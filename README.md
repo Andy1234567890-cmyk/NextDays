@@ -4,7 +4,7 @@ Weltweite Vacation-Rental-Plattform: PMS-Kern + Channel Manager + Direktbuchung
 + eigenes Buchungsportal. Faires Pricing (ein Preis, voller Funktionsumfang).
 
 ## Erste Schritte für Claude Code
-1. **CLAUDE.md** lesen (stabile Grundlage: Stack, Architektur, Konventionen).
+1. **PROJECT.md** lesen (stabile Grundlage: Stack, Architektur, Konventionen).
 2. **NOTES.md** lesen (aktueller Stand + nächste Schritte).
 3. Phase-0-Setup, dann `auth`-Slice als Referenz implementieren.
 

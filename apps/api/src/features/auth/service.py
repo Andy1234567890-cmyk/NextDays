@@ -3,7 +3,7 @@
 Registrierung legt atomar Tenant + Owner-User an und schreibt tenant_id/role
 ins JWT app_metadata (Quelle der Wahrheit für RLS). Bricht ein Schritt ab,
 werden bereits angelegte Artefakte zurückgerollt — kein verwaister Tenant,
-kein stilles Schlucken von Fehlern (CLAUDE.md).
+kein stilles Schlucken von Fehlern (PROJECT.md).
 """
 from supabase import Client
 

@@ -1,4 +1,4 @@
-"""Zentrale App-Konfiguration. Alle Secrets als SecretStr (CLAUDE.md)."""
+"""Zentrale App-Konfiguration. Alle Secrets als SecretStr (PROJECT.md)."""
 from functools import lru_cache
 
 from pydantic import SecretStr

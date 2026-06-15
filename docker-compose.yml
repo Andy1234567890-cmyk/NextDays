@@ -38,7 +38,7 @@ services:
     image: redis:7-alpine
     container_name: nextdays-redis
     # Redis dient als Caching-Layer UND als Broker für die spätere
-    # Background-Queue (CLAUDE.md: von Anfang an vorgesehen).
+    # Background-Queue (PROJECT.md: von Anfang an vorgesehen).
     ports:
       - "6379:6379"
     command: redis-server --save "" --appendonly no

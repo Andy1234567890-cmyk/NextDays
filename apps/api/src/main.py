@@ -1,6 +1,6 @@
 """FastAPI App-Einstieg. App-Factory; registriert alle Vertical Slices.
 
-Startet keinen Server beim Import (CLAUDE.md). Lokaler Start via uvicorn:
+Startet keinen Server beim Import (PROJECT.md). Lokaler Start via uvicorn:
     uvicorn src.main:app --reload
 """
 from fastapi import APIRouter, FastAPI
