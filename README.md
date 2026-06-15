@@ -48,6 +48,11 @@ NextDays kombiniert **zwei Geschäftsmodelle auf einem gemeinsamen Datenkern**:
               │  (provisionsfrei)   │      │  Booking · Airbnb   │
               └─────────────────────┘      │  Vrbo (Adapter)     │
                                            └─────────────────────┘
+
+   ┌───────────────────────────────────────────────────────────┐
+   │  Marketing-Website (entkoppelt, eigenes Deployment)         │
+   │  Landing · Pricing · Blog  —  KEINE Kopplung an PMS/Auth    │
+   └───────────────────────────────────────────────────────────┘
 ```
 
 Details: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**
@@ -103,12 +108,13 @@ nextdays/
 │   ├── CONTRIBUTING.md     # Arbeitsweise, Konventionen, Git-Flow
 │   ├── API.md              # API-Übersicht (Slices, Endpoints)
 │   └── decisions/          # ADRs (Architecture Decision Records)
+├── marketing/              # öffentliche Marketing-Website (ENTKOPPELT, eigenes Deployment)
 ├── apps/
 │   ├── web/                # Next.js — Vermieter-Dashboard + Portal
 │   └── api/                # FastAPI — gesamte Business-Logik
 │       └── src/
 │           ├── core/       # Config, Auth, Supabase, Logging
-│           └── features/   # 12 Vertical Slices
+│           └── features/   # Vertical Slices
 └── packages/
     └── shared/             # geteilte TS-Typen
 ```

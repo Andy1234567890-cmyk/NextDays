@@ -80,6 +80,12 @@ nextdays/
 ├── NOTES.md                   # Live-Session-Status (zuerst lesen bei neuer Session)
 ├── docs/
 │   └── decisions/             # ADRs (Architecture Decision Records)
+├── marketing/                 # öffentliche Marketing-/Landing-Website — ENTKOPPELT
+│   │                          # eigenständig, NICHT unter apps/. Eigenes Deployment.
+│   ├── app/                   # Next.js (App Router) — Landing, Pricing, About, Blog
+│   ├── components/
+│   ├── public/
+│   └── package.json           # eigene Dependencies, eigene CI/CD-Strecke
 ├── apps/
 │   ├── web/                   # Next.js — Vermieter-Dashboard (eingeloggt)
 │   │   ├── app/
@@ -102,6 +108,24 @@ nextdays/
 └── packages/
     └── shared/                # geteilte TS-Typen (aus Pydantic-Schemas generiert)
 ```
+
+### Marketing-Website bewusst entkoppelt
+
+Die öffentliche **Marketing-/Landing-Website** (`marketing/`) liegt **außerhalb von
+`apps/`** und ist vollständig entkoppelt:
+
+- **Eigenständig deploybar** — eigene `package.json`, eigene CI/CD-Strecke, eigenes
+  Vercel-Projekt/Domain (z. B. `nextdays.com`), getrennt vom Produkt
+  (`app.nextdays.com`).
+- **Keine Kopplung an PMS/Auth** — die Marketing-Seite spricht **nicht** die FastAPI
+  oder Supabase an. Rein statisch/SSG, maximale Performance & SEO, kein
+  Sicherheits-Surface zum Produkt.
+- **Unabhängige Release-Kadenz** — Marketing-Änderungen (Texte, Pricing-Seite,
+  Kampagnen) brechen nie das Produkt und umgekehrt.
+- **Optional geteilt:** lediglich Design-Tokens/Branding dürfen aus `packages/shared`
+  übernommen werden — keine Laufzeit-Abhängigkeit.
+
+> Begründung als ADR: siehe `docs/decisions/0002-marketing-website-entkopplung.md`.
 
 ---
 
