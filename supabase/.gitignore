@@ -1,0 +1,4 @@
+# Lokale Supabase-Artefakte (nicht committen)
+.branches
+.temp
+.env

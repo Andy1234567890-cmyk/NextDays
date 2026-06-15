@@ -1,0 +1,12 @@
+# Nicht ins Image kopieren (kleineres Image, kein Leak)
+.env
+.env.*
+!.env.example
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+tests/
+.DS_Store

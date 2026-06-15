@@ -1,0 +1,44 @@
+# docker-compose.yml — lokale, selbstgebaute Dienste für NextDays
+#
+# Enthält NUR die eigenen Dienste (FastAPI + Redis).
+# Der Supabase-Stack (Postgres, Auth, Storage, Studio) wird NICHT hier
+# definiert, sondern separat über die Supabase CLI gestartet:
+#   supabase start
+# So gibt es keine Doppelung und keine Port-Konflikte.
+#
+# Starten (macht Andy, nicht Claude): docker compose up
+
+services:
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    container_name: nextdays-api
+    # Reload-Mount: Quellcode wird ins Image gespiegelt, uvicorn --reload
+    # erkennt Änderungen ohne Rebuild. Zustandslos: kein lokaler State im Container.
+    volumes:
+      - ./apps/api:/app
+    env_file:
+      - ./apps/api/.env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    # host.docker.internal: erreicht den lokalen Supabase-Stack (CLI),
+    # der außerhalb dieses Compose-Netzes auf dem Host läuft (macOS/Windows).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: >
+      uvicorn src.main:app
+      --reload
+      --host 0.0.0.0
+      --port 8000
+
+  redis:
+    image: redis:7-alpine
+    container_name: nextdays-redis
+    # Redis dient als Caching-Layer UND als Broker für die spätere
+    # Background-Queue (CLAUDE.md: von Anfang an vorgesehen).
+    ports:
+      - "6379:6379"
+    command: redis-server --save "" --appendonly no
