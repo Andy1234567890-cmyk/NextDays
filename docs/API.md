@@ -121,6 +121,28 @@ def nur_owner(): ...
 
 ---
 
+## calendar (Kern-Logik implementiert)
+
+Herzstück (Lastenheft §2.2). Double-Booking-Schutz über die `availability`-Tabelle.
+Alle Endpoints erfordern Auth; `block`/`price-override` zusätzlich die Capability
+`manage_calendar`, Leseendpoints `view_calendar`.
+
+| Methode | Pfad | Beschreibung |
+|---|---|---|
+| `GET` | `/api/v1/calendar/availability?property_id&start&end` | Tagesstatus im Zeitraum (fehlende Tage = offen) |
+| `GET` | `/api/v1/calendar/check?property_id&start&end` | Verfügbarkeit + Konflikttage (Double-Booking-Prüfung) |
+| `POST` | `/api/v1/calendar/block` | Tage sperren — `409`, wenn bereits gebucht |
+| `POST` | `/api/v1/calendar/price-override` | Tagespreis setzen; `price: null` nimmt zurück |
+
+```json
+// GET /check → 200
+{ "property_id": "uuid", "available": false, "conflicting_days": ["2026-05-02"] }
+```
+
+`start` inklusive, `end` exklusiv (Check-out-Tag ist wieder frei).
+
+---
+
 ## Authentifizierung allgemein
 
 - Supabase-JWT (HS256), verifiziert in `core/security.py` gegen `SUPABASE_JWT_SECRET`.

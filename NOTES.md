@@ -32,6 +32,16 @@
 **README** um kundenverständliche Lastenheft-Diagramme erweitert (Mermaid, validiert):
 System-Überblick, Modul-Mindmap (voller Funktionsumfang), Rollen-/Daten-Split-Matrix.
 
+**Roadmap-Block 4 erledigt (Kalender-Kern, Herzstück §2.2):**
+- calendar-Slice mit echter Logik: get_availability, check_availability
+  (Double-Booking-Erkennung), block (lehnt gebuchte Tage ab → 409), set_price_override
+  (setzen/zurücknehmen). Supabase-Client injiziert (mockbar).
+- Endpoints: GET /availability, /check; POST /block, /price-override — geschützt über
+  Capability view_calendar / manage_calendar.
+- Neue Migration 0016 (price_overrides) — gegen echte Postgres validiert (16/16,
+  39 Tabellen, alle RLS).
+- Tests: 39 passed, 1 skipped. ruff clean.
+
 Offen für Andy (in REQUIREMENTS-GAP.md): i18n-Lib-Wahl (next-intl angenommen,
 ADR-0004), Rundungs-Policy (half-up, ADR-0005), DK-Felder nullable (umgesetzt).
 Migrationen noch nicht gegen den echten Supabase-Stack gefahren (Docker war aus) —
