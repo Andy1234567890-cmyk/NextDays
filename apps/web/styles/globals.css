@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+/* Tailwind v4 — Theme-Tokens als CSS-Variablen. KEIN tailwind.config.ts. */
+@theme {
+  /* PLATZHALTER — final: Farben aus Jeanines Logo (dänischer Einschlag) */
+  --color-primary: #1a5fb4;          /* TODO ersetzen */
+  --color-primary-foreground: #ffffff;
+  --color-accent: #c01c28;           /* TODO dänischer Akzent */
+  --radius: 0.5rem;
+}
+
+/* Light (Default) */
+:root {
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+}
+
+/* Dark Mode (.dark auf <html> via next-themes) */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+}

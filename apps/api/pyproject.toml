@@ -1,0 +1,52 @@
+# apps/api/pyproject.toml — FastAPI-Backend (Vertical Slice Architecture)
+
+[project]
+name = "nextdays-api"
+version = "0.1.0"
+description = "NextDays FastAPI-Backend — gesamte Business-Logik"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "pydantic>=2.9",
+    "pydantic-settings>=2.6",   # Config-Laden mit SecretStr
+    "supabase>=2.9",            # Supabase-Client (Postgres/Auth/Storage)
+    "redis>=5.2",               # Caching + Background-Queue
+    "structlog>=24.4",          # strukturiertes Logging
+    "python-multipart>=0.0.12", # Form-/Datei-Uploads (z. B. OCR)
+    "pyjwt>=2.9",               # Supabase-JWT-Verifikation (HS256)
+    "email-validator>=2.2",     # Pydantic EmailStr
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.24",
+    "httpx>=0.27",              # TestClient für FastAPI
+    "ruff>=0.7",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src"]
+
+[tool.ruff.lint]
+# E/F: pyflakes+pycodestyle, I: isort, B: bugbear, UP: pyupgrade,
+# ANN: type annotations (gegen Any-Schludrigkeit), S: bandit (Security)
+select = ["E", "F", "I", "B", "UP", "ANN", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+# assert + lockere Annotations + Test-Passwörter (keine echten Secrets) erlaubt
+"**/tests/*" = ["S101", "S105", "S106", "ANN"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests", "src"]
+markers = [
+    "integration: benötigt laufenden Supabase-Stack (übersprungen wenn nicht erreichbar)",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
