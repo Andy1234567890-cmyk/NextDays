@@ -12,3 +12,6 @@ build/
 .pytest_cache/
 .ruff_cache/
 *.egg-info/
+
+# Tool-spezifische Datei, nicht ins Repo (Spec liegt in PROJECT.md)
+CLAUDE.md
