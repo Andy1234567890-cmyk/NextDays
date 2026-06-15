@@ -12,7 +12,12 @@ from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
 from src.core.security import AuthContext
-from src.features.auth.dependencies import require_role
+from src.features.auth.dependencies import require_permission, require_role
+from src.features.auth.permissions import (
+    Capability,
+    capabilities_for,
+    has_capability,
+)
 from src.features.auth.schemas import RegisterRequest, UserRole
 from src.features.auth.service import AuthError, AuthService
 from src.main import create_app
@@ -68,6 +73,56 @@ def test_require_role_blocks_other_role() -> None:
     with pytest.raises(HTTPException) as exc:
         guard(ctx)
     assert exc.value.status_code == 403
+
+
+# --- Berechtigungs-Matrix (Lastenheft §4) ---
+
+def test_admin_has_all_capabilities() -> None:
+    caps = capabilities_for(UserRole.admin)
+    assert set(caps) == set(Capability)
+
+
+def test_owner_data_split_no_finances() -> None:
+    # Eigentümer sieht nur Vorname (limited), KEINE Finanzen, KEINEN vollen Gast.
+    assert has_capability(UserRole.owner, Capability.VIEW_GUEST_LIMITED)
+    assert not has_capability(UserRole.owner, Capability.VIEW_GUEST_FULL)
+    assert not has_capability(UserRole.owner, Capability.VIEW_FINANCES)
+
+
+def test_owner_can_only_request_not_approve_block() -> None:
+    assert has_capability(UserRole.owner, Capability.REQUEST_BLOCK)
+    assert not has_capability(UserRole.owner, Capability.APPROVE_BLOCK)
+    assert has_capability(UserRole.co_admin, Capability.APPROVE_BLOCK)
+
+
+def test_staff_no_finances_no_full_guest() -> None:
+    for cap in (Capability.VIEW_FINANCES, Capability.VIEW_GUEST_FULL,
+                Capability.VIEW_OWNER_REPORTS):
+        assert not has_capability(UserRole.staff, cap)
+    assert has_capability(UserRole.staff, Capability.VIEW_OWN_TASKS)
+
+
+def test_cleaner_matches_staff() -> None:
+    assert capabilities_for(UserRole.cleaner) == capabilities_for(UserRole.staff)
+
+
+def test_unknown_role_has_no_capabilities() -> None:
+    assert capabilities_for(None) == frozenset()
+    assert capabilities_for("nonsense") == frozenset()
+
+
+def test_require_permission_blocks_without_capability() -> None:
+    guard = require_permission(Capability.VIEW_FINANCES)
+    ctx = AuthContext(user_id="u1", tenant_id="t1", role="staff")
+    with pytest.raises(HTTPException) as exc:
+        guard(ctx)
+    assert exc.value.status_code == 403
+
+
+def test_require_permission_allows_with_capability() -> None:
+    guard = require_permission(Capability.VIEW_FINANCES)
+    ctx = AuthContext(user_id="u1", tenant_id="t1", role="admin")
+    assert guard(ctx) is ctx
 
 
 # --- register-Rollback ---

@@ -10,6 +10,7 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
+from .permissions import capabilities_for
 from .schemas import (
     LoginRequest,
     MeResponse,
@@ -85,6 +86,7 @@ class AuthService:
             user_id=ctx.user_id,
             tenant_id=ctx.tenant_id,
             role=role,
+            capabilities=sorted(c.value for c in capabilities_for(role)),
         )
 
     # --- interne Schritte (alle über Service-Role) ---

@@ -23,6 +23,15 @@
 - **Slices:** tasks/crm/dashboard/content angelegt (Health), payments-Gateway-
   Adapter (Revolut/Stripe, ADR-0003). Tests: 22 passed, 1 skipped. ruff clean.
 
+**Roadmap-Block 3 erledigt (Rollen & Berechtigungen):**
+- UserRole-Enum +admin/+co_admin; `permissions.py` mit Capability-Matrix (Lastenheft
+  §4): admin=alles, co_admin=operativ, owner=Daten-Split (Vorname/Netto), staff/cleaner
+  =nur operativ. `require_permission`-Dependency. `/me` liefert capabilities.
+- Tests: 30 passed, 1 skipped. ruff clean.
+
+**README** um kundenverständliche Lastenheft-Diagramme erweitert (Mermaid, validiert):
+System-Überblick, Modul-Mindmap (voller Funktionsumfang), Rollen-/Daten-Split-Matrix.
+
 Offen für Andy (in REQUIREMENTS-GAP.md): i18n-Lib-Wahl (next-intl angenommen,
 ADR-0004), Rundungs-Policy (half-up, ADR-0005), DK-Felder nullable (umgesetzt).
 Migrationen noch nicht gegen den echten Supabase-Stack gefahren (Docker war aus) —

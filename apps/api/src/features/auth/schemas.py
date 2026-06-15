@@ -5,9 +5,11 @@ from pydantic import BaseModel, EmailStr, Field, SecretStr
 
 
 class UserRole(StrEnum):
-    owner = "owner"
-    staff = "staff"
-    cleaner = "cleaner"
+    admin = "admin"        # voller Systemzugriff (Lastenheft §4.1)
+    co_admin = "co_admin"  # operative Rechte Eigentümer + Mitarbeiter kombiniert
+    owner = "owner"        # Eigentümer-Portal (Daten-Split, §4.2)
+    staff = "staff"        # Mitarbeiter-Portal (Smartphone, §4.3)
+    cleaner = "cleaner"    # Reinigungskraft (wie staff, operativ)
 
 
 class RegisterRequest(BaseModel):
@@ -36,6 +38,7 @@ class MeResponse(BaseModel):
     email: EmailStr | None = None
     tenant_id: str | None = None
     role: UserRole | None = None
+    capabilities: list[str] = []  # Fähigkeiten der Rolle (Berechtigungs-Matrix)
 
 
 # Bleibt erhalten: einheitlicher Health-Endpoint über alle Slices.

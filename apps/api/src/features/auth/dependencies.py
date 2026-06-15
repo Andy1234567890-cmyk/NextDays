@@ -7,6 +7,7 @@ from fastapi import Depends, HTTPException, status
 from src.core.security import AuthContext, get_current_user
 from src.core.supabase import get_anon_client, get_service_client
 
+from .permissions import Capability, has_capability
 from .schemas import UserRole
 from .service import AuthService
 
@@ -29,6 +30,26 @@ def require_role(*allowed: UserRole) -> Callable[[AuthContext], AuthContext]:
         ctx: Annotated[AuthContext, Depends(get_current_user)],
     ) -> AuthContext:
         if ctx.role not in allowed_values:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Unzureichende Berechtigung.",
+            )
+        return ctx
+
+    return _guard
+
+
+def require_permission(cap: Capability) -> Callable[[AuthContext], AuthContext]:
+    """Dependency-Factory: 403, wenn die Rolle die Fähigkeit nicht besitzt.
+
+    Feingranularer als require_role — schützt Endpoints anhand der
+    Berechtigungs-Matrix (Lastenheft §4).
+    """
+
+    def _guard(
+        ctx: Annotated[AuthContext, Depends(get_current_user)],
+    ) -> AuthContext:
+        if not has_capability(ctx.role, cap):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Unzureichende Berechtigung.",

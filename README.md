@@ -31,31 +31,109 @@ NextDays kombiniert **zwei Geschäftsmodelle auf einem gemeinsamen Datenkern**:
 
 ## Architektur auf einen Blick
 
-```
-                    ┌─────────────────────────────────────┐
-   Gäste  ───────►  │           Öffentliches Portal        │  (Phase 2)
-                    │        (Suche · Listing · Buchung)    │
-                    └───────────────────┬─────────────────┘
-                                        │
-   Vermieter ─────►  ┌─────────────────▼──────────────────┐
-   (Dashboard)       │            PMS-Datenkern             │
-                     │  Kalender · Reservierungen · Gäste   │
-                     │   Preise · Zahlungen · Posteingang   │
-                     └───┬───────────────────────────┬─────┘
-                         │                            │
-              ┌──────────▼─────────┐      ┌──────────▼──────────┐
-              │  Direktbuchung      │      │   Channel Manager   │
-              │  (provisionsfrei)   │      │  Booking · Airbnb   │
-              └─────────────────────┘      │  Vrbo (Adapter)     │
-                                           └─────────────────────┘
+Alle Kanäle docken an **einen** PMS-Datenkern an. Der zentrale Kalender ist die
+einzige Wahrheit und verhindert Double-Bookings über alle Kanäle.
 
-   ┌───────────────────────────────────────────────────────────┐
-   │  Marketing-Website (entkoppelt, eigenes Deployment)         │
-   │  Landing · Pricing · Blog  —  KEINE Kopplung an PMS/Auth    │
-   └───────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    Vermieter([Vermieter])
+    Gast([Gast])
+
+    subgraph CORE["PMS-Datenkern (eine Wahrheit)"]
+        KAL["Multi-Kalender"]
+        RES["Reservierungen"]
+        PRE["Preise / Saisons"]
+        ZAH["Zahlungen"]
+        AUF["Aufgaben"]
+        MSG["Posteingang"]
+    end
+
+    Vermieter -->|Dashboard| CORE
+    Gast -->|Direktbuchung / Portal| CORE
+
+    CORE --> DIR["Direktbuchung<br/>provisionsfrei (0%)"]
+    CORE --> CM["Channel Manager<br/>Booking · Airbnb · Vrbo"]
+    CORE --> POR["Öffentliches Portal<br/>(Phase 2)"]
+
+    CM <-->|Zwei-Wege-Sync| OTA["Externe Portale"]
+    CORE --> PAY["Zahlung: Revolut (primär) · Stripe"]
+
+    MKT["Marketing-Website<br/>entkoppelt · eigenes Deployment<br/>KEINE PMS/Auth-Kopplung"]
 ```
 
-Details: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**
+### Funktionsumfang (Module aus dem Lastenheft)
+
+Jeder Nutzer erhält **den vollen Funktionsumfang** — kein Feature-Gating, **0 %
+Buchungsgebühr**, Preis skaliert nur über die Anzahl der Unterkünfte.
+
+```mermaid
+mindmap
+  root((NextDays))
+    Vermieter-Werkzeug
+      Custom Dashboard
+        Drag and Drop Kacheln
+        White-Labeling
+      Multi-Kalender
+        Click-and-Hold
+        Manuelle Preise
+      Saison und Events
+        Taggenau
+        Farb-Legende
+      Aufgaben und Checklisten
+        Foto-Nachweise
+        Inventar
+      Unified Inbox
+        Trigger-Timing
+        Multi-Channel
+        Uebersetzung DE DK EN
+    Buchung und Zahlung
+      Direktbuchung 0 Prozent
+      Buchungs-Widget
+      Revolut primaer
+      Stripe sekundaer
+    Schnittstellen
+      Airbnb API
+      Booking.com
+      Vrbo Expedia
+      Import und Export
+    Portale
+      Eigentuemer-Portal
+      Mitarbeiter-Portal
+      Gaeste-Portal
+    CRM
+      Eigentuemer-Akquise
+      Partner und Deals
+    Unterkunfts-Oekosystem
+      Ferienhaus
+      Glamping Tiny House
+      Wohnmobilstellplatz
+      Hausboot
+```
+
+### Rollen & Daten-Split (Lastenheft §4)
+
+Wer sieht was — die Berechtigungs-Matrix sorgt für strikten Daten-Split
+(Eigentümer sehen nur Vorname + Netto/Nacht, Mitarbeiter keine Finanzen/Namen).
+
+```mermaid
+flowchart LR
+    ADMIN["Administrator<br/>voller Zugriff"]
+    CO["Co-Admin<br/>operativ + Stammdaten"]
+    OWN["Eigentümer<br/>Vorname · Netto/Nacht<br/>Sperrung beantragen"]
+    STAFF["Mitarbeiter / Reinigung<br/>nur Aufgaben · keine Finanzen"]
+
+    ADMIN --> FIN["Finanzen & Reports"]
+    ADMIN --> TENANT["Mandant & Plattform"]
+    CO --> PROPS["Hausdaten · Inventar · Aufgaben"]
+    CO --> APPR["Sperrungen freigeben"]
+    OWN --> REQ["Sperrung beantragen"]
+    OWN --> METER["Zählerstände · Services buchen"]
+    STAFF --> TASKS["eigene Aufgaben · Inventar"]
+```
+
+Details & technische Diagramme (C4, ER, Sequenz, Deployment):
+**[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** · Anforderungen:
+**[docs/LASTENHEFT.md](docs/LASTENHEFT.md)**
 
 ---
 
