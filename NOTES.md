@@ -3,7 +3,23 @@
 > Bei jeder neuen Session ZUERST diese Datei lesen. Nach jeder Session aktualisieren.
 
 ## Aktueller Fokus
-**Block 3 abgeschlossen** — Datenmodell + auth-Slice stehen.
+**Lastenheft eingetroffen (Stand 13.05.2026) — Scope deutlich erweitert.**
+- `docs/LASTENHEFT.md`: konsolidierte fachliche Quelle der Wahrheit.
+- `docs/REQUIREMENTS-GAP.md`: Abgleich mit Ist-Stand (✅/🟡/🔴/⚠️) + abgeleitete
+  Datenmodell-Erweiterungen + priorisierte Roadmap (10 Blöcke).
+- **Wichtige Scope-Änderungen:** Revolut = primäres Zahlungs-Gateway (Stripe sekundär,
+  Entscheidung getroffen); 3 native Sprachen DE/DK/EN; glatte Beträge (keine Cents);
+  neue Module (Dashboard-Personalisierung, Aufgaben/Checklisten, CRM/Partner,
+  8-stufiges Onboarding); neue Rollen admin + co_admin; Eigentümer-/Mitarbeiter-Portale.
+- **Marketing-Website** als entkoppelter Top-Level-Ordner `marketing/` verankert
+  (ADR-0002), eigenes Deployment, keine PMS/Auth-Kopplung.
+
+Nächster Schritt: Roadmap-Block 1 (Scope-Sync: PROJECT.md/Module/Rollen/Tech an
+Lastenheft angleichen), dann Block 2 (Datenmodell-Erweiterung als neue Migrationen).
+
+---
+
+## Vorheriger Stand: Block 3 — Datenmodell + auth-Slice stehen.
 
 **3a — Supabase-Migrationen** (`supabase/migrations/0001…0008`):
 - Alle Kern-Tabellen (§4) + Marktplatz-Tabellen (Phase 2) inkl. Enums, Checks, Indizes.
