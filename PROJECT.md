@@ -1,4 +1,4 @@
-# NextDays — Projekt-Spezifikation für Claude Code
+# NextDays — Projekt-Spezifikation
 
 > Diese Datei ist die stabile Grundlage (Single Source of Truth) für die Erstellung des NextDays-Projekts. Lies sie zuerst. Live-Session-Status gehört in `NOTES.md`, Architektur-Entscheidungen in `docs/decisions/*.md`.
 
@@ -176,7 +176,7 @@ Design-Prinzip (Jeanines Vorgabe): **„Schweizer Taschenmesser"** — viel Funk
 
 ---
 
-## 7. Was Claude Code zuerst tun soll
+## 7. Was zuerst zu tun ist
 
 1. **Monorepo-Gerüst** anlegen (Struktur aus §3), inkl. `PROJECT.md`, `NOTES.md`, `docs/decisions/`.
 2. **apps/web**: Next.js (App Router, TS, Bun) + Tailwind v4 (@theme) + shadcn/ui (v4-Variante, Icons auf Iconify) + next-themes (Light/Dark) + Route-Gruppen `(auth)/(dashboard)/(public)`.
@@ -186,7 +186,7 @@ Design-Prinzip (Jeanines Vorgabe): **„Schweizer Taschenmesser"** — viel Funk
 6. **NOTES.md** mit aktuellem Stand + nächsten Schritten füllen.
 7. Pre-Commit-Hooks (Lint + Tests), erste ADR in `docs/decisions/` zur Channel-Manager-Architektur (Direkt vs. Aggregator — offen lassen, Optionen dokumentieren).
 
-### Workflow-Regeln für Claude Code
+### Workflow-Regeln
 - **Diff-first → explizite Freigabe → Commit.** Keine blinden Annahmen, bei Unklarheit nachfragen.
 - Niemals `flutter run`/Dev-Server selbst starten (macht Andy).
 - Feature-Branch → PR → Merge; main bleibt sauber.

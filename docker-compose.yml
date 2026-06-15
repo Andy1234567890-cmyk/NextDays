@@ -6,7 +6,7 @@
 #   supabase start
 # So gibt es keine Doppelung und keine Port-Konflikte.
 #
-# Starten (macht Andy, nicht Claude): docker compose up
+# Starten (manuell): docker compose up
 
 services:
   api:

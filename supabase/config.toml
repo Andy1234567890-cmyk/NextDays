@@ -1,6 +1,6 @@
 # supabase/config.toml — Konfiguration des LOKALEN Supabase-Stacks
 #
-# Wird von der Supabase CLI gelesen. Start (macht Andy, nicht Claude):
+# Wird von der Supabase CLI gelesen. Start (manuell):
 #   supabase start
 # Das zieht Postgres, Auth (GoTrue), Storage, Studio und die REST-API
 # als lokale Docker-Container hoch. Diese Datei wurde manuell angelegt
