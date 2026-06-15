@@ -222,6 +222,17 @@ erDiagram
 **Marktplatz-Tabellen (Phase 2, Struktur vorbereitet):** `portal_guests`, `reviews`,
 `commissions` — siehe [Migration 0006](../supabase/migrations/0006_marketplace.sql).
 
+**Lastenheft-Erweiterung (Migrationen 0009–0015):** Das Modell wuchs auf **38
+Tabellen, alle mit RLS** (gegen eine echte Postgres-Instanz verifiziert). Neu u. a.:
+`property_type` + `type_attributes` (Ökosystem, ADR-0007), `surcharges`,
+`season_templates`/`seasons`/`season_periods`/`events`, `tasks`/`checklist_items`/
+`checklist_photos`/`inventory_items`, `leads`/`partners`/`deals`,
+`message_templates`/`message_triggers`, `content_blocks`, `block_requests`,
+`meter_readings` (append-only), `co_owners`, `dashboard_layouts`,
+`plans`/`subscriptions` (unit-basiertes Preismodell, ADR-0006). Rollen-Enum
+erweitert um `admin`, `co_admin`. `payments`: `stripe_ref` → `gateway_ref` +
+`gateway`-Enum (ADR-0003).
+
 **Kardinalität:** `||` = genau eins · `o{` = null bis viele · `|{` = ein bis viele.
 `--` = identifizierend (Kind kann ohne Eltern nicht existieren).
 
@@ -417,9 +428,15 @@ Gemeinsame Infrastruktur in `apps/api/src/core/`:
 | `supabase.py` | Client-Factory — Anon (RLS) und Service-Role (System) getrennt |
 | `security.py` | Supabase-JWT-Verifikation (HS256) → `AuthContext`, `CurrentUser` |
 
-**Die 12 Phase-1-Slices:** `auth` · `properties` · `rates` · `calendar` ·
-`reservations` · `guests` · `inbox` · `payments` · `channel_manager` ·
-`booking_engine` · `ocr` · `public_portal`.
+**Slices:** `auth` · `properties` · `rates` · `calendar` · `reservations` ·
+`guests` · `inbox` · `payments` · `channel_manager` · `booking_engine` · `ocr` ·
+`public_portal` · `tasks` · `crm` · `dashboard` · `content`.
+
+Die letzten vier (`tasks`, `crm`, `dashboard`, `content`) ergänzen den durch das
+[Lastenheft](LASTENHEFT.md) erweiterten Funktionsumfang (Aufgaben/Checklisten,
+Eigentümer-Akquise & Partner, Dashboard-Personalisierung, dreisprachige
+Standardtexte). Der `payments`-Slice nutzt ein **Gateway-Adapter-Pattern**
+(Revolut primär, Stripe sekundär — [ADR-0003](decisions/0003-zahlungs-gateway-revolut-primaer.md)).
 
 Alle Router unter dem gemeinsamen Prefix **`/api/v1`** (versioniert von Anfang an).
 `auth` ist als Referenz-Muster voll implementiert (siehe **[API.md](API.md)**).

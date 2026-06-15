@@ -29,7 +29,9 @@ Tragfähiger PMS-Kern + Vermieter-Seite (PMS, Objektpflege, Channel-Sync-Grundla
 | Theming | **Light + Dark Mode** über CSS-Variablen (`.dark`), via `next-themes` |
 | Backend | **FastAPI** (Python), Vertical Slice Architecture |
 | Datenbank/Auth/Storage | **Supabase** (Postgres, Auth, Storage), Multi-Tenant mit Row-Level-Security |
-| Zahlungen | **Stripe** (Connect für Marktplatz-Auszahlungen Plattform→Vermieter) |
+| Zahlungen | **Revolut Business API** (primäres Gateway: Mieten, Kautionen, Zusatzleistungen) · **Stripe** sekundär/konfigurierbar — Gateway-Adapter-Pattern (siehe ADR-0003) |
+| Sprachen (nativ) | **DE / DK / EN** — UI + automatisierte Kommunikation (i18n, siehe ADR-0004) |
+| Währungsdarstellung | **Glatte Beträge** systemweit, keine Cent-/Øre-Anzeige (siehe ADR-0005) |
 | Package Manager (Web) | **Bun** |
 | Deployment | Web → Vercel; API → Hetzner (Coolify); DSGVO-konform, self-hosted bevorzugt |
 
@@ -135,14 +137,14 @@ Alle Tabellen mit **Row-Level-Security**. `tenant_id` (Vermieter-Mandant) auf al
 
 ### Kern-Entitäten
 - **tenants** — Vermieter-Mandant (Firma/Person). `id, name, country, currency, created_at`
-- **users** — gehören zu einem Tenant. Rollen: `owner | staff | cleaner`. (Gäste sind separat, siehe unten.)
+- **users** — gehören zu einem Tenant. Rollen: `admin | co_admin | owner | staff | cleaner` (granulare Toggle-Matrix, siehe §4-Ergänzung & Lastenheft §4). (Gäste sind separat, siehe unten.)
 - **properties** — Unterkünfte. `id, tenant_id, title, description, address, lat, lng, amenities[], max_guests, photos[], status`
 - **rate_plans** — Preise/Saison. `id, property_id, name, base_price, currency, min_stay, season_rules(jsonb), weekend_surcharge`
 - **availability** — Verfügbarkeit pro Tag. `property_id, date, status(open|booked|blocked), source(direct|booking|airbnb|vrbo|manual)` — **die eine Wahrheit, verhindert Double-Bookings**
 - **reservations** — zentrale Buchung, kanalunabhängig. `id, tenant_id, property_id, guest_id, channel(direct|portal|booking|airbnb|vrbo), check_in, check_out, status, total_amount, currency, created_at`
 - **guests** — Gastprofile (kanalübergreifend). `id, name, email, phone, history`
 - **messages** — zentraler Posteingang. `id, reservation_id, sender, body, channel, created_at`
-- **payments** — Zahlungen/Anzahlungen. `id, reservation_id, amount, currency, type(deposit|full|refund), stripe_ref, status`
+- **payments** — Zahlungen/Anzahlungen. `id, reservation_id, amount, currency, type(deposit|full|refund), gateway(revolut|stripe), gateway_ref, status`
 
 ### Marktplatz-Erweiterung (Phase 2, Modell jetzt vorbereiten)
 - **portal_guests** — Gast-Accounts des öffentlichen Portals (Demand-Seite, tenant-übergreifend)
@@ -162,7 +164,7 @@ Jeder Slice in `apps/api/src/features/<name>/` mit `router.py`, `service.py`, `s
 5. **reservations** — Buchungsverwaltung (kanalunabhängig), Status, Check-in/out.
 6. **guests** — Gastprofile, Historie.
 7. **inbox** — zentrale Gästekommunikation.
-8. **payments** — Stripe-Integration (Anzahlungen, Auszahlungspläne, Belege).
+8. **payments** — Zahlungs-Gateway mit Adapter-Pattern: **Revolut Business API primär**, **Stripe sekundär** (Anzahlungen, Kautionen, Zusatzleistungen, Auszahlungspläne, Belege). Siehe ADR-0003.
 9. **channel_manager** — Sync-Grundlage + Adapter-Pattern pro Kanal:
    - Adapter-Interface (einheitlich), konkrete Adapter: **Booking.com**, **Airbnb**, **Vrbo/Expedia** (über Connectivity-Programme; alternativ Aggregator-Adapter z.B. Feondi).
    - Zwei-Wege-Sync (Verfügbarkeit, Preise, Buchungen), robuste Fehlerbehandlung (Retry, Logging, Alarm).
@@ -170,6 +172,35 @@ Jeder Slice in `apps/api/src/features/<name>/` mit `router.py`, `service.py`, `s
 10. **booking_engine** — Direktbuchungs-Strecke (provisionsfrei), Buchungs-Widget.
 11. **ocr** — OCR-Service mit Adapter-Pattern. Ausweis-/Pass-Scan (Check-in/Meldepflicht) + Belege. Self-hosted (Tesseract/PaddleOCR) bevorzugt. Ausweisdaten bleiben auf Hetzner.
 12. **public_portal** *(Struktur jetzt, Logik Phase 2)* — öffentliche Suche, Listing-Seiten, Gäste-Buchung, Gast-Accounts.
+
+### Zusätzliche Module aus Lastenheft (Roadmap, siehe `docs/REQUIREMENTS-GAP.md`)
+13. **tasks** — operatives Aufgaben-/Checklistenmanagement: auto-generierte Aufgaben (Endreinigung/Anreise-Check), wiederkehrende Regeln, Foto-Checklisten, Inventar (auch unterkunftslos).
+14. **crm** — Eigentümer-Akquise (Leads, Marketing-Attribution) + Partner/Deals (B2B-Rabatte, QR-Codes).
+15. **dashboard** — personalisierbares Dashboard (Drag&Drop-Kacheln, White-Labeling/Logo-Upload).
+16. **content** — zentralisierte, dreisprachige Standardtexte (Hausregeln, Check-in/out, Reiseguide), pro Unterkunft/Portfolio zuweisbar.
+
+> Rollen & Berechtigungen, Saison-/Event-Management, Messaging-Trigger, Zählerstände,
+> Sperrungs-Workflow und das 8-stufige Onboarding sind Erweiterungen bestehender
+> Slices (auth, rates, inbox, properties) — Details in `docs/LASTENHEFT.md`.
+
+### Preisstruktur (Geschäftsmodell, Lastenheft-Ergänzung)
+- **All-Inclusive:** kein Feature-Gating, voller Funktionsumfang für alle.
+- **0% Buchungsgebühr** im eigenen System (Abgrenzung zu vOffice/Lodgify).
+- **Skalierung nur über Anzahl verwalteter Unterkünfte** (günstiger Festpreis-Staffel,
+  auch bei 10+ Einheiten bezahlbar). Siehe ADR-0006.
+
+### Universelles Unterkunfts-Ökosystem (Cross-Over-SaaS)
+Beim Anlegen einer Unterkunft bestimmt ein **Beherbergungs-Typ** (Dropdown) die
+dynamisch passenden Checklisten, Shortcodes und Onboarding-Schritte:
+- **Ferienhaus / Appartement** — Schlüsselbox, BFE (DK), Endreinigung, Saison-Events.
+- **Glamping / Tiny House** — Außenanlagen, Whirlpool/Sauna-Wartung, Brennholz,
+  wetterabhängige Sonder-Saisons.
+- **Wohnmobilstellplatz / Camping-Pitch** — reduziertes PMS, QR-Check-in,
+  Stellplatz-Zuweisung, Schranken-Codes in SMS/E-Mail.
+- **Hausboot / Floating Home** — Liegeplatz-Vorschriften, technische Einweisung
+  (Fäkalientank, Strom), spezialisierte Handwerker-Kontakte.
+
+Siehe ADR-0007 (Datenmodell: `property_type` + typ-spezifische Felder/Templates).
 
 ---
 

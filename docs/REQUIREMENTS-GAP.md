@@ -64,6 +64,17 @@
 | Adress-Split (Straße/Nr./PLZ/Ort/Land) | 🔴 | `properties.address` (heute Freitext) auf strukturierte Felder umstellen. |
 | Miteigentümer | 🔴 | `co_owners`-Tabelle. |
 
+## G. Ergänzungs-Modul: Ökosystem (Lastenheft §7)
+
+| Anforderung | Status | Hinweis |
+|---|---|---|
+| All-Inclusive, kein Feature-Gating | 🔴 | Geschäftsmodell-Policy; technisch: KEINE Feature-Flags zum Sperren von Funktionen. Als ADR-0006 festhalten. |
+| 0% Buchungsgebühr (eigenes System) | 🔴 | `commissions` gilt nur fürs Portal (Phase 2), NICHT für PMS-Direktbuchungen. Sicherstellen, dass Vermieter-Buchungen gebührenfrei sind. |
+| Preis skaliert über Anzahl Unterkünfte | 🔴 | `subscriptions`/`plans`-Tabelle (unit-basiert), `tenant`-Abrechnung. |
+| Beherbergungs-Typ-Dropdown | 🔴 | `properties.property_type` Enum (ferienhaus, glamping, tiny_house, stellplatz, hausboot, …) → steuert Checklisten/Shortcodes/Onboarding. ADR-0007. |
+| Typ-spezifische Felder & Templates | 🔴 | Glamping (Whirlpool/Sauna/Brennholz), Stellplatz (QR-Check-in, Stellplatznr., Schranken-Code), Hausboot (Fäkalientank, Liegeplatz) → typgebundene Felder (jsonb `type_attributes` oder Detailtabellen). |
+| QR-Check-in / Schranken-Code in SMS | 🔴 | Verknüpft mit Messaging-Trigger (§2.4) + tasks. |
+
 ---
 
 ## Abgeleitete Datenmodell-Erweiterungen (für die Migrationen)
@@ -74,14 +85,19 @@
 `inventory_items`, `leads`, `partners`, `deals`, `dashboard_layouts`,
 `content_blocks`, `content_assignments`, `block_requests`, `meter_readings`,
 `co_owners`, `message_templates`, `message_triggers`, `notifications`,
-`onboarding_steps` (oder Felder direkt an `properties`).
+`onboarding_steps` (oder Felder direkt an `properties`),
+`subscriptions`/`plans` (unit-basiertes Preismodell), `surcharges` (Reinigung,
+Hund, Wäsche, Nebenkosten).
 
 **Änderungen an Bestehendem:**
 - `user_role`-Enum: `+ admin, + co_admin`.
 - `properties`: Adresse strukturieren; DK-Onboarding-Felder (BFE, CPR-Verweis,
   Boligtype, Bank) nullable ergänzen.
-- `payments`: Gateway-Feld (`revolut | stripe`), Revolut-Referenzen.
+- `payments`: Gateway-Feld (`revolut | stripe`), generisches `gateway_ref` statt
+  `stripe_ref`.
 - Preisaufschläge (Reinigung, Hund, Wäsche, Nebenkosten) als `surcharges`.
+- `properties`: `property_type`-Enum + typ-spezifische Attribute (`type_attributes`
+  jsonb), Adress-Split, DK-Onboarding-Felder.
 
 ---
 

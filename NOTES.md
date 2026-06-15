@@ -14,8 +14,20 @@
 - **Marketing-Website** als entkoppelter Top-Level-Ordner `marketing/` verankert
   (ADR-0002), eigenes Deployment, keine PMS/Auth-Kopplung.
 
-Nächster Schritt: Roadmap-Block 1 (Scope-Sync: PROJECT.md/Module/Rollen/Tech an
-Lastenheft angleichen), dann Block 2 (Datenmodell-Erweiterung als neue Migrationen).
+**Roadmap-Blöcke 1–2 erledigt:**
+- **Scope-Sync:** PROJECT.md (Module 13–16, Rollen admin/co_admin, Tech Revolut,
+  Sprachen DE/DK/EN, glatte Beträge, Ökosystem), ADRs 0003–0007.
+- **Datenmodell:** Migrationen 0009–0015 — **38 Tabellen, alle RLS**, gegen echte
+  Postgres (lokal, PG14) verifiziert. Enum-Erweiterungen, property_type,
+  gateway_ref, neue Tabellen für alle Lastenheft-Bereiche.
+- **Slices:** tasks/crm/dashboard/content angelegt (Health), payments-Gateway-
+  Adapter (Revolut/Stripe, ADR-0003). Tests: 22 passed, 1 skipped. ruff clean.
+
+Offen für Andy (in REQUIREMENTS-GAP.md): i18n-Lib-Wahl (next-intl angenommen,
+ADR-0004), Rundungs-Policy (half-up, ADR-0005), DK-Felder nullable (umgesetzt).
+Migrationen noch nicht gegen den echten Supabase-Stack gefahren (Docker war aus) —
+aber gegen lokales Postgres validiert. Nächste Blöcke: Rollen/Berechtigungen,
+Kalender-Kern, dann Slice-Logik gemäß Roadmap.
 
 ---
 

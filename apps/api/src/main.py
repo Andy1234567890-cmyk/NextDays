@@ -12,6 +12,9 @@ from .features.auth.router import router as auth_router
 from .features.booking_engine.router import router as booking_engine_router
 from .features.calendar.router import router as calendar_router
 from .features.channel_manager.router import router as channel_manager_router
+from .features.content.router import router as content_router
+from .features.crm.router import router as crm_router
+from .features.dashboard.router import router as dashboard_router
 from .features.guests.router import router as guests_router
 from .features.inbox.router import router as inbox_router
 from .features.ocr.router import router as ocr_router
@@ -20,6 +23,7 @@ from .features.properties.router import router as properties_router
 from .features.public_portal.router import router as public_portal_router
 from .features.rates.router import router as rates_router
 from .features.reservations.router import router as reservations_router
+from .features.tasks.router import router as tasks_router
 
 _SLICE_ROUTERS = [
     auth_router,
@@ -34,6 +38,10 @@ _SLICE_ROUTERS = [
     booking_engine_router,
     ocr_router,
     public_portal_router,
+    tasks_router,
+    crm_router,
+    dashboard_router,
+    content_router,
 ]
 
 

@@ -177,3 +177,35 @@ PDF-Export + Druck. Acht Stufen:
 8. **ANNONCERING** — Grundpreis-Definition; permanente Sperrung/Eigenbelegungs-
    Import; Plattform-Matrix & Launch-Termine (Nativ-Website, Airbnb, Booking.com,
    Vrbo).
+
+---
+
+## 7. Ergänzungs-Modul: Das NextDays-Ökosystem
+
+### 7.1 „All-Inclusive-Premium“-Preisstruktur
+- **Kein Feature-Versteckspiel:** keine künstlichen Leistungsvariationen oder
+  gesperrten Funktionen hinter teureren Paketen. Jeder Nutzer erhält sofort den
+  vollen Funktionsumfang (Channel Manager, PMS, Aufgabenplanung, Eigentümer-Portal,
+  Gäste-Portal).
+- **0% Buchungsgebühr:** keine prozentuale Beteiligung an Vermieter-Buchungen
+  (Abgrenzung zu vOffice mit 4 %).
+- **Skalierung nur über Einheiten:** Preis skaliert ausschließlich über die Anzahl
+  verwalteter Unterkünfte (günstiger Festpreis für 1–5 Häuser, auch bei 10+ für
+  kleine Unternehmen bezahlbar).
+
+### 7.2 Universelles Unterkunfts-Ökosystem (Cross-Over-SaaS)
+Modulare Datenstruktur für **jede Art von Kurzzeitvermietung weltweit**. Ein
+primäres **Beherbergungs-Typ-Dropdown** beim Anlegen passt Checklisten und
+Shortcodes automatisch an:
+
+- **Klassische Ferienhäuser & Urlaubs-Appartements:** Schlüsselboxen,
+  Hausspezifikationen (BFE-Nummer DK), große Endreinigungen, saisonale Event-Preise,
+  Abrechnung mit privaten Eigentümern.
+- **Glamping & Tiny Houses:** Felder für Außenanlagen, Whirlpool-/Saunawartung,
+  Brennholz-Zusatzleistungen, wetterabhängige Sonder-Saisonzeiten.
+- **Wohnmobilstellplätze & Camping-Pitches:** reduzierte PMS-Struktur, rein digital
+  (Check-in via QR-Code, automatische Stellplatz-Zuweisung, Schranken-Öffnungscodes
+  in automatisierter SMS/E-Mail).
+- **Hausboote / Floating Homes:** Onboarding für Liegeplatz-Vorschriften, technische
+  Einweisungen (Fäkalientank, Stromversorgung), spezialisierte Handwerker-
+  Notfallkontakte.

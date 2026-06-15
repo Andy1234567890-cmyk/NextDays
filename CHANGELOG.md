@@ -22,7 +22,24 @@ Format orientiert an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
   `docs/CONTRIBUTING.md`, `docs/API.md`, `LICENSE`, `.github/`-Templates.
 - ADR-0001: Channel-Manager-Architektur (Direkt vs. Aggregator).
 
+### Geändert (Lastenheft-Scope, Stand 13.05.2026)
+- Lastenheft + Ergänzungs-Modul aufgenommen (`docs/LASTENHEFT.md`), Gap-Analyse
+  & Roadmap (`docs/REQUIREMENTS-GAP.md`).
+- Datenmodell erweitert auf **38 Tabellen** (Migrationen 0009–0015), gegen echte
+  Postgres-Instanz verifiziert (alle mit RLS). Neu: Saisons/Events, Aufgaben/
+  Checklisten/Inventar, CRM/Partner, Messaging-Trigger, Content-Blöcke,
+  Sperrungs-Workflow, Zählerstände (append-only), Miteigentümer, Dashboard-Layouts,
+  unit-basiertes Preismodell.
+- Rollen-Enum: `+ admin`, `+ co_admin`.
+- `properties`: `property_type`-Enum + `type_attributes` (Unterkunfts-Ökosystem),
+  Adress-Split, DK-Onboarding-Felder.
+- `payments`: `stripe_ref` → `gateway_ref` + `gateway`-Enum; Gateway-Adapter
+  (Revolut primär, Stripe sekundär).
+- Neue Slices: `tasks`, `crm`, `dashboard`, `content` (Health + Struktur).
+- Marketing-Website als entkoppelter Top-Level-Ordner `marketing/` (ADR-0002).
+- ADRs 0002–0007 ergänzt.
+
 ### Offen
-- Supabase-Migrationen noch nicht gegen eine laufende DB verifiziert.
-- Web-Frontend (shadcn/ui, Iconify, Themes) noch nicht eingerichtet.
-- Übrige Slices (properties, calendar, …) noch nicht ausimplementiert.
+- Frontend (Dashboard, Portale, i18n DE/DK/EN) noch nicht implementiert.
+- Slice-Geschäftslogik (außer auth) folgt gemäß Roadmap.
+- Revolut/Stripe-Gateway-Calls, Channel-Adapter, OCR noch Platzhalter.

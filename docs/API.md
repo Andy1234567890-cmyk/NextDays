@@ -30,6 +30,10 @@ Jeder der 12 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
 | booking_engine | `GET /api/v1/booking-engine/health` |
 | ocr | `GET /api/v1/ocr/health` |
 | public_portal | `GET /api/v1/public-portal/health` |
+| tasks | `GET /api/v1/tasks/health` |
+| crm | `GET /api/v1/crm/health` |
+| dashboard | `GET /api/v1/dashboard/health` |
+| content | `GET /api/v1/content/health` |
 
 Antwort-Schema:
 
