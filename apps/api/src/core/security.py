@@ -1,13 +1,18 @@
 """Auth-Hülle: verifiziert Supabase-JWT und stellt AuthContext bereit.
 
-Die Rollen-/Tenant-Auflösung gegen die DB folgt im Slice `auth`. Hier wird
-das JWT kryptografisch geprüft und die Claims typisiert herausgereicht —
-keine Platzhalter-Akzeptanz beliebiger Tokens.
+Modernes Supabase signiert Access-Tokens mit **ES256** (asymmetrisch, JWKS).
+Ältere Projekte nutzen **HS256** mit einem Shared Secret. Dieser Code unterstützt
+beide: zuerst JWKS/ES256 (anhand des `kid` im Token-Header), sonst HS256-Fallback.
+
+Die Rollen-/Tenant-Auflösung erfolgt aus den JWT-Claims (`app_metadata`) — keine
+Platzhalter-Akzeptanz beliebiger Tokens.
 """
+from functools import lru_cache
 from typing import Annotated
 
 import jwt
 from fastapi import Depends, Header, HTTPException, status
+from jwt import PyJWKClient
 from pydantic import BaseModel
 
 from .config import Settings, get_settings
@@ -19,12 +24,43 @@ class AuthContext(BaseModel):
     role: str | None = None
 
 
-def _decode_token(token: str, secret: str) -> dict[str, object]:
+@lru_cache
+def _jwk_client(jwks_url: str) -> PyJWKClient:
+    # Cacht die öffentlichen Schlüssel pro JWKS-URL (kein Fetch je Request).
+    return PyJWKClient(jwks_url)
+
+
+def _jwks_url(settings: Settings) -> str:
+    return f"{settings.supabase_url.rstrip('/')}/auth/v1/.well-known/jwks.json"
+
+
+def _decode_token(token: str, settings: Settings) -> dict[str, object]:
+    """Verifiziert ES256 (JWKS) oder HS256 (Shared Secret) je nach Token-Header."""
     try:
+        alg = jwt.get_unverified_header(token).get("alg")
+    except jwt.PyJWTError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Ungültiges oder abgelaufenes Token.",
+        ) from exc
+
+    try:
+        if alg == "HS256":
+            secret = settings.supabase_jwt_secret.get_secret_value()
+            if not secret:
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail="JWT-Secret nicht konfiguriert.",
+                )
+            return jwt.decode(
+                token, secret, algorithms=["HS256"], audience="authenticated"
+            )
+        # Asymmetrisch (ES256/RS256): öffentlichen Schlüssel via JWKS holen.
+        signing_key = _jwk_client(_jwks_url(settings)).get_signing_key_from_jwt(token)
         return jwt.decode(
             token,
-            secret,
-            algorithms=["HS256"],
+            signing_key.key,
+            algorithms=["ES256", "RS256"],
             audience="authenticated",
         )
     except jwt.PyJWTError as exc:
@@ -44,13 +80,7 @@ def get_current_user(
             detail="Authorization-Header fehlt.",
         )
     token = authorization.split(" ", 1)[1]
-    secret = settings.supabase_jwt_secret.get_secret_value()
-    if not secret:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="JWT-Secret nicht konfiguriert.",
-        )
-    claims = _decode_token(token, secret)
+    claims = _decode_token(token, settings)
     sub = claims.get("sub")
     if not isinstance(sub, str):
         raise HTTPException(

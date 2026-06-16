@@ -1,10 +1,15 @@
 """Router für auth. Gemountet unter /api/v1/auth."""
-from fastapi import APIRouter, HTTPException, status
+from typing import Annotated
 
-from src.core.security import CurrentUser
+from fastapi import APIRouter, Depends, HTTPException, status
 
-from .dependencies import AuthServiceDep
+from src.core.security import AuthContext, CurrentUser
+
+from .dependencies import AuthServiceDep, require_permission
+from .permissions import Capability
 from .schemas import (
+    InviteRequest,
+    InviteResponse,
     LoginRequest,
     MeResponse,
     RegisterRequest,
@@ -45,3 +50,31 @@ def login(req: LoginRequest, service: AuthServiceDep) -> SessionResponse:
 @router.get("/me", response_model=MeResponse)
 def me(ctx: CurrentUser, service: AuthServiceDep) -> MeResponse:
     return service.me(ctx)
+
+
+@router.post(
+    "/invite",
+    response_model=InviteResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def invite(
+    req: InviteRequest,
+    service: AuthServiceDep,
+    ctx: Annotated[
+        AuthContext, Depends(require_permission(Capability.MANAGE_STAFF))
+    ],
+) -> InviteResponse:
+    """Mitarbeiter/weiteren Nutzer in den eigenen Tenant einladen.
+
+    Erfordert MANAGE_STAFF (admin/co_admin). Die Rolle des neuen Nutzers kommt
+    aus dem Request; der Tenant aus dem eingeloggten Nutzer.
+    """
+    if not ctx.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Einladender Nutzer hat keinen Tenant.",
+        )
+    try:
+        return service.invite(req, tenant_id=ctx.tenant_id)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

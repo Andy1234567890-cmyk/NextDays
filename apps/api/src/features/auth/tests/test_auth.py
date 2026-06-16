@@ -18,7 +18,7 @@ from src.features.auth.permissions import (
     capabilities_for,
     has_capability,
 )
-from src.features.auth.schemas import RegisterRequest, UserRole
+from src.features.auth.schemas import InviteRequest, RegisterRequest, UserRole
 from src.features.auth.service import AuthError, AuthService
 from src.main import create_app
 
@@ -179,6 +179,64 @@ def test_register_rolls_back_user_and_tenant_when_user_row_fails() -> None:
     service.auth.admin.delete_user.assert_called_with("user-456")
 
 
+# --- invite (Mitarbeiter/weitere Rollen) ---
+
+def _invite(role: UserRole) -> InviteRequest:
+    return InviteRequest(
+        email="staff@example.de",
+        password="longenough",
+        full_name="Mitarbeiter",
+        role=role,
+    )
+
+
+def test_invite_creates_user_with_role_in_existing_tenant() -> None:
+    svc, _anon, service = _service_with_mocks()
+    created = MagicMock()
+    created.user.id = "user-789"
+    service.auth.admin.create_user.return_value = created
+
+    res = svc.invite(_invite(UserRole.staff), tenant_id="tenant-abc")
+
+    assert res.user_id == "user-789"
+    assert res.role == UserRole.staff
+    assert res.tenant_id == "tenant-abc"
+    # app_metadata enthält tenant + rolle des Eingeladenen
+    meta = service.auth.admin.create_user.call_args.args[0]["app_metadata"]
+    assert meta == {"tenant_id": "tenant-abc", "role": "staff"}
+
+
+def test_invite_rejects_admin_role() -> None:
+    # Admin entsteht nur bei register; per invite ablehnen.
+    svc, _anon, _service = _service_with_mocks()
+    with pytest.raises(AuthError) as exc:
+        svc.invite(_invite(UserRole.admin), tenant_id="tenant-abc")
+    assert exc.value.status_code == 400
+
+
+def test_invite_allows_owner_role() -> None:
+    # Hauseigentümer (owner) wird per invite angelegt (Daten-Split-Rolle).
+    svc, _anon, service = _service_with_mocks()
+    created = MagicMock()
+    created.user.id = "user-owner"
+    service.auth.admin.create_user.return_value = created
+    res = svc.invite(_invite(UserRole.owner), tenant_id="tenant-abc")
+    assert res.role == UserRole.owner
+
+
+def test_invite_rolls_back_auth_user_when_row_fails() -> None:
+    svc, _anon, service = _service_with_mocks()
+    created = MagicMock()
+    created.user.id = "user-789"
+    service.auth.admin.create_user.return_value = created
+    service.table.return_value.insert.return_value.execute.side_effect = RuntimeError(
+        "users insert failed"
+    )
+    with pytest.raises(RuntimeError):
+        svc.invite(_invite(UserRole.cleaner), tenant_id="tenant-abc")
+    service.auth.admin.delete_user.assert_called_with("user-789")
+
+
 # --- Integration (nur mit laufendem Supabase-Stack) ---
 
 @pytest.mark.integration
@@ -201,5 +259,5 @@ def test_register_login_me_roundtrip() -> None:
     )
     assert me.status_code == 200, me.text
     data = me.json()
-    assert data["role"] == "owner"
+    assert data["role"] == "admin"  # Tenant-Gründer = admin
     assert data["tenant_id"]

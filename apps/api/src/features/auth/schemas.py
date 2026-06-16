@@ -26,6 +26,26 @@ class LoginRequest(BaseModel):
     password: SecretStr
 
 
+class InviteRequest(BaseModel):
+    """Einladung eines weiteren Nutzers in den eigenen Tenant (Mitarbeiter etc.).
+
+    Der einladende Nutzer (admin/co_admin) bestimmt die Rolle. Owner-Rolle wird
+    beim Registrieren vergeben, nicht beim Einladen.
+    """
+
+    email: EmailStr
+    password: SecretStr = Field(min_length=8)
+    full_name: str = Field(min_length=1, max_length=200)
+    role: UserRole
+
+
+class InviteResponse(BaseModel):
+    user_id: str
+    email: EmailStr
+    role: UserRole
+    tenant_id: str
+
+
 class SessionResponse(BaseModel):
     access_token: str
     refresh_token: str

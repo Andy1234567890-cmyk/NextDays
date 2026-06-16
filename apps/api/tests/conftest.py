@@ -25,12 +25,27 @@ def _supabase_reachable() -> bool:
         return False
 
 
+def _supabase_configured() -> bool:
+    """Integration braucht erreichbaren Stack UND gesetzte Keys.
+
+    Erreichbarkeit allein reicht nicht: das remote-Projekt ist immer per Socket
+    erreichbar, aber die App im Test braucht echte anon/service-role-Keys.
+    """
+    keys = (
+        os.environ.get("SUPABASE_ANON_KEY", ""),
+        os.environ.get("SUPABASE_SERVICE_ROLE_KEY", ""),
+    )
+    if not all(k and not k.startswith("changeme") for k in keys):
+        return False
+    return _supabase_reachable()
+
+
 def pytest_collection_modifyitems(
     config: pytest.Config, items: list[pytest.Item]
 ) -> None:
-    if _supabase_reachable():
+    if _supabase_configured():
         return
-    skip = pytest.mark.skip(reason="Supabase-Stack nicht erreichbar")
+    skip = pytest.mark.skip(reason="Supabase nicht konfiguriert (Keys/Stack)")
     for item in items:
         if "integration" in item.keywords:
             item.add_marker(skip)
