@@ -15,3 +15,7 @@ build/
 
 # Lokale Editor-/Tool-Hilfsdatei, nicht ins Repo (Spec liegt in PROJECT.md)
 CLAUDE.md
+
+# Next.js / TS Build-Cache
+apps/web/.next/
+*.tsbuildinfo
