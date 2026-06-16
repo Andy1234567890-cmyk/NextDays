@@ -1,15 +1,16 @@
-// Supabase-Browser-Client NUR für den Storybook-Austausch-Chat.
-// Nutzt den öffentlichen publishable-key (kein Geheimnis) und spricht
-// ausschließlich die isolierte Tabelle storybook_chat an.
-import { createClient } from "@supabase/supabase-js";
+// Supabase-Client für den Storybook-Chat. Nutzt den SSR-Browser-Client, damit
+// er DIESELBE Login-Session (Cookies) sieht wie der Storybook-Login — so kennt
+// der Chat den eingeloggten Nutzer und braucht keine zweite Anmeldung.
+import { createBrowserClient } from "@supabase/ssr";
 
-const url = import.meta.env.VITE_SUPABASE_URL as string;
-const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
+const url =
+  (import.meta.env.VITE_SUPABASE_URL as string) ||
+  (import.meta.env.NEXT_PUBLIC_SUPABASE_URL as string);
+const key =
+  (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string) ||
+  (import.meta.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY as string);
 
-export const chatCode = (import.meta.env.VITE_CHAT_CODE as string) ?? "";
-
-export const supabase = createClient(url, key, {
-  auth: { persistSession: false },
+export const supabase = createBrowserClient(url, key, {
   realtime: { params: { eventsPerSecond: 5 } },
 });
 

@@ -1,13 +1,9 @@
-// Realtime-Austausch-Chat für die Design-System-Werkstatt.
-// - Live über Supabase Realtime (Tabelle storybook_chat).
-// - Zugang per gemeinsamem Code (im Frontend geprüft) + Anzeigename.
-// - Isoliert von den PMS-Daten; nur Lesen/Schreiben von Chat-Nachrichten.
+// Realtime-Team-Chat für die Design-System-Werkstatt.
+// Name kommt automatisch aus dem eingeloggten Supabase-Account (kein zweiter
+// Login, keine Namensabfrage). Live über Supabase Realtime (Tabelle storybook_chat).
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { supabase, type ChatMessage } from "@/lib/supabase-chat";
-
-const LS_NAME = "nd_chat_name";
-const LS_OK = "nd_chat_ok";
 
 type TeamChatProps = {
   /** Optionales Thema (z. B. Komponentenname), das Nachrichten zugeordnet wird. */
@@ -15,26 +11,32 @@ type TeamChatProps = {
 };
 
 export function TeamChat({ topic }: TeamChatProps) {
-  const [unlocked, setUnlocked] = useState(false);
-  const [name, setName] = useState("");
-  const [nameInput, setNameInput] = useState("");
+  const [me, setMe] = useState<string>("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Zugang aus localStorage wiederherstellen.
+  // Eingeloggten Nutzer holen -> Anzeigename ableiten.
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (localStorage.getItem(LS_OK) === "1") setUnlocked(true);
-    const savedName = localStorage.getItem(LS_NAME);
-    if (savedName) setName(savedName);
+    let active = true;
+    supabase.auth.getUser().then(({ data }) => {
+      if (!active) return;
+      const u = data.user;
+      const name =
+        (u?.user_metadata?.name as string) ||
+        u?.email?.split("@")[0] ||
+        "Gast";
+      setMe(name);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
 
-  // Verlauf laden + Realtime abonnieren, sobald entsperrt.
+  // Verlauf laden + Realtime abonnieren.
   useEffect(() => {
-    if (!unlocked) return;
     let active = true;
 
     const load = async () => {
@@ -70,38 +72,24 @@ export function TeamChat({ topic }: TeamChatProps) {
       active = false;
       supabase.removeChannel(channel);
     };
-  }, [unlocked, topic]);
+  }, [topic]);
 
-  // Automatisch nach unten scrollen bei neuer Nachricht.
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [messages]);
 
-  // Kein Code mehr nötig — der Storybook-Login schützt bereits. Nur Anzeigename.
-  const unlock = useCallback(() => {
-    setError(null);
-    if (nameInput.trim().length < 2) {
-      setError("Bitte einen Namen (mind. 2 Zeichen) eingeben.");
-      return;
-    }
-    localStorage.setItem(LS_OK, "1");
-    localStorage.setItem(LS_NAME, nameInput.trim());
-    setName(nameInput.trim());
-    setUnlocked(true);
-  }, [nameInput]);
-
   const send = useCallback(async () => {
     const body = draft.trim();
-    if (!body) return;
+    if (!body || !me) return;
     setSending(true);
     setError(null);
     const { error: e } = await supabase
       .from("storybook_chat")
-      .insert({ author: name, body, topic: topic ?? null });
+      .insert({ author: me, body, topic: topic ?? null });
     setSending(false);
     if (e) setError(e.message);
     else setDraft("");
-  }, [draft, name, topic]);
+  }, [draft, me, topic]);
 
   const card: React.CSSProperties = {
     background: "var(--card)",
@@ -109,6 +97,8 @@ export function TeamChat({ topic }: TeamChatProps) {
     borderRadius: "var(--radius)",
     color: "var(--foreground)",
     fontFamily: "system-ui, sans-serif",
+    maxWidth: "40rem",
+    overflow: "hidden",
   };
   const inputStyle: React.CSSProperties = {
     width: "100%",
@@ -129,36 +119,8 @@ export function TeamChat({ topic }: TeamChatProps) {
     cursor: "pointer",
   };
 
-  if (!unlocked) {
-    return (
-      <div style={{ ...card, padding: "1.5rem", maxWidth: "26rem" }}>
-        <h3 style={{ marginTop: 0 }}>Wie heißt du?</h3>
-        <p style={{ color: "var(--muted-foreground)", fontSize: "0.9rem" }}>
-          Gib deinen Namen ein, dann kannst du live mitschreiben.
-        </p>
-        <div style={{ display: "grid", gap: "0.6rem" }}>
-          <input
-            style={inputStyle}
-            placeholder="Dein Name"
-            value={nameInput}
-            onChange={(e) => setNameInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && unlock()}
-          />
-          <button style={btn} onClick={unlock}>
-            Loslegen
-          </button>
-          {error ? (
-            <span style={{ color: "var(--destructive)", fontSize: "0.85rem" }}>
-              {error}
-            </span>
-          ) : null}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div style={{ ...card, maxWidth: "40rem", overflow: "hidden" }}>
+    <div style={card}>
       <div
         style={{
           padding: "0.75rem 1rem",
@@ -170,7 +132,7 @@ export function TeamChat({ topic }: TeamChatProps) {
       >
         <strong>Austausch{topic ? `: ${topic}` : ""}</strong>
         <span style={{ color: "var(--muted-foreground)", fontSize: "0.8rem" }}>
-          angemeldet als {name}
+          {me ? `als ${me}` : "…"}
         </span>
       </div>
 
@@ -191,11 +153,14 @@ export function TeamChat({ topic }: TeamChatProps) {
           </span>
         ) : (
           messages.map((m) => {
-            const mine = m.author === name;
+            const mine = m.author === me;
             return (
               <div
                 key={m.id}
-                style={{ alignSelf: mine ? "flex-end" : "flex-start", maxWidth: "80%" }}
+                style={{
+                  alignSelf: mine ? "flex-end" : "flex-start",
+                  maxWidth: "80%",
+                }}
               >
                 <div
                   style={{
@@ -216,7 +181,9 @@ export function TeamChat({ topic }: TeamChatProps) {
                 <div
                   style={{
                     background: mine ? "var(--primary)" : "var(--secondary)",
-                    color: mine ? "var(--primary-foreground)" : "var(--foreground)",
+                    color: mine
+                      ? "var(--primary-foreground)"
+                      : "var(--foreground)",
                     padding: "0.5rem 0.75rem",
                     borderRadius: "var(--radius)",
                     fontSize: "0.9rem",
@@ -247,7 +214,7 @@ export function TeamChat({ topic }: TeamChatProps) {
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && send()}
         />
-        <button style={btn} onClick={send} disabled={sending}>
+        <button style={btn} onClick={send} disabled={sending || !me}>
           {sending ? "…" : "Senden"}
         </button>
       </div>
