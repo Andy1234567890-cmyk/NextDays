@@ -158,6 +158,22 @@ Alle Endpoints erfordern Auth; `block`/`price-override` zusätzlich die Capabili
 
 ---
 
+## tasks (Logik implementiert — Lastenheft §2.5/§4.3)
+
+Aufgaben, Checklisten mit Foto-Nachweisen, Vertretung, Inventar.
+
+| Methode | Pfad | Capability | Beschreibung |
+|---|---|---|---|
+| `POST` | `/api/v1/tasks` | `manage_tasks` | Aufgabe anlegen |
+| `GET` | `/api/v1/tasks/mine` | `view_own_tasks` | eigene Aufgaben |
+| `POST` | `/api/v1/tasks/from-booking` | `manage_tasks` | aus Buchung: Anreise-Check + Endreinigung |
+| `POST` | `/api/v1/tasks/checklist/item` | `view_own_tasks` | Checklisten-Punkt |
+| `POST` | `/api/v1/tasks/checklist/photo` | `view_own_tasks` | Foto-Nachweis (unbegrenzt/Raum) |
+| `POST` | `/api/v1/tasks/substitution` | `request_substitute` | Vertretung anfragen (§4.3) |
+| `POST` | `/api/v1/tasks/inventory` | `manage_inventory` | Inventar (property_id null = zentraler Pool) |
+
+---
+
 ## Authentifizierung allgemein
 
 - Supabase-JWT (HS256), verifiziert in `core/security.py` gegen `SUPABASE_JWT_SECRET`.

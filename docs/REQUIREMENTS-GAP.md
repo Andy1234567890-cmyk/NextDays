@@ -25,7 +25,7 @@
 | 2.2 Multi-/Einzelkalender (Click-and-Hold) | `calendar` | 🟡 | Slice + `availability` da; UI-Interaktion, manuelle Preisüberschreibung im Kalender, Popup-Logik fehlen. |
 | 2.3 Saison-/Event-Management | `rates` | 🟡 | `rate_plans.season_rules` jsonb da, aber: taggenaue Saisons, Templates, Farb-Legende, Events (unterbrochene Zeiträume) = neue Tabellen. |
 | 2.4 Unified Inbox + Messaging | `inbox` | 🟡 | Slice + `messages` da; Trigger-System, Multi-Channel (SMS/OTA), Übersetzungs-Gateway, Rich-Text, Shortcodes fehlen. |
-| 2.5 Aufgaben-/Checklisten | — | 🔴 | Neuer `tasks`-Slice: Aufgaben, wiederkehrende Regeln, Foto-Checklisten, Inventar. |
+| 2.5 Aufgaben-/Checklisten | `tasks` | ✅ | Slice mit Logik: create/list/status, auto-Generierung bei Buchung (Anreise-Check + Endreinigung), Checklisten + Foto-Nachweise, Inventar (auch unterkunftslos), Vertretungs-Feature (§4.3). Datenmodell 0012+0019. Capability-geschützt. |
 | 2.6 CRM (Leads) + Partner/Deals | — | 🔴 | Neuer `crm`-Slice: `leads`, `partners`/`deals`. |
 
 ## C. Schnittstellen (Lastenheft §3)
