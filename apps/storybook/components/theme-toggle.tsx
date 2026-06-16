@@ -1,5 +1,3 @@
-"use client";
-
 // Theme-Umschalter (Light/Dark) für die Top-Bar — Iconify-Icons (PROJECT.md §6).
 import { Icon } from "@iconify/react";
 import { useTheme } from "next-themes";

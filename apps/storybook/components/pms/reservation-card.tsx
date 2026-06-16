@@ -7,7 +7,6 @@
 // (kein Nachname, keine Kontaktdaten) und nur Netto/Nacht. Diese Komponente
 // erhält daher bewusst ausschließlich `guestFirstName` — nie den vollständigen
 // Namen. Finanzen/Namen werden Mitarbeitern (staff/cleaner) gar nicht angezeigt.
-"use client";
 
 import { Icon } from "@iconify/react";
 import type { ComponentProps } from "react";

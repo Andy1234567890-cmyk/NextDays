@@ -1,7 +1,6 @@
 // Fachliche PMS-Komponente Aufgaben-Checkliste (Lastenheft §2.5, Tabelle task / checklist_item).
 // Task-Kopf (Titel, Fälligkeit, task_status-Badge) + checklist_items (Checkbox + Raum-Label)
 // mit Foto-Nachweis-Platzhalter je Item. Icons via Iconify — niemals lucide-react.
-"use client";
 
 import { Icon } from "@iconify/react";
 import { useState } from "react";

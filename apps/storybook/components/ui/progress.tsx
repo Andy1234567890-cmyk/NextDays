@@ -1,7 +1,6 @@
 // UI-Primitiv "Progress" (shadcn-Stil, Tailwind-v4-Tokens, CVA-Varianten).
 // Fortschrittsbalken (Wert 0-100) über semantische Token-Farben.
 // Icons via Iconify — niemals lucide-react (PROJECT.md §2).
-"use client";
 
 import { cva, type VariantProps } from "class-variance-authority";
 import type { ComponentProps } from "react";

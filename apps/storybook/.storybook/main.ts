@@ -38,21 +38,21 @@ const config: StorybookConfig = {
       ...(cfg.esbuild ?? {}),
       jsx: "automatic",
     };
-    // "use client"-Direktiven (Next.js/Radix) sind im Storybook-Bundle bedeutungslos.
-    // Rollup-Warnungen dazu unterdrücken, damit der Build-Log sauber bleibt.
-    cfg.build = cfg.build ?? {};
-    cfg.build.rollupOptions = cfg.build.rollupOptions ?? {};
-    const prevOnwarn = cfg.build.rollupOptions.onwarn;
-    cfg.build.rollupOptions.onwarn = (warning, warn) => {
-      if (
-        warning.code === "MODULE_LEVEL_DIRECTIVE" &&
-        /use client/.test(warning.message)
-      ) {
-        return;
-      }
-      if (typeof prevOnwarn === "function") prevOnwarn(warning, warn);
-      else warn(warning);
-    };
+    // "use client"-Direktiven braucht nur Next.js; im Storybook-Build (Vite/Rollup)
+    // sind sie bedeutungslos und erzeugen Warnungen. Hier an der Wurzel entfernen:
+    // das Plugin strippt die Direktive aus den Komponenten -> komplett sauberer Build.
+    cfg.plugins.push({
+      name: "strip-use-client",
+      enforce: "pre" as const,
+      transform(code: string, id: string) {
+        if (!/\.(t|j)sx?$/.test(id)) return null;
+        if (!/^\s*['"]use client['"]/.test(code)) return null;
+        return {
+          code: code.replace(/^\s*['"]use client['"];?\s*/, ""),
+          map: null,
+        };
+      },
+    });
     return cfg;
   },
 };

@@ -5,7 +5,6 @@
 //
 // Stil/Tokens streng nach BUILD_REFERENCE: nur semantische Token-Klassen
 // (keine Hex), Icons NUR via @iconify/react (ph:*), Radix wo sinnvoll (Tooltip).
-"use client";
 
 import { Icon } from "@iconify/react";
 import { cva, type VariantProps } from "class-variance-authority";

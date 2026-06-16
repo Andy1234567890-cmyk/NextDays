@@ -39,16 +39,27 @@ export async function GET(
   }
 
   let filePath = path.join(ROOT, rel);
+  let isIndex = false;
 
   try {
     const s = await stat(filePath).catch(() => null);
     // Verzeichnis oder leerer Pfad -> index.html (Storybook-Einstieg).
     if (!s || s.isDirectory()) {
       filePath = path.join(ROOT, rel, "index.html");
+      isIndex = true;
     }
-    const data = await readFile(filePath);
+    const raw = await readFile(filePath);
     const ext = path.extname(filePath).toLowerCase();
-    return new NextResponse(data, {
+
+    // In die index.html ein <base href="/sb/"> injizieren, damit die relativen
+    // Asset-Pfade des Storybooks IMMER auf /sb/ auflösen — egal ob /sb oder /sb/.
+    const body: BodyInit = isIndex
+      ? raw
+          .toString("utf-8")
+          .replace(/<head(\s[^>]*)?>/i, (m) => `${m}<base href="/sb/">`)
+      : new Uint8Array(raw);
+
+    return new NextResponse(body, {
       status: 200,
       headers: {
         "Content-Type": MIME[ext] ?? "application/octet-stream",

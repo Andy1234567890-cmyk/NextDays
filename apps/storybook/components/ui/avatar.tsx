@@ -1,6 +1,5 @@
 // Avatar-Primitiv (shadcn-Stil) auf Basis von @radix-ui/react-avatar.
 // Bild mit automatischem Initialen-Fallback; nur semantische Token-Klassen.
-"use client";
 
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import type { ComponentProps } from "react";

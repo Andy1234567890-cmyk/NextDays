@@ -1,5 +1,3 @@
-"use client";
-
 // next-themes Provider (class-Strategie, .dark auf <html>) — PROJECT.md §6.
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import type { ComponentProps } from "react";

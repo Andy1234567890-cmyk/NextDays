@@ -2,7 +2,6 @@
 // Vertikaler 8-stufiger Stepper für die Objekt-Inbetriebnahme: zeigt je Schritt den
 // Status (erledigt/aktiv/offen) mit Iconify-Checkmarks, optionaler Beschreibung
 // und Klick-Navigation. Responsive (vertikal, volle Breite). Icons via Iconify — niemals lucide-react.
-"use client";
 
 import { Icon } from "@iconify/react";
 import { useState } from "react";

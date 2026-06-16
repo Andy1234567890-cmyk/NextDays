@@ -2,7 +2,6 @@
 // Zeigt je Rolle (Zeile) an, welche Capabilities (Spalten) erlaubt sind — als Häkchen/Checkbox.
 // Nutzt table + checkbox + role-badge. Icons via Iconify (ph:*) — niemals lucide-react.
 // Nur semantische Token-Klassen, keine Hex-Werte.
-"use client";
 
 import { Icon } from "@iconify/react";
 import { useState } from "react";

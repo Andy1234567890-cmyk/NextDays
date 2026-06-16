@@ -1,6 +1,5 @@
 // UI-Primitiv "Switch" (shadcn-Stil, Radix-Primitive, Tailwind-v4-Tokens).
 // Icons via Iconify — niemals lucide-react (PROJECT.md §2).
-"use client";
 
 import * as SwitchPrimitive from "@radix-ui/react-switch";
 import type { ComponentProps } from "react";
