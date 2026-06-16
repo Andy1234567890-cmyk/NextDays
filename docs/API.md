@@ -14,7 +14,7 @@ Interaktive Doku (Swagger UI): **http://localhost:8000/docs**
 
 ## Slices
 
-Jeder der 12 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
+Jeder der 16 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
 
 | Slice | Health-Endpoint |
 |---|---|
@@ -176,7 +176,8 @@ Aufgaben, Checklisten mit Foto-Nachweisen, Vertretung, Inventar.
 
 ## Authentifizierung allgemein
 
-- Supabase-JWT (HS256), verifiziert in `core/security.py` gegen `SUPABASE_JWT_SECRET`.
+- Supabase-JWT **ES256 via JWKS** (modernes Supabase), verifiziert in `core/security.py`
+  über den JWKS-Endpoint; **HS256-Fallback** gegen `SUPABASE_JWT_SECRET` für lokale/ältere Setups.
 - `AuthContext` (`user_id`, `tenant_id`, `role`) wird aus den JWT-Claims gelesen.
 - Geschützte Endpoints nutzen die `CurrentUser`-Dependency.
 

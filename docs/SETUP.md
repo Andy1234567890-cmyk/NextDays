@@ -43,8 +43,8 @@ Relevante Werte: `API URL`, `anon key`, `service_role key`, `JWT secret`.
 supabase db reset
 ```
 
-Das spielt alle Migrationen aus `supabase/migrations/` (0001–0008) frisch ein:
-Tabellen, Enums, Indizes, RLS-Policies und Helper-Funktionen.
+Das spielt alle Migrationen aus `supabase/migrations/` (0001–0019) frisch ein:
+Tabellen (41), Enums, Indizes, RLS-Policies und Helper-Funktionen.
 
 > **Verifikation:** In Studio (http://localhost:54323) sollten alle Kern- und
 > Marktplatz-Tabellen sichtbar sein, mit aktivierter RLS.

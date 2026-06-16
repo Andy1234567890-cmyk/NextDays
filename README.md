@@ -147,7 +147,7 @@ Details & technische Diagramme (C4, ER, Sequenz, Deployment):
 | Backend | **FastAPI** (Python 3.12), Vertical Slice Architecture |
 | Datenbank/Auth/Storage | **Supabase** (Postgres, Auth, Storage), Multi-Tenant mit Row-Level-Security |
 | Cache & Queue | **Redis** |
-| Zahlungen | **Stripe** (Connect für Marktplatz-Auszahlungen) |
+| Zahlungen | **Revolut** (primär) · **Stripe** (sekundär) — Gateway-Adapter-Muster, vgl. [ADR-0003](docs/decisions/0003-zahlungs-gateway-revolut-primaer.md) |
 | Deployment | Web → Vercel · API → Hetzner (Coolify, Docker) · DSGVO-konform, self-hosted bevorzugt |
 
 ---
@@ -171,6 +171,15 @@ docker compose up
 # → API auf http://localhost:8000 · Docs auf http://localhost:8000/docs
 ```
 
+**Design-System / Storybook** (für UX/UI — zeigt alle Komponenten, Light/Dark, Design-Tokens):
+
+```bash
+cd apps/web
+bun install
+bun run storybook        # → http://localhost:6006
+# bun run build-storybook # statischer Build, als URL deploybar
+```
+
 Ausführliche Anleitung: **[docs/SETUP.md](docs/SETUP.md)**
 
 ---
@@ -188,12 +197,17 @@ nextdays/
 │   ├── API.md              # API-Übersicht (Slices, Endpoints)
 │   └── decisions/          # ADRs (Architecture Decision Records)
 ├── marketing/              # öffentliche Marketing-Website (ENTKOPPELT, eigenes Deployment)
+├── supabase/
+│   └── migrations/         # 19 Migrationen (Kern + Marktplatz + RLS), auf echter DB angewandt
 ├── apps/
 │   ├── web/                # Next.js — Vermieter-Dashboard + Portal
+│   │   ├── components/ui/  # shadcn-Stil-Komponenten (+ .stories.tsx)
+│   │   ├── styles/         # globals.css — Design-Tokens (einzige Quelle der Wahrheit)
+│   │   └── .storybook/     # Storybook (Design-System für UX/UI)
 │   └── api/                # FastAPI — gesamte Business-Logik
 │       └── src/
-│           ├── core/       # Config, Auth, Supabase, Logging
-│           └── features/   # Vertical Slices
+│           ├── core/       # Config, Auth (ES256/JWKS), Supabase, Logging
+│           └── features/   # 16 Vertical Slices (auth, calendar, tasks, payments, …)
 └── packages/
     └── shared/             # geteilte TS-Typen
 ```
@@ -205,12 +219,16 @@ nextdays/
 | Bereich | Status |
 |---|---|
 | Monorepo-Gerüst + Infra (Docker, Supabase-Config) | ✅ |
-| FastAPI `core/` (Config, Logging, Supabase, Auth) | ✅ |
-| 12 Vertical Slices (Health-Endpoints) | ✅ |
-| `auth`-Slice voll (Register/Login/Me/Rollen) | ✅ |
-| Supabase-Migrationen (Kern + Marktplatz, RLS) | ✅ geschrieben · ⏳ DB-Verifikation offen |
-| Web-Frontend (shadcn/Iconify/Themes) | ⏳ geplant |
-| Übrige Slices (properties, calendar, …) | ⏳ geplant |
+| FastAPI `core/` (Config, Logging, Supabase, Auth ES256/JWKS) | ✅ |
+| 16 Vertical Slices angelegt | ✅ |
+| `auth`-Slice voll (Register/Login/Me · Rollen · Capability-Matrix) | ✅ |
+| `calendar`-Slice (Verfügbarkeit, Sperrung, Preis-Override) | ✅ |
+| `tasks`-Slice (Aufgaben, Checklisten, Inventar, Vertretung) | ✅ |
+| `payments` (Gateway-Adapter Revolut/Stripe) | ✅ Gerüst · ⏳ Revolut-Implementierung |
+| Supabase-Migrationen (19) auf echter DB · 41 Tabellen · alle RLS · 0 Security-Advisors | ✅ |
+| Web-Frontend (shadcn-Stil · Iconify · next-themes · Tailwind v4) | ✅ |
+| Storybook (Design-System, Light/Dark, Token-Übersicht) | ✅ |
+| Inbox/Messaging · Channel-Adapter · CRM/Dashboard-Logik · Gäste-Portal | ⏳ geplant |
 
 Aktueller Detail-Stand & nächste Schritte: **[NOTES.md](NOTES.md)**
 
@@ -223,7 +241,9 @@ Aktueller Detail-Stand & nächste Schritte: **[NOTES.md](NOTES.md)**
 - **[docs/SETUP.md](docs/SETUP.md)** — lokales Entwicklungs-Setup
 - **[docs/CONTRIBUTING.md](docs/CONTRIBUTING.md)** — Arbeitsweise & Konventionen
 - **[docs/API.md](docs/API.md)** — API-Übersicht
-- **[docs/decisions/](docs/decisions/)** — Architecture Decision Records
+- **[docs/LASTENHEFT.md](docs/LASTENHEFT.md)** — vollständiges Lastenheft (Anforderungen)
+- **[docs/REQUIREMENTS-GAP.md](docs/REQUIREMENTS-GAP.md)** — Soll/Ist-Abgleich & Roadmap
+- **[docs/decisions/](docs/decisions/)** — 8 Architecture Decision Records (Channel Manager, Marketing-Entkopplung, Revolut, i18n, Rundung, Preismodell, Ökosystem, Storybook)
 
 ---
 

@@ -198,7 +198,7 @@ erDiagram
     USER {
         uuid id PK "== auth.users.id"
         uuid tenant_id FK
-        enum role "owner|staff|cleaner"
+        enum role "admin|co_admin|owner|staff|cleaner"
         string email
     }
     PROPERTY {
@@ -245,7 +245,8 @@ erDiagram
         uuid reservation_id FK
         numeric amount
         enum type "deposit|full|refund"
-        string stripe_ref
+        enum gateway "revolut|stripe"
+        string gateway_ref
     }
     MESSAGE {
         uuid id PK
@@ -255,8 +256,10 @@ erDiagram
     }
 ```
 
-**Marktplatz-Tabellen (Phase 2, Struktur vorbereitet):** `portal_guests`, `reviews`,
-`commissions` — siehe [Migration 0006](../supabase/migrations/0006_marketplace.sql).
+**Marktplatz-Tabellen (angelegt, mit RLS; Geschäftslogik in Phase 2):** `portal_guests`,
+`reviews`, `commissions` — siehe [Migration 0006](../supabase/migrations/0006_marketplace.sql).
+Das Kern-Diagramm oben zeigt bewusst nur die zentralen Entitäten; alle übrigen der
+**41 Tabellen** sind nach Bereich gruppiert im nächsten Abschnitt aufgeführt.
 
 **Kardinalität:** `||` = genau eins · `o{` = null bis viele · `|{` = ein bis viele.
 `--` = identifizierend (Kind kann ohne Eltern nicht existieren).
@@ -279,6 +282,7 @@ erDiagram
 
     TENANT ||--o{ TASK : has
     TENANT ||--o{ TASK_RULE : "wiederkehrend"
+    TASK_RULE ||--o{ TASK_RULE_ASSIGNMENT : "je Objekt"
     TASK ||--o{ CHECKLIST_ITEM : enthaelt
     CHECKLIST_ITEM ||--o{ CHECKLIST_PHOTO : "Foto-Nachweis"
     TASK ||--o{ TASK_SUBSTITUTION : "Vertretung"
