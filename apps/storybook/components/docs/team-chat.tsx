@@ -4,11 +4,7 @@
 // - Isoliert von den PMS-Daten; nur Lesen/Schreiben von Chat-Nachrichten.
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import {
-  chatCode,
-  supabase,
-  type ChatMessage,
-} from "@/lib/supabase-chat";
+import { supabase, type ChatMessage } from "@/lib/supabase-chat";
 
 const LS_NAME = "nd_chat_name";
 const LS_OK = "nd_chat_ok";
@@ -21,7 +17,6 @@ type TeamChatProps = {
 export function TeamChat({ topic }: TeamChatProps) {
   const [unlocked, setUnlocked] = useState(false);
   const [name, setName] = useState("");
-  const [codeInput, setCodeInput] = useState("");
   const [nameInput, setNameInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState("");
@@ -82,12 +77,9 @@ export function TeamChat({ topic }: TeamChatProps) {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, [messages]);
 
+  // Kein Code mehr nötig — der Storybook-Login schützt bereits. Nur Anzeigename.
   const unlock = useCallback(() => {
     setError(null);
-    if (codeInput.trim() !== chatCode) {
-      setError("Falscher Zugangscode.");
-      return;
-    }
     if (nameInput.trim().length < 2) {
       setError("Bitte einen Namen (mind. 2 Zeichen) eingeben.");
       return;
@@ -96,7 +88,7 @@ export function TeamChat({ topic }: TeamChatProps) {
     localStorage.setItem(LS_NAME, nameInput.trim());
     setName(nameInput.trim());
     setUnlocked(true);
-  }, [codeInput, nameInput]);
+  }, [nameInput]);
 
   const send = useCallback(async () => {
     const body = draft.trim();
@@ -140,10 +132,9 @@ export function TeamChat({ topic }: TeamChatProps) {
   if (!unlocked) {
     return (
       <div style={{ ...card, padding: "1.5rem", maxWidth: "26rem" }}>
-        <h3 style={{ marginTop: 0 }}>Austausch — Anmeldung</h3>
+        <h3 style={{ marginTop: 0 }}>Wie heißt du?</h3>
         <p style={{ color: "var(--muted-foreground)", fontSize: "0.9rem" }}>
-          Gemeinsamer Zugangscode und dein Name. Danach kannst du live
-          mitschreiben.
+          Gib deinen Namen ein, dann kannst du live mitschreiben.
         </p>
         <div style={{ display: "grid", gap: "0.6rem" }}>
           <input
@@ -151,17 +142,10 @@ export function TeamChat({ topic }: TeamChatProps) {
             placeholder="Dein Name"
             value={nameInput}
             onChange={(e) => setNameInput(e.target.value)}
-          />
-          <input
-            style={inputStyle}
-            type="password"
-            placeholder="Zugangscode"
-            value={codeInput}
-            onChange={(e) => setCodeInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && unlock()}
           />
           <button style={btn} onClick={unlock}>
-            Beitreten
+            Loslegen
           </button>
           {error ? (
             <span style={{ color: "var(--destructive)", fontSize: "0.85rem" }}>
