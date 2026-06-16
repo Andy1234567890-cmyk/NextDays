@@ -20,6 +20,13 @@ const config: StorybookConfig = {
       ...(cfg.resolve.alias ?? {}),
       "@": projectRoot.replace(/\/$/, ""),
     };
+    // Automatischer JSX-Runtime: JSX wird zu jsx()-Aufrufen, kein globales
+    // `React` nötig. Verhindert "React is not defined" im Production-Build,
+    // da tsconfig.json bewusst "jsx": "preserve" für Next.js nutzt.
+    cfg.esbuild = {
+      ...(cfg.esbuild ?? {}),
+      jsx: "automatic",
+    };
     return cfg;
   },
 };
