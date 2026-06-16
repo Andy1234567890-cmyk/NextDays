@@ -13,13 +13,13 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "types": ["node"],
-    "baseUrl": ".",
     "paths": { "@/*": ["./*"] }
   },
   "include": [
     "components/**/*",
     "stories/**/*",
     "lib/**/*",
+    "types/**/*",
     ".storybook/**/*"
   ]
 }
