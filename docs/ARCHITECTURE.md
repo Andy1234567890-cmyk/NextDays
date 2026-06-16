@@ -79,7 +79,7 @@ C4Container
     Container_Boundary(nd, "NextDays") {
         Container(marketing, "Marketing-Website", "Next.js (entkoppelt)", "Landing/Pricing/Blog — KEINE PMS/Auth-Kopplung (ADR-0002)")
         Container(web, "Web Dashboard", "Next.js, TypeScript", "Vermieter-PMS-UI + Portale (Vercel)")
-        Container(storybook, "Storybook", "react-vite", "Komponenten-Doku + Design-System (ADR-0008), Light/Dark, Token-Übersicht")
+        Container(storybook, "Storybook", "react-vite (eigenes Package apps/storybook)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
         Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 16 Vertical Slices unter /api/v1")
         ContainerDb(db, "Datenbank", "Supabase / Postgres", "41 Tabellen, Multi-Tenant, RLS, tenant_id")
         ContainerDb(cache, "Cache", "Redis", "Caching-Layer")
@@ -93,7 +93,7 @@ C4Container
 
     Rel(landlord, web, "Nutzt", "HTTPS")
     Rel(guest, web, "Bucht", "HTTPS")
-    Rel(web, storybook, "teilt Komponenten/Tokens", "Build-Zeit")
+    Rel(storybook, web, "fertige Komponenten übernehmen", "manuell/Build-Zeit")
     Rel(web, api, "Ruft auf", "JSON/HTTPS")
     Rel(api, db, "Liest/schreibt", "SQL (RLS)")
     Rel(api, cache, "Liest/schreibt", "Redis-Protokoll")
@@ -575,17 +575,25 @@ Alle Router unter dem gemeinsamen Prefix **`/api/v1`** (versioniert von Anfang a
 - Status-Tokens `--success` / `--warning` in `globals.css` ergänzt (für die
   Status-Badges), weiterhin als semantische Tokens — kein Hardcoding.
 
+**Trennung App ↔ Design-System (bewusst entkoppelt):** Das Storybook ist ein
+**eigenständiges Package `apps/storybook`** — die Werkstatt des UX/UI-Designers.
+UI-Komponenten entstehen dort; eine fertige Komponente wird **erst dann** ins
+Web-Projekt `apps/web` übernommen. So bleibt `apps/web` schlank und enthält keine
+in Entwicklung befindlichen Komponenten.
+
 ```
-apps/web/
+apps/web/                # Next.js — App-Gerüst (Dashboard/Portal)
 ├── app/                 # Route-Gruppen (auth)/(dashboard)/(public)
+└── lib/supabase/        # Browser- + Server-Client (@supabase/ssr)
+
+apps/storybook/          # Design-System & Komponenten-Doku (eigenes Package, eigenes Vercel)
 ├── components/
-│   ├── ui/              # 22 shadcn-Stil-Primitive (+ .stories.tsx)
-│   ├── pms/             # 15 fachliche PMS-Komponenten (+ .stories.tsx)
-│   ├── theme-provider.tsx · theme-toggle.tsx
-├── lib/
-│   ├── supabase/        # Browser- + Server-Client (@supabase/ssr)
-│   └── utils.ts         # cn()
-├── stories/             # 7 Eigentümer-Doku-Seiten (MDX) + Design/Tokens
+│   ├── ui/              # 22 shadcn-Stil-Primitive
+│   └── pms/             # 15 fachliche PMS-Komponenten
+├── stories/
+│   ├── ui/ · pms/       # Stories je Komponente
+│   └── *.mdx            # 7 Eigentümer-Doku-Seiten + Design/Tokens
+├── lib/utils.ts         # cn()
 ├── styles/globals.css   # Tailwind v4 @theme — Tokens (Quelle der Wahrheit)
 └── .storybook/          # main.ts · preview.tsx · BUILD_REFERENCE.md (Bau-Standard)
 ```

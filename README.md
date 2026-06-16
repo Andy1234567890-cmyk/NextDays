@@ -177,7 +177,7 @@ docker compose up
 Lokal entwickeln (zeigt alle Komponenten, Light/Dark, Design-Tokens):
 
 ```bash
-cd apps/web
+cd apps/storybook        # eigenständiges Design-System-Package
 bun install
 bun run storybook        # → http://localhost:6006
 # bun run build-storybook # statischer Build, als URL deploybar
@@ -203,10 +203,12 @@ nextdays/
 ├── supabase/
 │   └── migrations/         # 19 Migrationen (Kern + Marktplatz + RLS), auf echter DB angewandt
 ├── apps/
-│   ├── web/                # Next.js — Vermieter-Dashboard + Portal
-│   │   ├── components/ui/  # shadcn-Stil-Komponenten (+ .stories.tsx)
+│   ├── web/                # Next.js — Vermieter-Dashboard + Portal (App-Gerüst)
+│   ├── storybook/          # Design-System & Komponenten-Werkstatt (eigenes Package)
+│   │   ├── components/     # ui/ + pms/ — entstehen HIER (Designer)
+│   │   ├── stories/        # Stories (ui/ + pms/) + Eigentümer-Doku (MDX)
 │   │   ├── styles/         # globals.css — Design-Tokens (einzige Quelle der Wahrheit)
-│   │   └── .storybook/     # Storybook (Design-System für UX/UI)
+│   │   └── .storybook/     # Storybook-Konfiguration
 │   └── api/                # FastAPI — gesamte Business-Logik
 │       └── src/
 │           ├── core/       # Config, Auth (ES256/JWKS), Supabase, Logging
@@ -214,6 +216,10 @@ nextdays/
 └── packages/
     └── shared/             # geteilte TS-Typen
 ```
+
+> **Design-System-Workflow:** UI-Komponenten entstehen in `apps/storybook`
+> (Werkstatt des Designers). Erst wenn eine Komponente fertig ist, wird sie ins
+> Web-Projekt (`apps/web`) übernommen. `apps/web` bleibt bis dahin schlank.
 
 ---
 

@@ -13,9 +13,14 @@ es braucht eine lebende, code-nahe Komponenten-Doku.
 
 ## Entscheidung
 
-**Storybook** wird das Komponenten-Doku- und Design-System-Werkzeug für `apps/web`.
+**Storybook** ist ein **eigenständiges Package `apps/storybook`** — die Werkstatt
+des UX/UI-Designers, getrennt vom Web-Projekt.
 
-- Builder: **`@storybook/react-vite`** (stabil mit Next.js 15 + React 19; der
+- **Trennung App ↔ Design-System:** UI-Komponenten entstehen in `apps/storybook`
+  (eigene `package.json`, eigenes Vercel-Projekt). Eine fertige Komponente wird
+  **erst dann** ins Web-Projekt `apps/web` übernommen. Das verhindert die
+  Vermischung von App-Code mit noch in Entwicklung befindlichen Komponenten.
+- Builder: **`@storybook/react-vite`** (stabil mit React 19; der
   Webpack/`@storybook/nextjs`-Builder scheiterte mit Next 15).
 - **Light/Dark-Umschalter** in der Toolbar via `@storybook/addon-themes`
   (`.dark`-Klasse, identisch zur App).

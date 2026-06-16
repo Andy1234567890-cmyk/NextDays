@@ -24,3 +24,5 @@ apps/web/storybook-static/
 
 # Lokale Tool-/Session-Artefakte
 .claude/
+apps/storybook/storybook-static/
+.vercel/
