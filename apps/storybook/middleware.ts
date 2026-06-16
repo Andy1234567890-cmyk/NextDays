@@ -7,15 +7,16 @@ import { updateSession } from "@/lib/supabase-server";
 
 const PUBLIC_PATHS = ["/login", "/auth"];
 
-// Allowlist: NUR diese E-Mails dürfen ins Storybook — unabhängig davon, ob
-// sich jemand sonst einen Supabase-Account anlegen kann (PMS bleibt unberührt).
-// Erweiterbar über die Env STORYBOOK_ALLOWED_EMAILS (kommagetrennt).
-const ALLOWED = new Set(
-  (process.env.STORYBOOK_ALLOWED_EMAILS ?? "a.staudinger32@gmail.com")
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter(Boolean),
-);
+// Optionale strikte Allowlist. Wenn gesetzt (STORYBOOK_ALLOWED_EMAILS), dürfen
+// NUR diese E-Mails rein. Wenn LEER, darf jeder eingeloggte Nutzer rein — das
+// ist sicher, weil Accounts ausschließlich von Admins über /admin angelegt
+// werden (kein Self-Signup im Storybook-Flow).
+const RAW_ALLOWED = (process.env.STORYBOOK_ALLOWED_EMAILS ?? "")
+  .split(",")
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
+const ALLOWED = new Set(RAW_ALLOWED);
+const STRICT = ALLOWED.size > 0;
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -25,10 +26,17 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  // API-Routen prüfen die Session selbst und antworten mit JSON (403) statt
+  // Redirect — sonst bekäme der Browser-Fetch eine Login-HTML-Seite zurück.
+  if (pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
+
   const { response, user } = await updateSession(request);
 
-  // Keine Session ODER E-Mail nicht auf der Allowlist -> raus.
-  if (!user || !ALLOWED.has((user.email ?? "").toLowerCase())) {
+  // Keine Session -> raus. Bei strikter Allowlist zusätzlich E-Mail prüfen.
+  const ok = user && (!STRICT || ALLOWED.has((user.email ?? "").toLowerCase()));
+  if (!ok) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/login";
     loginUrl.searchParams.set("next", pathname);
