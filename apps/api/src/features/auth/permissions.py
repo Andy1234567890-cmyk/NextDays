@@ -41,6 +41,13 @@ class Capability(StrEnum):
     # Eigentümer-spezifisch
     ADD_METER_READING = "add_meter_reading"
     BOOK_SERVICES = "book_services"
+    MANAGE_NOTIFICATION_PREFS = "manage_notification_prefs"  # §4.2 SMS/E-Mail/aus
+    # Mitarbeiter-spezifisch (§4.3)
+    MANAGE_OWN_AVAILABILITY = "manage_own_availability"  # Urlaub/Verfügbarkeit
+    REQUEST_SUBSTITUTE = "request_substitute"            # Vertretungs-Feature
+    # Verwaltung / System (§4.1)
+    RECEIVE_SYSTEM_ALERTS = "receive_system_alerts"      # System-Warnungen erhalten
+    ASSIGN_STAFF_TO_PROPERTY = "assign_staff_to_property"  # Stamm-Mitarbeiter
     # Gäste-Daten
     VIEW_GUEST_FULL = "view_guest_full"      # voller Name + Preise
     VIEW_GUEST_LIMITED = "view_guest_limited"  # nur Vorname / Belegungszeit
@@ -49,6 +56,8 @@ class Capability(StrEnum):
 # Volle Fähigkeiten (admin = alles).
 _ALL: frozenset[Capability] = frozenset(Capability)
 
+# Co-Admin (§4.1): operative Rechte Eigentümer+Mitarbeiter kombiniert,
+# erhält System-Warnungen, kann Mitarbeiter Häusern zuweisen.
 _CO_ADMIN: frozenset[Capability] = frozenset({
     Capability.MANAGE_PROPERTIES,
     Capability.MANAGE_INVENTORY,
@@ -59,21 +68,31 @@ _CO_ADMIN: frozenset[Capability] = frozenset({
     Capability.VIEW_CALENDAR,
     Capability.APPROVE_BLOCK,
     Capability.VIEW_GUEST_FULL,
+    Capability.RECEIVE_SYSTEM_ALERTS,
+    Capability.ASSIGN_STAFF_TO_PROPERTY,
 })
 
+# Eigentümer (§4.2): Daten-Split, Sperrung beantragen, Zählerstände, Services
+# buchen, Reports + eigenes Benachrichtigungsmenü.
 _OWNER: frozenset[Capability] = frozenset({
     Capability.VIEW_CALENDAR,
     Capability.REQUEST_BLOCK,
     Capability.ADD_METER_READING,
     Capability.BOOK_SERVICES,
     Capability.VIEW_OWNER_REPORTS,
+    Capability.MANAGE_NOTIFICATION_PREFS,
     Capability.VIEW_GUEST_LIMITED,  # nur Vorname, kein Gesamtpreis (§4.2)
 })
 
+# Mitarbeiter/Dienstleister (§4.3): operativ, eigene Verfügbarkeiten,
+# Vertretung anfragen. KEINE Finanzen/Reports/Namen.
 _STAFF: frozenset[Capability] = frozenset({
     Capability.VIEW_OWN_TASKS,
-    Capability.MANAGE_INVENTORY,     # hausspezifische Inventarlisten
-    Capability.VIEW_GUEST_LIMITED,   # nur Belegungszeit, keine Namen (§4.3)
+    Capability.MANAGE_INVENTORY,        # hausspezifische Inventarlisten
+    Capability.MANAGE_OWN_AVAILABILITY,
+    Capability.REQUEST_SUBSTITUTE,
+    Capability.MANAGE_NOTIFICATION_PREFS,
+    Capability.VIEW_GUEST_LIMITED,      # nur Belegungszeit, keine Namen (§4.3)
 })
 
 ROLE_CAPABILITIES: dict[UserRole, frozenset[Capability]] = {

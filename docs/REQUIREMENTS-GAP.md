@@ -41,7 +41,7 @@
 
 | Anforderung | Status | Hinweis |
 |---|---|---|
-| Rollen owner/staff/cleaner | 🟡 | Enum vorhanden, aber Lastenheft braucht **`admin`, `co-admin`** zusätzlich + granulare Toggle-Matrix. |
+| Rollen owner/staff/cleaner + admin/co_admin | ✅ | Enum + granulare Capability-Matrix (auth/permissions.py) bildet §4 vollständig ab: Co-Admin System-Alerts + Staff-Zuweisung, Owner Notification-Prefs, Staff Verfügbarkeit + Vertretung. Tenant-Gründer = admin; invite legt weitere Rollen an (E2E gegen echte DB verifiziert). |
 | Eigentümer-Daten-Split (Vorname, Netto/Nacht) | 🔴 | Feldsichtbarkeit pro Rolle — RLS + View-Logik + Frontend. |
 | Sperrung beantragen → Admin-Freigabe | 🔴 | Workflow + `block_requests`-Tabelle. |
 | Zählerstände (append-only) | 🔴 | `meter_readings`-Tabelle, RLS verbietet Update/Delete für owner. |

@@ -105,6 +105,21 @@ Erfordert `Authorization: Bearer <access_token>`.
 
 `401` ohne/mit ungültigem Token.
 
+### `POST /api/v1/auth/invite` → `201`
+
+Lädt weiteren Nutzer in den eigenen Tenant ein. Erfordert `MANAGE_STAFF`
+(admin/co_admin). Rolle aus dem Request (`co_admin|owner|staff|cleaner`; `admin`
+entsteht nur per register). Tenant aus dem eingeloggten Nutzer.
+
+```json
+// Request
+{ "email": "staff@example.de", "password": "min8zeichen",
+  "full_name": "Mitarbeiter", "role": "staff" }
+// Response 201
+{ "user_id": "uuid", "email": "staff@example.de", "role": "staff",
+  "tenant_id": "uuid" }
+```
+
 ### Rollen-Guard
 
 `require_role(...)` (in `features/auth/dependencies.py`) ist eine

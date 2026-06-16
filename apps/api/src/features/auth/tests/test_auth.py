@@ -106,6 +106,32 @@ def test_cleaner_matches_staff() -> None:
     assert capabilities_for(UserRole.cleaner) == capabilities_for(UserRole.staff)
 
 
+# --- Lastenheft §4: explizite Anforderungen pro Rolle ---
+
+def test_co_admin_receives_alerts_and_assigns_staff() -> None:
+    # §4.1: Co-Admin erhält System-Warnungen und kann Mitarbeiter zuweisen.
+    assert has_capability(UserRole.co_admin, Capability.RECEIVE_SYSTEM_ALERTS)
+    assert has_capability(UserRole.co_admin, Capability.ASSIGN_STAFF_TO_PROPERTY)
+
+
+def test_owner_manages_notification_prefs() -> None:
+    # §4.2: Eigentümer hat selbstverwaltetes Benachrichtigungsmenü.
+    assert has_capability(UserRole.owner, Capability.MANAGE_NOTIFICATION_PREFS)
+    # aber weiterhin KEINE Mitarbeiter-Zuweisung/System-Alerts.
+    assert not has_capability(UserRole.owner, Capability.ASSIGN_STAFF_TO_PROPERTY)
+
+
+def test_staff_availability_and_substitute() -> None:
+    # §4.3: Mitarbeiter verwaltet eigene Verfügbarkeiten + Vertretung anfragen.
+    assert has_capability(UserRole.staff, Capability.MANAGE_OWN_AVAILABILITY)
+    assert has_capability(UserRole.staff, Capability.REQUEST_SUBSTITUTE)
+
+
+def test_admin_still_has_everything() -> None:
+    # admin muss auch nach Erweiterung der Matrix ALLE Capabilities haben.
+    assert set(capabilities_for(UserRole.admin)) == set(Capability)
+
+
 def test_unknown_role_has_no_capabilities() -> None:
     assert capabilities_for(None) == frozenset()
     assert capabilities_for("nonsense") == frozenset()
