@@ -8,8 +8,8 @@ Diese Datei ist die einzige Quelle der Wahrheit für den Komponenten-Bau. Nicht 
 - Varianten via `class-variance-authority` (cva) + `VariantProps`.
 - Radix-Primitive nutzen, wo sinnvoll (Dialog, Tabs, Checkbox, Switch, Select, Tooltip, Popover, Avatar, Label, Separator, Accordion, DropdownMenu).
 - Icons NUR via `@iconify/react` (`<Icon icon="ph:..." />`) — NIEMALS lucide-react.
-- KEINE hartkodierten Hex-Farben. Nur semantische Token-Klassen: `bg-background text-foreground bg-primary text-primary-foreground bg-accent text-accent-foreground bg-secondary text-muted-foreground border-border ring-[var(--ring)] bg-destructive`.
-- Radius: `rounded-[var(--radius)]`.
+- KEINE hartkodierten Hex-Farben. Nur semantische Token-Klassen: `bg-background text-foreground bg-primary text-primary-foreground bg-accent text-accent-foreground bg-secondary text-muted-foreground border-border ring-ring bg-destructive`.
+- Radius: `rounded-(--radius)`. Tailwind-v4-Kurzsyntax verwenden — NICHT `rounded-[var(--radius)]`/`ring-[var(--ring)]`; boolesche data-Attribute als `data-disabled:`.
 - Kommentare auf Deutsch, knapp.
 
 ## Story-Standard (Storybook 8, react-vite)
