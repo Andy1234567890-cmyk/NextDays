@@ -1,0 +1,10 @@
+{
+  "// Hinweis": "Tailwind v4: CSS-basierte Konfiguration. Quelle der Design-Tokens liegt im Storybook-Package.",
+  "tailwindCSS.experimental.configFile": {
+    "apps/storybook/styles/globals.css": "apps/storybook/**"
+  },
+  "tailwindCSS.classFunctions": ["cn", "cva"],
+  "files.associations": {
+    "*.css": "tailwindcss"
+  }
+}
