@@ -49,7 +49,8 @@ C4Context
     System_Ext(booking, "Booking.com", "OTA-Kanal")
     System_Ext(airbnb, "Airbnb", "OTA-Kanal")
     System_Ext(vrbo, "Vrbo / Expedia", "OTA-Kanal")
-    System_Ext(stripe, "Stripe", "Zahlungen, Connect-Auszahlungen")
+    System_Ext(revolut, "Revolut Business", "Zahlungen (primär)")
+    System_Ext(stripe, "Stripe", "Zahlungen (sekundär)")
     System_Ext(google, "Google APIs", "Maps/Places, Translate")
 
     Rel(landlord, pms, "Verwaltet Listings, Raten, Kalender")
@@ -57,7 +58,8 @@ C4Context
     Rel(pms, booking, "Zwei-Wege-Sync", "Connectivity API")
     Rel(pms, airbnb, "Zwei-Wege-Sync", "Partner API / Webhooks")
     Rel(pms, vrbo, "Zwei-Wege-Sync", "API")
-    Rel(pms, stripe, "Zahlungen, Auszahlungen", "HTTPS/API")
+    Rel(pms, revolut, "Zahlungen, Kautionen", "HTTPS/API")
+    Rel(pms, stripe, "Zahlungen (Fallback)", "HTTPS/API")
     Rel(pms, google, "Geocoding, Übersetzung", "HTTPS/API")
 ```
 
@@ -75,31 +77,63 @@ C4Container
     Person(guest, "Gast", "Bucht über Portal/Widget")
 
     Container_Boundary(nd, "NextDays") {
-        Container(web, "Web Dashboard", "Next.js, TypeScript", "Vermieter-PMS-UI + Portal (Vercel)")
-        Container(api, "API Backend", "FastAPI, Python", "Gesamte Business-Logik, Vertical Slices")
-        ContainerDb(db, "Datenbank", "Supabase / Postgres", "Multi-Tenant, RLS, tenant_id")
+        Container(marketing, "Marketing-Website", "Next.js (entkoppelt)", "Landing/Pricing/Blog — KEINE PMS/Auth-Kopplung (ADR-0002)")
+        Container(web, "Web Dashboard", "Next.js, TypeScript", "Vermieter-PMS-UI + Portale (Vercel)")
+        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 16 Vertical Slices unter /api/v1")
+        ContainerDb(db, "Datenbank", "Supabase / Postgres", "41 Tabellen, Multi-Tenant, RLS, tenant_id")
         ContainerDb(cache, "Cache", "Redis", "Caching-Layer")
-        ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel-Sync, OCR-Jobs")
+        ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel-Sync, OCR, Messaging-Trigger, wiederkehrende Aufgaben")
     }
 
-    System_Ext(stripe, "Stripe", "Zahlungen")
+    System_Ext(revolut, "Revolut", "Zahlungen (primär)")
+    System_Ext(stripe, "Stripe", "Zahlungen (sekundär)")
     System_Ext(booking, "Booking.com", "OTA")
     System_Ext(google, "Google APIs", "Maps/Translate")
 
     Rel(landlord, web, "Nutzt", "HTTPS")
     Rel(guest, web, "Bucht", "HTTPS")
     Rel(web, api, "Ruft auf", "JSON/HTTPS")
-    Rel(api, db, "Liest/schreibt", "SQL")
+    Rel(api, db, "Liest/schreibt", "SQL (RLS)")
     Rel(api, cache, "Liest/schreibt", "Redis-Protokoll")
     Rel(api, queue, "Reiht Jobs ein", "Redis")
     Rel(queue, booking, "ARI-Push / Reservierungs-Poll", "Connectivity API")
-    Rel(api, stripe, "Charges, Payouts", "API")
+    Rel(api, revolut, "Charges, Kautionen", "API")
+    Rel(api, stripe, "Charges (Fallback)", "API")
     Rel(api, google, "Geocoding, Übersetzung", "API")
 ```
 
 > **Hinweis zur C4-Notation:** „Container" meint hier eine *separat ausführbare App
 > oder einen Datastore* (Next.js, FastAPI, Postgres, Redis) — nicht zwingend einen
-> Docker-Container.
+> Docker-Container. Die Marketing-Website ist bewusst entkoppelt (eigenes Deployment).
+
+### Slice-Landkarte (Component-Ebene, API-Backend)
+
+Die 16 Vertical Slices und ihre Datenbereiche — der Stand der Geschäftslogik:
+
+```mermaid
+flowchart TB
+    subgraph API["API Backend (FastAPI) — /api/v1"]
+        subgraph CORE["core/ (Querschnitt)"]
+            CFG["config · logging · supabase · security (JWT ES256/JWKS)"]
+        end
+        subgraph DONE["Slices mit Logik"]
+            AUTH["auth — Register/Login/Me/Invite, Rollen+Capability-Matrix"]
+            CAL["calendar — Verfügbarkeit, Double-Booking, Preis-Override"]
+            TASKS["tasks — Aufgaben, Checklisten+Foto, Vertretung, Inventar"]
+        end
+        subgraph SCAFFOLD["Slices als Gerüst (Health) — folgen lt. Roadmap"]
+            PROP["properties"]; RATES["rates"]; RES["reservations"]
+            GUE["guests"]; INBOX["inbox"]; PAY["payments (Revolut-Adapter)"]
+            CM["channel_manager"]; BOOK["booking_engine"]; OCR["ocr"]
+            PORTAL["public_portal"]; CRM["crm"]; DASH["dashboard"]; CONT["content"]
+        end
+    end
+    DB[("Postgres — 41 Tabellen, RLS")]
+    DONE --> DB
+    SCAFFOLD --> DB
+    CORE --> DONE
+    CORE --> SCAFFOLD
+```
 
 ---
 
@@ -222,19 +256,56 @@ erDiagram
 **Marktplatz-Tabellen (Phase 2, Struktur vorbereitet):** `portal_guests`, `reviews`,
 `commissions` — siehe [Migration 0006](../supabase/migrations/0006_marketplace.sql).
 
-**Lastenheft-Erweiterung (Migrationen 0009–0015):** Das Modell wuchs auf **38
-Tabellen, alle mit RLS** (gegen eine echte Postgres-Instanz verifiziert). Neu u. a.:
-`property_type` + `type_attributes` (Ökosystem, ADR-0007), `surcharges`,
-`season_templates`/`seasons`/`season_periods`/`events`, `tasks`/`checklist_items`/
-`checklist_photos`/`inventory_items`, `leads`/`partners`/`deals`,
-`message_templates`/`message_triggers`, `content_blocks`, `block_requests`,
-`meter_readings` (append-only), `co_owners`, `dashboard_layouts`,
-`plans`/`subscriptions` (unit-basiertes Preismodell, ADR-0006). Rollen-Enum
-erweitert um `admin`, `co_admin`. `payments`: `stripe_ref` → `gateway_ref` +
-`gateway`-Enum (ADR-0003).
-
 **Kardinalität:** `||` = genau eins · `o{` = null bis viele · `|{` = ein bis viele.
 `--` = identifizierend (Kind kann ohne Eltern nicht existieren).
+
+### Datenmodell-Erweiterungen aus dem Lastenheft (Migrationen 0009–0019)
+
+Das Modell ist auf **41 Tabellen (alle mit RLS)** gewachsen — verifiziert gegen das
+echte Supabase-Projekt. Zur Lesbarkeit hier nach Bereich gruppiert (Details in den
+jeweiligen Migrationen):
+
+```mermaid
+erDiagram
+    TENANT ||--o{ SEASON_TEMPLATE : has
+    SEASON_TEMPLATE ||--o{ SEASON : contains
+    SEASON ||--o{ SEASON_PERIOD : "gilt an"
+    SEASON_TEMPLATE ||--o{ SEASON_ASSIGNMENT : "zugewiesen an"
+    TENANT ||--o{ EVENT : has
+    EVENT ||--o{ EVENT_PERIOD : "gilt an"
+    PROPERTY ||--o{ SURCHARGE : "Aufschläge"
+
+    TENANT ||--o{ TASK : has
+    TENANT ||--o{ TASK_RULE : "wiederkehrend"
+    TASK ||--o{ CHECKLIST_ITEM : enthaelt
+    CHECKLIST_ITEM ||--o{ CHECKLIST_PHOTO : "Foto-Nachweis"
+    TASK ||--o{ TASK_SUBSTITUTION : "Vertretung"
+    TENANT ||--o{ INVENTORY_ITEM : "Inventar/Pool"
+    USER ||--o{ STAFF_PROPERTY_ASSIGNMENT : "Stamm-MA"
+
+    TENANT ||--o{ LEAD : "Akquise"
+    TENANT ||--o{ PARTNER : has
+    PARTNER ||--o{ DEAL : "Rabatte"
+
+    TENANT ||--o{ MESSAGE_TEMPLATE : has
+    MESSAGE_TEMPLATE ||--o{ MESSAGE_TRIGGER : "Timing/Kanal"
+    TENANT ||--o{ CONTENT_BLOCK : "dreisprachig"
+    CONTENT_BLOCK ||--o{ CONTENT_ASSIGNMENT : "zugewiesen"
+
+    TENANT ||--o{ BLOCK_REQUEST : "Sperrung beantragt"
+    PROPERTY ||--o{ METER_READING : "Zählerstand (append-only)"
+    PROPERTY ||--o{ CO_OWNER : "Miteigentümer"
+    PROPERTY ||--o{ PRICE_OVERRIDE : "Tagespreis"
+    USER ||--|| DASHBOARD_LAYOUT : personalisiert
+
+    PLAN ||--o{ SUBSCRIPTION : "unit-basiert"
+    TENANT ||--|| SUBSCRIPTION : abonniert
+```
+
+**Weitere Änderungen am Bestand:** `property_type` + `type_attributes` an
+`properties` (Ökosystem, ADR-0007); Rollen-Enum um `admin`, `co_admin`
+erweitert; `payments`: `stripe_ref` → `gateway_ref` + `gateway`-Enum (ADR-0003).
+Marktplatz-Tabellen (`portal_guests`, `reviews`, `commissions`) wie oben.
 
 ---
 
@@ -333,6 +404,29 @@ sequenceDiagram
     deactivate Cal
     deactivate API
     deactivate Web
+```
+
+### 7.3 Auto-Aufgaben bei Buchung + Vertretung (§2.5/§4.3)
+
+```mermaid
+sequenceDiagram
+    participant CM as Channel-Manager / Buchung
+    participant API as FastAPI (tasks)
+    participant DB as Postgres
+    actor MA as Mitarbeiter
+    actor Team as Team-Kollege
+
+    CM->>+API: POST /tasks/from-booking (reservation)
+    API->>DB: INSERT "Anreise-Check" (due = check_in)
+    API->>DB: INSERT "Endreinigung" (due = check_out)
+    API-->>-CM: 201 (2 Aufgaben)
+
+    MA->>+API: POST /tasks/substitution (task_id)
+    API->>DB: INSERT task_substitution (status=requested)
+    API-->>-MA: 201 (Vertretung angefragt)
+    Team->>+API: accept_substitution
+    API->>DB: UPDATE status=accepted, accepted_by
+    API-->>-Team: übernommen
 ```
 
 ---
