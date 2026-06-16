@@ -2,3 +2,5 @@
 .env.local
 .vercel
 storybook-static/
+protected/
+.next/
