@@ -1,22 +1,84 @@
 @import "tailwindcss";
 
-/* Tailwind v4 — Theme-Tokens als CSS-Variablen. KEIN tailwind.config.ts. */
-@theme {
-  /* PLATZHALTER — final: Farben aus Jeanines Logo (dänischer Einschlag) */
-  --color-primary: #1a5fb4;          /* TODO ersetzen */
-  --color-primary-foreground: #ffffff;
-  --color-accent: #c01c28;           /* TODO dänischer Akzent */
+/* Tailwind v4 — Theme-Tokens als CSS-Variablen. KEIN tailwind.config.ts (PROJECT.md §6).
+ *
+ * ===========================================================================
+ * EINZIGE QUELLE DER WAHRHEIT FÜR ALLE FARBEN/TOKENS.
+ * Diese Werte sind VORLÄUFIG (aus dem Logo abgeleitet) und dürfen vom UX/UI-
+ * Designer jederzeit überschrieben werden — Komponenten nutzen ausschließlich
+ * die semantischen Token-Namen (bg-primary, text-accent, …), nie feste Hex-Werte.
+ * Eine Token-Änderung hier wirkt sofort systemweit, ohne Komponenten-Umbau.
+ * ===========================================================================
+ */
+
+/* Mappt die semantischen Tokens (unten) auf Tailwind-Utility-Farben. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
   --radius: 0.5rem;
 }
 
-/* Light (Default) */
+/* Light (Default).
+   Markenfarben aus dem offiziellen NextDays-Logo (powered by AirSmil):
+   Text-Schwarz #050505, Akzent-Rot #b82028 ("Smil"). Klar, aufgeräumt. */
 :root {
   --background: #ffffff;
   --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --primary: #0a0a0a;           /* Logo-Schwarz ("NextDays") als Primärfarbe */
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #b82028;           /* Logo-Rot ("Smil") als Akzent */
+  --accent-foreground: #ffffff;
+  --destructive: #b82028;
+  --destructive-foreground: #ffffff;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #b82028;
 }
 
-/* Dark Mode (.dark auf <html> via next-themes) */
+/* Dark Mode (.dark auf <html> via next-themes, class-Strategie).
+   Logo-Rot als Akzent bleibt; Primär wird hell für Kontrast auf Dunkel. */
 .dark {
   --background: #0a0a0a;
   --foreground: #fafafa;
+  --card: #161616;
+  --card-foreground: #fafafa;
+  --primary: #fafafa;          /* invertiert: helles "Schwarz" auf Dunkel */
+  --primary-foreground: #0a0a0a;
+  --secondary: #27272a;
+  --secondary-foreground: #f4f4f5;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #e0454d;           /* Logo-Rot, leicht aufgehellt für Dark */
+  --accent-foreground: #ffffff;
+  --destructive: #e0454d;
+  --destructive-foreground: #fafafa;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #e0454d;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
 }

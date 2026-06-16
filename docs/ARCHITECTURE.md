@@ -79,6 +79,7 @@ C4Container
     Container_Boundary(nd, "NextDays") {
         Container(marketing, "Marketing-Website", "Next.js (entkoppelt)", "Landing/Pricing/Blog — KEINE PMS/Auth-Kopplung (ADR-0002)")
         Container(web, "Web Dashboard", "Next.js, TypeScript", "Vermieter-PMS-UI + Portale (Vercel)")
+        Container(storybook, "Storybook", "react-vite", "Komponenten-Doku + Design-System (ADR-0008), Light/Dark, Token-Übersicht")
         Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 16 Vertical Slices unter /api/v1")
         ContainerDb(db, "Datenbank", "Supabase / Postgres", "41 Tabellen, Multi-Tenant, RLS, tenant_id")
         ContainerDb(cache, "Cache", "Redis", "Caching-Layer")
@@ -92,6 +93,7 @@ C4Container
 
     Rel(landlord, web, "Nutzt", "HTTPS")
     Rel(guest, web, "Bucht", "HTTPS")
+    Rel(web, storybook, "teilt Komponenten/Tokens", "Build-Zeit")
     Rel(web, api, "Ruft auf", "JSON/HTTPS")
     Rel(api, db, "Liest/schreibt", "SQL (RLS)")
     Rel(api, cache, "Liest/schreibt", "Redis-Protokoll")
@@ -534,6 +536,37 @@ Standardtexte). Der `payments`-Slice nutzt ein **Gateway-Adapter-Pattern**
 
 Alle Router unter dem gemeinsamen Prefix **`/api/v1`** (versioniert von Anfang an).
 `auth` ist als Referenz-Muster voll implementiert (siehe **[API.md](API.md)**).
+
+---
+
+## 11. Frontend & Design-System (apps/web)
+
+- **Next.js** (App Router, TS) mit **Bun**; UI im **shadcn-Stil** (CVA + Radix-Slot
+  + `cn`), Icons über **Iconify** (kein lucide-react, PROJECT.md §2).
+- **Tailwind v4** über `@theme` in `styles/globals.css` — **kein**
+  `tailwind.config.ts`. Light/Dark via `next-themes` (`.dark`-Klasse).
+- **Design-Tokens** sind die einzige Quelle der Wahrheit für Farben/Radius
+  (`:root` + `.dark` in `globals.css`). Startwerte aus dem NextDays-Logo
+  (Primär `#0a0a0a`, Akzent-Rot `#b82028`) — **vorläufig, vom Designer
+  überschreibbar**. Komponenten referenzieren nur semantische Tokens.
+- **Storybook** (react-vite) als lebende Komponenten-Doku & Design-System-Brücke
+  für den UX/UI-Designer ([ADR-0008](decisions/0008-storybook-design-system.md)):
+  Light/Dark-Umschalter, Design-Token-Übersicht (`Design/Tokens`), Stories je
+  Komponente. Build verifiziert; statisch deploybar (eigene URL für den Designer).
+
+```
+apps/web/
+├── app/                 # Route-Gruppen (auth)/(dashboard)/(public)
+├── components/
+│   ├── ui/              # shadcn-Stil-Komponenten (+ .stories.tsx)
+│   ├── theme-provider.tsx · theme-toggle.tsx
+├── lib/
+│   ├── supabase/        # Browser- + Server-Client (@supabase/ssr)
+│   └── utils.ts         # cn()
+├── stories/             # Design/Tokens-Übersicht
+├── styles/globals.css   # Tailwind v4 @theme — Tokens (Quelle der Wahrheit)
+└── .storybook/          # main.ts (react-vite) · preview.tsx (Theme-Switcher)
+```
 
 ---
 

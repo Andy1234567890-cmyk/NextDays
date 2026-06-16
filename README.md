@@ -143,6 +143,7 @@ Details & technische Diagramme (C4, ER, Sequenz, Deployment):
 |---|---|
 | Web-Frontend | Next.js (App Router), TypeScript, **Bun** |
 | UI | shadcn/ui (Tailwind v4 via `@theme`), **Iconify**, Light/Dark via `next-themes` |
+| Design-System | **Storybook** (Komponenten-Doku, Light/Dark, Design-Tokens) — Marke aus NextDays-Logo |
 | Backend | **FastAPI** (Python 3.12), Vertical Slice Architecture |
 | Datenbank/Auth/Storage | **Supabase** (Postgres, Auth, Storage), Multi-Tenant mit Row-Level-Security |
 | Cache & Queue | **Redis** |

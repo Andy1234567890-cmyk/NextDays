@@ -19,3 +19,5 @@ CLAUDE.md
 # Next.js / TS Build-Cache
 apps/web/.next/
 *.tsbuildinfo
+
+apps/web/storybook-static/
