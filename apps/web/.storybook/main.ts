@@ -4,8 +4,18 @@ import type { StorybookConfig } from "@storybook/react-vite";
 const projectRoot = fileURLToPath(new URL("..", import.meta.url));
 
 const config: StorybookConfig = {
-  stories: ["../components/**/*.stories.@(ts|tsx)", "../stories/**/*.stories.@(ts|tsx)"],
-  addons: ["@storybook/addon-themes"],
+  stories: [
+    "../stories/**/*.mdx",
+    "../components/**/*.mdx",
+    "../components/**/*.stories.@(ts|tsx)",
+    "../stories/**/*.stories.@(ts|tsx)",
+  ],
+  addons: [
+    "@storybook/addon-themes",
+    "@storybook/addon-docs",
+    "@storybook/addon-a11y",
+    "@storybook/addon-designs",
+  ],
   framework: {
     name: "@storybook/react-vite",
     options: {},
@@ -26,6 +36,21 @@ const config: StorybookConfig = {
     cfg.esbuild = {
       ...(cfg.esbuild ?? {}),
       jsx: "automatic",
+    };
+    // "use client"-Direktiven (Next.js/Radix) sind im Storybook-Bundle bedeutungslos.
+    // Rollup-Warnungen dazu unterdrücken, damit der Build-Log sauber bleibt.
+    cfg.build = cfg.build ?? {};
+    cfg.build.rollupOptions = cfg.build.rollupOptions ?? {};
+    const prevOnwarn = cfg.build.rollupOptions.onwarn;
+    cfg.build.rollupOptions.onwarn = (warning, warn) => {
+      if (
+        warning.code === "MODULE_LEVEL_DIRECTIVE" &&
+        /use client/.test(warning.message)
+      ) {
+        return;
+      }
+      if (typeof prevOnwarn === "function") prevOnwarn(warning, warn);
+      else warn(warning);
     };
     return cfg;
   },

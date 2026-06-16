@@ -21,3 +21,6 @@ apps/web/.next/
 *.tsbuildinfo
 
 apps/web/storybook-static/
+
+# Lokale Tool-/Session-Artefakte
+.claude/

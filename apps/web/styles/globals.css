@@ -27,6 +27,10 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -51,6 +55,10 @@
   --accent-foreground: #ffffff;
   --destructive: #b82028;
   --destructive-foreground: #ffffff;
+  --success: #16a34a;          /* Status: bestätigt/erledigt (grün) */
+  --success-foreground: #ffffff;
+  --warning: #d97706;          /* Status: ausstehend/Achtung (amber) */
+  --warning-foreground: #ffffff;
   --border: #e4e4e7;
   --input: #e4e4e7;
   --ring: #b82028;
@@ -73,6 +81,10 @@
   --accent-foreground: #ffffff;
   --destructive: #e0454d;
   --destructive-foreground: #fafafa;
+  --success: #22c55e;          /* Status grün, für Dark leicht aufgehellt */
+  --success-foreground: #0a0a0a;
+  --warning: #f59e0b;          /* Status amber, für Dark leicht aufgehellt */
+  --warning-foreground: #0a0a0a;
   --border: #27272a;
   --input: #27272a;
   --ring: #e0454d;

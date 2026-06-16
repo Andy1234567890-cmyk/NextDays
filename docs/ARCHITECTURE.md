@@ -554,22 +554,40 @@ Alle Router unter dem gemeinsamen Prefix **`/api/v1`** (versioniert von Anfang a
   (Primär `#0a0a0a`, Akzent-Rot `#b82028`) — **vorläufig, vom Designer
   überschreibbar**. Komponenten referenzieren nur semantische Tokens.
 - **Storybook** (react-vite) als lebende Komponenten-Doku & Design-System-Brücke
-  für den UX/UI-Designer ([ADR-0008](decisions/0008-storybook-design-system.md)):
-  Light/Dark-Umschalter, Design-Token-Übersicht (`Design/Tokens`), Stories je
-  Komponente. Build verifiziert; statisch deploybar (eigene URL für den Designer).
+  ([ADR-0008](decisions/0008-storybook-design-system.md)) — **live deployt**:
+  **https://nextdays-storybook.vercel.app** (öffentlich, kein Login). Addons:
+  `addon-docs` (MDX/Autodocs), `addon-a11y` (WCAG-Prüfung), `addon-themes`
+  (Light/Dark), `addon-designs` (Figma-Einbettung).
+- **Bibliotheks-Umfang** (deckungsgleich mit den Lastenheft-Modulen):
+  - **20 UI-Bausteine** (`UI-Bausteine/…`): Input, Label, Textarea, Select,
+    Checkbox, Switch, Badge, Avatar, Dialog, DropdownMenu, Tabs, Tooltip,
+    Popover, Accordion, Separator, Table, Skeleton, Alert, Progress, Breadcrumb
+    (+ Button, Card).
+  - **15 PMS-Komponenten** (`PMS-Komponenten/…`, je mit Modul-/Tabellen-Bezug):
+    Status-Badges, Rollen-Badge, Preis-Anzeige, Kanal-Icon, Objekt-Karte,
+    Reservierungs-Karte, Saison-Legende, Kalender-Tageszelle, **Multi-Kalender
+    (§2.2 Herzstück)**, Aufgaben-Checkliste, Inventar-Zeile, Nachrichten-Bubble,
+    Onboarding-Stepper (§6), Berechtigungs-Matrix (§4), Zahlungs-Zeile.
+  - **7 Eigentümer-Doku-Seiten** (`Einführung/…`, MDX, nicht-technisch): Was ist
+    NextDays · Rollen & wer sieht was · Der Multi-Kalender erklärt · Preissystem
+    · Nachrichten & Automatisierung · Aufgaben & Checklisten · Häufige Fragen.
+  - **Design/Tokens**: visuelle Token-Palette.
+- Status-Tokens `--success` / `--warning` in `globals.css` ergänzt (für die
+  Status-Badges), weiterhin als semantische Tokens — kein Hardcoding.
 
 ```
 apps/web/
 ├── app/                 # Route-Gruppen (auth)/(dashboard)/(public)
 ├── components/
-│   ├── ui/              # shadcn-Stil-Komponenten (+ .stories.tsx)
+│   ├── ui/              # 22 shadcn-Stil-Primitive (+ .stories.tsx)
+│   ├── pms/             # 15 fachliche PMS-Komponenten (+ .stories.tsx)
 │   ├── theme-provider.tsx · theme-toggle.tsx
 ├── lib/
 │   ├── supabase/        # Browser- + Server-Client (@supabase/ssr)
 │   └── utils.ts         # cn()
-├── stories/             # Design/Tokens-Übersicht
+├── stories/             # 7 Eigentümer-Doku-Seiten (MDX) + Design/Tokens
 ├── styles/globals.css   # Tailwind v4 @theme — Tokens (Quelle der Wahrheit)
-└── .storybook/          # main.ts (react-vite) · preview.tsx (Theme-Switcher)
+└── .storybook/          # main.ts · preview.tsx · BUILD_REFERENCE.md (Bau-Standard)
 ```
 
 ---

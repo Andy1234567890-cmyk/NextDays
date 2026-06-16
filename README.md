@@ -230,7 +230,7 @@ nextdays/
 | `payments` (Gateway-Adapter Revolut/Stripe) | ✅ Gerüst · ⏳ Revolut-Implementierung |
 | Supabase-Migrationen (19) auf echter DB · 41 Tabellen · alle RLS · 0 Security-Advisors | ✅ |
 | Web-Frontend (shadcn-Stil · Iconify · next-themes · Tailwind v4) | ✅ |
-| Storybook (Design-System, Light/Dark, Token-Übersicht) | ✅ |
+| Storybook (Design-System) — **live**, 22 UI-Bausteine + 15 PMS-Komponenten + 7 Eigentümer-Doku-Seiten | ✅ |
 | Inbox/Messaging · Channel-Adapter · CRM/Dashboard-Logik · Gäste-Portal | ⏳ geplant |
 
 Aktueller Detail-Stand & nächste Schritte: **[NOTES.md](NOTES.md)**

@@ -40,6 +40,15 @@ es braucht eine lebende, code-nahe Komponenten-Doku.
 - `apps/web` enthält shadcn-Stil-Komponenten (CVA + Radix-Slot + `cn`), Icons via
   **Iconify** (kein lucide-react, PROJECT.md §2).
 - Jede neue UI-Komponente bekommt eine `.stories.tsx`.
+- **Addons** (kuratiert): `addon-docs` (MDX-Erklärseiten für Eigentümer +
+  Autodocs), `addon-a11y` (WCAG-Barrierefreiheit), `addon-themes` (Light/Dark),
+  `addon-designs@8.0.4` (Figma-Einbettung; v8-kompatibel, da v10+ Storybook 9
+  voraussetzt). Chromatic/Visual-Tests bewusst später (kostenpflichtig).
+- **Bibliothek:** 22 UI-Bausteine, 15 PMS-Komponenten (je mit Modul-/Tabellen-
+  Bezug, inkl. Multi-Kalender §2.2), 7 nicht-technische Eigentümer-Doku-Seiten
+  (`Einführung/…`), Design/Tokens. Bau-Standard fixiert in
+  `.storybook/BUILD_REFERENCE.md` (Tokens, echte Enum-Werte, Stil).
+- Tailwind-v4-Kurzsyntax kanonisch (`rounded-(--radius)`, `ring-ring`).
 - Build/Dev verifiziert: `storybook build` erfolgreich, Dev-Server liefert HTTP 200.
 - **Deployed auf Vercel** als eigenes Projekt `nextdays-storybook` (Monorepo,
   Root `apps/web`, `vercel.json`: Build `bun run build-storybook`, Output
