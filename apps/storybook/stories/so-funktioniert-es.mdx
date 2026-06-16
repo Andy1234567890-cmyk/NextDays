@@ -1,0 +1,64 @@
+import { Meta } from '@storybook/blocks';
+import { Mermaid } from '@/components/docs/mermaid';
+
+<Meta title="Einführung/So funktioniert es (Diagramme)" />
+
+# So funktioniert es
+
+Diese Seite erklärt NextDays ganz ohne Technik-Begriffe. Anhand einfacher Bilder sehen Sie, wie eine Buchung entsteht, warum es nie zu Doppelbuchungen kommt und wer in Ihrem Team was sieht.
+
+## So entsteht eine Buchung
+
+Wenn ein Gast bucht, läuft alles automatisch ab: Die Buchung wird bestätigt, und Ihr Team bekommt direkt die passende Aufgabe, zum Beispiel die Reinigung. Sie müssen nichts von Hand weiterleiten.
+
+<Mermaid
+  title="So entsteht eine Buchung"
+  chart={`flowchart LR
+    A["Gast bucht"] --> B["Buchung wird angelegt"]
+    B --> C["Gast erhält Bestätigung"]
+    B --> D["Aufgabe für das Team:<br/>Reinigung vorbereiten"]`}
+/>
+
+## Ein Kalender, keine Doppelbuchungen
+
+Egal über welchen Weg ein Gast bucht, ob direkt bei Ihnen, über Booking.com oder Airbnb: Alle Kanäle tragen in denselben Kalender ein. Ist ein Tag belegt, wird er überall sofort gesperrt. So kann derselbe Zeitraum nie zweimal vergeben werden.
+
+<Mermaid
+  title="Ein Kalender, keine Doppelbuchungen"
+  chart={`flowchart TB
+    D["Direkt-Buchung"] --> K["Ein gemeinsamer Kalender"]
+    B["Booking.com"] --> K
+    A["Airbnb"] --> K
+    K --> S["Belegte Tage werden<br/>überall gesperrt"]`}
+/>
+
+## Wer sieht was
+
+Jede Person in Ihrem Team sieht genau das, was sie braucht. Sie als Eigentümer behalten den Überblick, der Admin verwaltet alles, und Mitarbeiter sehen nur ihre Aufgaben.
+
+<Mermaid
+  title="Wer sieht was"
+  chart={`flowchart TB
+    Admin["Admin<br/>verwaltet alles"] --> Alles["Volle Übersicht:<br/>Objekte, Buchungen, Team"]
+    Eigentuemer["Eigentümer<br/>Ihr Überblick"] --> Eigen["Eigene Objekte,<br/>Buchungen & Zahlen"]
+    Mitarbeiter["Mitarbeiter<br/>z. B. Reinigung"] --> Aufgaben["Nur die eigenen<br/>Aufgaben & Checklisten"]`}
+/>
+
+## Vom Gast bis zur fertigen Wohnung
+
+So sieht der gesamte Ablauf einer Buchung aus Sicht aller Beteiligten aus: Der Gast bucht und reist an, das System kümmert sich um Bestätigung und Aufgaben, und Ihr Team sorgt für eine saubere Wohnung zum nächsten Anreisetag.
+
+<Mermaid
+  title="Vom Gast bis zur fertigen Wohnung"
+  chart={`sequenceDiagram
+    actor Gast
+    participant NextDays
+    actor Team
+
+    Gast->>NextDays: Bucht eine Unterkunft
+    NextDays-->>Gast: Schickt die Bestätigung
+    NextDays->>Team: Erstellt die Reinigungsaufgabe
+    Gast->>NextDays: Reist an und checkt aus
+    Team->>NextDays: Erledigt die Reinigung
+    NextDays-->>Team: Wohnung ist bereit für den nächsten Gast`}
+/>
