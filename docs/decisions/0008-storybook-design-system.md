@@ -41,4 +41,7 @@ es braucht eine lebende, code-nahe Komponenten-Doku.
   **Iconify** (kein lucide-react, PROJECT.md §2).
 - Jede neue UI-Komponente bekommt eine `.stories.tsx`.
 - Build/Dev verifiziert: `storybook build` erfolgreich, Dev-Server liefert HTTP 200.
-- Deployment der statischen Storybook (eigene URL für den Designer) als Folgeschritt.
+- **Deployed auf Vercel** als eigenes Projekt `nextdays-storybook` (Monorepo,
+  Root `apps/web`, `vercel.json`: Build `bun run build-storybook`, Output
+  `storybook-static`). Öffentliche URL (kein Login):
+  **https://nextdays-storybook.vercel.app** — der Designer braucht kein lokales Setup.

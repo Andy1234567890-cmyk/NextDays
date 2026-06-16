@@ -171,7 +171,10 @@ docker compose up
 # → API auf http://localhost:8000 · Docs auf http://localhost:8000/docs
 ```
 
-**Design-System / Storybook** (für UX/UI — zeigt alle Komponenten, Light/Dark, Design-Tokens):
+**Design-System / Storybook** — live für den UX/UI-Designer (kein Login nötig):
+**https://nextdays-storybook.vercel.app**
+
+Lokal entwickeln (zeigt alle Komponenten, Light/Dark, Design-Tokens):
 
 ```bash
 cd apps/web
