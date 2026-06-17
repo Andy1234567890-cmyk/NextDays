@@ -171,16 +171,23 @@ docker compose up
 # → API auf http://localhost:8000 · Docs auf http://localhost:8000/docs
 ```
 
-**Design-System / Storybook** — live für den UX/UI-Designer (kein Login nötig):
-**https://nextdays-storybook.vercel.app**
+**Design-System / Storybook** — live, **zugangsgeschützt** (Login erforderlich,
+enthält Produktidee + sensible Daten): **https://nextdays-storybook.vercel.app**
+
+Der Zugang läuft über eine Next.js-Auth-Hülle (Supabase Auth, serverseitige
+Middleware). Neue Nutzer werden im **Admin-Bereich** (`/admin`) mit Sofort-
+Passwort angelegt — kein Self-Signup. Enthält außerdem einen Echtzeit-
+**Team-Chat** (`Austausch/`, Supabase Realtime). Details:
+[docs/ARCHITECTURE.md §11](docs/ARCHITECTURE.md).
 
 Lokal entwickeln (zeigt alle Komponenten, Light/Dark, Design-Tokens):
 
 ```bash
 cd apps/storybook        # eigenständiges Design-System-Package
 bun install
-bun run storybook        # → http://localhost:6006
-# bun run build-storybook # statischer Build, als URL deploybar
+bun run storybook        # nur Storybook  → http://localhost:6006
+bun run dev              # mit Auth-Hülle  → http://localhost:6007
+# bun run build           # Storybook (protected/sb) + Next-Build (Deploy)
 ```
 
 Ausführliche Anleitung: **[docs/SETUP.md](docs/SETUP.md)**
@@ -234,9 +241,10 @@ nextdays/
 | `calendar`-Slice (Verfügbarkeit, Sperrung, Preis-Override) | ✅ |
 | `tasks`-Slice (Aufgaben, Checklisten, Inventar, Vertretung) | ✅ |
 | `payments` (Gateway-Adapter Revolut/Stripe) | ✅ Gerüst · ⏳ Revolut-Implementierung |
-| Supabase-Migrationen (19) auf echter DB · 41 Tabellen · alle RLS · 0 Security-Advisors | ✅ |
+| Supabase-Migrationen (20) auf echter DB · RLS · 0 Security-Advisors · Realtime für Storybook-Chat | ✅ |
 | Web-Frontend (shadcn-Stil · Iconify · next-themes · Tailwind v4) | ✅ |
-| Storybook (Design-System) — **live**, 22 UI-Bausteine + 15 PMS-Komponenten + 7 Eigentümer-Doku-Seiten | ✅ |
+| Storybook (Design-System) — **live & zugangsgeschützt**, 22 UI-Bausteine + 15 PMS-Komponenten + 7 Eigentümer-Doku-Seiten | ✅ |
+| Storybook-Zugang: Supabase-Login (Middleware) · Admin-Bereich (Nutzer anlegen) · Realtime-Team-Chat | ✅ |
 | Inbox/Messaging · Channel-Adapter · CRM/Dashboard-Logik · Gäste-Portal | ⏳ geplant |
 
 Aktueller Detail-Stand & nächste Schritte: **[NOTES.md](NOTES.md)**

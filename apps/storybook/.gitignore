@@ -4,3 +4,5 @@
 storybook-static/
 protected/
 .next/
+next-env.d.ts
+tsconfig.tsbuildinfo

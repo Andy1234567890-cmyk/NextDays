@@ -56,6 +56,30 @@ des UX/UI-Designers, getrennt vom Web-Projekt.
 - Tailwind-v4-Kurzsyntax kanonisch (`rounded-(--radius)`, `ring-ring`).
 - Build/Dev verifiziert: `storybook build` erfolgreich, Dev-Server liefert HTTP 200.
 - **Deployed auf Vercel** als eigenes Projekt `nextdays-storybook` (Monorepo,
-  Root `apps/web`, `vercel.json`: Build `bun run build-storybook`, Output
-  `storybook-static`). Öffentliche URL (kein Login):
-  **https://nextdays-storybook.vercel.app** — der Designer braucht kein lokales Setup.
+  Root `apps/storybook`). URL: **https://nextdays-storybook.vercel.app** — der
+  Designer braucht kein lokales Setup. (Zugangsschutz + Build-Befehl siehe
+  Nachtrag unten.)
+
+## Nachtrag (Zugangsschutz, Admin, Chat)
+
+Nach der ersten Veröffentlichung kamen drei Anforderungen dazu — umgesetzt im
+selben Package `apps/storybook`:
+
+- **Login vor dem Storybook (zwingend).** Das Storybook enthält die gesamte
+  Produktidee und sensible Daten und darf nicht öffentlich sein. Statt des
+  statischen Deployments liegt jetzt eine **Next.js-Auth-Hülle** davor:
+  `middleware.ts` verlangt serverseitig eine Supabase-Session; das Storybook
+  wird nach `protected/sb/` gebaut (nicht in `public/`) und nur über den
+  Catch-all `/sb/[[...path]]` mit gültiger Session ausgeliefert. Build-Befehl
+  daher nicht mehr `build-storybook`, sondern `bun run build`
+  (`storybook build -o protected/sb && next build`); Framework auf Vercel =
+  Next.js.
+- **Admin-Bereich** (`/admin` → `/api/users`): Nutzer per E-Mail anlegen mit
+  Sofort-Passwort. Service-Role-Key bleibt **serverseitig**, nur Admins
+  (`STORYBOOK_ADMIN_EMAILS`). Kein Self-Signup.
+- **Echtzeit-Team-Chat** (`Austausch/`): Supabase Realtime (Tabelle
+  `storybook_chat`, Migration `0020`). Nutzt die Login-Session; Name kommt
+  automatisch aus dem Account.
+
+Details: [ARCHITECTURE.md §11](../ARCHITECTURE.md) („Zugangsschutz: Auth-Proxy"
++ „Echtzeit-Austausch").

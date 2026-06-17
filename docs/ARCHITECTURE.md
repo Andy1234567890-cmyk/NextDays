@@ -555,9 +555,11 @@ Alle Router unter dem gemeinsamen Prefix **`/api/v1`** (versioniert von Anfang a
   überschreibbar**. Komponenten referenzieren nur semantische Tokens.
 - **Storybook** (react-vite) als lebende Komponenten-Doku & Design-System-Brücke
   ([ADR-0008](decisions/0008-storybook-design-system.md)) — **live deployt**:
-  **https://nextdays-storybook.vercel.app** (öffentlich, kein Login). Addons:
-  `addon-docs` (MDX/Autodocs), `addon-a11y` (WCAG-Prüfung), `addon-themes`
-  (Light/Dark), `addon-designs` (Figma-Einbettung).
+  **https://nextdays-storybook.vercel.app** — **zugangsgeschützt** (Login
+  erforderlich, siehe Auth-Proxy unten; enthält die ganze Idee + sensible Daten,
+  daher kein öffentlicher Zugriff). Addons: `addon-docs` (MDX/Autodocs),
+  `addon-a11y` (WCAG-Prüfung), `addon-themes` (Light/Dark), `addon-designs`
+  (Figma-Einbettung).
 - **Bibliotheks-Umfang** (deckungsgleich mit den Lastenheft-Modulen):
   - **20 UI-Bausteine** (`UI-Bausteine/…`): Input, Label, Textarea, Select,
     Checkbox, Switch, Badge, Avatar, Dialog, DropdownMenu, Tabs, Tooltip,
@@ -571,6 +573,10 @@ Alle Router unter dem gemeinsamen Prefix **`/api/v1`** (versioniert von Anfang a
   - **7 Eigentümer-Doku-Seiten** (`Einführung/…`, MDX, nicht-technisch): Was ist
     NextDays · Rollen & wer sieht was · Der Multi-Kalender erklärt · Preissystem
     · Nachrichten & Automatisierung · Aufgaben & Checklisten · Häufige Fragen.
+  - **Architektur-Diagramme** (`Architektur/…`, MDX): technische C4-/ER-/Flow-
+    Diagramme **und** Eigentümer-freundliche „So funktioniert es"-Diagramme.
+  - **Austausch/Team-Chat** (`Austausch/…`, MDX): Echtzeit-Chat fürs Team
+    (Supabase Realtime, siehe unten).
   - **Design/Tokens**: visuelle Token-Palette.
 - Status-Tokens `--success` / `--warning` in `globals.css` ergänzt (für die
   Status-Badges), weiterhin als semantische Tokens — kein Hardcoding.
@@ -586,17 +592,69 @@ apps/web/                # Next.js — App-Gerüst (Dashboard/Portal)
 ├── app/                 # Route-Gruppen (auth)/(dashboard)/(public)
 └── lib/supabase/        # Browser- + Server-Client (@supabase/ssr)
 
-apps/storybook/          # Design-System & Komponenten-Doku (eigenes Package, eigenes Vercel)
+apps/storybook/          # Design-System + Auth-Proxy (eigenes Package, eigenes Vercel)
+├── app/                 # Next.js App Router (Auth-Hülle vor dem Storybook)
+│   ├── login/           # Login-Seite (Supabase signInWithPassword)
+│   ├── admin/           # Admin-Bereich: Nutzer anlegen (Sofort-Passwort)
+│   ├── api/users/       # Service-Role: Nutzer anlegen/listen (nur Admins)
+│   └── sb/[[...path]]/  # Catch-all: liefert das GESCHÜTZTE Storybook aus
+├── middleware.ts        # Auth-Gate: jede Route außer /login + /api verlangt Session
+├── protected/sb/        # statisch gebautes Storybook (privat, nie direkt erreichbar)
 ├── components/
 │   ├── ui/              # 22 shadcn-Stil-Primitive
-│   └── pms/             # 15 fachliche PMS-Komponenten
+│   ├── pms/             # 15 fachliche PMS-Komponenten
+│   └── docs/            # team-chat.tsx (Realtime) · mermaid.tsx (Diagramme)
 ├── stories/
 │   ├── ui/ · pms/       # Stories je Komponente
-│   └── *.mdx            # 7 Eigentümer-Doku-Seiten + Design/Tokens
-├── lib/utils.ts         # cn()
+│   └── *.mdx            # Eigentümer-Doku · Architektur · Austausch · Design/Tokens
+├── lib/
+│   ├── utils.ts         # cn()
+│   ├── supabase-server.ts   # updateSession() für Middleware
+│   ├── supabase-browser.ts  # Browser-Client (Login)
+│   └── supabase-chat.ts     # SSR-Browser-Client (Chat sieht Login-Session)
 ├── styles/globals.css   # Tailwind v4 @theme — Tokens (Quelle der Wahrheit)
 └── .storybook/          # main.ts · preview.tsx · BUILD_REFERENCE.md (Bau-Standard)
 ```
+
+### Zugangsschutz: Auth-Proxy vor dem Storybook
+
+Das Storybook enthält die gesamte Produktidee und sensible Daten — es darf nur
+von befugten Personen gesehen werden. Statt eines statischen Builds liegt vor dem
+Storybook eine **Next.js-Auth-Hülle** im selben Package:
+
+```mermaid
+flowchart LR
+  U[Browser] -->|jede Anfrage| MW[middleware.ts<br/>Supabase-Session?]
+  MW -->|keine Session| LOGIN[/login/]
+  MW -->|Session ok| ROUTE{Route}
+  ROUTE -->|/sb/*| SB[Catch-all liefert<br/>protected/sb/ aus]
+  ROUTE -->|/admin| ADMIN[Nutzer anlegen]
+  ROUTE -->|/api/users| API[Service-Role<br/>nur Admins]
+  LOGIN -->|signInWithPassword| SUPA[(Supabase Auth)]
+  ADMIN --> API
+  API -->|admin.createUser| SUPA
+```
+
+- **`middleware.ts`** prüft serverseitig die Supabase-Session. Ohne Session →
+  Redirect auf `/login`. Greift auch für **alle** Storybook-Assets (`/sb/*`),
+  sodass nichts ohne Login ausgeliefert wird. `/api/*` antwortet selbst mit
+  `403`-JSON statt Redirect.
+- Das Storybook wird statisch nach **`protected/sb/`** gebaut (außerhalb von
+  `public/`, daher nicht direkt erreichbar) und nur über den Catch-all
+  `/sb/[[...path]]` mit gültiger Session ausgeliefert. In die `index.html` wird
+  `<base href="/sb/">` injiziert, damit relative Asset-Pfade auflösen.
+- **Accounts gibt es nur per Admin** (`/admin` → `/api/users`, Service-Role-Key
+  bleibt serverseitig). Kein Self-Signup. Optionale strikte Allowlist über
+  `STORYBOOK_ALLOWED_EMAILS`; Admins über `STORYBOOK_ADMIN_EMAILS`.
+
+### Echtzeit-Austausch (Team-Chat)
+
+`Austausch/Team-Chat` ist ein Echtzeit-Chat direkt im Storybook über **Supabase
+Realtime** (Tabelle `storybook_chat`, Migration `0020`, Publication
+`supabase_realtime`). Der Chat nutzt **dieselbe Login-Session** (SSR-Browser-
+Client) — der Anzeigename kommt automatisch aus dem eingeloggten Account, keine
+zweite Anmeldung. RLS erlaubt anonymem Schlüssel nur `SELECT` + `INSERT`; der
+Chat ist bewusst von allen PMS-/Kundendaten getrennt.
 
 ---
 
