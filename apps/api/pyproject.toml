@@ -16,6 +16,8 @@ dependencies = [
     "python-multipart>=0.0.12", # Form-/Datei-Uploads (z. B. OCR)
     "pyjwt>=2.9",               # Supabase-JWT-Verifikation (HS256)
     "email-validator>=2.2",     # Pydantic EmailStr
+    "pyotp>=2.9",               # TOTP-2FA (Authenticator-App, kein SMS-Dienst)
+    "qrcode[pil]>=8.0",         # QR-Code (otpauth-URI) für die App-Einrichtung
 ]
 
 [project.optional-dependencies]
@@ -39,6 +41,48 @@ select = ["E", "F", "I", "B", "UP", "ANN", "S"]
 [tool.ruff.lint.per-file-ignores]
 # assert + lockere Annotations + Test-Passwörter (keine echten Secrets) erlaubt
 "**/tests/*" = ["S101", "S105", "S106", "ANN"]
+
+[tool.pylint.main]
+# Ruff (oben) ist der primäre Linter (Stil, Imports, Bugbear, Security,
+# Annotations). Pylint ergänzt nur die logischen Prüfungen. Reine
+# Konventions-/Stil-Checks, die Ruff bereits abdeckt oder die mit den
+# FastAPI-/Pydantic-Idiomen kollidieren, werden hier abgeschaltet, damit
+# Pylint die echten Befunde sauber meldet.
+py-version = "3.12"
+ignore-paths = ["^.*/tests/.*$"]
+
+[tool.pylint.format]
+max-line-length = 100
+
+[tool.pylint.basic]
+# StrEnum-Member werden klein geschrieben (direct, pending, ferienhaus …).
+# Pylint wertet sie als Konstanten und verlangt UPPER_CASE. Wir erlauben für
+# Konstanten BEIDE Stile (UPPER_CASE für echte Modul-Konstanten, snake_case für
+# Enum-Member). Klassen-Attribute frei (deckt ebenfalls Enum-Member ab).
+class-attribute-naming-style = "any"
+const-naming-style = "any"
+class-const-naming-style = "any"
+
+[tool.pylint."messages control"]
+disable = [
+    # Docstring-Zwang: Ruff/Projektstil regeln Doku; Modul-Docstrings sind da,
+    # triviale Health-/Schema-Funktionen brauchen keinen.
+    "missing-module-docstring",
+    "missing-class-docstring",
+    "missing-function-docstring",
+    # Pydantic-Schemas & Service-/Health-Klassen haben bewusst wenige Methoden.
+    "too-few-public-methods",
+    # Gemeinsame Enum-Werte (z. B. Kanal-Namen) sind absichtlich identisch.
+    "duplicate-code",
+    # FastAPI-Factory: lokales `app` vs. Modul-`app` ist idiomatisch.
+    "redefined-outer-name",
+    # Pydantic v2: `Model.model_fields` IST iterierbar (dict) — Pylint-Fehlalarm.
+    "not-an-iterable",
+    # `value == []` in Tests ist als Lesbarkeits-Assertion gewollt.
+    "use-implicit-booleaness-not-comparison",
+    # Lokale Imports (z. B. timedelta in einer Methode) sind hier bewusst.
+    "import-outside-toplevel",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

@@ -7,6 +7,7 @@ from fastapi import Depends, HTTPException, status
 from src.core.security import AuthContext, get_current_user
 from src.core.supabase import get_anon_client, get_service_client
 
+from .account_service import AccountService
 from .permissions import Capability, has_capability
 from .schemas import UserRole
 from .service import AuthService
@@ -19,7 +20,15 @@ def get_auth_service() -> AuthService:
     )
 
 
+def get_account_service() -> AccountService:
+    return AccountService(
+        anon_client=get_anon_client(),
+        service_client=get_service_client(),
+    )
+
+
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
+AccountServiceDep = Annotated[AccountService, Depends(get_account_service)]
 
 
 def require_role(*allowed: UserRole) -> Callable[[AuthContext], AuthContext]:

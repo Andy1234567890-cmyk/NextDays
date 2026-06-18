@@ -6,5 +6,12 @@
   "tailwindCSS.classFunctions": ["cn", "cva"],
   "files.associations": {
     "*.css": "tailwindcss"
-  }
+  },
+
+  "// Python (FastAPI)": "Interpreter = apps/api/.venv; Pylint nutzt die Projekt-Konfig in apps/api/pyproject.toml (10/10).",
+  "python.defaultInterpreterPath": "${workspaceFolder}/apps/api/.venv/bin/python",
+  "pylint.interpreter": ["${workspaceFolder}/apps/api/.venv/bin/python"],
+  "pylint.importStrategy": "fromEnvironment",
+  "pylint.cwd": "${workspaceFolder}/apps/api",
+  "pylint.args": ["--rcfile=${workspaceFolder}/apps/api/pyproject.toml"]
 }

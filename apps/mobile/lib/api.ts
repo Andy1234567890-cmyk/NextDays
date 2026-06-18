@@ -1,0 +1,65 @@
+// API-Client für das FastAPI-Backend (gleiche /api/v1-Schnittstelle wie die
+// Web-App). Business-Logik bleibt im Backend; die App ruft nur HTTP.
+// Basis-URL aus lib/config (Simulator: localhost; echtes Gerät: LAN-IP).
+import { getToken } from "@/lib/auth";
+import { API_URL } from "@/lib/config";
+
+const BASE = API_URL;
+const PREFIX = "/api/v1";
+
+export class ApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
+export type Result<T> = { ok: true; data: T } | { ok: false; error: string };
+
+type Options = {
+  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  body?: unknown;
+};
+
+// Roher Aufruf — wirft ApiError. Nutze `call` für ein Result.
+export async function api<T>(path: string, opts: Options = {}): Promise<T> {
+  const token = await getToken();
+  const headers: Record<string, string> = {};
+  if (opts.body !== undefined) headers["Content-Type"] = "application/json";
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  let res: Response;
+  try {
+    res = await fetch(`${BASE}${PREFIX}${path}`, {
+      method: opts.method ?? "GET",
+      headers,
+      body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
+    });
+  } catch {
+    throw new ApiError("Backend nicht erreichbar.", 503);
+  }
+
+  if (!res.ok) {
+    let detail = `Fehler ${res.status}`;
+    try {
+      const data = await res.json();
+      if (typeof data?.detail === "string") detail = data.detail;
+    } catch {
+      // kein JSON-Body
+    }
+    throw new ApiError(detail, res.status);
+  }
+
+  if (res.status === 204) return undefined as T;
+  return (await res.json()) as T;
+}
+
+// Bequemer Wrapper: nie werfen, immer ein Result zurückgeben.
+export async function call<T>(path: string, opts: Options = {}): Promise<Result<T>> {
+  try {
+    return { ok: true, data: await api<T>(path, opts) };
+  } catch (exc) {
+    return { ok: false, error: exc instanceof ApiError ? exc.message : "Aktion fehlgeschlagen." };
+  }
+}

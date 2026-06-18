@@ -1,4 +1,7 @@
 @import "tailwindcss";
+/* ---break---
+ */
+@custom-variant dark (&:is(.dark *));
 
 /* Tailwind v4 — Theme-Tokens als CSS-Variablen. KEIN tailwind.config.ts (PROJECT.md §6).
  *
@@ -17,6 +20,8 @@
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
@@ -34,6 +39,24 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  /* Charts (Umsatzentwicklung, Kanalverteilung — Lastenheft §2.1). */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Sidebar (Dashboard-Navigation, shadcn sidebar). */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
   --radius: 0.5rem;
 }
 
@@ -45,6 +68,8 @@
   --foreground: #0a0a0a;
   --card: #ffffff;
   --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
   --primary: #0a0a0a;           /* Logo-Schwarz ("NextDays") als Primärfarbe */
   --primary-foreground: #ffffff;
   --secondary: #f4f4f5;
@@ -62,6 +87,23 @@
   --border: #e4e4e7;
   --input: #e4e4e7;
   --ring: #b82028;
+
+  /* Chart-Palette: Akzent-Rot zuerst, dann harmonische Begleitfarben. */
+  --chart-1: #b82028;          /* Logo-Rot */
+  --chart-2: #0a0a0a;          /* Schwarz */
+  --chart-3: #2563eb;          /* Blau */
+  --chart-4: #16a34a;          /* Grün */
+  --chart-5: #d97706;          /* Amber */
+
+  /* Sidebar (Dashboard-Navigation). */
+  --sidebar: #fafafa;
+  --sidebar-foreground: #0a0a0a;
+  --sidebar-primary: #0a0a0a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f4f4f5;
+  --sidebar-accent-foreground: #18181b;
+  --sidebar-border: #e4e4e7;
+  --sidebar-ring: #b82028;
 }
 
 /* Dark Mode (.dark auf <html> via next-themes, class-Strategie).
@@ -71,6 +113,8 @@
   --foreground: #fafafa;
   --card: #161616;
   --card-foreground: #fafafa;
+  --popover: #161616;
+  --popover-foreground: #fafafa;
   --primary: #fafafa;          /* invertiert: helles "Schwarz" auf Dunkel */
   --primary-foreground: #0a0a0a;
   --secondary: #27272a;
@@ -88,6 +132,23 @@
   --border: #27272a;
   --input: #27272a;
   --ring: #e0454d;
+
+  /* Chart-Palette (für Dark leicht aufgehellt). */
+  --chart-1: #e0454d;          /* Logo-Rot, aufgehellt */
+  --chart-2: #fafafa;          /* Hell statt Schwarz */
+  --chart-3: #60a5fa;          /* Blau */
+  --chart-4: #22c55e;          /* Grün */
+  --chart-5: #f59e0b;          /* Amber */
+
+  /* Sidebar (Dashboard-Navigation). */
+  --sidebar: #161616;
+  --sidebar-foreground: #fafafa;
+  --sidebar-primary: #fafafa;
+  --sidebar-primary-foreground: #0a0a0a;
+  --sidebar-accent: #27272a;
+  --sidebar-accent-foreground: #f4f4f5;
+  --sidebar-border: #27272a;
+  --sidebar-ring: #e0454d;
 }
 
 body {

@@ -26,3 +26,10 @@ apps/web/storybook-static/
 .claude/
 apps/storybook/storybook-static/
 .vercel/
+
+# Geheimnisse (OAuth-Client-Secrets, Service-Keys) — niemals ins Repo
+.secrets/
+**/.secrets/
+client_secret_*.json
+*-secret*.json
+.mcp.json

@@ -1,0 +1,475 @@
+"use client";
+
+// Benutzer-Wizard (wie Lodgify „Benutzer erstellen"): Sheet von rechts, 4 Schritte
+// mit Fortschrittsanzeige. Schritt 1 Kontakt, 2 Zusatzinfos, 3 Rolle+Rechte,
+// 4 Objektzuweisung. Reine UI/State — Anlegen wird später ans Backend verdrahtet.
+import { Icon } from "@iconify/react";
+import { useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { cn } from "@/lib/utils";
+
+import {
+  GENERAL_PERMISSIONS,
+  LANGUAGES,
+  PM_PERMISSIONS,
+  ROLES,
+  WIZARD_STEPS,
+  type Permission,
+} from "./user-wizard-data";
+
+export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const [step, setStep] = useState(0);
+
+  // Schritt 1
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [hidePhones, setHidePhones] = useState(false);
+  // Schritt 2
+  const [language, setLanguage] = useState("de");
+  const [spoken, setSpoken] = useState<string[]>([]);
+  const [notes, setNotes] = useState("");
+  // Schritt 3
+  const [role, setRole] = useState("");
+  const [perms, setPerms] = useState<Set<string>>(new Set());
+
+  const reset = () => {
+    setStep(0);
+    setFirstName(""); setLastName(""); setEmail(""); setHidePhones(false);
+    setLanguage("de"); setSpoken([]); setNotes("");
+    setRole(""); setPerms(new Set());
+  };
+
+  const last = WIZARD_STEPS.length - 1;
+  const next = () => setStep((s) => Math.min(s + 1, last));
+  const back = () => setStep((s) => Math.max(s - 1, 0));
+
+  const togglePerm = (id: string) =>
+    setPerms((prev) => {
+      const n = new Set(prev);
+      n.has(id) ? n.delete(id) : n.add(id);
+      return n;
+    });
+
+  return (
+    <Sheet
+      open={open}
+      onOpenChange={(o) => {
+        setOpen(o);
+        if (!o) reset();
+      }}
+    >
+      <SheetTrigger asChild>{trigger}</SheetTrigger>
+      <SheetContent
+        side="right"
+        className="flex w-full flex-col gap-0 p-0 sm:max-w-lg"
+      >
+        <SheetHeader className="border-b">
+          <SheetTitle className="font-display text-lg font-extrabold">
+            Benutzer erstellen
+          </SheetTitle>
+          <p className="text-sm text-muted-foreground">{STEP_HINTS[step]}</p>
+          <Stepper current={step} />
+        </SheetHeader>
+
+        <div className="flex-1 overflow-y-auto p-4">
+          {step === 0 && (
+            <StepContact
+              firstName={firstName} setFirstName={setFirstName}
+              lastName={lastName} setLastName={setLastName}
+              email={email} setEmail={setEmail}
+              hidePhones={hidePhones} setHidePhones={setHidePhones}
+            />
+          )}
+          {step === 1 && (
+            <StepExtra
+              language={language} setLanguage={setLanguage}
+              spoken={spoken} setSpoken={setSpoken}
+              notes={notes} setNotes={setNotes}
+            />
+          )}
+          {step === 2 && (
+            <StepRole
+              role={role} setRole={setRole}
+              perms={perms} togglePerm={togglePerm}
+            />
+          )}
+          {step === 3 && <StepProperties />}
+        </div>
+
+        <SheetFooter className="flex-row gap-2 border-t">
+          <Button
+            type="button"
+            variant="outline"
+            className="flex-1"
+            onClick={() => (step === 0 ? setOpen(false) : back())}
+          >
+            {step === 0 ? "Abbrechen" : "Zurück"}
+          </Button>
+          <Button
+            type="button"
+            className="flex-1"
+            onClick={() => {
+              if (step === last) setOpen(false);
+              else next();
+            }}
+          >
+            {step === last ? "Erstellen" : "Weiter"}
+          </Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+const STEP_HINTS = [
+  "Fügen Sie die Kontaktinformationen dieses Benutzers hinzu.",
+  "Fügen Sie zusätzliche Informationen über diesen Benutzer hinzu.",
+  "Wählen Sie die Rolle und die Berechtigungen für diesen Benutzer aus.",
+  "Weisen Sie diesem Benutzer Objekte zu.",
+];
+
+function Stepper({ current }: { current: number }) {
+  return (
+    <div className="flex items-center pt-2">
+      {WIZARD_STEPS.map((label, i) => {
+        const done = i < current;
+        const active = i === current;
+        return (
+          <div key={label} className="flex flex-1 items-center last:flex-none">
+            <div className="flex flex-col items-center gap-1">
+              <span
+                className={cn(
+                  "flex size-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold transition-colors",
+                  done && "border-accent bg-accent text-accent-foreground",
+                  active && "border-accent text-accent",
+                  !done && !active && "border-border text-muted-foreground",
+                )}
+              >
+                {done ? <Icon icon="ph:check" className="size-4" /> : i + 1}
+              </span>
+            </div>
+            {i < WIZARD_STEPS.length - 1 && (
+              <span
+                className={cn(
+                  "mx-1 h-0.5 flex-1 transition-colors",
+                  i < current ? "bg-accent" : "bg-border",
+                )}
+              />
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ---------- Schritt 1: Kontakt ---------- */
+function StepContact(p: {
+  firstName: string; setFirstName: (v: string) => void;
+  lastName: string; setLastName: (v: string) => void;
+  email: string; setEmail: (v: string) => void;
+  hidePhones: boolean; setHidePhones: (v: boolean) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-5">
+      <FieldText label="Vorname" required value={p.firstName} onChange={p.setFirstName} />
+      <FieldText label="Nachname" required value={p.lastName} onChange={p.setLastName} />
+      <FieldText label="E-Mail" required type="email" value={p.email} onChange={p.setEmail} />
+
+      <div className="flex flex-col gap-1.5">
+        <Label>Telefonnummer</Label>
+        <div className="flex gap-2">
+          <PhoneCountry />
+          <Input type="tel" placeholder="+49 1525 1239026" className="flex-1" />
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label>Zusätzliche Telefonnummer</Label>
+        <div className="flex gap-2">
+          <PhoneCountry />
+          <Input type="tel" placeholder="+1 2015550123" className="flex-1" />
+        </div>
+      </div>
+
+      <label className="flex items-center gap-2 text-sm">
+        <Checkbox
+          checked={p.hidePhones}
+          onCheckedChange={(v) => p.setHidePhones(Boolean(v))}
+        />
+        Telefonnummern auf der Website ausblenden.
+      </label>
+    </div>
+  );
+}
+
+function PhoneCountry() {
+  return (
+    <Select defaultValue="de">
+      <SelectTrigger className="w-32 shrink-0">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="de">DE +49</SelectItem>
+        <SelectItem value="at">AT +43</SelectItem>
+        <SelectItem value="ch">CH +41</SelectItem>
+        <SelectItem value="dk">DK +45</SelectItem>
+        <SelectItem value="us">US +1</SelectItem>
+      </SelectContent>
+    </Select>
+  );
+}
+
+/* ---------- Schritt 2: Zusatzinfos ---------- */
+function StepExtra(p: {
+  language: string; setLanguage: (v: string) => void;
+  spoken: string[]; setSpoken: (v: string[]) => void;
+  notes: string; setNotes: (v: string) => void;
+}) {
+  const [search, setSearch] = useState("");
+
+  const toggle = (lang: string) =>
+    p.setSpoken(
+      p.spoken.includes(lang)
+        ? p.spoken.filter((l) => l !== lang)
+        : [...p.spoken, lang],
+    );
+
+  const filtered = LANGUAGES.filter((l) =>
+    l.toLowerCase().includes(search.trim().toLowerCase()),
+  );
+
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="w-lang">
+          Bevorzugte Sprache <span className="text-destructive">*</span>
+        </Label>
+        <Select value={p.language} onValueChange={p.setLanguage}>
+          <SelectTrigger id="w-lang">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="de">Deutsch</SelectItem>
+            <SelectItem value="da">Dänisch</SelectItem>
+            <SelectItem value="en">Englisch</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label>Gesprochene Sprachen</Label>
+        {p.spoken.length > 0 && (
+          <div className="flex flex-wrap gap-1.5">
+            {p.spoken.map((l) => (
+              <button
+                key={l}
+                type="button"
+                onClick={() => toggle(l)}
+                className="inline-flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1 text-xs"
+              >
+                <Icon icon="ph:x" className="size-3" />
+                {l}
+              </button>
+            ))}
+          </div>
+        )}
+        <div className="rounded-(--radius) border border-input">
+          {/* Suchfeld */}
+          <div className="flex items-center gap-2 border-b border-input px-3">
+            <Icon
+              icon="ph:magnifying-glass"
+              className="size-4 shrink-0 text-muted-foreground"
+            />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Sprache suchen…"
+              className="w-full bg-transparent py-2 text-sm outline-none placeholder:text-muted-foreground"
+            />
+          </div>
+          {/* Gefilterte Liste */}
+          <div className="max-h-48 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <p className="px-3 py-4 text-sm text-muted-foreground">
+                Keine Sprache gefunden.
+              </p>
+            ) : (
+              filtered.map((l) => (
+                <label
+                  key={l}
+                  className="flex cursor-pointer items-center gap-2 px-3 py-2 text-sm hover:bg-secondary/50"
+                >
+                  <Checkbox
+                    checked={p.spoken.includes(l)}
+                    onCheckedChange={() => toggle(l)}
+                  />
+                  {l}
+                </label>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="w-notes">Anmerkungen</Label>
+        <Input
+          id="w-notes"
+          value={p.notes}
+          onChange={(e) => p.setNotes(e.target.value)}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Schritt 3: Rolle + Berechtigungen ---------- */
+function StepRole(p: {
+  role: string; setRole: (v: string) => void;
+  perms: Set<string>; togglePerm: (id: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="w-role">
+          Rolle <span className="text-destructive">*</span>
+        </Label>
+        <Select value={p.role} onValueChange={p.setRole}>
+          <SelectTrigger id="w-role">
+            <SelectValue placeholder="Rolle wählen…" />
+          </SelectTrigger>
+          <SelectContent>
+            {ROLES.map((r) => (
+              <SelectItem key={r.value} value={r.value}>
+                {r.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {p.role && (
+        <>
+          <PermissionGroup
+            title="Allgemeine Berechtigungen"
+            items={GENERAL_PERMISSIONS}
+            perms={p.perms}
+            toggle={p.togglePerm}
+          />
+          <PermissionGroup
+            title="PM-Module-Berechtigungen"
+            items={PM_PERMISSIONS}
+            perms={p.perms}
+            toggle={p.togglePerm}
+          />
+        </>
+      )}
+    </div>
+  );
+}
+
+function PermissionGroup({
+  title,
+  items,
+  perms,
+  toggle,
+}: {
+  title: string;
+  items: Permission[];
+  perms: Set<string>;
+  toggle: (id: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <h4 className="font-display text-sm font-extrabold">{title}</h4>
+      <div className="flex flex-col divide-y divide-border rounded-(--radius) border border-input">
+        {items.map((perm) => (
+          <label
+            key={perm.id}
+            className="flex cursor-pointer items-start justify-between gap-3 p-3 hover:bg-secondary/40"
+          >
+            <span className="flex flex-col gap-0.5">
+              <span className="text-sm font-medium">{perm.label}</span>
+              <span className="text-xs text-muted-foreground">{perm.hint}</span>
+            </span>
+            <Checkbox
+              className="mt-0.5 shrink-0"
+              checked={perms.has(perm.id)}
+              onCheckedChange={() => toggle(perm.id)}
+            />
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Schritt 4: Objektzuweisung ---------- */
+function StepProperties() {
+  return (
+    <div className="flex flex-col items-center gap-3 py-12 text-center">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/illustrations/rentals-building.svg"
+        alt=""
+        aria-hidden
+        className="h-32 w-auto"
+      />
+      <p className="font-display text-lg font-extrabold">
+        Noch keine Unterkünfte
+      </p>
+      <p className="text-sm text-muted-foreground">
+        Erstellen Sie Ihre Unterkünfte, damit Sie sie später Ihren Benutzern
+        zuweisen können.
+      </p>
+    </div>
+  );
+}
+
+/* ---------- Hilfs-Feld ---------- */
+function FieldText({
+  label,
+  required,
+  type = "text",
+  value,
+  onChange,
+}: {
+  label: string;
+  required?: boolean;
+  type?: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label>
+        {label}
+        {required && <span className="text-destructive"> *</span>}
+      </Label>
+      <Input type={type} value={value} onChange={(e) => onChange(e.target.value)} />
+    </div>
+  );
+}

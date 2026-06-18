@@ -79,6 +79,7 @@ C4Container
     Container_Boundary(nd, "NextDays") {
         Container(marketing, "Marketing-Website", "Next.js (entkoppelt)", "Landing/Pricing/Blog — KEINE PMS/Auth-Kopplung (ADR-0002)")
         Container(web, "Web Dashboard", "Next.js, TypeScript", "Vermieter-PMS-UI + Portale (Vercel)")
+        Container(mobile, "Mobile-App", "React Native 0.86 + React Navigation (apps/mobile)", "Native Gäste- & Gastgeber-App (iOS/Android); teilt das FastAPI-Backend (/api/v1)")
         Container(storybook, "Storybook", "react-vite (eigenes Package apps/storybook)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
         Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 16 Vertical Slices unter /api/v1")
         ContainerDb(db, "Datenbank", "Supabase / Postgres", "41 Tabellen, Multi-Tenant, RLS, tenant_id")
@@ -93,8 +94,11 @@ C4Container
 
     Rel(landlord, web, "Nutzt", "HTTPS")
     Rel(guest, web, "Bucht", "HTTPS")
+    Rel(landlord, mobile, "Verwaltet (Gastgeber-App)", "HTTPS")
+    Rel(guest, mobile, "Bucht & reist (Gäste-App)", "HTTPS")
     Rel(storybook, web, "fertige Komponenten übernehmen", "manuell/Build-Zeit")
     Rel(web, api, "Ruft auf", "JSON/HTTPS")
+    Rel(mobile, api, "Ruft auf", "JSON/HTTPS")
     Rel(api, db, "Liest/schreibt", "SQL (RLS)")
     Rel(api, cache, "Liest/schreibt", "Redis-Protokoll")
     Rel(api, queue, "Reiht Jobs ein", "Redis")
@@ -200,6 +204,15 @@ erDiagram
         uuid tenant_id FK
         enum role "admin|co_admin|owner|staff|cleaner"
         string email
+        string full_name
+        string phone "E.164"
+        string additional_phone
+        bool hide_phones
+        string preferred_language
+        array spoken_languages
+        string website
+        text description
+        string avatar_url
     }
     PROPERTY {
         uuid id PK
@@ -381,6 +394,38 @@ sequenceDiagram
     end
 ```
 
+### 7.1a Social-Login (Google via Supabase OAuth)
+
+Neben dem FastAPI-Login („E-Mail/Passwort", Cookies `nd_access`/`nd_refresh`)
+gibt es einen Social-Login über **Supabase Auth**. Der Browser spricht hier
+direkt mit Supabase (publishable Key), die Session liegt in den Supabase-
+Auth-Cookies (`@supabase/ssr`). Das Dashboard-Gate akzeptiert **beide**
+Session-Arten.
+
+```mermaid
+sequenceDiagram
+    actor U as Nutzer
+    participant Web as Web (Next.js)
+    participant SB as Supabase Auth
+    participant G as Google OAuth
+
+    U->>Web: Klick „Mit Google anmelden" (/login oder /signup)
+    Web->>SB: signInWithOAuth(google, redirectTo=/auth/callback)
+    SB->>G: Weiterleitung zum Google-Consent
+    G-->>SB: code (Callback /auth/v1/callback)
+    SB-->>Web: Redirect /auth/callback?code=…
+    Web->>SB: exchangeCodeForSession(code)
+    SB-->>Web: Session-Cookies gesetzt
+    Web-->>U: Redirect ins Dashboard (/)
+```
+
+- **Google-Client:** OAuth-Client-ID in Google Cloud (Projekt `nextdays`),
+  Redirect-URI = `https://<ref>.supabase.co/auth/v1/callback`. Das Client-Secret
+  liegt **nur** in Supabase (Provider-Konfiguration), nie im Repo.
+- **Apple:** vorgesehen, aber noch nicht konfiguriert (Buttons deaktiviert).
+- **Rollen/Tenant:** ein per Social-Login angelegter Nutzer hat noch keine
+  FastAPI-Rolle; das Profil/Tenant-Mapping folgt im auth-Slice.
+
 ### 7.2 Direktbuchung mit Double-Booking-Schutz
 
 ```mermaid
@@ -462,6 +507,11 @@ stateDiagram-v2
         gegen Double-Booking
     end note
 ```
+
+Beim **manuellen Anlegen** über den Kalender (`POST /api/v1/reservations`,
+Reservierungs-Assistent im Vermieter-Dashboard) kann der Vermieter den Status
+direkt auf `confirmed` setzen; das Backend belegt sofort die Übernachtungstage
+in `availability` (= `booked`).
 
 ---
 

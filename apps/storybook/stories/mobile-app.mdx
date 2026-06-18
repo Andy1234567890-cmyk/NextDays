@@ -1,0 +1,131 @@
+import { Meta } from '@storybook/blocks';
+import { Mermaid } from '@/components/docs/mermaid';
+
+<Meta title="Mobile-App/Übersicht & Inhalt" />
+
+# Mobile-App (My Next Day)
+
+Native App für **Gäste** (Suchen, Buchen, Aufenthalt) und **Gastgeber**
+(Objekte, Kalender, Buchungen). Gebaut mit **bare React Native 0.86** (CLI, ohne
+Expo) und React Navigation 7. Teilt sich das FastAPI-Backend (`/api/v1`) mit der
+Web-App. Anzeigename auf dem Gerät: **My Next Day**.
+
+## Inhaltsverzeichnis
+
+1. [Stack & Aufbau](#stack--aufbau)
+2. [App-Start & Splash](#app-start--splash)
+3. [Branding: Name & Icon](#branding-name--icon)
+4. [Gast-Startseite (Booking × Airbnb)](#gast-startseite-booking--airbnb)
+5. [Navigation (Gast / Gastgeber)](#navigation-gast--gastgeber)
+6. [Backend-Anbindung](#backend-anbindung)
+7. [Änderungen dieser Iteration](#änderungen-dieser-iteration)
+
+---
+
+## Stack & Aufbau
+
+- **React Native 0.86** — CLI-Projekt mit echten `ios/`- und `android/`-Ordnern, New Architecture, React 19
+- **React Navigation 7** — ein Root-Stack über zwei Bottom-Tab-Navigatoren (Gast/Gastgeber)
+- **react-native-svg** (Icon-Set), **react-native-keychain** (Auth-Token)
+- **Schibsted Grotesk** als native TTFs; Akzentfarbe `#C42B3A`, cremiger Grund `#F6F2EC`
+- Design-System 1:1 aus dem Design-Kit portiert (Tokens, Icon-Pfade, Komponenten — `kit.tsx`)
+
+```
+App.tsx          GestureHandler → SafeArea → Theme → NavigationContainer → Splash
+navigation/      types.ts, GuestTabs.tsx, HostTabs.tsx
+screens/         RoleSelect, GuestHome/Discover/Wishlist/Trips/Profile, Host*, ListingDetail, Checkout, Checkin
+components/       Splash, ListingCard, ui/ (Icon, kit, Screen)
+theme/           tokens.ts (Farben/Typo/Dichte, Light+Dark) + ThemeProvider
+ios/ · android/  native Projekte
+```
+
+## App-Start & Splash
+
+Beim Start zeigt zunächst der native **LaunchScreen** (iOS-Storyboard) das
+NextDays-Logo auf cremigem Grund — kein „Powered by React Native" mehr. Darüber
+legt sich ein **JS-Splash** (`components/Splash.tsx`), der dasselbe Logo zeigt
+und nach kurzer Zeit sanft ausblendet, sodass der Übergang ins App-UI ohne
+Flackern wirkt. Die App öffnet **direkt in der Gast-Startseite** (wie
+Booking/Airbnb), nicht mehr in einer Rollen-Auswahl.
+
+## Branding: Name & Icon
+
+- **Anzeigename:** „My Next Day" (`CFBundleDisplayName` in `Info.plist`)
+- **App-Icon:** aus dem NextDays-Logo generiert, alle iOS-Größen
+  (`Images.xcassets/AppIcon.appiconset`, cremiger Hintergrund, kein Alpha)
+- **Splash-Logo:** `logo-cropped_transparent.png` (NextDays — powered by AirSmil)
+
+## Gast-Startseite (Booking × Airbnb)
+
+Der erste Tab **Erkunden** (`GuestHome.tsx`) ist eine Discovery-Startseite, die
+die Stärken beider Vorbilder im NextDays-Look mischt:
+
+| Abschnitt | Vorbild |
+| --- | --- |
+| Reiter Aufenthalte · Erlebnisse · Services (mit „NEU"-Badges) | Airbnb |
+| Such-Box Ort / Datum / Gäste + „Suche"-Button | Booking |
+| Kategorie-Chips (Strand, Natur, Stadt …) | beide |
+| „Suche fortsetzen" (zuletzt gesuchte Orte) | Booking |
+| Beliebte Unterkünfte (Querscroll, „Gäste-Favorit", Herz) | Airbnb |
+| NextDays+ Treue-Banner | Booking Genius |
+| Angesagte Reiseziele (große Stadt-Karten) | beide |
+| Wochenend-Angebote (Hotelkarten mit Score) | Booking |
+
+Tippen auf eine Unterkunft öffnet `ListingDetail`.
+
+## Navigation (Gast / Gastgeber)
+
+<Mermaid
+  title="Mobile-Navigation — Root-Stack über zwei Tab-Bereiche"
+  chart={`flowchart TB
+    START(["App-Start"]) --> SPLASH["Splash (Logo)"]
+    SPLASH --> GT
+
+    subgraph STACK["Root-Stack (React Navigation)"]
+        subgraph GT["Gast-Tabs"]
+            HOME["Erkunden (GuestHome)"]
+            SEARCH["Suche (GuestDiscover)"]
+            WISH["Merkliste"]
+            TRIPS["Reisen"]
+            GPROF["Profil"]
+        end
+        subgraph HT["Gastgeber-Tabs"]
+            DASH["Dashboard"]
+            CAL["Kalender"]
+            HINBOX["Posteingang"]
+            LIST["Inserate"]
+            HPROF["Profil"]
+        end
+        ROLE["RoleSelect (Rollen-Auswahl)"]
+        DETAIL["ListingDetail"]
+        CHECKOUT["Checkout"]
+        CHECKIN["Checkin"]
+    end
+
+    HOME --> DETAIL
+    SEARCH --> DETAIL
+    DETAIL --> CHECKOUT
+    GPROF -->|"Als Gastgeber verwalten"| ROLE
+    ROLE -->|"Gast"| GT
+    ROLE -->|"Gastgeber"| HT`}
+/>
+
+Der Gastgeber-Bereich ist über **Profil → „Als Gastgeber verwalten"** erreichbar
+(führt in die Rollen-Auswahl bzw. die Gastgeber-Tabs).
+
+## Backend-Anbindung
+
+Ruft dieselbe `/api/v1`-Schnittstelle wie die Web-App. Basis-URL in
+`lib/config.ts`: iOS-Simulator → `localhost:8000`, Android-Emulator →
+`10.0.2.2:8000`, echtes Gerät → LAN-IP. Auth-Token via Keychain (`lib/auth.ts`).
+Aktuell live angebunden: **Inserate** (`/properties`, Fallback auf Demo-Daten);
+die übrigen Screens nutzen noch Demo-Inhalte.
+
+## Änderungen dieser Iteration
+
+- Neue Gast-Startseite `GuestHome.tsx` (Booking × Airbnb) als erster Tab „Erkunden"
+- App startet direkt in den Gast-Tabs (keine Rollen-Auswahl davor)
+- Echtes Gast-Profil mit Modus-Wechsel „Als Gastgeber verwalten"
+- Splash-Start mit Logo (JS-Splash + nativer LaunchScreen ohne RN-Text)
+- Anzeigename „My Next Day" + generiertes App-Icon (alle iOS-Größen)
+- Gast-Tabs neu: Erkunden · Suche · Merkliste · Reisen · Profil

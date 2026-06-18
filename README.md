@@ -211,6 +211,7 @@ nextdays/
 │   └── migrations/         # 19 Migrationen (Kern + Marktplatz + RLS), auf echter DB angewandt
 ├── apps/
 │   ├── web/                # Next.js — Vermieter-Dashboard + Portal (App-Gerüst)
+│   ├── mobile/             # Expo / React Native — native Gäste- & Gastgeber-App
 │   ├── storybook/          # Design-System & Komponenten-Werkstatt (eigenes Package)
 │   │   ├── components/     # ui/ + pms/ — entstehen HIER (Designer)
 │   │   ├── stories/        # Stories (ui/ + pms/) + Eigentümer-Doku (MDX)

@@ -220,11 +220,13 @@ class AuthService:
     def _rollback_tenant(self, tenant_id: str) -> None:
         try:
             self._service.table("tenants").delete().eq("id", tenant_id).execute()
-        except Exception as exc:
+        # Best-Effort-Rollback: jeder SDK-Fehler wird geloggt, nie verschluckt.
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             log.error("rollback_tenant_failed", tenant_id=tenant_id, error=str(exc))
 
     def _rollback_user(self, user_id: str) -> None:
         try:
             self._service.auth.admin.delete_user(user_id)
-        except Exception as exc:
+        # Best-Effort-Rollback: jeder SDK-Fehler wird geloggt, nie verschluckt.
+        except Exception as exc:  # pylint: disable=broad-exception-caught
             log.error("rollback_user_failed", user_id=user_id, error=str(exc))

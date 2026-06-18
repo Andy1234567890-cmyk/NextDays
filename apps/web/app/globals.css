@@ -1,0 +1,217 @@
+@import "tailwindcss";
+/* Animations-Utilities (animate-in, slide-in-from-*, fade-*) für Tailwind v4.
+   Ohne dies erzeugen die Sheet-/Dialog-Klassen kein CSS → kein sanftes Sliden. */
+@import "tw-animate-css";
+
+/* Tailwind v4 — Theme-Tokens als CSS-Variablen. KEIN tailwind.config.ts (PROJECT.md §6).
+ *
+ * ===========================================================================
+ * EINZIGE QUELLE DER WAHRHEIT FÜR ALLE FARBEN/TOKENS.
+ * Markenfarben aus dem offiziellen NextDays-Logo: Schwarz #0a0a0a (Primär),
+ * Rot #b82028 (Akzent). Identisch zum Design-System (apps/storybook).
+ * Komponenten nutzen ausschließlich semantische Token-Namen, nie feste Hex-Werte.
+ * ===========================================================================
+ */
+
+@custom-variant dark (&:is(.dark *));
+
+/* Mappt die semantischen Tokens auf Tailwind-Utility-Farben + Fonts. */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Charts (Umsatzentwicklung, Kanalverteilung — Lastenheft §2.1). */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Sidebar (Dashboard-Navigation). */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius: 0.5rem;
+}
+
+/* Schriften: Inter für UI/Text, Fraunces für Display/Überschriften.
+   (Fraunces als freier, humanistischer Ersatz für die kommerzielle RL Aqva;
+   wird per next/font self-hosted geladen — DSGVO-konform, kein Google-CDN.)
+   Eigener @theme-Block (NICHT inline), damit Tailwind die Utilities
+   .font-sans / .font-display erzeugt. Keine Fallback-Schriften. */
+@theme {
+  --font-sans: var(--font-inter), sans-serif;
+  --font-display: var(--font-fraunces), sans-serif;
+}
+
+/* Light (Default). */
+:root {
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #0a0a0a;           /* Logo-Schwarz */
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #b82028;           /* Logo-Rot */
+  --accent-foreground: #ffffff;
+  --destructive: #b82028;
+  --destructive-foreground: #ffffff;
+  --success: #16a34a;
+  --success-foreground: #ffffff;
+  --warning: #d97706;
+  --warning-foreground: #ffffff;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #b82028;
+
+  --chart-1: #b82028;
+  --chart-2: #0a0a0a;
+  --chart-3: #2563eb;
+  --chart-4: #16a34a;
+  --chart-5: #d97706;
+
+  --sidebar: #fafafa;
+  --sidebar-foreground: #0a0a0a;
+  --sidebar-primary: #0a0a0a;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f4f4f5;
+  --sidebar-accent-foreground: #18181b;
+  --sidebar-border: #e4e4e7;
+  --sidebar-ring: #b82028;
+}
+
+/* Dark Mode (.dark auf <html> via next-themes). */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --card: #161616;
+  --card-foreground: #fafafa;
+  --popover: #161616;
+  --popover-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #0a0a0a;
+  --secondary: #27272a;
+  --secondary-foreground: #f4f4f5;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --accent: #e0454d;
+  --accent-foreground: #ffffff;
+  --destructive: #e0454d;
+  --destructive-foreground: #fafafa;
+  --success: #22c55e;
+  --success-foreground: #0a0a0a;
+  --warning: #f59e0b;
+  --warning-foreground: #0a0a0a;
+  --border: #27272a;
+  --input: #27272a;
+  --ring: #e0454d;
+
+  --chart-1: #e0454d;
+  --chart-2: #fafafa;
+  --chart-3: #60a5fa;
+  --chart-4: #22c55e;
+  --chart-5: #f59e0b;
+
+  --sidebar: #161616;
+  --sidebar-foreground: #fafafa;
+  --sidebar-primary: #fafafa;
+  --sidebar-primary-foreground: #0a0a0a;
+  --sidebar-accent: #27272a;
+  --sidebar-accent-foreground: #f4f4f5;
+  --sidebar-border: #27272a;
+  --sidebar-ring: #e0454d;
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* Display-Schrift (Fraunces) — nur die Schriftfamilie, OHNE Gewicht.
+   Direkt --font-fraunces (von next/font auf <body> gesetzt) statt der
+   @theme-Variable --font-display — letztere wird auf :root ausgewertet, wo
+   --font-fraunces noch nicht existiert und damit leer bliebe.
+   So kann das Gewicht pro Element per Utility gesteuert werden (z. B.
+   normale Navigation vs. extra-fette Überschriften). */
+.font-display {
+  font-family: var(--font-fraunces), sans-serif;
+}
+
+/* Echte Überschriften: Fraunces extra bold. */
+h1, h2, h3 {
+  font-family: var(--font-fraunces), sans-serif;
+  font-weight: 800; /* Extra Bold — Fraunces ist Variable Font bis 900 */
+}
+
+/* TipTap-Rich-Text-Editor (Beschreibungstexte). */
+.tiptap > * + * {
+  margin-top: 0.5rem;
+}
+.tiptap ul {
+  list-style: disc;
+  padding-left: 1.25rem;
+}
+.tiptap ol {
+  list-style: decimal;
+  padding-left: 1.25rem;
+}
+.tiptap blockquote {
+  border-left: 2px solid var(--border);
+  padding-left: 0.75rem;
+  color: var(--muted-foreground);
+}
+.tiptap a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.tiptap hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 0.75rem 0;
+}
+/* Platzhalter, solange leer. */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

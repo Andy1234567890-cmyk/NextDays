@@ -120,6 +120,35 @@ entsteht nur per register). Tenant aus dem eingeloggten Nutzer.
   "tenant_id": "uuid" }
 ```
 
+### Konto & 2FA (Sicherheit-Seite)
+
+Alle Endpunkte erfordern eine gültige Session (Bearer-Token). Quelle der Wahrheit
+ist FastAPI; reine OAuth-Konten (Google) werden beim ersten Zugriff lazy
+provisioniert (Tenant + `users`-Row).
+
+| Methode & Pfad | Zweck |
+| --- | --- |
+| `GET /api/v1/auth/account` | Konto-/Profil-Übersicht (E-Mail, Name, Rolle, Telefon, Sprachen, Website, Beschreibung, Avatar, `has_password`, `totp_enabled`) |
+| `GET /api/v1/auth/account/users` | Nutzer des eigenen Tenants (für die Objekt-Kontakt-Auswahl) — `user_id`, Name, E-Mail, Rolle, Telefon, Avatar |
+| `PATCH /api/v1/auth/account/email` | E-Mail ändern (`{ "new_email": "…" }`) |
+| `PATCH /api/v1/auth/account/name` | Anzeigename ändern (`{ "full_name": "…" }`) |
+| `PATCH /api/v1/auth/account/profile` | Profil-/Kontaktdaten ändern (Lodgify „Edit contact information"): `full_name`, `phone`, `additional_phone`, `hide_phones`, `preferred_language`, `spoken_languages`, `website`, `description`, `avatar_url` — nur gesendete Felder werden geschrieben |
+| `POST /api/v1/auth/account/avatar` | Profilbild hochladen (`multipart/form-data`, Feld `file`) → legt in den `avatars`-Bucket (`{user_id}/avatar.<ext>`) und setzt `avatar_url`. Läuft über den Service-Client, daher für beide Login-Wege nutzbar |
+| `PATCH /api/v1/auth/account/password` | Passwort ändern (`{ "current_password"?, "new_password" }`) |
+| `POST /api/v1/auth/totp/enroll` | TOTP-Enrollment starten → `secret`, `otpauth_uri`, `qr_data_url` |
+| `POST /api/v1/auth/totp/verify` | Enrollment per Code bestätigen → `recovery_codes` |
+| `POST /api/v1/auth/totp/disable` | 2FA mit gültigem Code (oder Recovery) abschalten |
+
+Die **Profilfelder** (Telefon, Sprachen, Website, Beschreibung, Avatar) liegen
+als eigene Spalten in `public.users`. Der **Objekt-Hauptkontakt** (Lodgify
+„Contact page") verweist über `type_attributes.contact.userId` des Objekts auf
+einen dieser Nutzer. Profilbilder liegen im öffentlichen Storage-Bucket
+`avatars` (Lesen öffentlich; Schreiben nur in den eigenen `{user_id}/`-Ordner
+bzw. serverseitig über den Avatar-Endpunkt).
+
+2FA läuft als **TOTP im eigenen Backend** (`pyotp`, Tabelle `public.user_mfa`) —
+kein externer SMS-Dienst. SMS ist vorgesehen, aber erst mit einem Provider aktiv.
+
 ### Rollen-Guard
 
 `require_role(...)` (in `features/auth/dependencies.py`) ist eine
@@ -133,6 +162,73 @@ from src.features.auth.schemas import UserRole
 @router.get("/nur-owner", dependencies=[Depends(require_role(UserRole.owner))])
 def nur_owner(): ...
 ```
+
+---
+
+## properties (CRUD implementiert)
+
+Objekt-Verwaltung (Lodgify „Rentals"). Alle Endpunkte erfordern eine Session
+(Bearer-Token); der Tenant kommt aus dem JWT, jeder Zugriff ist tenant-scoped.
+
+| Methode & Pfad | Zweck |
+| --- | --- |
+| `GET /api/v1/properties` | Objekte des Tenants auflisten |
+| `POST /api/v1/properties` | Objekt anlegen → `201` |
+| `GET /api/v1/properties/{id}` | Einzelnes Objekt |
+| `PATCH /api/v1/properties/{id}` | Felder ändern (partiell) |
+| `DELETE /api/v1/properties/{id}` | Objekt löschen → `204` |
+
+Felder: `title`, `description`, `property_type`
+(`ferienhaus|appartement|glamping|tiny_house|stellplatz|hausboot`), `status`
+(`draft|active|inactive`), `max_guests`, strukturierte Adresse
+(`street|house_number|postal_code|city|country|lat|lng`), `amenities[]`,
+`photos[]`. Sektionen ohne eigene Spalte (Räume, Schlafmöglichkeiten, m²,
+Einheiten) liegen flexibel in `type_attributes` (jsonb) — neue Lodgify-Sektionen
+brauchen so keine Migration.
+
+**Richtlinien** (Lodgify „Policies") liegen ebenfalls in `type_attributes`
+unter dem Key `policies`: strukturierte `policy` (Zahlungsplan, Stornoart,
+Kaution, Angebots-Gültigkeit), `bookability` (`instant|request|inquiry`),
+`checkInTime`, `checkOutTime`, mehrsprachige `ratesInfo`/`rentalAgreement`
+(`{de,en,da}`).
+
+**Preise** (Lodgify „Pricing") liegen in `type_attributes.pricing`:
+`currency`, `basePrice`, `dynamicPricing`, `customByWeekday`/`weekdayPrices`,
+`markup` (% je externem Kanal `airbnb`/`booking`/`google`), `extraGuestCharge`,
+`shortStay*`, `lengthPrices[]` (Wochen-/Monats-/eigene Längenpreise) sowie
+`fees[]`, `taxes[]` (USt./lokal), `promotions[]`, `addOns[]`, `businessTaxId`,
+`totRegistrationId` und `basePriceLabel`.
+
+**Verfügbarkeit** (Lodgify „Availability") liegt in `type_attributes.availability`:
+`minStay`, `minStayByDays`, `maxStay`, sowie pro-Kanal-fähige Werte
+(`preparationDays`, `bookingWindowDays`, `advanceNotice` je als
+`{custom, global, channels:{direct,airbnb,booking,google}}`) und gesperrte
+Wochentage (`unavailableCheckIn`/`unavailableCheckOut`).
+
+**Compliance** (Lodgify „Compliance") liegt in `type_attributes.compliance`:
+`registrationNumbers` (komma-getrennter String, max. 100 Zeichen) — eine oder
+mehrere Registrierungsnummern für die eigene Website zur Erfüllung lokaler
+Vorschriften. Für Airbnb/Booking.com werden die Nummern direkt in deren
+Plattform gepflegt.
+
+**Nachrichten-Platzhalter** (Lodgify „Messaging placeholders") liegen in
+`type_attributes.messaging`: pro Block (`checkIn`, `checkOut`, `directions`,
+`doorInstructions`, `rules`, `wifi`, `localGuide`, `emergency`) ein
+mehrsprachiger `LocalizedText` (`{de,en,da}`). Jeder Block hat einen Shortcode
+(`{{CheckinInstructions}}` …) für automatische Gästenachrichten.
+
+**Standort-Zusätze** (Lodgify „Location") liegen in `type_attributes.location`
+(die Basis-Adresse `street`/`house_number`/`postal_code`/`city`/`country`/`lat`/
+`lng` bleibt in eigenen Spalten): `stateProvince`, `useCustomCity`+`customCity`,
+`showPreciseLocation`, `distances` (`unit` `km|mi` + `values` je Verkehrsmittel
+`airport`/`bus`/`underground`/`train`/`motorway`/`port`), `customMapUrl` (Bild
+im `property-images`-Bucket) und mehrsprachige `directions` (`{de,en,da}`).
+Objekt-Bilder werden über `POST /api/v1/properties/{id}/image` (multipart, Feld
+`file`, optional `?slot=`) in den `property-images`-Bucket geladen
+(`{tenant_id}/{property_id}/{slot}.<ext>`).
+
+Alle Bereiche werden über `PATCH /api/v1/properties/{id}` mit
+`type_attributes` gespeichert (kein eigener Endpunkt; flexibles jsonb).
 
 ---
 
@@ -155,6 +251,60 @@ Alle Endpoints erfordern Auth; `block`/`price-override` zusätzlich die Capabili
 ```
 
 `start` inklusive, `end` exklusiv (Check-out-Tag ist wieder frei).
+
+---
+
+## reservations (implementiert)
+
+Reservierungen anlegen/listen. Eine Reservierung belegt den Zeitraum im
+Kalender (`availability` = `booked`) → derselbe Double-Booking-Schutz wie der
+calendar-Slice. tenant_id stammt aus dem JWT. Leseendpoint erfordert
+`view_calendar`, Anlegen `manage_calendar`.
+
+| Methode | Pfad | Beschreibung |
+|---|---|---|
+| `GET` | `/api/v1/reservations?property_id` | Reservierungen des Tenants (optional je Objekt) |
+| `POST` | `/api/v1/reservations` | Reservierung anlegen — `404` (fremdes Objekt), `409` (Tage belegt) |
+
+```json
+// POST /reservations
+{
+  "property_id": "uuid",
+  "check_in": "2026-05-01",
+  "check_out": "2026-05-04",
+  "channel": "direct",
+  "source": "Telefon",
+  "guests": { "adults": 2, "children": 0, "infants": 0, "pets": 0 },
+  "contact": { "first_name": "Max", "last_name": "Muster", "email": "m@x.de", "phone": "", "country": "DE", "language": "Deutsch" },
+  "total_amount": 540,
+  "status": "confirmed"
+}
+```
+
+Beim Anlegen wird der Gast in `guests` angelegt bzw. per E-Mail wiederverwendet;
+alle Übernachtungstage werden auf `booked` ge-upsertet. `check_out` ist exklusiv.
+
+---
+
+## content (Übersetzung implementiert)
+
+Texte übersetzen (Mietvertrag, Raten-Info) über die Google Cloud Translation
+API. Der API-Key bleibt serverseitig (`GOOGLE_TRANSLATE_API_KEY`). Nur für
+eingeloggte Nutzer.
+
+| Methode | Pfad | Beschreibung |
+|---|---|---|
+| `POST` | `/api/v1/content/translate` | Text/HTML übersetzen (da/en/de) |
+
+```json
+// POST /content/translate
+{ "text": "<p>Willkommen …</p>", "target": "en", "source": "de", "fmt": "html" }
+// → 200
+{ "text": "<p>Welcome …</p>", "detected_source": "de" }
+```
+
+`source` ist optional (auto-Erkennung). `fmt` ist `html` (Rich-Text) oder
+`text`. Fehlt der Key → `503`; API-/Netzwerkfehler → `502`.
 
 ---
 

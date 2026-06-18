@@ -1,0 +1,25 @@
+{
+  "migIndex": 1,
+  "data": [
+    {
+      "path": "assets/fonts/SchibstedGrotesk_400Regular.ttf",
+      "sha1": "f631b6d7387ea9c04931bdbac5c32660e8aaef3a"
+    },
+    {
+      "path": "assets/fonts/SchibstedGrotesk_500Medium.ttf",
+      "sha1": "3eac3d475b8c24bf9a4d0b3315abfb93da00a59f"
+    },
+    {
+      "path": "assets/fonts/SchibstedGrotesk_600SemiBold.ttf",
+      "sha1": "9a1247c60059487c1db8364eb58f572055fccc6a"
+    },
+    {
+      "path": "assets/fonts/SchibstedGrotesk_700Bold.ttf",
+      "sha1": "ca567e6350e3a8d9959512a781b4f3d3e15930a7"
+    },
+    {
+      "path": "assets/fonts/SchibstedGrotesk_800ExtraBold.ttf",
+      "sha1": "a7498fe31a0d801ddfd6f56d32e834a3da74ce7b"
+    }
+  ]
+}

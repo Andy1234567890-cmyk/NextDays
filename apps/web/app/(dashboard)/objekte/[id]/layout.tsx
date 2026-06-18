@@ -1,0 +1,38 @@
+// Objekt-Detail-Layout (wie Lodgify): Untermenü links (Rental details +
+// Reservation setup) mit Objekt-Wähler oben, Inhalt rechts. Server Component
+// lädt das Objekt für den Kopf; die Unterseiten rendern als {children}.
+import { notFound } from "next/navigation";
+
+import { PropertySubnav } from "@/components/objekte/property-subnav";
+import { getProperty } from "@/lib/properties";
+
+export default async function ObjektLayout({
+  children,
+  params,
+}: {
+  children: React.ReactNode;
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const res = await getProperty(id);
+  if (!res.ok) {
+    if (res.error.includes("nicht gefunden")) notFound();
+    return (
+      <div className="p-2 text-sm text-destructive">
+        Objekt konnte nicht geladen werden: {res.error}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[16rem_1fr]">
+      <PropertySubnav
+        id={id}
+        title={res.data.title}
+        photo={res.data.photos[0] ?? null}
+        status={res.data.status}
+      />
+      <div className="min-w-0">{children}</div>
+    </div>
+  );
+}
