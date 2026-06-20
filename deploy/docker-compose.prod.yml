@@ -59,6 +59,12 @@ services:
           memory: 1g
     # Horizontale Skalierung (1–2 Instanzen) erfolgt in Coolify über die
     # Replica-Einstellung der Ressource, nicht hier hart kodiert.
+    networks:
+      # default = Coolify/Traefik-Netz (externe Erreichbarkeit via Domain).
+      - default
+      # supabase-internal = stabiles Netz zum Supabase-Stack: die API erreicht
+      # darüber Kong per Name (SUPABASE_URL=http://kong:8000), ohne Internet-Umweg.
+      - supabase-internal
 
   redis:
     image: redis:7-alpine
@@ -87,6 +93,9 @@ services:
       resources:
         limits:
           memory: 512m
+    networks:
+      # Redis nur im default-Netz (nur die API spricht mit ihm, intern).
+      - default
 
   # --- Worker (Background-Queue / OCR-Jobs) — STUB, später aktivieren ---------
   # PROJECT.md sieht den Worker von Anfang an vor (Redis als Broker). Verarbeitet
@@ -112,3 +121,13 @@ services:
 # Host-Bind-Mount (${DATA_ROOT}/redis) im Service oben → 200-GB-Volume.
 # Grund: Coolify überschreibt Named-Volume-driver_opts (Daten sonst auf OS-SSD).
 # Voraussetzung: mkdir -p ${DATA_ROOT}/redis (siehe deploy/supabase/README.md).
+
+# Netzwerke. default = Coolify-verwaltetes App-Netz. supabase-internal = das
+# stabile, benannte externe Netz (auch im Supabase- und Kong-Compose), über das
+# die API Kong/auth/rest per Name erreicht. external + name: → Coolify nimmt das
+# vorhandene Netz, legt kein isoliertes neues an (sonst Name-Resolution-Fehler).
+networks:
+  default:
+  supabase-internal:
+    external: true
+    name: supabase-internal
