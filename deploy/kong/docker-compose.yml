@@ -41,9 +41,9 @@ services:
       start_period: 15s
     networks:
       # default = Coolify/Traefik-Netz (externe Erreichbarkeit via Domain).
-      default:
+      - default
       # supabase-internal = stabiles Netz zu den Stack-Services (auth/rest/…).
-      supabase-internal:
+      - supabase-internal
     deploy:
       resources:
         limits:
@@ -55,6 +55,7 @@ networks:
   default:
   supabase-internal:
     external: true
+    name: supabase-internal
 
 configs:
   # Inline content statt file:-Mount — Coolify erzeugt die Datei zuverlässig im
