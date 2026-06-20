@@ -323,7 +323,9 @@ configs:
   # Stack NICHT (kein functions/edge-runtime) → würde "role does not exist" werfen.
   db_roles_sql:
     content: |
-      \set pgpass `echo "$POSTGRES_PASSWORD"`
+      -- \getenv liest die Env-Variable DIREKT (psql-Builtin), ohne fragilen
+      -- `echo`-Subshell-Aufruf, der die Container-Env im initdb-Kontext nicht erbt.
+      \getenv pgpass POSTGRES_PASSWORD
       -- Passwort als Session-Setting ablegen: psql-Variablen (:'pgpass') werden
       -- innerhalb von DO $$..$$ NICHT interpoliert, daher der Umweg über
       -- set_config + current_setting im Block.
@@ -346,28 +348,27 @@ configs:
   # JWT-Settings auf DB-Ebene.
   db_jwt_sql:
     content: |
-      \set jwt_secret `echo "$JWT_SECRET"`
-      \set jwt_exp `echo "$JWT_EXP"`
+      \getenv jwt_secret JWT_SECRET
+      \getenv jwt_exp JWT_EXP
       ALTER DATABASE postgres SET "app.settings.jwt_secret" TO :'jwt_secret';
       ALTER DATABASE postgres SET "app.settings.jwt_exp" TO :'jwt_exp';
-  # Interne _supabase-DB (Metadaten für pooler/realtime/logs).
+  # Interne _supabase-DB (Metadaten für pooler/realtime/logs). Owner =
+  # current_user (= supabase_admin, der Init-User) — kein Env-Echo nötig.
   db_supabase_sql:
     content: |
-      \set pguser `echo "$POSTGRES_USER"`
-      CREATE DATABASE _supabase WITH OWNER :pguser;
+      SELECT 'CREATE DATABASE _supabase WITH OWNER ' || quote_ident(current_user)
+      \gexec
   # _realtime-Schema.
   db_realtime_sql:
     content: |
-      \set pguser `echo "$POSTGRES_USER"`
       create schema if not exists _realtime;
-      alter schema _realtime owner to :pguser;
+      alter schema _realtime owner to current_user;
   # _supavisor-Schema (Pooler) in der _supabase-DB.
   db_pooler_sql:
     content: |
-      \set pguser `echo "$POSTGRES_USER"`
       \c _supabase
       create schema if not exists _supavisor;
-      alter schema _supavisor owner to :pguser;
+      alter schema _supavisor owner to current_user;
       \c postgres
 
   # Kong-Gateway-Konfiguration (Quelle/identisch zu deploy/supabase/kong.yml).
