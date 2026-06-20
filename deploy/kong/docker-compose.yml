@@ -1,0 +1,63 @@
+# ──────────────────────────────────────────────────────────────────────────
+# Kong — API-Gateway des Supabase-Stacks, als EIGENSTÄNDIGE Coolify-App.
+#
+# Warum getrennt vom Supabase-Stack: Coolify macht für Compose-Stacks KEIN
+# Rolling-Update (stop-all → start-all → kurze Downtime). Single-Service-Apps
+# mit Healthcheck bekommen dagegen Coolifys Start-before-Stop = echtes
+# Zero-Downtime. Kong ist der einzige extern erreichbare Teil → nur Kong braucht
+# das. Die Backend-Services (auth/rest/storage/meta/realtime) bleiben im
+# Supabase-Stack und werden über das stabile Netz "supabase-internal" per Name
+# erreicht (siehe deploy/supabase/docker-compose.yml).
+#
+# Domain: über Coolify docker_compose_domains für Service "kong" MIT :8000
+# (z.B. https://supabase-kong.65.21.144.136.sslip.io:8000). Siehe README.
+# ──────────────────────────────────────────────────────────────────────────
+services:
+  kong:
+    image: kong/kong:3.9.1
+    container_name: nextdays-kong
+    restart: unless-stopped
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth,request-termination
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+    configs:
+      - source: kong_config
+        target: /usr/local/kong/kong.yml
+    expose:
+      - "8000"
+    # Healthcheck ist die Voraussetzung für Coolifys Rolling-Update: der neue
+    # Kong-Container muss healthy sein, BEVOR der alte gestoppt wird.
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      # default = Coolify/Traefik-Netz (externe Erreichbarkeit via Domain).
+      default:
+      # supabase-internal = stabiles Netz zu den Stack-Services (auth/rest/…).
+      supabase-internal:
+    deploy:
+      resources:
+        limits:
+          # ≥1g: bei 256m killte das OS Kongs nginx-Worker (OOM, signal 9) →
+          # instabile 502/401. Siehe deploy/supabase/README.md.
+          memory: 1g
+
+networks:
+  default:
+  supabase-internal:
+    external: true
+
+configs:
+  kong_config:
+    # Inhalt aus deploy/kong/kong.yml — Coolify erzeugt die Datei im Container.
+    # ${ANON_KEY}/${SERVICE_ROLE_KEY} werden von Compose aus der Coolify-Env interpoliert.
+    file: ./kong.yml
