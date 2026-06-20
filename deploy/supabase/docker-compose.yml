@@ -200,6 +200,10 @@ services:
       DB_USER: supabase_admin
       DB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_AFTER_CONNECT_QUERY: 'SET search_path TO _realtime'
+      # realtime (Elixir) erwartet LOG_LEVEL in KLEINSCHREIBUNG (info/warning/…).
+      # Überschreibt die global vererbte LOG_LEVEL=INFO (sonst Boot-Crash:
+      # binary_to_existing_atom <<"INFO">>).
+      LOG_LEVEL: info
       DB_ENC_KEY: ${REALTIME_ENC_KEY}
       API_JWT_SECRET: ${JWT_SECRET}
       # realtime v2.10x verlangt METRICS_JWT_SECRET zwingend (sonst Boot-Crash).
