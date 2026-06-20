@@ -62,6 +62,40 @@ projektspezifische Keys/Config und gehören **nicht** versioniert):
 | Volumes | ephemer | benannt, auf 200-GB-Volume |
 | Image-Tags | CLI-verwaltet | gepinnt (reproduzierbar) |
 
+## Kong von außen erreichbar machen (SUPABASE_URL)
+
+Kong ist das öffentliche Gateway des Stacks — seine Domain wird zur
+`SUPABASE_URL`, die API und Frontend nutzen. So wird es exponiert:
+
+1. **Domain pro Service über Coolify, NICHT über manuelle Labels.** In Coolify
+   das Feld `docker_compose_domains` für den Service `kong` setzen — die Domain
+   **mit Port-Suffix `:8000`**:
+
+   ```
+   {"kong":{"domain":"https://<deine-domain>:8000"}}
+   ```
+
+   Per API: `PATCH /api/v1/applications/{uuid}` mit
+   `{"docker_compose_domains":[{"name":"kong","domain":"https://…:8000"}]}`.
+
+   > ⚠️ Der Port `:8000` ist Pflicht. Ohne ihn generiert Coolify kein
+   > `loadbalancer.server.port`-Label → Traefik antwortet „no available server"
+   > (503). Coolify erzeugt aus diesem Feld automatisch alle Traefik-Labels
+   > inkl. korrektem Netzwerk — **keine** manuellen `traefik.*`-Labels und
+   > **kein** eigener `networks:`-Block im Compose nötig (würde sogar stören).
+
+2. **Kong-Memory ≥ 1g.** Das Limit steht im Compose auf `1g`. **Nicht** auf
+   256m senken: Kong erstickt dann (100 % MEM → nginx-Worker werden per
+   `signal 9` OOM-gekillt → instabile 502/401-Wechsel, die wie ein
+   Routing-Problem *aussehen*, aber keines sind).
+
+3. **Verifikation** (sobald Kong `healthy` ist, ~15 s nach Deploy):
+
+   ```bash
+   curl -s -o /dev/null -w '%{http_code}\n' \
+     "https://<deine-domain>/rest/v1/" -H "apikey: $ANON_KEY"   # → 200
+   ```
+
 ## Hinweis
 
 Image-Tags sind auf konkrete Versionen gepinnt. Vor dem Deploy gegen die
