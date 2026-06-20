@@ -42,10 +42,11 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-    ports:
-      # In Coolify übernimmt der Proxy (Traefik) das Routing/TLS; der Port
-      # kann dann intern bleiben. Für direktes Testen temporär exponiert (Firewall!).
-      - "8000:8000"
+    expose:
+      # KEIN festes Host-Port-Mapping (8000 ist auf dem Server von Coolify
+      # selbst belegt → Konflikt). Coolifys Traefik-Proxy routet extern anhand
+      # der Service-Domain auf diesen Container-Port.
+      - "8000"
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
       interval: 30s

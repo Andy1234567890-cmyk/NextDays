@@ -239,9 +239,11 @@ services:
       # Deklarative Kong-Route-Konfiguration (Gateway vor allen SB-APIs).
       # Diese Datei wird beim Setup angelegt (Supabase-Standard kong.yml).
       - ./kong.yml:/home/kong/kong.yml:ro
-    ports:
-      # Einziger nach außen geroutete SB-Port; in Coolify hinter Traefik/TLS.
-      - "8000:8000/tcp"
+    expose:
+      # KEIN festes Host-Port-Mapping (8000 ist auf dem Server von Coolify
+      # selbst belegt → Konflikt). Coolifys Traefik-Proxy routet extern anhand
+      # der Service-Domain auf diesen Container-Port. TLS/Domain via Coolify.
+      - "8000"
     depends_on:
       - auth
       - rest
