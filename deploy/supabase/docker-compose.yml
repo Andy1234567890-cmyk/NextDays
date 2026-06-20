@@ -326,25 +326,16 @@ configs:
       -- \getenv liest die Env-Variable DIREKT (psql-Builtin), ohne fragilen
       -- `echo`-Subshell-Aufruf, der die Container-Env im initdb-Kontext nicht erbt.
       \getenv pgpass POSTGRES_PASSWORD
-      -- Passwort als Session-Setting ablegen: psql-Variablen (:'pgpass') werden
-      -- innerhalb von DO $$..$$ NICHT interpoliert, daher der Umweg über
-      -- set_config + current_setting im Block.
-      SELECT set_config('myapp.pgpass', :'pgpass', false);
-      DO $$
-      DECLARE
-        r text;
-        pw text := current_setting('myapp.pgpass');
-      BEGIN
-        FOREACH r IN ARRAY ARRAY[
-          'authenticator','pgbouncer','supabase_auth_admin',
-          'supabase_storage_admin','supabase_functions_admin','supabase_read_only_user'
-        ]
-        LOOP
-          IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = r) THEN
-            EXECUTE format('ALTER USER %I WITH PASSWORD %L', r, pw);
-          END IF;
-        END LOOP;
-      END $$;
+      -- KEIN Dollar-Quoting (DO-Block): docker-compose configs:content escapet
+      -- Dollarzeichen -> psql-Syntaxfehler. Stattdessen bedingte ALTER USER per
+      -- generiertem SQL + \gexec (nur existierende Rollen).
+      SELECT format('ALTER USER %I WITH PASSWORD %L', rolname, :'pgpass')
+      FROM pg_roles
+      WHERE rolname IN (
+        'authenticator','pgbouncer','supabase_auth_admin',
+        'supabase_storage_admin','supabase_functions_admin','supabase_read_only_user'
+      )
+      \gexec
   # JWT-Settings auf DB-Ebene.
   db_jwt_sql:
     content: |
@@ -380,10 +371,10 @@ configs:
       consumers:
         - username: anon
           keyauth_credentials:
-            - key: $SUPABASE_ANON_KEY
+            - key: $$SUPABASE_ANON_KEY
         - username: service_role
           keyauth_credentials:
-            - key: $SUPABASE_SERVICE_KEY
+            - key: $$SUPABASE_SERVICE_KEY
 
       acls:
         - consumer: anon
@@ -393,9 +384,9 @@ configs:
 
       keyauth_credentials:
         - consumer: anon
-          key: $SUPABASE_ANON_KEY
+          key: $$SUPABASE_ANON_KEY
         - consumer: service_role
-          key: $SUPABASE_SERVICE_KEY
+          key: $$SUPABASE_SERVICE_KEY
 
       services:
         - name: auth-v1-open
