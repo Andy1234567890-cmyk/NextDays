@@ -328,6 +328,7 @@ networks:
   default:
   supabase-internal:
     external: true
+    name: supabase-internal
 
 # Init-SQL + Kong-Config als docker-compose configs (Coolify erzeugt die Dateien
 # im Container). Die DB-Init-Skripte stammen aus dem offiziellen Supabase-docker
