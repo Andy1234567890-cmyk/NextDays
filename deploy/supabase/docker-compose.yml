@@ -314,13 +314,11 @@ services:
       context: ./apps/api
       dockerfile: Dockerfile
     image: nextdays-api:prod
-    container_name: nextdays-api
+    # KEIN container_name: Coolify/Traefik nutzt den Service-Namen "api" für die
+    # Discovery; ein fester container_name (nextdays-api) bricht das Routing.
     restart: unless-stopped
     networks:
       default:
-      # coolify = Proxy-Netz (Traefik) → externe Erreichbarkeit via Domain.
-      # Muss explizit sein; sonst kein Routing → 000.
-      coolify:
       supabase-internal:
         aliases: [api]
     environment:
@@ -377,10 +375,6 @@ services:
 # ──────────────────────────────────────────────────────────────────────────
 networks:
   default:
-  # coolify = vorhandenes Proxy-Netz (Traefik). external + name: → nicht neu anlegen.
-  coolify:
-    external: true
-    name: coolify
   supabase-internal:
     external: true
     name: supabase-internal
