@@ -60,8 +60,10 @@ services:
     # Horizontale Skalierung (1–2 Instanzen) erfolgt in Coolify über die
     # Replica-Einstellung der Ressource, nicht hier hart kodiert.
     networks:
-      # default = Coolify/Traefik-Netz (externe Erreichbarkeit via Domain).
       - default
+      # coolify = Netz des Traefik-Proxy → externe Erreichbarkeit via Domain.
+      # Muss explizit dabei sein; Coolify hängt es bei Compose-Apps nicht autom. an.
+      - coolify
       # supabase-internal = stabiles Netz zum Supabase-Stack: die API erreicht
       # darüber Kong per Name (SUPABASE_URL=http://kong:8000), ohne Internet-Umweg.
       - supabase-internal
@@ -128,6 +130,10 @@ services:
 # vorhandene Netz, legt kein isoliertes neues an (sonst Name-Resolution-Fehler).
 networks:
   default:
+  # coolify = vorhandenes Proxy-Netz (Traefik). external + name: → nicht neu anlegen.
+  coolify:
+    external: true
+    name: coolify
   supabase-internal:
     external: true
     name: supabase-internal
