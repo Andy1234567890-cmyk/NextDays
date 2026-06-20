@@ -4,6 +4,11 @@ import { Icon } from "@iconify/react";
 import Image from "next/image";
 import Link from "next/link";
 
+// Ziel des "myNextDays für Gastgeber"-Buttons: die Marketing-/Gastgeber-Seite.
+const GASTGEBER_URL =
+  process.env.NEXT_PUBLIC_GASTGEBER_URL ??
+  "https://y13cm245vlmvq3yv38gdbtat.65.21.144.136.sslip.io";
+
 export function SiteHeader({ compact = false }: { compact?: boolean }) {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
@@ -37,7 +42,7 @@ export function SiteHeader({ compact = false }: { compact?: boolean }) {
 
         <div className="flex items-center gap-2">
           <Link
-            href="/"
+            href={GASTGEBER_URL}
             className="hidden rounded-full px-4 py-2 text-sm font-medium hover:bg-secondary sm:block"
           >
             myNextDays für Gastgeber
