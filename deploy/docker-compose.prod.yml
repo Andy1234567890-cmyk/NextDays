@@ -61,11 +61,10 @@ services:
     # Replica-Einstellung der Ressource, nicht hier hart kodiert.
     networks:
       - default
-      # coolify = Netz des Traefik-Proxy → externe Erreichbarkeit via Domain.
-      # Muss explizit dabei sein; Coolify hängt es bei Compose-Apps nicht autom. an.
-      - coolify
       # supabase-internal = stabiles Netz zum Supabase-Stack: die API erreicht
       # darüber Kong per Name (SUPABASE_URL=http://kong:8000), ohne Internet-Umweg.
+      # Das coolify-Netz (Traefik/externe Domain) hängt Coolify selbst an, via
+      # App-Setting "Connect To Predefined Network" (connect_to_docker_network).
       - supabase-internal
 
   redis:
@@ -130,10 +129,6 @@ services:
 # vorhandene Netz, legt kein isoliertes neues an (sonst Name-Resolution-Fehler).
 networks:
   default:
-  # coolify = vorhandenes Proxy-Netz (Traefik). external + name: → nicht neu anlegen.
-  coolify:
-    external: true
-    name: coolify
   supabase-internal:
     external: true
     name: supabase-internal
