@@ -44,15 +44,22 @@ services:
       - -c
       - wal_level=logical
     volumes:
-      # Direkter Host-Bind auf das 200-GB-Volume (DATA_ROOT). Coolify respektiert
-      # Bind-Mounts; Named Volumes mit driver_opts überschreibt es (Daten landen
-      # dann auf der OS-SSD). DATA_ROOT MUSS gesetzt sein (Env). Siehe ADR-0010.
-      - ${DATA_ROOT}/postgres:/var/lib/postgresql/data
+      # Persistent Storage als Bind-Mount auf das separate 200-GB-Hetzner-Volume
+      # (Coolify-dokumentierte Methode: absoluter Host-Source-Pfad, "No docker
+      # volume created"). Coolify expandiert ${VARS} im source NICHT, daher der
+      # absolute Mount-Pfad des Volumes. Server-spezifisch — siehe ADR-0010.
+      - type: bind
+        source: /mnt/HC_Volume_106086998/nextdays/postgres
+        target: /var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "supabase_admin", "-d", "${POSTGRES_DB:-postgres}"]
+      # Explizit gegen TCP-Host/Port prüfen, nicht nur den lokalen Socket — sonst
+      # meldet pg_isready "healthy", bevor die DB Netzwerk-Connections annimmt,
+      # und abhängige Dienste (auth) crashen mit "connection refused".
+      test: ["CMD-SHELL", "pg_isready -h localhost -p 5432 -U supabase_admin -d ${POSTGRES_DB:-postgres}"]
       interval: 10s
       timeout: 5s
-      retries: 10
+      retries: 15
+      start_period: 20s
     deploy:
       resources:
         limits:
@@ -183,8 +190,10 @@ services:
       REGION: eu-helsinki
       GLOBAL_S3_BUCKET: stub
     volumes:
-      # Direkter Host-Bind auf das 200-GB-Volume (s. db-Kommentar).
-      - ${DATA_ROOT}/storage:/var/lib/storage
+      # Bind-Mount aufs 200-GB-Volume (s. db-Service). Absoluter Host-Pfad.
+      - type: bind
+        source: /mnt/HC_Volume_106086998/nextdays/storage
+        target: /var/lib/storage
     depends_on:
       db:
         condition: service_healthy
@@ -249,10 +258,12 @@ services:
       KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
-    volumes:
-      # Deklarative Kong-Route-Konfiguration (im Repo: deploy/supabase/kong.yml).
-      # Gateway vor allen SB-APIs (auth/rest/realtime/storage/meta).
-      - ./kong.yml:/usr/local/kong/kong.yml:ro
+    configs:
+      # Kong-Route-Konfiguration über docker-compose configs (Coolify-Methode für
+      # Config-Dateien — erzeugt die Datei im Container, kein fragiler Pfad-Mount).
+      # Inhalt = top-level configs:-Block am Dateiende (Quelle: deploy/supabase/kong.yml).
+      - source: kong_config
+        target: /usr/local/kong/kong.yml
     expose:
       # KEIN festes Host-Port-Mapping (8000 ist auf dem Server von Coolify
       # selbst belegt → Konflikt). Coolifys Traefik-Proxy routet extern anhand
@@ -271,13 +282,136 @@ services:
 
 # ──────────────────────────────────────────────────────────────────────────
 # KEIN top-level volumes:-Block. Postgres- und Storage-Daten laufen über
-# DIREKTE Host-Bind-Mounts (${DATA_ROOT}/postgres bzw. /storage) in den
-# jeweiligen Services oben → das separate 200-GB-Hetzner-Volume.
+# Bind-Mounts mit ABSOLUTEM Host-Pfad (/mnt/HC_Volume_106086998/nextdays/...)
+# auf das separate 200-GB-Hetzner-Volume — Coolifys dokumentierte Persistent-
+# Storage-Methode ("Source Path from the host system, no docker volume created").
 #
-# Grund: Coolify managed Named Volumes selbst und ÜBERSCHREIBT driver_opts
-# (Daten landen sonst unter /var/lib/docker = OS-SSD). Direkte Bind-Mounts
-# respektiert Coolify. DATA_ROOT ist Pflicht-Env (Mount-Pfad des Volumes).
+# Warum absolut statt ${DATA_ROOT}: Coolify expandiert ${VARS} im volumes-source
+# NICHT (es entstünde ein Named Volume auf der OS-SSD). Der Pfad ist daher
+# server-spezifisch und bewusst hier dokumentiert — siehe ADR-0010.
 #
 # Voraussetzung (Server-Setup, siehe README.md):
-#   mkdir -p ${DATA_ROOT}/postgres ${DATA_ROOT}/storage
+#   mkdir -p /mnt/HC_Volume_106086998/nextdays/{postgres,storage,redis}
 # ──────────────────────────────────────────────────────────────────────────
+
+# Kong-Gateway-Konfiguration als docker-compose config (Coolify erzeugt die
+# Datei im Container). Quelle/identisch zu deploy/supabase/kong.yml.
+configs:
+  kong_config:
+    content: |
+      _format_version: "2.1"
+      _transform: true
+
+      consumers:
+        - username: anon
+          keyauth_credentials:
+            - key: $SUPABASE_ANON_KEY
+        - username: service_role
+          keyauth_credentials:
+            - key: $SUPABASE_SERVICE_KEY
+
+      acls:
+        - consumer: anon
+          group: anon
+        - consumer: service_role
+          group: admin
+
+      keyauth_credentials:
+        - consumer: anon
+          key: $SUPABASE_ANON_KEY
+        - consumer: service_role
+          key: $SUPABASE_SERVICE_KEY
+
+      services:
+        - name: auth-v1-open
+          url: http://auth:9999/verify
+          routes:
+            - name: auth-v1-open
+              strip_path: true
+              paths: ["/auth/v1/verify"]
+          plugins:
+            - name: cors
+        - name: auth-v1-open-callback
+          url: http://auth:9999/callback
+          routes:
+            - name: auth-v1-open-callback
+              strip_path: true
+              paths: ["/auth/v1/callback"]
+          plugins:
+            - name: cors
+        - name: auth-v1-open-authorize
+          url: http://auth:9999/authorize
+          routes:
+            - name: auth-v1-open-authorize
+              strip_path: true
+              paths: ["/auth/v1/authorize"]
+          plugins:
+            - name: cors
+        - name: auth-v1
+          url: http://auth:9999/
+          routes:
+            - name: auth-v1-all
+              strip_path: true
+              paths: ["/auth/v1/"]
+          plugins:
+            - name: cors
+            - name: key-auth
+              config:
+                hide_credentials: false
+            - name: acl
+              config:
+                hide_groups_header: true
+                allow: ["admin", "anon"]
+        - name: rest-v1
+          url: http://rest:3000/
+          routes:
+            - name: rest-v1-all
+              strip_path: true
+              paths: ["/rest/v1/"]
+          plugins:
+            - name: cors
+            - name: key-auth
+              config:
+                hide_credentials: true
+            - name: acl
+              config:
+                hide_groups_header: true
+                allow: ["admin", "anon"]
+        - name: realtime-v1
+          url: http://realtime:4000/socket/
+          routes:
+            - name: realtime-v1-all
+              strip_path: true
+              paths: ["/realtime/v1/"]
+          plugins:
+            - name: cors
+            - name: key-auth
+              config:
+                hide_credentials: false
+            - name: acl
+              config:
+                hide_groups_header: true
+                allow: ["admin", "anon"]
+        - name: storage-v1
+          url: http://storage:5000/
+          routes:
+            - name: storage-v1-all
+              strip_path: true
+              paths: ["/storage/v1/"]
+          plugins:
+            - name: cors
+        - name: meta
+          url: http://meta:8080/
+          routes:
+            - name: meta-all
+              strip_path: true
+              paths: ["/pg/"]
+          plugins:
+            - name: cors
+            - name: key-auth
+              config:
+                hide_credentials: false
+            - name: acl
+              config:
+                hide_groups_header: true
+                allow: ["admin"]

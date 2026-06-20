@@ -73,9 +73,11 @@ services:
       --appendfsync everysec
       --requirepass ${REDIS_PASSWORD}
     volumes:
-      # Direkter Host-Bind auf das 200-GB-Volume (DATA_ROOT) — Coolify-tauglich
-      # (überschreibt Named-Volume-driver_opts). AOF-Queue-Daten überleben so.
-      - ${DATA_ROOT}/redis:/data
+      # Bind-Mount aufs 200-GB-Volume (absoluter Host-Pfad; Coolify expandiert
+      # ${VARS} im source nicht). AOF-Queue-Daten überleben Neustarts. ADR-0010.
+      - type: bind
+        source: /mnt/HC_Volume_106086998/nextdays/redis
+        target: /data
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 30s

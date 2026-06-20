@@ -53,14 +53,26 @@ Postgres real der Engpass ist (siehe Upgrade-Trigger).
 - **200-GB-Volume** trägt Postgres-Daten + Supabase-Storage-Objekte
   (Property-Fotos, später Belege/Ausweise) + Redis-AOF, getrennt von der
   OS-SSD → unabhängig wachsend, separat sicherbar.
-- **Mount-Mechanik (wichtig):** Die Named Volumes `supabase-db-data`,
-  `supabase-storage-data`, `nextdays-redis-data` sind per `driver_opts`
-  (`type: none, o: bind, device: ${DATA_ROOT}/…`) an den **Mount-Pfad des
-  Hetzner-Volumes** gebunden. **Ohne diese Bindung** legt Docker Named Volumes
-  unter `/var/lib/docker/volumes/` ab — das wäre die **OS-SSD**, und das
-  200-GB-Volume bliebe ungenutzt, während die Systemplatte vollläuft. `DATA_ROOT`
-  ist daher eine **Pflicht-Env** (siehe `deploy/.env.example`); Verifikation per
-  `docker volume inspect` ist in `deploy/supabase/README.md` beschrieben.
+- **Mount-Mechanik (wichtig, im Live-Deploy verifiziert):** Persistenz läuft über
+  **Bind-Mounts mit absolutem Host-Pfad** auf das Hetzner-Volume
+  (`/mnt/HC_Volume_106086998/nextdays/{postgres,storage,redis}`) — Coolifys
+  dokumentierte Persistent-Storage-Methode („Source Path from the host system,
+  no docker volume created").
+  - **Warum absolut statt `${DATA_ROOT}`:** Coolify expandiert Umgebungsvariablen
+    im `volumes:`-`source` **nicht**. Ein erster Versuch mit Named Volumes +
+    `driver_opts` bzw. `${DATA_ROOT}/…` führte dazu, dass Coolify eigene Named
+    Volumes unter `/var/lib/docker/volumes/` (= **OS-SSD**) anlegte — der Live-Test
+    zeigte `…/cdqxi7…_data-rootpostgres/_data`. Daher der **absolute Pfad**.
+  - **Konsequenz:** Der Volume-Pfad ist **server-spezifisch** und bewusst in den
+    Compose-Dateien (Header-Kommentar) dokumentiert. Bei einem Server-/Volume-
+    Wechsel ist er an drei Stellen anzupassen (db, storage, redis). Verifikation
+    per `docker inspect <db> --format '{{.Mounts}}'` → muss den Volume-Pfad zeigen,
+    nicht `/var/lib/docker`.
+- **Kong-Konfiguration:** `kong.yml` wird über einen docker-compose **`configs:`**-
+  Block mit Inline-`content` bereitgestellt (Coolify-Methode für Config-Dateien),
+  statt per relativem Datei-Mount (`./kong.yml`) — letzterer legte unter Coolify
+  ein leeres Verzeichnis an („kong.yml: Is a directory"). Die separate Datei
+  `deploy/supabase/kong.yml` bleibt als lesbare Referenz im Repo.
 
 ### Supabase: self-hosted statt Cloud
 
