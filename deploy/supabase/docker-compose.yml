@@ -292,8 +292,22 @@ services:
     expose:
       # KEIN festes Host-Port-Mapping (8000 ist auf dem Server von Coolify
       # selbst belegt → Konflikt). Coolifys Traefik-Proxy routet extern anhand
-      # der Service-Domain auf diesen Container-Port. TLS/Domain via Coolify.
+      # der unten gesetzten Traefik-Labels auf diesen Container-Port (8000).
       - "8000"
+    labels:
+      # Explizites Traefik-Routing auf Kong:8000. Coolifys SERVICE_FQDN-Automatik
+      # greift bei diesem Compose nicht zuverlässig (Service heißt "kong",
+      # nur expose statt ports) → Labels direkt setzen. Domain kommt aus
+      # ${SERVICE_FQDN_KONG} (in Coolify-Env gesetzt, ohne https://-Präfix für die Host()-Regel).
+      - traefik.enable=true
+      - traefik.http.routers.kong-https.rule=Host(`${KONG_DOMAIN}`)
+      - traefik.http.routers.kong-https.entrypoints=https
+      - traefik.http.routers.kong-https.tls=true
+      - traefik.http.routers.kong-https.tls.certresolver=letsencrypt
+      - traefik.http.routers.kong-https.service=kong-svc
+      - traefik.http.routers.kong-http.rule=Host(`${KONG_DOMAIN}`)
+      - traefik.http.routers.kong-http.entrypoints=http
+      - traefik.http.services.kong-svc.loadbalancer.server.port=8000
     depends_on:
       - auth
       - rest
