@@ -4,6 +4,8 @@
 // (/auth/account, /auth/totp/*) mit dem Access-Token des eingeloggten Nutzers.
 // Token-Quelle: FastAPI-Cookie nd_access ODER die Supabase-OAuth-Session
 // (Google). Business-Logik bleibt in FastAPI (PROJECT.md §2).
+import { revalidatePath } from "next/cache";
+
 import { ApiError, api } from "@/lib/api";
 import { currentToken } from "@/lib/session-token";
 
@@ -35,6 +37,7 @@ export type TenantUser = {
   role: UserRole | null;
   phone: string | null;
   avatar_url: string | null;
+  tenant_id: string | null;
 };
 
 // Profil-/Kontaktdaten-Update (nur gesetzte Felder werden geschrieben).
@@ -56,7 +59,9 @@ export type TotpEnroll = {
   qr_data_url: string;
 };
 
-type Result<T> = { ok: true; data: T } | { ok: false; error: string };
+type Result<T> =
+  | { ok: true; data: T }
+  | { ok: false; error: string; status?: number };
 
 async function call<T>(
   path: string,
@@ -70,7 +75,8 @@ async function call<T>(
   } catch (exc) {
     const error =
       exc instanceof ApiError ? exc.message : "Aktion fehlgeschlagen.";
-    return { ok: false, error };
+    const status = exc instanceof ApiError ? exc.status : undefined;
+    return { ok: false, error, status };
   }
 }
 
@@ -107,6 +113,32 @@ export async function updateProfile(
 // Nutzer des eigenen Tenants (für die Kontakt-Auswahl eines Objekts).
 export async function listTenantUsers(): Promise<Result<TenantUser[]>> {
   return call<TenantUser[]>("/auth/account/users");
+}
+
+// Nutzerverwaltung (Konto → Benutzer): Admins sehen alle Nutzer plattformweit,
+// Owner/Co-Admin nur den eigenen Tenant; normale Benutzer erhalten 403.
+export async function listManagedUsers(): Promise<Result<TenantUser[]>> {
+  return call<TenantUser[]>("/auth/account/managed-users");
+}
+
+// Neuen Nutzer anlegen (Konto → Benutzer-Wizard): Rolle + Berechtigungen.
+export type InviteInput = {
+  email: string;
+  password: string;
+  full_name: string;
+  role: UserRole;
+  permissions: string[];
+};
+
+export async function inviteUser(
+  input: InviteInput,
+): Promise<Result<{ user_id: string }>> {
+  const res = await call<{ user_id: string }>("/auth/invite", {
+    method: "POST",
+    body: input,
+  });
+  if (res.ok) revalidatePath("/konto/nutzer");
+  return res;
 }
 
 // Profilbild hochladen (multipart). Läuft übers Backend (Service-Client), damit

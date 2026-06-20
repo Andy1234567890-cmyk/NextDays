@@ -1,13 +1,15 @@
 // Stammdaten für den Benutzer-Wizard: Rollen (wie Lodgify) + Berechtigungsmatrix
 // (Allgemein + PM-Module). Zentral hier, damit Wizard-Schritt 3 sie nur rendert.
 
+// Rollen für den Wizard — die `value`s sind exakt die DB-UserRoles
+// (admin | co_admin | owner | staff | cleaner), damit die Zuweisung beim
+// Anlegen 1:1 ins Backend geht.
 export const ROLES = [
   { value: "admin", label: "Admin" },
-  { value: "property_manager", label: "Objektverwalter" },
-  { value: "cleaner", label: "Reinigungspersonal" },
+  { value: "co_admin", label: "Co-Admin" },
   { value: "owner", label: "Unterkunftseigentümer" },
-  { value: "checkin_agent", label: "Check-in-Agent" },
-  { value: "member", label: "Mitglied" },
+  { value: "staff", label: "Mitarbeiter" },
+  { value: "cleaner", label: "Reinigungspersonal" },
 ] as const;
 
 export const LANGUAGES = [
@@ -79,3 +81,39 @@ export const WIZARD_STEPS = [
   "Rolle & Rechte",
   "Objekte",
 ] as const;
+
+// Default-Berechtigungen je Rolle (gespiegelt aus dem Backend
+// lodgify_permissions.py). Beim Rollenwechsel im Wizard vorausgewählt; admin =
+// alle. Frei überschreibbar.
+const ALL_PERMISSION_IDS = [
+  ...GENERAL_PERMISSIONS.map((p) => p.id),
+  ...PM_PERMISSIONS.map((p) => p.id),
+];
+
+export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
+  admin: ALL_PERMISSION_IDS,
+  co_admin: [
+    "edit_property", "edit_property_contact", "manage_property_settings",
+    "manage_property_conditions", "edit_calendar_bookings", "view_guest_name",
+    "view_guest_contact", "view_booking_source", "sync_ical",
+    "download_booking_report", "access_homepage_builder", "access_pm_features",
+    "pm_manage_booking_images", "pm_manage_property_images", "pm_chat",
+    "pm_edit_comments", "pm_edit_checkin_times", "pm_guest_module",
+    "pm_revenue_charts", "pm_nonrevenue_charts", "pm_property_area",
+    "pm_guest_details", "pm_booking_total", "pm_booking_payments",
+    "pm_view_add_comments", "pm_view_notes", "pm_view_booking_images",
+    "pm_view_property_images", "pm_website_access",
+  ],
+  owner: [
+    "owner_reporting", "view_booking_source", "pm_property_area",
+    "pm_photo_album", "pm_view_property_images", "pm_nonrevenue_charts",
+  ],
+  staff: [
+    "access_pm_features", "pm_property_area", "pm_alert_icons",
+    "pm_checkout_alerts", "pm_view_property_images", "pm_view_notes",
+  ],
+  cleaner: [
+    "access_pm_features", "pm_property_area", "pm_alert_icons",
+    "pm_checkout_alerts", "pm_view_property_images", "pm_view_notes",
+  ],
+};

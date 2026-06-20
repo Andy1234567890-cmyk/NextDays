@@ -37,6 +37,9 @@ class InviteRequest(BaseModel):
     password: SecretStr = Field(min_length=8)
     full_name: str = Field(min_length=1, max_length=200)
     role: UserRole
+    # Lodgify-Berechtigungen (IDs aus lodgify_permissions.Permission). Leer =
+    # Rollen-Defaults werden angewendet; Admin erhält immer alle.
+    permissions: list[str] | None = None
 
 
 class InviteResponse(BaseModel):
@@ -44,6 +47,7 @@ class InviteResponse(BaseModel):
     email: EmailStr
     role: UserRole
     tenant_id: str
+    permissions: list[str] = []
 
 
 class SessionResponse(BaseModel):
@@ -59,6 +63,7 @@ class MeResponse(BaseModel):
     tenant_id: str | None = None
     role: UserRole | None = None
     capabilities: list[str] = []  # Fähigkeiten der Rolle (Berechtigungs-Matrix)
+    permissions: list[str] = []   # Lodgify-Berechtigungen (für UI-Gating)
 
 
 class AccountResponse(BaseModel):
@@ -80,10 +85,12 @@ class AccountResponse(BaseModel):
     website: str | None = None
     description: str | None = None
     avatar_url: str | None = None
+    permissions: list[str] = []  # Lodgify-Berechtigungen (für UI-Gating)
 
 
 class TenantUser(BaseModel):
-    """Ein Nutzer des eigenen Tenants (für die Kontakt-Auswahl eines Objekts)."""
+    """Ein Nutzer. Für die Objekt-Kontakt-Auswahl (eigener Tenant) und für die
+    Admin-Nutzerverwaltung (Admins sehen alle Tenants → tenant_id mitgeliefert)."""
 
     user_id: str
     email: EmailStr | None = None
@@ -91,6 +98,8 @@ class TenantUser(BaseModel):
     role: UserRole | None = None
     phone: str | None = None
     avatar_url: str | None = None
+    tenant_id: str | None = None
+    permissions: list[str] = []
 
 
 class UpdateEmailRequest(BaseModel):

@@ -22,6 +22,7 @@ export default async function DashboardLayout({
   // 2) Sonst Supabase-OAuth-Session?
   let email = me?.email ?? "";
   let role = me?.role ?? null;
+  let permissions = me?.permissions ?? [];
 
   if (!me) {
     const supabase = await createClient();
@@ -30,13 +31,14 @@ export default async function DashboardLayout({
     } = await supabase.auth.getUser();
     if (!user) redirect("/login");
     email = user.email ?? "";
-    // Rolle kommt später aus dem FastAPI-Profil; vorerst kein Wert.
+    // Rolle/Berechtigungen kommen später aus dem FastAPI-Profil; vorerst leer.
     role = null;
+    permissions = [];
   }
 
   return (
     <SidebarProvider>
-      <AppSidebar email={email} role={role} />
+      <AppSidebar email={email} role={role} permissions={permissions} />
       <SidebarInset>
         <Topbar />
         {/* Inhaltsbereich — hier kommen später KPI-Kacheln & Charts hinein. */}

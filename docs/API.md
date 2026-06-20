@@ -14,11 +14,12 @@ Interaktive Doku (Swagger UI): **http://localhost:8000/docs**
 
 ## Slices
 
-Jeder der 16 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
+Jeder der 17 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
 
 | Slice | Health-Endpoint |
 |---|---|
 | auth | `GET /api/v1/auth/health` |
+| buchhaltung | `GET /api/v1/buchhaltung/health` |
 | properties | `GET /api/v1/properties/health` |
 | rates | `GET /api/v1/rates/health` |
 | calendar | `GET /api/v1/calendar/health` |
@@ -99,26 +100,42 @@ Erfordert `Authorization: Bearer <access_token>`.
   "user_id": "uuid",
   "email": "owner@example.de",
   "tenant_id": "uuid",
-  "role": "owner"
+  "role": "owner",
+  "capabilities": ["…"],
+  "permissions": ["edit_property", "…"]   // Lodgify-Berechtigungen (UI-Gating)
 }
 ```
 
-`401` ohne/mit ungültigem Token.
+`role`/`permissions` werden aus der DB gelesen (Quelle der Wahrheit, JWT kann
+veraltet sein). `401` ohne/mit ungültigem Token.
 
 ### `POST /api/v1/auth/invite` → `201`
 
-Lädt weiteren Nutzer in den eigenen Tenant ein. Erfordert `MANAGE_STAFF`
-(admin/co_admin). Rolle aus dem Request (`co_admin|owner|staff|cleaner`; `admin`
-entsteht nur per register). Tenant aus dem eingeloggten Nutzer.
+Legt weiteren Nutzer im eigenen Tenant an (Konto → Benutzer-Wizard). Erfordert
+`MANAGE_STAFF` (admin/co_admin). Rolle aus dem Request
+(`co_admin|owner|staff|cleaner`; `admin` entsteht nur per register). Tenant aus
+dem eingeloggten Nutzer. `permissions` ist optional — fehlt es, werden die
+Rollen-Defaults gesetzt; ungültige IDs werden gefiltert, Admin erhält immer alle.
 
 ```json
 // Request
 { "email": "staff@example.de", "password": "min8zeichen",
-  "full_name": "Mitarbeiter", "role": "staff" }
+  "full_name": "Mitarbeiter", "role": "staff",
+  "permissions": ["edit_property", "pm_chat"] }
 // Response 201
 { "user_id": "uuid", "email": "staff@example.de", "role": "staff",
-  "tenant_id": "uuid" }
+  "tenant_id": "uuid", "permissions": ["edit_property", "pm_chat"] }
 ```
+
+**Berechtigungsmodell (Lodgify):** Zwei Ebenen — die rollenbasierte
+**Capability-Matrix** (intern, `permissions.py`, schützt Slice-Endpoints) und die
+feingranularen **Lodgify-Berechtigungen** (43 IDs, `lodgify_permissions.py`,
+pro Nutzer in `users.permissions` JSONB). Letztere werden im Wizard zugewiesen,
+per `require_lodgify_permission(...)` an Endpoints durchgesetzt
+(z. B. `PATCH /properties/{id}` → `edit_property`,
+`POST /properties/{id}/image` → `pm_manage_property_images`,
+`POST /calendar/block|price-override` → `edit_calendar_bookings`) und im
+Frontend zum Aus-/Einblenden von Menüpunkten genutzt. Admin = immer alle.
 
 ### Konto & 2FA (Sicherheit-Seite)
 
@@ -129,7 +146,8 @@ provisioniert (Tenant + `users`-Row).
 | Methode & Pfad | Zweck |
 | --- | --- |
 | `GET /api/v1/auth/account` | Konto-/Profil-Übersicht (E-Mail, Name, Rolle, Telefon, Sprachen, Website, Beschreibung, Avatar, `has_password`, `totp_enabled`) |
-| `GET /api/v1/auth/account/users` | Nutzer des eigenen Tenants (für die Objekt-Kontakt-Auswahl) — `user_id`, Name, E-Mail, Rolle, Telefon, Avatar |
+| `GET /api/v1/auth/account/users` | Nutzer des eigenen Tenants (für die Objekt-Kontakt-Auswahl) — `user_id`, Name, E-Mail, Rolle, Telefon, Avatar, `tenant_id`, `permissions` |
+| `GET /api/v1/auth/account/managed-users` | Nutzerverwaltung (Konto → Benutzer): **Admin** sieht alle Nutzer plattformweit, Owner/Co-Admin nur den eigenen Tenant; normale Benutzer (staff/cleaner) → `403` |
 | `PATCH /api/v1/auth/account/email` | E-Mail ändern (`{ "new_email": "…" }`) |
 | `PATCH /api/v1/auth/account/name` | Anzeigename ändern (`{ "full_name": "…" }`) |
 | `PATCH /api/v1/auth/account/profile` | Profil-/Kontaktdaten ändern (Lodgify „Edit contact information"): `full_name`, `phone`, `additional_phone`, `hide_phones`, `preferred_language`, `spoken_languages`, `website`, `description`, `avatar_url` — nur gesendete Felder werden geschrieben |
@@ -283,6 +301,64 @@ calendar-Slice. tenant_id stammt aus dem JWT. Leseendpoint erfordert
 
 Beim Anlegen wird der Gast in `guests` angelegt bzw. per E-Mail wiederverwendet;
 alle Übernachtungstage werden auf `booked` ge-upsertet. `check_out` ist exklusiv.
+
+---
+
+## buchhaltung (Rechnungen + Kunden implementiert)
+
+Aus Taskilo übernommen, auf das NextDays-Mandantenkonzept vereinheitlicht
+(`tenant_id` statt `company_id`). Tenant-scoped; schreibende Endpoints erfordern
+die Lodgify-Berechtigung `owner_reporting`. Beträge werden serverseitig aus den
+Positionen berechnet (Decimal, kaufmännisch gerundet) — der Client kann sie nicht
+fälschen. GoBD-gesperrte Rechnungen (`is_locked`) sind nicht mehr änderbar/löschbar.
+
+| Methode & Pfad | Zweck |
+| --- | --- |
+| `GET /api/v1/buchhaltung/customers` | Kunden/Lieferanten des Tenants |
+| `POST /api/v1/buchhaltung/customers` | Kunde anlegen → `201` |
+| `PATCH /api/v1/buchhaltung/customers/{id}` | Kunde ändern |
+| `DELETE /api/v1/buchhaltung/customers/{id}` | Kunde (soft) löschen → `204` |
+| `GET /api/v1/buchhaltung/invoices` | Rechnungen (schlanke Liste) |
+| `GET /api/v1/buchhaltung/invoices/company/{id}` | Rechnungen im `InvoiceData`-Format (für den übernommenen Bestand) |
+| `GET /api/v1/buchhaltung/invoices/{id}` | Einzelne Rechnung inkl. Positionen |
+| `POST /api/v1/buchhaltung/invoices` | Rechnung anlegen — nimmt das reiche camelCase-Payload der Erstellen-Seite, Beträge serverseitig → `201` |
+| `PATCH /api/v1/buchhaltung/invoices/{id}` | Rechnung ändern / E-Rechnung-XML nachtragen (`409` wenn GoBD-gesperrt) |
+| `DELETE /api/v1/buchhaltung/invoices/{id}` | Rechnung (soft) löschen (`409` wenn gesperrt) |
+| `POST /api/v1/buchhaltung/number-sequences/next` | Nächste fortlaufende Dokumentnummer (GoBD-lückenlos, `next_document_number()`, Row-Lock) |
+| `GET /api/v1/buchhaltung/companies/{id}` | Firmen-/Rechnungsprofil des Tenants (`tenant_billing_profile`) |
+| `PATCH /api/v1/buchhaltung/companies/{id}` | Firmenprofil anlegen/ändern (Upsert) |
+| `GET /api/v1/buchhaltung/companies/{id}/transaction-links` | Beleg↔Bank-Verknüpfungen (Stub → leer, Bankabgleich folgt) |
+| `GET /api/v1/buchhaltung/booking-accounts/{id}` | Kontenplan (Stub → leer, Modul folgt) |
+| `POST /api/v1/buchhaltung/inline-invoice-services` | Service-Usage-Tracking (No-Op, Analytics folgt) |
+
+**Frontend-Anbindung (übernommener Bestand):** Die Bestands-Komponenten rufen
+`/api/v1/invoices…`, `/customers`, `/companies` etc. auf dem **eigenen Origin** auf.
+Ein Next.js-Proxy (`apps/web/app/api/v1/[...path]/route.ts`) injiziert server-seitig
+das Session-Token (`currentToken()`) und leitet an FastAPI weiter; der api-client
+mappt die Pfade auf den `buchhaltung`-Slice. Damit bleibt der Bestand 1:1 und nutzt
+die echte NextDays-Session.
+
+```json
+// POST /buchhaltung/invoices
+{ "customer_id": null, "currency": "EUR", "notes": "…",
+  "items": [
+    { "description": "Reinigung", "quantity": "2", "unit_price": "100", "tax_rate": "19" }
+  ] }
+// Antwort 201: vollständige Rechnung mit berechnetem net_amount/tax_amount/gross_amount
+```
+
+Kleinunternehmer (§19 UStG) wird aus `tenant_billing_profile.is_kleinunternehmer`
+gezogen; ist es gesetzt, wird die Steuer auf 0 gesetzt. Tabellen siehe Migrationen
+`0023_buchhaltung_fundament.sql` (`tenant_billing_profile`, `customers`, `invoices`,
+`invoice_line_items`), `0024_buchhaltung_angebote.sql` (`quotes`, `quote_line_items`)
+und `0025_buchhaltung_nummernkreise.sql` (`number_sequences` + Funktion
+`next_document_number()` für GoBD-lückenlose Nummern) — alle RLS via
+`current_tenant_id()`. `0026_buchhaltung_firmenprofil.sql` erweitert
+`tenant_billing_profile` um Adresse, Kontakt (Tel/E-Mail/Web), Handelsregister
+(HRB/Amtsgericht/Rechtsform), Geschäftsführer und Logo — diese Felder füllen den
+Rechnungskopf und den GoBD-Pflichtfooter. `GET/PATCH /companies/{id}` liefert/
+speichert sie als camelCase (`companyName`, `companyStreet`, `phoneNumber`, `vatId`,
+`companyRegister`, `districtCourt`, `firstName`/`lastName`, `iban` …).
 
 ---
 

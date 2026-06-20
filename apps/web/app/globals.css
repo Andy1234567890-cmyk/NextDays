@@ -3,6 +3,11 @@
    Ohne dies erzeugen die Sheet-/Dialog-Klassen kein CSS → kein sanftes Sliden. */
 @import "tw-animate-css";
 
+/* Tailwind-Klassen aus dem eingebundenen @tasko/ui-Vendor-Paket und den
+   portierten Finance-Komponenten mitscannen (sonst kein CSS für deren Klassen). */
+@source "../vendor/tasko-ui";
+@source "../components";
+
 /* Tailwind v4 — Theme-Tokens als CSS-Variablen. KEIN tailwind.config.ts (PROJECT.md §6).
  *
  * ===========================================================================

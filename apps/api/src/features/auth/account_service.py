@@ -19,6 +19,7 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
+from .lodgify_permissions import effective_permissions
 from .schemas import (
     AccountResponse,
     TenantUser,
@@ -70,7 +71,38 @@ class AccountService:
             website=row.get("website"),
             description=row.get("description"),
             avatar_url=row.get("avatar_url"),
+            permissions=self._effective_perm_ids(row),
         )
+
+    def role_and_permissions(
+        self, ctx: AuthContext
+    ) -> tuple[UserRole | None, list]:
+        """Rolle + gespeicherte Berechtigungs-IDs eines Nutzers (für Guards)."""
+        res = (
+            self._service.table("users")
+            .select("role, permissions")
+            .eq("id", ctx.user_id)
+            .limit(1)
+            .execute()
+        )
+        data = res.data[0] if res.data else {}
+        role_raw = data.get("role") or ctx.role
+        try:
+            role = UserRole(role_raw) if role_raw else None
+        except ValueError:
+            role = None
+        stored = data.get("permissions")
+        return role, stored if isinstance(stored, list) else []
+
+    @staticmethod
+    def _effective_perm_ids(row: dict) -> list[str]:
+        """Effektive Berechtigungs-IDs einer users-Row (Admin = alle)."""
+        try:
+            role = UserRole(row.get("role")) if row.get("role") else None
+        except ValueError:
+            role = None
+        perms = effective_permissions(role, row.get("permissions"))
+        return sorted(p.value for p in perms)
 
     # --- E-Mail / Name / Passwort -----------------------------------------
 
@@ -112,23 +144,64 @@ class AccountService:
             return []
         res = (
             self._service.table("users")
-            .select("id, email, full_name, role, phone, avatar_url")
+            .select("id, email, full_name, role, phone, avatar_url, tenant_id, permissions")
             .eq("tenant_id", tenant_id)
             .order("created_at")
             .execute()
         )
-        users = [
-            TenantUser(
-                user_id=u["id"],
-                email=u.get("email"),
-                full_name=u.get("full_name"),
-                role=u.get("role"),
-                phone=u.get("phone"),
-                avatar_url=u.get("avatar_url"),
-            )
-            for u in (res.data or [])
-        ]
+        users = [self._to_tenant_user(u) for u in (res.data or [])]
         # Account-Inhaber (admin/owner/co_admin) nach vorne sortieren.
+        rank = {UserRole.admin: 0, UserRole.owner: 1, UserRole.co_admin: 2}
+        users.sort(key=lambda u: rank.get(u.role, 9))
+        return users
+
+    def _to_tenant_user(self, u: dict) -> TenantUser:
+        return TenantUser(
+            user_id=u["id"],
+            email=u.get("email"),
+            full_name=u.get("full_name"),
+            role=u.get("role"),
+            phone=u.get("phone"),
+            avatar_url=u.get("avatar_url"),
+            tenant_id=u.get("tenant_id"),
+            permissions=self._effective_perm_ids(u),
+        )
+
+    # Rollen, die die Nutzerverwaltung (Konto → Benutzer) sehen dürfen.
+    _USER_MGMT_ROLES = frozenset(
+        {UserRole.admin, UserRole.owner, UserRole.co_admin}
+    )
+
+    def list_managed_users(self, ctx: AuthContext) -> list[TenantUser]:
+        """Nutzerliste für die Verwaltung (Konto → Benutzer).
+
+        Admins sehen ALLE Nutzer plattformweit (über alle Tenants), Owner/Co-Admin
+        nur ihren eigenen Tenant. Normale Benutzer (staff/cleaner) haben keinen
+        Zugriff (403).
+        """
+        row = self._ensure_user_row(ctx)
+        role_raw = row.get("role") or ctx.role
+        try:
+            role = UserRole(role_raw) if role_raw else None
+        except ValueError:
+            role = None
+        if role not in self._USER_MGMT_ROLES:
+            raise AuthError("Keine Berechtigung für die Nutzerverwaltung.", status_code=403)
+
+        query = (
+            self._service.table("users")
+            .select("id, email, full_name, role, phone, avatar_url, tenant_id, permissions")
+            .order("created_at")
+        )
+        # Nicht-Admins sehen nur den eigenen Tenant.
+        if role is not UserRole.admin:
+            tenant_id = row.get("tenant_id") or ctx.tenant_id
+            if not tenant_id:
+                return []
+            query = query.eq("tenant_id", tenant_id)
+
+        res = query.execute()
+        users = [self._to_tenant_user(u) for u in (res.data or [])]
         rank = {UserRole.admin: 0, UserRole.owner: 1, UserRole.co_admin: 2}
         users.sort(key=lambda u: rank.get(u.role, 9))
         return users

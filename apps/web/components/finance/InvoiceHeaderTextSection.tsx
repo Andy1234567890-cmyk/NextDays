@@ -1,0 +1,83 @@
+'use client';
+
+import { Icon } from '@iconify/react';
+import { Card, CardContent, CardHeader, CardTitle, Input, Label } from '@tasko/ui';
+import HeaderTextEditor from '@/components/finance/HeaderTextEditor';
+
+interface InvoiceHeaderTextSectionProps {
+  // Form Data
+  title: string;
+  headTextHtml: string;
+  onTitleChange: (value: string) => void;
+  onHeadTextChange: (value: string) => void;
+
+  // Company ID for Editor
+  companyId: string;
+  userId: string;
+
+  // Document Type
+  objectType?: 'INVOICE' | 'QUOTE' | 'REMINDER';
+
+  // Error Styling
+  getFieldErrorClass?: (fieldName: string) => string;
+}
+
+export default function InvoiceHeaderTextSection({
+  title,
+  headTextHtml,
+  onTitleChange,
+  onHeadTextChange,
+  companyId,
+  userId,
+  objectType = 'INVOICE',
+  getFieldErrorClass = () => '',
+}: InvoiceHeaderTextSectionProps) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <Icon icon="lucide:file-text" className="mr-2 h-5 w-5 text-accent" />
+          Kopftext
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <fieldset className="space-y-4">
+          {/* Betreff Section */}
+          <div>
+            <div className="space-y-2">
+              <Label htmlFor="invoice-title" className="font-medium text-gray-700 text-sm">
+                Betreff
+              </Label>
+              <div className="input-icon-field">
+                <Input
+                  id="invoice-title"
+                  type="text"
+                  value={title}
+                  onChange={e => onTitleChange(e.target.value)}
+                  placeholder="Wird automatisch generiert"
+                  className={`${getFieldErrorClass('title')}`}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* WYSIWYG Editor Section */}
+          <div className="space-y-2">
+            <Label className="font-medium text-gray-700 text-sm">Einleitung / Kopf-Text</Label>
+            <div className="sev-wysiwyg-wrapper">
+              <HeaderTextEditor
+                value={headTextHtml}
+                onChange={onHeadTextChange}
+                companyId={companyId}
+                userId={userId}
+                objectType={objectType}
+                textType="HEAD"
+              />
+            </div>
+          </div>
+        </fieldset>
+      </CardContent>
+    </Card>
+  );
+}

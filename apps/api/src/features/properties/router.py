@@ -1,9 +1,11 @@
 """Router für properties. Gemountet unter /api/v1/properties."""
 from typing import Annotated
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
-from src.core.security import CurrentUser
+from src.core.security import AuthContext, CurrentUser
+from src.features.auth.dependencies import require_lodgify_permission
+from src.features.auth.lodgify_permissions import Permission
 
 from .dependencies import PropertiesServiceDep
 from .schemas import (
@@ -58,8 +60,10 @@ def get_property(
 def update_property(
     property_id: str,
     req: PropertyUpdate,
-    ctx: CurrentUser,
     service: PropertiesServiceDep,
+    ctx: Annotated[
+        AuthContext, Depends(require_lodgify_permission(Permission.EDIT_PROPERTY))
+    ],
 ) -> PropertyResponse:
     try:
         return service.update(ctx, property_id, req)
@@ -80,9 +84,12 @@ def delete_property(
 @router.post("/{property_id}/image", response_model=ImageUploadResponse)
 async def upload_property_image(
     property_id: str,
-    ctx: CurrentUser,
     service: PropertiesServiceDep,
     file: Annotated[UploadFile, File()],
+    ctx: Annotated[
+        AuthContext,
+        Depends(require_lodgify_permission(Permission.PM_MANAGE_PROPERTY_IMAGES)),
+    ],
     slot: str = "image",
 ) -> ImageUploadResponse:
     """Bild für ein Objekt hochladen (multipart). ``slot`` benennt die
