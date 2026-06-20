@@ -13,6 +13,12 @@ import { useEffect, useState } from "react";
 
 import { SuchLeiste } from "./such-leiste";
 
+// Ziel des "myNextDays für Gastgeber"-Buttons: die Marketing-/Gastgeber-Seite.
+// Per Env überschreibbar (Domain-Wechsel), Default = aktuelle sslip.io-URL.
+const GASTGEBER_URL =
+  process.env.NEXT_PUBLIC_GASTGEBER_URL ??
+  "https://y13cm245vlmvq3yv38gdbtat.65.21.144.136.sslip.io";
+
 const TABS = ["Unterkünfte", "Erlebnisse", "Services"];
 
 const KATEGORIEN = [
@@ -107,7 +113,7 @@ export function PlattformNav() {
 
         <div className="flex shrink-0 items-center gap-2">
           <Link
-            href="/"
+            href={GASTGEBER_URL}
             className="hidden rounded-full px-4 py-2 text-sm font-medium hover:bg-secondary sm:block"
           >
             myNextDays für Gastgeber
