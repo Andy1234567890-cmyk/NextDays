@@ -157,6 +157,10 @@ services:
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
       GOTRUE_JWT_EXP: ${JWT_EXPIRY:-3600}
       GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      # aud-Claim der Token. MUSS gesetzt sein, sonst aud="" → die API lehnt
+      # Token ab (security.py verlangt audience="authenticated") → Dashboard
+      # wirft zurück auf /login.
+      GOTRUE_JWT_AUD: authenticated
       GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP:-false}
       GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
       # Google-OAuth. Client-ID/Secret als Coolify-Env (keine Secrets im Repo).
