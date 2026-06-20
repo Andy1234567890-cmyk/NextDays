@@ -27,6 +27,11 @@ projektspezifische Keys/Config und gehören **nicht** versioniert):
 1. **`kong.yml`** — deklarative Gateway-Konfiguration (Standard-Supabase-Routing
    für `auth`, `rest`, `realtime`, `storage`, `meta`). Vorlage: offizielles
    Supabase-`docker/volumes/api/kong.yml`. Wird per Volume in `kong` gemountet.
+   **Achtung Kong 3.x:** Diese Compose nutzt `kong/kong:3.9.1` (offizielles Set).
+   Nimm die `kong.yml` aus einer **aktuellen** Supabase-Release (Format-Version
+   `_format_version: "3.0"`), nicht aus einer alten 2.x-Vorlage — sonst startet
+   Kong nicht. Das offizielle Supabase-`docker/`-Verzeichnis passt zu diesem
+   Image-Set.
 
 2. **Env-Datei** mit allen Werten aus [`../.env.example`](../.env.example):
    - `POSTGRES_PASSWORD`, `JWT_SECRET` (≥ 32 Zeichen)
@@ -40,6 +45,12 @@ projektspezifische Keys/Config und gehören **nicht** versioniert):
    (`authenticator`, `anon`, `authenticated`, `service_role`,
    `supabase_auth_admin`, `supabase_storage_admin`) über sein Init-Skript an.
    Danach die App-Migrationen (`supabase/migrations/0001…`) gegen die DB fahren.
+
+   **Postgres-Version:** Bewusst **PG15** (`supabase/postgres:15.14.1.138`),
+   nicht das offizielle PG17 — passend zu `supabase/config.toml`
+   (`major_version = 15`) und den bestehenden Migrationen (ADR-0010). Die
+   übrigen Image-Tags entsprechen einem aktuellen, zueinander kompatiblen
+   offiziellen Supabase-Release-Set (Stand der Tag-Pinnung in der Compose).
 
 ## Bewusste Prod-Abweichungen vom Dev-CLI-Stack
 
