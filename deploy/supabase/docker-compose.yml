@@ -297,15 +297,17 @@ services:
     labels:
       # Explizites Traefik-Routing auf Kong:8000. Coolifys SERVICE_FQDN-Automatik
       # greift bei diesem Compose nicht zuverlässig (Service heißt "kong",
-      # nur expose statt ports) → Labels direkt setzen. Domain kommt aus
-      # ${SERVICE_FQDN_KONG} (in Coolify-Env gesetzt, ohne https://-Präfix für die Host()-Regel).
+      # nur expose statt ports) → Labels direkt setzen.
+      # Domain HARDCODED, weil Coolify KONG_DOMAIN nur als Runtime-Env in den
+      # Container schreibt, NICHT in die .env, die Compose beim Label-Parsen liest
+      # → ${KONG_DOMAIN} würde wörtlich stehenbleiben. Beim Domain-Wechsel hier ändern.
       - traefik.enable=true
-      - traefik.http.routers.kong-https.rule=Host(`${KONG_DOMAIN}`)
+      - traefik.http.routers.kong-https.rule=Host(`supabase-kong.65.21.144.136.sslip.io`)
       - traefik.http.routers.kong-https.entrypoints=https
       - traefik.http.routers.kong-https.tls=true
       - traefik.http.routers.kong-https.tls.certresolver=letsencrypt
       - traefik.http.routers.kong-https.service=kong-svc
-      - traefik.http.routers.kong-http.rule=Host(`${KONG_DOMAIN}`)
+      - traefik.http.routers.kong-http.rule=Host(`supabase-kong.65.21.144.136.sslip.io`)
       - traefik.http.routers.kong-http.entrypoints=http
       - traefik.http.services.kong-svc.loadbalancer.server.port=8000
     depends_on:
