@@ -1,0 +1,116 @@
+# deploy/docker-compose.prod.yml — PRODUCTION-Compose der App-Seite.
+#
+# Deckt NUR die eigenen Dienste ab (FastAPI + Redis [+ späterer Worker]).
+# Der self-hosted Supabase-Stack läuft getrennt: deploy/supabase/docker-compose.yml.
+# In Coolify werden beide als eigene Ressourcen/Stacks im selben Projekt geführt
+# und teilen sich das Docker-Netz (siehe ADR-0010).
+#
+# Unterschiede zum Dev-Compose (../docker-compose.yml, NICHT überschrieben):
+#   - api: gebautes Prod-Image (deploy/api/Dockerfile), KEIN Code-Mount, KEIN --reload
+#   - redis: AOF-Persistenz AN (Redis ist auch Queue-Broker → Jobs dürfen nicht verloren gehen)
+#   - Healthchecks + restart-Policy + RAM-Limits (CX43 = 16 GB, konservativ)
+#
+# Secrets kommen aus der Umgebung (Coolify-Env / .env, NICHT eingecheckt).
+# Variablennamen: siehe deploy/.env.example.
+
+services:
+  api:
+    build:
+      context: ../apps/api
+      dockerfile: ../../deploy/api/Dockerfile
+    image: nextdays-api:prod
+    container_name: nextdays-api
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      UVICORN_WORKERS: ${UVICORN_WORKERS:-2}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      # --- Supabase (self-hosted; zeigt auf den Kong-Gateway des SB-Stacks) ---
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      SUPABASE_JWT_SECRET: ${SUPABASE_JWT_SECRET}
+      # --- Redis (mit Passwort, s. command unten) ---
+      REDIS_URL: ${REDIS_URL}
+      # --- Externe Dienste (optional; App startet auch ohne) ---
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
+      GOOGLE_TRANSLATE_API_KEY: ${GOOGLE_TRANSLATE_API_KEY:-}
+      # Payments: MVP läuft OHNE Provider. Keys später (Stripe Connect, ADR-0010).
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+    ports:
+      # In Coolify übernimmt der Proxy (Traefik) das Routing/TLS; der Port
+      # kann dann intern bleiben. Für direktes Testen temporär exponiert (Firewall!).
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+    # Horizontale Skalierung (1–2 Instanzen) erfolgt in Coolify über die
+    # Replica-Einstellung der Ressource, nicht hier hart kodiert.
+
+  redis:
+    image: redis:7-alpine
+    container_name: nextdays-redis
+    restart: unless-stopped
+    # AOF AN (anders als Dev): Redis ist Cache UND Queue-Broker. appendfsync
+    # everysec = guter Kompromiss aus Haltbarkeit und Performance.
+    # Passwort via REDIS_PASSWORD (Coolify-Env). REDIS_URL der API muss es enthalten.
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  # --- Worker (Background-Queue / OCR-Jobs) — STUB, später aktivieren ---------
+  # PROJECT.md sieht den Worker von Anfang an vor (Redis als Broker). Verarbeitet
+  # u. a. OCR-Jobs (Tesseract, ADR-0010) asynchron. Aktivieren, sobald das
+  # Worker-Framework + die Jobs implementiert sind. Nutzt dasselbe Prod-Image.
+  #
+  # worker:
+  #   image: nextdays-api:prod
+  #   container_name: nextdays-worker
+  #   restart: unless-stopped
+  #   command: ["python", "-m", "src.worker"]   # konkreter Einstieg folgt
+  #   environment:
+  #     <<: *api-env                            # gleiche Env wie api
+  #   depends_on:
+  #     redis:
+  #       condition: service_healthy
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         memory: 1g
+
+# Redis-AOF-Daten ebenfalls aufs 200-GB-Volume (DATA_ROOT), nicht auf die
+# OS-SSD. Klein, aber konsistent — und Queue-Jobs überleben Server-Neustarts.
+# Voraussetzung: mkdir -p ${DATA_ROOT}/redis (siehe deploy/supabase/README.md).
+volumes:
+  redis-data:
+    name: nextdays-redis-data
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_ROOT}/redis

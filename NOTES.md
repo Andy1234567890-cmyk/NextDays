@@ -107,6 +107,11 @@ nächster Slice (properties) nach auth-Muster, oder Web-Setup (shadcn/Iconify/th
 5. [ ] shadcn/ui (v4-Variante) + Iconify + next-themes (Light/Dark) im Web einrichten.
 6. [ ] Übrige Slices nach auth-Muster.
 7. [ ] Pre-Commit-Hooks (ruff + pytest grün) + CI.
+8. [x] **Server-/DB-Hosting entschieden + Deploy-Dateien angelegt** — self-hosted
+       Supabase + FastAPI + Redis auf EINEM Hetzner-Server (CX43, Helsinki) via
+       Coolify. Repo-Artefakte unter `deploy/` (SB-Stack-Compose, Prod-Dockerfile,
+       App-Prod-Compose, `.env.example`). Siehe **ADR-0010**. (Go-Live-Schritte
+       im Browser/Server: Andy.)
 
 ## Offene Fragen (für Andy / Call mit Jeanine & Torsten)
 - Channel-Manager-Architektur: Direkt-Anbindung (Booking/Airbnb/Vrbo Connectivity) vs. Aggregator (Feondi)? → ADR-0001
@@ -114,6 +119,10 @@ nächster Slice (properties) nach auth-Muster, oder Web-Setup (shadcn/Iconify/th
 - Beteiligung (10%) — vertraglich woran genau? (gehört in Gesellschaftervertrag, nicht Code)
 - Theme-Farben: final aus Jeanines Logo (Platzhalter im @theme bis dahin)
 - Stundenschätzung: pro Phase als Spanne, NICHT als harte Gesamtzahl
+- **Payment-Provider final klären** (ADR-0010, offener Punkt): MVP läuft OHNE
+  Payments; Stripe Connect ist geplant, Revolut-Key war Altlast → vorerst raus.
+  Vor der Payment-Implementierung entscheiden: ein Provider vs. Adapter-Beibehalt
+  (ADR-0003 nennt Revolut primär — Widerspruch zur neueren Stripe-Connect-Planung).
 
 ## Status Designs / Tokens
 - Theme-Tokens = Platzhalter in apps/web/styles/globals.css (TODO mit Logo-Farben ersetzen)

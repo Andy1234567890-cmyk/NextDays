@@ -1,12 +1,36 @@
 # Nicht ins Image kopieren (kleineres Image, kein Leak)
+#
+# SICHERHEITSKRITISCH: verhindert, dass `COPY . .` Secrets (.env), VCS-Historie
+# (.git) oder Tests in einen Prod-Image-Layer schreibt. Siehe ADR-0010.
+
+# --- Secrets / Env (NIEMALS ins Image) ---
 .env
 .env.*
 !.env.example
+
+# --- Python-Artefakte ---
 __pycache__/
 *.pyc
+*.pyo
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
+*.egg-info/
+build/
+dist/
 .venv/
 venv/
+
+# --- Tests (kein Prod-Bestandteil) ---
 tests/
+conftest.py
+
+# --- VCS / Editor / OS ---
+.git/
+.gitignore
+.vscode/
+.idea/
 .DS_Store
+
+# --- Doku (nicht im Runtime-Image nötig) ---
+*.md

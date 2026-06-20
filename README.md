@@ -252,6 +252,31 @@ Aktueller Detail-Stand & nächste Schritte: **[NOTES.md](NOTES.md)**
 
 ---
 
+## Deployment (Production)
+
+Self-hosted auf **einem Hetzner-Server (CX43, Helsinki)** via **Coolify** —
+Backend + self-hosted Supabase + Redis als Container. Frontends bleiben auf
+Vercel (ADR-0002). Details: **[ADR-0010](docs/decisions/0010-production-deployment-coolify-hetzner.md)**.
+
+Repo-Deploy-Dateien (Dev-Setup bleibt unberührt, alles getrennt unter `deploy/`):
+
+- `deploy/supabase/docker-compose.yml` — self-hosted Supabase-Stack (Pooler an, Analytics aus, SMTP)
+- `deploy/api/Dockerfile` — Prod-Image (Multi-Worker, Non-Root, kein `--reload`, Healthcheck)
+- `deploy/docker-compose.prod.yml` — api + Redis (AOF/Queue-Broker) + Worker-Stub
+- `deploy/.env.example` — alle Prod-Variablennamen (Platzhalter) inkl. Staging-Hinweise
+
+**Aufgabenteilung beim Go-Live**
+
+- **Andy (im Browser/Server):** Coolify-GitHub-App verbinden · DNS + HTTPS einrichten ·
+  Env-Werte + `kong.yml` auf dem Server setzen · 200-GB-Volume mounten · Migrationen fahren.
+- **Repo (Claude Code):** liefert die versionierbaren Deploy-Dateien oben.
+
+> MVP läuft **ohne Payment-Provider** (Stripe Connect später; `STRIPE_*` in
+> `deploy/.env.example` optional/auskommentiert). Staging nutzt **eigene** Secrets
+> und TEST-Keys, nie die Prod-DB.
+
+---
+
 ## Dokumentation
 
 - **[PROJECT.md](PROJECT.md)** — verbindliche Spezifikation (Stack, Architektur, Konventionen)
@@ -261,7 +286,7 @@ Aktueller Detail-Stand & nächste Schritte: **[NOTES.md](NOTES.md)**
 - **[docs/API.md](docs/API.md)** — API-Übersicht
 - **[docs/LASTENHEFT.md](docs/LASTENHEFT.md)** — vollständiges Lastenheft (Anforderungen)
 - **[docs/REQUIREMENTS-GAP.md](docs/REQUIREMENTS-GAP.md)** — Soll/Ist-Abgleich & Roadmap
-- **[docs/decisions/](docs/decisions/)** — 8 Architecture Decision Records (Channel Manager, Marketing-Entkopplung, Revolut, i18n, Rundung, Preismodell, Ökosystem, Storybook)
+- **[docs/decisions/](docs/decisions/)** — 10 Architecture Decision Records (Channel Manager, Marketing-Entkopplung, Revolut, i18n, Rundung, Preismodell, Ökosystem, Storybook, Taskilo-Integration, Production-Deployment)
 
 ---
 

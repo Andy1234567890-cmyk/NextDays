@@ -1,0 +1,286 @@
+# deploy/supabase/docker-compose.yml — SELF-HOSTED Supabase-Stack (Production).
+#
+# Pendant zum lokalen CLI-Stack (supabase/config.toml, `supabase start`), aber
+# als explizite, versionierte Compose für den Hetzner-/Coolify-Betrieb (ADR-0010).
+#
+# Enthaltene Komponenten (wie im CLI-Stack, für Prod gehärtet):
+#   Postgres 15 · PostgREST · GoTrue (Auth) · Storage-API · Realtime ·
+#   Kong (API-Gateway) · Studio · Meta · Supavisor (Pooler, AKTIV).
+#
+# Bewusst WEG/AUS gegenüber Dev:
+#   - Inbucket (Dev-Mailcatcher) → ersetzt durch echten SMTP (SMTP_* Env)
+#   - Analytics/Logflare/Vector → AUS (spart RAM; CX43 = 16 GB, Coolify ~1,5 GB)
+#
+# Persistenz: benannte Volumes für Postgres-Daten und Storage-Objekte. Auf dem
+# Server liegen diese auf dem separaten 200-GB-Volume (Coolify-Mount), nicht auf
+# der OS-SSD — siehe ADR-0010 / server-sizing-analyse.md.
+#
+# Alle Secrets/Keys kommen aus der Umgebung (deploy/.env.example listet die Namen).
+# Image-Tags sind gepinnt, damit Deploys reproduzierbar sind.
+
+services:
+  db:
+    image: supabase/postgres:15.8.1.020
+    container_name: supabase-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_HOST: /var/run/postgresql
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_USER: supabase_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXP: ${JWT_EXPIRY:-3600}
+    command:
+      # shared_buffers konservativ für 16-GB-Server (Coolify + App + Stack teilen
+      # sich den RAM). effective_cache_size moderat. Bei Bedarf hochziehen (ADR-0010).
+      - postgres
+      - -c
+      - shared_buffers=512MB
+      - -c
+      - effective_cache_size=2GB
+      - -c
+      - max_connections=100
+      - -c
+      - wal_level=logical
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "supabase_admin", "-d", "${POSTGRES_DB:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    deploy:
+      resources:
+        limits:
+          memory: 4g
+
+  # --- Connection Pooler (Supavisor) — in Prod AKTIV (Dev: pooler disabled) ---
+  pooler:
+    image: supabase/supavisor:2.5.7
+    container_name: supabase-pooler
+    restart: unless-stopped
+    environment:
+      PORT: 4000
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_URL: ecto://supabase_admin:${POSTGRES_PASSWORD}@db:5432/_supabase
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      VAULT_ENC_KEY: ${VAULT_ENC_KEY}
+      POOLER_TENANT_ID: ${POOLER_TENANT_ID:-nextdays}
+      POOLER_DEFAULT_POOL_SIZE: ${POOLER_DEFAULT_POOL_SIZE:-20}
+      POOLER_MAX_CLIENT_CONN: ${POOLER_MAX_CLIENT_CONN:-100}
+      POOLER_POOL_MODE: transaction
+    depends_on:
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  rest:
+    image: postgrest/postgrest:v12.2.3
+    container_name: supabase-rest
+    restart: unless-stopped
+    environment:
+      PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-postgres}
+      PGRST_DB_SCHEMAS: public,graphql_public
+      PGRST_DB_ANON_ROLE: anon
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      PGRST_DB_MAX_ROWS: 1000
+      PGRST_DB_USE_LEGACY_GUCS: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  auth:
+    image: supabase/gotrue:v2.170.0
+    container_name: supabase-auth
+    restart: unless-stopped
+    environment:
+      GOTRUE_API_HOST: 0.0.0.0
+      GOTRUE_API_PORT: 9999
+      API_EXTERNAL_URL: ${API_EXTERNAL_URL}
+      GOTRUE_DB_DRIVER: postgres
+      GOTRUE_DB_DATABASE_URL: postgres://supabase_auth_admin:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-postgres}
+      GOTRUE_SITE_URL: ${SITE_URL}
+      GOTRUE_URI_ALLOW_LIST: ${ADDITIONAL_REDIRECT_URLS:-}
+      GOTRUE_JWT_SECRET: ${JWT_SECRET}
+      GOTRUE_JWT_EXP: ${JWT_EXPIRY:-3600}
+      GOTRUE_JWT_DEFAULT_GROUP_NAME: authenticated
+      GOTRUE_DISABLE_SIGNUP: ${DISABLE_SIGNUP:-false}
+      GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
+      GOTRUE_MAILER_AUTOCONFIRM: ${MAILER_AUTOCONFIRM:-false}
+      # Echter SMTP statt Inbucket (Prod). Werte aus Coolify-Env.
+      GOTRUE_SMTP_HOST: ${SMTP_HOST}
+      GOTRUE_SMTP_PORT: ${SMTP_PORT}
+      GOTRUE_SMTP_USER: ${SMTP_USER}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS}
+      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL}
+      GOTRUE_SMTP_SENDER_NAME: ${SMTP_SENDER_NAME:-myNextDays}
+    depends_on:
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+  realtime:
+    image: supabase/realtime:v2.34.7
+    container_name: supabase-realtime
+    restart: unless-stopped
+    environment:
+      PORT: 4000
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${POSTGRES_DB:-postgres}
+      DB_USER: supabase_admin
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_ENC_KEY: ${REALTIME_ENC_KEY}
+      API_JWT_SECRET: ${JWT_SECRET}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE}
+      ERL_AFLAGS: -proto_dist inet_tcp
+      RLIMIT_NOFILE: "10000"
+    depends_on:
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  storage:
+    image: supabase/storage-api:v1.19.3
+    container_name: supabase-storage
+    restart: unless-stopped
+    environment:
+      ANON_KEY: ${ANON_KEY}
+      SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      POSTGREST_URL: http://rest:3000
+      PGRST_JWT_SECRET: ${JWT_SECRET}
+      DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-postgres}
+      FILE_SIZE_LIMIT: 52428800 # 50 MiB (wie Dev-config.toml)
+      STORAGE_BACKEND: file
+      FILE_STORAGE_BACKEND_PATH: /var/lib/storage
+      REGION: eu-helsinki
+      GLOBAL_S3_BUCKET: stub
+    volumes:
+      - storage-data:/var/lib/storage
+    depends_on:
+      db:
+        condition: service_healthy
+      rest:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  meta:
+    image: supabase/postgres-meta:v0.87.1
+    container_name: supabase-meta
+    restart: unless-stopped
+    environment:
+      PG_META_PORT: 8080
+      PG_META_DB_HOST: db
+      PG_META_DB_PORT: 5432
+      PG_META_DB_NAME: ${POSTGRES_DB:-postgres}
+      PG_META_DB_USER: supabase_admin
+      PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+    depends_on:
+      db:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+  studio:
+    image: supabase/studio:2025.06.02
+    container_name: supabase-studio
+    restart: unless-stopped
+    environment:
+      STUDIO_PG_META_URL: http://meta:8080
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_PUBLIC_URL: ${API_EXTERNAL_URL}
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+      # Studio in Prod hinter Basic-Auth/Proxy stellen (Coolify) — Admin-UI.
+      AUTH_USERNAME: ${DASHBOARD_USERNAME}
+      AUTH_PASSWORD: ${DASHBOARD_PASSWORD}
+    depends_on:
+      meta:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+
+  kong:
+    image: kong:2.8.1
+    container_name: supabase-kong
+    restart: unless-stopped
+    environment:
+      KONG_DATABASE: "off"
+      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
+      KONG_DNS_ORDER: LAST,A,CNAME
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
+    volumes:
+      # Deklarative Kong-Route-Konfiguration (Gateway vor allen SB-APIs).
+      # Diese Datei wird beim Setup angelegt (Supabase-Standard kong.yml).
+      - ./kong.yml:/home/kong/kong.yml:ro
+    ports:
+      # Einziger nach außen geroutete SB-Port; in Coolify hinter Traefik/TLS.
+      - "8000:8000/tcp"
+    depends_on:
+      - auth
+      - rest
+      - realtime
+      - storage
+      - meta
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+
+# ──────────────────────────────────────────────────────────────────────────
+# VOLUMES — MÜSSEN auf dem separaten 200-GB-Hetzner-Volume liegen, NICHT auf
+# der 160-GB-OS-SSD. Ohne die driver_opts unten würde Docker diese Named
+# Volumes unter /var/lib/docker/volumes/ (= OS-SSD) anlegen → SSD läuft mit
+# Postgres-Daten + Fotos/Belegen voll, das 200-GB-Volume bliebe leer.
+#
+# Voraussetzung (macht Andy beim Server-Setup, siehe README.md):
+#   1. Hetzner-Volume an den Server hängen und mounten, z. B. nach
+#      /mnt/HC_Volume_xxxx  (Hetzner zeigt den Mount-Pfad im Panel).
+#   2. Datenverzeichnisse anlegen:
+#        mkdir -p ${DATA_ROOT}/postgres ${DATA_ROOT}/storage
+#   3. DATA_ROOT in der Env auf diesen Mount-Pfad setzen (deploy/.env.example).
+#
+# Die driver_opts binden die Named Volumes per bind an ${DATA_ROOT}/* → die
+# Daten landen garantiert auf dem 200-GB-Volume.
+# ──────────────────────────────────────────────────────────────────────────
+volumes:
+  db-data:
+    name: supabase-db-data
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_ROOT}/postgres
+  storage-data:
+    name: supabase-storage-data
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${DATA_ROOT}/storage
