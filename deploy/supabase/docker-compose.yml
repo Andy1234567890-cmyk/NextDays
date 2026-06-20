@@ -51,6 +51,20 @@ services:
       - type: bind
         source: /mnt/HC_Volume_106086998/nextdays/postgres
         target: /var/lib/postgresql/data
+    configs:
+      # Supabase-DB-Init (läuft nur beim ERSTEN Start eines leeren Datenverz.).
+      # Legt die rollen-spezifischen Passwörter + interne Schemas/DB an, die
+      # auth/storage/realtime/pooler brauchen. Reihenfolge via Dateinamen.
+      - source: db_realtime_sql
+        target: /docker-entrypoint-initdb.d/migrations/99-realtime.sql
+      - source: db_supabase_sql
+        target: /docker-entrypoint-initdb.d/migrations/97-_supabase.sql
+      - source: db_pooler_sql
+        target: /docker-entrypoint-initdb.d/migrations/99-pooler.sql
+      - source: db_roles_sql
+        target: /docker-entrypoint-initdb.d/init-scripts/99-roles.sql
+      - source: db_jwt_sql
+        target: /docker-entrypoint-initdb.d/init-scripts/99-jwt.sql
     healthcheck:
       # Explizit gegen TCP-Host/Port prüfen, nicht nur den lokalen Socket — sonst
       # meldet pg_isready "healthy", bevor die DB Netzwerk-Connections annimmt,
@@ -294,9 +308,47 @@ services:
 #   mkdir -p /mnt/HC_Volume_106086998/nextdays/{postgres,storage,redis}
 # ──────────────────────────────────────────────────────────────────────────
 
-# Kong-Gateway-Konfiguration als docker-compose config (Coolify erzeugt die
-# Datei im Container). Quelle/identisch zu deploy/supabase/kong.yml.
+# Init-SQL + Kong-Config als docker-compose configs (Coolify erzeugt die Dateien
+# im Container). Die DB-Init-Skripte stammen aus dem offiziellen Supabase-docker
+# (volumes/db/*) und laufen nur beim ERSTEN Start eines leeren Datenverzeichnisses.
 configs:
+  # Setzt die Passwörter der rollen-spezifischen DB-User auf ${POSTGRES_PASSWORD}.
+  db_roles_sql:
+    content: |
+      \set pgpass `echo "$POSTGRES_PASSWORD"`
+      ALTER USER authenticator WITH PASSWORD :'pgpass';
+      ALTER USER pgbouncer WITH PASSWORD :'pgpass';
+      ALTER USER supabase_auth_admin WITH PASSWORD :'pgpass';
+      ALTER USER supabase_functions_admin WITH PASSWORD :'pgpass';
+      ALTER USER supabase_storage_admin WITH PASSWORD :'pgpass';
+  # JWT-Settings auf DB-Ebene.
+  db_jwt_sql:
+    content: |
+      \set jwt_secret `echo "$JWT_SECRET"`
+      \set jwt_exp `echo "$JWT_EXP"`
+      ALTER DATABASE postgres SET "app.settings.jwt_secret" TO :'jwt_secret';
+      ALTER DATABASE postgres SET "app.settings.jwt_exp" TO :'jwt_exp';
+  # Interne _supabase-DB (Metadaten für pooler/realtime/logs).
+  db_supabase_sql:
+    content: |
+      \set pguser `echo "$POSTGRES_USER"`
+      CREATE DATABASE _supabase WITH OWNER :pguser;
+  # _realtime-Schema.
+  db_realtime_sql:
+    content: |
+      \set pguser `echo "$POSTGRES_USER"`
+      create schema if not exists _realtime;
+      alter schema _realtime owner to :pguser;
+  # _supavisor-Schema (Pooler) in der _supabase-DB.
+  db_pooler_sql:
+    content: |
+      \set pguser `echo "$POSTGRES_USER"`
+      \c _supabase
+      create schema if not exists _supavisor;
+      alter schema _supavisor owner to :pguser;
+      \c postgres
+
+  # Kong-Gateway-Konfiguration (Quelle/identisch zu deploy/supabase/kong.yml).
   kong_config:
     content: |
       _format_version: "2.1"
