@@ -70,4 +70,5 @@ export type MeResponse = {
   tenant_id: string | null;
   role: "admin" | "co_admin" | "owner" | "staff" | "cleaner" | null;
   capabilities: string[];
+  permissions: string[];  // Lodgify-Berechtigungen (für UI-Gating)
 };

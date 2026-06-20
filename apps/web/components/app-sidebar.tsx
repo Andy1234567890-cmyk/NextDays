@@ -41,36 +41,86 @@ import {
 } from "@/components/ui/sidebar";
 
 // Hauptbereiche (täglich genutzt) — Reihenfolge wie Lodgify, Begriffe auf DE.
-const MAIN = [
+// Menüpunkte. `req` = benötigte Lodgify-Berechtigung; ohne `req` immer sichtbar.
+// Admin sieht alles (siehe canSee).
+type NavItem = { title: string; href: string; icon: string; req?: string };
+
+const MAIN: readonly NavItem[] = [
   { title: "Dashboard", href: "/", icon: "ph:squares-four" },
   { title: "Reservierungen", href: "/reservierungen", icon: "ph:bookmark-simple" },
-  { title: "Posteingang", href: "/posteingang", icon: "ph:chat-circle" },
+  { title: "Posteingang", href: "/posteingang", icon: "ph:chat-circle", req: "view_guest_contact" },
   { title: "Kalender", href: "/kalender", icon: "ph:calendar-blank" },
   { title: "Objekte", href: "/objekte", icon: "ph:house-line" },
-  { title: "Website-Baukasten", href: "/website", icon: "ph:globe" },
+  { title: "Website-Baukasten", href: "/website", icon: "ph:globe", req: "access_homepage_builder" },
   { title: "Channel Manager", href: "/channels", icon: "ph:squares-four" },
-] as const;
+];
 
-// Aufklappbare Gruppen (wie Lodgify „Advanced"/„Tools").
-const GROUPS = [
+// Aufklappbare Gruppen (wie Lodgify „Advanced"/„Tools"). Die „My Next"-Domänen
+// (Buchhaltung/Marktplatz/HR/Jobs) sind je eine Gruppe; Buchhaltungs-Module
+// per owner_reporting gegated (ADR-0009: eine große Sidebar, Pfad-Navigation).
+const GROUPS: readonly { label: string; icon: string; items: readonly NavItem[] }[] = [
   {
     label: "Erweitert",
     icon: "ph:bookmark",
     items: [
-      { title: "Gäste", href: "/gaeste", icon: "ph:users" },
+      { title: "Gäste", href: "/gaeste", icon: "ph:users", req: "view_guest_contact" },
       { title: "Aufgaben", href: "/aufgaben", icon: "ph:check-square" },
-      { title: "Finanzen", href: "/finanzen", icon: "ph:currency-eur" },
+    ],
+  },
+  {
+    label: "Buchhaltung",
+    icon: "ph:calculator",
+    items: [
+      { title: "Rechnungen", href: "/buchhaltung", icon: "ph:receipt", req: "owner_reporting" },
+      { title: "Angebote", href: "/buchhaltung/angebote", icon: "ph:file-text", req: "owner_reporting" },
+      { title: "Ausgaben", href: "/buchhaltung/ausgaben", icon: "ph:arrow-circle-down", req: "owner_reporting" },
+      { title: "Kunden", href: "/buchhaltung/kunden", icon: "ph:address-book", req: "owner_reporting" },
+      { title: "Mahnwesen", href: "/buchhaltung/mahnwesen", icon: "ph:warning-circle", req: "owner_reporting" },
+      { title: "Kontenplan", href: "/buchhaltung/kontenplan", icon: "ph:tree-structure", req: "owner_reporting" },
+      { title: "Kassenbuch", href: "/buchhaltung/kassenbuch", icon: "ph:wallet", req: "owner_reporting" },
+      { title: "Steuer", href: "/buchhaltung/steuer", icon: "ph:percent", req: "owner_reporting" },
+      { title: "E-Rechnung", href: "/buchhaltung/e-rechnung", icon: "ph:file-code", req: "owner_reporting" },
+      { title: "DATEV", href: "/buchhaltung/datev", icon: "ph:export", req: "owner_reporting" },
+      { title: "Bank", href: "/buchhaltung/bank", icon: "ph:bank", req: "owner_reporting" },
+      { title: "Berichte", href: "/buchhaltung/berichte", icon: "ph:chart-line", req: "owner_reporting" },
+    ],
+  },
+  {
+    label: "Marktplatz",
+    icon: "ph:storefront",
+    items: [
+      { title: "Projekte", href: "/marktplatz/projekte", icon: "ph:folder" },
+      { title: "Aufträge", href: "/marktplatz/auftraege", icon: "ph:clipboard-text" },
+      { title: "Angebote", href: "/marktplatz/angebote", icon: "ph:handshake" },
+      { title: "Services", href: "/marktplatz/services", icon: "ph:wrench" },
+    ],
+  },
+  {
+    label: "Personal",
+    icon: "ph:users-three",
+    items: [
+      { title: "Mitarbeiter", href: "/hr/mitarbeiter", icon: "ph:identification-badge" },
+      { title: "Abwesenheit", href: "/hr/abwesenheit", icon: "ph:airplane-takeoff" },
+      { title: "Schichtplan", href: "/hr/schichtplan", icon: "ph:calendar-check" },
+      { title: "Auswertung", href: "/hr/auswertung", icon: "ph:chart-bar" },
+    ],
+  },
+  {
+    label: "Jobs",
+    icon: "ph:briefcase",
+    items: [
+      { title: "Stellen", href: "/jobs/stellen", icon: "ph:megaphone" },
+      { title: "Bewerbungen", href: "/jobs/bewerbungen", icon: "ph:user-list" },
     ],
   },
   {
     label: "Werkzeuge",
     icon: "ph:plus-circle",
     items: [
-      { title: "Berichte", href: "/berichte", icon: "ph:chart-bar" },
       { title: "Einstellungen", href: "/einstellungen", icon: "ph:gear" },
     ],
   },
-] as const;
+];
 
 const ROLE_LABELS: Record<string, string> = {
   admin: "Admin",
@@ -83,15 +133,25 @@ const ROLE_LABELS: Record<string, string> = {
 export function AppSidebar({
   email = "",
   role = null,
+  permissions = [],
 }: {
   email?: string;
   role?: "admin" | "co_admin" | "owner" | "staff" | "cleaner" | null;
+  permissions?: string[];
 }) {
   const pathname = usePathname();
   const router = useRouter();
 
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href);
+
+  // Sichtbarkeit eines Menüpunkts: Admin sieht alles; sonst muss die ggf.
+  // geforderte Berechtigung vorhanden sein.
+  const permSet = new Set(permissions);
+  const canSee = (item: NavItem) =>
+    role === "admin" || !item.req || permSet.has(item.req);
+
+  const mainItems = MAIN.filter(canSee);
 
   // Anzeigename + Initialen aus der E-Mail ableiten (bis echtes Profil da ist).
   const displayName = email ? email.split("@")[0] : "Konto";
@@ -114,7 +174,7 @@ export function AppSidebar({
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {MAIN.map((item) => (
+              {mainItems.map((item) => (
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
@@ -136,7 +196,9 @@ export function AppSidebar({
 
         {/* Aufklappbare Gruppen */}
         {GROUPS.map((group) => {
-          const groupActive = group.items.some((i) => isActive(i.href));
+          const items = group.items.filter(canSee);
+          if (items.length === 0) return null;
+          const groupActive = items.some((i) => isActive(i.href));
           return (
             <Collapsible
               key={group.label}
@@ -159,7 +221,7 @@ export function AppSidebar({
                 <CollapsibleContent>
                   <SidebarGroupContent>
                     <SidebarMenu>
-                      {group.items.map((item) => (
+                      {items.map((item) => (
                         <SidebarMenuItem key={item.href}>
                           <SidebarMenuButton
                             asChild

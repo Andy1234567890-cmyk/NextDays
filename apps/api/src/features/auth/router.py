@@ -111,6 +111,18 @@ def list_tenant_users(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.get("/account/managed-users", response_model=list[TenantUser])
+def list_managed_users(
+    ctx: CurrentUser, service: AccountServiceDep
+) -> list[TenantUser]:
+    """Nutzerverwaltung (Konto → Benutzer): Admins sehen alle, sonst eigener
+    Tenant; normale Benutzer (staff/cleaner) erhalten 403."""
+    try:
+        return service.list_managed_users(ctx)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.patch("/account/email", response_model=AccountResponse)
 def update_email(
     req: UpdateEmailRequest, ctx: CurrentUser, service: AccountServiceDep

@@ -10,6 +10,7 @@ from .core.config import get_settings
 from .core.logging import configure_logging, get_logger
 from .features.auth.router import router as auth_router
 from .features.booking_engine.router import router as booking_engine_router
+from .features.buchhaltung.router import router as buchhaltung_router
 from .features.calendar.router import router as calendar_router
 from .features.channel_manager.router import router as channel_manager_router
 from .features.content.router import router as content_router
@@ -27,6 +28,7 @@ from .features.tasks.router import router as tasks_router
 
 _SLICE_ROUTERS = [
     auth_router,
+    buchhaltung_router,
     properties_router,
     rates_router,
     calendar_router,

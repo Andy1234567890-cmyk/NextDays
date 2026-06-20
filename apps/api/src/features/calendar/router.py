@@ -6,7 +6,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.core.security import CurrentUser
 from src.core.supabase import get_service_client
-from src.features.auth.dependencies import require_permission
+from src.features.auth.dependencies import (
+    require_lodgify_permission,
+    require_permission,
+)
+from src.features.auth.lodgify_permissions import Permission
 from src.features.auth.permissions import Capability
 
 from .schemas import (
@@ -62,7 +66,9 @@ def check(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
-@router.post("/block")
+@router.post("/block", dependencies=[
+    Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
 def block(
     req: BlockRequest,
     service: CalendarServiceDep,
@@ -76,7 +82,9 @@ def block(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
-@router.post("/price-override")
+@router.post("/price-override", dependencies=[
+    Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
 def price_override(
     req: PriceOverrideRequest,
     service: CalendarServiceDep,

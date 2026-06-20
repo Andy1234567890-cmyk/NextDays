@@ -123,9 +123,10 @@ flowchart TB
             CFG["config · logging · supabase · security (JWT ES256/JWKS)"]
         end
         subgraph DONE["Slices mit Logik"]
-            AUTH["auth — Register/Login/Me/Invite, Rollen+Capability-Matrix"]
+            AUTH["auth — Register/Login/Me/Invite, Rollen+Capability-Matrix + Lodgify-Berechtigungen (pro Nutzer)"]
             CAL["calendar — Verfügbarkeit, Double-Booking, Preis-Override"]
             TASKS["tasks — Aufgaben, Checklisten+Foto, Vertretung, Inventar"]
+            BUCH["buchhaltung — Rechnungen + Kunden (aus Taskilo, tenant-vereinheitlicht); Steuer/E-Rechnung/DATEV/GoBD folgen"]
         end
         subgraph SCAFFOLD["Slices als Gerüst (Health) — folgen lt. Roadmap"]
             PROP["properties"]; RATES["rates"]; RES["reservations"]
@@ -192,6 +193,11 @@ erDiagram
     GUEST ||--o{ RESERVATION : makes
     RESERVATION ||--o{ PAYMENT : "settled by"
     RESERVATION ||--o{ MESSAGE : contains
+    TENANT ||--|| TENANT_BILLING_PROFILE : "Buchhaltungs-Stammdaten"
+    TENANT ||--o{ CUSTOMER : "Debitoren/Kreditoren"
+    TENANT ||--o{ INVOICE : "Rechnungen"
+    CUSTOMER ||--o{ INVOICE : "Empfänger"
+    INVOICE ||--o{ INVOICE_LINE_ITEM : "Positionen"
 
     TENANT {
         uuid id PK
@@ -213,6 +219,7 @@ erDiagram
         string website
         text description
         string avatar_url
+        jsonb permissions "Lodgify-Berechtigungs-IDs (Admin=alle)"
     }
     PROPERTY {
         uuid id PK
@@ -325,6 +332,21 @@ erDiagram
 `properties` (Ökosystem, ADR-0007); Rollen-Enum um `admin`, `co_admin`
 erweitert; `payments`: `stripe_ref` → `gateway_ref` + `gateway`-Enum (ADR-0003).
 Marktplatz-Tabellen (`portal_guests`, `reviews`, `commissions`) wie oben.
+`users.permissions` (JSONB, Migration 0022) für feingranulare
+Lodgify-Berechtigungen pro Nutzer.
+
+**Zweistufiges Berechtigungsmodell (Konto → Benutzer):**
+
+1. **Capability-Matrix** (`permissions.py`, rollenbasiert) — schützt interne
+   Slice-Endpoints über `require_permission(Capability.…)` / `require_role(…)`.
+2. **Lodgify-Berechtigungen** (`lodgify_permissions.py`, 43 IDs, pro Nutzer in
+   `users.permissions`) — im Benutzer-Wizard zugewiesen (Default je Rolle,
+   überschreibbar), per `require_lodgify_permission(Permission.…)` an Endpoints
+   durchgesetzt und im Frontend (`app-sidebar`, `getMe().permissions`) zum
+   Aus-/Einblenden von Menüpunkten genutzt. **Admin = immer alle.** Die
+   Nutzerverwaltung selbst sehen nur admin/owner/co_admin (sonst `403`); ein
+   **Admin sieht alle Nutzer plattformweit**, Owner/Co-Admin nur den eigenen
+   Tenant.
 
 ---
 
@@ -640,6 +662,10 @@ in Entwicklung befindlichen Komponenten.
 ```
 apps/web/                # Next.js — App-Gerüst (Dashboard/Portal)
 ├── app/                 # Route-Gruppen (auth)/(dashboard)/(public)
+│   └── (public)/marketing/   # Öffentliche Marketing-Landingpage (kein Auth-Gate)
+├── components/marketing/     # Sektions-Komponenten der Landingpage (Hero, Trial, …)
+├── public/marketing/channels/ # Buchungskanal-Logos (Booking.com, Airbnb, …)
+├── public/marketing/reviews/  # Review-Plattform-Logos (Capterra, Trustpilot, …)
 └── lib/supabase/        # Browser- + Server-Client (@supabase/ssr)
 
 apps/storybook/          # Design-System + Auth-Proxy (eigenes Package, eigenes Vercel)
@@ -726,3 +752,31 @@ wird in **[docs/decisions/](decisions/)** mit Rechtsgrundlage dokumentiert.
 > diffbar, mit dem Code versioniert. Bei Architektur-Änderungen hier aktualisieren.
 > C4Context/C4Container sind in Mermaid „experimental" — nach Änderungen im
 > GitHub-Preview gegenprüfen.
+
+---
+
+## „My Next" — Taskilo-Integration (Buchhaltung · Marktplatz · HR · Jobs)
+
+NextDays wird um den Geschäftsumfang von **Taskilo** erweitert. Maßgeblich:
+**[ADR-0009](decisions/0009-taskilo-integration-architektur.md)**, Bestand:
+**[TASKILO-INVENTAR.md](TASKILO-INVENTAR.md)**.
+
+**Leitplanken (ADR-0009):**
+- **Ein Stack, ein Backend, ein Supabase, eine Auth.** Die neuen Bereiche werden
+  als **Vertical Slices in `apps/api`** umgesetzt (wie die PMS-Slices),
+  Mandant **`tenant_id`** (RLS via `current_tenant_id()`), `companies` → `tenants`
+  (+ `tenant_billing_profile`).
+- **Frontend im NextDays-Paradigma:** Server Actions in `apps/web/lib/<domäne>.ts`,
+  UI ausschließlich `components/ui/*` + Tokens (kein `@tasko/ui`, kein react-query).
+  Taskilo-Komponenten werden **neu geschrieben**, nicht kopiert.
+- **Eine App, Pfade statt Subdomains:** `/dashboard`, `/buchhaltung`, `/marktplatz`,
+  `/hr`, `/jobs` unter einer Domain. **Keine** Feature-Subdomains (bricht
+  Auth/Session). Nur Marketing-Website ↔ App darf per Subdomain getrennt werden.
+- **Eine große Sidebar** mit aufklappbaren Gruppen je Domäne; Menü per
+  Lodgify-Berechtigung gegated.
+- **NICHT übernommen:** Chat, Admin-Dashboard, SEO/Marketing, WhatsApp,
+  Advertising, Taskilos eigene Auth + Onboarding.
+
+**Neue Slices (geplant):** `buchhaltung` (✅ Basis), `tax`, `datev`, `einvoice`,
+`banking`, `employees`, `jobs`, `job_applications`, `marketplace`.
+Vorgehen je Modul: **DB-Migration → Backend-Slice → Server Actions → UI**.

@@ -8,6 +8,7 @@ from src.core.security import AuthContext, get_current_user
 from src.core.supabase import get_anon_client, get_service_client
 
 from .account_service import AccountService
+from .lodgify_permissions import Permission, has_permission
 from .permissions import Capability, has_capability
 from .schemas import UserRole
 from .service import AuthService
@@ -59,6 +60,30 @@ def require_permission(cap: Capability) -> Callable[[AuthContext], AuthContext]:
         ctx: Annotated[AuthContext, Depends(get_current_user)],
     ) -> AuthContext:
         if not has_capability(ctx.role, cap):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Unzureichende Berechtigung.",
+            )
+        return ctx
+
+    return _guard
+
+
+def require_lodgify_permission(
+    perm: Permission,
+) -> Callable[[AuthContext], AuthContext]:
+    """Dependency-Factory für die feingranularen Lodgify-Berechtigungen.
+
+    Liest Rolle + permissions aus der DB (Quelle der Wahrheit, JWT kann veraltet
+    sein) und gibt 403, wenn der Nutzer die Berechtigung nicht hat. Admin = immer.
+    """
+
+    def _guard(
+        ctx: Annotated[AuthContext, Depends(get_current_user)],
+        service: AccountServiceDep,
+    ) -> AuthContext:
+        role, stored = service.role_and_permissions(ctx)
+        if not has_permission(role, stored, perm):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Unzureichende Berechtigung.",

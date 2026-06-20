@@ -6,6 +6,7 @@
 import { cookies } from "next/headers";
 
 import { ApiError, api, type MeResponse, type SessionResponse } from "@/lib/api";
+import { currentToken } from "@/lib/session-token";
 import { createClient } from "@/lib/supabase/server";
 
 const ACCESS = "nd_access";
@@ -62,10 +63,12 @@ export async function logout(): Promise<void> {
   }
 }
 
-/** Aktuellen Nutzer aus FastAPI holen (null, wenn nicht eingeloggt). */
+/** Aktuellen Nutzer aus FastAPI holen (null, wenn nicht eingeloggt).
+ *  Nutzt currentToken() → funktioniert für BEIDE Login-Wege: FastAPI-Cookie
+ *  (nd_access) UND Supabase-OAuth-Session (Google). So kommen Rolle +
+ *  Berechtigungen auch bei OAuth in die Sidebar (UI-Gating). */
 export async function getMe(): Promise<MeResponse | null> {
-  const jar = await cookies();
-  const token = jar.get(ACCESS)?.value;
+  const token = await currentToken();
   if (!token) return null;
   try {
     return await api<MeResponse>("/auth/me", { token });

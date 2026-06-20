@@ -2,10 +2,13 @@
 
 // Benutzer-Wizard (wie Lodgify „Benutzer erstellen"): Sheet von rechts, 4 Schritte
 // mit Fortschrittsanzeige. Schritt 1 Kontakt, 2 Zusatzinfos, 3 Rolle+Rechte,
-// 4 Objektzuweisung. Reine UI/State — Anlegen wird später ans Backend verdrahtet.
+// 4 Objektzuweisung. Beim Erstellen wird der Nutzer mit Rolle + Berechtigungen
+// über /auth/invite angelegt; ein Sofort-Passwort wird generiert und angezeigt.
 import { Icon } from "@iconify/react";
 import { useState } from "react";
 
+import { inviteUser } from "@/lib/account";
+import type { UserRole } from "@/lib/account";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -31,6 +34,7 @@ import {
   GENERAL_PERMISSIONS,
   LANGUAGES,
   PM_PERMISSIONS,
+  ROLE_DEFAULT_PERMISSIONS,
   ROLES,
   WIZARD_STEPS,
   type Permission,
@@ -52,17 +56,56 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
   // Schritt 3
   const [role, setRole] = useState("");
   const [perms, setPerms] = useState<Set<string>>(new Set());
+  // Anlegen
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [created, setCreated] = useState<{ email: string; password: string } | null>(
+    null,
+  );
 
   const reset = () => {
     setStep(0);
     setFirstName(""); setLastName(""); setEmail(""); setHidePhones(false);
     setLanguage("de"); setSpoken([]); setNotes("");
     setRole(""); setPerms(new Set());
+    setSubmitting(false); setError(null); setCreated(null);
   };
 
   const last = WIZARD_STEPS.length - 1;
   const next = () => setStep((s) => Math.min(s + 1, last));
   const back = () => setStep((s) => Math.max(s - 1, 0));
+
+  // Sofort-Passwort generieren (wie im Admin-Bereich): Nd- + 14 Zeichen.
+  const genPassword = () => {
+    const chars = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const a = new Uint8Array(14);
+    crypto.getRandomValues(a);
+    return "Nd-" + Array.from(a, (n) => chars[n % chars.length]).join("");
+  };
+
+  const submit = async () => {
+    setError(null);
+    const fullName = `${firstName} ${lastName}`.trim();
+    if (!fullName || !email || !role) {
+      setError("Vorname, Nachname, E-Mail und Rolle sind erforderlich.");
+      return;
+    }
+    const password = genPassword();
+    setSubmitting(true);
+    const res = await inviteUser({
+      email,
+      password,
+      full_name: fullName,
+      role: role as UserRole,
+      permissions: [...perms],
+    });
+    setSubmitting(false);
+    if (res.ok) {
+      setCreated({ email, password });
+    } else {
+      setError(res.error);
+    }
+  };
 
   const togglePerm = (id: string) =>
     setPerms((prev) => {
@@ -70,6 +113,12 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
       n.has(id) ? n.delete(id) : n.add(id);
       return n;
     });
+
+  // Rollenwechsel: passende Default-Berechtigungen vorauswählen (überschreibbar).
+  const onRoleChange = (value: string) => {
+    setRole(value);
+    setPerms(new Set(ROLE_DEFAULT_PERMISSIONS[value] ?? []));
+  };
 
   return (
     <Sheet
@@ -88,54 +137,74 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
           <SheetTitle className="font-display text-lg font-extrabold">
             Benutzer erstellen
           </SheetTitle>
-          <p className="text-sm text-muted-foreground">{STEP_HINTS[step]}</p>
-          <Stepper current={step} />
+          <p className="text-sm text-muted-foreground">
+            {created ? "Benutzer wurde angelegt." : STEP_HINTS[step]}
+          </p>
+          {!created && <Stepper current={step} />}
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto p-4">
-          {step === 0 && (
-            <StepContact
-              firstName={firstName} setFirstName={setFirstName}
-              lastName={lastName} setLastName={setLastName}
-              email={email} setEmail={setEmail}
-              hidePhones={hidePhones} setHidePhones={setHidePhones}
-            />
+          {created ? (
+            <StepSuccess email={created.email} password={created.password} />
+          ) : (
+            <>
+              {step === 0 && (
+                <StepContact
+                  firstName={firstName} setFirstName={setFirstName}
+                  lastName={lastName} setLastName={setLastName}
+                  email={email} setEmail={setEmail}
+                  hidePhones={hidePhones} setHidePhones={setHidePhones}
+                />
+              )}
+              {step === 1 && (
+                <StepExtra
+                  language={language} setLanguage={setLanguage}
+                  spoken={spoken} setSpoken={setSpoken}
+                  notes={notes} setNotes={setNotes}
+                />
+              )}
+              {step === 2 && (
+                <StepRole
+                  role={role} setRole={onRoleChange}
+                  perms={perms} togglePerm={togglePerm}
+                />
+              )}
+              {step === 3 && <StepProperties />}
+              {error && (
+                <p className="mt-4 rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm text-destructive">
+                  {error}
+                </p>
+              )}
+            </>
           )}
-          {step === 1 && (
-            <StepExtra
-              language={language} setLanguage={setLanguage}
-              spoken={spoken} setSpoken={setSpoken}
-              notes={notes} setNotes={setNotes}
-            />
-          )}
-          {step === 2 && (
-            <StepRole
-              role={role} setRole={setRole}
-              perms={perms} togglePerm={togglePerm}
-            />
-          )}
-          {step === 3 && <StepProperties />}
         </div>
 
         <SheetFooter className="flex-row gap-2 border-t">
-          <Button
-            type="button"
-            variant="outline"
-            className="flex-1"
-            onClick={() => (step === 0 ? setOpen(false) : back())}
-          >
-            {step === 0 ? "Abbrechen" : "Zurück"}
-          </Button>
-          <Button
-            type="button"
-            className="flex-1"
-            onClick={() => {
-              if (step === last) setOpen(false);
-              else next();
-            }}
-          >
-            {step === last ? "Erstellen" : "Weiter"}
-          </Button>
+          {created ? (
+            <Button type="button" className="flex-1" onClick={() => setOpen(false)}>
+              Fertig
+            </Button>
+          ) : (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                disabled={submitting}
+                onClick={() => (step === 0 ? setOpen(false) : back())}
+              >
+                {step === 0 ? "Abbrechen" : "Zurück"}
+              </Button>
+              <Button
+                type="button"
+                className="flex-1"
+                disabled={submitting}
+                onClick={() => (step === last ? submit() : next())}
+              >
+                {step === last ? (submitting ? "Wird erstellt…" : "Erstellen") : "Weiter"}
+              </Button>
+            </>
+          )}
         </SheetFooter>
       </SheetContent>
     </Sheet>
@@ -445,6 +514,44 @@ function StepProperties() {
         Erstellen Sie Ihre Unterkünfte, damit Sie sie später Ihren Benutzern
         zuweisen können.
       </p>
+    </div>
+  );
+}
+
+/* ---------- Erfolg: Zugangsdaten ---------- */
+function StepSuccess({ email, password }: { email: string; password: string }) {
+  return (
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col items-center gap-2 py-4 text-center">
+        <span className="flex size-12 items-center justify-center rounded-full bg-accent/10">
+          <Icon icon="ph:check-circle" className="size-7 text-accent" />
+        </span>
+        <p className="font-display text-lg font-extrabold">Benutzer erstellt</p>
+        <p className="text-sm text-muted-foreground">
+          Geben Sie diese Zugangsdaten an den neuen Benutzer weiter. Das Passwort
+          wird nur jetzt angezeigt.
+        </p>
+      </div>
+      <div className="flex flex-col gap-2 rounded-(--radius) border border-input p-3">
+        <Field label="E-Mail" value={email} />
+        <Field label="Passwort" value={password} mono />
+      </div>
+    </div>
+  );
+}
+
+function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <span className="text-xs text-muted-foreground">{label}</span>
+      <code
+        className={cn(
+          "select-all rounded bg-secondary px-2 py-1 text-sm",
+          mono && "font-mono",
+        )}
+      >
+        {value}
+      </code>
     </div>
   );
 }

@@ -11,6 +11,11 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
+from .lodgify_permissions import (
+    default_permissions_for,
+    effective_permissions,
+    normalize_permissions,
+)
 from .permissions import capabilities_for
 from .schemas import (
     InviteRequest,
@@ -92,6 +97,14 @@ class AuthService:
                 "Admin kann nicht eingeladen werden; entsteht bei register.",
                 status_code=400,
             )
+        # Berechtigungen: explizit gewählte (Wizard) oder Rollen-Defaults.
+        # Admin wäre hier ohnehin ausgeschlossen (s.o.); normalize filtert
+        # unbekannte IDs heraus.
+        if req.permissions is None:
+            permissions = default_permissions_for(req.role)
+        else:
+            permissions = normalize_permissions(req.permissions, req.role)
+
         user_id = self._create_auth_user(
             email=req.email,
             password=req.password,
@@ -105,6 +118,7 @@ class AuthService:
                 role=req.role,
                 email=req.email,
                 full_name=req.full_name,
+                permissions=permissions,
             )
         except Exception:
             self._rollback_user(user_id)
@@ -117,6 +131,7 @@ class AuthService:
             email=req.email,
             role=req.role,
             tenant_id=tenant_id,
+            permissions=permissions,
         )
 
     def login(self, req: LoginRequest) -> SessionResponse:
@@ -141,12 +156,26 @@ class AuthService:
         )
 
     def me(self, ctx: AuthContext) -> MeResponse:
-        role = UserRole(ctx.role) if ctx.role in UserRole.__members__ else None
+        # Rolle + Berechtigungen aus der DB (Quelle der Wahrheit) lesen — das
+        # JWT-app_metadata kann veraltet sein.
+        row = (
+            self._service.table("users")
+            .select("role, permissions, email")
+            .eq("id", ctx.user_id)
+            .limit(1)
+            .execute()
+        )
+        data = row.data[0] if row.data else {}
+        role_raw = data.get("role") or ctx.role
+        role = UserRole(role_raw) if role_raw in UserRole.__members__ else None
+        perms = effective_permissions(role, data.get("permissions"))
         return MeResponse(
             user_id=ctx.user_id,
+            email=data.get("email"),
             tenant_id=ctx.tenant_id,
             role=role,
             capabilities=sorted(c.value for c in capabilities_for(role)),
+            permissions=sorted(p.value for p in perms),
         )
 
     # --- interne Schritte (alle über Service-Role) ---
@@ -206,6 +235,7 @@ class AuthService:
         role: UserRole,
         email: str,
         full_name: str,
+        permissions: list[str] | None = None,
     ) -> None:
         self._service.table("users").insert(
             {
@@ -214,6 +244,7 @@ class AuthService:
                 "role": role.value,
                 "email": email,
                 "full_name": full_name,
+                "permissions": permissions or [],
             }
         ).execute()
 
