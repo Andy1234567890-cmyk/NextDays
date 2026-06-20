@@ -302,6 +302,9 @@ services:
       # Container schreibt, NICHT in die .env, die Compose beim Label-Parsen liest
       # → ${KONG_DOMAIN} würde wörtlich stehenbleiben. Beim Domain-Wechsel hier ändern.
       - traefik.enable=true
+      # Kong hängt in 2 Netzen (App-Netz + coolify). Traefik MUSS das App-Netz
+      # nutzen, sonst wählt es manchmal "coolify" (wo Kong nicht ist) → 502.
+      - traefik.docker.network=cdqxi7d0w34sxzr4wr8jy8um
       - traefik.http.routers.kong-https.rule=Host(`supabase-kong.65.21.144.136.sslip.io`)
       - traefik.http.routers.kong-https.entrypoints=https
       - traefik.http.routers.kong-https.tls=true
