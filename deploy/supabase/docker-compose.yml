@@ -300,8 +300,10 @@ services:
   # FastAPI-Backend — im SELBEN Stack wie Supabase, damit es Kong/auth/rest
   # direkt intern über http://kong:8000 erreicht (kein Internet-/Hairpin-Umweg).
   api:
+    # Build-Kontext relativ zum Coolify base_directory (= Repo-Root), NICHT zur
+    # Compose-Datei. Coolify löst Pfade vom geklonten Repo-Root auf.
     build:
-      context: ../../apps/api
+      context: ./apps/api
       dockerfile: Dockerfile
     image: nextdays-api:prod
     container_name: nextdays-api
