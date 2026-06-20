@@ -73,7 +73,9 @@ services:
       --appendfsync everysec
       --requirepass ${REDIS_PASSWORD}
     volumes:
-      - redis-data:/data
+      # Direkter Host-Bind auf das 200-GB-Volume (DATA_ROOT) — Coolify-tauglich
+      # (überschreibt Named-Volume-driver_opts). AOF-Queue-Daten überleben so.
+      - ${DATA_ROOT}/redis:/data
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 30s
@@ -104,14 +106,7 @@ services:
   #       limits:
   #         memory: 1g
 
-# Redis-AOF-Daten ebenfalls aufs 200-GB-Volume (DATA_ROOT), nicht auf die
-# OS-SSD. Klein, aber konsistent — und Queue-Jobs überleben Server-Neustarts.
+# KEIN top-level volumes:-Block. Redis-AOF läuft über einen direkten
+# Host-Bind-Mount (${DATA_ROOT}/redis) im Service oben → 200-GB-Volume.
+# Grund: Coolify überschreibt Named-Volume-driver_opts (Daten sonst auf OS-SSD).
 # Voraussetzung: mkdir -p ${DATA_ROOT}/redis (siehe deploy/supabase/README.md).
-volumes:
-  redis-data:
-    name: nextdays-redis-data
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${DATA_ROOT}/redis

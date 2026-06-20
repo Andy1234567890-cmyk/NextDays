@@ -44,7 +44,10 @@ services:
       - -c
       - wal_level=logical
     volumes:
-      - db-data:/var/lib/postgresql/data
+      # Direkter Host-Bind auf das 200-GB-Volume (DATA_ROOT). Coolify respektiert
+      # Bind-Mounts; Named Volumes mit driver_opts überschreibt es (Daten landen
+      # dann auf der OS-SSD). DATA_ROOT MUSS gesetzt sein (Env). Siehe ADR-0010.
+      - ${DATA_ROOT}/postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "supabase_admin", "-d", "${POSTGRES_DB:-postgres}"]
       interval: 10s
@@ -118,11 +121,13 @@ services:
       GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
       GOTRUE_MAILER_AUTOCONFIRM: ${MAILER_AUTOCONFIRM:-false}
       # Echter SMTP statt Inbucket (Prod). Werte aus Coolify-Env.
-      GOTRUE_SMTP_HOST: ${SMTP_HOST}
-      GOTRUE_SMTP_PORT: ${SMTP_PORT}
-      GOTRUE_SMTP_USER: ${SMTP_USER}
-      GOTRUE_SMTP_PASS: ${SMTP_PASS}
-      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL}
+      # SMTP_PORT braucht IMMER eine Zahl (GoTrue parst int) — Default 587,
+      # auch wenn SMTP (noch) nicht konfiguriert ist, sonst crasht der Start.
+      GOTRUE_SMTP_HOST: ${SMTP_HOST:-}
+      GOTRUE_SMTP_PORT: ${SMTP_PORT:-587}
+      GOTRUE_SMTP_USER: ${SMTP_USER:-}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS:-}
+      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL:-noreply@localhost}
       GOTRUE_SMTP_SENDER_NAME: ${SMTP_SENDER_NAME:-myNextDays}
     depends_on:
       db:
@@ -143,10 +148,16 @@ services:
       DB_NAME: ${POSTGRES_DB:-postgres}
       DB_USER: supabase_admin
       DB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_AFTER_CONNECT_QUERY: 'SET search_path TO _realtime'
       DB_ENC_KEY: ${REALTIME_ENC_KEY}
       API_JWT_SECRET: ${JWT_SECRET}
+      # realtime v2.10x verlangt METRICS_JWT_SECRET zwingend (sonst Boot-Crash).
+      METRICS_JWT_SECRET: ${JWT_SECRET}
       SECRET_KEY_BASE: ${SECRET_KEY_BASE}
       ERL_AFLAGS: -proto_dist inet_tcp
+      APP_NAME: realtime
+      SEED_SELF_HOST: "true"
+      RUN_JANITOR: "true"
       RLIMIT_NOFILE: "10000"
     depends_on:
       db:
@@ -172,7 +183,8 @@ services:
       REGION: eu-helsinki
       GLOBAL_S3_BUCKET: stub
     volumes:
-      - storage-data:/var/lib/storage
+      # Direkter Host-Bind auf das 200-GB-Volume (s. db-Kommentar).
+      - ${DATA_ROOT}/storage:/var/lib/storage
     depends_on:
       db:
         condition: service_healthy
@@ -230,15 +242,17 @@ services:
     restart: unless-stopped
     environment:
       KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /home/kong/kong.yml
+      KONG_DECLARATIVE_CONFIG: /usr/local/kong/kong.yml
       KONG_DNS_ORDER: LAST,A,CNAME
-      KONG_PLUGINS: request-transformer,cors,key-auth,acl
+      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth,request-termination
+      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
+      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
     volumes:
-      # Deklarative Kong-Route-Konfiguration (Gateway vor allen SB-APIs).
-      # Diese Datei wird beim Setup angelegt (Supabase-Standard kong.yml).
-      - ./kong.yml:/home/kong/kong.yml:ro
+      # Deklarative Kong-Route-Konfiguration (im Repo: deploy/supabase/kong.yml).
+      # Gateway vor allen SB-APIs (auth/rest/realtime/storage/meta).
+      - ./kong.yml:/usr/local/kong/kong.yml:ro
     expose:
       # KEIN festes Host-Port-Mapping (8000 ist auf dem Server von Coolify
       # selbst belegt → Konflikt). Coolifys Traefik-Proxy routet extern anhand
@@ -256,33 +270,14 @@ services:
           memory: 256m
 
 # ──────────────────────────────────────────────────────────────────────────
-# VOLUMES — MÜSSEN auf dem separaten 200-GB-Hetzner-Volume liegen, NICHT auf
-# der 160-GB-OS-SSD. Ohne die driver_opts unten würde Docker diese Named
-# Volumes unter /var/lib/docker/volumes/ (= OS-SSD) anlegen → SSD läuft mit
-# Postgres-Daten + Fotos/Belegen voll, das 200-GB-Volume bliebe leer.
+# KEIN top-level volumes:-Block. Postgres- und Storage-Daten laufen über
+# DIREKTE Host-Bind-Mounts (${DATA_ROOT}/postgres bzw. /storage) in den
+# jeweiligen Services oben → das separate 200-GB-Hetzner-Volume.
 #
-# Voraussetzung (macht Andy beim Server-Setup, siehe README.md):
-#   1. Hetzner-Volume an den Server hängen und mounten, z. B. nach
-#      /mnt/HC_Volume_xxxx  (Hetzner zeigt den Mount-Pfad im Panel).
-#   2. Datenverzeichnisse anlegen:
-#        mkdir -p ${DATA_ROOT}/postgres ${DATA_ROOT}/storage
-#   3. DATA_ROOT in der Env auf diesen Mount-Pfad setzen (deploy/.env.example).
+# Grund: Coolify managed Named Volumes selbst und ÜBERSCHREIBT driver_opts
+# (Daten landen sonst unter /var/lib/docker = OS-SSD). Direkte Bind-Mounts
+# respektiert Coolify. DATA_ROOT ist Pflicht-Env (Mount-Pfad des Volumes).
 #
-# Die driver_opts binden die Named Volumes per bind an ${DATA_ROOT}/* → die
-# Daten landen garantiert auf dem 200-GB-Volume.
+# Voraussetzung (Server-Setup, siehe README.md):
+#   mkdir -p ${DATA_ROOT}/postgres ${DATA_ROOT}/storage
 # ──────────────────────────────────────────────────────────────────────────
-volumes:
-  db-data:
-    name: supabase-db-data
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${DATA_ROOT}/postgres
-  storage-data:
-    name: supabase-storage-data
-    driver: local
-    driver_opts:
-      type: none
-      o: bind
-      device: ${DATA_ROOT}/storage
