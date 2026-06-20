@@ -119,6 +119,10 @@ services:
     image: postgrest/postgrest:v14.12
     container_name: supabase-rest
     restart: unless-stopped
+    networks:
+      default:
+      supabase-internal:
+        aliases: [rest]
     environment:
       PGRST_DB_URI: postgres://authenticator:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-postgres}
       PGRST_DB_SCHEMAS: public,graphql_public
@@ -138,6 +142,10 @@ services:
     image: supabase/gotrue:v2.189.0
     container_name: supabase-auth
     restart: unless-stopped
+    networks:
+      default:
+      supabase-internal:
+        aliases: [auth]
     environment:
       GOTRUE_API_HOST: 0.0.0.0
       GOTRUE_API_PORT: 9999
@@ -180,6 +188,10 @@ services:
     image: supabase/realtime:v2.102.3
     container_name: supabase-realtime
     restart: unless-stopped
+    networks:
+      default:
+      supabase-internal:
+        aliases: [realtime]
     environment:
       PORT: 4000
       DB_HOST: db
@@ -210,6 +222,10 @@ services:
     image: supabase/storage-api:v1.60.4
     container_name: supabase-storage
     restart: unless-stopped
+    networks:
+      default:
+      supabase-internal:
+        aliases: [storage]
     environment:
       ANON_KEY: ${ANON_KEY}
       SERVICE_KEY: ${SERVICE_ROLE_KEY}
@@ -240,6 +256,10 @@ services:
     image: supabase/postgres-meta:v0.96.6
     container_name: supabase-meta
     restart: unless-stopped
+    networks:
+      default:
+      supabase-internal:
+        aliases: [meta]
     environment:
       PG_META_PORT: 8080
       PG_META_DB_HOST: db
@@ -277,48 +297,10 @@ services:
         limits:
           memory: 512m
 
-  kong:
-    image: kong/kong:3.9.1
-    container_name: supabase-kong
-    restart: unless-stopped
-    environment:
-      KONG_DATABASE: "off"
-      KONG_DECLARATIVE_CONFIG: /usr/local/kong/kong.yml
-      KONG_DNS_ORDER: LAST,A,CNAME
-      KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth,request-termination
-      KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
-      KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
-      SUPABASE_ANON_KEY: ${ANON_KEY}
-      SUPABASE_SERVICE_KEY: ${SERVICE_ROLE_KEY}
-    configs:
-      # Kong-Route-Konfiguration über docker-compose configs (Coolify-Methode für
-      # Config-Dateien — erzeugt die Datei im Container, kein fragiler Pfad-Mount).
-      # Inhalt = top-level configs:-Block am Dateiende (Quelle: deploy/supabase/kong.yml).
-      - source: kong_config
-        target: /usr/local/kong/kong.yml
-    expose:
-      # KEIN festes Host-Port-Mapping (8000 ist auf dem Server von Coolify
-      # selbst belegt → Konflikt). Coolifys Traefik-Proxy routet extern anhand
-      # der unten gesetzten Traefik-Labels auf diesen Container-Port (8000).
-      - "8000"
-    # KEINE manuellen traefik.*-Labels und KEIN networks:-Block.
-    # Das Routing nach außen macht Coolify selbst über das Feld
-    # "docker_compose_domains" (Domain für Service "kong" MIT Port-Suffix :8000).
-    # Coolify generiert daraus die korrekten Traefik-Labels inkl. Netzwerk-Bindung.
-    # Siehe ADR-0010 / deploy/supabase/README.md.
-    depends_on:
-      - auth
-      - rest
-      - realtime
-      - storage
-      - meta
-    deploy:
-      resources:
-        limits:
-          # 256m war zu wenig: Kong lief permanent bei 100 % → OOM-Kill der
-          # nginx-Worker (signal 9) → instabile Antworten (502/401-Wechsel),
-          # die fälschlich wie ein Traefik-Routing-Problem aussahen.
-          memory: 1g
+# HINWEIS: Der frühere "kong"-Service wurde in eine EIGENSTÄNDIGE Coolify-App
+# ausgelagert (deploy/kong/) — nur so bekommt Kong Coolifys Rolling-Update
+# (Zero-Downtime). Kong erreicht die obigen Services über das stabile externe
+# Netz "supabase-internal" per Name (auth/rest/realtime/storage/meta).
 
 # ──────────────────────────────────────────────────────────────────────────
 # KEIN top-level volumes:-Block. Postgres- und Storage-Daten laufen über
@@ -333,6 +315,19 @@ services:
 # Voraussetzung (Server-Setup, siehe README.md):
 #   mkdir -p /mnt/HC_Volume_106086998/nextdays/{postgres,storage,redis}
 # ──────────────────────────────────────────────────────────────────────────
+
+# ──────────────────────────────────────────────────────────────────────────
+# Netzwerke. "default" = Coolify-verwaltetes App-Netz (intra-Stack-Kommunikation).
+# "supabase-internal" = STABILES, benanntes externes Netz (UUID-unabhängig), über
+# das die EIGENSTÄNDIGE Kong-App die Stack-Services (auth/rest/storage/…) per Name
+# erreicht. Jeder hier teilnehmende Service trägt unten einen networks-Alias, damit
+# Kong ihn als z.B. "auth" auflösen kann — egal wie der Coolify-Container heißt.
+# Anlegen (einmalig, Server): docker network create supabase-internal
+# ──────────────────────────────────────────────────────────────────────────
+networks:
+  default:
+  supabase-internal:
+    external: true
 
 # Init-SQL + Kong-Config als docker-compose configs (Coolify erzeugt die Dateien
 # im Container). Die DB-Init-Skripte stammen aus dem offiziellen Supabase-docker
@@ -382,122 +377,3 @@ configs:
       create schema if not exists _supavisor;
       alter schema _supavisor owner to current_user;
       \c postgres
-
-  # Kong-Gateway-Konfiguration (Quelle/identisch zu deploy/supabase/kong.yml).
-  # Keys via ${ANON_KEY}/${SERVICE_ROLE_KEY}: Compose interpoliert die ECHTEN
-  # Werte direkt in die Datei. Kong 3.9 substituiert $-Platzhalter NICHT mehr
-  # automatisch (anders als 2.x), daher hier die aufgelösten Werte. Die
-  # keyauth_credentials stehen NUR unter consumers (kein separater Block →
-  # sonst "uniqueness violation: key already declared").
-  kong_config:
-    content: |
-      _format_version: "2.1"
-      _transform: true
-
-      consumers:
-        - username: anon
-          keyauth_credentials:
-            - key: ${ANON_KEY}
-        - username: service_role
-          keyauth_credentials:
-            - key: ${SERVICE_ROLE_KEY}
-
-      acls:
-        - consumer: anon
-          group: anon
-        - consumer: service_role
-          group: admin
-
-      services:
-        - name: auth-v1-open
-          url: http://auth:9999/verify
-          routes:
-            - name: auth-v1-open
-              strip_path: true
-              paths: ["/auth/v1/verify"]
-          plugins:
-            - name: cors
-        - name: auth-v1-open-callback
-          url: http://auth:9999/callback
-          routes:
-            - name: auth-v1-open-callback
-              strip_path: true
-              paths: ["/auth/v1/callback"]
-          plugins:
-            - name: cors
-        - name: auth-v1-open-authorize
-          url: http://auth:9999/authorize
-          routes:
-            - name: auth-v1-open-authorize
-              strip_path: true
-              paths: ["/auth/v1/authorize"]
-          plugins:
-            - name: cors
-        - name: auth-v1
-          url: http://auth:9999/
-          routes:
-            - name: auth-v1-all
-              strip_path: true
-              paths: ["/auth/v1/"]
-          plugins:
-            - name: cors
-            - name: key-auth
-              config:
-                hide_credentials: false
-            - name: acl
-              config:
-                hide_groups_header: true
-                allow: ["admin", "anon"]
-        - name: rest-v1
-          url: http://rest:3000/
-          routes:
-            - name: rest-v1-all
-              strip_path: true
-              paths: ["/rest/v1/"]
-          plugins:
-            - name: cors
-            - name: key-auth
-              config:
-                hide_credentials: true
-            - name: acl
-              config:
-                hide_groups_header: true
-                allow: ["admin", "anon"]
-        - name: realtime-v1
-          url: http://realtime:4000/socket/
-          routes:
-            - name: realtime-v1-all
-              strip_path: true
-              paths: ["/realtime/v1/"]
-          plugins:
-            - name: cors
-            - name: key-auth
-              config:
-                hide_credentials: false
-            - name: acl
-              config:
-                hide_groups_header: true
-                allow: ["admin", "anon"]
-        - name: storage-v1
-          url: http://storage:5000/
-          routes:
-            - name: storage-v1-all
-              strip_path: true
-              paths: ["/storage/v1/"]
-          plugins:
-            - name: cors
-        - name: meta
-          url: http://meta:8080/
-          routes:
-            - name: meta-all
-              strip_path: true
-              paths: ["/pg/"]
-          plugins:
-            - name: cors
-            - name: key-auth
-              config:
-                hide_credentials: false
-            - name: acl
-              config:
-                hide_groups_header: true
-                allow: ["admin"]
