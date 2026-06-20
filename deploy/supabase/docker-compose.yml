@@ -294,17 +294,22 @@ services:
       # selbst belegt → Konflikt). Coolifys Traefik-Proxy routet extern anhand
       # der unten gesetzten Traefik-Labels auf diesen Container-Port (8000).
       - "8000"
+    # Kong muss im SELBEN Netz wie Coolifys Traefik (coolify-proxy) hängen,
+    # sonst findet Traefik den Service nur über die Container-IP, nicht über den
+    # Namen → 503/502/Connection-reset nach Redeploys. coolify ist ein externes,
+    # von Coolify verwaltetes Netz. "default" bleibt, damit die anderen
+    # Supabase-Container Kong weiter intern erreichen.
+    networks:
+      - default
+      - coolify
     labels:
       # Explizites Traefik-Routing auf Kong:8000. Coolifys SERVICE_FQDN-Automatik
-      # greift bei diesem Compose nicht zuverlässig (Service heißt "kong",
-      # nur expose statt ports) → Labels direkt setzen.
-      # Domain HARDCODED, weil Coolify KONG_DOMAIN nur als Runtime-Env in den
-      # Container schreibt, NICHT in die .env, die Compose beim Label-Parsen liest
-      # → ${KONG_DOMAIN} würde wörtlich stehenbleiben. Beim Domain-Wechsel hier ändern.
+      # greift bei diesem Compose nicht (Service heißt "kong", nur expose).
+      # Domain HARDCODED, weil Coolify die Variable nur als Runtime-Env schreibt,
+      # nicht in die .env, die Compose beim Label-Parsen liest. Beim Domain-Wechsel hier ändern.
       - traefik.enable=true
-      # Kong hängt in 2 Netzen (App-Netz + coolify). Traefik MUSS das App-Netz
-      # nutzen, sonst wählt es manchmal "coolify" (wo Kong nicht ist) → 502.
-      - traefik.docker.network=cdqxi7d0w34sxzr4wr8jy8um
+      # Traefik MUSS Kong über das coolify-Netz erreichen (dort lebt der Proxy).
+      - traefik.docker.network=coolify
       - traefik.http.routers.kong-https.rule=Host(`supabase-kong.65.21.144.136.sslip.io`)
       - traefik.http.routers.kong-https.entrypoints=https
       - traefik.http.routers.kong-https.tls=true
@@ -337,6 +342,19 @@ services:
 # Voraussetzung (Server-Setup, siehe README.md):
 #   mkdir -p /mnt/HC_Volume_106086998/nextdays/{postgres,storage,redis}
 # ──────────────────────────────────────────────────────────────────────────
+
+# ──────────────────────────────────────────────────────────────────────────
+# Netzwerke. "default" = das app-eigene Netz (alle Supabase-Container reden
+# darüber miteinander). "coolify" = das externe, von Coolify verwaltete Netz,
+# in dem auch der Traefik-Proxy (coolify-proxy) läuft. Nur Kong wird zusätzlich
+# in "coolify" gehängt (siehe networks: beim kong-Service), damit Traefik Kong
+# über den Service-Namen erreicht. Ohne external: würde Compose ein neues,
+# isoliertes coolify-Netz anlegen — der Proxy wäre nicht drin.
+# ──────────────────────────────────────────────────────────────────────────
+networks:
+  default:
+  coolify:
+    external: true
 
 # Init-SQL + Kong-Config als docker-compose configs (Coolify erzeugt die Dateien
 # im Container). Die DB-Init-Skripte stammen aus dem offiziellen Supabase-docker
