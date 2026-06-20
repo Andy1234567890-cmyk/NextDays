@@ -9,6 +9,12 @@ import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 
+// Login der Gastgeber liegt in der web-App (Dashboard). Per Env überschreibbar
+// (Domain-Wechsel), Default = aktuelle sslip.io-URL der web-App.
+const LOGIN_URL =
+  process.env.NEXT_PUBLIC_LOGIN_URL ??
+  "https://bln3q0n1l1se2hna8utkuag9.65.21.144.136.sslip.io/login";
+
 const NAV_LINKS = [
   { label: "Funktionen", href: "#funktionen" },
   { label: "Preise", href: "#preise" },
@@ -54,7 +60,7 @@ export function MarketingNav() {
             Deutsch
           </button>
           <Link
-            href="/login"
+            href={LOGIN_URL}
             className="hidden text-sm font-medium text-foreground transition-colors hover:text-accent sm:block"
           >
             Anmelden
