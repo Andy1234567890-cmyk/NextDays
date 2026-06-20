@@ -9,6 +9,15 @@
 -- daher das EXECUTE-Recht für public/anon/authenticated. Der Event-Trigger läuft
 -- davon unberührt weiter (Trigger nutzen die Funktion intern, nicht über EXECUTE-Grants).
 
-revoke execute on function public.rls_auto_enable() from public;
-revoke execute on function public.rls_auto_enable() from anon;
-revoke execute on function public.rls_auto_enable() from authenticated;
+-- Defensiv: die Event-Trigger-Funktion wird nicht von jeder Umgebung erzeugt
+-- (sie stammt aus dem Supabase-Advisor-Setup). Existiert sie nicht, sind die
+-- REVOKEs ohnehin gegenstandslos – daher in einen bedingten Block kapseln,
+-- damit frische DBs nicht abbrechen.
+do $$
+begin
+  if to_regprocedure('public.rls_auto_enable()') is not null then
+    revoke execute on function public.rls_auto_enable() from public;
+    revoke execute on function public.rls_auto_enable() from anon;
+    revoke execute on function public.rls_auto_enable() from authenticated;
+  end if;
+end $$;
