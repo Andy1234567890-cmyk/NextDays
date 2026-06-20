@@ -53,18 +53,23 @@ services:
         target: /var/lib/postgresql/data
     configs:
       # Supabase-DB-Init (läuft nur beim ERSTEN Start eines leeren Datenverz.).
-      # Legt die rollen-spezifischen Passwörter + interne Schemas/DB an, die
-      # auth/storage/realtime/pooler brauchen. Reihenfolge via Dateinamen.
-      - source: db_realtime_sql
-        target: /docker-entrypoint-initdb.d/migrations/99-realtime.sql
+      # Setzt rollen-spezifische Passwörter + interne DB/Schemas (_supabase,
+      # _realtime, _supavisor), die das Image NICHT selbst anlegt (verifiziert).
+      #
+      # WICHTIG: direkt in /docker-entrypoint-initdb.d/ (Standard-Postgres-
+      # Mechanismus), NICHT in die Unterordner init-scripts/ oder migrations/ —
+      # die gehören dem Image (migrate.sh) und werden separat verarbeitet.
+      # zz-Präfix sortiert NACH dem Image-Init (alphabetische Reihenfolge).
       - source: db_supabase_sql
-        target: /docker-entrypoint-initdb.d/migrations/97-_supabase.sql
-      - source: db_pooler_sql
-        target: /docker-entrypoint-initdb.d/migrations/99-pooler.sql
+        target: /docker-entrypoint-initdb.d/zz-97-_supabase.sql
       - source: db_roles_sql
-        target: /docker-entrypoint-initdb.d/init-scripts/99-roles.sql
+        target: /docker-entrypoint-initdb.d/zz-98-roles.sql
       - source: db_jwt_sql
-        target: /docker-entrypoint-initdb.d/init-scripts/99-jwt.sql
+        target: /docker-entrypoint-initdb.d/zz-98-jwt.sql
+      - source: db_realtime_sql
+        target: /docker-entrypoint-initdb.d/zz-99-realtime.sql
+      - source: db_pooler_sql
+        target: /docker-entrypoint-initdb.d/zz-99-pooler.sql
     healthcheck:
       # Explizit gegen TCP-Host/Port prüfen, nicht nur den lokalen Socket — sonst
       # meldet pg_isready "healthy", bevor die DB Netzwerk-Connections annimmt,
@@ -313,14 +318,31 @@ services:
 # (volumes/db/*) und laufen nur beim ERSTEN Start eines leeren Datenverzeichnisses.
 configs:
   # Setzt die Passwörter der rollen-spezifischen DB-User auf ${POSTGRES_PASSWORD}.
+  # ROBUST: nur Rollen, die wirklich existieren (DO-Block), sonst bricht psql ab
+  # und Folge-Skripte laufen nicht. supabase_functions_admin existiert in diesem
+  # Stack NICHT (kein functions/edge-runtime) → würde "role does not exist" werfen.
   db_roles_sql:
     content: |
       \set pgpass `echo "$POSTGRES_PASSWORD"`
-      ALTER USER authenticator WITH PASSWORD :'pgpass';
-      ALTER USER pgbouncer WITH PASSWORD :'pgpass';
-      ALTER USER supabase_auth_admin WITH PASSWORD :'pgpass';
-      ALTER USER supabase_functions_admin WITH PASSWORD :'pgpass';
-      ALTER USER supabase_storage_admin WITH PASSWORD :'pgpass';
+      -- Passwort als Session-Setting ablegen: psql-Variablen (:'pgpass') werden
+      -- innerhalb von DO $$..$$ NICHT interpoliert, daher der Umweg über
+      -- set_config + current_setting im Block.
+      SELECT set_config('myapp.pgpass', :'pgpass', false);
+      DO $$
+      DECLARE
+        r text;
+        pw text := current_setting('myapp.pgpass');
+      BEGIN
+        FOREACH r IN ARRAY ARRAY[
+          'authenticator','pgbouncer','supabase_auth_admin',
+          'supabase_storage_admin','supabase_functions_admin','supabase_read_only_user'
+        ]
+        LOOP
+          IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = r) THEN
+            EXECUTE format('ALTER USER %I WITH PASSWORD %L', r, pw);
+          END IF;
+        END LOOP;
+      END $$;
   # JWT-Settings auf DB-Ebene.
   db_jwt_sql:
     content: |
