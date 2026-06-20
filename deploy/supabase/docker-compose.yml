@@ -308,7 +308,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256m
+          # 256m war zu wenig: Kong lief permanent bei 100 % → OOM-Kill der
+          # nginx-Worker (signal 9) → instabile Antworten (502/401-Wechsel),
+          # die fälschlich wie ein Traefik-Routing-Problem aussahen.
+          memory: 1g
 
 # ──────────────────────────────────────────────────────────────────────────
 # KEIN top-level volumes:-Block. Postgres- und Storage-Daten laufen über
