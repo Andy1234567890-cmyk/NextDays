@@ -1,0 +1,92 @@
+{
+  "common": {
+    "save": "Gem",
+    "cancel": "Annuller",
+    "back": "Tilbage",
+    "next": "Næste",
+    "loading": "Indlæser …",
+    "language": "Sprog"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Velkommen til myNextDays",
+      "text": "På få trin er din virksomhed klar. Vi opretter dit første lejemål, fastsætter en pris og forbinder dine bookingkanaler.",
+      "cta": "Kom i gang"
+    },
+    "company": {
+      "title": "Virksomhedsoplysninger",
+      "text": "Disse oplysninger hører til din konto og bruges blandt andet til fakturaer og til at forbinde dine bookingportaler.",
+      "companyName": "Virksomhedsnavn *",
+      "companyNamePlaceholder": "f.eks. Villa zur Sonne GmbH",
+      "legalForm": "Virksomhedsform *",
+      "street": "Vej *",
+      "houseNumber": "Husnummer *",
+      "postalCode": "Postnummer *",
+      "city": "By *",
+      "country": "Land *",
+      "billingEmail": "Faktura-e-mail *",
+      "billingEmailHint": "Forudfyldt med din login-e-mail — kan ændres til fakturaer/kontakt.",
+      "phone": "Telefon *",
+      "vatId": "CVR/momsnr.",
+      "taxNumber": "eller skattenummer",
+      "moreOptional": "Flere oplysninger (valgfrit)",
+      "website": "Websted",
+      "companyRegister": "CVR-nr.",
+      "districtCourt": "Registreringsdomstol",
+      "iban": "IBAN",
+      "saving": "Gemmer …",
+      "missing": "Udfyld venligst: {fields}.",
+      "field": {
+        "companyName": "Virksomhedsnavn",
+        "street": "Vej",
+        "houseNumber": "Husnummer",
+        "postalCode": "Postnummer",
+        "city": "By",
+        "country": "Land",
+        "email": "E-mail",
+        "phone": "Telefon",
+        "vatOrTax": "CVR/momsnr. eller skattenummer"
+      }
+    },
+    "branch": {
+      "title": "Er du allerede aktiv på bookingportaler?",
+      "text": "Hvis du for eksempel allerede udlejer på Booking.com eller Airbnb, forbinder vi dine eksisterende konti og overtager dine lejemål og bookinger — du behøver ikke oprette noget to gange.",
+      "yesTitle": "Ja, det er jeg allerede",
+      "yesDesc": "Forbind og importér eksisterende portaler",
+      "noTitle": "Nej, jeg starter forfra",
+      "noDesc": "Opret et nyt lejemål og forbind kanaler fra bunden",
+      "whichPortals": "Hvilke portaler bruger du allerede?"
+    },
+    "object": {
+      "title": "Dit første lejemål",
+      "text": "Opret dit første udlejningsklare lejemål. Detaljer (adresse, fotos, faciliteter) kan du tilføje senere.",
+      "name": "Lejemålets navn",
+      "namePlaceholder": "f.eks. Dobbeltværelse med søudsigt",
+      "maxGuests": "Maksimalt antal gæster",
+      "creating": "Oprettes …",
+      "create": "Opret lejemål"
+    },
+    "price": {
+      "title": "Basispris pr. nat",
+      "text": "Fastsæt en startpris. Sæson- og kanalpriser kan du finjustere senere.",
+      "perNight": "Pris pr. nat (€)",
+      "pricePlaceholder": "f.eks. 120"
+    },
+    "channels": {
+      "titleImport": "Forbind og importér portaler",
+      "titleConnect": "Forbind bookingkanaler",
+      "notReady": "Kanalforbindelsen er ved at blive klargjort til din virksomhed. Du kan altid afslutte den senere under „Channel Manager\".",
+      "importIntro": "Vi forbinder dine eksisterende konti og overtager lejemål og bookinger. Vælg de portaler, du vil forbinde:",
+      "connectExisting": "Forbind portaler nu",
+      "importHint": "Forbindelsesguiden (adgang + tildeling af lejemål) åbnes integreret. Du kan også åbne den senere under „Channel Manager\".",
+      "newIntro": "Dit lejemål er oprettet. Så snart du forbinder kanaler, fordeler vi automatisk tilgængelighed og priser til Booking.com, Airbnb m.fl. — og bookinger lander direkte i din kalender.",
+      "connectNew": "Forbind kanaler",
+      "finish": "Afslut opsætning"
+    },
+    "done": {
+      "title": "Færdig — din virksomhed er klar!",
+      "text": "Du kan nu oprette flere lejemål, finjustere priser og færdiggøre dine kanalforbindelser i dashboardet.",
+      "toDashboard": "Til dashboard"
+    }
+  }
+}

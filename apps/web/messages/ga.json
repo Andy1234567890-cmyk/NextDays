@@ -1,0 +1,92 @@
+{
+  "common": {
+    "save": "Sábháil",
+    "cancel": "Cealaigh",
+    "back": "Ar ais",
+    "next": "Ar aghaidh",
+    "loading": "Á lódáil …",
+    "language": "Teanga"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Fáilte chuig myNextDays",
+      "text": "Beidh do ghnó réidh le tosú i mbeagán céimeanna. Cruthóimid do chéad mhaoin, socróimid praghas agus nascfaimid do chainéil áirithinte.",
+      "cta": "Ar aghaidh linn"
+    },
+    "company": {
+      "title": "Sonraí an chomhlachta",
+      "text": "Baineann na sonraí seo le do chuntas agus úsáidtear iad, i measc rudaí eile, le haghaidh sonraisc agus chun do thairseacha áirithinte a nascadh.",
+      "companyName": "Ainm an chomhlachta *",
+      "companyNamePlaceholder": "m.sh. Villa zur Sonne GmbH",
+      "legalForm": "Foirm dhlíthiúil *",
+      "street": "Sráid *",
+      "houseNumber": "Uimhir tí *",
+      "postalCode": "Cód poist *",
+      "city": "Cathair *",
+      "country": "Tír *",
+      "billingEmail": "Ríomhphost billeála *",
+      "billingEmailHint": "Réamhlíonta le do ríomhphost logála isteach — in-eagarthóireacht le haghaidh sonraisc/teagmhála.",
+      "phone": "Fón *",
+      "vatId": "VAT/CBL",
+      "taxNumber": "nó uimhir chánach",
+      "moreOptional": "Tuilleadh sonraí (roghnach)",
+      "website": "Suíomh gréasáin",
+      "companyRegister": "Uimh. na cláir thráchtála",
+      "districtCourt": "Cúirt chláraithe",
+      "iban": "IBAN",
+      "saving": "Á shábháil …",
+      "missing": "Líon isteach, le do thoil: {fields}.",
+      "field": {
+        "companyName": "Ainm an chomhlachta",
+        "street": "Sráid",
+        "houseNumber": "Uimhir tí",
+        "postalCode": "Cód poist",
+        "city": "Cathair",
+        "country": "Tír",
+        "email": "Ríomhphost",
+        "phone": "Fón",
+        "vatOrTax": "VAT/CBL nó uimhir chánach"
+      }
+    },
+    "branch": {
+      "title": "An bhfuil tú gníomhach ar thairseacha áirithinte cheana féin?",
+      "text": "Má dhéanann tú cíos cheana féin ar Booking.com nó Airbnb, mar shampla, nascfaimid do chuntais reatha agus iompórtálfaimid do mhaoine agus do chuid áirithintí — ní gá aon rud a chruthú faoi dhó.",
+      "yesTitle": "Tá, cheana féin",
+      "yesDesc": "Nasc agus iompórtáil tairseacha reatha",
+      "noTitle": "Níl, tá mé ag tosú as an nua",
+      "noDesc": "Cruthaigh maoin nua agus nasc cainéil ón tús",
+      "whichPortals": "Cé na tairseacha a úsáideann tú cheana féin?"
+    },
+    "object": {
+      "title": "Do chéad mhaoin",
+      "text": "Cruthaigh do chéad mhaoin in-ligthe ar cíos. Is féidir leat sonraí (seoladh, grianghraif, áiseanna) a chur leis níos déanaí.",
+      "name": "Ainm na maoine",
+      "namePlaceholder": "m.sh. Seomra dúbailte le radharc ar an loch",
+      "maxGuests": "Uaslíon aíonna",
+      "creating": "Á chruthú …",
+      "create": "Cruthaigh maoin"
+    },
+    "price": {
+      "title": "Bunphraghas in aghaidh na hoíche",
+      "text": "Socraigh praghas tosaigh. Is féidir leat praghsanna séasúracha agus cainéil a mhionchoigeartú níos déanaí.",
+      "perNight": "Praghas in aghaidh na hoíche (€)",
+      "pricePlaceholder": "m.sh. 120"
+    },
+    "channels": {
+      "titleImport": "Nasc agus iompórtáil tairseacha",
+      "titleConnect": "Nasc cainéil áirithinte",
+      "notReady": "Tá nascacht na gcainéal á socrú do do ghnó faoi láthair. Is féidir leat é a chríochnú am ar bith níos déanaí faoi „Channel Manager”.",
+      "importIntro": "Nascfaimid do chuntais reatha agus iompórtálfaimid maoine agus áirithintí. Roghnaigh na tairseacha is mian leat a nascadh:",
+      "connectExisting": "Nasc tairseacha anois",
+      "importHint": "Osclaíonn an cúntóir nasctha (rochtain + mapáil maoine) leabaithe. Is féidir leat é a oscailt níos déanaí freisin faoi „Channel Manager”.",
+      "newIntro": "Tá do mhaoin cruthaithe. Chomh luath agus a nascann tú cainéil, dáilfimid infhaighteacht agus praghsanna go huathoibríoch chuig Booking.com, Airbnb srl. — agus tagann áirithintí díreach isteach i do fhéilire.",
+      "connectNew": "Nasc cainéil",
+      "finish": "Críochnaigh an socrú"
+    },
+    "done": {
+      "title": "Déanta — tá do ghnó réidh le tosú!",
+      "text": "Is féidir leat tuilleadh maoine a chruthú, praghsanna a bheachtú agus do naisc chainéil a chríochnú sa deais anois.",
+      "toDashboard": "Chuig an deais"
+    }
+  }
+}

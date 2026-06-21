@@ -1,0 +1,92 @@
+{
+  "common": {
+    "save": "Saglabāt",
+    "cancel": "Atcelt",
+    "back": "Atpakaļ",
+    "next": "Tālāk",
+    "loading": "Notiek ielāde …",
+    "language": "Valoda"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Laipni lūdzam myNextDays",
+      "text": "Dažos soļos jūsu uzņēmums būs gatavs darbam. Mēs izveidosim jūsu pirmo objektu, iestatīsim cenu un savienosim jūsu rezervāciju kanālus.",
+      "cta": "Sākam"
+    },
+    "company": {
+      "title": "Uzņēmuma dati",
+      "text": "Šie dati pieder jūsu kontam un tiek izmantoti, cita starpā, rēķiniem un jūsu rezervāciju portālu savienošanai.",
+      "companyName": "Uzņēmuma nosaukums *",
+      "companyNamePlaceholder": "piem., Villa zur Sonne GmbH",
+      "legalForm": "Juridiskā forma *",
+      "street": "Iela *",
+      "houseNumber": "Mājas numurs *",
+      "postalCode": "Pasta indekss *",
+      "city": "Pilsēta *",
+      "country": "Valsts *",
+      "billingEmail": "Rēķinu e-pasts *",
+      "billingEmailHint": "Iepriekš aizpildīts ar jūsu pieteikšanās e-pastu — rediģējams rēķiniem/saziņai.",
+      "phone": "Tālrunis *",
+      "vatId": "PVN nr.",
+      "taxNumber": "vai nodokļu maksātāja numurs",
+      "moreOptional": "Papildu dati (neobligāti)",
+      "website": "Tīmekļa vietne",
+      "companyRegister": "Komercreģistra nr.",
+      "districtCourt": "Reģistra tiesa",
+      "iban": "IBAN",
+      "saving": "Notiek saglabāšana …",
+      "missing": "Lūdzu, aizpildiet: {fields}.",
+      "field": {
+        "companyName": "Uzņēmuma nosaukums",
+        "street": "Iela",
+        "houseNumber": "Mājas numurs",
+        "postalCode": "Pasta indekss",
+        "city": "Pilsēta",
+        "country": "Valsts",
+        "email": "E-pasts",
+        "phone": "Tālrunis",
+        "vatOrTax": "PVN nr. vai nodokļu maksātāja numurs"
+      }
+    },
+    "branch": {
+      "title": "Vai jūs jau darbojaties rezervāciju portālos?",
+      "text": "Ja jūs, piemēram, jau izīrējat platformā Booking.com vai Airbnb, mēs savienosim jūsu esošos kontus un pārņemsim jūsu objektus un rezervācijas — nekas nav jāizveido divreiz.",
+      "yesTitle": "Jā, jau darbojos",
+      "yesDesc": "Esošo portālu savienošana un importēšana",
+      "noTitle": "Nē, sāku no jauna",
+      "noDesc": "Izveidot jaunu objektu un savienot kanālus no nulles",
+      "whichPortals": "Kurus portālus jūs jau izmantojat?"
+    },
+    "object": {
+      "title": "Jūsu pirmais objekts",
+      "text": "Izveidojiet savu pirmo izīrējamo objektu. Detaļas (adresi, fotoattēlus, aprīkojumu) varat pievienot vēlāk.",
+      "name": "Objekta nosaukums",
+      "namePlaceholder": "piem., Divvietīgs numurs ar skatu uz ezeru",
+      "maxGuests": "Maksimālais viesu skaits",
+      "creating": "Notiek izveide …",
+      "create": "Izveidot objektu"
+    },
+    "price": {
+      "title": "Pamatcena par nakti",
+      "text": "Iestatiet sākuma cenu. Sezonas un kanālu cenas varat precīzi noregulēt vēlāk.",
+      "perNight": "Cena par nakti (€)",
+      "pricePlaceholder": "piem., 120"
+    },
+    "channels": {
+      "titleImport": "Portālu savienošana un importēšana",
+      "titleConnect": "Rezervāciju kanālu savienošana",
+      "notReady": "Kanālu savienojums pašlaik tiek iestatīts jūsu uzņēmumam. Jūs to varat pabeigt jebkurā laikā vēlāk sadaļā „Channel Manager”.",
+      "importIntro": "Mēs savienosim jūsu esošos kontus un importēsim objektus un rezervācijas. Izvēlieties portālus, kurus vēlaties savienot:",
+      "connectExisting": "Savienot portālus tagad",
+      "importHint": "Savienošanas palīgs (piekļuve + objektu piesaiste) atveras iegults. Jūs to varat atvērt arī vēlāk sadaļā „Channel Manager”.",
+      "newIntro": "Jūsu objekts ir izveidots. Tiklīdz savienosiet kanālus, mēs automātiski izplatīsim pieejamību un cenas platformās Booking.com, Airbnb u.c. — un rezervācijas nonāks tieši jūsu kalendārā.",
+      "connectNew": "Savienot kanālus",
+      "finish": "Pabeigt iestatīšanu"
+    },
+    "done": {
+      "title": "Gatavs — jūsu uzņēmums ir gatavs darbam!",
+      "text": "Tagad informācijas panelī varat izveidot vairāk objektu, precizēt cenas un galīgi savienot savus kanālus.",
+      "toDashboard": "Uz informācijas paneli"
+    }
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "common": {
+    "save": "Salvesta",
+    "cancel": "Tühista",
+    "back": "Tagasi",
+    "next": "Edasi",
+    "loading": "Laadimine …",
+    "language": "Keel"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Tere tulemast myNextDays keskkonda",
+      "text": "Paari sammuga on teie ettevõte stardivalmis. Loome teie esimese majutusobjekti, määrame hinna ja ühendame teie broneerimiskanalid.",
+      "cta": "Alustame"
+    },
+    "company": {
+      "title": "Ettevõtte andmed",
+      "text": "Need andmed kuuluvad teie konto juurde ja neid kasutatakse muu hulgas arvete jaoks ning broneerimisportaalide ühendamiseks.",
+      "companyName": "Ettevõtte nimi *",
+      "companyNamePlaceholder": "nt Villa zur Sonne GmbH",
+      "legalForm": "Õiguslik vorm *",
+      "street": "Tänav *",
+      "houseNumber": "Maja number *",
+      "postalCode": "Sihtnumber *",
+      "city": "Linn *",
+      "country": "Riik *",
+      "billingEmail": "Arve e-post *",
+      "billingEmailHint": "Eeltäidetud teie sisselogimise e-postiga — arvete/kontakti jaoks muudetav.",
+      "phone": "Telefon *",
+      "vatId": "KMKR",
+      "taxNumber": "või maksukohustuslase number",
+      "moreOptional": "Lisaandmed (valikuline)",
+      "website": "Veebisait",
+      "companyRegister": "Äriregistri nr",
+      "districtCourt": "Registrikohus",
+      "iban": "IBAN",
+      "saving": "Salvestamine …",
+      "missing": "Palun täitke: {fields}.",
+      "field": {
+        "companyName": "Ettevõtte nimi",
+        "street": "Tänav",
+        "houseNumber": "Maja number",
+        "postalCode": "Sihtnumber",
+        "city": "Linn",
+        "country": "Riik",
+        "email": "E-post",
+        "phone": "Telefon",
+        "vatOrTax": "KMKR või maksukohustuslase number"
+      }
+    },
+    "branch": {
+      "title": "Kas olete broneerimisportaalides juba aktiivne?",
+      "text": "Kui te juba üürite välja näiteks Booking.comis või Airbnbs, ühendame teie olemasolevad kontod ning impordime teie objektid ja broneeringud — midagi ei pea topelt looma.",
+      "yesTitle": "Jah, olen juba",
+      "yesDesc": "Olemasolevate portaalide ühendamine ja importimine",
+      "noTitle": "Ei, alustan nullist",
+      "noDesc": "Loo uus objekt ja ühenda kanalid nullist",
+      "whichPortals": "Milliseid portaale te juba kasutate?"
+    },
+    "object": {
+      "title": "Teie esimene objekt",
+      "text": "Looge oma esimene üüritav objekt. Üksikasju (aadress, fotod, sisustus) saate lisada hiljem.",
+      "name": "Objekti nimi",
+      "namePlaceholder": "nt Kahene tuba järvevaatega",
+      "maxGuests": "Maksimaalne külaliste arv",
+      "creating": "Loomine …",
+      "create": "Loo objekt"
+    },
+    "price": {
+      "title": "Põhihind öö kohta",
+      "text": "Määrake alghind. Hooaja- ja kanalihindu saate hiljem peenhäälestada.",
+      "perNight": "Hind öö kohta (€)",
+      "pricePlaceholder": "nt 120"
+    },
+    "channels": {
+      "titleImport": "Portaalide ühendamine ja importimine",
+      "titleConnect": "Broneerimiskanalite ühendamine",
+      "notReady": "Kanaliühendust seadistatakse praegu teie ettevõtte jaoks. Saate selle igal ajal hiljem lõpule viia jaotises „Channel Manager”.",
+      "importIntro": "Ühendame teie olemasolevad kontod ning impordime objektid ja broneeringud. Valige portaalid, mida soovite ühendada:",
+      "connectExisting": "Ühenda portaalid kohe",
+      "importHint": "Ühendamisviisard (juurdepääs + objekti seostamine) avaneb sisseehitatuna. Saate selle avada ka hiljem jaotises „Channel Manager”.",
+      "newIntro": "Teie objekt on loodud. Niipea kui kanalid ühendate, jaotame saadavuse ja hinnad automaatselt Booking.comi, Airbnbsse jt — ning broneeringud jõuavad otse teie kalendrisse.",
+      "connectNew": "Ühenda kanalid",
+      "finish": "Lõpeta seadistamine"
+    },
+    "done": {
+      "title": "Valmis — teie ettevõte on stardivalmis!",
+      "text": "Nüüd saate juhtpaneelil luua rohkem objekte, hindu täpsustada ja oma kanaliühendused lõplikult vormistada.",
+      "toDashboard": "Juhtpaneelile"
+    }
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "common": {
+    "save": "Tallenna",
+    "cancel": "Peruuta",
+    "back": "Takaisin",
+    "next": "Seuraava",
+    "loading": "Ladataan …",
+    "language": "Kieli"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Tervetuloa myNextDays-palveluun",
+      "text": "Muutamassa vaiheessa yrityksesi on valmis aloittamaan. Luomme ensimmäisen kohteesi, asetamme hinnan ja yhdistämme varauskanavasi.",
+      "cta": "Aloitetaan"
+    },
+    "company": {
+      "title": "Yritystiedot",
+      "text": "Nämä tiedot kuuluvat tiliisi, ja niitä käytetään muun muassa laskuihin ja varausportaaliesi yhdistämiseen.",
+      "companyName": "Yrityksen nimi *",
+      "companyNamePlaceholder": "esim. Villa zur Sonne GmbH",
+      "legalForm": "Yhtiömuoto *",
+      "street": "Katu *",
+      "houseNumber": "Talon numero *",
+      "postalCode": "Postinumero *",
+      "city": "Paikkakunta *",
+      "country": "Maa *",
+      "billingEmail": "Laskutussähköposti *",
+      "billingEmailHint": "Esitäytetty kirjautumissähköpostillasi — muokattavissa laskuja/yhteydenottoa varten.",
+      "phone": "Puhelin *",
+      "vatId": "ALV-numero",
+      "taxNumber": "tai verotunniste",
+      "moreOptional": "Lisätiedot (valinnainen)",
+      "website": "Verkkosivusto",
+      "companyRegister": "Kaupparekisterinro",
+      "districtCourt": "Rekisteriviranomainen",
+      "iban": "IBAN",
+      "saving": "Tallennetaan …",
+      "missing": "Täytä: {fields}.",
+      "field": {
+        "companyName": "Yrityksen nimi",
+        "street": "Katu",
+        "houseNumber": "Talon numero",
+        "postalCode": "Postinumero",
+        "city": "Paikkakunta",
+        "country": "Maa",
+        "email": "Sähköposti",
+        "phone": "Puhelin",
+        "vatOrTax": "ALV-numero tai verotunniste"
+      }
+    },
+    "branch": {
+      "title": "Oletko jo aktiivinen varausportaaleissa?",
+      "text": "Jos vuokraat jo esimerkiksi Booking.comissa tai Airbnb:ssä, yhdistämme nykyiset tilisi ja siirrämme kohteesi ja varauksesi — sinun ei tarvitse luoda mitään kahteen kertaan.",
+      "yesTitle": "Kyllä, olen jo",
+      "yesDesc": "Yhdistä ja tuo nykyiset portaalit",
+      "noTitle": "Ei, aloitan alusta",
+      "noDesc": "Luo uusi kohde ja yhdistä kanavat alusta alkaen",
+      "whichPortals": "Mitä portaaleja käytät jo?"
+    },
+    "object": {
+      "title": "Ensimmäinen kohteesi",
+      "text": "Luo ensimmäinen vuokrattava kohteesi. Tiedot (osoite, kuvat, varustelu) voit lisätä myöhemmin.",
+      "name": "Kohteen nimi",
+      "namePlaceholder": "esim. Kahden hengen huone järvinäköalalla",
+      "maxGuests": "Vieraiden enimmäismäärä",
+      "creating": "Luodaan …",
+      "create": "Luo kohde"
+    },
+    "price": {
+      "title": "Perushinta per yö",
+      "text": "Aseta aloitushinta. Kausi- ja kanavakohtaisia hintoja voit hienosäätää myöhemmin.",
+      "perNight": "Hinta per yö (€)",
+      "pricePlaceholder": "esim. 120"
+    },
+    "channels": {
+      "titleImport": "Yhdistä ja tuo portaalit",
+      "titleConnect": "Yhdistä varauskanavat",
+      "notReady": "Kanavayhteyttä valmistellaan parhaillaan yrityksellesi. Voit viimeistellä sen milloin tahansa myöhemmin kohdassa ”Channel Manager”.",
+      "importIntro": "Yhdistämme nykyiset tilisi ja siirrämme kohteet ja varaukset. Valitse portaalit, jotka haluat yhdistää:",
+      "connectExisting": "Yhdistä portaalit nyt",
+      "importHint": "Yhdistämisapuri (pääsy + kohteen kohdistus) avautuu upotettuna. Voit avata sen myös myöhemmin kohdassa ”Channel Manager”.",
+      "newIntro": "Kohteesi on luotu. Heti kun yhdistät kanavia, jaamme saatavuuden ja hinnat automaattisesti Booking.comiin, Airbnb:hen ynnä muihin — ja varaukset päätyvät suoraan kalenteriisi.",
+      "connectNew": "Yhdistä kanavat",
+      "finish": "Viimeistele asennus"
+    },
+    "done": {
+      "title": "Valmista — yrityksesi on valmis aloittamaan!",
+      "text": "Voit nyt luoda lisää kohteita, hienosäätää hintoja ja viimeistellä kanavayhteytesi koontinäytössä.",
+      "toDashboard": "Koontinäyttöön"
+    }
+  }
+}

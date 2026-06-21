@@ -1,0 +1,92 @@
+{
+  "common": {
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "back": "Terug",
+    "next": "Volgende",
+    "loading": "Laden …",
+    "language": "Taal"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Welkom bij myNextDays",
+      "text": "In een paar stappen is je bedrijf startklaar. We maken je eerste accommodatie aan, stellen een prijs in en koppelen je boekingskanalen.",
+      "cta": "Aan de slag"
+    },
+    "company": {
+      "title": "Bedrijfsgegevens",
+      "text": "Deze gegevens horen bij je account en worden onder andere gebruikt voor facturen en het koppelen van je boekingsportalen.",
+      "companyName": "Bedrijfsnaam *",
+      "companyNamePlaceholder": "bijv. Villa zur Sonne GmbH",
+      "legalForm": "Rechtsvorm *",
+      "street": "Straat *",
+      "houseNumber": "Huisnummer *",
+      "postalCode": "Postcode *",
+      "city": "Plaats *",
+      "country": "Land *",
+      "billingEmail": "Factuur-e-mail *",
+      "billingEmailHint": "Vooraf ingevuld met je login-e-mail — aanpasbaar voor facturen/contact.",
+      "phone": "Telefoon *",
+      "vatId": "btw-nummer",
+      "taxNumber": "of fiscaal nummer",
+      "moreOptional": "Meer gegevens (optioneel)",
+      "website": "Website",
+      "companyRegister": "KvK-nummer",
+      "districtCourt": "Registerrechtbank",
+      "iban": "IBAN",
+      "saving": "Opslaan …",
+      "missing": "Vul in: {fields}.",
+      "field": {
+        "companyName": "Bedrijfsnaam",
+        "street": "Straat",
+        "houseNumber": "Huisnummer",
+        "postalCode": "Postcode",
+        "city": "Plaats",
+        "country": "Land",
+        "email": "E-mail",
+        "phone": "Telefoon",
+        "vatOrTax": "btw-nummer of fiscaal nummer"
+      }
+    },
+    "branch": {
+      "title": "Ben je al actief op boekingsportalen?",
+      "text": "Als je bijvoorbeeld al verhuurt via Booking.com of Airbnb, koppelen we je bestaande accounts en nemen we je accommodaties & boekingen over — je hoeft niets dubbel aan te maken.",
+      "yesTitle": "Ja, dat ben ik al",
+      "yesDesc": "Bestaande portalen koppelen & importeren",
+      "noTitle": "Nee, ik begin opnieuw",
+      "noDesc": "Nieuwe accommodatie aanmaken en kanalen vers koppelen",
+      "whichPortals": "Welke portalen gebruik je al?"
+    },
+    "object": {
+      "title": "Je eerste accommodatie",
+      "text": "Maak je eerste verhuurbare accommodatie aan. Details (adres, foto's, voorzieningen) kun je later aanvullen.",
+      "name": "Naam van de accommodatie",
+      "namePlaceholder": "bijv. Tweepersoonskamer met meerzicht",
+      "maxGuests": "Maximaal aantal gasten",
+      "creating": "Wordt aangemaakt …",
+      "create": "Accommodatie aanmaken"
+    },
+    "price": {
+      "title": "Basisprijs per nacht",
+      "text": "Stel een startprijs in. Seizoens- en kanaalprijzen kun je later fijnafstellen.",
+      "perNight": "Prijs per nacht (€)",
+      "pricePlaceholder": "bijv. 120"
+    },
+    "channels": {
+      "titleImport": "Portalen koppelen & importeren",
+      "titleConnect": "Boekingskanalen koppelen",
+      "notReady": "De kanaalkoppeling wordt momenteel voor je bedrijf voorbereid. Je kunt deze later altijd afronden onder „Channel Manager\".",
+      "importIntro": "We koppelen je bestaande accounts en nemen accommodaties & boekingen over. Kies de portalen die je wilt koppelen:",
+      "connectExisting": "Portalen nu koppelen",
+      "importHint": "De koppelingsassistent (toegang + accommodatietoewijzing) opent ingebed. Je kunt deze ook later openen onder „Channel Manager\".",
+      "newIntro": "Je accommodatie is aangemaakt. Zodra je kanalen koppelt, verdelen we de beschikbaarheid en prijzen automatisch over Booking.com, Airbnb & co. — en boekingen komen direct in je kalender terecht.",
+      "connectNew": "Kanalen koppelen",
+      "finish": "Setup afronden"
+    },
+    "done": {
+      "title": "Gelukt — je bedrijf is startklaar!",
+      "text": "Je kunt nu in het dashboard meer accommodaties aanmaken, prijzen verfijnen en je kanalen definitief koppelen.",
+      "toDashboard": "Naar dashboard"
+    }
+  }
+}

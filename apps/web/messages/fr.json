@@ -1,0 +1,92 @@
+{
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "back": "Retour",
+    "next": "Suivant",
+    "loading": "Chargement …",
+    "language": "Langue"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Bienvenue sur myNextDays",
+      "text": "En quelques étapes, votre activité est prête à démarrer. Nous créons votre premier hébergement, définissons un prix et connectons vos canaux de réservation.",
+      "cta": "C'est parti"
+    },
+    "company": {
+      "title": "Informations sur l'entreprise",
+      "text": "Ces informations sont rattachées à votre compte et servent notamment pour les factures et la connexion de vos portails de réservation.",
+      "companyName": "Nom de l'entreprise *",
+      "companyNamePlaceholder": "p. ex. Villa zur Sonne GmbH",
+      "legalForm": "Forme juridique *",
+      "street": "Rue *",
+      "houseNumber": "Numéro *",
+      "postalCode": "Code postal *",
+      "city": "Ville *",
+      "country": "Pays *",
+      "billingEmail": "E-mail de facturation *",
+      "billingEmailHint": "Pré-rempli avec votre e-mail de connexion — modifiable pour les factures/le contact.",
+      "phone": "Téléphone *",
+      "vatId": "N° de TVA",
+      "taxNumber": "ou numéro fiscal",
+      "moreOptional": "Informations supplémentaires (facultatif)",
+      "website": "Site web",
+      "companyRegister": "N° du registre du commerce",
+      "districtCourt": "Tribunal d'enregistrement",
+      "iban": "IBAN",
+      "saving": "Enregistrement …",
+      "missing": "Veuillez compléter : {fields}.",
+      "field": {
+        "companyName": "Nom de l'entreprise",
+        "street": "Rue",
+        "houseNumber": "Numéro",
+        "postalCode": "Code postal",
+        "city": "Ville",
+        "country": "Pays",
+        "email": "E-mail",
+        "phone": "Téléphone",
+        "vatOrTax": "N° de TVA ou numéro fiscal"
+      }
+    },
+    "branch": {
+      "title": "Êtes-vous déjà actif sur des portails de réservation ?",
+      "text": "Si vous louez déjà sur Booking.com ou Airbnb, par exemple, nous connectons vos comptes existants et importons vos hébergements et réservations — vous n'avez rien à créer en double.",
+      "yesTitle": "Oui, je le suis déjà",
+      "yesDesc": "Connecter et importer les portails existants",
+      "noTitle": "Non, je débute",
+      "noDesc": "Créer un hébergement et connecter les canaux de zéro",
+      "whichPortals": "Quels portails utilisez-vous déjà ?"
+    },
+    "object": {
+      "title": "Votre premier hébergement",
+      "text": "Créez votre premier hébergement à louer. Vous pourrez ajouter les détails (adresse, photos, équipements) plus tard.",
+      "name": "Nom de l'hébergement",
+      "namePlaceholder": "p. ex. Chambre double vue lac",
+      "maxGuests": "Nombre maximum de voyageurs",
+      "creating": "Création en cours …",
+      "create": "Créer l'hébergement"
+    },
+    "price": {
+      "title": "Prix de base par nuit",
+      "text": "Définissez un prix de départ. Vous pourrez ajuster les prix saisonniers et par canal plus tard.",
+      "perNight": "Prix par nuit (€)",
+      "pricePlaceholder": "p. ex. 120"
+    },
+    "channels": {
+      "titleImport": "Connecter et importer les portails",
+      "titleConnect": "Connecter les canaux de réservation",
+      "notReady": "La connexion des canaux est en cours de préparation pour votre activité. Vous pouvez la finaliser à tout moment plus tard dans « Channel Manager ».",
+      "importIntro": "Nous connectons vos comptes existants et importons vos hébergements et réservations. Choisissez les portails que vous souhaitez connecter :",
+      "connectExisting": "Connecter les portails maintenant",
+      "importHint": "L'assistant de connexion (accès + association des hébergements) s'ouvre en intégré. Vous pouvez aussi le rouvrir plus tard dans « Channel Manager ».",
+      "newIntro": "Votre hébergement est créé. Dès que vous connectez des canaux, nous diffusons automatiquement la disponibilité et les prix vers Booking.com, Airbnb et autres — et les réservations arrivent directement dans votre calendrier.",
+      "connectNew": "Connecter les canaux",
+      "finish": "Terminer la configuration"
+    },
+    "done": {
+      "title": "C'est fait — votre activité est prête à démarrer !",
+      "text": "Vous pouvez maintenant créer d'autres hébergements, affiner les prix et finaliser la connexion de vos canaux dans le tableau de bord.",
+      "toDashboard": "Aller au tableau de bord"
+    }
+  }
+}

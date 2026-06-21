@@ -8,6 +8,7 @@
 //  5) Kanäle: Neu → verbinden | Bestand → Portale verbinden + importieren
 // Business-Logik im Backend; hier nur Orchestrierung (lib/properties, lib/channex).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -53,6 +54,8 @@ export function OnboardingWizard({
   loginEmail?: string | null;
 }) {
   const router = useRouter();
+  const t = useTranslations("onboarding");
+  const tc = useTranslations("common");
   const [pending, startTransition] = useTransition();
 
   // Startschritt anhand des gespeicherten Fortschritts wählen (Wiederaufnahme).
@@ -153,21 +156,21 @@ export function OnboardingWizard({
   function saveCompany() {
     setError(null);
     const required: [string | undefined, string][] = [
-      [firma.companyName, "Firmenname"],
-      [firma.companyStreet, "Straße"],
-      [firma.companyHouseNumber, "Hausnummer"],
-      [firma.companyPostalCode, "PLZ"],
-      [firma.companyCity, "Ort"],
-      [firma.companyCountry, "Land"],
-      [firma.email, "E-Mail"],
-      [firma.phoneNumber, "Telefon"],
+      [firma.companyName, t("company.field.companyName")],
+      [firma.companyStreet, t("company.field.street")],
+      [firma.companyHouseNumber, t("company.field.houseNumber")],
+      [firma.companyPostalCode, t("company.field.postalCode")],
+      [firma.companyCity, t("company.field.city")],
+      [firma.companyCountry, t("company.field.country")],
+      [firma.email, t("company.field.email")],
+      [firma.phoneNumber, t("company.field.phone")],
     ];
     const missing = required.filter(([v]) => !v?.trim()).map(([, l]) => l);
     if (!istKleinunternehmer && !firma.vatId?.trim() && !firma.taxNumber?.trim()) {
-      missing.push("USt-ID oder Steuernummer");
+      missing.push(t("company.field.vatOrTax"));
     }
     if (missing.length > 0) {
-      setError(`Bitte ausfüllen: ${missing.join(", ")}.`);
+      setError(t("company.missing", { fields: missing.join(", ") }));
       return;
     }
     startTransition(async () => {
@@ -211,38 +214,33 @@ export function OnboardingWizard({
         <Card>
           <Icon icon="ph:hand-waving" className="size-10 text-accent" />
           <h1 className="font-display text-2xl font-extrabold">
-            Willkommen bei myNextDays
+            {t("welcome.title")}
           </h1>
-          <p className="text-muted-foreground">
-            In wenigen Schritten ist dein Betrieb startklar. Wir legen dein
-            erstes Objekt an, setzen einen Preis und verbinden deine
-            Buchungskanäle.
-          </p>
+          <p className="text-muted-foreground">{t("welcome.text")}</p>
           <Button onClick={() => setStep("company")} className="self-start">
-            Los geht&apos;s
+            {t("welcome.cta")}
           </Button>
         </Card>
       )}
 
       {step === "company" && (
         <Card>
-          <h1 className="font-display text-2xl font-extrabold">Firmendaten</h1>
-          <p className="text-muted-foreground">
-            Diese Angaben gehören zu deinem Konto und werden u. a. für
-            Rechnungen und die Anbindung deiner Buchungsportale benötigt.
-          </p>
+          <h1 className="font-display text-2xl font-extrabold">
+            {t("company.title")}
+          </h1>
+          <p className="text-muted-foreground">{t("company.text")}</p>
 
           {/* Durchgehendes 12-Spalten-Raster: alle Feldkanten fluchten. */}
           <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-12">
             {/* Firma */}
-            <Field className="sm:col-span-6" label="Firmenname *">
+            <Field className="sm:col-span-6" label={t("company.companyName")}>
               <Input
                 value={firma.companyName ?? ""}
                 onChange={(e) => setF("companyName", e.target.value)}
-                placeholder="z. B. Villa zur Sonne GmbH"
+                placeholder={t("company.companyNamePlaceholder")}
               />
             </Field>
-            <Field className="sm:col-span-6" label="Rechtsform *">
+            <Field className="sm:col-span-6" label={t("company.legalForm")}>
               <NativeSelect
                 value={firma.legalForm ?? ""}
                 onChange={(e) => setF("legalForm", e.target.value)}
@@ -256,31 +254,31 @@ export function OnboardingWizard({
             </Field>
 
             {/* Adresse */}
-            <Field className="sm:col-span-8" label="Straße *">
+            <Field className="sm:col-span-8" label={t("company.street")}>
               <Input
                 value={firma.companyStreet ?? ""}
                 onChange={(e) => setF("companyStreet", e.target.value)}
               />
             </Field>
-            <Field className="sm:col-span-4" label="Hausnummer *">
+            <Field className="sm:col-span-4" label={t("company.houseNumber")}>
               <Input
                 value={firma.companyHouseNumber ?? ""}
                 onChange={(e) => setF("companyHouseNumber", e.target.value)}
               />
             </Field>
-            <Field className="sm:col-span-3" label="PLZ *">
+            <Field className="sm:col-span-3" label={t("company.postalCode")}>
               <Input
                 value={firma.companyPostalCode ?? ""}
                 onChange={(e) => setF("companyPostalCode", e.target.value)}
               />
             </Field>
-            <Field className="sm:col-span-6" label="Ort *">
+            <Field className="sm:col-span-6" label={t("company.city")}>
               <Input
                 value={firma.companyCity ?? ""}
                 onChange={(e) => setF("companyCity", e.target.value)}
               />
             </Field>
-            <Field className="sm:col-span-3" label="Land *">
+            <Field className="sm:col-span-3" label={t("company.country")}>
               <NativeSelect
                 value={firma.companyCountry ?? "DE"}
                 onChange={(e) => setLand(e.target.value)}
@@ -294,18 +292,17 @@ export function OnboardingWizard({
             </Field>
 
             {/* Kontakt — Rechnungs-/Firmen-E-Mail (kann von Login abweichen) */}
-            <Field className="sm:col-span-6" label="Rechnungs-E-Mail *">
+            <Field className="sm:col-span-6" label={t("company.billingEmail")}>
               <Input
                 type="email"
                 value={firma.email ?? ""}
                 onChange={(e) => setF("email", e.target.value)}
               />
               <p className="text-xs text-muted-foreground">
-                Vorbelegt mit deiner Login-E-Mail — für Rechnungen/Kontakt
-                anpassbar.
+                {t("company.billingEmailHint")}
               </p>
             </Field>
-            <Field className="sm:col-span-6" label="Telefon *">
+            <Field className="sm:col-span-6" label={t("company.phone")}>
               <Input
                 value={firma.phoneNumber ?? ""}
                 onChange={(e) => setF("phoneNumber", e.target.value)}
@@ -331,14 +328,14 @@ export function OnboardingWizard({
           )}
           {!istKleinunternehmer && (
             <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-12">
-              <Field className="sm:col-span-6" label="USt-ID / VAT-ID">
+              <Field className="sm:col-span-6" label={t("company.vatId")}>
                 <Input
                   value={firma.vatId ?? ""}
                   onChange={(e) => setF("vatId", e.target.value)}
                   placeholder={`z. B. ${vatBeispielFuerLand(land)}`}
                 />
               </Field>
-              <Field className="sm:col-span-6" label="oder Steuernummer">
+              <Field className="sm:col-span-6" label={t("company.taxNumber")}>
                 <Input
                   value={firma.taxNumber ?? ""}
                   onChange={(e) => setF("taxNumber", e.target.value)}
@@ -357,29 +354,29 @@ export function OnboardingWizard({
               icon={showOptional ? "ph:caret-up" : "ph:caret-down"}
               className="size-4"
             />
-            Weitere Angaben (optional)
+            {t("company.moreOptional")}
           </button>
           {showOptional && (
             <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Website">
+              <Field label={t("company.website")}>
                 <Input
                   value={firma.website ?? ""}
                   onChange={(e) => setF("website", e.target.value)}
                 />
               </Field>
-              <Field label="Handelsregister-Nr.">
+              <Field label={t("company.companyRegister")}>
                 <Input
                   value={firma.companyRegister ?? ""}
                   onChange={(e) => setF("companyRegister", e.target.value)}
                 />
               </Field>
-              <Field label="Registergericht">
+              <Field label={t("company.districtCourt")}>
                 <Input
                   value={firma.districtCourt ?? ""}
                   onChange={(e) => setF("districtCourt", e.target.value)}
                 />
               </Field>
-              <Field label="IBAN">
+              <Field label={t("company.iban")}>
                 <Input
                   value={firma.iban ?? ""}
                   onChange={(e) => setF("iban", e.target.value)}
@@ -391,10 +388,10 @@ export function OnboardingWizard({
           {error && <ErrorText>{error}</ErrorText>}
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => setStep("welcome")}>
-              Zurück
+              {tc("back")}
             </Button>
             <Button onClick={saveCompany} disabled={pending}>
-              {pending ? "Speichert …" : "Weiter"}
+              {pending ? t("company.saving") : tc("next")}
             </Button>
           </div>
         </Card>
@@ -403,35 +400,29 @@ export function OnboardingWizard({
       {step === "branch" && (
         <Card>
           <h1 className="font-display text-2xl font-extrabold">
-            Bist du schon auf Buchungsportalen aktiv?
+            {t("branch.title")}
           </h1>
-          <p className="text-muted-foreground">
-            Wenn du z.&nbsp;B. schon auf Booking.com oder Airbnb vermietest,
-            verbinden wir deine bestehenden Konten und übernehmen deine Objekte
-            &amp; Buchungen — du musst nichts doppelt anlegen.
-          </p>
+          <p className="text-muted-foreground">{t("branch.text")}</p>
           <div className="grid gap-3 sm:grid-cols-2">
             <SelectCard
               active={hasOta === true}
               icon="ph:plugs-connected"
-              title="Ja, bin ich schon"
-              desc="Bestehende Portale verbinden & importieren"
+              title={t("branch.yesTitle")}
+              desc={t("branch.yesDesc")}
               onClick={() => setHasOta(true)}
             />
             <SelectCard
               active={hasOta === false}
               icon="ph:sparkle"
-              title="Nein, ich starte neu"
-              desc="Objekt neu anlegen und Kanäle frisch verbinden"
+              title={t("branch.noTitle")}
+              desc={t("branch.noDesc")}
               onClick={() => setHasOta(false)}
             />
           </div>
 
           {hasOta === true && (
             <div className="flex flex-col gap-3 rounded-(--radius) border border-border p-4">
-              <p className="text-sm font-medium">
-                Welche Portale nutzt du bereits?
-              </p>
+              <p className="text-sm font-medium">{t("branch.whichPortals")}</p>
               <div className="flex flex-wrap gap-2">
                 {PORTALE.map((p) => (
                   <button
@@ -458,7 +449,7 @@ export function OnboardingWizard({
             disabled={hasOta === null}
             className="self-start"
           >
-            Weiter
+            {tc("next")}
           </Button>
         </Card>
       )}
@@ -466,27 +457,24 @@ export function OnboardingWizard({
       {step === "object" && (
         <Card>
           <h1 className="font-display text-2xl font-extrabold">
-            Dein erstes Objekt
+            {t("object.title")}
           </h1>
-          <p className="text-muted-foreground">
-            Lege dein erstes vermietbares Objekt an. Details (Adresse, Fotos,
-            Ausstattung) kannst du später ergänzen.
-          </p>
+          <p className="text-muted-foreground">{t("object.text")}</p>
           <div className="flex flex-col gap-1.5">
             <label htmlFor="objTitle" className="text-sm font-medium">
-              Name des Objekts
+              {t("object.name")}
             </label>
             <Input
               id="objTitle"
               value={objectTitle}
               onChange={(e) => setObjectTitle(e.target.value)}
-              placeholder="z. B. Doppelzimmer Seeblick"
+              placeholder={t("object.namePlaceholder")}
               maxLength={200}
             />
           </div>
           <div className="flex flex-col gap-1.5">
             <label htmlFor="guests" className="text-sm font-medium">
-              Maximale Gästezahl
+              {t("object.maxGuests")}
             </label>
             <Input
               id="guests"
@@ -501,13 +489,13 @@ export function OnboardingWizard({
           {error && <ErrorText>{error}</ErrorText>}
           <div className="flex gap-3">
             <Button variant="ghost" onClick={() => setStep("branch")}>
-              Zurück
+              {tc("back")}
             </Button>
             <Button
               onClick={saveObject}
               disabled={pending || objectTitle.trim().length === 0}
             >
-              {pending ? "Wird angelegt …" : "Objekt anlegen"}
+              {pending ? t("object.creating") : t("object.create")}
             </Button>
           </div>
         </Card>
@@ -516,15 +504,12 @@ export function OnboardingWizard({
       {step === "price" && (
         <Card>
           <h1 className="font-display text-2xl font-extrabold">
-            Basispreis je Nacht
+            {t("price.title")}
           </h1>
-          <p className="text-muted-foreground">
-            Setze einen Startpreis. Saison- und Kanalpreise kannst du später
-            feinjustieren.
-          </p>
+          <p className="text-muted-foreground">{t("price.text")}</p>
           <div className="flex flex-col gap-1.5">
             <label htmlFor="price" className="text-sm font-medium">
-              Preis pro Nacht (€)
+              {t("price.perNight")}
             </label>
             <Input
               id="price"
@@ -533,15 +518,15 @@ export function OnboardingWizard({
               step="1"
               value={basePrice}
               onChange={(e) => setBasePrice(e.target.value)}
-              placeholder="z. B. 120"
+              placeholder={t("price.pricePlaceholder")}
               className="w-40"
             />
           </div>
           <div className="flex gap-3">
             <Button variant="ghost" onClick={() => setStep("object")}>
-              Zurück
+              {tc("back")}
             </Button>
-            <Button onClick={goToChannels}>Weiter</Button>
+            <Button onClick={goToChannels}>{tc("next")}</Button>
           </div>
         </Card>
       )}
@@ -549,22 +534,19 @@ export function OnboardingWizard({
       {step === "channels" && (
         <Card>
           <h1 className="font-display text-2xl font-extrabold">
-            {hasOta ? "Portale verbinden & importieren" : "Buchungskanäle verbinden"}
+            {hasOta ? t("channels.titleImport") : t("channels.titleConnect")}
           </h1>
 
           {!channelManagerReady && (
             <p className="rounded-(--radius) border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
-              Die Kanal-Anbindung wird gerade für deinen Betrieb vorbereitet. Du
-              kannst sie jederzeit später unter „Channel Manager"
-              abschließen.
+              {t("channels.notReady")}
             </p>
           )}
 
           {hasOta ? (
             <div className="flex flex-col gap-3">
               <p className="text-muted-foreground">
-                Wir verbinden deine bestehenden Konten und übernehmen Objekte
-                &amp; Buchungen. Wähle die Portale, die du verbinden möchtest:
+                {t("channels.importIntro")}
               </p>
               <ul className="flex flex-col divide-y divide-border rounded-(--radius) border border-border">
                 {PORTALE.filter(
@@ -579,32 +561,31 @@ export function OnboardingWizard({
                 ))}
               </ul>
               {channelManagerReady ? (
-                <ChannelConnectButton label="Portale jetzt verbinden" />
+                <ChannelConnectButton label={t("channels.connectExisting")} />
               ) : null}
               <p className="text-xs text-muted-foreground">
-                Der Verbindungs-Assistent (Zugang + Objekt-Zuordnung) öffnet sich
-                eingebettet. Du kannst ihn auch später unter „Einstellungen →
-                Channel-Manager" aufrufen.
+                {t("channels.importHint")}
               </p>
             </div>
           ) : (
             <div className="flex flex-col gap-3">
-              <p className="text-muted-foreground">
-                Dein Objekt ist angelegt. Sobald du Kanäle verbindest, verteilen
-                wir Verfügbarkeit und Preise automatisch an Booking.com, Airbnb
-                &amp; Co. — und Buchungen landen direkt in deinem Kalender.
-              </p>
+              <p className="text-muted-foreground">{t("channels.newIntro")}</p>
               {channelManagerReady ? (
-                <ChannelConnectButton label="Kanäle verbinden" variant="outline" />
+                <ChannelConnectButton
+                  label={t("channels.connectNew")}
+                  variant="outline"
+                />
               ) : null}
             </div>
           )}
 
           <div className="flex gap-3">
             <Button variant="ghost" onClick={() => setStep("price")}>
-              Zurück
+              {tc("back")}
             </Button>
-            <Button onClick={() => setStep("done")}>Setup abschließen</Button>
+            <Button onClick={() => setStep("done")}>
+              {t("channels.finish")}
+            </Button>
           </div>
         </Card>
       )}
@@ -615,14 +596,11 @@ export function OnboardingWizard({
             <Icon icon="ph:check-bold" className="size-6" />
           </span>
           <h1 className="font-display text-2xl font-extrabold">
-            Geschafft — dein Betrieb ist startklar!
+            {t("done.title")}
           </h1>
-          <p className="text-muted-foreground">
-            Du kannst jetzt im Dashboard weitere Objekte anlegen, Preise
-            verfeinern und deine Kanäle final verbinden.
-          </p>
+          <p className="text-muted-foreground">{t("done.text")}</p>
           <Button onClick={finish} className="self-start">
-            Zum Dashboard
+            {t("done.toDashboard")}
           </Button>
         </Card>
       )}

@@ -1,0 +1,92 @@
+{
+  "common": {
+    "save": "Zapisz",
+    "cancel": "Anuluj",
+    "back": "Wstecz",
+    "next": "Dalej",
+    "loading": "Ładowanie …",
+    "language": "Język"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Witamy w myNextDays",
+      "text": "W kilku krokach Twój obiekt będzie gotowy do startu. Utworzymy Twój pierwszy obiekt, ustawimy cenę i połączymy Twoje kanały rezerwacji.",
+      "cta": "Zaczynamy"
+    },
+    "company": {
+      "title": "Dane firmy",
+      "text": "Te dane należą do Twojego konta i są wykorzystywane m.in. do faktur oraz do połączenia Twoich portali rezerwacyjnych.",
+      "companyName": "Nazwa firmy *",
+      "companyNamePlaceholder": "np. Villa zur Sonne GmbH",
+      "legalForm": "Forma prawna *",
+      "street": "Ulica *",
+      "houseNumber": "Numer domu *",
+      "postalCode": "Kod pocztowy *",
+      "city": "Miejscowość *",
+      "country": "Kraj *",
+      "billingEmail": "E-mail do faktur *",
+      "billingEmailHint": "Wstępnie wypełniony Twoim adresem e-mail logowania — można go zmienić dla faktur/kontaktu.",
+      "phone": "Telefon *",
+      "vatId": "NIP",
+      "taxNumber": "lub numer podatkowy",
+      "moreOptional": "Dodatkowe dane (opcjonalnie)",
+      "website": "Strona internetowa",
+      "companyRegister": "Nr rejestru handlowego",
+      "districtCourt": "Sąd rejestrowy",
+      "iban": "IBAN",
+      "saving": "Zapisywanie …",
+      "missing": "Proszę uzupełnić: {fields}.",
+      "field": {
+        "companyName": "Nazwa firmy",
+        "street": "Ulica",
+        "houseNumber": "Numer domu",
+        "postalCode": "Kod pocztowy",
+        "city": "Miejscowość",
+        "country": "Kraj",
+        "email": "E-mail",
+        "phone": "Telefon",
+        "vatOrTax": "NIP lub numer podatkowy"
+      }
+    },
+    "branch": {
+      "title": "Czy działasz już na portalach rezerwacyjnych?",
+      "text": "Jeśli na przykład wynajmujesz już na Booking.com lub Airbnb, połączymy Twoje istniejące konta i zaimportujemy Twoje obiekty i rezerwacje — nie musisz niczego zakładać dwa razy.",
+      "yesTitle": "Tak, już działam",
+      "yesDesc": "Połącz i zaimportuj istniejące portale",
+      "noTitle": "Nie, zaczynam od nowa",
+      "noDesc": "Utwórz nowy obiekt i połącz kanały od zera",
+      "whichPortals": "Z których portali już korzystasz?"
+    },
+    "object": {
+      "title": "Twój pierwszy obiekt",
+      "text": "Utwórz swój pierwszy obiekt do wynajęcia. Szczegóły (adres, zdjęcia, wyposażenie) możesz uzupełnić później.",
+      "name": "Nazwa obiektu",
+      "namePlaceholder": "np. Pokój dwuosobowy z widokiem na jezioro",
+      "maxGuests": "Maksymalna liczba gości",
+      "creating": "Tworzenie …",
+      "create": "Utwórz obiekt"
+    },
+    "price": {
+      "title": "Cena podstawowa za noc",
+      "text": "Ustaw cenę początkową. Ceny sezonowe i kanałowe możesz dopracować później.",
+      "perNight": "Cena za noc (€)",
+      "pricePlaceholder": "np. 120"
+    },
+    "channels": {
+      "titleImport": "Połącz i zaimportuj portale",
+      "titleConnect": "Połącz kanały rezerwacji",
+      "notReady": "Połączenie kanałów jest właśnie przygotowywane dla Twojego obiektu. Możesz je dokończyć w dowolnej chwili później w sekcji „Channel Manager”.",
+      "importIntro": "Połączymy Twoje istniejące konta i zaimportujemy obiekty i rezerwacje. Wybierz portale, które chcesz połączyć:",
+      "connectExisting": "Połącz portale teraz",
+      "importHint": "Asystent połączenia (dostęp + przypisanie obiektów) otwiera się w widoku osadzonym. Możesz go też otworzyć później w sekcji „Channel Manager”.",
+      "newIntro": "Twój obiekt został utworzony. Gdy tylko połączysz kanały, automatycznie rozdzielimy dostępność i ceny do Booking.com, Airbnb i innych — a rezerwacje trafią bezpośrednio do Twojego kalendarza.",
+      "connectNew": "Połącz kanały",
+      "finish": "Zakończ konfigurację"
+    },
+    "done": {
+      "title": "Gotowe — Twój obiekt jest gotowy do startu!",
+      "text": "Możesz teraz tworzyć kolejne obiekty, dopracowywać ceny i finalnie połączyć swoje kanały w panelu.",
+      "toDashboard": "Przejdź do panelu"
+    }
+  }
+}

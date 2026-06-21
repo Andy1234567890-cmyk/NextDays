@@ -1,0 +1,92 @@
+{
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "back": "Voltar",
+    "next": "Seguinte",
+    "loading": "A carregar …",
+    "language": "Idioma"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Bem-vindo ao myNextDays",
+      "text": "Em poucos passos o teu negócio fica pronto a arrancar. Criamos o teu primeiro alojamento, definimos um preço e ligamos os teus canais de reserva.",
+      "cta": "Vamos começar"
+    },
+    "company": {
+      "title": "Dados da empresa",
+      "text": "Estes dados pertencem à tua conta e são usados, entre outras coisas, para faturas e para a ligação dos teus portais de reserva.",
+      "companyName": "Nome da empresa *",
+      "companyNamePlaceholder": "ex. Villa zur Sonne GmbH",
+      "legalForm": "Forma jurídica *",
+      "street": "Rua *",
+      "houseNumber": "Número *",
+      "postalCode": "Código postal *",
+      "city": "Localidade *",
+      "country": "País *",
+      "billingEmail": "E-mail de faturação *",
+      "billingEmailHint": "Preenchido com o teu e-mail de início de sessão — editável para faturas/contacto.",
+      "phone": "Telefone *",
+      "vatId": "NIF",
+      "taxNumber": "ou número fiscal",
+      "moreOptional": "Mais dados (opcional)",
+      "website": "Site",
+      "companyRegister": "N.º de registo comercial",
+      "districtCourt": "Conservatória do registo",
+      "iban": "IBAN",
+      "saving": "A guardar …",
+      "missing": "Preenche os campos: {fields}.",
+      "field": {
+        "companyName": "Nome da empresa",
+        "street": "Rua",
+        "houseNumber": "Número",
+        "postalCode": "Código postal",
+        "city": "Localidade",
+        "country": "País",
+        "email": "E-mail",
+        "phone": "Telefone",
+        "vatOrTax": "NIF ou número fiscal"
+      }
+    },
+    "branch": {
+      "title": "Já estás ativo em portais de reserva?",
+      "text": "Se já alugas no Booking.com ou no Airbnb, por exemplo, ligamos as tuas contas existentes e importamos os teus alojamentos e reservas — não precisas de criar nada duas vezes.",
+      "yesTitle": "Sim, já estou",
+      "yesDesc": "Ligar e importar portais existentes",
+      "noTitle": "Não, estou a começar de novo",
+      "noDesc": "Criar um alojamento novo e ligar canais de raiz",
+      "whichPortals": "Que portais já utilizas?"
+    },
+    "object": {
+      "title": "O teu primeiro alojamento",
+      "text": "Cria o teu primeiro alojamento para alugar. Podes adicionar os detalhes (morada, fotos, comodidades) mais tarde.",
+      "name": "Nome do alojamento",
+      "namePlaceholder": "ex. Quarto duplo com vista para o lago",
+      "maxGuests": "Número máximo de hóspedes",
+      "creating": "A criar …",
+      "create": "Criar alojamento"
+    },
+    "price": {
+      "title": "Preço base por noite",
+      "text": "Define um preço inicial. Podes afinar os preços sazonais e por canal mais tarde.",
+      "perNight": "Preço por noite (€)",
+      "pricePlaceholder": "ex. 120"
+    },
+    "channels": {
+      "titleImport": "Ligar e importar portais",
+      "titleConnect": "Ligar canais de reserva",
+      "notReady": "A ligação dos canais está a ser preparada para o teu negócio. Podes concluí-la a qualquer momento mais tarde em «Channel Manager».",
+      "importIntro": "Ligamos as tuas contas existentes e importamos alojamentos e reservas. Escolhe os portais que queres ligar:",
+      "connectExisting": "Ligar portais agora",
+      "importHint": "O assistente de ligação (acesso + associação de alojamentos) abre integrado. Também o podes abrir mais tarde em «Channel Manager».",
+      "newIntro": "O teu alojamento está criado. Assim que ligares canais, distribuímos automaticamente a disponibilidade e os preços pelo Booking.com, Airbnb e outros — e as reservas chegam diretamente ao teu calendário.",
+      "connectNew": "Ligar canais",
+      "finish": "Concluir configuração"
+    },
+    "done": {
+      "title": "Concluído — o teu negócio está pronto a arrancar!",
+      "text": "Agora podes criar mais alojamentos, refinar os preços e finalizar a ligação dos teus canais no painel.",
+      "toDashboard": "Ir para o painel"
+    }
+  }
+}

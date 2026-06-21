@@ -6,5 +6,87 @@
     "next": "Next",
     "loading": "Loading …",
     "language": "Language"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Welcome to myNextDays",
+      "text": "Your business will be ready in just a few steps. We'll create your first property, set a price and connect your booking channels.",
+      "cta": "Let's go"
+    },
+    "company": {
+      "title": "Company details",
+      "text": "These details belong to your account and are used, among other things, for invoices and connecting your booking portals.",
+      "companyName": "Company name *",
+      "companyNamePlaceholder": "e.g. Villa zur Sonne GmbH",
+      "legalForm": "Legal form *",
+      "street": "Street *",
+      "houseNumber": "House number *",
+      "postalCode": "Postal code *",
+      "city": "City *",
+      "country": "Country *",
+      "billingEmail": "Billing email *",
+      "billingEmailHint": "Pre-filled with your login email — editable for invoices/contact.",
+      "phone": "Phone *",
+      "vatId": "VAT ID",
+      "taxNumber": "or tax number",
+      "moreOptional": "More details (optional)",
+      "website": "Website",
+      "companyRegister": "Commercial register no.",
+      "districtCourt": "Register court",
+      "iban": "IBAN",
+      "saving": "Saving …",
+      "missing": "Please fill in: {fields}.",
+      "field": {
+        "companyName": "Company name",
+        "street": "Street",
+        "houseNumber": "House number",
+        "postalCode": "Postal code",
+        "city": "City",
+        "country": "Country",
+        "email": "Email",
+        "phone": "Phone",
+        "vatOrTax": "VAT ID or tax number"
+      }
+    },
+    "branch": {
+      "title": "Are you already active on booking portals?",
+      "text": "If you already rent out on Booking.com or Airbnb, for example, we'll connect your existing accounts and import your properties & bookings — no need to set anything up twice.",
+      "yesTitle": "Yes, I am",
+      "yesDesc": "Connect & import existing portals",
+      "noTitle": "No, I'm starting fresh",
+      "noDesc": "Create a new property and connect channels from scratch",
+      "whichPortals": "Which portals do you already use?"
+    },
+    "object": {
+      "title": "Your first property",
+      "text": "Create your first rentable property. You can add details (address, photos, amenities) later.",
+      "name": "Property name",
+      "namePlaceholder": "e.g. Double room with lake view",
+      "maxGuests": "Maximum number of guests",
+      "creating": "Creating …",
+      "create": "Create property"
+    },
+    "price": {
+      "title": "Base price per night",
+      "text": "Set a starting price. You can fine-tune seasonal and channel prices later.",
+      "perNight": "Price per night (€)",
+      "pricePlaceholder": "e.g. 120"
+    },
+    "channels": {
+      "titleImport": "Connect & import portals",
+      "titleConnect": "Connect booking channels",
+      "notReady": "Channel connectivity is currently being set up for your business. You can complete it any time later under \"Channel Manager\".",
+      "importIntro": "We'll connect your existing accounts and import properties & bookings. Choose the portals you want to connect:",
+      "connectExisting": "Connect portals now",
+      "importHint": "The connection assistant (access + property mapping) opens embedded. You can also open it later under \"Channel Manager\".",
+      "newIntro": "Your property is created. As soon as you connect channels, we'll automatically distribute availability and prices to Booking.com, Airbnb & co. — and bookings land directly in your calendar.",
+      "connectNew": "Connect channels",
+      "finish": "Finish setup"
+    },
+    "done": {
+      "title": "Done — your business is ready to go!",
+      "text": "You can now create more properties, refine prices and finalize your channel connections in the dashboard.",
+      "toDashboard": "Go to dashboard"
+    }
   }
 }

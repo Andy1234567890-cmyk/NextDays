@@ -1,0 +1,92 @@
+{
+  "common": {
+    "save": "Salva",
+    "cancel": "Annulla",
+    "back": "Indietro",
+    "next": "Avanti",
+    "loading": "Caricamento …",
+    "language": "Lingua"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Benvenuto su myNextDays",
+      "text": "In pochi passaggi la tua attività è pronta a partire. Creiamo la tua prima struttura, impostiamo un prezzo e colleghiamo i tuoi canali di prenotazione.",
+      "cta": "Iniziamo"
+    },
+    "company": {
+      "title": "Dati aziendali",
+      "text": "Questi dati sono associati al tuo account e servono, tra l'altro, per le fatture e per il collegamento dei tuoi portali di prenotazione.",
+      "companyName": "Nome dell'azienda *",
+      "companyNamePlaceholder": "es. Villa zur Sonne GmbH",
+      "legalForm": "Forma giuridica *",
+      "street": "Via *",
+      "houseNumber": "Numero civico *",
+      "postalCode": "CAP *",
+      "city": "Città *",
+      "country": "Paese *",
+      "billingEmail": "E-mail di fatturazione *",
+      "billingEmailHint": "Precompilata con la tua e-mail di accesso — modificabile per fatture/contatti.",
+      "phone": "Telefono *",
+      "vatId": "P.IVA",
+      "taxNumber": "o codice fiscale",
+      "moreOptional": "Altri dati (facoltativo)",
+      "website": "Sito web",
+      "companyRegister": "N. registro imprese",
+      "districtCourt": "Tribunale di registrazione",
+      "iban": "IBAN",
+      "saving": "Salvataggio …",
+      "missing": "Compila i campi: {fields}.",
+      "field": {
+        "companyName": "Nome dell'azienda",
+        "street": "Via",
+        "houseNumber": "Numero civico",
+        "postalCode": "CAP",
+        "city": "Città",
+        "country": "Paese",
+        "email": "E-mail",
+        "phone": "Telefono",
+        "vatOrTax": "P.IVA o codice fiscale"
+      }
+    },
+    "branch": {
+      "title": "Sei già attivo sui portali di prenotazione?",
+      "text": "Se ad esempio affitti già su Booking.com o Airbnb, colleghiamo i tuoi account esistenti e importiamo le tue strutture e prenotazioni — non devi creare nulla due volte.",
+      "yesTitle": "Sì, lo sono già",
+      "yesDesc": "Collega e importa i portali esistenti",
+      "noTitle": "No, sto iniziando ora",
+      "noDesc": "Crea una nuova struttura e collega i canali da zero",
+      "whichPortals": "Quali portali usi già?"
+    },
+    "object": {
+      "title": "La tua prima struttura",
+      "text": "Crea la tua prima struttura affittabile. Potrai aggiungere i dettagli (indirizzo, foto, servizi) in un secondo momento.",
+      "name": "Nome della struttura",
+      "namePlaceholder": "es. Camera doppia vista lago",
+      "maxGuests": "Numero massimo di ospiti",
+      "creating": "Creazione in corso …",
+      "create": "Crea struttura"
+    },
+    "price": {
+      "title": "Prezzo base a notte",
+      "text": "Imposta un prezzo iniziale. Potrai perfezionare i prezzi stagionali e per canale in seguito.",
+      "perNight": "Prezzo a notte (€)",
+      "pricePlaceholder": "es. 120"
+    },
+    "channels": {
+      "titleImport": "Collega e importa i portali",
+      "titleConnect": "Collega i canali di prenotazione",
+      "notReady": "Il collegamento dei canali è in fase di preparazione per la tua attività. Potrai completarlo in qualsiasi momento più tardi in «Channel Manager».",
+      "importIntro": "Colleghiamo i tuoi account esistenti e importiamo strutture e prenotazioni. Scegli i portali che vuoi collegare:",
+      "connectExisting": "Collega i portali ora",
+      "importHint": "L'assistente di collegamento (accesso + abbinamento strutture) si apre integrato. Puoi riaprirlo anche più tardi in «Channel Manager».",
+      "newIntro": "La tua struttura è stata creata. Non appena colleghi i canali, distribuiamo automaticamente disponibilità e prezzi su Booking.com, Airbnb e altri — e le prenotazioni arrivano direttamente nel tuo calendario.",
+      "connectNew": "Collega i canali",
+      "finish": "Completa la configurazione"
+    },
+    "done": {
+      "title": "Fatto — la tua attività è pronta a partire!",
+      "text": "Ora puoi creare altre strutture, perfezionare i prezzi e finalizzare il collegamento dei canali nella dashboard.",
+      "toDashboard": "Vai alla dashboard"
+    }
+  }
+}

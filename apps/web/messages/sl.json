@@ -1,0 +1,92 @@
+{
+  "common": {
+    "save": "Shrani",
+    "cancel": "Prekliči",
+    "back": "Nazaj",
+    "next": "Naprej",
+    "loading": "Nalaganje …",
+    "language": "Jezik"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Dobrodošli v myNextDays",
+      "text": "Vaše poslovanje bo pripravljeno v nekaj korakih. Ustvarili bomo vašo prvo enoto, določili ceno in povezali vaše rezervacijske kanale.",
+      "cta": "Začnimo"
+    },
+    "company": {
+      "title": "Podatki o podjetju",
+      "text": "Ti podatki pripadajo vašemu računu in se uporabljajo med drugim za račune in povezavo vaših rezervacijskih portalov.",
+      "companyName": "Ime podjetja *",
+      "companyNamePlaceholder": "npr. Villa zur Sonne GmbH",
+      "legalForm": "Pravna oblika *",
+      "street": "Ulica *",
+      "houseNumber": "Hišna številka *",
+      "postalCode": "Poštna številka *",
+      "city": "Kraj *",
+      "country": "Država *",
+      "billingEmail": "E-pošta za račune *",
+      "billingEmailHint": "Vnaprej izpolnjeno z vašo prijavno e-pošto — mogoče prilagoditi za račune/stik.",
+      "phone": "Telefon *",
+      "vatId": "ID za DDV",
+      "taxNumber": "ali davčna številka",
+      "moreOptional": "Dodatni podatki (neobvezno)",
+      "website": "Spletna stran",
+      "companyRegister": "Št. poslovnega registra",
+      "districtCourt": "Registrsko sodišče",
+      "iban": "IBAN",
+      "saving": "Shranjevanje …",
+      "missing": "Prosimo, izpolnite: {fields}.",
+      "field": {
+        "companyName": "Ime podjetja",
+        "street": "Ulica",
+        "houseNumber": "Hišna številka",
+        "postalCode": "Poštna številka",
+        "city": "Kraj",
+        "country": "Država",
+        "email": "E-pošta",
+        "phone": "Telefon",
+        "vatOrTax": "ID za DDV ali davčna številka"
+      }
+    },
+    "branch": {
+      "title": "Ste že dejavni na rezervacijskih portalih?",
+      "text": "Če na primer že oddajate na Booking.com ali Airbnb, bomo povezali vaše obstoječe račune in prevzeli vaše enote in rezervacije — ničesar vam ni treba vnašati dvakrat.",
+      "yesTitle": "Da, že sem",
+      "yesDesc": "Poveži in uvozi obstoječe portale",
+      "noTitle": "Ne, začenjam na novo",
+      "noDesc": "Ustvari novo enoto in poveži kanale od začetka",
+      "whichPortals": "Katere portale že uporabljate?"
+    },
+    "object": {
+      "title": "Vaša prva enota",
+      "text": "Ustvarite svojo prvo enoto za oddajo. Podrobnosti (naslov, fotografije, opremo) lahko dodate pozneje.",
+      "name": "Ime enote",
+      "namePlaceholder": "npr. Dvoposteljna soba s pogledom na jezero",
+      "maxGuests": "Največje število gostov",
+      "creating": "Ustvarjanje …",
+      "create": "Ustvari enoto"
+    },
+    "price": {
+      "title": "Osnovna cena na noč",
+      "text": "Določite začetno ceno. Sezonske in kanalske cene lahko prilagodite pozneje.",
+      "perNight": "Cena na noč (€)",
+      "pricePlaceholder": "npr. 120"
+    },
+    "channels": {
+      "titleImport": "Poveži in uvozi portale",
+      "titleConnect": "Poveži rezervacijske kanale",
+      "notReady": "Povezava kanalov se trenutno pripravlja za vaše poslovanje. Dokončate jo lahko kadar koli pozneje pod „Channel Manager“.",
+      "importIntro": "Povezali bomo vaše obstoječe račune in uvozili enote in rezervacije. Izberite portale, ki jih želite povezati:",
+      "connectExisting": "Poveži portale zdaj",
+      "importHint": "Pomočnik za povezavo (dostop + dodelitev enot) se odpre vgrajeno. Odprete ga lahko tudi pozneje pod „Channel Manager“.",
+      "newIntro": "Vaša enota je ustvarjena. Takoj ko povežete kanale, bomo samodejno razporedili razpoložljivost in cene na Booking.com, Airbnb in druge — rezervacije pa bodo pristale neposredno v vašem koledarju.",
+      "connectNew": "Poveži kanale",
+      "finish": "Zaključi nastavitev"
+    },
+    "done": {
+      "title": "Opravljeno — vaše poslovanje je pripravljeno!",
+      "text": "Zdaj lahko v nadzorni plošči ustvarjate dodatne enote, izpopolnite cene in dokončno povežete svoje kanale.",
+      "toDashboard": "Na nadzorno ploščo"
+    }
+  }
+}

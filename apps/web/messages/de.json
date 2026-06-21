@@ -6,5 +6,87 @@
     "next": "Weiter",
     "loading": "Lädt …",
     "language": "Sprache"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Willkommen bei myNextDays",
+      "text": "In wenigen Schritten ist dein Betrieb startklar. Wir legen dein erstes Objekt an, setzen einen Preis und verbinden deine Buchungskanäle.",
+      "cta": "Los geht's"
+    },
+    "company": {
+      "title": "Firmendaten",
+      "text": "Diese Angaben gehören zu deinem Konto und werden u. a. für Rechnungen und die Anbindung deiner Buchungsportale benötigt.",
+      "companyName": "Firmenname *",
+      "companyNamePlaceholder": "z. B. Villa zur Sonne GmbH",
+      "legalForm": "Rechtsform *",
+      "street": "Straße *",
+      "houseNumber": "Hausnummer *",
+      "postalCode": "PLZ *",
+      "city": "Ort *",
+      "country": "Land *",
+      "billingEmail": "Rechnungs-E-Mail *",
+      "billingEmailHint": "Vorbelegt mit deiner Login-E-Mail — für Rechnungen/Kontakt anpassbar.",
+      "phone": "Telefon *",
+      "vatId": "USt-ID / VAT-ID",
+      "taxNumber": "oder Steuernummer",
+      "moreOptional": "Weitere Angaben (optional)",
+      "website": "Website",
+      "companyRegister": "Handelsregister-Nr.",
+      "districtCourt": "Registergericht",
+      "iban": "IBAN",
+      "saving": "Speichert …",
+      "missing": "Bitte ausfüllen: {fields}.",
+      "field": {
+        "companyName": "Firmenname",
+        "street": "Straße",
+        "houseNumber": "Hausnummer",
+        "postalCode": "PLZ",
+        "city": "Ort",
+        "country": "Land",
+        "email": "E-Mail",
+        "phone": "Telefon",
+        "vatOrTax": "USt-ID oder Steuernummer"
+      }
+    },
+    "branch": {
+      "title": "Bist du schon auf Buchungsportalen aktiv?",
+      "text": "Wenn du z. B. schon auf Booking.com oder Airbnb vermietest, verbinden wir deine bestehenden Konten und übernehmen deine Objekte & Buchungen — du musst nichts doppelt anlegen.",
+      "yesTitle": "Ja, bin ich schon",
+      "yesDesc": "Bestehende Portale verbinden & importieren",
+      "noTitle": "Nein, ich starte neu",
+      "noDesc": "Objekt neu anlegen und Kanäle frisch verbinden",
+      "whichPortals": "Welche Portale nutzt du bereits?"
+    },
+    "object": {
+      "title": "Dein erstes Objekt",
+      "text": "Lege dein erstes vermietbares Objekt an. Details (Adresse, Fotos, Ausstattung) kannst du später ergänzen.",
+      "name": "Name des Objekts",
+      "namePlaceholder": "z. B. Doppelzimmer Seeblick",
+      "maxGuests": "Maximale Gästezahl",
+      "creating": "Wird angelegt …",
+      "create": "Objekt anlegen"
+    },
+    "price": {
+      "title": "Basispreis je Nacht",
+      "text": "Setze einen Startpreis. Saison- und Kanalpreise kannst du später feinjustieren.",
+      "perNight": "Preis pro Nacht (€)",
+      "pricePlaceholder": "z. B. 120"
+    },
+    "channels": {
+      "titleImport": "Portale verbinden & importieren",
+      "titleConnect": "Buchungskanäle verbinden",
+      "notReady": "Die Kanal-Anbindung wird gerade für deinen Betrieb vorbereitet. Du kannst sie jederzeit später unter „Channel Manager\" abschließen.",
+      "importIntro": "Wir verbinden deine bestehenden Konten und übernehmen Objekte & Buchungen. Wähle die Portale, die du verbinden möchtest:",
+      "connectExisting": "Portale jetzt verbinden",
+      "importHint": "Der Verbindungs-Assistent (Zugang + Objekt-Zuordnung) öffnet sich eingebettet. Du kannst ihn auch später unter „Channel Manager\" aufrufen.",
+      "newIntro": "Dein Objekt ist angelegt. Sobald du Kanäle verbindest, verteilen wir Verfügbarkeit und Preise automatisch an Booking.com, Airbnb & Co. — und Buchungen landen direkt in deinem Kalender.",
+      "connectNew": "Kanäle verbinden",
+      "finish": "Setup abschließen"
+    },
+    "done": {
+      "title": "Geschafft — dein Betrieb ist startklar!",
+      "text": "Du kannst jetzt im Dashboard weitere Objekte anlegen, Preise verfeinern und deine Kanäle final verbinden.",
+      "toDashboard": "Zum Dashboard"
+    }
   }
 }

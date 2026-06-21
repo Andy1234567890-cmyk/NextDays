@@ -1,0 +1,92 @@
+{
+  "common": {
+    "save": "Salvează",
+    "cancel": "Anulează",
+    "back": "Înapoi",
+    "next": "Continuă",
+    "loading": "Se încarcă …",
+    "language": "Limbă"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Bun venit la myNextDays",
+      "text": "În câțiva pași, afacerea ta e gata de pornire. Îți creăm prima proprietate, stabilim un preț și conectăm canalele tale de rezervare.",
+      "cta": "Să începem"
+    },
+    "company": {
+      "title": "Date despre firmă",
+      "text": "Aceste date aparțin contului tău și sunt folosite, printre altele, pentru facturi și pentru conectarea portalurilor tale de rezervare.",
+      "companyName": "Numele firmei *",
+      "companyNamePlaceholder": "de ex. Villa zur Sonne GmbH",
+      "legalForm": "Forma juridică *",
+      "street": "Stradă *",
+      "houseNumber": "Număr *",
+      "postalCode": "Cod poștal *",
+      "city": "Localitate *",
+      "country": "Țară *",
+      "billingEmail": "E-mail de facturare *",
+      "billingEmailHint": "Precompletat cu e-mailul tău de conectare — editabil pentru facturi/contact.",
+      "phone": "Telefon *",
+      "vatId": "Cod TVA",
+      "taxNumber": "sau cod fiscal",
+      "moreOptional": "Date suplimentare (opțional)",
+      "website": "Site web",
+      "companyRegister": "Nr. registrul comerțului",
+      "districtCourt": "Oficiul registrului",
+      "iban": "IBAN",
+      "saving": "Se salvează …",
+      "missing": "Te rugăm completează: {fields}.",
+      "field": {
+        "companyName": "Numele firmei",
+        "street": "Stradă",
+        "houseNumber": "Număr",
+        "postalCode": "Cod poștal",
+        "city": "Localitate",
+        "country": "Țară",
+        "email": "E-mail",
+        "phone": "Telefon",
+        "vatOrTax": "Cod TVA sau cod fiscal"
+      }
+    },
+    "branch": {
+      "title": "Ești deja activ pe portaluri de rezervare?",
+      "text": "Dacă închiriezi deja pe Booking.com sau Airbnb, de exemplu, îți conectăm conturile existente și îți importăm proprietățile și rezervările — nu trebuie să creezi nimic de două ori.",
+      "yesTitle": "Da, sunt deja",
+      "yesDesc": "Conectează și importă portalurile existente",
+      "noTitle": "Nu, încep de la zero",
+      "noDesc": "Creează o proprietate nouă și conectează canalele de la zero",
+      "whichPortals": "Ce portaluri folosești deja?"
+    },
+    "object": {
+      "title": "Prima ta proprietate",
+      "text": "Creează prima ta proprietate de închiriat. Poți adăuga detaliile (adresă, fotografii, dotări) mai târziu.",
+      "name": "Numele proprietății",
+      "namePlaceholder": "de ex. Cameră dublă cu vedere la lac",
+      "maxGuests": "Număr maxim de oaspeți",
+      "creating": "Se creează …",
+      "create": "Creează proprietatea"
+    },
+    "price": {
+      "title": "Preț de bază pe noapte",
+      "text": "Stabilește un preț de pornire. Poți ajusta prețurile sezoniere și pe canal mai târziu.",
+      "perNight": "Preț pe noapte (€)",
+      "pricePlaceholder": "de ex. 120"
+    },
+    "channels": {
+      "titleImport": "Conectează și importă portaluri",
+      "titleConnect": "Conectează canalele de rezervare",
+      "notReady": "Conectarea canalelor este în curs de pregătire pentru afacerea ta. O poți finaliza oricând mai târziu din „Channel Manager”.",
+      "importIntro": "Îți conectăm conturile existente și importăm proprietăți și rezervări. Alege portalurile pe care vrei să le conectezi:",
+      "connectExisting": "Conectează portalurile acum",
+      "importHint": "Asistentul de conectare (acces + asocierea proprietăților) se deschide integrat. Îl poți deschide și mai târziu din „Channel Manager”.",
+      "newIntro": "Proprietatea ta a fost creată. De îndată ce conectezi canale, distribuim automat disponibilitatea și prețurile către Booking.com, Airbnb și altele — iar rezervările ajung direct în calendarul tău.",
+      "connectNew": "Conectează canalele",
+      "finish": "Finalizează configurarea"
+    },
+    "done": {
+      "title": "Gata — afacerea ta e pregătită de pornire!",
+      "text": "Acum poți crea mai multe proprietăți, ajusta prețurile și finaliza conectarea canalelor din panou.",
+      "toDashboard": "Mergi la panou"
+    }
+  }
+}

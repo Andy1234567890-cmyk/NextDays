@@ -1,0 +1,92 @@
+{
+  "common": {
+    "save": "Spremi",
+    "cancel": "Odustani",
+    "back": "Natrag",
+    "next": "Dalje",
+    "loading": "Učitavanje …",
+    "language": "Jezik"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Dobrodošli u myNextDays",
+      "text": "Vaše poslovanje bit će spremno za rad u nekoliko koraka. Stvorit ćemo vaš prvi objekt, postaviti cijenu i povezati vaše kanale rezervacija.",
+      "cta": "Krenimo"
+    },
+    "company": {
+      "title": "Podaci o tvrtki",
+      "text": "Ovi podaci pripadaju vašem računu i koriste se, među ostalim, za račune i povezivanje vaših portala za rezervacije.",
+      "companyName": "Naziv tvrtke *",
+      "companyNamePlaceholder": "npr. Villa zur Sonne GmbH",
+      "legalForm": "Pravni oblik *",
+      "street": "Ulica *",
+      "houseNumber": "Kućni broj *",
+      "postalCode": "Poštanski broj *",
+      "city": "Mjesto *",
+      "country": "Država *",
+      "billingEmail": "E-pošta za račune *",
+      "billingEmailHint": "Unaprijed ispunjeno vašom e-poštom za prijavu — može se urediti za račune/kontakt.",
+      "phone": "Telefon *",
+      "vatId": "OIB/PDV",
+      "taxNumber": "ili porezni broj",
+      "moreOptional": "Dodatni podaci (neobvezno)",
+      "website": "Web-stranica",
+      "companyRegister": "Br. sudskog registra",
+      "districtCourt": "Registarski sud",
+      "iban": "IBAN",
+      "saving": "Spremanje …",
+      "missing": "Molimo ispunite: {fields}.",
+      "field": {
+        "companyName": "Naziv tvrtke",
+        "street": "Ulica",
+        "houseNumber": "Kućni broj",
+        "postalCode": "Poštanski broj",
+        "city": "Mjesto",
+        "country": "Država",
+        "email": "E-pošta",
+        "phone": "Telefon",
+        "vatOrTax": "OIB/PDV ili porezni broj"
+      }
+    },
+    "branch": {
+      "title": "Jeste li već aktivni na portalima za rezervacije?",
+      "text": "Ako, na primjer, već iznajmljujete na Booking.com ili Airbnb, povezat ćemo vaše postojeće račune i preuzeti vaše objekte i rezervacije — ništa ne morate unositi dvaput.",
+      "yesTitle": "Da, već jesam",
+      "yesDesc": "Poveži i uvezi postojeće portale",
+      "noTitle": "Ne, krećem ispočetka",
+      "noDesc": "Stvori novi objekt i poveži kanale iznova",
+      "whichPortals": "Koje portale već koristite?"
+    },
+    "object": {
+      "title": "Vaš prvi objekt",
+      "text": "Stvorite svoj prvi objekt za iznajmljivanje. Pojedinosti (adresu, fotografije, opremu) možete dodati kasnije.",
+      "name": "Naziv objekta",
+      "namePlaceholder": "npr. Dvokrevetna soba s pogledom na jezero",
+      "maxGuests": "Najveći broj gostiju",
+      "creating": "Stvaranje …",
+      "create": "Stvori objekt"
+    },
+    "price": {
+      "title": "Osnovna cijena po noćenju",
+      "text": "Postavite početnu cijenu. Sezonske i kanalske cijene možete fino podesiti kasnije.",
+      "perNight": "Cijena po noćenju (€)",
+      "pricePlaceholder": "npr. 120"
+    },
+    "channels": {
+      "titleImport": "Poveži i uvezi portale",
+      "titleConnect": "Poveži kanale rezervacija",
+      "notReady": "Povezivanje kanala trenutačno se priprema za vaše poslovanje. Možete ga dovršiti bilo kada kasnije pod „Channel Manager”.",
+      "importIntro": "Povezat ćemo vaše postojeće račune i uvesti objekte i rezervacije. Odaberite portale koje želite povezati:",
+      "connectExisting": "Poveži portale sada",
+      "importHint": "Pomoćnik za povezivanje (pristup + dodjela objekata) otvara se ugrađeno. Možete ga otvoriti i kasnije pod „Channel Manager”.",
+      "newIntro": "Vaš objekt je stvoren. Čim povežete kanale, automatski ćemo raspodijeliti dostupnost i cijene na Booking.com, Airbnb i druge — a rezervacije stižu izravno u vaš kalendar.",
+      "connectNew": "Poveži kanale",
+      "finish": "Završi postavljanje"
+    },
+    "done": {
+      "title": "Gotovo — vaše poslovanje spremno je za rad!",
+      "text": "Sada možete na nadzornoj ploči stvarati dodatne objekte, dotjerati cijene i konačno povezati svoje kanale.",
+      "toDashboard": "Na nadzornu ploču"
+    }
+  }
+}

@@ -1,0 +1,92 @@
+{
+  "common": {
+    "save": "Uložiť",
+    "cancel": "Zrušiť",
+    "back": "Späť",
+    "next": "Ďalej",
+    "loading": "Načítava sa …",
+    "language": "Jazyk"
+  },
+  "onboarding": {
+    "welcome": {
+      "title": "Vitajte v myNextDays",
+      "text": "Vaša prevádzka bude pripravená v niekoľkých krokoch. Vytvoríme váš prvý objekt, nastavíme cenu a prepojíme vaše rezervačné kanály.",
+      "cta": "Začíname"
+    },
+    "company": {
+      "title": "Firemné údaje",
+      "text": "Tieto údaje patria k vášmu účtu a sú potrebné okrem iného na faktúry a prepojenie vašich rezervačných portálov.",
+      "companyName": "Názov firmy *",
+      "companyNamePlaceholder": "napr. Villa zur Sonne GmbH",
+      "legalForm": "Právna forma *",
+      "street": "Ulica *",
+      "houseNumber": "Číslo domu *",
+      "postalCode": "PSČ *",
+      "city": "Mesto *",
+      "country": "Krajina *",
+      "billingEmail": "Fakturačný e-mail *",
+      "billingEmailHint": "Predvyplnené vaším prihlasovacím e-mailom — možno upraviť pre faktúry/kontakt.",
+      "phone": "Telefón *",
+      "vatId": "IČ DPH",
+      "taxNumber": "alebo daňové číslo",
+      "moreOptional": "Ďalšie údaje (voliteľné)",
+      "website": "Webová stránka",
+      "companyRegister": "Č. obchodného registra",
+      "districtCourt": "Registrový súd",
+      "iban": "IBAN",
+      "saving": "Ukladá sa …",
+      "missing": "Vyplňte prosím: {fields}.",
+      "field": {
+        "companyName": "Názov firmy",
+        "street": "Ulica",
+        "houseNumber": "Číslo domu",
+        "postalCode": "PSČ",
+        "city": "Mesto",
+        "country": "Krajina",
+        "email": "E-mail",
+        "phone": "Telefón",
+        "vatOrTax": "IČ DPH alebo daňové číslo"
+      }
+    },
+    "branch": {
+      "title": "Ste už aktívni na rezervačných portáloch?",
+      "text": "Ak napríklad už prenajímate na Booking.com alebo Airbnb, prepojíme vaše existujúce účty a prevezmeme vaše objekty a rezervácie — nemusíte nič zadávať dvakrát.",
+      "yesTitle": "Áno, už som",
+      "yesDesc": "Prepojiť a importovať existujúce portály",
+      "noTitle": "Nie, začínam nanovo",
+      "noDesc": "Vytvoriť nový objekt a prepojiť kanály od začiatku",
+      "whichPortals": "Ktoré portály už používate?"
+    },
+    "object": {
+      "title": "Váš prvý objekt",
+      "text": "Vytvorte svoj prvý objekt na prenájom. Podrobnosti (adresu, fotografie, vybavenie) môžete doplniť neskôr.",
+      "name": "Názov objektu",
+      "namePlaceholder": "napr. Dvojlôžková izba s výhľadom na jazero",
+      "maxGuests": "Maximálny počet hostí",
+      "creating": "Vytvára sa …",
+      "create": "Vytvoriť objekt"
+    },
+    "price": {
+      "title": "Základná cena za noc",
+      "text": "Nastavte počiatočnú cenu. Sezónne a kanálové ceny môžete doladiť neskôr.",
+      "perNight": "Cena za noc (€)",
+      "pricePlaceholder": "napr. 120"
+    },
+    "channels": {
+      "titleImport": "Prepojiť a importovať portály",
+      "titleConnect": "Prepojiť rezervačné kanály",
+      "notReady": "Prepojenie kanálov sa práve pripravuje pre vašu prevádzku. Môžete ho kedykoľvek neskôr dokončiť v časti „Channel Manager“.",
+      "importIntro": "Prepojíme vaše existujúce účty a importujeme objekty a rezervácie. Vyberte portály, ktoré chcete prepojiť:",
+      "connectExisting": "Prepojiť portály teraz",
+      "importHint": "Sprievodca prepojením (prístup + priradenie objektov) sa otvorí vložene. Môžete ho otvoriť aj neskôr v časti „Channel Manager“.",
+      "newIntro": "Váš objekt je vytvorený. Hneď ako prepojíte kanály, automaticky rozdelíme dostupnosť a ceny na Booking.com, Airbnb a ďalšie — a rezervácie pristanú priamo vo vašom kalendári.",
+      "connectNew": "Prepojiť kanály",
+      "finish": "Dokončiť nastavenie"
+    },
+    "done": {
+      "title": "Hotovo — vaša prevádzka je pripravená!",
+      "text": "Teraz môžete v dashboarde vytvárať ďalšie objekty, doladiť ceny a finálne prepojiť svoje kanály.",
+      "toDashboard": "Prejsť na dashboard"
+    }
+  }
+}
