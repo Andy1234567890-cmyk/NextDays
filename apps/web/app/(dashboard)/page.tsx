@@ -24,7 +24,7 @@ export default async function DashboardPage() {
       <div className="mx-auto w-full max-w-3xl">
         <OnboardingWizard
           channelManagerReady={
-            health.ok ? health.data.channex_configured : false
+            health.ok ? health.data.channel_manager_ready : false
           }
           initialStatus={status}
         />

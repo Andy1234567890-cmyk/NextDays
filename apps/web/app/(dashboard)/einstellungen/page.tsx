@@ -27,7 +27,7 @@ export default async function EinstellungenPage() {
       </header>
 
       <ChannelManagerSettings
-        configured={health.ok ? health.data.channex_configured : false}
+        configured={health.ok ? health.data.channel_manager_ready : false}
         propertyMaps={maps.ok ? maps.data.items : []}
         bookings={bookings.ok ? bookings.data.items : []}
       />

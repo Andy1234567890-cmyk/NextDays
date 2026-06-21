@@ -18,7 +18,7 @@ export default async function OnboardingPage() {
   return (
     <div className="mx-auto w-full max-w-3xl p-6">
       <OnboardingWizard
-        channelManagerReady={health.ok ? health.data.channex_configured : false}
+        channelManagerReady={health.ok ? health.data.channel_manager_ready : false}
       />
     </div>
   );

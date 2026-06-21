@@ -32,7 +32,8 @@ async function call<T>(
 export type ChannexHealth = {
   slice: string;
   status: string;
-  channex_configured: boolean;
+  // Neutraler Feldname (Provider darf nicht im Network-Tab auftauchen).
+  channel_manager_ready: boolean;
 };
 
 export type PropertyMap = {

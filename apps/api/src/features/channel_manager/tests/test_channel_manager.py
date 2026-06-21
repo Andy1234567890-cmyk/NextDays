@@ -12,7 +12,8 @@ def test_channel_manager_health() -> None:
     assert body["slice"] == "channel_manager"
     assert body["status"] == "ok"
     # Feld existiert und ist bool (Wert hängt von der Umgebung/Key-Konfig ab).
-    assert isinstance(body["channex_configured"], bool)
+    # Neutraler Name (kein Provider-Leck im Response).
+    assert isinstance(body["channel_manager_ready"], bool)
 
 
 def test_webhook_rejects_wrong_secret() -> None:

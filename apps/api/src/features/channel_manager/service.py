@@ -62,7 +62,7 @@ class ChannelManagerService:
     def health(self) -> SliceHealth:
         return SliceHealth(
             slice=self.slice_name,
-            channex_configured=self._channex.is_configured,
+            channel_manager_ready=self._channex.is_configured,
         )
 
     def _require_db(self) -> Client:

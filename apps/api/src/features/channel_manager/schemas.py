@@ -9,8 +9,9 @@ from pydantic import BaseModel, Field
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"
-    # Ob der Channex-Provider konfiguriert ist (API-Key gesetzt).
-    channex_configured: bool = False
+    # Ob der Channel-Manager einsatzbereit ist (Provider-Key gesetzt). NEUTRALER
+    # Feldname — der Provider darf nie im Frontend/Network-Tab auftauchen.
+    channel_manager_ready: bool = False
 
 
 # --- Property-Mapping --------------------------------------------------------
