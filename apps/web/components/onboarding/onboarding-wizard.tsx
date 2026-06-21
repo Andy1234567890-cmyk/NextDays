@@ -12,7 +12,6 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
-import { ChannelConnectButton } from "@/components/channel-manager/channel-connect-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -26,31 +25,17 @@ import {
 } from "@/lib/laender";
 import type { OnboardingStatus } from "@/lib/onboarding";
 import { updateOnboarding } from "@/lib/onboarding";
-import { createProperty } from "@/lib/properties";
 import { cn } from "@/lib/utils";
 
-type Step =
-  | "welcome"
-  | "company"
-  | "branch"
-  | "object"
-  | "price"
-  | "channels"
-  | "done";
-
-// Portale, die ein Hotel evtl. schon nutzt (für den Bestands-Pfad).
-const PORTALE = [
-  { code: "BookingCom", label: "Booking.com", icon: "simple-icons:bookingdotcom" },
-  { code: "Expedia", label: "Expedia", icon: "simple-icons:expedia" },
-  { code: "Airbnb", label: "Airbnb", icon: "simple-icons:airbnb" },
-] as const;
+// Onboarding = NUR Unternehmen anlegen (Firmendaten/Admin-Konto). Unterkünfte
+// (Channex-Property/Room-Type/Rate-Plan, Kanäle) werden danach im Objekte-Bereich
+// gepflegt — das ist bewusst getrennt vom Onboarding.
+type Step = "welcome" | "company" | "done";
 
 export function OnboardingWizard({
-  channelManagerReady,
   initialStatus,
   loginEmail,
 }: {
-  channelManagerReady: boolean;
   initialStatus?: OnboardingStatus;
   loginEmail?: string | null;
 }) {
@@ -65,25 +50,14 @@ export function OnboardingWizard({
   // Startschritt anhand des gespeicherten Fortschritts wählen (Wiederaufnahme).
   function firstOpenStep(s?: OnboardingStatus): Step {
     if (!s) return "welcome";
-    // Firmendaten sind der erste Pflichtschritt (Konto vollständig + nötig für
-    // die Channel-Anbindung). Ohne sie geht es nicht weiter.
+    // Firmendaten sind der einzige Pflichtschritt. Danach ist das Onboarding
+    // abgeschlossen; Unterkünfte legt der Kunde im Objekte-Bereich an.
     if (!s.company_data_set) return "welcome";
-    if (!s.object_created) return s.has_ota === null ? "branch" : "object";
-    if (!s.price_set) return "price";
-    if (!s.channels_done) return "channels";
     return "done";
   }
 
   const [step, setStep] = useState<Step>(firstOpenStep(initialStatus));
   const [error, setError] = useState<string | null>(null);
-
-  // Verzweigung: schon auf Portalen aktiv?
-  const [hasOta, setHasOta] = useState<boolean | null>(
-    initialStatus?.has_ota ?? null,
-  );
-  const [selectedPortals, setSelectedPortals] = useState<string[]>(
-    initialStatus?.selected_portals ?? [],
-  );
 
   // Firmendaten (länderneutral, DACH + EU). Pflicht: A (Firma/Adresse/Kontakt)
   // + B (Steuer). C (Register/GF/Bank) optional/aufklappbar.
@@ -130,44 +104,13 @@ export function OnboardingWizard({
     });
   }
 
-  // Erstes Objekt
-  const [objectTitle, setObjectTitle] = useState("");
-  const [maxGuests, setMaxGuests] = useState(2);
-
-  // Preis (Basispreis je Nacht, in Euro)
-  const [basePrice, setBasePrice] = useState("");
-
   // Fortschritt im Hintergrund speichern (best-effort; blockiert die UI nicht).
   function persist(patch: Partial<OnboardingStatus>) {
     void updateOnboarding(patch);
   }
 
-  function togglePortal(code: string) {
-    setSelectedPortals((prev) =>
-      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code],
-    );
-  }
-
-  function saveObject() {
-    setError(null);
-    startTransition(async () => {
-      const res = await createProperty({
-        title: objectTitle.trim(),
-        property_type: "appartement",
-        max_guests: maxGuests,
-        status: "draft",
-      });
-      if (res.ok) {
-        persist({ object_created: true });
-        setStep("price");
-      } else {
-        setError(res.error);
-      }
-    });
-  }
-
   // Firmendaten speichern (Pflichtfelder prüfen) → tenant_billing_profile +
-  // Status-Flag. Erst danach geht es weiter.
+  // Status-Flag. Danach ist das Onboarding inhaltlich fertig (nur Unternehmen).
   function saveCompany() {
     setError(null);
     const required: [string | undefined, string][] = [
@@ -195,27 +138,18 @@ export function OnboardingWizard({
       });
       if (res.ok) {
         persist({ company_data_set: true });
-        setStep("branch");
+        setStep("done");
       } else {
         setError(res.error);
       }
     });
   }
 
-  function goToObject() {
-    persist({ has_ota: hasOta, selected_portals: selectedPortals });
-    setStep("object");
-  }
-
-  function goToChannels() {
-    persist({ price_set: true });
-    setStep("channels");
-  }
-
   function finish() {
     // Onboarding abschließen → Dashboard zeigt danach die normale Übersicht.
+    // Unterkünfte legt der Kunde anschließend im Objekte-Bereich an.
     startTransition(async () => {
-      await updateOnboarding({ channels_done: true, completed: true });
+      await updateOnboarding({ completed: true });
       router.replace("/");
       router.refresh();
     });
@@ -412,199 +346,6 @@ export function OnboardingWizard({
         </Card>
       )}
 
-      {step === "branch" && (
-        <Card>
-          <h1 className="font-display text-2xl font-extrabold">
-            {t("branch.title")}
-          </h1>
-          <p className="text-muted-foreground">{t("branch.text")}</p>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <SelectCard
-              active={hasOta === true}
-              icon="ph:plugs-connected"
-              title={t("branch.yesTitle")}
-              desc={t("branch.yesDesc")}
-              onClick={() => setHasOta(true)}
-            />
-            <SelectCard
-              active={hasOta === false}
-              icon="ph:sparkle"
-              title={t("branch.noTitle")}
-              desc={t("branch.noDesc")}
-              onClick={() => setHasOta(false)}
-            />
-          </div>
-
-          {hasOta === true && (
-            <div className="flex flex-col gap-3 rounded-(--radius) border border-border p-4">
-              <p className="text-sm font-medium">{t("branch.whichPortals")}</p>
-              <div className="flex flex-wrap gap-2">
-                {PORTALE.map((p) => (
-                  <button
-                    key={p.code}
-                    type="button"
-                    onClick={() => togglePortal(p.code)}
-                    className={
-                      "flex items-center gap-2 rounded-full border px-4 py-2 text-sm transition-colors " +
-                      (selectedPortals.includes(p.code)
-                        ? "border-accent bg-accent/10 text-foreground"
-                        : "border-border hover:bg-secondary")
-                    }
-                  >
-                    <Icon icon={p.icon} className="size-4" />
-                    {p.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <Button
-            onClick={goToObject}
-            disabled={hasOta === null}
-            className="self-start"
-          >
-            {tc("next")}
-          </Button>
-        </Card>
-      )}
-
-      {step === "object" && (
-        <Card>
-          <h1 className="font-display text-2xl font-extrabold">
-            {t("object.title")}
-          </h1>
-          <p className="text-muted-foreground">{t("object.text")}</p>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="objTitle" className="text-sm font-medium">
-              {t("object.name")}
-            </label>
-            <Input
-              id="objTitle"
-              value={objectTitle}
-              onChange={(e) => setObjectTitle(e.target.value)}
-              placeholder={t("object.namePlaceholder")}
-              maxLength={200}
-            />
-          </div>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="guests" className="text-sm font-medium">
-              {t("object.maxGuests")}
-            </label>
-            <Input
-              id="guests"
-              type="number"
-              min={1}
-              max={50}
-              value={maxGuests}
-              onChange={(e) => setMaxGuests(Number(e.target.value) || 1)}
-              className="w-32"
-            />
-          </div>
-          {error && <ErrorText>{error}</ErrorText>}
-          <div className="flex gap-3">
-            <Button variant="ghost" onClick={() => setStep("branch")}>
-              {tc("back")}
-            </Button>
-            <Button
-              onClick={saveObject}
-              disabled={pending || objectTitle.trim().length === 0}
-            >
-              {pending ? t("object.creating") : t("object.create")}
-            </Button>
-          </div>
-        </Card>
-      )}
-
-      {step === "price" && (
-        <Card>
-          <h1 className="font-display text-2xl font-extrabold">
-            {t("price.title")}
-          </h1>
-          <p className="text-muted-foreground">{t("price.text")}</p>
-          <div className="flex flex-col gap-1.5">
-            <label htmlFor="price" className="text-sm font-medium">
-              {t("price.perNight")}
-            </label>
-            <Input
-              id="price"
-              type="number"
-              min={0}
-              step="1"
-              value={basePrice}
-              onChange={(e) => setBasePrice(e.target.value)}
-              placeholder={t("price.pricePlaceholder")}
-              className="w-40"
-            />
-          </div>
-          <div className="flex gap-3">
-            <Button variant="ghost" onClick={() => setStep("object")}>
-              {tc("back")}
-            </Button>
-            <Button onClick={goToChannels}>{tc("next")}</Button>
-          </div>
-        </Card>
-      )}
-
-      {step === "channels" && (
-        <Card>
-          <h1 className="font-display text-2xl font-extrabold">
-            {hasOta ? t("channels.titleImport") : t("channels.titleConnect")}
-          </h1>
-
-          {!channelManagerReady && (
-            <p className="rounded-(--radius) border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
-              {t("channels.notReady")}
-            </p>
-          )}
-
-          {hasOta ? (
-            <div className="flex flex-col gap-3">
-              <p className="text-muted-foreground">
-                {t("channels.importIntro")}
-              </p>
-              <ul className="flex flex-col divide-y divide-border rounded-(--radius) border border-border">
-                {PORTALE.filter(
-                  (p) =>
-                    selectedPortals.length === 0 ||
-                    selectedPortals.includes(p.code),
-                ).map((p) => (
-                  <li key={p.code} className="flex items-center gap-3 p-3">
-                    <Icon icon={p.icon} className="size-5" />
-                    <span className="flex-1 text-sm font-medium">{p.label}</span>
-                  </li>
-                ))}
-              </ul>
-              {channelManagerReady ? (
-                <ChannelConnectButton label={t("channels.connectExisting")} />
-              ) : null}
-              <p className="text-xs text-muted-foreground">
-                {t("channels.importHint")}
-              </p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-3">
-              <p className="text-muted-foreground">{t("channels.newIntro")}</p>
-              {channelManagerReady ? (
-                <ChannelConnectButton
-                  label={t("channels.connectNew")}
-                  variant="outline"
-                />
-              ) : null}
-            </div>
-          )}
-
-          <div className="flex gap-3">
-            <Button variant="ghost" onClick={() => setStep("price")}>
-              {tc("back")}
-            </Button>
-            <Button onClick={() => setStep("done")}>
-              {t("channels.finish")}
-            </Button>
-          </div>
-        </Card>
-      )}
-
       {step === "done" && (
         <Card>
           <span className="flex size-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
@@ -629,35 +370,6 @@ function Card({ children }: { children: React.ReactNode }) {
     <div className="flex flex-col items-start gap-4 rounded-2xl border border-border bg-card p-8 shadow-sm">
       {children}
     </div>
-  );
-}
-
-function SelectCard({
-  active,
-  icon,
-  title,
-  desc,
-  onClick,
-}: {
-  active: boolean;
-  icon: string;
-  title: string;
-  desc: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={
-        "flex flex-col items-start gap-2 rounded-(--radius) border p-4 text-left transition-colors " +
-        (active ? "border-accent bg-accent/10" : "border-border hover:bg-secondary")
-      }
-    >
-      <Icon icon={icon} className="size-6 text-accent" />
-      <span className="font-medium">{title}</span>
-      <span className="text-sm text-muted-foreground">{desc}</span>
-    </button>
   );
 }
 
@@ -688,15 +400,7 @@ function Field({
 
 function ProgressBar({ step }: { step: Step }) {
   const tc = useTranslations("common");
-  const order: Step[] = [
-    "welcome",
-    "company",
-    "branch",
-    "object",
-    "price",
-    "channels",
-    "done",
-  ];
+  const order: Step[] = ["welcome", "company", "done"];
   const idx = order.indexOf(step);
   const pct = Math.round((idx / (order.length - 1)) * 100);
   return (

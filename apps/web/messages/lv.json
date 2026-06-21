@@ -13,7 +13,7 @@
   "onboarding": {
     "welcome": {
       "title": "Laipni lūdzam myNextDays",
-      "text": "Dažos soļos jūsu uzņēmums būs gatavs darbam. Mēs izveidosim jūsu pirmo objektu, iestatīsim cenu un savienosim jūsu rezervāciju kanālus.",
+      "text": "Vispirms izveidojam jūsu uzņēmumu. Šie dati izveido jūsu kontu — naktsmītnes iestatāt pēc tam sadaļā Naktsmītnes.",
       "cta": "Sākam"
     },
     "company": {
@@ -51,44 +51,9 @@
         "vatOrTax": "PVN nr. vai nodokļu maksātāja numurs"
       }
     },
-    "branch": {
-      "title": "Vai jūs jau darbojaties rezervāciju portālos?",
-      "text": "Ja jūs, piemēram, jau izīrējat platformā Booking.com vai Airbnb, mēs savienosim jūsu esošos kontus un pārņemsim jūsu objektus un rezervācijas — nekas nav jāizveido divreiz.",
-      "yesTitle": "Jā, jau darbojos",
-      "yesDesc": "Esošo portālu savienošana un importēšana",
-      "noTitle": "Nē, sāku no jauna",
-      "noDesc": "Izveidot jaunu objektu un savienot kanālus no nulles",
-      "whichPortals": "Kurus portālus jūs jau izmantojat?"
-    },
-    "object": {
-      "title": "Jūsu pirmais objekts",
-      "text": "Izveidojiet savu pirmo izīrējamo objektu. Detaļas (adresi, fotoattēlus, aprīkojumu) varat pievienot vēlāk.",
-      "name": "Objekta nosaukums",
-      "namePlaceholder": "piem., Divvietīgs numurs ar skatu uz ezeru",
-      "maxGuests": "Maksimālais viesu skaits",
-      "creating": "Notiek izveide …",
-      "create": "Izveidot objektu"
-    },
-    "price": {
-      "title": "Pamatcena par nakti",
-      "text": "Iestatiet sākuma cenu. Sezonas un kanālu cenas varat precīzi noregulēt vēlāk.",
-      "perNight": "Cena par nakti (€)",
-      "pricePlaceholder": "piem., 120"
-    },
-    "channels": {
-      "titleImport": "Portālu savienošana un importēšana",
-      "titleConnect": "Rezervāciju kanālu savienošana",
-      "notReady": "Kanālu savienojums pašlaik tiek iestatīts jūsu uzņēmumam. Jūs to varat pabeigt jebkurā laikā vēlāk sadaļā „Channel Manager”.",
-      "importIntro": "Mēs savienosim jūsu esošos kontus un importēsim objektus un rezervācijas. Izvēlieties portālus, kurus vēlaties savienot:",
-      "connectExisting": "Savienot portālus tagad",
-      "importHint": "Savienošanas palīgs (piekļuve + objektu piesaiste) atveras iegults. Jūs to varat atvērt arī vēlāk sadaļā „Channel Manager”.",
-      "newIntro": "Jūsu objekts ir izveidots. Tiklīdz savienosiet kanālus, mēs automātiski izplatīsim pieejamību un cenas platformās Booking.com, Airbnb u.c. — un rezervācijas nonāks tieši jūsu kalendārā.",
-      "connectNew": "Savienot kanālus",
-      "finish": "Pabeigt iestatīšanu"
-    },
     "done": {
-      "title": "Gatavs — jūsu uzņēmums ir gatavs darbam!",
-      "text": "Tagad informācijas panelī varat izveidot vairāk objektu, precizēt cenas un galīgi savienot savus kanālus.",
+      "title": "Gatavs — jūsu uzņēmums ir izveidots!",
+      "text": "Pēc tam izveidojiet naktsmītnes sadaļā Naktsmītnes, iestatiet cenas un savienojiet rezervēšanas kanālus.",
       "toDashboard": "Uz informācijas paneli"
     }
   },

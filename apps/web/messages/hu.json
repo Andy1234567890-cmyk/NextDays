@@ -72,7 +72,7 @@
   "onboarding": {
     "welcome": {
       "title": "Üdvözöljük a myNextDays rendszerben",
-      "text": "Néhány lépésben üzemkész lesz a vállalkozása. Létrehozzuk az első szálláshelyét, beállítunk egy árat és összekötjük a foglalási csatornáit.",
+      "text": "Először létrehozzuk a vállalkozásodat. Ezek az adatok hozzák létre a fiókodat — a szállásokat utána a Szállások részben állítod be.",
       "cta": "Kezdjük"
     },
     "company": {
@@ -110,44 +110,9 @@
         "vatOrTax": "adószám vagy adóazonosító szám"
       }
     },
-    "branch": {
-      "title": "Aktív már foglalási portálokon?",
-      "text": "Ha például már kiad szállást a Booking.com vagy az Airbnb felületén, összekötjük a meglévő fiókjait, és átvesszük a szálláshelyeit és foglalásait — semmit sem kell kétszer létrehoznia.",
-      "yesTitle": "Igen, már aktív vagyok",
-      "yesDesc": "Meglévő portálok összekötése és importálása",
-      "noTitle": "Nem, most kezdek",
-      "noDesc": "Új szálláshely létrehozása és csatornák összekötése a nulláról",
-      "whichPortals": "Mely portálokat használja már?"
-    },
-    "object": {
-      "title": "Az első szálláshelye",
-      "text": "Hozza létre az első kiadható szálláshelyét. A részleteket (cím, fotók, felszereltség) később is megadhatja.",
-      "name": "Szálláshely neve",
-      "namePlaceholder": "pl. Kétágyas szoba tóra néző kilátással",
-      "maxGuests": "Maximális vendégszám",
-      "creating": "Létrehozás …",
-      "create": "Szálláshely létrehozása"
-    },
-    "price": {
-      "title": "Alapár éjszakánként",
-      "text": "Állítson be kezdő árat. A szezonális és csatornaárakat később finomhangolhatja.",
-      "perNight": "Ár éjszakánként (€)",
-      "pricePlaceholder": "pl. 120"
-    },
-    "channels": {
-      "titleImport": "Portálok összekötése és importálása",
-      "titleConnect": "Foglalási csatornák összekötése",
-      "notReady": "A csatornakapcsolat beállítása jelenleg folyamatban van a vállalkozása számára. Bármikor később befejezheti a „Channel Manager” menüpontban.",
-      "importIntro": "Összekötjük a meglévő fiókjait, és átvesszük a szálláshelyeket és foglalásokat. Válassza ki az összekötni kívánt portálokat:",
-      "connectExisting": "Portálok összekötése most",
-      "importHint": "A kapcsolódási varázsló (hozzáférés + szálláshely-hozzárendelés) beágyazva nyílik meg. Később is megnyithatja a „Channel Manager” menüpontban.",
-      "newIntro": "A szálláshelye létrejött. Amint csatornákat köt össze, automatikusan elosztjuk az elérhetőséget és az árakat a Booking.com, az Airbnb és társai felé — a foglalások pedig közvetlenül a naptárába kerülnek.",
-      "connectNew": "Csatornák összekötése",
-      "finish": "Beállítás befejezése"
-    },
     "done": {
-      "title": "Kész — a vállalkozása üzemkész!",
-      "text": "Mostantól a vezérlőpulton további szálláshelyeket hozhat létre, finomíthatja az árakat és véglegesítheti a csatornakapcsolatait.",
+      "title": "Kész — a vállalkozásod létrejött!",
+      "text": "Ezután hozd létre a szállásaidat a Szállások részben, állíts be árakat és kösd össze a foglalási csatornákat.",
       "toDashboard": "Ugrás a vezérlőpultra"
     }
   },

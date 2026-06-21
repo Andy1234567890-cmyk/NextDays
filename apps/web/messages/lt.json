@@ -13,7 +13,7 @@
   "onboarding": {
     "welcome": {
       "title": "Sveiki atvykę į myNextDays",
-      "text": "Per kelis žingsnius jūsų verslas bus paruoštas. Sukursime pirmąjį jūsų objektą, nustatysime kainą ir prijungsime jūsų užsakymų kanalus.",
+      "text": "Pirmiausia sukuriame jūsų įmonę. Šie duomenys sukuria jūsų paskyrą — apgyvendinimą nustatysite vėliau skiltyje Apgyvendinimas.",
       "cta": "Pradėkime"
     },
     "company": {
@@ -51,44 +51,9 @@
         "vatOrTax": "PVM kodas arba mokesčių mokėtojo numeris"
       }
     },
-    "branch": {
-      "title": "Ar jau veikiate užsakymų portaluose?",
-      "text": "Jei, pavyzdžiui, jau nuomojate per Booking.com ar Airbnb, prijungsime jūsų esamas paskyras ir perimsime jūsų objektus bei užsakymus — nieko nereikės kurti du kartus.",
-      "yesTitle": "Taip, jau veikiu",
-      "yesDesc": "Prijungti ir importuoti esamus portalus",
-      "noTitle": "Ne, pradedu iš naujo",
-      "noDesc": "Sukurti naują objektą ir prijungti kanalus nuo nulio",
-      "whichPortals": "Kuriuos portalus jau naudojate?"
-    },
-    "object": {
-      "title": "Jūsų pirmasis objektas",
-      "text": "Sukurkite pirmąjį nuomojamą objektą. Išsamią informaciją (adresą, nuotraukas, įrangą) galėsite pridėti vėliau.",
-      "name": "Objekto pavadinimas",
-      "namePlaceholder": "pvz., Dvivietis kambarys su vaizdu į ežerą",
-      "maxGuests": "Didžiausias svečių skaičius",
-      "creating": "Kuriama …",
-      "create": "Sukurti objektą"
-    },
-    "price": {
-      "title": "Bazinė kaina už naktį",
-      "text": "Nustatykite pradinę kainą. Sezonines ir kanalų kainas galėsite tiksliai sureguliuoti vėliau.",
-      "perNight": "Kaina už naktį (€)",
-      "pricePlaceholder": "pvz., 120"
-    },
-    "channels": {
-      "titleImport": "Prijungti ir importuoti portalus",
-      "titleConnect": "Prijungti užsakymų kanalus",
-      "notReady": "Kanalų prijungimas šiuo metu ruošiamas jūsų verslui. Galite jį užbaigti bet kada vėliau skiltyje „Channel Manager”.",
-      "importIntro": "Prijungsime jūsų esamas paskyras ir importuosime objektus bei užsakymus. Pasirinkite portalus, kuriuos norite prijungti:",
-      "connectExisting": "Prijungti portalus dabar",
-      "importHint": "Prijungimo vediklis (prieiga + objektų priskyrimas) atsidaro įterptas. Jį taip pat galite atidaryti vėliau skiltyje „Channel Manager”.",
-      "newIntro": "Jūsų objektas sukurtas. Kai tik prijungsite kanalus, automatiškai paskirstysime pasiekiamumą ir kainas į Booking.com, Airbnb ir kt. — o užsakymai pateks tiesiai į jūsų kalendorių.",
-      "connectNew": "Prijungti kanalus",
-      "finish": "Užbaigti sąranką"
-    },
     "done": {
-      "title": "Atlikta — jūsų verslas paruoštas!",
-      "text": "Dabar valdymo skydelyje galite sukurti daugiau objektų, tikslinti kainas ir galutinai prijungti savo kanalus.",
+      "title": "Atlikta — jūsų įmonė sukurta!",
+      "text": "Tada sukurkite apgyvendinimą skiltyje Apgyvendinimas, nustatykite kainas ir prijunkite rezervavimo kanalus.",
       "toDashboard": "Į valdymo skydelį"
     }
   },

@@ -13,7 +13,7 @@
   "onboarding": {
     "welcome": {
       "title": "Velkommen til myNextDays",
-      "text": "På få trin er din virksomhed klar. Vi opretter dit første lejemål, fastsætter en pris og forbinder dine bookingkanaler.",
+      "text": "Først opretter vi din virksomhed. Disse oplysninger opretter din konto — dine overnatningssteder opsætter du bagefter under Overnatningssteder.",
       "cta": "Kom i gang"
     },
     "company": {
@@ -51,44 +51,9 @@
         "vatOrTax": "CVR/momsnr. eller skattenummer"
       }
     },
-    "branch": {
-      "title": "Er du allerede aktiv på bookingportaler?",
-      "text": "Hvis du for eksempel allerede udlejer på Booking.com eller Airbnb, forbinder vi dine eksisterende konti og overtager dine lejemål og bookinger — du behøver ikke oprette noget to gange.",
-      "yesTitle": "Ja, det er jeg allerede",
-      "yesDesc": "Forbind og importér eksisterende portaler",
-      "noTitle": "Nej, jeg starter forfra",
-      "noDesc": "Opret et nyt lejemål og forbind kanaler fra bunden",
-      "whichPortals": "Hvilke portaler bruger du allerede?"
-    },
-    "object": {
-      "title": "Dit første lejemål",
-      "text": "Opret dit første udlejningsklare lejemål. Detaljer (adresse, fotos, faciliteter) kan du tilføje senere.",
-      "name": "Lejemålets navn",
-      "namePlaceholder": "f.eks. Dobbeltværelse med søudsigt",
-      "maxGuests": "Maksimalt antal gæster",
-      "creating": "Oprettes …",
-      "create": "Opret lejemål"
-    },
-    "price": {
-      "title": "Basispris pr. nat",
-      "text": "Fastsæt en startpris. Sæson- og kanalpriser kan du finjustere senere.",
-      "perNight": "Pris pr. nat (€)",
-      "pricePlaceholder": "f.eks. 120"
-    },
-    "channels": {
-      "titleImport": "Forbind og importér portaler",
-      "titleConnect": "Forbind bookingkanaler",
-      "notReady": "Kanalforbindelsen er ved at blive klargjort til din virksomhed. Du kan altid afslutte den senere under „Channel Manager\".",
-      "importIntro": "Vi forbinder dine eksisterende konti og overtager lejemål og bookinger. Vælg de portaler, du vil forbinde:",
-      "connectExisting": "Forbind portaler nu",
-      "importHint": "Forbindelsesguiden (adgang + tildeling af lejemål) åbnes integreret. Du kan også åbne den senere under „Channel Manager\".",
-      "newIntro": "Dit lejemål er oprettet. Så snart du forbinder kanaler, fordeler vi automatisk tilgængelighed og priser til Booking.com, Airbnb m.fl. — og bookinger lander direkte i din kalender.",
-      "connectNew": "Forbind kanaler",
-      "finish": "Afslut opsætning"
-    },
     "done": {
-      "title": "Færdig — din virksomhed er klar!",
-      "text": "Du kan nu oprette flere lejemål, finjustere priser og færdiggøre dine kanalforbindelser i dashboardet.",
+      "title": "Færdig — din virksomhed er oprettet!",
+      "text": "Opret derefter dine overnatningssteder under Overnatningssteder, fastsæt priser og forbind dine bookingkanaler.",
       "toDashboard": "Til dashboard"
     }
   },

@@ -13,7 +13,7 @@
   "onboarding": {
     "welcome": {
       "title": "Bem-vindo ao myNextDays",
-      "text": "Em poucos passos o teu negócio fica pronto a arrancar. Criamos o teu primeiro alojamento, definimos um preço e ligamos os teus canais de reserva.",
+      "text": "Primeiro criamos a tua empresa. Estes dados criam a tua conta — os alojamentos configuras depois na área Alojamentos.",
       "cta": "Vamos começar"
     },
     "company": {
@@ -51,44 +51,9 @@
         "vatOrTax": "NIF ou número fiscal"
       }
     },
-    "branch": {
-      "title": "Já estás ativo em portais de reserva?",
-      "text": "Se já alugas no Booking.com ou no Airbnb, por exemplo, ligamos as tuas contas existentes e importamos os teus alojamentos e reservas — não precisas de criar nada duas vezes.",
-      "yesTitle": "Sim, já estou",
-      "yesDesc": "Ligar e importar portais existentes",
-      "noTitle": "Não, estou a começar de novo",
-      "noDesc": "Criar um alojamento novo e ligar canais de raiz",
-      "whichPortals": "Que portais já utilizas?"
-    },
-    "object": {
-      "title": "O teu primeiro alojamento",
-      "text": "Cria o teu primeiro alojamento para alugar. Podes adicionar os detalhes (morada, fotos, comodidades) mais tarde.",
-      "name": "Nome do alojamento",
-      "namePlaceholder": "ex. Quarto duplo com vista para o lago",
-      "maxGuests": "Número máximo de hóspedes",
-      "creating": "A criar …",
-      "create": "Criar alojamento"
-    },
-    "price": {
-      "title": "Preço base por noite",
-      "text": "Define um preço inicial. Podes afinar os preços sazonais e por canal mais tarde.",
-      "perNight": "Preço por noite (€)",
-      "pricePlaceholder": "ex. 120"
-    },
-    "channels": {
-      "titleImport": "Ligar e importar portais",
-      "titleConnect": "Ligar canais de reserva",
-      "notReady": "A ligação dos canais está a ser preparada para o teu negócio. Podes concluí-la a qualquer momento mais tarde em «Channel Manager».",
-      "importIntro": "Ligamos as tuas contas existentes e importamos alojamentos e reservas. Escolhe os portais que queres ligar:",
-      "connectExisting": "Ligar portais agora",
-      "importHint": "O assistente de ligação (acesso + associação de alojamentos) abre integrado. Também o podes abrir mais tarde em «Channel Manager».",
-      "newIntro": "O teu alojamento está criado. Assim que ligares canais, distribuímos automaticamente a disponibilidade e os preços pelo Booking.com, Airbnb e outros — e as reservas chegam diretamente ao teu calendário.",
-      "connectNew": "Ligar canais",
-      "finish": "Concluir configuração"
-    },
     "done": {
-      "title": "Concluído — o teu negócio está pronto a arrancar!",
-      "text": "Agora podes criar mais alojamentos, refinar os preços e finalizar a ligação dos teus canais no painel.",
+      "title": "Concluído — a tua empresa foi criada!",
+      "text": "De seguida, cria os teus alojamentos na área Alojamentos, define preços e liga os teus canais de reserva.",
       "toDashboard": "Ir para o painel"
     }
   },

@@ -13,7 +13,7 @@
   "onboarding": {
     "welcome": {
       "title": "Witamy w myNextDays",
-      "text": "W kilku krokach Twój obiekt będzie gotowy do startu. Utworzymy Twój pierwszy obiekt, ustawimy cenę i połączymy Twoje kanały rezerwacji.",
+      "text": "Najpierw zakładamy Twoją firmę. Te dane tworzą Twoje konto — obiekty skonfigurujesz później w sekcji Obiekty.",
       "cta": "Zaczynamy"
     },
     "company": {
@@ -51,44 +51,9 @@
         "vatOrTax": "NIP lub numer podatkowy"
       }
     },
-    "branch": {
-      "title": "Czy działasz już na portalach rezerwacyjnych?",
-      "text": "Jeśli na przykład wynajmujesz już na Booking.com lub Airbnb, połączymy Twoje istniejące konta i zaimportujemy Twoje obiekty i rezerwacje — nie musisz niczego zakładać dwa razy.",
-      "yesTitle": "Tak, już działam",
-      "yesDesc": "Połącz i zaimportuj istniejące portale",
-      "noTitle": "Nie, zaczynam od nowa",
-      "noDesc": "Utwórz nowy obiekt i połącz kanały od zera",
-      "whichPortals": "Z których portali już korzystasz?"
-    },
-    "object": {
-      "title": "Twój pierwszy obiekt",
-      "text": "Utwórz swój pierwszy obiekt do wynajęcia. Szczegóły (adres, zdjęcia, wyposażenie) możesz uzupełnić później.",
-      "name": "Nazwa obiektu",
-      "namePlaceholder": "np. Pokój dwuosobowy z widokiem na jezioro",
-      "maxGuests": "Maksymalna liczba gości",
-      "creating": "Tworzenie …",
-      "create": "Utwórz obiekt"
-    },
-    "price": {
-      "title": "Cena podstawowa za noc",
-      "text": "Ustaw cenę początkową. Ceny sezonowe i kanałowe możesz dopracować później.",
-      "perNight": "Cena za noc (€)",
-      "pricePlaceholder": "np. 120"
-    },
-    "channels": {
-      "titleImport": "Połącz i zaimportuj portale",
-      "titleConnect": "Połącz kanały rezerwacji",
-      "notReady": "Połączenie kanałów jest właśnie przygotowywane dla Twojego obiektu. Możesz je dokończyć w dowolnej chwili później w sekcji „Channel Manager”.",
-      "importIntro": "Połączymy Twoje istniejące konta i zaimportujemy obiekty i rezerwacje. Wybierz portale, które chcesz połączyć:",
-      "connectExisting": "Połącz portale teraz",
-      "importHint": "Asystent połączenia (dostęp + przypisanie obiektów) otwiera się w widoku osadzonym. Możesz go też otworzyć później w sekcji „Channel Manager”.",
-      "newIntro": "Twój obiekt został utworzony. Gdy tylko połączysz kanały, automatycznie rozdzielimy dostępność i ceny do Booking.com, Airbnb i innych — a rezerwacje trafią bezpośrednio do Twojego kalendarza.",
-      "connectNew": "Połącz kanały",
-      "finish": "Zakończ konfigurację"
-    },
     "done": {
-      "title": "Gotowe — Twój obiekt jest gotowy do startu!",
-      "text": "Możesz teraz tworzyć kolejne obiekty, dopracowywać ceny i finalnie połączyć swoje kanały w panelu.",
+      "title": "Gotowe — Twoja firma została założona!",
+      "text": "Następnie dodaj obiekty w sekcji Obiekty, ustaw ceny i połącz kanały rezerwacji.",
       "toDashboard": "Przejdź do panelu"
     }
   },

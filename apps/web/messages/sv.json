@@ -13,7 +13,7 @@
   "onboarding": {
     "welcome": {
       "title": "Välkommen till myNextDays",
-      "text": "På bara några steg är din verksamhet startklar. Vi skapar ditt första objekt, sätter ett pris och kopplar dina bokningskanaler.",
+      "text": "Först skapar vi ditt företag. Dessa uppgifter skapar ditt konto — dina boenden ställer du in efteråt under Boenden.",
       "cta": "Sätt igång"
     },
     "company": {
@@ -51,44 +51,9 @@
         "vatOrTax": "momsreg.nr eller organisationsnummer"
       }
     },
-    "branch": {
-      "title": "Är du redan aktiv på bokningsportaler?",
-      "text": "Om du till exempel redan hyr ut på Booking.com eller Airbnb kopplar vi dina befintliga konton och tar över dina objekt och bokningar — du behöver inte lägga upp något två gånger.",
-      "yesTitle": "Ja, det är jag redan",
-      "yesDesc": "Koppla och importera befintliga portaler",
-      "noTitle": "Nej, jag börjar på nytt",
-      "noDesc": "Skapa ett nytt objekt och koppla kanaler från grunden",
-      "whichPortals": "Vilka portaler använder du redan?"
-    },
-    "object": {
-      "title": "Ditt första objekt",
-      "text": "Skapa ditt första uthyrningsbara objekt. Detaljer (adress, foton, utrustning) kan du lägga till senare.",
-      "name": "Objektets namn",
-      "namePlaceholder": "t.ex. Dubbelrum med sjöutsikt",
-      "maxGuests": "Maximalt antal gäster",
-      "creating": "Skapas …",
-      "create": "Skapa objekt"
-    },
-    "price": {
-      "title": "Grundpris per natt",
-      "text": "Ange ett startpris. Säsongs- och kanalpriser kan du finjustera senare.",
-      "perNight": "Pris per natt (€)",
-      "pricePlaceholder": "t.ex. 120"
-    },
-    "channels": {
-      "titleImport": "Koppla och importera portaler",
-      "titleConnect": "Koppla bokningskanaler",
-      "notReady": "Kanalkopplingen håller på att förberedas för din verksamhet. Du kan slutföra den senare under ”Channel Manager”.",
-      "importIntro": "Vi kopplar dina befintliga konton och tar över objekt och bokningar. Välj de portaler du vill koppla:",
-      "connectExisting": "Koppla portaler nu",
-      "importHint": "Kopplingsguiden (åtkomst + objektkoppling) öppnas inbäddad. Du kan även öppna den senare under ”Channel Manager”.",
-      "newIntro": "Ditt objekt är skapat. Så snart du kopplar kanaler distribuerar vi tillgänglighet och priser automatiskt till Booking.com, Airbnb m.fl. — och bokningar hamnar direkt i din kalender.",
-      "connectNew": "Koppla kanaler",
-      "finish": "Slutför konfigurationen"
-    },
     "done": {
-      "title": "Klart — din verksamhet är startklar!",
-      "text": "Nu kan du skapa fler objekt, finjustera priser och slutföra dina kanalkopplingar i instrumentpanelen.",
+      "title": "Klart — ditt företag har skapats!",
+      "text": "Skapa sedan dina boenden under Boenden, ange priser och anslut dina bokningskanaler.",
       "toDashboard": "Till instrumentpanelen"
     }
   },

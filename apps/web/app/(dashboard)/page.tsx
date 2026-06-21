@@ -6,16 +6,14 @@ import { Icon } from "@iconify/react";
 
 import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
 import { Card, CardContent } from "@/components/ui/card";
-import { getChannexHealth } from "@/lib/channex";
 import { getOnboarding } from "@/lib/onboarding";
 import { currentUserEmail } from "@/lib/session-token";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const [onboarding, health, loginEmail] = await Promise.all([
+  const [onboarding, loginEmail] = await Promise.all([
     getOnboarding(),
-    getChannexHealth(),
     currentUserEmail(),
   ]);
 
@@ -24,13 +22,7 @@ export default async function DashboardPage() {
   if (status && !status.completed) {
     return (
       <div className="mx-auto w-full max-w-3xl">
-        <OnboardingWizard
-          channelManagerReady={
-            health.ok ? health.data.channel_manager_ready : false
-          }
-          initialStatus={status}
-          loginEmail={loginEmail}
-        />
+        <OnboardingWizard initialStatus={status} loginEmail={loginEmail} />
       </div>
     );
   }

@@ -72,7 +72,7 @@
   "onboarding": {
     "welcome": {
       "title": "Dobrodošli v myNextDays",
-      "text": "Vaše poslovanje bo pripravljeno v nekaj korakih. Ustvarili bomo vašo prvo enoto, določili ceno in povezali vaše rezervacijske kanale.",
+      "text": "Najprej ustvarimo vaše podjetje. Ti podatki ustvarijo vaš račun — nastanitve nastavite pozneje v razdelku Nastanitve.",
       "cta": "Začnimo"
     },
     "company": {
@@ -110,44 +110,9 @@
         "vatOrTax": "ID za DDV ali davčna številka"
       }
     },
-    "branch": {
-      "title": "Ste že dejavni na rezervacijskih portalih?",
-      "text": "Če na primer že oddajate na Booking.com ali Airbnb, bomo povezali vaše obstoječe račune in prevzeli vaše enote in rezervacije — ničesar vam ni treba vnašati dvakrat.",
-      "yesTitle": "Da, že sem",
-      "yesDesc": "Poveži in uvozi obstoječe portale",
-      "noTitle": "Ne, začenjam na novo",
-      "noDesc": "Ustvari novo enoto in poveži kanale od začetka",
-      "whichPortals": "Katere portale že uporabljate?"
-    },
-    "object": {
-      "title": "Vaša prva enota",
-      "text": "Ustvarite svojo prvo enoto za oddajo. Podrobnosti (naslov, fotografije, opremo) lahko dodate pozneje.",
-      "name": "Ime enote",
-      "namePlaceholder": "npr. Dvoposteljna soba s pogledom na jezero",
-      "maxGuests": "Največje število gostov",
-      "creating": "Ustvarjanje …",
-      "create": "Ustvari enoto"
-    },
-    "price": {
-      "title": "Osnovna cena na noč",
-      "text": "Določite začetno ceno. Sezonske in kanalske cene lahko prilagodite pozneje.",
-      "perNight": "Cena na noč (€)",
-      "pricePlaceholder": "npr. 120"
-    },
-    "channels": {
-      "titleImport": "Poveži in uvozi portale",
-      "titleConnect": "Poveži rezervacijske kanale",
-      "notReady": "Povezava kanalov se trenutno pripravlja za vaše poslovanje. Dokončate jo lahko kadar koli pozneje pod „Channel Manager“.",
-      "importIntro": "Povezali bomo vaše obstoječe račune in uvozili enote in rezervacije. Izberite portale, ki jih želite povezati:",
-      "connectExisting": "Poveži portale zdaj",
-      "importHint": "Pomočnik za povezavo (dostop + dodelitev enot) se odpre vgrajeno. Odprete ga lahko tudi pozneje pod „Channel Manager“.",
-      "newIntro": "Vaša enota je ustvarjena. Takoj ko povežete kanale, bomo samodejno razporedili razpoložljivost in cene na Booking.com, Airbnb in druge — rezervacije pa bodo pristale neposredno v vašem koledarju.",
-      "connectNew": "Poveži kanale",
-      "finish": "Zaključi nastavitev"
-    },
     "done": {
-      "title": "Opravljeno — vaše poslovanje je pripravljeno!",
-      "text": "Zdaj lahko v nadzorni plošči ustvarjate dodatne enote, izpopolnite cene in dokončno povežete svoje kanale.",
+      "title": "Končano — vaše podjetje je ustvarjeno!",
+      "text": "Nato ustvarite nastanitve v razdelku Nastanitve, določite cene in povežite rezervacijske kanale.",
       "toDashboard": "Na nadzorno ploščo"
     }
   },

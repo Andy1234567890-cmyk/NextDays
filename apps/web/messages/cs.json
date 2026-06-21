@@ -13,7 +13,7 @@
   "onboarding": {
     "welcome": {
       "title": "Vítejte v myNextDays",
-      "text": "Váš provoz bude připraven k provozu během několika kroků. Vytvoříme váš první objekt, nastavíme cenu a propojíme vaše rezervační kanály.",
+      "text": "Nejprve založíme vaši firmu. Tyto údaje vytvoří váš účet — ubytování nastavíte poté v sekci Ubytování.",
       "cta": "Začínáme"
     },
     "company": {
@@ -51,44 +51,9 @@
         "vatOrTax": "DIČ nebo daňové číslo"
       }
     },
-    "branch": {
-      "title": "Jste již aktivní na rezervačních portálech?",
-      "text": "Pokud již například pronajímáte na Booking.com nebo Airbnb, propojíme vaše stávající účty a převezmeme vaše objekty a rezervace — nemusíte nic zadávat dvakrát.",
-      "yesTitle": "Ano, už jsem",
-      "yesDesc": "Propojit a importovat stávající portály",
-      "noTitle": "Ne, začínám nově",
-      "noDesc": "Vytvořit nový objekt a propojit kanály od začátku",
-      "whichPortals": "Které portály již používáte?"
-    },
-    "object": {
-      "title": "Váš první objekt",
-      "text": "Vytvořte svůj první objekt k pronájmu. Podrobnosti (adresu, fotografie, vybavení) můžete doplnit později.",
-      "name": "Název objektu",
-      "namePlaceholder": "např. Dvoulůžkový pokoj s výhledem na jezero",
-      "maxGuests": "Maximální počet hostů",
-      "creating": "Vytváření …",
-      "create": "Vytvořit objekt"
-    },
-    "price": {
-      "title": "Základní cena za noc",
-      "text": "Nastavte počáteční cenu. Sezónní a kanálové ceny můžete doladit později.",
-      "perNight": "Cena za noc (€)",
-      "pricePlaceholder": "např. 120"
-    },
-    "channels": {
-      "titleImport": "Propojit a importovat portály",
-      "titleConnect": "Propojit rezervační kanály",
-      "notReady": "Propojení kanálů se právě připravuje pro váš provoz. Můžete je kdykoli později dokončit v části „Channel Manager“.",
-      "importIntro": "Propojíme vaše stávající účty a importujeme objekty a rezervace. Vyberte portály, které chcete propojit:",
-      "connectExisting": "Propojit portály nyní",
-      "importHint": "Průvodce propojením (přístup + přiřazení objektů) se otevře vloženě. Můžete jej také otevřít později v části „Channel Manager“.",
-      "newIntro": "Váš objekt je vytvořen. Jakmile propojíte kanály, automaticky rozdělíme dostupnost a ceny na Booking.com, Airbnb a další — a rezervace přistanou přímo ve vašem kalendáři.",
-      "connectNew": "Propojit kanály",
-      "finish": "Dokončit nastavení"
-    },
     "done": {
-      "title": "Hotovo — váš provoz je připraven k provozu!",
-      "text": "Nyní můžete v dashboardu vytvářet další objekty, doladit ceny a finálně propojit své kanály.",
+      "title": "Hotovo — vaše firma byla založena!",
+      "text": "Dále vytvořte ubytování v sekci Ubytování, nastavte ceny a propojte rezervační kanály.",
       "toDashboard": "Přejít na dashboard"
     }
   },

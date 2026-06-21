@@ -13,7 +13,7 @@
   "onboarding": {
     "welcome": {
       "title": "Merħba fi myNextDays",
-      "text": "Fi ftit passi n-negozju tiegħek ikun lest. Aħna noħolqu l-ewwel proprjetà tiegħek, nistabbilixxu prezz u ngħaqqdu l-kanali tal-prenotazzjoni tiegħek.",
+      "text": "L-ewwel noħolqu n-negozju tiegħek. Dawn id-dettalji joħolqu l-kont tiegħek — l-akkomodazzjonijiet tissettjahom wara fis-sezzjoni Akkomodazzjonijiet.",
       "cta": "Ejja nibdew"
     },
     "company": {
@@ -51,44 +51,9 @@
         "vatOrTax": "VAT jew numru tat-taxxa"
       }
     },
-    "branch": {
-      "title": "Diġà attiv fuq portali tal-prenotazzjoni?",
-      "text": "Jekk pereżempju diġà tikri fuq Booking.com jew Airbnb, aħna ngħaqqdu l-kontijiet eżistenti tiegħek u nimportaw il-proprjetajiet u l-prenotazzjonijiet tiegħek — m'hemmx għalfejn toħloq xejn darbtejn.",
-      "yesTitle": "Iva, diġà jien",
-      "yesDesc": "Għaqqad u importa portali eżistenti",
-      "noTitle": "Le, qed nibda mill-ġdid",
-      "noDesc": "Oħloq proprjetà ġdida u għaqqad il-kanali mill-bidu",
-      "whichPortals": "Liema portali diġà tuża?"
-    },
-    "object": {
-      "title": "L-ewwel proprjetà tiegħek",
-      "text": "Oħloq l-ewwel proprjetà tiegħek li tista' tinkera. Tista' żżid id-dettalji (indirizz, ritratti, faċilitajiet) aktar tard.",
-      "name": "Isem tal-proprjetà",
-      "namePlaceholder": "eż. Kamra doppja b'veduta tal-lag",
-      "maxGuests": "Numru massimu ta' mistednin",
-      "creating": "Qed tinħoloq …",
-      "create": "Oħloq proprjetà"
-    },
-    "price": {
-      "title": "Prezz bażiku għal kull lejl",
-      "text": "Stabbilixxi prezz tal-bidu. Tista' tirfina l-prezzijiet staġjonali u tal-kanali aktar tard.",
-      "perNight": "Prezz għal kull lejl (€)",
-      "pricePlaceholder": "eż. 120"
-    },
-    "channels": {
-      "titleImport": "Għaqqad u importa portali",
-      "titleConnect": "Għaqqad il-kanali tal-prenotazzjoni",
-      "notReady": "Il-konnettività tal-kanali bħalissa qed tiġi ssettjata għan-negozju tiegħek. Tista' tlestiha fi kwalunkwe ħin aktar tard taħt „Channel Manager”.",
-      "importIntro": "Aħna ngħaqqdu l-kontijiet eżistenti tiegħek u nimportaw il-proprjetajiet u l-prenotazzjonijiet. Agħżel il-portali li tixtieq tgħaqqad:",
-      "connectExisting": "Għaqqad il-portali issa",
-      "importHint": "L-assistent tal-konnessjoni (aċċess + immappjar tal-proprjetà) jinfetaħ inkorporat. Tista' tiftħu wkoll aktar tard taħt „Channel Manager”.",
-      "newIntro": "Il-proprjetà tiegħek inħolqot. Hekk kif tgħaqqad il-kanali, aħna nqassmu awtomatikament id-disponibbiltà u l-prezzijiet lil Booking.com, Airbnb u oħrajn — u l-prenotazzjonijiet jaslu direttament fil-kalendarju tiegħek.",
-      "connectNew": "Għaqqad il-kanali",
-      "finish": "Temm is-setup"
-    },
     "done": {
-      "title": "Lest — in-negozju tiegħek huwa lest!",
-      "text": "Issa tista' toħloq aktar proprjetajiet, tirfina l-prezzijiet u tiffinalizza l-konnessjonijiet tal-kanali tiegħek fid-dashboard.",
+      "title": "Lest — in-negozju tiegħek inħoloq!",
+      "text": "Imbagħad oħloq l-akkomodazzjonijiet fis-sezzjoni Akkomodazzjonijiet, issettja l-prezzijiet u qabbad il-kanali tal-prenotazzjoni.",
       "toDashboard": "Mur fid-dashboard"
     }
   },

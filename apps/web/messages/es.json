@@ -13,7 +13,7 @@
   "onboarding": {
     "welcome": {
       "title": "Bienvenido a myNextDays",
-      "text": "En unos pocos pasos tu negocio estará listo para empezar. Creamos tu primer alojamiento, fijamos un precio y conectamos tus canales de reserva.",
+      "text": "Primero creamos tu empresa. Estos datos crean tu cuenta — los alojamientos los configuras después en el área Alojamientos.",
       "cta": "Empecemos"
     },
     "company": {
@@ -51,44 +51,9 @@
         "vatOrTax": "NIF o número fiscal"
       }
     },
-    "branch": {
-      "title": "¿Ya estás activo en portales de reserva?",
-      "text": "Si ya alquilas en Booking.com o Airbnb, por ejemplo, conectamos tus cuentas existentes e importamos tus alojamientos y reservas — no tienes que crear nada dos veces.",
-      "yesTitle": "Sí, ya lo estoy",
-      "yesDesc": "Conectar e importar portales existentes",
-      "noTitle": "No, empiezo desde cero",
-      "noDesc": "Crear un alojamiento nuevo y conectar canales desde cero",
-      "whichPortals": "¿Qué portales usas ya?"
-    },
-    "object": {
-      "title": "Tu primer alojamiento",
-      "text": "Crea tu primer alojamiento para alquilar. Podrás añadir los detalles (dirección, fotos, equipamiento) más tarde.",
-      "name": "Nombre del alojamiento",
-      "namePlaceholder": "p. ej. Habitación doble con vistas al lago",
-      "maxGuests": "Número máximo de huéspedes",
-      "creating": "Creando …",
-      "create": "Crear alojamiento"
-    },
-    "price": {
-      "title": "Precio base por noche",
-      "text": "Fija un precio inicial. Podrás ajustar los precios por temporada y por canal más tarde.",
-      "perNight": "Precio por noche (€)",
-      "pricePlaceholder": "p. ej. 120"
-    },
-    "channels": {
-      "titleImport": "Conectar e importar portales",
-      "titleConnect": "Conectar canales de reserva",
-      "notReady": "La conexión de canales se está preparando para tu negocio. Puedes completarla en cualquier momento más tarde en «Channel Manager».",
-      "importIntro": "Conectamos tus cuentas existentes e importamos alojamientos y reservas. Elige los portales que quieres conectar:",
-      "connectExisting": "Conectar portales ahora",
-      "importHint": "El asistente de conexión (acceso + asignación de alojamientos) se abre integrado. También puedes abrirlo más tarde en «Channel Manager».",
-      "newIntro": "Tu alojamiento está creado. En cuanto conectes canales, distribuiremos automáticamente la disponibilidad y los precios en Booking.com, Airbnb y otros — y las reservas llegan directamente a tu calendario.",
-      "connectNew": "Conectar canales",
-      "finish": "Finalizar configuración"
-    },
     "done": {
-      "title": "¡Listo — tu negocio está preparado para empezar!",
-      "text": "Ahora puedes crear más alojamientos, ajustar los precios y finalizar la conexión de tus canales en el panel.",
+      "title": "¡Listo — tu empresa ha sido creada!",
+      "text": "A continuación, crea tus alojamientos en el área Alojamientos, define precios y conecta tus canales de reserva.",
       "toDashboard": "Ir al panel"
     }
   },
