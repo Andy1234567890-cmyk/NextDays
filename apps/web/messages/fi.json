@@ -5,7 +5,10 @@
     "back": "Takaisin",
     "next": "Seuraava",
     "loading": "Ladataan …",
-    "language": "Kieli"
+    "language": "Kieli",
+    "overview": "Yleiskatsaus",
+    "notifications": "Ilmoitukset",
+    "stepOf": "Vaihe {current}/{total}"
   },
   "onboarding": {
     "welcome": {
@@ -88,5 +91,43 @@
       "text": "Voit nyt luoda lisää kohteita, hienosäätää hintoja ja viimeistellä kanavayhteytesi koontinäytössä.",
       "toDashboard": "Koontinäyttöön"
     }
+  },
+  "countries": {
+    "DE": "Saksa",
+    "AT": "Itävalta",
+    "CH": "Sveitsi",
+    "BE": "Belgia",
+    "BG": "Bulgaria",
+    "HR": "Kroatia",
+    "CY": "Kypros",
+    "CZ": "Tšekki",
+    "DK": "Tanska",
+    "EE": "Viro",
+    "FI": "Suomi",
+    "FR": "Ranska",
+    "GR": "Kreikka",
+    "HU": "Unkari",
+    "IE": "Irlanti",
+    "IT": "Italia",
+    "LV": "Latvia",
+    "LT": "Liettua",
+    "LU": "Luxemburg",
+    "MT": "Malta",
+    "NL": "Alankomaat",
+    "PL": "Puola",
+    "PT": "Portugali",
+    "RO": "Romania",
+    "SK": "Slovakia",
+    "SI": "Slovenia",
+    "ES": "Espanja",
+    "SE": "Ruotsi"
+  },
+  "legalForms": {
+    "Einzelunternehmen": "Yksityinen elinkeinonharjoittaja",
+    "Personengesellschaft": "Henkilöyhtiö",
+    "Kapitalgesellschaft": "Pääomayhtiö",
+    "Andere": "Muu",
+    "Sole Trader": "Yksityinen elinkeinonharjoittaja",
+    "Partnership": "Henkilöyhtiö"
   }
 }

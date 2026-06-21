@@ -5,7 +5,10 @@
     "back": "Tagasi",
     "next": "Edasi",
     "loading": "Laadimine …",
-    "language": "Keel"
+    "language": "Keel",
+    "overview": "Ülevaade",
+    "notifications": "Teavitused",
+    "stepOf": "Samm {current}/{total}"
   },
   "onboarding": {
     "welcome": {
@@ -88,5 +91,43 @@
       "text": "Nüüd saate juhtpaneelil luua rohkem objekte, hindu täpsustada ja oma kanaliühendused lõplikult vormistada.",
       "toDashboard": "Juhtpaneelile"
     }
+  },
+  "countries": {
+    "DE": "Saksamaa",
+    "AT": "Austria",
+    "CH": "Šveits",
+    "BE": "Belgia",
+    "BG": "Bulgaaria",
+    "HR": "Horvaatia",
+    "CY": "Küpros",
+    "CZ": "Tšehhi",
+    "DK": "Taani",
+    "EE": "Eesti",
+    "FI": "Soome",
+    "FR": "Prantsusmaa",
+    "GR": "Kreeka",
+    "HU": "Ungari",
+    "IE": "Iirimaa",
+    "IT": "Itaalia",
+    "LV": "Läti",
+    "LT": "Leedu",
+    "LU": "Luksemburg",
+    "MT": "Malta",
+    "NL": "Holland",
+    "PL": "Poola",
+    "PT": "Portugal",
+    "RO": "Rumeenia",
+    "SK": "Slovakkia",
+    "SI": "Sloveenia",
+    "ES": "Hispaania",
+    "SE": "Rootsi"
+  },
+  "legalForms": {
+    "Einzelunternehmen": "Füüsilisest isikust ettevõtja",
+    "Personengesellschaft": "Täisühing",
+    "Kapitalgesellschaft": "Kapitaliühing",
+    "Andere": "Muu",
+    "Sole Trader": "Füüsilisest isikust ettevõtja",
+    "Partnership": "Täisühing"
   }
 }

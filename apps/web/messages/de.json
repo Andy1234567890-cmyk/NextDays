@@ -5,7 +5,10 @@
     "back": "Zurück",
     "next": "Weiter",
     "loading": "Lädt …",
-    "language": "Sprache"
+    "language": "Sprache",
+    "overview": "Übersicht",
+    "notifications": "Benachrichtigungen",
+    "stepOf": "Schritt {current} von {total}"
   },
   "onboarding": {
     "welcome": {
@@ -88,5 +91,43 @@
       "text": "Du kannst jetzt im Dashboard weitere Objekte anlegen, Preise verfeinern und deine Kanäle final verbinden.",
       "toDashboard": "Zum Dashboard"
     }
+  },
+  "legalForms": {
+    "Einzelunternehmen": "Einzelunternehmen",
+    "Personengesellschaft": "Personengesellschaft",
+    "Kapitalgesellschaft": "Kapitalgesellschaft",
+    "Andere": "Andere",
+    "Sole Trader": "Einzelunternehmer",
+    "Partnership": "Personengesellschaft"
+  },
+  "countries": {
+    "DE": "Deutschland",
+    "AT": "Österreich",
+    "CH": "Schweiz",
+    "BE": "Belgien",
+    "BG": "Bulgarien",
+    "HR": "Kroatien",
+    "CY": "Zypern",
+    "CZ": "Tschechien",
+    "DK": "Dänemark",
+    "EE": "Estland",
+    "FI": "Finnland",
+    "FR": "Frankreich",
+    "GR": "Griechenland",
+    "HU": "Ungarn",
+    "IE": "Irland",
+    "IT": "Italien",
+    "LV": "Lettland",
+    "LT": "Litauen",
+    "LU": "Luxemburg",
+    "MT": "Malta",
+    "NL": "Niederlande",
+    "PL": "Polen",
+    "PT": "Portugal",
+    "RO": "Rumänien",
+    "SK": "Slowakei",
+    "SI": "Slowenien",
+    "ES": "Spanien",
+    "SE": "Schweden"
   }
 }

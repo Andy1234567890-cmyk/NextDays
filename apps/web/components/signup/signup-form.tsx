@@ -4,6 +4,7 @@
 // (FastAPI /auth/register → Tenant + Owner + Channel-Manager-Group) und leitet
 // nach Erfolg in den Setup-Assistenten (/onboarding).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -14,6 +15,7 @@ import { LAENDER, currencyForCountry } from "@/lib/laender";
 
 export function SignupForm({ onBack }: { onBack: () => void }) {
   const router = useRouter();
+  const tCountry = useTranslations("countries");
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
@@ -134,7 +136,7 @@ export function SignupForm({ onBack }: { onBack: () => void }) {
         >
           {LAENDER.map((l) => (
             <option key={l.code} value={l.code}>
-              {l.label} ({l.currency})
+              {tCountry(l.code)} ({l.currency})
             </option>
           ))}
         </select>

@@ -5,7 +5,10 @@
     "back": "Lura",
     "next": "Li jmiss",
     "loading": "Qed jitlgħa …",
-    "language": "Lingwa"
+    "language": "Lingwa",
+    "overview": "Ħarsa ġenerali",
+    "notifications": "Notifiki",
+    "stepOf": "Pass {current} minn {total}"
   },
   "onboarding": {
     "welcome": {
@@ -88,5 +91,43 @@
       "text": "Issa tista' toħloq aktar proprjetajiet, tirfina l-prezzijiet u tiffinalizza l-konnessjonijiet tal-kanali tiegħek fid-dashboard.",
       "toDashboard": "Mur fid-dashboard"
     }
+  },
+  "countries": {
+    "DE": "il-Ġermanja",
+    "AT": "l-Awstrija",
+    "CH": "l-Iżvizzera",
+    "BE": "il-Belġju",
+    "BG": "il-Bulgarija",
+    "HR": "il-Kroazja",
+    "CY": "Ċipru",
+    "CZ": "ir-Repubblika Ċeka",
+    "DK": "id-Danimarka",
+    "EE": "l-Estonja",
+    "FI": "il-Finlandja",
+    "FR": "Franza",
+    "GR": "il-Greċja",
+    "HU": "l-Ungerija",
+    "IE": "l-Irlanda",
+    "IT": "l-Italja",
+    "LV": "il-Latvja",
+    "LT": "il-Litwanja",
+    "LU": "il-Lussemburgu",
+    "MT": "Malta",
+    "NL": "in-Netherlands",
+    "PL": "il-Polonja",
+    "PT": "il-Portugall",
+    "RO": "ir-Rumanija",
+    "SK": "is-Slovakkja",
+    "SI": "is-Slovenja",
+    "ES": "Spanja",
+    "SE": "l-Iżvezja"
+  },
+  "legalForms": {
+    "Einzelunternehmen": "Negozjant uniku",
+    "Personengesellschaft": "Sħubija",
+    "Kapitalgesellschaft": "Korporazzjoni",
+    "Andere": "Oħra",
+    "Sole Trader": "Negozjant uniku",
+    "Partnership": "Sħubija"
   }
 }

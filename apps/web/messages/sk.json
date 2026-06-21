@@ -5,7 +5,10 @@
     "back": "Späť",
     "next": "Ďalej",
     "loading": "Načítava sa …",
-    "language": "Jazyk"
+    "language": "Jazyk",
+    "overview": "Prehľad",
+    "notifications": "Oznámenia",
+    "stepOf": "Krok {current} z {total}"
   },
   "onboarding": {
     "welcome": {
@@ -88,5 +91,43 @@
       "text": "Teraz môžete v dashboarde vytvárať ďalšie objekty, doladiť ceny a finálne prepojiť svoje kanály.",
       "toDashboard": "Prejsť na dashboard"
     }
+  },
+  "countries": {
+    "DE": "Nemecko",
+    "AT": "Rakúsko",
+    "CH": "Švajčiarsko",
+    "BE": "Belgicko",
+    "BG": "Bulharsko",
+    "HR": "Chorvátsko",
+    "CY": "Cyprus",
+    "CZ": "Česko",
+    "DK": "Dánsko",
+    "EE": "Estónsko",
+    "FI": "Fínsko",
+    "FR": "Francúzsko",
+    "GR": "Grécko",
+    "HU": "Maďarsko",
+    "IE": "Írsko",
+    "IT": "Taliansko",
+    "LV": "Lotyšsko",
+    "LT": "Litva",
+    "LU": "Luxembursko",
+    "MT": "Malta",
+    "NL": "Holandsko",
+    "PL": "Poľsko",
+    "PT": "Portugalsko",
+    "RO": "Rumunsko",
+    "SK": "Slovensko",
+    "SI": "Slovinsko",
+    "ES": "Španielsko",
+    "SE": "Švédsko"
+  },
+  "legalForms": {
+    "Einzelunternehmen": "Živnostník",
+    "Personengesellschaft": "Osobná spoločnosť",
+    "Kapitalgesellschaft": "Kapitálová spoločnosť",
+    "Andere": "Iné",
+    "Sole Trader": "Živnostník",
+    "Partnership": "Osobná spoločnosť"
   }
 }

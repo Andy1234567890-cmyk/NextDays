@@ -5,7 +5,10 @@
     "back": "Vissza",
     "next": "Tovább",
     "loading": "Betöltés …",
-    "language": "Nyelv"
+    "language": "Nyelv",
+    "overview": "Áttekintés",
+    "notifications": "Értesítések",
+    "stepOf": "{total}. lépésből {current}."
   },
   "onboarding": {
     "welcome": {
@@ -88,5 +91,43 @@
       "text": "Mostantól a vezérlőpulton további szálláshelyeket hozhat létre, finomíthatja az árakat és véglegesítheti a csatornakapcsolatait.",
       "toDashboard": "Ugrás a vezérlőpultra"
     }
+  },
+  "countries": {
+    "DE": "Németország",
+    "AT": "Ausztria",
+    "CH": "Svájc",
+    "BE": "Belgium",
+    "BG": "Bulgária",
+    "HR": "Horvátország",
+    "CY": "Ciprus",
+    "CZ": "Csehország",
+    "DK": "Dánia",
+    "EE": "Észtország",
+    "FI": "Finnország",
+    "FR": "Franciaország",
+    "GR": "Görögország",
+    "HU": "Magyarország",
+    "IE": "Írország",
+    "IT": "Olaszország",
+    "LV": "Lettország",
+    "LT": "Litvánia",
+    "LU": "Luxemburg",
+    "MT": "Málta",
+    "NL": "Hollandia",
+    "PL": "Lengyelország",
+    "PT": "Portugália",
+    "RO": "Románia",
+    "SK": "Szlovákia",
+    "SI": "Szlovénia",
+    "ES": "Spanyolország",
+    "SE": "Svédország"
+  },
+  "legalForms": {
+    "Einzelunternehmen": "Egyéni vállalkozás",
+    "Personengesellschaft": "Személyegyesítő társaság",
+    "Kapitalgesellschaft": "Tőkeegyesítő társaság",
+    "Andere": "Egyéb",
+    "Sole Trader": "Egyéni vállalkozó",
+    "Partnership": "Személyegyesítő társaság"
   }
 }

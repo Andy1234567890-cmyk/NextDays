@@ -5,7 +5,10 @@
     "back": "Nazaj",
     "next": "Naprej",
     "loading": "Nalaganje …",
-    "language": "Jezik"
+    "language": "Jezik",
+    "overview": "Pregled",
+    "notifications": "Obvestila",
+    "stepOf": "Korak {current} od {total}"
   },
   "onboarding": {
     "welcome": {
@@ -88,5 +91,43 @@
       "text": "Zdaj lahko v nadzorni plošči ustvarjate dodatne enote, izpopolnite cene in dokončno povežete svoje kanale.",
       "toDashboard": "Na nadzorno ploščo"
     }
+  },
+  "countries": {
+    "DE": "Nemčija",
+    "AT": "Avstrija",
+    "CH": "Švica",
+    "BE": "Belgija",
+    "BG": "Bolgarija",
+    "HR": "Hrvaška",
+    "CY": "Ciper",
+    "CZ": "Češka",
+    "DK": "Danska",
+    "EE": "Estonija",
+    "FI": "Finska",
+    "FR": "Francija",
+    "GR": "Grčija",
+    "HU": "Madžarska",
+    "IE": "Irska",
+    "IT": "Italija",
+    "LV": "Latvija",
+    "LT": "Litva",
+    "LU": "Luksemburg",
+    "MT": "Malta",
+    "NL": "Nizozemska",
+    "PL": "Poljska",
+    "PT": "Portugalska",
+    "RO": "Romunija",
+    "SK": "Slovaška",
+    "SI": "Slovenija",
+    "ES": "Španija",
+    "SE": "Švedska"
+  },
+  "legalForms": {
+    "Einzelunternehmen": "Samostojni podjetnik",
+    "Personengesellschaft": "Osebna družba",
+    "Kapitalgesellschaft": "Kapitalska družba",
+    "Andere": "Drugo",
+    "Sole Trader": "Samostojni podjetnik",
+    "Partnership": "Osebna družba"
   }
 }

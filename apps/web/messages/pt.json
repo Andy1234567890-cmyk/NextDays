@@ -5,7 +5,10 @@
     "back": "Voltar",
     "next": "Seguinte",
     "loading": "A carregar …",
-    "language": "Idioma"
+    "language": "Idioma",
+    "overview": "Visão geral",
+    "notifications": "Notificações",
+    "stepOf": "Passo {current} de {total}"
   },
   "onboarding": {
     "welcome": {
@@ -88,5 +91,43 @@
       "text": "Agora podes criar mais alojamentos, refinar os preços e finalizar a ligação dos teus canais no painel.",
       "toDashboard": "Ir para o painel"
     }
+  },
+  "countries": {
+    "DE": "Alemanha",
+    "AT": "Áustria",
+    "CH": "Suíça",
+    "BE": "Bélgica",
+    "BG": "Bulgária",
+    "HR": "Croácia",
+    "CY": "Chipre",
+    "CZ": "Tchéquia",
+    "DK": "Dinamarca",
+    "EE": "Estônia",
+    "FI": "Finlândia",
+    "FR": "França",
+    "GR": "Grécia",
+    "HU": "Hungria",
+    "IE": "Irlanda",
+    "IT": "Itália",
+    "LV": "Letônia",
+    "LT": "Lituânia",
+    "LU": "Luxemburgo",
+    "MT": "Malta",
+    "NL": "Países Baixos",
+    "PL": "Polônia",
+    "PT": "Portugal",
+    "RO": "Romênia",
+    "SK": "Eslováquia",
+    "SI": "Eslovênia",
+    "ES": "Espanha",
+    "SE": "Suécia"
+  },
+  "legalForms": {
+    "Einzelunternehmen": "Empresário em nome individual",
+    "Personengesellschaft": "Sociedade de pessoas",
+    "Kapitalgesellschaft": "Sociedade de capitais",
+    "Andere": "Outra",
+    "Sole Trader": "Empresário em nome individual",
+    "Partnership": "Sociedade de pessoas"
   }
 }

@@ -5,7 +5,10 @@
     "back": "Tillbaka",
     "next": "Nästa",
     "loading": "Laddar …",
-    "language": "Språk"
+    "language": "Språk",
+    "overview": "Översikt",
+    "notifications": "Aviseringar",
+    "stepOf": "Steg {current} av {total}"
   },
   "onboarding": {
     "welcome": {
@@ -88,5 +91,43 @@
       "text": "Nu kan du skapa fler objekt, finjustera priser och slutföra dina kanalkopplingar i instrumentpanelen.",
       "toDashboard": "Till instrumentpanelen"
     }
+  },
+  "countries": {
+    "DE": "Tyskland",
+    "AT": "Österrike",
+    "CH": "Schweiz",
+    "BE": "Belgien",
+    "BG": "Bulgarien",
+    "HR": "Kroatien",
+    "CY": "Cypern",
+    "CZ": "Tjeckien",
+    "DK": "Danmark",
+    "EE": "Estland",
+    "FI": "Finland",
+    "FR": "Frankrike",
+    "GR": "Grekland",
+    "HU": "Ungern",
+    "IE": "Irland",
+    "IT": "Italien",
+    "LV": "Lettland",
+    "LT": "Litauen",
+    "LU": "Luxemburg",
+    "MT": "Malta",
+    "NL": "Nederländerna",
+    "PL": "Polen",
+    "PT": "Portugal",
+    "RO": "Rumänien",
+    "SK": "Slovakien",
+    "SI": "Slovenien",
+    "ES": "Spanien",
+    "SE": "Sverige"
+  },
+  "legalForms": {
+    "Einzelunternehmen": "Enskild firma",
+    "Personengesellschaft": "Handelsbolag",
+    "Kapitalgesellschaft": "Kapitalbolag",
+    "Andere": "Annat",
+    "Sole Trader": "Enskild firma",
+    "Partnership": "Handelsbolag"
   }
 }

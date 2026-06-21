@@ -5,7 +5,10 @@
     "back": "Atgal",
     "next": "Toliau",
     "loading": "Įkeliama …",
-    "language": "Kalba"
+    "language": "Kalba",
+    "overview": "Apžvalga",
+    "notifications": "Pranešimai",
+    "stepOf": "{current} žingsnis iš {total}"
   },
   "onboarding": {
     "welcome": {
@@ -88,5 +91,43 @@
       "text": "Dabar valdymo skydelyje galite sukurti daugiau objektų, tikslinti kainas ir galutinai prijungti savo kanalus.",
       "toDashboard": "Į valdymo skydelį"
     }
+  },
+  "countries": {
+    "DE": "Vokietija",
+    "AT": "Austrija",
+    "CH": "Šveicarija",
+    "BE": "Belgija",
+    "BG": "Bulgarija",
+    "HR": "Kroatija",
+    "CY": "Kipras",
+    "CZ": "Čekija",
+    "DK": "Danija",
+    "EE": "Estija",
+    "FI": "Suomija",
+    "FR": "Prancūzija",
+    "GR": "Graikija",
+    "HU": "Vengrija",
+    "IE": "Airija",
+    "IT": "Italija",
+    "LV": "Latvija",
+    "LT": "Lietuva",
+    "LU": "Liuksemburgas",
+    "MT": "Malta",
+    "NL": "Nyderlandai",
+    "PL": "Lenkija",
+    "PT": "Portugalija",
+    "RO": "Rumunija",
+    "SK": "Slovakija",
+    "SI": "Slovėnija",
+    "ES": "Ispanija",
+    "SE": "Švedija"
+  },
+  "legalForms": {
+    "Einzelunternehmen": "Individuali veikla",
+    "Personengesellschaft": "Ūkinė bendrija",
+    "Kapitalgesellschaft": "Kapitalo bendrovė",
+    "Andere": "Kita",
+    "Sole Trader": "Individuali veikla",
+    "Partnership": "Ūkinė bendrija"
   }
 }

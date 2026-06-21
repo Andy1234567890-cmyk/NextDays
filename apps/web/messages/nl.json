@@ -5,7 +5,10 @@
     "back": "Terug",
     "next": "Volgende",
     "loading": "Laden …",
-    "language": "Taal"
+    "language": "Taal",
+    "overview": "Overzicht",
+    "notifications": "Meldingen",
+    "stepOf": "Stap {current} van {total}"
   },
   "onboarding": {
     "welcome": {
@@ -88,5 +91,43 @@
       "text": "Je kunt nu in het dashboard meer accommodaties aanmaken, prijzen verfijnen en je kanalen definitief koppelen.",
       "toDashboard": "Naar dashboard"
     }
+  },
+  "countries": {
+    "DE": "Duitsland",
+    "AT": "Oostenrijk",
+    "CH": "Zwitserland",
+    "BE": "België",
+    "BG": "Bulgarije",
+    "HR": "Kroatië",
+    "CY": "Cyprus",
+    "CZ": "Tsjechië",
+    "DK": "Denemarken",
+    "EE": "Estland",
+    "FI": "Finland",
+    "FR": "Frankrijk",
+    "GR": "Griekenland",
+    "HU": "Hongarije",
+    "IE": "Ierland",
+    "IT": "Italië",
+    "LV": "Letland",
+    "LT": "Litouwen",
+    "LU": "Luxemburg",
+    "MT": "Malta",
+    "NL": "Nederland",
+    "PL": "Polen",
+    "PT": "Portugal",
+    "RO": "Roemenië",
+    "SK": "Slowakije",
+    "SI": "Slovenië",
+    "ES": "Spanje",
+    "SE": "Zweden"
+  },
+  "legalForms": {
+    "Einzelunternehmen": "Eenmanszaak",
+    "Personengesellschaft": "Personenvennootschap",
+    "Kapitalgesellschaft": "Kapitaalvennootschap",
+    "Andere": "Anders",
+    "Sole Trader": "Eenmanszaak",
+    "Partnership": "Personenvennootschap"
   }
 }

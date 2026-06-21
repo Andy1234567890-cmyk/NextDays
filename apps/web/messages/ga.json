@@ -5,7 +5,10 @@
     "back": "Ar ais",
     "next": "Ar aghaidh",
     "loading": "Á lódáil …",
-    "language": "Teanga"
+    "language": "Teanga",
+    "overview": "Forléargas",
+    "notifications": "Fógraí",
+    "stepOf": "Céim {current} as {total}"
   },
   "onboarding": {
     "welcome": {
@@ -88,5 +91,43 @@
       "text": "Is féidir leat tuilleadh maoine a chruthú, praghsanna a bheachtú agus do naisc chainéil a chríochnú sa deais anois.",
       "toDashboard": "Chuig an deais"
     }
+  },
+  "countries": {
+    "DE": "an Ghearmáin",
+    "AT": "an Ostair",
+    "CH": "an Eilvéis",
+    "BE": "an Bheilg",
+    "BG": "an Bhulgáir",
+    "HR": "an Chróit",
+    "CY": "an Chipir",
+    "CZ": "an tSeicia",
+    "DK": "an Danmhairg",
+    "EE": "an Eastóin",
+    "FI": "an Fhionlainn",
+    "FR": "an Fhrainc",
+    "GR": "an Ghréig",
+    "HU": "an Ungáir",
+    "IE": "Éire",
+    "IT": "an Iodáil",
+    "LV": "an Laitvia",
+    "LT": "an Liotuáin",
+    "LU": "Lucsamburg",
+    "MT": "Málta",
+    "NL": "an Ísiltír",
+    "PL": "an Pholainn",
+    "PT": "an Phortaingéil",
+    "RO": "an Rómáin",
+    "SK": "an tSlóvaic",
+    "SI": "an tSlóivéin",
+    "ES": "an Spáinn",
+    "SE": "an tSualainn"
+  },
+  "legalForms": {
+    "Einzelunternehmen": "Trádálaí aonair",
+    "Personengesellschaft": "Comhpháirtíocht",
+    "Kapitalgesellschaft": "Corparáid",
+    "Andere": "Eile",
+    "Sole Trader": "Trádálaí aonair",
+    "Partnership": "Comhpháirtíocht"
   }
 }

@@ -5,7 +5,10 @@
     "back": "Tilbage",
     "next": "Næste",
     "loading": "Indlæser …",
-    "language": "Sprog"
+    "language": "Sprog",
+    "overview": "Oversigt",
+    "notifications": "Notifikationer",
+    "stepOf": "Trin {current} af {total}"
   },
   "onboarding": {
     "welcome": {
@@ -88,5 +91,43 @@
       "text": "Du kan nu oprette flere lejemål, finjustere priser og færdiggøre dine kanalforbindelser i dashboardet.",
       "toDashboard": "Til dashboard"
     }
+  },
+  "countries": {
+    "DE": "Tyskland",
+    "AT": "Østrig",
+    "CH": "Schweiz",
+    "BE": "Belgien",
+    "BG": "Bulgarien",
+    "HR": "Kroatien",
+    "CY": "Cypern",
+    "CZ": "Tjekkiet",
+    "DK": "Danmark",
+    "EE": "Estland",
+    "FI": "Finland",
+    "FR": "Frankrig",
+    "GR": "Grækenland",
+    "HU": "Ungarn",
+    "IE": "Irland",
+    "IT": "Italien",
+    "LV": "Letland",
+    "LT": "Litauen",
+    "LU": "Luxembourg",
+    "MT": "Malta",
+    "NL": "Nederlandene",
+    "PL": "Polen",
+    "PT": "Portugal",
+    "RO": "Rumænien",
+    "SK": "Slovakiet",
+    "SI": "Slovenien",
+    "ES": "Spanien",
+    "SE": "Sverige"
+  },
+  "legalForms": {
+    "Einzelunternehmen": "Enkeltmandsvirksomhed",
+    "Personengesellschaft": "Interessentskab",
+    "Kapitalgesellschaft": "Kapitalselskab",
+    "Andere": "Andet",
+    "Sole Trader": "Enkeltmandsvirksomhed",
+    "Partnership": "Interessentskab"
   }
 }

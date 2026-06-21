@@ -4,42 +4,43 @@
 // erweiterbar; hier bewusst auf DACH+EU+CH begrenzt (siehe Onboarding-Plan).
 
 export type Land = {
-  code: string; // ISO-3166-1 alpha-2
-  label: string;
+  code: string; // ISO-3166-1 alpha-2 — Label kommt aus i18n (countries.<code>)
   currency: string; // ISO-4217
 };
 
 // DACH bewusst zuerst (häufigste Kunden), danach übrige EU alphabetisch.
+// Die Anzeigenamen liegen in den Sprachdateien (Namespace "countries"); hier nur
+// Code + Währung + Reihenfolge.
 export const LAENDER: readonly Land[] = [
-  { code: "DE", label: "Deutschland", currency: "EUR" },
-  { code: "AT", label: "Österreich", currency: "EUR" },
-  { code: "CH", label: "Schweiz", currency: "CHF" },
+  { code: "DE", currency: "EUR" },
+  { code: "AT", currency: "EUR" },
+  { code: "CH", currency: "CHF" },
   // übrige EU
-  { code: "BE", label: "Belgien", currency: "EUR" },
-  { code: "BG", label: "Bulgarien", currency: "BGN" },
-  { code: "HR", label: "Kroatien", currency: "EUR" },
-  { code: "CY", label: "Zypern", currency: "EUR" },
-  { code: "CZ", label: "Tschechien", currency: "CZK" },
-  { code: "DK", label: "Dänemark", currency: "DKK" },
-  { code: "EE", label: "Estland", currency: "EUR" },
-  { code: "FI", label: "Finnland", currency: "EUR" },
-  { code: "FR", label: "Frankreich", currency: "EUR" },
-  { code: "GR", label: "Griechenland", currency: "EUR" },
-  { code: "HU", label: "Ungarn", currency: "HUF" },
-  { code: "IE", label: "Irland", currency: "EUR" },
-  { code: "IT", label: "Italien", currency: "EUR" },
-  { code: "LV", label: "Lettland", currency: "EUR" },
-  { code: "LT", label: "Litauen", currency: "EUR" },
-  { code: "LU", label: "Luxemburg", currency: "EUR" },
-  { code: "MT", label: "Malta", currency: "EUR" },
-  { code: "NL", label: "Niederlande", currency: "EUR" },
-  { code: "PL", label: "Polen", currency: "PLN" },
-  { code: "PT", label: "Portugal", currency: "EUR" },
-  { code: "RO", label: "Rumänien", currency: "RON" },
-  { code: "SK", label: "Slowakei", currency: "EUR" },
-  { code: "SI", label: "Slowenien", currency: "EUR" },
-  { code: "ES", label: "Spanien", currency: "EUR" },
-  { code: "SE", label: "Schweden", currency: "SEK" },
+  { code: "BE", currency: "EUR" },
+  { code: "BG", currency: "BGN" },
+  { code: "HR", currency: "EUR" },
+  { code: "CY", currency: "EUR" },
+  { code: "CZ", currency: "CZK" },
+  { code: "DK", currency: "DKK" },
+  { code: "EE", currency: "EUR" },
+  { code: "FI", currency: "EUR" },
+  { code: "FR", currency: "EUR" },
+  { code: "GR", currency: "EUR" },
+  { code: "HU", currency: "HUF" },
+  { code: "IE", currency: "EUR" },
+  { code: "IT", currency: "EUR" },
+  { code: "LV", currency: "EUR" },
+  { code: "LT", currency: "EUR" },
+  { code: "LU", currency: "EUR" },
+  { code: "MT", currency: "EUR" },
+  { code: "NL", currency: "EUR" },
+  { code: "PL", currency: "PLN" },
+  { code: "PT", currency: "EUR" },
+  { code: "RO", currency: "RON" },
+  { code: "SK", currency: "EUR" },
+  { code: "SI", currency: "EUR" },
+  { code: "ES", currency: "EUR" },
+  { code: "SE", currency: "SEK" },
 ];
 
 export function currencyForCountry(code: string): string {
@@ -111,6 +112,28 @@ const RECHTSFORMEN_NACH_LAND: Readonly<Record<string, readonly string[]>> = {
 // Rechtsformen für ein Land (Fallback, falls Land nicht gelistet).
 export function rechtsformenFuerLand(code: string): readonly string[] {
   return RECHTSFORMEN_NACH_LAND[code] ?? RECHTSFORMEN_FALLBACK;
+}
+
+// Generische (übersetzbare) Rechtsform-Begriffe. Landesspezifische Eigennamen
+// (GmbH, SARL, S.r.l. …) bleiben in jeder Sprache gleich und werden NICHT
+// übersetzt — nur diese generischen Labels haben einen i18n-Key (legalForms.*).
+const UEBERSETZBARE_RECHTSFORMEN = new Set<string>([
+  "Einzelunternehmen",
+  "Personengesellschaft",
+  "Kapitalgesellschaft",
+  "Andere",
+  "Sole Trader",
+  "Partnership",
+]);
+
+// Übersetztes Anzeige-Label für eine Rechtsform. Der gespeicherte Wert bleibt
+// unverändert (Eigenname/Originalstring); nur generische Begriffe werden über
+// den übergebenen Übersetzer (Namespace "legalForms") lokalisiert.
+export function rechtsformLabel(
+  form: string,
+  t: (key: string) => string,
+): string {
+  return UEBERSETZBARE_RECHTSFORMEN.has(form) ? t(form) : form;
 }
 
 // Kleinunternehmer-/USt-Befreiungsregelung je Land. Der Begriff ist national und

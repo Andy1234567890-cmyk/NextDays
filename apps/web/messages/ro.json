@@ -5,7 +5,10 @@
     "back": "Înapoi",
     "next": "Continuă",
     "loading": "Se încarcă …",
-    "language": "Limbă"
+    "language": "Limbă",
+    "overview": "Prezentare generală",
+    "notifications": "Notificări",
+    "stepOf": "Pasul {current} din {total}"
   },
   "onboarding": {
     "welcome": {
@@ -88,5 +91,43 @@
       "text": "Acum poți crea mai multe proprietăți, ajusta prețurile și finaliza conectarea canalelor din panou.",
       "toDashboard": "Mergi la panou"
     }
+  },
+  "countries": {
+    "DE": "Germania",
+    "AT": "Austria",
+    "CH": "Elveția",
+    "BE": "Belgia",
+    "BG": "Bulgaria",
+    "HR": "Croația",
+    "CY": "Cipru",
+    "CZ": "Cehia",
+    "DK": "Danemarca",
+    "EE": "Estonia",
+    "FI": "Finlanda",
+    "FR": "Franța",
+    "GR": "Grecia",
+    "HU": "Ungaria",
+    "IE": "Irlanda",
+    "IT": "Italia",
+    "LV": "Letonia",
+    "LT": "Lituania",
+    "LU": "Luxemburg",
+    "MT": "Malta",
+    "NL": "Țările de Jos",
+    "PL": "Polonia",
+    "PT": "Portugalia",
+    "RO": "România",
+    "SK": "Slovacia",
+    "SI": "Slovenia",
+    "ES": "Spania",
+    "SE": "Suedia"
+  },
+  "legalForms": {
+    "Einzelunternehmen": "Întreprindere individuală",
+    "Personengesellschaft": "Societate de persoane",
+    "Kapitalgesellschaft": "Societate de capital",
+    "Andere": "Altele",
+    "Sole Trader": "Întreprindere individuală",
+    "Partnership": "Societate de persoane"
   }
 }

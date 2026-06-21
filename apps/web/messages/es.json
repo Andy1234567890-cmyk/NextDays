@@ -5,7 +5,10 @@
     "back": "Atrás",
     "next": "Siguiente",
     "loading": "Cargando …",
-    "language": "Idioma"
+    "language": "Idioma",
+    "overview": "Resumen",
+    "notifications": "Notificaciones",
+    "stepOf": "Paso {current} de {total}"
   },
   "onboarding": {
     "welcome": {
@@ -88,5 +91,43 @@
       "text": "Ahora puedes crear más alojamientos, ajustar los precios y finalizar la conexión de tus canales en el panel.",
       "toDashboard": "Ir al panel"
     }
+  },
+  "countries": {
+    "DE": "Alemania",
+    "AT": "Austria",
+    "CH": "Suiza",
+    "BE": "Bélgica",
+    "BG": "Bulgaria",
+    "HR": "Croacia",
+    "CY": "Chipre",
+    "CZ": "Chequia",
+    "DK": "Dinamarca",
+    "EE": "Estonia",
+    "FI": "Finlandia",
+    "FR": "Francia",
+    "GR": "Grecia",
+    "HU": "Hungría",
+    "IE": "Irlanda",
+    "IT": "Italia",
+    "LV": "Letonia",
+    "LT": "Lituania",
+    "LU": "Luxemburgo",
+    "MT": "Malta",
+    "NL": "Países Bajos",
+    "PL": "Polonia",
+    "PT": "Portugal",
+    "RO": "Rumanía",
+    "SK": "Eslovaquia",
+    "SI": "Eslovenia",
+    "ES": "España",
+    "SE": "Suecia"
+  },
+  "legalForms": {
+    "Einzelunternehmen": "Empresario individual",
+    "Personengesellschaft": "Sociedad personalista",
+    "Kapitalgesellschaft": "Sociedad de capital",
+    "Andere": "Otra",
+    "Sole Trader": "Empresario individual",
+    "Partnership": "Sociedad personalista"
   }
 }

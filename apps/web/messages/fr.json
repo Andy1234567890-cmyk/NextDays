@@ -5,7 +5,10 @@
     "back": "Retour",
     "next": "Suivant",
     "loading": "Chargement …",
-    "language": "Langue"
+    "language": "Langue",
+    "overview": "Aperçu",
+    "notifications": "Notifications",
+    "stepOf": "Étape {current} sur {total}"
   },
   "onboarding": {
     "welcome": {
@@ -88,5 +91,43 @@
       "text": "Vous pouvez maintenant créer d'autres hébergements, affiner les prix et finaliser la connexion de vos canaux dans le tableau de bord.",
       "toDashboard": "Aller au tableau de bord"
     }
+  },
+  "countries": {
+    "DE": "Allemagne",
+    "AT": "Autriche",
+    "CH": "Suisse",
+    "BE": "Belgique",
+    "BG": "Bulgarie",
+    "HR": "Croatie",
+    "CY": "Chypre",
+    "CZ": "Tchéquie",
+    "DK": "Danemark",
+    "EE": "Estonie",
+    "FI": "Finlande",
+    "FR": "France",
+    "GR": "Grèce",
+    "HU": "Hongrie",
+    "IE": "Irlande",
+    "IT": "Italie",
+    "LV": "Lettonie",
+    "LT": "Lituanie",
+    "LU": "Luxembourg",
+    "MT": "Malte",
+    "NL": "Pays-Bas",
+    "PL": "Pologne",
+    "PT": "Portugal",
+    "RO": "Roumanie",
+    "SK": "Slovaquie",
+    "SI": "Slovénie",
+    "ES": "Espagne",
+    "SE": "Suède"
+  },
+  "legalForms": {
+    "Einzelunternehmen": "Entreprise individuelle",
+    "Personengesellschaft": "Société de personnes",
+    "Kapitalgesellschaft": "Société de capitaux",
+    "Andere": "Autre",
+    "Sole Trader": "Entreprise individuelle",
+    "Partnership": "Société de personnes"
   }
 }

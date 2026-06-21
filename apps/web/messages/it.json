@@ -5,7 +5,10 @@
     "back": "Indietro",
     "next": "Avanti",
     "loading": "Caricamento …",
-    "language": "Lingua"
+    "language": "Lingua",
+    "overview": "Panoramica",
+    "notifications": "Notifiche",
+    "stepOf": "Passaggio {current} di {total}"
   },
   "onboarding": {
     "welcome": {
@@ -88,5 +91,43 @@
       "text": "Ora puoi creare altre strutture, perfezionare i prezzi e finalizzare il collegamento dei canali nella dashboard.",
       "toDashboard": "Vai alla dashboard"
     }
+  },
+  "countries": {
+    "DE": "Germania",
+    "AT": "Austria",
+    "CH": "Svizzera",
+    "BE": "Belgio",
+    "BG": "Bulgaria",
+    "HR": "Croazia",
+    "CY": "Cipro",
+    "CZ": "Cechia",
+    "DK": "Danimarca",
+    "EE": "Estonia",
+    "FI": "Finlandia",
+    "FR": "Francia",
+    "GR": "Grecia",
+    "HU": "Ungheria",
+    "IE": "Irlanda",
+    "IT": "Italia",
+    "LV": "Lettonia",
+    "LT": "Lituania",
+    "LU": "Lussemburgo",
+    "MT": "Malta",
+    "NL": "Paesi Bassi",
+    "PL": "Polonia",
+    "PT": "Portogallo",
+    "RO": "Romania",
+    "SK": "Slovacchia",
+    "SI": "Slovenia",
+    "ES": "Spagna",
+    "SE": "Svezia"
+  },
+  "legalForms": {
+    "Einzelunternehmen": "Ditta individuale",
+    "Personengesellschaft": "Società di persone",
+    "Kapitalgesellschaft": "Società di capitali",
+    "Andere": "Altro",
+    "Sole Trader": "Ditta individuale",
+    "Partnership": "Società di persone"
   }
 }

@@ -5,7 +5,10 @@
     "back": "Atpakaļ",
     "next": "Tālāk",
     "loading": "Notiek ielāde …",
-    "language": "Valoda"
+    "language": "Valoda",
+    "overview": "Pārskats",
+    "notifications": "Paziņojumi",
+    "stepOf": "{current}. solis no {total}"
   },
   "onboarding": {
     "welcome": {
@@ -88,5 +91,43 @@
       "text": "Tagad informācijas panelī varat izveidot vairāk objektu, precizēt cenas un galīgi savienot savus kanālus.",
       "toDashboard": "Uz informācijas paneli"
     }
+  },
+  "countries": {
+    "DE": "Vācija",
+    "AT": "Austrija",
+    "CH": "Šveice",
+    "BE": "Beļģija",
+    "BG": "Bulgārija",
+    "HR": "Horvātija",
+    "CY": "Kipra",
+    "CZ": "Čehija",
+    "DK": "Dānija",
+    "EE": "Igaunija",
+    "FI": "Somija",
+    "FR": "Francija",
+    "GR": "Grieķija",
+    "HU": "Ungārija",
+    "IE": "Īrija",
+    "IT": "Itālija",
+    "LV": "Latvija",
+    "LT": "Lietuva",
+    "LU": "Luksemburga",
+    "MT": "Malta",
+    "NL": "Nīderlande",
+    "PL": "Polija",
+    "PT": "Portugāle",
+    "RO": "Rumānija",
+    "SK": "Slovākija",
+    "SI": "Slovēnija",
+    "ES": "Spānija",
+    "SE": "Zviedrija"
+  },
+  "legalForms": {
+    "Einzelunternehmen": "Individuālais komersants",
+    "Personengesellschaft": "Personālsabiedrība",
+    "Kapitalgesellschaft": "Kapitālsabiedrība",
+    "Andere": "Cits",
+    "Sole Trader": "Individuālais komersants",
+    "Partnership": "Personālsabiedrība"
   }
 }

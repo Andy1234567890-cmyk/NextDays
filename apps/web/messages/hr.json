@@ -5,7 +5,10 @@
     "back": "Natrag",
     "next": "Dalje",
     "loading": "Učitavanje …",
-    "language": "Jezik"
+    "language": "Jezik",
+    "overview": "Pregled",
+    "notifications": "Obavijesti",
+    "stepOf": "Korak {current} od {total}"
   },
   "onboarding": {
     "welcome": {
@@ -88,5 +91,43 @@
       "text": "Sada možete na nadzornoj ploči stvarati dodatne objekte, dotjerati cijene i konačno povezati svoje kanale.",
       "toDashboard": "Na nadzornu ploču"
     }
+  },
+  "countries": {
+    "DE": "Njemačka",
+    "AT": "Austrija",
+    "CH": "Švicarska",
+    "BE": "Belgija",
+    "BG": "Bugarska",
+    "HR": "Hrvatska",
+    "CY": "Cipar",
+    "CZ": "Češka",
+    "DK": "Danska",
+    "EE": "Estonija",
+    "FI": "Finska",
+    "FR": "Francuska",
+    "GR": "Grčka",
+    "HU": "Mađarska",
+    "IE": "Irska",
+    "IT": "Italija",
+    "LV": "Latvija",
+    "LT": "Litva",
+    "LU": "Luksemburg",
+    "MT": "Malta",
+    "NL": "Nizozemska",
+    "PL": "Poljska",
+    "PT": "Portugal",
+    "RO": "Rumunjska",
+    "SK": "Slovačka",
+    "SI": "Slovenija",
+    "ES": "Španjolska",
+    "SE": "Švedska"
+  },
+  "legalForms": {
+    "Einzelunternehmen": "Obrt",
+    "Personengesellschaft": "Društvo osoba",
+    "Kapitalgesellschaft": "Društvo kapitala",
+    "Andere": "Ostalo",
+    "Sole Trader": "Obrt",
+    "Partnership": "Društvo osoba"
   }
 }

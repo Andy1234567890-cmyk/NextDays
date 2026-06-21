@@ -20,6 +20,7 @@ import { type FirmenProfil, saveFirmenProfil } from "@/lib/firmenprofil";
 import {
   LAENDER,
   kleinunternehmerLabelFuerLand,
+  rechtsformLabel,
   rechtsformenFuerLand,
   vatBeispielFuerLand,
 } from "@/lib/laender";
@@ -56,6 +57,8 @@ export function OnboardingWizard({
   const router = useRouter();
   const t = useTranslations("onboarding");
   const tc = useTranslations("common");
+  const tCountry = useTranslations("countries");
+  const tLegal = useTranslations("legalForms");
   const [pending, startTransition] = useTransition();
 
   // Startschritt anhand des gespeicherten Fortschritts wählen (Wiederaufnahme).
@@ -247,7 +250,7 @@ export function OnboardingWizard({
               >
                 {rechtsformen.map((r) => (
                   <option key={r} value={r}>
-                    {r}
+                    {rechtsformLabel(r, tLegal)}
                   </option>
                 ))}
               </NativeSelect>
@@ -285,7 +288,7 @@ export function OnboardingWizard({
               >
                 {LAENDER.map((l) => (
                   <option key={l.code} value={l.code}>
-                    {l.label}
+                    {tCountry(l.code)}
                   </option>
                 ))}
               </NativeSelect>
@@ -672,6 +675,7 @@ function Field({
 }
 
 function ProgressBar({ step }: { step: Step }) {
+  const tc = useTranslations("common");
   const order: Step[] = [
     "welcome",
     "company",
@@ -692,7 +696,7 @@ function ProgressBar({ step }: { step: Step }) {
         />
       </div>
       <p className="mt-1 text-xs text-muted-foreground">
-        Schritt {idx + 1} von {order.length}
+        {tc("stepOf", { current: idx + 1, total: order.length })}
       </p>
     </div>
   );
