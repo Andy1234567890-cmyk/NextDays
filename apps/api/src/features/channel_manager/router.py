@@ -138,18 +138,40 @@ def register_webhook(service: ChannelManagerServiceDep, ctx: _write) -> dict:
 
 
 # --- Webhook (ohne JWT; via geteiltes Secret abgesichert) --------------------
+@router.get("/webhook", include_in_schema=False)
+@router.head("/webhook", include_in_schema=False)
+async def channex_webhook_health() -> dict[str, str]:
+    """Health-/Erreichbarkeits-Ping. Channex (und Monitore) prüfen die URL per
+    GET/HEAD — wir antworten freundlich mit 200, sonst wertet Channex das
+    Anlegen als 'Operation failed'."""
+    return {"status": "ok"}
+
+
 @router.post("/webhook", include_in_schema=False)
 async def channex_webhook(
     request: Request,
     service: ChannelManagerServiceDep,
     x_channex_webhook_secret: Annotated[str | None, Header()] = None,
 ) -> dict[str, str]:
-    """Empfängt Channex-Webhooks. Verifiziert das geteilte Secret aus dem Header
-    (Channex signiert nicht via HMAC → eigenes Secret im Custom-Header)."""
+    """Empfängt Channex-Webhooks.
+
+    Channex sendet beim Einrichten/Validieren einen Test-Ping OHNE unseren
+    geheimen Header → solche leeren Pings beantworten wir mit 200 (sonst
+    'Operation failed' im Dashboard). ECHTE Events (mit 'event'-Feld) müssen
+    das geteilte Secret tragen (Channex signiert nicht via HMAC)."""
+    try:
+        payload = await request.json()
+    except Exception:
+        payload = {}
+
+    # Leerer Test-Ping (kein Event) → freundlich bestätigen, kein Secret nötig.
+    if not isinstance(payload, dict) or not payload.get("event"):
+        return {"status": "ok"}
+
+    # Echtes Event → Secret zwingend.
     expected = get_settings().channex_webhook_secret.get_secret_value()
     if not expected or x_channex_webhook_secret != expected:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiges Webhook-Secret."
         )
-    payload = await request.json()
     return service.ingest_webhook(payload)
