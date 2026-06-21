@@ -14,11 +14,13 @@ import { useState, useTransition } from "react";
 import { ChannelConnectButton } from "@/components/channel-manager/channel-connect-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { type FirmenProfil, saveFirmenProfil } from "@/lib/firmenprofil";
-import { LAENDER, RECHTSFORMEN } from "@/lib/laender";
+import { LAENDER, rechtsformenFuerLand } from "@/lib/laender";
 import type { OnboardingStatus } from "@/lib/onboarding";
 import { updateOnboarding } from "@/lib/onboarding";
 import { createProperty } from "@/lib/properties";
+import { cn } from "@/lib/utils";
 
 type Step =
   | "welcome"
@@ -80,6 +82,19 @@ export function OnboardingWizard({
 
   function setF<K extends keyof FirmenProfil>(key: K, value: FirmenProfil[K]) {
     setFirma((prev) => ({ ...prev, [key]: value }));
+  }
+
+  // Rechtsformen folgen dem Land; bei Landwechsel ungültige Form zurücksetzen.
+  const rechtsformen = rechtsformenFuerLand(firma.companyCountry ?? "DE");
+  function setLand(code: string) {
+    setFirma((prev) => {
+      const formen = rechtsformenFuerLand(code);
+      const legalForm =
+        prev.legalForm && formen.includes(prev.legalForm)
+          ? prev.legalForm
+          : formen[0];
+      return { ...prev, companyCountry: code, legalForm };
+    });
   }
 
   // Erstes Objekt
@@ -202,83 +217,76 @@ export function OnboardingWizard({
             Rechnungen und die Anbindung deiner Buchungsportale benötigt.
           </p>
 
-          {/* A — Firma */}
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Firmenname *">
+          {/* Durchgehendes 12-Spalten-Raster: alle Feldkanten fluchten. */}
+          <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-12">
+            {/* Firma */}
+            <Field className="sm:col-span-6" label="Firmenname *">
               <Input
                 value={firma.companyName ?? ""}
                 onChange={(e) => setF("companyName", e.target.value)}
                 placeholder="z. B. Villa zur Sonne GmbH"
               />
             </Field>
-            <Field label="Rechtsform *">
-              <select
+            <Field className="sm:col-span-6" label="Rechtsform *">
+              <NativeSelect
                 value={firma.legalForm ?? ""}
                 onChange={(e) => setF("legalForm", e.target.value)}
-                className="h-10 rounded-full border border-border bg-background px-4 text-sm"
               >
-                {RECHTSFORMEN.map((r) => (
+                {rechtsformen.map((r) => (
                   <option key={r} value={r}>
                     {r}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
-          </div>
 
-          {/* A — Adresse */}
-          <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
-            <Field label="Straße *">
+            {/* Adresse */}
+            <Field className="sm:col-span-8" label="Straße *">
               <Input
                 value={firma.companyStreet ?? ""}
                 onChange={(e) => setF("companyStreet", e.target.value)}
               />
             </Field>
-            <Field label="Hausnummer *">
+            <Field className="sm:col-span-4" label="Hausnummer *">
               <Input
                 value={firma.companyHouseNumber ?? ""}
                 onChange={(e) => setF("companyHouseNumber", e.target.value)}
               />
             </Field>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-[1fr_2fr_1.5fr]">
-            <Field label="PLZ *">
+            <Field className="sm:col-span-3" label="PLZ *">
               <Input
                 value={firma.companyPostalCode ?? ""}
                 onChange={(e) => setF("companyPostalCode", e.target.value)}
               />
             </Field>
-            <Field label="Ort *">
+            <Field className="sm:col-span-6" label="Ort *">
               <Input
                 value={firma.companyCity ?? ""}
                 onChange={(e) => setF("companyCity", e.target.value)}
               />
             </Field>
-            <Field label="Land *">
-              <select
+            <Field className="sm:col-span-3" label="Land *">
+              <NativeSelect
                 value={firma.companyCountry ?? "DE"}
-                onChange={(e) => setF("companyCountry", e.target.value)}
-                className="h-10 rounded-full border border-border bg-background px-4 text-sm"
+                onChange={(e) => setLand(e.target.value)}
               >
                 {LAENDER.map((l) => (
                   <option key={l.code} value={l.code}>
                     {l.label}
                   </option>
                 ))}
-              </select>
+              </NativeSelect>
             </Field>
-          </div>
 
-          {/* A — Kontakt */}
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="E-Mail *">
+            {/* Kontakt */}
+            <Field className="sm:col-span-6" label="E-Mail *">
               <Input
                 type="email"
                 value={firma.email ?? ""}
                 onChange={(e) => setF("email", e.target.value)}
               />
             </Field>
-            <Field label="Telefon *">
+            <Field className="sm:col-span-6" label="Telefon *">
               <Input
                 value={firma.phoneNumber ?? ""}
                 onChange={(e) => setF("phoneNumber", e.target.value)}
@@ -296,15 +304,15 @@ export function OnboardingWizard({
             Steuerbefreit (Kleinunternehmer) — keine USt-ID nötig
           </label>
           {!smallBusiness && (
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="USt-ID / VAT-ID">
+            <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-12">
+              <Field className="sm:col-span-6" label="USt-ID / VAT-ID">
                 <Input
                   value={firma.vatId ?? ""}
                   onChange={(e) => setF("vatId", e.target.value)}
                   placeholder="z. B. DE123456789"
                 />
               </Field>
-              <Field label="oder Steuernummer">
+              <Field className="sm:col-span-6" label="oder Steuernummer">
                 <Input
                   value={firma.taxNumber ?? ""}
                   onChange={(e) => setF("taxNumber", e.target.value)}
@@ -645,12 +653,14 @@ function ErrorText({ children }: { children: React.ReactNode }) {
 function Field({
   label,
   children,
+  className,
 }: {
   label: string;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className={cn("flex flex-col gap-1.5", className)}>
       <label className="text-sm font-medium">{label}</label>
       {children}
     </div>

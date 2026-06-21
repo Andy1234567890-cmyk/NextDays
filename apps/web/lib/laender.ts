@@ -46,16 +46,69 @@ export function currencyForCountry(code: string): string {
   return LAENDER.find((l) => l.code === code)?.currency ?? "EUR";
 }
 
-// Gängige Rechtsformen (länderneutral genug für DACH+EU; Freitext erlaubt).
-export const RECHTSFORMEN: readonly string[] = [
+// Rechtsformen je Land (ISO-3166-1 alpha-2). Pro Markt die gängigen Formen,
+// jeweils mit "Andere" als Auffang. Länder ohne eigenen Eintrag fallen auf
+// RECHTSFORMEN_FALLBACK zurück (generische, sprachneutrale Kategorien).
+export const RECHTSFORMEN_FALLBACK: readonly string[] = [
   "Einzelunternehmen",
-  "GbR",
-  "GmbH",
-  "UG (haftungsbeschränkt)",
-  "GmbH & Co. KG",
-  "OG / OHG",
-  "KG",
-  "e.K.",
-  "AG",
+  "Personengesellschaft",
+  "Kapitalgesellschaft",
   "Andere",
 ];
+
+const RECHTSFORMEN_NACH_LAND: Readonly<Record<string, readonly string[]>> = {
+  // DACH
+  DE: [
+    "Einzelunternehmen",
+    "GbR",
+    "GmbH",
+    "UG (haftungsbeschränkt)",
+    "GmbH & Co. KG",
+    "OHG",
+    "KG",
+    "e.K.",
+    "AG",
+    "Andere",
+  ],
+  AT: [
+    "Einzelunternehmen",
+    "OG",
+    "KG",
+    "GmbH",
+    "GmbH & Co KG",
+    "AG",
+    "Andere",
+  ],
+  CH: ["Einzelunternehmen", "Kollektivgesellschaft", "GmbH", "AG", "Andere"],
+  // EU
+  BE: ["Eenmanszaak / Indépendant", "VOF / SNC", "BV / SRL", "NV / SA", "Andere"],
+  BG: ["ET", "OOD", "EOOD", "AD", "Andere"],
+  HR: ["Obrt", "j.d.o.o.", "d.o.o.", "d.d.", "Andere"],
+  CY: ["Sole Trader", "Partnership", "Ltd", "Plc", "Andere"],
+  CZ: ["OSVČ", "v.o.s.", "s.r.o.", "a.s.", "Andere"],
+  DK: ["Enkeltmandsvirksomhed", "I/S", "ApS", "A/S", "Andere"],
+  EE: ["FIE", "OÜ", "AS", "Andere"],
+  FI: ["Toiminimi", "Ay / Ky", "Oy", "Oyj", "Andere"],
+  FR: ["Auto-entrepreneur", "EI", "EURL", "SARL", "SAS / SASU", "SA", "Andere"],
+  GR: ["Atomiki", "O.E. / E.E.", "EPE", "IKE", "AE", "Andere"],
+  HU: ["Egyéni vállalkozó", "Bt.", "Kft.", "Zrt. / Nyrt.", "Andere"],
+  IE: ["Sole Trader", "Partnership", "Ltd", "PLC", "Andere"],
+  IT: ["Ditta individuale", "S.n.c.", "S.a.s.", "S.r.l.", "S.p.A.", "Andere"],
+  LV: ["IK", "SIA", "AS", "Andere"],
+  LT: ["IĮ", "MB", "UAB", "AB", "Andere"],
+  LU: ["Entreprise individuelle", "SARL", "SA", "Andere"],
+  MT: ["Sole Trader", "Partnership", "Ltd", "Plc", "Andere"],
+  NL: ["Eenmanszaak", "VOF", "BV", "NV", "Andere"],
+  PL: ["JDG", "sp.j.", "sp. z o.o.", "S.A.", "Andere"],
+  PT: ["ENI", "Lda.", "S.A.", "Andere"],
+  RO: ["PFA", "SRL", "SA", "Andere"],
+  SK: ["Živnosť", "v.o.s.", "s.r.o.", "a.s.", "Andere"],
+  SI: ["s.p.", "d.o.o.", "d.d.", "Andere"],
+  ES: ["Autónomo", "S.C.", "S.L.", "S.A.", "Andere"],
+  SE: ["Enskild firma", "HB / KB", "AB", "Andere"],
+};
+
+// Rechtsformen für ein Land (Fallback, falls Land nicht gelistet).
+export function rechtsformenFuerLand(code: string): readonly string[] {
+  return RECHTSFORMEN_NACH_LAND[code] ?? RECHTSFORMEN_FALLBACK;
+}
