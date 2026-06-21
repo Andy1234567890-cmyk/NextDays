@@ -16,7 +16,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { type FirmenProfil, saveFirmenProfil } from "@/lib/firmenprofil";
-import { LAENDER, rechtsformenFuerLand } from "@/lib/laender";
+import {
+  LAENDER,
+  kleinunternehmerLabelFuerLand,
+  rechtsformenFuerLand,
+} from "@/lib/laender";
 import type { OnboardingStatus } from "@/lib/onboarding";
 import { updateOnboarding } from "@/lib/onboarding";
 import { createProperty } from "@/lib/properties";
@@ -84,8 +88,10 @@ export function OnboardingWizard({
     setFirma((prev) => ({ ...prev, [key]: value }));
   }
 
-  // Rechtsformen folgen dem Land; bei Landwechsel ungültige Form zurücksetzen.
-  const rechtsformen = rechtsformenFuerLand(firma.companyCountry ?? "DE");
+  // Rechtsformen + Kleinunternehmer-Label folgen dem Land.
+  const land = firma.companyCountry ?? "DE";
+  const rechtsformen = rechtsformenFuerLand(land);
+  const kleinunternehmer = kleinunternehmerLabelFuerLand(land);
   function setLand(code: string) {
     setFirma((prev) => {
       const formen = rechtsformenFuerLand(code);
@@ -294,15 +300,20 @@ export function OnboardingWizard({
             </Field>
           </div>
 
-          {/* B — Steuer */}
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={smallBusiness}
-              onChange={(e) => setSmallBusiness(e.target.checked)}
-            />
-            Steuerbefreit (Kleinunternehmer) — keine USt-ID nötig
-          </label>
+          {/* B — Steuer (Bezeichnung folgt dem Land) */}
+          <div className="flex flex-col gap-1">
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={smallBusiness}
+                onChange={(e) => setSmallBusiness(e.target.checked)}
+              />
+              {kleinunternehmer.label}
+            </label>
+            <p className="pl-6 text-xs text-muted-foreground">
+              {kleinunternehmer.hinweis}
+            </p>
+          </div>
           {!smallBusiness && (
             <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-12">
               <Field className="sm:col-span-6" label="USt-ID / VAT-ID">

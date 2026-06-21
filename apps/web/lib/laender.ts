@@ -112,3 +112,68 @@ const RECHTSFORMEN_NACH_LAND: Readonly<Record<string, readonly string[]>> = {
 export function rechtsformenFuerLand(code: string): readonly string[] {
   return RECHTSFORMEN_NACH_LAND[code] ?? RECHTSFORMEN_FALLBACK;
 }
+
+// Kleinunternehmer-/USt-Befreiungsregelung je Land. Der Begriff ist national
+// (DE §19 UStG, FR franchise en base, IT regime forfettario …) — daher pro Land
+// die passende Bezeichnung, sonst neutraler Fallback. `hinweis` erklärt kurz.
+type KleinunternehmerLabel = {
+  label: string; // Checkbox-Text
+  hinweis: string; // kurze Erläuterung darunter
+};
+
+const KLEINUNTERNEHMER_FALLBACK: KleinunternehmerLabel = {
+  label: "Von der Umsatzsteuer befreit — keine USt-ID nötig",
+  hinweis: "Aktivieren, wenn dein Unternehmen keine Umsatzsteuer ausweist.",
+};
+
+const KLEINUNTERNEHMER_NACH_LAND: Readonly<
+  Record<string, KleinunternehmerLabel>
+> = {
+  DE: {
+    label: "Kleinunternehmer (§19 UStG) — keine USt-ID nötig",
+    hinweis: "Befreiung von der Umsatzsteuer nach der Kleinunternehmerregelung.",
+  },
+  AT: {
+    label: "Kleinunternehmer (§6 Abs. 1 Z 27 UStG) — keine USt-ID nötig",
+    hinweis: "Österreichische Kleinunternehmerregelung.",
+  },
+  CH: {
+    label: "Von der MWST befreit — keine MWST-Nummer nötig",
+    hinweis: "Unter der Umsatzgrenze für die MWST-Pflicht.",
+  },
+  FR: {
+    label: "Franchise en base de TVA — keine USt-ID nötig",
+    hinweis: "Französische Kleinunternehmer-/Auto-entrepreneur-Regelung.",
+  },
+  IT: {
+    label: "Regime forfettario — keine USt-ID nötig",
+    hinweis: "Italienisches Pauschalsystem für Kleinunternehmen.",
+  },
+  ES: {
+    label: "Von der Umsatzsteuer befreit — keine USt-ID nötig",
+    hinweis: "Befreiung von der spanischen IVA.",
+  },
+  NL: {
+    label: "Kleineondernemersregeling (KOR) — keine USt-ID nötig",
+    hinweis: "Niederländische Kleinunternehmerregelung.",
+  },
+  BE: {
+    label: "Franchise/Vrijstelling kleine ondernemingen — keine USt-ID nötig",
+    hinweis: "Belgische Befreiung für Kleinunternehmen.",
+  },
+  PL: {
+    label: "Zwolnienie z VAT — keine USt-ID nötig",
+    hinweis: "Polnische Umsatzsteuerbefreiung für Kleinunternehmen.",
+  },
+  PT: {
+    label: "Regime de isenção (art. 53.º CIVA) — keine USt-ID nötig",
+    hinweis: "Portugiesische Befreiungsregelung.",
+  },
+};
+
+// Kleinunternehmer-/Befreiungs-Label für ein Land (Fallback, falls nicht gelistet).
+export function kleinunternehmerLabelFuerLand(
+  code: string,
+): KleinunternehmerLabel {
+  return KLEINUNTERNEHMER_NACH_LAND[code] ?? KLEINUNTERNEHMER_FALLBACK;
+}
