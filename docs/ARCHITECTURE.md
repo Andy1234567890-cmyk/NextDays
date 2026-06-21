@@ -151,28 +151,37 @@ ein einheitliches Interface zum PMS-Kern, dahinter austauschbare Adapter pro Kan
 So bleibt die Entscheidung *Direkt-Anbindung vs. Aggregator* reversibel
 (siehe [ADR-0001](decisions/0001-channel-manager-architektur.md)).
 
+**Aktueller Stand: Aggregator-Pfad über Channex.** Statt N Direkt-Adapter je OTA
+nutzen wir **Channex** als Aggregator (https://docs.channex.io) — eine API für alle
+Kanäle (Booking.com, Airbnb, Expedia …). Der `ChannexClient` (`channex_client.py`)
+ist der konkrete Adapter hinter der Facade; ARI/Buchungen laufen über die Channex-
+API (Auth `user-api-key`, ARI gebündelt, Buchungen via `booking_revisions/feed`
++ ack, Webhook als Trigger). Beträge in Cent. Mapping in `channex_*`-Tabellen
+(Migration `0027_channex.sql`).
+
 ```mermaid
 C4Container
-    title Component — Channel Manager Slice (Adapter-Pattern)
+    title Component — Channel Manager Slice (Aggregator über Channex)
 
     Container_Boundary(cm, "channel_manager") {
-        Container(facade, "Channel Facade", "Python", "Einheitliches Interface zum PMS-Kern")
-        Container(booking_ad, "Booking.com Adapter", "Python", "Adapter+Translator: OTA-XML / Poll")
-        Container(airbnb_ad, "Airbnb Adapter", "Python", "Adapter+Translator: Webhooks")
+        Container(facade, "Channel Facade", "Python", "Einheitliches Interface zum PMS-Kern (service.py)")
+        Container(channex_ad, "Channex Adapter", "Python", "channex_client.py: ARI-Push, Feed-Pull+Ack, Webhook")
         Container(ical_ad, "iCal Adapter", "Python", "Fallback: nur Sperrzeiten")
         Container(worker, "Sync Worker", "Redis Queue", "Retry, Backoff, DLQ, Idempotenz")
     }
 
     ContainerDb(cal, "availability (Kalender)", "Postgres", "Single Source of Truth")
-    System_Ext(booking, "Booking.com", "OTA")
-    System_Ext(airbnb, "Airbnb", "OTA")
+    ContainerDb(map, "channex_* Mappings", "Postgres", "property/room_type/rate_plan/booking")
+    System_Ext(channex, "Channex", "Channel-Manager-Aggregator")
+    System_Ext(otas, "OTAs (Booking.com, Airbnb, Expedia …)", "über Channex")
 
     Rel(facade, cal, "Sperrt/aktualisiert Tage atomar", "SQL FOR UPDATE")
+    Rel(facade, map, "ID-Mapping lokal ↔ Channex")
     Rel(facade, worker, "Fan-out-Push einreihen")
-    Rel(worker, booking_ad, "Ruft auf")
-    Rel(worker, airbnb_ad, "Ruft auf")
-    Rel(booking_ad, booking, "ARI-Push / Poll", "OTA-XML")
-    Rel(airbnb, airbnb_ad, "Webhook: Buchung/Storno", "HTTPS")
+    Rel(worker, channex_ad, "Ruft auf")
+    Rel(channex_ad, channex, "ARI-Push / Feed-Pull+Ack", "REST user-api-key")
+    Rel(channex, otas, "Verteilt ARI / liefert Buchungen")
+    Rel(channex, channex_ad, "Webhook: booking/ari (Trigger)", "HTTPS + Secret-Header")
 ```
 
 ---
@@ -327,6 +336,26 @@ erDiagram
     PLAN ||--o{ SUBSCRIPTION : "unit-basiert"
     TENANT ||--|| SUBSCRIPTION : abonniert
 ```
+
+**Channel-Manager-Mapping (Channex, Migration `0027_channex.sql`, alle mit RLS):**
+
+```mermaid
+erDiagram
+    TENANT ||--o{ CHANNEX_PROPERTY_MAP : has
+    PROPERTY ||--|| CHANNEX_PROPERTY_MAP : "verbunden mit Channex"
+    CHANNEX_PROPERTY_MAP ||--o{ CHANNEX_ROOM_TYPE_MAP : "Einheiten"
+    CHANNEX_ROOM_TYPE_MAP ||--o{ CHANNEX_RATE_PLAN_MAP : "Preispläne"
+    RATE_PLAN ||--o| CHANNEX_RATE_PLAN_MAP : "lokal ↔ Channex"
+    TENANT ||--o{ CHANNEX_BOOKING : "OTA-Buchungen"
+    CHANNEX_PROPERTY_MAP ||--o{ CHANNEX_BOOKING : "je Property"
+```
+
+Jede Mapping-Tabelle hält die `channex_*_id` (externe UUID) neben der lokalen
+Referenz; `channex_booking` speichert zusätzlich `revision_id`/`system_id` (Dedup)
+und die volle `raw`-Payload. Beträge in Cent (`amount_cents`). `channex_group_map`
+(Migration `0028`) hält je Tenant die Provider-Group (Whitelabel-Konto-Modell:
+ein Konto, eine Group pro Hotel). **White-Label-Pflicht:** Provider-Name/IDs
+erscheinen nie im Frontend (Responses neutralisiert: `property_title`/`external_id`).
 
 **Weitere Änderungen am Bestand:** `property_type` + `type_attributes` an
 `properties` (Ökosystem, ADR-0007); Rollen-Enum um `admin`, `co_admin`
@@ -745,6 +774,7 @@ wird in **[docs/decisions/](decisions/)** mit Rechtsgrundlage dokumentiert.
 | Google Calendar | optionaler Sync persönlicher Sperrzeiten (nicht Kanal-Sync) |
 | Google Translate | mehrsprachige Inhalte (server-seitig gecacht) |
 | OCR (self-hosted) | Ausweis-/Pass-Scan (Meldepflicht) + Belege — bleibt auf Hetzner |
+| **Channex** | Channel-Manager-Aggregator: OTA-Distribution (Booking.com, Airbnb, Expedia …). ARI-Push + Buchungs-Pull über den `channel_manager`-Slice (`channex_client.py`). Secrets: `CHANNEX_API_KEY`, `CHANNEX_BASE_URL`, `CHANNEX_WEBHOOK_SECRET`. |
 
 ---
 
