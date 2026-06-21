@@ -129,5 +129,11 @@
     "Andere": "Oħra",
     "Sole Trader": "Negozjant uniku",
     "Partnership": "Sħubija"
+  },
+  "exemption": {
+    "labelNamed": "Eżenti mit-taxxa ({scheme}) — l-ebda VAT meħtieġa",
+    "labelGeneric": "Eżenti mill-VAT — l-ebda VAT meħtieġa",
+    "hintNamed": "Eżenzjoni taħt l-iskema għal intrapriżi żgħar ({scheme}).",
+    "hintGeneric": "Ixgħel jekk in-negozju tiegħek huwa taħt il-limitu u ma jiċċarġjax VAT."
   }
 }

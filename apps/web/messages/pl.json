@@ -129,5 +129,11 @@
     "Andere": "Inne",
     "Sole Trader": "Jednoosobowa działalność",
     "Partnership": "Spółka osobowa"
+  },
+  "exemption": {
+    "labelNamed": "Zwolniony z podatku ({scheme}) — NIP niepotrzebny",
+    "labelGeneric": "Zwolniony z VAT — NIP niepotrzebny",
+    "hintNamed": "Zwolnienie w ramach procedury dla małych przedsiębiorstw ({scheme}).",
+    "hintGeneric": "Włącz, jeśli firma jest poniżej progu i nie nalicza VAT."
   }
 }

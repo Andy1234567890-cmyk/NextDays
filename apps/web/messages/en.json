@@ -92,6 +92,12 @@
       "toDashboard": "Go to dashboard"
     }
   },
+  "exemption": {
+    "labelNamed": "Tax-exempt ({scheme}) — no VAT ID required",
+    "labelGeneric": "Exempt from VAT — no VAT ID required",
+    "hintNamed": "Exemption under the small-business scheme ({scheme}).",
+    "hintGeneric": "Enable this if your business is below the threshold and does not charge VAT."
+  },
   "countries": {
     "DE": "Germany",
     "AT": "Austria",

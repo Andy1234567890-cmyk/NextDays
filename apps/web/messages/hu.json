@@ -129,5 +129,11 @@
     "Andere": "Egyéb",
     "Sole Trader": "Egyéni vállalkozó",
     "Partnership": "Személyegyesítő társaság"
+  },
+  "exemption": {
+    "labelNamed": "Adómentes ({scheme}) — nincs szükség adószámra",
+    "labelGeneric": "ÁFA-mentes — nincs szükség adószámra",
+    "hintNamed": "Mentesség a kisvállalkozói szabályozás szerint ({scheme}).",
+    "hintGeneric": "Kapcsold be, ha céged a határ alatt van és nem számít fel áfát."
   }
 }

@@ -129,5 +129,11 @@
     "Andere": "Eile",
     "Sole Trader": "Trádálaí aonair",
     "Partnership": "Comhpháirtíocht"
+  },
+  "exemption": {
+    "labelNamed": "Díolúine cánach ({scheme}) — níl uimhir CBL ag teastáil",
+    "labelGeneric": "Díolúine ó CBL — níl uimhir CBL ag teastáil",
+    "hintNamed": "Díolúine faoin scéim ghnólachtaí beaga ({scheme}).",
+    "hintGeneric": "Cuir ar siúl má tá do ghnó faoin tairseach gan CBL a ghearradh."
   }
 }

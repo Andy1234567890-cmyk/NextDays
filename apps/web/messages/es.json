@@ -129,5 +129,11 @@
     "Andere": "Otra",
     "Sole Trader": "Empresario individual",
     "Partnership": "Sociedad personalista"
+  },
+  "exemption": {
+    "labelNamed": "Exento de impuestos ({scheme}) — no se requiere NIF/IVA",
+    "labelGeneric": "Exento de IVA — no se requiere NIF/IVA",
+    "hintNamed": "Exención conforme al régimen de pequeñas empresas ({scheme}).",
+    "hintGeneric": "Actívalo si tu empresa está por debajo del umbral y no aplica IVA."
   }
 }

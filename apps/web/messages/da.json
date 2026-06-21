@@ -129,5 +129,11 @@
     "Andere": "Andet",
     "Sole Trader": "Enkeltmandsvirksomhed",
     "Partnership": "Interessentskab"
+  },
+  "exemption": {
+    "labelNamed": "Momsfritaget ({scheme}) — intet momsnr. nødvendigt",
+    "labelGeneric": "Fritaget for moms — intet momsnr. nødvendigt",
+    "hintNamed": "Fritagelse efter ordningen for små virksomheder ({scheme}).",
+    "hintGeneric": "Aktivér, hvis din virksomhed er under grænsen og ikke opkræver moms."
   }
 }

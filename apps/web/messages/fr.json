@@ -129,5 +129,11 @@
     "Andere": "Autre",
     "Sole Trader": "Entreprise individuelle",
     "Partnership": "Société de personnes"
+  },
+  "exemption": {
+    "labelNamed": "Exonéré de taxe ({scheme}) — pas de n° de TVA requis",
+    "labelGeneric": "Exonéré de TVA — pas de n° de TVA requis",
+    "hintNamed": "Exonération au titre du régime des petites entreprises ({scheme}).",
+    "hintGeneric": "Activez si votre entreprise est sous le seuil et ne facture pas la TVA."
   }
 }

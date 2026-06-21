@@ -129,5 +129,11 @@
     "Andere": "Altro",
     "Sole Trader": "Ditta individuale",
     "Partnership": "Società di persone"
+  },
+  "exemption": {
+    "labelNamed": "Esente da imposta ({scheme}) — nessuna P.IVA richiesta",
+    "labelGeneric": "Esente da IVA — nessuna P.IVA richiesta",
+    "hintNamed": "Esenzione secondo il regime per piccole imprese ({scheme}).",
+    "hintGeneric": "Attiva se la tua impresa è sotto la soglia e non applica IVA."
   }
 }

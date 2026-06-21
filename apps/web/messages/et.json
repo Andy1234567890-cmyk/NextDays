@@ -129,5 +129,11 @@
     "Andere": "Muu",
     "Sole Trader": "Füüsilisest isikust ettevõtja",
     "Partnership": "Täisühing"
+  },
+  "exemption": {
+    "labelNamed": "Maksuvaba ({scheme}) — KMKR-numbrit pole vaja",
+    "labelGeneric": "Käibemaksuvaba — KMKR-numbrit pole vaja",
+    "hintNamed": "Vabastus väikeettevõtja korra alusel ({scheme}).",
+    "hintGeneric": "Lülita sisse, kui ettevõte on alla piirmäära ega lisa käibemaksu."
   }
 }

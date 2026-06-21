@@ -92,6 +92,12 @@
       "toDashboard": "Zum Dashboard"
     }
   },
+  "exemption": {
+    "labelNamed": "Steuerbefreit ({scheme}) — keine USt-ID nötig",
+    "labelGeneric": "Von der Umsatzsteuer befreit — keine USt-ID nötig",
+    "hintNamed": "Befreiung nach der Kleinunternehmerregelung ({scheme}).",
+    "hintGeneric": "Aktivieren, wenn dein Unternehmen unter der Umsatzgrenze keine Umsatzsteuer ausweist."
+  },
   "legalForms": {
     "Einzelunternehmen": "Einzelunternehmen",
     "Personengesellschaft": "Personengesellschaft",

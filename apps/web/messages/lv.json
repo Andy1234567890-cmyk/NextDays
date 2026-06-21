@@ -129,5 +129,11 @@
     "Andere": "Cits",
     "Sole Trader": "Individuālais komersants",
     "Partnership": "Personālsabiedrība"
+  },
+  "exemption": {
+    "labelNamed": "Atbrīvots no nodokļa ({scheme}) — PVN nr. nav vajadzīgs",
+    "labelGeneric": "Atbrīvots no PVN — PVN nr. nav vajadzīgs",
+    "hintNamed": "Atbrīvojums saskaņā ar mazo uzņēmumu režīmu ({scheme}).",
+    "hintGeneric": "Ieslēdziet, ja uzņēmums ir zem sliekšņa un nepiemēro PVN."
   }
 }

@@ -129,5 +129,11 @@
     "Andere": "Ostalo",
     "Sole Trader": "Obrt",
     "Partnership": "Društvo osoba"
+  },
+  "exemption": {
+    "labelNamed": "Oslobođeno poreza ({scheme}) — PDV broj nije potreban",
+    "labelGeneric": "Oslobođeno PDV-a — PDV broj nije potreban",
+    "hintNamed": "Oslobođenje prema sustavu za male poduzetnike ({scheme}).",
+    "hintGeneric": "Uključite ako je tvrtka ispod praga i ne zaračunava PDV."
   }
 }

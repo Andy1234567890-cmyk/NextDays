@@ -129,5 +129,11 @@
     "Andere": "Drugo",
     "Sole Trader": "Samostojni podjetnik",
     "Partnership": "Osebna družba"
+  },
+  "exemption": {
+    "labelNamed": "Oproščeno davka ({scheme}) — ID za DDV ni potreben",
+    "labelGeneric": "Oproščeno DDV — ID za DDV ni potreben",
+    "hintNamed": "Oprostitev po ureditvi za male davčne zavezance ({scheme}).",
+    "hintGeneric": "Vklopite, če je podjetje pod pragom in ne obračunava DDV."
   }
 }

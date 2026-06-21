@@ -129,5 +129,11 @@
     "Andere": "Anders",
     "Sole Trader": "Eenmanszaak",
     "Partnership": "Personenvennootschap"
+  },
+  "exemption": {
+    "labelNamed": "Vrijgesteld van belasting ({scheme}) — geen btw-nummer nodig",
+    "labelGeneric": "Vrijgesteld van btw — geen btw-nummer nodig",
+    "hintNamed": "Vrijstelling op grond van de kleineondernemersregeling ({scheme}).",
+    "hintGeneric": "Zet aan als je bedrijf onder de grens blijft en geen btw rekent."
   }
 }

@@ -136,156 +136,56 @@ export function rechtsformLabel(
   return UEBERSETZBARE_RECHTSFORMEN.has(form) ? t(form) : form;
 }
 
-// Kleinunternehmer-/USt-Befreiungsregelung je Land. Der Begriff ist national und
-// wurde anhand offizieller Steuerbehörden verifiziert (DE/AT BMF, FR Legifrance,
-// IT/PT/PL/SK/SI/HR/HU/GR/LU nationale Finanzverwaltungen, CH ESTV). Mehrere
-// Länder (DK, EE, FI, IE, LV, SE, CY, CZ, BG) haben KEINEN Eigennamen, nur eine
-// Umsatzschwelle → dort der korrekte beschreibende Begriff. ES hat KEIN
-// nationales Regime (`exists: false`) — die EU-Franchise ist für Inlandsumsätze
-// nicht umgesetzt; dort wird keine Befreiungs-Checkbox angeboten.
-type KleinunternehmerLabel = {
-  label: string; // Checkbox-Text
-  hinweis: string; // kurze Erläuterung darunter
-  exists?: boolean; // false = kein nationales Befreiungsregime → Checkbox ausblenden
+// Kleinunternehmer-/USt-Befreiungsregelung je Land. Der NAME des Regimes ist ein
+// nationaler Eigenbegriff (verifiziert an offiziellen Steuerbehörden: DE/AT BMF,
+// FR Legifrance, IT/PT/PL/SK/SI/HR/HU/GR/LU nat. Finanzverwaltungen, CH ESTV) und
+// bleibt in JEDER UI-Sprache gleich. Der UMGEBENDE Text (Checkbox + Hinweis)
+// kommt aus dem i18n-System (Namespace "exemption") in der UI-Sprache.
+// `scheme: null` = Land ohne benannten Eigennamen (nur Umsatzschwelle) → generi-
+// scher übersetzter Text. ES = kein nationales Regime (`exists: false`).
+type Befreiung = {
+  scheme: string | null; // nationaler Eigenname des Regimes (unübersetzt) oder null
+  exists: boolean; // false = kein Regime → Checkbox ausblenden
 };
 
-const KLEINUNTERNEHMER_FALLBACK: KleinunternehmerLabel = {
-  label: "Von der Umsatzsteuer befreit — keine USt-ID nötig",
-  hinweis: "Aktivieren, wenn dein Unternehmen keine Umsatzsteuer ausweist.",
-};
-
-const KLEINUNTERNEHMER_NACH_LAND: Readonly<
-  Record<string, KleinunternehmerLabel>
-> = {
+const BEFREIUNG_NACH_LAND: Readonly<Record<string, Befreiung>> = {
   // DACH
-  DE: {
-    label: "Kleinunternehmer (§ 19 UStG) — keine USt-ID nötig",
-    hinweis: "Befreiung nach der Kleinunternehmerregelung.",
-  },
-  AT: {
-    label: "Kleinunternehmer (§ 6 Abs. 1 Z 27 UStG) — keine USt-ID nötig",
-    hinweis: "Österreichische Kleinunternehmerregelung.",
-  },
-  CH: {
-    label: "Von der MWST-Pflicht befreit — keine MWST-Nummer nötig",
-    hinweis:
-      "Befreiung von der Steuerpflicht (Art. 10 Abs. 2 MWSTG), unter der Umsatzgrenze.",
-  },
+  DE: { scheme: "§ 19 UStG", exists: true },
+  AT: { scheme: "§ 6 Abs. 1 Z 27 UStG", exists: true },
+  CH: { scheme: "Art. 10 Abs. 2 MWSTG", exists: true },
   // EU mit benanntem nationalem Regime
-  FR: {
-    label: "Franchise en base de TVA — keine USt-ID nötig",
-    hinweis: "Französische Kleinunternehmerregelung (Art. 293 B CGI).",
-  },
-  IT: {
-    label: "Regime forfettario — keine USt-ID nötig",
-    hinweis: "Italienisches Pauschalsystem (L. 190/2014).",
-  },
-  NL: {
-    label: "Kleineondernemersregeling (KOR) — keine USt-ID nötig",
-    hinweis: "Niederländische Kleinunternehmerregelung (Art. 25 OB 1968).",
-  },
-  BE: {
-    label: "Vrijstellingsregeling / Franchise (art. 56bis) — keine USt-ID nötig",
-    hinweis: "Belgische Befreiung für Kleinunternehmen.",
-  },
-  PL: {
-    label: "Zwolnienie podmiotowe z VAT — keine USt-ID nötig",
-    hinweis: "Polnische Umsatzsteuerbefreiung (Art. 113 ustawy o VAT).",
-  },
-  PT: {
-    label: "Regime de isenção (art. 53.º CIVA) — keine USt-ID nötig",
-    hinweis: "Portugiesische Befreiungsregelung.",
-  },
-  HU: {
-    label: "Alanyi adómentesség — keine USt-ID nötig",
-    hinweis: "Ungarische subjektive Steuerbefreiung (Áfa tv.).",
-  },
-  HR: {
-    label:
-      "Oslobođenje za male porezne obveznike — keine USt-ID nötig",
-    hinweis: "Kroatische Befreiung für Kleinunternehmen.",
-  },
-  GR: {
-    label: "Απαλλαγή ΦΠΑ μικρών επιχειρήσεων — keine USt-ID nötig",
-    hinweis: "Griechische Befreiung für Kleinunternehmen (Art. 44α–44γ).",
-  },
-  SI: {
-    label: "Oprostitev DDV za male davčne zavezance — keine USt-ID nötig",
-    hinweis: "Slowenische Befreiung (člen 94 ZDDV-1).",
-  },
-  SK: {
-    label: "Oslobodenie od dane pre malý podnik — keine USt-ID nötig",
-    hinweis: "Slowakische Kleinunternehmer-Sonderregelung (§ 68e–68g).",
-  },
-  LT: {
-    label: "Smulkiojo verslo schema (atleidimas nuo PVM) — keine USt-ID nötig",
-    hinweis: "Litauische Kleinunternehmer-Regelung.",
-  },
-  LU: {
-    label: "Régime de franchise des petites entreprises — keine USt-ID nötig",
-    hinweis: "Luxemburgische Kleinunternehmer-Befreiung (Art. 57 TVA).",
-  },
-  RO: {
-    label:
-      "Regimul special de scutire pentru întreprinderile mici — keine USt-ID nötig",
-    hinweis: "Rumänische Kleinunternehmer-Befreiung (Art. 310 Cod fiscal).",
-  },
-  MT: {
-    label: "Article 11 (small undertakings) — keine USt-ID nötig",
-    hinweis: "Maltesische Befreiung für Kleinunternehmen (Art. 11 VAT Act).",
-  },
-  // EU ohne Eigennamen — nur Umsatzschwelle (beschreibender Begriff)
-  DK: {
-    label: "Momsfritagelse (under registreringsgrænsen) — keine USt-ID nötig",
-    hinweis: "Dänemark: unter der Registrierungsgrenze keine Mehrwertsteuer.",
-  },
-  SE: {
-    label: "Momsbefrielse (liten omsättning) — keine USt-ID nötig",
-    hinweis: "Schweden: Befreiung bei geringem Umsatz.",
-  },
-  FI: {
-    label: "Arvonlisäveroton vähäinen toiminta — keine USt-ID nötig",
-    hinweis: "Finnland: umsatzsteuerfreie geringfügige Tätigkeit.",
-  },
-  EE: {
-    label: "Käibemaksuvabastus (alla piirmäära) — keine USt-ID nötig",
-    hinweis: "Estland: unter der Umsatzgrenze keine Umsatzsteuer.",
-  },
-  LV: {
-    label: "Atbrīvojums no PVN (zem sliekšņa) — keine USt-ID nötig",
-    hinweis: "Lettland: unter der Schwelle keine Umsatzsteuer.",
-  },
-  CZ: {
-    label: "Osvobození od DPH (neplátce) — keine USt-ID nötig",
-    hinweis: "Tschechien: unter der Umsatzgrenze Nicht-Zahler.",
-  },
-  BG: {
-    label: "Освобождаване от ДДС (под прага) — keine USt-ID nötig",
-    hinweis: "Bulgarien: unter der Registrierungsschwelle keine Umsatzsteuer.",
-  },
-  CY: {
-    label: "VAT exemption for small undertakings — keine USt-ID nötig",
-    hinweis: "Zypern: Befreiung unter der Registrierungsgrenze.",
-  },
-  IE: {
-    label: "Below the VAT registration threshold — keine USt-ID nötig",
-    hinweis: "Irland: unter der Registrierungsgrenze keine USt-Registrierung.",
-  },
+  FR: { scheme: "Franchise en base de TVA", exists: true },
+  IT: { scheme: "Regime forfettario", exists: true },
+  NL: { scheme: "Kleineondernemersregeling (KOR)", exists: true },
+  BE: { scheme: "Vrijstellingsregeling (art. 56bis)", exists: true },
+  PL: { scheme: "Zwolnienie podmiotowe z VAT", exists: true },
+  PT: { scheme: "Regime de isenção (art. 53.º CIVA)", exists: true },
+  HU: { scheme: "Alanyi adómentesség", exists: true },
+  HR: { scheme: "Oslobođenje za male porezne obveznike", exists: true },
+  GR: { scheme: "Απαλλαγή ΦΠΑ μικρών επιχειρήσεων", exists: true },
+  SI: { scheme: "Oprostitev DDV (člen 94 ZDDV-1)", exists: true },
+  SK: { scheme: "Oslobodenie pre malý podnik (§ 68e–68g)", exists: true },
+  LT: { scheme: "Smulkiojo verslo schema", exists: true },
+  LU: { scheme: "Régime de franchise (art. 57 TVA)", exists: true },
+  RO: { scheme: "Scutire pentru întreprinderile mici (art. 310)", exists: true },
+  MT: { scheme: "Article 11 (small undertakings)", exists: true },
+  // EU ohne Eigennamen — nur Umsatzschwelle (scheme: null → generischer Text)
+  DK: { scheme: null, exists: true },
+  SE: { scheme: null, exists: true },
+  FI: { scheme: null, exists: true },
+  EE: { scheme: null, exists: true },
+  LV: { scheme: null, exists: true },
+  CZ: { scheme: null, exists: true },
+  BG: { scheme: null, exists: true },
+  CY: { scheme: null, exists: true },
+  IE: { scheme: null, exists: true },
   // EU OHNE nationales Befreiungsregime
-  ES: {
-    label: "",
-    hinweis: "",
-    exists: false,
-  },
+  ES: { scheme: null, exists: false },
 };
 
-// Kleinunternehmer-/Befreiungs-Label für ein Land (Fallback, falls nicht gelistet).
-export function kleinunternehmerLabelFuerLand(
-  code: string,
-): KleinunternehmerLabel {
-  const eintrag = KLEINUNTERNEHMER_NACH_LAND[code];
-  if (eintrag) return eintrag;
-  return KLEINUNTERNEHMER_FALLBACK;
+// Befreiungs-Fakten für ein Land (Fallback = generisch, vorhanden).
+export function befreiungFuerLand(code: string): Befreiung {
+  return BEFREIUNG_NACH_LAND[code] ?? { scheme: null, exists: true };
 }
 
 // Beispiel-USt-IdNr. je Land (Platzhalter). Strukturen verifiziert anhand der

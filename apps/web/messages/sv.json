@@ -129,5 +129,11 @@
     "Andere": "Annat",
     "Sole Trader": "Enskild firma",
     "Partnership": "Handelsbolag"
+  },
+  "exemption": {
+    "labelNamed": "Skattebefriad ({scheme}) — inget momsreg.nr krävs",
+    "labelGeneric": "Befriad från moms — inget momsreg.nr krävs",
+    "hintNamed": "Befrielse enligt reglerna för små företag ({scheme}).",
+    "hintGeneric": "Slå på om företaget är under gränsen och inte tar ut moms."
   }
 }

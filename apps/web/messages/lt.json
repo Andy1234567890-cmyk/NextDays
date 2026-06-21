@@ -129,5 +129,11 @@
     "Andere": "Kita",
     "Sole Trader": "Individuali veikla",
     "Partnership": "Ūkinė bendrija"
+  },
+  "exemption": {
+    "labelNamed": "Atleista nuo mokesčio ({scheme}) — PVM kodas nereikalingas",
+    "labelGeneric": "Atleista nuo PVM — PVM kodas nereikalingas",
+    "hintNamed": "Atleidimas pagal smulkiojo verslo schemą ({scheme}).",
+    "hintGeneric": "Įjunkite, jei jūsų įmonė nesiekia ribos ir neskaičiuoja PVM."
   }
 }

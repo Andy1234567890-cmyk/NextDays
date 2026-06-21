@@ -19,7 +19,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { type FirmenProfil, saveFirmenProfil } from "@/lib/firmenprofil";
 import {
   LAENDER,
-  kleinunternehmerLabelFuerLand,
+  befreiungFuerLand,
   rechtsformLabel,
   rechtsformenFuerLand,
   vatBeispielFuerLand,
@@ -59,6 +59,7 @@ export function OnboardingWizard({
   const tc = useTranslations("common");
   const tCountry = useTranslations("countries");
   const tLegal = useTranslations("legalForms");
+  const tExempt = useTranslations("exemption");
   const [pending, startTransition] = useTransition();
 
   // Startschritt anhand des gespeicherten Fortschritts wählen (Wiederaufnahme).
@@ -99,12 +100,23 @@ export function OnboardingWizard({
     setFirma((prev) => ({ ...prev, [key]: value }));
   }
 
-  // Rechtsformen + Kleinunternehmer-Label folgen dem Land.
+  // Rechtsformen folgen dem Land. Die Befreiungs-FAKTEN (Regime-Name, ob es
+  // überhaupt eins gibt) folgen dem Firmensitz-Land; der angezeigte TEXT kommt
+  // aus dem i18n-System in der UI-Sprache.
   const land = firma.companyCountry ?? "DE";
   const rechtsformen = rechtsformenFuerLand(land);
-  const kleinunternehmer = kleinunternehmerLabelFuerLand(land);
-  // Länder ohne nationales Befreiungsregime (z. B. ES): keine Checkbox.
-  const kleinunternehmerMoeglich = kleinunternehmer.exists !== false;
+  const befreiung = befreiungFuerLand(land);
+  // Land ohne nationales Befreiungsregime (z. B. ES): keine Checkbox.
+  const kleinunternehmerMoeglich = befreiung.exists;
+  // Checkbox-Text + Hinweis in UI-Sprache; mit Regime-Name, falls vorhanden.
+  const kleinunternehmer = {
+    label: befreiung.scheme
+      ? tExempt("labelNamed", { scheme: befreiung.scheme })
+      : tExempt("labelGeneric"),
+    hinweis: befreiung.scheme
+      ? tExempt("hintNamed", { scheme: befreiung.scheme })
+      : tExempt("hintGeneric"),
+  };
   // Wenn keine Befreiung möglich ist, gilt smallBusiness als false (USt-ID nötig).
   const istKleinunternehmer = kleinunternehmerMoeglich && smallBusiness;
   function setLand(code: string) {

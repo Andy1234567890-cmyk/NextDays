@@ -129,5 +129,11 @@
     "Andere": "Jiné",
     "Sole Trader": "Živnostník",
     "Partnership": "Osobní společnost"
+  },
+  "exemption": {
+    "labelNamed": "Osvobozeno od daně ({scheme}) — DIČ není nutné",
+    "labelGeneric": "Osvobozeno od DPH — DIČ není nutné",
+    "hintNamed": "Osvobození v režimu pro malé podniky ({scheme}).",
+    "hintGeneric": "Zapněte, pokud je vaše firma pod limitem a neúčtuje DPH."
   }
 }

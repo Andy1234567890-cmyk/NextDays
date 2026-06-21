@@ -129,5 +129,11 @@
     "Andere": "Altele",
     "Sole Trader": "Întreprindere individuală",
     "Partnership": "Societate de persoane"
+  },
+  "exemption": {
+    "labelNamed": "Scutit de impozit ({scheme}) — nu este necesar cod TVA",
+    "labelGeneric": "Scutit de TVA — nu este necesar cod TVA",
+    "hintNamed": "Scutire conform regimului pentru întreprinderi mici ({scheme}).",
+    "hintGeneric": "Activați dacă firma este sub plafon și nu percepe TVA."
   }
 }
