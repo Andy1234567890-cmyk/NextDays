@@ -109,6 +109,19 @@ def sync_bookings(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+# --- Kanäle verbinden (white-label iFrame-URL) -------------------------------
+@router.get("/connect-url")
+def channel_connect_url(
+    ctx: CurrentUser, service: ChannelManagerServiceDep
+) -> dict[str, str]:
+    """Liefert die eingebettete Connect-URL (Channex-iFrame, Deutsch, white-label),
+    über die der Kunde Booking.com/Airbnb & Co. verbindet."""
+    try:
+        return {"url": service.get_channel_connect_url(ctx)}
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 # --- Webhook-Registrierung bei Channex (Admin) -------------------------------
 @router.get("/webhooks")
 def list_webhooks(service: ChannelManagerServiceDep, ctx: _write) -> list[dict]:

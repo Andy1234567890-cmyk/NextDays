@@ -366,6 +366,53 @@ class ChannelManagerService:
 
         return result
 
+    # -- iFrame Connect (Kanäle verbinden über Channex-UI) ---------------------
+    def get_channel_connect_url(
+        self, ctx: AuthContext, *, property_map_id: str | None = None
+    ) -> str:
+        """Baut die white-label iFrame-URL, über die der Kunde seine Kanäle
+        (Booking.com/Airbnb …) bei Channex verbindet. Nutzt die Channex-Property
+        des Tenants (erste verbundene, oder die angegebene)."""
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+
+        q = (
+            db.table("channex_property_map")
+            .select("channex_property_id")
+            .eq("tenant_id", tenant_id)
+            .is_("deleted_at", "null")
+        )
+        if property_map_id:
+            q = q.eq("id", property_map_id)
+        res = q.limit(1).execute()
+        if not res.data:
+            raise ChannelManagerError(
+                "Noch kein mit dem Channel-Manager verbundenes Objekt vorhanden. "
+                "Lege zuerst ein Objekt an.",
+                status_code=409,
+            )
+        channex_property_id = res.data[0]["channex_property_id"]
+
+        # Group des Tenants (falls vorhanden) mitgeben.
+        grp = (
+            db.table("channex_group_map")
+            .select("channex_group_id")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        group_id = grp.data[0]["channex_group_id"] if grp.data else None
+
+        try:
+            token = self._channex.create_one_time_token(
+                property_id=channex_property_id, group_id=group_id
+            )
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+        return self._channex.build_iframe_url(
+            token=token, property_id=channex_property_id
+        )
+
     # -- Webhook-Registrierung bei Channex (Admin) -----------------------------
     _WEBHOOK_EVENTS = "ari;booking_new;booking_modification;booking_cancellation"
 

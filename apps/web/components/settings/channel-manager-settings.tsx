@@ -6,6 +6,7 @@
 import { Icon } from "@iconify/react";
 import { useState, useTransition } from "react";
 
+import { ChannelConnectButton } from "@/components/channel-manager/channel-connect-button";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -81,6 +82,18 @@ export function ChannelManagerSettings({
             Die Kanal-Anbindung ist noch nicht aktiv. Sobald sie freigeschaltet
             ist, kannst du deine Objekte mit den Buchungsportalen verbinden.
           </p>
+        )}
+
+        {/* Kanäle verbinden (eingebettete white-label UI) */}
+        {configured && (
+          <section className="flex flex-col gap-2">
+            <h4 className="text-sm font-medium">Kanäle verbinden</h4>
+            <p className="text-sm text-muted-foreground">
+              Verbinde deine Buchungsportale (Booking.com, Airbnb, Expedia …) und
+              ordne deine Objekte zu.
+            </p>
+            <ChannelConnectButton label="Portale verbinden" variant="accent" />
+          </section>
         )}
 
         {/* Verbundene Objekte */}

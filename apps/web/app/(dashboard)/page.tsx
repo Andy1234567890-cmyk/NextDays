@@ -1,11 +1,37 @@
-// Dashboard-Übersicht (Startseite). Vorerst der leere Inhaltsbereich des
-// Layout-Gerüsts — KPI-Kacheln und Charts (Umsatz, Kanalverteilung, Lastenheft
-// §2.1) folgen im nächsten Schritt.
+// Dashboard-Übersicht (Startseite).
+// Solange das Onboarding des Tenants nicht abgeschlossen ist, zeigt das
+// Dashboard den Setup-Assistenten (ersetzt den Inhalt). Danach erscheint die
+// normale Übersicht (KPI-Kacheln/Charts folgen).
 import { Icon } from "@iconify/react";
 
+import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
 import { Card, CardContent } from "@/components/ui/card";
+import { getChannexHealth } from "@/lib/channex";
+import { getOnboarding } from "@/lib/onboarding";
 
-export default function DashboardPage() {
+export const dynamic = "force-dynamic";
+
+export default async function DashboardPage() {
+  const [onboarding, health] = await Promise.all([
+    getOnboarding(),
+    getChannexHealth(),
+  ]);
+
+  // Onboarding noch offen → Assistent im Dashboard anzeigen.
+  const status = onboarding.ok ? onboarding.data : null;
+  if (status && !status.completed) {
+    return (
+      <div className="mx-auto w-full max-w-3xl">
+        <OnboardingWizard
+          channelManagerReady={
+            health.ok ? health.data.channex_configured : false
+          }
+          initialStatus={status}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div>

@@ -1,13 +1,39 @@
-"""Router für dashboard. Gemountet unter /api/v1/dashboard."""
-from fastapi import APIRouter
+"""Router für dashboard. Gemountet unter /api/v1/dashboard.
 
-from .schemas import SliceHealth
-from .service import DashboardService
+Enthält den Onboarding-Fortschritt des Tenants (das Frontend zeigt den Setup-
+Assistenten, bis 'completed' true ist). Tenant-scoped (tenant_id aus dem JWT).
+"""
+from fastapi import APIRouter, HTTPException
+
+from src.core.security import CurrentUser
+
+from .dependencies import DashboardServiceDep
+from .schemas import OnboardingStatus, OnboardingUpdate, SliceHealth
+from .service import DashboardError
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
-_service = DashboardService()
 
 
 @router.get("/health", response_model=SliceHealth)
-def health() -> SliceHealth:
-    return _service.health()
+def health(service: DashboardServiceDep) -> SliceHealth:
+    return service.health()
+
+
+@router.get("/onboarding", response_model=OnboardingStatus)
+def get_onboarding(
+    ctx: CurrentUser, service: DashboardServiceDep
+) -> OnboardingStatus:
+    try:
+        return service.get_onboarding(ctx)
+    except DashboardError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.patch("/onboarding", response_model=OnboardingStatus)
+def update_onboarding(
+    req: OnboardingUpdate, ctx: CurrentUser, service: DashboardServiceDep
+) -> OnboardingStatus:
+    try:
+        return service.update_onboarding(ctx, req)
+    except DashboardError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

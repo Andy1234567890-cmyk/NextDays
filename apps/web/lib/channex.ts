@@ -120,6 +120,11 @@ export async function pushAri(input: {
   });
 }
 
+// --- Kanäle verbinden (white-label iFrame) ----------------------------------
+export async function getChannelConnectUrl(): Promise<Result<{ url: string }>> {
+  return call<{ url: string }>("/connect-url");
+}
+
 // --- Bookings ---------------------------------------------------------------
 export async function listChannexBookings(): Promise<
   Result<{ items: ChannexBooking[]; total: number }>

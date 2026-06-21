@@ -78,6 +78,12 @@ class ChannexClient:
         """True, wenn ein API-Key gesetzt ist (sonst läuft nichts gegen Channex)."""
         return bool(self._api_key)
 
+    @property
+    def web_host(self) -> str:
+        """Host der Channex-Web-App (für iFrame-Exchange), aus der base_url
+        abgeleitet: …/api/v1 → Host ohne /api/v1."""
+        return self._base_url.removesuffix("/api/v1").rstrip("/")
+
     # -- interner Request mit Auth, Wrapping, 429-Backoff, Fehler-Mapping -------
     def _request(
         self,
@@ -287,6 +293,34 @@ class ChannexClient:
 
     def get_booking(self, booking_id: str) -> dict[str, Any]:
         return self.get(f"bookings/{booking_id}")
+
+    # ----- iFrame Connect (One-Time-Token) ------------------------------------
+    def create_one_time_token(
+        self, *, property_id: str, group_id: str | None = None, username: str = "owner"
+    ) -> str:
+        """Holt ein One-Time-Token (15 Min gültig) für den iFrame-Exchange.
+        Gibt den Token-String zurück (data.token)."""
+        attrs: dict[str, Any] = {"property_id": property_id, "username": username}
+        if group_id:
+            attrs["group_id"] = group_id
+        res = self.post("auth/one_time_token", json={"one_time_token": attrs})
+        token = (res.get("data") or {}).get("token")
+        if not token:
+            raise ChannexError("Kein One-Time-Token erhalten.", status_code=502)
+        return token
+
+    def build_iframe_url(
+        self, *, token: str, property_id: str, redirect_to: str = "/channels", lng: str = "de"
+    ) -> str:
+        """Baut die iFrame-Exchange-URL (white-label Channex-UI)."""
+        return (
+            f"{self.web_host}/auth/exchange"
+            f"?oauth_session_key={token}"
+            f"&app_mode=headless"
+            f"&lng={lng}"
+            f"&redirect_to={redirect_to}"
+            f"&property_id={property_id}"
+        )
 
     # ----- Webhooks -----------------------------------------------------------
     def create_webhook(self, attributes: dict[str, Any]) -> dict[str, Any]:

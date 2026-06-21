@@ -47,6 +47,55 @@ export async function login(
   }
 }
 
+/** Registrierung: legt im Backend Tenant + Owner an und meldet direkt an.
+ *  Setzt dieselben httpOnly-Cookies wie login (das Backend gibt eine Session
+ *  zurück). Business-Logik (Tenant/Owner/Channel-Manager-Group) bleibt in
+ *  FastAPI (auth.register). */
+export async function register(input: {
+  email: string;
+  password: string;
+  fullName: string;
+  tenantName: string;
+  country: string;
+  currency: string;
+}): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const session = await api<SessionResponse>("/auth/register", {
+      method: "POST",
+      body: {
+        email: input.email,
+        password: input.password,
+        full_name: input.fullName,
+        tenant_name: input.tenantName,
+        country: input.country,
+        currency: input.currency,
+      },
+    });
+
+    const jar = await cookies();
+    const secure = process.env.NODE_ENV === "production";
+    jar.set(ACCESS, session.access_token, {
+      httpOnly: true,
+      secure,
+      sameSite: "lax",
+      path: "/",
+      maxAge: session.expires_in,
+    });
+    jar.set(REFRESH, session.refresh_token, {
+      httpOnly: true,
+      secure,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 30, // 30 Tage
+    });
+    return { ok: true };
+  } catch (exc) {
+    const error =
+      exc instanceof ApiError ? exc.message : "Registrierung fehlgeschlagen.";
+    return { ok: false, error };
+  }
+}
+
 /** Logout: beide Session-Arten beenden (FastAPI-Cookies + Supabase-Session). */
 export async function logout(): Promise<void> {
   const jar = await cookies();

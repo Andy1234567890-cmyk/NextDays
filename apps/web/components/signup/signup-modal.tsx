@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { Logo } from "@/components/logo";
+import { SignupForm } from "@/components/signup/signup-form";
 import { Button } from "@/components/ui/button";
 import { signInWithProvider } from "@/lib/oauth-login";
 
@@ -19,38 +20,50 @@ const FEATURES = [
   "Gästenachrichten automatisieren",
 ] as const;
 
+type Phase = "choose" | "email" | "loading";
+
 export function SignupModal() {
-  // null = Auswahl sichtbar; sonst läuft der Ladevorgang.
-  const [loading, setLoading] = useState(false);
+  const [phase, setPhase] = useState<Phase>("choose");
   const [progress, setProgress] = useState(0);
 
-  // Fortschrittsbalken hochzählen, sobald der Ladezustand startet.
+  // Fortschrittsbalken hochzählen, sobald der Ladezustand (OAuth) startet.
   useEffect(() => {
-    if (!loading) return;
+    if (phase !== "loading") return;
     const t = setInterval(() => {
       setProgress((p) => (p >= 100 ? 100 : p + 2));
     }, 60);
     return () => clearInterval(t);
-  }, [loading]);
+  }, [phase]);
 
-  function start() {
+  function startOAuth() {
     setProgress(0);
-    setLoading(true);
+    setPhase("loading");
   }
 
   return (
     <div className="w-full max-w-md rounded-2xl border bg-card p-8 shadow-2xl">
-      {loading ? (
-        <LoadingStep progress={progress} />
-      ) : (
-        <ChooseStep onStart={start} />
+      {phase === "loading" && <LoadingStep progress={progress} />}
+      {phase === "email" && (
+        <SignupForm onBack={() => setPhase("choose")} />
+      )}
+      {phase === "choose" && (
+        <ChooseStep
+          onStartOAuth={startOAuth}
+          onEmail={() => setPhase("email")}
+        />
       )}
     </div>
   );
 }
 
 // --- Phase 1: Auswahl ------------------------------------------------------
-function ChooseStep({ onStart }: { onStart: () => void }) {
+function ChooseStep({
+  onStartOAuth,
+  onEmail,
+}: {
+  onStartOAuth: () => void;
+  onEmail: () => void;
+}) {
   return (
     <div className="flex flex-col gap-6">
       <Logo heightRem={1.75} />
@@ -78,7 +91,7 @@ function ChooseStep({ onStart }: { onStart: () => void }) {
           variant="outline"
           className="gap-2"
           onClick={() => {
-            onStart();
+            onStartOAuth();
             signInWithProvider("google");
           }}
         >
@@ -96,11 +109,9 @@ function ChooseStep({ onStart }: { onStart: () => void }) {
           <span className="h-px flex-1 bg-border" />
         </div>
 
-        <Button type="button" className="gap-2" asChild>
-          <Link href="/login">
-            <Icon icon="ph:envelope-simple" className="size-4" />
-            Mit E-Mail registrieren
-          </Link>
+        <Button type="button" className="gap-2" onClick={onEmail}>
+          <Icon icon="ph:envelope-simple" className="size-4" />
+          Mit E-Mail registrieren
         </Button>
       </div>
 
