@@ -20,6 +20,7 @@ import {
   LAENDER,
   kleinunternehmerLabelFuerLand,
   rechtsformenFuerLand,
+  vatBeispielFuerLand,
 } from "@/lib/laender";
 import type { OnboardingStatus } from "@/lib/onboarding";
 import { updateOnboarding } from "@/lib/onboarding";
@@ -92,6 +93,10 @@ export function OnboardingWizard({
   const land = firma.companyCountry ?? "DE";
   const rechtsformen = rechtsformenFuerLand(land);
   const kleinunternehmer = kleinunternehmerLabelFuerLand(land);
+  // Länder ohne nationales Befreiungsregime (z. B. ES): keine Checkbox.
+  const kleinunternehmerMoeglich = kleinunternehmer.exists !== false;
+  // Wenn keine Befreiung möglich ist, gilt smallBusiness als false (USt-ID nötig).
+  const istKleinunternehmer = kleinunternehmerMoeglich && smallBusiness;
   function setLand(code: string) {
     setFirma((prev) => {
       const formen = rechtsformenFuerLand(code);
@@ -154,7 +159,7 @@ export function OnboardingWizard({
       [firma.phoneNumber, "Telefon"],
     ];
     const missing = required.filter(([v]) => !v?.trim()).map(([, l]) => l);
-    if (!smallBusiness && !firma.vatId?.trim() && !firma.taxNumber?.trim()) {
+    if (!istKleinunternehmer && !firma.vatId?.trim() && !firma.taxNumber?.trim()) {
       missing.push("USt-ID oder Steuernummer");
     }
     if (missing.length > 0) {
@@ -164,7 +169,7 @@ export function OnboardingWizard({
     startTransition(async () => {
       const res = await saveFirmenProfil({
         ...firma,
-        isSmallBusiness: smallBusiness,
+        isSmallBusiness: istKleinunternehmer,
       });
       if (res.ok) {
         persist({ company_data_set: true });
@@ -300,27 +305,29 @@ export function OnboardingWizard({
             </Field>
           </div>
 
-          {/* B — Steuer (Bezeichnung folgt dem Land) */}
-          <div className="flex flex-col gap-1">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={smallBusiness}
-                onChange={(e) => setSmallBusiness(e.target.checked)}
-              />
-              {kleinunternehmer.label}
-            </label>
-            <p className="pl-6 text-xs text-muted-foreground">
-              {kleinunternehmer.hinweis}
-            </p>
-          </div>
-          {!smallBusiness && (
+          {/* B — Steuer (Bezeichnung folgt dem Land; ES hat kein Regime) */}
+          {kleinunternehmerMoeglich && (
+            <div className="flex flex-col gap-1">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={smallBusiness}
+                  onChange={(e) => setSmallBusiness(e.target.checked)}
+                />
+                {kleinunternehmer.label}
+              </label>
+              <p className="pl-6 text-xs text-muted-foreground">
+                {kleinunternehmer.hinweis}
+              </p>
+            </div>
+          )}
+          {!istKleinunternehmer && (
             <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-12">
               <Field className="sm:col-span-6" label="USt-ID / VAT-ID">
                 <Input
                   value={firma.vatId ?? ""}
                   onChange={(e) => setF("vatId", e.target.value)}
-                  placeholder="z. B. DE123456789"
+                  placeholder={`z. B. ${vatBeispielFuerLand(land)}`}
                 />
               </Field>
               <Field className="sm:col-span-6" label="oder Steuernummer">
