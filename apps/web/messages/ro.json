@@ -49,12 +49,30 @@
         "email": "E-mail",
         "phone": "Telefon",
         "vatOrTax": "Cod TVA sau cod fiscal"
-      }
+      },
+      "state": "Stat / regiune",
+      "statePlaceholder": "ex. Bavaria"
     },
     "done": {
       "title": "Gata — firma ta a fost creată!",
       "text": "Apoi creează cazările în secțiunea Cazări, setează prețuri și conectează canalele de rezervare.",
       "toDashboard": "Mergi la panou"
+    },
+    "accommodation": {
+      "title": "Prima ta unitate de cazare",
+      "text": "Aceste date sunt necesare pentru ca unitatea ta de cazare să poată fi creată complet pe portalurile de rezervări.",
+      "nameLabel": "Numele unității de cazare *",
+      "namePlaceholder": "de ex. Cameră dublă cu vedere la lac",
+      "type": "Tipul unității de cazare *",
+      "typePlaceholder": "Selectează",
+      "types": {
+        "hotel": "Hotel",
+        "apartment": "Apartament",
+        "hostel": "Hostel",
+        "guest_house": "Casă de oaspeți",
+        "villa": "Vilă",
+        "resort": "Resort"
+      }
     }
   },
   "countries": {

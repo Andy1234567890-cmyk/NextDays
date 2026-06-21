@@ -49,12 +49,30 @@
         "email": "E-mail",
         "phone": "Telefono",
         "vatOrTax": "P.IVA o codice fiscale"
-      }
+      },
+      "state": "Regione / stato",
+      "statePlaceholder": "es. Baviera"
     },
     "done": {
       "title": "Fatto — la tua azienda è stata creata!",
       "text": "Poi crea le tue strutture nell area Strutture, imposta i prezzi e collega i canali di prenotazione.",
       "toDashboard": "Vai alla dashboard"
+    },
+    "accommodation": {
+      "title": "Il tuo primo alloggio",
+      "text": "Questi dati sono necessari affinché il tuo alloggio possa essere creato completamente sui portali di prenotazione.",
+      "nameLabel": "Nome dell'alloggio *",
+      "namePlaceholder": "ad es. Camera doppia vista lago",
+      "type": "Tipo di alloggio *",
+      "typePlaceholder": "Seleziona",
+      "types": {
+        "hotel": "Hotel",
+        "apartment": "Appartamento",
+        "hostel": "Ostello",
+        "guest_house": "Casa per ospiti",
+        "villa": "Villa",
+        "resort": "Resort"
+      }
     }
   },
   "countries": {

@@ -108,12 +108,30 @@
         "email": "E-mail",
         "phone": "Telefon",
         "vatOrTax": "adószám vagy adóazonosító szám"
-      }
+      },
+      "state": "Tartomány / régió",
+      "statePlaceholder": "pl. Bajorország"
     },
     "done": {
       "title": "Kész — a vállalkozásod létrejött!",
       "text": "Ezután hozd létre a szállásaidat a Szállások részben, állíts be árakat és kösd össze a foglalási csatornákat.",
       "toDashboard": "Ugrás a vezérlőpultra"
+    },
+    "accommodation": {
+      "title": "Az első szálláshelyed",
+      "text": "Ezek az adatok szükségesek ahhoz, hogy a szálláshelyed teljesen létrejöhessen a foglalási portálokon.",
+      "nameLabel": "A szálláshely neve *",
+      "namePlaceholder": "pl. Kétágyas szoba tóra néző kilátással",
+      "type": "Szálláshely típusa *",
+      "typePlaceholder": "Kérjük, válasszon",
+      "types": {
+        "hotel": "Hotel",
+        "apartment": "Apartman",
+        "hostel": "Hostel",
+        "guest_house": "Vendégház",
+        "villa": "Villa",
+        "resort": "Üdülő"
+      }
     }
   },
   "countries": {

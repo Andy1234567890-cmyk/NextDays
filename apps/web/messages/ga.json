@@ -49,12 +49,30 @@
         "email": "Ríomhphost",
         "phone": "Fón",
         "vatOrTax": "VAT/CBL nó uimhir chánach"
-      }
+      },
+      "state": "Stát / réigiún",
+      "statePlaceholder": "m.sh. an Bhaváir"
     },
     "done": {
       "title": "Déanta — tá do ghnó cruthaithe!",
       "text": "Ansin cruthaigh do chuid lóistín sa rannán Lóistín, socraigh praghsanna agus ceangail do chainéil áirithinte.",
       "toDashboard": "Chuig an deais"
+    },
+    "accommodation": {
+      "title": "Do chéad lóistín",
+      "text": "Tá na sonraí seo riachtanach ionas gur féidir do lóistín a chruthú go hiomlán ar na tairseacha áirithinte.",
+      "nameLabel": "Ainm an lóistín *",
+      "namePlaceholder": "m.sh. Seomra dúbailte le radharc ar an loch",
+      "type": "Cineál lóistín *",
+      "typePlaceholder": "Roghnaigh le do thoil",
+      "types": {
+        "hotel": "Óstán",
+        "apartment": "Árasán",
+        "hostel": "Brú",
+        "guest_house": "Teach aíochta",
+        "villa": "Vile",
+        "resort": "Ionad saoire"
+      }
     }
   },
   "countries": {

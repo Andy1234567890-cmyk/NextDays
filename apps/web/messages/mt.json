@@ -49,12 +49,30 @@
         "email": "Email",
         "phone": "Telefown",
         "vatOrTax": "VAT jew numru tat-taxxa"
-      }
+      },
+      "state": "Stat / reġjun",
+      "statePlaceholder": "eż. Bavarja"
     },
     "done": {
       "title": "Lest — in-negozju tiegħek inħoloq!",
       "text": "Imbagħad oħloq l-akkomodazzjonijiet fis-sezzjoni Akkomodazzjonijiet, issettja l-prezzijiet u qabbad il-kanali tal-prenotazzjoni.",
       "toDashboard": "Mur fid-dashboard"
+    },
+    "accommodation": {
+      "title": "L-ewwel akkomodazzjoni tiegħek",
+      "text": "Dawn id-dettalji huma meħtieġa biex l-akkomodazzjoni tiegħek tkun tista' tinħoloq kompletament fuq il-portali tal-prenotazzjonijiet.",
+      "nameLabel": "Isem l-akkomodazzjoni *",
+      "namePlaceholder": "eż. Kamra doppja b'veduta tal-lag",
+      "type": "Tip ta' akkomodazzjoni *",
+      "typePlaceholder": "Jekk jogħġbok agħżel",
+      "types": {
+        "hotel": "Lukanda",
+        "apartment": "Appartament",
+        "hostel": "Hostel",
+        "guest_house": "Dar tal-mistednin",
+        "villa": "Villa",
+        "resort": "Resort"
+      }
     }
   },
   "countries": {

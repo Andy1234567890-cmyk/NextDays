@@ -108,12 +108,30 @@
         "email": "E-post",
         "phone": "Telefon",
         "vatOrTax": "KMKR või maksukohustuslase number"
-      }
+      },
+      "state": "Liidumaa / piirkond",
+      "statePlaceholder": "nt Baieri"
     },
     "done": {
       "title": "Valmis — sinu ettevõte on loodud!",
       "text": "Seejärel loo majutused Majutuste alas, määra hinnad ja ühenda broneerimiskanalid.",
       "toDashboard": "Juhtpaneelile"
+    },
+    "accommodation": {
+      "title": "Sinu esimene majutus",
+      "text": "Need andmed on vajalikud, et sinu majutuse saaks broneerimisportaalides täielikult luua.",
+      "nameLabel": "Majutuse nimi *",
+      "namePlaceholder": "nt Kahekohaline tuba järvevaatega",
+      "type": "Majutuse tüüp *",
+      "typePlaceholder": "Palun vali",
+      "types": {
+        "hotel": "Hotell",
+        "apartment": "Korter",
+        "hostel": "Hostel",
+        "guest_house": "Külalistemaja",
+        "villa": "Villa",
+        "resort": "Resort"
+      }
     }
   },
   "countries": {

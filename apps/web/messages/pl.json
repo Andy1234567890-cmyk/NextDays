@@ -49,12 +49,30 @@
         "email": "E-mail",
         "phone": "Telefon",
         "vatOrTax": "NIP lub numer podatkowy"
-      }
+      },
+      "state": "Region / kraj związkowy",
+      "statePlaceholder": "np. Bawaria"
     },
     "done": {
       "title": "Gotowe — Twoja firma została założona!",
       "text": "Następnie dodaj obiekty w sekcji Obiekty, ustaw ceny i połącz kanały rezerwacji.",
       "toDashboard": "Przejdź do panelu"
+    },
+    "accommodation": {
+      "title": "Twój pierwszy obiekt",
+      "text": "Te dane są potrzebne, aby Twój obiekt mógł zostać w pełni utworzony w portalach rezerwacyjnych.",
+      "nameLabel": "Nazwa obiektu *",
+      "namePlaceholder": "np. Pokój dwuosobowy z widokiem na jezioro",
+      "type": "Rodzaj obiektu *",
+      "typePlaceholder": "Wybierz",
+      "types": {
+        "hotel": "Hotel",
+        "apartment": "Apartament",
+        "hostel": "Hostel",
+        "guest_house": "Pensjonat",
+        "villa": "Willa",
+        "resort": "Resort"
+      }
     }
   },
   "countries": {

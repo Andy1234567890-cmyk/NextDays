@@ -49,11 +49,29 @@
         "email": "Email",
         "phone": "Phone",
         "vatOrTax": "VAT ID or tax number"
+      },
+      "state": "State / region",
+      "statePlaceholder": "e.g. Bavaria"
+    },
+    "accommodation": {
+      "title": "Your first property",
+      "text": "These details are required so your property can be fully created on the booking portals.",
+      "nameLabel": "Property name *",
+      "namePlaceholder": "e.g. Double room with lake view",
+      "type": "Property type *",
+      "typePlaceholder": "Please select",
+      "types": {
+        "hotel": "Hotel",
+        "apartment": "Apartment",
+        "hostel": "Hostel",
+        "guest_house": "Guest house",
+        "villa": "Villa",
+        "resort": "Resort"
       }
     },
     "done": {
-      "title": "Done — your business has been created!",
-      "text": "Next, set up your properties in the Properties area, set prices and connect your booking channels.",
+      "title": "Done — your business is fully set up!",
+      "text": "Your company and first property are set up. Next, set prices and connect your booking channels in the Properties area.",
       "toDashboard": "Go to dashboard"
     }
   },

@@ -49,12 +49,30 @@
         "email": "E-mail",
         "phone": "Telefon",
         "vatOrTax": "DIČ nebo daňové číslo"
-      }
+      },
+      "state": "Region / spolková země",
+      "statePlaceholder": "např. Bavorsko"
     },
     "done": {
       "title": "Hotovo — vaše firma byla založena!",
       "text": "Dále vytvořte ubytování v sekci Ubytování, nastavte ceny a propojte rezervační kanály.",
       "toDashboard": "Přejít na dashboard"
+    },
+    "accommodation": {
+      "title": "Vaše první ubytování",
+      "text": "Tyto údaje jsou nezbytné, aby vaše ubytování mohlo být úplně vytvořeno na rezervačních portálech.",
+      "nameLabel": "Název ubytování *",
+      "namePlaceholder": "např. Dvoulůžkový pokoj s výhledem na jezero",
+      "type": "Typ ubytování *",
+      "typePlaceholder": "Vyberte",
+      "types": {
+        "hotel": "Hotel",
+        "apartment": "Apartmán",
+        "hostel": "Hostel",
+        "guest_house": "Penzion",
+        "villa": "Vila",
+        "resort": "Resort"
+      }
     }
   },
   "countries": {

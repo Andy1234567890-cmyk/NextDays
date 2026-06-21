@@ -1,12 +1,12 @@
 "use client";
 
-// Setup-Assistent fürs Hotel-Onboarding. Führt durch:
+// Onboarding-Assistent. Legt ein Unternehmen VOLLSTÄNDIG an (Firma + erste
+// Unterkunft mit allen Channex-Pflichtfeldern). Regel: vollständig oder nichts —
+// fehlen Daten, wird kein Unternehmen/keine Property angelegt.
 //  1) Willkommen
-//  2) Verzweigung: "Schon auf Buchungsportalen aktiv?" (ja/nein)
-//  3) Erstes Objekt anlegen (legt echtes Objekt an → Auto-Sync zum Provider)
-//  4) Preis setzen (Basispreis je Nacht)
-//  5) Kanäle: Neu → verbinden | Bestand → Portale verbinden + importieren
-// Business-Logik im Backend; hier nur Orchestrierung (lib/properties, lib/channex).
+//  2) Firmendaten (Admin-Konto)
+//  3) Unterkunft (Channex-Pflichtfelder: Titel, Art, Zustand, Geo, Zeitzone …)
+//  4) Fertig (erst wenn alles vollständig)
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -21,16 +21,25 @@ import {
   befreiungFuerLand,
   rechtsformLabel,
   rechtsformenFuerLand,
+  timezoneForCountry,
   vatBeispielFuerLand,
 } from "@/lib/laender";
 import type { OnboardingStatus } from "@/lib/onboarding";
 import { updateOnboarding } from "@/lib/onboarding";
+import { createProperty } from "@/lib/properties";
 import { cn } from "@/lib/utils";
 
-// Onboarding = NUR Unternehmen anlegen (Firmendaten/Admin-Konto). Unterkünfte
-// (Channex-Property/Room-Type/Rate-Plan, Kanäle) werden danach im Objekte-Bereich
-// gepflegt — das ist bewusst getrennt vom Onboarding.
-type Step = "welcome" | "company" | "done";
+// Gültige Channex-Unterkunftstypen (live gegen die Channex-API verifiziert).
+const PROPERTY_TYPES = [
+  "hotel",
+  "apartment",
+  "hostel",
+  "guest_house",
+  "villa",
+  "resort",
+] as const;
+
+type Step = "welcome" | "company" | "accommodation" | "done";
 
 export function OnboardingWizard({
   initialStatus,
@@ -48,11 +57,12 @@ export function OnboardingWizard({
   const [pending, startTransition] = useTransition();
 
   // Startschritt anhand des gespeicherten Fortschritts wählen (Wiederaufnahme).
+  // Vollständig oder nichts: erst Firma, dann Unterkunft; "done" erst wenn beides
+  // angelegt ist (object_created).
   function firstOpenStep(s?: OnboardingStatus): Step {
     if (!s) return "welcome";
-    // Firmendaten sind der einzige Pflichtschritt. Danach ist das Onboarding
-    // abgeschlossen; Unterkünfte legt der Kunde im Objekte-Bereich an.
     if (!s.company_data_set) return "welcome";
+    if (!s.object_created) return "accommodation";
     return "done";
   }
 
@@ -69,6 +79,19 @@ export function OnboardingWizard({
   });
   const [smallBusiness, setSmallBusiness] = useState(false);
   const [showOptional, setShowOptional] = useState(false);
+
+  // Unterkunft (Channex-Pflichtfelder). Adresse/Land kommen aus den Firmendaten;
+  // hier nur das Unterkunfts-Spezifische. Geo via "Standort finden" (Geocoding).
+  const [unterkunft, setUnterkunft] = useState({
+    title: "",
+    propertyType: "" as string,
+  });
+  function setU<K extends keyof typeof unterkunft>(
+    key: K,
+    value: (typeof unterkunft)[K],
+  ) {
+    setUnterkunft((prev) => ({ ...prev, [key]: value }));
+  }
 
   function setF<K extends keyof FirmenProfil>(key: K, value: FirmenProfil[K]) {
     setFirma((prev) => ({ ...prev, [key]: value }));
@@ -138,6 +161,39 @@ export function OnboardingWizard({
       });
       if (res.ok) {
         persist({ company_data_set: true });
+        setStep("accommodation");
+      } else {
+        setError(res.error);
+      }
+    });
+  }
+
+  // Unterkunft anlegen — VOLLSTÄNDIG oder gar nicht. Name + Art der Unterkunft
+  // sind Pflicht; Adresse/Land kommen aus den Firmendaten.
+  function saveAccommodation() {
+    setError(null);
+    const required: [string | undefined, string][] = [
+      [unterkunft.title, t("accommodation.title")],
+      [unterkunft.propertyType, t("accommodation.type")],
+    ];
+    const missing = required.filter(([v]) => !v?.trim()).map(([, l]) => l);
+    if (missing.length > 0) {
+      setError(t("company.missing", { fields: missing.join(", ") }));
+      return;
+    }
+    startTransition(async () => {
+      const res = await createProperty({
+        title: unterkunft.title.trim(),
+        property_type: unterkunft.propertyType as never,
+        street: firma.companyStreet ?? "",
+        house_number: firma.companyHouseNumber ?? "",
+        postal_code: firma.companyPostalCode ?? "",
+        city: firma.companyCity ?? "",
+        country: land,
+        status: "draft",
+      });
+      if (res.ok) {
+        persist({ object_created: true });
         setStep("done");
       } else {
         setError(res.error);
@@ -147,7 +203,6 @@ export function OnboardingWizard({
 
   function finish() {
     // Onboarding abschließen → Dashboard zeigt danach die normale Übersicht.
-    // Unterkünfte legt der Kunde anschließend im Objekte-Bereich an.
     startTransition(async () => {
       await updateOnboarding({ completed: true });
       router.replace("/");
@@ -257,6 +312,21 @@ export function OnboardingWizard({
                 onChange={(e) => setF("phoneNumber", e.target.value)}
               />
             </Field>
+
+            <Field className="sm:col-span-6" label={t("company.state")}>
+              <Input
+                value={firma.companyState ?? ""}
+                onChange={(e) => setF("companyState", e.target.value)}
+                placeholder={t("company.statePlaceholder")}
+              />
+            </Field>
+            <Field className="sm:col-span-6" label={t("company.website")}>
+              <Input
+                value={firma.website ?? ""}
+                onChange={(e) => setF("website", e.target.value)}
+                placeholder="https://"
+              />
+            </Field>
           </div>
 
           {/* B — Steuer (Bezeichnung folgt dem Land; ES hat kein Regime) */}
@@ -346,6 +416,51 @@ export function OnboardingWizard({
         </Card>
       )}
 
+      {step === "accommodation" && (
+        <Card>
+          <h1 className="font-display text-2xl font-extrabold">
+            {t("accommodation.title")}
+          </h1>
+          <p className="text-muted-foreground">{t("accommodation.text")}</p>
+
+          <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-12">
+            <Field className="sm:col-span-7" label={t("accommodation.nameLabel")}>
+              <Input
+                value={unterkunft.title}
+                onChange={(e) => setU("title", e.target.value)}
+                placeholder={t("accommodation.namePlaceholder")}
+                maxLength={200}
+              />
+            </Field>
+            <Field className="sm:col-span-5" label={t("accommodation.type")}>
+              <NativeSelect
+                value={unterkunft.propertyType}
+                onChange={(e) => setU("propertyType", e.target.value)}
+              >
+                <option value="" disabled>
+                  {t("accommodation.typePlaceholder")}
+                </option>
+                {PROPERTY_TYPES.map((pt) => (
+                  <option key={pt} value={pt}>
+                    {t(`accommodation.types.${pt}`)}
+                  </option>
+                ))}
+              </NativeSelect>
+            </Field>
+          </div>
+
+          {error && <ErrorText>{error}</ErrorText>}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setStep("company")}>
+              {tc("back")}
+            </Button>
+            <Button onClick={saveAccommodation} disabled={pending}>
+              {pending ? t("company.saving") : tc("next")}
+            </Button>
+          </div>
+        </Card>
+      )}
+
       {step === "done" && (
         <Card>
           <span className="flex size-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
@@ -400,7 +515,7 @@ function Field({
 
 function ProgressBar({ step }: { step: Step }) {
   const tc = useTranslations("common");
-  const order: Step[] = ["welcome", "company", "done"];
+  const order: Step[] = ["welcome", "company", "accommodation", "done"];
   const idx = order.indexOf(step);
   const pct = Math.round((idx / (order.length - 1)) * 100);
   return (

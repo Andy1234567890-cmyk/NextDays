@@ -49,12 +49,30 @@
         "email": "E-mail",
         "phone": "Telefoon",
         "vatOrTax": "btw-nummer of fiscaal nummer"
-      }
+      },
+      "state": "Provincie / regio",
+      "statePlaceholder": "bijv. Beieren"
     },
     "done": {
       "title": "Klaar — je bedrijf is aangemaakt!",
       "text": "Maak vervolgens je accommodaties aan bij Accommodaties, stel prijzen in en koppel je boekingskanalen.",
       "toDashboard": "Naar dashboard"
+    },
+    "accommodation": {
+      "title": "Je eerste accommodatie",
+      "text": "Deze gegevens zijn nodig zodat je accommodatie volledig op de boekingsportalen kan worden aangemaakt.",
+      "nameLabel": "Naam van de accommodatie *",
+      "namePlaceholder": "bijv. Tweepersoonskamer met uitzicht op het meer",
+      "type": "Type accommodatie *",
+      "typePlaceholder": "Maak een keuze",
+      "types": {
+        "hotel": "Hotel",
+        "apartment": "Appartement",
+        "hostel": "Hostel",
+        "guest_house": "Gastenverblijf",
+        "villa": "Villa",
+        "resort": "Resort"
+      }
     }
   },
   "countries": {

@@ -49,12 +49,30 @@
         "email": "E-mail",
         "phone": "Telefone",
         "vatOrTax": "NIF ou número fiscal"
-      }
+      },
+      "state": "Estado / região",
+      "statePlaceholder": "ex. Baviera"
     },
     "done": {
       "title": "Concluído — a tua empresa foi criada!",
       "text": "De seguida, cria os teus alojamentos na área Alojamentos, define preços e liga os teus canais de reserva.",
       "toDashboard": "Ir para o painel"
+    },
+    "accommodation": {
+      "title": "O teu primeiro alojamento",
+      "text": "Estes dados são necessários para que o teu alojamento possa ser totalmente criado nos portais de reservas.",
+      "nameLabel": "Nome do alojamento *",
+      "namePlaceholder": "p. ex. Quarto duplo com vista para o lago",
+      "type": "Tipo de alojamento *",
+      "typePlaceholder": "Selecionar",
+      "types": {
+        "hotel": "Hotel",
+        "apartment": "Apartamento",
+        "hostel": "Hostel",
+        "guest_house": "Casa de hóspedes",
+        "villa": "Villa",
+        "resort": "Resort"
+      }
     }
   },
   "countries": {

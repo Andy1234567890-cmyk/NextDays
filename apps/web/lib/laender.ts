@@ -47,6 +47,43 @@ export function currencyForCountry(code: string): string {
   return LAENDER.find((l) => l.code === code)?.currency ?? "EUR";
 }
 
+// Haupt-IANA-Zeitzone je Land (DACH+EU+CH). Channex verlangt eine Zeitzone an
+// der Property; für diese Märkte ist eine Hauptzeitzone pro Land eindeutig genug.
+const TIMEZONE_NACH_LAND: Readonly<Record<string, string>> = {
+  DE: "Europe/Berlin",
+  AT: "Europe/Vienna",
+  CH: "Europe/Zurich",
+  BE: "Europe/Brussels",
+  BG: "Europe/Sofia",
+  HR: "Europe/Zagreb",
+  CY: "Asia/Nicosia",
+  CZ: "Europe/Prague",
+  DK: "Europe/Copenhagen",
+  EE: "Europe/Tallinn",
+  FI: "Europe/Helsinki",
+  FR: "Europe/Paris",
+  GR: "Europe/Athens",
+  HU: "Europe/Budapest",
+  IE: "Europe/Dublin",
+  IT: "Europe/Rome",
+  LV: "Europe/Riga",
+  LT: "Europe/Vilnius",
+  LU: "Europe/Luxembourg",
+  MT: "Europe/Malta",
+  NL: "Europe/Amsterdam",
+  PL: "Europe/Warsaw",
+  PT: "Europe/Lisbon",
+  RO: "Europe/Bucharest",
+  SK: "Europe/Bratislava",
+  SI: "Europe/Ljubljana",
+  ES: "Europe/Madrid",
+  SE: "Europe/Stockholm",
+};
+
+export function timezoneForCountry(code: string): string {
+  return TIMEZONE_NACH_LAND[code] ?? "Europe/Berlin";
+}
+
 // Rechtsformen je Land (ISO-3166-1 alpha-2). Pro Markt die gängigen Formen,
 // jeweils mit "Andere" als Auffang. Länder ohne eigenen Eintrag fallen auf
 // RECHTSFORMEN_FALLBACK zurück (generische, sprachneutrale Kategorien).

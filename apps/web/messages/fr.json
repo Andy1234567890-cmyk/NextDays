@@ -49,12 +49,30 @@
         "email": "E-mail",
         "phone": "Téléphone",
         "vatOrTax": "N° de TVA ou numéro fiscal"
-      }
+      },
+      "state": "Région / état",
+      "statePlaceholder": "p. ex. Bavière"
     },
     "done": {
       "title": "Terminé — votre entreprise est créée !",
       "text": "Ensuite, créez vos hébergements dans la zone Hébergements, définissez les prix et connectez vos canaux de réservation.",
       "toDashboard": "Aller au tableau de bord"
+    },
+    "accommodation": {
+      "title": "Votre premier hébergement",
+      "text": "Ces informations sont nécessaires pour que votre hébergement puisse être entièrement créé sur les portails de réservation.",
+      "nameLabel": "Nom de l'hébergement *",
+      "namePlaceholder": "p. ex. Chambre double vue lac",
+      "type": "Type d'hébergement *",
+      "typePlaceholder": "Veuillez choisir",
+      "types": {
+        "hotel": "Hôtel",
+        "apartment": "Appartement",
+        "hostel": "Auberge de jeunesse",
+        "guest_house": "Maison d'hôtes",
+        "villa": "Villa",
+        "resort": "Resort"
+      }
     }
   },
   "countries": {

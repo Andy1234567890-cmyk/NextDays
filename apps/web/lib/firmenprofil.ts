@@ -19,6 +19,7 @@ export type FirmenProfil = {
   companyHouseNumber?: string;
   companyPostalCode?: string;
   companyCity?: string;
+  companyState?: string;
   companyCountry?: string;
   email?: string;
   phoneNumber?: string;

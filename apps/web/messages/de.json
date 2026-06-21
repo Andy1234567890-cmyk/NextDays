@@ -49,11 +49,29 @@
         "email": "E-Mail",
         "phone": "Telefon",
         "vatOrTax": "USt-ID oder Steuernummer"
+      },
+      "state": "Bundesland / Region",
+      "statePlaceholder": "z. B. Bayern"
+    },
+    "accommodation": {
+      "title": "Deine erste Unterkunft",
+      "text": "Diese Angaben sind nötig, damit deine Unterkunft auf den Buchungsportalen vollständig angelegt werden kann.",
+      "nameLabel": "Name der Unterkunft *",
+      "namePlaceholder": "z. B. Doppelzimmer Seeblick",
+      "type": "Art der Unterkunft *",
+      "typePlaceholder": "Bitte wählen",
+      "types": {
+        "hotel": "Hotel",
+        "apartment": "Apartment",
+        "hostel": "Hostel",
+        "guest_house": "Gästehaus",
+        "villa": "Villa",
+        "resort": "Resort"
       }
     },
     "done": {
-      "title": "Geschafft — dein Unternehmen ist angelegt!",
-      "text": "Im nächsten Schritt legst du im Objekte-Bereich deine Unterkünfte an, setzt Preise und verbindest deine Buchungskanäle.",
+      "title": "Geschafft — dein Unternehmen ist vollständig angelegt!",
+      "text": "Firma und erste Unterkunft sind eingerichtet. Im Objekte-Bereich setzt du als Nächstes Preise und verbindest deine Buchungskanäle.",
       "toDashboard": "Zum Dashboard"
     }
   },

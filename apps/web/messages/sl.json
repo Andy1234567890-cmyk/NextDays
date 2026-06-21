@@ -108,12 +108,30 @@
         "email": "E-pošta",
         "phone": "Telefon",
         "vatOrTax": "ID za DDV ali davčna številka"
-      }
+      },
+      "state": "Regija / zvezna dežela",
+      "statePlaceholder": "npr. Bavarska"
     },
     "done": {
       "title": "Končano — vaše podjetje je ustvarjeno!",
       "text": "Nato ustvarite nastanitve v razdelku Nastanitve, določite cene in povežite rezervacijske kanale.",
       "toDashboard": "Na nadzorno ploščo"
+    },
+    "accommodation": {
+      "title": "Vaša prva nastanitev",
+      "text": "Ti podatki so potrebni, da je vaša nastanitev lahko v celoti ustvarjena na rezervacijskih portalih.",
+      "nameLabel": "Ime nastanitve *",
+      "namePlaceholder": "npr. Dvoposteljna soba s pogledom na jezero",
+      "type": "Vrsta nastanitve *",
+      "typePlaceholder": "Izberite",
+      "types": {
+        "hotel": "Hotel",
+        "apartment": "Apartma",
+        "hostel": "Hostel",
+        "guest_house": "Gostišče",
+        "villa": "Vila",
+        "resort": "Resort"
+      }
     }
   },
   "countries": {

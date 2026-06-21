@@ -49,12 +49,30 @@
         "email": "El. paštas",
         "phone": "Telefonas",
         "vatOrTax": "PVM kodas arba mokesčių mokėtojo numeris"
-      }
+      },
+      "state": "Valstija / regionas",
+      "statePlaceholder": "pvz. Bavarija"
     },
     "done": {
       "title": "Atlikta — jūsų įmonė sukurta!",
       "text": "Tada sukurkite apgyvendinimą skiltyje Apgyvendinimas, nustatykite kainas ir prijunkite rezervavimo kanalus.",
       "toDashboard": "Į valdymo skydelį"
+    },
+    "accommodation": {
+      "title": "Jūsų pirmoji apgyvendinimo vieta",
+      "text": "Šie duomenys reikalingi, kad jūsų apgyvendinimo vieta galėtų būti visiškai sukurta rezervavimo portaluose.",
+      "nameLabel": "Apgyvendinimo vietos pavadinimas *",
+      "namePlaceholder": "pvz., Dvivietis kambarys su vaizdu į ežerą",
+      "type": "Apgyvendinimo vietos tipas *",
+      "typePlaceholder": "Pasirinkite",
+      "types": {
+        "hotel": "Viešbutis",
+        "apartment": "Apartamentai",
+        "hostel": "Nakvynės namai",
+        "guest_house": "Svečių namai",
+        "villa": "Vila",
+        "resort": "Kurortas"
+      }
     }
   },
   "countries": {

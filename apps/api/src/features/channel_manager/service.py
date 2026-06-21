@@ -36,6 +36,26 @@ log = get_logger("nextdays.channel_manager")
 
 _WEEKDAYS = ["mo", "tu", "we", "th", "fr", "sa", "su"]
 
+# Haupt-IANA-Zeitzone je Land (DACH+EU+CH). Channex verlangt eine Zeitzone an der
+# Property; spiegelt das Frontend-Mapping in apps/web/lib/laender.ts.
+_TIMEZONE_BY_COUNTRY: dict[str, str] = {
+    "DE": "Europe/Berlin", "AT": "Europe/Vienna", "CH": "Europe/Zurich",
+    "BE": "Europe/Brussels", "BG": "Europe/Sofia", "HR": "Europe/Zagreb",
+    "CY": "Asia/Nicosia", "CZ": "Europe/Prague", "DK": "Europe/Copenhagen",
+    "EE": "Europe/Tallinn", "FI": "Europe/Helsinki", "FR": "Europe/Paris",
+    "GR": "Europe/Athens", "HU": "Europe/Budapest", "IE": "Europe/Dublin",
+    "IT": "Europe/Rome", "LV": "Europe/Riga", "LT": "Europe/Vilnius",
+    "LU": "Europe/Luxembourg", "MT": "Europe/Malta", "NL": "Europe/Amsterdam",
+    "PL": "Europe/Warsaw", "PT": "Europe/Lisbon", "RO": "Europe/Bucharest",
+    "SK": "Europe/Bratislava", "SI": "Europe/Ljubljana", "ES": "Europe/Madrid",
+    "SE": "Europe/Stockholm",
+}
+
+
+def _timezone_for_country(code: str) -> str | None:
+    """IANA-Zeitzone für ein Land — None, wenn unbekannt (kein Fallback erfinden)."""
+    return _TIMEZONE_BY_COUNTRY.get(code.upper())
+
 
 class ChannelManagerError(Exception):
     """Fehler im channel_manager-Slice (an die API weitergereicht)."""
@@ -164,10 +184,13 @@ class ChannelManagerService:
         Sicher wiederholbar (idempotent). Gibt die Channex-IDs zurück."""
         db = self._require_db()
 
-        # Lokale Property laden (Tenant-Scope).
+        # Lokale Property MIT allen Channex-relevanten Feldern laden (Tenant-Scope).
         prop = (
             db.table("properties")
-            .select("id, title")
+            .select(
+                "id, title, description, property_type, street, house_number, "
+                "postal_code, city, country, lat, lng"
+            )
             .eq("id", property_id)
             .eq("tenant_id", tenant_id)
             .limit(1)
@@ -175,9 +198,10 @@ class ChannelManagerService:
         )
         if not prop.data:
             raise ChannelManagerError("Objekt nicht gefunden.", status_code=404)
-        prop_title = title or prop.data[0].get("title") or "Unbenannt"
+        prop_row = prop.data[0]
+        prop_title = title or prop_row.get("title") or "Unbenannt"
 
-        # Rate-Plans der Property laden (currency vom ersten Plan, sonst EUR).
+        # Rate-Plans der Property laden (currency vom ersten Plan).
         rate_plans = (
             db.table("rate_plans")
             .select("id, name, base_price, currency, min_stay")
@@ -185,25 +209,26 @@ class ChannelManagerService:
             .order("created_at")
             .execute()
         ).data or []
+        # KEIN Fallback: ohne Rate-Plan (mit echtem Preis) wird nichts an Channex
+        # gepusht — sonst entstünde eine unvollständige Property (0-€-Verkauf).
+        if not rate_plans:
+            raise ChannelManagerError(
+                "Kein Preisplan vorhanden — die Unterkunft kann ohne Preis nicht "
+                "an die Buchungsportale übermittelt werden.",
+                status_code=422,
+            )
         prop_currency = (
-            currency
-            or (rate_plans[0].get("currency") if rate_plans else None)
-            or "EUR"
+            currency or rate_plans[0].get("currency") or "EUR"
         ).upper()
 
         try:
             channex_property_id = self._upsert_channex_property(
-                db, tenant_id, property_id, prop_title, prop_currency
+                db, tenant_id, property_id, prop_title, prop_currency, prop_row
             )
             channex_room_type_id, room_type_map_id = self._upsert_channex_room_type(
                 db, tenant_id, channex_property_id, property_id, prop_title
             )
-            # Mindestens EIN Rate-Plan, damit der Channel später mappen kann.
-            plans = rate_plans or [
-                {"id": None, "name": "Standardpreis", "base_price": 0,
-                 "currency": prop_currency, "min_stay": 1}
-            ]
-            for rp in plans:
+            for rp in rate_plans:
                 self._upsert_channex_rate_plan(
                     db, tenant_id, room_type_map_id, channex_property_id,
                     channex_room_type_id, rp, prop_currency,
@@ -220,7 +245,8 @@ class ChannelManagerService:
         }
 
     def _upsert_channex_property(
-        self, db: Client, tenant_id: str, property_id: str, title: str, currency: str
+        self, db: Client, tenant_id: str, property_id: str, title: str,
+        currency: str, prop_row: dict[str, Any] | None = None,
     ) -> str:
         """POST (neu) oder PUT (vorhanden) der Channex-Property; Mapping pflegen."""
         existing = (
@@ -232,10 +258,13 @@ class ChannelManagerService:
             .limit(1)
             .execute()
         )
-        # Firmen-Adresse/Kontakt aus dem Firmenprofil mitgeben — OTAs wie
+        # Firmen-Adresse/Kontakt aus dem Firmenprofil als Basis — OTAs wie
         # Booking.com verlangen Property-Adresse/Kontakt zur Aktivierung.
         attrs = {"title": title, "currency": currency}
         attrs.update(self._billing_property_attrs(db, tenant_id))
+        # Unterkunfts-eigene Felder haben Vorrang (Adresse/Geo/Typ/Beschreibung
+        # gehören zur Property, nicht zur Firma).
+        attrs.update(self._property_attrs(prop_row))
         if existing.data:
             channex_id = existing.data[0]["channex_property_id"]
             self._channex.update_property(channex_id, attrs)
@@ -296,6 +325,33 @@ class ChannelManagerService:
             "website": p.get("website"),
         }
         return {k: v for k, v in candidates.items() if v}
+
+    @staticmethod
+    def _property_attrs(prop_row: dict[str, Any] | None) -> dict[str, Any]:
+        """Unterkunfts-eigene Felder → Channex-Property-Attribute. timezone wird
+        aus dem Land abgeleitet (Channex verlangt eine IANA-Zeitzone). Nur
+        nicht-leere Werte (keine Nullen an Channex)."""
+        if not prop_row:
+            return {}
+        street = " ".join(
+            x for x in [prop_row.get("street"), prop_row.get("house_number")] if x
+        ).strip()
+        country = prop_row.get("country")
+        candidates: dict[str, Any] = {
+            "address": street or None,
+            "zip_code": prop_row.get("postal_code"),
+            "city": prop_row.get("city"),
+            "country": country,
+            "property_type": prop_row.get("property_type"),
+            "latitude": prop_row.get("lat"),
+            "longitude": prop_row.get("lng"),
+            "timezone": _timezone_for_country(country) if country else None,
+        }
+        attrs = {k: v for k, v in candidates.items() if v not in (None, "")}
+        desc = prop_row.get("description")
+        if desc:
+            attrs["content"] = {"description": desc}
+        return attrs
 
     def _upsert_channex_room_type(
         self, db: Client, tenant_id: str, channex_property_id: str,

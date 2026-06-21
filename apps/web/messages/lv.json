@@ -49,12 +49,30 @@
         "email": "E-pasts",
         "phone": "Tālrunis",
         "vatOrTax": "PVN nr. vai nodokļu maksātāja numurs"
-      }
+      },
+      "state": "Štats / reģions",
+      "statePlaceholder": "piem. Bavārija"
     },
     "done": {
       "title": "Gatavs — jūsu uzņēmums ir izveidots!",
       "text": "Pēc tam izveidojiet naktsmītnes sadaļā Naktsmītnes, iestatiet cenas un savienojiet rezervēšanas kanālus.",
       "toDashboard": "Uz informācijas paneli"
+    },
+    "accommodation": {
+      "title": "Jūsu pirmā naktsmītne",
+      "text": "Šie dati ir nepieciešami, lai jūsu naktsmītni varētu pilnībā izveidot rezervēšanas portālos.",
+      "nameLabel": "Naktsmītnes nosaukums *",
+      "namePlaceholder": "piem., Divvietīgs numurs ar skatu uz ezeru",
+      "type": "Naktsmītnes veids *",
+      "typePlaceholder": "Lūdzu, izvēlieties",
+      "types": {
+        "hotel": "Viesnīca",
+        "apartment": "Dzīvoklis",
+        "hostel": "Hostelis",
+        "guest_house": "Viesu nams",
+        "villa": "Villa",
+        "resort": "Kūrorts"
+      }
     }
   },
   "countries": {

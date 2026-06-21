@@ -49,12 +49,30 @@
         "email": "E-post",
         "phone": "Telefon",
         "vatOrTax": "momsreg.nr eller organisationsnummer"
-      }
+      },
+      "state": "Region / delstat",
+      "statePlaceholder": "t.ex. Bayern"
     },
     "done": {
       "title": "Klart — ditt företag har skapats!",
       "text": "Skapa sedan dina boenden under Boenden, ange priser och anslut dina bokningskanaler.",
       "toDashboard": "Till instrumentpanelen"
+    },
+    "accommodation": {
+      "title": "Ditt första boende",
+      "text": "Dessa uppgifter behövs för att ditt boende ska kunna skapas fullständigt på bokningsportalerna.",
+      "nameLabel": "Boendets namn *",
+      "namePlaceholder": "t.ex. Dubbelrum med sjöutsikt",
+      "type": "Typ av boende *",
+      "typePlaceholder": "Välj",
+      "types": {
+        "hotel": "Hotell",
+        "apartment": "Lägenhet",
+        "hostel": "Vandrarhem",
+        "guest_house": "Gästhus",
+        "villa": "Villa",
+        "resort": "Resort"
+      }
     }
   },
   "countries": {

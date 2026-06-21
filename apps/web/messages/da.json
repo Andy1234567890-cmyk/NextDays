@@ -49,12 +49,30 @@
         "email": "E-mail",
         "phone": "Telefon",
         "vatOrTax": "CVR/momsnr. eller skattenummer"
-      }
+      },
+      "state": "Region / delstat",
+      "statePlaceholder": "f.eks. Bayern"
     },
     "done": {
       "title": "Færdig — din virksomhed er oprettet!",
       "text": "Opret derefter dine overnatningssteder under Overnatningssteder, fastsæt priser og forbind dine bookingkanaler.",
       "toDashboard": "Til dashboard"
+    },
+    "accommodation": {
+      "title": "Din første indkvartering",
+      "text": "Disse oplysninger er nødvendige, for at din indkvartering kan oprettes fuldstændigt på bookingportalerne.",
+      "nameLabel": "Indkvarteringens navn *",
+      "namePlaceholder": "f.eks. Dobbeltværelse med søudsigt",
+      "type": "Type indkvartering *",
+      "typePlaceholder": "Vælg",
+      "types": {
+        "hotel": "Hotel",
+        "apartment": "Lejlighed",
+        "hostel": "Vandrerhjem",
+        "guest_house": "Gæstehus",
+        "villa": "Villa",
+        "resort": "Resort"
+      }
     }
   },
   "countries": {

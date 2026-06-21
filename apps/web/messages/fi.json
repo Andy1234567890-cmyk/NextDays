@@ -49,12 +49,30 @@
         "email": "Sähköposti",
         "phone": "Puhelin",
         "vatOrTax": "ALV-numero tai verotunniste"
-      }
+      },
+      "state": "Osavaltio / alue",
+      "statePlaceholder": "esim. Baijeri"
     },
     "done": {
       "title": "Valmis — yrityksesi on luotu!",
       "text": "Luo seuraavaksi majoituksesi Majoitukset-osiossa, aseta hinnat ja yhdistä varauskanavasi.",
       "toDashboard": "Koontinäyttöön"
+    },
+    "accommodation": {
+      "title": "Ensimmäinen majoituksesi",
+      "text": "Näitä tietoja tarvitaan, jotta majoituksesi voidaan luoda kokonaan varausportaaleihin.",
+      "nameLabel": "Majoituksen nimi *",
+      "namePlaceholder": "esim. Kahden hengen huone järvinäkymällä",
+      "type": "Majoituksen tyyppi *",
+      "typePlaceholder": "Valitse",
+      "types": {
+        "hotel": "Hotelli",
+        "apartment": "Huoneisto",
+        "hostel": "Hostelli",
+        "guest_house": "Vierastalo",
+        "villa": "Huvila",
+        "resort": "Resort"
+      }
     }
   },
   "countries": {
