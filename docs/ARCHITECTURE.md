@@ -159,6 +159,20 @@ API (Auth `user-api-key`, ARI gebündelt, Buchungen via `booking_revisions/feed`
 + ack, Webhook als Trigger). Beträge in Cent. Mapping in `channex_*`-Tabellen
 (Migration `0027_channex.sql`).
 
+**PMS-Mapping (NextDays hat keine Zimmerkategorien).** Eine `property` ist die
+buchbare Einheit (Ferienwohnungs-Modell). Channex verkauft jedoch Room-Types mit
+`count_of_rooms`. Der Content-Sync bildet daher ab: `property` → Channex-Property,
+**ein synthetischer Room-Type pro Property** (`count_of_rooms=1`,
+`local_unit_ref = property_id`), je lokalem `rate_plans`-Eintrag ein Channex-Rate-Plan.
+Der Sync ist idempotent (POST/PUT je nach vorhandenem Mapping) und läuft non-blocking
+beim Objekt-Anlegen.
+
+**Kanäle inhouse verbinden (kein Provider-iFrame, white-label-Pflicht).** Der
+Adapter implementiert den vollen Channel-API-Flow selbst: `test_connection` →
+`mapping_details` → `create` (mit `group_id`, `rate_plans[]`, Codes als **Integer**)
+→ `activate`. Die eigene UI (`channel-connect-button.tsx`) führt durch
+Portal-Wahl → Zugangsdaten → Zimmer/Raten-Zuordnung; der Provider bleibt unsichtbar.
+
 ```mermaid
 C4Container
     title Component — Channel Manager Slice (Aggregator über Channex)

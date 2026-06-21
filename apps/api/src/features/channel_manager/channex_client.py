@@ -41,7 +41,7 @@ class ChannexError(Exception):
         *,
         status_code: int = 502,
         channex_status: int | None = None,
-        payload: Any | None = None,
+        payload: object | None = None,
     ) -> None:
         super().__init__(message)
         self.message = message
@@ -168,7 +168,7 @@ class ChannexClient:
         )
 
     @staticmethod
-    def _extract_message(detail: Any) -> str | None:
+    def _extract_message(detail: object) -> str | None:
         if isinstance(detail, dict):
             for key in ("title", "message", "detail"):
                 val = detail.get(key)
@@ -270,8 +270,13 @@ class ChannexClient:
         *,
         date_from: str,
         date_to: str,
-        restrictions: str = "rate,availability",
+        restrictions: str = "rate,min_stay_arrival,stop_sell",
     ) -> dict[str, Any]:
+        """Restriktionen lesen (Readback/Verifikation).
+
+        `filter[restrictions]` ist laut Channex PFLICHT — ohne den Parameter
+        antwortet die API mit 400 "restrictions is required". `availability`
+        ist KEINE Restriction (das liest man über get_availability)."""
         return self.get(
             "restrictions",
             params={
@@ -294,51 +299,74 @@ class ChannexClient:
     def get_booking(self, booking_id: str) -> dict[str, Any]:
         return self.get(f"bookings/{booking_id}")
 
-    # ----- Channels (OTA-Verbindungen; inhouse, kein iFrame) ------------------
-    # Erforschte channel-Codes (CamelCase) + settings-Pflichtfelder:
-    #   BookingCom → settings {property_id: <Hotel-ID>}
-    #   AirBNB     → settings {} (OAuth)
-    #   Expedia/Agoda → weitere settings (folgt)
+    # ----- Channels (OTA-Verbindungen; inhouse Channel-API) -------------------
+    # Verifizierter 4-Stufen-Flow (references/api.md, live gegen Staging geprüft):
+    #   1) test_connection  {channel, settings:{hotel_id}}   → Zugangsdaten prüfen
+    #   2) mapping_details  {channel, settings:{hotel_id}}   → OTA-Zimmer/Raten
+    #   3) POST /channels   {channel, group_id, properties:[uuid], rate_plans:[…]}
+    #   4) /channels/:id/activate                            → live (startet inaktiv)
+    # WICHTIG: room_type_code/rate_plan_code sind INTEGER; group_id ist Pflicht;
+    # DELETE nur bei inaktivem Kanal (sonst 422 "is active").
+    def list_channel_catalog(self) -> dict[str, Any]:
+        """Katalog aller verbindbaren OTAs inkl. Feld-Definitionen (`params`,
+        `rate_params`, `channel_restrictions`). Quelle der Wahrheit für die
+        Verbinden-Maske — Felder NICHT raten, sondern von hier nehmen."""
+        return self.get("channels/list")
+
     def list_channels(self, *, property_id: str | None = None) -> dict[str, Any]:
+        """Bereits verbundene Kanäle (optional auf eine Property gefiltert)."""
         params = {"filter[property_id]": property_id} if property_id else None
         return self.get("channels", params=params)
 
+    def get_channel(self, channel_id: str) -> dict[str, Any]:
+        return self.get(f"channels/{channel_id}")
+
+    def test_channel_connection(
+        self, *, channel: str, settings: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Schritt 1: OTA-Zugangsdaten prüfen, BEVOR etwas angelegt wird.
+        `settings.hotel_id` = die Property-ID beim OTA (z.B. Booking.com-Extranet-ID)."""
+        return self.post(
+            "channels/test_connection",
+            json={"channel": channel, "settings": settings},
+        )
+
+    def get_channel_mapping_details(
+        self, *, channel: str, settings: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Schritt 2: OTA-seitige Zimmer/Raten lesen. Für Booking.com liefert
+        data.rooms[].rates[], jeweils mit INTEGER-`id` (= room_type_code /
+        rate_plan_code), `pricing` (OBP/PP), `max_persons`, `occupancies`."""
+        return self.post(
+            "channels/mapping_details",
+            json={"channel": channel, "settings": settings},
+        )
+
     def create_channel(self, attributes: dict[str, Any]) -> dict[str, Any]:
+        """Schritt 3: Kanal anlegen (startet INAKTIV). Erwartet u.a. `channel`,
+        `group_id` (Pflicht!), `properties:[uuid]`, `rate_plans:[{rate_plan_id,
+        settings:{room_type_code(int), rate_plan_code(int), occupancy, …}}]`,
+        `settings:{hotel_id}`."""
         return self.post("channels", json={"channel": attributes})
 
     def update_channel(self, channel_id: str, attributes: dict[str, Any]) -> dict[str, Any]:
         return self.put(f"channels/{channel_id}", json={"channel": attributes})
 
+    def activate_channel(self, channel_id: str) -> dict[str, Any]:
+        """Schritt 4: Kanal live schalten (Kanäle werden inaktiv erstellt)."""
+        return self.post(f"channels/{channel_id}/activate", json={})
+
+    def deactivate_channel(self, channel_id: str) -> dict[str, Any]:
+        """Kanal pausieren. Auch nötig VOR dem Löschen (sonst 422 'is active')."""
+        return self.post(f"channels/{channel_id}/deactivate", json={})
+
     def delete_channel(self, channel_id: str) -> dict[str, Any]:
+        """Kanal löschen — muss vorher inaktiv sein (deactivate_channel)."""
         return self.delete(f"channels/{channel_id}")
 
-    # ----- iFrame Connect (One-Time-Token) ------------------------------------
-    def create_one_time_token(
-        self, *, property_id: str, group_id: str | None = None, username: str = "owner"
-    ) -> str:
-        """Holt ein One-Time-Token (15 Min gültig) für den iFrame-Exchange.
-        Gibt den Token-String zurück (data.token)."""
-        attrs: dict[str, Any] = {"property_id": property_id, "username": username}
-        if group_id:
-            attrs["group_id"] = group_id
-        res = self.post("auth/one_time_token", json={"one_time_token": attrs})
-        token = (res.get("data") or {}).get("token")
-        if not token:
-            raise ChannexError("Kein One-Time-Token erhalten.", status_code=502)
-        return token
-
-    def build_iframe_url(
-        self, *, token: str, property_id: str, redirect_to: str = "/channels", lng: str = "de"
-    ) -> str:
-        """Baut die iFrame-Exchange-URL (white-label Channex-UI)."""
-        return (
-            f"{self.web_host}/auth/exchange"
-            f"?oauth_session_key={token}"
-            f"&app_mode=headless"
-            f"&lng={lng}"
-            f"&redirect_to={redirect_to}"
-            f"&property_id={property_id}"
-        )
+    def list_groups(self) -> dict[str, Any]:
+        """Groups, auf die der Key Zugriff hat (für die group_id beim Channel-Create)."""
+        return self.get("groups")
 
     # ----- Webhooks -----------------------------------------------------------
     def create_webhook(self, attributes: dict[str, Any]) -> dict[str, Any]:

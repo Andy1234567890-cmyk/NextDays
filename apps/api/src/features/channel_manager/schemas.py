@@ -140,13 +140,61 @@ class ChannelListResponse(BaseModel):
     total: int
 
 
-class ConnectChannelRequest(BaseModel):
-    """Verbindet ein Portal mit einem lokalen Objekt (eigene Maske)."""
+class PrepareChannelRequest(BaseModel):
+    """Schritt 1+2: Zugangsdaten prüfen + OTA-Zimmer/Raten holen (legt nichts an)."""
 
     property_id: str                     # lokale Objekt-ID
-    portal_code: str                     # interner Portal-Code (BookingCom, AirBNB …)
+    portal_code: str                     # interner Portal-Code (BookingCom …)
+    settings: dict = Field(default_factory=dict)  # z.B. {"hotel_id": "..."}
+
+
+class OtaRate(BaseModel):
+    id: int | str                        # OTA-Raten-Code (integer)
     title: str | None = None
-    settings: dict = Field(default_factory=dict)  # portal-spezifische Felder
+    pricing: str | None = None
+    max_persons: int | None = None
+    occupancies: list[int] = Field(default_factory=list)
+
+
+class OtaRoom(BaseModel):
+    id: int | str                        # OTA-Zimmer-Code (integer)
+    title: str | None = None
+    rates: list[OtaRate] = Field(default_factory=list)
+
+
+class LocalRatePlanOption(BaseModel):
+    rate_plan_map_id: str
+    title: str
+
+
+class PrepareChannelResponse(BaseModel):
+    """OTA-Zimmer/Raten + unsere lokalen Preispläne zum Zuordnen in der UI."""
+
+    portal: str                          # menschlicher Name
+    ota_rooms: list[OtaRoom] = Field(default_factory=list)
+    rate_plans: list[LocalRatePlanOption] = Field(default_factory=list)
+
+
+class ChannelMapping(BaseModel):
+    """Eine Zuordnung: unser Preisplan ↔ OTA-Zimmer+Rate (Codes als Integer)."""
+
+    rate_plan_map_id: str
+    room_type_code: int
+    rate_plan_code: int
+    occupancy: int = 2
+    pricing_type: str = "Standard"
+    primary_occ: bool = True
+    readonly: bool = False
+
+
+class ConnectChannelRequest(BaseModel):
+    """Schritt 3+4: Kanal mit Zuordnung anlegen und aktivieren."""
+
+    property_id: str
+    portal_code: str
+    title: str | None = None
+    settings: dict = Field(default_factory=dict)        # z.B. {"hotel_id": "..."}
+    mappings: list[ChannelMapping] = Field(default_factory=list)
 
 
 # --- Webhook-Registrierung (Admin) ------------------------------------------

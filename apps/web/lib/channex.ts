@@ -142,6 +142,35 @@ export type ChannelConnection = {
   is_active: boolean;
 };
 
+// OTA-seitige Zimmer/Raten (aus mapping_details) + lokale Preispläne zum Zuordnen.
+export type OtaRate = {
+  id: number | string;
+  title: string | null;
+  pricing?: string | null;
+  max_persons?: number | null;
+  occupancies?: number[];
+};
+export type OtaRoom = {
+  id: number | string;
+  title: string | null;
+  rates: OtaRate[];
+};
+export type LocalRatePlanOption = { rate_plan_map_id: string; title: string };
+export type PrepareResult = {
+  portal: string;
+  ota_rooms: OtaRoom[];
+  rate_plans: LocalRatePlanOption[];
+};
+export type ChannelMapping = {
+  rate_plan_map_id: string;
+  room_type_code: number;
+  rate_plan_code: number;
+  occupancy?: number;
+  pricing_type?: string;
+  primary_occ?: boolean;
+  readonly?: boolean;
+};
+
 export async function listPortals(): Promise<Result<SupportedPortal[]>> {
   return call<SupportedPortal[]>("/portals");
 }
@@ -152,11 +181,25 @@ export async function listChannels(): Promise<
   return call<{ items: ChannelConnection[]; total: number }>("/channels");
 }
 
+// Schritt 1+2: Zugangsdaten prüfen + Zimmer/Raten holen (legt nichts an).
+export async function prepareChannel(input: {
+  property_id: string;
+  portal_code: string;
+  settings: Record<string, string>;
+}): Promise<Result<PrepareResult>> {
+  return call<PrepareResult>("/channels/prepare", {
+    method: "POST",
+    body: input,
+  });
+}
+
+// Schritt 3+4: Kanal mit Zuordnung anlegen + aktivieren.
 export async function connectChannel(input: {
   property_id: string;
   portal_code: string;
   title?: string;
   settings?: Record<string, string>;
+  mappings: ChannelMapping[];
 }): Promise<Result<ChannelConnection>> {
   return call<ChannelConnection>("/channels", { method: "POST", body: input });
 }

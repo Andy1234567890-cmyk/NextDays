@@ -381,6 +381,11 @@ Berechtigung `manage_property_settings`. Beträge laufen durchgängig in **Cent*
 | `POST /api/v1/channel-manager/ari` | Verfügbarkeit + Preise/Restriktionen gebündelt pushen (Channex-ARI) |
 | `GET /api/v1/channel-manager/bookings` | Eingegangene OTA-Buchungen des Tenants |
 | `POST /api/v1/channel-manager/bookings/sync` | Buchungs-Revisions-Feed ziehen → speichern → bei Channex bestätigen (ack) |
+| `GET /api/v1/channel-manager/portals` | Verbindbare Buchungsportale + Eingabefelder (white-label; Felder live aus dem Provider-Katalog) |
+| `POST /api/v1/channel-manager/channels/prepare` | Schritt 1+2: Zugangsdaten prüfen + Portal-Zimmer/Raten holen (legt nichts an) |
+| `GET /api/v1/channel-manager/channels` | Verbundene Kanäle des Tenants (white-label) |
+| `POST /api/v1/channel-manager/channels` | Schritt 3+4: Kanal mit Zimmer/Raten-Zuordnung anlegen **und aktivieren** → `201` |
+| `DELETE /api/v1/channel-manager/channels/{channel_id}` | Kanal trennen (erst deaktivieren, dann löschen) → `204` |
 | `POST /api/v1/channel-manager/webhook` | Webhook-Empfang (ohne JWT, via geteiltem Secret-Header `X-Channex-Webhook-Secret`) |
 
 **ARI-Push (Best-Practice: batchen, nicht einzeln).** Availability und Preise
@@ -413,8 +418,29 @@ automatisch und **non-blocking** (Provider-Fehler dürfen Registrierung/Objekt-
 Anlage nie scheitern lassen):
 
 1. **Registrierung** (`auth.register`) → legt automatisch die Tenant-Group an.
-2. **Objekt anlegen** (`POST /properties`) → legt automatisch die Provider-Property
-   in der Tenant-Group an und befüllt `channex_property_map`.
+2. **Objekt anlegen** (`POST /properties`) → löst den **Content-Sync** aus: Provider-
+   Property (in der Tenant-Group) + **ein synthetischer Room-Type** (`count_of_rooms=1`)
+   + je lokalem Preisplan **ein Rate-Plan** werden angelegt; alle Mapping-Tabellen
+   gefüllt. Idempotent (POST wenn kein Mapping, sonst PUT) → beliebig wiederholbar.
+
+NextDays modelliert **keine Zimmerkategorien** (eine `property` IST die buchbare
+Einheit, Ferienwohnungs-Modell). Channex verkauft aber Room-Types — daher der
+synthetische 1:1-Room-Type pro Property. Geld: `rate_plans.base_price` (Euro) →
+Cent-Integer **nur an der Provider-Grenze** (`_euro_to_cents`).
+
+**Kanäle verbinden (inhouse, KEIN Provider-iFrame).** Eigener 4-Schritt-Flow über
+die Channel-API, damit der Kunde nie den Provider sieht:
+
+1. **`channels/prepare`** ruft `test_connection` (Zugangsdaten prüfen — Achtung:
+   Provider liefert HTTP 200 auch bei Fehler, Erfolg steht in `data.success`) und
+   `mapping_details` (Portal-Zimmer/Raten) und liefert sie + die lokalen Preispläne
+   zur Zuordnung zurück.
+2. Die UI lässt **OTA-Zimmer+Rate ↔ lokalen Preisplan** zuordnen.
+3. **`POST /channels`** legt den Kanal mit `group_id` (Pflicht), `properties:[…]`
+   und `rate_plans:[{rate_plan_id, settings:{room_type_code, rate_plan_code, …}}]`
+   an — **Codes als Integer** (Strings → „Not mapped"). Kanäle starten **inaktiv**.
+4. Der Slice **aktiviert** den Kanal direkt (`/channels/:id/activate`). Trennen geht
+   nur über vorheriges `deactivate` (sonst `422 "is active"`).
 
 **White-Label (Pflicht):** Der Kunde darf den Provider nie sehen. Daher enthält
 **keine** Frontend-Antwort den Provider-Namen oder die Provider-IDs — die

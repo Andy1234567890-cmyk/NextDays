@@ -11,7 +11,7 @@ Verantwortlichkeiten:
 """
 from __future__ import annotations
 
-from datetime import date
+from datetime import UTC
 from typing import Any
 
 from supabase import Client
@@ -123,61 +123,281 @@ class ChannelManagerService:
         title: str,
         currency: str = "EUR",
     ) -> None:
-        """Legt die Property in Channex an (in der Tenant-Group) und mappt sie.
-        Non-blocking: Fehler werden geloggt + im Mapping vermerkt, nicht geworfen."""
+        """Non-blocking Auto-Sync beim Anlegen/Ändern eines Objekts.
+
+        Delegiert an den vollständigen, idempotenten Content-Sync und schluckt
+        Fehler (loggt sie), damit die Objekt-Anlage nie an Channex scheitert."""
         if not self._channex.is_configured or self._db is None:
             return
-        # Schon gemappt? Dann nichts tun (Idempotenz).
-        existing = (
-            self._db.table("channex_property_map")
-            .select("id")
-            .eq("property_id", property_id)
-            .is_("deleted_at", "null")
-            .limit(1)
-            .execute()
-        )
-        if existing.data:
-            return
-
-        group_id = self.ensure_group(tenant_id, title=title or "Hotel")
         try:
-            created = self._channex.create_property(
-                {"title": title or "Unbenannt", "currency": (currency or "EUR").upper()}
+            self.sync_content(
+                tenant_id, property_id=property_id, title=title, currency=currency
             )
-            channex_id = (created.get("data") or {}).get("id")
-            if not channex_id:
-                raise ChannexError("Keine Property-ID erhalten.", status_code=502)
-            if group_id:
-                # Fehler bei der Gruppenzuordnung ist nicht fatal (Property steht).
-                try:
-                    self._channex.assign_property_to_group(group_id, channex_id)
-                except ChannexError as exc:
-                    log.warning(
-                        "channex_group_assign_failed",
-                        property_id=property_id,
-                        error=exc.message,
-                    )
-            self._db.table("channex_property_map").upsert(
-                {
-                    "tenant_id": tenant_id,
-                    "property_id": property_id,
-                    "channex_property_id": channex_id,
-                    "sync_enabled": True,
-                    "last_sync_status": "ok",
-                    "last_sync_error": None,
-                },
-                on_conflict="channex_property_id",
-            ).execute()
-            log.info("channex_property_synced", tenant_id=tenant_id, property_id=property_id)
-        except ChannexError as exc:
-            # Mapping mit Fehlerstatus anlegen, damit die UI „erneut versuchen"
-            # anbieten kann; Objekt-Anlage bleibt erfolgreich.
+        except (ChannexError, ChannelManagerError) as exc:
+            msg = getattr(exc, "message", str(exc))
             log.error(
                 "channex_property_sync_failed",
                 tenant_id=tenant_id,
                 property_id=property_id,
-                error=exc.message,
+                error=msg,
             )
+
+    # -- Content-Sync (Skill-Komponente 2): Property → Room-Type → Rate-Plans ---
+    # NextDays modelliert KEINE Zimmerkategorien — eine `property` IST die
+    # buchbare Einheit (Ferienwohnungs-Modell, max_guests). Channex verkauft
+    # aber room_types mit count_of_rooms. Mapping daher:
+    #   property                       → Channex-Property        (1:1)
+    #   property (synthetischer Typ)   → 1 Channex-Room-Type     (count_of_rooms=1)
+    #   jeder rate_plans-Eintrag       → 1 Channex-Rate-Plan     (am Room-Type)
+    # Idempotent: POST wenn kein Mapping existiert, sonst PUT; UUID wird gemappt.
+    # Geld: rate_plans.base_price (Euro, numeric) → Cent-Integer NUR an der Grenze.
+    def sync_content(
+        self,
+        tenant_id: str,
+        *,
+        property_id: str,
+        title: str | None = None,
+        currency: str | None = None,
+    ) -> dict[str, str]:
+        """Legt/aktualisiert Property, synthetischen Room-Type und Rate-Plans in
+        Channex (Dependency-Reihenfolge) und pflegt die Mapping-Tabellen.
+        Sicher wiederholbar (idempotent). Gibt die Channex-IDs zurück."""
+        db = self._require_db()
+
+        # Lokale Property laden (Tenant-Scope).
+        prop = (
+            db.table("properties")
+            .select("id, title")
+            .eq("id", property_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        if not prop.data:
+            raise ChannelManagerError("Objekt nicht gefunden.", status_code=404)
+        prop_title = title or prop.data[0].get("title") or "Unbenannt"
+
+        # Rate-Plans der Property laden (currency vom ersten Plan, sonst EUR).
+        rate_plans = (
+            db.table("rate_plans")
+            .select("id, name, base_price, currency, min_stay")
+            .eq("property_id", property_id)
+            .order("created_at")
+            .execute()
+        ).data or []
+        prop_currency = (
+            currency
+            or (rate_plans[0].get("currency") if rate_plans else None)
+            or "EUR"
+        ).upper()
+
+        try:
+            channex_property_id = self._upsert_channex_property(
+                db, tenant_id, property_id, prop_title, prop_currency
+            )
+            channex_room_type_id, room_type_map_id = self._upsert_channex_room_type(
+                db, tenant_id, channex_property_id, property_id, prop_title
+            )
+            # Mindestens EIN Rate-Plan, damit der Channel später mappen kann.
+            plans = rate_plans or [
+                {"id": None, "name": "Standardpreis", "base_price": 0,
+                 "currency": prop_currency, "min_stay": 1}
+            ]
+            for rp in plans:
+                self._upsert_channex_rate_plan(
+                    db, tenant_id, room_type_map_id, channex_property_id,
+                    channex_room_type_id, rp, prop_currency,
+                )
+        except ChannexError as exc:
+            self._mark_property_sync(db, tenant_id, property_id, "error", exc.message)
+            raise self._wrap_channex(exc) from exc
+
+        self._mark_property_sync(db, tenant_id, property_id, "ok", None)
+        log.info("channex_content_synced", tenant_id=tenant_id, property_id=property_id)
+        return {
+            "channex_property_id": channex_property_id,
+            "channex_room_type_id": channex_room_type_id,
+        }
+
+    def _upsert_channex_property(
+        self, db: Client, tenant_id: str, property_id: str, title: str, currency: str
+    ) -> str:
+        """POST (neu) oder PUT (vorhanden) der Channex-Property; Mapping pflegen."""
+        existing = (
+            db.table("channex_property_map")
+            .select("id, channex_property_id")
+            .eq("property_id", property_id)
+            .eq("tenant_id", tenant_id)
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        )
+        attrs = {"title": title, "currency": currency}
+        if existing.data:
+            channex_id = existing.data[0]["channex_property_id"]
+            self._channex.update_property(channex_id, attrs)
+            return channex_id
+
+        # Neu anlegen + (falls vorhanden) der Tenant-Group zuordnen.
+        group_id = self.ensure_group(tenant_id, title=title)
+        created = self._channex.create_property(attrs)
+        channex_id = (created.get("data") or {}).get("id")
+        if not channex_id:
+            raise ChannexError("Keine Property-ID erhalten.", status_code=502)
+        if group_id:
+            try:
+                self._channex.assign_property_to_group(group_id, channex_id)
+            except ChannexError as exc:
+                log.warning("channex_group_assign_failed",
+                            property_id=property_id, error=exc.message)
+        db.table("channex_property_map").upsert(
+            {
+                "tenant_id": tenant_id,
+                "property_id": property_id,
+                "channex_property_id": channex_id,
+                "sync_enabled": True,
+                "last_sync_status": "ok",
+                "last_sync_error": None,
+            },
+            on_conflict="channex_property_id",
+        ).execute()
+        return channex_id
+
+    def _upsert_channex_room_type(
+        self, db: Client, tenant_id: str, channex_property_id: str,
+        property_id: str, title: str,
+    ) -> tuple[str, str]:
+        """Synthetischer Room-Type (1 pro Property). local_unit_ref = property_id.
+        Gibt (channex_room_type_id, room_type_map_id) zurück."""
+        property_map = (
+            db.table("channex_property_map")
+            .select("id")
+            .eq("channex_property_id", channex_property_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        if not property_map.data:
+            raise ChannexError("Property-Mapping fehlt.", status_code=500)
+        property_map_id = property_map.data[0]["id"]
+
+        existing = (
+            db.table("channex_room_type_map")
+            .select("id, channex_room_type_id")
+            .eq("property_map_id", property_map_id)
+            .eq("local_unit_ref", property_id)
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        )
+        attrs = {
+            "property_id": channex_property_id,
+            "title": title,
+            "count_of_rooms": 1,
+            "occ_adults": 4,
+            "occ_children": 0,
+            "occ_infants": 0,        # Channex-Pflichtfeld (live verifiziert)
+            "default_occupancy": 2,
+            "room_kind": "room",
+        }
+        if existing.data:
+            channex_room_type_id = existing.data[0]["channex_room_type_id"]
+            self._channex.update_room_type(channex_room_type_id, attrs)
+            return channex_room_type_id, existing.data[0]["id"]
+
+        created = self._channex.create_room_type(attrs)
+        channex_room_type_id = (created.get("data") or {}).get("id")
+        if not channex_room_type_id:
+            raise ChannexError("Keine Room-Type-ID erhalten.", status_code=502)
+        saved = (
+            db.table("channex_room_type_map")
+            .upsert(
+                {
+                    "tenant_id": tenant_id,
+                    "property_map_id": property_map_id,
+                    "local_unit_ref": property_id,
+                    "title": title,
+                    "channex_room_type_id": channex_room_type_id,
+                },
+                on_conflict="channex_room_type_id",
+            )
+            .execute()
+        )
+        return channex_room_type_id, saved.data[0]["id"]
+
+    def _upsert_channex_rate_plan(
+        self, db: Client, tenant_id: str, room_type_map_id: str,
+        channex_property_id: str, channex_room_type_id: str,
+        rp: dict[str, Any], currency: str,
+    ) -> str:
+        """Ein Rate-Plan (per_room, manual) am synthetischen Room-Type.
+        base_price (Euro) → Cent-Integer an der API-Grenze."""
+        local_rate_plan_id = rp.get("id")
+        title = rp.get("name") or "Standardpreis"
+        base_cents = self._euro_to_cents(rp.get("base_price")) or 0
+
+        q = (
+            db.table("channex_rate_plan_map")
+            .select("id, channex_rate_plan_id")
+            .eq("room_type_map_id", room_type_map_id)
+            .is_("deleted_at", "null")
+        )
+        q = q.eq("local_rate_plan_id", local_rate_plan_id) if local_rate_plan_id else q
+        existing = q.limit(1).execute()
+
+        attrs = {
+            "property_id": channex_property_id,
+            "room_type_id": channex_room_type_id,
+            "title": title,
+            "currency": currency,
+            "sell_mode": "per_room",
+            "rate_mode": "manual",
+            "options": [{"occupancy": 2, "is_primary": True, "rate": base_cents}],
+        }
+        if existing.data:
+            channex_rate_plan_id = existing.data[0]["channex_rate_plan_id"]
+            self._channex.update_rate_plan(channex_rate_plan_id, attrs)
+            return channex_rate_plan_id
+
+        created = self._channex.create_rate_plan(attrs)
+        channex_rate_plan_id = (created.get("data") or {}).get("id")
+        if not channex_rate_plan_id:
+            raise ChannexError("Keine Rate-Plan-ID erhalten.", status_code=502)
+        db.table("channex_rate_plan_map").upsert(
+            {
+                "tenant_id": tenant_id,
+                "room_type_map_id": room_type_map_id,
+                "local_rate_plan_id": local_rate_plan_id,
+                "title": title,
+                "channex_rate_plan_id": channex_rate_plan_id,
+            },
+            on_conflict="channex_rate_plan_id",
+        ).execute()
+        return channex_rate_plan_id
+
+    def _mark_property_sync(
+        self, db: Client, tenant_id: str, property_id: str,
+        status: str, error: str | None,
+    ) -> None:
+        from datetime import datetime
+
+        db.table("channex_property_map").update(
+            {
+                "last_sync_at": datetime.now(UTC).isoformat(),
+                "last_sync_status": status,
+                "last_sync_error": error,
+            }
+        ).eq("property_id", property_id).eq("tenant_id", tenant_id).execute()
+
+    @staticmethod
+    def _euro_to_cents(amount: object) -> int | None:
+        """Euro (numeric/Decimal/str) → Cent-Integer. Nur an der API-Grenze."""
+        if amount is None:
+            return None
+        try:
+            return round(float(amount) * 100)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            return None
 
     # -- Property-Mapping ------------------------------------------------------
     def list_property_maps(self, ctx: AuthContext) -> PropertyMapListResponse:
@@ -266,10 +486,10 @@ class ChannelManagerService:
     def disconnect_property(self, ctx: AuthContext, map_id: str) -> None:
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         db.table("channex_property_map").update(
-            {"deleted_at": datetime.now(timezone.utc).isoformat(), "sync_enabled": False}
+            {"deleted_at": datetime.now(UTC).isoformat(), "sync_enabled": False}
         ).eq("id", map_id).eq("tenant_id", tenant_id).execute()
 
     # -- ARI-Push --------------------------------------------------------------
@@ -366,46 +586,71 @@ class ChannelManagerService:
 
         return result
 
-    # -- Kanäle (OTA) inhouse: Katalog + Liste + Verbinden ---------------------
-    # Portal-Katalog mit erforschten Pflichtfeldern. label/icon white-label;
-    # `code` ist der interne Provider-Channel-Code (dem Kunden nicht erklärt).
-    _PORTALS: list[dict[str, Any]] = [
-        {
-            "code": "BookingCom",
-            "label": "Booking.com",
-            "icon": "simple-icons:bookingdotcom",
-            "fields": [
-                {"key": "property_id", "label": "Booking.com Hotel-ID",
-                 "placeholder": "z. B. 5868189", "required": True},
-            ],
-        },
-        {
-            "code": "AirBNB",
-            "label": "Airbnb",
-            "icon": "simple-icons:airbnb",
-            "fields": [],  # OAuth — keine Hotel-ID nötig
-        },
+    # -- Kanäle (OTA) inhouse: Channel-API nach Skill --------------------------
+    # White-label: der interne Channel-Code (z.B. "BookingCom") wird dem Kunden
+    # nie erklärt; angezeigt wird nur der menschliche Name (label). Die Portal-
+    # Felder kommen LIVE aus /channels/list (params, nicht-`hidden`) — nicht raten.
+    # Welche Portale wir anbieten (kuratiert; menschliche Labels + Icons):
+    _PORTAL_CATALOG: list[dict[str, str]] = [
+        {"code": "BookingCom", "label": "Booking.com", "icon": "simple-icons:bookingdotcom"},
+        {"code": "AirBNB", "label": "Airbnb", "icon": "simple-icons:airbnb"},
+        {"code": "Expedia", "label": "Expedia", "icon": "simple-icons:expedia"},
+        {"code": "VRBO", "label": "Vrbo", "icon": "ph:house"},
     ]
-
-    # Mapping interner Code → menschlicher Name (für white-label Anzeige).
-    _PORTAL_LABELS = {p["code"]: p["label"] for p in _PORTALS}
+    _PORTAL_LABELS = {p["code"]: p["label"] for p in _PORTAL_CATALOG}
+    _PORTAL_ICONS = {p["code"]: p["icon"] for p in _PORTAL_CATALOG}
 
     def list_supported_portals(self) -> list[dict[str, Any]]:
-        return self._PORTALS
+        """Verbindbare Portale + die Eingabefelder, die der Kunde ausfüllt.
+        Felder werden aus dem Channex-Channel-Katalog (`params`, ohne `hidden`)
+        abgeleitet — so raten wir nichts und bleiben aktuell."""
+        try:
+            catalog = self._channex.list_channel_catalog().get("data") or []
+        except ChannexError:
+            catalog = []
+        by_code = {c.get("code"): c for c in catalog}
+
+        out: list[dict[str, Any]] = []
+        for portal in self._PORTAL_CATALOG:
+            spec = by_code.get(portal["code"]) or {}
+            params = spec.get("params") or {}
+            fields = [
+                {
+                    "key": key,
+                    "label": self._humanize_field(meta.get("title"), portal["label"]),
+                    "placeholder": "",
+                    "required": True,
+                }
+                for key, meta in sorted(
+                    params.items(), key=lambda kv: kv[1].get("position", 99)
+                )
+                # nur sichtbare Pflicht-Eingaben (hidden/boolean rausfiltern)
+                if meta.get("type") not in ("hidden", "boolean")
+            ]
+            out.append(
+                {
+                    "code": portal["code"],
+                    "label": portal["label"],
+                    "icon": portal["icon"],
+                    "fields": fields,
+                }
+            )
+        return out
+
+    @staticmethod
+    def _humanize_field(title: str | None, portal_label: str) -> str:
+        """Channex-Feldtitel ggf. white-label machen (z.B. 'Hotel ID' →
+        'Booking.com Hotel-ID'). Kein Provider-Name durchsickern lassen."""
+        t = (title or "").strip() or "Wert"
+        if t.lower() in ("hotel id", "hotel_id", "hotel code"):
+            return f"{portal_label} Hotel-ID"
+        return t
 
     def list_channels(self, ctx: AuthContext) -> list[dict[str, Any]]:
         """Verbundene Kanäle des Tenants (white-label)."""
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
-        # Channex-Property-IDs des Tenants ermitteln (Scope!).
-        maps = (
-            db.table("channex_property_map")
-            .select("channex_property_id")
-            .eq("tenant_id", tenant_id)
-            .is_("deleted_at", "null")
-            .execute()
-        )
-        prop_ids = {m["channex_property_id"] for m in (maps.data or [])}
+        prop_ids = self._tenant_channex_property_ids(db, tenant_id)
         if not prop_ids:
             return []
         try:
@@ -415,9 +660,8 @@ class ChannelManagerService:
         out: list[dict[str, Any]] = []
         for ch in data:
             a = ch.get("attributes") or ch
-            # nur Kanäle, die zu einer Property dieses Tenants gehören
             if not (set(a.get("properties") or []) & prop_ids):
-                continue
+                continue  # fremder Kanal — nicht dieses Tenants
             out.append(
                 {
                     "id": ch.get("id") or a.get("id"),
@@ -428,17 +672,182 @@ class ChannelManagerService:
             )
         return out
 
-    def connect_channel(
+    def prepare_channel(
         self, ctx: AuthContext, *, property_id: str, portal_code: str,
-        title: str | None, settings: dict[str, Any],
+        settings: dict[str, Any],
     ) -> dict[str, Any]:
-        """Verbindet ein Portal mit einem lokalen Objekt (eigene Maske → Channex)."""
+        """Skill-Schritte 1+2: Zugangsdaten prüfen (test_connection) und die
+        OTA-seitigen Zimmer/Raten holen (mapping_details). Liefert die OTA-Zimmer
+        UND unsere lokalen Rate-Plans zurück, damit die UI zuordnen kann.
+        Legt NOCH NICHTS an."""
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
         if portal_code not in self._PORTAL_LABELS:
             raise ChannelManagerError("Unbekanntes Portal.", status_code=400)
 
-        # Lokales Objekt → Channex-Property-Mapping (Tenant-Scope).
+        channex_property_id = self._require_property_mapping(db, tenant_id, property_id)
+
+        # 1) Zugangsdaten prüfen. ACHTUNG (live verifiziert): Channex liefert
+        #    HTTP 200 AUCH bei falschen Daten — der Erfolg steht in data.success.
+        try:
+            res = self._channex.test_channel_connection(
+                channel=portal_code, settings=settings
+            )
+        except ChannexError as exc:
+            raise ChannelManagerError(
+                f"Zugangsdaten abgelehnt: {exc.message}", status_code=422
+            ) from exc
+        data = res.get("data") or {}
+        if data.get("success") is False:
+            errs = data.get("errors")
+            detail = (
+                "; ".join(str(e) for e in errs)
+                if isinstance(errs, list) and errs
+                else "Die Zugangsdaten konnten nicht bestätigt werden. Bitte "
+                "prüfe die eingegebene Kennung."
+            )
+            raise ChannelManagerError(f"Zugangsdaten abgelehnt: {detail}", status_code=422)
+
+        # 2) OTA-Zimmer/Raten lesen.
+        try:
+            details = self._channex.get_channel_mapping_details(
+                channel=portal_code, settings=settings
+            )
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+        rooms = (details.get("data") or {}).get("rooms") or []
+
+        # Unsere lokalen (gemappten) Rate-Plans dieser Property anbieten.
+        local_rate_plans = self._local_rate_plan_options(
+            db, tenant_id, channex_property_id
+        )
+        return {
+            "portal": self._PORTAL_LABELS[portal_code],
+            "ota_rooms": rooms,            # [{id, title, rates:[{id, title, …}]}]
+            "rate_plans": local_rate_plans,  # [{rate_plan_map_id, title}]
+        }
+
+    def connect_channel(
+        self, ctx: AuthContext, *, property_id: str, portal_code: str,
+        title: str | None, settings: dict[str, Any],
+        mappings: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Skill-Schritte 3+4: Kanal mit Zimmer/Raten-Zuordnung anlegen und
+        aktivieren. `mappings` = [{rate_plan_map_id, room_type_code(int),
+        rate_plan_code(int), occupancy, pricing_type, primary_occ}]."""
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        if portal_code not in self._PORTAL_LABELS:
+            raise ChannelManagerError("Unbekanntes Portal.", status_code=400)
+        if not mappings:
+            raise ChannelManagerError(
+                "Mindestens eine Zimmer/Raten-Zuordnung ist nötig.", status_code=422
+            )
+
+        channex_property_id = self._require_property_mapping(db, tenant_id, property_id)
+        group_id = self._require_group(db, tenant_id, channex_property_id)
+
+        # rate_plans-Array bauen: lokale Rate-Plan-Map-ID → Channex-Rate-Plan-UUID.
+        seen_pairs: set[tuple[int, int]] = set()
+        rate_plans: list[dict[str, Any]] = []
+        for m in mappings:
+            channex_rate_plan_id = self._channex_rate_plan_id_for_map(
+                db, tenant_id, m.get("rate_plan_map_id")
+            )
+            if not channex_rate_plan_id:
+                raise ChannelManagerError(
+                    "Unbekannter Preisplan in der Zuordnung.", status_code=422
+                )
+            room_code = self._as_int(m.get("room_type_code"))
+            rate_code = self._as_int(m.get("rate_plan_code"))
+            if room_code is None or rate_code is None:
+                raise ChannelManagerError(
+                    "Zimmer-/Raten-Code fehlt oder ist ungültig.", status_code=422
+                )
+            pair = (room_code, rate_code)
+            if pair in seen_pairs:
+                raise ChannelManagerError(
+                    "Eine OTA-Zimmer/Raten-Kombination darf nur einmal zugeordnet "
+                    "werden.", status_code=422,
+                )
+            seen_pairs.add(pair)
+            rate_plans.append(
+                {
+                    "rate_plan_id": channex_rate_plan_id,
+                    "settings": {
+                        "room_type_code": room_code,   # INTEGER!
+                        "rate_plan_code": rate_code,    # INTEGER!
+                        "occupancy": self._as_int(m.get("occupancy")) or 2,
+                        "pricing_type": m.get("pricing_type") or "Standard",
+                        "primary_occ": bool(m.get("primary_occ", True)),
+                        "readonly": bool(m.get("readonly", False)),
+                    },
+                }
+            )
+
+        attrs: dict[str, Any] = {
+            "channel": portal_code,
+            "group_id": group_id,                 # Pflicht
+            "is_active": False,                    # wird inaktiv erstellt
+            "title": title or self._PORTAL_LABELS[portal_code],
+            "properties": [channex_property_id],
+            "settings": settings or {},
+            "rate_plans": rate_plans,
+        }
+        try:
+            created = self._channex.create_channel(attrs)
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+
+        channel_id = (created.get("data") or {}).get("id")
+        a = (created.get("data") or {}).get("attributes") or {}
+        is_active = bool(a.get("is_active"))
+
+        # 4) Aktivieren (Kanäle starten inaktiv).
+        if channel_id and not is_active:
+            try:
+                self._channex.activate_channel(channel_id)
+                is_active = True
+            except ChannexError as exc:
+                # Anlegen hat geklappt — Aktivierung kann der Kunde wiederholen.
+                log.warning("channex_channel_activate_failed",
+                            channel_id=channel_id, error=exc.message)
+
+        return {
+            "id": channel_id,
+            "portal": self._PORTAL_LABELS[portal_code],
+            "title": a.get("title") or title or self._PORTAL_LABELS[portal_code],
+            "is_active": is_active,
+        }
+
+    def disconnect_channel(self, ctx: AuthContext, channel_id: str) -> None:
+        """Kanal trennen: erst deaktivieren (sonst 422 'is active'), dann löschen."""
+        self._require_tenant(ctx)
+        try:
+            self._channex.deactivate_channel(channel_id)
+        except ChannexError as exc:
+            # Schon inaktiv/nicht aktivierbar → weiter zum Delete.
+            log.info("channex_channel_deactivate_skip",
+                     channel_id=channel_id, error=exc.message)
+        try:
+            self._channex.delete_channel(channel_id)
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+
+    # -- Channel-Hilfen --------------------------------------------------------
+    def _tenant_channex_property_ids(self, db: Client, tenant_id: str) -> set[str]:
+        maps = (
+            db.table("channex_property_map")
+            .select("channex_property_id")
+            .eq("tenant_id", tenant_id)
+            .is_("deleted_at", "null")
+            .execute()
+        )
+        return {m["channex_property_id"] for m in (maps.data or [])}
+
+    def _require_property_mapping(
+        self, db: Client, tenant_id: str, property_id: str
+    ) -> str:
         pm = (
             db.table("channex_property_map")
             .select("channex_property_id")
@@ -453,8 +862,13 @@ class ChannelManagerService:
                 "Objekt ist noch nicht mit dem Channel-Manager verbunden.",
                 status_code=409,
             )
-        channex_property_id = pm.data[0]["channex_property_id"]
+        return pm.data[0]["channex_property_id"]
 
+    def _require_group(
+        self, db: Client, tenant_id: str, channex_property_id: str
+    ) -> str:
+        """group_id für den Channel-Create (Pflicht). Bevorzugt die Tenant-Group;
+        fällt sonst auf die Group zurück, die diese Property bei Channex besitzt."""
         grp = (
             db.table("channex_group_map")
             .select("channex_group_id")
@@ -462,82 +876,82 @@ class ChannelManagerService:
             .limit(1)
             .execute()
         )
-        group_id = grp.data[0]["channex_group_id"] if grp.data else None
-
-        attrs: dict[str, Any] = {
-            "property_id": channex_property_id,
-            "channel": portal_code,
-            "title": title or self._PORTAL_LABELS[portal_code],
-            "settings": settings or {},
-            "properties": [channex_property_id],
-        }
-        if group_id:
-            attrs["group_id"] = group_id
+        if grp.data:
+            return grp.data[0]["channex_group_id"]
+        # Fallback: Group ermitteln, die die Property enthält.
         try:
-            created = self._channex.create_channel(attrs)
-        except ChannexError as exc:
-            raise self._wrap_channex(exc) from exc
-        a = created.get("data", {}).get("attributes", {})
-        return {
-            "id": created.get("data", {}).get("id"),
-            "portal": self._PORTAL_LABELS.get(portal_code, "Kanal"),
-            "title": a.get("title"),
-            "is_active": bool(a.get("is_active")),
-        }
+            for g in self._channex.list_groups().get("data") or []:
+                rel = (g.get("relationships") or {}).get("properties") or {}
+                ids = {p.get("id") for p in (rel.get("data") or [])}
+                if channex_property_id in ids:
+                    return g.get("id")
+        except ChannexError:
+            pass
+        raise ChannelManagerError(
+            "Keine Channex-Gruppe für dieses Konto gefunden.", status_code=409
+        )
 
-    def disconnect_channel(self, ctx: AuthContext, channel_id: str) -> None:
-        self._require_tenant(ctx)
-        try:
-            self._channex.delete_channel(channel_id)
-        except ChannexError as exc:
-            raise self._wrap_channex(exc) from exc
-
-    # -- iFrame Connect (Kanäle verbinden über Channex-UI) ---------------------
-    def get_channel_connect_url(
-        self, ctx: AuthContext, *, property_map_id: str | None = None
-    ) -> str:
-        """Baut die white-label iFrame-URL, über die der Kunde seine Kanäle
-        (Booking.com/Airbnb …) bei Channex verbindet. Nutzt die Channex-Property
-        des Tenants (erste verbundene, oder die angegebene)."""
-        tenant_id = self._require_tenant(ctx)
-        db = self._require_db()
-
-        q = (
+    def _local_rate_plan_options(
+        self, db: Client, tenant_id: str, channex_property_id: str
+    ) -> list[dict[str, Any]]:
+        """Gemappte Rate-Plans dieser Property (für die Zuordnungs-Auswahl)."""
+        pm = (
             db.table("channex_property_map")
-            .select("channex_property_id")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("channex_property_id", channex_property_id)
+            .limit(1)
+            .execute()
+        )
+        if not pm.data:
+            return []
+        rts = (
+            db.table("channex_room_type_map")
+            .select("id")
+            .eq("property_map_id", pm.data[0]["id"])
+            .is_("deleted_at", "null")
+            .execute()
+        )
+        rt_ids = [r["id"] for r in (rts.data or [])]
+        if not rt_ids:
+            return []
+        rps = (
+            db.table("channex_rate_plan_map")
+            .select("id, title")
+            .in_("room_type_map_id", rt_ids)
+            .is_("deleted_at", "null")
+            .execute()
+        )
+        return [
+            {"rate_plan_map_id": r["id"], "title": r.get("title") or "Preisplan"}
+            for r in (rps.data or [])
+        ]
+
+    def _channex_rate_plan_id_for_map(
+        self, db: Client, tenant_id: str, rate_plan_map_id: str | None
+    ) -> str | None:
+        if not rate_plan_map_id:
+            return None
+        rp = (
+            db.table("channex_rate_plan_map")
+            .select("channex_rate_plan_id")
+            .eq("id", rate_plan_map_id)
             .eq("tenant_id", tenant_id)
             .is_("deleted_at", "null")
-        )
-        if property_map_id:
-            q = q.eq("id", property_map_id)
-        res = q.limit(1).execute()
-        if not res.data:
-            raise ChannelManagerError(
-                "Noch kein mit dem Channel-Manager verbundenes Objekt vorhanden. "
-                "Lege zuerst ein Objekt an.",
-                status_code=409,
-            )
-        channex_property_id = res.data[0]["channex_property_id"]
-
-        # Group des Tenants (falls vorhanden) mitgeben.
-        grp = (
-            db.table("channex_group_map")
-            .select("channex_group_id")
-            .eq("tenant_id", tenant_id)
             .limit(1)
             .execute()
         )
-        group_id = grp.data[0]["channex_group_id"] if grp.data else None
+        return rp.data[0]["channex_rate_plan_id"] if rp.data else None
 
+    @staticmethod
+    def _as_int(value: object) -> int | None:
+        """OTA-Codes MÜSSEN als Integer gesendet werden (Strings → 'Not mapped')."""
+        if value is None or isinstance(value, bool):
+            return None
         try:
-            token = self._channex.create_one_time_token(
-                property_id=channex_property_id, group_id=group_id
-            )
-        except ChannexError as exc:
-            raise self._wrap_channex(exc) from exc
-        return self._channex.build_iframe_url(
-            token=token, property_id=channex_property_id
-        )
+            return int(value)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            return None
 
     # -- Webhook-Registrierung bei Channex (Admin) -----------------------------
     _WEBHOOK_EVENTS = "ari;booking_new;booking_modification;booking_cancellation"
@@ -748,10 +1162,10 @@ class ChannelManagerService:
         )
 
     @staticmethod
-    def _to_cents(amount: Any) -> int | None:
+    def _to_cents(amount: object) -> int | None:
         if amount is None:
             return None
         try:
-            return round(float(amount) * 100)
+            return round(float(amount) * 100)  # type: ignore[arg-type]
         except (TypeError, ValueError):
             return None

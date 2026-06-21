@@ -23,6 +23,8 @@ from .schemas import (
     ChannelListResponse,
     ChannelResponse,
     ConnectChannelRequest,
+    PrepareChannelRequest,
+    PrepareChannelResponse,
     PropertyConnectRequest,
     PropertyMapListResponse,
     PropertyMapResponse,
@@ -135,11 +137,28 @@ def list_channels(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post("/channels/prepare", response_model=PrepareChannelResponse)
+def prepare_channel(
+    req: PrepareChannelRequest, service: ChannelManagerServiceDep, ctx: _write
+) -> PrepareChannelResponse:
+    """Schritt 1+2: Zugangsdaten prüfen + OTA-Zimmer/Raten holen (legt nichts an)."""
+    try:
+        data = service.prepare_channel(
+            ctx,
+            property_id=req.property_id,
+            portal_code=req.portal_code,
+            settings=req.settings,
+        )
+        return PrepareChannelResponse(**data)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.post("/channels", response_model=ChannelResponse, status_code=status.HTTP_201_CREATED)
 def connect_channel(
     req: ConnectChannelRequest, service: ChannelManagerServiceDep, ctx: _write
 ) -> ChannelResponse:
-    """Verbindet ein Portal mit einem Objekt (eigene Maske, inhouse)."""
+    """Schritt 3+4: Kanal mit Zimmer/Raten-Zuordnung anlegen und aktivieren."""
     try:
         c = service.connect_channel(
             ctx,
@@ -147,6 +166,7 @@ def connect_channel(
             portal_code=req.portal_code,
             title=req.title,
             settings=req.settings,
+            mappings=[m.model_dump() for m in req.mappings],
         )
         return ChannelResponse(**c)
     except ChannelManagerError as exc:
@@ -159,19 +179,6 @@ def disconnect_channel(
 ) -> None:
     try:
         service.disconnect_channel(ctx, channel_id)
-    except ChannelManagerError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
-
-
-# --- Kanäle verbinden (white-label iFrame-URL) -------------------------------
-@router.get("/connect-url")
-def channel_connect_url(
-    ctx: CurrentUser, service: ChannelManagerServiceDep
-) -> dict[str, str]:
-    """Liefert die eingebettete Connect-URL (Channex-iFrame, Deutsch, white-label),
-    über die der Kunde Booking.com/Airbnb & Co. verbindet."""
-    try:
-        return {"url": service.get_channel_connect_url(ctx)}
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
