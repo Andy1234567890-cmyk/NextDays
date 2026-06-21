@@ -418,10 +418,19 @@ automatisch und **non-blocking** (Provider-Fehler dürfen Registrierung/Objekt-
 Anlage nie scheitern lassen):
 
 1. **Registrierung** (`auth.register`) → legt automatisch die Tenant-Group an.
-2. **Objekt anlegen** (`POST /properties`) → löst den **Content-Sync** aus: Provider-
+2. **Firmendaten** (Onboarding-Schritt 1, Pflicht) → der Kunde (= Admin seines
+   Tenants) erfasst Firma/Adresse/Kontakt + Steuer (USt-ID/VAT-ID **oder**
+   Steuernummer, oder „Kleinunternehmer"). Gespeichert via
+   `PATCH /buchhaltung/companies/{id}` in `tenant_billing_profile`; Status-Flag
+   `company_data_set` in `tenant_onboarding`. Länderneutral (DACH + EU, ISO-Land
+   + Währung). Pflicht, BEVOR Objekt/Anbindung möglich sind.
+3. **Objekt anlegen** (`POST /properties`) → löst den **Content-Sync** aus: Provider-
    Property (in der Tenant-Group) + **ein synthetischer Room-Type** (`count_of_rooms=1`)
    + je lokalem Preisplan **ein Rate-Plan** werden angelegt; alle Mapping-Tabellen
    gefüllt. Idempotent (POST wenn kein Mapping, sonst PUT) → beliebig wiederholbar.
+   Die **Firmen-Adresse/Kontakt** (aus `tenant_billing_profile`) wird an die
+   Provider-Property mitgegeben (`address`, `zip_code`, `city`, `country`, `email`,
+   `phone`, `website`) — OTAs verlangen das zur Aktivierung.
 
 NextDays modelliert **keine Zimmerkategorien** (eine `property` IST die buchbare
 Einheit, Ferienwohnungs-Modell). Channex verkauft aber Room-Types — daher der

@@ -15,6 +15,7 @@ class OnboardingStatus(BaseModel):
 
     has_ota: bool | None = None
     selected_portals: list[str] = Field(default_factory=list)
+    company_data_set: bool = False
     object_created: bool = False
     price_set: bool = False
     channels_done: bool = False
@@ -26,6 +27,7 @@ class OnboardingUpdate(BaseModel):
 
     has_ota: bool | None = None
     selected_portals: list[str] | None = None
+    company_data_set: bool | None = None
     object_created: bool | None = None
     price_set: bool | None = None
     channels_done: bool | None = None

@@ -9,6 +9,7 @@ import { currentToken } from "@/lib/session-token";
 export type OnboardingStatus = {
   has_ota: boolean | null;
   selected_portals: string[];
+  company_data_set: boolean;
   object_created: boolean;
   price_set: boolean;
   channels_done: boolean;

@@ -10,13 +10,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { register } from "@/lib/auth";
-
-// Häufigste Länder/Währungen zuerst (DACH-Fokus); Default Deutschland/EUR.
-const LAENDER = [
-  { code: "DE", label: "Deutschland", currency: "EUR" },
-  { code: "AT", label: "Österreich", currency: "EUR" },
-  { code: "CH", label: "Schweiz", currency: "CHF" },
-] as const;
+import { LAENDER, currencyForCountry } from "@/lib/laender";
 
 export function SignupForm({ onBack }: { onBack: () => void }) {
   const router = useRouter();
@@ -27,13 +21,12 @@ export function SignupForm({ onBack }: { onBack: () => void }) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [country, setCountry] = useState<(typeof LAENDER)[number]["code"]>("DE");
+  const [country, setCountry] = useState<string>("DE");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    const currency =
-      LAENDER.find((l) => l.code === country)?.currency ?? "EUR";
+    const currency = currencyForCountry(country);
 
     startTransition(async () => {
       const res = await register({
@@ -136,9 +129,7 @@ export function SignupForm({ onBack }: { onBack: () => void }) {
         <select
           id="country"
           value={country}
-          onChange={(e) =>
-            setCountry(e.target.value as (typeof LAENDER)[number]["code"])
-          }
+          onChange={(e) => setCountry(e.target.value)}
           className="h-10 rounded-full border border-border bg-background px-4 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           {LAENDER.map((l) => (

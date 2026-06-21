@@ -14,11 +14,20 @@ import { useState, useTransition } from "react";
 import { ChannelConnectButton } from "@/components/channel-manager/channel-connect-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { type FirmenProfil, saveFirmenProfil } from "@/lib/firmenprofil";
+import { LAENDER, RECHTSFORMEN } from "@/lib/laender";
 import type { OnboardingStatus } from "@/lib/onboarding";
 import { updateOnboarding } from "@/lib/onboarding";
 import { createProperty } from "@/lib/properties";
 
-type Step = "welcome" | "branch" | "object" | "price" | "channels" | "done";
+type Step =
+  | "welcome"
+  | "company"
+  | "branch"
+  | "object"
+  | "price"
+  | "channels"
+  | "done";
 
 // Portale, die ein Hotel evtl. schon nutzt (für den Bestands-Pfad).
 const PORTALE = [
@@ -40,7 +49,10 @@ export function OnboardingWizard({
   // Startschritt anhand des gespeicherten Fortschritts wählen (Wiederaufnahme).
   function firstOpenStep(s?: OnboardingStatus): Step {
     if (!s) return "welcome";
-    if (!s.object_created) return s.has_ota === null ? "welcome" : "object";
+    // Firmendaten sind der erste Pflichtschritt (Konto vollständig + nötig für
+    // die Channel-Anbindung). Ohne sie geht es nicht weiter.
+    if (!s.company_data_set) return "welcome";
+    if (!s.object_created) return s.has_ota === null ? "branch" : "object";
     if (!s.price_set) return "price";
     if (!s.channels_done) return "channels";
     return "done";
@@ -56,6 +68,19 @@ export function OnboardingWizard({
   const [selectedPortals, setSelectedPortals] = useState<string[]>(
     initialStatus?.selected_portals ?? [],
   );
+
+  // Firmendaten (länderneutral, DACH + EU). Pflicht: A (Firma/Adresse/Kontakt)
+  // + B (Steuer). C (Register/GF/Bank) optional/aufklappbar.
+  const [firma, setFirma] = useState<FirmenProfil>({
+    companyCountry: "DE",
+    legalForm: "Einzelunternehmen",
+  });
+  const [smallBusiness, setSmallBusiness] = useState(false);
+  const [showOptional, setShowOptional] = useState(false);
+
+  function setF<K extends keyof FirmenProfil>(key: K, value: FirmenProfil[K]) {
+    setFirma((prev) => ({ ...prev, [key]: value }));
+  }
 
   // Erstes Objekt
   const [objectTitle, setObjectTitle] = useState("");
@@ -87,6 +112,42 @@ export function OnboardingWizard({
       if (res.ok) {
         persist({ object_created: true });
         setStep("price");
+      } else {
+        setError(res.error);
+      }
+    });
+  }
+
+  // Firmendaten speichern (Pflichtfelder prüfen) → tenant_billing_profile +
+  // Status-Flag. Erst danach geht es weiter.
+  function saveCompany() {
+    setError(null);
+    const required: [string | undefined, string][] = [
+      [firma.companyName, "Firmenname"],
+      [firma.companyStreet, "Straße"],
+      [firma.companyHouseNumber, "Hausnummer"],
+      [firma.companyPostalCode, "PLZ"],
+      [firma.companyCity, "Ort"],
+      [firma.companyCountry, "Land"],
+      [firma.email, "E-Mail"],
+      [firma.phoneNumber, "Telefon"],
+    ];
+    const missing = required.filter(([v]) => !v?.trim()).map(([, l]) => l);
+    if (!smallBusiness && !firma.vatId?.trim() && !firma.taxNumber?.trim()) {
+      missing.push("USt-ID oder Steuernummer");
+    }
+    if (missing.length > 0) {
+      setError(`Bitte ausfüllen: ${missing.join(", ")}.`);
+      return;
+    }
+    startTransition(async () => {
+      const res = await saveFirmenProfil({
+        ...firma,
+        isSmallBusiness: smallBusiness,
+      });
+      if (res.ok) {
+        persist({ company_data_set: true });
+        setStep("branch");
       } else {
         setError(res.error);
       }
@@ -127,9 +188,181 @@ export function OnboardingWizard({
             erstes Objekt an, setzen einen Preis und verbinden deine
             Buchungskanäle.
           </p>
-          <Button onClick={() => setStep("branch")} className="self-start">
+          <Button onClick={() => setStep("company")} className="self-start">
             Los geht&apos;s
           </Button>
+        </Card>
+      )}
+
+      {step === "company" && (
+        <Card>
+          <h1 className="font-display text-2xl font-extrabold">Firmendaten</h1>
+          <p className="text-muted-foreground">
+            Diese Angaben gehören zu deinem Konto und werden u. a. für
+            Rechnungen und die Anbindung deiner Buchungsportale benötigt.
+          </p>
+
+          {/* A — Firma */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Firmenname *">
+              <Input
+                value={firma.companyName ?? ""}
+                onChange={(e) => setF("companyName", e.target.value)}
+                placeholder="z. B. Villa zur Sonne GmbH"
+              />
+            </Field>
+            <Field label="Rechtsform *">
+              <select
+                value={firma.legalForm ?? ""}
+                onChange={(e) => setF("legalForm", e.target.value)}
+                className="h-10 rounded-full border border-border bg-background px-4 text-sm"
+              >
+                {RECHTSFORMEN.map((r) => (
+                  <option key={r} value={r}>
+                    {r}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+
+          {/* A — Adresse */}
+          <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
+            <Field label="Straße *">
+              <Input
+                value={firma.companyStreet ?? ""}
+                onChange={(e) => setF("companyStreet", e.target.value)}
+              />
+            </Field>
+            <Field label="Hausnummer *">
+              <Input
+                value={firma.companyHouseNumber ?? ""}
+                onChange={(e) => setF("companyHouseNumber", e.target.value)}
+              />
+            </Field>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-[1fr_2fr_1.5fr]">
+            <Field label="PLZ *">
+              <Input
+                value={firma.companyPostalCode ?? ""}
+                onChange={(e) => setF("companyPostalCode", e.target.value)}
+              />
+            </Field>
+            <Field label="Ort *">
+              <Input
+                value={firma.companyCity ?? ""}
+                onChange={(e) => setF("companyCity", e.target.value)}
+              />
+            </Field>
+            <Field label="Land *">
+              <select
+                value={firma.companyCountry ?? "DE"}
+                onChange={(e) => setF("companyCountry", e.target.value)}
+                className="h-10 rounded-full border border-border bg-background px-4 text-sm"
+              >
+                {LAENDER.map((l) => (
+                  <option key={l.code} value={l.code}>
+                    {l.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+
+          {/* A — Kontakt */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="E-Mail *">
+              <Input
+                type="email"
+                value={firma.email ?? ""}
+                onChange={(e) => setF("email", e.target.value)}
+              />
+            </Field>
+            <Field label="Telefon *">
+              <Input
+                value={firma.phoneNumber ?? ""}
+                onChange={(e) => setF("phoneNumber", e.target.value)}
+              />
+            </Field>
+          </div>
+
+          {/* B — Steuer */}
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={smallBusiness}
+              onChange={(e) => setSmallBusiness(e.target.checked)}
+            />
+            Steuerbefreit (Kleinunternehmer) — keine USt-ID nötig
+          </label>
+          {!smallBusiness && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="USt-ID / VAT-ID">
+                <Input
+                  value={firma.vatId ?? ""}
+                  onChange={(e) => setF("vatId", e.target.value)}
+                  placeholder="z. B. DE123456789"
+                />
+              </Field>
+              <Field label="oder Steuernummer">
+                <Input
+                  value={firma.taxNumber ?? ""}
+                  onChange={(e) => setF("taxNumber", e.target.value)}
+                />
+              </Field>
+            </div>
+          )}
+
+          {/* C — Optional */}
+          <button
+            type="button"
+            onClick={() => setShowOptional((v) => !v)}
+            className="flex items-center gap-1 self-start text-sm text-muted-foreground hover:text-foreground"
+          >
+            <Icon
+              icon={showOptional ? "ph:caret-up" : "ph:caret-down"}
+              className="size-4"
+            />
+            Weitere Angaben (optional)
+          </button>
+          {showOptional && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field label="Website">
+                <Input
+                  value={firma.website ?? ""}
+                  onChange={(e) => setF("website", e.target.value)}
+                />
+              </Field>
+              <Field label="Handelsregister-Nr.">
+                <Input
+                  value={firma.companyRegister ?? ""}
+                  onChange={(e) => setF("companyRegister", e.target.value)}
+                />
+              </Field>
+              <Field label="Registergericht">
+                <Input
+                  value={firma.districtCourt ?? ""}
+                  onChange={(e) => setF("districtCourt", e.target.value)}
+                />
+              </Field>
+              <Field label="IBAN">
+                <Input
+                  value={firma.iban ?? ""}
+                  onChange={(e) => setF("iban", e.target.value)}
+                />
+              </Field>
+            </div>
+          )}
+
+          {error && <ErrorText>{error}</ErrorText>}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setStep("welcome")}>
+              Zurück
+            </Button>
+            <Button onClick={saveCompany} disabled={pending}>
+              {pending ? "Speichert …" : "Weiter"}
+            </Button>
+          </div>
         </Card>
       )}
 
@@ -409,8 +642,31 @@ function ErrorText({ children }: { children: React.ReactNode }) {
   );
 }
 
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <label className="text-sm font-medium">{label}</label>
+      {children}
+    </div>
+  );
+}
+
 function ProgressBar({ step }: { step: Step }) {
-  const order: Step[] = ["welcome", "branch", "object", "price", "channels", "done"];
+  const order: Step[] = [
+    "welcome",
+    "company",
+    "branch",
+    "object",
+    "price",
+    "channels",
+    "done",
+  ];
   const idx = order.indexOf(step);
   const pct = Math.round((idx / (order.length - 1)) * 100);
   return (

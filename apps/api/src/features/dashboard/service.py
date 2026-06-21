@@ -5,7 +5,7 @@ dem JWT, nie aus User-Input) — gleiches Muster wie die anderen Slices.
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from supabase import Client
@@ -67,7 +67,7 @@ class DashboardService:
         data = req.model_dump(exclude_none=True)
         row.update(data)
         if data.get("completed") is True:
-            row["completed_at"] = datetime.now(timezone.utc).isoformat()
+            row["completed_at"] = datetime.now(UTC).isoformat()
 
         saved = (
             db.table("tenant_onboarding")
@@ -83,6 +83,7 @@ class DashboardService:
         return OnboardingStatus(
             has_ota=row.get("has_ota"),
             selected_portals=row.get("selected_portals") or [],
+            company_data_set=row.get("company_data_set", False),
             object_created=row.get("object_created", False),
             price_set=row.get("price_set", False),
             channels_done=row.get("channels_done", False),

@@ -232,7 +232,10 @@ class ChannelManagerService:
             .limit(1)
             .execute()
         )
+        # Firmen-Adresse/Kontakt aus dem Firmenprofil mitgeben — OTAs wie
+        # Booking.com verlangen Property-Adresse/Kontakt zur Aktivierung.
         attrs = {"title": title, "currency": currency}
+        attrs.update(self._billing_property_attrs(db, tenant_id))
         if existing.data:
             channex_id = existing.data[0]["channex_property_id"]
             self._channex.update_property(channex_id, attrs)
@@ -262,6 +265,37 @@ class ChannelManagerService:
             on_conflict="channex_property_id",
         ).execute()
         return channex_id
+
+    def _billing_property_attrs(
+        self, db: Client, tenant_id: str
+    ) -> dict[str, Any]:
+        """Adress-/Kontaktfelder aus tenant_billing_profile in Channex-Property-
+        Attribute übersetzen. Nur nicht-leere Werte (Channex: Nullen weglassen).
+        Adresse = Straße + Hausnummer zusammengeführt (Channex hat ein Feld)."""
+        res = (
+            db.table("tenant_billing_profile")
+            .select("company_street, company_house_number, company_postal_code, "
+                    "company_city, company_country, email, phone_number, website")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        if not res.data:
+            return {}
+        p = res.data[0]
+        street = " ".join(
+            x for x in [p.get("company_street"), p.get("company_house_number")] if x
+        ).strip()
+        candidates = {
+            "address": street or None,
+            "zip_code": p.get("company_postal_code"),
+            "city": p.get("company_city"),
+            "country": p.get("company_country"),
+            "email": p.get("email"),
+            "phone": p.get("phone_number"),
+            "website": p.get("website"),
+        }
+        return {k: v for k, v in candidates.items() if v}
 
     def _upsert_channex_room_type(
         self, db: Client, tenant_id: str, channex_property_id: str,
