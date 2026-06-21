@@ -46,9 +46,11 @@ const PORTALE = [
 export function OnboardingWizard({
   channelManagerReady,
   initialStatus,
+  loginEmail,
 }: {
   channelManagerReady: boolean;
   initialStatus?: OnboardingStatus;
+  loginEmail?: string | null;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
@@ -81,6 +83,8 @@ export function OnboardingWizard({
   const [firma, setFirma] = useState<FirmenProfil>({
     companyCountry: "DE",
     legalForm: "Einzelunternehmen",
+    // Rechnungs-/Firmen-E-Mail mit der Login-E-Mail vorbelegen (editierbar).
+    email: loginEmail ?? undefined,
   });
   const [smallBusiness, setSmallBusiness] = useState(false);
   const [showOptional, setShowOptional] = useState(false);
@@ -289,13 +293,17 @@ export function OnboardingWizard({
               </NativeSelect>
             </Field>
 
-            {/* Kontakt */}
-            <Field className="sm:col-span-6" label="E-Mail *">
+            {/* Kontakt — Rechnungs-/Firmen-E-Mail (kann von Login abweichen) */}
+            <Field className="sm:col-span-6" label="Rechnungs-E-Mail *">
               <Input
                 type="email"
                 value={firma.email ?? ""}
                 onChange={(e) => setF("email", e.target.value)}
               />
+              <p className="text-xs text-muted-foreground">
+                Vorbelegt mit deiner Login-E-Mail — für Rechnungen/Kontakt
+                anpassbar.
+              </p>
             </Field>
             <Field className="sm:col-span-6" label="Telefon *">
               <Input

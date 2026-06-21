@@ -8,13 +8,15 @@ import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
 import { Card, CardContent } from "@/components/ui/card";
 import { getChannexHealth } from "@/lib/channex";
 import { getOnboarding } from "@/lib/onboarding";
+import { currentUserEmail } from "@/lib/session-token";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const [onboarding, health] = await Promise.all([
+  const [onboarding, health, loginEmail] = await Promise.all([
     getOnboarding(),
     getChannexHealth(),
+    currentUserEmail(),
   ]);
 
   // Onboarding noch offen → Assistent im Dashboard anzeigen.
@@ -27,6 +29,7 @@ export default async function DashboardPage() {
             health.ok ? health.data.channel_manager_ready : false
           }
           initialStatus={status}
+          loginEmail={loginEmail}
         />
       </div>
     );
