@@ -78,7 +78,6 @@ export function OnboardingWizard({
     email: loginEmail ?? undefined,
   });
   const [smallBusiness, setSmallBusiness] = useState(false);
-  const [showOptional, setShowOptional] = useState(false);
 
   // Unterkunft (Channex-Pflichtfelder). Adresse/Land kommen aus den Firmendaten;
   // hier nur das Unterkunfts-Spezifische. Geo via "Standort finden" (Geocoding).
@@ -363,46 +362,30 @@ export function OnboardingWizard({
             </div>
           )}
 
-          {/* C — Optional */}
-          <button
-            type="button"
-            onClick={() => setShowOptional((v) => !v)}
-            className="flex items-center gap-1 self-start text-sm text-muted-foreground hover:text-foreground"
-          >
-            <Icon
-              icon={showOptional ? "ph:caret-up" : "ph:caret-down"}
-              className="size-4"
-            />
+          {/* C — Weitere Angaben (direkt sichtbar, kein Aufklappen) */}
+          <p className="text-sm font-medium text-muted-foreground">
             {t("company.moreOptional")}
-          </button>
-          {showOptional && (
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label={t("company.website")}>
-                <Input
-                  value={firma.website ?? ""}
-                  onChange={(e) => setF("website", e.target.value)}
-                />
-              </Field>
-              <Field label={t("company.companyRegister")}>
-                <Input
-                  value={firma.companyRegister ?? ""}
-                  onChange={(e) => setF("companyRegister", e.target.value)}
-                />
-              </Field>
-              <Field label={t("company.districtCourt")}>
-                <Input
-                  value={firma.districtCourt ?? ""}
-                  onChange={(e) => setF("districtCourt", e.target.value)}
-                />
-              </Field>
-              <Field label={t("company.iban")}>
-                <Input
-                  value={firma.iban ?? ""}
-                  onChange={(e) => setF("iban", e.target.value)}
-                />
-              </Field>
-            </div>
-          )}
+          </p>
+          <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-2">
+            <Field label={t("company.companyRegister")}>
+              <Input
+                value={firma.companyRegister ?? ""}
+                onChange={(e) => setF("companyRegister", e.target.value)}
+              />
+            </Field>
+            <Field label={t("company.districtCourt")}>
+              <Input
+                value={firma.districtCourt ?? ""}
+                onChange={(e) => setF("districtCourt", e.target.value)}
+              />
+            </Field>
+            <Field label={t("company.iban")}>
+              <Input
+                value={firma.iban ?? ""}
+                onChange={(e) => setF("iban", e.target.value)}
+              />
+            </Field>
+          </div>
 
           {error && <ErrorText>{error}</ErrorText>}
           <div className="flex gap-2">
