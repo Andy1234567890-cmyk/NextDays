@@ -450,7 +450,7 @@ class ChannelManagerService:
             raise ChannelManagerError("Property nicht gefunden.", status_code=404)
         local = prop.data[0]
 
-        channex_id = req.channex_property_id
+        channex_id = req.external_property_ref
         if not channex_id:
             # Neu in Channex anlegen.
             attributes = {
@@ -562,6 +562,13 @@ class ChannelManagerService:
         db = self._require_db()
         result = BookingSyncResponse()
 
+        # KRITISCH (Mandantentrennung): Der Revisions-Feed ist KONTOWEIT — er
+        # enthält die Buchungen ALLER Tenants. Wir dürfen ausschließlich
+        # Revisionen verarbeiten, deren property_id zu DIESEM Tenant gehört.
+        # Fremde Revisionen werden übersprungen und NICHT ge-ackt (damit der
+        # zuständige Tenant sie noch aus dem Feed bekommt).
+        own_property_ids = self._tenant_channex_property_ids(db, tenant_id)
+
         try:
             feed = self._channex.get_booking_revisions_feed()
         except ChannexError as exc:
@@ -573,6 +580,13 @@ class ChannelManagerService:
         for rev in revisions:
             attrs = rev.get("attributes") or rev
             revision_id = rev.get("id") or attrs.get("revision_id")
+            rev_property_id = attrs.get("property_id")
+
+            # Gehört diese Revision diesem Tenant? Sonst überspringen (kein ack!).
+            if rev_property_id not in own_property_ids:
+                result.skipped += 1
+                continue
+
             try:
                 self._upsert_booking(db, tenant_id, attrs, revision_id)
                 result.saved += 1

@@ -28,14 +28,15 @@ class PropertyMapResponse(BaseModel):
 
 
 class PropertyConnectRequest(BaseModel):
-    """Lokale Property mit Channex verbinden.
+    """Lokales Objekt mit dem Channel-Manager verbinden.
 
-    Entweder bestehende Channex-Property anbinden (channex_property_id gesetzt)
-    oder neu in Channex anlegen (channex_property_id leer → wir erzeugen sie).
+    Entweder ein bestehendes Provider-Objekt anbinden (`external_property_ref`
+    gesetzt) oder neu anlegen (leer → wir erzeugen es). Der Feldname ist neutral
+    — KEIN Provider-Bezug, der dem Kunden im Request/Network-Tab auffällt.
     """
 
     property_id: str
-    channex_property_id: str | None = None
+    external_property_ref: str | None = None
     # Felder zum Anlegen (nur nötig, wenn neu erzeugt wird):
     title: str | None = Field(default=None, max_length=255)
     currency: str | None = Field(default=None, min_length=3, max_length=3)
@@ -65,7 +66,7 @@ class RateUpdate(BaseModel):
 
 
 class AriPushRequest(BaseModel):
-    """Gebündelter ARI-Push (Channex-Best-Practice: batchen, nicht einzeln)."""
+    """Gebündelter ARI-Push (Best-Practice: batchen, nicht einzeln)."""
 
     availability: list[AvailabilityUpdate] = Field(default_factory=list)
     rates: list[RateUpdate] = Field(default_factory=list)
@@ -104,6 +105,9 @@ class BookingSyncResponse(BaseModel):
     fetched: int = 0
     saved: int = 0
     acknowledged: int = 0
+    # Revisionen FREMDER Tenants, die wir bewusst übersprungen haben (Mandanten-
+    # trennung). Müssen >0 sein können, ohne dass etwas durchsickert.
+    skipped: int = 0
     errors: list[str] = Field(default_factory=list)
 
 

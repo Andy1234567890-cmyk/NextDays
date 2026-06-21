@@ -86,7 +86,7 @@ def disconnect_property(
 def push_ari(
     req: AriPushRequest, service: ChannelManagerServiceDep, ctx: _write
 ) -> AriPushResponse:
-    """Verfügbarkeit + Preise/Restriktionen gebündelt zu Channex pushen."""
+    """Verfügbarkeit + Preise/Restriktionen gebündelt an die Kanäle pushen."""
     try:
         return service.push_ari(ctx, req)
     except ChannelManagerError as exc:
@@ -108,7 +108,7 @@ def list_bookings(
 def sync_bookings(
     service: ChannelManagerServiceDep, ctx: _write
 ) -> BookingSyncResponse:
-    """Buchungs-Revisions-Feed von Channex ziehen, speichern und bestätigen."""
+    """Eingehende Kanal-Buchungen abrufen, speichern und bestätigen."""
     try:
         return service.sync_bookings(ctx)
     except ChannelManagerError as exc:
@@ -186,7 +186,7 @@ def disconnect_channel(
 # --- Webhook-Registrierung bei Channex (Admin) -------------------------------
 @router.get("/webhooks")
 def list_webhooks(service: ChannelManagerServiceDep, ctx: _write) -> list[dict]:
-    """Bei Channex registrierte Webhooks anzeigen (Admin/Diagnose)."""
+    """Registrierte Kanal-Webhooks anzeigen (Admin/Diagnose)."""
     try:
         return service.list_registered_webhooks()
     except ChannelManagerError as exc:

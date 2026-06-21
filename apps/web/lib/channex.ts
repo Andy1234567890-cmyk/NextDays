@@ -90,7 +90,7 @@ export async function listPropertyMaps(): Promise<
 
 export async function connectProperty(input: {
   property_id: string;
-  channex_property_id?: string;
+  external_property_ref?: string;
   title?: string;
   currency?: string;
 }): Promise<Result<PropertyMap>> {
