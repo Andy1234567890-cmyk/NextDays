@@ -13,6 +13,7 @@ from .features.booking_engine.router import router as booking_engine_router
 from .features.buchhaltung.router import router as buchhaltung_router
 from .features.calendar.router import router as calendar_router
 from .features.channel_manager.router import router as channel_manager_router
+from .features.channel_manager.sandbox_ota import router as sandbox_ota_router
 from .features.content.router import router as content_router
 from .features.crm.router import router as crm_router
 from .features.dashboard.router import router as dashboard_router
@@ -37,6 +38,7 @@ _SLICE_ROUTERS = [
     inbox_router,
     payments_router,
     channel_manager_router,
+    sandbox_ota_router,
     booking_engine_router,
     ocr_router,
     public_portal_router,

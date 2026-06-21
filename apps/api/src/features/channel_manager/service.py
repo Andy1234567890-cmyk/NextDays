@@ -597,8 +597,31 @@ class ChannelManagerService:
         {"code": "Expedia", "label": "Expedia", "icon": "simple-icons:expedia"},
         {"code": "VRBO", "label": "Vrbo", "icon": "ph:house"},
     ]
-    _PORTAL_LABELS = {p["code"]: p["label"] for p in _PORTAL_CATALOG}
-    _PORTAL_ICONS = {p["code"]: p["icon"] for p in _PORTAL_CATALOG}
+    # Sandbox-Testkanal (NUR wenn channex_sandbox_portals=True): OpenChannel ruft
+    # UNSEREN Mock-OTA-Endpoint (sandbox_ota.py) auf → kompletter Connect-Flow
+    # ohne echtes OTA-Konto. endpoint/hotel_code/api_key setzt der Service selbst.
+    _SANDBOX_CODE = "OpenChannel"
+    _SANDBOX_CATALOG: list[dict[str, str]] = [
+        {"code": _SANDBOX_CODE, "label": "Testkanal (Sandbox)", "icon": "ph:flask"},
+    ]
+
+    def _portal_catalog(self) -> list[dict[str, str]]:
+        """Sichtbare Portale — im Sandbox-Modus inkl. Test-Kanäle."""
+        from src.core.config import get_settings
+
+        catalog = list(self._PORTAL_CATALOG)
+        if get_settings().channex_sandbox_portals:
+            catalog = catalog + self._SANDBOX_CATALOG
+        return catalog
+
+    @property
+    def _portal_labels(self) -> dict[str, str]:
+        return {p["code"]: p["label"] for p in self._portal_catalog()}
+
+    # Rückwärtskompatibler Alias (an vielen Stellen genutzt).
+    @property
+    def _PORTAL_LABELS(self) -> dict[str, str]:  # noqa: N802
+        return self._portal_labels
 
     def list_supported_portals(self) -> list[dict[str, Any]]:
         """Verbindbare Portale + die Eingabefelder, die der Kunde ausfüllt.
@@ -611,7 +634,11 @@ class ChannelManagerService:
         by_code = {c.get("code"): c for c in catalog}
 
         out: list[dict[str, Any]] = []
-        for portal in self._PORTAL_CATALOG:
+        for portal in self._portal_catalog():
+            # Sandbox-Testkanal: keine Eingaben — Service setzt alles selbst.
+            if portal["code"] == self._SANDBOX_CODE:
+                out.append({**portal, "fields": []})
+                continue
             spec = by_code.get(portal["code"]) or {}
             params = spec.get("params") or {}
             # Nur das EINE Haupt-Auth-Feld abfragen (z.B. Hotel-ID). Optionale/
@@ -694,6 +721,7 @@ class ChannelManagerService:
             raise ChannelManagerError("Unbekanntes Portal.", status_code=400)
 
         channex_property_id = self._require_property_mapping(db, tenant_id, property_id)
+        settings = self._inject_sandbox_settings(portal_code, property_id, settings)
 
         # 1) Zugangsdaten prüfen. ACHTUNG (live verifiziert): Channex liefert
         #    HTTP 200 AUCH bei falschen Daten — der Erfolg steht in data.success.
@@ -723,7 +751,7 @@ class ChannelManagerService:
             )
         except ChannexError as exc:
             raise self._wrap_channex(exc) from exc
-        rooms = (details.get("data") or {}).get("rooms") or []
+        rooms = self._normalize_mapping_rooms(details)
 
         # Unsere lokalen (gemappten) Rate-Plans dieser Property anbieten.
         local_rate_plans = self._local_rate_plan_options(
@@ -734,6 +762,55 @@ class ChannelManagerService:
             "ota_rooms": rooms,            # [{id, title, rates:[{id, title, …}]}]
             "rate_plans": local_rate_plans,  # [{rate_plan_map_id, title}]
         }
+
+    @staticmethod
+    def _normalize_mapping_rooms(details: dict[str, Any]) -> list[dict[str, Any]]:
+        """mapping_details kommt je OTA in zwei Formen — auf eine einheitliche
+        Struktur [{id, title, rates:[{id, title, pricing, max_persons}]}] bringen:
+          a) Booking.com: data.rooms[].rates[]
+          b) OpenChannel/„attributes": data.attributes.room_types[].rate_plans[]"""
+        data = details.get("data") or {}
+        if data.get("rooms"):
+            out = []
+            for r in data["rooms"]:
+                out.append(
+                    {
+                        "id": r.get("id"),
+                        "title": r.get("title"),
+                        "rates": [
+                            {
+                                "id": rt.get("id"),
+                                "title": rt.get("title"),
+                                "pricing": rt.get("pricing"),
+                                "max_persons": rt.get("max_persons"),
+                                "occupancies": rt.get("occupancies") or [],
+                            }
+                            for rt in (r.get("rates") or [])
+                        ],
+                    }
+                )
+            return out
+        # attributes.room_types[].rate_plans[]
+        attrs = data.get("attributes") or {}
+        out = []
+        for r in attrs.get("room_types") or []:
+            out.append(
+                {
+                    "id": r.get("id"),
+                    "title": r.get("title"),
+                    "rates": [
+                        {
+                            "id": rp.get("id"),
+                            "title": rp.get("title"),
+                            "pricing": rp.get("sell_mode"),
+                            "max_persons": rp.get("max_persons"),
+                            "occupancies": [],
+                        }
+                        for rp in (r.get("rate_plans") or [])
+                    ],
+                }
+            )
+        return out
 
     def connect_channel(
         self, ctx: AuthContext, *, property_id: str, portal_code: str,
@@ -754,9 +831,13 @@ class ChannelManagerService:
 
         channex_property_id = self._require_property_mapping(db, tenant_id, property_id)
         group_id = self._require_group(db, tenant_id, channex_property_id)
+        settings = self._inject_sandbox_settings(portal_code, property_id, settings)
+        # Echte OTAs verlangen INTEGER-Codes; OpenChannel (Sandbox) nutzt String-
+        # Codes (unsere UUIDs aus mapping_details) → dort nicht zu int zwingen.
+        is_sandbox = portal_code == self._SANDBOX_CODE
 
         # rate_plans-Array bauen: lokale Rate-Plan-Map-ID → Channex-Rate-Plan-UUID.
-        seen_pairs: set[tuple[int, int]] = set()
+        seen_pairs: set[tuple[Any, Any]] = set()
         rate_plans: list[dict[str, Any]] = []
         for m in mappings:
             channex_rate_plan_id = self._channex_rate_plan_id_for_map(
@@ -766,8 +847,12 @@ class ChannelManagerService:
                 raise ChannelManagerError(
                     "Unbekannter Preisplan in der Zuordnung.", status_code=422
                 )
-            room_code = self._as_int(m.get("room_type_code"))
-            rate_code = self._as_int(m.get("rate_plan_code"))
+            if is_sandbox:
+                room_code = m.get("room_type_code")
+                rate_code = m.get("rate_plan_code")
+            else:
+                room_code = self._as_int(m.get("room_type_code"))
+                rate_code = self._as_int(m.get("rate_plan_code"))
             if room_code is None or rate_code is None:
                 raise ChannelManagerError(
                     "Zimmer-/Raten-Code fehlt oder ist ungültig.", status_code=422
@@ -783,8 +868,8 @@ class ChannelManagerService:
                 {
                     "rate_plan_id": channex_rate_plan_id,
                     "settings": {
-                        "room_type_code": room_code,   # INTEGER!
-                        "rate_plan_code": rate_code,    # INTEGER!
+                        "room_type_code": room_code,
+                        "rate_plan_code": rate_code,
                         "occupancy": self._as_int(m.get("occupancy")) or 2,
                         "pricing_type": m.get("pricing_type") or "Standard",
                         "primary_occ": bool(m.get("primary_occ", True)),
@@ -826,6 +911,33 @@ class ChannelManagerService:
             "portal": self._PORTAL_LABELS[portal_code],
             "title": a.get("title") or title or self._PORTAL_LABELS[portal_code],
             "is_active": is_active,
+        }
+
+    def _inject_sandbox_settings(
+        self, portal_code: str, property_id: str, settings: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Für den Sandbox-Kanal (OpenChannel) die settings automatisch setzen:
+        endpoint = unser Mock-OTA, hotel_code = lokale property_id, api_key =
+        geteiltes Secret. Der Tester gibt nichts ein."""
+        if portal_code != self._SANDBOX_CODE:
+            return settings
+        from src.core.config import get_settings
+
+        cfg = get_settings()
+        base = (cfg.public_api_url or "").rstrip("/")
+        if not base:
+            raise ChannelManagerError(
+                "PUBLIC_API_URL fehlt — der Sandbox-Mock braucht eine öffentliche "
+                "HTTPS-URL, die Channex erreichen kann.",
+                status_code=400,
+            )
+        # WICHTIG: endpoint muss mit '/' enden — Channex hängt test_connection/,
+        # mapping_details/, changes/ direkt an.
+        endpoint = f"{base}/api/v1/channel-manager/sandbox-ota/"
+        return {
+            "endpoint": endpoint,
+            "hotel_code": property_id,
+            "api_key": cfg.channex_webhook_secret.get_secret_value(),
         }
 
     def disconnect_channel(self, ctx: AuthContext, channel_id: str) -> None:

@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     channex_api_key: SecretStr = SecretStr("")
     channex_base_url: str = "https://staging.channex.io/api/v1"
     channex_webhook_secret: SecretStr = SecretStr("")
+    # Sandbox-Testkanäle (z.B. BookDirectOpen) als verbindbare „Portale" mit
+    # anbieten — NUR zum Testen ohne echtes OTA-Konto. Im Prod IMMER false, sonst
+    # sähe der Kunde Test-Kanäle. Echter Kunde sieht nur Booking.com/Airbnb/…
+    channex_sandbox_portals: bool = False
     # Öffentliche Basis-URL DIESER API (für den Webhook-Callback, den Channex
     # aufruft). Muss von außen per HTTPS erreichbar sein — im Dev z.B. ein
     # Tunnel (ngrok/cloudflared), in Prod die echte API-Domain.
