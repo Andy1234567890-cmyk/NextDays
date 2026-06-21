@@ -191,6 +191,19 @@ class PropertiesService:
         )
         if not res.data:
             raise PropertyError("Objekt nicht gefunden.", status_code=404)
+
+        # Channel-Manager-Mapping mitführen: ohne reale Unterkunft ist die
+        # Channex-Verknüpfung gegenstandslos und würde sonst als Karteileiche
+        # im Channel-Manager weiterleben. Soft-Delete (deleted_at), damit der
+        # Sync sie nicht erneut anfasst.
+        from datetime import UTC, datetime
+
+        self._db.table("channex_property_map").update(
+            {"deleted_at": datetime.now(UTC).isoformat(), "sync_enabled": False}
+        ).eq("tenant_id", tenant_id).eq("property_id", property_id).is_(
+            "deleted_at", "null"
+        ).execute()
+
         log.info("property_deleted", tenant_id=tenant_id, property_id=property_id)
 
 

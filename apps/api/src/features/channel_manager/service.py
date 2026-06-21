@@ -503,9 +503,80 @@ class ChannelManagerService:
         )
         rows = res.data or []
         # Objekt-Titel nachladen (für die UI; ersetzt die interne Provider-ID).
+        # titles enthält NUR noch existierende Properties dieses Tenants.
         titles = self._property_titles(db, tenant_id, [r["property_id"] for r in rows])
-        items = [self._to_property_map(r, titles.get(r["property_id"])) for r in rows]
+
+        # Echter Abgleich mit Channex: existierende Channex-Property-IDs holen.
+        # None = Abgleich nicht möglich (Channex nicht erreichbar/konfiguriert) →
+        # dann NICHT löschen (kein Datenverlust bei Ausfall), nur lokale Waisen
+        # bereinigen. Set = verbindliche Wahrheit von Channex.
+        live_channex_ids = self._live_channex_property_ids()
+
+        orphan_ids: list[str] = []
+        for r in rows:
+            # 1) Lokale Unterkunft gelöscht → Mapping gegenstandslos.
+            if r["property_id"] not in titles:
+                orphan_ids.append(r["id"])
+                continue
+            # 2) Channex-Property existiert dort nicht mehr → Mapping veraltet.
+            if (
+                live_channex_ids is not None
+                and r.get("channex_property_id")
+                and r["channex_property_id"] not in live_channex_ids
+            ):
+                orphan_ids.append(r["id"])
+
+        # Verwaiste Mappings selbstheilend bereinigen: nicht anzeigen UND
+        # soft-löschen, damit sie nicht wiederkehren. Kein Fallback-Titel —
+        # eine Map ohne reale Unterkunft (lokal oder bei Channex) ist kein
+        # gültiges Objekt.
+        if orphan_ids:
+            from datetime import datetime
+
+            db.table("channex_property_map").update(
+                {"deleted_at": datetime.now(UTC).isoformat(), "sync_enabled": False}
+            ).in_("id", orphan_ids).eq("tenant_id", tenant_id).execute()
+            log.info(
+                "channex_property_map_orphans_pruned",
+                tenant_id=tenant_id,
+                count=len(orphan_ids),
+            )
+
+        orphan_set = set(orphan_ids)
+        items = [
+            self._to_property_map(r, titles[r["property_id"]])
+            for r in rows
+            if r["id"] not in orphan_set
+        ]
         return PropertyMapListResponse(items=items, total=len(items))
+
+    def _live_channex_property_ids(self) -> set[str] | None:
+        """Alle bei Channex tatsächlich existierenden Property-IDs (über alle
+        Seiten). Gibt None zurück, wenn Channex nicht erreichbar/konfiguriert
+        ist — Aufrufer dürfen dann KEINE Mappings als veraltet löschen."""
+        if not self._channex.is_configured:
+            return None
+        ids: set[str] = set()
+        page = 1
+        try:
+            while True:
+                resp = self._channex.list_properties(page=page, limit=100)
+                data = resp.get("data") or []
+                for item in data:
+                    pid = item.get("id")
+                    if pid:
+                        ids.add(pid)
+                # Channex paginiert über total/limit/page (kein total_pages).
+                meta = resp.get("meta") or {}
+                total = meta.get("total") or 0
+                limit = meta.get("limit") or 100
+                if not data or page * limit >= total:
+                    break
+                page += 1
+        except ChannexError as exc:
+            log.warning("channex_list_properties_failed", error=exc.message)
+            return None
+        return ids
 
     def _property_titles(
         self, db: Client, tenant_id: str, property_ids: list[str]
