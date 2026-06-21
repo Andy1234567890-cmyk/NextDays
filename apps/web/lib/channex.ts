@@ -120,9 +120,51 @@ export async function pushAri(input: {
   });
 }
 
-// --- Kanäle verbinden (white-label iFrame) ----------------------------------
-export async function getChannelConnectUrl(): Promise<Result<{ url: string }>> {
-  return call<{ url: string }>("/connect-url");
+// --- Kanäle (OTA) inhouse: Portale + verbundene Kanäle ----------------------
+export type PortalField = {
+  key: string;
+  label: string;
+  placeholder: string;
+  required: boolean;
+};
+
+export type SupportedPortal = {
+  code: string;
+  label: string;
+  icon: string;
+  fields: PortalField[];
+};
+
+export type ChannelConnection = {
+  id: string;
+  portal: string;
+  title: string | null;
+  is_active: boolean;
+};
+
+export async function listPortals(): Promise<Result<SupportedPortal[]>> {
+  return call<SupportedPortal[]>("/portals");
+}
+
+export async function listChannels(): Promise<
+  Result<{ items: ChannelConnection[]; total: number }>
+> {
+  return call<{ items: ChannelConnection[]; total: number }>("/channels");
+}
+
+export async function connectChannel(input: {
+  property_id: string;
+  portal_code: string;
+  title?: string;
+  settings?: Record<string, string>;
+}): Promise<Result<ChannelConnection>> {
+  return call<ChannelConnection>("/channels", { method: "POST", body: input });
+}
+
+export async function disconnectChannel(
+  channelId: string,
+): Promise<Result<void>> {
+  return call<void>(`/channels/${channelId}`, { method: "DELETE" });
 }
 
 // --- Bookings ---------------------------------------------------------------

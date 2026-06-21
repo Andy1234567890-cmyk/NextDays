@@ -366,6 +366,132 @@ class ChannelManagerService:
 
         return result
 
+    # -- Kanäle (OTA) inhouse: Katalog + Liste + Verbinden ---------------------
+    # Portal-Katalog mit erforschten Pflichtfeldern. label/icon white-label;
+    # `code` ist der interne Provider-Channel-Code (dem Kunden nicht erklärt).
+    _PORTALS: list[dict[str, Any]] = [
+        {
+            "code": "BookingCom",
+            "label": "Booking.com",
+            "icon": "simple-icons:bookingdotcom",
+            "fields": [
+                {"key": "property_id", "label": "Booking.com Hotel-ID",
+                 "placeholder": "z. B. 5868189", "required": True},
+            ],
+        },
+        {
+            "code": "AirBNB",
+            "label": "Airbnb",
+            "icon": "simple-icons:airbnb",
+            "fields": [],  # OAuth — keine Hotel-ID nötig
+        },
+    ]
+
+    # Mapping interner Code → menschlicher Name (für white-label Anzeige).
+    _PORTAL_LABELS = {p["code"]: p["label"] for p in _PORTALS}
+
+    def list_supported_portals(self) -> list[dict[str, Any]]:
+        return self._PORTALS
+
+    def list_channels(self, ctx: AuthContext) -> list[dict[str, Any]]:
+        """Verbundene Kanäle des Tenants (white-label)."""
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        # Channex-Property-IDs des Tenants ermitteln (Scope!).
+        maps = (
+            db.table("channex_property_map")
+            .select("channex_property_id")
+            .eq("tenant_id", tenant_id)
+            .is_("deleted_at", "null")
+            .execute()
+        )
+        prop_ids = {m["channex_property_id"] for m in (maps.data or [])}
+        if not prop_ids:
+            return []
+        try:
+            data = self._channex.list_channels().get("data") or []
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+        out: list[dict[str, Any]] = []
+        for ch in data:
+            a = ch.get("attributes") or ch
+            # nur Kanäle, die zu einer Property dieses Tenants gehören
+            if not (set(a.get("properties") or []) & prop_ids):
+                continue
+            out.append(
+                {
+                    "id": ch.get("id") or a.get("id"),
+                    "portal": self._PORTAL_LABELS.get(a.get("channel"), "Kanal"),
+                    "title": a.get("title"),
+                    "is_active": bool(a.get("is_active")),
+                }
+            )
+        return out
+
+    def connect_channel(
+        self, ctx: AuthContext, *, property_id: str, portal_code: str,
+        title: str | None, settings: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Verbindet ein Portal mit einem lokalen Objekt (eigene Maske → Channex)."""
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        if portal_code not in self._PORTAL_LABELS:
+            raise ChannelManagerError("Unbekanntes Portal.", status_code=400)
+
+        # Lokales Objekt → Channex-Property-Mapping (Tenant-Scope).
+        pm = (
+            db.table("channex_property_map")
+            .select("channex_property_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        )
+        if not pm.data:
+            raise ChannelManagerError(
+                "Objekt ist noch nicht mit dem Channel-Manager verbunden.",
+                status_code=409,
+            )
+        channex_property_id = pm.data[0]["channex_property_id"]
+
+        grp = (
+            db.table("channex_group_map")
+            .select("channex_group_id")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        group_id = grp.data[0]["channex_group_id"] if grp.data else None
+
+        attrs: dict[str, Any] = {
+            "property_id": channex_property_id,
+            "channel": portal_code,
+            "title": title or self._PORTAL_LABELS[portal_code],
+            "settings": settings or {},
+            "properties": [channex_property_id],
+        }
+        if group_id:
+            attrs["group_id"] = group_id
+        try:
+            created = self._channex.create_channel(attrs)
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+        a = created.get("data", {}).get("attributes", {})
+        return {
+            "id": created.get("data", {}).get("id"),
+            "portal": self._PORTAL_LABELS.get(portal_code, "Kanal"),
+            "title": a.get("title"),
+            "is_active": bool(a.get("is_active")),
+        }
+
+    def disconnect_channel(self, ctx: AuthContext, channel_id: str) -> None:
+        self._require_tenant(ctx)
+        try:
+            self._channex.delete_channel(channel_id)
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+
     # -- iFrame Connect (Kanäle verbinden über Channex-UI) ---------------------
     def get_channel_connect_url(
         self, ctx: AuthContext, *, property_map_id: str | None = None

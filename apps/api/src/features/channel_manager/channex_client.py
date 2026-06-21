@@ -294,6 +294,24 @@ class ChannexClient:
     def get_booking(self, booking_id: str) -> dict[str, Any]:
         return self.get(f"bookings/{booking_id}")
 
+    # ----- Channels (OTA-Verbindungen; inhouse, kein iFrame) ------------------
+    # Erforschte channel-Codes (CamelCase) + settings-Pflichtfelder:
+    #   BookingCom → settings {property_id: <Hotel-ID>}
+    #   AirBNB     → settings {} (OAuth)
+    #   Expedia/Agoda → weitere settings (folgt)
+    def list_channels(self, *, property_id: str | None = None) -> dict[str, Any]:
+        params = {"filter[property_id]": property_id} if property_id else None
+        return self.get("channels", params=params)
+
+    def create_channel(self, attributes: dict[str, Any]) -> dict[str, Any]:
+        return self.post("channels", json={"channel": attributes})
+
+    def update_channel(self, channel_id: str, attributes: dict[str, Any]) -> dict[str, Any]:
+        return self.put(f"channels/{channel_id}", json={"channel": attributes})
+
+    def delete_channel(self, channel_id: str) -> dict[str, Any]:
+        return self.delete(f"channels/{channel_id}")
+
     # ----- iFrame Connect (One-Time-Token) ------------------------------------
     def create_one_time_token(
         self, *, property_id: str, group_id: str | None = None, username: str = "owner"

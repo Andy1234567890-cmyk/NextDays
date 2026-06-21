@@ -20,10 +20,14 @@ from .schemas import (
     AriPushResponse,
     BookingListResponse,
     BookingSyncResponse,
+    ChannelListResponse,
+    ChannelResponse,
+    ConnectChannelRequest,
     PropertyConnectRequest,
     PropertyMapListResponse,
     PropertyMapResponse,
     SliceHealth,
+    SupportedPortal,
 )
 from .service import ChannelManagerError
 
@@ -105,6 +109,56 @@ def sync_bookings(
     """Buchungs-Revisions-Feed von Channex ziehen, speichern und bestätigen."""
     try:
         return service.sync_bookings(ctx)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Kanäle (OTA) inhouse: Katalog, Liste, Verbinden, Trennen ----------------
+@router.get("/portals", response_model=list[SupportedPortal])
+def list_portals(
+    ctx: CurrentUser, service: ChannelManagerServiceDep
+) -> list[SupportedPortal]:
+    """Unterstützte Portale + Felder für die eigene Verbinden-Maske."""
+    return [SupportedPortal(**p) for p in service.list_supported_portals()]
+
+
+@router.get("/channels", response_model=ChannelListResponse)
+def list_channels(
+    ctx: CurrentUser, service: ChannelManagerServiceDep
+) -> ChannelListResponse:
+    try:
+        items = service.list_channels(ctx)
+        return ChannelListResponse(
+            items=[ChannelResponse(**c) for c in items], total=len(items)
+        )
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/channels", response_model=ChannelResponse, status_code=status.HTTP_201_CREATED)
+def connect_channel(
+    req: ConnectChannelRequest, service: ChannelManagerServiceDep, ctx: _write
+) -> ChannelResponse:
+    """Verbindet ein Portal mit einem Objekt (eigene Maske, inhouse)."""
+    try:
+        c = service.connect_channel(
+            ctx,
+            property_id=req.property_id,
+            portal_code=req.portal_code,
+            title=req.title,
+            settings=req.settings,
+        )
+        return ChannelResponse(**c)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/channels/{channel_id}", status_code=status.HTTP_204_NO_CONTENT)
+def disconnect_channel(
+    channel_id: str, service: ChannelManagerServiceDep, ctx: _write
+) -> None:
+    try:
+        service.disconnect_channel(ctx, channel_id)
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

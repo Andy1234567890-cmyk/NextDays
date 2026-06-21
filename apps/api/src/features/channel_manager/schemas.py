@@ -106,6 +106,49 @@ class BookingSyncResponse(BaseModel):
     errors: list[str] = Field(default_factory=list)
 
 
+# --- Kanäle (OTA-Verbindungen, inhouse) -------------------------------------
+class PortalField(BaseModel):
+    """Ein Eingabefeld für die Verbinden-Maske eines Portals."""
+
+    key: str
+    label: str
+    placeholder: str = ""
+    required: bool = True
+
+
+class SupportedPortal(BaseModel):
+    """Ein unterstütztes Buchungsportal + die Felder für die eigene Maske.
+    `code` ist intern (Provider-Channel-Code), wird dem Kunden nicht erklärt."""
+
+    code: str
+    label: str
+    icon: str
+    fields: list[PortalField] = Field(default_factory=list)
+
+
+class ChannelResponse(BaseModel):
+    """Ein verbundener Kanal (white-label: kein Provider-Name im Feldnamen)."""
+
+    id: str
+    portal: str          # menschlich, z.B. "Booking.com"
+    title: str | None = None
+    is_active: bool = False
+
+
+class ChannelListResponse(BaseModel):
+    items: list[ChannelResponse]
+    total: int
+
+
+class ConnectChannelRequest(BaseModel):
+    """Verbindet ein Portal mit einem lokalen Objekt (eigene Maske)."""
+
+    property_id: str                     # lokale Objekt-ID
+    portal_code: str                     # interner Portal-Code (BookingCom, AirBNB …)
+    title: str | None = None
+    settings: dict = Field(default_factory=dict)  # portal-spezifische Felder
+
+
 # --- Webhook-Registrierung (Admin) ------------------------------------------
 class WebhookInfo(BaseModel):
     id: str
