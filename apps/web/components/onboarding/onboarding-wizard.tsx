@@ -288,7 +288,7 @@ export function OnboardingWizard({
           {!channelManagerReady && (
             <p className="rounded-(--radius) border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
               Die Kanal-Anbindung wird gerade für deinen Betrieb vorbereitet. Du
-              kannst sie jederzeit später unter „Einstellungen → Channel-Manager"
+              kannst sie jederzeit später unter „Channel Manager"
               abschließen.
             </p>
           )}
