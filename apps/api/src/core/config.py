@@ -31,6 +31,18 @@ class Settings(BaseSettings):
     stripe_secret_key: SecretStr = SecretStr("")
     stripe_webhook_secret: SecretStr = SecretStr("")
 
+    # --- Channex (Channel-Manager / OTA-Distribution) ---
+    # base_url default = Staging; für Produktion auf https://app.channex.io/api/v1.
+    # webhook_secret: eigenes Zufalls-Secret, das wir per Custom-Header an Channex
+    # geben und im Webhook-Receiver prüfen (Channex signiert nicht via HMAC).
+    channex_api_key: SecretStr = SecretStr("")
+    channex_base_url: str = "https://staging.channex.io/api/v1"
+    channex_webhook_secret: SecretStr = SecretStr("")
+    # Öffentliche Basis-URL DIESER API (für den Webhook-Callback, den Channex
+    # aufruft). Muss von außen per HTTPS erreichbar sein — im Dev z.B. ein
+    # Tunnel (ngrok/cloudflared), in Prod die echte API-Domain.
+    public_api_url: str = ""
+
     @property
     def is_local(self) -> bool:
         return self.app_env == "local"

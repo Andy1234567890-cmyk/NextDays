@@ -77,8 +77,32 @@ class PropertiesService:
         res = self._db.table("properties").insert(payload).execute()
         if not res.data:
             raise PropertyError("Objekt konnte nicht angelegt werden.", status_code=500)
-        log.info("property_created", tenant_id=tenant_id, property_id=res.data[0]["id"])
-        return PropertyResponse(**_row(res.data[0]))
+        row = res.data[0]
+        log.info("property_created", tenant_id=tenant_id, property_id=row["id"])
+        # Auto-Anbindung an den Channel-Manager (non-blocking): legt das Objekt
+        # automatisch beim Provider an. Schlägt das fehl, bleibt die Objekt-
+        # Anlage trotzdem erfolgreich (Fehler wird im Mapping vermerkt).
+        self._sync_to_channel_manager(
+            tenant_id,
+            property_id=row["id"],
+            title=row.get("title") or "Unbenannt",
+            currency=row.get("currency") or "EUR",
+        )
+        return PropertyResponse(**_row(row))
+
+    def _sync_to_channel_manager(
+        self, tenant_id: str, *, property_id: str, title: str, currency: str
+    ) -> None:
+        """Hängt das neue Objekt an den Channel-Manager-Slice. Lazy-Import, um
+        Zyklen zu vermeiden; jeder Fehler wird verschluckt (rein additiv)."""
+        try:
+            from src.features.channel_manager.service import ChannelManagerService
+
+            ChannelManagerService(service_client=self._db).sync_property_to_channex(
+                tenant_id, property_id=property_id, title=title, currency=currency
+            )
+        except Exception as exc:  # noqa: BLE001 — Auto-Sync darf nie blockieren
+            log.warning("channel_manager_autosync_failed", property_id=property_id, error=str(exc))
 
     def update(
         self, ctx: AuthContext, property_id: str, req: PropertyUpdate

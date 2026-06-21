@@ -27,7 +27,7 @@ Jeder der 17 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
 | guests | `GET /api/v1/guests/health` |
 | inbox | `GET /api/v1/inbox/health` |
 | payments | `GET /api/v1/payments/health` |
-| channel_manager | `GET /api/v1/channel-manager/health` |
+| channel_manager | `GET /api/v1/channel-manager/health` (Channex-Integration, s.u.) |
 | booking_engine | `GET /api/v1/booking-engine/health` |
 | ocr | `GET /api/v1/ocr/health` |
 | public_portal | `GET /api/v1/public-portal/health` |
@@ -359,6 +359,89 @@ und `0025_buchhaltung_nummernkreise.sql` (`number_sequences` + Funktion
 Rechnungskopf und den GoBD-Pflichtfooter. `GET/PATCH /companies/{id}` liefert/
 speichert sie als camelCase (`companyName`, `companyStreet`, `phoneNumber`, `vatId`,
 `companyRegister`, `districtCourt`, `firstName`/`lastName`, `iban` …).
+
+---
+
+## channel_manager (Channex-Integration implementiert)
+
+Channel-Manager-Anbindung für OTA-Distribution (Booking.com, Airbnb, Expedia …)
+über **Channex** (https://docs.channex.io). Channex ist der konkrete Provider
+hinter dem `channel_manager`-Slice; der HTTP-Client kapselt die Channex-API
+(`channex_client.py`, Auth-Header `user-api-key`, Body-Wrapping `{"<entity>": …}`,
+429-Backoff). Tenant-scoped; verwaltende Endpoints erfordern die Lodgify-
+Berechtigung `manage_property_settings`. Beträge laufen durchgängig in **Cent**
+(eindeutig, keine Rundungsfehler).
+
+| Methode & Pfad | Zweck |
+| --- | --- |
+| `GET /api/v1/channel-manager/health` | Slice-Status + `channex_configured` (API-Key gesetzt?) |
+| `GET /api/v1/channel-manager/properties` | Property-Mappings des Tenants |
+| `POST /api/v1/channel-manager/properties` | Property mit Channex verbinden (bestehende anbinden **oder** neu anlegen) → `201` |
+| `DELETE /api/v1/channel-manager/properties/{map_id}` | Mapping (soft) trennen → `204` |
+| `POST /api/v1/channel-manager/ari` | Verfügbarkeit + Preise/Restriktionen gebündelt pushen (Channex-ARI) |
+| `GET /api/v1/channel-manager/bookings` | Eingegangene OTA-Buchungen des Tenants |
+| `POST /api/v1/channel-manager/bookings/sync` | Buchungs-Revisions-Feed ziehen → speichern → bei Channex bestätigen (ack) |
+| `POST /api/v1/channel-manager/webhook` | Webhook-Empfang (ohne JWT, via geteiltem Secret-Header `X-Channex-Webhook-Secret`) |
+
+**ARI-Push (Best-Practice: batchen, nicht einzeln).** Availability und Preise
+werden getrennt zu Channex gesendet (Channex priorisiert die Availability-Queue).
+Rate-Limits: 20 ARI/Min pro Property (je 10 Availability/Restrictions) → der Client
+fängt `429` mit Backoff ab.
+
+```json
+// POST /channel-manager/ari
+{
+  "availability": [
+    { "room_type_map_id": "…", "date_from": "2026-07-01", "date_to": "2026-07-31", "availability": 5 }
+  ],
+  "rates": [
+    { "rate_plan_map_id": "…", "date_from": "2026-07-01", "date_to": "2026-07-31",
+      "rate_cents": 12000, "min_stay_arrival": 2, "stop_sell": false }
+  ]
+}
+// Antwort: { "availability_tasks": 1, "rate_tasks": 1, "warnings": [] }
+```
+
+**Buchungen (Pull statt Push).** Channex empfiehlt den `booking_revisions/feed`
+als primären Weg: Revisionen holen, lokal speichern, **erst dann** acken (gegen
+Duplikate). Webhooks dienen nur als Trigger — wegen unsicherer Reihenfolge wird
+immer der aktuelle Stand gezogen, nicht der Webhook-Payload verarbeitet.
+
+**Whitelabel & Auto-Onboarding.** EIN Whitelabel-Konto (unser API-Key), darin
+**pro Tenant eine Group** (`channex_group_map`, Migration `0028`). Der Flow läuft
+automatisch und **non-blocking** (Provider-Fehler dürfen Registrierung/Objekt-
+Anlage nie scheitern lassen):
+
+1. **Registrierung** (`auth.register`) → legt automatisch die Tenant-Group an.
+2. **Objekt anlegen** (`POST /properties`) → legt automatisch die Provider-Property
+   in der Tenant-Group an und befüllt `channex_property_map`.
+
+**White-Label (Pflicht):** Der Kunde darf den Provider nie sehen. Daher enthält
+**keine** Frontend-Antwort den Provider-Namen oder die Provider-IDs — die
+`PropertyMapResponse` liefert `property_title` statt `channex_property_id`, die
+`BookingResponse` nutzt `external_id` (neutral). UI-Texte sprechen nur von
+„Kanälen" / „Channel-Manager".
+
+**Mapping-Tabellen** (Migrationen `0027_channex.sql` + `0028_channex_groups.sql`,
+alle RLS via `current_tenant_id()`): `channex_group_map` (Tenant ↔ Group),
+`channex_property_map` (lokale property ↔ Provider-Property), `channex_room_type_map`
+(Einheit ↔ Room-Type), `channex_rate_plan_map` (Preisplan ↔ Rate-Plan) und
+`channex_booking` (eingehende OTA-Buchungen mit `revision_id`/`system_id` zur
+Dedup + voller `raw`-Payload).
+
+**Zertifizierung (Channex PMS, 14 Tests):** Full-Sync (500 Tage in ≤2 Calls),
+**nur Delta-Updates** (Full-Sync max. 1×/Tag), Batching mehrerer Änderungen pro
+Call, Rate-Limit-Treue (429-Backoff), Booking-Receiving via Webhook→Feed→Ack.
+Per-Person-Rate-Pläne nutzen (Limits: Hotel 20 Room-Types/200 Rate-Plans).
+
+**Frontend-Anbindung:** `apps/web/lib/channex.ts` (Server-Actions nach
+`Result<T>`-Muster) ruft den Slice über den Proxy auf; das Session-Token wird
+server-seitig injiziert (`currentToken()`).
+
+**Secrets (Coolify-Env / `.env`):** `CHANNEX_API_KEY`, `CHANNEX_BASE_URL`
+(Staging `https://staging.channex.io/api/v1`, Prod `https://app.channex.io/api/v1`),
+`CHANNEX_WEBHOOK_SECRET` (eigenes Zufalls-Secret, im Webhook-Receiver geprüft —
+Channex signiert nicht via HMAC).
 
 ---
 

@@ -8,4 +8,24 @@ client = TestClient(create_app())
 def test_channel_manager_health() -> None:
     resp = client.get("/api/v1/channel-manager/health")
     assert resp.status_code == 200
-    assert resp.json() == {"slice": "channel_manager", "status": "ok"}
+    body = resp.json()
+    assert body["slice"] == "channel_manager"
+    assert body["status"] == "ok"
+    # Feld existiert und ist bool (Wert hängt von der Umgebung/Key-Konfig ab).
+    assert isinstance(body["channex_configured"], bool)
+
+
+def test_webhook_rejects_wrong_secret() -> None:
+    # Ohne korrektes Secret → 401 (Webhook ist nicht JWT-gesichert).
+    resp = client.post(
+        "/api/v1/channel-manager/webhook",
+        json={"event": "booking_new"},
+        headers={"X-Channex-Webhook-Secret": "falsch"},
+    )
+    assert resp.status_code == 401
+
+
+def test_protected_endpoints_require_auth() -> None:
+    # Property-Liste ohne JWT → 401.
+    resp = client.get("/api/v1/channel-manager/properties")
+    assert resp.status_code == 401

@@ -1,0 +1,141 @@
+"use server";
+
+// Channel-Manager (Channex): Server-Actions gegen den FastAPI-channel_manager-
+// Slice (/api/v1/channel-manager). OTA-Distribution: Property-Mapping, ARI-Push,
+// Buchungs-Sync. Tenant-scoped; Business-Logik bleibt im Backend (PROJECT.md §2).
+import { revalidatePath } from "next/cache";
+
+import { ApiError, api } from "@/lib/api";
+import { currentToken } from "@/lib/session-token";
+
+export type Result<T> =
+  | { ok: true; data: T }
+  | { ok: false; error: string; status?: number };
+
+async function call<T>(
+  path: string,
+  opts: { method?: "GET" | "POST" | "PATCH" | "DELETE"; body?: unknown } = {},
+): Promise<Result<T>> {
+  const token = await currentToken();
+  if (!token) return { ok: false, error: "Nicht angemeldet." };
+  try {
+    const data = await api<T>(`/channel-manager${path}`, { ...opts, token });
+    return { ok: true, data };
+  } catch (exc) {
+    const error = exc instanceof ApiError ? exc.message : "Aktion fehlgeschlagen.";
+    const status = exc instanceof ApiError ? exc.status : undefined;
+    return { ok: false, error, status };
+  }
+}
+
+// --- Typen ------------------------------------------------------------------
+export type ChannexHealth = {
+  slice: string;
+  status: string;
+  channex_configured: boolean;
+};
+
+export type PropertyMap = {
+  id: string;
+  property_id: string;
+  property_title: string | null;
+  sync_enabled: boolean;
+  last_sync_at: string | null;
+  last_sync_status: string | null;
+  last_sync_error: string | null;
+};
+
+export type ChannexBooking = {
+  id: string;
+  external_id: string;
+  ota_name: string | null;
+  ota_reservation_code: string | null;
+  status: string;
+  arrival_date: string | null;
+  departure_date: string | null;
+  amount_cents: number | null;
+  currency: string | null;
+  customer: Record<string, unknown>;
+  acknowledged_at: string | null;
+};
+
+export type AvailabilityUpdate = {
+  room_type_map_id: string;
+  date_from: string;
+  date_to: string;
+  availability: number;
+};
+
+export type RateUpdate = {
+  rate_plan_map_id: string;
+  date_from: string;
+  date_to: string;
+  rate_cents?: number;
+  min_stay_arrival?: number;
+  stop_sell?: boolean;
+};
+
+// --- Health -----------------------------------------------------------------
+export async function getChannexHealth(): Promise<Result<ChannexHealth>> {
+  return call<ChannexHealth>("/health");
+}
+
+// --- Property-Mapping -------------------------------------------------------
+export async function listPropertyMaps(): Promise<
+  Result<{ items: PropertyMap[]; total: number }>
+> {
+  return call<{ items: PropertyMap[]; total: number }>("/properties");
+}
+
+export async function connectProperty(input: {
+  property_id: string;
+  channex_property_id?: string;
+  title?: string;
+  currency?: string;
+}): Promise<Result<PropertyMap>> {
+  const res = await call<PropertyMap>("/properties", {
+    method: "POST",
+    body: input,
+  });
+  if (res.ok) revalidatePath("/marktplatz");
+  return res;
+}
+
+export async function disconnectProperty(mapId: string): Promise<Result<void>> {
+  const res = await call<void>(`/properties/${mapId}`, { method: "DELETE" });
+  if (res.ok) revalidatePath("/marktplatz");
+  return res;
+}
+
+// --- ARI-Push ---------------------------------------------------------------
+export async function pushAri(input: {
+  availability?: AvailabilityUpdate[];
+  rates?: RateUpdate[];
+}): Promise<
+  Result<{ availability_tasks: number; rate_tasks: number; warnings: string[] }>
+> {
+  return call("/ari", {
+    method: "POST",
+    body: { availability: input.availability ?? [], rates: input.rates ?? [] },
+  });
+}
+
+// --- Bookings ---------------------------------------------------------------
+export async function listChannexBookings(): Promise<
+  Result<{ items: ChannexBooking[]; total: number }>
+> {
+  return call<{ items: ChannexBooking[]; total: number }>("/bookings");
+}
+
+export async function syncChannexBookings(): Promise<
+  Result<{ fetched: number; saved: number; acknowledged: number; errors: string[] }>
+> {
+  const res = await call<{
+    fetched: number;
+    saved: number;
+    acknowledged: number;
+    errors: string[];
+  }>("/bookings/sync", { method: "POST" });
+  if (res.ok) revalidatePath("/marktplatz");
+  return res;
+}

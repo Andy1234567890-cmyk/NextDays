@@ -82,7 +82,22 @@ class AuthService:
             self._rollback_user(user_id)
             self._rollback_tenant(tenant_id)
             raise
+        # Channel-Manager: für den neuen Tenant eine Provider-Group anlegen
+        # (non-blocking — Registrierung darf daran nie scheitern).
+        self._ensure_channel_manager_group(tenant_id, title=req.tenant_name)
         return self.login(LoginRequest(email=req.email, password=req.password))
+
+    def _ensure_channel_manager_group(self, tenant_id: str, *, title: str) -> None:
+        """Legt die Channel-Manager-Group des Tenants an. Lazy-Import gegen
+        Zyklen; jeder Fehler wird verschluckt (rein additiv)."""
+        try:
+            from src.features.channel_manager.service import ChannelManagerService
+
+            ChannelManagerService(service_client=self._service).ensure_group(
+                tenant_id, title=title or "Hotel"
+            )
+        except Exception as exc:  # noqa: BLE001 — darf Registrierung nie blockieren
+            log.warning("channel_manager_group_failed", tenant_id=tenant_id, error=str(exc))
 
     def invite(self, req: InviteRequest, tenant_id: str) -> InviteResponse:
         """Weiteren Nutzer (Mitarbeiter, Co-Admin, …) in den Tenant einladen.
