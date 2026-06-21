@@ -172,6 +172,8 @@ Adapter implementiert den vollen Channel-API-Flow selbst: `test_connection` →
 `mapping_details` → `create` (mit `group_id`, `rate_plans[]`, Codes als **Integer**)
 → `activate`. Die eigene UI (`channel-connect-button.tsx`) führt durch
 Portal-Wahl → Zugangsdaten → Zimmer/Raten-Zuordnung; der Provider bleibt unsichtbar.
+Für Tests ohne echtes OTA-Konto: Sandbox-Kanal (OpenChannel) gegen einen eigenen
+Mock-OTA-Endpoint (`sandbox_ota.py`, Flag `channex_sandbox_portals`).
 
 ```mermaid
 C4Container

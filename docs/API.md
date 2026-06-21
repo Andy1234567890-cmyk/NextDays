@@ -442,6 +442,11 @@ die Channel-API, damit der Kunde nie den Provider sieht:
 4. Der Slice **aktiviert** den Kanal direkt (`/channels/:id/activate`). Trennen geht
    nur über vorheriges `deactivate` (sonst `422 "is active"`).
 
+**Sandbox-Test (OpenChannel).** Mit `CHANNEX_SANDBOX_PORTALS=true` erscheint ein
+Test-Portal, das den selbst bereitgestellten Mock-OTA (`…/channel-manager/
+sandbox-ota/`) nutzt — so läuft der komplette Connect-Flow ohne echtes OTA-Konto.
+Nur Dev/Test; in Prod aus.
+
 **White-Label (Pflicht):** Der Kunde darf den Provider nie sehen. Daher enthält
 **keine** Frontend-Antwort den Provider-Namen oder die Provider-IDs — die
 `PropertyMapResponse` liefert `property_title` statt `channex_property_id`, die
