@@ -427,7 +427,8 @@ class ChannelManagerService:
         """Webhook von Channex verarbeiten. Wir nutzen das Event nur als TRIGGER
         und ziehen den aktuellen Stand (Channex garantiert keine Reihenfolge)."""
         event = payload.get("event", "unknown")
-        log.info("channex_webhook", event=event, property=payload.get("property_id"))
+        # 'event' ist bei structlog für die Message reserviert → eigenes Feld.
+        log.info("channex_webhook", webhook_event=event, property=payload.get("property_id"))
         # Verarbeitung (Feed-Pull) erfolgt durch den regulären sync_bookings-Lauf
         # bzw. einen Worker; hier nur Annahme bestätigen.
         return {"status": "accepted", "event": event}
