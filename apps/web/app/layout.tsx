@@ -1,6 +1,8 @@
-// Root-Layout: Schriften (lokal), Theme-Provider, globale Styles.
+// Root-Layout: Schriften (lokal), Theme-Provider, i18n-Provider, globale Styles.
 import type { Metadata } from "next";
 import localFont from "next/font/local";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale } from "next-intl/server";
 
 import { ThemeProvider } from "@/components/theme-provider";
 
@@ -27,20 +29,23 @@ export const metadata: Metadata = {
   description: "Vermieter-Dashboard für die NextDays-Vacation-Rental-Plattform.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const locale = await getLocale();
   return (
-    <html lang="de" suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning>
       <body className={`${inter.variable} ${fraunces.variable} antialiased`}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {children}
-        </ThemeProvider>
+        <NextIntlClientProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {children}
+          </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
