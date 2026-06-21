@@ -31,6 +31,11 @@ services:
         target: /usr/local/kong/kong.yml
     expose:
       - "8000"
+    labels:
+      # Kong hängt in mehreren Netzen (coolify + supabase-internal). Ohne dieses
+      # Label wählt Traefik mehrdeutig und erwischt das falsche → HTTPS 000.
+      # Erzwingt das coolify-Netz für die Traefik↔Kong-Verbindung.
+      - traefik.docker.network=coolify
     # Healthcheck ist die Voraussetzung für Coolifys Rolling-Update: der neue
     # Kong-Container muss healthy sein, BEVOR der alte gestoppt wird.
     healthcheck:
@@ -40,7 +45,12 @@ services:
       retries: 5
       start_period: 15s
     networks:
-      # default = Coolify/Traefik-Netz (externe Erreichbarkeit via Domain).
+      # coolify EXPLIZIT: bei einem eigenen networks:-Block hängt Coolify den
+      # Container NICHT automatisch ins coolify-Netz → Traefik erreicht Kong
+      # nicht (504/Timeout nach jedem Deploy). Das Label traefik.docker.network
+      # allein reicht NICHT — der Container muss tatsächlich im Netz sein.
+      - coolify
+      # default = Coolify-Stack-Netz (intra-Stack).
       - default
       # supabase-internal = stabiles Netz zu den Stack-Services (auth/rest/…).
       - supabase-internal
@@ -53,6 +63,11 @@ services:
 
 networks:
   default:
+  # Traefik-Proxy-Netz. EXTERN + benannt, damit Kong bei jedem Deploy
+  # reproduzierbar darin hängt (sonst 504, s.o.).
+  coolify:
+    external: true
+    name: coolify
   supabase-internal:
     external: true
     name: supabase-internal

@@ -318,6 +318,11 @@ services:
     # Discovery; ein fester container_name (nextdays-api) bricht das Routing.
     restart: unless-stopped
     networks:
+      # coolify-Netz EXPLIZIT, sonst hängt Coolify den Container bei einem
+      # eigenen networks:-Block NICHT automatisch dort ein → Traefik erreicht die
+      # api nicht → 504/Timeout nach jedem Deploy. (web-App hat keinen networks:-
+      # Block und kommt deshalb automatisch ins coolify-Netz.)
+      coolify:
       default:
       supabase-internal:
         aliases: [api]
@@ -375,6 +380,13 @@ services:
 # ──────────────────────────────────────────────────────────────────────────
 networks:
   default:
+  # Coolifys Proxy-Netz (Traefik). EXTERN + benannt, weil Coolify bei einem
+  # selbst definierten networks:-Block den Container NICHT automatisch ins
+  # coolify-Netz hängt — ohne diese explizite Bindung ist die api nach jedem
+  # Deploy nicht über Traefik erreichbar (504). Siehe api-Service oben.
+  coolify:
+    external: true
+    name: coolify
   supabase-internal:
     external: true
     name: supabase-internal
