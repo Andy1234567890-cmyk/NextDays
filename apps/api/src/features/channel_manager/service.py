@@ -614,6 +614,18 @@ class ChannelManagerService:
         for portal in self._PORTAL_CATALOG:
             spec = by_code.get(portal["code"]) or {}
             params = spec.get("params") or {}
+            # Nur das EINE Haupt-Auth-Feld abfragen (z.B. Hotel-ID). Optionale/
+            # versteckte Felder (email, notifications, payout …) lassen wir weg —
+            # der Kunde soll nichts Unnötiges sehen. Heuristik: sichtbares
+            # String-Feld ohne `default`/`rules`, mit der kleinsten `position`.
+            essential = [
+                (key, meta)
+                for key, meta in params.items()
+                if meta.get("type") == "string"
+                and "default" not in meta
+                and not meta.get("rules")
+            ]
+            essential.sort(key=lambda kv: kv[1].get("position", 99))
             fields = [
                 {
                     "key": key,
@@ -621,11 +633,7 @@ class ChannelManagerService:
                     "placeholder": "",
                     "required": True,
                 }
-                for key, meta in sorted(
-                    params.items(), key=lambda kv: kv[1].get("position", 99)
-                )
-                # nur sichtbare Pflicht-Eingaben (hidden/boolean rausfiltern)
-                if meta.get("type") not in ("hidden", "boolean")
+                for key, meta in essential[:1]  # nur das Hauptfeld
             ]
             out.append(
                 {
