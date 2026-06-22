@@ -1,0 +1,39 @@
+name: Deploy to Coolify
+
+# Auto-Deploy bei Push auf main. Coolifys eigener Webhook ist für die
+# Deploy-Key-Apps auf diesem Server nicht nutzbar (manuelle Webhook-Route 500,
+# API-Deploy verlangt Bearer-Header, den GitHub-Webhooks nicht setzen können).
+# Daher triggert dieser Workflow den Coolify-API-Deploy mit Bearer-Token.
+on:
+  push:
+    branches: [main]
+
+# Mehrere schnelle Pushes: laufende Deploys nicht stapeln.
+concurrency:
+  group: coolify-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy nextdays-supabase (API) + nextdays-web
+        env:
+          COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
+          COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
+        run: |
+          set -euo pipefail
+          deploy() {
+            local uuid="$1" name="$2"
+            echo "→ Deploy $name ($uuid)"
+            code=$(curl -sS -o /tmp/resp.json -w '%{http_code}' \
+              -H "Authorization: Bearer $COOLIFY_TOKEN" \
+              "$COOLIFY_URL/api/v1/deploy?uuid=$uuid")
+            cat /tmp/resp.json; echo
+            if [ "$code" != "200" ]; then
+              echo "::error::Deploy $name fehlgeschlagen (HTTP $code)"
+              exit 1
+            fi
+          }
+          deploy "cdqxi7d0w34sxzr4wr8jy8um" "nextdays-supabase"
+          deploy "bln3q0n1l1se2hna8utkuag9" "nextdays-web"
