@@ -69,6 +69,36 @@ class PriceOverrideRequest(BaseModel):
     price: float | None  # None = Überschreibung zurücknehmen (Lastenheft §2.2)
 
 
+class StopSellSource(StrEnum):
+    manual = "manual"
+    channex = "channex"
+
+
+class StopSellDay(BaseModel):
+    id: str
+    property_id: str
+    date: date
+    reason: str | None = None
+    source: StopSellSource
+
+
+class StopSellListResponse(BaseModel):
+    items: list[StopSellDay] = []
+    total: int = 0
+
+
+class StopSellRequest(BaseModel):
+    """Verkaufsstopp für einen Zeitraum setzen (manuell)."""
+    property_id: str
+    range: DateRange
+    reason: str | None = None
+
+
+class StopSellClearRequest(BaseModel):
+    property_id: str
+    range: DateRange
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"

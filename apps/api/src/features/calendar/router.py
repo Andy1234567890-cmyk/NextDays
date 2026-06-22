@@ -20,6 +20,9 @@ from .schemas import (
     DayAvailability,
     PriceOverrideRequest,
     SliceHealth,
+    StopSellClearRequest,
+    StopSellListResponse,
+    StopSellRequest,
 )
 from .service import CalendarError, CalendarService
 
@@ -94,6 +97,53 @@ def price_override(
 ) -> dict[str, str]:
     try:
         service.set_price_override(req)
+        return {"status": "ok"}
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/stop-sell", response_model=StopSellListResponse)
+def list_stop_sell(
+    service: CalendarServiceDep,
+    _ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    property_id: Annotated[str, Query()],
+    start: Annotated[date, Query()],
+    end: Annotated[date, Query()],
+) -> StopSellListResponse:
+    try:
+        items = service.list_stop_sell(property_id, DateRange(start=start, end=end))
+        return StopSellListResponse(items=items, total=len(items))
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/stop-sell", dependencies=[
+    Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
+def set_stop_sell(
+    req: StopSellRequest,
+    service: CalendarServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))],
+) -> dict[str, int]:
+    try:
+        days = service.set_stop_sell(ctx.tenant_id, req.property_id, req.range, req.reason)
+        return {"stopped_days": days}
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/stop-sell/clear", dependencies=[
+    Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
+def clear_stop_sell(
+    req: StopSellClearRequest,
+    service: CalendarServiceDep,
+    _ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> dict[str, str]:
+    try:
+        service.clear_stop_sell(req.property_id, req.range)
         return {"status": "ok"}
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

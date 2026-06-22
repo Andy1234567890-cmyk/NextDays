@@ -152,3 +152,49 @@ class CalendarService:
             .execute()
         )
         return res.data or []
+
+    # -- Stop-Sell (Verkaufsstopp je Tag) -------------------------------------
+    def list_stop_sell(
+        self, property_id: str, rng: DateRange
+    ) -> list[dict[str, object]]:
+        res = (
+            self._db()
+            .table("stop_sell")
+            .select("id,property_id,date,reason,source")
+            .eq("property_id", property_id)
+            .gte("date", rng.start.isoformat())
+            .lt("date", rng.end.isoformat())
+            .order("date")
+            .execute()
+        )
+        return res.data or []
+
+    def set_stop_sell(
+        self, tenant_id: str, property_id: str, rng: DateRange, reason: str | None
+    ) -> int:
+        """Verkaufsstopp manuell setzen (idempotent pro Tag)."""
+        payload = [
+            {
+                "tenant_id": tenant_id,
+                "property_id": property_id,
+                "date": day.isoformat(),
+                "reason": reason,
+                "source": "manual",
+            }
+            for day in rng.nights()
+        ]
+        self._db().table("stop_sell").upsert(
+            payload, on_conflict="property_id,date"
+        ).execute()
+        log.info("calendar_stop_sell_set", property_id=property_id, days=len(payload))
+        return len(payload)
+
+    def clear_stop_sell(self, property_id: str, rng: DateRange) -> None:
+        """Manuellen Verkaufsstopp aufheben. Channex-Stops (source=channex) bleiben
+        unangetastet — die spiegeln den OTA-Stand und werden per Import gepflegt."""
+        self._db().table("stop_sell").delete().eq("property_id", property_id).eq(
+            "source", "manual"
+        ).gte("date", rng.start.isoformat()).lt(
+            "date", rng.end.isoformat()
+        ).execute()
+        log.info("calendar_stop_sell_cleared", property_id=property_id)
