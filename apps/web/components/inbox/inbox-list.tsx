@@ -32,6 +32,7 @@ import {
   getAiReply,
   getInboxMessages,
   getInboxReservation,
+  listInboxThreads,
   listScheduled,
   listTeam,
   listTemplates,
@@ -39,6 +40,7 @@ import {
   sendInboxMessage,
   updateThreadFlags,
 } from "@/lib/inbox";
+import { useRealtime } from "@/lib/use-realtime";
 
 type TabKey =
   | "tabInbox"
@@ -91,6 +93,13 @@ export function InboxList({
   const [showFilter, setShowFilter] = useState(false);
   const [showBulk, setShowBulk] = useState(false);
   const current = rows.find((x) => x.id === active) ?? null;
+
+  // Echtes Realtime: bei Änderungen an Buchungen/Threads die Liste neu laden.
+  const reloadThreads = useCallback(async () => {
+    const res = await listInboxThreads();
+    if (res.ok) setRows(res.data.items);
+  }, []);
+  useRealtime({ table: "channex_booking", onChange: reloadThreads });
 
   const filtered = rows.filter(
     (th) =>
@@ -436,6 +445,24 @@ function Conversation({
     load();
     loadScheduled();
   }, [load, loadScheduled]);
+
+  // Echtes Realtime für den offenen Chat: neue Nachrichten + Notizen sofort.
+  useRealtime({
+    table: "sandbox_message",
+    filter: `thread_id=eq.${thread.id}`,
+    onChange: load,
+  });
+  useRealtime({
+    table: "inbox_thread_note",
+    filter: `thread_id=eq.${thread.id}`,
+    onChange: load,
+  });
+  // Geplante Nachrichten: bei Versand (Cron) aus der Liste verschwinden lassen.
+  useRealtime({
+    table: "inbox_scheduled_message",
+    filter: `thread_id=eq.${thread.id}`,
+    onChange: loadScheduled,
+  });
 
   // Vorlagen + Team einmal laden.
   useEffect(() => {

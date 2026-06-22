@@ -17,6 +17,7 @@ import {
   listWhatsAppMessages,
   sendWhatsApp,
 } from "@/lib/whatsapp-api";
+import { useRealtime } from "@/lib/use-realtime";
 
 export function WhatsAppPanel() {
   const t = useTranslations("whatsapp");
@@ -41,11 +42,9 @@ export function WhatsAppPanel() {
     loadConvs();
   }, [loadConvs]);
 
-  // Eingehende Nachrichten (Webhook) sichtbar machen: alle 15 s nachladen.
-  useEffect(() => {
-    const id = setInterval(loadConvs, 15_000);
-    return () => clearInterval(id);
-  }, [loadConvs]);
+  // Echtes Realtime: eingehende Nachrichten (Webhook) aktualisieren die Liste
+  // sofort, kein Polling.
+  useRealtime({ table: "whatsapp_conversation", onChange: loadConvs });
 
   const current = convs.find((c) => c.id === active) ?? null;
 
@@ -180,9 +179,15 @@ function WhatsAppChat({
 
   useEffect(() => {
     load();
-    const id = setInterval(load, 15_000);
-    return () => clearInterval(id);
   }, [load]);
+
+  // Echtes Realtime: neue WhatsApp-Nachrichten dieser Konversation sofort.
+  useRealtime({
+    table: "whatsapp_message",
+    filter: conversationId ? `conversation_id=eq.${conversationId}` : undefined,
+    enabled: !!conversationId,
+    onChange: load,
+  });
 
   function send() {
     const body = text.trim();
