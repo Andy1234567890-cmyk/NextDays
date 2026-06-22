@@ -249,3 +249,23 @@ async def channex_webhook(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiges Webhook-Secret."
         )
     return service.ingest_webhook(payload)
+
+
+@router.post("/internal/reconcile", include_in_schema=False)
+async def internal_reconcile(
+    service: ChannelManagerServiceDep,
+    x_internal_cron_secret: Annotated[str | None, Header()] = None,
+) -> dict:
+    """Interner Cron-Trigger: spiegelt Channex→DB für ALLE Tenants (Channex =
+    Quelle der Wahrheit). Kein JWT — via geteiltes Secret abgesichert, getriggert
+    durch einen Coolify-Scheduled-Task / Host-crontab (curl). Wiederverwendet das
+    CHANNEX_WEBHOOK_SECRET, damit kein neuer Env-Wert nötig ist."""
+    expected = get_settings().channex_webhook_secret.get_secret_value()
+    if not expected or x_internal_cron_secret != expected:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiges Secret."
+        )
+    try:
+        return service.reconcile_all_tenants()
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

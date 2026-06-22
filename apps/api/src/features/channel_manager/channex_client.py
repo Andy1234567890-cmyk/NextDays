@@ -220,11 +220,18 @@ class ChannexClient:
     def get_property(self, channex_id: str) -> dict[str, Any]:
         return self.get(f"properties/{channex_id}")
 
-    def list_properties(self, *, page: int = 1, limit: int = 100) -> dict[str, Any]:
-        return self.get(
-            "properties",
-            params={"pagination[page]": page, "pagination[limit]": limit},
-        )
+    def list_properties(
+        self, *, page: int = 1, limit: int = 100, group_id: str | None = None
+    ) -> dict[str, Any]:
+        params: dict[str, Any] = {
+            "pagination[page]": page,
+            "pagination[limit]": limit,
+        }
+        # White-label: nur Properties der Tenant-Group (sonst sähe man fremde
+        # Mandanten desselben Channex-Kontos).
+        if group_id:
+            params["filter[group_id]"] = group_id
+        return self.get("properties", params=params)
 
     # ----- Room Types ---------------------------------------------------------
     def create_room_type(self, attributes: dict[str, Any]) -> dict[str, Any]:
