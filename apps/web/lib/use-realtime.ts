@@ -5,6 +5,7 @@
 // der Client empfängt nur Zeilen seines Tenants (current_tenant_id() aus dem JWT).
 import { useEffect, useRef } from "react";
 
+import { currentToken } from "@/lib/session-token";
 import { createClient } from "@/lib/supabase/client";
 
 type RealtimeOpts = {
@@ -30,13 +31,13 @@ export function useRealtime({ table, filter, onChange, enabled = true }: Realtim
     let cancelled = false;
 
     (async () => {
-      // Realtime mit dem User-JWT verbinden (sonst läuft das Abo als anon und
-      // RLS liefert nichts).
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session?.access_token) {
-        supabase.realtime.setAuth(session.access_token);
+      // Realtime mit dem echten App-Token verbinden (sonst läuft das Abo als
+      // anon und RLS liefert nichts). Token-Quelle ist currentToken():
+      // bevorzugt das FastAPI-Cookie nd_access (Haupt-Login), sonst die
+      // Supabase-OAuth-Session — genau wie bei allen anderen API-Aufrufen.
+      const token = await currentToken();
+      if (token) {
+        supabase.realtime.setAuth(token);
       }
       if (cancelled) return;
 
