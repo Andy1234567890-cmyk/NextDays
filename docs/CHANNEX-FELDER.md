@@ -114,3 +114,38 @@ Telefon „1234567890") → müssen echt sein (Geo-Validierung der OTAs).
 
 **Trennung:** Firmendaten (tenant_billing_profile) = Onboarding, korrekt befüllt.
 Unterkunfts-/Preis-/Verfügbarkeits-/Policy-Daten = Objekte-Bereich (offen).
+
+## Property-Spiegel Channex → lokale DB (Reconcile)
+
+Channex ist die **Quelle der Wahrheit**; die lokale DB spiegelt Properties
+automatisch **1:1** (Existenz **und** Inhalte). Channex liefert **keine**
+Property-Webhooks (nur `ari;booking_new;booking_modification;booking_cancellation`),
+daher Spiegelung per **Polling**:
+
+- **Trigger 1 — Seitenaufruf:** `list_property_maps()` ruft vor dem Lesen
+  `reconcile_properties_for_tenant(tenant_id)` (non-blocking; Channex-Ausfall
+  bricht die Seite nie).
+- **Trigger 2 — Cron:** `POST /channel-manager/internal/reconcile`
+  (secret-geschützt via `X-Internal-Cron-Secret` = `CHANNEX_WEBHOOK_SECRET`,
+  `include_in_schema=False`) → `reconcile_all_tenants()`. Server-Cron alle 15 Min:
+  `/usr/local/bin/nextdays-reconcile.sh` (root-crontab) ruft den Endpunkt per
+  `docker exec` im `api-*`-Container auf; Log `/var/log/nextdays-reconcile.log`.
+
+**Abgleich-Logik** (`service.py` `reconcile_properties_for_tenant`):
+- Properties pro Tenant über `GET /properties?filter[group_id]=<channex_group_id>`
+  (white-label-sicher; group aus `channex_group_map`).
+- Channex-Property ohne aktive Map → lokales `properties` anlegen + Map (bzw.
+  soft-gelöschte Map mit lebender Property reaktivieren).
+- Bestehende gemappte Property → Titel/Adresse/Koordinaten/Description aus Channex
+  überschreiben. **Lokale-nur-Felder** (Fotos, Ausstattung, Preise, `max_guests`,
+  `status`, `currency`, Rate-Plans) bleiben unberührt.
+- Channex-Property weg → Map soft-löschen (`deleted_at`, `sync_enabled=false`).
+- **Kein Fallback:** fehlt der Pflicht-`title` bei Channex → Property überspringen
+  (`reconcile_skip_no_title`), nichts erfinden.
+- **Channex-Ausfall** (`_live_channex_properties_for_group` → `None`) → keine
+  Änderung (kein Insert/Update/Delete; kein Datenverlust).
+- `property_type` wird NICHT aus Channex übernommen (Channex-Werte ≠ lokales Enum).
+
+Mapping Channex-attributes → `properties` (invers zu `_property_attrs`):
+`title→title`, `address→address`, `city→city`, `zip_code→postal_code`,
+`country→country`, `latitude→lat`, `longitude→lng`, `content.description→description`.
