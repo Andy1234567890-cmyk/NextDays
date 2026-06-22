@@ -511,6 +511,10 @@ class InboxService:
             .execute()
         ).data
         s = ins[0] if ins else {}
+        # Sekundengenauen Timer sofort setzen (kein Warten auf Cron-Tick).
+        from . import scheduler
+        if s.get("id"):
+            scheduler.schedule(s["id"], s.get("send_at") or send_at)
         return ScheduledMessage(
             id=s.get("id"), thread_id=thread_id, body=text,
             send_at=s.get("send_at") or send_at, status=s.get("status") or "pending",
@@ -543,6 +547,9 @@ class InboxService:
         db.table("inbox_scheduled_message").update({"status": "cancelled"}).eq(
             "tenant_id", tenant_id
         ).eq("id", scheduled_id).eq("status", "pending").execute()
+        # Laufenden Timer stoppen.
+        from . import scheduler
+        scheduler.cancel(scheduled_id)
 
     # --- Massenaktualisierung ----------------------------------------------
     def bulk_update(

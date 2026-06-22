@@ -3,11 +3,14 @@
 Startet keinen Server beim Import (PROJECT.md). Lokaler Start via uvicorn:
     uvicorn src.main:app --reload
 """
+from contextlib import asynccontextmanager
+
 from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import get_settings
 from .core.logging import configure_logging, get_logger
+from .features.inbox import scheduler as inbox_scheduler
 from .features.auth.router import router as auth_router
 from .features.booking_engine.router import router as booking_engine_router
 from .features.buchhaltung.router import router as buchhaltung_router
@@ -51,12 +54,23 @@ _SLICE_ROUTERS = [
 ]
 
 
+@asynccontextmanager
+async def _lifespan(app: FastAPI):  # noqa: ANN201, ARG001
+    # Sekundengenauer Scheduler für geplante Posteingang-Nachrichten:
+    # beim Start offene pending-Nachrichten (neu) timern, beim Stop abbrechen.
+    await inbox_scheduler.start()
+    try:
+        yield
+    finally:
+        await inbox_scheduler.stop()
+
+
 def create_app() -> FastAPI:
     settings = get_settings()
     configure_logging(settings.log_level, json_logs=not settings.is_local)
     log = get_logger("nextdays.api")
 
-    app = FastAPI(title="NextDays API", version="0.1.0")
+    app = FastAPI(title="NextDays API", version="0.1.0", lifespan=_lifespan)
 
     app.add_middleware(
         CORSMiddleware,
