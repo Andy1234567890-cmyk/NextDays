@@ -74,6 +74,8 @@ class ReservationResponse(BaseModel):
     status: ReservationStatus
     total_amount: float
     currency: str = ""
+    ota_name: str | None = None       # echter Portal-Name (Kalender-Herkunft)
+    external_ref: str | None = None   # OTA-Reservierungscode
 
 
 class ReservationListResponse(BaseModel):

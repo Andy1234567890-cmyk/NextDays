@@ -132,7 +132,8 @@
       "getHelp": "Hilfe erhalten",
       "helpCenter": "Hilfe-Center",
       "logout": "Abmelden"
-    }
+    },
+    "stopSell": "Verkaufsstopp"
   },
   "exemption": {
     "labelNamed": "Steuerbefreit ({scheme}) — keine USt-ID nötig",
@@ -177,5 +178,33 @@
     "SI": "Slowenien",
     "ES": "Spanien",
     "SE": "Schweden"
+  },
+  "stopSell": {
+    "title": "Verkaufsstopp",
+    "description": "Sperre einzelne Tage für den Verkauf auf allen Kanälen.",
+    "setTitle": "Verkaufsstopp setzen",
+    "setHint": "Wähle Objekt und Zeitraum.",
+    "property": "Objekt",
+    "from": "Von",
+    "to": "Bis (exklusiv)",
+    "set": "Sperren",
+    "setOk": "{days} Tag(e) gesperrt.",
+    "activeTitle": "Aktive Verkaufsstopps",
+    "none": "Keine Verkaufsstopps im Zeitraum.",
+    "sourceManual": "Manuell",
+    "sourceChannex": "Vom Portal",
+    "clear": "Aufheben",
+    "readonly": "Portal"
+  },
+  "inbox": {
+    "title": "Posteingang",
+    "description": "Gästekommunikation von deinen Buchungsportalen.",
+    "empty": "Noch keine Nachrichten. Sobald OTA-Buchungen eingehen, erscheinen sie hier.",
+    "unknownGuest": "Unbekannter Gast",
+    "directChannel": "Direkt",
+    "stay": "Aufenthalt",
+    "email": "E-Mail",
+    "selectThread": "Wähle einen Eintrag aus.",
+    "replyComingSoon": "Antworten an das Portal folgt in Kürze."
   }
 }

@@ -60,3 +60,48 @@ export async function blockRange(
     body: { property_id: propertyId, range: { start, end } },
   });
 }
+
+export type StopSellSource = "manual" | "channex";
+
+export type StopSellDay = {
+  id: string;
+  property_id: string;
+  date: string; // YYYY-MM-DD
+  reason: string | null;
+  source: StopSellSource;
+};
+
+/** Verkaufsstopp-Tage eines Objekts im Zeitraum [start, end). */
+export async function listStopSell(
+  propertyId: string,
+  start: string,
+  end: string,
+): Promise<Result<{ items: StopSellDay[]; total: number }>> {
+  const qs = new URLSearchParams({ property_id: propertyId, start, end });
+  return call(`/calendar/stop-sell?${qs.toString()}`);
+}
+
+/** Verkaufsstopp für einen Zeitraum setzen (manuell). end exklusiv. */
+export async function setStopSell(
+  propertyId: string,
+  start: string,
+  end: string,
+  reason?: string,
+): Promise<Result<{ stopped_days: number }>> {
+  return call("/calendar/stop-sell", {
+    method: "POST",
+    body: { property_id: propertyId, range: { start, end }, reason: reason ?? null },
+  });
+}
+
+/** Manuellen Verkaufsstopp aufheben (Channex-Stops bleiben). end exklusiv. */
+export async function clearStopSell(
+  propertyId: string,
+  start: string,
+  end: string,
+): Promise<Result<{ status: string }>> {
+  return call("/calendar/stop-sell/clear", {
+    method: "POST",
+    body: { property_id: propertyId, range: { start, end } },
+  });
+}

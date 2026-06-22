@@ -56,7 +56,8 @@
       "getHelp": "Помощ",
       "helpCenter": "Помощен център",
       "logout": "Изход"
-    }
+    },
+    "stopSell": "Спиране на продажби"
   },
   "common": {
     "save": "Запазване",
@@ -177,5 +178,33 @@
     "labelGeneric": "Освободен от ДДС — не е необходим ДДС номер",
     "hintNamed": "Освобождаване по режима за малки предприятия ({scheme}).",
     "hintGeneric": "Активирайте, ако фирмата ви е под прага и не начислява ДДС."
+  },
+  "stopSell": {
+    "title": "Stop-sell",
+    "description": "Block individual days from being sold on all channels.",
+    "setTitle": "Set stop-sell",
+    "setHint": "Choose property and date range.",
+    "property": "Property",
+    "from": "From",
+    "to": "To (exclusive)",
+    "set": "Block",
+    "setOk": "{days} day(s) blocked.",
+    "activeTitle": "Active stop-sells",
+    "none": "No stop-sells in this range.",
+    "sourceManual": "Manual",
+    "sourceChannex": "From portal",
+    "clear": "Clear",
+    "readonly": "Portal"
+  },
+  "inbox": {
+    "title": "Inbox",
+    "description": "Guest communication from your booking portals.",
+    "empty": "No messages yet. OTA bookings will appear here once they arrive.",
+    "unknownGuest": "Unknown guest",
+    "directChannel": "Direct",
+    "stay": "Stay",
+    "email": "Email",
+    "selectThread": "Select a conversation.",
+    "replyComingSoon": "Replying to the portal is coming soon."
   }
 }

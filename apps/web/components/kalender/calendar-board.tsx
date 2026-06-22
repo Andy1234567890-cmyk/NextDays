@@ -19,6 +19,7 @@ import { CalendarActionMenu } from "@/components/kalender/calendar-action-menu";
 import { PropertyLabel } from "@/components/kalender/property-label";
 import { ReservationWizard } from "@/components/kalender/reservation-wizard";
 import {
+  type AvailabilitySource,
   type AvailabilityStatus,
   type DayAvailability,
   blockRange,
@@ -70,25 +71,50 @@ function addDays(d: Date, n: number) {
   return x;
 }
 
-type Segment = { start: number; span: number; status: AvailabilityStatus };
+type Segment = {
+  start: number;
+  span: number;
+  status: AvailabilityStatus;
+  source: AvailabilitySource;
+};
 
-// Aufeinanderfolgende Tage gleichen (nicht-offenen) Status zu Balken bündeln.
+// Herkunftslabel für gebuchte Segmente (echter OTA/Direkt-Kanal).
+const SOURCE_LABEL: Record<AvailabilitySource, string> = {
+  direct: "Direkt",
+  portal: "Portal",
+  booking: "Booking.com",
+  airbnb: "Airbnb",
+  vrbo: "Vrbo",
+  manual: "Manuell",
+};
+const SOURCE_ICON: Record<AvailabilitySource, string> = {
+  direct: "ph:user",
+  portal: "ph:globe",
+  booking: "simple-icons:bookingdotcom",
+  airbnb: "simple-icons:airbnb",
+  vrbo: "ph:house",
+  manual: "ph:hand",
+};
+
+// Aufeinanderfolgende Tage gleichen (nicht-offenen) Status+Quelle bündeln.
 function toSegments(
   statusByDay: Record<string, AvailabilityStatus>,
+  sourceByDay: Record<string, AvailabilitySource>,
   dates: Date[],
 ): Segment[] {
   const segs: Segment[] = [];
   let cur: Segment | null = null;
   dates.forEach((d, i) => {
     const s = statusByDay[key(d)] ?? "open";
+    const src = sourceByDay[key(d)] ?? "manual";
     if (s === "open") {
       cur = null;
       return;
     }
-    if (cur && cur.status === s && cur.start + cur.span === i) {
+    if (cur && cur.status === s && cur.source === src && cur.start + cur.span === i) {
       cur.span += 1;
     } else {
-      cur = { start: i, span: 1, status: s };
+      cur = { start: i, span: 1, status: s, source: src };
       segs.push(cur);
     }
   });
@@ -100,6 +126,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
   const [start, setStart] = useState<Date | null>(null);
   const [todayKey, setTodayKey] = useState("");
   const [avail, setAvail] = useState<Record<string, Record<string, AvailabilityStatus>>>({});
+  const [sources, setSources] = useState<Record<string, Record<string, AvailabilitySource>>>({});
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<ViewOptions>(DEFAULT_VIEW);
 
@@ -177,11 +204,17 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
       properties.map(async (p) => {
         const res = await getAvailability(p.id, s, e);
         const map: Record<string, AvailabilityStatus> = {};
-        if (res.ok) for (const d of res.data as DayAvailability[]) map[d.date] = d.status;
-        return [p.id, map] as const;
+        const srcMap: Record<string, AvailabilitySource> = {};
+        if (res.ok)
+          for (const d of res.data as DayAvailability[]) {
+            map[d.date] = d.status;
+            srcMap[d.date] = d.source;
+          }
+        return [p.id, map, srcMap] as const;
       }),
     );
-    setAvail(Object.fromEntries(results));
+    setAvail(Object.fromEntries(results.map((r) => [r[0], r[1]])));
+    setSources(Object.fromEntries(results.map((r) => [r[0], r[2]])));
     setLoading(false);
   }, [start, properties]);
 
@@ -346,7 +379,8 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
             {/* Objektzeilen */}
             {shown.map((p) => {
               const statusMap = avail[p.id] ?? {};
-              const segs = toSegments(statusMap, dates);
+              const sourceMap = sources[p.id] ?? {};
+              const segs = toSegments(statusMap, sourceMap, dates);
               return (
                 <div key={p.id} className="flex border-b last:border-b-0">
                   {/* Objektspalte (eigene Komponente, sticky links) */}
@@ -419,7 +453,11 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                     {segs.map((seg, i) => (
                       <div
                         key={i}
-                        title={`${STATUS_LABEL[seg.status]} · ${seg.span} Tag(e)`}
+                        title={
+                          seg.status === "booked"
+                            ? `${STATUS_LABEL[seg.status]} · ${SOURCE_LABEL[seg.source]} · ${seg.span} Tag(e)`
+                            : `${STATUS_LABEL[seg.status]} · ${seg.span} Tag(e)`
+                        }
                         className={`absolute top-1/2 flex -translate-y-1/2 items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium ${SEG_STYLE[seg.status]}`}
                         style={{
                           left: `calc(${seg.start} * ${COL}rem + 0.25rem)`,
@@ -427,9 +465,11 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                           height: "1.75rem",
                         }}
                       >
-                        {seg.status === "booked" && <Icon icon="ph:calendar-check" className="size-3 shrink-0" />}
+                        {seg.status === "booked" && <Icon icon={SOURCE_ICON[seg.source]} className="size-3 shrink-0" />}
                         {seg.status === "blocked" && <Icon icon="ph:lock-simple" className="size-3 shrink-0" />}
-                        <span className="truncate">{STATUS_LABEL[seg.status]}</span>
+                        <span className="truncate">
+                          {seg.status === "booked" ? SOURCE_LABEL[seg.source] : STATUS_LABEL[seg.status]}
+                        </span>
                       </div>
                     ))}
                   </div>

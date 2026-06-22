@@ -170,6 +170,8 @@ class ReservationsService:
             status=row["status"],
             total_amount=float(row.get("total_amount") or 0),
             currency=row.get("currency") or "",
+            ota_name=row.get("ota_name"),
+            external_ref=row.get("external_ref"),
         )
 
     def _upsert_guest(self, tenant_id: str, req: ReservationCreate) -> str | None:
@@ -219,4 +221,6 @@ class ReservationsService:
             status=r["status"],
             total_amount=float(r.get("total_amount") or 0),
             currency=r.get("currency") or "",
+            ota_name=r.get("ota_name"),
+            external_ref=r.get("external_ref"),
         )

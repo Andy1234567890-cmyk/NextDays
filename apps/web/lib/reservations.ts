@@ -48,6 +48,8 @@ export type Reservation = {
   status: ReservationStatus;
   total_amount: number;
   currency: string;
+  ota_name: string | null; // echter Portal-Name (Booking.com, Airbnb, Expedia …)
+  external_ref: string | null; // OTA-Reservierungscode
 };
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
