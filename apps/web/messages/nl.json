@@ -327,7 +327,11 @@
     "bulkBefore": "wenn letzte Aktivität am oder vor:",
     "bulkDateRequired": "Bitte ein Datum wählen.",
     "scheduleNeedsText": "Bitte zuerst eine Nachricht eingeben.",
-    "tabWhatsApp": "WhatsApp"
+    "tabWhatsApp": "WhatsApp",
+    "showArchived": "Archiv anzeigen",
+    "showActive": "Aktive anzeigen",
+    "emptyArchive": "Keine archivierten Konversationen.",
+    "restore": "Wiederherstellen"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp ist noch nicht verbunden. Zugangsdaten (Meta Cloud API) in den Server-Einstellungen hinterlegen, dann ist der Versand aktiv.",

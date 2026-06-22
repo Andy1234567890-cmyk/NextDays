@@ -92,18 +92,27 @@ export function InboxList({
   const [onlyUnassigned, setOnlyUnassigned] = useState(false);
   const [showFilter, setShowFilter] = useState(false);
   const [showBulk, setShowBulk] = useState(false);
+  // Archiv-Ansicht: zeigt archivierte Konversationen statt der aktiven.
+  const [showArchived, setShowArchived] = useState(false);
   const current = rows.find((x) => x.id === active) ?? null;
 
-  // Echtes Realtime: bei Änderungen an Buchungen/Threads die Liste neu laden.
+  // Threads je Modus (aktiv/archiviert) laden — auch für Realtime-Reload.
   const reloadThreads = useCallback(async () => {
-    const res = await listInboxThreads();
-    if (res.ok) setRows(res.data.items);
-  }, []);
+    const res = await listInboxThreads({ archived: showArchived });
+    if (res.ok) {
+      setRows(res.data.items);
+      setActive((cur) =>
+        res.data.items.some((r) => r.id === cur) ? cur : res.data.items[0]?.id ?? null,
+      );
+    }
+  }, [showArchived]);
+  useEffect(() => {
+    reloadThreads();
+  }, [reloadThreads]);
   useRealtime({ table: "channex_booking", onChange: reloadThreads });
 
   const filtered = rows.filter(
     (th) =>
-      !th.is_archived &&
       (!onlyUnassigned || !th.assigned_user_id) &&
       (th.guest_name ?? "").toLowerCase().includes(query.trim().toLowerCase()),
   );
@@ -113,11 +122,19 @@ export function InboxList({
     setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)));
   }
 
-  // Aktion: archivieren → aus Liste nehmen + nächste auswählen.
+  // Aktion: archivieren → aus aktiver Liste nehmen + nächste auswählen.
   async function archive(id: string) {
     await updateThreadFlags(id, { is_archived: true });
     const rest = filtered.filter((r) => r.id !== id);
-    patchThread(id, { is_archived: true });
+    setRows((prev) => prev.filter((r) => r.id !== id));
+    setActive(rest[0]?.id ?? null);
+  }
+
+  // Aktion: aus dem Archiv wiederherstellen → zurück in den aktiven Posteingang.
+  async function restore(id: string) {
+    await updateThreadFlags(id, { is_archived: false });
+    const rest = filtered.filter((r) => r.id !== id);
+    setRows((prev) => prev.filter((r) => r.id !== id));
     setActive(rest[0]?.id ?? null);
   }
 
@@ -242,6 +259,26 @@ export function InboxList({
             >
               <Icon icon="ph:funnel" className="size-4" />
             </button>
+            {/* Aktiv / Archiv umschalten */}
+            <button
+              type="button"
+              title={showArchived ? t("showActive") : t("showArchived")}
+              onClick={() => {
+                setShowArchived((v) => !v);
+                setActive(null);
+              }}
+              className={
+                "flex size-8 items-center justify-center rounded-(--radius) " +
+                (showArchived
+                  ? "bg-accent/10 text-accent"
+                  : "bg-secondary text-muted-foreground hover:text-foreground")
+              }
+            >
+              <Icon
+                icon={showArchived ? "ph:tray" : "ph:archive-box"}
+                className="size-4"
+              />
+            </button>
             <div className="flex flex-1 items-center gap-2 rounded-full border border-border px-3 py-1.5">
               <Icon icon="ph:magnifying-glass" className="size-4 text-muted-foreground" />
               <input
@@ -290,8 +327,13 @@ export function InboxList({
           {/* Liste oder Leerzustand */}
           {filtered.length === 0 ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
-              <Icon icon="ph:chat-circle-dots" className="size-8 text-muted-foreground/50" />
-              <p className="text-sm text-muted-foreground">{t("emptyList")}</p>
+              <Icon
+                icon={showArchived ? "ph:archive-box" : "ph:chat-circle-dots"}
+                className="size-8 text-muted-foreground/50"
+              />
+              <p className="text-sm text-muted-foreground">
+                {showArchived ? t("emptyArchive") : t("emptyList")}
+              </p>
             </div>
           ) : (
             <ul className="min-h-0 flex-1 divide-y divide-border overflow-y-auto">
@@ -352,8 +394,10 @@ export function InboxList({
             <Conversation
               key={current.id}
               thread={current}
+              archived={showArchived}
               onMarkUnread={() => markUnread(current.id)}
               onArchive={() => archive(current.id)}
+              onRestore={() => restore(current.id)}
               onNext={() => gotoNext(current.id)}
               onOpenNote={() => setOpenNoteSignal((n) => n + 1)}
               onAssigned={(uid, name) =>
@@ -396,15 +440,19 @@ export function InboxList({
 // --- Konversation (Chat + KI-Vorschlag + Antwortfeld) -----------------------
 function Conversation({
   thread,
+  archived,
   onMarkUnread,
   onArchive,
+  onRestore,
   onNext,
   onOpenNote,
   onAssigned,
 }: {
   thread: InboxThread;
+  archived: boolean;
   onMarkUnread: () => void;
   onArchive: () => void;
+  onRestore: () => void;
   onNext: () => void;
   onOpenNote: () => void;
   onAssigned: (userId: string | null, name: string | null) => void;
@@ -633,11 +681,19 @@ function Conversation({
               </div>
             )}
           </div>
-          <HeadAction
-            icon="ph:archive-box"
-            title={t("archive")}
-            onClick={onArchive}
-          />
+          {archived ? (
+            <HeadAction
+              icon="ph:arrow-counter-clockwise"
+              title={t("restore")}
+              onClick={onRestore}
+            />
+          ) : (
+            <HeadAction
+              icon="ph:archive-box"
+              title={t("archive")}
+              onClick={onArchive}
+            />
+          )}
           {/* Snooze: Schnellauswahl */}
           <div className="relative">
             <HeadAction

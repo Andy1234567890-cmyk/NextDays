@@ -59,9 +59,10 @@ def list_threads(
     service: InboxServiceDep,
     ctx: _guest,
     unassigned: Annotated[bool, Query()] = False,
+    archived: Annotated[bool, Query()] = False,
 ) -> InboxListResponse:
     try:
-        return service.list_threads(ctx, unassigned=unassigned)
+        return service.list_threads(ctx, unassigned=unassigned, archived=archived)
     except InboxError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

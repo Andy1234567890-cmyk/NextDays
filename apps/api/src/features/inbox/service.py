@@ -77,7 +77,7 @@ class InboxService:
         )
 
     def list_threads(
-        self, ctx: AuthContext, *, unassigned: bool = False
+        self, ctx: AuthContext, *, unassigned: bool = False, archived: bool = False
     ) -> InboxListResponse:
         db, tenant_id = self._require(ctx)
         query = (
@@ -88,7 +88,8 @@ class InboxService:
                 "is_read, is_starred, is_archived, assigned_user_id"
             )
             .eq("tenant_id", tenant_id)
-            .eq("is_archived", False)  # Archivierte nicht in der aktiven Liste
+            # Archiv-Ansicht zeigt NUR archivierte, sonst nur aktive.
+            .eq("is_archived", archived)
         )
         if unassigned:
             query = query.is_("assigned_user_id", "null")

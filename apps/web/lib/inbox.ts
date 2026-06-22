@@ -89,11 +89,14 @@ async function call<T>(
   }
 }
 
-/** OTA-Gäste-Threads des aktuellen Tenants. */
+/** OTA-Gäste-Threads des aktuellen Tenants (aktiv oder archiviert). */
 export async function listInboxThreads(
-  opts: { unassigned?: boolean } = {},
+  opts: { unassigned?: boolean; archived?: boolean } = {},
 ): Promise<Result<{ items: InboxThread[]; total: number }>> {
-  const qs = opts.unassigned ? "?unassigned=true" : "";
+  const params = new URLSearchParams();
+  if (opts.unassigned) params.set("unassigned", "true");
+  if (opts.archived) params.set("archived", "true");
+  const qs = params.toString() ? `?${params.toString()}` : "";
   return call<{ items: InboxThread[]; total: number }>(qs);
 }
 
