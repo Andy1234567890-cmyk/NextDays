@@ -81,6 +81,23 @@ def delete_property(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post("/{property_id}/publish", response_model=PropertyResponse)
+def publish_property(
+    property_id: str,
+    service: PropertiesServiceDep,
+    ctx: Annotated[
+        AuthContext,
+        Depends(require_lodgify_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
+    ],
+) -> PropertyResponse:
+    """Objekt veröffentlichen (draft→active), an Channex übertragen und den
+    Kalender initialisieren. Erfordert einen hinterlegten Preis."""
+    try:
+        return service.publish(ctx, property_id)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.post("/{property_id}/image", response_model=ImageUploadResponse)
 async def upload_property_image(
     property_id: str,

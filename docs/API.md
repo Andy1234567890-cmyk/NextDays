@@ -26,6 +26,7 @@ Jeder der 17 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
 | reservations | `GET /api/v1/reservations/health` |
 | guests | `GET /api/v1/guests/health` |
 | inbox | `GET /api/v1/inbox/health` |
+| whatsapp | `GET /api/v1/whatsapp/health` (Meta Cloud API, s.u.) |
 | payments | `GET /api/v1/payments/health` |
 | channel_manager | `GET /api/v1/channel-manager/health` (Channex-Integration, s.u.) |
 | booking_engine | `GET /api/v1/booking-engine/health` |
@@ -282,6 +283,7 @@ calendar-Slice. tenant_id stammt aus dem JWT. Leseendpoint erfordert
 | Methode | Pfad | Beschreibung |
 |---|---|---|
 | `GET` | `/api/v1/reservations?property_id` | Reservierungen des Tenants (optional je Objekt) |
+| `GET` | `/api/v1/reservations/dashboard` | Startseiten-Kennzahlen (echte Daten, im Backend berechnet) |
 | `POST` | `/api/v1/reservations` | Reservierung anlegen — `404` (fremdes Objekt), `409` (Tage belegt) |
 
 ```json
@@ -301,6 +303,106 @@ calendar-Slice. tenant_id stammt aus dem JWT. Leseendpoint erfordert
 
 Beim Anlegen wird der Gast in `guests` angelegt bzw. per E-Mail wiederverwendet;
 alle Übernachtungstage werden auf `booked` ge-upsertet. `check_out` ist exklusiv.
+Die Währung der Reservierung stammt vom Rate-Plan des Objekts (`rate_plans.currency`);
+`properties` hat keine eigene Währungsspalte.
+
+`GET /reservations/dashboard` liefert die Startseiten-Kacheln aus echten
+Reservierungen (kein Fallback, stornierte Reservierungen ausgenommen):
+
+```json
+{
+  "today": "2026-06-22",
+  "checkouts_today": [ { "reservation_id": "uuid", "guest_name": "…", "property_title": "…", "channel": "booking", "ota_name": "Booking.com", "check_in": "…", "check_out": "…", "status": "confirmed" } ],
+  "checkins_today": [ … ],
+  "upcoming": [ … ],
+  "checkins_30d":  { "value": 6,       "change_pct": 500.0 },
+  "revenue_30d":   { "value": 2560.50, "change_pct": null },
+  "confirmed_30d": { "value": 6,       "change_pct": 12.5 },
+  "currency": "EUR"
+}
+```
+
+- Listen: Check-outs/-ins mit `check_out`/`check_in == heute`, `upcoming` = künftige Anreisen.
+- KPIs: laufende 30 Tage (inkl. heute) vs. die 30 Tage davor; `change_pct = null`,
+  wenn keine Vorperiode existiert (keine erfundenen 0 %).
+
+---
+
+## inbox (Posteingang — implementiert)
+
+Gäste-Kommunikation pro OTA-Buchung (`channex_booking` = Thread). Nachrichten über
+Channex-Messaging (Booking.com/Airbnb/Expedia) bzw. im Sandbox-Modus über den lokalen
+Mock-Speicher. Alle Endpoints erfordern `view_guest_full`. White-label (kein
+Provider-Branding für Endkunden).
+
+| Methode | Pfad | Beschreibung |
+|---|---|---|
+| `GET` | `/api/v1/inbox?unassigned` | Threads des Tenants (Filter „nicht zugewiesen") |
+| `GET` | `/api/v1/inbox/team` | Team-Benutzer (mögliche Bearbeiter) |
+| `GET/POST` | `/api/v1/inbox/{id}/messages` | Verlauf lesen / Nachricht senden |
+| `GET` | `/api/v1/inbox/{id}/reservation` | Reservierungs-Kontext rechts |
+| `PUT` | `/api/v1/inbox/{id}/flags` | Favorit/Notiz/Lesen/Archiv/Erinnerung |
+| `PUT` | `/api/v1/inbox/{id}/assign` | Konversation einem Benutzer zuweisen (`user_id: null` hebt auf) |
+| `POST` | `/api/v1/inbox/{id}/notes` | Interne Notiz (gelb im Verlauf, `sender="note"`) |
+| `GET/POST` | `/api/v1/inbox/{id}/scheduled` | Geplante Nachrichten auflisten / planen (`send_at` ISO) |
+| `DELETE` | `/api/v1/inbox/scheduled/{sid}` | Geplante Nachricht abbrechen |
+| `POST` | `/api/v1/inbox/bulk-update` | Massenaktion: `{action: read\|archived, before: YYYY-MM-DD}` |
+| `POST` | `/api/v1/inbox/{id}/ai-reply` | KI-Antwortvorschlag (Groq) |
+| `…` | `/api/v1/inbox/templates\|ai-settings\|automations` | Vorlagen / KI-Einstellungen / Automatisierungen |
+
+**Interner Cron (kein JWT, Secret-Header `X-Internal-Cron-Secret` = `CHANNEX_WEBHOOK_SECRET`):**
+
+| `POST` | `/api/v1/inbox/internal/dispatch-scheduled` | Versendet fällige geplante Nachrichten (alle Tenants) |
+
+Per Coolify-Scheduled-Task / crontab regelmäßig aufrufen, analog zu
+`/channel-manager/internal/reconcile`:
+
+```
+*/5 * * * * curl -fsS -X POST https://<api-host>/api/v1/inbox/internal/dispatch-scheduled \
+  -H "X-Internal-Cron-Secret: $CHANNEX_WEBHOOK_SECRET"
+```
+
+**Tabellen (Migration 0040):** `channex_booking.assigned_user_id` (Zuweisung),
+`inbox_scheduled_message` (geplante Nachrichten, `status` pending→sent|failed|cancelled),
+`inbox_thread_note` (interne Notizen). RLS via `current_tenant_id()`.
+
+---
+
+## whatsapp (WhatsApp-Kanal — implementiert, Credentials erforderlich)
+
+Bidirektionaler WhatsApp-Kanal über die **Meta WhatsApp Cloud API**. Eine
+Konversation je Gast-Telefonnummer; Nachrichten in beide Richtungen. Versand über
+die Cloud API (oder Sandbox-Mock bei `WHATSAPP_SANDBOX=true` — kein realer
+Versand). Eingehende Nachrichten + Zustellstatus kommen per Meta-Webhook.
+Geschützte Endpoints erfordern `view_guest_full`.
+
+| Methode | Pfad | Beschreibung |
+|---|---|---|
+| `GET` | `/api/v1/whatsapp/status` | Konfig-Status (white-label, kein Token): konfiguriert / Sandbox |
+| `GET` | `/api/v1/whatsapp/conversations` | Konversationen des Tenants |
+| `GET` | `/api/v1/whatsapp/conversations/{id}/messages` | Verlauf (markiert als gelesen) |
+| `POST` | `/api/v1/whatsapp/send` | Senden: `{conversation_id?\|to_phone?, body}` |
+
+**Webhook (kein JWT, von Meta aufgerufen):**
+
+| `GET` | `/api/v1/whatsapp/webhook` | Verify-Handshake (`hub.challenge`, prüft `WHATSAPP_VERIFY_TOKEN`) |
+| `POST` | `/api/v1/whatsapp/webhook` | Eingehende Nachrichten + Status; idempotent über Meta-Message-ID |
+
+Webhook in der Meta-App-Konfiguration eintragen:
+`https://<api-host>/api/v1/whatsapp/webhook`, Verify-Token = `WHATSAPP_VERIFY_TOKEN`,
+Feld `messages` abonnieren.
+
+**Tenant-Auflösung eingehender Nachrichten:** bestehende Konversation (per Nummer)
+→ deren Tenant; sonst `WHATSAPP_DEFAULT_TENANT_ID`. Ohne beides wird die Nachricht
+protokolliert verworfen (kein Raten).
+
+**Tabellen (Migration 0041):** `whatsapp_conversation` (je Tenant+Nummer, `is_read`,
+optional `reservation_id`), `whatsapp_message` (`direction` in|out, `status`
+sent|delivered|read|failed|received, Meta-ID-Unique für Idempotenz). RLS via
+`current_tenant_id()`.
+
+**Env:** `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`,
+`WHATSAPP_GRAPH_VERSION` (v21.0), `WHATSAPP_SANDBOX`, `WHATSAPP_DEFAULT_TENANT_ID`.
 
 ---
 
@@ -386,6 +488,7 @@ Berechtigung `manage_property_settings`. Beträge laufen durchgängig in **Cent*
 | `GET /api/v1/channel-manager/channels` | Verbundene Kanäle des Tenants (white-label) |
 | `POST /api/v1/channel-manager/channels` | Schritt 3+4: Kanal mit Zimmer/Raten-Zuordnung anlegen **und aktivieren** → `201` |
 | `DELETE /api/v1/channel-manager/channels/{channel_id}` | Kanal trennen (erst deaktivieren, dann löschen) → `204` |
+| `GET /api/v1/channel-manager/properties/{property_id}/connections` | Gespeicherte OTA-Verbindungen eines Objekts (Hotel-ID + Status pro Portal, white-label) |
 | `POST /api/v1/channel-manager/webhook` | Webhook-Empfang (ohne JWT, via geteiltem Secret-Header `X-Channex-Webhook-Secret`) |
 
 **ARI-Push (Best-Practice: batchen, nicht einzeln).** Availability und Preise
@@ -468,6 +571,14 @@ alle RLS via `current_tenant_id()`): `channex_group_map` (Tenant ↔ Group),
 (Einheit ↔ Room-Type), `channex_rate_plan_map` (Preisplan ↔ Rate-Plan) und
 `channex_booking` (eingehende OTA-Buchungen mit `revision_id`/`system_id` zur
 Dedup + voller `raw`-Payload).
+
+**OTA-Verbindungen** (`0035_channex_channel_connection.sql`): `channex_channel_connection`
+persistiert pro (Objekt, Portal) die vom Vermieter eingegebene **OTA-Hotel-ID**, den bei
+Channex erzeugten `channex_channel_id` und den Aktiv-Status. So bleibt die Verbindung
+sichtbar/verwaltbar (Status, Trennen, Re-Connect mit vorbefüllter Hotel-ID).
+`connect_channel`/`disconnect_channel` schreiben sie; `list_channel_connections` liest
+sie white-label (nur Portal-Label, Hotel-ID, Status — keine Credentials). Unique
+`(property_id, ota_portal_code)`.
 
 **Zertifizierung (Channex PMS, 14 Tests):** Full-Sync (500 Tage in ≤2 Calls),
 **nur Delta-Updates** (Full-Sync max. 1×/Tag), Batching mehrerer Änderungen pro

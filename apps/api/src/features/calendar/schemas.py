@@ -99,6 +99,23 @@ class StopSellClearRequest(BaseModel):
     range: DateRange
 
 
+class SeasonPriceRequest(BaseModel):
+    """Tagespreis für einen Zeitraum setzen (Saisonpreis). end exklusiv."""
+    property_id: str
+    range: DateRange
+    price: float  # pro Nacht
+
+
+class SeasonPriceDay(BaseModel):
+    date: date
+    price: float
+
+
+class SeasonPriceListResponse(BaseModel):
+    items: list[SeasonPriceDay] = []
+    total: int = 0
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"

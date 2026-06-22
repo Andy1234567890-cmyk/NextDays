@@ -145,6 +145,26 @@ class ChannelListResponse(BaseModel):
     total: int
 
 
+class ChannelConnectionResponse(BaseModel):
+    """Eine gespeicherte OTA-Verbindung eines Objekts (white-label).
+
+    Enthält nur Portal, Hotel-ID und Status — keine rohen Credentials, kein
+    Provider-Branding."""
+
+    portal_code: str                     # interner Code (BookingCom …)
+    portal: str                          # menschlich, z.B. "Booking.com"
+    hotel_id: str                        # Hotel-ID beim OTA (Eingabe des Vermieters)
+    channel_id: str | None = None        # erzeugter Channel (None nach Trennen)
+    is_active: bool = False
+    last_error: str | None = None
+    updated_at: str | None = None
+
+
+class ChannelConnectionListResponse(BaseModel):
+    items: list[ChannelConnectionResponse]
+    total: int
+
+
 class PrepareChannelRequest(BaseModel):
     """Schritt 1+2: Zugangsdaten prüfen + OTA-Zimmer/Raten holen (legt nichts an)."""
 

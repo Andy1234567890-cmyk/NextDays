@@ -353,6 +353,7 @@ class _ImportChannex:
         restrictions=None,
         room_types=None,
         rate_plans=None,
+        fail_availability=False,
     ) -> None:
         self.is_configured = True
         self._bookings = bookings or []
@@ -360,6 +361,16 @@ class _ImportChannex:
         self._restrictions = restrictions or {}
         self._room_types = room_types or []
         self._rate_plans = rate_plans or []
+        self._fail_availability = fail_availability
+        self.pushed: list[dict] = []  # update_availability-Aufrufe
+
+    def update_availability(self, values):  # noqa: ANN001, ANN201
+        if self._fail_availability:
+            from src.features.channel_manager.channex_client import ChannexError
+
+            raise ChannexError("Channex down", status_code=502)
+        self.pushed.extend(values)
+        return {"data": values}
 
     def list_bookings_for_property(self, property_id, *, page=1, limit=100, inserted_after=None):  # noqa: ANN001, ANN201
         # Eine Seite (Tests klein halten).
@@ -387,6 +398,7 @@ _CONFLICT_KEYS = {
     "availability": ("property_id", "date"),
     "price_overrides": ("property_id", "date"),
     "stop_sell": ("property_id", "date"),
+    "channex_tax_map": ("property_id", "local_tax_id"),
 }
 
 
@@ -406,6 +418,8 @@ class _ImportDB:
             "guests": [],
             "properties": [],
             "rate_plans": [],
+            "ari_outbox": [],
+            "channex_tax_map": [],
         }
         self._seq = 0
 
@@ -565,3 +579,294 @@ def test_import_ari_never_overrides_booked() -> None:
     )
     # bleibt 'booked', nicht von ARI auf 'open' gesetzt
     assert db.tables["availability"][0]["status"] == "booked"
+
+
+# --- Phase 1: Realtime-Verfügbarkeits-Push (Doppelbuchungsschutz) ------------
+def _seed_with_room_type(db, tenant_id="t1", channex_pid="cx-prop", property_id="p1"):  # noqa: ANN001, ANN201
+    _seed_property(db, tenant_id, channex_pid, property_id)
+    db.tables["channex_room_type_map"].append(
+        {"id": "rt1", "tenant_id": tenant_id, "property_map_id": "m1",
+         "local_unit_ref": property_id, "channex_room_type_id": "cx-rt",
+         "deleted_at": None}
+    )
+
+
+def test_push_availability_sets_zero_and_marks_outbox_done() -> None:
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    channex = _ImportChannex()
+    _import_svc(channex, db).push_availability_for_property(
+        "t1", "p1", date(2026, 6, 23), date(2026, 6, 25), 0
+    )
+    # An Channex gepusht: richtige IDs + Menge 0.
+    assert channex.pushed[0]["property_id"] == "cx-prop"
+    assert channex.pushed[0]["room_type_id"] == "cx-rt"
+    assert channex.pushed[0]["availability"] == 0
+    # Outbox-Zeile auf done.
+    assert db.tables["ari_outbox"][0]["status"] == "done"
+
+
+def test_push_availability_no_mapping_is_noop() -> None:
+    db = _ImportDB()
+    _seed_property(db)  # KEIN room_type → kein Mapping
+    channex = _ImportChannex()
+    _import_svc(channex, db).push_availability_for_property(
+        "t1", "p1", date(2026, 6, 23), date(2026, 6, 25), 0
+    )
+    assert channex.pushed == [] and db.tables["ari_outbox"] == []
+
+
+def test_push_availability_failure_keeps_outbox_pending() -> None:
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    channex = _ImportChannex(fail_availability=True)
+    _import_svc(channex, db).push_availability_for_property(
+        "t1", "p1", date(2026, 6, 23), date(2026, 6, 25), 0
+    )
+    # Channex-Ausfall → Outbox bleibt pending (Retry), Buchung NICHT blockiert.
+    assert db.tables["ari_outbox"][0]["status"] == "pending"
+
+
+def test_process_ari_outbox_retries_pending() -> None:
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    db.tables["ari_outbox"].append({
+        "id": "o1", "tenant_id": "t1", "property_id": "p1",
+        "date_from": "2026-06-23", "date_to": "2026-06-25",
+        "availability": 0, "status": "pending", "attempts": 1,
+    })
+    channex = _ImportChannex()
+    res = _import_svc(channex, db).process_ari_outbox()
+    assert res["done"] == 1
+    assert db.tables["ari_outbox"][0]["status"] == "done"
+    assert channex.pushed[0]["availability"] == 0
+
+
+def test_ota_booking_pushes_zero_to_channex() -> None:
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    channex = _ImportChannex(bookings=[{"attributes": {
+        "booking_id": "BK1", "property_id": "cx-prop", "status": "new",
+        "ota_name": "Booking.com", "arrival_date": "2026-06-23",
+        "departure_date": "2026-06-25", "amount": "100", "currency": "EUR",
+        "customer": {"name": "A", "surname": "B"}}}])
+    _import_svc(channex, db).import_bookings_for_property("t1", "cx-prop")
+    # OTA-Buchung sperrt die Property bei Channex (availability 0).
+    assert any(p["availability"] == 0 for p in channex.pushed)
+
+
+# --- Phase 1: Steuern → Channex tax_sets ------------------------------------
+class _TaxChannex:
+    is_configured = True
+
+    def __init__(self):  # noqa: ANN204
+        self.taxes_created: list[dict] = []
+        self.sets_created: list[dict] = []
+
+    def create_tax(self, attributes):  # noqa: ANN001, ANN201
+        self.taxes_created.append(attributes)
+        return {"data": {"id": f"cx-tax-{len(self.taxes_created)}"}}
+
+    def update_tax(self, tax_id, attributes):  # noqa: ANN001, ANN201
+        return {"data": {"id": tax_id}}
+
+    def create_tax_set(self, attributes):  # noqa: ANN001, ANN201
+        self.sets_created.append(attributes)
+        return {"data": {"id": "cx-taxset-1"}}
+
+    def update_tax_set(self, tax_set_id, attributes):  # noqa: ANN001, ANN201
+        return {"data": {"id": tax_set_id}}
+
+
+def test_sync_taxes_creates_tax_and_set() -> None:
+    db = _ImportDB()
+    channex = _TaxChannex()
+    svc = ChannelManagerService(service_client=db, channex=channex)
+    prop_row = {
+        "id": "p1",
+        "type_attributes": {
+            "pricing": {
+                "taxes": [
+                    {"id": "t1", "kind": "vat", "name": "19% USt",
+                     "mode": "percent", "value": 19, "includedInPrice": True}
+                ]
+            }
+        },
+    }
+    svc._sync_taxes(db, "t-1", "p1", "cx-prop", ["cx-rp-1"], "EUR", prop_row)
+    # Tax mit korrektem Channex-Format angelegt.
+    assert channex.taxes_created[0]["logic"] == "percent"
+    assert channex.taxes_created[0]["type"] == "tax"
+    assert channex.taxes_created[0]["rate"] == "19"
+    assert channex.taxes_created[0]["is_inclusive"] is True
+    # tax_set mit dem Rate-Plan verknüpft.
+    assert channex.sets_created[0]["associated_rate_plan_ids"] == ["cx-rp-1"]
+    assert channex.sets_created[0]["taxes"] == [{"id": "cx-tax-1", "level": 0}]
+    # Mapping persistiert (inkl. tax_set_id).
+    m = db.tables["channex_tax_map"][0]
+    assert m["channex_tax_id"] == "cx-tax-1"
+    assert m["channex_tax_set_id"] == "cx-taxset-1"
+
+
+def test_sync_taxes_noop_without_taxes() -> None:
+    db = _ImportDB()
+    channex = _TaxChannex()
+    svc = ChannelManagerService(service_client=db, channex=channex)
+    svc._sync_taxes(db, "t-1", "p1", "cx-prop", ["cx-rp-1"], "EUR", {"type_attributes": {}})
+    assert channex.taxes_created == [] and db.tables["channex_tax_map"] == []
+
+
+# --- Phase 2: Gast-Aufschlag → per_person options ---------------------------
+def test_rate_plan_options_per_room_without_surcharge() -> None:
+    mode, opts = ChannelManagerService._rate_plan_options(10000, {"max_guests": 4})
+    assert mode == "per_room"
+    assert opts == [{"occupancy": 2, "is_primary": True, "rate": 10000}]
+
+
+def test_rate_plan_options_per_person_with_surcharge() -> None:
+    prop = {
+        "max_guests": 3,
+        "type_attributes": {"pricing": {"extraGuestCharge": 20, "extraGuestFrom": 1}},
+    }
+    mode, opts = ChannelManagerService._rate_plan_options(10000, prop)
+    assert mode == "per_person"
+    # occ1 primär = Basispreis; occ2 = +1×2000; occ3 = +2×2000.
+    by_occ = {o["occupancy"]: o for o in opts}
+    assert by_occ[1]["is_primary"] and by_occ[1]["rate"] == 10000
+    assert by_occ[2]["derived_option"]["rate"] == [["increase_by_amount", "2000"]]
+    assert by_occ[3]["derived_option"]["rate"] == [["increase_by_amount", "4000"]]
+
+
+# --- Phase 4: Property-Settings (state_length + min/max price) ---------------
+def test_property_attrs_includes_settings() -> None:
+    attrs = ChannelManagerService._property_attrs(
+        {"city": "Kiel", "type_attributes": {"pricing": {"minPrice": 50, "maxPrice": 0}}}
+    )
+    assert attrs["settings"]["state_length"] == 365
+    assert attrs["settings"]["min_price"] == 50
+    # maxPrice=0 → NICHT gesendet (kein erfundener Wert).
+    assert "max_price" not in attrs["settings"]
+
+
+def test_property_attrs_settings_without_pricing() -> None:
+    attrs = ChannelManagerService._property_attrs({"city": "Kiel"})
+    assert attrs["settings"] == {"state_length": 365}  # nur Inventartage, keine Preisgrenzen
+
+
+# --- Hotel-ID-Persistierung (channex_channel_connection) ---------------------
+def test_extract_hotel_id_prefers_known_keys() -> None:
+    # Booking.com & Co: hotel_id; Sandbox: hotel_code.
+    assert ChannelManagerService._extract_hotel_id({"hotel_id": "12345"}) == "12345"
+    assert ChannelManagerService._extract_hotel_id({"hotel_code": "abc"}) == "abc"
+    # Zahlen werden zu String normalisiert.
+    assert ChannelManagerService._extract_hotel_id({"hotel_id": 999}) == "999"
+
+
+def test_extract_hotel_id_none_without_match() -> None:
+    # Kein Fallback/Raten: ohne passenden Schlüssel → None.
+    assert ChannelManagerService._extract_hotel_id({}) is None
+    assert ChannelManagerService._extract_hotel_id({"foo": "bar"}) is None
+    assert ChannelManagerService._extract_hotel_id({"hotel_id": ""}) is None
+
+
+class _ConnDB:
+    """Fake-DB für channex_channel_connection: speichert Upserts, liefert Selects."""
+
+    def __init__(self, rows: list[dict] | None = None) -> None:
+        self.rows = rows or []
+        self.upserts: list[dict] = []
+        self.updates: list[dict] = []
+
+    def table(self, name: str):  # noqa: ANN201
+        assert name == "channex_channel_connection"
+        outer = self
+
+        class _Q:
+            def select(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+                return self
+
+            def eq(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+                return self
+
+            def order(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+                return self
+
+            def upsert(self, row, **_k):  # noqa: ANN001, ANN002, ANN003, ANN201
+                outer.upserts.append(row)
+                return self
+
+            def update(self, row, **_k):  # noqa: ANN001, ANN002, ANN003, ANN201
+                outer.updates.append(row)
+                return self
+
+            def execute(self):  # noqa: ANN201
+                return _Result(outer.rows)
+
+        return _Q()
+
+
+def test_save_channel_connection_persists_white_label_fields() -> None:
+    db = _ConnDB()
+    svc = ChannelManagerService(service_client=db, channex=_FakeChannex([]))
+    svc._save_channel_connection(
+        db, "tenant-1",
+        property_id="prop-1",
+        channex_property_id="cx-1",
+        portal_code="BookingCom",
+        settings={"hotel_id": "777"},
+        channel_id="chan-1",
+        is_active=True,
+        last_error=None,
+    )
+    assert len(db.upserts) == 1
+    row = db.upserts[0]
+    assert row["ota_hotel_id"] == "777"
+    assert row["channex_channel_id"] == "chan-1"
+    assert row["is_active"] is True
+    assert row["property_id"] == "prop-1"
+    assert row["ota_portal_code"] == "BookingCom"
+
+
+def test_save_channel_connection_skips_without_hotel_id() -> None:
+    # Kein Raten: ohne Hotel-ID wird nichts gespeichert.
+    db = _ConnDB()
+    svc = ChannelManagerService(service_client=db, channex=_FakeChannex([]))
+    svc._save_channel_connection(
+        db, "tenant-1",
+        property_id="prop-1",
+        channex_property_id="cx-1",
+        portal_code="BookingCom",
+        settings={},
+        channel_id="chan-1",
+        is_active=True,
+        last_error=None,
+    )
+    assert db.upserts == []
+
+
+def test_list_channel_connections_white_label_only() -> None:
+    db = _ConnDB(
+        [
+            {
+                "ota_portal_code": "BookingCom",
+                "ota_hotel_id": "777",
+                "channex_channel_id": "chan-1",
+                "is_active": True,
+                "last_error": None,
+                "updated_at": "2026-06-22T10:00:00Z",
+            }
+        ]
+    )
+    svc = ChannelManagerService(service_client=db, channex=_FakeChannex([]))
+    ctx = AuthContext(user_id="u", tenant_id="tenant-1")
+    out = svc.list_channel_connections(ctx, "prop-1")
+    assert len(out) == 1
+    item = out[0]
+    # White-label: menschlicher Portal-Name, Hotel-ID, Status — keine Credentials.
+    assert item["portal"] == "Booking.com"
+    assert item["hotel_id"] == "777"
+    assert item["is_active"] is True
+    assert set(item.keys()) == {
+        "portal_code", "portal", "hotel_id", "channel_id",
+        "is_active", "last_error", "updated_at",
+    }

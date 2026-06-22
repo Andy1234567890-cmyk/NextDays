@@ -4,7 +4,7 @@
 // status, die verbundenen Objekte (Property-Mappings) und erlaubt einen
 // manuellen Buchungs-Sync. Business-Logik liegt im Backend (lib/channex.ts).
 import { Icon } from "@iconify/react";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import { ChannelConnectButton } from "@/components/channel-manager/channel-connect-button";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import type { ChannexBooking, PropertyMap } from "@/lib/channex";
-import { syncChannexBookings } from "@/lib/channex";
+import type {
+  ChannexBooking,
+  PropertyMap,
+  StoredChannelConnection,
+} from "@/lib/channex";
+import { listChannelConnections, syncChannexBookings } from "@/lib/channex";
 
 type Props = {
   configured: boolean;
@@ -106,33 +110,36 @@ export function ChannelManagerSettings({
           ) : (
             <ul className="flex flex-col divide-y divide-border rounded-(--radius) border border-border">
               {propertyMaps.map((m) => (
-                <li key={m.id} className="flex items-center gap-3 p-3">
-                  <Icon
-                    icon="ph:house-line"
-                    className="size-5 text-muted-foreground"
-                  />
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-sm font-medium">
-                      {m.property_title ?? "Objekt"}
-                    </span>
-                    <span className="truncate text-xs text-muted-foreground">
-                      {m.last_sync_status === "error"
-                        ? `Fehler: ${m.last_sync_error ?? "unbekannt"}`
-                        : m.last_sync_at
-                          ? `Letzter Sync: ${new Date(m.last_sync_at).toLocaleString("de-DE")}`
-                          : "Noch nicht synchronisiert"}
+                <li key={m.id} className="flex flex-col gap-2 p-3">
+                  <div className="flex items-center gap-3">
+                    <Icon
+                      icon="ph:house-line"
+                      className="size-5 text-muted-foreground"
+                    />
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <span className="truncate text-sm font-medium">
+                        {m.property_title ?? "Objekt"}
+                      </span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {m.last_sync_status === "error"
+                          ? `Fehler: ${m.last_sync_error ?? "unbekannt"}`
+                          : m.last_sync_at
+                            ? `Letzter Sync: ${new Date(m.last_sync_at).toLocaleString("de-DE")}`
+                            : "Noch nicht synchronisiert"}
+                      </span>
+                    </div>
+                    <span
+                      className={
+                        "shrink-0 rounded-full px-2.5 py-1 text-xs font-medium " +
+                        (m.sync_enabled
+                          ? "bg-secondary text-secondary-foreground"
+                          : "bg-muted text-muted-foreground")
+                      }
+                    >
+                      {m.sync_enabled ? "Aktiv" : "Pausiert"}
                     </span>
                   </div>
-                  <span
-                    className={
-                      "shrink-0 rounded-full px-2.5 py-1 text-xs font-medium " +
-                      (m.sync_enabled
-                        ? "bg-secondary text-secondary-foreground"
-                        : "bg-muted text-muted-foreground")
-                    }
-                  >
-                    {m.sync_enabled ? "Aktiv" : "Pausiert"}
-                  </span>
+                  <PropertyConnections propertyId={m.property_id} />
                 </li>
               ))}
             </ul>
@@ -198,5 +205,49 @@ export function ChannelManagerSettings({
         </section>
       </CardContent>
     </Card>
+  );
+}
+
+// Verbundene Buchungsportale eines Objekts (Hotel-ID + Status pro Portal).
+// White-label: zeigt nur Portal-Label, Hotel-ID und Status.
+function PropertyConnections({ propertyId }: { propertyId: string }) {
+  const [items, setItems] = useState<StoredChannelConnection[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const res = await listChannelConnections(propertyId);
+      if (active) {
+        setItems(res.ok ? res.data.items : []);
+        setLoaded(true);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [propertyId]);
+
+  if (!loaded || items.length === 0) return null;
+
+  return (
+    <ul className="flex flex-wrap gap-2 pl-8">
+      {items.map((c) => (
+        <li
+          key={c.portal_code}
+          className="flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs"
+          title={c.last_error ?? undefined}
+        >
+          <span
+            className={
+              "size-1.5 rounded-full " +
+              (c.is_active ? "bg-emerald-500" : "bg-amber-500")
+            }
+          />
+          <span className="font-medium">{c.portal}</span>
+          <span className="text-muted-foreground">· {c.hotel_id}</span>
+        </li>
+      ))}
+    </ul>
   );
 }

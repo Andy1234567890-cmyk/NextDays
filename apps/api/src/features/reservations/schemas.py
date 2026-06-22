@@ -83,6 +83,39 @@ class ReservationListResponse(BaseModel):
     total: int
 
 
+class DashboardEntry(BaseModel):
+    """Eine Zeile in den Check-out/-in/Anstehend-Listen des Dashboards."""
+
+    reservation_id: str
+    guest_name: str = ""
+    property_title: str = ""
+    channel: ReservationChannel
+    ota_name: str | None = None
+    check_in: date
+    check_out: date
+    status: ReservationStatus
+
+
+class DashboardKpi(BaseModel):
+    """Eine KPI-Kachel mit Vergleich zu den vorherigen 30 Tagen."""
+
+    value: float
+    # Veränderung in Prozent ggü. der Vorperiode; None, wenn keine Vorperiode
+    # vorhanden ist (keine erfundenen 0-%-Werte).
+    change_pct: float | None = None
+
+
+class DashboardResponse(BaseModel):
+    today: date
+    checkouts_today: list[DashboardEntry]
+    checkins_today: list[DashboardEntry]
+    upcoming: list[DashboardEntry]
+    checkins_30d: DashboardKpi
+    revenue_30d: DashboardKpi
+    confirmed_30d: DashboardKpi
+    currency: str = ""
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"

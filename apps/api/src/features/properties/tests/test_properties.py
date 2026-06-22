@@ -165,3 +165,52 @@ def test_upload_image_returns_public_url() -> None:
     assert "custom-map.png" in storage.upload.call_args[0][0]
     assert url.startswith("https://x.supabase.co/")
     assert "?v=" in url  # Cache-Buster
+
+
+# --- publish (draft→active): ohne Preis 422 ---------------------------------
+class _PublishQuery:
+    def __init__(self, db, name):  # noqa: ANN001
+        self._db = db
+        self._name = name
+
+    def select(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+        return self
+
+    def eq(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+        return self
+
+    def limit(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+        return self
+
+    def execute(self):  # noqa: ANN201
+        class _R:
+            pass
+
+        r = _R()
+        r.data = self._db.canned.get(self._name, [])
+        return r
+
+
+class _PublishDB:
+    def __init__(self, canned):  # noqa: ANN001
+        self.canned = canned
+
+    def table(self, name):  # noqa: ANN001, ANN201
+        return _PublishQuery(self, name)
+
+
+def test_publish_without_rate_plan_is_422() -> None:
+    # Property existiert, aber KEIN rate_plan → Veröffentlichen abgelehnt (kein Fallback).
+    db = _PublishDB({"properties": [_row()], "rate_plans": []})
+    svc = PropertiesService(service_client=db)
+    with pytest.raises(PropertyError) as exc:
+        svc.publish(_ctx(), "p-1")
+    assert exc.value.status_code == 422
+
+
+def test_publish_missing_property_404() -> None:
+    db = _PublishDB({"properties": [], "rate_plans": []})
+    svc = PropertiesService(service_client=db)
+    with pytest.raises(PropertyError) as exc:
+        svc.publish(_ctx(), "p-x")
+    assert exc.value.status_code == 404

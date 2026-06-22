@@ -76,6 +76,12 @@ export async function createProperty(
   return call("/properties", { method: "POST", body: input });
 }
 
+/** Objekt veröffentlichen (draft→active): überträgt es an die Buchungsportale
+ *  und füllt den Kalender. Erfordert einen hinterlegten Preis. */
+export async function publishProperty(id: string): Promise<Result<Property>> {
+  return call(`/properties/${id}/publish`, { method: "POST" });
+}
+
 export async function updateProperty(
   id: string,
   input: PropertyInput,

@@ -33,3 +33,9 @@ apps/storybook/storybook-static/
 client_secret_*.json
 *-secret*.json
 .mcp.json
+
+# Persönliche Editor-Konfig (nicht ins Repo)
+.vscode/
+
+# Lokale Audit-/Analyse-Notizen (nicht ins Repo)
+AUDIT_MyNextDays.md

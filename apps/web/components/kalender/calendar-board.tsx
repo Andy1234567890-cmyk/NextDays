@@ -26,6 +26,7 @@ import {
   getAvailability,
 } from "@/lib/calendar";
 import type { PropertyType } from "@/lib/properties";
+import { type Reservation, listReservations } from "@/lib/reservations";
 
 type Prop = {
   id: string;
@@ -76,6 +77,7 @@ type Segment = {
   span: number;
   status: AvailabilityStatus;
   source: AvailabilitySource;
+  reservation?: Reservation; // verknüpfte Buchung (falls gefunden)
 };
 
 // Herkunftslabel für gebuchte Segmente (echter OTA/Direkt-Kanal).
@@ -97,9 +99,12 @@ const SOURCE_ICON: Record<AvailabilitySource, string> = {
 };
 
 // Aufeinanderfolgende Tage gleichen (nicht-offenen) Status+Quelle bündeln.
+// resByDay ordnet jedem belegten Tag die zugehörige Buchung zu (für Gastname +
+// Detail-Popover); ein Segmentwechsel erfolgt auch bei einem Buchungswechsel.
 function toSegments(
   statusByDay: Record<string, AvailabilityStatus>,
   sourceByDay: Record<string, AvailabilitySource>,
+  resByDay: Record<string, Reservation>,
   dates: Date[],
 ): Segment[] {
   const segs: Segment[] = [];
@@ -107,18 +112,47 @@ function toSegments(
   dates.forEach((d, i) => {
     const s = statusByDay[key(d)] ?? "open";
     const src = sourceByDay[key(d)] ?? "manual";
+    const res = resByDay[key(d)];
     if (s === "open") {
       cur = null;
       return;
     }
-    if (cur && cur.status === s && cur.source === src && cur.start + cur.span === i) {
+    if (
+      cur &&
+      cur.status === s &&
+      cur.source === src &&
+      cur.reservation?.id === res?.id &&
+      cur.start + cur.span === i
+    ) {
       cur.span += 1;
     } else {
-      cur = { start: i, span: 1, status: s, source: src };
+      cur = { start: i, span: 1, status: s, source: src, reservation: res };
       segs.push(cur);
     }
   });
   return segs;
+}
+
+// Buchungen eines Objekts auf Tages-Keys abbilden: jeder Übernachtungstag
+// [check_in, check_out) → Reservierung. So findet ein belegtes Segment seinen Gast.
+function reservationsByDay(reservations: Reservation[]): Record<string, Reservation> {
+  const map: Record<string, Reservation> = {};
+  for (const r of reservations) {
+    if (r.status === "cancelled") continue;
+    const ci = new Date(`${r.check_in}T00:00:00`);
+    const co = new Date(`${r.check_out}T00:00:00`);
+    for (let d = new Date(ci); d < co; d = addDays(d, 1)) {
+      map[key(d)] = r;
+    }
+  }
+  return map;
+}
+
+// Menschliches Herkunfts-/Gastlabel für einen Buchungsbalken.
+function segmentLabel(seg: Segment): string {
+  if (seg.status !== "booked") return STATUS_LABEL[seg.status];
+  const guest = seg.reservation?.guest_name?.trim();
+  return guest || seg.reservation?.ota_name || SOURCE_LABEL[seg.source];
 }
 
 export function CalendarBoard({ properties }: { properties: Prop[] }) {
@@ -127,6 +161,10 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
   const [todayKey, setTodayKey] = useState("");
   const [avail, setAvail] = useState<Record<string, Record<string, AvailabilityStatus>>>({});
   const [sources, setSources] = useState<Record<string, Record<string, AvailabilitySource>>>({});
+  // Buchungen je Objekt → Tages-Map (Gastname im Balken + Detail-Popover).
+  const [resByProp, setResByProp] = useState<Record<string, Record<string, Reservation>>>({});
+  // Aktuell geöffnetes Buchungsdetail (per Klick auf einen Balken).
+  const [detail, setDetail] = useState<Reservation | null>(null);
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<ViewOptions>(DEFAULT_VIEW);
 
@@ -200,21 +238,36 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
     setLoading(true);
     const s = key(start);
     const e = key(addDays(start, RANGE));
-    const results = await Promise.all(
-      properties.map(async (p) => {
-        const res = await getAvailability(p.id, s, e);
-        const map: Record<string, AvailabilityStatus> = {};
-        const srcMap: Record<string, AvailabilitySource> = {};
-        if (res.ok)
-          for (const d of res.data as DayAvailability[]) {
-            map[d.date] = d.status;
-            srcMap[d.date] = d.source;
-          }
-        return [p.id, map, srcMap] as const;
-      }),
-    );
+    const [results, resAll] = await Promise.all([
+      Promise.all(
+        properties.map(async (p) => {
+          const res = await getAvailability(p.id, s, e);
+          const map: Record<string, AvailabilityStatus> = {};
+          const srcMap: Record<string, AvailabilitySource> = {};
+          if (res.ok)
+            for (const d of res.data as DayAvailability[]) {
+              map[d.date] = d.status;
+              srcMap[d.date] = d.source;
+            }
+          return [p.id, map, srcMap] as const;
+        }),
+      ),
+      // Alle Buchungen (OTA + direkt, vereint aus reservations) in einem Call.
+      listReservations(),
+    ]);
     setAvail(Object.fromEntries(results.map((r) => [r[0], r[1]])));
     setSources(Object.fromEntries(results.map((r) => [r[0], r[2]])));
+    // Buchungen je Objekt gruppieren und auf Tages-Maps abbilden.
+    const byProp: Record<string, Reservation[]> = {};
+    if (resAll.ok)
+      for (const r of resAll.data.items) {
+        (byProp[r.property_id] ??= []).push(r);
+      }
+    setResByProp(
+      Object.fromEntries(
+        Object.entries(byProp).map(([pid, list]) => [pid, reservationsByDay(list)]),
+      ),
+    );
     setLoading(false);
   }, [start, properties]);
 
@@ -380,7 +433,8 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
             {shown.map((p) => {
               const statusMap = avail[p.id] ?? {};
               const sourceMap = sources[p.id] ?? {};
-              const segs = toSegments(statusMap, sourceMap, dates);
+              const resMap = resByProp[p.id] ?? {};
+              const segs = toSegments(statusMap, sourceMap, resMap, dates);
               return (
                 <div key={p.id} className="flex border-b last:border-b-0">
                   {/* Objektspalte (eigene Komponente, sticky links) */}
@@ -449,29 +503,54 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                       );
                     })()}
 
-                    {/* Balken über belegte/gesperrte Zeiträume */}
-                    {segs.map((seg, i) => (
-                      <div
-                        key={i}
-                        title={
-                          seg.status === "booked"
-                            ? `${STATUS_LABEL[seg.status]} · ${SOURCE_LABEL[seg.source]} · ${seg.span} Tag(e)`
-                            : `${STATUS_LABEL[seg.status]} · ${seg.span} Tag(e)`
-                        }
-                        className={`absolute top-1/2 flex -translate-y-1/2 items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium ${SEG_STYLE[seg.status]}`}
-                        style={{
-                          left: `calc(${seg.start} * ${COL}rem + 0.25rem)`,
-                          width: `calc(${seg.span} * ${COL}rem - 0.5rem)`,
-                          height: "1.75rem",
-                        }}
-                      >
-                        {seg.status === "booked" && <Icon icon={SOURCE_ICON[seg.source]} className="size-3 shrink-0" />}
-                        {seg.status === "blocked" && <Icon icon="ph:lock-simple" className="size-3 shrink-0" />}
-                        <span className="truncate">
-                          {seg.status === "booked" ? SOURCE_LABEL[seg.source] : STATUS_LABEL[seg.status]}
-                        </span>
-                      </div>
-                    ))}
+                    {/* Balken über belegte/gesperrte Zeiträume. Gebuchte Balken
+                        zeigen den Gastnamen + Kanal-Icon und sind klickbar
+                        (Detail-Popover). */}
+                    {segs.map((seg, i) => {
+                      const clickable = seg.status === "booked" && !!seg.reservation;
+                      const barTitle =
+                        seg.status === "booked"
+                          ? `${segmentLabel(seg)} · ${SOURCE_LABEL[seg.source]} · ${seg.span} Tag(e)`
+                          : `${STATUS_LABEL[seg.status]} · ${seg.span} Tag(e)`;
+                      const barStyle = {
+                        left: `calc(${seg.start} * ${COL}rem + 0.25rem)`,
+                        width: `calc(${seg.span} * ${COL}rem - 0.5rem)`,
+                        height: "1.75rem",
+                      };
+                      const barInner = (
+                        <>
+                          {seg.status === "booked" && (
+                            <Icon icon={SOURCE_ICON[seg.source]} className="size-3 shrink-0" />
+                          )}
+                          {seg.status === "blocked" && (
+                            <Icon icon="ph:lock-simple" className="size-3 shrink-0" />
+                          )}
+                          <span className="truncate">{segmentLabel(seg)}</span>
+                        </>
+                      );
+                      return clickable ? (
+                        <button
+                          type="button"
+                          key={i}
+                          title={barTitle}
+                          onMouseDown={(ev) => ev.stopPropagation()}
+                          onClick={() => seg.reservation && setDetail(seg.reservation)}
+                          className={`absolute top-1/2 flex -translate-y-1/2 cursor-pointer items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium transition-shadow hover:ring-2 hover:ring-accent/40 ${SEG_STYLE[seg.status]}`}
+                          style={barStyle}
+                        >
+                          {barInner}
+                        </button>
+                      ) : (
+                        <div
+                          key={i}
+                          title={barTitle}
+                          className={`absolute top-1/2 flex -translate-y-1/2 items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium ${SEG_STYLE[seg.status]}`}
+                          style={barStyle}
+                        >
+                          {barInner}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
@@ -493,6 +572,126 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
           basePrice={0}
         />
       )}
+
+      {/* Buchungsdetail (Klick auf einen Balken) — Gast, Kanal, Zeitraum, Code */}
+      {detail && (
+        <ReservationDetail
+          reservation={detail}
+          propertyTitle={
+            properties.find((p) => p.id === detail.property_id)?.title ?? "Objekt"
+          }
+          onClose={() => setDetail(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// Detail-Popover für eine Buchung (OTA oder direkt). White-label: zeigt den
+// echten Kanal/OTA-Namen (das ist die Herkunft der Buchung, kein Provider-Leck).
+const CHANNEL_LABEL: Record<Reservation["channel"], string> = {
+  direct: "Direktbuchung",
+  portal: "Portal",
+  booking: "Booking.com",
+  airbnb: "Airbnb",
+  vrbo: "Vrbo",
+};
+
+function ReservationDetail({
+  reservation,
+  propertyTitle,
+  onClose,
+}: {
+  reservation: Reservation;
+  propertyTitle: string;
+  onClose: () => void;
+}) {
+  const r = reservation;
+  const channel = r.ota_name || CHANNEL_LABEL[r.channel];
+  const fmtDate = (s: string) =>
+    new Date(`${s}T00:00:00`).toLocaleDateString("de-DE", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4"
+      onMouseDown={onClose}
+    >
+      <div
+        className="flex w-full max-w-md flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-2xl"
+        onMouseDown={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-col">
+            <span className="font-display text-lg font-extrabold">
+              {r.guest_name?.trim() || "Gast"}
+            </span>
+            <span className="text-sm text-muted-foreground">{propertyTitle}</span>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground"
+            aria-label="Schließen"
+          >
+            <Icon icon="ph:x" className="size-5" />
+          </button>
+        </div>
+
+        <dl className="flex flex-col divide-y divide-border rounded-(--radius) border border-border text-sm">
+          <DetailRow label="Kanal">
+            <span className="inline-flex items-center gap-1.5">
+              <Icon
+                icon={SOURCE_ICON[r.channel as AvailabilitySource] ?? "ph:globe"}
+                className="size-4"
+              />
+              {channel}
+            </span>
+          </DetailRow>
+          <DetailRow label="Zeitraum">
+            {fmtDate(r.check_in)} → {fmtDate(r.check_out)}
+          </DetailRow>
+          {r.external_ref && (
+            <DetailRow label="Buchungscode">{r.external_ref}</DetailRow>
+          )}
+          <DetailRow label="Status">{r.status}</DetailRow>
+          {r.total_amount > 0 && (
+            <DetailRow label="Betrag">
+              {r.total_amount.toLocaleString("de-DE", {
+                style: "currency",
+                currency: r.currency || "EUR",
+              })}
+            </DetailRow>
+          )}
+        </dl>
+
+        {/* OTA-Buchungen haben einen Gäste-Chat → Link in den Posteingang */}
+        {r.channel !== "direct" && (
+          <Button asChild variant="outline">
+            <Link href="/posteingang">
+              <Icon icon="ph:chat-circle" className="size-4" />
+              Nachrichten
+            </Link>
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DetailRow({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 px-3 py-2">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="font-medium">{children}</dd>
     </div>
   );
 }

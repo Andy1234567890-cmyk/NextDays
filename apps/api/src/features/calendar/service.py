@@ -118,6 +118,10 @@ class CalendarService:
         self._db().table("availability").upsert(
             payload, on_conflict="property_id,date"
         ).execute()
+        # Realtime: gesperrte Tage sofort an Channex/OTAs (availability=0).
+        self._push_channex_availability(
+            req.property_id, req.range.start, req.range.end, 0
+        )
         log.info("calendar_block", property_id=req.property_id, days=len(payload))
         return len(payload)
 
@@ -198,3 +202,110 @@ class CalendarService:
             "date", rng.end.isoformat()
         ).execute()
         log.info("calendar_stop_sell_cleared", property_id=property_id)
+
+    # -- Saisonpreise (Tagespreise je Zeitraum → price_overrides + Channex) ----
+    def list_season_prices(
+        self, property_id: str, rng: DateRange
+    ) -> list[dict[str, object]]:
+        res = (
+            self._db()
+            .table("price_overrides")
+            .select("date, price")
+            .eq("property_id", property_id)
+            .gte("date", rng.start.isoformat())
+            .lt("date", rng.end.isoformat())
+            .not_.is_("price", "null")
+            .order("date")
+            .execute()
+        )
+        return res.data or []
+
+    def set_season_price(
+        self, property_id: str, rng: DateRange, price: float
+    ) -> int:
+        """Tagespreis für jeden Tag im Zeitraum setzen (price_overrides) und an
+        Channex pushen (Restrictions/rate). Gibt Anzahl Tage zurück."""
+        payload = [
+            {
+                "property_id": property_id,
+                "date": day.isoformat(),
+                "price": price,
+            }
+            for day in rng.nights()
+        ]
+        self._db().table("price_overrides").upsert(
+            payload, on_conflict="property_id,date"
+        ).execute()
+        # Realtime an Channex: Tagespreis (Cent) für den Zeitraum.
+        self._push_channex_rate(property_id, rng.start, rng.end, round(price * 100))
+        log.info(
+            "calendar_season_price_set", property_id=property_id, days=len(payload)
+        )
+        return len(payload)
+
+    def _push_channex_rate(
+        self, property_id: str, start: date, end: date, rate_cents: int
+    ) -> None:
+        """Tagespreis an Channex pushen. tenant_id über die property. Fehler
+        dürfen die Speicherung NICHT scheitern lassen (Cron gleicht Preise ab)."""
+        if self._client is None:
+            return
+        try:
+            from datetime import timedelta
+
+            prop = (
+                self._db()
+                .table("properties")
+                .select("tenant_id")
+                .eq("id", property_id)
+                .limit(1)
+                .execute()
+            ).data
+            if not prop:
+                return
+            from src.features.channel_manager.service import ChannelManagerService
+
+            ChannelManagerService(service_client=self._client).push_rate_for_property(
+                prop[0]["tenant_id"],
+                property_id,
+                start,
+                end - timedelta(days=1),  # end exklusiv
+                rate_cents,
+            )
+        except Exception as exc:  # noqa: BLE001
+            log.warning("calendar_channex_rate_push_failed", error=str(exc))
+
+    def _push_channex_availability(
+        self, property_id: str, start: date, end: date, availability: int
+    ) -> None:
+        """Verfügbarkeit der Tage [start, end) realtime an Channex pushen
+        (Doppelbuchungsschutz). tenant_id wird über die property ermittelt. Fehler
+        dürfen die Kalenderaktion NICHT scheitern lassen (ari_outbox-Retry)."""
+        if self._client is None:
+            return
+        try:
+            from datetime import timedelta
+
+            prop = (
+                self._db()
+                .table("properties")
+                .select("tenant_id")
+                .eq("id", property_id)
+                .limit(1)
+                .execute()
+            ).data
+            if not prop:
+                return
+            from src.features.channel_manager.service import ChannelManagerService
+
+            ChannelManagerService(
+                service_client=self._client
+            ).push_availability_for_property(
+                prop[0]["tenant_id"],
+                property_id,
+                start,
+                end - timedelta(days=1),  # end ist exklusiv
+                availability,
+            )
+        except Exception as exc:  # noqa: BLE001
+            log.warning("calendar_channex_push_failed", error=str(exc))

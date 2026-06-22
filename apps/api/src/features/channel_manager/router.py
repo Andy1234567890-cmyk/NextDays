@@ -20,6 +20,8 @@ from .schemas import (
     AriPushResponse,
     BookingListResponse,
     BookingSyncResponse,
+    ChannelConnectionListResponse,
+    ChannelConnectionResponse,
     ChannelListResponse,
     ChannelResponse,
     ConnectChannelRequest,
@@ -179,6 +181,24 @@ def disconnect_channel(
 ) -> None:
     try:
         service.disconnect_channel(ctx, channel_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/properties/{property_id}/connections",
+    response_model=ChannelConnectionListResponse,
+)
+def list_channel_connections(
+    property_id: str, ctx: CurrentUser, service: ChannelManagerServiceDep
+) -> ChannelConnectionListResponse:
+    """Gespeicherte OTA-Verbindungen eines Objekts (Hotel-ID + Status pro Portal)."""
+    try:
+        items = service.list_channel_connections(ctx, property_id)
+        return ChannelConnectionListResponse(
+            items=[ChannelConnectionResponse(**c) for c in items],
+            total=len(items),
+        )
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

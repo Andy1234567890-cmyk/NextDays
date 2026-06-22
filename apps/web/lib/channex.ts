@@ -211,6 +211,26 @@ export async function disconnectChannel(
   return call<void>(`/channels/${channelId}`, { method: "DELETE" });
 }
 
+// Gespeicherte OTA-Verbindungen eines Objekts (Hotel-ID + Status pro Portal).
+// White-label: nur Portal-Label, Hotel-ID, Status — keine rohen Credentials.
+export type StoredChannelConnection = {
+  portal_code: string;
+  portal: string;
+  hotel_id: string;
+  channel_id: string | null;
+  is_active: boolean;
+  last_error: string | null;
+  updated_at: string | null;
+};
+
+export async function listChannelConnections(
+  propertyId: string,
+): Promise<Result<{ items: StoredChannelConnection[]; total: number }>> {
+  return call<{ items: StoredChannelConnection[]; total: number }>(
+    `/properties/${propertyId}/connections`,
+  );
+}
+
 // --- Bookings ---------------------------------------------------------------
 export async function listChannexBookings(): Promise<
   Result<{ items: ChannexBooking[]; total: number }>

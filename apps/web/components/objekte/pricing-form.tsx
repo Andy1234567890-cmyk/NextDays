@@ -57,6 +57,7 @@ import {
   readPricing,
 } from "@/lib/pricing-meta";
 import { type Property, updateProperty } from "@/lib/properties";
+import { setBasePrice } from "@/lib/rates";
 
 type Section =
   | "base"
@@ -92,12 +93,16 @@ export function PricingForm({ initial }: { initial: Property }) {
     const res = await updateProperty(p.id, {
       type_attributes: { ...p.type_attributes, pricing: next },
     });
-    if (res.ok) {
-      setP(res.data);
-      setSection(null);
-      return true;
+    if (!res.ok) return res.error;
+    setP(res.data);
+    setSection(null);
+    // Basispreis zusätzlich als rate_plan persistieren — das ist die Channex-
+    // Wahrheit und schließt die Kette (Sync, Verbinden, Kalender).
+    if (next.basePrice > 0) {
+      const rp = await setBasePrice(p.id, next.basePrice, next.currency);
+      if (!rp.ok) return rp.error;
     }
-    return res.error;
+    return true;
   }
 
   return (
@@ -125,6 +130,7 @@ export function PricingForm({ initial }: { initial: Property }) {
           title="Aufschlag (Mark-up)"
           hint="Passe den an externe Kanäle gesendeten Grundpreis an."
           onEdit={() => setSection("markup")}
+          localOnly
         >
           <span className="flex flex-wrap items-center gap-2">
             {MARKUP_CHANNELS.map((c) => (
@@ -152,6 +158,7 @@ export function PricingForm({ initial }: { initial: Property }) {
           hint="Erhöhe den Nachtpreis, wenn ein Gast nur kurz bleibt."
           actionLabel={pr.shortStayMaxNights > 0 ? "Bearbeiten" : "Hinzufügen"}
           onEdit={() => setSection("shortStay")}
+          localOnly
         >
           {pr.shortStayMaxNights > 0 ? (
             <Pill>+{fmtPrice(pr.shortStaySurcharge, cur)} bis {pr.shortStayMaxNights} Nächte</Pill>
@@ -163,7 +170,12 @@ export function PricingForm({ initial }: { initial: Property }) {
       <section className="flex flex-col gap-4">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="font-display text-xl font-extrabold">Längenabhängige Preise</h2>
+            <h2 className="flex items-center gap-2 font-display text-xl font-extrabold">
+              Längenabhängige Preise
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                nur Direktbuchungen
+              </span>
+            </h2>
             <p className="text-sm text-muted-foreground">
               Reduziere Preise für längere Aufenthalte — ab einer Woche bis zu beliebiger Länge.
             </p>
@@ -298,6 +310,7 @@ export function PricingForm({ initial }: { initial: Property }) {
       <ListSection
         title="Aktionen"
         hint="Erstelle Sonderaktionen für bestimmte Zeiträume oder Rabatte für einzelne Gäste."
+        localOnly
         onAdd={() => setSection({ promo: "new" })}
         empty="Noch keine Aktionen."
         items={pr.promotions}
@@ -316,6 +329,7 @@ export function PricingForm({ initial }: { initial: Property }) {
       <ListSection
         title="Add-ons"
         hint="Biete Extras für die Reservierung an (z. B. Frühstück). Verfügbar bei NextDays-Direktbuchungen."
+        localOnly
         onAdd={() => setSection({ addon: "new" })}
         empty="Noch keine Add-ons."
         items={pr.addOns}
@@ -393,6 +407,7 @@ function ListSection<T>({
   empty,
   items,
   render,
+  localOnly,
 }: {
   title: string;
   hint: string;
@@ -400,12 +415,20 @@ function ListSection<T>({
   empty: string;
   items: T[];
   render: (item: T) => React.ReactNode;
+  localOnly?: boolean;
 }) {
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h2 className="font-display text-xl font-extrabold">{title}</h2>
+          <h2 className="flex items-center gap-2 font-display text-xl font-extrabold">
+            {title}
+            {localOnly && (
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                nur Direktbuchungen
+              </span>
+            )}
+          </h2>
           <p className="text-sm text-muted-foreground">{hint}</p>
         </div>
         <Button variant="outline" size="sm" className="gap-1.5" onClick={onAdd}>
@@ -467,19 +490,28 @@ function BlockCard({
   hint,
   actionLabel = "Bearbeiten",
   onEdit,
+  localOnly,
   children,
 }: {
   title: string;
   hint: string;
   actionLabel?: string;
   onEdit: () => void;
+  localOnly?: boolean;
   children?: React.ReactNode;
 }) {
   return (
     <Card className="flex flex-col gap-3 p-5">
       <div className="flex items-start justify-between gap-4">
         <div className="leading-tight">
-          <p className="font-semibold">{title}</p>
+          <p className="flex items-center gap-2 font-semibold">
+            {title}
+            {localOnly && (
+              <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                nur Direktbuchungen
+              </span>
+            )}
+          </p>
           <p className="mt-0.5 text-sm text-muted-foreground">{hint}</p>
         </div>
         <Button variant="outline" size="sm" onClick={onEdit}>

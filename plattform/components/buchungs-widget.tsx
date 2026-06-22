@@ -1,17 +1,70 @@
-// Buchungs-Widget der Inserat-Seite — Datum/Gäste-Auswahl, Preis-Aufschlüsselung
-// und Reservieren-Aktion (führt zum Checkout). Eigenes myNextDays-Design.
-import { Icon } from "@iconify/react";
-import Link from "next/link";
+"use client";
 
+// Buchungs-Widget der Inserat-Seite — Datumswahl, echte Verfügbarkeitsprüfung
+// und Gastbuchung gegen den booking_engine-Slice. Der Buchungskalender im Backend
+// ist die oberste Wahrheit: belegte Zeiträume werden mit 409 abgelehnt, eine
+// erfolgreiche Buchung sperrt sofort alle Plattformen (Doppelbuchungsschutz).
+import { Icon } from "@iconify/react";
+import { useState } from "react";
+
+import { bucheGast, ladeVerfuegbarkeit } from "@/lib/buchung";
 import { type Listing, formatEuro } from "@/lib/listings";
 
-const NAECHTE = 2;
-const STEUER_SATZ = 0.0866; // ~ Platzhalter, bis Backend die echten Werte liefert
+function naechte(checkIn: string, checkOut: string): number {
+  if (!checkIn || !checkOut) return 0;
+  const a = new Date(checkIn + "T00:00:00Z").getTime();
+  const b = new Date(checkOut + "T00:00:00Z").getTime();
+  const n = Math.round((b - a) / 86_400_000);
+  return n > 0 ? n : 0;
+}
 
 export function BuchungsWidget({ listing }: { listing: Listing }) {
-  const zwischensumme = listing.preisProNacht * NAECHTE;
-  const steuern = Math.round(zwischensumme * STEUER_SATZ * 100) / 100;
-  const gesamt = Math.round((zwischensumme + steuern) * 100) / 100;
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
+  const [vorname, setVorname] = useState("");
+  const [nachname, setNachname] = useState("");
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState<{
+    kind: "idle" | "loading" | "error" | "done";
+    msg?: string;
+  }>({ kind: "idle" });
+
+  const n = naechte(checkIn, checkOut);
+  const zwischensumme = listing.preisProNacht * n;
+
+  async function reservieren() {
+    if (n <= 0) {
+      setStatus({ kind: "error", msg: "Bitte gültigen Zeitraum wählen." });
+      return;
+    }
+    if (!vorname || !nachname || !email) {
+      setStatus({ kind: "error", msg: "Bitte Kontaktdaten ausfüllen." });
+      return;
+    }
+    setStatus({ kind: "loading" });
+    // Erst Verfügbarkeit prüfen (Buchungskalender = Wahrheit).
+    const av = await ladeVerfuegbarkeit(listing.id, checkIn, checkOut);
+    if (!av.ok) {
+      setStatus({ kind: "error", msg: av.error });
+      return;
+    }
+    if (av.data.days.some((d) => !d.available)) {
+      setStatus({ kind: "error", msg: "Dieser Zeitraum ist nicht mehr verfügbar." });
+      return;
+    }
+    const res = await bucheGast({
+      property_id: listing.id,
+      check_in: checkIn,
+      check_out: checkOut,
+      contact: { first_name: vorname, last_name: nachname, email },
+      total_amount: zwischensumme,
+    });
+    if (res.ok) {
+      setStatus({ kind: "done", msg: "Buchung bestätigt! Du erhältst eine E-Mail." });
+    } else {
+      setStatus({ kind: "error", msg: res.error });
+    }
+  }
 
   return (
     <div className="rounded-2xl border border-border bg-card p-6 shadow-lg">
@@ -22,61 +75,91 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
         <span className="text-muted-foreground">Nacht</span>
       </p>
 
-      {/* Datum / Gäste */}
       <div className="overflow-hidden rounded-xl border border-border">
         <div className="grid grid-cols-2 divide-x divide-border border-b border-border">
-          <div className="p-3">
-            <p className="text-[0.625rem] font-semibold uppercase tracking-wide">
+          <label className="p-3">
+            <span className="block text-[0.625rem] font-semibold uppercase tracking-wide">
               Check-in
-            </p>
-            <p className="text-sm text-foreground">03.07.2026</p>
-          </div>
-          <div className="p-3">
-            <p className="text-[0.625rem] font-semibold uppercase tracking-wide">
+            </span>
+            <input
+              type="date"
+              value={checkIn}
+              onChange={(e) => setCheckIn(e.target.value)}
+              className="w-full bg-transparent text-sm text-foreground outline-none"
+            />
+          </label>
+          <label className="p-3">
+            <span className="block text-[0.625rem] font-semibold uppercase tracking-wide">
               Check-out
-            </p>
-            <p className="text-sm text-foreground">05.07.2026</p>
-          </div>
+            </span>
+            <input
+              type="date"
+              value={checkOut}
+              onChange={(e) => setCheckOut(e.target.value)}
+              className="w-full bg-transparent text-sm text-foreground outline-none"
+            />
+          </label>
         </div>
-        <div className="flex items-center justify-between p-3">
-          <div>
-            <p className="text-[0.625rem] font-semibold uppercase tracking-wide">
-              Gäste
-            </p>
-            <p className="text-sm text-foreground">1 Gast</p>
-          </div>
-          <Icon icon="ph:caret-down" className="size-4 text-muted-foreground" />
+        <div className="grid grid-cols-1 gap-2 p-3">
+          <input
+            placeholder="Vorname"
+            value={vorname}
+            onChange={(e) => setVorname(e.target.value)}
+            className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none"
+          />
+          <input
+            placeholder="Nachname"
+            value={nachname}
+            onChange={(e) => setNachname(e.target.value)}
+            className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none"
+          />
+          <input
+            type="email"
+            placeholder="E-Mail"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-sm outline-none"
+          />
         </div>
       </div>
 
-      <Link
-        href={`/checkout/${listing.id}`}
-        className="mt-4 flex w-full items-center justify-center rounded-full bg-accent px-4 py-3 font-medium text-accent-foreground transition-opacity hover:opacity-90"
+      <button
+        type="button"
+        onClick={reservieren}
+        disabled={status.kind === "loading"}
+        className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-3 font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
       >
-        Reservieren
-      </Link>
+        {status.kind === "loading" ? (
+          <Icon icon="ph:spinner" className="size-4 animate-spin" />
+        ) : null}
+        {status.kind === "done" ? "Gebucht" : "Reservieren"}
+      </button>
 
-      <p className="mt-3 text-center text-sm text-muted-foreground">
-        Du musst noch nichts bezahlen
-      </p>
+      {status.msg && (
+        <p
+          className={
+            "mt-3 text-center text-sm " +
+            (status.kind === "error" ? "text-red-600" : "text-green-700")
+          }
+        >
+          {status.msg}
+        </p>
+      )}
 
-      {/* Preis-Aufschlüsselung */}
-      <div className="mt-6 flex flex-col gap-3 text-sm">
-        <div className="flex justify-between">
-          <span className="underline">
-            {formatEuro(listing.preisProNacht)} × {NAECHTE} Nächte
-          </span>
-          <span>{formatEuro(zwischensumme)}</span>
+      {n > 0 && status.kind !== "done" && (
+        <div className="mt-6 flex flex-col gap-3 text-sm">
+          <div className="flex justify-between">
+            <span className="underline">
+              {formatEuro(listing.preisProNacht)} × {n} Nächte
+            </span>
+            <span>{formatEuro(zwischensumme)}</span>
+          </div>
+          <div className="mt-2 flex justify-between border-t border-border pt-3 font-semibold">
+            <span>Gesamt</span>
+            <span>{formatEuro(zwischensumme)}</span>
+          </div>
         </div>
-        <div className="flex justify-between">
-          <span className="underline">Steuern</span>
-          <span>{formatEuro(steuern)}</span>
-        </div>
-        <div className="mt-2 flex justify-between border-t border-border pt-3 font-semibold">
-          <span>Gesamt</span>
-          <span>{formatEuro(gesamt)}</span>
-        </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -70,6 +70,39 @@ async function call<T>(
   }
 }
 
+// --- Dashboard --------------------------------------------------------------
+export type DashboardEntry = {
+  reservation_id: string;
+  guest_name: string;
+  property_title: string;
+  channel: ReservationChannel;
+  ota_name: string | null;
+  check_in: string;
+  check_out: string;
+  status: ReservationStatus;
+};
+
+export type DashboardKpi = {
+  value: number;
+  change_pct: number | null;
+};
+
+export type Dashboard = {
+  today: string;
+  checkouts_today: DashboardEntry[];
+  checkins_today: DashboardEntry[];
+  upcoming: DashboardEntry[];
+  checkins_30d: DashboardKpi;
+  revenue_30d: DashboardKpi;
+  confirmed_30d: DashboardKpi;
+  currency: string;
+};
+
+/** Startseiten-Kennzahlen (echte Daten, im Backend berechnet). */
+export async function getDashboard(): Promise<Result<Dashboard>> {
+  return call("/reservations/dashboard");
+}
+
 /** Reservierung anlegen. Belegt im Backend die Kalendertage (booked). */
 export async function createReservation(
   input: ReservationInput,

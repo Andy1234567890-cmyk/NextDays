@@ -26,6 +26,7 @@ from .features.public_portal.router import router as public_portal_router
 from .features.rates.router import router as rates_router
 from .features.reservations.router import router as reservations_router
 from .features.tasks.router import router as tasks_router
+from .features.whatsapp.router import router as whatsapp_router
 
 _SLICE_ROUTERS = [
     auth_router,
@@ -46,6 +47,7 @@ _SLICE_ROUTERS = [
     crm_router,
     dashboard_router,
     content_router,
+    whatsapp_router,
 ]
 
 

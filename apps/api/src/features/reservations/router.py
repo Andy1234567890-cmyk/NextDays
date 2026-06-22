@@ -9,6 +9,7 @@ from src.features.auth.dependencies import require_permission
 from src.features.auth.permissions import Capability
 
 from .schemas import (
+    DashboardResponse,
     ReservationCreate,
     ReservationListResponse,
     ReservationResponse,
@@ -31,6 +32,17 @@ ReservationsServiceDep = Annotated[
 @router.get("/health", response_model=SliceHealth)
 def health() -> SliceHealth:
     return SliceHealth(slice="reservations")
+
+
+@router.get("/dashboard", response_model=DashboardResponse)
+def dashboard(
+    service: ReservationsServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+) -> DashboardResponse:
+    try:
+        return service.dashboard(ctx)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.get("", response_model=ReservationListResponse)

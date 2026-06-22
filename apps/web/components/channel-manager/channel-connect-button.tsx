@@ -14,8 +14,10 @@ import {
   type ChannelMapping,
   type LocalRatePlanOption,
   type OtaRoom,
+  type StoredChannelConnection,
   type SupportedPortal,
   connectChannel,
+  listChannelConnections,
   listPortals,
   prepareChannel,
 } from "@/lib/channex";
@@ -49,6 +51,9 @@ export function ChannelConnectButton({
   const [propertyId, setPropertyId] = useState<string | null>(null);
   const [selected, setSelected] = useState<SupportedPortal | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
+  // Bereits gespeicherte Verbindungen des gewählten Objekts (für Vorbefüllung
+  // der Hotel-ID + Status-Hinweis pro Portal).
+  const [connections, setConnections] = useState<StoredChannelConnection[]>([]);
 
   const [otaRooms, setOtaRooms] = useState<OtaRoom[]>([]);
   const [ratePlans, setRatePlans] = useState<LocalRatePlanOption[]>([]);
@@ -68,6 +73,19 @@ export function ChannelConnectButton({
     });
   }, [open]);
 
+  // Gespeicherte Verbindungen des aktuell gewählten Objekts laden (Vorbefüllung
+  // der Hotel-ID + Status-Hinweise je Portal).
+  useEffect(() => {
+    if (!open || !propertyId) {
+      setConnections([]);
+      return;
+    }
+    startTransition(async () => {
+      const res = await listChannelConnections(propertyId);
+      setConnections(res.ok ? res.data.items : []);
+    });
+  }, [open, propertyId]);
+
   function reset() {
     setStep("portal");
     setSelected(null);
@@ -86,9 +104,20 @@ export function ChannelConnectButton({
 
   function choosePortal(portal: SupportedPortal) {
     setSelected(portal);
-    setValues({});
+    // Hotel-ID aus einer bereits gespeicherten Verbindung vorbefüllen, damit der
+    // Vermieter sie beim Re-Connect nicht erneut eingeben muss.
+    const stored = connections.find((c) => c.portal_code === portal.code);
+    const firstField = portal.fields[0]?.key;
+    setValues(
+      stored && firstField ? { [firstField]: stored.hotel_id } : {},
+    );
     setError(null);
     setStep("credentials");
+  }
+
+  // Status-Hinweis für ein Portal in der Auswahl-Liste (verbunden/Aktion nötig).
+  function connectionFor(code: string): StoredChannelConnection | undefined {
+    return connections.find((c) => c.portal_code === code);
   }
 
   // Schritt 1→2: Zugangsdaten prüfen + Zimmer/Raten laden.
@@ -214,21 +243,34 @@ export function ChannelConnectButton({
                   Wähle das Portal, das du verbinden möchtest:
                 </p>
                 <div className="grid gap-2">
-                  {portals.map((p) => (
-                    <button
-                      key={p.code}
-                      type="button"
-                      onClick={() => choosePortal(p)}
-                      className="flex items-center gap-3 rounded-(--radius) border border-border p-3 text-left transition-colors hover:bg-secondary"
-                    >
-                      <Icon icon={p.icon} className="size-6" />
-                      <span className="font-medium">{p.label}</span>
-                      <Icon
-                        icon="ph:caret-right"
-                        className="ml-auto size-4 text-muted-foreground"
-                      />
-                    </button>
-                  ))}
+                  {portals.map((p) => {
+                    const conn = connectionFor(p.code);
+                    return (
+                      <button
+                        key={p.code}
+                        type="button"
+                        onClick={() => choosePortal(p)}
+                        className="flex items-center gap-3 rounded-(--radius) border border-border p-3 text-left transition-colors hover:bg-secondary"
+                      >
+                        <Icon icon={p.icon} className="size-6" />
+                        <span className="font-medium">{p.label}</span>
+                        {conn &&
+                          (conn.is_active ? (
+                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                              Verbunden
+                            </span>
+                          ) : (
+                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700">
+                              Aktion nötig
+                            </span>
+                          ))}
+                        <Icon
+                          icon="ph:caret-right"
+                          className="ml-auto size-4 text-muted-foreground"
+                        />
+                      </button>
+                    );
+                  })}
                   {portals.length === 0 && (
                     <p className="text-sm text-muted-foreground">
                       {pending ? "Lädt …" : "Keine Portale verfügbar."}

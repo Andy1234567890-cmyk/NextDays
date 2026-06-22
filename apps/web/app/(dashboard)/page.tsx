@@ -1,12 +1,14 @@
 // Dashboard-Übersicht (Startseite).
 // Solange das Onboarding des Tenants nicht abgeschlossen ist, zeigt das
-// Dashboard den Setup-Assistenten (ersetzt den Inhalt). Danach erscheint die
-// normale Übersicht (KPI-Kacheln/Charts folgen).
+// Dashboard den Setup-Assistenten (ersetzt den Inhalt). Danach erscheint das
+// Reservierungs-Dashboard (echte Kennzahlen aus dem Backend).
 import { Icon } from "@iconify/react";
 
+import { ReservationsDashboard } from "@/components/dashboard/reservations-dashboard";
 import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
 import { Card, CardContent } from "@/components/ui/card";
 import { getOnboarding } from "@/lib/onboarding";
+import { getDashboard } from "@/lib/reservations";
 import { currentUserEmail } from "@/lib/session-token";
 
 export const dynamic = "force-dynamic";
@@ -27,31 +29,22 @@ export default async function DashboardPage() {
     );
   }
 
-  return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h2 className="font-display text-2xl font-extrabold">
-          Willkommen zurück
-        </h2>
-        <p className="text-muted-foreground">
-          Hier entsteht dein NextDays-Dashboard.
-        </p>
-      </div>
-
+  const dashboard = await getDashboard();
+  if (!dashboard.ok) {
+    return (
       <Card className="border-dashed">
         <CardContent className="flex flex-col items-center justify-center gap-3 py-16 text-center">
           <span className="flex size-12 items-center justify-center rounded-full bg-secondary text-muted-foreground">
-            <Icon icon="ph:squares-four" className="size-6" />
+            <Icon icon="ph:warning-circle" className="size-6" />
           </span>
           <div>
-            <p className="font-medium">Layout-Gerüst steht</p>
-            <p className="text-sm text-muted-foreground">
-              Sidebar, Topbar und Theme-Umschaltung sind aktiv. Als Nächstes
-              kommen die Kennzahl-Kacheln und Diagramme hierher.
-            </p>
+            <p className="font-medium">Dashboard konnte nicht geladen werden</p>
+            <p className="text-sm text-muted-foreground">{dashboard.error}</p>
           </div>
         </CardContent>
       </Card>
-    </div>
-  );
+    );
+  }
+
+  return <ReservationsDashboard data={dashboard.data} />;
 }

@@ -180,6 +180,118 @@ class PropertiesService:
         # Cache-Buster, damit Clients trotz gleicher URL das neue Bild laden.
         return f"{public_url}?v={secrets.token_hex(4)}"
 
+    def publish(self, ctx: AuthContext, property_id: str) -> PropertyResponse:
+        """Objekt veröffentlichen: draft→active + Channex-Sync + Verfügbarkeit.
+
+        Voraussetzung: das Objekt hat mindestens einen Preisplan (rate_plan).
+        Ohne Preis kann es nicht an die Buchungsportale übertragen werden (422,
+        kein Fallback). Idempotent — erneutes Veröffentlichen aktualisiert nur.
+        """
+        from datetime import UTC, date, datetime, timedelta
+
+        tenant_id = self._require_tenant(ctx)
+        prop = (
+            self._db.table("properties")
+            .select("*")
+            .eq("id", property_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not prop:
+            raise PropertyError("Objekt nicht gefunden.", status_code=404)
+        row = prop[0]
+
+        rates = (
+            self._db.table("rate_plans")
+            .select("id, currency, min_stay")
+            .eq("property_id", property_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not rates:
+            raise PropertyError(
+                "Bitte zuerst einen Preis hinterlegen, dann kann das Objekt "
+                "veröffentlicht und an die Buchungsportale übertragen werden.",
+                status_code=422,
+            )
+        currency = rates[0].get("currency") or "EUR"
+
+        # 1) Status aktiv setzen.
+        upd = (
+            self._db.table("properties")
+            .update({"status": "active"})
+            .eq("id", property_id)
+            .eq("tenant_id", tenant_id)
+            .execute()
+        ).data
+        row = upd[0] if upd else row
+
+        # 2) Channex-Sync (Property+Room-Type+Rate-Plan+channex_property_map).
+        #    BLOCKIEREND hier: Veröffentlichen MUSS die Übertragung sicherstellen.
+        from src.features.channel_manager.service import (
+            ChannelManagerError,
+            ChannelManagerService,
+        )
+
+        cm = ChannelManagerService(service_client=self._db)
+        try:
+            cm.sync_content(
+                tenant_id,
+                property_id=property_id,
+                title=row.get("title") or "Unbenannt",
+                currency=currency,
+            )
+        except ChannelManagerError as exc:
+            raise PropertyError(exc.message, status_code=exc.status_code) from exc
+
+        # 3) Verfügbarkeit initialisieren (kommende 365 Tage als 'open', sofern
+        #    noch keine Zeile existiert) — füllt den Kalender, Basis für den Push.
+        today = datetime.now(UTC).date()
+        existing_days = {
+            r["date"]
+            for r in (
+                self._db.table("availability")
+                .select("date")
+                .eq("property_id", property_id)
+                .gte("date", today.isoformat())
+                .lt("date", (today + timedelta(days=365)).isoformat())
+                .execute()
+            ).data
+            or []
+        }
+        new_rows = [
+            {
+                "property_id": property_id,
+                "date": (today + timedelta(days=i)).isoformat(),
+                "status": "open",
+                "source": "manual",
+            }
+            for i in range(365)
+            if (today + timedelta(days=i)).isoformat() not in existing_days
+        ]
+        if new_rows:
+            self._db.table("availability").upsert(
+                new_rows, on_conflict="property_id,date"
+            ).execute()
+
+        # 4) Verfügbarkeit + Mindestaufenthalt an Channex pushen.
+        try:
+            cm.push_availability_for_property(
+                tenant_id, property_id, today, today + timedelta(days=364), 1
+            )
+            min_stay = int(rates[0].get("min_stay") or 1)
+            if min_stay > 1:
+                cm.push_rate_for_property(
+                    tenant_id, property_id, today, today + timedelta(days=364),
+                    min_stay=min_stay,
+                )
+        except Exception as exc:  # noqa: BLE001
+            log.warning("publish_channex_push_failed", property_id=property_id, error=str(exc))
+
+        log.info("property_published", tenant_id=tenant_id, property_id=property_id)
+        return PropertyResponse(**_row(row))
+
     def delete(self, ctx: AuthContext, property_id: str) -> None:
         tenant_id = self._require_tenant(ctx)
         res = (

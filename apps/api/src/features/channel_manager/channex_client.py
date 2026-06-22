@@ -256,6 +256,19 @@ class ChannexClient:
         Bei READ kommt options[].rate als Dezimalstring zurück."""
         return self.get("rate_plans", params={"filter[property_id]": property_id})
 
+    # ----- Taxes & Tax-Sets ---------------------------------------------------
+    def create_tax(self, attributes: dict[str, Any]) -> dict[str, Any]:
+        return self.post("taxes", json={"tax": attributes})
+
+    def update_tax(self, tax_id: str, attributes: dict[str, Any]) -> dict[str, Any]:
+        return self.put(f"taxes/{tax_id}", json={"tax": attributes})
+
+    def create_tax_set(self, attributes: dict[str, Any]) -> dict[str, Any]:
+        return self.post("tax_sets", json={"tax_set": attributes})
+
+    def update_tax_set(self, tax_set_id: str, attributes: dict[str, Any]) -> dict[str, Any]:
+        return self.put(f"tax_sets/{tax_set_id}", json={"tax_set": attributes})
+
     # ----- ARI: Availability + Restrictions/Rates -----------------------------
     def update_availability(self, values: list[dict[str, Any]]) -> dict[str, Any]:
         """Verfügbarkeit setzen. `values` = Liste von Updates (s. Channex-ARI).
@@ -414,3 +427,20 @@ class ChannexClient:
 
     def delete_webhook(self, webhook_id: str) -> dict[str, Any]:
         return self.delete(f"webhooks/{webhook_id}")
+
+    # ----- Messages (Gäste-Chat: Booking.com, Airbnb, Expedia) ----------------
+    # Channex omni-channel Messaging-API. Ein Thread gehört i.d.R. zu einer
+    # Booking (relationships.booking); Airbnb-„Inquiry" kann threadlos sein.
+    # Doku: https://docs.channex.io/api-v.1-documentation/messages-collection
+    def get_messages_for_booking(self, channex_booking_id: str) -> dict[str, Any]:
+        """Nachrichten einer Buchung lesen (data[] mit message, sender, time)."""
+        return self.get(f"bookings/{channex_booking_id}/messages")
+
+    def send_message_for_booking(
+        self, channex_booking_id: str, message: str
+    ) -> dict[str, Any]:
+        """Antwort an den Gast senden (geht an die OTA des Threads zurück)."""
+        return self.post(
+            f"bookings/{channex_booking_id}/messages",
+            json={"message": {"message": message}},
+        )

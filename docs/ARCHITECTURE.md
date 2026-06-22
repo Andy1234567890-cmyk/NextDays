@@ -364,6 +364,7 @@ erDiagram
     RATE_PLAN ||--o| CHANNEX_RATE_PLAN_MAP : "lokal ↔ Channex"
     TENANT ||--o{ CHANNEX_BOOKING : "OTA-Buchungen"
     CHANNEX_PROPERTY_MAP ||--o{ CHANNEX_BOOKING : "je Property"
+    PROPERTY ||--o{ CHANNEX_CHANNEL_CONNECTION : "OTA-Verbindungen (Hotel-ID)"
 ```
 
 Jede Mapping-Tabelle hält die `channex_*_id` (externe UUID) neben der lokalen
@@ -372,6 +373,13 @@ und die volle `raw`-Payload. Beträge in Cent (`amount_cents`). `channex_group_m
 (Migration `0028`) hält je Tenant die Provider-Group (Whitelabel-Konto-Modell:
 ein Konto, eine Group pro Hotel). **White-Label-Pflicht:** Provider-Name/IDs
 erscheinen nie im Frontend (Responses neutralisiert: `property_title`/`external_id`).
+
+`channex_channel_connection` (Migration `0035`) persistiert pro (Objekt, Portal) die
+vom Vermieter eingegebene **OTA-Hotel-ID**, den erzeugten Channel und den Aktiv-Status —
+damit ist die Portal-Verbindung sichtbar und verwaltbar (Status, Trennen, Re-Connect
+mit vorbefüllter Hotel-ID). Modell: Der Vermieter legt seine Unterkunft selbst beim OTA
+an (Hotel-ID), trägt sie in NextDays ein → Auto-Connect über Channex. Ein OTA-seitiges
+„Property von Null anlegen" ist kein verfügbarer Weg (s. ADR-0011).
 
 **Weitere Änderungen am Bestand:** `property_type` + `type_attributes` an
 `properties` (Ökosystem, ADR-0007); Rollen-Enum um `admin`, `co_admin`

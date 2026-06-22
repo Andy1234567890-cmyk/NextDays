@@ -19,6 +19,8 @@ from .schemas import (
     DateRange,
     DayAvailability,
     PriceOverrideRequest,
+    SeasonPriceListResponse,
+    SeasonPriceRequest,
     SliceHealth,
     StopSellClearRequest,
     StopSellListResponse,
@@ -145,5 +147,36 @@ def clear_stop_sell(
     try:
         service.clear_stop_sell(req.property_id, req.range)
         return {"status": "ok"}
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/season-price", response_model=SeasonPriceListResponse)
+def list_season_price(
+    service: CalendarServiceDep,
+    _ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    property_id: Annotated[str, Query()],
+    start: Annotated[date, Query()],
+    end: Annotated[date, Query()],
+) -> SeasonPriceListResponse:
+    try:
+        items = service.list_season_prices(property_id, DateRange(start=start, end=end))
+        return SeasonPriceListResponse(items=items, total=len(items))
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/season-price", dependencies=[
+    Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
+def set_season_price(
+    req: SeasonPriceRequest,
+    service: CalendarServiceDep,
+    _ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> dict[str, int]:
+    try:
+        return {"days": service.set_season_price(req.property_id, req.range, req.price)}
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

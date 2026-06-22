@@ -105,3 +105,29 @@ export async function clearStopSell(
     body: { property_id: propertyId, range: { start, end } },
   });
 }
+
+export type SeasonPriceDay = { date: string; price: number };
+
+/** Saison-/Tagespreise eines Objekts im Zeitraum [start, end). */
+export async function listSeasonPrices(
+  propertyId: string,
+  start: string,
+  end: string,
+): Promise<Result<{ items: SeasonPriceDay[]; total: number }>> {
+  const qs = new URLSearchParams({ property_id: propertyId, start, end });
+  return call(`/calendar/season-price?${qs.toString()}`);
+}
+
+/** Tagespreis für einen Zeitraum setzen (Saisonpreis). end exklusiv.
+ *  Schreibt price_overrides und pusht den Preis an Channex. */
+export async function setSeasonPrice(
+  propertyId: string,
+  start: string,
+  end: string,
+  price: number,
+): Promise<Result<{ days: number }>> {
+  return call("/calendar/season-price", {
+    method: "POST",
+    body: { property_id: propertyId, range: { start, end }, price },
+  });
+}

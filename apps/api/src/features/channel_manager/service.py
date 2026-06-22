@@ -189,7 +189,7 @@ class ChannelManagerService:
             db.table("properties")
             .select(
                 "id, title, description, property_type, street, house_number, "
-                "postal_code, city, country, lat, lng"
+                "postal_code, city, country, lat, lng, max_guests, type_attributes"
             )
             .eq("id", property_id)
             .eq("tenant_id", tenant_id)
@@ -228,11 +228,18 @@ class ChannelManagerService:
             channex_room_type_id, room_type_map_id = self._upsert_channex_room_type(
                 db, tenant_id, channex_property_id, property_id, prop_title
             )
+            channex_rate_plan_ids: list[str] = []
             for rp in rate_plans:
-                self._upsert_channex_rate_plan(
+                crp = self._upsert_channex_rate_plan(
                     db, tenant_id, room_type_map_id, channex_property_id,
-                    channex_room_type_id, rp, prop_currency,
+                    channex_room_type_id, rp, prop_currency, prop_row,
                 )
+                channex_rate_plan_ids.append(crp)
+            # Steuern (USt./City-Tax) → Channex tax_sets + tax_set_id am Rate-Plan.
+            self._sync_taxes(
+                db, tenant_id, property_id, channex_property_id,
+                channex_rate_plan_ids, prop_currency, prop_row,
+            )
         except ChannexError as exc:
             self._mark_property_sync(db, tenant_id, property_id, "error", exc.message)
             raise self._wrap_channex(exc) from exc
@@ -351,6 +358,19 @@ class ChannelManagerService:
         desc = prop_row.get("description")
         if desc:
             attrs["content"] = {"description": desc}
+
+        # Property-Settings: Inventartage (passt zu unserem 365-Tage-Init) und
+        # Min/Max-Preis aus dem Preise-Tab — Preisgrenzen nur senden, wenn der
+        # Nutzer sie gesetzt hat (kein erfundener Default).
+        settings: dict[str, Any] = {"state_length": 365}
+        pricing = (prop_row.get("type_attributes") or {}).get("pricing") or {}
+        min_price = pricing.get("minPrice")
+        max_price = pricing.get("maxPrice")
+        if isinstance(min_price, (int, float)) and min_price > 0:
+            settings["min_price"] = min_price
+        if isinstance(max_price, (int, float)) and max_price > 0:
+            settings["max_price"] = max_price
+        attrs["settings"] = settings
         return attrs
 
     def _upsert_channex_room_type(
@@ -415,13 +435,60 @@ class ChannelManagerService:
         )
         return channex_room_type_id, saved.data[0]["id"]
 
+    @staticmethod
+    def _rate_plan_options(
+        base_cents: int, prop_row: dict[str, Any] | None
+    ) -> tuple[str, list[dict[str, Any]]]:
+        """Baut (sell_mode, options) für den Rate-Plan. Ohne Gast-Aufschlag:
+        per_room mit Primär-Belegung 2. Mit extraGuestCharge>0: per_person mit
+        einer Option je Belegung (1..max_guests) — Primär-Belegung trägt den
+        Basispreis, höhere Belegungen einen festen Aufschlag pro zusätzlichem
+        Gast (derived_option increase_by_amount). Kein Aufschlag → kein Erfinden."""
+        attrs = (prop_row or {}).get("type_attributes") or {}
+        pricing = attrs.get("pricing") or {}
+        extra = pricing.get("extraGuestCharge") or 0
+        extra_from = pricing.get("extraGuestFrom") or 1
+        max_guests = (prop_row or {}).get("max_guests") or 2
+
+        if not extra or extra <= 0:
+            return "per_room", [
+                {"occupancy": 2, "is_primary": True, "rate": base_cents}
+            ]
+
+        extra_cents = round(float(extra) * 100)
+        primary_occ = max(1, int(extra_from))
+        options: list[dict[str, Any]] = []
+        for occ in range(1, int(max_guests) + 1):
+            if occ == primary_occ:
+                options.append(
+                    {"occupancy": occ, "is_primary": True, "rate": base_cents}
+                )
+            elif occ > primary_occ:
+                steps = occ - primary_occ
+                options.append(
+                    {
+                        "occupancy": occ,
+                        "is_primary": False,
+                        "derived_option": {
+                            "rate": [["increase_by_amount", str(extra_cents * steps)]]
+                        },
+                    }
+                )
+            else:
+                # Belegung unter der Primär-Belegung: gleicher Basispreis.
+                options.append(
+                    {"occupancy": occ, "is_primary": False, "rate": base_cents}
+                )
+        return "per_person", options
+
     def _upsert_channex_rate_plan(
         self, db: Client, tenant_id: str, room_type_map_id: str,
         channex_property_id: str, channex_room_type_id: str,
         rp: dict[str, Any], currency: str,
+        prop_row: dict[str, Any] | None = None,
     ) -> str:
-        """Ein Rate-Plan (per_room, manual) am synthetischen Room-Type.
-        base_price (Euro) → Cent-Integer an der API-Grenze."""
+        """Ein Rate-Plan am synthetischen Room-Type. base_price (Euro) → Cent.
+        Gast-Aufschlag → per_person-Belegungspreise (sonst per_room)."""
         local_rate_plan_id = rp.get("id")
         title = rp.get("name") or "Standardpreis"
         base_cents = self._euro_to_cents(rp.get("base_price")) or 0
@@ -435,14 +502,15 @@ class ChannelManagerService:
         q = q.eq("local_rate_plan_id", local_rate_plan_id) if local_rate_plan_id else q
         existing = q.limit(1).execute()
 
+        sell_mode, options = self._rate_plan_options(base_cents, prop_row)
         attrs = {
             "property_id": channex_property_id,
             "room_type_id": channex_room_type_id,
             "title": title,
             "currency": currency,
-            "sell_mode": "per_room",
+            "sell_mode": sell_mode,
             "rate_mode": "manual",
-            "options": [{"occupancy": 2, "is_primary": True, "rate": base_cents}],
+            "options": options,
         }
         if existing.data:
             channex_rate_plan_id = existing.data[0]["channex_rate_plan_id"]
@@ -464,6 +532,113 @@ class ChannelManagerService:
             on_conflict="channex_rate_plan_id",
         ).execute()
         return channex_rate_plan_id
+
+    # Lokale Steuer-Logik → Channex tax.logic. percent→percent; amount → pro Nacht
+    # (Pauschale je Nacht ist die gängige Auslegung eines festen Betrags).
+    _TAX_LOGIC = {"percent": "percent", "amount": "per_night"}
+    # Lokale Steuer-Art → Channex type.
+    _TAX_TYPE = {"vat": "tax", "local": "city tax"}
+
+    def _sync_taxes(
+        self,
+        db: Client,
+        tenant_id: str,
+        property_id: str,
+        channex_property_id: str,
+        channex_rate_plan_ids: list[str],
+        currency: str,
+        prop_row: dict[str, Any],
+    ) -> None:
+        """Lokale Steuern (type_attributes.pricing.taxes) → Channex taxes + ein
+        tax_set, das an die Rate-Plans gehängt wird. Idempotent über
+        channex_tax_map. Ohne Steuern: no-op."""
+        attrs = prop_row.get("type_attributes") or {}
+        pricing = attrs.get("pricing") or {}
+        taxes = pricing.get("taxes") or []
+        if not taxes:
+            return
+
+        channex_tax_ids: list[str] = []
+        for t in taxes:
+            local_id = t.get("id")
+            if not local_id:
+                continue
+            logic = self._TAX_LOGIC.get(t.get("mode"), "percent")
+            tax_attrs: dict[str, Any] = {
+                "title": (t.get("name") or "Steuer")[:255],
+                "logic": logic,
+                "type": self._TAX_TYPE.get(t.get("kind"), "tax"),
+                "rate": str(t.get("value") or 0),
+                "is_inclusive": bool(t.get("includedInPrice")),
+                "property_id": channex_property_id,
+            }
+            if logic != "percent":
+                tax_attrs["currency"] = currency
+
+            existing = (
+                db.table("channex_tax_map")
+                .select("id, channex_tax_id")
+                .eq("property_id", property_id)
+                .eq("local_tax_id", local_id)
+                .is_("deleted_at", "null")
+                .limit(1)
+                .execute()
+            ).data
+            if existing:
+                channex_tax_id = existing[0]["channex_tax_id"]
+                self._channex.update_tax(channex_tax_id, tax_attrs)
+            else:
+                created = self._channex.create_tax(tax_attrs)
+                channex_tax_id = (created.get("data") or {}).get("id")
+                if not channex_tax_id:
+                    continue
+                db.table("channex_tax_map").upsert(
+                    {
+                        "tenant_id": tenant_id,
+                        "property_id": property_id,
+                        "local_tax_id": local_id,
+                        "channex_tax_id": channex_tax_id,
+                    },
+                    on_conflict="property_id,local_tax_id",
+                ).execute()
+            channex_tax_ids.append(channex_tax_id)
+
+        if not channex_tax_ids:
+            return
+
+        # Ein tax_set je Property (enthält alle Steuern), an die Rate-Plans gehängt.
+        set_attrs = {
+            "title": "Standard",
+            "property_id": channex_property_id,
+            "currency": currency,
+            "taxes": [{"id": tid, "level": 0} for tid in channex_tax_ids],
+            "associated_rate_plan_ids": channex_rate_plan_ids,
+        }
+        # Bestehendes Set wiederverwenden (an irgendeiner Map dieser Property).
+        existing_set = (
+            db.table("channex_tax_map")
+            .select("channex_tax_set_id")
+            .eq("property_id", property_id)
+            .not_.is_("channex_tax_set_id", "null")
+            .limit(1)
+            .execute()
+        ).data
+        if existing_set and existing_set[0].get("channex_tax_set_id"):
+            tax_set_id = existing_set[0]["channex_tax_set_id"]
+            self._channex.update_tax_set(tax_set_id, set_attrs)
+        else:
+            created = self._channex.create_tax_set(set_attrs)
+            tax_set_id = (created.get("data") or {}).get("id")
+            if tax_set_id:
+                db.table("channex_tax_map").update(
+                    {"channex_tax_set_id": tax_set_id}
+                ).eq("property_id", property_id).is_("deleted_at", "null").execute()
+        log.info(
+            "channex_taxes_synced",
+            tenant_id=tenant_id,
+            property_id=property_id,
+            taxes=len(channex_tax_ids),
+        )
 
     def _mark_property_sync(
         self, db: Client, tenant_id: str, property_id: str,
@@ -798,6 +973,11 @@ class ChannelManagerService:
             except Exception as exc:  # noqa: BLE001 — ein Tenant darf nicht killen
                 totals["errors"].append(f"{tid}: {exc}")
                 log.error("reconcile_tenant_failed", tenant_id=tid, error=str(exc))
+        # Offene Verfügbarkeits-Pushes (ari_outbox) erneut versuchen (Retry).
+        try:
+            totals["ari_outbox"] = self.process_ari_outbox()
+        except Exception as exc:  # noqa: BLE001
+            log.error("ari_outbox_run_failed", error=str(exc))
         log.info(
             "reconcile_all_done",
             tenants=totals["tenants"],
@@ -944,6 +1124,265 @@ class ChannelManagerService:
             rate_tasks=rate_tasks,
             warnings=[str(w) for w in warnings],
         )
+
+    # -- Realtime-Verfügbarkeits-Push (Doppelbuchungsschutz) -------------------
+    # Der Buchungskalender (availability) ist die oberste Wahrheit. Jede lokale
+    # Änderung pusht SOFORT die Channex-Verfügbarkeit, damit OTAs den Tag nicht
+    # mehr/wieder verkaufen. Persistiert in ari_outbox (Retry bei Ausfall).
+    def _resolve_channex_room_type(
+        self, db: Client, tenant_id: str, property_id: str
+    ) -> dict[str, str] | None:
+        """property_id → (channex_property_id, channex_room_type_id). Synthetisch
+        1 Room-Type je Property (local_unit_ref = property_id). None, wenn nicht
+        mit Channex verbunden."""
+        pm = (
+            db.table("channex_property_map")
+            .select("id, channex_property_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        ).data
+        if not pm:
+            return None
+        rt = (
+            db.table("channex_room_type_map")
+            .select("channex_room_type_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_map_id", pm[0]["id"])
+            .eq("local_unit_ref", property_id)
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        ).data
+        if not rt:
+            return None
+        return {
+            "channex_property_id": pm[0]["channex_property_id"],
+            "channex_room_type_id": rt[0]["channex_room_type_id"],
+        }
+
+    def push_availability_for_property(
+        self,
+        tenant_id: str,
+        property_id: str,
+        date_from: date,
+        date_to: date,
+        availability: int,
+    ) -> None:
+        """Verfügbarkeit (absolute Menge je Tag) für einen Zeitraum an Channex
+        pushen. date_to inklusiv. Persistiert in ari_outbox und versucht den
+        Sofort-Push; bei Fehler bleibt die Zeile 'pending' (Cron-Retry). No-op,
+        wenn Channex nicht konfiguriert oder die Property nicht verbunden ist."""
+        if not self._channex.is_configured or self._db is None:
+            return
+        db = self._db
+        mapping = self._resolve_channex_room_type(db, tenant_id, property_id)
+        if mapping is None:
+            return  # nicht mit Channex verbunden → nichts zu pushen
+
+        outbox = (
+            db.table("ari_outbox")
+            .insert(
+                {
+                    "tenant_id": tenant_id,
+                    "property_id": property_id,
+                    "date_from": date_from.isoformat(),
+                    "date_to": date_to.isoformat(),
+                    "availability": availability,
+                    "status": "pending",
+                }
+            )
+            .execute()
+        ).data
+        outbox_id = outbox[0]["id"] if outbox else None
+
+        try:
+            self._channex.update_availability(
+                [
+                    {
+                        "property_id": mapping["channex_property_id"],
+                        "room_type_id": mapping["channex_room_type_id"],
+                        "date_from": date_from.isoformat(),
+                        "date_to": date_to.isoformat(),
+                        "availability": availability,
+                    }
+                ]
+            )
+            if outbox_id:
+                db.table("ari_outbox").update(
+                    {"status": "done", "attempts": 1}
+                ).eq("id", outbox_id).execute()
+            log.info(
+                "ari_push_done",
+                tenant_id=tenant_id,
+                property_id=property_id,
+                availability=availability,
+            )
+        except ChannexError as exc:
+            if outbox_id:
+                db.table("ari_outbox").update(
+                    {"attempts": 1, "last_error": exc.message}
+                ).eq("id", outbox_id).execute()
+            log.warning(
+                "ari_push_failed_queued",
+                tenant_id=tenant_id,
+                property_id=property_id,
+                error=exc.message,
+            )
+
+    def _resolve_channex_rate_plan(
+        self, db: Client, tenant_id: str, property_id: str
+    ) -> dict[str, str] | None:
+        """property_id → (channex_property_id, channex_rate_plan_id) über die
+        synthetische Room-Type/Rate-Plan-Kette. None, wenn nicht verbunden."""
+        rt = self._resolve_channex_room_type(db, tenant_id, property_id)
+        if rt is None:
+            return None
+        # Rate-Plan-Map über die Room-Type-Map dieser Property.
+        pm = (
+            db.table("channex_property_map")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        ).data
+        if not pm:
+            return None
+        rtm = (
+            db.table("channex_room_type_map")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_map_id", pm[0]["id"])
+            .eq("local_unit_ref", property_id)
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        ).data
+        if not rtm:
+            return None
+        rp = (
+            db.table("channex_rate_plan_map")
+            .select("channex_rate_plan_id")
+            .eq("tenant_id", tenant_id)
+            .eq("room_type_map_id", rtm[0]["id"])
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        ).data
+        if not rp:
+            return None
+        return {
+            "channex_property_id": rt["channex_property_id"],
+            "channex_rate_plan_id": rp[0]["channex_rate_plan_id"],
+        }
+
+    def push_rate_for_property(
+        self,
+        tenant_id: str,
+        property_id: str,
+        date_from: date,
+        date_to: date,
+        rate_cents: int | None = None,
+        *,
+        min_stay: int | None = None,
+    ) -> None:
+        """Preis und/oder Mindestaufenthalt für einen Zeitraum an Channex pushen
+        (Restrictions). Mindestens eines von rate_cents/min_stay setzen.
+        Best-effort: bei Fehler loggen — der reconcile-Cron gleicht ohnehin ab.
+        No-op, wenn nicht mit Channex verbunden. date_to inklusiv."""
+        if not self._channex.is_configured or self._db is None:
+            return
+        if rate_cents is None and min_stay is None:
+            return
+        mapping = self._resolve_channex_rate_plan(self._db, tenant_id, property_id)
+        if mapping is None:
+            return
+        value: dict[str, Any] = {
+            "property_id": mapping["channex_property_id"],
+            "rate_plan_id": mapping["channex_rate_plan_id"],
+            "date_from": date_from.isoformat(),
+            "date_to": date_to.isoformat(),
+        }
+        if rate_cents is not None:
+            value["rate"] = rate_cents
+        if min_stay is not None:
+            value["min_stay_arrival"] = min_stay
+            value["min_stay_through"] = min_stay
+        try:
+            self._channex.update_restrictions([value])
+            log.info(
+                "restriction_push_done",
+                tenant_id=tenant_id,
+                property_id=property_id,
+                rate_cents=rate_cents,
+                min_stay=min_stay,
+            )
+        except ChannexError as exc:
+            log.warning(
+                "restriction_push_failed",
+                tenant_id=tenant_id,
+                property_id=property_id,
+                error=exc.message,
+            )
+
+    def process_ari_outbox(self, limit: int = 200) -> dict[str, int]:
+        """Offene ari_outbox-Zeilen erneut an Channex pushen (Cron-Retry).
+        Idempotent (absoluter Set-Wert je Tag)."""
+        result = {"processed": 0, "done": 0, "failed": 0}
+        if not self._channex.is_configured or self._db is None:
+            return result
+        db = self._db
+        rows = (
+            db.table("ari_outbox")
+            .select("*")
+            .eq("status", "pending")
+            .order("created_at")
+            .limit(limit)
+            .execute()
+        ).data or []
+        for r in rows:
+            result["processed"] += 1
+            mapping = self._resolve_channex_room_type(
+                db, r["tenant_id"], r["property_id"]
+            )
+            if mapping is None:
+                db.table("ari_outbox").update(
+                    {"status": "failed", "last_error": "kein Channex-Mapping"}
+                ).eq("id", r["id"]).execute()
+                result["failed"] += 1
+                continue
+            try:
+                self._channex.update_availability(
+                    [
+                        {
+                            "property_id": mapping["channex_property_id"],
+                            "room_type_id": mapping["channex_room_type_id"],
+                            "date_from": r["date_from"],
+                            "date_to": r["date_to"],
+                            "availability": r["availability"],
+                        }
+                    ]
+                )
+                db.table("ari_outbox").update(
+                    {"status": "done", "attempts": (r["attempts"] or 0) + 1}
+                ).eq("id", r["id"]).execute()
+                result["done"] += 1
+            except ChannexError as exc:
+                attempts = (r["attempts"] or 0) + 1
+                # Nach 10 Versuchen aufgeben (failed), sonst weiter pending.
+                new_status = "failed" if attempts >= 10 else "pending"
+                db.table("ari_outbox").update(
+                    {"status": new_status, "attempts": attempts, "last_error": exc.message}
+                ).eq("id", r["id"]).execute()
+                if new_status == "failed":
+                    result["failed"] += 1
+        if result["processed"]:
+            log.info("ari_outbox_processed", **result)
+        return result
 
     # -- Bookings: Feed-Pull + Ack --------------------------------------------
     def sync_bookings(self, ctx: AuthContext) -> BookingSyncResponse:
@@ -1302,14 +1741,31 @@ class ChannelManagerService:
         is_active = bool(a.get("is_active"))
 
         # 4) Aktivieren (Kanäle starten inaktiv).
+        activate_error: str | None = None
         if channel_id and not is_active:
             try:
                 self._channex.activate_channel(channel_id)
                 is_active = True
             except ChannexError as exc:
                 # Anlegen hat geklappt — Aktivierung kann der Kunde wiederholen.
+                activate_error = exc.message
                 log.warning("channex_channel_activate_failed",
                             channel_id=channel_id, error=exc.message)
+
+        # Verbindung persistieren: Hotel-ID + erzeugter Channel pro (Objekt, Portal).
+        # So bleibt die Verbindung sichtbar/verwaltbar (Status, Trennen, Re-Connect)
+        # und nach Reload nachvollziehbar. Persistenz-Fehler dürfen den erfolgreichen
+        # Connect nicht scheitern lassen.
+        self._save_channel_connection(
+            db, tenant_id,
+            property_id=property_id,
+            channex_property_id=channex_property_id,
+            portal_code=portal_code,
+            settings=settings,
+            channel_id=channel_id,
+            is_active=is_active,
+            last_error=activate_error,
+        )
 
         # Initial-Vollimport (best effort): bestehende Buchungen, ARI/Preise,
         # Room-Types/Rate-Plans. Channel ist live; ein Import-Fehler darf den
@@ -1361,7 +1817,8 @@ class ChannelManagerService:
 
     def disconnect_channel(self, ctx: AuthContext, channel_id: str) -> None:
         """Kanal trennen: erst deaktivieren (sonst 422 'is active'), dann löschen."""
-        self._require_tenant(ctx)
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
         try:
             self._channex.deactivate_channel(channel_id)
         except ChannexError as exc:
@@ -1372,6 +1829,97 @@ class ChannelManagerService:
             self._channex.delete_channel(channel_id)
         except ChannexError as exc:
             raise self._wrap_channex(exc) from exc
+
+        # Persistierte Verbindung auf inaktiv setzen (der Channel existiert bei
+        # Channex nicht mehr). Wir behalten die Zeile mit der Hotel-ID, damit der
+        # Vermieter sie für einen Re-Connect nicht neu eingeben muss.
+        db.table("channex_channel_connection").update(
+            {"is_active": False, "channex_channel_id": None}
+        ).eq("tenant_id", tenant_id).eq("channex_channel_id", channel_id).execute()
+
+    # Settings-Schlüssel, unter denen die OTA-Hotel-ID je nach Portal steht.
+    _HOTEL_ID_KEYS = ("hotel_id", "hotel_code", "property_id", "property_code")
+
+    @classmethod
+    def _extract_hotel_id(cls, settings: dict[str, Any]) -> str | None:
+        """Hotel-ID robust aus den Connect-Settings ziehen (Schlüssel je OTA
+        verschieden). Kein Fallback/Raten — None, wenn nichts Passendes da ist."""
+        for key in cls._HOTEL_ID_KEYS:
+            val = settings.get(key)
+            if val not in (None, ""):
+                return str(val)
+        return None
+
+    def _save_channel_connection(
+        self, db: Client, tenant_id: str, *, property_id: str,
+        channex_property_id: str, portal_code: str, settings: dict[str, Any],
+        channel_id: str | None, is_active: bool, last_error: str | None,
+    ) -> None:
+        """Upsert der OTA-Verbindung pro (Objekt, Portal). Best-effort: ein
+        Persistenz-Fehler darf den erfolgreichen Connect nicht scheitern lassen."""
+        hotel_id = self._extract_hotel_id(settings)
+        if not hotel_id:
+            # Ohne Hotel-ID gibt es nichts Sinnvolles zu speichern (kein Raten).
+            log.warning(
+                "channex_connection_no_hotel_id",
+                property_id=property_id, portal_code=portal_code,
+            )
+            return
+        row = {
+            "tenant_id": tenant_id,
+            "property_id": property_id,
+            "channex_property_id": channex_property_id,
+            "ota_portal_code": portal_code,
+            "ota_hotel_id": hotel_id,
+            "channex_channel_id": channel_id,
+            "is_active": is_active,
+            "last_error": last_error,
+        }
+        try:
+            db.table("channex_channel_connection").upsert(
+                row, on_conflict="property_id,ota_portal_code"
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 — Persistenz darf Connect nicht killen
+            log.warning(
+                "channex_connection_persist_failed",
+                property_id=property_id, portal_code=portal_code, error=str(exc),
+            )
+
+    def list_channel_connections(
+        self, ctx: AuthContext, property_id: str
+    ) -> list[dict[str, Any]]:
+        """Gespeicherte OTA-Verbindungen eines Objekts (white-label).
+
+        Liefert nur Portal-Label, Hotel-ID und Status — keine rohen Credentials,
+        kein Provider-Branding."""
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        res = (
+            db.table("channex_channel_connection")
+            .select(
+                "ota_portal_code, ota_hotel_id, channex_channel_id, "
+                "is_active, last_error, updated_at"
+            )
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .order("created_at")
+            .execute()
+        )
+        out: list[dict[str, Any]] = []
+        for r in res.data or []:
+            code = r.get("ota_portal_code")
+            out.append(
+                {
+                    "portal_code": code,
+                    "portal": self._PORTAL_LABELS.get(code, "Kanal"),
+                    "hotel_id": r.get("ota_hotel_id"),
+                    "channel_id": r.get("channex_channel_id"),
+                    "is_active": bool(r.get("is_active")),
+                    "last_error": r.get("last_error"),
+                    "updated_at": r.get("updated_at"),
+                }
+            )
+        return out
 
     # -- Channel-Hilfen --------------------------------------------------------
     def _tenant_channex_property_ids(self, db: Client, tenant_id: str) -> set[str]:
@@ -1493,7 +2041,11 @@ class ChannelManagerService:
             return None
 
     # -- Webhook-Registrierung bei Channex (Admin) -----------------------------
-    _WEBHOOK_EVENTS = "ari;booking_new;booking_modification;booking_cancellation"
+    # 'message' liefert Push bei neuen Gäste-Nachrichten (Posteingang). Der
+    # Handler nutzt es nur als Trigger; den Verlauf zieht der Posteingang live.
+    _WEBHOOK_EVENTS = (
+        "ari;booking_new;booking_modification;booking_cancellation;message"
+    )
 
     def register_global_webhook(self, *, callback_url: str) -> dict[str, Any]:
         """Registriert (idempotent) EINEN globalen Webhook bei Channex, der alle
@@ -1825,6 +2377,14 @@ class ChannelManagerService:
                 ).eq("property_id", property_id).eq("date", d).eq(
                     "status", "booked"
                 ).eq("source", channel).execute()
+            # Freigabe an Channex: Tage wieder verfügbar (availability=1).
+            self.push_availability_for_property(
+                tenant_id,
+                property_id,
+                date.fromisoformat(arrival),
+                date.fromisoformat(departure) - timedelta(days=1),
+                1,
+            )
             return True
 
         guest_id = self._upsert_guest(db, tenant_id, attrs.get("customer") or {})
@@ -1859,6 +2419,14 @@ class ChannelManagerService:
             self._date_range_nights(arrival, departure),
             status="booked",
             source=channel,
+        )
+        # Realtime an Channex: Tage sperren (availability=0) → kein OTA-Doppel.
+        self.push_availability_for_property(
+            tenant_id,
+            property_id,
+            date.fromisoformat(arrival),
+            date.fromisoformat(departure) - timedelta(days=1),
+            0,
         )
         return True
 

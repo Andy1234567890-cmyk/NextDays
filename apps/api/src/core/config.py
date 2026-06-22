@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     google_translate_api_key: SecretStr = SecretStr("")
     stripe_secret_key: SecretStr = SecretStr("")
     stripe_webhook_secret: SecretStr = SecretStr("")
+    # Groq (KI-Antwortvorschläge im Posteingang). Pydantic liest case-insensitiv,
+    # daher passt auch der Env-Name `Groq_API_Key`.
+    groq_api_key: SecretStr = SecretStr("")
+    groq_model: str = "llama-3.3-70b-versatile"
 
     # --- Channex (Channel-Manager / OTA-Distribution) ---
     # base_url default = Staging; für Produktion auf https://app.channex.io/api/v1.
@@ -46,6 +50,24 @@ class Settings(BaseSettings):
     # aufruft). Muss von außen per HTTPS erreichbar sein — im Dev z.B. ein
     # Tunnel (ngrok/cloudflared), in Prod die echte API-Domain.
     public_api_url: str = ""
+
+    # --- WhatsApp (Meta WhatsApp Cloud API) ---
+    # access_token: permanenter System-User-Token (Meta Business).
+    # phone_number_id: ID der WhatsApp-Business-Telefonnummer (Graph API).
+    # verify_token: eigenes Zufalls-Secret für die Webhook-Verifizierung (GET).
+    # graph_version: Graph-API-Version (z.B. v21.0).
+    # Sandbox: ohne echte Credentials lokal testbar (Mock statt Meta-Call). Im
+    # Prod IMMER false, sonst würden Nachrichten nicht real versendet.
+    whatsapp_access_token: SecretStr = SecretStr("")
+    whatsapp_phone_number_id: str = ""
+    whatsapp_verify_token: SecretStr = SecretStr("")
+    whatsapp_graph_version: str = "v21.0"
+    whatsapp_sandbox: bool = False
+    # Eingehende Webhook-Nachrichten einer NEUEN Nummer brauchen einen Tenant.
+    # Da wir (vorerst) eine globale WhatsApp-Nummer haben, ordnet dieser Wert neue
+    # Konversationen einem Mandanten zu. Leer → neue Nummern werden NICHT geraten,
+    # sondern protokolliert verworfen (Memory „keine Fallbacks").
+    whatsapp_default_tenant_id: str = ""
 
     @property
     def is_local(self) -> bool:

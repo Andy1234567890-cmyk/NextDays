@@ -44,6 +44,7 @@ import {
   readAvailability,
 } from "@/lib/availability-meta";
 import { type Property, updateProperty } from "@/lib/properties";
+import { setMinStay } from "@/lib/rates";
 
 type Section =
   | "min"
@@ -87,12 +88,16 @@ export function AvailabilityForm({ initial }: { initial: Property }) {
     const res = await updateProperty(p.id, {
       type_attributes: { ...p.type_attributes, availability: next },
     });
-    if (res.ok) {
-      setP(res.data);
-      setSection(null);
-      return true;
+    if (!res.ok) return res.error;
+    setP(res.data);
+    setSection(null);
+    // Mindestaufenthalt zusätzlich in den rate_plan schreiben (Channex versteht
+    // min_stay direkt) — sofern bereits ein Preis/Plan existiert.
+    if (next.minStay >= 1) {
+      const rp = await setMinStay(p.id, next.minStay);
+      if (!rp.ok) return rp.error;
     }
-    return res.error;
+    return true;
   }
 
   const ALL: Channel[] = CHANNELS;

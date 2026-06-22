@@ -40,6 +40,7 @@ import {
   type PropertyInput,
   type PropertyStatus,
   type PropertyType,
+  publishProperty,
   updateProperty,
 } from "@/lib/properties";
 
@@ -65,6 +66,8 @@ function attrNum(p: Property, key: string): number | "" {
 export function PropertyOverview({ initial }: { initial: Property }) {
   const [p, setP] = useState<Property>(initial);
   const [section, setSection] = useState<Section>(null);
+  const [publishing, setPublishing] = useState(false);
+  const [publishMsg, setPublishMsg] = useState<string | null>(null);
 
   async function save(input: PropertyInput) {
     const res = await updateProperty(p.id, input);
@@ -76,6 +79,19 @@ export function PropertyOverview({ initial }: { initial: Property }) {
     return res.error;
   }
 
+  async function onPublish() {
+    setPublishing(true);
+    setPublishMsg(null);
+    const res = await publishProperty(p.id);
+    setPublishing(false);
+    if (res.ok) {
+      setP(res.data);
+      setPublishMsg("Veröffentlicht — mit den Buchungsportalen verbunden.");
+    } else {
+      setPublishMsg(res.error);
+    }
+  }
+
   const sizeM2 = attrNum(p, "size_m2");
   const units = attrNum(p, "units");
   const rooms = attrList(p, "rooms");
@@ -83,7 +99,36 @@ export function PropertyOverview({ initial }: { initial: Property }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="font-display text-3xl font-extrabold">Übersicht</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-3xl font-extrabold">Übersicht</h1>
+        <div className="flex items-center gap-3">
+          <span
+            className={
+              "rounded-full px-2.5 py-1 text-xs font-medium " +
+              (p.status === "active"
+                ? "bg-secondary text-secondary-foreground"
+                : "bg-muted text-muted-foreground")
+            }
+          >
+            {p.status === "active" ? "Aktiv" : "Entwurf"}
+          </span>
+          {p.status !== "active" && (
+            <Button onClick={onPublish} disabled={publishing}>
+              {publishing ? "Veröffentliche…" : "Veröffentlichen"}
+            </Button>
+          )}
+        </div>
+      </div>
+      {publishMsg && (
+        <p
+          className={
+            "text-sm " +
+            (p.status === "active" ? "text-foreground" : "text-destructive")
+          }
+        >
+          {publishMsg}
+        </p>
+      )}
 
       {/* Name & Beschreibung */}
       <SectionCard

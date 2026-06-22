@@ -26,20 +26,9 @@ import {
 } from "@/lib/laender";
 import type { OnboardingStatus } from "@/lib/onboarding";
 import { updateOnboarding } from "@/lib/onboarding";
-import { createProperty } from "@/lib/properties";
 import { cn } from "@/lib/utils";
 
-// Gültige Channex-Unterkunftstypen (live gegen die Channex-API verifiziert).
-const PROPERTY_TYPES = [
-  "hotel",
-  "apartment",
-  "hostel",
-  "guest_house",
-  "villa",
-  "resort",
-] as const;
-
-type Step = "welcome" | "company" | "accommodation" | "done";
+type Step = "welcome" | "company" | "done";
 
 export function OnboardingWizard({
   initialStatus,
@@ -62,7 +51,6 @@ export function OnboardingWizard({
   function firstOpenStep(s?: OnboardingStatus): Step {
     if (!s) return "welcome";
     if (!s.company_data_set) return "welcome";
-    if (!s.object_created) return "accommodation";
     return "done";
   }
 
@@ -78,19 +66,6 @@ export function OnboardingWizard({
     email: loginEmail ?? undefined,
   });
   const [smallBusiness, setSmallBusiness] = useState(false);
-
-  // Unterkunft (Channex-Pflichtfelder). Adresse/Land kommen aus den Firmendaten;
-  // hier nur das Unterkunfts-Spezifische. Geo via "Standort finden" (Geocoding).
-  const [unterkunft, setUnterkunft] = useState({
-    title: "",
-    propertyType: "" as string,
-  });
-  function setU<K extends keyof typeof unterkunft>(
-    key: K,
-    value: (typeof unterkunft)[K],
-  ) {
-    setUnterkunft((prev) => ({ ...prev, [key]: value }));
-  }
 
   function setF<K extends keyof FirmenProfil>(key: K, value: FirmenProfil[K]) {
     setFirma((prev) => ({ ...prev, [key]: value }));
@@ -160,39 +135,6 @@ export function OnboardingWizard({
       });
       if (res.ok) {
         persist({ company_data_set: true });
-        setStep("accommodation");
-      } else {
-        setError(res.error);
-      }
-    });
-  }
-
-  // Unterkunft anlegen — VOLLSTÄNDIG oder gar nicht. Name + Art der Unterkunft
-  // sind Pflicht; Adresse/Land kommen aus den Firmendaten.
-  function saveAccommodation() {
-    setError(null);
-    const required: [string | undefined, string][] = [
-      [unterkunft.title, t("accommodation.title")],
-      [unterkunft.propertyType, t("accommodation.type")],
-    ];
-    const missing = required.filter(([v]) => !v?.trim()).map(([, l]) => l);
-    if (missing.length > 0) {
-      setError(t("company.missing", { fields: missing.join(", ") }));
-      return;
-    }
-    startTransition(async () => {
-      const res = await createProperty({
-        title: unterkunft.title.trim(),
-        property_type: unterkunft.propertyType as never,
-        street: firma.companyStreet ?? "",
-        house_number: firma.companyHouseNumber ?? "",
-        postal_code: firma.companyPostalCode ?? "",
-        city: firma.companyCity ?? "",
-        country: land,
-        status: "draft",
-      });
-      if (res.ok) {
-        persist({ object_created: true });
         setStep("done");
       } else {
         setError(res.error);
@@ -399,51 +341,6 @@ export function OnboardingWizard({
         </Card>
       )}
 
-      {step === "accommodation" && (
-        <Card>
-          <h1 className="font-display text-2xl font-extrabold">
-            {t("accommodation.title")}
-          </h1>
-          <p className="text-muted-foreground">{t("accommodation.text")}</p>
-
-          <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-12">
-            <Field className="sm:col-span-7" label={t("accommodation.nameLabel")}>
-              <Input
-                value={unterkunft.title}
-                onChange={(e) => setU("title", e.target.value)}
-                placeholder={t("accommodation.namePlaceholder")}
-                maxLength={200}
-              />
-            </Field>
-            <Field className="sm:col-span-5" label={t("accommodation.type")}>
-              <NativeSelect
-                value={unterkunft.propertyType}
-                onChange={(e) => setU("propertyType", e.target.value)}
-              >
-                <option value="" disabled>
-                  {t("accommodation.typePlaceholder")}
-                </option>
-                {PROPERTY_TYPES.map((pt) => (
-                  <option key={pt} value={pt}>
-                    {t(`accommodation.types.${pt}`)}
-                  </option>
-                ))}
-              </NativeSelect>
-            </Field>
-          </div>
-
-          {error && <ErrorText>{error}</ErrorText>}
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setStep("company")}>
-              {tc("back")}
-            </Button>
-            <Button onClick={saveAccommodation} disabled={pending}>
-              {pending ? t("company.saving") : tc("next")}
-            </Button>
-          </div>
-        </Card>
-      )}
-
       {step === "done" && (
         <Card>
           <span className="flex size-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
@@ -498,7 +395,7 @@ function Field({
 
 function ProgressBar({ step }: { step: Step }) {
   const tc = useTranslations("common");
-  const order: Step[] = ["welcome", "company", "accommodation", "done"];
+  const order: Step[] = ["welcome", "company", "done"];
   const idx = order.indexOf(step);
   const pct = Math.round((idx / (order.length - 1)) * 100);
   return (
