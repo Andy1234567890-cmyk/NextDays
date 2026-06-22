@@ -149,3 +149,34 @@ daher Spiegelung per **Polling**:
 Mapping Channex-attributes → `properties` (invers zu `_property_attrs`):
 `title→title`, `address→address`, `city→city`, `zip_code→postal_code`,
 `country→country`, `latitude→lat`, `longitude→lng`, `content.description→description`.
+
+## Vollimport beim Portal-Verbinden (Buchungen, ARI, Rooms/Rates)
+
+Beim `connect_channel` (nach activate) läuft ein **best-effort Initial-Import**
+(Channel bleibt live, Import nachholbar); laufend über Feed/Webhook + Cron:
+
+- **Buchungen** (`import_bookings_for_property`): `GET /bookings?filter[property_id]`
+  paginiert (nur Connect/Recovery, NICHT periodisch — Channex-Doku). Jede Buchung →
+  Staging (`channex_booking`) + Projektion in die zentrale **`reservations`** +
+  Kalender-Block (`availability` `booked`). Storno → reservation cancelled +
+  Nächte dieser OTA-Quelle wieder `open`. Laufend zusätzlich in `sync_bookings`
+  (Feed) nach `_upsert_booking`. Idempotent über `reservations.source_channex_booking_id`.
+  OTA-Name→Kanal: Booking.com→booking, Airbnb→airbnb, VRBO→vrbo, sonst `portal`
+  (echter Name bleibt in `reservations.ota_name` für Kalender/Posteingang).
+- **ARI** (`import_ari_for_property`, 90-Tage-Chunks): `GET /availability` →
+  `availability` (0/stop_sell→blocked, >0→open; **`booked` wird nie überschrieben**);
+  `GET /restrictions?filter[restrictions]=rate,min_stay_arrival,stop_sell` →
+  `price_overrides` (rate) + `stop_sell`-Tabelle. Läuft auch im
+  `/internal/reconcile`-Cron pro aktiver Property.
+- **Rooms/Rates** (`import_rooms_rates_for_property`): `GET /room_types` +
+  `GET /rate_plans` → `channex_room_type_map`/`channex_rate_plan_map`; legt lokale
+  `rate_plans` an, wo keiner gemappt (Basispreis = Primär-Occupancy; per_person nur
+  Primär-Rate, Rest geloggt).
+
+**Frontend:** Kalender zeigt Buchungsherkunft (OTA-Icon/Label statt nur „Gebucht");
+Stop-Sell-Seite (`/stop-sell`, Sidebar) verwaltet manuelle Verkaufsstopps
+(Channex-Stops read-only); Posteingang (`/posteingang`) listet OTA-Buchungen als
+Threads. Backend: stop_sell-Endpunkte im `calendar`-Slice, Threads im `inbox`-Slice.
+
+**Migrationen:** 0031 (reservations `source_channex_booking_id`/`external_ref`/
+`ota_name`), 0032 (`stop_sell`-Tabelle).
