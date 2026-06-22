@@ -29,5 +29,3 @@ EXPOSE 8000
 # Kein CMD/ENTRYPOINT mit Auto-Start: der Start kommt aus docker-compose.yml.
 # Fallback für Standalone-Nutzung (z. B. `docker run`):
 CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
-
-# Auto-Deploy-Watch: apps/api ist Build-Context von deploy/supabase/docker-compose.yml
