@@ -113,23 +113,37 @@ def cancel(scheduled_id: str) -> None:
     _loop.call_soon_threadsafe(_cancel)
 
 
+def _load_pending() -> list[dict]:
+    db = get_service_client()
+    return (
+        db.table("inbox_scheduled_message")
+        .select("id, send_at")
+        .eq("status", "pending")
+        .execute()
+    ).data or []
+
+
 async def start() -> None:
-    """Beim App-Start: Loop merken + alle offenen pending-Nachrichten timern."""
+    """Beim App-Start: Loop merken + alle offenen pending-Nachrichten timern.
+
+    PostgREST/DB sind beim Container-Boot evtl. noch nicht bereit (502) — daher
+    mit Backoff erneut versuchen, statt die pending-Nachrichten zu verlieren.
+    """
     global _loop
     _loop = asyncio.get_running_loop()
-    try:
-        db = get_service_client()
-        rows = (
-            db.table("inbox_scheduled_message")
-            .select("id, send_at")
-            .eq("status", "pending")
-            .execute()
-        ).data or []
-        for r in rows:
-            schedule(r["id"], r["send_at"])
-        log.info("scheduler_started", restored=len(rows))
-    except Exception as exc:  # noqa: BLE001 — Start darf nicht scheitern
-        log.error("scheduler_start_failed", error=str(exc))
+    delays = [1, 2, 5, 10, 15, 30]
+    for attempt, wait in enumerate([0, *delays]):
+        if wait:
+            await asyncio.sleep(wait)
+        try:
+            rows = await asyncio.to_thread(_load_pending)
+            for r in rows:
+                schedule(r["id"], r["send_at"])
+            log.info("scheduler_started", restored=len(rows), attempt=attempt)
+            return
+        except Exception as exc:  # noqa: BLE001 — App-Start darf nicht scheitern
+            log.warning("scheduler_start_retry", attempt=attempt, error=str(exc)[:200])
+    log.error("scheduler_start_failed", reason="DB nach Retries nicht bereit")
 
 
 async def stop() -> None:
