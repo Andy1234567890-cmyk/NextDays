@@ -1,3 +1,5 @@
+from datetime import date
+
 from fastapi.testclient import TestClient
 
 from src.core.security import AuthContext
@@ -337,3 +339,229 @@ def test_booking_feed_isolates_tenants() -> None:
     assert saved_ids == ["bk-andy"]
     # Steffens Revision wurde NICHT ge-ackt (sein Tenant braucht sie noch).
     assert fake_channex.acked == ["rev-andy"]
+
+
+# --- Import Channex → reservations / availability / Preise -------------------
+class _ImportChannex:
+    """Channex-Stub für den Buchungs-/ARI-Import."""
+
+    def __init__(
+        self,
+        *,
+        bookings=None,
+        availability=None,
+        restrictions=None,
+        room_types=None,
+        rate_plans=None,
+    ) -> None:
+        self.is_configured = True
+        self._bookings = bookings or []
+        self._availability = availability or {}
+        self._restrictions = restrictions or {}
+        self._room_types = room_types or []
+        self._rate_plans = rate_plans or []
+
+    def list_bookings_for_property(self, property_id, *, page=1, limit=100, inserted_after=None):  # noqa: ANN001, ANN201
+        # Eine Seite (Tests klein halten).
+        return {"data": self._bookings, "meta": {"total": len(self._bookings), "limit": limit, "page": page}}
+
+    def get_availability(self, property_id, *, date_from, date_to):  # noqa: ANN001, ANN201
+        return {"data": self._availability}
+
+    def get_restrictions(self, property_id, *, date_from, date_to, restrictions):  # noqa: ANN001, ANN201
+        return {"data": self._restrictions}
+
+    def get_room_types(self, property_id):  # noqa: ANN001, ANN201
+        return {"data": self._room_types}
+
+    def get_rate_plans(self, property_id):  # noqa: ANN001, ANN201
+        return {"data": self._rate_plans}
+
+
+# on_conflict-Schlüssel je Tabelle (für das Fake-upsert).
+_CONFLICT_KEYS = {
+    "channex_property_map": ("channex_property_id",),
+    "channex_room_type_map": ("channex_room_type_id",),
+    "channex_rate_plan_map": ("channex_rate_plan_id",),
+    "channex_booking": ("channex_booking_id",),
+    "availability": ("property_id", "date"),
+    "price_overrides": ("property_id", "date"),
+    "stop_sell": ("property_id", "date"),
+}
+
+
+class _ImportDB:
+    """Generische In-Memory-DB für den Import (alle relevanten Tabellen)."""
+
+    def __init__(self) -> None:
+        self.tables: dict[str, list[dict]] = {
+            "channex_property_map": [],
+            "channex_room_type_map": [],
+            "channex_rate_plan_map": [],
+            "channex_booking": [],
+            "reservations": [],
+            "availability": [],
+            "price_overrides": [],
+            "stop_sell": [],
+            "guests": [],
+            "properties": [],
+            "rate_plans": [],
+        }
+        self._seq = 0
+
+    def next_id(self) -> str:
+        self._seq += 1
+        return f"id-{self._seq}"
+
+    def table(self, name):  # noqa: ANN001, ANN201
+        return _ImportQuery(self, name, self.tables[name])
+
+
+class _ImportQuery(_ReconcileQuery):
+    """Wie _ReconcileQuery, aber upsert nutzt den tabellenspezifischen Key."""
+
+    def execute(self):  # noqa: ANN201
+        rows = [r for r in self._store if self._match(r)]
+        if self._op == "insert":
+            new = dict(self._payload)
+            new.setdefault("id", self._db.next_id())
+            self._store.append(new)
+            return _Result([new])
+        if self._op == "update":
+            for r in rows:
+                r.update(self._payload)
+            return _Result(rows)
+        if self._op == "upsert":
+            keys = _CONFLICT_KEYS.get(self._name, ("id",))
+            match = [
+                r for r in self._store
+                if all(r.get(k) == self._payload.get(k) for k in keys)
+            ]
+            if match:
+                match[0].update(self._payload)
+                return _Result([match[0]])
+            new = dict(self._payload)
+            new.setdefault("id", self._db.next_id())
+            self._store.append(new)
+            return _Result([new])
+        return _Result(rows)
+
+
+def _import_svc(channex, db):  # noqa: ANN001, ANN201
+    return ChannelManagerService(service_client=db, channex=channex)
+
+
+def _seed_property(db, tenant_id="t1", channex_pid="cx-prop", property_id="p1"):  # noqa: ANN001, ANN201
+    db.tables["properties"].append({"id": property_id, "tenant_id": tenant_id, "title": "Haus"})
+    db.tables["channex_property_map"].append(
+        {"id": "m1", "tenant_id": tenant_id, "property_id": property_id,
+         "channex_property_id": channex_pid, "deleted_at": None}
+    )
+
+
+def test_ota_name_to_channel() -> None:
+    f = ChannelManagerService._ota_name_to_channel
+    assert f("Booking.com") == "booking"
+    assert f("Airbnb") == "airbnb"
+    assert f("VRBO") == "vrbo"
+    assert f("Expedia") == "portal"
+    assert f("Agoda") == "portal"
+    assert f(None) == "portal"
+
+
+def test_import_booking_creates_reservation_and_blocks_calendar() -> None:
+    db = _ImportDB()
+    _seed_property(db)
+    channex = _ImportChannex(bookings=[{"attributes": {
+        "booking_id": "BK1", "property_id": "cx-prop", "status": "new",
+        "ota_name": "Booking.com", "ota_reservation_code": "R123",
+        "arrival_date": "2026-07-01", "departure_date": "2026-07-03",
+        "amount": "200.00", "currency": "EUR",
+        "customer": {"name": "Max", "surname": "Mustermann", "mail": "m@x.de"}}}])
+    res = _import_svc(channex, db).import_bookings_for_property("t1", "cx-prop")
+    assert res["saved"] == 1
+    r = db.tables["reservations"][0]
+    assert r["channel"] == "booking" and r["ota_name"] == "Booking.com"
+    assert r["source_channex_booking_id"] == "BK1" and r["status"] == "confirmed"
+    # 2 Nächte (01., 02.), Abreisetag exklusiv.
+    booked = [a for a in db.tables["availability"] if a["status"] == "booked"]
+    assert {a["date"] for a in booked} == {"2026-07-01", "2026-07-02"}
+    # Gast angelegt.
+    assert db.tables["guests"][0]["email"] == "m@x.de"
+
+
+def test_import_booking_idempotent() -> None:
+    db = _ImportDB()
+    _seed_property(db)
+    booking = {"attributes": {
+        "booking_id": "BK1", "property_id": "cx-prop", "status": "new",
+        "ota_name": "Airbnb", "arrival_date": "2026-07-01",
+        "departure_date": "2026-07-02", "amount": "100", "currency": "EUR",
+        "customer": {"name": "A", "surname": "B"}}}
+    svc = _import_svc(_ImportChannex(bookings=[booking]), db)
+    svc.import_bookings_for_property("t1", "cx-prop")
+    svc.import_bookings_for_property("t1", "cx-prop")
+    assert len(db.tables["reservations"]) == 1  # kein Duplikat
+
+
+def test_import_booking_cancel_frees_calendar() -> None:
+    db = _ImportDB()
+    _seed_property(db)
+    # erst buchen, dann stornieren
+    svc = _import_svc(_ImportChannex(bookings=[{"attributes": {
+        "booking_id": "BK1", "property_id": "cx-prop", "status": "new",
+        "ota_name": "Booking.com", "arrival_date": "2026-07-01",
+        "departure_date": "2026-07-02", "amount": "100", "currency": "EUR",
+        "customer": {"name": "A", "surname": "B"}}}]), db)
+    svc.import_bookings_for_property("t1", "cx-prop")
+    svc2 = _import_svc(_ImportChannex(bookings=[{"attributes": {
+        "booking_id": "BK1", "property_id": "cx-prop", "status": "cancelled",
+        "ota_name": "Booking.com", "arrival_date": "2026-07-01",
+        "departure_date": "2026-07-02"}}]), db)
+    svc2.import_bookings_for_property("t1", "cx-prop")
+    assert db.tables["reservations"][0]["status"] == "cancelled"
+    assert db.tables["availability"][0]["status"] == "open"
+
+
+def test_import_booking_skips_without_property_mapping() -> None:
+    db = _ImportDB()  # KEIN seed → kein Mapping
+    channex = _ImportChannex(bookings=[{"attributes": {
+        "booking_id": "BK1", "property_id": "cx-unknown", "status": "new",
+        "arrival_date": "2026-07-01", "departure_date": "2026-07-02"}}])
+    res = _import_svc(channex, db).import_bookings_for_property("t1", "cx-unknown")
+    assert res["skipped"] == 1 and db.tables["reservations"] == []
+
+
+def test_import_ari_prices_and_availability() -> None:
+    db = _ImportDB()
+    _seed_property(db)
+    # availability: 1 Tag 0 (blocked), 1 Tag >0 (open)
+    channex = _ImportChannex(
+        availability={"cx-rt": {"2026-07-01": 0, "2026-07-02": 3}},
+        restrictions={"cx-rp": {"2026-07-01": {"rate": "138.00", "stop_sell": True},
+                                "2026-07-02": {"rate": "150.00"}}},
+    )
+    res = _import_svc(channex, db).import_ari_for_property(
+        "t1", "cx-prop", days_ahead=3, today=date(2026, 7, 1)
+    )
+    assert res["prices"] == 2
+    statuses = {a["date"]: a["status"] for a in db.tables["availability"]}
+    assert statuses["2026-07-01"] == "blocked" and statuses["2026-07-02"] == "open"
+    prices = {p["date"]: p["price"] for p in db.tables["price_overrides"]}
+    assert prices["2026-07-01"] == 138.0 and prices["2026-07-02"] == 150.0
+    assert any(s["date"] == "2026-07-01" for s in db.tables["stop_sell"])
+
+
+def test_import_ari_never_overrides_booked() -> None:
+    db = _ImportDB()
+    _seed_property(db)
+    db.tables["availability"].append(
+        {"id": "a1", "property_id": "p1", "date": "2026-07-01",
+         "status": "booked", "source": "booking"}
+    )
+    channex = _ImportChannex(availability={"cx-rt": {"2026-07-01": 5}})
+    _import_svc(channex, db).import_ari_for_property(
+        "t1", "cx-prop", days_ahead=1, today=date(2026, 7, 1)
+    )
+    # bleibt 'booked', nicht von ARI auf 'open' gesetzt
+    assert db.tables["availability"][0]["status"] == "booked"

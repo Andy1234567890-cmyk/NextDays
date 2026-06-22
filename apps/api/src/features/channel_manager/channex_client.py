@@ -240,12 +240,21 @@ class ChannexClient:
     def update_room_type(self, channex_id: str, attributes: dict[str, Any]) -> dict[str, Any]:
         return self.put(f"room_types/{channex_id}", json={"room_type": attributes})
 
+    def get_room_types(self, property_id: str) -> dict[str, Any]:
+        """Room-Types einer Property (für den Import). filter[property_id]."""
+        return self.get("room_types", params={"filter[property_id]": property_id})
+
     # ----- Rate Plans ---------------------------------------------------------
     def create_rate_plan(self, attributes: dict[str, Any]) -> dict[str, Any]:
         return self.post("rate_plans", json={"rate_plan": attributes})
 
     def update_rate_plan(self, channex_id: str, attributes: dict[str, Any]) -> dict[str, Any]:
         return self.put(f"rate_plans/{channex_id}", json={"rate_plan": attributes})
+
+    def get_rate_plans(self, property_id: str) -> dict[str, Any]:
+        """Rate-Plans einer Property (für den Import). filter[property_id].
+        Bei READ kommt options[].rate als Dezimalstring zurück."""
+        return self.get("rate_plans", params={"filter[property_id]": property_id})
 
     # ----- ARI: Availability + Restrictions/Rates -----------------------------
     def update_availability(self, values: list[dict[str, Any]]) -> dict[str, Any]:
@@ -305,6 +314,27 @@ class ChannexClient:
 
     def get_booking(self, booking_id: str) -> dict[str, Any]:
         return self.get(f"bookings/{booking_id}")
+
+    def list_bookings_for_property(
+        self,
+        property_id: str,
+        *,
+        page: int = 1,
+        limit: int = 100,
+        inserted_after: str | None = None,
+    ) -> dict[str, Any]:
+        """GET /bookings für GENAU EINE Property (Initial-/Recovery-Import).
+        Channex-Doku WARNT: NICHT periodisch nutzen — laufend läuft über den
+        Revisions-Feed. Antwort: data[], meta{total,limit,page}, order
+        inserted_at desc."""
+        params: dict[str, Any] = {
+            "filter[property_id]": property_id,
+            "pagination[page]": page,
+            "pagination[limit]": limit,
+        }
+        if inserted_after:
+            params["filter[inserted_at][gte]"] = inserted_after
+        return self.get("bookings", params=params)
 
     # ----- Channels (OTA-Verbindungen; inhouse Channel-API) -------------------
     # Verifizierter 4-Stufen-Flow (references/api.md, live gegen Staging geprüft):
