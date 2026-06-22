@@ -1,14 +1,15 @@
 name: Deploy to Coolify
 
-# Auto-Deploy bei Push auf main. Coolifys eigener Webhook ist für die
-# Deploy-Key-Apps auf diesem Server nicht nutzbar (manuelle Webhook-Route 500,
-# API-Deploy verlangt Bearer-Header, den GitHub-Webhooks nicht setzen können).
-# Daher triggert dieser Workflow den Coolify-API-Deploy mit Bearer-Token.
+# Auto-Deploy bei Push auf main für ALLE Coolify-Apps dieses Monorepos.
+# Coolifys eigener Push-Webhook ist für die Deploy-Key-Apps nicht nutzbar
+# (manuelle Webhook-Route 500, API-Deploy verlangt Bearer-Header, den
+# GitHub-Webhooks nicht setzen können). Dieser Workflow bildet Coolifys
+# watch_paths-Logik nach: er deployt nur die Apps, deren Pfade im Push
+# tatsächlich geändert wurden.
 on:
   push:
     branches: [main]
 
-# Mehrere schnelle Pushes: laufende Deploys nicht stapeln.
 concurrency:
   group: coolify-deploy
   cancel-in-progress: false
@@ -17,23 +18,60 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy nextdays-supabase (API) + nextdays-web
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Deploy geänderte Apps
         env:
           COOLIFY_URL: ${{ secrets.COOLIFY_URL }}
           COOLIFY_TOKEN: ${{ secrets.COOLIFY_TOKEN }}
         run: |
           set -euo pipefail
+
+          # App-Definitionen: "uuid|name|pfad-präfix1 pfad-präfix2 …"
+          # Pfad-Präfixe entsprechen den Coolify-watch_paths (ohne /**).
+          APPS=(
+            "jt5gdgragv2jzivpx4oiqfir|nextdays-kong|deploy/kong/"
+            "y13cm245vlmvq3yv38gdbtat|nextdays-marketing|marketing/"
+            "rh4f581hqashrnmiwnxb6pcu|nextdays-plattform|plattform/"
+            "u67kn5pj9cb2gqryt2ezsc8r|nextdays-storybook|apps/storybook/"
+            "cdqxi7d0w34sxzr4wr8jy8um|nextdays-supabase|deploy/supabase/ apps/api/"
+            "bln3q0n1l1se2hna8utkuag9|nextdays-web|apps/web/"
+          )
+
+          # Geänderte Dateien dieses Pushes ermitteln (Fallback: alles).
+          BEFORE="${{ github.event.before }}"
+          if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
+             || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            echo "Kein gültiger before-Commit → alle Apps prüfen (Erst-Push/Force)."
+            CHANGED=$(git ls-files)
+          else
+            CHANGED=$(git diff --name-only "$BEFORE" "${{ github.sha }}")
+          fi
+          echo "Geänderte Dateien:"; echo "$CHANGED" | sed 's/^/  /'
+
           deploy() {
             local uuid="$1" name="$2"
-            echo "→ Deploy $name ($uuid)"
+            echo "→ Deploy $name"
             code=$(curl -sS -o /tmp/resp.json -w '%{http_code}' \
               -H "Authorization: Bearer $COOLIFY_TOKEN" \
               "$COOLIFY_URL/api/v1/deploy?uuid=$uuid")
             cat /tmp/resp.json; echo
-            if [ "$code" != "200" ]; then
-              echo "::error::Deploy $name fehlgeschlagen (HTTP $code)"
-              exit 1
-            fi
+            [ "$code" = "200" ] || { echo "::error::Deploy $name fehlgeschlagen (HTTP $code)"; exit 1; }
           }
-          deploy "cdqxi7d0w34sxzr4wr8jy8um" "nextdays-supabase"
-          deploy "bln3q0n1l1se2hna8utkuag9" "nextdays-web"
+
+          any=0
+          for entry in "${APPS[@]}"; do
+            IFS='|' read -r uuid name paths <<< "$entry"
+            match=0
+            for p in $paths; do
+              if echo "$CHANGED" | grep -q "^$p"; then match=1; break; fi
+            done
+            if [ "$match" = "1" ]; then
+              deploy "$uuid" "$name"; any=1
+            else
+              echo "– $name übersprungen (keine Änderungen in: $paths)"
+            fi
+          done
+          [ "$any" = "1" ] || echo "Keine App betroffen — nichts zu deployen."
