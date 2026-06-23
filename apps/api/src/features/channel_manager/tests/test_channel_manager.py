@@ -374,7 +374,10 @@ class _ImportChannex:
 
     def list_bookings_for_property(self, property_id, *, page=1, limit=100, inserted_after=None):  # noqa: ANN001, ANN201
         # Eine Seite (Tests klein halten).
-        return {"data": self._bookings, "meta": {"total": len(self._bookings), "limit": limit, "page": page}}
+        return {
+            "data": self._bookings,
+            "meta": {"total": len(self._bookings), "limit": limit, "page": page},
+        }
 
     def get_availability(self, property_id, *, date_from, date_to):  # noqa: ANN001, ANN201
         return {"data": self._availability}

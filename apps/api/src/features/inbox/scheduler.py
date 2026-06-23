@@ -78,9 +78,9 @@ async def _wait_and_send(scheduled_id: str, send_at: str) -> None:
         if delay > 0:
             await asyncio.sleep(delay)
         await asyncio.to_thread(_send_now, scheduled_id)
-    except asyncio.CancelledError:  # bei Cancel des Plans
-        raise
     finally:
+        # Cancel des Plans propagiert über CancelledError; der Timer wird in
+        # jedem Fall (Erfolg, Cancel, Fehler) aus der Registry entfernt.
         _timers.pop(scheduled_id, None)
 
 
@@ -130,7 +130,9 @@ async def start() -> None:
     PostgREST/DB sind beim Container-Boot evtl. noch nicht bereit (502) — daher
     mit Backoff erneut versuchen, statt die pending-Nachrichten zu verlieren.
     """
-    global _loop
+    # Modul-globaler Loop-Singleton: schedule() (vom Request-Thread) braucht den
+    # beim Start gemerkten Event-Loop, um Timer thread-safe einzuhängen.
+    global _loop  # pylint: disable=global-statement
     _loop = asyncio.get_running_loop()
     delays = [1, 2, 5, 10, 15, 30]
     for attempt, wait in enumerate([0, *delays]):

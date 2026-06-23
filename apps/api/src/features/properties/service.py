@@ -187,7 +187,7 @@ class PropertiesService:
         Ohne Preis kann es nicht an die Buchungsportale übertragen werden (422,
         kein Fallback). Idempotent — erneutes Veröffentlichen aktualisiert nur.
         """
-        from datetime import UTC, date, datetime, timedelta
+        from datetime import UTC, datetime, timedelta
 
         tenant_id = self._require_tenant(ctx)
         prop = (

@@ -124,7 +124,7 @@ class RatesService:
         ).data
         if not existing or existing[0]["properties"]["tenant_id"] != tenant_id:
             raise RateError("Preisplan nicht gefunden.", status_code=404)
-        patch = {k: v for k, v in req.model_dump(exclude_none=True).items()}
+        patch = req.model_dump(exclude_none=True)
         if patch:
             upd = (
                 self._db()

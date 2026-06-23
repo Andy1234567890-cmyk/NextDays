@@ -41,7 +41,7 @@ def _q(value: Decimal) -> Decimal:
     return value.quantize(_CENT, rounding=ROUND_HALF_UP)
 
 
-def _num(value) -> float:
+def _num(value: object) -> float:
     """DB-Numeric/None robust in float wandeln (für InvoiceData-Beträge)."""
     if value is None:
         return 0.0

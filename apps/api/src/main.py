@@ -3,6 +3,7 @@
 Startet keinen Server beim Import (PROJECT.md). Lokaler Start via uvicorn:
     uvicorn src.main:app --reload
 """
+from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI
@@ -10,7 +11,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import get_settings
 from .core.logging import configure_logging, get_logger
-from .features.inbox import scheduler as inbox_scheduler
 from .features.auth.router import router as auth_router
 from .features.booking_engine.router import router as booking_engine_router
 from .features.buchhaltung.router import router as buchhaltung_router
@@ -21,6 +21,7 @@ from .features.content.router import router as content_router
 from .features.crm.router import router as crm_router
 from .features.dashboard.router import router as dashboard_router
 from .features.guests.router import router as guests_router
+from .features.inbox import scheduler as inbox_scheduler
 from .features.inbox.router import router as inbox_router
 from .features.ocr.router import router as ocr_router
 from .features.payments.router import router as payments_router
@@ -55,7 +56,7 @@ _SLICE_ROUTERS = [
 
 
 @asynccontextmanager
-async def _lifespan(app: FastAPI):  # noqa: ANN201, ARG001
+async def _lifespan(app: FastAPI) -> AsyncIterator[None]:  # noqa: ARG001
     # Sekundengenauer Scheduler für geplante Posteingang-Nachrichten:
     # beim Start offene pending-Nachrichten (neu) timern, beim Stop abbrechen.
     await inbox_scheduler.start()

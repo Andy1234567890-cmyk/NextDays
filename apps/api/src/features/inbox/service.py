@@ -20,9 +20,6 @@ from src.features.guests.identity import (
     resolve_or_create_guest,
 )
 
-if TYPE_CHECKING:
-    from .authz import InboxAccess
-
 from .ai import GroqClient, GroqError
 from .schemas import (
     AiReplyResponse,
@@ -45,6 +42,9 @@ from .schemas import (
     TeamMemberList,
     TemplateUpsert,
 )
+
+if TYPE_CHECKING:
+    from .authz import InboxAccess
 
 log = get_logger("nextdays.inbox")
 
@@ -466,8 +466,10 @@ class InboxService:
         )
 
     def update_thread_flags(
-        self, ctx: AuthContext, thread_id: str, *, is_starred=None, note=None,
-        is_read=None, is_archived=None, remind_at=None,
+        self, ctx: AuthContext, thread_id: str, *,
+        is_starred: bool | None = None, note: str | None = None,
+        is_read: bool | None = None, is_archived: bool | None = None,
+        remind_at: str | None = None,
     ) -> None:
         """Konversations-Flags setzen: Favorit, Notiz, Lese-/Archiv-Status,
         Erinnerung. Nur gesetzte Felder werden geschrieben."""

@@ -14,7 +14,6 @@ from src.features.auth.lodgify_permissions import Permission
 from .dependencies import BuchhaltungServiceDep
 from .schemas import (
     CustomerCreate,
-    CustomerListResponse,
     CustomerResponse,
     CustomerUpdate,
     InvoiceListResponse,

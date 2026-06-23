@@ -8,10 +8,15 @@ Text), passend zur Projekt-Regel „keine Fallbacks".
 """
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import httpx
 
 from src.core.config import get_settings
 from src.core.logging import get_logger
+
+if TYPE_CHECKING:
+    from .schemas import AiSettings, InboxMessage, ReservationDetail
 
 log = get_logger("nextdays.inbox.ai")
 
@@ -35,7 +40,13 @@ class GroqClient:
     def is_configured(self) -> bool:
         return bool(self._api_key)
 
-    def suggest_reply(self, *, history, reservation, settings=None) -> str:
+    def suggest_reply(
+        self,
+        *,
+        history: list[InboxMessage],
+        reservation: ReservationDetail,
+        settings: AiSettings | None = None,
+    ) -> str:
         """Antwortvorschlag erzeugen. `history`=Liste InboxMessage, `reservation`=
         ReservationDetail, `settings`=AiSettings (Ton/Sprache/Signatur/Prompt).
         Gibt den Vorschlagstext zurück."""

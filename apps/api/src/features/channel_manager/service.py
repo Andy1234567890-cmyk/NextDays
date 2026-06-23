@@ -1470,11 +1470,6 @@ class ChannelManagerService:
     def _portal_labels(self) -> dict[str, str]:
         return {p["code"]: p["label"] for p in self._portal_catalog()}
 
-    # Rückwärtskompatibler Alias (an vielen Stellen genutzt).
-    @property
-    def _PORTAL_LABELS(self) -> dict[str, str]:  # noqa: N802
-        return self._portal_labels
-
     def list_supported_portals(self) -> list[dict[str, Any]]:
         """Verbindbare Portale + die Eingabefelder, die der Kunde ausfüllt.
         Felder werden aus dem Channex-Channel-Katalog (`params`, ohne `hidden`)
@@ -1547,12 +1542,12 @@ class ChannelManagerService:
         out: list[dict[str, Any]] = []
         for ch in data:
             a = ch.get("attributes") or ch
-            if not (set(a.get("properties") or []) & prop_ids):
+            if not set(a.get("properties") or []).intersection(prop_ids):
                 continue  # fremder Kanal — nicht dieses Tenants
             out.append(
                 {
                     "id": ch.get("id") or a.get("id"),
-                    "portal": self._PORTAL_LABELS.get(a.get("channel"), "Kanal"),
+                    "portal": self._portal_labels.get(a.get("channel"), "Kanal"),
                     "title": a.get("title"),
                     "is_active": bool(a.get("is_active")),
                 }
@@ -1569,7 +1564,7 @@ class ChannelManagerService:
         Legt NOCH NICHTS an."""
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
-        if portal_code not in self._PORTAL_LABELS:
+        if portal_code not in self._portal_labels:
             raise ChannelManagerError("Unbekanntes Portal.", status_code=400)
 
         channex_property_id = self._require_property_mapping(db, tenant_id, property_id)
@@ -1610,7 +1605,7 @@ class ChannelManagerService:
             db, tenant_id, channex_property_id
         )
         return {
-            "portal": self._PORTAL_LABELS[portal_code],
+            "portal": self._portal_labels[portal_code],
             "ota_rooms": rooms,            # [{id, title, rates:[{id, title, …}]}]
             "rate_plans": local_rate_plans,  # [{rate_plan_map_id, title}]
         }
@@ -1674,7 +1669,7 @@ class ChannelManagerService:
         rate_plan_code(int), occupancy, pricing_type, primary_occ}]."""
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
-        if portal_code not in self._PORTAL_LABELS:
+        if portal_code not in self._portal_labels:
             raise ChannelManagerError("Unbekanntes Portal.", status_code=400)
         if not mappings:
             raise ChannelManagerError(
@@ -1734,7 +1729,7 @@ class ChannelManagerService:
             "channel": portal_code,
             "group_id": group_id,                 # Pflicht
             "is_active": False,                    # wird inaktiv erstellt
-            "title": title or self._PORTAL_LABELS[portal_code],
+            "title": title or self._portal_labels[portal_code],
             "properties": [channex_property_id],
             "settings": settings or {},
             "rate_plans": rate_plans,
@@ -1791,8 +1786,8 @@ class ChannelManagerService:
 
         return {
             "id": channel_id,
-            "portal": self._PORTAL_LABELS[portal_code],
-            "title": a.get("title") or title or self._PORTAL_LABELS[portal_code],
+            "portal": self._portal_labels[portal_code],
+            "title": a.get("title") or title or self._portal_labels[portal_code],
             "is_active": is_active,
         }
 
@@ -1919,7 +1914,7 @@ class ChannelManagerService:
             out.append(
                 {
                     "portal_code": code,
-                    "portal": self._PORTAL_LABELS.get(code, "Kanal"),
+                    "portal": self._portal_labels.get(code, "Kanal"),
                     "hotel_id": r.get("ota_hotel_id"),
                     "channel_id": r.get("channex_channel_id"),
                     "is_active": bool(r.get("is_active")),
