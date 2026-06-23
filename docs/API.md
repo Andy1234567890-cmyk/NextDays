@@ -367,7 +367,7 @@ Vorname), Kontakt mit `view_guest_contact`, Beträge/Umsatz mit `pm_booking_tota
 | `GET` | `/api/v1/guests/{id}/reservations` | Reservierungshistorie (Join) |
 | `GET` | `/api/v1/guests/{id}/threads` | verknüpfte Posteingang-Threads (Join) |
 | `GET` | `/api/v1/guests/{id}/invoices` | Rechnungen (Brücke guest.email → customers.email → invoices) |
-| `POST` | `/api/v1/guests/merge` | Dubletten zusammenführen — **TODO (501)** |
+| `POST` | `/api/v1/guests/merge` | Dubletten zusammenführen: Sub-Ressourcen + Reservierungen/Buchungen/WhatsApp-Konvos source→target umhängen, Quell-Gast anonymisieren |
 
 **Tabellen (Migration 0046):** `guests` erweitert (Stammdaten, VIP/Segment,
 `is_blocked`, Loyalty-Aggregate, `created_by/updated_by`, `anonymized_at`) +

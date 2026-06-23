@@ -51,7 +51,7 @@
 
 | Anforderung | Status | Hinweis |
 |---|---|---|
-| Gästekarte (Enterprise-Gästeprofil) | ✅ | `guests`-Slice ausgebaut (Migration 0046): Stammdaten + Adressen/Kontakte/Ausweise/Präferenzen/Consents/Notizen/Dokumente + Joins (Reservierungen/Threads/Rechnungen). Zugriff `pm_guest_details`, Feld-Maskierung über zentralen `guest_masking` (inkl. `view_guest_id_docs`), DSGVO-Anonymisierung. Frontend Liste + Detail mit Tabs. Offen: Merge (Dubletten) als 501-Stub. |
+| Gästekarte (Enterprise-Gästeprofil) | ✅ | `guests`-Slice ausgebaut (Migration 0046): Stammdaten + Adressen/Kontakte/Ausweise/Präferenzen/Consents/Notizen/Dokumente + Joins (Reservierungen/Threads/Rechnungen). Zugriff `pm_guest_details`, Feld-Maskierung über zentralen `guest_masking` (inkl. `view_guest_id_docs`), DSGVO-Anonymisierung. Frontend Liste + Detail mit Tabs. Merge (Dubletten) implementiert: Sub-Ressourcen + Reservierungen/Buchungen/WhatsApp-Konvos source→target umhängen, `guest_preferences` (1:1) & `guest_external_ids` (DSGVO) gesondert, Quell-Gast anonymisieren. |
 | White-Label-Gäste-Portal | 🟡 | `public_portal`-Slice als Struktur da (Phase 2). |
 | Echtzeit-Admin-Push bei Erst-Login | 🔴 | Event/Notification-System. |
 | Zentralisierte dreisprachige Standardtexte | 🔴 | `content_blocks`-Tabelle + Zuweisung pro Unterkunft. |

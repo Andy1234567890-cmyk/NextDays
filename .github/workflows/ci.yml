@@ -27,5 +27,11 @@ jobs:
       - name: Lint (ruff)
         run: ruff check src
 
+      - name: Lint (pylint 10/10)
+        # Hält die saubere 10.00/10 dauerhaft: bricht ab, sobald das Rating
+        # unter 10 fällt (neue echte Befunde). Bewusste Ausnahmen sind zentral
+        # in pyproject.toml [tool.pylint.*] begründet.
+        run: pylint --fail-under=10 src
+
       - name: Tests (pytest)
         run: pytest -q
