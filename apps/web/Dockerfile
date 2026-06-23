@@ -1,0 +1,43 @@
+# Multi-Stage-Build für die myNextDays-Web-App (Next.js 15, App Router).
+# Eigenes Dockerfile statt Nixpacks, weil Nixpacks die Node-Version nur per Major
+# pinnen kann und für "22" nur 22.11 liefert — zu alt für pnpm 11.1.1 (>=22.13).
+# Wir nutzen das offizielle, sicherheitsgepatchte node:22.16-slim und pnpm via
+# corepack. Build-Context ist apps/web (Coolify base_directory).
+
+# ---------------------------------------------------------------------------
+# 1) Dependencies — reproduzierbar aus dem Lockfile (frozen).
+# ---------------------------------------------------------------------------
+FROM node:22.16-slim AS deps
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@11.1.1 --activate
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+RUN pnpm install --frozen-lockfile
+
+# ---------------------------------------------------------------------------
+# 2) Build — Next.js produziert den standalone-Output.
+# ---------------------------------------------------------------------------
+FROM node:22.16-slim AS build
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@11.1.1 --activate
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+# devDependencies werden für den Build gebraucht (typescript, tailwind …).
+ENV NODE_ENV=production
+RUN pnpm build
+
+# ---------------------------------------------------------------------------
+# 3) Runtime — schlank: nur der standalone-Server + statische Assets.
+# ---------------------------------------------------------------------------
+FROM node:22.16-slim AS run
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PORT=3000
+# Nicht als root laufen.
+RUN groupadd --system --gid 1001 nodejs \
+  && useradd --system --uid 1001 --gid nodejs nextjs
+COPY --from=build --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=build --chown=nextjs:nodejs /app/public ./public
+USER nextjs
+EXPOSE 3000
+CMD ["node", "server.js"]
