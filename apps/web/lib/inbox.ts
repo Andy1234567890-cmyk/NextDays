@@ -10,6 +10,7 @@ export type InboxThread = {
   id: string;
   channex_booking_id: string | null;
   reservation_id: string | null;
+  guest_id: string | null; // verknüpfter Gast (Resolver) → Link zur Gästekarte
   ota_name: string | null;
   ota_reservation_code: string | null;
   guest_name: string | null;
@@ -126,6 +127,20 @@ export async function assignThread(
   return call<void>(`/${threadId}/assign`, {
     method: "PUT",
     body: { user_id: userId },
+  });
+}
+
+/**
+ * Korrektur: Thread einem (anderen) Gast zuordnen. guestId=null legt einen Gast
+ * aus den Thread-Kontaktdaten an (Resolver). Erfordert INBOX_MANAGE_CONFIG.
+ */
+export async function linkThreadGuest(
+  threadId: string,
+  guestId: string | null,
+): Promise<Result<{ guest_id: string | null }>> {
+  return call<{ guest_id: string | null }>(`/${threadId}/guest`, {
+    method: "PUT",
+    body: { guest_id: guestId },
   });
 }
 

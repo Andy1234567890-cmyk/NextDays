@@ -31,6 +31,16 @@ type WizardProp = {
   title: string;
 };
 
+/** Vorbefüllbarer Kontakt (z. B. aus der Gästekarte). */
+export type WizardInitialGuest = {
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  country?: string | null;
+  language?: string | null;
+};
+
 export function ReservationWizard({
   open,
   onClose,
@@ -40,6 +50,9 @@ export function ReservationWizard({
   checkIn,
   checkOut,
   basePrice,
+  initialGuest,
+  guestId,
+  editableDates = false,
 }: {
   open: boolean;
   onClose: () => void;
@@ -49,6 +62,11 @@ export function ReservationWizard({
   checkIn: string; // YYYY-MM-DD
   checkOut: string; // YYYY-MM-DD (exklusiv)
   basePrice: number; // Grundpreis (Summe Übernachtungen) – Platzhalter erlaubt
+  // Optional: aus der Gästekarte geöffnet → Kontakt vorbefüllen, festen Gast
+  // verknüpfen (keine Dublette) und Zeitraum im Wizard wählbar machen.
+  initialGuest?: WizardInitialGuest;
+  guestId?: string;
+  editableDates?: boolean;
 }) {
   const [step, setStep] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -56,6 +74,9 @@ export function ReservationWizard({
 
   // Schritt 1
   const [propertyId, setPropertyId] = useState(initialPropertyId);
+  // Zeitraum: aus dem Kalender vorgegeben; aus der Gästekarte im Wizard wählbar.
+  const [checkInState, setCheckInState] = useState(checkIn);
+  const [checkOutState, setCheckOutState] = useState(checkOut);
   const [channel, setChannel] = useState<ReservationChannel>("direct");
   const [source, setSource] = useState("");
   const [guests, setGuests] = useState<GuestBreakdown>({
@@ -65,12 +86,12 @@ export function ReservationWizard({
     pets: 0,
   });
   const [contact, setContact] = useState<GuestContact>({
-    first_name: "",
-    last_name: "",
-    email: "",
-    phone: "",
-    country: "",
-    language: "",
+    first_name: initialGuest?.first_name ?? "",
+    last_name: initialGuest?.last_name ?? "",
+    email: initialGuest?.email ?? "",
+    phone: initialGuest?.phone ?? "",
+    country: initialGuest?.country ?? "",
+    language: initialGuest?.language ?? "",
   });
 
   // Schritt 2 (Preise)
@@ -88,22 +109,30 @@ export function ReservationWizard({
 
   if (!open) return null;
 
-  const nights = countNights(checkIn, checkOut);
-  const rangeLabel = `${fmt(checkIn)} – ${fmt(checkOut)} · ${nights} Nacht${nights > 1 ? "e" : ""}`;
+  const nights = countNights(checkInState, checkOutState);
+  const rangeLabel = `${fmt(checkInState)} – ${fmt(checkOutState)} · ${nights} Nacht${nights > 1 ? "e" : ""}`;
+  const datesValid = nights > 0;
 
   async function confirm() {
+    if (!datesValid) {
+      setError("Bitte einen gültigen Zeitraum wählen (Abreise nach Anreise).");
+      setStep(0);
+      return;
+    }
     setSaving(true);
     setError(null);
     const res = await createReservation({
       property_id: propertyId,
-      check_in: checkIn,
-      check_out: checkOut,
+      check_in: checkInState,
+      check_out: checkOutState,
       channel,
       source,
       guests,
       contact,
       total_amount: total,
       status: "confirmed",
+      // Aus der Gästekarte: festen Gast verknüpfen (keine Dublette).
+      ...(guestId ? { guest_id: guestId } : {}),
     });
     setSaving(false);
     if (res.ok) {
@@ -184,11 +213,31 @@ export function ReservationWizard({
                     </SelectContent>
                   </Select>
                 </Field>
-                <Field label="Zeitraum">
-                  <div className="rounded-(--radius) border bg-muted/30 px-3 py-2 text-sm">
-                    {fmt(checkIn)} – {fmt(checkOut)}
+                {editableDates ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Anreise">
+                      <Input
+                        type="date"
+                        value={checkInState}
+                        onChange={(e) => setCheckInState(e.target.value)}
+                      />
+                    </Field>
+                    <Field label="Abreise">
+                      <Input
+                        type="date"
+                        value={checkOutState}
+                        min={checkInState}
+                        onChange={(e) => setCheckOutState(e.target.value)}
+                      />
+                    </Field>
                   </div>
-                </Field>
+                ) : (
+                  <Field label="Zeitraum">
+                    <div className="rounded-(--radius) border bg-muted/30 px-3 py-2 text-sm">
+                      {fmt(checkInState)} – {fmt(checkOutState)}
+                    </div>
+                  </Field>
+                )}
                 <Field label="Quelle">
                   <Select value={channel} onValueChange={(v) => setChannel(v as ReservationChannel)}>
                     <SelectTrigger>
@@ -275,7 +324,7 @@ export function ReservationWizard({
 
               <Section title="Übersicht">
                 <SummaryRow label="Objekt" value={properties.find((p) => p.id === propertyId)?.title ?? "—"} />
-                <SummaryRow label="Zeitraum" value={`${fmt(checkIn)} – ${fmt(checkOut)}`} />
+                <SummaryRow label="Zeitraum" value={`${fmt(checkInState)} – ${fmt(checkOutState)}`} />
                 <SummaryRow label="Gäste" value={`${guests.adults + guests.children} Pers.`} />
                 <SummaryRow label="Gast" value={`${contact.first_name} ${contact.last_name}`.trim() || "—"} />
               </Section>

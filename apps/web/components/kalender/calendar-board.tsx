@@ -657,7 +657,7 @@ function ReservationDetail({
             <DetailRow label="Buchungscode">{r.external_ref}</DetailRow>
           )}
           <DetailRow label="Status">{r.status}</DetailRow>
-          {r.total_amount > 0 && (
+          {r.total_amount != null && r.total_amount > 0 && (
             <DetailRow label="Betrag">
               {r.total_amount.toLocaleString("de-DE", {
                 style: "currency",

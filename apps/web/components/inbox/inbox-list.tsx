@@ -42,6 +42,7 @@ import {
   setInboxStatus,
   updateThreadFlags,
 } from "@/lib/inbox";
+import { type InboxAccess } from "@/lib/inbox-access";
 import { useRealtime } from "@/lib/use-realtime";
 
 type TabKey =
@@ -78,9 +79,11 @@ function fmtRange(a: string | null, b: string | null): string {
 export function InboxList({
   threads,
   error,
+  access,
 }: {
   threads: InboxThread[];
   error: string | null;
+  access: InboxAccess;
 }) {
   const t = useTranslations("inbox");
   const [query, setQuery] = useState("");
@@ -158,13 +161,14 @@ export function InboxList({
     }
   }
 
+  // Konfigurations-Tabs (Vorlagen/Automationen/KI/Verwalten) nur mit
+  // INBOX_MANAGE_CONFIG sichtbar (Enterprise-Achse „Aktionen").
   const TABS: TabKey[] = [
     "tabInbox",
     "tabWhatsApp",
-    "tabAiReplies",
-    "tabTemplates",
-    "tabAutomations",
-    "tabManage",
+    ...(access.canManageConfig
+      ? (["tabAiReplies", "tabTemplates", "tabAutomations", "tabManage"] as TabKey[])
+      : []),
   ];
 
   return (
@@ -307,15 +311,20 @@ export function InboxList({
                     <Icon icon="ph:x" className="size-4" />
                   </button>
                 </div>
-                <label className="flex items-center gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={onlyUnassigned}
-                    onChange={(e) => setOnlyUnassigned(e.target.checked)}
-                    className="size-4 accent-[var(--color-accent)]"
-                  />
-                  {t("filterUnassigned")}
-                </label>
+                {access.scope === "all" ? (
+                  <label className="flex items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={onlyUnassigned}
+                      onChange={(e) => setOnlyUnassigned(e.target.checked)}
+                      className="size-4 accent-[var(--color-accent)]"
+                    />
+                    {t("filterUnassigned")}
+                  </label>
+                ) : (
+                  // assigned-only-Nutzer sieht ohnehin nur eigene Konversationen.
+                  <p className="text-xs text-muted-foreground">{t("filterAssignedOnly")}</p>
+                )}
                 {onlyUnassigned && (
                   <button
                     type="button"
@@ -409,6 +418,7 @@ export function InboxList({
               key={current.id}
               thread={current}
               view={view}
+              access={access}
               onMarkUnread={() => markUnread(current.id)}
               onStatus={(s) => changeStatus(current.id, s)}
               onNext={() => gotoNext(current.id)}
@@ -454,6 +464,7 @@ export function InboxList({
 function Conversation({
   thread,
   view,
+  access,
   onMarkUnread,
   onStatus,
   onNext,
@@ -462,6 +473,7 @@ function Conversation({
 }: {
   thread: InboxThread;
   view: InboxStatus;
+  access: InboxAccess;
   onMarkUnread: () => void;
   onStatus: (status: "active" | "archived" | "trashed" | "deleted") => void;
   onNext: () => void;
@@ -647,7 +659,8 @@ function Conversation({
               updateThreadFlags(thread.id, { is_starred: next });
             }}
           />
-          {/* Zuweisen an Team-Benutzer */}
+          {/* Zuweisen an Team-Benutzer — nur mit INBOX_ASSIGN */}
+          {access.canAssign && (
           <div className="relative">
             <HeadAction
               icon="ph:user-circle-gear"
@@ -692,6 +705,7 @@ function Conversation({
               </div>
             )}
           </div>
+          )}
           {/* Wiederherstellen, wenn nicht in der aktiven Ansicht */}
           {view !== "active" && (
             <HeadAction
@@ -917,7 +931,13 @@ function Conversation({
         </p>
       )}
 
-      {/* Antwortfeld */}
+      {/* Antwortfeld — nur mit INBOX_REPLY; sonst Read-Only-Hinweis */}
+      {!access.canReply ? (
+        <div className="flex items-center gap-2 border-t border-border p-4 text-sm text-muted-foreground">
+          <Icon icon="ph:lock-simple" className="size-4" />
+          {t("readOnlyHint")}
+        </div>
+      ) : (
       <div className="relative flex items-end gap-2 border-t border-border p-3">
         {/* Geplant-senden-Popover */}
         {showSchedule && (
@@ -1001,6 +1021,7 @@ function Conversation({
           {sending ? t("sending") : t("send")}
         </Button>
       </div>
+      )}
     </>
   );
 }
@@ -1232,6 +1253,15 @@ function ReservationPanel({
           <Link href={`/kalender?reservation=${thread.reservation_id}`}>
             <Icon icon="ph:calendar-check" className="size-4" />
             {t("openReservation")}
+          </Link>
+        </Button>
+      )}
+
+      {thread.guest_id && (
+        <Button asChild variant="outline" size="sm">
+          <Link href={`/gaeste/${thread.guest_id}`}>
+            <Icon icon="ph:identification-card" className="size-4" />
+            {t("openGuest")}
           </Link>
         </Button>
       )}

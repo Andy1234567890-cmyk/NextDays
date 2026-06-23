@@ -35,6 +35,9 @@ export type ReservationInput = {
   contact: GuestContact;
   total_amount: number;
   status: ReservationStatus;
+  // Optional: bestehenden Gast fest verknüpfen (z. B. aus der Gästekarte) —
+  // Backend nutzt ihn statt einen neuen anzulegen (keine Dublette).
+  guest_id?: string;
 };
 
 export type Reservation = {
@@ -46,7 +49,7 @@ export type Reservation = {
   check_in: string;
   check_out: string;
   status: ReservationStatus;
-  total_amount: number;
+  total_amount: number | null; // null für Rollen ohne Finanz-/Vollzugriff (DSGVO-Split)
   currency: string;
   ota_name: string | null; // echter Portal-Name (Booking.com, Airbnb, Expedia …)
   external_ref: string | null; // OTA-Reservierungscode
