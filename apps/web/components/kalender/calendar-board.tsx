@@ -27,6 +27,11 @@ import {
   getAvailability,
 } from "@/lib/calendar";
 import { CHANNEL_META, CHANNEL_SOURCES, channelMeta } from "@/lib/calendar-channels";
+import {
+  type DisplayStatus,
+  STATUS_META,
+  reservationStatus,
+} from "@/lib/calendar-status";
 import type { PropertyType } from "@/lib/properties";
 import {
   type Reservation,
@@ -506,6 +511,15 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
             {CHANNEL_META[src].label}
           </span>
         ))}
+        <span className="h-3 w-px bg-border" aria-hidden />
+        {(["confirmed", "pending", "in_house", "completed", "cancelled"] as const).map(
+          (s) => (
+            <span key={s} className="flex items-center gap-1.5">
+              <span className={`size-2 rounded-full ${STATUS_META[s].dotBg}`} />
+              {STATUS_META[s].label}
+            </span>
+          ),
+        )}
         {loading && <span>· lädt …</span>}
       </div>
 
@@ -667,9 +681,23 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                       // Gebuchte Balken: Kanal-Farbakzent + Logo (Herkunft sofort
                       // erkennbar). Gesperrte: neutraler Block-Stil.
                       const meta = channelMeta(seg.source);
+                      // Anzeige-Status (inkl. abgeleitetem „eingecheckt") für
+                      // Farb-Punkt + reichen Tooltip.
+                      const dispStatus: DisplayStatus | null = seg.reservation
+                        ? reservationStatus(seg.reservation, todayKey)
+                        : null;
+                      const statusMeta = dispStatus ? STATUS_META[dispStatus] : null;
+                      const nights = seg.span;
                       const barTitle =
                         seg.status === "booked"
-                          ? `${segmentLabel(seg)} · ${meta.label} · ${seg.span} Tag(e)`
+                          ? [
+                              segmentLabel(seg),
+                              meta.label,
+                              statusMeta?.label,
+                              `${nights} Nacht${nights > 1 ? "e" : ""}`,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")
                           : `${STATUS_LABEL[seg.status]} · ${seg.span} Tag(e)`;
                       const barClass =
                         seg.status === "booked"
@@ -694,7 +722,20 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                           {seg.status === "blocked" && (
                             <Icon icon="ph:lock-simple" className="size-3 shrink-0" />
                           )}
+                          {/* Status-Punkt (OPERA-Stil): bestätigt/Option/
+                              eingecheckt/ausgecheckt/storniert. */}
+                          {statusMeta && (
+                            <span
+                              className={`size-1.5 shrink-0 rounded-full ring-1 ring-white/60 ${statusMeta.dotBg}`}
+                            />
+                          )}
                           <span className="truncate">{segmentLabel(seg)}</span>
+                          {/* Nächte-Indikator rechts, wenn der Balken breit genug ist. */}
+                          {seg.status === "booked" && nights >= 3 && (
+                            <span className="ml-auto shrink-0 text-[0.65rem] opacity-80">
+                              {nights}N
+                            </span>
+                          )}
                         </>
                       );
                       if (!clickable) {
