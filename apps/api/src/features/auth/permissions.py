@@ -117,3 +117,15 @@ def capabilities_for(role: UserRole | str | None) -> frozenset[Capability]:
 
 def has_capability(role: UserRole | str | None, cap: Capability) -> bool:
     return cap in capabilities_for(role)
+
+
+def first_name_only(full_name: str | None) -> str | None:
+    """Nur den Vornamen (erstes Token) zurückgeben — DSGVO-Daten-Split (§4).
+
+    Rollen ohne VIEW_GUEST_FULL sehen nur den Vornamen des Gastes, nie den
+    vollen Namen. Leerer/None-Name bleibt None.
+    """
+    if not full_name:
+        return None
+    token = full_name.strip().split(" ", 1)[0]
+    return token or None

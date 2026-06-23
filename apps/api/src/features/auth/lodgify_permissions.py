@@ -21,6 +21,8 @@ class Permission(StrEnum):
     EDIT_CALENDAR_BOOKINGS = "edit_calendar_bookings"
     VIEW_GUEST_NAME = "view_guest_name"
     VIEW_GUEST_CONTACT = "view_guest_contact"
+    VIEW_GUEST_ID_DOCS = "view_guest_id_docs"  # Ausweisdokumente (DSGVO-sensibel)
+    EDIT_GUEST = "edit_guest"                  # Gästekarte bearbeiten (Schreibrecht)
     VIEW_BOOKING_SOURCE = "view_booking_source"
     SYNC_ICAL = "sync_ical"
     DOWNLOAD_BOOKING_REPORT = "download_booking_report"
@@ -58,6 +60,12 @@ class Permission(StrEnum):
     PM_OWNER_DETAILS = "pm_owner_details"
     PM_VIEW_PROPERTY_IMAGES = "pm_view_property_images"
     PM_WEBSITE_ACCESS = "pm_website_access"
+    # --- Posteingang (Enterprise-Achsen: Scope/Actions) ---
+    # PM_CHAT (oben) = Access. Diese steuern Sichtbarkeit & erlaubte Aktionen.
+    INBOX_VIEW_ALL = "inbox_view_all"        # alle Tenant-Threads (sonst nur zugewiesene)
+    INBOX_REPLY = "inbox_reply"              # ausgehende Nachrichten senden
+    INBOX_ASSIGN = "inbox_assign"            # Threads (um-)zuweisen
+    INBOX_MANAGE_CONFIG = "inbox_manage_config"  # Vorlagen/Automationen/KI-Settings
 
 
 _ALL: frozenset[Permission] = frozenset(Permission)
@@ -73,6 +81,8 @@ _CO_ADMIN: frozenset[Permission] = frozenset({
     Permission.EDIT_CALENDAR_BOOKINGS,
     Permission.VIEW_GUEST_NAME,
     Permission.VIEW_GUEST_CONTACT,
+    Permission.VIEW_GUEST_ID_DOCS,
+    Permission.EDIT_GUEST,
     Permission.VIEW_BOOKING_SOURCE,
     Permission.SYNC_ICAL,
     Permission.DOWNLOAD_BOOKING_REPORT,
@@ -95,6 +105,11 @@ _CO_ADMIN: frozenset[Permission] = frozenset({
     Permission.PM_VIEW_BOOKING_IMAGES,
     Permission.PM_VIEW_PROPERTY_IMAGES,
     Permission.PM_WEBSITE_ACCESS,
+    # Posteingang voll (Agentur-Manager): alle Threads, antworten, zuweisen, konfigurieren.
+    Permission.INBOX_VIEW_ALL,
+    Permission.INBOX_REPLY,
+    Permission.INBOX_ASSIGN,
+    Permission.INBOX_MANAGE_CONFIG,
 })
 
 _OWNER: frozenset[Permission] = frozenset({
