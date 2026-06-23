@@ -24,6 +24,17 @@ import {
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 
+// Zeitfenster (sichtbare Tage). „Monat" = 28 als feste, gleichmäßige Breite
+// (OPERA-Room-Diary-Stil; kalendarische Monatslänge bricht das Raster nicht).
+export const RANGE_OPTIONS = [
+  { value: 1, label: "Tag" },
+  { value: 7, label: "Woche" },
+  { value: 14, label: "2 Wochen" },
+  { value: 28, label: "Monat" },
+] as const;
+
+export type RangeDays = (typeof RANGE_OPTIONS)[number]["value"];
+
 export type ViewOptions = {
   showPicture: boolean;
   showInternalName: boolean;
@@ -31,6 +42,7 @@ export type ViewOptions = {
   showPrice: boolean;
   showMinStay: boolean;
   weekStart: "mon" | "sun";
+  rangeDays: RangeDays;
 };
 
 export const DEFAULT_VIEW: ViewOptions = {
@@ -40,6 +52,7 @@ export const DEFAULT_VIEW: ViewOptions = {
   showPrice: true,
   showMinStay: true,
   weekStart: "mon",
+  rangeDays: 28,
 };
 
 export function CalendarHeader({
@@ -49,6 +62,8 @@ export function CalendarHeader({
   onPrev,
   onNext,
   onToday,
+  onJump,
+  jumpValue,
   onCreate,
 }: {
   title: { month: string; year: string };
@@ -57,6 +72,8 @@ export function CalendarHeader({
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
+  onJump: (isoDate: string) => void;
+  jumpValue: string; // YYYY-MM-DD des aktuellen Startdatums
   onCreate: (kind: "booking" | "blocked") => void;
 }) {
   const set = <K extends keyof ViewOptions>(k: K, v: ViewOptions[K]) =>
@@ -70,7 +87,34 @@ export function CalendarHeader({
       </h2>
 
       {/* Navigations- und Aktionsgruppe */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Zeitfenster (1/7/14/28-Monat) */}
+        <div className="inline-flex rounded-full border bg-secondary p-0.5 text-sm">
+          {RANGE_OPTIONS.map((o) => (
+            <button
+              key={o.value}
+              type="button"
+              onClick={() => set("rangeDays", o.value)}
+              className={`rounded-full px-3 py-1.5 font-medium transition-colors ${
+                view.rangeDays === o.value
+                  ? "bg-card text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {o.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Datum-Sprung (natives Date-Picker) */}
+        <input
+          type="date"
+          value={jumpValue}
+          onChange={(e) => e.target.value && onJump(e.target.value)}
+          aria-label="Zu Datum springen"
+          className="h-9 rounded-full border bg-background px-3 text-sm"
+        />
+
         <Button variant="outline" size="icon" onClick={onPrev} aria-label="Zurück">
           <Icon icon="ph:caret-left" className="size-4" />
         </Button>

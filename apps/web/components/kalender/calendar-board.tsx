@@ -33,6 +33,8 @@ import {
   reservationStatus,
 } from "@/lib/calendar-status";
 import type { PropertyType } from "@/lib/properties";
+import { TYPE_LABELS } from "@/lib/property-meta";
+import { Input } from "@/components/ui/input";
 import {
   type Reservation,
   listReservations,
@@ -56,7 +58,6 @@ const MONTHS = [
   "Juli", "August", "September", "Oktober", "November", "Dezember",
 ];
 
-const RANGE = 30; // angezeigte Tage ab Startdatum
 const COL = 5.5; // rem pro Tagesspalte (breit wie Lodgify)
 const LABEL = 17; // rem für die Objektspalte
 const ROW_H = 5.5; // rem Zeilenhöhe
@@ -238,6 +239,11 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
   const [detail, setDetail] = useState<Reservation | null>(null);
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<ViewOptions>(DEFAULT_VIEW);
+  // Filter & Suche (Paket 4b). Leerer Filter = alles sichtbar.
+  const [query, setQuery] = useState("");
+  const [channelFilter, setChannelFilter] = useState<AvailabilitySource | "all">("all");
+  const [statusFilter, setStatusFilter] = useState<DisplayStatus | "all">("all");
+  const [typeFilter, setTypeFilter] = useState<PropertyType | "all">("all");
 
   // Interaktion wie Lodgify: Anfangstag drücken → bis Endtag ziehen → loslassen.
   // `drag` ist nur die Vorschau WÄHREND des Ziehens; `sel` wird ERST beim
@@ -367,18 +373,106 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
     setTodayKey(key(now));
   }, []);
 
+  const range = view.rangeDays;
   const dates = useMemo(
-    () => (start ? Array.from({ length: RANGE }, (_, i) => addDays(start, i)) : []),
-    [start],
+    () => (start ? Array.from({ length: range }, (_, i) => addDays(start, i)) : []),
+    [start, range],
   );
 
-  const shown = properties;
+  // Objekt-Filter: Freitext (Titel/Adresse/Stadt/Gastname) + Objekttyp. Ein
+  // Objekt bleibt sichtbar, wenn es selbst passt ODER eine seiner Buchungen
+  // den Suchtext im Gastnamen trägt.
+  const q = query.trim().toLowerCase();
+  const shown = useMemo(() => {
+    return properties.filter((p) => {
+      if (typeFilter !== "all" && p.type !== typeFilter) return false;
+      if (!q) return true;
+      const inProp =
+        p.title.toLowerCase().includes(q) ||
+        p.address.toLowerCase().includes(q) ||
+        p.city.toLowerCase().includes(q);
+      if (inProp) return true;
+      const guests = Object.values(resByProp[p.id] ?? {});
+      return guests.some((r) => r.guest_name?.toLowerCase().includes(q));
+    });
+  }, [properties, typeFilter, q, resByProp]);
+
+  // Sichtbarkeit eines Segments unter Kanal-/Status-Filter (gefilterte Balken
+  // werden gedimmt statt entfernt, damit Belegung erkennbar bleibt).
+  const segMatchesFilters = useCallback(
+    (seg: Segment): boolean => {
+      if (channelFilter !== "all" && seg.source !== channelFilter) return false;
+      if (statusFilter !== "all") {
+        if (!seg.reservation) return false;
+        if (reservationStatus(seg.reservation, todayKey) !== statusFilter) return false;
+      }
+      return true;
+    },
+    [channelFilter, statusFilter, todayKey],
+  );
+  const filtersActive = channelFilter !== "all" || statusFilter !== "all";
+
+  // Kennzahlenleiste (sichtbarer Zeitraum × sichtbare Objekte):
+  //  - Belegung %: gebuchte Objekt-Tage / (Objekte × Tage)
+  //  - Umsatz/ADR: nur aus Buchungen mit sichtbarem Betrag (maskierungskonform;
+  //    total_amount === null = keine Berechtigung → fließt NICHT ein)
+  const metrics = useMemo(() => {
+    if (!start || shown.length === 0 || dates.length === 0) {
+      return { occupancy: 0, bookedNights: 0, totalNights: 0, revenue: 0, adr: null as number | null, amountsHidden: false };
+    }
+    const dayKeys = dates.map((d) => key(d));
+    let bookedNights = 0;
+    for (const p of shown) {
+      const statusMap = avail[p.id] ?? {};
+      for (const dk of dayKeys) if (statusMap[dk] === "booked") bookedNights += 1;
+    }
+    const totalNights = shown.length * dates.length;
+
+    // Umsatz: Buchungen der sichtbaren Objekte, deren Nächte in den sichtbaren
+    // Zeitraum fallen — anteilig (Nacht-Anteil im Fenster / Gesamtnächte).
+    const winStart = dayKeys[0];
+    const winEnd = key(addDays(start, dates.length)); // exklusiv
+    const seen = new Set<string>();
+    let revenue = 0;
+    let revenueNights = 0;
+    let amountsHidden = false;
+    for (const p of shown) {
+      for (const r of Object.values(resByProp[p.id] ?? {})) {
+        if (seen.has(r.id) || r.status === "cancelled") continue;
+        seen.add(r.id);
+        if (r.total_amount == null) {
+          amountsHidden = true;
+          continue;
+        }
+        const ci = r.check_in < winStart ? winStart : r.check_in;
+        const co = r.check_out > winEnd ? winEnd : r.check_out;
+        const nightsInWin = Math.max(
+          0,
+          Math.round((new Date(`${co}T00:00:00`).getTime() - new Date(`${ci}T00:00:00`).getTime()) / 86400000),
+        );
+        const totalResNights = Math.max(
+          1,
+          Math.round((new Date(`${r.check_out}T00:00:00`).getTime() - new Date(`${r.check_in}T00:00:00`).getTime()) / 86400000),
+        );
+        revenue += (r.total_amount * nightsInWin) / totalResNights;
+        revenueNights += nightsInWin;
+      }
+    }
+    return {
+      occupancy: totalNights ? bookedNights / totalNights : 0,
+      bookedNights,
+      totalNights,
+      revenue,
+      adr: revenueNights > 0 ? revenue / revenueNights : null,
+      amountsHidden,
+    };
+  }, [start, shown, dates, avail, resByProp]);
 
   const load = useCallback(async () => {
     if (!start || properties.length === 0) return;
     setLoading(true);
     const s = key(start);
-    const e = key(addDays(start, RANGE));
+    const e = key(addDays(start, range));
     const [results, resAll] = await Promise.all([
       Promise.all(
         properties.map(async (p) => {
@@ -416,7 +510,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
       ),
     );
     setLoading(false);
-  }, [start, properties]);
+  }, [start, properties, range]);
 
   useEffect(() => {
     load();
@@ -446,6 +540,11 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     setStart(now);
+  }
+  // Auf ein gewähltes Datum springen (Date-Picker im Kopf).
+  function jumpTo(isoDate: string) {
+    const d = new Date(`${isoDate}T00:00:00`);
+    if (!Number.isNaN(d.getTime())) setStart(d);
   }
 
   if (properties.length === 0) {
@@ -490,11 +589,64 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
         title={{ month: titleMonth, year: titleYear }}
         view={view}
         onView={setView}
-        onPrev={() => shift(-7)}
-        onNext={() => shift(7)}
+        onPrev={() => shift(-range)}
+        onNext={() => shift(range)}
         onToday={goToday}
+        onJump={jumpTo}
+        jumpValue={start ? key(start) : ""}
         onCreate={onCreate}
       />
+
+      {/* Filter & Suche (Objekt/Typ/Kanal/Status/Gastname) */}
+      <div className="flex flex-wrap items-center gap-2">
+        <div className="relative">
+          <Icon
+            icon="ph:magnifying-glass"
+            className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+          />
+          <Input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Objekt oder Gast suchen…"
+            className="h-9 w-56 rounded-full pl-9"
+            aria-label="Suche"
+          />
+        </div>
+        <FilterSelect
+          value={typeFilter}
+          onChange={(v) => setTypeFilter(v as PropertyType | "all")}
+          allLabel="Alle Typen"
+          options={Object.entries(TYPE_LABELS).map(([value, label]) => ({ value, label }))}
+        />
+        <FilterSelect
+          value={channelFilter}
+          onChange={(v) => setChannelFilter(v as AvailabilitySource | "all")}
+          allLabel="Alle Kanäle"
+          options={CHANNEL_SOURCES.map((s) => ({ value: s, label: CHANNEL_META[s].label }))}
+        />
+        <FilterSelect
+          value={statusFilter}
+          onChange={(v) => setStatusFilter(v as DisplayStatus | "all")}
+          allLabel="Alle Status"
+          options={(["confirmed", "pending", "in_house", "completed", "cancelled"] as const).map(
+            (s) => ({ value: s, label: STATUS_META[s].label }),
+          )}
+        />
+        {(query || typeFilter !== "all" || channelFilter !== "all" || statusFilter !== "all") && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setQuery("");
+              setTypeFilter("all");
+              setChannelFilter("all");
+              setStatusFilter("all");
+            }}
+          >
+            <Icon icon="ph:x" className="size-3.5" /> Zurücksetzen
+          </Button>
+        )}
+      </div>
 
       {/* Legende: Status + Vertriebskanäle (Herkunft je Farbe/Logo). */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
@@ -561,6 +713,45 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
           }}
         />
       )}
+
+      {/* Kennzahlenleiste (sichtbarer Zeitraum): Auslastung, ADR, Umsatz.
+          Beträge nur, wenn der Nutzer sie sehen darf (sonst Hinweis). */}
+      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 rounded-(--radius) border bg-secondary/40 px-4 py-2.5 text-sm">
+        <Metric
+          icon="ph:chart-pie-slice"
+          label="Auslastung"
+          value={`${Math.round(metrics.occupancy * 100)} %`}
+          hint={`${metrics.bookedNights}/${metrics.totalNights} Objekt-Nächte`}
+        />
+        <Metric
+          icon="ph:currency-eur"
+          label="Umsatz"
+          value={
+            metrics.amountsHidden && metrics.revenue === 0
+              ? "—"
+              : metrics.revenue.toLocaleString("de-DE", {
+                  style: "currency",
+                  currency: "EUR",
+                  maximumFractionDigits: 0,
+                })
+          }
+          hint={metrics.amountsHidden ? "ohne gesperrte Beträge" : "im Zeitraum"}
+        />
+        <Metric
+          icon="ph:bed"
+          label="ADR"
+          value={
+            metrics.adr == null
+              ? "—"
+              : metrics.adr.toLocaleString("de-DE", {
+                  style: "currency",
+                  currency: "EUR",
+                  maximumFractionDigits: 0,
+                })
+          }
+          hint="Ø Nachtpreis"
+        />
+      </div>
 
       {/* Raster — scrollt INNERHALB dieses Containers (min-w-0 begrenzt Breite) */}
       <Card className="min-w-0 overflow-hidden p-0">
@@ -699,10 +890,14 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                               .filter(Boolean)
                               .join(" · ")
                           : `${STATUS_LABEL[seg.status]} · ${seg.span} Tag(e)`;
-                      const barClass =
+                      // Kanal-/Status-Filter: nicht passende Balken dimmen
+                      // (Belegung bleibt erkennbar, Treffer stechen hervor).
+                      const dimmed = filtersActive && !segMatchesFilters(seg);
+                      const barClass = `${
                         seg.status === "booked"
                           ? `${meta.barBg} ${meta.barFg}`
-                          : SEG_STYLE[seg.status];
+                          : SEG_STYLE[seg.status]
+                      } ${dimmed ? "opacity-25" : ""}`;
                       // Während IRGENDEIN Balken gezogen wird, lassen alle Balken
                       // Mausereignisse durch (damit die Zell-onMouseEnter feuert
                       // und den Tag-Offset liefert).
@@ -859,6 +1054,60 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
         />
       )}
     </div>
+  );
+}
+
+// Eine Kennzahl in der Auslastungsleiste.
+function Metric({
+  icon,
+  label,
+  value,
+  hint,
+}: {
+  icon: string;
+  label: string;
+  value: string;
+  hint: string;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <Icon icon={icon} className="size-4 text-muted-foreground" />
+      <div className="flex flex-col leading-tight">
+        <span className="font-display font-extrabold">{value}</span>
+        <span className="text-xs text-muted-foreground">
+          {label} · {hint}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+// Kompaktes Filter-Dropdown (natives select, zugänglich + tastaturbedienbar).
+function FilterSelect({
+  value,
+  onChange,
+  allLabel,
+  options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  allLabel: string;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      aria-label={allLabel}
+      className="h-9 rounded-full border bg-background px-3 text-sm"
+    >
+      <option value="all">{allLabel}</option>
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>
+          {o.label}
+        </option>
+      ))}
+    </select>
   );
 }
 
