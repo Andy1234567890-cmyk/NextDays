@@ -355,12 +355,58 @@ def test_cross_tenant_subresource_404() -> None:
     assert exc.value.status_code == 404
 
 
-# --- Merge-Stub -------------------------------------------------------------
-def test_merge_not_implemented() -> None:
-    svc = _svc()
+# --- Merge ------------------------------------------------------------------
+def test_merge_reparents_subresources_and_anonymizes_source() -> None:
+    store = {
+        "guests": [
+            _guest_row(id="g1", email="dup@x.de", name="Anna (Dublette)"),
+            _guest_row(id="g2", email="anna@x.de", name="Anna Müller"),
+        ],
+        "guest_addresses": [
+            {"id": "a1", "tenant_id": "t1", "guest_id": "g1", "city": "Berlin"},
+        ],
+        "reservations": [
+            {"id": "r1", "tenant_id": "t1", "guest_id": "g1"},
+        ],
+        "channex_booking": [
+            {"id": "b1", "tenant_id": "t1", "guest_id": "g1"},
+        ],
+        "guest_external_ids": [
+            {"id": "e1", "tenant_id": "t1", "guest_id": "g1",
+             "channel": "ota", "external_id": "X"},
+        ],
+    }
+    svc = _svc(store)
+    out = svc.merge(_CTX, "g1", "g2")
+    assert out == {"merged": True, "target_id": "g2"}
+
+    # Sub-Ressourcen + Reservierung + Buchung hängen jetzt am Ziel.
+    assert store["guest_addresses"][0]["guest_id"] == "g2"
+    assert store["reservations"][0]["guest_id"] == "g2"
+    assert store["channex_booking"][0]["guest_id"] == "g2"
+    # Personenbezogene externe IDs der Quelle wurden verworfen (DSGVO).
+    assert store["guest_external_ids"] == []
+    # Quell-Gast ist anonymisiert, Ziel unverändert.
+    src = next(g for g in store["guests"] if g["id"] == "g1")
+    assert src["email"] is None
+    assert src["anonymized_at"] is not None
+    tgt = next(g for g in store["guests"] if g["id"] == "g2")
+    assert tgt["email"] == "anna@x.de"
+
+
+def test_merge_rejects_same_source_and_target() -> None:
+    svc = _svc(store={"guests": [_guest_row(id="g1")]})
+    with pytest.raises(GuestsError) as exc:
+        svc.merge(_CTX, "g1", "g1")
+    assert exc.value.status_code == 400
+
+
+def test_merge_404_when_guest_foreign() -> None:
+    store = {"guests": [_guest_row(id="g1")]}  # g2 fehlt
+    svc = _svc(store)
     with pytest.raises(GuestsError) as exc:
         svc.merge(_CTX, "g1", "g2")
-    assert exc.value.status_code == 501
+    assert exc.value.status_code == 404
 
 
 # --- EDIT_GUEST-Berechtigung (Schreibrecht) ---------------------------------

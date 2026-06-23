@@ -538,18 +538,80 @@ class GuestsService:
         ]
         return ListResponse(items=items, total=len(items))
 
-    def merge(self, ctx: AuthContext, source_id: str, target_id: str) -> dict:
-        """Dubletten zusammenführen (Enterprise, TODO).
+    # Sub-Ressourcen mit `guest_id`-Fremdschlüssel (n:1 zum Gast) — beim Merge
+    # werden alle Zeilen von source → target umgehängt. `guest_preferences` ist
+    # 1:1 (Unique auf guest_id) und `guest_external_ids` personenbezogen mit
+    # Unique-Constraint — beide werden gesondert behandelt (s. merge()).
+    _MERGE_REPARENT_TABLES = (
+        "guest_addresses", "guest_contacts", "guest_documents",
+        "guest_identity_documents", "guest_notes", "guest_consents",
+        "reservations", "channex_booking", "whatsapp_conversation",
+    )
 
-        Geplant: Sub-Ressourcen (Adressen/Kontakte/Dokumente/Notizen/Consents)
-        + Reservierungen/Rechnungen von source → target umhängen, danach source
-        anonymisieren/löschen. Bewusst noch nicht implementiert (kein Stub-
-        Verhalten erfinden — Memory „keine Fallbacks").
+    def merge(self, ctx: AuthContext, source_id: str, target_id: str) -> dict:
+        """Dubletten zusammenführen: Sub-Ressourcen + Reservierungen/Buchungen
+        von source → target umhängen, danach source anonymisieren.
+
+        Rechnungen hängen NICHT am Gast, sondern über die E-Mail-Brücke am
+        `customers`-Eintrag (s. invoices()); sie bleiben am Ziel automatisch
+        sichtbar, sobald dessen E-Mail erhalten ist. `guest_preferences` ist
+        1:1 — nur umhängen, wenn das Ziel noch keine hat, sonst die des Quell-
+        Gastes verwerfen (Ziel-Präferenzen haben Vorrang).
         """
-        self._require_tenant(ctx)
-        raise GuestsError(
-            "Zusammenführen ist noch nicht verfügbar.", status_code=501
+        tenant_id = self._require_tenant(ctx)
+        if source_id == target_id:
+            raise GuestsError(
+                "Quelle und Ziel müssen verschieden sein.", status_code=400
+            )
+        # Beide Gäste müssen existieren und zum Tenant gehören (sonst 404).
+        self._load_guest_row(tenant_id, source_id)
+        self._load_guest_row(tenant_id, target_id)
+        db = self._db()
+
+        for tbl in self._MERGE_REPARENT_TABLES:
+            db.table(tbl).update({"guest_id": target_id}).eq(
+                "tenant_id", tenant_id
+            ).eq("guest_id", source_id).execute()
+
+        # guest_preferences (1:1): nur übernehmen, wenn das Ziel noch keine hat.
+        target_has_prefs = bool(
+            db.table("guest_preferences").select("guest_id")
+            .eq("tenant_id", tenant_id).eq("guest_id", target_id)
+            .limit(1).execute().data
         )
+        if target_has_prefs:
+            db.table("guest_preferences").delete().eq(
+                "tenant_id", tenant_id
+            ).eq("guest_id", source_id).execute()
+        else:
+            db.table("guest_preferences").update({"guest_id": target_id}).eq(
+                "tenant_id", tenant_id
+            ).eq("guest_id", source_id).execute()
+
+        # guest_external_ids: gelten als personenbezogen und tragen ein Unique
+        # (tenant, channel, external_id) — ein Umhängen kann mit den Kanal-IDs
+        # des Ziel-Gastes kollidieren. Bei Anonymisierung werden sie ohnehin
+        # gelöscht (DSGVO, s. Migration 0047), daher hier verwerfen.
+        db.table("guest_external_ids").delete().eq(
+            "tenant_id", tenant_id
+        ).eq("guest_id", source_id).execute()
+
+        # Quell-Gast anonymisieren (PII nullen, anonymized_at setzen) — die
+        # Reservierungen hängen jetzt am Ziel, daher nicht hart löschen.
+        db.table("guests").update({
+            "name": "Zusammengeführt", "first_name": None, "last_name": None,
+            "birth_name": None, "email": None, "phone": None,
+            "birth_date": None, "birth_place": None, "company": None,
+            "vat_id": None, "block_reason": None,
+            "anonymized_at": datetime.now(UTC).isoformat(),
+            "updated_by": ctx.user_id,
+        }).eq("tenant_id", tenant_id).eq("id", source_id).execute()
+
+        log.info(
+            "guest_merged", tenant_id=tenant_id,
+            source_id=source_id, target_id=target_id,
+        )
+        return {"merged": True, "target_id": target_id}
 
     # --- Helfer -------------------------------------------------------------
     def _sub_ctx(self, ctx: AuthContext, guest_id: str) -> tuple[Client, str]:

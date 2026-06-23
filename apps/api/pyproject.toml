@@ -63,6 +63,19 @@ class-attribute-naming-style = "any"
 const-naming-style = "any"
 class-const-naming-style = "any"
 
+[tool.pylint.variables]
+# FastAPI-Idiom: Pfad-Parameter und injizierte Dependencies stehen ZWINGEND in
+# der Endpunkt-Signatur (sonst registriert FastAPI die Route nicht bzw. bindet
+# das Pfad-Segment nicht), werden im Body aber oft nicht gelesen:
+#   - ctx:      Auth-/Autorisierungs-Dependency (Seiteneffekt 401/403)
+#   - request:  Raw-Request bei Stub-/No-Op-Endpunkten
+#   - service:  injizierter Service, bei reinen Stub-Routen ungenutzt
+#   - company_id/user_id: Pfad-Kompat fürs Frontend; autoritativ ist der
+#     JWT-Tenant (im Service via RLS/Tenant-Scope), nicht der Pfad
+#   - app:      Signatur des FastAPI-Lifespan-Contextmanagers
+# Daher als bewusst-ignorierte Argumentnamen geführt (Default `_`-Präfix bleibt).
+ignored-argument-names = "_.*|^ignored_|^unused_|ctx|request|service|company_id|user_id|app"
+
 [tool.pylint."messages control"]
 disable = [
     # Docstring-Zwang: Ruff/Projektstil regeln Doku; Modul-Docstrings sind da,
@@ -82,6 +95,14 @@ disable = [
     "use-implicit-booleaness-not-comparison",
     # Lokale Imports (z. B. timedelta in einer Methode) sind hier bewusst.
     "import-outside-toplevel",
+    # Best-effort-/Non-blocking-Catch-alls sind ein bewusstes Architekturmuster:
+    # Channex-Push, Scheduler-/Cron-Dispatch, App-Start-Retry und Webhook-JSON-
+    # Parsing dürfen die Hauptoperation NIE blockieren und müssen daher jede
+    # Exception schlucken (geloggt, nicht weitergereicht). Jede Stelle ist im
+    # Code mit `# noqa: BLE001` + 1-Zeilen-Begründung markiert; Ruffs `BLE`-Regel
+    # bleibt aktiv und erzwingt diese Markierung. Eng-gefangene erwartbare Fehler
+    # (ChannexError o. Ä.) werden weiterhin konkret behandelt.
+    "broad-exception-caught",
 ]
 
 [tool.pytest.ini_options]
