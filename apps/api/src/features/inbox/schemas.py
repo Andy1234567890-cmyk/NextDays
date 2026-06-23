@@ -12,6 +12,7 @@ class InboxThread(BaseModel):
     id: str                         # channex_booking.id
     channex_booking_id: str | None = None  # Channex-Booking-UUID (für Messages)
     reservation_id: str | None = None      # verknüpfte lokale Reservierung
+    guest_id: str | None = None            # verknüpfter Gast (Resolver) → Gästekarte
     ota_name: str | None = None     # Portal (Booking.com, Airbnb, …)
     ota_reservation_code: str | None = None
     guest_name: str | None = None
@@ -169,6 +170,16 @@ class AssignRequest(BaseModel):
 
 class InboxStatusUpdate(BaseModel):
     status: str                    # active|archived|trashed|deleted
+
+
+class LinkGuestRequest(BaseModel):
+    # None → „Gast aus Thread anlegen" (Resolver über customer-JSON);
+    # gesetzt → bestehenden (tenant-eigenen) Gast verknüpfen.
+    guest_id: str | None = None
+
+
+class LinkGuestResponse(BaseModel):
+    guest_id: str | None = None
 
 
 # --- Interne Notiz (gelb im Verlauf) ----------------------------------------

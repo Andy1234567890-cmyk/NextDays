@@ -18,6 +18,10 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.features.guests.identity import (
+    contact_from_ota_customer,
+    resolve_or_create_guest,
+)
 
 from .channex_client import ChannexClient, ChannexError
 from .schemas import (
@@ -1416,9 +1420,9 @@ class ChannelManagerService:
                 continue
 
             try:
-                self._upsert_booking(db, tenant_id, attrs, revision_id)
+                guest_id = self._upsert_booking(db, tenant_id, attrs, revision_id)
                 # In die zentrale reservations-Tabelle + Kalender projizieren.
-                self._project_booking_to_reservation(db, tenant_id, attrs)
+                self._project_booking_to_reservation(db, tenant_id, attrs, guest_id)
                 result.saved += 1
                 if revision_id:
                     self._channex.ack_booking_revision(revision_id)
@@ -2195,10 +2199,24 @@ class ChannelManagerService:
 
     def _upsert_booking(
         self, db: Client, tenant_id: str, attrs: dict[str, Any], revision_id: str | None
-    ) -> None:
+    ) -> str | None:
+        """Staging-Zeile schreiben + Gast über den zentralen Resolver verknüpfen.
+
+        Gibt die guest_id zurück, damit die Reservierungs-Projektion denselben
+        Gast nutzt (ein Resolve pro Buchung, kein Doppel-Matching)."""
         channex_booking_id = attrs.get("booking_id") or attrs.get("id")
         if not channex_booking_id:
             raise ChannelManagerError("Buchung ohne ID übersprungen.", status_code=422)
+
+        # Zentraler Resolver: ein Pfad für alle Kanäle (E-Mail→Telefon→OTA-ID).
+        guest_id = resolve_or_create_guest(
+            db,
+            tenant_id,
+            contact_from_ota_customer(
+                attrs.get("customer") or {},
+                external_ref=attrs.get("ota_reservation_code"),
+            ),
+        )
 
         amount = attrs.get("amount")
         amount_cents = self._to_cents(amount)
@@ -2215,11 +2233,13 @@ class ChannelManagerService:
             "amount_cents": amount_cents,
             "currency": attrs.get("currency"),
             "customer": attrs.get("customer") or {},
+            "guest_id": guest_id,  # direkter Thread→Gast-Link (Inbox/Gästekarte)
             "raw": attrs,
         }
         db.table("channex_booking").upsert(
             row, on_conflict="channex_booking_id"
         ).execute()
+        return guest_id
 
     # -- Import Channex → zentrale reservations / availability / Preise --------
     # OTA-Buchungen landen nicht nur als Staging (channex_booking), sondern werden
@@ -2257,43 +2277,6 @@ class ChannelManagerService:
         )
         return pm.data[0]["property_id"] if pm.data else None
 
-    def _upsert_guest(
-        self, db: Client, tenant_id: str, customer: dict[str, Any]
-    ) -> str | None:
-        """Gast aus OTA-customer in guests upserten. Lookup per email; ohne Name
-        kein Gast (kein Erfinden). Gibt guest_id oder None zurück."""
-        name = " ".join(
-            x for x in [customer.get("name"), customer.get("surname")] if x
-        ).strip()
-        if not name:
-            return None
-        email = customer.get("mail") or customer.get("email")
-        phone = customer.get("phone")
-        if email:
-            existing = (
-                db.table("guests")
-                .select("id")
-                .eq("tenant_id", tenant_id)
-                .eq("email", email)
-                .limit(1)
-                .execute()
-            ).data
-            if existing:
-                return existing[0]["id"]
-        ins = (
-            db.table("guests")
-            .insert(
-                {
-                    "tenant_id": tenant_id,
-                    "name": name,
-                    "email": email,
-                    "phone": phone,
-                }
-            )
-            .execute()
-        )
-        return ins.data[0]["id"] if ins.data else None
-
     @staticmethod
     def _date_range_nights(check_in: str, check_out: str) -> list[str]:
         """Belegte Nächte [check_in, check_out) als ISO-Datumsliste (Abreisetag
@@ -2328,10 +2311,17 @@ class ChannelManagerService:
             ).execute()
 
     def _project_booking_to_reservation(
-        self, db: Client, tenant_id: str, attrs: dict[str, Any]
+        self,
+        db: Client,
+        tenant_id: str,
+        attrs: dict[str, Any],
+        guest_id: str | None = None,
     ) -> bool:
         """OTA-Buchung → zentrale reservations + Kalender-Block. Idempotent über
-        source_channex_booking_id. Gibt True bei Erfolg, False bei skip zurück."""
+        source_channex_booking_id. Gibt True bei Erfolg, False bei skip zurück.
+
+        `guest_id` stammt aus `_upsert_booking` (zentraler Resolver); ist er nicht
+        gesetzt (Aufruf ohne vorheriges Staging), wird hier resolved."""
         booking_id = attrs.get("booking_id") or attrs.get("id")
         channex_property_id = attrs.get("property_id")
         arrival = attrs.get("arrival_date")
@@ -2387,7 +2377,15 @@ class ChannelManagerService:
             )
             return True
 
-        guest_id = self._upsert_guest(db, tenant_id, attrs.get("customer") or {})
+        if guest_id is None:
+            guest_id = resolve_or_create_guest(
+                db,
+                tenant_id,
+                contact_from_ota_customer(
+                    attrs.get("customer") or {},
+                    external_ref=attrs.get("ota_reservation_code"),
+                ),
+            )
         total = attrs.get("amount")
         try:
             total_amount = float(total) if total is not None else 0
@@ -2455,10 +2453,12 @@ class ChannelManagerService:
             for item in data:
                 attrs = item.get("attributes") or item
                 try:
-                    self._upsert_booking(
+                    guest_id = self._upsert_booking(
                         db, tenant_id, attrs, attrs.get("revision_id")
                     )
-                    if self._project_booking_to_reservation(db, tenant_id, attrs):
+                    if self._project_booking_to_reservation(
+                        db, tenant_id, attrs, guest_id
+                    ):
                         result["saved"] += 1
                     else:
                         result["skipped"] += 1

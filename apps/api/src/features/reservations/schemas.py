@@ -55,6 +55,9 @@ class ReservationCreate(BaseModel):
     contact: GuestContact = GuestContact()
     total_amount: float = Field(default=0, ge=0)
     status: ReservationStatus = ReservationStatus.confirmed
+    # Optional: bestehenden Gast fest zuordnen (z. B. aus der Gästekarte). Wenn
+    # gesetzt UND gültig, wird kein neuer Gast angelegt (keine Dublette).
+    guest_id: str | None = None
 
     @model_validator(mode="after")
     def _check_order(self) -> "ReservationCreate":
@@ -72,7 +75,8 @@ class ReservationResponse(BaseModel):
     check_in: date
     check_out: date
     status: ReservationStatus
-    total_amount: float
+    # None für Rollen ohne VIEW_GUEST_FULL (DSGVO-Daten-Split §4).
+    total_amount: float | None = None
     currency: str = ""
     ota_name: str | None = None       # echter Portal-Name (Kalender-Herkunft)
     external_ref: str | None = None   # OTA-Reservierungscode

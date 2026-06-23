@@ -14,6 +14,12 @@ from supabase import Client
 from src.core.config import get_settings
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.features.guests.identity import (
+    GuestContact as ResolverContact,
+)
+from src.features.guests.identity import (
+    resolve_or_create_guest,
+)
 
 from .client import WhatsAppClient, WhatsAppError
 from .schemas import (
@@ -146,15 +152,51 @@ class WhatsAppService:
             .execute()
         ).data
         if existing:
-            return existing[0]
+            conv = existing[0]
+            # Nachzügler: Gast verknüpfen, falls eine Alt-Konversation ohne
+            # guest_id existiert (z. B. vor Einführung des Resolvers angelegt).
+            if not conv.get("guest_id"):
+                guest_id = self._resolve_guest(db, tenant_id, wa_phone, guest_name)
+                if guest_id:
+                    db.table("whatsapp_conversation").update(
+                        {"guest_id": guest_id}
+                    ).eq("id", conv["id"]).execute()
+                    conv["guest_id"] = guest_id
+            return conv
+        # Neue Konversation: Gast zentral auflösen (Telefon-/Kanal-ID-Match).
+        guest_id = self._resolve_guest(db, tenant_id, wa_phone, guest_name)
         ins = (
             db.table("whatsapp_conversation")
             .insert(
-                {"tenant_id": tenant_id, "wa_phone": wa_phone, "guest_name": guest_name}
+                {
+                    "tenant_id": tenant_id,
+                    "wa_phone": wa_phone,
+                    "guest_name": guest_name,
+                    "guest_id": guest_id,
+                }
             )
             .execute()
         ).data
         return ins[0]
+
+    @staticmethod
+    def _resolve_guest(
+        db: Client, tenant_id: str, wa_phone: str, guest_name: str | None
+    ) -> str | None:
+        """WhatsApp-Kontakt → Gast über den zentralen Resolver.
+
+        wa_phone ist E.164 ohne '+' (Meta-Format); für die Normalisierung im
+        Resolver mit '+' präfixen. Kanal-ID = WhatsApp-Nummer (stabil je Gast)."""
+        return resolve_or_create_guest(
+            db,
+            tenant_id,
+            ResolverContact(
+                name=guest_name,
+                phone=f"+{wa_phone}" if wa_phone else None,
+                channel="whatsapp",
+                external_ref=wa_phone or None,
+            ),
+        )
 
     # --- Senden -------------------------------------------------------------
     def send(

@@ -399,6 +399,7 @@ _CONFLICT_KEYS = {
     "price_overrides": ("property_id", "date"),
     "stop_sell": ("property_id", "date"),
     "channex_tax_map": ("property_id", "local_tax_id"),
+    "guest_external_ids": ("tenant_id", "channel", "external_id"),
 }
 
 
@@ -416,6 +417,7 @@ class _ImportDB:
             "price_overrides": [],
             "stop_sell": [],
             "guests": [],
+            "guest_external_ids": [],
             "properties": [],
             "rate_plans": [],
             "ari_outbox": [],

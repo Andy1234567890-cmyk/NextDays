@@ -52,11 +52,23 @@ class _Q:
         self._payload = payload
         return self
 
+    def upsert(self, payload, **_k):  # noqa: ANN001, ANN002, ANN003, ANN201
+        self._op = "upsert"
+        self._payload = payload
+        return self
+
     def eq(self, c, v):  # noqa: ANN001, ANN201
         self._eq[c] = v
         return self
 
+    def is_(self, c, _v):  # noqa: ANN001, ANN201
+        # nur 'null'-Filter relevant; Resolver nutzt es nicht, no-op reicht.
+        return self
+
     def order(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+        return self
+
+    def range(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
         return self
 
     def limit(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
@@ -75,6 +87,18 @@ class _Q:
             for r in match:
                 r.update(self._payload)
             return _Res(match)
+        if self._op == "upsert":
+            payload = dict(self._payload)
+            existing = [
+                r for r in rows
+                if all(r.get(k) == payload.get(k) for k in ("tenant_id", "channel", "external_id"))
+            ]
+            if existing:
+                existing[0].update(payload)
+                return _Res([existing[0]])
+            payload.setdefault("id", f"{self._name}-{len(rows) + 1}")
+            rows.append(payload)
+            return _Res([payload])
         return _Res(match)
 
 
@@ -145,4 +169,14 @@ def test_ingest_webhook_creates_incoming(monkeypatch) -> None:  # noqa: ANN001
     out = svc.ingest_webhook(payload)
     assert out["received"] == 1
     assert db.store["whatsapp_message"][0]["direction"] == "in"
-    assert db.store["whatsapp_conversation"][0]["guest_name"] == "Anna"
+    conv = db.store["whatsapp_conversation"][0]
+    assert conv["guest_name"] == "Anna"
+    # Resolver-Verknüpfung: Konversation trägt einen Gast, Gast wurde angelegt.
+    assert conv["guest_id"] is not None
+    guest = next(g for g in db.store["guests"] if g["id"] == conv["guest_id"])
+    assert guest["phone"] == "+491701234567"  # E.164-normalisiert
+    # Kanal-ID (WhatsApp-Nummer) ist verknüpft.
+    assert any(
+        x["channel"] == "whatsapp" and x["external_id"] == "491701234567"
+        for x in db.store["guest_external_ids"]
+    )

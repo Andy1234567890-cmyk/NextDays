@@ -122,8 +122,20 @@ def test_channel_enum_values() -> None:
 
 # --- Service: Dashboard ---
 
-def _dashboard_db(reservations: list[dict], properties: list[dict]) -> MagicMock:
-    """Mockt die im dashboard() benutzten Ketten (reservations + properties)."""
+# Volle Berechtigungen (Name, Kontakt, Quelle, Beträge sichtbar).
+_FULL_PERMS = [
+    "view_guest_name", "view_guest_contact", "view_booking_source",
+    "pm_booking_total",
+]
+# Maskiert (owner/staff/cleaner): keine Gast-Berechtigungen.
+_NO_PERMS: list[str] = []
+
+
+def _dashboard_db(
+    reservations: list[dict], properties: list[dict],
+    *, user_role: str = "admin", user_perms: list[str] | None = None,
+) -> MagicMock:
+    """Mockt die im dashboard() benutzten Ketten (reservations + properties + users)."""
     db = MagicMock(name="supabase")
 
     def table(name: str) -> MagicMock:
@@ -134,6 +146,12 @@ def _dashboard_db(reservations: list[dict], properties: list[dict]) -> MagicMock
         elif name == "properties":
             chain = t.select.return_value.eq.return_value.in_.return_value
             chain.execute.return_value.data = properties
+        elif name == "users":
+            chain = t.select.return_value.eq.return_value.limit.return_value
+            perms = _FULL_PERMS if user_perms is None else user_perms
+            chain.execute.return_value.data = [
+                {"role": user_role, "permissions": perms}
+            ]
         return t
 
     db.table.side_effect = table
@@ -166,12 +184,14 @@ def test_dashboard_buckets_and_kpis() -> None:
         {"id": "p2", "title": "City Loft", "currency": "EUR"},
     ]
     svc = _dashboard_db(reservations, properties)
-    out = svc.dashboard(AuthContext(user_id="u1", tenant_id="t1"))
+    out = svc.dashboard(AuthContext(user_id="u1", tenant_id="t1", role="admin"))
 
     assert [e.reservation_id for e in out.checkouts_today] == ["r1"]
     assert [e.reservation_id for e in out.checkins_today] == ["r2"]
     assert [e.reservation_id for e in out.upcoming] == ["r3"]
     assert out.checkouts_today[0].property_title == "Strandhaus"
+    # admin (VIEW_GUEST_FULL): voller Name
+    assert out.checkouts_today[0].guest_name == "Anna"
     # 3 aktive Check-ins in den letzten 30 Tagen (r1,r2 liegen drin; r3 in Zukunft)
     assert out.checkins_30d.value == 2
     assert out.revenue_30d.value == 500  # r1+r2; storno raus, zukünftiges raus
@@ -179,3 +199,86 @@ def test_dashboard_buckets_and_kpis() -> None:
     # keine Vorperiode → ehrlich None statt erfundener 0 %
     assert out.checkins_30d.change_pct is None
     assert out.currency == "EUR"
+
+
+# --- DSGVO-Daten-Split (§4): Maskierung je Rolle -----------------------------
+
+def _list_db(
+    reservations: list[dict], *, user_role: str = "admin",
+    user_perms: list[str] | None = None,
+) -> ReservationsService:
+    """Mockt die in list() benutzten Ketten (reservations mit guests-Join + users)."""
+    db = MagicMock(name="supabase")
+
+    def table(name: str) -> MagicMock:
+        t = MagicMock(name=f"table:{name}")
+        if name == "users":
+            chain = t.select.return_value.eq.return_value.limit.return_value
+            perms = _FULL_PERMS if user_perms is None else user_perms
+            chain.execute.return_value.data = [
+                {"role": user_role, "permissions": perms}
+            ]
+        else:
+            chain = t.select.return_value.eq.return_value.order.return_value
+            chain.execute.return_value.data = reservations
+        return t
+
+    db.table.side_effect = table
+    return ReservationsService(service_client=db)
+
+
+_GUEST_ROW = {
+    "id": "r1", "property_id": "p1", "guest_id": "g1", "channel": "booking",
+    "check_in": "2026-07-01", "check_out": "2026-07-03", "status": "confirmed",
+    "total_amount": 250, "currency": "EUR", "ota_name": "Booking.com",
+    "guests": {"name": "Anna Müller"},
+}
+
+
+def test_list_admin_sees_full_name_and_amount() -> None:
+    # admin: effective_permissions = ALLE → voller Zugriff (perms egal).
+    svc = _list_db([dict(_GUEST_ROW)], user_role="admin", user_perms=_NO_PERMS)
+    out = svc.list(AuthContext(user_id="u", tenant_id="t1", role="admin"))
+    r = out.items[0]
+    assert r.guest_name == "Anna Müller"
+    assert r.total_amount == 250.0
+    assert r.currency == "EUR"
+    assert r.ota_name == "Booking.com"
+
+
+def test_list_co_admin_with_full_perms() -> None:
+    svc = _list_db([dict(_GUEST_ROW)], user_role="co_admin", user_perms=_FULL_PERMS)
+    out = svc.list(AuthContext(user_id="u", tenant_id="t1", role="co_admin"))
+    r = out.items[0]
+    assert r.guest_name == "Anna Müller"
+    assert r.total_amount == 250.0
+
+
+def test_list_owner_sees_only_first_name_no_amount() -> None:
+    svc = _list_db([dict(_GUEST_ROW)], user_role="owner", user_perms=_NO_PERMS)
+    out = svc.list(AuthContext(user_id="u", tenant_id="t1", role="owner"))
+    r = out.items[0]
+    assert r.guest_name == "Anna"          # nur Vorname (kein view_guest_name)
+    assert r.total_amount is None          # kein Betrag (HIDE_PRICES nicht nötig: …)
+    assert r.currency == ""
+    assert r.ota_name is None              # keine Quelle (kein view_booking_source)
+
+
+def test_list_staff_with_hide_prices_overrides_total() -> None:
+    # staff mit view_guest_name + pm_booking_total, aber hide_prices →
+    # Name voll, Betrag trotz Betrags-Berechtigung weg (hide_prices überstimmt).
+    perms = ["view_guest_name", "pm_booking_total", "hide_prices"]
+    svc = _list_db([dict(_GUEST_ROW)], user_role="staff", user_perms=perms)
+    out = svc.list(AuthContext(user_id="u", tenant_id="t1", role="staff"))
+    r = out.items[0]
+    assert r.guest_name == "Anna Müller"   # view_guest_name → voller Name
+    assert r.total_amount is None          # hide_prices → kein Betrag
+
+
+def test_list_unknown_role_fails_closed() -> None:
+    # Unbekannte/fehlende Rolle ohne Berechtigungen → fail-closed.
+    svc = _list_db([dict(_GUEST_ROW)], user_role="cleaner", user_perms=_NO_PERMS)
+    out = svc.list(AuthContext(user_id="u", tenant_id="t1", role=None))
+    r = out.items[0]
+    assert r.guest_name == "Anna"
+    assert r.total_amount is None

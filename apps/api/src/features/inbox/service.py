@@ -7,11 +7,21 @@ Ein optionaler KI-Antwortvorschlag (Groq) hilft beim Beantworten.
 
 Tenant-scoped (tenant_id aus dem JWT). Kein stilles Exception-Swallowing.
 """
+from datetime import UTC
+from typing import TYPE_CHECKING
+
 from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.features.channel_manager.channex_client import ChannexClient, ChannexError
+from src.features.guests.identity import (
+    contact_from_ota_customer,
+    resolve_or_create_guest,
+)
+
+if TYPE_CHECKING:
+    from .authz import InboxAccess
 
 from .ai import GroqClient, GroqError
 from .schemas import (
@@ -67,6 +77,12 @@ class InboxService:
             raise InboxError("Posteingang-DB nicht verfügbar.", status_code=500)
         return self._db, ctx.tenant_id
 
+    def access(self, ctx: AuthContext) -> "InboxAccess":
+        """Effektive Posteingang-Berechtigungen des Nutzers (Quelle: DB)."""
+        from .authz import load_inbox_access
+
+        return load_inbox_access(self._db, ctx)
+
     @staticmethod
     def _guest_name(customer: dict) -> str | None:
         return (
@@ -80,23 +96,28 @@ class InboxService:
     _STATUSES = ("active", "archived", "trashed")
 
     def list_threads(
-        self, ctx: AuthContext, *, unassigned: bool = False, status: str = "active"
+        self, ctx: AuthContext, *, unassigned: bool = False, status: str = "active",
+        access: "InboxAccess | None" = None,
     ) -> InboxListResponse:
         db, tenant_id = self._require(ctx)
+        access = access or self.access(ctx)
         if status not in self._STATUSES:
             status = "active"
         query = (
             db.table("channex_booking")
             .select(
                 "id, channex_booking_id, ota_name, ota_reservation_code, status, "
-                "arrival_date, departure_date, customer, updated_at, "
+                "arrival_date, departure_date, customer, updated_at, guest_id, "
                 "is_read, is_starred, is_archived, assigned_user_id, inbox_status"
             )
             .eq("tenant_id", tenant_id)
             # Genau die gewählte Ansicht (active|archived|trashed); deleted nie.
             .eq("inbox_status", status)
         )
-        if unassigned:
+        # Scope: assigned-only-Nutzer sehen nur die ihnen zugewiesenen Threads.
+        if access.scope == "assigned":
+            query = query.eq("assigned_user_id", ctx.user_id)
+        elif unassigned:
             query = query.is_("assigned_user_id", "null")
         res = query.order("updated_at", desc=True).limit(200).execute()
         rows = res.data or []
@@ -106,6 +127,7 @@ class InboxService:
         # Namen der zugewiesenen Benutzer auflösen.
         user_ids = [r["assigned_user_id"] for r in rows if r.get("assigned_user_id")]
         names = self._user_names(db, tenant_id, user_ids)
+        mask = access.mask
 
         items: list[InboxThread] = []
         for r in rows:
@@ -117,10 +139,11 @@ class InboxService:
                     id=r["id"],
                     channex_booking_id=cbid,
                     reservation_id=res_by_booking.get(cbid),
-                    ota_name=r.get("ota_name"),
+                    guest_id=r.get("guest_id"),
+                    ota_name=mask.source_value(r.get("ota_name")),
                     ota_reservation_code=r.get("ota_reservation_code"),
-                    guest_name=self._guest_name(customer),
-                    guest_email=customer.get("mail") or customer.get("email"),
+                    guest_name=mask.name(self._guest_name(customer)),
+                    guest_email=mask.contact_value(customer.get("mail") or customer.get("email")),
                     status=r.get("status"),
                     arrival_date=r.get("arrival_date"),
                     departure_date=r.get("departure_date"),
@@ -172,8 +195,16 @@ class InboxService:
             if r.get("source_channex_booking_id")
         }
 
-    def _load_thread(self, db: Client, tenant_id: str, thread_id: str) -> dict:
-        """channex_booking-Zeile dieses Tenants laden (404, wenn fremd/fehlt)."""
+    def _load_thread(
+        self, db: Client, tenant_id: str, thread_id: str,
+        *, access: "InboxAccess | None" = None, scope_user_id: str | None = None,
+    ) -> dict:
+        """channex_booking-Zeile dieses Tenants laden (404, wenn fremd/fehlt).
+
+        Bei assigned-only-Scope (access.scope == "assigned") gilt ein fremder,
+        nicht zugewiesener Thread bewusst als 404 (nicht 403) — die Existenz wird
+        nicht preisgegeben. `scope_user_id` ist die user_id des Anfragenden.
+        """
         res = (
             db.table("channex_booking")
             .select("*")
@@ -184,7 +215,27 @@ class InboxService:
         )
         if not res.data:
             raise InboxError("Konversation nicht gefunden.", status_code=404)
-        return res.data[0]
+        row = res.data[0]
+        if access and access.scope == "assigned":
+            # Nur eigene Zuweisung sichtbar; sonst 404 (keine Existenz verraten).
+            if row.get("assigned_user_id") != scope_user_id:
+                raise InboxError("Konversation nicht gefunden.", status_code=404)
+        return row
+
+    def _load_thread_scoped(
+        self, ctx: AuthContext, thread_id: str,
+        *, access: "InboxAccess | None" = None,
+    ) -> tuple[Client, str, dict, "InboxAccess"]:
+        """Thread tenant- UND scope-gesichert laden (assigned-only → 404 bei fremd).
+
+        Liefert (db, tenant_id, row, access) für die Weiterverarbeitung.
+        """
+        db, tenant_id = self._require(ctx)
+        access = access or self.access(ctx)
+        row = self._load_thread(
+            db, tenant_id, thread_id, access=access, scope_user_id=ctx.user_id
+        )
+        return db, tenant_id, row, access
 
     @staticmethod
     def _sandbox_enabled() -> bool:
@@ -195,8 +246,7 @@ class InboxService:
         return get_settings().channex_sandbox_portals
 
     def get_messages(self, ctx: AuthContext, thread_id: str) -> InboxMessagesResponse:
-        db, tenant_id = self._require(ctx)
-        row = self._load_thread(db, tenant_id, thread_id)
+        db, tenant_id, row, _access = self._load_thread_scoped(ctx, thread_id)
 
         # Sandbox: Nachrichten aus dem lokalen Mock-Speicher.
         if self._sandbox_enabled():
@@ -280,13 +330,26 @@ class InboxService:
         )
 
     def send_message(
-        self, ctx: AuthContext, thread_id: str, message: str
+        self, ctx: AuthContext, thread_id: str, message: str,
+        *, enforce_reply: bool = True,
     ) -> InboxMessage:
-        db, tenant_id = self._require(ctx)
+        """Antwort an den Gast senden.
+
+        `enforce_reply=False` umgeht die INBOX_REPLY-Prüfung — nur für den
+        internen Cron/Scheduler-Pfad (die Berechtigung wurde beim Planen geprüft).
+        """
         text = (message or "").strip()
         if not text:
             raise InboxError("Nachricht darf nicht leer sein.", status_code=422)
-        row = self._load_thread(db, tenant_id, thread_id)
+        if enforce_reply:
+            db, tenant_id, row, _access = self._load_thread_scoped(ctx, thread_id)
+            if not _access.can_reply:
+                raise InboxError(
+                    "Keine Berechtigung zum Senden.", status_code=403
+                )
+        else:
+            db, tenant_id = self._require(ctx)
+            row = self._load_thread(db, tenant_id, thread_id)
 
         # Sandbox: Antwort lokal als 'property'-Nachricht ablegen.
         if self._sandbox_enabled():
@@ -326,13 +389,16 @@ class InboxService:
         return InboxMessage(message=text, sender="property")
 
     def get_reservation_detail(
-        self, ctx: AuthContext, thread_id: str
+        self, ctx: AuthContext, thread_id: str,
+        access: "InboxAccess | None" = None,
     ) -> ReservationDetail:
         """Reservierungs-Kontext rechts neben dem Chat (Listing, Gast, Preis …)."""
         db, tenant_id = self._require(ctx)
-        row = self._load_thread(db, tenant_id, thread_id)
+        access = access or self.access(ctx)
+        row = self._load_thread(
+            db, tenant_id, thread_id, access=access, scope_user_id=ctx.user_id
+        )
         customer = row.get("customer") or {}
-        cbid = row.get("channex_booking_id")
 
         listing_name = None
         listing_photo = None
@@ -371,23 +437,25 @@ class InboxService:
         occ = raw.get("occupancy") or {}
         checkin_time = raw.get("checkin_time") or occ.get("checkin_time")
         checkout_time = raw.get("checkout_time") or occ.get("checkout_time")
+        mask = access.mask
+        total = (amount / 100) if isinstance(amount, (int, float)) else None
         return ReservationDetail(
             listing_name=listing_name,
             listing_photo=listing_photo,
             address=address,
             rental_id=str(rental_id) if rental_id else None,
-            guest_name=self._guest_name(customer),
-            guest_email=customer.get("mail") or customer.get("email"),
-            guest_phone=customer.get("phone"),
+            guest_name=mask.name(self._guest_name(customer)),
+            guest_email=mask.contact_value(customer.get("mail") or customer.get("email")),
+            guest_phone=mask.contact_value(customer.get("phone")),
             guest_language=customer.get("language") or customer.get("lang"),
             adults=occ.get("adults"),
             children=occ.get("children"),
             nights=nights,
-            total_amount=(amount / 100) if isinstance(amount, (int, float)) else None,
-            paid_amount=0.0,
-            currency=row.get("currency"),
+            total_amount=mask.amount(total),
+            paid_amount=mask.amount(0.0),
+            currency=row.get("currency") if mask.amounts else None,
             status=row.get("status"),
-            ota_name=row.get("ota_name"),
+            ota_name=mask.source_value(row.get("ota_name")),
             ota_reservation_code=row.get("ota_reservation_code"),
             check_in=row.get("arrival_date"),
             check_out=row.get("departure_date"),
@@ -403,8 +471,7 @@ class InboxService:
     ) -> None:
         """Konversations-Flags setzen: Favorit, Notiz, Lese-/Archiv-Status,
         Erinnerung. Nur gesetzte Felder werden geschrieben."""
-        db, tenant_id = self._require(ctx)
-        self._load_thread(db, tenant_id, thread_id)  # 404, wenn fremd
+        db, tenant_id, _row, _access = self._load_thread_scoped(ctx, thread_id)
         patch: dict = {}
         if is_starred is not None:
             patch["is_starred"] = bool(is_starred)
@@ -435,10 +502,9 @@ class InboxService:
         trashed  – in den Papierkorb
         deleted  – endgültig löschen (nur Posteingang-Sicht; Buchung bleibt)
         """
-        db, tenant_id = self._require(ctx)
         if status not in self._SET_STATUSES:
             raise InboxError("Unbekannter Status.", status_code=422)
-        self._load_thread(db, tenant_id, thread_id)  # 404, wenn fremd
+        db, tenant_id, _row, _access = self._load_thread_scoped(ctx, thread_id)
         patch = {"inbox_status": status}
         # is_archived synchron halten (Kompat. mit bestehender Spalte/Logik).
         patch["is_archived"] = status == "archived"
@@ -447,12 +513,27 @@ class InboxService:
         ).execute()
 
     # --- Zuweisung ----------------------------------------------------------
+    @staticmethod
+    def _has_inbox_access(role: object, permissions: object) -> bool:
+        """Hat der Nutzer Posteingang-Zugriff (PM_CHAT, Admin immer)?"""
+        from src.features.auth.lodgify_permissions import Permission, has_permission
+        from src.features.auth.schemas import UserRole
+
+        try:
+            role_enum = UserRole(role) if role else None
+        except ValueError:
+            role_enum = None
+        return has_permission(role_enum, permissions, Permission.PM_CHAT)
+
     def list_team(self, ctx: AuthContext) -> "TeamMemberList":
-        """Team-Benutzer des Tenants (mögliche Bearbeiter einer Konversation)."""
+        """Mögliche Bearbeiter: nur Tenant-Nutzer mit Posteingang-Zugriff (PM_CHAT).
+
+        Man soll nicht an jemanden zuweisen können, der den Thread nie öffnen kann.
+        """
         db, tenant_id = self._require(ctx)
         res = (
             db.table("users")
-            .select("id, full_name, email")
+            .select("id, full_name, email, role, permissions")
             .eq("tenant_id", tenant_id)
             .order("full_name")
             .execute()
@@ -463,38 +544,125 @@ class InboxService:
                 email=u.get("email"),
             )
             for u in (res.data or [])
+            if self._has_inbox_access(u.get("role"), u.get("permissions"))
         ]
         return TeamMemberList(items=items, total=len(items))
 
     def assign_thread(
         self, ctx: AuthContext, thread_id: str, user_id: str | None
     ) -> None:
-        """Konversation einem Tenant-Benutzer zuweisen (None hebt auf)."""
-        db, tenant_id = self._require(ctx)
-        self._load_thread(db, tenant_id, thread_id)  # 404, wenn fremd
+        """Konversation einem Tenant-Benutzer zuweisen (None hebt auf).
+
+        Erfordert INBOX_ASSIGN. Ziel-Nutzer muss Posteingang-Zugriff (PM_CHAT)
+        haben, sonst 422. Audit: assigned_by/assigned_at werden gesetzt.
+        """
+        db, tenant_id, row, access = self._load_thread_scoped(ctx, thread_id)
+        if not access.can_assign:
+            raise InboxError("Keine Berechtigung zum Zuweisen.", status_code=403)
         if user_id:
-            ok = (
+            target = (
                 db.table("users")
-                .select("id")
+                .select("id, role, permissions")
                 .eq("tenant_id", tenant_id)
                 .eq("id", user_id)
                 .limit(1)
                 .execute()
             ).data
-            if not ok:
+            if not target:
                 raise InboxError("Benutzer nicht gefunden.", status_code=404)
+            t = target[0]
+            if not self._has_inbox_access(t.get("role"), t.get("permissions")):
+                raise InboxError(
+                    "Nutzer hat keinen Posteingang-Zugriff.", status_code=422
+                )
+        from datetime import datetime
+
+        previous = row.get("assigned_user_id")
+        now = datetime.now(UTC).isoformat()
         db.table("channex_booking").update(
-            {"assigned_user_id": user_id}
+            {
+                "assigned_user_id": user_id,
+                "assigned_by": ctx.user_id,
+                "assigned_at": now,
+            }
         ).eq("tenant_id", tenant_id).eq("id", thread_id).execute()
+        # Audit-Historie (Best-Effort: ein Log-Fehler darf die Zuweisung nicht kippen).
+        try:
+            db.table("inbox_assignment_log").insert(
+                {
+                    "tenant_id": tenant_id,
+                    "thread_id": thread_id,
+                    "from_user_id": previous,
+                    "to_user_id": user_id,
+                    "by_user_id": ctx.user_id,
+                }
+            ).execute()
+        except Exception as exc:  # noqa: BLE001
+            log.warning("inbox_assignment_log_failed", error=str(exc))
+
+    def link_thread_guest(
+        self, ctx: AuthContext, thread_id: str, guest_id: str | None
+    ) -> str | None:
+        """Korrektur: Thread manuell einem Gast zuordnen.
+
+        guest_id gesetzt → bestehenden (tenant-eigenen) Gast verknüpfen.
+        guest_id None  → „Gast aus Thread anlegen": Resolver über das customer-
+        JSON laufen lassen (findet bestehenden oder legt neu an).
+
+        Erfordert INBOX_MANAGE_CONFIG (Admin-Korrektur). Gibt die verknüpfte
+        guest_id zurück.
+        """
+        db, tenant_id, row, access = self._load_thread_scoped(ctx, thread_id)
+        if not access.can_manage_config:
+            raise InboxError("Keine Berechtigung zur Gast-Zuordnung.", status_code=403)
+
+        if guest_id:
+            owned = (
+                db.table("guests")
+                .select("id")
+                .eq("tenant_id", tenant_id)
+                .eq("id", guest_id)
+                .limit(1)
+                .execute()
+            ).data
+            if not owned:
+                raise InboxError("Gast nicht gefunden.", status_code=404)
+            resolved = owned[0]["id"]
+        else:
+            resolved = resolve_or_create_guest(
+                db,
+                tenant_id,
+                contact_from_ota_customer(
+                    row.get("customer") or {},
+                    external_ref=row.get("ota_reservation_code"),
+                ),
+            )
+            if not resolved:
+                raise InboxError(
+                    "Aus diesem Thread lässt sich kein Gast ableiten "
+                    "(kein Name/keine Kontaktdaten).",
+                    status_code=422,
+                )
+
+        db.table("channex_booking").update({"guest_id": resolved}).eq(
+            "tenant_id", tenant_id
+        ).eq("id", thread_id).execute()
+        log.info(
+            "inbox_thread_guest_linked",
+            tenant_id=tenant_id,
+            thread_id=thread_id,
+            guest_id=resolved,
+            by_user_id=ctx.user_id,
+        )
+        return resolved
 
     # --- Interne Notiz (gelb) ----------------------------------------------
     def add_note(self, ctx: AuthContext, thread_id: str, body: str) -> InboxMessage:
         """Interne Notiz in den Verlauf legen (gelb, nicht an die OTA)."""
-        db, tenant_id = self._require(ctx)
         text = (body or "").strip()
         if not text:
             raise InboxError("Notiz darf nicht leer sein.", status_code=422)
-        self._load_thread(db, tenant_id, thread_id)
+        db, tenant_id, _row, _access = self._load_thread_scoped(ctx, thread_id)
         ins = (
             db.table("inbox_thread_note")
             .insert(
@@ -521,13 +689,15 @@ class InboxService:
     def schedule_message(
         self, ctx: AuthContext, thread_id: str, body: str, send_at: str
     ) -> ScheduledMessage:
-        db, tenant_id = self._require(ctx)
         text = (body or "").strip()
         if not text:
             raise InboxError("Nachricht darf nicht leer sein.", status_code=422)
         if not (send_at or "").strip():
             raise InboxError("Zeitpunkt fehlt.", status_code=422)
-        self._load_thread(db, tenant_id, thread_id)
+        db, tenant_id, _row, access = self._load_thread_scoped(ctx, thread_id)
+        # Geplant = später ausgehende Nachricht → gleiche Reply-Berechtigung.
+        if not access.can_reply:
+            raise InboxError("Keine Berechtigung zum Senden.", status_code=403)
         ins = (
             db.table("inbox_scheduled_message")
             .insert(
@@ -553,8 +723,7 @@ class InboxService:
 
     def list_scheduled(self, ctx: AuthContext, thread_id: str) -> ScheduledMessageList:
         """Anstehende geplante Nachrichten einer Konversation."""
-        db, tenant_id = self._require(ctx)
-        self._load_thread(db, tenant_id, thread_id)
+        db, tenant_id, _row, _access = self._load_thread_scoped(ctx, thread_id)
         res = (
             db.table("inbox_scheduled_message")
             .select("id, thread_id, body, send_at, status")
@@ -588,6 +757,7 @@ class InboxService:
     ) -> BulkUpdateResult:
         """Threads mit letzter Aktivität ≤ `before` als gelesen/archiviert."""
         db, tenant_id = self._require(ctx)
+        access = self.access(ctx)
         if action == "read":
             patch = {"is_read": True}
         elif action == "archived":
@@ -598,25 +768,28 @@ class InboxService:
             raise InboxError("Datum fehlt.", status_code=422)
         # `before` ist ein Tag (YYYY-MM-DD) → einschließlich des ganzen Tages.
         upper = f"{before[:10]}T23:59:59Z"
-        res = (
+        query = (
             db.table("channex_booking")
             .update(patch)
             .eq("tenant_id", tenant_id)
             .lte("updated_at", upper)
-            .execute()
-        ).data or []
-        return BulkUpdateResult(updated=len(res))
+        )
+        # Scope: assigned-only-Nutzer dürfen nur ihre eigenen Threads massen-ändern.
+        if access.scope == "assigned":
+            query = query.eq("assigned_user_id", ctx.user_id)
+        rows = query.execute().data or []
+        return BulkUpdateResult(updated=len(rows))
 
     # --- Interner Cron: fällige geplante Nachrichten versenden -------------
     def dispatch_due_scheduled(self) -> dict:
         """Über ALLE Tenants: fällige (send_at ≤ jetzt) pending-Nachrichten
         versenden. Kein JWT — via internem Cron-Endpoint aufgerufen."""
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         if self._db is None:
             raise InboxError("Posteingang-DB nicht verfügbar.", status_code=500)
         db = self._db
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(UTC).isoformat()
         due = (
             db.table("inbox_scheduled_message")
             .select("id, tenant_id, thread_id, body")
@@ -630,7 +803,7 @@ class InboxService:
         for s in due:
             try:
                 ctx = AuthContext(user_id="cron", tenant_id=s["tenant_id"])
-                self.send_message(ctx, s["thread_id"], s["body"])
+                self.send_message(ctx, s["thread_id"], s["body"], enforce_reply=False)
                 db.table("inbox_scheduled_message").update(
                     {"status": "sent"}
                 ).eq("id", s["id"]).execute()

@@ -14,6 +14,13 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.features.auth.guest_masking import GuestMask, load_guest_mask
+from src.features.guests.identity import (
+    GuestContact as ResolverContact,
+)
+from src.features.guests.identity import (
+    resolve_or_create_guest,
+)
 
 from .schemas import (
     DashboardEntry,
@@ -112,7 +119,8 @@ class ReservationsService:
         if property_id:
             query = query.eq("property_id", property_id)
         res = query.order("check_in", desc=True).execute()
-        items = [self._row(r) for r in (res.data or [])]
+        mask = load_guest_mask(self._client, ctx.user_id)
+        items = [self._row(r, mask) for r in (res.data or [])]
         return ReservationListResponse(items=items, total=len(items))
 
     def dashboard(self, ctx: AuthContext) -> DashboardResponse:
@@ -152,15 +160,17 @@ class ReservationsService:
         )
 
         today = date.today()
+        mask = load_guest_mask(self._client, ctx.user_id)
 
         def entry(r: dict) -> DashboardEntry:
             guest = r.get("guests") or {}
+            name = guest.get("name", "") if isinstance(guest, dict) else ""
             return DashboardEntry(
                 reservation_id=r["id"],
-                guest_name=guest.get("name", "") if isinstance(guest, dict) else "",
+                guest_name=mask.name(name) or "",
                 property_title=titles.get(r["property_id"], ""),
                 channel=r["channel"],
-                ota_name=r.get("ota_name"),
+                ota_name=mask.source_value(r.get("ota_name")),
                 check_in=r["check_in"],
                 check_out=r["check_out"],
                 status=r["status"],
@@ -315,69 +325,67 @@ class ReservationsService:
             reservation_id=row["id"],
         )
 
+        mask = load_guest_mask(self._client, ctx.user_id)
         guest_name = f"{req.contact.first_name} {req.contact.last_name}".strip()
         return ReservationResponse(
             id=row["id"],
             property_id=row["property_id"],
             guest_id=row.get("guest_id"),
-            guest_name=guest_name,
+            guest_name=mask.name(guest_name) or "",
             channel=row["channel"],
             check_in=row["check_in"],
             check_out=row["check_out"],
             status=row["status"],
-            total_amount=float(row.get("total_amount") or 0),
-            currency=row.get("currency") or "",
-            ota_name=row.get("ota_name"),
+            total_amount=mask.amount(float(row.get("total_amount") or 0)),
+            currency=(row.get("currency") or "") if mask.amounts else "",
+            ota_name=mask.source_value(row.get("ota_name")),
             external_ref=row.get("external_ref"),
         )
 
     def _upsert_guest(self, tenant_id: str, req: ReservationCreate) -> str | None:
-        name = f"{req.contact.first_name} {req.contact.last_name}".strip()
-        email = req.contact.email.strip()
-        if not name and not email:
-            return None
-        # Bestehenden Gast per E-Mail wiederverwenden.
-        if email:
-            found = (
+        # 1) Fest zugeordneter Gast (z. B. aus der Gästekarte): nur übernehmen,
+        #    wenn er DIESEM Tenant gehört — sonst ignorieren (kein Fremd-Link).
+        if req.guest_id:
+            owned = (
                 self._db()
                 .table("guests")
                 .select("id")
+                .eq("id", req.guest_id)
                 .eq("tenant_id", tenant_id)
-                .eq("email", email)
                 .limit(1)
                 .execute()
             )
-            if found.data:
-                return found.data[0]["id"]
-        ins = (
-            self._db()
-            .table("guests")
-            .insert(
-                {
-                    "tenant_id": tenant_id,
-                    "name": name or email,
-                    "email": email or None,
-                    "phone": req.contact.phone or None,
-                }
-            )
-            .execute()
+            if owned.data:
+                return owned.data[0]["id"]
+        # 2) Sonst zentraler Resolver (E-Mail→Telefon→Neuanlage), ein Pfad für
+        #    alle Kanäle. Keine Dublette bei wiederkehrendem Gast.
+        return resolve_or_create_guest(
+            self._db(),
+            tenant_id,
+            ResolverContact(
+                first_name=req.contact.first_name,
+                last_name=req.contact.last_name,
+                email=req.contact.email,
+                phone=req.contact.phone,
+                channel="direct",
+            ),
         )
-        return ins.data[0]["id"] if ins.data else None
 
-    def _row(self, r: dict) -> ReservationResponse:
+    def _row(self, r: dict, mask: GuestMask) -> ReservationResponse:
         guest = r.get("guests") or {}
         guest_name = guest.get("name", "") if isinstance(guest, dict) else ""
+        amount = mask.amount(float(r.get("total_amount") or 0))
         return ReservationResponse(
             id=r["id"],
             property_id=r["property_id"],
             guest_id=r.get("guest_id"),
-            guest_name=guest_name,
+            guest_name=mask.name(guest_name) or "",
             channel=r["channel"],
             check_in=r["check_in"],
             check_out=r["check_out"],
             status=r["status"],
-            total_amount=float(r.get("total_amount") or 0),
-            currency=r.get("currency") or "",
-            ota_name=r.get("ota_name"),
+            total_amount=amount,
+            currency=(r.get("currency") or "") if mask.amounts else "",
+            ota_name=mask.source_value(r.get("ota_name")),
             external_ref=r.get("external_ref"),
         )
