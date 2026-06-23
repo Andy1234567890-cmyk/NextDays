@@ -53,28 +53,39 @@ class CalendarService:
     def get_availability(
         self, property_id: str, rng: DateRange
     ) -> list[DayAvailability]:
-        """Tagesstatus im Zeitraum. Fehlende Tage gelten als offen."""
+        """Tagesstatus im Zeitraum inkl. Preis + Min-Stay. Fehlende Tage = offen.
+
+        Preis je Tag: price_overrides (tagesgenau) hat Vorrang vor dem
+        Rate-Plan-Basispreis. Min-Stay kommt aus dem Rate-Plan (per-Tag-
+        Restriktionen sind v2). Ohne Rate-Plan/Override bleibt der Wert None
+        (kein erfundener Fallback-Preis).
+        """
         rows = self._fetch_days(property_id, rng)
         by_date = {r["date"]: r for r in rows}
+        overrides = self._fetch_price_overrides(property_id, rng)
+        base_price, min_stay = self._fetch_rate_plan(property_id)
         result: list[DayAvailability] = []
         for day in rng.nights():
-            row = by_date.get(day.isoformat())
-            if row is not None:
-                result.append(
-                    DayAvailability(
-                        date=day,
-                        status=AvailabilityStatus(row["status"]),
-                        source=AvailabilitySource(row["source"]),
-                    )
+            key = day.isoformat()
+            row = by_date.get(key)
+            price = overrides.get(key, base_price)
+            result.append(
+                DayAvailability(
+                    date=day,
+                    status=(
+                        AvailabilityStatus(row["status"])
+                        if row is not None
+                        else AvailabilityStatus.open
+                    ),
+                    source=(
+                        AvailabilitySource(row["source"])
+                        if row is not None
+                        else AvailabilitySource.manual
+                    ),
+                    price=price,
+                    min_stay=min_stay,
                 )
-            else:
-                result.append(
-                    DayAvailability(
-                        date=day,
-                        status=AvailabilityStatus.open,
-                        source=AvailabilitySource.manual,
-                    )
-                )
+            )
         return result
 
     def check_availability(
@@ -156,6 +167,54 @@ class CalendarService:
             .execute()
         )
         return res.data or []
+
+    def _fetch_price_overrides(
+        self, property_id: str, rng: DateRange
+    ) -> dict[str, float]:
+        """Tagesgenaue Preisüberschreibungen als {YYYY-MM-DD: price}."""
+        res = (
+            self._db()
+            .table("price_overrides")
+            .select("date,price")
+            .eq("property_id", property_id)
+            .gte("date", rng.start.isoformat())
+            .lt("date", rng.end.isoformat())
+            .not_.is_("price", "null")
+            .execute()
+        )
+        out: dict[str, float] = {}
+        for r in res.data or []:
+            day, price = r.get("date"), r.get("price")
+            if isinstance(day, str) and price is not None:
+                out[day] = float(price)
+        return out
+
+    def _fetch_rate_plan(
+        self, property_id: str
+    ) -> tuple[float | None, int | None]:
+        """Basispreis + Min-Stay aus dem (ersten) Rate-Plan des Objekts.
+
+        Ohne Rate-Plan → (None, None); es wird kein Preis erfunden.
+        """
+        res = (
+            self._db()
+            .table("rate_plans")
+            .select("base_price,min_stay")
+            .eq("property_id", property_id)
+            .order("created_at")
+            .limit(1)
+            .execute()
+        )
+        rows = res.data or []
+        if not rows:
+            return None, None
+        row = rows[0]
+        base = row.get("base_price")
+        min_stay = row.get("min_stay")
+        return (
+            float(base) if base is not None else None,
+            int(min_stay) if min_stay is not None else None,
+        )
 
     # -- Stop-Sell (Verkaufsstopp je Tag) -------------------------------------
     def list_stop_sell(

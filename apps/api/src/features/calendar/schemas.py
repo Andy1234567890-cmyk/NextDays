@@ -50,6 +50,11 @@ class DayAvailability(BaseModel):
     date: date
     status: AvailabilityStatus
     source: AvailabilitySource
+    # Tagespreis: price_overrides (Tag) > rate_plans.base_price (Default).
+    # None, wenn das Objekt keinen Rate-Plan/Override hat (kein Fallback-Wert).
+    price: float | None = None
+    # Mindestaufenthalt aus dem Rate-Plan des Objekts (per-Tag-Restriktionen v2).
+    min_stay: int | None = None
 
 
 class AvailabilityCheck(BaseModel):
