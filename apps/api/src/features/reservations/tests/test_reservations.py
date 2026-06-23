@@ -282,3 +282,193 @@ def test_list_unknown_role_fails_closed() -> None:
     r = out.items[0]
     assert r.guest_name == "Anna"
     assert r.total_amount is None
+
+
+# --- move/resize: Verschieben + Doppelbuchungs-Schutz ------------------------
+
+from src.features.reservations.schemas import ReservationMove  # noqa: E402
+
+
+class _MoveQuery:
+    """Stateful Query-Stub: Filter werden auf die Tabellenzeilen angewandt;
+    upsert/update mutieren den Store (deckt die move()-Ketten ab)."""
+
+    def __init__(self, store: dict, name: str) -> None:
+        self._store = store
+        self._name = name
+        self._eq: dict = {}
+        self._gte: str | None = None
+        self._lt: str | None = None
+
+    def select(self, *_a, **_k) -> "_MoveQuery":
+        return self
+
+    def eq(self, col, val) -> "_MoveQuery":  # noqa: ANN001
+        self._eq[col] = val
+        return self
+
+    def gte(self, _col, val) -> "_MoveQuery":  # noqa: ANN001
+        self._gte = val
+        return self
+
+    def lt(self, _col, val) -> "_MoveQuery":  # noqa: ANN001
+        self._lt = val
+        return self
+
+    def order(self, *_a, **_k) -> "_MoveQuery":
+        return self
+
+    def limit(self, *_a, **_k) -> "_MoveQuery":
+        return self
+
+    def _match(self, r: dict) -> bool:
+        for c, v in self._eq.items():
+            if r.get(c) != v:
+                return False
+        if self._gte is not None and r.get("date", "") < self._gte:
+            return False
+        if self._lt is not None and r.get("date", "") >= self._lt:
+            return False
+        return True
+
+    def upsert(self, payload, **_k) -> "_MoveQuery":  # noqa: ANN001
+        rows = payload if isinstance(payload, list) else [payload]
+        table = self._store.setdefault(self._name, [])
+        for row in rows:
+            for i, ex in enumerate(table):
+                if ex.get("property_id") == row.get("property_id") and ex.get(
+                    "date"
+                ) == row.get("date"):
+                    table[i] = {**ex, **row}
+                    break
+            else:
+                table.append(dict(row))
+        return self
+
+    def update(self, payload) -> "_MoveQuery":  # noqa: ANN001
+        self._pending_update = payload
+        return self
+
+    def execute(self) -> MagicMock:
+        rows = [r for r in self._store.get(self._name, []) if self._match(r)]
+        if getattr(self, "_pending_update", None) is not None:
+            for r in rows:
+                r.update(self._pending_update)
+        res = MagicMock()
+        res.data = rows
+        return res
+
+
+def _move_db(store: dict) -> ReservationsService:
+    db = MagicMock(name="supabase")
+    db.table.side_effect = lambda name: _MoveQuery(store, name)
+    return ReservationsService(service_client=db)
+
+
+def _move_store(*, check_in: str, check_out: str, status: str = "confirmed") -> dict:
+    return {
+        "users": [{"role": "admin", "permissions": _FULL_PERMS}],
+        "properties": [
+            {"id": "p1", "tenant_id": "t1"},
+            {"id": "p2", "tenant_id": "t1"},
+        ],
+        "reservations": [
+            {
+                "id": "r1", "tenant_id": "t1", "property_id": "p1", "guest_id": "g1",
+                "channel": "booking", "check_in": check_in, "check_out": check_out,
+                "status": status, "total_amount": 200, "currency": "EUR",
+                "ota_name": "Booking.com", "guests": {"name": "Anna"},
+            }
+        ],
+        "availability": [
+            {"property_id": "p1", "date": "2026-07-01", "status": "booked",
+             "source": "booking"},
+            {"property_id": "p1", "date": "2026-07-02", "status": "booked",
+             "source": "booking"},
+        ],
+    }
+
+
+def test_move_to_other_property_and_dates() -> None:
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    svc = _move_db(store)
+    out = svc.move(
+        AuthContext(user_id="u", tenant_id="t1", role="admin"),
+        "r1",
+        ReservationMove(
+            property_id="p2", check_in=date(2026, 7, 10), check_out=date(2026, 7, 12)
+        ),
+    )
+    assert out.property_id == "p2"
+    assert str(out.check_in) == "2026-07-10"
+    # Alte Tage freigegeben, neue belegt.
+    avail = {(a["property_id"], a["date"]): a["status"] for a in store["availability"]}
+    assert avail[("p1", "2026-07-01")] == "open"
+    assert avail[("p2", "2026-07-10")] == "booked"
+
+
+def test_resize_in_place_ignores_own_days() -> None:
+    # Verlängern am selben Objekt: die eigenen belegten Tage zählen NICHT als
+    # Konflikt; ein zusätzlicher freier Tag wird belegt.
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    svc = _move_db(store)
+    out = svc.move(
+        AuthContext(user_id="u", tenant_id="t1", role="admin"),
+        "r1",
+        ReservationMove(
+            property_id="p1", check_in=date(2026, 7, 1), check_out=date(2026, 7, 4)
+        ),
+    )
+    assert str(out.check_out) == "2026-07-04"
+    avail = {(a["property_id"], a["date"]): a["status"] for a in store["availability"]}
+    assert avail[("p1", "2026-07-03")] == "booked"
+
+
+def test_move_rejects_conflict_with_foreign_booking() -> None:
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    # Fremdbelegung am Zielobjekt p2.
+    store["availability"].append(
+        {"property_id": "p2", "date": "2026-07-10", "status": "booked",
+         "source": "airbnb"}
+    )
+    svc = _move_db(store)
+    with pytest.raises(ReservationError) as exc:
+        svc.move(
+            AuthContext(user_id="u", tenant_id="t1", role="admin"),
+            "r1",
+            ReservationMove(
+                property_id="p2", check_in=date(2026, 7, 10),
+                check_out=date(2026, 7, 12),
+            ),
+        )
+    assert exc.value.status_code == 409
+
+
+def test_move_rejects_cancelled() -> None:
+    store = _move_store(
+        check_in="2026-07-01", check_out="2026-07-03", status="cancelled"
+    )
+    svc = _move_db(store)
+    with pytest.raises(ReservationError) as exc:
+        svc.move(
+            AuthContext(user_id="u", tenant_id="t1", role="admin"),
+            "r1",
+            ReservationMove(
+                property_id="p1", check_in=date(2026, 7, 5), check_out=date(2026, 7, 7)
+            ),
+        )
+    assert exc.value.status_code == 409
+
+
+def test_move_unknown_reservation_404() -> None:
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    svc = _move_db(store)
+    with pytest.raises(ReservationError) as exc:
+        svc.move(
+            AuthContext(user_id="u", tenant_id="t1", role="admin"),
+            "does-not-exist",
+            ReservationMove(
+                property_id="p1", check_in=date(2026, 7, 5), check_out=date(2026, 7, 7)
+            ),
+        )
+    assert exc.value.status_code == 404

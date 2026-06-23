@@ -5,13 +5,18 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.core.security import CurrentUser
 from src.core.supabase import get_service_client
-from src.features.auth.dependencies import require_permission
+from src.features.auth.dependencies import (
+    require_lodgify_permission,
+    require_permission,
+)
+from src.features.auth.lodgify_permissions import Permission
 from src.features.auth.permissions import Capability
 
 from .schemas import (
     DashboardResponse,
     ReservationCreate,
     ReservationListResponse,
+    ReservationMove,
     ReservationResponse,
     SliceHealth,
 )
@@ -67,5 +72,28 @@ def create_reservation(
 ) -> ReservationResponse:
     try:
         return service.create(ctx, req)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.patch(
+    "/{reservation_id}/move",
+    response_model=ReservationResponse,
+    dependencies=[
+        Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    ],
+)
+def move_reservation(
+    reservation_id: str,
+    req: ReservationMove,
+    service: ReservationsServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> ReservationResponse:
+    """Reservierung verschieben (Objekt/Zeitraum) oder resizen (Check-in/out)
+    mit erneutem Doppelbuchungs-Schutz (409 bei Konflikt)."""
+    try:
+        return service.move(ctx, reservation_id, req)
     except ReservationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

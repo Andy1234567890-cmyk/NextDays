@@ -66,6 +66,24 @@ class ReservationCreate(BaseModel):
         return self
 
 
+class ReservationMove(BaseModel):
+    """Reservierung verschieben (anderes Objekt/anderer Zeitraum) oder resizen
+    (nur Check-in/out). Beides ist ein neues (property_id, check_in, check_out)
+    für eine bestehende Reservierung; der Double-Booking-Schutz greift erneut,
+    die eigenen alten Tage werden dabei ausgenommen.
+    """
+
+    property_id: str
+    check_in: date
+    check_out: date  # exklusiv
+
+    @model_validator(mode="after")
+    def _check_order(self) -> "ReservationMove":
+        if self.check_out <= self.check_in:
+            raise ValueError("check_out muss nach check_in liegen")
+        return self
+
+
 class ReservationResponse(BaseModel):
     id: str
     property_id: str

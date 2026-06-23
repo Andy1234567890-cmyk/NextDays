@@ -8,6 +8,8 @@ ist ein Tag bereits booked/blocked, schlägt das Anlegen mit 409 fehl.
 Gleiches Muster wie properties.service: Service-Role-Client + explizites
 tenant-Filtern (PROJECT.md §2 — Business-Logik im Backend).
 """
+from __future__ import annotations
+
 from datetime import date, timedelta
 
 from supabase import Client
@@ -28,6 +30,7 @@ from .schemas import (
     DashboardResponse,
     ReservationCreate,
     ReservationListResponse,
+    ReservationMove,
     ReservationResponse,
     SliceHealth,
 )
@@ -340,6 +343,175 @@ class ReservationsService:
             currency=(row.get("currency") or "") if mask.amounts else "",
             ota_name=mask.source_value(row.get("ota_name")),
             external_ref=row.get("external_ref"),
+        )
+
+    def move(
+        self, ctx: AuthContext, reservation_id: str, req: ReservationMove
+    ) -> ReservationResponse:
+        """Reservierung verschieben (Objekt/Zeitraum) oder resizen (Check-in/out).
+
+        Doppelbuchungs-Schutz greift erneut: die NEUEN Nächte dürfen — außer den
+        eigenen, bereits dieser Reservierung gehörenden Tagen — keinen booked/
+        blocked-Tag treffen. Ablauf (kein Teil-Commit nach außen):
+          1) Reservierung + Ziel-Objekt tenant-scoped prüfen.
+          2) Ziel-Nächte gegen Fremdbelegung prüfen (eigene Alt-Tage ausgenommen).
+          3) Alte Belegung freigeben (availability=open, Channex availability=1).
+          4) Neue Nächte belegen (booked, Channex availability=0).
+          5) reservations-Zeile aktualisieren.
+        """
+        tenant_id = self._require_tenant(ctx)
+        res = (
+            self._db()
+            .table("reservations")
+            .select("*")
+            .eq("id", reservation_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        if not res.data:
+            raise ReservationError("Reservierung nicht gefunden.", status_code=404)
+        current = res.data[0]
+        if current.get("status") == "cancelled":
+            raise ReservationError(
+                "Stornierte Reservierungen lassen sich nicht verschieben.",
+                status_code=409,
+            )
+
+        old_property = current["property_id"]
+        old_nights = {
+            d.isoformat()
+            for d in _nights(_as_date(current["check_in"]), _as_date(current["check_out"]))
+        }
+        new_nights = _nights(req.check_in, req.check_out)
+        new_keys = {d.isoformat() for d in new_nights}
+
+        # Ziel-Objekt gehört dem Tenant?
+        prop = (
+            self._db()
+            .table("properties")
+            .select("id")
+            .eq("id", req.property_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        if not prop.data:
+            raise ReservationError("Objekt nicht gefunden.", status_code=404)
+
+        # Double-Booking-Schutz für die Ziel-Nächte. Eigene Alt-Tage am SELBEN
+        # Objekt zählen nicht als Konflikt (Resize/Verkürzen am Platz).
+        avail = (
+            self._db()
+            .table("availability")
+            .select("date,status")
+            .eq("property_id", req.property_id)
+            .gte("date", req.check_in.isoformat())
+            .lt("date", req.check_out.isoformat())
+            .execute()
+        )
+        same_property = req.property_id == old_property
+        taken = [
+            r["date"]
+            for r in (avail.data or [])
+            if r["status"] != "open"
+            and not (same_property and r["date"] in old_nights)
+        ]
+        if taken:
+            raise ReservationError(
+                "Ziel-Zeitraum enthält bereits belegte/gesperrte Tage.",
+                status_code=409,
+            )
+
+        # Alte Belegung freigeben: nur Tage, die NICHT erneut belegt werden
+        # (beim Resize am Platz bleiben überlappende Tage booked).
+        release = sorted(old_nights - new_keys) if same_property else sorted(old_nights)
+        if release:
+            self._db().table("availability").upsert(
+                [
+                    {"property_id": old_property, "date": d,
+                     "status": "open", "source": "manual"}
+                    for d in release
+                ],
+                on_conflict="property_id,date",
+            ).execute()
+            self._release_channex(tenant_id, old_property, release)
+
+        # Neue Nächte belegen.
+        self._db().table("availability").upsert(
+            [
+                {
+                    "property_id": req.property_id,
+                    "date": day.isoformat(),
+                    "status": "booked",
+                    "source": current.get("channel") or "direct",
+                }
+                for day in new_nights
+            ],
+            on_conflict="property_id,date",
+        ).execute()
+        self._push_channex_availability(
+            tenant_id, req.property_id, req.check_in, req.check_out, 0
+        )
+
+        upd = (
+            self._db()
+            .table("reservations")
+            .update(
+                {
+                    "property_id": req.property_id,
+                    "check_in": req.check_in.isoformat(),
+                    "check_out": req.check_out.isoformat(),
+                }
+            )
+            .eq("id", reservation_id)
+            .eq("tenant_id", tenant_id)
+            .execute()
+        )
+        if not upd.data:
+            raise ReservationError(
+                "Reservierung konnte nicht verschoben werden.", status_code=500
+            )
+        log.info(
+            "reservation_moved",
+            reservation_id=reservation_id,
+            property_id=req.property_id,
+            nights=len(new_nights),
+        )
+        # guests(name) für die maskierte Antwort nachladen.
+        full = (
+            self._db()
+            .table("reservations")
+            .select("*, guests(name)")
+            .eq("id", reservation_id)
+            .limit(1)
+            .execute()
+        )
+        mask = load_guest_mask(self._client, ctx.user_id)
+        return self._row((full.data or [upd.data[0]])[0], mask)
+
+    def _release_channex(
+        self, tenant_id: str, property_id: str, days: list[str]
+    ) -> None:
+        """Freigegebene Tage zusammenhängend an Channex melden (availability=1).
+
+        Sortierte ISO-Tage werden zu Intervallen gebündelt; jedes Intervall wird
+        als [von, bis] (inklusiv) gepusht. Best-effort (ari_outbox-Retry).
+        """
+        if not days:
+            return
+        ordered = [date.fromisoformat(d) for d in sorted(days)]
+        start = prev = ordered[0]
+        for cur in ordered[1:]:
+            if (cur - prev).days == 1:
+                prev = cur
+                continue
+            self._push_channex_availability(
+                tenant_id, property_id, start, prev + timedelta(days=1), 1
+            )
+            start = prev = cur
+        self._push_channex_availability(
+            tenant_id, property_id, start, prev + timedelta(days=1), 1
         )
 
     def _upsert_guest(self, tenant_id: str, req: ReservationCreate) -> str | None:

@@ -6,7 +6,7 @@
 // Zeiträume als Balken. Scrollt INNERHALB des Containers (kein Seiten-Overflow).
 import { Icon } from "@iconify/react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -27,7 +27,12 @@ import {
 } from "@/lib/calendar";
 import { CHANNEL_META, CHANNEL_SOURCES, channelMeta } from "@/lib/calendar-channels";
 import type { PropertyType } from "@/lib/properties";
-import { type Reservation, listReservations } from "@/lib/reservations";
+import {
+  type Reservation,
+  listReservations,
+  moveReservation,
+} from "@/lib/reservations";
+import { toast } from "sonner";
 
 type Prop = {
   id: string;
@@ -72,6 +77,33 @@ function addDays(d: Date, n: number) {
   x.setDate(x.getDate() + n);
   return x;
 }
+// Aus einem laufenden Bar-Drag den Ziel-Zeitraum (YYYY-MM-DD, end exklusiv)
+// ableiten. Verschieben/Resize verändern check_in/out gemäß mode + dayOffset;
+// min. 1 Nacht bleibt erhalten.
+function barDragTarget(d: BarDrag): { ci: string; co: string; pid: string } {
+  const ci0 = new Date(`${d.res.check_in}T00:00:00`);
+  const co0 = new Date(`${d.res.check_out}T00:00:00`);
+  if (d.mode === "move") {
+    return {
+      ci: key(addDays(ci0, d.dayOffset)),
+      co: key(addDays(co0, d.dayOffset)),
+      pid: d.targetPid,
+    };
+  }
+  if (d.mode === "start") {
+    // Check-in verschieben, aber nie auf/über Check-out.
+    let ci = addDays(ci0, d.dayOffset);
+    const lastNight = addDays(co0, -1);
+    if (ci > lastNight) ci = lastNight;
+    return { ci: key(ci), co: key(co0), pid: d.res.property_id };
+  }
+  // "end": Check-out verschieben, aber nie auf/vor Check-in (min. 1 Nacht).
+  let co = addDays(co0, d.dayOffset);
+  const firstCheckout = addDays(ci0, 1);
+  if (co < firstCheckout) co = firstCheckout;
+  return { ci: key(ci0), co: key(co), pid: d.res.property_id };
+}
+
 // Kompakter Tagespreis fürs Raster. null (kein Rate-Plan) → „–" statt erfundener 0.
 function fmtPrice(price: number | null | undefined): string {
   if (price == null) return "–";
@@ -88,6 +120,17 @@ type Segment = {
   status: AvailabilityStatus;
   source: AvailabilitySource;
   reservation?: Reservation; // verknüpfte Buchung (falls gefunden)
+};
+
+// Laufendes Verschieben/Resizen eines bestehenden Buchungsbalkens.
+// mode: "move" = ganzer Balken (Tag- + Objektwechsel), "start"/"end" = Kante.
+type BarDrag = {
+  res: Reservation;
+  mode: "move" | "start" | "end";
+  startPid: string; // Objekt, in dem der Zug begann
+  startDi: number; // Tag-Index unter dem Cursor beim Drücken
+  dayOffset: number; // Verschiebung in Tagen (move/Kante)
+  targetPid: string; // aktuelles Ziel-Objekt (nur move)
 };
 
 // Herkunftslabel (zentral): echter OTA/Direkt-Kanal aus CHANNEL_META.
@@ -200,6 +243,37 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
   const [wizard, setWizard] = useState<{ pid: string; checkIn: string; checkOut: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // Balken-Interaktion: bestehende Buchung verschieben (move) ODER an den
+  // Kanten resizen (Check-in/out). `barDrag` hält den laufenden Zug; `dayOffset`
+  // bzw. `rowOffset` werden während der Mausbewegung über den Listener gesetzt.
+  const [barDrag, setBarDrag] = useState<BarDrag | null>(null);
+  const barDragRef = useRef<BarDrag | null>(null);
+  barDragRef.current = barDrag;
+
+  // Eine laufende Verschiebung/Resize an den Server schicken (optimistisch mit
+  // Rollback). pid/Zeitraum kommen aus der Drag-Vorschau (siehe applyBarDrag).
+  const commitBarDrag = useCallback(
+    async (d: BarDrag, targetPid: string, ci: string, co: string) => {
+      // Keine echte Änderung → nichts tun.
+      if (targetPid === d.res.property_id && ci === d.res.check_in && co === d.res.check_out) {
+        return;
+      }
+      setSaving(true);
+      const res = await moveReservation(d.res.id, targetPid, ci, co);
+      setSaving(false);
+      if (res.ok) {
+        toast.success("Reservierung verschoben.");
+        await load();
+      } else {
+        // Rollback: der Server hat nichts geändert → einfach neu laden, damit
+        // die Vorschau verschwindet. Konflikt klar zurückmelden.
+        toast.error(res.error || "Verschieben nicht möglich.");
+        await load();
+      }
+    },
+    [],
+  );
+
   // Hervorhebung: während des Ziehens die Vorschau, sonst die fertige Auswahl.
   const isSelected = useCallback(
     (pid: string, di: number) => {
@@ -220,15 +294,52 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
 
   const onCellEnter = useCallback(
     (pid: string, di: number) => {
+      // Während eines Balken-Zugs: Offset + Ziel-Objekt aus der überfahrenen
+      // Zelle ableiten (Move folgt dem Objekt, Resize bleibt im selben Objekt).
+      setBarDrag((cur) => {
+        if (!cur) return cur;
+        const dayOffset = di - cur.startDi;
+        return {
+          ...cur,
+          dayOffset,
+          targetPid: cur.mode === "move" ? pid : cur.res.property_id,
+        };
+      });
       setDrag((cur) => (cur && cur.pid === pid ? { ...cur, to: di } : cur));
     },
     [],
   );
 
-  // Maus loslassen beendet das Ziehen: Vorschau → Auswahl, dann öffnet sich
-  // direkt das Aktionsmenü am Cursor (wie Lodgify) — keine Leiste.
+  // Balken-Zug starten (auf einem belegten Buchungsbalken). mode unterscheidet
+  // Verschieben vs. Resizen an den Kanten. di = Tag-Index unter dem Cursor.
+  const onBarDown = useCallback(
+    (res: Reservation, pid: string, di: number, mode: BarDrag["mode"]) => {
+      setSel(null);
+      setDrag(null);
+      setBarDrag({
+        res,
+        mode,
+        startPid: pid,
+        startDi: di,
+        dayOffset: 0,
+        targetPid: pid,
+      });
+    },
+    [],
+  );
+
+  // Maus loslassen beendet das Ziehen. Ein laufender BALKEN-Zug (move/resize)
+  // hat Vorrang und wird an den Server geschickt; sonst Vorschau→Auswahl und
+  // das Aktionsmenü am Cursor (Block/Reservierung).
   useEffect(() => {
     const up = (e: MouseEvent) => {
+      const bd = barDragRef.current;
+      if (bd) {
+        setBarDrag(null);
+        const { ci, co, pid } = barDragTarget(bd);
+        void commitBarDrag(bd, pid, ci, co);
+        return;
+      }
       setDrag((cur) => {
         if (cur) {
           setSel(cur);
@@ -239,7 +350,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
     };
     window.addEventListener("mouseup", up);
     return () => window.removeEventListener("mouseup", up);
-  }, []);
+  }, [commitBarDrag]);
 
   useEffect(() => {
     const now = new Date();
@@ -559,6 +670,12 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                         seg.status === "booked"
                           ? `${meta.barBg} ${meta.barFg}`
                           : SEG_STYLE[seg.status];
+                      // Während IRGENDEIN Balken gezogen wird, lassen alle Balken
+                      // Mausereignisse durch (damit die Zell-onMouseEnter feuert
+                      // und den Tag-Offset liefert).
+                      const dragging = !!barDrag;
+                      const isThisDragged =
+                        barDrag?.res.id === seg.reservation?.id && !!seg.reservation;
                       const barStyle = {
                         left: `calc(${seg.start} * ${COL}rem + 0.25rem)`,
                         width: `calc(${seg.span} * ${COL}rem - 0.5rem)`,
@@ -575,29 +692,77 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                           <span className="truncate">{segmentLabel(seg)}</span>
                         </>
                       );
-                      return clickable ? (
-                        <button
-                          type="button"
-                          key={i}
-                          title={barTitle}
-                          onMouseDown={(ev) => ev.stopPropagation()}
-                          onClick={() => seg.reservation && setDetail(seg.reservation)}
-                          className={`absolute top-1/2 flex -translate-y-1/2 cursor-pointer items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium transition-shadow hover:ring-2 hover:ring-accent/40 ${barClass}`}
-                          style={barStyle}
-                        >
-                          {barInner}
-                        </button>
-                      ) : (
+                      if (!clickable) {
+                        return (
+                          <div
+                            key={i}
+                            title={barTitle}
+                            className={`absolute top-1/2 flex -translate-y-1/2 items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium ${barClass} ${dragging ? "pointer-events-none" : ""}`}
+                            style={barStyle}
+                          >
+                            {barInner}
+                          </div>
+                        );
+                      }
+                      const res = seg.reservation as Reservation;
+                      return (
                         <div
                           key={i}
                           title={barTitle}
-                          className={`absolute top-1/2 flex -translate-y-1/2 items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium ${barClass}`}
+                          onMouseDown={(ev) => {
+                            ev.stopPropagation();
+                            onBarDown(res, p.id, seg.start, "move");
+                          }}
+                          onClick={() => !barDrag && setDetail(res)}
+                          className={`group absolute top-1/2 flex -translate-y-1/2 cursor-grab items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium transition-shadow hover:ring-2 hover:ring-accent/40 ${barClass} ${isThisDragged ? "opacity-60 ring-2 ring-accent" : ""} ${dragging && !isThisDragged ? "pointer-events-none" : ""}`}
                           style={barStyle}
                         >
+                          {/* Resize-Kante links (Check-in). */}
+                          <span
+                            role="presentation"
+                            onMouseDown={(ev) => {
+                              ev.stopPropagation();
+                              onBarDown(res, p.id, seg.start, "start");
+                            }}
+                            className="absolute left-0 top-0 h-full w-2 cursor-ew-resize opacity-0 group-hover:opacity-100"
+                          />
                           {barInner}
+                          {/* Resize-Kante rechts (Check-out). */}
+                          <span
+                            role="presentation"
+                            onMouseDown={(ev) => {
+                              ev.stopPropagation();
+                              onBarDown(res, p.id, seg.start + seg.span - 1, "end");
+                            }}
+                            className="absolute right-0 top-0 h-full w-2 cursor-ew-resize opacity-0 group-hover:opacity-100"
+                          />
                         </div>
                       );
                     })}
+
+                    {/* Geister-Vorschau des verschobenen/resizten Balkens in
+                        DIESER Zeile (Zielobjekt bei move, sonst gleiches Objekt). */}
+                    {barDrag && start && (() => {
+                      const { ci, co, pid } = barDragTarget(barDrag);
+                      if (pid !== p.id) return null;
+                      const ciIdx = Math.round(
+                        (new Date(`${ci}T00:00:00`).getTime() - start.getTime()) / 86400000,
+                      );
+                      const coIdx = Math.round(
+                        (new Date(`${co}T00:00:00`).getTime() - start.getTime()) / 86400000,
+                      );
+                      const span = Math.max(1, coIdx - ciIdx);
+                      return (
+                        <div
+                          className="pointer-events-none absolute top-1/2 -translate-y-1/2 rounded-full border-2 border-dashed border-accent bg-accent/15"
+                          style={{
+                            left: `calc(${ciIdx} * ${COL}rem + 0.25rem)`,
+                            width: `calc(${span} * ${COL}rem - 0.5rem)`,
+                            height: "1.75rem",
+                          }}
+                        />
+                      );
+                    })()}
                   </div>
                 </div>
               );

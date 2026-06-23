@@ -59,7 +59,7 @@ type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
 async function call<T>(
   path: string,
-  opts: { method?: "GET" | "POST"; body?: unknown } = {},
+  opts: { method?: "GET" | "POST" | "PATCH"; body?: unknown } = {},
 ): Promise<Result<T>> {
   const token = await currentToken();
   if (!token) return { ok: false, error: "Nicht angemeldet." };
@@ -111,6 +111,20 @@ export async function createReservation(
   input: ReservationInput,
 ): Promise<Result<Reservation>> {
   return call("/reservations", { method: "POST", body: input });
+}
+
+/** Reservierung verschieben (Objekt/Zeitraum) oder resizen (Check-in/out).
+ *  Backend prüft erneut Double-Booking (409) und schreibt die Belegung um. */
+export async function moveReservation(
+  reservationId: string,
+  propertyId: string,
+  checkIn: string,
+  checkOut: string,
+): Promise<Result<Reservation>> {
+  return call(`/reservations/${encodeURIComponent(reservationId)}/move`, {
+    method: "PATCH",
+    body: { property_id: propertyId, check_in: checkIn, check_out: checkOut },
+  });
 }
 
 /** Reservierungen eines Objekts (oder alle, ohne propertyId). */
