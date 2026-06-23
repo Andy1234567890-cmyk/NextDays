@@ -53,6 +53,17 @@
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
 
+  /* Kanal-/Plattform-Herkunft (Multikalender): Markenakzent je Vertriebsweg.
+     Als Tokens statt bg-[#…]-Arbitraries (Tailwind v4 kompiliert die
+     unzuverlässig). Genutzt von lib/calendar-channels.ts. */
+  --color-channel-direct: var(--channel-direct);
+  --color-channel-booking: var(--channel-booking);
+  --color-channel-airbnb: var(--channel-airbnb);
+  --color-channel-vrbo: var(--channel-vrbo);
+  --color-channel-expedia: var(--channel-expedia);
+  --color-channel-google: var(--channel-google);
+  --color-channel-portal: var(--channel-portal);
+
   /* Sidebar (Dashboard-Navigation). */
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -107,6 +118,16 @@
   --chart-3: #2563eb;
   --chart-4: #16a34a;
   --chart-5: #d97706;
+
+  /* Kanal-Markenfarben (Multikalender-Herkunft). Bewusst die offiziellen
+     Plattform-Akzente, damit die Quelle sofort erkennbar ist. */
+  --channel-direct: #0a0a0a;   /* Direkt = myNextDays-Schwarz */
+  --channel-booking: #003580;  /* Booking.com-Blau */
+  --channel-airbnb: #ff5a5f;   /* Airbnb-Rot */
+  --channel-vrbo: #1668e3;     /* Vrbo-Blau */
+  --channel-expedia: #fbcb1c;  /* Expedia-Gelb */
+  --channel-google: #4285f4;   /* Google-Blau */
+  --channel-portal: #71717a;   /* sonstige Portale = neutral */
 
   --sidebar: #fafafa;
   --sidebar-foreground: #0a0a0a;

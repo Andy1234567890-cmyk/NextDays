@@ -25,6 +25,7 @@ import {
   blockRange,
   getAvailability,
 } from "@/lib/calendar";
+import { CHANNEL_META, CHANNEL_SOURCES, channelMeta } from "@/lib/calendar-channels";
 import type { PropertyType } from "@/lib/properties";
 import { type Reservation, listReservations } from "@/lib/reservations";
 
@@ -71,6 +72,15 @@ function addDays(d: Date, n: number) {
   x.setDate(x.getDate() + n);
   return x;
 }
+// Kompakter Tagespreis fürs Raster. null (kein Rate-Plan) → „–" statt erfundener 0.
+function fmtPrice(price: number | null | undefined): string {
+  if (price == null) return "–";
+  return price.toLocaleString("de-DE", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 0,
+  });
+}
 
 type Segment = {
   start: number;
@@ -80,23 +90,32 @@ type Segment = {
   reservation?: Reservation; // verknüpfte Buchung (falls gefunden)
 };
 
-// Herkunftslabel für gebuchte Segmente (echter OTA/Direkt-Kanal).
-const SOURCE_LABEL: Record<AvailabilitySource, string> = {
-  direct: "Direkt",
-  portal: "Portal",
-  booking: "Booking.com",
-  airbnb: "Airbnb",
-  vrbo: "Vrbo",
-  manual: "Manuell",
-};
-const SOURCE_ICON: Record<AvailabilitySource, string> = {
-  direct: "ph:user",
-  portal: "ph:globe",
-  booking: "simple-icons:bookingdotcom",
-  airbnb: "simple-icons:airbnb",
-  vrbo: "ph:house",
-  manual: "ph:hand",
-};
+// Herkunftslabel (zentral): echter OTA/Direkt-Kanal aus CHANNEL_META.
+function sourceLabel(source: AvailabilitySource): string {
+  return channelMeta(source).label;
+}
+
+// Kanal-Logo eines Balkens (Iconify-Brand-Icon ODER lokales SVG).
+function ChannelLogo({
+  source,
+  className = "size-3",
+}: {
+  source: AvailabilitySource;
+  className?: string;
+}) {
+  const logo = channelMeta(source).logo;
+  if (logo.kind === "img") {
+    // eslint-disable-next-line @next/next/no-img-element
+    return (
+      <img
+        src={logo.src}
+        alt={channelMeta(source).label}
+        className={`${className} shrink-0 rounded-[0.125rem]`}
+      />
+    );
+  }
+  return <Icon icon={logo.icon} className={`${className} shrink-0`} />;
+}
 
 // Aufeinanderfolgende Tage gleichen (nicht-offenen) Status+Quelle bündeln.
 // resByDay ordnet jedem belegten Tag die zugehörige Buchung zu (für Gastname +
@@ -152,7 +171,7 @@ function reservationsByDay(reservations: Reservation[]): Record<string, Reservat
 function segmentLabel(seg: Segment): string {
   if (seg.status !== "booked") return STATUS_LABEL[seg.status];
   const guest = seg.reservation?.guest_name?.trim();
-  return guest || seg.reservation?.ota_name || SOURCE_LABEL[seg.source];
+  return guest || seg.reservation?.ota_name || sourceLabel(seg.source);
 }
 
 export function CalendarBoard({ properties }: { properties: Prop[] }) {
@@ -161,6 +180,9 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
   const [todayKey, setTodayKey] = useState("");
   const [avail, setAvail] = useState<Record<string, Record<string, AvailabilityStatus>>>({});
   const [sources, setSources] = useState<Record<string, Record<string, AvailabilitySource>>>({});
+  // Tagespreis + Min-Stay je Objekt/Tag (aus get_availability) für die Anzeige.
+  const [prices, setPrices] = useState<Record<string, Record<string, number | null>>>({});
+  const [minStays, setMinStays] = useState<Record<string, Record<string, number | null>>>({});
   // Buchungen je Objekt → Tages-Map (Gastname im Balken + Detail-Popover).
   const [resByProp, setResByProp] = useState<Record<string, Record<string, Reservation>>>({});
   // Aktuell geöffnetes Buchungsdetail (per Klick auf einen Balken).
@@ -244,12 +266,16 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
           const res = await getAvailability(p.id, s, e);
           const map: Record<string, AvailabilityStatus> = {};
           const srcMap: Record<string, AvailabilitySource> = {};
+          const priceMap: Record<string, number | null> = {};
+          const minStayMap: Record<string, number | null> = {};
           if (res.ok)
             for (const d of res.data as DayAvailability[]) {
               map[d.date] = d.status;
               srcMap[d.date] = d.source;
+              priceMap[d.date] = d.price;
+              minStayMap[d.date] = d.min_stay;
             }
-          return [p.id, map, srcMap] as const;
+          return [p.id, map, srcMap, priceMap, minStayMap] as const;
         }),
       ),
       // Alle Buchungen (OTA + direkt, vereint aus reservations) in einem Call.
@@ -257,6 +283,8 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
     ]);
     setAvail(Object.fromEntries(results.map((r) => [r[0], r[1]])));
     setSources(Object.fromEntries(results.map((r) => [r[0], r[2]])));
+    setPrices(Object.fromEntries(results.map((r) => [r[0], r[3]])));
+    setMinStays(Object.fromEntries(results.map((r) => [r[0], r[4]])));
     // Buchungen je Objekt gruppieren und auf Tages-Maps abbilden.
     const byProp: Record<string, Reservation[]> = {};
     if (resAll.ok)
@@ -349,12 +377,19 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
         onCreate={onCreate}
       />
 
-      {/* Legende */}
-      <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
-        {(["open", "booked", "blocked"] as AvailabilityStatus[]).map((s) => (
+      {/* Legende: Status + Vertriebskanäle (Herkunft je Farbe/Logo). */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
+        {(["open", "blocked"] as AvailabilityStatus[]).map((s) => (
           <span key={s} className="flex items-center gap-1.5">
             <span className={`inline-block size-3 rounded-sm border ${s === "open" ? "bg-background" : SEG_STYLE[s]}`} />
             {STATUS_LABEL[s]}
+          </span>
+        ))}
+        <span className="h-3 w-px bg-border" aria-hidden />
+        {CHANNEL_SOURCES.map((src) => (
+          <span key={src} className="flex items-center gap-1.5">
+            <span className={`inline-flex size-3 items-center justify-center rounded-sm ${CHANNEL_META[src].dotBg}`} />
+            {CHANNEL_META[src].label}
           </span>
         ))}
         {loading && <span>· lädt …</span>}
@@ -433,6 +468,8 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
             {shown.map((p) => {
               const statusMap = avail[p.id] ?? {};
               const sourceMap = sources[p.id] ?? {};
+              const priceMap = prices[p.id] ?? {};
+              const minStayMap = minStays[p.id] ?? {};
               const resMap = resByProp[p.id] ?? {};
               const segs = toSegments(statusMap, sourceMap, resMap, dates);
               return (
@@ -473,11 +510,14 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                                 {p.maxGuests}
                               </span>
                               {view.showPrice && (
-                                <span className={inSel ? "text-white" : "text-muted-foreground"}>–</span>
+                                <span className={inSel ? "text-white" : "text-muted-foreground"}>
+                                  {fmtPrice(priceMap[key(d)])}
+                                </span>
                               )}
                               {view.showMinStay && (
                                 <span className={`flex items-center gap-0.5 text-[0.65rem] ${inSel ? "text-white/80" : "text-muted-foreground/70"}`}>
-                                  <Icon icon="ph:moon" className="size-3" />–
+                                  <Icon icon="ph:moon" className="size-3" />
+                                  {minStayMap[key(d)] != null ? `${minStayMap[key(d)]}` : "–"}
                                 </span>
                               )}
                             </>
@@ -508,10 +548,17 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                         (Detail-Popover). */}
                     {segs.map((seg, i) => {
                       const clickable = seg.status === "booked" && !!seg.reservation;
+                      // Gebuchte Balken: Kanal-Farbakzent + Logo (Herkunft sofort
+                      // erkennbar). Gesperrte: neutraler Block-Stil.
+                      const meta = channelMeta(seg.source);
                       const barTitle =
                         seg.status === "booked"
-                          ? `${segmentLabel(seg)} · ${SOURCE_LABEL[seg.source]} · ${seg.span} Tag(e)`
+                          ? `${segmentLabel(seg)} · ${meta.label} · ${seg.span} Tag(e)`
                           : `${STATUS_LABEL[seg.status]} · ${seg.span} Tag(e)`;
+                      const barClass =
+                        seg.status === "booked"
+                          ? `${meta.barBg} ${meta.barFg}`
+                          : SEG_STYLE[seg.status];
                       const barStyle = {
                         left: `calc(${seg.start} * ${COL}rem + 0.25rem)`,
                         width: `calc(${seg.span} * ${COL}rem - 0.5rem)`,
@@ -520,7 +567,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                       const barInner = (
                         <>
                           {seg.status === "booked" && (
-                            <Icon icon={SOURCE_ICON[seg.source]} className="size-3 shrink-0" />
+                            <ChannelLogo source={seg.source} />
                           )}
                           {seg.status === "blocked" && (
                             <Icon icon="ph:lock-simple" className="size-3 shrink-0" />
@@ -535,7 +582,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                           title={barTitle}
                           onMouseDown={(ev) => ev.stopPropagation()}
                           onClick={() => seg.reservation && setDetail(seg.reservation)}
-                          className={`absolute top-1/2 flex -translate-y-1/2 cursor-pointer items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium transition-shadow hover:ring-2 hover:ring-accent/40 ${SEG_STYLE[seg.status]}`}
+                          className={`absolute top-1/2 flex -translate-y-1/2 cursor-pointer items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium transition-shadow hover:ring-2 hover:ring-accent/40 ${barClass}`}
                           style={barStyle}
                         >
                           {barInner}
@@ -544,7 +591,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                         <div
                           key={i}
                           title={barTitle}
-                          className={`absolute top-1/2 flex -translate-y-1/2 items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium ${SEG_STYLE[seg.status]}`}
+                          className={`absolute top-1/2 flex -translate-y-1/2 items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium ${barClass}`}
                           style={barStyle}
                         >
                           {barInner}
@@ -643,8 +690,8 @@ function ReservationDetail({
         <dl className="flex flex-col divide-y divide-border rounded-(--radius) border border-border text-sm">
           <DetailRow label="Kanal">
             <span className="inline-flex items-center gap-1.5">
-              <Icon
-                icon={SOURCE_ICON[r.channel as AvailabilitySource] ?? "ph:globe"}
+              <ChannelLogo
+                source={r.channel as AvailabilitySource}
                 className="size-4"
               />
               {channel}
