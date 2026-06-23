@@ -427,7 +427,7 @@ class BuchhaltungService:
 
         res = self._db.table("invoices").insert(row).execute()
         if not res.data:
-            raise BuchhaltungError("Rechnung konnte nicht gespeichert werden.", 500)
+            raise BuchhaltungError("Rechnung konnte nicht gespeichert werden.", status_code=500)
         invoice_id = res.data[0]["id"]
 
         # Positionen speichern.
@@ -468,9 +468,9 @@ class BuchhaltungService:
             .eq("id", invoice_id).eq("tenant_id", tenant_id).limit(1).execute()
         )
         if not existing.data:
-            raise BuchhaltungError("Rechnung nicht gefunden.", 404)
+            raise BuchhaltungError("Rechnung nicht gefunden.", status_code=404)
         if existing.data[0].get("is_locked"):
-            raise BuchhaltungError("Rechnung ist festgeschrieben (GoBD).", 409)
+            raise BuchhaltungError("Rechnung ist festgeschrieben (GoBD).", status_code=409)
 
         allowed = {
             "status": payload.get("status"),

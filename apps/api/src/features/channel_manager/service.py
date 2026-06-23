@@ -1055,7 +1055,7 @@ class ChannelManagerService:
             .execute()
         )
         if not saved.data:
-            raise ChannelManagerError("Mapping konnte nicht gespeichert werden.", 500)
+            raise ChannelManagerError("Mapping konnte nicht gespeichert werden.", status_code=500)
         return self._to_property_map(saved.data[0])
 
     def disconnect_property(self, ctx: AuthContext, map_id: str) -> None:
@@ -1409,6 +1409,9 @@ class ChannelManagerService:
         revisions = feed.get("data") or []
         result.fetched = len(revisions)
 
+        # Fehler lokal sammeln und am Ende einmalig zuweisen — Pylint erkennt
+        # das Pydantic-Field sonst statisch als FieldInfo (ohne .append).
+        errors: list[str] = []
         for rev in revisions:
             attrs = rev.get("attributes") or rev
             revision_id = rev.get("id") or attrs.get("revision_id")
@@ -1429,9 +1432,10 @@ class ChannelManagerService:
                     result.acknowledged += 1
             except (ChannexError, ChannelManagerError) as exc:
                 msg = getattr(exc, "message", str(exc))
-                result.errors.append(f"Revision {revision_id}: {msg}")
+                errors.append(f"Revision {revision_id}: {msg}")
                 log.error("channex_booking_sync_failed", revision=revision_id, error=msg)
 
+        result.errors = errors
         return result
 
     # -- Kanäle (OTA) inhouse: Channel-API nach Skill --------------------------

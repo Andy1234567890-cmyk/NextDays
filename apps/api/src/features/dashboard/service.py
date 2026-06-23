@@ -75,7 +75,7 @@ class DashboardService:
             .execute()
         )
         if not saved.data:
-            raise DashboardError("Onboarding konnte nicht gespeichert werden.", 500)
+            raise DashboardError("Onboarding konnte nicht gespeichert werden.", status_code=500)
         return self._to_status(saved.data[0])
 
     @staticmethod
