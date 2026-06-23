@@ -22,6 +22,7 @@ export type InboxThread = {
   is_read: boolean;
   is_starred: boolean;
   is_archived: boolean;
+  inbox_status: "active" | "archived" | "trashed";
   assigned_user_id: string | null;
   assigned_user_name: string | null;
 };
@@ -89,15 +90,25 @@ async function call<T>(
   }
 }
 
-/** OTA-Gäste-Threads des aktuellen Tenants (aktiv oder archiviert). */
+export type InboxStatus = "active" | "archived" | "trashed";
+
+/** OTA-Gäste-Threads des aktuellen Tenants (aktiv | archiviert | Papierkorb). */
 export async function listInboxThreads(
-  opts: { unassigned?: boolean; archived?: boolean } = {},
+  opts: { unassigned?: boolean; status?: InboxStatus } = {},
 ): Promise<Result<{ items: InboxThread[]; total: number }>> {
   const params = new URLSearchParams();
   if (opts.unassigned) params.set("unassigned", "true");
-  if (opts.archived) params.set("archived", "true");
+  if (opts.status && opts.status !== "active") params.set("status", opts.status);
   const qs = params.toString() ? `?${params.toString()}` : "";
   return call<{ items: InboxThread[]; total: number }>(qs);
+}
+
+/** Lebenszyklus setzen: active (wiederherstellen) | archived | trashed | deleted. */
+export async function setInboxStatus(
+  threadId: string,
+  status: "active" | "archived" | "trashed" | "deleted",
+): Promise<Result<void>> {
+  return call<void>(`/${threadId}/status`, { method: "PUT", body: { status } });
 }
 
 /** Team-Benutzer des Tenants (mögliche Bearbeiter). */

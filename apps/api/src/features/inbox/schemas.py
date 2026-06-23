@@ -24,6 +24,7 @@ class InboxThread(BaseModel):
     is_read: bool = True
     is_starred: bool = False
     is_archived: bool = False
+    inbox_status: str = "active"           # active|archived|trashed
     assigned_user_id: str | None = None    # zugewiesener Tenant-Benutzer
     assigned_user_name: str | None = None
 
@@ -164,6 +165,10 @@ class TeamMemberList(BaseModel):
 
 class AssignRequest(BaseModel):
     user_id: str | None = None     # None → Zuweisung aufheben
+
+
+class InboxStatusUpdate(BaseModel):
+    status: str                    # active|archived|trashed|deleted
 
 
 # --- Interne Notiz (gelb im Verlauf) ----------------------------------------

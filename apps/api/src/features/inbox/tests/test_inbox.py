@@ -96,6 +96,7 @@ def test_list_threads_links_reservation_id() -> None:
             "customer": {"name": "Lucia", "surname": "Rodriguez", "mail": "l@x.de"},
             "updated_at": "2026-06-22T10:00:00Z",
             "is_archived": False,
+            "inbox_status": "active",
             "is_read": True,
             "is_starred": False,
         }

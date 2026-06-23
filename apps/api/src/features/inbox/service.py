@@ -76,20 +76,25 @@ class InboxService:
             or None
         )
 
+    # Gültige Posteingang-Status (Lebenszyklus).
+    _STATUSES = ("active", "archived", "trashed")
+
     def list_threads(
-        self, ctx: AuthContext, *, unassigned: bool = False, archived: bool = False
+        self, ctx: AuthContext, *, unassigned: bool = False, status: str = "active"
     ) -> InboxListResponse:
         db, tenant_id = self._require(ctx)
+        if status not in self._STATUSES:
+            status = "active"
         query = (
             db.table("channex_booking")
             .select(
                 "id, channex_booking_id, ota_name, ota_reservation_code, status, "
                 "arrival_date, departure_date, customer, updated_at, "
-                "is_read, is_starred, is_archived, assigned_user_id"
+                "is_read, is_starred, is_archived, assigned_user_id, inbox_status"
             )
             .eq("tenant_id", tenant_id)
-            # Archiv-Ansicht zeigt NUR archivierte, sonst nur aktive.
-            .eq("is_archived", archived)
+            # Genau die gewählte Ansicht (active|archived|trashed); deleted nie.
+            .eq("inbox_status", status)
         )
         if unassigned:
             query = query.is_("assigned_user_id", "null")
@@ -123,6 +128,7 @@ class InboxService:
                     is_read=bool(r.get("is_read", True)),
                     is_starred=bool(r.get("is_starred")),
                     is_archived=bool(r.get("is_archived")),
+                    inbox_status=r.get("inbox_status") or "active",
                     assigned_user_id=uid,
                     assigned_user_name=names.get(uid) if uid else None,
                 )
@@ -416,6 +422,30 @@ class InboxService:
             "id", thread_id
         ).execute()
 
+    # --- Lebenszyklus: Archiv / Papierkorb / Löschen ------------------------
+    _SET_STATUSES = ("active", "archived", "trashed", "deleted")
+
+    def set_inbox_status(
+        self, ctx: AuthContext, thread_id: str, status: str
+    ) -> None:
+        """Posteingang-Status setzen (Soft-Delete durchgängig).
+
+        active   – zurück in den Posteingang (Wiederherstellen)
+        archived – ins Archiv
+        trashed  – in den Papierkorb
+        deleted  – endgültig löschen (nur Posteingang-Sicht; Buchung bleibt)
+        """
+        db, tenant_id = self._require(ctx)
+        if status not in self._SET_STATUSES:
+            raise InboxError("Unbekannter Status.", status_code=422)
+        self._load_thread(db, tenant_id, thread_id)  # 404, wenn fremd
+        patch = {"inbox_status": status}
+        # is_archived synchron halten (Kompat. mit bestehender Spalte/Logik).
+        patch["is_archived"] = status == "archived"
+        db.table("channex_booking").update(patch).eq("tenant_id", tenant_id).eq(
+            "id", thread_id
+        ).execute()
+
     # --- Zuweisung ----------------------------------------------------------
     def list_team(self, ctx: AuthContext) -> "TeamMemberList":
         """Team-Benutzer des Tenants (mögliche Bearbeiter einer Konversation)."""
@@ -561,7 +591,7 @@ class InboxService:
         if action == "read":
             patch = {"is_read": True}
         elif action == "archived":
-            patch = {"is_archived": True}
+            patch = {"is_archived": True, "inbox_status": "archived"}
         else:
             raise InboxError("Unbekannte Aktion.", status_code=422)
         if not (before or "").strip():

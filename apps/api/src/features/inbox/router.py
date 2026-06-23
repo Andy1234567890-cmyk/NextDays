@@ -19,6 +19,7 @@ from .schemas import (
     BulkUpdateRequest,
     BulkUpdateResult,
     InboxListResponse,
+    InboxStatusUpdate,
     InboxMessage,
     InboxMessagesResponse,
     MessageTemplate,
@@ -59,10 +60,10 @@ def list_threads(
     service: InboxServiceDep,
     ctx: _guest,
     unassigned: Annotated[bool, Query()] = False,
-    archived: Annotated[bool, Query()] = False,
+    status: Annotated[str, Query()] = "active",
 ) -> InboxListResponse:
     try:
-        return service.list_threads(ctx, unassigned=unassigned, archived=archived)
+        return service.list_threads(ctx, unassigned=unassigned, status=status)
     except InboxError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -131,6 +132,16 @@ def update_flags(
             is_read=req.is_read, is_archived=req.is_archived,
             remind_at=req.remind_at,
         )
+    except InboxError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put("/{thread_id}/status", status_code=204)
+def set_status(
+    thread_id: str, req: InboxStatusUpdate, service: InboxServiceDep, ctx: _guest
+) -> None:
+    try:
+        service.set_inbox_status(ctx, thread_id, req.status)
     except InboxError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

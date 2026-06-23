@@ -331,7 +331,14 @@
     "showArchived": "Archiv anzeigen",
     "showActive": "Aktive anzeigen",
     "emptyArchive": "Keine archivierten Konversationen.",
-    "restore": "Wiederherstellen"
+    "restore": "Wiederherstellen",
+    "viewActive": "Aktiv",
+    "viewArchive": "Archiv",
+    "viewTrash": "Papierkorb",
+    "emptyTrash": "Papierkorb ist leer.",
+    "trash": "In den Papierkorb",
+    "deleteForever": "Endgültig löschen",
+    "deleteConfirm": "Diese Konversation endgültig aus dem Posteingang löschen? Die Buchung bleibt erhalten."
   },
   "whatsapp": {
     "notConfigured": "WhatsApp ist noch nicht verbunden. Zugangsdaten (Meta Cloud API) in den Server-Einstellungen hinterlegen, dann ist der Versand aktiv.",
