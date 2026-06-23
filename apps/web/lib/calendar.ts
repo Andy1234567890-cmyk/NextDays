@@ -108,6 +108,34 @@ export async function clearStopSell(
   });
 }
 
+export type BulkEditInput = {
+  property_ids: string[];
+  start: string; // YYYY-MM-DD
+  end: string; // YYYY-MM-DD (exklusiv)
+  price?: number;
+  min_stay?: number;
+  block?: boolean;
+  stop_sell?: boolean;
+};
+
+export type BulkEditResult = {
+  properties: number;
+  days: number;
+  applied: string[];
+};
+
+/** Bulk-Edit: Preis/Min-Stay/Sperre/Verkaufsstopp über mehrere Objekte ×
+ *  Zeitraum in einem Rutsch (Hostaway-Stil). Nur gesetzte Felder wirken. */
+export async function bulkEdit(
+  input: BulkEditInput,
+): Promise<Result<BulkEditResult>> {
+  const { property_ids, start, end, ...rest } = input;
+  return call("/calendar/bulk-edit", {
+    method: "POST",
+    body: { property_ids, range: { start, end }, ...rest },
+  });
+}
+
 export type SeasonPriceDay = { date: string; price: number };
 
 /** Saison-/Tagespreise eines Objekts im Zeitraum [start, end). */

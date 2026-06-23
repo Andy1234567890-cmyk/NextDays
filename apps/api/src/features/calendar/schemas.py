@@ -121,6 +121,43 @@ class SeasonPriceListResponse(BaseModel):
     total: int = 0
 
 
+class BulkEditRequest(BaseModel):
+    """Mehrere Objekte × ein Zeitraum in einem Rutsch bearbeiten (wie Hostaway).
+
+    Es wird nur angewendet, was gesetzt ist (None = unverändert):
+      - price:    Tagespreis je Tag (price_overrides + Channex-Rate-Push)
+      - min_stay: Mindestaufenthalt je Objekt (rate_plans + Channex-Restriktion)
+      - block:    True = sperren, False = Sperre aufheben (availability)
+      - stop_sell:True = Verkaufsstopp setzen, False = aufheben
+    """
+
+    property_ids: list[str]
+    range: DateRange
+    price: float | None = None
+    min_stay: int | None = None
+    block: bool | None = None
+    stop_sell: bool | None = None
+
+    @model_validator(mode="after")
+    def _at_least_one(self) -> "BulkEditRequest":
+        if not self.property_ids:
+            raise ValueError("Mindestens ein Objekt erforderlich")
+        if (
+            self.price is None
+            and self.min_stay is None
+            and self.block is None
+            and self.stop_sell is None
+        ):
+            raise ValueError("Mindestens eine Änderung erforderlich")
+        return self
+
+
+class BulkEditResult(BaseModel):
+    properties: int  # Anzahl bearbeiteter Objekte
+    days: int        # Tage je Objekt im Zeitraum
+    applied: list[str]  # welche Aktionen ausgeführt wurden
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"

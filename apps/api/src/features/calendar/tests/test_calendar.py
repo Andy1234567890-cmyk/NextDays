@@ -50,17 +50,29 @@ class _Query:
     def __init__(self, store: dict, name: str) -> None:
         self._store = store
         self._name = name
+        self._eq: dict = {}
+        self._in: tuple | None = None
+        self._op = "select"
 
     def select(self, *_a, **_k) -> "_Query":
         return self
 
-    def eq(self, *_a, **_k) -> "_Query":
+    def eq(self, col, val) -> "_Query":  # noqa: ANN001
+        self._eq[col] = val
+        return self
+
+    def in_(self, col, vals) -> "_Query":  # noqa: ANN001
+        self._in = (col, list(vals))
         return self
 
     def gte(self, *_a, **_k) -> "_Query":
         return self
 
     def lt(self, *_a, **_k) -> "_Query":
+        return self
+
+    def delete(self) -> "_Query":
+        self._op = "delete"
         return self
 
     def order(self, *_a, **_k) -> "_Query":
@@ -76,12 +88,24 @@ class _Query:
     def is_(self, *_a, **_k) -> "_Query":
         return self
 
+    def update(self, payload) -> "_Query":  # noqa: ANN001
+        self._store.setdefault("_updates", []).append((self._name, payload))
+        return self
+
     def upsert(self, payload, **_k) -> "_Query":  # noqa: ANN001
         self._store.setdefault("_upserts", []).append((self._name, payload))
         return self
 
     def execute(self) -> _Res:
-        return _Res(list(self._store.get(self._name, [])))
+        if self._op == "delete":
+            self._store.setdefault("_deletes", []).append(self._name)
+            return _Res([])
+        rows = list(self._store.get(self._name, []))
+        # in_-Filter unterstützen (properties-Tenant-Lookup im bulk_edit).
+        if self._in is not None:
+            col, vals = self._in
+            rows = [r for r in rows if r.get(col) in vals]
+        return _Res(rows)
 
 
 class _FakeDB:
@@ -194,6 +218,74 @@ def test_price_override_set_and_clear() -> None:
     )
     overrides = [u for u in store.get("_upserts", []) if u[0] == "price_overrides"]
     assert len(overrides) == 2
+
+
+# --- bulk_edit: mehrere Objekte × Zeitraum ---
+
+def test_bulk_edit_applies_price_and_block_across_properties() -> None:
+    from src.features.calendar.schemas import BulkEditRequest
+
+    svc, store = _service(
+        properties=[{"id": "p1"}, {"id": "p2"}],
+    )
+    res = svc.bulk_edit(
+        "t1",
+        BulkEditRequest(
+            property_ids=["p1", "p2"],
+            range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 4)),
+            price=99.0,
+            block=True,
+        ),
+    )
+    assert res.properties == 2
+    assert res.days == 3
+    assert set(res.applied) == {"price", "block"}
+    # price_overrides + availability-Upserts wurden je Objekt geschrieben.
+    upsert_tables = [u[0] for u in store.get("_upserts", [])]
+    assert upsert_tables.count("availability") == 2  # block je Objekt
+    assert upsert_tables.count("price_overrides") == 2
+
+
+def test_bulk_edit_min_stay_updates_rate_plans() -> None:
+    from src.features.calendar.schemas import BulkEditRequest
+
+    svc, store = _service(properties=[{"id": "p1"}])
+    svc.bulk_edit(
+        "t1",
+        BulkEditRequest(
+            property_ids=["p1"],
+            range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3)),
+            min_stay=3,
+        ),
+    )
+    updates = [u for u in store.get("_updates", []) if u[0] == "rate_plans"]
+    assert updates and updates[0][1] == {"min_stay": 3}
+
+
+def test_bulk_edit_rejects_foreign_property() -> None:
+    from src.features.calendar.schemas import BulkEditRequest
+
+    svc, _ = _service(properties=[{"id": "p1"}])  # p2 gehört nicht dem Tenant
+    with pytest.raises(CalendarError) as exc:
+        svc.bulk_edit(
+            "t1",
+            BulkEditRequest(
+                property_ids=["p1", "p2"],
+                range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2)),
+                price=50.0,
+            ),
+        )
+    assert exc.value.status_code == 404
+
+
+def test_bulk_edit_requires_a_change() -> None:
+    from src.features.calendar.schemas import BulkEditRequest
+
+    with pytest.raises(ValueError):
+        BulkEditRequest(
+            property_ids=["p1"],
+            range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2)),
+        )
 
 
 # --- ohne Client: sauberer Fehler statt Crash ---

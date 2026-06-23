@@ -16,6 +16,7 @@ import {
   DEFAULT_VIEW,
 } from "@/components/kalender/calendar-header";
 import { CalendarActionMenu } from "@/components/kalender/calendar-action-menu";
+import { BulkEditDialog } from "@/components/kalender/bulk-edit-dialog";
 import { PropertyLabel } from "@/components/kalender/property-label";
 import { ReservationWizard } from "@/components/kalender/reservation-wizard";
 import {
@@ -241,6 +242,8 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
   const [menuAt, setMenuAt] = useState<{ x: number; y: number } | null>(null);
   // Reservierungs-Assistent: Zeitraum (YYYY-MM-DD) + Objekt, wenn offen.
   const [wizard, setWizard] = useState<{ pid: string; checkIn: string; checkOut: string } | null>(null);
+  // Bulk-Edit-Dialog: Objekt + Zeitraum der aufgezogenen Selektion.
+  const [bulk, setBulk] = useState<{ pid: string; checkIn: string; checkOut: string } | null>(null);
   const [saving, setSaving] = useState(false);
 
   // Balken-Interaktion: bestehende Buchung verschieben (move) ODER an den
@@ -525,14 +528,16 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
               confirmBlock();
               return;
             }
-            // Reservierung: Wizard mit gezogenem Zeitraum öffnen (end exklusiv).
             const lo = Math.min(sel.from, sel.to);
             const hi = Math.max(sel.from, sel.to);
-            setWizard({
-              pid: sel.pid,
-              checkIn: key(addDays(start, lo)),
-              checkOut: key(addDays(start, hi + 1)),
-            });
+            const checkIn = key(addDays(start, lo));
+            const checkOut = key(addDays(start, hi + 1)); // end exklusiv
+            if (action === "bulk") {
+              setBulk({ pid: sel.pid, checkIn, checkOut });
+            } else {
+              // Reservierung: Wizard mit gezogenem Zeitraum öffnen.
+              setWizard({ pid: sel.pid, checkIn, checkOut });
+            }
             setMenuAt(null);
             setSel(null);
           }}
@@ -782,6 +787,23 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
           checkIn={wizard.checkIn}
           checkOut={wizard.checkOut}
           basePrice={0}
+        />
+      )}
+
+      {/* Bulk-Edit (Preis/Min-Stay/Sperre über Zeitraum × Objekte) */}
+      {bulk && start && (
+        <BulkEditDialog
+          open
+          rangeLabel={`${bulk.checkIn} – ${bulk.checkOut}`}
+          start={bulk.checkIn}
+          end={bulk.checkOut}
+          primaryProperty={{
+            id: bulk.pid,
+            title: properties.find((p) => p.id === bulk.pid)?.title ?? "Objekt",
+          }}
+          allProperties={properties.map((p) => ({ id: p.id, title: p.title }))}
+          onClose={() => setBulk(null)}
+          onApplied={() => load()}
         />
       )}
 

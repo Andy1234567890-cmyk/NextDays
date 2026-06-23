@@ -16,6 +16,8 @@ from src.features.auth.permissions import Capability
 from .schemas import (
     AvailabilityCheck,
     BlockRequest,
+    BulkEditRequest,
+    BulkEditResult,
     DateRange,
     DayAvailability,
     PriceOverrideRequest,
@@ -147,6 +149,22 @@ def clear_stop_sell(
     try:
         service.clear_stop_sell(req.property_id, req.range)
         return {"status": "ok"}
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/bulk-edit", response_model=BulkEditResult, dependencies=[
+    Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
+def bulk_edit(
+    req: BulkEditRequest,
+    service: CalendarServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))],
+) -> BulkEditResult:
+    """Preis/Min-Stay/Sperre/Verkaufsstopp über mehrere Objekte × Zeitraum
+    in einem Rutsch setzen (Hostaway-Bulk-Edit)."""
+    try:
+        return service.bulk_edit(ctx.tenant_id, req)
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

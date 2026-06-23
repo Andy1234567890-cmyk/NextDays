@@ -7,7 +7,7 @@
 import { Icon } from "@iconify/react";
 import { useEffect } from "react";
 
-type Action = "reservation_quote" | "reservation_simple" | "closed";
+type Action = "reservation_quote" | "reservation_simple" | "closed" | "bulk";
 
 export function CalendarActionMenu({
   at,
@@ -64,6 +64,13 @@ export function CalendarActionMenu({
           label={saving ? "Sperren…" : "Sperrzeitraum anlegen"}
           disabled={saving}
           onClick={() => onAction("closed")}
+        />
+        <div className="my-1 h-px bg-border" />
+        <MenuItem
+          icon="ph:sliders-horizontal"
+          label="Preis / Min-Stay / Sperre …"
+          disabled={saving}
+          onClick={() => onAction("bulk")}
         />
       </div>
     </>

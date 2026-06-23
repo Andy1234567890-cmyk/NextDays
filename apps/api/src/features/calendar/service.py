@@ -17,6 +17,8 @@ from .schemas import (
     AvailabilitySource,
     AvailabilityStatus,
     BlockRequest,
+    BulkEditRequest,
+    BulkEditResult,
     DateRange,
     DayAvailability,
     PriceOverrideRequest,
@@ -302,11 +304,97 @@ class CalendarService:
         )
         return len(payload)
 
+    # -- Bulk-Edit (mehrere Objekte × ein Zeitraum) ---------------------------
+    def _set_min_stay(self, property_id: str, rng: DateRange, min_stay: int) -> None:
+        """Mindestaufenthalt des Objekts setzen (rate_plans, property-weit) und
+        als Restriktion für den Zeitraum an Channex pushen. Per-Tag-Min-Stay
+        ist v2 — hier gilt der Wert objektweit (so wie der Rate-Plan)."""
+        self._db().table("rate_plans").update({"min_stay": min_stay}).eq(
+            "property_id", property_id
+        ).execute()
+        self._push_channex_rate(
+            property_id, rng.start, rng.end, None, min_stay=min_stay
+        )
+
+    def bulk_edit(self, tenant_id: str, req: BulkEditRequest) -> BulkEditResult:
+        """Preis/Min-Stay/Sperre/Verkaufsstopp über mehrere Objekte × Zeitraum
+        in einem Rutsch setzen. Nur gesetzte Felder werden angewendet. Jedes
+        Objekt muss DIESEM Tenant gehören (sonst 404 für die ganze Operation).
+        """
+        owned = (
+            self._db()
+            .table("properties")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .in_("id", req.property_ids)
+            .execute()
+        ).data or []
+        owned_ids = {p["id"] for p in owned}
+        missing = [pid for pid in req.property_ids if pid not in owned_ids]
+        if missing:
+            raise CalendarError("Objekt nicht gefunden.", status_code=404)
+
+        applied: list[str] = []
+        for pid in req.property_ids:
+            if req.block is True:
+                self.block(BlockRequest(property_id=pid, range=req.range))
+            elif req.block is False:
+                self._unblock(pid, req.range)
+            if req.stop_sell is True:
+                self.set_stop_sell(tenant_id, pid, req.range, None)
+            elif req.stop_sell is False:
+                self.clear_stop_sell(pid, req.range)
+            if req.price is not None:
+                self.set_season_price(pid, req.range, req.price)
+            if req.min_stay is not None:
+                self._set_min_stay(pid, req.range, req.min_stay)
+
+        if req.block is True:
+            applied.append("block")
+        elif req.block is False:
+            applied.append("unblock")
+        if req.stop_sell is True:
+            applied.append("stop_sell")
+        elif req.stop_sell is False:
+            applied.append("clear_stop_sell")
+        if req.price is not None:
+            applied.append("price")
+        if req.min_stay is not None:
+            applied.append("min_stay")
+
+        log.info(
+            "calendar_bulk_edit",
+            properties=len(req.property_ids),
+            applied=applied,
+        )
+        return BulkEditResult(
+            properties=len(req.property_ids),
+            days=len(req.range.nights()),
+            applied=applied,
+        )
+
+    def _unblock(self, property_id: str, rng: DateRange) -> None:
+        """Manuelle Sperre im Zeitraum aufheben (nur source=manual; gebuchte Tage
+        bleiben unberührt). Gibt die Tage an Channex frei (availability=1)."""
+        self._db().table("availability").delete().eq(
+            "property_id", property_id
+        ).eq("status", "blocked").eq("source", "manual").gte(
+            "date", rng.start.isoformat()
+        ).lt("date", rng.end.isoformat()).execute()
+        self._push_channex_availability(property_id, rng.start, rng.end, 1)
+
     def _push_channex_rate(
-        self, property_id: str, start: date, end: date, rate_cents: int
+        self,
+        property_id: str,
+        start: date,
+        end: date,
+        rate_cents: int | None,
+        *,
+        min_stay: int | None = None,
     ) -> None:
-        """Tagespreis an Channex pushen. tenant_id über die property. Fehler
-        dürfen die Speicherung NICHT scheitern lassen (Cron gleicht Preise ab)."""
+        """Tagespreis und/oder Min-Stay an Channex pushen. tenant_id über die
+        property. Fehler dürfen die Speicherung NICHT scheitern lassen (Cron
+        gleicht Preise/Restriktionen ohnehin ab)."""
         if self._client is None:
             return
         try:
@@ -330,6 +418,7 @@ class CalendarService:
                 start,
                 end - timedelta(days=1),  # end exklusiv
                 rate_cents,
+                min_stay=min_stay,
             )
         except Exception as exc:  # noqa: BLE001
             log.warning("calendar_channex_rate_push_failed", error=str(exc))
