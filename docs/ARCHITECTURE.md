@@ -368,8 +368,11 @@ erDiagram
 ```
 
 Jede Mapping-Tabelle hält die `channex_*_id` (externe UUID) neben der lokalen
-Referenz; `channex_booking` speichert zusätzlich `revision_id`/`system_id` (Dedup)
-und die volle `raw`-Payload. Beträge in Cent (`amount_cents`). `channex_group_map`
+Referenz; `channex_booking` speichert zusätzlich `revision_id`/`system_id` (Dedup),
+die volle `raw`-Payload und seit Migration `0047` `guest_id` (Thread→Gast-Link, vom
+zentralen Resolver gesetzt). Beträge in Cent (`amount_cents`). Die kanal-
+übergreifende Gast-Identität trägt `guest_external_ids` (Migration `0047`: je
+Tenant eindeutig pro `channel`+`external_id`). `channex_group_map`
 (Migration `0028`) hält je Tenant die Provider-Group (Whitelabel-Konto-Modell:
 ein Konto, eine Group pro Hotel). **White-Label-Pflicht:** Provider-Name/IDs
 erscheinen nie im Frontend (Responses neutralisiert: `property_title`/`external_id`).
@@ -392,7 +395,7 @@ Lodgify-Berechtigungen pro Nutzer.
 
 1. **Capability-Matrix** (`permissions.py`, rollenbasiert) — schützt interne
    Slice-Endpoints über `require_permission(Capability.…)` / `require_role(…)`.
-2. **Lodgify-Berechtigungen** (`lodgify_permissions.py`, 43 IDs, pro Nutzer in
+2. **Lodgify-Berechtigungen** (`lodgify_permissions.py`, pro Nutzer in
    `users.permissions`) — im Benutzer-Wizard zugewiesen (Default je Rolle,
    überschreibbar), per `require_lodgify_permission(Permission.…)` an Endpoints
    durchgesetzt und im Frontend (`app-sidebar`, `getMe().permissions`) zum
@@ -400,6 +403,44 @@ Lodgify-Berechtigungen pro Nutzer.
    Nutzerverwaltung selbst sehen nur admin/owner/co_admin (sonst `403`); ein
    **Admin sieht alle Nutzer plattformweit**, Owner/Co-Admin nur den eigenen
    Tenant.
+
+**Enterprise-Posteingang & DSGVO-Daten-Split (drei unabhängige Achsen):** Der
+Posteingang-Zugriff läuft **nicht** über den groben Rollen-Guard, sondern über die
+feingranularen Berechtigungen — `inbox/authz.py` löst aus `users.permissions` ein
+`InboxAccess` (Scope `inbox_view_all`, Aktionen `pm_chat`/`inbox_reply`/
+`inbox_assign`/`inbox_manage_config`, Feld-Maske) auf. Die Feldsichtbarkeit von
+Gastdaten (Name → nur Vorname ohne `view_guest_name`, Kontakt, Beträge, Quelle,
+**Ausweisnummern** → `••• 1234` ohne `view_guest_id_docs`) ist in **einem**
+zentralen Helper `auth/guest_masking.py` gebündelt und wird identisch von `inbox`,
+`reservations`, `dashboard` und `guests` (Gästekarte) genutzt (Single Source of
+Truth, fail-closed).
+
+**Gästekarte (guests-Slice, Migration 0046):** Enterprise-Gästeprofil (vgl. OPERA
+Cloud / protel) mit Stammdaten + Sub-Tabellen `guest_addresses`, `guest_contacts`,
+`guest_identity_documents` (DSGVO-sensibel), `guest_preferences`, `guest_consents`
+(append-only), `guest_notes`, `guest_documents` — alle tenant-scoped mit RLS.
+Zugriff über `pm_guest_details`; DSGVO-Löschung anonymisiert bei Reservierungs-
+bezug (statt Hard-Delete). Quelle der Wahrheit für die Permissions ist immer die DB (nicht das
+evtl. veraltete JWT). Zuweisungen sind auditiert (`channex_booking.assigned_by/at`
++ `inbox_assignment_log`, Migration `0045`).
+
+**Kanalübergreifende Nachricht→Gast-Zuordnung (Resolver, Migration 0047):** Jede
+eingehende Buchung/Nachricht — OTA via Channex, WhatsApp, manuelle Reservierung,
+künftig E-Mail/Direkt — läuft durch **einen** zentralen Resolver
+`guests/identity.py::resolve_or_create_guest`. Deterministische Match-Reihenfolge:
+(1) normalisierte E-Mail, (2) normalisierte Telefonnummer (E.164), (3) kanal-
+spezifische externe ID (`guest_external_ids`: OTA-Guest-ID / WhatsApp-Nummer /
+`external_ref`), sonst (4) Neuanlage. **Nie** allein auf den Namen mergen; bei
+mehrdeutigem Treffer (E-Mail ≠ Telefon) wird konservativ neu angelegt und
+`guests.needs_review` gesetzt (manuelles Merge via `/guests/merge`). `channex_booking`
+trägt jetzt `guest_id` (direkter Thread→Gast-Link, ersetzt die fragile Brücke über
+`reservations.source_channex_booking_id`); `whatsapp_conversation` ebenso. Damit
+zeigt die Gästekarte (`GET /guests/{id}/threads`) verknüpfte Threads, und im
+Posteingang führt jeder Thread zur Gästekarte. Korrektur durch Berechtigte
+(`inbox_manage_config`): `PUT /inbox/{thread_id}/guest` ordnet einen Thread manuell
+einem Gast zu oder legt „Gast aus Thread an". Backfill für Alt-Threads:
+`scripts/backfill_guest_links.py`. Kanal-IDs gelten als personenbezogen
+(DSGVO-Löschung/Anonymisierung).
 
 ---
 

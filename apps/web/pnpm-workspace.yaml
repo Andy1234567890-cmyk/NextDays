@@ -1,0 +1,10 @@
+# pnpm 11 blockiert Build-Skripte standardmäßig (strictDepBuilds). Diese Pakete
+# brauchen sie: @swc/core (Next-Kompilierung), sharp (Bildoptimierung),
+# @parcel/watcher (Datei-Watcher). allowBuilds gibt sie frei.
+allowBuilds:
+  '@parcel/watcher': true
+  '@swc/core': true
+  sharp: true
+# Vorab-Dep-Check vor "pnpm run"/"pnpm dev" abschalten (sonst Abbruch wegen
+# ignorierter Builds trotz Freigabe oben).
+verifyDepsBeforeRun: false

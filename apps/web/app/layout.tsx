@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale } from "next-intl/server";
+import { Toaster } from "sonner";
 
 import { ThemeProvider } from "@/components/theme-provider";
 
@@ -44,6 +45,7 @@ export default async function RootLayout({
             disableTransitionOnChange
           >
             {children}
+            <Toaster richColors position="top-right" />
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>

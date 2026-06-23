@@ -32,6 +32,7 @@ import { cn } from "@/lib/utils";
 
 import {
   GENERAL_PERMISSIONS,
+  INBOX_PERMISSIONS,
   LANGUAGES,
   PM_PERMISSIONS,
   ROLE_DEFAULT_PERMISSIONS,
@@ -451,6 +452,12 @@ function StepRole(p: {
           <PermissionGroup
             title="PM-Module-Berechtigungen"
             items={PM_PERMISSIONS}
+            perms={p.perms}
+            toggle={p.togglePerm}
+          />
+          <PermissionGroup
+            title="Posteingang"
+            items={INBOX_PERMISSIONS}
             perms={p.perms}
             toggle={p.togglePerm}
           />

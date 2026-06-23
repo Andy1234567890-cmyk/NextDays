@@ -72,7 +72,7 @@ const GROUPS: readonly {
     groupKey: "advanced",
     icon: "ph:bookmark",
     items: [
-      { key: "guests", href: "/gaeste", icon: "ph:users", req: "view_guest_contact" },
+      { key: "guests", href: "/gaeste", icon: "ph:users", req: "pm_guest_details" },
       { key: "tasks", href: "/aufgaben", icon: "ph:check-square" },
     ],
   },

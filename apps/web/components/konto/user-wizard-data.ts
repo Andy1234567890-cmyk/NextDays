@@ -33,6 +33,8 @@ export const GENERAL_PERMISSIONS: Permission[] = [
   { id: "edit_calendar_bookings", label: "Kalender und Buchungen bearbeiten", hint: "Erlauben, den Kalender und Buchungen zu bearbeiten. Erfordert Berechtigungen für Gastinformationen, Name und Berichte." },
   { id: "view_guest_name", label: "Gastnamen anzeigen", hint: "Erlauben, den Gastnamen in der Buchung zu sehen. Erforderlich für den Posteingangszugriff." },
   { id: "view_guest_contact", label: "Gast-Kontaktdaten anzeigen", hint: "Zugriff auf Gastinformationen erlauben. Erforderlich für den Posteingangszugriff." },
+  { id: "view_guest_id_docs", label: "Ausweisdokumente anzeigen", hint: "Erlauben, Ausweis-/Passnummern in der Gästekarte vollständig zu sehen (DSGVO-sensibel). Ohne diese Berechtigung werden Nummern maskiert." },
+  { id: "edit_guest", label: "Gästekarte bearbeiten", hint: "Erlauben, Gäste anzulegen, Stammdaten zu ändern und Adressen/Kontakte/Ausweise/Notizen/Einwilligungen zu pflegen. Ohne diese Berechtigung ist die Gästekarte nur lesbar." },
   { id: "view_booking_source", label: "Buchungsquelle anzeigen", hint: "Erlauben, die Buchungsherkunft zu sehen, z.B. Airbnb, Booking.com." },
   { id: "sync_ical", label: "Kalender über iCal synchronisieren", hint: "Zugriff auf Einstellungen gewähren, um den Kalender über iCal zu synchronisieren." },
   { id: "download_booking_report", label: "Bericht über Buchungen herunterladen", hint: "Erlauben Sie den Download des Buchungsberichts der Unterkunft." },
@@ -75,6 +77,17 @@ export const PM_PERMISSIONS: Permission[] = [
   { id: "pm_website_access", label: "PM-Module Website aufrufen", hint: "Gewährt Zugang zur PM-Module Website. Wenn deaktiviert, können Benutzer nur auf die mobile App zugreifen." },
 ];
 
+// Posteingang-Berechtigungen (Enterprise: Scope + Aktionen getrennt steuerbar).
+// IDs identisch zum Backend (lodgify_permissions.py) — Single Source of Truth.
+// Zugriff selbst = pm_chat (oben). Diese vier steuern, was der Nutzer im
+// Posteingang sehen und tun darf.
+export const INBOX_PERMISSIONS: Permission[] = [
+  { id: "inbox_view_all", label: "Alle Konversationen sehen", hint: "Sieht alle Posteingang-Konversationen des Kontos. Ohne diese Berechtigung sieht der Nutzer nur die ihm zugewiesenen Konversationen. Erfordert den Posteingang-Zugriff (Chat)." },
+  { id: "inbox_reply", label: "Auf Gäste antworten", hint: "Erlaubt, ausgehende Nachrichten an Gäste zu senden. Ohne diese Berechtigung ist der Posteingang nur lesbar." },
+  { id: "inbox_assign", label: "Konversationen zuweisen", hint: "Erlaubt, Konversationen an Team-Mitglieder zuzuweisen oder die Zuweisung zu ändern." },
+  { id: "inbox_manage_config", label: "Posteingang konfigurieren", hint: "Erlaubt, Nachrichtenvorlagen, Automatisierungen und KI-Einstellungen zu verwalten." },
+];
+
 export const WIZARD_STEPS = [
   "Kontakt",
   "Zusatzinfos",
@@ -88,6 +101,7 @@ export const WIZARD_STEPS = [
 const ALL_PERMISSION_IDS = [
   ...GENERAL_PERMISSIONS.map((p) => p.id),
   ...PM_PERMISSIONS.map((p) => p.id),
+  ...INBOX_PERMISSIONS.map((p) => p.id),
 ];
 
 export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
@@ -95,7 +109,8 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
   co_admin: [
     "edit_property", "edit_property_contact", "manage_property_settings",
     "manage_property_conditions", "edit_calendar_bookings", "view_guest_name",
-    "view_guest_contact", "view_booking_source", "sync_ical",
+    "view_guest_contact", "view_guest_id_docs", "edit_guest", "view_booking_source",
+    "sync_ical",
     "download_booking_report", "access_homepage_builder", "access_pm_features",
     "pm_manage_booking_images", "pm_manage_property_images", "pm_chat",
     "pm_edit_comments", "pm_edit_checkin_times", "pm_guest_module",
@@ -103,6 +118,7 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "pm_guest_details", "pm_booking_total", "pm_booking_payments",
     "pm_view_add_comments", "pm_view_notes", "pm_view_booking_images",
     "pm_view_property_images", "pm_website_access",
+    "inbox_view_all", "inbox_reply", "inbox_assign", "inbox_manage_config",
   ],
   owner: [
     "owner_reporting", "view_booking_source", "pm_property_area",

@@ -18,6 +18,8 @@ export type Account = {
   has_password: boolean;
   totp_enabled: boolean;
   role: UserRole | null;
+  // Effektive Lodgify-Berechtigungs-IDs (für UI-Gating; admin = alle).
+  permissions: string[];
   // Profilfelder (wie Lodgify „Contact information").
   phone: string | null;
   additional_phone: string | null;

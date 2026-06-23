@@ -280,6 +280,14 @@ Kalender (`availability` = `booked`) → derselbe Double-Booking-Schutz wie der
 calendar-Slice. tenant_id stammt aus dem JWT. Leseendpoint erfordert
 `view_calendar`, Anlegen `manage_calendar`.
 
+**DSGVO-Daten-Split (Lastenheft §4):** Die Gast-Felder werden serverseitig je
+Rolle maskiert. Rollen **mit** `view_guest_full` (admin, co_admin) erhalten
+vollen Gastnamen + Beträge. Rollen **ohne** (owner, staff, cleaner — bzw.
+unbekannte/fehlende Rolle, fail-closed) erhalten nur den **Vornamen**;
+`total_amount` ist `null` und `currency` leer. Gilt für `list`, `dashboard` und
+die Anlage-Antwort gleichermaßen (im Posteingang analog: `guest_email`/`phone`
+werden zusätzlich unterdrückt).
+
 | Methode | Pfad | Beschreibung |
 |---|---|---|
 | `GET` | `/api/v1/reservations?property_id` | Reservierungen des Tenants (optional je Objekt) |
@@ -328,12 +336,74 @@ Reservierungen (kein Fallback, stornierte Reservierungen ausgenommen):
 
 ---
 
+## guests (Gästekarte — implementiert)
+
+Enterprise-Gästeprofil (vgl. OPERA Cloud „Manage Profile" / protel Gästekartei):
+Stammdaten + Sub-Ressourcen (Adressen, Kontakte, Identitätsdokumente, Präferenzen,
+Consents, Notizen, Dokumente) + Joins (Reservierungen, Posteingang-Threads,
+Rechnungen). Tenant-isoliert (expliziter Filter + RLS via `current_tenant_id()`).
+
+**Zugriff:** alle Endpoints erfordern `pm_guest_details` (sonst `403`). **Feld-
+Maskierung** über den zentralen `auth/guest_masking.py` (Single Source of Truth,
+identisch zu reservations/inbox): voller Name nur mit `view_guest_name` (sonst
+Vorname), Kontakt mit `view_guest_contact`, Beträge/Umsatz mit `pm_booking_total`
+& nicht `hide_prices`, **Ausweisnummern nur mit `view_guest_id_docs`** (sonst
+`••• 1234`). Admin = immer alles.
+
+| Methode | Pfad | Beschreibung |
+|---|---|---|
+| `GET` | `/api/v1/guests?q&vip&segment&blocked&limit&offset` | Liste + Suche (Name/E-Mail/Telefon/Firma) + Filter |
+| `POST` | `/api/v1/guests` | Gast anlegen (`name` aus first/last_name ableitbar) |
+| `GET` | `/api/v1/guests/{id}` | Detail (maskiert) |
+| `PATCH` | `/api/v1/guests/{id}` | Stammdaten ändern |
+| `DELETE` | `/api/v1/guests/{id}` | DSGVO: anonymisiert bei Reservierungsbezug, sonst Hard-Delete |
+| `GET/POST/DELETE` | `/api/v1/guests/{id}/addresses[/{aid}]` | Adressen (1:n) |
+| `GET/POST/DELETE` | `/api/v1/guests/{id}/contacts[/{cid}]` | Kontakte (1:n) |
+| `GET/POST/DELETE` | `/api/v1/guests/{id}/identity-documents[/{did}]` | Ausweise (DSGVO; Schreiben braucht `view_guest_id_docs`) |
+| `GET/PUT` | `/api/v1/guests/{id}/preferences` | Präferenzen (1:1, upsert) |
+| `GET/POST` | `/api/v1/guests/{id}/consents` | Einwilligungen (append-only Historie) |
+| `GET/POST/DELETE` | `/api/v1/guests/{id}/notes[/{nid}]` | interne Notizen |
+| `GET/POST/DELETE` | `/api/v1/guests/{id}/documents[/{did}]` | Dokumente (Storage-Referenz) |
+| `GET` | `/api/v1/guests/{id}/reservations` | Reservierungshistorie (Join) |
+| `GET` | `/api/v1/guests/{id}/threads` | verknüpfte Posteingang-Threads (Join) |
+| `GET` | `/api/v1/guests/{id}/invoices` | Rechnungen (Brücke guest.email → customers.email → invoices) |
+| `POST` | `/api/v1/guests/merge` | Dubletten zusammenführen — **TODO (501)** |
+
+**Tabellen (Migration 0046):** `guests` erweitert (Stammdaten, VIP/Segment,
+`is_blocked`, Loyalty-Aggregate, `created_by/updated_by`, `anonymized_at`) +
+`guest_addresses`, `guest_contacts`, `guest_identity_documents`,
+`guest_preferences`, `guest_consents` (append-only), `guest_notes`,
+`guest_documents`. Alle RLS via `current_tenant_id()`. Neue Permission
+`view_guest_id_docs`.
+
+---
+
 ## inbox (Posteingang — implementiert)
 
 Gäste-Kommunikation pro OTA-Buchung (`channex_booking` = Thread). Nachrichten über
 Channex-Messaging (Booking.com/Airbnb/Expedia) bzw. im Sandbox-Modus über den lokalen
-Mock-Speicher. Alle Endpoints erfordern `view_guest_full`. White-label (kein
-Provider-Branding für Endkunden).
+Mock-Speicher. White-label (kein Provider-Branding für Endkunden).
+
+**Enterprise-Zugriffsmodell (drei unabhängige Achsen, pro Nutzer über
+`users.permissions` steuerbar — nicht an die Rolle gekoppelt; Quelle der Wahrheit
+ist die DB, nicht das JWT; `inbox/authz.py`):**
+
+- **Access** — jeder Endpoint erfordert `pm_chat` (sonst `403`). Admin immer.
+- **Scope** — `inbox_view_all` → alle Tenant-Threads; ohne → nur die dem Nutzer
+  zugewiesenen (`assigned_user_id == user_id`). Ein fremder Thread liefert im
+  assigned-Scope bewusst `404` (keine Existenz preisgeben), nicht `403`.
+- **Actions** — Senden/Planen erfordert `inbox_reply`, Zuweisen `inbox_assign`,
+  Vorlagen/Automationen/KI-Settings (POST/PUT/DELETE) `inbox_manage_config`
+  (sonst je `403`). Lesen ist davon unabhängig.
+- **Field-Masking** — Gastname/-kontakt/Beträge/Quelle werden serverseitig je
+  Berechtigung maskiert (zentraler `auth/guest_masking.py`, identisch zu
+  reservations/dashboard): nur Vorname ohne `view_guest_name`, kein Kontakt ohne
+  `view_guest_contact`, kein Betrag ohne `pm_booking_total` bzw. mit `hide_prices`,
+  keine Quelle ohne `view_booking_source`.
+
+Zuweisung ist gehärtet: Ziel-Nutzer muss `pm_chat` haben (sonst `422`); `list_team`
+liefert nur Nutzer mit Posteingang-Zugriff; jede Zuweisung setzt `assigned_by`/
+`assigned_at` und schreibt einen `inbox_assignment_log`-Eintrag (Audit).
 
 | Methode | Pfad | Beschreibung |
 |---|---|---|
@@ -343,6 +413,7 @@ Provider-Branding für Endkunden).
 | `GET` | `/api/v1/inbox/{id}/reservation` | Reservierungs-Kontext rechts |
 | `PUT` | `/api/v1/inbox/{id}/flags` | Favorit/Notiz/Lesen/Archiv/Erinnerung |
 | `PUT` | `/api/v1/inbox/{id}/assign` | Konversation einem Benutzer zuweisen (`user_id: null` hebt auf) |
+| `PUT` | `/api/v1/inbox/{id}/guest` | Korrektur: Thread einem Gast zuordnen (`guest_id`); `null` → Gast aus Thread anlegen (Resolver). Braucht `inbox_manage_config` |
 | `POST` | `/api/v1/inbox/{id}/notes` | Interne Notiz (gelb im Verlauf, `sender="note"`) |
 | `GET/POST` | `/api/v1/inbox/{id}/scheduled` | Geplante Nachrichten auflisten / planen (`send_at` ISO) |
 | `DELETE` | `/api/v1/inbox/scheduled/{sid}` | Geplante Nachricht abbrechen |
@@ -365,6 +436,13 @@ Per Coolify-Scheduled-Task / crontab regelmäßig aufrufen, analog zu
 **Tabellen (Migration 0040):** `channex_booking.assigned_user_id` (Zuweisung),
 `inbox_scheduled_message` (geplante Nachrichten, `status` pending→sent|failed|cancelled),
 `inbox_thread_note` (interne Notizen). RLS via `current_tenant_id()`.
+**Migration 0045 (Audit):** `channex_booking.assigned_by`/`assigned_at` +
+`inbox_assignment_log` (from/to/by-User, Historie). RLS via `current_tenant_id()`.
+
+**Posteingang-Berechtigungen (Lodgify-Permissions, `users.permissions`):**
+`pm_chat` (Zugriff), `inbox_view_all` (Scope), `inbox_reply`, `inbox_assign`,
+`inbox_manage_config`. Default: admin/co_admin alle; staff/owner/cleaner ohne
+(staff erhält `pm_chat`/`inbox_reply` nur, wenn im Benutzer-Wizard aktiviert).
 
 ---
 

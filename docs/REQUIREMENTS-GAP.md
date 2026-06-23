@@ -42,7 +42,7 @@
 | Anforderung | Status | Hinweis |
 |---|---|---|
 | Rollen owner/staff/cleaner + admin/co_admin | ✅ | Enum + granulare Capability-Matrix (auth/permissions.py) bildet §4 vollständig ab: Co-Admin System-Alerts + Staff-Zuweisung, Owner Notification-Prefs, Staff Verfügbarkeit + Vertretung. Tenant-Gründer = admin; invite legt weitere Rollen an (E2E gegen echte DB verifiziert). |
-| Eigentümer-Daten-Split (Vorname, Netto/Nacht) | 🔴 | Feldsichtbarkeit pro Rolle — RLS + View-Logik + Frontend. |
+| Eigentümer-Daten-Split (Vorname, Netto/Nacht) | 🟡 | Serverseitig erzwungen über die **feingranulare Permission-Matrix** (`users.permissions`, nicht rollengekoppelt): zentraler `auth/guest_masking.py` maskiert Gastname (nur Vorname ohne `view_guest_name`), Kontakt (`view_guest_contact`), Beträge (`pm_booking_total` & nicht `hide_prices`), Quelle (`view_booking_source`) — genutzt von `reservations.service` (list/get/create/dashboard) und `inbox.service` (list_threads/reservation_detail); fail-closed, admin = alle. Posteingang zusätzlich mit Enterprise-Achsen (Scope/Actions, `inbox/authz.py`). Offen: gleiche Maskierung in weiteren Slices (Finanzen/Reports) + DB-seitige RLS-Spaltenfilter. |
 | Sperrung beantragen → Admin-Freigabe | 🔴 | Workflow + `block_requests`-Tabelle. |
 | Zählerstände (append-only) | 🔴 | `meter_readings`-Tabelle, RLS verbietet Update/Delete für owner. |
 | Mitarbeiter-Smartphone-Portal | 🔴 | Eigene Ansicht, strikte Datentrennung, Vertretungs-Feature. |
@@ -51,6 +51,7 @@
 
 | Anforderung | Status | Hinweis |
 |---|---|---|
+| Gästekarte (Enterprise-Gästeprofil) | ✅ | `guests`-Slice ausgebaut (Migration 0046): Stammdaten + Adressen/Kontakte/Ausweise/Präferenzen/Consents/Notizen/Dokumente + Joins (Reservierungen/Threads/Rechnungen). Zugriff `pm_guest_details`, Feld-Maskierung über zentralen `guest_masking` (inkl. `view_guest_id_docs`), DSGVO-Anonymisierung. Frontend Liste + Detail mit Tabs. Offen: Merge (Dubletten) als 501-Stub. |
 | White-Label-Gäste-Portal | 🟡 | `public_portal`-Slice als Struktur da (Phase 2). |
 | Echtzeit-Admin-Push bei Erst-Login | 🔴 | Event/Notification-System. |
 | Zentralisierte dreisprachige Standardtexte | 🔴 | `content_blocks`-Tabelle + Zuweisung pro Unterkunft. |

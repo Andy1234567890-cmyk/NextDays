@@ -18,7 +18,7 @@ einen harten Crash verloren geht), ist aber nicht mehr der primäre Weg.
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
@@ -34,7 +34,7 @@ _loop: asyncio.AbstractEventLoop | None = None
 def _parse(ts: str) -> datetime:
     dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
     if dt.tzinfo is None:
-        dt = dt.replace(tzinfo=timezone.utc)
+        dt = dt.replace(tzinfo=UTC)
     return dt
 
 
@@ -59,7 +59,8 @@ def _send_now(scheduled_id: str) -> None:
     svc = InboxService(service_client=db)
     try:
         ctx = AuthContext(user_id="scheduler", tenant_id=s["tenant_id"])
-        svc.send_message(ctx, s["thread_id"], s["body"])
+        # Berechtigung wurde beim Planen geprüft → interner Versand ohne Reply-Guard.
+        svc.send_message(ctx, s["thread_id"], s["body"], enforce_reply=False)
         db.table("inbox_scheduled_message").update({"status": "sent"}).eq(
             "id", scheduled_id
         ).execute()
@@ -73,7 +74,7 @@ def _send_now(scheduled_id: str) -> None:
 
 async def _wait_and_send(scheduled_id: str, send_at: str) -> None:
     try:
-        delay = (_parse(send_at) - datetime.now(timezone.utc)).total_seconds()
+        delay = (_parse(send_at) - datetime.now(UTC)).total_seconds()
         if delay > 0:
             await asyncio.sleep(delay)
         await asyncio.to_thread(_send_now, scheduled_id)
