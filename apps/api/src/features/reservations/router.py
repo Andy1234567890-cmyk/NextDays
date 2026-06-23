@@ -15,6 +15,7 @@ from src.features.auth.permissions import Capability
 from .schemas import (
     DashboardResponse,
     ReservationCreate,
+    ReservationDetail,
     ReservationListResponse,
     ReservationMove,
     ReservationResponse,
@@ -58,6 +59,19 @@ def list_reservations(
 ) -> ReservationListResponse:
     try:
         return service.list(ctx, property_id)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/{reservation_id}", response_model=ReservationDetail)
+def reservation_detail(
+    reservation_id: str,
+    service: ReservationsServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+) -> ReservationDetail:
+    """Vollständige Reservierungs-Detailansicht (rechter Slider)."""
+    try:
+        return service.detail(ctx, reservation_id)
     except ReservationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

@@ -367,10 +367,10 @@ def _move_db(store: dict) -> ReservationsService:
 
 def _move_store(*, check_in: str, check_out: str, status: str = "confirmed") -> dict:
     return {
-        "users": [{"role": "admin", "permissions": _FULL_PERMS}],
+        "users": [{"id": "u", "role": "admin", "permissions": _FULL_PERMS}],
         "properties": [
-            {"id": "p1", "tenant_id": "t1"},
-            {"id": "p2", "tenant_id": "t1"},
+            {"id": "p1", "tenant_id": "t1", "title": "Apartment 1"},
+            {"id": "p2", "tenant_id": "t1", "title": "Apartment 2"},
         ],
         "reservations": [
             {
@@ -471,4 +471,52 @@ def test_move_unknown_reservation_404() -> None:
                 property_id="p1", check_in=date(2026, 7, 5), check_out=date(2026, 7, 7)
             ),
         )
+    assert exc.value.status_code == 404
+
+
+# --- detail: vollständige Detailansicht + Maskierung -------------------------
+
+def test_detail_admin_sees_full_amounts_and_quote() -> None:
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["reservations"][0].update({
+        "total_amount": 400, "paid_amount": 100,
+        "quote_items": [
+            {"label": "Room rate", "amount": 300},
+            {"label": "Reinigung", "amount": 100},
+        ],
+        "num_guests": 4, "adults": 4, "guest_email": "a@x.de",
+        "checkin_time": "16:00", "checkout_time": "10:00",
+    })
+    svc = _move_db(store)
+    d = svc.detail(AuthContext(user_id="u", tenant_id="t1", role="admin"), "r1")
+    assert d.nights == 2
+    assert d.num_guests == 4
+    assert d.total_amount == 400
+    assert d.due_amount == 300  # total - paid
+    assert [q.label for q in d.quote_items] == ["Room rate", "Reinigung"]
+    assert d.guest_email == "a@x.de"
+    assert d.checkin_time == "16:00"
+
+
+def test_detail_masks_amounts_and_contact_without_permission() -> None:
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["users"] = [{"id": "u", "role": "cleaner", "permissions": _NO_PERMS}]
+    store["reservations"][0].update({
+        "total_amount": 400, "paid_amount": 100,
+        "quote_items": [{"label": "Room rate", "amount": 300}],
+        "guest_email": "a@x.de",
+    })
+    svc = _move_db(store)
+    d = svc.detail(AuthContext(user_id="u", tenant_id="t1", role=None), "r1")
+    assert d.total_amount is None
+    assert d.due_amount is None
+    assert d.quote_items == []
+    assert d.guest_email is None
+
+
+def test_detail_unknown_404() -> None:
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    svc = _move_db(store)
+    with pytest.raises(ReservationError) as exc:
+        svc.detail(AuthContext(user_id="u", tenant_id="t1", role="admin"), "nope")
     assert exc.value.status_code == 404

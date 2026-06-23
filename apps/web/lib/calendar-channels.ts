@@ -21,45 +21,50 @@ export type ChannelMeta = {
 // `manual` ist keine echte Plattform, sondern eine intern gesperrte/gepflegte
 // Quelle — sie erscheint nicht als „Kanal", taucht aber bei Bedarf als Fallback
 // auf. Reihenfolge = Anzeigereihenfolge in Legende/Filter.
+// Logos: echte Markenformen. Airbnb gibt es als farbiges Iconify-Logo
+// (logos:airbnb); Booking/Expedia/Vrbo nur als monochrome simple-icons —
+// die werden auf dem (farbigen) Balken in Weiß und als Legenden-Punkt in der
+// Markenfarbe gerendert, sodass die Marke klar erkennbar bleibt.
 export const CHANNEL_META: Record<AvailabilitySource, ChannelMeta> = {
   direct: {
     label: "Direkt",
-    logo: { kind: "icon", icon: "ph:house-line" },
+    logo: { kind: "icon", icon: "ph:house-line-fill" },
     barBg: "bg-channel-direct",
     barFg: "text-white",
     dotBg: "bg-channel-direct",
   },
   booking: {
     label: "Booking.com",
-    logo: { kind: "img", src: "/channels/booking.svg" },
+    logo: { kind: "icon", icon: "simple-icons:bookingdotcom" },
     barBg: "bg-channel-booking",
     barFg: "text-white",
     dotBg: "bg-channel-booking",
   },
   airbnb: {
     label: "Airbnb",
-    logo: { kind: "icon", icon: "logos:airbnb-icon" },
+    logo: { kind: "icon", icon: "simple-icons:airbnb" },
     barBg: "bg-channel-airbnb",
     barFg: "text-white",
     dotBg: "bg-channel-airbnb",
   },
   vrbo: {
     label: "Vrbo",
-    logo: { kind: "icon", icon: "ph:house" },
+    // Kein Vrbo-Markenlogo in Iconify → klares Ferienhaus-Symbol als Platzhalter.
+    logo: { kind: "icon", icon: "ph:house-fill" },
     barBg: "bg-channel-vrbo",
     barFg: "text-white",
     dotBg: "bg-channel-vrbo",
   },
   portal: {
     label: "Portal",
-    logo: { kind: "icon", icon: "ph:globe" },
+    logo: { kind: "icon", icon: "ph:globe-hemisphere-west-fill" },
     barBg: "bg-channel-portal",
     barFg: "text-white",
     dotBg: "bg-channel-portal",
   },
   manual: {
     label: "Manuell",
-    logo: { kind: "icon", icon: "ph:hand" },
+    logo: { kind: "icon", icon: "ph:lock-simple-fill" },
     barBg: "bg-neutral-700",
     barFg: "text-white",
     dotBg: "bg-neutral-700",

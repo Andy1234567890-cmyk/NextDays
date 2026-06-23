@@ -17,6 +17,7 @@ import {
 } from "@/components/kalender/calendar-header";
 import { CalendarActionMenu } from "@/components/kalender/calendar-action-menu";
 import { BulkEditDialog } from "@/components/kalender/bulk-edit-dialog";
+import { ReservationDetailSlider } from "@/components/kalender/reservation-detail-slider";
 import { PropertyLabel } from "@/components/kalender/property-label";
 import { ReservationWizard } from "@/components/kalender/reservation-wizard";
 import {
@@ -237,7 +238,8 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
   // Buchungen je Objekt → Tages-Map (Gastname im Balken + Detail-Popover).
   const [resByProp, setResByProp] = useState<Record<string, Record<string, Reservation>>>({});
   // Aktuell geöffnetes Buchungsdetail (per Klick auf einen Balken).
-  const [detail, setDetail] = useState<Reservation | null>(null);
+  // Geöffnetes Buchungsdetail: nur die Reservierungs-ID (Slider lädt die Daten).
+  const [detail, setDetail] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<ViewOptions>(DEFAULT_VIEW);
   // Filter & Suche (Paket 4b). Leerer Filter = alles sichtbar.
@@ -268,29 +270,43 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
   // beim Ziehen — robuster als onMouseEnter (unabhängig von überdeckenden Balken).
   const gridRef = useRef<HTMLDivElement | null>(null);
 
-  // Eine laufende Verschiebung/Resize an den Server schicken (optimistisch mit
-  // Rollback). pid/Zeitraum kommen aus der Drag-Vorschau (siehe applyBarDrag).
+  // Ausstehende Verschiebung/Resize, die der Nutzer ERST bestätigen muss
+  // (Schutz vor versehentlichem Verschieben per Drag).
+  const [pendingMove, setPendingMove] = useState<{
+    res: Reservation;
+    mode: BarDrag["mode"];
+    targetPid: string;
+    ci: string;
+    co: string;
+  } | null>(null);
+
+  // Drag-Ende: keine echte Änderung → verwerfen; sonst Bestätigung anfordern.
   const commitBarDrag = useCallback(
-    async (d: BarDrag, targetPid: string, ci: string, co: string) => {
-      // Keine echte Änderung → nichts tun.
+    (d: BarDrag, targetPid: string, ci: string, co: string) => {
       if (targetPid === d.res.property_id && ci === d.res.check_in && co === d.res.check_out) {
         return;
       }
-      setSaving(true);
-      const res = await moveReservation(d.res.id, targetPid, ci, co);
-      setSaving(false);
-      if (res.ok) {
-        toast.success("Reservierung verschoben.");
-        await load();
-      } else {
-        // Rollback: der Server hat nichts geändert → einfach neu laden, damit
-        // die Vorschau verschwindet. Konflikt klar zurückmelden.
-        toast.error(res.error || "Verschieben nicht möglich.");
-        await load();
-      }
+      setPendingMove({ res: d.res, mode: d.mode, targetPid, ci, co });
     },
     [],
   );
+
+  // Bestätigte Verschiebung an den Server schicken (optimistisch mit Rollback
+  // über Neuladen). Konflikt (409) wird klar zurückgemeldet.
+  const confirmMove = useCallback(async () => {
+    const m = pendingMove;
+    if (!m) return;
+    setPendingMove(null);
+    setSaving(true);
+    const res = await moveReservation(m.res.id, m.targetPid, m.ci, m.co);
+    setSaving(false);
+    if (res.ok) {
+      toast.success("Reservierung verschoben.");
+    } else {
+      toast.error(res.error || "Verschieben nicht möglich.");
+    }
+    await load();
+  }, [pendingMove]);
 
   // Hervorhebung: während des Ziehens die Vorschau, sonst die fertige Auswahl.
   const isSelected = useCallback(
@@ -712,7 +728,11 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
         <span className="h-3 w-px bg-border" aria-hidden />
         {CHANNEL_SOURCES.map((src) => (
           <span key={src} className="flex items-center gap-1.5">
-            <span className={`inline-flex size-3 items-center justify-center rounded-sm ${CHANNEL_META[src].dotBg}`} />
+            <span
+              className={`inline-flex size-4 items-center justify-center rounded-sm text-white ${CHANNEL_META[src].dotBg}`}
+            >
+              <ChannelLogo source={src} className="size-2.5" />
+            </span>
             {CHANNEL_META[src].label}
           </span>
         ))}
@@ -979,10 +999,14 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                             />
                           )}
                           <span className="truncate">{segmentLabel(seg)}</span>
-                          {/* Nächte-Indikator rechts, wenn der Balken breit genug ist. */}
-                          {seg.status === "booked" && nights >= 3 && (
-                            <span className="ml-auto shrink-0 text-[0.65rem] opacity-80">
-                              {nights}N
+                          {/* Indikatoren rechts: Gästezahl + Nächte (sofern Platz). */}
+                          {seg.status === "booked" && seg.reservation && (
+                            <span className="ml-auto flex shrink-0 items-center gap-1 text-[0.65rem] opacity-90">
+                              <span className="flex items-center gap-0.5">
+                                <Icon icon="ph:user-fill" className="size-2.5" />
+                                {seg.reservation.num_guests}
+                              </span>
+                              {nights >= 3 && <span>· {nights}N</span>}
                             </span>
                           )}
                         </>
@@ -1008,7 +1032,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                             ev.stopPropagation();
                             onBarDown(res, p.id, seg.start, "move");
                           }}
-                          onClick={() => !barDrag && setDetail(res)}
+                          onClick={() => !barDrag && setDetail(res.id)}
                           // Während IRGENDEIN Balken gezogen wird, müssen ALLE
                           // Balken — auch der gezogene — Mausereignisse durch-
                           // lassen, sonst klebt der gezogene Balken am Cursor und
@@ -1103,15 +1127,47 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
         />
       )}
 
-      {/* Buchungsdetail (Klick auf einen Balken) — Gast, Kanal, Zeitraum, Code */}
+      {/* Buchungsdetail (Klick auf einen Balken) — voller Slider von rechts */}
       {detail && (
-        <ReservationDetail
-          reservation={detail}
-          propertyTitle={
-            properties.find((p) => p.id === detail.property_id)?.title ?? "Objekt"
-          }
+        <ReservationDetailSlider
+          reservationId={detail}
+          todayKey={todayKey}
           onClose={() => setDetail(null)}
         />
+      )}
+
+      {/* Bestätigung vor dem Verschieben/Resizen (Schutz vor Versehen) */}
+      {pendingMove && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-foreground/40 p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl">
+            <div className="mb-2 flex items-center gap-2">
+              <Icon icon="ph:arrows-left-right" className="size-5 text-accent" />
+              <h3 className="font-display text-lg font-extrabold">
+                {pendingMove.mode === "move"
+                  ? "Reservierung verschieben?"
+                  : "Zeitraum ändern?"}
+              </h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {pendingMove.res.guest_name?.trim() || "Buchung"} →{" "}
+              <span className="font-medium text-foreground">
+                {properties.find((p) => p.id === pendingMove.targetPid)?.title ?? "Objekt"}
+              </span>
+              , {pendingMove.ci} – {pendingMove.co}.
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Es wird erneut auf Doppelbuchung geprüft.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setPendingMove(null)} disabled={saving}>
+                Abbrechen
+              </Button>
+              <Button onClick={confirmMove} disabled={saving}>
+                {saving ? "Verschiebe…" : "Verschieben"}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -1171,111 +1227,3 @@ function FilterSelect({
   );
 }
 
-// Detail-Popover für eine Buchung (OTA oder direkt). White-label: zeigt den
-// echten Kanal/OTA-Namen (das ist die Herkunft der Buchung, kein Provider-Leck).
-const CHANNEL_LABEL: Record<Reservation["channel"], string> = {
-  direct: "Direktbuchung",
-  portal: "Portal",
-  booking: "Booking.com",
-  airbnb: "Airbnb",
-  vrbo: "Vrbo",
-};
-
-function ReservationDetail({
-  reservation,
-  propertyTitle,
-  onClose,
-}: {
-  reservation: Reservation;
-  propertyTitle: string;
-  onClose: () => void;
-}) {
-  const r = reservation;
-  const channel = r.ota_name || CHANNEL_LABEL[r.channel];
-  const fmtDate = (s: string) =>
-    new Date(`${s}T00:00:00`).toLocaleDateString("de-DE", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4"
-      onMouseDown={onClose}
-    >
-      <div
-        className="flex w-full max-w-md flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-2xl"
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex flex-col">
-            <span className="font-display text-lg font-extrabold">
-              {r.guest_name?.trim() || "Gast"}
-            </span>
-            <span className="text-sm text-muted-foreground">{propertyTitle}</span>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-muted-foreground hover:text-foreground"
-            aria-label="Schließen"
-          >
-            <Icon icon="ph:x" className="size-5" />
-          </button>
-        </div>
-
-        <dl className="flex flex-col divide-y divide-border rounded-(--radius) border border-border text-sm">
-          <DetailRow label="Kanal">
-            <span className="inline-flex items-center gap-1.5">
-              <ChannelLogo
-                source={r.channel as AvailabilitySource}
-                className="size-4"
-              />
-              {channel}
-            </span>
-          </DetailRow>
-          <DetailRow label="Zeitraum">
-            {fmtDate(r.check_in)} → {fmtDate(r.check_out)}
-          </DetailRow>
-          {r.external_ref && (
-            <DetailRow label="Buchungscode">{r.external_ref}</DetailRow>
-          )}
-          <DetailRow label="Status">{r.status}</DetailRow>
-          {r.total_amount != null && r.total_amount > 0 && (
-            <DetailRow label="Betrag">
-              {r.total_amount.toLocaleString("de-DE", {
-                style: "currency",
-                currency: r.currency || "EUR",
-              })}
-            </DetailRow>
-          )}
-        </dl>
-
-        {/* OTA-Buchungen haben einen Gäste-Chat → Link in den Posteingang */}
-        {r.channel !== "direct" && (
-          <Button asChild variant="outline">
-            <Link href="/posteingang">
-              <Icon icon="ph:chat-circle" className="size-4" />
-              Nachrichten
-            </Link>
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function DetailRow({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3 px-3 py-2">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="font-medium">{children}</dd>
-    </div>
-  );
-}

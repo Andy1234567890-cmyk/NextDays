@@ -28,7 +28,9 @@ from .schemas import (
     DashboardEntry,
     DashboardKpi,
     DashboardResponse,
+    QuoteItem,
     ReservationCreate,
+    ReservationDetail,
     ReservationListResponse,
     ReservationMove,
     ReservationResponse,
@@ -293,6 +295,21 @@ class ReservationsService:
                     "status": req.status.value,
                     "total_amount": req.total_amount,
                     "currency": currency,
+                    # Belegung (Gästezahl) für Balken + Detailansicht.
+                    "num_guests": (
+                        req.guests.adults
+                        + req.guests.children
+                        + req.guests.infants
+                    ),
+                    "adults": req.guests.adults,
+                    "children": req.guests.children,
+                    "infants": req.guests.infants,
+                    "pets": req.guests.pets,
+                    # Denormalisierte Kontaktdaten (für OTA-Buchungen ohne guests).
+                    "guest_email": req.contact.email or None,
+                    "guest_phone": req.contact.phone or None,
+                    "guest_language": req.contact.language or None,
+                    "guest_country": req.contact.country or None,
                 }
             )
             .execute()
@@ -490,6 +507,81 @@ class ReservationsService:
         mask = load_guest_mask(self._client, ctx.user_id)
         return self._row((full.data or [upd.data[0]])[0], mask)
 
+    def detail(self, ctx: AuthContext, reservation_id: str) -> ReservationDetail:
+        """Vollständige Reservierungs-Detailansicht (rechter Slider). Tenant-
+        scoped; Beträge + Kontaktdaten werden maskierungskonform geliefert."""
+        tenant_id = self._require_tenant(ctx)
+        res = (
+            self._db()
+            .table("reservations")
+            .select("*, guests(name)")
+            .eq("id", reservation_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        if not res.data:
+            raise ReservationError("Reservierung nicht gefunden.", status_code=404)
+        r = res.data[0]
+
+        title = ""
+        prop = (
+            self._db()
+            .table("properties")
+            .select("title")
+            .eq("id", r["property_id"])
+            .limit(1)
+            .execute()
+        ).data
+        if prop:
+            title = prop[0].get("title") or ""
+
+        mask = load_guest_mask(self._client, ctx.user_id)
+        guest = r.get("guests") or {}
+        guest_name = guest.get("name", "") if isinstance(guest, dict) else ""
+        ci, co = _as_date(r["check_in"]), _as_date(r["check_out"])
+
+        total = float(r.get("total_amount") or 0)
+        paid = float(r.get("paid_amount") or 0)
+        items = [
+            QuoteItem(label=str(it.get("label", "")), amount=float(it.get("amount") or 0))
+            for it in (r.get("quote_items") or [])
+            if isinstance(it, dict)
+        ]
+        return ReservationDetail(
+            id=r["id"],
+            property_id=r["property_id"],
+            property_title=title,
+            guest_id=r.get("guest_id"),
+            guest_name=mask.name(guest_name) or "",
+            channel=r["channel"],
+            ota_name=mask.source_value(r.get("ota_name")),
+            external_ref=r.get("external_ref"),
+            external_url=r.get("external_url"),
+            check_in=ci,
+            check_out=co,
+            nights=(co - ci).days,
+            status=r["status"],
+            num_guests=int(r.get("num_guests") or 1),
+            adults=int(r.get("adults") or 1),
+            children=int(r.get("children") or 0),
+            infants=int(r.get("infants") or 0),
+            pets=int(r.get("pets") or 0),
+            currency=(r.get("currency") or "") if mask.amounts else "",
+            total_amount=mask.amount(total),
+            paid_amount=mask.amount(paid),
+            due_amount=mask.amount(max(0.0, total - paid)),
+            quote_items=items if mask.amounts else [],
+            checkin_time=r.get("checkin_time"),
+            checkout_time=r.get("checkout_time"),
+            note=r.get("note"),
+            guest_email=mask.contact_value(r.get("guest_email")),
+            guest_phone=mask.contact_value(r.get("guest_phone")),
+            guest_language=r.get("guest_language"),
+            guest_country=r.get("guest_country"),
+            created_at=r.get("created_at"),
+        )
+
     def _release_channex(
         self, tenant_id: str, property_id: str, days: list[str]
     ) -> None:
@@ -560,4 +652,5 @@ class ReservationsService:
             currency=(r.get("currency") or "") if mask.amounts else "",
             ota_name=mask.source_value(r.get("ota_name")),
             external_ref=r.get("external_ref"),
+            num_guests=int(r.get("num_guests") or 1),
         )

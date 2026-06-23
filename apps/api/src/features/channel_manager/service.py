@@ -2390,6 +2390,11 @@ class ChannelManagerService:
             total_amount = float(total) if total is not None else 0
         except (TypeError, ValueError):
             total_amount = 0
+        # Gästezahl + Kontakt aus dem Channex-Booking übernehmen (für Balken +
+        # Detailansicht). occupancy ist je nach OTA dict {adults,children,infants}
+        # oder eine Zahl; defensiv beides unterstützen, sonst 1.
+        adults, children, infants = self._booking_occupancy(attrs)
+        customer = attrs.get("customer") or {}
         row = {
             "tenant_id": tenant_id,
             "property_id": property_id,
@@ -2403,6 +2408,14 @@ class ChannelManagerService:
             "total_amount": total_amount,
             "currency": attrs.get("currency") or "EUR",
             "source_channex_booking_id": booking_id,
+            "num_guests": max(1, adults + children + infants),
+            "adults": adults,
+            "children": children,
+            "infants": infants,
+            "guest_email": customer.get("mail") or customer.get("email"),
+            "guest_phone": customer.get("phone"),
+            "guest_language": customer.get("language"),
+            "guest_country": customer.get("country"),
         }
         if existing:
             db.table("reservations").update(row).eq("id", existing[0]["id"]).execute()
@@ -2426,6 +2439,22 @@ class ChannelManagerService:
             0,
         )
         return True
+
+    def _booking_occupancy(self, attrs: dict[str, Any]) -> tuple[int, int, int]:
+        """Gästezahl (adults, children, infants) aus einem Channex-Booking.
+
+        occupancy ist je nach OTA ein dict {adults,children,infants} oder eine
+        Zahl; alternativ liegt number_of_guests/occupancy direkt vor. Fehlt
+        alles, gilt 1 Erwachsener (keine erfundene größere Belegung)."""
+        occ = attrs.get("occupancy")
+        if isinstance(occ, dict):
+            return (
+                self._as_int(occ.get("adults")) or 1,
+                self._as_int(occ.get("children")) or 0,
+                self._as_int(occ.get("infants")) or 0,
+            )
+        total = self._as_int(occ) or self._as_int(attrs.get("number_of_guests"))
+        return (total or 1, 0, 0)
 
     def import_bookings_for_property(
         self,

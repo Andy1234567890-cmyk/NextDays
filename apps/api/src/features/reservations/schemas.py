@@ -98,6 +98,55 @@ class ReservationResponse(BaseModel):
     currency: str = ""
     ota_name: str | None = None       # echter Portal-Name (Kalender-Herkunft)
     external_ref: str | None = None   # OTA-Reservierungscode
+    num_guests: int = 1               # Gästezahl (Balken-Anzeige)
+
+
+class QuoteItem(BaseModel):
+    label: str
+    amount: float
+
+
+class ReservationDetail(BaseModel):
+    """Vollständige Reservierungs-Detailansicht (rechter Slider, Hostaway-Niveau).
+
+    Beträge/Kontakt sind maskierungskonform: ohne Berechtigung None bzw. nur
+    Vorname (DSGVO-Daten-Split §4)."""
+
+    id: str
+    property_id: str
+    property_title: str = ""
+    guest_id: str | None = None
+    guest_name: str = ""
+    channel: ReservationChannel
+    ota_name: str | None = None
+    external_ref: str | None = None
+    external_url: str | None = None
+    check_in: date
+    check_out: date
+    nights: int
+    status: ReservationStatus
+    # Belegung
+    num_guests: int = 1
+    adults: int = 1
+    children: int = 0
+    infants: int = 0
+    pets: int = 0
+    # Beträge (maskiert) + Quote-Aufschlüsselung
+    currency: str = ""
+    total_amount: float | None = None
+    paid_amount: float | None = None
+    due_amount: float | None = None
+    quote_items: list[QuoteItem] = []
+    # Policy-Zeiten + Notiz
+    checkin_time: str | None = None
+    checkout_time: str | None = None
+    note: str | None = None
+    # Gast-Kontakt (maskiert)
+    guest_email: str | None = None
+    guest_phone: str | None = None
+    guest_language: str | None = None
+    guest_country: str | None = None
+    created_at: str | None = None
 
 
 class ReservationListResponse(BaseModel):

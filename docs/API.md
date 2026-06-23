@@ -259,10 +259,11 @@ Alle Endpoints erfordern Auth; `block`/`price-override` zusätzlich die Capabili
 
 | Methode | Pfad | Beschreibung |
 |---|---|---|
-| `GET` | `/api/v1/calendar/availability?property_id&start&end` | Tagesstatus im Zeitraum (fehlende Tage = offen) |
+| `GET` | `/api/v1/calendar/availability?property_id&start&end` | Tagesstatus im Zeitraum inkl. `price`+`min_stay` je Tag (fehlende Tage = offen) |
 | `GET` | `/api/v1/calendar/check?property_id&start&end` | Verfügbarkeit + Konflikttage (Double-Booking-Prüfung) |
 | `POST` | `/api/v1/calendar/block` | Tage sperren — `409`, wenn bereits gebucht |
 | `POST` | `/api/v1/calendar/price-override` | Tagespreis setzen; `price: null` nimmt zurück |
+| `POST` | `/api/v1/calendar/bulk-edit` | Preis/Min-Stay/Sperre/Stop-Sell über mehrere Objekte × Zeitraum — `404` (fremdes Objekt) |
 
 ```json
 // GET /check → 200
@@ -290,9 +291,11 @@ werden zusätzlich unterdrückt).
 
 | Methode | Pfad | Beschreibung |
 |---|---|---|
-| `GET` | `/api/v1/reservations?property_id` | Reservierungen des Tenants (optional je Objekt) |
+| `GET` | `/api/v1/reservations?property_id` | Reservierungen des Tenants (optional je Objekt); inkl. `num_guests` |
 | `GET` | `/api/v1/reservations/dashboard` | Startseiten-Kennzahlen (echte Daten, im Backend berechnet) |
+| `GET` | `/api/v1/reservations/{id}` | Vollständige Detailansicht (Slider): Belegung, Quote, Zahlung, Policy-Zeiten, Kontakt — maskierungskonform |
 | `POST` | `/api/v1/reservations` | Reservierung anlegen — `404` (fremdes Objekt), `409` (Tage belegt) |
+| `PATCH` | `/api/v1/reservations/{id}/move` | Verschieben (Objekt/Zeitraum) oder resizen (Check-in/out) — `409` bei Doppelbuchung, eigene Alt-Tage ausgenommen |
 
 ```json
 // POST /reservations
