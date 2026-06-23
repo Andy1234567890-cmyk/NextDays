@@ -41,6 +41,7 @@ import {
   moveReservation,
 } from "@/lib/reservations";
 import { toast } from "sonner";
+import { useRealtime } from "@/lib/use-realtime";
 
 type Prop = {
   id: string;
@@ -263,6 +264,9 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
   const [barDrag, setBarDrag] = useState<BarDrag | null>(null);
   const barDragRef = useRef<BarDrag | null>(null);
   barDragRef.current = barDrag;
+  // Ref auf den Tagesbereich (Zeilen-Container) für die Geometrie-Berechnung
+  // beim Ziehen — robuster als onMouseEnter (unabhängig von überdeckenden Balken).
+  const gridRef = useRef<HTMLDivElement | null>(null);
 
   // Eine laufende Verschiebung/Resize an den Server schicken (optimistisch mit
   // Rollback). pid/Zeitraum kommen aus der Drag-Vorschau (siehe applyBarDrag).
@@ -342,6 +346,42 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
     [],
   );
 
+  // Während eines Balken-Zugs die Mausposition global tracken und daraus —
+  // rein geometrisch — Tag-Spalte + Ziel-Objektzeile bestimmen. Robuster als
+  // onMouseEnter der Zellen (das von überdeckenden Balken verschluckt würde).
+  const shownRef = useRef<Prop[]>([]);
+  useEffect(() => {
+    if (!barDrag) return;
+    const remPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const colPx = COL * remPx;
+    const rowPx = ROW_H * remPx;
+    const onMove = (e: MouseEvent) => {
+      const grid = gridRef.current;
+      const bd = barDragRef.current;
+      if (!grid || !bd) return;
+      const rect = grid.getBoundingClientRect();
+      // Jede Zeile beginnt mit der (sticky) LABEL-Spalte → diese Breite abziehen.
+      const di = Math.floor((e.clientX - rect.left - LABEL * remPx) / colPx);
+      const rows = shownRef.current;
+      const rowIdx = Math.min(
+        rows.length - 1,
+        Math.max(0, Math.floor((e.clientY - rect.top) / rowPx)),
+      );
+      const overPid = rows[rowIdx]?.id ?? bd.startPid;
+      setBarDrag((cur) =>
+        cur
+          ? {
+              ...cur,
+              dayOffset: di - cur.startDi,
+              targetPid: cur.mode === "move" ? overPid : cur.res.property_id,
+            }
+          : cur,
+      );
+    };
+    window.addEventListener("mousemove", onMove);
+    return () => window.removeEventListener("mousemove", onMove);
+  }, [barDrag]);
+
   // Maus loslassen beendet das Ziehen. Ein laufender BALKEN-Zug (move/resize)
   // hat Vorrang und wird an den Server geschickt; sonst Vorschau→Auswahl und
   // das Aktionsmenü am Cursor (Block/Reservierung).
@@ -396,6 +436,8 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
       return guests.some((r) => r.guest_name?.toLowerCase().includes(q));
     });
   }, [properties, typeFilter, q, resByProp]);
+  // Aktuelle sichtbare Objektliste für den Drag-Geometrie-Effect bereitstellen.
+  shownRef.current = shown;
 
   // Sichtbarkeit eines Segments unter Kanal-/Status-Filter (gefilterte Balken
   // werden gedimmt statt entfernt, damit Belegung erkennbar bleibt).
@@ -515,6 +557,17 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Realtime: Kalender live aktualisieren, sobald sich Buchungen, Belegung,
+  // Preise oder Verkaufsstopps ändern (eigene Aktionen, andere Nutzer oder
+  // OTA-Importe). RLS liefert nur Tenant-Zeilen. Während eines aktiven Zugs
+  // (Drag/Resize/Selektion) pausieren wir, damit kein Reload die Interaktion
+  // unterbricht.
+  const interacting = !!barDrag || !!drag || !!sel;
+  useRealtime({ table: "reservations", onChange: load, enabled: !interacting });
+  useRealtime({ table: "availability", onChange: load, enabled: !interacting });
+  useRealtime({ table: "price_overrides", onChange: load, enabled: !interacting });
+  useRealtime({ table: "stop_sell", onChange: load, enabled: !interacting });
 
   // Ausgewählten Zeitraum sperren (blockRange, end exklusiv).
   const confirmBlock = useCallback(async () => {
@@ -786,6 +839,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
             </div>
 
             {/* Objektzeilen */}
+            <div ref={gridRef}>
             {shown.map((p) => {
               const statusMap = avail[p.id] ?? {};
               const sourceMap = sources[p.id] ?? {};
@@ -955,7 +1009,12 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                             onBarDown(res, p.id, seg.start, "move");
                           }}
                           onClick={() => !barDrag && setDetail(res)}
-                          className={`group absolute top-1/2 flex -translate-y-1/2 cursor-grab items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium transition-shadow hover:ring-2 hover:ring-accent/40 ${barClass} ${isThisDragged ? "opacity-60 ring-2 ring-accent" : ""} ${dragging && !isThisDragged ? "pointer-events-none" : ""}`}
+                          // Während IRGENDEIN Balken gezogen wird, müssen ALLE
+                          // Balken — auch der gezogene — Mausereignisse durch-
+                          // lassen, sonst klebt der gezogene Balken am Cursor und
+                          // die Zell-onMouseEnter der Zielzeile/Kante feuern nie
+                          // (→ Move in andere Objekte & Resize blieben wirkungslos).
+                          className={`group absolute top-1/2 flex -translate-y-1/2 cursor-grab items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium transition-shadow hover:ring-2 hover:ring-accent/40 ${barClass} ${isThisDragged ? "opacity-60 ring-2 ring-accent" : ""} ${dragging ? "pointer-events-none" : ""}`}
                           style={barStyle}
                         >
                           {/* Resize-Kante links (Check-in). */}
@@ -1008,6 +1067,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                 </div>
               );
             })}
+            </div>
           </div>
         </div>
       </Card>
