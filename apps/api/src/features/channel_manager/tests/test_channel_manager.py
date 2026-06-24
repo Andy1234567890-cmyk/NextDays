@@ -488,6 +488,36 @@ def test_ota_name_to_channel() -> None:
     assert f(None) == "portal"
 
 
+def test_channex_property_type_mapping() -> None:
+    from src.features.channel_manager.service import _channex_property_type
+
+    # Lokaler deutscher Enum → gültiger Channex-Code.
+    assert _channex_property_type("appartement") == "apartment"
+    assert _channex_property_type("ferienhaus") == "holiday_home"
+    assert _channex_property_type("glamping") == "tent"
+    assert _channex_property_type("tiny_house") == "chalet"
+    assert _channex_property_type("stellplatz") == "camping"
+    assert _channex_property_type("hausboot") == "boat"
+    # Unbekannt/leer → None (Feld wird weggelassen, kein ungültiger Wert).
+    assert _channex_property_type(None) is None
+    assert _channex_property_type("unbekannt") is None
+
+
+def test_property_attrs_maps_property_type_for_channex() -> None:
+    # Regression: der lokale property_type 'appartement' darf NICHT roh an
+    # Channex gehen (422), sondern als 'apartment'.
+    attrs = ChannelManagerService._property_attrs(
+        {"property_type": "appartement", "country": "DE", "city": "Berlin"}
+    )
+    assert attrs["property_type"] == "apartment"
+
+    # Unbekannter Typ → property_type fehlt im Payload (statt ungültig).
+    attrs2 = ChannelManagerService._property_attrs(
+        {"property_type": "raumschiff", "country": "DE"}
+    )
+    assert "property_type" not in attrs2
+
+
 def test_import_booking_creates_reservation_and_blocks_calendar() -> None:
     db = _ImportDB()
     _seed_property(db)

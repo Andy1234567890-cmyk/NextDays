@@ -61,6 +61,29 @@ def _timezone_for_country(code: str) -> str | None:
     return _TIMEZONE_BY_COUNTRY.get(code.upper())
 
 
+# Lokaler property_type-Enum (public.property_type, Migration 0009) → gültiger
+# Channex-Code. Channex akzeptiert NUR seine 23 festen Codes; unser deutscher
+# Wert (z. B. "appartement") führt sonst zu 422 "property_type is invalid" und
+# blockiert das Veröffentlichen. Mapping verifiziert gegen die Channex-Doku.
+_CHANNEX_PROPERTY_TYPE: dict[str, str] = {
+    "ferienhaus": "holiday_home",
+    "appartement": "apartment",
+    "glamping": "tent",
+    "tiny_house": "chalet",
+    "stellplatz": "camping",
+    "hausboot": "boat",
+}
+
+
+def _channex_property_type(local: str | None) -> str | None:
+    """Lokalen property_type auf einen gültigen Channex-Code abbilden. Unbekannt
+    → None (Feld weglassen statt einen ungültigen Wert senden — property_type ist
+    für ARI/Buchung nicht erforderlich, ein 422 darf das Sync nicht kippen)."""
+    if not local:
+        return None
+    return _CHANNEX_PROPERTY_TYPE.get(local.lower())
+
+
 class ChannelManagerError(Exception):
     """Fehler im channel_manager-Slice (an die API weitergereicht)."""
 
@@ -353,7 +376,7 @@ class ChannelManagerService:
             "zip_code": prop_row.get("postal_code"),
             "city": prop_row.get("city"),
             "country": country,
-            "property_type": prop_row.get("property_type"),
+            "property_type": _channex_property_type(prop_row.get("property_type")),
             "latitude": prop_row.get("lat"),
             "longitude": prop_row.get("lng"),
             "timezone": _timezone_for_country(country) if country else None,
