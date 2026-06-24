@@ -14,6 +14,7 @@ from src.features.auth.permissions import Capability
 
 from .schemas import (
     DashboardResponse,
+    ReservationCancel,
     ReservationCreate,
     ReservationDetail,
     ReservationListResponse,
@@ -109,5 +110,28 @@ def move_reservation(
     mit erneutem Doppelbuchungs-Schutz (409 bei Konflikt)."""
     try:
         return service.move(ctx, reservation_id, req)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/{reservation_id}/cancel",
+    response_model=ReservationResponse,
+    dependencies=[
+        Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    ],
+)
+def cancel_reservation(
+    reservation_id: str,
+    req: ReservationCancel,
+    service: ReservationsServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> ReservationResponse:
+    """Reservierung stornieren — Begründung ist Pflicht und wird auditiert.
+    Kanal-agnostisch; gibt die belegten Tage frei (auch an Channex zurück)."""
+    try:
+        return service.cancel(ctx, reservation_id, req.reason)
     except ReservationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

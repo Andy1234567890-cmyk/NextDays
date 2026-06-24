@@ -296,6 +296,7 @@ werden zusätzlich unterdrückt).
 | `GET` | `/api/v1/reservations/{id}` | Vollständige Detailansicht (Slider): Belegung, Quote, Zahlung, Policy-Zeiten, Kontakt — maskierungskonform |
 | `POST` | `/api/v1/reservations` | Reservierung anlegen — `404` (fremdes Objekt), `409` (Tage belegt) |
 | `PATCH` | `/api/v1/reservations/{id}/move` | Verschieben (Objekt/Zeitraum) oder resizen (Check-in/out) — `409` bei Doppelbuchung, eigene Alt-Tage ausgenommen |
+| `POST` | `/api/v1/reservations/{id}/cancel` | Stornieren mit Pflicht-`reason` (`422` ohne) — kanal-agnostisch (Direkt/Plattform/alle Channex-OTAs), gibt Tage frei (auch an Channex zurück), Audit in `reservation_cancellation_log`. Lokal: hebt OTA-Buchung NICHT beim Portal auf |
 
 ```json
 // POST /reservations

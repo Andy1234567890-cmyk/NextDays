@@ -1160,6 +1160,10 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
           reservationId={detail}
           todayKey={todayKey}
           onClose={() => setDetail(null)}
+          onCancelled={() => {
+            setDetail(null);
+            load();
+          }}
         />
       )}
 

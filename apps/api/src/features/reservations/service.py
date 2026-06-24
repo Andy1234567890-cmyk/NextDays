@@ -10,7 +10,7 @@ tenant-Filtern (PROJECT.md §2 — Business-Logik im Backend).
 """
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from supabase import Client
 
@@ -507,6 +507,115 @@ class ReservationsService:
         mask = load_guest_mask(self._client, ctx.user_id)
         return self._row((full.data or [upd.data[0]])[0], mask)
 
+    def cancel(
+        self, ctx: AuthContext, reservation_id: str, reason: str
+    ) -> ReservationResponse:
+        """Reservierung stornieren — kanal-agnostisch (Direkt, eigene Plattform,
+        alle Channex-OTAs). Begründung ist PFLICHT und wird dokumentiert.
+
+        Ablauf:
+          1) Reservierung tenant-scoped laden; nicht doppelt stornieren.
+          2) Status=cancelled + Storno-Felder (wer/wann/warum) setzen.
+          3) Belegte Nächte freigeben (availability=open) + an Channex zurück
+             (availability=1), damit die Tage wieder an die OTAs gehen.
+          4) Append-only Audit-Zeile (reservation_cancellation_log).
+
+        Hinweis: Eine lokale Storno hebt eine OTA-Buchung NICHT beim Portal auf
+        (das UI weist darauf hin) — wir geben nur die lokale Belegung frei.
+        """
+        tenant_id = self._require_tenant(ctx)
+        clean_reason = (reason or "").strip()
+        if not clean_reason:
+            raise ReservationError(
+                "Eine Begründung ist für die Stornierung erforderlich.",
+                status_code=422,
+            )
+        res = (
+            self._db()
+            .table("reservations")
+            .select("*")
+            .eq("id", reservation_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        if not res.data:
+            raise ReservationError("Reservierung nicht gefunden.", status_code=404)
+        current = res.data[0]
+        if current.get("status") == "cancelled":
+            raise ReservationError(
+                "Reservierung ist bereits storniert.", status_code=409
+            )
+
+        now = datetime.now(UTC).isoformat()
+        upd = (
+            self._db()
+            .table("reservations")
+            .update(
+                {
+                    "status": "cancelled",
+                    "cancel_reason": clean_reason,
+                    "cancelled_by": ctx.user_id,
+                    "cancelled_at": now,
+                }
+            )
+            .eq("id", reservation_id)
+            .eq("tenant_id", tenant_id)
+            .execute()
+        )
+        if not upd.data:
+            raise ReservationError(
+                "Reservierung konnte nicht storniert werden.", status_code=500
+            )
+
+        # Belegte Nächte freigeben (nur die dieser Reservierung) + Channex zurück.
+        property_id = current["property_id"]
+        nights = _nights(_as_date(current["check_in"]), _as_date(current["check_out"]))
+        release = [d.isoformat() for d in nights]
+        if release:
+            self._db().table("availability").upsert(
+                [
+                    {"property_id": property_id, "date": d,
+                     "status": "open", "source": "manual"}
+                    for d in release
+                ],
+                on_conflict="property_id,date",
+            ).execute()
+            self._release_channex(tenant_id, property_id, release)
+
+        # Audit: append-only Storno-Historie (Best-Effort — Log-Fehler darf die
+        # Stornierung nicht kippen).
+        try:
+            self._db().table("reservation_cancellation_log").insert(
+                {
+                    "tenant_id": tenant_id,
+                    "reservation_id": reservation_id,
+                    "by_user_id": ctx.user_id,
+                    "reason": clean_reason,
+                    "channel": current.get("channel"),
+                    "ota_name": current.get("ota_name"),
+                }
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 — Audit ist best-effort
+            log.warning("reservation_cancellation_log_failed", error=str(exc))
+
+        log.info(
+            "reservation_cancelled",
+            reservation_id=reservation_id,
+            by_user_id=ctx.user_id,
+            channel=current.get("channel"),
+        )
+        full = (
+            self._db()
+            .table("reservations")
+            .select("*, guests(name)")
+            .eq("id", reservation_id)
+            .limit(1)
+            .execute()
+        )
+        mask = load_guest_mask(self._client, ctx.user_id)
+        return self._row((full.data or upd.data)[0], mask)
+
     def detail(self, ctx: AuthContext, reservation_id: str) -> ReservationDetail:
         """Vollständige Reservierungs-Detailansicht (rechter Slider). Tenant-
         scoped; Beträge + Kontaktdaten werden maskierungskonform geliefert."""
@@ -575,6 +684,8 @@ class ReservationsService:
             checkin_time=r.get("checkin_time"),
             checkout_time=r.get("checkout_time"),
             note=r.get("note"),
+            cancel_reason=r.get("cancel_reason"),
+            cancelled_at=r.get("cancelled_at"),
             guest_email=mask.contact_value(r.get("guest_email")),
             guest_phone=mask.contact_value(r.get("guest_phone")),
             guest_language=r.get("guest_language"),

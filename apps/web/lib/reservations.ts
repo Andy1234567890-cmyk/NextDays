@@ -87,6 +87,8 @@ export type ReservationDetail = {
   checkin_time: string | null;
   checkout_time: string | null;
   note: string | null;
+  cancel_reason: string | null;
+  cancelled_at: string | null;
   guest_email: string | null;
   guest_phone: string | null;
   guest_language: string | null;
@@ -171,6 +173,19 @@ export async function getReservationDetail(
   reservationId: string,
 ): Promise<Result<ReservationDetail>> {
   return call(`/reservations/${encodeURIComponent(reservationId)}`);
+}
+
+/** Reservierung stornieren — Begründung ist Pflicht (wird dokumentiert/auditiert).
+ *  Kanal-agnostisch; gibt die belegten Tage frei. Eine lokale Storno hebt eine
+ *  OTA-Buchung NICHT beim Portal auf (UI weist darauf hin). */
+export async function cancelReservation(
+  reservationId: string,
+  reason: string,
+): Promise<Result<Reservation>> {
+  return call(`/reservations/${encodeURIComponent(reservationId)}/cancel`, {
+    method: "POST",
+    body: { reason },
+  });
 }
 
 /** Reservierungen eines Objekts (oder alle, ohne propertyId). */

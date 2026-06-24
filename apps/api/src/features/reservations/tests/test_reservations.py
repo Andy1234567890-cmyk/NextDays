@@ -349,7 +349,18 @@ class _MoveQuery:
         self._pending_update = payload
         return self
 
+    def insert(self, payload) -> "_MoveQuery":  # noqa: ANN001
+        self._pending_insert = payload
+        return self
+
     def execute(self) -> MagicMock:
+        if getattr(self, "_pending_insert", None) is not None:
+            row = dict(self._pending_insert)
+            row.setdefault("id", f"{self._name}-{len(self._store.get(self._name, [])) + 1}")
+            self._store.setdefault(self._name, []).append(row)
+            res = MagicMock()
+            res.data = [row]
+            return res
         rows = [r for r in self._store.get(self._name, []) if self._match(r)]
         if getattr(self, "_pending_update", None) is not None:
             for r in rows:
@@ -520,3 +531,76 @@ def test_detail_unknown_404() -> None:
     with pytest.raises(ReservationError) as exc:
         svc.detail(AuthContext(user_id="u", tenant_id="t1", role="admin"), "nope")
     assert exc.value.status_code == 404
+
+
+# --- Storno (mit Pflicht-Begründung + Audit) ---------------------------------
+
+_CANCEL_CTX = AuthContext(user_id="u", tenant_id="t1", role="admin")
+
+
+def test_cancel_sets_status_frees_days_and_audits() -> None:
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    svc = _move_db(store)
+    out = svc.cancel(_CANCEL_CTX, "r1", "Gast hat abgesagt")
+    assert out.status == "cancelled"
+    # Reservierungs-Storno-Felder gesetzt.
+    r = next(x for x in store["reservations"] if x["id"] == "r1")
+    assert r["status"] == "cancelled"
+    assert r["cancel_reason"] == "Gast hat abgesagt"
+    assert r["cancelled_by"] == "u"
+    assert r["cancelled_at"]
+    # Belegte Tage freigegeben.
+    avail = {(a["property_id"], a["date"]): a["status"] for a in store["availability"]}
+    assert avail[("p1", "2026-07-01")] == "open"
+    assert avail[("p1", "2026-07-02")] == "open"
+    # Audit-Zeile geschrieben (mit Kanal/OTA dokumentiert).
+    log_rows = store.get("reservation_cancellation_log", [])
+    assert len(log_rows) == 1
+    assert log_rows[0]["reason"] == "Gast hat abgesagt"
+    assert log_rows[0]["by_user_id"] == "u"
+    assert log_rows[0]["channel"] == "booking"
+    assert log_rows[0]["ota_name"] == "Booking.com"
+
+
+def test_cancel_requires_reason() -> None:
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    svc = _move_db(store)
+    with pytest.raises(ReservationError) as exc:
+        svc.cancel(_CANCEL_CTX, "r1", "   ")
+    assert exc.value.status_code == 422
+    # Nichts storniert, keine Audit-Zeile.
+    assert store["reservations"][0]["status"] == "confirmed"
+    assert not store.get("reservation_cancellation_log")
+
+
+def test_cancel_already_cancelled_409() -> None:
+    store = _move_store(
+        check_in="2026-07-01", check_out="2026-07-03", status="cancelled"
+    )
+    svc = _move_db(store)
+    with pytest.raises(ReservationError) as exc:
+        svc.cancel(_CANCEL_CTX, "r1", "nochmal")
+    assert exc.value.status_code == 409
+
+
+def test_cancel_unknown_404() -> None:
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    svc = _move_db(store)
+    with pytest.raises(ReservationError) as exc:
+        svc.cancel(_CANCEL_CTX, "nope", "Grund")
+    assert exc.value.status_code == 404
+
+
+def test_cancel_direct_booking_also_frees_days() -> None:
+    # Direktbuchung (eigene Plattform/Wizard): channel=direct, kein OTA.
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["reservations"][0]["channel"] = "direct"
+    store["reservations"][0]["ota_name"] = None
+    for a in store["availability"]:
+        a["source"] = "direct"
+    svc = _move_db(store)
+    out = svc.cancel(_CANCEL_CTX, "r1", "Storno Direktbuchung")
+    assert out.status == "cancelled"
+    log_rows = store.get("reservation_cancellation_log", [])
+    assert log_rows[0]["channel"] == "direct"
+    assert log_rows[0]["ota_name"] is None

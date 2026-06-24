@@ -6,6 +6,7 @@
 // werden weggelassen, nichts erfunden.
 import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import type { AvailabilitySource } from "@/lib/calendar";
@@ -13,6 +14,7 @@ import { channelMeta } from "@/lib/calendar-channels";
 import { STATUS_META, displayStatus } from "@/lib/calendar-status";
 import {
   type ReservationDetail,
+  cancelReservation,
   getReservationDetail,
 } from "@/lib/reservations";
 
@@ -20,13 +22,43 @@ export function ReservationDetailSlider({
   reservationId,
   todayKey,
   onClose,
+  onCancelled,
 }: {
   reservationId: string;
   todayKey: string;
   onClose: () => void;
+  onCancelled?: () => void;
 }) {
   const [data, setData] = useState<ReservationDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Storno-Dialog: Begründung ist Pflicht; wird dokumentiert/auditiert.
+  const [cancelOpen, setCancelOpen] = useState(false);
+  const [reason, setReason] = useState("");
+  const [cancelling, setCancelling] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+
+  const isCancelled = data?.status === "cancelled";
+  // OTA-Buchung erkannt am echten Portal-Namen (channel "portal" sammelt 40+ OTAs).
+  const isOta = !!data && data.channel !== "direct";
+
+  const submitCancel = async () => {
+    const r = reason.trim();
+    if (!r) {
+      setCancelError("Bitte eine Begründung angeben.");
+      return;
+    }
+    setCancelling(true);
+    setCancelError(null);
+    const res = await cancelReservation(reservationId, r);
+    setCancelling(false);
+    if (res.ok) {
+      toast.success("Reservierung storniert.");
+      setCancelOpen(false);
+      onCancelled?.();
+    } else {
+      setCancelError(res.error);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -214,6 +246,84 @@ export function ReservationDetailSlider({
                 <Section title="Notiz">
                   <p className="whitespace-pre-wrap text-sm text-muted-foreground">{data.note}</p>
                 </Section>
+              )}
+
+              {/* Storno-Hinweis bei bereits stornierter Buchung */}
+              {isCancelled && (
+                <div className="rounded-(--radius) border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                  <p className="font-semibold">Storniert</p>
+                  {data.cancel_reason && (
+                    <p className="mt-0.5 text-destructive/90">
+                      Grund: {data.cancel_reason}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Storno-Aktion (nur wenn noch nicht storniert) */}
+              {!isCancelled && (
+                <div className="border-t pt-4">
+                  {!cancelOpen ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full text-destructive hover:bg-destructive/10"
+                      onClick={() => setCancelOpen(true)}
+                    >
+                      <Icon icon="ph:x-circle" className="size-4" />
+                      Reservierung stornieren
+                    </Button>
+                  ) : (
+                    <div className="flex flex-col gap-3 rounded-(--radius) border border-destructive/30 p-3">
+                      <p className="text-sm font-semibold text-destructive">
+                        Stornierung – Begründung erforderlich
+                      </p>
+                      {isOta && (
+                        <p className="rounded-(--radius) bg-amber-100 px-2.5 py-2 text-xs text-amber-800">
+                          <Icon icon="ph:warning" className="mr-1 inline size-3.5" />
+                          Dies storniert die Buchung nur lokal. Bitte storniere sie
+                          zusätzlich direkt im Portal
+                          {data.ota_name ? ` (${data.ota_name})` : ""}.
+                        </p>
+                      )}
+                      <textarea
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                        rows={3}
+                        autoFocus
+                        placeholder="Grund der Stornierung (wird dokumentiert) …"
+                        className="w-full rounded-(--radius) border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-destructive/40"
+                      />
+                      {cancelError && (
+                        <p className="text-xs text-destructive">{cancelError}</p>
+                      )}
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setCancelOpen(false);
+                            setReason("");
+                            setCancelError(null);
+                          }}
+                          disabled={cancelling}
+                        >
+                          Abbrechen
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          onClick={submitCancel}
+                          disabled={cancelling || !reason.trim()}
+                        >
+                          {cancelling ? "Storniere…" : "Stornieren"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
           </div>

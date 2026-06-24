@@ -84,6 +84,12 @@ class ReservationMove(BaseModel):
         return self
 
 
+class ReservationCancel(BaseModel):
+    """Storno mit Pflicht-Begründung (wird dokumentiert/auditiert)."""
+
+    reason: str = Field(min_length=1)
+
+
 class ReservationResponse(BaseModel):
     id: str
     property_id: str
@@ -141,6 +147,9 @@ class ReservationDetail(BaseModel):
     checkin_time: str | None = None
     checkout_time: str | None = None
     note: str | None = None
+    # Storno-Dokumentation (gesetzt bei status=cancelled)
+    cancel_reason: str | None = None
+    cancelled_at: str | None = None
     # Gast-Kontakt (maskiert)
     guest_email: str | None = None
     guest_phone: str | None = None

@@ -424,6 +424,14 @@ bezug (statt Hard-Delete). Quelle der Wahrheit für die Permissions ist immer di
 evtl. veraltete JWT). Zuweisungen sind auditiert (`channex_booking.assigned_by/at`
 + `inbox_assignment_log`, Migration `0045`).
 
+**Reservierungs-Storno (Migration `0050`):** Stornieren erfordert eine
+Pflicht-Begründung und ist dokumentiert — `reservations.cancel_reason/cancelled_by/
+cancelled_at` + append-only `reservation_cancellation_log`. Kanal-agnostisch
+(Direkt, eigene Plattform, alle 45+ Channex-OTAs): die belegten Tage werden
+freigegeben und an Channex zurückgemeldet (availability=1); eine lokale Storno
+hebt die OTA-Buchung NICHT beim Portal auf (das UI weist darauf hin). Guard:
+`MANAGE_CALENDAR` + `EDIT_CALENDAR_BOOKINGS` (wie Verschieben).
+
 **Kanalübergreifende Nachricht→Gast-Zuordnung (Resolver, Migration 0047):** Jede
 eingehende Buchung/Nachricht — OTA via Channex, WhatsApp, manuelle Reservierung,
 künftig E-Mail/Direkt — läuft durch **einen** zentralen Resolver
