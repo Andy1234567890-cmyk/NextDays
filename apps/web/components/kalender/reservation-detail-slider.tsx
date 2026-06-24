@@ -112,7 +112,11 @@ export function ReservationDetailSlider({
               Reservierung
             </p>
             <h2 className="truncate font-display text-xl font-extrabold">
-              {data?.guest_name?.trim() || (error ? "Fehler" : "Lädt…")}
+              {error
+                ? "Fehler"
+                : data
+                  ? data.guest_name?.trim() || data.property_title || "Reservierung"
+                  : "Lädt…"}
             </h2>
             {data && (
               <p className="mt-0.5 text-xs text-muted-foreground">
