@@ -19,6 +19,12 @@ export type DpSettings = {
   occupancy_sensitivity: number;
   min_stay_min: number;
   min_stay_max: number;
+  // Phase 2: Markt-/Wettbewerbs-Signal (opt-in zusätzlich zu enabled).
+  market_enabled: boolean;
+  market_sensitivity: number;
+  market_max_adjust_pct: number;
+  market_key: string | null;
+  comp_refs: string[];
 };
 
 export type DpSettingsInput = Partial<Omit<DpSettings, "property_id">>;

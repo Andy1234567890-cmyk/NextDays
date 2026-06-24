@@ -100,6 +100,7 @@ class CalendarService:
                     ),
                     price=eff.price if eff else None,
                     price_source=eff.source if eff else "none",
+                    price_factors=eff.factors if eff else None,
                     min_stay=min_stay,
                 )
             )

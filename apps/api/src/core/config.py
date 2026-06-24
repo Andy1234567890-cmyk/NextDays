@@ -69,6 +69,13 @@ class Settings(BaseSettings):
     # sondern protokolliert verworfen (Memory „keine Fallbacks").
     whatsapp_default_tenant_id: str = ""
 
+    # --- Dynamic Pricing Phase 2: Markt-/Wettbewerbs-Signal ---
+    # Provider-Auswahl: leer/„null" → NullProvider (kein externes Signal, Markt-
+    # Faktor neutral). „airdna" → AirDnaProvider (nur aktiv mit airdna_api_key).
+    market_data_provider: str = ""
+    airdna_api_key: SecretStr = SecretStr("")
+    airdna_base_url: str = "https://api.airdna.co/api/v1"
+
     @property
     def is_local(self) -> bool:
         return self.app_env == "local"

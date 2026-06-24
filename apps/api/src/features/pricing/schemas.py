@@ -15,8 +15,11 @@ class EffectivePriceDay(BaseModel):
 
     date: date
     price: float | None = None
-    # Herkunft des Preises (Transparenz/Debug): override | weekday | base | none.
+    # Herkunft des Preises: override | dynamic | weekday | base | none.
     source: str = "none"
+    # Faktor-Aufschlüsselung (nur bei source=dynamic): {faktor: multiplikator}
+    # für die „Warum dieser Preis?"-Erklärung im Kalender.
+    factors: dict[str, float] | None = None
 
 
 class QuoteRequest(BaseModel):
@@ -87,6 +90,12 @@ class DpSettingsResponse(BaseModel):
     occupancy_sensitivity: float = 30.0
     min_stay_min: int = 1
     min_stay_max: int = 7
+    # Phase 2: Markt-/Wettbewerbs-Signal (opt-in zusätzlich zu enabled).
+    market_enabled: bool = False
+    market_sensitivity: float = 20.0
+    market_max_adjust_pct: float = 25.0
+    market_key: str | None = None
+    comp_refs: list[str] = []
 
 
 class DpSettingsUpdate(BaseModel):
@@ -101,6 +110,11 @@ class DpSettingsUpdate(BaseModel):
     occupancy_sensitivity: float | None = Field(default=None, ge=0, le=100)
     min_stay_min: int | None = Field(default=None, ge=1)
     min_stay_max: int | None = Field(default=None, ge=1)
+    market_enabled: bool | None = None
+    market_sensitivity: float | None = Field(default=None, ge=0, le=100)
+    market_max_adjust_pct: float | None = Field(default=None, ge=0, le=100)
+    market_key: str | None = None
+    comp_refs: list[str] | None = None
 
 
 class RecomputeResponse(BaseModel):

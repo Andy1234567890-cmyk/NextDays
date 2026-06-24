@@ -668,9 +668,15 @@ function BaseEditor({
         </Select>
       </Field>
 
-      <div className="flex items-center justify-between text-sm">
-        <span className="text-muted-foreground">Dynamic Pricing</span>
-        <span className="font-medium">{v.dynamicPricing ? "AN" : "AUS"}</span>
+      <div className="flex items-start gap-2 rounded-(--radius) bg-blue-50 p-3 text-sm text-blue-900">
+        <Icon icon="ph:lightning" className="mt-0.5 size-4 shrink-0" />
+        <span>
+          Dynamische Preise (automatisch nach Saison, Wochenende, Auslastung,
+          Markt …) schaltest du im Bereich <strong>„Dynamische Preise"</strong>
+          weiter unten auf dieser Seite ein und stellst sie dort ein. Ein hier
+          gesetzter Grundpreis bleibt die Basis; ein manueller Tagespreis im
+          Kalender hat immer Vorrang.
+        </span>
       </div>
 
       <Field label="Grundpreis pro Nacht">

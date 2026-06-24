@@ -46,6 +46,11 @@ export function DynamicPricingSection({
       occupancy_sensitivity: s.occupancy_sensitivity,
       min_stay_min: s.min_stay_min,
       min_stay_max: s.min_stay_max,
+      market_enabled: s.market_enabled,
+      market_sensitivity: s.market_sensitivity,
+      market_max_adjust_pct: s.market_max_adjust_pct,
+      market_key: s.market_key,
+      comp_refs: s.comp_refs,
     });
     setBusy(false);
     if (res.ok) {
@@ -198,6 +203,65 @@ export function DynamicPricingSection({
             >
               <Icon icon="ph:plus" className="size-4" /> Regel hinzufügen
             </Button>
+          </div>
+
+          {/* Phase 2: Markt-/Wettbewerbs-Signal (opt-in zusätzlich) */}
+          <div className="flex flex-col gap-4 border-t pt-5">
+            <label className="flex cursor-pointer items-center justify-between gap-3">
+              <span className="leading-tight">
+                <span className="font-semibold">Marktdaten nutzen</span>
+                <span className="block text-sm text-muted-foreground">
+                  Preis zusätzlich am Wettbewerb/der Marktnachfrage ausrichten
+                  (benötigt eine konfigurierte Marktdaten-Quelle).
+                </span>
+              </span>
+              <Switch
+                checked={s.market_enabled}
+                onCheckedChange={(c) => set("market_enabled", c)}
+              />
+            </label>
+            {s.market_enabled && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Markt-Empfindlichkeit (%)">
+                    <NumInput
+                      value={s.market_sensitivity}
+                      onChange={(n) => set("market_sensitivity", n ?? 0)}
+                    />
+                  </Field>
+                  <Field label="Max. Markt-Korrektur (±%)">
+                    <NumInput
+                      value={s.market_max_adjust_pct}
+                      onChange={(n) => set("market_max_adjust_pct", n ?? 0)}
+                    />
+                  </Field>
+                </div>
+                <Field label="Markt-Schlüssel (Region/Markt)">
+                  <Input
+                    value={s.market_key ?? ""}
+                    placeholder="z. B. de-muenchen"
+                    onChange={(e) =>
+                      set("market_key", e.target.value || null)
+                    }
+                  />
+                </Field>
+                <Field label="Vergleichsobjekte (Comp-Set, kommagetrennt)">
+                  <Input
+                    value={s.comp_refs.join(", ")}
+                    placeholder="ref-1, ref-2, …"
+                    onChange={(e) =>
+                      set(
+                        "comp_refs",
+                        e.target.value
+                          .split(",")
+                          .map((x) => x.trim())
+                          .filter(Boolean),
+                      )
+                    }
+                  />
+                </Field>
+              </>
+            )}
           </div>
         </Card>
       )}

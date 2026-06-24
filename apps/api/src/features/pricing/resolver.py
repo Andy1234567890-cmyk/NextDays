@@ -192,28 +192,33 @@ class PricingResolver:
 
     def _load_dynamic(
         self, property_id: str, check_in: date, check_out: date
-    ) -> dict[str, float]:
-        """Dynamic-Pricing-Tagespreise (Regel-Engine). Optional wie die Konfig:
-        fehlt die Tabelle (nicht migriert) → leer, der Resolver fällt auf
-        weekday/base zurück (kein erfundener Preis)."""
+    ) -> dict[str, dict]:
+        """Dynamic-Pricing-Tagespreise (Regel-Engine) inkl. Faktor-Aufschlüsselung.
+        {ISO-Datum: {"price": float, "factors": dict}}. Optional wie die Konfig:
+        fehlt die Tabelle (nicht migriert) oder die factors-Spalte → leer/None, der
+        Resolver fällt auf weekday/base zurück (kein erfundener Preis)."""
         try:
             res = (
                 self._db()
                 .table("dynamic_prices")
-                .select("date, price")
+                .select("date, price, factors")
                 .eq("property_id", property_id)
                 .gte("date", check_in.isoformat())
                 .lt("date", check_out.isoformat())
                 .execute()
             ).data or []
-        except Exception as exc:  # noqa: BLE001 — fehlende Tabelle = kein DP
+        except Exception as exc:  # noqa: BLE001 — fehlende Tabelle/Spalte = kein DP
             log.warning("dynamic_prices_unavailable", error=str(exc))
             return {}
-        out: dict[str, float] = {}
+        out: dict[str, dict] = {}
         for r in res:
             day, price = r.get("date"), _to_float(r.get("price"))
             if isinstance(day, str) and price is not None:
-                out[day] = price
+                factors = r.get("factors")
+                out[day] = {
+                    "price": price,
+                    "factors": factors if isinstance(factors, dict) else None,
+                }
         return out
 
     # -- Effektivpreis pro Tag ------------------------------------------------
@@ -230,7 +235,7 @@ class PricingResolver:
     def _effective_for_day(
         day: date,
         overrides: dict[str, float],
-        dynamic: dict[str, float],
+        dynamic: dict[str, dict],
         config: _PricingConfig,
         base: float | None,
     ) -> EffectivePriceDay:
@@ -239,7 +244,12 @@ class PricingResolver:
         if key in overrides:
             return EffectivePriceDay(date=day, price=overrides[key], source="override")
         if key in dynamic:
-            return EffectivePriceDay(date=day, price=dynamic[key], source="dynamic")
+            return EffectivePriceDay(
+                date=day,
+                price=dynamic[key]["price"],
+                source="dynamic",
+                factors=dynamic[key].get("factors"),
+            )
         weekday = config.weekday_price(day)
         if weekday is not None:
             return EffectivePriceDay(date=day, price=weekday, source="weekday")

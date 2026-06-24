@@ -476,8 +476,19 @@ Horizont 540 Tage); zusätzlich rechnet `reservations.create/cancel` die betroff
 Tage (±2) sofort neu (Auslastung/Orphan ändern sich). **Manuell schlägt automatisch:**
 ein vom Host gesetzter `price_override` gewinnt im Resolver immer über den DP-Vorschlag;
 bei DP-AUS gibt es keine `dynamic_prices` und der Resolver fällt auf Basis zurück.
-Phase 2 (separat) ergänzt ein Markt-/Wettbewerbssignal (AirDNA/PriceLabs) als
-weitere Quelle — schreibt ebenfalls nach `dynamic_prices`, Verteilpfad unverändert.
+**Phase 2 (Migration `0056`)** ergänzt einen **Markt-/Wettbewerbs-Faktor** über eine
+pluggable Provider-Schnittstelle (`pricing/market/`: `MarketSignalProvider` → comp_price/
+demand_index/event_uplift_pct). Auswahl per Env `MARKET_DATA_PROVIDER`: Default
+**NullProvider** (neutral → exakt wie Phase 1), `AirDnaProvider` nur mit `AIRDNA_API_KEY`.
+Der Markt-Faktor zieht den Preis gewichtet (`market_sensitivity`) Richtung Markt-Median +
+Nachfrage, gedeckelt auf ±`market_max_adjust_pct`; Markt-Events werden mit `event_periods`
+gemerged (Maximum, keine Doppelzählung). Markt ist opt-in (`dp_settings.market_enabled/
+market_key/comp_refs`). Die Engine persistiert je Tag die **Faktor-Aufschlüsselung**
+(`dynamic_prices.factors`), die der Kalender als „Warum dieser Preis?"-Tooltip zeigt
+(Saison/Wochenende/Markt/Auslastung … mit %-Beitrag). Verteilpfad unverändert. Ohne
+AirDNA-Konto läuft alles über den NullProvider — DP wie Phase 1, nur mit Markt-Schaltern
++ Preis-Erklärung bereit. Optionale Alternative: ein PriceLabs-IAPI-Connector als
+umschaltbare Preis-Quelle (separat), der ebenfalls nach `dynamic_prices` schreibt.
 
 **Kanalübergreifende Nachricht→Gast-Zuordnung (Resolver, Migration 0047):** Jede
 eingehende Buchung/Nachricht — OTA via Channex, WhatsApp, manuelle Reservierung,

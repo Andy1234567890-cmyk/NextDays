@@ -40,6 +40,10 @@ class DpSettings:
     occupancy_sensitivity: float = 30.0
     min_stay_min: int = 1
     min_stay_max: int = 7
+    # Phase 2: Markt-/Wettbewerbs-Signal (opt-in zusätzlich zu enabled).
+    market_enabled: bool = False
+    market_sensitivity: float = 20.0
+    market_max_adjust_pct: float = 25.0
 
     @staticmethod
     def from_row(row: dict | None) -> DpSettings:
@@ -55,6 +59,9 @@ class DpSettings:
             occupancy_sensitivity=_as_float(row.get("occupancy_sensitivity"), 30.0),
             min_stay_min=int(row.get("min_stay_min") or 1),
             min_stay_max=int(row.get("min_stay_max") or 7),
+            market_enabled=bool(row.get("market_enabled")),
+            market_sensitivity=_as_float(row.get("market_sensitivity"), 20.0),
+            market_max_adjust_pct=_as_float(row.get("market_max_adjust_pct"), 25.0),
         )
 
 
@@ -72,6 +79,10 @@ class DaySignals:
     days_before: int = 365
     # True, wenn dieser Tag Teil einer 1–2-Nächte-Lücke zwischen Belegungen ist.
     is_orphan_gap: bool = False
+    # Phase 2 — Markt-Signale (None = kein Signal → neutral):
+    comp_price: float | None = None       # Median vergleichbarer Objekte
+    demand_index: float | None = None     # Marktnachfrage 0..1
+    market_event_pct: float | None = None  # Markt-Event-Aufschlag (%)
 
 
 @dataclass
@@ -149,6 +160,42 @@ def _orphan_factor(signals: DaySignals, settings: DpSettings) -> float:
     return 1.0
 
 
+def _market_factor(base: float, signals: DaySignals, settings: DpSettings) -> float:
+    """Markt-/Wettbewerbs-Faktor (Phase 2). Neutral (1.0), wenn Markt aus oder
+    kein Signal vorliegt — dann verhält sich die Engine wie Phase 1.
+
+    Zwei begrenzte Korrekturen, kombiniert und auf ±market_max_adjust_pct gedeckelt:
+      * Wettbewerb: liegt ein comp_price (Median vergleichbarer Objekte) vor, wird
+        der Preis gewichtet (market_sensitivity %) Richtung Markt-Median gezogen —
+        relativ zum Basispreis. comp über base → Aufschlag, darunter → Abschlag.
+      * Nachfrage: demand_index 0..1 wie die Auslastung (Pivot 0.5), ebenfalls über
+        market_sensitivity skaliert.
+    (Markt-Events fließen NICHT hier ein, sondern gemerged in den event-Faktor —
+    keine Doppelzählung.)"""
+    if not settings.market_enabled or base <= 0:
+        return 1.0
+    sens = settings.market_sensitivity / 100.0
+    adjust = 0.0
+    if signals.comp_price is not None and signals.comp_price > 0:
+        # Relative Marktabweichung zum Basispreis, gewichtet.
+        adjust += (signals.comp_price - base) / base * sens
+    if signals.demand_index is not None:
+        adjust += (signals.demand_index - _OCCUPANCY_PIVOT) / _OCCUPANCY_PIVOT * sens
+    cap = settings.market_max_adjust_pct / 100.0
+    adjust = max(-cap, min(cap, adjust))
+    return 1.0 + adjust
+
+
+def _merged_event_pct(signals: DaySignals) -> float:
+    """Event-Aufschlag aus event_periods + Marktdaten OHNE Doppelzählung: der
+    höhere der beiden gilt (nicht die Summe)."""
+    own = signals.event_pct
+    market = signals.market_event_pct
+    if market is None:
+        return own
+    return max(own, market)
+
+
 def _dynamic_min_stay(signals: DaySignals, settings: DpSettings) -> int:
     """Min-Stay aus der Auslastung: hohe Nachfrage → längerer Mindestaufenthalt,
     begrenzt durch [min_stay_min, min_stay_max]. Ohne Signal = min_stay_min."""
@@ -168,11 +215,14 @@ def compute_day(base: float, settings: DpSettings, signals: DaySignals) -> DayRe
     [min_price, max_price] (falls gesetzt)."""
     factors = {
         "season": 1.0 + signals.season_pct / 100.0,
-        "event": 1.0 + signals.event_pct / 100.0,
+        # Event: event_periods + Marktdaten gemerged (höherer Wert, keine Doppelzählung).
+        "event": 1.0 + _merged_event_pct(signals) / 100.0,
         "weekend": _weekend_factor(signals.day, settings),
         "occupancy": _occupancy_factor(signals, settings),
         "last_minute": _last_minute_factor(signals, settings),
         "orphan": _orphan_factor(signals, settings),
+        # Phase 2: Markt-/Wettbewerbs-Faktor (neutral 1.0 ohne Signal/Markt aus).
+        "market": _market_factor(base, signals, settings),
     }
     price = base
     for f in factors.values():

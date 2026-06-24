@@ -22,6 +22,9 @@ export type DayAvailability = {
   price: number | null; // Tagespreis (Override > dynamic > weekday > base); null ohne Rate-Plan
   // Herkunft des Preises: override | dynamic | weekday | base | none.
   price_source?: string;
+  // Faktor-Aufschlüsselung bei dynamischem Preis ({faktor: multiplikator}) für
+  // den „Warum dieser Preis?"-Tooltip. Nur bei price_source=dynamic gesetzt.
+  price_factors?: Record<string, number> | null;
   min_stay: number | null; // Mindestaufenthalt aus dem Rate-Plan
 };
 

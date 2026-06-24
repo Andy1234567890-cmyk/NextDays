@@ -280,6 +280,22 @@ werden bei neuer/stornierter Reservierung die betroffenen Tage (±2) neu gerechn
 **Manuell schlägt automatisch:** ein vom Host gesetzter `price_override` bleibt
 unangetastet und gewinnt im Resolver.
 
+**Dynamic Pricing (Phase 2, Markt-Signal + Preis-Erklärung, Migration `0056`):**
+Ein zusätzlicher **Markt-/Wettbewerbs-Faktor** über eine pluggable Provider-
+Schnittstelle (`pricing/market/`): `MarketSignalProvider.market_signal()` liefert je
+Tag `comp_price` (Median vergleichbarer Objekte), `demand_index` (0..1) und
+`event_uplift_pct`. Auswahl per Env `MARKET_DATA_PROVIDER` — Default **NullProvider**
+(kein Signal → Markt-Faktor neutral 1.0 → identisch zu Phase 1). `AirDnaProvider`
+nur aktiv mit `AIRDNA_API_KEY` (B2B-Konto); ohne Key bleibt alles lauffähig. Der
+Markt-Faktor zieht den Preis gewichtet (`market_sensitivity`) Richtung Markt-Median
++ Nachfrage, gedeckelt auf ±`market_max_adjust_pct`; Markt-Events werden mit
+`event_periods` **gemerged (Maximum, keine Doppelzählung)**. Markt ist opt-in
+zusätzlich (`dp_settings.market_enabled`, `market_key`, `comp_refs`). Die Engine
+liefert je Tag eine **Faktor-Aufschlüsselung** (`dynamic_prices.factors` jsonb), die
+über `GET /pricing/effective` (`factors`) bzw. `GET /calendar/availability`
+(`price_factors`) als „Warum dieser Preis?"-Tooltip im Kalender erscheint
+(Saison +X %, Wochenende +Y %, Markt +Z %, Auslastung −W %, …).
+
 Die Pricing-Konfiguration (Markups je Kanal, Extra-Gast-/Kurzaufenthalts-Aufschlag,
 längenabhängige Preise, Gebühren, Steuern, Aktionen, Add-ons) liegt strukturiert in
 `property_pricing_config` (Migration `0051`, Backfill aus `type_attributes.pricing`);

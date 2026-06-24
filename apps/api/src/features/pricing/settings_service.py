@@ -31,6 +31,11 @@ _DEFAULTS = {
     "occupancy_sensitivity": 30.0,
     "min_stay_min": 1,
     "min_stay_max": 7,
+    "market_enabled": False,
+    "market_sensitivity": 20.0,
+    "market_max_adjust_pct": 25.0,
+    "market_key": None,
+    "comp_refs": [],
 }
 
 
@@ -104,6 +109,11 @@ class DpSettingsService:
             occupancy_sensitivity=float(row.get("occupancy_sensitivity") or 0),
             min_stay_min=int(row.get("min_stay_min") or 1),
             min_stay_max=int(row.get("min_stay_max") or 7),
+            market_enabled=bool(row.get("market_enabled")),
+            market_sensitivity=float(row.get("market_sensitivity") or 0),
+            market_max_adjust_pct=float(row.get("market_max_adjust_pct") or 0),
+            market_key=row.get("market_key"),
+            comp_refs=[str(r) for r in (row.get("comp_refs") or [])],
         )
 
 

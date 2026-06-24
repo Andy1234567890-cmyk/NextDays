@@ -19,6 +19,7 @@ from supabase import Client
 from src.core.logging import get_logger
 
 from .engine import DaySignals, DpSettings, compute_day
+from .market import MarketDay, get_market_provider
 
 log = get_logger("nextdays.pricing.recompute")
 
@@ -39,6 +40,9 @@ class DynamicPricingRecompute:
 
     def __init__(self, service_client: Client | None = None) -> None:
         self._client = service_client
+        # Rohzeile der zuletzt geladenen dp_settings (für market_key/comp_refs,
+        # die nicht in der Rechen-Dataclass DpSettings liegen).
+        self._settings_row: dict | None = None
 
     def _db(self) -> Client:
         if self._client is None:
@@ -94,10 +98,12 @@ class DynamicPricingRecompute:
         season_pct = self._season_pct_by_date(property_id, rng_start, rng_end)
         event_pct = self._event_pct_by_date(tenant_id, rng_start, rng_end)
         booked = self._booked_dates(property_id, rng_start, rng_end)
+        market = self._market_by_date(settings, rng_start, rng_end)
 
         rows: list[dict] = []
         cur = rng_start
         while cur < rng_end:
+            md = market.get(cur.isoformat())
             signals = DaySignals(
                 day=cur,
                 season_pct=season_pct.get(cur.isoformat(), 0.0),
@@ -105,6 +111,9 @@ class DynamicPricingRecompute:
                 occupancy=self._occupancy_signal(cur, booked),
                 days_before=(cur - today).days,
                 is_orphan_gap=self._is_orphan_gap(cur, booked),
+                comp_price=md.comp_price if md else None,
+                demand_index=md.demand_index if md else None,
+                market_event_pct=md.event_uplift_pct if md else None,
             )
             res = compute_day(base, settings, signals)
             rows.append(
@@ -113,12 +122,19 @@ class DynamicPricingRecompute:
                     "date": cur.isoformat(),
                     "price": res.price,
                     "min_stay": res.min_stay,
+                    # Faktor-Aufschlüsselung persistieren („Warum dieser Preis?").
+                    "factors": {k: round(v, 4) for k, v in res.factors.items()},
                     "computed_at": datetime.now(UTC).isoformat(),
                 }
             )
             cur += timedelta(days=1)
 
         if rows:
+            # In dynamic_prices schreiben → Kalender, Quote UND die eigene
+            # Plattform (booking_engine) lesen den Preis automatisch über den
+            # Resolver (Pull, Priorität override > dynamic > weekday > base).
+            # KEIN Push dorthin nötig. Nur externe OTAs (Channex) müssen den
+            # Preis aktiv geschickt bekommen — das macht _push_to_channex.
             self._db().table("dynamic_prices").upsert(
                 rows, on_conflict="property_id,date"
             ).execute()
@@ -130,6 +146,32 @@ class DynamicPricingRecompute:
         )
         return len(rows)
 
+    def _market_by_date(
+        self, settings: DpSettings, start: date, end: date
+    ) -> dict[str, MarketDay]:
+        """Markt-Signal je Tag über den konfigurierten Provider — NUR wenn der
+        Vermieter Marktdaten aktiviert hat (market_enabled). Ohne Aktivierung oder
+        ohne Provider-Signal leer → der Markt-Faktor bleibt neutral (Phase-1-Parität).
+
+        market_key/comp_refs liegen in dp_settings; sie kommen NICHT aus der
+        Engine-DpSettings (die hält nur Rechenparameter), daher hier direkt aus
+        der Zeile gelesen."""
+        if not settings.market_enabled:
+            return {}
+        row = self._settings_row
+        market_key = (row or {}).get("market_key")
+        comp_refs = [str(r) for r in ((row or {}).get("comp_refs") or [])]
+        days: list[date] = []
+        cur = start
+        while cur < end:
+            days.append(cur)
+            cur += timedelta(days=1)
+        try:
+            return get_market_provider().market_signal(market_key, comp_refs, days)
+        except Exception as exc:  # noqa: BLE001 — Markt-Signal ist best-effort
+            log.warning("market_signal_failed", error=str(exc))
+            return {}
+
     # -- Quellen laden -------------------------------------------------------
     def _load_settings(self, property_id: str) -> DpSettings:
         res = (
@@ -140,7 +182,8 @@ class DynamicPricingRecompute:
             .limit(1)
             .execute()
         ).data or []
-        return DpSettings.from_row(res[0] if res else None)
+        self._settings_row = res[0] if res else None
+        return DpSettings.from_row(self._settings_row)
 
     def _load_base_price(self, property_id: str) -> float | None:
         res = (

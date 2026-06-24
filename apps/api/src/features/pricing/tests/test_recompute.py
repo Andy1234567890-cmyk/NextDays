@@ -114,6 +114,20 @@ def test_recompute_writes_only_dynamic_prices() -> None:
     assert all(row["price"] == 100.0 for row in db.writes["dynamic_prices"])
 
 
+def test_recompute_writes_factors() -> None:
+    # Faktor-Aufschlüsselung wird persistiert (für „Warum dieser Preis?").
+    db = _db(enabled=True, base=100.0)
+    svc = DynamicPricingRecompute(service_client=db)
+    svc.recompute_property("p1", start=date(2026, 7, 1), end=date(2026, 7, 2))
+    row = db.writes["dynamic_prices"][0]
+    assert isinstance(row["factors"], dict)
+    # Alle Phase-1+2-Faktoren vorhanden, inkl. market (neutral, da Markt aus).
+    for key in ("season", "event", "weekend", "occupancy", "last_minute",
+                "orphan", "market"):
+        assert key in row["factors"]
+    assert row["factors"]["market"] == 1.0
+
+
 def test_recompute_disabled_is_noop() -> None:
     db = _db(enabled=False, base=100.0)
     svc = DynamicPricingRecompute(service_client=db)

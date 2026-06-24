@@ -56,6 +56,9 @@ class DayAvailability(BaseModel):
     # Herkunft des Tagespreises: override | dynamic | weekday | base | none.
     # „dynamic" = von der Dynamic-Pricing-Engine → UI zeigt „auto"-Badge.
     price_source: str = "none"
+    # Faktor-Aufschlüsselung bei dynamischem Preis ({faktor: multiplikator}) für
+    # den „Warum dieser Preis?"-Tooltip. None außer bei price_source=dynamic.
+    price_factors: dict[str, float] | None = None
     # Mindestaufenthalt aus dem Rate-Plan des Objekts (per-Tag-Restriktionen v2).
     min_stay: int | None = None
 
