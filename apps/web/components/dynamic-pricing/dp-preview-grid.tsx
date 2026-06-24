@@ -4,8 +4,11 @@
 // pro Tag der empfohlene Preis oben rechts, Tageszahl unten links, „Heute“-
 // Marker. Bei dynamischem Preis ein Blitz + „Warum dieser Preis?"-Tooltip.
 // Read-only — manuelle Tagespreise setzt man im Kalender (gewinnen immer).
+import { useState } from "react";
+
 import type { DayAvailability } from "@/lib/calendar";
 import { Card } from "@/components/ui/card";
+import { explainDpPrice } from "@/lib/dynamic-pricing";
 
 const FACTOR_LABELS: Record<string, string> = {
   season: "Saison",
@@ -50,7 +53,28 @@ function todayIso(): string {
   return d.toISOString().slice(0, 10);
 }
 
-export function DpPreviewGrid({ days }: { days: DayAvailability[] }) {
+export function DpPreviewGrid({
+  days,
+  propertyId,
+}: {
+  days: DayAvailability[];
+  propertyId: string;
+}) {
+  // Geladene KI-Erklärung je Tag (ISO → Text | "…" beim Laden | Fehlertext).
+  const [explained, setExplained] = useState<Record<string, string>>({});
+  const [loadingDay, setLoadingDay] = useState<string | null>(null);
+
+  async function loadExplanation(day: string) {
+    if (explained[day] || loadingDay) return;
+    setLoadingDay(day);
+    const res = await explainDpPrice(propertyId, day);
+    setExplained((prev) => ({
+      ...prev,
+      [day]: res.ok ? res.data.explanation : res.error,
+    }));
+    setLoadingDay(null);
+  }
+
   if (days.length === 0) {
     return (
       <Card className="p-6 text-sm text-muted-foreground">
@@ -94,6 +118,7 @@ export function DpPreviewGrid({ days }: { days: DayAvailability[] }) {
           const isToday = d.date === today;
           const isDynamic = d.price_source === "dynamic";
           const why = explainFactors(d.price_factors);
+          const aiText = explained[d.date];
           return (
             <div
               key={d.date}
@@ -117,6 +142,26 @@ export function DpPreviewGrid({ days }: { days: DayAvailability[] }) {
                   {fmt(d.price)}
                 </span>
               </div>
+              {/* KI-Erklärung: bei dynamischem Preis on-demand abrufbar */}
+              {isDynamic && (
+                <button
+                  type="button"
+                  onClick={() => loadExplanation(d.date)}
+                  className="mt-1 self-end text-[0.65rem] text-accent hover:underline disabled:opacity-60"
+                  disabled={loadingDay === d.date}
+                >
+                  {loadingDay === d.date
+                    ? "lädt…"
+                    : aiText
+                      ? "KI-Erklärung ▾"
+                      : "Warum? (KI)"}
+                </button>
+              )}
+              {aiText && (
+                <p className="mt-1 rounded-(--radius) bg-muted/60 p-1.5 text-[0.65rem] leading-snug text-muted-foreground">
+                  {aiText}
+                </p>
+              )}
               {/* Tageszahl unten links, Heute hervorgehoben */}
               <span
                 className={

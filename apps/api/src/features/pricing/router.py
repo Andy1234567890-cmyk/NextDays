@@ -35,6 +35,7 @@ from .schemas import (
     DpSettingsResponse,
     DpSettingsUpdate,
     EffectivePriceDay,
+    PriceExplainResponse,
     QuoteRequest,
     QuoteResponse,
     RecomputeResponse,
@@ -155,6 +156,75 @@ def _recompute_in_background(property_id: str) -> None:
     DynamicPricingRecompute(
         service_client=get_service_client()
     ).recompute_property(property_id)
+
+
+@router.get("/explain/{property_id}", response_model=PriceExplainResponse)
+def explain_dynamic_price(
+    property_id: str,
+    day: Annotated[date, Query(description="Aufenthaltstag (ISO)")],
+    ctx: Annotated[
+        AuthContext, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> PriceExplainResponse:
+    """KI-Klartext-Begründung für den berechneten dynamischen Preis eines Tages
+    (on-demand, 'Warum dieser Preis?'). Liest den fertig berechneten Preis +
+    Faktor-Aufschlüsselung aus dynamic_prices und lässt das LLM sie ausformulieren —
+    es rechnet nicht selbst. Ohne dynamischen Preis (DP aus / kein Recompute) oder
+    ohne Groq-Key gibt es einen klaren Fehler (keine erfundene Erklärung)."""
+    from .explain import PriceExplainError, explain_price
+
+    db = get_service_client()
+    if db is None:
+        raise HTTPException(status_code=500, detail="Preis-DB nicht verfügbar.")
+    # Eigentum/Tenant-Scope über den Settings-Service (wirft 403/404 sauber).
+    service = DpSettingsService(service_client=db)
+    try:
+        service._require_own_property(ctx, property_id)  # noqa: SLF001
+    except PricingError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+    rows = (
+        db.table("dynamic_prices")
+        .select("price, factors")
+        .eq("property_id", property_id)
+        .eq("date", day.isoformat())
+        .limit(1)
+        .execute()
+    ).data or []
+    if not rows:
+        raise HTTPException(
+            status_code=404,
+            detail="Für diesen Tag gibt es keinen dynamischen Preis (DP aus oder noch nicht berechnet).",
+        )
+    price = float(rows[0].get("price") or 0)
+    factors = rows[0].get("factors") or {}
+
+    # Basispreis (Anker) für den Vergleich aus dem Rate-Plan.
+    rate_rows = (
+        db.table("rate_plans")
+        .select("base_price, currency, created_at")
+        .eq("property_id", property_id)
+        .order("created_at")
+        .limit(1)
+        .execute()
+    ).data or []
+    base_price = float(rate_rows[0]["base_price"]) if rate_rows and rate_rows[0].get("base_price") is not None else price
+    currency = (rate_rows[0].get("currency") if rate_rows else None) or "EUR"
+
+    try:
+        explanation = explain_price(
+            base_price=base_price,
+            final_price=price,
+            factors={k: float(v) for k, v in factors.items()},
+            currency=currency,
+            day=day.isoformat(),
+        )
+    except PriceExplainError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+    return PriceExplainResponse(
+        property_id=property_id, date=day, price=price, explanation=explanation
+    )
 
 
 # -- Dynamic Pricing: täglicher Recompute (Cron, per Secret) -----------------

@@ -74,6 +74,7 @@ Erwartungswert zu erfinden. Mit jeder Nacht Snapshots wächst die Abdeckung.
 | 5.1 | **Autopilot** (`dp_settings.autopilot_enabled`): berechnete Preise automatisch an OTAs pushen, oder nur als Empfehlung halten. enabled = rechnen, autopilot = veröffentlichen. | ✅ Push-Gate im Recompute |
 | 5.2 | **Wetter-Faktor** via DWD/Bright Sky (amtlich, frei, kein Key): gutes Wetter am Anreisetag → Aufschlag, gedeckelt. Nur im Forecast-Horizont (~10 Tage), ferne Tage neutral. | ✅ [weather.py](../../apps/api/src/features/pricing/weather.py) |
 | 5.3 | **Rate Rules** (`dp_settings.rate_rules`): manuelle Regeln (weekday/month/Vorlauf-Fenster → adjust_pct), als bewusster Override OBENDRAUF auf die Auto-Faktoren (KI + Fachwissen). | ✅ engine `_rate_rules_factor` |
+| 5.4 | **KI-Preiserklärung** (on-demand): `GET /pricing/explain/{id}?day=` gibt die fertige Faktor-Aufschlüsselung an das Groq-LLM (openai/gpt-oss-120b) und lässt sie in 2–3 Sätze Klartext übersetzen („Warum dieser Preis?"). Das LLM RECHNET NICHT — die Engine bleibt deterministisch; das LLM formuliert nur. Ohne Key → klarer Fehler (keine erfundene Erklärung). | ✅ [explain.py](../../apps/api/src/features/pricing/explain.py), Vorschau-Grid |
 
 > Realität (Stand 2026-06): erst ~13 Buchungen / 2 Tage Historie in der DB. Echtes
 > Lernen braucht Masse — deshalb startet Phase 2 die Erfassung SOFORT, damit Phase 4

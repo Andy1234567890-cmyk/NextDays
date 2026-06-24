@@ -101,6 +101,16 @@ export async function getDpSettings(
   return call(`/pricing/settings/${encodeURIComponent(propertyId)}`);
 }
 
+/** KI-Klartext-Begründung für den dynamischen Preis eines Tages (on-demand). */
+export async function explainDpPrice(
+  propertyId: string,
+  day: string,
+): Promise<Result<{ property_id: string; date: string; price: number; explanation: string }>> {
+  return call(
+    `/pricing/explain/${encodeURIComponent(propertyId)}?day=${encodeURIComponent(day)}`,
+  );
+}
+
 /** Dynamic-Pricing-Einstellungen setzen (Upsert; bei enabled sofortiger Recompute). */
 export async function saveDpSettings(
   propertyId: string,

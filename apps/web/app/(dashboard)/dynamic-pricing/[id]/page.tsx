@@ -58,7 +58,7 @@ export default async function Page({
         </p>
       </header>
       {avail.ok ? (
-        <DpPreviewGrid days={avail.data} />
+        <DpPreviewGrid days={avail.data} propertyId={id} />
       ) : (
         <Card className="p-5 text-sm text-destructive">
           Preise konnten nicht geladen werden: {avail.error}

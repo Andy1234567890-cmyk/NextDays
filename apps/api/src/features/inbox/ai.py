@@ -103,6 +103,23 @@ class GroqClient:
             "Schreibe den Antwortvorschlag des Gastgebers."
         )
 
+        return self.chat(system=system, user=user, temperature=0.4, max_tokens=400)
+
+    def chat(
+        self,
+        *,
+        system: str,
+        user: str,
+        temperature: float = 0.4,
+        max_tokens: int = 400,
+    ) -> str:
+        """Generischer Chat-Completion-Aufruf (system+user → Text). Wiederverwendbar
+        für andere KI-Funktionen (z. B. Preiserklärung). Kein Key → klarer Fehler
+        (keine Fallback-Antwort)."""
+        if not self.is_configured:
+            raise GroqError(
+                "KI ist nicht konfiguriert (Groq-API-Key fehlt).", status_code=503
+            )
         try:
             with httpx.Client(timeout=30.0) as client:
                 resp = client.post(
@@ -117,8 +134,8 @@ class GroqClient:
                             {"role": "system", "content": system},
                             {"role": "user", "content": user},
                         ],
-                        "temperature": 0.4,
-                        "max_tokens": 400,
+                        "temperature": temperature,
+                        "max_tokens": max_tokens,
                     },
                 )
         except httpx.HTTPError as exc:

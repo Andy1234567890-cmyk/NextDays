@@ -183,6 +183,15 @@ class RecomputeResponse(BaseModel):
     days: int
 
 
+class PriceExplainResponse(BaseModel):
+    """KI-Klartext-Begründung eines berechneten Tagespreises (on-demand)."""
+
+    property_id: str
+    date: date
+    price: float
+    explanation: str
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"
