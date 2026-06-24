@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+Dockerfile
+.dockerignore
+npm-debug.log*
+.env*.local
+# protected/ ist ein Build-Artefakt (storybook build -o protected/sb) und wird
+# im Container frisch erzeugt — lokalen Stand nicht in den Context kopieren.
+protected
