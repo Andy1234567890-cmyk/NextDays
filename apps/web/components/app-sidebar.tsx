@@ -141,6 +141,19 @@ const ROLE_KEYS: Record<string, string> = {
   cleaner: "cleaner",
 };
 
+// Eigentümer-Portal (Lastenheft §4.2): read-only, stark reduzierte Navigation.
+// Ein Eigentümer sieht NUR diese Bereiche — Belegungskalender, seine Objekte,
+// Dynamic-Pricing-Vorschau und (per owner_reporting gegated) die Berichte.
+// Andere Punkte ohne `req` (Reservierungen, Channel Manager, Marktplatz, HR …)
+// bleiben der Agentur vorbehalten. Pfad-Präfixe (href-Vergleich).
+const OWNER_ALLOWED_HREFS: readonly string[] = [
+  "/", // Dashboard
+  "/kalender",
+  "/objekte",
+  "/dynamic-pricing",
+  "/buchhaltung", // Berichte/Abrechnung (zusätzlich per owner_reporting gegated)
+];
+
 export function AppSidebar({
   email = "",
   role = null,
@@ -158,10 +171,17 @@ export function AppSidebar({
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   // Sichtbarkeit eines Menüpunkts: Admin sieht alles; sonst muss die ggf.
-  // geforderte Berechtigung vorhanden sein.
+  // geforderte Berechtigung vorhanden sein. Eigentümer (§4.2) sehen zusätzlich
+  // NUR die für ihr read-only-Portal freigegebenen Bereiche.
   const permSet = new Set(permissions);
-  const canSee = (item: NavItem) =>
-    role === "admin" || !item.req || permSet.has(item.req);
+  const canSee = (item: NavItem) => {
+    if (role === "admin") return true;
+    if (item.req && !permSet.has(item.req)) return false;
+    if (role === "owner" && !OWNER_ALLOWED_HREFS.includes(item.href)) {
+      return false;
+    }
+    return true;
+  };
 
   const mainItems = MAIN.filter(canSee);
 
