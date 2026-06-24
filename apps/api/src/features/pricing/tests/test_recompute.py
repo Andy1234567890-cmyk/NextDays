@@ -3,7 +3,7 @@
 Verifiziert: DP schreibt NUR dynamic_prices (nie price_overrides); DP-AUS ist ein
 No-op; ohne Basispreis kein erfundener Preis; Saison-Aufschlag fließt ein.
 """
-from datetime import date
+from datetime import date, timedelta
 
 from src.features.pricing.recompute import DynamicPricingRecompute
 
@@ -158,6 +158,25 @@ def test_recompute_all_only_enabled() -> None:
     res = svc.recompute_all(horizon_days=3)
     assert res["properties"] == 1
     assert res["days"] >= 1
+
+
+def test_occupancy_signal_ignores_past() -> None:
+    """Auslastung zählt NUR ab heute — vergangene Belegung darf einen künftigen
+    Preis nicht beeinflussen (sonst sähe ein leeres künftiges Objekt wegen alter
+    Buchungen fälschlich 'voll' aus)."""
+    from datetime import date as _date
+
+    svc = DynamicPricingRecompute(service_client=_db(enabled=True, base=100.0))
+    today = _date(2026, 7, 1)
+    day = _date(2026, 7, 1)
+    # 5 belegte Tage NUR in der Vergangenheit (vor heute) → dürfen nicht zählen.
+    past = {(_date(2026, 6, 20) + timedelta(days=i)).isoformat() for i in range(5)}
+    occ_past = svc._occupancy_signal(day, past, today)
+    assert occ_past == 0.0  # Vergangenheit ignoriert
+    # 5 belegte Tage in der Zukunft (ab heute) → zählen.
+    future = {(today + timedelta(days=i)).isoformat() for i in range(5)}
+    occ_future = svc._occupancy_signal(day, future, today)
+    assert occ_future > 0.0
 
 
 # --- End-to-End: voller Recompute-Pfad mit den neuen Bausteinen --------------

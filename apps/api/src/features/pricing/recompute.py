@@ -125,7 +125,7 @@ class DynamicPricingRecompute:
                 day=cur,
                 season_pct=season_pct.get(cur.isoformat(), 0.0),
                 event_pct=event_pct.get(cur.isoformat(), 0.0),
-                occupancy=self._occupancy_signal(cur, booked),
+                occupancy=self._occupancy_signal(cur, booked, today),
                 days_before=(cur - today).days,
                 is_orphan_gap=self._is_orphan_gap(cur, booked),
                 comp_price=md.comp_price if md else None,
@@ -539,8 +539,18 @@ class DynamicPricingRecompute:
         return out
 
     def _booked_dates(self, property_id: str, start: date, end: date) -> set[str]:
-        """Belegte/gesperrte Tage (availability.status != open) als ISO-Set."""
-        rows = (
+        """Belegte/gesperrte Tage als ISO-Set — aus ZWEI Quellen kombiniert:
+
+        (1) availability.status != open (Sperren/Sync-Status), UND
+        (2) aktive Reservierungen (status confirmed/pending), aufgelöst über
+            check_in..check_out (check_out exklusiv = Abreisetag wieder frei).
+
+        Reservierungen sind die Buchungs-Wahrheit; availability ist davon
+        abgeleitet und kann je nach Sync lückenhaft sein. Läse die Engine nur
+        availability, wäre sie bei nicht-gespiegelten Buchungen blind und ergäbe
+        fälschlich „leer → Rabatt". cancelled zählt NICHT als belegt."""
+        booked: set[str] = set()
+        avail = (
             self._db()
             .table("availability")
             .select("date, status")
@@ -549,17 +559,51 @@ class DynamicPricingRecompute:
             .lt("date", end.isoformat())
             .execute()
         ).data or []
-        return {r["date"] for r in rows if r.get("status") and r["status"] != "open"}
+        booked |= {
+            r["date"] for r in avail if r.get("status") and r["status"] != "open"
+        }
+        res = (
+            self._db()
+            .table("reservations")
+            .select("check_in, check_out, status")
+            .eq("property_id", property_id)
+            .lt("check_in", end.isoformat())
+            .gte("check_out", start.isoformat())
+            .execute()
+        ).data or []
+        for r in res:
+            if (r.get("status") or "").lower() == "cancelled":
+                continue
+            try:
+                ci = _as_date(r["check_in"])
+                co = _as_date(r["check_out"])
+            except (KeyError, ValueError, TypeError):
+                continue
+            cur = max(ci, start)
+            stop = min(co, end)
+            while cur < stop:
+                booked.add(cur.isoformat())
+                cur += timedelta(days=1)
+        return booked
 
     # -- Signal-Ableitung ----------------------------------------------------
     @staticmethod
-    def _occupancy_signal(day: date, booked: set[str]) -> float:
-        """Auslastung im ±Fenster um den Tag (Anteil belegter Tage, 0..1)."""
+    def _occupancy_signal(day: date, booked: set[str], today: date) -> float:
+        """Auslastung im Vorlauf-Fenster um den Tag (Anteil belegter Tage, 0..1).
+
+        NUR zukünftige Tage zählen (ab `today`): die Belegung, die einen künftigen
+        Preis treibt, ist die noch buchbare/schon gebuchte ZUKUNFT. Vergangene
+        Belegung ist für die Preissetzung irrelevant und würde den Faktor sonst
+        verfälschen (ein künftig leeres Objekt sähe wegen alter Buchungen „voll"
+        aus). Fenster: [max(day−half, today) .. day+half]."""
         half = _OCCUPANCY_WINDOW // 2
+        start = max(day - timedelta(days=half), today)
+        last = day + timedelta(days=half)
+        if last < start:
+            return 0.0
         total = 0
         taken = 0
-        cur = day - timedelta(days=half)
-        last = day + timedelta(days=half)
+        cur = start
         while cur <= last:
             total += 1
             if cur.isoformat() in booked:

@@ -208,9 +208,16 @@ function toSegments(
   const segs: Segment[] = [];
   let cur: Segment | null = null;
   dates.forEach((d, i) => {
-    const s = statusByDay[key(d)] ?? "open";
-    const src = sourceByDay[key(d)] ?? "manual";
     const res = resByDay[key(d)];
+    // Eine vorhandene (nicht stornierte) Reservierung macht den Tag gebucht —
+    // auch wenn availability ihn (noch) als "open" führt. reservations ist die
+    // Buchungs-Wahrheit; availability kann je nach Sync hinterherhinken. Sonst
+    // blieben real gebuchte Tage im Kalender unsichtbar (Balken fehlt).
+    const rawStatus = statusByDay[key(d)] ?? "open";
+    const s: AvailabilityStatus = res ? "booked" : rawStatus;
+    const src = res
+      ? (sourceByDay[key(d)] ?? "booking")
+      : (sourceByDay[key(d)] ?? "manual");
     if (s === "open") {
       cur = null;
       return;
