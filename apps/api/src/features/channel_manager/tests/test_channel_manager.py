@@ -593,11 +593,14 @@ def test_import_ari_prices_and_availability() -> None:
     res = _import_svc(channex, db).import_ari_for_property(
         "t1", "cx-prop", days_ahead=3, today=date(2026, 7, 1)
     )
-    assert res["prices"] == 2
+    # Zurückgelesene OTA-Raten werden NICHT als price_override geschrieben
+    # (sonst Echo-Loop, der die dynamischen Engine-Preise verdeckt). Die
+    # Preis-Wahrheit ist der pricing-Resolver, nicht der ARI-Reimport.
+    assert res["prices"] == 0
+    assert db.tables.get("price_overrides", []) == []
+    # Verfügbarkeit + stop_sell sind echte OTA-Signale und werden weiter importiert.
     statuses = {a["date"]: a["status"] for a in db.tables["availability"]}
     assert statuses["2026-07-01"] == "blocked" and statuses["2026-07-02"] == "open"
-    prices = {p["date"]: p["price"] for p in db.tables["price_overrides"]}
-    assert prices["2026-07-01"] == 138.0 and prices["2026-07-02"] == 150.0
     assert any(s["date"] == "2026-07-01" for s in db.tables["stop_sell"])
 
 

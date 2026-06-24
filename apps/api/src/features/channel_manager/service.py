@@ -2724,17 +2724,16 @@ class ChannelManagerService:
                 restr = {"data": {}}
             for _rate_plan, days in (restr.get("data") or {}).items():
                 for d, vals in (days or {}).items():
-                    rate = (vals or {}).get("rate")
-                    if rate is not None:
-                        try:
-                            price = float(rate)
-                            db.table("price_overrides").upsert(
-                                {"property_id": property_id, "date": d, "price": price},
-                                on_conflict="property_id,date",
-                            ).execute()
-                            result["prices"] += 1
-                        except (TypeError, ValueError):
-                            pass
+                    # WICHTIG: zurückgelesene OTA-Raten NICHT als price_override
+                    # schreiben. price_override ist per Architektur die MANUELLE
+                    # Host-Überschreibung und gewinnt im Resolver über dynamic_prices.
+                    # Beim Import würde das einen Echo-Loop erzeugen: unsere eigenen
+                    # gepushten Dynamic-Preise kämen als „manueller Override" zurück,
+                    # verdeckten die Engine-Preise samt Faktor-Aufschlüsselung und
+                    # frören sie als Festpreis ein. Die Preis-Wahrheit ist und bleibt
+                    # der pricing-Resolver (override > dynamic > weekday > base);
+                    # eingehende OTA-Raten sind kein manueller Override. stop_sell
+                    # und Verfügbarkeit sind dagegen echte OTA-Signale → bleiben.
                     if (vals or {}).get("stop_sell"):
                         db.table("stop_sell").upsert(
                             {
