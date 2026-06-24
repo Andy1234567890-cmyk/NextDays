@@ -75,8 +75,8 @@ class CalendarService:
         """
         rows = self._fetch_days(property_id, rng)
         by_date = {r["date"]: r for r in rows}
-        prices = {
-            d.date.isoformat(): d.price
+        effective = {
+            d.date.isoformat(): d
             for d in self._resolver().effective_prices(property_id, rng.start, rng.end)
         }
         _base, min_stay = self._fetch_rate_plan(property_id)
@@ -84,7 +84,7 @@ class CalendarService:
         for day in rng.nights():
             key = day.isoformat()
             row = by_date.get(key)
-            price = prices.get(key)
+            eff = effective.get(key)
             result.append(
                 DayAvailability(
                     date=day,
@@ -98,7 +98,8 @@ class CalendarService:
                         if row is not None
                         else AvailabilitySource.manual
                     ),
-                    price=price,
+                    price=eff.price if eff else None,
+                    price_source=eff.source if eff else "none",
                     min_stay=min_stay,
                 )
             )

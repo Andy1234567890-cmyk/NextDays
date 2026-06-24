@@ -4,8 +4,10 @@ Vorher lagen Preise in vier unverbundenen Quellen, die nicht zusammenspielten
 (Objekt-Preise erschienen nicht im Kalender/Quote). Dieser Resolver vereint sie:
 
   effective_price(property_id, day) -> Effektivpreis EINES Tages in der Reihenfolge
-    price_override(Tag) > weekday_price(Wochentag, falls custom_by_weekday)
-    > rate_plan.base_price. Kein Preis vorhanden → None (kein erfundener Fallback).
+    manueller price_override(Tag) > dynamic_price(Regel-Engine, Tag)
+    > weekday_price(Wochentag, falls custom_by_weekday) > rate_plan.base_price.
+    Kein Preis vorhanden → None (kein erfundener Fallback). Ein manuell gesetzter
+    Override gewinnt IMMER über den Dynamic-Pricing-Vorschlag.
 
   quote(req) -> vollständige Buchungs-Aufschlüsselung: nimmt die Effektiv-Tages-
     preise, wendet Längenpreis/Kurzaufenthalt/Extra-Gast pro Nacht an, dann
@@ -188,24 +190,56 @@ class PricingResolver:
                 out[day] = price
         return out
 
+    def _load_dynamic(
+        self, property_id: str, check_in: date, check_out: date
+    ) -> dict[str, float]:
+        """Dynamic-Pricing-Tagespreise (Regel-Engine). Optional wie die Konfig:
+        fehlt die Tabelle (nicht migriert) → leer, der Resolver fällt auf
+        weekday/base zurück (kein erfundener Preis)."""
+        try:
+            res = (
+                self._db()
+                .table("dynamic_prices")
+                .select("date, price")
+                .eq("property_id", property_id)
+                .gte("date", check_in.isoformat())
+                .lt("date", check_out.isoformat())
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — fehlende Tabelle = kein DP
+            log.warning("dynamic_prices_unavailable", error=str(exc))
+            return {}
+        out: dict[str, float] = {}
+        for r in res:
+            day, price = r.get("date"), _to_float(r.get("price"))
+            if isinstance(day, str) and price is not None:
+                out[day] = price
+        return out
+
     # -- Effektivpreis pro Tag ------------------------------------------------
     def effective_price(self, property_id: str, day: date) -> EffectivePriceDay:
-        """Effektivpreis EINES Tages: override > weekday > base. None = kein Preis."""
-        overrides = self._load_overrides(property_id, day, day + timedelta(days=1))
+        """Effektivpreis EINES Tages: override > dynamic > weekday > base."""
+        nxt = day + timedelta(days=1)
+        overrides = self._load_overrides(property_id, day, nxt)
+        dynamic = self._load_dynamic(property_id, day, nxt)
         config = self._load_config(property_id)
         base, _currency = self._load_rate_plan(property_id)
-        return self._effective_for_day(day, overrides, config, base)
+        return self._effective_for_day(day, overrides, dynamic, config, base)
 
     @staticmethod
     def _effective_for_day(
         day: date,
         overrides: dict[str, float],
+        dynamic: dict[str, float],
         config: _PricingConfig,
         base: float | None,
     ) -> EffectivePriceDay:
         key = day.isoformat()
+        # Manueller Override gewinnt IMMER (auch über Dynamic Pricing).
         if key in overrides:
             return EffectivePriceDay(date=day, price=overrides[key], source="override")
+        if key in dynamic:
+            return EffectivePriceDay(date=day, price=dynamic[key], source="dynamic")
         weekday = config.weekday_price(day)
         if weekday is not None:
             return EffectivePriceDay(date=day, price=weekday, source="weekday")
@@ -218,10 +252,11 @@ class PricingResolver:
     ) -> list[EffectivePriceDay]:
         """Effektivpreise für jeden Tag [check_in, check_out) in EINEM Lauf."""
         overrides = self._load_overrides(property_id, check_in, check_out)
+        dynamic = self._load_dynamic(property_id, check_in, check_out)
         config = self._load_config(property_id)
         base, _currency = self._load_rate_plan(property_id)
         return [
-            self._effective_for_day(day, overrides, config, base)
+            self._effective_for_day(day, overrides, dynamic, config, base)
             for day in _nights(check_in, check_out)
         ]
 
@@ -242,11 +277,13 @@ class PricingResolver:
         config = self._load_config(req.property_id)
         base, rp_currency = self._load_rate_plan(req.property_id)
         overrides = self._load_overrides(req.property_id, req.check_in, req.check_out)
+        dynamic = self._load_dynamic(req.property_id, req.check_in, req.check_out)
         currency = config.currency or rp_currency or ""
 
         # 1) Übernachtungssumme aus Effektiv-Tagespreisen.
         per_day = [
-            self._effective_for_day(day, overrides, config, base) for day in nights
+            self._effective_for_day(day, overrides, dynamic, config, base)
+            for day in nights
         ]
         priced = [d.price for d in per_day if d.price is not None]
         priceless = len(priced) == 0

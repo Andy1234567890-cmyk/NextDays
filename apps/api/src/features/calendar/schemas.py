@@ -50,9 +50,12 @@ class DayAvailability(BaseModel):
     date: date
     status: AvailabilityStatus
     source: AvailabilitySource
-    # Tagespreis: price_overrides (Tag) > rate_plans.base_price (Default).
+    # Tagespreis (Resolver): override > dynamic > weekday > base.
     # None, wenn das Objekt keinen Rate-Plan/Override hat (kein Fallback-Wert).
     price: float | None = None
+    # Herkunft des Tagespreises: override | dynamic | weekday | base | none.
+    # „dynamic" = von der Dynamic-Pricing-Engine → UI zeigt „auto"-Badge.
+    price_source: str = "none"
     # Mindestaufenthalt aus dem Rate-Plan des Objekts (per-Tag-Restriktionen v2).
     min_stay: int | None = None
 

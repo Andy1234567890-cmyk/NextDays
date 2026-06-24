@@ -234,6 +234,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
   const [sources, setSources] = useState<Record<string, Record<string, AvailabilitySource>>>({});
   // Tagespreis + Min-Stay je Objekt/Tag (aus get_availability) für die Anzeige.
   const [prices, setPrices] = useState<Record<string, Record<string, number | null>>>({});
+  const [priceSources, setPriceSources] = useState<Record<string, Record<string, string>>>({});
   const [minStays, setMinStays] = useState<Record<string, Record<string, number | null>>>({});
   // Buchungen je Objekt → Tages-Map (Gastname im Balken + Detail-Popover).
   const [resByProp, setResByProp] = useState<Record<string, Record<string, Reservation>>>({});
@@ -566,15 +567,17 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
           const map: Record<string, AvailabilityStatus> = {};
           const srcMap: Record<string, AvailabilitySource> = {};
           const priceMap: Record<string, number | null> = {};
+          const priceSrcMap: Record<string, string> = {};
           const minStayMap: Record<string, number | null> = {};
           if (res.ok)
             for (const d of res.data as DayAvailability[]) {
               map[d.date] = d.status;
               srcMap[d.date] = d.source;
               priceMap[d.date] = d.price;
+              priceSrcMap[d.date] = d.price_source ?? "none";
               minStayMap[d.date] = d.min_stay;
             }
-          return [p.id, map, srcMap, priceMap, minStayMap] as const;
+          return [p.id, map, srcMap, priceMap, minStayMap, priceSrcMap] as const;
         }),
       ),
       // Alle Buchungen (OTA + direkt, vereint aus reservations) in einem Call.
@@ -584,6 +587,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
     setSources(Object.fromEntries(results.map((r) => [r[0], r[2]])));
     setPrices(Object.fromEntries(results.map((r) => [r[0], r[3]])));
     setMinStays(Object.fromEntries(results.map((r) => [r[0], r[4]])));
+    setPriceSources(Object.fromEntries(results.map((r) => [r[0], r[5]])));
     // Buchungen je Objekt gruppieren und auf Tages-Maps abbilden.
     const byProp: Record<string, Reservation[]> = {};
     if (resAll.ok)
@@ -897,6 +901,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
               const statusMap = avail[p.id] ?? {};
               const sourceMap = sources[p.id] ?? {};
               const priceMap = prices[p.id] ?? {};
+              const priceSrcMap = priceSources[p.id] ?? {};
               const minStayMap = minStays[p.id] ?? {};
               const resMap = resByProp[p.id] ?? {};
               const segs = toSegments(statusMap, sourceMap, resMap, dates);
@@ -938,8 +943,16 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                                 {p.maxGuests}
                               </span>
                               {view.showPrice && (
-                                <span className={inSel ? "text-white" : "text-muted-foreground"}>
+                                <span className={`flex items-center gap-1 ${inSel ? "text-white" : "text-muted-foreground"}`}>
                                   {fmtPrice(priceMap[key(d)])}
+                                  {priceSrcMap[key(d)] === "dynamic" && (
+                                    <span
+                                      title="Dynamischer Preis (automatisch berechnet)"
+                                      className={`rounded px-1 text-[0.55rem] font-semibold leading-tight ${inSel ? "bg-white/25 text-white" : "bg-accent/15 text-accent"}`}
+                                    >
+                                      auto
+                                    </span>
+                                  )}
                                 </span>
                               )}
                               {view.showMinStay && (

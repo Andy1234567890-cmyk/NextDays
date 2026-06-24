@@ -82,7 +82,7 @@ C4Container
         Container(mobile, "Mobile-App", "React Native 0.86 + React Navigation (apps/mobile)", "Native Gäste- & Gastgeber-App (iOS/Android); teilt das FastAPI-Backend (/api/v1)")
         Container(storybook, "Storybook", "react-vite (eigenes Package apps/storybook)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
         Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 17 Vertical Slices unter /api/v1")
-        ContainerDb(db, "Datenbank", "Supabase / Postgres", "42 Tabellen, Multi-Tenant, RLS, tenant_id")
+        ContainerDb(db, "Datenbank", "Supabase / Postgres", "44 Tabellen, Multi-Tenant, RLS, tenant_id")
         ContainerDb(cache, "Cache", "Redis", "Caching-Layer")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel-Sync, OCR, Messaging-Trigger, wiederkehrende Aufgaben")
     }
@@ -125,7 +125,7 @@ flowchart TB
         subgraph DONE["Slices mit Logik"]
             AUTH["auth — Register/Login/Me/Invite, Rollen+Capability-Matrix + Lodgify-Berechtigungen (pro Nutzer)"]
             CAL["calendar — Verfügbarkeit, Double-Booking, Preis-Override (liest Preis via pricing-Resolver)"]
-            PRICE["pricing — zentraler Preis-Resolver: effective_price + quote (eine Preis-Wahrheit)"]
+            PRICE["pricing — Preis-Resolver (effective_price + quote) + Dynamic-Pricing-Engine (dynamic_prices, regelbasiert)"]
             TASKS["tasks — Aufgaben, Checklisten+Foto, Vertretung, Inventar"]
             BUCH["buchhaltung — Rechnungen + Kunden (aus Taskilo, tenant-vereinheitlicht); Steuer/E-Rechnung/DATEV/GoBD folgen"]
         end
@@ -136,7 +136,7 @@ flowchart TB
             PORTAL["public_portal"]; CRM["crm"]; DASH["dashboard"]; CONT["content"]
         end
     end
-    DB[("Postgres — 42 Tabellen, RLS")]
+    DB[("Postgres — 44 Tabellen, RLS")]
     DONE --> DB
     SCAFFOLD --> DB
     CORE --> DONE
@@ -305,14 +305,14 @@ erDiagram
 **Marktplatz-Tabellen (angelegt, mit RLS; Geschäftslogik in Phase 2):** `portal_guests`,
 `reviews`, `commissions` — siehe [Migration 0006](../supabase/migrations/0006_marketplace.sql).
 Das Kern-Diagramm oben zeigt bewusst nur die zentralen Entitäten; alle übrigen der
-**42 Tabellen** sind nach Bereich gruppiert im nächsten Abschnitt aufgeführt.
+**44 Tabellen** sind nach Bereich gruppiert im nächsten Abschnitt aufgeführt.
 
 **Kardinalität:** `||` = genau eins · `o{` = null bis viele · `|{` = ein bis viele.
 `--` = identifizierend (Kind kann ohne Eltern nicht existieren).
 
 ### Datenmodell-Erweiterungen aus dem Lastenheft (Migrationen 0009–0019)
 
-Das Modell ist auf **42 Tabellen (alle mit RLS)** gewachsen — verifiziert gegen das
+Das Modell ist auf **44 Tabellen (alle mit RLS)** gewachsen — verifiziert gegen das
 echte Supabase-Projekt. Zur Lesbarkeit hier nach Bereich gruppiert (Details in den
 jeweiligen Migrationen):
 
@@ -438,8 +438,9 @@ liefen früher in vier unverbundenen Quellen auseinander — im Objekt bearbeite
 Preise erschienen nicht im Kalender/Quote. Jetzt gibt es **einen** Resolver
 `pricing/resolver.py` als Single Source of Truth:
 - `effective_price(property_id, day)` → Effektivpreis pro Tag in fester Priorität
-  **`price_overrides`(Tag) > Wochentagspreis > `rate_plans.base_price`**; ohne Preis
-  `None` (kein erfundener Fallback).
+  **manueller `price_overrides`(Tag) > `dynamic_prices` (Regel-Engine) >
+  Wochentagspreis > `rate_plans.base_price`**; ohne Preis `None` (kein erfundener
+  Fallback).
 - `quote(property_id, range, guests, channel)` → vollständige Aufschlüsselung:
   Effektiv-Tagespreise + Längenpreis (verdrängt Basispreis), Kurzaufenthalts- und
   Extra-Gast-Aufschlag, Kanal-Markup (direct = 0), Gebühren, Aktionen (Rabatt),
@@ -455,8 +456,28 @@ in die typisierte, vom Resolver gelesene Tabelle **`property_pricing_config`** (
 Backfill aus dem Blob) überführt; `properties.update` spiegelt jede Änderung dorthin.
 `rate_plans` + `property_pricing_config` sind jetzt in der Realtime-Publication (`0052`)
 — Preisänderungen erscheinen ohne Reload in allen Tabs (`calendar-board` abonniert sie).
-Das ungenutzte zweite Saison-Modell (`seasons`/`season_*` aus `0011`) ist als
-deprecated markiert (`0053`); Saisonpreise laufen über `price_overrides`.
+Das zweite Saison-Modell (`seasons`/`season_*` aus `0011`) wurde mit `0053` als
+deprecated für die *manuellen* Tagespreise markiert (die laufen über
+`price_overrides`); die Saison-/Event-**Perioden** werden aber von der Dynamic-
+Pricing-Engine als Aufschlag-Signal gelesen (s. u.).
+
+**Dynamic Pricing (Phase 1, regelbasiert, Migration `0055`):** Eine reine Regel-
+Engine (`pricing/engine.py`, deterministisch/unit-testbar) berechnet je (Objekt,
+Tag) einen dynamischen Preis + Min-Stay aus **multiplikativen** Faktoren auf den
+Basispreis: Saison (`season_periods`), Event (`event_periods`), Wochenende, eigene
+Auslastung (Belegung im ±30-Tage-Fenster), Lead-Time/Last-Minute (Tage bis Anreise),
+Orphan-Gap (1–2-Nächte-Lücken in `availability`) — anschließend `clamp(min_price,
+…, max_price)`. Der `recompute`-Service lädt die Quellen, ruft die Engine und
+schreibt nach **`dynamic_prices`** (NIE in `price_overrides`); danach löst er den
+vorhandenen Channex-ARI-Push (Preis in Cent + Min-Stay, run-length-kodiert) aus.
+Konfiguration je Objekt in **`dp_settings`** (opt-in, **default AUS**). Der tägliche
+Lauf kommt über `POST /pricing/recompute` (Cron-Secret, Coolify Scheduled Task,
+Horizont 540 Tage); zusätzlich rechnet `reservations.create/cancel` die betroffenen
+Tage (±2) sofort neu (Auslastung/Orphan ändern sich). **Manuell schlägt automatisch:**
+ein vom Host gesetzter `price_override` gewinnt im Resolver immer über den DP-Vorschlag;
+bei DP-AUS gibt es keine `dynamic_prices` und der Resolver fällt auf Basis zurück.
+Phase 2 (separat) ergänzt ein Markt-/Wettbewerbssignal (AirDNA/PriceLabs) als
+weitere Quelle — schreibt ebenfalls nach `dynamic_prices`, Verteilpfad unverändert.
 
 **Kanalübergreifende Nachricht→Gast-Zuordnung (Resolver, Migration 0047):** Jede
 eingehende Buchung/Nachricht — OTA via Channex, WhatsApp, manuelle Reservierung,

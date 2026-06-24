@@ -67,6 +67,47 @@ class QuoteResponse(BaseModel):
     priceless: bool = False
 
 
+class LastMinuteRule(BaseModel):
+    """Eine Last-Minute-Regel: ab `days_before` Tagen vor Anreise `discount_pct`."""
+
+    days_before: int = Field(ge=1)
+    discount_pct: float = Field(ge=0, le=100)
+
+
+class DpSettingsResponse(BaseModel):
+    """Dynamic-Pricing-Konfiguration eines Objekts (dp_settings)."""
+
+    property_id: str
+    enabled: bool = False
+    min_price: float | None = None
+    max_price: float | None = None
+    weekend_uplift_pct: float = 15.0
+    last_minute: list[LastMinuteRule] = []
+    orphan_gap_discount_pct: float = 15.0
+    occupancy_sensitivity: float = 30.0
+    min_stay_min: int = 1
+    min_stay_max: int = 7
+
+
+class DpSettingsUpdate(BaseModel):
+    """PATCH-Form: nur gesetzte Felder werden übernommen."""
+
+    enabled: bool | None = None
+    min_price: float | None = Field(default=None, ge=0)
+    max_price: float | None = Field(default=None, ge=0)
+    weekend_uplift_pct: float | None = Field(default=None, ge=0, le=200)
+    last_minute: list[LastMinuteRule] | None = None
+    orphan_gap_discount_pct: float | None = Field(default=None, ge=0, le=100)
+    occupancy_sensitivity: float | None = Field(default=None, ge=0, le=100)
+    min_stay_min: int | None = Field(default=None, ge=1)
+    min_stay_max: int | None = Field(default=None, ge=1)
+
+
+class RecomputeResponse(BaseModel):
+    properties: int
+    days: int
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"

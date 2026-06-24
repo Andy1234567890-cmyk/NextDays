@@ -19,7 +19,9 @@ export type DayAvailability = {
   date: string; // YYYY-MM-DD
   status: AvailabilityStatus;
   source: AvailabilitySource;
-  price: number | null; // Tagespreis (Override > Basispreis); null ohne Rate-Plan
+  price: number | null; // Tagespreis (Override > dynamic > weekday > base); null ohne Rate-Plan
+  // Herkunft des Preises: override | dynamic | weekday | base | none.
+  price_source?: string;
   min_stay: number | null; // Mindestaufenthalt aus dem Rate-Plan
 };
 

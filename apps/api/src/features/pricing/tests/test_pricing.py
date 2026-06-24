@@ -74,11 +74,13 @@ def _resolver(
     base: float | None = None,
     overrides: list[dict] | None = None,
     config: dict | None = None,
+    dynamic: list[dict] | None = None,
 ) -> PricingResolver:
     tables: dict[str, list[dict]] = {
         "rate_plans": [{"base_price": base, "currency": "EUR"}] if base is not None else [],
         "price_overrides": overrides or [],
         "property_pricing_config": [config] if config else [],
+        "dynamic_prices": dynamic or [],
     }
     return PricingResolver(service_client=_DB(tables))
 
@@ -106,6 +108,34 @@ def test_effective_weekday_beats_base_but_not_override() -> None:
     r = _resolver(base=100.0, config=cfg)
     days = r.effective_prices("p", date(2026, 7, 1), date(2026, 7, 2))
     assert days[0].price == 130.0 and days[0].source == "weekday"
+
+
+def test_effective_dynamic_beats_weekday_and_base() -> None:
+    # Dynamic Pricing schlägt Wochentagspreis und Basis.
+    cfg = {"custom_by_weekday": True, "weekday_prices": {"wed": 130}}
+    r = _resolver(
+        base=100.0, config=cfg, dynamic=[{"date": "2026-07-01", "price": 175}]
+    )
+    days = r.effective_prices("p", date(2026, 7, 1), date(2026, 7, 2))
+    assert days[0].price == 175.0 and days[0].source == "dynamic"
+
+
+def test_effective_manual_override_beats_dynamic() -> None:
+    # Manueller Host-Override gewinnt IMMER über den Dynamic-Pricing-Vorschlag.
+    r = _resolver(
+        base=100.0,
+        overrides=[{"date": "2026-07-01", "price": 220}],
+        dynamic=[{"date": "2026-07-01", "price": 175}],
+    )
+    days = r.effective_prices("p", date(2026, 7, 1), date(2026, 7, 2))
+    assert days[0].price == 220.0 and days[0].source == "override"
+
+
+def test_effective_dp_off_falls_back_to_base() -> None:
+    # Ohne dynamic_prices-Eintrag (DP aus) → Basispreis.
+    r = _resolver(base=100.0, dynamic=[])
+    days = r.effective_prices("p", date(2026, 7, 1), date(2026, 7, 2))
+    assert days[0].price == 100.0 and days[0].source == "base"
 
 
 def test_effective_none_without_price() -> None:

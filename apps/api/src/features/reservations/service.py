@@ -117,6 +117,26 @@ class ReservationsService:
         except Exception as exc:  # noqa: BLE001
             log.warning("reservation_channex_push_failed", error=str(exc))
 
+    def _recompute_dynamic_pricing(
+        self, property_id: str, check_in: date, check_out: date
+    ) -> None:
+        """Dynamic Pricing für die betroffenen Tage neu rechnen — eine Buchung/
+        Storno ändert Auslastung + Orphan-Lücken. Mit Puffer (±2 Tage), da der
+        Orphan-/Auslastungs-Faktor Nachbartage einbezieht. Best-effort: No-op,
+        wenn DP für das Objekt aus ist; Fehler kippen die Buchung nicht."""
+        if self._client is None:
+            return
+        try:
+            from src.features.pricing.recompute import DynamicPricingRecompute
+
+            DynamicPricingRecompute(service_client=self._client).recompute_property(
+                property_id,
+                start=check_in - timedelta(days=2),
+                end=check_out + timedelta(days=2),
+            )
+        except Exception as exc:  # noqa: BLE001
+            log.warning("reservation_dp_recompute_failed", error=str(exc))
+
     def list(self, ctx: AuthContext, property_id: str | None = None) -> ReservationListResponse:
         tenant_id = self._require_tenant(ctx)
         query = (
@@ -346,6 +366,8 @@ class ReservationsService:
         self._push_channex_availability(
             tenant_id, req.property_id, req.check_in, req.check_out, 0
         )
+        # Dynamic Pricing der betroffenen Tage neu rechnen (Auslastung/Orphan).
+        self._recompute_dynamic_pricing(req.property_id, req.check_in, req.check_out)
 
         log.info(
             "reservation_created",
@@ -591,6 +613,12 @@ class ReservationsService:
                 on_conflict="property_id,date",
             ).execute()
             self._release_channex(tenant_id, property_id, release)
+            # Freigewordene Tage neu bepreisen (Auslastung/Orphan ändern sich).
+            self._recompute_dynamic_pricing(
+                property_id,
+                _as_date(current["check_in"]),
+                _as_date(current["check_out"]),
+            )
 
         # Audit: append-only Storno-Historie (Best-Effort — Log-Fehler darf die
         # Stornierung nicht kippen).

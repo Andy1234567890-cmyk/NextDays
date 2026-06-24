@@ -260,8 +260,25 @@ Buchungsstrecke lesen Preise ausschließlich hierüber. Leseendpoints `view_cale
 
 | Methode | Pfad | Beschreibung |
 |---|---|---|
-| `GET` | `/api/v1/pricing/effective?property_id&start&end` | Effektivpreis je Tag — Priorität `price_overrides`(Tag) > Wochentagspreis > `rate_plans.base_price`; sonst `null` (kein Fallback) |
+| `GET` | `/api/v1/pricing/effective?property_id&start&end` | Effektivpreis je Tag — Priorität manueller `price_overrides`(Tag) > `dynamic_prices` (Regel-Engine) > Wochentagspreis > `rate_plans.base_price`; sonst `null` (kein Fallback) |
 | `POST` | `/api/v1/pricing/quote` | Vollständige Aufschlüsselung `{property_id, check_in, check_out, guests, channel}` → `lines[]` (Übernachtung, Markup, Gebühren, Rabatt, Steuern), `nightly_total`, `total`, `priceless` |
+| `GET` | `/api/v1/pricing/settings/{property_id}` | Dynamic-Pricing-Einstellungen (dp_settings) eines Objekts (Defaults, falls leer). `manage_calendar` |
+| `PUT` | `/api/v1/pricing/settings/{property_id}` | Dynamic-Pricing-Einstellungen setzen (Upsert); bei `enabled=true` sofortiger Recompute. `manage_calendar` + `edit_calendar_bookings` |
+| `POST` | `/api/v1/pricing/recompute` | Interner Cron (Header `X-Internal-Cron-Secret`): berechnet die dynamischen Preise aller Objekte mit aktiviertem DP neu (Horizont 540 Tage) + Channex-Push |
+
+**Dynamic Pricing (Phase 1, regelbasiert, Migration `0055`):** Eine Regel-Engine
+(`pricing/engine.py`, reine Funktionen) berechnet täglich je (Objekt, Tag) einen
+dynamischen Preis + Min-Stay aus multiplikativen Faktoren — **Saison**
+(`season_periods`), **Event** (`event_periods`), **Wochenende**, **eigene Auslastung**,
+**Lead-Time/Last-Minute**, **Orphan-Gap** (1–2-Nächte-Lücken) — geklammert auf
+`[min_price, max_price]`. Ergebnis → Tabelle `dynamic_prices` (DP schreibt NIE in
+`price_overrides`). Konfiguration je Objekt in `dp_settings` (opt-in, **default AUS**).
+Verteilung über den vorhandenen Resolver (Kalender/Quote/Plattform lesen automatisch)
++ Channex-ARI-Push (Preis in Cent + Min-Stay, run-length-kodiert). Der tägliche Lauf
+kommt über einen **Coolify Scheduled Task** auf `POST /pricing/recompute`; zusätzlich
+werden bei neuer/stornierter Reservierung die betroffenen Tage (±2) neu gerechnet.
+**Manuell schlägt automatisch:** ein vom Host gesetzter `price_override` bleibt
+unangetastet und gewinnt im Resolver.
 
 Die Pricing-Konfiguration (Markups je Kanal, Extra-Gast-/Kurzaufenthalts-Aufschlag,
 längenabhängige Preise, Gebühren, Steuern, Aktionen, Add-ons) liegt strukturiert in
