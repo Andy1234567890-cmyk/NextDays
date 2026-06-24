@@ -7,6 +7,7 @@ Der Supabase-Client wird injiziert → im Test mockbar; echte DB-Calls beim
 laufenden Stack. Kein stilles Exception-Swallowing (PROJECT.md).
 """
 from datetime import date
+from typing import TYPE_CHECKING
 
 from supabase import Client
 
@@ -24,6 +25,9 @@ from .schemas import (
     PriceOverrideRequest,
     SliceHealth,
 )
+
+if TYPE_CHECKING:
+    from src.features.pricing.resolver import PricingResolver
 
 log = get_logger("nextdays.calendar")
 
@@ -52,25 +56,35 @@ class CalendarService:
             raise CalendarError("Kalender-DB nicht verfügbar.", status_code=500)
         return self._client
 
+    def _resolver(self) -> "PricingResolver":
+        """Zentraler Preis-Resolver (eine Preis-Wahrheit für Kalender + Quote)."""
+        from src.features.pricing.resolver import PricingResolver
+
+        return PricingResolver(service_client=self._db())
+
     def get_availability(
         self, property_id: str, rng: DateRange
     ) -> list[DayAvailability]:
         """Tagesstatus im Zeitraum inkl. Preis + Min-Stay. Fehlende Tage = offen.
 
-        Preis je Tag: price_overrides (tagesgenau) hat Vorrang vor dem
-        Rate-Plan-Basispreis. Min-Stay kommt aus dem Rate-Plan (per-Tag-
-        Restriktionen sind v2). Ohne Rate-Plan/Override bleibt der Wert None
+        Preis je Tag kommt aus dem zentralen Preis-Resolver (override > weekday >
+        base) — DIESELBE Wahrheit wie der Buchungs-Quote, damit Kalender und Quote
+        nie auseinanderlaufen. Min-Stay kommt aus dem Rate-Plan (per-Tag-
+        Restriktionen sind v2). Ohne Rate-Plan/Override bleibt der Preis None
         (kein erfundener Fallback-Preis).
         """
         rows = self._fetch_days(property_id, rng)
         by_date = {r["date"]: r for r in rows}
-        overrides = self._fetch_price_overrides(property_id, rng)
-        base_price, min_stay = self._fetch_rate_plan(property_id)
+        prices = {
+            d.date.isoformat(): d.price
+            for d in self._resolver().effective_prices(property_id, rng.start, rng.end)
+        }
+        _base, min_stay = self._fetch_rate_plan(property_id)
         result: list[DayAvailability] = []
         for day in rng.nights():
             key = day.isoformat()
             row = by_date.get(key)
-            price = overrides.get(key, base_price)
+            price = prices.get(key)
             result.append(
                 DayAvailability(
                     date=day,
@@ -169,27 +183,6 @@ class CalendarService:
             .execute()
         )
         return res.data or []
-
-    def _fetch_price_overrides(
-        self, property_id: str, rng: DateRange
-    ) -> dict[str, float]:
-        """Tagesgenaue Preisüberschreibungen als {YYYY-MM-DD: price}."""
-        res = (
-            self._db()
-            .table("price_overrides")
-            .select("date,price")
-            .eq("property_id", property_id)
-            .gte("date", rng.start.isoformat())
-            .lt("date", rng.end.isoformat())
-            .not_.is_("price", "null")
-            .execute()
-        )
-        out: dict[str, float] = {}
-        for r in res.data or []:
-            day, price = r.get("date"), r.get("price")
-            if isinstance(day, str) and price is not None:
-                out[day] = float(price)
-        return out
 
     def _fetch_rate_plan(
         self, property_id: str

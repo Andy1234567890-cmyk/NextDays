@@ -109,6 +109,56 @@ class RatesService:
         log.info("rate_plan_created", tenant_id=tenant_id, property_id=req.property_id)
         return self._row(ins[0])
 
+    def set_base_price(
+        self, ctx: AuthContext, req: RatePlanCreate
+    ) -> RatePlanResponse:
+        """Basispreis eines Objekts setzen: ersten Rate-Plan aktualisieren, sonst
+        anlegen (Upsert-Semantik in EINEM Server-Round-Trip). So landet der
+        Basispreis immer — auch beim ersten Speichern — ohne Race-Dublette aus
+        getrenntem List+POST/PATCH im Client."""
+        tenant_id = self._require_tenant(ctx)
+        prop = self._require_own_property(tenant_id, req.property_id)
+        existing = (
+            self._db()
+            .table("rate_plans")
+            .select("id")
+            .eq("property_id", req.property_id)
+            .order("created_at")
+            .limit(1)
+            .execute()
+        ).data or []
+        patch = {
+            "name": req.name,
+            "base_price": req.base_price,
+            "currency": req.currency,
+            "min_stay": req.min_stay,
+        }
+        if existing:
+            row = (
+                self._db()
+                .table("rate_plans")
+                .update(patch)
+                .eq("id", existing[0]["id"])
+                .execute()
+            ).data
+            result = row[0] if row else {**patch, "id": existing[0]["id"],
+                                          "property_id": req.property_id}
+        else:
+            row = (
+                self._db()
+                .table("rate_plans")
+                .insert({"property_id": req.property_id, **patch})
+                .execute()
+            ).data
+            if not row:
+                raise RateError(
+                    "Preisplan konnte nicht angelegt werden.", status_code=500
+                )
+            result = row[0]
+        self._sync_property(tenant_id, req.property_id, prop.get("title"), req.currency)
+        log.info("rate_base_price_set", tenant_id=tenant_id, property_id=req.property_id)
+        return self._row(result)
+
     def update(
         self, ctx: AuthContext, rate_plan_id: str, req: RatePlanUpdate
     ) -> RatePlanResponse:

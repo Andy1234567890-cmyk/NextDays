@@ -22,6 +22,7 @@ Jeder der 17 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
 | buchhaltung | `GET /api/v1/buchhaltung/health` |
 | properties | `GET /api/v1/properties/health` |
 | rates | `GET /api/v1/rates/health` |
+| pricing | `GET /api/v1/pricing/health` |
 | calendar | `GET /api/v1/calendar/health` |
 | reservations | `GET /api/v1/reservations/health` |
 | guests | `GET /api/v1/guests/health` |
@@ -251,6 +252,27 @@ Alle Bereiche werden über `PATCH /api/v1/properties/{id}` mit
 
 ---
 
+## pricing (Kern-Logik implementiert — eine Preis-Wahrheit)
+
+Zentraler Preis-Resolver (`pricing/resolver.py`): die EINZIGE Stelle, die Effektiv-
+Tagespreise und Buchungs-Quotes berechnet. Kalender, Reservierungs-Wizard und
+Buchungsstrecke lesen Preise ausschließlich hierüber. Leseendpoints `view_calendar`.
+
+| Methode | Pfad | Beschreibung |
+|---|---|---|
+| `GET` | `/api/v1/pricing/effective?property_id&start&end` | Effektivpreis je Tag — Priorität `price_overrides`(Tag) > Wochentagspreis > `rate_plans.base_price`; sonst `null` (kein Fallback) |
+| `POST` | `/api/v1/pricing/quote` | Vollständige Aufschlüsselung `{property_id, check_in, check_out, guests, channel}` → `lines[]` (Übernachtung, Markup, Gebühren, Rabatt, Steuern), `nightly_total`, `total`, `priceless` |
+
+Die Pricing-Konfiguration (Markups je Kanal, Extra-Gast-/Kurzaufenthalts-Aufschlag,
+längenabhängige Preise, Gebühren, Steuern, Aktionen, Add-ons) liegt strukturiert in
+`property_pricing_config` (Migration `0051`, Backfill aus `type_attributes.pricing`);
+`PATCH /properties/{id}` spiegelt jede Pricing-Änderung dorthin. `rate_plans` +
+`property_pricing_config` sind in der Realtime-Publication (`0052`) → Preisänderungen
+erscheinen live im Kalender. Basispreis setzen: `PUT /api/v1/rates/base-price`
+(Upsert — ersten Rate-Plan ändern oder anlegen, in einem Round-Trip).
+
+---
+
 ## calendar (Kern-Logik implementiert)
 
 Herzstück (Lastenheft §2.2). Double-Booking-Schutz über die `availability`-Tabelle.
@@ -259,7 +281,7 @@ Alle Endpoints erfordern Auth; `block`/`price-override` zusätzlich die Capabili
 
 | Methode | Pfad | Beschreibung |
 |---|---|---|
-| `GET` | `/api/v1/calendar/availability?property_id&start&end` | Tagesstatus im Zeitraum inkl. `price`+`min_stay` je Tag (fehlende Tage = offen) |
+| `GET` | `/api/v1/calendar/availability?property_id&start&end` | Tagesstatus im Zeitraum inkl. `price` (aus dem pricing-Resolver) + `min_stay` je Tag (fehlende Tage = offen) |
 | `GET` | `/api/v1/calendar/check?property_id&start&end` | Verfügbarkeit + Konflikttage (Double-Booking-Prüfung) |
 | `POST` | `/api/v1/calendar/block` | Tage sperren — `409`, wenn bereits gebucht |
 | `POST` | `/api/v1/calendar/price-override` | Tagespreis setzen; `price: null` nimmt zurück |

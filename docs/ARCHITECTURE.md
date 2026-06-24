@@ -81,8 +81,8 @@ C4Container
         Container(web, "Web Dashboard", "Next.js, TypeScript", "Vermieter-PMS-UI + Portale (Vercel)")
         Container(mobile, "Mobile-App", "React Native 0.86 + React Navigation (apps/mobile)", "Native Gäste- & Gastgeber-App (iOS/Android); teilt das FastAPI-Backend (/api/v1)")
         Container(storybook, "Storybook", "react-vite (eigenes Package apps/storybook)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
-        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 16 Vertical Slices unter /api/v1")
-        ContainerDb(db, "Datenbank", "Supabase / Postgres", "41 Tabellen, Multi-Tenant, RLS, tenant_id")
+        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 17 Vertical Slices unter /api/v1")
+        ContainerDb(db, "Datenbank", "Supabase / Postgres", "42 Tabellen, Multi-Tenant, RLS, tenant_id")
         ContainerDb(cache, "Cache", "Redis", "Caching-Layer")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel-Sync, OCR, Messaging-Trigger, wiederkehrende Aufgaben")
     }
@@ -114,7 +114,7 @@ C4Container
 
 ### Slice-Landkarte (Component-Ebene, API-Backend)
 
-Die 16 Vertical Slices und ihre Datenbereiche — der Stand der Geschäftslogik:
+Die 17 Vertical Slices und ihre Datenbereiche — der Stand der Geschäftslogik:
 
 ```mermaid
 flowchart TB
@@ -124,7 +124,8 @@ flowchart TB
         end
         subgraph DONE["Slices mit Logik"]
             AUTH["auth — Register/Login/Me/Invite, Rollen+Capability-Matrix + Lodgify-Berechtigungen (pro Nutzer)"]
-            CAL["calendar — Verfügbarkeit, Double-Booking, Preis-Override"]
+            CAL["calendar — Verfügbarkeit, Double-Booking, Preis-Override (liest Preis via pricing-Resolver)"]
+            PRICE["pricing — zentraler Preis-Resolver: effective_price + quote (eine Preis-Wahrheit)"]
             TASKS["tasks — Aufgaben, Checklisten+Foto, Vertretung, Inventar"]
             BUCH["buchhaltung — Rechnungen + Kunden (aus Taskilo, tenant-vereinheitlicht); Steuer/E-Rechnung/DATEV/GoBD folgen"]
         end
@@ -135,7 +136,7 @@ flowchart TB
             PORTAL["public_portal"]; CRM["crm"]; DASH["dashboard"]; CONT["content"]
         end
     end
-    DB[("Postgres — 41 Tabellen, RLS")]
+    DB[("Postgres — 42 Tabellen, RLS")]
     DONE --> DB
     SCAFFOLD --> DB
     CORE --> DONE
@@ -304,14 +305,14 @@ erDiagram
 **Marktplatz-Tabellen (angelegt, mit RLS; Geschäftslogik in Phase 2):** `portal_guests`,
 `reviews`, `commissions` — siehe [Migration 0006](../supabase/migrations/0006_marketplace.sql).
 Das Kern-Diagramm oben zeigt bewusst nur die zentralen Entitäten; alle übrigen der
-**41 Tabellen** sind nach Bereich gruppiert im nächsten Abschnitt aufgeführt.
+**42 Tabellen** sind nach Bereich gruppiert im nächsten Abschnitt aufgeführt.
 
 **Kardinalität:** `||` = genau eins · `o{` = null bis viele · `|{` = ein bis viele.
 `--` = identifizierend (Kind kann ohne Eltern nicht existieren).
 
 ### Datenmodell-Erweiterungen aus dem Lastenheft (Migrationen 0009–0019)
 
-Das Modell ist auf **41 Tabellen (alle mit RLS)** gewachsen — verifiziert gegen das
+Das Modell ist auf **42 Tabellen (alle mit RLS)** gewachsen — verifiziert gegen das
 echte Supabase-Projekt. Zur Lesbarkeit hier nach Bereich gruppiert (Details in den
 jeweiligen Migrationen):
 
@@ -431,6 +432,31 @@ cancelled_at` + append-only `reservation_cancellation_log`. Kanal-agnostisch
 freigegeben und an Channex zurückgemeldet (availability=1); eine lokale Storno
 hebt die OTA-Buchung NICHT beim Portal auf (das UI weist darauf hin). Guard:
 `MANAGE_CALENDAR` + `EDIT_CALENDAR_BOOKINGS` (wie Verschieben).
+
+**Zentrale Preis-Wahrheit (pricing-Slice, Migrationen `0051`/`0052`/`0053`):** Preise
+liefen früher in vier unverbundenen Quellen auseinander — im Objekt bearbeitete
+Preise erschienen nicht im Kalender/Quote. Jetzt gibt es **einen** Resolver
+`pricing/resolver.py` als Single Source of Truth:
+- `effective_price(property_id, day)` → Effektivpreis pro Tag in fester Priorität
+  **`price_overrides`(Tag) > Wochentagspreis > `rate_plans.base_price`**; ohne Preis
+  `None` (kein erfundener Fallback).
+- `quote(property_id, range, guests, channel)` → vollständige Aufschlüsselung:
+  Effektiv-Tagespreise + Längenpreis (verdrängt Basispreis), Kurzaufenthalts- und
+  Extra-Gast-Aufschlag, Kanal-Markup (direct = 0), Gebühren, Aktionen (Rabatt),
+  Steuern → Summe + Positionen.
+
+Jede Oberfläche liest Preise **ausschließlich** über den Resolver: der Kalender
+(`calendar/get_availability`) zeigt denselben Effektivpreis wie die Buchungs-Quote;
+`reservations.create` füllt `total_amount` + `quote_items` automatisch aus dem Quote
+(manueller Betrag > 0 überschreibt); der Reservierungs-Wizard zeigt die Quote-
+Aufschlüsselung live. Die zuvor opake Pricing-Konfiguration (Markups, Aufschläge,
+Gebühren, Steuern, Aktionen, Add-ons) wurde aus `properties.type_attributes.pricing`
+in die typisierte, vom Resolver gelesene Tabelle **`property_pricing_config`** (`0051`,
+Backfill aus dem Blob) überführt; `properties.update` spiegelt jede Änderung dorthin.
+`rate_plans` + `property_pricing_config` sind jetzt in der Realtime-Publication (`0052`)
+— Preisänderungen erscheinen ohne Reload in allen Tabs (`calendar-board` abonniert sie).
+Das ungenutzte zweite Saison-Modell (`seasons`/`season_*` aus `0011`) ist als
+deprecated markiert (`0053`); Saisonpreise laufen über `price_overrides`.
 
 **Kanalübergreifende Nachricht→Gast-Zuordnung (Resolver, Migration 0047):** Jede
 eingehende Buchung/Nachricht — OTA via Channex, WhatsApp, manuelle Reservierung,
@@ -702,7 +728,7 @@ Gemeinsame Infrastruktur in `apps/api/src/core/`:
 | `supabase.py` | Client-Factory — Anon (RLS) und Service-Role (System) getrennt |
 | `security.py` | Supabase-JWT-Verifikation (HS256) → `AuthContext`, `CurrentUser` |
 
-**Slices:** `auth` · `properties` · `rates` · `calendar` · `reservations` ·
+**Slices:** `auth` · `properties` · `rates` · `pricing` · `calendar` · `reservations` ·
 `guests` · `inbox` · `payments` · `channel_manager` · `booking_engine` · `ocr` ·
 `public_portal` · `tasks` · `crm` · `dashboard` · `content`.
 

@@ -121,8 +121,49 @@ class PropertiesService:
         )
         if not res.data:
             raise PropertyError("Objekt nicht gefunden.", status_code=404)
+        # Pricing-Konfig in die strukturierte, vom Resolver gelesene Tabelle
+        # spiegeln, sobald sie im Update steckt (eine Preis-Wahrheit). Der opake
+        # type_attributes.pricing-Blob bleibt zusätzlich für die Form-UI erhalten.
+        attrs = changes.get("type_attributes")
+        if isinstance(attrs, dict) and isinstance(attrs.get("pricing"), dict):
+            self._sync_pricing_config(tenant_id, property_id, attrs["pricing"])
         log.info("property_updated", tenant_id=tenant_id, property_id=property_id)
         return PropertyResponse(**_row(res.data[0]))
+
+    def _sync_pricing_config(
+        self, tenant_id: str, property_id: str, pricing: dict
+    ) -> None:
+        """Pricing-Blob → property_pricing_config (vom Preis-Resolver gelesen).
+
+        Schreibt die strukturierten Felder per Upsert. Fehlende Felder bleiben auf
+        den Spalten-Defaults (kein erfundener Wert). Best-effort — ein Fehler hier
+        darf das Speichern des Objekts nicht kippen (Realtime/Resolver greifen beim
+        nächsten Speichern erneut)."""
+        try:
+            row = {
+                "property_id": property_id,
+                "tenant_id": tenant_id,
+                "currency": pricing.get("currency") or "EUR",
+                "custom_by_weekday": bool(pricing.get("customByWeekday")),
+                "weekday_prices": pricing.get("weekdayPrices") or {},
+                "markup": pricing.get("markup") or {},
+                "extra_guest_charge": pricing.get("extraGuestCharge") or 0,
+                "extra_guest_from": pricing.get("extraGuestFrom") or 1,
+                "short_stay_max_nights": pricing.get("shortStayMaxNights") or 0,
+                "short_stay_surcharge": pricing.get("shortStaySurcharge") or 0,
+                "length_prices": pricing.get("lengthPrices") or [],
+                "fees": pricing.get("fees") or [],
+                "taxes": pricing.get("taxes") or [],
+                "promotions": pricing.get("promotions") or [],
+                "add_ons": pricing.get("addOns") or [],
+            }
+            self._db.table("property_pricing_config").upsert(
+                row, on_conflict="property_id"
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 — Spiegelung darf Speichern nicht kippen
+            log.warning(
+                "pricing_config_sync_failed", property_id=property_id, error=str(exc)
+            )
 
     IMAGE_BUCKET = "property-images"
     IMAGE_MAX_BYTES = 10 * 1024 * 1024

@@ -612,6 +612,11 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
   useRealtime({ table: "availability", onChange: load, enabled: !interacting });
   useRealtime({ table: "price_overrides", onChange: load, enabled: !interacting });
   useRealtime({ table: "stop_sell", onChange: load, enabled: !interacting });
+  // Preisänderungen live: Basispreis (rate_plans) + Pricing-Konfig
+  // (property_pricing_config) fließen über den Resolver in die Tagespreise →
+  // im Objekt geänderte Preise erscheinen sofort im Kalender (kein Reload).
+  useRealtime({ table: "rate_plans", onChange: load, enabled: !interacting });
+  useRealtime({ table: "property_pricing_config", onChange: load, enabled: !interacting });
 
   // Ausgewählten Zeitraum sperren (blockRange, end exklusiv).
   const confirmBlock = useCallback(async () => {

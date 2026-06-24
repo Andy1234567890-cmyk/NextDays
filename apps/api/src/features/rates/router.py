@@ -62,6 +62,17 @@ def create_rate(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.put("/base-price", response_model=RatePlanResponse)
+def set_base_price(
+    req: RatePlanCreate, service: RatesServiceDep, ctx: _write
+) -> RatePlanResponse:
+    """Basispreis setzen (Upsert: ersten Plan ändern oder anlegen). Idempotent."""
+    try:
+        return service.set_base_price(ctx, req)
+    except RateError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.patch("/{rate_plan_id}", response_model=RatePlanResponse)
 def update_rate(
     rate_plan_id: str, req: RatePlanUpdate, service: RatesServiceDep, ctx: _write

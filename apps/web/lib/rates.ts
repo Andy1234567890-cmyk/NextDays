@@ -19,7 +19,7 @@ type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
 async function call<T>(
   path: string,
-  opts: { method?: "GET" | "POST" | "PATCH" | "DELETE"; body?: unknown } = {},
+  opts: { method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE"; body?: unknown } = {},
 ): Promise<Result<T>> {
   const token = await currentToken();
   if (!token) return { ok: false, error: "Nicht angemeldet." };
@@ -40,24 +40,17 @@ export async function listRatePlans(
   return call(`/rates?property_id=${encodeURIComponent(propertyId)}`);
 }
 
-/** Basispreis eines Objekts setzen: legt den rate_plan an oder aktualisiert den
- *  ersten bestehenden. Schließt die Kette zu Channex (Sync im Backend). */
+/** Basispreis eines Objekts setzen: Upsert im Backend (ersten rate_plan ändern
+ *  oder anlegen) in EINEM Round-Trip — der Basispreis landet immer, auch beim
+ *  ersten Speichern, ohne Race-Dublette. Schließt die Kette zu Channex (Sync). */
 export async function setBasePrice(
   propertyId: string,
   basePrice: number,
   currency: string,
   minStay = 1,
 ): Promise<Result<RatePlan>> {
-  const existing = await listRatePlans(propertyId);
-  if (existing.ok && existing.data.items.length > 0) {
-    const id = existing.data.items[0].id;
-    return call(`/rates/${id}`, {
-      method: "PATCH",
-      body: { base_price: basePrice, currency, min_stay: minStay },
-    });
-  }
-  return call("/rates", {
-    method: "POST",
+  return call("/rates/base-price", {
+    method: "PUT",
     body: {
       property_id: propertyId,
       name: "Standard",

@@ -11,6 +11,7 @@ tenant-Filtern (PROJECT.md §2 — Business-Logik im Backend).
 from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta
+from typing import TYPE_CHECKING
 
 from supabase import Client
 
@@ -36,6 +37,9 @@ from .schemas import (
     ReservationResponse,
     SliceHealth,
 )
+
+if TYPE_CHECKING:
+    from src.features.pricing.schemas import QuoteResponse
 
 log = get_logger("nextdays.reservations")
 
@@ -270,17 +274,21 @@ class ReservationsService:
         # 3) Gast anlegen (oder bestehenden per E-Mail wiederverwenden).
         guest_id = self._upsert_guest(tenant_id, req)
 
-        # 4) Reservierung schreiben. Währung vom Rate-Plan des Objekts
-        #    (properties hat keine currency-Spalte); ohne Rate-Plan bleibt sie leer.
-        rate = (
-            self._db()
-            .table("rate_plans")
-            .select("currency")
-            .eq("property_id", req.property_id)
-            .limit(1)
-            .execute()
+        # 4) Preis aus dem zentralen Resolver (eine Preis-Wahrheit). Wird KEIN
+        #    Betrag übergeben (total_amount=0), berechnet der Quote die Summe +
+        #    Aufschlüsselung automatisch aus Basispreis/Saison/Aufschlägen — ein
+        #    manuell gesetzter Betrag (>0) gewinnt weiterhin (Überschreibung).
+        total_guests = (
+            req.guests.adults + req.guests.children + req.guests.infants
         )
-        currency = (rate.data[0].get("currency") if rate.data else "") or ""
+        quote = self._quote(
+            req.property_id, req.check_in, req.check_out, total_guests, req.channel.value
+        )
+        total_amount = req.total_amount if req.total_amount > 0 else quote.total
+        currency = quote.currency
+        quote_items = [
+            {"label": line.label, "amount": line.amount} for line in quote.lines
+        ]
         ins = (
             self._db()
             .table("reservations")
@@ -293,7 +301,8 @@ class ReservationsService:
                     "check_in": req.check_in.isoformat(),
                     "check_out": req.check_out.isoformat(),
                     "status": req.status.value,
-                    "total_amount": req.total_amount,
+                    "total_amount": total_amount,
+                    "quote_items": quote_items,
                     "currency": currency,
                     # Belegung (Gästezahl) für Balken + Detailansicht.
                     "num_guests": (
@@ -715,6 +724,28 @@ class ReservationsService:
             start = prev = cur
         self._push_channex_availability(
             tenant_id, property_id, start, prev + timedelta(days=1), 1
+        )
+
+    def _quote(
+        self,
+        property_id: str,
+        check_in: date,
+        check_out: date,
+        guests: int,
+        channel: str,
+    ) -> QuoteResponse:
+        """Buchungs-Quote über den zentralen Resolver (eine Preis-Wahrheit)."""
+        from src.features.pricing.resolver import PricingResolver
+        from src.features.pricing.schemas import QuoteRequest
+
+        return PricingResolver(service_client=self._db()).quote(
+            QuoteRequest(
+                property_id=property_id,
+                check_in=check_in,
+                check_out=check_out,
+                guests=max(1, guests),
+                channel=channel,
+            )
         )
 
     def _upsert_guest(self, tenant_id: str, req: ReservationCreate) -> str | None:

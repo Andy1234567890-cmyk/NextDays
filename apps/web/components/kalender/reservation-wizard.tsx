@@ -6,7 +6,7 @@
 //  3) Richtlinien: Policy-Automation + Übersicht, dann Bestätigen
 // Speichert über createReservation; das Backend belegt die Kalendertage.
 import { Icon } from "@iconify/react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { type Quote, getQuote } from "@/lib/pricing";
 import {
   type GuestBreakdown,
   type GuestContact,
@@ -94,11 +95,60 @@ export function ReservationWizard({
     language: initialGuest?.language ?? "",
   });
 
-  // Schritt 2 (Preise)
+  // Schritt 2 (Preise) — automatisch aus dem zentralen Resolver (Quote). Der
+  // Nutzer kann jeden Wert weiterhin manuell überschreiben; `touched` schützt
+  // editierte Felder davor, vom nächsten Quote überschrieben zu werden.
   const [roomRate, setRoomRate] = useState(basePrice);
   const [promotion, setPromotion] = useState(0);
   const [fees, setFees] = useState(0);
   const [taxes, setTaxes] = useState(0);
+  const [touched, setTouched] = useState(false);
+  const [quote, setQuote] = useState<Quote | null>(null);
+  const [quoting, setQuoting] = useState(false);
+
+  // Quote laden, sobald Objekt/Zeitraum/Gäste/Kanal feststehen (und solange der
+  // Nutzer die Preisfelder nicht selbst angefasst hat). Eine Preis-Wahrheit:
+  // dieselbe Berechnung wie Kalender + Buchung.
+  useEffect(() => {
+    if (!open || touched) return;
+    const validNights = countNights(checkInState, checkOutState) > 0;
+    if (!propertyId || !validNights) return;
+    let cancelled = false;
+    setQuoting(true);
+    getQuote({
+      property_id: propertyId,
+      check_in: checkInState,
+      check_out: checkOutState,
+      guests: guests.adults + guests.children + guests.infants,
+      channel,
+    }).then((res) => {
+      if (cancelled) return;
+      setQuoting(false);
+      if (!res.ok) return;
+      setQuote(res.data);
+      // Quote-Positionen auf die vier Anzeige-Felder abbilden (Übernachtung+
+      // Aufschläge = Grundpreis; Rabatt; Gebühren; Steuern).
+      const sum = (pred: (l: { label: string; amount: number }) => boolean) =>
+        res.data.lines.filter(pred).reduce((s, l) => s + l.amount, 0);
+      const isTax = (l: { label: string }) =>
+        /steuer|mwst|ust|vat/i.test(l.label);
+      const isFee = (l: { label: string }) =>
+        /gebühr|reinigung|fee|kurtaxe/i.test(l.label);
+      const isDiscount = (l: { amount: number }) => l.amount < 0;
+      setPromotion(-sum(isDiscount));
+      setFees(sum((l) => isFee(l) && l.amount > 0));
+      setTaxes(sum((l) => isTax(l) && l.amount > 0));
+      setRoomRate(
+        sum(
+          (l) => l.amount > 0 && !isFee(l) && !isTax(l),
+        ),
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, touched, propertyId, checkInState, checkOutState, guests, channel]);
+
   const total = useMemo(
     () => Math.max(0, roomRate - promotion + fees + taxes),
     [roomRate, promotion, fees, taxes],
@@ -297,14 +347,38 @@ export function ReservationWizard({
 
           {step === 1 && (
             <div className="flex flex-col gap-4">
-              <PriceRow label="Grundpreis" hint={`${nights} Nacht${nights > 1 ? "e" : ""}`} value={roomRate} onChange={setRoomRate} />
-              <PriceRow label="Aktion / Rabatt" value={promotion} onChange={setPromotion} negative />
-              <PriceRow label="Gebühren" hint="Reinigung etc." value={fees} onChange={setFees} />
-              <PriceRow label="Steuern" hint="USt." value={taxes} onChange={setTaxes} />
-              <div className="mt-2 flex items-center justify-between border-t pt-4">
-                <span className="text-sm text-muted-foreground">Add-ons</span>
-                <span className="text-sm text-muted-foreground">0,00</span>
-              </div>
+              {quoting && !touched && (
+                <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Icon icon="ph:circle-notch" className="size-3.5 animate-spin" />
+                  Preis wird berechnet…
+                </p>
+              )}
+              {quote?.priceless && !touched && (
+                <p className="rounded-(--radius) bg-amber-50 p-3 text-xs text-amber-900">
+                  Für dieses Objekt ist im Zeitraum kein Preis hinterlegt (kein
+                  Basispreis/Saisonpreis). Bitte manuell festlegen.
+                </p>
+              )}
+              <PriceRow
+                label="Grundpreis"
+                hint={`${nights} Nacht${nights > 1 ? "e" : ""}${quote && !touched ? " · automatisch berechnet" : ""}`}
+                value={roomRate}
+                onChange={(v) => { setTouched(true); setRoomRate(v); }}
+              />
+              <PriceRow label="Aktion / Rabatt" value={promotion} onChange={(v) => { setTouched(true); setPromotion(v); }} negative />
+              <PriceRow label="Gebühren" hint="Reinigung etc." value={fees} onChange={(v) => { setTouched(true); setFees(v); }} />
+              <PriceRow label="Steuern" hint="USt." value={taxes} onChange={(v) => { setTouched(true); setTaxes(v); }} />
+              {quote && !touched && quote.lines.length > 0 && (
+                <div className="mt-1 flex flex-col gap-1 rounded-(--radius) border bg-muted/30 p-3">
+                  <p className="mb-1 text-xs font-semibold text-muted-foreground">Aufschlüsselung</p>
+                  {quote.lines.map((l) => (
+                    <div key={l.label} className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">{l.label}</span>
+                      <span className={l.amount < 0 ? "text-emerald-700" : ""}>{eur(l.amount)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
