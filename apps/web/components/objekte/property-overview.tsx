@@ -6,6 +6,7 @@
 //  updateProperty(). Flexible Sektionen (rooms/beds/size/units) liegen in
 //  type_attributes.
 import { Icon } from "@iconify/react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -64,6 +65,7 @@ function attrNum(p: Property, key: string): number | "" {
 }
 
 export function PropertyOverview({ initial }: { initial: Property }) {
+  const router = useRouter();
   const [p, setP] = useState<Property>(initial);
   const [section, setSection] = useState<Section>(null);
   const [publishing, setPublishing] = useState(false);
@@ -74,6 +76,9 @@ export function PropertyOverview({ initial }: { initial: Property }) {
     if (res.ok) {
       setP(res.data);
       setSection(null);
+      // Server-Components neu rendern (Layout-Kopf links: Titel/Status/Foto),
+      // sonst zeigen Übersicht und linke Karte widersprüchliche Stände.
+      router.refresh();
       return true;
     }
     return res.error;
@@ -87,6 +92,9 @@ export function PropertyOverview({ initial }: { initial: Property }) {
     if (res.ok) {
       setP(res.data);
       setPublishMsg("Veröffentlicht — mit den Buchungsportalen verbunden.");
+      // Layout-Karte (status „Entwurf"→„Aktiv") ist eine separate Server-
+      // Component → ohne refresh bliebe sie auf „Entwurf" stehen.
+      router.refresh();
     } else {
       setPublishMsg(res.error);
     }

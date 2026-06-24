@@ -3,6 +3,7 @@
 // lädt das Objekt für den Kopf; die Unterseiten rendern als {children}.
 import { notFound } from "next/navigation";
 
+import { PropertyRealtime } from "@/components/objekte/property-realtime";
 import { PropertySubnav } from "@/components/objekte/property-subnav";
 import { getProperty } from "@/lib/properties";
 
@@ -26,6 +27,9 @@ export default async function ObjektLayout({
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-[16rem_1fr]">
+      {/* Live-Abo der Objektzeile → bei jeder Änderung Server-Components neu
+          laden (Status/Stammdaten ohne Reload, auch bei externen Änderungen). */}
+      <PropertyRealtime propertyId={id} />
       <PropertySubnav
         id={id}
         title={res.data.title}
