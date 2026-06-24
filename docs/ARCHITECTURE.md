@@ -207,6 +207,16 @@ C4Container
 
 Tatsächliches Schema aus **[supabase/migrations/](../supabase/migrations/)** (Phase 1).
 
+> **Migrationen anwenden:** Es gibt **keinen** automatischen Runner — `deploy.yml`
+> deployt nur Container, das Supabase-Image-Init läuft nur beim allerersten Start
+> eines leeren Datenverzeichnisses. App-Migrationen werden mit
+> **[supabase/apply-migrations.sh](../supabase/apply-migrations.sh)** eingespielt:
+> das Skript fährt alle `supabase/migrations/*.sql` in Reihenfolge per SSH/psql
+> gegen die Server-DB und trackt sie in `public.schema_migrations` (nur noch nicht
+> Angewendete laufen, gefahrlos wiederholbar). Bei nachträglicher Tracking-Einführung
+> auf einer bestehenden DB einmalig `--baseline` (markiert vorhandene Migrationen
+> als angewendet, ohne ihr SQL erneut zu fahren).
+
 ```mermaid
 erDiagram
     TENANT ||--o{ PROPERTY : owns
