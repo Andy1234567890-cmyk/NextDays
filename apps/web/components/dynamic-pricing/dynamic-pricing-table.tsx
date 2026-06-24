@@ -13,6 +13,12 @@ import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   type BaseMode,
   type BaseRateMode,
   type DpOverviewItem,
@@ -56,6 +62,45 @@ function channelLogo(code: string): { label: string; icon: string } {
   return CHANNEL_LOGO[code] ?? { label: code, icon: "ph:globe-hemisphere-west-fill" };
 }
 
+// Spalten-Header mit optionalem „?"-Erklär-Tooltip.
+function Th({
+  children,
+  hint,
+  className,
+}: {
+  children: React.ReactNode;
+  hint?: string;
+  className?: string;
+}) {
+  return (
+    <th className={`px-4 py-3 font-medium ${className ?? ""}`}>
+      {hint ? (
+        <span className="inline-flex items-center gap-1.5">
+          {children}
+          <TooltipProvider delayDuration={150}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Erklärung"
+                  className="text-muted-foreground/70 transition-colors hover:text-foreground"
+                >
+                  <Icon icon="ph:question" className="size-3.5" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs text-xs leading-relaxed normal-case tracking-normal">
+                {hint}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </span>
+      ) : (
+        children
+      )}
+    </th>
+  );
+}
+
 function fmtMoney(value: number | null, currency: string | null): string {
   if (value === null) return "—";
   const cur = currency || "EUR";
@@ -93,16 +138,33 @@ export function DynamicPricingTable({ items }: { items: DpOverviewItem[] }) {
         <table className="w-full text-sm">
             <thead>
               <tr className="border-b text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <th className="whitespace-nowrap px-4 py-3 font-medium">
-                  Objekt-ID
-                </th>
-                <th className="w-full px-4 py-3 font-medium">Objekt</th>
-                <th className="px-4 py-3 font-medium whitespace-nowrap">Basispreis</th>
-                <th className="px-4 py-3 font-medium">Min</th>
-                <th className="px-4 py-3 font-medium">Max</th>
-                <th className="px-4 py-3 text-center font-medium">Bearbeiten</th>
-                <th className="px-4 py-3 text-center font-medium">Aktiv</th>
-                <th className="px-4 py-3 text-center font-medium">Vorschau</th>
+                <Th className="whitespace-nowrap">Objekt-ID</Th>
+                <Th className="w-full">Objekt</Th>
+                <Th
+                  className="whitespace-nowrap"
+                  hint="Der aktuelle Basispreis (Anker) dieses Objekts und der gewählte Modus darunter (Datengetrieben mit Konservativ/Empfohlen/Aggressiv oder Manuell). Auf diesen Preis rechnen alle Regeln."
+                >
+                  Basispreis
+                </Th>
+                <Th hint="Mindestpreis: Unter diesen Wert geht die Engine nie. „—“ = kein Limit gesetzt.">
+                  Min
+                </Th>
+                <Th hint="Höchstpreis: Über diesen Wert geht die Engine nie. „—“ = kein Limit gesetzt.">
+                  Max
+                </Th>
+                <Th className="text-center">Bearbeiten</Th>
+                <Th
+                  className="text-center"
+                  hint="Schaltet Dynamic Pricing für dieses Objekt an/aus. Aus = der feste Grundpreis gilt. Wird sofort gespeichert."
+                >
+                  Aktiv
+                </Th>
+                <Th
+                  className="text-center"
+                  hint="Öffnet die 30-Tage-Vorschau: die von der Engine empfohlenen Tagespreise dieses Objekts."
+                >
+                  Vorschau
+                </Th>
               </tr>
             </thead>
             <tbody>
@@ -145,9 +207,21 @@ export function DynamicPricingTable({ items }: { items: DpOverviewItem[] }) {
                             })}
                           </span>
                         ) : (
-                          <span className="text-xs text-muted-foreground">
-                            Nicht verteilt
-                          </span>
+                          <TooltipProvider delayDuration={150}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <span className="cursor-help text-xs text-muted-foreground underline decoration-dotted underline-offset-2">
+                                  Nicht verteilt
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent className="max-w-xs text-xs leading-relaxed">
+                                Dieses Objekt ist auf keinem Kanal aktiv. Aktiviere
+                                es auf deiner Plattform oder verbinde es im Channel
+                                Manager mit OTAs (Booking.com, Airbnb …), damit
+                                Preise dorthin verteilt werden.
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
                       </div>
                     </div>

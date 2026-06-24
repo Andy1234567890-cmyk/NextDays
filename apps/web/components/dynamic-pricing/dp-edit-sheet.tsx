@@ -20,6 +20,12 @@ import {
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   type BaseRateMode,
   type DpOverviewItem,
   type DpSettings,
@@ -28,21 +34,29 @@ import {
   saveDpSettings,
 } from "@/lib/dynamic-pricing";
 
-const RATE_MODES: { value: BaseRateMode; title: string; hint: string }[] = [
+const RATE_MODES: {
+  value: BaseRateMode;
+  title: string;
+  hint: string;
+  info: string;
+}[] = [
   {
     value: "conservative",
     title: "Konservativ",
     hint: "Passt sich an Markt und Buchungslage an, bleibt aber zurückhaltender als „Empfohlen“.",
+    info: "Vorsichtige Strategie: Preise schwanken weniger stark nach oben und unten. Du verlierst seltener Buchungen durch hohe Preise, lässt aber an Spitzentagen etwas Umsatz liegen.",
   },
   {
     value: "recommended",
     title: "Empfohlen",
     hint: "Passt sich an Markt und Buchungslage an.",
+    info: "Ausgewogene Standard-Strategie: die Engine reagiert normal stark auf Nachfrage und Markt. Für die meisten Objekte die beste Wahl.",
   },
   {
     value: "aggressive",
     title: "Aggressiv",
     hint: "Passt sich an Markt und Buchungslage an, aber offensiver als „Empfohlen“.",
+    info: "Offensive Strategie: Preise schwanken stärker. An gefragten Tagen holst du mehr Umsatz, riskierst aber, dass zu hohe Preise einzelne Buchungen kosten.",
   },
 ];
 
@@ -131,7 +145,10 @@ export function DpEditSheet({
             {/* Aktiv-Schalter */}
             <label className="flex cursor-pointer items-center justify-between gap-3">
               <span className="leading-tight">
-                <span className="font-semibold">Dynamic Pricing aktiv</span>
+                <span className="flex items-center gap-1.5 font-semibold">
+                  Dynamic Pricing aktiv
+                  <InfoHint text="Ist dies an, berechnet die Engine die Tagespreise dieses Objekts automatisch und überschreibt den festen Grundpreis. Ein im Kalender manuell gesetzter Tagespreis hat trotzdem immer Vorrang." />
+                </span>
                 <span className="block text-sm text-muted-foreground">
                   Standardmäßig aus — du entscheidest pro Objekt.
                 </span>
@@ -144,11 +161,15 @@ export function DpEditSheet({
 
             {/* Basispreis-Modus */}
             <div className="flex flex-col gap-3">
-              <Label>Basispreis</Label>
+              <Label className="flex items-center gap-1.5">
+                Basispreis
+                <InfoHint text="Der Ausgangspreis (Anker), auf den alle Regeln wie Wochenende, Auslastung oder Markt rechnen. Du wählst, ob die Engine ihn automatisch ermittelt (Datengetrieben) oder du ihn selbst setzt (Manuell)." />
+              </Label>
               <RadioRow
                 checked={s.base_mode === "data_driven"}
                 title="Datengetrieben"
                 hint="Informiert durch unsere Engine, laufend aktualisiert."
+                info="Die Engine ermittelt den Basispreis automatisch aus deinem Grundpreis und passt ihn laufend an Nachfrage, Saison und Markt an. Du musst keinen festen Preis vorgeben."
                 onSelect={() => set("base_mode", "data_driven")}
               />
               {s.base_mode === "data_driven" && (
@@ -160,6 +181,7 @@ export function DpEditSheet({
                       checked={s.base_rate_mode === m.value}
                       title={m.title}
                       hint={m.hint}
+                      info={m.info}
                       right={
                         item.base_rate !== null && m.value === "recommended"
                           ? fmt(item.base_rate, cur)
@@ -174,6 +196,7 @@ export function DpEditSheet({
                 checked={s.base_mode === "manual"}
                 title="Manuell"
                 hint="Du behältst die volle Kontrolle."
+                info="Du legst den Basispreis selbst fest. Die Engine rechnet die Faktoren (Wochenende, Auslastung usw.) auf genau diesen Wert — passt ihn aber nicht eigenständig an den Markt an."
                 onSelect={() => set("base_mode", "manual")}
               />
               {s.base_mode === "manual" && (
@@ -191,14 +214,20 @@ export function DpEditSheet({
 
             {/* Min/Max-Leitplanken */}
             <div className="grid grid-cols-2 gap-4">
-              <Field label={`Mindestpreis (${cur})`}>
+              <Field
+                label={`Mindestpreis (${cur})`}
+                hint="Unter diesen Preis geht die Engine nie — egal wie niedrig die Nachfrage ist. Leer = kein Limit."
+              >
                 <NumInput
                   value={s.min_price}
                   onChange={(n) => set("min_price", n)}
                   placeholder="kein Limit"
                 />
               </Field>
-              <Field label={`Höchstpreis (${cur})`}>
+              <Field
+                label={`Höchstpreis (${cur})`}
+                hint="Über diesen Preis geht die Engine nie — auch bei sehr hoher Nachfrage. Leer = kein Limit."
+              >
                 <NumInput
                   value={s.max_price}
                   onChange={(n) => set("max_price", n)}
@@ -223,13 +252,19 @@ export function DpEditSheet({
               {advanced && (
                 <div className="flex flex-col gap-5">
                   <div className="grid grid-cols-2 gap-4">
-                    <Field label="Wochenend-Aufschlag (%)">
+                    <Field
+                      label="Wochenend-Aufschlag (%)"
+                      hint="So viel Prozent teurer werden Freitag und Samstag automatisch. Beispiel: 15 % macht aus 200 € → 230 € am Wochenende."
+                    >
                       <NumInput
                         value={s.weekend_uplift_pct}
                         onChange={(n) => set("weekend_uplift_pct", n ?? 0)}
                       />
                     </Field>
-                    <Field label="Auslastungs-Empfindlichkeit (%)">
+                    <Field
+                      label="Auslastungs-Empfindlichkeit (%)"
+                      hint="Wie stark der Preis auf die Buchungslage reagiert. Sind viele Nächte rundherum schon belegt, steigt der Preis; ist viel frei, sinkt er. Höherer Wert = stärkere Reaktion."
+                    >
                       <NumInput
                         value={s.occupancy_sensitivity}
                         onChange={(n) => set("occupancy_sensitivity", n ?? 0)}
@@ -237,13 +272,19 @@ export function DpEditSheet({
                     </Field>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
-                    <Field label="Lücken-Rabatt 1–2 Nächte (%)">
+                    <Field
+                      label="Lücken-Rabatt 1–2 Nächte (%)"
+                      hint="Rabatt für einzelne freie Nächte, die zwischen zwei Buchungen eingeklemmt sind (z. B. nur Mi frei zwischen Di und Do). Solche Lücken sind schwer zu füllen — ein Rabatt macht sie attraktiver."
+                    >
                       <NumInput
                         value={s.orphan_gap_discount_pct}
                         onChange={(n) => set("orphan_gap_discount_pct", n ?? 0)}
                       />
                     </Field>
-                    <Field label="Min-Stay-Spanne (Tage)">
+                    <Field
+                      label="Min-Stay-Spanne (Tage)"
+                      hint="Mindestaufenthalt je nach Nachfrage: bei schwacher Buchungslage gilt der kleinere Wert (links), bei starker der größere (rechts). Beispiel 1–7: normal 1 Nacht, an gefragten Terminen bis zu 7 Nächte."
+                    >
                       <div className="flex items-center gap-2">
                         <NumInput
                           value={s.min_stay_min}
@@ -266,7 +307,10 @@ export function DpEditSheet({
                   {/* Marktdaten */}
                   <label className="flex cursor-pointer items-center justify-between gap-3">
                     <span className="leading-tight">
-                      <span className="font-semibold">Marktdaten nutzen</span>
+                      <span className="flex items-center gap-1.5 font-semibold">
+                        Marktdaten nutzen
+                        <InfoHint text="Zusätzlich zu deinen eigenen Regeln richtet die Engine den Preis am Wettbewerb und der Marktnachfrage aus. Benötigt eine Marktdaten-Quelle (Markt-Schlüssel/Vergleichsobjekte unten). Ohne Quelle bleibt dieser Faktor wirkungslos." />
+                      </span>
                       <span className="block text-sm text-muted-foreground">
                         Preis zusätzlich am Wettbewerb/der Marktnachfrage
                         ausrichten (benötigt eine Marktdaten-Quelle).
@@ -280,20 +324,29 @@ export function DpEditSheet({
                   {s.market_enabled && (
                     <>
                       <div className="grid grid-cols-2 gap-4">
-                        <Field label="Markt-Empfindlichkeit (%)">
+                        <Field
+                          label="Markt-Empfindlichkeit (%)"
+                          hint="Wie stark sich dein Preis an den Marktpreisen vergleichbarer Objekte orientiert. Höherer Wert = dein Preis zieht stärker Richtung Marktdurchschnitt."
+                        >
                           <NumInput
                             value={s.market_sensitivity}
                             onChange={(n) => set("market_sensitivity", n ?? 0)}
                           />
                         </Field>
-                        <Field label="Max. Markt-Korrektur (±%)">
+                        <Field
+                          label="Max. Markt-Korrektur (±%)"
+                          hint="Obergrenze, wie weit der Markt deinen Preis nach oben oder unten verschieben darf. Beispiel 25 %: höchstens ein Viertel Auf- oder Abschlag durch Marktdaten."
+                        >
                           <NumInput
                             value={s.market_max_adjust_pct}
                             onChange={(n) => set("market_max_adjust_pct", n ?? 0)}
                           />
                         </Field>
                       </div>
-                      <Field label="Markt-Schlüssel (Region/Markt)">
+                      <Field
+                        label="Markt-Schlüssel (Region/Markt)"
+                        hint="Kennung des Marktes/der Region, aus der die Vergleichsdaten kommen (von deiner Marktdaten-Quelle vorgegeben). Beispiel: de-muenchen."
+                      >
                         <Input
                           value={s.market_key ?? ""}
                           placeholder="z. B. de-muenchen"
@@ -302,7 +355,10 @@ export function DpEditSheet({
                           }
                         />
                       </Field>
-                      <Field label="Vergleichsobjekte (Comp-Set, kommagetrennt)">
+                      <Field
+                        label="Vergleichsobjekte (Comp-Set, kommagetrennt)"
+                        hint="Liste vergleichbarer Objekte (Comp-Set), an deren Preisen sich die Engine orientiert. Kennungen kommagetrennt eintragen. Leer = die Engine nutzt den allgemeinen Marktdurchschnitt der Region."
+                      >
                         <Input
                           value={s.comp_refs.join(", ")}
                           placeholder="ref-1, ref-2, …"
@@ -340,6 +396,7 @@ function RadioRow({
   checked,
   title,
   hint,
+  info,
   right,
   small,
   onSelect,
@@ -347,6 +404,8 @@ function RadioRow({
   checked: boolean;
   title: string;
   hint: string;
+  // Optionaler längerer Erklär-Tooltip (für Begriffe, die der Kurz-Hint nicht abdeckt).
+  info?: string;
   right?: string;
   small?: boolean;
   onSelect: () => void;
@@ -368,7 +427,10 @@ function RadioRow({
       </span>
       <span className="flex-1 leading-tight">
         <span className={`flex items-center justify-between gap-2 ${small ? "text-sm" : ""} font-medium`}>
-          {title}
+          <span className="flex items-center gap-1.5">
+            {title}
+            {info && <InfoHint text={info} />}
+          </span>
           {right && <span className="font-semibold">{right}</span>}
         </span>
         <span className="block text-xs text-muted-foreground">{hint}</span>
@@ -386,7 +448,10 @@ function LastMinuteEditor({
 }) {
   return (
     <div className="flex flex-col gap-2">
-      <Label>Last-Minute-Rabatte</Label>
+      <Label className="flex items-center gap-1.5">
+        Last-Minute-Rabatte
+        <InfoHint text="Rabatt für kurzfristig noch freie Nächte, je näher der Anreisetag rückt. Beispiel: „ab 7 Tagen 10 %, ab 3 Tagen 20 %“ — so füllst du leere Tage kurz vor knapp." />
+      </Label>
       {rules.length === 0 && (
         <p className="text-sm text-muted-foreground">
           Noch keine Last-Minute-Regeln.
@@ -441,11 +506,37 @@ function LastMinuteEditor({
   );
 }
 
+// Kleines „?"-Icon mit Erklär-Tooltip. Hover/Fokus zeigt einen verständlichen
+// Hilfetext — damit die Fachbegriffe (Auslastung, Comp-Set, …) niemanden
+// ratlos lassen. type=button, damit es im Formular nichts auslöst.
+function InfoHint({ text }: { text: string }) {
+  return (
+    <TooltipProvider delayDuration={150}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            aria-label="Erklärung"
+            className="text-muted-foreground/70 transition-colors hover:text-foreground"
+          >
+            <Icon icon="ph:question" className="size-4" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent className="max-w-xs text-xs leading-relaxed">
+          {text}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+}
+
 function Field({
   label,
+  hint,
   children,
 }: {
   label: string;
+  hint?: string;
   children: React.ReactNode;
 }) {
   // mt-auto am Input: bei einzeiligen vs. zweizeiligen Labels in einem
@@ -453,7 +544,10 @@ function Field({
   // Feld unten bündig). h-full lässt die Zelle die Grid-Zeilenhöhe füllen.
   return (
     <div className="flex h-full flex-col gap-1.5">
-      <Label className="leading-tight">{label}</Label>
+      <Label className="flex items-center gap-1.5 leading-tight">
+        {label}
+        {hint && <InfoHint text={hint} />}
+      </Label>
       <div className="mt-auto">{children}</div>
     </div>
   );
