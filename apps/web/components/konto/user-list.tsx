@@ -2,8 +2,15 @@
 
 // Nutzerliste im Konto → Benutzer: zeigt alle Tenant-Mitglieder (Avatar,
 // Name, E-Mail, Rolle). Der Account-Inhaber steht zuerst (Backend-Sortierung).
+// Bei Eigentümern (Rolle 'owner') zusätzlich „Objekte zuordnen" (§4.2).
+import { Icon } from "@iconify/react";
+import { useState } from "react";
+
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import type { TenantUser, UserRole } from "@/lib/account";
+
+import { OwnerPropertiesDialog } from "./owner-properties-dialog";
 
 const ROLE_LABELS: Record<UserRole, string> = {
   admin: "Admin",
@@ -21,34 +28,58 @@ function initials(user: TenantUser): string {
 }
 
 export function UserList({ users }: { users: TenantUser[] }) {
+  // Welcher Eigentümer gerade die Objekt-Zuordnung offen hat (null = keiner).
+  const [assigning, setAssigning] = useState<TenantUser | null>(null);
+
   return (
-    <ul className="flex flex-col divide-y divide-border rounded-(--radius) border border-border">
-      {users.map((user) => (
-        <li
-          key={user.user_id}
-          className="flex items-center gap-3 p-3"
-        >
-          <Avatar>
-            {user.avatar_url && <AvatarImage src={user.avatar_url} alt="" />}
-            <AvatarFallback>{initials(user)}</AvatarFallback>
-          </Avatar>
-          <div className="flex min-w-0 flex-1 flex-col">
-            <span className="truncate text-sm font-medium">
-              {user.full_name || user.email || "Unbenannt"}
-            </span>
-            {user.email && (
-              <span className="truncate text-xs text-muted-foreground">
-                {user.email}
+    <>
+      <ul className="flex flex-col divide-y divide-border rounded-(--radius) border border-border">
+        {users.map((user) => (
+          <li
+            key={user.user_id}
+            className="flex items-center gap-3 p-3"
+          >
+            <Avatar>
+              {user.avatar_url && <AvatarImage src={user.avatar_url} alt="" />}
+              <AvatarFallback>{initials(user)}</AvatarFallback>
+            </Avatar>
+            <div className="flex min-w-0 flex-1 flex-col">
+              <span className="truncate text-sm font-medium">
+                {user.full_name || user.email || "Unbenannt"}
+              </span>
+              {user.email && (
+                <span className="truncate text-xs text-muted-foreground">
+                  {user.email}
+                </span>
+              )}
+            </div>
+            {user.role === "owner" && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 gap-1.5"
+                onClick={() => setAssigning(user)}
+              >
+                <Icon icon="ph:house-line" className="size-4" />
+                Objekte zuordnen
+              </Button>
+            )}
+            {user.role && (
+              <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
+                {ROLE_LABELS[user.role]}
               </span>
             )}
-          </div>
-          {user.role && (
-            <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
-              {ROLE_LABELS[user.role]}
-            </span>
-          )}
-        </li>
-      ))}
-    </ul>
+          </li>
+        ))}
+      </ul>
+
+      {assigning && (
+        <OwnerPropertiesDialog
+          userId={assigning.user_id}
+          userName={assigning.full_name || assigning.email || "Eigentümer"}
+          onClose={() => setAssigning(null)}
+        />
+      )}
+    </>
   );
 }

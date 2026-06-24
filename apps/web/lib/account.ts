@@ -67,7 +67,7 @@ type Result<T> =
 
 async function call<T>(
   path: string,
-  opts: { method?: "GET" | "POST" | "PATCH"; body?: unknown } = {},
+  opts: { method?: "GET" | "POST" | "PUT" | "PATCH"; body?: unknown } = {},
 ): Promise<Result<T>> {
   const token = await currentToken();
   if (!token) return { ok: false, error: "Nicht angemeldet." };
@@ -138,6 +138,28 @@ export async function inviteUser(
   const res = await call<{ user_id: string }>("/auth/invite", {
     method: "POST",
     body: input,
+  });
+  if (res.ok) revalidatePath("/konto/nutzer");
+  return res;
+}
+
+// --- Eigentümer-Objekt-Zuordnung (Lastenheft §4.2) -------------------------
+// Welche Objekte ein Eigentümer-Login sehen darf. Steuert das read-only-Portal.
+export type OwnerAssignment = { user_id: string; property_ids: string[] };
+
+export async function getOwnerProperties(
+  userId: string,
+): Promise<Result<OwnerAssignment>> {
+  return call<OwnerAssignment>(`/auth/owners/${userId}/properties`);
+}
+
+export async function setOwnerProperties(
+  userId: string,
+  propertyIds: string[],
+): Promise<Result<OwnerAssignment>> {
+  const res = await call<OwnerAssignment>(`/auth/owners/${userId}/properties`, {
+    method: "PUT",
+    body: { property_ids: propertyIds },
   });
   if (res.ok) revalidatePath("/konto/nutzer");
   return res;
