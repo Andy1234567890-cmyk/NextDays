@@ -33,7 +33,9 @@ class Settings(BaseSettings):
     # Groq (KI-Antwortvorschläge im Posteingang). Pydantic liest case-insensitiv,
     # daher passt auch der Env-Name `Groq_API_Key`.
     groq_api_key: SecretStr = SecretStr("")
-    groq_model: str = "llama-3.3-70b-versatile"
+    # llama-3.3-70b-versatile wird von Groq stillgelegt (Deprecation 2026);
+    # empfohlener Production-Nachfolger: openai/gpt-oss-120b.
+    groq_model: str = "openai/gpt-oss-120b"
 
     # --- Channex (Channel-Manager / OTA-Distribution) ---
     # base_url default = Staging; für Produktion auf https://app.channex.io/api/v1.
