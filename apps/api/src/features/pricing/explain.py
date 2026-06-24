@@ -80,7 +80,9 @@ def explain_price(
         "den Basispreis, den Endpreis und die bereits berechneten Einfluss-"
         "Faktoren in Prozent. RECHNE NICHT selbst und erfinde KEINE Zahlen — "
         "nutze nur die gelieferten Werte. Antworte in 2–3 kurzen deutschen Sätzen, "
-        "ohne Aufzählungszeichen. Nenne die wichtigsten Treiber zuerst."
+        "ohne Aufzählungszeichen. Nenne die wichtigsten Treiber zuerst. Spekuliere "
+        "NICHT über die Reihenfolge oder die genaue Verrechnung der Faktoren — "
+        "nenne nur, welche Faktoren den Preis nach oben bzw. unten bewegen."
     )
     day_line = f" für den {day}" if day else ""
     user = (

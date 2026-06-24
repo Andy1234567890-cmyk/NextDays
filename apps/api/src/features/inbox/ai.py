@@ -115,11 +115,28 @@ class GroqClient:
     ) -> str:
         """Generischer Chat-Completion-Aufruf (system+user → Text). Wiederverwendbar
         für andere KI-Funktionen (z. B. Preiserklärung). Kein Key → klarer Fehler
-        (keine Fallback-Antwort)."""
+        (keine Fallback-Antwort).
+
+        gpt-oss-* sind Reasoning-Modelle: ohne gedrosseltes reasoning_effort
+        verbrauchen sie das gesamte Token-Budget fürs „Nachdenken" und liefern ein
+        leeres content-Feld. Daher reasoning_effort=low + großzügiges max_tokens-
+        Budget; das antwortende content-Feld wird normal gelesen."""
         if not self.is_configured:
             raise GroqError(
                 "KI ist nicht konfiguriert (Groq-API-Key fehlt).", status_code=503
             )
+        payload = {
+            "model": self._model,
+            "messages": [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ],
+            "temperature": temperature,
+            # Reasoning-Modelle brauchen Budget fürs Denken ZUSÄTZLICH zur Antwort.
+            "max_tokens": max_tokens + 600,
+            # Groq-Param für gpt-oss: knapp denken, dann antworten (sonst leeres content).
+            "reasoning_effort": "low",
+        }
         try:
             with httpx.Client(timeout=30.0) as client:
                 resp = client.post(
@@ -128,15 +145,7 @@ class GroqClient:
                         "Authorization": f"Bearer {self._api_key}",
                         "Content-Type": "application/json",
                     },
-                    json={
-                        "model": self._model,
-                        "messages": [
-                            {"role": "system", "content": system},
-                            {"role": "user", "content": user},
-                        ],
-                        "temperature": temperature,
-                        "max_tokens": max_tokens,
-                    },
+                    json=payload,
                 )
         except httpx.HTTPError as exc:
             log.error("groq_network_error", error=str(exc))
@@ -152,8 +161,10 @@ class GroqClient:
         choices = data.get("choices") or []
         if not choices:
             raise GroqError("KI lieferte keine Antwort.")
-        content = (choices[0].get("message") or {}).get("content") or ""
-        text = content.strip()
+        msg = choices[0].get("message") or {}
+        # Primär content; bei Reasoning-Modellen ausnahmsweise reasoning als Quelle,
+        # falls content trotz Budget leer bleibt (kein erfundener Text).
+        text = (msg.get("content") or "").strip() or (msg.get("reasoning") or "").strip()
         if not text:
             raise GroqError("KI lieferte eine leere Antwort.")
         return text
