@@ -4,6 +4,7 @@
 "use client";
 
 import { Icon } from "@iconify/react";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const ZIEL_VORSCHLAEGE = [
@@ -17,9 +18,17 @@ const ZIEL_VORSCHLAEGE = [
 ];
 
 export function SuchLeiste() {
+  const router = useRouter();
   const [offen, setOffen] = useState(false);
   const [ziel, setZiel] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+
+  // Suche an die Startseite durchreichen: /?q=<Ort> → ladeReihen filtert über
+  // den booking_engine-/listings-Endpoint (q über Titel/Stadt/Land).
+  function suchen() {
+    const q = (ziel ?? "").trim();
+    router.push(q ? `/?q=${encodeURIComponent(q)}` : "/");
+  }
 
   useEffect(() => {
     function onClick(e: MouseEvent) {
@@ -103,6 +112,7 @@ export function SuchLeiste() {
         <button
           type="button"
           aria-label="Suchen"
+          onClick={suchen}
           className="ml-1 flex size-12 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground transition-opacity hover:opacity-90"
         >
           <Icon icon="ph:magnifying-glass" className="size-5" />

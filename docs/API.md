@@ -362,6 +362,28 @@ Reservierungen (kein Fallback, stornierte Reservierungen ausgenommen):
 
 ---
 
+## booking_engine (öffentliche Plattform — implementiert)
+
+Öffentliche Buchungsstrecke der eigenen Plattform (`/plattform`). **KEIN JWT** —
+bewusst public (Gäste suchen/buchen). tenant_id wird serverseitig aus der Property
+abgeleitet. Listings zeigen STRIKT nur `status='active'` (draft/inactive nie) und
+NUR gast-sichere Felder (keine exakte Adresse, kein Eigentümer/Tenant, keine
+internen Preisdetails). Preis kommt aus dem Pricing-Resolver.
+
+| Methode | Pfad | Beschreibung |
+|---|---|---|
+| `GET` | `/api/v1/booking-engine/listings?q&guests&start&end&tenant` | Liste buchbarer (active) Objekte. Optional: `q` (Titel/Ort), `guests` (Kapazität), `start`/`end` (Verfügbarkeit + Effektivpreis), `tenant` (Default: alle active tenant-übergreifend) |
+| `GET` | `/api/v1/booking-engine/listings/{id}?start&end` | Detail eines active Objekts (`404` wenn nicht active): Beschreibung, Fotos, Ausstattung, ungefähre Lage (gerundete lat/lng), Preis via Resolver |
+| `GET` | `/api/v1/booking-engine/availability?property_id&start&end` | Öffentliche Tagesverfügbarkeit (buchbar/belegt) |
+| `POST` | `/api/v1/booking-engine/reservations` | Gastbuchung (Double-Booking-Schutz `409`, sperrt Kalender + Channex-Push) |
+
+Gast-sichere Felder: `id, title, property_type, city, country, photos, max_guests,
+bedrooms, baths, amenities, price_from, currency` (+ Detail: `description, lat/lng
+gerundet, price, nights`). `price_from` = „ab"-Basispreis (None ohne hinterlegten
+Preis — kein Fallback); Bewertungen nur bei echten Daten (sonst weggelassen).
+
+---
+
 ## guests (Gästekarte — implementiert)
 
 Enterprise-Gästeprofil (vgl. OPERA Cloud „Manage Profile" / protel Gästekartei):

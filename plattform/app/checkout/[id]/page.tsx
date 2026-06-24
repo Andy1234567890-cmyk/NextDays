@@ -1,6 +1,6 @@
 // Checkout — dreistufiger Buchungsabschluss (Zahlungszeitpunkt → Zahlungsart →
 // Prüfen) mit Buchungs-Zusammenfassung seitlich. Eigenes myNextDays-Design;
-// Daten sind Platzhalter bis zur Backend-Anbindung.
+// Daten aus dem Backend (booking_engine, nur active Objekte).
 import { notFound } from "next/navigation";
 
 import { CheckoutSteps } from "@/components/checkout-steps";
@@ -8,10 +8,10 @@ import { PhotoPlaceholder } from "@/components/photo-placeholder";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Icon } from "@iconify/react";
-import { getListing, formatEuro } from "@/lib/listings";
+import { ladeInserat } from "@/lib/inserate";
+import { formatEuro } from "@/lib/listings";
 
 const NAECHTE = 2;
-const STEUER_SATZ = 0.0866;
 
 export default async function CheckoutPage({
   params,
@@ -19,12 +19,12 @@ export default async function CheckoutPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const listing = getListing(id);
+  const listing = await ladeInserat(id);
   if (!listing) notFound();
 
-  const zwischensumme = listing.preisProNacht * NAECHTE;
-  const steuern = Math.round(zwischensumme * STEUER_SATZ * 100) / 100;
-  const gesamt = Math.round((zwischensumme + steuern) * 100) / 100;
+  const cur = listing.currency;
+  const zwischensumme = (listing.preisProNacht ?? 0) * NAECHTE;
+  const gesamt = Math.round(zwischensumme * 100) / 100;
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -61,16 +61,17 @@ export default async function CheckoutPage({
                     <p className="line-clamp-2 font-medium leading-snug">
                       {listing.titel}
                     </p>
-                    <p className="mt-1 flex items-center gap-1 text-sm">
-                      <Icon icon="ph:star-fill" className="size-3.5" />
-                      {listing.bewertung.toLocaleString("de-DE")} (
-                      {listing.anzahlBewertungen})
-                      {listing.istFavorit && (
-                        <span className="ml-1 text-muted-foreground">
-                          · Gäste-Favorit
-                        </span>
-                      )}
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {listing.ort}
                     </p>
+                    {listing.bewertung != null && (
+                      <p className="mt-1 flex items-center gap-1 text-sm">
+                        <Icon icon="ph:star-fill" className="size-3.5" />
+                        {listing.bewertung.toLocaleString("de-DE")}
+                        {listing.anzahlBewertungen != null &&
+                          ` (${listing.anzahlBewertungen})`}
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -105,20 +106,22 @@ export default async function CheckoutPage({
                 <div className="pt-5">
                   <p className="text-sm font-semibold">Preisdetails</p>
                   <div className="mt-3 flex flex-col gap-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>
-                        {formatEuro(listing.preisProNacht)} × {NAECHTE} Nächte
-                      </span>
-                      <span>{formatEuro(zwischensumme)}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Steuern</span>
-                      <span>{formatEuro(steuern)}</span>
-                    </div>
-                    <div className="mt-2 flex justify-between border-t border-border pt-3 font-semibold">
-                      <span>Gesamt (EUR)</span>
-                      <span>{formatEuro(gesamt)}</span>
-                    </div>
+                    {listing.preisProNacht != null ? (
+                      <>
+                        <div className="flex justify-between">
+                          <span>
+                            {formatEuro(listing.preisProNacht, cur)} × {NAECHTE} Nächte
+                          </span>
+                          <span>{formatEuro(zwischensumme, cur)}</span>
+                        </div>
+                        <div className="mt-2 flex justify-between border-t border-border pt-3 font-semibold">
+                          <span>Gesamt ({cur})</span>
+                          <span>{formatEuro(gesamt, cur)}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-muted-foreground">Preis auf Anfrage</p>
+                    )}
                   </div>
                 </div>
               </div>

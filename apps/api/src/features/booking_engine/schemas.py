@@ -9,6 +9,52 @@ from datetime import date
 from pydantic import BaseModel, EmailStr, model_validator
 
 
+class PublicListing(BaseModel):
+    """Gast-sichere Listendarstellung eines öffentlichen (active) Objekts.
+
+    NUR unkritische Felder — keine exakte Adresse, kein Eigentümer/Tenant, keine
+    internen Preis-/Kostendetails. `price_from` ist der „ab"-Basispreis pro Nacht
+    aus dem Pricing-Resolver (None, wenn kein Preis hinterlegt — kein Fallback).
+    Bewertungen werden NICHT erfunden (optional, nur bei echten Daten).
+    """
+
+    id: str
+    title: str
+    property_type: str
+    city: str | None = None
+    country: str | None = None
+    photos: list[str] = []
+    max_guests: int = 1
+    bedrooms: int | None = None
+    baths: int | None = None
+    amenities: list[str] = []
+    price_from: float | None = None
+    currency: str = ""
+    rating: float | None = None
+    rating_count: int | None = None
+
+
+class PublicListingDetail(PublicListing):
+    """Detailansicht eines active Objekts vor der Buchung.
+
+    Zusätzlich Beschreibung, alle Fotos (in `photos`) und die UNGEFÄHRE Lage
+    (city/country + grob gerundete lat/lng), niemals die genaue Anschrift.
+    `price` ist der Effektivpreis für den angefragten Zeitraum (falls start/end),
+    sonst gleich `price_from`.
+    """
+
+    description: str | None = None
+    lat: float | None = None  # auf ~2 Nachkommastellen gerundet (ungefähr)
+    lng: float | None = None
+    price: float | None = None
+    nights: int | None = None
+
+
+class PublicListingListResponse(BaseModel):
+    items: list[PublicListing] = []
+    total: int = 0
+
+
 class PublicDay(BaseModel):
     date: date
     available: bool  # True = buchbar (status open), False = belegt/gesperrt

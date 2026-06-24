@@ -17,10 +17,19 @@ from .schemas import (
     PublicBookingRequest,
     PublicBookingResponse,
     PublicDay,
+    PublicListing,
+    PublicListingDetail,
+    PublicListingListResponse,
     SliceHealth,
 )
 
 log = get_logger("nextdays.booking_engine")
+
+# Gast-sichere Property-Felder (NIE tenant_id/Eigentümer/interne Preisdetails).
+_PUBLIC_PROPERTY_COLUMNS = (
+    "id, title, description, property_type, city, country, lat, lng, "
+    "max_guests, amenities, photos, type_attributes, status"
+)
 
 
 class BookingEngineError(Exception):
@@ -39,6 +48,26 @@ def _nights(check_in: date, check_out: date) -> list[date]:
     return days
 
 
+def _round_coord(value: object) -> float | None:
+    """Koordinate auf ~2 Nachkommastellen runden (ungefähre Lage, nie exakt)."""
+    if value is None:
+        return None
+    try:
+        return round(float(value), 2)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+
+
+def _as_opt_int(value: object) -> int | None:
+    """jsonb-Wert → int oder None (keine erfundenen 0-Werte)."""
+    if value is None:
+        return None
+    try:
+        return int(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+
+
 class BookingEngineService:
     slice_name = "booking_engine"
 
@@ -52,6 +81,149 @@ class BookingEngineService:
         if self._client is None:
             raise BookingEngineError("Buchungs-DB nicht verfügbar.", status_code=500)
         return self._client
+
+    # -- Öffentliche Listings (nur active) -----------------------------------
+    def list_listings(
+        self,
+        *,
+        q: str | None = None,
+        guests: int | None = None,
+        start: date | None = None,
+        end: date | None = None,
+        tenant: str | None = None,
+    ) -> PublicListingListResponse:
+        """Öffentliche Liste buchbarer Objekte. STRIKT status='active' — draft/
+        inactive erscheinen NIE. Default tenant-übergreifend (zentraler Marktplatz);
+        mit `tenant` auf einen Mandanten gefiltert (künftige White-Label-Seiten).
+
+        Bei gesetztem start/end fließt die Verfügbarkeit ein (belegte Objekte
+        fallen raus) und `price_from` ist der Effektivpreis des Zeitraums. `q`
+        filtert über Titel/Ort, `guests` über die Kapazität.
+        """
+        query = (
+            self._db()
+            .table("properties")
+            .select(_PUBLIC_PROPERTY_COLUMNS)
+            .eq("status", "active")
+        )
+        if tenant:
+            query = query.eq("tenant_id", tenant)
+        if guests:
+            query = query.gte("max_guests", guests)
+        rows = query.order("title").execute().data or []
+
+        if q:
+            needle = q.strip().lower()
+            rows = [
+                r
+                for r in rows
+                if needle in (r.get("title") or "").lower()
+                or needle in (r.get("city") or "").lower()
+                or needle in (r.get("country") or "").lower()
+            ]
+
+        items: list[PublicListing] = []
+        for r in rows:
+            if start and end and not self._is_available(r["id"], start, end):
+                continue
+            price, currency = self._price_from(r["id"], start, end)
+            items.append(self._to_listing(r, price, currency))
+        return PublicListingListResponse(items=items, total=len(items))
+
+    def listing_detail(
+        self,
+        listing_id: str,
+        *,
+        start: date | None = None,
+        end: date | None = None,
+    ) -> PublicListingDetail:
+        """Detail eines active Objekts (404, wenn nicht active). Ungefähre Lage
+        (gerundete lat/lng), Effektivpreis für den Zeitraum (falls start/end)."""
+        rows = (
+            self._db()
+            .table("properties")
+            .select(_PUBLIC_PROPERTY_COLUMNS)
+            .eq("id", listing_id)
+            .eq("status", "active")
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            raise BookingEngineError("Objekt nicht gefunden.", status_code=404)
+        r = rows[0]
+        price, currency = self._price_from(listing_id, start, end)
+        base = self._to_listing(r, price, currency)
+        nights = (end - start).days if start and end else None
+        return PublicListingDetail(
+            **base.model_dump(),
+            description=r.get("description"),
+            lat=_round_coord(r.get("lat")),
+            lng=_round_coord(r.get("lng")),
+            price=price,
+            nights=nights,
+        )
+
+    def _is_available(self, property_id: str, start: date, end: date) -> bool:
+        """True, wenn KEIN Tag im Zeitraum belegt/gesperrt ist (open/fehlend)."""
+        rows = (
+            self._db()
+            .table("availability")
+            .select("status")
+            .eq("property_id", property_id)
+            .gte("date", start.isoformat())
+            .lt("date", end.isoformat())
+            .execute()
+        ).data or []
+        return all(r.get("status") == "open" for r in rows)
+
+    def _price_from(
+        self, property_id: str, start: date | None, end: date | None
+    ) -> tuple[float | None, str]:
+        """„ab"-Preis pro Nacht via Pricing-Resolver. Mit Zeitraum der niedrigste
+        Effektiv-Tagespreis darin, sonst der Effektivpreis von heute. Kein
+        Preis hinterlegt → None (kein erfundener Fallback)."""
+        from src.features.pricing.resolver import PricingResolver
+
+        resolver = PricingResolver(service_client=self._db())
+        if start and end:
+            days = resolver.effective_prices(property_id, start, end)
+        else:
+            today = date.today()
+            days = resolver.effective_prices(property_id, today, today + timedelta(days=1))
+        prices = [d.price for d in days if d.price is not None]
+        currency = self._currency(property_id)
+        return (min(prices) if prices else None, currency)
+
+    def _currency(self, property_id: str) -> str:
+        res = (
+            self._db()
+            .table("rate_plans")
+            .select("currency")
+            .eq("property_id", property_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        return (res[0].get("currency") if res else "") or ""
+
+    @staticmethod
+    def _to_listing(
+        r: dict, price_from: float | None, currency: str
+    ) -> PublicListing:
+        attrs = r.get("type_attributes") or {}
+        return PublicListing(
+            id=r["id"],
+            title=r.get("title") or "",
+            property_type=r.get("property_type") or "",
+            city=r.get("city"),
+            country=r.get("country"),
+            photos=list(r.get("photos") or []),
+            max_guests=int(r.get("max_guests") or 1),
+            bedrooms=_as_opt_int(attrs.get("bedrooms")),
+            baths=_as_opt_int(attrs.get("baths") or attrs.get("bathrooms")),
+            amenities=list(r.get("amenities") or []),
+            price_from=price_from,
+            currency=currency,
+        )
 
     def _property_tenant(self, property_id: str) -> str | None:
         """tenant_id einer veröffentlichten Property. Nur 'active' ist öffentlich

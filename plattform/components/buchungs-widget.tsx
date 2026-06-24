@@ -30,7 +30,8 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
   }>({ kind: "idle" });
 
   const n = naechte(checkIn, checkOut);
-  const zwischensumme = listing.preisProNacht * n;
+  const preis = listing.preisProNacht; // null = Preis auf Anfrage
+  const zwischensumme = (preis ?? 0) * n;
 
   async function reservieren() {
     if (n <= 0) {
@@ -69,10 +70,16 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
   return (
     <div className="rounded-2xl border border-border bg-card p-6 shadow-lg">
       <p className="mb-4">
-        <span className="text-xl font-semibold">
-          {formatEuro(listing.preisProNacht)}
-        </span>{" "}
-        <span className="text-muted-foreground">Nacht</span>
+        {preis != null ? (
+          <>
+            <span className="text-xl font-semibold">
+              {formatEuro(preis, listing.currency)}
+            </span>{" "}
+            <span className="text-muted-foreground">Nacht</span>
+          </>
+        ) : (
+          <span className="text-muted-foreground">Preis auf Anfrage</span>
+        )}
       </p>
 
       <div className="overflow-hidden rounded-xl border border-border">
@@ -146,17 +153,17 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
         </p>
       )}
 
-      {n > 0 && status.kind !== "done" && (
+      {n > 0 && preis != null && status.kind !== "done" && (
         <div className="mt-6 flex flex-col gap-3 text-sm">
           <div className="flex justify-between">
             <span className="underline">
-              {formatEuro(listing.preisProNacht)} × {n} Nächte
+              {formatEuro(preis, listing.currency)} × {n} Nächte
             </span>
-            <span>{formatEuro(zwischensumme)}</span>
+            <span>{formatEuro(zwischensumme, listing.currency)}</span>
           </div>
           <div className="mt-2 flex justify-between border-t border-border pt-3 font-semibold">
             <span>Gesamt</span>
-            <span>{formatEuro(zwischensumme)}</span>
+            <span>{formatEuro(zwischensumme, listing.currency)}</span>
           </div>
         </div>
       )}
