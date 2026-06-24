@@ -57,6 +57,26 @@ class DpSettingsService:
             raise PricingError("Preis-DB nicht verfügbar.", status_code=500)
         return self._client
 
+    def _is_owner(self, ctx: AuthContext) -> bool:
+        """Eingeloggter Immobilien-Eigentümer (Lastenheft §4.2, read-only-Sicht)."""
+        return ctx.role == "owner"
+
+    def _owner_property_ids(self, ctx: AuthContext) -> set[str]:
+        """Objekte, die diesem Eigentümer zugeordnet sind (owner_property_assignments).
+
+        Die API nutzt den Service-Role-Key und umgeht RLS — der owner-Scope muss
+        hier also explizit durchgesetzt werden (die RLS aus 0059 schützt nur den
+        direkten Frontend→Supabase-Pfad). Leere Menge = sieht nichts (fail-closed)."""
+        rows = (
+            self._db()
+            .table("owner_property_assignments")
+            .select("property_id")
+            .eq("tenant_id", ctx.tenant_id)
+            .eq("user_id", ctx.user_id)
+            .execute()
+        ).data or []
+        return {r["property_id"] for r in rows}
+
     def _require_own_property(self, ctx: AuthContext, property_id: str) -> None:
         if not ctx.tenant_id:
             raise PricingError("Kein Tenant im Konto.", status_code=400)
@@ -70,6 +90,9 @@ class DpSettingsService:
             .execute()
         ).data
         if not res:
+            raise PricingError("Objekt nicht gefunden.", status_code=404)
+        # Eigentümer dürfen nur ihre zugeordneten Objekte sehen (§4.2).
+        if self._is_owner(ctx) and property_id not in self._owner_property_ids(ctx):
             raise PricingError("Objekt nicht gefunden.", status_code=404)
 
     def get(self, ctx: AuthContext, property_id: str) -> DpSettingsResponse:
@@ -90,6 +113,11 @@ class DpSettingsService:
         self, ctx: AuthContext, property_id: str, req: DpSettingsUpdate
     ) -> DpSettingsResponse:
         """dp_settings setzen (Upsert). Nur gesetzte Felder werden übernommen."""
+        # Eigentümer-Sicht ist read-only (Lastenheft §4.2): kein Schreibzugriff.
+        if self._is_owner(ctx):
+            raise PricingError(
+                "Eigentümer können Dynamic Pricing nicht ändern.", status_code=403
+            )
         self._require_own_property(ctx, property_id)
         patch = req.model_dump(mode="json", exclude_none=True)
         row = {"property_id": property_id, **patch}
@@ -111,14 +139,19 @@ class DpSettingsService:
         kein Fallback), Min/Max. dp_settings fehlt → Defaults (DP aus)."""
         if not ctx.tenant_id:
             raise PricingError("Kein Tenant im Konto.", status_code=400)
-        props = (
+        query = (
             self._db()
             .table("properties")
             .select("id, title, photos, status")
             .eq("tenant_id", ctx.tenant_id)
-            .order("title")
-            .execute()
-        ).data or []
+        )
+        # Eigentümer sehen nur ihre zugeordneten Objekte (Lastenheft §4.2).
+        if self._is_owner(ctx):
+            owned = self._owner_property_ids(ctx)
+            if not owned:
+                return DpOverviewResponse(items=[])
+            query = query.in_("id", list(owned))
+        props = query.order("title").execute().data or []
         if not props:
             return DpOverviewResponse(items=[])
 
