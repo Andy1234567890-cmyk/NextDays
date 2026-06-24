@@ -668,14 +668,16 @@ function BaseEditor({
         </Select>
       </Field>
 
-      <div className="flex items-start gap-2 rounded-(--radius) bg-blue-50 p-3 text-sm text-blue-900">
-        <Icon icon="ph:lightning" className="mt-0.5 size-4 shrink-0" />
+      <div className="flex items-start gap-2 rounded-(--radius) bg-accent/10 p-3 text-sm">
+        <Icon icon="ph:lightning" className="mt-0.5 size-4 shrink-0 text-accent" />
         <span>
           Dynamische Preise (automatisch nach Saison, Wochenende, Auslastung,
-          Markt …) schaltest du im Bereich <strong>„Dynamische Preise"</strong>
-          weiter unten auf dieser Seite ein und stellst sie dort ein. Ein hier
-          gesetzter Grundpreis bleibt die Basis; ein manueller Tagespreis im
-          Kalender hat immer Vorrang.
+          Markt …) richtest du zentral unter{" "}
+          <a href="/dynamic-pricing" className="font-semibold text-accent underline">
+            Dynamic Pricing
+          </a>{" "}
+          im Hauptmenü ein. Ein hier gesetzter Grundpreis bleibt die Basis; ein
+          manueller Tagespreis im Kalender hat immer Vorrang.
         </span>
       </div>
 

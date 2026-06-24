@@ -8,6 +8,10 @@ import { currentToken } from "@/lib/session-token";
 
 export type LastMinuteRule = { days_before: number; discount_pct: number };
 
+// Basispreis-Modus (Hostaway-Modell).
+export type BaseMode = "data_driven" | "manual";
+export type BaseRateMode = "conservative" | "recommended" | "aggressive";
+
 export type DpSettings = {
   property_id: string;
   enabled: boolean;
@@ -25,9 +29,30 @@ export type DpSettings = {
   market_max_adjust_pct: number;
   market_key: string | null;
   comp_refs: string[];
+  // Hostaway-Modell: Basispreis-Modus + Aggressivität.
+  base_mode: BaseMode;
+  base_rate_mode: BaseRateMode;
+  manual_base_price: number | null;
 };
 
 export type DpSettingsInput = Partial<Omit<DpSettings, "property_id">>;
+
+/** Eine Zeile der Dynamic-Pricing-Objekt-Übersicht (Hostaway-Tabelle). */
+export type DpOverviewItem = {
+  property_id: string;
+  title: string;
+  photo: string | null;
+  status: "draft" | "active" | "inactive";
+  currency: string | null;
+  enabled: boolean;
+  base_mode: BaseMode;
+  base_rate_mode: BaseRateMode;
+  base_rate: number | null;
+  min_price: number | null;
+  max_price: number | null;
+  // Verteilkanäle, auf denen das Objekt live ist: "platform" + OTA-Portal-Codes.
+  channels: string[];
+};
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -46,6 +71,13 @@ async function call<T>(
       error: exc instanceof ApiError ? exc.message : "Aktion fehlgeschlagen.",
     };
   }
+}
+
+/** Alle Objekte des Kontos mit ihrem Dynamic-Pricing-Status (Hostaway-Tabelle). */
+export async function getDpOverview(): Promise<
+  Result<{ items: DpOverviewItem[] }>
+> {
+  return call(`/pricing/overview`);
 }
 
 /** Dynamic-Pricing-Einstellungen eines Objekts (Defaults, falls noch leer). */

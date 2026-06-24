@@ -53,6 +53,7 @@ const MAIN: readonly NavItem[] = [
   { key: "reservations", href: "/reservierungen", icon: "ph:bookmark-simple" },
   { key: "inbox", href: "/posteingang", icon: "ph:chat-circle", req: "view_guest_contact" },
   { key: "calendar", href: "/kalender", icon: "ph:calendar-blank" },
+  { key: "dynamicPricing", href: "/dynamic-pricing", icon: "ph:lightning" },
   { key: "stopSell", href: "/stop-sell", icon: "ph:hand-palm" },
   { key: "properties", href: "/objekte", icon: "ph:house-line" },
   { key: "websiteBuilder", href: "/website", icon: "ph:globe", req: "access_homepage_builder" },

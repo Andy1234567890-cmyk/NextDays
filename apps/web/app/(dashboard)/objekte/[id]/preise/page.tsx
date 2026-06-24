@@ -1,9 +1,7 @@
 // Objekt → Preise (wie Lodgify „Pricing", Etappe 1): Grundpreis, Mark-up je
-// Kanal, Extra-Gast-/Kurzaufenthalts-Aufschlag, längenabhängige Preise. Dazu der
-// Dynamic-Pricing-Bereich (regelbasiert, opt-in).
-import { DynamicPricingSection } from "@/components/objekte/dynamic-pricing-section";
+// Kanal, Extra-Gast-/Kurzaufenthalts-Aufschlag, längenabhängige Preise. Die
+// automatische Preisanpassung liegt im eigenen Tab „Dynamic Pricing".
 import { PricingForm } from "@/components/objekte/pricing-form";
-import { getDpSettings } from "@/lib/dynamic-pricing";
 import { getProperty } from "@/lib/properties";
 
 export default async function Page({
@@ -12,7 +10,7 @@ export default async function Page({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [res, dp] = await Promise.all([getProperty(id), getDpSettings(id)]);
+  const res = await getProperty(id);
   if (!res.ok) {
     return (
       <div className="text-sm text-destructive">
@@ -20,10 +18,5 @@ export default async function Page({
       </div>
     );
   }
-  return (
-    <div className="flex flex-col gap-10">
-      <PricingForm initial={res.data} />
-      {dp.ok && <DynamicPricingSection propertyId={id} initial={dp.data} />}
-    </div>
-  );
+  return <PricingForm initial={res.data} />;
 }

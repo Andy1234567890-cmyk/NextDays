@@ -262,6 +262,7 @@ Buchungsstrecke lesen Preise ausschließlich hierüber. Leseendpoints `view_cale
 |---|---|---|
 | `GET` | `/api/v1/pricing/effective?property_id&start&end` | Effektivpreis je Tag — Priorität manueller `price_overrides`(Tag) > `dynamic_prices` (Regel-Engine) > Wochentagspreis > `rate_plans.base_price`; sonst `null` (kein Fallback) |
 | `POST` | `/api/v1/pricing/quote` | Vollständige Aufschlüsselung `{property_id, check_in, check_out, guests, channel}` → `lines[]` (Übernachtung, Markup, Gebühren, Rabatt, Steuern), `nightly_total`, `total`, `priceless` |
+| `GET` | `/api/v1/pricing/overview` | Alle Objekte des Kontos mit DP-Status (eine Zeile je Objekt: `enabled`, `base_mode`, `base_rate_mode`, effektiver `base_rate`, `min_price`, `max_price`, `currency`) — die Dynamic-Pricing-Objekt-Tabelle. `manage_calendar` |
 | `GET` | `/api/v1/pricing/settings/{property_id}` | Dynamic-Pricing-Einstellungen (dp_settings) eines Objekts (Defaults, falls leer). `manage_calendar` |
 | `PUT` | `/api/v1/pricing/settings/{property_id}` | Dynamic-Pricing-Einstellungen setzen (Upsert); bei `enabled=true` sofortiger Recompute. `manage_calendar` + `edit_calendar_bookings` |
 | `POST` | `/api/v1/pricing/recompute` | Interner Cron (Header `X-Internal-Cron-Secret`): berechnet die dynamischen Preise aller Objekte mit aktiviertem DP neu (Horizont 540 Tage) + Channex-Push |
@@ -295,6 +296,23 @@ liefert je Tag eine **Faktor-Aufschlüsselung** (`dynamic_prices.factors` jsonb)
 über `GET /pricing/effective` (`factors`) bzw. `GET /calendar/availability`
 (`price_factors`) als „Warum dieser Preis?"-Tooltip im Kalender erscheint
 (Saison +X %, Wochenende +Y %, Markt +Z %, Auslastung −W %, …).
+
+**Dynamic Pricing (Phase 3, zentrale Steuerung + Basispreis-Modus, Migration
+`0057`):** Bedienmodell nach Vorbild gängiger Channel-Manager (Hostaway). Eigener
+Hauptmenü-Bereich **`/dynamic-pricing`** mit einer **Objekt-Tabelle** (alle Objekte:
+Objekt-ID + Foto, Basispreis + Modus, Min/Max, **Aktiv-Toggle**, **Bearbeiten**-Slider,
+**30-Tage-Vorschau** `/dynamic-pricing/{id}`), gespeist aus `GET /pricing/overview`.
+Die angezeigte ID ist die **interne Objekt-ID** (lückenlos, kanal-unabhängig) — DP
+wirkt über den Resolver auf **beide** Verteilwege: die eigene Buchungsplattform (Pull)
+und Channex/OTAs (Push), nicht nur auf einen Kanal. Pro Objekt
+wählt der Vermieter, **wie der Basispreis (Anker) zustande kommt** —
+`dp_settings.base_mode`: `data_driven` (Anker = `rate_plans.base_price`, Engine passt
+an; Aggressivität `base_rate_mode` ∈ `conservative|recommended|aggressive` dämpft/
+verstärkt die abweichungsbasierten Faktoren Auslastung+Markt mit ×0,5/×1,0/×1,5) oder
+`manual` (fester `manual_base_price` als Anker, „volle Kontrolle"). `min_price`/
+`max_price` bleiben die Leitplanken, der manuelle Tages-`price_override` im Kalender
+gewinnt weiterhin immer (Resolver-Priorität). Rein additiv; Defaults
+(`data_driven`/`recommended`) bilden das bisherige Verhalten ab.
 
 Die Pricing-Konfiguration (Markups je Kanal, Extra-Gast-/Kurzaufenthalts-Aufschlag,
 längenabhängige Preise, Gebühren, Steuern, Aktionen, Add-ons) liegt strukturiert in

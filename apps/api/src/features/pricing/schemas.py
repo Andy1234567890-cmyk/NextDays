@@ -96,6 +96,10 @@ class DpSettingsResponse(BaseModel):
     market_max_adjust_pct: float = 25.0
     market_key: str | None = None
     comp_refs: list[str] = []
+    # Hostaway-Modell: Basispreis-Modus + Aggressivität.
+    base_mode: str = "data_driven"  # 'data_driven' | 'manual'
+    base_rate_mode: str = "recommended"  # 'conservative' | 'recommended' | 'aggressive'
+    manual_base_price: float | None = None
 
 
 class DpSettingsUpdate(BaseModel):
@@ -115,6 +119,37 @@ class DpSettingsUpdate(BaseModel):
     market_max_adjust_pct: float | None = Field(default=None, ge=0, le=100)
     market_key: str | None = None
     comp_refs: list[str] | None = None
+    base_mode: str | None = Field(default=None, pattern="^(data_driven|manual)$")
+    base_rate_mode: str | None = Field(
+        default=None, pattern="^(conservative|recommended|aggressive)$"
+    )
+    manual_base_price: float | None = Field(default=None, ge=0)
+
+
+class DpOverviewItem(BaseModel):
+    """Eine Zeile der Dynamic-Pricing-Objekt-Übersicht (Hostaway-Tabelle)."""
+
+    property_id: str
+    title: str
+    photo: str | None = None  # erstes Objektfoto (Thumbnail), None = keins
+    status: str = "draft"  # Veröffentlichungs-Status des Objekts: draft|active|inactive
+    currency: str | None = None
+    enabled: bool = False
+    base_mode: str = "data_driven"
+    base_rate_mode: str = "recommended"
+    # Effektiver Basispreis (Anker), den die Engine nutzt: manueller Wert oder
+    # Grundpreis aus dem Rate-Plan. None = kein Grundpreis hinterlegt (kein Fallback).
+    base_rate: float | None = None
+    min_price: float | None = None
+    max_price: float | None = None
+    # Verteilkanäle, auf denen das Objekt LIVE ist: "platform" (eigene
+    # Buchungsplattform, wenn status=active) + aktive OTA-Portal-Codes aus
+    # channex_channel_connection (z. B. BookingCom, AirBNB, VRBO, Expedia).
+    channels: list[str] = []
+
+
+class DpOverviewResponse(BaseModel):
+    items: list[DpOverviewItem] = []
 
 
 class RecomputeResponse(BaseModel):

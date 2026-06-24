@@ -26,6 +26,15 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from datetime import date
 
+# Aggressivität (Hostaway-Modell): Dämpfer/Verstärker auf die abweichungs-
+# basierten Faktoren (Auslastung + Markt). Konservativ reagiert sanfter auf
+# Markt-/Auslastungs-Schwankungen, aggressiv stärker; empfohlen = neutral.
+_AGGRESSIVENESS = {
+    "conservative": 0.5,
+    "recommended": 1.0,
+    "aggressive": 1.5,
+}
+
 
 @dataclass
 class DpSettings:
@@ -44,6 +53,21 @@ class DpSettings:
     market_enabled: bool = False
     market_sensitivity: float = 20.0
     market_max_adjust_pct: float = 25.0
+    # Hostaway-Modell: Basispreis-Modus + Aggressivität.
+    base_mode: str = "data_driven"  # 'data_driven' | 'manual'
+    base_rate_mode: str = "recommended"  # 'conservative' | 'recommended' | 'aggressive'
+    manual_base_price: float | None = None
+
+    @property
+    def aggressiveness(self) -> float:
+        """Faktor-Multiplikator aus base_rate_mode (Default neutral 1.0)."""
+        return _AGGRESSIVENESS.get(self.base_rate_mode, 1.0)
+
+    def effective_base(self, rate_plan_base: float) -> float:
+        """Basispreis (Anker): bei 'manual' der gesetzte Wert, sonst rate_plan."""
+        if self.base_mode == "manual" and self.manual_base_price is not None:
+            return self.manual_base_price
+        return rate_plan_base
 
     @staticmethod
     def from_row(row: dict | None) -> DpSettings:
@@ -62,6 +86,13 @@ class DpSettings:
             market_enabled=bool(row.get("market_enabled")),
             market_sensitivity=_as_float(row.get("market_sensitivity"), 20.0),
             market_max_adjust_pct=_as_float(row.get("market_max_adjust_pct"), 25.0),
+            base_mode=_as_choice(row.get("base_mode"), ("data_driven", "manual"), "data_driven"),
+            base_rate_mode=_as_choice(
+                row.get("base_rate_mode"),
+                ("conservative", "recommended", "aggressive"),
+                "recommended",
+            ),
+            manual_base_price=_opt_float(row.get("manual_base_price")),
         )
 
 
@@ -115,6 +146,12 @@ def _opt_float(value: object) -> float | None:
         return None
 
 
+def _as_choice(value: object, allowed: tuple[str, ...], default: str) -> str:
+    """Enum-Wert aus DB defensiv übernehmen (unbekannt → Default, kein Erfinden)."""
+    s = str(value) if value is not None else ""
+    return s if s in allowed else default
+
+
 def _weekend_factor(day: date, settings: DpSettings) -> float:
     """Fr (4) und Sa (5) bekommen den Wochenend-Aufschlag."""
     if day.weekday() in (4, 5) and settings.weekend_uplift_pct:
@@ -131,7 +168,8 @@ def _occupancy_factor(signals: DaySignals, settings: DpSettings) -> float:
     if signals.occupancy is None or settings.occupancy_sensitivity <= 0:
         return 1.0
     delta = (signals.occupancy - _OCCUPANCY_PIVOT) / _OCCUPANCY_PIVOT  # -1..+1
-    return 1.0 + delta * settings.occupancy_sensitivity / 100.0
+    # Aggressivität skaliert die Auslastungs-Abweichung (Hostaway-Modell).
+    return 1.0 + delta * settings.occupancy_sensitivity / 100.0 * settings.aggressiveness
 
 
 def _last_minute_factor(signals: DaySignals, settings: DpSettings) -> float:
@@ -181,6 +219,8 @@ def _market_factor(base: float, signals: DaySignals, settings: DpSettings) -> fl
         adjust += (signals.comp_price - base) / base * sens
     if signals.demand_index is not None:
         adjust += (signals.demand_index - _OCCUPANCY_PIVOT) / _OCCUPANCY_PIVOT * sens
+    # Aggressivität skaliert die Markt-Korrektur, danach Deckelung.
+    adjust *= settings.aggressiveness
     cap = settings.market_max_adjust_pct / 100.0
     adjust = max(-cap, min(cap, adjust))
     return 1.0 + adjust
@@ -211,8 +251,10 @@ def _dynamic_min_stay(signals: DaySignals, settings: DpSettings) -> int:
 def compute_day(base: float, settings: DpSettings, signals: DaySignals) -> DayResult:
     """Dynamischen Preis + Min-Stay für einen Tag berechnen (rein/deterministisch).
 
-    base = Basispreis (rate_plan). Multiplikatives Modell, danach Clamp auf
-    [min_price, max_price] (falls gesetzt)."""
+    base = Basispreis aus dem rate_plan/Grundpreis. Bei base_mode='manual' ersetzt
+    der gesetzte manual_base_price diesen Anker. Multiplikatives Modell, danach
+    Clamp auf [min_price, max_price] (falls gesetzt)."""
+    base = settings.effective_base(base)
     factors = {
         "season": 1.0 + signals.season_pct / 100.0,
         # Event: event_periods + Marktdaten gemerged (höherer Wert, keine Doppelzählung).

@@ -12,8 +12,14 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
+from .engine import DpSettings
 from .resolver import PricingError
-from .schemas import DpSettingsResponse, DpSettingsUpdate
+from .schemas import (
+    DpOverviewItem,
+    DpOverviewResponse,
+    DpSettingsResponse,
+    DpSettingsUpdate,
+)
 
 log = get_logger("nextdays.pricing.settings")
 
@@ -36,6 +42,9 @@ _DEFAULTS = {
     "market_max_adjust_pct": 25.0,
     "market_key": None,
     "comp_refs": [],
+    "base_mode": "data_driven",
+    "base_rate_mode": "recommended",
+    "manual_base_price": None,
 }
 
 
@@ -94,6 +103,116 @@ class DpSettingsService:
         )
         return self.get(ctx, property_id)
 
+    def overview(self, ctx: AuthContext) -> DpOverviewResponse:
+        """Alle Objekte des Kontos + ihr Dynamic-Pricing-Status (Hostaway-Tabelle).
+
+        Eine Zeile je Objekt: Aktiv-Status, Basispreis-Modus + effektiver Basispreis
+        (manueller Wert oder Grundpreis aus dem Rate-Plan; None = kein Grundpreis,
+        kein Fallback), Min/Max. dp_settings fehlt → Defaults (DP aus)."""
+        if not ctx.tenant_id:
+            raise PricingError("Kein Tenant im Konto.", status_code=400)
+        props = (
+            self._db()
+            .table("properties")
+            .select("id, title, photos, status")
+            .eq("tenant_id", ctx.tenant_id)
+            .order("title")
+            .execute()
+        ).data or []
+        if not props:
+            return DpOverviewResponse(items=[])
+
+        ids = [p["id"] for p in props]
+        settings_by_prop = self._settings_by_property(ids)
+        rate_by_prop = self._rate_plan_by_property(ids)
+        channels_by_prop = self._active_channels_by_property(ids)
+
+        items: list[DpOverviewItem] = []
+        for p in props:
+            pid = p["id"]
+            s = DpSettings.from_row(settings_by_prop.get(pid))
+            rate = rate_by_prop.get(pid, {})
+            rate_base = _opt_float(rate.get("base_price"))
+            # Effektiver Anker: manuell gesetzt oder Grundpreis (kein Erfinden).
+            base_rate = (
+                s.manual_base_price
+                if s.base_mode == "manual" and s.manual_base_price is not None
+                else rate_base
+            )
+            photos = p.get("photos") or []
+            status = p.get("status") or "draft"
+            # Eigene Plattform zählt als Kanal, sobald das Objekt aktiv ist
+            # (booking_engine zeigt nur status=active). OTA-Kanäle aus Channex.
+            channels = list(channels_by_prop.get(pid, []))
+            if status == "active":
+                channels = ["platform", *channels]
+            items.append(
+                DpOverviewItem(
+                    property_id=pid,
+                    title=p.get("title") or "Objekt",
+                    photo=photos[0] if photos else None,
+                    status=status,
+                    currency=rate.get("currency"),
+                    enabled=s.enabled,
+                    base_mode=s.base_mode,
+                    base_rate_mode=s.base_rate_mode,
+                    base_rate=base_rate,
+                    min_price=s.min_price,
+                    max_price=s.max_price,
+                    channels=channels,
+                )
+            )
+        return DpOverviewResponse(items=items)
+
+    def _settings_by_property(self, ids: list[str]) -> dict[str, dict]:
+        rows = (
+            self._db()
+            .table("dp_settings")
+            .select("*")
+            .in_("property_id", ids)
+            .execute()
+        ).data or []
+        return {r["property_id"]: r for r in rows}
+
+    def _rate_plan_by_property(self, ids: list[str]) -> dict[str, dict]:
+        """Pro Objekt der (älteste) Rate-Plan mit Grundpreis + Währung."""
+        rows = (
+            self._db()
+            .table("rate_plans")
+            .select("property_id, base_price, currency, created_at")
+            .in_("property_id", ids)
+            .order("created_at")
+            .execute()
+        ).data or []
+        out: dict[str, dict] = {}
+        for r in rows:  # erster (ältester) je Objekt gewinnt
+            out.setdefault(r["property_id"], r)
+        return out
+
+    def _active_channels_by_property(self, ids: list[str]) -> dict[str, list[str]]:
+        """Aktive OTA-Portal-Codes je Objekt aus channex_channel_connection.
+
+        Nur is_active=true. Fehlt die Tabelle (Env ohne Migration 0035), liefert
+        das leer zurück — kein erfundener Kanal."""
+        try:
+            rows = (
+                self._db()
+                .table("channex_channel_connection")
+                .select("property_id, ota_portal_code, is_active")
+                .in_("property_id", ids)
+                .eq("is_active", True)
+                .execute()
+            ).data or []
+        except Exception:  # pylint: disable=broad-exception-caught
+            return {}
+        out: dict[str, list[str]] = {}
+        for r in rows:
+            code = r.get("ota_portal_code")
+            if not code:
+                continue
+            out.setdefault(r["property_id"], []).append(code)
+        return out
+
     @staticmethod
     def _to_response(property_id: str, row: dict) -> DpSettingsResponse:
         return DpSettingsResponse(
@@ -114,6 +233,15 @@ class DpSettingsService:
             market_max_adjust_pct=float(row.get("market_max_adjust_pct") or 0),
             market_key=row.get("market_key"),
             comp_refs=[str(r) for r in (row.get("comp_refs") or [])],
+            base_mode=_choice(
+                row.get("base_mode"), ("data_driven", "manual"), "data_driven"
+            ),
+            base_rate_mode=_choice(
+                row.get("base_rate_mode"),
+                ("conservative", "recommended", "aggressive"),
+                "recommended",
+            ),
+            manual_base_price=_opt_float(row.get("manual_base_price")),
         )
 
 
@@ -124,3 +252,8 @@ def _opt_float(value: object) -> float | None:
         return float(value)  # type: ignore[arg-type]
     except (TypeError, ValueError):
         return None
+
+
+def _choice(value: object, allowed: tuple[str, ...], default: str) -> str:
+    s = str(value) if value is not None else ""
+    return s if s in allowed else default

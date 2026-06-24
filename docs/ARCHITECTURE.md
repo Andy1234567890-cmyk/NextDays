@@ -489,6 +489,17 @@ market_key/comp_refs`). Die Engine persistiert je Tag die **Faktor-Aufschlüssel
 AirDNA-Konto läuft alles über den NullProvider — DP wie Phase 1, nur mit Markt-Schaltern
 + Preis-Erklärung bereit. Optionale Alternative: ein PriceLabs-IAPI-Connector als
 umschaltbare Preis-Quelle (separat), der ebenfalls nach `dynamic_prices` schreibt.
+**Phase 3 (Migration `0057`)** bringt das zentrale Bedienmodell gängiger
+Channel-Manager (Hostaway) ins UI: ein eigener Hauptmenü-Bereich **`/dynamic-pricing`**
+mit einer **Objekt-Tabelle** (alle Objekte: Basispreis + Modus-Label, Min/Max,
+Aktiv-Toggle, Bearbeiten-Slider, 30-Tage-Vorschau `/dynamic-pricing/{id}`), gespeist
+aus `GET /pricing/overview` (`settings_service.overview`). Pro Objekt wählt der
+Vermieter den **Basispreis-Modus** (`dp_settings.base_mode`): `data_driven` (Anker aus
+`rate_plans.base_price`, Aggressivität `base_rate_mode` konservativ/empfohlen/aggressiv
+= ×0,5/×1,0/×1,5 auf Auslastung+Markt) oder `manual` (fester `manual_base_price`). Die
+Engine (`DpSettings.effective_base`/`aggressiveness`) ist der einzige Ort dieser Logik;
+Resolver-Priorität (manuell > dynamisch > Wochentag > Basis) und Verteilpfad bleiben
+unverändert. Rein additiv, Defaults bilden das bisherige Verhalten ab.
 
 **Kanalübergreifende Nachricht→Gast-Zuordnung (Resolver, Migration 0047):** Jede
 eingehende Buchung/Nachricht — OTA via Channex, WhatsApp, manuelle Reservierung,

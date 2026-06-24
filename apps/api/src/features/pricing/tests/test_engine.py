@@ -133,6 +133,43 @@ def test_deterministic() -> None:
     assert a.price == b.price and a.min_stay == b.min_stay
 
 
+# --- Hostaway-Modell: Basispreis-Modus + Aggressivität ----------------------
+
+
+def test_aggressiveness_scales_occupancy() -> None:
+    """Konservativ dämpft, aggressiv verstärkt die Auslastungs-Abweichung."""
+    sig = DaySignals(day=date(2026, 7, 1), occupancy=1.0, days_before=200)
+    cons = compute_day(_BASE, _settings(weekend_uplift_pct=0, base_rate_mode="conservative"), sig)
+    rec = compute_day(_BASE, _settings(weekend_uplift_pct=0, base_rate_mode="recommended"), sig)
+    aggr = compute_day(_BASE, _settings(weekend_uplift_pct=0, base_rate_mode="aggressive"), sig)
+    # recommended = +30 %, conservative = +15 % (×0,5), aggressive = +45 % (×1,5).
+    assert rec.price == 130.0
+    assert cons.price == 115.0
+    assert aggr.price == 145.0
+
+
+def test_manual_base_overrides_rate_plan() -> None:
+    """base_mode='manual' nutzt manual_base_price als Anker statt des rate_plan-Werts."""
+    s = _settings(weekend_uplift_pct=0, base_mode="manual", manual_base_price=200.0)
+    # rate_plan-Basis 100 wird ignoriert; Anker = 200.
+    r = compute_day(_BASE, s, DaySignals(day=date(2026, 7, 1), days_before=200))
+    assert r.price == 200.0
+
+
+def test_manual_base_ignored_without_value() -> None:
+    """manual ohne gesetzten Preis fällt auf den rate_plan-Anker zurück (kein Erfinden)."""
+    s = _settings(weekend_uplift_pct=0, base_mode="manual", manual_base_price=None)
+    r = compute_day(_BASE, s, DaySignals(day=date(2026, 7, 1), days_before=200))
+    assert r.price == 100.0
+
+
+def test_from_row_defaults_base_mode() -> None:
+    s = DpSettings.from_row({"base_mode": "bogus", "base_rate_mode": "x"})
+    assert s.base_mode == "data_driven"
+    assert s.base_rate_mode == "recommended"
+    assert s.aggressiveness == 1.0
+
+
 # --- Phase 2: Markt-/Wettbewerbs-Faktor -------------------------------------
 
 
