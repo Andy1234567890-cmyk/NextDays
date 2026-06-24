@@ -40,4 +40,9 @@ COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=build --chown=nextjs:nodejs /app/public ./public
 USER nextjs
 EXPOSE 3000
+# Readiness-Signal für Coolify/Traefik: erst nach „healthy" wird der Traffic
+# umgeschaltet → kein 502-Fenster beim Deploy. Node 22 hat globales fetch
+# (kein curl nötig). /healthz ist auth-/DB-frei und liefert 200.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD node -e "fetch('http://localhost:3000/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 CMD ["node", "server.js"]

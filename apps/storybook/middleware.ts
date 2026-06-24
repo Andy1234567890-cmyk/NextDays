@@ -5,7 +5,9 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import { updateSession } from "@/lib/supabase-server";
 
-const PUBLIC_PATHS = ["/login", "/auth"];
+// /healthz bleibt offen, damit der Coolify/Traefik-Healthcheck 200 erhält
+// (sonst würde die Auth-Middleware ihn auf /login umleiten → „unhealthy").
+const PUBLIC_PATHS = ["/login", "/auth", "/healthz"];
 
 // Optionale strikte Allowlist. Wenn gesetzt (STORYBOOK_ALLOWED_EMAILS), dürfen
 // NUR diese E-Mails rein. Wenn LEER, darf jeder eingeloggte Nutzer rein — das
