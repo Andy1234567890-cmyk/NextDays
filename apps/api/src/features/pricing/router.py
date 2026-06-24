@@ -8,7 +8,15 @@ Recompute (per Secret abgesichert).
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    Header,
+    HTTPException,
+    Query,
+    status,
+)
 
 from src.core.config import get_settings
 from src.core.security import AuthContext, CurrentUser
@@ -23,6 +31,7 @@ from src.features.auth.permissions import Capability
 from .recompute import DynamicPricingRecompute
 from .resolver import PricingError, PricingResolver
 from .schemas import (
+    DpOverviewResponse,
     DpSettingsResponse,
     DpSettingsUpdate,
     EffectivePriceDay,
@@ -81,6 +90,22 @@ def quote(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+# -- Dynamic Pricing: Objekt-Übersicht (Hostaway-Tabelle) --------------------
+@router.get("/overview", response_model=DpOverviewResponse)
+def dp_overview(
+    service: DpSettingsServiceDep,
+    ctx: Annotated[
+        AuthContext, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> DpOverviewResponse:
+    """Alle Objekte des Kontos mit ihrem Dynamic-Pricing-Status (eine Zeile je
+    Objekt: Aktiv, Basispreis-Modus + effektiver Basispreis, Min/Max)."""
+    try:
+        return service.overview(ctx)
+    except PricingError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 # -- Dynamic Pricing: Einstellungen je Objekt --------------------------------
 @router.get("/settings/{property_id}", response_model=DpSettingsResponse)
 def get_dp_settings(
@@ -106,6 +131,7 @@ def put_dp_settings(
     property_id: str,
     req: DpSettingsUpdate,
     service: DpSettingsServiceDep,
+    background: BackgroundTasks,
     ctx: Annotated[
         AuthContext, Depends(require_permission(Capability.MANAGE_CALENDAR))
     ],
@@ -113,15 +139,22 @@ def put_dp_settings(
     """Dynamic-Pricing-Einstellungen setzen. Recompute läuft per Cron/Hook."""
     try:
         result = service.update(ctx, property_id, req)
-        # Bei aktiviertem DP sofort einmal rechnen, damit der Kalender direkt
-        # dynamische Preise zeigt (sonst erst beim nächsten Cron-Tick).
+        # Bei aktiviertem DP einmal rechnen, damit der Kalender direkt dynamische
+        # Preise zeigt. Der Recompute rechnet 540 Tage und pusht an Channex —
+        # das läuft im Hintergrund, damit der Speichern-Request nicht blockiert
+        # (sonst hängt die Antwort am Channex-Push/Rate-Limit).
         if result.enabled:
-            DynamicPricingRecompute(
-                service_client=get_service_client()
-            ).recompute_property(property_id)
+            background.add_task(_recompute_in_background, property_id)
         return result
     except PricingError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+def _recompute_in_background(property_id: str) -> None:
+    """DP-Recompute eines Objekts im Hintergrund (nach dem Speichern)."""
+    DynamicPricingRecompute(
+        service_client=get_service_client()
+    ).recompute_property(property_id)
 
 
 # -- Dynamic Pricing: täglicher Recompute (Cron, per Secret) -----------------

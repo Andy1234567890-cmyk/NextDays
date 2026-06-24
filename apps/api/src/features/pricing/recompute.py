@@ -362,6 +362,10 @@ class DynamicPricingRecompute:
 
             cm = ChannelManagerService(service_client=self._client)
             ordered = sorted(rows, key=lambda r: r["date"])
+            # RLE: aufeinanderfolgende Tage mit gleichem (price, min_stay) zu
+            # einem Intervall bündeln, dann ALLE Intervalle in EINEM gebatchten
+            # Channex-Push schicken (statt pro Intervall ein Request → 429-Flut).
+            segments: list[dict] = []
             seg_start = 0
             for i in range(1, len(ordered) + 1):
                 same = (
@@ -375,15 +379,16 @@ class DynamicPricingRecompute:
                     continue
                 first = ordered[seg_start]
                 last = ordered[i - 1]
-                cm.push_rate_for_property(
-                    tenant_id,
-                    property_id,
-                    _as_date(first["date"]),
-                    _as_date(last["date"]),  # inklusiv
-                    round(float(first["price"]) * 100),
-                    min_stay=first.get("min_stay"),
+                segments.append(
+                    {
+                        "date_from": _as_date(first["date"]),
+                        "date_to": _as_date(last["date"]),  # inklusiv
+                        "rate_cents": round(float(first["price"]) * 100),
+                        "min_stay": first.get("min_stay"),
+                    }
                 )
                 seg_start = i
+            cm.push_rates_batch(tenant_id, property_id, segments)
         except Exception as exc:  # noqa: BLE001
             log.warning(
                 "dynamic_pricing_channex_push_failed",

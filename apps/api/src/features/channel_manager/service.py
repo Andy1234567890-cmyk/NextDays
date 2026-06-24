@@ -1356,6 +1356,70 @@ class ChannelManagerService:
                 error=exc.message,
             )
 
+    # Channex akzeptiert viele Werte je Restrictions-Request; wir chunken
+    # defensiv, damit ein Push über den vollen Horizont 1–wenige Requests ist
+    # statt hunderter Einzel-Requests (sonst 429-Flut, siehe Channex-Skill:
+    # „batch via ranges, hundreds of small requests per minute is abuse-shaped").
+    _RESTRICTIONS_CHUNK = 500
+
+    def push_rates_batch(
+        self,
+        tenant_id: str,
+        property_id: str,
+        segments: list[dict[str, Any]],
+    ) -> None:
+        """Mehrere Preis-/Min-Stay-Intervalle eines Objekts in EINEM (bzw. wenigen
+        gechunkten) Channex-Restrictions-Request pushen.
+
+        `segments` = Liste von {date_from, date_to (inkl.), rate_cents?, min_stay?}.
+        Das Channex-Mapping wird nur EINMAL aufgelöst (statt pro Intervall).
+        Best-effort: bei Fehler loggen — der reconcile-Cron gleicht ab.
+        No-op, wenn nicht verbunden oder keine Segmente."""
+        if not self._channex.is_configured or self._db is None or not segments:
+            return
+        mapping = self._resolve_channex_rate_plan(self._db, tenant_id, property_id)
+        if mapping is None:
+            return
+        values: list[dict[str, Any]] = []
+        for seg in segments:
+            rate_cents = seg.get("rate_cents")
+            min_stay = seg.get("min_stay")
+            if rate_cents is None and min_stay is None:
+                continue
+            value: dict[str, Any] = {
+                "property_id": mapping["channex_property_id"],
+                "rate_plan_id": mapping["channex_rate_plan_id"],
+                "date_from": seg["date_from"].isoformat(),
+                "date_to": seg["date_to"].isoformat(),
+            }
+            if rate_cents is not None:
+                value["rate"] = rate_cents
+            if min_stay is not None:
+                value["min_stay_arrival"] = min_stay
+                value["min_stay_through"] = min_stay
+            values.append(value)
+        if not values:
+            return
+        pushed = 0
+        try:
+            for i in range(0, len(values), self._RESTRICTIONS_CHUNK):
+                chunk = values[i : i + self._RESTRICTIONS_CHUNK]
+                self._channex.update_restrictions(chunk)
+                pushed += len(chunk)
+            log.info(
+                "restriction_push_batch_done",
+                tenant_id=tenant_id,
+                property_id=property_id,
+                intervals=pushed,
+            )
+        except ChannexError as exc:
+            log.warning(
+                "restriction_push_batch_failed",
+                tenant_id=tenant_id,
+                property_id=property_id,
+                error=exc.message,
+            )
+
     def process_ari_outbox(self, limit: int = 200) -> dict[str, int]:
         """Offene ari_outbox-Zeilen erneut an Channex pushen (Cron-Retry).
         Idempotent (absoluter Set-Wert je Tag)."""
