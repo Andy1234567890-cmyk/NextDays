@@ -5,7 +5,12 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 
 from src.core.security import AuthContext, CurrentUser
 
-from .dependencies import AccountServiceDep, AuthServiceDep, require_permission
+from .dependencies import (
+    AccountServiceDep,
+    AuthServiceDep,
+    OwnerAssignmentServiceDep,
+    require_permission,
+)
 from .permissions import Capability
 from .schemas import (
     AccountResponse,
@@ -13,6 +18,8 @@ from .schemas import (
     InviteResponse,
     LoginRequest,
     MeResponse,
+    OwnerAssignmentResponse,
+    OwnerAssignmentUpdate,
     RegisterRequest,
     SessionResponse,
     SliceHealth,
@@ -86,6 +93,46 @@ def invite(
         )
     try:
         return service.invite(req, tenant_id=ctx.tenant_id)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Eigentümer-Objekt-Zuordnung (Lastenheft §4.2) ------------------------
+
+
+@router.get(
+    "/owners/{user_id}/properties",
+    response_model=OwnerAssignmentResponse,
+)
+def get_owner_properties(
+    user_id: str,
+    service: OwnerAssignmentServiceDep,
+    ctx: Annotated[
+        AuthContext, Depends(require_permission(Capability.MANAGE_OWNERS))
+    ],
+) -> OwnerAssignmentResponse:
+    """Aktuelle Objekt-Zuordnung eines Eigentümers (Agentur-Sicht)."""
+    try:
+        return service.get(ctx, user_id)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put(
+    "/owners/{user_id}/properties",
+    response_model=OwnerAssignmentResponse,
+)
+def set_owner_properties(
+    user_id: str,
+    req: OwnerAssignmentUpdate,
+    service: OwnerAssignmentServiceDep,
+    ctx: Annotated[
+        AuthContext, Depends(require_permission(Capability.MANAGE_OWNERS))
+    ],
+) -> OwnerAssignmentResponse:
+    """Objekt-Zuordnung eines Eigentümers setzen (Replace). Nur eigene Objekte."""
+    try:
+        return service.set(ctx, user_id, req)
     except AuthError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

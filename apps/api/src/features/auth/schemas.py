@@ -102,6 +102,22 @@ class TenantUser(BaseModel):
     permissions: list[str] = []
 
 
+class OwnerAssignmentUpdate(BaseModel):
+    """Setzt die Objekt-Zuordnung eines Eigentümers (Lastenheft §4.2).
+
+    Vollständige Liste (Replace-Semantik): genau diese property_ids werden dem
+    Eigentümer zugeordnet, alle anderen Zuordnungen dieses Nutzers entfernt."""
+
+    property_ids: list[str] = []
+
+
+class OwnerAssignmentResponse(BaseModel):
+    """Aktuelle Objekt-Zuordnung eines Eigentümers."""
+
+    user_id: str
+    property_ids: list[str] = []
+
+
 class UpdateEmailRequest(BaseModel):
     new_email: EmailStr
 

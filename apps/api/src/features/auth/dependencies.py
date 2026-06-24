@@ -9,6 +9,7 @@ from src.core.supabase import get_anon_client, get_service_client
 
 from .account_service import AccountService
 from .lodgify_permissions import Permission, has_permission
+from .owner_assignment_service import OwnerAssignmentService
 from .permissions import Capability, has_capability
 from .schemas import UserRole
 from .service import AuthService
@@ -28,8 +29,15 @@ def get_account_service() -> AccountService:
     )
 
 
+def get_owner_assignment_service() -> OwnerAssignmentService:
+    return OwnerAssignmentService(service_client=get_service_client())
+
+
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
 AccountServiceDep = Annotated[AccountService, Depends(get_account_service)]
+OwnerAssignmentServiceDep = Annotated[
+    OwnerAssignmentService, Depends(get_owner_assignment_service)
+]
 
 
 def require_role(*allowed: UserRole) -> Callable[[AuthContext], AuthContext]:
