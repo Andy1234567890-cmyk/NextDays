@@ -82,7 +82,7 @@ C4Container
         Container(mobile, "Mobile-App", "React Native 0.86 + React Navigation (apps/mobile)", "Native Gäste- & Gastgeber-App (iOS/Android); teilt das FastAPI-Backend (/api/v1)")
         Container(storybook, "Storybook", "react-vite (eigenes Package apps/storybook)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
         Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 17 Vertical Slices unter /api/v1")
-        ContainerDb(db, "Datenbank", "Supabase / Postgres", "44 Tabellen, Multi-Tenant, RLS, tenant_id")
+        ContainerDb(db, "Datenbank", "Supabase / Postgres", "83 Tabellen, Multi-Tenant, RLS, tenant_id")
         ContainerDb(cache, "Cache", "Redis", "Caching-Layer")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel-Sync, OCR, Messaging-Trigger, wiederkehrende Aufgaben")
     }
@@ -136,7 +136,7 @@ flowchart TB
             PORTAL["public_portal"]; CRM["crm"]; DASH["dashboard"]; CONT["content"]
         end
     end
-    DB[("Postgres — 44 Tabellen, RLS")]
+    DB[("Postgres — 83 Tabellen, RLS")]
     DONE --> DB
     SCAFFOLD --> DB
     CORE --> DONE
@@ -315,14 +315,14 @@ erDiagram
 **Marktplatz-Tabellen (angelegt, mit RLS; Geschäftslogik in Phase 2):** `portal_guests`,
 `reviews`, `commissions` — siehe [Migration 0006](../supabase/migrations/0006_marketplace.sql).
 Das Kern-Diagramm oben zeigt bewusst nur die zentralen Entitäten; alle übrigen der
-**44 Tabellen** sind nach Bereich gruppiert im nächsten Abschnitt aufgeführt.
+**83 Tabellen** sind nach Bereich gruppiert im nächsten Abschnitt aufgeführt.
 
 **Kardinalität:** `||` = genau eins · `o{` = null bis viele · `|{` = ein bis viele.
 `--` = identifizierend (Kind kann ohne Eltern nicht existieren).
 
 ### Datenmodell-Erweiterungen aus dem Lastenheft (Migrationen 0009–0019)
 
-Das Modell ist auf **44 Tabellen (alle mit RLS)** gewachsen — verifiziert gegen das
+Das Modell ist auf **83 Tabellen (alle mit RLS)** gewachsen — verifiziert gegen das
 echte Supabase-Projekt. Zur Lesbarkeit hier nach Bereich gruppiert (Details in den
 jeweiligen Migrationen):
 
@@ -564,6 +564,31 @@ flowchart LR
 - **Control Plane vs. Application Plane:** Der `auth`-Slice (Tenant-Anlage, Onboarding)
   ist *global* — er läuft über den **Service-Role-Client**, der RLS bewusst umgeht
   (beim Registrieren existiert noch kein `tenant_id` im JWT → Henne-Ei).
+
+### 6.1 Eigentümer-Objekt-Scope (zweite RLS-Achse, Lastenheft §4.2)
+
+Innerhalb eines Tenants gibt es eine **zweite Isolationsachse**: ein eingeloggter
+**Eigentümer** (Rolle `owner`) sieht nur SEINE Objekte, die Agentur (admin/co_admin/
+staff/cleaner) den ganzen Tenant. Read-only-Stufe — Eigentümer haben keinen
+Schreibzugriff.
+
+- **Zuordnung:** `owner_property_assignments (tenant_id, user_id, property_id)`
+  (Migration 0058, Vorbild `staff_property_assignments`). Die Agentur pflegt sie über
+  `GET/PUT /auth/owners/{user_id}/properties` (Capability `MANAGE_OWNERS`) + UI in
+  Konto → Benutzer.
+- **Rolle aus dem JWT:** `public.current_user_role()` liest `app_metadata.role`
+  (analog `current_tenant_id()`).
+- **Durchsetzung (RLS, Migration 0059):** RESTRICTIVE SELECT-Policies via
+  `public.owner_can_see_property(property_id)` auf `properties` + allen 23
+  `property_id`-Tabellen. Die Funktion gibt für Nicht-owner immer `true` (Agentur-Sicht
+  unverändert), für owner nur bei zugeordnetem Objekt. RESTRICTIVE = UND-verknüpft mit
+  der tenant-Policy, kann also nur weiter einschränken.
+- **API-Durchsetzung:** Da die FastAPI-Slices den Service-Role-Key nutzen (RLS umgangen),
+  setzt die Pricing-API den Scope zusätzlich explizit durch (`overview()` filtert auf
+  zugeordnete Objekte; `update()` → 403 für owner).
+- **UI:** Sidebar reduziert für owner (`OWNER_ALLOWED_HREFS`: Dashboard, Kalender,
+  Objekte, Dynamic Pricing, Berichte). Die UI ist nur Komfort — die Sicherheit liegt
+  in RLS + API.
 
 ---
 
