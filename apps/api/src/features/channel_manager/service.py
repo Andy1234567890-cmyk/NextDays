@@ -2589,19 +2589,30 @@ class ChannelManagerService:
             for _room_type, days in (avail.get("data") or {}).items():
                 for d, qty in (days or {}).items():
                     by_date[d] = max(by_date.get(d, 0), int(qty or 0))
-            for d, qty in by_date.items():
-                # 'booked'-Tage (echte Buchung) NICHT überschreiben.
-                cur = (
+            # Bestehende Tage EINMAL laden (statt pro Tag einzeln) — und nur
+            # schreiben, wenn sich der Status WIRKLICH ändert. Sonst würde jeder
+            # Sync-Lauf alle 365 Tage neu upserten (updated_at-Bump) und — mit
+            # aktiver Realtime-Publication — eine Event-/Reload-Flut auslösen.
+            existing_days = {
+                r["date"]: r
+                for r in (
                     db.table("availability")
-                    .select("status")
+                    .select("date, status, source")
                     .eq("property_id", property_id)
-                    .eq("date", d)
-                    .limit(1)
+                    .in_("date", list(by_date.keys()))
                     .execute()
                 ).data
-                if cur and cur[0]["status"] == "booked":
+                or []
+            }
+            for d, qty in by_date.items():
+                cur = existing_days.get(d)
+                # 'booked'-Tage (echte Buchung) NICHT überschreiben.
+                if cur and cur["status"] == "booked":
                     continue
                 new_status = "open" if qty > 0 else "blocked"
+                # Idempotent: identischer Status + Quelle → nichts schreiben.
+                if cur and cur["status"] == new_status and cur.get("source") == "portal":
+                    continue
                 db.table("availability").upsert(
                     {
                         "property_id": property_id,

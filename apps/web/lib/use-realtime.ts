@@ -17,9 +17,21 @@ type RealtimeOpts = {
   onChange: () => void;
   /** Abo nur aktiv, wenn true (default true). */
   enabled?: boolean;
+  /**
+   * Events innerhalb dieses Fensters (ms) zu EINEM onChange zusammenfassen.
+   * Schützt vor Reload-Fluten, wenn ein Sync viele Zeilen auf einmal schreibt
+   * (z. B. OTA-ARI-Import: 365 availability-Zeilen). Default 400ms.
+   */
+  debounceMs?: number;
 };
 
-export function useRealtime({ table, filter, onChange, enabled = true }: RealtimeOpts) {
+export function useRealtime({
+  table,
+  filter,
+  onChange,
+  enabled = true,
+  debounceMs = 400,
+}: RealtimeOpts) {
   // Callback in ref halten, damit das Abo nicht bei jedem Render neu aufgebaut wird.
   const cb = useRef(onChange);
   cb.current = onChange;
@@ -29,6 +41,12 @@ export function useRealtime({ table, filter, onChange, enabled = true }: Realtim
     const supabase = createClient();
     let channel: ReturnType<typeof supabase.channel> | null = null;
     let cancelled = false;
+    // Debounce: viele Events kurz hintereinander → ein onChange.
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const fire = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => cb.current(), debounceMs);
+    };
 
     (async () => {
       // Realtime mit dem echten App-Token verbinden (sonst läuft das Abo als
@@ -46,14 +64,15 @@ export function useRealtime({ table, filter, onChange, enabled = true }: Realtim
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table, ...(filter ? { filter } : {}) },
-          () => cb.current(),
+          () => fire(),
         )
         .subscribe();
     })();
 
     return () => {
       cancelled = true;
+      if (timer) clearTimeout(timer);
       if (channel) supabase.removeChannel(channel);
     };
-  }, [table, filter, enabled]);
+  }, [table, filter, enabled, debounceMs]);
 }
