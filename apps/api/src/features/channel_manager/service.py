@@ -2416,6 +2416,12 @@ class ChannelManagerService:
             "guest_phone": customer.get("phone"),
             "guest_language": customer.get("language"),
             "guest_country": customer.get("country"),
+            # Policy-Zeiten + Preisaufschlüsselung aus der OTA-Payload (sofern
+            # vorhanden; kein Erfinden — fehlt ein Feld, bleibt es leer).
+            "checkin_time": attrs.get("checkin_time"),
+            "checkout_time": attrs.get("checkout_time"),
+            "quote_items": self._booking_quote_items(attrs),
+            "external_url": attrs.get("ota_url") or attrs.get("external_url"),
         }
         if existing:
             db.table("reservations").update(row).eq("id", existing[0]["id"]).execute()
@@ -2455,6 +2461,41 @@ class ChannelManagerService:
             )
         total = self._as_int(occ) or self._as_int(attrs.get("number_of_guests"))
         return (total or 1, 0, 0)
+
+    def _booking_quote_items(self, attrs: dict[str, Any]) -> list[dict[str, Any]]:
+        """Preisaufschlüsselung [{label, amount}] aus einem Channex-Booking.
+
+        Channex liefert Positionen je nach OTA unter `rooms` (Zimmerpreis) und
+        `services` (Reinigung/Steuern/Gebühren). Wir übernehmen nur, was wirklich
+        da ist (Label + Betrag) — fehlt die Struktur, bleibt die Liste leer
+        (keine erfundenen Posten)."""
+        items: list[dict[str, Any]] = []
+        for room in attrs.get("rooms") or []:
+            if not isinstance(room, dict):
+                continue
+            amount = self._to_float(room.get("amount") or room.get("total_price"))
+            if amount is None:
+                continue
+            label = room.get("title") or room.get("room_type_name") or "Zimmerpreis"
+            items.append({"label": str(label), "amount": amount})
+        for svc in attrs.get("services") or []:
+            if not isinstance(svc, dict):
+                continue
+            amount = self._to_float(svc.get("total_price") or svc.get("amount"))
+            if amount is None:
+                continue
+            label = svc.get("name") or svc.get("title") or "Gebühr"
+            items.append({"label": str(label), "amount": amount})
+        return items
+
+    @staticmethod
+    def _to_float(value: object) -> float | None:
+        if value is None:
+            return None
+        try:
+            return float(value)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            return None
 
     def import_bookings_for_property(
         self,

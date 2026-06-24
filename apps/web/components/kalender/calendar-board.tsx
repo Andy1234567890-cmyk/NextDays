@@ -266,6 +266,12 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
   const [barDrag, setBarDrag] = useState<BarDrag | null>(null);
   const barDragRef = useRef<BarDrag | null>(null);
   barDragRef.current = barDrag;
+  // Maus-Startposition beim Balken-mousedown + ob seither nennenswert bewegt
+  // wurde. So unterscheiden wir einen reinen KLICK (→ Detail-Slider öffnen) von
+  // einem echten DRAG (→ verschieben/resizen). Ohne das schluckt der sofort
+  // gesetzte barDrag den onClick und der Slider ging nie auf.
+  const barDownPos = useRef<{ x: number; y: number } | null>(null);
+  const barMoved = useRef(false);
   // Ref auf den Tagesbereich (Zeilen-Container) für die Geometrie-Berechnung
   // beim Ziehen — robuster als onMouseEnter (unabhängig von überdeckenden Balken).
   const gridRef = useRef<HTMLDivElement | null>(null);
@@ -347,9 +353,18 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
   // Balken-Zug starten (auf einem belegten Buchungsbalken). mode unterscheidet
   // Verschieben vs. Resizen an den Kanten. di = Tag-Index unter dem Cursor.
   const onBarDown = useCallback(
-    (res: Reservation, pid: string, di: number, mode: BarDrag["mode"]) => {
+    (
+      res: Reservation,
+      pid: string,
+      di: number,
+      mode: BarDrag["mode"],
+      ev: React.MouseEvent,
+    ) => {
       setSel(null);
       setDrag(null);
+      // Klick-vs-Drag-Erkennung: Startposition merken, "bewegt" zurücksetzen.
+      barDownPos.current = { x: ev.clientX, y: ev.clientY };
+      barMoved.current = false;
       setBarDrag({
         res,
         mode,
@@ -375,6 +390,11 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
       const grid = gridRef.current;
       const bd = barDragRef.current;
       if (!grid || !bd) return;
+      // Ab ~4px Bewegung gilt es als echtes Ziehen (nicht mehr als Klick).
+      const down = barDownPos.current;
+      if (down && (Math.abs(e.clientX - down.x) > 4 || Math.abs(e.clientY - down.y) > 4)) {
+        barMoved.current = true;
+      }
       const rect = grid.getBoundingClientRect();
       // Jede Zeile beginnt mit der (sticky) LABEL-Spalte → diese Breite abziehen.
       const di = Math.floor((e.clientX - rect.left - LABEL * remPx) / colPx);
@@ -406,6 +426,14 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
       const bd = barDragRef.current;
       if (bd) {
         setBarDrag(null);
+        // Reiner Klick (keine nennenswerte Bewegung) → Buchungsdetail öffnen,
+        // NICHT als Null-Verschiebung an den Server schicken.
+        if (!barMoved.current) {
+          barDownPos.current = null;
+          setDetail(bd.res.id);
+          return;
+        }
+        barDownPos.current = null;
         const { ci, co, pid } = barDragTarget(bd);
         void commitBarDrag(bd, pid, ci, co);
         return;
@@ -1030,9 +1058,8 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                           title={barTitle}
                           onMouseDown={(ev) => {
                             ev.stopPropagation();
-                            onBarDown(res, p.id, seg.start, "move");
+                            onBarDown(res, p.id, seg.start, "move", ev);
                           }}
-                          onClick={() => !barDrag && setDetail(res.id)}
                           // Während IRGENDEIN Balken gezogen wird, müssen ALLE
                           // Balken — auch der gezogene — Mausereignisse durch-
                           // lassen, sonst klebt der gezogene Balken am Cursor und
@@ -1046,7 +1073,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                             role="presentation"
                             onMouseDown={(ev) => {
                               ev.stopPropagation();
-                              onBarDown(res, p.id, seg.start, "start");
+                              onBarDown(res, p.id, seg.start, "start", ev);
                             }}
                             className="absolute left-0 top-0 h-full w-2 cursor-ew-resize opacity-0 group-hover:opacity-100"
                           />
@@ -1056,7 +1083,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                             role="presentation"
                             onMouseDown={(ev) => {
                               ev.stopPropagation();
-                              onBarDown(res, p.id, seg.start + seg.span - 1, "end");
+                              onBarDown(res, p.id, seg.start + seg.span - 1, "end", ev);
                             }}
                             className="absolute right-0 top-0 h-full w-2 cursor-ew-resize opacity-0 group-hover:opacity-100"
                           />
