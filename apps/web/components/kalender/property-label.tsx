@@ -16,6 +16,8 @@ export type LabelProp = {
   photo: string | null;
   address: string;
   city: string;
+  // Dynamic Pricing für dieses Objekt aktiv → Blitz-Badge an der Zeile.
+  dynamicEnabled?: boolean;
 };
 
 export function PropertyLabel({
@@ -49,7 +51,18 @@ export function PropertyLabel({
       )}
       <div className="flex min-w-0 flex-col leading-tight">
         {showInternalName && (
-          <span className="truncate text-sm font-semibold">{p.title}</span>
+          <span className="flex items-center gap-1.5">
+            <span className="truncate text-sm font-semibold">{p.title}</span>
+            {p.dynamicEnabled && (
+              <span
+                title="Dynamic Pricing aktiv — die Tagespreise werden automatisch berechnet."
+                className="flex shrink-0 items-center gap-0.5 rounded-full bg-accent/15 px-1.5 py-0.5 text-[0.6rem] font-semibold text-accent"
+              >
+                <Icon icon="ph:lightning-fill" className="size-2.5" />
+                Dynamic
+              </span>
+            )}
+          </span>
         )}
         <span className="truncate text-xs text-muted-foreground">
           {p.address || TYPE_LABELS[p.type]}

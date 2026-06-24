@@ -3,10 +3,17 @@
 // holt die Verfügbarkeit und rendert das interaktive Raster.
 import { CalendarBoard } from "@/components/kalender/calendar-board";
 import { Card } from "@/components/ui/card";
+import { getDpOverview } from "@/lib/dynamic-pricing";
 import { listProperties } from "@/lib/properties";
 
 export default async function KalenderPage() {
-  const res = await listProperties();
+  // Objekte + Dynamic-Pricing-Status parallel laden, damit der Kalender pro
+  // Objekt anzeigen kann, ob Dynamic Pricing aktiv ist (Blitz-Markierung).
+  const [res, dp] = await Promise.all([listProperties(), getDpOverview()]);
+  // Set der Objekte mit aktivem DP (best-effort: scheitert der Call, kein Blitz).
+  const dpEnabled = new Set(
+    dp.ok ? dp.data.items.filter((i) => i.enabled).map((i) => i.property_id) : [],
+  );
 
   if (!res.ok) {
     return (
@@ -29,6 +36,7 @@ export default async function KalenderPage() {
         address: [p.street, p.house_number].filter(Boolean).join(" "),
         city: [p.postal_code, p.city].filter(Boolean).join(" "),
         maxGuests: p.max_guests,
+        dynamicEnabled: dpEnabled.has(p.id),
       }))}
     />
   );

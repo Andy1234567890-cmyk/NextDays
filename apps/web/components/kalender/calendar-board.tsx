@@ -52,6 +52,8 @@ type Prop = {
   address: string;
   city: string;
   maxGuests: number;
+  // Dynamic Pricing für dieses Objekt aktiv → Blitz-Markierung in der Zeile.
+  dynamicEnabled?: boolean;
 };
 
 const WEEKDAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
@@ -650,6 +652,11 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
   // im Objekt geänderte Preise erscheinen sofort im Kalender (kein Reload).
   useRealtime({ table: "rate_plans", onChange: load, enabled: !interacting });
   useRealtime({ table: "property_pricing_config", onChange: load, enabled: !interacting });
+  // Dynamic Pricing live: neu berechnete Tagespreise (dynamic_prices) und das
+  // An-/Ausschalten je Objekt (dp_settings) erscheinen sofort im Kalender —
+  // echtes Realtime (Supabase postgres_changes), kein Polling.
+  useRealtime({ table: "dynamic_prices", onChange: load, enabled: !interacting });
+  useRealtime({ table: "dp_settings", onChange: load, enabled: !interacting });
 
   // Ausgewählten Zeitraum sperren (blockRange, end exklusiv).
   const confirmBlock = useCallback(async () => {
@@ -981,9 +988,10 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                                         explainFactors(factorsMap[key(d)]) ||
                                         "Dynamischer Preis (automatisch berechnet)"
                                       }
-                                      className={`cursor-help rounded px-1 text-[0.55rem] font-semibold leading-tight ${inSel ? "bg-white/25 text-white" : "bg-accent/15 text-accent"}`}
+                                      aria-label="Dynamischer Preis"
+                                      className={`flex cursor-help items-center rounded px-0.5 leading-tight ${inSel ? "text-white" : "text-accent"}`}
                                     >
-                                      auto
+                                      <Icon icon="ph:lightning-fill" className="size-2.5" />
                                     </span>
                                   )}
                                 </span>
