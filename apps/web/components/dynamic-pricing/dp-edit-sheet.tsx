@@ -31,6 +31,7 @@ import {
   type DpSettings,
   getDpSettings,
   type LastMinuteRule,
+  type RateRule,
   saveDpSettings,
 } from "@/lib/dynamic-pricing";
 
@@ -113,6 +114,10 @@ export function DpEditSheet({
       market_max_adjust_pct: s.market_max_adjust_pct,
       market_key: s.market_key,
       comp_refs: s.comp_refs,
+      autopilot_enabled: s.autopilot_enabled ?? false,
+      weather_enabled: s.weather_enabled ?? false,
+      weather_max_adjust_pct: s.weather_max_adjust_pct ?? 10,
+      rate_rules: s.rate_rules ?? [],
     });
     setBusy(false);
     if (res.ok) {
@@ -158,6 +163,25 @@ export function DpEditSheet({
                 onCheckedChange={(c) => set("enabled", c)}
               />
             </label>
+
+            {/* Autopilot — nur sinnvoll, wenn DP überhaupt an ist */}
+            {s.enabled && (
+              <label className="flex cursor-pointer items-center justify-between gap-3">
+                <span className="leading-tight">
+                  <span className="flex items-center gap-1.5 font-semibold">
+                    Autopilot
+                    <InfoHint text="Ist Autopilot an, werden die berechneten Preise automatisch an alle Kanäle (eigene Plattform + OTAs) geschickt. Ist er aus, berechnet die Engine die Preise weiterhin und zeigt sie als Vorschau/Empfehlung — veröffentlicht werden sie aber erst, wenn du es freigibst." />
+                  </span>
+                  <span className="block text-sm text-muted-foreground">
+                    Preise automatisch veröffentlichen statt nur empfehlen.
+                  </span>
+                </span>
+                <Switch
+                  checked={s.autopilot_enabled}
+                  onCheckedChange={(c) => set("autopilot_enabled", c)}
+                />
+              </label>
+            )}
 
             {/* Basispreis-Modus */}
             <div className="flex flex-col gap-3">
@@ -304,6 +328,41 @@ export function DpEditSheet({
                     onChange={(r) => set("last_minute", r)}
                   />
 
+                  <RateRulesEditor
+                    rules={s.rate_rules ?? []}
+                    onChange={(r) => set("rate_rules", r)}
+                  />
+
+                  {/* Wetter (RateBoard-Baustein, DWD-Daten) */}
+                  <label className="flex cursor-pointer items-center justify-between gap-3">
+                    <span className="leading-tight">
+                      <span className="flex items-center gap-1.5 font-semibold">
+                        Wetter berücksichtigen
+                        <InfoHint text="Die Engine bezieht das Wetter am Anreisetag ein (amtliche DWD-Daten): gutes Wetter hebt den Preis leicht, schlechtes senkt ihn. Wirkt nur für die nächsten ~10 Tage (so weit reicht die Wettervorhersage) und nur, wenn das Objekt Koordinaten hinterlegt hat." />
+                      </span>
+                      <span className="block text-sm text-muted-foreground">
+                        Preis am Wetter der nächsten Tage ausrichten (DWD).
+                      </span>
+                    </span>
+                    <Switch
+                      checked={s.weather_enabled}
+                      onCheckedChange={(c) => set("weather_enabled", c)}
+                    />
+                  </label>
+                  {s.weather_enabled && (
+                    <div className="ml-0">
+                      <Field
+                        label="Max. Wetter-Korrektur (±%)"
+                        hint="Obergrenze, wie weit gutes/schlechtes Wetter den Preis verschieben darf. Beispiel 10 %: höchstens ein Zehntel Auf- oder Abschlag durch das Wetter."
+                      >
+                        <NumInput
+                          value={s.weather_max_adjust_pct}
+                          onChange={(n) => set("weather_max_adjust_pct", n ?? 0)}
+                        />
+                      </Field>
+                    </div>
+                  )}
+
                   {/* Marktdaten */}
                   <label className="flex cursor-pointer items-center justify-between gap-3">
                     <span className="leading-tight">
@@ -410,11 +469,21 @@ function RadioRow({
   small?: boolean;
   onSelect: () => void;
 }) {
+  // role="button"-div statt <button>: der Titel kann einen InfoHint (selbst ein
+  // <button>) enthalten — verschachtelte <button> sind in HTML verboten und
+  // brechen die Hydration. Tastatur-Bedienung über Enter/Space nachgebildet.
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={onSelect}
-      className={`flex items-start gap-3 rounded-(--radius) border p-3 text-left ${
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
+      className={`flex cursor-pointer items-start gap-3 rounded-(--radius) border p-3 text-left ${
         checked ? "border-accent bg-accent/5" : "border-border hover:bg-muted/50"
       }`}
     >
@@ -435,7 +504,7 @@ function RadioRow({
         </span>
         <span className="block text-xs text-muted-foreground">{hint}</span>
       </span>
-    </button>
+    </div>
   );
 }
 
@@ -503,6 +572,138 @@ function LastMinuteEditor({
         <Icon icon="ph:plus" className="size-4" /> Regel hinzufügen
       </Button>
     </div>
+  );
+}
+
+const WEEKDAYS = [
+  { v: 0, l: "Mo" },
+  { v: 1, l: "Di" },
+  { v: 2, l: "Mi" },
+  { v: 3, l: "Do" },
+  { v: 4, l: "Fr" },
+  { v: 5, l: "Sa" },
+  { v: 6, l: "So" },
+];
+
+// Manuelle Rate Rules (RateBoard „KI + Fachwissen"): pro Regel ausgewählte
+// Wochentage + ein Auf-/Abschlag in %. Greift OBENDRAUF auf die Auto-Faktoren.
+function RateRulesEditor({
+  rules,
+  onChange,
+}: {
+  rules: RateRule[];
+  onChange: (rules: RateRule[]) => void;
+}) {
+  function toggleWeekday(i: number, day: number) {
+    const cur = rules[i].match.weekday;
+    const arr = Array.isArray(cur) ? [...cur] : cur === undefined ? [] : [cur];
+    const next = arr.includes(day)
+      ? arr.filter((d) => d !== day)
+      : [...arr, day].sort((a, b) => a - b);
+    onChange(
+      rules.map((r, idx) =>
+        idx === i ? { ...r, match: { ...r.match, weekday: next } } : r,
+      ),
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Label className="flex items-center gap-1.5">
+        Eigene Regeln
+        <InfoHint text="Deine manuellen Regeln zusätzlich zur Automatik (z. B. „sonntags +15 %“). Wähle die Wochentage und den Auf- oder Abschlag in Prozent. Diese Regeln gelten bewusst obendrauf — sie werden nicht von der automatischen Rabatt-Begrenzung verrechnet." />
+      </Label>
+      {rules.length === 0 && (
+        <p className="text-sm text-muted-foreground">Noch keine eigenen Regeln.</p>
+      )}
+      {rules.map((r, i) => (
+        <div
+          key={i}
+          className="flex flex-col gap-2 rounded-(--radius) border border-border p-3"
+        >
+          <div className="flex flex-wrap gap-1.5">
+            {WEEKDAYS.map((d) => {
+              const wd = r.match.weekday;
+              const active = Array.isArray(wd)
+                ? wd.includes(d.v)
+                : wd === d.v;
+              return (
+                <button
+                  key={d.v}
+                  type="button"
+                  onClick={() => toggleWeekday(i, d.v)}
+                  className={`size-8 rounded-full border text-xs font-medium ${
+                    active
+                      ? "border-accent bg-accent/10 text-foreground"
+                      : "border-border text-muted-foreground hover:bg-muted/50"
+                  }`}
+                >
+                  {d.l}
+                </button>
+              );
+            })}
+          </div>
+          <div className="flex items-center gap-2 text-sm">
+            <NumInputSigned
+              value={r.adjust_pct}
+              onChange={(n) =>
+                onChange(
+                  rules.map((x, idx) =>
+                    idx === i ? { ...x, adjust_pct: n ?? 0 } : x,
+                  ),
+                )
+              }
+              className="w-24"
+            />
+            <span className="text-muted-foreground">
+              % (positiv = Aufschlag, negativ = Rabatt)
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Entfernen"
+              className="ml-auto"
+              onClick={() => onChange(rules.filter((_, idx) => idx !== i))}
+            >
+              <Icon icon="ph:trash" className="size-4 text-muted-foreground" />
+            </Button>
+          </div>
+        </div>
+      ))}
+      <Button
+        variant="outline"
+        size="sm"
+        className="w-fit gap-1.5"
+        onClick={() =>
+          onChange([...rules, { match: { weekday: [] }, adjust_pct: 10 }])
+        }
+      >
+        <Icon icon="ph:plus" className="size-4" /> Regel hinzufügen
+      </Button>
+    </div>
+  );
+}
+
+// Wie NumInput, erlaubt aber negative Werte (Rate-Rule-Abschläge).
+function NumInputSigned({
+  value,
+  onChange,
+  className,
+}: {
+  value: number | null;
+  onChange: (v: number | null) => void;
+  className?: string;
+}) {
+  return (
+    <Input
+      type="number"
+      value={value ?? ""}
+      className={className}
+      onChange={(e) => {
+        const v = e.target.value;
+        onChange(v === "" ? null : Number(v));
+      }}
+    />
   );
 }
 

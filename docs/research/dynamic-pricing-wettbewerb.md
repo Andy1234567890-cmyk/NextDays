@@ -76,6 +76,29 @@ eigene Schwellen-Tabelle. **Nahe Buckets reagieren stärker.**
 | Min/Max-Clamp | vorhanden | Standard | ok |
 | Lernen aus Historie | keins | Pickup-Kurven, Elastizität | **Daten-Erfassung fehlt** |
 
+## Nachtrag: RateBoard (DACH-Hotel-RMS)
+
+> Quelle: RateBoard-Landingpage (discover.rateboard.io, abgerufen 2026-06-24).
+> Caveat: Marketing-Seite, KEINE technische Mechanik-Offenlegung — Pickup-Modell,
+> Booking-Pace und Cold-Start-Handling werden NICHT dokumentiert.
+
+RateBoard ist ein hotelfokussiertes Revenue-Management-System (DACH, 1.500+ Kunden,
+80+ Schnittstellen). Verifizierte Produkt-Bausteine (wörtlich von der Seite):
+
+| Baustein | Aussage | Unser Pendant |
+|---|---|---|
+| **KI-Forecast** | „Erkennen Sie zukünftige Trends für eine optimale Preis- und Auslastungsplanung" | gelernte Pickup-Kurve ([forecast.py](../../apps/api/src/features/pricing/forecast.py), Phase 4) |
+| **Autopilot** | „passt Ihre Raten rund um die Uhr vollautomatisch an Marktveränderungen an" | `dp_settings.autopilot_enabled` (Push-Gate im Recompute) |
+| **Rate Rules** | „KI-Power kombiniert mit Ihrem Fachwissen … individuelle Regeln" | `dp_settings.rate_rules` (engine `_rate_rules_factor`) |
+| **Wetter & Events** | „externe Faktoren, wie Wetter und Veranstaltungen für Ihre Preisgestaltung" | Wetter ([weather.py](../../apps/api/src/features/pricing/weather.py), DWD/Bright Sky) + event_periods |
+| **Wettbewerbsvergleich** | „Vergleichen Sie Ihre Performance direkt mit dem Wettbewerb" | Comp-Set/Markt-Faktor (Phase 3, PlatformProvider) |
+
+Marketing-Zahlen (unbelegt, nicht als Mechanik übernehmen): ⌀ +20 % Umsatz, bis
+20 % mehr Gewinn/Standort.
+
+**Konsequenz für uns:** Alle fünf RateBoard-Bausteine sind nun in unserer eigenen
+Engine umgesetzt — ohne Fremdkosten, ohne Drittanbieter-Abo für die Vermieter.
+
 ## Quellen (Primär)
 
 - PriceLabs — Occupancy Based Adjustments: https://help.pricelabs.co/portal/en/kb/articles/occupancy-based-adjustments
@@ -85,3 +108,5 @@ eigene Schwellen-Tabelle. **Nahe Buckets reagieren stärker.**
 - Beyond — How the algorithm works: https://www.beyondpricing.com/eu-blog/how-beyonds-dynamic-pricing-algorithm-works-for-you
 - Wheelhouse — Pricing Engine (2020): https://medium.com/wheelhouse/wheelhouse-pricing-engine-98dd9170d275
 - AirDNA Rates: https://help.airdna.co/en/articles/10011583-airdna-rates
+- RateBoard RMS (Landingpage): https://discover.rateboard.io/revenue-management-hotels-deutschland
+- DWD Open Data via Bright Sky (Wetterquelle): https://brightsky.dev

@@ -8,6 +8,15 @@ import { currentToken } from "@/lib/session-token";
 
 export type LastMinuteRule = { days_before: number; discount_pct: number };
 
+// Manuelle Rate Rule (KI + Fachwissen): Trefferkriterien → Auf-/Abschlag.
+export type RateRuleMatch = {
+  weekday?: number | number[];
+  month?: number | number[];
+  min_days_before?: number;
+  max_days_before?: number;
+};
+export type RateRule = { match: RateRuleMatch; adjust_pct: number };
+
 // Basispreis-Modus (Hostaway-Modell).
 export type BaseMode = "data_driven" | "manual";
 export type BaseRateMode = "conservative" | "recommended" | "aggressive";
@@ -33,6 +42,11 @@ export type DpSettings = {
   base_mode: BaseMode;
   base_rate_mode: BaseRateMode;
   manual_base_price: number | null;
+  // Phase 4 / RateBoard-Bausteine.
+  autopilot_enabled: boolean;
+  weather_enabled: boolean;
+  weather_max_adjust_pct: number;
+  rate_rules: RateRule[];
 };
 
 export type DpSettingsInput = Partial<Omit<DpSettings, "property_id">>;

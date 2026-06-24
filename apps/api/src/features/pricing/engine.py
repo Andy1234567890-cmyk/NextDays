@@ -41,6 +41,10 @@ class DpSettings:
     """Dynamic-Pricing-Konfiguration eines Objekts (aus dp_settings)."""
 
     enabled: bool = False
+    # RateBoard-Autopilot: berechnete Preise automatisch scharf schalten (an die
+    # Kanäle pushen). False = nur Empfehlung (in dynamic_prices/Vorschau sichtbar,
+    # aber kein OTA-Push). enabled steuert das Rechnen, autopilot das Veröffentlichen.
+    autopilot_enabled: bool = False
     min_price: float | None = None
     max_price: float | None = None
     weekend_uplift_pct: float = 15.0
@@ -57,6 +61,26 @@ class DpSettings:
     base_mode: str = "data_driven"  # 'data_driven' | 'manual'
     base_rate_mode: str = "recommended"  # 'conservative' | 'recommended' | 'aggressive'
     manual_base_price: float | None = None
+    # Roadmap-Phase 1 — auslastungsbasierte Best Practices der Wettbewerber:
+    # Asymmetrische Deckelung des Auslastungs-Faktors (Rabatte aggressiver als
+    # Aufschläge; PriceLabs-Default −20 % / +15 %). 0/None = kein eigener Cap.
+    occupancy_discount_cap_pct: float = 20.0
+    occupancy_premium_cap_pct: float = 15.0
+    # Vorlauf-Buckets: der Auslastungs-Faktor wirkt je nach Tagen-bis-Anreise
+    # unterschiedlich stark (nahe Termine reagieren stärker, „horizontal
+    # occupancy"). Liste {max_days_before, weight}: das erste Bucket, dessen
+    # max_days_before >= days_before, gewichtet den Auslastungs-Faktor. Leer =
+    # keine Bucket-Dämpfung (Gewicht 1.0, Verhalten wie zuvor).
+    occupancy_lead_buckets: list[dict] = field(default_factory=list)
+    # RateBoard-Baustein — Wetter als externer Nachfrage-Faktor (opt-in). Gutes
+    # Wetter am Anreisetag → Aufschlag, schlechtes → leichter Rabatt. weather_max_
+    # adjust_pct deckelt die Wirkung symmetrisch. 0/aus = kein Wetter-Effekt.
+    weather_enabled: bool = False
+    weather_max_adjust_pct: float = 10.0
+    # Rate Rules — manuelle Zusatzregeln des Vermieters (KI + Fachwissen). Jede
+    # Regel: {match:{...}, adjust_pct: float}. Greifen NACH den gelernten Faktoren
+    # als zusätzliche Auf-/Abschläge (siehe _rate_rules_factor). Leer = keine.
+    rate_rules: list[dict] = field(default_factory=list)
 
     @property
     def aggressiveness(self) -> float:
@@ -75,6 +99,7 @@ class DpSettings:
         lm = row.get("last_minute")
         return DpSettings(
             enabled=bool(row.get("enabled")),
+            autopilot_enabled=bool(row.get("autopilot_enabled")),
             min_price=_opt_float(row.get("min_price")),
             max_price=_opt_float(row.get("max_price")),
             weekend_uplift_pct=_as_float(row.get("weekend_uplift_pct"), 15.0),
@@ -93,6 +118,20 @@ class DpSettings:
                 "recommended",
             ),
             manual_base_price=_opt_float(row.get("manual_base_price")),
+            occupancy_discount_cap_pct=_as_float(
+                row.get("occupancy_discount_cap_pct"), 20.0
+            ),
+            occupancy_premium_cap_pct=_as_float(
+                row.get("occupancy_premium_cap_pct"), 15.0
+            ),
+            occupancy_lead_buckets=[
+                r for r in (row.get("occupancy_lead_buckets") or []) if isinstance(r, dict)
+            ],
+            weather_enabled=bool(row.get("weather_enabled")),
+            weather_max_adjust_pct=_as_float(row.get("weather_max_adjust_pct"), 10.0),
+            rate_rules=[
+                r for r in (row.get("rate_rules") or []) if isinstance(r, dict)
+            ],
         )
 
 
@@ -114,6 +153,16 @@ class DaySignals:
     comp_price: float | None = None       # Median vergleichbarer Objekte
     demand_index: float | None = None     # Marktnachfrage 0..1
     market_event_pct: float | None = None  # Markt-Event-Aufschlag (%)
+    # Roadmap-Phase 2 — Pickup-Velocity: relative Buchungsgeschwindigkeit dieses
+    # Anreisedatums gegenüber dem Erwartungswert. >0 = bucht sich schneller als
+    # normal (Frühindikator für Nachfrage → Aufschlag), <0 = langsamer, None =
+    # kein Signal (neutral). Skala grob −1..+1 (gedeckelt im Faktor).
+    pickup_velocity: float | None = None
+    # RateBoard-Baustein — Wetter-Score (externer Nachfrage-Faktor) für dieses
+    # Anreisedatum. Grob −1..+1: >0 = überdurchschnittlich gutes Wetter (mehr
+    # Nachfrage → Aufschlag), <0 = schlechtes Wetter, None = kein Signal (z. B.
+    # Datum außerhalb des Wetter-Forecast-Horizonts → neutral, keine Fallbacks).
+    weather_score: float | None = None
 
 
 @dataclass
@@ -159,17 +208,132 @@ def _weekend_factor(day: date, settings: DpSettings) -> float:
     return 1.0
 
 
+def _lead_bucket_weight(days_before: int, settings: DpSettings) -> float:
+    """Vorlauf-Gewicht für den Auslastungs-Faktor (Roadmap-Phase 1, „horizontal
+    occupancy"). Nahe Termine reagieren stärker auf die Belegung als ferne. Das
+    erste Bucket mit max_days_before >= days_before liefert sein Gewicht; ohne
+    konfigurierte Buckets oder ohne Treffer gilt 1.0 (Verhalten wie zuvor)."""
+    buckets = settings.occupancy_lead_buckets
+    if not buckets:
+        return 1.0
+    db = max(0, days_before)
+    best: tuple[int, float] | None = None
+    for b in sorted(
+        buckets, key=lambda x: _as_float(x.get("max_days_before"), 1e9)
+    ):
+        cap = _as_float(b.get("max_days_before"), -1.0)
+        if cap < 0:
+            continue
+        if db <= cap:
+            return _as_float(b.get("weight"), 1.0)
+        best = (int(cap), _as_float(b.get("weight"), 1.0))
+    # Über allen Buckets → Gewicht des größten Buckets (fernster Vorlauf).
+    return best[1] if best else 1.0
+
+
 def _occupancy_factor(signals: DaySignals, settings: DpSettings) -> float:
     """Auslastung → Auf/Abschlag. Bei occupancy=None neutral (kein Signal).
 
-    occupancy 1.0 (voll) → +sensitivity%, occupancy 0.0 (leer) → −sensitivity%,
-    linear um den Pivot 0.5. So füllt niedrige Belegung über günstigere Preise,
-    hohe Belegung hebt den Preis."""
+    occupancy 1.0 (voll) → Aufschlag, occupancy 0.0 (leer) → Rabatt, linear um
+    den Pivot 0.5, skaliert über sensitivity × Aggressivität × Vorlauf-Gewicht.
+    Roadmap-Phase 1: asymmetrische Deckelung — Rabatte bis occupancy_discount_cap,
+    Aufschläge bis occupancy_premium_cap (Wettbewerber-Best-Practice: füllen
+    wichtiger als abschöpfen)."""
     if signals.occupancy is None or settings.occupancy_sensitivity <= 0:
         return 1.0
     delta = (signals.occupancy - _OCCUPANCY_PIVOT) / _OCCUPANCY_PIVOT  # -1..+1
-    # Aggressivität skaliert die Auslastungs-Abweichung (Hostaway-Modell).
-    return 1.0 + delta * settings.occupancy_sensitivity / 100.0 * settings.aggressiveness
+    weight = _lead_bucket_weight(signals.days_before, settings)
+    adjust = delta * settings.occupancy_sensitivity / 100.0 * settings.aggressiveness * weight
+    return _cap_adjust(
+        adjust,
+        settings.occupancy_discount_cap_pct,
+        settings.occupancy_premium_cap_pct,
+    )
+
+
+def _pickup_factor(signals: DaySignals, settings: DpSettings) -> float:
+    """Pickup-Velocity → Aufschlag/Rabatt (Roadmap-Phase 2, Beyond/Wheelhouse).
+
+    Bucht sich ein Datum schneller als der Erwartungswert (velocity > 0), steigt
+    der Preis früh — antizipativ, bevor die Belegung hoch ist. Langsamer Pickup
+    senkt ihn leicht. Nutzt dieselbe sensitivity/Aggressivität und dieselbe
+    asymmetrische Deckelung wie der Auslastungs-Faktor. None = neutral."""
+    if signals.pickup_velocity is None or settings.occupancy_sensitivity <= 0:
+        return 1.0
+    v = max(-1.0, min(1.0, signals.pickup_velocity))
+    adjust = v * settings.occupancy_sensitivity / 100.0 * settings.aggressiveness
+    return _cap_adjust(
+        adjust,
+        settings.occupancy_discount_cap_pct,
+        settings.occupancy_premium_cap_pct,
+    )
+
+
+def _weather_factor(signals: DaySignals, settings: DpSettings) -> float:
+    """Wetter-Score → Auf-/Abschlag (RateBoard-Baustein, externer Nachfrage-Faktor).
+
+    Gutes Wetter am Anreisetag (score > 0) hebt den Preis, schlechtes senkt ihn —
+    symmetrisch gedeckelt über weather_max_adjust_pct. None = kein Signal (Datum
+    außerhalb des Forecast-Horizonts) → neutral, kein erfundener Wert."""
+    if not settings.weather_enabled or signals.weather_score is None:
+        return 1.0
+    score = max(-1.0, min(1.0, signals.weather_score))
+    cap = settings.weather_max_adjust_pct / 100.0
+    return 1.0 + score * cap
+
+
+def _rate_rules_factor(signals: DaySignals, settings: DpSettings) -> float:
+    """Manuelle Rate Rules → kombinierter Auf-/Abschlag (RateBoard: KI + Fachwissen).
+
+    Jede Regel {match, adjust_pct}: trifft das match auf den Tag zu, wird ihr
+    adjust_pct angewandt. Mehrere zutreffende Regeln stapeln multiplikativ. Ohne
+    Regeln neutral. match-Schlüssel (alle optional, UND-verknüpft):
+      weekday: int|list[int]  (0=Mo..6=So)
+      month:   int|list[int]
+      min_days_before / max_days_before: int (Vorlauf-Fenster)"""
+    if not settings.rate_rules:
+        return 1.0
+    factor = 1.0
+    for rule in settings.rate_rules:
+        if not isinstance(rule, dict):
+            continue
+        if _rule_matches(rule.get("match") or {}, signals):
+            factor *= 1.0 + _as_float(rule.get("adjust_pct"), 0.0) / 100.0
+    return factor
+
+
+def _rule_matches(match: dict, signals: DaySignals) -> bool:
+    """True, wenn alle gesetzten match-Kriterien auf den Tag zutreffen (UND)."""
+    def _in(value: object, crit: object) -> bool:
+        if isinstance(crit, list):
+            return value in crit
+        return value == crit
+
+    if "weekday" in match and not _in(signals.day.weekday(), match["weekday"]):
+        return False
+    if "month" in match and not _in(signals.day.month, match["month"]):
+        return False
+    if "min_days_before" in match and signals.days_before < _as_float(
+        match["min_days_before"], 0
+    ):
+        return False
+    if "max_days_before" in match and signals.days_before > _as_float(
+        match["max_days_before"], 1e9
+    ):
+        return False
+    return True
+
+
+def _cap_adjust(adjust: float, discount_cap_pct: float, premium_cap_pct: float) -> float:
+    """Asymmetrische Deckelung einer relativen Anpassung → Faktor (1.0 + adjust).
+
+    adjust < 0 (Rabatt) auf −discount_cap begrenzt, adjust > 0 (Aufschlag) auf
+    +premium_cap. Cap <= 0 → keine Begrenzung in dieser Richtung."""
+    if adjust < 0 and discount_cap_pct > 0:
+        adjust = max(adjust, -discount_cap_pct / 100.0)
+    elif adjust > 0 and premium_cap_pct > 0:
+        adjust = min(adjust, premium_cap_pct / 100.0)
+    return 1.0 + adjust
 
 
 def _last_minute_factor(signals: DaySignals, settings: DpSettings) -> float:
@@ -261,14 +425,23 @@ def compute_day(base: float, settings: DpSettings, signals: DaySignals) -> DayRe
         "event": 1.0 + _merged_event_pct(signals) / 100.0,
         "weekend": _weekend_factor(signals.day, settings),
         "occupancy": _occupancy_factor(signals, settings),
+        # Phase 2: Pickup-Velocity (antizipativ, neutral ohne Signal).
+        "pickup": _pickup_factor(signals, settings),
         "last_minute": _last_minute_factor(signals, settings),
         "orphan": _orphan_factor(signals, settings),
         # Phase 2: Markt-/Wettbewerbs-Faktor (neutral 1.0 ohne Signal/Markt aus).
         "market": _market_factor(base, signals, settings),
+        # RateBoard: Wetter (externer Nachfrage-Faktor, neutral ohne Signal/aus).
+        "weather": _weather_factor(signals, settings),
     }
-    price = base
-    for f in factors.values():
-        price *= f
+    # Gelernte/automatische Faktoren mit Anti-Über-Rabattierung kombinieren …
+    price = base * _combine_factors(factors.values())
+    # … dann die manuellen Rate Rules als bewussten Vermieter-Override OBENDRAUF
+    # (sie sollen nicht von der Anti-Über-Rabattierung der Auto-Faktoren verschluckt
+    # werden — KI + Fachwissen, RateBoard-Prinzip). In den factors für Transparenz.
+    rules_factor = _rate_rules_factor(signals, settings)
+    factors["rate_rules"] = rules_factor
+    price *= rules_factor
 
     if settings.min_price is not None:
         price = max(price, settings.min_price)
@@ -280,3 +453,23 @@ def compute_day(base: float, settings: DpSettings, signals: DaySignals) -> DayRe
         min_stay=_dynamic_min_stay(signals, settings),
         factors=factors,
     )
+
+
+def _combine_factors(factors: object) -> float:
+    """Faktoren zu EINEM Multiplikator kombinieren — mit Anti-Über-Rabattierung
+    (Roadmap-Phase 1, PriceLabs-Konfliktregel).
+
+    Statt alle Faktoren stumpf zu multiplizieren (mehrere Rabatte kumulieren sich
+    sonst zu stark, z. B. Last-Minute × Orphan × Auslastung → viel zu billig):
+      * Aufschläge (>1.0) stapeln multiplikativ (alle gelten),
+      * Rabatte (<1.0) gelten NICHT alle — nur der STÄRKSTE (kleinste) Rabatt zählt,
+      * neutrale Faktoren (==1.0) ohne Wirkung.
+    Ergebnis = Produkt aller Aufschläge × stärkster Rabatt."""
+    premium = 1.0
+    strongest_discount = 1.0  # 1.0 = kein Rabatt; kleiner = stärker
+    for f in factors:
+        if f > 1.0:
+            premium *= f
+        elif f < 1.0:
+            strongest_discount = min(strongest_discount, f)
+    return premium * strongest_discount

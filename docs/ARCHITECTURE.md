@@ -125,7 +125,7 @@ flowchart TB
         subgraph DONE["Slices mit Logik"]
             AUTH["auth — Register/Login/Me/Invite, Rollen+Capability-Matrix + Lodgify-Berechtigungen (pro Nutzer)"]
             CAL["calendar — Verfügbarkeit, Double-Booking, Preis-Override (liest Preis via pricing-Resolver)"]
-            PRICE["pricing — Preis-Resolver (effective_price + quote) + Dynamic-Pricing-Engine (dynamic_prices, regelbasiert)"]
+            PRICE["pricing — Preis-Resolver (effective_price + quote) + Dynamic-Pricing-Engine (dynamic_prices; Regeln + gelernte Pickup-Kurve/Wetter/Autopilot)"]
             TASKS["tasks — Aufgaben, Checklisten+Foto, Vertretung, Inventar"]
             BUCH["buchhaltung — Rechnungen + Kunden (aus Taskilo, tenant-vereinheitlicht); Steuer/E-Rechnung/DATEV/GoBD folgen"]
         end
@@ -510,6 +510,30 @@ Vermieter den **Basispreis-Modus** (`dp_settings.base_mode`): `data_driven` (Ank
 Engine (`DpSettings.effective_base`/`aggressiveness`) ist der einzige Ort dieser Logik;
 Resolver-Priorität (manuell > dynamisch > Wochentag > Basis) und Verteilpfad bleiben
 unverändert. Rein additiv, Defaults bilden das bisherige Verhalten ab.
+**Phase 4 — KI-Lernen + RateBoard-Bausteine (Migration `0060`):** Drei Erweiterungen,
+alle opt-in und additiv. (a) **Pickup-Erfassung + gelernter Forecast**: ein täglicher
+Snapshot je (Objekt, Anreisetag) in **`dp_pickup_snapshots`** (booked/days_before) ist
+das Lern-Fundament. `pricing/forecast.py::PickupCurveModel` lernt daraus die erwartete
+Belegungs-Wahrscheinlichkeit je (Anreise-Monat × Vorlauf-Bucket) — die normale
+Buchungskurve des Objekts. Der heutige Ist-Stand vs. diese Erwartung ergibt eine
+**Forecast-Velocity** (Ist über Erwartung → schneller → Aufschlag, antizipativ); sie
+speist denselben `pickup`-Faktor und ersetzt das grobe Phase-2-Lookback-Signal, wo die
+Kurve trägt. **Cold-Start:** unter `_MIN_OBSERVATIONS` Beobachtungen je Zelle KEIN
+Signal (neutral, keine erfundenen Werte). (b) **Wetter** (`pricing/weather.py`): Tages-
+Score aus DWD/Bright Sky (amtlich, frei, kein Key) für Tage im Forecast-Horizont
+(~10 Tage); gutes Wetter → Aufschlag, gedeckelt `weather_max_adjust_pct`. Opt-in
+`dp_settings.weather_enabled` + Objekt-Koordinaten (`properties.lat/lng`); ferne Tage
+neutral. (c) **Rate Rules** (`dp_settings.rate_rules`): manuelle Regeln
+(weekday/month/Vorlauf-Fenster → adjust_pct), die als bewusster Vermieter-Override
+OBENDRAUF auf die kombinierten Auto-Faktoren wirken (nicht von der Anti-Über-
+Rabattierung erfasst). (d) **Autopilot** (`dp_settings.autopilot_enabled`): trennt
+Rechnen von Veröffentlichen — `enabled` rechnet immer (Vorschau/Kalender sichtbar), der
+Channex-OTA-Push läuft nur bei aktivem Autopilot, sonst bleibt der Preis reine
+Empfehlung. Anti-Über-Rabattierung (nur stärkster Rabatt zählt, Aufschläge stapeln) +
+asymmetrische Caps (−20 %/+15 %) + Vorlauf-Buckets sind ebenfalls in `0060`. Damit
+erreicht die Engine das Funktionsniveau von PriceLabs/Beyond/RateBoard mit eigenen
+Daten; die Booking-Market-Insights-Quelle dockt später über dieselbe
+`MarketSignalProvider`-Schnittstelle an.
 
 **Kanalübergreifende Nachricht→Gast-Zuordnung (Resolver, Migration 0047):** Jede
 eingehende Buchung/Nachricht — OTA via Channex, WhatsApp, manuelle Reservierung,

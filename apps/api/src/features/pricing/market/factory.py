@@ -4,6 +4,11 @@ unset / "null"  → NullProvider (kein externes Signal, Markt-Faktor neutral).
 "airdna"        → AirDnaProvider, ABER nur wenn airdna_api_key gesetzt ist;
                   ohne Key fällt es bewusst auf NullProvider zurück (kein
                   halb-aktiver Provider, der ins Leere läuft).
+"platform"      → PlatformProvider (Markt aus eigenen Plattform-Daten,
+                  SiteMinder-Prinzip). Braucht service_client + tenant_id, die
+                  nur im Recompute-Kontext vorliegen — deshalb wählt der
+                  Recompute diesen Provider direkt (siehe recompute._market_provider).
+                  Hier ohne Kontext nicht baubar → NullProvider als sicherer Default.
 """
 from __future__ import annotations
 

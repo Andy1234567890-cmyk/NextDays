@@ -57,7 +57,12 @@ def test_season_and_event_uplift() -> None:
 
 
 def test_occupancy_factor_up_and_down() -> None:
-    s = _settings(weekend_uplift_pct=0)
+    # Caps ausschalten, um die rohe Sensitivity-Wirkung zu prüfen.
+    s = _settings(
+        weekend_uplift_pct=0,
+        occupancy_discount_cap_pct=0,
+        occupancy_premium_cap_pct=0,
+    )
     hi = compute_day(
         _BASE, s, DaySignals(day=date(2026, 7, 1), occupancy=1.0, days_before=200)
     )
@@ -137,11 +142,13 @@ def test_deterministic() -> None:
 
 
 def test_aggressiveness_scales_occupancy() -> None:
-    """Konservativ dämpft, aggressiv verstärkt die Auslastungs-Abweichung."""
+    """Konservativ dämpft, aggressiv verstärkt die Auslastungs-Abweichung.
+    Premium-Cap ausgeschaltet, um die reine Aggressivitäts-Skalierung zu prüfen."""
     sig = DaySignals(day=date(2026, 7, 1), occupancy=1.0, days_before=200)
-    cons = compute_day(_BASE, _settings(weekend_uplift_pct=0, base_rate_mode="conservative"), sig)
-    rec = compute_day(_BASE, _settings(weekend_uplift_pct=0, base_rate_mode="recommended"), sig)
-    aggr = compute_day(_BASE, _settings(weekend_uplift_pct=0, base_rate_mode="aggressive"), sig)
+    nocap = {"weekend_uplift_pct": 0, "occupancy_premium_cap_pct": 0}
+    cons = compute_day(_BASE, _settings(base_rate_mode="conservative", **nocap), sig)
+    rec = compute_day(_BASE, _settings(base_rate_mode="recommended", **nocap), sig)
+    aggr = compute_day(_BASE, _settings(base_rate_mode="aggressive", **nocap), sig)
     # recommended = +30 %, conservative = +15 % (×0,5), aggressive = +45 % (×1,5).
     assert rec.price == 130.0
     assert cons.price == 115.0
@@ -257,3 +264,154 @@ def test_market_event_merge_no_double_count() -> None:
         ),
     )
     assert round(r2.factors["event"], 4) == 1.4
+
+
+# --- Roadmap-Phase 1: Anti-Über-Rabattierung, asymmetrische Caps, Buckets ----
+
+
+def test_anti_over_discounting_only_strongest_discount() -> None:
+    """Mehrere Rabatte kumulieren NICHT — nur der stärkste gilt (PriceLabs-Regel).
+    Last-Minute 25 % (×0,75) + Orphan 15 % (×0,85): stärkster = 0,75 → 75 €,
+    NICHT 0,75×0,85 = 63,75 €."""
+    s = _settings(weekend_uplift_pct=0, min_price=10)
+    r = compute_day(
+        _BASE,
+        s,
+        DaySignals(day=date(2026, 7, 1), days_before=2, is_orphan_gap=True),
+    )
+    assert r.factors["last_minute"] == 0.75
+    assert r.factors["orphan"] == 0.85
+    assert r.price == 75.0  # nur der stärkste Rabatt
+
+
+def test_premiums_stack_but_discount_capped() -> None:
+    """Aufschläge stapeln (alle gelten), Rabatte nur der stärkste.
+    Saison +50 % × Wochenende +20 % = ×1,8; dazu Last-Minute-Rabatt 25 % → ×0,75.
+    Ergebnis 100 × 1,8 × 0,75 = 135 €."""
+    s = _settings(min_price=10, max_price=1000)
+    # 2026-07-04 = Samstag, 2 Tage vorher → Last-Minute 25 %.
+    r = compute_day(
+        _BASE,
+        s,
+        DaySignals(day=date(2026, 7, 4), season_pct=50, days_before=2),
+    )
+    assert r.price == 135.0
+
+
+def test_occupancy_discount_cap_asymmetric() -> None:
+    """Rabatt-Cap (−20 %) greift, obwohl sensitivity −30 % ergäbe."""
+    s = _settings(weekend_uplift_pct=0, min_price=10)
+    lo = compute_day(
+        _BASE, s, DaySignals(day=date(2026, 7, 1), occupancy=0.0, days_before=200)
+    )
+    # roh −30 %, gedeckelt auf −20 % → 80 €.
+    assert lo.price == 80.0
+    assert round(lo.factors["occupancy"], 4) == 0.8
+
+
+def test_occupancy_lead_buckets_dampen_far_out() -> None:
+    """Vorlauf-Buckets: ferne Termine reagieren schwächer auf die Auslastung.
+    Bucket 0-15 Tage Gewicht 1,0, darüber 0,5. Bei voller Belegung +30 % roh:
+    nah (Tag 5) → +15 % (Cap), fern (Tag 100) → +15 %×0,5-gewichtet, hier durch
+    Cap noch +15 %? Nein: Gewicht wirkt VOR dem Cap."""
+    buckets = [
+        {"max_days_before": 15, "weight": 1.0},
+        {"max_days_before": 365, "weight": 0.5},
+    ]
+    s = _settings(
+        weekend_uplift_pct=0,
+        occupancy_premium_cap_pct=0,  # Cap aus, um Gewicht isoliert zu sehen
+        occupancy_lead_buckets=buckets,
+        last_minute=[],  # keine Last-Minute-Überlagerung im nahen Bucket
+    )
+    near = compute_day(
+        _BASE, s, DaySignals(day=date(2026, 7, 1), occupancy=1.0, days_before=10)
+    )
+    far = compute_day(
+        _BASE, s, DaySignals(day=date(2026, 7, 1), occupancy=1.0, days_before=100)
+    )
+    assert near.price == 130.0  # voller Faktor (+30 %), Bucket 0-15 Gewicht 1,0
+    assert far.price == 115.0   # halbes Gewicht (+15 %)
+
+
+def test_pickup_velocity_factor() -> None:
+    """Schnellerer Pickup als normal → Aufschlag (antizipativ); langsamer → Rabatt.
+    velocity +1 → +sensitivity (30 %, gedeckelt auf Premium-Cap +15 %)."""
+    s = _settings(weekend_uplift_pct=0, min_price=10)
+    fast = compute_day(
+        _BASE, s, DaySignals(day=date(2026, 7, 1), days_before=200, pickup_velocity=1.0)
+    )
+    assert fast.price == 115.0  # +15 % (Premium-Cap)
+    slow = compute_day(
+        _BASE, s, DaySignals(day=date(2026, 7, 1), days_before=200, pickup_velocity=-1.0)
+    )
+    assert slow.price == 80.0  # −20 % (Discount-Cap)
+    none = compute_day(
+        _BASE, s, DaySignals(day=date(2026, 7, 1), days_before=200, pickup_velocity=None)
+    )
+    assert none.factors["pickup"] == 1.0
+
+
+# --- RateBoard-Bausteine: Wetter, Rate Rules, Autopilot ---------------------
+
+
+def test_weather_factor_good_and_bad() -> None:
+    """Gutes Wetter → Aufschlag, schlechtes → Rabatt, symmetrisch gedeckelt."""
+    # days_before=200 → keine Last-Minute-Überlagerung, Wetter isoliert.
+    s = _settings(weekend_uplift_pct=0, weather_enabled=True, weather_max_adjust_pct=10)
+    good = compute_day(
+        _BASE, s, DaySignals(day=date(2026, 7, 1), days_before=200, weather_score=1.0)
+    )
+    assert good.price == 110.0  # +10 %
+    bad = compute_day(
+        _BASE, s, DaySignals(day=date(2026, 7, 1), days_before=200, weather_score=-1.0)
+    )
+    assert bad.price == 90.0  # −10 %
+
+
+def test_weather_neutral_when_disabled_or_no_signal() -> None:
+    # Aus → neutral trotz Signal.
+    off = _settings(weekend_uplift_pct=0, weather_enabled=False)
+    r = compute_day(
+        _BASE, off, DaySignals(day=date(2026, 7, 1), days_before=5, weather_score=1.0)
+    )
+    assert r.factors["weather"] == 1.0
+    # An, aber kein Signal (fernes Datum) → neutral.
+    on = _settings(weekend_uplift_pct=0, weather_enabled=True)
+    r2 = compute_day(
+        _BASE, on, DaySignals(day=date(2026, 7, 1), days_before=200, weather_score=None)
+    )
+    assert r2.factors["weather"] == 1.0
+
+
+def test_rate_rules_apply_on_top() -> None:
+    """Manuelle Regel greift zusätzlich, auch wenn ein Auto-Rabatt aktiv ist
+    (Rate Rules sind bewusster Override, nicht von Anti-Über-Rabattierung erfasst)."""
+    # Regel: an Sonntagen (weekday 6) +20 %.
+    rules = [{"match": {"weekday": 6}, "adjust_pct": 20}]
+    s = _settings(weekend_uplift_pct=0, rate_rules=rules, min_price=10)
+    # 2026-07-05 = Sonntag.
+    r = compute_day(_BASE, s, DaySignals(day=date(2026, 7, 5), days_before=200))
+    assert r.factors["rate_rules"] == 1.2
+    assert r.price == 120.0
+    # Montag (kein Match) → Regel neutral.
+    r2 = compute_day(_BASE, s, DaySignals(day=date(2026, 7, 6), days_before=200))
+    assert r2.factors["rate_rules"] == 1.0
+    assert r2.price == 100.0
+
+
+def test_rate_rules_match_window() -> None:
+    """Vorlauf-Fenster im match: nur innerhalb min/max_days_before."""
+    rules = [{"match": {"max_days_before": 7}, "adjust_pct": -15}]
+    s = _settings(weekend_uplift_pct=0, rate_rules=rules, min_price=10)
+    near = compute_day(_BASE, s, DaySignals(day=date(2026, 7, 1), days_before=3))
+    assert near.factors["rate_rules"] == 0.85
+    far = compute_day(_BASE, s, DaySignals(day=date(2026, 7, 1), days_before=30))
+    assert far.factors["rate_rules"] == 1.0
+
+
+def test_autopilot_setting_parsed() -> None:
+    on = DpSettings.from_row({"enabled": True, "autopilot_enabled": True})
+    off = DpSettings.from_row({"enabled": True})
+    assert on.autopilot_enabled is True
+    assert off.autopilot_enabled is False

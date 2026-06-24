@@ -55,13 +55,25 @@ Vollständig durch Unit-Tests in `tests/test_engine.py` absicherbar (reine Funkt
 | 3.1 | **`PlatformProvider`** (neuer Markt-Provider): Comp-Set = vom Vermieter gewählte Plattform-Objekte; deren echte Tagespreise → `comp_price` (Markt-Median pro Tag). MPI (`_market_factor`) greift damit. |
 | 3.2 | **Comp-Set-Auswahl-UI**: Vermieter wählt 5–10 Vergleichsobjekte (`comp_refs` existiert im Edit-Sheet bereits). |
 
-### Phase 4 — Echtes KI-Lernen (datengetrieben, wenn Historie trägt)
+### Phase 4 — Echtes KI-Lernen (datengetrieben, wenn Historie trägt) ✅ umgesetzt
 
-| # | Änderung |
-|---|---|
-| 4.1 | Lern-Datensatz aus `dp_pickup_snapshots` + `reservations` (realer Vorlauf created_at vs. check_in). |
-| 4.2 | Erwartete **Pickup-Kurve pro Objekt/Saison** lernen → Abweichung treibt den Preis (Beyond-Ansatz). |
-| 4.3 | **Preiselastizität** schätzen, sobald genug Buchungen je Objekt. |
+| # | Änderung | Status |
+|---|---|---|
+| 4.1 | Lern-Datensatz aus `dp_pickup_snapshots` (täglicher Snapshot je Objekt/Anreisetag). | ✅ [forecast.py](../../apps/api/src/features/pricing/forecast.py) |
+| 4.2 | Erwartete **Pickup-Kurve pro Objekt/Saison** (Anreise-Monat × Vorlauf-Bucket) gelernt → Ist-vs-Erwartung treibt den Preis (Beyond-Ansatz). Ersetzt das grobe Phase-2-Velocity-Signal, wo die Kurve trägt. | ✅ `PickupCurveModel` |
+| 4.3 | Preiselastizität — verschoben: braucht gepreiste Buchungs-Outcomes mit Varianz, die erst mit Datenmasse entstehen (Cold-Start: `_MIN_OBSERVATIONS`). | ⏳ später |
+
+**Cold-Start (keine Fallbacks):** Unter `_MIN_OBSERVATIONS=8` Beobachtungen je Zelle
+liefert das Modell KEIN Signal (None) → die Engine bleibt dort neutral, statt einen
+Erwartungswert zu erfinden. Mit jeder Nacht Snapshots wächst die Abdeckung.
+
+### Phase 5 — RateBoard-Bausteine (eigene Plattform, Booking später) ✅ umgesetzt
+
+| # | Änderung | Status |
+|---|---|---|
+| 5.1 | **Autopilot** (`dp_settings.autopilot_enabled`): berechnete Preise automatisch an OTAs pushen, oder nur als Empfehlung halten. enabled = rechnen, autopilot = veröffentlichen. | ✅ Push-Gate im Recompute |
+| 5.2 | **Wetter-Faktor** via DWD/Bright Sky (amtlich, frei, kein Key): gutes Wetter am Anreisetag → Aufschlag, gedeckelt. Nur im Forecast-Horizont (~10 Tage), ferne Tage neutral. | ✅ [weather.py](../../apps/api/src/features/pricing/weather.py) |
+| 5.3 | **Rate Rules** (`dp_settings.rate_rules`): manuelle Regeln (weekday/month/Vorlauf-Fenster → adjust_pct), als bewusster Override OBENDRAUF auf die Auto-Faktoren (KI + Fachwissen). | ✅ engine `_rate_rules_factor` |
 
 > Realität (Stand 2026-06): erst ~13 Buchungen / 2 Tage Historie in der DB. Echtes
 > Lernen braucht Masse — deshalb startet Phase 2 die Erfassung SOFORT, damit Phase 4

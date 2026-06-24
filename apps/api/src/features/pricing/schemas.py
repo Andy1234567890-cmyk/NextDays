@@ -77,6 +77,22 @@ class LastMinuteRule(BaseModel):
     discount_pct: float = Field(ge=0, le=100)
 
 
+class RateRuleMatch(BaseModel):
+    """Trefferkriterien einer manuellen Rate Rule (alle optional, UND-verknüpft)."""
+
+    weekday: int | list[int] | None = None  # 0=Mo .. 6=So
+    month: int | list[int] | None = None
+    min_days_before: int | None = None
+    max_days_before: int | None = None
+
+
+class RateRule(BaseModel):
+    """Manuelle Zusatzregel (KI + Fachwissen): match → adjust_pct (Auf/Abschlag)."""
+
+    match: RateRuleMatch = Field(default_factory=RateRuleMatch)
+    adjust_pct: float = Field(ge=-100, le=200)
+
+
 class DpSettingsResponse(BaseModel):
     """Dynamic-Pricing-Konfiguration eines Objekts (dp_settings)."""
 
@@ -100,6 +116,11 @@ class DpSettingsResponse(BaseModel):
     base_mode: str = "data_driven"  # 'data_driven' | 'manual'
     base_rate_mode: str = "recommended"  # 'conservative' | 'recommended' | 'aggressive'
     manual_base_price: float | None = None
+    # Phase 4 / RateBoard-Bausteine.
+    autopilot_enabled: bool = False
+    weather_enabled: bool = False
+    weather_max_adjust_pct: float = 10.0
+    rate_rules: list[RateRule] = []
 
 
 class DpSettingsUpdate(BaseModel):
@@ -124,6 +145,11 @@ class DpSettingsUpdate(BaseModel):
         default=None, pattern="^(conservative|recommended|aggressive)$"
     )
     manual_base_price: float | None = Field(default=None, ge=0)
+    # Phase 4 / RateBoard-Bausteine.
+    autopilot_enabled: bool | None = None
+    weather_enabled: bool | None = None
+    weather_max_adjust_pct: float | None = Field(default=None, ge=0, le=100)
+    rate_rules: list[RateRule] | None = None
 
 
 class DpOverviewItem(BaseModel):

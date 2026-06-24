@@ -45,6 +45,10 @@ _DEFAULTS = {
     "base_mode": "data_driven",
     "base_rate_mode": "recommended",
     "manual_base_price": None,
+    "autopilot_enabled": False,
+    "weather_enabled": False,
+    "weather_max_adjust_pct": 10.0,
+    "rate_rules": [],
 }
 
 
@@ -275,6 +279,12 @@ class DpSettingsService:
                 "recommended",
             ),
             manual_base_price=_opt_float(row.get("manual_base_price")),
+            autopilot_enabled=bool(row.get("autopilot_enabled")),
+            weather_enabled=bool(row.get("weather_enabled")),
+            weather_max_adjust_pct=float(row.get("weather_max_adjust_pct") or 0),
+            rate_rules=[
+                r for r in (row.get("rate_rules") or []) if isinstance(r, dict)
+            ],
         )
 
 
