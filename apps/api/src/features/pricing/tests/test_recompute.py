@@ -158,3 +158,93 @@ def test_recompute_all_only_enabled() -> None:
     res = svc.recompute_all(horizon_days=3)
     assert res["properties"] == 1
     assert res["days"] >= 1
+
+
+# --- End-to-End: voller Recompute-Pfad mit den neuen Bausteinen --------------
+
+
+def _db_full(**settings_overrides: object) -> _DB:
+    """Fake-DB mit allen neuen Spalten/Tabellen (Pickup-Snapshots, Koordinaten),
+    damit der komplette Recompute-Pfad inkl. Phase-4/RateBoard-Code durchläuft."""
+    base_settings = {
+        "property_id": "p1",
+        "enabled": True,
+        "autopilot_enabled": False,
+        "min_price": None,
+        "max_price": None,
+        "weekend_uplift_pct": 0,
+        "last_minute": [],
+        "orphan_gap_discount_pct": 0,
+        "occupancy_sensitivity": 30,
+        "min_stay_min": 1,
+        "min_stay_max": 3,
+        "market_enabled": False,
+        "weather_enabled": False,
+        "weather_max_adjust_pct": 10,
+        "rate_rules": [],
+    }
+    base_settings.update(settings_overrides)
+    return _DB(
+        {
+            "dp_settings": [base_settings],
+            "rate_plans": [{"property_id": "p1", "base_price": 100.0, "currency": "EUR"}],
+            "properties": [{"id": "p1", "tenant_id": "t1", "lat": None, "lng": None}],
+            "availability": [],
+            "season_assignments": [],
+            "seasons": [],
+            "season_periods": [],
+            "events": [],
+            "event_periods": [],
+            "dp_pickup_snapshots": [],
+        }
+    )
+
+
+def test_e2e_full_pipeline_runs_and_writes_snapshots() -> None:
+    """Voller Pfad: Snapshots werden geschrieben UND dynamic_prices entstehen,
+    alle neuen Faktoren (pickup/weather/rate_rules) in der Aufschlüsselung."""
+    db = _db_full()
+    svc = DynamicPricingRecompute(service_client=db)
+    n = svc.recompute_property("p1", start=date(2026, 7, 1), end=date(2026, 7, 4))
+    assert n == 3
+    # Pickup-Snapshots wurden persistiert (Lern-Fundament ab Tag 1).
+    assert "dp_pickup_snapshots" in db.writes
+    assert len(db.writes["dp_pickup_snapshots"]) == 3
+    # Alle neuen Faktoren in der Aufschlüsselung.
+    factors = db.writes["dynamic_prices"][0]["factors"]
+    for key in ("pickup", "weather", "rate_rules"):
+        assert key in factors
+
+
+def test_e2e_rate_rule_applies_through_pipeline() -> None:
+    """Eine Rate Rule (sonntags +20 %) wirkt durch den ganzen Recompute-Pfad."""
+    # occupancy_sensitivity=0, damit die Rule isoliert wirkt (leerer Test-Kalender
+    # würde sonst zusätzlich den Auslastungs-Rabatt auslösen).
+    db = _db_full(
+        occupancy_sensitivity=0,
+        rate_rules=[{"match": {"weekday": 6}, "adjust_pct": 20}],
+    )
+    svc = DynamicPricingRecompute(service_client=db)
+    # 2026-07-05 = Sonntag.
+    svc.recompute_property("p1", start=date(2026, 7, 5), end=date(2026, 7, 6))
+    row = db.writes["dynamic_prices"][0]
+    assert row["factors"]["rate_rules"] == 1.2
+    assert row["price"] == 120.0
+
+
+def test_e2e_autopilot_gates_channex_push() -> None:
+    """Ohne Autopilot KEIN Channex-Push; dynamic_prices wird trotzdem geschrieben."""
+    pushed: list[str] = []
+    db = _db_full(autopilot_enabled=False)
+    svc = DynamicPricingRecompute(service_client=db)
+    svc._push_to_channex = lambda *a, **k: pushed.append("push")  # type: ignore[method-assign]
+    svc.recompute_property("p1", start=date(2026, 7, 1), end=date(2026, 7, 2))
+    assert "dynamic_prices" in db.writes  # berechnet + gespeichert (Empfehlung)
+    assert pushed == []  # aber NICHT veröffentlicht
+
+    pushed.clear()
+    db2 = _db_full(autopilot_enabled=True)
+    svc2 = DynamicPricingRecompute(service_client=db2)
+    svc2._push_to_channex = lambda *a, **k: pushed.append("push")  # type: ignore[method-assign]
+    svc2.recompute_property("p1", start=date(2026, 7, 1), end=date(2026, 7, 2))
+    assert pushed == ["push"]  # mit Autopilot veröffentlicht
