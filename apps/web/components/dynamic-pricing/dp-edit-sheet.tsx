@@ -643,6 +643,16 @@ function RateRulesEditor({
               );
             })}
           </div>
+          {(() => {
+            const wd = r.match.weekday;
+            const empty = Array.isArray(wd) ? wd.length === 0 : wd === undefined;
+            return empty ? (
+              <p className="text-xs text-warning">
+                Wähle mindestens einen Wochentag — sonst bleibt die Regel
+                wirkungslos.
+              </p>
+            ) : null;
+          })()}
           <div className="flex items-center gap-2 text-sm">
             <NumInputSigned
               value={r.adjust_pct}
