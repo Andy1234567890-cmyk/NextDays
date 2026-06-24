@@ -3,6 +3,7 @@
 import { notFound } from "next/navigation";
 
 import { GuestDetail } from "@/components/gaeste/guest-detail";
+import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { getAccount } from "@/lib/account";
 import { guestAccessFor } from "@/lib/guests-access";
 import { getGuest } from "@/lib/guests";
@@ -20,5 +21,10 @@ export default async function GuestDetailPage({
   const access = acc.ok
     ? guestAccessFor(acc.data.role, acc.data.permissions)
     : guestAccessFor(null, []);
-  return <GuestDetail guest={res.data} access={access} />;
+  return (
+    <>
+      <RealtimeRefresh tables={["guests"]} filter={`id=eq.${id}`} />
+      <GuestDetail guest={res.data} access={access} />
+    </>
+  );
 }

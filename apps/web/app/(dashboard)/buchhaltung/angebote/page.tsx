@@ -3,6 +3,7 @@
 import { Icon } from "@iconify/react";
 
 import { NewQuoteButton } from "@/components/buchhaltung/new-quote-button";
+import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card } from "@/components/ui/card";
 import { listCustomers, listQuotes } from "@/lib/buchhaltung";
 import type { Customer, QuoteStatus } from "@/lib/buchhaltung";
@@ -45,6 +46,7 @@ export default async function AngebotePage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <RealtimeRefresh tables={["quotes", "customers"]} />
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-display text-2xl font-extrabold">Angebote</h2>

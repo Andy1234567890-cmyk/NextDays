@@ -22,6 +22,7 @@ import {
   setStopSell,
   type StopSellDay,
 } from "@/lib/calendar";
+import { useRealtime } from "@/lib/use-realtime";
 
 type Property = { id: string; title: string };
 
@@ -51,6 +52,15 @@ export function StopSellManager({ properties }: { properties: Property[] }) {
   }
 
   useEffect(reload, [propertyId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Live: Verkaufsstopps + Belegung des gewählten Objekts ohne Reload spiegeln
+  // (z. B. Channex-Stops, die per Import kommen).
+  useRealtime({
+    table: "stop_sell",
+    filter: propertyId ? `property_id=eq.${propertyId}` : undefined,
+    onChange: reload,
+    enabled: !!propertyId,
+  });
 
   function onSet() {
     setMsg(null);

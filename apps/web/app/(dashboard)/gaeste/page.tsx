@@ -1,6 +1,7 @@
 // Gästekarte — Liste. Server Component lädt die (maskierten) Gäste + das Konto
 // (für das Berechtigungs-Gating), Client-Teil rendert Suche/Filter/Tabelle.
 import { GuestsList } from "@/components/gaeste/guests-list";
+import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { getAccount } from "@/lib/account";
 import { guestAccessFor } from "@/lib/guests-access";
 import { listGuests } from "@/lib/guests";
@@ -13,11 +14,14 @@ export default async function GaestePage() {
     ? guestAccessFor(acc.data.role, acc.data.permissions)
     : guestAccessFor(null, []);
   return (
-    <GuestsList
-      guests={res.ok ? res.data.items : []}
-      total={res.ok ? res.data.total : 0}
-      error={res.ok ? null : res.error}
-      access={access}
-    />
+    <>
+      <RealtimeRefresh tables={["guests"]} />
+      <GuestsList
+        guests={res.ok ? res.data.items : []}
+        total={res.ok ? res.data.total : 0}
+        error={res.ok ? null : res.error}
+        access={access}
+      />
+    </>
   );
 }

@@ -6,6 +6,7 @@ import { Icon } from "@iconify/react";
 
 import { ReservationsDashboard } from "@/components/dashboard/reservations-dashboard";
 import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
+import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card, CardContent } from "@/components/ui/card";
 import { getOnboarding } from "@/lib/onboarding";
 import { getDashboard } from "@/lib/reservations";
@@ -46,5 +47,10 @@ export default async function DashboardPage() {
     );
   }
 
-  return <ReservationsDashboard data={dashboard.data} />;
+  return (
+    <>
+      <RealtimeRefresh tables={["reservations", "properties", "availability"]} />
+      <ReservationsDashboard data={dashboard.data} />
+    </>
+  );
 }

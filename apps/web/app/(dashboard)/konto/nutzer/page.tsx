@@ -5,6 +5,7 @@ import { Icon } from "@iconify/react";
 
 import { UserWizard } from "@/components/konto/user-wizard";
 import { UserList } from "@/components/konto/user-list";
+import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Button } from "@/components/ui/button";
 import { listManagedUsers } from "@/lib/account";
 
@@ -27,6 +28,7 @@ export default async function NutzerPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-4">
+      <RealtimeRefresh tables={["users"]} />
       <div className="flex items-start justify-between gap-4">
         <div>
           <h2 className="font-display text-xl font-extrabold">Benutzer</h2>

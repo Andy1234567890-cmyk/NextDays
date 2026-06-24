@@ -3,6 +3,7 @@
 import { Icon } from "@iconify/react";
 
 import { NewCustomerButton } from "@/components/buchhaltung/new-customer-button";
+import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
 import { listCustomers, type Customer } from "@/lib/buchhaltung";
@@ -18,6 +19,7 @@ export default async function KundenPage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <RealtimeRefresh tables={["customers"]} />
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-display text-2xl font-extrabold">Kunden</h2>

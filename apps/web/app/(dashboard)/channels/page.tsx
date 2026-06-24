@@ -2,6 +2,7 @@
 // Verteilt Objekte an Buchungsportale, zeigt verbundene Kanäle/Objekte und
 // eingehende OTA-Buchungen. Status + Daten server-seitig laden, an die
 // Client-Komponente reichen. White-label: kein Provider-Name sichtbar.
+import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { ChannelManagerSettings } from "@/components/settings/channel-manager-settings";
 import {
   getChannexHealth,
@@ -20,6 +21,7 @@ export default async function ChannelsPage() {
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-6">
+      <RealtimeRefresh tables={["channex_property_map", "channex_booking"]} />
       <header className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold">Channel Manager</h1>
         <p className="text-sm text-muted-foreground">

@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { NewPropertyButton } from "@/components/objekte/new-property-button";
+import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card } from "@/components/ui/card";
 import { Icon } from "@iconify/react";
 import { STATUS_LABELS, TYPE_LABELS } from "@/lib/property-meta";
@@ -13,6 +14,7 @@ export default async function ObjektePage() {
 
   return (
     <div className="flex flex-col gap-6">
+      <RealtimeRefresh tables={["properties"]} />
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-display text-2xl font-extrabold">Objekte</h2>
