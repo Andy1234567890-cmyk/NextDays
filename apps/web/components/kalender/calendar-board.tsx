@@ -1072,9 +1072,33 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                       const dragging = !!barDrag;
                       const isThisDragged =
                         barDrag?.res.id === seg.reservation?.id && !!seg.reservation;
+                      // Halbtags-Logik (Hotel-Standard): ein Buchungsbalken beginnt
+                      // am Anreisetag erst zur Tagesmitte (Check-in nachmittags) und
+                      // reicht am Abreisetag bis zur Tagesmitte (Check-out vormittags).
+                      // So teilen sich ab- und anreisender Gast denselben Wechseltag,
+                      // ohne dass die Balken wie eine Doppelbuchung kollidieren.
+                      // seg.span = belegte Nächte [check_in .. check_out); der Balken
+                      // läuft daher VORNE eine halbe Spalte später los (Anreisemitte)
+                      // und HINTEN eine halbe Spalte weiter (in den Abreisetag bis zu
+                      // dessen Mitte). Nur für Buchungen, deren echte Kante im Fenster
+                      // liegt (am Fensterrand abgeschnitten → volle Kante).
+                      const firstDayKey = key(dates[0]);
+                      const lastDayKey = key(dates[dates.length - 1]);
+                      const isBooking = seg.status === "booked" && !!seg.reservation;
+                      const startsAtCheckIn =
+                        isBooking && seg.reservation!.check_in >= firstDayKey;
+                      // Abreisetag = letzte belegte Nacht + 1; sichtbar, solange er
+                      // im Fenster liegt (Segment endet sonst hart am Fensterrand).
+                      const endsAtCheckOut =
+                        isBooking && seg.reservation!.check_out <= lastDayKey;
+                      const leftPad = startsAtCheckIn ? 0.5 : 0;
+                      // Breite: Nächte minus halbe Anreise-Spalte, plus halbe
+                      // Auslauf-Spalte in den Abreisetag.
+                      const widthCols =
+                        seg.span - (startsAtCheckIn ? 0.5 : 0) + (endsAtCheckOut ? 0.5 : 0);
                       const barStyle = {
-                        left: `calc(${seg.start} * ${COL}rem + 0.25rem)`,
-                        width: `calc(${seg.span} * ${COL}rem - 0.5rem)`,
+                        left: `calc(${seg.start + leftPad} * ${COL}rem + 0.25rem)`,
+                        width: `calc(${widthCols} * ${COL}rem - 0.5rem)`,
                         height: "1.75rem",
                       };
                       const barInner = (
