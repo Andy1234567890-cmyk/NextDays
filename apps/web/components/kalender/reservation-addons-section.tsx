@@ -19,6 +19,8 @@ import {
   type Addon,
   type ReservationAddon,
 } from "@/lib/addons";
+import { formatCurrency } from "@/lib/currency";
+import { useRealtime } from "@/lib/use-realtime";
 
 const STATUS_LABEL: Record<ReservationAddon["status"], string> = {
   pending: "Offen",
@@ -36,30 +38,48 @@ export function ReservationAddonsSection({
   onChanged,
 }: {
   reservationId: string;
-  currency: string;
+  // Währung der Reservierung (kann null sein, wenn keine hinterlegt ist).
+  currency: string | null;
   onChanged?: () => void;
 }) {
   const [purchased, setPurchased] = useState<ReservationAddon[]>([]);
   const [catalog, setCatalog] = useState<Addon[]>([]);
+  // Währung: bevorzugt die der Reservierung, sonst die vom Backend gelieferte
+  // Objekt-Währung. Kein €-Fallback (Mehrwährung über 27 EU-Länder).
+  const [cur, setCur] = useState<string | null>(currency);
   const [pick, setPick] = useState("");
   const [busy, setBusy] = useState(false);
 
   const money = (v: number) =>
-    v.toLocaleString("de-DE", { style: "currency", currency: currency || "EUR" });
+    cur ? formatCurrency(v, cur) : v.toLocaleString("de-DE");
 
   async function reload() {
     const [bought, avail] = await Promise.all([
       listReservationAddons(reservationId),
       availableReservationAddons(reservationId),
     ]);
-    if (bought.ok) setPurchased(bought.data.items);
-    if (avail.ok) setCatalog(avail.data.items);
+    if (bought.ok) {
+      setPurchased(bought.data.items);
+      if (bought.data.currency) setCur(bought.data.currency);
+    }
+    if (avail.ok) {
+      setCatalog(avail.data.items);
+      if (avail.data.currency) setCur((c) => c ?? avail.data.currency);
+    }
   }
 
   useEffect(() => {
     void reload();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reservationId]);
+
+  // Echtes Realtime (Supabase WebSocket): Käufe/Statuswechsel dieser Reservierung
+  // sofort spiegeln — kein Polling (Projekt-Grundsatz).
+  useRealtime({
+    table: "reservation_addons",
+    filter: `reservation_id=eq.${reservationId}`,
+    onChange: () => void reload(),
+  });
 
   async function add() {
     if (!pick) return;

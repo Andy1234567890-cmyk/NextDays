@@ -18,12 +18,14 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   createAddon,
   deleteAddon,
+  listAddons,
   updateAddon,
   uploadAddonMedia,
   type Addon,
   type AddonInput,
   type AddonSurface,
 } from "@/lib/addons";
+import { formatCurrency } from "@/lib/currency";
 import { useRealtime } from "@/lib/use-realtime";
 
 const BASIS_OPTIONS: { value: Addon["basis"]; label: string }[] = [
@@ -61,9 +63,12 @@ function emptyDraft(sortOrder: number): AddonInput {
 export function AddonsManager({
   propertyId,
   initial,
+  currency,
 }: {
   propertyId: string;
   initial: Addon[];
+  // Objekt-Währung (aus dem Rate-Plan); null = keine hinterlegt → kein €-Fallback.
+  currency: string | null;
 }) {
   const router = useRouter();
   const [items, setItems] = useState<Addon[]>(initial);
@@ -71,11 +76,21 @@ export function AddonsManager({
   const [draft, setDraft] = useState<AddonInput | null>(null);
   const [busy, setBusy] = useState(false);
 
-  // Realtime: bei jeder Änderung an property_addons die Seite neu laden.
+  // Betrag in Objekt-Währung; ohne hinterlegte Währung nur der nackte Wert
+  // (nie € erfinden — Mehrwährung über 27 EU-Länder).
+  const money = (v: number) =>
+    currency ? formatCurrency(v, currency) : v.toLocaleString("de-DE");
+
+  // Echtes Realtime (Supabase WebSocket): bei jeder Änderung an property_addons
+  // die Liste direkt aus dem Backend neu in den State laden (kein Reload-Flackern).
   useRealtime({
     table: "property_addons",
     filter: `property_id=eq.${propertyId}`,
-    onChange: () => router.refresh(),
+    onChange: () => {
+      void listAddons(propertyId).then((res) => {
+        if (res.ok) setItems(res.data.items);
+      });
+    },
   });
 
   function startCreate() {
@@ -181,6 +196,7 @@ export function AddonsManager({
           draft={draft}
           editingId={editing === "new" ? null : (editing as string)}
           busy={busy}
+          currency={currency}
           onPatch={patch}
           onToggleSurface={toggleSurface}
           onMedia={onMedia}
@@ -223,7 +239,7 @@ export function AddonsManager({
                   )}
                 </span>
                 <span className="text-sm text-muted-foreground">
-                  {a.price.toFixed(2)} €{" "}
+                  {money(a.price)}{" "}
                   {BASIS_OPTIONS.find((b) => b.value === a.basis)?.label}
                   {" · "}
                   {a.appears_in
@@ -257,6 +273,7 @@ function AddonForm({
   draft,
   editingId,
   busy,
+  currency,
   onPatch,
   onToggleSurface,
   onMedia,
@@ -266,6 +283,7 @@ function AddonForm({
   draft: AddonInput;
   editingId: string | null;
   busy: boolean;
+  currency: string | null;
   onPatch: <K extends keyof AddonInput>(key: K, value: AddonInput[K]) => void;
   onToggleSurface: (s: AddonSurface) => void;
   onMedia: (addonId: string, file: File | undefined) => void;
@@ -313,7 +331,7 @@ function AddonForm({
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Field label="Preis (€)">
+        <Field label={currency ? `Preis (${currency})` : "Preis"}>
           <Input
             type="number"
             min={0}

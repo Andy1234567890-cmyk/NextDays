@@ -25,6 +25,7 @@ export default async function Page({
     <AddonsManager
       propertyId={id}
       initial={addons.ok ? addons.data.items : []}
+      currency={addons.ok ? addons.data.currency : null}
     />
   );
 }

@@ -88,6 +88,9 @@ class AddonResponse(AddonBase):
 class AddonListResponse(BaseModel):
     items: list[AddonResponse]
     total: int
+    # Währung des Objekts (aus dem Rate-Plan) für die Anzeige — None, wenn keine
+    # hinterlegt ist (Mehrwährung über 27 EU-Länder; kein €-Fallback).
+    currency: str | None = None
 
 
 class ReservationAddonResponse(BaseModel):

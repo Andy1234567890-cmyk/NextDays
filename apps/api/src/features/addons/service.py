@@ -80,6 +80,23 @@ class AddonsService:
         if not rows:
             raise AddonError("Objekt gehört nicht zu diesem Konto.", status_code=404)
 
+    def _property_currency(self, property_id: str) -> str | None:
+        """Währung des Objekts aus dem (ersten) Rate-Plan. Kein Fallback — None,
+        wenn keine hinterlegt ist (27 EU-Länder/Mehrwährung; nie € erfinden)."""
+        try:
+            rows = (
+                self._db.table("rate_plans")
+                .select("currency")
+                .eq("property_id", property_id)
+                .order("created_at")
+                .limit(1)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — fehlende Tabelle = keine Währung
+            log.warning("addon_currency_unavailable", error=str(exc))
+            return None
+        return (rows[0].get("currency") or None) if rows else None
+
     # --- Katalog (Dashboard, MANAGE_PROPERTIES) ------------------------------
 
     def list_for_property(
@@ -95,7 +112,11 @@ class AddonsService:
             .execute()
         ).data or []
         items = [AddonResponse(**_addon_row(r)) for r in rows]
-        return AddonListResponse(items=items, total=len(items))
+        return AddonListResponse(
+            items=items,
+            total=len(items),
+            currency=self._property_currency(property_id),
+        )
 
     def create(
         self, ctx: AuthContext, property_id: str, req: AddonCreate
@@ -197,7 +218,23 @@ class AddonsService:
         ).data or []
         items = [ReservationAddonResponse(**_res_addon_row(r)) for r in rows]
         total = round(sum(i.total for i in items), 2)
-        return ReservationAddonListResponse(items=items, total=total)
+        currency = None
+        res_rows = (
+            self._db.table("reservations")
+            .select("property_id, currency")
+            .eq("tenant_id", tenant_id)
+            .eq("id", reservation_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if res_rows:
+            # Reservierungs-Währung bevorzugt (so wurde gebucht), sonst Objekt-Plan.
+            currency = res_rows[0].get("currency") or self._property_currency(
+                str(res_rows[0]["property_id"])
+            )
+        return ReservationAddonListResponse(
+            items=items, total=total, currency=currency
+        )
 
     def _own_reservation(self, tenant_id: str, reservation_id: str) -> dict:
         rows = (
@@ -228,7 +265,11 @@ class AddonsService:
             .execute()
         ).data or []
         items = [AddonResponse(**_addon_row(r)) for r in rows]
-        return AddonListResponse(items=items, total=len(items))
+        return AddonListResponse(
+            items=items,
+            total=len(items),
+            currency=self._property_currency(str(res["property_id"])),
+        )
 
     def add_to_reservation(
         self, ctx: AuthContext, reservation_id: str, addon_id: str, qty: int

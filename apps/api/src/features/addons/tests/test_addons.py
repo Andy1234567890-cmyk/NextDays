@@ -373,3 +373,31 @@ def test_add_addon_foreign_reservation_rejected() -> None:
     with pytest.raises(AddonError) as exc:
         svc.add_to_reservation(_ctx(), "res-x", "addon-1", 1)
     assert exc.value.status_code == 404
+
+
+# --- Mehrwährung: Objekt-Währung aus rate_plans, kein €-Fallback -------------
+
+
+def test_catalog_currency_from_rate_plan() -> None:
+    db = _DB(
+        {
+            "properties": [{"id": "prop-1", "tenant_id": "t-1"}],
+            "property_addons": [_catalog_row()],
+            "rate_plans": [{"property_id": "prop-1", "currency": "SEK"}],
+        }
+    )
+    svc = AddonsService(service_client=db)
+    res = svc.list_for_property(_ctx(), "prop-1")
+    assert res.currency == "SEK"  # nie € erfunden
+
+
+def test_catalog_currency_none_without_rate_plan() -> None:
+    # Kein Rate-Plan → currency None (kein Fallback), Anzeige zeigt nackten Wert.
+    db = _DB(
+        {
+            "properties": [{"id": "prop-1", "tenant_id": "t-1"}],
+            "property_addons": [_catalog_row()],
+        }
+    )
+    svc = AddonsService(service_client=db)
+    assert svc.list_for_property(_ctx(), "prop-1").currency is None

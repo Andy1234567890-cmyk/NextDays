@@ -73,10 +73,11 @@ async function call<T>(
   }
 }
 
-/** Alle Zusatzleistungen eines Objekts (Katalog, inkl. inaktiver). */
+/** Alle Zusatzleistungen eines Objekts (Katalog, inkl. inaktiver). `currency`
+ *  ist die Objekt-Währung aus dem Rate-Plan (null = keine hinterlegt). */
 export async function listAddons(
   propertyId: string,
-): Promise<Result<{ items: Addon[]; total: number }>> {
+): Promise<Result<{ items: Addon[]; total: number; currency: string | null }>> {
   return call(`/addons/properties/${propertyId}`);
 }
 
@@ -101,17 +102,20 @@ export async function deleteAddon(addonId: string): Promise<Result<null>> {
   return call(`/addons/${addonId}`, { method: "DELETE" });
 }
 
-/** Gekaufte Zusatzleistungen einer Reservierung (Dashboard-Sicht). */
+/** Gekaufte Zusatzleistungen einer Reservierung (Dashboard-Sicht). `currency`
+ *  kommt aus der Reservierung/dem Objekt (null = keine hinterlegt). */
 export async function listReservationAddons(
   reservationId: string,
-): Promise<Result<{ items: ReservationAddon[]; total: number }>> {
+): Promise<
+  Result<{ items: ReservationAddon[]; total: number; currency: string | null }>
+> {
   return call(`/addons/reservations/${reservationId}`);
 }
 
 /** Aktive Katalog-Add-ons des Objekts dieser Reservierung (Schnell-Auswahl). */
 export async function availableReservationAddons(
   reservationId: string,
-): Promise<Result<{ items: Addon[]; total: number }>> {
+): Promise<Result<{ items: Addon[]; total: number; currency: string | null }>> {
   return call(`/addons/reservations/${reservationId}/available`);
 }
 
@@ -121,7 +125,9 @@ export async function addReservationAddon(
   reservationId: string,
   addonId: string,
   qty = 1,
-): Promise<Result<{ items: ReservationAddon[]; total: number }>> {
+): Promise<
+  Result<{ items: ReservationAddon[]; total: number; currency: string | null }>
+> {
   return call(`/addons/reservations/${reservationId}/addons`, {
     method: "POST",
     body: { addon_id: addonId, qty },
