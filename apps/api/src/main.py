@@ -24,6 +24,8 @@ from .features.guests.router import router as guests_router
 from .features.inbox import scheduler as inbox_scheduler
 from .features.inbox.router import router as inbox_router
 from .features.ocr.router import router as ocr_router
+from .features.owner_statements.router import router as owner_statements_router
+from .features.owners.router import router as owners_router
 from .features.payments.router import router as payments_router
 from .features.pricing.router import router as pricing_router
 from .features.properties.router import router as properties_router
@@ -37,6 +39,8 @@ _SLICE_ROUTERS = [
     auth_router,
     buchhaltung_router,
     properties_router,
+    owners_router,
+    owner_statements_router,
     rates_router,
     pricing_router,
     calendar_router,

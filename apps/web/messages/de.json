@@ -134,7 +134,10 @@
       "helpCenter": "Hilfe-Center",
       "logout": "Abmelden"
     },
-    "stopSell": "Verkaufsstopp"
+    "stopSell": "Verkaufsstopp",
+    "owners": "Eigentümer",
+    "ownerStatements": "Eigentümer-Abrechnung",
+    "portal": "Mein Portal"
   },
   "exemption": {
     "labelNamed": "Steuerbefreit ({scheme}) — keine USt-ID nötig",
@@ -342,7 +345,40 @@
     "deleteForever": "Endgültig löschen",
     "deleteConfirm": "Diese Konversation endgültig aus dem Posteingang löschen? Die Buchung bleibt erhalten.",
     "readOnlyHint": "Nur-Lese-Zugriff – du darfst auf diese Konversation nicht antworten.",
-    "filterAssignedOnly": "Du siehst nur dir zugewiesene Konversationen."
+    "filterAssignedOnly": "Du siehst nur dir zugewiesene Konversationen.",
+    "autoSchedule": "Zeitplan",
+    "autoBefore": "vor",
+    "autoAfter": "nach",
+    "autoTime": "Uhrzeit",
+    "autoHouses": "Unterkünfte",
+    "autoChannels": "Buchungskanäle",
+    "autoAllHouses": "Alle Unterkünfte",
+    "autoAllChannels": "Alle Kanäle",
+    "autoHousesCount": "Unterkünfte",
+    "autoNoHouses": "Keine Unterkünfte vorhanden.",
+    "autoAnchor_arrival": "Anreise",
+    "autoAnchor_departure": "Abreise",
+    "autoAnchor_booking": "Buchung",
+    "autoSearchHouses": "Unterkunft suchen …",
+    "autoSearchChannels": "Kanal suchen …",
+    "filterChannel": "Kanal",
+    "filterAllChannels": "Alle Kanäle",
+    "filterSearchChannel": "Kanal suchen …",
+    "filterProperty": "Unterkunft",
+    "filterAllProperties": "Alle Unterkünfte",
+    "filterSearchProperty": "Unterkunft suchen …",
+    "filterStatus": "Reservierungsstatus",
+    "filterStatusAll": "Alle",
+    "filterStatusNew": "Neu",
+    "filterStatusModified": "Geändert",
+    "filterStatusCancelled": "Storniert",
+    "filterRead": "Gelesen",
+    "filterReadAll": "Alle",
+    "filterReadUnread": "Ungelesen",
+    "filterReadRead": "Gelesen",
+    "filterArrivalRange": "Anreise (von–bis)",
+    "filterFrom": "Von",
+    "filterTo": "Bis"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp ist noch nicht verbunden. Zugangsdaten (Meta Cloud API) in den Server-Einstellungen hinterlegen, dann ist der Versand aktiv.",
@@ -454,5 +490,285 @@
     "contactType": "Typ",
     "contactValue": "Wert",
     "addContact": "Kontakt hinzufügen"
+  },
+  "fotos": {
+    "title": "Fotos",
+    "subtitle": "Lade Fotos hoch, lege das Titelbild fest und ordne sie per Ziehen an.",
+    "dropTitle": "Fotos hierher ziehen oder klicken zum Auswählen",
+    "dropHint": "JPEG oder PNG, 50 KB bis 20 MB. Mehrere Dateien gleichzeitig möglich.",
+    "uploaded": "{count, plural, one {# Foto hochgeladen} other {# Fotos hochgeladen}}",
+    "errorType": "Nur JPEG oder PNG erlaubt.",
+    "errorTooSmall": "Bild ist zu klein (min. 50 KB).",
+    "errorTooLarge": "Bild ist zu groß (max. 20 MB).",
+    "emptyTitle": "Noch keine Fotos",
+    "emptyHint": "Lade die ersten Fotos hoch. Das erste Foto wird automatisch zum Titelbild.",
+    "cover": "Titelbild",
+    "setCover": "Als Titelbild",
+    "menu": "Optionen",
+    "editCaption": "Bildunterschrift bearbeiten",
+    "delete": "Löschen",
+    "deleted": "Foto gelöscht.",
+    "coverSet": "Titelbild gesetzt.",
+    "captionHint": "Bildunterschrift je Sprache. Leere Felder werden nicht gespeichert.",
+    "captionPlaceholder": "z. B. Wohnzimmer mit Kamin",
+    "captionSaved": "Bildunterschrift gespeichert.",
+    "addLanguage": "Sprache hinzufügen",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "saving": "Speichert …"
+  },
+  "owners": {
+    "title": "Eigentümer",
+    "subtitle": "Verwalte die Eigentümer, für die deine Agentur Objekte betreut.",
+    "new": "Eigentümer",
+    "newTitle": "Neuer Eigentümer",
+    "create": "Anlegen",
+    "created": "Eigentümer angelegt.",
+    "cancel": "Abbrechen",
+    "save": "Speichern",
+    "saving": "Speichert …",
+    "saved": "Gespeichert.",
+    "delete": "Löschen",
+    "deleted": "Eigentümer gelöscht.",
+    "deleteConfirm": "Diesen Eigentümer wirklich löschen? Die Objekt-Zuordnungen werden ebenfalls entfernt.",
+    "emptyTitle": "Noch keine Eigentümer",
+    "emptyHint": "Lege den ersten Eigentümer an, um Objekte, Auszahlungen und Abrechnungen zu verwalten.",
+    "commissionShort": "Provision",
+    "propertyCount": "{count, plural, =0 {Keine Objekte} one {# Objekt} other {# Objekte}}",
+    "noProperties": "Diesem Eigentümer ist noch kein Objekt zugeordnet.",
+    "addProperty": "Objekt zuordnen …",
+    "removeProperty": "Zuordnung entfernen",
+    "sections": {
+      "master": "Stammdaten",
+      "payout": "Auszahlung & Provision",
+      "properties": "Objekte"
+    },
+    "frequency": {
+      "none": "Keine",
+      "monthly": "Monatlich"
+    },
+    "fields": {
+      "name": "Name",
+      "company": "Firma",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "street": "Straße",
+      "houseNumber": "Hausnummer",
+      "postalCode": "PLZ",
+      "city": "Ort",
+      "country": "Land",
+      "taxId": "Steuernummer",
+      "vatId": "USt-IdNr.",
+      "accountHolder": "Kontoinhaber",
+      "iban": "IBAN",
+      "bic": "BIC",
+      "bankName": "Bank",
+      "commission": "Management-Provision (%)",
+      "payoutMethod": "Auszahlungsmethode",
+      "statementFrequency": "Abrechnungs-Rhythmus",
+      "notes": "Notizen",
+      "share": "Anteil (%)",
+      "commissionOverride": "Provision (%) abw."
+    },
+    "placeholders": {
+      "name": "z. B. Max Mustermann",
+      "email": "z. B. max@example.com"
+    }
+  },
+  "ownerStatements": {
+    "title": "Eigentümer-Abrechnung",
+    "new": "Neu",
+    "created": "Abrechnung erstellt.",
+    "selectOwner": "Eigentümer wählen …",
+    "noOwners": "Bitte zuerst einen Eigentümer anlegen.",
+    "emptyTitle": "Keine Abrechnung geöffnet",
+    "emptyHint": "Erstelle eine neue Abrechnung oder öffne eine bestehende unter „Abrechnungen verwalten“.",
+    "download": "Herunterladen",
+    "downloadFailed": "PDF-Erstellung fehlgeschlagen.",
+    "save": "Speichern",
+    "saving": "Speichert …",
+    "saved": "Gespeichert.",
+    "finalize": "Finalisieren",
+    "finalized": "Abrechnung finalisiert.",
+    "delete": "Löschen",
+    "deleted": "Abrechnung gelöscht.",
+    "deleteConfirm": "Diese Abrechnung wirklich löschen?",
+    "storno": "Stornieren",
+    "cancelConfirm": "Diese Rechnung wirklich stornieren? Es wird eine Stornorechnung mit eigener Nummer erzeugt. Die Originalrechnung bleibt erhalten.",
+    "cancelled": "Stornorechnung erstellt.",
+    "stornoBanner": "Stornorechnung – hebt die referenzierte Originalrechnung vollständig auf.",
+    "cancelledBanner": "Diese Rechnung wurde storniert und ist unveränderbar.",
+    "tax": {
+      "net": "Nettobetrag",
+      "vat": "Umsatzsteuer",
+      "gross": "Bruttobetrag",
+      "category": {
+        "S": "Standardsatz",
+        "AE": "Reverse Charge",
+        "E": "steuerbefreit",
+        "Z": "Nullsatz"
+      }
+    },
+    "cancel": "Abbrechen",
+    "invoiceNumber": "Rechnungsnummer",
+    "notes": "Notizen",
+    "summaryPeriod": "Zeitraum {from} – {to}, {count} Buchung(en)",
+    "tabs": {
+      "createEdit": "Erstellen & Bearbeiten",
+      "manage": "Abrechnungen verwalten"
+    },
+    "filters": {
+      "from": "Von",
+      "to": "Bis",
+      "basis": "Basis",
+      "checkIn": "Check-in",
+      "checkOut": "Check-out",
+      "statuses": "Reservierungs-Status",
+      "statusCount": "{count} Status",
+      "title": "Filter"
+    },
+    "reservationStatus": {
+      "pending": "Offen",
+      "confirmed": "Bestätigt",
+      "cancelled": "Storniert",
+      "completed": "Abgeschlossen"
+    },
+    "status": {
+      "draft": "Entwurf",
+      "finalized": "Finalisiert"
+    },
+    "sections": {
+      "data": "Daten",
+      "summary": "Zusammenfassung",
+      "rentalActivity": "Vermietungs-Aktivität",
+      "expenses": "Ausgaben & Extras",
+      "grandTotal": "Gesamtsumme",
+      "attachments": "Anhänge"
+    },
+    "pm": {
+      "title": "Hausverwaltung",
+      "name": "Name",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "address": "Adresse",
+      "taxId": "Steuernummer/ID"
+    },
+    "owner": {
+      "title": "Eigentümer",
+      "name": "Name",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "address": "Adresse",
+      "taxId": "Steuernummer/ID"
+    },
+    "summary": {
+      "totalPrice": "Gesamtpreis",
+      "totalPayout": "Gesamt-Auszahlung",
+      "ownerPayout": "Eigentümer-Auszahlung",
+      "pmPayout": "Verwaltungs-Auszahlung"
+    },
+    "rental": {
+      "perReservation": "Pro Reservierung",
+      "perListing": "Pro Objekt",
+      "guest": "Gast",
+      "nights": "Nächte",
+      "listing": "Objekt",
+      "channel": "Kanal",
+      "reservations": "Reservierungen",
+      "totalPrice": "Gesamtpreis",
+      "totalPayout": "Gesamt-Auszahlung",
+      "totals": "Summen",
+      "empty": "Keine Reservierungen im Zeitraum."
+    },
+    "expenses": {
+      "add": "Hinzufügen",
+      "added": "Position hinzugefügt.",
+      "concept": "Konzept",
+      "date": "Datum",
+      "category": "Kategorie",
+      "listing": "Objekt",
+      "amount": "Betrag",
+      "total": "Summe",
+      "empty": "Noch keine Ausgaben.",
+      "toggleHidden": "Für Eigentümer aus-/einblenden",
+      "hidden": "Für Eigentümer ausgeblendet",
+      "visible": "Für Eigentümer sichtbar",
+      "reservation": "Reservierung",
+      "owner": "Eigentümer",
+      "hideAll": "Alle ausblenden",
+      "assignOwner": "Dem Eigentümer zuweisen"
+    },
+    "grand": {
+      "rentalRevenue": "Mieteinnahmen",
+      "expenses": "Ausgaben & Extras",
+      "total": "Gesamt",
+      "deductPercentage": "Provision abziehen (%)"
+    },
+    "manage": {
+      "owner": "Eigentümer",
+      "period": "Zeitraum",
+      "status": "Status",
+      "open": "Öffnen",
+      "emptyTitle": "Keine Abrechnungen",
+      "emptyHint": "Erstelle deine erste Eigentümer-Abrechnung unter „Erstellen & Bearbeiten“."
+    },
+    "edit": "Bearbeiten",
+    "attachments": {
+      "drop": "Dateien zum Hochladen ablegen oder durchsuchen"
+    },
+    "masterData": "Stammdaten",
+    "preview": "Vorschau",
+    "previewTitle": "Beleg-Vorschau",
+    "close": "Schließen"
+  },
+  "portal": {
+    "title": "Mein Portal",
+    "subtitle": "Übersicht über deine Objekte, Einnahmen und Abrechnungen.",
+    "properties": {
+      "title": "Meine Objekte",
+      "empty": "Dir sind aktuell keine Objekte zugeordnet."
+    },
+    "earnings": {
+      "title": "Einnahmen (dieser Monat)",
+      "property": "Objekt",
+      "reservations": "Buchungen",
+      "nights": "Nächte",
+      "payout": "Auszahlung",
+      "total": "Gesamt",
+      "empty": "Keine Einnahmen im Zeitraum."
+    },
+    "statements": {
+      "title": "Abrechnungen",
+      "period": "Zeitraum",
+      "invoice": "Rechnungsnr.",
+      "payout": "Auszahlung",
+      "empty": "Noch keine finalisierten Abrechnungen."
+    },
+    "block": {
+      "title": "Sperrung beantragen",
+      "hint": "Beantrage, dein Objekt für einen Zeitraum zu sperren. Die Agentur prüft den Antrag.",
+      "property": "Objekt",
+      "from": "Von",
+      "to": "Bis",
+      "submit": "Antrag senden",
+      "sending": "Sendet …",
+      "requested": "Antrag gesendet."
+    },
+    "meter": {
+      "title": "Zählerstand erfassen",
+      "hint": "Erfasse einen Zählerstand für dein Objekt.",
+      "property": "Objekt",
+      "kind": "Zähler",
+      "value": "Stand",
+      "readAt": "Ablesedatum",
+      "submit": "Speichern",
+      "saving": "Speichert …",
+      "saved": "Zählerstand gespeichert.",
+      "kinds": {
+        "electricity": "Strom",
+        "water": "Wasser",
+        "gas": "Gas"
+      }
+    }
   }
 }

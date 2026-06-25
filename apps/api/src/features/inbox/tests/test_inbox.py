@@ -555,3 +555,41 @@ def test_link_thread_guest_requires_config_permission() -> None:
     with pytest.raises(InboxError) as exc:
         svc.link_thread_guest(_CTX_OWNER, "th1", "g1")
     assert exc.value.status_code == 403
+
+
+# --- Automail: Zeitberechnung + Zuweisungs-Matching (reine Logik) ------------
+from datetime import UTC, datetime  # noqa: E402
+
+
+def test_compute_send_at_before_arrival_with_time() -> None:
+    th = {"arrival_date": "2026-07-10", "departure_date": "2026-07-14"}
+    # 3 Tage vor Anreise um 07:45.
+    dt = InboxService._compute_send_at("arrival", -3, "07:45", th)
+    assert dt == datetime(2026, 7, 7, 7, 45, tzinfo=UTC)
+
+
+def test_compute_send_at_after_departure() -> None:
+    th = {"arrival_date": "2026-07-10", "departure_date": "2026-07-14"}
+    # 1 Tag nach Abreise um 19:30.
+    dt = InboxService._compute_send_at("departure", 1, "19:30", th)
+    assert dt == datetime(2026, 7, 15, 19, 30, tzinfo=UTC)
+
+
+def test_compute_send_at_missing_anchor_is_none() -> None:
+    # booking-Anker ohne created_at → keine Planung (kein erfundenes Datum).
+    assert InboxService._compute_send_at("booking", 0, "12:00", {}) is None
+
+
+def test_automation_matches_empty_means_all() -> None:
+    a = {"property_ids": None, "channels": None}
+    assert InboxService._automation_matches(a, "p-1", "Airbnb") is True
+
+
+def test_automation_matches_house_and_channel_and_logic() -> None:
+    a = {"property_ids": ["p-1", "p-2"], "channels": ["airbnb"]}
+    # Haus passt UND Kanal passt (case-insensitive).
+    assert InboxService._automation_matches(a, "p-1", "Airbnb") is True
+    # Haus passt nicht.
+    assert InboxService._automation_matches(a, "p-9", "Airbnb") is False
+    # Kanal passt nicht (UND-Verknüpfung).
+    assert InboxService._automation_matches(a, "p-1", "Booking.com") is False

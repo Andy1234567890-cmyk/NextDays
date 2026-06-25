@@ -129,6 +129,21 @@ def dispatch_scheduled(
     return InboxService(service_client=get_service_client()).dispatch_due_scheduled()
 
 
+@router.post("/internal/dispatch-automations", include_in_schema=False)
+def dispatch_automations(
+    x_internal_cron_secret: Annotated[str | None, Header()] = None,
+) -> dict:
+    """Interner Cron-Trigger: versendet fällige Automails (Buchungsbestätigung,
+    Anreise-/Check-out-Info) über ALLE Tenants. Wie /dispatch-scheduled per
+    geteiltem Secret abgesichert, getriggert durch einen Scheduled-Task."""
+    expected = get_settings().channex_webhook_secret.get_secret_value()
+    if not expected or x_internal_cron_secret != expected:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiges Secret."
+        )
+    return InboxService(service_client=get_service_client()).dispatch_due_automations()
+
+
 @router.get("/{thread_id}/messages", response_model=InboxMessagesResponse)
 def get_messages(
     thread_id: str, service: InboxServiceDep, bundle: _AccessDep

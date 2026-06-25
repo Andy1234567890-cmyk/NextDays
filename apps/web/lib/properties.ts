@@ -131,3 +131,90 @@ export async function uploadPropertyImage(
     return { ok: false, error: "Backend nicht erreichbar." };
   }
 }
+
+// --- Foto-/Galerieverwaltung (property_photos) -----------------------------
+
+export type PropertyPhoto = {
+  id: string;
+  property_id: string;
+  url: string;
+  sort_order: number;
+  is_cover: boolean;
+  // Locale → Bildunterschrift, z. B. { de: "Wohnzimmer", en: "Living room" }.
+  caption: Record<string, string>;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+/** Fotos eines Objekts, nach Reihenfolge sortiert. */
+export async function listPropertyPhotos(
+  id: string,
+): Promise<Result<{ items: PropertyPhoto[]; total: number }>> {
+  return call(`/properties/${id}/photos`);
+}
+
+/** Ein Galerie-Foto hochladen (multipart) → neue Foto-Zeile. JPEG/PNG,
+ *  50 KB–20 MB (serverseitig validiert). Multi-Upload = mehrere Aufrufe. */
+export async function uploadPropertyPhoto(
+  id: string,
+  file: File,
+): Promise<Result<PropertyPhoto>> {
+  const token = await currentToken();
+  if (!token) return { ok: false, error: "Nicht angemeldet." };
+
+  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+  const form = new FormData();
+  form.append("file", file);
+  try {
+    const res = await fetch(`${base}/api/v1/properties/${id}/photos`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: form,
+      cache: "no-store",
+    });
+    if (!res.ok) {
+      let detail = `Fehler ${res.status}`;
+      try {
+        const data = await res.json();
+        if (typeof data?.detail === "string") detail = data.detail;
+      } catch {
+        // kein JSON-Body
+      }
+      return { ok: false, error: detail };
+    }
+    return { ok: true, data: (await res.json()) as PropertyPhoto };
+  } catch {
+    return { ok: false, error: "Backend nicht erreichbar." };
+  }
+}
+
+/** Reihenfolge der Fotos setzen (vollständige Liste der Foto-IDs). */
+export async function reorderPropertyPhotos(
+  id: string,
+  photoIds: string[],
+): Promise<Result<{ items: PropertyPhoto[]; total: number }>> {
+  return call(`/properties/${id}/photos/reorder`, {
+    method: "PATCH",
+    body: { photo_ids: photoIds },
+  });
+}
+
+/** Bildunterschrift (je Locale) und/oder Cover eines Fotos setzen. */
+export async function updatePropertyPhoto(
+  id: string,
+  photoId: string,
+  input: { caption?: Record<string, string>; is_cover?: boolean },
+): Promise<Result<PropertyPhoto>> {
+  return call(`/properties/${id}/photos/${photoId}`, {
+    method: "PATCH",
+    body: input,
+  });
+}
+
+/** Foto löschen (Datei + Zeile); war es das Cover, wird neu vergeben. */
+export async function deletePropertyPhoto(
+  id: string,
+  photoId: string,
+): Promise<Result<null>> {
+  return call(`/properties/${id}/photos/${photoId}`, { method: "DELETE" });
+}

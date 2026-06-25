@@ -110,7 +110,6 @@ def explain_price(
             )
     facts_block = "\n".join(f"{i+1}. {s}" for i, s in enumerate(steps))
 
-    base_str = f"{base_price:.0f} {currency}"
     final_str = f"{final_price:.0f} {currency}"
     day_line = f" für den {day}" if day else ""
 

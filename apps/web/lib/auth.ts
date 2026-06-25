@@ -58,6 +58,7 @@ export async function register(input: {
   tenantName: string;
   country: string;
   currency: string;
+  businessType?: "agency" | "self_managed";
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
     const session = await api<SessionResponse>("/auth/register", {
@@ -69,6 +70,7 @@ export async function register(input: {
         tenant_name: input.tenantName,
         country: input.country,
         currency: input.currency,
+        business_type: input.businessType ?? "agency",
       },
     });
 

@@ -56,6 +56,7 @@ const MAIN: readonly NavItem[] = [
   { key: "dynamicPricing", href: "/dynamic-pricing", icon: "ph:lightning" },
   { key: "stopSell", href: "/stop-sell", icon: "ph:hand-palm" },
   { key: "properties", href: "/objekte", icon: "ph:house-line" },
+  { key: "owners", href: "/eigentuemer", icon: "ph:user-circle-gear", req: "manage_owners" },
   { key: "websiteBuilder", href: "/website", icon: "ph:globe", req: "access_homepage_builder" },
   { key: "channelManager", href: "/channels", icon: "ph:squares-four" },
 ];
@@ -158,10 +159,12 @@ export function AppSidebar({
   email = "",
   role = null,
   permissions = [],
+  capabilities = [],
 }: {
   email?: string;
   role?: "admin" | "co_admin" | "owner" | "staff" | "cleaner" | null;
   permissions?: string[];
+  capabilities?: string[];
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -171,12 +174,14 @@ export function AppSidebar({
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   // Sichtbarkeit eines Menüpunkts: Admin sieht alles; sonst muss die ggf.
-  // geforderte Berechtigung vorhanden sein. Eigentümer (§4.2) sehen zusätzlich
-  // NUR die für ihr read-only-Portal freigegebenen Bereiche.
-  const permSet = new Set(permissions);
+  // geforderte Berechtigung vorhanden sein. `req` kann eine Lodgify-Permission
+  // ODER eine Capability sein (z. B. manage_owners = Agentur-Verwaltung).
+  // Eigentümer (§4.2) sehen zusätzlich NUR die fürs read-only-Portal freigegebenen
+  // Bereiche.
+  const grantSet = new Set([...permissions, ...capabilities]);
   const canSee = (item: NavItem) => {
     if (role === "admin") return true;
-    if (item.req && !permSet.has(item.req)) return false;
+    if (item.req && !grantSet.has(item.req)) return false;
     if (role === "owner" && !OWNER_ALLOWED_HREFS.includes(item.href)) {
       return false;
     }

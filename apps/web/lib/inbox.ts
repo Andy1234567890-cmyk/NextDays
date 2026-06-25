@@ -11,7 +11,9 @@ export type InboxThread = {
   channex_booking_id: string | null;
   reservation_id: string | null;
   guest_id: string | null; // verknüpfter Gast (Resolver) → Link zur Gästekarte
-  ota_name: string | null;
+  property_id: string | null;    // zugeordnetes Objekt (Filter/Anzeige)
+  property_title: string | null;
+  ota_name: string | null;       // Kanal (myNextDays, Booking.com, Airbnb, …)
   ota_reservation_code: string | null;
   guest_name: string | null;
   guest_email: string | null;
@@ -290,7 +292,13 @@ export type Automation = {
   id: string;
   name: string;
   trigger: string;
+  // anchor: Bezugsdatum (arrival|departure|booking); offset_days = vorzeichen-
+  // behaftetes Tagesdelta; send_time "HH:MM"; property_ids/channels leer = alle.
+  anchor: string;
   offset_days: number;
+  send_time: string | null;
+  property_ids: string[];
+  channels: string[];
   template_id: string | null;
   message: string | null;
   is_active: boolean;

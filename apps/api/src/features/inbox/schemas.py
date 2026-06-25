@@ -13,7 +13,9 @@ class InboxThread(BaseModel):
     channex_booking_id: str | None = None  # Channex-Booking-UUID (für Messages)
     reservation_id: str | None = None      # verknüpfte lokale Reservierung
     guest_id: str | None = None            # verknüpfter Gast (Resolver) → Gästekarte
-    ota_name: str | None = None     # Portal (Booking.com, Airbnb, …)
+    property_id: str | None = None         # zugeordnetes Objekt (für Filter/Anzeige)
+    property_title: str | None = None
+    ota_name: str | None = None     # Kanal (myNextDays, Booking.com, Airbnb, …)
     ota_reservation_code: str | None = None
     guest_name: str | None = None
     guest_email: str | None = None
@@ -128,11 +130,18 @@ class AiSettings(BaseModel):
 
 
 # --- Automatisierungen ------------------------------------------------------
+# anchor: Bezugsdatum (arrival|departure|booking); offset_days = vorzeichen-
+# behaftetes Tagesdelta (−3 = 3 Tage vor, +1 = 1 Tag nach). send_time = "HH:MM".
+# property_ids/channels = Zuweisung (leer = alle); UND-verknüpft (Haus UND Kanal).
 class Automation(BaseModel):
     id: str
     name: str
     trigger: str               # booking_new|before_checkin|after_checkout
+    anchor: str = "arrival"    # arrival|departure|booking
     offset_days: int = 0
+    send_time: str | None = None  # "HH:MM"
+    property_ids: list[str] = []
+    channels: list[str] = []
     template_id: str | None = None
     message: str | None = None
     is_active: bool = True
@@ -146,7 +155,11 @@ class AutomationList(BaseModel):
 class AutomationUpsert(BaseModel):
     name: str
     trigger: str
+    anchor: str = "arrival"
     offset_days: int = 0
+    send_time: str | None = None
+    property_ids: list[str] = []
+    channels: list[str] = []
     template_id: str | None = None
     message: str | None = None
     is_active: bool = True

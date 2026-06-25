@@ -7,7 +7,7 @@ Ein optionaler KI-Antwortvorschlag (Groq) hilft beim Beantworten.
 
 Tenant-scoped (tenant_id aus dem JWT). Kein stilles Exception-Swallowing.
 """
-from datetime import UTC
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
 
 from supabase import Client
@@ -108,7 +108,8 @@ class InboxService:
             .select(
                 "id, channex_booking_id, ota_name, ota_reservation_code, status, "
                 "arrival_date, departure_date, customer, updated_at, guest_id, "
-                "is_read, is_starred, is_archived, assigned_user_id, inbox_status"
+                "is_read, is_starred, is_archived, assigned_user_id, inbox_status, "
+                "property_map_id"
             )
             .eq("tenant_id", tenant_id)
             # Genau die gewählte Ansicht (active|archived|trashed); deleted nie.
@@ -127,6 +128,9 @@ class InboxService:
         # Namen der zugewiesenen Benutzer auflösen.
         user_ids = [r["assigned_user_id"] for r in rows if r.get("assigned_user_id")]
         names = self._user_names(db, tenant_id, user_ids)
+        # Objekt (Haus) je Thread auflösen: property_map_id → property_id + Titel.
+        map_ids = [r["property_map_id"] for r in rows if r.get("property_map_id")]
+        prop_by_map = self._properties_for_maps(db, tenant_id, map_ids)
         mask = access.mask
 
         items: list[InboxThread] = []
@@ -134,12 +138,15 @@ class InboxService:
             customer = r.get("customer") or {}
             cbid = r.get("channex_booking_id")
             uid = r.get("assigned_user_id")
+            prop = prop_by_map.get(r.get("property_map_id")) if r.get("property_map_id") else None
             items.append(
                 InboxThread(
                     id=r["id"],
                     channex_booking_id=cbid,
                     reservation_id=res_by_booking.get(cbid),
                     guest_id=r.get("guest_id"),
+                    property_id=prop[0] if prop else None,
+                    property_title=prop[1] if prop else None,
                     ota_name=mask.source_value(r.get("ota_name")),
                     ota_reservation_code=r.get("ota_reservation_code"),
                     guest_name=mask.name(self._guest_name(customer)),
@@ -175,6 +182,38 @@ class InboxService:
             u["id"]: (u.get("full_name") or u.get("email") or "")
             for u in (res.data or [])
         }
+
+    def _properties_for_maps(
+        self, db: Client, tenant_id: str, map_ids: list[str]
+    ) -> dict[str, tuple[str, str]]:
+        """Map property_map_id → (property_id, property_title). Zwei Batch-Abfragen
+        (channex_property_map → properties), damit der Posteingang nach Objekt
+        filtern/anzeigen kann."""
+        if not map_ids:
+            return {}
+        maps = (
+            db.table("channex_property_map")
+            .select("id, property_id")
+            .eq("tenant_id", tenant_id)
+            .in_("id", list(set(map_ids)))
+            .execute()
+        ).data or []
+        prop_ids = [m["property_id"] for m in maps if m.get("property_id")]
+        titles: dict[str, str] = {}
+        if prop_ids:
+            props = (
+                db.table("properties")
+                .select("id, title")
+                .in_("id", list(set(prop_ids)))
+                .execute()
+            ).data or []
+            titles = {str(p["id"]): p.get("title") or "" for p in props}
+        out: dict[str, tuple[str, str]] = {}
+        for m in maps:
+            pid = m.get("property_id")
+            if pid:
+                out[str(m["id"])] = (str(pid), titles.get(str(pid), ""))
+        return out
 
     def _reservation_ids_for(
         self, db: Client, tenant_id: str, booking_ids: list[str]
@@ -577,7 +616,6 @@ class InboxService:
                 raise InboxError(
                     "Nutzer hat keinen Posteingang-Zugriff.", status_code=422
                 )
-        from datetime import datetime
 
         previous = row.get("assigned_user_id")
         now = datetime.now(UTC).isoformat()
@@ -786,7 +824,6 @@ class InboxService:
     def dispatch_due_scheduled(self) -> dict:
         """Über ALLE Tenants: fällige (send_at ≤ jetzt) pending-Nachrichten
         versenden. Kein JWT — via internem Cron-Endpoint aufgerufen."""
-        from datetime import datetime
 
         if self._db is None:
             raise InboxError("Posteingang-DB nicht verfügbar.", status_code=500)
@@ -812,6 +849,182 @@ class InboxService:
                 sent += 1
             except Exception as exc:  # noqa: BLE001 — Cron darf nicht abbrechen
                 db.table("inbox_scheduled_message").update(
+                    {"status": "failed", "last_error": str(exc)[:500]}
+                ).eq("id", s["id"]).execute()
+                failed += 1
+        return {"sent": sent, "failed": failed, "considered": len(due)}
+
+    # -- Automail-Planung (Trigger-Engine) -------------------------------------
+    #
+    # Bei jeder importierten/aktualisierten OTA-Buchung (channex_booking = Thread)
+    # werden die fälligen Automails geplant: für jede aktive Automation prüfen, ob
+    # Objekt UND Kanal passen (leere Zuweisung = alle), das send_at aus anchor +
+    # offset_days @ send_time berechnen und EINE Zeile je (Automation, Thread) in
+    # automation_scheduled_message anlegen (Dedup-Constraint verhindert Doppel-
+    # versand). Der Cron (dispatch_due_automations) versendet später die fälligen.
+
+    @staticmethod
+    def _automation_body(db: Client, automation: dict) -> str | None:
+        """Text der Automail: Inline-message, sonst Vorlage (template_id)."""
+        msg = (automation.get("message") or "").strip()
+        if msg:
+            return msg
+        tid = automation.get("template_id")
+        if not tid:
+            return None
+        tpl = (
+            db.table("message_template")
+            .select("body")
+            .eq("id", tid)
+            .limit(1)
+            .execute()
+        ).data or []
+        body = (tpl[0].get("body") if tpl else "") or ""
+        return body.strip() or None
+
+    @staticmethod
+    def _compute_send_at(
+        anchor: str, offset_days: int, send_time: object, thread: dict
+    ) -> datetime | None:
+        """send_at = Ankerdatum + offset_days @ send_time (UTC). None, wenn das
+        Ankerdatum fehlt (z. B. booking ohne created_at) → Automail wird übersprungen."""
+        from datetime import date, time, timedelta
+
+        if anchor == "arrival":
+            base = thread.get("arrival_date")
+        elif anchor == "departure":
+            base = thread.get("departure_date")
+        else:  # booking
+            base = thread.get("created_at")
+        if not base:
+            return None
+        base_str = str(base)[:10]
+        try:
+            d = date.fromisoformat(base_str)
+        except ValueError:
+            return None
+        # send_time aus DB ist "HH:MM[:SS]"; ohne Angabe Mitternacht.
+        hh, mm = 0, 0
+        if send_time:
+            parts = str(send_time).split(":")
+            hh = int(parts[0])
+            mm = int(parts[1]) if len(parts) > 1 else 0
+        dt = datetime.combine(d + timedelta(days=offset_days), time(hh, mm), tzinfo=UTC)
+        return dt
+
+    @staticmethod
+    def _automation_matches(
+        automation: dict, property_id: str | None, ota_name: str | None
+    ) -> bool:
+        """Zuweisung prüfen: Objekt UND Kanal müssen passen (UND-verknüpft).
+        Leere/NULL-Zuweisung = alle (kein Filter)."""
+        props = automation.get("property_ids") or []
+        if props and (property_id is None or str(property_id) not in {str(p) for p in props}):
+            return False
+        chans = automation.get("channels") or []
+        if chans:
+            name = (ota_name or "").strip().lower()
+            if name not in {str(c).strip().lower() for c in chans}:
+                return False
+        return True
+
+    def schedule_automations_for_thread(self, tenant_id: str, thread_id: str) -> int:
+        """Fällige Automails für einen Thread planen. Gibt die Anzahl geplanter
+        (neu angelegter) Automails zurück. Idempotent über den Unique-Index."""
+        if self._db is None:
+            return 0
+        db = self._db
+        thread = (
+            db.table("channex_booking")
+            .select(
+                "id, tenant_id, property_map_id, ota_name, arrival_date, "
+                "departure_date, created_at"
+            )
+            .eq("id", thread_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not thread:
+            return 0
+        th = thread[0]
+        # property_map_id → lokale property_id (für Haus-Matching).
+        property_id = None
+        if th.get("property_map_id"):
+            pm = (
+                db.table("channex_property_map")
+                .select("property_id")
+                .eq("id", th["property_map_id"])
+                .limit(1)
+                .execute()
+            ).data or []
+            property_id = pm[0]["property_id"] if pm else None
+
+        automations = (
+            db.table("message_automation")
+            .select(self._AUTOMATION_COLS)
+            .eq("tenant_id", tenant_id)
+            .eq("is_active", True)
+            .execute()
+        ).data or []
+
+        planned = 0
+        for a in automations:
+            if not self._automation_matches(a, property_id, th.get("ota_name")):
+                continue
+            body = self._automation_body(db, a)
+            if not body:
+                continue
+            send_at = self._compute_send_at(
+                a.get("anchor") or "arrival",
+                a.get("offset_days") or 0,
+                a.get("send_time"),
+                th,
+            )
+            if send_at is None:
+                continue
+            # Upsert je (Automation, Thread); Dedup verhindert Doppelversand.
+            db.table("automation_scheduled_message").upsert(
+                {
+                    "tenant_id": tenant_id,
+                    "automation_id": a["id"],
+                    "thread_id": thread_id,
+                    "body": body,
+                    "send_at": send_at.isoformat(),
+                },
+                on_conflict="automation_id,thread_id",
+            ).execute()
+            planned += 1
+        return planned
+
+    def dispatch_due_automations(self) -> dict:
+        """Über ALLE Tenants: fällige (send_at ≤ jetzt) pending Automails versenden.
+        Kein JWT — via internem Cron-Endpoint. Versand über send_message (Channex)."""
+
+        if self._db is None:
+            raise InboxError("Posteingang-DB nicht verfügbar.", status_code=500)
+        db = self._db
+        now = datetime.now(UTC).isoformat()
+        due = (
+            db.table("automation_scheduled_message")
+            .select("id, tenant_id, thread_id, body")
+            .eq("status", "pending")
+            .lte("send_at", now)
+            .limit(200)
+            .execute()
+        ).data or []
+        sent = 0
+        failed = 0
+        for s in due:
+            try:
+                ctx = AuthContext(user_id="cron", tenant_id=s["tenant_id"])
+                self.send_message(ctx, s["thread_id"], s["body"], enforce_reply=False)
+                db.table("automation_scheduled_message").update(
+                    {"status": "sent"}
+                ).eq("id", s["id"]).execute()
+                sent += 1
+            except Exception as exc:  # noqa: BLE001 — Cron darf nicht abbrechen
+                db.table("automation_scheduled_message").update(
                     {"status": "failed", "last_error": str(exc)[:500]}
                 ).eq("id", s["id"]).execute()
                 failed += 1
@@ -918,16 +1131,55 @@ class InboxService:
         return req
 
     # -- Automatisierungen -----------------------------------------------------
+    _AUTOMATION_COLS = (
+        "id, name, trigger, anchor, offset_days, send_time, property_ids, "
+        "channels, template_id, message, is_active"
+    )
+
+    @staticmethod
+    def _automation_row(r: dict) -> Automation:
+        """DB-Zeile → Automation: NULL-Arrays zu [], send_time auf HH:MM kürzen."""
+        st = r.get("send_time")
+        return Automation(
+            id=str(r["id"]),
+            name=r.get("name") or "",
+            trigger=r.get("trigger") or "booking_new",
+            anchor=r.get("anchor") or "arrival",
+            offset_days=r.get("offset_days") or 0,
+            send_time=str(st)[:5] if st else None,
+            property_ids=[str(p) for p in (r.get("property_ids") or [])],
+            channels=list(r.get("channels") or []),
+            template_id=str(r["template_id"]) if r.get("template_id") else None,
+            message=r.get("message"),
+            is_active=bool(r.get("is_active", True)),
+        )
+
+    @staticmethod
+    def _automation_payload(req: AutomationUpsert) -> dict:
+        """Upsert-Payload: leere Arrays als NULL (= „alle"), send_time HH:MM."""
+        return {
+            "name": req.name,
+            "trigger": req.trigger,
+            "anchor": req.anchor,
+            "offset_days": req.offset_days,
+            "send_time": req.send_time if req.send_time else None,
+            "property_ids": req.property_ids or None,
+            "channels": req.channels or None,
+            "template_id": req.template_id,
+            "message": req.message,
+            "is_active": req.is_active,
+        }
+
     def list_automations(self, ctx: AuthContext) -> AutomationList:
         db, tenant_id = self._require(ctx)
         res = (
             db.table("message_automation")
-            .select("id, name, trigger, offset_days, template_id, message, is_active")
+            .select(self._AUTOMATION_COLS)
             .eq("tenant_id", tenant_id)
             .order("created_at")
             .execute()
         )
-        items = [Automation(**r) for r in (res.data or [])]
+        items = [self._automation_row(r) for r in (res.data or [])]
         return AutomationList(items=items, total=len(items))
 
     def create_automation(
@@ -938,10 +1190,10 @@ class InboxService:
             raise InboxError("Name ist nötig.", status_code=422)
         ins = (
             db.table("message_automation")
-            .insert({"tenant_id": tenant_id, **req.model_dump()})
+            .insert({"tenant_id": tenant_id, **self._automation_payload(req)})
             .execute()
         ).data
-        return Automation(**ins[0])
+        return self._automation_row(ins[0])
 
     def update_automation(
         self, ctx: AuthContext, automation_id: str, req: AutomationUpsert
@@ -949,14 +1201,14 @@ class InboxService:
         db, tenant_id = self._require(ctx)
         upd = (
             db.table("message_automation")
-            .update(req.model_dump())
+            .update(self._automation_payload(req))
             .eq("tenant_id", tenant_id)
             .eq("id", automation_id)
             .execute()
         ).data
         if not upd:
             raise InboxError("Automatisierung nicht gefunden.", status_code=404)
-        return Automation(**upd[0])
+        return self._automation_row(upd[0])
 
     def delete_automation(self, ctx: AuthContext, automation_id: str) -> None:
         db, tenant_id = self._require(ctx)

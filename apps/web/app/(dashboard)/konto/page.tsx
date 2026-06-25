@@ -1,10 +1,11 @@
 "use client";
 
 // Konto → Profil (wie Lodgify „My account / Profile").
-// Logo-Upload, Rechnungskontakt, Stammdaten, Telefon, Sprachen, Website,
-// Beschreibung. Reine UI/State — Speichern wird später ans Backend verdrahtet.
+// Logo-Upload (echt, gegen tenant_billing_profile via /buchhaltung/companies/me/logo),
+// Rechnungskontakt, Stammdaten, Telefon, Sprachen, Website, Beschreibung.
 import { Icon } from "@iconify/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 import { BillingContactSheet } from "@/components/konto/billing-contact-sheet";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Separator } from "@/components/ui/separator";
+import { getFirmenProfil, uploadFirmenLogo } from "@/lib/firmenprofil";
 
 export default function ProfilPage() {
   const [firstName, setFirstName] = useState("Andy");
@@ -27,22 +29,89 @@ export default function ProfilPage() {
   const [website, setWebsite] = useState("");
   const [description, setDescription] = useState("");
 
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  // Bestehendes Logo aus dem Firmenprofil laden.
+  useEffect(() => {
+    let active = true;
+    void getFirmenProfil().then((res) => {
+      if (!active || !res.ok) return;
+      const url = res.data.companyLogo;
+      if (typeof url === "string" && url) setLogoUrl(url);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function onPickLogo(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // erlaubt erneutes Wählen derselben Datei
+    if (!file) return;
+    setUploading(true);
+    const res = await uploadFirmenLogo(file);
+    setUploading(false);
+    if (!res.ok) {
+      toast.error(res.error);
+      return;
+    }
+    const url = res.data.companyLogo;
+    if (typeof url === "string") setLogoUrl(url);
+    toast.success("Logo gespeichert.");
+  }
+
   return (
-    <form
-      className="flex flex-col gap-8"
-      onSubmit={(e) => e.preventDefault()}
-    >
+    <form className="flex flex-col gap-8" onSubmit={(e) => e.preventDefault()}>
       {/* Logo-Upload */}
       <section className="flex flex-col gap-3">
         <h2 className="font-display text-xl font-extrabold">Profil</h2>
         <p className="text-sm text-muted-foreground">
           Diese Angaben erscheinen auf Dokumenten und im Gäste-Portal.
         </p>
-        <label className="flex size-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-(--radius) border border-dashed border-border text-muted-foreground transition-colors hover:bg-secondary/50">
-          <Icon icon="ph:upload-simple" className="size-6" />
-          <span className="text-xs">Logo hochladen</span>
-          <input type="file" accept="image/*" className="hidden" />
-        </label>
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          className="relative flex size-32 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-(--radius) border border-dashed border-border text-muted-foreground transition-colors hover:bg-secondary/50 disabled:cursor-wait"
+        >
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoUrl}
+              alt="Firmenlogo"
+              className="size-full object-contain p-2"
+            />
+          ) : (
+            <>
+              <Icon icon="ph:upload-simple" className="size-6" />
+              <span className="text-xs">Logo hochladen</span>
+            </>
+          )}
+          {uploading && (
+            <span className="absolute inset-0 flex items-center justify-center bg-background/70">
+              <Icon icon="ph:spinner" className="size-6 animate-spin" />
+            </span>
+          )}
+        </button>
+        {logoUrl && (
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="w-fit text-xs text-muted-foreground underline-offset-2 hover:underline"
+          >
+            Logo ersetzen
+          </button>
+        )}
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/png,image/jpeg,image/webp,image/svg+xml"
+          className="hidden"
+          onChange={onPickLogo}
+        />
       </section>
 
       <Separator />

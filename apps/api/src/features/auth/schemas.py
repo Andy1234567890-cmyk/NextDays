@@ -19,6 +19,9 @@ class RegisterRequest(BaseModel):
     tenant_name: str = Field(min_length=1, max_length=200)
     country: str = Field(min_length=2, max_length=2)   # ISO-3166-1 alpha-2
     currency: str = Field(min_length=3, max_length=3)  # ISO-4217
+    # 'agency' = verwaltet fremde Objekte (Owner-Statements); 'self_managed' =
+    # eigener Vermieter. Default agency (bisheriges Verhalten).
+    business_type: str = Field(default="agency", pattern="^(agency|self_managed)$")
 
 
 class LoginRequest(BaseModel):

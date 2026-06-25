@@ -1,11 +1,22 @@
-import { SectionPlaceholder } from "@/components/objekte/section-placeholder";
+// Objekt → Fotos (wie Lodgify „Photos"): Multi-Upload, Galerie mit Reorder,
+// Cover/Titelbild und mehrsprachige Bildunterschriften. Die Daten liegen in
+// property_photos; properties.photos wird als Spiegel weitergepflegt.
+import { PhotosManager } from "@/components/objekte/photos-manager";
+import { getProperty } from "@/lib/properties";
 
-export default function Page() {
-  return (
-    <SectionPlaceholder
-      title="Fotos"
-      icon="ph:image"
-      hint="Hier verwaltest du bald die Fotos des Objekts (Upload, Reihenfolge, Titelbild)."
-    />
-  );
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const res = await getProperty(id);
+  if (!res.ok) {
+    return (
+      <div className="text-sm text-destructive">
+        Objekt konnte nicht geladen werden: {res.error}
+      </div>
+    );
+  }
+  return <PhotosManager propertyId={id} />;
 }

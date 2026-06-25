@@ -7,6 +7,7 @@ properties/auth.account_service (PROJECT.md §2 — Business-Logik im Backend).
 Beträge werden serverseitig aus den Positionen berechnet (Decimal,
 ROUND_HALF_UP, 2 Nachkommastellen) — der Client kann sie nicht fälschen.
 """
+import secrets
 from decimal import ROUND_HALF_UP, Decimal
 
 from supabase import Client
@@ -245,12 +246,24 @@ class BuchhaltungService:
         p = (res.data or [{}])[0]
         name = p.get("legal_name") or ""
 
+        # Geschäftstyp + Land aus dem Tenant (für Frontend-Steuerung).
+        trow = (
+            self._db.table("tenants")
+            .select("business_type, country")
+            .eq("id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        t = trow[0] if trow else {}
+
         def s(key: str) -> str:
             """None → '' (der Footer würde sonst Fallback-Werte ziehen)."""
             return p.get(key) or ""
 
         return {
             "id": tenant_id,
+            "businessType": t.get("business_type") or "agency",
+            "tenantCountry": t.get("country"),
             # Name / Header
             "companyName": name,
             "name": name,
@@ -530,6 +543,58 @@ class BuchhaltungService:
         self._db.table("tenant_billing_profile").upsert(
             row, on_conflict="tenant_id"
         ).execute()
+        return self.get_company_profile(ctx)
+
+    # Firmenlogo: erlaubte Typen → Dateiendung (analog properties.upload_image).
+    LOGO_BUCKET = "company-logos"
+    LOGO_MAX_BYTES = 5 * 1024 * 1024
+    LOGO_MIME = {
+        "image/png": "png",
+        "image/jpeg": "jpg",
+        "image/webp": "webp",
+        "image/svg+xml": "svg",
+    }
+
+    def upload_logo(
+        self, ctx: AuthContext, content: bytes, content_type: str
+    ) -> dict:
+        """Firmenlogo in den Bucket legen, URL ins Profil schreiben → Profil zurück.
+
+        Pfad {tenant_id}/logo.{ext} mit upsert, sodass ein neues Logo das alte
+        ersetzt. Validiert Typ/Größe serverseitig. Speichert die öffentliche URL
+        (mit Cache-Buster) als company_logo_url und gibt das aktualisierte
+        Firmenprofil zurück.
+        """
+        tenant_id = self._require_tenant(ctx)
+
+        ext = self.LOGO_MIME.get(content_type)
+        if not ext:
+            raise BuchhaltungError(
+                "Nur PNG/JPEG/WebP/SVG erlaubt.", status_code=415
+            )
+        if len(content) > self.LOGO_MAX_BYTES:
+            raise BuchhaltungError("Logo ist zu groß (max. 5 MB).", status_code=413)
+
+        path = f"{tenant_id}/logo.{ext}"
+        storage = self._db.storage.from_(self.LOGO_BUCKET)
+        try:
+            storage.upload(
+                path,
+                content,
+                {"content-type": content_type, "upsert": "true"},
+            )
+        except Exception as exc:  # noqa: BLE001 — Storage-Fehler einheitlich
+            log.warning("company_logo_upload_failed", tenant_id=tenant_id, error=str(exc))
+            raise BuchhaltungError("Upload fehlgeschlagen.", status_code=502) from exc
+
+        public_url = storage.get_public_url(path)
+        # Cache-Buster, damit Clients trotz gleicher URL das neue Logo laden.
+        url = f"{public_url}?v={secrets.token_hex(4)}"
+        self._db.table("tenant_billing_profile").upsert(
+            {"tenant_id": tenant_id, "company_logo_url": url},
+            on_conflict="tenant_id",
+        ).execute()
+        log.info("company_logo_uploaded", tenant_id=tenant_id)
         return self.get_company_profile(ctx)
 
     def get_invoice(self, ctx: AuthContext, invoice_id: str) -> InvoiceResponse:

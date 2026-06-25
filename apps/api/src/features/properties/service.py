@@ -4,6 +4,8 @@ CRUD über die Service-Role mit EXPLIZITEM tenant-Scope: tenant_id stammt immer
 aus dem verifizierten JWT (AuthContext), nie aus User-Input. Gleiches Muster wie
 auth.account_service (PROJECT.md §2 — Business-Logik im Backend).
 """
+from __future__ import annotations
+
 import secrets
 
 from supabase import Client
@@ -12,8 +14,11 @@ from src.core.logging import get_logger
 from src.core.security import AuthContext
 
 from .schemas import (
+    PhotoUpdateRequest,
     PropertyCreate,
     PropertyListResponse,
+    PropertyPhoto,
+    PropertyPhotoListResponse,
     PropertyResponse,
     PropertyUpdate,
     SliceHealth,
@@ -221,6 +226,245 @@ class PropertiesService:
         # Cache-Buster, damit Clients trotz gleicher URL das neue Bild laden.
         return f"{public_url}?v={secrets.token_hex(4)}"
 
+    # --- Foto-/Galerieverwaltung (property_photos, Migration 0061) -----------
+    #
+    # property_photos ist die Wahrheit; properties.photos bleibt ein abgeleiteter
+    # Kompat-Spiegel (Cover zuerst, dann sort_order), den die bestehenden Leser
+    # (Kalender-Thumbnail, öffentliche Listings, DP-Übersicht, Inbox) weiter nutzen.
+
+    GALLERY_MAX_BYTES = 20 * 1024 * 1024
+    GALLERY_MIN_BYTES = 50 * 1024
+    GALLERY_MIME = {"image/png": "png", "image/jpeg": "jpg"}
+
+    def list_photos(
+        self, ctx: AuthContext, property_id: str
+    ) -> PropertyPhotoListResponse:
+        """Fotos eines Objekts, nach sort_order sortiert."""
+        self.get(ctx, property_id)  # 404, wenn nicht im eigenen Tenant
+        rows = (
+            self._db.table("property_photos")
+            .select("*")
+            .eq("property_id", property_id)
+            .order("sort_order")
+            .execute()
+        ).data or []
+        items = [PropertyPhoto(**_photo_row(r)) for r in rows]
+        return PropertyPhotoListResponse(items=items, total=len(items))
+
+    def add_photo(
+        self,
+        ctx: AuthContext,
+        property_id: str,
+        content: bytes,
+        content_type: str,
+    ) -> PropertyPhoto:
+        """Ein Galerie-Foto hochladen → Bucket + neue Zeile am Ende einsortieren.
+
+        Validiert Typ (JPEG/PNG) und Größe (50 KB–20 MB) serverseitig. Das erste
+        Foto eines Objekts wird automatisch zum Cover. Aktualisiert anschließend
+        den properties.photos-Spiegel.
+        """
+        tenant_id = self._require_tenant(ctx)
+        self.get(ctx, property_id)  # 404, wenn nicht im eigenen Tenant
+
+        ext = self.GALLERY_MIME.get(content_type)
+        if not ext:
+            raise PropertyError("Nur JPEG/PNG erlaubt.", status_code=415)
+        if len(content) < self.GALLERY_MIN_BYTES:
+            raise PropertyError("Bild ist zu klein (min. 50 KB).", status_code=413)
+        if len(content) > self.GALLERY_MAX_BYTES:
+            raise PropertyError("Bild ist zu groß (max. 20 MB).", status_code=413)
+
+        existing = (
+            self._db.table("property_photos")
+            .select("sort_order, is_cover")
+            .eq("property_id", property_id)
+            .order("sort_order", desc=True)
+            .execute()
+        ).data or []
+        next_order = (existing[0]["sort_order"] + 1) if existing else 0
+        is_cover = len(existing) == 0  # erstes Foto = Cover
+
+        # Eindeutiger Objektname je Foto (Galerie hat viele pro Objekt).
+        name = secrets.token_hex(8)
+        path = f"{tenant_id}/{property_id}/gallery/{name}.{ext}"
+        storage = self._db.storage.from_(self.IMAGE_BUCKET)
+        try:
+            storage.upload(path, content, {"content-type": content_type})
+        except Exception as exc:  # noqa: BLE001 — Storage-Fehler einheitlich
+            log.warning("property_photo_upload_failed", property_id=property_id, error=str(exc))
+            raise PropertyError("Upload fehlgeschlagen.", status_code=502) from exc
+        url = storage.get_public_url(path)
+
+        res = (
+            self._db.table("property_photos")
+            .insert(
+                {
+                    "property_id": property_id,
+                    "url": url,
+                    "sort_order": next_order,
+                    "is_cover": is_cover,
+                    "caption": {},
+                }
+            )
+            .execute()
+        )
+        if not res.data:
+            raise PropertyError("Foto konnte nicht angelegt werden.", status_code=500)
+        self._sync_photos_mirror(tenant_id, property_id)
+        log.info("property_photo_added", tenant_id=tenant_id, property_id=property_id)
+        return PropertyPhoto(**_photo_row(res.data[0]))
+
+    def reorder_photos(
+        self, ctx: AuthContext, property_id: str, photo_ids: list[str]
+    ) -> PropertyPhotoListResponse:
+        """Reihenfolge der Fotos setzen. ``photo_ids`` muss exakt die vorhandenen
+        Foto-IDs enthalten (keine fremden, keine fehlenden)."""
+        tenant_id = self._require_tenant(ctx)
+        self.get(ctx, property_id)
+        rows = (
+            self._db.table("property_photos")
+            .select("id")
+            .eq("property_id", property_id)
+            .execute()
+        ).data or []
+        current = {str(r["id"]) for r in rows}
+        if current != set(photo_ids):
+            raise PropertyError(
+                "Reihenfolge muss exakt alle Fotos des Objekts enthalten.",
+                status_code=400,
+            )
+        for index, photo_id in enumerate(photo_ids):
+            self._db.table("property_photos").update({"sort_order": index}).eq(
+                "id", photo_id
+            ).eq("property_id", property_id).execute()
+        self._sync_photos_mirror(tenant_id, property_id)
+        log.info("property_photos_reordered", tenant_id=tenant_id, property_id=property_id)
+        return self.list_photos(ctx, property_id)
+
+    def update_photo(
+        self,
+        ctx: AuthContext,
+        property_id: str,
+        photo_id: str,
+        req: PhotoUpdateRequest,
+    ) -> PropertyPhoto:
+        """Caption (je Locale) und/oder Cover eines Fotos setzen. Cover=true macht
+        dieses Foto zum alleinigen Cover (vorheriges Cover wird zurückgesetzt)."""
+        tenant_id = self._require_tenant(ctx)
+        self.get(ctx, property_id)
+        existing = (
+            self._db.table("property_photos")
+            .select("*")
+            .eq("id", photo_id)
+            .eq("property_id", property_id)
+            .execute()
+        ).data
+        if not existing:
+            raise PropertyError("Foto nicht gefunden.", status_code=404)
+
+        changes = req.model_dump(exclude_unset=True)
+        if not changes:
+            return PropertyPhoto(**_photo_row(existing[0]))
+
+        if changes.get("is_cover") is True:
+            # Genau ein Cover: erst alle zurücksetzen, dann dieses setzen. Reihen-
+            # folge ist wichtig wegen des partiellen Unique-Index (one_cover).
+            self._db.table("property_photos").update({"is_cover": False}).eq(
+                "property_id", property_id
+            ).eq("is_cover", True).execute()
+        elif changes.get("is_cover") is False:
+            # Cover nicht abwählbar (es muss immer eins geben) — ignorieren.
+            changes.pop("is_cover", None)
+
+        if changes:
+            res = (
+                self._db.table("property_photos")
+                .update(changes)
+                .eq("id", photo_id)
+                .eq("property_id", property_id)
+                .execute()
+            ).data
+            updated = res[0] if res else existing[0]
+        else:
+            updated = existing[0]
+        self._sync_photos_mirror(tenant_id, property_id)
+        log.info("property_photo_updated", tenant_id=tenant_id, property_id=property_id)
+        return PropertyPhoto(**_photo_row(updated))
+
+    def delete_photo(self, ctx: AuthContext, property_id: str, photo_id: str) -> None:
+        """Foto löschen: Datei aus dem Bucket + Zeile. War es das Cover, wird das
+        erste verbleibende Foto (kleinste sort_order) neues Cover."""
+        tenant_id = self._require_tenant(ctx)
+        self.get(ctx, property_id)
+        existing = (
+            self._db.table("property_photos")
+            .select("*")
+            .eq("id", photo_id)
+            .eq("property_id", property_id)
+            .execute()
+        ).data
+        if not existing:
+            raise PropertyError("Foto nicht gefunden.", status_code=404)
+        was_cover = bool(existing[0].get("is_cover"))
+
+        self._delete_storage_object(existing[0].get("url"))
+        self._db.table("property_photos").delete().eq("id", photo_id).eq(
+            "property_id", property_id
+        ).execute()
+
+        if was_cover:
+            remaining = (
+                self._db.table("property_photos")
+                .select("id")
+                .eq("property_id", property_id)
+                .order("sort_order")
+                .limit(1)
+                .execute()
+            ).data or []
+            if remaining:
+                self._db.table("property_photos").update({"is_cover": True}).eq(
+                    "id", remaining[0]["id"]
+                ).execute()
+        self._sync_photos_mirror(tenant_id, property_id)
+        log.info("property_photo_deleted", tenant_id=tenant_id, property_id=property_id)
+
+    def _delete_storage_object(self, url: str | None) -> None:
+        """Bucket-Objekt zur öffentlichen URL entfernen (best-effort)."""
+        if not url:
+            return
+        marker = f"/{self.IMAGE_BUCKET}/"
+        idx = url.find(marker)
+        if idx == -1:
+            return
+        path = url[idx + len(marker):].split("?", 1)[0]
+        try:
+            self._db.storage.from_(self.IMAGE_BUCKET).remove([path])
+        except Exception as exc:  # noqa: BLE001 — verwaistes Objekt ist tolerierbar
+            log.warning("property_photo_storage_remove_failed", path=path, error=str(exc))
+
+    def _sync_photos_mirror(self, tenant_id: str, property_id: str) -> None:
+        """properties.photos aus property_photos ableiten: Cover zuerst, dann
+        sort_order. Eine Foto-Wahrheit; die bestehenden URL-Array-Leser bleiben
+        unverändert. Best-effort — ein Fehler hier darf den Vorgang nicht kippen."""
+        try:
+            rows = (
+                self._db.table("property_photos")
+                .select("url, sort_order, is_cover")
+                .eq("property_id", property_id)
+                .order("sort_order")
+                .execute()
+            ).data or []
+            ordered = sorted(
+                rows, key=lambda r: (not r.get("is_cover"), r.get("sort_order") or 0)
+            )
+            urls = [r["url"] for r in ordered]
+            self._db.table("properties").update({"photos": urls}).eq(
+                "tenant_id", tenant_id
+            ).eq("id", property_id).execute()
+        except Exception as exc:  # noqa: BLE001 — Spiegelung darf Vorgang nicht kippen
+            log.warning("property_photos_mirror_failed", property_id=property_id, error=str(exc))
+
     def publish(self, ctx: AuthContext, property_id: str) -> PropertyResponse:
         """Objekt veröffentlichen: draft→active + Channex-Sync + Verfügbarkeit.
 
@@ -369,6 +613,20 @@ def _row(r: dict) -> dict:
         "amenities": r.get("amenities") or [],
         "photos": r.get("photos") or [],
         "type_attributes": r.get("type_attributes") or {},
+        "created_at": str(r["created_at"]) if r.get("created_at") else None,
+        "updated_at": str(r["updated_at"]) if r.get("updated_at") else None,
+    }
+
+
+def _photo_row(r: dict) -> dict:
+    """property_photos-Zeile in das PropertyPhoto-Schema überführen."""
+    return {
+        "id": str(r["id"]),
+        "property_id": str(r["property_id"]),
+        "url": r["url"],
+        "sort_order": int(r.get("sort_order") or 0),
+        "is_cover": bool(r.get("is_cover")),
+        "caption": r.get("caption") or {},
         "created_at": str(r["created_at"]) if r.get("created_at") else None,
         "updated_at": str(r["updated_at"]) if r.get("updated_at") else None,
     }

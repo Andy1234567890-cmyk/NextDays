@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from src.core.security import AuthContext
 from src.features.properties.schemas import (
+    PhotoUpdateRequest,
     PropertyCreate,
     PropertyType,
     PropertyUpdate,
@@ -213,4 +214,250 @@ def test_publish_missing_property_404() -> None:
     svc = PropertiesService(service_client=db)
     with pytest.raises(PropertyError) as exc:
         svc.publish(_ctx(), "p-x")
+    assert exc.value.status_code == 404
+
+
+# --- Foto-/Galerieverwaltung -------------------------------------------------
+#
+# In-Memory-Fake-DB, die property_photos und den properties.photos-Spiegel echt
+# nachbildet (die einfache _svc-Kette teilt sich einen Mock über alle Tabellen
+# und reicht für die feldgenaue Foto-Logik nicht).
+
+
+class _Result:
+    def __init__(self, data: list[dict]) -> None:
+        self.data = data
+
+
+class _PhotoQuery:
+    def __init__(self, db: "_PhotoDB", table: str) -> None:
+        self._db = db
+        self._table = table
+        self._op = "select"
+        self._payload: dict | None = None
+        self._filters: list[tuple[str, object]] = []
+        self._order: str | None = None
+        self._desc = False
+        self._limit: int | None = None
+
+    def select(self, *_a: object, **_k: object) -> "_PhotoQuery":
+        self._op = "select"
+        return self
+
+    def insert(self, payload: dict) -> "_PhotoQuery":
+        self._op = "insert"
+        self._payload = payload
+        return self
+
+    def update(self, payload: dict) -> "_PhotoQuery":
+        self._op = "update"
+        self._payload = payload
+        return self
+
+    def delete(self) -> "_PhotoQuery":
+        self._op = "delete"
+        return self
+
+    def eq(self, col: str, val: object) -> "_PhotoQuery":
+        self._filters.append((col, val))
+        return self
+
+    def order(self, col: str, desc: bool = False) -> "_PhotoQuery":
+        self._order = col
+        self._desc = desc
+        return self
+
+    def limit(self, n: int) -> "_PhotoQuery":
+        self._limit = n
+        return self
+
+    def _match(self, row: dict) -> bool:
+        return all(str(row.get(c)) == str(v) for c, v in self._filters)
+
+    def execute(self) -> _Result:
+        rows = self._db.tables.setdefault(self._table, [])
+        if self._op == "insert":
+            new = dict(self._payload or {})
+            new.setdefault("id", f"ph-{self._db.next_id()}")
+            new.setdefault("created_at", "2026-06-17T00:00:00Z")
+            new.setdefault("updated_at", "2026-06-17T00:00:00Z")
+            rows.append(new)
+            return _Result([new])
+        selected = [r for r in rows if self._match(r)]
+        if self._op == "update":
+            for r in selected:
+                r.update(self._payload or {})
+            return _Result(selected)
+        if self._op == "delete":
+            self._db.tables[self._table] = [r for r in rows if not self._match(r)]
+            return _Result(selected)
+        if self._order:
+            selected = sorted(
+                selected, key=lambda r: r.get(self._order) or 0, reverse=self._desc
+            )
+        if self._limit is not None:
+            selected = selected[: self._limit]
+        return _Result(selected)
+
+
+class _PhotoStorage:
+    def __init__(self) -> None:
+        self.uploaded: list[str] = []
+        self.removed: list[str] = []
+
+    def upload(self, path: str, _content: bytes, _opts: dict) -> None:
+        self.uploaded.append(path)
+
+    def get_public_url(self, path: str) -> str:
+        return f"https://x.supabase.co/storage/v1/object/public/property-images/{path}"
+
+    def remove(self, paths: list[str]) -> None:
+        self.removed.extend(paths)
+
+
+class _PhotoStorageNS:
+    def __init__(self, storage: _PhotoStorage) -> None:
+        self._storage = storage
+
+    def from_(self, _bucket: str) -> _PhotoStorage:
+        return self._storage
+
+
+class _PhotoDB:
+    def __init__(self) -> None:
+        self.tables: dict[str, list[dict]] = {
+            "properties": [_row()],
+            "property_photos": [],
+        }
+        self._counter = 0
+        self.storage = _PhotoStorageNS(_PhotoStorage())
+
+    def next_id(self) -> int:
+        self._counter += 1
+        return self._counter
+
+    def table(self, name: str) -> _PhotoQuery:
+        return _PhotoQuery(self, name)
+
+
+def _png(size: int) -> bytes:
+    return b"\x89PNG\r\n\x1a\n" + b"x" * max(0, size - 8)
+
+
+def test_add_photo_first_becomes_cover_and_mirrors() -> None:
+    db = _PhotoDB()
+    svc = PropertiesService(service_client=db)
+    photo = svc.add_photo(_ctx(), "p-1", _png(60 * 1024), "image/png")
+    assert photo.is_cover is True
+    assert photo.sort_order == 0
+    # properties.photos gespiegelt.
+    assert db.tables["properties"][0]["photos"] == [photo.url]
+
+
+def test_add_photo_rejects_bad_mime() -> None:
+    db = _PhotoDB()
+    svc = PropertiesService(service_client=db)
+    with pytest.raises(PropertyError) as exc:
+        svc.add_photo(_ctx(), "p-1", _png(60 * 1024), "application/pdf")
+    assert exc.value.status_code == 415
+
+
+def test_add_photo_rejects_too_small() -> None:
+    db = _PhotoDB()
+    svc = PropertiesService(service_client=db)
+    with pytest.raises(PropertyError) as exc:
+        svc.add_photo(_ctx(), "p-1", _png(1024), "image/png")
+    assert exc.value.status_code == 413
+
+
+def test_add_photo_rejects_too_large() -> None:
+    db = _PhotoDB()
+    svc = PropertiesService(service_client=db)
+    big = _png(PropertiesService.GALLERY_MAX_BYTES + 1)
+    with pytest.raises(PropertyError) as exc:
+        svc.add_photo(_ctx(), "p-1", big, "image/png")
+    assert exc.value.status_code == 413
+
+
+def test_multi_upload_creates_multiple_rows_single_cover() -> None:
+    db = _PhotoDB()
+    svc = PropertiesService(service_client=db)
+    a = svc.add_photo(_ctx(), "p-1", _png(60 * 1024), "image/png")
+    b = svc.add_photo(_ctx(), "p-1", _png(60 * 1024), "image/jpeg")
+    c = svc.add_photo(_ctx(), "p-1", _png(60 * 1024), "image/png")
+    assert len(db.tables["property_photos"]) == 3
+    covers = [p for p in db.tables["property_photos"] if p["is_cover"]]
+    assert len(covers) == 1 and covers[0]["id"] == a.id
+    assert [a.sort_order, b.sort_order, c.sort_order] == [0, 1, 2]
+
+
+def test_reorder_persists_and_mirrors() -> None:
+    db = _PhotoDB()
+    svc = PropertiesService(service_client=db)
+    a = svc.add_photo(_ctx(), "p-1", _png(60 * 1024), "image/png")
+    b = svc.add_photo(_ctx(), "p-1", _png(60 * 1024), "image/png")
+    svc.reorder_photos(_ctx(), "p-1", [b.id, a.id])
+    rows = {r["id"]: r["sort_order"] for r in db.tables["property_photos"]}
+    assert rows[b.id] == 0 and rows[a.id] == 1
+    # Cover (a) bleibt zuerst im Spiegel, danach nach sort_order (b).
+    assert db.tables["properties"][0]["photos"][0] == a.url
+
+
+def test_reorder_rejects_mismatched_ids() -> None:
+    db = _PhotoDB()
+    svc = PropertiesService(service_client=db)
+    svc.add_photo(_ctx(), "p-1", _png(60 * 1024), "image/png")
+    with pytest.raises(PropertyError) as exc:
+        svc.reorder_photos(_ctx(), "p-1", ["fremd"])
+    assert exc.value.status_code == 400
+
+
+def test_set_cover_moves_cover_and_keeps_single() -> None:
+    db = _PhotoDB()
+    svc = PropertiesService(service_client=db)
+    svc.add_photo(_ctx(), "p-1", _png(60 * 1024), "image/png")
+    b = svc.add_photo(_ctx(), "p-1", _png(60 * 1024), "image/png")
+    svc.update_photo(_ctx(), "p-1", b.id, PhotoUpdateRequest(is_cover=True))
+    covers = [p for p in db.tables["property_photos"] if p["is_cover"]]
+    assert len(covers) == 1 and covers[0]["id"] == b.id
+
+
+def test_caption_per_locale_saved_and_read() -> None:
+    db = _PhotoDB()
+    svc = PropertiesService(service_client=db)
+    a = svc.add_photo(_ctx(), "p-1", _png(60 * 1024), "image/png")
+    cap = {"de": "Wohnzimmer", "en": "Living room", "da": "Stue"}
+    updated = svc.update_photo(_ctx(), "p-1", a.id, PhotoUpdateRequest(caption=cap))
+    assert updated.caption == cap
+    listed = svc.list_photos(_ctx(), "p-1")
+    assert listed.items[0].caption == cap
+
+
+def test_delete_removes_row_file_and_reassigns_cover() -> None:
+    db = _PhotoDB()
+    svc = PropertiesService(service_client=db)
+    a = svc.add_photo(_ctx(), "p-1", _png(60 * 1024), "image/png")  # Cover
+    b = svc.add_photo(_ctx(), "p-1", _png(60 * 1024), "image/png")
+    svc.delete_photo(_ctx(), "p-1", a.id)
+    rows = db.tables["property_photos"]
+    assert len(rows) == 1 and rows[0]["id"] == b.id
+    assert rows[0]["is_cover"] is True  # Cover neu vergeben
+    assert db.storage.from_("property-images").removed  # Datei entfernt
+    assert db.tables["properties"][0]["photos"] == [b.url]
+
+
+def test_delete_unknown_photo_404() -> None:
+    db = _PhotoDB()
+    svc = PropertiesService(service_client=db)
+    with pytest.raises(PropertyError) as exc:
+        svc.delete_photo(_ctx(), "p-1", "nope")
+    assert exc.value.status_code == 404
+
+
+def test_list_photos_unknown_property_404() -> None:
+    db = _PhotoDB()
+    db.tables["properties"] = []
+    svc = PropertiesService(service_client=db)
+    with pytest.raises(PropertyError) as exc:
+        svc.list_photos(_ctx(), "p-x")
     assert exc.value.status_code == 404

@@ -18,6 +18,10 @@ import { ManageTab } from "@/components/inbox/manage-tab";
 import { TemplatesTab } from "@/components/inbox/templates-tab";
 import { WhatsAppPanel } from "@/components/inbox/whatsapp-panel";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
+import { MultiSelect } from "@/components/ui/multi-select";
+import { NativeSelect } from "@/components/ui/native-select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   type InboxMessage,
   type InboxStatus,
@@ -95,6 +99,13 @@ export function InboxList({
   const [openNoteSignal, setOpenNoteSignal] = useState(0);
   // Nur „nicht zugewiesene" Konversationen anzeigen (Filter-Panel).
   const [onlyUnassigned, setOnlyUnassigned] = useState(false);
+  // Erweiterte Filter (client-seitig auf der geladenen Liste).
+  const [fChannels, setFChannels] = useState<string[]>([]); // leer = alle
+  const [fProperties, setFProperties] = useState<string[]>([]); // leer = alle
+  const [fStatus, setFStatus] = useState<string>(""); // "" = alle (new|modified|cancelled)
+  const [fRead, setFRead] = useState<"all" | "unread" | "read">("all");
+  const [fFrom, setFFrom] = useState(""); // Anreise von (YYYY-MM-DD)
+  const [fTo, setFTo] = useState(""); // Anreise bis
   const [showFilter, setShowFilter] = useState(false);
   const [showBulk, setShowBulk] = useState(false);
   // Ansicht: Aktiv | Archiv | Papierkorb.
@@ -116,11 +127,43 @@ export function InboxList({
   }, [reloadThreads]);
   useRealtime({ table: "channex_booking", onChange: reloadThreads });
 
-  const filtered = rows.filter(
-    (th) =>
-      (!onlyUnassigned || !th.assigned_user_id) &&
-      (th.guest_name ?? "").toLowerCase().includes(query.trim().toLowerCase()),
-  );
+  // Filter-Optionen aus den geladenen Threads ableiten (nur real vorkommende).
+  const channelOptions = Array.from(
+    new Set(rows.map((r) => r.ota_name).filter((x): x is string => !!x)),
+  ).map((c) => ({ value: c, label: c }));
+  const propertyOptions = Array.from(
+    new Map(
+      rows
+        .filter((r) => r.property_id)
+        .map((r) => [r.property_id as string, r.property_title || ""]),
+    ).entries(),
+  ).map(([value, label]) => ({ value, label }));
+
+  const lc = (s: string | null) => (s ?? "").toLowerCase();
+  const filtered = rows.filter((th) => {
+    if (onlyUnassigned && th.assigned_user_id) return false;
+    if (!lc(th.guest_name).includes(query.trim().toLowerCase())) return false;
+    if (fChannels.length && !(th.ota_name && fChannels.includes(th.ota_name)))
+      return false;
+    if (
+      fProperties.length &&
+      !(th.property_id && fProperties.includes(th.property_id))
+    )
+      return false;
+    if (fStatus && th.status !== fStatus) return false;
+    if (fRead === "unread" && th.is_read) return false;
+    if (fRead === "read" && !th.is_read) return false;
+    if (fFrom && (!th.arrival_date || th.arrival_date < fFrom)) return false;
+    if (fTo && (!th.arrival_date || th.arrival_date > fTo)) return false;
+    return true;
+  });
+  const activeFilterCount =
+    (onlyUnassigned ? 1 : 0) +
+    (fChannels.length ? 1 : 0) +
+    (fProperties.length ? 1 : 0) +
+    (fStatus ? 1 : 0) +
+    (fRead !== "all" ? 1 : 0) +
+    (fFrom || fTo ? 1 : 0);
 
   // Eine Konversation lokal patchen (z.B. nach Ungelesen/Favorit).
   function patchThread(id: string, patch: Partial<InboxThread>) {
@@ -274,43 +317,32 @@ export function InboxList({
 
           {/* Filterleiste */}
           <div className="relative flex items-center gap-2 border-b border-border p-2">
-            <button
-              type="button"
-              title={t("filter")}
-              onClick={() => setShowFilter((v) => !v)}
-              className={
-                "flex size-8 items-center justify-center rounded-(--radius) " +
-                (onlyUnassigned
-                  ? "bg-accent/10 text-accent"
-                  : "bg-secondary text-muted-foreground hover:text-foreground")
-              }
-            >
-              <Icon icon="ph:funnel" className="size-4" />
-            </button>
-            <div className="flex flex-1 items-center gap-2 rounded-full border border-border px-3 py-1.5">
-              <Icon icon="ph:magnifying-glass" className="size-4 text-muted-foreground" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={t("searchGuests")}
-                className="w-full bg-transparent text-sm outline-none"
-              />
-            </div>
+            <Popover open={showFilter} onOpenChange={setShowFilter}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  title={t("filter")}
+                  className={
+                    "relative flex size-8 items-center justify-center rounded-(--radius) " +
+                    (activeFilterCount > 0
+                      ? "bg-accent/10 text-accent"
+                      : "bg-secondary text-muted-foreground hover:text-foreground")
+                  }
+                >
+                  <Icon icon="ph:funnel" className="size-4" />
+                  {activeFilterCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-accent text-[0.6rem] font-bold text-accent-foreground">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                </button>
+              </PopoverTrigger>
+              <PopoverContent
+                align="start"
+                className="flex max-h-[80vh] w-72 flex-col gap-3 overflow-y-auto p-3"
+              >
+                <span className="text-sm font-semibold">{t("filterTitle")}</span>
 
-            {/* Filter-Popover: derzeit „nicht zugewiesen" (white-label, real) */}
-            {showFilter && (
-              <div className="absolute left-2 top-12 z-20 w-60 rounded-2xl border border-border bg-card p-3 shadow-xl">
-                <div className="mb-2 flex items-center justify-between">
-                  <span className="text-sm font-semibold">{t("filterTitle")}</span>
-                  <button
-                    type="button"
-                    aria-label={t("close")}
-                    onClick={() => setShowFilter(false)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    <Icon icon="ph:x" className="size-4" />
-                  </button>
-                </div>
                 {access.scope === "all" ? (
                   <label className="flex items-center gap-2 text-sm">
                     <input
@@ -322,20 +354,91 @@ export function InboxList({
                     {t("filterUnassigned")}
                   </label>
                 ) : (
-                  // assigned-only-Nutzer sieht ohnehin nur eigene Konversationen.
                   <p className="text-xs text-muted-foreground">{t("filterAssignedOnly")}</p>
                 )}
-                {onlyUnassigned && (
+
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-medium text-muted-foreground">{t("filterChannel")}</span>
+                  <MultiSelect
+                    options={channelOptions}
+                    selected={fChannels}
+                    onChange={setFChannels}
+                    placeholder={t("filterAllChannels")}
+                    searchPlaceholder={t("filterSearchChannel")}
+                    allLabel={t("filterAllChannels")}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-medium text-muted-foreground">{t("filterProperty")}</span>
+                  <MultiSelect
+                    options={propertyOptions}
+                    selected={fProperties}
+                    onChange={setFProperties}
+                    placeholder={t("filterAllProperties")}
+                    searchPlaceholder={t("filterSearchProperty")}
+                    allLabel={t("filterAllProperties")}
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-medium text-muted-foreground">{t("filterStatus")}</span>
+                  <NativeSelect value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
+                    <option value="">{t("filterStatusAll")}</option>
+                    <option value="new">{t("filterStatusNew")}</option>
+                    <option value="modified">{t("filterStatusModified")}</option>
+                    <option value="cancelled">{t("filterStatusCancelled")}</option>
+                  </NativeSelect>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-medium text-muted-foreground">{t("filterRead")}</span>
+                  <NativeSelect
+                    value={fRead}
+                    onChange={(e) => setFRead(e.target.value as "all" | "unread" | "read")}
+                  >
+                    <option value="all">{t("filterReadAll")}</option>
+                    <option value="unread">{t("filterReadUnread")}</option>
+                    <option value="read">{t("filterReadRead")}</option>
+                  </NativeSelect>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-medium text-muted-foreground">{t("filterArrivalRange")}</span>
+                  <div className="grid grid-cols-2 gap-2">
+                    <DatePicker value={fFrom} onChange={setFFrom} placeholder={t("filterFrom")} />
+                    <DatePicker value={fTo} onChange={setFTo} placeholder={t("filterTo")} />
+                  </div>
+                </div>
+
+                {activeFilterCount > 0 && (
                   <button
                     type="button"
-                    onClick={() => setOnlyUnassigned(false)}
-                    className="mt-3 text-xs text-accent hover:underline"
+                    onClick={() => {
+                      setOnlyUnassigned(false);
+                      setFChannels([]);
+                      setFProperties([]);
+                      setFStatus("");
+                      setFRead("all");
+                      setFFrom("");
+                      setFTo("");
+                    }}
+                    className="text-xs text-accent hover:underline"
                   >
                     {t("filterClear")}
                   </button>
                 )}
-              </div>
-            )}
+              </PopoverContent>
+            </Popover>
+            <div className="flex flex-1 items-center gap-2 rounded-full border border-border px-3 py-1.5">
+              <Icon icon="ph:magnifying-glass" className="size-4 text-muted-foreground" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={t("searchGuests")}
+                className="w-full bg-transparent text-sm outline-none"
+              />
+            </div>
           </div>
           {/* Liste oder Leerzustand */}
           {filtered.length === 0 ? (

@@ -134,7 +134,10 @@
       "helpCenter": "Help center",
       "logout": "Log out"
     },
-    "stopSell": "Stop-sell"
+    "stopSell": "Stop-sell",
+    "owners": "Owners",
+    "ownerStatements": "Owner statements",
+    "portal": "My portal"
   },
   "exemption": {
     "labelNamed": "Tax-exempt ({scheme}) — no VAT ID required",
@@ -342,7 +345,40 @@
     "deleteForever": "Endgültig löschen",
     "deleteConfirm": "Diese Konversation endgültig aus dem Posteingang löschen? Die Buchung bleibt erhalten.",
     "readOnlyHint": "Read-only access – you cannot reply to this conversation.",
-    "filterAssignedOnly": "You only see conversations assigned to you."
+    "filterAssignedOnly": "You only see conversations assigned to you.",
+    "autoSchedule": "Schedule",
+    "autoBefore": "before",
+    "autoAfter": "after",
+    "autoTime": "Time",
+    "autoHouses": "Properties",
+    "autoChannels": "Booking channels",
+    "autoAllHouses": "All properties",
+    "autoAllChannels": "All channels",
+    "autoHousesCount": "properties",
+    "autoNoHouses": "No properties available.",
+    "autoAnchor_arrival": "Arrival",
+    "autoAnchor_departure": "Departure",
+    "autoAnchor_booking": "Booking",
+    "autoSearchHouses": "Search property …",
+    "autoSearchChannels": "Search channel …",
+    "filterChannel": "Channel",
+    "filterAllChannels": "All channels",
+    "filterSearchChannel": "Search channel …",
+    "filterProperty": "Property",
+    "filterAllProperties": "All properties",
+    "filterSearchProperty": "Search property …",
+    "filterStatus": "Reservation status",
+    "filterStatusAll": "All",
+    "filterStatusNew": "New",
+    "filterStatusModified": "Modified",
+    "filterStatusCancelled": "Cancelled",
+    "filterRead": "Read",
+    "filterReadAll": "All",
+    "filterReadUnread": "Unread",
+    "filterReadRead": "Read",
+    "filterArrivalRange": "Arrival (from–to)",
+    "filterFrom": "From",
+    "filterTo": "To"
   },
   "whatsapp": {
     "notConfigured": "WhatsApp ist noch nicht verbunden. Zugangsdaten (Meta Cloud API) in den Server-Einstellungen hinterlegen, dann ist der Versand aktiv.",
@@ -454,5 +490,285 @@
     "contactType": "Type",
     "contactValue": "Value",
     "addContact": "Add contact"
+  },
+  "fotos": {
+    "title": "Photos",
+    "subtitle": "Upload photos, set the cover image and reorder them by dragging.",
+    "dropTitle": "Drag photos here or click to select",
+    "dropHint": "JPEG or PNG, 50 KB to 20 MB. Multiple files at once supported.",
+    "uploaded": "{count, plural, one {# photo uploaded} other {# photos uploaded}}",
+    "errorType": "Only JPEG or PNG allowed.",
+    "errorTooSmall": "Image is too small (min. 50 KB).",
+    "errorTooLarge": "Image is too large (max. 20 MB).",
+    "emptyTitle": "No photos yet",
+    "emptyHint": "Upload the first photos. The first one automatically becomes the cover image.",
+    "cover": "Cover",
+    "setCover": "Set as cover",
+    "menu": "Options",
+    "editCaption": "Edit caption",
+    "delete": "Delete",
+    "deleted": "Photo deleted.",
+    "coverSet": "Cover image set.",
+    "captionHint": "Caption per language. Empty fields are not saved.",
+    "captionPlaceholder": "e.g. Living room with fireplace",
+    "captionSaved": "Caption saved.",
+    "addLanguage": "Add language",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving …"
+  },
+  "owners": {
+    "title": "Owners",
+    "subtitle": "Manage the owners whose properties your agency operates.",
+    "new": "Owner",
+    "newTitle": "New owner",
+    "create": "Create",
+    "created": "Owner created.",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving …",
+    "saved": "Saved.",
+    "delete": "Delete",
+    "deleted": "Owner deleted.",
+    "deleteConfirm": "Really delete this owner? Property assignments will be removed too.",
+    "emptyTitle": "No owners yet",
+    "emptyHint": "Create the first owner to manage properties, payouts and statements.",
+    "commissionShort": "Commission",
+    "propertyCount": "{count, plural, =0 {No properties} one {# property} other {# properties}}",
+    "noProperties": "No property is assigned to this owner yet.",
+    "addProperty": "Assign property …",
+    "removeProperty": "Remove assignment",
+    "sections": {
+      "master": "Master data",
+      "payout": "Payout & commission",
+      "properties": "Properties"
+    },
+    "frequency": {
+      "none": "None",
+      "monthly": "Monthly"
+    },
+    "fields": {
+      "name": "Name",
+      "company": "Company",
+      "email": "Email",
+      "phone": "Phone",
+      "street": "Street",
+      "houseNumber": "House number",
+      "postalCode": "Postal code",
+      "city": "City",
+      "country": "Country",
+      "taxId": "Tax number",
+      "vatId": "VAT ID",
+      "accountHolder": "Account holder",
+      "iban": "IBAN",
+      "bic": "BIC",
+      "bankName": "Bank",
+      "commission": "Management commission (%)",
+      "payoutMethod": "Payout method",
+      "statementFrequency": "Statement frequency",
+      "notes": "Notes",
+      "share": "Share (%)",
+      "commissionOverride": "Commission (%) override"
+    },
+    "placeholders": {
+      "name": "e.g. John Doe",
+      "email": "e.g. john@example.com"
+    }
+  },
+  "ownerStatements": {
+    "title": "Owner statements",
+    "new": "New",
+    "created": "Statement created.",
+    "selectOwner": "Select owner …",
+    "noOwners": "Please create an owner first.",
+    "emptyTitle": "No statement open",
+    "emptyHint": "Create a new statement or open an existing one under “Manage statements”.",
+    "download": "Download",
+    "downloadFailed": "PDF generation failed.",
+    "save": "Save",
+    "saving": "Saving …",
+    "saved": "Saved.",
+    "finalize": "Finalize",
+    "finalized": "Statement finalized.",
+    "delete": "Delete",
+    "deleted": "Statement deleted.",
+    "deleteConfirm": "Really delete this statement?",
+    "storno": "Cancel invoice",
+    "cancelConfirm": "Really cancel this invoice? A cancellation invoice with its own number will be created. The original invoice is preserved.",
+    "cancelled": "Cancellation invoice created.",
+    "stornoBanner": "Cancellation invoice – fully reverses the referenced original invoice.",
+    "cancelledBanner": "This invoice has been cancelled and is immutable.",
+    "tax": {
+      "net": "Net amount",
+      "vat": "VAT",
+      "gross": "Gross amount",
+      "category": {
+        "S": "Standard rate",
+        "AE": "Reverse charge",
+        "E": "Tax-exempt",
+        "Z": "Zero rate"
+      }
+    },
+    "cancel": "Cancel",
+    "invoiceNumber": "Invoice number",
+    "notes": "Notes",
+    "summaryPeriod": "Period {from} – {to}, {count} booking(s)",
+    "tabs": {
+      "createEdit": "Create & Edit",
+      "manage": "Manage statements"
+    },
+    "filters": {
+      "from": "From",
+      "to": "To",
+      "basis": "Basis",
+      "checkIn": "Check-in",
+      "checkOut": "Check-out",
+      "statuses": "Reservation statuses",
+      "statusCount": "{count} statuses",
+      "title": "Filters"
+    },
+    "reservationStatus": {
+      "pending": "Pending",
+      "confirmed": "Confirmed",
+      "cancelled": "Cancelled",
+      "completed": "Completed"
+    },
+    "status": {
+      "draft": "Draft",
+      "finalized": "Finalized"
+    },
+    "sections": {
+      "data": "Data",
+      "summary": "Summary",
+      "rentalActivity": "Rental activity",
+      "expenses": "Expenses & extras",
+      "grandTotal": "Grand total",
+      "attachments": "Attachments"
+    },
+    "pm": {
+      "title": "Property manager",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "taxId": "Tax number/ID"
+    },
+    "owner": {
+      "title": "Property owner",
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "address": "Address",
+      "taxId": "Tax number/ID"
+    },
+    "summary": {
+      "totalPrice": "Total Price",
+      "totalPayout": "Total Payout",
+      "ownerPayout": "Owner Payout",
+      "pmPayout": "Property Manager Payout"
+    },
+    "rental": {
+      "perReservation": "Per reservation",
+      "perListing": "Per listing",
+      "guest": "Guest",
+      "nights": "Nights",
+      "listing": "Listing",
+      "channel": "Channel",
+      "reservations": "Reservations",
+      "totalPrice": "Total Price",
+      "totalPayout": "Total Payout",
+      "totals": "Totals",
+      "empty": "No reservations in this period."
+    },
+    "expenses": {
+      "add": "Add",
+      "added": "Item added.",
+      "concept": "Concept",
+      "date": "Date",
+      "category": "Category",
+      "listing": "Listing",
+      "amount": "Amount",
+      "total": "Total",
+      "empty": "No expenses yet.",
+      "toggleHidden": "Hide/show for owner",
+      "hidden": "Hidden from owner",
+      "visible": "Visible to owner",
+      "reservation": "Reservation",
+      "owner": "Owner",
+      "hideAll": "Hide all",
+      "assignOwner": "Assign to owner"
+    },
+    "grand": {
+      "rentalRevenue": "Rental Revenue",
+      "expenses": "Expenses and Extras",
+      "total": "Total",
+      "deductPercentage": "Deduct percentage (%)"
+    },
+    "manage": {
+      "owner": "Owner",
+      "period": "Period",
+      "status": "Status",
+      "open": "Open",
+      "emptyTitle": "No statements",
+      "emptyHint": "Create your first owner statement under “Create & Edit”."
+    },
+    "edit": "Edit",
+    "attachments": {
+      "drop": "Drop files to upload or Browse"
+    },
+    "masterData": "Master data",
+    "preview": "Preview",
+    "previewTitle": "Document preview",
+    "close": "Close"
+  },
+  "portal": {
+    "title": "My portal",
+    "subtitle": "Overview of your properties, earnings and statements.",
+    "properties": {
+      "title": "My properties",
+      "empty": "No properties are assigned to you yet."
+    },
+    "earnings": {
+      "title": "Earnings (this month)",
+      "property": "Property",
+      "reservations": "Bookings",
+      "nights": "Nights",
+      "payout": "Payout",
+      "total": "Total",
+      "empty": "No earnings in this period."
+    },
+    "statements": {
+      "title": "Statements",
+      "period": "Period",
+      "invoice": "Invoice no.",
+      "payout": "Payout",
+      "empty": "No finalized statements yet."
+    },
+    "block": {
+      "title": "Request block",
+      "hint": "Request to block your property for a period. The agency reviews the request.",
+      "property": "Property",
+      "from": "From",
+      "to": "To",
+      "submit": "Send request",
+      "sending": "Sending …",
+      "requested": "Request sent."
+    },
+    "meter": {
+      "title": "Add meter reading",
+      "hint": "Record a meter reading for your property.",
+      "property": "Property",
+      "kind": "Meter",
+      "value": "Reading",
+      "readAt": "Read date",
+      "submit": "Save",
+      "saving": "Saving …",
+      "saved": "Reading saved.",
+      "kinds": {
+        "electricity": "Electricity",
+        "water": "Water",
+        "gas": "Gas"
+      }
+    }
   }
 }

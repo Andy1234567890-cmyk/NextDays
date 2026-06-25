@@ -23,6 +23,7 @@ export default async function DashboardLayout({
   let email = me?.email ?? "";
   let role = me?.role ?? null;
   let permissions = me?.permissions ?? [];
+  let capabilities = me?.capabilities ?? [];
 
   if (!me) {
     const supabase = await createClient();
@@ -34,11 +35,17 @@ export default async function DashboardLayout({
     // Rolle/Berechtigungen kommen später aus dem FastAPI-Profil; vorerst leer.
     role = null;
     permissions = [];
+    capabilities = [];
   }
 
   return (
     <SidebarProvider>
-      <AppSidebar email={email} role={role} permissions={permissions} />
+      <AppSidebar
+        email={email}
+        role={role}
+        permissions={permissions}
+        capabilities={capabilities}
+      />
       <SidebarInset>
         <Topbar />
         {/* Inhaltsbereich — hier kommen später KPI-Kacheln & Charts hinein. */}

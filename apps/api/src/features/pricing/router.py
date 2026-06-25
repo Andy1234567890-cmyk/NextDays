@@ -194,7 +194,10 @@ def explain_dynamic_price(
     if not rows:
         raise HTTPException(
             status_code=404,
-            detail="Für diesen Tag gibt es keinen dynamischen Preis (DP aus oder noch nicht berechnet).",
+            detail=(
+                "Für diesen Tag gibt es keinen dynamischen Preis "
+                "(DP aus oder noch nicht berechnet)."
+            ),
         )
     price = float(rows[0].get("price") or 0)
     factors = rows[0].get("factors") or {}
@@ -208,7 +211,11 @@ def explain_dynamic_price(
         .limit(1)
         .execute()
     ).data or []
-    base_price = float(rate_rows[0]["base_price"]) if rate_rows and rate_rows[0].get("base_price") is not None else price
+    base_price = (
+        float(rate_rows[0]["base_price"])
+        if rate_rows and rate_rows[0].get("base_price") is not None
+        else price
+    )
     currency = (rate_rows[0].get("currency") if rate_rows else None) or "EUR"
 
     try:

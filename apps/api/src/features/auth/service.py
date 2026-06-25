@@ -203,6 +203,7 @@ class AuthService:
                     "name": req.tenant_name,
                     "country": req.country,
                     "currency": req.currency,
+                    "business_type": req.business_type,
                 }
             )
             .execute()

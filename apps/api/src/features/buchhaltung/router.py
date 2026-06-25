@@ -5,7 +5,15 @@ Endpoints erfordern die Lodgify-Berechtigung OWNER_REPORTING (Buchhaltung).
 """
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    HTTPException,
+    Request,
+    UploadFile,
+    status,
+)
 
 from src.core.security import AuthContext, CurrentUser
 from src.features.auth.dependencies import require_lodgify_permission
@@ -183,6 +191,23 @@ async def update_company_profile(
     payload = await request.json()
     try:
         return service.update_company_profile(ctx, payload)
+    except BuchhaltungError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/companies/{company_id}/logo")
+async def upload_company_logo(
+    company_id: str,
+    service: BuchhaltungServiceDep,
+    ctx: _write,
+    file: Annotated[UploadFile, File()],
+) -> dict:
+    """Firmenlogo hochladen (multipart) → URL ins Profil schreiben, Profil zurück."""
+    content = await file.read()
+    try:
+        return service.upload_logo(
+            ctx, content, file.content_type or "application/octet-stream"
+        )
     except BuchhaltungError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

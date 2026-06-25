@@ -1,13 +1,17 @@
 "use client";
 
-// Automatisierungen-Tab: regelbasierte Auto-Nachrichten (Trigger + Zeitpunkt +
-// Vorlage/Text). Anlegen, aktivieren/deaktivieren, löschen.
+// Automatisierungen-Tab: planbare Auto-Nachrichten (Automails). Pro Regel:
+// Trigger + Anker (Anreise/Abreise/Buchung) + Offset (Tage vor/nach) + Uhrzeit,
+// Vorlage/Text, sowie Zuweisung nach Unterkünften UND Buchungskanälen (Haken;
+// leer = alle). Anlegen, aktivieren/deaktivieren, löschen.
 import { Icon } from "@iconify/react";
 import { useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MultiSelect } from "@/components/ui/multi-select";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   type Automation,
   type MessageTemplate,
@@ -17,25 +21,45 @@ import {
   listTemplates,
   updateAutomation,
 } from "@/lib/inbox";
+import { listProperties } from "@/lib/properties";
 
 const TRIGGERS = ["booking_new", "before_checkin", "after_checkout"];
+const ANCHORS = ["arrival", "departure", "booking"];
+// Kanal-Werte = ota_name-Herkunft (Backend matcht case-insensitive). Die eigene
+// Plattform „myNextDays" ist ein eigener Kanal wie die OTAs (booking_engine setzt
+// ota_name="myNextDays"), NICHT „Direkt".
+const CHANNELS = ["myNextDays", "Booking.com", "Airbnb", "Vrbo", "Expedia"];
+
+type Prop = { id: string; title: string };
 
 export function AutomationsTab() {
   const t = useTranslations("inbox");
   const [items, setItems] = useState<Automation[]>([]);
   const [templates, setTemplates] = useState<MessageTemplate[]>([]);
+  const [props, setProps] = useState<Prop[]>([]);
   const [name, setName] = useState("");
   const [trigger, setTrigger] = useState("booking_new");
-  const [offsetDays, setOffsetDays] = useState(0);
+  const [anchor, setAnchor] = useState("arrival");
+  // direction: "before" → negatives offset, "after" → positiv. days = Betrag.
+  const [direction, setDirection] = useState<"before" | "after">("before");
+  const [days, setDays] = useState(3);
+  const [sendTime, setSendTime] = useState("09:00");
+  const [propertyIds, setPropertyIds] = useState<string[]>([]);
+  const [channels, setChannels] = useState<string[]>([]);
   const [templateId, setTemplateId] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
   async function load() {
-    const [a, tpl] = await Promise.all([listAutomations(), listTemplates()]);
+    const [a, tpl, p] = await Promise.all([
+      listAutomations(),
+      listTemplates(),
+      listProperties(),
+    ]);
     if (a.ok) setItems(a.data.items);
     if (tpl.ok) setTemplates(tpl.data.items);
+    if (p.ok) setProps(p.data.items.map((x) => ({ id: x.id, title: x.title })));
   }
   useEffect(() => {
     load();
@@ -47,11 +71,16 @@ export function AutomationsTab() {
       return;
     }
     setError(null);
+    const offset = direction === "before" ? -Math.abs(days) : Math.abs(days);
     start(async () => {
       const res = await createAutomation({
         name,
         trigger,
-        offset_days: offsetDays,
+        anchor,
+        offset_days: offset,
+        send_time: sendTime || null,
+        property_ids: propertyIds,
+        channels,
         template_id: templateId || null,
         message: message || null,
         is_active: true,
@@ -59,7 +88,9 @@ export function AutomationsTab() {
       if (res.ok) {
         setName("");
         setMessage("");
-        setOffsetDays(0);
+        setDays(3);
+        setPropertyIds([]);
+        setChannels([]);
         await load();
       } else {
         setError(res.error);
@@ -69,14 +100,7 @@ export function AutomationsTab() {
 
   function toggle(a: Automation) {
     start(async () => {
-      await updateAutomation(a.id, {
-        name: a.name,
-        trigger: a.trigger,
-        offset_days: a.offset_days,
-        template_id: a.template_id,
-        message: a.message,
-        is_active: !a.is_active,
-      });
+      await updateAutomation(a.id, { ...a, is_active: !a.is_active });
       await load();
     });
   }
@@ -86,6 +110,26 @@ export function AutomationsTab() {
       await deleteAutomation(id);
       await load();
     });
+  }
+
+  // Lesbare Zeitplan-Zeile: „3 Tage vor Anreise · 07:45".
+  function scheduleLabel(a: Automation): string {
+    const abs = Math.abs(a.offset_days);
+    const dir = a.offset_days < 0 ? t("autoBefore") : t("autoAfter");
+    const anchorLabel = t(`autoAnchor_${a.anchor}` as never) ?? a.anchor;
+    const time = a.send_time ? ` · ${a.send_time}` : "";
+    if (abs === 0) return `${anchorLabel}${time}`;
+    return `${abs} ${t("autoDays")} ${dir} ${anchorLabel}${time}`;
+  }
+
+  function assignLabel(a: Automation): string {
+    const houses =
+      a.property_ids.length === 0
+        ? t("autoAllHouses")
+        : `${a.property_ids.length} ${t("autoHousesCount")}`;
+    const chans =
+      a.channels.length === 0 ? t("autoAllChannels") : a.channels.join(", ");
+    return `${houses} · ${chans}`;
   }
 
   return (
@@ -105,8 +149,11 @@ export function AutomationsTab() {
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="font-medium">{a.name}</span>
                   <span className="text-sm text-muted-foreground">
-                    {t(`autoTrigger_${a.trigger}` as never) ?? a.trigger}
-                    {a.offset_days ? ` · ${a.offset_days} ${t("autoDays")}` : ""}
+                    {t(`autoTrigger_${a.trigger}` as never) ?? a.trigger} ·{" "}
+                    {scheduleLabel(a)}
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    {assignLabel(a)}
                   </span>
                 </div>
                 <button
@@ -143,37 +190,80 @@ export function AutomationsTab() {
           onChange={(e) => setName(e.target.value)}
           placeholder={t("autoName")}
         />
+
         <label className="text-sm font-medium">{t("autoTriggerLabel")}</label>
-        <select
-          value={trigger}
-          onChange={(e) => setTrigger(e.target.value)}
-          className="rounded-(--radius) border border-border bg-background px-3 py-2 text-sm"
-        >
+        <NativeSelect value={trigger} onChange={(e) => setTrigger(e.target.value)}>
           {TRIGGERS.map((x) => (
             <option key={x} value={x}>
               {t(`autoTrigger_${x}` as never) ?? x}
             </option>
           ))}
-        </select>
-        <label className="text-sm font-medium">{t("autoOffset")}</label>
-        <Input
-          type="number"
-          value={offsetDays}
-          onChange={(e) => setOffsetDays(Number(e.target.value))}
+        </NativeSelect>
+
+        {/* Zeitplan: Offset (Tage) · vor/nach · Anker · Uhrzeit */}
+        <label className="text-sm font-medium">{t("autoSchedule")}</label>
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            type="number"
+            min={0}
+            value={days}
+            onChange={(e) => setDays(Number(e.target.value))}
+            aria-label={t("autoDays")}
+          />
+          <NativeSelect
+            value={direction}
+            onChange={(e) => setDirection(e.target.value as "before" | "after")}
+          >
+            <option value="before">{t("autoBefore")}</option>
+            <option value="after">{t("autoAfter")}</option>
+          </NativeSelect>
+          <NativeSelect value={anchor} onChange={(e) => setAnchor(e.target.value)}>
+            {ANCHORS.map((x) => (
+              <option key={x} value={x}>
+                {t(`autoAnchor_${x}` as never) ?? x}
+              </option>
+            ))}
+          </NativeSelect>
+          <Input
+            type="time"
+            value={sendTime}
+            onChange={(e) => setSendTime(e.target.value)}
+            aria-label={t("autoTime")}
+          />
+        </div>
+
+        {/* Zuweisung Unterkünfte (durchsuchbar; leer = alle) */}
+        <label className="text-sm font-medium">{t("autoHouses")}</label>
+        <MultiSelect
+          options={props.map((p) => ({ value: p.id, label: p.title }))}
+          selected={propertyIds}
+          onChange={setPropertyIds}
+          placeholder={t("autoAllHouses")}
+          searchPlaceholder={t("autoSearchHouses")}
+          emptyHint={t("autoNoHouses")}
+          allLabel={t("autoAllHouses")}
         />
+
+        {/* Zuweisung Kanäle (durchsuchbar; leer = alle) */}
+        <label className="text-sm font-medium">{t("autoChannels")}</label>
+        <MultiSelect
+          options={CHANNELS.map((c) => ({ value: c, label: c }))}
+          selected={channels}
+          onChange={setChannels}
+          placeholder={t("autoAllChannels")}
+          searchPlaceholder={t("autoSearchChannels")}
+          allLabel={t("autoAllChannels")}
+        />
+
         <label className="text-sm font-medium">{t("autoTemplate")}</label>
-        <select
-          value={templateId}
-          onChange={(e) => setTemplateId(e.target.value)}
-          className="rounded-(--radius) border border-border bg-background px-3 py-2 text-sm"
-        >
+        <NativeSelect value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
           <option value="">{t("autoNoTemplate")}</option>
           {templates.map((tpl) => (
             <option key={tpl.id} value={tpl.id}>
               {tpl.title}
             </option>
           ))}
-        </select>
+        </NativeSelect>
         {!templateId && (
           <textarea
             value={message}

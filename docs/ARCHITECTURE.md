@@ -114,7 +114,7 @@ C4Container
 
 ### Slice-Landkarte (Component-Ebene, API-Backend)
 
-Die 17 Vertical Slices und ihre Datenbereiche — der Stand der Geschäftslogik:
+Die Vertical Slices und ihre Datenbereiche — der Stand der Geschäftslogik:
 
 ```mermaid
 flowchart TB
@@ -127,16 +127,19 @@ flowchart TB
             CAL["calendar — Verfügbarkeit, Double-Booking, Preis-Override (liest Preis via pricing-Resolver)"]
             PRICE["pricing — Preis-Resolver (effective_price + quote) + Dynamic-Pricing-Engine (dynamic_prices; Regeln + gelernte Pickup-Kurve/Wetter/Autopilot)"]
             TASKS["tasks — Aufgaben, Checklisten+Foto, Vertretung, Inventar"]
-            BUCH["buchhaltung — Rechnungen + Kunden (aus Taskilo, tenant-vereinheitlicht); Steuer/E-Rechnung/DATEV/GoBD folgen"]
+            BUCH["buchhaltung — Rechnungen + Kunden (aus Taskilo, tenant-vereinheitlicht) + Firmenprofil/Logo; Nummernkreise (next_document_number)"]
+            OWN["owners — Eigentümer-Stammdaten, Objekt-Zuweisung (Anteil + Provisions-Override je Objekt)"]
+            OWNST["owner_statements — Auszahlungs-Abrechnung (Provision je Objekt, EU-Steuer/Reverse-Charge, Storno, Mehrwährung via ECB-Tageskurs)"]
+            INBOXL["inbox — Threads (OTA + eigene Plattform), Versand, Vorlagen/KI, geplante Nachrichten + planbare Automails (Zeit + Zuweisung Haus/Kanal)"]
         end
         subgraph SCAFFOLD["Slices als Gerüst (Health) — folgen lt. Roadmap"]
             PROP["properties"]; RATES["rates"]; RES["reservations"]
-            GUE["guests"]; INBOX["inbox"]; PAY["payments (Revolut-Adapter)"]
+            GUE["guests"]; PAY["payments (Revolut-Adapter)"]
             CM["channel_manager"]; BOOK["booking_engine"]; OCR["ocr"]
             PORTAL["public_portal"]; CRM["crm"]; DASH["dashboard"]; CONT["content"]
         end
     end
-    DB[("Postgres — 83 Tabellen, RLS")]
+    DB[("Postgres — 90 Tabellen, RLS")]
     DONE --> DB
     SCAFFOLD --> DB
     CORE --> DONE
@@ -553,6 +556,40 @@ einem Gast zu oder legt „Gast aus Thread an". Backfill für Alt-Threads:
 `scripts/backfill_guest_links.py`. Kanal-IDs gelten als personenbezogen
 (DSGVO-Löschung/Anonymisierung).
 
+**Eigentümer-Abrechnung (owners + owner_statements, Migrationen `0063`–`0071`):**
+Zwei Slices. **`owners`** (`0063`) hält die Eigentümer-Stammdaten (Adresse, Steuer-/
+USt-IdNr., Bank, `default_commission_pct`) und die Objekt-Zuweisung
+`owner_properties` (Anteil `ownership_share` + Provisions-Override
+`commission_override_pct` je Objekt). **`owner_statements`** (`0064`) ist die
+Auszahlungs-Abrechnung je Eigentümer + Zeitraum, mit Snapshot der PM-/Owner-
+Stammdaten, Status (`draft`/`finalized`/`cancelled`) und eingefrorenen Summen.
+
+- **Provision je Objekt (`0068`):** `owner_statements.commission_pct` ist NULL =
+  Provision je Objekt aus den Stammdaten (`commission_override_pct`, sonst
+  `default_commission_pct`); ein gesetzter Wert ist ein manueller, abrechnungsweiter
+  Override. Buchungssatz = (`total_amount` − `channel_fee`) × (1 − Provision); je
+  Reservierung mit dem Satz IHRES Objekts gerechnet (gemischte Sätze korrekt).
+- **EU-Steuer (`0065`, `tax.py`):** Kategorie/Satz nach EU-Recht — Kleinunternehmer
+  → 'E', Reverse-Charge (Käufer-USt-IdNr. + beide EU + Aussteller≠Käufer) → 'AE',
+  sonst 'S'. Fortlaufende Nummern über den Buchhaltungs-Bestand
+  (`next_document_number`/`tenant_billing_profile`, kein paralleles System).
+- **Storno:** Eine finalisierte Rechnung wird nicht gelöscht, sondern per
+  Stornorechnung (eigene Nummer, negierte Beträge, Referenz) neutralisiert; das
+  Original bleibt `cancelled` (`kind`/`cancels_statement_id`/`cancelled_by_statement_id`).
+- **Mehrwährung (`0069`/`0070`, `fx.py` + `currencies.py`):** Buchungen kommen in
+  ihrer Quellwährung (`reservations.currency`, via Channex ODER eigene Plattform).
+  Der Eigentümer gibt sein **Herkunftsland** an → **Owner-Zielwährung**
+  (`currencies.COUNTRY_CURRENCY`). NUR die Owner-Auszahlung wird umgerechnet — mit
+  dem **ECB-Tageskurs am Check-out** je Reservierung. Kursquelle: **Frankfurter**
+  (ECB, kostenlos, kein Key), gecacht in **`fx_rates`** (`rate_date,base,quote,rate,
+  source`; Tageskurs stabil/reproduzierbar, GoBD). **Kein Fallback** — fehlt ein
+  Kurs, `FxError` → 502 (keine erfundenen Beträge). Verwaltungsanteil bleibt je
+  Quellwährung getrennt (`pm_payout_by_currency`); Owner-Summe in `owner_currency`
+  (`0070`). Beträge verschiedener Währungen werden nie addiert.
+- **Live (`0071`):** `owners`, `owner_properties`, `owner_expenses`,
+  `owner_statements` sind in der Realtime-Publication — die Eigentümer-Seite
+  aktualisiert sich vollständig per WebSocket (s. § Echtzeit).
+
 ---
 
 ## 6. Mandantenfähigkeit & RLS
@@ -613,6 +650,9 @@ Schreibzugriff.
 - **UI:** Sidebar reduziert für owner (`OWNER_ALLOWED_HREFS`: Dashboard, Kalender,
   Objekte, Dynamic Pricing, Berichte). Die UI ist nur Komfort — die Sicherheit liegt
   in RLS + API.
+- **Abrechnung:** Der `owner_statements`-Slice setzt denselben Scope durch — eine
+  Abrechnung umfasst nur die dem Eigentümer zugeordneten Objekte (`owner_properties`),
+  deren Reservierungen, Provision je Objekt und Auszahlung (s. Datenmodell).
 
 ---
 
@@ -962,6 +1002,30 @@ Client) — der Anzeigename kommt automatisch aus dem eingeloggten Account, kein
 zweite Anmeldung. RLS erlaubt anonymem Schlüssel nur `SELECT` + `INSERT`; der
 Chat ist bewusst von allen PMS-/Kundendaten getrennt.
 
+**Grundsatz Realtime statt Polling:** Datengetriebene Ansichten aktualisieren sich
+über **Supabase Realtime (WebSocket, `postgres_changes`)** — kein Polling, kein
+manuelles Reload. Zentraler Hook `apps/web/lib/use-realtime.ts` (abonniert eine
+Tabelle, debounced, setzt das App-Token → RLS-tenant-scoped); pro Seite eine
+`<Domain>Realtime`-Komponente, die alle speisenden Tabellen abonniert und bei
+Änderung `router.refresh()` (+ ggf. gezieltes Neuladen) auslöst. Beispiele:
+`property-realtime.tsx` (Objektseite), `calendar-board` (Preise, `0052`),
+`owner-realtime.tsx` (Eigentümer-Seite: `owners`/`owner_properties`/
+`owner_expenses`/`owner_statements`/`reservations`, Publication via `0071`).
+Voraussetzung je Tabelle: Aufnahme in die Publication `supabase_realtime` per
+Migration.
+
+**Posteingang-Automails (inbox, Migration `0072`):** Planbare Auto-Nachrichten
+(Buchungsbestätigung, Anreise-/Check-out-Info). `message_automation` (0037) trägt
+zusätzlich `anchor` (arrival|departure|booking), `send_time`, `offset_days`
+(vorzeichen-behaftet) sowie die Zuweisung `property_ids[]`/`channels[]` (leer =
+alle, **UND-verknüpft**: Haus UND Kanal). Bei jedem Booking-Import plant
+`schedule_automations_for_thread` je passender Regel eine Zeile in
+`automation_scheduled_message` (Dedup über `(automation_id, thread_id)`); der Cron
+`POST /inbox/internal/dispatch-automations` versendet fällige (Channex). Kein
+Fallback bei fehlendem Ankerdatum (übersprungen). Beide Tabellen sind in der
+Realtime-Publication. Kanäle sind OTAs **und** die eigene Plattform „myNextDays"
+(gleichwertiger Buchungskanal, kein „Direkt").
+
 ---
 
 ## Externe Dienste
@@ -976,6 +1040,8 @@ wird in **[docs/decisions/](decisions/)** mit Rechtsgrundlage dokumentiert.
 | Google Translate | mehrsprachige Inhalte (server-seitig gecacht) |
 | OCR (self-hosted) | Ausweis-/Pass-Scan (Meldepflicht) + Belege — bleibt auf Hetzner |
 | **Channex** | Channel-Manager-Aggregator: OTA-Distribution (Booking.com, Airbnb, Expedia …). ARI-Push + Buchungs-Pull über den `channel_manager`-Slice (`channex_client.py`). Secrets: `CHANNEX_API_KEY`, `CHANNEX_BASE_URL`, `CHANNEX_WEBHOOK_SECRET`. |
+| Frankfurter (ECB) | Tages-Wechselkurse (ECB-Referenz, kostenlos, kein Key) für die Eigentümer-Abrechnung (`owner_statements/fx.py`); gecacht in `fx_rates`. Kein Fallback bei Ausfall. |
+| DWD / Bright Sky | amtliche Wetterdaten (frei, kein Key) als Dynamic-Pricing-Signal (`pricing/weather.py`). |
 
 ---
 

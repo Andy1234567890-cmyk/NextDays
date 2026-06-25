@@ -2322,9 +2322,28 @@ class ChannelManagerService:
             "guest_id": guest_id,  # direkter Thread→Gast-Link (Inbox/Gästekarte)
             "raw": attrs,
         }
-        db.table("channex_booking").upsert(
-            row, on_conflict="channex_booking_id"
-        ).execute()
+        upserted = (
+            db.table("channex_booking")
+            .upsert(row, on_conflict="channex_booking_id")
+            .execute()
+        ).data or []
+        # Automails für diesen Thread planen (Buchungsbestätigung, Anreise-/
+        # Check-out-Info …): idempotent über den Unique-Index je (Automation,
+        # Thread). Versand erfolgt später per Cron (dispatch_due_automations).
+        # Best effort — ein Planungsfehler darf den Buchungs-Import nicht abbrechen.
+        if upserted:
+            try:
+                from src.features.inbox.service import InboxService
+
+                InboxService(service_client=db).schedule_automations_for_thread(
+                    tenant_id, str(upserted[0]["id"])
+                )
+            except Exception as exc:  # noqa: BLE001 — Planung nie fatal
+                log.warning(
+                    "automail_schedule_failed",
+                    tenant_id=tenant_id,
+                    error=str(exc),
+                )
         return guest_id
 
     # -- Import Channex → zentrale reservations / availability / Preise --------

@@ -97,6 +97,45 @@ class ImageUploadResponse(BaseModel):
     url: str
 
 
+# --- Foto-/Galerieverwaltung (property_photos, Migration 0061) ---------------
+
+
+class PropertyPhoto(BaseModel):
+    """Ein Foto eines Objekts mit Metadaten (Reihenfolge, Cover, Caption)."""
+
+    id: str
+    property_id: str
+    url: str
+    sort_order: int
+    is_cover: bool
+    # Locale → Bildunterschrift, z. B. {"de": "Wohnzimmer", "en": "Living room"}.
+    caption: dict[str, str] = Field(default_factory=dict)
+    created_at: str | None = None
+    updated_at: str | None = None
+
+
+class PropertyPhotoListResponse(BaseModel):
+    items: list[PropertyPhoto]
+    total: int
+
+
+class PhotoReorderRequest(BaseModel):
+    """Neue Reihenfolge der Fotos als vollständige Liste der Foto-IDs."""
+
+    photo_ids: list[str] = Field(min_length=1)
+
+
+class PhotoUpdateRequest(BaseModel):
+    """Partielle Aktualisierung eines Fotos: Caption je Locale und/oder Cover.
+
+    ``caption`` ersetzt die gesamte Locale-Map (nicht gesetzt = unverändert).
+    ``is_cover=true`` macht dieses Foto zum alleinigen Cover des Objekts.
+    """
+
+    caption: dict[str, str] | None = None
+    is_cover: bool | None = None
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"
