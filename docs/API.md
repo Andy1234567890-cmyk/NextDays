@@ -523,12 +523,17 @@ liefert nur Nutzer mit Posteingang-Zugriff; jede Zuweisung setzt `assigned_by`/
 **Interner Cron (kein JWT, Secret-Header `X-Internal-Cron-Secret` = `CHANNEX_WEBHOOK_SECRET`):**
 
 | `POST` | `/api/v1/inbox/internal/dispatch-scheduled` | Versendet fällige geplante Nachrichten (alle Tenants) |
+| `POST` | `/api/v1/inbox/internal/dispatch-automations` | Versendet fällige Automails (Buchungsbestätigung, Anreise-/Check-out-Info; alle Tenants) |
 
 Per Coolify-Scheduled-Task / crontab regelmäßig aufrufen, analog zu
 `/channel-manager/internal/reconcile`:
 
 ```
 */5 * * * * curl -fsS -X POST https://<api-host>/api/v1/inbox/internal/dispatch-scheduled \
+  -H "X-Internal-Cron-Secret: $CHANNEX_WEBHOOK_SECRET"
+# Automails (planbare Auto-Nachrichten) — minütlich, damit die Uhrzeit (z. B.
+# 07:45) zeitnah getroffen wird:
+* * * * * curl -fsS -X POST https://<api-host>/api/v1/inbox/internal/dispatch-automations \
   -H "X-Internal-Cron-Secret: $CHANNEX_WEBHOOK_SECRET"
 ```
 
