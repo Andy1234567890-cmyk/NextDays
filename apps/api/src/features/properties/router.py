@@ -1,9 +1,10 @@
 """Router für properties. Gemountet unter /api/v1/properties."""
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from src.core.security import AuthContext, CurrentUser
+from src.core.uploads import read_upload
 from src.features.auth.dependencies import require_lodgify_permission
 from src.features.auth.lodgify_permissions import Permission
 
@@ -110,8 +111,8 @@ def publish_property(
 @router.post("/{property_id}/image", response_model=ImageUploadResponse)
 async def upload_property_image(
     property_id: str,
+    request: Request,
     service: PropertiesServiceDep,
-    file: Annotated[UploadFile, File()],
     ctx: Annotated[
         AuthContext,
         Depends(require_lodgify_permission(Permission.PM_MANAGE_PROPERTY_IMAGES)),
@@ -121,13 +122,13 @@ async def upload_property_image(
     """Bild für ein Objekt hochladen (multipart). ``slot`` benennt die
     Verwendung (z. B. „custom-map"); gibt die öffentliche URL zurück. Das
     Speichern der URL ins Objekt erfolgt separat per PATCH."""
-    content = await file.read()
+    content, content_type = await read_upload(request)
     try:
         url = service.upload_image(
             ctx,
             property_id,
             content,
-            file.content_type or "application/octet-stream",
+            content_type or "application/octet-stream",
             slot=slot,
         )
         return ImageUploadResponse(url=url)
@@ -158,20 +159,20 @@ def list_property_photos(
 )
 async def add_property_photo(
     property_id: str,
+    request: Request,
     service: PropertiesServiceDep,
-    file: Annotated[UploadFile, File()],
     ctx: Annotated[AuthContext, Depends(_MANAGE_IMAGES)],
 ) -> PropertyPhoto:
     """Ein Galerie-Foto hochladen (multipart). JPEG/PNG, 50 KB–20 MB. Das Foto
     wird ans Ende einsortiert; das erste Foto wird automatisch zum Cover. Der
     Client lädt mehrere Dateien über wiederholte Aufrufe hoch."""
-    content = await file.read()
+    content, content_type = await read_upload(request)
     try:
         return service.add_photo(
             ctx,
             property_id,
             content,
-            file.content_type or "application/octet-stream",
+            content_type or "application/octet-stream",
         )
     except PropertyError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

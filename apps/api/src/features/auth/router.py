@@ -1,9 +1,10 @@
 """Router für auth. Gemountet unter /api/v1/auth."""
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from src.core.security import AuthContext, CurrentUser
+from src.core.uploads import read_upload
 
 from .dependencies import (
     AccountServiceDep,
@@ -213,15 +214,15 @@ def update_profile(
 @router.post("/account/avatar", response_model=AccountResponse)
 async def upload_avatar(
     ctx: CurrentUser,
+    request: Request,
     service: AccountServiceDep,
-    file: Annotated[UploadFile, File()],
 ) -> AccountResponse:
     """Profilbild hochladen (multipart). Speichert in den avatars-Bucket und
     setzt avatar_url im Profil. Funktioniert für beide Login-Wege."""
-    content = await file.read()
+    content, content_type = await read_upload(request)
     try:
         return service.upload_avatar(
-            ctx, content, file.content_type or "application/octet-stream"
+            ctx, content, content_type or "application/octet-stream"
         )
     except AuthError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

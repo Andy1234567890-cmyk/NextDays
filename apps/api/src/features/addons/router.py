@@ -6,9 +6,10 @@ Flächen läuft über booking_engine bzw. public_portal, nicht hier.
 """
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from src.core.security import AuthContext
+from src.core.uploads import read_upload
 from src.features.auth.dependencies import require_permission
 from src.features.auth.permissions import Capability
 
@@ -95,14 +96,17 @@ def delete_addon(
 @router.post("/{addon_id}/media", response_model=AddonResponse)
 async def add_addon_media(
     addon_id: str,
+    request: Request,
     service: AddonsServiceDep,
-    file: Annotated[UploadFile, File()],
     ctx: Annotated[AuthContext, Depends(_MANAGE)],
 ) -> AddonResponse:
-    """Ein Medium (Foto) hochladen (multipart). JPEG/PNG/WebP, 10 KB–20 MB, max. 5."""
-    content = await file.read()
+    """Ein Medium (Foto) hochladen (multipart). JPEG/PNG/WebP, 10 KB–20 MB, max. 5.
+
+    Liest das Formular mit angehobenem Part-Limit (sonst lehnt Starlette Fotos
+    >1 MB mit rohem 413 ab); die 20-MB-Grenze prüft der Service."""
+    content, content_type = await read_upload(request)
     try:
-        return service.add_media(ctx, addon_id, content, file.content_type or "")
+        return service.add_media(ctx, addon_id, content, content_type)
     except AddonError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

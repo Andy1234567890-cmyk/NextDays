@@ -8,14 +8,13 @@ from typing import Annotated
 from fastapi import (
     APIRouter,
     Depends,
-    File,
     HTTPException,
     Request,
-    UploadFile,
     status,
 )
 
 from src.core.security import AuthContext, CurrentUser
+from src.core.uploads import read_upload
 from src.features.auth.dependencies import require_lodgify_permission
 from src.features.auth.lodgify_permissions import Permission
 
@@ -198,15 +197,15 @@ async def update_company_profile(
 @router.post("/companies/{company_id}/logo")
 async def upload_company_logo(
     company_id: str,
+    request: Request,
     service: BuchhaltungServiceDep,
     ctx: _write,
-    file: Annotated[UploadFile, File()],
 ) -> dict:
     """Firmenlogo hochladen (multipart) → URL ins Profil schreiben, Profil zurück."""
-    content = await file.read()
+    content, content_type = await read_upload(request)
     try:
         return service.upload_logo(
-            ctx, content, file.content_type or "application/octet-stream"
+            ctx, content, content_type or "application/octet-stream"
         )
     except BuchhaltungError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
