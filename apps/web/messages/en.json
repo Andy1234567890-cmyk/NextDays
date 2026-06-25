@@ -651,7 +651,8 @@
       "email": "Email",
       "phone": "Phone",
       "address": "Address",
-      "taxId": "Tax number/ID"
+      "taxId": "Tax number/ID",
+      "fromMaster": "Set in your company profile (Account)"
     },
     "owner": {
       "title": "Property owner",
@@ -659,7 +660,8 @@
       "email": "Email",
       "phone": "Phone",
       "address": "Address",
-      "taxId": "Tax number/ID"
+      "taxId": "Tax number/ID",
+      "fromMaster": "Set in the owner master data"
     },
     "summary": {
       "totalPrice": "Total Price",

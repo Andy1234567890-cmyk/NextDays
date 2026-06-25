@@ -7,7 +7,10 @@
 // (die ans FastAPI proxyt) — PDF-Rendering läuft also lokal in Node, nicht im
 // Python-Backend (dort ist kein Playwright verfügbar).
 import { NextResponse } from "next/server";
-import { chromium } from "playwright";
+// playwright-core (statt "playwright"): identischer chromium.launch, aber ohne
+// den eigenen Browser-Bootstrap-Treiber — der Chromium-Browser wird im Docker-
+// Runtime-Stage über PLAYWRIGHT_BROWSERS_PATH bereitgestellt.
+import { chromium } from "playwright-core";
 
 // Playwright braucht Node (kein Edge) und etwas Zeit fürs Rendern.
 export const runtime = "nodejs";

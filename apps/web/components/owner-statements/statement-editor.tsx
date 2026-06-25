@@ -359,16 +359,16 @@ export function StatementEditor({
       {/* Data */}
       <Section title={t("sections.data")} defaultOpen>
         <div className="grid grid-cols-1 gap-x-10 gap-y-3 lg:grid-cols-2">
-          <HeaderField label={t("pm.name")} value={st.header.pm_name} onChange={(v) => patchHeader("pm_name", v)} disabled />
-          <HeaderField label={t("owner.name")} value={st.header.owner_name} onChange={(v) => patchHeader("owner_name", v)} disabled />
-          <HeaderField label={t("pm.email")} value={st.header.pm_email} onChange={(v) => patchHeader("pm_email", v)} disabled />
-          <HeaderField label={t("owner.email")} value={st.header.owner_email} onChange={(v) => patchHeader("owner_email", v)} disabled />
-          <HeaderField label={t("pm.phone")} value={st.header.pm_phone} onChange={(v) => patchHeader("pm_phone", v)} disabled />
-          <HeaderField label={t("owner.phone")} value={st.header.owner_phone} onChange={(v) => patchHeader("owner_phone", v)} disabled />
-          <HeaderField label={t("pm.address")} value={st.header.pm_address} onChange={(v) => patchHeader("pm_address", v)} disabled />
-          <HeaderField label={t("owner.address")} value={st.header.owner_address} onChange={(v) => patchHeader("owner_address", v)} disabled />
-          <HeaderField label={t("pm.taxId")} value={st.header.pm_tax_id} onChange={(v) => patchHeader("pm_tax_id", v)} disabled />
-          <HeaderField label={t("owner.taxId")} value={st.header.owner_tax_id} onChange={(v) => patchHeader("owner_tax_id", v)} disabled />
+          <HeaderField label={t("pm.name")} value={st.header.pm_name} onChange={(v) => patchHeader("pm_name", v)} disabled emptyHint={t("pm.fromMaster")} />
+          <HeaderField label={t("owner.name")} value={st.header.owner_name} onChange={(v) => patchHeader("owner_name", v)} disabled emptyHint={t("owner.fromMaster")} />
+          <HeaderField label={t("pm.email")} value={st.header.pm_email} onChange={(v) => patchHeader("pm_email", v)} disabled emptyHint={t("pm.fromMaster")} />
+          <HeaderField label={t("owner.email")} value={st.header.owner_email} onChange={(v) => patchHeader("owner_email", v)} disabled emptyHint={t("owner.fromMaster")} />
+          <HeaderField label={t("pm.phone")} value={st.header.pm_phone} onChange={(v) => patchHeader("pm_phone", v)} disabled emptyHint={t("pm.fromMaster")} />
+          <HeaderField label={t("owner.phone")} value={st.header.owner_phone} onChange={(v) => patchHeader("owner_phone", v)} disabled emptyHint={t("owner.fromMaster")} />
+          <HeaderField label={t("pm.address")} value={st.header.pm_address} onChange={(v) => patchHeader("pm_address", v)} disabled emptyHint={t("pm.fromMaster")} />
+          <HeaderField label={t("owner.address")} value={st.header.owner_address} onChange={(v) => patchHeader("owner_address", v)} disabled emptyHint={t("owner.fromMaster")} />
+          <HeaderField label={t("pm.taxId")} value={st.header.pm_tax_id} onChange={(v) => patchHeader("pm_tax_id", v)} disabled emptyHint={t("pm.fromMaster")} />
+          <HeaderField label={t("owner.taxId")} value={st.header.owner_tax_id} onChange={(v) => patchHeader("owner_tax_id", v)} disabled emptyHint={t("owner.fromMaster")} />
           <HeaderField label={t("invoiceNumber")} value={st.header.invoice_number} onChange={(v) => patchHeader("invoice_number", v)} disabled={finalized} />
         </div>
         <Labeled label={t("notes")} className="mt-3">
@@ -879,16 +879,25 @@ function HeaderField({
   value,
   onChange,
   disabled,
+  emptyHint,
 }: {
   label: string;
   value: string | null;
   onChange: (v: string | null) => void;
   disabled: boolean;
+  // Hinweis im Platzhalter, wenn ein schreibgeschütztes Feld leer ist (Daten
+  // stammen aus den Stammdaten – dort pflegen, nicht hier).
+  emptyHint?: string;
 }) {
   return (
     <div className="flex items-center gap-3">
       <span className="w-40 shrink-0 text-sm text-muted-foreground">{label}</span>
-      <Input value={value ?? ""} disabled={disabled} onChange={(e) => onChange(e.target.value || null)} />
+      <Input
+        value={value ?? ""}
+        disabled={disabled}
+        placeholder={disabled && !value ? emptyHint : undefined}
+        onChange={(e) => onChange(e.target.value || null)}
+      />
     </div>
   );
 }

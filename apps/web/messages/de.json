@@ -651,7 +651,8 @@
       "email": "E-Mail",
       "phone": "Telefon",
       "address": "Adresse",
-      "taxId": "Steuernummer/ID"
+      "taxId": "Steuernummer/ID",
+      "fromMaster": "Im Firmenprofil (Konto) hinterlegen"
     },
     "owner": {
       "title": "Eigentümer",
@@ -659,7 +660,8 @@
       "email": "E-Mail",
       "phone": "Telefon",
       "address": "Adresse",
-      "taxId": "Steuernummer/ID"
+      "taxId": "Steuernummer/ID",
+      "fromMaster": "In den Stammdaten hinterlegen"
     },
     "summary": {
       "totalPrice": "Gesamtpreis",

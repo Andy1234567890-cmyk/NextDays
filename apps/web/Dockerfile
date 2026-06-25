@@ -32,6 +32,15 @@ FROM node:22.16-slim AS run
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
+# Playwright/Chromium für die PDF-Route (/api/v1/generate-pdf-single):
+# Browser an einen festen, für den nextjs-User lesbaren Pfad installieren.
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+# Nur den Chromium-Browser + dessen System-Libs installieren (kein Firefox/WebKit).
+# Wir nehmen exakt dieselbe Playwright-Version wie in package.json, damit Treiber
+# und Browser-Revision zusammenpassen. --with-deps zieht libnss3/libatk/… per apt.
+RUN corepack enable && corepack prepare pnpm@11.1.1 --activate \
+  && npx --yes playwright@1.61.1 install --with-deps chromium \
+  && chmod -R a+rx /ms-playwright
 # Nicht als root laufen.
 RUN groupadd --system --gid 1001 nodejs \
   && useradd --system --uid 1001 --gid nodejs nextjs
