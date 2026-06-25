@@ -109,21 +109,46 @@ class OwnersService:
             .order("name")
             .execute()
         ).data or []
-        # Objekt-Anzahl je Eigentümer in einem Rutsch (kein N+1).
+        # Objekt-Anzahl + effektive Provisions-Spanne je Eigentümer in einem
+        # Rutsch (kein N+1). Effektiv = Override je Objekt, sonst Owner-Default.
         owner_ids = [str(r["id"]) for r in rows]
+        default_by_owner = {
+            str(r["id"]): float(r.get("default_commission_pct") or 0) for r in rows
+        }
         counts: dict[str, int] = {oid: 0 for oid in owner_ids}
+        eff_by_owner: dict[str, list[float]] = {oid: [] for oid in owner_ids}
         if owner_ids:
             links = (
                 self._db.table("owner_properties")
-                .select("owner_id")
+                .select("owner_id, commission_override_pct")
                 .in_("owner_id", owner_ids)
                 .execute()
             ).data or []
             for link in links:
                 oid = str(link["owner_id"])
                 counts[oid] = counts.get(oid, 0) + 1
+                override = link.get("commission_override_pct")
+                eff = (
+                    float(override)
+                    if override is not None
+                    else default_by_owner.get(oid, 0.0)
+                )
+                eff_by_owner.setdefault(oid, []).append(eff)
         items = [
-            OwnerListItem(**_owner_row(r), property_count=counts.get(str(r["id"]), 0))
+            OwnerListItem(
+                **_owner_row(r),
+                property_count=counts.get(str(r["id"]), 0),
+                commission_min=(
+                    min(eff_by_owner[str(r["id"])])
+                    if eff_by_owner.get(str(r["id"]))
+                    else None
+                ),
+                commission_max=(
+                    max(eff_by_owner[str(r["id"])])
+                    if eff_by_owner.get(str(r["id"]))
+                    else None
+                ),
+            )
             for r in rows
         ]
         return OwnerListResponse(items=items, total=len(items))

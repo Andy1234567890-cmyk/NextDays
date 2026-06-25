@@ -14,7 +14,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
+import { ReservationDetailSlider } from "@/components/kalender/reservation-detail-slider";
 import { ReservationWizard } from "@/components/kalender/reservation-wizard";
+import { formatCurrency } from "@/lib/currency";
 import type { GuestAccess } from "@/lib/guests-access";
 import { listProperties } from "@/lib/properties";
 import {
@@ -840,31 +842,65 @@ function PreferencesTab({
 function ReservationsTab({ guestId, access }: { guestId: string; access: GuestAccess }) {
   const t = useTranslations("guests");
   const [items, setItems] = useState<GuestReservation[] | null>(null);
-  useEffect(() => {
+  // Geöffnete Reservierung → Detail-Slider (mit Zusatzbuchungen + Storno).
+  const [openId, setOpenId] = useState<string | null>(null);
+
+  const reload = useCallback(() => {
     listGuestReservations(guestId).then((r) => r.ok && setItems(r.data.items));
   }, [guestId]);
+  useEffect(reload, [reload]);
+
+  const todayKey = new Date().toISOString().slice(0, 10);
+  const money = (v: number, cur: string | null) =>
+    cur ? formatCurrency(v, cur) : v.toLocaleString("de-DE");
+
   if (items === null) return <Card>…</Card>;
   if (items.length === 0) return <Card>{t("noReservations")}</Card>;
   return (
-    <Card>
-      <ul className="flex flex-col gap-2">
-        {items.map((r) => (
-          <li key={r.id} className="flex items-center justify-between border-b border-border pb-2 last:border-0">
-            <span>
-              {r.check_in ?? "—"} – {r.check_out ?? "—"}
-            </span>
-            <span className="text-muted-foreground">{r.status ?? "—"}</span>
-            {access.amounts && (
-              <span className="font-medium">
-                {r.total_amount != null
-                  ? `${r.total_amount.toLocaleString("de-DE")} ${r.currency ?? ""}`
-                  : "—"}
-              </span>
-            )}
-          </li>
-        ))}
-      </ul>
-    </Card>
+    <>
+      <Card>
+        <ul className="flex flex-col gap-1">
+          {items.map((r) => (
+            <li key={r.id}>
+              <button
+                type="button"
+                onClick={() => setOpenId(r.id)}
+                className="flex w-full items-center justify-between gap-3 rounded-(--radius) px-2 py-2 text-left hover:bg-muted/60"
+              >
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate">
+                    {r.check_in ?? "—"} – {r.check_out ?? "—"}
+                  </span>
+                  {access.amounts && r.addons_total != null && r.addons_total > 0 && (
+                    <span className="text-xs text-muted-foreground">
+                      + {money(r.addons_total, r.currency)} {t("addons")}
+                    </span>
+                  )}
+                </span>
+                <span className="text-sm text-muted-foreground">{r.status ?? "—"}</span>
+                {access.amounts && (
+                  <span className="shrink-0 font-medium">
+                    {r.total_amount != null ? money(r.total_amount, r.currency) : "—"}
+                  </span>
+                )}
+                <Icon icon="ph:caret-right" className="size-4 shrink-0 text-muted-foreground" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </Card>
+      {openId && (
+        <ReservationDetailSlider
+          reservationId={openId}
+          todayKey={todayKey}
+          onClose={() => setOpenId(null)}
+          onCancelled={() => {
+            setOpenId(null);
+            reload();
+          }}
+        />
+      )}
+    </>
   );
 }
 

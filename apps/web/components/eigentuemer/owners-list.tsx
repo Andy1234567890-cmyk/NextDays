@@ -81,7 +81,7 @@ export function OwnersList({
                 </p>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>
-                    {t("commissionShort")}: {o.default_commission_pct}%
+                    {t("commissionShort")}: {commissionLabel(o)}
                   </span>
                   <span>
                     {t("propertyCount", { count: o.property_count })}
@@ -168,4 +168,13 @@ function CreateOwnerDialog({
       </Card>
     </div>
   );
+}
+
+// Effektive Provision für die Karte: einheitlich → ein Wert, sonst Spanne.
+// Ohne zugeordnete Objekte (min/max null) der Owner-Default.
+function commissionLabel(o: OwnerListItem): string {
+  const lo = o.commission_min;
+  const hi = o.commission_max;
+  if (lo == null || hi == null) return `${o.default_commission_pct}%`;
+  return lo === hi ? `${lo}%` : `${lo}–${hi}%`;
 }

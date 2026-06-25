@@ -335,6 +335,10 @@ class BookingEngineService:
 
         guest_id = self._upsert_guest(tenant_id, req.contact)
 
+        # Währung aus dem Objekt (Rate-Plan) — nie hart auf EUR (27 EU-Länder).
+        _price, currency = self._price_from(
+            req.property_id, req.check_in, req.check_out
+        )
         ins = (
             self._db()
             .table("reservations")
@@ -349,7 +353,7 @@ class BookingEngineService:
                     "check_out": req.check_out.isoformat(),
                     "status": "confirmed",
                     "total_amount": req.total_amount,
-                    "currency": "EUR",
+                    "currency": currency or None,
                 }
             )
             .execute()
@@ -391,6 +395,14 @@ class BookingEngineService:
 
         # Realtime an Channex/OTAs sperren (availability=0) — kein OTA-Doppel.
         self._push_channex(tenant_id, req.property_id, req.check_in, req.check_out, 0)
+
+        # Loyalty-Aggregate des Gastes (Aufenthalte/Umsatz) neu berechnen.
+        if guest_id:
+            from src.features.guests.service import (  # noqa: PLC0415
+                recompute_guest_aggregates,
+            )
+
+            recompute_guest_aggregates(self._db(), tenant_id, str(guest_id))
 
         log.info(
             "public_booking_created",

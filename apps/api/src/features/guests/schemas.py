@@ -236,6 +236,9 @@ class GuestReservationItem(BaseModel):
     channel: str | None = None
     total_amount: float | None = None       # maskierbar
     currency: str | None = None
+    # Summe der gebuchten Zusatzleistungen (reservation_addons, ohne stornierte);
+    # maskierbar wie total_amount. 0 = keine Extras.
+    addons_total: float | None = None
 
 
 class GuestThreadItem(BaseModel):

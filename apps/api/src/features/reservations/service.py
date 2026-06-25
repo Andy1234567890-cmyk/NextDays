@@ -369,6 +369,14 @@ class ReservationsService:
         # Dynamic Pricing der betroffenen Tage neu rechnen (Auslastung/Orphan).
         self._recompute_dynamic_pricing(req.property_id, req.check_in, req.check_out)
 
+        # Loyalty-Aggregate des Gastes (Aufenthalte/Umsatz) neu berechnen.
+        if guest_id:
+            from src.features.guests.service import (  # noqa: PLC0415
+                recompute_guest_aggregates,
+            )
+
+            recompute_guest_aggregates(self._db(), tenant_id, guest_id)
+
         log.info(
             "reservation_created",
             property_id=req.property_id,
@@ -635,6 +643,16 @@ class ReservationsService:
             ).execute()
         except Exception as exc:  # noqa: BLE001 — Audit ist best-effort
             log.warning("reservation_cancellation_log_failed", error=str(exc))
+
+        # Loyalty-Aggregate des Gastes neu berechnen (Storno reduziert Umsatz).
+        if current.get("guest_id"):
+            from src.features.guests.service import (  # noqa: PLC0415
+                recompute_guest_aggregates,
+            )
+
+            recompute_guest_aggregates(
+                self._db(), tenant_id, str(current["guest_id"])
+            )
 
         log.info(
             "reservation_cancelled",

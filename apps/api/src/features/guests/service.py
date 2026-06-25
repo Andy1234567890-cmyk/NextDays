@@ -464,6 +464,8 @@ class GuestsService:
             .eq("tenant_id", tenant_id).eq("guest_id", guest_id)
             .order("check_in", desc=True).execute()
         )
+        rows = res.data or []
+        addon_totals = self._addon_totals_for([str(r["id"]) for r in rows])
         items = [
             GuestReservationItem(
                 id=r["id"], property_id=r.get("property_id"),
@@ -473,10 +475,35 @@ class GuestsService:
                     float(r["total_amount"]) if r.get("total_amount") is not None else None
                 ),
                 currency=(r.get("currency") if mask.amounts else None),
+                addons_total=mask.amount(addon_totals.get(str(r["id"]), 0.0)),
             )
-            for r in (res.data or [])
+            for r in rows
         ]
         return ListResponse(items=items, total=len(items))
+
+    def _addon_totals_for(self, reservation_ids: list[str]) -> dict[str, float]:
+        """Summe der nicht-stornierten Zusatzleistungen je Reservierung."""
+        ids = [r for r in reservation_ids if r]
+        if not ids:
+            return {}
+        try:
+            rows = (
+                self._db()
+                .table("reservation_addons")
+                .select("reservation_id, total, status")
+                .in_("reservation_id", ids)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — fehlende Tabelle = keine Extras
+            log.warning("guest_reservation_addons_unavailable", error=str(exc))
+            return {}
+        out: dict[str, float] = {}
+        for a in rows:
+            if (a.get("status") or "pending") == "cancelled":
+                continue
+            rid = str(a["reservation_id"])
+            out[rid] = out.get(rid, 0.0) + float(a.get("total") or 0)
+        return out
 
     def threads(self, ctx: AuthContext, guest_id: str) -> ListResponse:
         """Verknüpfte Posteingang-Threads (channex_booking) über den Gast.
@@ -709,3 +736,71 @@ class GuestsService:
             doc_type=r.get("doc_type"), storage_path=r.get("storage_path") or "",
             uploaded_by=r.get("uploaded_by"), created_at=r["created_at"],
         )
+
+
+def recompute_guest_aggregates(db: Client, tenant_id: str, guest_id: str) -> None:
+    """Loyalty-Aggregate eines Gastes (stays_count/total_revenue/last_stay_at)
+    aus seinen Reservierungen neu berechnen und in die guests-Zeile schreiben.
+
+    Single Source of Truth: wird nach jedem Anlegen/Stornieren einer Reservierung
+    aufgerufen (reservations.create, booking_engine.create_public_booking,
+    Storno). Stornierte Reservierungen zählen nicht; der Umsatz enthält den
+    Mietbetrag plus die nicht-stornierten Zusatzleistungen (reservation_addons).
+    Best-effort: Fehler werden geloggt, nicht propagiert (kein Buchungs-Abbruch).
+    """
+    if not guest_id:
+        return
+    try:
+        res_rows = (
+            db.table("reservations")
+            .select("id, total_amount, status, check_out")
+            .eq("tenant_id", tenant_id)
+            .eq("guest_id", guest_id)
+            .execute()
+        ).data or []
+        active = [r for r in res_rows if (r.get("status") or "") != "cancelled"]
+
+        addon_by_res: dict[str, float] = {}
+        res_ids = [str(r["id"]) for r in active]
+        if res_ids:
+            try:
+                addon_rows = (
+                    db.table("reservation_addons")
+                    .select("reservation_id, total, status")
+                    .in_("reservation_id", res_ids)
+                    .execute()
+                ).data or []
+                for a in addon_rows:
+                    if (a.get("status") or "pending") == "cancelled":
+                        continue
+                    rid = str(a["reservation_id"])
+                    addon_by_res[rid] = addon_by_res.get(rid, 0.0) + float(
+                        a.get("total") or 0
+                    )
+            except Exception as exc:  # noqa: BLE001 — fehlende Tabelle = kein Extra
+                log.warning("guest_addons_unavailable", error=str(exc))
+
+        revenue = 0.0
+        last_stay: str | None = None
+        for r in active:
+            revenue += float(r.get("total_amount") or 0)
+            revenue += addon_by_res.get(str(r["id"]), 0.0)
+            co = r.get("check_out")
+            if co and (last_stay is None or str(co) > last_stay):
+                last_stay = str(co)
+
+        db.table("guests").update(
+            {
+                "stays_count": len(active),
+                "total_revenue": round(revenue, 2),
+                "last_stay_at": last_stay,
+            }
+        ).eq("tenant_id", tenant_id).eq("id", guest_id).execute()
+        log.info(
+            "guest_aggregates_recomputed",
+            tenant_id=tenant_id,
+            guest_id=guest_id,
+            stays=len(active),
+        )
+    except Exception as exc:  # noqa: BLE001 — Aggregat-Fehler darf Buchung nicht killen
+        log.warning("guest_aggregates_failed", guest_id=guest_id, error=str(exc))

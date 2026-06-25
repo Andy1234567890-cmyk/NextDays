@@ -213,6 +213,28 @@ def test_list_returns_items_with_property_count() -> None:
     assert by_name["B"].property_count == 0
 
 
+def test_list_shows_effective_commission_from_override() -> None:
+    # Owner-Default 0, aber Objekt-Override 29 → Karte zeigt effektiv 29 (kein 0).
+    svc = _svc()
+    a = svc.create(_ctx(), OwnerCreate(name="A", default_commission_pct=0))
+    svc.assign_property(
+        _ctx(),
+        a.id,
+        OwnerPropertyAssign(property_id="p-1", commission_override_pct=29),
+    )
+    item = {i.name: i for i in svc.list(_ctx()).items}["A"]
+    assert item.commission_min == 29.0
+    assert item.commission_max == 29.0
+
+
+def test_list_commission_none_without_properties() -> None:
+    # Ohne zugeordnete Objekte: min/max None → UI fällt auf den Default zurück.
+    svc = _svc()
+    svc.create(_ctx(), OwnerCreate(name="A", default_commission_pct=15))
+    item = {i.name: i for i in svc.list(_ctx()).items}["A"]
+    assert item.commission_min is None and item.commission_max is None
+
+
 def test_update_changes_fields() -> None:
     svc = _svc()
     owner = svc.create(_ctx(), OwnerCreate(name="A"))

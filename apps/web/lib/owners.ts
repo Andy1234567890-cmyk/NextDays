@@ -45,6 +45,10 @@ export type Owner = {
 
 export type OwnerListItem = Omit<Owner, "properties"> & {
   property_count: number;
+  // Effektive Provisions-Spanne über die Objekte (Override je Objekt, sonst
+  // Owner-Default). null = noch keine Objekte zugeordnet.
+  commission_min: number | null;
+  commission_max: number | null;
 };
 
 export type OwnerInput = Partial<

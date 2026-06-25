@@ -132,6 +132,8 @@ export type GuestReservation = {
   channel: string | null;
   total_amount: number | null;
   currency: string | null;
+  // Summe der gebuchten Zusatzleistungen (0 = keine); maskierbar wie total.
+  addons_total: number | null;
 };
 
 export type GuestThread = {

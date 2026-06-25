@@ -99,6 +99,11 @@ class OwnerListItem(OwnerBase):
     id: str
     tenant_id: str
     property_count: int = 0
+    # Effektive Provisions-Spanne über die Objekte: je Objekt der Override, sonst
+    # der Owner-Default. Bei Gleichheit zeigt die UI einen Wert, sonst eine Spanne.
+    # None, wenn (noch) keine Objekte zugeordnet sind.
+    commission_min: float | None = None
+    commission_max: float | None = None
     created_at: str | None = None
     updated_at: str | None = None
 
