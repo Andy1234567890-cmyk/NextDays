@@ -15,7 +15,10 @@ Exception-Swallowing. Siehe PROJECT.md.
 - `GET /{id}` — Detail inkl. Objekt-Zuordnungen.
 - `PATCH /{id}` — Stammdaten/Bank/Provision/Statement-Frequenz aktualisieren.
 - `DELETE /{id}` — löschen.
+- `GET /{id}/available-properties` — Objekte, die diesem Owner zugeordnet werden
+  dürfen: frei (keinem Owner) oder bereits sein. Objekte anderer Eigentümer fehlen.
 - `POST /{id}/properties` — Objekt zuordnen / Anteil + Provisions-Override setzen.
+  **Exklusiv:** ist das Objekt schon einem anderen Eigentümer zugeordnet → `409`.
 - `DELETE /{id}/properties/{property_id}` — Zuordnung entfernen.
 
 ## Daten (Migration 0063)
@@ -26,6 +29,8 @@ Exception-Swallowing. Siehe PROJECT.md.
   RLS via tenant.
 - `owner_properties`: Link owner↔property mit `ownership_share` (%) und
   `commission_override_pct` (überschreibt Default je Objekt). RLS via owner→tenant.
+  **`unique (property_id)` (Migration 0073): ein Objekt gehört genau einem
+  Eigentümer** — keine Mehrfachzuordnung (Owner 2/3 verboten).
 - `reservations.channel_fee`: explizite Kanalgebühr; Total Payout = total_amount −
   channel_fee (Owner-Statements, Teil B).
 - Backfill aus `co_owners` (share_percent → ownership_share). `co_owners` bleibt als

@@ -13,6 +13,7 @@ from src.features.auth.permissions import Capability
 
 from .dependencies import OwnersServiceDep
 from .schemas import (
+    AvailablePropertiesResponse,
     OwnerCreate,
     OwnerListResponse,
     OwnerPropertyAssign,
@@ -91,6 +92,22 @@ def delete_owner(
 ) -> None:
     try:
         service.delete(ctx, owner_id)
+    except OwnerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/{owner_id}/available-properties", response_model=AvailablePropertiesResponse
+)
+def available_properties(
+    owner_id: str,
+    service: OwnersServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+) -> AvailablePropertiesResponse:
+    """Objekte, die diesem Owner zugeordnet werden dürfen (frei oder bereits sein).
+    Objekte anderer Eigentümer fehlen — ein Objekt gehört genau einem Owner."""
+    try:
+        return service.available_properties(ctx, owner_id)
     except OwnerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

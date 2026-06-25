@@ -116,6 +116,19 @@ class OwnerPropertyAssign(BaseModel):
     commission_override_pct: float | None = Field(default=None, ge=0, le=100)
 
 
+class AvailableProperty(BaseModel):
+    """Objekt, das einem Eigentümer zugeordnet werden darf: entweder frei (keinem
+    Owner zugeordnet) oder bereits diesem Owner. So bleibt ein Objekt exklusiv
+    bei einem Eigentümer (kein Mehrfach-Owner)."""
+
+    id: str
+    title: str
+
+
+class AvailablePropertiesResponse(BaseModel):
+    items: list[AvailableProperty]
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"

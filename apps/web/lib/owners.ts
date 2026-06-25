@@ -94,6 +94,17 @@ export async function deleteOwner(id: string): Promise<Result<null>> {
   return call(`/owners/${id}`, { method: "DELETE" });
 }
 
+/**
+ * Objekte, die diesem Eigentümer zugeordnet werden dürfen: frei (keinem Owner
+ * zugeordnet) oder bereits dieser Owner. Objekte anderer Eigentümer fehlen —
+ * ein Objekt gehört genau einem Eigentümer.
+ */
+export async function getAvailableProperties(
+  ownerId: string,
+): Promise<Result<{ items: { id: string; title: string }[] }>> {
+  return call(`/owners/${ownerId}/available-properties`);
+}
+
 /** Objekt zuordnen oder Anteil/Provisions-Override aktualisieren. */
 export async function assignOwnerProperty(
   ownerId: string,

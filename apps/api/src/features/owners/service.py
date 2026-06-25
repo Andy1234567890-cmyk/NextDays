@@ -14,6 +14,8 @@ from src.core.logging import get_logger
 from src.core.security import AuthContext
 
 from .schemas import (
+    AvailablePropertiesResponse,
+    AvailableProperty,
     OwnerCreate,
     OwnerListItem,
     OwnerListResponse,
@@ -177,6 +179,35 @@ class OwnersService:
             raise OwnerError("Eigentümer nicht gefunden.", status_code=404)
         log.info("owner_deleted", tenant_id=tenant_id, owner_id=owner_id)
 
+    def available_properties(
+        self, ctx: AuthContext, owner_id: str
+    ) -> AvailablePropertiesResponse:
+        """Objekte, die diesem Owner zugeordnet werden dürfen: frei (keinem Owner
+        zugeordnet) ODER bereits bei diesem Owner. Objekte anderer Eigentümer
+        bleiben außen vor — ein Objekt gehört genau einem Eigentümer."""
+        tenant_id = self._require_tenant(ctx)
+        self._get_row(tenant_id, owner_id)
+        props = (
+            self._db.table("properties")
+            .select("id, title")
+            .eq("tenant_id", tenant_id)
+            .order("title")
+            .execute()
+        ).data or []
+        taken = (
+            self._db.table("owner_properties")
+            .select("property_id, owner_id")
+            .execute()
+        ).data or []
+        # property_id → owner_id (alle Zuordnungen im Tenant via property scope).
+        owner_by_prop = {str(t["property_id"]): str(t["owner_id"]) for t in taken}
+        items = [
+            AvailableProperty(id=str(p["id"]), title=p["title"])
+            for p in props
+            if owner_by_prop.get(str(p["id"]), owner_id) == owner_id
+        ]
+        return AvailablePropertiesResponse(items=items)
+
     def assign_property(
         self, ctx: AuthContext, owner_id: str, req: OwnerPropertyAssign
     ) -> OwnerResponse:
@@ -187,6 +218,26 @@ class OwnersService:
         if req.property_id not in self._tenant_property_ids(tenant_id):
             raise OwnerError(
                 "Objekt gehört nicht zu diesem Konto.", status_code=400
+            )
+        # Exklusivität: ein Objekt darf nur EINEM Eigentümer gehören. Ist es
+        # bereits einem ANDEREN Owner zugeordnet, klar abweisen (kein stilles
+        # Umhängen). Aktualisieren des eigenen Links (Anteil/Provision) bleibt ok.
+        existing = (
+            self._db.table("owner_properties")
+            .select("owner_id, owners(name)")
+            .eq("property_id", req.property_id)
+            .neq("owner_id", owner_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if existing:
+            other = existing[0].get("owners") or {}
+            other_name = other.get("name") if isinstance(other, dict) else None
+            raise OwnerError(
+                "Objekt ist bereits einem anderen Eigentümer zugeordnet"
+                + (f" ({other_name})" if other_name else "")
+                + ". Erst dort entfernen.",
+                status_code=409,
             )
         self._db.table("owner_properties").upsert(
             {

@@ -5,9 +5,8 @@
 import Link from "next/link";
 
 import { OwnerStatementsForOwner } from "@/components/eigentuemer/owner-statements-for-owner";
-import { getOwner } from "@/lib/owners";
+import { getAvailableProperties, getOwner } from "@/lib/owners";
 import { listStatements } from "@/lib/owner-statements";
-import { listProperties } from "@/lib/properties";
 
 export default async function Page({
   params,
@@ -15,10 +14,12 @@ export default async function Page({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  // Nur zuordenbare Objekte (frei oder bereits diesem Owner) — Objekte anderer
+  // Eigentümer dürfen nicht zur Auswahl stehen (ein Objekt = ein Eigentümer).
   const [ownerRes, statementsRes, propsRes] = await Promise.all([
     getOwner(id),
     listStatements(id),
-    listProperties(),
+    getAvailableProperties(id),
   ]);
 
   if (!ownerRes.ok) {

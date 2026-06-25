@@ -37,6 +37,7 @@ class _Query:
         self._payload: dict | list[dict] | None = None
         self._conflict: str | None = None
         self._filters: list[tuple[str, object]] = []
+        self._neq: list[tuple[str, object]] = []
         self._in: tuple[str, list] | None = None
         self._order: str | None = None
 
@@ -68,6 +69,10 @@ class _Query:
         self._filters.append((col, val))
         return self
 
+    def neq(self, col: str, val: object) -> "_Query":
+        self._neq.append((col, val))
+        return self
+
     def in_(self, col: str, vals: list) -> "_Query":
         self._in = (col, vals)
         return self
@@ -81,6 +86,8 @@ class _Query:
 
     def _match(self, row: dict) -> bool:
         ok = all(str(row.get(c)) == str(v) for c, v in self._filters)
+        if ok and self._neq:
+            ok = all(str(row.get(c)) != str(v) for c, v in self._neq)
         if ok and self._in:
             col, vals = self._in
             ok = str(row.get(col)) in {str(v) for v in vals}
@@ -267,6 +274,39 @@ def test_unassign_property() -> None:
     svc.assign_property(_ctx(), owner.id, OwnerPropertyAssign(property_id="p-1"))
     res = svc.unassign_property(_ctx(), owner.id, "p-1")
     assert res.properties == []
+
+
+# --- Exklusivität: ein Objekt gehört genau einem Eigentümer ------------------
+
+def test_assign_property_owned_by_other_rejected() -> None:
+    """p-1 gehört Owner A — Owner B darf es nicht zusätzlich bekommen (409)."""
+    svc = _svc()
+    a = svc.create(_ctx(), OwnerCreate(name="A"))
+    b = svc.create(_ctx(), OwnerCreate(name="B"))
+    svc.assign_property(_ctx(), a.id, OwnerPropertyAssign(property_id="p-1"))
+    with pytest.raises(OwnerError) as exc:
+        svc.assign_property(_ctx(), b.id, OwnerPropertyAssign(property_id="p-1"))
+    assert exc.value.status_code == 409
+
+
+def test_available_properties_excludes_other_owners_property() -> None:
+    """Frei + eigenes Objekt erscheinen; Objekt eines anderen Owners nicht."""
+    svc = _svc(
+        {
+            "properties": [
+                {"id": "p-1", "tenant_id": "t-1", "title": "Villa"},
+                {"id": "p-2", "tenant_id": "t-1", "title": "Haus"},
+                {"id": "p-3", "tenant_id": "t-1", "title": "Loft"},
+            ]
+        }
+    )
+    a = svc.create(_ctx(), OwnerCreate(name="A"))
+    b = svc.create(_ctx(), OwnerCreate(name="B"))
+    svc.assign_property(_ctx(), a.id, OwnerPropertyAssign(property_id="p-1"))
+    svc.assign_property(_ctx(), b.id, OwnerPropertyAssign(property_id="p-2"))
+    # Für A: das eigene p-1 + das freie p-3, aber NICHT B's p-2.
+    avail = {p.id for p in svc.available_properties(_ctx(), a.id).items}
+    assert avail == {"p-1", "p-3"}
 
 
 # --- Owner-Login-Verknüpfung -------------------------------------------------
