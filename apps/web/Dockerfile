@@ -27,20 +27,22 @@ RUN pnpm build
 
 # ---------------------------------------------------------------------------
 # 3) Runtime — schlank: nur der standalone-Server + statische Assets.
+#    KEIN Chromium-Download im Build: das 177-MB-Browser-Paket vom Playwright-CDN
+#    riss den Build mit exit 255 ab (lief parallel zu `next build`). Stattdessen
+#    nur die stabilen Chromium-System-Libs aus dem Debian-Mirror; der Browser
+#    selbst liegt im persistenten Volume PLAYWRIGHT_BROWSERS_PATH (von Coolify
+#    gemountet, einmal befüllt, übersteht Deploys).
 # ---------------------------------------------------------------------------
 FROM node:22.16-slim AS run
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
-# Playwright/Chromium für die PDF-Route (/api/v1/generate-pdf-single):
-# Browser an einen festen, für den nextjs-User lesbaren Pfad installieren.
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-# Nur den Chromium-Browser + dessen System-Libs installieren (kein Firefox/WebKit).
-# Wir nehmen exakt dieselbe Playwright-Version wie in package.json, damit Treiber
-# und Browser-Revision zusammenpassen. --with-deps zieht libnss3/libatk/… per apt.
-RUN corepack enable && corepack prepare pnpm@11.1.1 --activate \
-  && npx --yes playwright@1.61.1 install --with-deps chromium \
-  && chmod -R a+rx /ms-playwright
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+      libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+      libgbm1 libasound2 libpango-1.0-0 libcairo2 libatspi2.0-0 \
+  && rm -rf /var/lib/apt/lists/*
 # Nicht als root laufen.
 RUN groupadd --system --gid 1001 nodejs \
   && useradd --system --uid 1001 --gid nodejs nextjs
