@@ -38,6 +38,13 @@ Beide bleiben für diesen Zweck **bewusst liegen** (kein Doppel-Mechanismus).
 - `DELETE /{addon_id}` — löschen.
 - `POST /{addon_id}/media` — ein Medium (Foto) hochladen (multipart), max. 5.
 - `GET /reservations/{reservation_id}` — gekaufte Extras (Dashboard-Sicht).
+- `GET /reservations/{reservation_id}/available` — aktive Katalog-Add-ons des
+  Objekts dieser Reservierung (Schnell-Auswahl im Kalender-Detail).
+- `POST /reservations/{reservation_id}/addons` — **Schnelltaste** (Lastenheft:
+  „Direkt-Buchung Dienstleistungen … direkt im Kalender"): Extra zu einer
+  bestehenden Buchung hinzufügen. Funktioniert für **jeden Kanal, auch OTA**
+  (z. B. Booking) — die Hausverwaltung bucht ein Extra-Angebot provisionsfrei am
+  OTA vorbei dazu.
 - `POST /reservation-addons/{id}/mark-paid` — manuell als bezahlt markieren
   (solange kein Payment-Provider live ist).
 
@@ -62,6 +69,7 @@ Beide bleiben für diesen Zweck **bewusst liegen** (kein Doppel-Mechanismus).
 - **Owner-Statement**: `reservation_addons` (pending + paid, ohne cancelled)
   fließt als Extra-Umsatz in Total Price/Payout und damit in den Provisions-Split
   (provisionsfrei verkauft → keine channel_fee darauf).
-- **Payment-gegatet**: `status` bleibt `pending` bis bezahlt. Ohne Stripe gilt
-  „zahlbar bei Anreise" (manuell als paid markierbar); Anzeige/Buchung sind
-  **nicht** an Payment blockiert.
+- **Payment-gegatet**: `status` bleibt `pending` bis bezahlt. Ohne aktiven
+  Payment-Provider (primär Revolut, Stripe sekundär — ADR-0003) gilt „zahlbar bei
+  Anreise" (manuell als paid markierbar); Anzeige/Buchung sind **nicht** an
+  Payment blockiert.

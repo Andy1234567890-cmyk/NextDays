@@ -199,6 +199,112 @@ class AddonsService:
         total = round(sum(i.total for i in items), 2)
         return ReservationAddonListResponse(items=items, total=total)
 
+    def _own_reservation(self, tenant_id: str, reservation_id: str) -> dict:
+        rows = (
+            self._db.table("reservations")
+            .select("id, tenant_id, property_id, check_in, check_out, num_guests")
+            .eq("tenant_id", tenant_id)
+            .eq("id", reservation_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            raise AddonError("Reservierung nicht gefunden.", status_code=404)
+        return rows[0]
+
+    def available_for_reservation(
+        self, ctx: AuthContext, reservation_id: str
+    ) -> AddonListResponse:
+        """Aktive Katalog-Add-ons des Objekts dieser Reservierung — für die
+        Schnell-Hinzufügen-Auswahl im Reservierungs-Detail (Dashboard)."""
+        tenant_id = self._require_tenant(ctx)
+        res = self._own_reservation(tenant_id, reservation_id)
+        rows = (
+            self._db.table("property_addons")
+            .select(_ADDON_COLS)
+            .eq("property_id", str(res["property_id"]))
+            .eq("active", True)
+            .order("sort_order")
+            .execute()
+        ).data or []
+        items = [AddonResponse(**_addon_row(r)) for r in rows]
+        return AddonListResponse(items=items, total=len(items))
+
+    def add_to_reservation(
+        self, ctx: AuthContext, reservation_id: str, addon_id: str, qty: int
+    ) -> ReservationAddonListResponse:
+        """Zusatzleistung als Schnelltaste zu einer bestehenden Buchung hinzufügen
+        (Dashboard/Agentur). Betrag serverseitig aus dem Katalog; löst den
+        Task-Trigger aus. Verkaufsfläche „checkin" → keine appears_in-Schranke
+        für den manuellen Verkauf durch die Hausverwaltung."""
+        from datetime import date  # noqa: PLC0415
+
+        tenant_id = self._require_tenant(ctx)
+        res = self._own_reservation(tenant_id, reservation_id)
+        addon = self._addon_for_property(str(res["property_id"]), addon_id)
+        check_in = date.fromisoformat(str(res["check_in"]))
+        check_out = date.fromisoformat(str(res["check_out"]))
+        nights = max((check_out - check_in).days, 1)
+        guests = int(res.get("num_guests") or 1)
+        tax_rate = (
+            float(addon["tax_rate"]) if addon.get("tax_rate") is not None else None
+        )
+        _net, gross = addon_total(
+            float(addon.get("price") or 0),
+            str(addon.get("basis") or "per_stay"),
+            tax_rate,
+            nights=nights,
+            guests=guests,
+            qty=max(int(qty), 1),
+        )
+        names = addon.get("name") or {}
+        self._db.table("reservation_addons").insert(
+            {
+                "tenant_id": tenant_id,
+                "reservation_id": reservation_id,
+                "addon_id": addon_id,
+                "name": names,
+                "price": float(addon.get("price") or 0),
+                "basis": str(addon.get("basis") or "per_stay"),
+                "tax_rate": tax_rate,
+                "qty": max(int(qty), 1),
+                "total": gross,
+                "status": AddonStatus.pending.value,
+            }
+        ).execute()
+        # Trigger „addon_purchased": Vorbereitungs-Aufgabe (best-effort).
+        label = names.get("de") or next(iter(names.values()), "Zusatzleistung")
+        try:
+            from src.features.tasks.service import TasksService  # noqa: PLC0415
+
+            TasksService(client=self._db).generate_for_addon(
+                tenant_id,
+                str(res["property_id"]),
+                reservation_id,
+                label,
+                check_in.isoformat(),
+            )
+        except Exception as exc:  # noqa: BLE001 — Task-Fehler darf Kauf nicht killen
+            log.warning("addon_task_failed", reservation_id=reservation_id, error=str(exc))
+        log.info("addon_added_to_reservation", tenant_id=tenant_id, id=reservation_id)
+        return self.list_for_reservation(ctx, reservation_id)
+
+    def _addon_for_property(self, property_id: str, addon_id: str) -> dict:
+        rows = (
+            self._db.table("property_addons")
+            .select(_ADDON_COLS)
+            .eq("id", addon_id)
+            .eq("property_id", property_id)
+            .eq("active", True)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            raise AddonError(
+                "Zusatzleistung gehört nicht zu diesem Objekt.", status_code=404
+            )
+        return rows[0]
+
     def mark_paid(self, ctx: AuthContext, res_addon_id: str) -> ReservationAddonResponse:
         """Manuell als bezahlt markieren (solange kein Payment-Provider live ist)."""
         tenant_id = self._require_tenant(ctx)

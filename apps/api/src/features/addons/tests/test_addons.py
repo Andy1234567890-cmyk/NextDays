@@ -305,3 +305,71 @@ def test_catalog_create_foreign_property_rejected() -> None:
     with pytest.raises(AddonError) as exc:
         svc.create(_ctx(), "prop-fremd", AddonCreate(name={"de": "X"}))
     assert exc.value.status_code == 404
+
+
+# --- Schnelltaste: Add-on zu bestehender Buchung (Dashboard) -----------------
+
+
+def test_add_addon_to_reservation_quick(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "src.features.tasks.service.TasksService.generate_for_addon",
+        lambda *a, **k: None,
+    )
+    db = _DB(
+        {
+            "properties": [{"id": "prop-1", "tenant_id": "t-1", "title": "Villa"}],
+            "property_addons": [_catalog_row(price=20, basis="per_night")],
+            "reservations": [
+                {
+                    "id": "res-1",
+                    "tenant_id": "t-1",
+                    "property_id": "prop-1",
+                    "check_in": "2026-07-01",
+                    "check_out": "2026-07-04",
+                    "num_guests": 2,
+                }
+            ],
+            "reservation_addons": [],
+            "tasks": [],
+        }
+    )
+    svc = AddonsService(service_client=db)
+    view = svc.add_to_reservation(_ctx(), "res-1", "addon-1", 1)
+    # per_night 20 × 3 Nächte = 60.
+    assert view.total == 60.0
+    assert view.items[0].status == "pending"
+
+
+def test_available_for_reservation_lists_property_catalog() -> None:
+    db = _DB(
+        {
+            "properties": [{"id": "prop-1", "tenant_id": "t-1", "title": "Villa"}],
+            "property_addons": [_catalog_row(), _catalog_row(id="addon-2")],
+            "reservations": [
+                {
+                    "id": "res-1",
+                    "tenant_id": "t-1",
+                    "property_id": "prop-1",
+                    "check_in": "2026-07-01",
+                    "check_out": "2026-07-04",
+                    "num_guests": 2,
+                }
+            ],
+        }
+    )
+    svc = AddonsService(service_client=db)
+    assert svc.available_for_reservation(_ctx(), "res-1").total == 2
+
+
+def test_add_addon_foreign_reservation_rejected() -> None:
+    db = _DB(
+        {
+            "properties": [{"id": "prop-1", "tenant_id": "t-1"}],
+            "property_addons": [_catalog_row()],
+            "reservations": [],  # keine Reservierung im Tenant
+        }
+    )
+    svc = AddonsService(service_client=db)
+    with pytest.raises(AddonError) as exc:
+        svc.add_to_reservation(_ctx(), "res-x", "addon-1", 1)
+    assert exc.value.status_code == 404

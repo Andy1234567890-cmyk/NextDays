@@ -454,6 +454,8 @@ Katalog-CRUD + Medien sind `MANAGE_PROPERTIES`-geschützt; der Verkauf läuft pu
 | `DELETE` | `/api/v1/addons/{addon_id}` | löschen |
 | `POST` | `/api/v1/addons/{addon_id}/media` | ein Medium hochladen (multipart, JPEG/PNG/WebP, max. 5) |
 | `GET` | `/api/v1/addons/reservations/{reservation_id}` | gekaufte Extras einer Reservierung (Dashboard) |
+| `GET` | `/api/v1/addons/reservations/{reservation_id}/available` | aktive Katalog-Add-ons des Objekts dieser Reservierung (Schnell-Auswahl) |
+| `POST` | `/api/v1/addons/reservations/{reservation_id}/addons` | **Schnelltaste:** Zusatzleistung zu einer bestehenden Buchung hinzufügen — jeder Kanal, auch OTA (z. B. Booking), provisionsfrei am OTA vorbei |
 | `POST` | `/api/v1/addons/reservation-addons/{id}/mark-paid` | manuell als bezahlt markieren (ohne Payment-Provider: „zahlbar bei Anreise") |
 
 Abrechnungsbasis: `per_stay` · `per_night` · `per_guest` · `per_unit`. Verkauf

@@ -18,6 +18,7 @@ from .schemas import (
     AddonListResponse,
     AddonResponse,
     AddonUpdate,
+    ReservationAddonAdd,
     ReservationAddonListResponse,
     ReservationAddonResponse,
     SliceHealth,
@@ -117,6 +118,38 @@ def list_reservation_addons(
     """Gekaufte Zusatzleistungen einer Reservierung (Dashboard-Sicht)."""
     try:
         return service.list_for_reservation(ctx, reservation_id)
+    except AddonError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/reservations/{reservation_id}/available", response_model=AddonListResponse
+)
+def available_reservation_addons(
+    reservation_id: str,
+    service: AddonsServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+) -> AddonListResponse:
+    """Aktive Katalog-Add-ons des Objekts dieser Reservierung (Schnell-Auswahl)."""
+    try:
+        return service.available_for_reservation(ctx, reservation_id)
+    except AddonError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/reservations/{reservation_id}/addons",
+    response_model=ReservationAddonListResponse,
+)
+def add_reservation_addon(
+    reservation_id: str,
+    req: ReservationAddonAdd,
+    service: AddonsServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+) -> ReservationAddonListResponse:
+    """Schnelltaste: Zusatzleistung zu einer bestehenden Buchung hinzufügen."""
+    try:
+        return service.add_to_reservation(ctx, reservation_id, req.addon_id, req.qty)
     except AddonError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

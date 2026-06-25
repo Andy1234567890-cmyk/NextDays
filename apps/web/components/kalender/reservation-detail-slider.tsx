@@ -8,6 +8,7 @@ import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { ReservationAddonsSection } from "@/components/kalender/reservation-addons-section";
 import { Button } from "@/components/ui/button";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { channelMeta } from "@/lib/calendar-channels";
@@ -207,6 +208,15 @@ export function ReservationDetailSlider({
                     </div>
                   </dl>
                 </Section>
+              )}
+
+              {/* Zusatzleistungen — Schnelltaste: Extra-Angebote zu dieser
+                  Buchung dazubuchen (jeder Kanal, auch OTA wie Booking). */}
+              {!isCancelled && (
+                <ReservationAddonsSection
+                  reservationId={reservationId}
+                  currency={data.currency}
+                />
               )}
 
               {/* Kontakt */}

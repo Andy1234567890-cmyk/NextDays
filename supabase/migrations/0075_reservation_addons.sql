@@ -6,9 +6,10 @@
 -- rückwirkend verändern (gleiches Prinzip wie reservations.quote_items).
 --
 -- Zahlstatus ist Payment-gegatet: pending -> paid (sofortige separate
--- Kartenbelastung, sobald Stripe live ist) bzw. ohne Provider „zahlbar bei
--- Anreise" (manuell als paid markierbar). Anzeige/Buchung sind NICHT an Payment
--- blockiert — nur der Status wird geführt.
+-- Kartenbelastung, sobald der Payment-Provider live ist — primär Revolut, Stripe
+-- sekundär, ADR-0003) bzw. ohne Provider „zahlbar bei Anreise" (manuell als paid
+-- markierbar). Anzeige/Buchung sind NICHT an Payment blockiert — nur der Status
+-- wird geführt.
 
 create table public.reservation_addons (
     id             uuid primary key default gen_random_uuid(),

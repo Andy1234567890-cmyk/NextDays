@@ -113,6 +113,13 @@ class ReservationAddonListResponse(BaseModel):
     currency: str | None = None
 
 
+class ReservationAddonAdd(BaseModel):
+    """Schnell-Hinzufügen eines Katalog-Add-ons zu einer bestehenden Buchung."""
+
+    addon_id: str
+    qty: int = Field(default=1, ge=1)
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"

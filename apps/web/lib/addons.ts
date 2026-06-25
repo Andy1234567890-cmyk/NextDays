@@ -40,6 +40,21 @@ export type AddonInput = {
   sort_order?: number;
 };
 
+export type ReservationAddon = {
+  id: string;
+  reservation_id: string;
+  addon_id: string | null;
+  name: Record<string, string>;
+  price: number;
+  basis: AddonBasis;
+  tax_rate: number | null;
+  qty: number;
+  total: number;
+  status: "pending" | "paid" | "cancelled";
+  charged_at: string | null;
+  created_at: string | null;
+};
+
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
 async function call<T>(
@@ -84,6 +99,43 @@ export async function updateAddon(
 
 export async function deleteAddon(addonId: string): Promise<Result<null>> {
   return call(`/addons/${addonId}`, { method: "DELETE" });
+}
+
+/** Gekaufte Zusatzleistungen einer Reservierung (Dashboard-Sicht). */
+export async function listReservationAddons(
+  reservationId: string,
+): Promise<Result<{ items: ReservationAddon[]; total: number }>> {
+  return call(`/addons/reservations/${reservationId}`);
+}
+
+/** Aktive Katalog-Add-ons des Objekts dieser Reservierung (Schnell-Auswahl). */
+export async function availableReservationAddons(
+  reservationId: string,
+): Promise<Result<{ items: Addon[]; total: number }>> {
+  return call(`/addons/reservations/${reservationId}/available`);
+}
+
+/** Schnelltaste: eine Zusatzleistung zu einer bestehenden Buchung hinzufügen
+ *  (auch bei OTA-Buchungen, z. B. Booking — provisionsfrei am OTA vorbei). */
+export async function addReservationAddon(
+  reservationId: string,
+  addonId: string,
+  qty = 1,
+): Promise<Result<{ items: ReservationAddon[]; total: number }>> {
+  return call(`/addons/reservations/${reservationId}/addons`, {
+    method: "POST",
+    body: { addon_id: addonId, qty },
+  });
+}
+
+/** Eine gekaufte Zusatzleistung manuell als bezahlt markieren (ohne Payment-
+ *  Provider: „zahlbar bei Anreise"). */
+export async function markReservationAddonPaid(
+  resAddonId: string,
+): Promise<Result<ReservationAddon>> {
+  return call(`/addons/reservation-addons/${resAddonId}/mark-paid`, {
+    method: "POST",
+  });
 }
 
 /** Ein Medium (Foto) hochladen (multipart) → aktualisiertes Add-on.
