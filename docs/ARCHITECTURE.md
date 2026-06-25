@@ -81,8 +81,8 @@ C4Container
         Container(web, "Web Dashboard", "Next.js, TypeScript", "Vermieter-PMS-UI + Portale (Vercel)")
         Container(mobile, "Mobile-App", "React Native 0.86 + React Navigation (apps/mobile)", "Native Gäste- & Gastgeber-App (iOS/Android); teilt das FastAPI-Backend (/api/v1)")
         Container(storybook, "Storybook", "react-vite (eigenes Package apps/storybook)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
-        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 17 Vertical Slices unter /api/v1")
-        ContainerDb(db, "Datenbank", "Supabase / Postgres", "83 Tabellen, Multi-Tenant, RLS, tenant_id")
+        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 23 Vertical Slices unter /api/v1")
+        ContainerDb(db, "Datenbank", "Supabase / Postgres", "85 Tabellen, Multi-Tenant, RLS, tenant_id")
         ContainerDb(cache, "Cache", "Redis", "Caching-Layer")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel-Sync, OCR, Messaging-Trigger, wiederkehrende Aufgaben")
     }
@@ -131,6 +131,7 @@ flowchart TB
             OWN["owners — Eigentümer-Stammdaten, Objekt-Zuweisung (Anteil + Provisions-Override je Objekt)"]
             OWNST["owner_statements — Auszahlungs-Abrechnung (Provision je Objekt, EU-Steuer/Reverse-Charge, Storno, Mehrwährung via ECB-Tageskurs)"]
             INBOXL["inbox — Threads (OTA + eigene Plattform), Versand, Vorlagen/KI, geplante Nachrichten + planbare Automails (Zeit + Zuweisung Haus/Kanal)"]
+            ADDON["addons — Zusatzleistungen/Upsells je Objekt (Medien, Basis, appears_in, wann-anzeigen); Verkauf via booking_engine + Gäste-Portal, Extra-Umsatz in Owner-Statement, Task-Trigger addon_purchased, Payment-gegatet"]
         end
         subgraph SCAFFOLD["Slices als Gerüst (Health) — folgen lt. Roadmap"]
             PROP["properties"]; RATES["rates"]; RES["reservations"]
@@ -139,7 +140,7 @@ flowchart TB
             PORTAL["public_portal"]; CRM["crm"]; DASH["dashboard"]; CONT["content"]
         end
     end
-    DB[("Postgres — 90 Tabellen, RLS")]
+    DB[("Postgres — 92 Tabellen, RLS")]
     DONE --> DB
     SCAFFOLD --> DB
     CORE --> DONE
@@ -318,14 +319,14 @@ erDiagram
 **Marktplatz-Tabellen (angelegt, mit RLS; Geschäftslogik in Phase 2):** `portal_guests`,
 `reviews`, `commissions` — siehe [Migration 0006](../supabase/migrations/0006_marketplace.sql).
 Das Kern-Diagramm oben zeigt bewusst nur die zentralen Entitäten; alle übrigen der
-**83 Tabellen** sind nach Bereich gruppiert im nächsten Abschnitt aufgeführt.
+**85 Tabellen** sind nach Bereich gruppiert im nächsten Abschnitt aufgeführt.
 
 **Kardinalität:** `||` = genau eins · `o{` = null bis viele · `|{` = ein bis viele.
 `--` = identifizierend (Kind kann ohne Eltern nicht existieren).
 
 ### Datenmodell-Erweiterungen aus dem Lastenheft (Migrationen 0009–0019)
 
-Das Modell ist auf **83 Tabellen (alle mit RLS)** gewachsen — verifiziert gegen das
+Das Modell ist auf **85 Tabellen (alle mit RLS)** gewachsen — verifiziert gegen das
 echte Supabase-Projekt. Zur Lesbarkeit hier nach Bereich gruppiert (Details in den
 jeweiligen Migrationen):
 
@@ -338,6 +339,9 @@ erDiagram
     TENANT ||--o{ EVENT : has
     EVENT ||--o{ EVENT_PERIOD : "gilt an"
     PROPERTY ||--o{ SURCHARGE : "Aufschläge"
+    PROPERTY ||--o{ PROPERTY_ADDON : "Zusatzleistungen/Upsells"
+    RESERVATION ||--o{ RESERVATION_ADDON : "gekaufte Extras"
+    PROPERTY_ADDON ||--o{ RESERVATION_ADDON : "Snapshot bei Kauf"
 
     TENANT ||--o{ TASK : has
     TENANT ||--o{ TASK_RULE : "wiederkehrend"

@@ -112,6 +112,39 @@ class TasksService:
         log.info("tasks_generated_for_booking", reservation_id=req.reservation_id)
         return [self._to_task(r) for r in (res.data or [])]
 
+    def generate_for_addon(
+        self,
+        tenant_id: str,
+        property_id: str,
+        reservation_id: str,
+        addon_label: str,
+        due_at: str,
+    ) -> Task | None:
+        """Vorbereitungs-Aufgabe bei Kauf einer Zusatzleistung (Trigger
+        ``addon_purchased``). Fällig am Anreisetag; ein Task je gekauftem Item.
+        Best-effort: Fehler werden geloggt, nicht propagiert (kein Kauf-Abbruch)."""
+        try:
+            res = (
+                self._db()
+                .table("tasks")
+                .insert(
+                    {
+                        "tenant_id": tenant_id,
+                        "property_id": property_id,
+                        "reservation_id": reservation_id,
+                        "title": f"Zusatzleistung vorbereiten: {addon_label}",
+                        "status": TaskStatus.open.value,
+                        "due_at": due_at,
+                    }
+                )
+                .execute()
+            )
+        except Exception as exc:  # noqa: BLE001 — Task-Fehler darf Kauf nicht killen
+            log.warning("addon_task_failed", reservation_id=reservation_id, error=str(exc))
+            return None
+        log.info("task_generated_for_addon", reservation_id=reservation_id)
+        return self._to_task(res.data[0]) if res.data else None
+
     # --- Checklisten + Foto-Nachweise (§2.5) ---
 
     def add_checklist_item(self, req: ChecklistItemCreate) -> ChecklistItem:

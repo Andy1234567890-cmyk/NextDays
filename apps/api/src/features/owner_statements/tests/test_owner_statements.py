@@ -604,3 +604,45 @@ def test_owner_payout_converted_to_owner_currency() -> None:
     assert row.owner_payout == 800.0
     assert row.owner_payout_converted == 8800.0
     assert row.fx_rate == 11.0
+
+
+# --- Zusatzleistungen (Upsell-Umsatz fließt in den Owner-Split) --------------
+
+
+def test_addon_revenue_flows_into_owner_statement() -> None:
+    # r-1 hat eine bezahlte Zusatzleistung (Frühstück, 60). Der Extra-Umsatz
+    # erhöht Total Price + Auszahlung (provisionsfrei verkauft → keine
+    # channel_fee darauf), fließt aber in den Provisions-Split.
+    tables = _base_tables()
+    tables["reservation_addons"] = [
+        {
+            "id": "ra-1",
+            "tenant_id": "t-1",
+            "reservation_id": "r-1",
+            "total": 60,
+            "status": "paid",
+        }
+    ]
+    st = _gen(_svc(tables))
+    # Total Price: 1000 + 60 (Addon) + 500 = 1560.
+    assert st.summary.total_price == 1560.0
+    # Total Payout: 1560 - 100 (channel_fee nur auf Miete) = 1460.
+    assert st.summary.total_payout == 1460.0
+    # Owner-Payout 20% Provision: 1460 * 0.8 = 1168.
+    assert st.summary.owner_payout == 1168.0
+
+
+def test_cancelled_addon_excluded_from_statement() -> None:
+    # Stornierte Zusatzleistung zählt NICHT als Umsatz.
+    tables = _base_tables()
+    tables["reservation_addons"] = [
+        {
+            "id": "ra-x",
+            "tenant_id": "t-1",
+            "reservation_id": "r-1",
+            "total": 60,
+            "status": "cancelled",
+        }
+    ]
+    st = _gen(_svc(tables))
+    assert st.summary.total_price == 1500.0  # unverändert (Addon ignoriert)

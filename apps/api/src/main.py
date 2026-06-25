@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import get_settings
 from .core.logging import configure_logging, get_logger
+from .features.addons.router import router as addons_router
 from .features.auth.router import router as auth_router
 from .features.booking_engine.router import router as booking_engine_router
 from .features.buchhaltung.router import router as buchhaltung_router
@@ -41,6 +42,7 @@ _SLICE_ROUTERS = [
     properties_router,
     owners_router,
     owner_statements_router,
+    addons_router,
     rates_router,
     pricing_router,
     calendar_router,

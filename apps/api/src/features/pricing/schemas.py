@@ -22,6 +22,13 @@ class EffectivePriceDay(BaseModel):
     factors: dict[str, float] | None = None
 
 
+class AddonSelection(BaseModel):
+    """Ein vom Gast gewähltes Upsell (Katalog-ID + Menge) für den Quote."""
+
+    addon_id: str
+    qty: int = Field(default=1, ge=1)
+
+
 class QuoteRequest(BaseModel):
     """Anfrage für einen Buchungs-Quote (Preisaufschlüsselung)."""
 
@@ -31,6 +38,9 @@ class QuoteRequest(BaseModel):
     guests: int = Field(default=1, ge=1)
     # Kanal bestimmt den Markup-Aufschlag (direct = kein Markup).
     channel: str = "direct"
+    # Optionale Zusatzleistungen (Upsells); werden nach Basis + Steuer als eigene
+    # Positionen in die Aufschlüsselung gerechnet.
+    addons: list[AddonSelection] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def _check_order(self) -> "QuoteRequest":

@@ -39,6 +39,9 @@ class _Q:
     def lt(self, *_a: object, **_k: object) -> "_Q":
         return self
 
+    def in_(self, *_a: object, **_k: object) -> "_Q":
+        return self
+
     def order(self, *_a: object, **_k: object) -> "_Q":
         return self
 
@@ -75,12 +78,14 @@ def _resolver(
     overrides: list[dict] | None = None,
     config: dict | None = None,
     dynamic: list[dict] | None = None,
+    addons: list[dict] | None = None,
 ) -> PricingResolver:
     tables: dict[str, list[dict]] = {
         "rate_plans": [{"base_price": base, "currency": "EUR"}] if base is not None else [],
         "price_overrides": overrides or [],
         "property_pricing_config": [config] if config else [],
         "dynamic_prices": dynamic or [],
+        "property_addons": addons or [],
     }
     return PricingResolver(service_client=_DB(tables))
 
@@ -268,3 +273,56 @@ def test_quote_short_stay_surcharge() -> None:
         )
     )
     assert q.nightly_total == 260.0  # 200 + 60
+
+
+# --- Quote mit Zusatzleistungen (Upsells) ------------------------------------
+
+
+def test_quote_includes_addon_per_guest() -> None:
+    # Frühstück 12/Gast, 2 Gäste, 2 Nächte → 24 als eigene Position.
+    addons = [
+        {
+            "id": "a-1",
+            "name": {"de": "Frühstück"},
+            "price": 12,
+            "basis": "per_guest",
+            "tax_rate": None,
+        }
+    ]
+    r = _resolver(base=100.0, addons=addons)
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 3),
+            guests=2,
+            addons=[{"addon_id": "a-1", "qty": 1}],
+        )
+    )
+    assert any(line.label == "Frühstück" and line.amount == 24.0 for line in q.lines)
+    assert q.total == 224.0  # 200 Übernachtung + 24 Frühstück
+
+
+def test_quote_addon_with_tax() -> None:
+    # Reinigung 50 pro Aufenthalt + 19% Steuer = 59.5.
+    addons = [
+        {
+            "id": "a-2",
+            "name": {"de": "Endreinigung"},
+            "price": 50,
+            "basis": "per_stay",
+            "tax_rate": 19,
+        }
+    ]
+    r = _resolver(base=100.0, addons=addons)
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 3),
+            guests=1,
+            addons=[{"addon_id": "a-2", "qty": 1}],
+        )
+    )
+    assert any(line.amount == 59.5 for line in q.lines)
+    assert q.total == 259.5

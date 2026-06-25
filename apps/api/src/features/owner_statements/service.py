@@ -295,6 +295,34 @@ class OwnerStatementsService:
         ).data or []
         return {str(r["id"]): r.get("name") or "" for r in rows}
 
+    def _addon_sums(self, reservation_ids: list[str]) -> dict[str, Decimal]:
+        """Extra-Umsatz (Zusatzleistungen) je Reservierung → in den Owner-Split.
+
+        Zählt pending UND paid (ohne Stripe gilt „zahlbar bei Anreise" — der
+        Umsatz ist dennoch entstanden); cancelled bleibt außen vor. Add-ons sind
+        provisionsfrei am OTA vorbei verkauft, fließen aber wie Mietumsatz in den
+        Provisions-/Auszahlungs-Split der Hausverwaltung."""
+        ids = [r for r in reservation_ids if r]
+        if not ids:
+            return {}
+        try:
+            rows = (
+                self._db.table("reservation_addons")
+                .select("reservation_id, total, status")
+                .in_("reservation_id", ids)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — fehlende Tabelle = kein Extra-Umsatz
+            log.warning("statement_addons_unavailable", error=str(exc))
+            return {}
+        sums: dict[str, Decimal] = {}
+        for a in rows:
+            if (a.get("status") or "pending") == "cancelled":
+                continue
+            rid = str(a["reservation_id"])
+            sums[rid] = sums.get(rid, Decimal("0")) + _d(a.get("total"))
+        return sums
+
     def _rental_rows(
         self,
         reservations: list[dict],
@@ -314,12 +342,16 @@ class OwnerStatementsService:
         guest_names = self._guest_names(
             [str(r["guest_id"]) for r in reservations if r.get("guest_id")]
         )
+        addon_sums = self._addon_sums([str(r["id"]) for r in reservations])
         cmap = commission_map or {}
         rows: list[RentalRow] = []
         for r in reservations:
             listing_id = str(r["property_id"])
             src_currency = (r.get("currency") or owner_currency).upper()
-            price = _d(r.get("total_amount"))
+            # Extra-Umsatz aus Zusatzleistungen fließt in Preis + Auszahlung
+            # (provisionsfrei verkauft → keine channel_fee darauf).
+            addon_total = addon_sums.get(str(r["id"]), Decimal("0"))
+            price = _d(r.get("total_amount")) + addon_total
             payout = price - _d(r.get("channel_fee"))
             pct = override if override is not None else cmap.get(listing_id, Decimal("0"))
             owner_payout = payout * ((Decimal("100") - pct) / Decimal("100"))

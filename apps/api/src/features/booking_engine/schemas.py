@@ -34,13 +34,31 @@ class PublicListing(BaseModel):
     rating_count: int | None = None
 
 
+class PublicAddon(BaseModel):
+    """Gast-sichere Darstellung einer buchbaren Zusatzleistung (Upsell).
+
+    Nur die für die Buchungsstrecke freigegebenen, aktiven Add-ons. Texte
+    mehrsprachig (Locale → Text); price/basis fürs Frontend-Rechnen, der
+    verbindliche Betrag wird serverseitig im Quote/Kauf ermittelt.
+    """
+
+    id: str
+    name: dict[str, str] = {}
+    description: dict[str, str] = {}
+    media: list[str] = []
+    price: float = 0
+    basis: str = "per_stay"
+    mandatory: bool = False
+    tax_rate: float | None = None
+
+
 class PublicListingDetail(PublicListing):
     """Detailansicht eines active Objekts vor der Buchung.
 
     Zusätzlich Beschreibung, alle Fotos (in `photos`) und die UNGEFÄHRE Lage
     (city/country + grob gerundete lat/lng), niemals die genaue Anschrift.
     `price` ist der Effektivpreis für den angefragten Zeitraum (falls start/end),
-    sonst gleich `price_from`.
+    sonst gleich `price_from`. `addons` sind die buchbaren Zusatzleistungen.
     """
 
     description: str | None = None
@@ -48,6 +66,7 @@ class PublicListingDetail(PublicListing):
     lng: float | None = None
     price: float | None = None
     nights: int | None = None
+    addons: list[PublicAddon] = []
 
 
 class PublicListingListResponse(BaseModel):
@@ -72,12 +91,23 @@ class GuestContact(BaseModel):
     phone: str = ""
 
 
+class AddonPick(BaseModel):
+    """Vom Gast gewählte Zusatzleistung (Katalog-ID + Menge)."""
+
+    addon_id: str
+    qty: int = 1
+
+
 class PublicBookingRequest(BaseModel):
     property_id: str
     check_in: date
     check_out: date  # exklusiv
     contact: GuestContact
     total_amount: float = 0
+    guests: int = 1
+    # Optionale Zusatzleistungen; serverseitig aus dem Katalog bepreist + als
+    # reservation_addons angelegt (Client-Beträge werden nicht vertraut).
+    addons: list[AddonPick] = []
 
     @model_validator(mode="after")
     def _check_dates(self) -> "PublicBookingRequest":
@@ -92,6 +122,35 @@ class PublicBookingResponse(BaseModel):
     check_in: date
     check_out: date
     status: str
+
+
+class PurchasedAddon(BaseModel):
+    """Ein bereits gekauftes Upsell (gast-sichere Sicht: Name/Menge/Betrag/Status)."""
+
+    id: str
+    name: dict[str, str] = {}
+    qty: int = 1
+    total: float = 0
+    status: str = "pending"
+
+
+class ReservationAddonsView(BaseModel):
+    """Gast-Sicht auf eine Reservierung für den Nach-Buchung-Verkauf.
+
+    ``available`` = noch buchbare (guest_portal-)Upsells unter Beachtung der
+    „wann anzeigen"-Regel; ``purchased`` = bereits dazugebuchte.
+    """
+
+    reservation_id: str
+    available: list[PublicAddon] = []
+    purchased: list[PurchasedAddon] = []
+
+
+class PostBookingAddonRequest(BaseModel):
+    """Nachträglicher Add-on-Kauf durch den Gast (E-Mail verifiziert leicht)."""
+
+    email: EmailStr
+    addons: list[AddonPick] = []
 
 
 class SliceHealth(BaseModel):

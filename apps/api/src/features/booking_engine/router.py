@@ -12,11 +12,13 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from src.core.supabase import get_service_client
 
 from .schemas import (
+    PostBookingAddonRequest,
     PublicAvailabilityResponse,
     PublicBookingRequest,
     PublicBookingResponse,
     PublicListingDetail,
     PublicListingListResponse,
+    ReservationAddonsView,
     SliceHealth,
 )
 from .service import BookingEngineError, BookingEngineService
@@ -91,5 +93,40 @@ def create_booking(
 ) -> PublicBookingResponse:
     try:
         return service.create_public_booking(req)
+    except BookingEngineError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/reservations/{reservation_id}/addons", response_model=ReservationAddonsView
+)
+def reservation_addons(
+    reservation_id: str,
+    service: BookingEngineServiceDep,
+    email: Annotated[str, Query()],
+) -> ReservationAddonsView:
+    """Nach-Buchung-Sicht des Gasts: buchbare guest_portal-Add-ons + gekaufte.
+    Verifikation über die Buchungs-E-Mail (Gäste haben keinen Login)."""
+    try:
+        return service.reservation_addons_view(
+            reservation_id, email, today=date.today()
+        )
+    except BookingEngineError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/reservations/{reservation_id}/addons", response_model=ReservationAddonsView
+)
+def buy_reservation_addons(
+    reservation_id: str,
+    req: PostBookingAddonRequest,
+    service: BookingEngineServiceDep,
+) -> ReservationAddonsView:
+    """Nachträglicher Add-on-Kauf durch den Gast (Verkaufsfläche guest_portal)."""
+    try:
+        return service.purchase_post_booking_addons(
+            reservation_id, req, today=date.today()
+        )
     except BookingEngineError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

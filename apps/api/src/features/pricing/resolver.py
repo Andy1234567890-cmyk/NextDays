@@ -23,6 +23,7 @@ from datetime import date, timedelta
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.features.addons.pricing import addon_total
 
 from .schemas import (
     EffectivePriceDay,
@@ -154,6 +155,30 @@ class PricingResolver:
             log.warning("pricing_config_unavailable", error=str(exc))
             return _PricingConfig(None)
         return _PricingConfig(res[0] if res else None)
+
+    def _load_addons(
+        self, property_id: str, addon_ids: list[str]
+    ) -> dict[str, dict]:
+        """Aktive Katalog-Add-ons des Objekts zu den gewählten IDs (id → Zeile).
+
+        Filtert auf property_id UND active=true, damit der Quote nur echte,
+        freigegebene Upsells dieses Objekts bepreist (kein Vertrauen auf Input)."""
+        if not addon_ids:
+            return {}
+        try:
+            rows = (
+                self._db()
+                .table("property_addons")
+                .select("id, name, price, basis, tax_rate")
+                .eq("property_id", property_id)
+                .eq("active", True)
+                .in_("id", addon_ids)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — fehlende Tabelle = keine Add-ons
+            log.warning("pricing_addons_unavailable", error=str(exc))
+            return {}
+        return {str(r["id"]): r for r in rows}
 
     def _load_rate_plan(self, property_id: str) -> tuple[float | None, str | None]:
         """Basispreis + Währung aus dem (ersten) Rate-Plan. Ohne Plan → (None, None)."""
@@ -377,6 +402,38 @@ class PricingResolver:
                 name = str(tax.get("name") or "Steuer")
                 lines.append(QuoteLine(label=name, amount=round(amount, 2)))
                 subtotal += amount
+
+        # 6) Zusatzleistungen (Upsells): eigene Positionen, je nach Basis + eigener
+        #    Steuer (brutto). Beträge serverseitig aus dem Katalog, nie aus Input.
+        if req.addons:
+            catalog = self._load_addons(
+                req.property_id, [a.addon_id for a in req.addons]
+            )
+            locale = "de"
+            for sel in req.addons:
+                addon = catalog.get(sel.addon_id)
+                if not addon:
+                    continue
+                _net, gross = addon_total(
+                    float(addon.get("price") or 0),
+                    str(addon.get("basis") or "per_stay"),
+                    (
+                        float(addon["tax_rate"])
+                        if addon.get("tax_rate") is not None
+                        else None
+                    ),
+                    nights=n,
+                    guests=req.guests,
+                    qty=sel.qty,
+                )
+                if gross <= 0:
+                    continue
+                names = addon.get("name") or {}
+                label = names.get(locale) or next(iter(names.values()), "Zusatzleistung")
+                if sel.qty > 1:
+                    label = f"{label} ×{sel.qty}"
+                lines.append(QuoteLine(label=label, amount=gross))
+                subtotal += gross
 
         total = round(max(0.0, subtotal), 2)
         return QuoteResponse(

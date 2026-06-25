@@ -14,7 +14,7 @@ Interaktive Doku (Swagger UI): **http://localhost:8000/docs**
 
 ## Slices
 
-Jeder der 17 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
+Jeder der 23 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
 
 | Slice | Health-Endpoint |
 |---|---|
@@ -31,6 +31,7 @@ Jeder der 17 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
 | payments | `GET /api/v1/payments/health` |
 | channel_manager | `GET /api/v1/channel-manager/health` (Channex-Integration, s.u.) |
 | booking_engine | `GET /api/v1/booking-engine/health` |
+| addons | `GET /api/v1/addons/health` |
 | ocr | `GET /api/v1/ocr/health` |
 | public_portal | `GET /api/v1/public-portal/health` |
 | tasks | `GET /api/v1/tasks/health` |
@@ -426,12 +427,39 @@ internen Preisdetails). Preis kommt aus dem Pricing-Resolver.
 | `GET` | `/api/v1/booking-engine/listings?q&guests&start&end&tenant` | Liste buchbarer (active) Objekte. Optional: `q` (Titel/Ort), `guests` (Kapazität), `start`/`end` (Verfügbarkeit + Effektivpreis), `tenant` (Default: alle active tenant-übergreifend) |
 | `GET` | `/api/v1/booking-engine/listings/{id}?start&end` | Detail eines active Objekts (`404` wenn nicht active): Beschreibung, Fotos, Ausstattung, ungefähre Lage (gerundete lat/lng), Preis via Resolver |
 | `GET` | `/api/v1/booking-engine/availability?property_id&start&end` | Öffentliche Tagesverfügbarkeit (buchbar/belegt) |
-| `POST` | `/api/v1/booking-engine/reservations` | Gastbuchung (Double-Booking-Schutz `409`, sperrt Kalender + Channex-Push) |
+| `POST` | `/api/v1/booking-engine/reservations` | Gastbuchung (Double-Booking-Schutz `409`, sperrt Kalender + Channex-Push). Body kann `guests` + `addons` (Auswahl) enthalten → Zusatzleistungen werden serverseitig bepreist + als `reservation_addons` angelegt |
+| `GET` | `/api/v1/booking-engine/reservations/{id}/addons?email` | Nach-Buchung-Sicht des Gasts: buchbare `guest_portal`-Zusatzleistungen (unter Beachtung der „wann anzeigen"-Regel) + bereits gekaufte. Verifikation über die Buchungs-E-Mail |
+| `POST` | `/api/v1/booking-engine/reservations/{id}/addons` | Nachträglicher Add-on-Kauf durch den Gast (`email` + `addons`); serverseitig bepreist, Verkaufsfläche `guest_portal` |
 
 Gast-sichere Felder: `id, title, property_type, city, country, photos, max_guests,
 bedrooms, baths, amenities, price_from, currency` (+ Detail: `description, lat/lng
-gerundet, price, nights`). `price_from` = „ab"-Basispreis (None ohne hinterlegten
-Preis — kein Fallback); Bewertungen nur bei echten Daten (sonst weggelassen).
+gerundet, price, nights, addons`). `price_from` = „ab"-Basispreis (None ohne
+hinterlegten Preis — kein Fallback); Bewertungen nur bei echten Daten (sonst
+weggelassen). `addons` (Detail) = für die Buchungsseite freigegebene Upsells.
+
+---
+
+## addons (Zusatzleistungen/Upsells — implementiert)
+
+Optionale Extras, die Gäste dazubuchen (Früh-Check-in, Reinigung, Frühstück …).
+Katalog-CRUD + Medien sind `MANAGE_PROPERTIES`-geschützt; der Verkauf läuft public
+über `booking_engine` (s. o.). Tabellen `property_addons` + `reservation_addons`
+(Migrationen 0074/0075).
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| `GET` | `/api/v1/addons/properties/{property_id}` | Katalog eines Objekts (inkl. inaktiver) |
+| `POST` | `/api/v1/addons/properties/{property_id}` | Zusatzleistung anlegen (Name/Beschreibung i18n, Preis, Basis, optional/pflicht, `appears_in`, `available_until`) |
+| `PATCH` | `/api/v1/addons/{addon_id}` | bearbeiten |
+| `DELETE` | `/api/v1/addons/{addon_id}` | löschen |
+| `POST` | `/api/v1/addons/{addon_id}/media` | ein Medium hochladen (multipart, JPEG/PNG/WebP, max. 5) |
+| `GET` | `/api/v1/addons/reservations/{reservation_id}` | gekaufte Extras einer Reservierung (Dashboard) |
+| `POST` | `/api/v1/addons/reservation-addons/{id}/mark-paid` | manuell als bezahlt markieren (ohne Payment-Provider: „zahlbar bei Anreise") |
+
+Abrechnungsbasis: `per_stay` · `per_night` · `per_guest` · `per_unit`. Verkauf
+provisionsfrei am OTA vorbei; **Zahlstatus** `pending`/`paid`/`cancelled`. Beim
+Kauf: Auto-Aufgabe (Task-Trigger `addon_purchased`) + Extra-Umsatz im
+Owner-Statement. Preise werden **immer serverseitig** aus dem Katalog berechnet.
 
 ---
 

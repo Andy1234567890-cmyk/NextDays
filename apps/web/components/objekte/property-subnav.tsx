@@ -25,6 +25,7 @@ const GROUPS: { label: string; items: { slug: string; title: string; icon: strin
     label: "Reservierung",
     items: [
       { slug: "preise", title: "Preise", icon: "ph:currency-eur" },
+      { slug: "zusatzleistungen", title: "Zusatzleistungen", icon: "ph:plus-circle" },
       { slug: "verfuegbarkeit", title: "Verfügbarkeit", icon: "ph:calendar-blank" },
       { slug: "richtlinien", title: "Richtlinien", icon: "ph:file-text" },
       { slug: "saisonpreise", title: "Saisonpreise", icon: "ph:sun" },
