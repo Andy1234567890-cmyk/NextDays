@@ -104,6 +104,9 @@ export function CalendarHeader({
           aria-label="Zeitfenster"
           className="h-9 w-auto rounded-full"
         >
+          <option value="" disabled>
+            Zeitfenster wählen…
+          </option>
           {RANGE_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}

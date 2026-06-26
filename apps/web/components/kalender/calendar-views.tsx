@@ -65,6 +65,8 @@ export function CalendarViews({ properties }: { properties: Prop[] }) {
   );
 
   // Ansicht-Dropdown — einmal definiert, an der passenden Stelle gerendert.
+  // Erste Zeile ist ein nicht-wählbarer Platzhalter „Ansicht wählen…", damit das
+  // Feld klar als Auswahl erkennbar ist; der aktive Wert bleibt darunter sichtbar.
   const viewSwitcher = (
     <NativeSelect
       value={active}
@@ -72,6 +74,9 @@ export function CalendarViews({ properties }: { properties: Prop[] }) {
       aria-label="Ansicht"
       className="h-9 w-auto rounded-full font-medium"
     >
+      <option value="" disabled>
+        Ansicht wählen…
+      </option>
       {VIEWS.map((v) => (
         <option key={v.key} value={v.key}>
           {v.label}
