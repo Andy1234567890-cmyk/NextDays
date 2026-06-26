@@ -24,7 +24,7 @@ from src.features.guests.identity import (
     resolve_or_create_guest,
 )
 
-from . import content_builder
+from . import airbnb_oauth, content_builder
 from .channex_client import ChannexClient, ChannexError
 from .schemas import (
     AriPushRequest,
@@ -1652,6 +1652,10 @@ class ChannelManagerService:
     _SANDBOX_CATALOG: list[dict[str, str]] = [
         {"code": _SANDBOX_CODE, "label": "Testkanal (Sandbox)", "icon": "ph:flask"},
     ]
+    # OAuth-Portale: KEIN eingebbares Credential, Verbindung per OAuth-URL (Airbnb).
+    # Allowlist als Absicherung — zusätzlich erkennt list_supported_portals OAuth
+    # automatisch daran, dass der Katalog kein abfragbares Credential-Feld hat.
+    _OAUTH_PORTALS: frozenset[str] = frozenset({"AirBNB"})
 
     def _portal_catalog(self) -> list[dict[str, str]]:
         """Sichtbare Portale — im Sandbox-Modus inkl. Test-Kanäle."""
@@ -1678,9 +1682,10 @@ class ChannelManagerService:
 
         out: list[dict[str, Any]] = []
         for portal in self._portal_catalog():
-            # Sandbox-Testkanal: keine Eingaben — Service setzt alles selbst.
+            # Sandbox-Testkanal: keine Eingaben — Service setzt alles selbst
+            # (credential-Flow, Service injiziert endpoint/hotel_code/api_key).
             if portal["code"] == self._SANDBOX_CODE:
-                out.append({**portal, "fields": []})
+                out.append({**portal, "fields": [], "connection_type": "credential"})
                 continue
             spec = by_code.get(portal["code"]) or {}
             params = spec.get("params") or {}
@@ -1705,12 +1710,17 @@ class ChannelManagerService:
                 }
                 for key, meta in essential[:1]  # nur das Hauptfeld
             ]
+            # OAuth ⇔ kein abfragbares Credential-Hauptfeld (z.B. Airbnb) ODER
+            # explizit in der Allowlist. OAuth-Portale zeigen keine Credential-
+            # Eingabe — der Connect läuft über die OAuth-URL (begin_channel_oauth).
+            is_oauth = portal["code"] in self._OAUTH_PORTALS or not fields
             out.append(
                 {
                     "code": portal["code"],
                     "label": portal["label"],
                     "icon": portal["icon"],
-                    "fields": fields,
+                    "fields": [] if is_oauth else fields,
+                    "connection_type": "oauth" if is_oauth else "credential",
                 }
             )
         return out
@@ -1875,51 +1885,10 @@ class ChannelManagerService:
         channex_property_id = self._require_property_mapping(db, tenant_id, property_id)
         group_id = self._require_group(db, tenant_id, channex_property_id)
         settings = self._inject_sandbox_settings(portal_code, property_id, settings)
-        # Echte OTAs verlangen INTEGER-Codes; OpenChannel (Sandbox) nutzt String-
-        # Codes (unsere UUIDs aus mapping_details) → dort nicht zu int zwingen.
-        is_sandbox = portal_code == self._SANDBOX_CODE
 
-        # rate_plans-Array bauen: lokale Rate-Plan-Map-ID → Channex-Rate-Plan-UUID.
-        seen_pairs: set[tuple[Any, Any]] = set()
-        rate_plans: list[dict[str, Any]] = []
-        for m in mappings:
-            channex_rate_plan_id = self._channex_rate_plan_id_for_map(
-                db, tenant_id, m.get("rate_plan_map_id")
-            )
-            if not channex_rate_plan_id:
-                raise ChannelManagerError(
-                    "Unbekannter Preisplan in der Zuordnung.", status_code=422
-                )
-            if is_sandbox:
-                room_code = m.get("room_type_code")
-                rate_code = m.get("rate_plan_code")
-            else:
-                room_code = self._as_int(m.get("room_type_code"))
-                rate_code = self._as_int(m.get("rate_plan_code"))
-            if room_code is None or rate_code is None:
-                raise ChannelManagerError(
-                    "Zimmer-/Raten-Code fehlt oder ist ungültig.", status_code=422
-                )
-            pair = (room_code, rate_code)
-            if pair in seen_pairs:
-                raise ChannelManagerError(
-                    "Eine OTA-Zimmer/Raten-Kombination darf nur einmal zugeordnet "
-                    "werden.", status_code=422,
-                )
-            seen_pairs.add(pair)
-            rate_plans.append(
-                {
-                    "rate_plan_id": channex_rate_plan_id,
-                    "settings": {
-                        "room_type_code": room_code,
-                        "rate_plan_code": rate_code,
-                        "occupancy": self._as_int(m.get("occupancy")) or 2,
-                        "pricing_type": m.get("pricing_type") or "Standard",
-                        "primary_occ": bool(m.get("primary_occ", True)),
-                        "readonly": bool(m.get("readonly", False)),
-                    },
-                }
-            )
+        # rate_plans-Array bauen (gemeinsamer Helfer; echte OTAs INTEGER-Codes,
+        # OpenChannel/Sandbox String-Codes — Helfer unterscheidet das).
+        rate_plans = self._build_rate_plans(db, tenant_id, portal_code, mappings)
 
         attrs: dict[str, Any] = {
             "channel": portal_code,
@@ -1986,6 +1955,290 @@ class ChannelManagerService:
             "title": a.get("title") or title or self._portal_labels[portal_code],
             "is_active": is_active,
         }
+
+    # -- Airbnb-OAuth (white-label, ohne iFrame) -------------------------------
+    # Airbnb hat kein eingebbares Credential; Verbindung über eine echte
+    # airbnb.com-OAuth-URL (Kunde öffnet sie selbst ODER schickt sie dem
+    # Eigentümer). Flow: Channel inaktiv anlegen → OAuth-URL holen → (Kunde
+    # autorisiert) → Status pollen → Mapping + activate über den bestehenden Pfad.
+    # Verifiziert: docs/CHANNEX-FELDER.md §4a.
+    def begin_channel_oauth(
+        self, ctx: AuthContext, *, property_id: str, portal_code: str,
+        title: str | None, settings: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """OAuth-Start: inaktiven Channel anlegen + echte OAuth-URL erzeugen.
+
+        Gibt {channel_id, oauth_url, portal, status:"pending"} zurück. Der Kunde
+        öffnet die URL oder schickt sie dem Eigentümer; Mapping/activate folgen
+        nach erfolgreicher Verbindung (refresh_channel_oauth_status → finalize)."""
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        if portal_code not in self._OAUTH_PORTALS:
+            raise ChannelManagerError(
+                "Dieses Portal nutzt keinen OAuth-Verbindungsweg.", status_code=400
+            )
+
+        channex_property_id = self._require_property_mapping(db, tenant_id, property_id)
+        group_id = self._require_group(db, tenant_id, channex_property_id)
+        channel_title = title or self._portal_labels.get(portal_code, "Airbnb")
+
+        # 1) Channel inaktiv anlegen (ohne rate_plans/settings — Mapping kommt später).
+        try:
+            created = self._channex.create_channel(
+                {
+                    "channel": portal_code,
+                    "group_id": group_id,
+                    "is_active": False,
+                    "title": channel_title,
+                    "properties": [channex_property_id],
+                }
+            )
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+        channel_id = (created.get("data") or {}).get("id")
+        if not channel_id:
+            raise ChannelManagerError(
+                "Channex hat keinen Kanal angelegt.", status_code=502
+            )
+
+        # 2) Frischer JWT (pro Connect, kein Cache) → echte OAuth-URL.
+        try:
+            one_time = self._channex.create_one_time_token(
+                property_id=channex_property_id,
+                group_id=group_id,
+                username=ctx.user_id,
+            )
+            jwt = self._channex.exchange_one_time_token(one_time)
+            oauth_url = self._channex.create_airbnb_connection_link(
+                jwt=jwt,
+                connection_link=airbnb_oauth.connection_link_body(
+                    group_id=group_id,
+                    channex_property_id=channex_property_id,
+                    channel_id=channel_id,
+                    title=channel_title,
+                    settings=settings,
+                ),
+            )
+        except ChannexError as exc:
+            # Channel bleibt angelegt (inaktiv) — der Kunde kann den Link erneut
+            # anfordern; nichts geht verloren.
+            raise self._wrap_channex(exc) from exc
+
+        # 3) Verbindung persistieren (noch nicht verbunden: kein host_id, inaktiv).
+        self._save_oauth_connection(
+            db, tenant_id,
+            property_id=property_id,
+            channex_property_id=channex_property_id,
+            portal_code=portal_code,
+            channel_id=channel_id,
+            host_id=None,
+            is_active=False,
+            last_error=None,
+        )
+        log.info(
+            "channex_oauth_begin",
+            tenant_id=tenant_id, property_id=property_id,
+            portal_code=portal_code, channel_id=channel_id,
+        )
+        return {
+            "channel_id": channel_id,
+            "oauth_url": oauth_url,
+            "portal": self._portal_labels.get(portal_code, "Airbnb"),
+            "status": "pending",
+        }
+
+    def refresh_channel_oauth_status(
+        self, ctx: AuthContext, *, property_id: str, portal_code: str
+    ) -> dict[str, Any]:
+        """Verbindungsstatus aus Channex lesen (Poll — Channex liefert keine
+        Channel-Webhooks). Schreibt host_id/Status in channex_channel_connection
+        → Realtime-Update. `is_active` bleibt false bis Mapping+activate."""
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        row = (
+            db.table("channex_channel_connection")
+            .select("channex_channel_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .eq("ota_portal_code", portal_code)
+            .limit(1)
+            .execute()
+        ).data
+        if not row or not row[0].get("channex_channel_id"):
+            raise ChannelManagerError(
+                "Keine OAuth-Verbindung für dieses Objekt.", status_code=404
+            )
+        channel_id = row[0]["channex_channel_id"]
+        try:
+            got = self._channex.get_channel(channel_id)
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+
+        status = airbnb_oauth.parse_connection_status(got)
+        host_id = status["host_id"]
+        connected = status["connected"]
+        last_error = status["last_error"]
+
+        # host_id/Fehler persistieren (Realtime). is_active NICHT hier setzen.
+        db.table("channex_channel_connection").update(
+            {"ota_hotel_id": host_id, "last_error": last_error}
+        ).eq("tenant_id", tenant_id).eq("property_id", property_id).eq(
+            "ota_portal_code", portal_code
+        ).execute()
+        log.info(
+            "channex_oauth_status",
+            tenant_id=tenant_id, property_id=property_id,
+            portal_code=portal_code, connected=connected,
+        )
+        return {
+            "connected": connected,
+            "host_id": host_id,
+            "portal": self._portal_labels.get(portal_code, "Airbnb"),
+        }
+
+    def finalize_oauth_channel(
+        self, ctx: AuthContext, *, property_id: str, portal_code: str,
+        mappings: list[dict[str, Any]],
+    ) -> dict[str, Any]:
+        """Nach erfolgreicher OAuth-Verbindung: Mapping setzen + Channel aktivieren.
+
+        Nutzt update_channel (statt create) auf dem in begin_channel_oauth
+        angelegten Channel, dann activate. Erst danach is_active=true."""
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        if not mappings:
+            raise ChannelManagerError(
+                "Mindestens eine Zimmer/Raten-Zuordnung ist nötig.", status_code=422
+            )
+        row = (
+            db.table("channex_channel_connection")
+            .select("channex_channel_id, ota_hotel_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .eq("ota_portal_code", portal_code)
+            .limit(1)
+            .execute()
+        ).data
+        if not row or not row[0].get("channex_channel_id"):
+            raise ChannelManagerError(
+                "Keine OAuth-Verbindung für dieses Objekt.", status_code=404
+            )
+        channel_id = row[0]["channex_channel_id"]
+
+        rate_plans = self._build_rate_plans(db, tenant_id, portal_code, mappings)
+
+        # Mapping auf den bestehenden Channel setzen + aktivieren.
+        try:
+            self._channex.update_channel(channel_id, {"rate_plans": rate_plans})
+            self._channex.activate_channel(channel_id)
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+
+        db.table("channex_channel_connection").update(
+            {"is_active": True, "last_error": None}
+        ).eq("tenant_id", tenant_id).eq("property_id", property_id).eq(
+            "ota_portal_code", portal_code
+        ).execute()
+
+        # Initial-Vollimport (best effort) wie beim credential-Connect.
+        channex_property_id = self._require_property_mapping(db, tenant_id, property_id)
+        try:
+            self.import_bookings_for_property(tenant_id, channex_property_id)
+            self.import_rooms_rates_for_property(tenant_id, channex_property_id)
+            self.import_ari_for_property(tenant_id, channex_property_id)
+        except (ChannexError, ChannelManagerError) as exc:
+            log.warning(
+                "channex_oauth_initial_import_failed",
+                channex_property_id=channex_property_id,
+                error=getattr(exc, "message", str(exc)),
+            )
+        log.info(
+            "channex_oauth_finalize",
+            tenant_id=tenant_id, property_id=property_id, channel_id=channel_id,
+        )
+        return {
+            "id": channel_id,
+            "portal": self._portal_labels.get(portal_code, "Airbnb"),
+            "title": self._portal_labels.get(portal_code, "Airbnb"),
+            "is_active": True,
+        }
+
+    def _save_oauth_connection(
+        self, db: Client, tenant_id: str, *, property_id: str,
+        channex_property_id: str, portal_code: str, channel_id: str,
+        host_id: str | None, is_active: bool, last_error: str | None,
+    ) -> None:
+        """Upsert einer OAuth-Verbindung (Airbnb): kein hotel_id-Credential, sondern
+        host_id (erst nach Verbindung). Anders als _save_channel_connection, das
+        eine eingegebene Hotel-ID voraussetzt."""
+        row = {
+            "tenant_id": tenant_id,
+            "property_id": property_id,
+            "channex_property_id": channex_property_id,
+            "ota_portal_code": portal_code,
+            "ota_hotel_id": host_id,
+            "channex_channel_id": channel_id,
+            "is_active": is_active,
+            "last_error": last_error,
+        }
+        try:
+            db.table("channex_channel_connection").upsert(
+                row, on_conflict="property_id,ota_portal_code"
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 — Persistenz darf Connect nicht killen
+            log.warning(
+                "channex_oauth_connection_persist_failed",
+                property_id=property_id, portal_code=portal_code, error=str(exc),
+            )
+
+    def _build_rate_plans(
+        self, db: Client, tenant_id: str, portal_code: str,
+        mappings: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        """rate_plans-Array aus Mapping-Zeilen (gemeinsam von connect_channel und
+        finalize_oauth_channel). Wirft bei unbekanntem Preisplan/Duplikat."""
+        is_sandbox = portal_code == self._SANDBOX_CODE
+        seen_pairs: set[tuple[Any, Any]] = set()
+        rate_plans: list[dict[str, Any]] = []
+        for m in mappings:
+            channex_rate_plan_id = self._channex_rate_plan_id_for_map(
+                db, tenant_id, m.get("rate_plan_map_id")
+            )
+            if not channex_rate_plan_id:
+                raise ChannelManagerError(
+                    "Unbekannter Preisplan in der Zuordnung.", status_code=422
+                )
+            if is_sandbox:
+                room_code = m.get("room_type_code")
+                rate_code = m.get("rate_plan_code")
+            else:
+                room_code = self._as_int(m.get("room_type_code"))
+                rate_code = self._as_int(m.get("rate_plan_code"))
+            if room_code is None or rate_code is None:
+                raise ChannelManagerError(
+                    "Zimmer-/Raten-Code fehlt oder ist ungültig.", status_code=422
+                )
+            pair = (room_code, rate_code)
+            if pair in seen_pairs:
+                raise ChannelManagerError(
+                    "Eine OTA-Zimmer/Raten-Kombination darf nur einmal zugeordnet "
+                    "werden.", status_code=422,
+                )
+            seen_pairs.add(pair)
+            rate_plans.append(
+                {
+                    "rate_plan_id": channex_rate_plan_id,
+                    "settings": {
+                        "room_type_code": room_code,
+                        "rate_plan_code": rate_code,
+                        "occupancy": self._as_int(m.get("occupancy")) or 2,
+                        "pricing_type": m.get("pricing_type") or "Standard",
+                        "primary_occ": bool(m.get("primary_occ", True)),
+                        "readonly": bool(m.get("readonly", False)),
+                    },
+                }
+            )
+        return rate_plans
 
     def _inject_sandbox_settings(
         self, portal_code: str, property_id: str, settings: dict[str, Any]

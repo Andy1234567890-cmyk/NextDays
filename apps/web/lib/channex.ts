@@ -134,6 +134,9 @@ export type SupportedPortal = {
   label: string;
   icon: string;
   fields: PortalField[];
+  // "credential" = Hotel-ID/Zugangsdaten eingeben; "oauth" = Verbindung über
+  // OAuth-URL (Airbnb, kein eingebbares Credential).
+  connection_type: "credential" | "oauth";
 };
 
 export type ChannelConnection = {
@@ -209,6 +212,67 @@ export async function disconnectChannel(
   channelId: string,
 ): Promise<Result<void>> {
   return call<void>(`/channels/${channelId}`, { method: "DELETE" });
+}
+
+// --- Airbnb-OAuth (white-label, ohne iFrame) --------------------------------
+// Airbnb hat kein eingebbares Credential: das Backend legt einen inaktiven Kanal
+// an und liefert eine echte airbnb.com-OAuth-URL (öffnen ODER an Eigentümer
+// kopieren). Status wird gepollt; Mapping + Aktivierung danach über finalize.
+export type OAuthBeginResult = {
+  channel_id: string;
+  oauth_url: string;
+  portal: string;
+  status: string;
+};
+export type OAuthStatusResult = {
+  connected: boolean;
+  host_id: string | null;
+  portal: string;
+};
+
+export async function beginChannelOAuth(input: {
+  property_id: string;
+  portal_code: string;
+  title?: string;
+  settings?: Record<string, unknown>;
+}): Promise<Result<OAuthBeginResult>> {
+  return call<OAuthBeginResult>(
+    `/properties/${input.property_id}/channels/${input.portal_code}/oauth/begin`,
+    {
+      method: "POST",
+      body: {
+        property_id: input.property_id,
+        portal_code: input.portal_code,
+        title: input.title,
+        settings: input.settings ?? {},
+      },
+    },
+  );
+}
+
+export async function getChannelOAuthStatus(
+  propertyId: string,
+  portalCode: string,
+): Promise<Result<OAuthStatusResult>> {
+  return call<OAuthStatusResult>(
+    `/properties/${propertyId}/channels/${portalCode}/oauth/status`,
+  );
+}
+
+export async function finalizeOAuthChannel(input: {
+  property_id: string;
+  portal_code: string;
+  mappings: ChannelMapping[];
+}): Promise<Result<ChannelConnection>> {
+  const res = await call<ChannelConnection>(
+    `/properties/${input.property_id}/channels/${input.portal_code}/oauth/finalize`,
+    {
+      method: "POST",
+      body: { property_id: input.property_id, portal_code: input.portal_code, mappings: input.mappings },
+    },
+  );
+  if (res.ok) revalidatePath("/einstellungen");
+  return res;
 }
 
 // Gespeicherte OTA-Verbindungen eines Objekts (Hotel-ID + Status pro Portal).

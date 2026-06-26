@@ -92,6 +92,7 @@ class ChannexClient:
         *,
         params: dict[str, Any] | None = None,
         json: dict[str, Any] | None = None,
+        bearer: str | None = None,
     ) -> dict[str, Any]:
         if not self.is_configured:
             raise ChannexError(
@@ -100,11 +101,16 @@ class ChannexClient:
             )
 
         url = f"{self._base_url}/{path.lstrip('/')}"
+        # Standard: user-api-key. Für Session-JWT-Endpunkte (Airbnb-OAuth-Link)
+        # stattdessen Bearer — diese meta-Endpunkte lehnen den api-key ab (422).
         headers = {
-            "user-api-key": self._api_key,
             "Content-Type": "application/json",
             "Accept": "application/json",
         }
+        if bearer:
+            headers["Authorization"] = f"Bearer {bearer}"
+        else:
+            headers["user-api-key"] = self._api_key
 
         last_exc: Exception | None = None
         # +1 finaler Versuch nach allen Backoffs.
@@ -186,8 +192,10 @@ class ChannexClient:
     def get(self, path: str, *, params: dict[str, Any] | None = None) -> dict[str, Any]:
         return self._request("GET", path, params=params)
 
-    def post(self, path: str, *, json: dict[str, Any]) -> dict[str, Any]:
-        return self._request("POST", path, json=json)
+    def post(
+        self, path: str, *, json: dict[str, Any], bearer: str | None = None
+    ) -> dict[str, Any]:
+        return self._request("POST", path, json=json, bearer=bearer)
 
     def put(self, path: str, *, json: dict[str, Any]) -> dict[str, Any]:
         return self._request("PUT", path, json=json)
@@ -417,6 +425,73 @@ class ChannexClient:
     def list_groups(self) -> dict[str, Any]:
         """Groups, auf die der Key Zugriff hat (für die group_id beim Channel-Create)."""
         return self.get("groups")
+
+    # ----- Airbnb-OAuth (white-label, ohne iFrame) ----------------------------
+    # Airbnb hat KEIN eingebbares Credential; die Verbindung läuft über eine echte
+    # airbnb.com-OAuth-URL, die ein dedizierter meta-Endpunkt erzeugt. Verifiziert
+    # 2026-06-26 live gegen Staging + Channex-SPA-Bundle (kein Raten):
+    #   1) POST auth/one_time_token {property_id, group_id, username} → data.token
+    #   2) GET  auth/exchange?oauth_session_key=<token>&app_mode=headless
+    #          → data.attributes.token (Session-JWT)
+    #   3) POST meta/airbnb/connection_link  (JWT-Bearer!) {connection_link:{…}}
+    #          → data.attributes.url  (= airbnb.com/oauth2/auth?…)
+    # Doku: docs/CHANNEX-FELDER.md §4a.
+    def create_one_time_token(
+        self, *, property_id: str, group_id: str, username: str
+    ) -> str:
+        """Schritt 1: One-Time-Token (15 Min, einmalig) für den JWT-Exchange."""
+        res = self.post(
+            "auth/one_time_token",
+            json={
+                "property_id": property_id,
+                "group_id": group_id,
+                "username": username,
+            },
+        )
+        token = (res.get("data") or {}).get("token")
+        if not token:
+            raise ChannexError(
+                "Channex lieferte kein One-Time-Token.", status_code=502, payload=res
+            )
+        return token
+
+    def exchange_one_time_token(self, one_time_token: str) -> str:
+        """Schritt 2: One-Time-Token gegen einen Session-JWT tauschen.
+
+        WICHTIG: Nur GET; nur mit `Accept: application/json` (sonst liefert der
+        Pfad die Channex-SPA-HTML). `app_mode=headless` = ohne Channex-Chrome."""
+        res = self.get(
+            "auth/exchange",
+            params={"oauth_session_key": one_time_token, "app_mode": "headless"},
+        )
+        jwt = ((res.get("data") or {}).get("attributes") or {}).get("token")
+        if not jwt:
+            raise ChannexError(
+                "Channex lieferte keinen Session-JWT.", status_code=502, payload=res
+            )
+        return jwt
+
+    def create_airbnb_connection_link(
+        self, *, jwt: str, connection_link: dict[str, Any]
+    ) -> str:
+        """Schritt 3: echte Airbnb-OAuth-URL erzeugen (zum Öffnen ODER Kopieren).
+
+        Braucht den Session-JWT als Bearer (api-key allein → 422). `connection_link`
+        snake_case: {group_id, properties:[uuid], channel_id?, title, request_id,
+        settings:{booking_amount_settings, cohost_payout_calculations, min_stay_type,
+        send_email_notifications, email?}}. Gibt die airbnb.com-OAuth-URL zurück."""
+        res = self.post(
+            "meta/airbnb/connection_link",
+            json={"connection_link": connection_link},
+            bearer=jwt,
+        )
+        url = ((res.get("data") or {}).get("attributes") or {}).get("url")
+        if not url:
+            raise ChannexError(
+                "Channex lieferte keine Airbnb-OAuth-URL.",
+                status_code=502, payload=res,
+            )
+        return url
 
     # ----- Webhooks -----------------------------------------------------------
     def create_webhook(self, attributes: dict[str, Any]) -> dict[str, Any]:

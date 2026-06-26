@@ -6,7 +6,7 @@
 //   2) Zimmer/Raten des Portals den eigenen Preisplänen zuordnen
 //   3) Verbinden — Backend legt an + aktiviert (Schritt prepare→connect)
 import { Icon } from "@iconify/react";
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,14 +16,20 @@ import {
   type OtaRoom,
   type StoredChannelConnection,
   type SupportedPortal,
+  beginChannelOAuth,
   connectChannel,
+  finalizeOAuthChannel,
+  getChannelOAuthStatus,
   listChannelConnections,
   listPortals,
   prepareChannel,
 } from "@/lib/channex";
 import { listProperties } from "@/lib/properties";
+import { useRealtime } from "@/lib/use-realtime";
 
-type Step = "portal" | "credentials" | "mapping" | "done";
+// "oauth" = Airbnb-Verbindung über OAuth-URL (kein Credential): URL öffnen oder
+// an den Eigentümer kopieren, dann auf Verbindung warten und Mapping setzen.
+type Step = "portal" | "credentials" | "oauth" | "mapping" | "done";
 
 // Eine Zeile in der Zuordnungs-Tabelle: ein OTA-Zimmer+Rate → ein Preisplan.
 type MappingRow = {
@@ -62,6 +68,12 @@ export function ChannelConnectButton({
   const [error, setError] = useState<string | null>(null);
   const [done, setDone] = useState<string | null>(null);
 
+  // OAuth-Flow (Airbnb): erzeugte OAuth-URL, Verbundenheits-Status, Host-ID.
+  const [oauthUrl, setOauthUrl] = useState<string | null>(null);
+  const [oauthConnected, setOauthConnected] = useState(false);
+  const [oauthHostId, setOauthHostId] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
   useEffect(() => {
     if (!open) return;
     startTransition(async () => {
@@ -94,6 +106,10 @@ export function ChannelConnectButton({
     setRatePlans([]);
     setRows([]);
     setError(null);
+    setOauthUrl(null);
+    setOauthConnected(false);
+    setOauthHostId(null);
+    setCopied(false);
   }
 
   function close() {
@@ -104,6 +120,13 @@ export function ChannelConnectButton({
 
   function choosePortal(portal: SupportedPortal) {
     setSelected(portal);
+    setError(null);
+    // OAuth-Portale (Airbnb): kein Credential — direkt in den OAuth-Flow.
+    if (portal.connection_type === "oauth") {
+      setValues({});
+      startOAuth(portal);
+      return;
+    }
     // Hotel-ID aus einer bereits gespeicherten Verbindung vorbefüllen, damit der
     // Vermieter sie beim Re-Connect nicht erneut eingeben muss.
     const stored = connections.find((c) => c.portal_code === portal.code);
@@ -111,9 +134,113 @@ export function ChannelConnectButton({
     setValues(
       stored && firstField ? { [firstField]: stored.hotel_id } : {},
     );
-    setError(null);
     setStep("credentials");
   }
+
+  // OAuth-Start (Airbnb): inaktiven Kanal anlegen + echte OAuth-URL holen.
+  function startOAuth(portal: SupportedPortal) {
+    if (!propertyId) {
+      setError("Bitte zuerst ein Objekt anlegen.");
+      return;
+    }
+    setOauthUrl(null);
+    setOauthConnected(false);
+    setOauthHostId(null);
+    setCopied(false);
+    setStep("oauth");
+    startTransition(async () => {
+      const res = await beginChannelOAuth({
+        property_id: propertyId,
+        portal_code: portal.code,
+      });
+      if (res.ok) {
+        setOauthUrl(res.data.oauth_url);
+      } else {
+        setError(res.error);
+      }
+    });
+  }
+
+  // Status prüfen: ist die OAuth-Verbindung inzwischen aktiv (host_id da)?
+  const checkOAuthStatus = useCallback(async () => {
+    if (!propertyId || !selected) return;
+    const res = await getChannelOAuthStatus(propertyId, selected.code);
+    if (res.ok) {
+      setOauthConnected(res.data.connected);
+      setOauthHostId(res.data.host_id);
+    }
+  }, [propertyId, selected]);
+
+  // OAuth-Link öffnen bzw. in die Zwischenablage kopieren (Self-Connect durch
+  // den Eigentümer, wenn der Vermieter keinen Airbnb-Zugang hat).
+  function openOAuth() {
+    if (oauthUrl) window.open(oauthUrl, "_blank", "noopener,noreferrer");
+  }
+  async function copyOAuth() {
+    if (!oauthUrl) return;
+    try {
+      await navigator.clipboard.writeText(oauthUrl);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setError("Link konnte nicht kopiert werden.");
+    }
+  }
+
+  // Nach „verbunden": Mapping laden (bestehender Pfad) und finalisieren.
+  function loadOAuthMapping() {
+    if (!selected || !propertyId) return;
+    setError(null);
+    startTransition(async () => {
+      const res = await prepareChannel({
+        property_id: propertyId,
+        portal_code: selected.code,
+        settings: {},
+      });
+      if (!res.ok) {
+        setError(res.error);
+        return;
+      }
+      setOtaRooms(res.data.ota_rooms);
+      setRatePlans(res.data.rate_plans);
+      const defaultPlan = res.data.rate_plans[0]?.rate_plan_map_id ?? "";
+      const initial: MappingRow[] = [];
+      for (const room of res.data.ota_rooms) {
+        for (const rate of room.rates ?? []) {
+          initial.push({
+            room_type_code: Number(room.id),
+            rate_plan_code: Number(rate.id),
+            roomLabel: room.title ?? `Listing ${room.id}`,
+            rateLabel: rate.title ?? `Rate ${rate.id}`,
+            pricing_type: rate.pricing === "OBP" ? "OBP" : "Standard",
+            occupancy: rate.max_persons ?? 2,
+            rate_plan_map_id: defaultPlan,
+          });
+        }
+      }
+      setRows(initial);
+      setStep("mapping");
+    });
+  }
+
+  // Realtime-Pflicht: ein Verbindungs-Update (host_id geschrieben durch das
+  // Status-Polling, evtl. in einer anderen Session) kommt ohne Reload an.
+  const oauthWaiting = step === "oauth" && !!selected && !oauthConnected;
+  useRealtime({
+    table: "channex_channel_connection",
+    filter: propertyId ? `property_id=eq.${propertyId}` : undefined,
+    enabled: oauthWaiting,
+    onChange: () => void checkOAuthStatus(),
+  });
+
+  // Fallback-Poll (Channex liefert keine Channel-Webhooks): solange der Dialog
+  // im OAuth-Schritt offen und noch nicht verbunden ist, alle 5 s prüfen.
+  useEffect(() => {
+    if (!oauthWaiting) return;
+    void checkOAuthStatus();
+    const t = window.setInterval(() => void checkOAuthStatus(), 5000);
+    return () => window.clearInterval(t);
+  }, [oauthWaiting, checkOAuthStatus]);
 
   // Status-Hinweis für ein Portal in der Auswahl-Liste (verbunden/Aktion nötig).
   function connectionFor(code: string): StoredChannelConnection | undefined {
@@ -178,13 +305,20 @@ export function ChannelConnectButton({
       return;
     }
     setError(null);
+    const isOAuth = selected.connection_type === "oauth";
     startTransition(async () => {
-      const res = await connectChannel({
-        property_id: propertyId,
-        portal_code: selected.code,
-        settings: values,
-        mappings,
-      });
+      const res = isOAuth
+        ? await finalizeOAuthChannel({
+            property_id: propertyId,
+            portal_code: selected.code,
+            mappings,
+          })
+        : await connectChannel({
+            property_id: propertyId,
+            portal_code: selected.code,
+            settings: values,
+            mappings,
+          });
       if (res.ok) {
         setDone(`${selected.label} verbunden und aktiviert.`);
         setStep("done");
@@ -277,6 +411,65 @@ export function ChannelConnectButton({
                     </p>
                   )}
                 </div>
+              </div>
+            ) : step === "oauth" && selected ? (
+              /* Schritt 2 (OAuth): Airbnb-Konto verbinden */
+              <div className="flex flex-col gap-4">
+                <StepBack onClick={() => setStep("portal")} text="Anderes Portal" />
+                <PortalHead portal={selected} />
+                <p className="text-sm text-muted-foreground">
+                  Verbinde dein {selected.label}-Konto. Öffne den Link selbst –
+                  oder schicke ihn dem Eigentümer, falls du keinen Zugang zum
+                  Konto hast.
+                </p>
+
+                {!oauthUrl && !error && (
+                  <p className="text-sm text-muted-foreground">
+                    <Spinner text="Verbindung wird vorbereitet …" />
+                  </p>
+                )}
+                {error && <ErrorBox text={error} />}
+
+                {oauthUrl && !oauthConnected && (
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-wrap gap-2">
+                      <Button onClick={openOAuth}>
+                        <Icon icon="ph:arrow-square-out" className="size-4" />
+                        Jetzt verbinden
+                      </Button>
+                      <Button onClick={copyOAuth} variant="outline">
+                        <Icon
+                          icon={copied ? "ph:check" : "ph:copy"}
+                          className="size-4"
+                        />
+                        {copied ? "Link kopiert" : "Link kopieren"}
+                      </Button>
+                    </div>
+                    <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Icon
+                        icon="ph:spinner"
+                        className="size-4 animate-spin"
+                      />
+                      Warte auf die Bestätigung über Airbnb …
+                    </p>
+                  </div>
+                )}
+
+                {oauthConnected && (
+                  <div className="flex flex-col gap-3">
+                    <p className="flex items-center gap-2 text-sm font-medium text-emerald-600">
+                      <Icon icon="ph:check-circle" className="size-5" />
+                      Verbunden{oauthHostId ? ` · Host-ID ${oauthHostId}` : ""}
+                    </p>
+                    <Button onClick={loadOAuthMapping} disabled={pending}>
+                      {pending ? (
+                        <Spinner text="Lade Listings …" />
+                      ) : (
+                        "Weiter zur Zuordnung"
+                      )}
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : step === "credentials" && selected ? (
               /* Schritt 2: Zugangsdaten */

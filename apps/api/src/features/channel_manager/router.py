@@ -34,6 +34,10 @@ from .schemas import (
     ChannelResponse,
     ConnectChannelRequest,
     ConnectionToggleRequest,
+    OAuthBeginRequest,
+    OAuthBeginResponse,
+    OAuthFinalizeRequest,
+    OAuthStatusResponse,
     PrepareChannelRequest,
     PrepareChannelResponse,
     PropertyConnectRequest,
@@ -190,6 +194,78 @@ def disconnect_channel(
 ) -> None:
     try:
         service.disconnect_channel(ctx, channel_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Airbnb-OAuth (white-label, ohne iFrame) ---------------------------------
+@router.post(
+    "/properties/{property_id}/channels/{portal_code}/oauth/begin",
+    response_model=OAuthBeginResponse,
+)
+def begin_channel_oauth(
+    property_id: str,
+    portal_code: str,
+    req: OAuthBeginRequest,
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+) -> OAuthBeginResponse:
+    """OAuth-Start (Airbnb): inaktiven Kanal anlegen + echte OAuth-URL erzeugen.
+    Der Kunde öffnet die URL oder schickt sie dem Eigentümer (Self-Connect)."""
+    try:
+        result = service.begin_channel_oauth(
+            ctx,
+            property_id=property_id,
+            portal_code=portal_code,
+            title=req.title,
+            settings=req.settings,
+        )
+        return OAuthBeginResponse(**result)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/properties/{property_id}/channels/{portal_code}/oauth/status",
+    response_model=OAuthStatusResponse,
+)
+def channel_oauth_status(
+    property_id: str,
+    portal_code: str,
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+) -> OAuthStatusResponse:
+    """Verbindungsstatus pollen (Channex liefert keine Channel-Webhooks). Schreibt
+    host_id/Status in die Verbindung → Realtime-Update in offenen Sessions."""
+    try:
+        result = service.refresh_channel_oauth_status(
+            ctx, property_id=property_id, portal_code=portal_code
+        )
+        return OAuthStatusResponse(**result)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/properties/{property_id}/channels/{portal_code}/oauth/finalize",
+    response_model=ChannelResponse,
+)
+def finalize_oauth_channel(
+    property_id: str,
+    portal_code: str,
+    req: OAuthFinalizeRequest,
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+) -> ChannelResponse:
+    """Nach erfolgreicher OAuth-Verbindung: Mapping setzen + Kanal aktivieren."""
+    try:
+        result = service.finalize_oauth_channel(
+            ctx,
+            property_id=property_id,
+            portal_code=portal_code,
+            mappings=[m.model_dump() for m in req.mappings],
+        )
+        return ChannelResponse(**result)
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

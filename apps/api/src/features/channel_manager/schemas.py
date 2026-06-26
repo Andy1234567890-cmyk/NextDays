@@ -129,6 +129,9 @@ class SupportedPortal(BaseModel):
     label: str
     icon: str
     fields: list[PortalField] = Field(default_factory=list)
+    # "credential" = Hotel-ID/Zugangsdaten eingeben; "oauth" = Verbindung über
+    # OAuth-URL (Airbnb, kein eingebbares Credential).
+    connection_type: str = "credential"
 
 
 class ChannelResponse(BaseModel):
@@ -225,6 +228,41 @@ class ConnectChannelRequest(BaseModel):
     portal_code: str
     title: str | None = None
     settings: dict = Field(default_factory=dict)        # z.B. {"hotel_id": "..."}
+    mappings: list[ChannelMapping] = Field(default_factory=list)
+
+
+# --- Airbnb-OAuth (white-label, ohne iFrame) --------------------------------
+class OAuthBeginRequest(BaseModel):
+    """OAuth-Start: inaktiven Channel anlegen + echte OAuth-URL erzeugen."""
+
+    property_id: str
+    portal_code: str                                  # OAuth-Portal (AirBNB)
+    title: str | None = None
+    settings: dict = Field(default_factory=dict)      # optionale Airbnb-Settings
+
+
+class OAuthBeginResponse(BaseModel):
+    """Die OAuth-URL zum Öffnen ODER Kopieren (an den Eigentümer senden)."""
+
+    channel_id: str
+    oauth_url: str
+    portal: str                                       # menschlich, z.B. "Airbnb"
+    status: str = "pending"
+
+
+class OAuthStatusResponse(BaseModel):
+    """Verbindungsstatus (Poll): verbunden + Host-ID, sobald autorisiert."""
+
+    connected: bool = False
+    host_id: str | None = None
+    portal: str
+
+
+class OAuthFinalizeRequest(BaseModel):
+    """Nach erfolgreicher Verbindung: Mapping setzen + Channel aktivieren."""
+
+    property_id: str
+    portal_code: str
     mappings: list[ChannelMapping] = Field(default_factory=list)
 
 

@@ -76,7 +76,79 @@ sie an Channex übermitteln.
 - **BookingCom** (`room_rate_multioccupancy`, single): `hotel_id` **JA**; `send_email_notifications`/`email` optional.
 - **Expedia** (`room_rate_multioccupancy`, single): `hotel_id` **JA**; `min_stay_type`, `booking_amount_settings` optional.
 - **OpenChannel / Sandbox** (`room_rate_multioccupancy`, single): `endpoint`+`api_key`+`hotel_code` **JA**.
-- **AirBNB** (Code „AirBNB", `listing`-Mapping, multiple): OAuth-Token `code`; Mapping per `listing_id` + `airbnb_rate_plan_id`.
+- **AirBNB** (Code „AirBNB", `listing`-Mapping, multiple): **OAuth-Kanal — kein
+  eingebbares Credential.** Verbindung NICHT per `test_connection`/`create` mit
+  Settings, sondern über den white-label IFrame (s. nächster Abschnitt).
+
+## 4a. Airbnb-OAuth (white-label, OHNE IFrame) — verifiziert 2026-06-26
+
+**Ziel:** echte Airbnb-OAuth-URL in der EIGENEN UI relayen (öffnen ODER kopieren &
+an Eigentümer senden) — **kein** Channex-IFrame.
+
+**Befund (live gegen Staging + Channex-SPA-Bundle gelesen, kein Raten):**
+- Airbnb-Katalog: `code="AirBNB"`, `shortCode="ABB"`. Einziges credential-artiges
+  Feld `code` (Typ **`hidden`**) → nichts Einzugebendes → connection_type
+  **`oauth`**. Kein `hotel_id`.
+- Das Channel-Objekt selbst trägt **keine** OAuth-URL; alle geratenen
+  `/channels/:id/oauth*`-Pfade → 404. Die URL kommt aus einem **separaten
+  meta-Endpunkt**, den die SPA nutzt (`createAirbnbConnectionLink` im Bundle).
+
+**Verifizierter Flow (alle Schritte live 200/201 gegen Staging):**
+1. **One-Time-Token:** `POST /api/v1/auth/one_time_token`
+   Body `{property_id, group_id, username}` → `200` `{data:{token:"<uuid>"}}`.
+   TTL 15 Min, einmalig nutzbar.
+2. **JWT-Exchange:** `GET /api/v1/auth/exchange?oauth_session_key={token}&app_mode=headless`
+   → `200` `{data:{attributes:{token:"<JWT>"}}}`. (NUR GET; POST/`exchange_token`
+   etc. → 404. `/auth/exchange` ohne `Accept: application/json` liefert die SPA-
+   HTML — Header zwingend.) Der JWT autorisiert die folgenden meta-Calls.
+3. **Airbnb-Channel inaktiv anlegen:** `POST /channels` (JWT ODER api-key)
+   `{channel:{channel:"AirBNB", title, group_id, properties:[pid], is_active:false}}`
+   → `201`, `data.id` = `channel_id`. (Kein `rate_plans`, kein `settings.hotel_id`.)
+4. **OAuth-URL holen:** `POST /api/v1/meta/airbnb/connection_link` **(JWT-Header)**
+   Body **snake_case**, gewrappt:
+   ```
+   {"connection_link": {
+     "group_id": "<uuid>",
+     "properties": ["<channex_property_uuid>"],
+     "channel_id": "<channel_id aus Schritt 3, optional>",
+     "title": "<Kanal-Titel>",
+     "request_id": "<eigene uuid zur Realtime-Korrelation>",
+     "settings": {
+       "booking_amount_settings": "Payout Amount",   // oder "Total Paid Amount"
+       "cohost_payout_calculations": false,
+       "min_stay_type": "Arrival",                    // oder "Through"
+       "send_email_notifications": false,
+       "email": "<optional>"
+     }
+   }}
+   ```
+   → `200` `{data:{attributes:{url:"https://www.airbnb.com/oauth2/auth?scope=property_management,messages_read,messages_write&state=…&client_id=…&redirect_uri=https://staging.channex.io/api/v1/meta/airbnb/auth_redirect"}}}`.
+   **`data.attributes.url` = die echte Airbnb-OAuth-URL** → in der eigenen UI
+   öffnen (`window.open`) ODER „Link kopieren" an den Eigentümer.
+   ⚠️ Ohne JWT (nur api-key) → `422 group_id can't be blank` (Endpunkt braucht den
+   Session-JWT-Kontext). camelCase-Body (`groupId`) → ebenfalls 422.
+5. **Callback:** Airbnb leitet nach Autorisierung auf Channex'
+   `…/meta/airbnb/auth_redirect` (im URL enthalten) — Channex verarbeitet den
+   Token serverseitig; **kein Redirect zu uns nötig**.
+6. **Status / Host-ID lesen** (Polling, da Channex keine Channel-Webhooks liefert):
+   `get_channel(channel_id)` → `data.attributes.settings`:
+   - **verbunden** ⇔ `settings.tokens` ist gesetzt (nicht null/undefined);
+   - **Host-ID** = `settings.tokens.user_id`;
+   - **Token ungültig** ⇔ `settings.token_invalid === true` (Re-Auth nötig);
+   - `settings.scope` = gewährte Airbnb-Scopes.
+   (Feldnamen aus dem SPA-Component `j7t`: `l?.tokens?.user_id`, `token_invalid`.)
+7. **Re-Auth invalidieren** (optional, Admin): SPA ruft
+   `Channels.airbnbInvalidateAuth(channel_id)` — Pfad bei Bedarf analog aus dem
+   Bundle ziehen; für den Erst-Connect nicht nötig.
+8. **Mapping + Aktivieren:** sobald verbunden, läuft alles über den **bestehenden**
+   `/channels`-Pfad: `get_channel_mapping_details` (liefert dann die Airbnb-
+   Listings) → `update_channel` mit `rate_plans` → `activate_channel`. **`is_active`
+   in unserer DB erst NACH activate true setzen.**
+
+**Architektur (IFrame-frei):** Backend macht 1→4 (Token→JWT→Channel→URL) und gibt
+die `url` ans Frontend; Frontend zeigt „Jetzt verbinden" (öffnet url) + „Link
+kopieren". Status per Poll auf `get_channel` (Schritt 6) → Realtime über die
+`channex_channel_connection`-Tabelle (wir schreiben host_id/connected rein).
 
 ### rate_params (pro Mapping-Zeile, Booking/Expedia/OpenChannel)
 `rate_plan_code` (string), `room_type_code` (string), `occupancy` (int),

@@ -444,6 +444,7 @@ class _ImportDB:
             "ari_outbox": [],
             "channex_tax_map": [],
             "channex_channel_connection": [],
+            "channex_group_map": [],
         }
         self._seq = 0
 
@@ -1036,3 +1037,209 @@ def test_list_channel_connections_white_label_only() -> None:
         "portal_code", "portal", "hotel_id", "channel_id",
         "is_active", "last_error", "updated_at",
     }
+
+
+# --- Airbnb-OAuth (white-label, ohne iFrame) --------------------------------
+class _OAuthChannex(_ImportChannex):
+    """Channex-Stub für den Airbnb-OAuth-Flow: zeichnet die OAuth-/Channel-Calls
+    auf und liefert den Verbindungsstatus (settings.tokens.user_id)."""
+
+    def __init__(self, *, channel_settings=None, **kw) -> None:  # noqa: ANN003, ANN001
+        super().__init__(**kw)
+        self._channel_settings = channel_settings  # für get_channel
+        self.created_channels: list[dict] = []
+        self.updated_channels: list[tuple[str, dict]] = []
+        self.connection_link_bodies: list[dict] = []
+        self.one_time_args: list[dict] = []
+
+    def create_channel(self, attributes):  # noqa: ANN001, ANN201
+        self.created_channels.append(attributes)
+        return {"data": {"id": "cx-airbnb", "attributes": {"is_active": False}}}
+
+    def update_channel(self, channel_id, attributes):  # noqa: ANN001, ANN201
+        self.updated_channels.append((channel_id, attributes))
+        return {"data": {"id": channel_id, "attributes": attributes}}
+
+    def get_channel(self, channel_id):  # noqa: ANN001, ANN201
+        return {"data": {"attributes": {"settings": self._channel_settings or {}}}}
+
+    def create_one_time_token(self, *, property_id, group_id, username):  # noqa: ANN001, ANN201
+        self.one_time_args.append(
+            {"property_id": property_id, "group_id": group_id, "username": username}
+        )
+        return "ott-123"
+
+    def exchange_one_time_token(self, one_time_token):  # noqa: ANN001, ANN201
+        assert one_time_token == "ott-123"
+        return "jwt-abc"
+
+    def create_airbnb_connection_link(self, *, jwt, connection_link):  # noqa: ANN001, ANN201
+        assert jwt == "jwt-abc"
+        self.connection_link_bodies.append(connection_link)
+        return "https://www.airbnb.com/oauth2/auth?state=x&client_id=y"
+
+    def list_channel_catalog(self):  # noqa: ANN201
+        # Echter Katalog-Shape (verifiziert): Airbnb-`code` ist hidden (kein
+        # Credential), Booking.com hat ein sichtbares hotel_id-Feld.
+        return {"data": [
+            {"code": "AirBNB", "params": {
+                "code": {"type": "hidden", "title": "Token Code", "position": 0},
+            }},
+            {"code": "BookingCom", "params": {
+                "hotel_id": {"type": "string", "title": "Hotel ID", "position": 0},
+            }},
+        ]}
+
+
+def _seed_oauth(db, tenant_id="t1"):  # noqa: ANN001, ANN201
+    """Property-Mapping + Group + Rate-Plan-Map für den OAuth-Flow (kein
+    channex_channel_connection — den legt begin_channel_oauth selbst an)."""
+    db.tables["properties"].append(
+        {"id": "p1", "tenant_id": tenant_id, "title": "Haus"}
+    )
+    db.tables["channex_property_map"].append(
+        {"id": "m1", "tenant_id": tenant_id, "property_id": "p1",
+         "channex_property_id": "cx-prop", "deleted_at": None}
+    )
+    db.tables["channex_group_map"].append(
+        {"id": "g1", "tenant_id": tenant_id, "channex_group_id": "cx-group"}
+    )
+    db.tables["channex_rate_plan_map"].append(
+        {"id": "rpm1", "tenant_id": tenant_id, "property_id": "p1",
+         "channex_rate_plan_id": "cx-rate", "deleted_at": None}
+    )
+
+
+def test_supported_portals_marks_airbnb_oauth() -> None:
+    db = _ImportDB()
+    svc = _import_svc(_OAuthChannex(), db)
+    portals = {p["code"]: p for p in svc.list_supported_portals()}
+    # Airbnb: OAuth, KEIN Credential-Feld.
+    assert portals["AirBNB"]["connection_type"] == "oauth"
+    assert portals["AirBNB"]["fields"] == []
+    # Booking.com bleibt credential-basiert mit Hotel-ID-Feld.
+    assert portals["BookingCom"]["connection_type"] == "credential"
+    assert len(portals["BookingCom"]["fields"]) == 1
+
+
+def test_begin_channel_oauth_creates_inactive_channel_and_returns_url() -> None:
+    db = _ImportDB()
+    _seed_oauth(db)
+    channex = _OAuthChannex()
+    ctx = AuthContext(user_id="andy", tenant_id="t1")
+    res = _import_svc(channex, db).begin_channel_oauth(
+        ctx, property_id="p1", portal_code="AirBNB", title="Mein Airbnb"
+    )
+    assert res["oauth_url"].startswith("https://www.airbnb.com/oauth2/auth")
+    assert res["channel_id"] == "cx-airbnb"
+    assert res["status"] == "pending"
+    # Channel inaktiv angelegt, OHNE rate_plans (Mapping kommt später).
+    assert channex.created_channels[0]["is_active"] is False
+    assert "rate_plans" not in channex.created_channels[0]
+    # username = user_id (kein PII-Leck), connection_link snake_case + group_id.
+    assert channex.one_time_args[0]["username"] == "andy"
+    body = channex.connection_link_bodies[0]
+    assert body["group_id"] == "cx-group"
+    assert body["channel_id"] == "cx-airbnb"
+    # Verbindung persistiert (inaktiv, noch kein host_id).
+    conn = db.tables["channex_channel_connection"][0]
+    assert conn["ota_portal_code"] == "AirBNB"
+    assert conn["is_active"] is False
+    assert conn["ota_hotel_id"] is None
+
+
+def test_begin_channel_oauth_rejects_credential_portal() -> None:
+    db = _ImportDB()
+    _seed_oauth(db)
+    ctx = AuthContext(user_id="u", tenant_id="t1")
+    try:
+        _import_svc(_OAuthChannex(), db).begin_channel_oauth(
+            ctx, property_id="p1", portal_code="BookingCom", title=None
+        )
+    except ChannelManagerError as exc:
+        assert exc.status_code == 400
+    else:
+        raise AssertionError("credential-Portal darf keinen OAuth-Begin erlauben")
+
+
+def test_refresh_oauth_status_connected_writes_host_id() -> None:
+    db = _ImportDB()
+    _seed_oauth(db)
+    db.tables["channex_channel_connection"].append(
+        {"id": "c1", "tenant_id": "t1", "property_id": "p1",
+         "ota_portal_code": "AirBNB", "is_active": False,
+         "channex_channel_id": "cx-airbnb", "ota_hotel_id": None}
+    )
+    channex = _OAuthChannex(channel_settings={"tokens": {"user_id": "HOST-9"}})
+    ctx = AuthContext(user_id="u", tenant_id="t1")
+    res = _import_svc(channex, db).refresh_channel_oauth_status(
+        ctx, property_id="p1", portal_code="AirBNB"
+    )
+    assert res["connected"] is True
+    assert res["host_id"] == "HOST-9"
+    # host_id persistiert (Realtime) — aber is_active bleibt false bis finalize.
+    conn = db.tables["channex_channel_connection"][0]
+    assert conn["ota_hotel_id"] == "HOST-9"
+    assert conn["is_active"] is False
+
+
+def test_refresh_oauth_status_not_connected() -> None:
+    db = _ImportDB()
+    _seed_oauth(db)
+    db.tables["channex_channel_connection"].append(
+        {"id": "c1", "tenant_id": "t1", "property_id": "p1",
+         "ota_portal_code": "AirBNB", "is_active": False,
+         "channex_channel_id": "cx-airbnb", "ota_hotel_id": None}
+    )
+    channex = _OAuthChannex(channel_settings={})  # noch keine tokens
+    ctx = AuthContext(user_id="u", tenant_id="t1")
+    res = _import_svc(channex, db).refresh_channel_oauth_status(
+        ctx, property_id="p1", portal_code="AirBNB"
+    )
+    assert res["connected"] is False
+    assert res["host_id"] is None
+
+
+def test_finalize_oauth_channel_maps_and_activates() -> None:
+    db = _ImportDB()
+    _seed_oauth(db)
+    db.tables["channex_channel_connection"].append(
+        {"id": "c1", "tenant_id": "t1", "property_id": "p1",
+         "ota_portal_code": "AirBNB", "is_active": False,
+         "channex_channel_id": "cx-airbnb", "ota_hotel_id": "HOST-9"}
+    )
+    channex = _OAuthChannex()
+    ctx = AuthContext(user_id="u", tenant_id="t1")
+    res = _import_svc(channex, db).finalize_oauth_channel(
+        ctx, property_id="p1", portal_code="AirBNB",
+        mappings=[{
+            "rate_plan_map_id": "rpm1", "room_type_code": 11,
+            "rate_plan_code": 22, "occupancy": 2,
+        }],
+    )
+    assert res["is_active"] is True
+    # Mapping per update_channel auf den BESTEHENDEN Channel + activate.
+    assert channex.updated_channels[0][0] == "cx-airbnb"
+    assert channex.updated_channels[0][1]["rate_plans"][0]["rate_plan_id"] == "cx-rate"
+    assert channex.activated == ["cx-airbnb"]
+    # Erst jetzt is_active true.
+    assert db.tables["channex_channel_connection"][0]["is_active"] is True
+
+
+def test_finalize_oauth_channel_requires_mappings() -> None:
+    db = _ImportDB()
+    _seed_oauth(db)
+    db.tables["channex_channel_connection"].append(
+        {"id": "c1", "tenant_id": "t1", "property_id": "p1",
+         "ota_portal_code": "AirBNB", "is_active": False,
+         "channex_channel_id": "cx-airbnb"}
+    )
+    ctx = AuthContext(user_id="u", tenant_id="t1")
+    try:
+        _import_svc(_OAuthChannex(), db).finalize_oauth_channel(
+            ctx, property_id="p1", portal_code="AirBNB", mappings=[]
+        )
+    except ChannelManagerError as exc:
+        assert exc.status_code == 422
+    else:
+        raise AssertionError("finalize ohne Mapping muss 422 liefern")
