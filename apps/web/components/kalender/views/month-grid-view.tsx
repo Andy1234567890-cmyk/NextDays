@@ -11,6 +11,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Prop } from "@/components/kalender/calendar-board";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   type DayAvailability,
   getAvailability,
@@ -149,17 +150,17 @@ export function CalendarMonthGridView({
     <div className="flex flex-col gap-4">
       {/* Steuerung */}
       <div className="flex flex-wrap items-center gap-2">
-        <select
+        <NativeSelect
           value={propertyId}
           onChange={(e) => setPropertyId(e.target.value)}
-          className="h-9 rounded-full border bg-card px-3 text-sm text-foreground"
+          className="h-9 w-auto"
         >
           {properties.map((p) => (
             <option key={p.id} value={p.id}>
               {p.title}
             </option>
           ))}
-        </select>
+        </NativeSelect>
         <div className="ml-auto flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={prevMonth} aria-label="Vorheriger Monat">
             <Icon icon="ph:caret-left" className="size-4" />

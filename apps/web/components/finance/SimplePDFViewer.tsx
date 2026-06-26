@@ -1,6 +1,7 @@
 import { Icon } from '@iconify/react';
 import type React from 'react';
 import { useRef, useState } from 'react';
+import { NativeSelect } from '@/components/ui/native-select';
 import { useSimplePagination } from '@/hooks/pdf/useSimplePagination';
 
 interface SimplePDFViewerProps {
@@ -128,19 +129,19 @@ export const SimplePDFViewer: React.FC<SimplePDFViewerProps> = ({
           >
             <Icon icon="lucide:zoom-out" width={16} height={16} />
           </button>
-          <select
+          <NativeSelect
             value={zoomLevel}
             onChange={e => {
               onZoomChange(parseFloat(e.target.value));
             }}
-            className="rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+            className="h-auto py-1"
           >
             {zoomOptions.map(option => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
       </div>
 

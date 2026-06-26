@@ -10,6 +10,7 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   type ChannelMapping,
   type LocalRatePlanOption,
@@ -537,7 +538,7 @@ export function ChannelConnectButton({
                             icon="ph:arrow-right"
                             className="hidden size-4 shrink-0 text-muted-foreground sm:block"
                           />
-                          <select
+                          <NativeSelect
                             value={r.rate_plan_map_id}
                             onChange={(e) =>
                               setRows((prev) =>
@@ -548,7 +549,7 @@ export function ChannelConnectButton({
                                 ),
                               )
                             }
-                            className="rounded-(--radius) border border-border bg-background px-3 py-2 text-sm sm:w-56"
+                            className="sm:w-56"
                           >
                             <option value="">— nicht zuordnen —</option>
                             {ratePlans.map((rp) => (
@@ -559,7 +560,7 @@ export function ChannelConnectButton({
                                 {rp.title}
                               </option>
                             ))}
-                          </select>
+                          </NativeSelect>
                         </div>
                       ))}
                     </div>

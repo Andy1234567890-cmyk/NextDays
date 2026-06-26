@@ -16,6 +16,7 @@ import {
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 
+import { NativeSelect } from '@/components/ui/native-select';
 import { getVATFormat, validateVATNumber } from '@/utils/vatValidation';
 
 export interface ContactPerson {
@@ -649,12 +650,12 @@ function AddCustomerModal({
 
                 <div>
                   <Label htmlFor="country">Land *</Label>
-                  <select
+                  <NativeSelect
                     id="country"
                     name="country"
                     value={formData.country}
                     onChange={e => handleChange('country', e.target.value)}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-accent"
+                    className="w-full"
                     required
                   >
                     <option value="Deutschland">Deutschland</option>
@@ -668,7 +669,7 @@ function AddCustomerModal({
                     <option value="Polen">Polen</option>
                     <option value="Tschechien">Tschechien</option>
                     <option value="Andere">Andere</option>
-                  </select>
+                  </NativeSelect>
                 </div>
               </div>
 

@@ -145,6 +145,7 @@ import { EmailSendModal } from './EmailSendModal';
 import PDFTemplate from './PDFTemplates';
 import type { PDFTemplateProps } from './pdf-templates';
 import { SimplePDFViewer } from './SimplePDFViewer';
+import { NativeSelect } from '@/components/ui/native-select';
 
 interface SendDocumentModalProps {
   isOpen: boolean;
@@ -2546,17 +2547,17 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                         {/* Sprache */}
                         <div className="space-y-2">
                           <Label className="font-medium text-sm">Sprache</Label>
-                          <select
+                          <NativeSelect
                             value={documentSettings.language}
                             onChange={e =>
                               setDocumentSettings(prev => ({ ...prev, language: e.target.value }))
                             }
-                            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent"
+                            className="w-full"
                           >
                             <option value="de">Deutsch</option>
                             <option value="en">English</option>
                             <option value="fr">Français</option>
-                          </select>
+                          </NativeSelect>
                         </div>
 
                         {/* QR-Code Optionen */}

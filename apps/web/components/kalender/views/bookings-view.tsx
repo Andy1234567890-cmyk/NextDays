@@ -13,6 +13,7 @@ import { ReservationDetailSlider } from "@/components/kalender/reservation-detai
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { CHANNEL_SOURCES, channelMeta } from "@/lib/calendar-channels";
 import { type DisplayStatus, STATUS_META } from "@/lib/calendar-status";
@@ -383,16 +384,16 @@ function Select({
   options: { value: string; label: string }[];
 }) {
   return (
-    <select
+    <NativeSelect
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="h-9 rounded-full border bg-card px-3 text-sm text-foreground"
+      className="h-9"
     >
       {options.map((o) => (
         <option key={o.value} value={o.value}>
           {o.label}
         </option>
       ))}
-    </select>
+    </NativeSelect>
   );
 }

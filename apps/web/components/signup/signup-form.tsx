@@ -10,6 +10,7 @@ import { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { register } from "@/lib/auth";
 import { LAENDER, currencyForCountry } from "@/lib/laender";
 
@@ -128,18 +129,18 @@ export function SignupForm({ onBack }: { onBack: () => void }) {
         <label htmlFor="country" className="text-sm font-medium">
           Land
         </label>
-        <select
+        <NativeSelect
           id="country"
           value={country}
           onChange={(e) => setCountry(e.target.value)}
-          className="h-10 rounded-full border border-border bg-background px-4 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="rounded-full pl-4"
         >
           {LAENDER.map((l) => (
             <option key={l.code} value={l.code}>
               {tCountry(l.code)} ({l.currency})
             </option>
           ))}
-        </select>
+        </NativeSelect>
       </div>
 
       {error && (

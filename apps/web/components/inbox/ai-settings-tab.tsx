@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NativeSelect } from "@/components/ui/native-select";
 import { type AiSettings, getAiSettings, saveAiSettings } from "@/lib/inbox";
 
 const TONES = ["freundlich", "formell", "locker"];
@@ -47,31 +48,31 @@ export function AiSettingsTab() {
         <h2 className="font-display text-lg font-extrabold">{t("tabAiReplies")}</h2>
 
         <Row label={t("aiTone")}>
-          <select
+          <NativeSelect
             value={s.tone}
             onChange={(e) => setS({ ...s, tone: e.target.value })}
-            className="rounded-(--radius) border border-border bg-background px-3 py-2 text-sm"
+            className="w-auto self-start"
           >
             {TONES.map((x) => (
               <option key={x} value={x}>
                 {t(`aiTone_${x}` as never) ?? x}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </Row>
 
         <Row label={t("aiLanguage")}>
-          <select
+          <NativeSelect
             value={s.language}
             onChange={(e) => setS({ ...s, language: e.target.value })}
-            className="rounded-(--radius) border border-border bg-background px-3 py-2 text-sm"
+            className="w-auto self-start"
           >
             {LANGS.map((x) => (
               <option key={x} value={x}>
                 {x === "auto" ? t("aiLangAuto") : x.toUpperCase()}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </Row>
 
         <Row label={t("aiSignature")}>

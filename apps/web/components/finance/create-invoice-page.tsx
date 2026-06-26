@@ -296,6 +296,7 @@ import NewProductModal, { type NewProductValues } from '@/components/inventory/N
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { useNextInvoiceNumber } from '@/hooks/useNextInvoiceNumber';
 import { InventoryService } from '@/services/inventoryService';
+import { NativeSelect } from '@/components/ui/native-select';
 
 export default function CreateQuotePage() {
   const params = useParams();
@@ -4205,8 +4206,7 @@ export default function CreateQuotePage() {
                       </div>
                       <div>
                         <label className="mb-1 block font-medium text-sm">Einheit</label>
-                        <select
-                          className="rounded border px-2 py-1"
+                        <NativeSelect
                           value={serviceDraft.unit}
                           onChange={e => setServiceDraft(d => ({ ...d, unit: e.target.value }))}
                         >
@@ -4215,7 +4215,7 @@ export default function CreateQuotePage() {
                           <option value="Pauschale">Pauschale</option>
                           <option value="%">%</option>
                           <option value="Tag(e)">Tag(e)</option>
-                        </select>
+                        </NativeSelect>
                       </div>
                     </div>
                   </div>

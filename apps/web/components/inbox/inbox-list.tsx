@@ -1561,14 +1561,14 @@ function BulkUpdateDialog({
         </div>
 
         <label className="mb-1 block text-sm font-medium">{t("bulkMarkAs")}</label>
-        <select
+        <NativeSelect
           value={action}
           onChange={(e) => setAction(e.target.value as "read" | "archived")}
-          className="mb-4 w-full rounded-(--radius) border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/40"
+          className="mb-4 w-full"
         >
           <option value="read">{t("bulkRead")}</option>
           <option value="archived">{t("bulkArchived")}</option>
-        </select>
+        </NativeSelect>
 
         <label className="mb-1 block text-sm font-medium">{t("bulkBefore")}</label>
         <input
