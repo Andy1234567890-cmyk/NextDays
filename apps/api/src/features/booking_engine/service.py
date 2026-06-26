@@ -74,6 +74,16 @@ def _as_opt_int(value: object) -> int | None:
         return None
 
 
+def _as_opt_float(value: object) -> float | None:
+    """DB-Wert → float oder None (kein erfundener 0-Preis)."""
+    if value is None:
+        return None
+    try:
+        return float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+
+
 class BookingEngineService:
     slice_name = "booking_engine"
 
@@ -128,13 +138,95 @@ class BookingEngineService:
                 or needle in (r.get("country") or "").lower()
             ]
 
-        items: list[PublicListing] = []
-        for r in rows:
-            if start and end and not self._is_available(r["id"], start, end):
-                continue
-            price, currency = self._price_from(r["id"], start, end)
-            items.append(self._to_listing(r, price, currency))
+        if not rows:
+            return PublicListingListResponse(items=[], total=0)
+
+        property_ids = [r["id"] for r in rows]
+        # Verfügbarkeit für ALLE Objekte in EINER Query (statt pro Objekt) — nur
+        # wenn ein Zeitraum gewählt ist; sonst gibt es nichts zu filtern.
+        if start and end:
+            blocked = self._unavailable_property_ids(property_ids, start, end)
+            rows = [r for r in rows if r["id"] not in blocked]
+            property_ids = [r["id"] for r in rows]
+
+        # „ab"-Preis für ALLE Objekte gebündelt (statt N×~6 Resolver-Queries):
+        # ohne Zeitraum der Basispreis (stabil, eine rate_plans-Query); mit
+        # Zeitraum der niedrigste Effektiv-Tagespreis (ein Resolver, je Objekt
+        # die bestehende Auflösung — aber ohne pro Objekt neu aufzubauen).
+        prices = self._prices_for_listings(property_ids, start, end)
+
+        items = [
+            self._to_listing(r, *prices.get(r["id"], (None, "")))
+            for r in rows
+        ]
         return PublicListingListResponse(items=items, total=len(items))
+
+    def _unavailable_property_ids(
+        self, property_ids: list[str], start: date, end: date
+    ) -> set[str]:
+        """Objekte mit mindestens einem nicht-offenen Tag im Zeitraum — in EINER
+        Query für alle Objekte (statt _is_available pro Objekt)."""
+        if not property_ids:
+            return set()
+        rows = (
+            self._db()
+            .table("availability")
+            .select("property_id, status")
+            .in_("property_id", property_ids)
+            .gte("date", start.isoformat())
+            .lt("date", end.isoformat())
+            .execute()
+        ).data or []
+        return {r["property_id"] for r in rows if r.get("status") != "open"}
+
+    def _prices_for_listings(
+        self,
+        property_ids: list[str],
+        start: date | None,
+        end: date | None,
+    ) -> dict[str, tuple[float | None, str]]:
+        """„ab"-Preis + Währung je Objekt, gebündelt (kein N+1).
+
+        Ohne Zeitraum: Basispreis aus dem ältesten Rate-Plan je Objekt in EINER
+        Query. Mit Zeitraum: niedrigster Effektiv-Tagespreis je Objekt über den
+        gemeinsam genutzten Resolver (Währung weiter aus dem Rate-Plan)."""
+        if not property_ids:
+            return {}
+        base_by_property = self._base_prices(property_ids)
+        if not (start and end):
+            return base_by_property
+
+        from src.features.pricing.resolver import PricingResolver  # noqa: PLC0415
+
+        resolver = PricingResolver(service_client=self._db())
+        out: dict[str, tuple[float | None, str]] = {}
+        for pid in property_ids:
+            _base, currency = base_by_property.get(pid, (None, ""))
+            days = resolver.effective_prices(pid, start, end)
+            prices = [d.price for d in days if d.price is not None]
+            out[pid] = (min(prices) if prices else None, currency)
+        return out
+
+    def _base_prices(
+        self, property_ids: list[str]
+    ) -> dict[str, tuple[float | None, str]]:
+        """Basispreis + Währung je Objekt aus dem ältesten Rate-Plan — EINE Query
+        für alle Objekte. Pro Objekt gewinnt der zuerst erstellte Plan."""
+        rows = (
+            self._db()
+            .table("rate_plans")
+            .select("property_id, base_price, currency, created_at")
+            .in_("property_id", property_ids)
+            .order("created_at")
+            .execute()
+        ).data or []
+        out: dict[str, tuple[float | None, str]] = {}
+        for r in rows:
+            pid = r.get("property_id")
+            if pid in out:  # ältester Plan zuerst (order created_at) → behalten
+                continue
+            out[pid] = (_as_opt_float(r.get("base_price")), r.get("currency") or "")
+        return out
 
     def listing_detail(
         self,
@@ -209,19 +301,6 @@ class BookingEngineService:
                 )
             )
         return out
-
-    def _is_available(self, property_id: str, start: date, end: date) -> bool:
-        """True, wenn KEIN Tag im Zeitraum belegt/gesperrt ist (open/fehlend)."""
-        rows = (
-            self._db()
-            .table("availability")
-            .select("status")
-            .eq("property_id", property_id)
-            .gte("date", start.isoformat())
-            .lt("date", end.isoformat())
-            .execute()
-        ).data or []
-        return all(r.get("status") == "open" for r in rows)
 
     def _price_from(
         self, property_id: str, start: date | None, end: date | None

@@ -35,14 +35,26 @@ type ApiListResponse = { items: ApiListing[]; total: number };
 // Server-Component-Fetch über den Same-Origin-Proxy. Absolute URL aus der
 // Request-Herkunft ableiten ist hier nicht nötig: Next leitet relative Pfade in
 // Server-Components an den eigenen Origin; der Proxy spricht dann FastAPI an.
+// Kurzes Zeitbudget: hängt das Backend (z. B. 504/Gateway-Timeout), darf der
+// SSR-Render nicht mitblockieren — nach Ablauf bricht der Fetch ab und der
+// Aufrufer (ladeReihen) zeigt den Leerzustand statt abzustürzen.
+const FETCH_TIMEOUT_MS = 8000;
+
 async function get<T>(path: string): Promise<T> {
   const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
-  const res = await fetch(`${base}/api/v1/booking-engine/${path}`, {
-    headers: { Accept: "application/json" },
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error(`Backend ${res.status}: ${path}`);
-  return res.json() as Promise<T>;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${base}/api/v1/booking-engine/${path}`, {
+      headers: { Accept: "application/json" },
+      cache: "no-store",
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`Backend ${res.status}: ${path}`);
+    return res.json() as Promise<T>;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function ort(city: string | null, country: string | null): string {
@@ -85,7 +97,9 @@ export type SuchParams = {
   end?: string;
 };
 
-/** Alle aktiven Inserate (optional gefiltert). */
+/** Alle aktiven Inserate (optional gefiltert). Resilient: ein Backend-Fehler
+ *  oder Timeout darf die Startseite NICHT abstürzen lassen — dann leere Liste
+ *  (die Seite zeigt ihren Leerzustand). Kein erfundener Inhalt. */
 export async function ladeInserate(params: SuchParams = {}): Promise<Listing[]> {
   const qs = new URLSearchParams();
   if (params.q) qs.set("q", params.q);
@@ -93,8 +107,13 @@ export async function ladeInserate(params: SuchParams = {}): Promise<Listing[]> 
   if (params.start) qs.set("start", params.start);
   if (params.end) qs.set("end", params.end);
   const suffix = qs.toString() ? `?${qs.toString()}` : "";
-  const data = await get<ApiListResponse>(`listings${suffix}`);
-  return (data.items ?? []).map(mapList);
+  try {
+    const data = await get<ApiListResponse>(`listings${suffix}`);
+    return (data.items ?? []).map(mapList);
+  } catch (err) {
+    console.error("ladeInserate fehlgeschlagen:", err);
+    return [];
+  }
 }
 
 /** Ein Inserat (Detail) — null, wenn nicht (mehr) aktiv. */

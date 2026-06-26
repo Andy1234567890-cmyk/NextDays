@@ -50,12 +50,17 @@ class _Q:
         self._table = table
         self._filters: dict[str, object] = {}
         self._gte: dict[str, object] = {}
+        self._in: dict[str, set] = {}
 
     def select(self, *_a: object, **_k: object) -> "_Q":
         return self
 
     def eq(self, col: str, val: object) -> "_Q":
         self._filters[col] = val
+        return self
+
+    def in_(self, col: str, vals: object) -> "_Q":
+        self._in[col] = set(vals)  # type: ignore[arg-type]
         return self
 
     def gte(self, col: str, val: object) -> "_Q":
@@ -84,6 +89,8 @@ class _Q:
             rows = [r for r in rows if r.get(col) == val]
         for col, val in self._gte.items():
             rows = [r for r in rows if (r.get(col) or 0) >= val]
+        for col, vals in self._in.items():
+            rows = [r for r in rows if r.get(col) in vals]
 
         class _R:
             pass
@@ -96,8 +103,10 @@ class _Q:
 class _DB:
     def __init__(self, tables: dict[str, list[dict]]) -> None:
         self.tables = tables
+        self.table_calls: list[str] = []  # für N+1-Regression-Schutz
 
     def table(self, name: str) -> _Q:
+        self.table_calls.append(name)
         return _Q(self, name)
 
 
@@ -141,6 +150,27 @@ def test_listings_price_from_resolver() -> None:
     assert by_id["p-active"].currency == "EUR"
     # p-active2 ohne rate_plan → kein Fallback-Preis.
     assert by_id["p-active2"].price_from is None
+
+
+def test_listings_no_n_plus_one_without_dates() -> None:
+    # Ohne Zeitraum: konstante Query-Zahl, UNABHÄNGIG von der Objektanzahl
+    # (Schutz gegen N+1-Regression, die den Marktplatz ins 504 laufen ließ).
+    # Erwartet: 1× properties + 1× rate_plans (gebatcht) = 2 DB-Tabellen-Calls.
+    db = _DB(
+        {
+            "properties": _PROPERTIES,
+            "availability": [],
+            "rate_plans": [
+                {"property_id": "p-active", "base_price": 120, "currency": "EUR"}
+            ],
+            "property_pricing_config": [],
+        }
+    )
+    svc = BookingEngineService(service_client=db)
+    svc.list_listings()
+    assert db.table_calls.count("rate_plans") == 1
+    assert db.table_calls.count("properties") == 1
+    assert "property_pricing_config" not in db.table_calls  # kein Resolver/Listing
 
 
 def test_listings_tenant_filter() -> None:
