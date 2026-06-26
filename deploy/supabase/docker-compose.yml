@@ -328,9 +328,17 @@ services:
         aliases: [api]
     labels:
       # Die api hängt in mehreren Netzen → Traefik muss wissen, ÜBER WELCHES es
-      # die api anspricht (sonst wählt es mehrdeutig das falsche → 503 "no
-      # available server"). Erzwingt das coolify-Netz (wie bei Kong).
-      - traefik.docker.network=coolify
+      # die api anspricht (sonst wählt es mehrdeutig das falsche → 503/504).
+      #
+      # MUSS das App-Netz (= Coolify-App-UUID) sein, NICHT "coolify": Coolify
+      # hängt jeden Compose-Service automatisch in sein App-Netz
+      # cdqxi7d0w34sxzr4wr8jy8um (in dem AUCH der coolify-proxy liegt) und lässt
+      # die explizite coolify-Netz-Mitgliedschaft des Service beim Generieren
+      # fallen. Zeigt das Label dann auf "coolify", trifft Traefik eine IP, in der
+      # der Container nicht erreichbar ist → 504 nach JEDEM Deploy. Das App-Netz
+      # ist stabil (UUID ändert sich nicht) und deckt sich mit dem von Coolify
+      # selbst gesetzten caddy_ingress_network-Label.
+      - traefik.docker.network=cdqxi7d0w34sxzr4wr8jy8um
     environment:
       APP_ENV: ${APP_ENV:-production}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
