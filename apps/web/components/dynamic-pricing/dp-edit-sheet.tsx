@@ -25,6 +25,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatCurrency } from "@/lib/currency";
 import {
   type BaseRateMode,
   type DpOverviewItem,
@@ -127,7 +128,7 @@ export function DpEditSheet({
     }
   }
 
-  const cur = item.currency || "EUR";
+  const cur = item.currency;
 
   return (
     <Sheet open onOpenChange={(o) => !o && onClose()}>
@@ -207,8 +208,10 @@ export function DpEditSheet({
                       hint={m.hint}
                       info={m.info}
                       right={
-                        item.base_rate !== null && m.value === "recommended"
-                          ? fmt(item.base_rate, cur)
+                        item.base_rate !== null &&
+                        cur !== null &&
+                        m.value === "recommended"
+                          ? formatCurrency(item.base_rate, cur)
                           : undefined
                       }
                       onSelect={() => set("base_rate_mode", m.value)}
@@ -225,7 +228,7 @@ export function DpEditSheet({
               />
               {s.base_mode === "manual" && (
                 <div className="ml-6">
-                  <Field label={`Basispreis (${cur})`}>
+                  <Field label={cur ? `Basispreis (${cur})` : "Basispreis"}>
                     <NumInput
                       value={s.manual_base_price}
                       onChange={(n) => set("manual_base_price", n)}
@@ -239,7 +242,7 @@ export function DpEditSheet({
             {/* Min/Max-Leitplanken */}
             <div className="grid grid-cols-2 gap-4">
               <Field
-                label={`Mindestpreis (${cur})`}
+                label={cur ? `Mindestpreis (${cur})` : "Mindestpreis"}
                 hint="Unter diesen Preis geht die Engine nie — egal wie niedrig die Nachfrage ist. Leer = kein Limit."
               >
                 <NumInput
@@ -249,7 +252,7 @@ export function DpEditSheet({
                 />
               </Field>
               <Field
-                label={`Höchstpreis (${cur})`}
+                label={cur ? `Höchstpreis (${cur})` : "Höchstpreis"}
                 hint="Über diesen Preis geht die Engine nie — auch bei sehr hoher Nachfrage. Leer = kein Limit."
               >
                 <NumInput
@@ -788,12 +791,4 @@ function NumInput({
       }}
     />
   );
-}
-
-function fmt(value: number, currency: string): string {
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: 0,
-  }).format(value);
 }

@@ -207,7 +207,11 @@ export function GuestDetail({
           {access.amounts && guest.total_revenue != null && (
             <Kv
               label={t("totalRevenue")}
-              value={`${guest.total_revenue.toLocaleString("de-DE")} ${guest.currency ?? "EUR"}`}
+              value={
+                guest.currency
+                  ? formatCurrency(guest.total_revenue, guest.currency)
+                  : guest.total_revenue.toLocaleString("de-DE")
+              }
             />
           )}
           {guest.is_blocked && guest.block_reason && (

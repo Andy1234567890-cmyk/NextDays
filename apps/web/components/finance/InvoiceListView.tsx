@@ -30,6 +30,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { api } from '@/lib/api-client';
+import { formatCurrency } from '@/lib/currency';
 import type { BookingAccount } from '@/services/bookingAccountService';
 import { InvoiceStatusService } from '@/services/invoice-status.service';
 import { TransactionLinkService } from '@/services/transaction-link.service';
@@ -112,13 +113,6 @@ export function InvoiceListView({
     today.setHours(0, 0, 0, 0);
     dueDate.setHours(0, 0, 0, 0);
     return dueDate < today;
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('de-DE', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(amount);
   };
 
   const getStatusBadge = (invoice: InvoiceData) => {
@@ -707,10 +701,12 @@ export function InvoiceListView({
                               : '-'}
                       </TableCell>
                       <TableCell className="text-right">
-                        {formatCurrency(invoice.amount || 0)}
+                        {formatCurrency(invoice.amount || 0, invoice.currency)}
                       </TableCell>
                       <TableCell className="text-right">
-                        {invoice.status === 'paid' ? '0,00 €' : formatCurrency(invoice.total)}
+                        {invoice.status === 'paid'
+                          ? formatCurrency(0, invoice.currency)
+                          : formatCurrency(invoice.total, invoice.currency)}
                       </TableCell>
                       <TableCell>
                         {!linkedInvoices.has(invoice.id) ? (

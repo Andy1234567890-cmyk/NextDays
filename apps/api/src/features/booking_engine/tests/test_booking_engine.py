@@ -101,11 +101,14 @@ class _DB:
         return _Q(self, name)
 
 
-def _service(rate_plans: list[dict] | None = None) -> BookingEngineService:
+def _service(
+    rate_plans: list[dict] | None = None,
+    properties: list[dict] | None = None,
+) -> BookingEngineService:
     return BookingEngineService(
         service_client=_DB(
             {
-                "properties": _PROPERTIES,
+                "properties": properties if properties is not None else _PROPERTIES,
                 "availability": [],
                 "rate_plans": rate_plans
                 if rate_plans is not None
@@ -158,6 +161,26 @@ def test_listing_detail_active_and_rounded_coords() -> None:
     assert d.description == "Schön"
     assert d.lat == 54.12 and d.lng == 8.65  # auf 2 Nachkommastellen gerundet
     assert d.bedrooms == 3 and d.baths == 2
+
+
+def test_listing_detail_prefers_platform_description() -> None:
+    # Eigene Buchungsseite zeigt den Plattform-Text statt des OTA-Texts.
+    # Eigene, isolierte Property, damit die Listen-Zählungen unberührt bleiben.
+    prop = {
+        "id": "p-platform", "tenant_id": "t1", "title": "Villa",
+        "description": "OTA-Text", "platform_description": "Eigener Text",
+        "property_type": "ferienhaus", "city": "Kampen", "country": "DE",
+        "lat": None, "lng": None, "max_guests": 8,
+        "amenities": [], "photos": [], "type_attributes": {}, "status": "active",
+    }
+    d = _service(properties=[prop]).listing_detail("p-platform")
+    assert d.description == "Eigener Text"
+
+
+def test_listing_detail_falls_back_to_canonical_description() -> None:
+    # Ohne platform_description bleibt die kanonische description (= OTA-Text).
+    d = _service().listing_detail("p-active")
+    assert d.description == "Schön"
 
 
 def test_listing_detail_404_for_draft() -> None:

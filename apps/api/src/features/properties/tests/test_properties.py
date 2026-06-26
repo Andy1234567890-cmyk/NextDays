@@ -88,6 +88,15 @@ def test_property_update_is_all_optional() -> None:
     assert upd.model_dump(exclude_unset=True) == {}
 
 
+def test_platform_description_is_independent_of_description() -> None:
+    # Eigenplattform-Text lässt sich unabhängig von der kanonischen (OTA-)
+    # description per PATCH setzen; nur das gesetzte Feld geht raus.
+    upd = PropertyUpdate(platform_description="Nur eigene Seite")
+    assert upd.model_dump(exclude_unset=True) == {
+        "platform_description": "Nur eigene Seite"
+    }
+
+
 # --- Service-CRUD ---
 
 def test_create_sets_tenant_from_context() -> None:

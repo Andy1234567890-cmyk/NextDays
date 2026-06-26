@@ -25,6 +25,7 @@ from .schemas import (
     ChannelListResponse,
     ChannelResponse,
     ConnectChannelRequest,
+    ConnectionToggleRequest,
     PrepareChannelRequest,
     PrepareChannelResponse,
     PropertyConnectRequest,
@@ -199,6 +200,32 @@ def list_channel_connections(
             items=[ChannelConnectionResponse(**c) for c in items],
             total=len(items),
         )
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.patch(
+    "/properties/{property_id}/connections/{portal_code}",
+    response_model=ChannelConnectionResponse,
+)
+def set_connection_active(
+    property_id: str,
+    portal_code: str,
+    req: ConnectionToggleRequest,
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+) -> ChannelConnectionResponse:
+    """Kanal pro (Objekt × Portal) an-/abschalten (selektiver Verkaufsstopp).
+    „Aus" stoppt ARI/Preis-Push und deaktiviert den Channex-Channel; eingehende
+    Buchungen werden weiter importiert."""
+    try:
+        result = service.set_connection_active(
+            ctx,
+            property_id=property_id,
+            portal_code=portal_code,
+            is_active=req.is_active,
+        )
+        return ChannelConnectionResponse(**result)
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

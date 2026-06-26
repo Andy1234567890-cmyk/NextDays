@@ -204,6 +204,7 @@ class InboxService:
             props = (
                 db.table("properties")
                 .select("id, title")
+                .eq("tenant_id", tenant_id)
                 .in_("id", list(set(prop_ids)))
                 .execute()
             ).data or []
@@ -864,8 +865,12 @@ class InboxService:
     # versand). Der Cron (dispatch_due_automations) versendet später die fälligen.
 
     @staticmethod
-    def _automation_body(db: Client, automation: dict) -> str | None:
-        """Text der Automail: Inline-message, sonst Vorlage (template_id)."""
+    def _automation_body(db: Client, tenant_id: str, automation: dict) -> str | None:
+        """Text der Automail: Inline-message, sonst Vorlage (template_id).
+
+        Die Vorlage wird explizit nach tenant_id gefiltert — der Service-Role-Key
+        umgeht RLS, sonst ließe sich über eine manipulierte template_id die Vorlage
+        eines fremden Tenants laden."""
         msg = (automation.get("message") or "").strip()
         if msg:
             return msg
@@ -876,6 +881,7 @@ class InboxService:
             db.table("message_template")
             .select("body")
             .eq("id", tid)
+            .eq("tenant_id", tenant_id)
             .limit(1)
             .execute()
         ).data or []
@@ -972,7 +978,7 @@ class InboxService:
         for a in automations:
             if not self._automation_matches(a, property_id, th.get("ota_name")):
                 continue
-            body = self._automation_body(db, a)
+            body = self._automation_body(db, tenant_id, a)
             if not body:
                 continue
             send_at = self._compute_send_at(

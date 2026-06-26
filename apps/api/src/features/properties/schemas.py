@@ -31,6 +31,9 @@ class PropertyBase(BaseModel):
 
     title: str = Field(min_length=1, max_length=200)
     description: str | None = None
+    # Abweichende Beschreibung NUR für die eigene Buchungsstrecke; OTAs/Channex
+    # erhalten weiter `description`. None = Fallback auf `description`.
+    platform_description: str | None = None
     property_type: PropertyType = PropertyType.ferienhaus
     status: PropertyStatus = PropertyStatus.draft
 
@@ -64,6 +67,7 @@ class PropertyUpdate(BaseModel):
 
     title: str | None = Field(default=None, min_length=1, max_length=200)
     description: str | None = None
+    platform_description: str | None = None
     property_type: PropertyType | None = None
     status: PropertyStatus | None = None
     max_guests: int | None = Field(default=None, ge=1, le=99)

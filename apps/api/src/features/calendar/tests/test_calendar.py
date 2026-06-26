@@ -124,9 +124,9 @@ def _service(**tables: list[dict]) -> tuple[CalendarService, dict]:
 # --- get_availability: fehlende Tage = offen ---
 
 def test_missing_days_are_open() -> None:
-    svc, _ = _service()
+    svc, _ = _service(properties=[{"id": "p1"}])
     rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3))
-    days = svc.get_availability("p1", rng)
+    days = svc.get_availability("t1", "p1", rng)
     assert [d.status for d in days] == [
         AvailabilityStatus.open,
         AvailabilityStatus.open,
@@ -137,11 +137,12 @@ def test_missing_days_are_open() -> None:
 
 def test_availability_price_override_beats_base_price() -> None:
     svc, _ = _service(
+        properties=[{"id": "p1"}],
         rate_plans=[{"base_price": 100.0, "min_stay": 2}],
         price_overrides=[{"date": "2026-05-02", "price": 150.0}],
     )
     rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3))
-    days = svc.get_availability("p1", rng)
+    days = svc.get_availability("t1", "p1", rng)
     # Tag 1 ohne Override → Basispreis; Tag 2 mit Override.
     assert days[0].price == 100.0
     assert days[1].price == 150.0
@@ -149,29 +150,40 @@ def test_availability_price_override_beats_base_price() -> None:
 
 
 def test_availability_no_rate_plan_keeps_price_none() -> None:
-    svc, _ = _service()  # kein Rate-Plan → kein erfundener Preis
+    svc, _ = _service(properties=[{"id": "p1"}])  # kein Rate-Plan → kein erfundener Preis
     rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2))
-    days = svc.get_availability("p1", rng)
+    days = svc.get_availability("t1", "p1", rng)
     assert days[0].price is None
     assert days[0].min_stay is None
+
+
+# --- get_availability: fremdes Objekt → 404 (Tenant-Scope) ---
+
+def test_availability_rejects_foreign_property() -> None:
+    svc, _ = _service()  # keine eigene property im Store → Gate wirft 404
+    rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2))
+    with pytest.raises(CalendarError) as exc:
+        svc.get_availability("t1", "p-fremd", rng)
+    assert exc.value.status_code == 404
 
 
 # --- check_availability: Double-Booking erkannt ---
 
 def test_check_detects_conflict() -> None:
     svc, _ = _service(
-        availability=[{"date": "2026-05-02", "status": "booked", "source": "booking"}]
+        properties=[{"id": "p1"}],
+        availability=[{"date": "2026-05-02", "status": "booked", "source": "booking"}],
     )
     rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3))
-    res = svc.check_availability("p1", rng)
+    res = svc.check_availability("t1", "p1", rng)
     assert res.available is False
     assert res.conflicting_days == [date(2026, 5, 2)]
 
 
 def test_check_all_open_is_available() -> None:
-    svc, _ = _service()
+    svc, _ = _service(properties=[{"id": "p1"}])
     rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 5))
-    res = svc.check_availability("p1", rng)
+    res = svc.check_availability("t1", "p1", rng)
     assert res.available is True
     assert res.conflicting_days == []
 
@@ -180,24 +192,25 @@ def test_check_all_open_is_available() -> None:
 
 def test_block_rejects_when_booked() -> None:
     svc, _ = _service(
-        availability=[{"date": "2026-05-02", "status": "booked", "source": "airbnb"}]
+        properties=[{"id": "p1"}],
+        availability=[{"date": "2026-05-02", "status": "booked", "source": "airbnb"}],
     )
     req = BlockRequest(
         property_id="p1",
         range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3)),
     )
     with pytest.raises(CalendarError) as exc:
-        svc.block(req)
+        svc.block("t1", req)
     assert exc.value.status_code == 409
 
 
 def test_block_open_days_upserts() -> None:
-    svc, store = _service()
+    svc, store = _service(properties=[{"id": "p1"}])
     req = BlockRequest(
         property_id="p1",
         range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 4)),
     )
-    count = svc.block(req)
+    count = svc.block("t1", req)
     assert count == 3
     upserts = [u for u in store.get("_upserts", []) if u[0] == "availability"]
     assert len(upserts) == 1
@@ -209,12 +222,12 @@ def test_block_open_days_upserts() -> None:
 # --- price override: setzen und zurücknehmen ---
 
 def test_price_override_set_and_clear() -> None:
-    svc, store = _service()
+    svc, store = _service(properties=[{"id": "p1"}])
     svc.set_price_override(
-        PriceOverrideRequest(property_id="p1", date=date(2026, 5, 1), price=120)
+        "t1", PriceOverrideRequest(property_id="p1", date=date(2026, 5, 1), price=120)
     )
     svc.set_price_override(
-        PriceOverrideRequest(property_id="p1", date=date(2026, 5, 1), price=None)
+        "t1", PriceOverrideRequest(property_id="p1", date=date(2026, 5, 1), price=None)
     )
     overrides = [u for u in store.get("_upserts", []) if u[0] == "price_overrides"]
     assert len(overrides) == 2
@@ -294,5 +307,5 @@ def test_db_unavailable_raises_clean_error() -> None:
     svc = CalendarService(client=None)
     rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2))
     with pytest.raises(CalendarError) as exc:
-        svc.get_availability("p1", rng)
+        svc.get_availability("t1", "p1", rng)
     assert exc.value.status_code == 500

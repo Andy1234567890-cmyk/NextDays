@@ -6,15 +6,12 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-// --- Format-Helfer (aus dem Buchhaltungs-Bestand übernommen) -----------------
+// --- Format-Helfer -----------------------------------------------------------
 
-/** Währungsbetrag mit deutschem Locale formatieren. */
-export function formatCurrency(amount: number, currency = "EUR"): string {
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: currency,
-  }).format(amount);
-}
+// Währungsformatierung: EINE Implementierung in lib/currency.ts (mit Locale +
+// festen Nachkommastellen). Hier nur re-exportiert, damit bestehende Importe aus
+// "@/lib/utils" weiterhin funktionieren — keine zweite Wahrheit mehr.
+export { formatCurrency } from "./currency";
 
 /**
  * Datum auf deutsches Locale formatieren.

@@ -22,6 +22,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { formatCurrency } from "@/lib/currency";
 import {
   type InboxMessage,
   type InboxStatus,
@@ -1172,7 +1173,9 @@ function ReservationPanel({
   const money = (v: number | null) =>
     v == null
       ? null
-      : v.toLocaleString("de-DE", { style: "currency", currency: res.currency || "EUR" });
+      : res.currency
+        ? formatCurrency(v, res.currency)
+        : v.toLocaleString("de-DE");
   const total = money(res.total_amount);
   const due = money(res.total_amount);
   const paid = money(res.paid_amount ?? 0);

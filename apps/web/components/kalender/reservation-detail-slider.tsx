@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { channelMeta } from "@/lib/calendar-channels";
 import { STATUS_META, displayStatus } from "@/lib/calendar-status";
+import { formatCurrency } from "@/lib/currency";
 import {
   type ReservationDetail,
   cancelReservation,
@@ -83,12 +84,7 @@ export function ReservationDetailSlider({
   }, [onClose]);
 
   const money = (v: number | null | undefined, currency: string) =>
-    v == null
-      ? "—"
-      : v.toLocaleString("de-DE", {
-          style: "currency",
-          currency: currency || "EUR",
-        });
+    v == null ? "—" : formatCurrency(v, currency);
 
   const status = data
     ? displayStatus(data.status, data.check_in, data.check_out, todayKey)

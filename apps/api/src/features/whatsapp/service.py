@@ -82,6 +82,11 @@ class WhatsAppService:
     # --- Lesen --------------------------------------------------------------
     def list_conversations(self, ctx: AuthContext) -> WhatsAppConversationList:
         db, tenant_id = self._require(ctx)
+        # Gastname über die zentrale Maske (Daten-Split §4): ohne VIEW_GUEST_NAME
+        # nur Vorname — dieselbe Wahrheit wie inbox/reservations.
+        from src.features.auth.guest_masking import load_guest_mask
+
+        mask = load_guest_mask(db, ctx.user_id)
         res = (
             db.table("whatsapp_conversation")
             .select("id, wa_phone, guest_name, reservation_id, last_message, last_at, is_read")
@@ -92,7 +97,8 @@ class WhatsAppService:
         )
         items = [
             WhatsAppConversation(
-                id=c["id"], wa_phone=c["wa_phone"], guest_name=c.get("guest_name"),
+                id=c["id"], wa_phone=c["wa_phone"],
+                guest_name=mask.name(c.get("guest_name")),
                 reservation_id=c.get("reservation_id"),
                 last_message=c.get("last_message"), last_at=c.get("last_at"),
                 is_read=bool(c.get("is_read", True)),

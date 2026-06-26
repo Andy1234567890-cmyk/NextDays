@@ -5,7 +5,7 @@
 // (null → „—"). Neuanlage öffnet einen schlanken Dialog.
 import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,13 @@ export function GuestsList({
   const [onlyBlocked, setOnlyBlocked] = useState(false);
   const [showNew, setShowNew] = useState(false);
   const [pending, start] = useTransition();
+
+  // Realtime-Pflicht: RealtimeRefresh (gaeste/page.tsx) löst router.refresh()
+  // aus → neue, serverseitig maskierte guests-Props. Den lokalen State damit
+  // synchronisieren, sonst zeigt die Tabelle bis zur nächsten Suche alte Daten.
+  useEffect(() => {
+    setRows(guests);
+  }, [guests]);
 
   const reload = (opts: { q?: string; blocked?: boolean }) =>
     start(async () => {

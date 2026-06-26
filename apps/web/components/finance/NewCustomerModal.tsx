@@ -20,6 +20,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
+import { formatCurrency } from '@/lib/currency';
 import { type NumberSequence, NumberSequenceService } from '@/services/numberSequenceService';
 import { validateVATNumber } from '@/utils/vatValidation';
 import NewCategoryModal from './NewCategoryModal';
@@ -1759,20 +1760,26 @@ export default function NewCustomerModal({
                     <div className="space-y-1 text-gray-700 text-sm">
                       <div className="flex justify-between">
                         <span>Rechnungsbetrag:</span>
-                        <span>1.000,00 €</span>
+                        <span>{formatCurrency(1000, formData.currency)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Skonto ({formData.earlyPaymentDiscount || 2}%):</span>
                         <span>
-                          -{((1000 * (formData.earlyPaymentDiscount || 2)) / 100).toFixed(2)} €
+                          -
+                          {formatCurrency(
+                            (1000 * (formData.earlyPaymentDiscount || 2)) / 100,
+                            formData.currency,
+                          )}
                         </span>
                       </div>
                       <hr className="border-gray-300" />
                       <div className="flex justify-between font-medium">
                         <span>Zu zahlen bei Skonto:</span>
                         <span>
-                          {(1000 - (1000 * (formData.earlyPaymentDiscount || 2)) / 100).toFixed(2)}{' '}
-                          €
+                          {formatCurrency(
+                            1000 - (1000 * (formData.earlyPaymentDiscount || 2)) / 100,
+                            formData.currency,
+                          )}
                         </span>
                       </div>
                       <div className="mt-2 text-gray-600 text-xs">

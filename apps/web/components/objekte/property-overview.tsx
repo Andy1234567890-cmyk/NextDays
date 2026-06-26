@@ -400,6 +400,7 @@ function NameEditor({
 }) {
   const [title, setTitle] = useState(p.title);
   const [desc, setDesc] = useState(p.description ?? "");
+  const [platformDesc, setPlatformDesc] = useState(p.platform_description ?? "");
   const [type, setType] = useState<PropertyType>(p.property_type);
   const { busy, error, run } = useEditor();
 
@@ -429,13 +430,30 @@ function NameEditor({
         </Select>
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="e-desc">Beschreibung</Label>
+        <Label htmlFor="e-desc">Beschreibung (für OTAs/Buchungsportale)</Label>
         <Textarea
           id="e-desc"
           rows={6}
           value={desc}
           onChange={(e) => setDesc(e.target.value)}
         />
+        <p className="text-xs text-muted-foreground">
+          Dieser Text wird an Booking.com, Airbnb &amp; Co. übertragen.
+        </p>
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <Label htmlFor="e-platform-desc">
+          Beschreibung für die eigene Buchungsseite (optional)
+        </Label>
+        <Textarea
+          id="e-platform-desc"
+          rows={6}
+          value={platformDesc}
+          onChange={(e) => setPlatformDesc(e.target.value)}
+        />
+        <p className="text-xs text-muted-foreground">
+          Leer lassen, um den OTA-Text auch auf der eigenen Seite zu zeigen.
+        </p>
       </div>
       <SaveBar
         busy={busy}
@@ -443,7 +461,12 @@ function NameEditor({
         disabled={!title.trim()}
         onSave={() =>
           run(() =>
-            onSave({ title, description: desc, property_type: type }),
+            onSave({
+              title,
+              description: desc,
+              platform_description: platformDesc || null,
+              property_type: type,
+            }),
           )
         }
       />

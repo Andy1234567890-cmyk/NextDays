@@ -540,7 +540,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
   //    total_amount === null = keine Berechtigung → fließt NICHT ein)
   const metrics = useMemo(() => {
     if (!start || shown.length === 0 || dates.length === 0) {
-      return { occupancy: 0, bookedNights: 0, totalNights: 0, revenue: 0, adr: null as number | null, amountsHidden: false };
+      return { occupancy: 0, bookedNights: 0, totalNights: 0, revenue: 0, adr: null as number | null, amountsHidden: false, currency: null as string | null };
     }
     const dayKeys = dates.map((d) => key(d));
     let bookedNights = 0;
@@ -558,6 +558,8 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
     let revenue = 0;
     let revenueNights = 0;
     let amountsHidden = false;
+    // Währung aus den Buchungsdaten (Reservation.currency) — kein €-Hardcode.
+    let currency: string | null = null;
     for (const p of shown) {
       for (const r of Object.values(resByProp[p.id] ?? {})) {
         if (seen.has(r.id) || r.status === "cancelled") continue;
@@ -578,6 +580,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
         );
         revenue += (r.total_amount * nightsInWin) / totalResNights;
         revenueNights += nightsInWin;
+        if (currency == null) currency = r.currency;
       }
     }
     return {
@@ -587,6 +590,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
       revenue,
       adr: revenueNights > 0 ? revenue / revenueNights : null,
       amountsHidden,
+      currency,
     };
   }, [start, shown, dates, avail, resByProp]);
 
@@ -877,14 +881,14 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
           hint={`${metrics.bookedNights}/${metrics.totalNights} Objekt-Nächte`}
         />
         <Metric
-          icon="ph:currency-eur"
+          icon="ph:currency-circle-dollar"
           label="Umsatz"
           value={
-            metrics.amountsHidden && metrics.revenue === 0
+            (metrics.amountsHidden && metrics.revenue === 0) || metrics.currency == null
               ? "—"
               : metrics.revenue.toLocaleString("de-DE", {
                   style: "currency",
-                  currency: "EUR",
+                  currency: metrics.currency,
                   maximumFractionDigits: 0,
                 })
           }
@@ -894,11 +898,11 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
           icon="ph:bed"
           label="ADR"
           value={
-            metrics.adr == null
+            metrics.adr == null || metrics.currency == null
               ? "—"
               : metrics.adr.toLocaleString("de-DE", {
                   style: "currency",
-                  currency: "EUR",
+                  currency: metrics.currency,
                   maximumFractionDigits: 0,
                 })
           }

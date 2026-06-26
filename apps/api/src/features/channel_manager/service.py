@@ -18,11 +18,13 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.features.auth.guest_masking import GuestMask
 from src.features.guests.identity import (
     contact_from_ota_customer,
     resolve_or_create_guest,
 )
 
+from . import content_builder
 from .channex_client import ChannexClient, ChannexError
 from .schemas import (
     AriPushRequest,
@@ -228,6 +230,17 @@ class ChannelManagerService:
         prop_row = prop.data[0]
         prop_title = title or prop_row.get("title") or "Unbenannt"
 
+        # Fotos für den Content-Push laden. property_photos ist via Property-FK
+        # tenant-scoped; die Property wurde direkt darüber als tenant-eigen
+        # verifiziert, daher ist der property_id-Filter hier ausreichend.
+        photos = (
+            db.table("property_photos")
+            .select("url, sort_order, is_cover, caption")
+            .eq("property_id", property_id)
+            .order("sort_order")
+            .execute()
+        ).data or []
+
         # Rate-Plans der Property laden (currency vom ersten Plan).
         rate_plans = (
             db.table("rate_plans")
@@ -250,10 +263,11 @@ class ChannelManagerService:
 
         try:
             channex_property_id = self._upsert_channex_property(
-                db, tenant_id, property_id, prop_title, prop_currency, prop_row
+                db, tenant_id, property_id, prop_title, prop_currency, prop_row, photos
             )
             channex_room_type_id, room_type_map_id = self._upsert_channex_room_type(
-                db, tenant_id, channex_property_id, property_id, prop_title
+                db, tenant_id, channex_property_id, property_id, prop_title,
+                prop_row, photos,
             )
             channex_rate_plan_ids: list[str] = []
             for rp in rate_plans:
@@ -281,6 +295,7 @@ class ChannelManagerService:
     def _upsert_channex_property(
         self, db: Client, tenant_id: str, property_id: str, title: str,
         currency: str, prop_row: dict[str, Any] | None = None,
+        photos: list[dict[str, Any]] | None = None,
     ) -> str:
         """POST (neu) oder PUT (vorhanden) der Channex-Property; Mapping pflegen."""
         existing = (
@@ -298,7 +313,7 @@ class ChannelManagerService:
         attrs.update(self._billing_property_attrs(db, tenant_id))
         # Unterkunfts-eigene Felder haben Vorrang (Adresse/Geo/Typ/Beschreibung
         # gehören zur Property, nicht zur Firma).
-        attrs.update(self._property_attrs(prop_row))
+        attrs.update(self._property_attrs(prop_row, photos or []))
         if existing.data:
             channex_id = existing.data[0]["channex_property_id"]
             self._channex.update_property(channex_id, attrs)
@@ -361,7 +376,10 @@ class ChannelManagerService:
         return {k: v for k, v in candidates.items() if v}
 
     @staticmethod
-    def _property_attrs(prop_row: dict[str, Any] | None) -> dict[str, Any]:
+    def _property_attrs(
+        prop_row: dict[str, Any] | None,
+        photos: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
         """Unterkunfts-eigene Felder → Channex-Property-Attribute. timezone wird
         aus dem Land abgeleitet (Channex verlangt eine IANA-Zeitzone). Nur
         nicht-leere Werte (keine Nullen an Channex)."""
@@ -382,9 +400,14 @@ class ChannelManagerService:
             "timezone": _timezone_for_country(country) if country else None,
         }
         attrs = {k: v for k, v in candidates.items() if v not in (None, "")}
-        desc = prop_row.get("description")
-        if desc:
-            attrs["content"] = {"description": desc}
+        # Content (Beschreibung, Hausregeln/Check-in, Fotos) zentral aufgebaut.
+        # Sprache nach Objekt-Land; Beschreibung = kanonischer OTA-Text.
+        locale_order = content_builder.locale_order_for_country(country)
+        content = content_builder.build_property_content(
+            prop_row, photos or [], locale_order=locale_order
+        )
+        if content:
+            attrs["content"] = content
 
         # Property-Settings: Inventartage (passt zu unserem 365-Tage-Init) und
         # Min/Max-Preis aus dem Preise-Tab — Preisgrenzen nur senden, wenn der
@@ -403,6 +426,8 @@ class ChannelManagerService:
     def _upsert_channex_room_type(
         self, db: Client, tenant_id: str, channex_property_id: str,
         property_id: str, title: str,
+        prop_row: dict[str, Any] | None = None,
+        photos: list[dict[str, Any]] | None = None,
     ) -> tuple[str, str]:
         """Synthetischer Room-Type (1 pro Property). local_unit_ref = property_id.
         Gibt (channex_room_type_id, room_type_map_id) zurück."""
@@ -437,6 +462,17 @@ class ChannelManagerService:
             "default_occupancy": 2,
             "room_kind": "room",
         }
+        # Room-Type-Content (Beschreibung + Fotos, KEIN important_information).
+        # Beim 1-Zimmer-Modell teilt der Room-Type die Property-Inhalte.
+        if prop_row is not None:
+            locale_order = content_builder.locale_order_for_country(
+                prop_row.get("country")
+            )
+            rt_content = content_builder.build_room_type_content(
+                prop_row, photos or [], locale_order=locale_order
+            )
+            if rt_content:
+                attrs["content"] = rt_content
         if existing.data:
             channex_room_type_id = existing.data[0]["channex_room_type_id"]
             self._channex.update_room_type(channex_room_type_id, attrs)
@@ -1101,6 +1137,14 @@ class ChannelManagerService:
             if mapping is None:
                 warnings.append(f"Room-Type-Mapping {upd.room_type_map_id} unbekannt.")
                 continue
+            if not self._map_has_active_connection(
+                db, tenant_id, mapping["property_map_id"]
+            ):
+                warnings.append(
+                    f"Room-Type-Mapping {upd.room_type_map_id} übersprungen "
+                    "(kein aktiver Kanal)."
+                )
+                continue
             avail_values.append(
                 {
                     "property_id": mapping["channex_property_id"],
@@ -1117,6 +1161,14 @@ class ChannelManagerService:
             mapping = self._rate_plan_mapping(db, tenant_id, upd.rate_plan_map_id)
             if mapping is None:
                 warnings.append(f"Rate-Plan-Mapping {upd.rate_plan_map_id} unbekannt.")
+                continue
+            if not self._map_has_active_connection(
+                db, tenant_id, mapping["property_map_id"]
+            ):
+                warnings.append(
+                    f"Rate-Plan-Mapping {upd.rate_plan_map_id} übersprungen "
+                    "(kein aktiver Kanal)."
+                )
                 continue
             value: dict[str, Any] = {
                 "property_id": mapping["channex_property_id"],
@@ -1190,6 +1242,49 @@ class ChannelManagerService:
             "channex_room_type_id": rt[0]["channex_room_type_id"],
         }
 
+    def _has_active_connection(
+        self, db: Client, tenant_id: str, property_id: str
+    ) -> bool:
+        """True, wenn das Objekt mindestens EINE aktive Kanal-Verbindung hat.
+
+        Eine Quelle der Wahrheit für „darf für dieses Objekt verkauft werden":
+        steht jeder Kanal auf Aus (is_active=False), wird KEIN ARI/Preis mehr
+        gepusht (selektives Kanal-An/Aus pro Objekt). Tenant-Scope explizit, da
+        der Service-Role-Key die RLS umgeht."""
+        res = (
+            db.table("channex_channel_connection")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .eq("is_active", True)
+            .limit(1)
+            .execute()
+        ).data
+        return bool(res)
+
+    def _property_id_for_map(
+        self, db: Client, tenant_id: str, property_map_id: str
+    ) -> str | None:
+        """property_map_id → lokale property_id (für das An/Aus-Gate in push_ari)."""
+        pm = (
+            db.table("channex_property_map")
+            .select("property_id")
+            .eq("id", property_map_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        return pm[0]["property_id"] if pm else None
+
+    def _map_has_active_connection(
+        self, db: Client, tenant_id: str, property_map_id: str
+    ) -> bool:
+        """Gate über die property_map_id (push_ari arbeitet auf Mapping-Ebene)."""
+        property_id = self._property_id_for_map(db, tenant_id, property_map_id)
+        if property_id is None:
+            return False
+        return self._has_active_connection(db, tenant_id, property_id)
+
     def push_availability_for_property(
         self,
         tenant_id: str,
@@ -1208,6 +1303,8 @@ class ChannelManagerService:
         mapping = self._resolve_channex_room_type(db, tenant_id, property_id)
         if mapping is None:
             return  # nicht mit Channex verbunden → nichts zu pushen
+        if not self._has_active_connection(db, tenant_id, property_id):
+            return  # alle Kanäle des Objekts auf Aus → kein Verkauf, kein Push
 
         outbox = (
             db.table("ari_outbox")
@@ -1328,6 +1425,8 @@ class ChannelManagerService:
         mapping = self._resolve_channex_rate_plan(self._db, tenant_id, property_id)
         if mapping is None:
             return
+        if not self._has_active_connection(self._db, tenant_id, property_id):
+            return  # alle Kanäle des Objekts auf Aus → kein Preis-Push
         value: dict[str, Any] = {
             "property_id": mapping["channex_property_id"],
             "rate_plan_id": mapping["channex_rate_plan_id"],
@@ -1380,6 +1479,8 @@ class ChannelManagerService:
         mapping = self._resolve_channex_rate_plan(self._db, tenant_id, property_id)
         if mapping is None:
             return
+        if not self._has_active_connection(self._db, tenant_id, property_id):
+            return  # alle Kanäle des Objekts auf Aus → kein Batch-Preis-Push
         values: list[dict[str, Any]] = []
         for seg in segments:
             rate_cents = seg.get("rate_cents")
@@ -1445,6 +1546,14 @@ class ChannelManagerService:
                     {"status": "failed", "last_error": "kein Channex-Mapping"}
                 ).eq("id", r["id"]).execute()
                 result["failed"] += 1
+                continue
+            if not self._has_active_connection(db, r["tenant_id"], r["property_id"]):
+                # Alle Kanäle des Objekts auf Aus → nichts verkaufen. Als done
+                # abhaken (übersprungen), damit der Cron nicht endlos retryt.
+                db.table("ari_outbox").update(
+                    {"status": "done", "last_error": "kein aktiver Kanal (übersprungen)"}
+                ).eq("id", r["id"]).execute()
+                result["done"] += 1
                 continue
             try:
                 self._channex.update_availability(
@@ -1927,6 +2036,58 @@ class ChannelManagerService:
             {"is_active": False, "channex_channel_id": None}
         ).eq("tenant_id", tenant_id).eq("channex_channel_id", channel_id).execute()
 
+    def set_connection_active(
+        self, ctx: AuthContext, *, property_id: str, portal_code: str, is_active: bool
+    ) -> dict[str, Any]:
+        """Kanal pro (Objekt × Portal) an-/abschalten (selektiver Verkaufsstopp).
+
+        Anders als disconnect_channel bleibt der Channex-Channel bestehen
+        (sofortiges Re-Aktivieren). „Aus" = kein ARI/Preis-Push mehr UND der
+        Channex-Channel wird hart deaktiviert, damit das OTA wirklich stoppt;
+        eingehende Buchungen werden weiterhin importiert."""
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        row = (
+            db.table("channex_channel_connection")
+            .select("channex_channel_id, ota_hotel_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .eq("ota_portal_code", portal_code)
+            .limit(1)
+            .execute()
+        ).data
+        if not row:
+            raise ChannelManagerError("Kanal-Verbindung nicht gefunden.", status_code=404)
+
+        channel_id = row[0].get("channex_channel_id")
+        if channel_id:
+            try:
+                if is_active:
+                    self._channex.activate_channel(channel_id)
+                else:
+                    self._channex.deactivate_channel(channel_id)
+            except ChannexError as exc:
+                raise self._wrap_channex(exc) from exc
+
+        db.table("channex_channel_connection").update(
+            {"is_active": is_active}
+        ).eq("tenant_id", tenant_id).eq("property_id", property_id).eq(
+            "ota_portal_code", portal_code
+        ).execute()
+        log.info(
+            "channex_connection_toggled",
+            tenant_id=tenant_id, property_id=property_id,
+            portal_code=portal_code, is_active=is_active,
+        )
+        return {
+            "portal_code": portal_code,
+            "portal": self._portal_labels.get(portal_code, "Kanal"),
+            "hotel_id": row[0].get("ota_hotel_id"),
+            "channel_id": channel_id,
+            "is_active": is_active,
+            "last_error": None,
+        }
+
     # Settings-Schlüssel, unter denen die OTA-Hotel-ID je nach Portal steht.
     _HOTEL_ID_KEYS = ("hotel_id", "hotel_code", "property_id", "property_code")
 
@@ -2204,6 +2365,11 @@ class ChannelManagerService:
     def list_bookings(self, ctx: AuthContext) -> BookingListResponse:
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
+        # Gast-PII im OTA-customer-Blob über die zentrale Maske (Daten-Split §4):
+        # ohne VIEW_GUEST_NAME/CONTACT keine vollen Namen/Kontaktdaten.
+        from src.features.auth.guest_masking import load_guest_mask
+
+        mask = load_guest_mask(db, ctx.user_id)
         res = (
             db.table("channex_booking")
             .select("*")
@@ -2212,7 +2378,7 @@ class ChannelManagerService:
             .limit(200)
             .execute()
         )
-        items = [self._to_booking(r) for r in (res.data or [])]
+        items = [self._to_booking(r, mask) for r in (res.data or [])]
         return BookingListResponse(items=items, total=len(items))
 
     # -- DB-Mapping-Lookups ----------------------------------------------------
@@ -2236,6 +2402,7 @@ class ChannelManagerService:
         return {
             "channex_property_id": prop,
             "channex_room_type_id": rt.data[0]["channex_room_type_id"],
+            "property_map_id": rt.data[0]["property_map_id"],
         }
 
     def _rate_plan_mapping(
@@ -2268,6 +2435,7 @@ class ChannelManagerService:
         return {
             "channex_property_id": prop,
             "channex_rate_plan_id": rp.data[0]["channex_rate_plan_id"],
+            "property_map_id": rt.data[0]["property_map_id"],
         }
 
     def _channex_property_id(
@@ -2454,6 +2622,7 @@ class ChannelManagerService:
         existing = (
             db.table("reservations")
             .select("id")
+            .eq("tenant_id", tenant_id)
             .eq("source_channex_booking_id", booking_id)
             .limit(1)
             .execute()
@@ -2911,7 +3080,29 @@ class ChannelManagerService:
         )
 
     @staticmethod
-    def _to_booking(row: dict[str, Any]) -> BookingResponse:
+    def _mask_customer(customer: dict[str, Any], mask: GuestMask) -> dict[str, Any]:
+        """OTA-customer-Blob gemäß Gast-Maske bereinigen (Daten-Split §4).
+
+        Namensfelder werden auf den Vornamen reduziert, wenn VIEW_GUEST_NAME fehlt;
+        Kontaktfelder (Mail/Telefon) entfallen ganz ohne VIEW_GUEST_CONTACT. Andere
+        Felder (Land etc.) bleiben unverändert."""
+        if not customer:
+            return {}
+        name_keys = {"name", "first_name", "firstname", "surname", "last_name", "lastname"}
+        contact_keys = {"mail", "email", "phone", "tel", "telephone"}
+        out: dict[str, Any] = {}
+        for key, value in customer.items():
+            low = key.lower()
+            if low in name_keys and isinstance(value, str):
+                out[key] = mask.name(value)
+            elif low in contact_keys:
+                out[key] = mask.contact_value(value if isinstance(value, str) else None)
+            else:
+                out[key] = value
+        return out
+
+    @staticmethod
+    def _to_booking(row: dict[str, Any], mask: GuestMask) -> BookingResponse:
         return BookingResponse(
             id=row["id"],
             external_id=row["channex_booking_id"],
@@ -2922,7 +3113,7 @@ class ChannelManagerService:
             departure_date=row.get("departure_date"),
             amount_cents=row.get("amount_cents"),
             currency=row.get("currency"),
-            customer=row.get("customer") or {},
+            customer=ChannelManagerService._mask_customer(row.get("customer") or {}, mask),
             acknowledged_at=row.get("acknowledged_at"),
         )
 

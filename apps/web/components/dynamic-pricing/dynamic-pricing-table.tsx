@@ -18,6 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { formatCurrency } from "@/lib/currency";
 import {
   type BaseMode,
   type BaseRateMode,
@@ -103,12 +104,7 @@ function Th({
 
 function fmtMoney(value: number | null, currency: string | null): string {
   if (value === null) return "—";
-  const cur = currency || "EUR";
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: cur,
-    maximumFractionDigits: 0,
-  }).format(value);
+  return formatCurrency(value, currency ?? undefined);
 }
 
 export function DynamicPricingTable({ items }: { items: DpOverviewItem[] }) {

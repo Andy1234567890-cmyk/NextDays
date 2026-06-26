@@ -416,7 +416,7 @@ class AccountService:
             res = self._service.auth.admin.get_user_by_id(user_id)
             return res.user
         # SDK-Fehler werden geloggt; Aufrufer behandeln None konservativ.
-        except Exception as exc:  # pylint: disable=broad-exception-caught
+        except Exception as exc:  # noqa: BLE001  pylint: disable=broad-exception-caught
             log.warning("get_auth_user_failed", user_id=user_id, error=str(exc))
             return None
 
@@ -447,7 +447,7 @@ class AccountService:
             )
             return res.session is not None
         # Falsche Zugangsdaten/SDK-Fehler bedeuten schlicht: Passwort nicht ok.
-        except Exception:  # pylint: disable=broad-exception-caught
+        except Exception:  # noqa: BLE001  pylint: disable=broad-exception-caught
             return False
 
 

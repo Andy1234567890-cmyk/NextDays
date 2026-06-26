@@ -145,6 +145,12 @@ class ChannelListResponse(BaseModel):
     total: int
 
 
+class ConnectionToggleRequest(BaseModel):
+    """An-/Abschalten einer OTA-Verbindung pro (Objekt × Portal)."""
+
+    is_active: bool
+
+
 class ChannelConnectionResponse(BaseModel):
     """Eine gespeicherte OTA-Verbindung eines Objekts (white-label).
 

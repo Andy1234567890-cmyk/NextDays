@@ -13,6 +13,7 @@ import {
 } from '@tasko/ui';
 import { useEffect, useState } from 'react';
 
+import { formatCurrency } from '@/lib/currency';
 import type { InvoiceData } from '@/types/invoiceTypes';
 
 interface EmailDialogProps {
@@ -36,7 +37,7 @@ export function EmailDialog({ isOpen, onClose, invoice, companyId }: EmailDialog
       setEmailBody(
         `Sehr geehrte Damen und Herren,\n\n` +
           `anbei erhalten Sie unsere Rechnung ${invoice.number || invoice.invoiceNumber || 'RE-XXXX'}.\n\n` +
-          `Rechnungsbetrag: ${new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(invoice.total)}\n` +
+          `Rechnungsbetrag: ${formatCurrency(invoice.total, invoice.currency)}\n` +
           `Fällig bis: ${new Date(invoice.dueDate).toLocaleDateString('de-DE')}\n\n` +
           `Bei Fragen stehen wir Ihnen gerne zur Verfügung.\n\n` +
           `Mit freundlichen Grüßen\n` +

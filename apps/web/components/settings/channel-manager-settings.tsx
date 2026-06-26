@@ -4,7 +4,7 @@
 // status, die verbundenen Objekte (Property-Mappings) und erlaubt einen
 // manuellen Buchungs-Sync. Business-Logik liegt im Backend (lib/channex.ts).
 import { Icon } from "@iconify/react";
-import { useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 
 import { ChannelConnectButton } from "@/components/channel-manager/channel-connect-button";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,13 @@ import type {
   PropertyMap,
   StoredChannelConnection,
 } from "@/lib/channex";
-import { listChannelConnections, syncChannexBookings } from "@/lib/channex";
+import {
+  listChannelConnections,
+  setConnectionActive,
+  syncChannexBookings,
+} from "@/lib/channex";
+import { formatCurrency } from "@/lib/currency";
+import { useRealtime } from "@/lib/use-realtime";
 
 type Props = {
   configured: boolean;
@@ -189,10 +195,8 @@ export function ChannelManagerSettings({
                     <span className="truncate text-xs text-muted-foreground">
                       {b.arrival_date} → {b.departure_date}
                       {b.amount_cents != null &&
-                        ` · ${(b.amount_cents / 100).toLocaleString("de-DE", {
-                          style: "currency",
-                          currency: b.currency ?? "EUR",
-                        })}`}
+                        b.currency != null &&
+                        ` · ${formatCurrency(b.amount_cents / 100, b.currency)}`}
                     </span>
                   </div>
                   <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
@@ -213,20 +217,39 @@ export function ChannelManagerSettings({
 function PropertyConnections({ propertyId }: { propertyId: string }) {
   const [items, setItems] = useState<StoredChannelConnection[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [toggling, setToggling] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    const res = await listChannelConnections(propertyId);
+    setItems(res.ok ? res.data.items : []);
+    setLoaded(true);
+  }, [propertyId]);
 
   useEffect(() => {
-    let active = true;
-    (async () => {
-      const res = await listChannelConnections(propertyId);
-      if (active) {
-        setItems(res.ok ? res.data.items : []);
-        setLoaded(true);
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, [propertyId]);
+    void load();
+  }, [load]);
+
+  // Realtime-Pflicht: Kanal-An/Aus eines anderen Nutzers/einer anderen Session
+  // sofort übernehmen (kein Polling). Nur Verbindungen DIESES Objekts.
+  useRealtime({
+    table: "channex_channel_connection",
+    filter: `property_id=eq.${propertyId}`,
+    onChange: () => void load(),
+  });
+
+  async function toggle(c: StoredChannelConnection) {
+    const next = !c.is_active;
+    setToggling(c.portal_code);
+    // Optimistisch umschalten; bei Fehler aus dem Backend zurücksetzen.
+    setItems((prev) =>
+      prev.map((x) =>
+        x.portal_code === c.portal_code ? { ...x, is_active: next } : x,
+      ),
+    );
+    const res = await setConnectionActive(propertyId, c.portal_code, next);
+    if (!res.ok) await load();
+    setToggling(null);
+  }
 
   if (!loaded || items.length === 0) return null;
 
@@ -246,6 +269,14 @@ function PropertyConnections({ propertyId }: { propertyId: string }) {
           />
           <span className="font-medium">{c.portal}</span>
           <span className="text-muted-foreground">· {c.hotel_id}</span>
+          <button
+            type="button"
+            onClick={() => toggle(c)}
+            disabled={toggling === c.portal_code}
+            className="ml-1 rounded-full px-2 py-0.5 font-medium text-accent hover:underline disabled:opacity-50"
+          >
+            {c.is_active ? "Pausieren" : "Aktivieren"}
+          </button>
         </li>
       ))}
     </ul>

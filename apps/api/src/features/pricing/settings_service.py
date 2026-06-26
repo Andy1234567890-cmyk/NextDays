@@ -240,7 +240,9 @@ class DpSettingsService:
                 .eq("is_active", True)
                 .execute()
             ).data or []
-        except Exception:  # pylint: disable=broad-exception-caught
+        # Fehlende/nicht-migrierte Channex-Tabelle = keine Verbindungen (leere Map);
+        # die Übersicht bleibt ohne Channel-Status nutzbar.
+        except Exception:  # noqa: BLE001  pylint: disable=broad-exception-caught
             return {}
         out: dict[str, list[str]] = {}
         for r in rows:

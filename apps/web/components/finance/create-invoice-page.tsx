@@ -71,6 +71,7 @@ import { COUNTRIES } from '@/constants/countries';
 import { useNewAuth } from '@/contexts/NewAuthContext';
 import { getAllCurrencies } from '@/data/currencies';
 import { api } from '@/lib/api-client';
+import { formatCurrency as formatCurrencyIntl } from '@/lib/currency';
 import { cn } from '@/lib/utils';
 import type { QuoteItem as InvoiceItem, QuoteItem } from '@/services/quoteService';
 import type { CreateInvoiceFormData } from '@/types/formData';
@@ -1428,15 +1429,13 @@ export default function CreateQuotePage() {
     [],
   );
 
-  // Currency-Formatter
+  // Currency-Formatter (Währung aus den Formulardaten, kein €-Hardcode)
   const formatCurrency = (amount: number) => {
+    const safeAmount = Number.isFinite(amount) ? amount : 0;
     try {
-      return new Intl.NumberFormat('de-DE', {
-        style: 'currency',
-        currency: formData.currency || 'EUR',
-      }).format(Number.isFinite(amount) ? amount : 0);
+      return formatCurrencyIntl(safeAmount, formData.currency);
     } catch {
-      return `${(Number.isFinite(amount) ? amount : 0).toFixed(2)} ${formData.currency || 'EUR'}`;
+      return `${safeAmount.toFixed(2)} ${formData.currency}`;
     }
   };
 

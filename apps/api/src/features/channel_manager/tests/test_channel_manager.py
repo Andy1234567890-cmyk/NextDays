@@ -3,7 +3,10 @@ from datetime import date
 from fastapi.testclient import TestClient
 
 from src.core.security import AuthContext
-from src.features.channel_manager.service import ChannelManagerService
+from src.features.channel_manager.service import (
+    ChannelManagerError,
+    ChannelManagerService,
+)
 from src.main import create_app
 
 client = TestClient(create_app())
@@ -363,6 +366,9 @@ class _ImportChannex:
         self._rate_plans = rate_plans or []
         self._fail_availability = fail_availability
         self.pushed: list[dict] = []  # update_availability-Aufrufe
+        self.restrictions_pushed: list[dict] = []  # update_restrictions-Aufrufe
+        self.activated: list[str] = []
+        self.deactivated: list[str] = []
 
     def update_availability(self, values):  # noqa: ANN001, ANN201
         if self._fail_availability:
@@ -371,6 +377,18 @@ class _ImportChannex:
             raise ChannexError("Channex down", status_code=502)
         self.pushed.extend(values)
         return {"data": values}
+
+    def update_restrictions(self, values):  # noqa: ANN001, ANN201
+        self.restrictions_pushed.extend(values)
+        return {"data": values}
+
+    def activate_channel(self, channel_id):  # noqa: ANN001, ANN201
+        self.activated.append(channel_id)
+        return {}
+
+    def deactivate_channel(self, channel_id):  # noqa: ANN001, ANN201
+        self.deactivated.append(channel_id)
+        return {}
 
     def list_bookings_for_property(self, property_id, *, page=1, limit=100, inserted_after=None):  # noqa: ANN001, ANN201
         # Eine Seite (Tests klein halten).
@@ -425,6 +443,7 @@ class _ImportDB:
             "rate_plans": [],
             "ari_outbox": [],
             "channex_tax_map": [],
+            "channex_channel_connection": [],
         }
         self._seq = 0
 
@@ -475,6 +494,13 @@ def _seed_property(db, tenant_id="t1", channex_pid="cx-prop", property_id="p1"):
     db.tables["channex_property_map"].append(
         {"id": "m1", "tenant_id": tenant_id, "property_id": property_id,
          "channex_property_id": channex_pid, "deleted_at": None}
+    )
+    # Aktive Kanal-Verbindung: ohne sie greift das An/Aus-Gate und der Push wäre
+    # ein No-Op. Das verbundene, AKTIVE Objekt ist der Normalfall der Push-Tests.
+    db.tables["channex_channel_connection"].append(
+        {"id": "c1", "tenant_id": tenant_id, "property_id": property_id,
+         "ota_portal_code": "BookingCom", "is_active": True,
+         "channex_channel_id": "cx-chan"}
     )
 
 
@@ -652,6 +678,86 @@ def test_push_availability_no_mapping_is_noop() -> None:
         "t1", "p1", date(2026, 6, 23), date(2026, 6, 25), 0
     )
     assert channex.pushed == [] and db.tables["ari_outbox"] == []
+
+
+# --- Selektives Kanal-An/Aus pro Objekt --------------------------------------
+
+def _deactivate_all(db, property_id="p1"):  # noqa: ANN001, ANN201
+    for row in db.tables["channex_channel_connection"]:
+        if row["property_id"] == property_id:
+            row["is_active"] = False
+
+
+def test_push_availability_skipped_when_all_channels_inactive() -> None:
+    # Stehen alle Kanäle des Objekts auf Aus, wird NICHT an Channex gepusht.
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    _deactivate_all(db)
+    channex = _ImportChannex()
+    _import_svc(channex, db).push_availability_for_property(
+        "t1", "p1", date(2026, 6, 23), date(2026, 6, 25), 0
+    )
+    assert channex.pushed == []  # Gate greift → kein Verkauf
+    assert db.tables["ari_outbox"] == []
+
+
+def test_process_ari_outbox_skips_inactive_as_done() -> None:
+    # Outbox-Zeile eines abgeschalteten Objekts: als done abhaken (kein Retry).
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    _deactivate_all(db)
+    db.tables["ari_outbox"].append({
+        "id": "o1", "tenant_id": "t1", "property_id": "p1",
+        "date_from": "2026-06-23", "date_to": "2026-06-25",
+        "availability": 0, "status": "pending", "attempts": 0,
+    })
+    channex = _ImportChannex()
+    res = _import_svc(channex, db).process_ari_outbox()
+    assert channex.pushed == []
+    assert res["done"] == 1
+    assert db.tables["ari_outbox"][0]["status"] == "done"
+
+
+def test_set_connection_active_off_deactivates_channex_channel() -> None:
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    channex = _ImportChannex()
+    ctx = AuthContext(user_id="u", tenant_id="t1")
+    result = _import_svc(channex, db).set_connection_active(
+        ctx, property_id="p1", portal_code="BookingCom", is_active=False
+    )
+    assert result["is_active"] is False
+    assert channex.deactivated == ["cx-chan"]  # Channex-Channel hart aus
+    assert db.tables["channex_channel_connection"][0]["is_active"] is False
+
+
+def test_set_connection_active_on_activates_channex_channel() -> None:
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    _deactivate_all(db)
+    channex = _ImportChannex()
+    ctx = AuthContext(user_id="u", tenant_id="t1")
+    result = _import_svc(channex, db).set_connection_active(
+        ctx, property_id="p1", portal_code="BookingCom", is_active=True
+    )
+    assert result["is_active"] is True
+    assert channex.activated == ["cx-chan"]
+    assert db.tables["channex_channel_connection"][0]["is_active"] is True
+
+
+def test_set_connection_active_unknown_connection_404() -> None:
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    channex = _ImportChannex()
+    ctx = AuthContext(user_id="u", tenant_id="t1")
+    try:
+        _import_svc(channex, db).set_connection_active(
+            ctx, property_id="p1", portal_code="AirBNB", is_active=False
+        )
+    except ChannelManagerError as exc:
+        assert exc.status_code == 404
+    else:
+        raise AssertionError("fremder/unbekannter Kanal muss 404 liefern")
 
 
 def test_push_availability_failure_keeps_outbox_pending() -> None:

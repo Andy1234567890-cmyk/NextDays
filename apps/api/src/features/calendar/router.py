@@ -48,13 +48,15 @@ def health() -> SliceHealth:
 @router.get("/availability", response_model=list[DayAvailability])
 def availability(
     service: CalendarServiceDep,
-    _ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
     property_id: Annotated[str, Query()],
     start: Annotated[date, Query()],
     end: Annotated[date, Query()],
 ) -> list[DayAvailability]:
     try:
-        return service.get_availability(property_id, DateRange(start=start, end=end))
+        return service.get_availability(
+            ctx.tenant_id, property_id, DateRange(start=start, end=end)
+        )
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -62,13 +64,15 @@ def availability(
 @router.get("/check", response_model=AvailabilityCheck)
 def check(
     service: CalendarServiceDep,
-    _ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
     property_id: Annotated[str, Query()],
     start: Annotated[date, Query()],
     end: Annotated[date, Query()],
 ) -> AvailabilityCheck:
     try:
-        return service.check_availability(property_id, DateRange(start=start, end=end))
+        return service.check_availability(
+            ctx.tenant_id, property_id, DateRange(start=start, end=end)
+        )
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -79,12 +83,12 @@ def check(
 def block(
     req: BlockRequest,
     service: CalendarServiceDep,
-    _ctx: Annotated[
+    ctx: Annotated[
         CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
     ],
 ) -> dict[str, int]:
     try:
-        return {"blocked_days": service.block(req)}
+        return {"blocked_days": service.block(ctx.tenant_id, req)}
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -95,12 +99,12 @@ def block(
 def price_override(
     req: PriceOverrideRequest,
     service: CalendarServiceDep,
-    _ctx: Annotated[
+    ctx: Annotated[
         CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
     ],
 ) -> dict[str, str]:
     try:
-        service.set_price_override(req)
+        service.set_price_override(ctx.tenant_id, req)
         return {"status": "ok"}
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
@@ -109,13 +113,15 @@ def price_override(
 @router.get("/stop-sell", response_model=StopSellListResponse)
 def list_stop_sell(
     service: CalendarServiceDep,
-    _ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
     property_id: Annotated[str, Query()],
     start: Annotated[date, Query()],
     end: Annotated[date, Query()],
 ) -> StopSellListResponse:
     try:
-        items = service.list_stop_sell(property_id, DateRange(start=start, end=end))
+        items = service.list_stop_sell(
+            ctx.tenant_id, property_id, DateRange(start=start, end=end)
+        )
         return StopSellListResponse(items=items, total=len(items))
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
@@ -142,12 +148,12 @@ def set_stop_sell(
 def clear_stop_sell(
     req: StopSellClearRequest,
     service: CalendarServiceDep,
-    _ctx: Annotated[
+    ctx: Annotated[
         CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
     ],
 ) -> dict[str, str]:
     try:
-        service.clear_stop_sell(req.property_id, req.range)
+        service.clear_stop_sell(ctx.tenant_id, req.property_id, req.range)
         return {"status": "ok"}
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
@@ -172,13 +178,15 @@ def bulk_edit(
 @router.get("/season-price", response_model=SeasonPriceListResponse)
 def list_season_price(
     service: CalendarServiceDep,
-    _ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
     property_id: Annotated[str, Query()],
     start: Annotated[date, Query()],
     end: Annotated[date, Query()],
 ) -> SeasonPriceListResponse:
     try:
-        items = service.list_season_prices(property_id, DateRange(start=start, end=end))
+        items = service.list_season_prices(
+            ctx.tenant_id, property_id, DateRange(start=start, end=end)
+        )
         return SeasonPriceListResponse(items=items, total=len(items))
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
@@ -190,11 +198,15 @@ def list_season_price(
 def set_season_price(
     req: SeasonPriceRequest,
     service: CalendarServiceDep,
-    _ctx: Annotated[
+    ctx: Annotated[
         CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
     ],
 ) -> dict[str, int]:
     try:
-        return {"days": service.set_season_price(req.property_id, req.range, req.price)}
+        return {
+            "days": service.set_season_price(
+                ctx.tenant_id, req.property_id, req.range, req.price
+            )
+        }
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

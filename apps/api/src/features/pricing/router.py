@@ -19,7 +19,7 @@ from fastapi import (
 )
 
 from src.core.config import get_settings
-from src.core.security import AuthContext, CurrentUser
+from src.core.security import AuthContext
 from src.core.supabase import get_service_client
 from src.features.auth.dependencies import (
     require_lodgify_permission,
@@ -66,13 +66,19 @@ def health() -> SliceHealth:
 @router.get("/effective", response_model=list[EffectivePriceDay])
 def effective_prices(
     resolver: PricingResolverDep,
-    _ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    settings: DpSettingsServiceDep,
+    ctx: Annotated[AuthContext, Depends(require_permission(Capability.VIEW_CALENDAR))],
     property_id: Annotated[str, Query()],
     start: Annotated[date, Query()],
     end: Annotated[date, Query()],
 ) -> list[EffectivePriceDay]:
-    """Effektivpreis je Tag [start, end) — override > dynamic > weekday > base."""
+    """Effektivpreis je Tag [start, end) — override > dynamic > weekday > base.
+
+    Tenant-Scope: der Resolver liest nur nach property_id (Service-Role-Key umgeht
+    RLS), daher muss das Objekt-Eigentum HIER geprüft werden, bevor Preise eines
+    fremden Objekts ausgegeben werden könnten."""
     try:
+        settings._require_own_property(ctx, property_id)  # noqa: SLF001
         return resolver.effective_prices(property_id, start, end)
     except PricingError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
@@ -82,10 +88,15 @@ def effective_prices(
 def quote(
     req: QuoteRequest,
     resolver: PricingResolverDep,
-    _ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    settings: DpSettingsServiceDep,
+    ctx: Annotated[AuthContext, Depends(require_permission(Capability.VIEW_CALENDAR))],
 ) -> QuoteResponse:
-    """Vollständige Preisaufschlüsselung eines Aufenthalts (Wizard/Buchung)."""
+    """Vollständige Preisaufschlüsselung eines Aufenthalts (Wizard/Buchung).
+
+    Tenant-Scope wie /effective: Eigentum am Objekt prüfen, bevor ein vollständiger
+    Quote (inkl. Konfig/Gebühren/Add-ons eines fremden Objekts) berechnet wird."""
     try:
+        settings._require_own_property(ctx, req.property_id)  # noqa: SLF001
         return resolver.quote(req)
     except PricingError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

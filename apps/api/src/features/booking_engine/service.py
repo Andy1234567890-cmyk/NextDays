@@ -30,9 +30,11 @@ from .schemas import (
 log = get_logger("nextdays.booking_engine")
 
 # Gast-sichere Property-Felder (NIE tenant_id/Eigentümer/interne Preisdetails).
+# platform_description ist der optionale Eigenplattform-Text (überschreibt
+# description NUR hier; OTAs/Channex sehen ihn nicht).
 _PUBLIC_PROPERTY_COLUMNS = (
-    "id, title, description, property_type, city, country, lat, lng, "
-    "max_guests, amenities, photos, type_attributes, status"
+    "id, title, description, platform_description, property_type, city, country, "
+    "lat, lng, max_guests, amenities, photos, type_attributes, status"
 )
 
 
@@ -160,7 +162,9 @@ class BookingEngineService:
         nights = (end - start).days if start and end else None
         return PublicListingDetail(
             **base.model_dump(),
-            description=r.get("description"),
+            # Eigene Buchungsseite bevorzugt den Plattform-Text; sonst der
+            # kanonische (OTA-)Text. Kein EUR-/Default-Ersatz, nur Fallback.
+            description=r.get("platform_description") or r.get("description"),
             lat=_round_coord(r.get("lat")),
             lng=_round_coord(r.get("lng")),
             price=price,

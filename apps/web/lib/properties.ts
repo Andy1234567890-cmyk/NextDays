@@ -20,6 +20,8 @@ export type Property = {
   tenant_id: string;
   title: string;
   description: string | null;
+  // Abweichende Beschreibung nur für die eigene Buchungsseite (nicht an OTAs).
+  platform_description: string | null;
   property_type: PropertyType;
   status: PropertyStatus;
   max_guests: number;

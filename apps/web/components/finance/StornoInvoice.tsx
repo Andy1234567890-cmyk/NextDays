@@ -32,6 +32,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 import { useNewAuth } from '@/contexts/NewAuthContext';
+import { formatCurrency } from '@/lib/currency';
 import { InvoiceService } from '@/services/firestoreInvoiceService';
 import type { InvoiceData } from '@/types/invoiceTypes';
 import { InvoiceTemplateRenderer } from './InvoiceTemplates';
@@ -49,13 +50,6 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const { user } = useNewAuth();
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('de-DE', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(amount);
-  };
 
   const formatDate = (date: string | Date) => {
     return new Date(date).toLocaleDateString('de-DE');
@@ -236,7 +230,9 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
               <div className="flex items-center gap-2">
                 <Icon icon="lucide:euro" className="h-4 w-4 text-gray-500" />
                 <span className="font-medium">Betrag:</span>
-                <span className="font-bold text-lg">{formatCurrency(invoice.total)}</span>
+                <span className="font-bold text-lg">
+                  {formatCurrency(invoice.total, invoice.currency)}
+                </span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-medium">Status:</span>
@@ -365,7 +361,7 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
                   <Icon icon="lucide:euro" className="h-4 w-4 text-gray-500" />
                   <span className="font-medium">Storno-Betrag:</span>
                   <span className="font-bold text-red-600">
-                    {formatCurrency(stornoInvoice.total)}
+                    {formatCurrency(stornoInvoice.total, stornoInvoice.currency)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">

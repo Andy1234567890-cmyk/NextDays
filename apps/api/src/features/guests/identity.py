@@ -171,16 +171,22 @@ def _link_external_id(
 
 def _backfill_missing(
     db: Client,
+    tenant_id: str,
     guest_id: str,
     *,
     email: str | None,
     phone: str | None,
 ) -> None:
-    """Fehlende E-Mail/Telefon am gefundenen Gast ergänzen (nie überschreiben)."""
+    """Fehlende E-Mail/Telefon am gefundenen Gast ergänzen (nie überschreiben).
+
+    Die API nutzt den Service-Role-Key (umgeht RLS), darum wird auch hier explizit
+    nach tenant_id gefiltert — der guest_id stammt zwar aus einer tenant-gescopten
+    Suche, der Filter härtet Lese- und Schreibpfad aber gegen Tenant-Verwechslung."""
     current = (
         db.table("guests")
         .select("email, phone")
         .eq("id", guest_id)
+        .eq("tenant_id", tenant_id)
         .limit(1)
         .execute()
     ).data
@@ -192,7 +198,9 @@ def _backfill_missing(
     if phone and not current[0].get("phone"):
         patch["phone"] = phone
     if patch:
-        db.table("guests").update(patch).eq("id", guest_id).execute()
+        db.table("guests").update(patch).eq("id", guest_id).eq(
+            "tenant_id", tenant_id
+        ).execute()
 
 
 def resolve_or_create_guest(
@@ -240,7 +248,7 @@ def resolve_or_create_guest(
         matched = _find_by_external_id(db, tenant_id, channel, external_id)
 
     if matched:
-        _backfill_missing(db, matched, email=email, phone=phone)
+        _backfill_missing(db, tenant_id, matched, email=email, phone=phone)
         if channel and external_id:
             _link_external_id(db, tenant_id, matched, channel, external_id)
         return matched

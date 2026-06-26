@@ -56,6 +56,28 @@ class CalendarService:
             raise CalendarError("Kalender-DB nicht verfügbar.", status_code=500)
         return self._client
 
+    def _require_own_property(self, tenant_id: str, property_id: str) -> None:
+        """Stellt sicher, dass das Objekt DIESEM Tenant gehört (sonst 404).
+
+        Der Service nutzt den Service-Role-Key und umgeht damit RLS — der Tenant-
+        Scope MUSS hier explizit erzwungen werden, sonst lassen sich über geratene
+        property_id fremde Verfügbarkeiten/Preise/Stop-Sells lesen oder ändern.
+        Einmal am Eintritt geprüft, sind die nachgelagerten property_id-Reads sicher.
+        """
+        if not tenant_id:
+            raise CalendarError("Kein Tenant im Konto.", status_code=400)
+        res = (
+            self._db()
+            .table("properties")
+            .select("id")
+            .eq("id", property_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not res:
+            raise CalendarError("Objekt nicht gefunden.", status_code=404)
+
     def _resolver(self) -> "PricingResolver":
         """Zentraler Preis-Resolver (eine Preis-Wahrheit für Kalender + Quote)."""
         from src.features.pricing.resolver import PricingResolver
@@ -63,7 +85,7 @@ class CalendarService:
         return PricingResolver(service_client=self._db())
 
     def get_availability(
-        self, property_id: str, rng: DateRange
+        self, tenant_id: str, property_id: str, rng: DateRange
     ) -> list[DayAvailability]:
         """Tagesstatus im Zeitraum inkl. Preis + Min-Stay. Fehlende Tage = offen.
 
@@ -73,6 +95,7 @@ class CalendarService:
         Restriktionen sind v2). Ohne Rate-Plan/Override bleibt der Preis None
         (kein erfundener Fallback-Preis).
         """
+        self._require_own_property(tenant_id, property_id)
         rows = self._fetch_days(property_id, rng)
         by_date = {r["date"]: r for r in rows}
         effective = {
@@ -107,12 +130,12 @@ class CalendarService:
         return result
 
     def check_availability(
-        self, property_id: str, rng: DateRange
+        self, tenant_id: str, property_id: str, rng: DateRange
     ) -> AvailabilityCheck:
         """Double-Booking-Schutz: frei nur, wenn KEIN Tag booked/blocked ist."""
         conflicts: list[date] = [
             d.date
-            for d in self.get_availability(property_id, rng)
+            for d in self.get_availability(tenant_id, property_id, rng)
             if d.status != AvailabilityStatus.open
         ]
         return AvailabilityCheck(
@@ -121,14 +144,15 @@ class CalendarService:
             conflicting_days=conflicts,
         )
 
-    def block(self, req: BlockRequest) -> int:
+    def block(self, tenant_id: str, req: BlockRequest) -> int:
         """Tage sperren (manuell). Idempotenter Upsert pro Tag. Gibt Anzahl zurück.
 
         Schützt vor Double-Booking: bereits gebuchte Tage werden NICHT überschrieben.
         """
+        self._require_own_property(tenant_id, req.property_id)
         booked = [
             d.date
-            for d in self.get_availability(req.property_id, req.range)
+            for d in self.get_availability(tenant_id, req.property_id, req.range)
             if d.status == AvailabilityStatus.booked
         ]
         if booked:
@@ -154,11 +178,12 @@ class CalendarService:
         log.info("calendar_block", property_id=req.property_id, days=len(payload))
         return len(payload)
 
-    def set_price_override(self, req: PriceOverrideRequest) -> None:
+    def set_price_override(self, tenant_id: str, req: PriceOverrideRequest) -> None:
         """Tagespreis im Kalenderblatt setzen/zurücknehmen (Lastenheft §2.2).
 
         price=None nimmt die Überschreibung zurück (Tag folgt wieder dem Rate-Plan).
         """
+        self._require_own_property(tenant_id, req.property_id)
         self._db().table("price_overrides").upsert(
             {
                 "property_id": req.property_id,
@@ -215,8 +240,9 @@ class CalendarService:
 
     # -- Stop-Sell (Verkaufsstopp je Tag) -------------------------------------
     def list_stop_sell(
-        self, property_id: str, rng: DateRange
+        self, tenant_id: str, property_id: str, rng: DateRange
     ) -> list[dict[str, object]]:
+        self._require_own_property(tenant_id, property_id)
         res = (
             self._db()
             .table("stop_sell")
@@ -233,6 +259,7 @@ class CalendarService:
         self, tenant_id: str, property_id: str, rng: DateRange, reason: str | None
     ) -> int:
         """Verkaufsstopp manuell setzen (idempotent pro Tag)."""
+        self._require_own_property(tenant_id, property_id)
         payload = [
             {
                 "tenant_id": tenant_id,
@@ -249,9 +276,12 @@ class CalendarService:
         log.info("calendar_stop_sell_set", property_id=property_id, days=len(payload))
         return len(payload)
 
-    def clear_stop_sell(self, property_id: str, rng: DateRange) -> None:
+    def clear_stop_sell(
+        self, tenant_id: str, property_id: str, rng: DateRange
+    ) -> None:
         """Manuellen Verkaufsstopp aufheben. Channex-Stops (source=channex) bleiben
         unangetastet — die spiegeln den OTA-Stand und werden per Import gepflegt."""
+        self._require_own_property(tenant_id, property_id)
         self._db().table("stop_sell").delete().eq("property_id", property_id).eq(
             "source", "manual"
         ).gte("date", rng.start.isoformat()).lt(
@@ -261,8 +291,9 @@ class CalendarService:
 
     # -- Saisonpreise (Tagespreise je Zeitraum → price_overrides + Channex) ----
     def list_season_prices(
-        self, property_id: str, rng: DateRange
+        self, tenant_id: str, property_id: str, rng: DateRange
     ) -> list[dict[str, object]]:
+        self._require_own_property(tenant_id, property_id)
         res = (
             self._db()
             .table("price_overrides")
@@ -277,10 +308,11 @@ class CalendarService:
         return res.data or []
 
     def set_season_price(
-        self, property_id: str, rng: DateRange, price: float
+        self, tenant_id: str, property_id: str, rng: DateRange, price: float
     ) -> int:
         """Tagespreis für jeden Tag im Zeitraum setzen (price_overrides) und an
         Channex pushen (Restrictions/rate). Gibt Anzahl Tage zurück."""
+        self._require_own_property(tenant_id, property_id)
         payload = [
             {
                 "property_id": property_id,
@@ -332,15 +364,15 @@ class CalendarService:
         applied: list[str] = []
         for pid in req.property_ids:
             if req.block is True:
-                self.block(BlockRequest(property_id=pid, range=req.range))
+                self.block(tenant_id, BlockRequest(property_id=pid, range=req.range))
             elif req.block is False:
                 self._unblock(pid, req.range)
             if req.stop_sell is True:
                 self.set_stop_sell(tenant_id, pid, req.range, None)
             elif req.stop_sell is False:
-                self.clear_stop_sell(pid, req.range)
+                self.clear_stop_sell(tenant_id, pid, req.range)
             if req.price is not None:
-                self.set_season_price(pid, req.range, req.price)
+                self.set_season_price(tenant_id, pid, req.range, req.price)
             if req.min_stay is not None:
                 self._set_min_stay(pid, req.range, req.min_stay)
 

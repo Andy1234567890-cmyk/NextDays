@@ -23,6 +23,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.features.auth.guest_masking import GuestMask, load_guest_mask
 
 from .currencies import currency_for_country
 from .fx import FxError, FxService
@@ -330,6 +331,7 @@ class OwnerStatementsService:
         owner_currency: str,
         override: Decimal | None,
         commission_map: dict[str, Decimal] | None,
+        mask: GuestMask,
     ) -> list[RentalRow]:
         """Rental-Activity-Zeilen inkl. Buchungssatz und Währungsumrechnung.
 
@@ -338,6 +340,10 @@ class OwnerStatementsService:
         Provision ist der manuelle Override, sonst der Objekt-Satz aus der Map.
         Der Buchungssatz wird mit dem ECB-Tageskurs am CHECK-OUT in die
         Owner-Währung umgerechnet (kein Fallback — FxError bricht ab).
+
+        Der Gastname läuft durch die zentrale Maske (Daten-Split §4): ein
+        Eigentümer (OWNER_REPORTING, aber ohne VIEW_GUEST_NAME) sieht nur den
+        Vornamen — nie den vollen Gast-PII.
         """
         guest_names = self._guest_names(
             [str(r["guest_id"]) for r in reservations if r.get("guest_id")]
@@ -377,7 +383,7 @@ class OwnerStatementsService:
             rows.append(
                 RentalRow(
                     reservation_id=str(r["id"]),
-                    guest=guest_names.get(str(r.get("guest_id"))),
+                    guest=mask.name(guest_names.get(str(r.get("guest_id")))),
                     nights=self._nights(r.get("check_in"), checkout),
                     listing_id=listing_id,
                     listing=titles.get(listing_id),
@@ -552,7 +558,8 @@ class OwnerStatementsService:
             req.reservation_statuses,
         )
         rental_rows = self._rental_rows(
-            reservations, titles, owner_currency, override, commission_map
+            reservations, titles, owner_currency, override, commission_map,
+            load_guest_mask(self._db, ctx.user_id),
         )
         listing_rows = self._listing_rows(rental_rows, titles)
         # Nicht an eine Abrechnung gebundene Owner-Ausgaben im Zeitraum einbeziehen.
@@ -696,7 +703,7 @@ class OwnerStatementsService:
         return rows[0]
 
     def _build_activity(
-        self, tenant_id: str, row: dict
+        self, tenant_id: str, row: dict, user_id: str | None
     ) -> tuple[list[RentalRow], list[ListingRow], dict[str, str]]:
         owner = self._owner(tenant_id, str(row["owner_id"]))
         owner_currency = self._owner_currency(owner, tenant_id)
@@ -712,7 +719,8 @@ class OwnerStatementsService:
             list(row.get("reservation_statuses") or []),
         )
         rental_rows = self._rental_rows(
-            reservations, titles, owner_currency, override, cmap
+            reservations, titles, owner_currency, override, cmap,
+            load_guest_mask(self._db, user_id),
         )
         listing_rows = self._listing_rows(rental_rows, titles)
         return rental_rows, listing_rows, titles
@@ -736,7 +744,8 @@ class OwnerStatementsService:
         """Summen aus aktueller Aktivität + Expenses neu berechnen und im draft
         persistieren. Finalisierte Statements werden NICHT verändert."""
         row = self._statement_row(tenant_id, statement_id)
-        rental_rows, _listings, _titles = self._build_activity(tenant_id, row)
+        # Nur Summen — die Gastnamen fließen nicht in die Antwort; fail-closed Maske.
+        rental_rows, _listings, _titles = self._build_activity(tenant_id, row, None)
         expenses = self._expenses_for_statement(statement_id)
         owner = self._owner(tenant_id, str(row["owner_id"]))
         owner_currency = self._owner_currency(owner, tenant_id)
@@ -763,7 +772,9 @@ class OwnerStatementsService:
     def get(self, ctx: AuthContext, statement_id: str) -> StatementResponse:
         tenant_id = self._require_tenant(ctx)
         row = self._statement_row(tenant_id, statement_id)
-        rental_rows, listing_rows, _titles = self._build_activity(tenant_id, row)
+        rental_rows, listing_rows, _titles = self._build_activity(
+            tenant_id, row, ctx.user_id
+        )
         expenses = self._expenses_for_statement(statement_id)
         override, cmap = self._commission_for_row(tenant_id, row)
         owner = self._owner(tenant_id, str(row["owner_id"]))

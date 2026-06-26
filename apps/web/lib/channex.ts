@@ -231,6 +231,22 @@ export async function listChannelConnections(
   );
 }
 
+// Kanal pro (Objekt × Portal) an-/abschalten (selektiver Verkaufsstopp).
+// „Aus" stoppt ARI/Preis-Push und deaktiviert den Channex-Channel; eingehende
+// Buchungen werden weiter importiert.
+export async function setConnectionActive(
+  propertyId: string,
+  portalCode: string,
+  isActive: boolean,
+): Promise<Result<StoredChannelConnection>> {
+  const res = await call<StoredChannelConnection>(
+    `/properties/${propertyId}/connections/${portalCode}`,
+    { method: "PATCH", body: { is_active: isActive } },
+  );
+  if (res.ok) revalidatePath("/einstellungen");
+  return res;
+}
+
 // --- Bookings ---------------------------------------------------------------
 export async function listChannexBookings(): Promise<
   Result<{ items: ChannexBooking[]; total: number }>

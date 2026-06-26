@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { formatCurrency } from "@/lib/currency";
 import { type Quote, getQuote } from "@/lib/pricing";
 import {
   type GuestBreakdown,
@@ -374,7 +375,7 @@ export function ReservationWizard({
                   {quote.lines.map((l) => (
                     <div key={l.label} className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground">{l.label}</span>
-                      <span className={l.amount < 0 ? "text-emerald-700" : ""}>{eur(l.amount)}</span>
+                      <span className={l.amount < 0 ? "text-emerald-700" : ""}>{formatCurrency(l.amount, quote.currency)}</span>
                     </div>
                   ))}
                 </div>
@@ -410,7 +411,7 @@ export function ReservationWizard({
         <div className="border-t px-5 py-4">
           <div className="mb-3 flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Gesamt</span>
-            <span className="font-display text-lg font-extrabold">{eur(total)}</span>
+            <span className="font-display text-lg font-extrabold">{formatCurrency(total, quote?.currency)}</span>
           </div>
           {error && <p className="mb-3 text-sm text-destructive">{error}</p>}
           <div className="flex gap-3">
@@ -544,11 +545,4 @@ function countNights(checkIn: string, checkOut: string): number {
 function fmt(iso: string): string {
   const d = new Date(iso);
   return `${d.getDate()}.${d.getMonth() + 1}.${d.getFullYear()}`;
-}
-
-function eur(n: number): string {
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: "EUR",
-  }).format(n);
 }
