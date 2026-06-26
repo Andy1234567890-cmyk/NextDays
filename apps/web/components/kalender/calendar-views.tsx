@@ -26,8 +26,10 @@ const CalendarOccupancyView = dynamic(
   { loading: () => <ViewSkeleton /> },
 );
 
+// Nutzerverständliche Labels (kein Fachjargon wie „Timeline"). Der `key` bleibt
+// der technische Identifier (URL/Logik), nur das Label ist für den Nutzer.
 const VIEWS = [
-  { key: "timeline", label: "Timeline" },
+  { key: "timeline", label: "Belegungsplan" },
   { key: "bookings", label: "Buchungen" },
   { key: "month", label: "Monatsgitter" },
   { key: "occupancy", label: "Auslastung" },
