@@ -271,6 +271,10 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
   const [priceSources, setPriceSources] = useState<Record<string, Record<string, string>>>({});
   const [priceFactors, setPriceFactors] = useState<Record<string, Record<string, Record<string, number>>>>({});
   const [minStays, setMinStays] = useState<Record<string, Record<string, number | null>>>({});
+  // CTA/CTD je Objekt × Tag: [arrivalGesperrt, departureGesperrt].
+  const [restrictions, setRestrictions] = useState<
+    Record<string, Record<string, [boolean, boolean]>>
+  >({});
   // Buchungen je Objekt → Tages-Map (Gastname im Balken + Detail-Popover).
   const [resByProp, setResByProp] = useState<Record<string, Record<string, Reservation>>>({});
   // Aktuell geöffnetes Buchungsdetail (per Klick auf einen Balken).
@@ -609,6 +613,8 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
           const priceSrcMap: Record<string, string> = {};
           const factorsMap: Record<string, Record<string, number>> = {};
           const minStayMap: Record<string, number | null> = {};
+          // CTA/CTD je Tag: [arrivalGesperrt, departureGesperrt].
+          const restrictMap: Record<string, [boolean, boolean]> = {};
           if (res.ok)
             for (const d of res.data as DayAvailability[]) {
               map[d.date] = d.status;
@@ -617,8 +623,16 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
               priceSrcMap[d.date] = d.price_source ?? "none";
               if (d.price_factors) factorsMap[d.date] = d.price_factors;
               minStayMap[d.date] = d.min_stay;
+              if (d.closed_to_arrival || d.closed_to_departure)
+                restrictMap[d.date] = [
+                  !!d.closed_to_arrival,
+                  !!d.closed_to_departure,
+                ];
             }
-          return [p.id, map, srcMap, priceMap, minStayMap, priceSrcMap, factorsMap] as const;
+          return [
+            p.id, map, srcMap, priceMap, minStayMap, priceSrcMap, factorsMap,
+            restrictMap,
+          ] as const;
         }),
       ),
       // Alle Buchungen (OTA + direkt, vereint aus reservations) in einem Call.
@@ -628,6 +642,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
     setSources(Object.fromEntries(results.map((r) => [r[0], r[2]])));
     setPrices(Object.fromEntries(results.map((r) => [r[0], r[3]])));
     setMinStays(Object.fromEntries(results.map((r) => [r[0], r[4]])));
+    setRestrictions(Object.fromEntries(results.map((r) => [r[0], r[7]])));
     setPriceFactors(Object.fromEntries(results.map((r) => [r[0], r[6]])));
     setPriceSources(Object.fromEntries(results.map((r) => [r[0], r[5]])));
     // Buchungen je Objekt gruppieren und auf Tages-Maps abbilden.
@@ -829,6 +844,15 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
             </span>
           ),
         )}
+        <span className="h-3 w-px bg-border" aria-hidden />
+        <span className="flex items-center gap-1.5">
+          <Icon icon="ph:sign-in" className="size-3.5 text-destructive/80" />
+          Anreise gesperrt (CTA)
+        </span>
+        <span className="flex items-center gap-1.5">
+          <Icon icon="ph:sign-out" className="size-3.5 text-destructive/80" />
+          Abreise gesperrt (CTD)
+        </span>
         {loading && <span>· lädt …</span>}
       </div>
 
@@ -951,6 +975,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
               const priceSrcMap = priceSources[p.id] ?? {};
               const factorsMap = priceFactors[p.id] ?? {};
               const minStayMap = minStays[p.id] ?? {};
+              const restrictMap = restrictions[p.id] ?? {};
               const resMap = resByProp[p.id] ?? {};
               const segs = toSegments(statusMap, sourceMap, resMap, dates);
               return (
@@ -1011,6 +1036,28 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                                 <span className={`flex items-center gap-0.5 text-[0.65rem] ${inSel ? "text-white/80" : "text-muted-foreground/70"}`}>
                                   <Icon icon="ph:moon" className="size-3" />
                                   {minStayMap[key(d)] != null ? `${minStayMap[key(d)]}` : "–"}
+                                </span>
+                              )}
+                              {/* CTA/CTD: Anreise- bzw. Abreise-Sperre je Tag. */}
+                              {(restrictMap[key(d)]?.[0] ||
+                                restrictMap[key(d)]?.[1]) && (
+                                <span className="flex items-center gap-0.5">
+                                  {restrictMap[key(d)]?.[0] && (
+                                    <span title="Anreise gesperrt (CTA)" className="flex">
+                                      <Icon
+                                        icon="ph:sign-in"
+                                        className={`size-3 ${inSel ? "text-white/90" : "text-destructive/80"}`}
+                                      />
+                                    </span>
+                                  )}
+                                  {restrictMap[key(d)]?.[1] && (
+                                    <span title="Abreise gesperrt (CTD)" className="flex">
+                                      <Icon
+                                        icon="ph:sign-out"
+                                        className={`size-3 ${inSel ? "text-white/90" : "text-destructive/80"}`}
+                                      />
+                                    </span>
+                                  )}
                                 </span>
                               )}
                             </>

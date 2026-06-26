@@ -375,6 +375,89 @@ def test_bulk_edit_fixed_and_pct_mutually_exclusive() -> None:
         )
 
 
+# --- Teil B: CTA/CTD-Restriktionen ---
+
+def test_set_restrictions_upserts_cta_ctd() -> None:
+    svc, store = _service(properties=[{"id": "p1"}])
+    days = svc.set_restrictions(
+        "t1", "p1",
+        DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3)),
+        cta=True, ctd=False,
+    )
+    assert days == 2
+    upserts = [u for u in store["_upserts"] if u[0] == "availability"]
+    assert upserts, "availability-Upsert erwartet"
+    row = upserts[0][1][0]
+    assert row["closed_to_arrival"] is True
+    assert row["closed_to_departure"] is False
+
+
+def test_set_restrictions_only_sets_given_field() -> None:
+    svc, store = _service(properties=[{"id": "p1"}])
+    svc.set_restrictions(
+        "t1", "p1",
+        DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2)),
+        cta=True,  # ctd None → bleibt unverändert (Feld nicht im Payload)
+    )
+    row = [u for u in store["_upserts"] if u[0] == "availability"][0][1][0]
+    assert row["closed_to_arrival"] is True
+    assert "closed_to_departure" not in row
+
+
+def test_set_restrictions_noop_when_both_none() -> None:
+    svc, store = _service(properties=[{"id": "p1"}])
+    days = svc.set_restrictions(
+        "t1", "p1", DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2)),
+    )
+    assert days == 0
+    assert not [u for u in store.get("_upserts", []) if u[0] == "availability"]
+
+
+def test_set_restrictions_rejects_foreign_property() -> None:
+    svc, _ = _service()  # keine eigene property
+    with pytest.raises(CalendarError) as exc:
+        svc.set_restrictions(
+            "t1", "p-fremd",
+            DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2)),
+            cta=True,
+        )
+    assert exc.value.status_code == 404
+
+
+def test_get_availability_returns_cta_ctd_flags() -> None:
+    svc, _ = _service(
+        properties=[{"id": "p1"}],
+        availability=[{
+            "date": "2026-05-01", "status": "open", "source": "manual",
+            "closed_to_arrival": True, "closed_to_departure": False,
+        }],
+    )
+    days = svc.get_availability(
+        "t1", "p1", DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3)),
+    )
+    # Tag 1 hat die Flags; Tag 2 (keine Zeile) → Default false.
+    assert days[0].closed_to_arrival is True
+    assert days[0].closed_to_departure is False
+    assert days[1].closed_to_arrival is False
+
+
+def test_bulk_edit_sets_cta_ctd() -> None:
+    from src.features.calendar.schemas import BulkEditRequest
+
+    svc, store = _service(properties=[{"id": "p1"}])
+    res = svc.bulk_edit(
+        "t1",
+        BulkEditRequest(
+            property_ids=["p1"],
+            range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3)),
+            closed_to_arrival=True,
+            closed_to_departure=False,
+        ),
+    )
+    assert "cta_on" in res.applied and "ctd_off" in res.applied
+    assert [u for u in store["_upserts"] if u[0] == "availability"]
+
+
 # --- ohne Client: sauberer Fehler statt Crash ---
 
 def test_db_unavailable_raises_clean_error() -> None:

@@ -125,6 +125,12 @@ class CalendarService:
                     price_source=eff.source if eff else "none",
                     price_factors=eff.factors if eff else None,
                     min_stay=min_stay,
+                    closed_to_arrival=bool(
+                        row.get("closed_to_arrival") if row else False
+                    ),
+                    closed_to_departure=bool(
+                        row.get("closed_to_departure") if row else False
+                    ),
                 )
             )
         return result
@@ -203,7 +209,7 @@ class CalendarService:
         res = (
             self._db()
             .table("availability")
-            .select("date,status,source")
+            .select("date,status,source,closed_to_arrival,closed_to_departure")
             .eq("property_id", property_id)
             .gte("date", rng.start.isoformat())
             .lt("date", rng.end.isoformat())
@@ -368,6 +374,79 @@ class CalendarService:
         )
         return len(payload)
 
+    def set_restrictions(
+        self,
+        tenant_id: str,
+        property_id: str,
+        rng: DateRange,
+        *,
+        cta: bool | None = None,
+        ctd: bool | None = None,
+    ) -> int:
+        """CTA/CTD-Restriktionen je Tag setzen (availability-Upsert pro Tag) und
+        an Channex pushen. Nur gesetzte Felder ändern sich (None = unverändert).
+        availability-Zeilen werden wie bei Preis/Block auch für offene Tage
+        angelegt. Gibt Anzahl Tage zurück."""
+        self._require_own_property(tenant_id, property_id)
+        if cta is None and ctd is None:
+            return 0
+        flags: dict[str, bool] = {}
+        if cta is not None:
+            flags["closed_to_arrival"] = cta
+        if ctd is not None:
+            flags["closed_to_departure"] = ctd
+        payload = [
+            {"property_id": property_id, "date": day.isoformat(), **flags}
+            for day in rng.nights()
+        ]
+        self._db().table("availability").upsert(
+            payload, on_conflict="property_id,date"
+        ).execute()
+        self._push_channex_restrictions(property_id, rng.start, rng.end, cta, ctd)
+        log.info(
+            "calendar_set_restrictions",
+            property_id=property_id, cta=cta, ctd=ctd, days=len(payload),
+        )
+        return len(payload)
+
+    def _push_channex_restrictions(
+        self,
+        property_id: str,
+        start: date,
+        end: date,
+        cta: bool | None,
+        ctd: bool | None,
+    ) -> None:
+        """CTA/CTD an Channex pushen (Best-Effort; Gate _has_active_connection im
+        ChannelManagerService). Fehler dürfen die Speicherung nie scheitern lassen."""
+        if self._client is None:
+            return
+        try:
+            prop = (
+                self._db()
+                .table("properties")
+                .select("tenant_id")
+                .eq("id", property_id)
+                .limit(1)
+                .execute()
+            ).data
+            if not prop:
+                return
+            from src.features.channel_manager.service import ChannelManagerService
+
+            ChannelManagerService(
+                service_client=self._client
+            ).push_restrictions_for_property(
+                prop[0]["tenant_id"],
+                property_id,
+                start,
+                end - timedelta(days=1),  # end exklusiv → inklusiv
+                closed_to_arrival=cta,
+                closed_to_departure=ctd,
+            )
+        except Exception as exc:  # noqa: BLE001
+            log.warning("calendar_channex_restrictions_push_failed", error=str(exc))
+
     # -- Bulk-Edit (mehrere Objekte × ein Zeitraum) ---------------------------
     def _set_min_stay(self, property_id: str, rng: DateRange, min_stay: int) -> None:
         """Mindestaufenthalt des Objekts setzen (rate_plans, property-weit) und
@@ -416,6 +495,11 @@ class CalendarService:
                 )
             if req.min_stay is not None:
                 self._set_min_stay(pid, req.range, req.min_stay)
+            if req.closed_to_arrival is not None or req.closed_to_departure is not None:
+                self.set_restrictions(
+                    tenant_id, pid, req.range,
+                    cta=req.closed_to_arrival, ctd=req.closed_to_departure,
+                )
 
         if req.block is True:
             applied.append("block")
@@ -431,6 +515,14 @@ class CalendarService:
             applied.append("price_pct")
         if req.min_stay is not None:
             applied.append("min_stay")
+        if req.closed_to_arrival is not None:
+            applied.append(
+                "cta_on" if req.closed_to_arrival else "cta_off"
+            )
+        if req.closed_to_departure is not None:
+            applied.append(
+                "ctd_on" if req.closed_to_departure else "ctd_off"
+            )
 
         log.info(
             "calendar_bulk_edit",

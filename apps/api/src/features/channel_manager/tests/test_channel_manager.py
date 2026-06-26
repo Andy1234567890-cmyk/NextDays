@@ -702,6 +702,54 @@ def test_push_availability_skipped_when_all_channels_inactive() -> None:
     assert db.tables["ari_outbox"] == []
 
 
+def _seed_with_rate_plan(db, tenant_id="t1", property_id="p1"):  # noqa: ANN001, ANN201
+    """Volle synthetische Kette property→room_type→rate_plan (für CTA/CTD-Push)."""
+    _seed_with_room_type(db, tenant_id, property_id=property_id)
+    db.tables["channex_rate_plan_map"].append(
+        {"id": "rpm1", "tenant_id": tenant_id, "property_id": property_id,
+         "room_type_map_id": "rt1", "channex_rate_plan_id": "cx-rate",
+         "deleted_at": None}
+    )
+
+
+def test_push_restrictions_cta_ctd_sends_to_channex() -> None:
+    db = _ImportDB()
+    _seed_with_rate_plan(db)
+    channex = _ImportChannex()
+    _import_svc(channex, db).push_restrictions_for_property(
+        "t1", "p1", date(2026, 6, 23), date(2026, 6, 25),
+        closed_to_arrival=True, closed_to_departure=False,
+    )
+    assert len(channex.restrictions_pushed) == 1
+    val = channex.restrictions_pushed[0]
+    assert val["property_id"] == "cx-prop"
+    assert val["rate_plan_id"] == "cx-rate"
+    assert val["closed_to_arrival"] is True
+    assert val["closed_to_departure"] is False
+
+
+def test_push_restrictions_skipped_when_inactive() -> None:
+    db = _ImportDB()
+    _seed_with_rate_plan(db)
+    _deactivate_all(db)  # alle Kanäle aus → Gate greift
+    channex = _ImportChannex()
+    _import_svc(channex, db).push_restrictions_for_property(
+        "t1", "p1", date(2026, 6, 23), date(2026, 6, 25),
+        closed_to_arrival=True,
+    )
+    assert channex.restrictions_pushed == []
+
+
+def test_push_restrictions_noop_without_flags() -> None:
+    db = _ImportDB()
+    _seed_with_rate_plan(db)
+    channex = _ImportChannex()
+    _import_svc(channex, db).push_restrictions_for_property(
+        "t1", "p1", date(2026, 6, 23), date(2026, 6, 25),
+    )
+    assert channex.restrictions_pushed == []
+
+
 def test_process_ari_outbox_skips_inactive_as_done() -> None:
     # Outbox-Zeile eines abgeschalteten Objekts: als done abhaken (kein Retry).
     db = _ImportDB()

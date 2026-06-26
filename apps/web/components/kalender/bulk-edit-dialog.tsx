@@ -16,6 +16,7 @@ import { bulkEdit } from "@/lib/calendar";
 
 type BlockMode = "none" | "block" | "unblock";
 type StopMode = "none" | "stop" | "clear";
+type RestrictMode = "none" | "on" | "off";
 
 export function BulkEditDialog({
   open,
@@ -45,6 +46,8 @@ export function BulkEditDialog({
   const [minStay, setMinStay2] = useState("");
   const [blockMode, setBlockMode] = useState<BlockMode>("none");
   const [stopMode, setStopMode] = useState<StopMode>("none");
+  const [ctaMode, setCtaMode] = useState<RestrictMode>("none");
+  const [ctdMode, setCtdMode] = useState<RestrictMode>("none");
   const [saving, setSaving] = useState(false);
 
   if (!open) return null;
@@ -59,7 +62,9 @@ export function BulkEditDialog({
     priceFilled ||
     (setMinStay && minStay !== "") ||
     blockMode !== "none" ||
-    stopMode !== "none";
+    stopMode !== "none" ||
+    ctaMode !== "none" ||
+    ctdMode !== "none";
 
   async function apply() {
     if (!hasChange) {
@@ -80,6 +85,8 @@ export function BulkEditDialog({
       ...(setMinStay && minStay !== "" ? { min_stay: Number(minStay) } : {}),
       ...(blockMode !== "none" ? { block: blockMode === "block" } : {}),
       ...(stopMode !== "none" ? { stop_sell: stopMode === "stop" } : {}),
+      ...(ctaMode !== "none" ? { closed_to_arrival: ctaMode === "on" } : {}),
+      ...(ctdMode !== "none" ? { closed_to_departure: ctdMode === "on" } : {}),
     });
     setSaving(false);
     if (res.ok) {
@@ -235,6 +242,34 @@ export function BulkEditDialog({
                   { value: "clear", label: "Aufheben" },
                 ]}
                 onChange={(v) => setStopMode(v as StopMode)}
+              />
+            </fieldset>
+
+            {/* Anreise gesperrt (CTA) */}
+            <fieldset className="flex flex-col gap-2">
+              <legend className="text-sm font-medium">Anreise gesperrt (CTA)</legend>
+              <SegmentedThree
+                value={ctaMode}
+                options={[
+                  { value: "none", label: "Unverändert" },
+                  { value: "on", label: "An" },
+                  { value: "off", label: "Aus" },
+                ]}
+                onChange={(v) => setCtaMode(v as RestrictMode)}
+              />
+            </fieldset>
+
+            {/* Abreise gesperrt (CTD) */}
+            <fieldset className="flex flex-col gap-2">
+              <legend className="text-sm font-medium">Abreise gesperrt (CTD)</legend>
+              <SegmentedThree
+                value={ctdMode}
+                options={[
+                  { value: "none", label: "Unverändert" },
+                  { value: "on", label: "An" },
+                  { value: "off", label: "Aus" },
+                ]}
+                onChange={(v) => setCtdMode(v as RestrictMode)}
               />
             </fieldset>
           </div>

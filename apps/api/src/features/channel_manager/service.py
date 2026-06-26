@@ -1455,6 +1455,51 @@ class ChannelManagerService:
                 error=exc.message,
             )
 
+    def push_restrictions_for_property(
+        self,
+        tenant_id: str,
+        property_id: str,
+        date_from: date,
+        date_to: date,
+        *,
+        closed_to_arrival: bool | None = None,
+        closed_to_departure: bool | None = None,
+    ) -> None:
+        """CTA/CTD-Restriktionen für einen Zeitraum an Channex pushen. Nur gesetzte
+        Felder (None = unverändert). Best-effort wie push_rate_for_property; No-op,
+        wenn nicht verbunden oder alle Kanäle aus. date_to inklusiv."""
+        if not self._channex.is_configured or self._db is None:
+            return
+        if closed_to_arrival is None and closed_to_departure is None:
+            return
+        mapping = self._resolve_channex_rate_plan(self._db, tenant_id, property_id)
+        if mapping is None:
+            return
+        if not self._has_active_connection(self._db, tenant_id, property_id):
+            return  # alle Kanäle des Objekts auf Aus → kein Push
+        value: dict[str, Any] = {
+            "property_id": mapping["channex_property_id"],
+            "rate_plan_id": mapping["channex_rate_plan_id"],
+            "date_from": date_from.isoformat(),
+            "date_to": date_to.isoformat(),
+        }
+        if closed_to_arrival is not None:
+            value["closed_to_arrival"] = closed_to_arrival
+        if closed_to_departure is not None:
+            value["closed_to_departure"] = closed_to_departure
+        try:
+            self._channex.update_restrictions([value])
+            log.info(
+                "cta_ctd_push_done",
+                tenant_id=tenant_id, property_id=property_id,
+                cta=closed_to_arrival, ctd=closed_to_departure,
+            )
+        except ChannexError as exc:
+            log.warning(
+                "cta_ctd_push_failed",
+                tenant_id=tenant_id, property_id=property_id, error=exc.message,
+            )
+
     # Channex akzeptiert viele Werte je Restrictions-Request; wir chunken
     # defensiv, damit ein Push über den vollen Horizont 1–wenige Requests ist
     # statt hunderter Einzel-Requests (sonst 429-Flut, siehe Channex-Skill:

@@ -26,6 +26,9 @@ export type DayAvailability = {
   // den „Warum dieser Preis?"-Tooltip. Nur bei price_source=dynamic gesetzt.
   price_factors?: Record<string, number> | null;
   min_stay: number | null; // Mindestaufenthalt aus dem Rate-Plan
+  // CTA/CTD-Restriktionen je Tag (Default false ohne availability-Zeile).
+  closed_to_arrival?: boolean;
+  closed_to_departure?: boolean;
 };
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };

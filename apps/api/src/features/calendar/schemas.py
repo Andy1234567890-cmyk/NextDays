@@ -61,6 +61,9 @@ class DayAvailability(BaseModel):
     price_factors: dict[str, float] | None = None
     # Mindestaufenthalt aus dem Rate-Plan des Objekts (per-Tag-Restriktionen v2).
     min_stay: int | None = None
+    # CTA/CTD-Restriktionen je Tag (Default false bei fehlender availability-Zeile).
+    closed_to_arrival: bool = False
+    closed_to_departure: bool = False
 
 
 class AvailabilityCheck(BaseModel):
@@ -146,6 +149,8 @@ class BulkEditRequest(BaseModel):
     min_stay: int | None = None
     block: bool | None = None
     stop_sell: bool | None = None
+    closed_to_arrival: bool | None = None
+    closed_to_departure: bool | None = None
 
     @model_validator(mode="after")
     def _at_least_one(self) -> "BulkEditRequest":
@@ -155,13 +160,16 @@ class BulkEditRequest(BaseModel):
             raise ValueError(
                 "Fester Preis und prozentuale Anpassung schließen sich aus"
             )
-        if (
-            self.price is None
-            and self.price_adjust_pct is None
-            and self.min_stay is None
-            and self.block is None
-            and self.stop_sell is None
-        ):
+        changes = (
+            self.price,
+            self.price_adjust_pct,
+            self.min_stay,
+            self.block,
+            self.stop_sell,
+            self.closed_to_arrival,
+            self.closed_to_departure,
+        )
+        if all(c is None for c in changes):
             raise ValueError("Mindestens eine Änderung erforderlich")
         return self
 
