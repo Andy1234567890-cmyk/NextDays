@@ -760,6 +760,28 @@ def test_set_connection_active_unknown_connection_404() -> None:
         raise AssertionError("fremder/unbekannter Kanal muss 404 liefern")
 
 
+class _ResyncChannex(_ImportChannex):
+    """Wie _ImportChannex, zeichnet aber den Availability-Pull (Resync) auf."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.availability_pulled = 0
+
+    def get_availability(self, property_id, *, date_from, date_to):  # noqa: ANN001, ANN201
+        self.availability_pulled += 1
+        return {"data": {}}
+
+
+def test_resync_property_ari_pulls_from_channex() -> None:
+    # Re-Aktivierung stellt frische ARI her (F3.5): import_ari_for_property
+    # zieht die Verfügbarkeit erneut von Channex.
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    channex = _ResyncChannex()
+    _import_svc(channex, db).resync_property_ari("t1", "p1")
+    assert channex.availability_pulled > 0  # Resync hat Channex abgefragt
+
+
 def test_push_availability_failure_keeps_outbox_pending() -> None:
     db = _ImportDB()
     _seed_with_room_type(db)

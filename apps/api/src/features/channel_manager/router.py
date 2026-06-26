@@ -7,7 +7,15 @@ ein geteiltes Secret im Header abgesichert.
 """
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    Header,
+    HTTPException,
+    Request,
+    status,
+)
 
 from src.core.config import get_settings
 from src.core.security import AuthContext, CurrentUser
@@ -213,11 +221,13 @@ def set_connection_active(
     portal_code: str,
     req: ConnectionToggleRequest,
     service: ChannelManagerServiceDep,
+    background: BackgroundTasks,
     ctx: _write,
 ) -> ChannelConnectionResponse:
     """Kanal pro (Objekt × Portal) an-/abschalten (selektiver Verkaufsstopp).
     „Aus" stoppt ARI/Preis-Push und deaktiviert den Channex-Channel; eingehende
-    Buchungen werden weiter importiert."""
+    Buchungen werden weiter importiert. Beim Wieder-Anschalten wird im Hintergrund
+    frische ARI hergestellt (sonst wäre der OTA-Stand vom Abschaltzeitpunkt)."""
     try:
         result = service.set_connection_active(
             ctx,
@@ -225,6 +235,10 @@ def set_connection_active(
             portal_code=portal_code,
             is_active=req.is_active,
         )
+        if req.is_active and ctx.tenant_id:
+            background.add_task(
+                service.resync_property_ari, ctx.tenant_id, property_id
+            )
         return ChannelConnectionResponse(**result)
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

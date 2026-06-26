@@ -2088,6 +2088,41 @@ class ChannelManagerService:
             "last_error": None,
         }
 
+    def resync_property_ari(self, tenant_id: str, property_id: str) -> None:
+        """Nach Re-Aktivierung eines Kanals frische ARI für das Objekt herstellen.
+
+        Sonst stünde der Kanal wieder auf „an", aber Verfügbarkeit/Preise am OTA
+        wären so alt wie beim Abschalten. Nutzt die bestehenden, getesteten Pfade:
+        - import_ari_for_property gleicht Verfügbarkeit/Preise mit Channex ab,
+        - recompute_property rechnet die dynamischen Preise neu (no-op, wenn DP
+          aus) und pusht sie via push_rates_batch.
+        Best-effort: ein Fehler darf den Toggle nicht nachträglich kippen — der
+        reconcile-Cron gleicht ohnehin periodisch ab."""
+        if self._db is None:
+            return
+        try:
+            channex_property_id = self._require_property_mapping(
+                self._db, tenant_id, property_id
+            )
+            self.import_ari_for_property(tenant_id, channex_property_id)
+        except (ChannelManagerError, ChannexError) as exc:
+            log.warning(
+                "reactivation_resync_import_failed",
+                property_id=property_id,
+                error=getattr(exc, "message", str(exc)),
+            )
+        try:
+            from src.features.pricing.recompute import DynamicPricingRecompute
+
+            DynamicPricingRecompute(
+                service_client=self._db
+            ).recompute_property(property_id)
+        except Exception as exc:  # noqa: BLE001 — Resync ist best-effort, nie blockierend
+            log.warning(
+                "reactivation_resync_recompute_failed",
+                property_id=property_id, error=str(exc),
+            )
+
     # Settings-Schlüssel, unter denen die OTA-Hotel-ID je nach Portal steht.
     _HOTEL_ID_KEYS = ("hotel_id", "hotel_code", "property_id", "property_code")
 
