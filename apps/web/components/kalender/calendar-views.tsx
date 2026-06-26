@@ -64,30 +64,41 @@ export function CalendarViews({ properties }: { properties: Prop[] }) {
     [params, pathname, router],
   );
 
+  // Ansicht-Dropdown — einmal definiert, an der passenden Stelle gerendert.
+  const viewSwitcher = (
+    <NativeSelect
+      value={active}
+      onChange={(e) => setView(e.target.value as ViewKey)}
+      aria-label="Ansicht"
+      className="h-9 w-auto rounded-full font-medium"
+    >
+      {VIEWS.map((v) => (
+        <option key={v.key} value={v.key}>
+          {v.label}
+        </option>
+      ))}
+    </NativeSelect>
+  );
+
   return (
     <div className="flex flex-col gap-5">
-      {/* Ansicht-Umschalter als kompaktes Dropdown statt Tab-Reihe */}
-      <NativeSelect
-        value={active}
-        onChange={(e) => setView(e.target.value as ViewKey)}
-        aria-label="Ansicht"
-        className="h-9 w-auto rounded-full font-medium"
-      >
-        {VIEWS.map((v) => (
-          <option key={v.key} value={v.key}>
-            {v.label}
-          </option>
-        ))}
-      </NativeSelect>
-
-      {/* Timeline bleibt immer gemountet (Board hält eigenen State/Scroll); die
-          Zusatzviews werden nur bei Bedarf gerendert. */}
+      {/* Timeline: das Ansicht-Dropdown sitzt in der Board-Kopfzeile (links neben
+          dem Titel) — eine saubere Kopfzeile. Die Timeline bleibt immer gemountet
+          (Board hält eigenen State/Scroll). */}
       <div className={active === "timeline" ? "" : "hidden"}>
-        <CalendarBoard properties={properties} />
+        <CalendarBoard properties={properties} viewSwitcher={viewSwitcher} />
       </div>
-      {active === "bookings" && <CalendarBookingsView properties={properties} />}
-      {active === "month" && <CalendarMonthGridView properties={properties} />}
-      {active === "occupancy" && <CalendarOccupancyView properties={properties} />}
+
+      {/* Andere Views haben keine Board-Kopfzeile → eigene schlanke Zeile mit
+          dem Ansicht-Dropdown darüber. */}
+      {active !== "timeline" && (
+        <>
+          <div className="flex items-center">{viewSwitcher}</div>
+          {active === "bookings" && <CalendarBookingsView properties={properties} />}
+          {active === "month" && <CalendarMonthGridView properties={properties} />}
+          {active === "occupancy" && <CalendarOccupancyView properties={properties} />}
+        </>
+      )}
     </div>
   );
 }

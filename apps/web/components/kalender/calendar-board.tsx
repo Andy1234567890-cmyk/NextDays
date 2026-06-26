@@ -6,10 +6,11 @@
 // Zeiträume als Balken. Scrollt INNERHALB des Containers (kein Seiten-Overflow).
 import { Icon } from "@iconify/react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   type ViewOptions,
   CalendarHeader,
@@ -62,9 +63,30 @@ const MONTHS = [
   "Juli", "August", "September", "Oktober", "November", "Dezember",
 ];
 
-const COL = 5.5; // rem pro Tagesspalte (breit wie Lodgify)
+const COL = 5.5; // rem pro Tagesspalte (breit & lesbar wie Lodgify, konstant)
 const LABEL = 17; // rem für die Objektspalte
 const ROW_H = 5.5; // rem Zeilenhöhe
+
+// Durchgehende Timeline: Bereich vom 1. Januar des LAUFENDEN Jahres bis Ende des
+// FOLGEJAHRES — so reicht das Scrollen zurück bis 01.01. UND mehr als ein Jahr
+// voraus. Die Spaltenbreite bleibt konstant (lesbar); gescrollt wird durchgehend.
+// Gerendert wird nur ein virtualisiertes Sub-Fenster; die Index-Geometrie
+// (Drag/Balken) bleibt ABSOLUT in `dates`, damit sie unverändert weiterrechnet.
+// Grenzen hängen vom heutigen Datum ab → zur Laufzeit berechnet (siehe Component).
+function rangeStart(now: Date): Date {
+  return new Date(now.getFullYear(), 0, 1); // 1. Januar, laufendes Jahr
+}
+function rangeEnd(now: Date): Date {
+  return new Date(now.getFullYear() + 1, 11, 31); // 31. Dezember, Folgejahr
+}
+function daysBetween(a: Date, b: Date): number {
+  return Math.round((b.getTime() - a.getTime()) / 86_400_000);
+}
+// Wie viele Spalten links/rechts des sichtbaren Fensters zusätzlich gerendert
+// werden (Puffer gegen Leerflächen beim schnellen Scrollen).
+const OVERSCAN = 24;
+// Chunk-Größe (Tage) für das Nachladen der Tagesdaten beim Scrollen.
+const CHUNK_DAYS = 90;
 
 const SEG_STYLE: Record<AvailabilityStatus, string> = {
   open: "",
@@ -260,7 +282,15 @@ function segmentLabel(seg: Segment): string {
   return guest || seg.reservation?.ota_name || sourceLabel(seg.source);
 }
 
-export function CalendarBoard({ properties }: { properties: Prop[] }) {
+export function CalendarBoard({
+  properties,
+  viewSwitcher,
+}: {
+  properties: Prop[];
+  // Ansicht-Dropdown (Timeline/Buchungen/…), wird in die Kopfzeile links neben
+  // den Titel gereicht, damit alles in einer Zeile steht.
+  viewSwitcher?: ReactNode;
+}) {
   // Startdatum (rollierend). null bis der Client das heutige Datum kennt.
   const [start, setStart] = useState<Date | null>(null);
   const [todayKey, setTodayKey] = useState("");
@@ -282,6 +312,9 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
   const [detail, setDetail] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<ViewOptions>(DEFAULT_VIEW);
+  // Horizontaler Scroll-Container des Rasters — Navigation (◀/▶/Heute/Sprung)
+  // scrollt ihn, statt das Startdatum zu verschieben (durchgehende Timeline).
+  const scrollRef = useRef<HTMLDivElement | null>(null);
   // Filter & Suche (Paket 4b). Leerer Filter = alles sichtbar.
   const [query, setQuery] = useState("");
   const [channelFilter, setChannelFilter] = useState<AvailabilitySource | "all">("all");
@@ -456,7 +489,7 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
     };
     window.addEventListener("mousemove", onMove);
     return () => window.removeEventListener("mousemove", onMove);
-  }, [barDrag]);
+  }, [barDrag, COL]);
 
   // Maus loslassen beendet das Ziehen. Ein laufender BALKEN-Zug (move/resize)
   // hat Vorrang und wird an den Server geschickt; sonst Vorschau→Auswahl und
@@ -493,15 +526,91 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
   useEffect(() => {
     const now = new Date();
     now.setHours(0, 0, 0, 0);
-    setStart(now);
+    // Durchgehende Timeline: Raster beginnt am 1. Januar des laufenden Jahres
+    // (Anker des Index-0-Tages). Navigiert wird durch Scrollen, nicht durch
+    // Verschieben von `start`.
+    setStart(rangeStart(now));
     setTodayKey(key(now));
   }, []);
 
-  const range = view.rangeDays;
-  const dates = useMemo(
-    () => (start ? Array.from({ length: range }, (_, i) => addDays(start, i)) : []),
-    [start, range],
+  // Gesamtzahl der Tage im Bereich (1. Jan laufendes Jahr .. 31. Dez Folgejahr).
+  // Hängt vom heutigen Datum ab → aus `start` abgeleitet (nach Mount gesetzt).
+  const totalDays = useMemo(
+    () => (start ? daysBetween(start, rangeEnd(start)) + 1 : 0),
+    [start],
   );
+  // Volles Datums-Array über den ganzen Scroll-Bereich. Nur Date-Objekte →
+  // billig; gerendert wird daraus ein virtualisiertes Sub-Fenster.
+  const dates = useMemo(
+    () => (start ? Array.from({ length: totalDays }, (_, i) => addDays(start, i)) : []),
+    [start, totalDays],
+  );
+  // Index des heutigen Tages im dates-Array (Tage vom 1. Jan bis heute).
+  const todayIndex = useMemo(() => {
+    if (!start || !todayKey) return 0;
+    return daysBetween(start, new Date(`${todayKey}T00:00:00`));
+  }, [start, todayKey]);
+  // Einmaliger Auto-Scroll auf „heute" beim ersten Aufbau; Ref-Flag verhindert
+  // Zurückspringen bei späteren Realtime-Reloads.
+  const didInitialScroll = useRef(false);
+
+  // rem→px (Spaltenbreite in px = COL * rem).
+  const remPx = useCallback(
+    () => parseFloat(getComputedStyle(document.documentElement).fontSize) || 16,
+    [],
+  );
+  // Container so scrollen, dass Tagesspalte `di` direkt rechts der (sticky)
+  // Objektspalte erscheint, geklemmt auf den Gesamtbereich.
+  const scrollToIndex = useCallback(
+    (di: number, behavior: ScrollBehavior = "smooth") => {
+      const el = scrollRef.current;
+      if (!el) return;
+      el.scrollTo({ left: Math.max(0, di * COL * remPx()), behavior });
+    },
+    [COL, remPx],
+  );
+  const currentLeftIndex = useCallback((): number => {
+    const el = scrollRef.current;
+    if (!el) return todayIndex;
+    return Math.round(el.scrollLeft / (COL * remPx()));
+  }, [COL, remPx, todayIndex]);
+
+  // --- Virtualisierung: nur das sichtbare Index-Fenster (+Overscan) rendern ---
+  // scrollLeft + clientWidth → [visFrom, visTo). Per rAF gedrosselt.
+  // Initiales Fenster (wird vom recomputeWindow-/Auto-Scroll-Effect sofort auf
+  // den heutigen Bereich korrigiert, sobald Breite + start feststehen).
+  const [visFrom, setVisFrom] = useState(0);
+  const [visTo, setVisTo] = useState(60 + OVERSCAN);
+  const recomputeWindow = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const colPx = COL * remPx();
+    const from = Math.max(0, Math.floor(el.scrollLeft / colPx) - OVERSCAN);
+    const visibleCols = Math.ceil(el.clientWidth / colPx);
+    const to = Math.min(totalDays, from + visibleCols + OVERSCAN * 2);
+    setVisFrom(from);
+    setVisTo(to);
+  }, [remPx, totalDays]);
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        recomputeWindow();
+      });
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    // Einmal initial berechnen (Breite steht erst nach Mount fest).
+    recomputeWindow();
+    return () => {
+      el.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [recomputeWindow]);
 
   // Objekt-Filter: Freitext (Titel/Adresse/Stadt/Gastname) + Objekttyp. Ein
   // Objekt bleibt sichtbar, wenn es selbst passt ODER eine seiner Buchungen
@@ -546,18 +655,26 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
     if (!start || shown.length === 0 || dates.length === 0) {
       return { occupancy: 0, bookedNights: 0, totalNights: 0, revenue: 0, adr: null as number | null, amountsHidden: false, currency: null as string | null };
     }
-    const dayKeys = dates.map((d) => key(d));
+    // Nur das SICHTBARE Fenster: ab der linken sichtbaren Spalte über die
+    // gewählte Granularität (view.rangeDays). „Belegung 80 %" gilt damit für das,
+    // was der Nutzer gerade sieht — nicht für den ganzen ~395-Tage-Bereich.
+    const winFrom = Math.min(visFrom + OVERSCAN, Math.max(0, totalDays - view.rangeDays));
+    const winDays = dates.slice(winFrom, winFrom + view.rangeDays);
+    if (winDays.length === 0) {
+      return { occupancy: 0, bookedNights: 0, totalNights: 0, revenue: 0, adr: null as number | null, amountsHidden: false, currency: null as string | null };
+    }
+    const dayKeys = winDays.map((d) => key(d));
     let bookedNights = 0;
     for (const p of shown) {
       const statusMap = avail[p.id] ?? {};
       for (const dk of dayKeys) if (statusMap[dk] === "booked") bookedNights += 1;
     }
-    const totalNights = shown.length * dates.length;
+    const totalNights = shown.length * dayKeys.length;
 
     // Umsatz: Buchungen der sichtbaren Objekte, deren Nächte in den sichtbaren
     // Zeitraum fallen — anteilig (Nacht-Anteil im Fenster / Gesamtnächte).
     const winStart = dayKeys[0];
-    const winEnd = key(addDays(start, dates.length)); // exklusiv
+    const winEnd = key(addDays(winDays[0], winDays.length)); // exklusiv
     const seen = new Set<string>();
     let revenue = 0;
     let revenueNights = 0;
@@ -596,72 +713,180 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
       amountsHidden,
       currency,
     };
-  }, [start, shown, dates, avail, resByProp]);
+  }, [start, shown, dates, avail, resByProp, visFrom, view.rangeDays]);
 
-  const load = useCallback(async () => {
-    if (!start || properties.length === 0) return;
-    setLoading(true);
-    const s = key(start);
-    const e = key(addDays(start, range));
-    const [results, resAll] = await Promise.all([
-      Promise.all(
-        properties.map(async (p) => {
-          const res = await getAvailability(p.id, s, e);
-          const map: Record<string, AvailabilityStatus> = {};
-          const srcMap: Record<string, AvailabilitySource> = {};
-          const priceMap: Record<string, number | null> = {};
-          const priceSrcMap: Record<string, string> = {};
-          const factorsMap: Record<string, Record<string, number>> = {};
-          const minStayMap: Record<string, number | null> = {};
-          // CTA/CTD je Tag: [arrivalGesperrt, departureGesperrt].
-          const restrictMap: Record<string, [boolean, boolean]> = {};
-          if (res.ok)
-            for (const d of res.data as DayAvailability[]) {
-              map[d.date] = d.status;
-              srcMap[d.date] = d.source;
-              priceMap[d.date] = d.price;
-              priceSrcMap[d.date] = d.price_source ?? "none";
-              if (d.price_factors) factorsMap[d.date] = d.price_factors;
-              minStayMap[d.date] = d.min_stay;
-              if (d.closed_to_arrival || d.closed_to_departure)
-                restrictMap[d.date] = [
-                  !!d.closed_to_arrival,
-                  !!d.closed_to_departure,
-                ];
-            }
-          return [
-            p.id, map, srcMap, priceMap, minStayMap, priceSrcMap, factorsMap,
-            restrictMap,
-          ] as const;
-        }),
-      ),
-      // Alle Buchungen (OTA + direkt, vereint aus reservations) in einem Call.
-      listReservations(),
-    ]);
-    setAvail(Object.fromEntries(results.map((r) => [r[0], r[1]])));
-    setSources(Object.fromEntries(results.map((r) => [r[0], r[2]])));
-    setPrices(Object.fromEntries(results.map((r) => [r[0], r[3]])));
-    setMinStays(Object.fromEntries(results.map((r) => [r[0], r[4]])));
-    setRestrictions(Object.fromEntries(results.map((r) => [r[0], r[7]])));
-    setPriceFactors(Object.fromEntries(results.map((r) => [r[0], r[6]])));
-    setPriceSources(Object.fromEntries(results.map((r) => [r[0], r[5]])));
-    // Buchungen je Objekt gruppieren und auf Tages-Maps abbilden.
+  // Geladenes Index-Intervall [from, to) der Tagesdaten (chunked). Ref, weil der
+  // Scroll-Handler es liest, ohne ein Neu-Rendern auszulösen.
+  const loadedRange = useRef<{ from: number; to: number } | null>(null);
+
+  // Buchungen separat laden — EIN Call, günstig, sofort sichtbar (entkoppelt von
+  // der schwereren chunked Tagesdaten-Last). Balken erscheinen also sofort.
+  const loadReservations = useCallback(async () => {
+    const resAll = await listReservations();
+    if (!resAll.ok) return;
     const byProp: Record<string, Reservation[]> = {};
-    if (resAll.ok)
-      for (const r of resAll.data.items) {
-        (byProp[r.property_id] ??= []).push(r);
-      }
+    for (const r of resAll.data.items) {
+      (byProp[r.property_id] ??= []).push(r);
+    }
     setResByProp(
       Object.fromEntries(
         Object.entries(byProp).map(([pid, list]) => [pid, reservationsByDay(list)]),
       ),
     );
-    setLoading(false);
-  }, [start, properties, range]);
+  }, []);
 
+  // Tagesdaten (Status/Preis/Min-Stay/CTA-CTD) für ein Index-Fenster laden und
+  // additiv in die State-Maps mergen. `replace` löscht vorher die alten Tagesdaten
+  // (für Realtime-Reload des geladenen Bereichs), sonst wird nur ergänzt.
+  const loadDays = useCallback(
+    async (fromIdx: number, toIdx: number, replace = false) => {
+      if (!start || properties.length === 0) return;
+      const from = Math.max(0, fromIdx);
+      const to = Math.min(totalDays, toIdx);
+      if (to <= from) return;
+      setLoading(true);
+      const s = key(addDays(start, from));
+      const e = key(addDays(start, to)); // exklusiv
+      const results = await Promise.all(
+        properties.map(async (p) => {
+          const res = await getAvailability(p.id, s, e);
+          const days: DayAvailability[] = res.ok ? (res.data as DayAvailability[]) : [];
+          return [p.id, days] as const;
+        }),
+      );
+      // Merge-Helfer: pro State-Map die neuen Tage einspielen (replace = ersetzen).
+      const mergeInto = <V,>(
+        prev: Record<string, Record<string, V>>,
+        pick: (d: DayAvailability) => [string, V] | null,
+      ): Record<string, Record<string, V>> => {
+        const next: Record<string, Record<string, V>> = { ...prev };
+        for (const [pid, days] of results) {
+          const base = replace ? {} : { ...(next[pid] ?? {}) };
+          for (const d of days) {
+            const kv = pick(d);
+            if (kv) base[kv[0]] = kv[1];
+          }
+          next[pid] = base;
+        }
+        return next;
+      };
+      setAvail((prev: Record<string, Record<string, AvailabilityStatus>>) =>
+        mergeInto(prev, (d) => [d.date, d.status]),
+      );
+      setSources((prev: Record<string, Record<string, AvailabilitySource>>) =>
+        mergeInto(prev, (d) => [d.date, d.source]),
+      );
+      setPrices((prev: Record<string, Record<string, number | null>>) =>
+        mergeInto(prev, (d) => [d.date, d.price]),
+      );
+      setPriceSources((prev: Record<string, Record<string, string>>) =>
+        mergeInto(prev, (d) => [d.date, d.price_source ?? "none"]),
+      );
+      setPriceFactors((prev: Record<string, Record<string, Record<string, number>>>) =>
+        mergeInto(prev, (d) => (d.price_factors ? [d.date, d.price_factors] : null)),
+      );
+      setMinStays((prev: Record<string, Record<string, number | null>>) =>
+        mergeInto(prev, (d) => [d.date, d.min_stay]),
+      );
+      setRestrictions((prev: Record<string, Record<string, [boolean, boolean]>>) =>
+        mergeInto(prev, (d) =>
+          d.closed_to_arrival || d.closed_to_departure
+            ? [d.date, [!!d.closed_to_arrival, !!d.closed_to_departure]]
+            : null,
+        ),
+      );
+      // Geladenes Intervall fortschreiben (Vereinigung), bei replace zurücksetzen.
+      const cur = replace ? null : loadedRange.current;
+      loadedRange.current = cur
+        ? { from: Math.min(cur.from, from), to: Math.max(cur.to, to) }
+        : { from, to };
+      setLoading(false);
+    },
+    [start, properties, totalDays],
+  );
+
+  // Sicherstellen, dass das sichtbare Index-Fenster (+Puffer) geladen ist; sonst
+  // den fehlenden CHUNK_DAYS-Block nachladen (links ODER rechts). Kein Voll-Load.
+  const ensureLoaded = useCallback(
+    (fromIdx: number, toIdx: number) => {
+      const cur = loadedRange.current;
+      if (cur && fromIdx >= cur.from && toIdx <= cur.to) return; // alles da
+      if (!cur) {
+        void loadDays(fromIdx, toIdx);
+        return;
+      }
+      // Fehlt links?
+      if (fromIdx < cur.from) {
+        void loadDays(Math.max(0, cur.from - CHUNK_DAYS), cur.from);
+      }
+      // Fehlt rechts?
+      if (toIdx > cur.to) {
+        void loadDays(cur.to, Math.min(totalDays, cur.to + CHUNK_DAYS));
+      }
+    },
+    [loadDays],
+  );
+
+  // Realtime-/Erst-Reload: Buchungen frisch + den AKTUELL geladenen Tagesbereich
+  // neu (replace). Lädt NICHT die ganzen ~395 Tage.
+  const load = useCallback(async () => {
+    await loadReservations();
+    const cur = loadedRange.current;
+    if (cur) await loadDays(cur.from, cur.to, true);
+  }, [loadReservations, loadDays]);
+
+  // Erst-Last + Hintergrund-Vorladen des GANZEN Jahres: Zuerst der Block um heute
+  // (schneller Start), dann werden die restlichen ~395 Tage Block für Block im
+  // Hintergrund nachgezogen — sequenziell (nicht alle auf einmal, sonst
+  // überlastet es Browser/Backend). Beim Scrollen ist dann alles schon da, kein
+  // „lädt…". Vorrang nach vorn (Zukunft), dann nach hinten (Vergangenheit).
+  const prefetchToken = useRef(0);
   useEffect(() => {
-    load();
-  }, [load]);
+    if (!start || properties.length === 0) return;
+    const myToken = ++prefetchToken.current;
+    void loadReservations();
+    (async () => {
+      // 1) Sichtbarer Block um heute zuerst.
+      await loadDays(
+        Math.max(0, todayIndex - CHUNK_DAYS / 3),
+        Math.min(totalDays, todayIndex + CHUNK_DAYS),
+      );
+      // 2) Rest des Jahres in Blöcken nachziehen, bis [0, totalDays) voll ist.
+      //    Abbruch, wenn ein neuer Lauf gestartet wurde (Objektwechsel/Remount).
+      let guard = 0;
+      while (myToken === prefetchToken.current && guard < 64) {
+        guard += 1;
+        const cur = loadedRange.current;
+        if (!cur) break;
+        if (cur.to < totalDays) {
+          await loadDays(cur.to, Math.min(totalDays, cur.to + CHUNK_DAYS));
+        } else if (cur.from > 0) {
+          await loadDays(Math.max(0, cur.from - CHUNK_DAYS), cur.from);
+        } else {
+          break; // ganzes Jahr geladen
+        }
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [start, properties]);
+
+  // Beim Scrollen: fehlende Blöcke um das sichtbare Fenster nachladen.
+  useEffect(() => {
+    ensureLoaded(visFrom, visTo);
+  }, [visFrom, visTo, ensureLoaded]);
+
+  // Beim ersten gerenderten Raster sofort (ohne Animation) auf „heute" scrollen,
+  // damit der Nutzer nicht im Vergangenheits-Puffer landet. Nur einmal.
+  useEffect(() => {
+    if (didInitialScroll.current) return;
+    // Erst scrollen, wenn alles steht: start, gerendertes Raster UND der echte
+    // todayIndex (>0, sobald todayKey gesetzt ist) — sonst landet der Erst-Scroll
+    // fälschlich auf dem 1. Januar (Index 0).
+    if (!start || dates.length === 0 || !todayKey || todayIndex <= 0) return;
+    didInitialScroll.current = true;
+    scrollToIndex(todayIndex, "auto");
+    recomputeWindow();
+  }, [start, dates.length, todayKey, todayIndex, scrollToIndex, recomputeWindow]);
 
   // Realtime: Kalender live aktualisieren, sobald sich Buchungen, Belegung,
   // Preise oder Verkaufsstopps ändern (eigene Aktionen, andere Nutzer oder
@@ -701,18 +926,21 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
     }
   }, [sel, start, load]);
 
+  // ◀/▶: um den sichtbaren Granularitäts-Schritt weiterscrollen (statt `start`
+  // zu verschieben — die Timeline ist durchgehend).
   function shift(deltaDays: number) {
-    setStart((cur) => (cur ? addDays(cur, deltaDays) : cur));
+    scrollToIndex(currentLeftIndex() + deltaDays);
   }
   function goToday() {
-    const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    setStart(now);
+    scrollToIndex(todayIndex);
   }
-  // Auf ein gewähltes Datum springen (Date-Picker im Kopf).
+  // Auf ein gewähltes Datum springen (Date-Picker im Kopf): zum Index scrollen.
   function jumpTo(isoDate: string) {
+    if (!start) return;
     const d = new Date(`${isoDate}T00:00:00`);
-    if (!Number.isNaN(d.getTime())) setStart(d);
+    if (Number.isNaN(d.getTime())) return;
+    const di = Math.round((d.getTime() - start.getTime()) / 86_400_000);
+    scrollToIndex(Math.min(totalDays - 1, Math.max(0, di)));
   }
 
   if (properties.length === 0) {
@@ -757,12 +985,13 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
         title={{ month: titleMonth, year: titleYear }}
         view={view}
         onView={setView}
-        onPrev={() => shift(-range)}
-        onNext={() => shift(range)}
+        onPrev={() => shift(-view.rangeDays)}
+        onNext={() => shift(view.rangeDays)}
         onToday={goToday}
         onJump={jumpTo}
         jumpValue={start ? key(start) : ""}
         onCreate={onCreate}
+        viewSwitcher={viewSwitcher}
       />
 
       {/* Filter & Suche (Objekt/Typ/Kanal/Status/Gastname) */}
@@ -936,9 +1165,9 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
 
       {/* Raster — scrollt INNERHALB dieses Containers (min-w-0 begrenzt Breite) */}
       <Card className="min-w-0 overflow-hidden p-0">
-        <div className="overflow-x-auto">
+        <div ref={scrollRef} className="overflow-x-auto">
           <div style={{ width: `${LABEL + dates.length * COL}rem` }}>
-            {/* Tageskopf */}
+            {/* Tageskopf — virtualisiert: Spacer + nur sichtbare Spalten. */}
             <div className="flex border-b">
               <div
                 className="sticky left-0 z-20 flex shrink-0 items-center border-r bg-card px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
@@ -947,7 +1176,9 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                 Objekt
               </div>
               <div className="flex">
-                {dates.map((d) => {
+                {/* Spacer links (alle Spalten vor dem sichtbaren Fenster). */}
+                <div style={{ width: `${visFrom * COL}rem` }} className="shrink-0" />
+                {dates.slice(visFrom, visTo).map((d) => {
                   const wd = d.getDay();
                   const isToday = key(d) === todayKey;
                   return (
@@ -963,6 +1194,8 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                     </div>
                   );
                 })}
+                {/* Spacer rechts (alle Spalten nach dem sichtbaren Fenster). */}
+                <div style={{ width: `${(totalDays - visTo) * COL}rem` }} className="shrink-0" />
               </div>
             </div>
 
@@ -989,10 +1222,15 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                     showId={view.showId}
                   />
 
-                  {/* Tagesbereich */}
+                  {/* Tagesbereich — volle Breite (für absolut positionierte
+                      Balken), Zellen virtualisiert mit Spacern; di bleibt
+                      ABSOLUT (= visFrom + i), damit Drag/Selektion stimmen. */}
                   <div className="relative flex" style={{ width: `${dates.length * COL}rem`, height: `${ROW_H}rem` }}>
+                    {/* Spacer links (Zellen vor dem sichtbaren Fenster). */}
+                    <div style={{ width: `${visFrom * COL}rem` }} className="shrink-0" />
                     {/* Zellen mit Gäste + Preis-Platzhalter — klickbar (sperren/freigeben) */}
-                    {dates.map((d, di) => {
+                    {dates.slice(visFrom, visTo).map((d, i) => {
+                      const di = visFrom + i;
                       const isToday = key(d) === todayKey;
                       const status = statusMap[key(d)] ?? "open";
                       const inSel = isSelected(p.id, di);
@@ -1065,6 +1303,8 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                         </button>
                       );
                     })}
+                    {/* Spacer rechts (Zellen nach dem sichtbaren Fenster). */}
+                    <div style={{ width: `${(totalDays - visTo) * COL}rem` }} className="shrink-0" />
 
                     {/* Gestrichelter Rahmen um den ausgewählten Block (wie Lodgify) */}
                     {(() => {
@@ -1389,11 +1629,11 @@ function FilterSelect({
   options: { value: string; label: string }[];
 }) {
   return (
-    <select
+    <NativeSelect
       value={value}
       onChange={(e) => onChange(e.target.value)}
       aria-label={allLabel}
-      className="h-9 rounded-full border bg-background px-3 text-sm"
+      className="h-9 w-auto"
     >
       <option value="all">{allLabel}</option>
       {options.map((o) => (
@@ -1401,7 +1641,7 @@ function FilterSelect({
           {o.label}
         </option>
       ))}
-    </select>
+    </NativeSelect>
   );
 }
 

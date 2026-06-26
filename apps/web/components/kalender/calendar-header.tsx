@@ -4,6 +4,7 @@
 // ◀ Zurück · ▶ Vor · 📅 Heute, rechts ⚙️ Ansicht-anpassen (Drawer) und
 // ＋ Erstellen (Menü). Eigenständiges Element, steuert das Raster über Props.
 import { Icon } from "@iconify/react";
+import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -66,6 +67,7 @@ export function CalendarHeader({
   onJump,
   jumpValue,
   onCreate,
+  viewSwitcher,
 }: {
   title: { month: string; year: string };
   view: ViewOptions;
@@ -76,16 +78,22 @@ export function CalendarHeader({
   onJump: (isoDate: string) => void;
   jumpValue: string; // YYYY-MM-DD des aktuellen Startdatums
   onCreate: (kind: "booking" | "blocked") => void;
+  // Optionales Ansicht-Dropdown (Timeline/Buchungen/…), links neben dem Titel,
+  // damit Ansicht + Titel + Navigation in EINER Kopfzeile sitzen.
+  viewSwitcher?: ReactNode;
 }) {
   const set = <K extends keyof ViewOptions>(k: K, v: ViewOptions[K]) =>
     onView({ ...view, [k]: v });
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3">
-      {/* Titel */}
-      <h2 className="font-display text-2xl font-extrabold">
-        {title.month} <span className="font-normal text-muted-foreground">{title.year}</span>
-      </h2>
+      {/* Ansicht-Umschalter + Titel (links) */}
+      <div className="flex items-center gap-3">
+        {viewSwitcher}
+        <h2 className="font-display text-2xl font-extrabold">
+          {title.month} <span className="font-normal text-muted-foreground">{title.year}</span>
+        </h2>
+      </div>
 
       {/* Navigations- und Aktionsgruppe */}
       <div className="flex flex-wrap items-center gap-2">
