@@ -1,10 +1,10 @@
 "use client";
 
 // Top-Level-Umschalter des Kalenders: Timeline (bestehendes Board, unverändert)
-// plus vier zusätzliche Ansichten — Liste, An-/Abreisen, Monatsgitter,
-// Auslastung. Die aktive Ansicht wird in der URL (?view=) persistiert, damit ein
-// Reload/Teilen denselben Blick öffnet. Die Zusatzviews werden lazy geladen, so
-// dass der Standard-Timeline-Blick nicht durch sie verzögert wird.
+// plus drei zusätzliche Ansichten — Buchungen (An-/Abreisen + Liste kombiniert),
+// Monatsgitter, Auslastung. Die aktive Ansicht wird in der URL (?view=)
+// persistiert, damit ein Reload/Teilen denselben Blick öffnet. Die Zusatzviews
+// werden lazy geladen, so dass der Standard-Timeline-Blick nicht verzögert wird.
 import dynamic from "next/dynamic";
 import { Icon } from "@iconify/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -13,12 +13,8 @@ import { useCallback } from "react";
 import { type Prop, CalendarBoard } from "@/components/kalender/calendar-board";
 
 // Lazy: nur laden, wenn die jeweilige Ansicht aktiv ist.
-const CalendarListView = dynamic(
-  () => import("@/components/kalender/views/list-view").then((m) => m.CalendarListView),
-  { loading: () => <ViewSkeleton /> },
-);
-const CalendarArrivalsView = dynamic(
-  () => import("@/components/kalender/views/arrivals-view").then((m) => m.CalendarArrivalsView),
+const CalendarBookingsView = dynamic(
+  () => import("@/components/kalender/views/bookings-view").then((m) => m.CalendarBookingsView),
   { loading: () => <ViewSkeleton /> },
 );
 const CalendarMonthGridView = dynamic(
@@ -32,8 +28,7 @@ const CalendarOccupancyView = dynamic(
 
 const VIEWS = [
   { key: "timeline", label: "Timeline", icon: "ph:rows" },
-  { key: "list", label: "Liste", icon: "ph:list-bullets" },
-  { key: "arrivals", label: "An-/Abreisen", icon: "ph:sign-in" },
+  { key: "bookings", label: "Buchungen", icon: "ph:list-bullets" },
   { key: "month", label: "Monatsgitter", icon: "ph:calendar-blank" },
   { key: "occupancy", label: "Auslastung", icon: "ph:chart-bar" },
 ] as const;
@@ -44,13 +39,19 @@ function isViewKey(v: string | null): v is ViewKey {
   return VIEWS.some((x) => x.key === v);
 }
 
+// Alte gespeicherte Links auf die getrennten Ansichten weiter gültig halten:
+// ?view=list und ?view=arrivals zeigen jetzt auf die kombinierte „Buchungen".
+function normalizeView(v: string | null): ViewKey {
+  if (v === "list" || v === "arrivals") return "bookings";
+  return isViewKey(v) ? v : "timeline";
+}
+
 export function CalendarViews({ properties }: { properties: Prop[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
 
-  const raw = params.get("view");
-  const active: ViewKey = isViewKey(raw) ? raw : "timeline";
+  const active: ViewKey = normalizeView(params.get("view"));
 
   const setView = useCallback(
     (key: ViewKey) => {
@@ -89,8 +90,7 @@ export function CalendarViews({ properties }: { properties: Prop[] }) {
       <div className={active === "timeline" ? "" : "hidden"}>
         <CalendarBoard properties={properties} />
       </div>
-      {active === "list" && <CalendarListView properties={properties} />}
-      {active === "arrivals" && <CalendarArrivalsView properties={properties} />}
+      {active === "bookings" && <CalendarBookingsView properties={properties} />}
       {active === "month" && <CalendarMonthGridView properties={properties} />}
       {active === "occupancy" && <CalendarOccupancyView properties={properties} />}
     </div>
