@@ -1,7 +1,10 @@
-// Kalender-Übersicht (wie Lodgify): Timeline-Raster, Objekte als Zeilen, echte
-// Verfügbarkeit pro Tag. Server Component lädt die Objekte; der Client-Teil
-// holt die Verfügbarkeit und rendert das interaktive Raster.
-import { CalendarBoard } from "@/components/kalender/calendar-board";
+// Kalender-Übersicht (wie Lodgify): Timeline-Raster + vier Zusatzansichten
+// (Liste, An-/Abreisen, Monatsgitter, Auslastung) über einen Top-Level-Umschalter.
+// Server Component lädt die Objekte; der Client-Teil holt die Verfügbarkeit und
+// rendert die jeweils aktive Ansicht.
+import { Suspense } from "react";
+
+import { CalendarViews } from "@/components/kalender/calendar-views";
 import { Card } from "@/components/ui/card";
 import { getDpOverview } from "@/lib/dynamic-pricing";
 import { listProperties } from "@/lib/properties";
@@ -26,18 +29,22 @@ export default async function KalenderPage() {
     );
   }
 
+  const properties = res.data.items.map((p) => ({
+    id: p.id,
+    title: p.title,
+    type: p.property_type,
+    photo: p.photos[0] ?? null,
+    address: [p.street, p.house_number].filter(Boolean).join(" "),
+    city: [p.postal_code, p.city].filter(Boolean).join(" "),
+    maxGuests: p.max_guests,
+    dynamicEnabled: dpEnabled.has(p.id),
+  }));
+
+  // CalendarViews liest die aktive Ansicht aus der URL (?view=) → Suspense-Grenze
+  // (Next.js verlangt sie für useSearchParams in einer Server-gerenderten Seite).
   return (
-    <CalendarBoard
-      properties={res.data.items.map((p) => ({
-        id: p.id,
-        title: p.title,
-        type: p.property_type,
-        photo: p.photos[0] ?? null,
-        address: [p.street, p.house_number].filter(Boolean).join(" "),
-        city: [p.postal_code, p.city].filter(Boolean).join(" "),
-        maxGuests: p.max_guests,
-        dynamicEnabled: dpEnabled.has(p.id),
-      }))}
-    />
+    <Suspense fallback={null}>
+      <CalendarViews properties={properties} />
+    </Suspense>
   );
 }

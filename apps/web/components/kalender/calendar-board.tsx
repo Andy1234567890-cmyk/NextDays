@@ -44,7 +44,7 @@ import {
 import { toast } from "sonner";
 import { useRealtime } from "@/lib/use-realtime";
 
-type Prop = {
+export type Prop = {
   id: string;
   title: string;
   type: PropertyType;
