@@ -38,7 +38,9 @@ export function BulkEditDialog({
 }) {
   const [applyAll, setApplyAll] = useState(false);
   const [setPrice, setSetPrice] = useState(false);
+  const [priceMode, setPriceMode] = useState<"fixed" | "pct">("fixed");
   const [price, setPrice2] = useState("");
+  const [pricePct, setPricePct] = useState("");
   const [setMinStay, setSetMinStay] = useState(false);
   const [minStay, setMinStay2] = useState("");
   const [blockMode, setBlockMode] = useState<BlockMode>("none");
@@ -51,8 +53,10 @@ export function BulkEditDialog({
     ? allProperties.map((p) => p.id)
     : [primaryProperty.id];
 
+  const priceFilled =
+    setPrice && (priceMode === "fixed" ? price !== "" : pricePct !== "");
   const hasChange =
-    (setPrice && price !== "") ||
+    priceFilled ||
     (setMinStay && minStay !== "") ||
     blockMode !== "none" ||
     stopMode !== "none";
@@ -67,7 +71,12 @@ export function BulkEditDialog({
       property_ids: targetIds,
       start,
       end,
-      ...(setPrice && price !== "" ? { price: Number(price) } : {}),
+      ...(setPrice && priceMode === "fixed" && price !== ""
+        ? { price: Number(price) }
+        : {}),
+      ...(setPrice && priceMode === "pct" && pricePct !== ""
+        ? { price_adjust_pct: Number(pricePct) }
+        : {}),
       ...(setMinStay && minStay !== "" ? { min_stay: Number(minStay) } : {}),
       ...(blockMode !== "none" ? { block: blockMode === "block" } : {}),
       ...(stopMode !== "none" ? { stop_sell: stopMode === "stop" } : {}),
@@ -133,17 +142,46 @@ export function BulkEditDialog({
                 Preis pro Nacht setzen
               </label>
               {setPrice && (
-                <div className="ml-7">
-                  <Label htmlFor="bulk-price" className="sr-only">Preis</Label>
-                  <Input
-                    id="bulk-price"
-                    type="number"
-                    min={0}
-                    inputMode="decimal"
-                    placeholder="z. B. 120"
-                    value={price}
-                    onChange={(e) => setPrice2(e.target.value)}
+                <div className="ml-7 flex flex-col gap-2">
+                  <SegmentedThree
+                    value={priceMode}
+                    options={[
+                      { value: "fixed", label: "Fester Preis" },
+                      { value: "pct", label: "Prozentual" },
+                    ]}
+                    onChange={(v) => setPriceMode(v as "fixed" | "pct")}
                   />
+                  {priceMode === "fixed" ? (
+                    <div>
+                      <Label htmlFor="bulk-price" className="sr-only">Preis</Label>
+                      <Input
+                        id="bulk-price"
+                        type="number"
+                        min={0}
+                        inputMode="decimal"
+                        placeholder="z. B. 120"
+                        value={price}
+                        onChange={(e) => setPrice2(e.target.value)}
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <Label htmlFor="bulk-price-pct" className="sr-only">
+                        Prozentuale Anpassung
+                      </Label>
+                      <Input
+                        id="bulk-price-pct"
+                        type="number"
+                        inputMode="decimal"
+                        placeholder="z. B. +10 oder -15"
+                        value={pricePct}
+                        onChange={(e) => setPricePct(e.target.value)}
+                      />
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Passt den effektiven Tagespreis um diesen Prozentsatz an.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

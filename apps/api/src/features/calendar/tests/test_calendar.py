@@ -301,6 +301,80 @@ def test_bulk_edit_requires_a_change() -> None:
         )
 
 
+# --- Teil A: Bulk-Preisanpassung in Prozent ---
+
+def test_bulk_edit_price_pct_increase_writes_overrides() -> None:
+    from src.features.calendar.schemas import BulkEditRequest
+
+    # Basispreis 100 → +10 % = 110.0 je Tag, als Override geschrieben.
+    svc, store = _service(
+        properties=[{"id": "p1"}],
+        rate_plans=[{"base_price": 100.0, "min_stay": 1}],
+    )
+    res = svc.bulk_edit(
+        "t1",
+        BulkEditRequest(
+            property_ids=["p1"],
+            range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3)),
+            price_adjust_pct=10,
+        ),
+    )
+    assert res.applied == ["price_pct"]
+    overrides = [u for u in store["_upserts"] if u[0] == "price_overrides"]
+    assert overrides, "Overrides müssen geschrieben werden"
+    prices = {row["date"]: row["price"] for row in overrides[0][1]}
+    assert prices == {"2026-05-01": 110.0, "2026-05-02": 110.0}
+
+
+def test_bulk_edit_price_pct_decrease_rounds() -> None:
+    from src.features.calendar.schemas import BulkEditRequest
+
+    # Basispreis 100 → -15 % = 85.0.
+    svc, store = _service(
+        properties=[{"id": "p1"}],
+        rate_plans=[{"base_price": 100.0, "min_stay": 1}],
+    )
+    svc.bulk_edit(
+        "t1",
+        BulkEditRequest(
+            property_ids=["p1"],
+            range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2)),
+            price_adjust_pct=-15,
+        ),
+    )
+    overrides = [u for u in store["_upserts"] if u[0] == "price_overrides"]
+    assert overrides[0][1][0]["price"] == 85.0
+
+
+def test_bulk_edit_price_pct_skips_days_without_price() -> None:
+    from src.features.calendar.schemas import BulkEditRequest
+
+    # Kein Rate-Plan → kein auflösbarer Preis → keine Overrides (kein Crash).
+    svc, store = _service(properties=[{"id": "p1"}])
+    res = svc.bulk_edit(
+        "t1",
+        BulkEditRequest(
+            property_ids=["p1"],
+            range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3)),
+            price_adjust_pct=10,
+        ),
+    )
+    assert res.applied == ["price_pct"]
+    assert not [u for u in store.get("_upserts", []) if u[0] == "price_overrides"]
+
+
+def test_bulk_edit_fixed_and_pct_mutually_exclusive() -> None:
+    from src.features.calendar.schemas import BulkEditRequest
+
+    with pytest.raises(ValueError):
+        BulkEditRequest(
+            property_ids=["p1"],
+            range=DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2)),
+            price=99.0,
+            price_adjust_pct=10,
+        )
+
+
 # --- ohne Client: sauberer Fehler statt Crash ---
 
 def test_db_unavailable_raises_clean_error() -> None:

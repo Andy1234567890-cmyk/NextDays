@@ -6,7 +6,7 @@ Verfügbarkeitslogik + Double-Booking-Schutz über die availability-Tabelle
 Der Supabase-Client wird injiziert → im Test mockbar; echte DB-Calls beim
 laufenden Stack. Kein stilles Exception-Swallowing (PROJECT.md).
 """
-from datetime import date
+from datetime import date, timedelta
 from typing import TYPE_CHECKING
 
 from supabase import Client
@@ -331,6 +331,43 @@ class CalendarService:
         )
         return len(payload)
 
+    def adjust_season_price_pct(
+        self, tenant_id: str, property_id: str, rng: DateRange, pct: float
+    ) -> int:
+        """Effektiven Tagespreis je Tag um `pct` Prozent anpassen (z. B. +10/-15)
+        und als Override schreiben — derselbe Pfad wie set_season_price, nur mit
+        je Tag individuellem Preis. Tage ohne auflösbaren Preis werden übersprungen
+        (kein Crash, kein erfundener Basiswert). Gibt Anzahl geänderter Tage zurück.
+        """
+        self._require_own_property(tenant_id, property_id)
+        days = self._resolver().effective_prices(property_id, rng.start, rng.end)
+        factor = 1 + pct / 100
+        payload = [
+            {
+                "property_id": property_id,
+                "date": d.date.isoformat(),
+                "price": round(d.price * factor, 2),
+            }
+            for d in days
+            if d.price is not None
+        ]
+        if not payload:
+            return 0
+        self._db().table("price_overrides").upsert(
+            payload, on_conflict="property_id,date"
+        ).execute()
+        # Channex je Tag (unterschiedliche Preise) — Best-Effort, wie sonst auch.
+        for row in payload:
+            day = date.fromisoformat(row["date"])
+            self._push_channex_rate(
+                property_id, day, day + timedelta(days=1), round(row["price"] * 100)
+            )
+        log.info(
+            "calendar_season_price_pct",
+            property_id=property_id, pct=pct, days=len(payload),
+        )
+        return len(payload)
+
     # -- Bulk-Edit (mehrere Objekte × ein Zeitraum) ---------------------------
     def _set_min_stay(self, property_id: str, rng: DateRange, min_stay: int) -> None:
         """Mindestaufenthalt des Objekts setzen (rate_plans, property-weit) und
@@ -373,6 +410,10 @@ class CalendarService:
                 self.clear_stop_sell(tenant_id, pid, req.range)
             if req.price is not None:
                 self.set_season_price(tenant_id, pid, req.range, req.price)
+            elif req.price_adjust_pct is not None:
+                self.adjust_season_price_pct(
+                    tenant_id, pid, req.range, req.price_adjust_pct
+                )
             if req.min_stay is not None:
                 self._set_min_stay(pid, req.range, req.min_stay)
 
@@ -386,6 +427,8 @@ class CalendarService:
             applied.append("clear_stop_sell")
         if req.price is not None:
             applied.append("price")
+        elif req.price_adjust_pct is not None:
+            applied.append("price_pct")
         if req.min_stay is not None:
             applied.append("min_stay")
 
@@ -425,8 +468,6 @@ class CalendarService:
         if self._client is None:
             return
         try:
-            from datetime import timedelta
-
             prop = (
                 self._db()
                 .table("properties")
@@ -459,8 +500,6 @@ class CalendarService:
         if self._client is None:
             return
         try:
-            from datetime import timedelta
-
             prop = (
                 self._db()
                 .table("properties")

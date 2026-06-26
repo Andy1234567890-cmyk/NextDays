@@ -118,6 +118,7 @@ export type BulkEditInput = {
   start: string; // YYYY-MM-DD
   end: string; // YYYY-MM-DD (exklusiv)
   price?: number;
+  price_adjust_pct?: number; // prozentual (z. B. +10 / -15); schließt price aus
   min_stay?: number;
   block?: boolean;
   stop_sell?: boolean;

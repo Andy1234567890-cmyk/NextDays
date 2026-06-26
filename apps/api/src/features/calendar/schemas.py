@@ -131,15 +131,18 @@ class BulkEditRequest(BaseModel):
     """Mehrere Objekte × ein Zeitraum in einem Rutsch bearbeiten (wie Hostaway).
 
     Es wird nur angewendet, was gesetzt ist (None = unverändert):
-      - price:    Tagespreis je Tag (price_overrides + Channex-Rate-Push)
-      - min_stay: Mindestaufenthalt je Objekt (rate_plans + Channex-Restriktion)
-      - block:    True = sperren, False = Sperre aufheben (availability)
-      - stop_sell:True = Verkaufsstopp setzen, False = aufheben
+      - price:             fester Tagespreis je Tag (price_overrides + Channex)
+      - price_adjust_pct:  prozentuale Anpassung des effektiven Tagespreises
+                           (z. B. +10 / -15); schließt `price` aus
+      - min_stay:          Mindestaufenthalt je Objekt (rate_plans + Channex)
+      - block:             True = sperren, False = Sperre aufheben (availability)
+      - stop_sell:         True = Verkaufsstopp setzen, False = aufheben
     """
 
     property_ids: list[str]
     range: DateRange
     price: float | None = None
+    price_adjust_pct: float | None = None
     min_stay: int | None = None
     block: bool | None = None
     stop_sell: bool | None = None
@@ -148,8 +151,13 @@ class BulkEditRequest(BaseModel):
     def _at_least_one(self) -> "BulkEditRequest":
         if not self.property_ids:
             raise ValueError("Mindestens ein Objekt erforderlich")
+        if self.price is not None and self.price_adjust_pct is not None:
+            raise ValueError(
+                "Fester Preis und prozentuale Anpassung schließen sich aus"
+            )
         if (
             self.price is None
+            and self.price_adjust_pct is None
             and self.min_stay is None
             and self.block is None
             and self.stop_sell is None

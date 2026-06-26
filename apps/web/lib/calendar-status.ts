@@ -18,10 +18,22 @@ export type StatusMeta = {
   dotBg: string;
   /** Iconify-Icon für Tooltip/Legende. */
   icon: string;
+  /**
+   * Optionale Balken-Sonderklasse. Standard-Balken (bestätigt/eingecheckt)
+   * lassen das leer; „Option/vorläufig" (pending) hebt sich deutlich ab —
+   * amber getönt + gestrichelter Rand, damit eine Option nicht wie eine feste
+   * Buchung aussieht.
+   */
+  barClass?: string;
 };
 
 export const STATUS_META: Record<DisplayStatus, StatusMeta> = {
-  pending: { label: "Option / vorläufig", dotBg: "bg-warning", icon: "ph:hourglass-medium" },
+  pending: {
+    label: "Option / vorläufig",
+    dotBg: "bg-warning",
+    icon: "ph:hourglass-medium",
+    barClass: "bg-warning/25 border border-dashed border-warning text-foreground",
+  },
   confirmed: { label: "Bestätigt", dotBg: "bg-success", icon: "ph:check-circle" },
   in_house: { label: "Eingecheckt", dotBg: "bg-channel-vrbo", icon: "ph:door-open" },
   completed: { label: "Ausgecheckt", dotBg: "bg-muted-foreground", icon: "ph:flag-checkered" },

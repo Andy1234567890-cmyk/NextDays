@@ -1065,9 +1065,15 @@ export function CalendarBoard({ properties }: { properties: Prop[] }) {
                       // Kanal-/Status-Filter: nicht passende Balken dimmen
                       // (Belegung bleibt erkennbar, Treffer stechen hervor).
                       const dimmed = filtersActive && !segMatchesFilters(seg);
+                      // Option/vorläufig (pending) bekommt einen eigenen, klar
+                      // unterscheidbaren Balken (amber + gestrichelt) statt der
+                      // Kanalfarbe — eine Option darf nicht wie eine feste
+                      // Buchung aussehen. Bestätigt/eingecheckt unverändert.
+                      const bookedBar =
+                        statusMeta?.barClass ?? `${meta.barBg} ${meta.barFg}`;
                       const barClass = `${
                         seg.status === "booked"
-                          ? `${meta.barBg} ${meta.barFg}`
+                          ? bookedBar
                           : SEG_STYLE[seg.status]
                       } ${dimmed ? "opacity-25" : ""}`;
                       // Während IRGENDEIN Balken gezogen wird, lassen alle Balken
