@@ -8,6 +8,13 @@ import { useEffect, useRef } from "react";
 import { currentToken } from "@/lib/session-token";
 import { createClient } from "@/lib/supabase/client";
 
+// Modul-globaler Zähler für eindeutige Channel-Namen. Mehrere Komponenten dürfen
+// dieselbe Tabelle abonnieren (z. B. Timeline + Listenansicht gleichzeitig);
+// ohne eindeutigen Namen teilten sie sich EINEN Supabase-Channel und der zweite
+// .on() nach subscribe() wirft „cannot add postgres_changes callbacks … after
+// subscribe()". Jede Hook-Instanz bekommt daher ihren eigenen Channel.
+let channelSeq = 0;
+
 type RealtimeOpts = {
   /** Tabelle in public, z.B. "channex_booking". */
   table: string;
@@ -36,6 +43,15 @@ export function useRealtime({
   const cb = useRef(onChange);
   cb.current = onChange;
 
+  // Eindeutige, über die Lebensdauer stabile ID dieser Hook-Instanz — damit zwei
+  // Komponenten mit derselben Tabelle nicht denselben Channel-Namen erzeugen.
+  const uidRef = useRef<number | null>(null);
+  if (uidRef.current === null) {
+    channelSeq += 1;
+    uidRef.current = channelSeq;
+  }
+  const uid = uidRef.current;
+
   useEffect(() => {
     if (!enabled) return;
     const supabase = createClient();
@@ -60,7 +76,7 @@ export function useRealtime({
       if (cancelled) return;
 
       channel = supabase
-        .channel(`rt:${table}:${filter ?? "all"}`)
+        .channel(`rt:${table}:${filter ?? "all"}:${uid}`)
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table, ...(filter ? { filter } : {}) },
@@ -74,5 +90,5 @@ export function useRealtime({
       if (timer) clearTimeout(timer);
       if (channel) supabase.removeChannel(channel);
     };
-  }, [table, filter, enabled, debounceMs]);
+  }, [table, filter, enabled, debounceMs, uid]);
 }
