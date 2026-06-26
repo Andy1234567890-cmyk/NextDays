@@ -6,11 +6,11 @@
 // persistiert, damit ein Reload/Teilen denselben Blick öffnet. Die Zusatzviews
 // werden lazy geladen, so dass der Standard-Timeline-Blick nicht verzögert wird.
 import dynamic from "next/dynamic";
-import { Icon } from "@iconify/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 
 import { type Prop, CalendarBoard } from "@/components/kalender/calendar-board";
+import { NativeSelect } from "@/components/ui/native-select";
 
 // Lazy: nur laden, wenn die jeweilige Ansicht aktiv ist.
 const CalendarBookingsView = dynamic(
@@ -27,10 +27,10 @@ const CalendarOccupancyView = dynamic(
 );
 
 const VIEWS = [
-  { key: "timeline", label: "Timeline", icon: "ph:rows" },
-  { key: "bookings", label: "Buchungen", icon: "ph:list-bullets" },
-  { key: "month", label: "Monatsgitter", icon: "ph:calendar-blank" },
-  { key: "occupancy", label: "Auslastung", icon: "ph:chart-bar" },
+  { key: "timeline", label: "Timeline" },
+  { key: "bookings", label: "Buchungen" },
+  { key: "month", label: "Monatsgitter" },
+  { key: "occupancy", label: "Auslastung" },
 ] as const;
 
 type ViewKey = (typeof VIEWS)[number]["key"];
@@ -66,24 +66,19 @@ export function CalendarViews({ properties }: { properties: Prop[] }) {
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Ansicht-Umschalter */}
-      <div className="inline-flex flex-wrap gap-1 self-start rounded-full border bg-secondary p-0.5 text-sm">
+      {/* Ansicht-Umschalter als kompaktes Dropdown statt Tab-Reihe */}
+      <NativeSelect
+        value={active}
+        onChange={(e) => setView(e.target.value as ViewKey)}
+        aria-label="Ansicht"
+        className="h-9 w-auto rounded-full font-medium"
+      >
         {VIEWS.map((v) => (
-          <button
-            key={v.key}
-            type="button"
-            onClick={() => setView(v.key)}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1.5 font-medium transition-colors ${
-              active === v.key
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Icon icon={v.icon} className="size-4" />
+          <option key={v.key} value={v.key}>
             {v.label}
-          </button>
+          </option>
         ))}
-      </div>
+      </NativeSelect>
 
       {/* Timeline bleibt immer gemountet (Board hält eigenen State/Scroll); die
           Zusatzviews werden nur bei Bedarf gerendert. */}

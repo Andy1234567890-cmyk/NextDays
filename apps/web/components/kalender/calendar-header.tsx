@@ -6,6 +6,7 @@
 import { Icon } from "@iconify/react";
 
 import { Button } from "@/components/ui/button";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -88,23 +89,19 @@ export function CalendarHeader({
 
       {/* Navigations- und Aktionsgruppe */}
       <div className="flex flex-wrap items-center gap-2">
-        {/* Zeitfenster (1/7/14/28-Monat) */}
-        <div className="inline-flex rounded-full border bg-secondary p-0.5 text-sm">
+        {/* Zeitfenster (1/7/14/28-Monat) als kompaktes Dropdown statt Button-Reihe */}
+        <NativeSelect
+          value={view.rangeDays}
+          onChange={(e) => set("rangeDays", Number(e.target.value) as RangeDays)}
+          aria-label="Zeitfenster"
+          className="h-9 w-auto rounded-full"
+        >
           {RANGE_OPTIONS.map((o) => (
-            <button
-              key={o.value}
-              type="button"
-              onClick={() => set("rangeDays", o.value)}
-              className={`rounded-full px-3 py-1.5 font-medium transition-colors ${
-                view.rangeDays === o.value
-                  ? "bg-card text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
+            <option key={o.value} value={o.value}>
               {o.label}
-            </button>
+            </option>
           ))}
-        </div>
+        </NativeSelect>
 
         {/* Datum-Sprung (natives Date-Picker) */}
         <input
