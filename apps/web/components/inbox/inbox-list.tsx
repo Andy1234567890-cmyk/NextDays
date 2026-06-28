@@ -16,7 +16,7 @@ import { AiSettingsTab } from "@/components/inbox/ai-settings-tab";
 import { AutomationsTab } from "@/components/inbox/automations-tab";
 import { ManageTab } from "@/components/inbox/manage-tab";
 import { TemplatesTab } from "@/components/inbox/templates-tab";
-import { WhatsAppPanel } from "@/components/inbox/whatsapp-panel";
+import { WhatsAppChat } from "@/components/inbox/whatsapp-panel";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { MultiSelect } from "@/components/ui/multi-select";
@@ -49,10 +49,13 @@ import {
 } from "@/lib/inbox";
 import { type InboxAccess } from "@/lib/inbox-access";
 import { useRealtime } from "@/lib/use-realtime";
+import {
+  type WhatsAppConversation,
+  listWhatsAppConversations,
+} from "@/lib/whatsapp-api";
 
 type TabKey =
   | "tabInbox"
-  | "tabWhatsApp"
   | "tabAiReplies"
   | "tabTemplates"
   | "tabAutomations"
@@ -63,7 +66,62 @@ const OTA_ICON: Record<string, string> = {
   airbnb: "simple-icons:airbnb",
   expedia: "simple-icons:expedia",
   vrbo: "ph:house",
+  whatsapp: "ph:whatsapp-logo",
 };
+
+// Kanalname für WhatsApp-Konversationen in der gemeinsamen Liste (Filter/Anzeige).
+const WHATSAPP_CHANNEL = "WhatsApp";
+// Stabiler ID-Präfix, damit WhatsApp-Threads von OTA-Threads unterscheidbar sind
+// (Klick öffnet dann das WhatsApp-Chat-Panel statt der OTA-Konversation).
+const WA_PREFIX = "wa:";
+// Flüchtige Konversation für eine NEUE Nummer (entsteht real erst beim Senden).
+const WA_NEW_PREFIX = "wa:new:";
+const isWhatsApp = (id: string) => id.startsWith(WA_PREFIX);
+
+// WhatsApp-Konversation in die InboxThread-Form bringen, damit sie in derselben
+// Liste/Filterung wie OTA-Threads läuft. Nur die Felder, die Liste + Filter
+// nutzen, werden gefüllt; OTA-spezifische Felder bleiben null (keine Fallbacks).
+function whatsAppToThread(c: WhatsAppConversation): InboxThread {
+  return {
+    id: `${WA_PREFIX}${c.id}`,
+    channex_booking_id: null,
+    reservation_id: c.reservation_id,
+    guest_id: null,
+    property_id: null,
+    property_title: null,
+    ota_name: WHATSAPP_CHANNEL,
+    ota_reservation_code: null,
+    guest_name: c.guest_name ?? `+${c.wa_phone}`,
+    guest_email: null,
+    status: null,
+    arrival_date: null,
+    departure_date: null,
+    last_message: c.last_message,
+    updated_at: c.last_at,
+    is_read: c.is_read,
+    is_starred: false,
+    is_archived: false,
+    inbox_status: "active",
+    assigned_user_id: null,
+    assigned_user_name: null,
+  };
+}
+
+// Flüchtiger Listeneintrag für eine neue, noch nicht existierende WhatsApp-Nummer.
+function whatsAppDraftThread(phone: string): InboxThread {
+  return {
+    ...whatsAppToThread({
+      id: `new:${phone}`,
+      wa_phone: phone,
+      guest_name: null,
+      reservation_id: null,
+      last_message: null,
+      last_at: null,
+      is_read: true,
+    }),
+    id: `${WA_NEW_PREFIX}${phone}`,
+  };
+}
 
 function otaIcon(name: string | null): string {
   if (!name) return "ph:chat-circle";
@@ -113,20 +171,33 @@ export function InboxList({
   const [view, setView] = useState<InboxStatus>("active");
   const current = rows.find((x) => x.id === active) ?? null;
 
-  // Threads je Ansicht laden — auch für Realtime-Reload.
+  // Threads je Ansicht laden — auch für Realtime-Reload. WhatsApp-Konversationen
+  // werden (nur in der aktiven Ansicht) als gleichwertige Threads eingemischt, so
+  // dass ein einziger Posteingang OTA- und WhatsApp-Chats zeigt.
   const reloadThreads = useCallback(async () => {
-    const res = await listInboxThreads({ status: view });
-    if (res.ok) {
-      setRows(res.data.items);
-      setActive((cur) =>
-        res.data.items.some((r) => r.id === cur) ? cur : res.data.items[0]?.id ?? null,
-      );
-    }
+    const [otaRes, waRes] = await Promise.all([
+      listInboxThreads({ status: view }),
+      view === "active" ? listWhatsAppConversations() : Promise.resolve(null),
+    ]);
+    if (!otaRes.ok) return;
+    const ota = otaRes.data.items;
+    const wa: InboxThread[] =
+      waRes && waRes.ok ? waRes.data.items.map(whatsAppToThread) : [];
+    // Gemeinsame Liste nach Aktualität (neueste zuerst); null-Daten ans Ende.
+    const merged = [...ota, ...wa].sort((a, b) =>
+      (b.updated_at ?? "").localeCompare(a.updated_at ?? ""),
+    );
+    setRows(merged);
+    setActive((cur) =>
+      merged.some((r) => r.id === cur) ? cur : merged[0]?.id ?? null,
+    );
   }, [view]);
   useEffect(() => {
     reloadThreads();
   }, [reloadThreads]);
   useRealtime({ table: "channex_booking", onChange: reloadThreads });
+  // WhatsApp-Liste live: neue/aktualisierte Konversationen erscheinen ohne Reload.
+  useRealtime({ table: "whatsapp_conversation", onChange: reloadThreads });
 
   // Filter-Optionen aus den geladenen Threads ableiten (nur real vorkommende).
   const channelOptions = Array.from(
@@ -195,13 +266,29 @@ export function InboxList({
     if (next) setActive(next.id);
   }
 
-  // Thread öffnen → automatisch als gelesen markieren.
+  // Neue WhatsApp-Konversation anstoßen: flüchtigen Pseudo-Thread voranstellen.
+  // Real entsteht die Konversation erst beim ersten Senden (Webhook/Service).
+  function startWhatsApp() {
+    const raw = window.prompt(t("whatsappNewPrompt"));
+    const phone = (raw ?? "").replace(/\D/g, "");
+    if (phone.length < 6) return;
+    const id = `${WA_NEW_PREFIX}${phone}`;
+    setRows((prev) =>
+      prev.some((r) => r.id === id)
+        ? prev
+        : [whatsAppDraftThread(phone), ...prev],
+    );
+    setActive(id);
+  }
+
+  // Thread öffnen → automatisch als gelesen markieren. WhatsApp-Threads laufen
+  // nicht über den inbox-Slice; nur lokal als gelesen spiegeln (kein OTA-Call).
   function selectThread(id: string) {
     setActive(id);
     const th = rows.find((r) => r.id === id);
     if (th && !th.is_read) {
       patchThread(id, { is_read: true });
-      updateThreadFlags(id, { is_read: true });
+      if (!isWhatsApp(id)) updateThreadFlags(id, { is_read: true });
     }
   }
 
@@ -209,7 +296,6 @@ export function InboxList({
   // INBOX_MANAGE_CONFIG sichtbar (Enterprise-Achse „Aktionen").
   const TABS: TabKey[] = [
     "tabInbox",
-    "tabWhatsApp",
     ...(access.canManageConfig
       ? (["tabAiReplies", "tabTemplates", "tabAutomations", "tabManage"] as TabKey[])
       : []),
@@ -267,9 +353,7 @@ export function InboxList({
       )}
 
       {/* Andere Tabs: eigene Inhalte */}
-      {tab === "tabWhatsApp" ? (
-        <WhatsAppPanel />
-      ) : tab === "tabTemplates" ? (
+      {tab === "tabTemplates" ? (
         <TemplatesTab />
       ) : tab === "tabAiReplies" ? (
         <AiSettingsTab />
@@ -440,6 +524,14 @@ export function InboxList({
                 className="w-full bg-transparent text-sm outline-none"
               />
             </div>
+            <button
+              type="button"
+              title={t("whatsappNewChat")}
+              onClick={startWhatsApp}
+              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 transition-colors hover:bg-emerald-200"
+            >
+              <Icon icon="ph:whatsapp-logo" className="size-4" />
+            </button>
           </div>
           {/* Liste oder Leerzustand */}
           {filtered.length === 0 ? (
@@ -515,9 +607,31 @@ export function InboxList({
           )}
         </div>
 
-        {/* Spalte 2: Konversation */}
+        {/* Spalte 2: Konversation — WhatsApp-Threads nutzen das WhatsApp-Chat-
+            Panel (Meta Cloud API), OTA-Threads die Channex-Konversation. */}
         <div className="col-span-12 flex min-h-0 flex-col rounded-2xl border border-border bg-card sm:col-span-8 lg:col-span-5 xl:col-span-5">
-          {current ? (
+          {!current ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">
+              <Icon icon="ph:chats-circle" className="size-10 text-muted-foreground/40" />
+              {t("emptyConversation")}
+            </div>
+          ) : isWhatsApp(current.id) ? (
+            <WhatsAppChat
+              key={current.id}
+              conversationId={
+                current.id.startsWith(WA_NEW_PREFIX)
+                  ? null
+                  : current.id.slice(WA_PREFIX.length)
+              }
+              phone={
+                current.id.startsWith(WA_NEW_PREFIX)
+                  ? current.id.slice(WA_NEW_PREFIX.length)
+                  : ""
+              }
+              name={current.guest_name}
+              onSent={reloadThreads}
+            />
+          ) : (
             <Conversation
               key={current.id}
               thread={current}
@@ -534,17 +648,13 @@ export function InboxList({
                 })
               }
             />
-          ) : (
-            <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">
-              <Icon icon="ph:chats-circle" className="size-10 text-muted-foreground/40" />
-              {t("emptyConversation")}
-            </div>
           )}
         </div>
 
-        {/* Spalte 3: Reservierungs-Panel */}
+        {/* Spalte 3: Reservierungs-Panel (nur für OTA-Threads; WhatsApp hat im
+            inbox-Slice keinen Reservierungskontext). */}
         <div className="col-span-12 hidden min-h-0 flex-col overflow-y-auto rounded-2xl border border-border bg-card lg:col-span-4 lg:flex xl:col-span-4">
-          {current ? (
+          {current && !isWhatsApp(current.id) ? (
             <ReservationPanel
               key={`${current.id}-res`}
               thread={current}
@@ -552,8 +662,17 @@ export function InboxList({
             />
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">
-              <Icon icon="ph:identification-card" className="size-8 text-muted-foreground/40" />
-              {t("emptyReservation")}
+              <Icon
+                icon={
+                  current && isWhatsApp(current.id)
+                    ? "ph:whatsapp-logo"
+                    : "ph:identification-card"
+                }
+                className="size-8 text-muted-foreground/40"
+              />
+              {current && isWhatsApp(current.id)
+                ? t("whatsappNoReservation")
+                : t("emptyReservation")}
             </div>
           )}
         </div>

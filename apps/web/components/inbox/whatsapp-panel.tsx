@@ -151,7 +151,7 @@ export function WhatsAppPanel() {
   );
 }
 
-function WhatsAppChat({
+export function WhatsAppChat({
   conversationId,
   phone,
   name,

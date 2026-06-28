@@ -41,6 +41,18 @@ class SendWhatsAppRequest(BaseModel):
     body: str
 
 
+class SendWhatsAppTemplateRequest(BaseModel):
+    """Template-Nachricht (Meta-Regel: außerhalb des 24-h-Fensters Pflicht)."""
+
+    conversation_id: str | None = None
+    to_phone: str | None = None    # nötig, wenn keine conversation_id
+    template_name: str             # von Meta freigegebener Template-Name
+    language_code: str = "de"      # Sprachcode des Templates (z.B. de, en_US)
+    # Geordnete Variablenwerte für den Body des Templates ({{1}}, {{2}}, …).
+    # Leer = Template ohne Variablen.
+    variables: list[str] = []
+
+
 class WhatsAppStatus(BaseModel):
     """White-label Konfig-Status (KEIN Token im Response)."""
 

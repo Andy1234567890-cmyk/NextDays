@@ -4,9 +4,9 @@
 "use client";
 
 import { Icon } from "@iconify/react";
-import Image from "next/image";
 import Link from "next/link";
 
+import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 
 // Login der Gastgeber liegt in der web-App (Dashboard). Per Env überschreibbar
@@ -28,14 +28,7 @@ export function MarketingNav() {
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-6">
         <Link href="/" className="flex items-center">
-          <Image
-            src="/marketing/brand/mynextdays-logo.png"
-            alt="myNextDays — powered by AirSmil"
-            width={1470}
-            height={399}
-            priority
-            className="h-9 w-auto"
-          />
+          <Logo heightRem={2.25} />
         </Link>
 
         <ul className="hidden items-center gap-7 md:flex">

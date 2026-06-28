@@ -8,6 +8,7 @@ Tenant-scoped (tenant_id aus dem JWT); der Webhook bestimmt den Tenant über die
 bestehende Konversation bzw. den konfigurierten Default-Tenant — nie geraten.
 """
 import re
+from datetime import datetime, timedelta, timezone
 
 from supabase import Client
 
@@ -205,6 +206,90 @@ class WhatsAppService:
         )
 
     # --- Senden -------------------------------------------------------------
+    # Meta-Regel: freie Textnachrichten sind nur INNERHALB von 24 h nach der
+    # letzten EINGEHENDEN Nachricht erlaubt. Außerhalb (oder ohne jede eingehende
+    # Nachricht) sind ausschließlich Template-Nachrichten zulässig.
+    _SERVICE_WINDOW = timedelta(hours=24)
+
+    def _last_inbound_at(self, db: Client, tenant_id: str, conv_id: str) -> datetime | None:
+        """Zeitpunkt der jüngsten EINGEHENDEN Nachricht der Konversation (oder None)."""
+        res = (
+            db.table("whatsapp_message")
+            .select("created_at")
+            .eq("tenant_id", tenant_id)
+            .eq("conversation_id", conv_id)
+            .eq("direction", "in")
+            .order("created_at", desc=True)
+            .limit(1)
+            .execute()
+        ).data
+        if not res:
+            return None
+        raw = res[0].get("created_at")
+        if not raw:
+            return None
+        try:
+            return datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+        except ValueError:
+            return None
+
+    def _within_service_window(self, db: Client, tenant_id: str, conv_id: str) -> bool:
+        """True, wenn die letzte eingehende Nachricht < 24 h her ist."""
+        last_in = self._last_inbound_at(db, tenant_id, conv_id)
+        if last_in is None:
+            return False
+        if last_in.tzinfo is None:
+            last_in = last_in.replace(tzinfo=timezone.utc)
+        return datetime.now(timezone.utc) - last_in < self._SERVICE_WINDOW
+
+    def _resolve_target(
+        self, db: Client, tenant_id: str, conversation_id: str | None, to_phone: str | None
+    ) -> dict:
+        """Ziel-Konversation laden oder per Telefonnummer anlegen (gemeinsam)."""
+        if conversation_id:
+            return self._load_conversation(db, tenant_id, conversation_id)
+        phone = _normalize_phone(to_phone or "")
+        if len(phone) < 6:
+            raise WhatsAppServiceError(
+                "Gültige Telefonnummer mit Ländervorwahl nötig.", status_code=422
+            )
+        return self._upsert_conversation(db, tenant_id, phone)
+
+    def _persist_outgoing(
+        self,
+        db: Client,
+        tenant_id: str,
+        conv: dict,
+        *,
+        body: str,
+        wa_message_id: str | None,
+        status: str,
+        last_message: str,
+    ) -> WhatsAppMessage:
+        """Ausgehende Nachricht speichern + Konversation aktualisieren (gemeinsam)."""
+        ins = (
+            db.table("whatsapp_message")
+            .insert(
+                {
+                    "tenant_id": tenant_id,
+                    "conversation_id": conv["id"],
+                    "direction": "out",
+                    "body": body,
+                    "wa_message_id": wa_message_id,
+                    "status": status,
+                }
+            )
+            .execute()
+        ).data
+        m = ins[0] if ins else {}
+        db.table("whatsapp_conversation").update(
+            {"last_message": last_message}
+        ).eq("tenant_id", tenant_id).eq("id", conv["id"]).execute()
+        return WhatsAppMessage(
+            id=m.get("id"), direction="out", body=body,
+            status=status, sent_at=m.get("created_at"),
+        )
+
     def send(
         self,
         ctx: AuthContext,
@@ -218,52 +303,77 @@ class WhatsAppService:
         if not text:
             raise WhatsAppServiceError("Nachricht darf nicht leer sein.", status_code=422)
 
-        if conversation_id:
-            conv = self._load_conversation(db, tenant_id, conversation_id)
-        else:
-            phone = _normalize_phone(to_phone or "")
-            if len(phone) < 6:
-                raise WhatsAppServiceError(
-                    "Gültige Telefonnummer mit Ländervorwahl nötig.", status_code=422
-                )
-            conv = self._upsert_conversation(db, tenant_id, phone)
+        conv = self._resolve_target(db, tenant_id, conversation_id, to_phone)
 
-        wa_phone = conv["wa_phone"]
+        # 24-h-Servicefenster: freier Text nur innerhalb. Außerhalb → Template nötig.
+        if not self._sandbox() and not self._within_service_window(
+            db, tenant_id, conv["id"]
+        ):
+            raise WhatsAppServiceError(
+                "Außerhalb des 24-Stunden-Servicefensters: Es ist nur eine "
+                "Template-Nachricht erlaubt (send-template).",
+                status_code=409,
+            )
+
         wa_message_id = None
-        status = "sent"
-
-        if self._sandbox():
-            # Sandbox: kein echter Meta-Call, Nachricht lokal ablegen.
-            status = "sent"
-        else:
+        if not self._sandbox():
             try:
-                res = self._client.send_text(wa_phone, text)
+                res = self._client.send_text(conv["wa_phone"], text)
             except WhatsAppError as exc:
                 raise WhatsAppServiceError(exc.message, status_code=exc.status_code) from exc
             msgs = res.get("messages") or []
             wa_message_id = msgs[0].get("id") if msgs else None
 
-        ins = (
-            db.table("whatsapp_message")
-            .insert(
+        return self._persist_outgoing(
+            db, tenant_id, conv,
+            body=text, wa_message_id=wa_message_id, status="sent", last_message=text,
+        )
+
+    def send_template(
+        self,
+        ctx: AuthContext,
+        *,
+        conversation_id: str | None,
+        to_phone: str | None,
+        template_name: str,
+        language_code: str = "de",
+        variables: list[str] | None = None,
+    ) -> WhatsAppMessage:
+        """Template-Nachricht senden (auch außerhalb des 24-h-Fensters erlaubt)."""
+        db, tenant_id = self._require(ctx)
+        name = (template_name or "").strip()
+        if not name:
+            raise WhatsAppServiceError("Template-Name nötig.", status_code=422)
+
+        conv = self._resolve_target(db, tenant_id, conversation_id, to_phone)
+
+        # Body-Variablen → Meta-Components (geordnete {{1}}, {{2}}, …).
+        components: list[dict] | None = None
+        if variables:
+            components = [
                 {
-                    "tenant_id": tenant_id,
-                    "conversation_id": conv["id"],
-                    "direction": "out",
-                    "body": text,
-                    "wa_message_id": wa_message_id,
-                    "status": status,
+                    "type": "body",
+                    "parameters": [{"type": "text", "text": v} for v in variables],
                 }
-            )
-            .execute()
-        ).data
-        m = ins[0] if ins else {}
-        db.table("whatsapp_conversation").update(
-            {"last_message": text}
-        ).eq("tenant_id", tenant_id).eq("id", conv["id"]).execute()
-        return WhatsAppMessage(
-            id=m.get("id"), direction="out", body=text,
-            status=status, sent_at=m.get("created_at"),
+            ]
+
+        wa_message_id = None
+        if not self._sandbox():
+            try:
+                res = self._client.send_template(
+                    conv["wa_phone"], name, language_code, components
+                )
+            except WhatsAppError as exc:
+                raise WhatsAppServiceError(exc.message, status_code=exc.status_code) from exc
+            msgs = res.get("messages") or []
+            wa_message_id = msgs[0].get("id") if msgs else None
+
+        # Im Verlauf als „Vorlage: <name>" sichtbar (der gerenderte Text liegt bei Meta).
+        body_label = f"[Vorlage: {name}]"
+        return self._persist_outgoing(
+            db, tenant_id, conv,
+            body=body_label, wa_message_id=wa_message_id, status="sent",
+            last_message=body_label,
         )
 
     # --- Webhook (eingehend, kein JWT) -------------------------------------

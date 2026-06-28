@@ -57,13 +57,17 @@ class Settings(BaseSettings):
     # access_token: permanenter System-User-Token (Meta Business).
     # phone_number_id: ID der WhatsApp-Business-Telefonnummer (Graph API).
     # verify_token: eigenes Zufalls-Secret für die Webhook-Verifizierung (GET).
-    # graph_version: Graph-API-Version (z.B. v21.0).
+    # app_secret: App-Geheimnis (Meta-App-Einstellungen) — für die Prüfung der
+    #   Webhook-Signatur (X-Hub-Signature-256). Leer = Signaturprüfung wird im Dev
+    #   übersprungen (mit Warn-Log); im Prod MUSS es gesetzt sein.
+    # graph_version: Graph-API-Version (Übergabe nutzt v25.0).
     # Sandbox: ohne echte Credentials lokal testbar (Mock statt Meta-Call). Im
     # Prod IMMER false, sonst würden Nachrichten nicht real versendet.
     whatsapp_access_token: SecretStr = SecretStr("")
     whatsapp_phone_number_id: str = ""
     whatsapp_verify_token: SecretStr = SecretStr("")
-    whatsapp_graph_version: str = "v21.0"
+    whatsapp_app_secret: SecretStr = SecretStr("")
+    whatsapp_graph_version: str = "v25.0"
     whatsapp_sandbox: bool = False
     # Eingehende Webhook-Nachrichten einer NEUEN Nummer brauchen einen Tenant.
     # Da wir (vorerst) eine globale WhatsApp-Nummer haben, ordnet dieser Wert neue

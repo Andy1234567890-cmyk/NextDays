@@ -1,8 +1,8 @@
 // Plattform-Kopfzeile (myNextDays-Buchungsplattform). Eigenes Design —
 // schlanke Leiste mit Logo-Wortmarke, Such-Pille und Konto-Aktion.
 import { Icon } from "@iconify/react";
-import Image from "next/image";
 import Link from "next/link";
+import { Logo } from "./logo";
 
 // Ziel des "myNextDays für Gastgeber"-Buttons: die Marketing-/Gastgeber-Seite.
 const GASTGEBER_URL =
@@ -14,14 +14,7 @@ export function SiteHeader({ compact = false }: { compact?: boolean }) {
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-6">
         <Link href="/" className="flex items-center">
-          <Image
-            src="/mynextdays-logo.png"
-            alt="myNextDays"
-            width={1470}
-            height={399}
-            priority
-            className="h-9 w-auto"
-          />
+          <Logo />
         </Link>
 
         {!compact && (

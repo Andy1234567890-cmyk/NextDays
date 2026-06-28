@@ -1,8 +1,9 @@
 // Footer — dunkler Block mit Link-Spalten, App-Store-Badges, Sprache,
 // Rechtshinweisen und Social-Links. Figma: schwarzer Footer am Seitenende.
 import { Icon } from "@iconify/react";
-import Image from "next/image";
 import Link from "next/link";
+
+import { Logo } from "@/components/logo";
 
 const FOOTER_COLUMNS = [
   {
@@ -42,13 +43,7 @@ export function MarketingFooter() {
       <div className="mx-auto max-w-7xl px-6 py-16">
         <div className="grid gap-10 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
           <div>
-            <Image
-              src="/marketing/brand/mynextdays-logo-light.png"
-              alt="myNextDays — powered by AirSmil"
-              width={1470}
-              height={399}
-              className="h-9 w-auto"
-            />
+            <Logo heightRem={2.25} />
             <p className="mt-4 max-w-xs text-sm text-primary-foreground/70">
               Eine starke Plattform für kleine Unterkünfte – mehr Buchungen,
               weniger Arbeit.

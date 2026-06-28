@@ -46,19 +46,55 @@ class WhatsAppClient:
         return bool(self._token and self._phone_number_id)
 
     def send_text(self, to_phone: str, body: str) -> dict[str, Any]:
-        """Textnachricht senden. Gibt die Meta-Antwort zurück (enthält message-ID)."""
+        """Textnachricht senden. Gibt die Meta-Antwort zurück (enthält message-ID).
+
+        Nur INNERHALB des 24-h-Servicefensters erlaubt (Meta-Regel) — die Prüfung
+        liegt im Service. Außerhalb ist `send_template` zu nutzen.
+        """
+        return self._post_messages(
+            {
+                "messaging_product": "whatsapp",
+                "to": to_phone,
+                "type": "text",
+                "text": {"body": body},
+            }
+        )
+
+    def send_template(
+        self,
+        to_phone: str,
+        template_name: str,
+        language_code: str = "de",
+        components: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
+        """Template-Nachricht senden (auch außerhalb des 24-h-Fensters erlaubt).
+
+        `components` sind die Meta-Template-Parameter (Header/Body/Buttons); None,
+        wenn das Template keine Variablen hat.
+        """
+        template: dict[str, Any] = {
+            "name": template_name,
+            "language": {"code": language_code},
+        }
+        if components:
+            template["components"] = components
+        return self._post_messages(
+            {
+                "messaging_product": "whatsapp",
+                "to": to_phone,
+                "type": "template",
+                "template": template,
+            }
+        )
+
+    def _post_messages(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Gemeinsamer Versandpfad (Auth, Netz-/HTTP-Fehler) für Text + Template."""
         if not self.is_configured:
             raise WhatsAppError(
                 "WhatsApp ist nicht konfiguriert (Access-Token / Phone-Number-ID fehlt).",
                 status_code=503,
             )
         url = f"{_GRAPH_HOST}/{self._version}/{self._phone_number_id}/messages"
-        payload = {
-            "messaging_product": "whatsapp",
-            "to": to_phone,
-            "type": "text",
-            "text": {"body": body},
-        }
         try:
             resp = httpx.post(
                 url,

@@ -4,11 +4,15 @@
 - Webhook (kein JWT): GET = Verify-Handshake (hub.challenge), POST = eingehende
   Nachrichten/Status von Meta. Abgesichert über den verify_token.
 """
+import hashlib
+import hmac
+import json
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 
 from src.core.config import get_settings
+from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.core.supabase import get_service_client
 from src.features.auth.dependencies import require_permission
@@ -16,6 +20,7 @@ from src.features.auth.permissions import Capability
 
 from .schemas import (
     SendWhatsAppRequest,
+    SendWhatsAppTemplateRequest,
     SliceHealth,
     WhatsAppConversationList,
     WhatsAppMessage,
@@ -23,6 +28,8 @@ from .schemas import (
     WhatsAppStatus,
 )
 from .service import WhatsAppService, WhatsAppServiceError
+
+log = get_logger("nextdays.whatsapp.router")
 
 
 def get_whatsapp_service() -> WhatsAppService:
@@ -80,6 +87,24 @@ def send(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post("/send-template", response_model=WhatsAppMessage)
+def send_template(
+    req: SendWhatsAppTemplateRequest, service: WhatsAppServiceDep, ctx: _guest
+) -> WhatsAppMessage:
+    """Template-Nachricht senden — auch außerhalb des 24-h-Servicefensters."""
+    try:
+        return service.send_template(
+            ctx,
+            conversation_id=req.conversation_id,
+            to_phone=req.to_phone,
+            template_name=req.template_name,
+            language_code=req.language_code,
+            variables=req.variables,
+        )
+    except WhatsAppServiceError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 # --- Meta-Webhook (kein JWT) -----------------------------------------------
 @router.get("/webhook", include_in_schema=False)
 def webhook_verify(
@@ -94,15 +119,45 @@ def webhook_verify(
     raise HTTPException(status_code=403, detail="Verifizierung fehlgeschlagen.")
 
 
+def _signature_ok(raw_body: bytes, header: str | None, app_secret: str) -> bool:
+    """X-Hub-Signature-256 gegen HMAC-SHA256(app_secret, raw_body) prüfen.
+
+    Meta sendet `sha256=<hex>`. Vergleich konstant-zeitig (compare_digest)."""
+    if not header or not header.startswith("sha256="):
+        return False
+    expected = hmac.new(
+        app_secret.encode("utf-8"), raw_body, hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(header.removeprefix("sha256="), expected)
+
+
 @router.post("/webhook", include_in_schema=False)
 async def webhook_receive(
     request: Request, service: WhatsAppServiceDep
 ) -> dict:
-    """Eingehende Nachrichten/Status von Meta. Antwortet immer 200 (Meta erwartet
-    schnelle Bestätigung); Fehler werden geloggt, nicht nach außen gegeben."""
+    """Eingehende Nachrichten/Status von Meta.
+
+    Sicherheit: Der ROHE Body wird gegen die `X-Hub-Signature-256` (HMAC mit dem
+    App-Secret) geprüft, BEVOR er geparst/verarbeitet wird. Fehlende/falsche
+    Signatur → 403. Ist kein App-Secret konfiguriert (lokal/Test), wird die
+    Prüfung mit Warn-Log übersprungen, damit Dev ohne Secret weiterläuft.
+
+    Bei gültiger Signatur antwortet der Endpoint 200 (Meta erwartet schnelle
+    Bestätigung); interne Fehler werden geloggt, nicht nach außen gegeben."""
+    raw_body = await request.body()
+    app_secret = get_settings().whatsapp_app_secret.get_secret_value()
+    if app_secret:
+        if not _signature_ok(
+            raw_body, request.headers.get("X-Hub-Signature-256"), app_secret
+        ):
+            log.warning("whatsapp_webhook_bad_signature")
+            raise HTTPException(status_code=403, detail="Ungültige Signatur.")
+    else:
+        log.warning("whatsapp_webhook_signature_skipped_no_secret")
+
     try:
-        payload = await request.json()
-    except Exception:  # noqa: BLE001 — defektes JSON → trotzdem 200
+        payload = json.loads(raw_body)
+    except (ValueError, UnicodeDecodeError):  # defektes JSON → trotzdem 200
         return {"received": 0}
     try:
         return service.ingest_webhook(payload)
