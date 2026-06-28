@@ -480,10 +480,10 @@ export function CalendarBoard({
       setBarDrag((cur) =>
         cur
           ? {
-              ...cur,
-              dayOffset: di - cur.startDi,
-              targetPid: cur.mode === "move" ? overPid : cur.res.property_id,
-            }
+            ...cur,
+            dayOffset: di - cur.startDi,
+            targetPid: cur.mode === "move" ? overPid : cur.res.property_id,
+          }
           : cur,
       );
     };
@@ -1140,10 +1140,10 @@ export function CalendarBoard({
             (metrics.amountsHidden && metrics.revenue === 0) || metrics.currency == null
               ? "—"
               : metrics.revenue.toLocaleString("de-DE", {
-                  style: "currency",
-                  currency: metrics.currency,
-                  maximumFractionDigits: 0,
-                })
+                style: "currency",
+                currency: metrics.currency,
+                maximumFractionDigits: 0,
+              })
           }
           hint={metrics.amountsHidden ? "ohne gesperrte Beträge" : "im Zeitraum"}
         />
@@ -1154,10 +1154,10 @@ export function CalendarBoard({
             metrics.adr == null || metrics.currency == null
               ? "—"
               : metrics.adr.toLocaleString("de-DE", {
-                  style: "currency",
-                  currency: metrics.currency,
-                  maximumFractionDigits: 0,
-                })
+                style: "currency",
+                currency: metrics.currency,
+                maximumFractionDigits: 0,
+              })
           }
           hint="Ø Nachtpreis"
         />
@@ -1203,146 +1203,145 @@ export function CalendarBoard({
 
             {/* Objektzeilen */}
             <div ref={gridRef}>
-            {shown.map((p) => {
-              const statusMap = avail[p.id] ?? {};
-              const sourceMap = sources[p.id] ?? {};
-              const priceMap = prices[p.id] ?? {};
-              const priceSrcMap = priceSources[p.id] ?? {};
-              const factorsMap = priceFactors[p.id] ?? {};
-              const minStayMap = minStays[p.id] ?? {};
-              const restrictMap = restrictions[p.id] ?? {};
-              const resMap = resByProp[p.id] ?? {};
-              const segs = toSegments(statusMap, sourceMap, resMap, dates);
-              return (
-                <div key={p.id} className="flex border-b last:border-b-0">
-                  {/* Objektspalte (eigene Komponente, sticky links) */}
-                  <PropertyLabel
-                    p={p}
-                    width={LABEL}
-                    showPicture={view.showPicture}
-                    showInternalName={view.showInternalName}
-                    showId={view.showId}
-                  />
+              {shown.map((p) => {
+                const statusMap = avail[p.id] ?? {};
+                const sourceMap = sources[p.id] ?? {};
+                const priceMap = prices[p.id] ?? {};
+                const priceSrcMap = priceSources[p.id] ?? {};
+                const factorsMap = priceFactors[p.id] ?? {};
+                const minStayMap = minStays[p.id] ?? {};
+                const restrictMap = restrictions[p.id] ?? {};
+                const resMap = resByProp[p.id] ?? {};
+                const segs = toSegments(statusMap, sourceMap, resMap, dates);
+                return (
+                  <div key={p.id} className="flex border-b last:border-b-0">
+                    {/* Objektspalte (eigene Komponente, sticky links) */}
+                    <PropertyLabel
+                      p={p}
+                      width={LABEL}
+                      showPicture={view.showPicture}
+                      showInternalName={view.showInternalName}
+                      showId={view.showId}
+                    />
 
-                  {/* Tagesbereich — volle Breite (für absolut positionierte
+                    {/* Tagesbereich — volle Breite (für absolut positionierte
                       Balken), Zellen virtualisiert mit Spacern; di bleibt
                       ABSOLUT (= visFrom + i), damit Drag/Selektion stimmen. */}
-                  <div className="relative flex" style={{ width: `${dates.length * COL}rem`, height: `${ROW_H}rem` }}>
-                    {/* Spacer links (Zellen vor dem sichtbaren Fenster). */}
-                    <div style={{ width: `${visFrom * COL}rem` }} className="shrink-0" />
-                    {/* Zellen mit Gäste + Preis-Platzhalter — klickbar (sperren/freigeben) */}
-                    {dates.slice(visFrom, visTo).map((d, i) => {
-                      const di = visFrom + i;
-                      const isToday = key(d) === todayKey;
-                      const status = statusMap[key(d)] ?? "open";
-                      const inSel = isSelected(p.id, di);
-                      return (
-                        <button
-                          type="button"
-                          key={key(d)}
-                          onMouseDown={() => onCellDown(p.id, di)}
-                          onMouseEnter={() => onCellEnter(p.id, di)}
-                          className={`flex shrink-0 cursor-pointer flex-col items-center justify-center gap-0.5 border-r text-sm transition-colors ${
-                            inSel
-                              ? "bg-neutral-800 text-white"
-                              : `hover:bg-accent/10 ${isToday ? "bg-accent/5" : ""}`
-                          }`}
-                          style={{ width: `${COL}rem`, height: `${ROW_H}rem` }}
-                        >
-                          {status === "open" && (
-                            <>
-                              <span className={`flex items-center gap-0.5 ${inSel ? "text-white" : "text-muted-foreground"}`}>
-                                <Icon icon="ph:user" className="size-3.5" />
-                                {p.maxGuests}
-                              </span>
-                              {view.showPrice && (
-                                <span className={`flex items-center gap-1 ${inSel ? "text-white" : "text-muted-foreground"}`}>
-                                  {fmtPrice(priceMap[key(d)])}
-                                  {priceSrcMap[key(d)] === "dynamic" && (
-                                    <span
-                                      title={
-                                        explainFactors(factorsMap[key(d)]) ||
-                                        "Dynamischer Preis (automatisch berechnet)"
-                                      }
-                                      aria-label="Dynamischer Preis"
-                                      className={`flex cursor-help items-center rounded px-0.5 leading-tight ${inSel ? "text-white" : "text-accent"}`}
-                                    >
-                                      <Icon icon="ph:lightning-fill" className="size-2.5" />
+                    <div className="relative flex" style={{ width: `${dates.length * COL}rem`, height: `${ROW_H}rem` }}>
+                      {/* Spacer links (Zellen vor dem sichtbaren Fenster). */}
+                      <div style={{ width: `${visFrom * COL}rem` }} className="shrink-0" />
+                      {/* Zellen mit Gäste + Preis-Platzhalter — klickbar (sperren/freigeben) */}
+                      {dates.slice(visFrom, visTo).map((d, i) => {
+                        const di = visFrom + i;
+                        const isToday = key(d) === todayKey;
+                        const status = statusMap[key(d)] ?? "open";
+                        const inSel = isSelected(p.id, di);
+                        return (
+                          <button
+                            type="button"
+                            key={key(d)}
+                            onMouseDown={() => onCellDown(p.id, di)}
+                            onMouseEnter={() => onCellEnter(p.id, di)}
+                            className={`flex shrink-0 cursor-pointer flex-col items-center justify-center gap-0.5 border-r text-sm transition-colors ${inSel
+                                ? "bg-neutral-800 text-white"
+                                : `hover:bg-accent/10 ${isToday ? "bg-accent/5" : ""}`
+                              }`}
+                            style={{ width: `${COL}rem`, height: `${ROW_H}rem` }}
+                          >
+                            {status === "open" && (
+                              <>
+                                <span className={`flex items-center gap-0.5 ${inSel ? "text-white" : "text-muted-foreground"}`}>
+                                  <Icon icon="ph:user" className="size-3.5" />
+                                  {p.maxGuests}
+                                </span>
+                                {view.showPrice && (
+                                  <span className={`flex items-center gap-1 ${inSel ? "text-white" : "text-muted-foreground"}`}>
+                                    {fmtPrice(priceMap[key(d)])}
+                                    {priceSrcMap[key(d)] === "dynamic" && (
+                                      <span
+                                        title={
+                                          explainFactors(factorsMap[key(d)]) ||
+                                          "Dynamischer Preis (automatisch berechnet)"
+                                        }
+                                        aria-label="Dynamischer Preis"
+                                        className={`flex cursor-help items-center rounded px-0.5 leading-tight ${inSel ? "text-white" : "text-accent"}`}
+                                      >
+                                        <Icon icon="ph:lightning-fill" className="size-2.5" />
+                                      </span>
+                                    )}
+                                  </span>
+                                )}
+                                {view.showMinStay && (
+                                  <span className={`flex items-center gap-0.5 text-[0.65rem] ${inSel ? "text-white/80" : "text-muted-foreground/70"}`}>
+                                    <Icon icon="ph:moon" className="size-3" />
+                                    {minStayMap[key(d)] != null ? `${minStayMap[key(d)]}` : "–"}
+                                  </span>
+                                )}
+                                {/* CTA/CTD: Anreise- bzw. Abreise-Sperre je Tag. */}
+                                {(restrictMap[key(d)]?.[0] ||
+                                  restrictMap[key(d)]?.[1]) && (
+                                    <span className="flex items-center gap-0.5">
+                                      {restrictMap[key(d)]?.[0] && (
+                                        <span title="Anreise gesperrt (CTA)" className="flex">
+                                          <Icon
+                                            icon="ph:sign-in"
+                                            className={`size-3 ${inSel ? "text-white/90" : "text-destructive/80"}`}
+                                          />
+                                        </span>
+                                      )}
+                                      {restrictMap[key(d)]?.[1] && (
+                                        <span title="Abreise gesperrt (CTD)" className="flex">
+                                          <Icon
+                                            icon="ph:sign-out"
+                                            className={`size-3 ${inSel ? "text-white/90" : "text-destructive/80"}`}
+                                          />
+                                        </span>
+                                      )}
                                     </span>
                                   )}
-                                </span>
-                              )}
-                              {view.showMinStay && (
-                                <span className={`flex items-center gap-0.5 text-[0.65rem] ${inSel ? "text-white/80" : "text-muted-foreground/70"}`}>
-                                  <Icon icon="ph:moon" className="size-3" />
-                                  {minStayMap[key(d)] != null ? `${minStayMap[key(d)]}` : "–"}
-                                </span>
-                              )}
-                              {/* CTA/CTD: Anreise- bzw. Abreise-Sperre je Tag. */}
-                              {(restrictMap[key(d)]?.[0] ||
-                                restrictMap[key(d)]?.[1]) && (
-                                <span className="flex items-center gap-0.5">
-                                  {restrictMap[key(d)]?.[0] && (
-                                    <span title="Anreise gesperrt (CTA)" className="flex">
-                                      <Icon
-                                        icon="ph:sign-in"
-                                        className={`size-3 ${inSel ? "text-white/90" : "text-destructive/80"}`}
-                                      />
-                                    </span>
-                                  )}
-                                  {restrictMap[key(d)]?.[1] && (
-                                    <span title="Abreise gesperrt (CTD)" className="flex">
-                                      <Icon
-                                        icon="ph:sign-out"
-                                        className={`size-3 ${inSel ? "text-white/90" : "text-destructive/80"}`}
-                                      />
-                                    </span>
-                                  )}
-                                </span>
-                              )}
-                            </>
-                          )}
-                        </button>
-                      );
-                    })}
-                    {/* Spacer rechts (Zellen nach dem sichtbaren Fenster). */}
-                    <div style={{ width: `${(totalDays - visTo) * COL}rem` }} className="shrink-0" />
+                              </>
+                            )}
+                          </button>
+                        );
+                      })}
+                      {/* Spacer rechts (Zellen nach dem sichtbaren Fenster). */}
+                      <div style={{ width: `${(totalDays - visTo) * COL}rem` }} className="shrink-0" />
 
-                    {/* Gestrichelter Rahmen um den ausgewählten Block (wie Lodgify) */}
-                    {(() => {
-                      const active = drag ?? sel;
-                      if (!active || active.pid !== p.id) return null;
-                      const lo = Math.min(active.from, active.to);
-                      const hi = Math.max(active.from, active.to);
-                      return (
-                        <div
-                          className="pointer-events-none absolute inset-y-0 border-2 border-dashed border-neutral-500"
-                          style={{
-                            left: `calc(${lo} * ${COL}rem)`,
-                            width: `calc(${hi - lo + 1} * ${COL}rem)`,
-                          }}
-                        />
-                      );
-                    })()}
+                      {/* Gestrichelter Rahmen um den ausgewählten Block (wie Lodgify) */}
+                      {(() => {
+                        const active = drag ?? sel;
+                        if (!active || active.pid !== p.id) return null;
+                        const lo = Math.min(active.from, active.to);
+                        const hi = Math.max(active.from, active.to);
+                        return (
+                          <div
+                            className="pointer-events-none absolute inset-y-0 border-2 border-dashed border-neutral-500"
+                            style={{
+                              left: `calc(${lo} * ${COL}rem)`,
+                              width: `calc(${hi - lo + 1} * ${COL}rem)`,
+                            }}
+                          />
+                        );
+                      })()}
 
-                    {/* Balken über belegte/gesperrte Zeiträume. Gebuchte Balken
+                      {/* Balken über belegte/gesperrte Zeiträume. Gebuchte Balken
                         zeigen den Gastnamen + Kanal-Icon und sind klickbar
                         (Detail-Popover). */}
-                    {segs.map((seg, i) => {
-                      const clickable = seg.status === "booked" && !!seg.reservation;
-                      // Gebuchte Balken: Kanal-Farbakzent + Logo (Herkunft sofort
-                      // erkennbar). Gesperrte: neutraler Block-Stil.
-                      const meta = channelMeta(seg.source);
-                      // Anzeige-Status (inkl. abgeleitetem „eingecheckt") für
-                      // Farb-Punkt + reichen Tooltip.
-                      const dispStatus: DisplayStatus | null = seg.reservation
-                        ? reservationStatus(seg.reservation, todayKey)
-                        : null;
-                      const statusMeta = dispStatus ? STATUS_META[dispStatus] : null;
-                      const nights = seg.span;
-                      const barTitle =
-                        seg.status === "booked"
-                          ? [
+                      {segs.map((seg, i) => {
+                        const clickable = seg.status === "booked" && !!seg.reservation;
+                        // Gebuchte Balken: Kanal-Farbakzent + Logo (Herkunft sofort
+                        // erkennbar). Gesperrte: neutraler Block-Stil.
+                        const meta = channelMeta(seg.source);
+                        // Anzeige-Status (inkl. abgeleitetem „eingecheckt") für
+                        // Farb-Punkt + reichen Tooltip.
+                        const dispStatus: DisplayStatus | null = seg.reservation
+                          ? reservationStatus(seg.reservation, todayKey)
+                          : null;
+                        const statusMeta = dispStatus ? STATUS_META[dispStatus] : null;
+                        const nights = seg.span;
+                        const barTitle =
+                          seg.status === "booked"
+                            ? [
                               segmentLabel(seg),
                               meta.label,
                               statusMeta?.label,
@@ -1350,163 +1349,162 @@ export function CalendarBoard({
                             ]
                               .filter(Boolean)
                               .join(" · ")
-                          : `${STATUS_LABEL[seg.status]} · ${seg.span} Tag(e)`;
-                      // Kanal-/Status-Filter: nicht passende Balken dimmen
-                      // (Belegung bleibt erkennbar, Treffer stechen hervor).
-                      const dimmed = filtersActive && !segMatchesFilters(seg);
-                      // Option/vorläufig (pending) bekommt einen eigenen, klar
-                      // unterscheidbaren Balken (amber + gestrichelt) statt der
-                      // Kanalfarbe — eine Option darf nicht wie eine feste
-                      // Buchung aussehen. Bestätigt/eingecheckt unverändert.
-                      const bookedBar =
-                        statusMeta?.barClass ?? `${meta.barBg} ${meta.barFg}`;
-                      const barClass = `${
-                        seg.status === "booked"
-                          ? bookedBar
-                          : SEG_STYLE[seg.status]
-                      } ${dimmed ? "opacity-25" : ""}`;
-                      // Während IRGENDEIN Balken gezogen wird, lassen alle Balken
-                      // Mausereignisse durch (damit die Zell-onMouseEnter feuert
-                      // und den Tag-Offset liefert).
-                      const dragging = !!barDrag;
-                      const isThisDragged =
-                        barDrag?.res.id === seg.reservation?.id && !!seg.reservation;
-                      // Halbtags-Logik (Hotel-Standard): ein Buchungsbalken beginnt
-                      // am Anreisetag erst zur Tagesmitte (Check-in nachmittags) und
-                      // reicht am Abreisetag bis zur Tagesmitte (Check-out vormittags).
-                      // So teilen sich ab- und anreisender Gast denselben Wechseltag,
-                      // ohne dass die Balken wie eine Doppelbuchung kollidieren.
-                      // seg.span = belegte Nächte [check_in .. check_out); der Balken
-                      // läuft daher VORNE eine halbe Spalte später los (Anreisemitte)
-                      // und HINTEN eine halbe Spalte weiter (in den Abreisetag bis zu
-                      // dessen Mitte). Nur für Buchungen, deren echte Kante im Fenster
-                      // liegt (am Fensterrand abgeschnitten → volle Kante).
-                      const firstDayKey = key(dates[0]);
-                      const lastDayKey = key(dates[dates.length - 1]);
-                      const isBooking = seg.status === "booked" && !!seg.reservation;
-                      const startsAtCheckIn =
-                        isBooking && seg.reservation!.check_in >= firstDayKey;
-                      // Abreisetag = letzte belegte Nacht + 1; sichtbar, solange er
-                      // im Fenster liegt (Segment endet sonst hart am Fensterrand).
-                      const endsAtCheckOut =
-                        isBooking && seg.reservation!.check_out <= lastDayKey;
-                      const leftPad = startsAtCheckIn ? 0.5 : 0;
-                      // Breite: Nächte minus halbe Anreise-Spalte, plus halbe
-                      // Auslauf-Spalte in den Abreisetag.
-                      const widthCols =
-                        seg.span - (startsAtCheckIn ? 0.5 : 0) + (endsAtCheckOut ? 0.5 : 0);
-                      const barStyle = {
-                        left: `calc(${seg.start + leftPad} * ${COL}rem + 0.25rem)`,
-                        width: `calc(${widthCols} * ${COL}rem - 0.5rem)`,
-                        height: "1.75rem",
-                      };
-                      const barInner = (
-                        <>
-                          {seg.status === "booked" && (
-                            <ChannelLogo source={seg.source} />
-                          )}
-                          {seg.status === "blocked" && (
-                            <Icon icon="ph:lock-simple" className="size-3 shrink-0" />
-                          )}
-                          {/* Status-Punkt (OPERA-Stil): bestätigt/Option/
+                            : `${STATUS_LABEL[seg.status]} · ${seg.span} Tag(e)`;
+                        // Kanal-/Status-Filter: nicht passende Balken dimmen
+                        // (Belegung bleibt erkennbar, Treffer stechen hervor).
+                        const dimmed = filtersActive && !segMatchesFilters(seg);
+                        // Option/vorläufig (pending) bekommt einen eigenen, klar
+                        // unterscheidbaren Balken (amber + gestrichelt) statt der
+                        // Kanalfarbe — eine Option darf nicht wie eine feste
+                        // Buchung aussehen. Bestätigt/eingecheckt unverändert.
+                        const bookedBar =
+                          statusMeta?.barClass ?? `${meta.barBg} ${meta.barFg}`;
+                        const barClass = `${seg.status === "booked"
+                            ? bookedBar
+                            : SEG_STYLE[seg.status]
+                          } ${dimmed ? "opacity-25" : ""}`;
+                        // Während IRGENDEIN Balken gezogen wird, lassen alle Balken
+                        // Mausereignisse durch (damit die Zell-onMouseEnter feuert
+                        // und den Tag-Offset liefert).
+                        const dragging = !!barDrag;
+                        const isThisDragged =
+                          barDrag?.res.id === seg.reservation?.id && !!seg.reservation;
+                        // Halbtags-Logik (Hotel-Standard): ein Buchungsbalken beginnt
+                        // am Anreisetag erst zur Tagesmitte (Check-in nachmittags) und
+                        // reicht am Abreisetag bis zur Tagesmitte (Check-out vormittags).
+                        // So teilen sich ab- und anreisender Gast denselben Wechseltag,
+                        // ohne dass die Balken wie eine Doppelbuchung kollidieren.
+                        // seg.span = belegte Nächte [check_in .. check_out); der Balken
+                        // läuft daher VORNE eine halbe Spalte später los (Anreisemitte)
+                        // und HINTEN eine halbe Spalte weiter (in den Abreisetag bis zu
+                        // dessen Mitte). Nur für Buchungen, deren echte Kante im Fenster
+                        // liegt (am Fensterrand abgeschnitten → volle Kante).
+                        const firstDayKey = key(dates[0]);
+                        const lastDayKey = key(dates[dates.length - 1]);
+                        const isBooking = seg.status === "booked" && !!seg.reservation;
+                        const startsAtCheckIn =
+                          isBooking && seg.reservation!.check_in >= firstDayKey;
+                        // Abreisetag = letzte belegte Nacht + 1; sichtbar, solange er
+                        // im Fenster liegt (Segment endet sonst hart am Fensterrand).
+                        const endsAtCheckOut =
+                          isBooking && seg.reservation!.check_out <= lastDayKey;
+                        const leftPad = startsAtCheckIn ? 0.5 : 0;
+                        // Breite: Nächte minus halbe Anreise-Spalte, plus halbe
+                        // Auslauf-Spalte in den Abreisetag.
+                        const widthCols =
+                          seg.span - (startsAtCheckIn ? 0.5 : 0) + (endsAtCheckOut ? 0.5 : 0);
+                        const barStyle = {
+                          left: `calc(${seg.start + leftPad} * ${COL}rem + 0.25rem)`,
+                          width: `calc(${widthCols} * ${COL}rem - 0.5rem)`,
+                          height: "1.75rem",
+                        };
+                        const barInner = (
+                          <>
+                            {seg.status === "booked" && (
+                              <ChannelLogo source={seg.source} />
+                            )}
+                            {seg.status === "blocked" && (
+                              <Icon icon="ph:lock-simple" className="size-3 shrink-0" />
+                            )}
+                            {/* Status-Punkt (OPERA-Stil): bestätigt/Option/
                               eingecheckt/ausgecheckt/storniert. */}
-                          {statusMeta && (
-                            <span
-                              className={`size-1.5 shrink-0 rounded-full ring-1 ring-white/60 ${statusMeta.dotBg}`}
-                            />
-                          )}
-                          <span className="truncate">{segmentLabel(seg)}</span>
-                          {/* Indikatoren rechts: Gästezahl + Nächte (sofern Platz). */}
-                          {seg.status === "booked" && seg.reservation && (
-                            <span className="ml-auto flex shrink-0 items-center gap-1 text-[0.65rem] opacity-90">
-                              <span className="flex items-center gap-0.5">
-                                <Icon icon="ph:user-fill" className="size-2.5" />
-                                {seg.reservation.num_guests}
+                            {statusMeta && (
+                              <span
+                                className={`size-1.5 shrink-0 rounded-full ring-1 ring-white/60 ${statusMeta.dotBg}`}
+                              />
+                            )}
+                            <span className="truncate">{segmentLabel(seg)}</span>
+                            {/* Indikatoren rechts: Gästezahl + Nächte (sofern Platz). */}
+                            {seg.status === "booked" && seg.reservation && (
+                              <span className="ml-auto flex shrink-0 items-center gap-1 text-[0.65rem] opacity-90">
+                                <span className="flex items-center gap-0.5">
+                                  <Icon icon="ph:user-fill" className="size-2.5" />
+                                  {seg.reservation.num_guests}
+                                </span>
+                                {nights >= 3 && <span>· {nights}N</span>}
                               </span>
-                              {nights >= 3 && <span>· {nights}N</span>}
-                            </span>
-                          )}
-                        </>
-                      );
-                      if (!clickable) {
+                            )}
+                          </>
+                        );
+                        if (!clickable) {
+                          return (
+                            <div
+                              key={i}
+                              title={barTitle}
+                              className={`absolute top-1/2 flex -translate-y-1/2 items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium ${barClass} ${dragging ? "pointer-events-none" : ""}`}
+                              style={barStyle}
+                            >
+                              {barInner}
+                            </div>
+                          );
+                        }
+                        const res = seg.reservation as Reservation;
                         return (
                           <div
                             key={i}
                             title={barTitle}
-                            className={`absolute top-1/2 flex -translate-y-1/2 items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium ${barClass} ${dragging ? "pointer-events-none" : ""}`}
+                            onMouseDown={(ev) => {
+                              ev.stopPropagation();
+                              onBarDown(res, p.id, seg.start, "move", ev);
+                            }}
+                            // Während IRGENDEIN Balken gezogen wird, müssen ALLE
+                            // Balken — auch der gezogene — Mausereignisse durch-
+                            // lassen, sonst klebt der gezogene Balken am Cursor und
+                            // die Zell-onMouseEnter der Zielzeile/Kante feuern nie
+                            // (→ Move in andere Objekte & Resize blieben wirkungslos).
+                            className={`group absolute top-1/2 flex -translate-y-1/2 cursor-grab items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium transition-shadow hover:ring-2 hover:ring-accent/40 ${barClass} ${isThisDragged ? "opacity-60 ring-2 ring-accent" : ""} ${dragging ? "pointer-events-none" : ""}`}
                             style={barStyle}
                           >
+                            {/* Resize-Kante links (Check-in). */}
+                            <span
+                              role="presentation"
+                              onMouseDown={(ev) => {
+                                ev.stopPropagation();
+                                onBarDown(res, p.id, seg.start, "start", ev);
+                              }}
+                              className="absolute left-0 top-0 h-full w-2 cursor-ew-resize opacity-0 group-hover:opacity-100"
+                            />
                             {barInner}
+                            {/* Resize-Kante rechts (Check-out). */}
+                            <span
+                              role="presentation"
+                              onMouseDown={(ev) => {
+                                ev.stopPropagation();
+                                onBarDown(res, p.id, seg.start + seg.span - 1, "end", ev);
+                              }}
+                              className="absolute right-0 top-0 h-full w-2 cursor-ew-resize opacity-0 group-hover:opacity-100"
+                            />
                           </div>
                         );
-                      }
-                      const res = seg.reservation as Reservation;
-                      return (
-                        <div
-                          key={i}
-                          title={barTitle}
-                          onMouseDown={(ev) => {
-                            ev.stopPropagation();
-                            onBarDown(res, p.id, seg.start, "move", ev);
-                          }}
-                          // Während IRGENDEIN Balken gezogen wird, müssen ALLE
-                          // Balken — auch der gezogene — Mausereignisse durch-
-                          // lassen, sonst klebt der gezogene Balken am Cursor und
-                          // die Zell-onMouseEnter der Zielzeile/Kante feuern nie
-                          // (→ Move in andere Objekte & Resize blieben wirkungslos).
-                          className={`group absolute top-1/2 flex -translate-y-1/2 cursor-grab items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium transition-shadow hover:ring-2 hover:ring-accent/40 ${barClass} ${isThisDragged ? "opacity-60 ring-2 ring-accent" : ""} ${dragging ? "pointer-events-none" : ""}`}
-                          style={barStyle}
-                        >
-                          {/* Resize-Kante links (Check-in). */}
-                          <span
-                            role="presentation"
-                            onMouseDown={(ev) => {
-                              ev.stopPropagation();
-                              onBarDown(res, p.id, seg.start, "start", ev);
-                            }}
-                            className="absolute left-0 top-0 h-full w-2 cursor-ew-resize opacity-0 group-hover:opacity-100"
-                          />
-                          {barInner}
-                          {/* Resize-Kante rechts (Check-out). */}
-                          <span
-                            role="presentation"
-                            onMouseDown={(ev) => {
-                              ev.stopPropagation();
-                              onBarDown(res, p.id, seg.start + seg.span - 1, "end", ev);
-                            }}
-                            className="absolute right-0 top-0 h-full w-2 cursor-ew-resize opacity-0 group-hover:opacity-100"
-                          />
-                        </div>
-                      );
-                    })}
+                      })}
 
-                    {/* Geister-Vorschau des verschobenen/resizten Balkens in
+                      {/* Geister-Vorschau des verschobenen/resizten Balkens in
                         DIESER Zeile (Zielobjekt bei move, sonst gleiches Objekt). */}
-                    {barDrag && start && (() => {
-                      const { ci, co, pid } = barDragTarget(barDrag);
-                      if (pid !== p.id) return null;
-                      const ciIdx = Math.round(
-                        (new Date(`${ci}T00:00:00`).getTime() - start.getTime()) / 86400000,
-                      );
-                      const coIdx = Math.round(
-                        (new Date(`${co}T00:00:00`).getTime() - start.getTime()) / 86400000,
-                      );
-                      const span = Math.max(1, coIdx - ciIdx);
-                      return (
-                        <div
-                          className="pointer-events-none absolute top-1/2 -translate-y-1/2 rounded-full border-2 border-dashed border-accent bg-accent/15"
-                          style={{
-                            left: `calc(${ciIdx} * ${COL}rem + 0.25rem)`,
-                            width: `calc(${span} * ${COL}rem - 0.5rem)`,
-                            height: "1.75rem",
-                          }}
-                        />
-                      );
-                    })()}
+                      {barDrag && start && (() => {
+                        const { ci, co, pid } = barDragTarget(barDrag);
+                        if (pid !== p.id) return null;
+                        const ciIdx = Math.round(
+                          (new Date(`${ci}T00:00:00`).getTime() - start.getTime()) / 86400000,
+                        );
+                        const coIdx = Math.round(
+                          (new Date(`${co}T00:00:00`).getTime() - start.getTime()) / 86400000,
+                        );
+                        const span = Math.max(1, coIdx - ciIdx);
+                        return (
+                          <div
+                            className="pointer-events-none absolute top-1/2 -translate-y-1/2 rounded-full border-2 border-dashed border-accent bg-accent/15"
+                            style={{
+                              left: `calc(${ciIdx} * ${COL}rem + 0.25rem)`,
+                              width: `calc(${span} * ${COL}rem - 0.5rem)`,
+                              height: "1.75rem",
+                            }}
+                          />
+                        );
+                      })()}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
             </div>
           </div>
         </div>
