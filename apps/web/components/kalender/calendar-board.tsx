@@ -1164,7 +1164,9 @@ export function CalendarBoard({
       </div>
 
       {/* Raster — scrollt INNERHALB dieses Containers (min-w-0 begrenzt Breite) */}
-      <Card className="min-w-0 overflow-hidden p-0">
+      {/* overflow-clip statt overflow-hidden: clippt Inhalte an Rundungen, ohne */}
+      {/* einen Scroll-Kontext zu erzeugen — sonst bricht sticky left-0. */}
+      <Card className="min-w-0 overflow-clip p-0">
         <div ref={scrollRef} className="overflow-x-auto">
           <div style={{ width: `${LABEL + dates.length * COL}rem` }}>
             {/* Tageskopf — virtualisiert: Spacer + nur sichtbare Spalten. */}
