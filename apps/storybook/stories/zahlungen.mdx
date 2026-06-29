@@ -1,0 +1,157 @@
+import { Meta } from '@storybook/blocks';
+import { Mermaid } from '@/components/docs/mermaid';
+
+<Meta title="Architektur/Zahlungen & Stripe Connect" />
+
+# Zahlungen & Stripe Connect
+
+Dokumentation der Zahlungsinfrastruktur von NextDays. Primäres Gateway ist **Stripe Connect Custom** — Gastgeber werden vollständig White-Label auf unserer Plattform onboardet, Gäste zahlen direkt an NextDays, die Auszahlung an den Gastgeber erfolgt automatisch abzüglich der Plattformgebühr.
+
+> ADR: [ADR-0011 — Stripe primär](https://github.com) · [ADR-0003 — superseded](https://github.com)
+
+---
+
+## Architekturentscheidung
+
+**Stripe Connect Custom** wurde gegenüber Express/Standard gewählt, weil:
+- Vollständige White-Label-Kontrolle — kein Stripe-Branding für den Gastgeber
+- NextDays übernimmt das KYC-Onboarding (Name, Adresse, Bankverbindung, Ausweisdokument)
+- Vollständige Kontrolle über UX und Darstellung
+
+---
+
+## Zahlungsflows
+
+<Mermaid
+  title="Flow 1: Plattformbuchung (Direkt)"
+  chart={`sequenceDiagram
+    participant G as Gast
+    participant P as NextDays Platform
+    participant S as Stripe
+    participant H as Gastgeber (Connected Account)
+
+    G->>P: Buchung abschließen
+    P->>S: PaymentIntent erstellen\\n(application_fee_amount + transfer_data)
+    S->>G: Zahlung einziehen
+    S->>P: Plattformgebühr einbehalten
+    S->>H: Restbetrag auszahlen (Transfer)`}
+/>
+
+<Mermaid
+  title="Flow 2: OTA-Buchung (Booking.com via Channex)"
+  chart={`sequenceDiagram
+    participant G as Gast
+    participant OTA as Booking.com
+    participant C as Channex
+    participant P as NextDays Platform
+
+    G->>OTA: Buchung & Zahlung
+    OTA->>C: Buchungs-Webhook
+    C->>P: Buchung eingehend
+    P->>P: Reservation anlegen\\nKalender blockieren
+    Note over P: Kein Stripe — Buchführung\\nder Plattformgebühr\\nüber Faktura-Slice`}
+/>
+
+---
+
+## Gastgeber-Onboarding (White-Label)
+
+<Mermaid
+  title="KYC-Onboarding Flow"
+  chart={`sequenceDiagram
+    participant A as Admin (NextDays)
+    participant API as FastAPI Backend
+    participant S as Stripe
+    participant H as Gastgeber
+
+    A->>API: POST /api/v1/payments/connect/accounts\\n{email, country, tenant_id}
+    API->>S: stripe.Account.create(type=custom)
+    S-->>API: acct_... (stripe_account_id)
+    API->>S: AccountLink erstellen (account_onboarding)
+    S-->>API: onboarding_url (einmalig, läuft ab)
+    API-->>A: {stripe_account_id, onboarding_url, expires_at}
+    A->>H: Onboarding-Link senden
+    H->>S: KYC-Formular ausfüllen (White-Label)
+    S->>API: Webhook: account.updated\\n(charges_enabled, details_submitted)
+    API->>API: tenant_billing_profile UPDATE`}
+/>
+
+---
+
+## Implementierte API-Endpunkte
+
+| Methode | Pfad | Beschreibung |
+|---------|------|--------------|
+| `POST` | `/api/v1/payments/connect/accounts` | Stripe Custom Account + Onboarding-Link erstellen |
+| `GET` | `/api/v1/payments/connect/accounts/{id}` | KYC-Status abfragen |
+| `POST` | `/api/v1/payments/connect/accounts/{id}/onboarding-link` | Neuen Onboarding-Link generieren (nach Ablauf) |
+| `POST` | `/api/v1/payments/webhook` | Stripe-Webhook-Empfang (HMAC-verifiziert) |
+
+---
+
+## Webhook-Handler
+
+Der Webhook-Endpunkt verarbeitet folgende Stripe-Events:
+
+| Event | Was passiert |
+|-------|-------------|
+| `account.updated` | `tenant_billing_profile` wird mit `charges_enabled`, `payouts_enabled`, `details_submitted` aktualisiert. Bei erstmaligem KYC-Abschluss wird `stripe_onboarding_at` gesetzt. |
+
+**Sicherheit:** Jeder Webhook-Request wird via HMAC-SHA256 (`Stripe-Signature` Header) gegen das `STRIPE_WEBHOOK_SECRET` verifiziert. Ungültige Signaturen → `400`.
+
+---
+
+## Datenbank
+
+Migration `0081_stripe_connect_account.sql` fügt folgende Spalten in `tenant_billing_profile` ein:
+
+| Spalte | Typ | Bedeutung |
+|--------|-----|-----------|
+| `stripe_account_id` | `text` | Connected Account ID (`acct_...`). NULL = noch nicht onboardet |
+| `stripe_charges_enabled` | `boolean` | Konto kann Zahlungen empfangen |
+| `stripe_payouts_enabled` | `boolean` | Konto kann Auszahlungen erhalten |
+| `stripe_details_submitted` | `boolean` | KYC vollständig eingereicht |
+| `stripe_onboarding_at` | `timestamptz` | Zeitpunkt des KYC-Abschlusses |
+
+---
+
+## Konfiguration (Env-Variablen)
+
+| Variable | Wo | Bedeutung |
+|----------|----|-----------|
+| `STRIPE_SECRET_KEY` | `apps/api/.env` | Sandbox: `sk_test_...` · Prod: `sk_live_...` |
+| `STRIPE_WEBHOOK_SECRET` | `apps/api/.env` | Lokal (CLI): `whsec_7f1d...` · Prod (Dashboard): `whsec_mRuv...` |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `apps/web/.env.local` | Sandbox: `pk_test_...` |
+
+---
+
+## Lokales Testen
+
+```bash
+# Terminal 1 — API starten
+cd apps/api
+uvicorn src.main:app --reload --port 8000 --log-level info --reload-exclude '.venv'
+
+# Terminal 2 — Stripe Listener
+stripe listen --forward-to http://localhost:8000/api/v1/payments/webhook
+
+# Terminal 3 — Event feuern
+stripe trigger account.updated
+```
+
+**Erwartetes Ergebnis im Backend-Log:**
+```
+stripe_webhook_received    event_type=account.updated
+PATCH tenant_billing_profile → 200 OK
+stripe_account_not_found_in_db  (solange kein echter Onboarding-Account in der DB)
+```
+
+---
+
+## Stripe Dashboard
+
+- **Sandbox-Account:** Mynextdays sandbox
+- **Webhook Destination:** `mynextdays-connect-kyc` (Active)
+- **Endpoint URL:** `https://nextdays-api.65.21.144.136.sslip.io/api/v1/payments/webhook`
+- **Event scope:** Connected accounts
+- **Listening to:** `account.updated`
