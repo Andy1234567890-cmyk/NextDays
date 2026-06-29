@@ -1,5 +1,5 @@
-import { Meta } from '@storybook/blocks';
-import { Mermaid } from '@/components/docs/mermaid';
+import { Meta } from "@storybook/blocks";
+import { Mermaid } from "@/components/docs/mermaid";
 
 <Meta title="Architektur/Zahlungen & Stripe Connect" />
 
@@ -14,6 +14,7 @@ Dokumentation der Zahlungsinfrastruktur von NextDays. Primäres Gateway ist **St
 ## Architekturentscheidung
 
 **Stripe Connect Custom** wurde gegenüber Express/Standard gewählt, weil:
+
 - Vollständige White-Label-Kontrolle — kein Stripe-Branding für den Gastgeber
 - NextDays übernimmt das KYC-Onboarding (Name, Adresse, Bankverbindung, Ausweisdokument)
 - Vollständige Kontrolle über UX und Darstellung
@@ -35,6 +36,7 @@ Dokumentation der Zahlungsinfrastruktur von NextDays. Primäres Gateway ist **St
     S->>G: Zahlung einziehen
     S->>P: Plattformgebühr einbehalten
     S->>H: Restbetrag auszahlen (Transfer)`}
+
 />
 
 <Mermaid
@@ -50,6 +52,7 @@ Dokumentation der Zahlungsinfrastruktur von NextDays. Primäres Gateway ist **St
     C->>P: Buchung eingehend
     P->>P: Reservation anlegen\\nKalender blockieren
     Note over P: Kein Stripe — Buchführung\\nder Plattformgebühr\\nüber Faktura-Slice`}
+
 />
 
 ---
@@ -74,18 +77,19 @@ Dokumentation der Zahlungsinfrastruktur von NextDays. Primäres Gateway ist **St
     H->>S: KYC-Formular ausfüllen (White-Label)
     S->>API: Webhook: account.updated\\n(charges_enabled, details_submitted)
     API->>API: tenant_billing_profile UPDATE`}
+
 />
 
 ---
 
 ## Implementierte API-Endpunkte
 
-| Methode | Pfad | Beschreibung |
-|---------|------|--------------|
-| `POST` | `/api/v1/payments/connect/accounts` | Stripe Custom Account + Onboarding-Link erstellen |
-| `GET` | `/api/v1/payments/connect/accounts/{id}` | KYC-Status abfragen |
-| `POST` | `/api/v1/payments/connect/accounts/{id}/onboarding-link` | Neuen Onboarding-Link generieren (nach Ablauf) |
-| `POST` | `/api/v1/payments/webhook` | Stripe-Webhook-Empfang (HMAC-verifiziert) |
+| Methode | Pfad                                                     | Beschreibung                                      |
+| ------- | -------------------------------------------------------- | ------------------------------------------------- |
+| `POST`  | `/api/v1/payments/connect/accounts`                      | Stripe Custom Account + Onboarding-Link erstellen |
+| `GET`   | `/api/v1/payments/connect/accounts/{id}`                 | KYC-Status abfragen                               |
+| `POST`  | `/api/v1/payments/connect/accounts/{id}/onboarding-link` | Neuen Onboarding-Link generieren (nach Ablauf)    |
+| `POST`  | `/api/v1/payments/webhook`                               | Stripe-Webhook-Empfang (HMAC-verifiziert)         |
 
 ---
 
@@ -93,8 +97,8 @@ Dokumentation der Zahlungsinfrastruktur von NextDays. Primäres Gateway ist **St
 
 Der Webhook-Endpunkt verarbeitet folgende Stripe-Events:
 
-| Event | Was passiert |
-|-------|-------------|
+| Event             | Was passiert                                                                                                                                                                 |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `account.updated` | `tenant_billing_profile` wird mit `charges_enabled`, `payouts_enabled`, `details_submitted` aktualisiert. Bei erstmaligem KYC-Abschluss wird `stripe_onboarding_at` gesetzt. |
 
 **Sicherheit:** Jeder Webhook-Request wird via HMAC-SHA256 (`Stripe-Signature` Header) gegen das `STRIPE_WEBHOOK_SECRET` verifiziert. Ungültige Signaturen → `400`.
@@ -105,23 +109,23 @@ Der Webhook-Endpunkt verarbeitet folgende Stripe-Events:
 
 Migration `0081_stripe_connect_account.sql` fügt folgende Spalten in `tenant_billing_profile` ein:
 
-| Spalte | Typ | Bedeutung |
-|--------|-----|-----------|
-| `stripe_account_id` | `text` | Connected Account ID (`acct_...`). NULL = noch nicht onboardet |
-| `stripe_charges_enabled` | `boolean` | Konto kann Zahlungen empfangen |
-| `stripe_payouts_enabled` | `boolean` | Konto kann Auszahlungen erhalten |
-| `stripe_details_submitted` | `boolean` | KYC vollständig eingereicht |
-| `stripe_onboarding_at` | `timestamptz` | Zeitpunkt des KYC-Abschlusses |
+| Spalte                     | Typ           | Bedeutung                                                      |
+| -------------------------- | ------------- | -------------------------------------------------------------- |
+| `stripe_account_id`        | `text`        | Connected Account ID (`acct_...`). NULL = noch nicht onboardet |
+| `stripe_charges_enabled`   | `boolean`     | Konto kann Zahlungen empfangen                                 |
+| `stripe_payouts_enabled`   | `boolean`     | Konto kann Auszahlungen erhalten                               |
+| `stripe_details_submitted` | `boolean`     | KYC vollständig eingereicht                                    |
+| `stripe_onboarding_at`     | `timestamptz` | Zeitpunkt des KYC-Abschlusses                                  |
 
 ---
 
 ## Konfiguration (Env-Variablen)
 
-| Variable | Wo | Bedeutung |
-|----------|----|-----------|
-| `STRIPE_SECRET_KEY` | `apps/api/.env` | Sandbox: `sk_test_...` · Prod: `sk_live_...` |
-| `STRIPE_WEBHOOK_SECRET` | `apps/api/.env` | Lokal (CLI): `whsec_7f1d...` · Prod (Dashboard): `whsec_mRuv...` |
-| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `apps/web/.env.local` | Sandbox: `pk_test_...` |
+| Variable                             | Wo                    | Bedeutung                                                        |
+| ------------------------------------ | --------------------- | ---------------------------------------------------------------- |
+| `STRIPE_SECRET_KEY`                  | `apps/api/.env`       | Sandbox: `sk_test_...` · Prod: `sk_live_...`                     |
+| `STRIPE_WEBHOOK_SECRET`              | `apps/api/.env`       | Lokal (CLI): `whsec_7f1d...` · Prod (Dashboard): `whsec_mRuv...` |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | `apps/web/.env.local` | Sandbox: `pk_test_...`                                           |
 
 ---
 
@@ -140,6 +144,7 @@ stripe trigger account.updated
 ```
 
 **Erwartetes Ergebnis im Backend-Log:**
+
 ```
 stripe_webhook_received    event_type=account.updated
 PATCH tenant_billing_profile → 200 OK
