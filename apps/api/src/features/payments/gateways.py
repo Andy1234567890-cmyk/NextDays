@@ -46,7 +46,7 @@ class StripeAdapter(PaymentGatewayAdapter):
 
 
 def get_adapter(gateway: PaymentGateway) -> PaymentGatewayAdapter:
-    """Factory: liefert den Adapter zum gewählten Gateway (Default Revolut)."""
+    """Factory: liefert den Adapter zum gewählten Gateway (Default Stripe)."""
     match gateway:
         case PaymentGateway.revolut:
             return RevolutAdapter()

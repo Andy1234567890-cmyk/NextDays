@@ -30,6 +30,7 @@ class Settings(BaseSettings):
     google_translate_api_key: SecretStr = SecretStr("")
     stripe_secret_key: SecretStr = SecretStr("")
     stripe_webhook_secret: SecretStr = SecretStr("")
+    stripe_publishable_key: str = ""          # NEXT_PUBLIC_ im Frontend
     # Groq (KI-Antwortvorschläge im Posteingang). Pydantic liest case-insensitiv,
     # daher passt auch der Env-Name `Groq_API_Key`.
     groq_api_key: SecretStr = SecretStr("")

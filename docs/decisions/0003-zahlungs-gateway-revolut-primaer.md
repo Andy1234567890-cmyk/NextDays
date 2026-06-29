@@ -1,6 +1,6 @@
-# ADR-0003: Zahlungs-Gateway — Revolut primär, Stripe sekundär (Adapter)
+# ADR-0003: Zahlungs-Gateway — Adapter-Pattern (superseded)
 
-- Status: **akzeptiert**
+- Status: **superseded** → abgelöst durch [ADR-0011](0011-zahlungs-gateway-stripe-primaer.md)
 - Datum: 2026-06-15
 
 ## Kontext

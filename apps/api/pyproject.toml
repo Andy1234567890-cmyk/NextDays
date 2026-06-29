@@ -18,6 +18,7 @@ dependencies = [
     "email-validator>=2.2",     # Pydantic EmailStr
     "pyotp>=2.9",               # TOTP-2FA (Authenticator-App, kein SMS-Dienst)
     "qrcode[pil]>=8.0",         # QR-Code (otpauth-URI) für die App-Einrichtung
+    "stripe>=15.3.0",            # Stripe Connect (Marketplace-Zahlungen)
 ]
 
 [project.optional-dependencies]
