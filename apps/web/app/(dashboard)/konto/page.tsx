@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { BillingContactSheet } from "@/components/konto/billing-contact-sheet";
+import { KontoZahlungenSection } from "@/components/konto/konto-zahlungen-section";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -63,6 +64,7 @@ export default function ProfilPage() {
   }
 
   return (
+    <>
     <form className="flex flex-col gap-8" onSubmit={(e) => e.preventDefault()}>
       {/* Logo-Upload */}
       <section className="flex flex-col gap-3">
@@ -243,6 +245,11 @@ export default function ProfilPage() {
         </Button>
         <Button type="submit">Speichern</Button>
       </div>
-    </form>
+      </form>
+
+      {/* Zahlungen — direkt im Konto, kein eigener Tab. Außerhalb des Profil-
+          Formulars, damit der Speichern-Submit nicht mitgreift. */}
+      <KontoZahlungenSection />
+    </>
   );
 }

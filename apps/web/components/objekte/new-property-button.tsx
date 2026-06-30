@@ -133,7 +133,7 @@ export function NewPropertyButton() {
                   className="self-start gap-2"
                   onClick={() => {
                     setOpen(false);
-                    router.push("/konto/zahlungen");
+                    router.push("/konto");
                   }}
                 >
                   <Icon icon="ph:credit-card" className="size-4" />

@@ -91,7 +91,7 @@ function Banner({ variant, detail }: { variant: Variant; detail?: string }) {
         </div>
       </div>
       <Link
-        href="/konto/zahlungen"
+        href="/konto"
         className={`flex shrink-0 items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90 ${s.btn}`}
       >
         <Icon icon="ph:credit-card" className="size-4" />

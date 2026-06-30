@@ -119,7 +119,7 @@ export async function createConnectAccount(
     method: "POST",
     body: input,
   });
-  if (res.ok) revalidatePath("/konto/zahlungen");
+  if (res.ok) revalidatePath("/konto");
   return res;
 }
 
@@ -142,7 +142,7 @@ export async function updateConnectAccount(
     `/connect/accounts/${encodeURIComponent(accountId)}`,
     { method: "PATCH", body: { fields } },
   );
-  if (res.ok) revalidatePath("/konto/zahlungen");
+  if (res.ok) revalidatePath("/konto");
   return res;
 }
 
@@ -156,7 +156,7 @@ export async function acceptConnectTos(
     `/connect/accounts/${encodeURIComponent(accountId)}/accept-tos`,
     { method: "POST" },
   );
-  if (res.ok) revalidatePath("/konto/zahlungen");
+  if (res.ok) revalidatePath("/konto");
   return res;
 }
 
@@ -176,6 +176,6 @@ export async function setBankAccount(
       },
     },
   );
-  if (res.ok) revalidatePath("/konto/zahlungen");
+  if (res.ok) revalidatePath("/konto");
   return res;
 }

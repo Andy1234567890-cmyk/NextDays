@@ -2,6 +2,8 @@
 
 // Unter-Navigation der Konto-Seite (Profil / Nutzer / Sicherheit).
 // Aktiver Punkt anhand des Pfads. Icons via Iconify (ph:*).
+// Zahlungen liegen NICHT als eigener Tab vor, sondern als Abschnitt direkt auf
+// der Profil-Seite (/konto) — alles im Admin-Konto gebündelt.
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -11,7 +13,6 @@ import { cn } from "@/lib/utils";
 const ITEMS = [
   { title: "Profil", href: "/konto", icon: "ph:user-circle" },
   { title: "Nutzer", href: "/konto/nutzer", icon: "ph:users" },
-  { title: "Zahlungen", href: "/konto/zahlungen", icon: "ph:credit-card" },
   { title: "Sicherheit", href: "/konto/sicherheit", icon: "ph:shield-check" },
 ] as const;
 
