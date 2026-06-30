@@ -21,10 +21,26 @@ except ImportError as exc:
 from src.core.config import get_settings
 
 
+class StripeNotConfiguredError(RuntimeError):
+    """Stripe-Secret-Key ist nicht gesetzt (in Coolify/Env zu konfigurieren).
+
+    Wird beim ersten Stripe-Zugriff geworfen, statt mit leerem Key einen
+    kryptischen Stripe-Auth-Fehler zu erzeugen — so ist die Ursache (fehlende
+    Konfiguration) im Frontend klar sichtbar. Keine Fallbacks (Projektregel)."""
+
+
 @lru_cache(maxsize=1)
 def get_stripe() -> StripeClient:
-    """Gibt einen konfigurierten StripeClient zurück (einmaliges Init via lru_cache)."""
+    """Gibt einen konfigurierten StripeClient zurück (einmaliges Init via lru_cache).
+
+    Fehlt der Secret Key, wird klar fehlgeschlagen — nicht mit leerem Key ein
+    StripeClient gebaut, der später unverständlich scheitert."""
     secret = get_settings().stripe_secret_key.get_secret_value()
+    if not secret:
+        raise StripeNotConfiguredError(
+            "Stripe ist nicht konfiguriert (STRIPE_SECRET_KEY fehlt). "
+            "Bitte in der Umgebung (Coolify) setzen."
+        )
     return StripeClient(
         secret,
         max_network_retries=2,  # automatische Retries bei Netzwerkfehlern

@@ -44,6 +44,9 @@ type Props = {
   initialAccountId: string | null;
   // Initialer KYC-Status (serverseitig vorgeladen) oder null, wenn noch keiner.
   initialStatus: ConnectStatus | null;
+  // Fehlermeldung, falls der Status NICHT geladen werden konnte (z.B. Stripe im
+  // Backend nicht konfiguriert) — wird sichtbar gemacht statt verschluckt.
+  initialStatusError?: string | null;
 };
 
 // Status-Badge: grün, wenn erfüllt; sonst neutral-grau. Semantische Tokens —
@@ -72,9 +75,14 @@ export function StripeOnboarding({
   email,
   initialAccountId,
   initialStatus,
+  initialStatusError = null,
 }: Props) {
   const [accountId, setAccountId] = useState<string | null>(initialAccountId);
   const [status, setStatus] = useState<ConnectStatus | null>(initialStatus);
+  // Fehler beim Status-Laden (nicht verschlucken — sichtbar machen).
+  const [statusError, setStatusError] = useState<string | null>(
+    initialStatusError,
+  );
   const [creating, startCreate] = useTransition();
   const [savingProfile, startProfile] = useTransition();
   const [savingBank, startBank] = useTransition();
@@ -105,10 +113,17 @@ export function StripeOnboarding({
   const [accountHolder, setAccountHolder] = useState("");
 
   // Status frisch aus dem Backend nachladen (nach Realtime-Event oder Mutation).
+  // Fehler nicht verschlucken: bei Misserfolg statusError setzen, damit die UI
+  // den echten Zustand zeigt statt endlos „lädt …".
   const reloadStatus = useCallback(async () => {
     if (!accountId) return;
     const res = await getConnectStatus(accountId);
-    if (res.ok) setStatus(res.data);
+    if (res.ok) {
+      setStatus(res.data);
+      setStatusError(null);
+    } else {
+      setStatusError(res.error);
+    }
   }, [accountId]);
 
   // Beim ersten Mount ohne vorgeladenen Status nachladen.
@@ -403,6 +418,26 @@ export function StripeOnboarding({
                 </div>
               )}
             </>
+          ) : statusError ? (
+            // Status NICHT abrufbar (z.B. Stripe im Backend nicht konfiguriert):
+            // echten Fehler zeigen statt endlosem „lädt …".
+            <div className="flex flex-col gap-2 rounded-(--radius) border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+              <span className="flex items-center gap-2 font-medium">
+                <Icon icon="ph:warning-circle" className="size-5 shrink-0" />
+                Zahlungs-Status nicht abrufbar
+              </span>
+              <span className="text-destructive/90">{statusError}</span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => void reloadStatus()}
+                className="self-start"
+              >
+                <Icon icon="ph:arrow-clockwise" className="size-4" />
+                Erneut versuchen
+              </Button>
+            </div>
           ) : (
             <p className="text-sm text-muted-foreground">
               Status wird geladen …

@@ -52,11 +52,19 @@ export default async function ZahlungenPage() {
 
   // Bereits angelegten Account + dessen Live-Status vorladen (kein Fallback:
   // ohne Account bleibt beides null und das Setup-Formular wird gezeigt).
+  // Schlägt der Status-Call fehl (z.B. Stripe im Backend nicht konfiguriert),
+  // wird der Fehler weitergereicht und sichtbar gemacht — NICHT verschluckt,
+  // sonst bliebe ein kaputter Stripe-Pfad als „lädt …" hängen.
   const accountId = await getStoredConnectAccountId();
   let status: ConnectStatus | null = null;
+  let statusError: string | null = null;
   if (accountId) {
     const res = await getConnectStatus(accountId);
-    if (res.ok) status = res.data;
+    if (res.ok) {
+      status = res.data;
+    } else {
+      statusError = res.error;
+    }
   }
 
   // Land aus dem Firmenprofil für die Vorbefüllung (rein optional).
@@ -77,6 +85,7 @@ export default async function ZahlungenPage() {
         email={me.email ?? (profil.ok ? String(profil.data.email ?? "") : "")}
         initialAccountId={accountId}
         initialStatus={status}
+        initialStatusError={statusError}
       />
     </div>
   );

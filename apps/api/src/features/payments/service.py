@@ -32,7 +32,7 @@ from .schemas import (
     ConnectAccountStatus,
     SliceHealth,
 )
-from .stripe_client import get_stripe
+from .stripe_client import StripeNotConfiguredError, get_stripe
 
 log = get_logger("nextdays.payments")
 
@@ -58,7 +58,26 @@ class PaymentsService:
         stripe: StripeClient | None = None,  # injizierbar für Tests
     ) -> None:
         self._db = service_client
-        self._stripe = stripe or get_stripe()
+        # Lazy: der StripeClient wird erst beim ersten echten Stripe-Zugriff
+        # gebaut (über die ``_stripe``-Property). So scheitert nicht schon die
+        # Service-Instanziierung — bei jedem payments-Request — wenn der Key
+        # fehlt; stattdessen wirft erst der konkrete Aufruf einen sauberen,
+        # verständlichen Fehler (503). Ein injizierter Client (Tests) wird direkt
+        # übernommen.
+        self._injected_stripe = stripe
+
+    @property
+    def _stripe(self) -> StripeClient:
+        """StripeClient — injiziert (Test) oder lazy aus der Config. Fehlt der
+        Key, wird StripeNotConfiguredError in einen klaren PaymentsError (503)
+        übersetzt, damit das Frontend „Stripe nicht konfiguriert" sieht statt
+        eines kryptischen Auth-Fehlers."""
+        if self._injected_stripe is not None:
+            return self._injected_stripe
+        try:
+            return get_stripe()
+        except StripeNotConfiguredError as exc:
+            raise PaymentsError(str(exc), status_code=503) from exc
 
     def health(self) -> SliceHealth:
         return SliceHealth(slice=self.slice_name)

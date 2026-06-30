@@ -41,6 +41,25 @@ def test_payments_health() -> None:
     assert resp.json() == {"slice": "payments", "status": "ok"}
 
 
+def test_stripe_not_configured_raises_clean_error(monkeypatch) -> None:  # noqa: ANN001
+    """Fehlt der Stripe-Key, muss der Stripe-Zugriff einen klaren PaymentsError
+    (503) werfen — nicht mit leerem Key einen kryptischen Auth-Fehler erzeugen.
+    Genau dieser Pfad macht „Stripe nicht konfiguriert" im Frontend sichtbar."""
+    from src.features.payments import stripe_client as sc
+
+    sc.get_stripe.cache_clear()
+    monkeypatch.setattr(
+        get_settings().stripe_secret_key, "get_secret_value", lambda: ""
+    )
+    # Kein injizierter Client → Service muss lazy initialisieren und sauber scheitern.
+    svc = PaymentsService(service_client=None, stripe=None)
+    with pytest.raises(PaymentsError) as exc:
+        svc.get_connect_account_status("acct_does_not_matter")
+    assert exc.value.status_code == 503
+    assert "nicht konfiguriert" in exc.value.message.lower()
+    sc.get_stripe.cache_clear()
+
+
 # --- Fake-DB (Insert/Update/Select) -----------------------------------------
 class _Res:
     def __init__(self, data) -> None:  # noqa: ANN001
