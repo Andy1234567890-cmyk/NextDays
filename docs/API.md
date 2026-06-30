@@ -14,7 +14,7 @@ Interaktive Doku (Swagger UI): **http://localhost:8000/docs**
 
 ## Slices
 
-Jeder der 23 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
+Jeder der 22 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
 
 | Slice | Health-Endpoint |
 |---|---|
@@ -32,6 +32,8 @@ Jeder der 23 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
 | channel_manager | `GET /api/v1/channel-manager/health` (Channex-Integration, s.u.) |
 | booking_engine | `GET /api/v1/booking-engine/health` |
 | addons | `GET /api/v1/addons/health` |
+| owners | `GET /api/v1/owners/health` (Eigentümer-Stammdaten + Objekt-Zuweisung, s.u.) |
+| owner_statements | `GET /api/v1/owner-statements/health` (Auszahlungs-Abrechnung, s.u.) |
 | ocr | `GET /api/v1/ocr/health` |
 | public_portal | `GET /api/v1/public-portal/health` |
 | tasks | `GET /api/v1/tasks/health` |
@@ -887,6 +889,49 @@ Aufgaben, Checklisten mit Foto-Nachweisen, Vertretung, Inventar.
 | `POST` | `/api/v1/tasks/checklist/photo` | `view_own_tasks` | Foto-Nachweis (unbegrenzt/Raum) |
 | `POST` | `/api/v1/tasks/substitution` | `request_substitute` | Vertretung anfragen (§4.3) |
 | `POST` | `/api/v1/tasks/inventory` | `manage_inventory` | Inventar (property_id null = zentraler Pool) |
+
+---
+
+## owners (Eigentümer-Stammdaten — implementiert)
+
+Eigentümer (Lead → Vermieter) + Objekt-Zuweisung mit Anteil und Provisions-
+Override je Objekt (Basis für den Eigentümer-Objekt-Scope, Lastenheft §4.2).
+Tenant-geschützt (`MANAGE_OWNERS`).
+
+| Methode | Pfad | Beschreibung |
+|---|---|---|
+| `GET` | `/api/v1/owners` | Eigentümer-Liste |
+| `POST` | `/api/v1/owners` | Eigentümer anlegen |
+| `GET` | `/api/v1/owners/{owner_id}` | Eigentümer-Detail |
+| `PATCH` | `/api/v1/owners/{owner_id}` | Eigentümer aktualisieren |
+| `DELETE` | `/api/v1/owners/{owner_id}` | Eigentümer löschen |
+| `POST` | `/api/v1/owners/{owner_id}/properties` | Objekt zuweisen (Anteil + Provisions-Override) |
+| `DELETE` | `/api/v1/owners/{owner_id}/properties/{property_id}` | Zuweisung aufheben |
+
+---
+
+## owner_statements (Auszahlungs-Abrechnung — implementiert)
+
+Rechnerische Eigentümer-Abrechnung je Zeitraum: Buchungssatz
+`(total_amount − channel_fee) × (1 − Provision)` je Reservierung (Provisionssatz
+des Objekts), EU-Steuer-Kategorien (S / AE Reverse-Charge / E Kleinunternehmer),
+GoBD-Nummernkreis, Stornorechnung statt Löschen, Mehrwährung via ECB-Tageskurs
+am Check-out (kein Fallback → 502). Reporting-/Billing-geschützt.
+
+| Methode | Pfad | Beschreibung |
+|---|---|---|
+| `GET` | `/api/v1/owner-statements` | Abrechnungen auflisten |
+| `POST` | `/api/v1/owner-statements` | Abrechnung erzeugen (Zeitraum) |
+| `POST` | `/api/v1/owner-statements/preview` | Vorschau ohne Persistenz |
+| `GET` | `/api/v1/owner-statements/{id}` | Detail (eingefrorene Summen) |
+| `PATCH` | `/api/v1/owner-statements/{id}` | Entwurf bearbeiten |
+| `POST` | `/api/v1/owner-statements/{id}/finalize` | Finalisieren (Nummernkreis) |
+| `POST` | `/api/v1/owner-statements/{id}/cancel` | Stornieren (Stornorechnung) |
+| `DELETE` | `/api/v1/owner-statements/{id}` | Entwurf löschen |
+| `POST` | `/api/v1/owner-statements/expenses` | Eigentümer-Ausgabe anlegen |
+| `PATCH` | `/api/v1/owner-statements/expenses/{id}` | Ausgabe ändern |
+| `DELETE` | `/api/v1/owner-statements/expenses/{id}` | Ausgabe löschen |
+| `POST` | `/api/v1/owner-statements/auto-run` | Periodische Auto-Abrechnung auslösen |
 
 ---
 

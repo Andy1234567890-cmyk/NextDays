@@ -81,8 +81,8 @@ C4Container
         Container(web, "Web Dashboard", "Next.js, TypeScript", "Vermieter-PMS-UI + Portale (Vercel)")
         Container(mobile, "Mobile-App", "React Native 0.86 + React Navigation (apps/mobile)", "Native Gäste- & Gastgeber-App (iOS/Android); teilt das FastAPI-Backend (/api/v1)")
         Container(storybook, "Storybook", "react-vite (eigenes Package apps/storybook)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
-        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 23 Vertical Slices unter /api/v1")
-        ContainerDb(db, "Datenbank", "Supabase / Postgres", "85 Tabellen, Multi-Tenant, RLS, tenant_id")
+        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 22 Vertical Slices unter /api/v1")
+        ContainerDb(db, "Datenbank", "Supabase / Postgres", "93 Tabellen, Multi-Tenant, RLS, tenant_id")
         ContainerDb(cache, "Cache", "Redis", "Caching-Layer")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel-Sync, OCR, Messaging-Trigger, wiederkehrende Aufgaben")
     }
@@ -132,15 +132,21 @@ flowchart TB
             OWNST["owner_statements — Auszahlungs-Abrechnung (Provision je Objekt, EU-Steuer/Reverse-Charge, Storno, Mehrwährung via ECB-Tageskurs)"]
             INBOXL["inbox — Threads (OTA + eigene Plattform), Versand, Vorlagen/KI, geplante Nachrichten + planbare Automails (Zeit + Zuweisung Haus/Kanal)"]
             ADDON["addons — Zusatzleistungen/Upsells je Objekt (Medien, Basis, appears_in, wann-anzeigen); Verkauf via booking_engine + Gäste-Portal, Extra-Umsatz in Owner-Statement, Task-Trigger addon_purchased, Payment-gegatet"]
+            PROP["properties — Objekt-Stammdaten, Fotos, Typ-Attribute, Adress-Split, Owner-Scope (RLS)"]
+            RATES["rates — Saison-/Event-Preise, Rate-Plans, Aufschläge"]
+            RES["reservations — Buchungen, Lifecycle, Gast-Maskierung (Daten-Split)"]
+            GUE["guests — Enterprise-Gästeprofil (Adressen/Kontakte/Ausweise/Consents), Merge, DSGVO"]
+            PAY["payments — Stripe Connect Custom (primär), Destination Charge, Kaution, Refund, Webhooks; OTA-Gate; Revolut sekundär"]
+            CM["channel_manager — Channex (ARI-Push, Buchungs-Import, Webhooks, Hotel-ID-Flow, Stop-Sell, ARI-Outbox)"]
+            BOOK["booking_engine — eigene Direktbuchungs-Strecke (provisionsfrei) + Buchungs-Widget"]
+            PORTAL["public_portal — White-Label-Gäste-Portal (Phase 2-Struktur, 9 Routen)"]
+            WA["whatsapp — WhatsApp Cloud API (Conversations/Messages, im Posteingang integriert)"]
         end
-        subgraph SCAFFOLD["Slices als Gerüst (Health) — folgen lt. Roadmap"]
-            PROP["properties"]; RATES["rates"]; RES["reservations"]
-            GUE["guests"]; PAY["payments (Revolut-Adapter)"]
-            CM["channel_manager"]; BOOK["booking_engine"]; OCR["ocr"]
-            PORTAL["public_portal"]; CRM["crm"]; DASH["dashboard"]; CONT["content"]
+        subgraph SCAFFOLD["Slices als Gerüst (Health-only) — Logik folgt lt. Roadmap"]
+            OCR["ocr"]; CRM["crm"]; DASH["dashboard (min.)"]; CONT["content (min.)"]
         end
     end
-    DB[("Postgres — 92 Tabellen, RLS")]
+    DB[("Postgres — 93 Tabellen (Migrationen 0001–0083), RLS")]
     DONE --> DB
     SCAFFOLD --> DB
     CORE --> DONE
@@ -319,14 +325,14 @@ erDiagram
 **Marktplatz-Tabellen (angelegt, mit RLS; Geschäftslogik in Phase 2):** `portal_guests`,
 `reviews`, `commissions` — siehe [Migration 0006](../supabase/migrations/0006_marketplace.sql).
 Das Kern-Diagramm oben zeigt bewusst nur die zentralen Entitäten; alle übrigen der
-**85 Tabellen** sind nach Bereich gruppiert im nächsten Abschnitt aufgeführt.
+**93 Tabellen** sind nach Bereich gruppiert im nächsten Abschnitt aufgeführt.
 
 **Kardinalität:** `||` = genau eins · `o{` = null bis viele · `|{` = ein bis viele.
 `--` = identifizierend (Kind kann ohne Eltern nicht existieren).
 
 ### Datenmodell-Erweiterungen aus dem Lastenheft (Migrationen 0009–0019)
 
-Das Modell ist auf **85 Tabellen (alle mit RLS)** gewachsen — verifiziert gegen das
+Das Modell ist auf **93 Tabellen (alle mit RLS)** gewachsen — verifiziert gegen das
 echte Supabase-Projekt. Zur Lesbarkeit hier nach Bereich gruppiert (Details in den
 jeweiligen Migrationen):
 
@@ -594,6 +600,59 @@ Stammdaten, Status (`draft`/`finalized`/`cancelled`) und eingefrorenen Summen.
 - **Live (`0071`):** `owners`, `owner_properties`, `owner_expenses`,
   `owner_statements` sind in der Realtime-Publication — die Eigentümer-Seite
   aktualisiert sich vollständig per WebSocket (s. § Echtzeit).
+
+### Zusatzleistungen / Add-ons (`0074`/`0075`)
+
+- **`property_addons`** (`0074`): Upsells je Objekt (Reinigung, Wäsche, Hund,
+  Frühstück …) mit Preis, Medien, `appears_in` und `available_until` (z. B.
+  `anytime` / vor Anreise). Realtime via `0076`.
+- **`reservation_addons`** (`0075`): pro Reservierung gekaufte Add-ons
+  (Snapshot von Bezeichnung/Preis zum Kaufzeitpunkt — kein Nachträglich-
+  Verändern). Verkauf über `booking_engine` + Gäste-Portal, fließt als
+  Extra-Umsatz in das Owner-Statement, triggert die Aufgabe `addon_purchased`.
+
+### Zahlungen & Stripe Connect (`0079`–`0083`)
+
+Das Zahlungs-Fundament (vgl. `payments`-Slice, ADR-0011 — Stripe primär):
+
+- **`0081` Connect-Account** — Felder auf `tenant_billing_profile`:
+  `stripe_account_id`, `stripe_charges_enabled`, `stripe_payouts_enabled`,
+  `stripe_details_submitted`, `stripe_onboarding_at`. Der `account.updated`-
+  Webhook spiegelt den KYC-Status hierher.
+- **`0082` payments_core** — neue Tabelle **`stripe_webhook_event`** (Event-ID-
+  Dedup → Idempotenz); `reservations.payment_status` (Enum
+  `reservation_payment_status`: `unpaid|pending|paid|refunded|deposit_held`);
+  `properties.deposit_amount` (Kautionsbetrag); `payments.gateway` Default
+  `stripe`.
+- **`0083` billing_kyc** — `tenant_billing_profile.account_type`
+  (`individual|company`) + `owner_dob` (date): die für die Stripe-Freischaltung
+  nötigen KYC-Angaben, erfasst im Konto (Stammdaten) und per Auto-Connect an
+  Stripe übertragen.
+- **`0079` `properties.platform_description`** — abweichender Beschreibungstext
+  nur für die eigene Buchungsstrecke (OTAs erhalten weiter den kanonischen Text).
+- **`0080` `availability` CTA/CTD** — Closed-to-Arrival/Departure je Tag.
+
+**Geldfluss-Regel (OTA-Gate):** Ein PaymentIntent (Buchung/Kaution) entsteht
+**nur** für eigene Kanäle (`channel` ∈ {`direct`,`portal`} ohne
+`source_channex_booking_id`). OTA-Buchungen (`booking`/`airbnb`/`vrbo`) zahlt der
+Gast bei der OTA — die zahlt den Vermieter direkt aus, kein Stripe (409). **0%
+Buchungsgebühr** auf eigene Buchungen (ADR-0006); Provision nur im
+Phase-2-Marktplatz (`commissions`).
+
+### Weitere Tabellen nach Bereich
+
+Über die oben im ER-Diagramm gezeigten Kern-Entitäten hinaus existieren diese
+Detail-/Hilfstabellen (mit RLS, tenant-scoped):
+
+| Bereich | Tabellen | Zweck |
+|---|---|---|
+| Buchhaltung | `quotes`, `quote_line_items` (`0024`), `number_sequences` (`0025`) | Angebote + GoBD-Nummernkreise |
+| Sicherheit | `user_mfa` (`0021`) | TOTP-2FA pro Nutzer |
+| Onboarding | `tenant_onboarding` (`0029`) | Onboarding-Fortschritt des Tenants |
+| Channex | `stop_sell` (`0032`), `ari_outbox` (`0033`), `channex_tax_map` (`0034`), `sandbox_message` (`0036`) | Stop-Sell, ARI-Outbox-Queue, Steuer-Mapping, Sandbox-Mock-OTA |
+| Posteingang | `inbox_ai_settings` (`0037`), `inbox_scheduled_message`, `inbox_thread_note` (`0040`) | KI-Settings, geplante Nachrichten, Thread-Notizen |
+| WhatsApp | `whatsapp_conversation`, `whatsapp_message` (`0041`) | WhatsApp Cloud API — im Posteingang integriert |
+| Objekte | `property_photos` (`0061`) | Objekt-Fotos (mehrsprachige Caption, Cover, Sortierung) |
 
 ---
 
@@ -873,16 +932,20 @@ Gemeinsame Infrastruktur in `apps/api/src/core/`:
 | `config.py` | `Settings` mit `SecretStr` für alle Secrets |
 | `logging.py` | structlog (Console lokal, JSON in Produktion) |
 | `supabase.py` | Client-Factory — Anon (RLS) und Service-Role (System) getrennt |
-| `security.py` | Supabase-JWT-Verifikation (HS256) → `AuthContext`, `CurrentUser` |
+| `security.py` | Supabase-JWT-Verifikation (ES256/JWKS) → `AuthContext`, `CurrentUser` |
 
-**Slices:** `auth` · `properties` · `rates` · `pricing` · `calendar` · `reservations` ·
-`guests` · `inbox` · `payments` · `channel_manager` · `booking_engine` · `ocr` ·
-`public_portal` · `tasks` · `crm` · `dashboard` · `content`.
+**Slices (22):** `auth` · `properties` · `rates` · `pricing` · `calendar` ·
+`reservations` · `guests` · `inbox` · `whatsapp` · `payments` ·
+`channel_manager` · `booking_engine` · `addons` · `owners` · `owner_statements` ·
+`buchhaltung` · `ocr` · `public_portal` · `tasks` · `crm` · `dashboard` ·
+`content`. (22 namentlich + interne Slice-Bausteine — Router-Prefixe je unter
+`/api/v1`.)
 
-Die letzten vier (`tasks`, `crm`, `dashboard`, `content`) ergänzen den durch das
-[Lastenheft](LASTENHEFT.md) erweiterten Funktionsumfang (Aufgaben/Checklisten,
-Eigentümer-Akquise & Partner, Dashboard-Personalisierung, dreisprachige
-Standardtexte). Der `payments`-Slice nutzt ein **Gateway-Adapter-Pattern**
+Die kleineren (`ocr`, `crm`) sind Health-/Gerüst-Slices; `dashboard`/`content`
+minimal. Der Rest ist mit Geschäftslogik ausgebaut: u. a. `tasks`
+(Aufgaben/Checklisten), `owners`/`owner_statements` (Eigentümer-Scope +
+Auszahlungs-Abrechnung), `buchhaltung` (Rechnungen/Firmenprofil), `whatsapp`
+(WhatsApp Cloud API im Posteingang), `addons` (Upsells). Der `payments`-Slice nutzt ein **Gateway-Adapter-Pattern**
 (Stripe Connect Custom primär, Revolut sekundär/konfigurierbar —
 [ADR-0011](decisions/0011-zahlungs-gateway-stripe-primaer.md), ersetzt ADR-0003).
 
