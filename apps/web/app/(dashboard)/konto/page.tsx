@@ -14,6 +14,7 @@ import { KontoZahlungenSection } from "@/components/konto/konto-zahlungen-sectio
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LabelHint } from "@/components/ui/label-hint";
 import { NativeSelect } from "@/components/ui/native-select";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
@@ -256,37 +257,38 @@ export default function ProfilPage() {
             </p>
           </div>
 
-          {/* 1) Kontotyp — zuerst, weil er entscheidet, ob ein Firmenname
-              relevant ist und wie Stripe das Konto behandelt. */}
-          <div className="flex flex-col gap-1.5 sm:max-w-sm">
-            <Label htmlFor="accountType">Kontotyp</Label>
-            <NativeSelect
-              id="accountType"
-              value={accountType}
-              onChange={(e) =>
-                setAccountType(e.target.value as "individual" | "company")
-              }
-            >
-              <option value="individual">Einzelperson</option>
-              <option value="company">Firma</option>
-            </NativeSelect>
+          {/* 1) Kontotyp + (bei Firma) Firmenname — Kontotyp entscheidet, ob
+              ein Firmenname relevant ist. Bei Einzelperson füllt Kontotyp die
+              Zeile allein; bei Firma steht der Firmenname daneben. */}
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="accountType">Kontotyp</Label>
+              <NativeSelect
+                id="accountType"
+                value={accountType}
+                onChange={(e) =>
+                  setAccountType(e.target.value as "individual" | "company")
+                }
+              >
+                <option value="individual">Einzelperson</option>
+                <option value="company">Firma</option>
+              </NativeSelect>
+            </div>
+            {accountType === "company" && (
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="companyName">
+                  Firmenname <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="companyName"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                />
+              </div>
+            )}
           </div>
 
-          {/* 2a) Firmenname — nur bei Firma (Einzelperson hat keine Firma). */}
-          {accountType === "company" && (
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="companyName">
-                Firmenname <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="companyName"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-              />
-            </div>
-          )}
-
-          {/* 2b) Person — bei Firma die vertretungsberechtigte Person. */}
+          {/* 2) Person — bei Firma die vertretungsberechtigte Person. */}
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="firstName">
@@ -312,21 +314,25 @@ export default function ProfilPage() {
             </div>
           </div>
 
-          <div className="flex flex-col gap-1.5 sm:max-w-sm">
-            <Label htmlFor="ownerDob">
-              {accountType === "company"
-                ? "Geburtsdatum der vertretungsberechtigten Person"
-                : "Geburtsdatum"}
-            </Label>
-            <Input
-              id="ownerDob"
-              type="date"
-              value={ownerDob}
-              onChange={(e) => setOwnerDob(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">
-              Für die Zahlungsfreischaltung (Stripe).
-            </p>
+          {/* Geburtsdatum (links) — die zweite Spalte bleibt frei (date-Feld
+              braucht keine volle Breite). */}
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <LabelHint
+                htmlFor="ownerDob"
+                hint="Für die Zahlungsfreischaltung (Stripe)."
+              >
+                {accountType === "company"
+                  ? "Geburtsdatum der vertretungsberechtigten Person"
+                  : "Geburtsdatum"}
+              </LabelHint>
+              <Input
+                id="ownerDob"
+                type="date"
+                value={ownerDob}
+                onChange={(e) => setOwnerDob(e.target.value)}
+              />
+            </div>
           </div>
 
           <Separator />
@@ -474,7 +480,12 @@ export default function ProfilPage() {
               IBAN ab (Verification of Payee). */}
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="accountHolder">Kontoinhaber</Label>
+              <LabelHint
+                htmlFor="accountHolder"
+                hint="Muss exakt dem bei der Bank hinterlegten Namen entsprechen (EU-Namensabgleich, Verification of Payee)."
+              >
+                Kontoinhaber
+              </LabelHint>
               <Input
                 id="accountHolder"
                 value={accountHolder}
@@ -483,10 +494,6 @@ export default function ProfilPage() {
                   setAccountHolderTouched(true);
                 }}
               />
-              <p className="text-xs text-muted-foreground">
-                Muss exakt dem bei der Bank hinterlegten Namen entsprechen
-                (EU-Namensabgleich).
-              </p>
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="iban">IBAN</Label>
