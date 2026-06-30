@@ -11,13 +11,13 @@ const config: StorybookConfig = {
     "../stories/**/*.stories.@(ts|tsx)",
   ],
   addons: [
-    "@storybook/addon-themes",
     "@storybook/addon-docs",
     "@storybook/addon-a11y",
     "@storybook/addon-designs",
-    // Rendert die globale Toolbar (u.a. den DE/EN-Sprach-Umschalter aus
-    // preview.tsx globalTypes.docLang). Ohne dieses Addon erscheint der
-    // Umschalter nicht.
+    // Rendert die globale Toolbar (Theme- + DE/EN-Sprach-Umschalter aus
+    // preview.tsx globalTypes). Ohne dieses Addon erscheinen die Schalter nicht.
+    // Theme/Sprache werden über einen eigenen Decorator (withThemeAndLang)
+    // direkt auf <html> angewendet — wirkt in Canvas UND in MDX-Docs.
     "@storybook/addon-toolbars",
   ],
   framework: {
