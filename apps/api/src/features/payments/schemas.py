@@ -72,6 +72,9 @@ class ConnectAccountCreate(BaseModel):
     email: str
     country: str = "DE"          # ISO-3166-1 Alpha-2 (Standard: Deutschland)
     tenant_id: str                # interner Tenant → wird als Metadata gespeichert
+    # "individual" (Einzelperson) oder "company" (Firma) — bestimmt die Stripe-
+    # Pflichtfelder. Default individual (häufigster Fall bei Vermietern).
+    business_type: str = "individual"
 
 class ConnectAccountResponse(BaseModel):
     """Response nach Account-Erstellung (Custom: KEIN hosted Onboarding-Link —

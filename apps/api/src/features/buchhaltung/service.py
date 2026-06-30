@@ -531,6 +531,9 @@ class BuchhaltungService:
             "bic": g("bic"),
             "bank_name": g("bankName") or g("bank_name"),
             "account_holder": g("accountHolder") or g("account_holder"),
+            # Stripe-KYC: Kontotyp + Geburtsdatum (für charges_enabled nötig)
+            "account_type": g("accountType") or g("account_type"),
+            "owner_dob": g("ownerDob") or g("owner_dob"),
             # Logo
             "company_logo_url": g("companyLogo") or g("company_logo_url"),
             # Flags
@@ -583,10 +586,16 @@ class BuchhaltungService:
             log.info("connect_account_skipped_incomplete", tenant_id=tenant_id)
             return
 
+        account_type = profile.get("account_type") or "individual"
         try:
             payments = PaymentsService(service_client=self._db)
             account = payments.create_connect_account(
-                ConnectAccountCreate(email=email, country=country, tenant_id=tenant_id)
+                ConnectAccountCreate(
+                    email=email,
+                    country=country,
+                    tenant_id=tenant_id,
+                    business_type=account_type,
+                )
             )
             self._db.table("tenant_billing_profile").update(
                 {"stripe_account_id": account.stripe_account_id}
@@ -987,8 +996,11 @@ class BuchhaltungService:
 
 
 def _connect_fields_from_profile(profile: dict) -> dict:
-    """Baut das Stripe-Account-Update (`fields`) aus dem Firmenprofil. Nur Felder,
-    die wirklich vorhanden sind (keine leeren/erfundenen Werte an Stripe)."""
+    """Baut das Stripe-Account-Update (`fields`) aus dem Firmenprofil — abhängig
+    vom Kontotyp (Einzelperson vs. Firma). Nur vorhandene Felder (keine leeren/
+    erfundenen Werte an Stripe). Die ToS-Akzeptanz (date/ip) gehört NICHT hierher
+    — sie braucht die echte Nutzer-IP und passiert im expliziten Aktivierungs-
+    Schritt des Onboarding-UIs."""
     fields: dict = {}
 
     street = profile.get("company_street")
@@ -1002,17 +1014,35 @@ def _connect_fields_from_profile(profile: dict) -> dict:
     }
     address = {k: v for k, v in address.items() if v}
 
-    individual = {
+    # Natürliche Person (Einzelperson direkt, bei Firmen die vertretungs-
+    # berechtigte Person). Inklusive Geburtsdatum (Stripe-KYC-Pflicht).
+    person = {
         "first_name": profile.get("managing_director_first_name"),
         "last_name": profile.get("managing_director_last_name"),
         "email": profile.get("email"),
         "phone": profile.get("phone_number"),
     }
     if address:
-        individual["address"] = address
-    individual = {k: v for k, v in individual.items() if v}
-    if individual:
-        fields["individual"] = individual
+        person["address"] = address
+    dob = _dob_parts(profile.get("owner_dob"))
+    if dob:
+        person["dob"] = dob
+    person = {k: v for k, v in person.items() if v}
+
+    account_type = profile.get("account_type") or "individual"
+    if account_type == "company":
+        company = {"name": profile.get("legal_name")}
+        if address:
+            company["address"] = address
+        company = {k: v for k, v in company.items() if v}
+        if company:
+            fields["company"] = company
+        if person:
+            # Bei Firmen ist die Person der Vertreter (representative).
+            person["relationship"] = {"representative": True, "title": "Geschäftsführer"}
+            fields["individual"] = person
+    elif person:
+        fields["individual"] = person
 
     business_profile = {"name": profile.get("legal_name")}
     if profile.get("website"):
@@ -1022,3 +1052,17 @@ def _connect_fields_from_profile(profile: dict) -> dict:
         fields["business_profile"] = business_profile
 
     return fields
+
+
+def _dob_parts(value: object) -> dict | None:
+    """ISO-Datum (YYYY-MM-DD) → Stripe-dob {day, month, year}. None bei leer/ungültig."""
+    if not value:
+        return None
+    try:
+        parts = str(value).split("-")
+        if len(parts) != 3:
+            return None
+        year, month, day = (int(p) for p in parts)
+        return {"day": day, "month": month, "year": year}
+    except (ValueError, TypeError):
+        return None

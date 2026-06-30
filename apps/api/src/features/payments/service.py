@@ -94,7 +94,11 @@ class PaymentsService:
                 "type": "custom",
                 "country": req.country,
                 "email": req.email,
-                "business_type": "company",
+                # Einzelperson oder Firma — bestimmt die KYC-Pflichtfelder.
+                "business_type": req.business_type,
+                # Branchencode 7011 = Lodging/Unterkünfte (für Vermietung passend);
+                # ist sonst ein offenes Requirement und blockiert charges_enabled.
+                "business_profile": {"mcc": "7011"},
                 "capabilities": {
                     "card_payments": {"requested": True},
                     "transfers": {"requested": True},
@@ -128,6 +132,21 @@ class PaymentsService:
         zusammengestellte Stripe-Account-Update (business_profile, company,
         individual, …)."""
         self._stripe.v1.accounts.update(stripe_account_id, params=fields)
+        return self.get_connect_account_status(stripe_account_id)
+
+    def accept_tos(
+        self, stripe_account_id: str, *, ip: str, when: int
+    ) -> ConnectAccountStatus:
+        """Stripe-Services-Vereinbarung für den Connected Account akzeptieren.
+        ``ip``/``when`` müssen die ECHTE Nutzer-IP + der Zeitpunkt der Zustimmung
+        sein (Compliance-Nachweis) — nie geraten. Erst danach kann der Account
+        ``charges_enabled`` werden."""
+        if not ip:
+            raise PaymentsError("IP für die ToS-Akzeptanz fehlt.", status_code=422)
+        self._stripe.v1.accounts.update(
+            stripe_account_id,
+            params={"tos_acceptance": {"date": when, "ip": ip}},
+        )
         return self.get_connect_account_status(stripe_account_id)
 
     def set_external_account(

@@ -91,6 +91,30 @@ def update_connect_account(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post(
+    "/connect/accounts/{stripe_account_id}/accept-tos",
+    response_model=ConnectAccountStatus,
+)
+def accept_tos(
+    stripe_account_id: str,
+    request: Request,
+    service: PaymentsServiceDep,
+    ctx: _billing,
+) -> ConnectAccountStatus:
+    """Stripe-Services-Vereinbarung akzeptieren — mit der ECHTEN Nutzer-IP
+    (Compliance-Nachweis). Schließt das KYC ab, sodass der Account aktiviert
+    werden kann."""
+    ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (
+        request.client.host if request.client else ""
+    )
+    try:
+        return service.accept_tos(
+            stripe_account_id, ip=ip, when=int(datetime.now(UTC).timestamp())
+        )
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.put("/connect/accounts/{stripe_account_id}/bank", response_model=ConnectAccountStatus)
 def set_external_account(
     stripe_account_id: str,
