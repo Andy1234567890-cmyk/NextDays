@@ -35,6 +35,7 @@ export type FirmenProfil = {
   lastName?: string;
   iban?: string;
   bic?: string;
+  accountHolder?: string;
   // Stripe-KYC: Kontotyp (Einzelperson/Firma) + Geburtsdatum der vertretungs-
   // berechtigten Person. Wird beim Profil-Speichern an den Auto-Connect-Account
   // weitergereicht (für die Zahlungsfreischaltung). ownerDob = ISO YYYY-MM-DD.
