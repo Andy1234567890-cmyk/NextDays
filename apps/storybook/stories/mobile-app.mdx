@@ -1,7 +1,10 @@
 import { Meta } from '@storybook/blocks';
 import { Mermaid } from '@/components/docs/mermaid';
+import { De, En } from "@/components/docs/lang";
 
 <Meta title="Mobile-App/Übersicht & Inhalt" />
+
+<De>
 
 # Mobile-App (My Next Day)
 
@@ -20,7 +23,32 @@ Web-App. Anzeigename auf dem Gerät: **My Next Day**.
 6. [Backend-Anbindung](#backend-anbindung)
 7. [Änderungen dieser Iteration](#änderungen-dieser-iteration)
 
+</De>
+
+<En>
+
+# Mobile App (My Next Day)
+
+Native app for **guests** (search, book, stay) and **hosts**
+(properties, calendar, bookings). Built with **bare React Native 0.86** (CLI, without
+Expo) and React Navigation 7. Shares the FastAPI backend (`/api/v1`) with the
+web app. Display name on the device: **My Next Day**.
+
+## Table of contents
+
+1. [Stack & structure](#stack--aufbau)
+2. [App start & splash](#app-start--splash)
+3. [Branding: name & icon](#branding-name--icon)
+4. [Guest home screen (Booking × Airbnb)](#gast-startseite-booking--airbnb)
+5. [Navigation (guest / host)](#navigation-gast--gastgeber)
+6. [Backend integration](#backend-anbindung)
+7. [Changes in this iteration](#änderungen-dieser-iteration)
+
+</En>
+
 ---
+
+<De>
 
 ## Stack & Aufbau
 
@@ -39,6 +67,31 @@ theme/           tokens.ts (Farben/Typo/Dichte, Light+Dark) + ThemeProvider
 ios/ · android/  native Projekte
 ```
 
+</De>
+
+<En>
+
+## Stack & structure
+
+- **React Native 0.86** — CLI project with real `ios/` and `android/` folders, New Architecture, React 19
+- **React Navigation 7** — one root stack over two bottom-tab navigators (guest/host)
+- **react-native-svg** (icon set), **react-native-keychain** (auth token)
+- **Schibsted Grotesk** as native TTFs; accent color `#C42B3A`, creamy background `#F6F2EC`
+- Design system ported 1:1 from the design kit (tokens, icon paths, components — `kit.tsx`)
+
+```
+App.tsx          GestureHandler → SafeArea → Theme → NavigationContainer → Splash
+navigation/      types.ts, GuestTabs.tsx, HostTabs.tsx
+screens/         RoleSelect, GuestHome/Discover/Wishlist/Trips/Profile, Host*, ListingDetail, Checkout, Checkin
+components/       Splash, ListingCard, ui/ (Icon, kit, Screen)
+theme/           tokens.ts (colors/typography/density, light+dark) + ThemeProvider
+ios/ · android/  native projects
+```
+
+</En>
+
+<De>
+
 ## App-Start & Splash
 
 Beim Start zeigt zunächst der native **LaunchScreen** (iOS-Storyboard) das
@@ -48,12 +101,44 @@ und nach kurzer Zeit sanft ausblendet, sodass der Übergang ins App-UI ohne
 Flackern wirkt. Die App öffnet **direkt in der Gast-Startseite** (wie
 Booking/Airbnb), nicht mehr in einer Rollen-Auswahl.
 
+</De>
+
+<En>
+
+## App start & splash
+
+On start the native **LaunchScreen** (iOS storyboard) first shows the
+NextDays logo on a creamy background — no more "Powered by React Native". On top
+sits a **JS splash** (`components/Splash.tsx`) that shows the same logo
+and gently fades out after a short while, so the transition into the app UI feels
+flicker-free. The app opens **directly on the guest home screen** (like
+Booking/Airbnb), no longer on a role selection.
+
+</En>
+
+<De>
+
 ## Branding: Name & Icon
 
 - **Anzeigename:** „My Next Day" (`CFBundleDisplayName` in `Info.plist`)
 - **App-Icon:** aus dem NextDays-Logo generiert, alle iOS-Größen
   (`Images.xcassets/AppIcon.appiconset`, cremiger Hintergrund, kein Alpha)
 - **Splash-Logo:** `logo-cropped_transparent.png` (NextDays — powered by AirSmil)
+
+</De>
+
+<En>
+
+## Branding: name & icon
+
+- **Display name:** "My Next Day" (`CFBundleDisplayName` in `Info.plist`)
+- **App icon:** generated from the NextDays logo, all iOS sizes
+  (`Images.xcassets/AppIcon.appiconset`, creamy background, no alpha)
+- **Splash logo:** `logo-cropped_transparent.png` (NextDays — powered by AirSmil)
+
+</En>
+
+<De>
 
 ## Gast-Startseite (Booking × Airbnb)
 
@@ -72,6 +157,32 @@ die Stärken beider Vorbilder im NextDays-Look mischt:
 | Wochenend-Angebote (Hotelkarten mit Score) | Booking |
 
 Tippen auf eine Unterkunft öffnet `ListingDetail`.
+
+</De>
+
+<En>
+
+## Guest home screen (Booking × Airbnb)
+
+The first tab **Explore** (`GuestHome.tsx`) is a discovery home screen that
+mixes the strengths of both models in the NextDays look:
+
+| Section | Model |
+| --- | --- |
+| Tabs Stays · Experiences · Services (with "NEW" badges) | Airbnb |
+| Search box location / date / guests + "Search" button | Booking |
+| Category chips (beach, nature, city …) | both |
+| "Continue search" (recently searched locations) | Booking |
+| Popular stays (horizontal scroll, "guest favorite", heart) | Airbnb |
+| NextDays+ loyalty banner | Booking Genius |
+| Trending destinations (large city cards) | both |
+| Weekend deals (hotel cards with score) | Booking |
+
+Tapping a stay opens `ListingDetail`.
+
+</En>
+
+<De>
 
 ## Navigation (Gast / Gastgeber)
 
@@ -113,6 +224,54 @@ Tippen auf eine Unterkunft öffnet `ListingDetail`.
 Der Gastgeber-Bereich ist über **Profil → „Als Gastgeber verwalten"** erreichbar
 (führt in die Rollen-Auswahl bzw. die Gastgeber-Tabs).
 
+</De>
+
+<En>
+
+## Navigation (guest / host)
+
+<Mermaid
+  title="Mobile navigation — root stack over two tab areas"
+  chart={`flowchart TB
+    START(["App start"]) --> SPLASH["Splash (logo)"]
+    SPLASH --> GT
+
+    subgraph STACK["Root stack (React Navigation)"]
+        subgraph GT["Guest tabs"]
+            HOME["Explore (GuestHome)"]
+            SEARCH["Search (GuestDiscover)"]
+            WISH["Wishlist"]
+            TRIPS["Trips"]
+            GPROF["Profile"]
+        end
+        subgraph HT["Host tabs"]
+            DASH["Dashboard"]
+            CAL["Calendar"]
+            HINBOX["Inbox"]
+            LIST["Listings"]
+            HPROF["Profile"]
+        end
+        ROLE["RoleSelect (role selection)"]
+        DETAIL["ListingDetail"]
+        CHECKOUT["Checkout"]
+        CHECKIN["Checkin"]
+    end
+
+    HOME --> DETAIL
+    SEARCH --> DETAIL
+    DETAIL --> CHECKOUT
+    GPROF -->|"Manage as host"| ROLE
+    ROLE -->|"Guest"| GT
+    ROLE -->|"Host"| HT`}
+/>
+
+The host area is reachable via **Profile → "Manage as host"**
+(leads into the role selection or the host tabs).
+
+</En>
+
+<De>
+
 ## Backend-Anbindung
 
 Ruft dieselbe `/api/v1`-Schnittstelle wie die Web-App. Basis-URL in
@@ -120,6 +279,22 @@ Ruft dieselbe `/api/v1`-Schnittstelle wie die Web-App. Basis-URL in
 `10.0.2.2:8000`, echtes Gerät → LAN-IP. Auth-Token via Keychain (`lib/auth.ts`).
 Aktuell live angebunden: **Inserate** (`/properties`, Fallback auf Demo-Daten);
 die übrigen Screens nutzen noch Demo-Inhalte.
+
+</De>
+
+<En>
+
+## Backend integration
+
+Calls the same `/api/v1` interface as the web app. Base URL in
+`lib/config.ts`: iOS simulator → `localhost:8000`, Android emulator →
+`10.0.2.2:8000`, real device → LAN IP. Auth token via Keychain (`lib/auth.ts`).
+Currently wired live: **listings** (`/properties`, falls back to demo data);
+the remaining screens still use demo content.
+
+</En>
+
+<De>
 
 ## Änderungen dieser Iteration
 
@@ -129,3 +304,18 @@ die übrigen Screens nutzen noch Demo-Inhalte.
 - Splash-Start mit Logo (JS-Splash + nativer LaunchScreen ohne RN-Text)
 - Anzeigename „My Next Day" + generiertes App-Icon (alle iOS-Größen)
 - Gast-Tabs neu: Erkunden · Suche · Merkliste · Reisen · Profil
+
+</De>
+
+<En>
+
+## Changes in this iteration
+
+- New guest home screen `GuestHome.tsx` (Booking × Airbnb) as the first tab "Explore"
+- App starts directly on the guest tabs (no role selection before it)
+- Real guest profile with mode switch "Manage as host"
+- Splash start with logo (JS splash + native LaunchScreen without RN text)
+- Display name "My Next Day" + generated app icon (all iOS sizes)
+- New guest tabs: Explore · Search · Wishlist · Trips · Profile
+
+</En>

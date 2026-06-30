@@ -1,11 +1,26 @@
 import { Meta } from '@storybook/blocks';
 import { Mermaid } from '@/components/docs/mermaid';
+import { De, En } from "@/components/docs/lang";
 
 <Meta title="Architektur/Technische Übersicht" />
+
+<De>
 
 # Technische Architektur
 
 Dies ist die technische Architektur von NextDays in Diagrammen (C4-Modell sowie ergänzende ER-, Sequenz-, State- und Deployment-Diagramme). Alle Diagramme entsprechen 1:1 dem Stand der Architektur-Dokumentation und beschreiben den tatsächlich umgesetzten Aufbau.
+
+</De>
+
+<En>
+
+# Technical architecture
+
+This is the technical architecture of NextDays in diagrams (C4 model plus supplementary ER, sequence, state and deployment diagrams). All diagrams match the state of the architecture documentation 1:1 and describe the actually implemented structure.
+
+</En>
+
+<De>
 
 ## System Context (C4 Level 1)
 
@@ -39,6 +54,47 @@ Wer nutzt NextDays, und mit welchen externen Systemen spricht es? Vermieter und 
     Rel(pms, stripe, "Zahlungen (Fallback)", "HTTPS/API")
     Rel(pms, google, "Geocoding, Übersetzung", "HTTPS/API")`}
 />
+
+</De>
+
+<En>
+
+## System Context (C4 Level 1)
+
+Who uses NextDays, and which external systems does it talk to? Hosts and guests work with the PMS core, which communicates with OTA channels, payment and Google services through connectors.
+
+<Mermaid
+  title="System Context (C4 Level 1)"
+  chart={`C4Context
+    title System Context — NextDays
+
+    Person(landlord, "Host", "Manages properties, prices, calendar, bookings")
+    Person(guest, "Guest", "Searches and books accommodation")
+
+    System_Boundary(nd, "NextDays Platform") {
+        System(pms, "PMS Core", "Central data core: calendar, bookings, tenants, payments")
+    }
+
+    System_Ext(booking, "Booking.com", "OTA channel")
+    System_Ext(airbnb, "Airbnb", "OTA channel")
+    System_Ext(vrbo, "Vrbo / Expedia", "OTA channel")
+    System_Ext(revolut, "Revolut Business", "Payments (primary)")
+    System_Ext(stripe, "Stripe", "Payments (secondary)")
+    System_Ext(google, "Google APIs", "Maps/Places, Translate")
+
+    Rel(landlord, pms, "Manages listings, rates, calendar")
+    Rel(guest, pms, "Books directly (portal/widget)")
+    Rel(pms, booking, "Two-way sync", "Connectivity API")
+    Rel(pms, airbnb, "Two-way sync", "Partner API / Webhooks")
+    Rel(pms, vrbo, "Two-way sync", "API")
+    Rel(pms, revolut, "Payments, deposits", "HTTPS/API")
+    Rel(pms, stripe, "Payments (fallback)", "HTTPS/API")
+    Rel(pms, google, "Geocoding, translation", "HTTPS/API")`}
+/>
+
+</En>
+
+<De>
 
 ## Container (C4 Level 2)
 
@@ -84,6 +140,58 @@ Die ausführbaren Bausteine und Datastores des Systems mit Technologie und Proto
     Rel(api, google, "Geocoding, Übersetzung", "API")`}
 />
 
+</De>
+
+<En>
+
+## Container (C4 Level 2)
+
+The executable building blocks and data stores of the system with technology and protocol. The marketing website is deliberately decoupled, the web dashboard calls the FastAPI backend, which in turn accesses Postgres, Redis and the background queue.
+
+<Mermaid
+  title="Container (C4 Level 2)"
+  chart={`C4Container
+    title Container — NextDays
+
+    Person(landlord, "Host", "Uses the dashboard")
+    Person(guest, "Guest", "Books via portal/widget")
+
+    Container_Boundary(nd, "NextDays") {
+        Container(marketing, "Marketing website", "Next.js (decoupled)", "Landing/Pricing/Blog — NO PMS/Auth coupling (ADR-0002)")
+        Container(web, "Web Dashboard", "Next.js, TypeScript", "Host PMS UI + portals (Vercel)")
+        Container(mobile, "Mobile app", "React Native 0.86 (bare CLI, no Expo)", "Guests (booking/stay) + hosts (management), iOS/Android")
+        Container(storybook, "Storybook", "react-vite (own package apps/storybook)", "Design system & component workshop (ADR-0008); finished components move to Web")
+        Container(api, "API Backend", "FastAPI, Python", "Business logic, 16 vertical slices under /api/v1")
+        ContainerDb(db, "Database", "Supabase / Postgres", "41 tables, multi-tenant, RLS, tenant_id")
+        ContainerDb(cache, "Cache", "Redis", "Caching layer")
+        ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel sync, OCR, messaging triggers, recurring tasks")
+    }
+
+    System_Ext(revolut, "Revolut", "Payments (primary)")
+    System_Ext(stripe, "Stripe", "Payments (secondary)")
+    System_Ext(booking, "Booking.com", "OTA")
+    System_Ext(google, "Google APIs", "Maps/Translate")
+
+    Rel(landlord, web, "Uses", "HTTPS")
+    Rel(guest, web, "Books", "HTTPS")
+    Rel(guest, mobile, "Books & travels", "HTTPS")
+    Rel(landlord, mobile, "Manages on the go", "HTTPS")
+    Rel(storybook, web, "adopt finished components", "manual/build-time")
+    Rel(web, api, "Calls", "JSON/HTTPS")
+    Rel(mobile, api, "Calls", "JSON/HTTPS (/api/v1)")
+    Rel(api, db, "Reads/writes", "SQL (RLS)")
+    Rel(api, cache, "Reads/writes", "Redis protocol")
+    Rel(api, queue, "Enqueues jobs", "Redis")
+    Rel(queue, booking, "ARI push / reservation poll", "Connectivity API")
+    Rel(api, revolut, "Charges, deposits", "API")
+    Rel(api, stripe, "Charges (fallback)", "API")
+    Rel(api, google, "Geocoding, translation", "API")`}
+/>
+
+</En>
+
+<De>
+
 ## Slice-Landkarte (Component-Ebene, API-Backend)
 
 Die 16 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslogik: Querschnitt im Core, Slices mit fertiger Logik (auth, calendar, tasks) sowie Gerüst-Slices, die laut Roadmap folgen.
@@ -114,6 +222,44 @@ Die 16 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslog
     CORE --> SCAFFOLD`}
 />
 
+</De>
+
+<En>
+
+## Slice map (component level, API backend)
+
+The 16 vertical slices and their data areas show the state of the business logic: cross-cutting concerns in the core, slices with finished logic (auth, calendar, tasks) plus scaffold slices that follow per the roadmap.
+
+<Mermaid
+  title="Slice map (component level, API backend)"
+  chart={`flowchart TB
+    subgraph API["API Backend (FastAPI) — /api/v1"]
+        subgraph CORE["core/ (cross-cutting)"]
+            CFG["config · logging · supabase · security (JWT ES256/JWKS)"]
+        end
+        subgraph DONE["Slices with logic"]
+            AUTH["auth — Register/Login/Me/Invite, roles+capability matrix"]
+            CAL["calendar — availability, double-booking, price override"]
+            TASKS["tasks — tasks, checklists+photo, substitution, inventory"]
+        end
+        subgraph SCAFFOLD["Slices as scaffold (Health) — follow per roadmap"]
+            PROP["properties"]; RATES["rates"]; RES["reservations"]
+            GUE["guests"]; INBOX["inbox"]; PAY["payments (Revolut adapter)"]
+            CM["channel_manager"]; BOOK["booking_engine"]; OCR["ocr"]
+            PORTAL["public_portal"]; CRM["crm"]; DASH["dashboard"]; CONT["content"]
+        end
+    end
+    DB[("Postgres — 41 tables, RLS")]
+    DONE --> DB
+    SCAFFOLD --> DB
+    CORE --> DONE
+    CORE --> SCAFFOLD`}
+/>
+
+</En>
+
+<De>
+
 ## Component: Channel Manager (C4 Level 3)
 
 Der `channel_manager`-Slice nutzt ein Adapter-Pattern (Anti-Corruption-Layer): ein einheitliches Interface zum PMS-Kern, dahinter austauschbare Adapter pro Kanal. So bleibt die Entscheidung Direkt-Anbindung vs. Aggregator reversibel.
@@ -142,6 +288,43 @@ Der `channel_manager`-Slice nutzt ein Adapter-Pattern (Anti-Corruption-Layer): e
     Rel(booking_ad, booking, "ARI-Push / Poll", "OTA-XML")
     Rel(airbnb, airbnb_ad, "Webhook: Buchung/Storno", "HTTPS")`}
 />
+
+</De>
+
+<En>
+
+## Component: Channel Manager (C4 Level 3)
+
+The `channel_manager` slice uses an adapter pattern (anti-corruption layer): a uniform interface to the PMS core, with interchangeable adapters per channel behind it. This keeps the decision between direct connection vs. aggregator reversible.
+
+<Mermaid
+  title="Component — Channel Manager Slice (adapter pattern)"
+  chart={`C4Container
+    title Component — Channel Manager Slice (adapter pattern)
+
+    Container_Boundary(cm, "channel_manager") {
+        Container(facade, "Channel Facade", "Python", "Uniform interface to the PMS core")
+        Container(booking_ad, "Booking.com Adapter", "Python", "Adapter+Translator: OTA-XML / poll")
+        Container(airbnb_ad, "Airbnb Adapter", "Python", "Adapter+Translator: webhooks")
+        Container(ical_ad, "iCal Adapter", "Python", "Fallback: blocked periods only")
+        Container(worker, "Sync Worker", "Redis Queue", "Retry, backoff, DLQ, idempotency")
+    }
+
+    ContainerDb(cal, "availability (calendar)", "Postgres", "Single Source of Truth")
+    System_Ext(booking, "Booking.com", "OTA")
+    System_Ext(airbnb, "Airbnb", "OTA")
+
+    Rel(facade, cal, "Locks/updates days atomically", "SQL FOR UPDATE")
+    Rel(facade, worker, "Enqueue fan-out push")
+    Rel(worker, booking_ad, "Calls")
+    Rel(worker, airbnb_ad, "Calls")
+    Rel(booking_ad, booking, "ARI push / poll", "OTA-XML")
+    Rel(airbnb, airbnb_ad, "Webhook: booking/cancellation", "HTTPS")`}
+/>
+
+</En>
+
+<De>
 
 ## Datenmodell (ER-Diagramm)
 
@@ -269,6 +452,140 @@ Das Modell ist auf 41 Tabellen (alle mit RLS) gewachsen. Die folgende, nach Bere
     TENANT ||--|| SUBSCRIPTION : abonniert`}
 />
 
+</De>
+
+<En>
+
+## Data model (ER diagram)
+
+The actual schema from the Supabase migrations (phase 1). At the center is the tenant, to which properties, users, guests and reservations are attached; availability is the single source of truth against double-bookings.
+
+<Mermaid
+  title="Data model — core entities (phase 1)"
+  chart={`erDiagram
+    TENANT ||--o{ PROPERTY : owns
+    TENANT ||--o{ USER : employs
+    TENANT ||--o{ GUEST : has
+    TENANT ||--o{ RESERVATION : has
+    PROPERTY ||--o{ RATE_PLAN : has
+    PROPERTY ||--|{ AVAILABILITY : tracks
+    PROPERTY ||--o{ RESERVATION : "is booked in"
+    GUEST ||--o{ RESERVATION : makes
+    RESERVATION ||--o{ PAYMENT : "settled by"
+    RESERVATION ||--o{ MESSAGE : contains
+
+    TENANT {
+        uuid id PK
+        string name
+        string country
+        string currency
+    }
+    USER {
+        uuid id PK "== auth.users.id"
+        uuid tenant_id FK
+        enum role "admin|co_admin|owner|staff|cleaner"
+        string email
+    }
+    PROPERTY {
+        uuid id PK
+        uuid tenant_id FK
+        string title
+        float lat
+        float lng
+        int max_guests
+        enum status "draft|active|inactive"
+    }
+    RATE_PLAN {
+        uuid id PK
+        uuid property_id FK
+        numeric base_price
+        int min_stay
+        jsonb season_rules
+    }
+    AVAILABILITY {
+        uuid property_id FK
+        date day "UNIQUE(property_id, day)"
+        enum status "open|booked|blocked"
+        enum source "direct|portal|booking|airbnb|vrbo|manual"
+    }
+    GUEST {
+        uuid id PK
+        uuid tenant_id FK
+        string name
+        string email
+    }
+    RESERVATION {
+        uuid id PK
+        uuid tenant_id FK
+        uuid property_id FK
+        uuid guest_id FK
+        enum channel "direct|portal|booking|airbnb|vrbo"
+        date check_in
+        date check_out
+        enum status "pending|confirmed|cancelled|completed"
+        numeric total_amount
+    }
+    PAYMENT {
+        uuid id PK
+        uuid reservation_id FK
+        numeric amount
+        enum type "deposit|full|refund"
+        enum gateway "revolut|stripe"
+        string gateway_ref
+    }
+    MESSAGE {
+        uuid id PK
+        uuid reservation_id FK
+        string sender
+        string channel
+    }`}
+/>
+
+The model has grown to 41 tables (all with RLS). The following overview, grouped by area, shows the extensions from the requirements specification (migrations 0009–0019): season/pricing logic, tasks & checklists, CRM/partners, messaging/content as well as owner and billing structures.
+
+<Mermaid
+  title="Data model — extensions from the requirements spec (migrations 0009–0019)"
+  chart={`erDiagram
+    TENANT ||--o{ SEASON_TEMPLATE : has
+    SEASON_TEMPLATE ||--o{ SEASON : contains
+    SEASON ||--o{ SEASON_PERIOD : "applies on"
+    SEASON_TEMPLATE ||--o{ SEASON_ASSIGNMENT : "assigned to"
+    TENANT ||--o{ EVENT : has
+    EVENT ||--o{ EVENT_PERIOD : "applies on"
+    PROPERTY ||--o{ SURCHARGE : "surcharges"
+
+    TENANT ||--o{ TASK : has
+    TENANT ||--o{ TASK_RULE : "recurring"
+    TASK_RULE ||--o{ TASK_RULE_ASSIGNMENT : "per property"
+    TASK ||--o{ CHECKLIST_ITEM : contains
+    CHECKLIST_ITEM ||--o{ CHECKLIST_PHOTO : "photo proof"
+    TASK ||--o{ TASK_SUBSTITUTION : "substitution"
+    TENANT ||--o{ INVENTORY_ITEM : "inventory/pool"
+    USER ||--o{ STAFF_PROPERTY_ASSIGNMENT : "core staff"
+
+    TENANT ||--o{ LEAD : "acquisition"
+    TENANT ||--o{ PARTNER : has
+    PARTNER ||--o{ DEAL : "discounts"
+
+    TENANT ||--o{ MESSAGE_TEMPLATE : has
+    MESSAGE_TEMPLATE ||--o{ MESSAGE_TRIGGER : "timing/channel"
+    TENANT ||--o{ CONTENT_BLOCK : "trilingual"
+    CONTENT_BLOCK ||--o{ CONTENT_ASSIGNMENT : "assigned"
+
+    TENANT ||--o{ BLOCK_REQUEST : "block requested"
+    PROPERTY ||--o{ METER_READING : "meter reading (append-only)"
+    PROPERTY ||--o{ CO_OWNER : "co-owner"
+    PROPERTY ||--o{ PRICE_OVERRIDE : "daily price"
+    USER ||--|| DASHBOARD_LAYOUT : personalized
+
+    PLAN ||--o{ SUBSCRIPTION : "unit-based"
+    TENANT ||--|| SUBSCRIPTION : subscribes`}
+/>
+
+</En>
+
+<De>
+
 ## Mandantenfähigkeit & RLS
 
 Jeder Vermieter ist ein Tenant. Die Isolation läuft über Row-Level-Security (RLS) in Postgres, nicht über Anwendungslogik (Pool-Modell, geteiltes Schema mit `tenant_id`). Die `tenant_id` steht im JWT `app_metadata`; der globale auth-Slice nutzt die Service-Role und umgeht RLS bewusst beim Onboarding.
@@ -292,6 +609,38 @@ Jeder Vermieter ist ein Tenant. Die Isolation läuft über Row-Level-Security (R
     SLICES -->|"SQL mit JWT-Claim"| DB
     AUTH -.->|"Service-Role (umgeht RLS)"| DB`}
 />
+
+</De>
+
+<En>
+
+## Multi-tenancy & RLS
+
+Every host is a tenant. The isolation runs via row-level security (RLS) in Postgres, not via application logic (pool model, shared schema with `tenant_id`). The `tenant_id` is stored in the JWT `app_metadata`; the global auth slice uses the service role and deliberately bypasses RLS during onboarding.
+
+<Mermaid
+  title="Multi-tenancy & RLS — control plane vs. application plane"
+  chart={`flowchart LR
+    subgraph CP["Control Plane (global, NOT tenant-isolated)"]
+        AUTH["auth slice<br/>registration · tenant creation · roles"]
+    end
+
+    subgraph AP["Application Plane (per tenant, behind RLS)"]
+        SLICES["properties · calendar · reservations<br/>guests · payments · inbox · ..."]
+    end
+
+    JWT["JWT with app_metadata.tenant_id"]
+    DB[("Postgres<br/>RLS: tenant_id = current_tenant_id()")]
+
+    AUTH -->|"create_user(app_metadata)"| JWT
+    JWT -->|"Bearer token"| SLICES
+    SLICES -->|"SQL with JWT claim"| DB
+    AUTH -.->|"Service role (bypasses RLS)"| DB`}
+/>
+
+</En>
+
+<De>
 
 ## Kritische Flows — 7.1 Registrierung (atomar mit Rollback)
 
@@ -323,6 +672,45 @@ Die Registrierung legt Tenant und Nutzer atomar an: Scheitert die User-Anlage, w
         API-->>-L: 201 + SessionResponse
     end`}
 />
+
+</De>
+
+<En>
+
+## Critical flows — 7.1 Registration (atomic with rollback)
+
+Registration creates tenant and user atomically: if user creation fails, the tenant is deleted again via rollback. A session is only created on success.
+
+<Mermaid
+  title="7.1 Registration (atomic with rollback)"
+  chart={`sequenceDiagram
+    actor L as Host
+    participant API as FastAPI (auth)
+    participant SR as Supabase (service role)
+    participant DB as Postgres
+
+    L->>+API: POST /api/v1/auth/register
+    API->>+SR: INSERT tenant (service role)
+    SR->>DB: tenants
+    DB-->>SR: tenant_id
+    SR-->>-API: tenant_id
+    API->>+SR: create_user(app_metadata={tenant_id, role:owner})
+    alt User creation fails
+        SR-->>API: Error
+        API->>SR: DELETE tenant (rollback)
+        API-->>L: 409 / 500
+    else ok
+        SR-->>-API: user_id
+        API->>SR: INSERT users row
+        Note over API,DB: On error: roll back user + tenant
+        API->>API: login()
+        API-->>-L: 201 + SessionResponse
+    end`}
+/>
+
+</En>
+
+<De>
 
 ## Kritische Flows — 7.2 Direktbuchung mit Double-Booking-Schutz
 
@@ -358,6 +746,48 @@ Bei einer Direktbuchung sperrt der calendar-Slice die Tage per `SELECT ... FOR U
     deactivate Web`}
 />
 
+</De>
+
+<En>
+
+## Critical flows — 7.2 Direct booking with double-booking protection
+
+For a direct booking, the calendar slice locks the days atomically via `SELECT ... FOR UPDATE`. A single calendar prevents double-bookings: if days are occupied, the API responds with 409 Conflict.
+
+<Mermaid
+  title="7.2 Direct booking with double-booking protection"
+  chart={`sequenceDiagram
+    actor Guest as Guest
+    participant Web as Web (Next.js)
+    participant API as FastAPI
+    participant Cal as calendar slice
+    participant DB as Postgres
+
+    Guest->>+Web: Booking request
+    Web->>+API: POST /api/v1/booking-engine/reserve
+    API->>+Cal: Check availability
+    Cal->>+DB: SELECT availability FOR UPDATE
+    DB-->>-Cal: Day status
+    alt Dates free
+        Cal-->>API: OK, days locked
+        API->>DB: INSERT reservation (pending)
+        Note over API,DB: ONE calendar = no double-booking
+        API-->>Web: 201 Created
+        Web-->>Guest: Confirmation
+    else occupied
+        Cal-->>API: Conflict
+        API-->>Web: 409 Conflict
+        Web-->>Guest: "Not available"
+    end
+    deactivate Cal
+    deactivate API
+    deactivate Web`}
+/>
+
+</En>
+
+<De>
+
 ## Kritische Flows — 7.3 Auto-Aufgaben bei Buchung + Vertretung
 
 Bei einer Buchung erzeugt der tasks-Slice automatisch Anreise-Check und Endreinigung. Mitarbeiter können eine Aufgabe zur Vertretung anbieten, die ein Kollege übernehmen kann.
@@ -383,6 +813,40 @@ Bei einer Buchung erzeugt der tasks-Slice automatisch Anreise-Check und Endreini
     API->>DB: UPDATE status=accepted, accepted_by
     API-->>-Team: übernommen`}
 />
+
+</De>
+
+<En>
+
+## Critical flows — 7.3 Auto-tasks on booking + substitution
+
+On a booking, the tasks slice automatically creates an arrival check and final cleaning. Staff can offer a task for substitution, which a colleague can take over.
+
+<Mermaid
+  title="7.3 Auto-tasks on booking + substitution (§2.5/§4.3)"
+  chart={`sequenceDiagram
+    participant CM as Channel manager / booking
+    participant API as FastAPI (tasks)
+    participant DB as Postgres
+    actor MA as Staff member
+    actor Team as Team colleague
+
+    CM->>+API: POST /tasks/from-booking (reservation)
+    API->>DB: INSERT "Arrival check" (due = check_in)
+    API->>DB: INSERT "Final cleaning" (due = check_out)
+    API-->>-CM: 201 (2 tasks)
+
+    MA->>+API: POST /tasks/substitution (task_id)
+    API->>DB: INSERT task_substitution (status=requested)
+    API-->>-MA: 201 (substitution requested)
+    Team->>+API: accept_substitution
+    API->>DB: UPDATE status=accepted, accepted_by
+    API-->>-Team: taken over`}
+/>
+
+</En>
+
+<De>
 
 ## Reservierungs-Lifecycle (State)
 
@@ -410,6 +874,41 @@ Der `reservation.status` ist eine echte State-Machine: von Pending über Confirm
         gegen Double-Booking
     end note`}
 />
+
+</De>
+
+<En>
+
+## Reservation lifecycle (state)
+
+The `reservation.status` is a real state machine: from Pending through Confirmed (with sub-states from check-in to Completed) to Cancelled. From Pending onwards, the calendar days are already locked against double-booking.
+
+<Mermaid
+  title="Reservation lifecycle (state)"
+  chart={`stateDiagram-v2
+    [*] --> Pending: Booking created
+    Pending --> Confirmed: Payment received
+    Pending --> Cancelled: Timeout / cancellation
+
+    state Confirmed {
+        [*] --> AwaitingCheckIn
+        AwaitingCheckIn --> CheckedIn: Guest arrives
+        CheckedIn --> Completed: Stay ends
+        Completed --> [*]
+    }
+
+    Confirmed --> Cancelled: Cancellation condition
+    Cancelled --> [*]
+
+    note right of Pending
+        Calendar days locked
+        against double-booking
+    end note`}
+/>
+
+</En>
+
+<De>
 
 ## Deployment & Skalierung
 
@@ -442,3 +941,41 @@ DSGVO-konform und self-hosted bevorzugt mit EU-Datenresidenz als harter Grenze. 
     A1 -.->|"Transfer: SCC/DPF"| STRIPE
     A1 -.->|"Transfer: DPF"| GOOG`}
 />
+
+</De>
+
+<En>
+
+## Deployment & scaling
+
+GDPR-compliant and self-hosted preferred, with EU data residency as a hard boundary. The stateless FastAPI scales horizontally behind a load balancer; all state (Postgres, Redis, queue, OCR/storage) is externalized and stays in the EU. Edges crossing EU borders are annotated with the transfer legal basis.
+
+<Mermaid
+  title="Deployment & scaling"
+  chart={`flowchart TB
+    subgraph EU["EU / Hetzner (Coolify, Docker) — data residency boundary"]
+        LB["Load Balancer"]
+        subgraph APP["FastAPI Container x1..N (stateless)"]
+            A1["API Instance"]
+        end
+        DB[("Postgres — pooled, RLS, tenant_id")]
+        RD[("Redis — Cache")]
+        Q["Background Queue / Worker"]
+        OCR["OCR / ID scan + storage<br/>never leaves the EU"]
+        LB --> APP
+        A1 --> DB
+        A1 --> RD
+        A1 --> Q
+        A1 --> OCR
+    end
+
+    VERCEL["Vercel — Next.js Frontend"]
+    STRIPE["Stripe — Payments"]
+    GOOG["Google APIs — DPF-certified"]
+
+    VERCEL -->|HTTPS| LB
+    A1 -.->|"Transfer: SCC/DPF"| STRIPE
+    A1 -.->|"Transfer: DPF"| GOOG`}
+/>
+
+</En>

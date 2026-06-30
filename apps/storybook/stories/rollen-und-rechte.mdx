@@ -1,6 +1,9 @@
 import { Meta } from '@storybook/blocks';
+import { De, En } from "@/components/docs/lang";
 
 <Meta title="Einführung/Rollen & wer sieht was" />
+
+<De>
 
 # Rollen & wer sieht was
 
@@ -51,3 +54,59 @@ Kurz gesagt: Sensible Zahlen und persönliche Daten bleiben dort, wo sie hingeh�
 - Für Helfer im Tagesgeschäft wählen Sie **Mitarbeiter**, für die Reinigung **Reinigungskraft**. Beide kommen so an keinerlei vertrauliche Daten.
 
 Im Zweifel gilt eine einfache Faustregel: **Geben Sie immer so wenig Rechte wie möglich und so viele wie nötig.** Sie können eine Rolle jederzeit ändern, wenn sich Aufgaben verschieben.
+
+</De>
+
+<En>
+
+# Roles & who sees what
+
+To keep your data secure and ensure each person sees exactly what they need for their work, NextDays has five different roles. A role is nothing more than a "hat" that someone puts on: depending on the hat, you see and are allowed more or less. This page explains in simple terms who is allowed to see what – without any technology.
+
+## Why roles exist at all
+
+Imagine your company as a house with many rooms. Not every person needs a key for every room. Your accounting needs to see the figures, but the cleaner only the cleaning schedule. That's exactly what the roles regulate: everyone only gets the keys they really need. This protects your guests, your owners and your business.
+
+## The five roles in plain terms
+
+- **Admin** – This is the chief access, usually you yourself. The admin sees and is allowed to do everything: all properties, all bookings, all figures, all people. This is where all the threads come together.
+
+- **Co-Admin** – A right hand with almost all the rights of the admin. Ideal for a management role, a trusted office worker or a partner who should fully represent you. You give Co-Admin only to people you fully trust.
+
+- **Owner** – These are the owners of the holiday properties you manage. An owner sees **exclusively their own properties** plus a deliberately restricted view: they learn that there is a booking and what they earn per night – but no full guest data and no internal business figures. More on this in the next section.
+
+- **Staff** – Your operational workers in day-to-day business, for example for check-in, support or coordination. Staff work with occupancies and tasks, but see **no finances and no guest names**.
+
+- **Cleaner** – The narrowest role. A cleaner only sees what they need for their work: which property needs cleaning and when. No prices, no names, no booking details.
+
+## The most important protection: the data split
+
+Two points are so important that we highlight them specially. They are firmly built in and cannot be circumvented by accident:
+
+- **Owners only see the guest's first name and the net amount per night.** No surname, no contact details, no breakdown of your fees or margins. This way your owner stays well informed about their occupancy and their earnings – without your business model or the guest's privacy being disclosed.
+
+- **Staff and cleaners see neither finances nor guest names.** They get exactly the information they need to work, and nothing beyond that.
+
+In short: sensitive figures and personal data stay where they belong. Each role only sees its own slice.
+
+## Who is allowed to do what – the overview
+
+| What                                 | Admin | Co-Admin | Owner             | Staff       | Cleaner         |
+| ------------------------------------ | :---: | :------: | :---------------: | :---------: | :-------------: |
+| Manage all properties                |  Yes  |   Yes    | Own only          |    No       |      No         |
+| See bookings                         |  Yes  |   Yes    | Own (overview)    |   Partly    |      No         |
+| Full guest name & contact details    |  Yes  |   Yes    | No (first name only)|  No       |      No         |
+| Finances & business figures          |  Yes  |   Yes    | Net/night only    |    No       |      No         |
+| Tasks & cleaning schedules           |  Yes  |   Yes    | Viewable          |    Yes      |      Yes        |
+| Manage people & roles                |  Yes  |   Yes    | No                |    No       |      No         |
+| Company settings                     |  Yes  | Partly   | No                |    No       |      No         |
+
+## How to make the right choice
+
+- Assign **Admin** and **Co-Admin** sparingly – only to people who should oversee the entire business.
+- Give every property owner the **Owner** role. They then automatically only see their own properties with the protected view.
+- For helpers in day-to-day business choose **Staff**, for cleaning **Cleaner**. Neither of them gets access to any confidential data this way.
+
+When in doubt, a simple rule of thumb applies: **Always grant as few rights as possible and as many as necessary.** You can change a role at any time if responsibilities shift.
+
+</En>

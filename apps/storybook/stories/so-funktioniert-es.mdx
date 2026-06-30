@@ -1,7 +1,10 @@
 import { Meta } from '@storybook/blocks';
 import { Mermaid } from '@/components/docs/mermaid';
+import { De, En } from "@/components/docs/lang";
 
 <Meta title="Einführung/So funktioniert es (Diagramme)" />
+
+<De>
 
 # So funktioniert es
 
@@ -62,3 +65,69 @@ So sieht der gesamte Ablauf einer Buchung aus Sicht aller Beteiligten aus: Der G
     Team->>NextDays: Erledigt die Reinigung
     NextDays-->>Team: Wohnung ist bereit für den nächsten Gast`}
 />
+
+</De>
+
+<En>
+
+# How it works
+
+This page explains NextDays without any technical jargon. Using simple pictures, you can see how a booking comes about, why double bookings never happen and who on your team sees what.
+
+## How a booking comes about
+
+When a guest books, everything runs automatically: the booking is confirmed, and your team immediately gets the matching task, for example the cleaning. You don't have to forward anything by hand.
+
+<Mermaid
+  title="How a booking comes about"
+  chart={`flowchart LR
+    A["Guest books"] --> B["Booking is created"]
+    B --> C["Guest receives confirmation"]
+    B --> D["Task for the team:<br/>Prepare cleaning"]`}
+/>
+
+## One calendar, no double bookings
+
+No matter how a guest books, whether directly with you, via Booking.com or Airbnb: all channels write to the same calendar. Once a day is occupied, it is instantly blocked everywhere. This means the same period can never be assigned twice.
+
+<Mermaid
+  title="One calendar, no double bookings"
+  chart={`flowchart TB
+    D["Direct booking"] --> K["One shared calendar"]
+    B["Booking.com"] --> K
+    A["Airbnb"] --> K
+    K --> S["Occupied days are<br/>blocked everywhere"]`}
+/>
+
+## Who sees what
+
+Each person on your team sees exactly what they need. As the owner, you keep the overview, the admin manages everything, and staff only see their tasks.
+
+<Mermaid
+  title="Who sees what"
+  chart={`flowchart TB
+    Admin["Admin<br/>manages everything"] --> Alles["Full overview:<br/>Properties, bookings, team"]
+    Eigentuemer["Owner<br/>Your overview"] --> Eigen["Own properties,<br/>bookings & figures"]
+    Mitarbeiter["Staff<br/>e.g. cleaning"] --> Aufgaben["Only their own<br/>tasks & checklists"]`}
+/>
+
+## From guest to finished apartment
+
+This is what the entire course of a booking looks like from the perspective of everyone involved: the guest books and arrives, the system takes care of confirmation and tasks, and your team ensures a clean apartment in time for the next arrival.
+
+<Mermaid
+  title="From guest to finished apartment"
+  chart={`sequenceDiagram
+    actor Guest
+    participant NextDays
+    actor Team
+
+    Guest->>NextDays: Books an accommodation
+    NextDays-->>Guest: Sends the confirmation
+    NextDays->>Team: Creates the cleaning task
+    Guest->>NextDays: Arrives and checks out
+    Team->>NextDays: Completes the cleaning
+    NextDays-->>Team: Apartment is ready for the next guest`}
+/>
+
+</En>
