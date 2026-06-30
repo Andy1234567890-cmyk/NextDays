@@ -218,7 +218,10 @@ class PaymentsService:
     def _load_reservation(self, db: Client, reservation_id: str) -> dict:
         res = (
             db.table("reservations")
-            .select("id, tenant_id, total_amount, currency, payment_status")
+            .select(
+                "id, tenant_id, total_amount, currency, payment_status, "
+                "channel, ota_name, source_channex_booking_id"
+            )
             .eq("id", reservation_id)
             .limit(1)
             .execute()
@@ -226,6 +229,30 @@ class PaymentsService:
         if not res:
             raise PaymentsError("Buchung nicht gefunden.", status_code=404)
         return res[0]
+
+    # OTA-Kanäle: der Gast zahlt direkt bei der OTA (Booking/Airbnb/Vrbo), die
+    # OTA zahlt den Vermieter selbst aus. Für solche Buchungen darf KEINE Stripe-
+    # Zahlung erzeugt werden (sonst doppelte Belastung). Eigene Kanäle (direct =
+    # manuell erfasst, portal = eigene Buchungsstrecke) laufen über Stripe.
+    _OTA_CHANNELS = frozenset({"booking", "airbnb", "vrbo"})
+
+    def _require_own_channel(self, res: dict) -> None:
+        """Stellt sicher, dass die Reservierung über einen EIGENEN Kanal kam —
+        sonst keine Stripe-Zahlung (OTA hat den Gast bereits kassiert)."""
+        channel = (res.get("channel") or "").lower()
+        # source_channex_booking_id gesetzt = über Channex/OTA importiert →
+        # zuverlässigster Indikator, auch für OTAs, die als 'portal' laufen.
+        from_ota = (
+            channel in self._OTA_CHANNELS
+            or bool(res.get("source_channex_booking_id"))
+        )
+        if from_ota:
+            name = res.get("ota_name") or channel or "OTA"
+            raise PaymentsError(
+                f"Diese Buchung kam über {name}. Die Zahlung wickelt {name} ab — "
+                "über myNextDays ist hier keine Zahlung möglich.",
+                status_code=409,
+            )
 
     def _connected_account(self, db: Client, tenant_id: str) -> str:
         """Connected Account des Tenants — nur wenn er Zahlungen empfangen darf."""
@@ -257,6 +284,8 @@ class PaymentsService:
         Reservierung, nicht aus dem JWT (Gäste zahlen ohne Login)."""
         db = self._db_or_fail()
         res = self._load_reservation(db, reservation_id)
+        # Kein Stripe für OTA-Buchungen — die OTA hat den Gast bereits kassiert.
+        self._require_own_channel(res)
         tenant_id = res["tenant_id"]
         amount = float(res["total_amount"] or 0)
         if amount <= 0:
@@ -301,6 +330,8 @@ class PaymentsService:
         res = self._load_reservation(db, reservation_id)
         if res["tenant_id"] != tenant_id:
             raise PaymentsError("Buchung nicht gefunden.", status_code=404)
+        # Keine Stripe-Kaution für OTA-Buchungen — die OTA regelt Zahlung/Kaution.
+        self._require_own_channel(res)
         amount = self._deposit_amount(db, reservation_id)
         currency = res["currency"]
         if not currency:

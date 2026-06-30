@@ -29,7 +29,7 @@ Tragfähiger PMS-Kern + Vermieter-Seite (PMS, Objektpflege, Channel-Sync-Grundla
 | Theming | **Light + Dark Mode** über CSS-Variablen (`.dark`), via `next-themes` |
 | Backend | **FastAPI** (Python), Vertical Slice Architecture |
 | Datenbank/Auth/Storage | **Supabase** (Postgres, Auth, Storage), Multi-Tenant mit Row-Level-Security |
-| Zahlungen | **Revolut Business API** (primäres Gateway: Mieten, Kautionen, Zusatzleistungen) · **Stripe** sekundär/konfigurierbar — Gateway-Adapter-Pattern (siehe ADR-0003) |
+| Zahlungen | **Stripe Connect Custom** (primäres Gateway: Mieten, Kautionen, Zusatzleistungen, white-label) · **Revolut** sekundär/konfigurierbar — Gateway-Adapter-Pattern (siehe ADR-0011) |
 | Sprachen (nativ) | **DE / DK / EN** — UI + automatisierte Kommunikation (i18n, siehe ADR-0004) |
 | Währungsdarstellung | **Glatte Beträge** systemweit, keine Cent-/Øre-Anzeige (siehe ADR-0005) |
 | Package Manager (Web) | **Bun** |
@@ -164,7 +164,7 @@ Jeder Slice in `apps/api/src/features/<name>/` mit `router.py`, `service.py`, `s
 5. **reservations** — Buchungsverwaltung (kanalunabhängig), Status, Check-in/out.
 6. **guests** — Gastprofile, Historie.
 7. **inbox** — zentrale Gästekommunikation.
-8. **payments** — Zahlungs-Gateway mit Adapter-Pattern: **Revolut Business API primär**, **Stripe sekundär** (Anzahlungen, Kautionen, Zusatzleistungen, Auszahlungspläne, Belege). Siehe ADR-0003.
+8. **payments** — Zahlungs-Gateway mit Adapter-Pattern: **Stripe Connect Custom primär** (white-label, Destination Charge, Anzahlungen, Kautionen, Zusatzleistungen, Belege), **Revolut sekundär** konfigurierbar. Geldfluss nur für eigene Kanäle (direct/portal) — OTA-Buchungen (booking/airbnb/vrbo) werden bei der OTA bezahlt, kein Stripe. Siehe ADR-0011.
 9. **channel_manager** — Sync-Grundlage + Adapter-Pattern pro Kanal:
    - Adapter-Interface (einheitlich), konkrete Adapter: **Booking.com**, **Airbnb**, **Vrbo/Expedia** (über Connectivity-Programme; alternativ Aggregator-Adapter z.B. Feondi).
    - Zwei-Wege-Sync (Verfügbarkeit, Preise, Buchungen), robuste Fehlerbehandlung (Retry, Logging, Alarm).

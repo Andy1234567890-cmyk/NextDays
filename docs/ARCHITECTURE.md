@@ -49,8 +49,8 @@ C4Context
     System_Ext(booking, "Booking.com", "OTA-Kanal")
     System_Ext(airbnb, "Airbnb", "OTA-Kanal")
     System_Ext(vrbo, "Vrbo / Expedia", "OTA-Kanal")
-    System_Ext(revolut, "Revolut Business", "Zahlungen (primär)")
-    System_Ext(stripe, "Stripe", "Zahlungen (sekundär)")
+    System_Ext(stripe, "Stripe Connect", "Zahlungen (primär)")
+    System_Ext(revolut, "Revolut Business", "Zahlungen (sekundär)")
     System_Ext(google, "Google APIs", "Maps/Places, Translate")
 
     Rel(landlord, pms, "Verwaltet Listings, Raten, Kalender")
@@ -87,8 +87,8 @@ C4Container
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel-Sync, OCR, Messaging-Trigger, wiederkehrende Aufgaben")
     }
 
-    System_Ext(revolut, "Revolut", "Zahlungen (primär)")
-    System_Ext(stripe, "Stripe", "Zahlungen (sekundär)")
+    System_Ext(stripe, "Stripe Connect", "Zahlungen (primär)")
+    System_Ext(revolut, "Revolut", "Zahlungen (sekundär)")
     System_Ext(booking, "Booking.com", "OTA")
     System_Ext(google, "Google APIs", "Maps/Translate")
 
@@ -404,7 +404,8 @@ an (Hotel-ID), trägt sie in NextDays ein → Auto-Connect über Channex. Ein OT
 
 **Weitere Änderungen am Bestand:** `property_type` + `type_attributes` an
 `properties` (Ökosystem, ADR-0007); Rollen-Enum um `admin`, `co_admin`
-erweitert; `payments`: `stripe_ref` → `gateway_ref` + `gateway`-Enum (ADR-0003).
+erweitert; `payments`: `stripe_ref` → `gateway_ref` + `gateway`-Enum
+(Adapter-Pattern ADR-0003; Primärwahl Stripe via ADR-0011).
 Marktplatz-Tabellen (`portal_guests`, `reviews`, `commissions`) wie oben.
 `users.permissions` (JSONB, Migration 0022) für feingranulare
 Lodgify-Berechtigungen pro Nutzer.
@@ -882,7 +883,8 @@ Die letzten vier (`tasks`, `crm`, `dashboard`, `content`) ergänzen den durch da
 [Lastenheft](LASTENHEFT.md) erweiterten Funktionsumfang (Aufgaben/Checklisten,
 Eigentümer-Akquise & Partner, Dashboard-Personalisierung, dreisprachige
 Standardtexte). Der `payments`-Slice nutzt ein **Gateway-Adapter-Pattern**
-(Revolut primär, Stripe sekundär — [ADR-0003](decisions/0003-zahlungs-gateway-revolut-primaer.md)).
+(Stripe Connect Custom primär, Revolut sekundär/konfigurierbar —
+[ADR-0011](decisions/0011-zahlungs-gateway-stripe-primaer.md), ersetzt ADR-0003).
 
 Alle Router unter dem gemeinsamen Prefix **`/api/v1`** (versioniert von Anfang an).
 `auth` ist als Referenz-Muster voll implementiert (siehe **[API.md](API.md)**).

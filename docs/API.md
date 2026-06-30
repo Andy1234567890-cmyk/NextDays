@@ -623,8 +623,19 @@ sent|delivered|read|failed|received, Meta-ID-Unique für Idempotenz). RLS via
 Online-Zahlungen über **Stripe** (primär; Revolut sekundär/NotImplemented). Connect
 ist **Custom** (voll white-label, kein Stripe-Branding/-Onboarding). Geldfluss =
 **Destination Charge**: der Gast zahlt über den Plattform-Account, das Geld geht an
-den Connected Account des Tenants (`transfer_data.destination`), optional mit
-Plattform-Provision (`STRIPE_PLATFORM_FEE_PCT`, Default 0).
+den Connected Account des Tenants (`transfer_data.destination`).
+
+**0% Buchungsgebühr (ADR-0006):** Auf PMS-/Direktbuchungen der Vermieter erhebt
+myNextDays **keine** Provision — `STRIPE_PLATFORM_FEE_PCT` ist 0. Eine Provision
+(`application_fee_amount`) ist nur für den eigenen Marktplatz (Portal-Buchungen,
+Phase 2) vorgesehen.
+
+**OTA-Gate (nur eigene Kanäle):** Ein PaymentIntent (Buchung **und** Kaution) wird
+**nur** für eigene Kanäle erzeugt — `channel` ∈ {`direct`, `portal`} **ohne**
+`source_channex_booking_id`. OTA-Buchungen (`booking`/`airbnb`/`vrbo` oder über
+Channex importiert) kassiert die OTA selbst und zahlt den Vermieter direkt aus →
+`booking/.../intent` und `deposit/.../hold` antworten dafür mit **409** (keine
+doppelte Belastung). Add-ons/Upsells am OTA vorbei sind separat (addons-Slice).
 
 | Methode | Pfad | Zugriff |
 |---|---|---|

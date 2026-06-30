@@ -183,6 +183,55 @@ def test_booking_payment_without_onboarded_account_fails() -> None:
     assert exc.value.status_code == 409
 
 
+# --- OTA-Gate: keine Stripe-Zahlung für OTA-Buchungen -----------------------
+# OTAs (Booking/Airbnb/Vrbo) kassieren den Gast selbst und zahlen den Vermieter
+# direkt aus → über myNextDays darf für solche Buchungen KEIN PaymentIntent
+# entstehen (sonst doppelte Belastung). Greift VOR jedem Stripe-Call, daher
+# ohne echte Stripe-API testbar.
+
+@pytest.mark.parametrize(
+    ("channel", "ota_name", "channex_id"),
+    [
+        ("booking", "Booking.com", None),
+        ("airbnb", "Airbnb", None),
+        ("vrbo", "Vrbo", None),
+        # OTA, die intern als 'portal' läuft, aber über Channex importiert wurde
+        # (z.B. Expedia/Agoda) → source_channex_booking_id ist der sichere Marker.
+        ("portal", "Expedia", "chx-booking-1"),
+    ],
+)
+def test_booking_payment_blocked_for_ota(channel, ota_name, channex_id) -> None:  # noqa: ANN001
+    db = _db_with_booking(charges_enabled=True)
+    res = db.store["reservations"][0]
+    res["channel"] = channel
+    res["ota_name"] = ota_name
+    res["source_channex_booking_id"] = channex_id
+    svc = PaymentsService(service_client=db, stripe=_stripe())
+    with pytest.raises(PaymentsError) as exc:
+        svc.create_booking_payment(reservation_id="res-1")
+    assert exc.value.status_code == 409
+    # Keine payments-Row angelegt (Gate griff vor dem Stripe-Call).
+    assert db.store.get("payments", []) == []
+
+
+@pytest.mark.parametrize("channel", ["direct", "portal"])
+def test_booking_payment_allowed_for_own_channel_passes_gate(channel) -> None:  # noqa: ANN001
+    """Eigene Kanäle (direct/portal ohne Channex-Marker) passieren das OTA-Gate.
+    Ohne Stripe-Key scheitert es erst danach am Account/Stripe — NICHT mit 409
+    'OTA'. Wir prüfen, dass NICHT das Gate (sondern ein anderer Grund) greift."""
+    db = _db_with_booking(charges_enabled=True)
+    res = db.store["reservations"][0]
+    res["channel"] = channel
+    res["ota_name"] = None
+    res["source_channex_booking_id"] = None
+    svc = PaymentsService(service_client=db, stripe=_stripe())
+    try:
+        svc.create_booking_payment(reservation_id="res-1")
+    except PaymentsError as exc:
+        # Erlaubt ist alles AUSSER der OTA-Ablehnung.
+        assert "über myNextDays ist hier keine Zahlung möglich" not in exc.message
+
+
 def _make_transfer_ready_account(stripe: StripeClient) -> str:
     """Custom-Test-Account mit vollständiger Test-Persona → transfers sofort
     'active' (Stripe-Test-Verifizierung: id_number 000000000, address-Match)."""
