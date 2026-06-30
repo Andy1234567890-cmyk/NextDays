@@ -137,13 +137,20 @@ class BlockType(StrEnum):
 class HeroContent(BaseModel):
     heading: dict[str, str] = Field(default_factory=dict)
     subheading: dict[str, str] = Field(default_factory=dict)
+    eyebrow: dict[str, str] = Field(default_factory=dict)
     image_url: str | None = None
     cta_label: dict[str, str] = Field(default_factory=dict)
     cta_href: str | None = None
+    # Layout-Variante: "fullscreen" | "split" | "centered".
+    variant: str = "fullscreen"
+    # Optionale Schrift-Familie (Schlüssel aus dem Font-Katalog); None = Marke.
+    font_family: str | None = None
 
 
 class RichTextContent(BaseModel):
     html: dict[str, str] = Field(default_factory=dict)  # TipTap-HTML je Locale
+    align: str = "left"  # "left" | "center"
+    font_family: str | None = None
 
 
 class ImageContent(BaseModel):

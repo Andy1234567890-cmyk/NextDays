@@ -484,7 +484,7 @@ def test_resolve_page_unknown_host_404() -> None:
 def test_apply_template_creates_pages_and_blocks() -> None:
     tables = {"site_pages": [], "site_blocks": []}
     svc = _svc(tables)
-    res = svc.apply_template(_ctx(), "klassik")
+    res = svc.apply_template(_ctx(), "bergchalet")
     assert res.total >= 1
     # Genau eine Home aus dem Template.
     homes = [p for p in tables["site_pages"] if p["is_home"]]

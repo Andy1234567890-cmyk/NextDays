@@ -1,9 +1,40 @@
 // Buchungs-Blöcke: Objekt-Grid + Featured. Laden echte, tenant-gefilterte Objekte
-// aus dem booking_engine-Slice (?tenant=) und rendern sie über die vorhandene
-// ListingReihe. DAS ist der Buchungs-Vorsprung ggü. reinen Website-Buildern.
-import { ListingReihe } from "@/components/listing-reihe";
+// aus dem booking_engine-Slice und rendern sie als großes, responsives Grid aus
+// Premium-Foto-Karten (Hover-Lift). DAS ist der Buchungs-Vorsprung ggü. reinen
+// Website-Buildern.
+import { ListingCard } from "@/components/listing-card";
 import { pickText } from "@/lib/i18n";
 import { type SuchParams, ladeInserate } from "@/lib/inserate";
+import type { Listing } from "@/lib/listings";
+
+function Grid({ listings }: { listings: Listing[] }) {
+  return (
+    <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+      {listings.map((listing) => (
+        <ListingCard key={listing.id} listing={listing} />
+      ))}
+    </div>
+  );
+}
+
+function Section({
+  headline,
+  children,
+}: {
+  headline: string | null;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="mx-auto max-w-7xl px-6 py-16">
+      {headline ? (
+        <h2 className="mb-8 font-display text-3xl font-semibold tracking-tight md:text-4xl">
+          {headline}
+        </h2>
+      ) : null}
+      {children}
+    </section>
+  );
+}
 
 /** Objekt-Grid: alle aktiven Objekte des Tenants (optional q/guests gefiltert). */
 export async function PropertiesGridBlock({
@@ -26,20 +57,17 @@ export async function PropertiesGridBlock({
   const listings = await ladeInserate(params, tenantId);
   if (listings.length === 0) {
     return (
-      <section className="mx-auto max-w-7xl px-6 py-8">
-        {headline ? (
-          <h2 className="mb-4 font-display text-2xl font-semibold">{headline}</h2>
-        ) : null}
-        <p className="text-sm text-muted-foreground">
+      <Section headline={headline || "Unterkünfte"}>
+        <p className="text-muted-foreground">
           Aktuell sind keine Unterkünfte verfügbar.
         </p>
-      </section>
+      </Section>
     );
   }
   return (
-    <section className="mx-auto max-w-7xl px-6 py-4">
-      <ListingReihe reihe={{ titel: headline || "Unterkünfte", listings }} />
-    </section>
+    <Section headline={headline || "Unsere Unterkünfte"}>
+      <Grid listings={listings} />
+    </Section>
   );
 }
 
@@ -62,10 +90,8 @@ export async function FeaturedPropertiesBlock({
   const listings = await ladeInserate({ propertyIds: ids }, tenantId);
   if (listings.length === 0) return null;
   return (
-    <section className="mx-auto max-w-7xl px-6 py-4">
-      <ListingReihe
-        reihe={{ titel: headline || "Empfohlene Unterkünfte", listings }}
-      />
-    </section>
+    <Section headline={headline || "Empfohlene Unterkünfte"}>
+      <Grid listings={listings} />
+    </Section>
   );
 }

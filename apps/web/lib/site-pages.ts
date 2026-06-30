@@ -172,6 +172,65 @@ export async function removeBlock(blockId: string): Promise<Result<null>> {
   return call(`/site-config/blocks/${blockId}`, { method: "DELETE" });
 }
 
+// Ein Block, wie ihn der Canvas-Editor speichert (blockId=null → neu anlegen).
+export type SyncBlock = {
+  blockId: string | null;
+  type: BlockType;
+  content: Record<string, unknown>;
+  settings: Record<string, unknown>;
+};
+
+/**
+ * Synchronisiert den kompletten Block-Baum einer Seite (Editor → Backend):
+ * vorhandene aktualisieren, neue anlegen, entfernte löschen, Reihenfolge setzen.
+ * Diff über die vorhandenen Endpunkte (kein eigener Bulk-Endpoint nötig). Gibt
+ * die frische, geordnete Block-Liste zurück (mit echten DB-IDs).
+ */
+export async function syncBlocks(
+  pageId: string,
+  blocks: SyncBlock[],
+): Promise<Result<{ items: Block[]; total: number }>> {
+  const existing = await listBlocks(pageId);
+  if (!existing.ok) return existing;
+  const keepIds = new Set(
+    blocks.map((b) => b.blockId).filter((id): id is string => !!id),
+  );
+
+  // 1) Entfernte Blöcke löschen.
+  for (const old of existing.data.items) {
+    if (!keepIds.has(old.id)) {
+      const res = await removeBlock(old.id);
+      if (!res.ok) return res;
+    }
+  }
+
+  // 2) Vorhandene aktualisieren, neue anlegen → finale ID-Reihenfolge sammeln.
+  const orderedIds: string[] = [];
+  for (const b of blocks) {
+    if (b.blockId && keepIds.has(b.blockId)) {
+      const res = await updateBlock(b.blockId, {
+        content: b.content,
+        settings: b.settings,
+      });
+      if (!res.ok) return res;
+      orderedIds.push(b.blockId);
+    } else {
+      const res = await addBlock(pageId, b.type, b.content, b.settings);
+      if (!res.ok) return res;
+      orderedIds.push(res.data.id);
+    }
+  }
+
+  // 3) Reihenfolge setzen (liefert die geordnete Liste zurück).
+  if (orderedIds.length > 0) {
+    const res = await reorderBlocks(pageId, orderedIds);
+    if (res.ok) touch();
+    return res;
+  }
+  touch();
+  return { ok: true, data: { items: [], total: 0 } };
+}
+
 // --- Live-Vorschau (Draft-Token für den builder-iframe) ---------------------
 export async function createDraftToken(
   pageId: string,

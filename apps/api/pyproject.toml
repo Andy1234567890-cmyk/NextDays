@@ -43,6 +43,8 @@ select = ["E", "F", "I", "B", "UP", "ANN", "S"]
 [tool.ruff.lint.per-file-ignores]
 # assert + lockere Annotations + Test-Passwörter (keine echten Secrets) erlaubt
 "**/tests/*" = ["S101", "S105", "S106", "ANN"]
+# Template-Datenmodul: lange lokalisierte Marketing-Texte/HTML nicht umbrechen.
+"**/site_config/templates.py" = ["E501"]
 
 [tool.pylint.main]
 # Ruff (oben) ist der primäre Linter (Stil, Imports, Bugbear, Security,

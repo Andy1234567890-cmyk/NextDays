@@ -48,7 +48,7 @@ function Result() {
 export default function CheckoutDonePage() {
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader compact />
+      <SiteHeader />
       <Suspense fallback={null}>
         <Result />
       </Suspense>

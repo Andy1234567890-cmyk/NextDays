@@ -33,7 +33,7 @@ export default async function HomePage({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader logoSrc={branding?.logo_url} logoAlt={branding?.site_name} />
+      <SiteHeader logoSrc={branding?.logo_url} logoAlt={branding?.site_name} siteName={branding?.site_name} />
       <main className="flex-1">
         <BlockRenderer
           blocks={site.blocks}

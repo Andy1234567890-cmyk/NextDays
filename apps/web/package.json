@@ -11,6 +11,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@craftjs/core": "0.2.12",
+    "@craftjs/layers": "0.2.7",
     "@hookform/resolvers": "5.4.0",
     "@iconify/react": "6.0.2",
     "@radix-ui/react-accordion": "1.2.14",

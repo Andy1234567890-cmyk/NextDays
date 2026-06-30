@@ -28,7 +28,7 @@ export default async function CheckoutPage({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader compact />
+      <SiteHeader />
 
       <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-8">
         <div className="mb-8 flex items-center gap-4">

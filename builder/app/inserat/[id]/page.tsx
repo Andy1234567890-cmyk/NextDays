@@ -41,9 +41,9 @@ export default async function InseratPage({
   return (
     <div className="flex min-h-screen flex-col">
       <SiteHeader
-        compact
         logoSrc={branding?.logo_url}
         logoAlt={branding?.site_name}
+        siteName={branding?.site_name}
       />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-6">
