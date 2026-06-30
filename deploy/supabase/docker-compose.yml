@@ -241,12 +241,29 @@ services:
       PGRST_JWT_SECRET: ${JWT_SECRET}
       DATABASE_URL: postgres://supabase_storage_admin:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-postgres}
       FILE_SIZE_LIMIT: 52428800 # 50 MiB (wie Dev-config.toml)
-      STORAGE_BACKEND: file
+      # Backend-Wahl: Default file (Bind-Mount unten). PROD-Ziel = Hetzner Object
+      # Storage (S3) zur Entlastung der OS-SSD (Infra-Runbook Punkt 3). Cutover =
+      # STORAGE_BACKEND=s3 + die STORAGE_S3_*/AWS_*-Werte aus der Env setzen (in
+      # Coolify), Bestands-Medien vorher per deploy/storage/migrate-storage-to-s3.sh
+      # in den Bucket kopieren. storage-api findet sie ohne DB-Änderung (Object-Key
+      # = Disk-Pfad ohne den GLOBAL_S3_BUCKET-Präfixordner).
+      STORAGE_BACKEND: ${STORAGE_BACKEND:-file}
       FILE_STORAGE_BACKEND_PATH: /var/lib/storage
-      REGION: eu-helsinki
-      GLOBAL_S3_BUCKET: stub
+      # file-Backend-Default; im s3-Modus von STORAGE_S3_* überschrieben.
+      REGION: ${STORAGE_S3_REGION:-eu-helsinki}
+      GLOBAL_S3_BUCKET: ${STORAGE_S3_BUCKET:-stub}
+      # S3-Backend (nur wirksam bei STORAGE_BACKEND=s3; leer = file-Backend bleibt).
+      STORAGE_S3_ENDPOINT: ${STORAGE_S3_ENDPOINT:-}
+      STORAGE_S3_REGION: ${STORAGE_S3_REGION:-}
+      STORAGE_S3_BUCKET: ${STORAGE_S3_BUCKET:-}
+      STORAGE_S3_FORCE_PATH_STYLE: ${STORAGE_S3_FORCE_PATH_STYLE:-}
+      # storage-api v1.60.4 liest S3-Credentials über die AWS-SDK-Standardchain.
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
     volumes:
       # Bind-Mount aufs 200-GB-Volume (s. db-Service). Absoluter Host-Pfad.
+      # Bleibt auch nach S3-Cutover als Fallback gemountet, bis die Migration
+      # verifiziert ist (additive Migration, kein Datenverlust).
       - type: bind
         source: /mnt/HC_Volume_106086998/nextdays/storage
         target: /var/lib/storage

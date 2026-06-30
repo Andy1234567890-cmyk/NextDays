@@ -38,6 +38,12 @@ export BORG_RELOCATED_REPO_ACCESS_IS_OK="${BORG_RELOCATED_REPO_ACCESS_IS_OK:-no}
 POSTGRES_IMAGE="${POSTGRES_IMAGE:-supabase/postgres:15.14.1.138}"
 PG_USER="${PG_USER:-supabase_admin}"
 STORAGE_DIR="${STORAGE_DIR:-/mnt/HC_Volume_106086998/nextdays/storage}"
+# Wenn die Medien in Hetzner Object Storage liegen (STORAGE_BACKEND=s3), wird das
+# Bucket statt des lokalen Verzeichnisses gesichert (zweite Kopie/Versionierung).
+# Voraussetzung: STORAGE_S3_ENDPOINT + STORAGE_S3_BUCKET + AWS_*-Keys gesetzt.
+STORAGE_S3_ENDPOINT="${STORAGE_S3_ENDPOINT:-}"
+STORAGE_S3_BUCKET="${STORAGE_S3_BUCKET:-}"
+STORAGE_S3_REGION="${STORAGE_S3_REGION:-fsn1}"
 DATABASES="${DATABASES:-postgres _supabase}"
 RETENTION_DAILY="${RETENTION_DAILY:-7}"
 RETENTION_WEEKLY="${RETENTION_WEEKLY:-4}"
@@ -94,14 +100,32 @@ for db in $DATABASES; do
   DUMP_FILES+=("$out")
 done
 
-# --- 2) Borg-Archiv: DB-Dumps + Storage-Verzeichnis --------------------------
-# Borg-Repo verschlüsselt zusätzlich auf Repo-Ebene (repokey/keyfile bei `borg init`).
+# --- 2) Medien einsammeln: S3-Bucket (bevorzugt) oder lokales Verzeichnis ----
+# Nach dem S3-Cutover ist das lokale STORAGE_DIR veraltet/leer → dann das Bucket
+# in ein temporäres Verzeichnis spiegeln und DIESES sichern (sonst Backup-Lücke).
 ARCHIVE="nextdays-$(date -u '+%Y-%m-%dT%H-%M-%SZ')"
 STORAGE_ARG=()
-if [[ -d "$STORAGE_DIR" ]]; then
+if [[ -n "$STORAGE_S3_ENDPOINT" && -n "$STORAGE_S3_BUCKET" && -n "${AWS_ACCESS_KEY_ID:-}" ]]; then
+  if ! command -v rclone >/dev/null 2>&1; then
+    die "STORAGE_S3_* gesetzt, aber rclone fehlt (apt-get install -y rclone)."
+  fi
+  S3_MIRROR="${WORK_DIR}/s3-media"
+  mkdir -p "$S3_MIRROR"
+  log "Spiegele S3-Bucket ${STORAGE_S3_BUCKET} für Backup …"
+  export RCLONE_CONFIG_BK_TYPE=s3 RCLONE_CONFIG_BK_PROVIDER=Other
+  export RCLONE_CONFIG_BK_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID"
+  export RCLONE_CONFIG_BK_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY"
+  export RCLONE_CONFIG_BK_ENDPOINT="$STORAGE_S3_ENDPOINT"
+  export RCLONE_CONFIG_BK_REGION="$STORAGE_S3_REGION"
+  [[ "${STORAGE_S3_FORCE_PATH_STYLE:-}" == "true" ]] && export RCLONE_CONFIG_BK_FORCE_PATH_STYLE=true
+  rclone copy --checksum "BK:${STORAGE_S3_BUCKET}" "$S3_MIRROR" 2>&1 | tee -a "$LOG_FILE" \
+    || die "S3-Spiegelung für Backup fehlgeschlagen."
+  STORAGE_ARG=("$S3_MIRROR")
+  log "S3-Medien gespiegelt: $(find "$S3_MIRROR" -type f | wc -l | tr -d ' ') Objekte."
+elif [[ -d "$STORAGE_DIR" ]]; then
   STORAGE_ARG=("$STORAGE_DIR")
 else
-  log "WARN: STORAGE_DIR ${STORAGE_DIR} fehlt — Storage wird ausgelassen."
+  log "WARN: weder S3-Bucket noch STORAGE_DIR ${STORAGE_DIR} vorhanden — Storage wird ausgelassen."
 fi
 
 log "Borg create ${ARCHIVE} …"
