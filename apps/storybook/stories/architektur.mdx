@@ -8,7 +8,7 @@ import { De, En } from "@/components/docs/lang";
 
 # Technische Architektur
 
-Dies ist die technische Architektur von NextDays in Diagrammen (C4-Modell sowie ergänzende ER-, Sequenz-, State- und Deployment-Diagramme). Alle Diagramme entsprechen 1:1 dem Stand der Architektur-Dokumentation und beschreiben den tatsächlich umgesetzten Aufbau.
+Dies ist die technische Architektur von myNextDays in Diagrammen (C4-Modell sowie ergänzende ER-, Sequenz-, State- und Deployment-Diagramme). Alle Diagramme entsprechen 1:1 dem Stand der Architektur-Dokumentation und beschreiben den tatsächlich umgesetzten Aufbau.
 
 </De>
 
@@ -16,7 +16,7 @@ Dies ist die technische Architektur von NextDays in Diagrammen (C4-Modell sowie 
 
 # Technical architecture
 
-This is the technical architecture of NextDays in diagrams (C4 model plus supplementary ER, sequence, state and deployment diagrams). All diagrams match the state of the architecture documentation 1:1 and describe the actually implemented structure.
+This is the technical architecture of myNextDays in diagrams (C4 model plus supplementary ER, sequence, state and deployment diagrams). All diagrams match the state of the architecture documentation 1:1 and describe the actually implemented structure.
 
 </En>
 
@@ -24,17 +24,17 @@ This is the technical architecture of NextDays in diagrams (C4 model plus supple
 
 ## System Context (C4 Level 1)
 
-Wer nutzt NextDays, und mit welchen externen Systemen spricht es? Vermieter und Gäste arbeiten mit dem PMS-Kern, der über Konnektoren mit OTA-Kanälen, Zahlungs- und Google-Diensten kommuniziert.
+Wer nutzt myNextDays, und mit welchen externen Systemen spricht es? Vermieter und Gäste arbeiten mit dem PMS-Kern, der über Konnektoren mit OTA-Kanälen, Zahlungs- und Google-Diensten kommuniziert.
 
 <Mermaid
   title="System Context (C4 Level 1)"
   chart={`C4Context
-    title System Context — NextDays
+    title System Context — myNextDays
 
     Person(landlord, "Vermieter", "Pflegt Objekte, Preise, Kalender, Buchungen")
     Person(guest, "Gast", "Sucht und bucht Unterkunft")
 
-    System_Boundary(nd, "NextDays Platform") {
+    System_Boundary(nd, "myNextDays Platform") {
         System(pms, "PMS Core", "Zentraler Datenkern: Kalender, Buchungen, Mandanten, Zahlungen")
     }
 
@@ -61,17 +61,17 @@ Wer nutzt NextDays, und mit welchen externen Systemen spricht es? Vermieter und 
 
 ## System Context (C4 Level 1)
 
-Who uses NextDays, and which external systems does it talk to? Hosts and guests work with the PMS core, which communicates with OTA channels, payment and Google services through connectors.
+Who uses myNextDays, and which external systems does it talk to? Hosts and guests work with the PMS core, which communicates with OTA channels, payment and Google services through connectors.
 
 <Mermaid
   title="System Context (C4 Level 1)"
   chart={`C4Context
-    title System Context — NextDays
+    title System Context — myNextDays
 
     Person(landlord, "Host", "Manages properties, prices, calendar, bookings")
     Person(guest, "Guest", "Searches and books accommodation")
 
-    System_Boundary(nd, "NextDays Platform") {
+    System_Boundary(nd, "myNextDays Platform") {
         System(pms, "PMS Core", "Central data core: calendar, bookings, tenants, payments")
     }
 
@@ -103,12 +103,12 @@ Die ausführbaren Bausteine und Datastores des Systems mit Technologie und Proto
 <Mermaid
   title="Container (C4 Level 2)"
   chart={`C4Container
-    title Container — NextDays
+    title Container — myNextDays
 
     Person(landlord, "Vermieter", "Nutzt das Dashboard")
     Person(guest, "Gast", "Bucht über Portal/Widget")
 
-    Container_Boundary(nd, "NextDays") {
+    Container_Boundary(nd, "myNextDays") {
         Container(marketing, "Marketing-Website", "Next.js (entkoppelt)", "Landing/Pricing/Blog — KEINE PMS/Auth-Kopplung (ADR-0002)")
         Container(web, "Web Dashboard", "Next.js, TypeScript", "Vermieter-PMS-UI + Portale (Vercel)")
         Container(mobile, "Mobile-App", "React Native 0.86 (bare CLI, kein Expo)", "Gäste (Buchen/Aufenthalt) + Gastgeber (Verwaltung), iOS/Android")
@@ -151,12 +151,12 @@ The executable building blocks and data stores of the system with technology and
 <Mermaid
   title="Container (C4 Level 2)"
   chart={`C4Container
-    title Container — NextDays
+    title Container — myNextDays
 
     Person(landlord, "Host", "Uses the dashboard")
     Person(guest, "Guest", "Books via portal/widget")
 
-    Container_Boundary(nd, "NextDays") {
+    Container_Boundary(nd, "myNextDays") {
         Container(marketing, "Marketing website", "Next.js (decoupled)", "Landing/Pricing/Blog — NO PMS/Auth coupling (ADR-0002)")
         Container(web, "Web Dashboard", "Next.js, TypeScript", "Host PMS UI + portals (Vercel)")
         Container(mobile, "Mobile app", "React Native 0.86 (bare CLI, no Expo)", "Guests (booking/stay) + hosts (management), iOS/Android")

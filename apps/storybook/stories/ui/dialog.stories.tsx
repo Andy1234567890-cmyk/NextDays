@@ -126,7 +126,7 @@ export const StandardmaessigOffen: Story = {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Willkommen bei NextDays</DialogTitle>
+          <DialogTitle>Willkommen bei myNextDays</DialogTitle>
           <DialogDescription>
             Dieser Dialog ist beim Laden bereits geöffnet, um den offenen
             Zustand zu zeigen.

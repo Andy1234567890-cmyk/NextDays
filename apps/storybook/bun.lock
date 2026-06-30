@@ -41,6 +41,7 @@
         "@storybook/addon-designs": "8.0.4",
         "@storybook/addon-docs": "^8.6.0",
         "@storybook/addon-themes": "^8.6.0",
+        "@storybook/addon-toolbars": "8.6.18",
         "@storybook/blocks": "^8.6.0",
         "@storybook/react-vite": "^8.6.0",
         "@tailwindcss/vite": "^4.0.0",
@@ -452,6 +453,8 @@
     "@storybook/addon-highlight": ["@storybook/addon-highlight@8.6.18", "", { "dependencies": { "@storybook/global": "^5.0.0" }, "peerDependencies": { "storybook": "^8.6.18" } }, "sha512-wTFJ1DPM0C8gK6nGTJxH75byayQj7BPAz02fME4AOmT6clrBpVl1zSTFTkXaSr+k4xOfeMR/xNUfVskaXz6T9w=="],
 
     "@storybook/addon-themes": ["@storybook/addon-themes@8.6.18", "", { "dependencies": { "ts-dedent": "^2.0.0" }, "peerDependencies": { "storybook": "^8.6.18" } }, "sha512-v+Xcxo/XB2ayw9E/RygGOqUIaPOXp9XEFv6EF7DRt41/RQkQ846yJBARTC2cH8kCb+7FYcvDLD3GN/ms7i8wNg=="],
+
+    "@storybook/addon-toolbars": ["@storybook/addon-toolbars@8.6.18", "", { "peerDependencies": { "storybook": "^8.6.18" } }, "sha512-x037KXCEcNfPISGX485DtiP+8Bw/cOT45plcQa8eiAQVrVcUwYaDoLubE9YV5b5CsSAjX8sDviGTme6ALfq7+w=="],
 
     "@storybook/blocks": ["@storybook/blocks@8.6.14", "", { "dependencies": { "@storybook/icons": "^1.2.12", "ts-dedent": "^2.0.0" }, "peerDependencies": { "react": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0", "react-dom": "^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0", "storybook": "^8.6.14" }, "optionalPeers": ["react", "react-dom"] }, "sha512-rBMHAfA39AGHgkrDze4RmsnQTMw1ND5fGWobr9pDcJdnDKWQWNRD7Nrlxj0gFlN3n4D9lEZhWGdFrCbku7FVAQ=="],
 

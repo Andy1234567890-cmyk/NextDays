@@ -8,7 +8,7 @@ import { De, En } from "@/components/docs/lang";
 
 # Zahlungen & Stripe Connect
 
-Dokumentation der Zahlungsinfrastruktur von NextDays. Primäres Gateway ist **Stripe Connect Custom** — Gastgeber werden vollständig White-Label auf unserer Plattform onboardet, Gäste zahlen direkt an NextDays, die Auszahlung an den Gastgeber erfolgt automatisch abzüglich der Plattformgebühr.
+Dokumentation der Zahlungsinfrastruktur von myNextDays. Primäres Gateway ist **Stripe Connect Custom** — Gastgeber werden vollständig White-Label auf unserer Plattform onboardet, Gäste zahlen direkt an myNextDays, die Auszahlung an den Gastgeber erfolgt automatisch abzüglich der Plattformgebühr.
 
 > ADR: [ADR-0011 — Stripe primär](https://github.com) · [ADR-0003 — superseded](https://github.com)
 
@@ -19,7 +19,7 @@ Dokumentation der Zahlungsinfrastruktur von NextDays. Primäres Gateway ist **St
 **Stripe Connect Custom** wurde gegenüber Express/Standard gewählt, weil:
 
 - Vollständige White-Label-Kontrolle — kein Stripe-Branding für den Gastgeber
-- NextDays übernimmt das KYC-Onboarding (Name, Adresse, Bankverbindung, Ausweisdokument)
+- myNextDays übernimmt das KYC-Onboarding (Name, Adresse, Bankverbindung, Ausweisdokument)
 - Vollständige Kontrolle über UX und Darstellung
 
 Stripe wird für **alle Zahlungen auf der eigenen Plattform** (myNextDays/`booking_engine`) genutzt — Direkt- wie Plattformbuchung. Nur bei **OTA-Buchungen** (Booking.com etc.) zahlt der Gast beim OTA; dort fließt kein Stripe-Geld über uns.
@@ -30,7 +30,7 @@ Stripe wird für **alle Zahlungen auf der eigenen Plattform** (myNextDays/`booki
 
 # Payments & Stripe Connect
 
-Documentation of NextDays' payment infrastructure. The primary gateway is **Stripe Connect Custom** — hosts are onboarded fully white-label on our platform, guests pay NextDays directly, and the payout to the host happens automatically minus the platform fee.
+Documentation of myNextDays' payment infrastructure. The primary gateway is **Stripe Connect Custom** — hosts are onboarded fully white-label on our platform, guests pay myNextDays directly, and the payout to the host happens automatically minus the platform fee.
 
 > ADR: [ADR-0011 — Stripe primary](https://github.com) · [ADR-0003 — superseded](https://github.com)
 
@@ -41,7 +41,7 @@ Documentation of NextDays' payment infrastructure. The primary gateway is **Stri
 **Stripe Connect Custom** was chosen over Express/Standard because:
 
 - Full white-label control — no Stripe branding for the host
-- NextDays handles the KYC onboarding (name, address, bank details, ID document)
+- myNextDays handles the KYC onboarding (name, address, bank details, ID document)
 - Full control over UX and presentation
 
 Stripe is used for **all payments on our own platform** (myNextDays/`booking_engine`) — both direct and platform bookings. Only for **OTA bookings** (Booking.com etc.) the guest pays at the OTA; no Stripe money flows through us there.
@@ -62,7 +62,7 @@ Stripe is used for **all payments on our own platform** (myNextDays/`booking_eng
   title="Flow 1: Plattformbuchung (Direkt)"
   chart={`sequenceDiagram
     participant G as Gast
-    participant P as NextDays Platform
+    participant P as myNextDays Platform
     participant S as Stripe
     participant H as Gastgeber (Connected Account)
 
@@ -79,7 +79,7 @@ Stripe is used for **all payments on our own platform** (myNextDays/`booking_eng
     participant G as Gast
     participant OTA as Booking.com
     participant C as Channex
-    participant P as NextDays Platform
+    participant P as myNextDays Platform
 
     G->>OTA: Buchung & Zahlung (beim OTA)
     OTA->>C: Buchungs-Webhook
@@ -94,7 +94,7 @@ Stripe is used for **all payments on our own platform** (myNextDays/`booking_eng
   title="Flow 1: Platform booking (direct)"
   chart={`sequenceDiagram
     participant G as Guest
-    participant P as NextDays Platform
+    participant P as myNextDays Platform
     participant S as Stripe
     participant H as Host (Connected Account)
 
@@ -111,7 +111,7 @@ Stripe is used for **all payments on our own platform** (myNextDays/`booking_eng
     participant G as Guest
     participant OTA as Booking.com
     participant C as Channex
-    participant P as NextDays Platform
+    participant P as myNextDays Platform
 
     G->>OTA: Booking & payment (at the OTA)
     OTA->>C: Booking webhook

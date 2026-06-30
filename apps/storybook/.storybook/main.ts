@@ -15,6 +15,10 @@ const config: StorybookConfig = {
     "@storybook/addon-docs",
     "@storybook/addon-a11y",
     "@storybook/addon-designs",
+    // Rendert die globale Toolbar (u.a. den DE/EN-Sprach-Umschalter aus
+    // preview.tsx globalTypes.docLang). Ohne dieses Addon erscheint der
+    // Umschalter nicht.
+    "@storybook/addon-toolbars",
   ],
   framework: {
     name: "@storybook/react-vite",

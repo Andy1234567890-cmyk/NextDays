@@ -21,7 +21,7 @@ Diese Datei ist die einzige Quelle der Wahrheit für den Komponenten-Bau. Nicht 
 - Deutsche Story-Namen (Standard, Varianten, Zustände …) und deutsche Beispieltexte.
 
 ## Sidebar-Titel-Hierarchie (genau so)
-- Doku (MDX): `Einführung/...`  → z.B. `Einführung/Was ist NextDays`
+- Doku (MDX): `Einführung/...`  → z.B. `Einführung/Was ist myNextDays`
 - Design-Tokens: `Design/Tokens`
 - Primitive: `UI-Bausteine/<Name>`  → z.B. `UI-Bausteine/Input`
 - Fachlich: `PMS-Komponenten/<Name>` → z.B. `PMS-Komponenten/Multi-Kalender`

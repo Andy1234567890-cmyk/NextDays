@@ -60,7 +60,7 @@ export const Eingehend: Story = {
 export const Ausgehend: Story = {
   args: {
     direction: "outgoing",
-    sender: "Team NextDays",
+    sender: "Team myNextDays",
     channel: "email",
     text: "Gerne! Check-in ist ab 15:00 Uhr möglich. Bis später!",
     timestamp: "14:40",
@@ -109,7 +109,7 @@ export const Thread: Story = {
       />
       <MessageBubble
         direction="outgoing"
-        sender="Team NextDays"
+        sender="Team myNextDays"
         channel="ota"
         text="Hallo Lena, schön dass Sie kommen! Check-in ist ab 15:00 Uhr."
         timestamp="Gestern, 18:20"
@@ -123,7 +123,7 @@ export const Thread: Story = {
       />
       <MessageBubble
         direction="outgoing"
-        sender="Team NextDays"
+        sender="Team myNextDays"
         channel="sms"
         text="Ja, ein kostenfreier Stellplatz direkt am Haus ist reserviert."
         timestamp="08:21"
