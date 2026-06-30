@@ -44,7 +44,9 @@ export type PropertyInput = Partial<
   Omit<Property, "id" | "tenant_id" | "created_at" | "updated_at">
 > & { title?: string };
 
-type Result<T> = { ok: true; data: T } | { ok: false; error: string };
+type Result<T> =
+  | { ok: true; data: T }
+  | { ok: false; error: string; status?: number };
 
 async function call<T>(
   path: string,
@@ -58,7 +60,8 @@ async function call<T>(
   } catch (exc) {
     const error =
       exc instanceof ApiError ? exc.message : "Aktion fehlgeschlagen.";
-    return { ok: false, error };
+    const status = exc instanceof ApiError ? exc.status : undefined;
+    return { ok: false, error, status };
   }
 }
 

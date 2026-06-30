@@ -34,10 +34,13 @@ export function NewPropertyButton() {
   const [guests, setGuests] = useState(2);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 409 = Stripe-Konto noch nicht freigeschaltet → Hinweis + Weg zur Einrichtung.
+  const [needsPayments, setNeedsPayments] = useState(false);
 
   async function save() {
     setBusy(true);
     setError(null);
+    setNeedsPayments(false);
     const res = await createProperty({
       title,
       property_type: type,
@@ -51,6 +54,7 @@ export function NewPropertyButton() {
       router.refresh();
     } else {
       setError(res.error);
+      if (res.status === 409) setNeedsPayments(true);
     }
   }
 
@@ -114,11 +118,33 @@ export function NewPropertyButton() {
               />
             </div>
 
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && !needsPayments && (
+              <p className="text-sm text-destructive">{error}</p>
+            )}
 
-            <Button onClick={save} disabled={busy || !title.trim()}>
-              {busy ? "Anlegen…" : "Objekt anlegen"}
-            </Button>
+            {needsPayments ? (
+              <div className="flex flex-col gap-3 rounded-(--radius) border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+                <span className="flex items-start gap-2">
+                  <Icon icon="ph:warning-circle" className="mt-0.5 size-4 shrink-0" />
+                  {error}
+                </span>
+                <Button
+                  variant="outline"
+                  className="self-start gap-2"
+                  onClick={() => {
+                    setOpen(false);
+                    router.push("/konto/zahlungen");
+                  }}
+                >
+                  <Icon icon="ph:credit-card" className="size-4" />
+                  Zahlungen einrichten
+                </Button>
+              </div>
+            ) : (
+              <Button onClick={save} disabled={busy || !title.trim()}>
+                {busy ? "Anlegen…" : "Objekt anlegen"}
+              </Button>
+            )}
           </div>
         </SheetContent>
       </Sheet>
