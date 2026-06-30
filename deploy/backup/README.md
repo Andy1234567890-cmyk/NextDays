@@ -8,13 +8,16 @@ Reiner Hetzner-Stack (Storage Box + BorgBackup), kein AWS.
 
 | Komponente | Zeitplan | Was |
 |---|---|---|
-| `nextdays-backup.timer` | täglich 02:30 | `pg_dump -Fc` (`postgres` + `_supabase`) + Supabase-Storage → age-verschlüsselt → Borg-Push zur Storage Box → GFS-Prune |
+| `nextdays-backup.timer` | täglich 02:30 | `pg_dump -Fc` (`postgres` + `_supabase`) + Coolify-Config + Supabase-Storage → age-verschlüsselt → Borg-Push zur Storage Box → GFS-Prune |
 | `nextdays-restore-test.timer` | monatlich, 1. um 04:00 | Jüngstes Backup in Wegwerf-Container wiederherstellen + Sanity-Checks |
 | `nextdays-disk-check.timer` | stündlich | Warnt bei > 80 % auf OS-SSD oder Daten-Volume |
 
 **Retention (GFS):** 7 täglich · 4 wöchentlich · 6 monatlich.
-**Gesichert:** DBs `postgres` + `_supabase`, Storage-Verzeichnis (Gäste-Fotos/Belege = PII).
-**Verschlüsselung:** Borg-Repo (repokey) **und** age auf den DB-Dumps (Defense-in-Depth).
+**Gesichert:** DBs `postgres` + `_supabase`, Storage (Gäste-Fotos/Belege = PII), **und
+die Coolify-Konfiguration** (`coolify-config.tar.age`: coolify-DB-Dump + APP_KEY +
+SSH-Keys — siehe [../RECOVERY.md](../RECOVERY.md) für den Wiederaufbau).
+**Verschlüsselung:** Borg-Repo (repokey) **und** age auf den Dumps (Defense-in-Depth).
+Das Coolify-Tar enthält Secrets → liegt **nur** age-verschlüsselt vor.
 
 Die Prod-DB und die Bind-Mount-Datenverzeichnisse werden ausschließlich **gelesen**.
 
