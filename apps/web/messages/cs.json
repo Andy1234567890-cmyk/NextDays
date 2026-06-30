@@ -37,6 +37,12 @@
       "companyRegister": "Č. obchodního rejstříku",
       "districtCourt": "Rejstříkový soud",
       "iban": "IBAN",
+      "paymentActivation": "Aktivace plateb",
+      "accountType": "Typ účtu",
+      "accountTypeIndividual": "Fyzická osoba",
+      "accountTypeCompany": "Firma",
+      "ownerDob": "Datum narození (pro aktivaci plateb)",
+      "ownerDobCompany": "Datum narození oprávněné osoby",
       "saving": "Ukládání …",
       "missing": "Vyplňte prosím: {fields}.",
       "field": {

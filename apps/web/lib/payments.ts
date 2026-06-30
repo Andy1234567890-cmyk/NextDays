@@ -146,6 +146,20 @@ export async function updateConnectAccount(
   return res;
 }
 
+// Stripe-Nutzungsbedingungen (ToS) mit der echten Request-IP akzeptieren. Stripe
+// verlangt diese Annahme zur Freischaltung (charges_enabled). KEIN Body — die IP
+// ermittelt das Backend aus dem Request. Gibt den aktualisierten Status zurück.
+export async function acceptConnectTos(
+  accountId: string,
+): Promise<Result<ConnectStatus>> {
+  const res = await call<ConnectStatus>(
+    `/connect/accounts/${encodeURIComponent(accountId)}/accept-tos`,
+    { method: "POST" },
+  );
+  if (res.ok) revalidatePath("/konto/zahlungen");
+  return res;
+}
+
 // Auszahlungs-Bankkonto (IBAN) hinterlegen. Gibt den aktualisierten Status zurück.
 export async function setBankAccount(
   accountId: string,

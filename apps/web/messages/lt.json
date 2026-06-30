@@ -37,6 +37,12 @@
       "companyRegister": "Įmonių registro nr.",
       "districtCourt": "Registro teismas",
       "iban": "IBAN",
+      "paymentActivation": "Mokėjimų aktyvinimas",
+      "accountType": "Paskyros tipas",
+      "accountTypeIndividual": "Fizinis asmuo",
+      "accountTypeCompany": "Įmonė",
+      "ownerDob": "Gimimo data (mokėjimams aktyvinti)",
+      "ownerDobCompany": "Įgalioto atstovo gimimo data",
       "saving": "Išsaugoma …",
       "missing": "Užpildykite: {fields}.",
       "field": {

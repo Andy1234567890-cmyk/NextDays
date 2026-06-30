@@ -37,6 +37,12 @@
       "companyRegister": "Nru tar-reġistru kummerċjali",
       "districtCourt": "Qorti tar-reġistru",
       "iban": "IBAN",
+      "paymentActivation": "Attivazzjoni tal-ħlasijiet",
+      "accountType": "Tip ta' kont",
+      "accountTypeIndividual": "Individwu",
+      "accountTypeCompany": "Kumpanija",
+      "ownerDob": "Data tat-twelid (għall-attivazzjoni tal-ħlasijiet)",
+      "ownerDobCompany": "Data tat-twelid tar-rappreżentant awtorizzat",
       "saving": "Qed jissejvja …",
       "missing": "Jekk jogħġbok imla: {fields}.",
       "field": {

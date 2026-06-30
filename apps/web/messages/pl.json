@@ -37,6 +37,12 @@
       "companyRegister": "Nr rejestru handlowego",
       "districtCourt": "Sąd rejestrowy",
       "iban": "IBAN",
+      "paymentActivation": "Aktywacja płatności",
+      "accountType": "Typ konta",
+      "accountTypeIndividual": "Osoba fizyczna",
+      "accountTypeCompany": "Firma",
+      "ownerDob": "Data urodzenia (do aktywacji płatności)",
+      "ownerDobCompany": "Data urodzenia osoby uprawnionej do reprezentacji",
       "saving": "Zapisywanie …",
       "missing": "Proszę uzupełnić: {fields}.",
       "field": {

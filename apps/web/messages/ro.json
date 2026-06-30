@@ -37,6 +37,12 @@
       "companyRegister": "Nr. registrul comerțului",
       "districtCourt": "Oficiul registrului",
       "iban": "IBAN",
+      "paymentActivation": "Activarea plăților",
+      "accountType": "Tip de cont",
+      "accountTypeIndividual": "Persoană fizică",
+      "accountTypeCompany": "Companie",
+      "ownerDob": "Data nașterii (pentru activarea plăților)",
+      "ownerDobCompany": "Data nașterii reprezentantului legal",
       "saving": "Se salvează …",
       "missing": "Te rugăm completează: {fields}.",
       "field": {

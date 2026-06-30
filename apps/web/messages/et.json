@@ -98,6 +98,12 @@
       "companyRegister": "Äriregistri nr",
       "districtCourt": "Registrikohus",
       "iban": "IBAN",
+      "paymentActivation": "Maksete aktiveerimine",
+      "accountType": "Konto tüüp",
+      "accountTypeIndividual": "Eraisik",
+      "accountTypeCompany": "Ettevõte",
+      "ownerDob": "Sünnikuupäev (maksete aktiveerimiseks)",
+      "ownerDobCompany": "Esindusõigusliku isiku sünnikuupäev",
       "saving": "Salvestamine …",
       "missing": "Palun täitke: {fields}.",
       "field": {

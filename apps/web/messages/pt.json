@@ -37,6 +37,12 @@
       "companyRegister": "N.º de registo comercial",
       "districtCourt": "Conservatória do registo",
       "iban": "IBAN",
+      "paymentActivation": "Ativação de pagamentos",
+      "accountType": "Tipo de conta",
+      "accountTypeIndividual": "Pessoa singular",
+      "accountTypeCompany": "Empresa",
+      "ownerDob": "Data de nascimento (para a ativação de pagamentos)",
+      "ownerDobCompany": "Data de nascimento do representante legal",
       "saving": "A guardar …",
       "missing": "Preenche os campos: {fields}.",
       "field": {

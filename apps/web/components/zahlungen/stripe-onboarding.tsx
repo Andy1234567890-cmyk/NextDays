@@ -25,7 +25,9 @@ import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Separator } from "@/components/ui/separator";
 import { COUNTRIES } from "@/lib/countries";
+import { saveFirmenProfil } from "@/lib/firmenprofil";
 import {
+  acceptConnectTos,
   createConnectAccount,
   getConnectStatus,
   setBankAccount,
@@ -76,12 +78,19 @@ export function StripeOnboarding({
   const [creating, startCreate] = useTransition();
   const [savingProfile, startProfile] = useTransition();
   const [savingBank, startBank] = useTransition();
+  const [accepting, startAccept] = useTransition();
 
   // Inhaber-Standort: vorbefüllt aus dem Account-Land, sonst leer (kein Default-
   // Erfinden — Projektregel „keine Fallbacks"). Wird auch fürs Anlegen genutzt.
   const [country, setCountry] = useState("");
 
   // Geschäfts-/Inhaber-Formular.
+  // Kontotyp: Einzelperson/Firma (entspricht tenant_billing_profile.account_type,
+  // Default 'individual'). Steuert das Label des Geburtsdatums und wird mit dem
+  // Firmenprofil gespeichert (für die Stripe-Freischaltung).
+  const [accountType, setAccountType] = useState<"individual" | "company">(
+    "individual",
+  );
   const [url, setUrl] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -173,6 +182,17 @@ export function StripeOnboarding({
     }
 
     startProfile(async () => {
+      // Kontotyp + Geburtsdatum zusätzlich ins Firmenprofil schreiben
+      // (tenant_billing_profile.account_type / owner_dob). Geburtsdatum nur,
+      // wenn ausgefüllt — kein leerer/erfundener Wert (Projektregel).
+      const profil: { accountType: "individual" | "company"; ownerDob?: string } =
+        { accountType };
+      if (dob) profil.ownerDob = dob;
+      const profilRes = await saveFirmenProfil(profil);
+      if (!profilRes.ok) {
+        toast.error(profilRes.error);
+        return;
+      }
       const res = await updateConnectAccount(accountId, fields);
       if (!res.ok) {
         toast.error(res.error);
@@ -205,6 +225,21 @@ export function StripeOnboarding({
       }
       setStatus(res.data);
       toast.success("Bankverbindung gespeichert.");
+    });
+  }
+
+  // Stripe-Nutzungsbedingungen mit echter Request-IP akzeptieren — nötig zur
+  // Freischaltung (charges_enabled). Gibt den aktualisierten Status zurück.
+  function handleAcceptTos() {
+    if (!accountId) return;
+    startAccept(async () => {
+      const res = await acceptConnectTos(accountId);
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
+      setStatus(res.data);
+      toast.success("Nutzungsbedingungen akzeptiert.");
     });
   }
 
@@ -335,6 +370,38 @@ export function StripeOnboarding({
                   Keine offenen Anforderungen. Deine Angaben werden geprüft.
                 </p>
               )}
+
+              {status.charges_enabled ? (
+                // Freigeschaltet: grüner Aktiv-Zustand.
+                <div className="flex items-center gap-2 rounded-(--radius) border border-emerald-600/40 bg-emerald-50 p-3 text-sm font-medium text-emerald-700">
+                  <Icon
+                    icon="ph:check-circle-fill"
+                    className="size-5 shrink-0 text-emerald-600"
+                  />
+                  Zahlungen aktiv — du kannst Gästezahlungen empfangen.
+                </div>
+              ) : (
+                // Noch nicht freigeschaltet: Stripe-ToS akzeptieren.
+                <div className="flex flex-col gap-2">
+                  <Button
+                    type="button"
+                    variant="accent"
+                    onClick={handleAcceptTos}
+                    disabled={accepting}
+                    className="self-start"
+                  >
+                    <Icon
+                      icon={accepting ? "ph:spinner" : "ph:rocket-launch"}
+                      className={"size-4 " + (accepting ? "animate-spin" : "")}
+                    />
+                    {accepting ? "Wird aktiviert …" : "Zahlungen aktivieren"}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Mit dem Klick akzeptierst du die
+                    Stripe-Nutzungsbedingungen.
+                  </p>
+                </div>
+              )}
             </>
           ) : (
             <p className="text-sm text-muted-foreground">
@@ -367,6 +434,20 @@ export function StripeOnboarding({
 
           <Separator />
 
+          <div className="flex flex-col gap-1.5 sm:max-w-xs">
+            <Label htmlFor="acct-type">Kontotyp</Label>
+            <NativeSelect
+              id="acct-type"
+              value={accountType}
+              onChange={(e) =>
+                setAccountType(e.target.value as "individual" | "company")
+              }
+            >
+              <option value="individual">Einzelperson</option>
+              <option value="company">Firma</option>
+            </NativeSelect>
+          </div>
+
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="ind-first">Vorname</Label>
@@ -397,7 +478,11 @@ export function StripeOnboarding({
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="ind-dob">Geburtsdatum</Label>
+              <Label htmlFor="ind-dob">
+                {accountType === "company"
+                  ? "Geburtsdatum der vertretungsberechtigten Person"
+                  : "Geburtsdatum (für die Zahlungsfreischaltung)"}
+              </Label>
               <Input
                 id="ind-dob"
                 type="date"

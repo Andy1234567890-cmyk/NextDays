@@ -37,6 +37,12 @@
       "companyRegister": "CVR-nr.",
       "districtCourt": "Registreringsdomstol",
       "iban": "IBAN",
+      "paymentActivation": "Aktivering af betalinger",
+      "accountType": "Kontotype",
+      "accountTypeIndividual": "Privatperson",
+      "accountTypeCompany": "Virksomhed",
+      "ownerDob": "Fødselsdato (til aktivering af betalinger)",
+      "ownerDobCompany": "Fødselsdato for den tegningsberettigede person",
       "saving": "Gemmer …",
       "missing": "Udfyld venligst: {fields}.",
       "field": {

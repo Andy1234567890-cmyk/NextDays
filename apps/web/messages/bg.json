@@ -98,6 +98,12 @@
       "companyRegister": "№ в търговския регистър",
       "districtCourt": "Регистърен съд",
       "iban": "IBAN",
+      "paymentActivation": "Активиране на плащания",
+      "accountType": "Тип акаунт",
+      "accountTypeIndividual": "Физическо лице",
+      "accountTypeCompany": "Фирма",
+      "ownerDob": "Дата на раждане (за активиране на плащания)",
+      "ownerDobCompany": "Дата на раждане на упълномощения представител",
       "saving": "Запазване …",
       "missing": "Моля, попълнете: {fields}.",
       "field": {

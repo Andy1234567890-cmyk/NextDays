@@ -37,6 +37,12 @@
       "companyRegister": "Reg.nr för handelsregister",
       "districtCourt": "Registreringsdomstol",
       "iban": "IBAN",
+      "paymentActivation": "Aktivering av betalningar",
+      "accountType": "Kontotyp",
+      "accountTypeIndividual": "Privatperson",
+      "accountTypeCompany": "Företag",
+      "ownerDob": "Födelsedatum (för aktivering av betalningar)",
+      "ownerDobCompany": "Födelsedatum för den behöriga företrädaren",
       "saving": "Sparar …",
       "missing": "Fyll i: {fields}.",
       "field": {

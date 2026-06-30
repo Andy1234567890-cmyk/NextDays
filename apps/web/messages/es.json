@@ -37,6 +37,12 @@
       "companyRegister": "N.º de registro mercantil",
       "districtCourt": "Registro mercantil",
       "iban": "IBAN",
+      "paymentActivation": "Activación de pagos",
+      "accountType": "Tipo de cuenta",
+      "accountTypeIndividual": "Persona física",
+      "accountTypeCompany": "Empresa",
+      "ownerDob": "Fecha de nacimiento (para la activación de pagos)",
+      "ownerDobCompany": "Fecha de nacimiento del representante legal",
       "saving": "Guardando …",
       "missing": "Rellena los campos: {fields}.",
       "field": {

@@ -37,6 +37,12 @@
       "companyRegister": "KvK-nummer",
       "districtCourt": "Registerrechtbank",
       "iban": "IBAN",
+      "paymentActivation": "Betalingen activeren",
+      "accountType": "Accounttype",
+      "accountTypeIndividual": "Particulier",
+      "accountTypeCompany": "Bedrijf",
+      "ownerDob": "Geboortedatum (voor activering van betalingen)",
+      "ownerDobCompany": "Geboortedatum van de bevoegde vertegenwoordiger",
       "saving": "Opslaan …",
       "missing": "Vul in: {fields}.",
       "field": {

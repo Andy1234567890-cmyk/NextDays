@@ -37,6 +37,12 @@
       "companyRegister": "Komercreģistra nr.",
       "districtCourt": "Reģistra tiesa",
       "iban": "IBAN",
+      "paymentActivation": "Maksājumu aktivizēšana",
+      "accountType": "Konta veids",
+      "accountTypeIndividual": "Fiziska persona",
+      "accountTypeCompany": "Uzņēmums",
+      "ownerDob": "Dzimšanas datums (maksājumu aktivizēšanai)",
+      "ownerDobCompany": "Pilnvarotās personas dzimšanas datums",
       "saving": "Notiek saglabāšana …",
       "missing": "Lūdzu, aizpildiet: {fields}.",
       "field": {

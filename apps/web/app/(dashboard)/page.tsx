@@ -3,9 +3,11 @@
 // Dashboard den Setup-Assistenten (ersetzt den Inhalt). Danach erscheint das
 // Reservierungs-Dashboard (echte Kennzahlen aus dem Backend).
 import { Icon } from "@iconify/react";
+import { Suspense } from "react";
 
 import { ReservationsDashboard } from "@/components/dashboard/reservations-dashboard";
 import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
+import { PaymentsStatusBanner } from "@/components/zahlungen/payments-status-banner";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card, CardContent } from "@/components/ui/card";
 import { getOnboarding } from "@/lib/onboarding";
@@ -50,6 +52,9 @@ export default async function DashboardPage() {
   return (
     <>
       <RealtimeRefresh tables={["reservations", "properties", "availability"]} />
+      <Suspense fallback={null}>
+        <PaymentsStatusBanner />
+      </Suspense>
       <ReservationsDashboard data={dashboard.data} />
     </>
   );

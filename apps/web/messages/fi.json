@@ -37,6 +37,12 @@
       "companyRegister": "Kaupparekisterinro",
       "districtCourt": "Rekisteriviranomainen",
       "iban": "IBAN",
+      "paymentActivation": "Maksujen aktivointi",
+      "accountType": "Tilin tyyppi",
+      "accountTypeIndividual": "Yksityishenkilö",
+      "accountTypeCompany": "Yritys",
+      "ownerDob": "Syntymäaika (maksujen aktivointia varten)",
+      "ownerDobCompany": "Edustamiseen oikeutetun henkilön syntymäaika",
       "saving": "Tallennetaan …",
       "missing": "Täytä: {fields}.",
       "field": {

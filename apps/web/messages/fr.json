@@ -37,6 +37,12 @@
       "companyRegister": "N° du registre du commerce",
       "districtCourt": "Tribunal d'enregistrement",
       "iban": "IBAN",
+      "paymentActivation": "Activation des paiements",
+      "accountType": "Type de compte",
+      "accountTypeIndividual": "Particulier",
+      "accountTypeCompany": "Société",
+      "ownerDob": "Date de naissance (pour l'activation des paiements)",
+      "ownerDobCompany": "Date de naissance du représentant légal",
       "saving": "Enregistrement …",
       "missing": "Veuillez compléter : {fields}.",
       "field": {

@@ -98,6 +98,12 @@
       "companyRegister": "Αρ. εμπορικού μητρώου",
       "districtCourt": "Δικαστήριο μητρώου",
       "iban": "IBAN",
+      "paymentActivation": "Ενεργοποίηση πληρωμών",
+      "accountType": "Τύπος λογαριασμού",
+      "accountTypeIndividual": "Φυσικό πρόσωπο",
+      "accountTypeCompany": "Εταιρεία",
+      "ownerDob": "Ημερομηνία γέννησης (για την ενεργοποίηση πληρωμών)",
+      "ownerDobCompany": "Ημερομηνία γέννησης του νόμιμου εκπροσώπου",
       "saving": "Αποθήκευση …",
       "missing": "Συμπληρώστε: {fields}.",
       "field": {

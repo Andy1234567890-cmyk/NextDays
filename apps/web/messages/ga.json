@@ -37,6 +37,12 @@
       "companyRegister": "Uimh. na cláir thráchtála",
       "districtCourt": "Cúirt chláraithe",
       "iban": "IBAN",
+      "paymentActivation": "Gníomhachtú íocaíochtaí",
+      "accountType": "Cineál cuntais",
+      "accountTypeIndividual": "Duine aonair",
+      "accountTypeCompany": "Cuideachta",
+      "ownerDob": "Dáta breithe (le haghaidh gníomhachtú íocaíochtaí)",
+      "ownerDobCompany": "Dáta breithe an ionadaí údaraithe",
       "saving": "Á shábháil …",
       "missing": "Líon isteach, le do thoil: {fields}.",
       "field": {

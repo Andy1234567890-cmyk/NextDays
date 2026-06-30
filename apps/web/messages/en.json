@@ -37,6 +37,12 @@
       "companyRegister": "Commercial register no.",
       "districtCourt": "Register court",
       "iban": "IBAN",
+      "paymentActivation": "Payment activation",
+      "accountType": "Account type",
+      "accountTypeIndividual": "Individual",
+      "accountTypeCompany": "Company",
+      "ownerDob": "Date of birth (for payment activation)",
+      "ownerDobCompany": "Date of birth of the authorised representative",
       "saving": "Saving …",
       "missing": "Please fill in: {fields}.",
       "field": {

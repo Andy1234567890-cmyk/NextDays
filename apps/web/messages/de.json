@@ -37,6 +37,12 @@
       "companyRegister": "Handelsregister-Nr.",
       "districtCourt": "Registergericht",
       "iban": "IBAN",
+      "paymentActivation": "Zahlungsfreischaltung",
+      "accountType": "Kontotyp",
+      "accountTypeIndividual": "Einzelperson",
+      "accountTypeCompany": "Firma",
+      "ownerDob": "Geburtsdatum (für die Zahlungsfreischaltung)",
+      "ownerDobCompany": "Geburtsdatum der vertretungsberechtigten Person",
       "saving": "Speichert …",
       "missing": "Bitte ausfüllen: {fields}.",
       "field": {

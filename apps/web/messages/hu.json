@@ -98,6 +98,12 @@
       "companyRegister": "Cégjegyzékszám",
       "districtCourt": "Cégbíróság",
       "iban": "IBAN",
+      "paymentActivation": "Fizetések aktiválása",
+      "accountType": "Fióktípus",
+      "accountTypeIndividual": "Magánszemély",
+      "accountTypeCompany": "Cég",
+      "ownerDob": "Születési dátum (a fizetések aktiválásához)",
+      "ownerDobCompany": "A képviseletre jogosult személy születési dátuma",
       "saving": "Mentés …",
       "missing": "Kérjük, töltse ki: {fields}.",
       "field": {

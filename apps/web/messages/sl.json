@@ -98,6 +98,12 @@
       "companyRegister": "Št. poslovnega registra",
       "districtCourt": "Registrsko sodišče",
       "iban": "IBAN",
+      "paymentActivation": "Aktivacija plačil",
+      "accountType": "Vrsta računa",
+      "accountTypeIndividual": "Fizična oseba",
+      "accountTypeCompany": "Podjetje",
+      "ownerDob": "Datum rojstva (za aktivacijo plačil)",
+      "ownerDobCompany": "Datum rojstva pooblaščene osebe",
       "saving": "Shranjevanje …",
       "missing": "Prosimo, izpolnite: {fields}.",
       "field": {

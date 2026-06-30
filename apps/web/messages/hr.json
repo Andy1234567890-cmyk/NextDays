@@ -98,6 +98,12 @@
       "companyRegister": "Br. sudskog registra",
       "districtCourt": "Registarski sud",
       "iban": "IBAN",
+      "paymentActivation": "Aktivacija plaćanja",
+      "accountType": "Vrsta računa",
+      "accountTypeIndividual": "Fizička osoba",
+      "accountTypeCompany": "Tvrtka",
+      "ownerDob": "Datum rođenja (za aktivaciju plaćanja)",
+      "ownerDobCompany": "Datum rođenja ovlaštene osobe",
       "saving": "Spremanje …",
       "missing": "Molimo ispunite: {fields}.",
       "field": {

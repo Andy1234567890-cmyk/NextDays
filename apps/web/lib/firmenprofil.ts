@@ -35,6 +35,11 @@ export type FirmenProfil = {
   lastName?: string;
   iban?: string;
   bic?: string;
+  // Stripe-KYC: Kontotyp (Einzelperson/Firma) + Geburtsdatum der vertretungs-
+  // berechtigten Person. Wird beim Profil-Speichern an den Auto-Connect-Account
+  // weitergereicht (für die Zahlungsfreischaltung). ownerDob = ISO YYYY-MM-DD.
+  accountType?: "individual" | "company";
+  ownerDob?: string;
 };
 
 // company_id ist serverseitig irrelevant (Profil = aktueller Tenant aus JWT),

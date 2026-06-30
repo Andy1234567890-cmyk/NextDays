@@ -37,6 +37,12 @@
       "companyRegister": "N. registro imprese",
       "districtCourt": "Tribunale di registrazione",
       "iban": "IBAN",
+      "paymentActivation": "Attivazione dei pagamenti",
+      "accountType": "Tipo di account",
+      "accountTypeIndividual": "Persona fisica",
+      "accountTypeCompany": "Azienda",
+      "ownerDob": "Data di nascita (per l'attivazione dei pagamenti)",
+      "ownerDobCompany": "Data di nascita del rappresentante legale",
       "saving": "Salvataggio …",
       "missing": "Compila i campi: {fields}.",
       "field": {

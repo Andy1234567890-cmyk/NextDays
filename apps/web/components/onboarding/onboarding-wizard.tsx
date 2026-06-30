@@ -64,6 +64,10 @@ export function OnboardingWizard({
     legalForm: "Einzelunternehmen",
     // Rechnungs-/Firmen-E-Mail mit der Login-E-Mail vorbelegen (editierbar).
     email: loginEmail ?? undefined,
+    // Stripe-Kontotyp: Default „Einzelperson" (entspricht dem DB-Default
+    // tenant_billing_profile.account_type='individual'). Geburtsdatum bleibt leer
+    // bis der Nutzer es ausfüllt — kein erfundener Wert (Projektregel).
+    accountType: "individual",
   });
   const [smallBusiness, setSmallBusiness] = useState(false);
 
@@ -132,6 +136,8 @@ export function OnboardingWizard({
       const res = await saveFirmenProfil({
         ...firma,
         isSmallBusiness: istKleinunternehmer,
+        // Geburtsdatum nur senden, wenn ausgefüllt — kein leerer/erfundener Wert.
+        ownerDob: firma.ownerDob?.trim() ? firma.ownerDob : undefined,
       });
       if (res.ok) {
         persist({ company_data_set: true });
@@ -325,6 +331,46 @@ export function OnboardingWizard({
               <Input
                 value={firma.iban ?? ""}
                 onChange={(e) => setF("iban", e.target.value)}
+              />
+            </Field>
+          </div>
+
+          {/* Stripe-KYC: Kontotyp + Geburtsdatum für die Zahlungsfreischaltung.
+              Bei „Firma" bezieht sich das Geburtsdatum auf die vertretungs-
+              berechtigte Person. */}
+          <p className="text-sm font-medium text-muted-foreground">
+            {t("company.paymentActivation")}
+          </p>
+          <div className="grid grid-cols-1 gap-x-3 gap-y-4 sm:grid-cols-2">
+            <Field label={t("company.accountType")}>
+              <NativeSelect
+                value={firma.accountType ?? "individual"}
+                onChange={(e) =>
+                  setF(
+                    "accountType",
+                    e.target.value as "individual" | "company",
+                  )
+                }
+              >
+                <option value="individual">
+                  {t("company.accountTypeIndividual")}
+                </option>
+                <option value="company">
+                  {t("company.accountTypeCompany")}
+                </option>
+              </NativeSelect>
+            </Field>
+            <Field
+              label={
+                firma.accountType === "company"
+                  ? t("company.ownerDobCompany")
+                  : t("company.ownerDob")
+              }
+            >
+              <Input
+                type="date"
+                value={firma.ownerDob ?? ""}
+                onChange={(e) => setF("ownerDob", e.target.value)}
               />
             </Field>
           </div>
