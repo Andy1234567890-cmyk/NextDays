@@ -1,7 +1,16 @@
-"""Router für payments. Gemountet unter /api/v1/payments."""
+"""Router für payments. Gemountet unter /api/v1/payments.
+
+- Connect (Custom, white-label): Account anlegen/aktualisieren, KYC-Status, IBAN.
+  Tenant-geschützt (Admin/Billing).
+- Gast-Zahlung: ``POST /payments/booking/{reservation_id}/intent`` (public — Gäste
+  zahlen ohne Login; Tenant serverseitig aus der Reservierung).
+- Kaution/Refund: tenant-geschützt (MANAGE_BILLING).
+- Webhook (kein JWT, via Stripe-Signatur): account.updated + payment_intent.*/charge.refunded.
+"""
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 
@@ -9,67 +18,163 @@ from src.core.config import get_settings
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.core.supabase import get_service_client
-from src.features.auth.dependencies import require_role
-from src.features.auth.permissions import UserRole
+from src.features.auth.dependencies import require_permission
+from src.features.auth.permissions import Capability
 
 from .schemas import (
+    BookingPaymentResult,
     ConnectAccountCreate,
     ConnectAccountResponse,
     ConnectAccountStatus,
+    ConnectAccountUpdate,
+    DepositCaptureRequest,
+    ExternalAccountRequest,
+    RefundRequest,
     SliceHealth,
 )
-from .service import PaymentsService
-from .stripe_client import get_stripe
+from .service import PaymentsError, PaymentsService
+from .webhook import handle_stripe_event
 
 router = APIRouter(prefix="/payments", tags=["payments"])
-_service = PaymentsService()
 log = get_logger("nextdays.payments")
 
 
+def get_payments_service() -> PaymentsService:
+    return PaymentsService(service_client=get_service_client())
+
+
+PaymentsServiceDep = Annotated[PaymentsService, Depends(get_payments_service)]
+_billing = Annotated[AuthContext, Depends(require_permission(Capability.MANAGE_BILLING))]
+
+
 @router.get("/health", response_model=SliceHealth)
-def health() -> SliceHealth:
-    return _service.health()
+def health(service: PaymentsServiceDep) -> SliceHealth:
+    return service.health()
 
 
-# --- Stripe Connect -----------------------------------------------------------
+# --- Stripe Connect (Custom, white-label) -------------------------------------
 
 @router.post("/connect/accounts", response_model=ConnectAccountResponse)
 def create_connect_account(
-    req: ConnectAccountCreate,
-    ctx: AuthContext = Depends(require_role(UserRole.admin)),
+    req: ConnectAccountCreate, service: PaymentsServiceDep, ctx: _billing
 ) -> ConnectAccountResponse:
-    """Erstellt einen Stripe Custom Account für den Gastgeber und gibt den
-    White-Label-Onboarding-Link zurück. Nur für Admins."""
-    base = get_settings().cors_origins.split(",")[0].strip()
-    return _service.create_connect_account(
-        req,
-        return_url=f"{base}/konto/zahlungen/onboarding/abgeschlossen",
-        refresh_url=f"{base}/konto/zahlungen/onboarding/neu",
-    )
+    """Custom-Account für den Gastgeber anlegen (kein Stripe-Branding). Die KYC-
+    Erfassung läuft danach über die eigene UI (update/external-account)."""
+    try:
+        return service.create_connect_account(req)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.get("/connect/accounts/{stripe_account_id}", response_model=ConnectAccountStatus)
 def get_connect_account_status(
-    stripe_account_id: str,
-    ctx: AuthContext = Depends(require_role(UserRole.admin)),
+    stripe_account_id: str, service: PaymentsServiceDep, ctx: _billing
 ) -> ConnectAccountStatus:
-    """Liefert KYC-/Aktivierungsstatus eines verbundenen Gastgeber-Accounts."""
-    return _service.get_connect_account_status(stripe_account_id)
+    """KYC-/Aktivierungsstatus + offene Requirements (für die eigene Onboarding-UI)."""
+    try:
+        return service.get_connect_account_status(stripe_account_id)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
-@router.post("/connect/accounts/{stripe_account_id}/onboarding-link")
-def refresh_onboarding_link(
+@router.patch("/connect/accounts/{stripe_account_id}", response_model=ConnectAccountStatus)
+def update_connect_account(
     stripe_account_id: str,
-    ctx: AuthContext = Depends(require_role(UserRole.admin)),
+    req: ConnectAccountUpdate,
+    service: PaymentsServiceDep,
+    ctx: _billing,
+) -> ConnectAccountStatus:
+    """Geschäfts-/Inhaberdaten an den Custom-Account senden (eigene UI)."""
+    try:
+        return service.update_connect_account(stripe_account_id, req.fields)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put("/connect/accounts/{stripe_account_id}/bank", response_model=ConnectAccountStatus)
+def set_external_account(
+    stripe_account_id: str,
+    req: ExternalAccountRequest,
+    service: PaymentsServiceDep,
+    ctx: _billing,
+) -> ConnectAccountStatus:
+    """Auszahlungs-Bankkonto (IBAN) am Custom-Account hinterlegen."""
+    try:
+        return service.set_external_account(
+            stripe_account_id,
+            iban=req.iban,
+            account_holder=req.account_holder,
+            country=req.country,
+        )
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Gast-Zahlung (public — Gäste zahlen ohne Login) --------------------------
+
+@router.post("/booking/{reservation_id}/intent", response_model=BookingPaymentResult)
+def create_booking_intent(
+    reservation_id: str, service: PaymentsServiceDep
+) -> BookingPaymentResult:
+    """PaymentIntent für eine Gastbuchung — Tenant kommt aus der Reservierung."""
+    try:
+        return service.create_booking_payment(reservation_id=reservation_id)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Kaution (tenant-geschützt) -----------------------------------------------
+
+@router.post("/deposit/{reservation_id}/hold")
+def create_deposit_hold(
+    reservation_id: str, service: PaymentsServiceDep, ctx: _billing
 ) -> dict:
-    """Generiert einen neuen Onboarding-Link (z. B. nach Ablauf des alten)."""
-    base = get_settings().cors_origins.split(",")[0].strip()
-    url = _service.create_onboarding_link(
-        stripe_account_id,
-        return_url=f"{base}/konto/zahlungen/onboarding/abgeschlossen",
-        refresh_url=f"{base}/konto/zahlungen/onboarding/neu",
-    )
-    return {"onboarding_url": url}
+    """Kaution vorautorisieren (manual-capture PaymentIntent)."""
+    try:
+        return service.create_deposit_hold(ctx, reservation_id=reservation_id)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/deposit/{payment_id}/capture")
+def capture_deposit(
+    payment_id: str,
+    req: DepositCaptureRequest,
+    service: PaymentsServiceDep,
+    ctx: _billing,
+) -> dict:
+    """Kaution (teilweise) einziehen — bei Schaden."""
+    try:
+        return service.capture_deposit(ctx, payment_id, req.amount)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/deposit/{payment_id}/release")
+def release_deposit(
+    payment_id: str, service: PaymentsServiceDep, ctx: _billing
+) -> dict:
+    """Kaution freigeben (Vorautorisierung stornieren)."""
+    try:
+        return service.release_deposit(ctx, payment_id)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Refund (tenant-geschützt) ------------------------------------------------
+
+@router.post("/{payment_id}/refund")
+def refund_payment(
+    payment_id: str,
+    req: RefundRequest,
+    service: PaymentsServiceDep,
+    ctx: _billing,
+) -> dict:
+    """Zahlung (teilweise) erstatten."""
+    try:
+        return service.refund_payment(ctx, payment_id, req.amount)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 # --- Stripe Webhook (kein JWT — via Stripe-Signatur gesichert) ----------------
@@ -79,37 +184,29 @@ async def stripe_webhook(
     request: Request,
     stripe_signature: str | None = Header(default=None, alias="stripe-signature"),
 ) -> dict[str, str]:
-    """Empfängt Stripe-Webhook-Events und verarbeitet relevante Events.
-
-    Stripe signiert jeden Request mit HMAC-SHA256 (Stripe-Signature Header).
-    Verifizierung via SDK — ungültige Signaturen → 400.
-    Relevante Events:
-      - account.updated: KYC-Status in tenant_billing_profile spiegeln.
-    """
+    """Empfängt Stripe-Webhook-Events (signaturgeprüft) und verarbeitet relevante
+    Events: ``account.updated`` (KYC-Spiegel) + ``payment_intent.*`` /
+    ``charge.refunded`` (Zahlstatus). Idempotent über die Event-ID."""
     import stripe  # noqa: PLC0415
 
     payload = await request.body()
     webhook_secret = get_settings().stripe_webhook_secret.get_secret_value()
 
-    if not webhook_secret or webhook_secret == "changeme":
+    if not webhook_secret:
         log.warning("stripe_webhook_secret_not_configured")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Stripe Webhook Secret nicht konfiguriert.",
         )
-
     if not stripe_signature:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Fehlender Stripe-Signature Header.",
         )
 
-    # Signatur prüfen — schützt vor gefälschten Webhook-Requests.
     try:
         event = stripe.Webhook.construct_event(
-            payload=payload,
-            sig_header=stripe_signature,
-            secret=webhook_secret,
+            payload=payload, sig_header=stripe_signature, secret=webhook_secret
         )
     except stripe.SignatureVerificationError as exc:
         log.warning("stripe_webhook_invalid_signature", error=str(exc))
@@ -118,48 +215,6 @@ async def stripe_webhook(
             detail="Ungültige Stripe-Signatur.",
         ) from exc
 
-    event_type: str = event["type"]
-    log.info("stripe_webhook_received", event_type=event_type, event_id=event["id"])
-
-    # --- account.updated: KYC-Status in DB spiegeln -------------------------
-    if event_type == "account.updated":
-        account = event["data"]["object"]
-        stripe_account_id: str = account.id
-        charges_enabled: bool = bool(getattr(account, "charges_enabled", False))
-        payouts_enabled: bool = bool(getattr(account, "payouts_enabled", False))
-        details_submitted: bool = bool(getattr(account, "details_submitted", False))
-
-        db = get_service_client()
-        update: dict = {
-            "stripe_charges_enabled": charges_enabled,
-            "stripe_payouts_enabled": payouts_enabled,
-            "stripe_details_submitted": details_submitted,
-        }
-        # Onboarding-Abschluss: erstmaliges details_submitted → Timestamp setzen.
-        if details_submitted:
-            update["stripe_onboarding_at"] = datetime.now(UTC).isoformat()
-
-        result = (
-            db.table("tenant_billing_profile")
-            .update(update)
-            .eq("stripe_account_id", stripe_account_id)
-            .execute()
-        )
-
-        if result.data:
-            log.info(
-                "stripe_account_updated",
-                stripe_account_id=stripe_account_id,
-                charges_enabled=charges_enabled,
-                payouts_enabled=payouts_enabled,
-                details_submitted=details_submitted,
-            )
-        else:
-            # Account noch nicht in der DB — kann bei Race Condition vorkommen
-            # (Webhook kommt vor dem create_connect_account-Response).
-            log.warning(
-                "stripe_account_not_found_in_db",
-                stripe_account_id=stripe_account_id,
-            )
-
+    db = get_service_client()
+    handle_stripe_event(db, event, now_iso=datetime.now(UTC).isoformat())
     return {"received": "ok"}

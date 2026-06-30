@@ -31,6 +31,9 @@ class Settings(BaseSettings):
     stripe_secret_key: SecretStr = SecretStr("")
     stripe_webhook_secret: SecretStr = SecretStr("")
     stripe_publishable_key: str = ""          # NEXT_PUBLIC_ im Frontend
+    # Plattform-Provision auf Gast-Zahlungen (Destination Charge), in Prozent des
+    # Buchungsbetrags. 0 = keine Fee (Default). Wird zu application_fee_amount.
+    stripe_platform_fee_pct: float = 0.0
     # Groq (KI-Antwortvorschläge im Posteingang). Pydantic liest case-insensitiv,
     # daher passt auch der Env-Name `Groq_API_Key`.
     groq_api_key: SecretStr = SecretStr("")

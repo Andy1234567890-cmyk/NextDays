@@ -8,7 +8,7 @@ Tenant-scoped (tenant_id aus dem JWT); der Webhook bestimmt den Tenant über die
 bestehende Konversation bzw. den konfigurierten Default-Tenant — nie geraten.
 """
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from supabase import Client
 
@@ -239,8 +239,8 @@ class WhatsAppService:
         if last_in is None:
             return False
         if last_in.tzinfo is None:
-            last_in = last_in.replace(tzinfo=timezone.utc)
-        return datetime.now(timezone.utc) - last_in < self._SERVICE_WINDOW
+            last_in = last_in.replace(tzinfo=UTC)
+        return datetime.now(UTC) - last_in < self._SERVICE_WINDOW
 
     def _resolve_target(
         self, db: Client, tenant_id: str, conversation_id: str | None, to_phone: str | None

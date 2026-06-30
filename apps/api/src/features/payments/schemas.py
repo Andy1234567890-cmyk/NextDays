@@ -28,6 +28,43 @@ class ChargeResult(BaseModel):
     status: str
 
 
+# --- Gast-Zahlung / Kaution / Refund ---------------------------------------
+
+class BookingPaymentResult(BaseModel):
+    """Antwort auf die Intent-Erstellung: client_secret für das Payment Element.
+
+    Das client_secret wird NICHT in der DB gespeichert (nur an den Browser für
+    die clientseitige Bestätigung)."""
+
+    client_secret: str
+    payment_id: str
+    publishable_key: str          # Frontend braucht den Stripe-Public-Key
+
+
+class PaymentRow(BaseModel):
+    """Eine Zahlung (gast-/tenant-sichtbar, ohne Stripe-Internas)."""
+
+    id: str
+    reservation_id: str
+    amount: float
+    currency: str | None = None
+    type: PaymentType
+    status: str
+    gateway: PaymentGateway
+
+
+class RefundRequest(BaseModel):
+    """Teil-/Vollerstattung zu einer bestehenden Zahlung. amount=None = voll."""
+
+    amount: float | None = None
+
+
+class DepositCaptureRequest(BaseModel):
+    """Kaution einziehen (Schaden). amount=None = Vollbetrag der Vorautorisierung."""
+
+    amount: float | None = None
+
+
 # --- Stripe Connect --------------------------------------------------------
 
 class ConnectAccountCreate(BaseModel):
@@ -37,18 +74,31 @@ class ConnectAccountCreate(BaseModel):
     tenant_id: str                # interner Tenant → wird als Metadata gespeichert
 
 class ConnectAccountResponse(BaseModel):
-    """Response nach Account-Erstellung."""
+    """Response nach Account-Erstellung (Custom: KEIN hosted Onboarding-Link —
+    die KYC-Erfassung läuft über die eigene Dashboard-UI)."""
     stripe_account_id: str        # acct_...
-    onboarding_url: str           # einmaliger Link zum White-Label-Onboarding
-    expires_at: int               # Unix-Timestamp, wann der Link abläuft
 
 class ConnectAccountStatus(BaseModel):
-    """Status eines verbundenen Gastgeber-Accounts."""
+    """Status eines verbundenen Gastgeber-Accounts (für die eigene Onboarding-UI)."""
     stripe_account_id: str
     charges_enabled: bool         # kann Zahlungen empfangen
     payouts_enabled: bool         # kann Auszahlungen erhalten
     details_submitted: bool       # KYC vollständig eingereicht
     requirements: list[str]       # offene Pflichtfelder (leer = alles OK)
+    disabled_reason: str | None = None  # warum der Account (noch) gesperrt ist
+
+
+class ConnectAccountUpdate(BaseModel):
+    """Geschäfts-/Inhaberdaten an den Custom-Account (eigene Onboarding-UI).
+    ``fields`` ist das Stripe-Account-Update (business_profile/company/individual)."""
+    fields: dict[str, object]
+
+
+class ExternalAccountRequest(BaseModel):
+    """Auszahlungs-Bankkonto (IBAN) am Custom-Account hinterlegen."""
+    iban: str
+    account_holder: str
+    country: str = "DE"
 
 
 class SliceHealth(BaseModel):
