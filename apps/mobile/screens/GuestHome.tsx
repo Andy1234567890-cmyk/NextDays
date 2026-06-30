@@ -5,7 +5,7 @@
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState } from "react";
-import { Pressable, ScrollView, View } from "react-native";
+import { Image, Pressable, ScrollView, View } from "react-native";
 
 import { Icon, type IconName } from "@/components/ui/Icon";
 import { Card, Chip, Col, Divider, Photo, Row, Star, Txt } from "@/components/ui/kit";
@@ -14,6 +14,8 @@ import { ND_PHOTOS as P, PH } from "@/lib/photos";
 import type { GuestTabParamList } from "@/navigation/types";
 import type { RootStackParamList } from "@/navigation/types";
 import { useTheme } from "@/theme/ThemeProvider";
+
+const logoImg = require("../assets/img/Logo_transparent.png");
 
 // Reiter über der Suche (Airbnb: Unterkünfte/Erlebnisse/Services).
 const TABS: { key: string; label: string; icon: IconName; tag?: string }[] = [
@@ -69,9 +71,11 @@ export default function GuestHome() {
     <Screen contentStyle={{ gap: 22 }}>
       {/* Kopf */}
       <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
-        <Txt v="h2" accent>
-          NextDays
-        </Txt>
+        <Image
+          source={logoImg}
+          style={{ width: 140, height: 52 }}
+          resizeMode="contain"
+        />
         <Row gap={6}>
           <RoundIcon icon="chat" />
           <RoundIcon icon="bell" />
@@ -208,11 +212,11 @@ export default function GuestHome() {
         </ScrollView>
       </Section>
 
-      {/* Treue-Banner (Booking Genius, in NextDays-Rot) */}
+      {/* Treue-Banner */}
       <Card style={{ flexDirection: "row", overflow: "hidden" }}>
         <Col gap={6} style={{ flex: 1, padding: 18, backgroundColor: t.palette.accent }}>
           <Txt v="h2" color="#fff">
-            NextDays+
+            MyNextDays+
           </Txt>
           <Txt v="sm" color="rgba(255,255,255,0.92)">
             Andy, du bist auf Stufe 3 — sichere dir 10–20 % auf ausgewählte Aufenthalte.
@@ -228,7 +232,7 @@ export default function GuestHome() {
         </Col>
       </Card>
 
-      {/* Angesagte Reiseziele (Airbnb-große Karten) */}
+      {/* Angesagte Reiseziele */}
       <Section title="Angesagte Reiseziele">
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 14, paddingRight: 4 }}>
           {DESTINATIONS.map((d) => (
@@ -247,7 +251,7 @@ export default function GuestHome() {
         </ScrollView>
       </Section>
 
-      {/* Wochenend-Angebote (Booking-Hotelkarten) */}
+      {/* Wochenend-Angebote */}
       <Section title="Wochenend-Angebote" sub="Sparen Sie vom 19.–21. Juni">
         <Col gap={14}>
           {DEALS.map((d) => (

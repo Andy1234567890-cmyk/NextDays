@@ -2,7 +2,7 @@
 // beliebte Unterkünfte.
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Pressable, ScrollView, View } from "react-native";
+import { Image, Pressable, ScrollView, View } from "react-native";
 
 import { ListingCard } from "@/components/ListingCard";
 import { Icon } from "@/components/ui/Icon";
@@ -11,6 +11,9 @@ import { Screen } from "@/components/ui/Screen";
 import type { RootStackParamList } from "@/navigation/types";
 import { ND_PHOTOS as P, PH } from "@/lib/photos";
 import { useTheme } from "@/theme/ThemeProvider";
+
+// Einbindung des transparenten Logos
+const logoImg = require("../assets/img/Logo_transparent.png");
 
 const CATS: [string, string][] = [
   ["globe", "Alle"],
@@ -23,12 +26,16 @@ const CATS: [string, string][] = [
 export default function GuestDiscover() {
   const t = useTheme();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
   return (
     <Screen contentStyle={{ gap: 20 }}>
-      <Row style={{ justifyContent: "space-between" }}>
-        <Txt v="h2" accent>
-          NextDays
-        </Txt>
+      {/* Header Bereich: Hier wurde der Text durch das Image ersetzt */}
+      <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
+        <Image
+          source={logoImg}
+          style={{ width: 120, height: 40 }} // Breite erhöht, da es ein Logo-Schriftzug/Breitbild ist
+          resizeMode="contain"
+        />
         <Avatar s={38} src={PH(P.bright, 100)} />
       </Row>
 

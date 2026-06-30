@@ -15,7 +15,7 @@ export function Splash() {
   useEffect(() => {
     const timer = setTimeout(() => {
       Animated.timing(opacity, { toValue: 0, duration: 320, useNativeDriver: true }).start(() => setDone(true));
-    }, 900);
+    }, 1000);
     return () => clearTimeout(timer);
   }, [opacity]);
 
@@ -24,7 +24,7 @@ export function Splash() {
   return (
     <Animated.View pointerEvents="none" style={[StyleSheet.absoluteFill, styles.wrap, { opacity }]}>
       <View style={styles.center}>
-        <Image source={require("@/assets/img/logo.png")} style={styles.logo} resizeMode="contain" />
+        <Image source={require("@/assets/img/Logo_transparent.png")} style={styles.logo} resizeMode="contain" />
       </View>
     </Animated.View>
   );
@@ -33,5 +33,5 @@ export function Splash() {
 const styles = StyleSheet.create({
   wrap: { backgroundColor: BG, zIndex: 100 },
   center: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 48 },
-  logo: { width: "100%", height: 90 },
+  logo: { width: "100%", height: 250 },
 });

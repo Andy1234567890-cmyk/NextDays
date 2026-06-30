@@ -2,7 +2,7 @@
 // wählt man den Bereich (im echten Login käme die Rolle aus dem Konto).
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { View } from "react-native";
+import { View, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Btn, Col, Txt } from "@/components/ui/kit";
@@ -26,9 +26,7 @@ export default function RoleSelect() {
       }}
     >
       <Col gap={10}>
-        <Txt v="eyebrow" accent>
-          NextDays
-        </Txt>
+        <Image source={require("@/assets/img/Logo_transparent.png")} style={{ height: 32, resizeMode: 'contain', alignSelf: 'flex-start', tintColor: t.palette.accent }} />
         <Txt v="display">
           Buchen, verwalten,{"\n"}ankommen.
         </Txt>
