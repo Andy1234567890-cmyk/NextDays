@@ -1,0 +1,12 @@
+[Unit]
+Description=Monatlicher NextDays Restore-Test (verifiziert, dass Backups wiederherstellbar sind)
+Documentation=https://github.com/Andy54411/NextDays/blob/main/deploy/backup/README.md
+
+[Timer]
+# Am 1. jedes Monats 04:00 lokale Zeit.
+OnCalendar=*-*-01 04:00:00
+Persistent=true
+RandomizedDelaySec=600
+
+[Install]
+WantedBy=timers.target

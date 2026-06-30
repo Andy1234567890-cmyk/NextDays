@@ -1,0 +1,8 @@
+[Unit]
+Description=NextDays Disk-Alert (OS-SSD + Daten-Volume Belegung prüfen)
+Documentation=https://github.com/Andy54411/NextDays/blob/main/deploy/backup/README.md
+
+[Service]
+Type=oneshot
+EnvironmentFile=-/etc/nextdays-backup.env
+ExecStart=/usr/local/bin/nextdays-disk-check.sh

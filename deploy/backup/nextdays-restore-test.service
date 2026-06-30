@@ -1,0 +1,13 @@
+[Unit]
+Description=NextDays Restore-Test (jüngstes Backup in Wegwerf-Container wiederherstellen + prüfen)
+Documentation=https://github.com/Andy54411/NextDays/blob/main/deploy/backup/README.md
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/nextdays-backup.env
+ExecStart=/usr/local/bin/nextdays-restore-test.sh
+Nice=10
+TimeoutStartSec=1800

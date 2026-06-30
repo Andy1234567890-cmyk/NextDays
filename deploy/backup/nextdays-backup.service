@@ -1,0 +1,18 @@
+[Unit]
+Description=NextDays Off-site-Backup (Postgres-Dumps + Supabase-Storage → Hetzner Storage Box via Borg)
+Documentation=https://github.com/Andy54411/NextDays/blob/main/deploy/backup/README.md
+After=network-online.target docker.service
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/nextdays-backup.env
+ExecStart=/usr/local/bin/nextdays-backup.sh
+# Backup darf laufen, ohne den Host zu belasten.
+Nice=10
+IOSchedulingClass=idle
+# Schutz: kein Schreibzugriff außerhalb der Backup-Pfade nötig.
+ProtectHome=true
+PrivateTmp=false
+TimeoutStartSec=3600

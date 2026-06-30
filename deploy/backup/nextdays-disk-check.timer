@@ -1,0 +1,10 @@
+[Unit]
+Description=Stündlicher NextDays Disk-Alert
+Documentation=https://github.com/Andy54411/NextDays/blob/main/deploy/backup/README.md
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+
+[Install]
+WantedBy=timers.target

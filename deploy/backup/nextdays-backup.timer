@@ -1,0 +1,12 @@
+[Unit]
+Description=Täglicher NextDays Off-site-Backup-Lauf
+Documentation=https://github.com/Andy54411/NextDays/blob/main/deploy/backup/README.md
+
+[Timer]
+# Täglich 02:30 lokale Zeit; Persistent=true holt verpasste Läufe nach Boot nach.
+OnCalendar=*-*-* 02:30:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target
