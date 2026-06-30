@@ -60,23 +60,27 @@ Dokumentation der Zahlungsinfrastruktur von NextDays. Primäres Gateway ist **St
 ## Gastgeber-Onboarding (White-Label)
 
 <Mermaid
-  title="KYC-Onboarding Flow"
+  title="KYC-Onboarding Flow (eigenes Formular, KEIN Stripe-Link)"
   chart={`sequenceDiagram
-    participant A as Admin (NextDays)
+    participant H as Gastgeber
+    participant W as myNextDays-Dashboard
     participant API as FastAPI Backend
     participant S as Stripe
-    participant H as Gastgeber
 
-    A->>API: POST /api/v1/payments/connect/accounts\\n{email, country, tenant_id}
-    API->>S: stripe.Account.create(type=custom)
+    H->>W: /konto/zahlungen öffnen
+    W->>API: POST /payments/connect/accounts\\n{email, country, tenant_id}
+    API->>S: Account.create(type=custom,\\ntos_acceptance.service_agreement=full)
     S-->>API: acct_... (stripe_account_id)
-    API->>S: AccountLink erstellen (account_onboarding)
-    S-->>API: onboarding_url (einmalig, läuft ab)
-    API-->>A: {stripe_account_id, onboarding_url, expires_at}
-    A->>H: Onboarding-Link senden
-    H->>S: KYC-Formular ausfüllen (White-Label)
+    API-->>W: {stripe_account_id}
+    H->>W: KYC-Formular ausfüllen (im MND-Branding)
+    W->>API: PATCH /payments/connect/accounts/{id}\\n{fields: business_profile/individual}
+    API->>S: Account.update(...)
+    H->>W: Auszahlungs-IBAN eingeben
+    W->>API: PUT /payments/connect/accounts/{id}/bank
+    API->>S: Account.update(external_account)
     S->>API: Webhook: account.updated\\n(charges_enabled, details_submitted)
-    API->>API: tenant_billing_profile UPDATE`}
+    API->>API: tenant_billing_profile UPDATE
+    API-->>W: Realtime (tenant_billing_profile) → Live-Status`}
 
 />
 
@@ -84,12 +88,22 @@ Dokumentation der Zahlungsinfrastruktur von NextDays. Primäres Gateway ist **St
 
 ## Implementierte API-Endpunkte
 
-| Methode | Pfad                                                     | Beschreibung                                      |
-| ------- | -------------------------------------------------------- | ------------------------------------------------- |
-| `POST`  | `/api/v1/payments/connect/accounts`                      | Stripe Custom Account + Onboarding-Link erstellen |
-| `GET`   | `/api/v1/payments/connect/accounts/{id}`                 | KYC-Status abfragen                               |
-| `POST`  | `/api/v1/payments/connect/accounts/{id}/onboarding-link` | Neuen Onboarding-Link generieren (nach Ablauf)    |
-| `POST`  | `/api/v1/payments/webhook`                               | Stripe-Webhook-Empfang (HMAC-verifiziert)         |
+| Methode  | Pfad                                            | Beschreibung                                         | Zugriff        |
+| -------- | ----------------------------------------------- | ---------------------------------------------------- | -------------- |
+| `POST`   | `/api/v1/payments/connect/accounts`             | Stripe **Custom** Account anlegen (kein hosted Link) | MANAGE_BILLING |
+| `GET`    | `/api/v1/payments/connect/accounts/{id}`        | KYC-Status + offene Requirements + `disabled_reason` | MANAGE_BILLING |
+| `PATCH`  | `/api/v1/payments/connect/accounts/{id}`        | Geschäfts-/Inhaberdaten senden (eigene UI, `{fields}`)| MANAGE_BILLING |
+| `PUT`    | `/api/v1/payments/connect/accounts/{id}/bank`   | Auszahlungs-Bankkonto (IBAN)                         | MANAGE_BILLING |
+| `POST`   | `/api/v1/payments/booking/{reservation_id}/intent` | Gast-Zahlung: PaymentIntent → `{client_secret}`  | **public**     |
+| `POST`   | `/api/v1/payments/deposit/{reservation_id}/hold`| Kaution vorautorisieren (manual capture)            | MANAGE_BILLING |
+| `POST`   | `/api/v1/payments/deposit/{payment_id}/capture` | Kaution einziehen (Schaden, Teil-/Vollbetrag)       | MANAGE_BILLING |
+| `POST`   | `/api/v1/payments/deposit/{payment_id}/release` | Kaution freigeben (cancel)                          | MANAGE_BILLING |
+| `POST`   | `/api/v1/payments/{payment_id}/refund`          | (Teil-)Erstattung                                   | MANAGE_BILLING |
+| `POST`   | `/api/v1/payments/webhook`                       | Stripe-Webhook-Empfang (HMAC-verifiziert)           | Stripe-Sig.    |
+
+> **Kein `onboarding-link`-Endpoint mehr.** Custom-Accounts werden über das eigene
+> Dashboard-Formular onboardet (`PATCH …/{id}` + `PUT …/{id}/bank`), nicht über
+> einen Stripe-gehosteten Link.
 
 ---
 
@@ -97,9 +111,16 @@ Dokumentation der Zahlungsinfrastruktur von NextDays. Primäres Gateway ist **St
 
 Der Webhook-Endpunkt verarbeitet folgende Stripe-Events:
 
-| Event             | Was passiert                                                                                                                                                                 |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `account.updated` | `tenant_billing_profile` wird mit `charges_enabled`, `payouts_enabled`, `details_submitted` aktualisiert. Bei erstmaligem KYC-Abschluss wird `stripe_onboarding_at` gesetzt. |
+| Event                                    | Was passiert                                                                                                                                |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `account.updated`                        | `tenant_billing_profile` wird mit `charges_enabled`, `payouts_enabled`, `details_submitted` aktualisiert; erstmaliger KYC-Abschluss setzt `stripe_onboarding_at`. |
+| `payment_intent.succeeded`               | `payments.status = succeeded`; `reservations.payment_status = paid`.                                                                        |
+| `payment_intent.payment_failed`          | `payments.status = failed`.                                                                                                                 |
+| `payment_intent.amount_capturable_updated` | Kaution vorautorisiert; `reservations.payment_status = deposit_held`.                                                                     |
+| `charge.refunded`                        | `payments.status = refunded`; `reservations.payment_status = refunded`.                                                                     |
+
+**Idempotenz:** Jede Event-ID wird in `stripe_webhook_event` festgehalten — ein
+zweiter Eingang derselben ID wird übersprungen (Stripe liefert at-least-once).
 
 **Sicherheit:** Jeder Webhook-Request wird via HMAC-SHA256 (`Stripe-Signature` Header) gegen das `STRIPE_WEBHOOK_SECRET` verifiziert. Ungültige Signaturen → `400`.
 
@@ -107,7 +128,7 @@ Der Webhook-Endpunkt verarbeitet folgende Stripe-Events:
 
 ## Datenbank
 
-Migration `0081_stripe_connect_account.sql` fügt folgende Spalten in `tenant_billing_profile` ein:
+Migration `0081_stripe_connect_account.sql` — Connected-Account-Status in `tenant_billing_profile`:
 
 | Spalte                     | Typ           | Bedeutung                                                      |
 | -------------------------- | ------------- | -------------------------------------------------------------- |
@@ -116,6 +137,19 @@ Migration `0081_stripe_connect_account.sql` fügt folgende Spalten in `tenant_bi
 | `stripe_payouts_enabled`   | `boolean`     | Konto kann Auszahlungen erhalten                               |
 | `stripe_details_submitted` | `boolean`     | KYC vollständig eingereicht                                    |
 | `stripe_onboarding_at`     | `timestamptz` | Zeitpunkt des KYC-Abschlusses                                  |
+
+Migration `0082_payments_core.sql` — Payment-Kern:
+
+| Objekt                              | Typ                                   | Bedeutung                                                    |
+| ----------------------------------- | ------------------------------------- | ----------------------------------------------------------- |
+| `payments.gateway` (Default)        | `payment_gateway`                     | Default `revolut` → **`stripe`** (Stripe ist primär)        |
+| `reservations.payment_status`       | enum `reservation_payment_status`     | `unpaid` · `pending` · `paid` · `refunded` · `deposit_held` |
+| `properties.deposit_amount`         | `numeric(12,2)` nullable              | Kautionsbetrag pro Objekt. NULL = keine Kaution             |
+| `stripe_webhook_event`              | Tabelle (`id text pk`, `type`, `received_at`) | Verarbeitete Event-IDs (Webhook-Idempotenz)         |
+
+> Realtime: `payments`, `reservations`, `tenant_billing_profile` sind bereits über
+> `0054_realtime_all_tables` in der `supabase_realtime`-Publication — neue Spalten
+> erscheinen dort automatisch.
 
 ---
 
@@ -139,8 +173,10 @@ uvicorn src.main:app --reload --port 8000 --log-level info --reload-exclude '.ve
 # Terminal 2 — Stripe Listener
 stripe listen --forward-to http://localhost:8000/api/v1/payments/webhook
 
-# Terminal 3 — Event feuern
+# Terminal 3 — Events feuern
 stripe trigger account.updated
+stripe trigger payment_intent.succeeded
+stripe trigger charge.refunded
 ```
 
 **Erwartetes Ergebnis im Backend-Log:**
@@ -158,5 +194,26 @@ stripe_account_not_found_in_db  (solange kein echter Onboarding-Account in der D
 - **Sandbox-Account:** Mynextdays sandbox
 - **Webhook Destination:** `mynextdays-connect-kyc` (Active)
 - **Endpoint URL:** `https://nextdays-api.65.21.144.136.sslip.io/api/v1/payments/webhook`
-- **Event scope:** Connected accounts
-- **Listening to:** `account.updated`
+- **Event scope:** Connected accounts **+ Account (Payments)**
+- **Listening to:** `account.updated`, `payment_intent.succeeded`,
+  `payment_intent.payment_failed`, `payment_intent.amount_capturable_updated`,
+  `charge.refunded`
+
+---
+
+## Gast-Checkout (Plattform)
+
+Der Gast zahlt im **eigenen myNextDays-Branding** (Stripe **Payment Element**,
+kein Stripe-Redirect):
+
+1. Reservierung anlegen (`booking_engine`) → `reservation_id`.
+2. `POST /payments/booking/{id}/intent` → `{client_secret, publishable_key}`
+   (Destination Charge: `transfer_data.destination` = Connected Account,
+   `application_fee_amount` aus `STRIPE_PLATFORM_FEE_PCT`).
+3. Payment Element mit `client_secret` rendern → `confirmPayment` (3DS/SCA
+   automatisch, `redirect: if_required`).
+4. Finaler „bezahlt"-Status kommt **serverseitig** über `payment_intent.succeeded`.
+
+Ist der Connected Account des Tenants nicht freigeschaltet (`charges_enabled=false`),
+liefert der Intent-Endpoint **409** → „Online-Zahlung derzeit nicht möglich" (kein
+Fallback-Charge auf die Plattform).
