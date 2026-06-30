@@ -135,6 +135,12 @@ export default function ProfilPage() {
   async function onSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
+    // Aussteller-Name (legal_name): bei Firma der Firmenname, bei Einzelperson
+    // Vor+Nachname — sonst hätte die Einzelperson keinen Namen auf Rechnungen.
+    const issuerName =
+      accountType === "company"
+        ? companyName
+        : [firstName, lastName].filter(Boolean).join(" ");
     const res = await saveFirmenProfil({
       // Person
       firstName: firstName || undefined,
@@ -144,7 +150,7 @@ export default function ProfilPage() {
       accountType,
       ownerDob: ownerDob || undefined,
       // Firma / Rechnungskontakt
-      companyName: companyName || undefined,
+      companyName: issuerName || undefined,
       companyStreet: street || undefined,
       companyHouseNumber: houseNumber || undefined,
       companyPostalCode: postalCode || undefined,
@@ -238,10 +244,9 @@ export default function ProfilPage() {
 
         <Separator />
 
-        {/* Kontaktdaten — EIN Abschnitt für alles, was der Admin hinterlegt:
-            Firma, Adresse, Steuer, Bank, Person, Kontakt. Keine künstliche
-            Aufteilung. Diese Daten sind Aussteller auf Abrechnungen und Basis
-            für Steuer-, Auszahlungs- und Zahlungslogik. */}
+        {/* Kontaktdaten — EIN Abschnitt, in logischer Reihenfolge:
+            1) Kontotyp (bestimmt alles Weitere) → 2) Wer (Firma/Person) →
+            3) Adresse → 4) Kontakt → 5) Steuer → 6) Bank → 7) Sonstiges. */}
         <section className="flex flex-col gap-5">
           <div className="flex flex-col gap-1">
             <h3 className="font-display text-lg font-extrabold">Kontaktdaten</h3>
@@ -251,17 +256,82 @@ export default function ProfilPage() {
             </p>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="companyName">
-              Firmenname <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="companyName"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-            />
+          {/* 1) Kontotyp — zuerst, weil er entscheidet, ob ein Firmenname
+              relevant ist und wie Stripe das Konto behandelt. */}
+          <div className="flex flex-col gap-1.5 sm:max-w-sm">
+            <Label htmlFor="accountType">Kontotyp</Label>
+            <NativeSelect
+              id="accountType"
+              value={accountType}
+              onChange={(e) =>
+                setAccountType(e.target.value as "individual" | "company")
+              }
+            >
+              <option value="individual">Einzelperson</option>
+              <option value="company">Firma</option>
+            </NativeSelect>
           </div>
 
+          {/* 2a) Firmenname — nur bei Firma (Einzelperson hat keine Firma). */}
+          {accountType === "company" && (
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="companyName">
+                Firmenname <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="companyName"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+              />
+            </div>
+          )}
+
+          {/* 2b) Person — bei Firma die vertretungsberechtigte Person. */}
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="firstName">
+                Vorname <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="firstName"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="lastName">
+                Nachname <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="lastName"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5 sm:max-w-sm">
+            <Label htmlFor="ownerDob">
+              {accountType === "company"
+                ? "Geburtsdatum der vertretungsberechtigten Person"
+                : "Geburtsdatum"}
+            </Label>
+            <Input
+              id="ownerDob"
+              type="date"
+              value={ownerDob}
+              onChange={(e) => setOwnerDob(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Für die Zahlungsfreischaltung (Stripe).
+            </p>
+          </div>
+
+          <Separator />
+
+          {/* 3) Adresse */}
           <div className="grid gap-5 sm:grid-cols-3">
             <div className="flex flex-col gap-1.5 sm:col-span-2">
               <Label htmlFor="street">Straße</Label>
@@ -322,6 +392,9 @@ export default function ProfilPage() {
             </NativeSelect>
           </div>
 
+          <Separator />
+
+          {/* 4) Kontakt */}
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="email">E-Mail</Label>
             <Input
@@ -332,6 +405,33 @@ export default function ProfilPage() {
             />
           </div>
 
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="phone1">
+              Primäre Telefonnummer <span className="text-destructive">*</span>
+            </Label>
+            <PhoneInput
+              id="phone1"
+              value={phone}
+              onChange={setPhone}
+              defaultCountry={country}
+              required
+            />
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="website">Website</Label>
+            <Input
+              id="website"
+              type="url"
+              placeholder="https://…"
+              value={website}
+              onChange={(e) => setWebsite(e.target.value)}
+            />
+          </div>
+
+          <Separator />
+
+          {/* 5) Steuer */}
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="vatId">{vatIdLabel(country)}</Label>
@@ -366,12 +466,12 @@ export default function ProfilPage() {
             </p>
           )}
 
-          {/* Bankverbindung (Auszahlungen). Kontoinhaber ist automatisch
-              vorbefüllt (Firma → Firmenname, Einzelperson → Vor+Nachname),
-              bleibt aber editierbar: seit Okt 2025 gleicht die Bank bei jeder
-              SEPA-Überweisung Name ↔ IBAN ab (Verification of Payee). Weicht der
-              bei der Bank hinterlegte Name ab, muss er hier exakt eingetragen
-              werden, sonst scheitert die Auszahlung. */}
+          <Separator />
+
+          {/* 6) Bank (Auszahlungen). Kontoinhaber automatisch vorbefüllt
+              (Firma → Firmenname, Einzelperson → Vor+Nachname), aber editierbar:
+              seit Okt 2025 gleicht die Bank bei jeder SEPA-Überweisung Name ↔
+              IBAN ab (Verification of Payee). */}
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="accountHolder">Kontoinhaber</Label>
@@ -400,31 +500,9 @@ export default function ProfilPage() {
             </div>
           </div>
 
-          <div className="grid gap-5 sm:grid-cols-2">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="firstName">
-                Vorname <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="firstName"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="lastName">
-                Nachname <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="lastName"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                required
-              />
-            </div>
-          </div>
+          <Separator />
 
+          {/* 7) Sonstiges */}
           <div className="flex flex-col gap-1.5 sm:max-w-sm">
             <Label htmlFor="language">Bevorzugte Sprache</Label>
             <Select value={language} onValueChange={setLanguage}>
@@ -437,62 +515,6 @@ export default function ProfilPage() {
                 <SelectItem value="en">Englisch</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="phone1">
-              Primäre Telefonnummer <span className="text-destructive">*</span>
-            </Label>
-            <PhoneInput
-              id="phone1"
-              value={phone}
-              onChange={setPhone}
-              defaultCountry={country}
-              required
-            />
-          </div>
-
-          <div className="grid gap-5 sm:grid-cols-2">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="accountType">Kontotyp</Label>
-              <NativeSelect
-                id="accountType"
-                value={accountType}
-                onChange={(e) =>
-                  setAccountType(e.target.value as "individual" | "company")
-                }
-              >
-                <option value="individual">Einzelperson</option>
-                <option value="company">Firma</option>
-              </NativeSelect>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="ownerDob">
-                {accountType === "company"
-                  ? "Geburtsdatum der vertretungsberechtigten Person"
-                  : "Geburtsdatum"}
-              </Label>
-              <Input
-                id="ownerDob"
-                type="date"
-                value={ownerDob}
-                onChange={(e) => setOwnerDob(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground">
-                Für die Zahlungsfreischaltung (Stripe).
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="website">Website</Label>
-            <Input
-              id="website"
-              type="url"
-              placeholder="https://…"
-              value={website}
-              onChange={(e) => setWebsite(e.target.value)}
-            />
           </div>
 
           <div className="flex flex-col gap-1.5">
