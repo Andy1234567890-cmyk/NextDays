@@ -66,6 +66,9 @@ class Permission(StrEnum):
     INBOX_REPLY = "inbox_reply"              # ausgehende Nachrichten senden
     INBOX_ASSIGN = "inbox_assign"            # Threads (um-)zuweisen
     INBOX_MANAGE_CONFIG = "inbox_manage_config"  # Vorlagen/Automationen/KI-Settings
+    # --- White-Label-Site (Branding + Custom-Domains) ---
+    # Spiegelt die Backend-Capability MANAGE_SITE_CONFIG; steuert den /konto/branding-Tab.
+    MANAGE_SITE_CONFIG = "manage_site_config"
 
 
 _ALL: frozenset[Permission] = frozenset(Permission)
@@ -110,6 +113,7 @@ _CO_ADMIN: frozenset[Permission] = frozenset({
     Permission.INBOX_REPLY,
     Permission.INBOX_ASSIGN,
     Permission.INBOX_MANAGE_CONFIG,
+    Permission.MANAGE_SITE_CONFIG,
 })
 
 _OWNER: frozenset[Permission] = frozenset({

@@ -22,6 +22,7 @@ class Capability(StrEnum):
     # Plattform / Mandant
     MANAGE_TENANT = "manage_tenant"
     MANAGE_BILLING = "manage_billing"
+    MANAGE_SITE_CONFIG = "manage_site_config"  # White-Label-Branding + Custom-Domains
     # Stammdaten / Objekte
     MANAGE_PROPERTIES = "manage_properties"
     MANAGE_INVENTORY = "manage_inventory"
@@ -70,6 +71,7 @@ _CO_ADMIN: frozenset[Capability] = frozenset({
     Capability.VIEW_GUEST_FULL,
     Capability.RECEIVE_SYSTEM_ALERTS,
     Capability.ASSIGN_STAFF_TO_PROPERTY,
+    Capability.MANAGE_SITE_CONFIG,  # gebrandete Buchungs-Site der Agentur pflegen
 })
 
 # Eigentümer (§4.2): Daten-Split, Sperrung beantragen, Zählerstände, Services

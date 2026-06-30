@@ -86,6 +86,20 @@ class Settings(BaseSettings):
     # Tunnel (ngrok/cloudflared), in Prod die echte API-Domain.
     public_api_url: str = ""
 
+    # --- Cloudflare for SaaS (Custom Hostnames für White-Label-Agentur-Domains) ---
+    # api_token: API-Token mit NUR "Zone › Custom Hostnames › Edit" auf der einen
+    #   SaaS-Zone (least-privilege). zone_id: die ID dieser Zone.
+    # fallback_origin: der Hostname in der CF-Zone, auf den ALLE Custom-Hostnames
+    #   routen (z.B. origin.mynextdays.de → Hetzner-Origin). Genau hierauf zeigt der
+    #   CNAME, den eine Agentur für ihre Domain setzt. Ohne konfigurierten
+    #   Fallback-Origin (CF-Account-seitig) routet kein Custom-Domain-Traffic.
+    # Leer = Cloudflare nicht konfiguriert → Domain-Endpunkte antworten 503 (kein
+    #   Raten/Fallback). Branding ohne Custom-Domain funktioniert trotzdem.
+    cloudflare_api_token: SecretStr = SecretStr("")
+    cloudflare_zone_id: str = ""
+    cloudflare_fallback_origin: str = ""
+    cloudflare_base_url: str = "https://api.cloudflare.com/client/v4"
+
     # --- WhatsApp (Meta WhatsApp Cloud API) ---
     # access_token: permanenter System-User-Token (Meta Business).
     # phone_number_id: ID der WhatsApp-Business-Telefonnummer (Graph API).
