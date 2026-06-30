@@ -12,7 +12,10 @@ ExecStart=/usr/local/bin/nextdays-backup.sh
 # Backup darf laufen, ohne den Host zu belasten.
 Nice=10
 IOSchedulingClass=idle
-# Schutz: kein Schreibzugriff außerhalb der Backup-Pfade nötig.
-ProtectHome=true
+# WICHTIG: ProtectHome NICHT setzen — der Backup-SSH-Key, die age-Identity und die
+# known_hosts liegen in /root/.ssh bzw. /root. ProtectHome=true macht /root für den
+# Service unsichtbar → SSH zur Storage Box scheitert ("Identity file not accessible",
+# "/root/.ssh Read-only"). Der Service läuft als root und ist auf diese Secrets
+# angewiesen; die Härtung würde genau den Off-site-Push verhindern.
 PrivateTmp=false
 TimeoutStartSec=3600
