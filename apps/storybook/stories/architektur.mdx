@@ -113,7 +113,7 @@ Die ausführbaren Bausteine und Datastores des Systems mit Technologie und Proto
         Container(web, "Web Dashboard", "Next.js, TypeScript", "Vermieter-PMS-UI + Portale (Vercel)")
         Container(mobile, "Mobile-App", "React Native 0.86 (bare CLI, kein Expo)", "Gäste (Buchen/Aufenthalt) + Gastgeber (Verwaltung), iOS/Android")
         Container(storybook, "Storybook", "react-vite (eigenes Package apps/storybook)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
-        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 16 Vertical Slices unter /api/v1")
+        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 22 Vertical Slices unter /api/v1")
         ContainerDb(db, "Datenbank", "Supabase / Postgres", "41 Tabellen, Multi-Tenant, RLS, tenant_id")
         ContainerDb(cache, "Cache", "Redis", "Caching-Layer")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel-Sync, OCR, Messaging-Trigger, wiederkehrende Aufgaben")
@@ -161,7 +161,7 @@ The executable building blocks and data stores of the system with technology and
         Container(web, "Web Dashboard", "Next.js, TypeScript", "Host PMS UI + portals (Vercel)")
         Container(mobile, "Mobile app", "React Native 0.86 (bare CLI, no Expo)", "Guests (booking/stay) + hosts (management), iOS/Android")
         Container(storybook, "Storybook", "react-vite (own package apps/storybook)", "Design system & component workshop (ADR-0008); finished components move to Web")
-        Container(api, "API Backend", "FastAPI, Python", "Business logic, 16 vertical slices under /api/v1")
+        Container(api, "API Backend", "FastAPI, Python", "Business logic, 22 vertical slices under /api/v1")
         ContainerDb(db, "Database", "Supabase / Postgres", "41 tables, multi-tenant, RLS, tenant_id")
         ContainerDb(cache, "Cache", "Redis", "Caching layer")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel sync, OCR, messaging triggers, recurring tasks")
@@ -194,7 +194,7 @@ The executable building blocks and data stores of the system with technology and
 
 ## Slice-Landkarte (Component-Ebene, API-Backend)
 
-Die 16 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslogik: Querschnitt im Core, Slices mit fertiger Logik (auth, calendar, tasks) sowie Gerüst-Slices, die laut Roadmap folgen.
+Die 22 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslogik: Querschnitt im Core, Slices mit fertiger Logik (Großteil) sowie wenige Gerüst-Slices (ocr, crm), die laut Roadmap folgen.
 
 <Mermaid
   title="Slice-Landkarte (Component-Ebene, API-Backend)"
@@ -207,12 +207,19 @@ Die 16 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslog
             AUTH["auth — Register/Login/Me/Invite, Rollen+Capability-Matrix"]
             CAL["calendar — Verfügbarkeit, Double-Booking, Preis-Override"]
             TASKS["tasks — Aufgaben, Checklisten+Foto, Vertretung, Inventar"]
+            PROP["properties"]; RATES["rates"]; RES["reservations"]
+            GUE["guests"]; INBOX["inbox"]; PRICE["pricing"]
+            PAY["payments — Stripe Connect Custom (primär), Destination Charge, Webhooks; Revolut sekundär"]
+            CM["channel_manager"]; BOOK["booking_engine"]
+            PORTAL["public_portal"]
+            OWN["owners — Eigentümer-Stammdaten + Objekt-Zuweisung (Anteil/Provision je Objekt)"]
+            OWNST["owner_statements — Auszahlungs-Abrechnung (Provision, EU-Steuer/Reverse-Charge, Storno, Mehrwährung ECB)"]
+            WA["whatsapp — WhatsApp Cloud API, im Posteingang integriert"]
+            BUCH["buchhaltung — Rechnungen + Kunden + Firmenprofil/Logo, Nummernkreise"]
+            ADDON["addons — Zusatzleistungen/Upsells je Objekt, Verkauf via booking_engine + Gäste-Portal"]
         end
         subgraph SCAFFOLD["Slices als Gerüst (Health) — folgen lt. Roadmap"]
-            PROP["properties"]; RATES["rates"]; RES["reservations"]
-            GUE["guests"]; INBOX["inbox"]; PAY["payments (Revolut-Adapter)"]
-            CM["channel_manager"]; BOOK["booking_engine"]; OCR["ocr"]
-            PORTAL["public_portal"]; CRM["crm"]; DASH["dashboard"]; CONT["content"]
+            OCR["ocr"]; CRM["crm"]; DASH["dashboard (min.)"]; CONT["content (min.)"]
         end
     end
     DB[("Postgres — 41 Tabellen, RLS")]
@@ -228,7 +235,7 @@ Die 16 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslog
 
 ## Slice map (component level, API backend)
 
-The 16 vertical slices and their data areas show the state of the business logic: cross-cutting concerns in the core, slices with finished logic (auth, calendar, tasks) plus scaffold slices that follow per the roadmap.
+The 22 vertical slices and their data areas show the state of the business logic: cross-cutting concerns in the core, slices with finished logic (the majority) plus a few scaffold slices (ocr, crm) that follow per the roadmap.
 
 <Mermaid
   title="Slice map (component level, API backend)"
@@ -241,12 +248,19 @@ The 16 vertical slices and their data areas show the state of the business logic
             AUTH["auth — Register/Login/Me/Invite, roles+capability matrix"]
             CAL["calendar — availability, double-booking, price override"]
             TASKS["tasks — tasks, checklists+photo, substitution, inventory"]
+            PROP["properties"]; RATES["rates"]; RES["reservations"]
+            GUE["guests"]; INBOX["inbox"]; PRICE["pricing"]
+            PAY["payments — Stripe Connect Custom (primary), Destination Charge, webhooks; Revolut secondary"]
+            CM["channel_manager"]; BOOK["booking_engine"]
+            PORTAL["public_portal"]
+            OWN["owners — owner master data + property assignment (share/commission per property)"]
+            OWNST["owner_statements — payout statement (commission, EU tax/reverse charge, cancellation, multi-currency ECB)"]
+            WA["whatsapp — WhatsApp Cloud API, integrated in the inbox"]
+            BUCH["buchhaltung — invoices + customers + company profile/logo, number ranges"]
+            ADDON["addons — add-on services/upsells per property, sold via booking_engine + guest portal"]
         end
         subgraph SCAFFOLD["Slices as scaffold (Health) — follow per roadmap"]
-            PROP["properties"]; RATES["rates"]; RES["reservations"]
-            GUE["guests"]; INBOX["inbox"]; PAY["payments (Revolut adapter)"]
-            CM["channel_manager"]; BOOK["booking_engine"]; OCR["ocr"]
-            PORTAL["public_portal"]; CRM["crm"]; DASH["dashboard"]; CONT["content"]
+            OCR["ocr"]; CRM["crm"]; DASH["dashboard (min.)"]; CONT["content (min.)"]
         end
     end
     DB[("Postgres — 41 tables, RLS")]
