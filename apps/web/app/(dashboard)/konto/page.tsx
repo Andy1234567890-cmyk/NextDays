@@ -62,7 +62,6 @@ export default function ProfilPage() {
   const [taxNumber, setTaxNumber] = useState("");
   const [isSmallBusiness, setIsSmallBusiness] = useState(false);
   const [iban, setIban] = useState("");
-  const [accountHolder, setAccountHolder] = useState("");
 
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -99,7 +98,6 @@ export default function ProfilPage() {
       if (s("taxNumber")) setTaxNumber(s("taxNumber"));
       setIsSmallBusiness(Boolean(d.isSmallBusiness));
       if (s("iban")) setIban(s("iban"));
-      if (s("accountHolder")) setAccountHolder(s("accountHolder"));
     });
     return () => {
       active = false;
@@ -132,7 +130,8 @@ export default function ProfilPage() {
       taxNumber: taxNumber || undefined,
       isSmallBusiness,
       iban: iban ? iban.replace(/\s+/g, "") : undefined,
-      accountHolder: accountHolder || undefined,
+      // Kontoinhaber wird serverseitig automatisch gesetzt (Firma → Firmenname,
+      // Einzelperson → Vor+Nachname) — kein doppeltes Eintippen.
     });
     setSaving(false);
     if (!res.ok) {
@@ -213,15 +212,16 @@ export default function ProfilPage() {
 
         <Separator />
 
-        {/* Rechnungskontakt — inline (vorher Dialog) */}
+        {/* Kontaktdaten — EIN Abschnitt für alles, was der Admin hinterlegt:
+            Firma, Adresse, Steuer, Bank, Person, Kontakt. Keine künstliche
+            Aufteilung. Diese Daten sind Aussteller auf Abrechnungen und Basis
+            für Steuer-, Auszahlungs- und Zahlungslogik. */}
         <section className="flex flex-col gap-5">
           <div className="flex flex-col gap-1">
-            <h3 className="font-display text-lg font-extrabold">
-              Rechnungskontakt
-            </h3>
+            <h3 className="font-display text-lg font-extrabold">Kontaktdaten</h3>
             <p className="text-sm text-muted-foreground">
-              Erscheint als Aussteller auf Abrechnungen; Basis für Steuer- und
-              Auszahlungslogik.
+              Deine Firmen-, Kontakt- und Bankdaten. Sie erscheinen auf
+              Abrechnungen und werden für Steuer und Auszahlungen genutzt.
             </p>
           </div>
 
@@ -340,36 +340,19 @@ export default function ProfilPage() {
             </p>
           )}
 
-          <Separator />
-
-          {/* Bankverbindung (Auszahlungen) */}
-          <div className="grid gap-5 sm:grid-cols-2">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="accountHolder">Kontoinhaber</Label>
-              <Input
-                id="accountHolder"
-                value={accountHolder}
-                onChange={(e) => setAccountHolder(e.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="iban">IBAN</Label>
-              <Input
-                id="iban"
-                placeholder="DE00 0000 0000 0000 0000 00"
-                autoComplete="off"
-                value={iban}
-                onChange={(e) => setIban(e.target.value)}
-              />
-            </div>
+          {/* Bankverbindung (Auszahlungen). Der Kontoinhaber wird automatisch
+              gesetzt (Firma → Firmenname, Einzelperson → Vor+Nachname) — kein
+              separates Feld. */}
+          <div className="flex flex-col gap-1.5 sm:max-w-md">
+            <Label htmlFor="iban">IBAN (für Auszahlungen)</Label>
+            <Input
+              id="iban"
+              placeholder="DE00 0000 0000 0000 0000 00"
+              autoComplete="off"
+              value={iban}
+              onChange={(e) => setIban(e.target.value)}
+            />
           </div>
-        </section>
-
-        <Separator />
-
-        {/* Stammdaten */}
-        <section className="flex flex-col gap-5">
-          <h3 className="font-display text-lg font-extrabold">Stammdaten</h3>
 
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">

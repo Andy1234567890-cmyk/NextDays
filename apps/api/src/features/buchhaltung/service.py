@@ -610,7 +610,7 @@ class BuchhaltungService:
                 _connect_fields_from_profile(profile),
             )
             iban = profile.get("iban")
-            holder = profile.get("account_holder") or profile.get("legal_name")
+            holder = profile.get("account_holder") or _account_holder_from(profile)
             if iban and holder:
                 payments.set_external_account(
                     account.stripe_account_id,
@@ -997,6 +997,24 @@ class BuchhaltungService:
             {"status": "converted", "converted_invoice_id": invoice.id}
         ).eq("id", quote_id).eq("tenant_id", tenant_id).execute()
         return invoice
+
+
+def _account_holder_from(profile: dict) -> str | None:
+    """Kontoinhaber automatisch ableiten — kein separates Eingabefeld nötig:
+    Firma → Firmenname (legal_name), Einzelperson → Vor+Nachname. None, wenn
+    nichts davon vorhanden ist (kein erfundener Wert)."""
+    account_type = profile.get("account_type") or "individual"
+    if account_type == "company" and profile.get("legal_name"):
+        return profile["legal_name"]
+    name = " ".join(
+        p
+        for p in (
+            profile.get("managing_director_first_name"),
+            profile.get("managing_director_last_name"),
+        )
+        if p
+    )
+    return name or profile.get("legal_name") or None
 
 
 def _connect_fields_from_profile(profile: dict) -> dict:

@@ -11,6 +11,7 @@ from unittest.mock import MagicMock, patch
 from src.core.security import AuthContext
 from src.features.buchhaltung.service import (
     BuchhaltungService,
+    _account_holder_from,
     _connect_fields_from_profile,
 )
 
@@ -46,6 +47,38 @@ def test_connect_fields_omits_missing() -> None:
     # Nur E-Mail vorhanden → keine leeren Adress-/Business-Blöcke (keine Fallbacks).
     fields = _connect_fields_from_profile({"email": "h@example.com"})
     assert fields == {"individual": {"email": "h@example.com"}}
+
+
+def test_account_holder_auto_derived() -> None:
+    """Kontoinhaber wird ohne separates Feld abgeleitet: Firma → Firmenname,
+    Einzelperson → Vor+Nachname; nichts vorhanden → None (kein Fallback)."""
+    # Firma
+    assert (
+        _account_holder_from(
+            {"account_type": "company", "legal_name": "Muster GmbH"}
+        )
+        == "Muster GmbH"
+    )
+    # Einzelperson
+    assert (
+        _account_holder_from(
+            {
+                "account_type": "individual",
+                "managing_director_first_name": "Max",
+                "managing_director_last_name": "Muster",
+            }
+        )
+        == "Max Muster"
+    )
+    # Einzelperson ohne Name, aber legal_name → letzter Rückfall
+    assert (
+        _account_holder_from(
+            {"account_type": "individual", "legal_name": "Max Muster e.K."}
+        )
+        == "Max Muster e.K."
+    )
+    # Nichts vorhanden → None
+    assert _account_holder_from({"account_type": "individual"}) is None
 
 
 # --- Fake-DB -----------------------------------------------------------------
