@@ -60,6 +60,33 @@ def test_stripe_not_configured_raises_clean_error(monkeypatch) -> None:  # noqa:
     sc.get_stripe.cache_clear()
 
 
+def test_stripe_invalid_request_becomes_clean_400() -> None:
+    """Ein Stripe-Eingabefehler (z.B. ungültige PLZ, http_status 400) muss als
+    sauberer PaymentsError(400) mit der Stripe-Meldung ankommen — NICHT als
+    ungefangener 500-Stacktrace."""
+    from stripe import InvalidRequestError
+
+    class _RaisingAccounts:
+        def update(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+            raise InvalidRequestError(
+                "Invalid DE postal code",
+                param="individual[address][postal_code]",
+                http_status=400,
+            )
+
+    class _V1:
+        accounts = _RaisingAccounts()
+
+    class _FakeStripe:
+        v1 = _V1()
+
+    svc = PaymentsService(service_client=None, stripe=_FakeStripe())
+    with pytest.raises(PaymentsError) as exc:
+        svc.update_connect_account("acct_x", {"individual": {}})
+    assert exc.value.status_code == 400
+    assert "postal code" in exc.value.message.lower()
+
+
 # --- Fake-DB (Insert/Update/Select) -----------------------------------------
 class _Res:
     def __init__(self, data) -> None:  # noqa: ANN001

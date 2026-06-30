@@ -15,9 +15,11 @@ an Stripe (``int(round(amount * 100))``).
 """
 from __future__ import annotations
 
+from contextlib import contextmanager
 from typing import Any
 
 from stripe import StripeClient
+from stripe import StripeError as _StripeError
 from supabase import Client
 
 from src.core.config import get_settings
@@ -42,6 +44,26 @@ class PaymentsError(Exception):
         super().__init__(message)
         self.message = message
         self.status_code = status_code
+
+
+@contextmanager
+def _stripe_errors():  # noqa: ANN202
+    """Übersetzt Stripe-SDK-Fehler in saubere PaymentsError, damit sie als
+    verständliche HTTP-Antwort beim Nutzer ankommen — nicht als ungefangener
+    500-Stacktrace. Stripe liefert bei Eingabefehlern (z.B. ungültige PLZ) eine
+    nutzerlesbare ``user_message``/``message``; die wird 1:1 durchgereicht
+    (kein erfundener Text). InvalidRequest → 400 (Nutzer-/Datenfehler), alle
+    anderen Stripe-Fehler → 502 (Upstream)."""
+    try:
+        yield
+    except _StripeError as exc:
+        msg = getattr(exc, "user_message", None) or str(exc) or "Stripe-Fehler."
+        # Stripes HTTP-Status entscheidet: 4xx = Eingabe-/Datenfehler des
+        # Nutzers (z.B. ungültige PLZ) → 1:1 als 400 weiterreichen; sonst ist es
+        # ein Upstream-/Serverproblem → 502.
+        http_status = getattr(exc, "http_status", None)
+        code = 400 if isinstance(http_status, int) and 400 <= http_status < 500 else 502
+        raise PaymentsError(msg, status_code=code) from exc
 
 
 def _to_cents(amount: float) -> int:
@@ -108,31 +130,33 @@ class PaymentsService:
         übernimmt die Stripe-Services-Vereinbarung gegenüber dem Connected Account
         — Voraussetzung für vollständiges White-Label bei Custom Accounts.
         """
-        account = self._stripe.v1.accounts.create(
-            params={
-                "type": "custom",
-                "country": req.country,
-                "email": req.email,
-                # Einzelperson oder Firma — bestimmt die KYC-Pflichtfelder.
-                "business_type": req.business_type,
-                # Branchencode 7011 = Lodging/Unterkünfte (für Vermietung passend);
-                # ist sonst ein offenes Requirement und blockiert charges_enabled.
-                "business_profile": {"mcc": "7011"},
-                "capabilities": {
-                    "card_payments": {"requested": True},
-                    "transfers": {"requested": True},
-                },
-                "tos_acceptance": {"service_agreement": "full"},
-                "metadata": {"tenant_id": req.tenant_id},
-            }
-        )
+        with _stripe_errors():
+            account = self._stripe.v1.accounts.create(
+                params={
+                    "type": "custom",
+                    "country": req.country,
+                    "email": req.email,
+                    # Einzelperson oder Firma — bestimmt die KYC-Pflichtfelder.
+                    "business_type": req.business_type,
+                    # Branchencode 7011 = Lodging/Unterkünfte (für Vermietung
+                    # passend); sonst offenes Requirement → blockiert charges.
+                    "business_profile": {"mcc": "7011"},
+                    "capabilities": {
+                        "card_payments": {"requested": True},
+                        "transfers": {"requested": True},
+                    },
+                    "tos_acceptance": {"service_agreement": "full"},
+                    "metadata": {"tenant_id": req.tenant_id},
+                }
+            )
         return ConnectAccountResponse(stripe_account_id=account.id)
 
     def get_connect_account_status(
         self, stripe_account_id: str
     ) -> ConnectAccountStatus:
         """Liest KYC-/Aktivierungsstatus + offene Requirements (für die eigene UI)."""
-        account = self._stripe.v1.accounts.retrieve(stripe_account_id)
+        with _stripe_errors():
+            account = self._stripe.v1.accounts.retrieve(stripe_account_id)
         requirements: list[str] = list(account.requirements.currently_due or [])
         return ConnectAccountStatus(
             stripe_account_id=account.id,
@@ -150,7 +174,8 @@ class PaymentsService:
         (eigene Onboarding-UI statt Stripe-hosted). ``fields`` ist das von der UI
         zusammengestellte Stripe-Account-Update (business_profile, company,
         individual, …)."""
-        self._stripe.v1.accounts.update(stripe_account_id, params=fields)
+        with _stripe_errors():
+            self._stripe.v1.accounts.update(stripe_account_id, params=fields)
         return self.get_connect_account_status(stripe_account_id)
 
     def accept_tos(
@@ -162,28 +187,30 @@ class PaymentsService:
         ``charges_enabled`` werden."""
         if not ip:
             raise PaymentsError("IP für die ToS-Akzeptanz fehlt.", status_code=422)
-        self._stripe.v1.accounts.update(
-            stripe_account_id,
-            params={"tos_acceptance": {"date": when, "ip": ip}},
-        )
+        with _stripe_errors():
+            self._stripe.v1.accounts.update(
+                stripe_account_id,
+                params={"tos_acceptance": {"date": when, "ip": ip}},
+            )
         return self.get_connect_account_status(stripe_account_id)
 
     def set_external_account(
         self, stripe_account_id: str, *, iban: str, account_holder: str, country: str
     ) -> ConnectAccountStatus:
         """Auszahlungs-Bankkonto (IBAN) am Custom-Account hinterlegen."""
-        self._stripe.v1.accounts.update(
-            stripe_account_id,
-            params={
-                "external_account": {
-                    "object": "bank_account",
-                    "country": country,
-                    "currency": _currency_for_country(country),
-                    "account_holder_name": account_holder,
-                    "account_number": iban,
-                }
-            },
-        )
+        with _stripe_errors():
+            self._stripe.v1.accounts.update(
+                stripe_account_id,
+                params={
+                    "external_account": {
+                        "object": "bank_account",
+                        "country": country,
+                        "currency": _currency_for_country(country),
+                        "account_holder_name": account_holder,
+                        "account_number": iban,
+                    }
+                },
+            )
         return self.get_connect_account_status(stripe_account_id)
 
     # --- Gast-Zahlung (Stufe A) ---------------------------------------------
@@ -240,14 +267,15 @@ class PaymentsService:
 
         acct = self._connected_account(db, tenant_id)
         amount_cents = _to_cents(amount)
-        intent = sc.create_payment_intent(
-            amount_cents=amount_cents,
-            currency=currency,
-            destination_acct=acct,
-            application_fee_cents=self._fee_cents(amount_cents),
-            metadata={"reservation_id": reservation_id, "tenant_id": tenant_id},
-            client=self._stripe,
-        )
+        with _stripe_errors():
+            intent = sc.create_payment_intent(
+                amount_cents=amount_cents,
+                currency=currency,
+                destination_acct=acct,
+                application_fee_cents=self._fee_cents(amount_cents),
+                metadata={"reservation_id": reservation_id, "tenant_id": tenant_id},
+                client=self._stripe,
+            )
         payment = self._insert_payment(
             db,
             reservation_id=reservation_id,
@@ -279,15 +307,16 @@ class PaymentsService:
             raise PaymentsError("Währung der Buchung fehlt.", status_code=422)
         acct = self._connected_account(db, tenant_id)
         amount_cents = _to_cents(amount)
-        intent = sc.create_payment_intent(
-            amount_cents=amount_cents,
-            currency=currency,
-            destination_acct=acct,
-            application_fee_cents=0,  # auf Kautionen keine Plattform-Fee
-            capture_method="manual",
-            metadata={"reservation_id": reservation_id, "type": "deposit"},
-            client=self._stripe,
-        )
+        with _stripe_errors():
+            intent = sc.create_payment_intent(
+                amount_cents=amount_cents,
+                currency=currency,
+                destination_acct=acct,
+                application_fee_cents=0,  # auf Kautionen keine Plattform-Fee
+                capture_method="manual",
+                metadata={"reservation_id": reservation_id, "type": "deposit"},
+                client=self._stripe,
+            )
         payment = self._insert_payment(
             db,
             reservation_id=reservation_id,
@@ -310,9 +339,10 @@ class PaymentsService:
         db, tenant_id = self._require(ctx)
         payment = self._load_payment(db, payment_id, tenant_id, expect_type="deposit")
         amount_cents = _to_cents(amount) if amount is not None else None
-        result = sc.capture_payment_intent(
-            payment["gateway_ref"], amount_cents, client=self._stripe
-        )
+        with _stripe_errors():
+            result = sc.capture_payment_intent(
+                payment["gateway_ref"], amount_cents, client=self._stripe
+            )
         self._update_payment(db, payment_id, {"status": "succeeded"})
         return {"payment_id": payment_id, "status": result["status"]}
 
@@ -320,7 +350,10 @@ class PaymentsService:
         """Kaution freigeben (Vorautorisierung stornieren) — kein Geldfluss."""
         db, tenant_id = self._require(ctx)
         payment = self._load_payment(db, payment_id, tenant_id, expect_type="deposit")
-        result = sc.cancel_payment_intent(payment["gateway_ref"], client=self._stripe)
+        with _stripe_errors():
+            result = sc.cancel_payment_intent(
+                payment["gateway_ref"], client=self._stripe
+            )
         self._update_payment(db, payment_id, {"status": "refunded"})
         return {"payment_id": payment_id, "status": result["status"]}
 
@@ -334,7 +367,10 @@ class PaymentsService:
         db, tenant_id = self._require(ctx)
         payment = self._load_payment(db, payment_id, tenant_id)
         amount_cents = _to_cents(amount) if amount is not None else None
-        result = sc.refund(payment["gateway_ref"], amount_cents, client=self._stripe)
+        with _stripe_errors():
+            result = sc.refund(
+                payment["gateway_ref"], amount_cents, client=self._stripe
+            )
         self._insert_payment(
             db,
             reservation_id=payment["reservation_id"],
