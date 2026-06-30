@@ -293,6 +293,10 @@ class BuchhaltungService:
             "accountHolder": s("account_holder"),
             # Logo
             "companyLogo": s("company_logo_url"),
+            # Stripe-KYC: Kontotyp + Geburtsdatum (damit die Stammdaten-UI die
+            # gespeicherten Werte wieder anzeigt).
+            "accountType": s("account_type"),
+            "ownerDob": s("owner_dob"),
             # Flags
             "isSmallBusiness": bool(p.get("is_kleinunternehmer")),
             "eInvoiceFormat": p.get("e_invoice_format"),

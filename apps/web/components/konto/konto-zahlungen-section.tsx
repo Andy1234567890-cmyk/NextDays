@@ -1,21 +1,20 @@
 "use client";
 
-// Zahlungen-Abschnitt direkt auf der Konto-Seite (/konto) — kein eigener Tab.
-// Lädt Tenant/E-Mail/Capability (getMe) + den bereits angelegten Connect-Account
-// und dessen Live-Status über Server-Actions (lib/payments.ts) und rendert das
-// eigene white-label Stripe-Onboarding. So liegt die komplette Zahlungs-
-// einrichtung im Admin-Konto, ohne separate Unterseite.
+// Zahlungen-Abschnitt direkt auf der Konto-Seite (/konto) — kein eigener Tab,
+// KEINE doppelten Eingabefelder. Name, Adresse, E-Mail, Telefon, IBAN,
+// Geburtsdatum und Website kommen aus den Stammdaten/dem Firmenprofil und werden
+// beim Profil-Speichern automatisch an Stripe übertragen. Hier bleibt nur der
+// echte Status + der Aktivieren-Button (ToS-Zustimmung).
 //
-// Capability-Gate: nur Admin/Co-Admin mit MANAGE_BILLING dürfen Zahlungen
-// einrichten — sonst Hinweis (wie auf der früheren Zahlungs-Unterseite). Fehler
-// beim Status-Laden werden durchgereicht und sichtbar gemacht (nicht verschluckt).
+// Lädt Tenant/E-Mail/Capability (getMe) + den bereits angelegten Connect-Account
+// und dessen Live-Status über Server-Actions (lib/payments.ts). Fehler beim
+// Status-Laden werden durchgereicht und sichtbar gemacht (nicht verschluckt).
 import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
 
-import { StripeOnboarding } from "@/components/zahlungen/stripe-onboarding";
+import { PaymentsActivation } from "@/components/zahlungen/payments-activation";
 import { Separator } from "@/components/ui/separator";
 import { getMe } from "@/lib/auth";
-import { getFirmenProfil } from "@/lib/firmenprofil";
 import {
   getConnectStatus,
   getStoredConnectAccountId,
@@ -25,7 +24,6 @@ import {
 type Loaded = {
   canManage: boolean;
   tenantId: string | null;
-  email: string;
   accountId: string | null;
   status: ConnectStatus | null;
   statusError: string | null;
@@ -43,7 +41,6 @@ export function KontoZahlungenSection() {
         setState({
           canManage: false,
           tenantId: null,
-          email: "",
           accountId: null,
           status: null,
           statusError: null,
@@ -51,13 +48,6 @@ export function KontoZahlungenSection() {
         return;
       }
       const canManage = me.capabilities.includes("manage_billing");
-      // E-Mail aus Session, sonst aus dem Firmenprofil (kein erfundener Wert).
-      let email = me.email ?? "";
-      if (!email) {
-        const profil = await getFirmenProfil();
-        if (active && profil.ok) email = String(profil.data.email ?? "");
-      }
-      // Account + Live-Status nur laden, wenn der Nutzer Zahlungen verwalten darf.
       let accountId: string | null = null;
       let status: ConnectStatus | null = null;
       let statusError: string | null = null;
@@ -73,7 +63,6 @@ export function KontoZahlungenSection() {
       setState({
         canManage,
         tenantId: me.tenant_id ?? null,
-        email,
         accountId,
         status,
         statusError,
@@ -90,8 +79,8 @@ export function KontoZahlungenSection() {
       <div className="flex flex-col gap-1">
         <h3 className="font-display text-lg font-extrabold">Zahlungen</h3>
         <p className="text-sm text-muted-foreground">
-          Richte dein Zahlungskonto ein, um Gästezahlungen zu empfangen und
-          Auszahlungen zu erhalten.
+          Aktivierung deines Zahlungskontos. Alle Angaben kommen aus deinen
+          Stammdaten — kein doppeltes Ausfüllen.
         </p>
       </div>
 
@@ -110,11 +99,22 @@ export function KontoZahlungenSection() {
           Es ist noch kein Unternehmen mit deinem Konto verknüpft. Schließe
           zuerst das Onboarding ab.
         </p>
+      ) : !state.accountId ? (
+        // Noch kein Stripe-Account: er entsteht automatisch, sobald die
+        // Stammdaten (mit E-Mail + Land) gespeichert sind — kein separater
+        // manueller Anlege-Schritt.
+        <p className="rounded-(--radius) border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+          <Icon
+            icon="ph:info"
+            className="mr-1.5 inline size-4 align-text-bottom"
+          />
+          Speichere zuerst deine Stammdaten (inkl. Land und E-Mail). Dein
+          Zahlungskonto wird daraus automatisch angelegt; danach erscheint hier
+          die Aktivierung.
+        </p>
       ) : (
-        <StripeOnboarding
-          tenantId={state.tenantId}
-          email={state.email}
-          initialAccountId={state.accountId}
+        <PaymentsActivation
+          accountId={state.accountId}
           initialStatus={state.status}
           initialStatusError={state.statusError}
         />

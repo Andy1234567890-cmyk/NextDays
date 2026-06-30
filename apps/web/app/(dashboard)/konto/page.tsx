@@ -12,6 +12,7 @@ import { KontoZahlungenSection } from "@/components/konto/konto-zahlungen-sectio
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   Select,
   SelectContent,
@@ -21,31 +22,78 @@ import {
 } from "@/components/ui/select";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import { Separator } from "@/components/ui/separator";
-import { getFirmenProfil, uploadFirmenLogo } from "@/lib/firmenprofil";
+import {
+  getFirmenProfil,
+  saveFirmenProfil,
+  uploadFirmenLogo,
+} from "@/lib/firmenprofil";
 
 export default function ProfilPage() {
-  const [firstName, setFirstName] = useState("Andy");
-  const [lastName, setLastName] = useState("Staudinger");
+  // Alle Stammdaten kommen aus dem Firmenprofil (tenant_billing_profile) und
+  // werden dorthin gespeichert — kein Hardcode. Diese Daten sind zugleich die
+  // EINZIGE Quelle für die Stripe-Zahlungsfreischaltung (Auto-Connect beim
+  // Speichern), darum gehören Geburtsdatum + Kontotyp hierher.
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [language, setLanguage] = useState("de");
   const [website, setWebsite] = useState("");
   const [description, setDescription] = useState("");
+  const [phone, setPhone] = useState("");
+  const [ownerDob, setOwnerDob] = useState(""); // ISO YYYY-MM-DD
+  const [accountType, setAccountType] = useState<"individual" | "company">(
+    "individual",
+  );
 
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  // Bestehendes Logo aus dem Firmenprofil laden.
+  // Bestehendes Firmenprofil laden (Stammdaten + Logo + Stripe-KYC-Felder).
   useEffect(() => {
     let active = true;
     void getFirmenProfil().then((res) => {
       if (!active || !res.ok) return;
-      const url = res.data.companyLogo;
+      const d = res.data;
+      const s = (k: string): string =>
+        typeof d[k] === "string" ? (d[k] as string) : "";
+      const url = d.companyLogo;
       if (typeof url === "string" && url) setLogoUrl(url);
+      if (s("firstName")) setFirstName(s("firstName"));
+      if (s("lastName")) setLastName(s("lastName"));
+      if (s("phoneNumber")) setPhone(s("phoneNumber"));
+      if (s("website")) setWebsite(s("website"));
+      if (s("ownerDob")) setOwnerDob(s("ownerDob"));
+      const at = s("accountType");
+      if (at === "individual" || at === "company") setAccountType(at);
     });
     return () => {
       active = false;
     };
   }, []);
+
+  // Stammdaten speichern → löst serverseitig den Stripe-Auto-Connect aus
+  // (buchhaltung.update_company_profile → _ensure_connect_account). Dadurch
+  // werden Name/Adresse/E-Mail/Telefon/IBAN/Geburtsdatum automatisch an Stripe
+  // übertragen — ohne doppeltes Formular.
+  async function onSave(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    const res = await saveFirmenProfil({
+      firstName: firstName || undefined,
+      lastName: lastName || undefined,
+      phoneNumber: phone || undefined,
+      website: website || undefined,
+      accountType,
+      ownerDob: ownerDob || undefined,
+    });
+    setSaving(false);
+    if (!res.ok) {
+      toast.error(res.error);
+      return;
+    }
+    toast.success("Stammdaten gespeichert.");
+  }
 
   async function onPickLogo(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -65,7 +113,7 @@ export default function ProfilPage() {
 
   return (
     <>
-    <form className="flex flex-col gap-8" onSubmit={(e) => e.preventDefault()}>
+    <form className="flex flex-col gap-8" onSubmit={onSave}>
       {/* Logo-Upload */}
       <section className="flex flex-col gap-3">
         <h2 className="font-display text-xl font-extrabold">Profil</h2>
@@ -193,6 +241,8 @@ export default function ProfilPage() {
               id="phone1"
               type="tel"
               placeholder="+49 1525 1239026"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
               required
             />
           </div>
@@ -215,6 +265,38 @@ export default function ProfilPage() {
               <SelectItem value="fr">Französisch</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="accountType">Kontotyp</Label>
+            <NativeSelect
+              id="accountType"
+              value={accountType}
+              onChange={(e) =>
+                setAccountType(e.target.value as "individual" | "company")
+              }
+            >
+              <option value="individual">Einzelperson</option>
+              <option value="company">Firma</option>
+            </NativeSelect>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="ownerDob">
+              {accountType === "company"
+                ? "Geburtsdatum der vertretungsberechtigten Person"
+                : "Geburtsdatum"}
+            </Label>
+            <Input
+              id="ownerDob"
+              type="date"
+              value={ownerDob}
+              onChange={(e) => setOwnerDob(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Für die Zahlungsfreischaltung (Stripe).
+            </p>
+          </div>
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -243,7 +325,9 @@ export default function ProfilPage() {
         <Button type="button" variant="outline">
           Abbrechen
         </Button>
-        <Button type="submit">Speichern</Button>
+        <Button type="submit" disabled={saving}>
+          {saving ? "Speichert …" : "Speichern"}
+        </Button>
       </div>
       </form>
 

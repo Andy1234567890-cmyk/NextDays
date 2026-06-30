@@ -162,6 +162,37 @@ def test_ensure_connect_account_skips_when_incomplete() -> None:
     cls.assert_not_called()
 
 
+def test_company_profile_roundtrip_includes_kyc_fields() -> None:
+    """Stammdaten (inkl. Stripe-KYC-Felder) speichern → laden gibt sie als
+    camelCase zurück, damit die Stammdaten-UI die gespeicherten Werte wieder
+    anzeigt (firstName/lastName/phoneNumber/website/accountType/ownerDob)."""
+    db = _DB()
+    svc = BuchhaltungService(db)
+    # Auto-Connect ist hier nicht der Fokus → Stripe weg-mocken (ohne E-Mail/Land
+    # würde er ohnehin übersprungen, aber wir setzen beides für Realismus).
+    with patch("src.features.payments.service.PaymentsService"):
+        svc.update_company_profile(
+            _CTX,
+            {
+                "firstName": "Max",
+                "lastName": "Muster",
+                "phoneNumber": "+49301234567",
+                "website": "https://muster.de",
+                "email": "host@example.com",
+                "companyCountry": "DE",
+                "accountType": "individual",
+                "ownerDob": "1990-05-15",
+            },
+        )
+    profile = svc.get_company_profile(_CTX)
+    assert profile["firstName"] == "Max"
+    assert profile["lastName"] == "Muster"
+    assert profile["phoneNumber"] == "+49301234567"
+    assert profile["website"] == "https://muster.de"
+    assert profile["accountType"] == "individual"
+    assert profile["ownerDob"] == "1990-05-15"
+
+
 def test_ensure_connect_account_survives_stripe_error() -> None:
     from src.features.payments.service import PaymentsError
 
