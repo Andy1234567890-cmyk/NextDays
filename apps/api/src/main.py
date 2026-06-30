@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .core.config import get_settings
 from .core.logging import configure_logging, get_logger
+from .core.ratelimit_middleware import RateLimitMiddleware
 from .features.addons.router import router as addons_router
 from .features.auth.router import router as auth_router
 from .features.booking_engine.router import router as booking_engine_router
@@ -64,7 +65,7 @@ _SLICE_ROUTERS = [
 
 
 @asynccontextmanager
-async def _lifespan(app: FastAPI) -> AsyncIterator[None]:  # noqa: ARG001
+async def _lifespan(app: FastAPI) -> AsyncIterator[None]:
     # Sekundengenauer Scheduler für geplante Posteingang-Nachrichten:
     # beim Start offene pending-Nachrichten (neu) timern, beim Stop abbrechen.
     await inbox_scheduler.start()
@@ -72,6 +73,9 @@ async def _lifespan(app: FastAPI) -> AsyncIterator[None]:  # noqa: ARG001
         yield
     finally:
         await inbox_scheduler.stop()
+        limiter_mw = getattr(app.state, "rate_limit_middleware", None)
+        if limiter_mw is not None:
+            await limiter_mw.aclose()
 
 
 def create_app() -> FastAPI:
@@ -95,6 +99,13 @@ def create_app() -> FastAPI:
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
         allow_headers=["*"],
     )
+
+    # Redis-backed Rate-Limiting (Infra-Runbook Punkt 8): schützt vor Brute-Force
+    # (Login), Scrapern und Lastspitzen, sodass ein einzelner missbrauchter/teurer
+    # Endpunkt nicht den ganzen Server mitreißt. Redis-backed, weil bei mehreren
+    # Uvicorn-Workern ein In-Memory-Limiter pro Worker getrennt zählen würde. Die
+    # Middleware baut ihren Redis-Client lazy pro Event-Loop (loop-sicher).
+    app.add_middleware(RateLimitMiddleware, settings=settings)
 
     api_v1 = APIRouter(prefix="/api/v1")
     for r in _SLICE_ROUTERS:

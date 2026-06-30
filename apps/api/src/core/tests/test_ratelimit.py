@@ -1,0 +1,218 @@
+"""Tests für das Redis-basierte Rate-Limiting (Infra-Runbook Punkt 8).
+
+Deckt ab: 429-Auslösung + Retry-After, IP-Extraktion hinter Traefik (XFF),
+Tenant-Keying, Health-Ausnahme, fail-open bei Redis-Ausfall + fail-closed auf
+sensiblen Endpunkten. Kein echtes Redis nötig — ein In-Memory-Fake bildet die
+Fixed-Window-Semantik der Lua-Auswertung nach.
+"""
+import asyncio
+
+import pytest
+import redis.asyncio as aioredis
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+
+from src.core.config import Settings
+from src.core.ratelimit import (
+    Limit,
+    RateLimiter,
+    client_ip_from_xff,
+    parse_limit,
+)
+from src.core.ratelimit_middleware import (
+    RateLimitMiddleware,
+    _select_bucket,
+    _tenant_from_bearer,
+)
+
+
+# --- Fake-Redis: bildet das _WINDOW_LUA-Verhalten in-memory nach ------------
+class _FakeRedis:
+    def __init__(self, *, fail: bool = False) -> None:
+        self._counts: dict[str, int] = {}
+        self._fail = fail
+
+    async def eval(self, _script: str, _nkeys: int, key: str, window: str):
+        if self._fail:
+            raise aioredis.RedisError("simulierter Ausfall")
+        self._counts[key] = self._counts.get(key, 0) + 1
+        return [self._counts[key], int(window)]
+
+    async def aclose(self) -> None:
+        return None
+
+
+# --- parse_limit ------------------------------------------------------------
+def test_parse_limit_ok() -> None:
+    assert parse_limit("300/60") == Limit(300, 60)
+
+
+@pytest.mark.parametrize("bad", ["", "abc", "10", "0/60", "10/0", "-1/60"])
+def test_parse_limit_rejects_invalid(bad: str) -> None:
+    with pytest.raises(ValueError):
+        parse_limit(bad)
+
+
+# --- IP-Extraktion hinter Traefik ------------------------------------------
+def test_client_ip_skips_trusted_proxy() -> None:
+    # XFF "client, proxy" mit 1 vertrauenswürdigem Hop → echte IP = "client".
+    assert client_ip_from_xff("1.2.3.4, 10.0.0.1", "10.0.0.1", 1) == "1.2.3.4"
+
+
+def test_client_ip_not_spoofable_via_first_element() -> None:
+    # Angreifer setzt eine gefälschte IP voran; mit 1 Hop nehmen wir NICHT das
+    # erste, sondern das vorletzte Element (die vom Proxy gesehene echte IP).
+    assert client_ip_from_xff("9.9.9.9, 1.2.3.4, 10.0.0.1", "10.0.0.1", 1) == "1.2.3.4"
+
+
+def test_client_ip_falls_back_to_peer_without_xff() -> None:
+    assert client_ip_from_xff(None, "10.0.0.5", 1) == "10.0.0.5"
+
+
+def test_client_ip_traefik_replaces_xff_hops_zero() -> None:
+    # Am Server verifiziert: Coolify-Traefik ERSETZT clientseitiges XFF durch die
+    # echte Remote-IP → XFF hat genau ein Element, hops=0 nimmt es (nicht spoofbar,
+    # weil ein vom Client vorangestelltes Element von Traefik verworfen wird).
+    assert client_ip_from_xff("203.0.113.7", "10.0.0.1", 0) == "203.0.113.7"
+    # Selbst wenn ein Angreifer mehrere voranstellt: hops=0 nimmt das LETZTE
+    # (= das von Traefik gesetzte echte), nicht das erste.
+    assert client_ip_from_xff("9.9.9.9, 203.0.113.7", "10.0.0.1", 0) == "203.0.113.7"
+
+
+# --- Bucket-Auswahl (gestaffelte Limits) ------------------------------------
+def test_bucket_selection_staffelung() -> None:
+    s = Settings()
+    from src.core.ratelimit_middleware import _Buckets  # noqa: PLC0415
+
+    b = _Buckets(s)
+    assert _select_bucket("/api/v1/auth/login", b)[0] == "auth"
+    assert _select_bucket("/api/v1/auth/register", b)[0] == "auth"
+    assert _select_bucket("/api/v1/payments/booking/x/intent", b)[0] == "payments"
+    assert _select_bucket("/api/v1/booking-engine/listings", b)[0] == "listings"
+    assert _select_bucket("/api/v1/properties/x", b)[0] == "default"
+    # Auth/Payments sind sensibel (fail-closed-Kandidaten), Listings nicht.
+    assert _select_bucket("/api/v1/auth/login", b)[2] is True
+    assert _select_bucket("/api/v1/booking-engine/listings", b)[2] is False
+
+
+# --- Tenant-Extraktion aus dem Bearer (best-effort) -------------------------
+def test_tenant_from_bearer_reads_app_metadata() -> None:
+    import base64
+    import json
+
+    payload = {"app_metadata": {"tenant_id": "tenant-123"}}
+    body = base64.urlsafe_b64encode(json.dumps(payload).encode()).rstrip(b"=").decode()
+    token = f"h.{body}.sig"
+    assert _tenant_from_bearer(f"Bearer {token}") == "tenant-123"
+
+
+def test_tenant_from_bearer_none_on_garbage() -> None:
+    assert _tenant_from_bearer("Bearer not-a-jwt") is None
+    assert _tenant_from_bearer(None) is None
+
+
+# --- RateLimiter-Kern -------------------------------------------------------
+def test_limiter_blocks_after_max() -> None:
+    async def run() -> None:
+        limiter = RateLimiter(_FakeRedis())
+        limit = Limit(3, 60)
+        for _ in range(3):
+            d = await limiter.check("k", limit)
+            assert d.allowed
+        blocked = await limiter.check("k", limit)
+        assert not blocked.allowed
+        assert blocked.retry_after == 60
+
+    asyncio.run(run())
+
+
+def test_limiter_degraded_on_redis_error() -> None:
+    async def run() -> None:
+        limiter = RateLimiter(_FakeRedis(fail=True))
+        d = await limiter.check("k", Limit(1, 60))
+        assert d.degraded and d.allowed  # fail-open-Signal an die Middleware
+
+    asyncio.run(run())
+
+
+# --- Middleware end-to-end (TestClient) -------------------------------------
+def _app_with_limiter(redis_client, settings: Settings) -> FastAPI:
+    app = FastAPI()
+
+    @app.get("/health")
+    def health() -> dict[str, str]:
+        return {"status": "ok"}
+
+    @app.get("/api/v1/booking-engine/listings")
+    def listings() -> dict[str, str]:
+        return {"ok": "yes"}
+
+    @app.get("/api/v1/auth/login")
+    def login() -> dict[str, str]:
+        return {"ok": "yes"}
+
+    app.add_middleware(
+        RateLimitMiddleware,
+        limiter=RateLimiter(redis_client),
+        settings=settings,
+    )
+    return app
+
+
+def test_429_and_retry_after_on_listings() -> None:
+    settings = Settings(rate_limit_listings="2/60")
+    client = TestClient(_app_with_limiter(_FakeRedis(), settings))
+    h = {"X-Forwarded-For": "1.2.3.4, 10.0.0.1"}
+    assert client.get("/api/v1/booking-engine/listings", headers=h).status_code == 200
+    assert client.get("/api/v1/booking-engine/listings", headers=h).status_code == 200
+    r = client.get("/api/v1/booking-engine/listings", headers=h)
+    assert r.status_code == 429
+    assert r.headers.get("Retry-After") == "60"
+    assert r.headers.get("X-RateLimit-Limit") == "2"
+
+
+def test_health_is_exempt() -> None:
+    settings = Settings(rate_limit_listings="1/60", rate_limit_default="1/60")
+    client = TestClient(_app_with_limiter(_FakeRedis(), settings))
+    # Viele Health-Calls dürfen NIE limitiert werden.
+    for _ in range(10):
+        assert client.get("/health").status_code == 200
+
+
+def test_distinct_ips_have_separate_budgets() -> None:
+    settings = Settings(rate_limit_listings="1/60")
+    client = TestClient(_app_with_limiter(_FakeRedis(), settings))
+    # Default hops=0 (Traefik-Verhalten): echte IP = letztes XFF-Element.
+    a = {"X-Forwarded-For": "1.1.1.1"}
+    b = {"X-Forwarded-For": "2.2.2.2"}
+    assert client.get("/api/v1/booking-engine/listings", headers=a).status_code == 200
+    assert client.get("/api/v1/booking-engine/listings", headers=a).status_code == 429
+    # Andere IP hat eigenes Budget → nicht blockiert.
+    assert client.get("/api/v1/booking-engine/listings", headers=b).status_code == 200
+
+
+def test_fail_open_on_redis_outage_for_normal_endpoint() -> None:
+    settings = Settings(rate_limit_listings="1/60")
+    client = TestClient(_app_with_limiter(_FakeRedis(fail=True), settings))
+    h = {"X-Forwarded-For": "1.2.3.4, 10.0.0.1"}
+    # Redis tot → normaler Endpunkt läuft durch (fail-open), kein Aussperren.
+    for _ in range(5):
+        assert client.get("/api/v1/booking-engine/listings", headers=h).status_code == 200
+
+
+def test_fail_closed_on_redis_outage_for_auth() -> None:
+    settings = Settings(rate_limit_fail_closed_sensitive=True)
+    client = TestClient(_app_with_limiter(_FakeRedis(fail=True), settings))
+    h = {"X-Forwarded-For": "1.2.3.4, 10.0.0.1"}
+    # Redis tot → sensibler Auth-Endpunkt fail-closed (503 statt offenes Brute-Force-Fenster).
+    r = client.get("/api/v1/auth/login", headers=h)
+    assert r.status_code == 503
+    assert r.headers.get("Retry-After") == "5"
+
+
+def test_disabled_limiter_passes_through() -> None:
+    settings = Settings(rate_limit_enabled=False, rate_limit_listings="1/60")
+    client = TestClient(_app_with_limiter(_FakeRedis(), settings))
+    h = {"X-Forwarded-For": "1.2.3.4, 10.0.0.1"}
+    for _ in range(5):
+        assert client.get("/api/v1/booking-engine/listings", headers=h).status_code == 200

@@ -25,6 +25,35 @@ class Settings(BaseSettings):
     # --- Redis ---
     redis_url: str = "redis://localhost:6379/0"
 
+    # --- Rate-Limiting (Redis-backed, pro IP + pro Tenant) ---
+    # Schema je Limit: "<max>/<fenster-sekunden>". Gestaffelt nach Sensitivität.
+    # An/aus-Schalter, damit lokale Tests/Dev ohne Redis nicht limitiert werden.
+    rate_limit_enabled: bool = True
+    # Großzügiger globaler Default pro IP — fängt nur Exzesse/Scraper.
+    rate_limit_default: str = "300/60"
+    # Streng: Brute-Force-Schutz für Login/Register (pro IP).
+    rate_limit_auth: str = "10/60"
+    # Streng: teure Zahlungs-Endpunkte (pro IP).
+    rate_limit_payments: str = "30/60"
+    # Mittel: öffentliche Such-/Listings-/Kalender-Endpunkte (Scraper-Schutz, pro IP).
+    rate_limit_listings: str = "60/60"
+    # Multi-Tenant-Fairness: ein eingeloggter Tenant darf den Pool nicht leeren.
+    rate_limit_tenant: str = "600/60"
+    # Vertrauenswürdige Proxy-Hops für die X-Forwarded-For-Auswertung. Anzahl der
+    # von RECHTS zu überspringenden Proxy-IPs; die echte Client-IP ist das
+    # (1+trusted_hops)-letzte XFF-Element.
+    # WICHTIG (am Server verifiziert): Coolifys Traefik VERTRAUT clientseitigem
+    # X-Forwarded-For NICHT — es ersetzt den Header durch die echte Remote-IP
+    # (Test: gefälschtes XFF kam als reine Client-IP an). Damit enthält XFF genau
+    # ein vertrauenswürdiges Element = die echte IP → trusted_hops = 0 (letztes
+    # Element). Würde Coolify später eine weitere Proxy-Schicht (z. B. Cloudflare)
+    # davorsetzen, diesen Wert entsprechend erhöhen.
+    rate_limit_trusted_proxy_hops: int = 0
+    # Auth/Payments fail-CLOSED bei Redis-Ausfall (lieber 503 als Brute-Force-Fenster
+    # offen); alle anderen Endpunkte fail-OPEN (Redis ist Cache/Queue, kein harter
+    # Gate — ein Redis-Ausfall darf nicht alle Nutzer aussperren).
+    rate_limit_fail_closed_sensitive: bool = True
+
     # --- Externe Dienste (optional, erst bei Bedarf gefüllt) ---
     google_maps_api_key: SecretStr = SecretStr("")
     google_translate_api_key: SecretStr = SecretStr("")
