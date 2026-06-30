@@ -9,6 +9,7 @@ import { useState } from "react";
 
 import { bucheGast, ladeVerfuegbarkeit } from "@/lib/buchung";
 import { type Listing, formatEuro } from "@/lib/listings";
+import { StripeCheckout } from "@/components/stripe-checkout";
 
 function naechte(checkIn: string, checkOut: string): number {
   if (!checkIn || !checkOut) return 0;
@@ -27,6 +28,7 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
   const [status, setStatus] = useState<{
     kind: "idle" | "loading" | "error" | "done";
     msg?: string;
+    reservationId?: string;
   }>({ kind: "idle" });
 
   const n = naechte(checkIn, checkOut);
@@ -61,7 +63,8 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
       total_amount: zwischensumme,
     });
     if (res.ok) {
-      setStatus({ kind: "done", msg: "Buchung bestätigt! Du erhältst eine E-Mail." });
+      // Reservierung steht — weiter zum Bezahlschritt (Stripe Payment Element).
+      setStatus({ kind: "done", reservationId: res.data.id });
     } else {
       setStatus({ kind: "error", msg: res.error });
     }
@@ -130,27 +133,28 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={reservieren}
-        disabled={status.kind === "loading"}
-        className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-3 font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
-      >
-        {status.kind === "loading" ? (
-          <Icon icon="ph:spinner" className="size-4 animate-spin" />
-        ) : null}
-        {status.kind === "done" ? "Gebucht" : "Reservieren"}
-      </button>
-
-      {status.msg && (
-        <p
-          className={
-            "mt-3 text-center text-sm " +
-            (status.kind === "error" ? "text-red-600" : "text-green-700")
-          }
+      {/* Schritt 2: Bezahlen (Stripe Payment Element) — erscheint, sobald die
+          Reservierung angelegt ist. */}
+      {status.kind === "done" && status.reservationId ? (
+        <div className="mt-4">
+          <StripeCheckout reservationId={status.reservationId} />
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={reservieren}
+          disabled={status.kind === "loading"}
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-full bg-accent px-4 py-3 font-medium text-accent-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
         >
-          {status.msg}
-        </p>
+          {status.kind === "loading" ? (
+            <Icon icon="ph:spinner" className="size-4 animate-spin" />
+          ) : null}
+          Reservieren &amp; bezahlen
+        </button>
+      )}
+
+      {status.msg && status.kind === "error" && (
+        <p className="mt-3 text-center text-sm text-red-600">{status.msg}</p>
       )}
 
       {n > 0 && preis != null && status.kind !== "done" && (

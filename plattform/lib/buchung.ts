@@ -61,3 +61,43 @@ export async function bucheGast(input: {
 > {
   return call("reservations", { method: "POST", body: input });
 }
+
+// --- Online-Zahlung (Stripe) ------------------------------------------------
+
+export type BookingIntent = {
+  client_secret: string;
+  payment_id: string;
+  publishable_key: string;
+};
+
+/**
+ * Stripe-PaymentIntent für eine bereits angelegte Reservierung holen. Tenant +
+ * Betrag bestimmt das Backend serverseitig aus der Reservierung (keine
+ * client-seitigen Beträge). Liefert client_secret + publishable_key fürs
+ * Payment Element. 409 = Online-Zahlung für dieses Objekt (noch) nicht möglich.
+ */
+export async function ladeZahlungsIntent(
+  reservationId: string,
+): Promise<Result<BookingIntent>> {
+  try {
+    const res = await fetch(
+      `/api/v1/payments/booking/${reservationId}/intent`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        cache: "no-store",
+      },
+    );
+    if (!res.ok) {
+      const detail = await res.json().catch(() => null);
+      const msg =
+        res.status === 409
+          ? "Online-Zahlung ist für diese Unterkunft derzeit nicht möglich."
+          : (detail?.detail ?? `Fehler ${res.status}`);
+      return { ok: false, error: String(msg) };
+    }
+    return { ok: true, data: (await res.json()) as BookingIntent };
+  } catch {
+    return { ok: false, error: "Verbindung fehlgeschlagen." };
+  }
+}
