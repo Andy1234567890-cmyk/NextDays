@@ -310,6 +310,12 @@ class ApplyTemplateRequest(BaseModel):
     template_id: str
 
 
+class DraftTokenResponse(BaseModel):
+    """Kurzlebiger Token für die Editor-Live-Vorschau (builder/-iframe)."""
+
+    token: str
+
+
 # --- Öffentlicher Resolver (service-role, nur veröffentlicht) ----------------
 class PublicBlock(BaseModel):
     """Ein Block für den öffentlichen Renderer — type + content + settings."""

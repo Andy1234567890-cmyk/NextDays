@@ -70,7 +70,7 @@ export async function BlockRenderer({
   return (
     <>
       {blocks.map((block, i) => (
-        <div key={i} style={bgStyle(block.settings)}>
+        <div key={i} data-block-index={i} style={bgStyle(block.settings)}>
           {rendered[i]}
         </div>
       ))}

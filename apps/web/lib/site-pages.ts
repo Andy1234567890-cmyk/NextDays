@@ -172,6 +172,13 @@ export async function removeBlock(blockId: string): Promise<Result<null>> {
   return call(`/site-config/blocks/${blockId}`, { method: "DELETE" });
 }
 
+// --- Live-Vorschau (Draft-Token für den builder-iframe) ---------------------
+export async function createDraftToken(
+  pageId: string,
+): Promise<Result<{ token: string }>> {
+  return call(`/site-config/pages/${pageId}/draft-token`, { method: "POST" });
+}
+
 // --- Templates --------------------------------------------------------------
 export async function applyTemplate(
   templateId: string,

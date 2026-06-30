@@ -497,3 +497,70 @@ def test_apply_unknown_template_404() -> None:
     with pytest.raises(SiteConfigError) as exc:
         _svc({"site_pages": []}).apply_template(_ctx(), "gibtsnicht")
     assert exc.value.status_code == 404
+
+
+def test_draft_token_roundtrip_and_renders_unpublished() -> None:
+    tables = {
+        "tenant_custom_domains": [],
+        "tenant_site_config": [{"tenant_id": "t-1", "social_links": {}}],
+        "site_pages": [
+            {"id": "p1", "tenant_id": "t-1", "slug": "", "title": "Entwurf",
+             "is_home": True, "is_published": False, "nav_order": 0}
+        ],
+        "site_blocks": [
+            {"id": "b1", "tenant_id": "t-1", "page_id": "p1", "type": "hero",
+             "position": 0, "content": {"heading": {"de": "Hi"}}, "settings": {}}
+        ],
+    }
+    svc = _svc(tables)
+    token = svc.create_draft_token(_ctx(), "p1")
+    # Mit gültigem Token wird die UNVERÖFFENTLICHTE Seite gerendert.
+    out = svc.resolve_page_draft("p1", token)
+    assert out.tenant_id == "t-1"
+    assert out.blocks[0].type == "hero"
+
+
+def test_draft_token_invalid_403() -> None:
+    tables = {
+        "tenant_site_config": [{"tenant_id": "t-1", "social_links": {}}],
+        "site_pages": [
+            {"id": "p1", "tenant_id": "t-1", "slug": "", "title": "x",
+             "is_home": True, "is_published": False, "nav_order": 0}
+        ],
+        "site_blocks": [],
+    }
+    with pytest.raises(SiteConfigError) as exc:
+        _svc(tables).resolve_page_draft("p1", "9999999999.deadbeef")
+    assert exc.value.status_code == 403
+
+
+def test_draft_token_foreign_page_404() -> None:
+    # Token für p1 darf nicht für eine fremde page_id gelten.
+    tables = {
+        "tenant_site_config": [{"tenant_id": "t-1", "social_links": {}}],
+        "site_pages": [
+            {"id": "p1", "tenant_id": "t-1", "slug": "", "title": "x",
+             "is_home": True, "is_published": False, "nav_order": 0}
+        ],
+        "site_blocks": [],
+    }
+    svc = _svc(tables)
+    token = svc.create_draft_token(_ctx(), "p1")
+    with pytest.raises(SiteConfigError) as exc:
+        svc.resolve_page_draft("p-other", token)
+    assert exc.value.status_code == 404
+
+
+def test_draft_invalid_page_id_404_not_500() -> None:
+    # Eine syntaktisch ungültige ID (DB wirft) → sauberes 404, kein 500.
+    class _BoomDB:
+        def table(self, _name: str):
+            raise RuntimeError("invalid input syntax for type uuid")
+
+    svc = SiteConfigService(
+        service_client=_BoomDB(),  # type: ignore[arg-type]
+        cloudflare=_FakeCloudflare(),  # type: ignore[arg-type]
+    )
+    with pytest.raises(SiteConfigError) as exc:
+        svc.resolve_page_draft("nope", "x.y")
+    assert exc.value.status_code == 404

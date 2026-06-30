@@ -100,6 +100,12 @@ class Settings(BaseSettings):
     cloudflare_fallback_origin: str = ""
     cloudflare_base_url: str = "https://api.cloudflare.com/client/v4"
 
+    # --- Page-Builder: Draft-Render-Token (Editor-Live-Vorschau) ---
+    # HMAC-Secret, mit dem das Backend kurzlebige Tokens signiert, die der
+    # builder/-iframe vorzeigt, um UNVERÖFFENTLICHTE Seiten zu rendern. NIE ins
+    # Repo/Log. Im Dev leer → ein lokaler Default greift (nur lokal nutzbar).
+    site_draft_secret: SecretStr = SecretStr("")
+
     # --- WhatsApp (Meta WhatsApp Cloud API) ---
     # access_token: permanenter System-User-Token (Meta Business).
     # phone_number_id: ID der WhatsApp-Business-Telefonnummer (Graph API).

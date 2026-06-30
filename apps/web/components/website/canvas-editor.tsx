@@ -6,7 +6,7 @@
 // Inhalte werden debounced gespeichert; optimistisches Update mit Rollback.
 import { Icon } from "@iconify/react";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import {
   type BlockType,
   type Page,
   addBlock,
+  createDraftToken,
   removeBlock,
   reorderBlocks,
   updateBlock,
@@ -22,6 +23,10 @@ import {
 
 import { BLOCK_CATALOG, BLOCK_META } from "./block-catalog";
 import { BlockInspector } from "./block-inspector";
+
+// builder-Origin für die Live-Vorschau (Draft-iframe). Lokal Default 3200.
+const BUILDER_URL =
+  process.env.NEXT_PUBLIC_BUILDER_URL ?? "http://localhost:3200";
 
 export function CanvasEditor({
   page,
@@ -36,9 +41,52 @@ export function CanvasEditor({
   );
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
+  const [draftToken, setDraftToken] = useState<string | null>(null);
+  const [previewKey, setPreviewKey] = useState(0); // erzwingt iframe-Reload
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
 
   const selected = blocks.find((b) => b.id === selectedId) ?? null;
+
+  // Draft-Token einmal laden (für die Live-Vorschau im iframe).
+  useEffect(() => {
+    let active = true;
+    void createDraftToken(page.id).then((res) => {
+      if (active && res.ok) setDraftToken(res.data.token);
+    });
+    return () => {
+      active = false;
+    };
+  }, [page.id]);
+
+  // postMessage-Brücke: Klick im Canvas-iframe → Block selektieren.
+  useEffect(() => {
+    function onMessage(e: MessageEvent) {
+      if (e.origin !== BUILDER_URL) return; // nur der builder-Origin
+      const data = e.data as { source?: string; type?: string; index?: number };
+      if (data?.source !== "builder-canvas") return;
+      if (data.type === "ready") return;
+      if (data.type === "select" && typeof data.index === "number") {
+        const b = blocks[data.index];
+        if (b) setSelectedId(b.id);
+      }
+    }
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [blocks]);
+
+  // Editor stellt sich dem iframe vor (setzt den Ziel-Origin in der Bridge).
+  function onIframeLoad() {
+    iframeRef.current?.contentWindow?.postMessage(
+      { source: "builder-editor", type: "hello" },
+      BUILDER_URL,
+    );
+  }
+
+  // iframe neu laden, sobald sich Blöcke geändert haben (nach dem Speichern).
+  function refreshPreview() {
+    setPreviewKey((k) => k + 1);
+  }
 
   async function persistOrder(next: Block[]) {
     const prev = blocks;
@@ -47,8 +95,10 @@ export function CanvasEditor({
       page.id,
       next.map((b) => b.id),
     );
-    if (res.ok) setBlocks(res.data.items);
-    else {
+    if (res.ok) {
+      setBlocks(res.data.items);
+      refreshPreview();
+    } else {
       setBlocks(prev);
       toast.error(res.error);
     }
@@ -90,6 +140,7 @@ export function CanvasEditor({
     }
     setBlocks((prev) => [...prev, res.data]);
     setSelectedId(res.data.id);
+    refreshPreview();
   }
 
   async function onDelete(id: string) {
@@ -100,6 +151,8 @@ export function CanvasEditor({
     if (!res.ok) {
       setBlocks(prev);
       toast.error(res.error);
+    } else {
+      refreshPreview();
     }
   }
 
@@ -115,6 +168,7 @@ export function CanvasEditor({
     saveTimers.current[id] = setTimeout(async () => {
       const res = await updateBlock(id, patch);
       if (!res.ok) toast.error(res.error);
+      else refreshPreview();
     }, 600);
   }
 
@@ -137,11 +191,11 @@ export function CanvasEditor({
         </div>
       </div>
 
-      <div className="grid flex-1 grid-cols-[14rem_1fr_18rem] overflow-hidden">
+      <div className="grid flex-1 grid-cols-[13rem_13rem_1fr_18rem] overflow-hidden">
         {/* Palette */}
         <aside className="overflow-y-auto border-r border-border p-3">
           <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Blöcke
+            Blöcke einfügen
           </p>
           <div className="flex flex-col gap-1">
             {BLOCK_CATALOG.map((b) => (
@@ -166,17 +220,17 @@ export function CanvasEditor({
           </div>
         </aside>
 
-        {/* Canvas / Block-Liste */}
-        <main className="overflow-y-auto bg-secondary/20 p-4">
+        {/* Ebenen: Block-Reihenfolge per Drag ODER Pfeilen */}
+        <aside className="overflow-y-auto border-r border-border p-3">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Ebenen
+          </p>
           {blocks.length === 0 ? (
-            <div className="flex h-full flex-col items-center justify-center gap-2 text-center text-muted-foreground">
-              <Icon icon="ph:stack" className="size-8" />
-              <p className="text-sm">
-                Fügen Sie links Blöcke hinzu, um Ihre Seite zu bauen.
-              </p>
-            </div>
+            <p className="text-xs text-muted-foreground">
+              Noch keine Blöcke.
+            </p>
           ) : (
-            <ul className="mx-auto flex max-w-3xl flex-col gap-2">
+            <ul className="flex flex-col gap-1">
               {blocks.map((block) => (
                 <li
                   key={block.id}
@@ -193,22 +247,20 @@ export function CanvasEditor({
                   }}
                   onClick={() => setSelectedId(block.id)}
                   className={
-                    "flex cursor-pointer items-center gap-2 rounded-(--radius) border bg-background px-3 py-3 " +
+                    "flex cursor-pointer items-center gap-1.5 rounded-(--radius) border px-2 py-2 text-sm " +
                     (selectedId === block.id
-                      ? "border-primary ring-1 ring-primary"
-                      : "border-border") +
+                      ? "border-primary bg-secondary/50"
+                      : "border-transparent hover:bg-secondary/40") +
                     (overId === block.id ? " ring-2 ring-primary/40" : "") +
                     (dragId === block.id ? " opacity-50" : "")
                   }
                 >
                   <Icon
                     icon={BLOCK_META[block.type].icon}
-                    className="size-4 text-muted-foreground"
+                    className="size-4 shrink-0 text-muted-foreground"
                   />
-                  <span className="text-sm font-medium">
-                    {BLOCK_META[block.type].label}
-                  </span>
-                  <span className="ml-auto flex items-center gap-0.5">
+                  <span className="truncate">{BLOCK_META[block.type].label}</span>
+                  <span className="ml-auto flex shrink-0 items-center">
                     <button
                       type="button"
                       aria-label="nach oben"
@@ -216,9 +268,9 @@ export function CanvasEditor({
                         e.stopPropagation();
                         move(block.id, -1);
                       }}
-                      className="rounded-full p-1 hover:bg-secondary"
+                      className="rounded-full p-0.5 hover:bg-secondary"
                     >
-                      <Icon icon="ph:caret-up" className="size-4" />
+                      <Icon icon="ph:caret-up" className="size-3.5" />
                     </button>
                     <button
                       type="button"
@@ -227,9 +279,9 @@ export function CanvasEditor({
                         e.stopPropagation();
                         move(block.id, 1);
                       }}
-                      className="rounded-full p-1 hover:bg-secondary"
+                      className="rounded-full p-0.5 hover:bg-secondary"
                     >
-                      <Icon icon="ph:caret-down" className="size-4" />
+                      <Icon icon="ph:caret-down" className="size-3.5" />
                     </button>
                     <button
                       type="button"
@@ -238,14 +290,32 @@ export function CanvasEditor({
                         e.stopPropagation();
                         void onDelete(block.id);
                       }}
-                      className="rounded-full p-1 hover:bg-secondary"
+                      className="rounded-full p-0.5 hover:bg-secondary"
                     >
-                      <Icon icon="ph:trash" className="size-4" />
+                      <Icon icon="ph:trash" className="size-3.5" />
                     </button>
                   </span>
                 </li>
               ))}
             </ul>
+          )}
+        </aside>
+
+        {/* Live-Canvas: echter builder-Render im iframe (Draft-Token) */}
+        <main className="overflow-hidden bg-secondary/20">
+          {draftToken ? (
+            <iframe
+              key={previewKey}
+              ref={iframeRef}
+              onLoad={onIframeLoad}
+              title="Live-Vorschau"
+              src={`${BUILDER_URL}/render/${page.id}?token=${encodeURIComponent(draftToken)}`}
+              className="size-full border-0"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
+              Vorschau wird geladen …
+            </div>
           )}
         </main>
 
@@ -259,7 +329,7 @@ export function CanvasEditor({
             />
           ) : (
             <p className="p-4 text-sm text-muted-foreground">
-              Wählen Sie einen Block, um ihn zu bearbeiten.
+              Wählen Sie links einen Block, um ihn zu bearbeiten.
             </p>
           )}
         </aside>

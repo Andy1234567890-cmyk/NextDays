@@ -12,10 +12,14 @@ Status, kein tenant-fremder Leak.
 """
 from __future__ import annotations
 
+import hashlib
+import hmac
+import time
 from datetime import UTC, datetime
 
 from supabase import Client
 
+from src.core.config import get_settings
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
@@ -584,6 +588,91 @@ class SiteConfigService:
             ],
             branding=self._public_branding(tenant_id),
         )
+
+    # === Page-Builder: Draft-Vorschau (Editor-iframe) =======================
+
+    # Token-Gültigkeit: 1 Stunde reicht für eine Editier-Sitzung; danach lädt der
+    # iframe einen frischen Token. Kurzlebig, damit ein geleakter Token wenig wert ist.
+    _DRAFT_TTL_SECONDS = 3600
+
+    def _draft_secret(self) -> bytes:
+        secret = get_settings().site_draft_secret.get_secret_value()
+        # Lokaler Dev-Default (nur ohne gesetztes Secret) — in Prod IMMER gesetzt.
+        return (secret or "dev-only-insecure-draft-secret").encode()
+
+    def create_draft_token(self, ctx: AuthContext, page_id: str) -> str:
+        """Signiert einen kurzlebigen Token (tenant+page+exp) für die Live-
+        Vorschau im Editor-iframe. Nur für eigene Seiten."""
+        tenant_id = self._require_tenant(ctx)
+        self._own_page(tenant_id, page_id)
+        exp = int(time.time()) + self._DRAFT_TTL_SECONDS
+        return self._sign_draft(tenant_id, page_id, exp)
+
+    def _sign_draft(self, tenant_id: str, page_id: str, exp: int) -> str:
+        msg = f"{tenant_id}.{page_id}.{exp}".encode()
+        sig = hmac.new(self._draft_secret(), msg, hashlib.sha256).hexdigest()
+        return f"{exp}.{sig}"
+
+    def resolve_page_draft(self, page_id: str, token: str) -> PublicPageResponse:
+        """Rendert eine Seite (auch UNVERÖFFENTLICHT) für den Editor-iframe —
+        nur mit gültigem, nicht abgelaufenem Token. Kein JWT (cross-origin
+        iframe). Token bindet tenant_id + page_id."""
+        # Seite + tenant aus der DB holen (service-role), dann Token verifizieren.
+        # Eine syntaktisch ungültige ID (keine UUID) ist „nicht gefunden", kein 500.
+        try:
+            page_rows = (
+                self._db.table("site_pages")
+                .select(f"{_PAGE_COLS}, tenant_id")
+                .eq("id", page_id)
+                .limit(1)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — ungültige ID → 404
+            raise SiteConfigError(
+                "Seite nicht gefunden.", status_code=404
+            ) from exc
+        if not page_rows:
+            raise SiteConfigError("Seite nicht gefunden.", status_code=404)
+        page = page_rows[0]
+        tenant_id = page["tenant_id"]
+        if not self._verify_draft(tenant_id, page_id, token):
+            raise SiteConfigError("Ungültiger Vorschau-Token.", status_code=403)
+        block_rows = (
+            self._db.table("site_blocks")
+            .select("type, content, settings")
+            .eq("page_id", page_id)
+            .order("position")
+            .execute()
+        ).data or []
+        return PublicPageResponse(
+            tenant_id=tenant_id,
+            page=PublicPageMeta(
+                slug=page["slug"],
+                title=page["title"],
+                seo_title=page.get("seo_title"),
+                seo_description=page.get("seo_description"),
+                og_image_url=page.get("og_image_url"),
+            ),
+            blocks=[
+                PublicBlock(
+                    type=BlockType(b["type"]),
+                    content=b.get("content") or {},
+                    settings=b.get("settings") or {},
+                )
+                for b in block_rows
+            ],
+            branding=self._public_branding(tenant_id),
+        )
+
+    def _verify_draft(self, tenant_id: str, page_id: str, token: str) -> bool:
+        try:
+            exp = int(token.split(".", 1)[0])
+        except (ValueError, AttributeError, IndexError):
+            return False
+        if exp < int(time.time()):
+            return False  # abgelaufen
+        expected = self._sign_draft(tenant_id, page_id, exp)
+        return hmac.compare_digest(expected, token)
 
     # --- Page-Builder intern -------------------------------------------------
 

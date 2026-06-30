@@ -30,6 +30,7 @@ from .schemas import (
     CustomDomainListResponse,
     CustomDomainResponse,
     DomainCreate,
+    DraftTokenResponse,
     PageCreate,
     PageListResponse,
     PageResponse,
@@ -303,6 +304,21 @@ def apply_template(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@manage_router.post(
+    "/pages/{page_id}/draft-token", response_model=DraftTokenResponse
+)
+def create_draft_token(
+    page_id: str,
+    service: SiteConfigServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE)],
+) -> DraftTokenResponse:
+    """Kurzlebiger Token für die Live-Vorschau im Editor-iframe (eigene Seite)."""
+    try:
+        return DraftTokenResponse(token=service.create_draft_token(ctx, page_id))
+    except SiteConfigError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 # --- Öffentlicher Resolver (KEIN JWT) ---------------------------------------
 @public_router.get("/by-domain", response_model=PublicSiteResponse)
 def resolve_site_by_domain(
@@ -329,5 +345,19 @@ def resolve_page(
     builder/-Renderer. KEIN JWT; nur is_published; unbekannt → 404."""
     try:
         return service.resolve_page(host, slug)
+    except SiteConfigError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@public_router.get("/page/draft", response_model=PublicPageResponse)
+def resolve_page_draft(
+    service: SiteConfigServiceDep,
+    page_id: Annotated[str, Query()],
+    token: Annotated[str, Query()],
+) -> PublicPageResponse:
+    """Entwurfs-Render für den Editor-iframe (auch unveröffentlicht). KEIN JWT,
+    aber HMAC-Token-verifiziert (tenant+page+exp). Ungültig → 403."""
+    try:
+        return service.resolve_page_draft(page_id, token)
     except SiteConfigError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
