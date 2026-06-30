@@ -81,11 +81,18 @@ def create_app() -> FastAPI:
 
     app = FastAPI(title="NextDays API", version="0.1.0", lifespan=_lifespan)
 
+    # CORS default-deny: mit allow_credentials=True würde Starlettes allow_methods=["*"]
+    # die Request-Methode reflektieren und damit JEDE Methode (inkl. neuer wie QUERY,
+    # RFC 10008) für credential-tragende Browser-Requests freigeben. Stattdessen eine
+    # explizite Allowlist der real genutzten Methoden + OPTIONS (Preflight). Eine
+    # unbekannte Methode fällt so durch den Preflight, statt automatisch erlaubt zu sein.
+    # (CORS ist Browser-Schutz, keine Server-Autorisierung — die erzwingt der Auth-
+    #  Dependency pro Route; diese Allowlist hält das Prinzip dennoch konsistent.)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origin_list,
         allow_credentials=True,
-        allow_methods=["*"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
         allow_headers=["*"],
     )
 
