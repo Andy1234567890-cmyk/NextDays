@@ -107,15 +107,21 @@ class BookingEngineService:
         start: date | None = None,
         end: date | None = None,
         tenant: str | None = None,
+        property_ids: list[str] | None = None,
     ) -> PublicListingListResponse:
         """Öffentliche Liste buchbarer Objekte. STRIKT status='active' — draft/
         inactive erscheinen NIE. Default tenant-übergreifend (zentraler Marktplatz);
-        mit `tenant` auf einen Mandanten gefiltert (künftige White-Label-Seiten).
+        mit `tenant` auf einen Mandanten gefiltert (White-Label-Seiten).
+        `property_ids` schränkt auf konkrete Objekte ein (Featured-Block).
 
         Bei gesetztem start/end fließt die Verfügbarkeit ein (belegte Objekte
         fallen raus) und `price_from` ist der Effektivpreis des Zeitraums. `q`
         filtert über Titel/Ort, `guests` über die Kapazität.
         """
+        # Leere property_ids-Liste = bewusst „keine Objekte" (nicht „alle"): der
+        # Featured-Block ohne Auswahl darf nicht versehentlich alles rendern.
+        if property_ids is not None and not property_ids:
+            return PublicListingListResponse(items=[], total=0)
         query = (
             self._db()
             .table("properties")
@@ -124,6 +130,8 @@ class BookingEngineService:
         )
         if tenant:
             query = query.eq("tenant_id", tenant)
+        if property_ids:
+            query = query.in_("id", property_ids)
         if guests:
             query = query.gte("max_guests", guests)
         rows = query.order("title").execute().data or []

@@ -13,8 +13,12 @@ import pytest
 
 from src.core.security import AuthContext
 from src.features.site_config.schemas import (
+    BlockCreate,
+    BlockType,
+    BlockUpdate,
     BrandingUpdate,
     DomainCreate,
+    PageCreate,
     PublicSiteResponse,
 )
 from src.features.site_config.service import SiteConfigError, SiteConfigService
@@ -34,6 +38,9 @@ class _Query:
         self._payload: list[dict] | dict | None = None
         self._conflict: str | None = None
         self._filters: list[tuple[str, object]] = []
+        self._neq: list[tuple[str, object]] = []
+        self._in: tuple[str, list] | None = None
+        self._order: tuple[str, bool] | None = None
 
     def select(self, *_cols: object, **_k: object) -> _Query:
         self._op = "select"
@@ -63,14 +70,32 @@ class _Query:
         self._filters.append((col, val))
         return self
 
-    def order(self, *_a: object, **_k: object) -> _Query:
+    def neq(self, col: str, val: object) -> _Query:
+        self._neq.append((col, val))
+        return self
+
+    def in_(self, col: str, vals: list) -> _Query:
+        self._in = (col, vals)
+        return self
+
+    def order(self, col: str = "", *, desc: bool = False, **_k: object) -> _Query:
+        if col:
+            self._order = (col, desc)
         return self
 
     def limit(self, _n: int) -> _Query:
         return self
 
     def _match(self, row: dict) -> bool:
-        return all(str(row.get(c)) == str(v) for c, v in self._filters)
+        if not all(str(row.get(c)) == str(v) for c, v in self._filters):
+            return False
+        if any(str(row.get(c)) == str(v) for c, v in self._neq):
+            return False
+        if self._in is not None:
+            col, vals = self._in
+            if row.get(col) not in vals:
+                return False
+        return True
 
     def execute(self) -> _Result:
         rows = self._db.tables.setdefault(self._table, [])
@@ -80,6 +105,11 @@ class _Query:
             for i, p in enumerate(new):
                 row = dict(p)
                 row.setdefault("id", f"{self._table}-{len(rows) + i + 1}")
+                # DB-Spalten-Defaults nachbilden (wie Postgres NOT NULL DEFAULT).
+                if self._table == "site_pages":
+                    row.setdefault("is_home", False)
+                    row.setdefault("is_published", False)
+                    row.setdefault("nav_order", 0)
                 rows.append(row)
                 created.append(row)
             return _Result(created)
@@ -103,6 +133,11 @@ class _Query:
         if self._op == "delete":
             self._db.tables[self._table] = [r for r in rows if not self._match(r)]
             return _Result(selected)
+        if self._order is not None:
+            col, desc = self._order
+            selected = sorted(
+                selected, key=lambda r: r.get(col) or 0, reverse=desc
+            )
         return _Result(selected)
 
 
@@ -309,3 +344,156 @@ def test_add_domain_does_not_log_token(caplog: pytest.LogCaptureFixture) -> None
         svc.add_domain(_ctx(), DomainCreate(domain="neu.de"))
     joined = " ".join(r.getMessage() for r in caplog.records)
     assert "abc123-validation-token" not in joined
+
+
+# === Page-Builder: Seiten + Blöcke ==========================================
+def test_create_first_page_is_home() -> None:
+    svc = _svc({"site_pages": []})
+    page = svc.create_page(_ctx(), PageCreate(title="Start", slug=""))
+    assert page.is_home is True
+    # Zweite Seite ist NICHT automatisch Home.
+    page2 = svc.create_page(_ctx(), PageCreate(title="Über", slug="ueber"))
+    assert page2.is_home is False
+
+
+def test_page_slug_unique_per_tenant_409() -> None:
+    svc = _svc({"site_pages": []})
+    svc.create_page(_ctx(), PageCreate(title="A", slug="x"))
+    with pytest.raises(SiteConfigError) as exc:
+        svc.create_page(_ctx(), PageCreate(title="B", slug="x"))
+    assert exc.value.status_code == 409
+
+
+def test_set_home_page_dethrones_others() -> None:
+    tables = {
+        "site_pages": [
+            {"id": "p1", "tenant_id": "t-1", "slug": "", "title": "A",
+             "is_home": True, "is_published": False, "nav_order": 0},
+            {"id": "p2", "tenant_id": "t-1", "slug": "b", "title": "B",
+             "is_home": False, "is_published": False, "nav_order": 0},
+        ]
+    }
+    svc = _svc(tables)
+    svc.set_home_page(_ctx(), "p2")
+    homes = [p for p in tables["site_pages"] if p["is_home"]]
+    assert len(homes) == 1 and homes[0]["id"] == "p2"
+
+
+def test_page_tenant_scope_404() -> None:
+    tables = {
+        "site_pages": [
+            {"id": "p1", "tenant_id": "t-OTHER", "slug": "", "title": "A",
+             "is_home": True, "is_published": True, "nav_order": 0}
+        ]
+    }
+    with pytest.raises(SiteConfigError) as exc:
+        _svc(tables).publish_page(_ctx(tenant="t-1"), "p1")
+    assert exc.value.status_code == 404
+
+
+def test_add_block_positions_increment_and_validate() -> None:
+    tables = {
+        "site_pages": [
+            {"id": "p1", "tenant_id": "t-1", "slug": "", "title": "A",
+             "is_home": True, "is_published": False, "nav_order": 0}
+        ],
+        "site_blocks": [],
+    }
+    svc = _svc(tables)
+    b0 = svc.add_block(_ctx(), "p1", BlockCreate(type=BlockType.hero, content={}))
+    b1 = svc.add_block(
+        _ctx(), "p1",
+        BlockCreate(type=BlockType.rich_text, content={"html": {"de": "<p>x</p>"}}),
+    )
+    assert b0.position == 0 and b1.position == 1
+    # content wurde gegen das Hero-Schema validiert/normalisiert.
+    assert "heading" in b0.content
+
+
+def test_reorder_blocks_rejects_foreign_set() -> None:
+    tables = {
+        "site_pages": [
+            {"id": "p1", "tenant_id": "t-1", "slug": "", "title": "A",
+             "is_home": True, "is_published": False, "nav_order": 0}
+        ],
+        "site_blocks": [
+            {"id": "b1", "tenant_id": "t-1", "page_id": "p1", "type": "hero",
+             "position": 0, "content": {}, "settings": {}},
+            {"id": "b2", "tenant_id": "t-1", "page_id": "p1", "type": "spacer",
+             "position": 1, "content": {}, "settings": {}},
+        ],
+    }
+    svc = _svc(tables)
+    # falsche Menge (fremde ID) → 400
+    with pytest.raises(SiteConfigError) as exc:
+        svc.reorder_blocks(_ctx(), "p1", ["b1", "b99"])
+    assert exc.value.status_code == 400
+    # korrekte Menge → Positionen folgen der Reihenfolge
+    res = svc.reorder_blocks(_ctx(), "p1", ["b2", "b1"])
+    by_id = {b.id: b.position for b in res.items}
+    assert by_id["b2"] == 0 and by_id["b1"] == 1
+
+
+def test_update_block_validates_against_type() -> None:
+    tables = {
+        "site_pages": [
+            {"id": "p1", "tenant_id": "t-1", "slug": "", "title": "A",
+             "is_home": True, "is_published": False, "nav_order": 0}
+        ],
+        "site_blocks": [
+            {"id": "b1", "tenant_id": "t-1", "page_id": "p1", "type": "button",
+             "position": 0, "content": {}, "settings": {}},
+        ],
+    }
+    svc = _svc(tables)
+    out = svc.update_block(
+        _ctx(), "b1", BlockUpdate(content={"label": {"de": "Buchen"}, "href": "/x"})
+    )
+    assert out.content["href"] == "/x"
+
+
+def test_resolve_page_only_published() -> None:
+    tables = {
+        "tenant_custom_domains": [
+            {"id": "d1", "tenant_id": "t-1", "domain": "a.de", "status": "active"}
+        ],
+        "tenant_site_config": [{"tenant_id": "t-1", "social_links": {}}],
+        "site_pages": [
+            {"id": "p1", "tenant_id": "t-1", "slug": "", "title": "Home",
+             "is_home": True, "is_published": False, "nav_order": 0}
+        ],
+        "site_blocks": [],
+    }
+    # Home existiert, aber unveröffentlicht → 404 (kein Entwurf nach außen).
+    with pytest.raises(SiteConfigError) as exc:
+        _svc(tables).resolve_page("a.de", None)
+    assert exc.value.status_code == 404
+    # veröffentlicht → kommt durch, mit Branding + tenant_id
+    tables["site_pages"][0]["is_published"] = True
+    out = _svc(tables).resolve_page("a.de", None)
+    assert out.tenant_id == "t-1"
+    assert out.page.slug == ""
+
+
+def test_resolve_page_unknown_host_404() -> None:
+    with pytest.raises(SiteConfigError) as exc:
+        _svc({"tenant_custom_domains": []}).resolve_page("nope.de", None)
+    assert exc.value.status_code == 404
+
+
+def test_apply_template_creates_pages_and_blocks() -> None:
+    tables = {"site_pages": [], "site_blocks": []}
+    svc = _svc(tables)
+    res = svc.apply_template(_ctx(), "klassik")
+    assert res.total >= 1
+    # Genau eine Home aus dem Template.
+    homes = [p for p in tables["site_pages"] if p["is_home"]]
+    assert len(homes) == 1
+    # Blöcke wurden angelegt + content-validiert.
+    assert len(tables["site_blocks"]) >= 1
+
+
+def test_apply_unknown_template_404() -> None:
+    with pytest.raises(SiteConfigError) as exc:
+        _svc({"site_pages": []}).apply_template(_ctx(), "gibtsnicht")
+    assert exc.value.status_code == 404

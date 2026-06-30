@@ -19,8 +19,14 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
+from . import templates as site_templates
 from .cloudflare_client import CloudflareClient, CloudflareError
 from .schemas import (
+    BlockCreate,
+    BlockListResponse,
+    BlockResponse,
+    BlockType,
+    BlockUpdate,
     BrandingResponse,
     BrandingUpdate,
     CustomDomainListResponse,
@@ -28,8 +34,16 @@ from .schemas import (
     DnsRecord,
     DomainCreate,
     DomainStatus,
+    PageCreate,
+    PageListResponse,
+    PageResponse,
+    PageUpdate,
+    PublicBlock,
+    PublicPageMeta,
+    PublicPageResponse,
     PublicSiteResponse,
     SliceHealth,
+    validate_block_content,
 )
 
 log = get_logger("nextdays.site_config")
@@ -45,6 +59,11 @@ _DOMAIN_COLS = (
 )
 # Öffentliche Felder + tenant_id, um vom Domain-Treffer aufs Branding zu joinen.
 _PUBLIC_COLS = f"tenant_id, {_BRANDING_COLS}"
+_PAGE_COLS = (
+    "id, slug, title, seo_title, seo_description, og_image_url, is_home, "
+    "is_published, nav_order"
+)
+_BLOCK_COLS = "id, page_id, type, position, content, settings"
 
 
 class SiteConfigError(Exception):
@@ -222,9 +241,9 @@ class SiteConfigService:
 
     # --- Öffentlicher Resolver (KEIN JWT, service-role) ----------------------
 
-    def resolve_site_by_domain(self, host: str) -> PublicSiteResponse:
-        """Host → Tenant + öffentliches Branding. NUR aktive Domains; unbekannt
-        → 404. Gibt ausschließlich öffentliche Felder zurück (kein Leak)."""
+    def _tenant_id_for_host(self, host: str) -> str:
+        """Host → tenant_id über eine AKTIVE Custom-Domain. 400 bei leerem Host,
+        404 bei unbekannter/nicht-aktiver Domain. Service-role (kein JWT)."""
         host = (host or "").strip().lower().rstrip(".")
         if not host:
             raise SiteConfigError("Kein Host angegeben.", status_code=400)
@@ -238,7 +257,10 @@ class SiteConfigService:
         ).data or []
         if not domain_rows:
             raise SiteConfigError("Unbekannte Domain.", status_code=404)
-        tenant_id = domain_rows[0]["tenant_id"]
+        return domain_rows[0]["tenant_id"]
+
+    def _public_branding(self, tenant_id: str) -> PublicSiteResponse:
+        """Öffentliches Branding eines Tenants (nur öffentliche Felder)."""
         cfg_rows = (
             self._db.table("tenant_site_config")
             .select(_PUBLIC_COLS)
@@ -246,9 +268,389 @@ class SiteConfigService:
             .limit(1)
             .execute()
         ).data or []
-        # Domain aktiv, aber (noch) kein Branding gepflegt → minimal: nur tenant_id.
         base = cfg_rows[0] if cfg_rows else {"tenant_id": tenant_id}
         return PublicSiteResponse(**{**base, "tenant_id": tenant_id})
+
+    def resolve_site_by_domain(self, host: str) -> PublicSiteResponse:
+        """Host → Tenant + öffentliches Branding. NUR aktive Domains; unbekannt
+        → 404. Gibt ausschließlich öffentliche Felder zurück (kein Leak)."""
+        return self._public_branding(self._tenant_id_for_host(host))
+
+    # === Page-Builder: Seiten (Dashboard, MANAGE_SITE_CONFIG) ================
+
+    def list_pages(self, ctx: AuthContext) -> PageListResponse:
+        tenant_id = self._require_tenant(ctx)
+        rows = (
+            self._db.table("site_pages")
+            .select(_PAGE_COLS)
+            .eq("tenant_id", tenant_id)
+            .order("nav_order")
+            .order("created_at")
+            .execute()
+        ).data or []
+        items = [PageResponse(**r) for r in rows]
+        return PageListResponse(items=items, total=len(items))
+
+    def create_page(self, ctx: AuthContext, req: PageCreate) -> PageResponse:
+        tenant_id = self._require_tenant(ctx)
+        # Erste Seite eines Tenants wird automatisch Home.
+        existing = (
+            self._db.table("site_pages")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        slug = req.slug
+        # Slug-Kollision vorab abfangen (DB-unique ist der harte Backstop).
+        if (
+            self._db.table("site_pages")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("slug", slug)
+            .limit(1)
+            .execute()
+        ).data:
+            raise SiteConfigError(
+                "Es gibt bereits eine Seite mit diesem Slug.", status_code=409
+            )
+        payload = {
+            "tenant_id": tenant_id,
+            "title": req.title,
+            "slug": slug,
+            "is_home": not existing,
+        }
+        res = self._db.table("site_pages").insert(payload).execute()
+        if not res.data:
+            raise SiteConfigError(
+                "Seite konnte nicht angelegt werden.", status_code=500
+            )
+        # Frisch laden, damit DB-Defaults (is_published/nav_order) gefüllt sind.
+        return self._load_page(tenant_id, res.data[0]["id"])
+
+    def update_page(
+        self, ctx: AuthContext, page_id: str, req: PageUpdate
+    ) -> PageResponse:
+        tenant_id = self._require_tenant(ctx)
+        self._own_page(tenant_id, page_id)
+        patch = req.model_dump(mode="json", exclude_unset=True)
+        if "slug" in patch:
+            clash = (
+                self._db.table("site_pages")
+                .select("id")
+                .eq("tenant_id", tenant_id)
+                .eq("slug", patch["slug"])
+                .neq("id", page_id)
+                .limit(1)
+                .execute()
+            ).data or []
+            if clash:
+                raise SiteConfigError(
+                    "Es gibt bereits eine Seite mit diesem Slug.", status_code=409
+                )
+        if patch:
+            self._db.table("site_pages").update(patch).eq("id", page_id).eq(
+                "tenant_id", tenant_id
+            ).execute()
+        return self._load_page(tenant_id, page_id)
+
+    def set_home_page(self, ctx: AuthContext, page_id: str) -> PageResponse:
+        tenant_id = self._require_tenant(ctx)
+        self._own_page(tenant_id, page_id)
+        # Erst alle anderen entkrönen (partieller Unique-Index ist der Backstop),
+        # dann die Zielseite zur Home machen.
+        self._db.table("site_pages").update({"is_home": False}).eq(
+            "tenant_id", tenant_id
+        ).neq("id", page_id).execute()
+        self._db.table("site_pages").update({"is_home": True}).eq(
+            "id", page_id
+        ).eq("tenant_id", tenant_id).execute()
+        return self._load_page(tenant_id, page_id)
+
+    def publish_page(self, ctx: AuthContext, page_id: str) -> PageResponse:
+        return self._set_published(ctx, page_id, True)
+
+    def unpublish_page(self, ctx: AuthContext, page_id: str) -> PageResponse:
+        return self._set_published(ctx, page_id, False)
+
+    def delete_page(self, ctx: AuthContext, page_id: str) -> None:
+        tenant_id = self._require_tenant(ctx)
+        self._own_page(tenant_id, page_id)
+        # Blöcke hängen per FK on delete cascade; Seite löschen genügt.
+        self._db.table("site_pages").delete().eq("id", page_id).eq(
+            "tenant_id", tenant_id
+        ).execute()
+
+    # === Page-Builder: Blöcke ================================================
+
+    def list_blocks(self, ctx: AuthContext, page_id: str) -> BlockListResponse:
+        tenant_id = self._require_tenant(ctx)
+        self._own_page(tenant_id, page_id)
+        rows = (
+            self._db.table("site_blocks")
+            .select(_BLOCK_COLS)
+            .eq("page_id", page_id)
+            .order("position")
+            .execute()
+        ).data or []
+        items = [BlockResponse(**r) for r in rows]
+        return BlockListResponse(items=items, total=len(items))
+
+    def add_block(
+        self, ctx: AuthContext, page_id: str, req: BlockCreate
+    ) -> BlockResponse:
+        tenant_id = self._require_tenant(ctx)
+        self._own_page(tenant_id, page_id)
+        content = self._validate_content(req.type, req.content)
+        rows = (
+            self._db.table("site_blocks")
+            .select("position")
+            .eq("page_id", page_id)
+            .order("position", desc=True)
+            .limit(1)
+            .execute()
+        ).data or []
+        next_pos = (rows[0]["position"] + 1) if rows else 0
+        payload = {
+            "tenant_id": tenant_id,
+            "page_id": page_id,
+            "type": req.type.value,
+            "position": next_pos,
+            "content": content,
+            "settings": req.settings or {},
+        }
+        res = self._db.table("site_blocks").insert(payload).execute()
+        if not res.data:
+            raise SiteConfigError(
+                "Block konnte nicht angelegt werden.", status_code=500
+            )
+        return BlockResponse(**self._block_row(res.data[0]))
+
+    def update_block(
+        self, ctx: AuthContext, block_id: str, req: BlockUpdate
+    ) -> BlockResponse:
+        tenant_id = self._require_tenant(ctx)
+        block = self._own_block(tenant_id, block_id)
+        patch: dict = {}
+        if req.content is not None:
+            patch["content"] = self._validate_content(
+                BlockType(block["type"]), req.content
+            )
+        if req.settings is not None:
+            patch["settings"] = req.settings
+        if patch:
+            self._db.table("site_blocks").update(patch).eq("id", block_id).eq(
+                "tenant_id", tenant_id
+            ).execute()
+        return self._load_block(tenant_id, block_id)
+
+    def reorder_blocks(
+        self, ctx: AuthContext, page_id: str, ordered_ids: list[str]
+    ) -> BlockListResponse:
+        tenant_id = self._require_tenant(ctx)
+        self._own_page(tenant_id, page_id)
+        # Alle Block-IDs der Seite laden und prüfen, dass die übergebene Liste
+        # exakt diese Menge ist (kein fremder/fehlender Block).
+        rows = (
+            self._db.table("site_blocks")
+            .select("id")
+            .eq("page_id", page_id)
+            .execute()
+        ).data or []
+        actual = {r["id"] for r in rows}
+        if set(ordered_ids) != actual:
+            raise SiteConfigError(
+                "Die Blockliste passt nicht zur Seite.", status_code=400
+            )
+        for pos, block_id in enumerate(ordered_ids):
+            self._db.table("site_blocks").update({"position": pos}).eq(
+                "id", block_id
+            ).eq("tenant_id", tenant_id).execute()
+        return self.list_blocks(ctx, page_id)
+
+    def remove_block(self, ctx: AuthContext, block_id: str) -> None:
+        tenant_id = self._require_tenant(ctx)
+        self._own_block(tenant_id, block_id)
+        self._db.table("site_blocks").delete().eq("id", block_id).eq(
+            "tenant_id", tenant_id
+        ).execute()
+
+    def apply_template(
+        self, ctx: AuthContext, template_id: str
+    ) -> PageListResponse:
+        tenant_id = self._require_tenant(ctx)
+        tmpl = site_templates.TEMPLATES.get(template_id)
+        if not tmpl:
+            raise SiteConfigError("Unbekanntes Template.", status_code=404)
+        existing_slugs = {
+            r["slug"]
+            for r in (
+                self._db.table("site_pages")
+                .select("slug")
+                .eq("tenant_id", tenant_id)
+                .execute()
+            ).data
+            or []
+        }
+        has_home = bool(
+            (
+                self._db.table("site_pages")
+                .select("id")
+                .eq("tenant_id", tenant_id)
+                .eq("is_home", True)
+                .limit(1)
+                .execute()
+            ).data
+        )
+        for page in tmpl["pages"]:
+            if page["slug"] in existing_slugs:
+                continue  # Slug schon vergeben → diese Template-Seite überspringen
+            is_home = bool(page.get("is_home")) and not has_home
+            if is_home:
+                has_home = True
+            page_res = (
+                self._db.table("site_pages")
+                .insert(
+                    {
+                        "tenant_id": tenant_id,
+                        "title": page["title"],
+                        "slug": page["slug"],
+                        "is_home": is_home,
+                    }
+                )
+                .execute()
+            )
+            page_id = page_res.data[0]["id"]
+            for pos, block in enumerate(page.get("blocks", [])):
+                btype = BlockType(block["type"])
+                self._db.table("site_blocks").insert(
+                    {
+                        "tenant_id": tenant_id,
+                        "page_id": page_id,
+                        "type": btype.value,
+                        "position": pos,
+                        "content": self._validate_content(
+                            btype, block.get("content", {})
+                        ),
+                        "settings": block.get("settings", {}),
+                    }
+                ).execute()
+        return self.list_pages(ctx)
+
+    # === Page-Builder: öffentlicher Resolver (service-role, kein JWT) ========
+
+    def resolve_page(self, host: str, slug: str | None = None) -> PublicPageResponse:
+        """Host → veröffentlichte Seite (Home bei slug=None) + geordnete Blöcke +
+        Branding. NUR is_published, nur öffentliche Felder. Unbekannt → 404."""
+        tenant_id = self._tenant_id_for_host(host)
+        query = (
+            self._db.table("site_pages")
+            .select(_PAGE_COLS)
+            .eq("tenant_id", tenant_id)
+            .eq("is_published", True)
+        )
+        query = (
+            query.eq("is_home", True)
+            if slug is None or slug == ""
+            else query.eq("slug", slug)
+        )
+        page_rows = query.limit(1).execute().data or []
+        if not page_rows:
+            raise SiteConfigError("Seite nicht gefunden.", status_code=404)
+        page = page_rows[0]
+        block_rows = (
+            self._db.table("site_blocks")
+            .select("type, content, settings")
+            .eq("page_id", page["id"])
+            .order("position")
+            .execute()
+        ).data or []
+        return PublicPageResponse(
+            tenant_id=tenant_id,
+            page=PublicPageMeta(
+                slug=page["slug"],
+                title=page["title"],
+                seo_title=page.get("seo_title"),
+                seo_description=page.get("seo_description"),
+                og_image_url=page.get("og_image_url"),
+            ),
+            blocks=[
+                PublicBlock(
+                    type=BlockType(b["type"]),
+                    content=b.get("content") or {},
+                    settings=b.get("settings") or {},
+                )
+                for b in block_rows
+            ],
+            branding=self._public_branding(tenant_id),
+        )
+
+    # --- Page-Builder intern -------------------------------------------------
+
+    def _validate_content(self, block_type: BlockType, content: dict) -> dict:
+        try:
+            return validate_block_content(block_type, content or {})
+        except ValueError as exc:
+            raise SiteConfigError(
+                f"Ungültiger Block-Inhalt: {exc}", status_code=400
+            ) from exc
+
+    def _own_page(self, tenant_id: str, page_id: str) -> dict:
+        rows = (
+            self._db.table("site_pages")
+            .select(_PAGE_COLS)
+            .eq("id", page_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            raise SiteConfigError(
+                "Seite gehört nicht zu diesem Konto.", status_code=404
+            )
+        return rows[0]
+
+    def _own_block(self, tenant_id: str, block_id: str) -> dict:
+        rows = (
+            self._db.table("site_blocks")
+            .select(_BLOCK_COLS)
+            .eq("id", block_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            raise SiteConfigError(
+                "Block gehört nicht zu diesem Konto.", status_code=404
+            )
+        return rows[0]
+
+    def _load_page(self, tenant_id: str, page_id: str) -> PageResponse:
+        return PageResponse(**self._page_row(self._own_page(tenant_id, page_id)))
+
+    def _load_block(self, tenant_id: str, block_id: str) -> BlockResponse:
+        return BlockResponse(**self._block_row(self._own_block(tenant_id, block_id)))
+
+    def _set_published(
+        self, ctx: AuthContext, page_id: str, value: bool
+    ) -> PageResponse:
+        tenant_id = self._require_tenant(ctx)
+        self._own_page(tenant_id, page_id)
+        self._db.table("site_pages").update({"is_published": value}).eq(
+            "id", page_id
+        ).eq("tenant_id", tenant_id).execute()
+        return self._load_page(tenant_id, page_id)
+
+    @staticmethod
+    def _page_row(row: dict) -> dict:
+        return {k: row.get(k) for k in PageResponse.model_fields}
+
+    @staticmethod
+    def _block_row(row: dict) -> dict:
+        out = {k: row.get(k) for k in BlockResponse.model_fields}
+        out["content"] = row.get("content") or {}
+        out["settings"] = row.get("settings") or {}
+        return out
 
     # --- intern --------------------------------------------------------------
 

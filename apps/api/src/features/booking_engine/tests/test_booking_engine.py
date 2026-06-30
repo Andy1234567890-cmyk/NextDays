@@ -178,6 +178,18 @@ def test_listings_tenant_filter() -> None:
     assert {i.id for i in res.items} == {"p-active2"}
 
 
+def test_listings_property_ids_filter() -> None:
+    # Featured-Block: nur die ausgewählten Objekte.
+    res = _service().list_listings(property_ids=["p-active"])
+    assert {i.id for i in res.items} == {"p-active"}
+
+
+def test_listings_property_ids_empty_returns_none() -> None:
+    # Leere Auswahl = bewusst KEINE Objekte (nicht „alle").
+    res = _service().list_listings(property_ids=[])
+    assert res.items == [] and res.total == 0
+
+
 def test_listings_guests_and_query_filter() -> None:
     svc = _service()
     assert {i.id for i in svc.list_listings(guests=4).items} == {"p-active"}
