@@ -24,6 +24,19 @@ from src.core.logging import get_logger
 log = get_logger("nextdays.payments.webhook")
 
 
+def _field(obj: Any, key: str, default: Any = None) -> Any:  # noqa: ANN401
+    """Feld aus dem Event-Objekt lesen — robust für BEIDE Quellen:
+    Stripes ``StripeObject`` (Produktion, aus ``construct_event``; hat KEIN
+    ``.get()``) und ein Dict (Tests). StripeObject erlaubt Item-Zugriff, wirft
+    aber KeyError bei fehlendem Schlüssel → mit try/except auf den Default."""
+    if isinstance(obj, Mapping):
+        return obj.get(key, default)
+    try:
+        return obj[key]
+    except (KeyError, AttributeError, TypeError):
+        return default
+
+
 def _already_processed(db: Client, event_id: str, event_type: str, now_iso: str) -> bool:
     """True, wenn die Event-ID schon verarbeitet wurde. Sonst wird sie vermerkt."""
     existing = (
@@ -65,7 +78,7 @@ def handle_stripe_event(
             # Kaution vorautorisiert (Geld ist reserviert, noch nicht eingezogen).
             _set_payment_status(db, obj["id"], "pending", reservation="deposit_held")
         case "charge.refunded":
-            pi_id = obj.get("payment_intent")
+            pi_id = _field(obj, "payment_intent")
             if pi_id:
                 _set_payment_status(db, pi_id, "refunded", reservation="refunded")
         case _:
@@ -78,9 +91,9 @@ def _handle_account_updated(
 ) -> None:
     """KYC-Status eines Connected Accounts in tenant_billing_profile spiegeln."""
     stripe_account_id = account["id"]
-    charges = bool(account.get("charges_enabled", False))
-    payouts = bool(account.get("payouts_enabled", False))
-    details = bool(account.get("details_submitted", False))
+    charges = bool(_field(account, "charges_enabled", False))
+    payouts = bool(_field(account, "payouts_enabled", False))
+    details = bool(_field(account, "details_submitted", False))
     update: dict[str, Any] = {
         "stripe_charges_enabled": charges,
         "stripe_payouts_enabled": payouts,

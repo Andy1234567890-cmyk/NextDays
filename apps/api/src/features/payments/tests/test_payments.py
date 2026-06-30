@@ -303,6 +303,48 @@ def test_webhook_succeeded_marks_paid() -> None:
     assert db.store["reservations"][0]["payment_status"] == "paid"
 
 
+class _StripeObjectLike:
+    """Simuliert Stripes StripeObject: Item-Zugriff (obj["x"]) ja, aber KEIN
+    .get() (genau das verursachte in Produktion AttributeError: get)."""
+
+    def __init__(self, data: dict) -> None:
+        self._data = data
+
+    def __getitem__(self, key):  # noqa: ANN001, ANN204
+        return self._data[key]  # KeyError bei fehlend — wie StripeObject
+
+    # bewusst KEIN get()
+
+
+def test_webhook_account_updated_with_stripe_object() -> None:
+    """account.updated mit einem StripeObject-artigen Event (kein .get()) — muss
+    die KYC-Flags spiegeln statt an AttributeError zu scheitern (Prod-Bug)."""
+    db = _DB()
+    db.store["tenant_billing_profile"] = [
+        {"tenant_id": "t1", "stripe_account_id": "acct_x"}
+    ]
+    event = {
+        "id": "evt_acc_1",
+        "type": "account.updated",
+        "data": {
+            "object": _StripeObjectLike(
+                {
+                    "id": "acct_x",
+                    "charges_enabled": True,
+                    "payouts_enabled": True,
+                    "details_submitted": True,
+                }
+            )
+        },
+    }
+    out = handle_stripe_event(db, event, now_iso="2026-06-30T00:00:00Z")
+    assert out["status"] == "ok"
+    prof = db.store["tenant_billing_profile"][0]
+    assert prof["stripe_charges_enabled"] is True
+    assert prof["stripe_payouts_enabled"] is True
+    assert prof["stripe_details_submitted"] is True
+
+
 def test_webhook_is_idempotent() -> None:
     db = _DB()
     db.store["payments"] = [
