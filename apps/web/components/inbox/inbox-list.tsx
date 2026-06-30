@@ -90,7 +90,10 @@ function whatsAppToThread(c: WhatsAppConversation): InboxThread {
     property_id: null,
     property_title: null,
     ota_name: WHATSAPP_CHANNEL,
-    ota_reservation_code: null,
+    // Normalisierte WhatsApp-Nummer mitführen (Feld bei WhatsApp sonst leer), um
+    // zuverlässig „existiert schon ein Chat für diese Nummer?" zu prüfen — auch
+    // wenn der Chat einen echten Gastnamen statt der Rohnummer anzeigt.
+    ota_reservation_code: c.wa_phone.replace(/\D/g, ""),
     guest_name: c.guest_name ?? `+${c.wa_phone}`,
     guest_email: null,
     status: null,
@@ -269,18 +272,31 @@ export function InboxList({
     if (next) setActive(next.id);
   }
 
-  // Neue WhatsApp-Konversation anstoßen: flüchtigen Pseudo-Thread voranstellen.
-  // Real entsteht die Konversation erst beim ersten Senden (Webhook/Service).
-  function startWhatsApp() {
-    const phone = newWaPhone.replace(/\D/g, "");
+  // WhatsApp-Chat mit einer Nummer öffnen. Existiert bereits eine Konversation
+  // für die Nummer, wird sie ausgewählt; sonst ein flüchtiger Entwurf
+  // vorangestellt (real entsteht sie erst beim ersten Senden über den Webhook).
+  function openWhatsApp(rawPhone: string) {
+    const phone = rawPhone.replace(/\D/g, "");
     if (phone.length < 6) return;
+    // WhatsApp-Chats leben in der aktiven Ansicht — von Archiv/Papierkorb wechseln.
+    if (view !== "active") setView("active");
+    const existing = rows.find(
+      (r) => isWhatsApp(r.id) && r.ota_reservation_code === phone,
+    );
+    if (existing) {
+      setActive(existing.id);
+      return;
+    }
     const id = `${WA_NEW_PREFIX}${phone}`;
     setRows((prev) =>
-      prev.some((r) => r.id === id)
-        ? prev
-        : [whatsAppDraftThread(phone), ...prev],
+      prev.some((r) => r.id === id) ? prev : [whatsAppDraftThread(phone), ...prev],
     );
     setActive(id);
+  }
+
+  // Aus dem Popover „Neue Nummer": Eingabe übernehmen, Popover schließen.
+  function startWhatsApp() {
+    openWhatsApp(newWaPhone);
     setNewWaPhone("");
     setShowNewWa(false);
   }
@@ -689,6 +705,7 @@ export function InboxList({
               key={`${current.id}-res`}
               thread={current}
               openNoteSignal={openNoteSignal}
+              onWhatsApp={openWhatsApp}
             />
           ) : (
             <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">
@@ -1283,9 +1300,11 @@ function Conversation({
 function ReservationPanel({
   thread,
   openNoteSignal,
+  onWhatsApp,
 }: {
   thread: InboxThread;
   openNoteSignal: number;
+  onWhatsApp: (phone: string) => void;
 }) {
   const t = useTranslations("inbox");
   const [res, setRes] = useState<ReservationDetail | null>(null);
@@ -1459,15 +1478,14 @@ function ReservationPanel({
           }
         />
         {res.guest_phone && (
-          <a
-            href={`https://wa.me/${res.guest_phone.replace(/[^0-9]/g, "")}`}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={() => onWhatsApp(res.guest_phone!)}
             className="flex w-fit items-center gap-2 rounded-full bg-secondary px-3 py-1.5 text-sm font-medium hover:bg-secondary/80"
           >
             <Icon icon="ph:whatsapp-logo" className="size-4 text-emerald-600" />
-            WhatsApp
-          </a>
+            {t("whatsappOpenChat")}
+          </button>
         )}
       </div>
 
