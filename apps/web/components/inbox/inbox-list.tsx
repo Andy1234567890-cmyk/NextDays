@@ -167,6 +167,9 @@ export function InboxList({
   const [fTo, setFTo] = useState(""); // Anreise bis
   const [showFilter, setShowFilter] = useState(false);
   const [showBulk, setShowBulk] = useState(false);
+  // Popover „Neue WhatsApp-Nummer anschreiben" (eigenes Feld statt window.prompt).
+  const [showNewWa, setShowNewWa] = useState(false);
+  const [newWaPhone, setNewWaPhone] = useState("");
   // Ansicht: Aktiv | Archiv | Papierkorb.
   const [view, setView] = useState<InboxStatus>("active");
   const current = rows.find((x) => x.id === active) ?? null;
@@ -269,8 +272,7 @@ export function InboxList({
   // Neue WhatsApp-Konversation anstoßen: flüchtigen Pseudo-Thread voranstellen.
   // Real entsteht die Konversation erst beim ersten Senden (Webhook/Service).
   function startWhatsApp() {
-    const raw = window.prompt(t("whatsappNewPrompt"));
-    const phone = (raw ?? "").replace(/\D/g, "");
+    const phone = newWaPhone.replace(/\D/g, "");
     if (phone.length < 6) return;
     const id = `${WA_NEW_PREFIX}${phone}`;
     setRows((prev) =>
@@ -279,6 +281,8 @@ export function InboxList({
         : [whatsAppDraftThread(phone), ...prev],
     );
     setActive(id);
+    setNewWaPhone("");
+    setShowNewWa(false);
   }
 
   // Thread öffnen → automatisch als gelesen markieren. WhatsApp-Threads laufen
@@ -524,14 +528,40 @@ export function InboxList({
                 className="w-full bg-transparent text-sm outline-none"
               />
             </div>
-            <button
-              type="button"
-              title={t("whatsappNewChat")}
-              onClick={startWhatsApp}
-              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 transition-colors hover:bg-emerald-200"
-            >
-              <Icon icon="ph:whatsapp-logo" className="size-4" />
-            </button>
+            <Popover open={showNewWa} onOpenChange={setShowNewWa}>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  title={t("whatsappNewChat")}
+                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 transition-colors hover:bg-emerald-200"
+                >
+                  <Icon icon="ph:whatsapp-logo" className="size-4" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="flex w-64 flex-col gap-2 p-3">
+                <span className="text-sm font-semibold">{t("whatsappNewChat")}</span>
+                <input
+                  autoFocus
+                  value={newWaPhone}
+                  onChange={(e) => setNewWaPhone(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") startWhatsApp();
+                  }}
+                  placeholder={t("whatsappNewPlaceholder")}
+                  className="rounded-full border border-border bg-transparent px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-accent/40"
+                />
+                <Button
+                  type="button"
+                  size="sm"
+                  className="self-end"
+                  disabled={newWaPhone.replace(/\D/g, "").length < 6}
+                  onClick={startWhatsApp}
+                >
+                  <Icon icon="ph:chat-circle-text" className="size-4" />
+                  {t("whatsappNewStart")}
+                </Button>
+              </PopoverContent>
+            </Popover>
           </div>
           {/* Liste oder Leerzustand */}
           {filtered.length === 0 ? (
