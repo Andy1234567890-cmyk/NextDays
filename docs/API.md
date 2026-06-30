@@ -28,7 +28,7 @@ Jeder der 23 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
 | guests | `GET /api/v1/guests/health` |
 | inbox | `GET /api/v1/inbox/health` |
 | whatsapp | `GET /api/v1/whatsapp/health` (Meta Cloud API, s.u.) |
-| payments | `GET /api/v1/payments/health` |
+| payments | `GET /api/v1/payments/health` (Stripe Connect + Zahlungen, s.u.) |
 | channel_manager | `GET /api/v1/channel-manager/health` (Channex-Integration, s.u.) |
 | booking_engine | `GET /api/v1/booking-engine/health` |
 | addons | `GET /api/v1/addons/health` |
@@ -615,6 +615,39 @@ sent|delivered|read|failed|received, Meta-ID-Unique für Idempotenz). RLS via
 
 **Env:** `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_VERIFY_TOKEN`,
 `WHATSAPP_GRAPH_VERSION` (v21.0), `WHATSAPP_SANDBOX`, `WHATSAPP_DEFAULT_TENANT_ID`.
+
+---
+
+## payments (Stripe Payment-Kern — implementiert)
+
+Online-Zahlungen über **Stripe** (primär; Revolut sekundär/NotImplemented). Connect
+ist **Custom** (voll white-label, kein Stripe-Branding/-Onboarding). Geldfluss =
+**Destination Charge**: der Gast zahlt über den Plattform-Account, das Geld geht an
+den Connected Account des Tenants (`transfer_data.destination`), optional mit
+Plattform-Provision (`STRIPE_PLATFORM_FEE_PCT`, Default 0).
+
+| Methode | Pfad | Zugriff |
+|---|---|---|
+| `POST` | `/api/v1/payments/connect/accounts` | MANAGE_BILLING — Custom-Account anlegen |
+| `GET` | `/api/v1/payments/connect/accounts/{id}` | MANAGE_BILLING — KYC-Status + Requirements |
+| `PATCH` | `/api/v1/payments/connect/accounts/{id}` | MANAGE_BILLING — Geschäfts-/Inhaberdaten (eigene UI) |
+| `PUT` | `/api/v1/payments/connect/accounts/{id}/bank` | MANAGE_BILLING — Auszahlungs-IBAN |
+| `POST` | `/api/v1/payments/booking/{reservation_id}/intent` | **public** (Gast) — PaymentIntent, `{client_secret}` |
+| `POST` | `/api/v1/payments/deposit/{reservation_id}/hold` | MANAGE_BILLING — Kaution vorautorisieren |
+| `POST` | `/api/v1/payments/deposit/{payment_id}/capture` | MANAGE_BILLING — Kaution einziehen (Schaden) |
+| `POST` | `/api/v1/payments/deposit/{payment_id}/release` | MANAGE_BILLING — Kaution freigeben |
+| `POST` | `/api/v1/payments/{payment_id}/refund` | MANAGE_BILLING — (Teil-)Erstattung |
+| `POST` | `/api/v1/payments/webhook` | Stripe-Signatur (kein JWT) |
+
+**Kaution** = manual-capture PaymentIntent über `properties.deposit_amount`.
+**Webhook** (idempotent über `stripe_webhook_event`): `account.updated` →
+`tenant_billing_profile`; `payment_intent.succeeded|payment_failed|
+amount_capturable_updated` + `charge.refunded` → `payments.status` +
+`reservations.payment_status` (Enum `unpaid|pending|paid|refunded|deposit_held`).
+
+**Env:** `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PUBLISHABLE_KEY`
+(→ `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` im Frontend), `STRIPE_PLATFORM_FEE_PCT`
+(Default 0). **Offen:** Owner→Owner-Stripe-Transfer, Revolut-Adapter.
 
 ---
 
