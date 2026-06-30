@@ -62,6 +62,13 @@ export default function ProfilPage() {
   const [taxNumber, setTaxNumber] = useState("");
   const [isSmallBusiness, setIsSmallBusiness] = useState(false);
   const [iban, setIban] = useState("");
+  // Kontoinhaber (VoP-Pflicht seit Okt 2025: Name MUSS exakt zur IBAN passen,
+  // sonst scheitert die Auszahlung). Wird automatisch vorbefüllt (Firma →
+  // Firmenname, Einzelperson → Vor+Nachname), bleibt aber überschreibbar — der
+  // bei der Bank hinterlegte Name kann abweichen. `touched` merkt sich einen
+  // manuellen Eingriff, damit die Auto-Vorbefüllung ihn nicht überschreibt.
+  const [accountHolder, setAccountHolder] = useState("");
+  const [accountHolderTouched, setAccountHolderTouched] = useState(false);
 
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -98,11 +105,29 @@ export default function ProfilPage() {
       if (s("taxNumber")) setTaxNumber(s("taxNumber"));
       setIsSmallBusiness(Boolean(d.isSmallBusiness));
       if (s("iban")) setIban(s("iban"));
+      // Ein bereits gespeicherter Kontoinhaber war eine bewusste Eingabe → als
+      // „touched" markieren, damit die Auto-Vorbefüllung ihn nicht überschreibt.
+      if (s("accountHolder")) {
+        setAccountHolder(s("accountHolder"));
+        setAccountHolderTouched(true);
+      }
     });
     return () => {
       active = false;
     };
   }, []);
+
+  // Kontoinhaber automatisch vorbefüllen, solange der Nutzer ihn nicht manuell
+  // gesetzt hat: Firma → Firmenname, Einzelperson → Vor+Nachname. So stimmt der
+  // Name im Normalfall sofort mit der IBAN überein (VoP), bleibt aber editierbar.
+  useEffect(() => {
+    if (accountHolderTouched) return;
+    const derived =
+      accountType === "company"
+        ? companyName.trim()
+        : [firstName, lastName].filter(Boolean).join(" ").trim();
+    setAccountHolder(derived);
+  }, [accountHolderTouched, accountType, companyName, firstName, lastName]);
 
   // Alles speichern → ein Profil-Update. Löst serverseitig den Stripe-Auto-
   // Connect aus (update_company_profile → _ensure_connect_account): Name/
@@ -130,8 +155,9 @@ export default function ProfilPage() {
       taxNumber: taxNumber || undefined,
       isSmallBusiness,
       iban: iban ? iban.replace(/\s+/g, "") : undefined,
-      // Kontoinhaber wird serverseitig automatisch gesetzt (Firma → Firmenname,
-      // Einzelperson → Vor+Nachname) — kein doppeltes Eintippen.
+      // Kontoinhaber exakt wie eingegeben/vorbefüllt — muss für VoP zur IBAN
+      // passen. Leer lassen wir das Backend ableiten (_account_holder_from).
+      accountHolder: accountHolder.trim() || undefined,
     });
     setSaving(false);
     if (!res.ok) {
@@ -340,18 +366,38 @@ export default function ProfilPage() {
             </p>
           )}
 
-          {/* Bankverbindung (Auszahlungen). Der Kontoinhaber wird automatisch
-              gesetzt (Firma → Firmenname, Einzelperson → Vor+Nachname) — kein
-              separates Feld. */}
-          <div className="flex flex-col gap-1.5 sm:max-w-md">
-            <Label htmlFor="iban">IBAN (für Auszahlungen)</Label>
-            <Input
-              id="iban"
-              placeholder="DE00 0000 0000 0000 0000 00"
-              autoComplete="off"
-              value={iban}
-              onChange={(e) => setIban(e.target.value)}
-            />
+          {/* Bankverbindung (Auszahlungen). Kontoinhaber ist automatisch
+              vorbefüllt (Firma → Firmenname, Einzelperson → Vor+Nachname),
+              bleibt aber editierbar: seit Okt 2025 gleicht die Bank bei jeder
+              SEPA-Überweisung Name ↔ IBAN ab (Verification of Payee). Weicht der
+              bei der Bank hinterlegte Name ab, muss er hier exakt eingetragen
+              werden, sonst scheitert die Auszahlung. */}
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="accountHolder">Kontoinhaber</Label>
+              <Input
+                id="accountHolder"
+                value={accountHolder}
+                onChange={(e) => {
+                  setAccountHolder(e.target.value);
+                  setAccountHolderTouched(true);
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                Muss exakt dem bei der Bank hinterlegten Namen entsprechen
+                (EU-Namensabgleich).
+              </p>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="iban">IBAN</Label>
+              <Input
+                id="iban"
+                placeholder="DE00 0000 0000 0000 0000 00"
+                autoComplete="off"
+                value={iban}
+                onChange={(e) => setIban(e.target.value)}
+              />
+            </div>
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">
