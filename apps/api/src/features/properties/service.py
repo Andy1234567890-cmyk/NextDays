@@ -75,8 +75,33 @@ class PropertiesService:
             raise PropertyError("Objekt nicht gefunden.", status_code=404)
         return PropertyResponse(**_row(res.data[0]))
 
+    def _require_payments_ready(self, tenant_id: str) -> None:
+        """Wirft, wenn der Tenant keinen von Stripe bestätigten Connected Account
+        hat (``stripe_charges_enabled = true``). Eine Tenant-übergreifende, eine
+        Quelle der Wahrheit für „darf dieser Mandant verkaufen?"."""
+        prof = (
+            self._db.table("tenant_billing_profile")
+            .select("stripe_charges_enabled")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        ready = bool(prof[0].get("stripe_charges_enabled")) if prof else False
+        if not ready:
+            raise PropertyError(
+                "Bitte schließe zuerst die Zahlungs-Einrichtung ab (Stripe). "
+                "Objekte können erst angelegt werden, wenn dein Konto für "
+                "Zahlungen freigeschaltet ist.",
+                status_code=409,
+            )
+
     def create(self, ctx: AuthContext, req: PropertyCreate) -> PropertyResponse:
         tenant_id = self._require_tenant(ctx)
+        # Plattform-Regel: ein Objekt darf erst angelegt werden, wenn der Stripe
+        # Connected Account des Tenants von Stripe BESTÄTIGT ist (charges_enabled).
+        # Sonst könnte ein Gast buchen/zahlen, ohne dass eine Auszahlung möglich
+        # wäre. Onboarding/KYC muss also vorher abgeschlossen sein.
+        self._require_payments_ready(tenant_id)
         payload = req.model_dump(mode="json")
         payload["tenant_id"] = tenant_id
         res = self._db.table("properties").insert(payload).execute()

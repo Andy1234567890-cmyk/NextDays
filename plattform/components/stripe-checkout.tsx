@@ -123,9 +123,15 @@ function PayForm({
     if (!stripe || !elements) return;
     setSubmitting(true);
     setError(null);
-    // 3DS/SCA wird vom Payment Element automatisch ausgelöst (redirect: if_required).
+    // 3DS/SCA wird vom Payment Element automatisch ausgelöst. return_url ist für
+    // redirect-basierte Methoden (iDEAL/Giropay/…) Pflicht (Stripe-Doku); mit
+    // redirect:"if_required" wird sie NUR bei einem echten Redirect genutzt —
+    // Kartenzahlung bleibt inline ohne Weiterleitung.
     const { error: err } = await stripe.confirmPayment({
       elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/checkout/abgeschlossen`,
+      },
       redirect: "if_required",
     });
     setSubmitting(false);

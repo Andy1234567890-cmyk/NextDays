@@ -543,7 +543,79 @@ class BuchhaltungService:
         self._db.table("tenant_billing_profile").upsert(
             row, on_conflict="tenant_id"
         ).execute()
+        # Plattform-Pflicht: ein Objektbesitzer braucht zum Auszahlen einen Stripe
+        # Connected Account. Er entsteht automatisch aus den gerade erfassten
+        # Firmendaten (Onboarding), nicht durch einen separaten manuellen Schritt.
+        self._ensure_connect_account(tenant_id, row)
         return self.get_company_profile(ctx)
+
+    def _ensure_connect_account(self, tenant_id: str, profile: dict) -> None:
+        """Legt — falls noch nicht vorhanden — automatisch einen Stripe Custom
+        Connected Account für den Tenant an und überträgt die erfassten Firmen-/
+        Bankdaten. Idempotent (kein Doppel-Anlegen). Stripe-Fehler dürfen das
+        Speichern des Firmenprofils NICHT scheitern lassen (das Profil ist auch
+        ohne Stripe gültig) — sie werden geloggt, nicht verschluckt mit erfundenem
+        Erfolg."""
+        from src.features.payments.schemas import (  # noqa: PLC0415
+            ConnectAccountCreate,
+        )
+        from src.features.payments.service import (  # noqa: PLC0415
+            PaymentsError,
+            PaymentsService,
+        )
+
+        existing = (
+            self._db.table("tenant_billing_profile")
+            .select("stripe_account_id")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if existing and existing[0].get("stripe_account_id"):
+            return  # Account besteht bereits — nichts tun.
+
+        email = profile.get("email")
+        country = profile.get("company_country")
+        if not email or not country:
+            # Ohne E-Mail/Land kann kein valider Account erstellt werden — kein
+            # Raten (keine Fallbacks). Onboarding fragt beides ab; fehlt es, wird
+            # der Account beim nächsten vollständigen Speichern angelegt.
+            log.info("connect_account_skipped_incomplete", tenant_id=tenant_id)
+            return
+
+        try:
+            payments = PaymentsService(service_client=self._db)
+            account = payments.create_connect_account(
+                ConnectAccountCreate(email=email, country=country, tenant_id=tenant_id)
+            )
+            self._db.table("tenant_billing_profile").update(
+                {"stripe_account_id": account.stripe_account_id}
+            ).eq("tenant_id", tenant_id).execute()
+            # Firmen-/Inhaberdaten an den Account übertragen (best effort).
+            payments.update_connect_account(
+                account.stripe_account_id,
+                _connect_fields_from_profile(profile),
+            )
+            iban = profile.get("iban")
+            holder = profile.get("account_holder") or profile.get("legal_name")
+            if iban and holder:
+                payments.set_external_account(
+                    account.stripe_account_id,
+                    iban=iban, account_holder=holder, country=country,
+                )
+            log.info(
+                "connect_account_created",
+                tenant_id=tenant_id,
+                stripe_account_id=account.stripe_account_id,
+            )
+        except PaymentsError as exc:
+            # Stripe nicht konfiguriert/erreichbar → Profil bleibt gespeichert,
+            # Connect kann später (eigene UI) nachgeholt werden.
+            log.warning(
+                "connect_account_auto_create_failed",
+                tenant_id=tenant_id,
+                error=exc.message,
+            )
 
     # Firmenlogo: erlaubte Typen → Dateiendung (analog properties.upload_image).
     LOGO_BUCKET = "company-logos"
@@ -912,3 +984,41 @@ class BuchhaltungService:
             {"status": "converted", "converted_invoice_id": invoice.id}
         ).eq("id", quote_id).eq("tenant_id", tenant_id).execute()
         return invoice
+
+
+def _connect_fields_from_profile(profile: dict) -> dict:
+    """Baut das Stripe-Account-Update (`fields`) aus dem Firmenprofil. Nur Felder,
+    die wirklich vorhanden sind (keine leeren/erfundenen Werte an Stripe)."""
+    fields: dict = {}
+
+    street = profile.get("company_street")
+    house = profile.get("company_house_number")
+    line1 = " ".join(p for p in (street, house) if p) or None
+    address = {
+        "line1": line1,
+        "city": profile.get("company_city"),
+        "postal_code": profile.get("company_postal_code"),
+        "country": profile.get("company_country"),
+    }
+    address = {k: v for k, v in address.items() if v}
+
+    individual = {
+        "first_name": profile.get("managing_director_first_name"),
+        "last_name": profile.get("managing_director_last_name"),
+        "email": profile.get("email"),
+        "phone": profile.get("phone_number"),
+    }
+    if address:
+        individual["address"] = address
+    individual = {k: v for k, v in individual.items() if v}
+    if individual:
+        fields["individual"] = individual
+
+    business_profile = {"name": profile.get("legal_name")}
+    if profile.get("website"):
+        business_profile["url"] = profile["website"]
+    business_profile = {k: v for k, v in business_profile.items() if v}
+    if business_profile:
+        fields["business_profile"] = business_profile
+
+    return fields

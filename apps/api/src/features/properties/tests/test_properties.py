@@ -470,3 +470,32 @@ def test_list_photos_unknown_property_404() -> None:
     with pytest.raises(PropertyError) as exc:
         svc.list_photos(_ctx(), "p-x")
     assert exc.value.status_code == 404
+
+
+# --- Gate: Objekt-Anlage erst mit bestätigtem Stripe-Account ----------------
+
+def test_create_blocked_without_confirmed_stripe_account() -> None:
+    """Ohne charges_enabled darf KEIN Objekt angelegt werden (Onboarding/KYC
+    muss vorher abgeschlossen sein)."""
+    db = _PhotoDB()
+    db.tables["tenant_billing_profile"] = [
+        {"tenant_id": "t-1", "stripe_charges_enabled": False}
+    ]
+    svc = PropertiesService(service_client=db)
+    with pytest.raises(PropertyError) as exc:
+        svc.create(_ctx(), PropertyCreate(title="Villa", property_type=PropertyType.ferienhaus))
+    assert exc.value.status_code == 409
+    # Es wurde KEIN Objekt angelegt.
+    assert len(db.tables.get("properties", [])) == 1  # nur die Default-Row
+
+
+def test_create_allowed_with_confirmed_stripe_account() -> None:
+    db = _PhotoDB()
+    db.tables["properties"] = []
+    db.tables["tenant_billing_profile"] = [
+        {"tenant_id": "t-1", "stripe_charges_enabled": True}
+    ]
+    svc = PropertiesService(service_client=db)
+    res = svc.create(_ctx(), PropertyCreate(title="Villa", property_type=PropertyType.ferienhaus))
+    assert res.title == "Villa"
+    assert len(db.tables["properties"]) == 1
