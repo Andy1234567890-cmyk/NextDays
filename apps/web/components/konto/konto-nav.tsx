@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 const ITEMS = [
   { title: "Profil", href: "/konto", icon: "ph:user-circle" },
   { title: "Nutzer", href: "/konto/nutzer", icon: "ph:users" },
+  { title: "Zahlungen", href: "/konto/zahlungen", icon: "ph:credit-card" },
   { title: "Sicherheit", href: "/konto/sicherheit", icon: "ph:shield-check" },
 ] as const;
 
