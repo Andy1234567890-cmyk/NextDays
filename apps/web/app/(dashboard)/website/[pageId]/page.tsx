@@ -22,7 +22,11 @@ export default async function PageEditor({
 
   return (
     <div className="flex flex-1 flex-col">
-      <CanvasEditor page={page} initialBlocks={blocksRes.data.items} />
+      <CanvasEditor
+        page={page}
+        pages={pagesRes.data.items}
+        initialBlocks={blocksRes.data.items}
+      />
     </div>
   );
 }

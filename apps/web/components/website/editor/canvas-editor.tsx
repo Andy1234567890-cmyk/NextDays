@@ -27,7 +27,8 @@ import {
   SpacerNode,
   TextNode,
 } from "./nodes";
-import { Palette } from "./palette";
+import { InsertPanel } from "./insert-panel";
+import { LeftPanel } from "./left-panel";
 import { PropertiesPanel } from "./properties-panel";
 import { SelectionOverlay } from "./selection-overlay";
 import { blocksToSerializedNodes, craftJsonToBlocks } from "./serialize";
@@ -63,45 +64,65 @@ const RESOLVER = {
 
 export function CanvasEditor({
   page,
+  pages,
   initialBlocks,
 }: {
   page: Page;
+  pages: Page[];
   initialBlocks: Block[];
 }) {
   return (
     <Editor resolver={RESOLVER}>
-      <EditorShell page={page} initialBlocks={initialBlocks} />
+      <EditorShell page={page} pages={pages} initialBlocks={initialBlocks} />
     </Editor>
   );
 }
 
 function EditorShell({
   page,
+  pages,
   initialBlocks,
 }: {
   page: Page;
+  pages: Page[];
   initialBlocks: Block[];
 }) {
   const { query, actions } = useEditor();
   const [device, setDevice] = useState<Device>("desktop");
   const [zoom, setZoom] = useState(1);
   const [saving, setSaving] = useState(false);
+  const [insertOpen, setInsertOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Blöcke nach dem Mount einzeln in den (von Craft erzeugten) ROOT-Canvas laden.
+  // Blöcke in den (von Craft erzeugten) ROOT-Canvas laden.
   // parseSerializedNode().toNode() löst jeden resolvedName gegen den laufenden
-  // Resolver auf und hängt den Knoten an ROOT — robuster als ein selbst gebautes
-  // ROOT-JSON via deserialize (das beim ROOT-Typ scheiterte).
+  // Resolver auf und hängt den Knoten an ROOT.
   const loadBlocks = (blocks: Block[]) => {
-    blocks.forEach((_, i) => {
-      const sn = blocksToSerializedNodes(blocks)[i];
+    const serialized = blocksToSerializedNodes(blocks);
+    serialized.forEach((sn, i) => {
       const node = query.parseSerializedNode(sn).toNode();
       actions.add(node, ROOT_NODE, i);
     });
   };
 
+  // Erst laden, wenn der ROOT-Canvas wirklich existiert (Frame gemountet). Beim
+  // ersten Effect-Lauf ist ROOT sonst noch nicht da → Blöcke gingen verloren
+  // (Symptom: leere Canvas trotz vorhandener Blöcke).
+  const loadedRef = useRef(false);
   useEffect(() => {
-    if (initialBlocks.length > 0) loadBlocks(initialBlocks);
+    if (loadedRef.current || initialBlocks.length === 0) return;
+    let tries = 0;
+    const tryLoad = () => {
+      tries += 1;
+      const rootExists = !!query.getNodes()[ROOT_NODE];
+      if (rootExists) {
+        loadedRef.current = true;
+        loadBlocks(initialBlocks);
+      } else if (tries < 30) {
+        requestAnimationFrame(tryLoad);
+      }
+    };
+    requestAnimationFrame(tryLoad);
     // nur beim ersten Mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -127,96 +148,150 @@ function EditorShell({
     }
   }
 
+  const deviceLabel: Record<Device, string> = { desktop: "Desktop", tablet: "Tablet", mobile: "Mobil" };
+  const devicePx: Record<Device, number> = { desktop: 1200, tablet: 768, mobile: 390 };
+
   return (
-    <div className="flex flex-1 flex-col">
-      {/* Kopfzeile */}
-      <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-2.5">
+    <div className="relative flex h-full flex-1 flex-col bg-background">
+      {insertOpen ? <InsertPanel onClose={() => setInsertOpen(false)} /> : null}
+      {/* Obere Toolbar (Framer-Stil) */}
+      <header className="flex h-12 items-center justify-between gap-3 border-b border-border px-3">
         <div className="flex items-center gap-2">
           <Link href="/website">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="size-8">
               <Icon icon="ph:arrow-left" className="size-4" />
             </Button>
           </Link>
-          <div>
-            <p className="text-sm font-semibold">{page.title}</p>
-            <p className="text-xs text-muted-foreground">
-              /{page.slug} · {page.is_published ? "veröffentlicht" : "Entwurf"}
-            </p>
-          </div>
-        </div>
-
-        {/* Device-Umschalter */}
-        <div className="flex items-center gap-1 rounded-full border border-border p-1">
-          {(["desktop", "tablet", "mobile"] as Device[]).map((d) => (
+          <span className="flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-medium">
+            <Icon icon="ph:browser" className="size-3.5 text-primary" />
+            Canvas
+            <Icon icon="ph:caret-down" className="size-3 text-muted-foreground" />
+          </span>
+          {/* Werkzeuge — „+" öffnet das Insert-Panel */}
+          <div className="ml-1 flex items-center gap-0.5">
             <button
-              key={d}
               type="button"
-              aria-label={d}
-              onClick={() => setDevice(d)}
+              aria-label="Block hinzufügen"
+              title="Block hinzufügen"
+              onClick={() => setInsertOpen((v) => !v)}
               className={
-                "flex size-8 items-center justify-center rounded-full transition " +
-                (device === d ? "bg-secondary text-foreground" : "text-muted-foreground hover:bg-secondary/60")
+                "flex size-8 items-center justify-center rounded-md transition " +
+                (insertOpen
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-secondary hover:text-foreground")
               }
             >
-              <Icon
-                icon={d === "desktop" ? "ph:desktop" : d === "tablet" ? "ph:device-tablet" : "ph:device-mobile"}
-                className="size-4"
-              />
+              <Icon icon="ph:plus" className="size-4" />
             </button>
-          ))}
+            <ToolBtn icon="ph:selection" label="Auswahl" />
+            <ToolBtn icon="ph:text-t" label="Text" />
+          </div>
         </div>
 
-        {/* Zoom + Speichern */}
+        {/* Titel mittig */}
+        <div className="flex flex-col items-center">
+          <span className="text-sm font-semibold">{page.title}</span>
+          <span className="text-[0.625rem] text-muted-foreground">
+            /{page.slug || ""} · {page.is_published ? "veröffentlicht" : "Entwurf"}
+          </span>
+        </div>
+
+        {/* Rechts: Device + Veröffentlichen */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 rounded-full border border-border px-1">
-            <button type="button" aria-label="kleiner" onClick={() => setZoom((z) => Math.max(0.4, +(z - 0.1).toFixed(2)))} className="flex size-7 items-center justify-center rounded-full hover:bg-secondary">
-              <Icon icon="ph:minus" className="size-3.5" />
-            </button>
-            <span className="w-10 text-center text-xs tabular-nums">{Math.round(zoom * 100)}%</span>
-            <button type="button" aria-label="größer" onClick={() => setZoom((z) => Math.min(1.5, +(z + 0.1).toFixed(2)))} className="flex size-7 items-center justify-center rounded-full hover:bg-secondary">
-              <Icon icon="ph:plus" className="size-3.5" />
-            </button>
+          <div className="flex items-center gap-0.5 rounded-md border border-border p-0.5">
+            {(["desktop", "tablet", "mobile"] as Device[]).map((d) => (
+              <button
+                key={d}
+                type="button"
+                aria-label={d}
+                onClick={() => setDevice(d)}
+                className={
+                  "flex size-7 items-center justify-center rounded transition " +
+                  (device === d ? "bg-secondary text-foreground" : "text-muted-foreground hover:bg-secondary/60")
+                }
+              >
+                <Icon
+                  icon={d === "desktop" ? "ph:desktop" : d === "tablet" ? "ph:device-tablet" : "ph:device-mobile"}
+                  className="size-4"
+                />
+              </button>
+            ))}
           </div>
-          <Button onClick={save} disabled={saving} size="sm">
-            {saving ? "Speichern …" : "Speichern"}
+          <Button onClick={save} disabled={saving} size="sm" className="h-8">
+            {saving ? "Speichern …" : "Veröffentlichen"}
           </Button>
         </div>
       </header>
 
-      {/* 3 Spalten: Palette · Canvas · Eigenschaften */}
-      <div className="grid flex-1 grid-cols-[14rem_1fr_18rem] overflow-hidden">
-        <aside className="overflow-y-auto border-r border-border">
-          <Palette />
+      {/* 3 Spalten: LeftPanel · Canvas · Inspektor */}
+      <div className="grid min-h-0 flex-1 grid-cols-[15rem_1fr_17rem]">
+        <aside className="min-h-0 overflow-hidden border-r border-border">
+          <LeftPanel page={page} pages={pages} />
         </aside>
 
-        {/* Canvas-Bühne (grauer Hintergrund, Device-Frame, Zoom) */}
+        {/* Canvas-Bühne: freie Fläche + sichtbarer Device-Frame */}
         <div
           ref={scrollRef}
-          className="relative overflow-auto bg-[oklch(0.96_0_0)] p-8"
+          className="relative min-h-0 overflow-auto bg-[oklch(0.94_0.004_260)]"
         >
           <SelectionOverlay scrollRef={scrollRef} />
-          <div
-            className="mx-auto bg-background shadow-2xl shadow-black/10 ring-1 ring-border transition-[width] duration-200"
-            style={{
-              width: DEVICE_WIDTH[device],
-              maxWidth: "100%",
-              transform: `scale(${zoom})`,
-              transformOrigin: "top center",
-            }}
-          >
-            {/* Craft erzeugt den ROOT-Canvas selbst; die Blöcke werden nach dem
-                Mount per actions.deserialize geladen (löst resolvedNames gegen
-                den laufenden Resolver auf). */}
-            <Frame>
-              <Element is={Canvas} canvas />
-            </Frame>
+          <div className="flex min-h-full w-full justify-center p-12">
+            <div
+              style={{
+                width: DEVICE_WIDTH[device],
+                maxWidth: "100%",
+                transform: `scale(${zoom})`,
+                transformOrigin: "top center",
+              }}
+            >
+              {/* Device-Frame-Label (wie Framer „Desktop 1200") */}
+              <div className="mb-2 flex items-center gap-2 text-xs font-medium text-primary">
+                <Icon icon="ph:play-circle" className="size-4" />
+                {deviceLabel[device]}
+                <span className="text-muted-foreground">{devicePx[device]}</span>
+              </div>
+              <div className="min-h-[40rem] bg-background shadow-xl shadow-black/10 ring-1 ring-primary/30">
+                <Frame>
+                  <Element is={Canvas} canvas />
+                </Frame>
+              </div>
+            </div>
+          </div>
+
+          {/* Untere schwebende Leiste (Zeiger/Hand/Zoom) */}
+          <div className="pointer-events-none sticky bottom-4 flex justify-center">
+            <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-border bg-card px-2 py-1.5 shadow-lg">
+              <ToolBtn icon="ph:cursor" label="Zeiger" />
+              <ToolBtn icon="ph:hand" label="Hand" />
+              <span className="mx-1 h-4 w-px bg-border" />
+              <button type="button" aria-label="kleiner" onClick={() => setZoom((z) => Math.max(0.4, +(z - 0.1).toFixed(2)))} className="flex size-7 items-center justify-center rounded-full hover:bg-secondary">
+                <Icon icon="ph:minus" className="size-3.5" />
+              </button>
+              <span className="w-11 text-center text-xs tabular-nums">{Math.round(zoom * 100)}%</span>
+              <button type="button" aria-label="größer" onClick={() => setZoom((z) => Math.min(1.5, +(z + 0.1).toFixed(2)))} className="flex size-7 items-center justify-center rounded-full hover:bg-secondary">
+                <Icon icon="ph:plus" className="size-3.5" />
+              </button>
+            </div>
           </div>
         </div>
 
-        <aside className="overflow-y-auto border-l border-border">
+        <aside className="min-h-0 overflow-y-auto border-l border-border">
           <PropertiesPanel />
         </aside>
       </div>
     </div>
+  );
+}
+
+function ToolBtn({ icon, label }: { icon: string; label: string }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      className="flex size-8 items-center justify-center rounded-md text-muted-foreground transition hover:bg-secondary hover:text-foreground"
+    >
+      <Icon icon={icon} className="size-4" />
+    </button>
   );
 }

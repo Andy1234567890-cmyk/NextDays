@@ -1,11 +1,15 @@
 "use client";
 
-// Block-Palette (links): jeder Eintrag ist per Drag auf die Canvas ziehbar
-// (Craft `create`-Connector) ODER per Klick ans Ende anfügbar. Buchungs-Blöcke
-// grün hervorgehoben — der Vorsprung ggü. reinen Website-Buildern.
+// Block-Palette (im linken Panel unter der Seitenliste). Zwei Wege:
+//  • KLICK: fügt den Block sofort ans Ende der Seite an, selektiert ihn und
+//    scrollt hin (Hauptweg — funktioniert immer).
+//  • DRAG: per Craft `create`-Connector auf die Canvas ziehen (Bonus).
+// Buchungs-Blöcke grün hervorgehoben — der Vorsprung ggü. reinen Buildern.
 import { Element, useEditor } from "@craftjs/core";
+import { ROOT_NODE } from "@craftjs/utils";
 import { Icon } from "@iconify/react";
 import type { ReactElement } from "react";
+import { toast } from "sonner";
 
 import {
   ButtonNode,
@@ -39,36 +43,51 @@ const ITEMS: PaletteItem[] = [
 ];
 
 export function Palette() {
-  const { connectors } = useEditor();
+  const { connectors, query, actions } = useEditor();
+
+  // Klick-Insert: Element → NodeTree → ans Ende von ROOT anhängen + selektieren.
+  function insert(element: ReactElement, label: string) {
+    try {
+      const tree = query.parseReactElement(element).toNodeTree();
+      const count = query.node(ROOT_NODE).get().data.nodes.length;
+      actions.addNodeTree(tree, ROOT_NODE, count);
+      actions.selectNode(tree.rootNodeId);
+      requestAnimationFrame(() => {
+        query.node(tree.rootNodeId).get().dom?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    } catch (e) {
+      toast.error(`„${label}" konnte nicht eingefügt werden.`);
+      // eslint-disable-next-line no-console
+      console.error(e);
+    }
+  }
 
   return (
-    <div className="flex flex-col gap-1 p-3">
-      <p className="mb-1 px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Blöcke
-      </p>
+    <div className="grid grid-cols-2 gap-1.5">
       {ITEMS.map((item) => (
         <button
           key={item.label}
           type="button"
+          onClick={() => insert(item.element, item.label)}
           ref={(r) => {
             if (r) connectors.create(r, item.element);
           }}
           className={
-            "flex cursor-grab items-center gap-2.5 rounded-(--radius) border border-transparent px-3 py-2.5 text-left text-sm transition active:cursor-grabbing hover:border-border hover:bg-secondary/60 " +
+            "group flex flex-col items-start gap-2 rounded-lg border border-border bg-card p-2.5 text-left text-xs transition hover:border-primary/40 hover:bg-secondary/50 active:scale-[0.98] " +
             (item.booking ? "text-emerald-700" : "")
           }
         >
-          <span className="flex size-7 items-center justify-center rounded-md bg-secondary">
+          <span className="pointer-events-none flex size-7 items-center justify-center rounded-md bg-secondary">
             <Icon icon={item.icon} className="size-4" />
           </span>
-          <span className="font-medium">{item.label}</span>
-          {item.booking ? (
-            <span className="ml-auto rounded-full bg-emerald-100 px-2 py-0.5 text-[0.625rem] font-semibold text-emerald-700">
-              Buchung
-            </span>
-          ) : (
-            <Icon icon="ph:dots-six-vertical" className="ml-auto size-4 text-muted-foreground/50" />
-          )}
+          <span className="pointer-events-none flex w-full items-center justify-between font-medium">
+            {item.label}
+            {item.booking ? (
+              <span className="pointer-events-none rounded-full bg-emerald-100 px-1.5 py-0.5 text-[0.5625rem] font-semibold text-emerald-700">
+                Buchung
+              </span>
+            ) : null}
+          </span>
         </button>
       ))}
     </div>
