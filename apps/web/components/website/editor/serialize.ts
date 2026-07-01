@@ -69,7 +69,15 @@ export type SerializedBlock = {
 };
 
 // Welche Prop-Keys sind „settings" (Layout/Style) statt „content" (Inhalt)?
-const SETTINGS_KEYS = new Set(["background_color", "padding", "full_width"]);
+const SETTINGS_KEYS = new Set([
+  "background_color",
+  "padding",
+  "full_width",
+  "opacity",
+  "visible",
+  "radius",
+  "rotation",
+]);
 
 function splitProps(props: Record<string, unknown>): {
   content: Record<string, unknown>;

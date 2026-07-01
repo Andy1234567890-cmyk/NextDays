@@ -29,6 +29,7 @@ import {
 } from "./nodes";
 import { InsertMode, InsertModeProvider } from "./insert-panel";
 import { LeftPanel } from "./left-panel";
+import { RenderNode } from "./render-node";
 import { PropertiesPanel } from "./properties-panel";
 import { SelectionOverlay } from "./selection-overlay";
 import { blocksToSerializedNodes, craftJsonToBlocks } from "./serialize";
@@ -72,7 +73,7 @@ export function CanvasEditor({
   initialBlocks: Block[];
 }) {
   return (
-    <Editor resolver={RESOLVER}>
+    <Editor resolver={RESOLVER} onRender={RenderNode}>
       <EditorShell page={page} pages={pages} initialBlocks={initialBlocks} />
     </Editor>
   );

@@ -231,6 +231,11 @@ class BlockSettings(BaseModel):
     background_color: str | None = Field(default=None, pattern=_HEX_RE)
     padding: str = "md"  # "none" | "sm" | "md" | "lg"
     full_width: bool = False
+    # Framer-artige Stil-Steuerung (im Style-Inspektor bearbeitbar).
+    opacity: float = Field(default=1.0, ge=0.0, le=1.0)
+    visible: bool = True
+    radius: int = Field(default=0, ge=0, le=200)  # px
+    rotation: int = Field(default=0, ge=-180, le=180)  # Grad
 
 
 # --- Seiten (Dashboard) ------------------------------------------------------
