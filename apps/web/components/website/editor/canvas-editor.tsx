@@ -35,11 +35,6 @@ import { SelectionOverlay } from "./selection-overlay";
 import { blocksToSerializedNodes, craftJsonToBlocks } from "./serialize";
 
 type Device = "desktop" | "tablet" | "mobile";
-const DEVICE_WIDTH: Record<Device, string> = {
-  desktop: "100%",
-  tablet: "48rem",
-  mobile: "23.5rem",
-};
 
 // ROOT-Canvas: nimmt die Blöcke als Kinder auf (Drop-Ziel der Palette).
 function Canvas({ children }: { children?: React.ReactNode }) {
@@ -93,7 +88,13 @@ function EditorShell({
   const [zoom, setZoom] = useState(1);
   const [saving, setSaving] = useState(false);
   const [insertOpen, setInsertOpen] = useState(false);
+  // Ziehbare Frame-Breite (in px). Device-Umschalter setzt die passende Breite,
+  // die Ziehgriffe am Frame ändern sie frei.
+  const [frameWidth, setFrameWidth] = useState(1200);
+  const [dragging, setDragging] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
+  const [frameHeight, setFrameHeight] = useState(0);
 
   // Blöcke in den (von Craft erzeugten) ROOT-Canvas laden.
   // parseSerializedNode().toNode() löst jeden resolvedName gegen den laufenden
@@ -152,6 +153,43 @@ function EditorShell({
   const deviceLabel: Record<Device, string> = { desktop: "Desktop", tablet: "Tablet", mobile: "Mobil" };
   const devicePx: Record<Device, number> = { desktop: 1200, tablet: 768, mobile: 390 };
 
+  // Device-Umschalter setzt die Frame-Breite (danach frei ziehbar).
+  function pickDevice(d: Device) {
+    setDevice(d);
+    setFrameWidth(devicePx[d]);
+  }
+
+  // Frame-Höhe live messen (fürs Maß-Badge beim Ziehen).
+  useEffect(() => {
+    const el = frameRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => setFrameHeight(Math.round(el.getBoundingClientRect().height / zoom)));
+    ro.observe(el);
+    setFrameHeight(Math.round(el.getBoundingClientRect().height / zoom));
+    return () => ro.disconnect();
+  }, [zoom, frameWidth]);
+
+  // Breite über die Seiten-Handles ziehen (Maus). dir = -1 links, +1 rechts.
+  function startResize(e: React.MouseEvent, dir: -1 | 1) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(true);
+    const startX = e.clientX;
+    const startW = frameWidth;
+    function onMove(ev: MouseEvent) {
+      // Bei zentriertem Frame ändert eine Seite die Breite doppelt (symmetrisch).
+      const delta = ((ev.clientX - startX) / zoom) * 2 * dir;
+      setFrameWidth(Math.round(Math.min(2560, Math.max(280, startW + delta))));
+    }
+    function onUp() {
+      setDragging(false);
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    }
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  }
+
   return (
     <div className="relative flex h-full flex-1 flex-col bg-background">
       {/* Obere Toolbar (Framer-Stil) */}
@@ -204,7 +242,7 @@ function EditorShell({
                 key={d}
                 type="button"
                 aria-label={d}
-                onClick={() => setDevice(d)}
+                onClick={() => pickDevice(d)}
                 className={
                   "flex size-7 items-center justify-center rounded transition " +
                   (device === d ? "bg-secondary text-foreground" : "text-muted-foreground hover:bg-secondary/60")
@@ -255,8 +293,7 @@ function EditorShell({
           <div className="flex min-h-full w-full justify-center p-12">
             <div
               style={{
-                width: DEVICE_WIDTH[device],
-                maxWidth: "100%",
+                width: frameWidth,
                 transform: `scale(${zoom})`,
                 transformOrigin: "top center",
               }}
@@ -265,12 +302,25 @@ function EditorShell({
               <div className="mb-2 flex items-center gap-2 text-xs font-medium text-primary">
                 <Icon icon="ph:play-circle" className="size-4" />
                 {deviceLabel[device]}
-                <span className="text-muted-foreground">{devicePx[device]}</span>
+                <span className="text-muted-foreground">{frameWidth}</span>
               </div>
-              <div className="min-h-[40rem] bg-background shadow-xl shadow-black/10 ring-1 ring-primary/30">
+
+              {/* Der Frame selbst — mit Ziehgriffen an den Seiten/Ecken. */}
+              <div ref={frameRef} className="group/frame relative min-h-[40rem] bg-background shadow-xl shadow-black/10 ring-1 ring-primary/30">
                 <Frame>
                   <Element is={Canvas} canvas />
                 </Frame>
+
+                {/* Seiten-Ziehgriffe (Breite) */}
+                <ResizeHandle side="left" onStart={(e) => startResize(e, -1)} />
+                <ResizeHandle side="right" onStart={(e) => startResize(e, 1)} />
+
+                {/* Maß-Badge beim Ziehen (wie Framer „1277 × 1683") */}
+                {dragging ? (
+                  <div className="pointer-events-none absolute -right-2 top-1/2 z-40 -translate-y-1/2 translate-x-full rounded-md bg-primary px-2.5 py-1 text-xs font-semibold text-primary-foreground shadow-lg">
+                    {frameWidth} × {frameHeight}
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
@@ -297,6 +347,29 @@ function EditorShell({
         </aside>
       </div>
       </InsertModeProvider>
+    </div>
+  );
+}
+
+// Ziehgriff an einer Frame-Seite (Framer-Stil: blaue Kante + Ecken-Punkte).
+function ResizeHandle({
+  side,
+  onStart,
+}: {
+  side: "left" | "right";
+  onStart: (e: React.MouseEvent) => void;
+}) {
+  const pos = side === "left" ? "left-0 -translate-x-1/2" : "right-0 translate-x-1/2";
+  return (
+    <div
+      onMouseDown={onStart}
+      className={`absolute inset-y-0 z-40 w-3 cursor-ew-resize ${pos} flex items-center justify-center opacity-0 transition group-hover/frame:opacity-100`}
+    >
+      {/* Kanten-Linie */}
+      <span className="h-full w-0.5 bg-primary" />
+      {/* Ecken-Punkte */}
+      <span className="absolute top-0 size-2 -translate-y-1/2 rounded-full border-2 border-primary bg-background" />
+      <span className="absolute bottom-0 size-2 translate-y-1/2 rounded-full border-2 border-primary bg-background" />
     </div>
   );
 }
