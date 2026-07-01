@@ -37,8 +37,16 @@ export function LeftPanel({
 
   function neueSeite() {
     start(async () => {
-      const titel = "Neue Seite";
-      const res = await createPage(titel);
+      // Eindeutigen Slug erzeugen (leerer Slug ist für die Home reserviert →
+      // sonst 409). Fortlaufende Nummer, bis kein Slug kollidiert.
+      const vorhanden = new Set(pages.map((p) => p.slug));
+      let n = pages.length + 1;
+      let slug = `seite-${n}`;
+      while (vorhanden.has(slug)) {
+        n += 1;
+        slug = `seite-${n}`;
+      }
+      const res = await createPage(`Neue Seite ${n}`, slug);
       if (res.ok) {
         router.push(`/website/${res.data.id}`);
       } else {

@@ -27,7 +27,7 @@ import {
   SpacerNode,
   TextNode,
 } from "./nodes";
-import { InsertPanel } from "./insert-panel";
+import { InsertMode, InsertModeProvider } from "./insert-panel";
 import { LeftPanel } from "./left-panel";
 import { PropertiesPanel } from "./properties-panel";
 import { SelectionOverlay } from "./selection-overlay";
@@ -153,7 +153,6 @@ function EditorShell({
 
   return (
     <div className="relative flex h-full flex-1 flex-col bg-background">
-      {insertOpen ? <InsertPanel onClose={() => setInsertOpen(false)} /> : null}
       {/* Obere Toolbar (Framer-Stil) */}
       <header className="flex h-12 items-center justify-between gap-3 border-b border-border px-3">
         <div className="flex items-center gap-2">
@@ -223,17 +222,34 @@ function EditorShell({
         </div>
       </header>
 
-      {/* 3 Spalten: LeftPanel · Canvas · Inspektor */}
+      {/* 3 Spalten: LeftPanel · Canvas · Inspektor.
+          Im Insert-Modus WECHSELT die Sidebar zu den Insert-Kategorien und das
+          Kachel-Grid legt sich als Overlay über die Canvas. Der Craft-Frame
+          bleibt IMMER gemountet (nie display:none), damit keine Blöcke verloren
+          gehen. */}
+      <InsertModeProvider onClose={() => setInsertOpen(false)}>
       <div className="grid min-h-0 flex-1 grid-cols-[15rem_1fr_17rem]">
+        {/* Spalte 1: Sidebar ODER Insert-Kategorien */}
         <aside className="min-h-0 overflow-hidden border-r border-border">
-          <LeftPanel page={page} pages={pages} />
+          {insertOpen ? (
+            <InsertMode onClose={() => setInsertOpen(false)} variant="categories" />
+          ) : (
+            <LeftPanel page={page} pages={pages} />
+          )}
         </aside>
 
-        {/* Canvas-Bühne: freie Fläche + sichtbarer Device-Frame */}
+        {/* Canvas-Bühne: freie Fläche + sichtbarer Device-Frame (bleibt gemountet) */}
         <div
           ref={scrollRef}
           className="relative min-h-0 overflow-auto bg-[oklch(0.94_0.004_260)]"
         >
+          {/* Insert-Kachel-Grid: schmale Spalte am linken Rand der Canvas
+              (wie Framer) — die Canvas bleibt rechts daneben sichtbar. */}
+          {insertOpen ? (
+            <div className="absolute inset-y-0 left-0 z-30 w-[22rem] overflow-y-auto border-r border-border bg-background">
+              <InsertMode onClose={() => setInsertOpen(false)} variant="grid" />
+            </div>
+          ) : null}
           <SelectionOverlay scrollRef={scrollRef} />
           <div className="flex min-h-full w-full justify-center p-12">
             <div
@@ -279,6 +295,7 @@ function EditorShell({
           <PropertiesPanel />
         </aside>
       </div>
+      </InsertModeProvider>
     </div>
   );
 }
