@@ -366,7 +366,12 @@ services:
       SUPABASE_ANON_KEY: ${ANON_KEY}
       SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
       SUPABASE_JWT_SECRET: ${JWT_SECRET}
-      REDIS_URL: ${REDIS_URL:-redis://localhost:6379/0}
+      # Rate-Limiter/Backpressure-Redis: der Service "redis" liegt im SELBEN
+      # Stack (default-Netz) → per Servicename erreichbar, KEIN localhost (das
+      # wäre der api-Container selbst → ConnectionError → Login-fail-closed 503).
+      # Coolifys eigener "coolify-redis" liegt in einem fremden Netz und ist
+      # bewusst NICHT für die App gedacht.
+      REDIS_URL: ${REDIS_URL:-redis://:${REDIS_PASSWORD}@redis:6379/0}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
       GOOGLE_TRANSLATE_API_KEY: ${GOOGLE_TRANSLATE_API_KEY:-}
     expose:
@@ -376,10 +381,33 @@ services:
         condition: service_started
       rest:
         condition: service_started
+      redis:
+        condition: service_healthy
     deploy:
       resources:
         limits:
           memory: 1g
+
+  # Redis für Rate-Limiting/Backpressure (core/ratelimit*.py). Im default-Netz
+  # des Stacks, damit die api ihn per "redis" auflöst. Passwortgeschützt;
+  # persistenter Bind-Mount auf dem Hetzner-Volume wie Postgres/Storage.
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes"]
+    networks:
+      default:
+    volumes:
+      - /mnt/HC_Volume_106086998/nextdays/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256m
 
 # HINWEIS: Der frühere "kong"-Service wurde in eine EIGENSTÄNDIGE Coolify-App
 # ausgelagert (deploy/kong/) — nur so bekommt Kong Coolifys Rolling-Update
