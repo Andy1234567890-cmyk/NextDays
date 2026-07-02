@@ -23,7 +23,10 @@ export function OwnersList({
 }) {
   const t = useTranslations("owners");
   const router = useRouter();
-  const [owners] = useState<OwnerListItem[]>(initial);
+  // Props direkt rendern — useState(initial) würde die Liste beim Mount
+  // einfrieren und die frischen Server-Props nach jedem Realtime-
+  // router.refresh() ignorieren (Liste bliebe für immer stehen).
+  const owners = initial;
   const [creating, setCreating] = useState(false);
 
   return (

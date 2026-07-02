@@ -4,6 +4,8 @@
 // price_overrides im Backend und pusht den Preis realtime an Channex (alle Kanäle).
 import { useEffect, useState, useTransition } from "react";
 
+import { useRealtime } from "@/lib/use-realtime";
+
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -44,6 +46,13 @@ export function SeasonPriceForm({ initial }: { initial: Property }) {
   }
 
   useEffect(reload, []); // eslint-disable-line react-hooks/exhaustive-deps
+  // Realtime-Pflicht: Saisonpreise anderer Sessions/aus dem Kalender live
+  // spiegeln (price_overrides ist die Preis-Wahrheit hinter dieser Liste).
+  useRealtime({
+    table: "price_overrides",
+    filter: `property_id=eq.${initial.id}`,
+    onChange: reload,
+  });
 
   function onSave() {
     const p = Number(price);

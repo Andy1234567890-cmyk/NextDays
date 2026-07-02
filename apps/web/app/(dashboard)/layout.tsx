@@ -24,6 +24,7 @@ export default async function DashboardLayout({
   let role = me?.role ?? null;
   let permissions = me?.permissions ?? [];
   let capabilities = me?.capabilities ?? [];
+  const accommodationType = me?.accommodation_type ?? "vacation_rental";
 
   if (!me) {
     const supabase = await createClient();
@@ -45,6 +46,7 @@ export default async function DashboardLayout({
         role={role}
         permissions={permissions}
         capabilities={capabilities}
+        accommodationType={accommodationType}
       />
       <SidebarInset>
         <Topbar />

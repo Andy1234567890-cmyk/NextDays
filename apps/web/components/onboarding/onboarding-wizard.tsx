@@ -4,9 +4,10 @@
 // Unterkunft mit allen Channex-Pflichtfeldern). Regel: vollständig oder nichts —
 // fehlen Daten, wird kein Unternehmen/keine Property angelegt.
 //  1) Willkommen
-//  2) Firmendaten (Admin-Konto)
-//  3) Unterkunft (Channex-Pflichtfelder: Titel, Art, Zustand, Geo, Zeitzone …)
-//  4) Fertig (erst wenn alles vollständig)
+//  2) Betriebsart (Ferienunterkunft oder Hotel — steuert die Navigation)
+//  3) Firma & Adresse (Admin-Konto)
+//  4) Steuern & Zahlungen (USt/Kleinunternehmer, Register, Stripe-KYC)
+//  5) Fertig (erst wenn alles vollständig)
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -15,6 +16,8 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
+import type { AccommodationType } from "@/lib/api";
+import { setAccommodationType } from "@/lib/auth";
 import { type FirmenProfil, saveFirmenProfil } from "@/lib/firmenprofil";
 import {
   LAENDER,
@@ -28,7 +31,7 @@ import type { OnboardingStatus } from "@/lib/onboarding";
 import { updateOnboarding } from "@/lib/onboarding";
 import { cn } from "@/lib/utils";
 
-type Step = "welcome" | "company" | "done";
+type Step = "welcome" | "type" | "company" | "tax" | "done";
 
 export function OnboardingWizard({
   initialStatus,
@@ -43,6 +46,9 @@ export function OnboardingWizard({
   const tCountry = useTranslations("countries");
   const tLegal = useTranslations("legalForms");
   const tExempt = useTranslations("exemption");
+  // Betriebsart-Labels/Hints: gleicher Namespace wie der Konto-Abschnitt
+  // (bereits in allen 24 Sprachen gepflegt).
+  const tAcc = useTranslations("accommodationType");
   const [pending, startTransition] = useTransition();
 
   // Startschritt anhand des gespeicherten Fortschritts wählen (Wiederaufnahme).
@@ -56,6 +62,21 @@ export function OnboardingWizard({
 
   const [step, setStep] = useState<Step>(firstOpenStep(initialStatus));
   const [error, setError] = useState<string | null>(null);
+
+  // Betriebsart (Ferienunterkunft/Hotel): bewusst OHNE Vorauswahl — der Kunde
+  // entscheidet explizit (vollständig oder nichts); wird beim Weiter sofort am
+  // Mandanten gespeichert und steuert die Dashboard-Navigation.
+  const [accommodationType, setAccType] = useState<AccommodationType | null>(null);
+
+  function saveType() {
+    if (!accommodationType) return;
+    setError(null);
+    startTransition(async () => {
+      const res = await setAccommodationType(accommodationType);
+      if (res.ok) setStep("company");
+      else setError(res.error);
+    });
+  }
 
   // Firmendaten (länderneutral, DACH + EU). Pflicht: A (Firma/Adresse/Kontakt)
   // + B (Steuer). C (Register/GF/Bank) optional/aufklappbar.
@@ -110,9 +131,9 @@ export function OnboardingWizard({
     void updateOnboarding(patch);
   }
 
-  // Firmendaten speichern (Pflichtfelder prüfen) → tenant_billing_profile +
-  // Status-Flag. Danach ist das Onboarding inhaltlich fertig (nur Unternehmen).
-  function saveCompany() {
+  // Schritt „Firma & Adresse": nur die Stammdaten-Pflichtfelder prüfen, dann
+  // weiter zum Steuer-Schritt (gespeichert wird erst dort, komplett).
+  function nextFromCompany() {
     setError(null);
     const required: [string | undefined, string][] = [
       [firma.companyName, t("company.field.companyName")],
@@ -125,11 +146,19 @@ export function OnboardingWizard({
       [firma.phoneNumber, t("company.field.phone")],
     ];
     const missing = required.filter(([v]) => !v?.trim()).map(([, l]) => l);
-    if (!istKleinunternehmer && !firma.vatId?.trim() && !firma.taxNumber?.trim()) {
-      missing.push(t("company.field.vatOrTax"));
-    }
     if (missing.length > 0) {
       setError(t("company.missing", { fields: missing.join(", ") }));
+      return;
+    }
+    setStep("tax");
+  }
+
+  // Schritt „Steuern & Zahlungen": Steuer-Pflicht prüfen, dann ALLES speichern
+  // → tenant_billing_profile + Status-Flag (vollständig oder nichts).
+  function saveCompany() {
+    setError(null);
+    if (!istKleinunternehmer && !firma.vatId?.trim() && !firma.taxNumber?.trim()) {
+      setError(t("company.missing", { fields: t("company.field.vatOrTax") }));
       return;
     }
     startTransition(async () => {
@@ -168,9 +197,74 @@ export function OnboardingWizard({
             {t("welcome.title")}
           </h1>
           <p className="text-muted-foreground">{t("welcome.text")}</p>
-          <Button onClick={() => setStep("company")} className="self-start">
+          <Button onClick={() => setStep("type")} className="self-start">
             {t("welcome.cta")}
           </Button>
+        </Card>
+      )}
+
+      {step === "type" && (
+        <Card>
+          <h1 className="font-display text-2xl font-extrabold">
+            {t("type.title")}
+          </h1>
+          <p className="text-muted-foreground">{t("type.text")}</p>
+          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+            {(
+              [
+                { value: "vacation_rental", icon: "ph:house-line" },
+                { value: "hotel", icon: "ph:bed" },
+              ] as const
+            ).map((opt) => {
+              const active = accommodationType === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setAccType(opt.value)}
+                  className={cn(
+                    "flex items-center gap-3 rounded-(--radius) border p-4 text-left transition",
+                    active
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:bg-secondary/50",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "flex size-10 shrink-0 items-center justify-center rounded-full",
+                      active
+                        ? "bg-primary/10 text-primary"
+                        : "bg-secondary text-muted-foreground",
+                    )}
+                  >
+                    <Icon icon={opt.icon} className="size-5" />
+                  </span>
+                  <span className="flex min-w-0 flex-col">
+                    <span className="text-sm font-medium">{tAcc(opt.value)}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {tAcc(`${opt.value}Hint`)}
+                    </span>
+                  </span>
+                  {active && (
+                    <Icon
+                      icon="ph:check-circle-fill"
+                      className="ml-auto size-5 shrink-0 text-primary"
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+          {error && <ErrorText>{error}</ErrorText>}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setStep("welcome")}>
+              {tc("back")}
+            </Button>
+            <Button onClick={saveType} disabled={pending || !accommodationType}>
+              {tc("next")}
+            </Button>
+          </div>
         </Card>
       )}
 
@@ -276,6 +370,25 @@ export function OnboardingWizard({
             </Field>
           </div>
 
+          {error && <ErrorText>{error}</ErrorText>}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setStep("type")}>
+              {tc("back")}
+            </Button>
+            <Button onClick={nextFromCompany} disabled={pending}>
+              {tc("next")}
+            </Button>
+          </div>
+        </Card>
+      )}
+
+      {step === "tax" && (
+        <Card>
+          <h1 className="font-display text-2xl font-extrabold">
+            {t("tax.title")}
+          </h1>
+          <p className="text-muted-foreground">{t("tax.text")}</p>
+
           {/* B — Steuer (Bezeichnung folgt dem Land; ES hat kein Regime) */}
           {kleinunternehmerMoeglich && (
             <div className="flex flex-col gap-1">
@@ -377,7 +490,7 @@ export function OnboardingWizard({
 
           {error && <ErrorText>{error}</ErrorText>}
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setStep("welcome")}>
+            <Button variant="outline" onClick={() => setStep("company")}>
               {tc("back")}
             </Button>
             <Button onClick={saveCompany} disabled={pending}>
@@ -441,7 +554,7 @@ function Field({
 
 function ProgressBar({ step }: { step: Step }) {
   const tc = useTranslations("common");
-  const order: Step[] = ["welcome", "company", "done"];
+  const order: Step[] = ["welcome", "type", "company", "tax", "done"];
   const idx = order.indexOf(step);
   const pct = Math.round((idx / (order.length - 1)) * 100);
   return (

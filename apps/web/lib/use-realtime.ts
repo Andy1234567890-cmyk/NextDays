@@ -3,10 +3,39 @@
 // Echtes Realtime (Supabase WebSocket, kein Polling). Abonniert postgres_changes
 // einer Tabelle und ruft bei jedem INSERT/UPDATE/DELETE den Callback. RLS gilt:
 // der Client empfängt nur Zeilen seines Tenants (current_tenant_id() aus dem JWT).
+import {
+  type SupabaseClient,
+  createClient as createSupabaseClient,
+} from "@supabase/supabase-js";
 import { useEffect, useRef } from "react";
 
 import { currentToken } from "@/lib/session-token";
-import { createClient } from "@/lib/supabase/client";
+
+// Dedizierter Realtime-Client (Modul-Singleton, NUR für Realtime — sein
+// auth-Modul bleibt passiv und ohne Session). Verifiziert gegen die echte DB:
+//
+//  - realtime.setAuth(App-JWT) VOR .subscribe() → Events kommen (RLS-Claims
+//    werden beim Channel-JOIN registriert).
+//  - setAuth NACH subscribe → keine Events (Claims des Joins bleiben anon).
+//  - accessToken-Client-Option → keine Events (wird beim postgres_changes-Join
+//    nicht ausgewertet, supabase-js 2.108).
+//  - Der GETEILTE ssr-Browser-Client (lib/supabase/client) ist ungeeignet:
+//    sein auth-Modul überschreibt das Token beim Init/INITIAL_SESSION wieder
+//    mit anon (Cookie-Login hat dort keine Session) → Subscription lief als
+//    anon, RLS filterte alle Events weg (SUBSCRIBED, aber 0 Events).
+let rtClient: SupabaseClient | null = null;
+function realtimeClient(): SupabaseClient {
+  if (!rtClient) {
+    rtClient = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+      // Kein Session-Handling: Dieser Client authentifiziert sich pro Channel
+      // explizit über setAuth(currentToken()) — nie über sein auth-Modul.
+      { auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false } },
+    );
+  }
+  return rtClient;
+}
 
 // Modul-globaler Zähler für eindeutige Channel-Namen. Mehrere Komponenten dürfen
 // dieselbe Tabelle abonnieren (z. B. Timeline + Listenansicht gleichzeitig);
@@ -52,9 +81,17 @@ export function useRealtime({
   }
   const uid = uidRef.current;
 
+  // Während enabled=false ist das Abo abbestellt — Events aus diesem Fenster
+  // wären sonst dauerhaft verloren (UI bliebe stale, z. B. Kalender nach einer
+  // langen Drag-Interaktion). Beim Re-Enable daher einmal onChange nachholen.
+  const wasDisabled = useRef(false);
+
   useEffect(() => {
-    if (!enabled) return;
-    const supabase = createClient();
+    if (!enabled) {
+      wasDisabled.current = true;
+      return;
+    }
+    const supabase = realtimeClient();
     let channel: ReturnType<typeof supabase.channel> | null = null;
     let cancelled = false;
     // Debounce: viele Events kurz hintereinander → ein onChange.
@@ -64,14 +101,19 @@ export function useRealtime({
       timer = setTimeout(() => cb.current(), debounceMs);
     };
 
+    if (wasDisabled.current) {
+      wasDisabled.current = false;
+      fire();
+    }
+
     (async () => {
-      // Realtime mit dem echten App-Token verbinden (sonst läuft das Abo als
-      // anon und RLS liefert nichts). Token-Quelle ist currentToken():
-      // bevorzugt das FastAPI-Cookie nd_access (Haupt-Login), sonst die
-      // Supabase-OAuth-Session — genau wie bei allen anderen API-Aufrufen.
+      // App-JWT VOR dem Subscribe setzen — die RLS-Claims der Subscription
+      // werden beim JOIN registriert; ohne Token liefe das Abo als anon
+      // (default-deny → 0 Events). Token-Quelle currentToken(): FastAPI-Cookie
+      // nd_access bevorzugt, sonst Supabase-OAuth-Session.
       const token = await currentToken();
       if (token) {
-        supabase.realtime.setAuth(token);
+        await supabase.realtime.setAuth(token);
       }
       if (cancelled) return;
 

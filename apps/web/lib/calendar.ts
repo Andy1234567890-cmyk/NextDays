@@ -79,6 +79,8 @@ export type StopSellDay = {
   date: string; // YYYY-MM-DD
   reason: string | null;
   source: StopSellSource;
+  // Reisebüro/Veranstalter, an den sich der Stopp richtet (null = alle Kanäle).
+  agency_id?: string | null;
 };
 
 /** Verkaufsstopp-Tage eines Objekts im Zeitraum [start, end). */
@@ -91,16 +93,26 @@ export async function listStopSell(
   return call(`/calendar/stop-sell?${qs.toString()}`);
 }
 
-/** Verkaufsstopp für einen Zeitraum setzen (manuell). end exklusiv. */
+/** Verkaufsstopp für einen Zeitraum setzen (manuell). end exklusiv.
+ *  weekdays (ISO: 0=Montag … 6=Sonntag) beschränkt optional auf Wochentage
+ *  im Zeitraum (z. B. nur Wochenenden); wird auch an Channex durchgereicht. */
 export async function setStopSell(
   propertyId: string,
   start: string,
   end: string,
   reason?: string,
+  weekdays?: number[],
+  agencyId?: string,
 ): Promise<Result<{ stopped_days: number }>> {
   return call("/calendar/stop-sell", {
     method: "POST",
-    body: { property_id: propertyId, range: { start, end }, reason: reason ?? null },
+    body: {
+      property_id: propertyId,
+      range: { start, end },
+      reason: reason ?? null,
+      weekdays: weekdays ?? null,
+      agency_id: agencyId ?? null,
+    },
   });
 }
 
@@ -109,10 +121,15 @@ export async function clearStopSell(
   propertyId: string,
   start: string,
   end: string,
+  weekdays?: number[],
 ): Promise<Result<{ status: string }>> {
   return call("/calendar/stop-sell/clear", {
     method: "POST",
-    body: { property_id: propertyId, range: { start, end } },
+    body: {
+      property_id: propertyId,
+      range: { start, end },
+      weekdays: weekdays ?? null,
+    },
   });
 }
 

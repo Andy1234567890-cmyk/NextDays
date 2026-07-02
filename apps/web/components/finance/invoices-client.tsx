@@ -12,6 +12,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ImportXRechnungDialog } from "@/components/finance/ImportXRechnungDialog";
 import { InvoiceListView } from "@/components/finance/InvoiceListView";
 import { api } from "@/lib/api-client";
+import { useRealtime } from "@/lib/use-realtime";
 import type { InvoiceData } from "@/types/invoiceTypes";
 
 export function InvoicesClient({ companyId }: { companyId: string }) {
@@ -41,6 +42,9 @@ export function InvoicesClient({ companyId }: { companyId: string }) {
   useEffect(() => {
     if (companyId) loadInvoices();
   }, [companyId, loadInvoices]);
+  // Realtime-Pflicht: Rechnungen anderer Sessions (inkl. Positionen) live.
+  useRealtime({ table: "invoices", onChange: () => void loadInvoices(), enabled: !!companyId });
+  useRealtime({ table: "invoice_line_items", onChange: () => void loadInvoices(), enabled: !!companyId });
 
   const header = (
     <header className="flex items-center justify-between">

@@ -10,6 +10,8 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
+import { useRealtime } from "@/lib/use-realtime";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -349,6 +351,17 @@ function OverviewTab({
   const [form, setForm] = useState<Record<string, string>>(initial);
   const [blocked, setBlocked] = useState(guest.is_blocked);
 
+  // Formular beim EDIT-START vom aktuellen guest initialisieren — der Mount-
+  // Stand kann durch Realtime-Refreshes längst veraltet sein; save() difft
+  // gegen die frische Prop und würde sonst Fremdänderungen still zurückdrehen.
+  useEffect(() => {
+    if (editing) {
+      setForm(initial());
+      setBlocked(guest.is_blocked);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editing]);
+
   // Nachname nur editierbar, wenn voller Name sichtbar (sonst maskiert).
   const locked = (f: FieldKey) => f === "last_name" && !access.fullName;
   const set = (f: FieldKey, v: string) => setForm((p) => ({ ...p, [f]: v }));
@@ -494,6 +507,19 @@ function ContactTab({ guest, access }: { guest: Guest; access: GuestAccess }) {
     loadAddr();
     loadCont();
   }, [access.contact, loadAddr, loadCont]);
+  // Realtime-Pflicht: Adressen/Kontakte anderer Sessions live spiegeln.
+  useRealtime({
+    table: "guest_addresses",
+    filter: `guest_id=eq.${guest.id}`,
+    onChange: loadAddr,
+    enabled: access.contact,
+  });
+  useRealtime({
+    table: "guest_contacts",
+    filter: `guest_id=eq.${guest.id}`,
+    onChange: loadCont,
+    enabled: access.contact,
+  });
 
   if (!access.contact) {
     return <Card>{t("contactMasked")}</Card>;
@@ -680,6 +706,12 @@ function IdentityTab({
     listIdentityDocs(guestId).then((r) => r.ok && setDocs(r.data.items));
   }, [guestId]);
   useEffect(() => load(), [load]);
+  // Realtime-Pflicht: Ausweisdokumente anderer Sessions live spiegeln.
+  useRealtime({
+    table: "guest_identity_documents",
+    filter: `guest_id=eq.${guestId}`,
+    onChange: load,
+  });
 
   const add = async () => {
     if (!number.trim()) return;
@@ -853,6 +885,12 @@ function ReservationsTab({ guestId, access }: { guestId: string; access: GuestAc
     listGuestReservations(guestId).then((r) => r.ok && setItems(r.data.items));
   }, [guestId]);
   useEffect(reload, [reload]);
+  // Realtime-Pflicht: neue/geänderte Aufenthalte dieses Gasts live spiegeln.
+  useRealtime({
+    table: "reservations",
+    filter: `guest_id=eq.${guestId}`,
+    onChange: reload,
+  });
 
   const todayKey = new Date().toISOString().slice(0, 10);
   const money = (v: number, cur: string | null) =>
@@ -911,9 +949,12 @@ function ReservationsTab({ guestId, access }: { guestId: string; access: GuestAc
 function InvoicesTab({ guestId }: { guestId: string }) {
   const t = useTranslations("guests");
   const [items, setItems] = useState<GuestInvoice[] | null>(null);
-  useEffect(() => {
+  const load = useCallback(() => {
     listGuestInvoices(guestId).then((r) => r.ok && setItems(r.data.items));
   }, [guestId]);
+  useEffect(() => load(), [load]);
+  // Realtime-Pflicht: neue/geänderte Rechnungen live spiegeln.
+  useRealtime({ table: "invoices", onChange: load });
   if (items === null) return <Card>…</Card>;
   if (items.length === 0) return <Card>{t("noInvoices")}</Card>;
   return (
@@ -979,6 +1020,12 @@ function NotesTab({
     listNotes(guestId).then((r) => r.ok && setItems(r.data.items));
   }, [guestId]);
   useEffect(() => load(), [load]);
+  // Realtime-Pflicht: Notizen anderer Sessions live spiegeln.
+  useRealtime({
+    table: "guest_notes",
+    filter: `guest_id=eq.${guestId}`,
+    onChange: load,
+  });
   const save = async () => {
     if (!body.trim()) return;
     const res = await addNote(guestId, { body: body.trim() });
@@ -1044,9 +1091,16 @@ function NotesTab({
 function DocumentsTab({ guestId }: { guestId: string }) {
   const t = useTranslations("guests");
   const [count, setCount] = useState<number | null>(null);
-  useEffect(() => {
+  const load = useCallback(() => {
     listDocuments(guestId).then((r) => r.ok && setCount(r.data.total));
   }, [guestId]);
+  useEffect(() => load(), [load]);
+  // Realtime-Pflicht: Dokumente anderer Sessions live spiegeln.
+  useRealtime({
+    table: "guest_documents",
+    filter: `guest_id=eq.${guestId}`,
+    onChange: load,
+  });
   return <Card>{count === null ? "…" : t("documentsCount", { count })}</Card>;
 }
 
@@ -1063,6 +1117,12 @@ function GdprTab({
     listConsents(guestId).then((r) => r.ok && setItems(r.data.items));
   }, [guestId]);
   useEffect(() => load(), [load]);
+  // Realtime-Pflicht: Einwilligungen anderer Sessions live spiegeln.
+  useRealtime({
+    table: "guest_consents",
+    filter: `guest_id=eq.${guestId}`,
+    onChange: load,
+  });
   const setConsent = async (type: string, status: string) => {
     const res = await addConsent(guestId, { consent_type: type, status });
     if (res.ok) {

@@ -50,3 +50,64 @@ export function googleFontsHref(families: Array<string | null | undefined>): str
   if (params.size === 0) return null;
   return `https://fonts.googleapis.com/css2?${[...params].map((p) => `family=${p}`).join("&")}&display=swap`;
 }
+
+// --- Live-Katalog aus der Google Fonts Developer API (voller Katalog) ---------
+// Der statische FONT_CATALOG oben ist die kuratierte Basis; für die volle
+// Framer-artige Auswahl lädt der Editor den kompletten Google-Katalog über die
+// eigene Proxy-Route /api/google-fonts (Server-Key). Die gewählte Familie wird
+// zur Laufzeit per <link> in <head> geladen, damit sie sofort im Canvas wirkt.
+
+export type GoogleFontEntry = {
+  family: string;
+  category: string; // sans-serif | serif | display | handwriting | monospace
+  variants: string[];
+};
+
+let _catalogCache: GoogleFontEntry[] | null = null;
+let _catalogPromise: Promise<GoogleFontEntry[]> | null = null;
+
+/** Vollen Google-Fonts-Katalog laden (einmal pro Session gecacht). */
+export async function loadGoogleFontCatalog(): Promise<GoogleFontEntry[]> {
+  if (_catalogCache) return _catalogCache;
+  if (_catalogPromise) return _catalogPromise;
+  _catalogPromise = fetch("/api/google-fonts")
+    .then(async (r) => {
+      if (!r.ok) throw new Error(`Katalog-Fehler ${r.status}`);
+      const data = (await r.json()) as { items?: GoogleFontEntry[] };
+      _catalogCache = data.items ?? [];
+      return _catalogCache;
+    })
+    .finally(() => { _catalogPromise = null; });
+  return _catalogPromise;
+}
+
+// Bereits injizierte Familien merken (nicht doppelt laden).
+const _loadedFamilies = new Set<string>();
+
+/** Eine beliebige Google-Font-Familie zur Laufzeit in <head> laden (Editor). */
+export function ensureGoogleFontLoaded(family: string | null | undefined): void {
+  if (!family || typeof document === "undefined") return;
+  if (_loadedFamilies.has(family)) return;
+  _loadedFamilies.add(family);
+  // Übliche Gewichte anfordern; Google liefert vorhandene, ignoriert fehlende.
+  const spec = `${family.replace(/ /g, "+")}:wght@400;500;600;700`;
+  const href = `https://fonts.googleapis.com/css2?family=${spec}&display=swap`;
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = href;
+  link.dataset.googleFont = family;
+  document.head.appendChild(link);
+}
+
+/** CSS-font-family-Stack für eine beliebige Familie (mit Kategorie-Fallback). */
+export function anyFontStack(family: string | null | undefined, category?: string): string | null {
+  if (!family) return null;
+  const known = fontByFamily(family);
+  if (known) return known.stack;
+  const generic =
+    category === "serif" ? "serif" :
+    category === "monospace" ? "monospace" :
+    category === "display" || category === "handwriting" ? "cursive" :
+    "sans-serif";
+  return `'${family}', ${generic}`;
+}

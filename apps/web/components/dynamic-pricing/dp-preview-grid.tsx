@@ -8,30 +8,10 @@ import { useState } from "react";
 
 import type { DayAvailability } from "@/lib/calendar";
 import { Card } from "@/components/ui/card";
+import { explainFactors } from "@/lib/dp-factors";
 import { explainDpPrice } from "@/lib/dynamic-pricing";
 
-const FACTOR_LABELS: Record<string, string> = {
-  season: "Saison",
-  event: "Event",
-  weekend: "Wochenende",
-  occupancy: "Auslastung",
-  last_minute: "Last-Minute",
-  orphan: "Lückenfüllung",
-  market: "Markt",
-};
-
 const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
-
-function explainFactors(factors: Record<string, number> | null | undefined): string {
-  if (!factors) return "";
-  const lines: string[] = [];
-  for (const [key, mult] of Object.entries(factors)) {
-    if (mult == null || Math.abs(mult - 1) < 0.001) continue;
-    const pct = Math.round((mult - 1) * 100);
-    lines.push(`${FACTOR_LABELS[key] ?? key} ${pct >= 0 ? "+" : ""}${pct} %`);
-  }
-  return lines.length ? `Warum dieser Preis?\n${lines.join("\n")}` : "";
-}
 
 function fmt(value: number | null): string {
   if (value === null) return "—";

@@ -43,6 +43,12 @@ export function OwnerStatementsForOwner({
   const [tab, setTab] = useState<"edit" | "manage">("edit");
   const [current, setCurrent] = useState<Statement | null>(initialStatement);
   const [list, setList] = useState<StatementListItem[]>(statements);
+  // Realtime liefert über router.refresh() frische Props — ohne Sync bliebe
+  // die „Verwalten"-Liste für immer auf dem Mount-Stand (Abrechnungen anderer
+  // Sessions erschienen nie).
+  useEffect(() => {
+    setList(statements);
+  }, [statements]);
   const [masterOpen, setMasterOpen] = useState(false);
   const previewLoaded = useRef(false);
   // current in einer ref spiegeln, damit der Realtime-Callback den aktuellen

@@ -122,21 +122,27 @@ export function WhatsAppChat({
         </p>
       )}
 
-      <div className="flex items-end gap-2 border-t border-border p-3">
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={t("placeholder")}
-          rows={2}
-          className="min-h-[2.5rem] flex-1 resize-none rounded-(--radius) border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/40"
-        />
-        <Button type="button" onClick={send} disabled={sending || !text.trim()}>
-          <Icon
-            icon={sending ? "ph:spinner" : "ph:paper-plane-tilt"}
-            className={"size-4 " + (sending ? "animate-spin" : "")}
+      {/* Eingabe-Box wie im Posteingang: Textarea oben, Senden INNEN unten
+          rechts — bleibt in jeder Spaltenbreite voll breit. */}
+      <div className="border-t border-border p-3">
+        <div className="flex flex-col rounded-2xl border border-border bg-background focus-within:ring-2 focus-within:ring-accent/40">
+          <textarea
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder={t("placeholder")}
+            rows={2}
+            className="min-h-[2.5rem] w-full resize-none bg-transparent px-3 pt-2.5 pb-1 text-sm outline-none"
           />
-          {t("send")}
-        </Button>
+          <div className="flex items-center justify-end px-2 pb-2">
+            <Button type="button" onClick={send} disabled={sending || !text.trim()}>
+              <Icon
+                icon={sending ? "ph:spinner" : "ph:paper-plane-tilt"}
+                className={"size-4 " + (sending ? "animate-spin" : "")}
+              />
+              {t("send")}
+            </Button>
+          </div>
+        </div>
       </div>
     </>
   );

@@ -5,6 +5,7 @@
 import { Icon } from "@iconify/react";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/currency";
 import type {
   Dashboard,
   DashboardEntry,
@@ -32,14 +33,6 @@ function fmtDate(iso: string): string {
   // 2026-07-01 → 01.07.26
   const [y, m, d] = iso.slice(0, 10).split("-");
   return `${d}.${m}.${y.slice(2)}`;
-}
-
-function fmtMoney(value: number, currency: string): string {
-  const n = new Intl.NumberFormat("de-DE", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(value);
-  return currency ? `${currency} ${n}` : n;
 }
 
 function ChangeBadge({ change }: { change: number | null }) {
@@ -210,7 +203,7 @@ export function ReservationsDashboard({ data }: { data: Dashboard }) {
           icon="ph:currency-circle-dollar"
           title="Umsatz"
           kpi={data.revenue_30d}
-          display={fmtMoney(data.revenue_30d.value, data.currency)}
+          display={formatCurrency(data.revenue_30d.value, data.currency)}
           unitLabel="Gesamtumsatz"
         />
         <KpiCard

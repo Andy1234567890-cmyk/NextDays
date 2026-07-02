@@ -41,61 +41,122 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
-// Hauptbereiche (täglich genutzt) — Reihenfolge wie Lodgify, Begriffe auf DE.
-// Menüpunkte. `req` = benötigte Lodgify-Berechtigung; ohne `req` immer sichtbar.
-// Admin sieht alles (siehe canSee).
+// Navigation nach PMS-Konvergenz (Casona/Lodgify): oben die täglichen
+// Kernbereiche flach, darunter thematische Gruppen. Die Beherbergungsart
+// des Mandanten (vacation_rental | hotel, Migration 0090) steuert Begriffe
+// („Objekte" vs. „Zimmer") und Sichtbarkeit (Eigentümer nur Ferienvermietung).
 // `key` = i18n-Schlüssel (Namespace "nav"), `req` = benötigte Lodgify-Berechti-
 // gung; ohne `req` immer sichtbar. Admin sieht alles (siehe canSee).
 type NavItem = { key: string; href: string; icon: string; req?: string };
+type AccommodationType = "vacation_rental" | "hotel";
 
+// Täglich genutzte Kernbereiche (flach, wie Casona „Übersicht/Belegungsplan").
 const MAIN: readonly NavItem[] = [
   { key: "dashboard", href: "/", icon: "ph:squares-four" },
-  { key: "reservations", href: "/reservierungen", icon: "ph:bookmark-simple" },
-  { key: "inbox", href: "/posteingang", icon: "ph:chat-circle", req: "view_guest_contact" },
   { key: "calendar", href: "/kalender", icon: "ph:calendar-blank" },
-  { key: "dynamicPricing", href: "/dynamic-pricing", icon: "ph:lightning" },
-  { key: "stopSell", href: "/stop-sell", icon: "ph:hand-palm" },
-  { key: "properties", href: "/objekte", icon: "ph:house-line" },
-  { key: "owners", href: "/eigentuemer", icon: "ph:user-circle-gear", req: "manage_owners" },
-  { key: "websiteBuilder", href: "/website", icon: "ph:globe", req: "access_homepage_builder" },
-  { key: "channelManager", href: "/channels", icon: "ph:squares-four" },
+  { key: "inbox", href: "/posteingang", icon: "ph:chat-circle", req: "view_guest_contact" },
 ];
 
-// Aufklappbare Gruppen (wie Lodgify „Advanced"/„Tools"). Die „My Next"-Domänen
-// (Buchhaltung/Marktplatz/HR/Jobs) sind je eine Gruppe; Buchhaltungs-Module
-// per owner_reporting gegated (ADR-0009: eine große Sidebar, Pfad-Navigation).
+// Thematische Gruppen; werden zur Laufzeit nach Beherbergungsart gebaut.
+type NavGroup = { groupKey: string; icon: string; items: readonly NavItem[] };
+
+// Finanz-/Verwaltungspunkte der Betriebs-Gruppe (per owner_reporting gegated,
+// ADR-0009). Hotel und Ferienvermietung haben unterschiedliche Sätze:
+//  - Hotel folgt dem Casona-„Hotel"-Menü (Rechnungen … Statistik).
+//  - Ferienvermietung führt das buchhaltungslastige NextDays-Set.
+// Einstellungen wird separat als letzter Punkt der Gruppe angehängt.
+const HOTEL_FINANCE: readonly NavItem[] = [
+  { key: "invoices", href: "/buchhaltung/rechnungen", icon: "ph:receipt", req: "owner_reporting" },
+  { key: "payments", href: "/buchhaltung/zahlungen", icon: "ph:credit-card", req: "owner_reporting" },
+  { key: "revenue", href: "/buchhaltung/umsatz", icon: "ph:trend-up", req: "owner_reporting" },
+  { key: "bankAccounts", href: "/buchhaltung/bankkonten", icon: "ph:bank", req: "owner_reporting" },
+  { key: "lists", href: "/buchhaltung/listen", icon: "ph:list-checks", req: "owner_reporting" },
+  { key: "closingDates", href: "/buchhaltung/schliesszeiten", icon: "ph:calendar-x", req: "owner_reporting" },
+  { key: "cashBook", href: "/buchhaltung/kassenbuch", icon: "ph:wallet", req: "owner_reporting" },
+  { key: "statistics", href: "/buchhaltung/statistik", icon: "ph:chart-bar", req: "owner_reporting" },
+];
+
+const VR_FINANCE: readonly NavItem[] = [
+  { key: "invoices", href: "/buchhaltung", icon: "ph:receipt", req: "owner_reporting" },
+  { key: "quotes", href: "/buchhaltung/angebote", icon: "ph:file-text", req: "owner_reporting" },
+  { key: "expenses", href: "/buchhaltung/ausgaben", icon: "ph:arrow-circle-down", req: "owner_reporting" },
+  { key: "dunning", href: "/buchhaltung/mahnwesen", icon: "ph:warning-circle", req: "owner_reporting" },
+  { key: "chartOfAccounts", href: "/buchhaltung/kontenplan", icon: "ph:tree-structure", req: "owner_reporting" },
+  { key: "cashBook", href: "/buchhaltung/kassenbuch", icon: "ph:wallet", req: "owner_reporting" },
+  { key: "tax", href: "/buchhaltung/steuer", icon: "ph:percent", req: "owner_reporting" },
+  { key: "eInvoice", href: "/buchhaltung/e-rechnung", icon: "ph:file-code", req: "owner_reporting" },
+  { key: "datev", href: "/buchhaltung/datev", icon: "ph:export", req: "owner_reporting" },
+  { key: "bank", href: "/buchhaltung/bank", icon: "ph:bank", req: "owner_reporting" },
+  { key: "reports", href: "/buchhaltung/berichte", icon: "ph:chart-line", req: "owner_reporting" },
+];
+
+// Betriebs-Gruppe „Hotel" (exakt das Casona-„Hotel"-Menü).
+const HOTEL_GROUP: NavGroup = {
+  groupKey: "hotel",
+  icon: "ph:buildings",
+  items: [...HOTEL_FINANCE, { key: "settings", href: "/einstellungen", icon: "ph:gear" }],
+};
+
+// Betriebs-Gruppe „Ferienwohnungen" (NextDays-Finanzsatz + Eigentümer).
+const VR_GROUP: NavGroup = {
+  groupKey: "vacationRentals",
+  icon: "ph:house-line",
+  items: [
+    { key: "owners", href: "/eigentuemer", icon: "ph:user-circle-gear", req: "manage_owners" },
+    ...VR_FINANCE,
+    { key: "settings", href: "/einstellungen", icon: "ph:gear" },
+  ],
+};
+
+function buildGroups(accommodationType: AccommodationType): readonly NavGroup[] {
+  const hotel = accommodationType === "hotel";
+  // Genau die Betriebs-Gruppe der eingestellten Beherbergungsart.
+  return [
+    hotel ? HOTEL_GROUP : VR_GROUP,
+    {
+      // Reservierungen (Casona-Muster): Übersicht · Gruppen · Verkaufsstopp ·
+      // Einstellungen. Verkaufsstopp steuert die Buchbarkeit von Zeiträumen —
+      // das ist Reservierungs-/Belegungsarbeit, kein Objektstammdatum.
+      groupKey: "reservations",
+      icon: "ph:bookmark-simple",
+      items: [
+        { key: "overview", href: "/reservierungen", icon: "ph:bookmark-simple" },
+        { key: "reservationGroups", href: "/reservierungen/gruppen", icon: "ph:users-three" },
+        { key: "stopSell", href: "/stop-sell", icon: "ph:hand-palm" },
+        { key: "settings", href: "/reservierungen/einstellungen", icon: "ph:gear" },
+      ],
+    },
+    {
+      // Gäste: geteilte Hauptkategorie für Hotel UND Ferienvermietung
+      // (Casona-Muster): Übersicht · Firmen/Kategorien · Monatsbericht ·
+      // Gutscheine, plus die Reisebüro-Partnerkartei.
+      groupKey: "guests",
+      icon: "ph:users",
+      items: [
+        { key: "overview", href: "/gaeste", icon: "ph:users", req: "pm_guest_details" },
+        { key: "guestCategories", href: "/gaeste/kategorien", icon: "ph:buildings", req: "pm_guest_details" },
+        { key: "guestMonthlyReport", href: "/gaeste/monatsbericht", icon: "ph:chart-bar", req: "pm_guest_details" },
+        { key: "vouchers", href: "/gaeste/gutscheine", icon: "ph:ticket", req: "pm_guest_details" },
+        { key: "travelAgencies", href: "/reisebueros", icon: "ph:handshake", req: "manage_partners" },
+      ],
+    },
+    {
+      groupKey: "distribution",
+      icon: "ph:broadcast",
+      items: [
+        { key: "channelManager", href: "/channels", icon: "ph:arrows-left-right" },
+        // Preissteuerung ist Vertriebsarbeit — gilt für Hotels wie FeWo.
+        { key: "dynamicPricing", href: "/dynamic-pricing", icon: "ph:lightning" },
+        { key: "websiteBuilder", href: "/website", icon: "ph:globe", req: "access_homepage_builder" },
+      ],
+    },
+    ...STATIC_GROUPS,
+  ];
+}
+
+// Betriebsart-unabhängige Gruppen (Marktplatz/HR/Jobs).
 // `groupKey` = i18n-Schlüssel (Namespace "nav.groups").
-const GROUPS: readonly {
-  groupKey: string;
-  icon: string;
-  items: readonly NavItem[];
-}[] = [
-  {
-    groupKey: "advanced",
-    icon: "ph:bookmark",
-    items: [
-      { key: "guests", href: "/gaeste", icon: "ph:users", req: "pm_guest_details" },
-      { key: "tasks", href: "/aufgaben", icon: "ph:check-square" },
-    ],
-  },
-  {
-    groupKey: "accounting",
-    icon: "ph:calculator",
-    items: [
-      { key: "invoices", href: "/buchhaltung", icon: "ph:receipt", req: "owner_reporting" },
-      { key: "quotes", href: "/buchhaltung/angebote", icon: "ph:file-text", req: "owner_reporting" },
-      { key: "expenses", href: "/buchhaltung/ausgaben", icon: "ph:arrow-circle-down", req: "owner_reporting" },
-      { key: "customers", href: "/buchhaltung/kunden", icon: "ph:address-book", req: "owner_reporting" },
-      { key: "dunning", href: "/buchhaltung/mahnwesen", icon: "ph:warning-circle", req: "owner_reporting" },
-      { key: "chartOfAccounts", href: "/buchhaltung/kontenplan", icon: "ph:tree-structure", req: "owner_reporting" },
-      { key: "cashBook", href: "/buchhaltung/kassenbuch", icon: "ph:wallet", req: "owner_reporting" },
-      { key: "tax", href: "/buchhaltung/steuer", icon: "ph:percent", req: "owner_reporting" },
-      { key: "eInvoice", href: "/buchhaltung/e-rechnung", icon: "ph:file-code", req: "owner_reporting" },
-      { key: "datev", href: "/buchhaltung/datev", icon: "ph:export", req: "owner_reporting" },
-      { key: "bank", href: "/buchhaltung/bank", icon: "ph:bank", req: "owner_reporting" },
-      { key: "reports", href: "/buchhaltung/berichte", icon: "ph:chart-line", req: "owner_reporting" },
-    ],
-  },
+const STATIC_GROUPS: readonly NavGroup[] = [
   {
     groupKey: "marketplace",
     icon: "ph:storefront",
@@ -122,13 +183,6 @@ const GROUPS: readonly {
     items: [
       { key: "positions", href: "/jobs/stellen", icon: "ph:megaphone" },
       { key: "applications", href: "/jobs/bewerbungen", icon: "ph:user-list" },
-    ],
-  },
-  {
-    groupKey: "tools",
-    icon: "ph:plus-circle",
-    items: [
-      { key: "settings", href: "/einstellungen", icon: "ph:gear" },
     ],
   },
 ];
@@ -160,11 +214,13 @@ export function AppSidebar({
   role = null,
   permissions = [],
   capabilities = [],
+  accommodationType = "vacation_rental",
 }: {
   email?: string;
   role?: "admin" | "co_admin" | "owner" | "staff" | "cleaner" | null;
   permissions?: string[];
   capabilities?: string[];
+  accommodationType?: AccommodationType;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -189,6 +245,7 @@ export function AppSidebar({
   };
 
   const mainItems = MAIN.filter(canSee);
+  const groups = buildGroups(accommodationType);
 
   // Anzeigename + Initialen aus der E-Mail ableiten (bis echtes Profil da ist).
   const displayName = email ? email.split("@")[0] : t("account.title");
@@ -232,7 +289,7 @@ export function AppSidebar({
         </SidebarGroup>
 
         {/* Aufklappbare Gruppen */}
-        {GROUPS.map((group) => {
+        {groups.map((group) => {
           const items = group.items.filter(canSee);
           if (items.length === 0) return null;
           const groupActive = items.some((i) => isActive(i.href));

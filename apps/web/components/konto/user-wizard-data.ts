@@ -43,6 +43,7 @@ export const GENERAL_PERMISSIONS: Permission[] = [
   { id: "manage_closed_periods", label: "Nur geschlossene Zeiträume verwalten", hint: "Gewährt Zugriff nur auf die Verwaltung von geschlossenen Zeiträumen. Wenn ausgewählt, werden die Berechtigungen zum Anzeigen von Gast-Kontaktdaten, Gästenamen, Bearbeiten des Kalenders und Buchungen, Anzeigen der Buchungsquelle und Herunterladen des Buchungsberichts deaktiviert." },
   { id: "access_pm_features", label: "Auf PM-Module-Funktionen zugreifen", hint: "Ermöglicht den Zugriff auf PM-Module vom Hauptmenü aus. Um den Zugriff auf bestimmte Funktionen der PM-Module zu gewähren, weisen Sie die entsprechenden Berechtigungen zu." },
   { id: "owner_reporting", label: "Zugriff auf Reporting für Eigentümer", hint: "Bietet Zugang zu Finanzberichten für Unterkunftseigentümer." },
+  { id: "manage_partners", label: "Reisebüros & Partner verwalten", hint: "Erlaubt, die Reisebüro-Kartei zu verwalten: Stammdaten, Kontakte, Verträge und vereinbarte Preise von Reisebüros und Reiseveranstaltern." },
 ];
 
 // PM-Module-Berechtigungen.
@@ -119,6 +120,7 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<string, string[]> = {
     "pm_view_add_comments", "pm_view_notes", "pm_view_booking_images",
     "pm_view_property_images", "pm_website_access",
     "inbox_view_all", "inbox_reply", "inbox_assign", "inbox_manage_config",
+    "manage_partners",
   ],
   owner: [
     "owner_reporting", "view_booking_source", "pm_property_area",

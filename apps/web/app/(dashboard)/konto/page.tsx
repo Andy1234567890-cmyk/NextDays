@@ -10,6 +10,7 @@ import { Icon } from "@iconify/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { KontoBetriebsartSection } from "@/components/konto/konto-betriebsart-section";
 import { KontoZahlungenSection } from "@/components/konto/konto-zahlungen-section";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -544,6 +545,10 @@ export default function ProfilPage() {
           </Button>
         </div>
       </form>
+
+      {/* Betriebsart (FeWo/Hotel) — steuert die Navigation. Außerhalb des
+          Profil-Formulars, damit der Speichern-Submit nicht mitgreift. */}
+      <KontoBetriebsartSection />
 
       {/* Zahlungen — direkt im Konto, kein eigener Tab. Außerhalb des Profil-
           Formulars, damit der Speichern-Submit nicht mitgreift. */}

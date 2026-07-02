@@ -5,6 +5,7 @@
 import { notFound } from "next/navigation";
 
 import { DpPreviewGrid } from "@/components/dynamic-pricing/dp-preview-grid";
+import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card } from "@/components/ui/card";
 import { getAvailability } from "@/lib/calendar";
 import { getProperty } from "@/lib/properties";
@@ -42,6 +43,8 @@ export default async function Page({
   }
   return (
     <div className="flex w-full flex-col gap-6 p-6">
+      {/* Realtime-Pflicht: Preis-/Verfügbarkeitsänderungen live in der Vorschau. */}
+      <RealtimeRefresh tables={["dynamic_prices", "availability", "dp_settings"]} />
       <header className="flex flex-col gap-1">
         <a
           href="/dynamic-pricing"

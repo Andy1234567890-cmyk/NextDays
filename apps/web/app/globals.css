@@ -241,3 +241,52 @@ h1, h2, h3 {
   height: 0;
   pointer-events: none;
 }
+
+/* Framer-Slider (Inspektor „Opazität" u. a.): dünne Spur, gefüllt bis --pct,
+   kleiner runder weißer Knopf mit feinem Rand. --pct kommt inline vom Element. */
+.framer-range {
+  --track-h: 0.1875rem; /* 3px */
+  --thumb: 0.75rem;     /* 12px */
+}
+.framer-range::-webkit-slider-runnable-track {
+  height: var(--track-h);
+  border-radius: 9999px;
+  background: linear-gradient(
+    to right,
+    var(--primary) 0,
+    var(--primary) var(--pct, 0%),
+    var(--secondary) var(--pct, 0%),
+    var(--secondary) 100%
+  );
+}
+.framer-range::-moz-range-track {
+  height: var(--track-h);
+  border-radius: 9999px;
+  background: var(--secondary);
+}
+.framer-range::-moz-range-progress {
+  height: var(--track-h);
+  border-radius: 9999px;
+  background: var(--primary);
+}
+.framer-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: var(--thumb);
+  height: var(--thumb);
+  margin-top: calc((var(--track-h) - var(--thumb)) / 2);
+  border-radius: 9999px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}
+.framer-range::-moz-range-thumb {
+  width: var(--thumb);
+  height: var(--thumb);
+  border-radius: 9999px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+}

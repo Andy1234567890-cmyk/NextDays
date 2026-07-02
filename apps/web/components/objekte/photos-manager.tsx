@@ -7,8 +7,10 @@
 // die Wahrheit; das Backend pflegt properties.photos als abgeleiteten Spiegel.
 import { Icon } from "@iconify/react";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+
+import { useRealtime } from "@/lib/use-realtime";
 
 import {
   DropdownMenu,
@@ -48,19 +50,23 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
   const activeLocale = useLocale();
   const lang: Locale = isLocale(activeLocale) ? activeLocale : DEFAULT_LOCALE;
 
-  useEffect(() => {
-    let active = true;
-    void (async () => {
-      const res = await listPropertyPhotos(propertyId);
-      if (!active) return;
-      if (res.ok) setPhotos(res.data.items);
-      else toast.error(res.error);
-      setLoading(false);
-    })();
-    return () => {
-      active = false;
-    };
+  const reload = useCallback(async () => {
+    const res = await listPropertyPhotos(propertyId);
+    if (res.ok) setPhotos(res.data.items);
+    else toast.error(res.error);
+    setLoading(false);
   }, [propertyId]);
+
+  useEffect(() => {
+    void reload();
+  }, [reload]);
+  // Realtime-Pflicht: Uploads/Umsortierungen anderer Sessions live spiegeln
+  // (property_photos ist seit 0077 in der Realtime-Publication).
+  useRealtime({
+    table: "property_photos",
+    filter: `property_id=eq.${propertyId}`,
+    onChange: () => void reload(),
+  });
 
   function validate(file: File): string | null {
     if (!ACCEPTED.includes(file.type)) return t("errorType");

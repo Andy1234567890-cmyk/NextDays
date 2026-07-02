@@ -3,6 +3,7 @@
 // Vorschau. Eine Preis-Wahrheit (Resolver); ein manueller Tagespreis im Kalender
 // gewinnt immer. Server Component lädt die Übersicht; der Client-Teil bearbeitet.
 import { DynamicPricingTable } from "@/components/dynamic-pricing/dynamic-pricing-table";
+import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card } from "@/components/ui/card";
 import { getDpOverview } from "@/lib/dynamic-pricing";
 
@@ -12,6 +13,8 @@ export default async function DynamicPricingPage() {
   const res = await getDpOverview();
   return (
     <div className="flex w-full flex-col gap-6 p-6">
+      {/* Realtime-Pflicht: Toggle/Preise anderer Nutzer + neue Objekte live. */}
+      <RealtimeRefresh tables={["dp_settings", "dynamic_prices", "properties"]} />
       <header className="flex flex-col gap-1">
         <h1 className="font-display text-2xl font-extrabold">Dynamic Pricing</h1>
         <p className="text-sm text-muted-foreground">

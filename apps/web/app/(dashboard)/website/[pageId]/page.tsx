@@ -1,6 +1,10 @@
 // Editor einer Seite: lädt Seite + Blöcke und übergibt sie an den Canvas-Editor.
 // KEIN Realtime-Refresh hier — der Canvas-Editor hält lokalen Bearbeitungsstand;
 // ein Live-Reload würde unbestätigte Änderungen verwerfen.
+//
+// Der Editor ist VOLLBILD (wie Framer): der CanvasEditor legt sich als
+// fixed-Overlay über das gesamte Dashboard (inkl. Sidebar/Topbar) — kein
+// Wrapper nötig; „Zurück" im Editor führt zur Seitenliste /website.
 import { notFound } from "next/navigation";
 
 import { CanvasEditor } from "@/components/website/editor/canvas-editor";
@@ -21,12 +25,10 @@ export default async function PageEditor({
   if (!page) notFound();
 
   return (
-    <div className="flex flex-1 flex-col">
-      <CanvasEditor
-        page={page}
-        pages={pagesRes.data.items}
-        initialBlocks={blocksRes.data.items}
-      />
-    </div>
+    <CanvasEditor
+      page={page}
+      pages={pagesRes.data.items}
+      initialBlocks={blocksRes.data.items}
+    />
   );
 }

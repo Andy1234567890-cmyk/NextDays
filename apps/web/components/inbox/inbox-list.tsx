@@ -1208,7 +1208,11 @@ function Conversation({
           {t("readOnlyHint")}
         </div>
       ) : (
-      <div className="relative flex items-end gap-2 border-t border-border p-3">
+      // Composer als EINE Eingabe-Box (moderner Messenger-Stil): Textarea oben,
+      // Werkzeug-Zeile (Vorlagen/KI/Geplant + Senden) INNEN unten rechts. So
+      // bleibt das Textfeld in jeder Spaltenbreite voll breit — ohne Breakpoints.
+      <div className="relative border-t border-border p-3">
+      <div className="flex flex-col rounded-2xl border border-border bg-background focus-within:ring-2 focus-within:ring-accent/40">
         {/* Geplant-senden-Popover */}
         {showSchedule && (
           <SchedulePopover
@@ -1219,7 +1223,7 @@ function Conversation({
         )}
         {/* Vorlagen-Dropdown */}
         {showTemplates && (
-          <div className="absolute bottom-16 left-3 z-10 max-h-60 w-72 overflow-y-auto rounded-2xl border border-border bg-card p-1 shadow-xl">
+          <div className="absolute bottom-full left-3 z-10 mb-1 max-h-60 w-72 overflow-y-auto rounded-2xl border border-border bg-card p-1 shadow-xl">
             {templates.length === 0 ? (
               <p className="p-3 text-sm text-muted-foreground">
                 {t("templatesEmpty")}
@@ -1249,8 +1253,9 @@ function Conversation({
           onChange={(e) => setText(e.target.value)}
           placeholder={t("placeholder")}
           rows={2}
-          className="min-h-[2.5rem] flex-1 resize-none rounded-(--radius) border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/40"
+          className="min-h-[2.5rem] w-full resize-none bg-transparent px-3 pt-2.5 pb-1 text-sm outline-none"
         />
+        <div className="flex items-center justify-end gap-1.5 px-2 pb-2">
         <Button
           type="button"
           variant="outline"
@@ -1290,6 +1295,8 @@ function Conversation({
           />
           {sending ? t("sending") : t("send")}
         </Button>
+        </div>
+      </div>
       </div>
       )}
     </>
@@ -1786,7 +1793,7 @@ function SchedulePopover({
   }
 
   return (
-    <div className="absolute bottom-16 right-3 z-20 w-64 rounded-2xl border border-border bg-card p-3 shadow-xl">
+    <div className="absolute bottom-full right-3 z-20 mb-1 w-64 rounded-2xl border border-border bg-card p-3 shadow-xl">
       <div className="mb-2 flex items-center justify-between">
         <span className="text-sm font-semibold">{t("schedulePick")}</span>
         <button

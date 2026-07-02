@@ -3,6 +3,7 @@
 // Auth-Server-Actions: rufen das FastAPI-Backend (auth-Slice) und verwalten die
 // Session über httpOnly-Cookies. Die Business-Logik bleibt in FastAPI
 // (PROJECT.md §2) — hier wird nur aufgerufen und das Token sicher abgelegt.
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 
 import { ApiError, api, type MeResponse, type SessionResponse } from "@/lib/api";
@@ -125,5 +126,25 @@ export async function getMe(): Promise<MeResponse | null> {
     return await api<MeResponse>("/auth/me", { token });
   } catch {
     return null;
+  }
+}
+
+/** Beherbergungsart des Mandanten umstellen (nur Admin, Capability
+ *  manage_tenant). Steuert die Dashboard-Navigation (FeWo vs. Hotel). */
+export async function setAccommodationType(
+  value: "vacation_rental" | "hotel",
+): Promise<{ ok: true; data: MeResponse } | { ok: false; error: string }> {
+  const token = await currentToken();
+  if (!token) return { ok: false, error: "Nicht angemeldet." };
+  try {
+    const data = await api<MeResponse>("/auth/tenant/accommodation-type", {
+      token,
+      method: "PATCH",
+      body: { accommodation_type: value },
+    });
+    revalidatePath("/", "layout");
+    return { ok: true, data };
+  } catch (e) {
+    return { ok: false, error: e instanceof ApiError ? e.message : "Unbekannter Fehler." };
   }
 }

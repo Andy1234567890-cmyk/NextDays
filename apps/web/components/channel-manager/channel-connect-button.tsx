@@ -43,6 +43,30 @@ type MappingRow = {
   rate_plan_map_id: string; // gewählter lokaler Preisplan
 };
 
+// Vorbelegung der Zuordnungs-Tabelle (Credential- UND OAuth-Pfad): jede
+// OTA-Zimmer/Rate-Kombination eine Zeile, Preisplan = erster lokaler.
+function buildMappingRows(
+  otaRooms: OtaRoom[],
+  ratePlans: LocalRatePlanOption[],
+): MappingRow[] {
+  const defaultPlan = ratePlans[0]?.rate_plan_map_id ?? "";
+  const rows: MappingRow[] = [];
+  for (const room of otaRooms) {
+    for (const rate of room.rates ?? []) {
+      rows.push({
+        room_type_code: Number(room.id),
+        rate_plan_code: Number(rate.id),
+        roomLabel: room.title ?? `Zimmer ${room.id}`,
+        rateLabel: rate.title ?? `Rate ${rate.id}`,
+        pricing_type: rate.pricing === "OBP" ? "OBP" : "Standard",
+        occupancy: rate.max_persons ?? 2,
+        rate_plan_map_id: defaultPlan,
+      });
+    }
+  }
+  return rows;
+}
+
 export function ChannelConnectButton({
   label = "Kanäle verbinden",
   variant = "default",
@@ -204,22 +228,7 @@ export function ChannelConnectButton({
       }
       setOtaRooms(res.data.ota_rooms);
       setRatePlans(res.data.rate_plans);
-      const defaultPlan = res.data.rate_plans[0]?.rate_plan_map_id ?? "";
-      const initial: MappingRow[] = [];
-      for (const room of res.data.ota_rooms) {
-        for (const rate of room.rates ?? []) {
-          initial.push({
-            room_type_code: Number(room.id),
-            rate_plan_code: Number(rate.id),
-            roomLabel: room.title ?? `Listing ${room.id}`,
-            rateLabel: rate.title ?? `Rate ${rate.id}`,
-            pricing_type: rate.pricing === "OBP" ? "OBP" : "Standard",
-            occupancy: rate.max_persons ?? 2,
-            rate_plan_map_id: defaultPlan,
-          });
-        }
-      }
-      setRows(initial);
+      setRows(buildMappingRows(res.data.ota_rooms, res.data.rate_plans));
       setStep("mapping");
     });
   }
@@ -267,23 +276,7 @@ export function ChannelConnectButton({
       }
       setOtaRooms(res.data.ota_rooms);
       setRatePlans(res.data.rate_plans);
-      // Vorbelegung: jede OTA-Zimmer/Rate-Zeile, Preisplan = erster lokaler.
-      const defaultPlan = res.data.rate_plans[0]?.rate_plan_map_id ?? "";
-      const initial: MappingRow[] = [];
-      for (const room of res.data.ota_rooms) {
-        for (const rate of room.rates ?? []) {
-          initial.push({
-            room_type_code: Number(room.id),
-            rate_plan_code: Number(rate.id),
-            roomLabel: room.title ?? `Zimmer ${room.id}`,
-            rateLabel: rate.title ?? `Rate ${rate.id}`,
-            pricing_type: rate.pricing === "OBP" ? "OBP" : "Standard",
-            occupancy: rate.max_persons ?? 2,
-            rate_plan_map_id: defaultPlan,
-          });
-        }
-      }
-      setRows(initial);
+      setRows(buildMappingRows(res.data.ota_rooms, res.data.rate_plans));
       setStep("mapping");
     });
   }

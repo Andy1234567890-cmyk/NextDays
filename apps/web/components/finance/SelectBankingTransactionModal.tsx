@@ -188,12 +188,6 @@ export default function SelectBankingTransactionModal({
     setError(null);
 
     try {
-      console.log(
-        'Modal: Loading transactions for user:',
-        user.uid,
-        'credentialType:',
-        credentialType,
-      );
 
       // STEP 1: Load accounts first - EXAKT wie Banking Seite
       const accountsResponse = await fetch(
@@ -203,7 +197,6 @@ export default function SelectBankingTransactionModal({
       let accounts: any[] = [];
       if (accountsResponse.ok) {
         const accountsData = await accountsResponse.json();
-        console.log('Modal: Accounts response:', accountsData);
         if (accountsData.success && accountsData.accounts) {
           accounts = accountsData.accounts;
         }
@@ -218,7 +211,6 @@ export default function SelectBankingTransactionModal({
       });
 
       const transactionUrl = `/api/finapi/transactions?${params}`;
-      console.log('Modal: Fetching transactions from:', transactionUrl);
 
       const response = await fetch(transactionUrl);
 
@@ -229,12 +221,9 @@ export default function SelectBankingTransactionModal({
       }
 
       const data = await response.json();
-      console.log('Modal: Transaction API response:', data);
 
       if (data.success && data.data?.transactions) {
         const rawTransactions = data.data.transactions;
-        console.log('Modal: Raw transactions count:', rawTransactions.length);
-        console.log('Modal: Sample raw transaction:', rawTransactions[0]);
 
         // EXAKTE Konvertierungslogik wie Banking Seite
         const convertedTransactions: Transaction[] = rawTransactions.map(
@@ -266,8 +255,6 @@ export default function SelectBankingTransactionModal({
           },
         );
 
-        console.log('Modal: Converted transactions count:', convertedTransactions.length);
-        console.log('Modal: Sample converted transaction:', convertedTransactions[0]);
 
         // Sort by booking date (newest first) - SAME as Banking Accounts Page
         const sortedTransactions = convertedTransactions.sort((a, b) => {
@@ -299,8 +286,6 @@ export default function SelectBankingTransactionModal({
           }
         }
 
-        console.log('Modal: Final filtered transactions count:', filteredTransactions.length);
-        console.log('Modal: First 3 final transactions:', filteredTransactions.slice(0, 3));
         setTransactions(filteredTransactions);
 
         // Update transaction status nach dem Laden der Links
@@ -308,7 +293,6 @@ export default function SelectBankingTransactionModal({
           updateTransactionStatus(filteredTransactions);
         }, 100);
       } else {
-        console.log('Modal: No transactions in response or unsuccessful');
         setTransactions([]);
         if (data.message && !data.message.includes('please connect a bank first')) {
           setError(data.message);
@@ -328,16 +312,13 @@ export default function SelectBankingTransactionModal({
     if (!user?.uid) return;
 
     try {
-      console.log('Modal: Loading transaction links...');
       const result = await TransactionLinkService.getLinks(companyId);
       if (result.success && result.links) {
-        console.log('Modal: Transaction links loaded:', result.links.length);
         setTransactionLinks(result.links);
 
         // Update transaction status after loading links
         updateTransactionStatus(transactions);
       } else {
-        console.log('Modal: No transaction links or error:', result.error);
         setTransactionLinks([]);
       }
     } catch (error) {
@@ -359,7 +340,6 @@ export default function SelectBankingTransactionModal({
       };
     });
 
-    console.log('Modal: Updated transaction status based on links');
     setTransactions(updatedTransactions);
   };
 
@@ -420,9 +400,6 @@ export default function SelectBankingTransactionModal({
   });
 
   // Debug Log
-  console.log('Modal: Total transactions:', transactions.length);
-  console.log('Modal: Transaction links:', transactionLinks.length);
-  console.log('Modal: Available (open) transactions:', availableTransactions.length);
 
   const filteredTransactions = availableTransactions.filter(transaction => {
     if (!searchTerm) return true;

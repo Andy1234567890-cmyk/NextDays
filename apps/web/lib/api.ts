@@ -64,6 +64,8 @@ export type SessionResponse = {
   expires_in: number;
 };
 
+export type AccommodationType = "vacation_rental" | "hotel";
+
 export type MeResponse = {
   user_id: string;
   email: string | null;
@@ -71,4 +73,6 @@ export type MeResponse = {
   role: "admin" | "co_admin" | "owner" | "staff" | "cleaner" | null;
   capabilities: string[];
   permissions: string[];  // Lodgify-Berechtigungen (für UI-Gating)
+  // Beherbergungsart des Mandanten (Migration 0090): steuert die Navigation.
+  accommodation_type: AccommodationType | null;
 };
