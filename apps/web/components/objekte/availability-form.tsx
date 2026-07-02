@@ -5,13 +5,21 @@
 //  Vorlaufzeit, gesperrte Check-in/out-Wochentage. Mehrere Blöcke erlauben
 //  „Custom setup per channel" (NextDays / Airbnb / Booking.com / Google).
 // Gespeichert per updateProperty() in type_attributes.availability.
-import { Icon } from "@iconify/react";
 import { useState } from "react";
 
+import {
+  ChannelIcons,
+  ChannelLogo,
+  EditorShell,
+  Field,
+  Footer,
+  Hint,
+  Pill,
+  useSaver,
+} from "@/components/objekte/editor-primitives";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -19,13 +27,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import {
   type Availability,
@@ -34,7 +35,6 @@ import {
   type WeekdayFlags,
   ADVANCE_NOTICE_OPTIONS,
   BOOKING_WINDOW_OPTIONS,
-  CHANNEL_LOGOS,
   CHANNEL_LABELS,
   CHANNELS,
   PREPARATION_OPTIONS,
@@ -54,30 +54,6 @@ type Section =
   | "notice"
   | "days"
   | null;
-
-// Ein einzelnes Kanal-Logo (Iconify-Icon ODER lokales SVG via <img>).
-function ChannelLogo({ channel, big }: { channel: Channel; big?: boolean }) {
-  const logo = CHANNEL_LOGOS[channel];
-  const cls = big ? "size-4" : "size-3.5";
-  if (logo.kind === "img") {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={logo.src} alt={CHANNEL_LABELS[channel]} className={`${cls} rounded-sm`} />;
-  }
-  return <Icon icon={logo.icon} className={cls} />;
-}
-
-// Kanal-Logos als kleine Badges (echte Marken-Logos).
-function ChannelIcons({ channels }: { channels: Channel[] }) {
-  return (
-    <span className="ml-2 inline-flex items-center gap-1 align-middle">
-      {channels.map((c) => (
-        <span key={c} title={CHANNEL_LABELS[c]} className="inline-flex">
-          <ChannelLogo channel={c} />
-        </span>
-      ))}
-    </span>
-  );
-}
 
 export function AvailabilityForm({ initial }: { initial: Property }) {
   const [p, setP] = useState<Property>(initial);
@@ -240,14 +216,6 @@ function BlockCard({
   );
 }
 
-function Pill({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex w-fit items-center rounded-full bg-muted/60 px-3 py-1.5 text-sm">
-      {children}
-    </span>
-  );
-}
-
 // Zeigt entweder den globalen Wert oder die Werte je Kanal als Pills.
 function PerChannelPills<T extends string | number>({
   pc,
@@ -274,99 +242,6 @@ function PerChannelPills<T extends string | number>({
 function dayLabel(f: WeekdayFlags): string {
   const n = countDays(f);
   return n === 0 ? "alle Tage verfügbar" : `${n} Tag(e) gesperrt`;
-}
-
-// --- Editor-Hülle (mit Footer wie Lodgify) ---------------------------------
-
-function EditorShell({
-  title,
-  subtitle,
-  channels,
-  onClose,
-  footer,
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  channels?: Channel[];
-  onClose: () => void;
-  footer: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <Sheet open onOpenChange={(o) => !o && onClose()}>
-      <SheetContent className="flex h-full w-full flex-col gap-0 p-0 sm:max-w-lg">
-        <SheetHeader className="border-b">
-          <SheetTitle className="font-display text-xl font-extrabold">{title}</SheetTitle>
-          <SheetDescription className={subtitle ? "" : "sr-only"}>{subtitle ?? title}</SheetDescription>
-          {channels && (
-            <p className="flex items-center text-sm text-muted-foreground">
-              Gilt für <ChannelIcons channels={channels} />
-            </p>
-          )}
-        </SheetHeader>
-        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-5">{children}</div>
-        <div className="flex items-center justify-end gap-3 border-t p-4">{footer}</div>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
-function useSaver(onSave: (next: Availability) => Promise<true | string>) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  async function run(next: Availability) {
-    setBusy(true);
-    setError(null);
-    const r = await onSave(next);
-    setBusy(false);
-    if (r !== true) setError(r);
-  }
-  return { busy, error, run };
-}
-
-function Footer({
-  busy,
-  error,
-  onCancel,
-  onSave,
-  disabled,
-}: {
-  busy: boolean;
-  error: string | null;
-  onCancel: () => void;
-  onSave: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <div className="flex w-full items-center gap-3">
-      {error && <p className="mr-auto text-sm text-destructive">{error}</p>}
-      <Button variant="ghost" onClick={onCancel} disabled={busy} className={error ? "" : "ml-auto"}>
-        Abbrechen
-      </Button>
-      <Button onClick={onSave} disabled={busy || disabled}>
-        {busy ? "Speichern…" : "Speichern"}
-      </Button>
-    </div>
-  );
-}
-
-function Hint({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex items-start gap-2 rounded-(--radius) bg-blue-50 p-3 text-sm text-blue-900">
-      <Icon icon="ph:info" className="mt-0.5 size-4 shrink-0" />
-      <span>{children}</span>
-    </div>
-  );
-}
-
-function Field({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Label>{label}</Label>
-      {children}
-    </div>
-  );
 }
 
 // --- Editoren ---------------------------------------------------------------

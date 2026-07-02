@@ -27,37 +27,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import {
-  createInvoice,
-  type Customer,
-  type LineItemInput,
-} from "@/lib/buchhaltung";
+  formatEur,
+  LineItemsEditor,
+  useLineItemRows,
+} from "@/components/buchhaltung/line-items-editor";
+import { createInvoice, type Customer } from "@/lib/buchhaltung";
 
 const NO_CUSTOMER = "__none__";
-
-type Row = {
-  description: string;
-  quantity: string;
-  unit_price: string;
-  tax_rate: string;
-};
-
-const EMPTY_ROW: Row = {
-  description: "",
-  quantity: "1",
-  unit_price: "0",
-  tax_rate: "19",
-};
-
-function lineNet(r: Row): number {
-  return (Number(r.quantity) || 0) * (Number(r.unit_price) || 0);
-}
-
-function formatEur(n: number): string {
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: "EUR",
-  }).format(n);
-}
 
 export function NewInvoiceButton({
   customers = [],
@@ -66,41 +42,32 @@ export function NewInvoiceButton({
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const [rows, setRows] = useState<Row[]>([{ ...EMPTY_ROW }]);
+  const {
+    rows,
+    setRow,
+    addRow,
+    removeRow,
+    reset: resetRows,
+    netTotal,
+    taxTotal,
+    toLineItemInputs,
+  } = useLineItemRows();
   const [customerId, setCustomerId] = useState<string>(NO_CUSTOMER);
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const netTotal = rows.reduce((sum, r) => sum + lineNet(r), 0);
-  const taxTotal = rows.reduce(
-    (sum, r) => sum + lineNet(r) * ((Number(r.tax_rate) || 0) / 100),
-    0,
-  );
   const grossTotal = netTotal + taxTotal;
 
-  const setRow = (i: number, patch: Partial<Row>) =>
-    setRows((prev) => prev.map((r, idx) => (idx === i ? { ...r, ...patch } : r)));
-  const addRow = () => setRows((prev) => [...prev, { ...EMPTY_ROW }]);
-  const removeRow = (i: number) =>
-    setRows((prev) => (prev.length > 1 ? prev.filter((_, idx) => idx !== i) : prev));
-
   const reset = () => {
-    setRows([{ ...EMPTY_ROW }]);
+    resetRows();
     setCustomerId(NO_CUSTOMER);
     setNotes("");
     setError(null);
   };
 
   async function save() {
-    const items: LineItemInput[] = rows
-      .filter((r) => r.description.trim())
-      .map((r) => ({
-        description: r.description.trim(),
-        quantity: r.quantity || "0",
-        unit_price: r.unit_price || "0",
-        tax_rate: r.tax_rate || "0",
-      }));
+    const items = toLineItemInputs();
     if (items.length === 0) {
       setError("Mindestens eine Position mit Beschreibung ist erforderlich.");
       return;
@@ -166,76 +133,12 @@ export function NewInvoiceButton({
             </div>
 
             {/* Positionen */}
-            <div className="flex flex-col gap-3">
-              {rows.map((r, i) => (
-                <div
-                  key={i}
-                  className="flex flex-col gap-2 rounded-(--radius) border border-input p-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs text-muted-foreground">
-                      Position {i + 1}
-                    </Label>
-                    {rows.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeRow(i)}
-                        className="text-muted-foreground hover:text-destructive"
-                        aria-label="Position entfernen"
-                      >
-                        <Icon icon="ph:trash" className="size-4" />
-                      </button>
-                    )}
-                  </div>
-                  <Input
-                    placeholder="Beschreibung"
-                    value={r.description}
-                    onChange={(e) => setRow(i, { description: e.target.value })}
-                  />
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="flex flex-col gap-1">
-                      <Label className="text-xs text-muted-foreground">Menge</Label>
-                      <Input
-                        type="number"
-                        inputMode="decimal"
-                        value={r.quantity}
-                        onChange={(e) => setRow(i, { quantity: e.target.value })}
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <Label className="text-xs text-muted-foreground">Einzelpreis €</Label>
-                      <Input
-                        type="number"
-                        inputMode="decimal"
-                        value={r.unit_price}
-                        onChange={(e) => setRow(i, { unit_price: e.target.value })}
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <Label className="text-xs text-muted-foreground">MwSt. %</Label>
-                      <Input
-                        type="number"
-                        inputMode="decimal"
-                        value={r.tax_rate}
-                        onChange={(e) => setRow(i, { tax_rate: e.target.value })}
-                      />
-                    </div>
-                  </div>
-                  <p className="text-right text-xs text-muted-foreground">
-                    Netto: {formatEur(lineNet(r))}
-                  </p>
-                </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                className="gap-2"
-                onClick={addRow}
-              >
-                <Icon icon="ph:plus" className="size-4" />
-                Position hinzufügen
-              </Button>
-            </div>
+            <LineItemsEditor
+              rows={rows}
+              onRowChange={setRow}
+              onAdd={addRow}
+              onRemove={removeRow}
+            />
 
             {/* Notizen */}
             <div className="flex flex-col gap-1.5">

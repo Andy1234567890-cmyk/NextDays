@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Segmented } from "@/components/ui/segmented";
 import { bulkEdit } from "@/lib/calendar";
 
 type BlockMode = "none" | "block" | "unblock";
@@ -150,7 +151,7 @@ export function BulkEditDialog({
               </label>
               {setPrice && (
                 <div className="ml-7 flex flex-col gap-2">
-                  <SegmentedThree
+                  <Segmented
                     value={priceMode}
                     options={[
                       { value: "fixed", label: "Fester Preis" },
@@ -220,7 +221,7 @@ export function BulkEditDialog({
             {/* Sperre */}
             <fieldset className="flex flex-col gap-2">
               <legend className="text-sm font-medium">Verfügbarkeit</legend>
-              <SegmentedThree
+              <Segmented
                 value={blockMode}
                 options={[
                   { value: "none", label: "Unverändert" },
@@ -234,7 +235,7 @@ export function BulkEditDialog({
             {/* Verkaufsstopp */}
             <fieldset className="flex flex-col gap-2">
               <legend className="text-sm font-medium">Verkaufsstopp (OTA)</legend>
-              <SegmentedThree
+              <Segmented
                 value={stopMode}
                 options={[
                   { value: "none", label: "Unverändert" },
@@ -248,7 +249,7 @@ export function BulkEditDialog({
             {/* Anreise gesperrt (CTA) */}
             <fieldset className="flex flex-col gap-2">
               <legend className="text-sm font-medium">Anreise gesperrt (CTA)</legend>
-              <SegmentedThree
+              <Segmented
                 value={ctaMode}
                 options={[
                   { value: "none", label: "Unverändert" },
@@ -262,7 +263,7 @@ export function BulkEditDialog({
             {/* Abreise gesperrt (CTD) */}
             <fieldset className="flex flex-col gap-2">
               <legend className="text-sm font-medium">Abreise gesperrt (CTD)</legend>
-              <SegmentedThree
+              <Segmented
                 value={ctdMode}
                 options={[
                   { value: "none", label: "Unverändert" },
@@ -284,35 +285,6 @@ export function BulkEditDialog({
           </Button>
         </div>
       </div>
-    </div>
-  );
-}
-
-function SegmentedThree({
-  value,
-  options,
-  onChange,
-}: {
-  value: string;
-  options: { value: string; label: string }[];
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="inline-flex rounded-full border bg-secondary p-0.5 text-sm">
-      {options.map((o) => (
-        <button
-          key={o.value}
-          type="button"
-          onClick={() => onChange(o.value)}
-          className={`rounded-full px-3 py-1.5 font-medium transition-colors ${
-            value === o.value
-              ? "bg-card text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
     </div>
   );
 }

@@ -7,8 +7,9 @@
 //  type_attributes.
 import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
+import { useSaver } from "@/components/objekte/editor-primitives";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -70,6 +71,15 @@ export function PropertyOverview({ initial }: { initial: Property }) {
   const [section, setSection] = useState<Section>(null);
   const [publishing, setPublishing] = useState(false);
   const [publishMsg, setPublishMsg] = useState<string | null>(null);
+
+  // PropertyRealtime (Layout) liefert nach externen Änderungen (anderer
+  // Nutzer, Channex-Import) via router.refresh() frische Props — ohne Sync
+  // bliebe die Übersicht für immer auf dem Mount-Stand. Während ein
+  // Abschnitt bearbeitet wird, nicht hineinfunken.
+  useEffect(() => {
+    if (section === null) setP(initial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initial]);
 
   async function save(input: PropertyInput) {
     const res = await updateProperty(p.id, input);
@@ -374,19 +384,6 @@ function SaveBar({
 
 type SaveFn = (input: PropertyInput) => Promise<true | string>;
 
-function useEditor() {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  async function run(fn: () => Promise<true | string>) {
-    setBusy(true);
-    setError(null);
-    const r = await fn();
-    setBusy(false);
-    if (r !== true) setError(r);
-  }
-  return { busy, error, run };
-}
-
 function NameEditor({
   open,
   p,
@@ -402,7 +399,7 @@ function NameEditor({
   const [desc, setDesc] = useState(p.description ?? "");
   const [platformDesc, setPlatformDesc] = useState(p.platform_description ?? "");
   const [type, setType] = useState<PropertyType>(p.property_type);
-  const { busy, error, run } = useEditor();
+  const { busy, error, run } = useSaver(onSave);
 
   return (
     <EditorShell open={open} onClose={onClose} title="Name und Beschreibung">
@@ -460,14 +457,12 @@ function NameEditor({
         error={error}
         disabled={!title.trim()}
         onSave={() =>
-          run(() =>
-            onSave({
-              title,
-              description: desc,
-              platform_description: platformDesc || null,
-              property_type: type,
-            }),
-          )
+          run({
+            title,
+            description: desc,
+            platform_description: platformDesc || null,
+            property_type: type,
+          })
         }
       />
     </EditorShell>
@@ -489,7 +484,7 @@ function InfoEditor({
   const [size, setSize] = useState<number | "">(attrNum(p, "size_m2"));
   const [units, setUnits] = useState<number | "">(attrNum(p, "units"));
   const [status, setStatus] = useState<PropertyStatus>(p.status);
-  const { busy, error, run } = useEditor();
+  const { busy, error, run } = useSaver(onSave);
 
   return (
     <EditorShell open={open} onClose={onClose} title="Objekt-Infos">
@@ -550,17 +545,15 @@ function InfoEditor({
         busy={busy}
         error={error}
         onSave={() =>
-          run(() =>
-            onSave({
-              max_guests: guests,
-              status,
-              type_attributes: {
-                ...p.type_attributes,
-                size_m2: size === "" ? undefined : size,
-                units: units === "" ? undefined : units,
-              },
-            }),
-          )
+          run({
+            max_guests: guests,
+            status,
+            type_attributes: {
+              ...p.type_attributes,
+              size_m2: size === "" ? undefined : size,
+              units: units === "" ? undefined : units,
+            },
+          })
         }
       />
     </EditorShell>
@@ -583,7 +576,7 @@ function ListEditor({
   onSave: (vals: string[]) => Promise<true | string>;
 }) {
   const [vals, setVals] = useState<string[]>(selected);
-  const { busy, error, run } = useEditor();
+  const { busy, error, run } = useSaver(onSave);
 
   function toggle(v: string) {
     setVals((s) => (s.includes(v) ? s.filter((x) => x !== v) : [...s, v]));
@@ -607,7 +600,7 @@ function ListEditor({
           </label>
         ))}
       </div>
-      <SaveBar busy={busy} error={error} onSave={() => run(() => onSave(vals))} />
+      <SaveBar busy={busy} error={error} onSave={() => run(vals)} />
     </EditorShell>
   );
 }
@@ -624,7 +617,7 @@ function AmenitiesEditor({
   onSave: (vals: string[]) => Promise<true | string>;
 }) {
   const [vals, setVals] = useState<string[]>(selected);
-  const { busy, error, run } = useEditor();
+  const { busy, error, run } = useSaver(onSave);
 
   function toggle(v: string) {
     setVals((s) => (s.includes(v) ? s.filter((x) => x !== v) : [...s, v]));
@@ -658,7 +651,7 @@ function AmenitiesEditor({
           </div>
         </div>
       ))}
-      <SaveBar busy={busy} error={error} onSave={() => run(() => onSave(vals))} />
+      <SaveBar busy={busy} error={error} onSave={() => run(vals)} />
     </EditorShell>
   );
 }
@@ -679,7 +672,7 @@ function LocationEditor({
   const [zip, setZip] = useState(p.postal_code ?? "");
   const [city, setCity] = useState(p.city ?? "");
   const [country, setCountry] = useState(p.country ?? "");
-  const { busy, error, run } = useEditor();
+  const { busy, error, run } = useSaver(onSave);
 
   return (
     <EditorShell open={open} onClose={onClose} title="Standort bearbeiten">
@@ -727,15 +720,13 @@ function LocationEditor({
         busy={busy}
         error={error}
         onSave={() =>
-          run(() =>
-            onSave({
-              street,
-              house_number: houseNo,
-              postal_code: zip,
-              city,
-              country,
-            }),
-          )
+          run({
+            street,
+            house_number: houseNo,
+            postal_code: zip,
+            city,
+            country,
+          })
         }
       />
     </EditorShell>

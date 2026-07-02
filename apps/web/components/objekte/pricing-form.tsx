@@ -8,7 +8,15 @@
 import { Icon } from "@iconify/react";
 import { useState } from "react";
 
-import { CHANNEL_LABELS, CHANNEL_LOGOS } from "@/lib/availability-meta";
+import {
+  ChannelLogo,
+  EditorShell,
+  Field,
+  Footer,
+  Hint,
+  Pill,
+  useSaver,
+} from "@/components/objekte/editor-primitives";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -18,7 +26,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -26,14 +33,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
+import { CHANNEL_LABELS } from "@/lib/availability-meta";
 import {
   type AddOn,
   type Currency,
@@ -72,16 +73,6 @@ type Section =
   | "taxInfo"
   | "baseLabel"
   | null;
-
-function ChannelBadge({ channel }: { channel: "airbnb" | "booking" | "google" }) {
-  const logo = CHANNEL_LOGOS[channel];
-  return logo.kind === "img" ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={logo.src} alt={CHANNEL_LABELS[channel]} className="size-3.5 rounded-sm" />
-  ) : (
-    <Icon icon={logo.icon} className="size-3.5" />
-  );
-}
 
 export function PricingForm({ initial }: { initial: Property }) {
   const [p, setP] = useState<Property>(initial);
@@ -135,7 +126,7 @@ export function PricingForm({ initial }: { initial: Property }) {
           <span className="flex flex-wrap items-center gap-2">
             {MARKUP_CHANNELS.map((c) => (
               <span key={c} className="inline-flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1.5 text-sm">
-                <ChannelBadge channel={c} />
+                <ChannelLogo channel={c} />
                 {pr.markup[c] >= 0 ? "+" : ""}{pr.markup[c]}%
               </span>
             ))}
@@ -523,100 +514,6 @@ function BlockCard({
   );
 }
 
-function Pill({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex w-fit items-center rounded-full bg-muted/60 px-3 py-1.5 text-sm">
-      {children}
-    </span>
-  );
-}
-
-// --- Editor-Hülle ----------------------------------------------------------
-
-function EditorShell({
-  title,
-  subtitle,
-  onClose,
-  footer,
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  onClose: () => void;
-  footer: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <Sheet open onOpenChange={(o) => !o && onClose()}>
-      <SheetContent className="flex h-full w-full flex-col gap-0 p-0 sm:max-w-lg">
-        <SheetHeader className="border-b">
-          <SheetTitle className="font-display text-xl font-extrabold">{title}</SheetTitle>
-          <SheetDescription className={subtitle ? "" : "sr-only"}>{subtitle ?? title}</SheetDescription>
-        </SheetHeader>
-        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-5">{children}</div>
-        <div className="flex items-center justify-end gap-3 border-t p-4">{footer}</div>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
-function useSaver(onSave: (next: Pricing) => Promise<true | string>) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  async function run(next: Pricing) {
-    setBusy(true);
-    setError(null);
-    const r = await onSave(next);
-    setBusy(false);
-    if (r !== true) setError(r);
-  }
-  return { busy, error, run };
-}
-
-function Footer({
-  busy,
-  error,
-  onCancel,
-  onSave,
-  disabled,
-}: {
-  busy: boolean;
-  error: string | null;
-  onCancel: () => void;
-  onSave: () => void;
-  disabled?: boolean;
-}) {
-  return (
-    <div className="flex w-full items-center gap-3">
-      {error && <p className="mr-auto text-sm text-destructive">{error}</p>}
-      <Button variant="ghost" onClick={onCancel} disabled={busy} className={error ? "" : "ml-auto"}>
-        Abbrechen
-      </Button>
-      <Button onClick={onSave} disabled={busy || disabled}>
-        {busy ? "Speichern…" : "Speichern"}
-      </Button>
-    </div>
-  );
-}
-
-function Hint({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex items-start gap-2 rounded-(--radius) bg-blue-50 p-3 text-sm text-blue-900">
-      <Icon icon="ph:info" className="mt-0.5 size-4 shrink-0" />
-      <span>{children}</span>
-    </div>
-  );
-}
-
-function Field({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Label>{label}</Label>
-      {children}
-    </div>
-  );
-}
-
 // Geld-Eingabe mit Währungssuffix.
 function MoneyInput({
   value,
@@ -731,7 +628,7 @@ function MarkupEditor({
           key={c}
           label={
             <span className="flex items-center gap-1.5">
-              <ChannelBadge channel={c} />
+              <ChannelLogo channel={c} />
               {CHANNEL_LABELS[c]}
             </span>
           }

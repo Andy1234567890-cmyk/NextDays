@@ -15,19 +15,19 @@ import {
 import { Icon } from "@iconify/react";
 import { useEffect, useRef, useState } from "react";
 
+import {
+  EditorShell,
+  Empty,
+  Field,
+  Footer,
+  Hint,
+  useSaver,
+} from "@/components/objekte/editor-primitives";
+import { LocalizedTextEditor } from "@/components/objekte/localized-text-editor";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { LocalizedTextEditor } from "@/components/objekte/localized-text-editor";
 import {
   type Distances,
   type LocationExtras,
@@ -195,10 +195,6 @@ function SectionCard({
   );
 }
 
-function Empty({ children }: { children: React.ReactNode }) {
-  return <p className="text-sm text-muted-foreground/70">{children}</p>;
-}
-
 function DistancesPreview({ ex }: { ex: LocationExtras }) {
   const u = ex.distances.unit;
   return (
@@ -214,108 +210,6 @@ function DistancesPreview({ ex }: { ex: LocationExtras }) {
           {f.label}: {ex.distances.values[f.key]} {u}
         </span>
       ))}
-    </div>
-  );
-}
-
-// --- Editor-Hülle ----------------------------------------------------------
-
-function EditorShell({
-  title,
-  subtitle,
-  onClose,
-  footer,
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  onClose: () => void;
-  footer: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <Sheet open onOpenChange={(o) => !o && onClose()}>
-      <SheetContent className="flex h-full w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
-        <SheetHeader className="shrink-0 border-b">
-          <SheetTitle className="font-display text-xl font-extrabold">
-            {title}
-          </SheetTitle>
-          <SheetDescription className={subtitle ? "" : "sr-only"}>
-            {subtitle ?? title}
-          </SheetDescription>
-        </SheetHeader>
-        {/* min-h-0 ist entscheidend, damit der Bereich scrollt statt zu wachsen */}
-        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-5">
-          {children}
-        </div>
-        <div className="flex shrink-0 items-center justify-end gap-3 border-t p-4">
-          {footer}
-        </div>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
-function Footer({
-  busy,
-  error,
-  onCancel,
-  onSave,
-}: {
-  busy: boolean;
-  error: string | null;
-  onCancel: () => void;
-  onSave: () => void;
-}) {
-  return (
-    <div className="flex w-full items-center gap-3">
-      {error && <p className="mr-auto text-sm text-destructive">{error}</p>}
-      <Button
-        variant="ghost"
-        onClick={onCancel}
-        disabled={busy}
-        className={error ? "" : "ml-auto"}
-      >
-        Abbrechen
-      </Button>
-      <Button onClick={onSave} disabled={busy}>
-        {busy ? "Speichern…" : "Speichern"}
-      </Button>
-    </div>
-  );
-}
-
-function useSaver<T extends unknown[]>(
-  fn: (...args: T) => Promise<true | string>,
-) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  async function run(...args: T) {
-    setBusy(true);
-    setError(null);
-    const r = await fn(...args);
-    setBusy(false);
-    if (r !== true) setError(r);
-  }
-  return { busy, error, run };
-}
-
-function Field({
-  label,
-  required,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Label>
-        {label}
-        {required && <span className="ml-0.5 text-destructive">*</span>}
-      </Label>
-      {children}
     </div>
   );
 }
@@ -456,10 +350,7 @@ function AddressEditor({
               </Map>
             </div>
           </div>
-          <div className="flex items-start gap-2 rounded-(--radius) bg-blue-50 p-3 text-sm text-blue-900">
-            <Icon icon="ph:info" className="mt-0.5 size-4 shrink-0" />
-            <span>Bearbeite die Adresse oben, um Karte und Koordinaten zu aktualisieren.</span>
-          </div>
+          <Hint>Bearbeite die Adresse oben, um Karte und Koordinaten zu aktualisieren.</Hint>
 
           {/* Standortgenauigkeit */}
           <div className="flex items-start justify-between gap-4 rounded-(--radius) border p-4">

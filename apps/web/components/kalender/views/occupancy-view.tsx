@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { Prop } from "@/components/kalender/calendar-board";
 import { Card } from "@/components/ui/card";
+import { Segmented } from "@/components/ui/segmented";
 import {
   addDays,
   dateKey,
@@ -152,35 +153,6 @@ export function CalendarOccupancyView({ properties }: { properties: Prop[] }) {
           />
         ))}
       </div>
-    </div>
-  );
-}
-
-function Segmented({
-  value,
-  onChange,
-  options,
-}: {
-  value: number;
-  onChange: (v: number) => void;
-  options: readonly { value: number; label: string }[];
-}) {
-  return (
-    <div className="inline-flex rounded-full border bg-secondary p-0.5 text-sm">
-      {options.map((o) => (
-        <button
-          key={o.value}
-          type="button"
-          onClick={() => onChange(o.value)}
-          className={`rounded-full px-3 py-1.5 font-medium transition-colors ${
-            value === o.value
-              ? "bg-card text-foreground shadow-sm"
-              : "text-muted-foreground hover:text-foreground"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
     </div>
   );
 }

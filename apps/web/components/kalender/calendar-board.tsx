@@ -29,6 +29,7 @@ import {
   getAvailability,
 } from "@/lib/calendar";
 import { CHANNEL_META, CHANNEL_SOURCES, channelMeta } from "@/lib/calendar-channels";
+import { explainFactors } from "@/lib/dp-factors";
 import {
   type DisplayStatus,
   STATUS_META,
@@ -145,31 +146,6 @@ function fmtPrice(price: number | null | undefined): string {
     currency: "EUR",
     maximumFractionDigits: 0,
   });
-}
-
-// Deutsche Labels für die Dynamic-Pricing-Faktoren („Warum dieser Preis?").
-const FACTOR_LABELS: Record<string, string> = {
-  season: "Saison",
-  event: "Event",
-  weekend: "Wochenende",
-  occupancy: "Auslastung",
-  last_minute: "Last-Minute",
-  orphan: "Lückenfüllung",
-  market: "Markt",
-};
-
-// factors (Multiplikatoren, 1.0 = neutral) → lesbare Erklärzeilen mit %-Beitrag.
-// Nur Faktoren ≠ neutral werden gezeigt; leere Erklärung, wenn alles neutral.
-function explainFactors(factors: Record<string, number> | undefined): string {
-  if (!factors) return "";
-  const lines: string[] = [];
-  for (const [key, mult] of Object.entries(factors)) {
-    if (mult == null || Math.abs(mult - 1) < 0.001) continue;
-    const pct = Math.round((mult - 1) * 100);
-    const label = FACTOR_LABELS[key] ?? key;
-    lines.push(`${label} ${pct >= 0 ? "+" : ""}${pct} %`);
-  }
-  return lines.length ? `Warum dieser Preis?\n${lines.join("\n")}` : "";
 }
 
 type Segment = {

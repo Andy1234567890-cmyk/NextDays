@@ -8,10 +8,19 @@
 import { Icon } from "@iconify/react";
 import { useState } from "react";
 
+import {
+  EditorShell,
+  Empty,
+  Field,
+  Footer,
+  Hint,
+  Pill,
+  useSaver,
+} from "@/components/objekte/editor-primitives";
+import { LocalizedTextEditor } from "@/components/objekte/localized-text-editor";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -19,14 +28,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { LocalizedTextEditor } from "@/components/objekte/localized-text-editor";
 import {
   type CancellationType,
   type DepositMode,
@@ -189,102 +190,6 @@ function BlockCard({
       </div>
       {children}
     </Card>
-  );
-}
-
-function Pill({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="inline-flex w-fit items-center rounded-full bg-muted/60 px-3 py-1.5 text-sm">
-      {children}
-    </span>
-  );
-}
-
-function Empty({ children }: { children: React.ReactNode }) {
-  return <p className="text-sm text-muted-foreground/70">{children}</p>;
-}
-
-// --- Editor-Hülle ----------------------------------------------------------
-
-function EditorShell({
-  title,
-  subtitle,
-  onClose,
-  footer,
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  onClose: () => void;
-  footer: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <Sheet open onOpenChange={(o) => !o && onClose()}>
-      <SheetContent className="flex h-full w-full flex-col gap-0 p-0 sm:max-w-lg">
-        <SheetHeader className="border-b">
-          <SheetTitle className="font-display text-xl font-extrabold">{title}</SheetTitle>
-          <SheetDescription className={subtitle ? "" : "sr-only"}>
-            {subtitle ?? title}
-          </SheetDescription>
-        </SheetHeader>
-        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-5">{children}</div>
-        {/* Fußzeile: Abbrechen + Speichern (wie Lodgify) */}
-        <div className="flex items-center justify-end gap-3 border-t p-4">{footer}</div>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
-function useSaver(onSave: (next: Policies) => Promise<true | string>) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  async function run(next: Policies) {
-    setBusy(true);
-    setError(null);
-    const r = await onSave(next);
-    setBusy(false);
-    if (r !== true) setError(r);
-  }
-  return { busy, error, run };
-}
-
-// Standard-Fußzeile: Abbrechen + Speichern.
-function Footer({
-  busy,
-  error,
-  onCancel,
-  onSave,
-  saveLabel = "Speichern",
-  disabled,
-}: {
-  busy: boolean;
-  error: string | null;
-  onCancel: () => void;
-  onSave: () => void;
-  saveLabel?: string;
-  disabled?: boolean;
-}) {
-  return (
-    <div className="flex w-full items-center gap-3">
-      {error && <p className="mr-auto text-sm text-destructive">{error}</p>}
-      <Button variant="ghost" onClick={onCancel} disabled={busy} className={error ? "" : "ml-auto"}>
-        Abbrechen
-      </Button>
-      <Button onClick={onSave} disabled={busy || disabled}>
-        {busy ? "Speichern…" : saveLabel}
-      </Button>
-    </div>
-  );
-}
-
-// Info-Hinweis (blaue Box wie Lodgify).
-function Hint({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex items-start gap-2 rounded-(--radius) bg-blue-50 p-3 text-sm text-blue-900">
-      <Icon icon="ph:info" className="mt-0.5 size-4 shrink-0" />
-      <span>{children}</span>
-    </div>
   );
 }
 
@@ -608,11 +513,3 @@ function LocalizedPreview({ value, clamp }: { value: LocalizedText; clamp?: bool
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col gap-1.5">
-      <Label>{label}</Label>
-      {children}
-    </div>
-  );
-}
