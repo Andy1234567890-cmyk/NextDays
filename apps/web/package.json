@@ -11,6 +11,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@codemirror/lang-javascript": "6.2.5",
     "@craftjs/core": "0.2.12",
     "@craftjs/layers": "0.2.7",
     "@craftjs/utils": "0.2.5",
@@ -56,6 +57,7 @@
     "@tiptap/pm": "3.27.1",
     "@tiptap/react": "3.27.1",
     "@tiptap/starter-kit": "3.27.1",
+    "@uiw/react-codemirror": "4.25.10",
     "@vis.gl/react-google-maps": "1.8.3",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
@@ -64,6 +66,7 @@
     "embla-carousel-react": "8.6.0",
     "fast-xml-parser": "5.9.3",
     "input-otp": "1.4.2",
+    "motion": "12.42.2",
     "next": "15.5.19",
     "next-intl": "4.13.0",
     "next-themes": "0.4.6",

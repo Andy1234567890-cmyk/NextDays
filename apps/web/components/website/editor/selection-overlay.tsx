@@ -14,10 +14,13 @@ type Rect = { top: number; left: number; width: number; height: number };
 
 export function SelectionOverlay({
   scrollRef,
+  revision,
 }: {
   scrollRef: React.RefObject<HTMLDivElement | null>;
+  // Ändert sich mit Kamera (Pan/Zoom) → erzwingt Neuvermessung der Rechtecke.
+  revision?: number;
 }) {
-  const { selectedId, hoveredId, dom, hoveredDom, displayName, actions, query, canMoveUp, canMoveDown } =
+  const { selectedId, hoveredId, dom, hoveredDom, displayName, isFrame, actions, query, canMoveUp, canMoveDown } =
     useEditor((state) => {
       const selected = state.events.selected.values().next().value as string | undefined;
       const hovered = state.events.hovered.values().next().value as string | undefined;
@@ -33,12 +36,16 @@ export function SelectionOverlay({
           down = idx < parent.data.nodes.length - 1;
         }
       }
+      const name = id ? state.nodes[id]?.data.displayName ?? "" : "";
       return {
         selectedId: id,
         hoveredId: hovered ?? null,
         dom: id ? state.nodes[id]?.dom ?? null : null,
         hoveredDom: hovered ? state.nodes[hovered]?.dom ?? null : null,
-        displayName: id ? state.nodes[id]?.data.displayName ?? "" : "",
+        displayName: name,
+        // Frames bringen EIGENE Auswahl-Handles/Rahmen mit → Overlay-Rahmen
+        // unterdrücken, nur die Mini-Toolbar an der echten Frame-Position zeigen.
+        isFrame: name === "Frame",
         canMoveUp: up,
         canMoveDown: down,
       };
@@ -72,14 +79,20 @@ export function SelectionOverlay({
     const ro = new ResizeObserver(() => measure());
     ro.observe(scroller);
     if (dom) ro.observe(dom);
+    // Frame-Objekte ändern Position/Größe über inline-style → mitverfolgen,
+    // damit Toolbar/Rahmen dem Objekt beim Ziehen/Skalieren folgen.
+    const mo = new MutationObserver(() => measure());
+    if (dom) mo.observe(dom, { attributes: true, attributeFilter: ["style"] });
     scroller.addEventListener("scroll", measure, { passive: true });
     window.addEventListener("resize", measure);
     return () => {
       ro.disconnect();
+      mo.disconnect();
       scroller.removeEventListener("scroll", measure);
       window.removeEventListener("resize", measure);
     };
-  }, [dom, measure, scrollRef]);
+    // `revision` bewusst als Trigger: bei Kamera-Änderung neu vermessen.
+  }, [dom, measure, scrollRef, revision]);
 
   function move(dir: -1 | 1) {
     if (!selectedId || selectedId === "ROOT") return;
@@ -120,7 +133,10 @@ export function SelectionOverlay({
 
       {selRect && selectedId && selectedId !== "ROOT" ? (
         <div
-          className="pointer-events-none absolute z-30 rounded-[0.25rem] ring-2 ring-primary"
+          className={
+            "pointer-events-none absolute z-30 rounded-[0.25rem] " +
+            (isFrame ? "" : "ring-2 ring-primary")
+          }
           style={{ top: selRect.top, left: selRect.left, width: selRect.width, height: selRect.height }}
         >
           <div className="pointer-events-auto absolute -top-9 left-0 flex items-center gap-0.5 rounded-full bg-primary px-1 py-1 text-primary-foreground shadow-lg">

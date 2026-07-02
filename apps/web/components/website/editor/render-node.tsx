@@ -16,10 +16,16 @@ export function RenderNode({ render }: { render: React.ReactElement }) {
     };
   });
 
-  if (!visible) return null;
-
   const style: React.CSSProperties = {};
-  if (opacity !== 1) style.opacity = opacity;
+  // „Sichtbar = Nein": im EDITOR NICHT entfernen (wie Framer), sondern ausgrauen
+  // (halbtransparent + grayscale), damit die Node anklick-/bearbeitbar bleibt.
+  // Der echte Ausblend-Effekt greift erst im builder-Renderer.
+  if (!visible) {
+    style.opacity = 0.4;
+    style.filter = "grayscale(1)";
+  } else if (opacity !== 1) {
+    style.opacity = opacity;
+  }
   if (radius > 0) {
     style.borderRadius = `${radius}px`;
     style.overflow = "hidden";

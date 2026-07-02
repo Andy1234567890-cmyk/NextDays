@@ -5,7 +5,6 @@
 //    beide mit „+". KEINE Block-Palette hier — Blöcke kommen übers „+"-Menü oben.
 //  • Layers: der Craft-Node-Baum der aktiven Seite (@craftjs/layers).
 //  • Assets: Bausteine (Palette) als Kachel-Katalog.
-import { Layers } from "@craftjs/layers";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,6 +14,7 @@ import { toast } from "sonner";
 import type { Page } from "@/lib/site-pages";
 import { createPage } from "@/lib/site-pages";
 
+import { LayerTree } from "./layer-tree";
 import { Palette } from "./palette";
 
 type Tab = "pages" | "layers" | "assets";
@@ -83,6 +83,21 @@ export function LeftPanel({
       </div>
       <div className="border-b border-border" />
 
+      {/* Seiten-Umschalter (nur im Layers-Tab, wie Framer „Home ▾") */}
+      {tab === "layers" ? (
+        <>
+          <button
+            type="button"
+            className="mx-3 mt-3 flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm transition hover:bg-secondary/60"
+          >
+            <Icon icon={page.is_home ? "ph:house" : "ph:file"} className="size-4 text-muted-foreground" />
+            <span className="truncate">{page.title}</span>
+            <Icon icon="ph:caret-down" className="ml-auto size-3.5 text-muted-foreground" />
+          </button>
+          <div className="mx-3 mt-2 border-b border-border" />
+        </>
+      ) : null}
+
       {/* Suche */}
       <div className="p-3">
         <div className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2">
@@ -142,11 +157,7 @@ export function LeftPanel({
           </>
         ) : null}
 
-        {tab === "layers" ? (
-          <div className="p-2 text-sm">
-            <Layers expandRootOnLoad />
-          </div>
-        ) : null}
+        {tab === "layers" ? <LayerTree /> : null}
 
         {tab === "assets" ? (
           <div className="p-3">
