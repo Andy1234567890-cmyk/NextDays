@@ -1291,3 +1291,24 @@ def test_finalize_oauth_channel_requires_mappings() -> None:
         assert exc.status_code == 422
     else:
         raise AssertionError("finalize ohne Mapping muss 422 liefern")
+
+
+def test_to_booking_masks_customer_via_mixin() -> None:
+    """Regression für den Mixin-Split: _to_booking referenziert _mask_customer
+    über BookingsSyncMixin (einzige Nicht-Verbatim-Stelle des Splits)."""
+    from src.features.auth.guest_masking import GuestMask
+
+    mask = GuestMask(
+        full_name=False, contact=False, amounts=True, source=True, id_docs=False
+    )
+    row = {
+        "id": "b1",
+        "channex_booking_id": "cx-1",
+        "status": "new",
+        "customer": {"name": "Max Mustermann", "mail": "max@example.com"},
+    }
+    booking = ChannelManagerService._to_booking(row, mask)
+    assert booking.id == "b1"
+    assert booking.external_id == "cx-1"
+    # Maskierung greift: voller Name/Kontakt sind ohne Rechte nicht sichtbar.
+    assert booking.customer.get("mail") is None or booking.customer.get("mail") == ""

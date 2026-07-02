@@ -62,14 +62,13 @@ ignored-modules = ["redis.asyncio"]
 
 [tool.pylint.format]
 max-line-length = 100
-# channel_manager/service.py ist eine geschäftskritische Fassade (eine
-# ChannelManagerService-Klasse, ~72 über self-State + private Helfer eng
-# verschränkte Methoden für Channex-ARI-Sync/Mapping/Bookings). Ein sauberer
-# Split in Submodule (channex_sync/property_mapping/ari/bookings) ist gewollt,
-# aber für einen Lint-Pass zu risikoreich. Limit bewusst angehoben.
-# TODO(channel_manager): ChannelManagerService in Submodule slicen und Limit
-# wieder auf den Default (1000) senken.
-max-module-lines = 3000
+# channel_manager/service.py ist seit dem Mixin-Split (common + 6 Domänen-
+# Module) unter 1000 Zeilen — das frühere 3000er-Limit ist eingelöst. Drei
+# Bestands-Services liegen noch knapp darüber (owner_statements 1293,
+# inbox 1223, buchhaltung 1090).
+# TODO(god-files): inbox/owner_statements/buchhaltung splitten und Limit
+# auf den Default (1000) senken.
+max-module-lines = 1300
 
 [tool.pylint.basic]
 # StrEnum-Member werden klein geschrieben (direct, pending, ferienhaus …).

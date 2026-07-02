@@ -191,7 +191,36 @@ class AuthService:
             role=role,
             capabilities=sorted(c.value for c in capabilities_for(role)),
             permissions=sorted(p.value for p in perms),
+            accommodation_type=self._accommodation_type(ctx.tenant_id),
         )
+
+    def _accommodation_type(self, tenant_id: str | None) -> str | None:
+        # Beherbergungsart des Mandanten (0090) — steuert die Navigation.
+        if not tenant_id:
+            return None
+        row = (
+            self._service.table("tenants")
+            .select("accommodation_type")
+            .eq("id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        return row.data[0]["accommodation_type"] if row.data else None
+
+    def set_accommodation_type(self, ctx: AuthContext, value: str) -> MeResponse:
+        # Berechtigung (MANAGE_TENANT) prüft der Router-Guard; hier nur der
+        # EIGENE Mandant (Service-Role umgeht RLS → expliziter Tenant-Scope).
+        if not ctx.tenant_id:
+            raise AuthError("Kein Mandant im Token.", status_code=400)
+        res = (
+            self._service.table("tenants")
+            .update({"accommodation_type": value})
+            .eq("id", ctx.tenant_id)
+            .execute()
+        )
+        if not res.data:
+            raise AuthError("Mandant nicht gefunden.", status_code=404)
+        return self.me(ctx)
 
     # --- interne Schritte (alle über Service-Role) ---
 

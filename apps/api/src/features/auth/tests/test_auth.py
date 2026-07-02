@@ -18,7 +18,12 @@ from src.features.auth.permissions import (
     capabilities_for,
     has_capability,
 )
-from src.features.auth.schemas import InviteRequest, RegisterRequest, UserRole
+from src.features.auth.schemas import (
+    AccommodationTypeUpdate,
+    InviteRequest,
+    RegisterRequest,
+    UserRole,
+)
 from src.features.auth.service import AuthError, AuthService
 from src.main import create_app
 
@@ -287,3 +292,50 @@ def test_register_login_me_roundtrip() -> None:
     data = me.json()
     assert data["role"] == "admin"  # Tenant-Gründer = admin
     assert data["tenant_id"]
+
+
+# --- Betriebsart (accommodation_type, 0090) ---
+
+def test_accommodation_type_update_rejects_unknown_value() -> None:
+    with pytest.raises(ValidationError):
+        AccommodationTypeUpdate(accommodation_type="hostel")
+
+
+def test_set_accommodation_type_requires_tenant() -> None:
+    svc, _anon, _service = _service_with_mocks()
+    ctx = AuthContext(user_id="u1", tenant_id=None, role="admin")
+    with pytest.raises(AuthError):
+        svc.set_accommodation_type(ctx, "hotel")
+
+
+def test_set_accommodation_type_scopes_update_to_own_tenant() -> None:
+    svc, _anon, service = _service_with_mocks()
+    ctx = AuthContext(user_id="u1", tenant_id="t1", role="admin")
+    table = service.table.return_value
+    table.update.return_value.eq.return_value.execute.return_value.data = [
+        {"id": "t1"}
+    ]
+    # me()-Folge-Reads (users + tenants).
+    table.select.return_value.eq.return_value.limit.return_value.execute.return_value.data = [
+        {
+            "role": "admin",
+            "permissions": None,
+            "email": "a@b.de",
+            "accommodation_type": "hotel",
+        }
+    ]
+
+    res = svc.set_accommodation_type(ctx, "hotel")
+
+    service.table.assert_any_call("tenants")
+    table.update.assert_called_with({"accommodation_type": "hotel"})
+    table.update.return_value.eq.assert_called_with("id", "t1")
+    assert res.accommodation_type == "hotel"
+
+
+def test_set_accommodation_type_404_when_tenant_missing() -> None:
+    svc, _anon, service = _service_with_mocks()
+    ctx = AuthContext(user_id="u1", tenant_id="t1", role="admin")
+    service.table.return_value.update.return_value.eq.return_value.execute.return_value.data = []
+    with pytest.raises(AuthError):
+        svc.set_accommodation_type(ctx, "vacation_rental")

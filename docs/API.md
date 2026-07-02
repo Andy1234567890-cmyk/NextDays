@@ -26,6 +26,7 @@ Jeder der 22 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
 | calendar | `GET /api/v1/calendar/health` |
 | reservations | `GET /api/v1/reservations/health` |
 | guests | `GET /api/v1/guests/health` |
+| travel_agencies | `GET /api/v1/travel-agencies/health` |
 | inbox | `GET /api/v1/inbox/health` |
 | whatsapp | `GET /api/v1/whatsapp/health` (Meta Cloud API, s.u.) |
 | payments | `GET /api/v1/payments/health` (Stripe Connect + Zahlungen, s.u.) |
@@ -107,12 +108,20 @@ Erfordert `Authorization: Bearer <access_token>`.
   "tenant_id": "uuid",
   "role": "owner",
   "capabilities": ["…"],
-  "permissions": ["edit_property", "…"]   // Lodgify-Berechtigungen (UI-Gating)
+  "permissions": ["edit_property", "…"],  // Lodgify-Berechtigungen (UI-Gating)
+  "accommodation_type": "vacation_rental" // Betriebsart (0090): vacation_rental | hotel
 }
 ```
 
 `role`/`permissions` werden aus der DB gelesen (Quelle der Wahrheit, JWT kann
 veraltet sein). `401` ohne/mit ungültigem Token.
+
+### `PATCH /api/v1/auth/tenant/accommodation-type`
+
+Stellt die Betriebsart des EIGENEN Mandanten um (steuert die Dashboard-
+Navigation: „Objekte" vs. „Zimmer", Eigentümer-Modul nur Ferienvermietung).
+Erfordert `MANAGE_TENANT` (Admin). Body:
+`{ "accommodation_type": "vacation_rental" | "hotel" }` → Antwort: `MeResponse`.
 
 ### `POST /api/v1/auth/invite` → `201`
 
@@ -944,3 +953,24 @@ am Check-out (kein Fallback → 502). Reporting-/Billing-geschützt.
 
 > Die übrigen Slices (properties, calendar, …) werden nach dem auth-Muster
 > ausgebaut. Diese Übersicht wird dabei fortgeschrieben.
+
+## travel_agencies — Reisebüro-/Partner-Kartei
+
+Alle Endpunkte hinter der Lodgify-Permission `manage_partners`. Verträge sind
+nach Jahren gruppierbar (Jahr = `valid_from`); Vertragsdateien liegen im
+privaten Bucket `agency-contracts` (Download nur als signierte URL).
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| `GET` | `/api/v1/travel-agencies?q&include_inactive` | Partner-Liste |
+| `POST` | `/api/v1/travel-agencies` | Partner anlegen |
+| `GET/PATCH/DELETE` | `/api/v1/travel-agencies/{id}` | Kartei lesen/ändern/löschen |
+| `GET/POST` | `/api/v1/travel-agencies/{id}/contacts` · `DELETE …/{cid}` | Kontaktpersonen |
+| `GET/POST` | `/api/v1/travel-agencies/{id}/contracts` · `PATCH/DELETE …/{cid}` | Verträge (Art, Gültigkeit, Währung, Kommission, Release) |
+| `POST` | `…/contracts/{cid}/file` | Vertragsdokument hochladen (multipart, PDF/JPG/PNG/DOCX/XLSX, 25 MB) |
+| `GET` | `…/contracts/{cid}/file-url` | signierte Download-URL (TTL 1 h) |
+| `GET/POST` | `…/contracts/{cid}/rates` · `DELETE …/{rid}` | Saison-Preiszeilen (Zeitraum × Objekt × Preis/Nacht, net/gross, min_stay) |
+
+Verknüpfung Verkaufsstopp: `POST /api/v1/calendar/stop-sell` akzeptiert
+`agency_id` (Adressat der Stop-Sale-Meldung) und `weekdays` (ISO 0=Mo…6=So);
+manuelle Stopps werden als `stop_sell`-Restriction an Channex gepusht.

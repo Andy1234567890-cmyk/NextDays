@@ -141,12 +141,13 @@ flowchart TB
             BOOK["booking_engine — eigene Direktbuchungs-Strecke (provisionsfrei) + Buchungs-Widget"]
             PORTAL["public_portal — White-Label-Gäste-Portal (Phase 2-Struktur, 9 Routen)"]
             WA["whatsapp — WhatsApp Cloud API (Conversations/Messages, im Posteingang integriert)"]
+            TAG["travel_agencies — Reisebüro-Kartei (Profile, Verträge nach Jahren, Saison-Preise, Vertragsdateien)"]
         end
         subgraph SCAFFOLD["Slices als Gerüst (Health-only) — Logik folgt lt. Roadmap"]
             OCR["ocr"]; CRM["crm"]; DASH["dashboard (min.)"]; CONT["content (min.)"]
         end
     end
-    DB[("Postgres — 93 Tabellen (Migrationen 0001–0083), RLS")]
+    DB[("Postgres — 97+ Tabellen (Migrationen 0001–0090), RLS")]
     DONE --> DB
     SCAFFOLD --> DB
     CORE --> DONE

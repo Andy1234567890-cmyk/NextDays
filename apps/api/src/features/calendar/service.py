@@ -252,7 +252,7 @@ class CalendarService:
         res = (
             self._db()
             .table("stop_sell")
-            .select("id,property_id,date,reason,source")
+            .select("id,property_id,date,reason,source,agency_id")
             .eq("property_id", property_id)
             .gte("date", rng.start.isoformat())
             .lt("date", rng.end.isoformat())
@@ -261,11 +261,61 @@ class CalendarService:
         )
         return res.data or []
 
+    # Channex-Wochentags-Codes (Index = date.weekday(): 0=Montag … 6=Sonntag).
+    _CHANNEX_DAYS = ("mo", "tu", "we", "th", "fr", "sa", "su")
+
     def set_stop_sell(
-        self, tenant_id: str, property_id: str, rng: DateRange, reason: str | None
+        self,
+        tenant_id: str,
+        property_id: str,
+        rng: DateRange,
+        reason: str | None,
+        weekdays: list[int] | None = None,
+        agency_id: str | None = None,
     ) -> int:
-        """Verkaufsstopp manuell setzen (idempotent pro Tag)."""
+        """Verkaufsstopp manuell setzen (idempotent pro Tag) und als
+        stop_sell-Restriction an Channex pushen. `weekdays` (ISO 0=Mo … 6=So)
+        beschränkt optional auf Wochentage im Zeitraum (z. B. nur Wochenenden).
+        `agency_id` dokumentiert den Adressaten der Stop-Sale-Meldung
+        (Reisebüro/Veranstalter); None = gilt allen Kanälen."""
         self._require_own_property(tenant_id, property_id)
+        if agency_id is not None:
+            # Tenant-Scope explizit prüfen (Service-Role umgeht RLS) — sonst
+            # ließen sich fremde Agenturen referenzieren/als Orakel abfragen.
+            owned = (
+                self._db()
+                .table("travel_agencies")
+                .select("id")
+                .eq("tenant_id", tenant_id)
+                .eq("id", agency_id)
+                .limit(1)
+                .execute()
+            ).data
+            if not owned:
+                raise CalendarError("Reisebüro nicht gefunden.", status_code=404)
+        days = [d for d in rng.nights() if not weekdays or d.weekday() in weekdays]
+        if not days:
+            return 0
+        # Channex-seitige Stops (source=channex) nie überschreiben — der Upsert
+        # würde sonst ihre source auf manual kippen und ein späteres Aufheben
+        # würde OTA-Stops öffnen. Diese Tage sind ohnehin bereits gestoppt.
+        channex_days = {
+            row["date"]
+            for row in (
+                self._db()
+                .table("stop_sell")
+                .select("date")
+                .eq("property_id", property_id)
+                .eq("source", "channex")
+                .gte("date", rng.start.isoformat())
+                .lt("date", rng.end.isoformat())
+                .execute()
+            ).data
+            or []
+        }
+        days = [d for d in days if d.isoformat() not in channex_days]
+        if not days:
+            return 0
         payload = [
             {
                 "tenant_id": tenant_id,
@@ -273,27 +323,131 @@ class CalendarService:
                 "date": day.isoformat(),
                 "reason": reason,
                 "source": "manual",
+                "agency_id": agency_id,
             }
-            for day in rng.nights()
+            for day in days
         ]
         self._db().table("stop_sell").upsert(
             payload, on_conflict="property_id,date"
         ).execute()
+        # Ein Range-Push; die Wochentags-Maske versteht Channex nativ (days).
+        self._push_channex_stop_sell(
+            property_id,
+            [(rng.start, rng.end - timedelta(days=1))],
+            stop_sell=True,
+            days=[self._CHANNEX_DAYS[w] for w in weekdays] if weekdays else None,
+        )
         log.info("calendar_stop_sell_set", property_id=property_id, days=len(payload))
         return len(payload)
 
     def clear_stop_sell(
-        self, tenant_id: str, property_id: str, rng: DateRange
+        self,
+        tenant_id: str,
+        property_id: str,
+        rng: DateRange,
+        weekdays: list[int] | None = None,
     ) -> None:
         """Manuellen Verkaufsstopp aufheben. Channex-Stops (source=channex) bleiben
-        unangetastet — die spiegeln den OTA-Stand und werden per Import gepflegt."""
+        unangetastet — die spiegeln den OTA-Stand und werden per Import gepflegt.
+        An Channex wird stop_sell=false NUR für Tage gepusht, die danach wirklich
+        keinen Stop mehr haben (sonst würden OTA-seitige Stops geöffnet)."""
         self._require_own_property(tenant_id, property_id)
-        self._db().table("stop_sell").delete().eq("property_id", property_id).eq(
-            "source", "manual"
-        ).gte("date", rng.start.isoformat()).lt(
-            "date", rng.end.isoformat()
-        ).execute()
+        wanted = [d for d in rng.nights() if not weekdays or d.weekday() in weekdays]
+        if not wanted:
+            return
+        query = (
+            self._db()
+            .table("stop_sell")
+            .delete()
+            .eq("property_id", property_id)
+            .eq("source", "manual")
+        )
+        if weekdays:
+            query = query.in_("date", [d.isoformat() for d in wanted])
+        else:
+            query = query.gte("date", rng.start.isoformat()).lt(
+                "date", rng.end.isoformat()
+            )
+        query.execute()
+        # Verbleibende Stops (z. B. source=channex) dürfen nicht geöffnet werden.
+        remaining = {
+            row["date"]
+            for row in (
+                self._db()
+                .table("stop_sell")
+                .select("date")
+                .eq("property_id", property_id)
+                .gte("date", rng.start.isoformat())
+                .lt("date", rng.end.isoformat())
+                .execute()
+            ).data
+            or []
+        }
+        open_days = [d for d in wanted if d.isoformat() not in remaining]
+        if not remaining:
+            # Nichts bleibt gesperrt → EIN Range-Push (mit nativer Wochentags-Maske).
+            self._push_channex_stop_sell(
+                property_id,
+                [(rng.start, rng.end - timedelta(days=1))],
+                stop_sell=False,
+                days=[self._CHANNEX_DAYS[w] for w in weekdays] if weekdays else None,
+            )
+        else:
+            self._push_channex_stop_sell(
+                property_id, self._date_spans(open_days), stop_sell=False
+            )
         log.info("calendar_stop_sell_cleared", property_id=property_id)
+
+    @staticmethod
+    def _date_spans(days: list[date]) -> list[tuple[date, date]]:
+        """Sortierte Tagesliste zu zusammenhängenden (start, end)-Spannen
+        komprimieren (end inklusiv) — Ranges statt Einzeltage pushen
+        (Channex-Skill: „batch via ranges")."""
+        spans: list[tuple[date, date]] = []
+        for d in sorted(days):
+            if spans and d == spans[-1][1] + timedelta(days=1):
+                spans[-1] = (spans[-1][0], d)
+            else:
+                spans.append((d, d))
+        return spans
+
+    def _push_channex_stop_sell(
+        self,
+        property_id: str,
+        spans: list[tuple[date, date]],
+        *,
+        stop_sell: bool,
+        days: list[str] | None = None,
+    ) -> None:
+        """Verkaufsstopp als stop_sell-Restriction an Channex pushen (Best-Effort;
+        Gate _has_active_connection im ChannelManagerService). Fehler dürfen die
+        Speicherung nie scheitern lassen."""
+        if self._client is None or not spans:
+            return
+        try:
+            prop = (
+                self._db()
+                .table("properties")
+                .select("tenant_id")
+                .eq("id", property_id)
+                .limit(1)
+                .execute()
+            ).data
+            if not prop:
+                return
+            from src.features.channel_manager.service import ChannelManagerService
+
+            ChannelManagerService(
+                service_client=self._client
+            ).push_stop_sell_for_property(
+                prop[0]["tenant_id"],
+                property_id,
+                spans,
+                stop_sell=stop_sell,
+                days=days,
+            )
+        except Exception as exc:  # noqa: BLE001
+            log.warning("calendar_channex_stop_sell_push_failed", error=str(exc))
 
     # -- Saisonpreise (Tagespreise je Zeitraum → price_overrides + Channex) ----
     def list_season_prices(

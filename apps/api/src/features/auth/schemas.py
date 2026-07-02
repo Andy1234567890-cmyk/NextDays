@@ -67,6 +67,15 @@ class MeResponse(BaseModel):
     role: UserRole | None = None
     capabilities: list[str] = []  # Fähigkeiten der Rolle (Berechtigungs-Matrix)
     permissions: list[str] = []   # Lodgify-Berechtigungen (für UI-Gating)
+    # Beherbergungsart des Mandanten (0090): steuert die Navigation
+    # (Objekte vs. Zimmer, Eigentümer-Modul nur bei Ferienvermietung).
+    accommodation_type: str | None = None
+
+
+class AccommodationTypeUpdate(BaseModel):
+    """Beherbergungsart des Mandanten umstellen (nur Admin)."""
+
+    accommodation_type: str = Field(pattern="^(vacation_rental|hotel)$")
 
 
 class AccountResponse(BaseModel):

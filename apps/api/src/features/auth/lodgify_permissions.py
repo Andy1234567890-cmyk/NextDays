@@ -69,6 +69,8 @@ class Permission(StrEnum):
     # --- White-Label-Site (Branding + Custom-Domains) ---
     # Spiegelt die Backend-Capability MANAGE_SITE_CONFIG; steuert den /konto/branding-Tab.
     MANAGE_SITE_CONFIG = "manage_site_config"
+    # --- Reisebüro-/Partner-Kartei (Stammdaten, Verträge, Jahres-Preise) ---
+    MANAGE_PARTNERS = "manage_partners"
 
 
 _ALL: frozenset[Permission] = frozenset(Permission)
@@ -114,6 +116,7 @@ _CO_ADMIN: frozenset[Permission] = frozenset({
     Permission.INBOX_ASSIGN,
     Permission.INBOX_MANAGE_CONFIG,
     Permission.MANAGE_SITE_CONFIG,
+    Permission.MANAGE_PARTNERS,
 })
 
 _OWNER: frozenset[Permission] = frozenset({

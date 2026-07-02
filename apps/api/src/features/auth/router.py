@@ -14,6 +14,7 @@ from .dependencies import (
 )
 from .permissions import Capability
 from .schemas import (
+    AccommodationTypeUpdate,
     AccountResponse,
     InviteRequest,
     InviteResponse,
@@ -68,6 +69,18 @@ def login(req: LoginRequest, service: AuthServiceDep) -> SessionResponse:
 @router.get("/me", response_model=MeResponse)
 def me(ctx: CurrentUser, service: AuthServiceDep) -> MeResponse:
     return service.me(ctx)
+
+
+@router.patch("/tenant/accommodation-type", response_model=MeResponse)
+def set_accommodation_type(
+    req: AccommodationTypeUpdate,
+    ctx: Annotated[AuthContext, Depends(require_permission(Capability.MANAGE_TENANT))],
+    service: AuthServiceDep,
+) -> MeResponse:
+    try:
+        return service.set_accommodation_type(ctx, req.accommodation_type)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.post(

@@ -466,3 +466,91 @@ def test_db_unavailable_raises_clean_error() -> None:
     with pytest.raises(CalendarError) as exc:
         svc.get_availability("t1", "p1", rng)
     assert exc.value.status_code == 500
+
+
+# --- Stop-Sell: Wochentags-Maske, Spannen-Kompression, Schema-Validierung ---
+
+def test_stop_sell_weekday_mask_limits_days() -> None:
+    svc, store = _service(properties=[{"id": "p1"}])
+    # 1.–14. Juni 2027 (1.6. = Dienstag): nur Sa (5) + So (6) sperren.
+    rng = DateRange(start=date(2027, 6, 1), end=date(2027, 6, 15))
+    count = svc.set_stop_sell("t1", "p1", rng, None, [5, 6])
+    (_table, payload) = store["_upserts"][0]
+    assert count == 4
+    assert [row["date"] for row in payload] == [
+        "2027-06-05", "2027-06-06", "2027-06-12", "2027-06-13",
+    ]
+    assert all(row["source"] == "manual" for row in payload)
+
+
+def test_stop_sell_weekday_mask_without_match_is_noop() -> None:
+    svc, store = _service(properties=[{"id": "p1"}])
+    rng = DateRange(start=date(2027, 6, 5), end=date(2027, 6, 7))  # Sa + So
+    count = svc.set_stop_sell("t1", "p1", rng, None, [2])  # nur Mittwoch
+    assert count == 0
+    assert "_upserts" not in store  # kein Upsert für leere Auswahl
+
+
+def test_stop_sell_without_mask_covers_all_nights() -> None:
+    svc, store = _service(properties=[{"id": "p1"}])
+    rng = DateRange(start=date(2027, 6, 1), end=date(2027, 6, 4))
+    count = svc.set_stop_sell("t1", "p1", rng, "Wartung", None)
+    (_table, payload) = store["_upserts"][0]
+    assert count == 3
+    assert all(row["reason"] == "Wartung" for row in payload)
+
+
+def test_clear_stop_sell_with_weekdays_runs_delete() -> None:
+    svc, store = _service(
+        properties=[{"id": "p1"}],
+        stop_sell=[{"date": "2027-06-06"}],  # bleibt (z. B. source=channex)
+    )
+    rng = DateRange(start=date(2027, 6, 1), end=date(2027, 6, 15))
+    svc.clear_stop_sell("t1", "p1", rng, [5, 6])
+    assert "stop_sell" in store.get("_deletes", [])
+
+
+def test_date_spans_compresses_consecutive_days() -> None:
+    spans = CalendarService._date_spans(
+        [date(2027, 6, 5), date(2027, 6, 6), date(2027, 6, 8)]
+    )
+    assert spans == [
+        (date(2027, 6, 5), date(2027, 6, 6)),
+        (date(2027, 6, 8), date(2027, 6, 8)),
+    ]
+
+
+def test_stop_sell_request_rejects_invalid_weekday() -> None:
+    from src.features.calendar.schemas import StopSellRequest
+
+    with pytest.raises(ValueError):
+        StopSellRequest(
+            property_id="p1",
+            range=DateRange(start=date(2027, 6, 1), end=date(2027, 6, 2)),
+            weekdays=[7],
+        )
+
+
+def test_stop_sell_rejects_foreign_agency() -> None:
+    # Cross-Tenant-Referenz: fremde agency_id → 404 (Review-Befund P1).
+    # Der Fake ignoriert eq-Filter; ein leerer Store simuliert den
+    # tenant-gescopten Lookup ohne Treffer.
+    svc, _ = _service(properties=[{"id": "p1"}], travel_agencies=[])
+    rng = DateRange(start=date(2027, 6, 1), end=date(2027, 6, 3))
+    with pytest.raises(CalendarError) as exc:
+        svc.set_stop_sell("t1", "p1", rng, None, None, "a-fremd")
+    assert exc.value.status_code == 404
+
+
+def test_stop_sell_never_overwrites_channex_days() -> None:
+    # Upsert darf source=channex nicht auf manual kippen (Review-Befund P2).
+    svc, store = _service(
+        properties=[{"id": "p1"}],
+        stop_sell=[{"date": "2027-06-02", "source": "channex"}],
+    )
+    rng = DateRange(start=date(2027, 6, 1), end=date(2027, 6, 4))
+    count = svc.set_stop_sell("t1", "p1", rng, None, None)
+    (_table, payload) = store["_upserts"][0]
+    dates = [row["date"] for row in payload]
+    assert "2027-06-02" not in dates  # Channex-Tag ausgespart
+    assert count == 2

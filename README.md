@@ -220,7 +220,7 @@ nextdays/
 │   └── api/                # FastAPI — gesamte Business-Logik
 │       └── src/
 │           ├── core/       # Config, Auth (ES256/JWKS), Supabase, Logging
-│           └── features/   # 16 Vertical Slices (auth, calendar, tasks, payments, …)
+│           └── features/   # 25 Vertical Slices (auth, calendar, tasks, payments, …)
 └── packages/
     └── shared/             # geteilte TS-Typen
 ```
@@ -237,7 +237,8 @@ nextdays/
 |---|---|
 | Monorepo-Gerüst + Infra (Docker, Supabase-Config) | ✅ |
 | FastAPI `core/` (Config, Logging, Supabase, Auth ES256/JWKS) | ✅ |
-| 16 Vertical Slices angelegt | ✅ |
+| 25 Vertical Slices angelegt | ✅ |
+| `travel_agencies` (Reisebüro-Kartei: Verträge nach Jahren, Saison-Preise, Stop-Sell-Adressat) | ✅ |
 | `auth`-Slice voll (Register/Login/Me · Rollen · Capability-Matrix) | ✅ |
 | `calendar`-Slice (Verfügbarkeit, Sperrung, Preis-Override) | ✅ |
 | `tasks`-Slice (Aufgaben, Checklisten, Inventar, Vertretung) | ✅ |

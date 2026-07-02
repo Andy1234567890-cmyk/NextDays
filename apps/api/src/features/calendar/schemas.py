@@ -94,6 +94,8 @@ class StopSellDay(BaseModel):
     date: date
     reason: str | None = None
     source: StopSellSource
+    # Reisebüro/Veranstalter, an den sich der Stopp richtet (None = alle).
+    agency_id: str | None = None
 
 
 class StopSellListResponse(BaseModel):
@@ -102,15 +104,37 @@ class StopSellListResponse(BaseModel):
 
 
 class StopSellRequest(BaseModel):
-    """Verkaufsstopp für einen Zeitraum setzen (manuell)."""
+    """Verkaufsstopp für einen Zeitraum setzen (manuell).
+
+    weekdays: optionale Wochentags-Maske (ISO: 0=Montag … 6=Sonntag) — nur
+    passende Tage im Zeitraum werden gesperrt (z. B. nur Wochenenden).
+    None/leer = alle Tage.
+    """
     property_id: str
     range: DateRange
     reason: str | None = None
+    weekdays: list[int] | None = None
+    # Adressat der Stop-Sale-Meldung (travel_agencies.id); None = alle Kanäle.
+    agency_id: str | None = None
+
+    @model_validator(mode="after")
+    def _check_weekdays(self) -> "StopSellRequest":
+        if self.weekdays is not None and any(w < 0 or w > 6 for w in self.weekdays):
+            raise ValueError("weekdays müssen zwischen 0 (Montag) und 6 (Sonntag) liegen")
+        return self
 
 
 class StopSellClearRequest(BaseModel):
     property_id: str
     range: DateRange
+    # Wochentags-Maske wie bei StopSellRequest (nur passende Tage aufheben).
+    weekdays: list[int] | None = None
+
+    @model_validator(mode="after")
+    def _check_weekdays(self) -> "StopSellClearRequest":
+        if self.weekdays is not None and any(w < 0 or w > 6 for w in self.weekdays):
+            raise ValueError("weekdays müssen zwischen 0 (Montag) und 6 (Sonntag) liegen")
+        return self
 
 
 class SeasonPriceRequest(BaseModel):
