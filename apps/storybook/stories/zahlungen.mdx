@@ -186,6 +186,28 @@ Stripe is used for **all payments on our own platform** (myNextDays/`booking_eng
 
 <De>
 
+## AGB & Stripe Connected Account Agreement (Custom-Pflicht)
+
+Stripe verlangt für **Custom Accounts**, dass die Plattform die Zustimmung zum
+[Stripe Connected Account Agreement](https://stripe.com/connect-account/legal/full)
+selbst einholt und in den eigenen AGB referenziert (kein Stripe-gehosteter
+Onboarding-Flow → wir sind allein verantwortlich für die Einwilligung).
+
+- **AGB in allen 24 EU-Amtssprachen** unter `/agb` (Agentur-AGB in `apps/web`,
+  Quellfassung `content/legal/agb/de.ts`). **§ 5 „Zahlungsabwicklung durch
+  Stripe"** verankert das Connected Account Agreement nach Stripes offiziellem
+  Empfehlungstext; § 6 regelt Auszahlungen, Rückbelastungen und negative Salden.
+- Der Gäste-Marktplatz (`plattform/`) hat eine eigene Gast-AGB unter
+  `/agb?sprache=<code>`.
+- **Zustimmung mit Nachweis:** Der „Zahlungen aktivieren"-Klick verlinkt AGB +
+  Connected Account Agreement und setzt `tos_acceptance` (`date` + **echte
+  Nutzer-IP** aus `x-forwarded-for`) via `Account.update` — Stripe verlangt beide
+  Werte als Beleg der Einwilligung.
+
+> Der Betreiber-Firmenname in den AGB ist noch ein Platzhalter und muss vor der
+> Stripe-Einreichung durch die echte Firmierung ersetzt werden; eine anwaltliche
+> Prüfung der Texte steht aus.
+
 ## Implementierte API-Endpunkte
 
 | Methode  | Pfad                                            | Beschreibung                                         | Zugriff        |
@@ -208,6 +230,28 @@ Stripe is used for **all payments on our own platform** (myNextDays/`booking_eng
 </De>
 
 <En>
+
+## Terms & Stripe Connected Account Agreement (Custom requirement)
+
+For **Custom accounts**, Stripe requires the platform to obtain consent to the
+[Stripe Connected Account Agreement](https://stripe.com/connect-account/legal/full)
+itself and to reference it in its own terms (no Stripe-hosted onboarding flow →
+we are solely responsible for the consent).
+
+- **Terms in all 24 EU official languages** at `/agb` (agency terms in
+  `apps/web`, source `content/legal/agb/de.ts`). **§ 5 "Payment processing by
+  Stripe"** anchors the Connected Account Agreement following Stripe's official
+  recommended language; § 6 covers payouts, chargebacks and negative balances.
+- The guest marketplace (`plattform/`) has its own guest terms at
+  `/agb?sprache=<code>`.
+- **Consent with proof:** The "Activate payments" click links the terms + the
+  Connected Account Agreement and sets `tos_acceptance` (`date` + the **real
+  user IP** from `x-forwarded-for`) via `Account.update` — Stripe requires both
+  values as evidence of consent.
+
+> The operator's company name in the terms is still a placeholder and must be
+> replaced with the real legal entity before submitting to Stripe; a legal
+> review of the texts is still pending.
 
 ## Implemented API endpoints
 
