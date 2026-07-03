@@ -12,6 +12,8 @@
 // tenant_billing_profile gespiegelt; wir abonnieren die Tabelle (useRealtime,
 // WebSocket) und laden bei jeder Änderung live nach — kein Polling.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
+import Link from "next/link";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -78,6 +80,7 @@ export function PaymentsActivation({
   initialStatus,
   initialStatusError,
 }: Props) {
+  const t = useTranslations("legal");
   const [status, setStatus] = useState<ConnectStatus | null>(initialStatus);
   const [statusError, setStatusError] = useState<string | null>(
     initialStatusError,
@@ -210,9 +213,31 @@ export function PaymentsActivation({
               />
               {accepting ? "Wird aktiviert …" : "Zahlungen aktivieren"}
             </Button>
+            {/* Stripe-Pflicht (Custom Accounts): Beim Akzeptieren müssen unsere
+                AGB UND das Stripe Connected Account Agreement sichtbar
+                verlinkt sein — Wortlaut folgt Stripes Empfehlungstext. */}
             <p className="text-xs text-muted-foreground">
-              Mit dem Klick akzeptierst du die Stripe-Nutzungsbedingungen. Alle
-              übrigen Angaben kommen aus deinen Stammdaten.
+              {t.rich("stripeConsent", {
+                agb: (chunks) => (
+                  <Link
+                    href="/agb"
+                    target="_blank"
+                    className="underline underline-offset-2 hover:text-foreground"
+                  >
+                    {chunks}
+                  </Link>
+                ),
+                stripe: (chunks) => (
+                  <a
+                    href="https://stripe.com/connect-account/legal/full"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline underline-offset-2 hover:text-foreground"
+                  >
+                    {chunks}
+                  </a>
+                ),
+              })}
             </p>
           </div>
         </>

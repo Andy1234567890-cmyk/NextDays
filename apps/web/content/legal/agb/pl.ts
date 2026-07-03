@@ -1,0 +1,144 @@
+import type { LegalDoc } from "../types";
+
+// Polnische Fassung. Quelle ist content/legal/agb/de.ts — Änderungen immer
+// zuerst dort. § 5 Absatz 1–2 folgt Stripes offiziellem Empfehlungstext
+// (Stripe Connected Account Agreement) — Wortlaut sinngemäß, URLs nicht verändern.
+export const agb: LegalDoc = {
+  title: "Ogólne Warunki Handlowe (Regulamin) dla agencji i wynajmujących",
+  stand: "Stan na: 3 lipca 2026 r.",
+  intro: [
+    "Niniejsze Ogólne Warunki Handlowe (zwane dalej „Regulaminem”) określają zasady korzystania z platformy oprogramowania myNextDays (zwanej dalej „Platformą”) przez agencje, wynajmujących, zarządców nieruchomości oraz innych użytkowników prowadzących działalność gospodarczą (zwanych dalej „Użytkownikiem”).",
+    "Dostawcą Platformy jest [pełna firma, forma prawna, adres i dane rejestrowe operatora — uzupełnić przed publikacją] (zwana dalej „myNextDays” lub „my”).",
+    "Platforma jest przeznaczona wyłącznie dla przedsiębiorców w rozumieniu § 14 niemieckiego kodeksu cywilnego (BGB) lub odpowiednich przepisów danego państwa członkowskiego UE. Nie jest przeznaczona dla konsumentów.",
+  ],
+  sections: [
+    {
+      heading: "§ 1 Zakres obowiązywania",
+      paragraphs: [
+        "Niniejszy Regulamin ma zastosowanie do wszystkich umów dotyczących korzystania z Platformy zawieranych między myNextDays a Użytkownikiem oraz do wszystkich usług i modułów udostępnianych za jej pośrednictwem.",
+        "Odmienne, sprzeczne lub uzupełniające warunki handlowe Użytkownika stają się częścią umowy tylko wtedy, gdy myNextDays wyraźnie zaakceptuje ich obowiązywanie w formie tekstowej.",
+      ],
+    },
+    {
+      heading: "§ 2 Przedmiot umowy i usługi",
+      paragraphs: [
+        "myNextDays udostępnia Użytkownikowi oprogramowanie w chmurze do zarządzania obiektami wakacyjnymi i przedsiębiorstwami noclegowymi. Zakres funkcji wynika z aktualnego opisu usług i obejmuje w szczególności:",
+      ],
+      list: [
+        "zarządzanie obiektami, kalendarzami obłożenia i rezerwacjami (system zarządzania nieruchomościami),",
+        "połączenie z zewnętrznymi kanałami rezerwacyjnymi (np. Booking.com, Airbnb) za pośrednictwem menedżera kanałów,",
+        "publikowanie ofert za pośrednictwem własnego kanału rezerwacyjnego Platformy myNextDays,",
+        "tworzenie własnych stron internetowych za pomocą zintegrowanego kreatora stron,",
+        "funkcje księgowe, rozliczeniowe i analityczne, w tym rozliczenia dla właścicieli,",
+        "komunikację z gośćmi oraz przyjmowanie płatności za pośrednictwem zintegrowanej obsługi płatności (§ 5).",
+      ],
+    },
+    {
+      heading: "§ 3 Rejestracja, konto i dane Użytkownika",
+      paragraphs: [
+        "Korzystanie z Platformy wymaga rejestracji konta. Użytkownik jest zobowiązany do podawania przy rejestracji oraz przez cały okres obowiązywania umowy prawdziwych, aktualnych i kompletnych danych dotyczących swojej osoby i swojego przedsiębiorstwa oraz do ich niezwłocznej aktualizacji w przypadku zmian.",
+        "Dane dostępowe należy zachowywać w tajemnicy i chronić przed dostępem osób trzecich. Użytkownik ma obowiązek niezwłocznie poinformować myNextDays, jeżeli istnieją przesłanki wskazujące na nadużycie jego konta.",
+        "Konto jest nieprzenoszalne. Użytkownik zapewnia, że wszystkie osoby korzystające z konta w jego imieniu przestrzegają niniejszego Regulaminu.",
+      ],
+    },
+    {
+      heading: "§ 4 Rola myNextDays przy rezerwacjach",
+      paragraphs: [
+        "Umowy o świadczenie usług noclegowych dotyczące obiektów oferowanych na Platformie, w połączonych kanałach zewnętrznych lub na własnej stronie internetowej Użytkownika są zawierane wyłącznie między Użytkownikiem (lub reprezentowanym przez niego właścicielem) a danym gościem. myNextDays nie staje się stroną umowy o nocleg.",
+        "Za prawidłowość i zgodność z prawem treści ofert (opisów, zdjęć, cen, dostępności, podatków i opłat) odpowiada wyłącznie Użytkownik.",
+      ],
+    },
+    {
+      heading: "§ 5 Obsługa płatności przez Stripe",
+      paragraphs: [
+        "Usługi obsługi płatności dla agencji i wynajmujących na myNextDays są świadczone przez Stripe i podlegają umowie [Stripe Connected Account Agreement](https://stripe.com/connect-account/legal/full), która obejmuje warunki korzystania z usług Stripe (łącznie „Umowa o Usługi Stripe”). Akceptując niniejszy Regulamin lub kontynuując działalność jako agencja lub wynajmujący na myNextDays, Użytkownik wyraża zgodę na związanie się Umową o Usługi Stripe, która może być co pewien czas zmieniana przez Stripe.",
+        "Warunkiem umożliwienia przez myNextDays usług obsługi płatności za pośrednictwem Stripe jest przekazanie myNextDays przez Użytkownika prawdziwych i kompletnych informacji o nim samym i jego przedsiębiorstwie. Użytkownik upoważnia myNextDays do udostępniania Stripe tych informacji oraz danych transakcyjnych związanych z korzystaniem z usług obsługi płatności świadczonych przez Stripe.",
+        "Dla stosunku prawnego ze Stripe miarodajny jest podlinkowany anglojęzyczny tekst umowy w aktualnie obowiązującej wersji. Stroną umowy dla użytkowników z Europejskiego Obszaru Gospodarczego jest spółka Stripe wskazana w Umowie o Usługi Stripe (obecnie Stripe Payments Europe, Limited, Irlandia). Stripe przetwarza dane osobowe zgodnie z [Polityką prywatności Stripe](https://stripe.com/privacy).",
+        "W celu wypełnienia ustawowych obowiązków identyfikacyjnych i weryfikacyjnych (m.in. przeciwdziałanie praniu pieniędzy, „Know Your Customer”) myNextDays i Stripe mogą w każdej chwili zażądać dodatkowych informacji i dokumentów, w szczególności dokumentów tożsamości, informacji o beneficjentach rzeczywistych oraz danych rachunku bankowego. Jeżeli żądane informacje lub dokumenty nie zostaną dostarczone w wyznaczonym terminie, przyjmowanie płatności lub wypłaty mogą zostać w całości lub częściowo wstrzymane do czasu skompletowania danych.",
+      ],
+    },
+    {
+      heading: "§ 6 Wypłaty, obciążenia zwrotne i salda ujemne",
+      paragraphs: [
+        "Wypłaty są dokonywane na rachunek bankowy wskazany przez Użytkownika. myNextDays może dostosować harmonogram wypłat ze względu na ryzyko, w szczególności w przypadku nowych kont, nietypowych wzorców transakcji lub trwających weryfikacji.",
+        "Obciążenia zwrotne (chargebacki), zwroty płatności oraz wynikające z nich opłaty związane z rezerwacjami Użytkownika ponosi Użytkownik. myNextDays jest uprawniona do potrącania odpowiednich kwot z przyszłych wypłat.",
+        "Jeżeli na rachunku płatniczym Użytkownika powstanie saldo ujemne, Użytkownik jest zobowiązany do jego niezwłocznego wyrównania. Użytkownik upoważnia myNextDays i Stripe do pobierania sald ujemnych ze wskazanego rachunku bankowego, o ile jest to prawnie dopuszczalne.",
+      ],
+    },
+    {
+      heading: "§ 7 Opłaty i rozliczenia",
+      paragraphs: [
+        "Opłaty za korzystanie z Platformy wynikają z cennika uzgodnionego przy zawarciu umowy lub z indywidualnej oferty. Wszystkie ceny nie zawierają obowiązujących podatków ustawowych i są wyrażone w walucie wskazanej w umowie.",
+        "Opłaty zależne od transakcji (np. opłaty za płatności lub kanały) mogą być potrącane lub rozliczane bezpośrednio przy realizacji danej transakcji.",
+        "Jeżeli Użytkownik pozostaje w zwłoce z płatnościami, myNextDays może po uprzednim powiadomieniu zablokować dostęp do Platformy do czasu uregulowania zaległych należności.",
+      ],
+    },
+    {
+      heading: "§ 8 Obowiązki Użytkownika; własne dokumenty prawne",
+      paragraphs: [
+        "Użytkownik zapewnia, że jego oferty, treści i praktyki handlowe są zgodne z obowiązującym prawem, w szczególności z przepisami o usługach noclegowych, obowiązkach meldunkowych, podatkach i ochronie konsumentów obowiązującymi w miejscu położenia obiektu. Użytkownik na własną odpowiedzialność posiada wymagane zezwolenia, rejestracje i licencje.",
+        "Za strony internetowe prowadzone przez Użytkownika za pomocą kreatora stron oraz za jego oferty na Platformie odpowiada sam Użytkownik; obejmuje to w szczególności własny regulamin dla gości, własne dane identyfikacyjne usługodawcy (impressum) oraz własne informacje o ochronie danych.",
+        "Zabronione są w szczególności: zamieszczanie nieprawdziwych lub wprowadzających w błąd ofert, realizacja transakcji pozornych lub oszukańczych, obchodzenie obsługi płatności zgodnie z § 5 w odniesieniu do rezerwacji zawartych za pośrednictwem Platformy oraz każde korzystanie, które zagraża bezpieczeństwu lub dostępności Platformy.",
+      ],
+    },
+    {
+      heading: "§ 9 Zewnętrzne kanały rezerwacyjne",
+      paragraphs: [
+        "W przypadku połączenia z kanałami zewnętrznymi (np. Booking.com, Airbnb) dodatkowo obowiązują warunki danego operatora kanału. Wymagane w tym celu umowy Użytkownik zawiera bezpośrednio z operatorem kanału.",
+        "myNextDays zapewnia techniczną synchronizację dostępności, cen i danych rezerwacji, nie ma jednak wpływu na treści, prowizje ani decyzje operatorów kanałów i nie odpowiada za ich dostępność.",
+      ],
+    },
+    {
+      heading: "§ 10 Dostępność i rozwój Platformy",
+      paragraphs: [
+        "myNextDays świadczy usługi z należytą starannością wymaganą w obrocie profesjonalnym i dąży do wysokiej dostępności Platformy. Okna serwisowe, prace rozwojowe oraz okoliczności pozostające poza wpływem myNextDays (np. zakłócenia u dostawców zewnętrznych) mogą tymczasowo ograniczać dostępność.",
+        "myNextDays może rozwijać Platformę i zmieniać jej funkcje, o ile nie zagraża to celowi umowy, a zmiana jest dla Użytkownika akceptowalna.",
+      ],
+    },
+    {
+      heading: "§ 11 Dane i ochrona danych",
+      paragraphs: [
+        "Jeżeli myNextDays w ramach udostępniania Platformy przetwarza dane osobowe w imieniu Użytkownika (w szczególności dane gości), strony zawierają umowę powierzenia przetwarzania danych zgodnie z art. 28 RODO.",
+        "Użytkownik pozostaje odpowiedzialny za dopuszczalność gromadzenia i przetwarzania wprowadzanych przez niego danych w świetle przepisów o ochronie danych. Szczegóły dotyczące przetwarzania danych przez myNextDays wynikają z informacji o ochronie danych Platformy; do przetwarzania danych przez Stripe stosuje się § 5.",
+      ],
+    },
+    {
+      heading: "§ 12 Własność intelektualna",
+      paragraphs: [
+        "Wszelkie prawa do Platformy, jej oprogramowania i treści (z wyjątkiem treści zamieszczanych przez Użytkownika) przysługują myNextDays lub jej licencjodawcom. Użytkownik otrzymuje na okres obowiązywania umowy niewyłączne, nieprzenoszalne prawo do korzystania z Platformy w zakresie uzgodnionym w umowie.",
+        "W odniesieniu do treści zamieszczanych przez Użytkownika Użytkownik udziela myNextDays niewyłącznych praw do korzystania z nich w zakresie niezbędnym do prowadzenia Platformy (w szczególności do przechowywania, zwielokrotniania, wyświetlania i przekazywania do połączonych kanałów).",
+      ],
+    },
+    {
+      heading: "§ 13 Odpowiedzialność",
+      paragraphs: [
+        "myNextDays ponosi nieograniczoną odpowiedzialność za winę umyślną i rażące niedbalstwo oraz za szkody wynikające z naruszenia życia, ciała lub zdrowia.",
+        "W przypadku zwykłego niedbalstwa myNextDays odpowiada wyłącznie za naruszenie istotnych obowiązków umownych (obowiązków kardynalnych), w granicach typowej dla umowy, możliwej do przewidzenia szkody. Odpowiedzialność na podstawie przepisów o odpowiedzialności za produkt oraz z tytułu udzielonych gwarancji pozostaje nienaruszona.",
+        "Za utratę danych myNextDays odpowiada tylko w takim zakresie, w jakim szkoda powstałaby również przy prawidłowym, regularnym tworzeniu kopii zapasowych przez Użytkownika, chyba że tworzenie kopii zapasowych należy na mocy umowy do obowiązków myNextDays.",
+      ],
+    },
+    {
+      heading: "§ 14 Okres obowiązywania, wypowiedzenie i blokada",
+      paragraphs: [
+        "Okres obowiązywania i terminy wypowiedzenia wynikają z danej umowy. Prawo do nadzwyczajnego wypowiedzenia z ważnego powodu pozostaje nienaruszone.",
+        "myNextDays może tymczasowo zablokować dostęp do Platformy lub poszczególne funkcje (w tym przyjmowanie płatności i wypłaty), jeżeli istnieją konkretne przesłanki naruszenia niniejszego Regulaminu, oszustwa lub nadużycia albo jeżeli myNextDays jest do tego zobowiązana przepisami prawa lub poleceniem dostawcy usług płatniczych. Użytkownik zostanie poinformowany o blokadzie, o ile jest to prawnie dopuszczalne.",
+        "Po zakończeniu umowy myNextDays na żądanie udostępni Użytkownikowi jego dane do eksportu w powszechnie stosowanym formacie w ciągu 30 dni; następnie dane zostaną usunięte, o ile nie stoją temu na przeszkodzie ustawowe obowiązki przechowywania.",
+      ],
+    },
+    {
+      heading: "§ 15 Zmiany niniejszego Regulaminu",
+      paragraphs: [
+        "myNextDays może zmienić niniejszy Regulamin ze skutkiem na przyszłość, o ile jest to konieczne z ważnych przyczyn (w szczególności z powodu zmian przepisów prawa, orzecznictwa lub wymogów dostawców usług płatniczych), a Użytkownik nie zostanie przez to nadmiernie pokrzywdzony.",
+        "Zmiany będą zapowiadane Użytkownikowi w formie tekstowej co najmniej sześć tygodni przed ich wejściem w życie. Jeżeli Użytkownik nie zgłosi sprzeciwu w okresie zapowiedzi lub będzie nadal korzystać z Platformy po wejściu zmian w życie, zmieniony Regulamin uznaje się za przyjęty; na ten skutek zostanie osobno zwrócona uwaga w zapowiedzi.",
+      ],
+    },
+    {
+      heading: "§ 16 Postanowienia końcowe",
+      paragraphs: [
+        "Zastosowanie ma prawo państwa, w którym dostawca Platformy ma swoją siedzibę, z wyłączeniem Konwencji Narodów Zjednoczonych o umowach międzynarodowej sprzedaży towarów. Bezwzględnie obowiązujące przepisy państwa, w którym Użytkownik ma swoją siedzibę, pozostają nienaruszone.",
+        "Wyłącznie właściwym sądem dla wszystkich sporów wynikających z niniejszej umowy lub z nią związanych jest — w zakresie prawnie dopuszczalnym — sąd właściwy dla siedziby dostawcy Platformy.",
+        "Jeżeli poszczególne postanowienia niniejszego Regulaminu są lub staną się nieskuteczne, nie narusza to skuteczności pozostałych postanowień.",
+      ],
+    },
+  ],
+};

@@ -11,8 +11,32 @@ const SCALE = SOURCE_SIZE / VISIBLE.w;
 const SHIFT_X = (VISIBLE.x / SOURCE_SIZE) * 100;
 const SHIFT_Y = (VISIBLE.y / SOURCE_SIZE) * 100;
 
-export function Logo({ heightRem = 1.75 }: { heightRem?: number }) {
+// `dark`: helle Logo-Variante für dunkle Hintergründe (z. B. schwarzer Footer).
+// Echtes Asset statt CSS-Filter, damit das Logo-Rot (AirSmil) nicht kippt; die
+// Datei ist bereits zugeschnitten, daher kein Crop-Transform.
+export function Logo({
+  heightRem = 1.75,
+  dark = false,
+}: {
+  heightRem?: number;
+  dark?: boolean;
+}) {
   const widthRem = heightRem * ASPECT;
+
+  if (dark) {
+    return (
+      <img
+        src="/marketing/brand/mynextdays-logo-light.png"
+        alt="myNextDays — powered by AirSmil"
+        style={{
+          height: `${heightRem}rem`,
+          width: "auto",
+          display: "inline-block",
+          flexShrink: 0,
+        }}
+      />
+    );
+  }
 
   return (
     <span
@@ -27,7 +51,7 @@ export function Logo({ heightRem = 1.75 }: { heightRem?: number }) {
     >
       <img
         src="/Logo_transparent.png"
-        alt="NextDays — powered by AirSmil"
+        alt="myNextDays — powered by AirSmil"
         style={{
           position: "absolute",
           left: 0,

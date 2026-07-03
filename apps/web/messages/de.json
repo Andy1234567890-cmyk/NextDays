@@ -10,6 +10,11 @@
     "notifications": "Benachrichtigungen",
     "stepOf": "Schritt {current} von {total}"
   },
+  "legal": {
+    "agbLinkLabel": "AGB",
+    "stripeConsent": "Die Zahlungsabwicklung für Agenturen und Vermieter auf myNextDays erfolgt durch Stripe und unterliegt dem <stripe>Stripe Connected Account Agreement</stripe>. Mit dem Klick auf „Zahlungen aktivieren“ stimmst du unseren <agb>AGB</agb> und dem Stripe-Rahmenvertrag zu und bestätigst, dass deine Angaben richtig und vollständig sind. Alle übrigen Angaben kommen aus deinen Stammdaten.",
+    "signupConsent": "Mit der Registrierung akzeptierst du unsere <agb>AGB</agb>."
+  },
   "onboarding": {
     "welcome": {
       "title": "Willkommen bei myNextDays",

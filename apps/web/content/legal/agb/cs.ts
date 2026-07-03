@@ -1,0 +1,144 @@
+import type { LegalDoc } from "../types";
+
+// Tschechische Fassung. Quelle ist content/legal/agb/de.ts — Änderungen immer
+// zuerst dort. § 5 Absatz 1–2 folgt Stripes offiziellem Empfehlungstext
+// (Stripe Connected Account Agreement) — Wortlaut sinngemäß, URLs nicht verändern.
+export const agb: LegalDoc = {
+  title: "Všeobecné obchodní podmínky (VOP) pro agentury a pronajímatele",
+  stand: "Stav ke dni: 3. července 2026",
+  intro: [
+    "Tyto všeobecné obchodní podmínky (dále jen „VOP“) upravují užívání softwarové platformy myNextDays (dále jen „platforma“) agenturami, pronajímateli, správci nemovitostí a dalšími podnikatelskými uživateli (dále jen „uživatel“).",
+    "Provozovatelem platformy je [úplný název společnosti, právní forma, adresa a údaje o zápisu provozovatele do rejstříku — doplnit před zveřejněním] (dále jen „myNextDays“ nebo „my“).",
+    "Platforma je určena výhradně podnikatelům ve smyslu § 14 německého občanského zákoníku (BGB), resp. odpovídajících předpisů příslušného členského státu EU. Není určena spotřebitelům.",
+  ],
+  sections: [
+    {
+      heading: "§ 1 Oblast působnosti",
+      paragraphs: [
+        "Tyto VOP se vztahují na veškeré smlouvy o užívání platformy uzavřené mezi myNextDays a uživatelem, jakož i na všechny služby a moduly poskytované jejím prostřednictvím.",
+        "Odchylné, rozporné nebo doplňující obchodní podmínky uživatele se stávají součástí smlouvy pouze tehdy, pokud myNextDays s jejich platností výslovně souhlasila v textové podobě.",
+      ],
+    },
+    {
+      heading: "§ 2 Předmět smlouvy a služby",
+      paragraphs: [
+        "myNextDays poskytuje uživateli cloudový software pro správu rekreačních ubytování a ubytovacích zařízení. Rozsah funkcí vyplývá z aktuálně platného popisu služeb a zahrnuje zejména:",
+      ],
+      list: [
+        "správu objektů, kalendářů obsazenosti a rezervací (property management system),",
+        "napojení na rezervační kanály třetích stran (např. Booking.com, Airbnb) prostřednictvím channel manageru,",
+        "zveřejňování nabídek prostřednictvím vlastního rezervačního kanálu platformy myNextDays,",
+        "tvorbu vlastních webových stránek pomocí integrovaného page builderu,",
+        "účetní, zúčtovací a analytické funkce včetně vyúčtování pro vlastníky,",
+        "komunikaci s hosty a přijímání plateb prostřednictvím integrovaného zpracování plateb (§ 5).",
+      ],
+    },
+    {
+      heading: "§ 3 Registrace, účet a údaje uživatele",
+      paragraphs: [
+        "Užívání platformy vyžaduje registraci účtu. Uživatel je povinen při registraci a po celou dobu trvání smlouvy uvádět správné, aktuální a úplné údaje o své osobě a svém podniku a při jejich změně je neprodleně aktualizovat.",
+        "Přístupové údaje je nutno uchovávat v tajnosti a chránit před přístupem třetích osob. Uživatel je povinen myNextDays neprodleně informovat, existují-li náznaky zneužití jeho účtu.",
+        "Účet je nepřenosný. Uživatel zajistí, aby všechny osoby, které účet jeho jménem používají, dodržovaly tyto VOP.",
+      ],
+    },
+    {
+      heading: "§ 4 Role myNextDays při rezervacích",
+      paragraphs: [
+        "Smlouvy o ubytování týkající se ubytování nabízeného na platformě, prostřednictvím napojených kanálů třetích stran nebo na vlastních webových stránkách uživatele se uzavírají výhradně mezi uživatelem (resp. vlastníkem, kterého uživatel zastupuje) a příslušným hostem. myNextDays se nestává smluvní stranou smlouvy o ubytování.",
+        "Za správnost a zákonnost obsahu nabídek (popisy, fotografie, ceny, dostupnost, daně a poplatky) odpovídá výhradně uživatel.",
+      ],
+    },
+    {
+      heading: "§ 5 Zpracování plateb prostřednictvím Stripe",
+      paragraphs: [
+        "Služby zpracování plateb pro agentury a pronajímatele na myNextDays poskytuje Stripe a řídí se smlouvou [Stripe Connected Account Agreement](https://stripe.com/connect-account/legal/full), která zahrnuje podmínky poskytování služeb Stripe (společně dále jen „smlouva o službách Stripe“). Souhlasem s těmito VOP nebo pokračováním v činnosti jako agentura či pronajímatel na myNextDays uživatel souhlasí s tím, že je vázán smlouvou o službách Stripe, kterou může Stripe čas od času měnit.",
+        "Podmínkou toho, aby myNextDays umožňovala služby zpracování plateb prostřednictvím Stripe, je, že uživatel poskytne myNextDays správné a úplné informace o sobě a svém podniku. Uživatel zmocňuje myNextDays k tomu, aby tyto informace a transakční údaje související s užíváním služeb zpracování plateb poskytovaných společností Stripe předávala společnosti Stripe.",
+        "Pro právní vztah se společností Stripe je rozhodné odkazované anglické znění smlouvy v jeho aktuálně platné verzi. Smluvním partnerem pro uživatele v Evropském hospodářském prostoru je společnost Stripe uvedená ve smlouvě o službách Stripe (v současnosti Stripe Payments Europe, Limited, Irsko). Stripe zpracovává osobní údaje v souladu se [zásadami ochrany osobních údajů společnosti Stripe](https://stripe.com/privacy).",
+        "Za účelem splnění zákonných identifikačních a ověřovacích povinností (mj. prevence praní špinavých peněz, „Know Your Customer“) mohou myNextDays a Stripe kdykoli požadovat další údaje a doklady, zejména doklady totožnosti, údaje o skutečných majitelích a o bankovním spojení. Nebudou-li požadované údaje nebo doklady poskytnuty ve stanovené lhůtě, může být přijímání plateb nebo vyplácení zcela či zčásti pozastaveno, dokud nebudou údaje úplné.",
+      ],
+    },
+    {
+      heading: "§ 6 Výplaty, zpětná zúčtování a záporné zůstatky",
+      paragraphs: [
+        "Výplaty se provádějí na bankovní účet uvedený uživatelem. myNextDays může frekvenci výplat z důvodů řízení rizik upravit, zejména u nových účtů, nápadných transakčních vzorců nebo probíhajících prověrek.",
+        "Zpětná zúčtování (chargebacky), vrácení plateb a z nich vyplývající poplatky v souvislosti s rezervacemi uživatele nese uživatel. myNextDays je oprávněna započíst odpovídající částky proti budoucím výplatám.",
+        "Vznikne-li na platebním účtu uživatele záporný zůstatek, je uživatel povinen jej neprodleně vyrovnat. Uživatel zmocňuje myNextDays a Stripe k inkasu záporných zůstatků z uvedeného bankovního účtu, pokud je to právně přípustné.",
+      ],
+    },
+    {
+      heading: "§ 7 Odměny a vyúčtování",
+      paragraphs: [
+        "Odměny za užívání platformy vyplývají z ceníku sjednaného při uzavření smlouvy, resp. z individuální nabídky. Všechny ceny se rozumí bez příslušných zákonných daní a v měně uvedené ve smlouvě.",
+        "Odměny závislé na transakcích (např. poplatky za platby nebo za kanály) mohou být sraženy nebo započteny přímo při zpracování příslušné transakce.",
+        "Dostane-li se uživatel do prodlení s platbami, může myNextDays po předchozím upozornění zablokovat přístup k platformě až do vyrovnání dlužných pohledávek.",
+      ],
+    },
+    {
+      heading: "§ 8 Povinnosti uživatele; vlastní právní texty",
+      paragraphs: [
+        "Uživatel zajistí, aby jeho nabídky, obsah a obchodní praktiky odpovídaly příslušným platným právním předpisům, zejména předpisům o ubytování, ohlašovacím, daňovým a spotřebitelskoprávním předpisům v místě ubytování. Potřebná povolení, registrace a licence si uživatel obstarává na vlastní odpovědnost.",
+        "Za webové stránky, které uživatel provozuje prostřednictvím page builderu, jakož i za své nabídky na platformě odpovídá uživatel sám; to zahrnuje zejména vlastní obchodní podmínky pro hosty, vlastní údaje o provozovateli (impresum) a vlastní informace o ochraně osobních údajů.",
+        "Zakázáno je zejména: zveřejňování nesprávných nebo klamavých nabídek, provádění fiktivních obchodů nebo podvodných transakcí, obcházení zpracování plateb podle § 5 u rezervací uzavřených prostřednictvím platformy, jakož i jakékoli užívání, které narušuje bezpečnost nebo dostupnost platformy.",
+      ],
+    },
+    {
+      heading: "§ 9 Rezervační kanály třetích stran",
+      paragraphs: [
+        "Při napojení kanálů třetích stran (např. Booking.com, Airbnb) platí navíc podmínky příslušného provozovatele kanálu. Smlouvy k tomu potřebné uzavírá uživatel s provozovatelem kanálu sám.",
+        "myNextDays zajišťuje technickou synchronizaci dostupnosti, cen a rezervačních dat, nemá však žádný vliv na obsah, provize ani rozhodnutí provozovatelů kanálů a neodpovídá za jejich dostupnost.",
+      ],
+    },
+    {
+      heading: "§ 10 Dostupnost a další vývoj",
+      paragraphs: [
+        "myNextDays poskytuje služby s péčí řádného hospodáře a usiluje o vysokou dostupnost platformy. Okna údržby, další vývoj a okolnosti mimo sféru vlivu myNextDays (např. výpadky u poskytovatelů třetích stran) mohou dostupnost dočasně omezit.",
+        "myNextDays smí platformu dále rozvíjet a měnit funkce, pokud tím není ohrožen účel smlouvy a změna je pro uživatele přiměřená.",
+      ],
+    },
+    {
+      heading: "§ 11 Data a ochrana osobních údajů",
+      paragraphs: [
+        "Pokud myNextDays při poskytování platformy zpracovává osobní údaje z pověření uživatele (zejména údaje hostů), uzavřou smluvní strany smlouvu o zpracování osobních údajů podle čl. 28 GDPR.",
+        "Uživatel zůstává odpovědný za přípustnost shromažďování a zpracování jím vložených dat z hlediska ochrany osobních údajů. Podrobnosti o zpracování údajů společností myNextDays vyplývají z informací o ochraně osobních údajů platformy; pro zpracování údajů společností Stripe platí § 5.",
+      ],
+    },
+    {
+      heading: "§ 12 Duševní vlastnictví",
+      paragraphs: [
+        "Veškerá práva k platformě, jejímu softwaru a jejímu obsahu (s výjimkou obsahu vloženého uživatelem) náleží myNextDays, resp. jejím poskytovatelům licencí. Uživatel získává na dobu trvání smlouvy nevýhradní, nepřenosné právo užívat platformu ve smluvně sjednaném rozsahu.",
+        "K obsahu vloženému uživatelem poskytuje uživatel myNextDays nevýhradní užívací práva nezbytná pro provoz platformy (zejména k ukládání, rozmnožování, zobrazování a přenosu do napojených kanálů).",
+      ],
+    },
+    {
+      heading: "§ 13 Odpovědnost",
+      paragraphs: [
+        "myNextDays odpovídá neomezeně za úmysl a hrubou nedbalost, jakož i za škody způsobené újmou na životě, těle nebo zdraví.",
+        "V případě prosté nedbalosti odpovídá myNextDays pouze za porušení podstatných smluvních povinností (kardinálních povinností), a to v rozsahu omezeném na předvídatelnou škodu typickou pro daný typ smlouvy. Odpovědnost podle zákona o odpovědnosti za vady výrobku a z převzatých záruk zůstává nedotčena.",
+        "Za ztrátu dat odpovídá myNextDays pouze v rozsahu, v jakém by škoda vznikla i při řádném a pravidelném zálohování dat uživatelem, ledaže zálohování dat smluvně přísluší myNextDays.",
+      ],
+    },
+    {
+      heading: "§ 14 Doba trvání, výpověď a zablokování",
+      paragraphs: [
+        "Doba trvání a výpovědní lhůty vyplývají z příslušné smlouvy. Právo na mimořádnou výpověď ze závažného důvodu zůstává nedotčeno.",
+        "myNextDays může dočasně zablokovat přístup k platformě nebo jednotlivé funkce (včetně přijímání plateb a výplat), existují-li konkrétní náznaky porušení těchto VOP, podvodu nebo zneužití, nebo je-li k tomu myNextDays povinna ze zákona či na základě pokynu poskytovatele platebních služeb. O zablokování bude uživatel informován, pokud je to právně přípustné.",
+        "Po skončení smlouvy poskytne myNextDays uživateli na jeho žádost jeho data k exportu v běžném formátu do 30 dnů; poté budou data smazána, pokud tomu nebrání zákonné povinnosti uchovávání.",
+      ],
+    },
+    {
+      heading: "§ 15 Změny těchto VOP",
+      paragraphs: [
+        "myNextDays může tyto VOP měnit s účinností do budoucna, pokud je to nezbytné ze závažných důvodů (zejména kvůli změnám právních předpisů, změnám judikatury nebo požadavkům poskytovatelů platebních služeb) a uživatel tím není nepřiměřeně znevýhodněn.",
+        "Změny budou uživateli oznámeny v textové podobě nejméně šest týdnů před nabytím účinnosti. Nevznese-li uživatel v oznámené lhůtě námitku nebo bude-li platformu po nabytí účinnosti nadále užívat, považují se změněné VOP za přijaté; na tento následek bude v oznámení zvlášť upozorněno.",
+      ],
+    },
+    {
+      heading: "§ 16 Závěrečná ustanovení",
+      paragraphs: [
+        "Použije se právo státu, v němž má provozovatel své sídlo, s vyloučením Úmluvy OSN o smlouvách o mezinárodní koupi zboží. Kogentní předpisy státu, v němž má uživatel své sídlo, zůstávají nedotčeny.",
+        "Výlučně místně příslušným soudem pro všechny spory vyplývající z této smlouvy nebo vzniklé v souvislosti s ní je — pokud je to právně přípustné — soud v sídle provozovatele.",
+        "Budou-li jednotlivá ustanovení těchto VOP neplatná nebo se neplatnými stanou, není tím dotčena platnost ostatních ustanovení.",
+      ],
+    },
+  ],
+};

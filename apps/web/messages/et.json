@@ -89,6 +89,11 @@
     "notifications": "Teavitused",
     "stepOf": "Samm {current}/{total}"
   },
+  "legal": {
+    "agbLinkLabel": "Üldtingimused",
+    "stripeConsent": "Maksete töötlemist agentuuridele ja üürileandjatele myNextDaysis teostab Stripe ning selle suhtes kehtib <stripe>Stripe Connected Account Agreement</stripe>. Klõpsates „Aktiveeri maksed“ nõustud meie <agb>üldtingimuste</agb> ja Stripe’i teenuslepinguga ning kinnitad, et sinu andmed on õiged ja täielikud. Kõik ülejäänud andmed võetakse sinu põhiandmetest.",
+    "signupConsent": "Registreerudes nõustud meie <agb>üldtingimustega</agb>."
+  },
   "onboarding": {
     "welcome": {
       "title": "Tere tulemast myNextDays keskkonda",

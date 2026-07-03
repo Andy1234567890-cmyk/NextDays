@@ -89,6 +89,11 @@
     "notifications": "Известия",
     "stepOf": "Стъпка {current} от {total}"
   },
+  "legal": {
+    "agbLinkLabel": "Общи условия",
+    "stripeConsent": "Обработката на плащанията за агенции и наемодатели в myNextDays се извършва от Stripe и се подчинява на <stripe>Stripe Connected Account Agreement</stripe>. С натискането на „Активиране на плащания“ приемате нашите <agb>Общи условия</agb> и Споразумението за услугите на Stripe и потвърждавате, че данните ви са верни и пълни. Всички останали данни идват от основните данни на фирмата ви.",
+    "signupConsent": "С регистрацията приемате нашите <agb>Общи условия</agb>."
+  },
   "onboarding": {
     "welcome": {
       "title": "Добре дошли в myNextDays",

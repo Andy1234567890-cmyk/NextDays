@@ -10,6 +10,11 @@
     "notifications": "Fógraí",
     "stepOf": "Céim {current} as {total}"
   },
+  "legal": {
+    "agbLinkLabel": "Téarmaí",
+    "stripeConsent": "Is é Stripe a sholáthraíonn na seirbhísí próiseála íocaíochtaí do ghníomhaireachtaí agus do bhainisteoirí réadmhaoine ar myNextDays agus tá siad faoi réir an <stripe>Stripe Connected Account Agreement</stripe>. Trí chliceáil ar “Gníomhachtaigh íocaíochtaí” aontaíonn tú lenár <agb>dTéarmaí agus Coinníollacha</agb> agus le Comhaontú Seirbhísí Stripe agus deimhníonn tú go bhfuil do chuid sonraí ceart agus iomlán. Tagann na sonraí eile go léir ó do mháistirshonraí.",
+    "signupConsent": "Trí chlárú, glacann tú lenár <agb>dTéarmaí agus Coinníollacha</agb>."
+  },
   "onboarding": {
     "welcome": {
       "title": "Fáilte chuig myNextDays",

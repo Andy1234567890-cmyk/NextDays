@@ -37,13 +37,28 @@ const SOCIALS = [
   { icon: "ph:linkedin-logo", label: "LinkedIn" },
 ];
 
+// Die Rechtsseiten (AGB usw.) liegen in der Haupt-App (apps/web), nicht in
+// dieser reinen Marketing-App — daher absolute Links auf die App-Domain.
+// Basis aus derselben Env wie der Login-Link in der Nav abgeleitet.
+const APP_URL = (
+  process.env.NEXT_PUBLIC_LOGIN_URL ??
+  "https://bln3q0n1l1se2hna8utkuag9.65.21.144.136.sslip.io/login"
+).replace(/\/login\/?$/, "");
+
+const RECHTLICH: { label: string; href?: string }[] = [
+  { label: "AGB", href: `${APP_URL}/agb` },
+  { label: "Datenschutz" },
+  { label: "Impressum" },
+  { label: "Cookie-Richtlinie" },
+];
+
 export function MarketingFooter() {
   return (
     <footer id="ressourcen" className="bg-primary text-primary-foreground">
       <div className="mx-auto max-w-7xl px-6 py-16">
         <div className="grid gap-10 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
           <div>
-            <Logo heightRem={2.25} />
+            <Logo heightRem={2.25} dark />
             <p className="mt-4 max-w-xs text-sm text-primary-foreground/70">
               Eine starke Plattform für kleine Unterkünfte – mehr Buchungen,
               weniger Arbeit.
@@ -83,9 +98,24 @@ export function MarketingFooter() {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-6 border-t border-primary-foreground/15 pt-8 sm:flex-row">
-          <p className="text-sm text-primary-foreground/60">
-            © 2026 myNextDays. Alle Rechte vorbehalten.
-          </p>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-primary-foreground/60">
+            <span>© 2026 myNextDays. Alle Rechte vorbehalten.</span>
+            {RECHTLICH.map((r) => (
+              <span key={r.label} className="flex items-center gap-2">
+                <span aria-hidden>·</span>
+                {r.href ? (
+                  <Link
+                    href={r.href}
+                    className="transition-colors hover:text-primary-foreground hover:underline"
+                  >
+                    {r.label}
+                  </Link>
+                ) : (
+                  <span>{r.label}</span>
+                )}
+              </span>
+            ))}
+          </div>
           <div className="flex items-center gap-5">
             <button
               type="button"

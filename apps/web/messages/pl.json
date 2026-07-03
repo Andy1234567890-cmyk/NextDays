@@ -10,6 +10,11 @@
     "notifications": "Powiadomienia",
     "stepOf": "Krok {current} z {total}"
   },
+  "legal": {
+    "agbLinkLabel": "Regulamin",
+    "stripeConsent": "Obsługę płatności dla agencji i wynajmujących na myNextDays zapewnia Stripe; podlega ona umowie <stripe>Stripe Connected Account Agreement</stripe>. Klikając „Aktywuj płatności”, akceptujesz nasz <agb>Regulamin</agb> oraz Umowę o Usługi Stripe i potwierdzasz, że Twoje dane są prawdziwe i kompletne. Wszystkie pozostałe dane pochodzą z Twoich danych podstawowych.",
+    "signupConsent": "Rejestrując się, akceptujesz nasz <agb>Regulamin</agb>."
+  },
   "onboarding": {
     "welcome": {
       "title": "Witamy w myNextDays",

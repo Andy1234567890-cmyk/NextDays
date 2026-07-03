@@ -32,6 +32,9 @@ Server-Actions in `lib/<domäne>.ts` an `/api/v1/…`.
 ## Wichtige Pfade
 
 - `app/(dashboard)/` — alle Dashboard-Routen (Server Components laden Initialdaten)
+- `app/(public)/agb` — öffentliche Agentur-AGB (24 Sprachen, Stripe-Klausel § 5)
 - `components/website/editor/` — der Framer-artige Page-Builder-Editor
+- `content/legal/agb/` — AGB-Texte pro Sprache (`de.ts` ist die Quellfassung;
+  Änderungen zuerst dort, dann in allen 24 Sprachen nachziehen)
 - `lib/` — Server-Actions, API-Client (`api.ts`), Realtime, Formatierung
 - `messages/` — i18n-Kataloge (bei neuen UI-Texten alle 24 Sprachen pflegen)

@@ -39,11 +39,13 @@ const SPALTEN = [
   },
 ];
 
-const RECHTLICH = [
-  "Datenschutz",
-  "Nutzungsbedingungen",
-  "Impressum",
-  "Cookie-Richtlinie",
+// Rechtslinks: nur Ziele verlinken, die es wirklich gibt — Platzhalter ohne
+// Seite bleiben bewusst ohne href (keine toten "#"-Links vortäuschen).
+const RECHTLICH: { label: string; href?: string }[] = [
+  { label: "Datenschutz" },
+  { label: "Nutzungsbedingungen", href: "/agb" },
+  { label: "Impressum" },
+  { label: "Cookie-Richtlinie" },
 ];
 
 const SOCIAL = [
@@ -85,11 +87,18 @@ export function SiteFooter() {
           <div className="flex flex-wrap items-center gap-x-1 gap-y-2 text-sm text-muted-foreground">
             <span>© 2026 myNextDays</span>
             {RECHTLICH.map((link) => (
-              <span key={link} className="flex items-center gap-1">
+              <span key={link.label} className="flex items-center gap-1">
                 <span aria-hidden>·</span>
-                <Link href="#" className="hover:text-foreground hover:underline">
-                  {link}
-                </Link>
+                {link.href ? (
+                  <Link
+                    href={link.href}
+                    className="hover:text-foreground hover:underline"
+                  >
+                    {link.label}
+                  </Link>
+                ) : (
+                  <span>{link.label}</span>
+                )}
               </span>
             ))}
           </div>

@@ -10,6 +10,16 @@ sind die Migrationen 0016–0090 sowie das komplette Dashboard entstanden. Die
 wichtigsten Punkte konsolidiert:
 
 ### Hinzugefügt
+- **AGB in allen 24 EU-Amtssprachen** (Vorbereitung Stripe-Custom-Genehmigung):
+  Agentur-AGB in `apps/web` (öffentliche Route `/agb`, Sprache folgt dem
+  App-Sprachumschalter; Inhalte als TS-Module unter `content/legal/agb/`,
+  Loader-Map erzwingt Vollständigkeit aller 24 Sprachen zur Build-Zeit) und
+  Gast-AGB in `plattform/` (Route `/agb?sprache=<code>` mit Sprachauswahl).
+  § 5 verankert das [Stripe Connected Account Agreement](https://stripe.com/connect-account/legal/full)
+  nach Stripes offiziellem Empfehlungstext; der „Zahlungen aktivieren"-Dialog
+  und das Signup verlinken AGB + Stripe-Vertrag (`legal`-Namespace in allen
+  24 Message-Katalogen). Betreiber-Firmierung ist bewusst Platzhalter —
+  vor Veröffentlichung ergänzen; juristische Prüfung ausstehend.
 - **Page-Builder** (Migrationen 0086/0087, [ADR-0013](docs/decisions/0013-page-builder-renderer-editor-trennung.md)):
   visueller craft.js-Editor im Dashboard (`apps/web`, Route `/website`),
   neuer API-Slice `site_config` (Branding, Custom-Domains via Cloudflare for

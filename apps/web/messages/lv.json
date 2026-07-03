@@ -10,6 +10,11 @@
     "notifications": "Paziņojumi",
     "stepOf": "{current}. solis no {total}"
   },
+  "legal": {
+    "agbLinkLabel": "Noteikumi",
+    "stripeConsent": "Maksājumu apstrādi aģentūrām un izīrētājiem myNextDays platformā veic Stripe, un uz to attiecas <stripe>Stripe Connected Account Agreement</stripe>. Noklikšķinot uz „Aktivizēt maksājumus”, jūs piekrītat mūsu <agb>noteikumiem</agb> un Stripe pakalpojumu līgumam un apstiprināt, ka jūsu sniegtā informācija ir pareiza un pilnīga. Visi pārējie dati tiek ņemti no jūsu pamatdatiem.",
+    "signupConsent": "Reģistrējoties jūs piekrītat mūsu <agb>noteikumiem</agb>."
+  },
   "onboarding": {
     "welcome": {
       "title": "Laipni lūdzam myNextDays",

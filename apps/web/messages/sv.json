@@ -10,6 +10,11 @@
     "notifications": "Aviseringar",
     "stepOf": "Steg {current} av {total}"
   },
+  "legal": {
+    "agbLinkLabel": "Allmänna villkor",
+    "stripeConsent": "Betalningshanteringen för byråer och uthyrare på myNextDays sköts av Stripe och omfattas av <stripe>Stripe Connected Account Agreement</stripe>. Genom att klicka på ”Aktivera betalningar” godkänner du våra <agb>allmänna villkor</agb> och Stripe-avtalet och bekräftar att dina uppgifter är riktiga och fullständiga. Alla övriga uppgifter hämtas från dina grunduppgifter.",
+    "signupConsent": "Genom att registrera dig godkänner du våra <agb>allmänna villkor</agb>."
+  },
   "onboarding": {
     "welcome": {
       "title": "Välkommen till myNextDays",

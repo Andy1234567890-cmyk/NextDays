@@ -10,6 +10,11 @@
     "notifications": "Notificări",
     "stepOf": "Pasul {current} din {total}"
   },
+  "legal": {
+    "agbLinkLabel": "Termeni și condiții",
+    "stripeConsent": "Procesarea plăților pentru agenții și locatori pe myNextDays este realizată de Stripe și este supusă acordului <stripe>Stripe Connected Account Agreement</stripe>. Prin clic pe „Activează plățile” ești de acord cu <agb>Termenii și condițiile</agb> noastre și cu Acordul de servicii Stripe și confirmi că datele tale sunt corecte și complete. Toate celelalte date provin din datele tale de bază.",
+    "signupConsent": "Prin înregistrare accepți <agb>Termenii și condițiile</agb> noastre."
+  },
   "onboarding": {
     "welcome": {
       "title": "Bun venit la myNextDays",

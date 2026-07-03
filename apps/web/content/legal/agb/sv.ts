@@ -1,0 +1,145 @@
+import type { LegalDoc } from "../types";
+
+// Schwedische Fassung. Quelle ist content/legal/agb/de.ts — Änderungen immer
+// zuerst dort. § 5 enthält die von Stripe für Custom-Plattformen
+// vorgeschriebene Klausel (Stripe Connected Account Agreement) — Wortlaut an
+// Stripes offiziellen Empfehlungstext angelehnt, URLs nicht verändern.
+export const agb: LegalDoc = {
+  title: "Allmänna villkor för byråer och uthyrare",
+  stand: "Senast uppdaterad: 3 juli 2026",
+  intro: [
+    "Dessa allmänna villkor (nedan ”villkoren”) reglerar byråers, uthyrares, fastighetsförvaltares och andra kommersiella användares (nedan ”användaren”) användning av programvaruplattformen myNextDays (nedan ”plattformen”).",
+    "Plattformen tillhandahålls av [fullständigt företagsnamn, bolagsform, adress och registeruppgifter för operatören — kompletteras före publicering] (nedan ”myNextDays” eller ”vi”).",
+    "Plattformen riktar sig uteslutande till näringsidkare i den mening som avses i § 14 i den tyska civillagen (BGB) respektive motsvarande bestämmelser i det aktuella EU-medlemslandet. Den riktar sig inte till konsumenter.",
+  ],
+  sections: [
+    {
+      heading: "§ 1 Tillämpningsområde",
+      paragraphs: [
+        "Dessa villkor gäller för samtliga avtal om användning av plattformen mellan myNextDays och användaren samt för alla tjänster och moduler som tillhandahålls via plattformen.",
+        "Avvikande, motstridiga eller kompletterande villkor från användaren blir endast en del av avtalet om myNextDays uttryckligen har godkänt dem i textform.",
+      ],
+    },
+    {
+      heading: "§ 2 Avtalsföremål och tjänster",
+      paragraphs: [
+        "myNextDays tillhandahåller användaren en molnbaserad programvara för förvaltning av semesterboenden och logiverksamheter. Funktionsomfattningen framgår av den vid var tid gällande tjänstebeskrivningen och omfattar särskilt:",
+      ],
+      list: [
+        "förvaltning av boenden, beläggningskalendrar och reservationer (property management-system),",
+        "anslutning till tredje parts bokningskanaler (t.ex. Booking.com, Airbnb) via en channel manager,",
+        "publicering av erbjudanden via plattformens egen bokningskanal myNextDays,",
+        "skapande av egna webbplatser via den integrerade page buildern,",
+        "bokförings-, avräknings- och rapportfunktioner, inklusive ägaravräkningar,",
+        "kommunikation med gäster samt mottagande av betalningar via den integrerade betalningshanteringen (§ 5).",
+      ],
+    },
+    {
+      heading: "§ 3 Registrering, konto och användarens uppgifter",
+      paragraphs: [
+        "Användning av plattformen förutsätter registrering av ett konto. Användaren är skyldig att vid registreringen och under hela avtalstiden lämna riktiga, aktuella och fullständiga uppgifter om sig själv och sitt företag samt att utan dröjsmål uppdatera dem vid ändringar.",
+        "Inloggningsuppgifter ska hållas hemliga och skyddas mot åtkomst från tredje part. Användaren ska utan dröjsmål informera myNextDays om det finns tecken på att kontot missbrukas.",
+        "Ett konto kan inte överlåtas. Användaren säkerställer att alla personer som använder kontot för användarens räkning följer dessa villkor.",
+      ],
+    },
+    {
+      heading: "§ 4 myNextDays roll vid bokningar",
+      paragraphs: [
+        "Inkvarteringsavtal om de boenden som erbjuds på plattformen, via anslutna tredjepartskanaler eller via användarens egen webbplats ingås uteslutande mellan användaren (respektive den ägare som användaren företräder) och den aktuella gästen. myNextDays blir inte part i inkvarteringsavtalet.",
+        "Användaren är ensam ansvarig för att erbjudandenas innehåll (beskrivningar, foton, priser, tillgänglighet, skatter och avgifter) är riktigt och lagenligt.",
+      ],
+    },
+    {
+      heading: "§ 5 Betalningshantering genom Stripe",
+      paragraphs: [
+        "Betalningshanteringstjänsterna för byråer och uthyrare på myNextDays tillhandahålls av Stripe och omfattas av [Stripe Connected Account Agreement](https://stripe.com/connect-account/legal/full), som innefattar Stripes användarvillkor (tillsammans ”Stripe-avtalet”). Genom att godkänna dessa villkor eller fortsätta att vara verksam som byrå eller uthyrare på myNextDays förklarar sig användaren bunden av Stripe-avtalet, som från tid till annan kan ändras av Stripe.",
+        "En förutsättning för att myNextDays ska kunna möjliggöra betalningshanteringstjänster via Stripe är att användaren förser myNextDays med riktiga och fullständiga uppgifter om sig själv och sitt företag. Användaren bemyndigar myNextDays att till Stripe vidarebefordra dessa uppgifter samt transaktionsdata som hänger samman med användningen av de betalningshanteringstjänster som Stripe tillhandahåller.",
+        "För rättsförhållandet till Stripe gäller den länkade engelskspråkiga avtalstexten i dess vid var tid gällande lydelse. Avtalspart för användare inom Europeiska ekonomiska samarbetsområdet är det Stripe-bolag som anges i Stripe-avtalet (för närvarande Stripe Payments Europe, Limited, Irland). Stripe behandlar personuppgifter i enlighet med [Stripes integritetspolicy](https://stripe.com/privacy).",
+        "För att uppfylla lagstadgade identifierings- och kontrollskyldigheter (bl.a. bekämpning av penningtvätt, ”känn din kund”) kan myNextDays och Stripe när som helst begära ytterligare uppgifter och underlag, i synnerhet identitetshandlingar, uppgifter om verkliga huvudmän och bankuppgifter. Om begärda uppgifter eller underlag inte lämnas inom den angivna fristen kan mottagandet av betalningar eller utbetalningar helt eller delvis avbrytas till dess att uppgifterna är fullständiga.",
+      ],
+    },
+    {
+      heading: "§ 6 Utbetalningar, återdebiteringar och negativa saldon",
+      paragraphs: [
+        "Utbetalningar görs till det bankkonto som användaren har angett. myNextDays kan av riskskäl anpassa utbetalningsfrekvensen, i synnerhet vid nya konton, avvikande transaktionsmönster eller pågående granskningar.",
+        "Återdebiteringar (chargebacks), återbetalningar samt avgifter som uppstår till följd av dessa i samband med användarens bokningar bärs av användaren. myNextDays har rätt att kvitta motsvarande belopp mot framtida utbetalningar.",
+        "Om ett negativt saldo uppstår på användarens betalkonto ska användaren utan dröjsmål utjämna det. Användaren bemyndigar myNextDays och Stripe att debitera negativa saldon från det angivna bankkontot, i den mån detta är rättsligt tillåtet.",
+      ],
+    },
+    {
+      heading: "§ 7 Avgifter och fakturering",
+      paragraphs: [
+        "Avgifterna för användningen av plattformen framgår av den prislista som avtalades vid avtalets ingående respektive av det individuella erbjudandet. Alla priser anges exklusive vid var tid tillämpliga lagstadgade skatter och i den valuta som anges i avtalet.",
+        "Transaktionsbaserade avgifter (t.ex. betalnings- eller kanalavgifter) kan hållas inne eller kvittas direkt när den aktuella transaktionen genomförs.",
+        "Om användaren är i dröjsmål med betalningar kan myNextDays efter föregående avisering spärra åtkomsten till plattformen till dess att de utestående fordringarna har reglerats.",
+      ],
+    },
+    {
+      heading: "§ 8 Användarens skyldigheter; egna juridiska texter",
+      paragraphs: [
+        "Användaren säkerställer att dennes erbjudanden, innehåll och affärsmetoder följer tillämplig lagstiftning, i synnerhet reglerna om inkvartering, registrering, skatt och konsumentskydd på den ort där boendet är beläget. Användaren ansvarar själv för att inneha nödvändiga tillstånd, registreringar och licenser.",
+        "För webbplatser som användaren driver via page buildern samt för sina erbjudanden på plattformen ansvarar användaren själv; detta omfattar i synnerhet egna gästvillkor, egen juridisk information (impressum) och egen dataskyddsinformation.",
+        "Förbjudet är i synnerhet: att publicera oriktiga eller vilseledande erbjudanden, att genomföra skentransaktioner eller bedrägliga transaktioner, att kringgå betalningshanteringen enligt § 5 för bokningar som kommit till stånd via plattformen samt varje användning som försämrar plattformens säkerhet eller tillgänglighet.",
+      ],
+    },
+    {
+      heading: "§ 9 Tredje parts bokningskanaler",
+      paragraphs: [
+        "Vid anslutning av tredjepartskanaler (t.ex. Booking.com, Airbnb) gäller dessutom villkoren för respektive kanaloperatör. Användaren ingår själv de avtal med kanaloperatören som krävs för detta.",
+        "myNextDays utför den tekniska synkroniseringen av tillgänglighet, priser och bokningsdata, men har inget inflytande över kanaloperatörernas innehåll, provisioner eller beslut och ansvarar inte för deras tillgänglighet.",
+      ],
+    },
+    {
+      heading: "§ 10 Tillgänglighet och vidareutveckling",
+      paragraphs: [
+        "myNextDays utför tjänsterna med den omsorg som krävs av en ansvarsfull näringsidkare och eftersträvar hög tillgänglighet för plattformen. Underhållsfönster, vidareutveckling och omständigheter utanför myNextDays kontroll (t.ex. störningar hos tredjepartsleverantörer) kan tillfälligt begränsa tillgängligheten.",
+        "myNextDays får vidareutveckla plattformen och ändra funktioner, förutsatt att avtalets syfte inte äventyras därigenom och ändringen är rimlig för användaren.",
+      ],
+    },
+    {
+      heading: "§ 11 Data och dataskydd",
+      paragraphs: [
+        "I den mån myNextDays vid tillhandahållandet av plattformen behandlar personuppgifter för användarens räkning (i synnerhet gästuppgifter) ingår parterna ett personuppgiftsbiträdesavtal enligt artikel 28 i dataskyddsförordningen (GDPR).",
+        "Användaren förblir ansvarig för att insamlingen och behandlingen av de uppgifter som användaren tillför är tillåten enligt dataskyddslagstiftningen. Närmare uppgifter om myNextDays databehandling framgår av plattformens dataskyddsinformation; för Stripes databehandling gäller § 5.",
+      ],
+    },
+    {
+      heading: "§ 12 Immateriella rättigheter",
+      paragraphs: [
+        "Samtliga rättigheter till plattformen, dess programvara och dess innehåll (med undantag för innehåll som användaren har lagt in) tillkommer myNextDays respektive dess licensgivare. Användaren erhåller för avtalstiden en enkel, icke överlåtbar rätt att använda plattformen i den omfattning som avtalats.",
+        "Till det innehåll som användaren lägger in upplåter användaren åt myNextDays de enkla nyttjanderätter som krävs för driften av plattformen (i synnerhet för lagring, mångfaldigande, visning och överföring till anslutna kanaler).",
+      ],
+    },
+    {
+      heading: "§ 13 Ansvar",
+      paragraphs: [
+        "myNextDays ansvarar obegränsat vid uppsåt och grov vårdslöshet samt för skador till följd av skada på liv, kropp eller hälsa.",
+        "Vid ringa vårdslöshet ansvarar myNextDays endast för åsidosättande av väsentliga avtalsförpliktelser (kardinalförpliktelser), begränsat till den för avtalet typiska, förutsebara skadan. Ansvar enligt produktansvarslagstiftningen samt enligt lämnade garantier påverkas inte.",
+        "För förlust av data ansvarar myNextDays endast i den omfattning skadan skulle ha inträffat även om användaren hade utfört korrekta och regelbundna säkerhetskopieringar, såvida inte säkerhetskopieringen enligt avtalet åligger myNextDays.",
+      ],
+    },
+    {
+      heading: "§ 14 Avtalstid, uppsägning och avstängning",
+      paragraphs: [
+        "Avtalstid och uppsägningstider framgår av det aktuella avtalet. Rätten att säga upp avtalet i förtid av viktig grund påverkas inte.",
+        "myNextDays kan tillfälligt spärra åtkomsten till plattformen eller enskilda funktioner (inklusive mottagande av betalningar och utbetalningar) om det finns konkreta tecken på överträdelse av dessa villkor, på bedrägeri eller på missbruk, eller om myNextDays är skyldigt att göra det enligt lag eller till följd av ett åläggande från en betaltjänstleverantör. Användaren informeras om spärrningen i den mån detta är rättsligt tillåtet.",
+        "Efter avtalets upphörande tillhandahåller myNextDays på begäran användarens data för export i ett gängse format inom 30 dagar; därefter raderas uppgifterna, såvida inte lagstadgade lagringsskyldigheter hindrar detta.",
+      ],
+    },
+    {
+      heading: "§ 15 Ändringar av dessa villkor",
+      paragraphs: [
+        "myNextDays kan ändra dessa villkor med verkan för framtiden, i den mån detta är nödvändigt av godtagbara skäl (i synnerhet lagändringar, ändringar i rättspraxis eller krav från betaltjänstleverantörer) och användaren inte missgynnas oskäligt av detta.",
+        "Ändringar aviseras användaren i textform minst sex veckor innan de träder i kraft. Om användaren inte invänder inom aviseringsfristen eller fortsätter att använda plattformen efter ikraftträdandet anses de ändrade villkoren godkända; denna följd framhålls särskilt i aviseringen.",
+      ],
+    },
+    {
+      heading: "§ 16 Slutbestämmelser",
+      paragraphs: [
+        "Lagen i den stat där operatören har sitt säte tillämpas, med uteslutande av FN:s konvention om avtal om internationella köp av varor (CISG). Tvingande bestämmelser i den stat där användaren har sitt säte påverkas inte.",
+        "Exklusivt forum för alla tvister som uppstår ur eller i samband med detta avtal är — i den mån det är rättsligt tillåtet — den ort där operatören har sitt säte.",
+        "Om enskilda bestämmelser i dessa villkor är eller blir ogiltiga påverkas inte giltigheten av övriga bestämmelser.",
+      ],
+    },
+  ],
+};

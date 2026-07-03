@@ -89,6 +89,11 @@
     "notifications": "Értesítések",
     "stepOf": "{total}. lépésből {current}."
   },
+  "legal": {
+    "agbLinkLabel": "ÁSZF",
+    "stripeConsent": "Az ügynökségek és szállásadók fizetéseinek feldolgozását a myNextDays platformon a Stripe végzi, és arra a <stripe>Stripe Connected Account Agreement</stripe> vonatkozik. A „Fizetések aktiválása” gombra kattintva elfogadod az <agb>ÁSZF</agb>-ünket és a Stripe-keretszerződést, és megerősíted, hogy az adataid helyesek és hiánytalanok. Az összes többi adat a törzsadataidból származik.",
+    "signupConsent": "A regisztrációval elfogadod az <agb>ÁSZF</agb>-ünket."
+  },
   "onboarding": {
     "welcome": {
       "title": "Üdvözöljük a myNextDays rendszerben",

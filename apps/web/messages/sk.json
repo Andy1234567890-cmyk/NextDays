@@ -10,6 +10,11 @@
     "notifications": "Oznámenia",
     "stepOf": "Krok {current} z {total}"
   },
+  "legal": {
+    "agbLinkLabel": "VOP",
+    "stripeConsent": "Spracovanie platieb pre agentúry a prenajímateľov na myNextDays zabezpečuje Stripe a riadi sa zmluvou <stripe>Stripe Connected Account Agreement</stripe>. Kliknutím na „Aktivovať platby“ súhlasíte s našimi <agb>VOP</agb> a s rámcovou zmluvou Stripe a potvrdzujete, že vaše údaje sú správne a úplné. Všetky ostatné údaje pochádzajú z vašich kmeňových údajov.",
+    "signupConsent": "Registráciou prijímate naše <agb>VOP</agb>."
+  },
   "onboarding": {
     "welcome": {
       "title": "Vitajte v myNextDays",

@@ -10,6 +10,11 @@
     "notifications": "Notifikationer",
     "stepOf": "Trin {current} af {total}"
   },
+  "legal": {
+    "agbLinkLabel": "Vilkår og betingelser",
+    "stripeConsent": "Betalingsbehandlingen for bureauer og udlejere på myNextDays varetages af Stripe og er underlagt <stripe>Stripe Connected Account Agreement</stripe>. Ved at klikke på »Aktivér betalinger« accepterer du vores <agb>vilkår og betingelser</agb> og Stripe-rammeaftalen og bekræfter, at dine oplysninger er korrekte og fuldstændige. Alle øvrige oplysninger hentes fra dine stamdata.",
+    "signupConsent": "Ved at registrere dig accepterer du vores <agb>vilkår og betingelser</agb>."
+  },
   "onboarding": {
     "welcome": {
       "title": "Velkommen til myNextDays",

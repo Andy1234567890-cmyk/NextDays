@@ -10,6 +10,11 @@
     "notifications": "Notifications",
     "stepOf": "Étape {current} sur {total}"
   },
+  "legal": {
+    "agbLinkLabel": "CGU",
+    "stripeConsent": "Le traitement des paiements pour les agences et les loueurs sur myNextDays est assuré par Stripe et est soumis au <stripe>Stripe Connected Account Agreement</stripe>. En cliquant sur « Activer les paiements », vous acceptez nos <agb>CGU</agb> ainsi que le contrat-cadre Stripe et confirmez que vos informations sont exactes et complètes. Toutes les autres informations proviennent de vos données de base.",
+    "signupConsent": "En vous inscrivant, vous acceptez nos <agb>CGU</agb>."
+  },
   "onboarding": {
     "welcome": {
       "title": "Bienvenue sur myNextDays",

@@ -89,6 +89,11 @@
     "notifications": "Obavijesti",
     "stepOf": "Korak {current} od {total}"
   },
+  "legal": {
+    "agbLinkLabel": "Opći uvjeti",
+    "stripeConsent": "Obradu plaćanja za agencije i iznajmljivače na platformi myNextDays obavlja Stripe i ona podliježe ugovoru <stripe>Stripe Connected Account Agreement</stripe>. Klikom na „Aktiviraj plaćanja” prihvaćate naše <agb>Opće uvjete</agb> i Okvirni ugovor sa Stripeom te potvrđujete da su vaši podaci točni i potpuni. Svi ostali podaci preuzimaju se iz vaših matičnih podataka.",
+    "signupConsent": "Registracijom prihvaćate naše <agb>Opće uvjete</agb>."
+  },
   "onboarding": {
     "welcome": {
       "title": "Dobrodošli u myNextDays",

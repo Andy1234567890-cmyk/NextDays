@@ -10,6 +10,11 @@
     "notifications": "Notificações",
     "stepOf": "Passo {current} de {total}"
   },
+  "legal": {
+    "agbLinkLabel": "Termos e Condições",
+    "stripeConsent": "O processamento de pagamentos para agências e arrendadores na myNextDays é efetuado pela Stripe e está sujeito ao <stripe>Stripe Connected Account Agreement</stripe>. Ao clicares em «Ativar pagamentos», aceitas os nossos <agb>Termos e Condições</agb> e o Contrato-Quadro da Stripe e confirmas que os teus dados estão corretos e completos. Todos os restantes dados provêm dos teus dados mestre.",
+    "signupConsent": "Ao registares-te, aceitas os nossos <agb>Termos e Condições</agb>."
+  },
   "onboarding": {
     "welcome": {
       "title": "Bem-vindo ao myNextDays",

@@ -10,6 +10,11 @@
     "notifications": "Pranešimai",
     "stepOf": "{current} žingsnis iš {total}"
   },
+  "legal": {
+    "agbLinkLabel": "Bendrosios sąlygos",
+    "stripeConsent": "Mokėjimų apdorojimą agentūroms ir nuomotojams platformoje myNextDays vykdo Stripe; jam taikoma sutartis <stripe>Stripe Connected Account Agreement</stripe>. Spustelėdami „Aktyvinti mokėjimus“ sutinkate su mūsų <agb>bendrosiomis sąlygomis</agb> ir Stripe paslaugų sutartimi bei patvirtinate, kad jūsų duomenys yra teisingi ir išsamūs. Visi kiti duomenys paimami iš jūsų pagrindinių duomenų.",
+    "signupConsent": "Registruodamiesi sutinkate su mūsų <agb>bendrosiomis sąlygomis</agb>."
+  },
   "onboarding": {
     "welcome": {
       "title": "Sveiki atvykę į myNextDays",

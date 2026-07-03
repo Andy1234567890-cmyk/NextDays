@@ -10,6 +10,11 @@
     "notifications": "Notifiki",
     "stepOf": "Pass {current} minn {total}"
   },
+  "legal": {
+    "agbLinkLabel": "Termini u Kundizzjonijiet",
+    "stripeConsent": "L-ipproċessar tal-ħlasijiet għall-aġenziji u s-sidien il-kera fuq myNextDays isir minn Stripe u huwa soġġett għall-ftehim <stripe>Stripe Connected Account Agreement</stripe>. Meta tikklikkja “Attiva l-ħlasijiet”, taqbel mat-<agb>Termini u Kundizzjonijiet</agb> tagħna u mal-Ftehim tas-Servizzi ta' Stripe, u tikkonferma li d-dettalji tiegħek huma korretti u kompluti. Id-dettalji l-oħra kollha jittieħdu mid-data ewlenija tiegħek.",
+    "signupConsent": "Meta tirreġistra, taċċetta t-<agb>Termini u Kundizzjonijiet</agb> tagħna."
+  },
   "onboarding": {
     "welcome": {
       "title": "Merħba fi myNextDays",

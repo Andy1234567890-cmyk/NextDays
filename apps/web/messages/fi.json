@@ -10,6 +10,11 @@
     "notifications": "Ilmoitukset",
     "stepOf": "Vaihe {current}/{total}"
   },
+  "legal": {
+    "agbLinkLabel": "Sopimusehdot",
+    "stripeConsent": "Maksujen käsittelyn välitystoimistoille ja vuokranantajille myNextDays-palvelussa hoitaa Stripe, ja siihen sovelletaan <stripe>Stripe Connected Account Agreement</stripe> -sopimusta. Napsauttamalla ”Aktivoi maksut” hyväksyt <agb>sopimusehtomme</agb> ja Stripe-palvelusopimuksen sekä vahvistat, että antamasi tiedot ovat oikeat ja täydelliset. Kaikki muut tiedot haetaan perustiedoistasi.",
+    "signupConsent": "Rekisteröitymällä hyväksyt <agb>sopimusehtomme</agb>."
+  },
   "onboarding": {
     "welcome": {
       "title": "Tervetuloa myNextDays-palveluun",

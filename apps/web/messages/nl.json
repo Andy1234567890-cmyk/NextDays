@@ -10,6 +10,11 @@
     "notifications": "Meldingen",
     "stepOf": "Stap {current} van {total}"
   },
+  "legal": {
+    "agbLinkLabel": "Algemene voorwaarden",
+    "stripeConsent": "De betalingsverwerking voor agentschappen en verhuurders op myNextDays wordt uitgevoerd door Stripe en valt onder de <stripe>Stripe Connected Account Agreement</stripe>. Door op “Betalingen activeren” te klikken ga je akkoord met onze <agb>algemene voorwaarden</agb> en de Stripe-dienstenovereenkomst en bevestig je dat je gegevens juist en volledig zijn. Alle overige gegevens komen uit je stamgegevens.",
+    "signupConsent": "Door je te registreren ga je akkoord met onze <agb>algemene voorwaarden</agb>."
+  },
   "onboarding": {
     "welcome": {
       "title": "Welkom bij myNextDays",

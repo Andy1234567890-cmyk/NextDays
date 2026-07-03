@@ -10,6 +10,11 @@
     "notifications": "Notifications",
     "stepOf": "Step {current} of {total}"
   },
+  "legal": {
+    "agbLinkLabel": "Terms",
+    "stripeConsent": "Payment processing services for agencies and property managers on myNextDays are provided by Stripe and are subject to the <stripe>Stripe Connected Account Agreement</stripe>. By clicking “Activate payments” you agree to our <agb>Terms and Conditions</agb> and the Stripe Services Agreement and confirm that the information you provided is accurate and complete. All other details come from your master data.",
+    "signupConsent": "By signing up you accept our <agb>Terms and Conditions</agb>."
+  },
   "onboarding": {
     "welcome": {
       "title": "Welcome to myNextDays",

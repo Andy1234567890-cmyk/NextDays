@@ -1,6 +1,7 @@
 // Footer — dunkler Block mit Link-Spalten, App-Store-Badges, Sprache,
 // Rechtshinweisen und Social-Links. Figma: schwarzer Footer am Seitenende.
 import { Icon } from "@iconify/react";
+import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 
 import { Logo } from "@/components/logo";
@@ -37,13 +38,23 @@ const SOCIALS = [
   { icon: "ph:linkedin-logo", label: "LinkedIn" },
 ];
 
-export function MarketingFooter() {
+export async function MarketingFooter() {
+  const t = await getTranslations("legal");
+  // Rechtslinks: nur echte Ziele verlinken. AGB gibt es (24-sprachig unter
+  // /agb); Impressum/Datenschutz/Cookie folgen noch → als Label ohne href
+  // (keine toten "#"-Links).
+  const rechtlich: { label: string; href?: string }[] = [
+    { label: t("agbLinkLabel"), href: "/agb" },
+    { label: "Datenschutz" },
+    { label: "Impressum" },
+    { label: "Cookie-Richtlinie" },
+  ];
   return (
     <footer id="ressourcen" className="bg-primary text-primary-foreground">
       <div className="mx-auto max-w-7xl px-6 py-16">
         <div className="grid gap-10 lg:grid-cols-[1.5fr_repeat(4,1fr)]">
           <div>
-            <Logo heightRem={2.25} />
+            <Logo heightRem={2.25} dark />
             <p className="mt-4 max-w-xs text-sm text-primary-foreground/70">
               Eine starke Plattform für kleine Unterkünfte – mehr Buchungen,
               weniger Arbeit.
@@ -83,9 +94,24 @@ export function MarketingFooter() {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-6 border-t border-primary-foreground/15 pt-8 sm:flex-row">
-          <p className="text-sm text-primary-foreground/60">
-            © 2026 myNextDays. Alle Rechte vorbehalten.
-          </p>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-primary-foreground/60">
+            <span>© 2026 myNextDays. Alle Rechte vorbehalten.</span>
+            {rechtlich.map((r) => (
+              <span key={r.label} className="flex items-center gap-2">
+                <span aria-hidden>·</span>
+                {r.href ? (
+                  <Link
+                    href={r.href}
+                    className="transition-colors hover:text-primary-foreground hover:underline"
+                  >
+                    {r.label}
+                  </Link>
+                ) : (
+                  <span>{r.label}</span>
+                )}
+              </span>
+            ))}
+          </div>
           <div className="flex items-center gap-5">
             <button
               type="button"

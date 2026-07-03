@@ -639,6 +639,15 @@ Das Zahlungs-Fundament (vgl. `payments`-Slice, ADR-0011 — Stripe primär):
   (`individual|company`) + `owner_dob` (date): die für die Stripe-Freischaltung
   nötigen KYC-Angaben, erfasst im Konto (Stammdaten) und per Auto-Connect an
   Stripe übertragen.
+
+**AGB & Stripe Connected Account Agreement (Custom-Pflicht):** Die Agentur-AGB
+liegen als 24-sprachige TS-Module in `apps/web/content/legal/agb/` (öffentliche
+Route `/agb`, `de.ts` ist die Quellfassung); § 5 verankert das
+[Stripe Connected Account Agreement](https://stripe.com/connect-account/legal/full)
+nach Stripes Empfehlungstext. Der „Zahlungen aktivieren"-Klick
+(`components/zahlungen/payments-activation.tsx`) verlinkt AGB + Stripe-Vertrag
+und dokumentiert die Annahme via `tos_acceptance` (date + echte Nutzer-IP).
+Gast-AGB für den Marktplatz: `plattform/app/agb` (`?sprache=<code>`).
 - **`0079` `properties.platform_description`** — abweichender Beschreibungstext
   nur für die eigene Buchungsstrecke (OTAs erhalten weiter den kanonischen Text).
 - **`0080` `availability` CTA/CTD** — Closed-to-Arrival/Departure je Tag.

@@ -5,6 +5,7 @@
 //  2) Laden:   Fortschrittsbalken + „Deine eigene Buchungswebsite …"
 // Größen in rem, Buttons rounded-full (Projekt-Regeln), Icons via Iconify.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -64,6 +65,7 @@ function ChooseStep({
   onStartOAuth: () => void;
   onEmail: () => void;
 }) {
+  const t = useTranslations("legal");
   return (
     <div className="flex flex-col gap-6">
       <Logo heightRem={1.75} />
@@ -114,6 +116,22 @@ function ChooseStep({
           Mit E-Mail registrieren
         </Button>
       </div>
+
+      {/* AGB-Einwilligung: Registrierung setzt die Annahme unserer AGB voraus
+          (dort verankert: Stripe Connected Account Agreement, § 5). */}
+      <p className="text-center text-xs text-muted-foreground">
+        {t.rich("signupConsent", {
+          agb: (chunks) => (
+            <Link
+              href="/agb"
+              target="_blank"
+              className="underline underline-offset-2 hover:text-foreground"
+            >
+              {chunks}
+            </Link>
+          ),
+        })}
+      </p>
 
       <p className="text-center text-sm text-muted-foreground">
         Schon ein Konto?{" "}
