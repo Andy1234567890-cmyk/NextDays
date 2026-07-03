@@ -91,7 +91,7 @@ export function replacePlaceholders(
 
   let result = text;
   const dataRecord = data as Record<string, unknown>;
-  // � DEBUG: Kritische Eingabe-Daten loggen
+  // DEBUG: Kritische Eingabe-Daten loggen
 
   // Firmen-Platzhalter
   if (data.companyName) result = result.replace(/\[%FIRMENNAME%\]/g, data.companyName);
@@ -356,6 +356,26 @@ export function replacePlaceholders(
   result = result.replace(/\[%FAELLIGKEITSDATUM%\]/g, formattedDueDate);
   result = result.replace(/\[%GUELTIG_BIS%\]/g, formattedDueDate); // Für Angebote
   result = result.replace(/\[%GULTIG_BIS%\]/g, formattedDueDate); // Alternative Schreibweise
+  result = result.replace(/\[%GUELTIGKEITSDATUM%\]/g, formattedDueDate); // Dialog-Token (Angebot)
+
+  // Gültigkeitsdauer (Angebote): Zeitspanne zwischen Dokumentdatum und
+  // Gültig-bis, z. B. „14 Tage" — nur wenn beide Daten vorhanden und plausibel.
+  let validityDuration = '';
+  if (gueltigBis && data.documentDate) {
+    const start = new Date(String(data.documentDate));
+    const end = new Date(
+      gueltigBis instanceof Date ? gueltigBis : String(gueltigBis),
+    );
+    if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+      const days = Math.round((end.getTime() - start.getTime()) / 86_400_000);
+      if (days > 0) {
+        const unit =
+          language === 'en' ? 'days' : language === 'fr' ? 'jours' : 'Tage';
+        validityDuration = `${days} ${unit}`;
+      }
+    }
+  }
+  result = result.replace(/\[%GUELTIGKEITSDAUER%\]/g, validityDuration);
   // Leistungsdatum - mehrere Quellen prüfen - IMMER ersetzen
   const leistungsDatum: unknown = data.serviceDate || data.documentDate;
   let formattedServiceDate = '';
@@ -790,6 +810,11 @@ export function replacePlaceholders(
     return dueDate.toLocaleDateString('de-DE');
   };
   result = result.replace(/\[%ZAHLUNGSZIEL%\]/g, calculatePaymentDue2());
+
+  // Aufräumen: Übrig gebliebene Platzhalter (unbekannte Token oder per
+  // if-Guard übersprungene leere Datenfelder, z. B. [%FIRMENFAX%] ohne
+  // hinterlegtes Fax) dürfen NIE wörtlich im fertigen Dokument landen.
+  result = result.replace(/\[%[A-Za-z0-9_.ÄÖÜäöü]+%\]/g, '');
 
   // Zeilenumbrüche für HTML konvertieren
   result = result.replace(/\n/g, '<br>');

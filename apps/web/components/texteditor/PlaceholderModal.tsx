@@ -129,11 +129,14 @@ export default function PlaceholderModal({
               { token: '[%BESTELLNUMMER%]', title: 'Bestellnummer' },
             ]
           : [
+              // Nur Token anbieten, die replacePlaceholders (utils/
+              // placeholderSystem.ts) auch auflösen kann — Lieferbedingungen/
+              // Projektname haben (noch) keine Datenquelle in der App und
+              // würden sonst leer aus dem Dokument entfernt.
               { token: '[%ANGEBOTSNUMMER%]', title: 'Angebotsnummer' },
               { token: '[%ANGEBOTSDATUM%]', title: 'Angebotsdatum' },
               { token: '[%GUELTIGKEITSDATUM%]', title: 'Gültigkeitsdatum' },
               { token: '[%GUELTIGKEITSDAUER%]', title: 'Gültigkeitsdauer' },
-              { token: '[%LIEFERBEDINGUNGEN%]', title: 'Lieferbedingungen' },
               { token: '[%ZAHLUNGSBEDINGUNGEN%]', title: 'Zahlungsbedingungen' },
               { token: '[%GESAMTBETRAG%]', title: 'Gesamtbetrag' },
               { token: '[%NETTOBETRAG%]', title: 'Nettobetrag' },
@@ -141,7 +144,6 @@ export default function PlaceholderModal({
               { token: '[%MEHRWERTSTEUERSATZ%]', title: 'Mehrwertsteuersatz' },
               { token: '[%WAEHRUNG%]', title: 'Währung' },
               { token: '[%RABATT%]', title: 'Rabatt' },
-              { token: '[%PROJEKTNAME%]', title: 'Projektname' },
               { token: '[%BESTELLNUMMER%]', title: 'Bestellnummer' },
             ],
     },
