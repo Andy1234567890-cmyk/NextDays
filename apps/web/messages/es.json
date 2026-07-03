@@ -517,7 +517,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Datos personales",
+    "statistics": "Estadísticas",
+    "avgRevenue": "Ingresos medios",
+    "kicker": "Huésped",
+    "contactKind": {
+      "mobile": "Móvil",
+      "private": "Privado",
+      "business": "Trabajo",
+      "email": "Correo electrónico"
+    }
   },
   "travelAgencies": {
     "title": "Agencias de viajes",
@@ -614,6 +624,7 @@
     "hotel": "Hotel",
     "hotelHint": "Habitaciones, recepción, operación hotelera clásica",
     "saved": "Tipo de negocio guardado.",
-    "adminOnly": "Solo los administradores pueden cambiar el tipo de negocio."
+    "adminOnly": "Solo los administradores pueden cambiar el tipo de negocio.",
+    "locked": "El tipo de negocio se define en el onboarding y no puede cambiarse después."
   }
 }

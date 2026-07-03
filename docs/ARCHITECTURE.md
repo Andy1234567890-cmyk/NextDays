@@ -468,6 +468,35 @@ freigegeben und an Channex zurückgemeldet (availability=1); eine lokale Storno
 hebt die OTA-Buchung NICHT beim Portal auf (das UI weist darauf hin). Guard:
 `MANAGE_CALENDAR` + `EDIT_CALENDAR_BOOKINGS` (wie Verschieben).
 
+**Check-in/Check-out + Zimmerrechnung (Migrationen `0091`/`0092`):** Echte
+Front-Desk-Aktionen im Kalender-Buchungs-Slider — `POST /reservations/{id}/
+check-in|check-out` persistiert `checked_in_at`/`checked_out_at` (Guards wie
+Storno); der Anzeige-Status „Eingecheckt" kommt seit `0091` aus diesen Feldern,
+nicht mehr aus dem Anreisedatum, und der Check-out setzt `status='completed'`.
+Fachliche Regeln (Nutzer-Entscheidung): Rechnungen aus Buchungen erst NACH
+Check-in; **beim Check-out entsteht verpflichtend eine finale Rechnung mit
+GoBD-Nummer** — schlägt die Rechnungserstellung fehl, findet kein Check-out
+statt (Reihenfolge: erst Rechnung, dann Statuswechsel; Retry ist idempotent).
+Der **Booking→Invoice-Builder** (`buchhaltung/reservation_invoice.py`, EINE
+Quelle der Wahrheit für Check-out, `GET /buchhaltung/invoice-preview` und den
+manuellen „Rechnung aus Buchung"-Flow) baut die Positionen aus
+`reservations.quote_items` (neues optionales `kind`-Feld je Zeile:
+`lodging|surcharge|fee|discount|tax|addon`; `tax`-Zeilen wie Kurtaxe → 0 % USt,
+Bestands-Snapshots ohne `kind` via Label-Abgleich mit
+`property_pricing_config.taxes`) plus `reservation_addons`
+(Snapshot-Steuersatz; quote_items enthalten NIE Addon-Zeilen — Invariante).
+Aufenthalts-Positionen werden mit `tenant_billing_profile.lodging_tax_rate`
+versteuert (nullable, bewusst KEIN Default — fehlt der Satz, 422 mit klarer
+Meldung; Kleinunternehmer → 0 %); Brutto→Netto wird je Zeile rückgerechnet, die
+Brutto-Summe bleibt exakt der Gastpreis. Gast→Debitor-Brücke:
+`customers.guest_id` (unique je Tenant, `KD-`-Nummern über
+`next_document_number`). `invoices.reservation_id` + partieller Unique-Index
+verhindern Doppelrechnungen (nach Storno ist eine neue möglich); Währung kommt
+aus dem Buchungs-Snapshot, sonst deterministisch aus
+`property_pricing_config.currency`/`rate_plans.currency`. Channex-Resync fasst
+Buchungen mit `checked_out_at` nicht mehr an (kein Status-Rollback);
+`invoices`/`invoice_line_items` sind in der Realtime-Publication.
+
 **Zentrale Preis-Wahrheit (pricing-Slice, Migrationen `0051`/`0052`/`0053`):** Preise
 liefen früher in vier unverbundenen Quellen auseinander — im Objekt bearbeitete
 Preise erschienen nicht im Kalender/Quote. Jetzt gibt es **einen** Resolver
@@ -910,8 +939,8 @@ stateDiagram-v2
 
     state Confirmed {
         [*] --> AwaitingCheckIn
-        AwaitingCheckIn --> CheckedIn: Gast reist an
-        CheckedIn --> Completed: Aufenthalt endet
+        AwaitingCheckIn --> CheckedIn: POST check-in (checked_in_at)
+        CheckedIn --> Completed: POST check-out (Pflicht-Rechnung + checked_out_at)
         Completed --> [*]
     }
 
@@ -928,6 +957,12 @@ Beim **manuellen Anlegen** über den Kalender (`POST /api/v1/reservations`,
 Reservierungs-Assistent im Vermieter-Dashboard) kann der Vermieter den Status
 direkt auf `confirmed` setzen; das Backend belegt sofort die Übernachtungstage
 in `availability` (= `booked`).
+
+Seit `0091` sind Check-in/Check-out **echte Übergänge** (Front-Desk-Buttons im
+Buchungs-Slider): `checked_in_at`/`checked_out_at` persistieren den Zustand,
+`completed` wird beim Check-out gesetzt. Der Check-out erzeugt verpflichtend
+die finale Rechnung (siehe Abschnitt Check-in/Check-out + Zimmerrechnung) —
+ohne Rechnung kein Übergang nach `Completed`.
 
 ---
 

@@ -13,7 +13,6 @@ import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
 
 import { PaymentsActivation } from "@/components/zahlungen/payments-activation";
-import { Separator } from "@/components/ui/separator";
 import { getMe } from "@/lib/auth";
 import {
   getConnectStatus,
@@ -75,7 +74,6 @@ export function KontoZahlungenSection() {
 
   return (
     <section className="flex flex-col gap-5">
-      <Separator />
       <div className="flex flex-col gap-1">
         <h3 className="font-display text-lg font-extrabold">Zahlungen</h3>
         <p className="text-sm text-muted-foreground">

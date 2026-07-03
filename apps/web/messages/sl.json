@@ -517,7 +517,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Osebni podatki",
+    "statistics": "Statistika",
+    "avgRevenue": "Povprečen prihodek",
+    "kicker": "Gost",
+    "contactKind": {
+      "mobile": "Mobilni",
+      "private": "Zasebni",
+      "business": "Poslovni",
+      "email": "E-pošta"
+    }
   },
   "travelAgencies": {
     "title": "Turistične agencije",
@@ -614,6 +624,7 @@
     "hotel": "Hotel",
     "hotelHint": "Sobe, recepcija, klasično hotelsko poslovanje",
     "saved": "Vrsta poslovanja shranjena.",
-    "adminOnly": "Vrsto poslovanja lahko spremenijo le skrbniki."
+    "adminOnly": "Vrsto poslovanja lahko spremenijo le skrbniki.",
+    "locked": "Vrsta poslovanja se določi ob registraciji in je pozneje ni mogoče spremeniti."
   }
 }

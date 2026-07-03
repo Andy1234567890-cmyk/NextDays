@@ -517,7 +517,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Henkilötiedot",
+    "statistics": "Tilastot",
+    "avgRevenue": "Keskimääräinen liikevaihto",
+    "kicker": "Vieras",
+    "contactKind": {
+      "mobile": "Matkapuhelin",
+      "private": "Yksityinen",
+      "business": "Työ",
+      "email": "Sähköposti"
+    }
   },
   "travelAgencies": {
     "title": "Matkatoimistot",
@@ -614,6 +624,7 @@
     "hotel": "Hotelli",
     "hotelHint": "Huoneet, vastaanotto, perinteinen hotellitoiminta",
     "saved": "Toimintatyyppi tallennettu.",
-    "adminOnly": "Vain järjestelmänvalvojat voivat muuttaa toimintatyyppiä."
+    "adminOnly": "Vain järjestelmänvalvojat voivat muuttaa toimintatyyppiä.",
+    "locked": "Toimintatyyppi määritetään käyttöönotossa eikä sitä voi vaihtaa myöhemmin."
   }
 }

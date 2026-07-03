@@ -38,6 +38,10 @@ import {
 import { useInvoiceActions } from '@/components/finance/create-invoice/use-invoice-actions';
 import { useInvoiceLoaders } from '@/components/finance/create-invoice/use-invoice-loaders';
 import { useItemPopovers } from '@/components/finance/create-invoice/use-item-popovers';
+import {
+  type InvoicePreview,
+  getInvoicePreview,
+} from '@/lib/buchhaltung-bookings';
 import type { NewProductValues } from '@/components/inventory/NewProductModal';
 import { useCompanySettings } from '@/hooks/useCompanySettings';
 import { useNextInvoiceNumber } from '@/hooks/useNextInvoiceNumber';
@@ -53,6 +57,9 @@ export default function CreateQuotePage() {
   const uid =
     (typeof params?.uid === 'string' ? params.uid : '') || user?.uid || '';
   const prefillCustomerId = searchParams?.get('customerId');
+  // „Rechnung aus Buchung" (0092): ?reservation=<id> (Deeplink aus dem
+  // Kalender-Slider) ODER Auswahl im Buchungs-Picker.
+  const prefillReservationId = searchParams?.get('reservation');
   const {
     nextNumber: nextInvoiceNumber,
     isLoading: nextNumberLoading,
@@ -110,6 +117,14 @@ export default function CreateQuotePage() {
   // Lieferdatum State (Einzeldatum vs. Zeitraum)
   const [deliveryDateType, setDeliveryDateType] = useState<'single' | 'range'>('single');
   const [deliveryDateRange, setDeliveryDateRange] = useState<{ from?: Date; to?: Date }>({});
+
+  // Buchungs-Brücke (0092): verknüpfte Reservierung + deren Debitor. Gesetzt
+  // durch den ?reservation=-Deeplink aus dem Kalender („Rechnung erstellen");
+  // wandert beim Speichern mit ins Payload (Backend prüft Check-in +
+  // Doppelrechnung). Kein sichtbares Banner — der Kalender-Klick befüllt das
+  // Formular einfach vollständig.
+  const [reservationId, setReservationId] = useState<string | null>(null);
+  const [reservationCustomerId, setReservationCustomerId] = useState<string | null>(null);
 
   // Nummernkreis Modal State
   const [showNumberingModal, setShowNumberingModal] = useState(false);
@@ -176,12 +191,85 @@ export default function CreateQuotePage() {
         typeof crypto !== 'undefined' && 'randomUUID' in crypto
           ? crypto.randomUUID()
           : Math.random().toString(36).slice(2),
-      description: 'Leistung',
+      description: 'Übernachtung',
       quantity: 1,
       unitPrice: 0,
       total: 0,
     },
   ]);
+
+  // „Rechnung aus Buchung": Backend-Vorbefüllung anwenden (EINE Routine für
+  // ?reservation=-Deeplink UND Buchungs-Picker). Kunde + Positionen (netto,
+  // inkl. Upsells mit Snapshot-Steuersatz) + Währung + Aufenthaltszeitraum
+  // kommen aus /buchhaltung/invoice-preview — dieselbe Logik wie die
+  // automatische Check-out-Rechnung (eine Quelle der Wahrheit).
+  const applyReservationPreview = (p: InvoicePreview) => {
+    setReservationId(p.reservationId);
+    setReservationCustomerId(p.customerId);
+    // Firmengast (Gästemappe „Firma") → Empfänger ist die Organisation,
+    // sonst Privatperson mit Vor-/Nachname aus der Gästemappe.
+    const isOrg = !!p.company;
+    setContactType(isOrg ? 'organisation' : 'person');
+    // Adresse aus der Gästemappe im Formular-Format des Anschrift-Blocks:
+    // Zeile 0 = Straße + Nr., Zeile 1 = "PLZ Ort", Zeile 2 = Land.
+    const addressText = p.address
+      ? [
+          [p.address.street, p.address.houseNo].filter(Boolean).join(' '),
+          [p.address.postalCode, p.address.city].filter(Boolean).join(' '),
+          p.address.country,
+        ].join('\n')
+      : '';
+    setFormData(prev => ({
+      ...prev,
+      customerName: isOrg ? p.company : p.customerName,
+      customerFirstName: p.customerFirstName,
+      customerLastName: p.customerLastName,
+      customerEmail: p.customerEmail,
+      customerNumber: p.customerNumber,
+      customerAddress: addressText || prev.customerAddress,
+      customerOrderNumber: prev.customerOrderNumber,
+      currency: p.currency,
+      servicePeriod: `${p.stay.from} – ${p.stay.to}`,
+    }));
+    setDeliveryDateType('range');
+    setDeliveryDateRange({
+      from: new Date(`${p.stay.from}T00:00:00`),
+      to: new Date(`${p.stay.to}T00:00:00`),
+    });
+    setItems(
+      p.items.map(it => ({
+        id:
+          typeof crypto !== 'undefined' && 'randomUUID' in crypto
+            ? crypto.randomUUID()
+            : Math.random().toString(36).slice(2),
+        description: it.description,
+        quantity: it.quantity,
+        unitPrice: it.unitPrice, // netto (Backend rechnet Brutto→Netto zurück)
+        total: it.quantity * it.unitPrice,
+        taxRate: it.taxRate,
+        unit: it.unit,
+        category: 'Aufenthalt',
+      })),
+    );
+  };
+
+  const loadReservationPreview = async (rid: string) => {
+    const res = await getInvoicePreview(rid);
+    if (res.ok) {
+      applyReservationPreview(res.data);
+      toast.success('Buchung übernommen — Positionen aus Aufenthalt und Zusatzleistungen.');
+    } else {
+      // Klartext vom Backend (z. B. „noch nicht eingecheckt", „Rechnung
+      // existiert bereits", „Übernachtungs-Steuersatz fehlt").
+      toast.error(res.error);
+    }
+  };
+
+  // Deeplink ?reservation=<id> (z. B. „Rechnung erstellen (vorab)" im Kalender).
+  useEffect(() => {
+    if (prefillReservationId) void loadReservationPreview(prefillReservationId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- nur beim Mount/Param-Wechsel
+  }, [prefillReservationId]);
 
   // Lade-Effekte (Kunden, Firma, Dienstleistungen, Vorlagen, Nummernkreis, E-Rechnung, Defaults)
   const {
@@ -280,6 +368,8 @@ export default function CreateQuotePage() {
     vat,
     grandTotal,
     taxGrouped,
+    reservationId,
+    reservationCustomerId,
   });
 
 
@@ -619,8 +709,9 @@ export default function CreateQuotePage() {
               toast.success('Per Post versenden wurde bearbeitet');
             }
 
-            // Navigate to invoice list after successful action
-            router.push(`/dashboard/company/${uid}/finance/invoices`);
+            // Zur Rechnungsliste (die Alt-Route /dashboard/company/… existiert
+            // in NextDays nicht — Rechnungen leben unter /buchhaltung).
+            router.push('/buchhaltung');
           } catch (error) {
             console.error('Error sending document:', error);
             toast.error('Fehler beim Versenden der Rechnung');

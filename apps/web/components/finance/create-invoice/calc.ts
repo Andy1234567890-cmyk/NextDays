@@ -78,7 +78,18 @@ export function computeTotals(
     const factor = 1 - Math.max(0, Math.min(100, it.discountPercent || 0)) / 100;
     return sum + t * factor;
   }, 0);
-  const vat = subtotal * (taxRate / 100);
+  // Steuer JE POSITION mit deren Satz (?? statt ||: 0 % ist ein gültiger
+  // Satz — Kurtaxe/Abgaben aus Buchungsrechnungen dürfen NICHT auf den
+  // Firmen-Standardsatz kippen). Positionen ohne eigenen Satz → globaler Satz.
+  const vat = items.reduce((sum, it) => {
+    if (it.category === 'discount') {
+      // Rabatt mindert die Bemessungsgrundlage mit seinem eigenen Satz
+      // (Rabatt-Positionen werden mit taxRate 0 angelegt → neutral).
+      return sum - Math.abs(it.total || 0) * ((it.taxRate ?? taxRate) / 100);
+    }
+    const factor = 1 - Math.max(0, Math.min(100, it.discountPercent || 0)) / 100;
+    return sum + (it.total || 0) * factor * ((it.taxRate ?? taxRate) / 100);
+  }, 0);
   const grandTotal = subtotal + vat;
 
   // Positionen nach Steuersatz gruppieren (für Rechnungen mit mehreren Steuersätzen)
@@ -87,7 +98,7 @@ export function computeTotals(
   items.forEach(item => {
     if (item.category === 'discount') return; // Rabatt-Positionen überspringen
 
-    const itemTaxRate = item.taxRate || taxRate;
+    const itemTaxRate = item.taxRate ?? taxRate;
     const t = item.total || 0;
     const factor = 1 - Math.max(0, Math.min(100, item.discountPercent || 0)) / 100;
     const netAmount = t * factor;

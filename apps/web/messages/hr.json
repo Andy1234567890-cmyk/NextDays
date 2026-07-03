@@ -517,7 +517,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Osobni podaci",
+    "statistics": "Statistika",
+    "avgRevenue": "Prosječan prihod",
+    "kicker": "Gost",
+    "contactKind": {
+      "mobile": "Mobitel",
+      "private": "Privatni",
+      "business": "Poslovni",
+      "email": "E-pošta"
+    }
   },
   "travelAgencies": {
     "title": "Turističke agencije",
@@ -614,6 +624,7 @@
     "hotel": "Hotel",
     "hotelHint": "Sobe, recepcija, klasično hotelsko poslovanje",
     "saved": "Vrsta poslovanja spremljena.",
-    "adminOnly": "Samo administratori mogu promijeniti vrstu poslovanja."
+    "adminOnly": "Samo administratori mogu promijeniti vrstu poslovanja.",
+    "locked": "Vrsta poslovanja određuje se pri registraciji i kasnije se ne može mijenjati."
   }
 }

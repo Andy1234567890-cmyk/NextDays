@@ -10,6 +10,40 @@ sind die Migrationen 0016–0090 sowie das komplette Dashboard entstanden. Die
 wichtigsten Punkte konsolidiert:
 
 ### Hinzugefügt
+- **Check-in/Check-out + Zimmerrechnungen aus Buchungen** (Migrationen
+  0091/0092): echte Front-Desk-Aktionen im Kalender-Buchungs-Slider
+  (`POST /reservations/{id}/check-in|check-out`, persistiert in
+  `checked_in_at`/`checked_out_at`; „Eingecheckt" ist keine Datums-Ableitung
+  mehr). Der Check-out erzeugt verpflichtend eine **finale Rechnung mit
+  GoBD-Nummer** über den neuen Booking→Invoice-Builder
+  (`buchhaltung/reservation_invoice.py`, eine Quelle der Wahrheit):
+  Positionen aus `reservations.quote_items` (neues `kind`-Feld klassifiziert
+  Zeilen; Abgaben wie Kurtaxe → 0 % USt) + `reservation_addons`
+  (Snapshot-Steuersatz), Brutto→Netto-Rückrechnung, Gast→Debitor-Brücke
+  (`customers.guest_id`, Kundennummern `KD-` über den Nummernkreis),
+  Doppelrechnungs-Schutz per Unique-Index, `invoices.reservation_id`.
+  Neuer Tenant-Steuersatz `tenant_billing_profile.lodging_tax_rate`
+  (Firmenprofil-Modal „USt-Satz Übernachtung", bewusst ohne Default —
+  fehlt er, schlägt die automatische Rechnung mit klarer Meldung fehl).
+  Erstellformular `/buchhaltung/rechnungen/neu`: Buchungs-Picker „Aus
+  Buchung übernehmen" + `?reservation=`-Deeplink (Vorbefüllung via
+  `GET /buchhaltung/invoice-preview`, nur eingecheckte Buchungen);
+  Rechnungsliste fokussiert `?invoice=`. Channex-Resync überschreibt
+  abgeschlossene Aufenthalte nicht mehr; `invoices`/`invoice_line_items`
+  sind jetzt in der Realtime-Publikation (Subscription war stumm).
+  Hotel-Terminologie: „Lieferdatum" → „Leistungsdatum"/„Aufenthalt";
+  Status `finalized` ist stornierbar; tote Alt-Redirects
+  (`/dashboard/company/…`) auf `/buchhaltung` umgebogen. NEU dazu:
+  **Storno-Endpunkt** `POST /buchhaltung/invoices/{id}/storno` (der
+  Storno-Dialog rief bisher eine nicht existente Route auf) — erzeugt den
+  negierten ST-Beleg, setzt das Original auf `cancelled` (gibt den
+  Unique-Index für eine korrigierte Buchungsrechnung frei), idempotent mit
+  Selbstreparatur. Gäste-Fix: der Gast-Resolver schreibt jetzt
+  Vorname/Nachname/Sprache strukturiert in die Gästemappe (0046-Felder);
+  Migration 0093 backfillt Bestandsgäste, 0094 nimmt soft-gelöschte
+  Debitoren aus dem Gast-Unique. Rabatt-Positionen (Gesamtrabatt) werden
+  serverseitig jetzt korrekt ABGEZOGEN und mindern die USt-Bemessung
+  (vorher: Beleg wich von der Anzeige ab / USt-Ausweis überhöht).
 - **AGB in allen 24 EU-Amtssprachen** (Vorbereitung Stripe-Custom-Genehmigung):
   Agentur-AGB in `apps/web` (öffentliche Route `/agb`, Sprache folgt dem
   App-Sprachumschalter; Inhalte als TS-Module unter `content/legal/agb/`,

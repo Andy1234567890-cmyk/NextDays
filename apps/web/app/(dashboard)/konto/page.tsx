@@ -34,6 +34,7 @@ import {
   vatIdLabel,
 } from "@/lib/countries";
 import {
+  checkVatId,
   getFirmenProfil,
   saveFirmenProfil,
   uploadFirmenLogo,
@@ -61,8 +62,20 @@ export default function ProfilPage() {
   const [country, setCountry] = useState("DE");
   const [email, setEmail] = useState("");
   const [vatId, setVatId] = useState("");
+  // Live-Prüfung der USt-IdNr. gegen VIES (EU-Prüfdienst) beim Verlassen des
+  // Felds — informativ, blockiert das Speichern nicht.
+  const [vatCheck, setVatCheck] = useState<
+    | null
+    | { state: "checking" }
+    | { state: "ok"; name: string | null }
+    | { state: "invalid" }
+    | { state: "error"; message: string }
+  >(null);
   const [taxNumber, setTaxNumber] = useState("");
   const [isSmallBusiness, setIsSmallBusiness] = useState(false);
+  // USt-Satz Übernachtung (0092) als String (Input); "" = nicht konfiguriert.
+  // Pflicht für die automatische Rechnung beim Check-out (kein Default).
+  const [lodgingTaxRate, setLodgingTaxRate] = useState("");
   const [iban, setIban] = useState("");
   // Kontoinhaber (VoP-Pflicht seit Okt 2025: Name MUSS exakt zur IBAN passen,
   // sonst scheitert die Auszahlung). Wird automatisch vorbefüllt (Firma →
@@ -106,6 +119,7 @@ export default function ProfilPage() {
       if (s("vatId")) setVatId(s("vatId"));
       if (s("taxNumber")) setTaxNumber(s("taxNumber"));
       setIsSmallBusiness(Boolean(d.isSmallBusiness));
+      if (d.lodgingTaxRate != null) setLodgingTaxRate(String(d.lodgingTaxRate));
       if (s("iban")) setIban(s("iban"));
       // Ein bereits gespeicherter Kontoinhaber war eine bewusste Eingabe → als
       // „touched" markieren, damit die Auto-Vorbefüllung ihn nicht überschreibt.
@@ -162,6 +176,10 @@ export default function ProfilPage() {
       vatId: vatId || undefined,
       taxNumber: taxNumber || undefined,
       isSmallBusiness,
+      lodgingTaxRate:
+        lodgingTaxRate.trim() !== "" && Number.isFinite(Number(lodgingTaxRate))
+          ? Number(lodgingTaxRate)
+          : undefined,
       iban: iban ? iban.replace(/\s+/g, "") : undefined,
       // Kontoinhaber exakt wie eingegeben/vorbefüllt — muss für VoP zur IBAN
       // passen. Leer lassen wir das Backend ableiten (_account_holder_from).
@@ -193,6 +211,18 @@ export default function ProfilPage() {
 
   return (
     <>
+      {/* Kopf-Bereich: Profil/Logo + Zahlungs-Status + Betriebsart als Karten
+          nebeneinander. Zahlungen/Betriebsart liegen bewusst AUSSERHALB des
+          Formulars (der Speichern-Submit greift dort nicht). */}
+      <div className="mb-8 grid grid-cols-12 items-start gap-4">
+        <div className="col-span-12 rounded-2xl border border-border bg-card p-5 xl:col-span-7">
+          <KontoZahlungenSection />
+        </div>
+        <div className="col-span-12 rounded-2xl border border-border bg-card p-5 xl:col-span-5">
+          <KontoBetriebsartSection />
+        </div>
+      </div>
+
       <form className="flex flex-col gap-8" onSubmit={onSave}>
         {/* Logo-Upload */}
         <section className="flex flex-col gap-3">
@@ -445,8 +475,51 @@ export default function ProfilPage() {
               <Input
                 id="vatId"
                 value={vatId}
-                onChange={(e) => setVatId(e.target.value)}
+                placeholder="DE123456789"
+                onChange={(e) => {
+                  setVatId(e.target.value);
+                  setVatCheck(null);
+                }}
+                onBlur={async () => {
+                  const v = vatId.trim();
+                  if (!v) {
+                    setVatCheck(null);
+                    return;
+                  }
+                  setVatCheck({ state: "checking" });
+                  const res = await checkVatId(v);
+                  if (res.ok) {
+                    setVatCheck(
+                      res.data.valid
+                        ? { state: "ok", name: res.data.name }
+                        : { state: "invalid" },
+                    );
+                  } else {
+                    setVatCheck({ state: "error", message: res.error });
+                  }
+                }}
               />
+              {vatCheck?.state === "checking" && (
+                <p className="text-xs text-muted-foreground">
+                  Prüfe gegen den EU-Prüfdienst (VIES) …
+                </p>
+              )}
+              {vatCheck?.state === "ok" && (
+                <p className="flex items-center gap-1 text-xs text-success">
+                  <Icon icon="ph:check-circle" className="size-3.5" />
+                  Gültig laut VIES{vatCheck.name ? ` — ${vatCheck.name}` : ""}
+                </p>
+              )}
+              {vatCheck?.state === "invalid" && (
+                <p className="flex items-center gap-1 text-xs text-destructive">
+                  <Icon icon="ph:x-circle" className="size-3.5" />
+                  Laut EU-Prüfdienst (VIES) ist diese USt-IdNr. NICHT gültig —
+                  bitte prüfen.
+                </p>
+              )}
+              {vatCheck?.state === "error" && (
+                <p className="text-xs text-muted-foreground">{vatCheck.message}</p>
+              )}
             </div>
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="taxNumber">Steuernummer</Label>
@@ -454,6 +527,24 @@ export default function ProfilPage() {
                 id="taxNumber"
                 value={taxNumber}
                 onChange={(e) => setTaxNumber(e.target.value)}
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <LabelHint
+                htmlFor="lodgingTaxRate"
+                hint="Steuersatz für Übernachtungs-Positionen bei Rechnungen aus Buchungen (z. B. 7 % in Deutschland). Ohne Angabe kann beim Check-out keine automatische Rechnung erstellt werden."
+              >
+                USt-Satz Übernachtung (%)
+              </LabelHint>
+              <Input
+                id="lodgingTaxRate"
+                type="number"
+                min={0}
+                max={100}
+                step="0.1"
+                value={lodgingTaxRate}
+                onChange={(e) => setLodgingTaxRate(e.target.value)}
+                placeholder="z. B. 7"
               />
             </div>
           </div>
@@ -545,14 +636,6 @@ export default function ProfilPage() {
           </Button>
         </div>
       </form>
-
-      {/* Betriebsart (FeWo/Hotel) — steuert die Navigation. Außerhalb des
-          Profil-Formulars, damit der Speichern-Submit nicht mitgreift. */}
-      <KontoBetriebsartSection />
-
-      {/* Zahlungen — direkt im Konto, kein eigener Tab. Außerhalb des Profil-
-          Formulars, damit der Speichern-Submit nicht mitgreift. */}
-      <KontoZahlungenSection />
     </>
   );
 }

@@ -517,7 +517,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Données personnelles",
+    "statistics": "Statistiques",
+    "avgRevenue": "Revenu moyen",
+    "kicker": "Client",
+    "contactKind": {
+      "mobile": "Mobile",
+      "private": "Privé",
+      "business": "Professionnel",
+      "email": "E-mail"
+    }
   },
   "travelAgencies": {
     "title": "Agences de voyages",
@@ -614,6 +624,7 @@
     "hotel": "Hôtel",
     "hotelHint": "Chambres, réception, exploitation hôtelière classique",
     "saved": "Type d'établissement enregistré.",
-    "adminOnly": "Seuls les administrateurs peuvent modifier le type d'établissement."
+    "adminOnly": "Seuls les administrateurs peuvent modifier le type d'établissement.",
+    "locked": "Le type d'établissement est défini lors de l'inscription et ne peut plus être modifié."
   }
 }

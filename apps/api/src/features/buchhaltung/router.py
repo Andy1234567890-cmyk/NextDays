@@ -134,6 +134,68 @@ def list_invoices_for_company(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post("/invoices/{invoice_id}/storno")
+async def create_storno_invoice(
+    invoice_id: str,
+    request: Request,
+    service: BuchhaltungServiceDep,
+    ctx: _write,
+) -> dict:
+    """Stornorechnung erzeugen (GoBD-Korrekturweg): negierter ST-Beleg mit
+    Verweis aufs Original; Original wird 'cancelled' (gibt bei Buchungs-
+    rechnungen den Unique-Index für eine korrigierte Rechnung frei)."""
+    payload = await request.json()
+    try:
+        return service.create_storno_invoice(
+            ctx, invoice_id, str(payload.get("reason") or "")
+        )
+    except BuchhaltungError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/vat-check")
+def check_vat_id(
+    vat_id: str,
+    ctx: CurrentUser,
+    service: BuchhaltungServiceDep,
+) -> dict:
+    """USt-IdNr. gegen den offiziellen EU-Prüfdienst VIES prüfen (27 EU-Länder).
+    422 = Format falsch, 503 = VIES nicht erreichbar (Prüfung offen)."""
+    try:
+        return service.check_vat_id(ctx, vat_id)
+    except BuchhaltungError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Zimmerrechnungen aus Buchungen (Booking→Invoice-Brücke, 0092) ------------
+@router.get("/billable-reservations")
+def billable_reservations(
+    service: BuchhaltungServiceDep,
+    ctx: _write,
+    query: str = "",
+) -> list[dict]:
+    """Abrechenbare Buchungen (eingecheckt, nicht storniert, ohne aktive
+    Rechnung) für den Buchungs-Picker im Erstellformular."""
+    try:
+        return service.billable_reservations(ctx, query)
+    except BuchhaltungError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/invoice-preview")
+def invoice_preview(
+    reservation_id: str,
+    service: BuchhaltungServiceDep,
+    ctx: _write,
+) -> dict:
+    """Vorbefüllung „Rechnung aus Buchung" (Kunde + Positionen aus Aufenthalt
+    und Upsells) — dieselbe Positions-Logik wie die Check-out-Rechnung."""
+    try:
+        return service.invoice_preview(ctx, reservation_id)
+    except BuchhaltungError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 # --- Firmenprofil / Read-Endpoints für den Buchhaltungs-Bestand --------------
 @router.get("/companies/{company_id}/transaction-links")
 def list_transaction_links(

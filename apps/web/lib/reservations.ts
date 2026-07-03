@@ -54,9 +54,21 @@ export type Reservation = {
   ota_name: string | null; // echter Portal-Name (Booking.com, Airbnb, Expedia …)
   external_ref: string | null; // OTA-Reservierungscode
   num_guests: number; // Gästezahl (Balken-Anzeige)
+  // Echter Check-in/Check-out-Zustand (0091) — null = noch nicht erfolgt.
+  checked_in_at: string | null;
+  checked_out_at: string | null;
 };
 
 export type QuoteItem = { label: string; amount: number };
+
+// Aktive Rechnung zur Buchung (Beträge null ohne Betrags-Sichtbarkeit).
+export type ReservationInvoiceInfo = {
+  id: string;
+  invoice_number: string | null;
+  status: string;
+  gross_amount: number | null;
+  currency: string;
+};
 
 // Vollständige Detailansicht (rechter Slider). Beträge/Kontakt maskiert (null
 // ohne Berechtigung).
@@ -87,6 +99,11 @@ export type ReservationDetail = {
   checkin_time: string | null;
   checkout_time: string | null;
   note: string | null;
+  // Echter Check-in/Check-out-Zustand (0091) — null = noch nicht erfolgt.
+  checked_in_at: string | null;
+  checked_out_at: string | null;
+  // Aktive Rechnung zur Buchung (Booking→Invoice-Brücke 0092), null = keine.
+  invoice: ReservationInvoiceInfo | null;
   cancel_reason: string | null;
   cancelled_at: string | null;
   guest_email: string | null;
@@ -185,6 +202,32 @@ export async function cancelReservation(
   return call(`/reservations/${encodeURIComponent(reservationId)}/cancel`, {
     method: "POST",
     body: { reason },
+  });
+}
+
+/** Gast einchecken (setzt checked_in_at; nur bestätigte Buchungen). */
+export async function checkInReservation(
+  reservationId: string,
+): Promise<Result<Reservation>> {
+  return call(`/reservations/${encodeURIComponent(reservationId)}/check-in`, {
+    method: "POST",
+  });
+}
+
+export type CheckOutResult = {
+  reservation: Reservation;
+  invoice_id: string;
+  invoice_number: string | null;
+  invoice_already_existed: boolean;
+};
+
+/** Gast auschecken — erzeugt serverseitig verpflichtend die finale Rechnung
+ *  (GoBD-Nummer); schlägt die Rechnung fehl, findet KEIN Check-out statt. */
+export async function checkOutReservation(
+  reservationId: string,
+): Promise<Result<CheckOutResult>> {
+  return call(`/reservations/${encodeURIComponent(reservationId)}/check-out`, {
+    method: "POST",
   });
 }
 

@@ -297,6 +297,8 @@ class _MoveQuery:
         self._store = store
         self._name = name
         self._eq: dict = {}
+        self._neq: dict = {}
+        self._is_null: list = []
         self._gte: str | None = None
         self._lt: str | None = None
 
@@ -305,6 +307,17 @@ class _MoveQuery:
 
     def eq(self, col, val) -> "_MoveQuery":  # noqa: ANN001
         self._eq[col] = val
+        return self
+
+    def neq(self, col, val) -> "_MoveQuery":  # noqa: ANN001
+        self._neq[col] = val
+        return self
+
+    def is_(self, col, val) -> "_MoveQuery":  # noqa: ANN001
+        # PostgREST: is_("col", "null") — hier nur der Null-Fall (detail()-
+        # Rechnungs-Query, 0092).
+        if val == "null":
+            self._is_null.append(col)
         return self
 
     def gte(self, _col, val) -> "_MoveQuery":  # noqa: ANN001
@@ -324,6 +337,12 @@ class _MoveQuery:
     def _match(self, r: dict) -> bool:
         for c, v in self._eq.items():
             if r.get(c) != v:
+                return False
+        for c, v in self._neq.items():
+            if r.get(c) == v:
+                return False
+        for c in self._is_null:
+            if r.get(c) is not None:
                 return False
         if self._gte is not None and r.get("date", "") < self._gte:
             return False

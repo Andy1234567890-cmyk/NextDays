@@ -517,7 +517,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Osobné údaje",
+    "statistics": "Štatistika",
+    "avgRevenue": "Priemerná tržba",
+    "kicker": "Hosť",
+    "contactKind": {
+      "mobile": "Mobil",
+      "private": "Súkromný",
+      "business": "Pracovný",
+      "email": "E-mail"
+    }
   },
   "travelAgencies": {
     "title": "Cestovné kancelárie",
@@ -614,6 +624,7 @@
     "hotel": "Hotel",
     "hotelHint": "Izby, recepcia, klasická hotelová prevádzka",
     "saved": "Typ prevádzky uložený.",
-    "adminOnly": "Typ prevádzky môžu meniť iba administrátori."
+    "adminOnly": "Typ prevádzky môžu meniť iba administrátori.",
+    "locked": "Typ prevádzky sa nastavuje pri onboardingu a neskôr ho nemožno zmeniť."
   }
 }

@@ -3,9 +3,11 @@
 // Vollständige Reservierungs-Detailansicht als rechter Slider (Hostaway-Niveau).
 // Lädt die Detaildaten beim Öffnen (GET /reservations/{id}). Beträge/Kontakt
 // kommen bereits maskiert aus dem Backend (DSGVO-Daten-Split) — fehlende Felder
-// werden weggelassen, nichts erfunden.
+// werden weggelassen, nichts erfunden. Check-in/Check-out (0091) laufen hier:
+// der Check-out erzeugt serverseitig verpflichtend die finale Rechnung (0092).
 import { Icon } from "@iconify/react";
-import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { ReservationAddonsSection } from "@/components/kalender/reservation-addons-section";
@@ -15,22 +17,30 @@ import { channelMeta } from "@/lib/calendar-channels";
 import { STATUS_META, displayStatus } from "@/lib/calendar-status";
 import { formatCurrency } from "@/lib/currency";
 import {
+  type CheckOutResult,
   type ReservationDetail,
   cancelReservation,
+  checkInReservation,
+  checkOutReservation,
   getReservationDetail,
 } from "@/lib/reservations";
+import { useRealtime } from "@/lib/use-realtime";
 
 export function ReservationDetailSlider({
   reservationId,
   todayKey,
   onClose,
   onCancelled,
+  onChanged,
 }: {
   reservationId: string;
   todayKey: string;
   onClose: () => void;
   onCancelled?: () => void;
+  /** Optional: nach Check-in/Check-out (Board/Listen neu laden). */
+  onChanged?: () => void;
 }) {
+  const router = useRouter();
   const [data, setData] = useState<ReservationDetail | null>(null);
   const [error, setError] = useState<string | null>(null);
   // Storno-Dialog: Begründung ist Pflicht; wird dokumentiert/auditiert.
@@ -38,6 +48,12 @@ export function ReservationDetailSlider({
   const [reason, setReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
   const [cancelError, setCancelError] = useState<string | null>(null);
+  // Check-in/Check-out: Early-Check-in braucht eine Bestätigung; der Check-out
+  // zeigt danach die erzeugte Rechnung (Ergebnis-Panel mit Versand-Link).
+  const [earlyConfirm, setEarlyConfirm] = useState(false);
+  const [actionBusy, setActionBusy] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [checkoutResult, setCheckoutResult] = useState<CheckOutResult | null>(null);
 
   const isCancelled = data?.status === "cancelled";
   // OTA-Buchung erkannt am echten Portal-Namen (channel "portal" sammelt 40+ OTAs).
@@ -62,19 +78,68 @@ export function ReservationDetailSlider({
     }
   };
 
-  useEffect(() => {
-    let cancelled = false;
-    setData(null);
-    setError(null);
+  const reload = useCallback(() => {
     getReservationDetail(reservationId).then((res) => {
-      if (cancelled) return;
       if (res.ok) setData(res.data);
       else setError(res.error);
     });
-    return () => {
-      cancelled = true;
-    };
   }, [reservationId]);
+
+  useEffect(() => {
+    setData(null);
+    setError(null);
+    setEarlyConfirm(false);
+    setActionError(null);
+    setCheckoutResult(null);
+    reload();
+  }, [reload]);
+
+  // Realtime (WebSocket, kein Polling): Detail + zugehörige Rechnung folgen
+  // Änderungen sofort — auch wenn parallel jemand anderes ein-/auscheckt.
+  useRealtime({
+    table: "reservations",
+    filter: `id=eq.${reservationId}`,
+    onChange: reload,
+  });
+  useRealtime({
+    table: "invoices",
+    filter: `reservation_id=eq.${reservationId}`,
+    onChange: reload,
+  });
+
+  const doCheckIn = async () => {
+    setActionBusy(true);
+    setActionError(null);
+    const res = await checkInReservation(reservationId);
+    setActionBusy(false);
+    setEarlyConfirm(false);
+    if (res.ok) {
+      toast.success("Gast eingecheckt.");
+      reload();
+      onChanged?.();
+    } else {
+      setActionError(res.error);
+    }
+  };
+
+  const doCheckOut = async () => {
+    setActionBusy(true);
+    setActionError(null);
+    const res = await checkOutReservation(reservationId);
+    setActionBusy(false);
+    if (res.ok) {
+      toast.success(
+        res.data.invoice_already_existed
+          ? "Gast ausgecheckt — bestehende Rechnung verwendet."
+          : `Gast ausgecheckt — Rechnung ${res.data.invoice_number ?? ""} erstellt.`,
+      );
+      setCheckoutResult(res.data);
+      reload();
+      onChanged?.();
+    } else {
+      setActionError(res.error);
+    }
+  };
 
   // Esc schließt.
   useEffect(() => {
@@ -87,9 +152,24 @@ export function ReservationDetailSlider({
     v == null ? "—" : formatCurrency(v, currency);
 
   const status = data
-    ? displayStatus(data.status, data.check_in, data.check_out, todayKey)
+    ? displayStatus(
+        data.status,
+        data.check_in,
+        data.check_out,
+        todayKey,
+        data.checked_in_at,
+        data.checked_out_at,
+      )
     : null;
   const meta = data ? channelMeta(data.channel as AvailabilitySource) : null;
+
+  const fmtDateTime = (iso: string) =>
+    new Date(iso).toLocaleString("de-DE", {
+      day: "numeric",
+      month: "short",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
 
   const fmtDate = (s: string) =>
     new Date(`${s}T00:00:00`).toLocaleDateString("de-DE", {
@@ -173,38 +253,234 @@ export function ReservationDetailSlider({
                 </p>
               </div>
 
-              {/* Zeitraum */}
-              <div className="flex items-center gap-2 text-sm">
-                <span className="font-medium">{fmtDate(data.check_in)}</span>
-                <Icon icon="ph:arrow-right" className="size-4 text-muted-foreground" />
-                <span className="font-medium">{fmtDate(data.check_out)}</span>
-                <span className="text-muted-foreground">· {data.nights} Nächte</span>
+              {/* Aufenthalts-Band (Layout-Referenz Casona: Ankunft/Abreise-
+                  Chips + Nächte, Gesamtbetrag prominent rechts) */}
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-(--radius) border bg-secondary/40 p-3">
+                <div className="flex items-center gap-2">
+                  <div className="rounded-(--radius) bg-card px-3 py-1.5 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Anreise
+                    </p>
+                    <p className="text-sm font-bold">{fmtDate(data.check_in)}</p>
+                  </div>
+                  <Icon icon="ph:arrow-right" className="size-4 text-muted-foreground" />
+                  <div className="rounded-(--radius) bg-card px-3 py-1.5 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Abreise
+                    </p>
+                    <p className="text-sm font-bold">{fmtDate(data.check_out)}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-display text-xl font-extrabold">
+                    {money(data.total_amount, data.currency)}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {data.nights} Nächte
+                  </p>
+                </div>
               </div>
 
-              {/* Beträge-Karten (Paid / Due / Total) */}
-              <div className="grid grid-cols-3 gap-2 text-center">
-                <Stat label="Bezahlt" value={money(data.paid_amount, data.currency)} />
-                <Stat label="Offen" value={money(data.due_amount, data.currency)} />
-                <Stat label="Gesamt" value={money(data.total_amount, data.currency)} />
-              </div>
-
-              {/* Quote-Aufschlüsselung */}
-              {data.quote_items.length > 0 && (
-                <Section title="Aufschlüsselung">
-                  <dl className="flex flex-col gap-1.5 text-sm">
-                    {data.quote_items.map((q, i) => (
-                      <div key={i} className="flex justify-between">
-                        <dt className="text-muted-foreground">{q.label}</dt>
-                        <dd>{money(q.amount, data.currency)}</dd>
-                      </div>
-                    ))}
-                    <div className="mt-1 flex justify-between border-t pt-1.5 font-semibold">
-                      <dt>Gesamt</dt>
-                      <dd>{money(data.total_amount, data.currency)}</dd>
-                    </div>
-                  </dl>
-                </Section>
+              {/* Echter Check-in/Check-out-Zustand (0091) */}
+              {(data.checked_in_at || data.checked_out_at) && (
+                <p className="text-xs text-muted-foreground">
+                  {data.checked_in_at &&
+                    `Eingecheckt seit ${fmtDateTime(data.checked_in_at)}`}
+                  {data.checked_out_at &&
+                    ` · Ausgecheckt am ${fmtDateTime(data.checked_out_at)}`}
+                </p>
               )}
+
+              {/* Check-in / Check-out (Front-Desk-Aktionen). Der Check-out
+                  erzeugt serverseitig verpflichtend die finale Rechnung —
+                  schlägt sie fehl (z. B. Steuersatz fehlt), bleibt der Gast
+                  eingecheckt und der Fehler steht hier im Klartext. */}
+              {!isCancelled && !checkoutResult && (
+                <>
+                  {!data.checked_in_at && data.status === "confirmed" && (
+                    <div className="flex flex-col gap-2">
+                      {!earlyConfirm ? (
+                        <Button
+                          type="button"
+                          className="w-full"
+                          disabled={actionBusy}
+                          onClick={() =>
+                            todayKey < data.check_in
+                              ? setEarlyConfirm(true)
+                              : doCheckIn()
+                          }
+                        >
+                          <Icon icon="ph:door-open" className="size-4" />
+                          {actionBusy ? "Checke ein…" : "Gast einchecken"}
+                        </Button>
+                      ) : (
+                        <div className="flex flex-col gap-2 rounded-(--radius) border border-warning/40 bg-warning/10 p-3 text-sm">
+                          <p>
+                            Anreise ist erst am {fmtDate(data.check_in)} — Gast
+                            trotzdem jetzt einchecken (Early Check-in)?
+                          </p>
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setEarlyConfirm(false)}
+                              disabled={actionBusy}
+                            >
+                              Abbrechen
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={doCheckIn}
+                              disabled={actionBusy}
+                            >
+                              {actionBusy ? "Checke ein…" : "Ja, einchecken"}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {data.checked_in_at && !data.checked_out_at && (
+                    <Button
+                      type="button"
+                      className="w-full"
+                      disabled={actionBusy}
+                      onClick={doCheckOut}
+                    >
+                      <Icon icon="ph:flag-checkered" className="size-4" />
+                      {actionBusy
+                        ? "Checke aus…"
+                        : "Check-out + finale Rechnung"}
+                    </Button>
+                  )}
+                  {actionError && (
+                    <p className="rounded-(--radius) border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                      {actionError}
+                    </p>
+                  )}
+                </>
+              )}
+
+              {/* Ergebnis-Panel nach erfolgreichem Check-out */}
+              {checkoutResult && (
+                <div className="flex flex-col gap-2 rounded-(--radius) border border-success/40 bg-success/10 p-3 text-sm">
+                  <p className="font-semibold">
+                    <Icon icon="ph:check-circle" className="mr-1 inline size-4" />
+                    {checkoutResult.invoice_already_existed
+                      ? `Check-out abgeschlossen — Rechnung ${checkoutResult.invoice_number ?? ""} verwendet.`
+                      : `Finale Rechnung ${checkoutResult.invoice_number ?? ""} erstellt.`}
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={() =>
+                      router.push(
+                        `/buchhaltung?invoice=${encodeURIComponent(checkoutResult.invoice_id)}`,
+                      )
+                    }
+                  >
+                    <Icon icon="ph:paper-plane-tilt" className="size-4" />
+                    Rechnung ansehen &amp; versenden
+                  </Button>
+                </div>
+              )}
+
+              {/* Umsatz & Rechnung (Layout-Referenz Casona: Aufschlüsselung,
+                  Gesamt, in Rechnung gestellt/bezahlt/noch offen, Aktionen).
+                  Vorab-Rechnung erst NACH Check-in (fachliche Regel). */}
+              <Section title="Umsatz & Rechnung">
+                <dl className="flex flex-col gap-1.5 text-sm">
+                  {data.quote_items.map((q, i) => (
+                    <div key={i} className="flex justify-between">
+                      <dt className="text-muted-foreground">{q.label}</dt>
+                      <dd>{money(q.amount, data.currency)}</dd>
+                    </div>
+                  ))}
+                  <div className="mt-1 flex justify-between border-t pt-2 font-semibold">
+                    <dt>Gesamt</dt>
+                    <dd className="font-display font-extrabold">
+                      {money(data.total_amount, data.currency)}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between border-t pt-2">
+                    <dt className="text-muted-foreground">In Rechnung gestellt</dt>
+                    <dd>
+                      {data.invoice && data.invoice.gross_amount != null
+                        ? formatCurrency(
+                            data.invoice.gross_amount,
+                            data.invoice.currency || data.currency,
+                          )
+                        : money(0, data.currency)}
+                    </dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Bezahlt</dt>
+                    <dd>{money(data.paid_amount, data.currency)}</dd>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <dt className="text-muted-foreground">Noch offen</dt>
+                    <dd
+                      className={
+                        (data.due_amount ?? 0) > 0
+                          ? "rounded-full bg-warning/20 px-2 py-0.5 font-semibold"
+                          : "font-semibold"
+                      }
+                    >
+                      {money(data.due_amount, data.currency)}
+                    </dd>
+                  </div>
+                </dl>
+
+                {!isCancelled && (
+                  <div className="mt-3 border-t pt-3">
+                    {data.invoice ? (
+                      <div className="flex items-center justify-between gap-3 text-sm">
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">
+                            {data.invoice.invoice_number ?? "Rechnung"}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {data.invoice.status}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            router.push(
+                              `/buchhaltung?invoice=${encodeURIComponent(data.invoice!.id)}`,
+                            )
+                          }
+                        >
+                          <Icon icon="ph:receipt" className="size-4" />
+                          Ansehen
+                        </Button>
+                      </div>
+                    ) : data.checked_in_at ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          router.push(
+                            `/buchhaltung/rechnungen/neu?reservation=${encodeURIComponent(reservationId)}`,
+                          )
+                        }
+                        className="flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
+                      >
+                        <Icon icon="ph:receipt" className="size-4" />
+                        Rechnung erstellen (vorab)
+                      </button>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">
+                        Noch keine Rechnung — möglich ab Check-in. Beim Check-out
+                        wird sie automatisch erstellt.
+                      </p>
+                    )}
+                  </div>
+                )}
+              </Section>
 
               {/* Zusatzleistungen — Schnelltaste: Extra-Angebote zu dieser
                   Buchung dazubuchen (jeder Kanal, auch OTA wie Booking). */}
@@ -265,6 +541,13 @@ export function ReservationDetailSlider({
                   {data.cancel_reason && (
                     <p className="mt-0.5 text-destructive/90">
                       Grund: {data.cancel_reason}
+                    </p>
+                  )}
+                  {data.invoice && (
+                    <p className="mt-1.5 text-destructive/90">
+                      Zur stornierten Buchung existiert Rechnung{" "}
+                      {data.invoice.invoice_number ?? data.invoice.id} — ggf.
+                      Stornorechnung in der Buchhaltung erstellen.
                     </p>
                   )}
                 </div>
@@ -339,15 +622,6 @@ export function ReservationDetailSlider({
           </div>
         )}
       </div>
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-(--radius) border bg-secondary/40 px-2 py-2.5">
-      <p className="font-display text-sm font-extrabold">{value}</p>
-      <p className="text-xs text-muted-foreground">{label}</p>
     </div>
   );
 }

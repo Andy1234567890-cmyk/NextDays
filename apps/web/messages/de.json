@@ -551,7 +551,17 @@
     "addAddress": "Adresse hinzufügen",
     "contactType": "Typ",
     "contactValue": "Wert",
-    "addContact": "Kontakt hinzufügen"
+    "addContact": "Kontakt hinzufügen",
+    "personalData": "Persönliche Daten",
+    "statistics": "Statistik",
+    "avgRevenue": "Ø Umsatz",
+    "kicker": "Gast",
+    "contactKind": {
+      "mobile": "Mobil",
+      "private": "Privat",
+      "business": "Geschäftlich",
+      "email": "E-Mail"
+    }
   },
   "fotos": {
     "title": "Fotos",
@@ -930,6 +940,7 @@
     "hotel": "Hotel",
     "hotelHint": "Zimmer, Rezeption, klassischer Hotelbetrieb",
     "saved": "Betriebsart gespeichert.",
-    "adminOnly": "Nur Administratoren können die Betriebsart ändern."
+    "adminOnly": "Nur Administratoren können die Betriebsart ändern.",
+    "locked": "Die Betriebsart wird beim Onboarding festgelegt und kann nachträglich nicht gewechselt werden."
   }
 }

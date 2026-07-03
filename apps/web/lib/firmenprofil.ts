@@ -28,6 +28,9 @@ export type FirmenProfil = {
   isSmallBusiness?: boolean;
   vatId?: string;
   taxNumber?: string;
+  // USt-Satz Übernachtung (%) — Pflicht für die automatische Rechnung beim
+  // Check-out (Booking→Invoice, 0092); undefined lässt den Wert unangetastet.
+  lodgingTaxRate?: number;
   // Optional (Register / GF / Bank)
   companyRegister?: string;
   districtCourt?: string;
@@ -46,6 +49,31 @@ export type FirmenProfil = {
 // company_id ist serverseitig irrelevant (Profil = aktueller Tenant aus JWT),
 // der Pfad braucht aber einen Platzhalter.
 const COMPANY_PATH = "/buchhaltung/companies/me";
+
+// USt-IdNr.-Prüfung gegen den offiziellen EU-Prüfdienst VIES (27 EU-Länder).
+export type VatCheck = {
+  vatId: string;
+  valid: boolean;
+  name: string | null;
+  address: string | null;
+};
+
+export async function checkVatId(vatId: string): Promise<Result<VatCheck>> {
+  const token = await currentToken();
+  if (!token) return { ok: false, error: "Nicht angemeldet." };
+  try {
+    const data = await api<VatCheck>(
+      `/buchhaltung/vat-check?vat_id=${encodeURIComponent(vatId)}`,
+      { token },
+    );
+    return { ok: true, data };
+  } catch (exc) {
+    return {
+      ok: false,
+      error: exc instanceof ApiError ? exc.message : "Prüfung fehlgeschlagen.",
+    };
+  }
+}
 
 export async function getFirmenProfil(): Promise<Result<Record<string, unknown>>> {
   const token = await currentToken();

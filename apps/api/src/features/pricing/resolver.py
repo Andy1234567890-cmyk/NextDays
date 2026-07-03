@@ -336,7 +336,9 @@ class PricingResolver:
         lines: list[QuoteLine] = []
         if nightly_total > 0 or not priceless:
             label = f"Übernachtung ({n} Nacht{'e' if n != 1 else ''})"
-            lines.append(QuoteLine(label=label, amount=round(nightly_total, 2)))
+            lines.append(
+                QuoteLine(label=label, amount=round(nightly_total, 2), kind="lodging")
+            )
 
         # Kurzaufenthalts-Aufschlag (pro Nacht), wenn Aufenthalt kurz genug.
         if (
@@ -347,7 +349,11 @@ class PricingResolver:
             surcharge = config.short_stay_surcharge * n
             nightly_total += surcharge
             lines.append(
-                QuoteLine(label="Kurzaufenthalts-Aufschlag", amount=round(surcharge, 2))
+                QuoteLine(
+                    label="Kurzaufenthalts-Aufschlag",
+                    amount=round(surcharge, 2),
+                    kind="surcharge",
+                )
             )
 
         # Extra-Gast-Aufschlag pro Nacht ab dem konfigurierten Gast.
@@ -359,6 +365,7 @@ class PricingResolver:
                 QuoteLine(
                     label=f"Aufschlag {extra_guests} weitere(r) Gast/Gäste",
                     amount=round(extra, 2),
+                    kind="surcharge",
                 )
             )
 
@@ -369,7 +376,11 @@ class PricingResolver:
             nightly_total += markup
             sign = "Aufschlag" if markup > 0 else "Abschlag"
             lines.append(
-                QuoteLine(label=f"Kanal-{sign} ({markup_pct:g}%)", amount=round(markup, 2))
+                QuoteLine(
+                    label=f"Kanal-{sign} ({markup_pct:g}%)",
+                    amount=round(markup, 2),
+                    kind="surcharge",
+                )
             )
 
         subtotal = nightly_total
@@ -379,7 +390,7 @@ class PricingResolver:
             amount = self._fee_amount(fee, n, req.guests)
             if amount > 0:
                 name = str(fee.get("name") or "Gebühr")
-                lines.append(QuoteLine(label=name, amount=round(amount, 2)))
+                lines.append(QuoteLine(label=name, amount=round(amount, 2), kind="fee"))
                 subtotal += amount
 
         # 4) Aktion (prozentualer Rabatt auf die bisherige Zwischensumme).
@@ -389,7 +400,11 @@ class PricingResolver:
                 discount = subtotal * pct / 100.0
                 name = str(promo.get("name") or "Rabatt")
                 lines.append(
-                    QuoteLine(label=f"{name} (−{pct:g}%)", amount=round(-discount, 2))
+                    QuoteLine(
+                        label=f"{name} (−{pct:g}%)",
+                        amount=round(-discount, 2),
+                        kind="discount",
+                    )
                 )
                 subtotal -= discount
 
@@ -400,7 +415,7 @@ class PricingResolver:
             amount = self._tax_amount(tax, subtotal)
             if amount > 0:
                 name = str(tax.get("name") or "Steuer")
-                lines.append(QuoteLine(label=name, amount=round(amount, 2)))
+                lines.append(QuoteLine(label=name, amount=round(amount, 2), kind="tax"))
                 subtotal += amount
 
         # 6) Zusatzleistungen (Upsells): eigene Positionen, je nach Basis + eigener
@@ -432,7 +447,7 @@ class PricingResolver:
                 label = names.get(locale) or next(iter(names.values()), "Zusatzleistung")
                 if sel.qty > 1:
                     label = f"{label} ×{sel.qty}"
-                lines.append(QuoteLine(label=label, amount=gross))
+                lines.append(QuoteLine(label=label, amount=gross, kind="addon"))
                 subtotal += gross
 
         total = round(max(0.0, subtotal), 2)

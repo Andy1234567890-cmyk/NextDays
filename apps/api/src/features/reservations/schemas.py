@@ -105,11 +105,25 @@ class ReservationResponse(BaseModel):
     ota_name: str | None = None       # echter Portal-Name (Kalender-Herkunft)
     external_ref: str | None = None   # OTA-Reservierungscode
     num_guests: int = 1               # Gästezahl (Balken-Anzeige)
+    # Echter Check-in/Check-out-Zustand (0091) — None = noch nicht erfolgt.
+    checked_in_at: str | None = None
+    checked_out_at: str | None = None
 
 
 class QuoteItem(BaseModel):
     label: str
     amount: float
+
+
+class ReservationInvoiceInfo(BaseModel):
+    """Aktive Rechnung zur Buchung (Booking→Invoice-Brücke, 0092)."""
+
+    id: str
+    invoice_number: str | None = None
+    status: str = ""
+    # None ohne Betrags-Sichtbarkeit (GuestMask.amounts).
+    gross_amount: float | None = None
+    currency: str = ""
 
 
 class ReservationDetail(BaseModel):
@@ -147,6 +161,11 @@ class ReservationDetail(BaseModel):
     checkin_time: str | None = None
     checkout_time: str | None = None
     note: str | None = None
+    # Echter Check-in/Check-out-Zustand (0091) — None = noch nicht erfolgt.
+    checked_in_at: str | None = None
+    checked_out_at: str | None = None
+    # Aktive Rechnung zur Buchung (None = noch keine erstellt).
+    invoice: ReservationInvoiceInfo | None = None
     # Storno-Dokumentation (gesetzt bei status=cancelled)
     cancel_reason: str | None = None
     cancelled_at: str | None = None
@@ -156,6 +175,16 @@ class ReservationDetail(BaseModel):
     guest_language: str | None = None
     guest_country: str | None = None
     created_at: str | None = None
+
+
+class CheckOutResponse(BaseModel):
+    """Ergebnis des Check-outs: Buchung + die dabei erzeugte finale Rechnung
+    (invoice_already_existed=True beim idempotenten Retry)."""
+
+    reservation: ReservationResponse
+    invoice_id: str
+    invoice_number: str | None = None
+    invoice_already_existed: bool = False
 
 
 class ReservationListResponse(BaseModel):

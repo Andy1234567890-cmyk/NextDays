@@ -86,6 +86,12 @@ export function PaymentsActivation({
     initialStatusError,
   );
   const [accepting, startAccept] = useTransition();
+  // Einwilligung als Popup: der AGB-/Stripe-Vertragstext wird NICHT mehr
+  // dauerhaft in der Fläche gezeigt, sondern beim Klick auf „Zahlungen
+  // aktivieren" abgefragt — Zustimmung erst im Dialog (Stripe-Pflicht: AGB +
+  // Connected Account Agreement müssen im Moment der Zustimmung sichtbar
+  // verlinkt sein).
+  const [consentOpen, setConsentOpen] = useState(false);
 
   const reloadStatus = useCallback(async () => {
     const res = await getConnectStatus(accountId);
@@ -116,6 +122,7 @@ export function PaymentsActivation({
         return;
       }
       setStatus(res.data);
+      setConsentOpen(false);
       toast.success("Zahlungen aktiviert.");
     });
   }
@@ -199,24 +206,46 @@ export function PaymentsActivation({
               </ul>
             </div>
           )}
-          <div className="flex flex-col gap-2">
-            <Button
-              type="button"
-              variant="accent"
-              onClick={handleAcceptTos}
-              disabled={accepting}
-              className="self-start"
-            >
-              <Icon
-                icon={accepting ? "ph:spinner" : "ph:rocket-launch"}
-                className={"size-4 " + (accepting ? "animate-spin" : "")}
-              />
-              {accepting ? "Wird aktiviert …" : "Zahlungen aktivieren"}
-            </Button>
-            {/* Stripe-Pflicht (Custom Accounts): Beim Akzeptieren müssen unsere
-                AGB UND das Stripe Connected Account Agreement sichtbar
-                verlinkt sein — Wortlaut folgt Stripes Empfehlungstext. */}
-            <p className="text-xs text-muted-foreground">
+          <Button
+            type="button"
+            variant="accent"
+            onClick={() => setConsentOpen(true)}
+            disabled={accepting}
+            className="self-start"
+          >
+            <Icon icon="ph:rocket-launch" className="size-4" />
+            Zahlungen aktivieren
+          </Button>
+        </>
+      )}
+
+      {/* Einwilligungs-Popup: AGB + Stripe Connected Account Agreement müssen
+          im Moment der Zustimmung sichtbar verlinkt sein (Stripe-Pflicht für
+          Custom Accounts, Wortlaut folgt Stripes Empfehlungstext). */}
+      {consentOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/40"
+            role="presentation"
+            onClick={() => !accepting && setConsentOpen(false)}
+          />
+          <div className="relative z-10 flex w-full max-w-lg flex-col rounded-2xl bg-card shadow-xl">
+            <div className="flex items-center justify-between gap-4 border-b border-border px-5 py-4">
+              <h2 className="font-display text-lg font-extrabold">
+                Zahlungen aktivieren
+              </h2>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => setConsentOpen(false)}
+                disabled={accepting}
+                aria-label="Schließen"
+              >
+                <Icon icon="ph:x" className="size-4" />
+              </Button>
+            </div>
+            <div className="px-5 py-4 text-sm">
               {t.rich("stripeConsent", {
                 agb: (chunks) => (
                   <Link
@@ -238,9 +267,31 @@ export function PaymentsActivation({
                   </a>
                 ),
               })}
-            </p>
+            </div>
+            <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setConsentOpen(false)}
+                disabled={accepting}
+              >
+                Abbrechen
+              </Button>
+              <Button
+                type="button"
+                variant="accent"
+                onClick={handleAcceptTos}
+                disabled={accepting}
+              >
+                <Icon
+                  icon={accepting ? "ph:spinner" : "ph:check-circle"}
+                  className={"size-4 " + (accepting ? "animate-spin" : "")}
+                />
+                {accepting ? "Wird aktiviert …" : "Zustimmen & aktivieren"}
+              </Button>
+            </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

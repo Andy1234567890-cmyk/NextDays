@@ -517,7 +517,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Personuppgifter",
+    "statistics": "Statistik",
+    "avgRevenue": "Genomsnittlig omsättning",
+    "kicker": "Gäst",
+    "contactKind": {
+      "mobile": "Mobil",
+      "private": "Privat",
+      "business": "Arbete",
+      "email": "E-post"
+    }
   },
   "travelAgencies": {
     "title": "Resebyråer",
@@ -614,6 +624,7 @@
     "hotel": "Hotell",
     "hotelHint": "Rum, reception, klassisk hotelldrift",
     "saved": "Verksamhetstyp sparad.",
-    "adminOnly": "Endast administratörer kan ändra verksamhetstypen."
+    "adminOnly": "Endast administratörer kan ändra verksamhetstypen.",
+    "locked": "Verksamhetstypen fastställs vid onboarding och kan inte ändras senare."
   }
 }

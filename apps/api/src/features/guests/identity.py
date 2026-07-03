@@ -87,6 +87,11 @@ class GuestContact:
     phone: str | None = None
     channel: str | None = None
     external_ref: str | None = None
+    # Gästemappen-Stammdaten (0046), sofern der Kanal sie liefert — werden
+    # beim Anlegen strukturiert gespeichert (nicht nur der zusammengesetzte
+    # `name`), damit die Gästekartei Vorname/Nachname/Sprache/Nationalität hat.
+    language: str | None = None
+    country: str | None = None
     extra: dict[str, Any] = field(default_factory=dict)
 
     def full_name(self) -> str:
@@ -105,6 +110,8 @@ def contact_from_ota_customer(
         email=customer.get("mail") or customer.get("email"),
         phone=customer.get("phone"),
         channel="ota",
+        language=customer.get("language"),
+        country=customer.get("country"),
         external_ref=external_ref
         or customer.get("id")
         or customer.get("guest_id"),
@@ -176,15 +183,18 @@ def _backfill_missing(
     *,
     email: str | None,
     phone: str | None,
+    contact: GuestContact | None = None,
 ) -> None:
-    """Fehlende E-Mail/Telefon am gefundenen Gast ergänzen (nie überschreiben).
+    """Fehlende Stammdaten am gefundenen Gast ergänzen (nie überschreiben):
+    E-Mail/Telefon plus Gästemappen-Felder (Vorname/Nachname/Sprache/
+    Nationalität, 0046), sofern der Kanal sie liefert.
 
     Die API nutzt den Service-Role-Key (umgeht RLS), darum wird auch hier explizit
     nach tenant_id gefiltert — der guest_id stammt zwar aus einer tenant-gescopten
     Suche, der Filter härtet Lese- und Schreibpfad aber gegen Tenant-Verwechslung."""
     current = (
         db.table("guests")
-        .select("email, phone")
+        .select("email, phone, first_name, last_name, language")
         .eq("id", guest_id)
         .eq("tenant_id", tenant_id)
         .limit(1)
@@ -197,6 +207,19 @@ def _backfill_missing(
         patch["email"] = email
     if phone and not current[0].get("phone"):
         patch["phone"] = phone
+    if contact:
+        # BEWUSST ohne country→nationality: das Kanal-„Land" ist ein
+        # Adress-/Wohnsitzland, keine Staatsangehörigkeit — es landet als
+        # Adresse in guest_addresses (siehe _ensure_country_address).
+        for column, value in (
+            ("first_name", contact.first_name),
+            ("last_name", contact.last_name),
+            ("language", contact.language),
+        ):
+            cleaned = (value or "").strip()
+            if cleaned and not current[0].get(column):
+                patch[column] = cleaned
+        _ensure_country_address(db, tenant_id, guest_id, contact.country)
     if patch:
         db.table("guests").update(patch).eq("id", guest_id).eq(
             "tenant_id", tenant_id
@@ -239,6 +262,7 @@ def resolve_or_create_guest(
             channel=channel,
             external_id=external_id,
             needs_review=True,
+            contact=contact,
         )
 
     matched = by_email or by_phone
@@ -248,7 +272,9 @@ def resolve_or_create_guest(
         matched = _find_by_external_id(db, tenant_id, channel, external_id)
 
     if matched:
-        _backfill_missing(db, tenant_id, matched, email=email, phone=phone)
+        _backfill_missing(
+            db, tenant_id, matched, email=email, phone=phone, contact=contact
+        )
         if channel and external_id:
             _link_external_id(db, tenant_id, matched, channel, external_id)
         return matched
@@ -265,7 +291,38 @@ def resolve_or_create_guest(
         channel=channel,
         external_id=external_id,
         needs_review=False,
+        contact=contact,
     )
+
+
+def _ensure_country_address(
+    db: Client, tenant_id: str, guest_id: str, country: str | None
+) -> None:
+    """Wohnsitzland aus der Buchung als Adresse in der Gästemappe anlegen
+    (guest_addresses.country, 0046) — aber NUR, wenn der Gast noch gar keine
+    Adresse hat. Kuratierte Adressdaten werden nie überschrieben/ergänzt."""
+    cleaned = (country or "").strip()
+    if not cleaned:
+        return
+    existing = (
+        db.table("guest_addresses")
+        .select("id")
+        .eq("tenant_id", tenant_id)
+        .eq("guest_id", guest_id)
+        .limit(1)
+        .execute()
+    ).data
+    if existing:
+        return
+    db.table("guest_addresses").insert(
+        {
+            "tenant_id": tenant_id,
+            "guest_id": guest_id,
+            "type": "private",
+            "country": cleaned,
+            "is_primary": True,
+        }
+    ).execute()
 
 
 def _create_guest(
@@ -278,6 +335,7 @@ def _create_guest(
     channel: str | None,
     external_id: str | None,
     needs_review: bool,
+    contact: GuestContact | None = None,
 ) -> str | None:
     payload: dict[str, Any] = {
         "tenant_id": tenant_id,
@@ -287,10 +345,28 @@ def _create_guest(
         "phone": phone,
         "needs_review": needs_review,
     }
+    # Gästemappen-Stammdaten (0046) strukturiert mitschreiben, sofern der Kanal
+    # sie liefert — sonst zeigt die Gästekartei nur den zusammengesetzten Namen
+    # und Vorname/Nachname/Sprache bleiben leer. BEWUSST ohne country→
+    # nationality: das Kanal-„Land" ist ein Adress-/Wohnsitzland, keine
+    # Staatsangehörigkeit — es wird nach dem Insert als Adresse angelegt
+    # (_ensure_country_address → guest_addresses.country).
+    if contact:
+        for column, value in (
+            ("first_name", contact.first_name),
+            ("last_name", contact.last_name),
+            ("language", contact.language),
+        ):
+            cleaned = (value or "").strip()
+            if cleaned:
+                payload[column] = cleaned
     ins = db.table("guests").insert(payload).execute()
     if not ins.data:
         return None
     guest_id = ins.data[0]["id"]
     if channel and external_id:
         _link_external_id(db, tenant_id, guest_id, channel, external_id)
+    if contact:
+        # Wohnsitzland → Adresse in der Gästemappe (nicht nationality).
+        _ensure_country_address(db, tenant_id, guest_id, contact.country)
     return guest_id

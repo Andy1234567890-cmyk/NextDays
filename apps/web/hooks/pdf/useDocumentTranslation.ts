@@ -108,7 +108,8 @@ const translations: Record<string, DocumentTranslations> = {
     date: 'Datum',
     dueDate: 'Fälligkeitsdatum',
     validUntil: 'Gültig bis',
-    deliveryDate: 'Lieferdatum',
+    // Hotel/Ferienobjekt: Leistungs- statt Lieferdatum (Aufenthalt/Service)
+    deliveryDate: 'Leistungsdatum',
 
     // Table headers
     position: 'Pos.',
@@ -194,7 +195,7 @@ const translations: Record<string, DocumentTranslations> = {
     date: 'Date',
     dueDate: 'Due Date',
     validUntil: 'Valid Until',
-    deliveryDate: 'Delivery Date',
+    deliveryDate: 'Service Date',
 
     // Table headers
     position: 'Pos.',
@@ -278,7 +279,7 @@ const translations: Record<string, DocumentTranslations> = {
     date: 'Date',
     dueDate: "Date d'échéance",
     validUntil: "Valide jusqu'au",
-    deliveryDate: 'Date de livraison',
+    deliveryDate: 'Date de prestation',
     position: 'Pos.',
     description: 'Description',
     quantity: 'Quantité',

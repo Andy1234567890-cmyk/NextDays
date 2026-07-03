@@ -7,6 +7,7 @@
 import { Icon } from "@iconify/react";
 import { Button } from "@tasko/ui";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 import { ImportXRechnungDialog } from "@/components/finance/ImportXRechnungDialog";
@@ -16,6 +17,10 @@ import { useRealtime } from "@/lib/use-realtime";
 import type { InvoiceData } from "@/types/invoiceTypes";
 
 export function InvoicesClient({ companyId }: { companyId: string }) {
+  // Fokus-Rechnung (?invoice=<id>): Ziel des Redirects nach dem Check-out im
+  // Kalender („Rechnung ansehen & versenden") — wird oben hervorgehoben.
+  const searchParams = useSearchParams();
+  const focusInvoiceId = searchParams?.get("invoice") ?? null;
   const [invoices, setInvoices] = useState<InvoiceData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,9 +73,39 @@ export function InvoicesClient({ companyId }: { companyId: string }) {
     </header>
   );
 
+  const focused = focusInvoiceId
+    ? invoices.find(inv => inv.id === focusInvoiceId)
+    : undefined;
+
   return (
     <div className="space-y-6">
       {header}
+
+      {/* Fokus-Banner nach Check-out-Redirect: die frisch erzeugte Rechnung
+          klar hervorheben (Versand/Details laufen über die Liste darunter). */}
+      {focused && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-success/40 bg-success/10 px-4 py-3">
+          <div className="flex items-center gap-3">
+            <Icon icon="ph:check-circle" className="size-5 text-success" />
+            <div>
+              <p className="text-sm font-semibold">
+                Rechnung {focused.invoiceNumber || focused.number} zur Buchung
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {focused.customerName}
+                {focused.total != null && focused.currency
+                  ? ` · ${focused.total.toLocaleString("de-DE", { style: "currency", currency: focused.currency })}`
+                  : ""}
+                {` · Status: ${focused.status}`}
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            In der Liste unten öffnen, um sie anzusehen, zu drucken oder zu
+            versenden.
+          </p>
+        </div>
+      )}
 
       <ImportXRechnungDialog
         open={showImportDialog}

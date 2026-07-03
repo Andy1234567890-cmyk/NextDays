@@ -517,7 +517,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Date personale",
+    "statistics": "Statistici",
+    "avgRevenue": "Venit mediu",
+    "kicker": "Oaspete",
+    "contactKind": {
+      "mobile": "Mobil",
+      "private": "Privat",
+      "business": "Serviciu",
+      "email": "E-mail"
+    }
   },
   "travelAgencies": {
     "title": "Agenții de turism",
@@ -614,6 +624,7 @@
     "hotel": "Hotel",
     "hotelHint": "Camere, recepție, operare hotelieră clasică",
     "saved": "Tip de activitate salvat.",
-    "adminOnly": "Doar administratorii pot schimba tipul de activitate."
+    "adminOnly": "Doar administratorii pot schimba tipul de activitate.",
+    "locked": "Tipul de activitate se stabilește la onboarding și nu poate fi schimbat ulterior."
   }
 }

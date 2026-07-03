@@ -13,6 +13,7 @@ from src.features.auth.lodgify_permissions import Permission
 from src.features.auth.permissions import Capability
 
 from .schemas import (
+    CheckOutResponse,
     DashboardResponse,
     ReservationCancel,
     ReservationCreate,
@@ -133,5 +134,51 @@ def cancel_reservation(
     Kanal-agnostisch; gibt die belegten Tage frei (auch an Channex zurück)."""
     try:
         return service.cancel(ctx, reservation_id, req.reason)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/{reservation_id}/check-in",
+    response_model=ReservationResponse,
+    dependencies=[
+        Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    ],
+)
+def check_in_reservation(
+    reservation_id: str,
+    service: ReservationsServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> ReservationResponse:
+    """Gast einchecken (setzt checked_in_at, 0091). Front-Desk-Aktion —
+    gleiche Guards wie move/cancel."""
+    try:
+        return service.check_in(ctx, reservation_id)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/{reservation_id}/check-out",
+    response_model=CheckOutResponse,
+    dependencies=[
+        Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    ],
+)
+def check_out_reservation(
+    reservation_id: str,
+    service: ReservationsServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> CheckOutResponse:
+    """Gast auschecken — erzeugt verpflichtend die finale Rechnung (GoBD-
+    Nummer) über den Booking→Invoice-Builder; ohne Rechnung kein Check-out.
+    Die Rechnung entsteht serverseitig als System-Nebeneffekt der Front-Desk-
+    Aktion (bewusst ohne OWNER_REPORTING-Anforderung)."""
+    try:
+        return service.check_out(ctx, reservation_id)
     except ReservationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

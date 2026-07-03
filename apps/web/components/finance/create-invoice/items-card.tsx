@@ -110,7 +110,7 @@ export default function ItemsCard({
       <CardHeader>
         <CardTitle className="flex items-center">
           <Icon icon="lucide:calculator" className="mr-2 h-5 w-5 text-accent" />
-          Produkte
+          Positionen
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -200,7 +200,10 @@ export default function ItemsCard({
                 unitPrice: 0,
                 total: 0,
                 category: 'discount',
-                taxRate: 0, // Rabatte haben normalerweise 0% Steuer
+                // KEIN fester Steuersatz: der Rabatt mindert die Bemessungs-
+                // grundlage mit dem geltenden Satz (?? taxRate in calc/Payload)
+                // — fest 0 % ließe die USt auf der unrabattierten Basis stehen
+                // (überhöhter Ausweis, §14c-Risiko).
               };
               setItems(prev => [...prev, newItem]);
             }}
@@ -225,7 +228,7 @@ export default function ItemsCard({
                     setShowPopover(false);
                   }
                 }}
-                placeholder="Dienstleistung suchen oder neue erstellen..."
+                placeholder="Leistung suchen oder neu erstellen (Frühstück, Wellness, Parkplatz …)"
                 className="w-full"
               />
 
@@ -236,7 +239,7 @@ export default function ItemsCard({
                     {loadingSavedServices ? (
                       <div className="flex items-center gap-2 p-2">
                         <Icon icon="lucide:loader2" className="h-4 w-4 animate-spin" />
-                        <span>Lade Dienstleistungen...</span>
+                        <span>Lade Leistungen...</span>
                       </div>
                     ) : (
                       <>
@@ -270,7 +273,7 @@ export default function ItemsCard({
                                 ]);
                                 setNewServiceName('');
                                 setShowPopover(false);
-                                toast.success('Dienstleistung zur Rechnung hinzugefügt');
+                                toast.success('Leistung zur Rechnung hinzugefügt');
                               }}
                             >
                               <div>
@@ -317,7 +320,7 @@ export default function ItemsCard({
                               <div className="flex items-center gap-2 text-gray-600 text-sm">
                                 <Icon icon="lucide:plus" className="h-4 w-4" />
                                 <span>
-                                  Neue Dienstleistung &quot;{newServiceName}&quot; erstellen
+                                  Neue Leistung &quot;{newServiceName}&quot; erstellen
                                 </span>
                               </div>
                             </div>
@@ -334,9 +337,9 @@ export default function ItemsCard({
           <Dialog open={serviceModalOpen} onOpenChange={setServiceModalOpen}>
             <DialogContent className="max-w-md" aria-describedby="service-dialog-description">
               <DialogHeader>
-                <DialogTitle>Neue Dienstleistung anlegen</DialogTitle>
+                <DialogTitle>Neue Leistung anlegen</DialogTitle>
                 <div id="service-dialog-description" className="sr-only">
-                  Dialog zum Anlegen einer neuen Dienstleistung mit Name und weiteren Details
+                  Dialog zum Anlegen einer neuen Leistung mit Name und weiteren Details
                 </div>
               </DialogHeader>
               <div className="space-y-4">
@@ -419,7 +422,7 @@ export default function ItemsCard({
                     // 3. Dialog schließen und Form zurücksetzen
                     setServiceModalOpen(false);
                     setServiceDraft({ name: '', description: '', price: '', unit: 'Stk' });
-                    toast.success('Dienstleistung zur Rechnung hinzugefügt');
+                    toast.success('Leistung zur Rechnung hinzugefügt');
                   }}
                   disabled={!serviceDraft.name.trim() || !serviceDraft.price}
                 >
@@ -439,7 +442,7 @@ export default function ItemsCard({
         {items.length > 0 && (
           <div className="flex gap-3 rounded-lg bg-gray-50 px-4 py-2 font-medium text-gray-700 text-sm">
             <div style={{ flex: 1 }}>
-              <label className="block">Produkt oder Service</label>
+              <label className="block">Leistung / Position</label>
             </div>
             <div style={{ width: '80px' }}>
               <label className="block">Menge</label>

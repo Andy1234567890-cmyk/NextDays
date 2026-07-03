@@ -517,7 +517,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Dettalji personali",
+    "statistics": "Statistika",
+    "avgRevenue": "Dħul medju",
+    "kicker": "Mistieden",
+    "contactKind": {
+      "mobile": "Mowbajl",
+      "private": "Privat",
+      "business": "Xogħol",
+      "email": "Email"
+    }
   },
   "travelAgencies": {
     "title": "Aġenziji tal-ivvjaġġar",
@@ -614,6 +624,7 @@
     "hotel": "Lukanda",
     "hotelHint": "Kmamar, reception, operat klassiku ta' lukanda",
     "saved": "It-tip ta' negozju ġie salvat.",
-    "adminOnly": "L-amministraturi biss jistgħu jibdlu t-tip ta' negozju."
+    "adminOnly": "L-amministraturi biss jistgħu jibdlu t-tip ta' negozju.",
+    "locked": "It-tip ta' operat jiġi stabbilit waqt l-onboarding u ma jistax jinbidel wara."
   }
 }

@@ -368,6 +368,34 @@ export default function InvoiceModals({
                   />
                 </div>
               </div>
+
+              {/* USt-Satz Übernachtung (0092): Pflicht für die automatische
+                  Rechnung beim Check-out — ohne ihn schlägt sie mit klarer
+                  Meldung fehl (kein stiller Standardsatz, 27 EU-Länder). */}
+              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>USt-Satz Übernachtung (%)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step="0.1"
+                    value={companySettingsFormData.lodgingTaxRate}
+                    onChange={e =>
+                      setCompanySettingsFormData(prev => ({
+                        ...prev,
+                        lodgingTaxRate: e.target.value,
+                      }))
+                    }
+                    placeholder="z. B. 7"
+                  />
+                  <p className="text-gray-500 text-xs">
+                    Steuersatz für Übernachtungs-Positionen bei Rechnungen aus
+                    Buchungen (z. B. 7 % in Deutschland). Ohne Angabe kann beim
+                    Check-out keine automatische Rechnung erstellt werden.
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Optionale Angaben */}

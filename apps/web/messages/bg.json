@@ -517,7 +517,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Лични данни",
+    "statistics": "Статистика",
+    "avgRevenue": "Среден приход",
+    "kicker": "Гост",
+    "contactKind": {
+      "mobile": "Мобилен",
+      "private": "Личен",
+      "business": "Служебен",
+      "email": "Имейл"
+    }
   },
   "travelAgencies": {
     "title": "Туристически агенции",
@@ -614,6 +624,7 @@
     "hotel": "Хотел",
     "hotelHint": "Стаи, рецепция, класическа хотелска дейност",
     "saved": "Типът дейност е запазен.",
-    "adminOnly": "Само администратори могат да променят типа дейност."
+    "adminOnly": "Само администратори могат да променят типа дейност.",
+    "locked": "Типът на обекта се задава при въвеждането и не може да се променя по-късно."
   }
 }

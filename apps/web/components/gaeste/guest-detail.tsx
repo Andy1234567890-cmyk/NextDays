@@ -18,6 +18,7 @@ import { NativeSelect } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import { ReservationDetailSlider } from "@/components/kalender/reservation-detail-slider";
 import { ReservationWizard } from "@/components/kalender/reservation-wizard";
+import { STATUS_META } from "@/lib/calendar-status";
 import { formatCurrency } from "@/lib/currency";
 import type { GuestAccess } from "@/lib/guests-access";
 import { listProperties } from "@/lib/properties";
@@ -124,145 +125,132 @@ export function GuestDetail({
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Kopf-Karte */}
-      <div className="flex flex-wrap items-start justify-between gap-4 rounded-2xl border border-border bg-card p-5">
-        <div className="flex items-center gap-4">
-          <div className="flex size-14 items-center justify-center rounded-full bg-accent/10 font-display text-lg font-bold text-accent">
-            {initials}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="font-display text-xl font-bold">{guest.name ?? "—"}</h1>
-              {guest.vip_code && (
-                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-800">
-                  {guest.vip_code}
-                </span>
-              )}
-              {guest.is_blocked && (
-                <span className="flex items-center gap-1 rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-semibold text-destructive">
-                  <Icon icon="ph:prohibit" className="size-3.5" />
-                  {t("blocked")}
-                </span>
-              )}
+      {/* Kopf-Banner mit Ordner-Tabs (Layout-Referenz Casona: farbiges Band,
+          Kicker + großer Name, Tabs als angesetzte Reiter — der aktive Reiter
+          geht nahtlos in den Inhalt über). Farbe = myNextDays-Akzent-Token. */}
+      <div className="rounded-2xl bg-accent text-white">
+        <div className="flex flex-wrap items-start justify-between gap-4 px-6 pb-5 pt-5">
+          <div className="flex items-center gap-4">
+            <div className="flex size-14 items-center justify-center rounded-full bg-white/15 font-display text-lg font-bold">
+              {initials}
             </div>
-            {access.contact && (
-              <p className="text-sm text-muted-foreground">
-                {[guest.email, guest.phone].filter(Boolean).join(" · ") || "—"}
+            <div>
+              <p className="text-sm text-white/70">{t("kicker")}</p>
+              <div className="flex items-center gap-2">
+                <h1 className="font-display text-2xl font-extrabold">
+                  {guest.name ?? "—"}
+                </h1>
+                {guest.vip_code && (
+                  <span className="rounded-full bg-white/20 px-2 py-0.5 text-xs font-semibold">
+                    {guest.vip_code}
+                  </span>
+                )}
+                {guest.is_blocked && (
+                  <span className="flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-xs font-semibold">
+                    <Icon icon="ph:prohibit" className="size-3.5" />
+                    {t("blocked")}
+                  </span>
+                )}
+              </div>
+              {access.contact && (
+                <p className="text-sm text-white/80">
+                  {[guest.email, guest.phone].filter(Boolean).join(" · ") || "—"}
+                </p>
+              )}
+              <p className="mt-1 text-xs text-white/60">
+                {t("auditLine", {
+                  created: guest.created_at?.slice(0, 10) ?? "—",
+                  updated: guest.updated_at?.slice(0, 10) ?? "—",
+                })}
               </p>
-            )}
-            <p className="mt-1 text-xs text-muted-foreground">
-              {t("auditLine", {
-                created: guest.created_at?.slice(0, 10) ?? "—",
-                updated: guest.updated_at?.slice(0, 10) ?? "—",
-              })}
-            </p>
-          </div>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {access.canEdit && (
-            <Button
-              type="button"
-              variant={editing ? "default" : "outline"}
-              size="sm"
-              onClick={() => {
-                setTab("overview");
-                setEditing((v) => !v);
-              }}
-            >
-              <Icon icon="ph:pencil-simple" className="size-4" />
-              {editing ? t("editingActive") : t("edit")}
-            </Button>
-          )}
-          {access.canEdit && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={openWizard}
-              disabled={wizardLoading}
-            >
-              <Icon icon="ph:calendar-plus" className="size-4" />
-              {t("actionNewReservation")}
-            </Button>
-          )}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setTab("messages")}
-          >
-            <Icon icon="ph:chat-circle" className="size-4" />
-            {t("actionMessage")}
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-12 gap-4">
-        {/* Übersichts-Spalte */}
-        <aside className="col-span-12 flex flex-col gap-2 rounded-2xl border border-border bg-card p-4 text-sm lg:col-span-3">
-          <Kv label={t("nationality")} value={guest.nationality} />
-          <Kv label={t("language")} value={guest.language} />
-          <Kv label={t("currency")} value={guest.currency} />
-          <Kv label={t("vipCode")} value={guest.vip_code} />
-          <Kv label={t("segment")} value={guest.segment} />
-          <Kv label={t("stays")} value={String(guest.stays_count)} />
-          {access.amounts && guest.total_revenue != null && (
-            <Kv
-              label={t("totalRevenue")}
-              value={
-                guest.currency
-                  ? formatCurrency(guest.total_revenue, guest.currency)
-                  : guest.total_revenue.toLocaleString("de-DE")
-              }
-            />
-          )}
-          {guest.is_blocked && guest.block_reason && (
-            <div className="mt-2 rounded-(--radius) bg-destructive/10 p-2 text-xs text-destructive">
-              {t("blockReason")}: {guest.block_reason}
             </div>
-          )}
-        </aside>
-
-        {/* Tab-Bereich */}
-        <section className="col-span-12 lg:col-span-9">
-          <div className="mb-3 flex flex-wrap gap-4 border-b border-border text-sm">
-            {tabs.map((k) => (
-              <button
-                key={k}
-                type="button"
-                onClick={() => setTab(k)}
-                className={
-                  k === tab
-                    ? "border-b-2 border-accent pb-2 font-semibold text-accent"
-                    : "pb-2 text-muted-foreground hover:text-foreground"
-                }
-              >
-                {t(`tab.${k}`)}
-              </button>
-            ))}
           </div>
+          <div className="flex flex-wrap gap-2">
+            {access.canEdit && (
+              <Button
+                type="button"
+                size="sm"
+                className="bg-card text-foreground hover:bg-card/90"
+                onClick={() => {
+                  setTab("overview");
+                  setEditing((v) => !v);
+                }}
+              >
+                <Icon icon="ph:pencil-simple" className="size-4" />
+                {editing ? t("editingActive") : t("edit")}
+              </Button>
+            )}
+            {access.canEdit && (
+              <Button
+                type="button"
+                size="sm"
+                className="bg-card text-foreground hover:bg-card/90"
+                onClick={openWizard}
+                disabled={wizardLoading}
+              >
+                <Icon icon="ph:calendar-plus" className="size-4" />
+                {t("actionNewReservation")}
+              </Button>
+            )}
+            <Button
+              type="button"
+              size="sm"
+              className="bg-card text-foreground hover:bg-card/90"
+              onClick={() => setTab("messages")}
+            >
+              <Icon icon="ph:chat-circle" className="size-4" />
+              {t("actionMessage")}
+            </Button>
+          </div>
+        </div>
 
-          {tab === "overview" && (
-            <OverviewTab
-              guest={guest}
-              access={access}
-              editing={editing}
-              onDone={() => setEditing(false)}
-            />
-          )}
-          {tab === "contact" && <ContactTab guest={guest} access={access} />}
-          {tab === "identity" && access.idDocs && (
-            <IdentityTab guestId={guest.id} access={access} />
-          )}
-          {tab === "preferences" && <PreferencesTab guestId={guest.id} access={access} />}
-          {tab === "reservations" && <ReservationsTab guestId={guest.id} access={access} />}
-          {tab === "invoices" && access.amounts && <InvoicesTab guestId={guest.id} />}
-          {tab === "messages" && <MessagesTab guestId={guest.id} />}
-          {tab === "notes" && <NotesTab guestId={guest.id} access={access} />}
-          {tab === "documents" && <DocumentsTab guestId={guest.id} />}
-          {tab === "gdpr" && <GdprTab guestId={guest.id} access={access} />}
-        </section>
+        {/* Ordner-Tabs am Band-Unterrand: aktiv = Hintergrundfarbe des
+            Inhalts (nahtloser Übergang), inaktiv = aufgehellter Reiter. */}
+        <div className="flex flex-wrap gap-1 px-4">
+          {tabs.map((k) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setTab(k)}
+              className={
+                k === tab
+                  ? "rounded-t-lg bg-background px-4 py-2.5 text-sm font-semibold text-foreground"
+                  : "rounded-t-lg bg-white/15 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/25"
+              }
+            >
+              {t(`tab.${k}`)}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {/* Tab-Inhalt (die Übersicht bringt ihre eigene Zwei-Spalten-Struktur
+          mit — Hauptspalte + rechte Info-Leiste). */}
+      <section>
+
+        {tab === "overview" && (
+          <OverviewTab
+            guest={guest}
+            access={access}
+            editing={editing}
+            onDone={() => setEditing(false)}
+            onEdit={() => setEditing(true)}
+            onOpenTab={(k) => setTab(k)}
+            onNewReservation={openWizard}
+          />
+        )}
+        {tab === "contact" && <ContactTab guest={guest} access={access} />}
+        {tab === "identity" && access.idDocs && (
+          <IdentityTab guestId={guest.id} access={access} />
+        )}
+        {tab === "preferences" && <PreferencesTab guestId={guest.id} access={access} />}
+        {tab === "reservations" && <ReservationsTab guestId={guest.id} access={access} />}
+        {tab === "invoices" && access.amounts && <InvoicesTab guestId={guest.id} />}
+        {tab === "messages" && <MessagesTab guestId={guest.id} />}
+        {tab === "notes" && <NotesTab guestId={guest.id} access={access} />}
+        {tab === "documents" && <DocumentsTab guestId={guest.id} />}
+        {tab === "gdpr" && <GdprTab guestId={guest.id} access={access} />}
+      </section>
 
       {/* Neue Reservierung als rechter Slider — vorbefüllt mit diesem Gast,
           Objekt + Zeitraum im Wizard wählbar, fester guest_id (keine Dublette). */}
@@ -319,6 +307,112 @@ function Card({ children }: { children: React.ReactNode }) {
   );
 }
 
+// Karte mit Titelzeile + optionaler Aktions-Fußzeile (Layout-Referenz Casona:
+// Inhalt oben, Aktion unten abgesetzt) — Farben/Radien = myNextDays-Tokens.
+function SectionCard({
+  title,
+  footer,
+  children,
+}: {
+  title: string;
+  footer?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-card text-sm">
+      <div className="px-5 pt-4">
+        <h2 className="font-display text-base font-extrabold">{title}</h2>
+      </div>
+      <div className="px-5 py-4">{children}</div>
+      {footer && (
+        <div className="border-t border-border bg-secondary/40 px-5 py-3">{footer}</div>
+      )}
+    </div>
+  );
+}
+
+function StatRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 py-2 first:pt-0 last:pb-0">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="font-medium">{value}</dd>
+    </div>
+  );
+}
+
+// Notizen-Kachel der Info-Leiste: jüngste Notizen als Zettel, Rest im Tab.
+function NotesRailCard({ guestId, onOpen }: { guestId: string; onOpen: () => void }) {
+  const t = useTranslations("guests");
+  const [items, setItems] = useState<GuestNote[] | null>(null);
+  const load = useCallback(() => {
+    listNotes(guestId).then((r) => r.ok && setItems(r.data.items));
+  }, [guestId]);
+  useEffect(() => load(), [load]);
+  useRealtime({ table: "guest_notes", filter: `guest_id=eq.${guestId}`, onChange: load });
+  return (
+    <SectionCard
+      title={t("tab.notes")}
+      footer={
+        <button
+          type="button"
+          onClick={onOpen}
+          className="flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
+        >
+          <Icon icon="ph:note-pencil" className="size-4" />
+          {t("addNote")}
+        </button>
+      }
+    >
+      {items === null ? (
+        "…"
+      ) : items.length === 0 ? (
+        <p className="text-muted-foreground">{t("noNotes")}</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {items.slice(0, 3).map((n) => (
+            <li
+              key={n.id}
+              className="rounded-(--radius) border border-warning/30 bg-warning/10 p-2.5 text-sm"
+            >
+              <p className="whitespace-pre-wrap">{n.body}</p>
+            </li>
+          ))}
+        </ul>
+      )}
+    </SectionCard>
+  );
+}
+
+// Dokumente-Kachel der Info-Leiste (Anzahl + Sprung in den Tab).
+function DocumentsRailCard({ guestId, onOpen }: { guestId: string; onOpen: () => void }) {
+  const t = useTranslations("guests");
+  const [count, setCount] = useState<number | null>(null);
+  const load = useCallback(() => {
+    listDocuments(guestId).then((r) => r.ok && setCount(r.data.total));
+  }, [guestId]);
+  useEffect(() => load(), [load]);
+  useRealtime({ table: "guest_documents", filter: `guest_id=eq.${guestId}`, onChange: load });
+  return (
+    <SectionCard
+      title={t("tab.documents")}
+      footer={
+        <button
+          type="button"
+          onClick={onOpen}
+          className="flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
+        >
+          <Icon icon="ph:folder-open" className="size-4" />
+          {t("tab.documents")}
+        </button>
+      }
+    >
+      <p className="text-muted-foreground">
+        {count === null ? "…" : t("documentsCount", { count })}
+      </p>
+    </SectionCard>
+  );
+}
+
 // Stammdaten: Ansicht ODER Edit-Formular. Im Edit-Modus wird per PATCH nur das
 // Geänderte gesendet (Diff gegen den geladenen Gast). Maskierte Felder (Nachname
 // ohne view_guest_name) sind gesperrt und werden nicht vorbelegt.
@@ -327,11 +421,17 @@ function OverviewTab({
   access,
   editing,
   onDone,
+  onEdit,
+  onOpenTab,
+  onNewReservation,
 }: {
   guest: Guest;
   access: GuestAccess;
   editing: boolean;
   onDone: () => void;
+  onEdit: () => void;
+  onOpenTab: (k: TabKey) => void;
+  onNewReservation: () => void;
 }) {
   const t = useTranslations("guests");
   const router = useRouter();
@@ -366,6 +466,68 @@ function OverviewTab({
   const locked = (f: FieldKey) => f === "last_name" && !access.fullName;
   const set = (f: FieldKey, v: string) => setForm((p) => ({ ...p, [f]: v }));
 
+  // Reservierungen EINMAL laden (Reservierungs-Karte + Statistik teilen sie):
+  // die Statistik leitet daraus die Anzeige-Währung ab — guests.currency ist
+  // bei automatisch angelegten Gästen leer, die Buchungen tragen die Wahrheit.
+  const [resItems, setResItems] = useState<GuestReservation[] | null>(null);
+  const reloadRes = useCallback(() => {
+    listGuestReservations(guest.id).then((r) => r.ok && setResItems(r.data.items));
+  }, [guest.id]);
+  useEffect(reloadRes, [reloadRes]);
+  useRealtime({
+    table: "reservations",
+    filter: `guest_id=eq.${guest.id}`,
+    onChange: reloadRes,
+  });
+  const displayCurrency =
+    guest.currency ||
+    resItems?.find((r) => r.currency)?.currency ||
+    null;
+
+  // Einzelfeld-Popup (Layout-Referenz Casona): Klick auf ein Feld öffnet einen
+  // kleinen Dialog NUR für dieses Feld — schnelle Korrektur ohne den großen
+  // Bearbeiten-Modus. Speichern schickt ein Ein-Feld-PATCH.
+  const [fieldEdit, setFieldEdit] = useState<
+    { key: FieldKey; label: string; type?: string } | null
+  >(null);
+  const [fieldValue, setFieldValue] = useState("");
+  const [fieldSaving, setFieldSaving] = useState(false);
+  const openField = (key: FieldKey, label: string, type?: string) => {
+    if (!access.canEdit || locked(key)) return;
+    setFieldValue((guest[key] as string | null) ?? "");
+    setFieldEdit({ key, label, type });
+  };
+  const saveField = async () => {
+    if (!fieldEdit) return;
+    const before = (guest[fieldEdit.key] as string | null) ?? "";
+    if (fieldValue === before) {
+      setFieldEdit(null);
+      return;
+    }
+    setFieldSaving(true);
+    const res = await updateGuest(guest.id, {
+      [fieldEdit.key]: fieldValue === "" ? null : fieldValue,
+    });
+    setFieldSaving(false);
+    if (res.ok) {
+      toast.success(t("saved"));
+      setFieldEdit(null);
+      router.refresh();
+    } else {
+      toast.error(res.error);
+    }
+  };
+  const fmtMoney = (v: number) =>
+    displayCurrency ? formatCurrency(v, displayCurrency) : v.toLocaleString("de-DE");
+  const fmtDay = (s: string | null) =>
+    s
+      ? new Date(`${s}T00:00:00`).toLocaleDateString("de-DE", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
+      : "—";
+
   const save = () =>
     start(async () => {
       // Diff: nur tatsächlich geänderte Felder senden.
@@ -392,20 +554,181 @@ function OverviewTab({
 
   if (!editing) {
     return (
-      <Card>
-        <div className="grid grid-cols-2 gap-3">
-          <Kv label={t("salutation")} value={guest.salutation} />
-          <Kv label={t("title2")} value={guest.title} />
-          <Kv label={t("firstName")} value={guest.first_name} />
-          <Kv label={t("lastName")} value={access.fullName ? guest.last_name : null} />
-          <Kv label={t("birthDate")} value={guest.birth_date} />
-          <Kv label={t("birthPlace")} value={guest.birth_place} />
-          <Kv label={t("company")} value={guest.company} />
-          <Kv label={t("position")} value={guest.position} />
-          <Kv label={t("vatId")} value={guest.vat_id} />
-          {access.source && <Kv label={t("source")} value={guest.source} />}
+      <div className="grid grid-cols-12 items-start gap-4">
+        {/* Hauptspalte: Persönliche Daten + Reservierungen */}
+        <div className="col-span-12 flex flex-col gap-4 xl:col-span-8">
+          <SectionCard
+            title={t("personalData")}
+            footer={
+              access.canEdit ? (
+                <button
+                  type="button"
+                  onClick={onEdit}
+                  className="flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
+                >
+                  <Icon icon="ph:pencil-simple" className="size-4" />
+                  {t("edit")}
+                </button>
+              ) : undefined
+            }
+          >
+            {/* 3er-Zeilen mit Trennlinien (Casona-Raster). Klick auf ein Feld
+                öffnet das Einzelfeld-Popup (openField). */}
+            <div className="flex flex-col divide-y divide-border">
+              {(
+                [
+                  [
+                    { key: "first_name", label: t("firstName"), value: guest.first_name },
+                    {
+                      key: "last_name",
+                      label: t("lastName"),
+                      value: access.fullName ? guest.last_name : null,
+                    },
+                    { key: "nationality", label: t("nationality"), value: guest.nationality },
+                  ],
+                  [
+                    { key: "language", label: t("language"), value: guest.language },
+                    {
+                      key: "birth_date",
+                      label: t("birthDate"),
+                      value: guest.birth_date ? fmtDay(guest.birth_date) : null,
+                      type: "date",
+                    },
+                    { key: "birth_place", label: t("birthPlace"), value: guest.birth_place },
+                  ],
+                  [
+                    { key: "salutation", label: t("salutation"), value: guest.salutation },
+                    { key: "title", label: t("title2"), value: guest.title },
+                    {
+                      key: "currency",
+                      label: t("currency"),
+                      value: guest.currency || displayCurrency,
+                    },
+                  ],
+                  [
+                    { key: "company", label: t("company"), value: guest.company },
+                    { key: "position", label: t("position"), value: guest.position },
+                    { key: "vat_id", label: t("vatId"), value: guest.vat_id },
+                  ],
+                  [
+                    { key: "vip_code", label: t("vipCode"), value: guest.vip_code },
+                    { key: "segment", label: t("segment"), value: guest.segment },
+                    ...(access.source
+                      ? [{ key: null, label: t("source"), value: guest.source }]
+                      : []),
+                  ],
+                ] as {
+                  key: FieldKey | null;
+                  label: string;
+                  value: string | null | undefined;
+                  type?: string;
+                }[][]
+              ).map((row, i) => (
+                <div
+                  key={i}
+                  className="grid grid-cols-2 gap-x-6 gap-y-4 py-4 first:pt-0 last:pb-0 sm:grid-cols-3"
+                >
+                  {row.map((f) =>
+                    access.canEdit && f.key && !locked(f.key) ? (
+                      <button
+                        key={f.label}
+                        type="button"
+                        onClick={() => openField(f.key as FieldKey, f.label, f.type)}
+                        className="-mx-2 -my-1 rounded-(--radius) px-2 py-1 text-left hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-accent/40"
+                      >
+                        <Kv label={f.label} value={f.value} />
+                      </button>
+                    ) : (
+                      <Kv key={f.label} label={f.label} value={f.value} />
+                    ),
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Einzelfeld-Popup */}
+            {fieldEdit && (
+              <FormDialog
+                title={fieldEdit.label}
+                onClose={() => setFieldEdit(null)}
+                onSubmit={saveField}
+                submitLabel={fieldSaving ? "…" : t("save")}
+                cancelLabel={t("cancel")}
+              >
+                <label className="flex flex-col gap-1.5 text-sm">
+                  <span className="font-medium">{fieldEdit.label}</span>
+                  <Input
+                    type={fieldEdit.type ?? "text"}
+                    value={fieldValue}
+                    autoFocus
+                    onChange={(e) => setFieldValue(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") void saveField();
+                    }}
+                  />
+                </label>
+              </FormDialog>
+            )}
+            {guest.is_blocked && guest.block_reason && (
+              <div className="mt-4 rounded-(--radius) bg-destructive/10 p-2.5 text-xs text-destructive">
+                {t("blockReason")}: {guest.block_reason}
+              </div>
+            )}
+          </SectionCard>
+
+          <SectionCard
+            title={t("tab.reservations")}
+            footer={
+              access.canEdit ? (
+                <button
+                  type="button"
+                  onClick={onNewReservation}
+                  className="flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
+                >
+                  <Icon icon="ph:plus-circle" className="size-4" />
+                  {t("actionNewReservation")}
+                </button>
+              ) : undefined
+            }
+          >
+            <ReservationList
+              guestId={guest.id}
+              access={access}
+              limit={5}
+              items={resItems}
+              reload={reloadRes}
+            />
+          </SectionCard>
         </div>
-      </Card>
+
+        {/* Rechte Info-Leiste: Notizen, Statistik, Dokumente */}
+        <div className="col-span-12 flex flex-col gap-4 xl:col-span-4">
+          <NotesRailCard guestId={guest.id} onOpen={() => onOpenTab("notes")} />
+          <SectionCard title={t("statistics")}>
+            <dl className="flex flex-col divide-y divide-border text-sm">
+              <StatRow label={t("stays")} value={String(guest.stays_count)} />
+              <StatRow label={t("colLastStay")} value={fmtDay(guest.last_stay_at)} />
+              {access.amounts && guest.total_revenue != null && (
+                <>
+                  <StatRow
+                    label={t("avgRevenue")}
+                    value={
+                      guest.stays_count > 0
+                        ? fmtMoney(guest.total_revenue / guest.stays_count)
+                        : "—"
+                    }
+                  />
+                  <StatRow
+                    label={t("totalRevenue")}
+                    value={fmtMoney(guest.total_revenue)}
+                  />
+                </>
+              )}
+            </dl>
+          </SectionCard>
+          <DocumentsRailCard guestId={guest.id} onOpen={() => onOpenTab("documents")} />
+        </div>
+      </div>
     );
   }
 
@@ -577,7 +900,11 @@ function ContactTab({ guest, access }: { guest: Guest; access: GuestAccess }) {
         title={t("contacts")}
         items={contacts}
         canEdit={access.canEdit}
-        render={(c: GuestContact) => `${c.type}: ${c.value}`}
+        render={(c: GuestContact) => {
+          const known = ["mobile", "private", "business", "email"];
+          const label = known.includes(c.type) ? t(`contactKind.${c.type}`) : c.type;
+          return `${label}: ${c.value}`;
+        }}
         onDelete={async (id) => {
           const res = await deleteContact(guest.id, id);
           if (res.ok) {
@@ -587,7 +914,17 @@ function ContactTab({ guest, access }: { guest: Guest; access: GuestAccess }) {
         }}
         addLabel={t("addContact")}
         fields={[
-          { key: "type", label: t("contactType") },
+          {
+            key: "type",
+            label: t("contactType"),
+            // Feste Auswahl statt Freitext (guest_contacts.type, 0046).
+            options: [
+              { value: "mobile", label: t("contactKind.mobile") },
+              { value: "private", label: t("contactKind.private") },
+              { value: "business", label: t("contactKind.business") },
+              { value: "email", label: t("contactKind.email") },
+            ],
+          },
           { key: "value", label: t("contactValue") },
         ]}
         onAdd={async (vals) => {
@@ -626,7 +963,8 @@ function SubList<T extends { id: string }>({
   render: (item: T) => string;
   onDelete: (id: string) => void | Promise<void>;
   addLabel: string;
-  fields: { key: string; label: string }[];
+  // Feld mit options → Auswahlliste statt Freitext (z. B. Kontakt-Typ).
+  fields: { key: string; label: string; options?: { value: string; label: string }[] }[];
   onAdd: (vals: Record<string, string>) => Promise<boolean>;
 }) {
   const t = useTranslations("guests");
@@ -660,32 +998,90 @@ function SubList<T extends { id: string }>({
           ))}
         </ul>
       )}
-      {canEdit &&
-        (adding ? (
-          <div className="mt-3 flex flex-wrap items-end gap-2 border-t border-border pt-3">
-            {fields.map((f) => (
-              <label key={f.key} className="flex flex-col gap-1 text-sm">
-                <span className="text-muted-foreground">{f.label}</span>
+      {canEdit && (
+        <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => setAdding(true)}>
+          <Icon icon="ph:plus" className="size-4" />
+          {addLabel}
+        </Button>
+      )}
+      {/* Hinzufügen als Dialog (Layout-Referenz Casona) statt Inline-Zeile —
+          beschriftete Felder untereinander, Aktionen unten. */}
+      {adding && (
+        <FormDialog
+          title={addLabel}
+          onClose={() => {
+            setAdding(false);
+            setVals({});
+          }}
+          onSubmit={submit}
+          submitLabel={t("add")}
+          cancelLabel={t("cancel")}
+        >
+          {fields.map((f) => (
+            <label key={f.key} className="flex flex-col gap-1.5 text-sm">
+              <span className="font-medium">{f.label}</span>
+              {f.options ? (
+                <NativeSelect
+                  value={vals[f.key] ?? f.options[0]?.value ?? ""}
+                  onChange={(e) => setVals((p) => ({ ...p, [f.key]: e.target.value }))}
+                >
+                  {f.options.map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </NativeSelect>
+              ) : (
                 <Input
                   value={vals[f.key] ?? ""}
                   onChange={(e) => setVals((p) => ({ ...p, [f.key]: e.target.value }))}
                 />
-              </label>
-            ))}
-            <Button type="button" onClick={submit}>
-              {t("add")}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => setAdding(false)}>
-              {t("cancel")}
-            </Button>
-          </div>
-        ) : (
-          <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => setAdding(true)}>
-            <Icon icon="ph:plus" className="size-4" />
-            {addLabel}
-          </Button>
-        ))}
+              )}
+            </label>
+          ))}
+        </FormDialog>
+      )}
     </Card>
+  );
+}
+
+// Zentrierter Formular-Dialog: Titel, gestapelte Felder, Abbrechen/Speichern.
+function FormDialog({
+  title,
+  onClose,
+  onSubmit,
+  submitLabel,
+  cancelLabel,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  onSubmit: () => void | Promise<void>;
+  submitLabel: string;
+  cancelLabel: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40" role="presentation" onClick={onClose} />
+      <div className="relative z-10 flex max-h-[85vh] w-full max-w-lg flex-col rounded-2xl bg-card shadow-xl">
+        <div className="flex items-center justify-between gap-4 border-b border-border px-5 py-4">
+          <h2 className="font-display text-lg font-extrabold">{title}</h2>
+          <Button type="button" variant="outline" size="icon" onClick={onClose} aria-label="✕">
+            <Icon icon="ph:x" className="size-4" />
+          </Button>
+        </div>
+        <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-5 py-4">{children}</div>
+        <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-4">
+          <Button type="button" variant="outline" onClick={onClose}>
+            {cancelLabel}
+          </Button>
+          <Button type="button" onClick={() => void onSubmit()}>
+            {submitLabel}
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -761,38 +1157,38 @@ function IdentityTab({
           ))}
         </ul>
       )}
-      {access.canEdit &&
-        (adding ? (
-          <div className="mt-3 flex flex-wrap items-end gap-2 border-t border-border pt-3">
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-muted-foreground">{t("docTypeLabel")}</span>
-              <NativeSelect value={docType} onChange={(e) => setDocType(e.target.value)}>
-                <option value="passport">{t("docType.passport")}</option>
-                <option value="id_card">{t("docType.id_card")}</option>
-                <option value="driver_license">{t("docType.driver_license")}</option>
-              </NativeSelect>
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-muted-foreground">{t("docNumber")}</span>
-              <Input value={number} onChange={(e) => setNumber(e.target.value)} />
-            </label>
-            <label className="flex flex-col gap-1 text-sm">
-              <span className="text-muted-foreground">{t("validUntil")}</span>
-              <Input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
-            </label>
-            <Button type="button" onClick={add}>
-              {t("add")}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => setAdding(false)}>
-              {t("cancel")}
-            </Button>
-          </div>
-        ) : (
-          <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => setAdding(true)}>
-            <Icon icon="ph:plus" className="size-4" />
-            {t("addIdentityDoc")}
-          </Button>
-        ))}
+      {access.canEdit && (
+        <Button type="button" variant="outline" size="sm" className="mt-3" onClick={() => setAdding(true)}>
+          <Icon icon="ph:plus" className="size-4" />
+          {t("addIdentityDoc")}
+        </Button>
+      )}
+      {access.canEdit && adding && (
+        <FormDialog
+          title={t("addIdentityDoc")}
+          onClose={() => setAdding(false)}
+          onSubmit={add}
+          submitLabel={t("add")}
+          cancelLabel={t("cancel")}
+        >
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium">{t("docTypeLabel")}</span>
+            <NativeSelect value={docType} onChange={(e) => setDocType(e.target.value)}>
+              <option value="passport">{t("docType.passport")}</option>
+              <option value="id_card">{t("docType.id_card")}</option>
+              <option value="driver_license">{t("docType.driver_license")}</option>
+            </NativeSelect>
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium">{t("docNumber")}</span>
+            <Input value={number} onChange={(e) => setNumber(e.target.value)} />
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium">{t("validUntil")}</span>
+            <Input type="date" value={validUntil} onChange={(e) => setValidUntil(e.target.value)} />
+          </label>
+        </FormDialog>
+      )}
     </Card>
   );
 }
@@ -805,113 +1201,199 @@ function PreferencesTab({
   access: GuestAccess;
 }) {
   const t = useTranslations("guests");
-  const router = useRouter();
   const [loaded, setLoaded] = useState(false);
-  const [wishes, setWishes] = useState("");
-  const [dietary, setDietary] = useState("");
-  const [roomPref, setRoomPref] = useState("");
-  const [pending, start] = useTransition();
+  const [prefs, setPrefs] = useState({
+    room_preferences: "",
+    dietary: "",
+    wishes: "",
+  });
+  type PrefKey = keyof typeof prefs;
+  // Einzelfeld-Popup wie in der Übersicht (Klick auf Feld → kleiner Dialog).
+  const [edit, setEdit] = useState<
+    { key: PrefKey; label: string; multiline?: boolean } | null
+  >(null);
+  const [value, setValue] = useState("");
+  const [saving, setSaving] = useState(false);
+
   useEffect(() => {
     getPreferences(guestId).then((r) => {
       if (r.ok) {
-        setWishes(r.data.wishes ?? "");
-        setDietary(r.data.dietary ?? "");
-        setRoomPref(r.data.room_preferences ?? "");
+        setPrefs({
+          room_preferences: r.data.room_preferences ?? "",
+          dietary: r.data.dietary ?? "",
+          wishes: r.data.wishes ?? "",
+        });
       }
       setLoaded(true);
     });
   }, [guestId]);
 
-  const save = () =>
-    start(async () => {
-      const res = await savePreferences(guestId, {
-        wishes: wishes || null,
-        dietary: dietary || null,
-        room_preferences: roomPref || null,
-      });
-      if (res.ok) {
-        toast.success(t("saved"));
-        router.refresh();
-      } else {
-        toast.error(res.error);
-      }
+  const openEdit = (key: PrefKey, label: string, multiline = false) => {
+    if (!access.canEdit) return;
+    setValue(prefs[key]);
+    setEdit({ key, label, multiline });
+  };
+  const save = async () => {
+    if (!edit) return;
+    setSaving(true);
+    // Das Backend-PUT ersetzt ALLE Präferenz-Felder (Upsert) — darum immer
+    // den kompletten lokalen Stand mitschicken, nie nur das eine Feld.
+    const next = { ...prefs, [edit.key]: value };
+    const res = await savePreferences(guestId, {
+      room_preferences: next.room_preferences || null,
+      dietary: next.dietary || null,
+      wishes: next.wishes || null,
     });
+    setSaving(false);
+    if (res.ok) {
+      setPrefs(next);
+      toast.success(t("saved"));
+      setEdit(null);
+    } else {
+      toast.error(res.error);
+    }
+  };
 
   if (!loaded) return <Card>…</Card>;
-  if (!access.canEdit) {
-    return (
-      <Card>
-        <p className="mb-1 text-muted-foreground">{t("wishes")}</p>
-        <p className="whitespace-pre-wrap">{wishes || "—"}</p>
-        <p className="mb-1 mt-3 text-muted-foreground">{t("dietary")}</p>
-        <p className="whitespace-pre-wrap">{dietary || "—"}</p>
-        <p className="mb-1 mt-3 text-muted-foreground">{t("roomPreferences")}</p>
-        <p className="whitespace-pre-wrap">{roomPref || "—"}</p>
-      </Card>
-    );
-  }
+  const rows: { key: PrefKey; label: string; multiline?: boolean }[] = [
+    { key: "room_preferences", label: t("roomPreferences") },
+    { key: "dietary", label: t("dietary") },
+    { key: "wishes", label: t("wishes"), multiline: true },
+  ];
   return (
-    <Card>
-      <div className="flex flex-col gap-3">
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted-foreground">{t("roomPreferences")}</span>
-          <Input value={roomPref} onChange={(e) => setRoomPref(e.target.value)} />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted-foreground">{t("dietary")}</span>
-          <Input value={dietary} onChange={(e) => setDietary(e.target.value)} />
-        </label>
-        <label className="flex flex-col gap-1 text-sm">
-          <span className="text-muted-foreground">{t("wishes")}</span>
-          <Textarea value={wishes} onChange={(e) => setWishes(e.target.value)} rows={4} />
-        </label>
-      </div>
-      <div className="mt-3 flex justify-end">
-        <Button type="button" onClick={save} disabled={pending}>
-          {t("save")}
-        </Button>
-      </div>
-    </Card>
+    <>
+      <SectionCard title={t("tab.preferences")}>
+        <div className="flex flex-col divide-y divide-border">
+          {rows.map((r) =>
+            access.canEdit ? (
+              <button
+                key={r.key}
+                type="button"
+                onClick={() => openEdit(r.key, r.label, r.multiline)}
+                className="-mx-2 rounded-(--radius) px-2 py-3 text-left first:pt-0 last:pb-0 hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-accent/40"
+              >
+                <Kv label={r.label} value={prefs[r.key]} />
+              </button>
+            ) : (
+              <div key={r.key} className="py-3 first:pt-0 last:pb-0">
+                <Kv label={r.label} value={prefs[r.key]} />
+              </div>
+            ),
+          )}
+        </div>
+      </SectionCard>
+      {edit && (
+        <FormDialog
+          title={edit.label}
+          onClose={() => setEdit(null)}
+          onSubmit={save}
+          submitLabel={saving ? "…" : t("save")}
+          cancelLabel={t("cancel")}
+        >
+          <label className="flex flex-col gap-1.5 text-sm">
+            <span className="font-medium">{edit.label}</span>
+            {edit.multiline ? (
+              <Textarea
+                rows={4}
+                value={value}
+                autoFocus
+                onChange={(e) => setValue(e.target.value)}
+              />
+            ) : (
+              <Input
+                value={value}
+                autoFocus
+                onChange={(e) => setValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") void save();
+                }}
+              />
+            )}
+          </label>
+        </FormDialog>
+      )}
+    </>
   );
 }
 
-function ReservationsTab({ guestId, access }: { guestId: string; access: GuestAccess }) {
+// Reservierungs-Liste des Gastes (Übersicht-Karte UND Tab): Zeile = Status-
+// Badge, Zeitraum mit Pfeil, Upsell-Hinweis, Betrag; Klick öffnet den
+// Detail-Slider (mit Check-in/out, Zusatzbuchungen, Storno).
+function ReservationList({
+  guestId,
+  access,
+  limit,
+  items: itemsProp,
+  reload: reloadProp,
+}: {
+  guestId: string;
+  access: GuestAccess;
+  limit?: number;
+  /** Optional vorgeladen (Übersicht teilt die Liste mit der Statistik). */
+  items?: GuestReservation[] | null;
+  reload?: () => void;
+}) {
   const t = useTranslations("guests");
-  const [items, setItems] = useState<GuestReservation[] | null>(null);
-  // Geöffnete Reservierung → Detail-Slider (mit Zusatzbuchungen + Storno).
+  const managed = itemsProp !== undefined;
+  const [ownItems, setOwnItems] = useState<GuestReservation[] | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
 
-  const reload = useCallback(() => {
-    listGuestReservations(guestId).then((r) => r.ok && setItems(r.data.items));
+  const ownReload = useCallback(() => {
+    listGuestReservations(guestId).then((r) => r.ok && setOwnItems(r.data.items));
   }, [guestId]);
-  useEffect(reload, [reload]);
-  // Realtime-Pflicht: neue/geänderte Aufenthalte dieses Gasts live spiegeln.
+  useEffect(() => {
+    if (!managed) ownReload();
+  }, [managed, ownReload]);
+  // Realtime-Pflicht: neue/geänderte Aufenthalte dieses Gasts live spiegeln
+  // (nur wenn die Liste nicht vom Eltern-Layout verwaltet wird).
   useRealtime({
     table: "reservations",
     filter: `guest_id=eq.${guestId}`,
-    onChange: reload,
+    onChange: ownReload,
+    enabled: !managed,
   });
+  const items = managed ? (itemsProp ?? null) : ownItems;
+  const reload = managed ? (reloadProp ?? (() => {})) : ownReload;
 
   const todayKey = new Date().toISOString().slice(0, 10);
   const money = (v: number, cur: string | null) =>
     cur ? formatCurrency(v, cur) : v.toLocaleString("de-DE");
+  const fmtDay = (s: string | null) =>
+    s
+      ? new Date(`${s}T00:00:00`).toLocaleDateString("de-DE", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        })
+      : "—";
 
-  if (items === null) return <Card>…</Card>;
-  if (items.length === 0) return <Card>{t("noReservations")}</Card>;
+  if (items === null) return <p className="text-muted-foreground">…</p>;
+  if (items.length === 0)
+    return <p className="text-muted-foreground">{t("noReservations")}</p>;
+  const shown = limit ? items.slice(0, limit) : items;
   return (
     <>
-      <Card>
-        <ul className="flex flex-col gap-1">
-          {items.map((r) => (
+      <ul className="flex flex-col divide-y divide-border">
+        {shown.map((r) => {
+          const meta = r.status
+            ? STATUS_META[r.status as keyof typeof STATUS_META]
+            : undefined;
+          return (
             <li key={r.id}>
               <button
                 type="button"
                 onClick={() => setOpenId(r.id)}
-                className="flex w-full items-center justify-between gap-3 rounded-(--radius) px-2 py-2 text-left hover:bg-muted/60"
+                className="flex w-full items-center gap-4 rounded-(--radius) px-2 py-3 text-left hover:bg-muted/60"
               >
-                <span className="flex min-w-0 flex-col">
-                  <span className="truncate">
-                    {r.check_in ?? "—"} – {r.check_out ?? "—"}
+                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
+                  {meta && <span className={`size-2 rounded-full ${meta.dotBg}`} />}
+                  {meta?.label ?? r.status ?? "—"}
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col">
+                  <span className="flex items-center gap-1.5 truncate font-medium">
+                    {fmtDay(r.check_in)}
+                    <Icon icon="ph:arrow-right" className="size-3.5 text-muted-foreground" />
+                    {fmtDay(r.check_out)}
                   </span>
                   {access.amounts && r.addons_total != null && r.addons_total > 0 && (
                     <span className="text-xs text-muted-foreground">
@@ -919,18 +1401,17 @@ function ReservationsTab({ guestId, access }: { guestId: string; access: GuestAc
                     </span>
                   )}
                 </span>
-                <span className="text-sm text-muted-foreground">{r.status ?? "—"}</span>
                 {access.amounts && (
-                  <span className="shrink-0 font-medium">
+                  <span className="shrink-0 font-display font-extrabold">
                     {r.total_amount != null ? money(r.total_amount, r.currency) : "—"}
                   </span>
                 )}
                 <Icon icon="ph:caret-right" className="size-4 shrink-0 text-muted-foreground" />
               </button>
             </li>
-          ))}
-        </ul>
-      </Card>
+          );
+        })}
+      </ul>
       {openId && (
         <ReservationDetailSlider
           reservationId={openId}
@@ -940,9 +1421,18 @@ function ReservationsTab({ guestId, access }: { guestId: string; access: GuestAc
             setOpenId(null);
             reload();
           }}
+          onChanged={reload}
         />
       )}
     </>
+  );
+}
+
+function ReservationsTab({ guestId, access }: { guestId: string; access: GuestAccess }) {
+  return (
+    <Card>
+      <ReservationList guestId={guestId} access={access} />
+    </Card>
   );
 }
 

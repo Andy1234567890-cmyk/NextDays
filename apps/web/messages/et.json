@@ -517,7 +517,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Isikuandmed",
+    "statistics": "Statistika",
+    "avgRevenue": "Keskmine käive",
+    "kicker": "Külaline",
+    "contactKind": {
+      "mobile": "Mobiil",
+      "private": "Isiklik",
+      "business": "Töö",
+      "email": "E-post"
+    }
   },
   "travelAgencies": {
     "title": "Reisibürood",
@@ -614,6 +624,7 @@
     "hotel": "Hotell",
     "hotelHint": "Toad, vastuvõtt, klassikaline hotellitegevus",
     "saved": "Tegevusala salvestatud.",
-    "adminOnly": "Tegevusala saavad muuta ainult administraatorid."
+    "adminOnly": "Tegevusala saavad muuta ainult administraatorid.",
+    "locked": "Majutustüüp määratakse liitumisel ja seda ei saa hiljem muuta."
   }
 }

@@ -303,6 +303,7 @@ export function CalendarBookingsView({ properties }: { properties: Prop[] }) {
           todayKey={todayKey}
           onClose={() => setDetail(null)}
           onCancelled={load}
+          onChanged={load}
         />
       )}
     </div>

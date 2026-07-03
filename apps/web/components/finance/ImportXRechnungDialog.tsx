@@ -140,7 +140,9 @@ export function ImportXRechnungDialog({
         setImportType(null);
         onOpenChange(false);
 
-        router.push(`/dashboard/company/${companyId}/finance/invoices/${invoiceId}/edit`);
+        // Alt-Route existiert in NextDays nicht — Rechnungsliste mit Fokus
+        // auf der importierten Rechnung (?invoice=) öffnen.
+        router.push(`/buchhaltung?invoice=${encodeURIComponent(invoiceId)}`);
       } else {
         // 📉 AUSGABE: Lieferantenrechnung (eigenes Unternehmen ist Käufer)
         const expenseData = XRechnungParserService.convertToExpenseData(previewData, companyId);
@@ -166,7 +168,9 @@ export function ImportXRechnungDialog({
         setImportType(null);
         onOpenChange(false);
 
-        router.push(`/dashboard/company/${companyId}/finance/expenses`);
+        // Alt-Route existiert in NextDays nicht — Ausgaben leben unter
+        // /buchhaltung/ausgaben.
+        router.push('/buchhaltung/ausgaben');
       }
 
       if (onSuccess) {

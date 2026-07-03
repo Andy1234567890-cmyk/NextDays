@@ -58,6 +58,11 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       draft: { label: 'Entwurf', variant: 'secondary' as const, icon: 'lucide:file-text' },
+      finalized: {
+        label: 'Finalisiert',
+        variant: 'default' as const,
+        icon: 'lucide:check-circle',
+      },
       sent: { label: 'Gesendet', variant: 'default' as const, icon: 'lucide:check-circle' },
       paid: { label: 'Bezahlt', variant: 'default' as const, icon: 'lucide:check-circle' },
       overdue: {
@@ -177,7 +182,14 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
   };
 
   const canBeStorniert = () => {
-    return (invoice.status === 'sent' || invoice.status === 'paid') && !invoice.isStorno;
+    // 'finalized' = finale Rechnung mit GoBD-Nummer (Formular-Speichern UND
+    // automatische Check-out-Rechnung) — muss stornierbar sein wie sent/paid.
+    return (
+      (invoice.status === 'finalized' ||
+        invoice.status === 'sent' ||
+        invoice.status === 'paid') &&
+      !invoice.isStorno
+    );
   };
 
   if (!canBeStorniert()) {
@@ -189,7 +201,8 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
             <span className="font-medium">Diese Rechnung kann nicht storniert werden</span>
           </div>
           <p className="mt-2 text-amber-600 text-sm">
-            Nur gesendete oder bezahlte Rechnungen können storniert werden.
+            Nur finalisierte, gesendete oder bezahlte Rechnungen können
+            storniert werden.
           </p>
         </CardContent>
       </Card>

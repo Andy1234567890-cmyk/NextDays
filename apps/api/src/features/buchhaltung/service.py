@@ -10,6 +10,7 @@ ROUND_HALF_UP, 2 Nachkommastellen) — der Client kann sie nicht fälschen.
 import secrets
 from decimal import ROUND_HALF_UP, Decimal
 
+from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.logging import get_logger
@@ -88,6 +89,8 @@ def _row_to_invoicedata(row: dict, customer_name: str | None) -> dict:
         "currency": row.get("currency") or "EUR",
         "notes": row.get("notes"),
         "footerText": row.get("footer_text"),
+        # Buchungs-Brücke (0092): gesetzt bei Zimmerrechnungen aus Buchungen.
+        "reservationId": row.get("reservation_id"),
     }
 
 
@@ -228,6 +231,104 @@ class BuchhaltungService:
 
         return [_row_to_invoicedata(r, names.get(r.get("customer_id"))) for r in rows]
 
+    # --- Zimmerrechnungen aus Buchungen (Booking→Invoice-Brücke, 0092) --------
+    def billable_reservations(self, ctx: AuthContext, query: str = "") -> list[dict]:
+        """Abrechenbare Buchungen fürs Erstellformular: eingecheckt, nicht
+        storniert, noch ohne aktive Rechnung. Gastnamen/Beträge maskierungs-
+        konform (GuestMask). Suche über Gastname/Objekttitel."""
+        tenant_id = self._require_tenant(ctx)
+        rows = (
+            self._db.table("reservations")
+            .select(
+                "id, property_id, check_in, check_out, currency, total_amount, "
+                "checked_in_at, guests(name), properties(title)"
+            )
+            .eq("tenant_id", tenant_id)
+            .neq("status", "cancelled")
+            .not_.is_("checked_in_at", "null")
+            # Ausgecheckte haben per Definition eine Rechnung (Check-out-
+            # Pflicht) — sie hier auszuschließen hält die Liste dauerhaft
+            # klein, statt dass alte abgerechnete Aufenthalte das Limit füllen.
+            .is_("checked_out_at", "null")
+            .order("checked_in_at", desc=True)
+            .limit(100)
+            .execute()
+        ).data or []
+        if not rows:
+            return []
+
+        billed = {
+            r["reservation_id"]
+            for r in (
+                self._db.table("invoices")
+                .select("reservation_id")
+                .eq("tenant_id", tenant_id)
+                .in_("reservation_id", [r["id"] for r in rows])
+                .eq("invoice_type", "invoice")
+                .neq("status", "cancelled")
+                .is_("deleted_at", "null")
+                .execute()
+            ).data
+            or []
+        }
+
+        from src.features.auth.guest_masking import load_guest_mask  # noqa: PLC0415
+
+        mask = load_guest_mask(self._db, ctx.user_id)
+        needle = (query or "").strip().lower()
+        out: list[dict] = []
+        for r in rows:
+            if r["id"] in billed:
+                continue
+            guest = r.get("guests") or {}
+            guest_name = guest.get("name", "") if isinstance(guest, dict) else ""
+            prop = r.get("properties") or {}
+            title = prop.get("title", "") if isinstance(prop, dict) else ""
+            if needle and needle not in f"{guest_name} {title}".lower():
+                continue
+            out.append(
+                {
+                    "id": r["id"],
+                    "guestName": mask.name(guest_name) or "",
+                    "propertyTitle": title,
+                    "checkIn": r.get("check_in"),
+                    "checkOut": r.get("check_out"),
+                    "checkedInAt": r.get("checked_in_at"),
+                    "currency": (r.get("currency") or "") if mask.amounts else "",
+                    "totalAmount": mask.amount(_num(r.get("total_amount"))),
+                }
+            )
+        return out
+
+    def invoice_preview(self, ctx: AuthContext, reservation_id: str) -> dict:
+        """Vorbefüllung „Rechnung aus Buchung" — dieselbe Positions-Logik wie
+        der Check-out (reservation_invoice, eine Quelle der Wahrheit)."""
+        tenant_id = self._require_tenant(ctx)
+        # Lazy: reservation_invoice importiert BuchhaltungError aus DIESEM Modul.
+        from . import reservation_invoice  # noqa: PLC0415
+
+        return reservation_invoice.preview_for_reservation(
+            self._db, tenant_id, reservation_id
+        )
+
+    def create_storno_invoice(
+        self, ctx: AuthContext, invoice_id: str, reason: str
+    ) -> dict:
+        """Stornorechnung (GoBD-Korrekturweg) — Logik in storno.py (Facade)."""
+        tenant_id = self._require_tenant(ctx)
+        # Lazy: storno importiert BuchhaltungError/_q/… aus DIESEM Modul.
+        from . import storno  # noqa: PLC0415
+
+        return storno.create_storno_invoice(self._db, tenant_id, invoice_id, reason)
+
+    def check_vat_id(self, ctx: AuthContext, vat_id: str) -> dict:
+        """USt-IdNr. gegen VIES prüfen — Logik in vat_check.py (Slice-Facade)."""
+        self._require_tenant(ctx)
+        # Lazy: vat_check importiert BuchhaltungError aus DIESEM Modul.
+        from . import vat_check  # noqa: PLC0415
+
+        return vat_check.check_vat_id(vat_id)
+
     def get_company_profile(self, ctx: AuthContext) -> dict:
         """Firmen-/Rechnungsprofil des Tenants (für das Buchhaltungs-Frontend).
 
@@ -301,6 +402,13 @@ class BuchhaltungService:
             "isSmallBusiness": bool(p.get("is_kleinunternehmer")),
             "eInvoiceFormat": p.get("e_invoice_format"),
             "leitwegId": p.get("leitweg_id"),
+            # USt-Satz Übernachtung (0092) — None = nicht konfiguriert (die
+            # automatische Buchungsrechnung verlangt ihn, kein Default).
+            "lodgingTaxRate": (
+                _num(p.get("lodging_tax_rate"))
+                if p.get("lodging_tax_rate") is not None
+                else None
+            ),
         }
 
     def list_transaction_links(self, ctx: AuthContext) -> list[dict]:
@@ -386,7 +494,12 @@ class BuchhaltungService:
 
     def _compute_totals(self, items: list[dict]) -> tuple[Decimal, Decimal, Decimal]:
         """Netto/Steuer/Brutto serverseitig aus den Positionen berechnen
-        (Client-Werte werden NICHT vertraut, PROJECT.md §2)."""
+        (Client-Werte werden NICHT vertraut, PROJECT.md §2).
+
+        Rabatt-Positionen (category='discount', Gesamtrabatt des Formulars)
+        werden im Client-State POSITIV gehalten und nur in der Anzeige negiert
+        — hier MÜSSEN sie abgezogen werden, sonst weicht der gespeicherte
+        GoBD-Beleg von der angezeigten/gedruckten Rechnung ab."""
         net_total = Decimal("0")
         tax_total = Decimal("0")
         for it in items:
@@ -394,6 +507,8 @@ class BuchhaltungService:
             price = Decimal(str(it.get("unitPrice") or it.get("unit_price") or 0))
             disc = Decimal(str(it.get("discountPercent") or it.get("discount_percent") or 0))
             rate = Decimal(str(it.get("taxRate") or it.get("tax_rate") or 0))
+            if it.get("category") == "discount":
+                price = -abs(price)
             gross_unit = qty * price
             net = _q(gross_unit - gross_unit * (disc / Decimal(100)))
             net_total += net
@@ -415,6 +530,63 @@ class BuchhaltungService:
         )
         invoice_number = payload.get("invoiceNumber") or payload.get("number")
         status = payload.get("status") or "draft"
+
+        # Buchungs-Brücke: „Rechnung aus Buchung" aus dem Formular. Regeln wie
+        # beim Check-out: Buchung muss dem Tenant gehören, eingecheckt und
+        # nicht storniert sein; nur EINE aktive Rechnung je Buchung (0092).
+        reservation_id = payload.get("reservationId") or payload.get("reservation_id")
+        if reservation_id:
+            res_rows = (
+                self._db.table("reservations")
+                .select(
+                    "id, status, checked_in_at, guest_id, guest_email, "
+                    "guest_phone, guest_country"
+                )
+                .eq("id", reservation_id)
+                .eq("tenant_id", tenant_id)
+                .limit(1)
+                .execute()
+            ).data
+            if not res_rows:
+                raise BuchhaltungError("Buchung nicht gefunden.", status_code=404)
+            if res_rows[0].get("status") == "cancelled":
+                raise BuchhaltungError(
+                    "Stornierte Buchung kann nicht abgerechnet werden.",
+                    status_code=409,
+                )
+            if not res_rows[0].get("checked_in_at"):
+                raise BuchhaltungError(
+                    "Der Gast ist noch nicht eingecheckt — Rechnungen aus "
+                    "Buchungen sind erst nach dem Check-in möglich.",
+                    status_code=409,
+                )
+            from . import reservation_invoice  # noqa: PLC0415 — Import-Zyklus
+
+            existing = reservation_invoice.find_active_invoice(
+                self._db, tenant_id, str(reservation_id)
+            )
+            if existing:
+                raise BuchhaltungError(
+                    f"Zu dieser Buchung existiert bereits Rechnung "
+                    f"{existing.get('invoice_number')}.",
+                    status_code=409,
+                )
+            # Gast→Debitor erst JETZT (Schreibpfad) anlegen/verknüpfen — die
+            # Vorschau ist bewusst nebenwirkungsfrei. Gast ohne Namen blockiert
+            # den manuellen Flow nicht (der Nutzer hat den Empfänger im
+            # Formular ausgefüllt) — dann bleibt nur die FK-Verknüpfung leer.
+            if not (payload.get("customerId") or payload.get("customer_id")):
+                try:
+                    guest_customer = reservation_invoice.ensure_customer_for_guest(
+                        self._db, tenant_id, res_rows[0]
+                    )
+                    payload = {**payload, "customerId": guest_customer["id"]}
+                except BuchhaltungError as exc:
+                    log.warning(
+                        "reservation_invoice_customer_link_skipped",
+                        reservation_id=reservation_id,
+                        reason=exc.message,
+                    )
 
         row = {
             "tenant_id": tenant_id,
@@ -439,21 +611,36 @@ class BuchhaltungService:
             "e_invoice_format": (
                 payload.get("eInvoiceType") if payload.get("isEInvoice") else None
             ),
+            "reservation_id": reservation_id,
         }
         row = {k: v for k, v in row.items() if v is not None}
 
-        res = self._db.table("invoices").insert(row).execute()
+        try:
+            res = self._db.table("invoices").insert(row).execute()
+        except APIError as exc:
+            # Unique-Index invoices_reservation_active_uq (0092): parallel wurde
+            # bereits eine aktive Rechnung zu dieser Buchung erzeugt.
+            if reservation_id and "invoices_reservation_active_uq" in str(exc):
+                raise BuchhaltungError(
+                    "Zu dieser Buchung existiert bereits eine Rechnung.",
+                    status_code=409,
+                ) from exc
+            raise
         if not res.data:
             raise BuchhaltungError("Rechnung konnte nicht gespeichert werden.", status_code=500)
         invoice_id = res.data[0]["id"]
 
-        # Positionen speichern.
+        # Positionen speichern. Rabatt-Positionen negativ persistieren (siehe
+        # _compute_totals) — sonst verliert der Beleg das Vorzeichen und ein
+        # Storno würde den Rabatt als Zuschlag negieren.
         line_rows = []
         for pos, it in enumerate(items, start=1):
             qty = Decimal(str(it.get("quantity") or 0))
             price = Decimal(str(it.get("unitPrice") or 0))
             disc = Decimal(str(it.get("discountPercent") or 0))
             rate = Decimal(str(it.get("taxRate") or 0))
+            if it.get("category") == "discount":
+                price = -abs(price)
             gross_unit = qty * price
             net = _q(gross_unit - gross_unit * (disc / Decimal(100)))
             tax = _q(net * (rate / Decimal(100)))
@@ -544,6 +731,8 @@ class BuchhaltungService:
             "is_kleinunternehmer": g("isSmallBusiness"),
             "e_invoice_format": g("eInvoiceFormat") or g("e_invoice_format"),
             "leitweg_id": g("leitwegId") or g("leitweg_id"),
+            # USt-Satz Übernachtung (0092)
+            "lodging_tax_rate": g("lodgingTaxRate"),
         }
         row = {k: v for k, v in row.items() if v is not None}
         row["tenant_id"] = tenant_id
@@ -579,7 +768,26 @@ class BuchhaltungService:
             .execute()
         ).data
         if existing and existing[0].get("stripe_account_id"):
-            return  # Account besteht bereits — nichts tun.
+            # Account besteht bereits: die AKTUALISIERTEN Firmendaten trotzdem
+            # an Stripe synchronisieren — sonst bleiben offene Requirements
+            # (z. B. business_profile.url „Provide a business website") für
+            # immer offen, obwohl der Nutzer die Daten längst nachgetragen hat.
+            # Bankverbindung wird hier bewusst NICHT erneut angefügt (Stripe
+            # würde ein zweites externes Konto anlegen).
+            try:
+                payments = PaymentsService(service_client=self._db)
+                fields = _connect_fields_from_profile(profile)
+                if fields:
+                    payments.update_connect_account(
+                        existing[0]["stripe_account_id"], fields
+                    )
+            except PaymentsError as exc:
+                log.warning(
+                    "connect_account_sync_failed",
+                    tenant_id=tenant_id,
+                    error=exc.message,
+                )
+            return
 
         email = profile.get("email")
         country = profile.get("company_country")

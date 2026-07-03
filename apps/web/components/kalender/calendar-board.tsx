@@ -677,7 +677,9 @@ export function CalendarBoard({
         );
         revenue += (r.total_amount * nightsInWin) / totalResNights;
         revenueNights += nightsInWin;
-        if (currency == null) currency = r.currency;
+        // currency kann "" sein (nullable seit 0078 bzw. maskiert) — leere
+        // Strings sind KEIN gültiger ISO-Code (toLocaleString wirft sonst).
+        if (currency == null && r.currency) currency = r.currency;
       }
     }
     return {
@@ -1113,7 +1115,7 @@ export function CalendarBoard({
           icon="ph:currency-circle-dollar"
           label="Umsatz"
           value={
-            (metrics.amountsHidden && metrics.revenue === 0) || metrics.currency == null
+            (metrics.amountsHidden && metrics.revenue === 0) || !metrics.currency
               ? "—"
               : metrics.revenue.toLocaleString("de-DE", {
                 style: "currency",
@@ -1127,7 +1129,7 @@ export function CalendarBoard({
           icon="ph:bed"
           label="ADR"
           value={
-            metrics.adr == null || metrics.currency == null
+            metrics.adr == null || !metrics.currency
               ? "—"
               : metrics.adr.toLocaleString("de-DE", {
                 style: "currency",
@@ -1527,6 +1529,7 @@ export function CalendarBoard({
             setDetail(null);
             load();
           }}
+          onChanged={load}
         />
       )}
 

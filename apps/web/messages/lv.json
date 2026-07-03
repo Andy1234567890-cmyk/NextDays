@@ -517,7 +517,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Personas dati",
+    "statistics": "Statistika",
+    "avgRevenue": "Vidējie ieņēmumi",
+    "kicker": "Viesis",
+    "contactKind": {
+      "mobile": "Mobilais",
+      "private": "Privāts",
+      "business": "Darba",
+      "email": "E-pasts"
+    }
   },
   "travelAgencies": {
     "title": "Ceļojumu aģentūras",
@@ -614,6 +624,7 @@
     "hotel": "Viesnīca",
     "hotelHint": "Numuri, reģistratūra, klasiska viesnīcas darbība",
     "saved": "Darbības veids saglabāts.",
-    "adminOnly": "Darbības veidu var mainīt tikai administratori."
+    "adminOnly": "Darbības veidu var mainīt tikai administratori.",
+    "locked": "Darbības veids tiek noteikts reģistrācijas laikā un vēlāk nav maināms."
   }
 }

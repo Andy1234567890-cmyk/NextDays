@@ -1,0 +1,192 @@
+"""Tests für Check-in/Check-out (0091) inkl. Pflicht-Rechnung beim Check-out.
+
+Chain-Mock wie in buchhaltung/tests/test_reservation_invoice.py: jede Query-
+Kette endet in execute() → hinterlegte Daten; Attribut-Zugriffe werden je
+Tabelle protokolliert (Beweis „kein Write vor Rechnung").
+"""
+from types import SimpleNamespace
+
+import pytest
+
+from src.core.security import AuthContext
+from src.features.buchhaltung.service import BuchhaltungError
+from src.features.reservations.service import ReservationError, ReservationsService
+
+CTX = AuthContext(user_id="u1", tenant_id="t1")
+
+
+class _Chain:
+    def __init__(self, data: object, calls: list[str]) -> None:
+        self._data = data
+        self.calls = calls
+
+    def __getattr__(self, name: str) -> "_Chain":
+        self.calls.append(name)
+        return self
+
+    def __call__(self, *args: object, **kwargs: object) -> "_Chain":
+        return self
+
+    def execute(self) -> SimpleNamespace:
+        return SimpleNamespace(data=self._data)
+
+
+class _DB:
+    def __init__(self, tables: dict[str, object]) -> None:
+        self._tables = tables
+        self.calls: dict[str, list[str]] = {}
+
+    def table(self, name: str) -> _Chain:
+        calls = self.calls.setdefault(name, [])
+        return _Chain(self._tables.get(name, []), calls)
+
+
+def _reservation(**overrides: object) -> dict:
+    base = {
+        "id": "r1",
+        "tenant_id": "t1",
+        "property_id": "p1",
+        "guest_id": "g1",
+        "channel": "direct",
+        "status": "confirmed",
+        "check_in": "2026-07-01",
+        "check_out": "2026-07-04",
+        "checked_in_at": None,
+        "checked_out_at": None,
+        "total_amount": 300.0,
+        "currency": "EUR",
+        "guests": {"name": "Max Muster"},
+    }
+    base.update(overrides)
+    return base
+
+
+def _service(reservation: dict | None, extra: dict[str, object] | None = None
+             ) -> tuple[ReservationsService, _DB]:
+    tables: dict[str, object] = {
+        "reservations": [reservation] if reservation else [],
+        "users": [],  # load_guest_mask → fail-closed Maske
+        "invoices": [],
+    }
+    tables.update(extra or {})
+    db = _DB(tables)
+    return ReservationsService(service_client=db), db  # type: ignore[arg-type]
+
+
+# --- Check-in ----------------------------------------------------------------
+
+def test_check_in_requires_confirmed() -> None:
+    service, _ = _service(_reservation(status="pending"))
+    with pytest.raises(ReservationError) as exc:
+        service.check_in(CTX, "r1")
+    assert exc.value.status_code == 409
+
+
+def test_check_in_rejects_cancelled() -> None:
+    service, _ = _service(_reservation(status="cancelled"))
+    with pytest.raises(ReservationError) as exc:
+        service.check_in(CTX, "r1")
+    assert exc.value.status_code == 409
+
+
+def test_check_in_rejects_double() -> None:
+    service, _ = _service(
+        _reservation(checked_in_at="2026-07-01T14:00:00+00:00")
+    )
+    with pytest.raises(ReservationError) as exc:
+        service.check_in(CTX, "r1")
+    assert exc.value.status_code == 409
+
+
+def test_check_in_unknown_reservation_404() -> None:
+    service, _ = _service(None)
+    with pytest.raises(ReservationError) as exc:
+        service.check_in(CTX, "r1")
+    assert exc.value.status_code == 404
+
+
+def test_check_in_sets_timestamp() -> None:
+    service, db = _service(_reservation())
+    result = service.check_in(CTX, "r1")
+    assert "update" in db.calls["reservations"]
+    assert result.id == "r1"
+
+
+# --- Check-out ---------------------------------------------------------------
+
+def test_check_out_requires_check_in() -> None:
+    service, db = _service(_reservation())
+    with pytest.raises(ReservationError) as exc:
+        service.check_out(CTX, "r1")
+    assert exc.value.status_code == 409
+    assert "update" not in db.calls["reservations"]
+
+
+def test_check_out_rejects_double() -> None:
+    service, _ = _service(
+        _reservation(
+            checked_in_at="2026-07-01T14:00:00+00:00",
+            checked_out_at="2026-07-04T10:00:00+00:00",
+        )
+    )
+    with pytest.raises(ReservationError) as exc:
+        service.check_out(CTX, "r1")
+    assert exc.value.status_code == 409
+
+
+def test_check_out_aborts_without_touching_reservation_when_invoice_fails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Builder-Fehler (z. B. Steuersatz fehlt) ⇒ 4xx-Klartext und KEIN
+    reservations-Update — kein halber Zustand."""
+    service, db = _service(
+        _reservation(checked_in_at="2026-07-01T14:00:00+00:00")
+    )
+
+    def _boom(*args: object, **kwargs: object) -> dict:
+        raise BuchhaltungError("Übernachtungs-Steuersatz fehlt …", status_code=422)
+
+    monkeypatch.setattr(
+        "src.features.buchhaltung.reservation_invoice.create_from_reservation",
+        _boom,
+    )
+    with pytest.raises(ReservationError) as exc:
+        service.check_out(CTX, "r1")
+    assert exc.value.status_code == 422
+    assert "Steuersatz" in exc.value.message
+    assert "update" not in db.calls["reservations"]
+
+
+def test_check_out_creates_invoice_then_completes(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    service, db = _service(
+        _reservation(checked_in_at="2026-07-01T14:00:00+00:00")
+    )
+    monkeypatch.setattr(
+        "src.features.buchhaltung.reservation_invoice.create_from_reservation",
+        lambda *a, **k: {"id": "i1", "invoice_number": "RE-0001",
+                         "already_existed": False},
+    )
+    result = service.check_out(CTX, "r1")
+    assert result.invoice_id == "i1"
+    assert result.invoice_number == "RE-0001"
+    assert result.invoice_already_existed is False
+    assert "update" in db.calls["reservations"]
+
+
+def test_check_out_retry_reuses_existing_invoice(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Retry nach Teil-Fehler: der Builder findet die bestehende Rechnung
+    (idempotent) und der Check-out wird abgeschlossen."""
+    service, _ = _service(
+        _reservation(checked_in_at="2026-07-01T14:00:00+00:00")
+    )
+    monkeypatch.setattr(
+        "src.features.buchhaltung.reservation_invoice.create_from_reservation",
+        lambda *a, **k: {"id": "i1", "invoice_number": "RE-0001",
+                         "already_existed": True},
+    )
+    result = service.check_out(CTX, "r1")
+    assert result.invoice_already_existed is True

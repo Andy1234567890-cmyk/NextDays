@@ -632,7 +632,9 @@ export default function GeneralInfoCard({
                     />
                   </div>
 
-                  {/* Lieferdatum */}
+                  {/* Leistungsdatum (Hotel/Ferienobjekt: einzelner Tag) bzw.
+                      Aufenthalt/Leistungszeitraum (von–bis, Standard bei
+                      Zimmerrechnungen aus Buchungen) */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1">
@@ -646,7 +648,7 @@ export default function GeneralInfoCard({
                             setDeliveryDateRange({});
                           }}
                         >
-                          Lieferdatum
+                          Leistungsdatum
                         </Label>
                         <span className="text-red-500">*</span>
                       </div>
@@ -660,7 +662,7 @@ export default function GeneralInfoCard({
                           setFormData(prev => ({ ...prev, deliveryDate: '' }));
                         }}
                       >
-                        Zeitraum
+                        Aufenthalt / Zeitraum
                       </button>
                     </div>
 

@@ -77,6 +77,10 @@ type UseInvoiceActionsArgs = {
   vat: number;
   grandTotal: number;
   taxGrouped: Array<{ rate: number; netAmount: number; taxAmount: number }>;
+  // Buchungs-Brücke (0092): „Rechnung aus Buchung" — Backend verknüpft die
+  // Rechnung mit der Reservierung und verhindert Doppelrechnungen (409).
+  reservationId?: string | null;
+  reservationCustomerId?: string | null;
 };
 
 export function useInvoiceActions({
@@ -127,6 +131,8 @@ export function useInvoiceActions({
   vat,
   grandTotal,
   taxGrouped,
+  reservationId,
+  reservationCustomerId,
 }: UseInvoiceActionsArgs) {
   // Ref um manuelle Datumsänderungen zu tracken (verhindert Sync-Loops)
   const isManualDateChangeRef = useRef(false);
@@ -611,9 +617,11 @@ export function useInvoiceActions({
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             total: item.total,
-            taxRate: item.taxRate || taxRate,
+            // ?? statt ||: 0 % ist gültig (Kurtaxe/Abgaben aus Buchungs-
+            // rechnungen) und darf nicht auf den Standardsatz kippen.
+            taxRate: item.taxRate ?? taxRate,
             unit: item.unit || 'Stk',
-            category: item.category || 'Artikel',
+            category: item.category || 'Leistung',
             discountPercent: item.discountPercent || 0,
             inventoryItemId: item.inventoryItemId || null,
           })),
@@ -668,6 +676,11 @@ export function useInvoiceActions({
         // Additional Control Fields
         isStorno: false,
         isRecurring: false,
+
+        // Buchungs-Brücke (0092): verknüpft die Rechnung mit der Buchung;
+        // Backend prüft Check-in-Pflicht + Doppelrechnungs-Schutz (409).
+        reservationId: reservationId || undefined,
+        customerId: reservationCustomerId || undefined,
 
         // E-Invoice Settings (if enabled)
         isEInvoice: eInvoiceEnabled || false,
@@ -811,7 +824,13 @@ export function useInvoiceActions({
       setShowSendDocumentModal(true);
     } catch (e) {
       console.error('❌ CRITICAL ERROR in handleSubmit:', e);
-      toast.error('Rechnung konnte nicht gespeichert werden');
+      // Backend-Fachfehler im Klartext zeigen (z. B. 409 „Zu dieser Buchung
+      // existiert bereits eine Rechnung." aus der Buchungs-Brücke).
+      const message =
+        e instanceof Error && e.message && !e.message.startsWith('API Error')
+          ? e.message
+          : 'Rechnung konnte nicht gespeichert werden';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -1172,6 +1191,12 @@ export function useInvoiceActions({
         bic: companySettingsFormData.bic,
         firstName: companySettingsFormData.companyOwner.split(' ')[0] || '',
         lastName: companySettingsFormData.companyOwner.split(' ').slice(1).join(' ') || '',
+        // USt-Satz Übernachtung (0092): nur mitschicken, wenn gesetzt und
+        // gültig — leer lässt den gespeicherten Wert unangetastet.
+        lodgingTaxRate: Number.isFinite(Number(companySettingsFormData.lodgingTaxRate))
+          && companySettingsFormData.lodgingTaxRate.trim() !== ''
+          ? Number(companySettingsFormData.lodgingTaxRate)
+          : undefined,
       });
 
       toast.success('Unternehmensdaten gespeichert');

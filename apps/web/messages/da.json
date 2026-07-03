@@ -517,7 +517,17 @@
     "addAddress": "Adresse hinzufügen",
     "contactType": "Typ",
     "contactValue": "Wert",
-    "addContact": "Kontakt hinzufügen"
+    "addContact": "Kontakt hinzufügen",
+    "personalData": "Personlige oplysninger",
+    "statistics": "Statistik",
+    "avgRevenue": "Gennemsnitlig omsætning",
+    "kicker": "Gæst",
+    "contactKind": {
+      "mobile": "Mobil",
+      "private": "Privat",
+      "business": "Arbejde",
+      "email": "E-mail"
+    }
   },
   "travelAgencies": {
     "title": "Rejsebureauer",
@@ -614,6 +624,7 @@
     "hotel": "Hotel",
     "hotelHint": "Værelser, reception, klassisk hoteldrift",
     "saved": "Virksomhedstype gemt.",
-    "adminOnly": "Kun administratorer kan ændre virksomhedstypen."
+    "adminOnly": "Kun administratorer kan ændre virksomhedstypen.",
+    "locked": "Driftstypen fastlægges under onboarding og kan ikke ændres senere."
   }
 }

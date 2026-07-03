@@ -50,10 +50,18 @@ class QuoteRequest(BaseModel):
 
 
 class QuoteLine(BaseModel):
-    """Eine Position der Aufschlüsselung (Label + Betrag; negativ = Rabatt)."""
+    """Eine Position der Aufschlüsselung (Label + Betrag; negativ = Rabatt).
+
+    `kind` klassifiziert die Zeile für die Rechnungserstellung (Booking→Invoice,
+    buchhaltung/reservation_invoice): lodging|surcharge|fee|discount|tax|addon.
+    'tax' (Abgaben wie Kurtaxe) wird mit 0 % USt fakturiert, alles andere mit
+    dem Übernachtungs-Steuersatz. Optional, damit Bestands-Snapshots ohne kind
+    (ältere reservations.quote_items) gültig bleiben — dort greift die
+    Label-Heuristik."""
 
     label: str
     amount: float
+    kind: str | None = None
 
 
 class QuoteResponse(BaseModel):

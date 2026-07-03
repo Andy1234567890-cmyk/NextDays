@@ -175,15 +175,27 @@ def test_ensure_connect_account_creates_and_stores() -> None:
     fake_payments.set_external_account.assert_called_once()
 
 
-def test_ensure_connect_account_is_idempotent() -> None:
+def test_ensure_connect_account_is_idempotent_but_syncs_fields() -> None:
+    """Bestehender Account: KEIN zweiter Account, aber die aktualisierten
+    Firmendaten werden an Stripe synchronisiert — sonst blieben offene
+    Requirements (z. B. nachgetragene Website → business_profile.url) für
+    immer offen. Bankverbindung wird beim Sync bewusst nicht erneut angefügt."""
     db = _DB()
     db.store["tenant_billing_profile"].append(
         {"tenant_id": "t1", "stripe_account_id": "acct_exists"}
     )
     svc = BuchhaltungService(db)
     with patch("src.features.payments.service.PaymentsService") as cls:
-        svc._ensure_connect_account("t1", _profile_row())  # noqa: SLF001
-    cls.assert_not_called()  # bestehender Account → kein zweiter Anlauf
+        fake_payments = cls.return_value
+        svc._ensure_connect_account(  # noqa: SLF001
+            "t1", {**_profile_row(), "website": "https://muster.example"}
+        )
+    fake_payments.create_connect_account.assert_not_called()
+    fake_payments.set_external_account.assert_not_called()
+    fake_payments.update_connect_account.assert_called_once()
+    account_id, fields = fake_payments.update_connect_account.call_args.args
+    assert account_id == "acct_exists"
+    assert fields["business_profile"]["url"] == "https://muster.example"
 
 
 def test_ensure_connect_account_skips_when_incomplete() -> None:

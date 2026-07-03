@@ -517,7 +517,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Asmens duomenys",
+    "statistics": "Statistika",
+    "avgRevenue": "Vidutinės pajamos",
+    "kicker": "Svečias",
+    "contactKind": {
+      "mobile": "Mobilusis",
+      "private": "Asmeninis",
+      "business": "Darbo",
+      "email": "El. paštas"
+    }
   },
   "travelAgencies": {
     "title": "Kelionių agentūros",
@@ -614,6 +624,7 @@
     "hotel": "Viešbutis",
     "hotelHint": "Kambariai, registratūra, klasikinė viešbučio veikla",
     "saved": "Veiklos tipas išsaugotas.",
-    "adminOnly": "Veiklos tipą gali keisti tik administratoriai."
+    "adminOnly": "Veiklos tipą gali keisti tik administratoriai.",
+    "locked": "Veiklos tipas nustatomas registracijos metu ir vėliau negali būti keičiamas."
   }
 }

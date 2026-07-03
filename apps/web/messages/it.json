@@ -517,7 +517,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Dati personali",
+    "statistics": "Statistiche",
+    "avgRevenue": "Ricavo medio",
+    "kicker": "Ospite",
+    "contactKind": {
+      "mobile": "Cellulare",
+      "private": "Privato",
+      "business": "Lavoro",
+      "email": "E-mail"
+    }
   },
   "travelAgencies": {
     "title": "Agenzie di viaggio",
@@ -614,6 +624,7 @@
     "hotel": "Hotel",
     "hotelHint": "Camere, reception, gestione alberghiera classica",
     "saved": "Tipo di attività salvato.",
-    "adminOnly": "Solo gli amministratori possono modificare il tipo di attività."
+    "adminOnly": "Solo gli amministratori possono modificare il tipo di attività.",
+    "locked": "Il tipo di attività viene definito durante l'onboarding e non può essere modificato in seguito."
   }
 }

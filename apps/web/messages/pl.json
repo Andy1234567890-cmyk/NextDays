@@ -517,7 +517,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Dane osobowe",
+    "statistics": "Statystyki",
+    "avgRevenue": "Średni przychód",
+    "kicker": "Gość",
+    "contactKind": {
+      "mobile": "Komórka",
+      "private": "Prywatny",
+      "business": "Służbowy",
+      "email": "E-mail"
+    }
   },
   "travelAgencies": {
     "title": "Biura podróży",
@@ -614,6 +624,7 @@
     "hotel": "Hotel",
     "hotelHint": "Pokoje, recepcja, klasyczny hotel",
     "saved": "Zapisano typ działalności.",
-    "adminOnly": "Tylko administratorzy mogą zmienić typ działalności."
+    "adminOnly": "Tylko administratorzy mogą zmienić typ działalności.",
+    "locked": "Typ działalności jest ustalany podczas onboardingu i nie można go później zmienić."
   }
 }

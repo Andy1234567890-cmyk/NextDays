@@ -517,7 +517,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Προσωπικά στοιχεία",
+    "statistics": "Στατιστικά",
+    "avgRevenue": "Μέσος τζίρος",
+    "kicker": "Επισκέπτης",
+    "contactKind": {
+      "mobile": "Κινητό",
+      "private": "Προσωπικό",
+      "business": "Επαγγελματικό",
+      "email": "E-mail"
+    }
   },
   "travelAgencies": {
     "title": "Ταξιδιωτικά γραφεία",
@@ -614,6 +624,7 @@
     "hotel": "Ξενοδοχείο",
     "hotelHint": "Δωμάτια, ρεσεψιόν, κλασική ξενοδοχειακή λειτουργία",
     "saved": "Ο τύπος επιχείρησης αποθηκεύτηκε.",
-    "adminOnly": "Μόνο διαχειριστές μπορούν να αλλάξουν τον τύπο επιχείρησης."
+    "adminOnly": "Μόνο διαχειριστές μπορούν να αλλάξουν τον τύπο επιχείρησης.",
+    "locked": "Ο τύπος καταλύματος ορίζεται κατά την εγγραφή και δεν αλλάζει αργότερα."
   }
 }

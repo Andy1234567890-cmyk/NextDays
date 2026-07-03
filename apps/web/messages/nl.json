@@ -517,7 +517,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Persoonlijke gegevens",
+    "statistics": "Statistieken",
+    "avgRevenue": "Gemiddelde omzet",
+    "kicker": "Gast",
+    "contactKind": {
+      "mobile": "Mobiel",
+      "private": "Privé",
+      "business": "Zakelijk",
+      "email": "E-mail"
+    }
   },
   "travelAgencies": {
     "title": "Reisbureaus",
@@ -614,6 +624,7 @@
     "hotel": "Hotel",
     "hotelHint": "Kamers, receptie, klassiek hotelbedrijf",
     "saved": "Bedrijfstype opgeslagen.",
-    "adminOnly": "Alleen beheerders kunnen het bedrijfstype wijzigen."
+    "adminOnly": "Alleen beheerders kunnen het bedrijfstype wijzigen.",
+    "locked": "Het bedrijfstype wordt bij de onboarding vastgelegd en kan later niet worden gewijzigd."
   }
 }

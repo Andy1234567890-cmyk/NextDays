@@ -47,6 +47,9 @@ export type CompanySettingsFormData = {
   phone: string;
   iban: string;
   bic: string;
+  // USt-Satz Übernachtung (%) als String (Input-Feld); '' = nicht gesetzt.
+  // Pflicht für die automatische Check-out-Rechnung (0092, kein Default).
+  lodgingTaxRate: string;
 };
 
 type UseInvoiceLoadersArgs = {
@@ -116,6 +119,7 @@ export function useInvoiceLoaders({
     phone: '',
     iban: '',
     bic: '',
+    lodgingTaxRate: '',
   });
 
   // Lade existierende Dienstleistungen
@@ -303,6 +307,10 @@ export function useInvoiceLoaders({
               phone: companyData.phoneNumber || companyData.companyPhoneNumber || '',
               iban: companyData.iban || companyData.step4?.iban || '',
               bic: companyData.bic || companyData.step4?.bic || '',
+              lodgingTaxRate:
+                companyData.lodgingTaxRate != null
+                  ? String(companyData.lodgingTaxRate)
+                  : '',
             });
           }
         }

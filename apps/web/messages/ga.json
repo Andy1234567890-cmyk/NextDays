@@ -517,7 +517,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Sonraí pearsanta",
+    "statistics": "Staitisticí",
+    "avgRevenue": "Meánioncam",
+    "kicker": "Aoi",
+    "contactKind": {
+      "mobile": "Fón póca",
+      "private": "Príobháideach",
+      "business": "Gnó",
+      "email": "Ríomhphost"
+    }
   },
   "travelAgencies": {
     "title": "Gníomhaireachtaí taistil",
@@ -614,6 +624,7 @@
     "hotel": "Óstán",
     "hotelHint": "Seomraí, deasc fáilte, gnáthoibríocht óstáin",
     "saved": "Cineál gnó sábháilte.",
-    "adminOnly": "Ní féidir ach le riarthóirí an cineál gnó a athrú."
+    "adminOnly": "Ní féidir ach le riarthóirí an cineál gnó a athrú.",
+    "locked": "Socraítear an cineál lóistín le linn an chláraithe agus ní féidir é a athrú níos déanaí."
   }
 }

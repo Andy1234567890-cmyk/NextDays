@@ -270,15 +270,26 @@ class BookingsSyncMixin:
         status_in = (attrs.get("status") or "new").lower()
         existing = (
             db.table("reservations")
-            .select("id")
+            .select("id, checked_out_at")
             .eq("tenant_id", tenant_id)
             .eq("source_channex_booking_id", booking_id)
             .limit(1)
             .execute()
         ).data
+        # Nach echtem Check-out (0091) ist der Aufenthalt abgeschlossen — ein
+        # OTA-Resync darf status='completed' nicht mehr überschreiben (weder
+        # auf confirmed zurückdrehen noch nachträglich stornieren + freigeben).
+        already_checked_out = bool(existing and existing[0].get("checked_out_at"))
 
         # Storno: reservation stornieren + Nächte dieser OTA-Quelle wieder frei.
         if status_in == "cancelled":
+            if already_checked_out:
+                log.warning(
+                    "booking_cancel_after_checkout_ignored",
+                    tenant_id=tenant_id,
+                    booking_id=booking_id,
+                )
+                return True
             if existing:
                 db.table("reservations").update({"status": "cancelled"}).eq(
                     "id", existing[0]["id"]
@@ -348,9 +359,29 @@ class BookingsSyncMixin:
             "external_url": attrs.get("ota_url") or attrs.get("external_url"),
         }
         if existing:
+            if already_checked_out:
+                # Abgeschlossener (fakturierter) Aufenthalt: Status, Zeitraum
+                # und Beträge sind eingefroren — die finale Rechnung ist
+                # bereits erstellt und darf nicht von einem OTA-Resync
+                # abweichen. Nur unkritische Felder (Kontakt) übernehmen.
+                for frozen in (
+                    "status",
+                    "check_in",
+                    "check_out",
+                    "total_amount",
+                    "quote_items",
+                    "currency",
+                ):
+                    row.pop(frozen, None)
             db.table("reservations").update(row).eq("id", existing[0]["id"]).execute()
         else:
             db.table("reservations").insert(row).execute()
+
+        if already_checked_out:
+            # Auch Kalender/Channex nicht mehr anfassen: die OTA-Revision kann
+            # einen ANDEREN Zeitraum liefern als der eingefrorene Aufenthalt —
+            # ihre Nächte zu sperren erzeugte verwaiste Blockierungen.
+            return True
 
         # Kalender: belegte Nächte sperren (Buchung ist autoritativ für 'booked').
         self._set_availability(
@@ -387,12 +418,14 @@ class BookingsSyncMixin:
         return (total or 1, 0, 0)
 
     def _booking_quote_items(self, attrs: dict[str, Any]) -> list[dict[str, Any]]:
-        """Preisaufschlüsselung [{label, amount}] aus einem Channex-Booking.
+        """Preisaufschlüsselung [{label, amount, kind}] aus einem Channex-Booking.
 
         Channex liefert Positionen je nach OTA unter `rooms` (Zimmerpreis) und
         `services` (Reinigung/Steuern/Gebühren). Wir übernehmen nur, was wirklich
         da ist (Label + Betrag) — fehlt die Struktur, bleibt die Liste leer
-        (keine erfundenen Posten)."""
+        (keine erfundenen Posten). `kind` klassifiziert für die Rechnungs-
+        erstellung (rooms→lodging, services→fee); USt-Feinheiten je OTA-Gebühr
+        kennt Channex nicht — dokumentierte Modellgrenze."""
         items: list[dict[str, Any]] = []
         for room in attrs.get("rooms") or []:
             if not isinstance(room, dict):
@@ -401,7 +434,7 @@ class BookingsSyncMixin:
             if amount is None:
                 continue
             label = room.get("title") or room.get("room_type_name") or "Zimmerpreis"
-            items.append({"label": str(label), "amount": amount})
+            items.append({"label": str(label), "amount": amount, "kind": "lodging"})
         for svc in attrs.get("services") or []:
             if not isinstance(svc, dict):
                 continue
@@ -409,7 +442,7 @@ class BookingsSyncMixin:
             if amount is None:
                 continue
             label = svc.get("name") or svc.get("title") or "Gebühr"
-            items.append({"label": str(label), "amount": amount})
+            items.append({"label": str(label), "amount": amount, "kind": "fee"})
         return items
 
     @staticmethod

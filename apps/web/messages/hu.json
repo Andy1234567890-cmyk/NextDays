@@ -517,7 +517,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Személyes adatok",
+    "statistics": "Statisztika",
+    "avgRevenue": "Átlagos árbevétel",
+    "kicker": "Vendég",
+    "contactKind": {
+      "mobile": "Mobil",
+      "private": "Magán",
+      "business": "Munkahelyi",
+      "email": "E-mail"
+    }
   },
   "travelAgencies": {
     "title": "Utazási irodák",
@@ -614,6 +624,7 @@
     "hotel": "Szálloda",
     "hotelHint": "Szobák, recepció, klasszikus szállodai működés",
     "saved": "Működési forma mentve.",
-    "adminOnly": "A működési formát csak adminisztrátorok módosíthatják."
+    "adminOnly": "A működési formát csak adminisztrátorok módosíthatják.",
+    "locked": "Az üzemeltetési típus az onboarding során kerül beállításra, és később nem módosítható."
   }
 }

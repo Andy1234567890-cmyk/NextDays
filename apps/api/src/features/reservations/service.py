@@ -26,12 +26,14 @@ from src.features.guests.identity import (
 )
 
 from .schemas import (
+    CheckOutResponse,
     DashboardEntry,
     DashboardKpi,
     DashboardResponse,
     QuoteItem,
     ReservationCreate,
     ReservationDetail,
+    ReservationInvoiceInfo,
     ReservationListResponse,
     ReservationMove,
     ReservationResponse,
@@ -307,7 +309,10 @@ class ReservationsService:
         total_amount = req.total_amount if req.total_amount > 0 else quote.total
         currency = quote.currency
         quote_items = [
-            {"label": line.label, "amount": line.amount} for line in quote.lines
+            # kind klassifiziert die Zeile für die spätere Rechnungserstellung
+            # (Booking→Invoice: 'tax' = Abgabe 0 % USt, sonst Übernachtungssatz).
+            {"label": line.label, "amount": line.amount, "kind": line.kind}
+            for line in quote.lines
         ]
         ins = (
             self._db()
@@ -431,6 +436,12 @@ class ReservationsService:
         if current.get("status") == "cancelled":
             raise ReservationError(
                 "Stornierte Reservierungen lassen sich nicht verschieben.",
+                status_code=409,
+            )
+        if current.get("checked_out_at"):
+            raise ReservationError(
+                "Aufenthalt ist abgeschlossen (ausgecheckt + fakturiert) — "
+                "Zeitraum/Objekt lassen sich nicht mehr ändern.",
                 status_code=409,
             )
 
@@ -585,6 +596,12 @@ class ReservationsService:
             raise ReservationError(
                 "Reservierung ist bereits storniert.", status_code=409
             )
+        if current.get("checked_out_at"):
+            raise ReservationError(
+                "Aufenthalt ist abgeschlossen (ausgecheckt + fakturiert) — "
+                "Korrekturen laufen über die Stornorechnung in der Buchhaltung.",
+                status_code=409,
+            )
 
         now = datetime.now(UTC).isoformat()
         upd = (
@@ -671,6 +688,147 @@ class ReservationsService:
         mask = load_guest_mask(self._client, ctx.user_id)
         return self._row((full.data or upd.data)[0], mask)
 
+    def _load_owned(self, tenant_id: str, reservation_id: str) -> dict:
+        """Reservierung tenant-scoped laden (404, wenn fremd/fehlend)."""
+        rows = (
+            self._db()
+            .table("reservations")
+            .select("*, guests(name)")
+            .eq("id", reservation_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not rows:
+            raise ReservationError("Reservierung nicht gefunden.", status_code=404)
+        return rows[0]
+
+    def check_in(self, ctx: AuthContext, reservation_id: str) -> ReservationResponse:
+        """Gast einchecken: checked_in_at setzen (0091).
+
+        Nur bestätigte Buchungen; kein Doppel-Check-in. Early-Check-in (vor dem
+        Anreisetag) ist erlaubt — das Frontend zeigt dafür einen Hinweis, der
+        Server blockiert bewusst nicht (Rezeption entscheidet).
+        """
+        tenant_id = self._require_tenant(ctx)
+        current = self._load_owned(tenant_id, reservation_id)
+        status = current.get("status")
+        if status == "cancelled":
+            raise ReservationError(
+                "Stornierte Buchung kann nicht eingecheckt werden.", status_code=409
+            )
+        if status == "pending":
+            raise ReservationError(
+                "Buchung ist noch nicht bestätigt — bitte zuerst bestätigen.",
+                status_code=409,
+            )
+        if current.get("checked_in_at"):
+            raise ReservationError(
+                "Gast ist bereits eingecheckt.", status_code=409
+            )
+        if current.get("checked_out_at") or status == "completed":
+            raise ReservationError(
+                "Buchung ist bereits abgereist.", status_code=409
+            )
+
+        upd = (
+            self._db()
+            .table("reservations")
+            .update({"checked_in_at": datetime.now(UTC).isoformat()})
+            .eq("id", reservation_id)
+            .eq("tenant_id", tenant_id)
+            .execute()
+        )
+        if not upd.data:
+            raise ReservationError(
+                "Check-in konnte nicht gespeichert werden.", status_code=500
+            )
+        log.info(
+            "reservation_checked_in",
+            reservation_id=reservation_id,
+            by_user_id=ctx.user_id,
+        )
+        mask = load_guest_mask(self._client, ctx.user_id)
+        return self._row(self._load_owned(tenant_id, reservation_id), mask)
+
+    def check_out(self, ctx: AuthContext, reservation_id: str) -> CheckOutResponse:
+        """Gast auschecken — erzeugt verpflichtend die finale Rechnung.
+
+        Reihenfolge (kein halber Zustand, Supabase kennt keine Multi-Statement-
+        Transaktion): (1) Guards ohne Write, (2) Rechnung über den Booking→
+        Invoice-Builder (idempotent — bestehende aktive Rechnung wird
+        wiederverwendet; jeder Builder-Fehler bricht den Check-out ab),
+        (3) erst DANACH checked_out_at + status='completed' setzen. Ein Retry
+        nach Fehler in (3) ist sicher, weil (2) die Rechnung wiederfindet.
+
+        Die Rechnung entsteht serverseitig als System-Nebeneffekt des Check-outs
+        (Front-Desk-Aktion) — bewusst OHNE OWNER_REPORTING-Anforderung.
+        """
+        tenant_id = self._require_tenant(ctx)
+        current = self._load_owned(tenant_id, reservation_id)
+        if current.get("status") == "cancelled":
+            raise ReservationError(
+                "Stornierte Buchung kann nicht ausgecheckt werden.", status_code=409
+            )
+        if not current.get("checked_in_at"):
+            raise ReservationError(
+                "Gast ist noch nicht eingecheckt.", status_code=409
+            )
+        if current.get("checked_out_at"):
+            raise ReservationError(
+                "Gast ist bereits ausgecheckt.", status_code=409
+            )
+
+        # Lazy-Import über die Slice-Grenze (Muster guests/tasks-Imports).
+        from src.features.buchhaltung.reservation_invoice import (  # noqa: PLC0415
+            create_from_reservation,
+        )
+        from src.features.buchhaltung.service import (  # noqa: PLC0415
+            BuchhaltungError,
+        )
+
+        try:
+            invoice = create_from_reservation(self._db(), tenant_id, reservation_id)
+        except BuchhaltungError as exc:
+            # Fehlertext 1:1 durchreichen (z. B. „Übernachtungs-Steuersatz
+            # fehlt") — Check-out abgebrochen, nichts geschrieben.
+            raise ReservationError(exc.message, status_code=exc.status_code) from exc
+
+        upd = (
+            self._db()
+            .table("reservations")
+            .update(
+                {
+                    "checked_out_at": datetime.now(UTC).isoformat(),
+                    "status": "completed",
+                }
+            )
+            .eq("id", reservation_id)
+            .eq("tenant_id", tenant_id)
+            .execute()
+        )
+        if not upd.data:
+            raise ReservationError(
+                "Rechnung wurde erstellt, aber der Check-out konnte nicht "
+                "gespeichert werden — bitte erneut auschecken (die Rechnung "
+                "wird dabei wiederverwendet).",
+                status_code=500,
+            )
+        log.info(
+            "reservation_checked_out",
+            reservation_id=reservation_id,
+            by_user_id=ctx.user_id,
+            invoice_id=invoice["id"],
+            invoice_already_existed=invoice["already_existed"],
+        )
+        mask = load_guest_mask(self._client, ctx.user_id)
+        return CheckOutResponse(
+            reservation=self._row(self._load_owned(tenant_id, reservation_id), mask),
+            invoice_id=invoice["id"],
+            invoice_number=invoice.get("invoice_number"),
+            invoice_already_existed=bool(invoice["already_existed"]),
+        )
+
     def detail(self, ctx: AuthContext, reservation_id: str) -> ReservationDetail:
         """Vollständige Reservierungs-Detailansicht (rechter Slider). Tenant-
         scoped; Beträge + Kontaktdaten werden maskierungskonform geliefert."""
@@ -712,6 +870,31 @@ class ReservationsService:
             for it in (r.get("quote_items") or [])
             if isinstance(it, dict)
         ]
+
+        # Aktive Rechnung zur Buchung (Booking→Invoice-Brücke 0092) für den
+        # Rechnungs-Abschnitt im Slider — Beträge hinter mask.amounts.
+        invoice_info: ReservationInvoiceInfo | None = None
+        inv_rows = (
+            self._db()
+            .table("invoices")
+            .select("id, invoice_number, status, gross_amount, currency")
+            .eq("tenant_id", tenant_id)
+            .eq("reservation_id", reservation_id)
+            .eq("invoice_type", "invoice")
+            .neq("status", "cancelled")
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        ).data
+        if inv_rows:
+            inv = inv_rows[0]
+            invoice_info = ReservationInvoiceInfo(
+                id=inv["id"],
+                invoice_number=inv.get("invoice_number"),
+                status=inv.get("status") or "",
+                gross_amount=mask.amount(float(inv.get("gross_amount") or 0)),
+                currency=(inv.get("currency") or "") if mask.amounts else "",
+            )
         return ReservationDetail(
             id=r["id"],
             property_id=r["property_id"],
@@ -739,6 +922,9 @@ class ReservationsService:
             checkin_time=r.get("checkin_time"),
             checkout_time=r.get("checkout_time"),
             note=r.get("note"),
+            checked_in_at=r.get("checked_in_at"),
+            checked_out_at=r.get("checked_out_at"),
+            invoice=invoice_info,
             cancel_reason=r.get("cancel_reason"),
             cancelled_at=r.get("cancelled_at"),
             guest_email=mask.contact_value(r.get("guest_email")),
@@ -820,6 +1006,10 @@ class ReservationsService:
                 email=req.contact.email,
                 phone=req.contact.phone,
                 channel="direct",
+                # Gästemappen-Stammdaten (0046): strukturiert mitgeben, damit
+                # die Gästekartei nicht nur den zusammengesetzten Namen hat.
+                language=req.contact.language,
+                country=req.contact.country,
             ),
         )
 
@@ -841,4 +1031,6 @@ class ReservationsService:
             ota_name=mask.source_value(r.get("ota_name")),
             external_ref=r.get("external_ref"),
             num_guests=int(r.get("num_guests") or 1),
+            checked_in_at=r.get("checked_in_at"),
+            checked_out_at=r.get("checked_out_at"),
         )

@@ -551,7 +551,17 @@
     "addAddress": "Add address",
     "contactType": "Type",
     "contactValue": "Value",
-    "addContact": "Add contact"
+    "addContact": "Add contact",
+    "personalData": "Personal details",
+    "statistics": "Statistics",
+    "avgRevenue": "Average revenue",
+    "kicker": "Guest",
+    "contactKind": {
+      "mobile": "Mobile",
+      "private": "Private",
+      "business": "Business",
+      "email": "Email"
+    }
   },
   "fotos": {
     "title": "Photos",
@@ -930,6 +940,7 @@
     "hotel": "Hotel",
     "hotelHint": "Rooms, front desk, classic hotel operation",
     "saved": "Business type saved.",
-    "adminOnly": "Only administrators can change the business type."
+    "adminOnly": "Only administrators can change the business type.",
+    "locked": "The property type is set during onboarding and cannot be changed later."
   }
 }
