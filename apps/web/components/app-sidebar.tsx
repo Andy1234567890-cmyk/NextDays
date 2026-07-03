@@ -65,13 +65,18 @@ type NavGroup = { groupKey: string; icon: string; items: readonly NavItem[] };
 //  - Hotel folgt dem Casona-„Hotel"-Menü (Rechnungen … Statistik).
 //  - Ferienvermietung führt das buchhaltungslastige NextDays-Set.
 // Einstellungen wird separat als letzter Punkt der Gruppe angehängt.
+// Ziele zeigen auf real existierende Routen: Rechnungen = die Rechnungsliste
+// unter /buchhaltung (wie im Ferienvermietungs-Menü), Bankkonten = /buchhaltung/
+// bank, Schließzeiten = der Verkaufsstopp-Kalender (/stop-sell). Zahlungen/
+// Umsatz/Listen/Statistik haben eigene Routen (derzeit ComingSoon-Muster wie
+// /buchhaltung/berichte) — NIE auf Pfade ohne Route verlinken (404).
 const HOTEL_FINANCE: readonly NavItem[] = [
-  { key: "invoices", href: "/buchhaltung/rechnungen", icon: "ph:receipt", req: "owner_reporting" },
+  { key: "invoices", href: "/buchhaltung", icon: "ph:receipt", req: "owner_reporting" },
   { key: "payments", href: "/buchhaltung/zahlungen", icon: "ph:credit-card", req: "owner_reporting" },
   { key: "revenue", href: "/buchhaltung/umsatz", icon: "ph:trend-up", req: "owner_reporting" },
-  { key: "bankAccounts", href: "/buchhaltung/bankkonten", icon: "ph:bank", req: "owner_reporting" },
+  { key: "bankAccounts", href: "/buchhaltung/bank", icon: "ph:bank", req: "owner_reporting" },
   { key: "lists", href: "/buchhaltung/listen", icon: "ph:list-checks", req: "owner_reporting" },
-  { key: "closingDates", href: "/buchhaltung/schliesszeiten", icon: "ph:calendar-x", req: "owner_reporting" },
+  { key: "closingDates", href: "/stop-sell", icon: "ph:calendar-x", req: "owner_reporting" },
   { key: "cashBook", href: "/buchhaltung/kassenbuch", icon: "ph:wallet", req: "owner_reporting" },
   { key: "statistics", href: "/buchhaltung/statistik", icon: "ph:chart-bar", req: "owner_reporting" },
 ];

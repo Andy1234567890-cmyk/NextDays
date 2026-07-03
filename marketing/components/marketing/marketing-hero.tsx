@@ -17,8 +17,10 @@ const CHANNELS = [
 ];
 
 export function MarketingHero() {
+  // 100svh minus Nav (h-16 = 4rem): der Hero füllt den restlichen Viewport
+  // exakt — kein weißer Streifen der Folgesektion unter der Kanal-Leiste.
   return (
-    <section className="relative flex min-h-[90vh] flex-col items-center justify-center overflow-hidden bg-primary">
+    <section className="relative flex min-h-[calc(100svh-4rem)] flex-col items-center overflow-hidden bg-primary">
       {/* Hintergrundbild — lege eine Datei unter /public/marketing/hero-bg.jpg ab,
           um sie zu aktivieren. Bis dahin zeigt bg-primary (Schwarz). */}
       {/* <Image
@@ -32,8 +34,9 @@ export function MarketingHero() {
       {/* Dunkles Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
 
-      {/* Inhalt */}
-      <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center px-6 pt-28 pb-16 text-center">
+      {/* Inhalt — flex-1 zentriert ihn im Raum ÜBER der Kanal-Leiste,
+          die Leiste selbst sitzt dadurch immer am unteren Sektionsrand. */}
+      <div className="relative z-10 mx-auto flex max-w-4xl flex-1 flex-col items-center justify-center px-6 pt-16 pb-12 text-center">
         {/* Credibility */}
         <div className="mb-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
           <div className="flex items-center gap-1.5">
