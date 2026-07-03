@@ -41,8 +41,8 @@ Wer nutzt myNextDays, und mit welchen externen Systemen spricht es? Vermieter un
     System_Ext(booking, "Booking.com", "OTA-Kanal")
     System_Ext(airbnb, "Airbnb", "OTA-Kanal")
     System_Ext(vrbo, "Vrbo / Expedia", "OTA-Kanal")
-    System_Ext(revolut, "Revolut Business", "Zahlungen (primär)")
-    System_Ext(stripe, "Stripe", "Zahlungen (sekundär)")
+    System_Ext(stripe, "Stripe", "Zahlungen (primär)")
+    System_Ext(revolut, "Revolut Business", "Zahlungen (sekundär)")
     System_Ext(google, "Google APIs", "Maps/Places, Translate")
 
     Rel(landlord, pms, "Verwaltet Listings, Raten, Kalender")
@@ -50,8 +50,8 @@ Wer nutzt myNextDays, und mit welchen externen Systemen spricht es? Vermieter un
     Rel(pms, booking, "Zwei-Wege-Sync", "Connectivity API")
     Rel(pms, airbnb, "Zwei-Wege-Sync", "Partner API / Webhooks")
     Rel(pms, vrbo, "Zwei-Wege-Sync", "API")
-    Rel(pms, revolut, "Zahlungen, Kautionen", "HTTPS/API")
-    Rel(pms, stripe, "Zahlungen (Fallback)", "HTTPS/API")
+    Rel(pms, stripe, "Zahlungen, Kautionen", "HTTPS/API")
+    Rel(pms, revolut, "Zahlungen (sekundär)", "HTTPS/API")
     Rel(pms, google, "Geocoding, Übersetzung", "HTTPS/API")`}
 />
 
@@ -78,8 +78,8 @@ Who uses myNextDays, and which external systems does it talk to? Hosts and guest
     System_Ext(booking, "Booking.com", "OTA channel")
     System_Ext(airbnb, "Airbnb", "OTA channel")
     System_Ext(vrbo, "Vrbo / Expedia", "OTA channel")
-    System_Ext(revolut, "Revolut Business", "Payments (primary)")
-    System_Ext(stripe, "Stripe", "Payments (secondary)")
+    System_Ext(stripe, "Stripe", "Payments (primary)")
+    System_Ext(revolut, "Revolut Business", "Payments (secondary)")
     System_Ext(google, "Google APIs", "Maps/Places, Translate")
 
     Rel(landlord, pms, "Manages listings, rates, calendar")
@@ -87,8 +87,8 @@ Who uses myNextDays, and which external systems does it talk to? Hosts and guest
     Rel(pms, booking, "Two-way sync", "Connectivity API")
     Rel(pms, airbnb, "Two-way sync", "Partner API / Webhooks")
     Rel(pms, vrbo, "Two-way sync", "API")
-    Rel(pms, revolut, "Payments, deposits", "HTTPS/API")
-    Rel(pms, stripe, "Payments (fallback)", "HTTPS/API")
+    Rel(pms, stripe, "Payments, deposits", "HTTPS/API")
+    Rel(pms, revolut, "Payments (secondary)", "HTTPS/API")
     Rel(pms, google, "Geocoding, translation", "HTTPS/API")`}
 />
 
@@ -110,34 +110,39 @@ Die ausführbaren Bausteine und Datastores des Systems mit Technologie und Proto
 
     Container_Boundary(nd, "myNextDays") {
         Container(marketing, "Marketing-Website", "Next.js (entkoppelt)", "Landing/Pricing/Blog — KEINE PMS/Auth-Kopplung (ADR-0002)")
-        Container(web, "Web Dashboard", "Next.js, TypeScript", "Vermieter-PMS-UI + Portale (Vercel)")
+        Container(web, "Web Dashboard", "Next.js, TypeScript", "Vermieter-PMS-UI + Portale (Coolify-App)")
         Container(mobile, "Mobile-App", "React Native 0.86 (bare CLI, kein Expo)", "Gäste (Buchen/Aufenthalt) + Gastgeber (Verwaltung), iOS/Android")
         Container(storybook, "Storybook", "react-vite (eigenes Package apps/storybook)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
-        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 22 Vertical Slices unter /api/v1")
-        ContainerDb(db, "Datenbank", "Supabase / Postgres", "41 Tabellen, Multi-Tenant, RLS, tenant_id")
-        ContainerDb(cache, "Cache", "Redis", "Caching-Layer")
+        Container(builder, "Website-Renderer", "Next.js (builder/)", "White-Label-Agentur-Sites pro Custom-Domain (Page-Builder)")
+        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 24 Vertical Slices unter /api/v1")
+        ContainerDb(db, "Datenbank", "Supabase / Postgres", "101 Tabellen, Multi-Tenant, RLS, tenant_id")
+        ContainerDb(cache, "Cache", "Redis", "Caching + Rate-Limiting")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel-Sync, OCR, Messaging-Trigger, wiederkehrende Aufgaben")
     }
 
-    System_Ext(revolut, "Revolut", "Zahlungen (primär)")
-    System_Ext(stripe, "Stripe", "Zahlungen (sekundär)")
+    System_Ext(stripe, "Stripe", "Zahlungen (primär, Connect Custom)")
+    System_Ext(revolut, "Revolut", "Zahlungen (sekundär)")
     System_Ext(booking, "Booking.com", "OTA")
-    System_Ext(google, "Google APIs", "Maps/Translate")
+    System_Ext(google, "Google APIs", "Maps/Translate/Fonts")
+    System_Ext(cloudflare, "Cloudflare for SaaS", "Custom-Domain-TLS")
 
     Rel(landlord, web, "Nutzt", "HTTPS")
     Rel(guest, web, "Bucht", "HTTPS")
+    Rel(guest, builder, "Bucht auf Agentur-Site", "HTTPS (Custom-Domain)")
     Rel(guest, mobile, "Bucht & reist", "HTTPS")
     Rel(landlord, mobile, "Verwaltet unterwegs", "HTTPS")
     Rel(storybook, web, "fertige Komponenten übernehmen", "manuell/Build-Zeit")
     Rel(web, api, "Ruft auf", "JSON/HTTPS")
+    Rel(builder, api, "by-domain-Resolver + Seiten", "JSON/HTTPS (/api/v1/site)")
     Rel(mobile, api, "Ruft auf", "JSON/HTTPS (/api/v1)")
     Rel(api, db, "Liest/schreibt", "SQL (RLS)")
     Rel(api, cache, "Liest/schreibt", "Redis-Protokoll")
     Rel(api, queue, "Reiht Jobs ein", "Redis")
     Rel(queue, booking, "ARI-Push / Reservierungs-Poll", "Connectivity API")
-    Rel(api, revolut, "Charges, Kautionen", "API")
-    Rel(api, stripe, "Charges (Fallback)", "API")
-    Rel(api, google, "Geocoding, Übersetzung", "API")`}
+    Rel(api, stripe, "Charges, Auszahlungen", "API")
+    Rel(api, revolut, "Charges (sekundär)", "API")
+    Rel(api, cloudflare, "Custom Hostnames", "API")
+    Rel(api, google, "Geocoding, Übersetzung, Fonts", "API")`}
 />
 
 </De>
@@ -158,34 +163,39 @@ The executable building blocks and data stores of the system with technology and
 
     Container_Boundary(nd, "myNextDays") {
         Container(marketing, "Marketing website", "Next.js (decoupled)", "Landing/Pricing/Blog — NO PMS/Auth coupling (ADR-0002)")
-        Container(web, "Web Dashboard", "Next.js, TypeScript", "Host PMS UI + portals (Vercel)")
+        Container(web, "Web Dashboard", "Next.js, TypeScript", "Host PMS UI + portals (Coolify app)")
         Container(mobile, "Mobile app", "React Native 0.86 (bare CLI, no Expo)", "Guests (booking/stay) + hosts (management), iOS/Android")
         Container(storybook, "Storybook", "react-vite (own package apps/storybook)", "Design system & component workshop (ADR-0008); finished components move to Web")
-        Container(api, "API Backend", "FastAPI, Python", "Business logic, 22 vertical slices under /api/v1")
-        ContainerDb(db, "Database", "Supabase / Postgres", "41 tables, multi-tenant, RLS, tenant_id")
-        ContainerDb(cache, "Cache", "Redis", "Caching layer")
+        Container(builder, "Website renderer", "Next.js (builder/)", "White-label agency sites per custom domain (website builder)")
+        Container(api, "API Backend", "FastAPI, Python", "Business logic, 24 vertical slices under /api/v1")
+        ContainerDb(db, "Database", "Supabase / Postgres", "101 tables, multi-tenant, RLS, tenant_id")
+        ContainerDb(cache, "Cache", "Redis", "Caching + rate limiting")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel sync, OCR, messaging triggers, recurring tasks")
     }
 
-    System_Ext(revolut, "Revolut", "Payments (primary)")
-    System_Ext(stripe, "Stripe", "Payments (secondary)")
+    System_Ext(stripe, "Stripe", "Payments (primary, Connect Custom)")
+    System_Ext(revolut, "Revolut", "Payments (secondary)")
     System_Ext(booking, "Booking.com", "OTA")
-    System_Ext(google, "Google APIs", "Maps/Translate")
+    System_Ext(google, "Google APIs", "Maps/Translate/Fonts")
+    System_Ext(cloudflare, "Cloudflare for SaaS", "Custom-domain TLS")
 
     Rel(landlord, web, "Uses", "HTTPS")
     Rel(guest, web, "Books", "HTTPS")
+    Rel(guest, builder, "Books on agency site", "HTTPS (custom domain)")
     Rel(guest, mobile, "Books & travels", "HTTPS")
     Rel(landlord, mobile, "Manages on the go", "HTTPS")
     Rel(storybook, web, "adopt finished components", "manual/build-time")
     Rel(web, api, "Calls", "JSON/HTTPS")
+    Rel(builder, api, "by-domain resolver + pages", "JSON/HTTPS (/api/v1/site)")
     Rel(mobile, api, "Calls", "JSON/HTTPS (/api/v1)")
     Rel(api, db, "Reads/writes", "SQL (RLS)")
     Rel(api, cache, "Reads/writes", "Redis protocol")
     Rel(api, queue, "Enqueues jobs", "Redis")
     Rel(queue, booking, "ARI push / reservation poll", "Connectivity API")
-    Rel(api, revolut, "Charges, deposits", "API")
-    Rel(api, stripe, "Charges (fallback)", "API")
-    Rel(api, google, "Geocoding, translation", "API")`}
+    Rel(api, stripe, "Charges, payouts", "API")
+    Rel(api, revolut, "Charges (secondary)", "API")
+    Rel(api, cloudflare, "Custom hostnames", "API")
+    Rel(api, google, "Geocoding, translation, fonts", "API")`}
 />
 
 </En>
@@ -194,7 +204,7 @@ The executable building blocks and data stores of the system with technology and
 
 ## Slice-Landkarte (Component-Ebene, API-Backend)
 
-Die 22 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslogik: Querschnitt im Core, Slices mit fertiger Logik (Großteil) sowie wenige Gerüst-Slices (ocr, crm), die laut Roadmap folgen.
+Die 24 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslogik: Querschnitt im Core, Slices mit fertiger Logik (Großteil) sowie wenige Gerüst-Slices (ocr, crm), die laut Roadmap folgen.
 
 <Mermaid
   title="Slice-Landkarte (Component-Ebene, API-Backend)"
@@ -217,12 +227,14 @@ Die 22 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslog
             WA["whatsapp — WhatsApp Cloud API, im Posteingang integriert"]
             BUCH["buchhaltung — Rechnungen + Kunden + Firmenprofil/Logo, Nummernkreise"]
             ADDON["addons — Zusatzleistungen/Upsells je Objekt, Verkauf via booking_engine + Gäste-Portal"]
+            SITE["site_config — Page-Builder: Branding, Seiten/Blöcke, Templates, Custom-Domains (Cloudflare)"]
+            TA["travel_agencies — Reisebüro-Kartei: Verträge, Kontakte, Provisionen"]
         end
         subgraph SCAFFOLD["Slices als Gerüst (Health) — folgen lt. Roadmap"]
             OCR["ocr"]; CRM["crm"]; DASH["dashboard (min.)"]; CONT["content (min.)"]
         end
     end
-    DB[("Postgres — 41 Tabellen, RLS")]
+    DB[("Postgres — 101 Tabellen, RLS")]
     DONE --> DB
     SCAFFOLD --> DB
     CORE --> DONE
@@ -235,7 +247,7 @@ Die 22 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslog
 
 ## Slice map (component level, API backend)
 
-The 22 vertical slices and their data areas show the state of the business logic: cross-cutting concerns in the core, slices with finished logic (the majority) plus a few scaffold slices (ocr, crm) that follow per the roadmap.
+The 24 vertical slices and their data areas show the state of the business logic: cross-cutting concerns in the core, slices with finished logic (the majority) plus a few scaffold slices (ocr, crm) that follow per the roadmap.
 
 <Mermaid
   title="Slice map (component level, API backend)"
@@ -258,12 +270,14 @@ The 22 vertical slices and their data areas show the state of the business logic
             WA["whatsapp — WhatsApp Cloud API, integrated in the inbox"]
             BUCH["buchhaltung — invoices + customers + company profile/logo, number ranges"]
             ADDON["addons — add-on services/upsells per property, sold via booking_engine + guest portal"]
+            SITE["site_config — website builder: branding, pages/blocks, templates, custom domains (Cloudflare)"]
+            TA["travel_agencies — travel agency file: contracts, contacts, commissions"]
         end
         subgraph SCAFFOLD["Slices as scaffold (Health) — follow per roadmap"]
             OCR["ocr"]; CRM["crm"]; DASH["dashboard (min.)"]; CONT["content (min.)"]
         end
     end
-    DB[("Postgres — 41 tables, RLS")]
+    DB[("Postgres — 101 tables, RLS")]
     DONE --> DB
     SCAFFOLD --> DB
     CORE --> DONE
@@ -425,7 +439,7 @@ Das tatsächliche Schema aus den Supabase-Migrationen (Phase 1). Im Zentrum steh
     }`}
 />
 
-Das Modell ist auf 41 Tabellen (alle mit RLS) gewachsen. Die folgende, nach Bereich gruppierte Übersicht zeigt die Erweiterungen aus dem Lastenheft (Migrationen 0009–0019): Saison-/Preislogik, Aufgaben & Checklisten, CRM/Partner, Messaging/Content sowie Eigentümer- und Abrechnungsstrukturen.
+Das Modell ist auf 101 Tabellen (alle mit RLS) gewachsen — inzwischen bei Migration 0090. Die folgende, nach Bereich gruppierte Übersicht zeigt die Kern-Erweiterungen aus dem Lastenheft (Migrationen 0009–0019): Saison-/Preislogik, Aufgaben & Checklisten, CRM/Partner, Messaging/Content sowie Eigentümer- und Abrechnungsstrukturen. Jüngere Bereiche: Page-Builder (0086/0087, siehe eigene Seite „Architektur/Page-Builder“), Reisebüros (0088), Betriebsart Hotel/Ferienunterkunft am Mandanten (0090).
 
 <Mermaid
   title="Datenmodell — Erweiterungen aus dem Lastenheft (Migrationen 0009–0019)"
@@ -555,7 +569,7 @@ The actual schema from the Supabase migrations (phase 1). At the center is the t
     }`}
 />
 
-The model has grown to 41 tables (all with RLS). The following overview, grouped by area, shows the extensions from the requirements specification (migrations 0009–0019): season/pricing logic, tasks & checklists, CRM/partners, messaging/content as well as owner and billing structures.
+The model has grown to 101 tables (all with RLS) — currently at migration 0090. The following overview, grouped by area, shows the core extensions from the requirements specification (migrations 0009–0019): season/pricing logic, tasks & checklists, CRM/partners, messaging/content as well as owner and billing structures. More recent areas: website builder (0086/0087, see the dedicated page "Architektur/Page-Builder"), travel agencies (0088), tenant accommodation type hotel/vacation rental (0090).
 
 <Mermaid
   title="Data model — extensions from the requirements spec (migrations 0009–0019)"
@@ -947,11 +961,11 @@ DSGVO-konform und self-hosted bevorzugt mit EU-Datenresidenz als harter Grenze. 
         A1 --> OCR
     end
 
-    VERCEL["Vercel — Next.js Frontend"]
+    FRONTS["Coolify-Apps — Next.js-Frontends"]
     STRIPE["Stripe — Payments"]
     GOOG["Google APIs — DPF-zertifiziert"]
 
-    VERCEL -->|HTTPS| LB
+    FRONTS -->|HTTPS| LB
     A1 -.->|"Transfer: SCC/DPF"| STRIPE
     A1 -.->|"Transfer: DPF"| GOOG`}
 />
@@ -983,11 +997,11 @@ GDPR-compliant and self-hosted preferred, with EU data residency as a hard bound
         A1 --> OCR
     end
 
-    VERCEL["Vercel — Next.js Frontend"]
+    FRONTS["Coolify apps — Next.js frontends"]
     STRIPE["Stripe — Payments"]
     GOOG["Google APIs — DPF-certified"]
 
-    VERCEL -->|HTTPS| LB
+    FRONTS -->|HTTPS| LB
     A1 -.->|"Transfer: SCC/DPF"| STRIPE
     A1 -.->|"Transfer: DPF"| GOOG`}
 />

@@ -53,10 +53,18 @@ export async function GET(
 
     // In die index.html ein <base href="/sb/"> injizieren, damit die relativen
     // Asset-Pfade des Storybooks IMMER auf /sb/ auflösen — egal ob /sb oder /sb/.
+    // Außerdem einen schwebenden „Abmelden"-Button (→ /logout) einhängen, weil
+    // die statische Storybook-UI selbst keinen Logout kennt.
+    const LOGOUT_BTN =
+      '<a href="/logout" title="Abmelden" style="position:fixed;bottom:0.75rem;left:0.75rem;' +
+      "z-index:99999;padding:0.35rem 0.85rem;border-radius:9999px;background:#161616;" +
+      "color:#fafafa;font:600 0.75rem system-ui,sans-serif;text-decoration:none;" +
+      'border:1px solid #2a2a2a;opacity:0.85">Abmelden</a>';
     const body: BodyInit = isIndex
       ? raw
           .toString("utf-8")
           .replace(/<head(\s[^>]*)?>/i, (m) => `${m}<base href="/sb/">`)
+          .replace(/<\/body>/i, `${LOGOUT_BTN}</body>`)
       : new Uint8Array(raw);
 
     return new NextResponse(body, {

@@ -69,7 +69,7 @@ export const CheckoutInfoPausiert: Story = {
 export const Liste: Story = {
   args: { rule: base },
   render: () => (
-    <div className="flex w-[34rem] flex-col gap-2">
+    <div className="flex w-136 flex-col gap-2">
       <AutomailRuleCard rule={base} />
       <AutomailRuleCard rule={{ ...base, ...CheckoutInfoPausiert.args!.rule }} />
       <AutomailRuleCard

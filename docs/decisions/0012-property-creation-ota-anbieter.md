@@ -1,8 +1,10 @@
-# ADR-0011: Neue Unterkünfte bei OTAs anlegen – Anbieter-Wahl (Channex vs. NextPax vs. Beds24)
+# ADR-0012: Neue Unterkünfte bei OTAs anlegen – Anbieter-Wahl (Channex vs. NextPax vs. Beds24)
 
 - Status: **offen** (warten auf NextPax-Antwort; siehe `docs/nextpax-anfrage.md`)
 - Datum: 2026-06-22
 - Bezug: ergänzt ADR-0001 (Channel-Manager-Architektur)
+- Hinweis: ursprünglich als „0011" angelegt; wegen Nummern-Kollision mit
+  [ADR-0011 (Stripe primär)](0011-zahlungs-gateway-stripe-primaer.md) auf 0012 umnummeriert.
 
 ## Kontext
 

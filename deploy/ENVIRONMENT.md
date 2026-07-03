@@ -83,6 +83,18 @@ verschlüsselten Coolify-Config-Sicherung. Diese Datei sagt nur, **welche** Vari
 | `CORS_ORIGINS` | erlaubte Frontend-Origins | nein | Coolify-Env |
 | `UVICORN_WORKERS` | API-Worker-Anzahl (2) | nein | Coolify-Env |
 
+### Page-Builder (`site_config`-Slice)
+| Variable | Zweck | Secret? | Quelle |
+|---|---|---|---|
+| `SITE_DRAFT_SECRET` | HMAC-Signatur der Draft-Vorschau-Tokens (unveröffentlichte Seiten, TTL 1 h) | **ja** | → Passwort-Manager (generiert) |
+| `CLOUDFLARE_API_TOKEN` | Cloudflare for SaaS — Custom Hostnames anlegen/syncen (TLS für Agentur-Domains) | **ja** | → Passwort-Manager |
+| `CLOUDFLARE_ZONE_ID` | Cloudflare-Zone für die Custom Hostnames | nein | Coolify-Env |
+| `CLOUDFLARE_FALLBACK_ORIGIN` | Fallback-Origin, auf den Custom Hostnames zeigen (builder-App) | nein | Coolify-Env |
+| `CLOUDFLARE_BASE_URL` | Cloudflare-API-Endpoint (Default `https://api.cloudflare.com/client/v4`) | nein | Compose-Default |
+
+> Ohne `CLOUDFLARE_*`-Konfiguration antworten die Domain-Endpunkte des
+> `site_config`-Slices mit 503 (bewusst kein stiller Fallback).
+
 ### Medien-Storage (Hetzner Object Storage, S3) — siehe [storage/README.md](storage/README.md)
 | Variable | Zweck | Secret? | Quelle |
 |---|---|---|---|
@@ -109,9 +121,12 @@ verschlüsselten Coolify-Config-Sicherung. Diese Datei sagt nur, **welche** Vari
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase-URL (öffentlich) | nein | Coolify-Env (`is_buildtime`) |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | anon/publishable Key (öffentlich) | nein | Coolify-Env (`is_buildtime`) |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable (öffentlich) | nein | Coolify-Env (`is_buildtime`) |
+| `GOOGLE_FONTS_API_KEY` | Google-Fonts-Katalog im Page-Builder (server-only, Proxy `/api/google-fonts`; ohne Key → 503 im Font-Picker) | **ja** | → Passwort-Manager |
 
 > `NEXT_PUBLIC_*` sind per Definition öffentlich (Browser-sichtbar) → **kein Secret**,
 > müssen aber als **buildtime** gesetzt sein, weil Next.js sie beim Build inlined.
+> `GOOGLE_FONTS_API_KEY` hat bewusst **kein** `NEXT_PUBLIC_`-Präfix — er wird nur
+> server-seitig in der Proxy-Route gelesen und darf nie ins Browser-Bundle.
 
 ## App: `nextdays-plattform` (Next.js öffentliche Buchungsplattform)
 | Variable | Zweck | Secret? | Quelle |
@@ -119,6 +134,21 @@ verschlüsselten Coolify-Config-Sicherung. Diese Datei sagt nur, **welche** Vari
 | `NEXT_PUBLIC_API_URL` | API-Basis-URL | nein | Coolify-Env (`is_buildtime`) |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable | nein | Coolify-Env (`is_buildtime`) |
 | `NIXPACKS_NODE_VERSION` | Node-Version | nein | Coolify-Env |
+
+## App: `nextdays-builder` (White-Label-Site-Renderer, `builder/`)
+
+Rendert pro Custom-Domain die veröffentlichte Agentur-Website (siehe
+[builder/README.md](../builder/README.md)). Anders als die übrigen Frontends
+**kein Nixpacks**, sondern eigenes `builder/Dockerfile` (Multi-Stage, bun-Build,
+Next-Standalone unter Node, `HEALTHCHECK` auf `/healthz`; `HOSTNAME=0.0.0.0` ist
+bereits im Image gesetzt). Coolify-`base_directory` ist `builder/`. Die
+Cloudflare-Custom-Hostnames (`CLOUDFLARE_FALLBACK_ORIGIN`, s. o.) zeigen auf
+diese App. Stand der Erhebung (2026-06-30) noch nicht als Coolify-App angelegt.
+
+| Variable | Zweck | Secret? | Quelle |
+|---|---|---|---|
+| `NEXT_PUBLIC_SITE_URL` | eigener öffentlicher Origin der builder-App | nein | Coolify-Env (`is_buildtime`) |
+| `NEXT_PUBLIC_API_URL` | FastAPI-Backend (Ziel des `/api/v1`-Proxys) | nein | Coolify-Env (`is_buildtime`) |
 
 ## App: `nextdays-storybook` (Komponenten-Doku)
 | Variable | Zweck | Secret? | Quelle |

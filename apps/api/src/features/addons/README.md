@@ -70,6 +70,6 @@ Beide bleiben für diesen Zweck **bewusst liegen** (kein Doppel-Mechanismus).
   fließt als Extra-Umsatz in Total Price/Payout und damit in den Provisions-Split
   (provisionsfrei verkauft → keine channel_fee darauf).
 - **Payment-gegatet**: `status` bleibt `pending` bis bezahlt. Ohne aktiven
-  Payment-Provider (primär Revolut, Stripe sekundär — ADR-0003) gilt „zahlbar bei
+  Payment-Provider (primär Stripe, Revolut sekundär — ADR-0011) gilt „zahlbar bei
   Anreise" (manuell als paid markierbar); Anzeige/Buchung sind **nicht** an
   Payment blockiert.

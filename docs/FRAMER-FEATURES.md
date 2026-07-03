@@ -19,7 +19,7 @@ Layers/Pages/Assets links · Device-Frame-Canvas Mitte · Properties-Inspektor r
 
 ## 2. Insert / einfügbare Elemente
 - **Öffnen:** Insert-Button / `I`, Suchfeld, Drag-Drop.
-- **Layout:** Frame (F, draw), Stack (Auto-Layout), Grid. 🟡 (Frame ✅, Stack/Grid ❌)
+- **Layout:** Frame (F, draw), Stack (Auto-Layout), Grid. 🟡 (Frame ✅; Stack/Grid/Masonry ✅ als Editor-Container — rudimentär, werden nicht persistiert)
 - **Basic:** Text (T), Image (Fill/Fit/Stretch/Tile, Alt, lazy, AVIF/WebP), Video (Autoplay/Loop/Muted/Controls/Poster), SVG/Vector (Path-Edit, Icon-Sets), Embed (URL-iframe / HTML-Script). 🟡 (Hero/Abstand-Blöcke ✅, Rest ❌)
 - **Components:** Master/Instance (nur Frame/Stack konvertierbar), Variants, Overrides via Property-Controls, Slots (ComponentInstance). ❌
 - **Ready-made:** Ticker, Nav, Carousel, Accordion, Form, Lottie. ❌
@@ -27,8 +27,8 @@ Layers/Pages/Assets links · Device-Frame-Canvas Mitte · Properties-Inspektor r
 
 ## 3. Layout-System (CSS-Abbildung)
 - **Frame** = position:relative + Kinder absolute (Pins). **Stack** = flexbox. **Grid** = css-grid.
-- **Stack:** Direction (row/col), Distribute (start/center/end/space-between/around/evenly → justify-content), Align (→ align-items), Gap, Padding (uniform/per-side), Wrap. ❌
-- **Grid:** columns/rows (repeat(n,1fr)), gap, margins, maxWidth; per-Item colSpan/rowSpan. ❌
+- **Stack:** Direction (row/col), Distribute (start/center/end/space-between/around/evenly → justify-content), Align (→ align-items), Gap, Padding (uniform/per-side), Wrap. 🟡 (Basis-Container ✅, nicht persistiert; volle Steuerung offen)
+- **Grid:** columns/rows (repeat(n,1fr)), gap, margins, maxWidth; per-Item colSpan/rowSpan. 🟡 (Basis-Container ✅, nicht persistiert; per-Item-Spans offen)
 - **Sizing (W & H unabhängig):** Fixed | Relative(%) | Fill(flex:1 / 100%) | Fit(fit-content) | Viewport(vw/vh); + Min/Max; Aspect-Ratio-Lock. 🟡 (Frame Fixed ✅)
 - **Pins/Constraints:** Top/Right/Bottom/Left an/aus + Center-H/V; gegenüberliegend gepinnt = stretch. Position-Typ: relative/absolute/fixed/sticky. 🟡 (Pins-Widget ✅, Position-Typen ❌)
 - **Responsive:** jedes Property pro Breakpoint überschreibbar (Delta-Override, Vererbung groß→klein). 🟡
@@ -52,7 +52,7 @@ Fast JEDE Property hat das **⊕-Bind-Badge** (Variable binden). 🟡 (nur Opazi
 - **Triggers:** Click, ClickStart, MouseEnter/Leave, Appear, Scroll (Layer/Section-in-View, Direction), Time, Exit, Key, Custom-Event. ❌
 - **Actions:** Set Variant, Set Variable, Show Overlay, Navigate, Open URL, Scroll To, Trigger Event. ❌
 - **Transitions:** Instant; Tween (Duration/Delay/Ease: Linear/In/Out/InOut/Bezier); Spring (Physics: Stiffness/Damping/Mass | Time: Duration/Bounce). ❌
-- **Effects:** Appear, Hover, Press, Scroll, Scroll-Speed/Parallax, Sticky/Pin, Cursor (Replace/Follow). Props: Scale/Offset/Rotation/Opacity. ❌
+- **Effects:** Appear, Hover, Press, Scroll, Scroll-Speed/Parallax, Sticky/Pin, Cursor (Replace/Follow). Props: Scale/Offset/Rotation/Opacity. 🟡 (Hover/Press/Appear/Scroll/Parallax ✅ im Editor via motion/react — nicht persistiert; Sticky/Cursor ❌)
 - **Overlay-Trigger-Conditions:** Repeat/Cookie/URL-Param/Visited/Start-End/Form-Submit/Link-Click; And/Or.
 
 ## 7. Visuelle Effekte (stapelbare Style-Blöcke)
@@ -85,7 +85,7 @@ Fast JEDE Property hat das **⊕-Bind-Badge** (Variable binden). 🟡 (nur Opazi
 ## 10. Design-System / Tokens
 - **Color Styles:** name (/=Ordner), light (Pflicht) + dark (optional), RGBA (Alpha=Opacity). `Brand/Primary`→`--primary`. ❌
 - **Text Styles:** tag (h1-h6/p), font/size/lineHeight/letterSpacing, color-ref, minWidth + breakpoints[] (max 4, groß→klein). ❌
-- **Fonts:** web(Google)/custom(WOFF2-Upload)/variable(Achsen); Subsetting. ❌
+- **Fonts:** web(Google)/custom(WOFF2-Upload)/variable(Achsen); Subsetting. 🟡 (Google-Fonts-Picker + Runtime-Laden ✅ via /api/google-fonts; Upload/variable/Subsetting ❌)
 - **Themes:** light/dark/auto pro Page/Section (Section überschreibt); `data-theme`-Attribut. ❌
 - **Zusatz-Tokens** (nicht Framer-nativ): spacing/radius/borderWidth/shadow — rem statt px.
 
@@ -94,7 +94,9 @@ Fast JEDE Property hat das **⊕-Bind-Badge** (Variable binden). 🟡 (nur Opazi
 ## Bereits gebaut (Ist-Stand `apps/web/components/website/editor/`)
 Multi-Frame-Breakpoints + freies Verschieben + Snapping-Guides (rot durchgezogen + pink) · Hand-Tool ·
 Radius all/per-corner + Drag-Handles · Border-Popup · Opacity/Visible/Fill/Overflow ⊕-Bindung +
-Set-Variable-Kaskade · Variables-Editor (zentriert) · Zusatz-Stile-Popover (15 Einträge).
+Set-Variable-Kaskade · Variables-Editor (zentriert) · Zusatz-Stile-Popover (15 Einträge) ·
+Stack/Grid/Masonry-Container (rudimentär) · Effects-Sektion (Hover/Press/Appear/Scroll/Parallax) ·
+Google-Fonts-Picker (global + je Element). Persistenz-Grenze: nur die 10 Block-Typen (ARCHITECTURE §12).
 
 ## Priorisierter Bauplan (nächste Schritte)
 1. **Conditional-Value-Dialog** ("Overflow"-Dialog) mit echter Wirkung — direkt dran (§5).

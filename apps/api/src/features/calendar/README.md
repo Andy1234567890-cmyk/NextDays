@@ -1,7 +1,11 @@
 # Slice: calendar
 
-Vertical Slice. Enthält: router.py, service.py, schemas.py, tests/.
-Regeln: explizite Pydantic-Typisierung, kein direkter DB-Zugriff aus Routern,
-kein Exception-Swallowing. Siehe PROJECT.md.
+Multi-Kalender — die eine Wahrheit über Verfügbarkeit (`/api/v1/calendar`):
+Tages-Verfügbarkeit (`GET /availability`), Buchbarkeits-Check (`GET /check`),
+manuelle Sperrungen (`POST /block`), Preis-Overrides pro Tag
+(`POST /price-override`) und Bulk-Edit über Zeiträume (`POST /bulk-edit`).
 
-Status: **angelegt (leer)** — Implementierung folgt. `auth` ist Referenz-Muster.
+Außerdem: **Verkaufsstopp/Stop-Sell** (`GET/POST /stop-sell`,
+`POST /stop-sell/clear`; Migration 0089 — optional mit Reisebüro als
+Adressat) und Saisonpreis-Zeilen (`GET/POST /season-price`).
+Schreibende Endpunkte sind Capability-geschützt.

@@ -3,7 +3,41 @@
 Alle nennenswerten Änderungen an diesem Projekt werden hier dokumentiert.
 Format orientiert an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 
-## [Unreleased]
+## [Unreleased] — konsolidierter Stand Juli 2026
+
+Sammelnachtrag: zwischen dem Eintrag unten (Mai 2026, ~Migration 0015) und heute
+sind die Migrationen 0016–0090 sowie das komplette Dashboard entstanden. Die
+wichtigsten Punkte konsolidiert:
+
+### Hinzugefügt
+- **Page-Builder** (Migrationen 0086/0087, [ADR-0013](docs/decisions/0013-page-builder-renderer-editor-trennung.md)):
+  visueller craft.js-Editor im Dashboard (`apps/web`, Route `/website`),
+  neuer API-Slice `site_config` (Branding, Custom-Domains via Cloudflare for
+  SaaS, Seiten/Blöcke, Start-Templates, HMAC-Draft-Token) und eigenständige
+  Renderer-App `builder/` (Host→Tenant-Middleware, rendert nur veröffentlichte
+  Blöcke; Port 3200, eigenes Dockerfile). Spec: `docs/FRAMER-FEATURES.md`.
+- **Betriebsart** `tenants.accommodation_type` (`vacation_rental | hotel`,
+  Migration 0090): Wahl im 5-Schritte-Onboarding, steuert Sidebar-Navigation
+  und Begriffe im Dashboard.
+- **Reisebüro-/Partner-Kartei** `travel_agencies` (Migration 0088): Verträge
+  nach Jahren, Saison-Preiszeilen, Kontakte, Vertragsdokumente.
+- **Verkaufsstopp (Stop-Sell)** mit Channex-Push (Migration 0089, Endpunkte
+  `GET/POST /calendar/stop-sell`, `POST /calendar/stop-sell/clear`) inkl.
+  Reisebüro als Adressat der Stop-Sale-Meldung.
+- **Redis-Rate-Limiting** für die API (`core/ratelimit*.py`, 429 +
+  `Retry-After`/`X-RateLimit-*`) — Betrieb: `deploy/RATE-LIMITING.md`.
+
+### Geändert
+- **Zahlungs-Gateway: Stripe Connect Custom ist primär** ([ADR-0011](docs/decisions/0011-zahlungs-gateway-stripe-primaer.md),
+  ersetzt ADR-0003); Revolut bleibt sekundär im Adapter-Interface.
+- **Realtime-Client-Fix** (`apps/web/lib/use-realtime.ts`): dedizierter
+  Supabase-Client nur für Realtime, `realtime.setAuth(App-JWT)` **vor**
+  `subscribe()` — vorher liefen Subscriptions als `anon` und RLS filterte
+  alle Events weg.
+
+---
+
+## [Unreleased] — Stand Mai 2026
 
 ### Hinzugefügt
 - Monorepo-Gerüst (`apps/web`, `apps/api`, `packages/shared`, `docs/`).
@@ -39,7 +73,7 @@ Format orientiert an [Keep a Changelog](https://keepachangelog.com/de/1.1.0/).
 - Marketing-Website als entkoppelter Top-Level-Ordner `marketing/` (ADR-0002).
 - ADRs 0002–0007 ergänzt.
 
-### Offen
+### Offen (Stand Mai 2026 — inzwischen überholt, siehe konsolidierten Eintrag oben)
 - Frontend (Dashboard, Portale, i18n DE/DK/EN) noch nicht implementiert.
 - Slice-Geschäftslogik (außer auth) folgt gemäß Roadmap.
 - Revolut/Stripe-Gateway-Calls, Channel-Adapter, OCR noch Platzhalter.

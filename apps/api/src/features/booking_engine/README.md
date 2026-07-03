@@ -1,7 +1,10 @@
 # Slice: booking_engine
 
-Vertical Slice. Enthält: router.py, service.py, schemas.py, tests/.
-Regeln: explizite Pydantic-Typisierung, kein direkter DB-Zugriff aus Routern,
-kein Exception-Swallowing. Siehe PROJECT.md.
+Öffentliche Buchungsstrecke der Direktbuchung (`/api/v1/booking-engine`,
+Gäste haben keinen Login): Inserate-Liste + Detail (`/listings`,
+`/listings/{id}`), Verfügbarkeitsabfrage (`/availability`) und
+Buchungsanlage (`POST /reservations`).
 
-Status: **angelegt (leer)** — Implementierung folgt. `auth` ist Referenz-Muster.
+Nach der Buchung: Add-on-Verkaufsfläche für Gäste
+(`GET/POST /reservations/{id}/addons`) — buchbare `guest_portal`-Add-ons
+einsehen und nachkaufen, verifiziert über die Buchungs-E-Mail.

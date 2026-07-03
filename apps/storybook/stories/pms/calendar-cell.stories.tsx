@@ -179,7 +179,7 @@ export const BeispielWoche: Story = {
       { day: 21, status: "open", price: 150 },
     ];
     return (
-      <div className="grid w-[26rem] grid-cols-7 gap-1">
+      <div className="grid w-104 grid-cols-7 gap-1">
         {week.map((d) => (
           <CalendarCell
             key={d.day}

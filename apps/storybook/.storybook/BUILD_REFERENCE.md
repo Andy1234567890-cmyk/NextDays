@@ -8,6 +8,9 @@ Diese Datei ist die einzige Quelle der Wahrheit für den Komponenten-Bau. Nicht 
 - Varianten via `class-variance-authority` (cva) + `VariantProps`.
 - Radix-Primitive nutzen, wo sinnvoll (Dialog, Tabs, Checkbox, Switch, Select, Tooltip, Popover, Avatar, Label, Separator, Accordion, DropdownMenu).
 - Icons NUR via `@iconify/react` (`<Icon icon="ph:..." />`) — NIEMALS lucide-react.
+  Einzige Ausnahme: dokumentierte Inline-SVGs, die ein Original 1:1 spiegeln
+  (z.B. die Framer-Icons im Einfügen-Menü des Page-Builders) — mit
+  `currentColor`/`fillOpacity` statt fester Farben.
 - KEINE hartkodierten Hex-Farben. Nur semantische Token-Klassen: `bg-background text-foreground bg-primary text-primary-foreground bg-accent text-accent-foreground bg-secondary text-muted-foreground border-border ring-ring bg-destructive`.
 - Radius: `rounded-(--radius)`. Tailwind-v4-Kurzsyntax verwenden — NICHT `rounded-[var(--radius)]`/`ring-[var(--ring)]`; boolesche data-Attribute als `data-disabled:`.
 - Kommentare auf Deutsch, knapp.
@@ -22,9 +25,11 @@ Diese Datei ist die einzige Quelle der Wahrheit für den Komponenten-Bau. Nicht 
 
 ## Sidebar-Titel-Hierarchie (genau so)
 - Doku (MDX): `Einführung/...`  → z.B. `Einführung/Was ist myNextDays`
+- Architektur (MDX): `Architektur/...` → z.B. `Architektur/Page-Builder`
 - Design-Tokens: `Design/Tokens`
 - Primitive: `UI-Bausteine/<Name>`  → z.B. `UI-Bausteine/Input`
 - Fachlich: `PMS-Komponenten/<Name>` → z.B. `PMS-Komponenten/Multi-Kalender`
+- Page-Builder: `Page-Builder/<Name>` → z.B. `Page-Builder/Editor-Toolbar`
 
 ## ECHTE Enum-Werte (aus supabase/migrations — verbindlich)
 - user_role: `admin | co_admin | owner | staff | cleaner`
@@ -46,10 +51,13 @@ Diese Datei ist die einzige Quelle der Wahrheit für den Komponenten-Bau. Nicht 
 ## Fachliche Regeln (Lastenheft)
 - Beträge sind GLATT (keine Cent): `1.250 €` oder `8.500 Kr`. Sprachen DE/DK/EN.
 - Eigentümer sieht von Gästen nur Vorname + Netto/Nacht; Mitarbeiter keine Finanzen/Namen.
-- Zahlungs-Gateway: Revolut primär, Stripe sekundär.
+- Zahlungs-Gateway: Stripe primär (Connect Custom, ADR-0011), Revolut sekundär.
 - Status-Farben (Vorschlag, über Tokens/utility): pending=amber, confirmed/done=grün, cancelled=grau, completed=dunkelgrün, failed/blocked=destructive.
 
 ## Dateiort
-- Primitive: `components/ui/<name>.tsx` + `<name>.stories.tsx`
-- Fachlich: `components/pms/<name>.tsx` + `<name>.stories.tsx`
+- Primitive: `components/ui/<name>.tsx` + Story `stories/ui/<name>.stories.tsx`
+- Fachlich: `components/pms/<name>.tsx` + Story `stories/pms/<name>.stories.tsx`
+- Page-Builder-Nachbauten: `components/builder/<name>.tsx` + Story `stories/builder/<name>.stories.tsx`
+  (props-getriebene Nachbauten der Editor-Oberfläche aus `apps/web/components/website/editor/` —
+  OHNE craft.js/TipTap/Server-Abhängigkeiten; Interaktion über Callbacks/`console.log`)
 - Doku: `stories/<thema>.mdx`

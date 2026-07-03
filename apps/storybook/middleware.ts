@@ -7,7 +7,9 @@ import { updateSession } from "@/lib/supabase-server";
 
 // /healthz bleibt offen, damit der Coolify/Traefik-Healthcheck 200 erhält
 // (sonst würde die Auth-Middleware ihn auf /login umleiten → „unhealthy").
-const PUBLIC_PATHS = ["/login", "/auth", "/healthz"];
+// Das Logo braucht die Login-Seite selbst — ohne Freigabe würde die
+// Bild-Anfrage auf /login umgeleitet (kaputtes Bild).
+const PUBLIC_PATHS = ["/login", "/auth", "/healthz", "/Logo_transparent.png"];
 
 // Optionale strikte Allowlist. Wenn gesetzt (STORYBOOK_ALLOWED_EMAILS), dürfen
 // NUR diese E-Mails rein. Wenn LEER, darf jeder eingeloggte Nutzer rein — das

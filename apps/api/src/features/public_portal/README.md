@@ -1,7 +1,10 @@
 # Slice: public_portal
 
-Vertical Slice. Enthält: router.py, service.py, schemas.py, tests/.
-Regeln: explizite Pydantic-Typisierung, kein direkter DB-Zugriff aus Routern,
-kein Exception-Swallowing. Siehe PROJECT.md.
+Eigentümer-Portal (`/api/v1/public-portal`): Eigentümer sehen **nur die ihnen
+zugeordneten Objekte** (Owner-Scope, Lastenheft §4.2) — Objektliste
+(`/properties`), Belegungskalender (`/calendar`), Erträge (`/earnings`) und
+Abrechnungen (`/statements`).
 
-Status: **angelegt (leer)** — Implementierung folgt. `auth` ist Referenz-Muster.
+Aktiv werden dürfen sie nur begrenzt: Sperrung **beantragen**
+(`POST /block-requests`, Freigabe durch die Agentur) und Zählerstände
+erfassen (`POST /meter-readings`).

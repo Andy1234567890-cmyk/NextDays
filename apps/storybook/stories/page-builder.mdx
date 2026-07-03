@@ -1,0 +1,299 @@
+import { Meta } from "@storybook/blocks";
+import { Mermaid } from "@/components/docs/mermaid";
+import { De, En } from "@/components/docs/lang";
+
+<Meta title="Architektur/Page-Builder" />
+
+<De>
+
+# Page-Builder
+
+Der Page-Builder ist der Multi-Tenant-White-Label-Website-Builder von myNextDays: Jede Agentur baut im Dashboard eine mehrseitige eigene Website in einem **Framer-artigen visuellen Editor** und veröffentlicht sie unter der **eigenen Custom-Domain**. Der Vorsprung gegenüber reinen Website-Buildern: die **Buchungs-Engine ist ein einbettbarer Block** (Suche, Objekt-Grid) — keine getrennte Welt.
+
+Die Nachbauten der Editor-Oberfläche liegen in der Rubrik **Page-Builder** (Editor-Toolbar, Seiten-Panel, Ebenen-Baum, Insert-Panel, Einfügen-Menü, Font-Picker, Zoom-Leiste).
+
+</De>
+
+<En>
+
+# Page builder
+
+The page builder is myNextDays' multi-tenant white-label website builder: every agency composes its own multi-page website in a **Framer-style visual editor** inside the dashboard and publishes it on its **own custom domain**. The edge over generic builders: the **booking engine is an embeddable block** (search, property grid) — not a separate world.
+
+The workshop replicas of the editor UI live in the **Page-Builder** section (editor toolbar, pages panel, layer tree, insert panel, insert menu, font picker, zoom bar).
+
+</En>
+
+<De>
+
+## Drei getrennte Ebenen
+
+Der Page-Builder besteht aus drei physisch getrennten Teilen: dem **Editor** im Dashboard (`apps/web`, craft.js-Canvas), dem **Backend-Slice** `site_config` (FastAPI) und der eigenständigen **Renderer-App** `builder/` (Next.js), die veröffentlichte Seiten pro Custom-Domain ausliefert.
+
+<Mermaid
+  title="Datenfluss Editor → Datenbank → Renderer"
+  chart={`flowchart LR
+    subgraph web["apps/web — Dashboard"]
+        editor["Canvas-Editor (craft.js)\nFrames · Ebenen · Inspektor"]
+        actions["Server-Actions\nlib/site-pages.ts (syncBlocks-Diff)"]
+    end
+    subgraph api["apps/api — FastAPI"]
+        manage["manage_router\n/api/v1/site-config (JWT + Capability)"]
+        public["public_router\n/api/v1/site (ohne JWT, service-role)"]
+        cf["Cloudflare for SaaS\nCustom-Domain-TLS"]
+    end
+    subgraph db["Supabase Postgres"]
+        pages[("site_pages")]
+        blocks[("site_blocks")]
+        branding[("tenant_site_config")]
+        domains[("tenant_custom_domains")]
+    end
+    subgraph renderer["builder/ — Renderer-App"]
+        mw["middleware.ts\nHost → Tenant"]
+        render["block-renderer.tsx\n10 Block-Typen"]
+    end
+    besucher(("Besucher\nCustom-Domain"))
+
+    editor --> actions --> manage
+    manage --> pages & blocks & branding
+    manage --> cf
+    cf --> domains
+    besucher --> mw --> public
+    public --> pages & blocks & branding & domains
+    public --> render`}
+/>
+
+## Datenmodell
+
+Vier Tabellen (Migrationen `0086` + `0087`), alle mit Tenant-RLS (default-deny) und Realtime-Publication:
+
+<Mermaid
+  title="ER-Diagramm Page-Builder"
+  chart={`erDiagram
+    tenants ||--o| tenant_site_config : "1:1 Branding"
+    tenants ||--o{ tenant_custom_domains : "Custom-Domains"
+    tenants ||--o{ site_pages : ""
+    site_pages ||--o{ site_blocks : "geordnete Blöcke"
+
+    tenant_site_config {
+        uuid tenant_id UK
+        text site_name
+        text primary_color "Hex #rrggbb"
+        text secondary_color
+        text font_family
+        jsonb about_text "mehrsprachig"
+        text booking_mode "instant|inquiry|both"
+    }
+    tenant_custom_domains {
+        text domain UK
+        text cf_custom_hostname_id
+        text status "pending|active|error"
+        text ssl_status
+    }
+    site_pages {
+        uuid tenant_id FK
+        text slug "leer = Startseite"
+        text title
+        bool is_home "genau eine je Tenant"
+        bool is_published
+        int nav_order
+    }
+    site_blocks {
+        uuid tenant_id FK
+        uuid page_id FK
+        text type "10 Block-Typen"
+        int position
+        jsonb content "pro Typ validiert"
+        jsonb settings
+    }`}
+/>
+
+**Die 10 Block-Typen:** `hero` · `rich_text` · `image` · `gallery` · `button` · `spacer` · `contact` · `search` · `properties_grid` · `featured_properties`. Der `content` jedes Blocks wird im Backend gegen ein typspezifisches Schema validiert (mehrsprachige Texte als Sprach-Map, Farben nur als Hex).
+
+## Veröffentlichen & Ausliefern
+
+<Mermaid
+  title="Seite bearbeiten → veröffentlichen → öffentlicher Abruf"
+  chart={`sequenceDiagram
+    participant A as Agentur (Editor)
+    participant W as apps/web (Server-Actions)
+    participant API as FastAPI site_config
+    participant DB as Postgres
+    participant B as builder/ (Renderer)
+    participant G as Besucher
+
+    A->>W: Speichern (craft.js-Baum)
+    W->>W: serialize.ts: Baum → flache Blockliste
+    W->>API: syncBlocks-Diff (add/update/reorder/delete)
+    API->>DB: tenant-gescoped schreiben
+    A->>API: POST /pages/id/publish
+    API->>DB: is_published = true
+    G->>B: GET https://ferien-mueller.de/haeuser
+    B->>API: /site/by-domain?host=… (Middleware)
+    API-->>B: tenant_id + Branding
+    B->>API: /site/page?host=…&slug=haeuser
+    API-->>B: nur veröffentlichte Blöcke
+    B-->>G: gerenderte Seite (Block-Renderer)`}
+/>
+
+Für die Vorschau unveröffentlichter Stände gibt es einen **HMAC-signierten Draft-Token** (`POST /pages/{id}/draft-token`, TTL 1 h): `builder/app/render/[pageId]` rendert damit auch Entwürfe — ohne dass je ein JWT in einen iframe wandert. Die postMessage-Brücke zum Editor existiert als Infrastruktur, ist im aktuellen Editor aber **noch nicht verdrahtet** (der Editor rendert die Nodes direkt).
+
+## Editor-Modell vs. Persistenz-Modell (wichtig)
+
+Der Editor ist bewusst weiter als das Speicherformat — das ist dokumentierter Ausbau-Stand, kein Versehen (Bau-Vorlage: `docs/FRAMER-FEATURES.md`):
+
+| Editor (craft.js) | Persistenz (site_blocks) |
+| --- | --- |
+| Hierarchischer Node-Baum, freie **Frames** (x/y/Breite/Höhe), Container **Stack/Grid/Masonry** | Flache, geordnete Liste der **10 Block-Typen** |
+| Page-**Variablen** mit Bindungen, **Code-Overrides**, Effekte (Hover/Scroll/Parallax) | nicht persistiert (In-Memory im Editor) |
+| Voller Stil-Inspektor (Pins, Size-Modi, Radius je Ecke, Schatten, …) | `settings`: Hintergrund, Padding, volle Breite, Opazität, Sichtbarkeit, Radius, Drehung |
+
+Beim Speichern übersetzt `serialize.ts` den Baum in die flache Blockliste; Layout-Container und ihre Kinder gehen dabei **verloren**. Der öffentliche Renderer kennt nur die 10 Block-Typen.
+
+## Externe Dienste & Schlüssel
+
+| Dienst | Zweck | Konfiguration |
+| --- | --- | --- |
+| Google Fonts API | voller Schriftkatalog im Font-Picker | `GOOGLE_FONTS_API_KEY` (apps/web, server-seitig) |
+| Cloudflare for SaaS | Custom-Domain-TLS (Custom Hostnames) | `cloudflare_*`-Variablen (apps/api) |
+| Unsplash | Bilder der Start-Templates | keine (statische URLs) |
+| Draft-Token | Entwurfs-Vorschau ohne JWT | `SITE_DRAFT_SECRET` (apps/api) |
+
+</De>
+
+<En>
+
+## Three separate layers
+
+The page builder consists of three physically separate parts: the **editor** in the dashboard (`apps/web`, craft.js canvas), the **backend slice** `site_config` (FastAPI), and the standalone **renderer app** `builder/` (Next.js) that serves published pages per custom domain.
+
+<Mermaid
+  title="Data flow editor → database → renderer"
+  chart={`flowchart LR
+    subgraph web["apps/web — dashboard"]
+        editor["Canvas editor (craft.js)\nframes · layers · inspector"]
+        actions["Server actions\nlib/site-pages.ts (syncBlocks diff)"]
+    end
+    subgraph api["apps/api — FastAPI"]
+        manage["manage_router\n/api/v1/site-config (JWT + capability)"]
+        public["public_router\n/api/v1/site (no JWT, service role)"]
+        cf["Cloudflare for SaaS\ncustom-domain TLS"]
+    end
+    subgraph db["Supabase Postgres"]
+        pages[("site_pages")]
+        blocks[("site_blocks")]
+        branding[("tenant_site_config")]
+        domains[("tenant_custom_domains")]
+    end
+    subgraph renderer["builder/ — renderer app"]
+        mw["middleware.ts\nhost → tenant"]
+        render["block-renderer.tsx\n10 block types"]
+    end
+    visitor(("Visitor\ncustom domain"))
+
+    editor --> actions --> manage
+    manage --> pages & blocks & branding
+    manage --> cf
+    cf --> domains
+    visitor --> mw --> public
+    public --> pages & blocks & branding & domains
+    public --> render`}
+/>
+
+## Data model
+
+Four tables (migrations `0086` + `0087`), all with tenant RLS (default deny) and realtime publication:
+
+<Mermaid
+  title="ER diagram page builder"
+  chart={`erDiagram
+    tenants ||--o| tenant_site_config : "1:1 branding"
+    tenants ||--o{ tenant_custom_domains : "custom domains"
+    tenants ||--o{ site_pages : ""
+    site_pages ||--o{ site_blocks : "ordered blocks"
+
+    tenant_site_config {
+        uuid tenant_id UK
+        text site_name
+        text primary_color "hex #rrggbb"
+        text secondary_color
+        text font_family
+        jsonb about_text "multilingual"
+        text booking_mode "instant|inquiry|both"
+    }
+    tenant_custom_domains {
+        text domain UK
+        text cf_custom_hostname_id
+        text status "pending|active|error"
+        text ssl_status
+    }
+    site_pages {
+        uuid tenant_id FK
+        text slug "empty = home page"
+        text title
+        bool is_home "exactly one per tenant"
+        bool is_published
+        int nav_order
+    }
+    site_blocks {
+        uuid tenant_id FK
+        uuid page_id FK
+        text type "10 block types"
+        int position
+        jsonb content "validated per type"
+        jsonb settings
+    }`}
+/>
+
+**The 10 block types:** `hero` · `rich_text` · `image` · `gallery` · `button` · `spacer` · `contact` · `search` · `properties_grid` · `featured_properties`. Each block's `content` is validated against a type-specific schema in the backend (multilingual text as a locale map, colors as hex only) — the booking blocks embed the real booking engine.
+
+## Publish & serve
+
+<Mermaid
+  title="Edit page → publish → public request"
+  chart={`sequenceDiagram
+    participant A as Agency (editor)
+    participant W as apps/web (server actions)
+    participant API as FastAPI site_config
+    participant DB as Postgres
+    participant B as builder/ (renderer)
+    participant G as Visitor
+
+    A->>W: Save (craft.js tree)
+    W->>W: serialize.ts: tree → flat block list
+    W->>API: syncBlocks diff (add/update/reorder/delete)
+    API->>DB: tenant-scoped writes
+    A->>API: POST /pages/id/publish
+    API->>DB: is_published = true
+    G->>B: GET https://ferien-mueller.de/haeuser
+    B->>API: /site/by-domain?host=… (middleware)
+    API-->>B: tenant_id + branding
+    B->>API: /site/page?host=…&slug=haeuser
+    API-->>B: published blocks only
+    B-->>G: rendered page (block renderer)`}
+/>
+
+For previewing unpublished drafts there is an **HMAC-signed draft token** (`POST /pages/{id}/draft-token`, TTL 1 h): `builder/app/render/[pageId]` renders drafts with it — no JWT ever enters an iframe. The postMessage bridge to the editor exists as infrastructure but is **not wired up** in the current editor (the editor renders the nodes directly).
+
+## Editor model vs. persistence model (important)
+
+The editor intentionally runs ahead of the storage format (build spec: `docs/FRAMER-FEATURES.md`):
+
+| Editor (craft.js) | Persistence (site_blocks) |
+| --- | --- |
+| Hierarchical node tree, free-floating **frames** (x/y/width/height), **stack/grid/masonry** containers | Flat, ordered list of the **10 block types** |
+| Page **variables** with bindings, **code overrides**, effects (hover/scroll/parallax) | not persisted (in-memory in the editor) |
+| Full style inspector (pins, sizing modes, per-corner radius, shadows, …) | `settings`: background, padding, full width, opacity, visibility, radius, rotation |
+
+On save, `serialize.ts` flattens the tree into the block list; layout containers and their children are **dropped**. The public renderer only knows the 10 block types.
+
+## External services & keys
+
+| Service | Purpose | Configuration |
+| --- | --- | --- |
+| Google Fonts API | full font catalog in the font picker | `GOOGLE_FONTS_API_KEY` (apps/web, server-side) |
+| Cloudflare for SaaS | custom-domain TLS (custom hostnames) | `cloudflare_*` variables (apps/api) |
+| Unsplash | imagery for the starter templates | none (static URLs) |
+| Draft token | draft preview without a JWT | `SITE_DRAFT_SECRET` (apps/api) |
+
+</En>

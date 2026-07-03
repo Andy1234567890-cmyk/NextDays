@@ -1,7 +1,14 @@
 # ADR-0010: Production-Deployment via Coolify auf Hetzner CX43
 
-- Status: **akzeptiert**
+- Status: **akzeptiert** (Frontend-Aussage aktualisiert, siehe Nachtrag unten)
 - Datum: 2026-06-20
+
+> **Nachtrag (Juli 2026):** Die ursprüngliche Annahme „Next.js-Frontends bleiben
+> auf Vercel" gilt nicht mehr — **alle Frontends laufen inzwischen als
+> Coolify-Apps auf demselben Server** (`nextdays-web`, `nextdays-plattform`,
+> `nextdays-storybook`, `nextdays-marketing`; der Website-Renderer `builder/`
+> bringt ein eigenes Dockerfile mit). Der Rest dieser ADR (Server-Sizing,
+> Supabase-Stack, Betrieb) gilt unverändert.
 
 ## Kontext
 

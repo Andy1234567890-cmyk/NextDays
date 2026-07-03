@@ -14,7 +14,7 @@ Interaktive Doku (Swagger UI): **http://localhost:8000/docs**
 
 ## Slices
 
-Jeder der 22 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
+Jeder der 24 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
 
 | Slice | Health-Endpoint |
 |---|---|
@@ -32,6 +32,7 @@ Jeder der 22 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
 | payments | `GET /api/v1/payments/health` (Stripe Connect + Zahlungen, s.u.) |
 | channel_manager | `GET /api/v1/channel-manager/health` (Channex-Integration, s.u.) |
 | booking_engine | `GET /api/v1/booking-engine/health` |
+| site_config | `GET /api/v1/site-config/health` (Page-Builder, s.u.) |
 | addons | `GET /api/v1/addons/health` |
 | owners | `GET /api/v1/owners/health` (Eigentümer-Stammdaten + Objekt-Zuweisung, s.u.) |
 | owner_statements | `GET /api/v1/owner-statements/health` (Auszahlungs-Abrechnung, s.u.) |
@@ -339,8 +340,9 @@ erscheinen live im Kalender. Basispreis setzen: `PUT /api/v1/rates/base-price`
 ## calendar (Kern-Logik implementiert)
 
 Herzstück (Lastenheft §2.2). Double-Booking-Schutz über die `availability`-Tabelle.
-Alle Endpoints erfordern Auth; `block`/`price-override` zusätzlich die Capability
-`manage_calendar`, Leseendpoints `view_calendar`.
+Alle Endpoints erfordern Auth; `block`/`price-override`/`stop-sell` zusätzlich die
+Capability `manage_calendar` (Stop-Sell-Schreibpfade außerdem die
+Lodgify-Berechtigung `edit_calendar_bookings`), Leseendpoints `view_calendar`.
 
 | Methode | Pfad | Beschreibung |
 |---|---|---|
@@ -348,6 +350,9 @@ Alle Endpoints erfordern Auth; `block`/`price-override` zusätzlich die Capabili
 | `GET` | `/api/v1/calendar/check?property_id&start&end` | Verfügbarkeit + Konflikttage (Double-Booking-Prüfung) |
 | `POST` | `/api/v1/calendar/block` | Tage sperren — `409`, wenn bereits gebucht |
 | `POST` | `/api/v1/calendar/price-override` | Tagespreis setzen; `price: null` nimmt zurück |
+| `GET` | `/api/v1/calendar/stop-sell?property_id&start&end` | Verkaufsstopps im Zeitraum: `items[]` je Tag mit `id`, `date`, `reason`, `source` (`manual`\|`channex`), `agency_id` + `total`. `view_calendar` |
+| `POST` | `/api/v1/calendar/stop-sell` | Verkaufsstopp setzen: `{property_id, range, reason?, weekdays?, agency_id?}` → `{stopped_days}`. `weekdays` = ISO-Wochentagsmaske (0=Mo…6=So, nur passende Tage), `agency_id` = Adressat der Stop-Sale-Meldung (`travel_agencies`, `null` = alle Kanäle). Wird als `stop_sell`-Restriction an Channex gepusht |
+| `POST` | `/api/v1/calendar/stop-sell/clear` | Verkaufsstopp aufheben: `{property_id, range, weekdays?}` → `{status:"ok"}`. Löscht **nur manuelle** Stopps (`source=manual`); Channex-Stopps spiegeln den OTA-Stand und bleiben unangetastet. `stop_sell=false` geht nur für Tage an Channex, die danach wirklich frei sind |
 | `POST` | `/api/v1/calendar/bulk-edit` | Preis/Min-Stay/Sperre/Stop-Sell über mehrere Objekte × Zeitraum — `404` (fremdes Objekt) |
 
 ```json
@@ -951,6 +956,18 @@ am Check-out (kein Fallback → 502). Reporting-/Billing-geschützt.
 - `AuthContext` (`user_id`, `tenant_id`, `role`) wird aus den JWT-Claims gelesen.
 - Geschützte Endpoints nutzen die `CurrentUser`-Dependency.
 
+### Rate-Limiting
+
+Alle Endpunkte laufen durch einen **Redis-backed Rate-Limiter** (ASGI-Middleware,
+`core/ratelimit.py` + `ratelimit_middleware.py`) mit gestaffelten Buckets
+(Default/IP, Auth, Payments, Listings, pro Tenant — per Env konfigurierbar). Bei
+Überschreitung antwortet die API mit **HTTP `429`** + Headern **`Retry-After`**
+(Restsekunden des Fensters), **`X-RateLimit-Limit`** und
+**`X-RateLimit-Remaining`** — Clients sollten `Retry-After` respektieren. Bei
+Redis-Ausfall gilt fail-open, für sensible Pfade (Auth/Payments) fail-closed
+(`503` + `Retry-After`). Limits, Env-Schalter und Betriebsdetails:
+**[deploy/RATE-LIMITING.md](../deploy/RATE-LIMITING.md)**.
+
 > Die übrigen Slices (properties, calendar, …) werden nach dem auth-Muster
 > ausgebaut. Diese Übersicht wird dabei fortgeschrieben.
 
@@ -974,3 +991,83 @@ privaten Bucket `agency-contracts` (Download nur als signierte URL).
 Verknüpfung Verkaufsstopp: `POST /api/v1/calendar/stop-sell` akzeptiert
 `agency_id` (Adressat der Stop-Sale-Meldung) und `weekdays` (ISO 0=Mo…6=So);
 manuelle Stopps werden als `stop_sell`-Restriction an Channex gepusht.
+
+---
+
+## site_config (Page-Builder — implementiert)
+
+Backend des Page-Builders (Architektur + Datenmodell:
+[ARCHITECTURE.md §12](ARCHITECTURE.md#12-page-builder)).
+Der Slice mountet **zwei Router**: den Dashboard-Router `/api/v1/site-config`
+(JWT + Capability `MANAGE_SITE_CONFIG`, tenant-gescoped — jeder Zugriff wird
+explizit auf den Tenant aus dem JWT gefiltert; ohne Tenant im Konto → `400`)
+und den öffentlichen Resolver `/api/v1/site` (**kein JWT**, service-role) für
+den `builder/`-Renderer der myNextDays-Websites.
+
+### Branding & Custom-Domains (`/api/v1/site-config`)
+
+| Methode | Pfad | Beschreibung |
+|---|---|---|
+| `GET` | `/api/v1/site-config/health` | Slice-Status |
+| `GET` | `/api/v1/site-config` | Branding lesen (`site_name`, `tagline`, `logo_url`, `hero_image_url`, `primary_color`/`secondary_color` (Hex `#rrggbb`), `font_family`, `about_text`/`contact_text`/`social_links` (i18n-/Key-Objekte), `booking_mode` `instant\|inquiry\|both`); leere Config → Defaults/None |
+| `PUT` | `/api/v1/site-config` | Branding setzen — Teil-Update, nur gesendete Felder werden geschrieben |
+| `GET` | `/api/v1/site-config/domains` | Custom-Domains des Tenants (`status` `pending\|active\|error`, `ssl_status`, `dns_records[]`; die interne Cloudflare-Hostname-ID wird bewusst nicht exponiert) |
+| `POST` | `/api/v1/site-config/domains` | Domain verbinden → `201`; legt den Cloudflare-Custom-Hostname an und liefert die zu setzenden DNS-Records (CNAME + TXT-Validierung). `409` Domain bereits vergeben (global unique); `503` Cloudflare nicht konfiguriert |
+| `POST` | `/api/v1/site-config/domains/{domain_id}/sync` | Status/SSL-Status frisch von Cloudflare spiegeln (`pending` → `active`). `409` wenn nicht mit Cloudflare verknüpft |
+| `DELETE` | `/api/v1/site-config/domains/{domain_id}` | Domain trennen → `204` (Cloudflare-`404` wird toleriert) |
+
+### Seiten (`/api/v1/site-config/pages`)
+
+| Methode | Pfad | Beschreibung |
+|---|---|---|
+| `GET` | `/api/v1/site-config/pages` | Seiten des Tenants (sortiert nach `nav_order`) |
+| `POST` | `/api/v1/site-config/pages` | Seite anlegen → `201`. Body `{title, slug?}`; `slug` nur `a-z 0-9 -`, leer = Home-Slug. Die **erste** Seite eines Tenants wird automatisch Home. `409` Slug bereits vergeben |
+| `PUT` | `/api/v1/site-config/pages/{page_id}` | Seite ändern (Teil-Update): `title`, `slug`, `seo_title`, `seo_description`, `og_image_url`, `nav_order`. `409` Slug-Kollision |
+| `POST` | `/api/v1/site-config/pages/{page_id}/home` | Seite zur Home-Seite machen (genau eine je Tenant, partieller Unique-Index) |
+| `POST` | `/api/v1/site-config/pages/{page_id}/publish` | veröffentlichen (`is_published=true`) |
+| `POST` | `/api/v1/site-config/pages/{page_id}/unpublish` | Veröffentlichung zurücknehmen |
+| `DELETE` | `/api/v1/site-config/pages/{page_id}` | Seite löschen → `204` (Blöcke per FK-Cascade) |
+| `POST` | `/api/v1/site-config/pages/{page_id}/draft-token` | Kurzlebigen Vorschau-Token erzeugen → `{token}` (s. u.) |
+
+### Blöcke (`/api/v1/site-config/…/blocks`)
+
+| Methode | Pfad | Beschreibung |
+|---|---|---|
+| `GET` | `/api/v1/site-config/pages/{page_id}/blocks` | Blöcke einer Seite (nach `position` sortiert) |
+| `POST` | `/api/v1/site-config/pages/{page_id}/blocks` | Block anlegen → `201`. Body `{type, content?, settings?}`; wird ans Ende positioniert |
+| `PUT` | `/api/v1/site-config/blocks/{block_id}` | `content`/`settings` ändern (der `type` ist unveränderlich) |
+| `POST` | `/api/v1/site-config/pages/{page_id}/blocks/reorder` | Neu ordnen: `{ordered_ids}` muss **exakt** die Block-Menge der Seite sein, sonst `400` |
+| `DELETE` | `/api/v1/site-config/blocks/{block_id}` | Block löschen → `204` |
+| `POST` | `/api/v1/site-config/templates/apply` | Start-Template anwenden: `{template_id}` (`bergchalet`\|`kueste`\|`stadt`) → Seitenliste; `404` unbekanntes Template |
+
+**Block-Typen (10) + Content-Validierung:** `hero` · `rich_text` · `image` ·
+`gallery` · `button` · `spacer` · `contact` · `search` · `properties_grid` ·
+`featured_properties`. Der `content` wird **pro Typ** gegen ein eigenes
+Pydantic-Schema validiert und normalisiert (`validate_block_content`) — Felder
+außerhalb des Schemas werden verworfen, ungültiger Inhalt → `400`. Texte sind
+i18n-Objekte (`{locale: text}`). `settings` sind typunabhängig
+(`background_color` Hex, `padding` `none|sm|md|lg`, `full_width`, `opacity`,
+`visible`, `radius`, `rotation`).
+
+**Font-Katalog:** Die Schriftauswahl des Editors (voller Google-Fonts-Katalog)
+läuft **nicht** über FastAPI, sondern über die server-seitige Next.js-Route
+`/api/google-fonts` in `apps/web` (Key `GOOGLE_FONTS_API_KEY`; ohne Key → `503`).
+
+### Öffentlicher Resolver (`/api/v1/site`, KEIN JWT)
+
+| Methode | Pfad | Beschreibung |
+|---|---|---|
+| `GET` | `/api/v1/site/by-domain?host=` | Host → Tenant + **öffentliches** Branding (`PublicSiteResponse`: `tenant_id`, Branding-Felder — keine Domain-/Cloudflare-Interna). Nur Domains mit `status=active`; `422` fehlender/zu kurzer Host (Query-Validierung `min_length=3`), `400` Whitespace-Host, `404` unbekannte Domain. Wird von der `builder/`-Middleware je Request aufgerufen |
+| `GET` | `/api/v1/site/page?host=&slug=` | Veröffentlichte Seite + Blöcke + Branding (`PublicPageResponse`) für den Renderer. Nur `is_published`; leerer `slug` → Home-Seite; unbekannt → `404` |
+| `GET` | `/api/v1/site/page/draft?page_id=&token=` | Entwurfs-Render für die Editor-Vorschau — liefert auch **unveröffentlichte** Seiten. `403` bei ungültigem/abgelaufenem Token |
+
+**Draft-Token-Mechanik:** `POST /site-config/pages/{id}/draft-token` signiert
+`tenant_id.page_id.exp` per **HMAC-SHA256** mit `SITE_DRAFT_SECRET`
+(Token-Format `{exp}.{sig}`, **TTL 3600 s**); `GET /site/page/draft` verifiziert
+konstant-zeitig (`hmac.compare_digest`). So kann der Editor eine Vorschau ohne
+JWT rendern lassen, ohne unveröffentlichte Inhalte öffentlich zu machen.
+
+**Frontend-Anbindung:** Server-Actions in `apps/web/lib/site-pages.ts` +
+`lib/site-config.ts` (u. a. `syncBlocks()` als Diff-Orchestrator des Editors —
+es gibt bewusst keinen Bulk-Endpunkt); der `builder/`-Renderer ruft den
+öffentlichen Resolver über seinen eigenen Proxy (`builder/app/api/v1/[...path]/route.ts`).

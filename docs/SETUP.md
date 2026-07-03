@@ -43,8 +43,12 @@ Relevante Werte: `API URL`, `anon key`, `service_role key`, `JWT secret`.
 supabase db reset
 ```
 
-Das spielt alle Migrationen aus `supabase/migrations/` (0001–0019) frisch ein:
-Tabellen (41), Enums, Indizes, RLS-Policies und Helper-Funktionen.
+Das spielt alle 90 Migrationen aus `supabase/migrations/` (0001–0090) frisch ein:
+Tabellen (101), Enums, Indizes, RLS-Policies und Helper-Funktionen.
+
+> **Produktion:** Auf dem Server laufen Migrationen NICHT automatisch — dort
+> immer über `supabase/apply-migrations.sh` einspielen (Tracking in
+> `schema_migrations`).
 
 > **Verifikation:** In Studio (http://localhost:54323) sollten alle Kern- und
 > Marktplatz-Tabellen sichtbar sein, mit aktivierter RLS.
@@ -101,14 +105,49 @@ ruff check src    # Lint (inkl. Security-Regeln)
 Integration-Tests (Marker `integration`) laufen automatisch mit, sobald der
 Supabase-Stack erreichbar ist.
 
-## Web-Frontend
-
-> Noch nicht eingerichtet — folgt in einem späteren Schritt (siehe [NOTES.md](../NOTES.md)).
+## Web-Frontend (`apps/web` — Dashboard inkl. Website-Editor)
 
 ```bash
 cd apps/web
 bun install
-bun dev
+cp .env.example .env.local   # Werte eintragen, siehe Kommentare in der Datei
+bun run dev                  # → http://localhost:3000
+```
+
+Wichtige Variablen in `.env.local` (Details in `apps/web/.env.example`):
+
+| Variable | Zweck |
+|---|---|
+| `NEXT_PUBLIC_API_URL` | FastAPI-Backend (lokal `http://localhost:8000`) |
+| `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase (Auth/Realtime) |
+| `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` | Karten |
+| `GOOGLE_FONTS_API_KEY` | **server-only** — Google-Fonts-Katalog im Page-Builder (Proxy `/api/google-fonts`); ohne Key antwortet der Font-Picker mit 503 |
+
+## builder (`builder/` — White-Label-Site-Renderer)
+
+Eigenständige Next.js-App, die pro Custom-Domain die veröffentlichte
+Agentur-Website rendert (Details: [builder/README.md](../builder/README.md)).
+
+```bash
+cd builder
+bun install
+bun run dev                  # → http://localhost:3200
+```
+
+`builder/.env.local` (nicht committen):
+
+```ini
+NEXT_PUBLIC_SITE_URL=http://localhost:3200
+NEXT_PUBLIC_API_URL=http://localhost:8000   # FastAPI (Proxy-Ziel von /api/v1/*)
+```
+
+## Storybook (`apps/storybook` — Design-System)
+
+```bash
+cd apps/storybook
+bun install
+bun run storybook            # nur Storybook   → http://localhost:6006
+bun run dev                  # mit Auth-Hülle  → http://localhost:6007
 ```
 
 ## Troubleshooting

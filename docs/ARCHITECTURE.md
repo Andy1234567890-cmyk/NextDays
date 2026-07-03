@@ -19,6 +19,8 @@
 8. [Reservierungs-Lifecycle (State)](#8-reservierungs-lifecycle-state)
 9. [Deployment & Skalierung](#9-deployment--skalierung)
 10. [Backend-Aufbau (Vertical Slices)](#10-backend-aufbau-vertical-slices)
+11. [Frontend & Design-System (apps/web)](#11-frontend--design-system-appsweb)
+12. [Page-Builder](#12-page-builder)
 
 ---
 
@@ -78,12 +80,13 @@ C4Container
 
     Container_Boundary(nd, "NextDays") {
         Container(marketing, "Marketing-Website", "Next.js (entkoppelt)", "Landing/Pricing/Blog — KEINE PMS/Auth-Kopplung (ADR-0002)")
-        Container(web, "Web Dashboard", "Next.js, TypeScript", "Vermieter-PMS-UI + Portale (Vercel)")
+        Container(web, "Web Dashboard", "Next.js, TypeScript", "Vermieter-PMS-UI + Portale (Coolify-App)")
         Container(mobile, "Mobile-App", "React Native 0.86 + React Navigation (apps/mobile)", "Native Gäste- & Gastgeber-App (iOS/Android); teilt das FastAPI-Backend (/api/v1)")
         Container(storybook, "Storybook", "react-vite (eigenes Package apps/storybook)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
-        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 22 Vertical Slices unter /api/v1")
-        ContainerDb(db, "Datenbank", "Supabase / Postgres", "93 Tabellen, Multi-Tenant, RLS, tenant_id")
-        ContainerDb(cache, "Cache", "Redis", "Caching-Layer")
+        Container(builder, "Website-Renderer", "Next.js (builder/, Port 3200)", "Öffentliche White-Label-Websites der Vermieter (Page-Builder); Host→Tenant über den by-domain-Resolver")
+        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 24 Vertical Slices unter /api/v1; Redis-Rate-Limiter als ASGI-Middleware (429 + Retry-After)")
+        ContainerDb(db, "Datenbank", "Supabase / Postgres", "101 Tabellen (Migrationen 0001–0090), Multi-Tenant, RLS, tenant_id")
+        ContainerDb(cache, "Cache", "Redis", "Caching-Layer + Rate-Limiter-Zähler")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel-Sync, OCR, Messaging-Trigger, wiederkehrende Aufgaben")
     }
 
@@ -91,13 +94,19 @@ C4Container
     System_Ext(revolut, "Revolut", "Zahlungen (sekundär)")
     System_Ext(booking, "Booking.com", "OTA")
     System_Ext(google, "Google APIs", "Maps/Translate")
+    System_Ext(cf, "Cloudflare for SaaS", "Custom-Hostname-TLS für Kunden-Domains")
+    System_Ext(gfonts, "Google Fonts API", "Font-Katalog für den Website-Editor")
 
     Rel(landlord, web, "Nutzt", "HTTPS")
     Rel(guest, web, "Bucht", "HTTPS")
+    Rel(guest, builder, "Besucht Vermieter-Website (Custom-Domain)", "HTTPS")
     Rel(landlord, mobile, "Verwaltet (Gastgeber-App)", "HTTPS")
     Rel(guest, mobile, "Bucht & reist (Gäste-App)", "HTTPS")
     Rel(storybook, web, "fertige Komponenten übernehmen", "manuell/Build-Zeit")
     Rel(web, api, "Ruft auf", "JSON/HTTPS")
+    Rel(builder, api, "by-domain / page (öffentlicher Resolver)", "JSON/HTTPS")
+    Rel(api, cf, "Custom Hostnames anlegen/syncen (TLS)", "API")
+    Rel(web, gfonts, "Font-Katalog (Proxy-Route /api/google-fonts)", "HTTPS")
     Rel(mobile, api, "Ruft auf", "JSON/HTTPS")
     Rel(api, db, "Liest/schreibt", "SQL (RLS)")
     Rel(api, cache, "Liest/schreibt", "Redis-Protokoll")
@@ -142,12 +151,13 @@ flowchart TB
             PORTAL["public_portal — White-Label-Gäste-Portal (Phase 2-Struktur, 9 Routen)"]
             WA["whatsapp — WhatsApp Cloud API (Conversations/Messages, im Posteingang integriert)"]
             TAG["travel_agencies — Reisebüro-Kartei (Profile, Verträge nach Jahren, Saison-Preise, Vertragsdateien)"]
+            SITE["site_config — Page-Builder: Branding, Custom-Domains (Cloudflare for SaaS), Seiten + Blöcke (Page-Builder), Templates, Draft-Token; öffentlicher by-domain-Resolver (s. §12)"]
         end
         subgraph SCAFFOLD["Slices als Gerüst (Health-only) — Logik folgt lt. Roadmap"]
             OCR["ocr"]; CRM["crm"]; DASH["dashboard (min.)"]; CONT["content (min.)"]
         end
     end
-    DB[("Postgres — 97+ Tabellen (Migrationen 0001–0090), RLS")]
+    DB[("Postgres — 101 Tabellen (Migrationen 0001–0090), RLS")]
     DONE --> DB
     SCAFFOLD --> DB
     CORE --> DONE
@@ -326,14 +336,14 @@ erDiagram
 **Marktplatz-Tabellen (angelegt, mit RLS; Geschäftslogik in Phase 2):** `portal_guests`,
 `reviews`, `commissions` — siehe [Migration 0006](../supabase/migrations/0006_marketplace.sql).
 Das Kern-Diagramm oben zeigt bewusst nur die zentralen Entitäten; alle übrigen der
-**93 Tabellen** sind nach Bereich gruppiert im nächsten Abschnitt aufgeführt.
+**101 Tabellen** sind nach Bereich gruppiert im nächsten Abschnitt aufgeführt.
 
 **Kardinalität:** `||` = genau eins · `o{` = null bis viele · `|{` = ein bis viele.
 `--` = identifizierend (Kind kann ohne Eltern nicht existieren).
 
-### Datenmodell-Erweiterungen aus dem Lastenheft (Migrationen 0009–0019)
+### Datenmodell-Erweiterungen aus dem Lastenheft (Migrationen 0009 ff.)
 
-Das Modell ist auf **93 Tabellen (alle mit RLS)** gewachsen — verifiziert gegen das
+Das Modell ist auf **101 Tabellen (alle mit RLS)** gewachsen — verifiziert gegen das
 echte Supabase-Projekt. Zur Lesbarkeit hier nach Bereich gruppiert (Details in den
 jeweiligen Migrationen):
 
@@ -407,7 +417,7 @@ vom Vermieter eingegebene **OTA-Hotel-ID**, den erzeugten Channel und den Aktiv-
 damit ist die Portal-Verbindung sichtbar und verwaltbar (Status, Trennen, Re-Connect
 mit vorbefüllter Hotel-ID). Modell: Der Vermieter legt seine Unterkunft selbst beim OTA
 an (Hotel-ID), trägt sie in NextDays ein → Auto-Connect über Channex. Ein OTA-seitiges
-„Property von Null anlegen" ist kein verfügbarer Weg (s. ADR-0011).
+„Property von Null anlegen" ist kein verfügbarer Weg (s. ADR-0012).
 
 **Weitere Änderungen am Bestand:** `property_type` + `type_attributes` an
 `properties` (Ökosystem, ADR-0007); Rollen-Enum um `admin`, `co_admin`
@@ -640,6 +650,44 @@ Gast bei der OTA — die zahlt den Vermieter direkt aus, kein Stripe (409). **0%
 Buchungsgebühr** auf eigene Buchungen (ADR-0006); Provision nur im
 Phase-2-Marktplatz (`commissions`).
 
+### Härtung, Page-Builder & Betriebsart (`0084`–`0090`)
+
+- **`0084` RLS-Nachzügler** — schließt eine Security-Audit-Lücke: 6 public-Tabellen
+  hatten volle anon/authenticated-Grants, aber **kein aktiviertes RLS** (über
+  PostgREST tenant-übergreifend les-/schreibbar). Tenant-gebundene Tabellen
+  (`ari_outbox`, `channex_tax_map`, `stop_sell`) erhalten die Standard-tenant-Policy;
+  System-/globale Tabellen bekommen bewusst **keine** permissive Policy (nur
+  `service_role`). Konsequenz-Regel: **jede neue public-Tabelle braucht RLS.**
+- **`0085` service_role statement_timeout** — DB-Backpressure: `statement_timeout
+  = 15s` + `lock_timeout = 8s` für die Rolle `service_role` (vorher unbegrenzt —
+  eine langsame Query konnte Connections aushungern). Teil des Rate-Limiting-/
+  Backpressure-Konzepts, siehe [deploy/RATE-LIMITING.md](../deploy/RATE-LIMITING.md).
+- **`0086` tenant_site_config** — Fundament des Page-Builders:
+  `tenant_site_config` (Branding 1:1 je Tenant) + `tenant_custom_domains`
+  (Kunden-Domains, Cloudflare-Custom-Hostname-Status). Details in [§12](#12-page-builder).
+- **`0087` site_pages / site_blocks** — Seiten + geordnete Inhaltsblöcke des
+  Page-Builders (10 Block-Typen per CHECK, partieller Unique-Index „genau eine
+  Home-Seite je Tenant"). Details in [§12](#12-page-builder).
+- **`0088` travel_agencies** — Reisebüro-/Partner-Kartei (Profile, Kontakte,
+  Verträge nach Jahren, Saison-Preiszeilen, Vertragsdateien im privaten Bucket
+  `agency-contracts`); `stop_sell.agency_id` (Adressat einer Stop-Sale-Meldung).
+- **`0089` stop_sell_agency_idx** — partieller Index auf `stop_sell.agency_id`
+  (FK-Löschpfad + Partner-Filter der Kartei).
+- **`0090` tenants.accommodation_type** — **Betriebsart** des Mandanten:
+  `'vacation_rental' | 'hotel'` (Default `vacation_rental`, CHECK-Constraint).
+
+**Betriebsart (`accommodation_type`, `0090`):** myNextDays bedient
+Ferienwohnungs-Vermieter UND Hotels. Die Betriebsart steuert die
+Dashboard-Navigation in `apps/web` (Hotel- vs. FeWo-Sidebar, Begriffe wie
+„Objekte" vs. „Zimmer"; Eigentümer-Modul nur für Ferienvermietung) und wird im
+**5-Schritte-Onboarding** als eigener Schritt („Betriebsart") abgefragt
+(`onboarding-wizard.tsx`: welcome → type → company → tax → done). Umstellen per
+`PATCH /api/v1/auth/tenant/accommodation-type` (Capability `MANAGE_TENANT`).
+**Nicht verwechseln:** die Channex-OTA-„Hotel-ID" (`channex_channel_connection`,
+§4) ist eine externe Portal-Kennung und hat mit der Betriebsart nichts zu tun;
+ebenso beschreibt `tenants.business_type` (`0066`) das Vermarktungsmodell
+(agency/self_managed), nicht die Beherbergungsart.
+
 ### Weitere Tabellen nach Bereich
 
 Über die oben im ER-Diagramm gezeigten Kern-Entitäten hinaus existieren diese
@@ -654,6 +702,8 @@ Detail-/Hilfstabellen (mit RLS, tenant-scoped):
 | Posteingang | `inbox_ai_settings` (`0037`), `inbox_scheduled_message`, `inbox_thread_note` (`0040`) | KI-Settings, geplante Nachrichten, Thread-Notizen |
 | WhatsApp | `whatsapp_conversation`, `whatsapp_message` (`0041`) | WhatsApp Cloud API — im Posteingang integriert |
 | Objekte | `property_photos` (`0061`) | Objekt-Fotos (mehrsprachige Caption, Cover, Sortierung) |
+| Page-Builder | `tenant_site_config`, `tenant_custom_domains` (`0086`), `site_pages`, `site_blocks` (`0087`) | White-Label-Website je Tenant: Branding, Custom-Domains, Seiten + Blöcke (s. §12) |
+| Reisebüros | `travel_agencies`, `travel_agency_contacts`, `travel_agency_contracts`, `travel_agency_rates` (`0088`) | Partner-Kartei mit Verträgen + Saison-Preisen |
 
 ---
 
@@ -881,24 +931,30 @@ flowchart TB
     subgraph EU["EU / Hetzner (Coolify, Docker) — Datenresidenz-Grenze"]
         LB["Load Balancer"]
         subgraph APP["FastAPI Container x1..N (stateless)"]
-            A1["API Instance"]
+            A1["API Instance<br/>+ Redis-Rate-Limiter (Middleware)"]
         end
+        BLD["builder — Website-Renderer<br/>Next.js, Port 3200<br/>(eigenes Dockerfile, eigene Coolify-App)"]
         DB[("Postgres — pooled, RLS, tenant_id")]
-        RD[("Redis — Cache")]
+        RD[("Redis — Cache + Rate-Limiter-Zähler")]
         Q["Background Queue / Worker"]
         OCR["OCR / Ausweis-Scan + Storage<br/>verlässt EU nie"]
         LB --> APP
+        LB --> BLD
+        BLD -->|"by-domain / page"| A1
         A1 --> DB
         A1 --> RD
         A1 --> Q
         A1 --> OCR
     end
 
-    VERCEL["Vercel — Next.js Frontend"]
+    FRONTS["Coolify-Apps — Next.js-Frontends (web/plattform/builder/storybook/marketing)"]
     STRIPE["Stripe — Payments"]
     GOOG["Google APIs — DPF-zertifiziert"]
+    CFSAAS["Cloudflare for SaaS —<br/>Custom-Domain-TLS (Kunden-Domains)"]
 
-    VERCEL -->|HTTPS| LB
+    FRONTS -->|HTTPS| LB
+    CFSAAS -->|"HTTPS (Fallback-Origin)"| LB
+    A1 -.->|"Custom Hostnames (API)"| CFSAAS
     A1 -.->|"Transfer: SCC/DPF"| STRIPE
     A1 -.->|"Transfer: DPF"| GOOG
 ```
@@ -910,6 +966,15 @@ flowchart TB
 - **Kein** Serverless (Cold Starts, DB-Pooling-Probleme bei langlaufendem FastAPI).
 - **US-Cloud als Compute bewusst vermieden** (CLOUD Act vs. DSGVO-Positionierung).
 - Jede EU-Grenze überschreitende Kante ist mit Transfer-Rechtsgrundlage annotiert.
+- **builder/** ist eine eigenständige Next.js-App mit **eigenem Dockerfile** und
+  eigener Coolify-App (Port 3200) — die öffentlichen Vermieter-Websites skalieren
+  unabhängig vom Dashboard. Kunden-Domains terminieren TLS über **Cloudflare for
+  SaaS** (Custom Hostnames → Fallback-Origin).
+- **Rate-Limiting & Backpressure:** Redis-backed Fixed-Window-Limiter als
+  ASGI-Middleware (`core/ratelimit.py` + `ratelimit_middleware.py`; gestaffelte
+  Buckets, 429 + `Retry-After`/`X-RateLimit-*`, fail-open außer Auth/Payments)
+  plus `statement_timeout` für `service_role` (`0085`) — Details in
+  **[deploy/RATE-LIMITING.md](../deploy/RATE-LIMITING.md)**.
 
 ---
 
@@ -935,12 +1000,13 @@ Gemeinsame Infrastruktur in `apps/api/src/core/`:
 | `supabase.py` | Client-Factory — Anon (RLS) und Service-Role (System) getrennt |
 | `security.py` | Supabase-JWT-Verifikation (ES256/JWKS) → `AuthContext`, `CurrentUser` |
 
-**Slices (22):** `auth` · `properties` · `rates` · `pricing` · `calendar` ·
+**Slices (24):** `auth` · `properties` · `rates` · `pricing` · `calendar` ·
 `reservations` · `guests` · `inbox` · `whatsapp` · `payments` ·
 `channel_manager` · `booking_engine` · `addons` · `owners` · `owner_statements` ·
-`buchhaltung` · `ocr` · `public_portal` · `tasks` · `crm` · `dashboard` ·
-`content`. (22 namentlich + interne Slice-Bausteine — Router-Prefixe je unter
-`/api/v1`.)
+`buchhaltung` · `travel_agencies` · `site_config` · `ocr` · `public_portal` ·
+`tasks` · `crm` · `dashboard` · `content`. (24 namentlich + interne
+Slice-Bausteine — Router-Prefixe je unter `/api/v1`; `site_config` mountet zwei
+Router: `/site-config` (Dashboard) und `/site` (öffentlicher Resolver).)
 
 Die kleineren (`ocr`, `crm`) sind Health-/Gerüst-Slices; `dashboard`/`content`
 minimal. Der Rest ist mit Geschäftslogik ausgebaut: u. a. `tasks`
@@ -966,8 +1032,9 @@ Alle Router unter dem gemeinsamen Prefix **`/api/v1`** (versioniert von Anfang a
   (Primär `#0a0a0a`, Akzent-Rot `#b82028`) — **vorläufig, vom Designer
   überschreibbar**. Komponenten referenzieren nur semantische Tokens.
 - **Storybook** (react-vite) als lebende Komponenten-Doku & Design-System-Brücke
-  ([ADR-0008](decisions/0008-storybook-design-system.md)) — **live deployt**:
-  **https://nextdays-storybook.vercel.app** — **zugangsgeschützt** (Login
+  ([ADR-0008](decisions/0008-storybook-design-system.md)) — **live deployt**
+  als Coolify-App `nextdays-storybook`
+  (https://u67kn5pj9cb2gqryt2ezsc8r.65.21.144.136.sslip.io/sb) — **zugangsgeschützt** (Login
   erforderlich, siehe Auth-Proxy unten; enthält die ganze Idee + sensible Daten,
   daher kein öffentlicher Zugriff). Addons: `addon-docs` (MDX/Autodocs),
   `addon-a11y` (WCAG-Prüfung), `addon-themes` (Light/Dark), `addon-designs`
@@ -1008,7 +1075,7 @@ apps/web/                # Next.js — App-Gerüst (Dashboard/Portal)
 ├── public/marketing/reviews/  # Review-Plattform-Logos (Capterra, Trustpilot, …)
 └── lib/supabase/        # Browser- + Server-Client (@supabase/ssr)
 
-apps/storybook/          # Design-System + Auth-Proxy (eigenes Package, eigenes Vercel)
+apps/storybook/          # Design-System + Auth-Proxy (eigenes Package, eigene Coolify-App)
 ├── app/                 # Next.js App Router (Auth-Hülle vor dem Storybook)
 │   ├── login/           # Login-Seite (Supabase signInWithPassword)
 │   ├── admin/           # Admin-Bereich: Nutzer anlegen (Sofort-Passwort)
@@ -1074,10 +1141,15 @@ Chat ist bewusst von allen PMS-/Kundendaten getrennt.
 
 **Grundsatz Realtime statt Polling:** Datengetriebene Ansichten aktualisieren sich
 über **Supabase Realtime (WebSocket, `postgres_changes`)** — kein Polling, kein
-manuelles Reload. Zentraler Hook `apps/web/lib/use-realtime.ts` (abonniert eine
-Tabelle, debounced, setzt das App-Token → RLS-tenant-scoped); pro Seite eine
+manuelles Reload. Zentraler Hook **`apps/web/lib/use-realtime.ts`**: ein
+dedizierter Realtime-Client als **Modul-Singleton** (nur für Realtime, getrennt
+vom Auth-Client), der **zwingend `realtime.setAuth(App-JWT)` VOR `.subscribe()`**
+aufruft — sonst joint der Channel mit anon-Claims und es kommen **0 Events**
+(RLS filtert alles weg). Der Hook abonniert eine Tabelle (optional gefiltert),
+debounced die Events und folgt dem **Server-Props-Sync-Muster**: pro Seite eine
 `<Domain>Realtime`-Komponente, die alle speisenden Tabellen abonniert und bei
-Änderung `router.refresh()` (+ ggf. gezieltes Neuladen) auslöst. Beispiele:
+Änderung `router.refresh()` (+ ggf. gezieltes Neuladen) auslöst — die Seite
+bleibt server-gerendert, Realtime triggert nur den Refresh. Beispiele:
 `property-realtime.tsx` (Objektseite), `calendar-board` (Preise, `0052`),
 `owner-realtime.tsx` (Eigentümer-Seite: `owners`/`owner_properties`/
 `owner_expenses`/`owner_statements`/`reservations`, Publication via `0071`).
@@ -1098,6 +1170,196 @@ Realtime-Publication. Kanäle sind OTAs **und** die eigene Plattform „myNextDa
 
 ---
 
+## 12. Page-Builder
+
+Jeder Mandant kann eine eigene **White-Label-Website** betreiben — myNextDays als
+Baukasten, PMS-integriert (Suche, Objektlisten und Buchung docken direkt an den
+Datenkern an). Verbindliche Feature-Spezifikation und Bau-Vorlage des Editors ist
+**[docs/FRAMER-FEATURES.md](FRAMER-FEATURES.md)** (Soll/Ist je Feature mit
+✅/🟡/❌-Status). Drei physisch getrennte Ebenen:
+
+1. **Editor (`apps/web`)** — Framer-artiger visueller Canvas-Editor auf
+   **craft.js** (`@craftjs/core`/`layers`/`utils`) als Vollbild-Overlay über dem
+   Dashboard (`app/(dashboard)/website/[pageId]/page.tsx`). Die Seite wird
+   serverseitig geladen (`listBlocks()`); `serialize.ts` konvertiert die flache
+   DB-Blockliste in craft.js-Nodes am ROOT-Canvas. Beim Speichern diff't
+   `syncBlocks()` (`lib/site-pages.ts`) den serialisierten craft-Baum gegen die
+   DB über die einzelnen CRUD-Endpunkte (löschen/aktualisieren/anlegen/neu
+   ordnen — **kein Bulk-Endpoint**); frische DB-IDs fließen zurück in die
+   craft-Props. Editor-Features: unendliche Bühne mit Kamera (Pan,
+   Zoom-zum-Cursor, `use-camera.ts`), Device-Frames/Breakpoints (Desktop 1200 /
+   Tablet 810 / Phone 390 + Custom, Resize per Ziehgriff mit Live-Maß-Badge),
+   Layer-Tree, Insert-Panel, Framer-Style-Inspektor
+   (Seiten-/Frame-/Element-Ebene), Font-Picker (kuratierter Katalog + voller
+   Google-Fonts-Katalog über die Next-Route `/api/google-fonts`), Inline-Text,
+   Effekte/Motion. Der Editor nutzt bewusst **kein** Realtime; die Seitenliste
+   (`/website`) abonniert `site_pages`.
+2. **Backend (`apps/api`, Slice `site_config`)** — zwei Router:
+   `manage_router` (`/api/v1/site-config`, JWT + Capability
+   `MANAGE_SITE_CONFIG`, tenant-gescoped) und `public_router` (`/api/v1/site`,
+   JWT-los). Der Service arbeitet immer mit dem Service-Role-Client + explizitem
+   tenant-Scope aus dem JWT; RLS ist der default-deny-Backstop. Block-`content`
+   wird **pro Typ strikt gegen Pydantic-Schemas validiert**. Alle Endpunkte im
+   Detail: **[API.md → site_config](API.md#site_config-page-builder--implementiert)**.
+3. **Renderer (`builder/`)** — eigenständige Next.js-App (Port 3200, eigenes
+   Dockerfile, eigene Coolify-App). `middleware.ts` löst den Host über
+   `GET /api/v1/site/by-domain` auf und setzt die Header
+   `x-tenant-id`/`x-site-branding`; die öffentlichen Seiten (`app/page.tsx` =
+   Home, `app/[slug]/page.tsx`) laden über `lib/site.ts` →
+   `GET /api/v1/site/page` **nur veröffentlichte** Blöcke und rendern sie mit
+   `components/blocks/block-renderer.tsx`. TLS für Kunden-Domains kommt von
+   **Cloudflare for SaaS** (Custom Hostnames,
+   `site_config/cloudflare_client.py`; ohne Cloudflare-Konfiguration antworten
+   die Domain-Endpunkte `503`).
+
+### Datenmodell (Migrationen `0086`/`0087`)
+
+```mermaid
+erDiagram
+    TENANT ||--o| TENANT_SITE_CONFIG : "Branding (1:1)"
+    TENANT ||--o{ TENANT_CUSTOM_DOMAINS : "Custom-Domains"
+    TENANT ||--o{ SITE_PAGES : "Seiten"
+    SITE_PAGES ||--o{ SITE_BLOCKS : "geordnete Blöcke"
+
+    TENANT_SITE_CONFIG {
+        uuid id PK
+        uuid tenant_id FK "unique (1:1)"
+        string site_name
+        string tagline
+        string logo_url
+        string hero_image_url
+        string primary_color "6-stelliger Hex-Code"
+        string secondary_color
+        string font_family
+        jsonb about_text
+        jsonb contact_text
+        jsonb social_links
+        enum booking_mode "instant|inquiry|both"
+    }
+    TENANT_CUSTOM_DOMAINS {
+        uuid id PK
+        uuid tenant_id FK
+        string domain "unique (global)"
+        string cf_custom_hostname_id
+        enum status "pending|active|error"
+        string ssl_status
+        timestamptz last_synced_at
+    }
+    SITE_PAGES {
+        uuid id PK
+        uuid tenant_id FK
+        string slug "unique(tenant_id, slug); leer = Home"
+        string title
+        string seo_title
+        string seo_description
+        string og_image_url
+        bool is_home "partieller Unique-Index: genau eine Home je Tenant"
+        bool is_published
+        int nav_order
+    }
+    SITE_BLOCKS {
+        uuid id PK
+        uuid tenant_id FK "denormalisiert (RLS)"
+        uuid page_id FK "on delete cascade"
+        string type "CHECK: 10 Typen"
+        int position "Index (page_id, position)"
+        jsonb content "pro Typ Pydantic-validiert"
+        jsonb settings "background_color, padding, full_width, opacity, visible, radius, rotation"
+    }
+```
+
+Alle vier Tabellen haben RLS (`tenant_id = current_tenant_id()`, using + with
+check), `replica identity full` und sind in der Publication `supabase_realtime`.
+
+**Die 10 Block-Typen** (DB-CHECK + `BlockType`-StrEnum + je ein eigenes
+Pydantic-content-Schema): `hero` · `rich_text` · `image` · `gallery` · `button`
+· `spacer` · `contact` · `search` · `properties_grid` · `featured_properties`.
+Mehrsprachige Texte liegen als `{locale: text}`-Objekte im `content`. Drei
+Start-Templates (`templates.py`: bergchalet/kueste/stadt, Unsplash-Bilder)
+befüllen eine leere Site per `POST /site-config/templates/apply`.
+
+### Draft-Token (Vorschau unveröffentlichter Seiten)
+
+Der öffentliche Renderer liefert grundsätzlich nur `is_published`-Seiten. Für die
+Editor-Vorschau erzeugt `POST /site-config/pages/{id}/draft-token` einen
+kurzlebigen Token: **HMAC-SHA256** über `tenant_id.page_id.exp`, signiert mit
+`SITE_DRAFT_SECRET`, Format `{exp}.{sig}`, **TTL 3600 s**, Verifikation
+konstant-zeitig (`hmac.compare_digest`). `GET /api/v1/site/page/draft?page_id&token`
+rendert damit auch unveröffentlichte Seiten (`403` bei ungültigem/abgelaufenem
+Token). Die Draft-Route des Renderers (`builder/app/render/[pageId]/page.tsx`)
+und die postMessage-Brücke (`canvas-bridge.tsx`) existieren als Infrastruktur für
+eine iframe-Live-Vorschau, sind im aktuellen Editor aber **nicht verdrahtet**
+(der Editor rendert die Nodes direkt, ohne iframe).
+
+### Bewusste Abweichung: Editor-Modell vs. Persistenz-Modell
+
+Der Editor ist funktional ein Framer-Klon, die Persistenz ein schlanker
+10-Block-Stack — gekoppelt ausschließlich über `serialize.ts`. Der ehrliche
+Ist-Stand:
+
+1. **Persistiert wird eine flache, geordnete Liste** der 10 Block-Typen
+   (`site_blocks`); der Editor arbeitet mit einem hierarchischen craft.js-Baum
+   inkl. frei positionierter Frames (x/y/Breite/Höhe) und Layout-Containern.
+2. **Frame/Stack/Grid/Masonry überleben das Speichern nicht:**
+   `craftJsonToBlocks` iteriert nur die Top-Level-Nodes des ROOT und überspringt
+   Typen außerhalb `NODE_BY_TYPE` — Container samt Kindern werden beim Speichern
+   verworfen.
+3. **Settings nur teilweise wirksam:** `splitProps` kennt 7 settings-Keys; das
+   Backend verwirft Nicht-Schema-Felder. Der öffentliche Renderer wertet nur
+   `content` + `settings.background_color` aus — `opacity`/`radius`/`rotation`/
+   `visible` wirken derzeit nur im Editor.
+4. **Page-Variables und Code-Overrides** (`variables-context.tsx`,
+   CodeMirror-Editor) sind reiner In-Memory-Editor-State ohne DB-Ziel — nach
+   einem Reload weg.
+5. **Draft-Render + postMessage-Brücke** sind gebaut, aber nicht verdrahtet (s. o.).
+
+[docs/FRAMER-FEATURES.md](FRAMER-FEATURES.md) hält diesen Soll-/Ist-Stand je
+Feature fest und ist die verbindliche Vorlage für den Ausbau (u. a. Persistenz
+des Editor-Baums).
+
+### Ablauf: bearbeiten → veröffentlichen → öffentlicher Abruf (Custom-Domain)
+
+```mermaid
+sequenceDiagram
+    actor V as Vermieter
+    participant Web as Editor (apps/web)
+    participant API as FastAPI (site_config)
+    participant DB as Postgres
+    participant CF as Cloudflare for SaaS
+    actor G as Besucher
+    participant BLD as builder/ (Renderer)
+
+    V->>Web: /website/[pageId] öffnen
+    Web->>API: GET /site-config/pages/{id}/blocks (JWT, MANAGE_SITE_CONFIG)
+    API->>DB: site_blocks (tenant-scoped)
+    DB-->>API: Blöcke
+    API-->>Web: BlockListResponse → craft.js-Nodes (serialize.ts)
+    V->>Web: bearbeiten + Speichern
+    Web->>API: syncBlocks(): POST/PUT/DELETE /blocks + /blocks/reorder
+    API->>DB: content pro Block-Typ Pydantic-validiert
+    V->>Web: „Veröffentlichen"
+    Web->>API: POST /site-config/pages/{id}/publish
+    API->>DB: is_published = true
+
+    Note over V,CF: einmalig: Custom-Domain verbinden
+    V->>Web: Domain hinzufügen
+    Web->>API: POST /site-config/domains {domain}
+    API->>CF: Custom Hostname anlegen
+    CF-->>API: hostname_id + DNS-Records + SSL-Status
+    API->>DB: tenant_custom_domains (status pending → active)
+
+    G->>BLD: https://kunden-domain.tld (TLS via Cloudflare)
+    BLD->>API: GET /site/by-domain?host=… (middleware.ts, kein JWT)
+    API->>DB: aktive Domain → Tenant + öffentliches Branding
+    API-->>BLD: PublicSiteResponse (x-tenant-id / x-site-branding)
+    BLD->>API: GET /site/page?host=…&slug=…
+    API->>DB: NUR is_published-Seite + Blöcke
+    API-->>BLD: PublicPageResponse
+    BLD-->>G: gerenderte Seite (block-renderer.tsx)
+```
+
+---
+
 ## Externe Dienste
 
 Vom FastAPI-Backend als Dienste aufgerufen, Datenhoheit bleibt bei uns. Jeder Dienst
@@ -1112,6 +1374,9 @@ wird in **[docs/decisions/](decisions/)** mit Rechtsgrundlage dokumentiert.
 | **Channex** | Channel-Manager-Aggregator: OTA-Distribution (Booking.com, Airbnb, Expedia …). ARI-Push + Buchungs-Pull über den `channel_manager`-Slice (`channex_client.py`). Secrets: `CHANNEX_API_KEY`, `CHANNEX_BASE_URL`, `CHANNEX_WEBHOOK_SECRET`. |
 | Frankfurter (ECB) | Tages-Wechselkurse (ECB-Referenz, kostenlos, kein Key) für die Eigentümer-Abrechnung (`owner_statements/fx.py`); gecacht in `fx_rates`. Kein Fallback bei Ausfall. |
 | DWD / Bright Sky | amtliche Wetterdaten (frei, kein Key) als Dynamic-Pricing-Signal (`pricing/weather.py`). |
+| **Google Fonts** | Font-Katalog des Website-Editors (Developer API `webfonts/v1`). Aufgerufen über die server-seitige Next-Route `apps/web/app/api/google-fonts/route.ts` (kein FastAPI-Endpunkt); Key `GOOGLE_FONTS_API_KEY` bleibt serverseitig — ohne Key antwortet die Route `503`. |
+| **Cloudflare for SaaS** | Custom-Hostname-TLS für die Kunden-Domains des Page-Builders (`site_config/cloudflare_client.py`). Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_FALLBACK_ORIGIN` (+ optional `CLOUDFLARE_BASE_URL`); fehlen sie, antworten die Domain-Endpunkte `503`. |
+| Unsplash | Stock-Bilder der Website-Start-Templates (`site_config/templates.py`) — nur referenzierte Bild-URLs, kein API-Key, kein Server-Aufruf. |
 
 ---
 

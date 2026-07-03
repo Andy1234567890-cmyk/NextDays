@@ -42,7 +42,7 @@ export const FilterPanel: Story = {
         <span className="text-sm font-semibold">Konversationen filtern</span>
 
         <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" className="size-4 accent-[var(--color-accent)]" />
+          <input type="checkbox" className="size-4 accent-(--color-accent)" />
           Nicht zugewiesen
         </label>
 
