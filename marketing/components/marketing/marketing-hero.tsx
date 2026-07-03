@@ -100,21 +100,38 @@ export function MarketingHero() {
         </div>
       </div>
 
-      {/* Channel-Logos */}
-      <div className="relative z-10 w-full border-t border-white/10 bg-black/40 py-6 backdrop-blur-sm">
-        <p className="mb-4 text-center text-xs font-medium uppercase tracking-widest text-white/40">
+      {/* Channel-Karten — dunkel gestylt im Hero (die frühere helle
+          Kanal-Sektion ist hierher gewandert; id="kanaele" hält den
+          Nav-Anker). Logos per brightness-0+invert einheitlich weiß. */}
+      <div
+        id="kanaele"
+        className="relative z-10 w-full border-t border-white/10 bg-black/40 py-8 backdrop-blur-sm"
+      >
+        <p className="mb-2 text-center text-xs font-medium uppercase tracking-widest text-white/40">
           Verbunden mit allen großen Plattformen
         </p>
-        <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-center gap-8 px-6">
+        <p className="mb-6 text-center text-sm text-white/70">
+          Verbinde dich mit über 450 Buchungskanälen und maximiere deine
+          Auslastung.
+        </p>
+        {/* Weiße Karten mit Original-Logofarben: die Figma-Exporte bringen
+            eigene weiße Hintergrund-Flächen mit — auf weißer Karte unsichtbar,
+            jeder CSS-Filter würde sie dagegen als Blöcke sichtbar machen. */}
+        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-stretch justify-center gap-4 px-6">
           {CHANNELS.map((ch) => (
-            <Image
+            <div
               key={ch.alt}
-              src={ch.src}
-              alt={ch.alt}
-              width={100}
-              height={28}
-              className="h-6 w-auto object-contain opacity-60 grayscale invert transition hover:opacity-100 hover:grayscale-0"
-            />
+              className="flex h-[4.25rem] flex-1 items-center justify-center rounded-2xl bg-white px-6 shadow-sm transition hover:shadow-md"
+              style={{ minWidth: "10rem", maxWidth: "13.33rem" }}
+            >
+              <Image
+                src={ch.src}
+                alt={ch.alt}
+                width={181}
+                height={68}
+                className="h-full w-auto object-contain py-3"
+              />
+            </div>
           ))}
         </div>
       </div>

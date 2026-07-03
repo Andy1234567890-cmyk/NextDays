@@ -2,7 +2,6 @@
 // Layout 1:1 nach Figma (Soj052u1PbHfASB2RMsOba, Node 3-613),
 // umgesetzt im NextDays-Design-System (Schwarz/Rot, Fraunces/Inter, Pill-Buttons).
 import { MarketingBenefits } from "@/components/marketing/marketing-benefits";
-import { MarketingChannelsBar } from "@/components/marketing/marketing-channels-bar";
 import { MarketingFeatures } from "@/components/marketing/marketing-features";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import { MarketingHero } from "@/components/marketing/marketing-hero";
@@ -25,8 +24,8 @@ export default function MarketingPage() {
     <div className="flex min-h-screen flex-col bg-background font-sans text-foreground">
       <MarketingNav />
       <main className="flex-1">
+        {/* Kanal-Karten liegen jetzt IM Hero (dunkle Leiste, id="kanaele"). */}
         <MarketingHero />
-        <MarketingChannelsBar />
         <MarketingIntro />
         <MarketingBenefits />
         <MarketingTrial />
