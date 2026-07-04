@@ -545,6 +545,38 @@ def test_property_attrs_maps_property_type_for_channex() -> None:
     assert "property_type" not in attrs2
 
 
+def test_channex_facility_ids_maps_and_drops_unknown() -> None:
+    from src.features.channel_manager.service import _channex_facility_ids
+
+    wifi = "ed553333-7f1f-434a-8c43-eb8fe96c5f54"
+    ac = "cc402cc0-696b-4bd6-a5d7-4adb060bc056"
+    # Bekannte Slugs → UUIDs (Reihenfolge stabil).
+    assert _channex_facility_ids(["wifi", "air_conditioning"]) == [wifi, ac]
+    # Unbekannt → weggelassen (kein ungültiger Wert an Channex).
+    assert _channex_facility_ids(["wifi", "raumschiff"]) == [wifi]
+    # Leer/None → leere Liste (leert Facilities synchron).
+    assert _channex_facility_ids([]) == []
+    assert _channex_facility_ids(None) == []
+    # Duplikate entfernt.
+    assert _channex_facility_ids(["wifi", "wifi"]) == [wifi]
+
+
+def test_property_attrs_includes_facilities() -> None:
+    wifi = "ed553333-7f1f-434a-8c43-eb8fe96c5f54"
+    attrs = ChannelManagerService._property_attrs(
+        {"country": "DE", "amenities": ["wifi"]}
+    )
+    assert attrs["facilities"] == [wifi]
+    # amenities-Key gesetzt, aber leer → facilities=[] (leert bei Channex/OTA).
+    attrs_empty = ChannelManagerService._property_attrs(
+        {"country": "DE", "amenities": []}
+    )
+    assert attrs_empty["facilities"] == []
+    # amenities gar nicht geladen → facilities-Feld fehlt (kein versehentliches Leeren).
+    attrs_none = ChannelManagerService._property_attrs({"country": "DE"})
+    assert "facilities" not in attrs_none
+
+
 def test_import_booking_creates_reservation_and_blocks_calendar() -> None:
     db = _ImportDB()
     _seed_property(db)
@@ -918,6 +950,34 @@ def test_push_restrictions_noop_without_flags() -> None:
     assert channex.restrictions_pushed == []
 
 
+def test_push_max_stay_sends_to_channex() -> None:
+    # Channex-Key ist max_stay (NICHT max_stay_arrival — das persistiert Channex
+    # nicht; live verifiziert).
+    db = _ImportDB()
+    _seed_with_rate_plan(db)
+    channex = _ImportChannex()
+    _import_svc(channex, db).push_max_stay_for_property(
+        "t1", "p1", date(2026, 6, 23), date(2026, 6, 25), 14
+    )
+    assert len(channex.restrictions_pushed) == 1
+    val = channex.restrictions_pushed[0]
+    assert val["property_id"] == "cx-prop"
+    assert val["rate_plan_id"] == "cx-rate"
+    assert val["max_stay"] == 14
+    assert "max_stay_arrival" not in val
+
+
+def test_push_max_stay_skipped_when_not_managed() -> None:
+    db = _ImportDB()
+    _seed_with_rate_plan(db)
+    _unmanage(db)  # property_map soft-deleted → Gate greift
+    channex = _ImportChannex()
+    _import_svc(channex, db).push_max_stay_for_property(
+        "t1", "p1", date(2026, 6, 23), date(2026, 6, 25), 14
+    )
+    assert channex.restrictions_pushed == []
+
+
 def test_process_ari_outbox_skips_unmanaged_as_done() -> None:
     # Outbox-Zeile eines NICHT bei Channex gemanagten Objekts: als done abhaken
     # (kein Endlos-Retry). Inaktive Kanäle allein stoppen den Push NICHT mehr.
@@ -1135,6 +1195,35 @@ def test_rate_plan_options_per_person_with_surcharge() -> None:
     assert by_occ[1]["is_primary"] and by_occ[1]["rate"] == 10000
     assert by_occ[2]["derived_option"]["rate"] == [["increase_by_amount", "2000"]]
     assert by_occ[3]["derived_option"]["rate"] == [["increase_by_amount", "4000"]]
+
+
+# --- Room-Type-Belegung aus echten Objektdaten (occ_*, count_of_rooms) --------
+def test_room_type_occupancy_from_object_data() -> None:
+    occ = ChannelManagerService._room_type_occupancy(
+        {
+            "max_guests": 4,
+            "type_attributes": {"occupancy": {"children": 2, "infants": 1, "rooms": 3}},
+        }
+    )
+    assert occ["occ_adults"] == 4
+    assert occ["default_occupancy"] == 4
+    assert occ["occ_children"] == 2
+    assert occ["occ_infants"] == 1
+    assert occ["count_of_rooms"] == 3
+
+
+def test_room_type_occupancy_defaults_when_missing() -> None:
+    # Ohne occupancy-Block: Kinder/Kleinkinder 0, mind. 1 Zimmer, occ_adults ≥ 1.
+    occ = ChannelManagerService._room_type_occupancy({"max_guests": 1})
+    assert occ == {
+        "count_of_rooms": 1,
+        "occ_adults": 1,
+        "occ_children": 0,
+        "occ_infants": 0,
+        "default_occupancy": 1,
+    }
+    # Gar keine Objektdaten → sichere Mindestwerte (occ_adults 2 = Default).
+    assert ChannelManagerService._room_type_occupancy(None)["occ_adults"] == 2
 
 
 # --- Phase 4: Property-Settings (state_length + min/max price) ---------------

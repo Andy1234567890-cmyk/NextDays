@@ -362,6 +362,45 @@ class AriPushMixin:
                 error=exc.message,
             )
 
+    def push_max_stay_for_property(
+        self,
+        tenant_id: str,
+        property_id: str,
+        date_from: date,
+        date_to: date,
+        max_stay: int,
+    ) -> None:
+        """Maximalaufenthalt (max_stay-Restriction) für einen Zeitraum an Channex
+        pushen. Channex-Key ist `max_stay` (NICHT max_stay_arrival — das nimmt
+        Channex zwar per 200 an, persistiert es aber nicht; live verifiziert).
+        0 = keine Obergrenze. Best-effort wie push_rate_for_property; No-op ohne
+        Verbindung/Mapping. date_to inklusiv."""
+        if not self._channex.is_configured or self._db is None:
+            return
+        mapping = self._resolve_channex_rate_plan(self._db, tenant_id, property_id)
+        if mapping is None:
+            return
+        if not self._is_channex_managed(self._db, tenant_id, property_id):
+            return  # alle Kanäle des Objekts auf Aus → kein Push
+        value: dict[str, Any] = {
+            "property_id": mapping["channex_property_id"],
+            "rate_plan_id": mapping["channex_rate_plan_id"],
+            "date_from": date_from.isoformat(),
+            "date_to": date_to.isoformat(),
+            "max_stay": max(0, int(max_stay)),
+        }
+        try:
+            self._channex.update_restrictions([value])
+            log.info(
+                "max_stay_push_done",
+                tenant_id=tenant_id, property_id=property_id, max_stay=max_stay,
+            )
+        except ChannexError as exc:
+            log.warning(
+                "max_stay_push_failed",
+                tenant_id=tenant_id, property_id=property_id, error=exc.message,
+            )
+
     def push_restrictions_for_property(
         self,
         tenant_id: str,

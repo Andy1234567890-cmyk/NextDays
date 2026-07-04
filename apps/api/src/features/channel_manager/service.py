@@ -22,6 +22,7 @@ from .channels import ChannelsMixin
 from .channex_client import ChannexClient, ChannexError
 from .common import (
     ChannelManagerError,
+    _channex_facility_ids,
     _channex_property_type,
     _timezone_for_country,
 )
@@ -33,6 +34,7 @@ from .schemas import SliceHealth
 __all__ = [
     "ChannelManagerError",
     "ChannelManagerService",
+    "_channex_facility_ids",
     "_channex_property_type",
     "_timezone_for_country",
 ]

@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 import { useSaver } from "@/components/objekte/editor-primitives";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { ChannelBadge } from "@/components/ui/channel-badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -30,7 +31,8 @@ import {
 } from "@/components/ui/sheet";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  AMENITY_GROUPS,
+  AMENITY_SLUGS,
+  amenityLabel,
   BED_OPTIONS,
   HOTEL_TYPES,
   ROOM_OPTIONS,
@@ -180,6 +182,7 @@ export function PropertyOverview({ initial }: { initial: Property }) {
       <SectionCard
         title="Räume"
         hint="Welche Räume gibt es?"
+        channel="ota"
         onEdit={() => setSection("rooms")}
       >
         {rooms.length ? (
@@ -197,6 +200,7 @@ export function PropertyOverview({ initial }: { initial: Property }) {
       <SectionCard
         title="Schlafmöglichkeiten"
         hint="Welche Betten gibt es?"
+        channel="ota"
         onEdit={() => setSection("beds")}
       >
         {beds.length ? (
@@ -216,6 +220,7 @@ export function PropertyOverview({ initial }: { initial: Property }) {
       <SectionCard
         title="Ausstattung"
         hint="Was bietet dein Objekt?"
+        channel="ota"
         onEdit={() => setSection("amenities")}
       >
         {p.amenities.length ? (
@@ -225,7 +230,7 @@ export function PropertyOverview({ initial }: { initial: Property }) {
                 key={a}
                 className="rounded-full bg-secondary px-3 py-1 text-xs"
               >
-                {a}
+                {amenityLabel(a)}
               </span>
             ))}
           </div>
@@ -240,6 +245,7 @@ export function PropertyOverview({ initial }: { initial: Property }) {
       <SectionCard
         title="Standort"
         hint="Adresse des Objekts."
+        channel="ota"
         onEdit={() => setSection("location")}
       >
         <p className="text-sm text-muted-foreground">
@@ -303,22 +309,45 @@ export function PropertyOverview({ initial }: { initial: Property }) {
 
 // --- Bausteine -------------------------------------------------------------
 
+// Label eines Formularfelds mit Kanal-Kennzeichnung (OTA vs. nur myNextDays).
+function FieldLabel({
+  htmlFor,
+  channel,
+  children,
+}: {
+  htmlFor?: string;
+  channel: "ota" | "local";
+  children: React.ReactNode;
+}) {
+  return (
+    <span className="flex flex-wrap items-center gap-2">
+      <Label htmlFor={htmlFor}>{children}</Label>
+      <ChannelBadge channel={channel} />
+    </span>
+  );
+}
+
 function SectionCard({
   title,
   hint,
   onEdit,
+  channel,
   children,
 }: {
   title: string;
   hint: string;
   onEdit: () => void;
+  channel?: "ota" | "local";
   children: React.ReactNode;
 }) {
   return (
     <Card className="flex flex-col gap-3 p-5">
       <div className="flex items-start justify-between">
-        <div>
-          <h3 className="font-display text-lg font-extrabold">{title}</h3>
+        <div className="flex flex-col gap-1.5">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="font-display text-lg font-extrabold">{title}</h3>
+            {channel && <ChannelBadge channel={channel} />}
+          </div>
           <p className="text-sm text-muted-foreground">{hint}</p>
         </div>
         <Button
@@ -411,7 +440,9 @@ function NameEditor({
   return (
     <EditorShell open={open} onClose={onClose} title="Name und Beschreibung">
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="e-title">Name</Label>
+        <FieldLabel htmlFor="e-title" channel="ota">
+          Name
+        </FieldLabel>
         <Input
           id="e-title"
           value={title}
@@ -419,7 +450,7 @@ function NameEditor({
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label>Typ</Label>
+        <FieldLabel channel="ota">Typ</FieldLabel>
         <Select value={type} onValueChange={(v) => setType(v as PropertyType)}>
           <SelectTrigger>
             <SelectValue />
@@ -434,7 +465,9 @@ function NameEditor({
         </Select>
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="e-desc">Beschreibung (für OTAs/Buchungsportale)</Label>
+        <FieldLabel htmlFor="e-desc" channel="ota">
+          Beschreibung
+        </FieldLabel>
         <Textarea
           id="e-desc"
           rows={6}
@@ -446,9 +479,9 @@ function NameEditor({
         </p>
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="e-platform-desc">
+        <FieldLabel htmlFor="e-platform-desc" channel="local">
           Beschreibung für die eigene Buchungsseite (optional)
-        </Label>
+        </FieldLabel>
         <Textarea
           id="e-platform-desc"
           rows={6}
@@ -487,7 +520,15 @@ function InfoEditor({
   onClose: () => void;
   onSave: SaveFn;
 }) {
+  const occ = (p.type_attributes?.occupancy ?? {}) as {
+    children?: number;
+    infants?: number;
+    rooms?: number;
+  };
   const [guests, setGuests] = useState(p.max_guests);
+  const [children, setChildren] = useState<number>(occ.children ?? 0);
+  const [infants, setInfants] = useState<number>(occ.infants ?? 0);
+  const [rooms, setRooms] = useState<number>(occ.rooms ?? 1);
   const [size, setSize] = useState<number | "">(attrNum(p, "size_m2"));
   const [units, setUnits] = useState<number | "">(attrNum(p, "units"));
   const [status, setStatus] = useState<PropertyStatus>(p.status);
@@ -496,7 +537,9 @@ function InfoEditor({
   return (
     <EditorShell open={open} onClose={onClose} title="Objekt-Infos">
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="e-guests">Max. Gäste</Label>
+        <FieldLabel htmlFor="e-guests" channel="ota">
+          Max. Gäste
+        </FieldLabel>
         <Input
           id="e-guests"
           type="number"
@@ -506,8 +549,60 @@ function InfoEditor({
           onChange={(e) => setGuests(Number(e.target.value) || 1)}
         />
       </div>
+
+      {/* Belegung — geht als Kapazität an die Buchungsportale (Room-Type-
+          Belegung: Erwachsene/Kinder/Kleinkinder + Anzahl Zimmer). */}
+      <div className="flex flex-col gap-2 rounded-2xl border p-4">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="font-semibold">Belegung</span>
+          <ChannelBadge channel="ota" />
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Erwachsenenplätze bieten Platz für Erwachsene und Kinder,
+          Kinderplätze nur für Kinder. „Max. Gäste" (oben) sind die
+          Erwachsenenplätze.
+        </p>
+        <div className="grid grid-cols-3 gap-2">
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="e-children">Kinderplätze</Label>
+            <Input
+              id="e-children"
+              type="number"
+              min={0}
+              max={99}
+              value={children}
+              onChange={(e) => setChildren(Math.max(0, Number(e.target.value) || 0))}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="e-infants">Kleinkindplätze</Label>
+            <Input
+              id="e-infants"
+              type="number"
+              min={0}
+              max={99}
+              value={infants}
+              onChange={(e) => setInfants(Math.max(0, Number(e.target.value) || 0))}
+            />
+          </div>
+          <div className="flex flex-col gap-1.5">
+            <Label htmlFor="e-rooms">Anzahl Zimmer</Label>
+            <Input
+              id="e-rooms"
+              type="number"
+              min={1}
+              max={99}
+              value={rooms}
+              onChange={(e) => setRooms(Math.max(1, Number(e.target.value) || 1))}
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="e-size">Größe (m²)</Label>
+        <FieldLabel htmlFor="e-size" channel="local">
+          Größe (m²)
+        </FieldLabel>
         <Input
           id="e-size"
           type="number"
@@ -519,7 +614,9 @@ function InfoEditor({
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label htmlFor="e-units">Einheiten</Label>
+        <FieldLabel htmlFor="e-units" channel="local">
+          Einheiten
+        </FieldLabel>
         <Input
           id="e-units"
           type="number"
@@ -531,7 +628,7 @@ function InfoEditor({
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <Label>Status</Label>
+        <FieldLabel channel="local">Status</FieldLabel>
         <Select
           value={status}
           onValueChange={(v) => setStatus(v as PropertyStatus)}
@@ -559,6 +656,7 @@ function InfoEditor({
               ...p.type_attributes,
               size_m2: size === "" ? undefined : size,
               units: units === "" ? undefined : units,
+              occupancy: { children, infants, rooms },
             },
           })
         }
@@ -624,40 +722,93 @@ function AmenitiesEditor({
   onSave: (vals: string[]) => Promise<true | string>;
 }) {
   const [vals, setVals] = useState<string[]>(selected);
+  const [query, setQuery] = useState("");
   const { busy, error, run } = useSaver(onSave);
 
-  function toggle(v: string) {
-    setVals((s) => (s.includes(v) ? s.filter((x) => x !== v) : [...s, v]));
+  function add(v: string) {
+    setVals((s) => (s.includes(v) ? s : [...s, v]));
+    setQuery("");
   }
+  function remove(v: string) {
+    setVals((s) => s.filter((x) => x !== v));
+  }
+
+  // Suchleisten-Muster: Vorschläge erscheinen NUR bei aktiver Suche (301 auf
+  // einmal wäre unübersichtlich). Bereits Gewähltes wird nicht vorgeschlagen.
+  const q = query.trim().toLowerCase();
+  const suggestions = q
+    ? AMENITY_SLUGS.filter(
+        (s) => !vals.includes(s) && amenityLabel(s).toLowerCase().includes(q),
+      ).slice(0, 30)
+    : [];
 
   return (
     <EditorShell open={open} onClose={onClose} title="Ausstattung bearbeiten">
-      {AMENITY_GROUPS.map((g) => (
-        <div key={g.group} className="flex flex-col gap-2">
-          <span className="text-xs font-semibold uppercase text-muted-foreground">
-            {g.group}
-          </span>
-          <div className="flex flex-wrap gap-2">
-            {g.items.map((a) => {
-              const on = vals.includes(a);
-              return (
-                <button
-                  key={a}
-                  type="button"
-                  onClick={() => toggle(a)}
-                  className={`rounded-full border px-3 py-1 text-xs ${
-                    on
-                      ? "border-accent bg-accent text-accent-foreground"
-                      : "text-muted-foreground"
-                  }`}
-                >
-                  {a}
-                </button>
-              );
-            })}
-          </div>
+      <p className="text-xs text-muted-foreground">
+        Die Ausstattung entspricht dem Channex-Katalog. Alle Merkmale werden an
+        die Buchungsportale (Booking.com, Airbnb &amp; Co.) übertragen.
+      </p>
+
+      {/* Gewählte Ausstattung — kompakt oben, mit ✕ zum Entfernen */}
+      {vals.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {vals.map((slug) => (
+            <span
+              key={slug}
+              className="inline-flex items-center gap-1.5 rounded-full border border-accent bg-accent px-3 py-1 text-xs text-accent-foreground"
+            >
+              {amenityLabel(slug)}
+              <span className="rounded-full bg-accent-foreground/20 px-1 text-[0.6rem] font-semibold">
+                OTA
+              </span>
+              <button
+                type="button"
+                onClick={() => remove(slug)}
+                aria-label={`${amenityLabel(slug)} entfernen`}
+                className="text-accent-foreground/70 hover:text-accent-foreground"
+              >
+                <Icon icon="ph:x" className="size-3" />
+              </button>
+            </span>
+          ))}
         </div>
-      ))}
+      )}
+
+      {/* Suchleiste + Vorschlagsliste (Zeilen, keine Chip-Wolke) */}
+      <div className="flex flex-col gap-0">
+        <Input
+          placeholder="Ausstattung suchen …"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+        />
+        {q && (
+          <div className="mt-1 max-h-64 overflow-y-auto rounded-2xl border">
+            {suggestions.length === 0 ? (
+              <p className="px-3 py-2 text-sm text-muted-foreground">
+                Keine Treffer.
+              </p>
+            ) : (
+              suggestions.map((slug) => (
+                <button
+                  key={slug}
+                  type="button"
+                  onClick={() => add(slug)}
+                  className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-secondary"
+                >
+                  <span className="flex items-center gap-2">
+                    <Icon icon="ph:plus" className="size-3.5 text-muted-foreground" />
+                    {amenityLabel(slug)}
+                  </span>
+                  <span className="rounded-full bg-secondary px-1.5 text-[0.6rem] font-semibold text-muted-foreground">
+                    OTA
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
       <SaveBar busy={busy} error={error} onSave={() => run(vals)} />
     </EditorShell>
   );

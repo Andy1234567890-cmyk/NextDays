@@ -16,7 +16,11 @@ from src.features.properties.schemas import (
     PropertyType,
     PropertyUpdate,
 )
-from src.features.properties.service import PropertiesService, PropertyError
+from src.features.properties.service import (
+    PropertiesService,
+    PropertyError,
+    _max_stay_of,
+)
 from src.main import create_app
 
 client = TestClient(create_app())
@@ -581,3 +585,16 @@ def test_update_rejects_type_switch_outside_accommodation() -> None:
     assert exc.value.status_code == 422
     row = next(r for r in db.tables["properties"] if r["id"] == "p-zimmer")
     assert row["property_type"] == "einzelzimmer"  # unverändert
+
+
+# --- Maximalaufenthalt aus type_attributes.availability (an die Portale) -------
+def test_max_stay_of_reads_availability() -> None:
+    assert _max_stay_of({"type_attributes": {"availability": {"maxStay": 14}}}) == 14
+
+
+def test_max_stay_of_defaults_zero_when_missing_or_invalid() -> None:
+    # Kein Wert / kein Block → 0 (= keine Obergrenze). Ungültig → 0 (kein Crash).
+    assert _max_stay_of({}) == 0
+    assert _max_stay_of({"type_attributes": {}}) == 0
+    assert _max_stay_of({"type_attributes": {"availability": {"maxStay": None}}}) == 0
+    assert _max_stay_of({"type_attributes": {"availability": {"maxStay": "x"}}}) == 0

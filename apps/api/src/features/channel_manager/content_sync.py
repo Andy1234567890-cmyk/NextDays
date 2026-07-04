@@ -13,7 +13,13 @@ from supabase import Client
 
 from . import content_builder
 from .channex_client import ChannexError
-from .common import ChannelManagerError, _channex_property_type, _timezone_for_country, log
+from .common import (
+    ChannelManagerError,
+    _channex_facility_ids,
+    _channex_property_type,
+    _timezone_for_country,
+    log,
+)
 
 
 class ContentSyncMixin:
@@ -110,7 +116,8 @@ class ContentSyncMixin:
             db.table("properties")
             .select(
                 "id, title, description, property_type, street, house_number, "
-                "postal_code, city, country, lat, lng, max_guests, type_attributes"
+                "postal_code, city, country, lat, lng, max_guests, amenities, "
+                "type_attributes"
             )
             .eq("id", property_id)
             .eq("tenant_id", tenant_id)
@@ -292,6 +299,12 @@ class ContentSyncMixin:
             "timezone": _timezone_for_country(country) if country else None,
         }
         attrs = {k: v for k, v in candidates.items() if v not in (None, "")}
+        # Ausstattung → Channex-Facilities (property.facilities, Top-Level). Sobald
+        # das Objekt amenities kennt, IMMER setzen (auch []), damit ein Entfernen
+        # die Facilities bei Channex/den OTAs synchron leert — die Ausstattung muss
+        # 1:1 mit Channex übereinstimmen. Unbekannte Slugs werden weggelassen.
+        if "amenities" in (prop_row or {}):
+            attrs["facilities"] = _channex_facility_ids(prop_row.get("amenities"))
         # Content (Beschreibung, Hausregeln/Check-in, Fotos) zentral aufgebaut.
         # Sprache nach Objekt-Land; Beschreibung = kanonischer OTA-Text.
         locale_order = content_builder.locale_order_for_country(country)
@@ -314,6 +327,24 @@ class ContentSyncMixin:
             settings["max_price"] = max_price
         attrs["settings"] = settings
         return attrs
+
+    @staticmethod
+    def _room_type_occupancy(prop_row: dict[str, Any] | None) -> dict[str, int]:
+        """Room-Type-Belegung aus den ECHTEN Objektdaten, nicht pauschal — sonst
+        zeigt Channex/OTA eine falsche Kapazität. Erwachsene = max_guests; Kinder-,
+        Kleinkindplätze und Zimmeranzahl kommen aus type_attributes.occupancy (im
+        Objekt-Editor „Belegung" erfasst, 1:1 die Channex-Felder). Channex verlangt
+        occ_adults ≥ 1 und default_occupancy ≤ occ_adults; occ_children/occ_infants
+        sind Pflichtfelder (live verifiziert)."""
+        occ = ((prop_row or {}).get("type_attributes") or {}).get("occupancy") or {}
+        occ_adults = max(1, int((prop_row or {}).get("max_guests") or 2))
+        return {
+            "count_of_rooms": max(1, int(occ.get("rooms") or 1)),
+            "occ_adults": occ_adults,
+            "occ_children": max(0, int(occ.get("children") or 0)),
+            "occ_infants": max(0, int(occ.get("infants") or 0)),
+            "default_occupancy": occ_adults,
+        }
 
     def _upsert_channex_room_type(
         self, db: Client, tenant_id: str, channex_property_id: str,
@@ -347,11 +378,7 @@ class ContentSyncMixin:
         attrs = {
             "property_id": channex_property_id,
             "title": title,
-            "count_of_rooms": 1,
-            "occ_adults": 4,
-            "occ_children": 0,
-            "occ_infants": 0,        # Channex-Pflichtfeld (live verifiziert)
-            "default_occupancy": 2,
+            **self._room_type_occupancy(prop_row),
             "room_kind": "room",
         }
         # Room-Type-Content (Beschreibung + Fotos, KEIN important_information).

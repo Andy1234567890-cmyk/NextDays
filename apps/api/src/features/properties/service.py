@@ -28,6 +28,30 @@ from .schemas import (
 
 log = get_logger("nextdays.properties")
 
+# Felder, deren Änderung einen Channex-Content-Resync auslöst (Beschreibung/
+# Titel/Adresse/Typ/Ausstattung gehen an OTAs). Reine Preis-Updates sind NICHT
+# dabei — die synct der rates-Slice separat.
+# Änderungen an diesen Feldern lösen einen Content-Sync zu Channex aus, weil
+# sie in den Property-/Room-Type-Content einfließen. max_guests + type_attributes
+# gehören dazu: aus ihnen wird die Room-Type-Belegung (occ_adults/children/
+# infants, count_of_rooms) gebaut, die an die OTAs geht.
+_CONTENT_FIELDS = frozenset({
+    "title", "description", "platform_description", "property_type",
+    "street", "house_number", "postal_code", "city", "country",
+    "lat", "lng", "amenities", "max_guests", "type_attributes",
+})
+
+
+def _max_stay_of(row: dict) -> int:
+    """Maximalaufenthalt (Nächte) aus type_attributes.availability.maxStay lesen.
+    0/fehlend = keine Obergrenze. Der Kunde setzt ihn im Verfügbarkeits-Formular;
+    Channex nimmt ihn als max_stay-Restriction (an die Portale)."""
+    avail = (row.get("type_attributes") or {}).get("availability") or {}
+    try:
+        return max(0, int(avail.get("maxStay") or 0))
+    except (TypeError, ValueError):
+        return 0
+
 
 class PropertyError(Exception):
     """Fachlicher Fehler; vom Router auf HTTP-Status gemappt."""
@@ -194,8 +218,40 @@ class PropertiesService:
         attrs = changes.get("type_attributes")
         if isinstance(attrs, dict) and isinstance(attrs.get("pricing"), dict):
             self._sync_pricing_config(tenant_id, property_id, attrs["pricing"])
+        # Content-Felder (Beschreibung, Titel, Adresse, Typ, Fotos, Ausstattung)
+        # nach Channex spiegeln, sobald sie sich ändern — sonst bliebe der
+        # OTA-Content veraltet (z. B. Beschreibung nie an Booking/Airbnb). Nur bei
+        # content-relevanten Änderungen (reine Preis-Updates synct der rates-Slice).
+        row = res.data[0]
+        if _CONTENT_FIELDS & changes.keys():
+            self._sync_to_channel_manager(
+                tenant_id,
+                property_id=property_id,
+                title=row.get("title") or "Unbenannt",
+                currency=row.get("currency") or "EUR",
+            )
+        # Maximalaufenthalt (Verfügbarkeits-Formular) an die Portale spiegeln,
+        # sobald type_attributes sich ändert — sonst bliebe die Obergrenze bei
+        # Booking/Airbnb veraltet. Best-effort, blockiert das Speichern nie.
+        if "type_attributes" in changes:
+            self._push_max_stay(tenant_id, property_id, _max_stay_of(row))
         log.info("property_updated", tenant_id=tenant_id, property_id=property_id)
-        return PropertyResponse(**_row(res.data[0]))
+        return PropertyResponse(**_row(row))
+
+    def _push_max_stay(self, tenant_id: str, property_id: str, max_stay: int) -> None:
+        """Maximalaufenthalt an Channex pushen (best-effort, Lazy-Import). 0 wird
+        ebenfalls gepusht, damit das Entfernen der Obergrenze synchron ist."""
+        from datetime import date, timedelta
+
+        try:
+            from src.features.channel_manager.service import ChannelManagerService
+
+            today = date.today()
+            ChannelManagerService(service_client=self._db).push_max_stay_for_property(
+                tenant_id, property_id, today, today + timedelta(days=364), max_stay
+            )
+        except Exception as exc:  # noqa: BLE001 — Auto-Push darf nie blockieren
+            log.warning("max_stay_autopush_failed", property_id=property_id, error=str(exc))
 
     def _sync_pricing_config(
         self, tenant_id: str, property_id: str, pricing: dict
@@ -295,7 +351,11 @@ class PropertiesService:
     # (Kalender-Thumbnail, öffentliche Listings, DP-Übersicht, Inbox) weiter nutzen.
 
     GALLERY_MAX_BYTES = 20 * 1024 * 1024
-    GALLERY_MIN_BYTES = 50 * 1024
+    # Nur Schutz gegen leere/kaputte Dateien — KEINE Qualitätsschwelle über die
+    # Bytegröße: moderne Formate (AVIF/WebP) werden im Client zu JPEG konvertiert
+    # und sind dann legitim klein (oft < 50 KB). Die echte Mindestgröße prüft der
+    # Client über die Auflösung (≥ 600×400 px).
+    GALLERY_MIN_BYTES = 2 * 1024
     GALLERY_MIME = {"image/png": "png", "image/jpeg": "jpg"}
 
     def list_photos(
@@ -322,9 +382,10 @@ class PropertiesService:
     ) -> PropertyPhoto:
         """Ein Galerie-Foto hochladen → Bucket + neue Zeile am Ende einsortieren.
 
-        Validiert Typ (JPEG/PNG) und Größe (50 KB–20 MB) serverseitig. Das erste
-        Foto eines Objekts wird automatisch zum Cover. Aktualisiert anschließend
-        den properties.photos-Spiegel.
+        Validiert Typ (JPEG/PNG) und Größe (bis 20 MB, nicht leer) serverseitig.
+        Moderne Formate (AVIF/WebP/HEIC) konvertiert der Client vorab zu JPEG; die
+        Mindestauflösung prüft der Client. Das erste Foto eines Objekts wird
+        automatisch zum Cover. Aktualisiert anschließend den properties.photos-Spiegel.
         """
         tenant_id = self._require_tenant(ctx)
         self.get(ctx, property_id)  # 404, wenn nicht im eigenen Tenant
@@ -333,7 +394,7 @@ class PropertiesService:
         if not ext:
             raise PropertyError("Nur JPEG/PNG erlaubt.", status_code=415)
         if len(content) < self.GALLERY_MIN_BYTES:
-            raise PropertyError("Bild ist zu klein (min. 50 KB).", status_code=413)
+            raise PropertyError("Bild ist leer oder beschädigt.", status_code=413)
         if len(content) > self.GALLERY_MAX_BYTES:
             raise PropertyError("Bild ist zu groß (max. 20 MB).", status_code=413)
 
@@ -526,6 +587,25 @@ class PropertiesService:
             ).eq("id", property_id).execute()
         except Exception as exc:  # noqa: BLE001 — Spiegelung darf Vorgang nicht kippen
             log.warning("property_photos_mirror_failed", property_id=property_id, error=str(exc))
+        # Fotos gehören zum OTA-Content: nach jeder Foto-Änderung (Hinzufügen,
+        # Umsortieren, Cover/Caption, Löschen) den Content an Channex spiegeln —
+        # sonst kämen Fotos NIE bei Booking/Airbnb an (Upload triggerte bisher nur
+        # den lokalen properties.photos-Spiegel, keinen Channex-Sync).
+        prop = (
+            self._db.table("properties")
+            .select("title, currency")
+            .eq("tenant_id", tenant_id)
+            .eq("id", property_id)
+            .limit(1)
+            .execute()
+        ).data
+        if prop:
+            self._sync_to_channel_manager(
+                tenant_id,
+                property_id=property_id,
+                title=prop[0].get("title") or "Unbenannt",
+                currency=prop[0].get("currency") or "EUR",
+            )
 
     def publish(self, ctx: AuthContext, property_id: str) -> PropertyResponse:
         """Objekt veröffentlichen: draft→active + Channex-Sync + Verfügbarkeit.
@@ -632,6 +712,14 @@ class PropertiesService:
                 cm.push_rate_for_property(
                     tenant_id, property_id, today, today + timedelta(days=364),
                     min_stay=min_stay,
+                )
+            # Maximalaufenthalt aus dem Verfügbarkeits-Formular an die Portale
+            # (Channex-Key max_stay). 0 = keine Obergrenze → nur pushen, wenn > 0.
+            max_stay = _max_stay_of(row)
+            if max_stay > 0:
+                cm.push_max_stay_for_property(
+                    tenant_id, property_id, today, today + timedelta(days=364),
+                    max_stay,
                 )
         except Exception as exc:  # noqa: BLE001
             log.warning("publish_channex_push_failed", property_id=property_id, error=str(exc))

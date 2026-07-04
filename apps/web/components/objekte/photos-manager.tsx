@@ -29,10 +29,68 @@ import {
   uploadPropertyPhoto,
 } from "@/lib/properties";
 
-const ACCEPTED = ["image/jpeg", "image/png"];
-const MIN_BYTES = 50 * 1024;
+// Buchungsportale (via Channex) nehmen nur JPEG/PNG an — die speichern/senden
+// wir. Der Kunde darf aber auch moderne Formate (WebP/AVIF/HEIC) hochladen; die
+// werden vor dem Upload im Browser zu JPEG konvertiert, damit die Portale sie
+// sicher annehmen. HEIC/HEIF melden manche Browser mit leerem MIME-Typ → auch
+// per Endung erkennen.
+const PORTAL_READY = ["image/jpeg", "image/png"];
+const CONVERTIBLE = ["image/webp", "image/avif", "image/heic", "image/heif"];
+const CONVERTIBLE_EXT = /\.(webp|avif|heic|heif)$/i;
 const MAX_BYTES = 20 * 1024 * 1024;
+// Untergrenze über die AUFLÖSUNG, nicht die Dateigröße: moderne Formate (AVIF/
+// WebP) komprimieren echte Fotos oft unter 50 KB, sind aber vollwertig. Die
+// Mindestmaße wehren nur winzige Icons/Thumbnails ab.
+const MIN_WIDTH = 600;
+const MIN_HEIGHT = 400;
 const CAPTION_MAX = 100;
+
+function isConvertible(file: File): boolean {
+  return CONVERTIBLE.includes(file.type) || CONVERTIBLE_EXT.test(file.name);
+}
+
+// Maße eines Bildes ermitteln (für die Auflösungs-Untergrenze). Kann der Browser
+// das Format nicht dekodieren, kommt null → Aufrufer meldet Formatfehler.
+async function imageSize(file: File): Promise<{ w: number; h: number } | null> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const size = { w: bitmap.width, h: bitmap.height };
+    bitmap.close();
+    return size;
+  } catch {
+    return null;
+  }
+}
+
+// Wandelt ein nicht-portalfähiges Bild (WebP/AVIF/HEIC) im Browser in JPEG um.
+// Nutzt createImageBitmap (dekodiert AVIF/WebP nativ, wo der Browser es kann)
+// und zeichnet auf ein Canvas. Gibt bei Erfolg (neue .jpg-Datei, Maße) zurück,
+// sonst null (Browser kann das Format nicht dekodieren → Aufrufer meldet Fehler).
+async function toJpeg(
+  file: File,
+): Promise<{ file: File; w: number; h: number } | null> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const canvas = document.createElement("canvas");
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(bitmap, 0, 0);
+    const w = bitmap.width;
+    const h = bitmap.height;
+    bitmap.close();
+    // Qualität 0,92: gut genug für Portale, ohne die Datei unnötig aufzublähen.
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", 0.92),
+    );
+    if (!blob) return null;
+    const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+    return { file: new File([blob], name, { type: "image/jpeg" }), w, h };
+  } catch {
+    return null;
+  }
+}
 
 type UploadState = { name: string; error: string | null; busy: boolean };
 
@@ -68,10 +126,16 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
     onChange: () => void reload(),
   });
 
-  function validate(file: File): string | null {
-    if (!ACCEPTED.includes(file.type)) return t("errorType");
-    if (file.size < MIN_BYTES) return t("errorTooSmall");
-    if (file.size > MAX_BYTES) return t("errorTooLarge");
+  // Größe erst nach evtl. Konvertierung prüfen. Der Typ-Check lässt portalfähige
+  // (JPEG/PNG) und konvertierbare (WebP/AVIF/HEIC) Formate zu; alles andere raus.
+  function validateType(file: File): string | null {
+    if (!PORTAL_READY.includes(file.type) && !isConvertible(file)) {
+      return t("errorType");
+    }
+    return null;
+  }
+  function validateResolution(w: number, h: number): string | null {
+    if (w < MIN_WIDTH || h < MIN_HEIGHT) return t("errorTooSmall");
     return null;
   }
 
@@ -80,14 +144,45 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
     setUploads(files.map((f) => ({ name: f.name, error: null, busy: true })));
     const added: PropertyPhoto[] = [];
     for (let i = 0; i < files.length; i += 1) {
-      const file = files[i];
-      const invalid = validate(file);
-      if (invalid) {
+      const fail = (error: string) =>
         setUploads((prev) =>
-          prev.map((u, idx) =>
-            idx === i ? { ...u, busy: false, error: invalid } : u,
-          ),
+          prev.map((u, idx) => (idx === i ? { ...u, busy: false, error } : u)),
         );
+      let file = files[i];
+      const badType = validateType(file);
+      if (badType) {
+        fail(badType);
+        continue;
+      }
+      // Byte-Obergrenze (vor der Konvertierung, gegen riesige Rohdateien).
+      if (file.size > MAX_BYTES) {
+        fail(t("errorTooLarge"));
+        continue;
+      }
+      // Moderne Formate vor dem Upload zu JPEG konvertieren (Portal-Kompatibilität).
+      // Die Bildmaße fallen dabei ab; sonst separat ermitteln. Untergrenze ist
+      // die AUFLÖSUNG, nicht die Dateigröße (AVIF/WebP sind legitim klein).
+      let dims: { w: number; h: number } | null;
+      if (isConvertible(file)) {
+        // eslint-disable-next-line no-await-in-loop -- sequenziell für stabile Reihenfolge
+        const jpeg = await toJpeg(file);
+        if (!jpeg) {
+          fail(t("errorType"));
+          continue;
+        }
+        file = jpeg.file;
+        dims = { w: jpeg.w, h: jpeg.h };
+      } else {
+        // eslint-disable-next-line no-await-in-loop -- sequenziell für stabile Reihenfolge
+        dims = await imageSize(file);
+      }
+      if (!dims) {
+        fail(t("errorType"));
+        continue;
+      }
+      const badRes = validateResolution(dims.w, dims.h);
+      if (badRes) {
+        fail(badRes);
         continue;
       }
       // eslint-disable-next-line no-await-in-loop -- sequenziell für stabile Reihenfolge
@@ -228,7 +323,7 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png"
+        accept="image/jpeg,image/png,image/webp,image/avif,image/heic,image/heif,.heic,.heif"
         multiple
         className="hidden"
         onChange={(e) => {
