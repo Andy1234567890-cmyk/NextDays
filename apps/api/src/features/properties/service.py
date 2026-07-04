@@ -618,9 +618,12 @@ class PropertiesService:
         # Umsortieren, Cover/Caption, Löschen) den Content an Channex spiegeln —
         # sonst kämen Fotos NIE bei Booking/Airbnb an (Upload triggerte bisher nur
         # den lokalen properties.photos-Spiegel, keinen Channex-Sync).
+        # Nur `title` selektieren — die Währung hat properties NICHT als Spalte
+        # (sie liegt im rate_plan); sync_property_to_channex lädt die echte
+        # currency ohnehin selbst aus dem rate_plan. "EUR" ist nur Platzhalter.
         prop = (
             self._db.table("properties")
-            .select("title, currency")
+            .select("title")
             .eq("tenant_id", tenant_id)
             .eq("id", property_id)
             .limit(1)
@@ -631,7 +634,7 @@ class PropertiesService:
                 tenant_id,
                 property_id=property_id,
                 title=prop[0].get("title") or "Unbenannt",
-                currency=prop[0].get("currency") or "EUR",
+                currency="EUR",
             )
 
     def publish(self, ctx: AuthContext, property_id: str) -> PropertyResponse:
