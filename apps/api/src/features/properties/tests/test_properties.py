@@ -233,6 +233,23 @@ def test_publish_missing_property_404() -> None:
     assert exc.value.status_code == 404
 
 
+def test_resync_missing_property_404() -> None:
+    db = _PublishDB({"properties": []})
+    svc = PropertiesService(service_client=db)
+    with pytest.raises(PropertyError) as exc:
+        svc.resync_content(_ctx(), "p-x")
+    assert exc.value.status_code == 404
+
+
+def test_resync_existing_property_returns_it() -> None:
+    # Objekt vorhanden → Resync liefert es zurück (Content-/max_stay-Push sind
+    # best-effort und verschlucken den fehlenden Channel-Manager im Mock).
+    db = _PublishDB({"properties": [_row()]})
+    svc = PropertiesService(service_client=db)
+    res = svc.resync_content(_ctx(), "p-1")
+    assert res.id == "p-1"
+
+
 # --- Foto-/Galerieverwaltung -------------------------------------------------
 #
 # In-Memory-Fake-DB, die property_photos und den properties.photos-Spiegel echt

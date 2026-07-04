@@ -159,6 +159,8 @@ class PropertyPhoto(BaseModel):
     is_cover: bool
     # Locale → Bildunterschrift, z. B. {"de": "Wohnzimmer", "en": "Living room"}.
     caption: dict[str, str] = Field(default_factory=dict)
+    # Urheber/Fotograf (an die Buchungsportale mitgesendet). Leer = kein Autor.
+    author: str | None = None
     created_at: str | None = None
     updated_at: str | None = None
 
@@ -175,14 +177,17 @@ class PhotoReorderRequest(BaseModel):
 
 
 class PhotoUpdateRequest(BaseModel):
-    """Partielle Aktualisierung eines Fotos: Caption je Locale und/oder Cover.
+    """Partielle Aktualisierung eines Fotos: Caption je Locale, Cover und/oder
+    Autor.
 
     ``caption`` ersetzt die gesamte Locale-Map (nicht gesetzt = unverändert).
     ``is_cover=true`` macht dieses Foto zum alleinigen Cover des Objekts.
+    ``author`` setzt den Urheber (leerer String = Autor entfernen).
     """
 
     caption: dict[str, str] | None = None
     is_cover: bool | None = None
+    author: str | None = None
 
 
 class SliceHealth(BaseModel):

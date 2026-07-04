@@ -108,6 +108,23 @@ def publish_property(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post("/{property_id}/resync", response_model=PropertyResponse)
+def resync_property(
+    property_id: str,
+    service: PropertiesServiceDep,
+    ctx: Annotated[
+        AuthContext,
+        Depends(require_lodgify_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
+    ],
+) -> PropertyResponse:
+    """Objekt-Inhalte (inkl. Fotos, Ausstattung, Belegung) erneut an die
+    Buchungsportale übertragen — ohne Statuswechsel."""
+    try:
+        return service.resync_content(ctx, property_id)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.post("/{property_id}/image", response_model=ImageUploadResponse)
 async def upload_property_image(
     property_id: str,

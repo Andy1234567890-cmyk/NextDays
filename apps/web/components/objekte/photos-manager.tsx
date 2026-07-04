@@ -25,9 +25,11 @@ import {
   deletePropertyPhoto,
   listPropertyPhotos,
   reorderPropertyPhotos,
+  resyncProperty,
   updatePropertyPhoto,
   uploadPropertyPhoto,
 } from "@/lib/properties";
+import { Button } from "@/components/ui/button";
 
 // Buchungsportale (via Channex) nehmen nur JPEG/PNG an — die speichern/senden
 // wir. Der Kunde darf aber auch moderne Formate (WebP/AVIF/HEIC) hochladen; die
@@ -97,6 +99,7 @@ type UploadState = { name: string; error: string | null; busy: boolean };
 export function PhotosManager({ propertyId }: { propertyId: string }) {
   const t = useTranslations("fotos");
   const [photos, setPhotos] = useState<PropertyPhoto[]>([]);
+  const [resyncing, setResyncing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dragOver, setDragOver] = useState(false);
   const [uploads, setUploads] = useState<UploadState[]>([]);
@@ -290,14 +293,52 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
     } else toast.error(res.error);
   }
 
+  // Urheber/Fotograf speichern (onBlur). Nur bei echter Änderung; leer = entfernen.
+  async function saveAuthor(photo: PropertyPhoto, text: string) {
+    const trimmed = text.trim();
+    if ((photo.author ?? "") === trimmed) return;
+    const res = await updatePropertyPhoto(propertyId, photo.id, {
+      author: trimmed,
+    });
+    if (res.ok) {
+      setPhotos((prev) =>
+        prev.map((p) => (p.id === photo.id ? { ...p, author: res.data.author } : p)),
+      );
+    } else toast.error(res.error);
+  }
+
   const cover = photos.find((p) => p.is_cover) ?? null;
   const rest = photos.filter((p) => !p.is_cover);
 
+  async function resyncToPortals() {
+    setResyncing(true);
+    const res = await resyncProperty(propertyId);
+    setResyncing(false);
+    if (res.ok) toast.success(t("resyncDone"));
+    else toast.error(res.error);
+  }
+
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="font-display text-3xl font-extrabold">{t("title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h1 className="font-display text-3xl font-extrabold">{t("title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
+        </div>
+        {photos.length > 0 && (
+          <Button
+            variant="outline"
+            onClick={() => void resyncToPortals()}
+            disabled={resyncing}
+            className="gap-2"
+          >
+            <Icon
+              icon={resyncing ? "ph:spinner" : "ph:upload-simple"}
+              className={`size-4 ${resyncing ? "animate-spin" : ""}`}
+            />
+            {t("resyncCta")}
+          </Button>
+        )}
       </div>
 
       {/* Multi-Upload-Zone */}
@@ -398,6 +439,7 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
               onSetCover={setCover}
               onRemove={removePhoto}
               onSaveCaption={saveCaption}
+              onSaveAuthor={saveAuthor}
             />
           )}
 
@@ -418,6 +460,7 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
                   onSetCover={setCover}
                   onRemove={removePhoto}
                   onSaveCaption={saveCaption}
+                  onSaveAuthor={saveAuthor}
                 />
               ))}
             </div>
@@ -443,6 +486,7 @@ function PhotoCard({
   onSetCover,
   onRemove,
   onSaveCaption,
+  onSaveAuthor,
 }: {
   photo: PropertyPhoto;
   lang: Locale;
@@ -456,13 +500,18 @@ function PhotoCard({
   onSetCover: (photo: PropertyPhoto) => void;
   onRemove: (photo: PropertyPhoto) => void;
   onSaveCaption: (photo: PropertyPhoto, text: string) => void;
+  onSaveAuthor: (photo: PropertyPhoto, text: string) => void;
 }) {
   // Lokaler Entwurf, damit der Zähler live mitläuft; gespeichert wird onBlur.
   const [value, setValue] = useState(photo.caption[lang] ?? "");
+  const [author, setAuthor] = useState(photo.author ?? "");
 
   useEffect(() => {
     setValue(photo.caption[lang] ?? "");
   }, [photo.caption, lang]);
+  useEffect(() => {
+    setAuthor(photo.author ?? "");
+  }, [photo.author]);
 
   return (
     <div className="flex flex-col overflow-hidden rounded-(--radius) border border-border bg-card">
@@ -543,6 +592,19 @@ function PhotoCard({
         <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
           {value.length}/{CAPTION_MAX}
         </span>
+      </div>
+      {/* Urheber/Fotograf — geht an die Buchungsportale mit. */}
+      <div className="flex items-center gap-2 border-t border-border px-3 py-2">
+        <Icon icon="ph:camera" className="size-4 shrink-0 text-muted-foreground" />
+        <input
+          type="text"
+          maxLength={CAPTION_MAX}
+          value={author}
+          onChange={(e) => setAuthor(e.target.value)}
+          onBlur={() => onSaveAuthor(photo, author)}
+          placeholder={t("authorPlaceholder")}
+          className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+        />
       </div>
     </div>
   );

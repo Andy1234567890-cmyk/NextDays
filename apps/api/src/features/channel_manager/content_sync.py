@@ -134,7 +134,7 @@ class ContentSyncMixin:
         # verifiziert, daher ist der property_id-Filter hier ausreichend.
         photos = (
             db.table("property_photos")
-            .select("url, sort_order, is_cover, caption")
+            .select("url, sort_order, is_cover, caption, author")
             .eq("property_id", property_id)
             .order("sort_order")
             .execute()

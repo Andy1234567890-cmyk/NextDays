@@ -94,6 +94,12 @@ export async function publishProperty(id: string): Promise<Result<Property>> {
   return call(`/properties/${id}/publish`, { method: "POST" });
 }
 
+/** Objekt-Inhalte (Beschreibung, Ausstattung, Fotos, Belegung, Adresse) erneut
+ *  an die Buchungsportale übertragen — ohne Statuswechsel. */
+export async function resyncProperty(id: string): Promise<Result<Property>> {
+  return call(`/properties/${id}/resync`, { method: "POST" });
+}
+
 export async function updateProperty(
   id: string,
   input: PropertyInput,
@@ -154,6 +160,8 @@ export type PropertyPhoto = {
   is_cover: boolean;
   // Locale → Bildunterschrift, z. B. { de: "Wohnzimmer", en: "Living room" }.
   caption: Record<string, string>;
+  // Urheber/Fotograf (an die Buchungsportale mitgesendet). null = kein Autor.
+  author: string | null;
   created_at: string | null;
   updated_at: string | null;
 };
@@ -215,7 +223,11 @@ export async function reorderPropertyPhotos(
 export async function updatePropertyPhoto(
   id: string,
   photoId: string,
-  input: { caption?: Record<string, string>; is_cover?: boolean },
+  input: {
+    caption?: Record<string, string>;
+    is_cover?: boolean;
+    author?: string;
+  },
 ): Promise<Result<PropertyPhoto>> {
   return call(`/properties/${id}/photos/${photoId}`, {
     method: "PATCH",

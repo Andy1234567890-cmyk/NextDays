@@ -588,7 +588,10 @@
     "addLanguage": "Add language",
     "cancel": "Cancel",
     "save": "Save",
-    "saving": "Saving …"
+    "saving": "Saving …",
+    "resyncCta": "Send to booking portals",
+    "resyncDone": "Sent to the booking portals.",
+    "authorPlaceholder": "Author / photographer (optional)"
   },
   "owners": {
     "title": "Owners",

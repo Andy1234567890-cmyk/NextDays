@@ -67,7 +67,8 @@ def _photos(photos_rows: list[dict[str, Any]], locale_order: list[str]) -> list[
     """property_photos-Zeilen → Channex-Foto-Objekte.
 
     Cover (`is_cover`) zuerst (position 0), danach nach `sort_order`. `description`
-    aus der mehrsprachigen `caption` (weggelassen, wenn leer). `kind` = "photo"."""
+    aus der mehrsprachigen `caption` (weggelassen, wenn leer). `author` = Urheber
+    (weggelassen, wenn leer). `kind` = "photo"."""
     if not photos_rows:
         return []
     ordered = sorted(
@@ -83,6 +84,9 @@ def _photos(photos_rows: list[dict[str, Any]], locale_order: list[str]) -> list[
         caption = _text_in_order(row.get("caption"), locale_order)
         if caption:
             photo["description"] = caption
+        author = row.get("author")
+        if author and str(author).strip():
+            photo["author"] = str(author).strip()
         out.append(photo)
     return out
 

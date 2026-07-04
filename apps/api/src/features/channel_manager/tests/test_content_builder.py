@@ -56,6 +56,18 @@ def test_photo_without_caption_omits_description() -> None:
     assert content["photos"][0]["kind"] == "photo"
 
 
+def test_photo_author_included_when_set() -> None:
+    photos = [
+        {"url": "a.jpg", "sort_order": 0, "is_cover": True, "caption": {},
+         "author": "Max Mustermann"},
+        {"url": "b.jpg", "sort_order": 1, "is_cover": False, "caption": {},
+         "author": "  "},  # nur Whitespace → weggelassen
+    ]
+    content = cb.build_property_content({}, photos, locale_order=["de"])
+    assert content["photos"][0]["author"] == "Max Mustermann"
+    assert "author" not in content["photos"][1]
+
+
 def test_photo_without_url_is_skipped() -> None:
     photos = [
         {"url": "", "sort_order": 0, "is_cover": True, "caption": {}},

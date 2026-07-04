@@ -191,6 +191,33 @@ class PropertiesService:
         except Exception as exc:  # noqa: BLE001 — Auto-Sync darf nie blockieren
             log.warning("channel_manager_autosync_failed", property_id=property_id, error=str(exc))
 
+    def resync_content(self, ctx: AuthContext, property_id: str) -> PropertyResponse:
+        """Objekt-Inhalte (Beschreibung, Ausstattung, Fotos, Belegung, Adresse …)
+        erneut an die Buchungsportale übertragen — ohne Statuswechsel. Für den
+        „An Buchungsportale übertragen"-Button: aktualisiert den OTA-Content und
+        pusht den Maximalaufenthalt. Idempotent."""
+        tenant_id = self._require_tenant(ctx)
+        row = (
+            self._db.table("properties")
+            .select("*")
+            .eq("id", property_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not row:
+            raise PropertyError("Objekt nicht gefunden.", status_code=404)
+        r = row[0]
+        self._sync_to_channel_manager(
+            tenant_id,
+            property_id=property_id,
+            title=r.get("title") or "Unbenannt",
+            currency=r.get("currency") or "EUR",
+        )
+        self._push_max_stay(tenant_id, property_id, _max_stay_of(r))
+        log.info("property_resynced", tenant_id=tenant_id, property_id=property_id)
+        return PropertyResponse(**_row(r))
+
     def update(
         self, ctx: AuthContext, property_id: str, req: PropertyUpdate
     ) -> PropertyResponse:
@@ -793,6 +820,7 @@ def _photo_row(r: dict) -> dict:
         "sort_order": int(r.get("sort_order") or 0),
         "is_cover": bool(r.get("is_cover")),
         "caption": r.get("caption") or {},
+        "author": r.get("author") or None,
         "created_at": str(r["created_at"]) if r.get("created_at") else None,
         "updated_at": str(r["updated_at"]) if r.get("updated_at") else None,
     }
