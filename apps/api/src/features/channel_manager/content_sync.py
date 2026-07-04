@@ -98,6 +98,29 @@ class ContentSyncMixin:
     #   jeder rate_plans-Eintrag       → 1 Channex-Rate-Plan     (am Room-Type)
     # Idempotent: POST wenn kein Mapping existiert, sonst PUT; UUID wird gemappt.
     # Geld: rate_plans.base_price (Euro, numeric) → Cent-Integer NUR an der Grenze.
+    def resync_all_content(self, tenant_id: str) -> None:
+        """Alle Objekte des Tenants inhaltlich neu an Channex spiegeln. Für tenant-
+        weite Content-Änderungen, die JEDES Objekt betreffen — z. B. das Firmen-/
+        Unterkunftslogo (company_logo_url → property.logo_url). Best-effort je
+        Objekt; ein Fehler an einem Objekt stoppt die übrigen nicht. properties hat
+        keine currency-Spalte (die liegt im rate_plan) → sync_content lädt sie selbst."""
+        db = self._require_db()
+        props = (
+            db.table("properties").select("id, title").eq("tenant_id", tenant_id)
+            .execute()
+        ).data or []
+        for p in props:
+            try:
+                self.sync_content(
+                    tenant_id, property_id=p["id"],
+                    title=p.get("title") or "Unbenannt", currency="EUR",
+                )
+            except Exception as exc:  # noqa: BLE001 — pro Objekt best-effort
+                log.warning(
+                    "resync_all_content_property_failed",
+                    tenant_id=tenant_id, property_id=p.get("id"), error=str(exc),
+                )
+
     def sync_content(
         self,
         tenant_id: str,

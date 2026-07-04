@@ -7,6 +7,10 @@ properties/auth.account_service (PROJECT.md §2 — Business-Logik im Backend).
 Beträge werden serverseitig aus den Positionen berechnet (Decimal,
 ROUND_HALF_UP, 2 Nachkommastellen) — der Client kann sie nicht fälschen.
 """
+# Bewusst gebündelter Service (Rechnungen + Kunden + Angebote + Firmenprofil/Logo)
+# knapp über der 1300-Zeilen-Warnschwelle. Eine Aufspaltung ist als eigener
+# Refactor geplant, nicht in einer Bugfix-Änderung — daher hier explizit erlaubt.
+# pylint: disable=too-many-lines
 import secrets
 from decimal import ROUND_HALF_UP, Decimal
 
@@ -902,6 +906,15 @@ class BuchhaltungService:
             {"tenant_id": tenant_id, "company_logo_url": url},
             on_conflict="tenant_id",
         ).execute()
+        # Firmenlogo = Unterkunftslogo an den Buchungsportalen → alle Objekte des
+        # Tenants sofort neu spiegeln (sonst käme es erst beim nächsten Speichern).
+        # Best-effort; darf den Upload nie kippen.
+        try:
+            from src.features.channel_manager.service import ChannelManagerService
+
+            ChannelManagerService(service_client=self._db).resync_all_content(tenant_id)
+        except Exception as exc:  # noqa: BLE001 — Auto-Resync darf nie blockieren
+            log.warning("logo_resync_failed", tenant_id=tenant_id, error=str(exc))
         log.info("company_logo_uploaded", tenant_id=tenant_id)
         return self.get_company_profile(ctx)
 
