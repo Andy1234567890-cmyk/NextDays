@@ -182,7 +182,7 @@ export function PropertyOverview({ initial }: { initial: Property }) {
       <SectionCard
         title="Räume"
         hint="Welche Räume gibt es?"
-        channel="ota"
+        channel="local"
         onEdit={() => setSection("rooms")}
       >
         {rooms.length ? (
@@ -200,7 +200,7 @@ export function PropertyOverview({ initial }: { initial: Property }) {
       <SectionCard
         title="Schlafmöglichkeiten"
         hint="Welche Betten gibt es?"
-        channel="ota"
+        channel="local"
         onEdit={() => setSection("beds")}
       >
         {beds.length ? (

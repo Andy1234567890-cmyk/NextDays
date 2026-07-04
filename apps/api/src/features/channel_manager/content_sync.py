@@ -252,7 +252,8 @@ class ContentSyncMixin:
         res = (
             db.table("tenant_billing_profile")
             .select("company_street, company_house_number, company_postal_code, "
-                    "company_city, company_country, email, phone_number, website")
+                    "company_city, company_country, email, phone_number, website, "
+                    "company_logo_url")
             .eq("tenant_id", tenant_id)
             .limit(1)
             .execute()
@@ -271,6 +272,8 @@ class ContentSyncMixin:
             "email": p.get("email"),
             "phone": p.get("phone_number"),
             "website": p.get("website"),
+            # Unterkunftslogo: zentrales Firmenlogo (/konto) → Channex/OTAs.
+            "logo_url": p.get("company_logo_url"),
         }
         return {k: v for k, v in candidates.items() if v}
 
