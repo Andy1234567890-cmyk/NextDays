@@ -608,6 +608,27 @@ def test_import_booking_skips_without_property_mapping() -> None:
     assert res["skipped"] == 1 and db.tables["reservations"] == []
 
 
+def test_import_ari_skipped_without_active_channel() -> None:
+    # Kein aktiver Kanal → Channex ist nicht die Verfügbarkeits-Wahrheit; der
+    # Import darf availability/stop_sell NICHT überschreiben (sonst flächig
+    # 'blocked' + anonyme stop_sell-Zeilen aus Channex' Default availability=0).
+    db = _ImportDB()
+    _seed_property(db)
+    # Alle Kanäle des Objekts auf Aus.
+    for conn in db.tables["channex_channel_connection"]:
+        conn["is_active"] = False
+    channex = _ImportChannex(
+        availability={"cx-rt": {"2026-07-01": 0}},
+        restrictions={"cx-rp": {"2026-07-01": {"stop_sell": True}}},
+    )
+    res = _import_svc(channex, db).import_ari_for_property(
+        "t1", "cx-prop", days_ahead=1, today=date(2026, 7, 1)
+    )
+    assert res == {"prices": 0, "availability": 0, "stop_sell": 0}
+    assert db.tables["availability"] == []
+    assert db.tables["stop_sell"] == []
+
+
 def test_import_ari_prices_and_availability() -> None:
     db = _ImportDB()
     _seed_property(db)

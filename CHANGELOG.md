@@ -98,6 +98,31 @@ wichtigsten Punkte konsolidiert:
 - **Redis-Rate-Limiting** für die API (`core/ratelimit*.py`, 429 +
   `Retry-After`/`X-RateLimit-*`) — Betrieb: `deploy/RATE-LIMITING.md`.
 
+### Behoben (Stop-Sell-Integrität)
+- **Stop-Sell sperrt jetzt ALLE Kanäle**: die eigene Buchungsstrecke
+  (`booking_engine`) und die interne Rezeptions-Buchung (`reservations.create`)
+  prüfen explizit die `stop_sell`-Tabelle und lehnen mit 409 ab. Vorher war ein
+  Stop-Sell-Tag nur zufällig über `availability=blocked` geschützt — ein
+  Sync-Verzug hätte eine Doppelbuchung erlaubt.
+- **Stop-Sell nie auf gebuchten Tagen**: `set_stop_sell` und der Channex-Import
+  überspringen `availability=booked`-Tage (`_booked_dates`); `set_stop_sell`
+  liefert `{stopped_days, skipped_booked}` und pusht nur die tatsächlich
+  gesetzten Tage an Channex (nicht mehr die rohen Range-Grenzen).
+- **Stop-Sell-Echo-Loop geschlossen**: der ARI-Import überschreibt bestehende
+  `source='manual'`-Stops (mit `agency_id`/`reason`) nicht mehr zu anonymen
+  `channex`-Zeilen — er schreibt nur noch Tage, die es lokal noch nicht gibt
+  (idempotent, kein Realtime-Bump).
+- **Import ohne aktiven Kanal**: `import_ari_for_property` überspringt Objekte
+  ohne aktive Kanal-Verbindung (`_has_active_connection`, symmetrisch zum
+  Push-Gate). Ohne verbundenen Kanal meldet Channex per Default
+  `availability=0`/`stop_sell` für alle Tage; der Import hätte das als flächiges
+  „gesperrt" + massenhaft anonyme Stop-Sells zurückgeschrieben.
+- **Stop-Sell-Seite zeigt Buchungen**: gebuchte Tage erscheinen mit Gastname
+  (nicht als anonymes Schloss), sind nicht auswählbar; das Panel meldet
+  Überschneidungen mit Buchungen und lässt manuelle Stops wieder aufheben.
+- **Terminologie**: durchgängig „Stop-Sell" (statt „Verkaufsstopp"/„Stop-Sale")
+  in allen 24 Locales, Kalenderbalken und Dialogen.
+
 ### Geändert
 - **Zahlungs-Gateway: Stripe Connect Custom ist primär** ([ADR-0011](docs/decisions/0011-zahlungs-gateway-stripe-primaer.md),
   ersetzt ADR-0003); Revolut bleibt sekundär im Adapter-Interface.

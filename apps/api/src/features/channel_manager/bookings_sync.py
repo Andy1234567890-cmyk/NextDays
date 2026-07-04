@@ -524,6 +524,21 @@ class BookingsSyncMixin:
         if not property_id:
             return result
 
+        # Kein aktiver Kanal → Channex ist NICHT die Verfügbarkeits-Wahrheit für
+        # dieses Objekt. Ohne verbundenen Kanal wird nichts an Channex gepusht
+        # (kein Kontingent, keine Rate), sodass Channex per Default availability=0
+        # / stop_sell für ALLE Tage meldet. Würde der Import das zurückschreiben,
+        # überschriebe er die lokale (Host-)Verfügbarkeit flächig mit „gesperrt"
+        # und legte massenhaft anonyme stop_sell-Zeilen an — genau der Zustand,
+        # den der Betreiber nie gesetzt hat. Symmetrisch zum Push-Gate
+        # (_has_active_connection): kein Verkaufskanal ⇒ kein Channex-Import.
+        if not self._has_active_connection(db, tenant_id, property_id):
+            log.info(
+                "import_ari_skipped_no_active_channel",
+                tenant_id=tenant_id, property_id=property_id,
+            )
+            return result
+
         start = today or datetime.now(UTC).date()
         chunk = 90
         offset = 0
