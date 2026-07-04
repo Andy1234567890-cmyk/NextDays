@@ -9,6 +9,7 @@ from src.features.calendar.schemas import (
     BlockRequest,
     DateRange,
     PriceOverrideRequest,
+    StopSellListResponse,
 )
 from src.features.calendar.service import CalendarError, CalendarService
 from src.main import create_app
@@ -474,9 +475,9 @@ def test_stop_sell_weekday_mask_limits_days() -> None:
     svc, store = _service(properties=[{"id": "p1"}])
     # 1.–14. Juni 2027 (1.6. = Dienstag): nur Sa (5) + So (6) sperren.
     rng = DateRange(start=date(2027, 6, 1), end=date(2027, 6, 15))
-    count = svc.set_stop_sell("t1", "p1", rng, None, [5, 6])
+    res = svc.set_stop_sell("t1", "p1", rng, None, [5, 6])
     (_table, payload) = store["_upserts"][0]
-    assert count == 4
+    assert res["stopped_days"] == 4
     assert [row["date"] for row in payload] == [
         "2027-06-05", "2027-06-06", "2027-06-12", "2027-06-13",
     ]
@@ -486,18 +487,52 @@ def test_stop_sell_weekday_mask_limits_days() -> None:
 def test_stop_sell_weekday_mask_without_match_is_noop() -> None:
     svc, store = _service(properties=[{"id": "p1"}])
     rng = DateRange(start=date(2027, 6, 5), end=date(2027, 6, 7))  # Sa + So
-    count = svc.set_stop_sell("t1", "p1", rng, None, [2])  # nur Mittwoch
-    assert count == 0
+    res = svc.set_stop_sell("t1", "p1", rng, None, [2])  # nur Mittwoch
+    assert res["stopped_days"] == 0
     assert "_upserts" not in store  # kein Upsert für leere Auswahl
 
 
 def test_stop_sell_without_mask_covers_all_nights() -> None:
     svc, store = _service(properties=[{"id": "p1"}])
     rng = DateRange(start=date(2027, 6, 1), end=date(2027, 6, 4))
-    count = svc.set_stop_sell("t1", "p1", rng, "Wartung", None)
+    res = svc.set_stop_sell("t1", "p1", rng, "Wartung", None)
     (_table, payload) = store["_upserts"][0]
-    assert count == 3
+    assert res["stopped_days"] == 3
     assert all(row["reason"] == "Wartung" for row in payload)
+
+
+def test_stop_sell_skips_booked_days() -> None:
+    # Gebuchte Tage dürfen NIE gestoppt werden (der Tag ist verkauft). Sie
+    # werden übersprungen und als skipped_booked gemeldet (UI-Hinweis).
+    svc, store = _service(
+        properties=[{"id": "p1"}],
+        availability=[
+            {"date": "2027-06-02", "status": "booked", "source": "direct"},
+        ],
+    )
+    rng = DateRange(start=date(2027, 6, 1), end=date(2027, 6, 4))
+    res = svc.set_stop_sell("t1", "p1", rng, "Wartung", None)
+    (_table, payload) = store["_upserts"][0]
+    assert res["stopped_days"] == 2
+    assert res["skipped_booked"] == 1
+    # Der gebuchte 2.6. ist NICHT im Upsert.
+    assert [row["date"] for row in payload] == ["2027-06-01", "2027-06-03"]
+
+
+def test_stop_sell_all_booked_writes_nothing() -> None:
+    svc, store = _service(
+        properties=[{"id": "p1"}],
+        availability=[
+            {"date": "2027-06-01", "status": "booked", "source": "direct"},
+            {"date": "2027-06-02", "status": "booked", "source": "direct"},
+            {"date": "2027-06-03", "status": "booked", "source": "direct"},
+        ],
+    )
+    rng = DateRange(start=date(2027, 6, 1), end=date(2027, 6, 4))
+    res = svc.set_stop_sell("t1", "p1", rng, None, None)
+    assert res["stopped_days"] == 0
+    assert res["skipped_booked"] == 3
+    assert "_upserts" not in store
 
 
 def test_clear_stop_sell_with_weekdays_runs_delete() -> None:
@@ -549,8 +584,24 @@ def test_stop_sell_never_overwrites_channex_days() -> None:
         stop_sell=[{"date": "2027-06-02", "source": "channex"}],
     )
     rng = DateRange(start=date(2027, 6, 1), end=date(2027, 6, 4))
-    count = svc.set_stop_sell("t1", "p1", rng, None, None)
+    res = svc.set_stop_sell("t1", "p1", rng, None, None)
     (_table, payload) = store["_upserts"][0]
     dates = [row["date"] for row in payload]
     assert "2027-06-02" not in dates  # Channex-Tag ausgespart
-    assert count == 2
+    assert res["stopped_days"] == 2
+
+
+def test_stop_sell_response_keeps_agency_name() -> None:
+    """Der Reisebüro-Name (travel_agencies-Join) muss durch das Response-Modell
+    überleben — sonst zeigt der Kalender-Balken nur „Gesperrt" ohne Adressat."""
+    item = {
+        "id": "ss1",
+        "property_id": "p1",
+        "date": "2027-06-02",
+        "reason": "Renovierung",
+        "source": "manual",
+        "agency_id": "ag1",
+        "agency_name": "TUI",
+    }
+    dumped = StopSellListResponse(items=[item], total=1).items[0].model_dump()
+    assert dumped["agency_name"] == "TUI"

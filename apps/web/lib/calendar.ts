@@ -81,9 +81,11 @@ export type StopSellDay = {
   source: StopSellSource;
   // Reisebüro/Veranstalter, an den sich der Stopp richtet (null = alle Kanäle).
   agency_id?: string | null;
+  // Name des Reisebüros (Backend-Join) — fürs Balken-Label im Kalender.
+  agency_name?: string | null;
 };
 
-/** Verkaufsstopp-Tage eines Objekts im Zeitraum [start, end). */
+/** Stop-Sell-Tage eines Objekts im Zeitraum [start, end). */
 export async function listStopSell(
   propertyId: string,
   start: string,
@@ -93,7 +95,7 @@ export async function listStopSell(
   return call(`/calendar/stop-sell?${qs.toString()}`);
 }
 
-/** Verkaufsstopp für einen Zeitraum setzen (manuell). end exklusiv.
+/** Stop-Sell für einen Zeitraum setzen (manuell). end exklusiv.
  *  weekdays (ISO: 0=Montag … 6=Sonntag) beschränkt optional auf Wochentage
  *  im Zeitraum (z. B. nur Wochenenden); wird auch an Channex durchgereicht. */
 export async function setStopSell(
@@ -103,7 +105,9 @@ export async function setStopSell(
   reason?: string,
   weekdays?: number[],
   agencyId?: string,
-): Promise<Result<{ stopped_days: number }>> {
+  // skipped_booked: gebuchte Tage im Zeitraum werden nie gestoppt (der Tag ist
+  // bereits verkauft) und hier gemeldet, damit die UI die Überschneidung zeigt.
+): Promise<Result<{ stopped_days: number; skipped_booked: number }>> {
   return call("/calendar/stop-sell", {
     method: "POST",
     body: {
@@ -116,7 +120,7 @@ export async function setStopSell(
   });
 }
 
-/** Manuellen Verkaufsstopp aufheben (Channex-Stops bleiben). end exklusiv. */
+/** Manuellen Stop-Sell aufheben (Channex-Stops bleiben). end exklusiv. */
 export async function clearStopSell(
   propertyId: string,
   start: string,
@@ -150,7 +154,7 @@ export type BulkEditResult = {
   applied: string[];
 };
 
-/** Bulk-Edit: Preis/Min-Stay/Sperre/Verkaufsstopp über mehrere Objekte ×
+/** Bulk-Edit: Preis/Min-Stay/Sperre/Stop-Sell über mehrere Objekte ×
  *  Zeitraum in einem Rutsch (Hostaway-Stil). Nur gesetzte Felder wirken. */
 export async function bulkEdit(
   input: BulkEditInput,

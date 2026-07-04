@@ -22,7 +22,7 @@ export const TotalsDisplay: React.FC<TotalsDisplayProps> = ({
   const getSkontoDate = (days?: number) => {
     const skontoDate = new Date();
     skontoDate.setDate(skontoDate.getDate() + (days ?? 0));
-    return skontoDate.toLocaleDateString('de-DE');
+    return skontoDate.toLocaleDateString(t('dateLocale'));
   };
 
   // Prüfe alle speziellen Steuerbehandlungen
@@ -88,7 +88,7 @@ export const TotalsDisplay: React.FC<TotalsDisplayProps> = ({
                 key={`${tax.rate}-${tax.taxAmount}`}
                 className="flex justify-between py-1 text-sm"
               >
-                <span>MwSt. ({tax.rate}%):</span>
+                <span>{t('vatAmount')} ({tax.rate}%):</span>
                 <span>{formatCurrency(tax.taxAmount)}</span>
               </div>
             ))}
@@ -100,11 +100,11 @@ export const TotalsDisplay: React.FC<TotalsDisplayProps> = ({
             {data.skontoEnabled && data.skontoDays && data.skontoPercentage && (
               <div className="mt-4 border-t pt-3" style={{ borderColor: color }}>
                 <div className="flex justify-between py-1 text-green-700 text-sm">
-                  <span>Skonto ({data.skontoPercentage}%):</span>
+                  <span>{t('skonto')} ({data.skontoPercentage}%):</span>
                   <span>-{formatCurrency(data.total * (data.skontoPercentage / 100))}</span>
                 </div>
                 <div className="flex justify-between py-1 font-bold text-green-800 text-sm">
-                  <span>Bei Zahlung bis {getSkontoDate(skontoDays)}:</span>
+                  <span>{t('ifPaidBy')} {getSkontoDate(skontoDays)}:</span>
                   <span>
                     {formatCurrency(data.total - data.total * (data.skontoPercentage / 100))}
                   </span>
@@ -131,7 +131,7 @@ export const TotalsDisplay: React.FC<TotalsDisplayProps> = ({
                 key={`${tax.rate}-${tax.taxAmount}`}
                 className="flex justify-between py-0.5 text-xs"
               >
-                <span>MwSt. ({tax.rate}%):</span>
+                <span>{t('vatAmount')} ({tax.rate}%):</span>
                 <span>{formatCurrency(tax.taxAmount)}</span>
               </div>
             ))}
@@ -143,11 +143,11 @@ export const TotalsDisplay: React.FC<TotalsDisplayProps> = ({
             {data.skontoEnabled && data.skontoDays && data.skontoPercentage && (
               <div className="mt-2 border-t pt-2" style={{ borderColor: color }}>
                 <div className="flex justify-between py-0.5 text-green-700 text-xs">
-                  <span>Skonto ({data.skontoPercentage}%):</span>
+                  <span>{t('skonto')} ({data.skontoPercentage}%):</span>
                   <span>-{formatCurrency(data.total * (data.skontoPercentage / 100))}</span>
                 </div>
                 <div className="flex justify-between py-0.5 font-medium text-green-800 text-xs">
-                  <span>Bei Zahlung bis {getSkontoDate(skontoDays)}:</span>
+                  <span>{t('ifPaidBy')} {getSkontoDate(skontoDays)}:</span>
                   <span>
                     {formatCurrency(data.total - data.total * (data.skontoPercentage / 100))}
                   </span>
@@ -169,7 +169,7 @@ export const TotalsDisplay: React.FC<TotalsDisplayProps> = ({
       </div>
       {taxLines.map(tax => (
         <div key={`${tax.rate}-${tax.taxAmount}`} className="flex justify-between py-2">
-          <span>MwSt. ({tax.rate}%):</span>
+          <span>{t('vatAmount')} ({tax.rate}%):</span>
           <span>{formatCurrency(tax.taxAmount)}</span>
         </div>
       ))}
@@ -180,11 +180,11 @@ export const TotalsDisplay: React.FC<TotalsDisplayProps> = ({
       {data.skontoEnabled && data.skontoDays && data.skontoPercentage && (
         <div className="mt-2 border-gray-300 border-t pt-2">
           <div className="flex justify-between py-1 text-green-700 text-sm">
-            <span>Skonto ({data.skontoPercentage}%):</span>
+            <span>{t('skonto')} ({data.skontoPercentage}%):</span>
             <span>-{formatCurrency(data.total * (data.skontoPercentage / 100))}</span>
           </div>
           <div className="flex justify-between border-green-200 border-t py-1 font-bold text-green-800">
-            <span>Bei Zahlung bis {getSkontoDate(skontoDays)}:</span>
+            <span>{t('ifPaidBy')} {getSkontoDate(skontoDays)}:</span>
             <span>{formatCurrency(data.total - data.total * (data.skontoPercentage / 100))}</span>
           </div>
         </div>

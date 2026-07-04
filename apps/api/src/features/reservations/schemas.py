@@ -177,6 +177,17 @@ class ReservationDetail(BaseModel):
     created_at: str | None = None
 
 
+class CheckOutRequest(BaseModel):
+    """Zahlart des Gastes beim Check-out (wird an der Rezeption abgefragt).
+
+    cash/card = am Empfang bezahlt → Rechnung sofort 'paid';
+    invoice = Zahlung auf Rechnung (Überweisung, Zahlungsziel) → 'finalized'.
+    card_brand nur bei Kreditkarte (Visa, Mastercard, …)."""
+
+    payment_method: str = Field(default="invoice", pattern="^(cash|card|invoice)$")
+    card_brand: str | None = None
+
+
 class CheckOutResponse(BaseModel):
     """Ergebnis des Check-outs: Buchung + die dabei erzeugte finale Rechnung
     (invoice_already_existed=True beim idempotenten Retry)."""

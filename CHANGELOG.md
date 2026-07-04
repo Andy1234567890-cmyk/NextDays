@@ -10,6 +10,33 @@ sind die Migrationen 0016–0090 sowie das komplette Dashboard entstanden. Die
 wichtigsten Punkte konsolidiert:
 
 ### Hinzugefügt
+- **Objektlisten strikt nach Betriebsart**: `GET /properties` (und
+  `owners/available-properties`) filtern serverseitig nach
+  `tenants.accommodation_type` — Hotel sieht nur Zimmertypen, Ferienvermietung
+  nur Ferienobjekt-Typen (Typ-Gruppen `VR_TYPES`/`HOTEL_TYPES` +
+  `types_for_accommodation()` in `properties/schemas.py`, Spiegel von
+  `lib/property-meta.ts`). Damit zeigen Kalender (alle Views + Buchungs-Wizard),
+  /objekte, /stop-sell und alle Auswahl-Dialoge nur noch betriebsart-passende
+  Objekte; `create`/`update` lehnen betriebsfremde Typen mit 422 ab.
+- **USt-Satz je Gebühr**: Gebühren im Preis-Setup tragen optional einen eigenen
+  Satz (`fees[].taxRate`, z. B. Frühstück 19 % neben Logis 7 %; leer =
+  Übernachtungssatz). Der Satz wandert als Snapshot durch Resolver →
+  `quote_items[].tax_rate` → Rechnung (Prioritätskette: Kleinunternehmer →
+  Zeilen-Satz → Abgabe 0 % → `lodging_tax_rate`); Bestand/Channex unverändert.
+- **Rechnungssprache = Gastsprache** (Migration 0099, `invoices.language`):
+  Belegtexte aus Buchungen (Aufenthalts-Label, Kopftext, Einheit, Addon-Namen
+  aus dem mehrsprachigen jsonb) entstehen in der Gastsprache — neuer
+  Begriffskatalog `buchhaltung/doc_i18n.py` (24 EU-Sprachen, Pluralregeln,
+  Datumsformate). PDF-Beschriftungen: `useDocumentTranslation` von 3 auf
+  24 Sprachen erweitert (`hooks/pdf/document-translations.ts`), Restdeutsch in
+  ItemsTable/TotalsDisplay/Templates auf den Hook umgestellt; der
+  Versand-Dialog belegt die Sprache aus dem Beleg vor (24er-Auswahl).
+- **Dokument-Dialog direkt im Kalender**: „Ansehen & versenden" im
+  Buchungs-Slider (nach Check-out und bei bestehender Rechnung) öffnet die
+  PDF-Vorschau (Download/Druck) ohne Seitenwechsel — `lib/invoice-document.ts`
+  mappt die Backend-Rechnung auf die Dokumentform des Buchhaltungs-Bestands;
+  derselbe Mapper repariert den Nachladepfad des SendDocumentModal
+  (snake_case-Antwort wurde bisher roh durchgereicht).
 - **Check-in/Check-out + Zimmerrechnungen aus Buchungen** (Migrationen
   0091/0092): echte Front-Desk-Aktionen im Kalender-Buchungs-Slider
   (`POST /reservations/{id}/check-in|check-out`, persistiert in

@@ -94,6 +94,17 @@ def _row_to_invoicedata(row: dict, customer_name: str | None) -> dict:
     }
 
 
+def _normalize_document_language(value: object) -> str | None:
+    """Roh-Sprachcode aus dem Formular-Payload auf eine unterstützte
+    Dokumentsprache normalisieren (doc_i18n): None bleibt None (→ de bei der
+    Anzeige), alles andere wird ein gültiger Code (unbekannt → de)."""
+    if value is None or str(value).strip() == "":
+        return None
+    from . import doc_i18n  # noqa: PLC0415 — lokaler Import vermeidet Zyklus
+
+    return doc_i18n.resolve_language(value)
+
+
 class BuchhaltungError(Exception):
     """Fachlicher Fehler; vom Router auf HTTP-Status gemappt."""
 
@@ -612,6 +623,10 @@ class BuchhaltungService:
                 payload.get("eInvoiceType") if payload.get("isEInvoice") else None
             ),
             "reservation_id": reservation_id,
+            # Dokumentsprache (0099): auf eine unterstützte Sprache normalisieren
+            # (de-AT→de, unbekannt→de), damit kein ungültiger Code in die Spalte
+            # gelangt und die PDF-Sprachvorbelegung steuert.
+            "language": _normalize_document_language(payload.get("language")),
         }
         row = {k: v for k, v in row.items() if v is not None}
 

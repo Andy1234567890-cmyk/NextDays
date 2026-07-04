@@ -57,11 +57,17 @@ class QuoteLine(BaseModel):
     'tax' (Abgaben wie Kurtaxe) wird mit 0 % USt fakturiert, alles andere mit
     dem Übernachtungs-Steuersatz. Optional, damit Bestands-Snapshots ohne kind
     (ältere reservations.quote_items) gültig bleiben — dort greift die
-    Label-Heuristik."""
+    Label-Heuristik.
+
+    `tax_rate` ist der zeilen-eigene USt-Satz in % als Snapshot zum
+    Buchungszeitpunkt (Gebühren mit eigenem Satz, z. B. Frühstück 19 % neben
+    Logis 7 %; Quelle: fees[].taxRate der property_pricing_config). None =
+    kein eigener Satz — die Rechnung nutzt dann die kind-/Label-Logik."""
 
     label: str
     amount: float
     kind: str | None = None
+    tax_rate: float | None = None
 
 
 class QuoteResponse(BaseModel):

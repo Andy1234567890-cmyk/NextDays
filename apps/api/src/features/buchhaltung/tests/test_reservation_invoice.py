@@ -23,17 +23,23 @@ TENANT = "t1"
 
 class _Chain:
     """PostgREST-Query-Ketten-Mock: jede Methode/Attribut gibt die Kette selbst
-    zurück, execute() liefert die hinterlegten Daten (deque = Antwort-Queue)."""
+    zurück, execute() liefert die hinterlegten Daten (deque = Antwort-Queue).
+    insert(...)-Payloads werden mitgeschnitten (Assertions auf Schreibdaten)."""
 
-    def __init__(self, data: object, calls: list[str]) -> None:
+    def __init__(self, data: object, calls: list[str], inserts: list) -> None:
         self._data = data
         self.calls = calls
+        self.inserts = inserts
+        self._last_attr = ""
 
     def __getattr__(self, name: str) -> "_Chain":
         self.calls.append(name)
+        object.__setattr__(self, "_last_attr", name)
         return self
 
     def __call__(self, *args: object, **kwargs: object) -> "_Chain":
+        if self._last_attr == "insert" and args:
+            self.inserts.append(args[0])
         return self
 
     def execute(self) -> SimpleNamespace:
@@ -49,15 +55,18 @@ class _DB:
     def __init__(self, tables: dict[str, object]) -> None:
         self._tables = tables
         self.calls: dict[str, list[str]] = {}
+        self.inserts: dict[str, list] = {}
 
     def table(self, name: str) -> _Chain:
         calls = self.calls.setdefault(name, [])
-        return _Chain(self._tables.get(name, []), calls)
+        inserts = self.inserts.setdefault(name, [])
+        return _Chain(self._tables.get(name, []), calls, inserts)
 
     def rpc(self, name: str, params: dict) -> _Chain:
         return _Chain(
             [{"sequential_number": 7, "formatted_number": "RE-0007"}],
             self.calls.setdefault(f"rpc:{name}", []),
+            self.inserts.setdefault(f"rpc:{name}", []),
         )
 
 
@@ -123,6 +132,64 @@ def test_label_heuristic_for_legacy_items_without_kind() -> None:
     by_label = {p["description"]: p for p in pos}
     assert by_label["City Tax"]["tax_rate"] == Decimal("0")
     assert by_label["Übernachtung (3 Nächte)"]["tax_rate"] == Decimal("7")
+
+
+def test_fee_line_uses_own_tax_rate_snapshot() -> None:
+    """Gebühr mit eigenem Satz-Snapshot (Frühstück 19 %) neben Logis 7 %."""
+    res = _reservation(
+        total_amount=320.0,
+        quote_items=[
+            {"label": "Übernachtung (3 Nächte)", "amount": 280.0, "kind": "lodging"},
+            {"label": "Frühstück", "amount": 40.0, "kind": "fee", "tax_rate": 19.0},
+        ],
+    )
+    pos = build_positions(res, [], [], Decimal("7"), False, "")
+    by_label = {p["description"]: p for p in pos}
+    assert by_label["Frühstück"]["tax_rate"] == Decimal("19")
+    # 40,00 brutto @19 % → 33,61 netto / 6,39 Steuer.
+    assert by_label["Frühstück"]["net_amount"] == Decimal("33.61")
+    assert by_label["Frühstück"]["tax_amount"] == Decimal("6.39")
+    assert by_label["Übernachtung (3 Nächte)"]["tax_rate"] == Decimal("7")
+
+
+def test_fee_line_without_snapshot_falls_back_to_lodging_rate() -> None:
+    """Bestands-/Channex-Fees ohne tax_rate → Übernachtungssatz (alter Pfad)."""
+    res = _reservation(
+        total_amount=320.0,
+        quote_items=[
+            {"label": "Übernachtung (3 Nächte)", "amount": 280.0, "kind": "lodging"},
+            {"label": "Reinigung", "amount": 40.0, "kind": "fee"},
+        ],
+    )
+    pos = build_positions(res, [], [], Decimal("7"), False, "")
+    by_label = {p["description"]: p for p in pos}
+    assert by_label["Reinigung"]["tax_rate"] == Decimal("7")
+
+
+def test_kleinunternehmer_overrides_fee_tax_rate_snapshot() -> None:
+    res = _reservation(
+        total_amount=320.0,
+        quote_items=[
+            {"label": "Übernachtung (3 Nächte)", "amount": 280.0, "kind": "lodging"},
+            {"label": "Frühstück", "amount": 40.0, "kind": "fee", "tax_rate": 19.0},
+        ],
+    )
+    pos = build_positions(res, [], [], None, True, "")
+    assert all(p["tax_rate"] == Decimal("0") for p in pos)
+
+
+def test_tax_line_with_snapshot_rate_uses_snapshot() -> None:
+    """Zeilen-Satz schlägt auch die Abgaben-0%-Logik — der Snapshot ist die
+    Kaufzeitpunkt-Wahrheit (gesetzt wird er heute nur für Gebühren)."""
+    res = _reservation(
+        quote_items=[
+            {"label": "Übernachtung (3 Nächte)", "amount": 280.0, "kind": "lodging"},
+            {"label": "Kurtaxe", "amount": 20.0, "kind": "tax", "tax_rate": 7.0},
+        ],
+    )
+    pos = build_positions(res, [], [], Decimal("7"), False, "")
+    by_label = {p["description"]: p for p in pos}
+    assert by_label["Kurtaxe"]["tax_rate"] == Decimal("7")
 
 
 def test_missing_lodging_tax_rate_raises_422() -> None:
@@ -438,3 +505,81 @@ def test_fully_paid_reservation_creates_paid_invoice() -> None:
                      invoices=deque([[], [{"id": "i9"}]])))
     result = create_from_reservation(db, TENANT, "r1")
     assert result["already_existed"] is False
+
+
+def test_cash_payment_marks_invoice_paid() -> None:
+    """Zahlart bar/Karte (Rezeptions-Abfrage): Rechnung sofort 'paid' mit
+    vollem Betrag + persistierter Zahlart (0097)."""
+    db = _DB(_tables(invoices=deque([[], [{"id": "i9"}]])))
+    create_from_reservation(db, TENANT, "r1", payment_method="cash")
+    row = db.inserts["invoices"][0]
+    assert row["status"] == "paid"
+    assert row["payment_method"] == "cash"
+    assert "card_brand" not in row  # None-Werte werden nicht mitgesendet
+    assert row["paid_amount"] == "300.00"
+    assert "paid_at" in row
+
+
+def test_card_payment_persists_brand() -> None:
+    db = _DB(_tables(invoices=deque([[], [{"id": "i9"}]])))
+    create_from_reservation(
+        db, TENANT, "r1", payment_method="card", card_brand="Visa"
+    )
+    row = db.inserts["invoices"][0]
+    assert row["status"] == "paid"
+    assert row["payment_method"] == "card"
+    assert row["card_brand"] == "Visa"
+
+
+def test_invoice_payment_stays_finalized_with_due_date() -> None:
+    """„Auf Rechnung": kein Sofort-Bezahlt — finalized mit Zahlungsziel."""
+    db = _DB(_tables(invoices=deque([[], [{"id": "i9"}]])))
+    create_from_reservation(db, TENANT, "r1", payment_method="invoice")
+    row = db.inserts["invoices"][0]
+    assert row["status"] == "finalized"
+    assert row["payment_method"] == "invoice"
+    assert row["paid_amount"] == "0.00"
+
+
+# --- Dokumentsprache = Gastsprache (doc_i18n, 0099) ---------------------------
+
+def test_collective_position_in_guest_language() -> None:
+    """Sammelposition + Einheit entstehen in der Gastsprache (it)."""
+    res = _reservation(guest_language="it", quote_items=[])
+    pos = build_positions(res, [], [], Decimal("7"), False, "Villa", "it")
+    assert pos[0]["description"] == "Soggiorno Villa 01/07/2026 – 04/07/2026 (3 notti)"
+    assert pos[0]["unit"] == "forfettario"
+
+
+def test_addon_label_prefers_guest_language() -> None:
+    addons = [{"status": "pending", "total": 30.0, "tax_rate": 19.0, "qty": 1,
+               "name": {"de": "Frühstück", "it": "Colazione"}}]
+    pos = build_positions(_reservation(), addons, [], Decimal("7"), False, "", "it")
+    assert any(p["description"] == "Colazione" for p in pos)
+
+
+def test_created_invoice_stores_language_and_localized_head_text() -> None:
+    reservation = _reservation(guest_language="it")
+    db = _DB(_tables(reservations=[reservation],
+                     invoices=deque([[], [{"id": "i9"}]])))
+    create_from_reservation(db, TENANT, "r1")
+    row = db.inserts["invoices"][0]
+    assert row["language"] == "it"
+    assert row["head_text"] == "Soggiorno 01/07/2026 – 04/07/2026 (3 notti), Zimmer 1"
+
+
+def test_unknown_guest_language_falls_back_to_german() -> None:
+    reservation = _reservation(guest_language="xx")
+    db = _DB(_tables(reservations=[reservation],
+                     invoices=deque([[], [{"id": "i9"}]])))
+    create_from_reservation(db, TENANT, "r1")
+    row = db.inserts["invoices"][0]
+    assert row["language"] == "de"
+    assert row["head_text"] == "Aufenthalt 01.07.2026 – 04.07.2026 (3 Nächte), Zimmer 1"
+
+
+def test_preview_returns_guest_language() -> None:
+    reservation = _reservation(guest_language="it")
+    db = _DB(_tables(reservations=[reservation], customers=[]))
+    preview = preview_for_reservation(db, TENANT, "r1")
+    assert preview["guestLanguage"] == "it"

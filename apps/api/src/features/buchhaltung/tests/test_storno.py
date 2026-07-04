@@ -15,15 +15,20 @@ CTX = AuthContext(user_id="u1", tenant_id="t1")
 
 
 class _Chain:
-    def __init__(self, data: object, calls: list[str]) -> None:
+    def __init__(self, data: object, calls: list[str], inserts: list) -> None:
         self._data = data
         self.calls = calls
+        self.inserts = inserts
+        self._last_attr = ""
 
     def __getattr__(self, name: str) -> "_Chain":
         self.calls.append(name)
+        object.__setattr__(self, "_last_attr", name)
         return self
 
     def __call__(self, *args: object, **kwargs: object) -> "_Chain":
+        if self._last_attr == "insert" and args:
+            self.inserts.append(args[0])
         return self
 
     def execute(self) -> SimpleNamespace:
@@ -37,15 +42,18 @@ class _DB:
     def __init__(self, tables: dict[str, object]) -> None:
         self._tables = tables
         self.calls: dict[str, list[str]] = {}
+        self.inserts: dict[str, list] = {}
 
     def table(self, name: str) -> _Chain:
         calls = self.calls.setdefault(name, [])
-        return _Chain(self._tables.get(name, []), calls)
+        inserts = self.inserts.setdefault(name, [])
+        return _Chain(self._tables.get(name, []), calls, inserts)
 
     def rpc(self, name: str, params: dict) -> _Chain:
         return _Chain(
             [{"sequential_number": 3, "formatted_number": "ST-0003"}],
             self.calls.setdefault(f"rpc:{name}", []),
+            self.inserts.setdefault(f"rpc:{name}", []),
         )
 
 
@@ -159,3 +167,22 @@ def test_storno_negates_amounts_and_cancels_original() -> None:
     assert "insert" in db.calls["invoices"]
     assert "update" in db.calls["invoices"]
     assert "insert" in db.calls["invoice_line_items"]
+
+
+def test_storno_inherits_document_language() -> None:
+    """Der Storno-Beleg erbt die Dokumentsprache des Originals (0099) —
+    sonst italienische Positionen unter deutschem PDF/head_text."""
+    storno_row = {"id": "s9", "invoice_number": "ST-0003", "invoice_type": "storno",
+                  "gross_amount": -100.0, "net_amount": -93.46, "tax_amount": -6.54}
+    service, db = _service(
+        {
+            "invoices": deque(
+                [[{**_ORIGINAL, "language": "it"}], [], [storno_row], [storno_row]]
+            ),
+            "invoice_line_items": deque([[], []]),
+            "customers": [{"id": "c1", "name": "Max Muster"}],
+        }
+    )
+    service.create_storno_invoice(CTX, "i1", "falscher Betrag")
+    inserted = db.inserts["invoices"][0]
+    assert inserted["language"] == "it"

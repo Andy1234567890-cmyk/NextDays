@@ -36,7 +36,7 @@ export function PropertyLabel({
   return (
     <Link
       href={`/objekte/${p.id}`}
-      className="sticky left-0 z-10 flex shrink-0 items-center gap-3 border-r bg-card px-3 py-3 hover:bg-muted"
+      className="sticky left-0 z-10 flex shrink-0 items-center gap-3 border-r bg-card px-3 py-2 hover:bg-muted"
       style={{ width: `${width}rem` }}
     >
       {showPicture && (

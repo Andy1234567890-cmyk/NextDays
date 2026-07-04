@@ -221,13 +221,22 @@ export type CheckOutResult = {
   invoice_already_existed: boolean;
 };
 
+// Zahlart des Gastes (Rezeptions-Abfrage beim Check-out): bar/Karte = am
+// Empfang bezahlt → Rechnung sofort 'paid'; invoice = Zahlung auf Rechnung.
+export type CheckOutPayment = {
+  payment_method: "cash" | "card" | "invoice";
+  card_brand?: string;
+};
+
 /** Gast auschecken — erzeugt serverseitig verpflichtend die finale Rechnung
  *  (GoBD-Nummer); schlägt die Rechnung fehl, findet KEIN Check-out statt. */
 export async function checkOutReservation(
   reservationId: string,
+  payment: CheckOutPayment,
 ): Promise<Result<CheckOutResult>> {
   return call(`/reservations/${encodeURIComponent(reservationId)}/check-out`, {
     method: "POST",
+    body: payment,
   });
 }
 

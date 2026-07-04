@@ -47,6 +47,9 @@ def _row(**over: object) -> dict:
         "type_attributes": {},
         "created_at": "2026-06-17T00:00:00Z",
         "updated_at": "2026-06-17T00:00:00Z",
+        # Die _svc-Kette liefert dieselbe Row für ALLE Tabellen — auch für den
+        # tenant_billing_profile-Gate-Check in create(); Flag daher hier setzen.
+        "stripe_charges_enabled": True,
     }
     base.update(over)
     return base
@@ -57,7 +60,7 @@ def _svc(result_data: list[dict]) -> PropertiesService:
     chain = MagicMock()
     chain.execute.return_value = MagicMock(data=result_data)
     # alle Builder-Methoden geben die Kette zurück
-    for m in ("select", "eq", "order", "insert", "update", "delete"):
+    for m in ("select", "eq", "in_", "limit", "order", "insert", "update", "delete"):
         getattr(chain, m).return_value = chain
     db.table.return_value = chain
     return PropertiesService(service_client=db)
@@ -245,6 +248,7 @@ class _PhotoQuery:
         self._op = "select"
         self._payload: dict | None = None
         self._filters: list[tuple[str, object]] = []
+        self._in: list[tuple[str, list[str]]] = []
         self._order: str | None = None
         self._desc = False
         self._limit: int | None = None
@@ -271,6 +275,10 @@ class _PhotoQuery:
         self._filters.append((col, val))
         return self
 
+    def in_(self, col: str, vals: list) -> "_PhotoQuery":
+        self._in.append((col, [str(v) for v in vals]))
+        return self
+
     def order(self, col: str, desc: bool = False) -> "_PhotoQuery":
         self._order = col
         self._desc = desc
@@ -281,7 +289,9 @@ class _PhotoQuery:
         return self
 
     def _match(self, row: dict) -> bool:
-        return all(str(row.get(c)) == str(v) for c, v in self._filters)
+        return all(str(row.get(c)) == str(v) for c, v in self._filters) and all(
+            str(row.get(c)) in vals for c, vals in self._in
+        )
 
     def execute(self) -> _Result:
         rows = self._db.tables.setdefault(self._table, [])
@@ -499,3 +509,75 @@ def test_create_allowed_with_confirmed_stripe_account() -> None:
     res = svc.create(_ctx(), PropertyCreate(title="Villa", property_type=PropertyType.ferienhaus))
     assert res.title == "Villa"
     assert len(db.tables["properties"]) == 1
+
+
+# --- Betriebsart-Scope: Listen + Typ-Validierung -----------------------------
+#
+# tenants.accommodation_type bestimmt die sichtbaren/erlaubten Objekttypen:
+# hotel → Zimmertypen, vacation_rental → Ferienobjekt-Typen, NULL → alles.
+
+
+def _accommodation_db(accommodation: str | None) -> _PhotoDB:
+    db = _PhotoDB()
+    db.tables["tenants"] = [{"id": "t-1", "accommodation_type": accommodation}]
+    db.tables["tenant_billing_profile"] = [
+        {"tenant_id": "t-1", "stripe_charges_enabled": True}
+    ]
+    db.tables["properties"] = [
+        _row(id="p-fewo", title="FeWo", property_type="appartement"),
+        _row(id="p-zimmer", title="Zimmer 101", property_type="einzelzimmer"),
+    ]
+    return db
+
+
+def test_list_hotel_shows_only_room_types() -> None:
+    svc = PropertiesService(service_client=_accommodation_db("hotel"))
+    res = svc.list(_ctx())
+    assert [i.title for i in res.items] == ["Zimmer 101"]
+
+
+def test_list_vacation_rental_shows_only_vr_types() -> None:
+    svc = PropertiesService(service_client=_accommodation_db("vacation_rental"))
+    res = svc.list(_ctx())
+    assert [i.title for i in res.items] == ["FeWo"]
+
+
+def test_list_without_accommodation_type_shows_all() -> None:
+    svc = PropertiesService(service_client=_accommodation_db(None))
+    res = svc.list(_ctx())
+    assert res.total == 2
+
+
+def test_create_rejects_type_outside_accommodation() -> None:
+    db = _accommodation_db("vacation_rental")
+    svc = PropertiesService(service_client=db)
+    with pytest.raises(PropertyError) as exc:
+        svc.create(
+            _ctx(), PropertyCreate(title="Suite", property_type=PropertyType.suite)
+        )
+    assert exc.value.status_code == 422
+    assert len(db.tables["properties"]) == 2  # nichts angelegt
+
+
+def test_create_accepts_matching_type() -> None:
+    db = _accommodation_db("hotel")
+    svc = PropertiesService(service_client=db)
+    res = svc.create(
+        _ctx(),
+        PropertyCreate(title="Zimmer 102", property_type=PropertyType.doppelzimmer),
+    )
+    assert res.title == "Zimmer 102"
+
+
+def test_update_rejects_type_switch_outside_accommodation() -> None:
+    db = _accommodation_db("hotel")
+    svc = PropertiesService(service_client=db)
+    with pytest.raises(PropertyError) as exc:
+        svc.update(
+            _ctx(),
+            "p-zimmer",
+            PropertyUpdate(property_type=PropertyType.ferienhaus),
+        )
+    assert exc.value.status_code == 422
+    row = next(r for r in db.tables["properties"] if r["id"] == "p-zimmer")
+    assert row["property_type"] == "einzelzimmer"  # unverändert

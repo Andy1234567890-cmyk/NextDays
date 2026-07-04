@@ -631,6 +631,101 @@ def test_import_ari_prices_and_availability() -> None:
     assert any(s["date"] == "2026-07-01" for s in db.tables["stop_sell"])
 
 
+def test_import_ari_stop_sell_skips_manual_day() -> None:
+    # Regression gegen Datenzerstörung: ein manuell gesetzter Stop-Sell (mit
+    # agency_id/reason) wird an Channex gepusht und kommt als Echo zurück. Der
+    # Import darf die manuelle Zeile NICHT zu source=channex degradieren und
+    # agency_id/reason NICHT auf NULL setzen.
+    db = _ImportDB()
+    _seed_property(db)
+    db.tables["stop_sell"].append(
+        {"id": "s1", "tenant_id": "t1", "property_id": "p1",
+         "date": "2026-07-01", "source": "manual",
+         "agency_id": "ag-tui", "reason": "TUI"}
+    )
+    channex = _ImportChannex(
+        restrictions={"cx-rp": {"2026-07-01": {"stop_sell": True}}}
+    )
+    res = _import_svc(channex, db).import_ari_for_property(
+        "t1", "cx-prop", days_ahead=1, today=date(2026, 7, 1)
+    )
+    assert res["stop_sell"] == 0
+    row = db.tables["stop_sell"][0]
+    assert row["source"] == "manual"
+    assert row["agency_id"] == "ag-tui"
+    assert row["reason"] == "TUI"
+
+
+def test_import_ari_stop_sell_idempotent_channex() -> None:
+    # Bestehender channex-Tag: kein zweiter Upsert (kein updated_at-Bump →
+    # keine Realtime-Event-Flut).
+    db = _ImportDB()
+    _seed_property(db)
+    db.tables["stop_sell"].append(
+        {"id": "s1", "tenant_id": "t1", "property_id": "p1",
+         "date": "2026-07-01", "source": "channex"}
+    )
+    channex = _ImportChannex(
+        restrictions={"cx-rp": {"2026-07-01": {"stop_sell": True}}}
+    )
+    res = _import_svc(channex, db).import_ari_for_property(
+        "t1", "cx-prop", days_ahead=1, today=date(2026, 7, 1)
+    )
+    assert res["stop_sell"] == 0
+    assert len(db.tables["stop_sell"]) == 1
+
+
+def test_import_ari_stop_sell_writes_new_channex_day() -> None:
+    # Echter neuer OTA-Stop (kein bestehender Eintrag) → als channex importiert.
+    db = _ImportDB()
+    _seed_property(db)
+    channex = _ImportChannex(
+        restrictions={"cx-rp": {"2026-07-01": {"stop_sell": True}}}
+    )
+    res = _import_svc(channex, db).import_ari_for_property(
+        "t1", "cx-prop", days_ahead=1, today=date(2026, 7, 1)
+    )
+    assert res["stop_sell"] == 1
+    row = db.tables["stop_sell"][0]
+    assert row["source"] == "channex" and row["date"] == "2026-07-01"
+
+
+def test_import_ari_stop_sell_skips_booked_day() -> None:
+    # Ein gebuchter Tag darf NIE als Stop-Sell importiert werden (der Tag ist
+    # verkauft; Stop-Sell darüber verfälscht die Verfügbarkeit).
+    db = _ImportDB()
+    _seed_property(db)
+    db.tables["availability"].append(
+        {"id": "a1", "property_id": "p1", "date": "2026-07-01",
+         "status": "booked", "source": "direct"}
+    )
+    channex = _ImportChannex(
+        restrictions={"cx-rp": {"2026-07-01": {"stop_sell": True}}}
+    )
+    res = _import_svc(channex, db).import_ari_for_property(
+        "t1", "cx-prop", days_ahead=1, today=date(2026, 7, 1)
+    )
+    assert res["stop_sell"] == 0
+    assert db.tables["stop_sell"] == []
+
+
+def test_import_ari_stop_sell_dedupes_across_rate_plans() -> None:
+    # Derselbe Tag in zwei Rate-Plänen → nur EIN Schreibvorgang (set-Dedup).
+    db = _ImportDB()
+    _seed_property(db)
+    channex = _ImportChannex(
+        restrictions={
+            "rp-a": {"2026-07-01": {"stop_sell": True}},
+            "rp-b": {"2026-07-01": {"stop_sell": True}},
+        }
+    )
+    res = _import_svc(channex, db).import_ari_for_property(
+        "t1", "cx-prop", days_ahead=1, today=date(2026, 7, 1)
+    )
+    assert res["stop_sell"] == 1
+    assert len(db.tables["stop_sell"]) == 1
+
+
 def test_import_ari_never_overrides_booked() -> None:
     db = _ImportDB()
     _seed_property(db)

@@ -58,6 +58,10 @@ export interface InvoiceData {
   // Rechnungsbeschreibung
   description: string;
 
+  // Dokumentsprache des Belegs (0099, ISO 639-1, z. B. de/en/it);
+  // Rechnungssprache = Gastsprache, Fallback de.
+  language?: string;
+
   // Unternehmensdaten
   companyName: string;
   companyAddress: string;

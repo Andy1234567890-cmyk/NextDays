@@ -22,7 +22,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { useNewAuth } from '@/contexts/NewAuthContext';
+import {
+  DOCUMENT_LANGUAGES,
+  DOCUMENT_LANGUAGE_LABELS,
+} from '@/hooks/pdf/document-translations';
+import { resolveDocumentLanguage } from '@/hooks/pdf/useDocumentTranslation';
 import { api } from '@/lib/api-client';
+import { type BackendInvoice, invoiceToDocument } from '@/lib/invoice-document';
 import { formatDate } from '@/lib/utils';
 // PDF-API wird serverseitig verwendet - keine Client-Dependencies nötig
 import { InvoiceService } from '@/services/firestoreInvoiceService';
@@ -113,6 +119,9 @@ interface DocumentWithGoBD extends BaseDocument {
   // Steuerregelfelder fuer korrekte Speicherung
   taxRuleLabel?: string;
   isSmallBusiness?: boolean;
+  // Dokumentsprache des Belegs (0099, Gastsprache) — belegt die Sprach-
+  // Auswahl im Dialog vor; fehlt sie (Bestand/manuell) → de.
+  language?: string | null;
 }
 
 // Send options for email/download/print actions
@@ -272,7 +281,11 @@ export function SendDocumentModal({
   // GoBD Action Warning Hook
   const { showWarning, WarningComponent } = useGoBDActionWarning(); // Document Settings States
   const [documentSettings, setDocumentSettings] = useState({
-    language: 'de',
+    // Dokumentsprache aus dem Beleg vorbelegen (Rechnungssprache =
+    // Gastsprache, 0099). Bei „immer gemountetem" Modal ist document beim
+    // ersten Render leer — der Effekt unten zieht die Sprache nach, sobald das
+    // Dokument gesetzt ist. Manuell im Dialog umstellbar.
+    language: resolveDocumentLanguage(document?.language),
     showQRCode: false,
     showEPCQRCode: false,
     showCustomerNumber: false, // ✅ Deaktiviert - User muss selbst aktivieren
@@ -465,6 +478,28 @@ export function SendDocumentModal({
           }
 
           if (realDoc) {
+            // FastAPI liefert die Rechnung snake_case (InvoiceResponse) —
+            // in die camelCase-Dokumentform übersetzen; Felder, die das
+            // Backend nicht am Beleg speichert (Empfänger/Firma), kommen aus
+            // dem übergebenen document.
+            if ('invoice_number' in (realDoc as unknown as Record<string, unknown>)) {
+              const mapped = invoiceToDocument(realDoc as unknown as BackendInvoice, {
+                customerName: document?.customerName,
+                customerEmail: document?.customerEmail,
+                customerAddress:
+                  typeof document?.customerAddress === 'string'
+                    ? document.customerAddress
+                    : undefined,
+              });
+              realDoc = { ...document, ...mapped } as unknown as InvoiceData;
+              // Dokumentsprache des Belegs (0099) in die Sprach-Auswahl übernehmen.
+              if (mapped.language) {
+                setDocumentSettings(prev => ({
+                  ...prev,
+                  language: resolveDocumentLanguage(mapped.language),
+                }));
+              }
+            }
             // Cast to InvoiceData for setRealDocumentData (which expects InvoiceData)
             setRealDocumentData(realDoc as InvoiceData);
 
@@ -506,6 +541,18 @@ export function SendDocumentModal({
 
     loadRealDocumentData();
   }, [isOpen, document?.id, document, documentType, companyId, generateQRCode]);
+
+  // Dokumentsprache aus dem übergebenen Beleg nachziehen (0099). Nötig, weil
+  // das Modal im Erstell-Flow „immer gemountet" ist und beim ersten Render ein
+  // leeres document bekommt — der useState-Initializer greift dann nicht.
+  useEffect(() => {
+    if (document?.language) {
+      setDocumentSettings(prev => ({
+        ...prev,
+        language: resolveDocumentLanguage(document.language),
+      }));
+    }
+  }, [document?.language]);
 
   // Load company data and enrich document data
   useEffect(() => {
@@ -1534,6 +1581,10 @@ ${document.companyName || 'Ihr Unternehmen'}`;
             ...((sourceData as DocumentWithGoBD).isSmallBusiness !== undefined && {
               isSmallBusiness: (sourceData as DocumentWithGoBD).isSmallBusiness,
             }),
+            // Dokumentsprache (0099): die im Dialog gewählte/vorbelegte Sprache
+            // mitspeichern, damit die Gastsprache nicht verloren geht, wenn der
+            // Nutzer direkt aus der Vorschau speichert/versendet.
+            ...(documentSettings.language && { language: documentSettings.language }),
           };
 
           // Speichere direkt in Firestore über den Service
@@ -2554,9 +2605,11 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                             }
                             className="w-full"
                           >
-                            <option value="de">Deutsch</option>
-                            <option value="en">English</option>
-                            <option value="fr">Français</option>
+                            {DOCUMENT_LANGUAGES.map(code => (
+                              <option key={code} value={code}>
+                                {DOCUMENT_LANGUAGE_LABELS[code] ?? code}
+                              </option>
+                            ))}
                           </NativeSelect>
                         </div>
 

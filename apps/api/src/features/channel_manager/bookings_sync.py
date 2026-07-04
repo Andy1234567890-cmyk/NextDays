@@ -592,29 +592,74 @@ class BookingsSyncMixin:
             except ChannexError as exc:
                 log.warning("import_ari_restrictions_failed", error=exc.message)
                 restr = {"data": {}}
-            for _rate_plan, days in (restr.get("data") or {}).items():
-                for d, vals in (days or {}).items():
-                    # WICHTIG: zurückgelesene OTA-Raten NICHT als price_override
-                    # schreiben. price_override ist per Architektur die MANUELLE
-                    # Host-Überschreibung und gewinnt im Resolver über dynamic_prices.
-                    # Beim Import würde das einen Echo-Loop erzeugen: unsere eigenen
-                    # gepushten Dynamic-Preise kämen als „manueller Override" zurück,
-                    # verdeckten die Engine-Preise samt Faktor-Aufschlüsselung und
-                    # frören sie als Festpreis ein. Die Preis-Wahrheit ist und bleibt
-                    # der pricing-Resolver (override > dynamic > weekday > base);
-                    # eingehende OTA-Raten sind kein manueller Override. stop_sell
-                    # und Verfügbarkeit sind dagegen echte OTA-Signale → bleiben.
-                    if (vals or {}).get("stop_sell"):
-                        db.table("stop_sell").upsert(
-                            {
-                                "tenant_id": tenant_id,
-                                "property_id": property_id,
-                                "date": d,
-                                "source": "channex",
-                            },
-                            on_conflict="property_id,date",
-                        ).execute()
-                        result["stop_sell"] += 1
+            # WICHTIG: zurückgelesene OTA-Raten NICHT als price_override
+            # schreiben. price_override ist per Architektur die MANUELLE
+            # Host-Überschreibung und gewinnt im Resolver über dynamic_prices.
+            # Beim Import würde das einen Echo-Loop erzeugen: unsere eigenen
+            # gepushten Dynamic-Preise kämen als „manueller Override" zurück,
+            # verdeckten die Engine-Preise samt Faktor-Aufschlüsselung und
+            # frören sie als Festpreis ein. Die Preis-Wahrheit ist und bleibt
+            # der pricing-Resolver (override > dynamic > weekday > base);
+            # eingehende OTA-Raten sind kein manueller Override.
+            #
+            # stop_sell: derselbe Echo-Loop droht auch hier. Ein manuell
+            # gesetzter Stop-Sell (source=manual, agency_id/reason) wird an
+            # Channex gepusht und kommt beim nächsten Import als stop_sell=1
+            # zurück — ununterscheidbar von einem echten OTA-Stop. Ein blinder
+            # Upsert würde die manuelle Zeile zu source=channex degradieren und
+            # agency_id/reason (z. B. TUI) auf NULL setzen. Daher: nur Tage
+            # schreiben, die NOCH KEINEN Eintrag haben (echter neuer OTA-Stop).
+            # Bestehende Tage — manual (eigenes Echo) wie channex (schon da) —
+            # werden übersprungen; das schützt die Herkunft UND ist idempotent
+            # (kein updated_at-Bump → keine Realtime-Event-Flut), analog zum
+            # Availability-Block oben.
+            stopped = {
+                d
+                for _rate_plan, days in (restr.get("data") or {}).items()
+                for d, vals in (days or {}).items()
+                if (vals or {}).get("stop_sell")
+            }
+            if stopped:
+                existing_stops = {
+                    r["date"]
+                    for r in (
+                        db.table("stop_sell")
+                        .select("date")
+                        .eq("property_id", property_id)
+                        .in_("date", list(stopped))
+                        .execute()
+                    ).data
+                    or []
+                }
+                # Gebuchte Tage NIE als Stop-Sell schreiben: ein gebuchter Tag ist
+                # verkauft, ein Stop-Sell darüber verfälscht die Verfügbarkeits-
+                # Wahrheit. Auf 'stopped' gescopte Query (nicht existing_days aus
+                # dem Availability-Feed, das divergieren kann).
+                booked_days = {
+                    r["date"]
+                    for r in (
+                        db.table("availability")
+                        .select("date")
+                        .eq("property_id", property_id)
+                        .eq("status", "booked")
+                        .in_("date", list(stopped))
+                        .execute()
+                    ).data
+                    or []
+                }
+                for d in stopped:
+                    if d in existing_stops or d in booked_days:
+                        continue
+                    db.table("stop_sell").upsert(
+                        {
+                            "tenant_id": tenant_id,
+                            "property_id": property_id,
+                            "date": d,
+                            "source": "channex",
+                        },
+                        on_conflict="property_id,date",
+                    ).execute()
+                    result["stop_sell"] += 1
         log.info("import_ari_done", tenant_id=tenant_id, **result)
         return result
 

@@ -295,7 +295,7 @@ export async function listChannelConnections(
   );
 }
 
-// Kanal pro (Objekt × Portal) an-/abschalten (selektiver Verkaufsstopp).
+// Kanal pro (Objekt × Portal) an-/abschalten (selektiver Stop-Sell).
 // „Aus" stoppt ARI/Preis-Push und deaktiviert den Channex-Channel; eingehende
 // Buchungen werden weiter importiert.
 export async function setConnectionActive(

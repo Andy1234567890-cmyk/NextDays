@@ -96,6 +96,8 @@ class StopSellDay(BaseModel):
     source: StopSellSource
     # Reisebüro/Veranstalter, an den sich der Stopp richtet (None = alle).
     agency_id: str | None = None
+    # Name des Reisebüros (Join travel_agencies) — fürs Kalender-Balken-Label.
+    agency_name: str | None = None
 
 
 class StopSellListResponse(BaseModel):

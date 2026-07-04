@@ -1,6 +1,6 @@
 "use client";
 
-// Seiten-Panel des Verkaufsstopp-Kalenders (Konvergenzmuster aller PMS:
+// Seiten-Panel des Stop-Sell-Kalenders (Konvergenzmuster aller PMS:
 // Auswahl → seitliches Panel statt Modal): Zeitraum (editierbar),
 // Wochentags-Maske (Hostaway/Smoobu-Muster, Channex versteht sie nativ),
 // Grund-Auswahl + Notiz (Guesty-Muster) und Setzen/Aufheben.
@@ -49,6 +49,7 @@ function daysBetween(start: string, end: string, weekdays: Set<number>): string[
 export function StopSellPanel({
   selection,
   stops,
+  bookedDates,
   agencies,
   onClose,
   onDone,
@@ -56,7 +57,10 @@ export function StopSellPanel({
   selection: StopSellSelection;
   /** Alle Stop-Sell-Tage des Objekts (der Kalender hält sie ohnehin vor). */
   stops: StopSellDay[];
-  /** Reisebüros/Veranstalter als Adressaten der Stop-Sale-Meldung. */
+  /** Gebuchte Tage (ISO) des Objekts — für Stop-Sell tabu, werden aus der
+   *  Auswahl ausgeschlossen und als Überschneidung gemeldet. */
+  bookedDates: Set<string>;
+  /** Reisebüros/Veranstalter als Adressaten der Stop-Sell-Meldung. */
   agencies: AgencyOption[];
   onClose: () => void;
   onDone: () => void;
@@ -70,7 +74,7 @@ export function StopSellPanel({
   );
   const [reasonKey, setReasonKey] = useState<(typeof REASON_KEYS)[number] | null>(null);
   const [note, setNote] = useState("");
-  // Adressat der Stop-Sale-Meldung ("" = alle Reiseanbieter).
+  // Adressat der Stop-Sell-Meldung ("" = alle Reiseanbieter).
   const [agencyId, setAgencyId] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -83,9 +87,19 @@ export function StopSellPanel({
     );
   }, [locale]);
 
-  const affected = useMemo(
+  // Alle Tage im Zeitraum (vor Buchungs-Filter) — für die Überschneidungs-Zählung.
+  const rangeDays = useMemo(
     () => (from <= to ? daysBetween(from, to, weekdays) : []),
     [from, to, weekdays],
+  );
+  // Gebuchte Tage sind für Stop-Sell tabu → aus der wirksamen Auswahl raus.
+  const bookedInRange = useMemo(
+    () => rangeDays.filter((d) => bookedDates.has(d)),
+    [rangeDays, bookedDates],
+  );
+  const affected = useMemo(
+    () => rangeDays.filter((d) => !bookedDates.has(d)),
+    [rangeDays, bookedDates],
   );
   const affectedSet = useMemo(() => new Set(affected), [affected]);
   const manualInRange = stops.filter(
@@ -188,7 +202,7 @@ export function StopSellPanel({
         </div>
       </div>
 
-      {/* Adressat: Reisebüro/Veranstalter (Touristik: Stop-Sale-Meldung an
+      {/* Adressat: Reisebüro/Veranstalter (Touristik: Stop-Sell-Meldung an
           den Partner); leer = gilt allen Kanälen. */}
       {agencies.length > 0 && (
         <label className="flex flex-col gap-1.5">
@@ -235,6 +249,12 @@ export function StopSellPanel({
         {t("daysAffected", { n: affected.length })}
       </p>
 
+      {bookedInRange.length > 0 && (
+        <p className="flex items-start gap-2 rounded-(--radius) bg-accent/10 px-3 py-2 text-xs text-accent-foreground">
+          <Icon icon="ph:calendar-check" className="mt-0.5 size-3.5 shrink-0" />
+          {t("bookedInRange", { n: bookedInRange.length })}
+        </p>
+      )}
       {channexInRange.length > 0 && (
         <p className="flex items-start gap-2 rounded-(--radius) bg-muted px-3 py-2 text-xs text-muted-foreground">
           <Icon icon="ph:lock-simple" className="mt-0.5 size-3.5 shrink-0" />
@@ -248,12 +268,11 @@ export function StopSellPanel({
           <Icon icon="ph:hand-palm" className="size-4" />
           {t("apply")}
         </Button>
+        {/* Aufheben: nur manuelle Stop-Sells im Zeitraum sind per Hand löschbar
+            (Portal-/Channex-Stops bleiben, siehe channexInRange-Hinweis). */}
         {manualInRange.length > 0 && (
-          <Button
-            variant="outline"
-            onClick={onClear}
-            disabled={pending}
-          >
+          <Button variant="destructive" onClick={onClear} disabled={pending}>
+            <Icon icon="ph:trash" className="size-4" />
             {t("clearRange", { n: manualInRange.length })}
           </Button>
         )}

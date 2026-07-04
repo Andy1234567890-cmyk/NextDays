@@ -1,6 +1,6 @@
-// Stop-Sell — Verkaufsstopp-Kalender (Multi-Property-Zeitleiste wie in den
+// Stop-Sell — Stop-Sell-Kalender (Multi-Property-Zeitleiste wie in den
 // großen PMS): Server Component lädt Objekte + Reisebüros (Adressaten der
-// Stop-Sale-Meldung), der Client-Kalender zeigt Belegung + Stopps pro Tag und
+// Stop-Sell-Meldung), der Client-Kalender zeigt Belegung + Stopps pro Tag und
 // setzt/hebt Stopps per Drag-Auswahl (Channex-Stops read-only).
 import { StopSellCalendar } from "@/components/stop-sell/stop-sell-calendar";
 import { RealtimeRefresh } from "@/components/realtime-refresh";

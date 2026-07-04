@@ -54,6 +54,8 @@ export type InvoicePreview = {
   propertyTitle: string;
   stay: { from: string; to: string; nights: number };
   paidAmount: number;
+  // Dokumentsprache = Gastsprache (doc_i18n, 24 EU-Locales; Fallback de).
+  guestLanguage: string;
   items: InvoicePreviewItem[];
 };
 

@@ -48,7 +48,14 @@ function normalizeView(v: string | null): ViewKey {
   return isViewKey(v) ? v : "timeline";
 }
 
-export function CalendarViews({ properties }: { properties: Prop[] }) {
+export function CalendarViews({
+  properties,
+  accommodationType,
+}: {
+  properties: Prop[];
+  // Betriebsart (0090): steuert die Typ-Filter-Liste im Belegungsplan.
+  accommodationType?: "vacation_rental" | "hotel" | null;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -93,7 +100,11 @@ export function CalendarViews({ properties }: { properties: Prop[] }) {
           dem Titel) — eine saubere Kopfzeile. Die Timeline bleibt immer gemountet
           (Board hält eigenen State/Scroll). */}
       <div className={active === "timeline" ? "" : "hidden"}>
-        <CalendarBoard properties={properties} viewSwitcher={viewSwitcher} />
+        <CalendarBoard
+          properties={properties}
+          viewSwitcher={viewSwitcher}
+          accommodationType={accommodationType}
+        />
       </div>
 
       {/* Andere Views haben keine Board-Kopfzeile → eigene schlanke Zeile mit

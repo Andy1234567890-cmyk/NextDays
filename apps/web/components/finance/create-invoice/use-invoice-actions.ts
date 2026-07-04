@@ -81,6 +81,8 @@ type UseInvoiceActionsArgs = {
   // Rechnung mit der Reservierung und verhindert Doppelrechnungen (409).
   reservationId?: string | null;
   reservationCustomerId?: string | null;
+  // Dokumentsprache (0099, Gastsprache aus der Buchungs-Vorschau; sonst de).
+  documentLanguage?: string;
 };
 
 export function useInvoiceActions({
@@ -133,6 +135,7 @@ export function useInvoiceActions({
   taxGrouped,
   reservationId,
   reservationCustomerId,
+  documentLanguage,
 }: UseInvoiceActionsArgs) {
   // Ref um manuelle Datumsänderungen zu tracken (verhindert Sync-Loops)
   const isManualDateChangeRef = useRef(false);
@@ -467,6 +470,9 @@ export function useInvoiceActions({
       // Metadata
       createdAt: new Date(),
       isStorno: false,
+      // Dokumentsprache (0099): Gastsprache aus der Buchungs-Vorschau —
+      // belegt die Sprach-Auswahl im Vorschau-/Versand-Dialog vor.
+      language: documentLanguage || 'de',
     };
 
     setCreatedDocument(tempInvoiceData);
@@ -671,7 +677,8 @@ export function useInvoiceActions({
         template: selectedTemplate || 'TEMPLATE_STANDARD',
         templateId: selectedTemplate || 'TEMPLATE_STANDARD',
         templateType: selectedTemplate || 'TEMPLATE_STANDARD',
-        language: 'de',
+        // Dokumentsprache (0099): Gastsprache aus der Buchungs-Vorschau.
+        language: documentLanguage || 'de',
 
         // Additional Control Fields
         isStorno: false,

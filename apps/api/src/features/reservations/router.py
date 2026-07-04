@@ -13,6 +13,7 @@ from src.features.auth.lodgify_permissions import Permission
 from src.features.auth.permissions import Capability
 
 from .schemas import (
+    CheckOutRequest,
     CheckOutResponse,
     DashboardResponse,
     ReservationCancel,
@@ -173,12 +174,14 @@ def check_out_reservation(
     ctx: Annotated[
         CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
     ],
+    req: CheckOutRequest | None = None,
 ) -> CheckOutResponse:
     """Gast auschecken — erzeugt verpflichtend die finale Rechnung (GoBD-
     Nummer) über den Booking→Invoice-Builder; ohne Rechnung kein Check-out.
+    Die Zahlart (bar/Karte/auf Rechnung) kommt aus der Rezeptions-Abfrage.
     Die Rechnung entsteht serverseitig als System-Nebeneffekt der Front-Desk-
     Aktion (bewusst ohne OWNER_REPORTING-Anforderung)."""
     try:
-        return service.check_out(ctx, reservation_id)
+        return service.check_out(ctx, reservation_id, req)
     except ReservationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

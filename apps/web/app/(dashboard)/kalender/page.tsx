@@ -6,13 +6,18 @@ import { Suspense } from "react";
 
 import { CalendarViews } from "@/components/kalender/calendar-views";
 import { Card } from "@/components/ui/card";
+import { getMe } from "@/lib/auth";
 import { getDpOverview } from "@/lib/dynamic-pricing";
 import { listProperties } from "@/lib/properties";
 
 export default async function KalenderPage() {
-  // Objekte + Dynamic-Pricing-Status parallel laden, damit der Kalender pro
-  // Objekt anzeigen kann, ob Dynamic Pricing aktiv ist (Blitz-Markierung).
-  const [res, dp] = await Promise.all([listProperties(), getDpOverview()]);
+  // Objekte + Dynamic-Pricing-Status + Betriebsart parallel laden — die
+  // Betriebsart steuert die Typ-Filter-Liste (Zimmertypen vs. Ferienobjekte).
+  const [res, dp, me] = await Promise.all([
+    listProperties(),
+    getDpOverview(),
+    getMe(),
+  ]);
   // Set der Objekte mit aktivem DP (best-effort: scheitert der Call, kein Blitz).
   const dpEnabled = new Set(
     dp.ok ? dp.data.items.filter((i) => i.enabled).map((i) => i.property_id) : [],
@@ -44,7 +49,10 @@ export default async function KalenderPage() {
   // (Next.js verlangt sie für useSearchParams in einer Server-gerenderten Seite).
   return (
     <Suspense fallback={null}>
-      <CalendarViews properties={properties} />
+      <CalendarViews
+        properties={properties}
+        accommodationType={me?.accommodation_type ?? null}
+      />
     </Suspense>
   );
 }

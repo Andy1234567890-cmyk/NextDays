@@ -244,7 +244,9 @@ export function PricingForm({ initial }: { initial: Property }) {
           <ListRow
             key={f.id}
             title={f.name}
-            pill={`${fmtPrice(f.amount, cur)} · ${FEE_BASIS_LABELS[f.basis]}${f.optional ? " · optional" : ""}`}
+            pill={`${fmtPrice(f.amount, cur)} · ${FEE_BASIS_LABELS[f.basis]}${
+              f.taxRate != null ? ` · ${f.taxRate} % USt` : ""
+            }${f.optional ? " · optional" : ""}`}
             onEdit={() => setSection({ fee: f.id })}
             onDelete={() => save({ ...pr, fees: pr.fees.filter((x) => x.id !== f.id) })}
           />
@@ -816,6 +818,31 @@ function FeeEditor({
       </Field>
       <Field label="Berechnung">
         <BasisSelect value={v.basis} onChange={(b) => setV({ ...v, basis: b })} />
+      </Field>
+      <Field label="USt-Satz (%) — leer = Standardsatz der Übernachtung">
+        <div className="flex items-center gap-2">
+          <Input
+            type="number"
+            min={0}
+            max={100}
+            step={0.1}
+            value={v.taxRate ?? ""}
+            placeholder="z. B. 19 für Frühstück"
+            onChange={(e) => {
+              if (e.target.value === "") {
+                setV({ ...v, taxRate: null });
+                return;
+              }
+              // Auf gültigen USt-Bereich 0–100 begrenzen (min/max am Input
+              // blocken getippte/„2e3"-Werte nicht) — der Satz wird als
+              // Snapshot in Rechnungszeilen übernommen.
+              const n = Number(e.target.value);
+              if (!Number.isFinite(n)) return;
+              setV({ ...v, taxRate: Math.min(100, Math.max(0, n)) });
+            }}
+          />
+          <span className="text-sm text-muted-foreground">%</span>
+        </div>
       </Field>
       <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
         <span className="font-medium">Optional (Gast kann ab-/zuwählen)</span>

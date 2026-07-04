@@ -1,14 +1,14 @@
 "use client";
 
-// Verkaufsstopp-Kalender (Konvergenzmuster der PMS-Multikalender, verifiziert
+// Stop-Sell-Kalender (Konvergenzmuster der PMS-Multikalender, verifiziert
 // gegen Hostaway/Guesty/Smoobu/Lodgify/Airbnb/Booking): Zeilen = Objekte
 // (sticky links), Spalten = Tage (180-Tage-Fenster ab heute), Drag über die
 // Tage einer Objektzeile wählt einen Zeitraum → rechtes Seiten-Panel setzt/
-// hebt den Verkaufsstopp auf (mit Wochentags-Maske, Grund + Notiz).
+// hebt den Stop-Sell auf (mit Wochentags-Maske, Grund + Notiz).
 //
 // Ebenen je Tageszelle: Belegungs-Status (frei/gebucht/gesperrt aus
 // availability — nur Anzeige, die Wahrheit bleibt im /kalender) + der
-// Verkaufsstopp als EIGENE Ebene darüber (manuell = Hand, Portal = Schloss,
+// Stop-Sell als EIGENE Ebene darüber (manuell = Hand, Portal = Schloss,
 // read-only). Preise gehören bewusst NICHT hierher — dafür gibt es den
 // Belegungsplan; diese Seite ist der fokussierte Stop-Sell-Kanal.
 // Live per Supabase-Realtime (stop_sell/availability/reservations).
@@ -23,6 +23,7 @@ import {
   type StopSellDay,
 } from "@/lib/calendar";
 import { isoPlus, isoWeekday, todayIso } from "@/lib/dates";
+import { listReservations, type Reservation } from "@/lib/reservations";
 import { useRealtime } from "@/lib/use-realtime";
 
 import {
@@ -80,6 +81,10 @@ export function StopSellCalendar({
 
   const [avail, setAvail] = useState<Record<string, Record<string, DayAvailability>>>({});
   const [stops, setStops] = useState<Record<string, Record<string, StopSellDay>>>({});
+  // Buchungen je Objekt × Nacht: gebuchte Tage werden als Buchung (Gastname)
+  // gezeigt, nicht als anonymes Stop-Sell-Schloss — Stop-Sell und Kalender
+  // müssen dieselbe Belegungs-Wahrheit zeigen.
+  const [resByDay, setResByDay] = useState<Record<string, Record<string, Reservation>>>({});
   const [error, setError] = useState<string | null>(agenciesError);
   // Fehler-Prop nach Realtime-Refresh übernehmen — sonst bliebe ein alter
   // Banner stehen (oder ein neuer Ladefehler unsichtbar).
@@ -92,6 +97,19 @@ export function StopSellCalendar({
 
   const load = useCallback(async () => {
     const to = isoPlus(today, DAYS_AHEAD);
+    // Buchungen tenant-weit EINMAL laden (dieselbe Action wie der Belegungsplan,
+    // liefert Gastname per GuestMask) und je Objekt nach Nacht zuordnen.
+    const resAll = await listReservations();
+    if (!resAll.ok) setError(resAll.error);
+    const resByProp: Record<string, Record<string, Reservation>> = {};
+    if (resAll.ok) {
+      for (const r of resAll.data.items) {
+        if (r.status === "cancelled") continue; // stornierte belegen nicht
+        const map = (resByProp[r.property_id] ??= {});
+        // Nächte: check_in (inkl.) bis check_out (exkl.).
+        for (let d = r.check_in; d < r.check_out; d = isoPlus(d, 1)) map[d] = r;
+      }
+    }
     const perProperty = await Promise.all(
       properties.map(async (p) => {
         const [availRes, stopRes] = await Promise.all([
@@ -109,6 +127,7 @@ export function StopSellCalendar({
     );
     setAvail(Object.fromEntries(perProperty.map(([id, a]) => [id, a])));
     setStops(Object.fromEntries(perProperty.map(([id, , s]) => [id, s])));
+    setResByDay(resByProp);
   }, [properties, today]);
 
   useEffect(() => {
@@ -166,14 +185,21 @@ export function StopSellCalendar({
       ? { pid: sel.propertyId, start: sel.start, end: sel.end }
       : null;
 
+  // Ein Tag gilt als gebucht, wenn availability=booked ODER eine (nicht
+  // stornierte) Reservierung darauf liegt — beide Quellen zusammen, damit ein
+  // Sync-Verzug nie eine Buchung verschwinden lässt.
+  const isBooked = (pid: string, d: string): boolean =>
+    avail[pid]?.[d]?.status === "booked" || !!resByDay[pid]?.[d];
+
   function cellClasses(pid: string, d: string): string {
     const inSelection =
       !!active && active.pid === pid && d >= active.start && d <= active.end;
     if (inSelection) return "bg-foreground/80";
+    // Buchung sticht Stop-Sell (der Tag ist verkauft) — wie im Belegungsplan.
+    if (isBooked(pid, d)) return "bg-accent/70";
     const day = avail[pid]?.[d];
     const stop = stops[pid]?.[d];
     if (stop) return stop.source === "channex" ? "bg-destructive/10" : "bg-destructive/20";
-    if (day?.status === "booked") return "bg-accent/70";
     if (day?.status === "blocked") return "bg-muted-foreground/40";
     const wd = isoWeekday(d);
     return wd >= 5 ? "bg-muted/60" : "bg-background";
@@ -182,11 +208,15 @@ export function StopSellCalendar({
   function cellTitle(p: Property, d: string): string {
     const day = avail[p.id]?.[d];
     const stop = stops[p.id]?.[d];
+    const res = resByDay[p.id]?.[d];
     const parts = [p.title, d];
-    if (day?.status === "booked") parts.push(t("legendBooked"));
-    else if (day?.status === "blocked") parts.push(t("legendBlocked"));
+    if (isBooked(p.id, d)) {
+      // Gastname sichtbar machen (Stop-Sell muss die Buchung zeigen).
+      parts.push(res?.guest_name ? `${t("legendBooked")}: ${res.guest_name}` : t("legendBooked"));
+    } else if (day?.status === "blocked") parts.push(t("legendBlocked"));
     else parts.push(t("legendOpen"));
-    if (stop) {
+    // Stop-Sell nur ergänzen, wenn der Tag NICHT gebucht ist (sonst irreführend).
+    if (stop && !isBooked(p.id, d)) {
       parts.push(stop.source === "channex" ? t("legendStopChannel") : t("legendStopManual"));
       if (stop.reason) parts.push(stop.reason);
     }
@@ -194,6 +224,16 @@ export function StopSellCalendar({
   }
 
   const stopsFor = (pid: string): StopSellDay[] => Object.values(stops[pid] ?? {});
+
+  // Gebuchte Tage eines Objekts (availability=booked ∪ Reservierungsnächte) —
+  // fürs Panel, damit gebuchte Tage aus der wirksamen Auswahl fallen.
+  const bookedDatesFor = (pid: string): Set<string> => {
+    const set = new Set<string>(Object.keys(resByDay[pid] ?? {}));
+    for (const [d, day] of Object.entries(avail[pid] ?? {})) {
+      if (day.status === "booked") set.add(d);
+    }
+    return set;
+  };
 
   return (
     <div className="flex w-full flex-col gap-4 p-6">
@@ -291,6 +331,7 @@ export function StopSellCalendar({
                 </div>
                 {days.map((d) => {
                   const stop = stops[p.id]?.[d];
+                  const booked = isBooked(p.id, d);
                   const inSel =
                     !!active && active.pid === p.id && d >= active.start && d <= active.end;
                   return (
@@ -298,24 +339,29 @@ export function StopSellCalendar({
                       key={d}
                       type="button"
                       title={cellTitle(p, d)}
+                      // Gebuchte Tage sind für Stop-Sell tabu → nicht auswählbar.
+                      disabled={booked}
                       onMouseDown={(e) => {
-                        if (e.button !== 0) return;
+                        if (e.button !== 0 || booked) return;
                         e.preventDefault();
                         setSel(null);
                         setDrag({ pid: p.id, a: d, b: d });
                       }}
                       onMouseEnter={() => {
+                        if (booked) return;
                         setDrag((prev) =>
                           prev && prev.pid === p.id ? { ...prev, b: d } : prev,
                         );
                       }}
                       className={
                         "flex shrink-0 items-center justify-center border-r border-border/50 transition-colors " +
+                        (booked ? "cursor-not-allowed " : "") +
                         cellClasses(p.id, d)
                       }
                       style={{ width: `${COL}rem`, height: `${ROW}rem` }}
                     >
-                      {stop ? (
+                      {/* Stop-Sell-Schloss nur auf NICHT gebuchten Tagen zeigen. */}
+                      {stop && !booked ? (
                         <Icon
                           icon={stop.source === "channex" ? "ph:lock-simple" : "ph:hand-palm"}
                           className={
@@ -341,6 +387,7 @@ export function StopSellCalendar({
           <StopSellPanel
             selection={sel}
             stops={stopsFor(sel.propertyId)}
+            bookedDates={bookedDatesFor(sel.propertyId)}
             agencies={agencies}
             onClose={() => setSel(null)}
             onDone={() => {

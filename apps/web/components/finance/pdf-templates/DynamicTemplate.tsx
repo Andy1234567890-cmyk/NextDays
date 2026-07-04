@@ -457,18 +457,18 @@ export const DynamicTemplate: React.FC<DynamicTemplateProps> = ({
                   style={{ borderColor: color }}
                 >
                   <div className="mb-3 font-semibold text-lg" style={{ color }}>
-                    Rechnungsdetails
+                    {t('documentDetails')}
                   </div>
                   <div className="space-y-2">
                     <div>
-                      <span className="font-medium">Datum:</span> {formatDate(data.invoiceDate)}
+                      <span className="font-medium">{t('date')}:</span> {formatDate(data.invoiceDate)}
                     </div>
                     <div>
-                      <span className="font-medium">Fälligkeitsdatum:</span>{' '}
+                      <span className="font-medium">{t('dueDate')}:</span>{' '}
                       {formatDate(data.dueDate)}
                     </div>
                     <div>
-                      <span className="font-medium">Zahlungsziel:</span> {data.paymentTerms}
+                      <span className="font-medium">{t('paymentTerms')}:</span> {data.paymentTerms}
                     </div>
                   </div>
                 </div>

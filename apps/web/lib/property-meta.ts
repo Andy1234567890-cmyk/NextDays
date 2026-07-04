@@ -9,7 +9,43 @@ export const TYPE_LABELS: Record<PropertyType, string> = {
   tiny_house: "Tiny House",
   stellplatz: "Stellplatz",
   hausboot: "Hausboot",
+  // Hotel-Zimmertypen (Migration 0098, Betriebsart 'hotel')
+  einzelzimmer: "Einzelzimmer",
+  doppelzimmer: "Doppelzimmer",
+  zweibettzimmer: "Zweibettzimmer",
+  familienzimmer: "Familienzimmer",
+  junior_suite: "Junior Suite",
+  suite: "Suite",
 };
+
+// Typen je Betriebsart (0090): Ferienvermietung sieht Ferienobjekt-Typen,
+// Hotel sieht Zimmertypen — Filter und Anlage-Dialoge zeigen NUR die passende
+// Liste (typeOptionsFor). TYPE_OPTIONS bleibt die Gesamtliste (für die
+// Anzeige von Bestandsdaten, egal welcher Typ).
+export const VR_TYPES: PropertyType[] = [
+  "ferienhaus",
+  "appartement",
+  "glamping",
+  "tiny_house",
+  "stellplatz",
+  "hausboot",
+];
+
+export const HOTEL_TYPES: PropertyType[] = [
+  "einzelzimmer",
+  "doppelzimmer",
+  "zweibettzimmer",
+  "familienzimmer",
+  "junior_suite",
+  "suite",
+];
+
+export function typeOptionsFor(
+  accommodationType: "vacation_rental" | "hotel" | null | undefined,
+): { value: PropertyType; label: string }[] {
+  const types = accommodationType === "hotel" ? HOTEL_TYPES : VR_TYPES;
+  return types.map((value) => ({ value, label: TYPE_LABELS[value] }));
+}
 
 export const TYPE_OPTIONS = Object.entries(TYPE_LABELS).map(([value, label]) => ({
   value: value as PropertyType,

@@ -53,11 +53,15 @@ def test_create_requires_tenant() -> None:
 # --- Service: Double-Booking-Schutz ---
 
 def _service_for_create(
-    *, property_found: bool, taken_days: list[dict[str, str]]
+    *,
+    property_found: bool,
+    taken_days: list[dict[str, str]],
+    stopped_days: list[dict[str, str]] | None = None,
 ) -> ReservationsService:
     """Mockt die im create() benutzten Tabellen-Ketten.
 
-    properties.select…limit → {data: [...]}, availability.select…lt → taken_days.
+    properties.select…limit → {data: [...]}, availability.select…lt → taken_days,
+    stop_sell.select…lt → stopped_days (Stop-Sell-Guard).
     """
     db = MagicMock(name="supabase")
 
@@ -78,6 +82,11 @@ def _service_for_create(
                 t.select.return_value.eq.return_value.gte.return_value.lt.return_value
             )
             chain.execute.return_value.data = taken_days
+        elif name == "stop_sell":
+            chain = (
+                t.select.return_value.eq.return_value.gte.return_value.lt.return_value
+            )
+            chain.execute.return_value.data = stopped_days or []
         return t
 
     db.table.side_effect = table
@@ -97,6 +106,25 @@ def test_create_rejects_when_days_taken() -> None:
     with pytest.raises(ReservationError) as exc:
         service.create(AuthContext(user_id="u1", tenant_id="t1"), req)
     assert exc.value.status_code == 409
+
+
+def test_create_rejects_stop_sell_days() -> None:
+    # Ein von Mitarbeitern gesetzter Stop-Sell sperrt den Tag auf ALLEN Kanälen
+    # — auch die interne Rezeptions-Buchung (409).
+    service = _service_for_create(
+        property_found=True,
+        taken_days=[],  # availability frei
+        stopped_days=[{"date": "2026-05-01"}],  # aber Stop-Sell gesetzt
+    )
+    req = ReservationCreate(
+        property_id="p1",
+        check_in=date(2026, 5, 1),
+        check_out=date(2026, 5, 3),
+    )
+    with pytest.raises(ReservationError) as exc:
+        service.create(AuthContext(user_id="u1", tenant_id="t1"), req)
+    assert exc.value.status_code == 409
+    assert "Stop-Sell" in exc.value.message
 
 
 def test_create_rejects_unknown_property() -> None:

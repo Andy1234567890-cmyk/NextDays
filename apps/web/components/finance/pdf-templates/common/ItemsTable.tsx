@@ -23,7 +23,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
 }) => {
   const { t } = useDocumentTranslation(language);
   if (!data.realItems || data.realItems.length === 0) {
-    return <div className="py-8 text-center text-gray-500">Keine Positionen vorhanden</div>;
+    return <div className="py-8 text-center text-gray-500">{t('noItems')}</div>;
   }
 
   const hasAnyDiscount = data.realItems.some(item => (item as any).discountPercent > 0);
@@ -77,7 +77,9 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                     <td className="px-3 py-4 text-sm">
                       <div className="font-medium">{item.description}</div>
                       {(item as any).unit && (
-                        <div className="text-gray-500 text-xs">Einheit: {(item as any).unit}</div>
+                        <div className="text-gray-500 text-xs">
+                          {t('unitLabel')}: {(item as any).unit}
+                        </div>
                       )}
                     </td>
                     <td className="px-3 py-4 text-right text-sm">{item.quantity}</td>
@@ -165,7 +167,9 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                   <td className="px-2 py-2 font-mono text-xs">
                     <div>{item.description}</div>
                     {(item as any).unit && (
-                      <div className="text-gray-500">UNIT: {(item as any).unit}</div>
+                      <div className="text-gray-500 uppercase">
+                        {t('unitLabel')}: {(item as any).unit}
+                      </div>
                     )}
                   </td>
                   <td className="px-2 py-2 text-right font-mono text-xs">{item.quantity}</td>

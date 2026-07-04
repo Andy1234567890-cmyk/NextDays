@@ -331,6 +331,32 @@ def test_available_properties_excludes_other_owners_property() -> None:
     assert avail == {"p-1", "p-3"}
 
 
+def test_available_properties_scoped_by_accommodation_type() -> None:
+    """Betriebsart hotel → nur Zimmertypen zur Zuordnung anbieten."""
+    svc = _svc(
+        {
+            "tenants": [{"id": "t-1", "accommodation_type": "hotel"}],
+            "properties": [
+                {
+                    "id": "p-1",
+                    "tenant_id": "t-1",
+                    "title": "FeWo",
+                    "property_type": "appartement",
+                },
+                {
+                    "id": "p-2",
+                    "tenant_id": "t-1",
+                    "title": "Zimmer 101",
+                    "property_type": "einzelzimmer",
+                },
+            ],
+        }
+    )
+    a = svc.create(_ctx(), OwnerCreate(name="A"))
+    avail = {p.id for p in svc.available_properties(_ctx(), a.id).items}
+    assert avail == {"p-2"}
+
+
 # --- Owner-Login-Verknüpfung -------------------------------------------------
 
 def test_link_user_must_be_owner_role() -> None:

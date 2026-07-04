@@ -136,11 +136,12 @@ def set_stop_sell(
     ctx: Annotated[CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))],
 ) -> dict[str, int]:
     try:
-        days = service.set_stop_sell(
+        # Rückgabe {stopped_days, skipped_booked}: gebuchte Tage werden nie
+        # gestoppt und separat gemeldet, damit die UI die Überschneidung zeigt.
+        return service.set_stop_sell(
             ctx.tenant_id, req.property_id, req.range, req.reason, req.weekdays,
             req.agency_id,
         )
-        return {"stopped_days": days}
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

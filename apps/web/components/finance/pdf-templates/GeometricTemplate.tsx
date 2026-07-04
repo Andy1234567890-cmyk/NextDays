@@ -116,7 +116,7 @@ export const GeometricTemplate: React.FC<GeometricTemplateProps> = ({
                     {data.documentLabel}
                   </div>
                   <div className="text-gray-600 text-sm">Nr. {data.invoiceNumber}</div>
-                  <div className="text-gray-600 text-sm">Datum: {formatDate(data.invoiceDate)}</div>
+                  <div className="text-gray-600 text-sm">{t('date')}: {formatDate(data.invoiceDate)}</div>
                 </div>
               </div>
 
@@ -371,13 +371,13 @@ export const GeometricTemplate: React.FC<GeometricTemplateProps> = ({
 
                 <div>
                   <div className="mb-3 font-semibold" style={{ color }}>
-                    Rechnungsdetails
+                    {t('documentDetails')}
                   </div>
                   <div className="space-y-2">
-                    <div>Rechnungsnr.: {data.invoiceNumber}</div>
-                    <div>Datum: {formatDate(data.invoiceDate)}</div>
-                    <div>Fälligkeitsdatum: {formatDate(data.dueDate)}</div>
-                    <div>Zahlungsziel: {data.paymentTerms}</div>
+                    <div>{t('invoiceNumber')}: {data.invoiceNumber}</div>
+                    <div>{t('date')}: {formatDate(data.invoiceDate)}</div>
+                    <div>{t('dueDate')}: {formatDate(data.dueDate)}</div>
+                    <div>{t('paymentTerms')}: {data.paymentTerms}</div>
                   </div>
                 </div>
               </div>

@@ -67,7 +67,7 @@ type NavGroup = { groupKey: string; icon: string; items: readonly NavItem[] };
 // Einstellungen wird separat als letzter Punkt der Gruppe angehängt.
 // Ziele zeigen auf real existierende Routen: Rechnungen = die Rechnungsliste
 // unter /buchhaltung (wie im Ferienvermietungs-Menü), Bankkonten = /buchhaltung/
-// bank, Schließzeiten = der Verkaufsstopp-Kalender (/stop-sell). Zahlungen/
+// bank, Schließzeiten = der Stop-Sell-Kalender (/stop-sell). Zahlungen/
 // Umsatz/Listen/Statistik haben eigene Routen (derzeit ComingSoon-Muster wie
 // /buchhaltung/berichte) — NIE auf Pfade ohne Route verlinken (404).
 const HOTEL_FINANCE: readonly NavItem[] = [
@@ -119,8 +119,8 @@ function buildGroups(accommodationType: AccommodationType): readonly NavGroup[] 
   return [
     hotel ? HOTEL_GROUP : VR_GROUP,
     {
-      // Reservierungen (Casona-Muster): Übersicht · Gruppen · Verkaufsstopp ·
-      // Einstellungen. Verkaufsstopp steuert die Buchbarkeit von Zeiträumen —
+      // Reservierungen (Casona-Muster): Übersicht · Gruppen · Stop-Sell ·
+      // Einstellungen. Stop-Sell steuert die Buchbarkeit von Zeiträumen —
       // das ist Reservierungs-/Belegungsarbeit, kein Objektstammdatum.
       groupKey: "reservations",
       icon: "ph:bookmark-simple",

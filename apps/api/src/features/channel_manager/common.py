@@ -44,6 +44,15 @@ _CHANNEX_PROPERTY_TYPE: dict[str, str] = {
     "tiny_house": "chalet",
     "stellplatz": "camping",
     "hausboot": "boat",
+    # Hotel-Zimmertypen (0098): das Objekt ist ein Zimmer eines Hotels →
+    # Channex-Property-Typ "hotel" (Room-Types entstehen ohnehin synthetisch
+    # pro Objekt, siehe PMS-Mapping).
+    "einzelzimmer": "hotel",
+    "doppelzimmer": "hotel",
+    "zweibettzimmer": "hotel",
+    "familienzimmer": "hotel",
+    "junior_suite": "hotel",
+    "suite": "hotel",
 }
 
 

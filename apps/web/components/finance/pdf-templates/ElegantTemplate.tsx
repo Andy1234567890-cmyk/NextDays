@@ -439,12 +439,12 @@ export const ElegantTemplate: React.FC<ElegantTemplateProps> = ({
 
                 <div>
                   <div className="mb-4 font-light text-lg" style={{ color }}>
-                    Rechnungsdetails
+                    {t('documentDetails')}
                   </div>
                   <div className="space-y-1">
                     <div>Nr. {data.invoiceNumber}</div>
-                    <div>Datum: {formatDate(data.invoiceDate)}</div>
-                    <div>Fälligkeitsdatum: {formatDate(data.dueDate)}</div>
+                    <div>{t('date')}: {formatDate(data.invoiceDate)}</div>
+                    <div>{t('dueDate')}: {formatDate(data.dueDate)}</div>
                   </div>
                 </div>
               </div>

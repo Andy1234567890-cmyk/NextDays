@@ -21,10 +21,16 @@ Positionsquellen:
 
 Steuerlogik (v1): EIN Tenant-Satz `lodging_tax_rate` für alle Aufenthalts-
 Positionen; Abgaben-Zeilen (kind='tax' bzw. Label = additiver taxes[].name aus
-property_pricing_config, z. B. Kurtaxe) → 0 % USt als eigene Position; Addons
-behalten ihren Snapshot-Satz. Kleinunternehmer → alles 0 %. Brutto→Netto wird
-je Zeile rückgerechnet (Decimal, ROUND_HALF_UP), damit die Brutto-Summe exakt
-dem Buchungsbetrag + Addons entspricht (keine Rundungsdrift).
+property_pricing_config, z. B. Kurtaxe) → 0 % USt als eigene Position; Zeilen
+mit eigenem Satz-Snapshot (quote_items[].tax_rate, Gebühren wie Frühstück 19 %)
+behalten diesen; Addons behalten ihren Snapshot-Satz. Kleinunternehmer → alles
+0 %. Brutto→Netto wird je Zeile rückgerechnet (Decimal, ROUND_HALF_UP), damit
+die Brutto-Summe exakt dem Buchungsbetrag + Addons entspricht.
+
+Dokumentsprache: Belegtexte (Labels, head_text, Einheit) entstehen in der
+Gastsprache (reservations.guest_language → doc_i18n, 24 EU-Sprachen); die
+Sprache wird als invoices.language (0099) gespeichert, damit PDF/Versand
+dieselbe Sprache vorbelegen. Unbekannt/fehlend → de.
 """
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
@@ -34,6 +40,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 
+from . import doc_i18n
 from .service import BuchhaltungError, _q
 
 log = get_logger("nextdays.buchhaltung.reservation_invoice")
@@ -51,11 +58,15 @@ def _dec(value: object) -> Decimal:
     return Decimal(str(value if value is not None else 0))
 
 
-def _addon_label(names: object, qty: int) -> str:
-    """Anzeigename eines Addon-Snapshots (Dokumentsprache v1 = de, sonst erster
-    vorhandener Wert — gleiches Muster wie addons/service + pricing/resolver)."""
+def _addon_label(names: object, qty: int, language: str = "de") -> str:
+    """Anzeigename eines Addon-Snapshots: Gastsprache vor de vor erstem
+    vorhandenen Wert (name ist mehrsprachiges jsonb, Muster addons/service)."""
     names = names if isinstance(names, dict) else {}
-    label = names.get("de") or next(iter(names.values()), "Zusatzleistung")
+    label = (
+        names.get(language)
+        or names.get("de")
+        or next(iter(names.values()), doc_i18n.extra_service_label(language))
+    )
     return f"{label} ×{qty}" if qty > 1 else str(label)
 
 
@@ -100,14 +111,16 @@ def _split_gross(gross: Decimal, rate: Decimal) -> tuple[Decimal, Decimal]:
     return net, _q(gross - net)
 
 
-def _line(description: str, gross: Decimal, rate: Decimal) -> dict:
+def _line(
+    description: str, gross: Decimal, rate: Decimal, unit: str = "pauschal"
+) -> dict:
     """Eine Rechnungsposition (Beträge als Decimal; quantity ist immer 1 —
     Mengen stecken bereits im Label, z. B. „Übernachtung (3 Nächte)")."""
     net, tax = _split_gross(gross, rate)
     return {
         "description": description,
         "quantity": Decimal("1"),
-        "unit": "pauschal",
+        "unit": unit,
         "unit_price": net,
         "tax_rate": rate,
         "net_amount": net,
@@ -123,12 +136,18 @@ def build_positions(
     lodging_tax_rate: Decimal | None,
     is_klein: bool,
     property_title: str,
+    language: str = "de",
 ) -> list[dict]:
     """Rechnungspositionen aus Buchung + Addons (pure Funktion, DB-frei).
+
+    `language` = Dokumentsprache (doc_i18n) für die hier ERZEUGTEN Texte
+    (Sammelposition, Einheit, Addon-Fallback); Snapshot-Labels aus quote_items
+    bleiben unverändert (Kaufzeitpunkt-Wahrheit).
 
     Wirft BuchhaltungError 422, wenn der Übernachtungs-Steuersatz fehlt (und
     kein Kleinunternehmer) oder gar keine fakturierbare Position entsteht.
     """
+    unit = doc_i18n.flat_rate_unit(language)
     tax_labels = _additive_tax_labels(pricing_taxes)
     total_amount = _dec(reservation.get("total_amount"))
     quote_items = [
@@ -164,11 +183,25 @@ def build_positions(
             gross = _q(_dec(it.get("amount")))
             if gross == 0:
                 continue
-            label = str(it.get("label") or "").strip() or "Position"
+            label = str(it.get("label") or "").strip() or doc_i18n.item_fallback_label(
+                language
+            )
             kind = str(it.get("kind") or "").strip()
             is_levy = kind == _ZERO_RATE_KIND if kind else label in tax_labels
-            rate = Decimal("0") if (is_levy or is_klein) else lodging_rate()
-            positions.append(_line(label, gross, rate))
+            # Prioritätskette: Kleinunternehmer → 0 %; zeilen-eigener Satz-
+            # Snapshot (Gebühr mit eigener USt, z. B. Frühstück 19 %) → dieser;
+            # Abgabe (kind='tax'/Label) → 0 %; sonst Übernachtungssatz.
+            # Bestands-Snapshots und Channex-Fees haben nie tax_rate → alter Pfad.
+            line_rate = it.get("tax_rate")
+            if is_klein:
+                rate = Decimal("0")
+            elif line_rate is not None:
+                rate = _q(_dec(line_rate))
+            elif is_levy:
+                rate = Decimal("0")
+            else:
+                rate = lodging_rate()
+            positions.append(_line(label, gross, rate, unit))
     if not positions:
         check_in = str(reservation.get("check_in") or "")
         check_out = str(reservation.get("check_out") or "")
@@ -176,12 +209,9 @@ def build_positions(
             nights = (date.fromisoformat(check_out) - date.fromisoformat(check_in)).days
         except ValueError:
             nights = 0
-        stay = f"{_de_date(check_in)} – {_de_date(check_out)}"
-        label = f"Aufenthalt {property_title} {stay}".strip()
-        if nights > 0:
-            label += f" ({nights} {'Nächte' if nights != 1 else 'Nacht'})"
+        label = doc_i18n.stay_label(language, property_title, check_in, check_out, nights)
         rate = Decimal("0") if total_amount == 0 else lodging_rate()
-        positions.append(_line(label, total_amount, rate))
+        positions.append(_line(label, total_amount, rate, unit))
 
     # Upsells: eigene Positionen mit Snapshot-Steuersatz (NULL = 0 % ist die
     # dokumentierte Kaufzeitpunkt-Wahrheit aus 0075, kein erfundener Default).
@@ -193,17 +223,11 @@ def build_positions(
             continue
         rate = Decimal("0") if is_klein else _q(_dec(addon.get("tax_rate")))
         qty = max(int(addon.get("qty") or 1), 1)
-        positions.append(_line(_addon_label(addon.get("name"), qty), gross, rate))
+        positions.append(
+            _line(_addon_label(addon.get("name"), qty, language), gross, rate, unit)
+        )
 
     return positions
-
-
-def _de_date(iso: str) -> str:
-    """ISO-Datum → deutsche Anzeige (Dokumentsprache v1 = de)."""
-    try:
-        return date.fromisoformat(iso).strftime("%d.%m.%Y")
-    except ValueError:
-        return iso
 
 
 def find_active_invoice(db: Client, tenant_id: str, reservation_id: str) -> dict | None:
@@ -420,8 +444,17 @@ def _load_context(db: Client, tenant_id: str, reservation_id: str) -> dict:
         lodging_raw = profile.get("lodging_tax_rate")
         lodging_tax_rate = _dec(lodging_raw) if lodging_raw is not None else None
 
+    # Dokumentsprache = Gastsprache (24 EU-Sprachen; unbekannt/fehlend → de).
+    language = doc_i18n.resolve_language(reservation.get("guest_language"))
+
     positions = build_positions(
-        reservation, addons, pricing_taxes, lodging_tax_rate, is_klein, property_title
+        reservation,
+        addons,
+        pricing_taxes,
+        lodging_tax_rate,
+        is_klein,
+        property_title,
+        language,
     )
 
     paid = _dec(reservation.get("paid_amount"))
@@ -437,6 +470,7 @@ def _load_context(db: Client, tenant_id: str, reservation_id: str) -> dict:
         "currency": currency,
         "is_klein": is_klein,
         "paid_amount": _q(paid),
+        "language": language,
     }
 
 
@@ -553,6 +587,8 @@ def preview_for_reservation(db: Client, tenant_id: str, reservation_id: str) -> 
         "propertyTitle": ctx["property_title"],
         "stay": {"from": check_in, "to": check_out, "nights": nights},
         "paidAmount": float(ctx["paid_amount"]),
+        # Dokumentsprache fürs Erstellformular/PDF (Gastsprache, doc_i18n).
+        "guestLanguage": ctx["language"],
         # unitPrice ist NETTO (das Formular rechnet netto, priceInput='netto').
         "items": [
             {
@@ -568,8 +604,19 @@ def preview_for_reservation(db: Client, tenant_id: str, reservation_id: str) -> 
     }
 
 
-def create_from_reservation(db: Client, tenant_id: str, reservation_id: str) -> dict:
+def create_from_reservation(
+    db: Client,
+    tenant_id: str,
+    reservation_id: str,
+    *,
+    payment_method: str = "invoice",
+    card_brand: str | None = None,
+) -> dict:
     """Finale Rechnung zur Buchung erzeugen (idempotent).
+
+    Zahlart aus der Check-out-Abfrage: cash/card = am Empfang bezahlt →
+    Rechnung sofort 'paid' (voller Betrag); invoice = Zahlung auf Rechnung
+    (Überweisung) → 'finalized' mit Zahlungsziel.
 
     Rückgabe {id, invoice_number, already_existed}. Alle Validierungen und die
     Positionsberechnung laufen VOR dem ersten Write; existiert bereits eine
@@ -609,8 +656,11 @@ def create_from_reservation(db: Client, tenant_id: str, reservation_id: str) -> 
 
     today = datetime.now(UTC).date()
     payment_days = int(profile.get("default_payment_days") or 14)
-    paid = ctx["paid_amount"]
-    fully_paid = Decimal("0") < gross_total <= paid
+    # Bar/Karte = am Empfang beglichen → voller Betrag bezahlt; „auf Rechnung"
+    # zählt nur bereits geleistete Zahlungen (Anzahlung, bezahlte Addons).
+    paid_at_desk = payment_method in ("cash", "card")
+    paid = gross_total if paid_at_desk else ctx["paid_amount"]
+    fully_paid = paid_at_desk or Decimal("0") < gross_total <= paid
 
     check_in = str(reservation.get("check_in") or "")
     check_out = str(reservation.get("check_out") or "")
@@ -618,10 +668,9 @@ def create_from_reservation(db: Client, tenant_id: str, reservation_id: str) -> 
         nights = (date.fromisoformat(check_out) - date.fromisoformat(check_in)).days
     except ValueError:
         nights = 0
-    head_text = (
-        f"Aufenthalt {_de_date(check_in)} – {_de_date(check_out)}"
-        f" ({nights} {'Nächte' if nights != 1 else 'Nacht'})"
-        + (f", {ctx['property_title']}" if ctx["property_title"] else "")
+    language = ctx["language"]
+    head_text = doc_i18n.head_text(
+        language, check_in, check_out, nights, ctx["property_title"]
     )
 
     row = {
@@ -645,7 +694,14 @@ def create_from_reservation(db: Client, tenant_id: str, reservation_id: str) -> 
         "tax_rule": "DE_TAXABLE",
         "is_kleinunternehmer": ctx["is_klein"],
         "head_text": head_text,
+        # Dokumentsprache des Belegs (0099) — PDF/Versand-Dialog belegen damit
+        # ihre Sprach-Auswahl vor.
+        "language": language,
+        # Zahlart aus der Check-out-Abfrage (0097); card_brand nur bei Karte.
+        "payment_method": payment_method,
+        "card_brand": card_brand if payment_method == "card" else None,
     }
+    row = {k: v for k, v in row.items() if v is not None}
     if fully_paid:
         row["paid_at"] = datetime.now(UTC).isoformat()
 

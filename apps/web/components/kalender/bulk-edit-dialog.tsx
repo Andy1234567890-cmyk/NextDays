@@ -232,9 +232,9 @@ export function BulkEditDialog({
               />
             </fieldset>
 
-            {/* Verkaufsstopp */}
+            {/* Stop-Sell */}
             <fieldset className="flex flex-col gap-2">
-              <legend className="text-sm font-medium">Verkaufsstopp (OTA)</legend>
+              <legend className="text-sm font-medium">Stop-Sell (OTA)</legend>
               <Segmented
                 value={stopMode}
                 options={[

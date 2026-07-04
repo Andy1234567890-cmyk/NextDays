@@ -217,6 +217,19 @@ class CalendarService:
         )
         return res.data or []
 
+    def _booked_dates(self, property_id: str, rng: DateRange) -> set[str]:
+        """Gebuchte Tage (availability.status='booked') im Range als ISO-Strings.
+        Eine Quelle der Wahrheit für „welche Tage sind belegt" — jeder Buchungs-
+        pfad schreibt synchron booked, jeder Storno setzt zurück auf open, also
+        ist die availability-Tabelle die kanonische, für-Range-abfragbare Wahrheit.
+        Genutzt vom Stop-Sell-Guard: auf einem gebuchten Tag darf NIE ein
+        Stop-Sell liegen (der Tag ist bereits verkauft)."""
+        return {
+            row["date"]
+            for row in self._fetch_days(property_id, rng)
+            if row.get("status") == AvailabilityStatus.booked.value
+        }
+
     def _fetch_rate_plan(
         self, property_id: str
     ) -> tuple[float | None, int | None]:
@@ -252,14 +265,25 @@ class CalendarService:
         res = (
             self._db()
             .table("stop_sell")
-            .select("id,property_id,date,reason,source,agency_id")
+            # travel_agencies-Embed: der Kalender zeigt am Stop-Sale-Balken,
+            # an WEN sich der Stopp richtet (z. B. TUI) — nicht nur „Gesperrt".
+            .select(
+                "id,property_id,date,reason,source,agency_id,"
+                "travel_agencies(name)"
+            )
             .eq("property_id", property_id)
             .gte("date", rng.start.isoformat())
             .lt("date", rng.end.isoformat())
             .order("date")
             .execute()
         )
-        return res.data or []
+        rows = res.data or []
+        for row in rows:
+            agency = row.pop("travel_agencies", None) or {}
+            row["agency_name"] = (
+                agency.get("name") if isinstance(agency, dict) else None
+            )
+        return rows
 
     # Channex-Wochentags-Codes (Index = date.weekday(): 0=Montag … 6=Sonntag).
     _CHANNEX_DAYS = ("mo", "tu", "we", "th", "fr", "sa", "su")
@@ -272,12 +296,16 @@ class CalendarService:
         reason: str | None,
         weekdays: list[int] | None = None,
         agency_id: str | None = None,
-    ) -> int:
+    ) -> dict[str, int]:
         """Verkaufsstopp manuell setzen (idempotent pro Tag) und als
         stop_sell-Restriction an Channex pushen. `weekdays` (ISO 0=Mo … 6=So)
         beschränkt optional auf Wochentage im Zeitraum (z. B. nur Wochenenden).
         `agency_id` dokumentiert den Adressaten der Stop-Sale-Meldung
-        (Reisebüro/Veranstalter); None = gilt allen Kanälen."""
+        (Reisebüro/Veranstalter); None = gilt allen Kanälen.
+
+        Gibt ``{stopped_days, skipped_booked}`` zurück: gebuchte Tage werden
+        NIE gestoppt (der Tag ist bereits verkauft) und stattdessen gemeldet,
+        damit die UI die Überschneidung anzeigen kann."""
         self._require_own_property(tenant_id, property_id)
         if agency_id is not None:
             # Tenant-Scope explizit prüfen (Service-Role umgeht RLS) — sonst
@@ -295,7 +323,14 @@ class CalendarService:
                 raise CalendarError("Reisebüro nicht gefunden.", status_code=404)
         days = [d for d in rng.nights() if not weekdays or d.weekday() in weekdays]
         if not days:
-            return 0
+            return {"stopped_days": 0, "skipped_booked": 0}
+        # Gebuchte Tage NIE stoppen: ein gebuchter Tag ist verkauft, ein
+        # Stop-Sell darüber wäre bedeutungslos und würde die Verfügbarkeits-
+        # Wahrheit verfälschen. Übersprungene Tage separat melden (UI-Hinweis).
+        booked = self._booked_dates(property_id, rng)
+        before = len(days)
+        days = [d for d in days if d.isoformat() not in booked]
+        skipped_booked = before - len(days)
         # Channex-seitige Stops (source=channex) nie überschreiben — der Upsert
         # würde sonst ihre source auf manual kippen und ein späteres Aufheben
         # würde OTA-Stops öffnen. Diese Tage sind ohnehin bereits gestoppt.
@@ -315,7 +350,7 @@ class CalendarService:
         }
         days = [d for d in days if d.isoformat() not in channex_days]
         if not days:
-            return 0
+            return {"stopped_days": 0, "skipped_booked": skipped_booked}
         payload = [
             {
                 "tenant_id": tenant_id,
@@ -330,15 +365,21 @@ class CalendarService:
         self._db().table("stop_sell").upsert(
             payload, on_conflict="property_id,date"
         ).execute()
-        # Ein Range-Push; die Wochentags-Maske versteht Channex nativ (days).
+        # Push NUR die tatsächlich gesetzten Tage (gebuchte/channex-Tage sind
+        # raus) — als komprimierte Spannen. Kein roher Range-Push mehr, sonst
+        # würde Stop-Sell für gebuchte Tage an die OTAs gemeldet.
         self._push_channex_stop_sell(
             property_id,
-            [(rng.start, rng.end - timedelta(days=1))],
+            self._date_spans(days),
             stop_sell=True,
-            days=[self._CHANNEX_DAYS[w] for w in weekdays] if weekdays else None,
         )
-        log.info("calendar_stop_sell_set", property_id=property_id, days=len(payload))
-        return len(payload)
+        log.info(
+            "calendar_stop_sell_set",
+            property_id=property_id,
+            days=len(payload),
+            skipped_booked=skipped_booked,
+        )
+        return {"stopped_days": len(payload), "skipped_booked": skipped_booked}
 
     def clear_stop_sell(
         self,

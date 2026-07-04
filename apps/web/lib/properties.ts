@@ -11,7 +11,14 @@ export type PropertyType =
   | "glamping"
   | "tiny_house"
   | "stellplatz"
-  | "hausboot";
+  | "hausboot"
+  // Hotel-Zimmertypen (Migration 0098, Betriebsart 'hotel')
+  | "einzelzimmer"
+  | "doppelzimmer"
+  | "zweibettzimmer"
+  | "familienzimmer"
+  | "junior_suite"
+  | "suite";
 
 export type PropertyStatus = "draft" | "active" | "inactive";
 

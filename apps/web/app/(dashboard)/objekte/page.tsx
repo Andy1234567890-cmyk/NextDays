@@ -6,23 +6,30 @@ import { NewPropertyButton } from "@/components/objekte/new-property-button";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card } from "@/components/ui/card";
 import { Icon } from "@iconify/react";
+import { getMe } from "@/lib/auth";
 import { STATUS_LABELS, TYPE_LABELS } from "@/lib/property-meta";
 import { listProperties } from "@/lib/properties";
 
 export default async function ObjektePage() {
-  const res = await listProperties();
+  // Betriebsart mitladen: Hotel spricht von „Zimmern" und bekommt die
+  // Zimmertypen-Liste in der Anlage (0090/0098).
+  const [res, me] = await Promise.all([listProperties(), getMe()]);
+  const accommodationType = me?.accommodation_type ?? null;
+  const isHotel = accommodationType === "hotel";
 
   return (
     <div className="flex flex-col gap-6">
       <RealtimeRefresh tables={["properties"]} />
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display text-2xl font-extrabold">Objekte</h2>
+          <h2 className="font-display text-2xl font-extrabold">
+            {isHotel ? "Zimmer" : "Objekte"}
+          </h2>
           <p className="text-sm text-muted-foreground">
-            Verwalte deine Unterkünfte.
+            {isHotel ? "Verwalte deine Zimmer." : "Verwalte deine Unterkünfte."}
           </p>
         </div>
-        <NewPropertyButton />
+        <NewPropertyButton accommodationType={accommodationType} />
       </div>
 
       {!res.ok ? (
@@ -30,7 +37,7 @@ export default async function ObjektePage() {
           Objekte konnten nicht geladen werden. Ist das Backend erreichbar?
         </Card>
       ) : res.data.items.length === 0 ? (
-        <EmptyState />
+        <EmptyState accommodationType={accommodationType} />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {res.data.items.map((p) => (
@@ -73,21 +80,31 @@ export default async function ObjektePage() {
   );
 }
 
-function EmptyState() {
+function EmptyState({
+  accommodationType,
+}: {
+  accommodationType: "vacation_rental" | "hotel" | null;
+}) {
+  const isHotel = accommodationType === "hotel";
   return (
     <Card className="flex flex-col items-center justify-center gap-3 p-12 text-center">
       <span className="flex size-14 items-center justify-center rounded-full bg-secondary">
-        <Icon icon="ph:house-line" className="size-7 text-muted-foreground" />
+        <Icon
+          icon={isHotel ? "ph:bed" : "ph:house-line"}
+          className="size-7 text-muted-foreground"
+        />
       </span>
       <div>
         <p className="font-display text-lg font-extrabold">
-          Noch keine Objekte
+          {isHotel ? "Noch keine Zimmer" : "Noch keine Objekte"}
         </p>
         <p className="text-sm text-muted-foreground">
-          Lege dein erstes Objekt an, um loszulegen.
+          {isHotel
+            ? "Lege dein erstes Zimmer an, um loszulegen."
+            : "Lege dein erstes Objekt an, um loszulegen."}
         </p>
       </div>
-      <NewPropertyButton />
+      <NewPropertyButton accommodationType={accommodationType} />
     </Card>
   );
 }

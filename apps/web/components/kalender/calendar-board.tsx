@@ -26,7 +26,9 @@ import {
   type AvailabilityStatus,
   type DayAvailability,
   blockRange,
+  type StopSellDay,
   getAvailability,
+  listStopSell,
 } from "@/lib/calendar";
 import { CHANNEL_META, CHANNEL_SOURCES, channelMeta } from "@/lib/calendar-channels";
 import { explainFactors } from "@/lib/dp-factors";
@@ -36,7 +38,7 @@ import {
   reservationStatus,
 } from "@/lib/calendar-status";
 import type { PropertyType } from "@/lib/properties";
-import { TYPE_LABELS } from "@/lib/property-meta";
+import { typeOptionsFor } from "@/lib/property-meta";
 import { Input } from "@/components/ui/input";
 import {
   type Reservation,
@@ -66,7 +68,7 @@ const MONTHS = [
 
 const COL = 5.5; // rem pro Tagesspalte (breit & lesbar wie Lodgify, konstant)
 const LABEL = 17; // rem für die Objektspalte
-const ROW_H = 5.5; // rem Zeilenhöhe
+const ROW_H = 3.5; // rem Zeilenhöhe (kompakter — mehr Objekte pro Bildschirm)
 
 // Durchgehende Timeline: Bereich vom 1. Januar des LAUFENDEN Jahres bis Ende des
 // FOLGEJAHRES — so reicht das Scrollen zurück bis 01.01. UND mehr als ein Jahr
@@ -89,15 +91,22 @@ const OVERSCAN = 24;
 // Chunk-Größe (Tage) für das Nachladen der Tagesdaten beim Scrollen.
 const CHUNK_DAYS = 90;
 
-const SEG_STYLE: Record<AvailabilityStatus, string> = {
+// Segment-Status: availability-Status plus „stop_sell" (Stop-Sell aus der
+// stop_sell-Tabelle — der Tag ist frei, wird aber nicht aktiv verkauft; der
+// Balken zeigt Adressat/Grund, z. B. „Stop-Sell · TUI · Renovierung").
+type SegStatus = AvailabilityStatus | "stop_sell";
+
+const SEG_STYLE: Record<SegStatus, string> = {
   open: "",
   booked: "bg-accent/85 text-white",
   blocked: "bg-neutral-700 text-white",
+  stop_sell: "bg-warning/90 text-white",
 };
-const STATUS_LABEL: Record<AvailabilityStatus, string> = {
+const STATUS_LABEL: Record<SegStatus, string> = {
   open: "Frei",
   booked: "Gebucht",
   blocked: "Gesperrt",
+  stop_sell: "Stop-Sell",
 };
 
 function pad(n: number) {
@@ -151,9 +160,10 @@ function fmtPrice(price: number | null | undefined): string {
 type Segment = {
   start: number;
   span: number;
-  status: AvailabilityStatus;
+  status: SegStatus;
   source: AvailabilitySource;
   reservation?: Reservation; // verknüpfte Buchung (falls gefunden)
+  stopSell?: StopSellDay; // Stop-Sell-Details (Grund/Adressat) bei status=stop_sell
 };
 
 // Laufendes Verschieben/Resizen eines bestehenden Buchungsbalkens.
@@ -202,6 +212,7 @@ function toSegments(
   sourceByDay: Record<string, AvailabilitySource>,
   resByDay: Record<string, Reservation>,
   dates: Date[],
+  stopSellByDay: Record<string, StopSellDay> = {},
 ): Segment[] {
   const segs: Segment[] = [];
   let cur: Segment | null = null;
@@ -212,7 +223,13 @@ function toSegments(
     // Buchungs-Wahrheit; availability kann je nach Sync hinterherhinken. Sonst
     // blieben real gebuchte Tage im Kalender unsichtbar (Balken fehlt).
     const rawStatus = statusByDay[key(d)] ?? "open";
-    const s: AvailabilityStatus = res ? "booked" : rawStatus;
+    // Stop-Sell: der Tag wird nicht verkauft — eigener Balken mit
+    // Grund/Adressat statt nur „Gesperrt". Der Stop-Sell hat Vorrang vor der
+    // generischen availability-Sperre (blocked): OTAs/Channex setzen an
+    // denselben Tagen oft BEIDES (blocked + stop_sell); ohne Vorrang bliebe der
+    // Adressat (z. B. TUI) + Grund unsichtbar. Nur eine echte Buchung sticht ihn.
+    const stop = !res ? stopSellByDay[key(d)] : undefined;
+    const s: SegStatus = res ? "booked" : stop ? "stop_sell" : rawStatus;
     const src = res
       ? (sourceByDay[key(d)] ?? "booking")
       : (sourceByDay[key(d)] ?? "manual");
@@ -220,16 +237,31 @@ function toSegments(
       cur = null;
       return;
     }
+    // Stop-Sell-Segmente nur bündeln, wenn Grund + Adressat gleich bleiben
+    // (sonst verschluckt ein Balken die Details des nächsten).
+    const sameStop =
+      s !== "stop_sell" ||
+      (cur?.stopSell?.reason === stop?.reason &&
+        cur?.stopSell?.agency_id === stop?.agency_id &&
+        cur?.stopSell?.source === stop?.source);
     if (
       cur &&
       cur.status === s &&
       cur.source === src &&
       cur.reservation?.id === res?.id &&
+      sameStop &&
       cur.start + cur.span === i
     ) {
       cur.span += 1;
     } else {
-      cur = { start: i, span: 1, status: s, source: src, reservation: res };
+      cur = {
+        start: i,
+        span: 1,
+        status: s,
+        source: src,
+        reservation: res,
+        stopSell: stop,
+      };
       segs.push(cur);
     }
   });
@@ -253,6 +285,13 @@ function reservationsByDay(reservations: Reservation[]): Record<string, Reservat
 
 // Menschliches Herkunfts-/Gastlabel für einen Buchungsbalken.
 function segmentLabel(seg: Segment): string {
+  if (seg.status === "stop_sell") {
+    // Adressat sichtbar machen: Reisebüro-Name (z. B. TUI), sonst Herkunft.
+    const who =
+      seg.stopSell?.agency_name ||
+      (seg.stopSell?.source === "channex" ? "OTA/Channex" : "alle Kanäle");
+    return ["Stop-Sell", who, seg.stopSell?.reason].filter(Boolean).join(" · ");
+  }
   if (seg.status !== "booked") return STATUS_LABEL[seg.status];
   const guest = seg.reservation?.guest_name?.trim();
   return guest || seg.reservation?.ota_name || sourceLabel(seg.source);
@@ -261,11 +300,15 @@ function segmentLabel(seg: Segment): string {
 export function CalendarBoard({
   properties,
   viewSwitcher,
+  accommodationType,
 }: {
   properties: Prop[];
   // Ansicht-Dropdown (Timeline/Buchungen/…), wird in die Kopfzeile links neben
   // den Titel gereicht, damit alles in einer Zeile steht.
   viewSwitcher?: ReactNode;
+  // Betriebsart (0090): steuert die Typ-Filter-Liste (Zimmertypen vs.
+  // Ferienobjekt-Typen).
+  accommodationType?: "vacation_rental" | "hotel" | null;
 }) {
   // Startdatum (rollierend). null bis der Client das heutige Datum kennt.
   const [start, setStart] = useState<Date | null>(null);
@@ -280,6 +323,11 @@ export function CalendarBoard({
   // CTA/CTD je Objekt × Tag: [arrivalGesperrt, departureGesperrt].
   const [restrictions, setRestrictions] = useState<
     Record<string, Record<string, [boolean, boolean]>>
+  >({});
+  // Stop-Sells je Objekt × Tag (stop_sell mit Grund/Adressat) — eigener
+  // Balken-Typ, damit „Stop-Sell · TUI · Grund" sichtbar ist statt nur „Gesperrt".
+  const [stopSell, setStopSell] = useState<
+    Record<string, Record<string, StopSellDay>>
   >({});
   // Buchungen je Objekt → Tages-Map (Gastname im Balken + Detail-Popover).
   const [resByProp, setResByProp] = useState<Record<string, Record<string, Reservation>>>({});
@@ -727,9 +775,15 @@ export function CalendarBoard({
       const e = key(addDays(start, to)); // exklusiv
       const results = await Promise.all(
         properties.map(async (p) => {
-          const res = await getAvailability(p.id, s, e);
+          // Verfügbarkeit + Stop-Sells parallel — der Stop-Sell-Balken
+          // braucht Grund/Adressat aus stop_sell (availability kennt sie nicht).
+          const [res, ss] = await Promise.all([
+            getAvailability(p.id, s, e),
+            listStopSell(p.id, s, e),
+          ]);
           const days: DayAvailability[] = res.ok ? (res.data as DayAvailability[]) : [];
-          return [p.id, days] as const;
+          const stops: StopSellDay[] = ss.ok ? ss.data.items : [];
+          return [p.id, days, stops] as const;
         }),
       );
       // Merge-Helfer: pro State-Map die neuen Tage einspielen (replace = ersetzen).
@@ -773,6 +827,15 @@ export function CalendarBoard({
             : null,
         ),
       );
+      setStopSell((prev: Record<string, Record<string, StopSellDay>>) => {
+        const next = { ...prev };
+        for (const [pid, , stops] of results) {
+          const base = replace ? {} : { ...(next[pid] ?? {}) };
+          for (const d of stops) base[d.date] = d;
+          next[pid] = base;
+        }
+        return next;
+      });
       // Geladenes Intervall fortschreiben (Vereinigung), bei replace zurücksetzen.
       const cur = replace ? null : loadedRange.current;
       loadedRange.current = cur
@@ -867,7 +930,7 @@ export function CalendarBoard({
   }, [start, dates.length, todayKey, todayIndex, scrollToIndex, recomputeWindow]);
 
   // Realtime: Kalender live aktualisieren, sobald sich Buchungen, Belegung,
-  // Preise oder Verkaufsstopps ändern (eigene Aktionen, andere Nutzer oder
+  // Preise oder Stop-Sells ändern (eigene Aktionen, andere Nutzer oder
   // OTA-Importe). RLS liefert nur Tenant-Zeilen. Während eines aktiven Zugs
   // (Drag/Resize/Selektion) pausieren wir, damit kein Reload die Interaktion
   // unterbricht.
@@ -991,7 +1054,7 @@ export function CalendarBoard({
           value={typeFilter}
           onChange={(v) => setTypeFilter(v as PropertyType | "all")}
           allLabel="Alle Typen"
-          options={Object.entries(TYPE_LABELS).map(([value, label]) => ({ value, label }))}
+          options={typeOptionsFor(accommodationType)}
         />
         <FilterSelect
           value={channelFilter}
@@ -1025,7 +1088,7 @@ export function CalendarBoard({
 
       {/* Legende: Status + Vertriebskanäle (Herkunft je Farbe/Logo). */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
-        {(["open", "blocked"] as AvailabilityStatus[]).map((s) => (
+        {(["open", "blocked", "stop_sell"] as SegStatus[]).map((s) => (
           <span key={s} className="flex items-center gap-1.5">
             <span className={`inline-block size-3 rounded-sm border ${s === "open" ? "bg-background" : SEG_STYLE[s]}`} />
             {STATUS_LABEL[s]}
@@ -1190,7 +1253,8 @@ export function CalendarBoard({
                 const minStayMap = minStays[p.id] ?? {};
                 const restrictMap = restrictions[p.id] ?? {};
                 const resMap = resByProp[p.id] ?? {};
-                const segs = toSegments(statusMap, sourceMap, resMap, dates);
+                const stopMap = stopSell[p.id] ?? {};
+                const segs = toSegments(statusMap, sourceMap, resMap, dates, stopMap);
                 return (
                   <div key={p.id} className="flex border-b last:border-b-0">
                     {/* Objektspalte (eigene Komponente, sticky links) */}
@@ -1327,7 +1391,7 @@ export function CalendarBoard({
                             ]
                               .filter(Boolean)
                               .join(" · ")
-                            : `${STATUS_LABEL[seg.status]} · ${seg.span} Tag(e)`;
+                            : `${segmentLabel(seg)} · ${seg.span} Tag(e)`;
                         // Kanal-/Status-Filter: nicht passende Balken dimmen
                         // (Belegung bleibt erkennbar, Treffer stechen hervor).
                         const dimmed = filtersActive && !segMatchesFilters(seg);
@@ -1383,6 +1447,9 @@ export function CalendarBoard({
                             )}
                             {seg.status === "blocked" && (
                               <Icon icon="ph:lock-simple" className="size-3 shrink-0" />
+                            )}
+                            {seg.status === "stop_sell" && (
+                              <Icon icon="ph:prohibit" className="size-3 shrink-0" />
                             )}
                             {/* Status-Punkt (OPERA-Stil): bestätigt/Option/
                               eingecheckt/ausgecheckt/storniert. */}

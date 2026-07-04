@@ -497,6 +497,32 @@ aus dem Buchungs-Snapshot, sonst deterministisch aus
 Buchungen mit `checked_out_at` nicht mehr an (kein Status-Rollback);
 `invoices`/`invoice_line_items` sind in der Realtime-Publication.
 
+**USt-Satz je Gebühr (Snapshot-Kette wie Addons):** Gebühren im Preis-Setup
+(`property_pricing_config.fees[]`, jsonb) tragen ein optionales `taxRate`
+(z. B. Frühstück 19 % neben Logis 7 %; leer = Standard-Übernachtungssatz —
+Override-Hierarchie, kein erfundener Wert). Der Pricing-Resolver schreibt den
+Satz als Snapshot in die QuoteLine (`tax_rate`), der Buchungs-Snapshot
+persistiert ihn in `reservations.quote_items`, und `build_positions` nutzt die
+Prioritätskette **Kleinunternehmer → Zeilen-`tax_rate` → Abgabe
+(kind='tax'/Label) 0 % → `lodging_tax_rate`**. Bestands-Snapshots und
+Channex-Fees (liefern nie einen Satz — Modellgrenze) laufen unverändert über
+den Übernachtungssatz.
+
+**Rechnungssprache = Gastsprache (`0099`):** Belegtexte aus Buchungen
+(Aufenthalts-Label, Sammelposition, `head_text`, Einheit, Addon-Label aus dem
+mehrsprachigen `name`-jsonb) entstehen in der Korrespondenzsprache des Gastes
+(`reservations.guest_language`) — Begriffskatalog `buchhaltung/doc_i18n.py`
+(24 EU-Sprachen inkl. zählabhängiger Pluralformen und Datumsformat je Sprache;
+unbekannt/fehlend → de). Die Sprache wird als `invoices.language` gespeichert
+und über `InvoiceResponse`/`invoice-preview` (`guestLanguage`) ausgeliefert;
+das PDF-Frontend übersetzt seine statischen Beschriftungen über
+`apps/web/hooks/pdf/document-translations.ts` (24 Locales, gleiche Liste wie
+`messages/*`) und belegt die Sprach-Auswahl im Versand-Dialog damit vor.
+Der Kalender-Slider öffnet den Dokument-Dialog (PDF-Vorschau/Download/Druck)
+direkt („Ansehen & versenden", `lib/invoice-document.ts` mappt die
+snake_case-`InvoiceResponse` auf die camelCase-Dokumentform des Bestands);
+E-Mail-Versand bleibt bis zum Mailcow-SMTP-Ausbau deaktiviert.
+
 **Zentrale Preis-Wahrheit (pricing-Slice, Migrationen `0051`/`0052`/`0053`):** Preise
 liefen früher in vier unverbundenen Quellen auseinander — im Objekt bearbeitete
 Preise erschienen nicht im Kalender/Quote. Jetzt gibt es **einen** Resolver
@@ -725,6 +751,18 @@ Dashboard-Navigation in `apps/web` (Hotel- vs. FeWo-Sidebar, Begriffe wie
 §4) ist eine externe Portal-Kennung und hat mit der Betriebsart nichts zu tun;
 ebenso beschreibt `tenants.business_type` (`0066`) das Vermarktungsmodell
 (agency/self_managed), nicht die Beherbergungsart.
+
+**Betriebsart-Scope der Objektlisten:** Die Typ-Gruppen leben serverseitig in
+`properties/schemas.py` (`VR_TYPES`/`HOTEL_TYPES` +
+`types_for_accommodation()`, Spiegel von `apps/web/lib/property-meta.ts`).
+`GET /properties` filtert nach der Betriebsart des Tenants (Hotel sieht nur
+Zimmertypen, Ferienvermietung nur Ferienobjekt-Typen; `accommodation_type`
+NULL = kein Filter) — damit sind ALLE Flächen (Kalender inkl. Views/Wizard,
+/objekte, /stop-sell, Dialoge, Channel-Mapping) in einem Schnitt korrekt.
+`owners/available_properties` filtert identisch. `create`/`update` lehnen
+betriebsfremde Objekttypen mit 422 ab (sonst entstünden unsichtbare Objekte);
+`GET /properties/{id}` bleibt bewusst ungefiltert (Direktlink als
+Sicherheitsventil für falsch typisierte Bestandsobjekte).
 
 ### Weitere Tabellen nach Bereich
 

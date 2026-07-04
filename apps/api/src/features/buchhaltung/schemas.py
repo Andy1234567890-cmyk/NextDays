@@ -129,6 +129,8 @@ class InvoiceResponse(BaseModel):
     gobd_status: str = "open"
     is_locked: bool = False
     pdf_url: str | None = None
+    # Dokumentsprache des Belegs (0099, Gastsprache); None = Bestand → de.
+    language: str | None = None
     created_at: datetime
     updated_at: datetime
     items: list[LineItemResponse] = Field(default_factory=list)

@@ -101,6 +101,10 @@ def create_storno_invoice(
         "tax_rate": original.get("tax_rate"),
         "tax_rule": original.get("tax_rule"),
         "is_kleinunternehmer": original.get("is_kleinunternehmer"),
+        # Dokumentsprache der Originalrechnung erben (0099): die Positions-
+        # texte werden 1:1 übernommen, also muss der Storno-Beleg dieselbe
+        # Sprache tragen — sonst italienische Positionen unter deutschem PDF.
+        "language": original.get("language"),
         "original_invoice_id": invoice_id,
         "storno_reason": clean_reason,
         "head_text": (

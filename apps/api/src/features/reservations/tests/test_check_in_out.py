@@ -4,15 +4,20 @@ Chain-Mock wie in buchhaltung/tests/test_reservation_invoice.py: jede Query-
 Kette endet in execute() → hinterlegte Daten; Attribut-Zugriffe werden je
 Tabelle protokolliert (Beweis „kein Write vor Rechnung").
 """
+from datetime import date, timedelta
 from types import SimpleNamespace
 
 import pytest
 
 from src.core.security import AuthContext
 from src.features.buchhaltung.service import BuchhaltungError
+from src.features.reservations.schemas import CheckOutRequest
 from src.features.reservations.service import ReservationError, ReservationsService
 
 CTX = AuthContext(user_id="u1", tenant_id="t1")
+# Dynamische Daten: der Abreisetag-Guard vergleicht gegen HEUTE — Standard-
+# Buchung reist heute ab (Check-out erlaubt), Guard-Tests nutzen die Zukunft.
+_TODAY = date.today()
 
 
 class _Chain:
@@ -49,8 +54,8 @@ def _reservation(**overrides: object) -> dict:
         "guest_id": "g1",
         "channel": "direct",
         "status": "confirmed",
-        "check_in": "2026-07-01",
-        "check_out": "2026-07-04",
+        "check_in": (_TODAY - timedelta(days=2)).isoformat(),
+        "check_out": _TODAY.isoformat(),
         "checked_in_at": None,
         "checked_out_at": None,
         "total_amount": 300.0,
@@ -173,6 +178,53 @@ def test_check_out_creates_invoice_then_completes(
     assert result.invoice_number == "RE-0001"
     assert result.invoice_already_existed is False
     assert "update" in db.calls["reservations"]
+
+
+def test_check_out_blocked_before_departure_day() -> None:
+    """Check-out erst AM Abreisetag — vorher 409, kein Write (frühere Abreise
+    läuft über „Aufenthalt verkürzen")."""
+    service, db = _service(
+        _reservation(
+            checked_in_at="2026-07-01T14:00:00+00:00",
+            check_out=(_TODAY + timedelta(days=2)).isoformat(),
+        )
+    )
+    with pytest.raises(ReservationError) as exc:
+        service.check_out(CTX, "r1")
+    assert exc.value.status_code == 409
+    assert "Abreisetag" in exc.value.message
+    assert "update" not in db.calls["reservations"]
+
+
+def test_check_out_passes_payment_to_builder(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Zahlart-Abfrage (Rezeption) erreicht den Rechnungs-Builder."""
+    captured: dict = {}
+
+    def fake(
+        db: object,
+        tenant_id: str,
+        rid: str,
+        *,
+        payment_method: str = "invoice",
+        card_brand: str | None = None,
+    ) -> dict:
+        captured.update(method=payment_method, brand=card_brand)
+        return {"id": "i1", "invoice_number": "RE-0001", "already_existed": False}
+
+    monkeypatch.setattr(
+        "src.features.buchhaltung.reservation_invoice.create_from_reservation",
+        fake,
+    )
+    service, _ = _service(
+        _reservation(checked_in_at="2026-07-01T14:00:00+00:00")
+    )
+    result = service.check_out(
+        CTX, "r1", CheckOutRequest(payment_method="card", card_brand="Visa")
+    )
+    assert captured == {"method": "card", "brand": "Visa"}
+    assert result.invoice_id == "i1"
 
 
 def test_check_out_retry_reuses_existing_invoice(

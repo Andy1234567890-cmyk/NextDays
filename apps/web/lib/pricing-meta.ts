@@ -62,6 +62,9 @@ export type Fee = {
   amount: number;
   basis: FeeBasis;
   optional: boolean; // Gast kann ab-/zuwählen
+  // Eigener USt-Satz in % (z. B. Frühstück 19 % neben Logis 7 %). Leer =
+  // Standard-Übernachtungssatz des Objekts/Kontos (Override-Hierarchie).
+  taxRate?: number | null;
 };
 
 // Steuer (Lodgify „Taxes"): USt./Sales tax ODER lokale Steuer.

@@ -17,6 +17,51 @@ class PropertyType(StrEnum):
     tiny_house = "tiny_house"
     stellplatz = "stellplatz"
     hausboot = "hausboot"
+    # Hotel-Zimmertypen (Migration 0098, Betriebsart 'hotel' aus 0090)
+    einzelzimmer = "einzelzimmer"
+    doppelzimmer = "doppelzimmer"
+    zweibettzimmer = "zweibettzimmer"
+    familienzimmer = "familienzimmer"
+    junior_suite = "junior_suite"
+    suite = "suite"
+
+
+# Typ-Gruppen je Betriebsart (tenants.accommodation_type, Migration 0090).
+# Spiegel von apps/web/lib/property-meta.ts (VR_TYPES/HOTEL_TYPES) — die
+# UI-Labels leben dort, die Sichtbarkeits-/Validierungs-Wahrheit hier.
+VR_TYPES: frozenset[PropertyType] = frozenset(
+    {
+        PropertyType.ferienhaus,
+        PropertyType.appartement,
+        PropertyType.glamping,
+        PropertyType.tiny_house,
+        PropertyType.stellplatz,
+        PropertyType.hausboot,
+    }
+)
+
+HOTEL_TYPES: frozenset[PropertyType] = frozenset(
+    {
+        PropertyType.einzelzimmer,
+        PropertyType.doppelzimmer,
+        PropertyType.zweibettzimmer,
+        PropertyType.familienzimmer,
+        PropertyType.junior_suite,
+        PropertyType.suite,
+    }
+)
+
+
+def types_for_accommodation(
+    accommodation_type: str | None,
+) -> frozenset[PropertyType] | None:
+    """Erlaubte Objekttypen je Betriebsart; None = keine Einschränkung
+    (Tenant ohne gesetzte Betriebsart, Bestand vor Migration 0090)."""
+    if accommodation_type == "hotel":
+        return HOTEL_TYPES
+    if accommodation_type == "vacation_rental":
+        return VR_TYPES
+    return None
 
 
 class PropertyStatus(StrEnum):

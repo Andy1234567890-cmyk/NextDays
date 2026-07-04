@@ -26,6 +26,7 @@ from src.features.guests.identity import (
 )
 
 from .schemas import (
+    CheckOutRequest,
     CheckOutResponse,
     DashboardEntry,
     DashboardKpi,
@@ -292,6 +293,23 @@ class ReservationsService:
             raise ReservationError(
                 "Zeitraum enthält bereits belegte/gesperrte Tage.", status_code=409
             )
+        # Stop-Sell-Schutz: ein von Mitarbeitern gesetzter Stop-Sell sperrt den
+        # Tag auf ALLEN Kanälen — auch die interne Rezeptions-Buchung. Der Stopp
+        # muss erst aufgehoben werden, bevor hier gebucht werden kann.
+        stopped = (
+            self._db()
+            .table("stop_sell")
+            .select("date")
+            .eq("property_id", req.property_id)
+            .gte("date", req.check_in.isoformat())
+            .lt("date", req.check_out.isoformat())
+            .execute()
+        ).data or []
+        if stopped:
+            raise ReservationError(
+                "Zeitraum enthält Stop-Sell-Tage. Bitte zuerst den Stop-Sell "
+                "aufheben.", status_code=409
+            )
 
         # 3) Gast anlegen (oder bestehenden per E-Mail wiederverwenden).
         guest_id = self._upsert_guest(tenant_id, req)
@@ -311,7 +329,13 @@ class ReservationsService:
         quote_items = [
             # kind klassifiziert die Zeile für die spätere Rechnungserstellung
             # (Booking→Invoice: 'tax' = Abgabe 0 % USt, sonst Übernachtungssatz).
-            {"label": line.label, "amount": line.amount, "kind": line.kind}
+            # tax_rate = zeilen-eigener Satz-Snapshot (Gebühr mit eigener USt).
+            {
+                "label": line.label,
+                "amount": line.amount,
+                "kind": line.kind,
+                "tax_rate": line.tax_rate,
+            }
             for line in quote.lines
         ]
         ins = (
@@ -751,7 +775,12 @@ class ReservationsService:
         mask = load_guest_mask(self._client, ctx.user_id)
         return self._row(self._load_owned(tenant_id, reservation_id), mask)
 
-    def check_out(self, ctx: AuthContext, reservation_id: str) -> CheckOutResponse:
+    def check_out(
+        self,
+        ctx: AuthContext,
+        reservation_id: str,
+        req: CheckOutRequest | None = None,
+    ) -> CheckOutResponse:
         """Gast auschecken — erzeugt verpflichtend die finale Rechnung.
 
         Reihenfolge (kein halber Zustand, Supabase kennt keine Multi-Statement-
@@ -778,6 +807,19 @@ class ReservationsService:
             raise ReservationError(
                 "Gast ist bereits ausgecheckt.", status_code=409
             )
+        # Check-out erst AM Abreisetag (oder später — z. B. vergessener
+        # Check-out), nie vorher: die finale Rechnung bepreist den vollen
+        # Aufenthalt. Reist der Gast früher ab, wird zuerst der Zeitraum
+        # verkürzt (Buchung anpassen), dann ausgecheckt. Tagesvergleich in UTC
+        # (pragmatisch; Objekt-Zeitzonen sind nicht modelliert).
+        departure = _as_date(current["check_out"])
+        if datetime.now(UTC).date() < departure:
+            raise ReservationError(
+                f"Check-out ist erst am Abreisetag "
+                f"({departure.strftime('%d.%m.%Y')}) möglich. Reist der Gast "
+                "früher ab, bitte zuerst den Aufenthalt verkürzen.",
+                status_code=409,
+            )
 
         # Lazy-Import über die Slice-Grenze (Muster guests/tasks-Imports).
         from src.features.buchhaltung.reservation_invoice import (  # noqa: PLC0415
@@ -787,22 +829,32 @@ class ReservationsService:
             BuchhaltungError,
         )
 
+        payment = req or CheckOutRequest()
         try:
-            invoice = create_from_reservation(self._db(), tenant_id, reservation_id)
+            invoice = create_from_reservation(
+                self._db(),
+                tenant_id,
+                reservation_id,
+                payment_method=payment.payment_method,
+                card_brand=payment.card_brand,
+            )
         except BuchhaltungError as exc:
             # Fehlertext 1:1 durchreichen (z. B. „Übernachtungs-Steuersatz
             # fehlt") — Check-out abgebrochen, nichts geschrieben.
             raise ReservationError(exc.message, status_code=exc.status_code) from exc
 
+        update_fields: dict = {
+            "checked_out_at": datetime.now(UTC).isoformat(),
+            "status": "completed",
+        }
+        if payment.payment_method in ("cash", "card"):
+            # Am Empfang beglichen → Buchung ist vollständig bezahlt (sonst
+            # zeigte der Slider weiter „Noch offen").
+            update_fields["paid_amount"] = current.get("total_amount")
         upd = (
             self._db()
             .table("reservations")
-            .update(
-                {
-                    "checked_out_at": datetime.now(UTC).isoformat(),
-                    "status": "completed",
-                }
-            )
+            .update(update_fields)
             .eq("id", reservation_id)
             .eq("tenant_id", tenant_id)
             .execute()

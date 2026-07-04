@@ -32,10 +32,11 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   AMENITY_GROUPS,
   BED_OPTIONS,
+  HOTEL_TYPES,
   ROOM_OPTIONS,
   STATUS_OPTIONS,
   TYPE_LABELS,
-  TYPE_OPTIONS,
+  typeOptionsFor,
 } from "@/lib/property-meta";
 import {
   type Property,
@@ -400,6 +401,12 @@ function NameEditor({
   const [platformDesc, setPlatformDesc] = useState(p.platform_description ?? "");
   const [type, setType] = useState<PropertyType>(p.property_type);
   const { busy, error, run } = useSaver(onSave);
+  // Typ-Liste passend zur Objektwelt (0098): ein Zimmer bleibt in den
+  // Zimmertypen, ein Ferienobjekt in den Ferienobjekt-Typen — kein
+  // versehentlicher Wechsel zwischen den Welten.
+  const typeOptions = typeOptionsFor(
+    HOTEL_TYPES.includes(p.property_type) ? "hotel" : "vacation_rental",
+  );
 
   return (
     <EditorShell open={open} onClose={onClose} title="Name und Beschreibung">
@@ -418,7 +425,7 @@ function NameEditor({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {TYPE_OPTIONS.map((o) => (
+            {typeOptions.map((o) => (
               <SelectItem key={o.value} value={o.value}>
                 {o.label}
               </SelectItem>

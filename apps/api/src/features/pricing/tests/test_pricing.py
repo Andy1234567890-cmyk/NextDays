@@ -212,6 +212,30 @@ def test_quote_full_breakdown() -> None:
     assert q.priceless is False
 
 
+def test_quote_fee_tax_rate_snapshot_in_line() -> None:
+    """fees[].taxRate wandert als Snapshot in die QuoteLine (Frühstück 19 %);
+    Gebühr ohne taxRate bleibt ohne Zeilen-Satz (Rechnung → Übernachtungssatz)."""
+    cfg = {
+        "fees": [
+            {"name": "Frühstück", "amount": 40, "basis": "per_stay", "taxRate": 19},
+            {"name": "Reinigung", "amount": 50, "basis": "per_stay"},
+        ],
+    }
+    r = _resolver(base=100.0, config=cfg)
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 4),
+            guests=2,
+        )
+    )
+    by_label = {line.label: line for line in q.lines}
+    assert by_label["Frühstück"].kind == "fee"
+    assert by_label["Frühstück"].tax_rate == 19.0
+    assert by_label["Reinigung"].tax_rate is None
+
+
 def test_quote_direct_has_no_markup() -> None:
     cfg = {"markup": {"booking": 25}}
     r = _resolver(base=100.0, config=cfg)

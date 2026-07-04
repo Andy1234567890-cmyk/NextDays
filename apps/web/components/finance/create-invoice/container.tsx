@@ -125,6 +125,9 @@ export default function CreateQuotePage() {
   // Formular einfach vollständig.
   const [reservationId, setReservationId] = useState<string | null>(null);
   const [reservationCustomerId, setReservationCustomerId] = useState<string | null>(null);
+  // Dokumentsprache des Belegs (Rechnungssprache = Gastsprache, 0099);
+  // ohne Buchungsbezug bleibt es bei Deutsch.
+  const [documentLanguage, setDocumentLanguage] = useState('de');
 
   // Nummernkreis Modal State
   const [showNumberingModal, setShowNumberingModal] = useState(false);
@@ -206,6 +209,7 @@ export default function CreateQuotePage() {
   const applyReservationPreview = (p: InvoicePreview) => {
     setReservationId(p.reservationId);
     setReservationCustomerId(p.customerId);
+    setDocumentLanguage(p.guestLanguage || 'de');
     // Firmengast (Gästemappe „Firma") → Empfänger ist die Organisation,
     // sonst Privatperson mit Vor-/Nachname aus der Gästemappe.
     const isOrg = !!p.company;
@@ -370,6 +374,7 @@ export default function CreateQuotePage() {
     taxGrouped,
     reservationId,
     reservationCustomerId,
+    documentLanguage,
   });
 
 

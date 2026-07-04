@@ -12,6 +12,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.features.properties.schemas import types_for_accommodation
 
 from .schemas import (
     AvailablePropertiesResponse,
@@ -58,6 +59,17 @@ class OwnersService:
         if not ctx.tenant_id:
             raise OwnerError("Kein Tenant im Konto.", status_code=400)
         return ctx.tenant_id
+
+    def _accommodation_type(self, tenant_id: str) -> str | None:
+        """Betriebsart des Tenants (tenants.accommodation_type, 0090)."""
+        row = (
+            self._db.table("tenants")
+            .select("accommodation_type")
+            .eq("id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        return row.data[0].get("accommodation_type") if row.data else None
 
     def _tenant_property_ids(self, tenant_id: str) -> set[str]:
         rows = (
@@ -212,13 +224,17 @@ class OwnersService:
         bleiben außen vor — ein Objekt gehört genau einem Eigentümer."""
         tenant_id = self._require_tenant(ctx)
         self._get_row(tenant_id, owner_id)
-        props = (
+        query = (
             self._db.table("properties")
             .select("id, title")
             .eq("tenant_id", tenant_id)
-            .order("title")
-            .execute()
-        ).data or []
+        )
+        # Betriebsart-Scope wie in PropertiesService.list(): keine
+        # betriebsfremden Objekte zur Zuordnung anbieten.
+        allowed = types_for_accommodation(self._accommodation_type(tenant_id))
+        if allowed is not None:
+            query = query.in_("property_type", sorted(t.value for t in allowed))
+        props = query.order("title").execute().data or []
         taken = (
             self._db.table("owner_properties")
             .select("property_id, owner_id")

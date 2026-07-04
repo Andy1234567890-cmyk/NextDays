@@ -423,6 +423,23 @@ class BookingEngineService:
             raise BookingEngineError(
                 "Zeitraum ist nicht mehr verfügbar.", status_code=409
             )
+        # Stop-Sell-Schutz: ein Stop-Sell = auf ALLEN Kanälen gesperrt, auch der
+        # eigenen Plattform (sonst Doppelbuchung). Explizit gegen die stop_sell-
+        # Tabelle prüfen — nicht nur auf availability verlassen (ein Sync-Verzug
+        # könnte den Tag noch als 'open' führen, obwohl ein Stop-Sell existiert).
+        stopped = (
+            self._db()
+            .table("stop_sell")
+            .select("date")
+            .eq("property_id", req.property_id)
+            .gte("date", req.check_in.isoformat())
+            .lt("date", req.check_out.isoformat())
+            .execute()
+        ).data or []
+        if stopped:
+            raise BookingEngineError(
+                "Zeitraum ist nicht mehr verfügbar.", status_code=409
+            )
 
         guest_id = self._upsert_guest(tenant_id, req.contact)
 

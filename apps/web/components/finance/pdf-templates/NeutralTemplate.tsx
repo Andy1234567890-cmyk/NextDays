@@ -287,7 +287,7 @@ export const NeutralTemplate: React.FC<NeutralTemplateProps> = ({
                     })()}
                   </div>
                 )}
-                {config.showPaymentTerms && <div>Zahlungsziel: {data.paymentTerms}</div>}
+                {config.showPaymentTerms && <div>{t('paymentTerms')}: {data.paymentTerms}</div>}
                 {data.customerOrderNumber && <div>Referenz: {data.customerOrderNumber}</div>}
               </div>
             </div>

@@ -385,12 +385,21 @@ class PricingResolver:
 
         subtotal = nightly_total
 
-        # 3) Gebühren.
+        # 3) Gebühren. Eigener USt-Satz (fees[].taxRate, z. B. Frühstück 19 %)
+        # wandert als Snapshot in die Zeile — die Rechnung nutzt ihn später
+        # vorrangig vor dem Übernachtungssatz.
         for fee in config.fees:
             amount = self._fee_amount(fee, n, req.guests)
             if amount > 0:
                 name = str(fee.get("name") or "Gebühr")
-                lines.append(QuoteLine(label=name, amount=round(amount, 2), kind="fee"))
+                lines.append(
+                    QuoteLine(
+                        label=name,
+                        amount=round(amount, 2),
+                        kind="fee",
+                        tax_rate=_to_float(fee.get("taxRate")),
+                    )
+                )
                 subtotal += amount
 
         # 4) Aktion (prozentualer Rabatt auf die bisherige Zwischensumme).

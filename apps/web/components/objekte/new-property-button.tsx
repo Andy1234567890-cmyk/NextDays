@@ -23,14 +23,24 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { TYPE_OPTIONS } from "@/lib/property-meta";
+import { typeOptionsFor } from "@/lib/property-meta";
 import { createProperty, type PropertyType } from "@/lib/properties";
 
-export function NewPropertyButton() {
+export function NewPropertyButton({
+  accommodationType,
+}: {
+  // Betriebsart (0090): Hotel legt ZIMMER an (Zimmertypen), Ferienvermietung
+  // Ferienobjekte — Liste und Wortlaut passen sich an.
+  accommodationType?: "vacation_rental" | "hotel" | null;
+}) {
   const router = useRouter();
+  const isHotel = accommodationType === "hotel";
+  const typeOptions = typeOptionsFor(accommodationType);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
-  const [type, setType] = useState<PropertyType>("ferienhaus");
+  const [type, setType] = useState<PropertyType>(
+    isHotel ? "doppelzimmer" : "ferienhaus",
+  );
   const [guests, setGuests] = useState(2);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,14 +72,14 @@ export function NewPropertyButton() {
     <>
       <Button onClick={() => setOpen(true)} className="gap-2">
         <Icon icon="ph:plus" className="size-4" />
-        Neues Objekt
+        {isHotel ? "Neues Zimmer" : "Neues Objekt"}
       </Button>
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="w-full sm:max-w-md">
           <SheetHeader>
             <SheetTitle className="font-display text-xl font-extrabold">
-              Neues Objekt
+              {isHotel ? "Neues Zimmer" : "Neues Objekt"}
             </SheetTitle>
             <SheetDescription>
               Lege die Basisdaten an — Details folgen danach.
@@ -83,7 +93,7 @@ export function NewPropertyButton() {
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="z. B. Villa Sonnenschein"
+                placeholder={isHotel ? "z. B. Zimmer 101" : "z. B. Villa Sonnenschein"}
               />
             </div>
 
@@ -97,7 +107,7 @@ export function NewPropertyButton() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {TYPE_OPTIONS.map((o) => (
+                  {typeOptions.map((o) => (
                     <SelectItem key={o.value} value={o.value}>
                       {o.label}
                     </SelectItem>
@@ -142,7 +152,7 @@ export function NewPropertyButton() {
               </div>
             ) : (
               <Button onClick={save} disabled={busy || !title.trim()}>
-                {busy ? "Anlegen…" : "Objekt anlegen"}
+                {busy ? "Anlegen…" : isHotel ? "Zimmer anlegen" : "Objekt anlegen"}
               </Button>
             )}
           </div>

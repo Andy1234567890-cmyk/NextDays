@@ -20,8 +20,10 @@ from .schemas import (
     PropertyPhoto,
     PropertyPhotoListResponse,
     PropertyResponse,
+    PropertyType,
     PropertyUpdate,
     SliceHealth,
+    types_for_accommodation,
 )
 
 log = get_logger("nextdays.properties")
@@ -50,15 +52,45 @@ class PropertiesService:
             raise PropertyError("Kein Tenant im Konto.", status_code=400)
         return ctx.tenant_id
 
+    def _accommodation_type(self, tenant_id: str) -> str | None:
+        """Betriebsart des Tenants (tenants.accommodation_type, 0090)."""
+        row = (
+            self._db.table("tenants")
+            .select("accommodation_type")
+            .eq("id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        return row.data[0].get("accommodation_type") if row.data else None
+
+    def _require_type_matches_accommodation(
+        self, tenant_id: str, property_type: PropertyType
+    ) -> None:
+        """Objekttyp muss zur Betriebsart passen — sonst entstünde ein Objekt,
+        das in keiner Liste sichtbar ist (list() filtert nach Betriebsart)."""
+        allowed = types_for_accommodation(self._accommodation_type(tenant_id))
+        if allowed is not None and property_type not in allowed:
+            raise PropertyError(
+                f"Der Objekttyp „{property_type.value}“ passt nicht zur "
+                "Betriebsart deines Kontos. Wähle einen Typ aus der "
+                "angebotenen Liste.",
+                status_code=422,
+            )
+
     def list(self, ctx: AuthContext) -> PropertyListResponse:
         tenant_id = self._require_tenant(ctx)
-        res = (
+        query = (
             self._db.table("properties")
             .select("*")
             .eq("tenant_id", tenant_id)
-            .order("created_at", desc=True)
-            .execute()
         )
+        # Betriebsart-Scope: Hotel sieht nur Zimmertypen, Ferienvermietung nur
+        # Ferienobjekt-Typen. get() per ID bleibt bewusst ungefiltert, damit
+        # falsch typisierte Bestandsobjekte per Direktlink korrigierbar bleiben.
+        allowed = types_for_accommodation(self._accommodation_type(tenant_id))
+        if allowed is not None:
+            query = query.in_("property_type", sorted(t.value for t in allowed))
+        res = query.order("created_at", desc=True).execute()
         items = [PropertyResponse(**_row(r)) for r in (res.data or [])]
         return PropertyListResponse(items=items, total=len(items))
 
@@ -102,6 +134,7 @@ class PropertiesService:
         # Sonst könnte ein Gast buchen/zahlen, ohne dass eine Auszahlung möglich
         # wäre. Onboarding/KYC muss also vorher abgeschlossen sein.
         self._require_payments_ready(tenant_id)
+        self._require_type_matches_accommodation(tenant_id, req.property_type)
         payload = req.model_dump(mode="json")
         payload["tenant_id"] = tenant_id
         res = self._db.table("properties").insert(payload).execute()
@@ -142,6 +175,10 @@ class PropertiesService:
         changes = req.model_dump(mode="json", exclude_unset=True)
         if not changes:
             return self.get(ctx, property_id)
+        if "property_type" in changes:
+            self._require_type_matches_accommodation(
+                tenant_id, PropertyType(changes["property_type"])
+            )
         res = (
             self._db.table("properties")
             .update(changes)

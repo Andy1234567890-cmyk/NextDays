@@ -6,6 +6,7 @@
 import { revalidatePath } from "next/cache";
 
 import { ApiError, api } from "@/lib/api";
+import type { BackendInvoice } from "@/lib/invoice-document";
 import { currentToken } from "@/lib/session-token";
 
 export type Result<T> =
@@ -116,7 +117,9 @@ export async function listInvoices(): Promise<
   return call("/invoices");
 }
 
-export async function getInvoice(id: string): Promise<Result<unknown>> {
+/** Volle Rechnung inkl. Positionen (InvoiceResponse, snake_case) — für den
+ *  Dokument-Dialog im Kalender-Slider via lib/invoice-document.ts mappen. */
+export async function getInvoice(id: string): Promise<Result<BackendInvoice>> {
   return call(`/invoices/${id}`);
 }
 
