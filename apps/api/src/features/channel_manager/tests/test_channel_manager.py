@@ -608,15 +608,15 @@ def test_import_booking_skips_without_property_mapping() -> None:
     assert res["skipped"] == 1 and db.tables["reservations"] == []
 
 
-def test_import_ari_skipped_without_active_channel() -> None:
-    # Kein aktiver Kanal → Channex ist nicht die Verfügbarkeits-Wahrheit; der
-    # Import darf availability/stop_sell NICHT überschreiben (sonst flächig
-    # 'blocked' + anonyme stop_sell-Zeilen aus Channex' Default availability=0).
+def test_import_ari_skipped_when_not_managed() -> None:
+    # Nicht bei Channex gemanaged (property_map soft-deleted) → Channex ist nicht
+    # die Verfügbarkeits-Wahrheit; der Import darf availability/stop_sell NICHT
+    # überschreiben (sonst flächig 'blocked' + anonyme stop_sell-Zeilen aus
+    # Channex' Default availability=0). Inaktive Kanäle allein blocken NICHT mehr.
     db = _ImportDB()
     _seed_property(db)
-    # Alle Kanäle des Objekts auf Aus.
-    for conn in db.tables["channex_channel_connection"]:
-        conn["is_active"] = False
+    for row in db.tables["channex_property_map"]:
+        row["deleted_at"] = "2026-01-01T00:00:00Z"
     channex = _ImportChannex(
         availability={"cx-rt": {"2026-07-01": 0}},
         restrictions={"cx-rp": {"2026-07-01": {"stop_sell": True}}},
@@ -627,6 +627,24 @@ def test_import_ari_skipped_without_active_channel() -> None:
     assert res == {"prices": 0, "availability": 0, "stop_sell": 0}
     assert db.tables["availability"] == []
     assert db.tables["stop_sell"] == []
+
+
+def test_import_ari_runs_when_managed_without_channel() -> None:
+    # Managed-Objekt ohne aktiven OTA-Kanal: Import läuft und schreibt 'open' für
+    # qty>0 (nach der Entkopplung liefert Channex echte Werte statt Default 0).
+    db = _ImportDB()
+    _seed_property(db)
+    for conn in db.tables["channex_channel_connection"]:
+        conn["is_active"] = False  # kein aktiver Kanal — darf Import NICHT stoppen
+    channex = _ImportChannex(
+        availability={"cx-rt": {"2026-07-01": 3}},
+    )
+    res = _import_svc(channex, db).import_ari_for_property(
+        "t1", "cx-prop", days_ahead=1, today=date(2026, 7, 1)
+    )
+    assert res["availability"] == 1
+    statuses = {a["date"]: a["status"] for a in db.tables["availability"]}
+    assert statuses["2026-07-01"] == "open"
 
 
 def test_import_ari_prices_and_availability() -> None:
@@ -805,16 +823,37 @@ def _deactivate_all(db, property_id="p1"):  # noqa: ANN001, ANN201
             row["is_active"] = False
 
 
-def test_push_availability_skipped_when_all_channels_inactive() -> None:
-    # Stehen alle Kanäle des Objekts auf Aus, wird NICHT an Channex gepusht.
+def _unmanage(db, property_id="p1"):  # noqa: ANN001, ANN201
+    """Objekt „nicht mehr bei Channex gemanaged" machen (property_map soft-delete)
+    → das Push-/Import-Gate _is_channex_managed greift."""
+    for row in db.tables["channex_property_map"]:
+        if row["property_id"] == property_id:
+            row["deleted_at"] = "2026-01-01T00:00:00Z"
+
+
+def test_push_availability_runs_without_active_channel() -> None:
+    # Kern-Regression gegen den Deadlock: ein bei Channex gemanagtes Objekt
+    # pusht Verfügbarkeit, AUCH wenn kein OTA-Kanal (aktiv) verbunden ist.
     db = _ImportDB()
     _seed_with_room_type(db)
-    _deactivate_all(db)
+    _deactivate_all(db)  # alle OTA-Kanäle aus — darf den Push NICHT mehr stoppen
     channex = _ImportChannex()
     _import_svc(channex, db).push_availability_for_property(
         "t1", "p1", date(2026, 6, 23), date(2026, 6, 25), 0
     )
-    assert channex.pushed == []  # Gate greift → kein Verkauf
+    assert channex.pushed != []  # managed → Push läuft trotz inaktiver Kanäle
+
+
+def test_push_availability_skipped_when_not_managed() -> None:
+    # Nicht bei Channex angelegt (property_map soft-deleted) → kein Push.
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    _unmanage(db)
+    channex = _ImportChannex()
+    _import_svc(channex, db).push_availability_for_property(
+        "t1", "p1", date(2026, 6, 23), date(2026, 6, 25), 0
+    )
+    assert channex.pushed == []
     assert db.tables["ari_outbox"] == []
 
 
@@ -844,10 +883,23 @@ def test_push_restrictions_cta_ctd_sends_to_channex() -> None:
     assert val["closed_to_departure"] is False
 
 
-def test_push_restrictions_skipped_when_inactive() -> None:
+def test_push_restrictions_runs_without_active_channel() -> None:
+    # Managed-Objekt: Restriktionen gehen an Channex, auch ohne aktiven OTA-Kanal.
     db = _ImportDB()
     _seed_with_rate_plan(db)
-    _deactivate_all(db)  # alle Kanäle aus → Gate greift
+    _deactivate_all(db)  # alle Kanäle aus — darf den Push NICHT stoppen
+    channex = _ImportChannex()
+    _import_svc(channex, db).push_restrictions_for_property(
+        "t1", "p1", date(2026, 6, 23), date(2026, 6, 25),
+        closed_to_arrival=True,
+    )
+    assert channex.restrictions_pushed != []
+
+
+def test_push_restrictions_skipped_when_not_managed() -> None:
+    db = _ImportDB()
+    _seed_with_rate_plan(db)
+    _unmanage(db)  # property_map soft-deleted → Gate greift
     channex = _ImportChannex()
     _import_svc(channex, db).push_restrictions_for_property(
         "t1", "p1", date(2026, 6, 23), date(2026, 6, 25),
@@ -866,11 +918,12 @@ def test_push_restrictions_noop_without_flags() -> None:
     assert channex.restrictions_pushed == []
 
 
-def test_process_ari_outbox_skips_inactive_as_done() -> None:
-    # Outbox-Zeile eines abgeschalteten Objekts: als done abhaken (kein Retry).
+def test_process_ari_outbox_skips_unmanaged_as_done() -> None:
+    # Outbox-Zeile eines NICHT bei Channex gemanagten Objekts: als done abhaken
+    # (kein Endlos-Retry). Inaktive Kanäle allein stoppen den Push NICHT mehr.
     db = _ImportDB()
     _seed_with_room_type(db)
-    _deactivate_all(db)
+    _unmanage(db)
     db.tables["ari_outbox"].append({
         "id": "o1", "tenant_id": "t1", "property_id": "p1",
         "date_from": "2026-06-23", "date_to": "2026-06-25",
@@ -881,6 +934,22 @@ def test_process_ari_outbox_skips_inactive_as_done() -> None:
     assert channex.pushed == []
     assert res["done"] == 1
     assert db.tables["ari_outbox"][0]["status"] == "done"
+
+
+def test_process_ari_outbox_pushes_when_managed_without_channel() -> None:
+    # Managed-Objekt ohne aktiven Kanal: Outbox wird verarbeitet (Push läuft).
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    _deactivate_all(db)
+    db.tables["ari_outbox"].append({
+        "id": "o1", "tenant_id": "t1", "property_id": "p1",
+        "date_from": "2026-06-23", "date_to": "2026-06-25",
+        "availability": 1, "status": "pending", "attempts": 0,
+    })
+    channex = _ImportChannex()
+    res = _import_svc(channex, db).process_ari_outbox()
+    assert channex.pushed != []
+    assert res["done"] == 1
 
 
 def test_set_connection_active_off_deactivates_channex_channel() -> None:

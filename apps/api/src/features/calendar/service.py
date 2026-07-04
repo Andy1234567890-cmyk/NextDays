@@ -461,7 +461,7 @@ class CalendarService:
         days: list[str] | None = None,
     ) -> None:
         """Verkaufsstopp als stop_sell-Restriction an Channex pushen (Best-Effort;
-        Gate _has_active_connection im ChannelManagerService). Fehler dürfen die
+        Gate _is_channex_managed im ChannelManagerService). Fehler dürfen die
         Speicherung nie scheitern lassen."""
         if self._client is None or not spans:
             return
@@ -612,7 +612,7 @@ class CalendarService:
         cta: bool | None,
         ctd: bool | None,
     ) -> None:
-        """CTA/CTD an Channex pushen (Best-Effort; Gate _has_active_connection im
+        """CTA/CTD an Channex pushen (Best-Effort; Gate _is_channex_managed im
         ChannelManagerService). Fehler dürfen die Speicherung nie scheitern lassen."""
         if self._client is None:
             return

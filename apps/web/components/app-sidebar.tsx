@@ -115,9 +115,20 @@ const VR_GROUP: NavGroup = {
 
 function buildGroups(accommodationType: AccommodationType): readonly NavGroup[] {
   const hotel = accommodationType === "hotel";
+  // Objekt-Stammdaten als erstes Item der Betriebs-Gruppe: Hotel spricht von
+  // „Zimmern", Ferienvermietung von „Objekten" (Label betriebsartabhängig, wie
+  // die /objekte-Seite selbst). Ohne diesen Eintrag käme man nicht mehr zur
+  // Objektverwaltung (die Route /objekte existiert, war aber unverlinkt).
+  const propertiesItem: NavItem = hotel
+    ? { key: "rooms", href: "/objekte", icon: "ph:bed" }
+    : { key: "properties", href: "/objekte", icon: "ph:house-line" };
+  const operationsGroup: NavGroup = {
+    ...(hotel ? HOTEL_GROUP : VR_GROUP),
+    items: [propertiesItem, ...(hotel ? HOTEL_GROUP : VR_GROUP).items],
+  };
   // Genau die Betriebs-Gruppe der eingestellten Beherbergungsart.
   return [
-    hotel ? HOTEL_GROUP : VR_GROUP,
+    operationsGroup,
     {
       // Reservierungen (Casona-Muster): Übersicht · Gruppen · Stop-Sell ·
       // Einstellungen. Stop-Sell steuert die Buchbarkeit von Zeiträumen —

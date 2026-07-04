@@ -38,12 +38,12 @@ class AriPushMixin:
             if mapping is None:
                 warnings.append(f"Room-Type-Mapping {upd.room_type_map_id} unbekannt.")
                 continue
-            if not self._map_has_active_connection(
+            if not self._map_is_channex_managed(
                 db, tenant_id, mapping["property_map_id"]
             ):
                 warnings.append(
                     f"Room-Type-Mapping {upd.room_type_map_id} übersprungen "
-                    "(kein aktiver Kanal)."
+                    "(nicht bei Channex angelegt)."
                 )
                 continue
             avail_values.append(
@@ -63,12 +63,12 @@ class AriPushMixin:
             if mapping is None:
                 warnings.append(f"Rate-Plan-Mapping {upd.rate_plan_map_id} unbekannt.")
                 continue
-            if not self._map_has_active_connection(
+            if not self._map_is_channex_managed(
                 db, tenant_id, mapping["property_map_id"]
             ):
                 warnings.append(
                     f"Rate-Plan-Mapping {upd.rate_plan_map_id} übersprungen "
-                    "(kein aktiver Kanal)."
+                    "(nicht bei Channex angelegt)."
                 )
                 continue
             value: dict[str, Any] = {
@@ -143,21 +143,27 @@ class AriPushMixin:
             "channex_room_type_id": rt[0]["channex_room_type_id"],
         }
 
-    def _has_active_connection(
+    def _is_channex_managed(
         self, db: Client, tenant_id: str, property_id: str
     ) -> bool:
-        """True, wenn das Objekt mindestens EINE aktive Kanal-Verbindung hat.
+        """True, wenn das Objekt bei Channex angelegt ist (aktives property_map,
+        deleted_at IS NULL).
 
-        Eine Quelle der Wahrheit für „darf für dieses Objekt verkauft werden":
-        steht jeder Kanal auf Aus (is_active=False), wird KEIN ARI/Preis mehr
-        gepusht (selektives Kanal-An/Aus pro Objekt). Tenant-Scope explizit, da
-        der Service-Role-Key die RLS umgeht."""
+        Eine Quelle der Wahrheit für „darf für dieses Objekt Inventar an Channex":
+        ein gemanagtes Objekt ist verkaufsbereit — Verfügbarkeit/Preise gehen an
+        Channex, UNABHÄNGIG davon, ob schon ein OTA-Kanal verbunden ist. Welche
+        OTA das Kontingent zeigt, steuert Channex selbst über den (de)aktivierten
+        Channel (set_connection_active → deactivate_channel). Das frühere Gate
+        „mindestens ein aktiver Kanal" war ein Deadlock: ohne OTA kein Push →
+        Channex meldet availability=0 → Objekt überall „gesperrt". Tenant-Scope
+        explizit, da der Service-Role-Key die RLS umgeht. `sync_enabled` wird stets
+        gemeinsam mit `deleted_at` gesetzt → `deleted_at IS NULL` genügt."""
         res = (
-            db.table("channex_channel_connection")
+            db.table("channex_property_map")
             .select("id")
             .eq("tenant_id", tenant_id)
             .eq("property_id", property_id)
-            .eq("is_active", True)
+            .is_("deleted_at", "null")
             .limit(1)
             .execute()
         ).data
@@ -166,7 +172,7 @@ class AriPushMixin:
     def _property_id_for_map(
         self, db: Client, tenant_id: str, property_map_id: str
     ) -> str | None:
-        """property_map_id → lokale property_id (für das An/Aus-Gate in push_ari)."""
+        """property_map_id → lokale property_id (für das Gate in push_ari)."""
         pm = (
             db.table("channex_property_map")
             .select("property_id")
@@ -177,14 +183,14 @@ class AriPushMixin:
         ).data
         return pm[0]["property_id"] if pm else None
 
-    def _map_has_active_connection(
+    def _map_is_channex_managed(
         self, db: Client, tenant_id: str, property_map_id: str
     ) -> bool:
         """Gate über die property_map_id (push_ari arbeitet auf Mapping-Ebene)."""
         property_id = self._property_id_for_map(db, tenant_id, property_map_id)
         if property_id is None:
             return False
-        return self._has_active_connection(db, tenant_id, property_id)
+        return self._is_channex_managed(db, tenant_id, property_id)
 
     def push_availability_for_property(
         self,
@@ -204,7 +210,7 @@ class AriPushMixin:
         mapping = self._resolve_channex_room_type(db, tenant_id, property_id)
         if mapping is None:
             return  # nicht mit Channex verbunden → nichts zu pushen
-        if not self._has_active_connection(db, tenant_id, property_id):
+        if not self._is_channex_managed(db, tenant_id, property_id):
             return  # alle Kanäle des Objekts auf Aus → kein Verkauf, kein Push
 
         outbox = (
@@ -326,7 +332,7 @@ class AriPushMixin:
         mapping = self._resolve_channex_rate_plan(self._db, tenant_id, property_id)
         if mapping is None:
             return
-        if not self._has_active_connection(self._db, tenant_id, property_id):
+        if not self._is_channex_managed(self._db, tenant_id, property_id):
             return  # alle Kanäle des Objekts auf Aus → kein Preis-Push
         value: dict[str, Any] = {
             "property_id": mapping["channex_property_id"],
@@ -376,7 +382,7 @@ class AriPushMixin:
         mapping = self._resolve_channex_rate_plan(self._db, tenant_id, property_id)
         if mapping is None:
             return
-        if not self._has_active_connection(self._db, tenant_id, property_id):
+        if not self._is_channex_managed(self._db, tenant_id, property_id):
             return  # alle Kanäle des Objekts auf Aus → kein Push
         value: dict[str, Any] = {
             "property_id": mapping["channex_property_id"],
@@ -421,7 +427,7 @@ class AriPushMixin:
         mapping = self._resolve_channex_rate_plan(self._db, tenant_id, property_id)
         if mapping is None:
             return
-        if not self._has_active_connection(self._db, tenant_id, property_id):
+        if not self._is_channex_managed(self._db, tenant_id, property_id):
             return  # alle Kanäle des Objekts auf Aus → kein Push
         today = date.today()
         values: list[dict[str, Any]] = []
@@ -477,7 +483,7 @@ class AriPushMixin:
         mapping = self._resolve_channex_rate_plan(self._db, tenant_id, property_id)
         if mapping is None:
             return
-        if not self._has_active_connection(self._db, tenant_id, property_id):
+        if not self._is_channex_managed(self._db, tenant_id, property_id):
             return  # alle Kanäle des Objekts auf Aus → kein Batch-Preis-Push
         values: list[dict[str, Any]] = []
         for seg in segments:
@@ -540,16 +546,13 @@ class AriPushMixin:
                 db, r["tenant_id"], r["property_id"]
             )
             if mapping is None:
+                # Kein aktives Channex-Mapping (nie angelegt oder soft-deleted) →
+                # nichts zu pushen. Als done abhaken (übersprungen), damit der Cron
+                # nicht endlos retryt. _resolve_channex_room_type prüft bereits
+                # deleted_at IS NULL, deckt also das _is_channex_managed-Gate ab.
                 db.table("ari_outbox").update(
-                    {"status": "failed", "last_error": "kein Channex-Mapping"}
-                ).eq("id", r["id"]).execute()
-                result["failed"] += 1
-                continue
-            if not self._has_active_connection(db, r["tenant_id"], r["property_id"]):
-                # Alle Kanäle des Objekts auf Aus → nichts verkaufen. Als done
-                # abhaken (übersprungen), damit der Cron nicht endlos retryt.
-                db.table("ari_outbox").update(
-                    {"status": "done", "last_error": "kein aktiver Kanal (übersprungen)"}
+                    {"status": "done",
+                     "last_error": "nicht bei Channex angelegt (übersprungen)"}
                 ).eq("id", r["id"]).execute()
                 result["done"] += 1
                 continue

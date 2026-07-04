@@ -636,6 +636,22 @@ class PropertiesService:
         except Exception as exc:  # noqa: BLE001
             log.warning("publish_channex_push_failed", property_id=property_id, error=str(exc))
 
+        # 5) Tagesgenaue Preise an Channex pushen — sonst kennt der OTA nur den
+        # Rate-Plan-Ankerpreis, nicht Saison-/Dynamic-Preise. recompute_property
+        # rechnet neu und pusht via push_rates_batch (no-op ohne Dynamic Pricing;
+        # Basispreise gehen trotzdem raus). Ohne diesen Schritt wäre das Objekt bei
+        # Channex verfügbar, aber mit unvollständigem Preis (Deadlock-Nachbesserung).
+        try:
+            from src.features.pricing.recompute import DynamicPricingRecompute
+
+            DynamicPricingRecompute(service_client=self._db).recompute_property(
+                property_id
+            )
+        except Exception as exc:  # noqa: BLE001 — Preis-Push best-effort, nie blockierend
+            log.warning(
+                "publish_price_push_failed", property_id=property_id, error=str(exc)
+            )
+
         log.info("property_published", tenant_id=tenant_id, property_id=property_id)
         return PropertyResponse(**_row(row))
 
