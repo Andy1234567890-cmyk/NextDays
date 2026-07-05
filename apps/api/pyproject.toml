@@ -54,11 +54,12 @@ select = ["E", "F", "I", "B", "UP", "ANN", "S"]
 # Pylint die echten Befunde sauber meldet.
 py-version = "3.12"
 ignore-paths = ["^.*/tests/.*$"]
-# redis-py exponiert `redis.asyncio` über eine dynamische Submodul-Struktur, die
-# astroid statisch nicht auflösen kann (falscher E0401). Das Paket ist real
-# installiert (redis>=5.2) und importiert zur Laufzeit sauber — nur die statische
-# Analyse stolpert. Gezielt ignorieren, damit kein Falsch-Positiv die 10.00 drückt.
-ignored-modules = ["redis.asyncio"]
+# redis-py exponiert `redis` und `redis.asyncio` über eine dynamische Submodul-
+# Struktur, die astroid statisch nicht auflösen kann (falscher E0401). Das Paket
+# ist real installiert (redis>=5.2) und importiert zur Laufzeit sauber — nur die
+# statische Analyse stolpert. Gezielt ignorieren, damit kein Falsch-Positiv die
+# 10.00 drückt (sync-Client im Worker-Budget, async-Client im HTTP-Limiter).
+ignored-modules = ["redis", "redis.asyncio"]
 
 [tool.pylint.format]
 max-line-length = 100

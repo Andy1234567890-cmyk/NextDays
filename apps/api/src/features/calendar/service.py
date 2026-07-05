@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.jobs.queue import try_enqueue_ari
 
 from .schemas import (
     AvailabilityCheck,
@@ -578,6 +579,22 @@ class CalendarService:
                 spans.append((d, d))
         return spans
 
+    def _tenant_of(self, property_id: str) -> str | None:
+        """tenant_id eines Objekts (für die ARI-Push-Jobs). None, wenn das Objekt
+        nicht existiert, keine tenant_id trägt oder keine DB verfügbar ist —
+        best-effort, damit das Einreihen die Kalenderaktion nie kippt."""
+        if self._client is None:
+            return None
+        rows = (
+            self._db()
+            .table("properties")
+            .select("tenant_id")
+            .eq("id", property_id)
+            .limit(1)
+            .execute()
+        ).data
+        return rows[0].get("tenant_id") if rows else None
+
     def _push_channex_stop_sell(
         self,
         property_id: str,
@@ -586,35 +603,17 @@ class CalendarService:
         stop_sell: bool,
         days: list[str] | None = None,
     ) -> None:
-        """Verkaufsstopp als stop_sell-Restriction an Channex pushen (Best-Effort;
-        Gate _is_channex_managed im ChannelManagerService). Fehler dürfen die
-        Speicherung nie scheitern lassen."""
-        if self._client is None or not spans:
+        """Verkaufsstopp als stop_sell-ARI-Push-Job einreihen (Phase 2). Die `spans`
+        sind bereits gefiltert (gebuchte/channex-Tage raus) → als ISO-Paare
+        serialisiert ins Payload. KEIN coalesce (span-spezifisch)."""
+        tenant_id = self._tenant_of(property_id) if spans else None
+        if tenant_id is None:
             return
-        try:
-            prop = (
-                self._db()
-                .table("properties")
-                .select("tenant_id")
-                .eq("id", property_id)
-                .limit(1)
-                .execute()
-            ).data
-            if not prop:
-                return
-            from src.features.channel_manager.service import ChannelManagerService
-
-            ChannelManagerService(
-                service_client=self._client
-            ).push_stop_sell_for_property(
-                prop[0]["tenant_id"],
-                property_id,
-                spans,
-                stop_sell=stop_sell,
-                days=days,
-            )
-        except Exception as exc:  # noqa: BLE001
-            log.warning("calendar_channex_stop_sell_push_failed", error=str(exc))
+        try_enqueue_ari(
+            self._db(), tenant_id, property_id, "stop_sell",
+            {"spans": [[a.isoformat(), b.isoformat()] for a, b in spans],
+             "stop_sell": stop_sell, "days": days},
+        )
 
     # -- Saisonpreise (Tagespreise je Zeitraum → price_overrides + Channex) ----
     def list_season_prices(
@@ -738,35 +737,17 @@ class CalendarService:
         cta: bool | None,
         ctd: bool | None,
     ) -> None:
-        """CTA/CTD an Channex pushen (Best-Effort; Gate _is_channex_managed im
-        ChannelManagerService). Fehler dürfen die Speicherung nie scheitern lassen."""
-        if self._client is None:
+        """CTA/CTD als ARI-Push-Job einreihen (Phase 2). KEIN coalesce
+        (zeitraum-spezifisch)."""
+        tenant_id = self._tenant_of(property_id)
+        if tenant_id is None:
             return
-        try:
-            prop = (
-                self._db()
-                .table("properties")
-                .select("tenant_id")
-                .eq("id", property_id)
-                .limit(1)
-                .execute()
-            ).data
-            if not prop:
-                return
-            from src.features.channel_manager.service import ChannelManagerService
-
-            ChannelManagerService(
-                service_client=self._client
-            ).push_restrictions_for_property(
-                prop[0]["tenant_id"],
-                property_id,
-                start,
-                end - timedelta(days=1),  # end exklusiv → inklusiv
-                closed_to_arrival=cta,
-                closed_to_departure=ctd,
-            )
-        except Exception as exc:  # noqa: BLE001
-            log.warning("calendar_channex_restrictions_push_failed", error=str(exc))
+        try_enqueue_ari(
+            self._db(), tenant_id, property_id, "restrictions",
+            {"date_from": start.isoformat(),
+             "date_to": (end - timedelta(days=1)).isoformat(),  # end exklusiv→inkl.
+             "closed_to_arrival": cta, "closed_to_departure": ctd},
+        )
 
     # -- Bulk-Edit (mehrere Objekte × ein Zeitraum) ---------------------------
     def _set_min_stay(self, property_id: str, rng: DateRange, min_stay: int) -> None:
@@ -875,64 +856,30 @@ class CalendarService:
         *,
         min_stay: int | None = None,
     ) -> None:
-        """Tagespreis und/oder Min-Stay an Channex pushen. tenant_id über die
-        property. Fehler dürfen die Speicherung NICHT scheitern lassen (Cron
-        gleicht Preise/Restriktionen ohnehin ab)."""
-        if self._client is None:
+        """Tagespreis und/oder Min-Stay als ARI-Push-Job einreihen (Phase 2). KEIN
+        coalesce (zeitraum-/wert-spezifisch). tenant_id über die property."""
+        tenant_id = self._tenant_of(property_id)
+        if tenant_id is None:
             return
-        try:
-            prop = (
-                self._db()
-                .table("properties")
-                .select("tenant_id")
-                .eq("id", property_id)
-                .limit(1)
-                .execute()
-            ).data
-            if not prop:
-                return
-            from src.features.channel_manager.service import ChannelManagerService
-
-            ChannelManagerService(service_client=self._client).push_rate_for_property(
-                prop[0]["tenant_id"],
-                property_id,
-                start,
-                end - timedelta(days=1),  # end exklusiv
-                rate_cents,
-                min_stay=min_stay,
-            )
-        except Exception as exc:  # noqa: BLE001
-            log.warning("calendar_channex_rate_push_failed", error=str(exc))
+        try_enqueue_ari(
+            self._db(), tenant_id, property_id, "rate",
+            {"date_from": start.isoformat(),
+             "date_to": (end - timedelta(days=1)).isoformat(),  # end exklusiv
+             "rate_cents": rate_cents, "min_stay": min_stay},
+        )
 
     def _push_channex_availability(
         self, property_id: str, start: date, end: date, availability: int
     ) -> None:
-        """Verfügbarkeit der Tage [start, end) realtime an Channex pushen
-        (Doppelbuchungsschutz). tenant_id wird über die property ermittelt. Fehler
-        dürfen die Kalenderaktion NICHT scheitern lassen (ari_outbox-Retry)."""
-        if self._client is None:
+        """Verfügbarkeit der Tage [start, end) als ARI-Push-Job einreihen (Phase 2).
+        Doppelbuchungsschutz ohne Request-Blockade. KEIN coalesce — verschiedene
+        Kalenderaktionen betreffen disjunkte Zeiträume. tenant_id über die property."""
+        tenant_id = self._tenant_of(property_id)
+        if tenant_id is None:
             return
-        try:
-            prop = (
-                self._db()
-                .table("properties")
-                .select("tenant_id")
-                .eq("id", property_id)
-                .limit(1)
-                .execute()
-            ).data
-            if not prop:
-                return
-            from src.features.channel_manager.service import ChannelManagerService
-
-            ChannelManagerService(
-                service_client=self._client
-            ).push_availability_for_property(
-                prop[0]["tenant_id"],
-                property_id,
-                start,
-                end - timedelta(days=1),  # end ist exklusiv
-                availability,
-            )
-        except Exception as exc:  # noqa: BLE001
-            log.warning("calendar_channex_push_failed", error=str(exc))
+        try_enqueue_ari(
+            self._db(), tenant_id, property_id, "availability",
+            {"date_from": start.isoformat(),
+             "date_to": (end - timedelta(days=1)).isoformat(),  # end exklusiv
+             "availability": availability},
+        )

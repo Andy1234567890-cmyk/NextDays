@@ -20,15 +20,26 @@ import os
 import signal
 import socket
 from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from supabase import Client
 
+from src.core.config import get_settings
 from src.core.logging import configure_logging, get_logger
 from src.core.supabase import get_service_client
+from src.jobs.channex_budget import ChannexBudget
 from src.jobs.queue import enqueue, next_run_after
 
 log = get_logger("nextdays.worker")
+
+# Job-Typen, die tatsächlich an Channex pushen → vor dem Handler ein Token aus dem
+# kontoweiten Channex-Budget verbrauchen. Nicht-Channex-Jobs (z. B. reines
+# Recompute ohne Push) laufen ohne Budget-Gate. Der Wert je Eintrag ist der
+# Payload-Schlüssel, der die property_id trägt (für die pro-Property-Ebene).
+_CHANNEX_JOB_TYPES = frozenset(
+    {"sync_property_content", "reconcile_tenant", "push_ari"}
+)
 
 # Parallel verarbeitete Jobs je Worker-Instanz. Begrenzt lokale Thread-/DB-Last;
 # die eigentliche Channex-Grenze ist das Redis-Token-Budget (Folge-Baustein).
@@ -74,10 +85,61 @@ def _handle_recompute_property(db: Client, payload: dict[str, Any]) -> None:
     )
 
 
+def _handle_push_ari(db: Client, payload: dict[str, Any]) -> None:
+    """Generischer ARI-Push (Availability/Rate/Max-Stay/Restrictions/Stop-Sell)
+    für einen Zeitraum. `kind` wählt die Ziel-Methode; die übrigen Payload-Felder
+    sind die Argumente. Ersetzt die früher synchron im Request-Pfad laufenden
+    _push_channex_*-Aufrufe (calendar/rates) — dieselben Service-Methoden, nur
+    jetzt asynchron im Worker mit Channex-Token-Budget."""
+    from datetime import date
+
+    # push_*-Methoden liegen direkt am Service (AriPushMixin).
+    push = _svc(db)
+    kind = payload["kind"]
+    tenant_id = payload["tenant_id"]
+    property_id = payload["property_id"]
+
+    def _d(key: str) -> date:
+        return date.fromisoformat(payload[key])
+
+    if kind == "availability":
+        push.push_availability_for_property(
+            tenant_id, property_id, _d("date_from"), _d("date_to"),
+            int(payload["availability"]),
+        )
+    elif kind == "rate":
+        push.push_rate_for_property(
+            tenant_id, property_id, _d("date_from"), _d("date_to"),
+            rate_cents=payload.get("rate_cents"), min_stay=payload.get("min_stay"),
+        )
+    elif kind == "max_stay":
+        push.push_max_stay_for_property(
+            tenant_id, property_id, _d("date_from"), _d("date_to"),
+            int(payload["max_stay"]),
+        )
+    elif kind == "restrictions":
+        push.push_restrictions_for_property(
+            tenant_id, property_id, _d("date_from"), _d("date_to"),
+            closed_to_arrival=payload.get("closed_to_arrival"),
+            closed_to_departure=payload.get("closed_to_departure"),
+        )
+    elif kind == "stop_sell":
+        spans = [(date.fromisoformat(a), date.fromisoformat(b))
+                 for a, b in payload["spans"]]
+        push.push_stop_sell_for_property(
+            tenant_id, property_id, spans,
+            stop_sell=bool(payload["stop_sell"]),
+            days=payload.get("days"),
+        )
+    else:
+        raise ValueError(f"unbekannter ARI-kind: {kind}")
+
+
 HANDLERS: dict[str, Callable[[Client, dict[str, Any]], None]] = {
     "sync_property_content": _handle_sync_property_content,
     "reconcile_tenant": _handle_reconcile_tenant,
     "recompute_property": _handle_recompute_property,
+    "push_ari": _handle_push_ari,
 }
 
 
@@ -86,13 +148,18 @@ HANDLERS: dict[str, Callable[[Client, dict[str, Any]], None]] = {
 class Worker:
     """Claim-Loop mit Concurrency-Pool, Reaper und Zeit-Tick."""
 
-    def __init__(self, db: Client | None = None) -> None:
+    def __init__(
+        self, db: Client | None = None, budget: ChannexBudget | None = None
+    ) -> None:
         self._db = db or get_service_client()
         self._sem = asyncio.Semaphore(CONCURRENCY)
         self._stop = asyncio.Event()
         self._inflight: set[asyncio.Task] = set()
         self._worker_id = f"{socket.gethostname()}:{os.getpid()}"
         self._last_reconcile_tick = 0.0
+        # Kontoweites Channex-Token-Budget (Phase 1b): vor jedem Channex-Push wird
+        # ein Token verbraucht, sonst wird der Job verzögert statt Channex überfahren.
+        self._budget = budget or ChannexBudget(get_settings())
 
     def request_stop(self) -> None:
         self._stop.set()
@@ -123,13 +190,36 @@ class Worker:
             "run_after": next_run_after(attempts).isoformat(),
         }).eq("id", job["id"]).execute()
 
+    def _defer(self, job: dict[str, Any], retry_after: int) -> None:
+        """Job wegen erschöpftem Channex-Budget verzögern: zurück auf queued mit
+        run_after = jetzt + retry_after (genau bis das nächste Token frei wird),
+        OHNE attempts zu verbrauchen (es ist kein Fehler, nur Warten). claim_jobs
+        hat attempts beim Claim erhöht → hier −1 zurückdrehen, damit das Retry-
+        Budget nicht durch Budget-Wartephasen aufgezehrt wird."""
+        attempts = max((job.get("attempts") or 1) - 1, 0)
+        run_after = datetime.now(UTC) + timedelta(seconds=max(retry_after, 1))
+        self._db.table("jobs").update({
+            "status": "queued", "locked_at": None, "locked_by": None,
+            "attempts": attempts,
+            "run_after": run_after.isoformat(),
+        }).eq("id", job["id"]).execute()
+
     def _run_job(self, job: dict[str, Any]) -> None:
-        """Synchron im Thread: Handler ausführen, Status setzen."""
+        """Synchron im Thread: Budget prüfen, Handler ausführen, Status setzen."""
         handler = HANDLERS.get(job["job_type"])
         if handler is None:
             self._finish(job["id"], "dead", f"unknown job_type: {job['job_type']}")
             log.error("job_unknown_type", id=job["id"], job_type=job["job_type"])
             return
+        # Channex-Budget-Gate: nur für Job-Typen, die tatsächlich pushen.
+        if job["job_type"] in _CHANNEX_JOB_TYPES:
+            payload = job.get("payload") or {}
+            decision = self._budget.try_consume(payload.get("property_id"))
+            if not decision.allowed:
+                self._defer(job, decision.retry_after)
+                log.info("job_deferred_budget", id=job["id"], job_type=job["job_type"],
+                         retry_after=decision.retry_after)
+                return
         try:
             handler(self._db, job.get("payload") or {})
             self._finish(job["id"], "done")

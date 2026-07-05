@@ -126,20 +126,38 @@ darf nicht N Full-Syncs auslösen, sondern einen. (Job-Key = tenant+property, le
 
 ---
 
-## Phase 3 — Outbox vollständig
-*Baut auf Phase 1. Geschäftskritische Werte dürfen nicht mehr still auseinanderdriften.*
+## Phase 3 — Outbox vollständig ✅ (durch Phase 2 erfüllt)
+*Geschäftskritische Werte dürfen nicht mehr still auseinanderdriften.*
 
 **Ziel:** Preis-, Min-Stay-, Stop-Sell-, Max-Stay-, CTA/CTD-Pushes bekommen dieselbe
 Retry-Garantie wie Availability heute.
 
-**Bausteine:**
-1. Outbox-Konzept auf alle Restriction-/Rate-Pushes ausweiten (nicht nur ari_outbox/Availability).
-2. `process_ari_outbox` — hartes `limit=200` durch dynamisches/queue-getriebenes Abarbeiten ersetzen,
-   damit es bei hohem Aufkommen aufholt.
-3. Reconcile bleibt als Sicherheitsnetz, ist aber nicht mehr die einzige Konsistenz-Garantie.
+**Ergebnis — die `jobs`-Queue IST die vollständige Outbox:** Mit Phase 2 laufen ALLE
+ARI-Pushes (Rate, Restrictions, Min/Max-Stay, Stop-Sell, Availability) über die
+`jobs`-Queue. Die hat bereits Persistenz + Retry mit Backoff (`next_run_after`) +
+Dead-Letter (`status='dead'` nach `max_attempts`). Ein fehlgeschlagener `push_ari`-Job
+wird also automatisch neu versucht und geht bei endgültigem Scheitern nicht verloren,
+sondern bleibt sichtbar als `dead`-Zeile. Damit haben Preise/Restriktionen exakt dieselbe
+Retry-Garantie wie Availability — Ziel erreicht.
 
-**Gate:** Gates grün. **Verifikation:** simulierter Channex-Ausfall → Werte landen nach
-Recovery vollständig (kein Verlust), gegen Channex-Staging gegengelesen.
+**Bewusst NICHT gebaut (Architektur-Entscheidung):** Keine zweite Outbox-Tabelle für
+Rate/Restrictions. Das wäre Doppel-Absicherung derselben Sache (zwei parallele
+Retry-Mechanismen → „multiple sources of truth"-Smell, projektweit verboten).
+
+**Absicherungs-Architektur (Stand nach Phase 2/3):**
+- **Alle ARI-Pushes:** `jobs`-Queue = persistente Outbox mit Job-Retry/Backoff/dead-letter.
+- **Availability zusätzlich:** `ari_outbox` (Zeilenebene) als *spezifischer* Doppelbuchungs-
+  Sonderschutz — bei einem Availability-Fehler ist das Risiko eine echte OTA-Doppelbuchung,
+  das rechtfertigt die zweite Absicherung. Bleibt bewusst bestehen.
+- **Reconcile-Tick:** Sicherheitsnetz Channex→DB (spiegelt Existenz/Inhalte; Preise/lokale
+  Felder bleiben lokal die Wahrheit).
+
+**Verbleibende schmale Lücke (dokumentiert, akzeptiert):** Schlägt das `enqueue` SELBST
+fehl (DB im Moment des Einreihens weg), gibt es für rate/restriction keinen Nachhol-Pfad.
+Wahrscheinlichkeit minimal: das enqueue ist ein Insert in dieselbe DB, in die gerade
+erfolgreich gespeichert wurde — ist die weg, ist das Speichern selbst schon gescheitert.
+`try_enqueue_*` loggt den Fehler. Bei Bedarf später: Reconcile um einen DB→Channex-
+Preis-/Restriktions-Abgleich erweitern.
 
 ---
 

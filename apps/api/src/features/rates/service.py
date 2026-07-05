@@ -9,6 +9,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.jobs.queue import try_enqueue_ari, try_enqueue_content_sync
 
 from .schemas import (
     RatePlanCreate,
@@ -221,21 +222,13 @@ class RatesService:
     def _sync_property(
         self, tenant_id: str, property_id: str, title: str | None, currency: str | None
     ) -> None:
-        """Channex-Sync der Property auslösen (non-blocking). Ein bepreistes
-        Objekt fließt damit sofort an Channex (Property+Room-Type+Rate-Plan)."""
-        try:
-            from src.features.channel_manager.service import ChannelManagerService
-
-            ChannelManagerService(
-                service_client=self._db()
-            ).sync_property_to_channex(
-                tenant_id,
-                property_id=property_id,
-                title=title or "Unbenannt",
-                currency=currency or "EUR",
-            )
-        except Exception as exc:  # noqa: BLE001 — Sync darf das Speichern nie blockieren
-            log.warning("rate_plan_channex_sync_failed", property_id=property_id, error=str(exc))
+        """Channex-Content-Sync als Hintergrund-Job einreihen (Phase 2). Ein
+        bepreistes Objekt fließt so an Channex, ohne dass das Speichern auf die
+        mehreren sequentiellen Channex-Calls wartet. Coalesced je Objekt →
+        mehrfaches Speichern des Basispreises erzeugt nur EINEN Sync."""
+        try_enqueue_content_sync(
+            self._db(), tenant_id, property_id, title=title, currency=currency
+        )
 
     # Planungshorizont für den Restriction-Push (deckt den 365-Tage-Availability-
     # Init ab). Ab heute, damit vergangene Tage nicht angefasst werden.
@@ -244,30 +237,19 @@ class RatesService:
     def _push_min_stay_restriction(
         self, tenant_id: str, property_id: str, min_stay: int
     ) -> None:
-        """Mindestaufenthalt als per-Datum-Restriction an Channex pushen (der
-        Wert, den das Channex-Kalender-UI zeigt und für Buchungen erzwingt).
-        Non-blocking: ein Channex-Fehler darf das Speichern nie kippen; der
-        reconcile-Cron gleicht ohnehin ab."""
+        """Mindestaufenthalt als per-Datum-Restriction über den vollen Horizont als
+        ARI-Push-Job einreihen (Phase 2). Das ist der Wert, den das Channex-
+        Kalender-UI zeigt und für Buchungen erzwingt. Deckt IMMER den ganzen
+        Horizont ab → coalesce=True sicher; der Reconcile-Tick gleicht zusätzlich ab."""
         if min_stay < 1:
             return
-        try:
-            from datetime import date, timedelta
+        from datetime import date, timedelta
 
-            from src.features.channel_manager.service import ChannelManagerService
-
-            today = date.today()
-            ChannelManagerService(
-                service_client=self._db()
-            ).push_rate_for_property(
-                tenant_id,
-                property_id,
-                today,
-                today + timedelta(days=self._RESTRICTION_HORIZON_DAYS),
-                min_stay=min_stay,
-            )
-        except Exception as exc:  # noqa: BLE001 — Push darf das Speichern nie blockieren
-            log.warning(
-                "min_stay_restriction_push_failed",
-                property_id=property_id,
-                error=str(exc),
-            )
+        today = date.today()
+        try_enqueue_ari(
+            self._db(), tenant_id, property_id, "rate",
+            {"date_from": today.isoformat(),
+             "date_to": (today + timedelta(days=self._RESTRICTION_HORIZON_DAYS)).isoformat(),
+             "min_stay": min_stay},
+            coalesce=True,
+        )

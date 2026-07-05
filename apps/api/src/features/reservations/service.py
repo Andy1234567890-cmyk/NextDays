@@ -24,6 +24,7 @@ from src.features.guests.identity import (
 from src.features.guests.identity import (
     resolve_or_create_guest,
 )
+from src.jobs.queue import try_enqueue_ari, try_enqueue_recompute
 
 from .schemas import (
     CheckOutRequest,
@@ -100,45 +101,30 @@ class ReservationsService:
         check_out: date,
         availability: int,
     ) -> None:
-        """Verfügbarkeit der belegten/freigegebenen Nächte realtime an Channex
-        pushen (Doppelbuchungsschutz). Fehler dürfen die Buchung NICHT scheitern
-        lassen — der Push ist über die ari_outbox abgesichert (Retry)."""
+        """Verfügbarkeit der belegten/freigegebenen Nächte als ARI-Push-Job
+        einreihen (Phase 2). Doppelbuchungsschutz: die Belegung geht so ohne
+        Request-Blockade an Channex. KEIN coalesce — jede Buchung/Freigabe betrifft
+        einen eigenen Zeitraum, ein pauschaler dedup_key würde disjunkte Ranges
+        verschmelzen. Zusätzlich ist der Push über die ari_outbox abgesichert."""
         if self._client is None:
             return
-        try:
-            from src.features.channel_manager.service import ChannelManagerService
+        try_enqueue_ari(
+            self._client, tenant_id, property_id, "availability",
+            {"date_from": check_in.isoformat(),
+             "date_to": (check_out - timedelta(days=1)).isoformat(),  # Abreise exkl.
+             "availability": availability},
+        )
 
-            ChannelManagerService(
-                service_client=self._client
-            ).push_availability_for_property(
-                tenant_id,
-                property_id,
-                check_in,
-                check_out - timedelta(days=1),  # Abreisetag exklusiv
-                availability,
-            )
-        except Exception as exc:  # noqa: BLE001
-            log.warning("reservation_channex_push_failed", error=str(exc))
-
-    def _recompute_dynamic_pricing(
-        self, property_id: str, check_in: date, check_out: date
-    ) -> None:
-        """Dynamic Pricing für die betroffenen Tage neu rechnen — eine Buchung/
-        Storno ändert Auslastung + Orphan-Lücken. Mit Puffer (±2 Tage), da der
-        Orphan-/Auslastungs-Faktor Nachbartage einbezieht. Best-effort: No-op,
-        wenn DP für das Objekt aus ist; Fehler kippen die Buchung nicht."""
+    def _recompute_dynamic_pricing(self, tenant_id: str, property_id: str) -> None:
+        """Dynamic-Pricing-Recompute als Job einreihen (Phase 2) — eine Buchung/
+        Storno ändert Auslastung + Orphan-Lücken. Der Worker rechnet den Horizont
+        neu und pusht die Tagespreise. Coalesced je Objekt: mehrere Buchungen
+        desselben Objekts kurz hintereinander erzeugen nur EINEN Recompute. Der Job
+        rechnet den vollen Horizont — funktional eine Obermenge des früheren
+        ±2-Tage-Fensters um die Buchung."""
         if self._client is None:
             return
-        try:
-            from src.features.pricing.recompute import DynamicPricingRecompute
-
-            DynamicPricingRecompute(service_client=self._client).recompute_property(
-                property_id,
-                start=check_in - timedelta(days=2),
-                end=check_out + timedelta(days=2),
-            )
-        except Exception as exc:  # noqa: BLE001
-            log.warning("reservation_dp_recompute_failed", error=str(exc))
+        try_enqueue_recompute(self._client, tenant_id, property_id)
 
     def list(self, ctx: AuthContext, property_id: str | None = None) -> ReservationListResponse:
         tenant_id = self._require_tenant(ctx)
@@ -396,7 +382,7 @@ class ReservationsService:
             tenant_id, req.property_id, req.check_in, req.check_out, 0
         )
         # Dynamic Pricing der betroffenen Tage neu rechnen (Auslastung/Orphan).
-        self._recompute_dynamic_pricing(req.property_id, req.check_in, req.check_out)
+        self._recompute_dynamic_pricing(tenant_id, req.property_id)
 
         # Loyalty-Aggregate des Gastes (Aufenthalte/Umsatz) neu berechnen.
         if guest_id:
@@ -663,11 +649,7 @@ class ReservationsService:
             ).execute()
             self._release_channex(tenant_id, property_id, release)
             # Freigewordene Tage neu bepreisen (Auslastung/Orphan ändern sich).
-            self._recompute_dynamic_pricing(
-                property_id,
-                _as_date(current["check_in"]),
-                _as_date(current["check_out"]),
-            )
+            self._recompute_dynamic_pricing(tenant_id, property_id)
 
         # Audit: append-only Storno-Historie (Best-Effort — Log-Fehler darf die
         # Stornierung nicht kippen).

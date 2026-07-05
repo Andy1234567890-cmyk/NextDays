@@ -89,6 +89,13 @@ class Settings(BaseSettings):
     # anbieten — NUR zum Testen ohne echtes OTA-Konto. Im Prod IMMER false, sonst
     # sähe der Kunde Test-Kanäle. Echter Kunde sieht nur Booking.com/Airbnb/…
     channex_sandbox_portals: bool = False
+    # Kontoweites Channex-Anfrage-Budget (Token-Bucket im Worker vor jedem Push).
+    # EIN Channex-API-Key fürs ganze Konto → alle Betriebe teilen sich Channex'
+    # Rate-Limit. Bei vielen gleichzeitig sync'enden Betrieben würde der Worker
+    # Channex sonst überfahren (429/Sperre). Zwei Ebenen: kontoweit + pro Property.
+    # Schema wie die HTTP-Limits: "<max>/<fenster-sekunden>".
+    channex_account_budget: str = "200/60"   # kontoweit ~200 Requests/Minute
+    channex_property_budget: str = "20/60"    # je Property ~20 Requests/Minute
     # Öffentliche Basis-URL DIESER API (für den Webhook-Callback, den Channex
     # aufruft). Muss von außen per HTTPS erreichbar sein — im Dev z.B. ein
     # Tunnel (ngrok/cloudflared), in Prod die echte API-Domain.

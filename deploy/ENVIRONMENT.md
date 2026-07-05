@@ -83,6 +83,9 @@ verschlüsselten Coolify-Config-Sicherung. Diese Datei sagt nur, **welche** Vari
 | `CORS_ORIGINS` | erlaubte Frontend-Origins | nein | Coolify-Env |
 | `UVICORN_WORKERS` | API-Worker-Anzahl (Default 4, 8-Kern-Server) | nein | Coolify-Env |
 | `PGRST_DB_POOL` | PostgREST-Connection-Pool (Default 25; Σ Pools < max_connections 100) | nein | Coolify-Env |
+| `WORKER_CONCURRENCY` | Parallel-Jobs je Worker-Prozess (Default 4) | nein | Coolify-Env |
+| `CHANNEX_ACCOUNT_BUDGET` | Kontoweites Channex-Anfrage-Budget im Worker (Default `200/60`) | nein | Coolify-Env |
+| `CHANNEX_PROPERTY_BUDGET` | Channex-Budget je Property im Worker (Default `20/60`) | nein | Coolify-Env |
 
 ### Page-Builder (`site_config`-Slice)
 | Variable | Zweck | Secret? | Quelle |

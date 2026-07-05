@@ -12,6 +12,11 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.jobs.queue import (
+    try_enqueue_ari,
+    try_enqueue_content_sync,
+    try_enqueue_recompute,
+)
 
 from .schemas import (
     PhotoUpdateRequest,
@@ -180,16 +185,15 @@ class PropertiesService:
     def _sync_to_channel_manager(
         self, tenant_id: str, *, property_id: str, title: str, currency: str
     ) -> None:
-        """Hängt das neue Objekt an den Channel-Manager-Slice. Lazy-Import, um
-        Zyklen zu vermeiden; jeder Fehler wird verschluckt (rein additiv)."""
-        try:
-            from src.features.channel_manager.service import ChannelManagerService
-
-            ChannelManagerService(service_client=self._db).sync_property_to_channex(
-                tenant_id, property_id=property_id, title=title, currency=currency
-            )
-        except Exception as exc:  # noqa: BLE001 — Auto-Sync darf nie blockieren
-            log.warning("channel_manager_autosync_failed", property_id=property_id, error=str(exc))
+        """Reiht den Channex-Content-Sync des Objekts als Hintergrund-Job ein
+        (Phase 2: raus aus dem Request-Pfad). Früher lief hier der volle Content-
+        Sync synchron (mehrere sequentielle ~3s-Channex-Calls) und blockierte den
+        Request. Jetzt antwortet der Request sofort; der Worker synct im Hintergrund
+        mit Channex-Token-Budget. Coalesced je Objekt → mehrfaches Speichern (z. B.
+        Galerie-Upload) erzeugt nur EINEN Sync mit dem letzten Stand."""
+        try_enqueue_content_sync(
+            self._db, tenant_id, property_id, title=title, currency=currency
+        )
 
     def resync_content(self, ctx: AuthContext, property_id: str) -> PropertyResponse:
         """Objekt-Inhalte (Beschreibung, Ausstattung, Fotos, Belegung, Adresse …)
@@ -266,19 +270,19 @@ class PropertiesService:
         return PropertyResponse(**_row(row))
 
     def _push_max_stay(self, tenant_id: str, property_id: str, max_stay: int) -> None:
-        """Maximalaufenthalt an Channex pushen (best-effort, Lazy-Import). 0 wird
-        ebenfalls gepusht, damit das Entfernen der Obergrenze synchron ist."""
+        """Maximalaufenthalt als ARI-Push-Job einreihen (Phase 2). 0 wird ebenfalls
+        gepusht, damit das Entfernen der Obergrenze synchronisiert wird. Deckt IMMER
+        den vollen 365-Tage-Horizont ab → coalesce=True sicher (letzter gewinnt)."""
         from datetime import date, timedelta
 
-        try:
-            from src.features.channel_manager.service import ChannelManagerService
-
-            today = date.today()
-            ChannelManagerService(service_client=self._db).push_max_stay_for_property(
-                tenant_id, property_id, today, today + timedelta(days=364), max_stay
-            )
-        except Exception as exc:  # noqa: BLE001 — Auto-Push darf nie blockieren
-            log.warning("max_stay_autopush_failed", property_id=property_id, error=str(exc))
+        today = date.today()
+        try_enqueue_ari(
+            self._db, tenant_id, property_id, "max_stay",
+            {"date_from": today.isoformat(),
+             "date_to": (today + timedelta(days=364)).isoformat(),
+             "max_stay": max_stay},
+            coalesce=True,
+        )
 
     def _sync_pricing_config(
         self, tenant_id: str, property_id: str, pricing: dict
@@ -732,43 +736,36 @@ class PropertiesService:
                 new_rows, on_conflict="property_id,date"
             ).execute()
 
-        # 4) Verfügbarkeit + Mindestaufenthalt an Channex pushen.
-        try:
-            cm.push_availability_for_property(
-                tenant_id, property_id, today, today + timedelta(days=364), 1
+        # 4) Verfügbarkeit + Mindest-/Maximalaufenthalt als ARI-Jobs einreihen
+        #    (Phase 2: raus aus dem Request-Pfad). Alle decken den vollen 365-Tage-
+        #    Horizont ab → coalesce=True sicher. Der Content-Sync oben (Schritt 3)
+        #    blieb synchron, weil sein Ergebnis den HTTP-Status bestimmt.
+        horizon_to = (today + timedelta(days=364)).isoformat()
+        today_iso = today.isoformat()
+        try_enqueue_ari(
+            self._db, tenant_id, property_id, "availability",
+            {"date_from": today_iso, "date_to": horizon_to, "availability": 1},
+            coalesce=True,
+        )
+        min_stay = int(rates[0].get("min_stay") or 1)
+        if min_stay > 1:
+            try_enqueue_ari(
+                self._db, tenant_id, property_id, "rate",
+                {"date_from": today_iso, "date_to": horizon_to, "min_stay": min_stay},
+                coalesce=True,
             )
-            min_stay = int(rates[0].get("min_stay") or 1)
-            if min_stay > 1:
-                cm.push_rate_for_property(
-                    tenant_id, property_id, today, today + timedelta(days=364),
-                    min_stay=min_stay,
-                )
-            # Maximalaufenthalt aus dem Verfügbarkeits-Formular an die Portale
-            # (Channex-Key max_stay). 0 = keine Obergrenze → nur pushen, wenn > 0.
-            max_stay = _max_stay_of(row)
-            if max_stay > 0:
-                cm.push_max_stay_for_property(
-                    tenant_id, property_id, today, today + timedelta(days=364),
-                    max_stay,
-                )
-        except Exception as exc:  # noqa: BLE001
-            log.warning("publish_channex_push_failed", property_id=property_id, error=str(exc))
+        max_stay = _max_stay_of(row)
+        if max_stay > 0:
+            try_enqueue_ari(
+                self._db, tenant_id, property_id, "max_stay",
+                {"date_from": today_iso, "date_to": horizon_to, "max_stay": max_stay},
+                coalesce=True,
+            )
 
-        # 5) Tagesgenaue Preise an Channex pushen — sonst kennt der OTA nur den
-        # Rate-Plan-Ankerpreis, nicht Saison-/Dynamic-Preise. recompute_property
-        # rechnet neu und pusht via push_rates_batch (no-op ohne Dynamic Pricing;
-        # Basispreise gehen trotzdem raus). Ohne diesen Schritt wäre das Objekt bei
-        # Channex verfügbar, aber mit unvollständigem Preis (Deadlock-Nachbesserung).
-        try:
-            from src.features.pricing.recompute import DynamicPricingRecompute
-
-            DynamicPricingRecompute(service_client=self._db).recompute_property(
-                property_id
-            )
-        except Exception as exc:  # noqa: BLE001 — Preis-Push best-effort, nie blockierend
-            log.warning(
-                "publish_price_push_failed", property_id=property_id, error=str(exc)
-            )
+        # 5) Tagesgenaue Preise nachrechnen + pushen als recompute_property-Job
+        #    (Coalescing je Objekt). Ohne diesen Schritt kennt der OTA nur den
+        #    Rate-Plan-Ankerpreis, nicht Saison-/Dynamic-Preise.
+        try_enqueue_recompute(self._db, tenant_id, property_id)
 
         log.info("property_published", tenant_id=tenant_id, property_id=property_id)
         return PropertyResponse(**_row(row))

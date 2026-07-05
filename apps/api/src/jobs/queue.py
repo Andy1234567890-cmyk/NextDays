@@ -82,3 +82,75 @@ def enqueue(
         db.table("jobs").insert(row).execute()
     log.info("job_enqueued", job_type=job_type, tenant_id=tenant_id,
              dedup_key=dedup_key)
+
+
+# --- Best-effort-Wrapper für die Services (Phase 2) --------------------------
+# Die Slices rufen diese statt inline an Channex zu pushen. Sie kapseln das
+# try/except selbst, damit ein DB-/Queue-Fehler den Request-Pfad NIE kippt — der
+# Sync ist ohnehin asynchron und wird vom Reconcile-Tick nachgeholt, falls das
+# Einreihen scheitert. Bewusst breit gefangen (wie die alten inline-Pushes).
+
+def try_enqueue_content_sync(
+    db: Client, tenant_id: str, property_id: str,
+    *, title: str | None = None, currency: str | None = None,
+) -> None:
+    """Vollen Channex-Content-Sync eines Objekts einreihen (coalesced je Objekt)."""
+    try:
+        enqueue(
+            db, "sync_property_content", tenant_id=tenant_id,
+            payload={"tenant_id": tenant_id, "property_id": property_id,
+                     "title": title, "currency": currency},
+            dedup_key=dedup_key(tenant_id, property_id, "sync_property_content"),
+        )
+    except Exception as exc:  # noqa: BLE001 — Einreihen darf den Request nie kippen
+        log.warning("enqueue_content_sync_failed", property_id=property_id,
+                    error=str(exc)[:200])
+
+
+def try_enqueue_recompute(db: Client, tenant_id: str, property_id: str) -> None:
+    """DP-Recompute eines Objekts als Job einreihen (coalesced je Objekt). Der
+    Handler rechnet die Tagespreise neu und pusht sie via push_rates_batch."""
+    try:
+        enqueue(
+            db, "recompute_property", tenant_id=tenant_id,
+            payload={"property_id": property_id},
+            dedup_key=dedup_key(tenant_id, property_id, "recompute_property"),
+        )
+    except Exception as exc:  # noqa: BLE001 — Einreihen darf den Request nie kippen
+        log.warning("enqueue_recompute_failed", property_id=property_id,
+                    error=str(exc)[:200])
+
+
+def try_enqueue_ari(
+    db: Client, tenant_id: str, property_id: str, kind: str,
+    fields: dict[str, Any], *, coalesce: bool = False,
+) -> None:
+    """Einen ARI-Push (kind = availability|rate|max_stay|restrictions|stop_sell)
+    für ein Objekt einreihen. `fields` sind die kind-spezifischen Payload-Werte
+    (date_from/date_to als ISO-Strings, availability/rate_cents/… je nach kind).
+
+    WICHTIG zum Coalescing: standardmäßig KEIN dedup_key. Reine ARI-Pushes
+    betreffen oft DISJUNKTE Zeiträume (zwei Blocks in verschiedenen Monaten; alte
+    Freigabe + neue Belegung beim Umbuchen). Ein pauschaler dedup_key würde sie via
+    "letzter gewinnt" verschmelzen und frühere Ranges verlieren → verlorene
+    Verfügbarkeits-/Preis-Updates. Die ari_outbox dedupliziert bereits auf
+    Zeilenebene, und der Reconcile-Tick gleicht ab.
+
+    `coalesce=True` NUR setzen, wenn der Push IMMER den vollen Horizont des Objekts
+    abdeckt (z. B. property-weiter min_stay/max_stay über 365 Tage) — dann ist
+    "letzter gewinnt" korrekt und spart Stau bei häufigem Speichern.
+    """
+    key = (
+        dedup_key(tenant_id, property_id, "push_ari", suffix=kind)
+        if coalesce else None
+    )
+    try:
+        enqueue(
+            db, "push_ari", tenant_id=tenant_id,
+            payload={"kind": kind, "tenant_id": tenant_id,
+                     "property_id": property_id, **fields},
+            dedup_key=key,
+        )
+    except Exception as exc:  # noqa: BLE001 — Einreihen darf den Request nie kippen
+        log.warning("enqueue_ari_failed", property_id=property_id, kind=kind,
+                    error=str(exc)[:200])

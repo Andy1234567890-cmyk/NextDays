@@ -107,10 +107,27 @@ class _StatusDB:
         return _Res([])
 
 
-def _worker_with(db):  # noqa: ANN001, ANN202
+class _FakeBudget:
+    """Budget-Stub: erlaubt/verweigert deterministisch, ohne echtes Redis."""
+
+    def __init__(self, *, allow: bool = True, retry_after: int = 30) -> None:
+        self._allow = allow
+        self._retry = retry_after
+        self.calls: list = []
+
+    def try_consume(self, property_id):  # noqa: ANN001, ANN201
+        from src.jobs.channex_budget import BudgetDecision
+
+        self.calls.append(property_id)
+        return BudgetDecision(allowed=self._allow, retry_after=self._retry)
+
+
+def _worker_with(db, budget=None):  # noqa: ANN001, ANN202
     from src.worker import Worker
 
-    return Worker(db=db)
+    # Default-Budget erlaubt immer → die Handler-/Retry-Tests laufen wie bisher,
+    # ohne echtes Redis (das Gate ist in eigenen Tests unten separat geprüft).
+    return Worker(db=db, budget=budget or _FakeBudget(allow=True))
 
 
 def test_run_job_unbekannter_typ_wird_dead() -> None:
@@ -175,3 +192,109 @@ def test_run_job_budget_erschoepft_wird_dead(monkeypatch) -> None:  # noqa: ANN0
         "attempts": 10, "max_attempts": 10, "payload": {},
     })
     assert db.updates[-1]["status"] == "dead"
+
+
+def test_run_job_kein_budget_wird_deferred(monkeypatch) -> None:  # noqa: ANN001
+    # Channex-Job ohne freies Token: NICHT ausführen, sondern verzögern (queued),
+    # OHNE attempts zu verbrauchen (Warten ist kein Fehlversuch).
+    import src.worker as worker_mod
+
+    called = {"ran": False}
+
+    def _handler(_db, _payload):  # noqa: ANN001, ANN202
+        called["ran"] = True
+
+    monkeypatch.setitem(worker_mod.HANDLERS, "sync_property_content", _handler)
+    db = _StatusDB()
+    w = _worker_with(db, budget=_FakeBudget(allow=False, retry_after=45))
+    w._run_job({
+        "id": "j5", "job_type": "sync_property_content",
+        "attempts": 3, "max_attempts": 10, "payload": {"property_id": "p1"},
+    })
+    assert called["ran"] is False           # Handler NICHT gelaufen
+    last = db.updates[-1]
+    assert last["status"] == "queued"        # zurück in die Warteschlange
+    assert last["attempts"] == 2             # 3 − 1 (Claim-Erhöhung zurückgedreht)
+
+
+def test_run_job_nicht_channex_umgeht_budget(monkeypatch) -> None:  # noqa: ANN001
+    # recompute_property ist KEIN Channex-Job → Budget-Gate greift nicht, selbst
+    # wenn das Budget leer wäre. Handler läuft, Status done.
+    import src.worker as worker_mod
+
+    monkeypatch.setitem(worker_mod.HANDLERS, "recompute_property", lambda _d, _p: None)
+    db = _StatusDB()
+    denying = _FakeBudget(allow=False)
+    w = _worker_with(db, budget=denying)
+    w._run_job({
+        "id": "j6", "job_type": "recompute_property",
+        "attempts": 1, "max_attempts": 10, "payload": {"property_id": "p1"},
+    })
+    assert db.updates[-1]["status"] == "done"
+    assert denying.calls == []  # Budget wurde gar nicht befragt
+
+
+# --- push_ari-Handler: kind → richtige Push-Methode + Argumente --------------
+
+class _RecordingService:
+    """Fake-ChannelManagerService: zeichnet push_*-Aufrufe auf (args, kwargs)."""
+
+    def __init__(self) -> None:
+        self.calls: list[tuple] = []
+
+    def __getattr__(self, name):  # noqa: ANN001, ANN204
+        def _rec(*args, **kwargs):  # noqa: ANN002, ANN003, ANN202
+            self.calls.append((name, args, kwargs))
+        return _rec
+
+
+def _run_push_ari(monkeypatch, payload):  # noqa: ANN001, ANN202
+    import src.worker as worker_mod
+
+    svc = _RecordingService()
+    monkeypatch.setattr(worker_mod, "_svc", lambda _db: svc)
+    worker_mod._handle_push_ari(None, payload)
+    return svc.calls
+
+
+def test_push_ari_availability_maps_to_availability_push(monkeypatch) -> None:  # noqa: ANN001
+    calls = _run_push_ari(monkeypatch, {
+        "kind": "availability", "tenant_id": "t1", "property_id": "p1",
+        "date_from": "2026-07-01", "date_to": "2026-07-10", "availability": 0,
+    })
+    from datetime import date
+    name, args, _ = calls[0]
+    assert name == "push_availability_for_property"
+    assert args == ("t1", "p1", date(2026, 7, 1), date(2026, 7, 10), 0)
+
+
+def test_push_ari_rate_passes_rate_and_min_stay(monkeypatch) -> None:  # noqa: ANN001
+    calls = _run_push_ari(monkeypatch, {
+        "kind": "rate", "tenant_id": "t1", "property_id": "p1",
+        "date_from": "2026-07-01", "date_to": "2026-07-10",
+        "rate_cents": 12000, "min_stay": 3,
+    })
+    name, _args, kwargs = calls[0]
+    assert name == "push_rate_for_property"
+    assert kwargs == {"rate_cents": 12000, "min_stay": 3}
+
+
+def test_push_ari_stop_sell_uses_keyword_and_spans(monkeypatch) -> None:  # noqa: ANN001
+    # Regression: stop_sell MUSS als keyword übergeben werden (Signatur *, stop_sell).
+    from datetime import date
+    calls = _run_push_ari(monkeypatch, {
+        "kind": "stop_sell", "tenant_id": "t1", "property_id": "p1",
+        "spans": [["2026-07-01", "2026-07-05"]], "stop_sell": True, "days": None,
+    })
+    name, args, kwargs = calls[0]
+    assert name == "push_stop_sell_for_property"
+    assert args == ("t1", "p1", [(date(2026, 7, 1), date(2026, 7, 5))])
+    assert kwargs == {"stop_sell": True, "days": None}
+
+
+def test_push_ari_unknown_kind_raises(monkeypatch) -> None:  # noqa: ANN001
+    import pytest
+    with pytest.raises(ValueError, match="unbekannter ARI-kind"):
+        _run_push_ari(monkeypatch, {
+            "kind": "gibts_nicht", "tenant_id": "t1", "property_id": "p1",
+        })
