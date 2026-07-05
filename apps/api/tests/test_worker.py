@@ -29,58 +29,56 @@ def test_dedup_key_kanonisch() -> None:
     assert dedup_key(None, "p1", "reconcile") == "global:p1:reconcile"
 
 
-# --- Fake-DB (Fluent-Query-Fake, zeichnet upsert/insert auf) ----------------
+# --- Fake-DB (zeichnet die enqueue_job-RPC auf) -----------------------------
+# enqueue() reiht über die RPC enqueue_job (0103) ein, NICHT per PostgREST-upsert
+# (der partielle Coalescing-Index ist per on_conflict nicht adressierbar → 42P10).
 
 class _Res:
     def __init__(self, data) -> None:  # noqa: ANN001
         self.data = data
 
 
-class _FakeJobsQuery:
-    def __init__(self, sink) -> None:  # noqa: ANN001
+class _FakeRpc:
+    def __init__(self, sink, fn, params) -> None:  # noqa: ANN001
         self._sink = sink
-
-    def upsert(self, row, on_conflict=None):  # noqa: ANN001, ANN201
-        self._sink.append(("upsert", row, on_conflict))
-        return self
-
-    def insert(self, row):  # noqa: ANN001, ANN201
-        self._sink.append(("insert", row, None))
-        return self
+        self._fn = fn
+        self._params = params
 
     def execute(self):  # noqa: ANN201
+        self._sink.append((self._fn, self._params))
         return _Res([])
 
 
 class _FakeDB:
     def __init__(self) -> None:
-        self.writes: list = []
+        self.rpcs: list = []
 
-    def table(self, name):  # noqa: ANN001, ANN201
-        assert name == "jobs"
-        return _FakeJobsQuery(self.writes)
+    def rpc(self, fn, params):  # noqa: ANN001, ANN201
+        return _FakeRpc(self.rpcs, fn, params)
 
 
-def test_enqueue_mit_dedup_key_nutzt_upsert() -> None:
+def test_enqueue_mit_dedup_key_ruft_enqueue_job_rpc() -> None:
     db = _FakeDB()
     enqueue(db, "push_ari", payload={"property_id": "p1"},
             tenant_id="t1", dedup_key="t1:p1:push_ari")
-    assert len(db.writes) == 1
-    op, row, on_conflict = db.writes[0]
-    # Coalescing: upsert auf dedup_key (letzter gewinnt).
-    assert op == "upsert"
-    assert on_conflict == "dedup_key"
-    assert row["job_type"] == "push_ari"
-    assert row["tenant_id"] == "t1"
-    assert row["dedup_key"] == "t1:p1:push_ari"
-    assert "run_after" in row
+    assert len(db.rpcs) == 1
+    fn, params = db.rpcs[0]
+    # Coalescing läuft in der RPC (partieller Index) — dedup_key wird durchgereicht.
+    assert fn == "enqueue_job"
+    assert params["p_job_type"] == "push_ari"
+    assert params["p_tenant_id"] == "t1"
+    assert params["p_dedup_key"] == "t1:p1:push_ari"
+    assert params["p_payload"] == {"property_id": "p1"}
+    assert "p_run_after" in params
 
 
-def test_enqueue_ohne_dedup_key_nutzt_insert() -> None:
+def test_enqueue_ohne_dedup_key_ruft_rpc_mit_null_key() -> None:
     db = _FakeDB()
     enqueue(db, "reconcile_tenant", payload={"tenant_id": "t1"}, tenant_id="t1")
-    op, _row, _oc = db.writes[0]
-    assert op == "insert"  # kein Coalescing → jeder Job zählt
+    fn, params = db.rpcs[0]
+    assert fn == "enqueue_job"
+    # Kein Coalescing → die RPC macht bei NULL-Key einen schlichten Insert.
+    assert params["p_dedup_key"] is None
 
 
 # --- Worker-Job-Ausführung: Handler + Retry/dead-Pfad -----------------------

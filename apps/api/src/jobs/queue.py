@@ -65,21 +65,21 @@ def enqueue(
     Best-effort by design — der Aufrufer kapselt dies in try/except, damit das
     Einreihen den Request-Pfad nie kippt (wie die alten inline-Pushes)."""
     run_after = datetime.now(UTC) + timedelta(seconds=delay_seconds)
-    row: dict[str, Any] = {
-        "job_type": job_type,
-        "tenant_id": tenant_id,
-        "payload": payload,
-        "dedup_key": dedup_key,
-        "max_attempts": max_attempts,
-        "run_after": run_after.isoformat(),
-    }
-    if dedup_key is not None:
-        # on_conflict auf den partiellen Unique-Index: bestehenden offenen Job mit
-        # dem neuen Payload überschreiben ("letzter gewinnt"). Erledigte Jobs
-        # (done/failed/dead) sind nicht im Index → blockieren keinen neuen.
-        db.table("jobs").upsert(row, on_conflict="dedup_key").execute()
-    else:
-        db.table("jobs").insert(row).execute()
+    # Über die RPC enqueue_job (0103) einreihen, NICHT per PostgREST-upsert: der
+    # Coalescing-Index jobs_dedup_open_uq ist PARTIELL, und PostgREST kann ein
+    # partielles Index-Ziel nicht per on_conflict="dedup_key" adressieren (42P10
+    # "no unique or exclusion constraint matching the ON CONFLICT specification").
+    # Die RPC gibt das Index-Prädikat in reinem SQL an und trifft ihn korrekt;
+    # ohne dedup_key macht sie einen schlichten Insert (gleiche "letzter gewinnt"-
+    # Semantik wie zuvor der upsert-Zweig, nur race-frei in einer Anweisung).
+    db.rpc("enqueue_job", {
+        "p_job_type": job_type,
+        "p_payload": payload,
+        "p_tenant_id": tenant_id,
+        "p_dedup_key": dedup_key,
+        "p_max_attempts": max_attempts,
+        "p_run_after": run_after.isoformat(),
+    }).execute()
     log.info("job_enqueued", job_type=job_type, tenant_id=tenant_id,
              dedup_key=dedup_key)
 
