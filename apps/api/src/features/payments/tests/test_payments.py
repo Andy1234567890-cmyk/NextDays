@@ -110,6 +110,16 @@ class _Q:
         self._payload = payload
         return self
 
+    def upsert(self, payload, **kw):  # noqa: ANN001, ANN003, ANN201
+        self._op = "upsert"
+        self._payload = payload
+        self._ignore_dupes = kw.get("ignore_duplicates", False)
+        return self
+
+    def delete(self):  # noqa: ANN201
+        self._op = "delete"
+        return self
+
     def update(self, payload):  # noqa: ANN001, ANN201
         self._op = "update"
         self._payload = payload
@@ -133,10 +143,23 @@ class _Q:
             row.setdefault("created_at", "2026-06-22T00:00:00Z")
             rows.append(row)
             return _Res([row])
+        if self._op == "upsert":
+            row = dict(self._payload)
+            # PK-Konflikt (id existiert schon) + ignore_duplicates → leere
+            # Rückgabe (kein neuer Insert), wie PostgREST/Postgres DO NOTHING.
+            if getattr(self, "_ignore_dupes", False) and any(
+                r.get("id") == row.get("id") for r in rows
+            ):
+                return _Res([])
+            rows.append(row)
+            return _Res([row])
         match = [r for r in rows if all(r.get(k) == v for k, v in self._eq.items())]
         if self._op == "update":
             for r in match:
                 r.update(self._payload)
+            return _Res(match)
+        if self._op == "delete":
+            self._store[self._name] = [r for r in rows if r not in match]
             return _Res(match)
         return _Res(match)
 

@@ -136,6 +136,51 @@ wichtigsten Punkte konsolidiert:
   (`locked_by`-Guard). Migration 0106 sperrt `claim_jobs`/`requeue_stuck_jobs`
   gegen anon/authenticated (nur noch service_role).
 
+### Behoben (2. Bug-Jagd-Runde 07/2026 — 31 verifizierte Befunde)
+Zweiter Multi-Agenten-Loop (86 Agenten, adversariell 2-fach verifiziert) über den
+deployten Stand; alle 31 Befunde gefixt (2 Critical, 15 High, 12 Medium, 2 Low):
+- **Owner-Sperre in der Betriebsbuchhaltung** (§4.2): die owner-Rolle besitzt
+  zwar OWNER_REPORTING (für die eigene Auszahlungs-Abrechnung), hat in der
+  tenant-weiten Debitorenbuchhaltung aber nichts zu suchen — sie konnte vorher
+  Rechnungen/Kunden-PII ALLER Objekte lesen UND schreiben. Jetzt hart 403
+  (Lesen + Schreiben), Owner-Finanzsicht ausschließlich /owner-statements.
+- **Finalisierte Rechnungen GoBD-unlöschbar/unänderbar**: `delete_invoice`/
+  `update_invoice` prüfen nicht mehr nur das nie gesetzte `is_locked`, sondern
+  Status + vergebene Nummer — nur echte Entwürfe ohne Nummer sind mutierbar.
+- **Nummernkreis serverseitig + nur bei Finalisierung**: `create_invoice_from_bestand`
+  zieht die GoBD-Nummer atomar über `next_document_number` (ignoriert die
+  fälschbare Client-Nummer), Entwürfe ziehen KEINE Nummer mehr (keine Lücken);
+  der Client fabriziert keine `Date.now()`-Nummer mehr; Duplikat-Kollision → 409.
+- **owner_statements**: als `hidden_from_owner` markierte Ausgaben werden dem
+  Eigentümer weder gelistet noch (bei Live-Summen) eingerechnet.
+- **booking_engine**: `create_public_booking` bucht nur noch `active`-Objekte
+  (nicht draft/inactive), bestimmt den Preis SERVERSEITIG (Gast kann
+  total_amount nicht mehr auf 0 setzen), pusht Channex asynchron über die Queue
+  und stößt Dynamic-Pricing-Recompute an.
+- **reservations**: `move()` prüft jetzt Stop-Sell; `cancel()`/`move()` geben
+  Nächte NICHT frei (und pushen kein availability=1), die noch von einer anderen
+  aktiven (z. B. OTA-)Buchung belegt sind.
+- **ari_outbox**: eine ältere pending-Zeile wird von einer neueren überholenden
+  Absicht supersedet (kein Wieder-Öffnen real belegter Tage); done-Update mit
+  pending-Guard.
+- **channel-manager**: `/bookings` maskiert Beträge + Buchungsquelle rollen-
+  konform (staff/cleaner sehen keine Umsätze/OTA-Namen); Topologie-Lese-
+  Endpunkte (properties/channels/status) verlangen MANAGE_PROPERTY_SETTINGS.
+- **Inbox-Doppelversand** geschlossen: atomares Claim (`UPDATE … WHERE
+  status='pending'`) in Timer + Cron beider Dispatch-Pfade.
+- **Cloudflare-Custom-Hostname** wird bei DB-Insert-Fehler zurückgerollt (keine
+  Waise).
+- **enqueue_job-Coalescing** (Migration 0108): Coalescing nur noch gegen
+  wartende ('queued') Jobs — ein Update gegen einen laufenden Job erzeugt jetzt
+  einen neuen queued-Job (die Änderung geht nicht mehr lautlos verloren).
+- **Rate-Limit-Fairness** pro IP gekeyt (kein Cross-Tenant-DoS über unsignierte
+  tenant_id); **Channex-Budget** meldet retry_after nur der blockierenden Ebene;
+  **Stripe-Webhook** claimt Events atomar (ON CONFLICT) und gibt sie bei
+  Verarbeitungsfehler frei (Retry); **Addon-Käufe** idempotent (Migration 0109,
+  Unique-Index gegen Doppelklick); Frontend: PDF-MwSt-Feldname korrigiert,
+  Monatsgitter abonniert alle preis-speisenden Tabellen (Realtime),
+  Banking-Abgleich zeigt die echte Transaktions-Währung (kein €-Hardcode).
+
 ### Behoben (High-Befunde der Bug-Jagd 07/2026)
 - **Owner-Scope im Kalender + Reservierungen (§4.2)**: Eigentümer sehen jetzt nur
   ihre zugeordneten Objekte (neuer gemeinsamer Helfer `auth/owner_scope.py`).

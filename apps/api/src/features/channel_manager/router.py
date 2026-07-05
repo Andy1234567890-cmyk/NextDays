@@ -54,6 +54,11 @@ router = APIRouter(prefix="/channel-manager", tags=["channel_manager"])
 _write = Annotated[
     AuthContext, Depends(require_lodgify_permission(Permission.MANAGE_PROPERTY_SETTINGS))
 ]
+# Lesen der Kanal-/Vertriebstopologie (welche Objekte an welche OTAs, Kanal-
+# Verbindungsstatus) ist eine Management-Information — dieselbe Capability wie
+# das Schreiben. Vorher nur CurrentUser: jeder staff/cleaner/owner konnte die
+# komplette Kanal-Topologie des Mandanten einsehen.
+_read = _write
 
 
 @router.get("/health", response_model=SliceHealth)
@@ -64,7 +69,7 @@ def health(service: ChannelManagerServiceDep) -> SliceHealth:
 # --- Property-Mapping --------------------------------------------------------
 @router.get("/properties", response_model=PropertyMapListResponse)
 def list_property_maps(
-    ctx: CurrentUser, service: ChannelManagerServiceDep
+    ctx: _read, service: ChannelManagerServiceDep
 ) -> PropertyMapListResponse:
     try:
         return service.list_property_maps(ctx)
@@ -141,7 +146,7 @@ def list_portals(
 
 @router.get("/channels", response_model=ChannelListResponse)
 def list_channels(
-    ctx: CurrentUser, service: ChannelManagerServiceDep
+    ctx: _read, service: ChannelManagerServiceDep
 ) -> ChannelListResponse:
     try:
         items = service.list_channels(ctx)
@@ -275,7 +280,7 @@ def finalize_oauth_channel(
     response_model=ChannelConnectionListResponse,
 )
 def list_channel_connections(
-    property_id: str, ctx: CurrentUser, service: ChannelManagerServiceDep
+    property_id: str, ctx: _read, service: ChannelManagerServiceDep
 ) -> ChannelConnectionListResponse:
     """Gespeicherte OTA-Verbindungen eines Objekts (Hotel-ID + Status pro Portal)."""
     try:

@@ -291,9 +291,11 @@ class AriPushMixin:
                 ]
             )
             if outbox_id:
+                # Guard status='pending': falls ein paralleler process_ari_outbox-
+                # Tick dieselbe Zeile schon abgehakt hat, kein zweiter Übergang.
                 db.table("ari_outbox").update(
                     {"status": "done", "attempts": prior_attempts + 1}
-                ).eq("id", outbox_id).execute()
+                ).eq("id", outbox_id).eq("status", "pending").execute()
             log.info(
                 "ari_push_done",
                 tenant_id=tenant_id,
@@ -682,6 +684,29 @@ class AriPushMixin:
                 error=exc.message,
             )
 
+    @staticmethod
+    def _superseded_outbox_ids(rows: list[dict]) -> set[str]:
+        """IDs der pending-Zeilen, die von einer NEUEREN pending-Zeile desselben
+        Objekts mit überlappendem Datumsbereich überholt sind. `rows` ist nach
+        created_at aufsteigend sortiert — eine Zeile ist superseded, wenn eine
+        SPÄTERE Zeile (größerer Index) dasselbe property_id und einen
+        überlappenden [date_from, date_to]-Bereich hat."""
+
+        def _overlap(a: dict, b: dict) -> bool:
+            return (
+                a["property_id"] == b["property_id"]
+                and str(a["date_from"]) <= str(b["date_to"])
+                and str(b["date_from"]) <= str(a["date_to"])
+            )
+
+        superseded: set[str] = set()
+        for i, older in enumerate(rows):
+            for newer in rows[i + 1:]:
+                if _overlap(older, newer):
+                    superseded.add(older["id"])
+                    break
+        return superseded
+
     def process_ari_outbox(self, limit: int = 200) -> dict[str, int]:
         """Offene ari_outbox-Zeilen erneut an Channex pushen (Cron-Retry).
         Idempotent (absoluter Set-Wert je Tag)."""
@@ -697,7 +722,22 @@ class AriPushMixin:
             .limit(limit)
             .execute()
         ).data or []
+        # Superseding: eine ältere pending-Zeile für dieselben (überlappenden)
+        # Tage darf NICHT nach einer neueren Absicht gepusht werden — sonst
+        # überschreibt z. B. ein alter avail=1 (Storno, dessen Push scheiterte)
+        # einen inzwischen live gegangenen avail=0 (neue Buchung) und öffnet den
+        # real belegten Tag wieder. Für jede Zeile prüfen, ob eine NEUERE pending-
+        # Zeile desselben Objekts den Bereich überlappt; wenn ja, die ältere als
+        # 'superseded' abhaken statt sie zu pushen.
+        superseded_ids = self._superseded_outbox_ids(rows)
         for r in rows:
+            if r["id"] in superseded_ids:
+                db.table("ari_outbox").update(
+                    {"status": "done", "last_error": "superseded (neuere Absicht)"}
+                ).eq("id", r["id"]).eq("status", "pending").execute()
+                result["processed"] += 1
+                result["done"] += 1
+                continue
             result["processed"] += 1
             mapping = self._resolve_channex_room_type(
                 db, r["tenant_id"], r["property_id"]

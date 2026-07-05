@@ -485,6 +485,16 @@ class OwnerStatementsService:
             .execute()
         ).data or []
 
+    def _visible_expenses(
+        self, ctx: AuthContext, expenses: list[dict]
+    ) -> list[dict]:
+        """Ausgaben aus Owner-Sicht filtern: als `hidden_from_owner` markierte
+        Positionen werden dem Eigentümer weder gelistet noch (bei Live-Summen)
+        eingerechnet. Die Agentur (admin/co_admin) sieht sie unverändert."""
+        if not self._is_owner(ctx):
+            return expenses
+        return [e for e in expenses if not e.get("hidden_from_owner")]
+
     def _owner_unbound_expenses(
         self, tenant_id: str, owner_id: str, period_from: date, period_to: date
     ) -> list[dict]:
@@ -615,8 +625,12 @@ class OwnerStatementsService:
         )
         listing_rows = self._listing_rows(rental_rows, titles)
         # Nicht an eine Abrechnung gebundene Owner-Ausgaben im Zeitraum einbeziehen.
-        expenses = self._owner_unbound_expenses(
-            tenant_id, req.owner_id, req.period_from, req.period_to
+        # Für den Owner die hidden_from_owner-Positionen aus Anzeige UND Summe raus.
+        expenses = self._visible_expenses(
+            ctx,
+            self._owner_unbound_expenses(
+                tenant_id, req.owner_id, req.period_from, req.period_to
+            ),
         )
         summary = self._compute_summary(
             rental_rows, expenses, req.owner_id, currency, owner_currency
@@ -830,7 +844,11 @@ class OwnerStatementsService:
         rental_rows, listing_rows, _titles = self._build_activity(
             tenant_id, row, ctx.user_id
         )
-        expenses = self._expenses_for_statement(statement_id)
+        # Owner sieht als hidden_from_owner markierte Ausgaben weder gelistet noch
+        # (bei Live-Summen) eingerechnet. Finalisierte Summen bleiben Snapshot.
+        expenses = self._visible_expenses(
+            ctx, self._expenses_for_statement(statement_id)
+        )
         override, cmap = self._commission_for_row(tenant_id, row)
         owner = self._owner(tenant_id, str(row["owner_id"]))
         owner_currency = self._owner_currency(owner, tenant_id)

@@ -201,13 +201,18 @@ class RateLimitMiddleware:
             if not ip_decision.degraded and not ip_decision.allowed:
                 return self._reject(ip_decision, "listings", path, scope="ip")
 
-        # Zusätzliches allgemeines Tenant-Limit (Fairness) für eingeloggte Requests.
-        # Beim listings-Bucket ist das Tenant-Keying schon das Primärlimit oben →
-        # das schwächere Fairness-Limit hier würde es fälschlich zuerst greifen
-        # lassen; deshalb nur für die übrigen (IP-gekeyten) Buckets anwenden.
+        # Zusätzliches Tenant-Fairness-Limit für eingeloggte Requests. Der
+        # Schlüssel wird PRO IP gekeyt (tenant:{tenant}:ip:{ip}), NICHT global
+        # pro Tenant: die tenant_id stammt aus einem unsignierten JWT
+        # (_tenant_from_bearer). Ein globaler tenant:{tenant}-Zähler ließe sich
+        # sonst mit einer gefälschten Opfer-tenant_id von außen füllen und würde
+        # so echte Nutzer dieses Tenants tenant-weit aussperren (Cross-Tenant-
+        # DoS). Pro-IP-Keying begrenzt einen Angreifer auf sein eigenes Fenster
+        # und erhält den Fairness-Zweck (Büro-NAT: eine IP, mehrere Mitarbeiter).
+        # Beim listings-Bucket ist das Tenant-Keying schon das Primärlimit oben.
         if tenant and bucket_name != "listings":
             t_decision = await limiter.check(
-                f"tenant:{tenant}", self._buckets.tenant
+                f"tenant:{tenant}:ip:{ip or 'unknown'}", self._buckets.tenant
             )
             if not t_decision.degraded and not t_decision.allowed:
                 return self._reject(t_decision, "tenant", path, scope="tenant")

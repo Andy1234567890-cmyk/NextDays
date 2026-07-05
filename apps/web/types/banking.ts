@@ -40,6 +40,8 @@ export interface ModalTransaction {
   verwendungszweck: string;
   buchungstag: string;
   betrag: number;
+  // Währung der Transaktion (aus der Bank-Quelle; nie €-Hardcode).
+  currency?: string;
   accountId: string;
   // Erweiterte Felder (optional für Kompatibilität)
   status?: 'processed' | 'pending' | 'failed' | 'duplicate' | 'adjustment' | 'linked';

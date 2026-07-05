@@ -9,6 +9,7 @@ invoices_reservation_active_uq aus 0092 für eine korrigierte Rechnung frei).
 from datetime import UTC, datetime
 from decimal import Decimal
 
+from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.logging import get_logger
@@ -128,24 +129,38 @@ def create_storno_invoice(
         .execute()
     ).data or []
     if lines:
-        db.table("invoice_line_items").insert(
-            [
-                {
-                    "invoice_id": storno["id"],
-                    "position": li.get("position"),
-                    "description": li.get("description"),
-                    "quantity": li.get("quantity"),
-                    "unit": li.get("unit"),
-                    "unit_price": neg(li.get("unit_price")),
-                    "tax_rate": li.get("tax_rate"),
-                    "discount_percent": li.get("discount_percent"),
-                    "net_amount": neg(li.get("net_amount")),
-                    "tax_amount": neg(li.get("tax_amount")),
-                    "gross_amount": neg(li.get("gross_amount")),
-                }
-                for li in lines
-            ]
-        ).execute()
+        try:
+            db.table("invoice_line_items").insert(
+                [
+                    {
+                        "invoice_id": storno["id"],
+                        "position": li.get("position"),
+                        "description": li.get("description"),
+                        "quantity": li.get("quantity"),
+                        "unit": li.get("unit"),
+                        "unit_price": neg(li.get("unit_price")),
+                        "tax_rate": li.get("tax_rate"),
+                        "discount_percent": li.get("discount_percent"),
+                        "net_amount": neg(li.get("net_amount")),
+                        "tax_amount": neg(li.get("tax_amount")),
+                        "gross_amount": neg(li.get("gross_amount")),
+                    }
+                    for li in lines
+                ]
+            ).execute()
+        except APIError as exc:
+            # Storno-Kopf ist schon geschrieben, das Original aber noch NICHT
+            # storniert. Schlägt der Positions-Insert fehl, bliebe ein leerer
+            # Storno-Kopf zurück, den ein Retry (über existing_storno) fälschlich
+            # als fertigen, positionslosen Beleg ausgäbe. Kopf zurückrollen, damit
+            # der Retry sauber von vorn beginnt.
+            db.table("invoices").delete().eq("id", storno["id"]).eq(
+                "tenant_id", tenant_id
+            ).execute()
+            raise BuchhaltungError(
+                "Storno-Positionen konnten nicht gespeichert werden.",
+                status_code=500,
+            ) from exc
 
     # Original als storniert markieren — gibt den Unique-Index frei.
     db.table("invoices").update(

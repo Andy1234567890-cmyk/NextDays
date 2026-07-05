@@ -395,6 +395,16 @@ class _MoveQuery:
         self._lt = val
         return self
 
+    def lte(self, col, val) -> "_MoveQuery":  # noqa: ANN001
+        # Range-Filter für _days_still_booked_by_others (check_in <= hi).
+        self._lte = (col, val)
+        return self
+
+    def gt(self, col, val) -> "_MoveQuery":  # noqa: ANN001
+        # Range-Filter für _days_still_booked_by_others (check_out > lo).
+        self._gt = (col, val)
+        return self
+
     def order(self, *_a, **_k) -> "_MoveQuery":
         return self
 
@@ -414,6 +424,12 @@ class _MoveQuery:
         if self._gte is not None and r.get("date", "") < self._gte:
             return False
         if self._lt is not None and r.get("date", "") >= self._lt:
+            return False
+        lte = getattr(self, "_lte", None)
+        if lte is not None and str(r.get(lte[0], "")) > lte[1]:
+            return False
+        gt = getattr(self, "_gt", None)
+        if gt is not None and str(r.get(gt[0], "")) <= gt[1]:
             return False
         return True
 
@@ -791,3 +807,34 @@ def test_map_booking_conflict_codes() -> None:
         "message": "kaputt", "code": "42P01", "hint": None, "details": None,
     })
     assert _map_booking_conflict(other) is other
+
+
+def test_cancel_keeps_days_still_booked_by_ota() -> None:
+    """Storniert man eine lokale Buchung, die sich mit einer OTA-Buchung
+    überlappt, dürfen die überlappenden Tage NICHT freigegeben werden (sonst
+    würde ein real belegter Tag an Channex als frei zurückgemeldet)."""
+    store = {
+        "users": [{"id": "u", "role": "admin", "permissions": _FULL_PERMS}],
+        "properties": [{"id": "p1", "tenant_id": "t1", "title": "A1"}],
+        "reservations": [
+            # lokale Buchung (wird storniert), 01.-03.
+            {"id": "r-local", "tenant_id": "t1", "property_id": "p1",
+             "channel": "direct", "check_in": "2026-07-01", "check_out": "2026-07-03",
+             "status": "confirmed", "total_amount": 100, "currency": "EUR"},
+            # OTA-Buchung überlappt am 02., bleibt aktiv
+            {"id": "r-ota", "tenant_id": "t1", "property_id": "p1",
+             "channel": "booking", "source_channex_booking_id": "OTA-1",
+             "check_in": "2026-07-02", "check_out": "2026-07-04",
+             "status": "confirmed", "total_amount": 100, "currency": "EUR"},
+        ],
+        "availability": [
+            {"property_id": "p1", "date": "2026-07-01", "status": "booked", "source": "direct"},
+            {"property_id": "p1", "date": "2026-07-02", "status": "booked", "source": "booking"},
+        ],
+    }
+    svc = _move_db(store)
+    svc.cancel(AuthContext(user_id="u", tenant_id="t1", role="admin"), "r-local", "Testgrund")
+    avail = {r["date"]: r["status"] for r in store["availability"]}
+    # 01. wird frei (nur lokal belegt), 02. bleibt booked (OTA belegt ihn noch).
+    assert avail["2026-07-01"] == "open"
+    assert avail["2026-07-02"] == "booked"

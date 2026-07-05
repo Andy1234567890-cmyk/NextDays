@@ -178,13 +178,41 @@ class SiteConfigService:
             "status": DomainStatus.pending.value,
             "ssl_status": ssl.get("status"),
         }
-        res = self._db.table("tenant_custom_domains").insert(payload).execute()
+        # Der CF-Hostname ist bereits angelegt. Schlägt der DB-Insert fehl (leere
+        # Rückgabe ODER Unique-Verletzung durch eine parallele Registrierung —
+        # die Vorab-Prüfung oben ist TOCTOU), würde er sonst als Waise bei
+        # Cloudflare zurückbleiben (nie über remove_domain aufräumbar, blockiert
+        # ggf. eine spätere legitime Registrierung). Daher: bei jedem Fehler den
+        # CF-Hostname wieder löschen (best-effort), dann sauber melden.
+        try:
+            res = self._db.table("tenant_custom_domains").insert(payload).execute()
+        except Exception as exc:  # noqa: BLE001 — DB-Fehler → CF-Rollback
+            self._rollback_cf_hostname(cf_id)
+            # Unique-Verletzung (parallele Registrierung) als 409 melden.
+            if "duplicate" in str(exc).lower() or "unique" in str(exc).lower():
+                raise SiteConfigError(
+                    "Domain ist bereits vergeben.", status_code=409
+                ) from exc
+            raise SiteConfigError(
+                "Domain konnte nicht gespeichert werden.", status_code=500
+            ) from exc
         if not res.data:
+            self._rollback_cf_hostname(cf_id)
             raise SiteConfigError(
                 "Domain konnte nicht gespeichert werden.", status_code=500
             )
         row = res.data[0]
         return self._domain_row(row, dns_records=self._dns_records(domain, ssl))
+
+    def _rollback_cf_hostname(self, cf_id: str | None) -> None:
+        """Verwaisten Cloudflare-Custom-Hostname wieder entfernen (best-effort —
+        ein Fehler beim Aufräumen darf den ursprünglichen Fehler nicht überdecken)."""
+        if not cf_id:
+            return
+        try:
+            self._cf.delete_custom_hostname(cf_id)
+        except Exception as exc:  # noqa: BLE001
+            log.warning("cf_hostname_rollback_failed", cf_id=cf_id, error=str(exc)[:200])
 
     def sync_domain(
         self, ctx: AuthContext, domain_id: str

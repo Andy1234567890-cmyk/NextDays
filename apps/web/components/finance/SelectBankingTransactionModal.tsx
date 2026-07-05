@@ -160,6 +160,9 @@ export default function SelectBankingTransactionModal({
       verwendungszweck: finapiTx.purpose || 'Keine Beschreibung',
       buchungstag: convertFinAPIDate(finapiTx.bookingDate),
       betrag: finapiTx.amount,
+      // Währung aus der Bank-Transaktion mitführen (nie €-Hardcode); ohne Angabe
+      // leer → formatCurrency zeigt die reine Zahl (kein falsches Symbol).
+      currency: finapiTx.currency || '',
       offen: true, // Wird später basierend auf TransactionLinks aktualisiert
       verknuepfungen: [], // Would be populated from your internal system
       accountId: finapiTx.accountId.toString(),
@@ -353,10 +356,15 @@ export default function SelectBankingTransactionModal({
     }
   }, [isOpen]); // load-Funktionen nicht memoized → aus Deps genommen (Loop-Schutz)
 
-  const formatCurrency = (amount: number, currency: string = 'EUR') => {
+  const formatCurrency = (amount: number, currency?: string) => {
+    // Kein €-Hardcode: ungültiger/fehlender ISO-Code → reine Zahl (kein falsches
+    // Symbol, kein Intl-Crash), analog lib/currency.ts.
+    const code = typeof currency === 'string' ? currency.trim().toUpperCase() : '';
+    const valid = /^[A-Z]{3}$/.test(code);
     return new Intl.NumberFormat('de-DE', {
-      style: 'currency',
-      currency: currency,
+      ...(valid ? { style: 'currency' as const, currency: code } : {}),
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount);
   };
 
@@ -627,7 +635,7 @@ export default function SelectBankingTransactionModal({
                               transaction.betrag > 0 ? 'text-green-600' : 'text-red-600'
                             }`}
                           >
-                            {formatCurrency(transaction.betrag, 'EUR')}
+                            {formatCurrency(transaction.betrag, transaction.currency)}
                           </div>
                           {isAmountMatch(transaction.betrag, invoiceAmount) && (
                             <div className="mt-1">

@@ -10,6 +10,7 @@ from __future__ import annotations
 import secrets
 from datetime import UTC, datetime
 
+from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.logging import get_logger
@@ -441,7 +442,27 @@ def purchase_addons(
         )
     if not payload:
         return []
-    created = (db.table("reservation_addons").insert(payload).execute()).data or []
+    # Idempotenz gegen Doppelklick/Retry: der partielle Unique-Index
+    # reservation_addons_active_uidx (0109) verhindert eine zweite aktive Zeile
+    # je (reservation_id, addon_id). Kollidiert der Insert, war der Kauf bereits
+    # gebucht — dann die BESTEHENDEN Zeilen zurückgeben statt doppelt zu berechnen.
+    try:
+        created = (
+            db.table("reservation_addons").insert(payload).execute()
+        ).data or []
+    except APIError as exc:
+        if "reservation_addons_active_uidx" not in str(exc):
+            raise
+        log.info("addon_purchase_idempotent_skip", reservation_id=reservation_id)
+        addon_ids = [p["addon_id"] for p in payload]
+        created = (
+            db.table("reservation_addons")
+            .select("*")
+            .eq("reservation_id", reservation_id)
+            .in_("addon_id", addon_ids)
+            .neq("status", "cancelled")
+            .execute()
+        ).data or []
 
     # Trigger „addon_purchased": je Item eine Vorbereitungs-Aufgabe (best-effort,
     # lazy import → kein Slice-Importzyklus).

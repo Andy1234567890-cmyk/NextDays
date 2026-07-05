@@ -543,8 +543,17 @@ class BuchhaltungService:
         is_klein = bool(
             payload.get("isSmallBusiness") or payload.get("is_kleinunternehmer")
         )
-        invoice_number = payload.get("invoiceNumber") or payload.get("number")
         status = payload.get("status") or "draft"
+        # GoBD-Nummer NUR bei Finalisierung und NUR serverseitig atomar ziehen —
+        # nie die (fälschbare/fabrizierte) Client-Nummer übernehmen. Entwürfe
+        # bekommen KEINE Nummer (sonst reißt jeder verworfene Entwurf eine
+        # dauerhafte Lücke in den fortlaufenden Nummernkreis).
+        invoice_number = None
+        invoice_sequence = None
+        if status != "draft":
+            num = self.next_number(ctx, "Rechnung")
+            invoice_number = num["formattedNumber"]
+            invoice_sequence = num["sequentialNumber"]
 
         # Buchungs-Brücke: „Rechnung aus Buchung" aus dem Formular. Regeln wie
         # beim Check-out: Buchung muss dem Tenant gehören, eingecheckt und
@@ -607,7 +616,7 @@ class BuchhaltungService:
             "tenant_id": tenant_id,
             "customer_id": payload.get("customerId") or payload.get("customer_id"),
             "invoice_number": invoice_number,
-            "invoice_sequence": payload.get("sequentialNumber"),
+            "invoice_sequence": invoice_sequence,
             "invoice_year": payload.get("year"),
             "invoice_type": "storno" if payload.get("isStorno") else "invoice",
             "status": status,
@@ -637,11 +646,20 @@ class BuchhaltungService:
         try:
             res = self._db.table("invoices").insert(row).execute()
         except APIError as exc:
+            msg = str(exc)
             # Unique-Index invoices_reservation_active_uq (0092): parallel wurde
             # bereits eine aktive Rechnung zu dieser Buchung erzeugt.
-            if reservation_id and "invoices_reservation_active_uq" in str(exc):
+            if reservation_id and "invoices_reservation_active_uq" in msg:
                 raise BuchhaltungError(
                     "Zu dieser Buchung existiert bereits eine Rechnung.",
+                    status_code=409,
+                ) from exc
+            # GoBD-Backstop invoices_tenant_number_uidx (0105): zwei aktive Belege
+            # desselben Tenants mit identischer Nummer → fachlicher 409 statt
+            # eines rohen 500 mit DB-Detailtext.
+            if "invoices_tenant_number_uidx" in msg:
+                raise BuchhaltungError(
+                    "Diese Rechnungsnummer ist bereits vergeben.",
                     status_code=409,
                 ) from exc
             raise
@@ -682,7 +700,20 @@ class BuchhaltungService:
                 "gross_amount": str(_q(net + tax)),
             })
         if line_rows:
-            self._db.table("invoice_line_items").insert(line_rows).execute()
+            try:
+                self._db.table("invoice_line_items").insert(line_rows).execute()
+            except APIError as exc:
+                # Kopf ist schon geschrieben — schlägt der Positions-Insert fehl,
+                # bliebe eine Rechnung mit Summen aber ohne Positionen zurück
+                # (Kopf ≠ Σ Positionen, GoBD-widersprüchlich). Kopf zurückrollen
+                # (hard delete des gerade angelegten Belegs) und sauber melden.
+                self._db.table("invoices").delete().eq("id", invoice_id).eq(
+                    "tenant_id", tenant_id
+                ).execute()
+                raise BuchhaltungError(
+                    "Rechnungspositionen konnten nicht gespeichert werden.",
+                    status_code=500,
+                ) from exc
 
         return {"id": invoice_id, "invoice_number": invoice_number}
 
@@ -1028,7 +1059,7 @@ class BuchhaltungService:
         tenant_id = self._require_tenant(ctx)
         current = (
             self._db.table("invoices")
-            .select("is_locked, is_kleinunternehmer")
+            .select("is_locked, is_kleinunternehmer, status, invoice_number")
             .eq("id", invoice_id)
             .eq("tenant_id", tenant_id)
             .limit(1)
@@ -1036,11 +1067,19 @@ class BuchhaltungService:
         )
         if not current.data:
             raise BuchhaltungError("Rechnung nicht gefunden.", status_code=404)
-        if current.data[0].get("is_locked"):
+        row = current.data[0]
+        # Nur echte Entwürfe ohne Nummer sind änderbar (GoBD, wie delete_invoice).
+        if (
+            bool(row.get("is_locked"))
+            or row.get("status") not in self._MUTABLE_INVOICE_STATUSES
+            or bool(row.get("invoice_number"))
+        ):
             raise BuchhaltungError(
-                "Rechnung ist GoBD-gesperrt und nicht änderbar.", status_code=409
+                "Festgeschriebene Rechnungen sind GoBD-geschützt und nicht "
+                "änderbar (nur Entwürfe ohne Nummer).",
+                status_code=409,
             )
-        is_klein = bool(current.data[0].get("is_kleinunternehmer"))
+        is_klein = bool(row.get("is_kleinunternehmer"))
 
         patch = req.model_dump(mode="json", exclude_unset=True, exclude={"items"})
         # Positionen ersetzen + Summen neu berechnen, falls items übergeben.
@@ -1068,11 +1107,18 @@ class BuchhaltungService:
             ).execute()
         return self.get_invoice(ctx, invoice_id)
 
+    # Festgeschriebene Belege (GoBD): sobald eine Rechnung eine Nummer trägt oder
+    # nicht mehr Entwurf ist, ist sie unveränderbar UND unlöschbar. is_locked
+    # allein reicht NICHT als Gate (Default false, wird nirgends gesetzt) — sonst
+    # ließe sich jede finalisierte, nummerierte Rechnung soft-löschen und ihre
+    # Nummer (der Unique-Index greift nur bei deleted_at IS NULL) neu vergeben.
+    _MUTABLE_INVOICE_STATUSES = frozenset({"draft"})
+
     def delete_invoice(self, ctx: AuthContext, invoice_id: str) -> None:
         tenant_id = self._require_tenant(ctx)
         current = (
             self._db.table("invoices")
-            .select("is_locked")
+            .select("is_locked, status, invoice_number")
             .eq("id", invoice_id)
             .eq("tenant_id", tenant_id)
             .limit(1)
@@ -1080,9 +1126,19 @@ class BuchhaltungService:
         )
         if not current.data:
             raise BuchhaltungError("Rechnung nicht gefunden.", status_code=404)
-        if current.data[0].get("is_locked"):
+        row = current.data[0]
+        # Löschbar sind NUR echte Entwürfe ohne vergebene Nummer. Alles andere
+        # (finalized/paid/cancelled/storno oder eine bereits gezogene Nummer) ist
+        # ein festgeschriebener GoBD-Beleg → 409.
+        is_finalized = (
+            bool(row.get("is_locked"))
+            or row.get("status") not in self._MUTABLE_INVOICE_STATUSES
+            or bool(row.get("invoice_number"))
+        )
+        if is_finalized:
             raise BuchhaltungError(
-                "Rechnung ist GoBD-gesperrt und kann nicht gelöscht werden.",
+                "Festgeschriebene Rechnungen sind GoBD-geschützt und können nicht "
+                "gelöscht werden (nur Entwürfe ohne Nummer).",
                 status_code=409,
             )
         self._db.table("invoices").update({"deleted_at": "now()"}).eq(

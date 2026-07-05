@@ -112,6 +112,38 @@ class ReservationsService:
             raise ReservationError("Kein Tenant im Konto.", status_code=400)
         return ctx.tenant_id
 
+    def _days_still_booked_by_others(
+        self, property_id: str, days: list[str], exclude_reservation_id: str
+    ) -> set[str]:
+        """Von `days` diejenigen, die noch durch eine ANDERE aktive Reservierung
+        desselben Objekts belegt sind (z. B. eine importierte OTA-Buchung — die
+        darf mit einer lokalen Buchung überlappen, der EXCLUDE-Constraint nimmt
+        OTA-Buchungen aus). Solche Tage dürfen beim Stornieren/Verschieben der
+        lokalen Reservierung NICHT freigegeben und NICHT an Channex zurück-
+        gemeldet werden, sonst werden real belegte Tage wieder verkaufbar."""
+        if not days:
+            return set()
+        lo, hi = min(days), max(days)
+        rows = (
+            self._db()
+            .table("reservations")
+            .select("check_in, check_out")
+            .eq("property_id", property_id)
+            .neq("id", exclude_reservation_id)
+            .neq("status", "cancelled")
+            .lte("check_in", hi)
+            .gt("check_out", lo)
+            .execute()
+        ).data or []
+        occupied: set[str] = set()
+        wanted = set(days)
+        for r in rows:
+            for d in _nights(_as_date(r["check_in"]), _as_date(r["check_out"])):
+                iso = d.isoformat()
+                if iso in wanted:
+                    occupied.add(iso)
+        return occupied
+
     def _owner_scope_pids(self, ctx: AuthContext) -> list[str] | None:
         """Objekt-IDs, auf die ein Eigentümer eingeschränkt ist (§4.2).
 
@@ -617,6 +649,24 @@ class ReservationsService:
                 "Ziel-Zeitraum enthält bereits belegte/gesperrte Tage.",
                 status_code=409,
             )
+        # Stop-Sell-Schutz für die Ziel-Nächte — wie create()/create_public_booking.
+        # Ein Stop-Sell-Tag kann in availability noch als 'open' geführt sein
+        # (Sync-Verzug), deshalb explizit die stop_sell-Tabelle prüfen; sonst
+        # landet ein Move auf gesperrten Tagen, die auf OTAs weiter verkauft werden.
+        stopped = (
+            self._db()
+            .table("stop_sell")
+            .select("date")
+            .eq("property_id", req.property_id)
+            .gte("date", req.check_in.isoformat())
+            .lt("date", req.check_out.isoformat())
+            .execute()
+        ).data or []
+        if stopped:
+            raise ReservationError(
+                "Ziel-Zeitraum enthält Stop-Sell-Tage. Bitte zuerst den "
+                "Stop-Sell aufheben.", status_code=409,
+            )
 
         # Reservierungs-Zeile ZUERST umziehen: der EXCLUDE-Constraint
         # reservations_no_local_overlap (0104) validiert den Ziel-Zeitraum
@@ -653,6 +703,10 @@ class ReservationsService:
         # Alte Belegung freigeben: nur Tage, die NICHT erneut belegt werden
         # (beim Resize am Platz bleiben überlappende Tage booked).
         release = sorted(old_nights - new_keys) if same_property else sorted(old_nights)
+        # Tage, die noch von einer anderen aktiven Buchung (z. B. OTA) belegt
+        # sind, nicht freigeben (kein availability=1-Push für real belegte Tage).
+        still = self._days_still_booked_by_others(old_property, release, reservation_id)
+        release = [d for d in release if d not in still]
         if release:
             self._db().table("availability").upsert(
                 [
@@ -769,6 +823,11 @@ class ReservationsService:
         property_id = current["property_id"]
         nights = _nights(_as_date(current["check_in"]), _as_date(current["check_out"]))
         release = [d.isoformat() for d in nights]
+        # Tage, die noch von einer ANDEREN aktiven Buchung (z. B. OTA) belegt
+        # sind, NICHT freigeben — sonst würde ein real belegter Tag an Channex
+        # als verkaufbar zurückgemeldet (Doppelbuchung).
+        still = self._days_still_booked_by_others(property_id, release, reservation_id)
+        release = [d for d in release if d not in still]
         if release:
             self._db().table("availability").upsert(
                 [

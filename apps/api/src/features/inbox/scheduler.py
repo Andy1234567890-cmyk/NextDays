@@ -54,8 +54,20 @@ def _send_now(scheduled_id: str) -> None:
     if not row:
         return
     s = row[0]
-    if s.get("status") != "pending":
-        return  # bereits gesendet/abgebrochen
+    # ATOMARES CLAIM: nur EIN Versandpfad darf die Zeile senden. Der In-App-Timer
+    # UND der Cron-Sicherheitsnetz-Tick verarbeiten dieselben pending-Zeilen; ohne
+    # Claim entstünde ein TOCTOU-Fenster zwischen Read und dem finalen 'sent'-
+    # Update → Gast bekäme die Nachricht zweimal. UPDATE ... WHERE status='pending'
+    # gewinnt genau einer; die leere Rückgabe zeigt den Verlierern „schon geclaimt".
+    claimed = (
+        db.table("inbox_scheduled_message")
+        .update({"status": "sending"})
+        .eq("id", scheduled_id)
+        .eq("status", "pending")
+        .execute()
+    ).data
+    if not claimed:
+        return  # anderer Pfad hat die Zeile bereits geclaimt/gesendet/abgebrochen
     svc = InboxService(service_client=db)
     try:
         ctx = AuthContext(user_id="scheduler", tenant_id=s["tenant_id"])

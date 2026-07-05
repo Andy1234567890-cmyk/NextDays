@@ -506,35 +506,18 @@ export function useInvoiceActions({
       const finalPaymentTerms =
         [formData.paymentTerms?.trim(), skontoSentence].filter(Boolean).join('\n\n') || undefined;
 
-      // � KRITISCHER FIX: Generiere Rechnungsnummer DYNAMISCH beim Speichern!
-      // Verhindert Race Conditions bei gleichzeitiger Rechnungserstellung
+      // Die GoBD-Rechnungsnummer wird AUSSCHLIESSLICH serverseitig atomar über
+      // next_document_number vergeben — und nur bei Finalisierung, nicht für
+      // Entwürfe (sonst reißt jeder verworfene Entwurf eine Lücke). Der Client
+      // zieht/sendet KEINE Nummer mehr (kein Date.now()-Fallback, der außerhalb
+      // des Nummernkreises läge und GoBD-Lückenlosigkeit brechen würde).
 
-      let finalInvoiceNumber = '';
-      let finalSequentialNumber = 1;
-
-      try {
-        const numberResult = (await api.post(`/api/v1/number-sequences/next?company_id=${uid}`, {
-          type: 'Rechnung',
-        })) as any;
-        finalInvoiceNumber =
-          numberResult?.formattedNumber || `RE-${Date.now().toString().slice(-4)}`;
-        finalSequentialNumber = numberResult?.sequentialNumber || 1;
-      } catch (numberError) {
-        // Fallback nur im Notfall — Ursache loggen (Diagnose Nummernkreis).
-        console.error('Fehler bei Rechnungsnummer-Generierung:', numberError);
-        finalInvoiceNumber = `RE-${Date.now().toString().slice(-4)}`;
-        finalSequentialNumber = Date.now() % 1000;
-      }
-
-      // �🚨 COMPLETE INVOICE DATA OBJECT - **EVERY SINGLE FIELD** FROM THE FORM!
+      // 🚨 COMPLETE INVOICE DATA OBJECT - **EVERY SINGLE FIELD** FROM THE FORM!
       // This object must contain ALL form fields to ensure complete data persistence
       const invoiceData = {
-        // Basic Invoice Info - ID will be assigned by the API
+        // Basic Invoice Info - ID + Nummer werden vom Server vergeben.
         id: '', // Assigned by the API after creation
         companyId: uid,
-        invoiceNumber: finalInvoiceNumber, // ✅ Atomisch generierte Nummer
-        number: finalInvoiceNumber, // ✅ Atomisch generierte Nummer
-        sequentialNumber: finalSequentialNumber, // ✅ Korrekte sequentielle Nummer
         status: asDraft ? 'draft' : 'finalized',
 
         // Dates - ALLE Datumswerte aus dem Formular

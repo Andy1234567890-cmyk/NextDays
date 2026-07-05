@@ -37,21 +37,23 @@ def _field(obj: Any, key: str, default: Any = None) -> Any:  # noqa: ANN401
         return default
 
 
-def _already_processed(db: Client, event_id: str, event_type: str, now_iso: str) -> bool:
-    """True, wenn die Event-ID schon verarbeitet wurde. Sonst wird sie vermerkt."""
-    existing = (
+def _claim_event(db: Client, event_id: str, event_type: str, now_iso: str) -> bool:
+    """Event-ID ATOMAR reservieren. True = neu geclaimt (verarbeiten), False =
+    bereits vorhanden (Duplikat überspringen).
+
+    INSERT ... ON CONFLICT DO NOTHING statt SELECT-dann-INSERT: bei nebenläufiger
+    Duplikat-Zustellung (Stripe at-least-once) gewinnt genau einer, der Verlierer
+    bekommt eine leere Rückgabe — kein PK-Verletzungs-500 an Stripe."""
+    inserted = (
         db.table("stripe_webhook_event")
-        .select("id")
-        .eq("id", event_id)
-        .limit(1)
+        .upsert(
+            {"id": event_id, "type": event_type, "received_at": now_iso},
+            on_conflict="id",
+            ignore_duplicates=True,
+        )
         .execute()
     ).data
-    if existing:
-        return True
-    db.table("stripe_webhook_event").insert(
-        {"id": event_id, "type": event_type, "received_at": now_iso}
-    ).execute()
-    return False
+    return bool(inserted)
 
 
 def handle_stripe_event(
@@ -62,11 +64,26 @@ def handle_stripe_event(
     event_type: str = event["type"]
     log.info("stripe_webhook_received", event_type=event_type, event_id=event_id)
 
-    if _already_processed(db, event_id, event_type, now_iso):
+    if not _claim_event(db, event_id, event_type, now_iso):
         log.info("stripe_webhook_duplicate_skipped", event_id=event_id)
         return {"status": "duplicate"}
 
     obj = event["data"]["object"]
+    try:
+        result = _dispatch_stripe_event(db, event_type, obj, now_iso)
+    except Exception:
+        # Verarbeitung fehlgeschlagen → Claim wieder freigeben, damit der
+        # Stripe-Retry das Event erneut zustellt (sonst bliebe die Zahlung/
+        # Reservierung dauerhaft im falschen Status, weil das Event schon als
+        # „gesehen" markiert wäre).
+        db.table("stripe_webhook_event").delete().eq("id", event_id).execute()
+        raise
+    return result or {"status": "ok"}
+
+
+def _dispatch_stripe_event(
+    db: Client, event_type: str, obj: Mapping[str, Any], now_iso: str
+) -> dict[str, str] | None:
     match event_type:
         case "account.updated":
             _handle_account_updated(db, obj, now_iso)

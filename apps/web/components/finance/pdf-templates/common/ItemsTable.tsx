@@ -93,7 +93,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                     )}
                     {showVATPerPosition && (
                       <td className="px-3 py-4 text-right text-sm">
-                        {(() => { const r = (item as any).vatRate ?? (data as any).taxRate; return r == null ? '' : `${r}%`; })()}
+                        {(() => { const r = (item as any).vatRate ?? (item as any).taxRate ?? (data as any).vatRate; return r == null ? '' : `${r}%`; })()}
                       </td>
                     )}
                     <td className="px-3 py-4 text-right font-medium text-sm">
@@ -183,7 +183,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                   )}
                   {showVATPerPosition && (
                     <td className="px-2 py-2 text-right font-mono text-xs">
-                      {(() => { const r = (item as any).vatRate ?? (data as any).taxRate; return r == null ? '' : `${r}%`; })()}
+                      {(() => { const r = (item as any).vatRate ?? (item as any).taxRate ?? (data as any).vatRate; return r == null ? '' : `${r}%`; })()}
                     </td>
                   )}
                   <td className="px-2 py-2 text-right font-bold font-mono text-xs">
@@ -246,7 +246,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                 )}
                 {showVATPerPosition && (
                   <td className="border p-3 text-right text-sm">
-                    {(() => { const r = (item as any).vatRate ?? (data as any).taxRate; return r == null ? '' : `${r}%`; })()}
+                    {(() => { const r = (item as any).vatRate ?? (item as any).taxRate ?? (data as any).vatRate; return r == null ? '' : `${r}%`; })()}
                   </td>
                 )}
                 <td className="border p-3 text-right">

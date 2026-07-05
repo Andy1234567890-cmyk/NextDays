@@ -841,6 +841,19 @@ class InboxService:
         sent = 0
         failed = 0
         for s in due:
+            # ATOMARES CLAIM: der In-App-Timer (scheduler._send_now) verarbeitet
+            # dieselben pending-Zeilen. Nur wer die Zeile per UPDATE ...
+            # WHERE status='pending' auf 'sending' flippt, darf senden — sonst
+            # Doppelversand. Leere Rückgabe = anderer Pfad war schneller.
+            claimed = (
+                db.table("inbox_scheduled_message")
+                .update({"status": "sending"})
+                .eq("id", s["id"])
+                .eq("status", "pending")
+                .execute()
+            ).data
+            if not claimed:
+                continue
             try:
                 ctx = AuthContext(user_id="cron", tenant_id=s["tenant_id"])
                 self.send_message(ctx, s["thread_id"], s["body"], enforce_reply=False)
@@ -1022,6 +1035,16 @@ class InboxService:
         sent = 0
         failed = 0
         for s in due:
+            # Atomares Claim gegen überlappende Cron-Läufe (kein Doppelversand).
+            claimed = (
+                db.table("automation_scheduled_message")
+                .update({"status": "sending"})
+                .eq("id", s["id"])
+                .eq("status", "pending")
+                .execute()
+            ).data
+            if not claimed:
+                continue
             try:
                 ctx = AuthContext(user_id="cron", tenant_id=s["tenant_id"])
                 self.send_message(ctx, s["thread_id"], s["body"], enforce_reply=False)

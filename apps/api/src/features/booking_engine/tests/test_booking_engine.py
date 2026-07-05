@@ -292,7 +292,15 @@ def test_public_booking_maps_rpc_conflict_to_409(monkeypatch) -> None:  # noqa: 
     svc = BookingEngineService(service_client=db)
     monkeypatch.setattr(svc, "_property_tenant", lambda *_a: "t-1")
     monkeypatch.setattr(svc, "_upsert_guest", lambda *_a: None)
-    monkeypatch.setattr(svc, "_price_from", lambda *_a: (None, "EUR"))
+    # Preis kommt serverseitig aus dem Resolver — Quote mocken.
+    from types import SimpleNamespace
+
+    import src.features.pricing.resolver as resolver_mod
+
+    monkeypatch.setattr(
+        resolver_mod.PricingResolver, "quote",
+        lambda self, req: SimpleNamespace(total=300.0, currency="EUR", lines=[]),
+    )
 
     req = PublicBookingRequest(
         property_id="p-1",
@@ -310,3 +318,20 @@ def test_public_booking_maps_rpc_conflict_to_409(monkeypatch) -> None:  # noqa: 
         svc.create_public_booking(req)
     assert exc.value.status_code == 409
     assert exc.value.message == "Zeitraum ist nicht mehr verfügbar."
+
+
+def test_property_tenant_rejects_non_active() -> None:
+    """draft/inactive-Objekte sind nicht öffentlich buchbar → _property_tenant None."""
+    from unittest.mock import MagicMock
+
+    from src.features.booking_engine.service import BookingEngineService
+
+    def _svc(status_val: str) -> BookingEngineService:
+        db = MagicMock(name="db")
+        chain = db.table.return_value.select.return_value.eq.return_value.limit.return_value
+        chain.execute.return_value.data = [{"tenant_id": "t-1", "status": status_val}]
+        return BookingEngineService(service_client=db)
+
+    assert _svc("active")._property_tenant("p-1") == "t-1"
+    assert _svc("draft")._property_tenant("p-1") is None
+    assert _svc("inactive")._property_tenant("p-1") is None

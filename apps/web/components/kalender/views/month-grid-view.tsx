@@ -108,9 +108,20 @@ export function CalendarMonthGridView({
     void load();
   }, [load]);
 
+  // Realtime auf ALLE Tabellen, die den angezeigten Tagespreis + Min-Stay +
+  // Belegung speisen (wie calendar-board) — sonst bleiben Preis/Min-Stay/Sperre
+  // stale, bis der Nutzer den Monat wechselt (Realtime-Pflicht). Der Preis kommt
+  // aus dem Resolver über price_overrides > dynamic_prices > weekday
+  // (property_pricing_config) > base (rate_plans); dp_settings schaltet Dynamic
+  // Pricing je Objekt; stop_sell beeinflusst die als 'blocked' gezeigte Belegung.
   useRealtime({ table: "availability", onChange: load });
   useRealtime({ table: "reservations", onChange: load });
   useRealtime({ table: "price_overrides", onChange: load });
+  useRealtime({ table: "stop_sell", onChange: load });
+  useRealtime({ table: "rate_plans", onChange: load });
+  useRealtime({ table: "property_pricing_config", onChange: load });
+  useRealtime({ table: "dynamic_prices", onChange: load });
+  useRealtime({ table: "dp_settings", onChange: load });
 
   const prevMonth = () => {
     if (month === 0) {

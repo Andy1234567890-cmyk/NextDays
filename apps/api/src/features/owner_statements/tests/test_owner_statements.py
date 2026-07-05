@@ -756,3 +756,21 @@ def test_owner_preview_only_self() -> None:
     )
     resp = svc.preview(_owner_ctx(), eigen)
     assert resp.owner_id == "o-1"
+
+
+# --- hidden_from_owner: Owner sieht versteckte Ausgaben weder gelistet noch in Summe --
+
+def test_visible_expenses_filters_for_owner_only() -> None:
+    svc = _svc()
+    exps = [
+        {"id": "e1", "amount": "100", "hidden_from_owner": False},
+        {"id": "e2", "amount": "50", "hidden_from_owner": True},
+    ]
+    from src.core.security import AuthContext
+
+    admin = AuthContext(user_id="a", tenant_id="t-1", role="admin")
+    owner = AuthContext(user_id="o", tenant_id="t-1", role="owner")
+    # Admin sieht beide, Owner nur die sichtbare.
+    assert len(svc._visible_expenses(admin, exps)) == 2
+    owner_view = svc._visible_expenses(owner, exps)
+    assert [e["id"] for e in owner_view] == ["e1"]

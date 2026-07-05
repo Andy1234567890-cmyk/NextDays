@@ -361,8 +361,11 @@ class BookingEngineService:
         )
 
     def _property_tenant(self, property_id: str) -> str | None:
-        """tenant_id einer veröffentlichten Property. Nur 'active' ist öffentlich
-        buchbar (kein draft)."""
+        """tenant_id einer ÖFFENTLICHEN Property. Nur 'active' ist öffentlich
+        buchbar/abrufbar — draft/inactive geben None zurück (→ 404), damit ein
+        noch nicht veröffentlichtes oder deaktiviertes Objekt nicht über die
+        geratene UUID direkt gebucht werden kann (der Docstring galt bisher nur
+        auf dem Papier — status wurde nicht geprüft)."""
         res = (
             self._db()
             .table("properties")
@@ -371,7 +374,7 @@ class BookingEngineService:
             .limit(1)
             .execute()
         ).data
-        if not res:
+        if not res or res[0].get("status") != "active":
             return None
         return res[0]["tenant_id"]
 
@@ -444,10 +447,24 @@ class BookingEngineService:
 
         guest_id = self._upsert_guest(tenant_id, req.contact)
 
-        # Währung aus dem Objekt (Rate-Plan) — nie hart auf EUR (27 EU-Länder).
-        _price, currency = self._price_from(
-            req.property_id, req.check_in, req.check_out
+        # Preis SERVERSEITIG über den zentralen Resolver bestimmen — der Gast darf
+        # den Betrag NICHT selbst setzen (req.total_amount wird ignoriert, sonst
+        # ließe sich eine 0-€-/Fantasiepreis-Buchung anlegen). Anders als die
+        # interne reservations.create gibt es hier keinen Mitarbeiter-Override.
+        from src.features.pricing.resolver import PricingResolver  # noqa: PLC0415
+        from src.features.pricing.schemas import QuoteRequest  # noqa: PLC0415
+
+        quote = PricingResolver(service_client=self._db()).quote(
+            QuoteRequest(
+                property_id=req.property_id,
+                check_in=req.check_in,
+                check_out=req.check_out,
+                guests=max(req.guests, 1),
+                channel="direct",
+            )
         )
+        total_amount = quote.total
+        currency = quote.currency
         # Reservierung + Kalender-Belegung + ari_outbox ATOMAR (RPC 0104):
         # Advisory-Lock je Objekt schließt das TOCTOU-Fenster zwischen dem Check
         # oben und dem Write — zwei gleichzeitige Gäste bekommen nie dieselbe
@@ -469,7 +486,7 @@ class BookingEngineService:
                             "check_in": req.check_in.isoformat(),
                             "check_out": req.check_out.isoformat(),
                             "status": "confirmed",
-                            "total_amount": req.total_amount,
+                            "total_amount": total_amount,
                             "currency": currency or None,
                         },
                         "p_source": "direct",
@@ -512,6 +529,14 @@ class BookingEngineService:
             tenant_id, req.property_id, req.check_in, req.check_out, 0,
             outbox_id=outbox_id,
         )
+        # Dynamic Pricing neu rechnen — eine Plattform-Buchung ändert Auslastung/
+        # Orphan-Lücken genauso wie eine interne Buchung (wie reservations.create).
+        try:
+            from src.jobs.queue import try_enqueue_recompute  # noqa: PLC0415
+
+            try_enqueue_recompute(self._db(), tenant_id, req.property_id)
+        except Exception as exc:  # noqa: BLE001 — darf die Buchung nie kippen
+            log.warning("public_booking_recompute_enqueue_failed", error=str(exc))
 
         # Loyalty-Aggregate des Gastes (Aufenthalte/Umsatz) neu berechnen.
         if guest_id:
@@ -686,24 +711,24 @@ class BookingEngineService:
         availability: int,
         outbox_id: str | None = None,
     ) -> None:
-        """Realtime-Push an Channex (Doppelbuchungsschutz). Fehler dürfen die
-        Buchung NICHT scheitern lassen (ari_outbox-Retry). `outbox_id` = die
-        bereits mit der Buchung persistierte ari_outbox-Zeile (RPC 0104) — der
-        Push arbeitet sie ab, statt eine zweite anzulegen."""
+        """Channex-Availability-Push als JOB einreihen (nicht synchron im
+        Request-Pfad) — wie alle anderen Buchungs-/Kalenderpfade. Ein langsamer/
+        ausgefallener Channex-Call darf die öffentliche Gastbuchung nicht
+        blockieren; der Worker arbeitet den Push ab. `outbox_id` = die mit der
+        Buchung atomar persistierte ari_outbox-Zeile (RPC 0104) — der Job
+        arbeitet sie ab, statt eine zweite anzulegen. Die Outbox ist der
+        Backstop, falls das Enqueue scheitert (process_ari_outbox-Tick)."""
         if self._client is None:
             return
-        try:
-            from src.features.channel_manager.service import ChannelManagerService
+        from src.jobs.queue import try_enqueue_ari  # noqa: PLC0415
 
-            ChannelManagerService(
-                service_client=self._client
-            ).push_availability_for_property(
-                tenant_id,
-                property_id,
-                check_in,
-                check_out - timedelta(days=1),
-                availability,
-                outbox_id=outbox_id,
-            )
-        except Exception as exc:  # noqa: BLE001
-            log.warning("public_booking_channex_push_failed", error=str(exc))
+        fields: dict[str, object] = {
+            "date_from": check_in.isoformat(),
+            "date_to": (check_out - timedelta(days=1)).isoformat(),  # Abreise exkl.
+            "availability": availability,
+        }
+        if outbox_id:
+            fields["outbox_id"] = outbox_id
+        try_enqueue_ari(
+            self._client, tenant_id, property_id, "availability", fields,
+        )

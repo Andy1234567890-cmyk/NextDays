@@ -35,26 +35,27 @@ log = get_logger("nextdays.channex.budget")
 # per INCR verbrauchen. So wird nie ein Account-Token verbrannt, wenn die
 # Property-Ebene ablehnt (sonst leerte ein einzelnes überlastetes Objekt über
 # seine Retries das kontoweite Budget aller anderen Objekte).
-# Rückgabe: {allowed(0|1), account_ttl, prop_ttl}. KEYS[1]=account,
-# KEYS[2]=prop(optional). ARGV: 1=acc_max 2=acc_window 3=prop_max 4=prop_window
-# 5=has_prop(0|1).
+# Rückgabe: {allowed(0|1), account_ttl, prop_ttl}. Bei Ablehnung trägt NUR die
+# tatsächlich BLOCKIERENDE Ebene ihre echte TTL; die nicht-blockierende Ebene
+# gibt -2 zurück (= „nicht relevant"). So kann der Aufrufer retry_after aus der
+# richtigen Ebene bestimmen (früher nahm min() fälschlich die kürzere Property-
+# TTL, auch wenn nur das Account-Budget voll war → vorzeitiges Aufwachen +
+# Re-Defer-Churn). KEYS[1]=account, KEYS[2]=prop(optional). ARGV: 1=acc_max
+# 2=acc_window 3=prop_max 4=prop_window 5=has_prop(0|1).
 _TWO_LEVEL_LUA = """
 local has_prop = tonumber(ARGV[5])
 local acc = tonumber(redis.call('GET', KEYS[1]) or '0')
-local acc_ttl = redis.call('TTL', KEYS[1])
 local prop = 0
-local prop_ttl = -2
 if has_prop == 1 then
   prop = tonumber(redis.call('GET', KEYS[2]) or '0')
-  prop_ttl = redis.call('TTL', KEYS[2])
 end
 -- Würde das Verbrauchen eine Ebene über ihr Maximum heben? Dann ablehnen,
--- OHNE zu inkrementieren.
+-- OHNE zu inkrementieren — und NUR die blockierende Ebene mit echter TTL melden.
 if acc + 1 > tonumber(ARGV[1]) then
-  return {0, acc_ttl, prop_ttl}
+  return {0, redis.call('TTL', KEYS[1]), -2}
 end
 if has_prop == 1 and prop + 1 > tonumber(ARGV[3]) then
-  return {0, acc_ttl, prop_ttl}
+  return {0, -2, redis.call('TTL', KEYS[2])}
 end
 -- Beide Ebenen haben Platz → beide atomar verbrauchen.
 local acc_new = redis.call('INCR', KEYS[1])
@@ -118,15 +119,23 @@ class ChannexBudget:
             )
         if int(allowed) == 1:
             return BudgetDecision(allowed=True, retry_after=0)
-        # Abgelehnt: die restriktivere (kürzere) Wartezeit der überschrittenen
-        # Ebene(n) melden. Property-TTL nur berücksichtigen, wenn vorhanden.
-        acc_wait = _retry(int(acc_ttl), self._account)
-        if has_prop and int(prop_ttl) >= 0:
+        # Abgelehnt: NUR die tatsächlich blockierende Ebene meldet ihre echte TTL
+        # (die andere gibt -2). Aus der blockierenden Ebene die Wartezeit ableiten,
+        # sonst wacht der Job zu früh auf (wenn nur Account voll ist, aber die
+        # kürzere Property-TTL genommen würde) → Re-Defer-Churn.
+        acc_ttl, prop_ttl = int(acc_ttl), int(prop_ttl)
+        if acc_ttl >= 0:
             return BudgetDecision(
-                allowed=False,
-                retry_after=min(acc_wait, _retry(int(prop_ttl), self._property)),
+                allowed=False, retry_after=_retry(acc_ttl, self._account)
             )
-        return BudgetDecision(allowed=False, retry_after=acc_wait)
+        if prop_ttl >= 0:
+            return BudgetDecision(
+                allowed=False, retry_after=_retry(prop_ttl, self._property)
+            )
+        # Beide -2 (sollte nicht vorkommen) → konservativ das Account-Fenster.
+        return BudgetDecision(
+            allowed=False, retry_after=self._account.window_seconds
+        )
 
 
 def _retry(ttl: int, limit: Limit) -> int:

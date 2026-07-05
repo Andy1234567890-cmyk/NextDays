@@ -852,16 +852,22 @@ class BookingsSyncMixin:
 
     @staticmethod
     def _to_booking(row: dict[str, Any], mask: GuestMask) -> BookingResponse:
+        # Betrag + Buchungsquelle maskierungskonform: ohne PM_BOOKING_TOTAL
+        # (amounts) keine Beträge/Währung, ohne VIEW_BOOKING_SOURCE keine
+        # OTA-Namen/-Codes. staff/cleaner (§4.3) sehen weder Umsatz noch Quelle.
+        amount = mask.amount(
+            float(row["amount_cents"]) if row.get("amount_cents") is not None else None
+        )
         return BookingResponse(
             id=row["id"],
             external_id=row["channex_booking_id"],
-            ota_name=row.get("ota_name"),
-            ota_reservation_code=row.get("ota_reservation_code"),
+            ota_name=mask.source_value(row.get("ota_name")),
+            ota_reservation_code=mask.source_value(row.get("ota_reservation_code")),
             status=row.get("status", "new"),
             arrival_date=row.get("arrival_date"),
             departure_date=row.get("departure_date"),
-            amount_cents=row.get("amount_cents"),
-            currency=row.get("currency"),
+            amount_cents=int(amount) if amount is not None else None,
+            currency=(row.get("currency") if mask.amounts else None),
             customer=BookingsSyncMixin._mask_customer(row.get("customer") or {}, mask),
             acknowledged_at=row.get("acknowledged_at"),
         )

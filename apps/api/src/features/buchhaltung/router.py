@@ -35,15 +35,33 @@ from .service import BuchhaltungError
 
 router = APIRouter(prefix="/buchhaltung", tags=["buchhaltung"])
 
-# Schreibrechte für Buchhaltung: OWNER_REPORTING (Finanz-/Buchhaltungszugang).
-_write = Annotated[
-    AuthContext, Depends(require_lodgify_permission(Permission.OWNER_REPORTING))
-]
-# Leserechte für Buchhaltung: ebenfalls OWNER_REPORTING. Rechnungen, Kunden-PII
-# (Name/Adresse/Steuer-ID), Nummernkreise und Firmenprofile sind Finanzdaten —
-# staff/cleaner (§4.3) haben KEINEN Finanz-Zugang und dürfen sie auch nicht
-# LESEN. Vorher waren die GETs nur mit CurrentUser (reine Authentifizierung)
-# geschützt; jeder eingeloggte Nutzer konnte die vollständige Kundenliste ziehen.
+
+def _require_agency_finance(
+    ctx: Annotated[
+        AuthContext, Depends(require_lodgify_permission(Permission.OWNER_REPORTING))
+    ],
+) -> AuthContext:
+    """Zugang zur AGENTUR-Debitorenbuchhaltung (Kunden/Rechnungen/Nummernkreise
+    des Betriebs).
+
+    Zwei Ebenen: (1) OWNER_REPORTING (staff/cleaner ohne Finanz-Zugang raus).
+    (2) Die owner-Rolle BESITZT OWNER_REPORTING zwar (für ihre eigene
+    Auszahlungs-Abrechnung in owner_statements, dort self-scoped), hat in der
+    tenant-weiten Debitorenbuchhaltung aber NICHTS zu suchen — sie würde sonst
+    Rechnungen/Kunden-PII ALLER Objekte des Tenants sehen und sogar schreiben
+    (§4.2: Owner read-only + nur eigene Daten). Deshalb Owner hier hart mit 403
+    aussperren — die Owner-Finanzsicht ist ausschließlich /owner-statements.
+    """
+    if ctx.role == "owner":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Kein Zugriff auf die Betriebsbuchhaltung.",
+        )
+    return ctx
+
+
+# Schreib- UND Leserechte: Agentur-Finanzzugang (OWNER_REPORTING, ohne Owner).
+_write = Annotated[AuthContext, Depends(_require_agency_finance)]
 _read = _write
 
 
