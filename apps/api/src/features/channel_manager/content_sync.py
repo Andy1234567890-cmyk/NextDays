@@ -529,6 +529,16 @@ class ContentSyncMixin:
             "rate_mode": "manual",
             "options": options,
         }
+        # Mindestaufenthalt → Channex (min_stay_arrival + min_stay_through). Beide
+        # sind 7er-Arrays (Mo–So); wir setzen für alle Wochentage denselben Wert
+        # aus rate_plans.min_stay. Ohne das bleibt Channex bei Default 1 (live
+        # verifiziert: PUT [3×7] persistiert, GET liest 3 zurück). Der min_stay-
+        # Typ (arrival/through/both) steuert nur, welches Array Channex erzwingt.
+        min_stay = rp.get("min_stay")
+        if isinstance(min_stay, int) and min_stay >= 1:
+            week = [min_stay] * 7
+            attrs["min_stay_arrival"] = week
+            attrs["min_stay_through"] = week
         if existing.data:
             channex_rate_plan_id = existing.data[0]["channex_rate_plan_id"]
             self._channex.update_rate_plan(channex_rate_plan_id, attrs)

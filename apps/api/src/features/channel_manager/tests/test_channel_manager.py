@@ -1255,6 +1255,58 @@ def test_rate_plan_options_per_person_with_surcharge() -> None:
     assert by_occ[3]["derived_option"]["rate"] == [["increase_by_amount", "4000"]]
 
 
+class _RatePlanChannex:
+    """Channex-Stub, der die beim Rate-Plan-Anlegen gesendeten attrs festhält."""
+
+    is_configured = True
+
+    def __init__(self) -> None:
+        self.created: list[dict] = []
+
+    def create_rate_plan(self, attrs):  # noqa: ANN001, ANN201
+        self.created.append(attrs)
+        return {"data": {"id": "cx-rp-new"}}
+
+
+def test_rate_plan_sync_sends_min_stay_to_channex() -> None:
+    # Regression: rate_plans.min_stay=3 MUSS als min_stay_arrival/through an
+    # Channex gehen (7er-Array Mo–So). Ohne den Fix blieb Channex bei Default 1
+    # (live verifiziert). Der Bug: _upsert_channex_rate_plan schrieb min_stay
+    # nicht in die attrs.
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    rt_map = db.tables["channex_room_type_map"][0]
+    channex = _RatePlanChannex()
+    svc = _import_svc(channex, db)
+    svc._upsert_channex_rate_plan(
+        db, "t1", rt_map["id"], "cx-prop", "cx-rt",
+        {"id": "rp1", "name": "Standard", "base_price": 129, "min_stay": 3},
+        "EUR",
+    )
+    assert channex.created, "create_rate_plan wurde nicht aufgerufen"
+    sent = channex.created[0]
+    assert sent["min_stay_arrival"] == [3, 3, 3, 3, 3, 3, 3]
+    assert sent["min_stay_through"] == [3, 3, 3, 3, 3, 3, 3]
+
+
+def test_rate_plan_sync_omits_min_stay_when_unset() -> None:
+    # min_stay=1 (Default) oder fehlend → keine min_stay-Felder senden (Channex
+    # bleibt auf seinem Default, kein überflüssiger Push). 1×7 wäre auch ok, aber
+    # wir senden nur, was der Nutzer über 1 hinaus gesetzt hat.
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    rt_map = db.tables["channex_room_type_map"][0]
+    channex = _RatePlanChannex()
+    svc = _import_svc(channex, db)
+    svc._upsert_channex_rate_plan(
+        db, "t1", rt_map["id"], "cx-prop", "cx-rt",
+        {"id": "rp2", "name": "Standard", "base_price": 99, "min_stay": None},
+        "EUR",
+    )
+    sent = channex.created[0]
+    assert "min_stay_arrival" not in sent
+
+
 # --- Room-Type-Belegung aus echten Objektdaten (occ_*, count_of_rooms) --------
 def test_room_type_occupancy_from_object_data() -> None:
     occ = ChannelManagerService._room_type_occupancy(
