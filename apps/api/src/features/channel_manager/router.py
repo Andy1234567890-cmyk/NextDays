@@ -5,6 +5,7 @@ sind tenant-scoped (tenant_id aus dem JWT) und erfordern MANAGE_PROPERTY_SETTING
 Der Webhook-Endpoint ist bewusst ohne JWT (Channex ruft ihn auf) und wird über
 ein geteiltes Secret im Header abgesichert.
 """
+import secrets
 from typing import Annotated
 
 from fastapi import (
@@ -384,9 +385,16 @@ async def channex_webhook(
     if not isinstance(payload, dict) or not payload.get("event"):
         return {"status": "ok"}
 
-    # Echtes Event → Secret zwingend.
+    # Echtes Event → Secret zwingend. Vergleich konstant-zeitig
+    # (secrets.compare_digest) wie beim WhatsApp-verify_token — ein byteweiser
+    # !=-Vergleich wäre ein Timing-Seitenkanal auf das Secret, über das gefälschte
+    # Channex-Events (Buchungen/ARI) in fremde Tenants eingespeist werden könnten.
     expected = get_settings().channex_webhook_secret.get_secret_value()
-    if not expected or x_channex_webhook_secret != expected:
+    if (
+        not expected
+        or not x_channex_webhook_secret
+        or not secrets.compare_digest(x_channex_webhook_secret, expected)
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiges Webhook-Secret."
         )

@@ -7,7 +7,7 @@ Ein optionaler KI-Antwortvorschlag (Groq) hilft beim Beantworten.
 
 Tenant-scoped (tenant_id aus dem JWT). Kein stilles Exception-Swallowing.
 """
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING
 
 from supabase import Client
@@ -785,6 +785,23 @@ class InboxService:
 
     def cancel_scheduled(self, ctx: AuthContext, scheduled_id: str) -> None:
         db, tenant_id = self._require(ctx)
+        # Zugehörige geplante Nachricht laden, um ihren Thread zu ermitteln — und
+        # den Thread-Scope (assigned-only) durchsetzen. Ohne diese Prüfung könnte
+        # ein Nutzer ohne INBOX_VIEW_ALL eine geplante Nachricht in einem fremd
+        # zugewiesenen Thread stornieren, den er selbst gar nicht sehen darf
+        # (list_scheduled erzwingt den Scope korrekt, cancel_scheduled bislang nicht).
+        row = (
+            db.table("inbox_scheduled_message")
+            .select("id, thread_id")
+            .eq("tenant_id", tenant_id)
+            .eq("id", scheduled_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not row:
+            raise InboxError("Geplante Nachricht nicht gefunden.", status_code=404)
+        # Wirft 404, wenn der Nutzer den Thread laut Scope nicht sehen darf.
+        self._load_thread_scoped(ctx, row[0]["thread_id"])
         db.table("inbox_scheduled_message").update({"status": "cancelled"}).eq(
             "tenant_id", tenant_id
         ).eq("id", scheduled_id).eq("status", "pending").execute()
@@ -830,6 +847,26 @@ class InboxService:
             raise InboxError("Posteingang-DB nicht verfügbar.", status_code=500)
         db = self._db
         now = datetime.now(UTC).isoformat()
+        # Verwaiste 'sending'-Zeilen (Prozess starb nach Claim, vor 'sent'/'failed')
+        # wieder freigeben, damit sie in diesem Tick als fällig neu versendet werden
+        # und nicht für immer verloren bleiben. Frist deutlich über realer
+        # Versanddauer, damit ein aktiver Versand nicht doppelt läuft (updated_at
+        # per DB-Trigger beim Claim gesetzt).
+        from . import scheduler  # noqa: PLC0415 — Zirkularität (scheduler↔service)
+
+        reap_cutoff = (
+            datetime.now(UTC)
+            - timedelta(minutes=scheduler.SENDING_REAP_MINUTES)
+        ).isoformat()
+        reaped = (
+            db.table("inbox_scheduled_message")
+            .update({"status": "pending"})
+            .eq("status", "sending")
+            .lt("updated_at", reap_cutoff)
+            .execute()
+        ).data or []
+        if reaped:
+            log.warning("dispatch_reaped_stuck_sending", count=len(reaped))
         due = (
             db.table("inbox_scheduled_message")
             .select("id, tenant_id, thread_id, body")
@@ -907,7 +944,7 @@ class InboxService:
     ) -> datetime | None:
         """send_at = Ankerdatum + offset_days @ send_time (UTC). None, wenn das
         Ankerdatum fehlt (z. B. booking ohne created_at) → Automail wird übersprungen."""
-        from datetime import date, time, timedelta
+        from datetime import date, time
 
         if anchor == "arrival":
             base = thread.get("arrival_date")

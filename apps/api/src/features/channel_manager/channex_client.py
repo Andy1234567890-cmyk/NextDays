@@ -182,14 +182,17 @@ class ChannexClient:
         else:
             headers["user-api-key"] = self._api_key
 
-        # Kontoweites Budget VOR dem echten HTTP-Call ziehen (falls ein Callback
-        # gesetzt ist). So zahlt JEDER Call ein Token — Batch-Jobs mit N Calls
-        # umgehen das Konto-Limit nicht mehr über das einmalige Vorab-Gate.
-        self._acquire_budget(_budget_property_id(params, json))
+        budget_property_id = _budget_property_id(params, json)
 
         last_exc: Exception | None = None
         # +1 finaler Versuch nach allen Backoffs.
         for attempt in range(len(self._RETRY_BACKOFF_SECONDS) + 1):
+            # Kontoweites Budget VOR JEDEM echten HTTP-Round-Trip ziehen (falls ein
+            # Callback gesetzt ist) — auch vor jedem 429-Retry. Sonst deckt EIN Token
+            # bis zu (Retries+1) echte Channex-Requests ab und das Budget unterzählt
+            # die reale Last genau dann, wenn Channex bereits 429 liefert (die
+            # Situation, für die die Drosselung gebaut ist).
+            self._acquire_budget(budget_property_id)
             try:
                 with httpx.Client(timeout=self._timeout) as client:
                     resp = client.request(

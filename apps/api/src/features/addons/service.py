@@ -456,24 +456,36 @@ def purchase_addons(
     # Idempotenz gegen Doppelklick/Retry: der partielle Unique-Index
     # reservation_addons_active_uidx (0109) verhindert eine zweite aktive Zeile
     # je (reservation_id, addon_id). Kollidiert der Insert, war der Kauf bereits
-    # gebucht — dann die BESTEHENDEN Zeilen zurückgeben statt doppelt zu berechnen.
-    try:
-        created = (
-            db.table("reservation_addons").insert(payload).execute()
-        ).data or []
-    except APIError as exc:
-        if "reservation_addons_active_uidx" not in str(exc):
-            raise
-        log.info("addon_purchase_idempotent_skip", reservation_id=reservation_id)
-        addon_ids = [p["addon_id"] for p in payload]
-        created = (
-            db.table("reservation_addons")
-            .select("*")
-            .eq("reservation_id", reservation_id)
-            .in_("addon_id", addon_ids)
-            .neq("status", "cancelled")
-            .execute()
-        ).data or []
+    # gebucht — dann die BESTEHENDE Zeile zurückgeben statt doppelt zu berechnen.
+    #
+    # WICHTIG: pro Addon EINZELN inserten, nicht als ein atomarer Batch. Kollidiert
+    # in einem Batch nur EIN Addon, würde der gesamte Insert fehlschlagen und die
+    # genuin NEUEN Addons desselben Batches gingen verloren (geräuschlos nie
+    # berechnet). Einzel-Inserts halten jedes neue Addon, egal welches im Batch
+    # bereits existiert.
+    created: list[dict] = []
+    for item in payload:
+        try:
+            rows_ins = (
+                db.table("reservation_addons").insert(item).execute()
+            ).data or []
+        except APIError as exc:
+            if "reservation_addons_active_uidx" not in str(exc):
+                raise
+            log.info(
+                "addon_purchase_idempotent_skip",
+                reservation_id=reservation_id,
+                addon_id=item["addon_id"],
+            )
+            rows_ins = (
+                db.table("reservation_addons")
+                .select("*")
+                .eq("reservation_id", reservation_id)
+                .eq("addon_id", item["addon_id"])
+                .neq("status", "cancelled")
+                .execute()
+            ).data or []
+        created.extend(rows_ins)
 
     # Trigger „addon_purchased": je Item eine Vorbereitungs-Aufgabe (best-effort,
     # lazy import → kein Slice-Importzyklus).

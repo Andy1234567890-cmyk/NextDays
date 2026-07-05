@@ -81,6 +81,11 @@ class DpSettingsService:
         ).data or []
         return {r["property_id"] for r in rows}
 
+    def require_own_property(self, ctx: AuthContext, property_id: str) -> None:
+        """Öffentlicher Scope-Guard für Router (Tenant-Eigentum + Owner-§4.2).
+        Wirft PricingError(404), wenn das Objekt fremd/nicht sichtbar ist."""
+        self._require_own_property(ctx, property_id)
+
     def _require_own_property(self, ctx: AuthContext, property_id: str) -> None:
         if not ctx.tenant_id:
             raise PricingError("Kein Tenant im Konto.", status_code=400)

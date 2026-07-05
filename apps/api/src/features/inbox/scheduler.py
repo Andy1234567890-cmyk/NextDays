@@ -18,13 +18,21 @@ einen harten Crash verloren geht), ist aber nicht mehr der primäre Weg.
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.core.supabase import get_service_client
 
 log = get_logger("nextdays.inbox.scheduler")
+
+# Nach so vielen Minuten in 'sending' gilt eine Zeile als verwaist (Prozess starb
+# nach dem Claim, vor dem 'sent'/'failed'-Update) und wird wieder freigegeben. Die
+# Frist muss deutlich über einer realen Versanddauer liegen, damit ein gerade
+# aktiver Versand nicht doppelt läuft. `updated_at` wird per DB-Trigger beim Claim
+# auf now() gesetzt (trg_inbox_scheduled_message_updated). Modul-öffentlich, weil
+# der Cron-Reaper in inbox/service.py denselben Wert nutzt.
+SENDING_REAP_MINUTES = 10
 
 # Offene Timer: scheduled_message.id -> asyncio.Task (zum Abbrechen bei Cancel).
 _timers: dict[str, asyncio.Task] = {}
@@ -126,8 +134,35 @@ def cancel(scheduled_id: str) -> None:
     _loop.call_soon_threadsafe(_cancel)
 
 
+def _reap_stuck_sending() -> int:
+    """Verwaiste 'sending'-Zeilen wieder auf 'pending' setzen.
+
+    Stirbt der Prozess/Container zwischen Claim (status='sending') und dem finalen
+    'sent'/'failed'-Update, reklamiert sonst KEIN Pfad die Zeile je wieder (Timer
+    und Cron laden nur 'pending') — die geplante Nachricht wäre für immer verloren.
+    Nur Zeilen freigeben, deren letzter Update (updated_at, per Trigger beim Claim
+    gesetzt) länger als die Reap-Frist zurückliegt, damit ein GERADE laufender
+    Versand nicht doppelt getriggert wird. Gibt die Anzahl freigegebener Zeilen
+    zurück (Aufrufer timert sie danach neu)."""
+    db = get_service_client()
+    cutoff = (datetime.now(UTC) - timedelta(minutes=SENDING_REAP_MINUTES)).isoformat()
+    reaped = (
+        db.table("inbox_scheduled_message")
+        .update({"status": "pending"})
+        .eq("status", "sending")
+        .lt("updated_at", cutoff)
+        .execute()
+    ).data or []
+    if reaped:
+        log.warning("scheduler_reaped_stuck_sending", count=len(reaped))
+    return len(reaped)
+
+
 def _load_pending() -> list[dict]:
     db = get_service_client()
+    # Vor dem (Neu-)Timern verwaiste 'sending'-Zeilen freigeben, damit sie hier
+    # als 'pending' mitgeladen und neu getimert werden.
+    _reap_stuck_sending()
     return (
         db.table("inbox_scheduled_message")
         .select("id, send_at")

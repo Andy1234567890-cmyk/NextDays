@@ -20,6 +20,7 @@ import contextlib
 import os
 import signal
 import socket
+import time
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -376,7 +377,14 @@ class Worker:
             log.warning("reconcile_tick_failed", error=str(exc)[:200])
 
     def _enqueue_reconcile_all(self) -> None:
-        bucket = int(self._last_reconcile_tick // RECONCILE_TICK_SECONDS)
+        # Coalescing-Bucket aus der WALL-CLOCK (time.time()), NICHT aus der
+        # Monotonic-Loop-Uhr: loop.time() hat pro Prozess einen anderen, undefinierten
+        # Nullpunkt. Zwei Worker-Instanzen (oder derselbe Worker über einen Neustart)
+        # berechneten daraus für denselben Wandzeit-Tick verschiedene Buckets →
+        # dedup_keys kollidierten nie → das versprochene Cross-Instance-/Cross-Restart-
+        # Coalescing griffe nicht (N-fache Reconcile-/Channex-Last bei N Instanzen).
+        # Die Wall-Clock ist über alle Instanzen gleich → gemeinsamer Bucket.
+        bucket = int(time.time() // RECONCILE_TICK_SECONDS)
         rows = (
             self._db.table("channex_group_map").select("tenant_id").execute()
         ).data or []

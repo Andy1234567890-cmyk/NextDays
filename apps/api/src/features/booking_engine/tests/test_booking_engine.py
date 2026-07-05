@@ -324,6 +324,74 @@ def test_public_booking_maps_rpc_conflict_to_409(monkeypatch) -> None:  # noqa: 
     assert exc.value.message == "Zeitraum ist nicht mehr verfügbar."
 
 
+def test_public_booking_includes_addons_in_quote(monkeypatch) -> None:  # noqa: ANN001
+    """CRITICAL-Regression: die gewählten Addons MÜSSEN in den Quote fließen, sonst
+    enthält total_amount nur die Unterkunft und der spätere Stripe-PaymentIntent
+    kassiert die Zusatzleistungen nie. Wir fangen das an quote() übergebene req ab."""
+    from datetime import date as _date
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+
+    import src.features.pricing.resolver as resolver_mod
+    from src.features.booking_engine.schemas import (
+        AddonPick,
+        GuestContact,
+        PublicBookingRequest,
+    )
+    from src.features.booking_engine.service import BookingEngineService
+
+    db = MagicMock(name="supabase")
+
+    def table(name: str) -> MagicMock:
+        t = MagicMock(name=f"table:{name}")
+        if name in ("availability", "stop_sell"):
+            chain = (
+                t.select.return_value.eq.return_value.gte.return_value.lt.return_value
+            )
+            chain.execute.return_value.data = []
+        return t
+
+    db.table.side_effect = table
+    # RPC gibt eine gültige Reservierung zurück (kein Konflikt).
+    db.rpc.return_value.execute.return_value.data = {
+        "reservation": {"id": "res-1"}, "outbox_id": None,
+    }
+
+    svc = BookingEngineService(service_client=db)
+    monkeypatch.setattr(
+        svc, "_public_property",
+        lambda *_a: {"tenant_id": "t-1", "status": "active", "max_guests": 6},
+    )
+    monkeypatch.setattr(svc, "_upsert_guest", lambda *_a: "g-1")
+    monkeypatch.setattr(svc, "_push_channex", lambda *_a, **_k: None)
+    # Addons anlegen + Loyalty/Recompute neutralisieren (nicht Teil des Asserts).
+    import src.features.addons.service as addons_mod
+    monkeypatch.setattr(addons_mod, "purchase_addons", lambda *_a, **_k: [])
+
+    captured: dict = {}
+
+    def _fake_quote(_self, req):  # noqa: ANN001, ANN202
+        captured["addons"] = list(req.addons)
+        return SimpleNamespace(total=260.0, currency="EUR", lines=[])
+
+    monkeypatch.setattr(resolver_mod.PricingResolver, "quote", _fake_quote)
+
+    req = PublicBookingRequest(
+        property_id="p-1",
+        check_in=_date(2026, 8, 1),
+        check_out=_date(2026, 8, 3),
+        guests=2,
+        total_amount=200.0,
+        contact=GuestContact(
+            first_name="Max", last_name="Gast", email="max@example.com",
+        ),
+        addons=[AddonPick(addon_id="a-1", qty=1)],
+    )
+    svc.create_public_booking(req)
+    # Der Quote hat die gewählten Addons gesehen (→ total_amount enthält sie).
+    assert [a.addon_id for a in captured["addons"]] == ["a-1"]
+
+
 def test_property_tenant_rejects_non_active() -> None:
     """draft/inactive-Objekte sind nicht öffentlich buchbar → _property_tenant None."""
     from unittest.mock import MagicMock

@@ -51,6 +51,18 @@ def create_storno_invoice(
         )
     if original.get("status") == "cancelled":
         raise BuchhaltungError("Rechnung ist bereits storniert.", status_code=409)
+    # Nur AUSGESTELLTE (finalisierte, nummerierte) Rechnungen sind stornierbar. Ein
+    # Entwurf (status='draft', invoice_number=NULL) ist noch kein Beleg — ein Storno
+    # darauf würde eine Gutschrift auf einen nicht existenten Beleg erzeugen (GoBD-
+    # Verstoß), eine echte ST-Nummer verbrennen (dauerhafte Lücke im Nummernkreis)
+    # und den Entwurf unrettbar auf 'cancelled' setzen (nicht mehr editier-/löschbar).
+    # Entwürfe werden stattdessen gelöscht/bearbeitet, nicht storniert.
+    if original.get("status") == "draft" or not original.get("invoice_number"):
+        raise BuchhaltungError(
+            "Nur ausgestellte Rechnungen sind stornierbar. Ein Entwurf lässt sich "
+            "direkt bearbeiten oder löschen.",
+            status_code=409,
+        )
     existing_storno = (
         db.table("invoices")
         .select("*")

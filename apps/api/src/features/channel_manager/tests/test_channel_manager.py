@@ -180,6 +180,10 @@ class _ReconcileQuery:
         self._filters.append(("eq", field, value, False))
         return self
 
+    def ilike(self, field, value):  # noqa: ANN001, ANN201
+        self._filters.append(("ilike", field, value.replace("\\", ""), False))
+        return self
+
     def neq(self, field, value):  # noqa: ANN001, ANN201
         self._filters.append(("neq", field, value, False))
         return self
@@ -211,6 +215,8 @@ class _ReconcileQuery:
         for kind, field, value, neg in self._filters:
             if kind == "eq":
                 ok = row.get(field) == value
+            elif kind == "ilike":
+                ok = str(row.get(field) or "").casefold() == str(value).casefold()
             elif kind == "neq":
                 ok = row.get(field) != value
             elif kind == "in":

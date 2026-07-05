@@ -181,6 +181,58 @@ deployten Stand; alle 31 Befunde gefixt (2 Critical, 15 High, 12 Medium, 2 Low):
   Monatsgitter abonniert alle preis-speisenden Tabellen (Realtime),
   Banking-Abgleich zeigt die echte Transaktions-Währung (kein €-Hardcode).
 
+### Behoben (3. Bug-Jagd-Runde 07/2026 — 30 verifizierte Befunde)
+Dritter Multi-Agenten-Loop über den deployten Stand; alle 30 Befunde gefixt
+(2 Critical, 13 High, 6 Medium, 9 Low). Migrationen 0110–0113. Kernpunkte:
+- **ari_outbox-Superseding tag-genau + im schnellen Pfad**: der Verfügbarkeits-
+  Push überspringt nur die von einer NEUEREN Outbox-Zeile abgedeckten TAGE
+  (statt ganze Zeilen bei Teil-Überlappung zu verwerfen) und tut das auch im
+  Sofort-Push, nicht nur im Cron — kein still verlorener/überschriebener
+  availability-Wert mehr.
+- **Doppel-Storno + Doppel-Addon DB-seitig ausgeschlossen** (0110/0109): je
+  Original genau ein Storno (`invoices_storno_per_original_uidx`), je
+  Reservierung ein aktives Addon; Gäste-Dedup `(tenant_id, lower(email))` (0113);
+  Teilrückerstattungs-Status `partially_refunded` (0111).
+
+### Behoben (4. Bug-Jagd-Runde 07/2026 — 22 verifizierte Befunde)
+Vierter Multi-Agenten-Loop (66 Agenten, adversariell 2-fach verifiziert) über den
+deployten Stand; alle 22 Befunde gefixt (1 Critical, 11 High, 5 Medium, 5 Low),
+ohne neue Migration (reine Code-Fixes gegen den 0104–0113-Stand):
+- **Zusatzleistungen werden jetzt kassiert** (Critical): `create_public_booking`
+  reicht die gewählten Add-ons in den Preis-Quote → `total_amount` (und damit der
+  Stripe-PaymentIntent) enthält sie. Zuvor blieben gebuchte Add-ons `pending` und
+  wurden nie belastet.
+- **Eingecheckter Gast nicht mehr verschiebbar**: `move()` lehnt eine bereits
+  eingecheckte Reservierung ab (409) — sonst würden belegte Nächte freigegeben und
+  als `availability=1` an OTAs gepusht, während der Gast noch im Zimmer ist.
+- **OTA-Storno gibt nur die wirklich freigewordenen Tage frei**: der Channex-Push
+  läuft tag-/quellengenau (nicht pauschal der ganze Zeitraum) — ein überlappender
+  manueller Block/Fremdkanal-Tag bleibt gesperrt (kein Overselling).
+- **Superseding ignoriert gescheiterte Pushes**: `_newer_covered_days` zählt nur
+  `pending`/`done`-Outbox-Zeilen als Supersessor — eine `failed`-Zeile unterdrückt
+  keine ältere echte Sperre mehr.
+- **Preis-/Umsatz-Maskierung für Owner geschlossen (§4.2)**: Dashboard-Umsatz-KPI
+  (`revenue_30d=None` ohne `PM_BOOKING_TOTAL`) und die Preis-Endpunkte
+  `pricing/effective`+`/quote` (jetzt hinter `PM_BOOKING_TOTAL`) geben einem
+  Eigentümer keine Gesamtpreise mehr.
+- **Storno nur auf ausgestellte Rechnung**: ein Entwurf (`draft`,
+  `invoice_number=NULL`) lässt sich nicht mehr stornieren (keine verbrannte
+  ST-Nummer / Gutschrift auf Nicht-Beleg / GoBD-Verstoß).
+- **Cross-Tenant-DoS im Rate-Limit entschärft**: beim listings-Bucket wird das
+  IP-Limit VOR dem globalen Tenant-Zähler geprüft — eine gefälschte
+  Opfer-tenant_id von wenigen IPs kann dessen Fenster nicht mehr vollschreiben.
+- **PDF-Summen: Rabatt-Positionen zählen negativ**, `taxGrouped` wird bei
+  gemischten Sätzen aus den Positionen abgeleitet (kein falsches Kopf-Satz-Label).
+- **Weitere**: Add-on-Teilkollision verliert keine neuen Add-ons mehr
+  (Einzel-Insert); Add-on-Fehler nach committer Buchung kippt sie nicht (kein
+  500 + 409-Retry-Sackgasse); Inbox-`sending`-Reaper (verlorene geplante Nachricht
+  läuft nach Crash wieder an) + Thread-Scope für `cancel_scheduled`; Channex-Budget
+  zählt pro echtem HTTP-Round-Trip (auch 429-Retries); Reconcile-Coalescing über
+  Wall-Clock-Bucket (Cross-Instance/Restart); Gäste-Resolver findet mixed-case
+  E-Mails (case-insensitiv, kein 500); Kalender-KPIs mischen keine Währungen mehr;
+  Channex-Webhook-Secret zeitkonstant verglichen; Forecast-Training paginiert
+  (kein stiller 1000-Zeilen-Cap).
+
 ### Behoben (High-Befunde der Bug-Jagd 07/2026)
 - **Owner-Scope im Kalender + Reservierungen (§4.2)**: Eigentümer sehen jetzt nur
   ihre zugeordneten Objekte (neuer gemeinsamer Helfer `auth/owner_scope.py`).

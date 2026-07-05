@@ -366,6 +366,25 @@ export function usePDFTemplateData(props: PDFTemplateProps): ProcessedPDFData {
     const taxable = !documentData.isSmallBusiness && !isTaxExempt;
 
     realItems.forEach(item => {
+      const rawRate = (item as unknown as Record<string, unknown>).vatRate ??
+        (item as unknown as Record<string, unknown>).taxRate;
+      const lineRate = rawRate == null ? vatRate : Number(rawRate);
+
+      // Rabatt-Positionen (category==='discount') MINDERN Zwischensumme und
+      // Steuer — sie werden NICHT als positiver Aufschlag addiert. Gleiche
+      // Vorzeichen-Logik wie calc.ts::computeTotals (die zentrale Wahrheit):
+      // subtotal += -abs(total); Steuer mindert die Bemessungsgrundlage mit dem
+      // eigenen Satz (Rabatte werden mit taxRate 0 angelegt → neutral). Sonst
+      // zeigt die Tabelle die Zeile negativ, die Zwischensumme aber positiv.
+      if (item.category === 'discount') {
+        const discountAmount = Math.abs(item.total || 0);
+        subtotal -= discountAmount;
+        if (taxable) {
+          taxAmount -= discountAmount * (lineRate / 100);
+        }
+        return;
+      }
+
       // Verwende unitPrice (nicht price) und berücksichtige discountPercent
       const unitPrice =
         item.unitPrice || ((item as unknown as Record<string, unknown>).price as number) || 0;
@@ -378,14 +397,42 @@ export function usePDFTemplateData(props: PDFTemplateProps): ProcessedPDFData {
 
       if (taxable) {
         // Zeilen-eigener Satz (0 ist gültig!) vor Beleg-Satz — ?? statt ||.
-        const rawRate = (item as unknown as Record<string, unknown>).vatRate ??
-          (item as unknown as Record<string, unknown>).taxRate;
-        const lineRate = rawRate == null ? vatRate : Number(rawRate);
         taxAmount += itemTotal * (lineRate / 100);
       }
     });
 
     const total = subtotal + taxAmount;
+
+    // taxGrouped PRO Steuersatz aus den Positionen ableiten, wenn der Beleg keine
+    // fertige Gruppierung mitliefert. Sonst fällt TotalsDisplay auf EINE Zeile mit
+    // dem Beleg-Kopf-Satz (data.vatRate) und dem über gemischte Sätze summierten
+    // data.taxAmount zurück — Satz-Label und Betrag passen dann nicht zusammen
+    // (z. B. „MwSt (0%): 19,00 €" bei 19% Übernachtung + 0% Kurtaxe). Rabatte
+    // (category==='discount') mindern die Gruppe ihres Satzes (Vorzeichen wie oben).
+    const computedTaxGroups = new Map<number, number>();
+    if (taxable) {
+      realItems.forEach(item => {
+        const rawRate = (item as unknown as Record<string, unknown>).vatRate ??
+          (item as unknown as Record<string, unknown>).taxRate;
+        const lineRate = rawRate == null ? vatRate : Number(rawRate);
+        let lineTax: number;
+        if (item.category === 'discount') {
+          lineTax = -Math.abs(item.total || 0) * (lineRate / 100);
+        } else {
+          const unitPrice =
+            item.unitPrice ||
+            ((item as unknown as Record<string, unknown>).price as number) || 0;
+          const quantity = item.quantity || 0;
+          const discountPercent = item.discountPercent || 0;
+          const itemTotal = quantity * unitPrice * (1 - discountPercent / 100);
+          lineTax = itemTotal * (lineRate / 100);
+        }
+        computedTaxGroups.set(lineRate, (computedTaxGroups.get(lineRate) || 0) + lineTax);
+      });
+    }
+    const derivedTaxGrouped = Array.from(computedTaxGroups.entries())
+      .map(([rate, tax]) => ({ rate, taxAmount: tax }))
+      .sort((a, b) => b.rate - a.rate);
 
     // Dokument-Label basierend auf Dokumenttyp und Sprache
     const getDocumentLabel = () => {
@@ -496,7 +543,12 @@ export function usePDFTemplateData(props: PDFTemplateProps): ProcessedPDFData {
     const isSmallBusiness = documentData.isSmallBusiness || false;
     const priceInput = documentData.priceInput || 'netto';
     const taxRuleType = documentData.taxRuleType || '';
-    const normalizedTaxGrouped = normalizeTaxGrouped(documentData.taxGrouped);
+    // Fertige Gruppierung des Belegs bevorzugen; fehlt sie, die pro Satz aus den
+    // Positionen abgeleitete Gruppierung nutzen — nie auf die Ein-Zeilen-Notlösung
+    // von TotalsDisplay zurückfallen (falsches Satz-Label bei gemischten Sätzen).
+    const passedTaxGrouped = normalizeTaxGrouped(documentData.taxGrouped);
+    const normalizedTaxGrouped =
+      passedTaxGrouped.length > 0 ? passedTaxGrouped : derivedTaxGrouped;
 
     // Adress-Parsing
     const companyAddressParsed = parseAddress(companyAddress);

@@ -21,6 +21,36 @@ def test_pricing_health() -> None:
     assert resp.json() == {"slice": "pricing", "status": "ok"}
 
 
+def test_price_endpoints_require_booking_total_permission() -> None:
+    """/effective und /quote sind hinter PM_BOOKING_TOTAL: ein Owner (ohne diese
+    Permission) darf laut §4.2 keine Preise/Gesamtbeträge sehen → 403. Der Guard
+    wird direkt geprüft (Owner-Set ohne PM_BOOKING_TOTAL vs. Admin)."""
+    from unittest.mock import MagicMock
+
+    import pytest
+    from fastapi import HTTPException
+
+    from src.core.security import AuthContext
+    from src.features.auth.dependencies import require_lodgify_permission
+    from src.features.auth.lodgify_permissions import Permission, UserRole
+
+    guard = require_lodgify_permission(Permission.PM_BOOKING_TOTAL)
+
+    # Owner ohne PM_BOOKING_TOTAL → 403.
+    owner_ctx = AuthContext(user_id="u", tenant_id="t1", role="owner")
+    owner_svc = MagicMock()
+    owner_svc.role_and_permissions.return_value = (UserRole.owner, [])
+    with pytest.raises(HTTPException) as exc:
+        guard(owner_ctx, owner_svc)
+    assert exc.value.status_code == 403
+
+    # Admin → durchgelassen (Admin hat implizit alle Lodgify-Permissions).
+    admin_ctx = AuthContext(user_id="a", tenant_id="t1", role="admin")
+    admin_svc = MagicMock()
+    admin_svc.role_and_permissions.return_value = (UserRole.admin, [])
+    assert guard(admin_ctx, admin_svc) is admin_ctx
+
+
 class _Q:
     """Minimaler Supabase-Query-Stub: gibt für eine Tabelle feste Zeilen zurück."""
 

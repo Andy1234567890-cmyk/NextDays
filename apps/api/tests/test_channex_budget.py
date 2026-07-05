@@ -11,18 +11,32 @@ from src.jobs.channex_budget import ChannexBudget
 
 
 class _FakeRedis:
-    """Bildet nur das eine genutzte eval(_WINDOW_LUA, 1, key, window) nach:
-    INCR je key, TTL = window (konstant für den Test). Optional wirft es."""
+    """Bildet die genutzte eval(_TWO_LEVEL_LUA, 2, acc_key, prop_key, acc_max,
+    acc_win, prop_max, prop_win, has_prop) nach: prüft beide Ebenen all-or-nothing,
+    inkrementiert nur bei Erfolg, meldet bei Ablehnung NUR die blockierende Ebene
+    mit ihrer TTL (die andere -2). Optional wirft es (Redis-Ausfall)."""
 
     def __init__(self, *, fail: bool = False) -> None:
         self._counts: dict[str, int] = {}
         self._fail = fail
 
-    def eval(self, _script, _nkeys, key, window):  # noqa: ANN001, ANN201
+    def eval(  # noqa: ANN001, ANN201, PLR0913
+        self, _script, _nkeys, acc_key, prop_key,
+        acc_max, acc_win, prop_max, prop_win, has_prop,
+    ):
         if self._fail:
             raise redis.RedisError("down")
-        self._counts[key] = self._counts.get(key, 0) + 1
-        return [self._counts[key], int(window)]
+        acc = self._counts.get(acc_key, 0)
+        prop = self._counts.get(prop_key, 0) if int(has_prop) == 1 else 0
+        # Ablehnen ohne Inkrement, wenn eine Ebene über ihr Max ginge.
+        if acc + 1 > int(acc_max):
+            return [0, int(acc_win), -2]
+        if int(has_prop) == 1 and prop + 1 > int(prop_max):
+            return [0, -2, int(prop_win)]
+        self._counts[acc_key] = acc + 1
+        if int(has_prop) == 1:
+            self._counts[prop_key] = prop + 1
+        return [1, int(acc_win), int(prop_win) if int(has_prop) == 1 else -2]
 
 
 def _budget(fake: _FakeRedis, *, account: str = "3/60", prop: str = "2/60") -> ChannexBudget:

@@ -24,6 +24,7 @@ class _Q:
         self._name = name
         self._db = store
         self._eq = {}
+        self._ilike = {}
         self._op = "select"
         self._payload = None
 
@@ -50,6 +51,12 @@ class _Q:
         self._eq[c] = v
         return self
 
+    def ilike(self, c, v):  # noqa: ANN001, ANN201
+        # Case-insensitiver Literal-Vergleich (Produktivcode escapt die Wildcards
+        # via _like_escape, im Test kommen keine vor → als casefold-Gleichheit).
+        self._ilike[c] = v.replace("\\", "")
+        return self
+
     def limit(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
         return self
 
@@ -59,7 +66,15 @@ class _Q:
             row.setdefault("id", f"{self._name}-{len(self._store) + 1}")
             self._store.append(row)
             return _Res([row])
-        match = [r for r in self._store if all(r.get(k) == v for k, v in self._eq.items())]
+        match = [
+            r
+            for r in self._store
+            if all(r.get(k) == v for k, v in self._eq.items())
+            and all(
+                str(r.get(k) or "").casefold() == str(v).casefold()
+                for k, v in self._ilike.items()
+            )
+        ]
         if self._op == "update":
             for r in match:
                 r.update(self._payload)

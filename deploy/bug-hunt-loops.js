@@ -28,7 +28,18 @@ const KNOWN_FIXED = `BEREITS GEFIXT (NICHT erneut melden, nur NEUE/andere Bugs):
 - move()/cancel(): Stop-Sell + keine Freigabe OTA-belegter Tage
 - Inbox-Doppelversand (atomares Claim); Cloudflare-Hostname-Rollback
 - Rate-Limit tenant-Fairness pro IP; channex_budget retry_after; Stripe-Webhook-Claim; Addon-Idempotenz (0109)
-- WhatsApp-Webhook fail-closed; Dockerfile HOSTNAME; diverse EUR/Brand-Hardcodes, ItemsTable MwSt, Monatsgitter-Realtime`
+- WhatsApp-Webhook fail-closed; Dockerfile HOSTNAME; diverse EUR/Brand-Hardcodes, ItemsTable MwSt, Monatsgitter-Realtime
+GEFIXT IN RUNDE 3 (ebenfalls NICHT erneut melden):
+- ari_outbox-Superseding jetzt TAG-GENAU + im schnellen push_availability-Pfad (nicht nur Cron); _newer_covered_days, _superseding_days_by_row, _group_iso_days_to_ranges
+- update_invoice_raw sperrt finalisierte Rechnungen (Status+Nummer-Gate); Owner sieht keine season-price-Preise
+- Kalender-Preiswährung aus Rate-Plan (BoardProperty.currency, _fetch_rate_plan_bulk); PDF ItemsTable/TotalsDisplay/Girocode-QR mit echter Belegwährung
+- Channex-Budget pro Call (ChannexClient before_call/ChannexBudgetExhausted) statt 1 Token je Batch-Job
+- Doppel-Storno-Race (0110 Unique-Index + Handling); disconnect_channel Tenant-Eigentum vor Channex-Call (IDOR)
+- Teilerstattung → partially_refunded (0111, Webhook amount_refunded vs amount + refund_payment); create_booking_payment idempotent (retrieve_payment_intent)
+- Admin-Addon-Schnelltaste fängt 0109-Kollision (409); öffentliche Buchung: max_guests + Vergangenheitsdatum abgelehnt (_public_property)
+- connect_property fremde channex_property_id abgewiesen; GoBD-Nummer erst nach Validierung; customer_id tenant-gescopt
+- WhatsApp verify_token konstant-zeitig (compare_digest); Gäste-Dedup (0113 guests_tenant_email/phone_uq); properties-Realtime im Kalender
+- Nummernkreis-Constraint defensiv (0112); EmailSendModal Brand-Slug ohne Fallback; Banking-Modal Transaktions-Währung`
 
 // Nur bestätigte, echte Bugs. Schema erzwingt strukturierte Rückgabe.
 const FINDINGS_SCHEMA = {

@@ -359,9 +359,18 @@ class ReservationsService:
             return DashboardKpi(value=cur_val, change_pct=round(change, 1))
 
         checkins_30d = kpi(len(cur), len(prev))
-        revenue_30d = kpi(
-            sum(float(r.get("total_amount") or 0) for r in cur),
-            sum(float(r.get("total_amount") or 0) for r in prev),
+        # Umsatz-KPI NUR für Nutzer mit Betrags-Sichtbarkeit (mask.amounts).
+        # Ein Owner ohne PM_BOOKING_TOTAL darf laut §4.2 keinen Gesamtpreis sehen —
+        # weder einzeln (überall sonst gegated) noch aggregiert hier. Sonst würde
+        # der aggregierte 30-Tage-Umsatz seiner Objekte die Preis-Maskierung
+        # durchlöchern. None statt eines maskierten 0-Werts (kein erfundener Betrag).
+        revenue_30d = (
+            kpi(
+                sum(float(r.get("total_amount") or 0) for r in cur),
+                sum(float(r.get("total_amount") or 0) for r in prev),
+            )
+            if mask.amounts
+            else None
         )
         confirmed_30d = kpi(
             sum(1 for r in cur if r.get("status") == "confirmed"),
@@ -376,7 +385,7 @@ class ReservationsService:
             checkins_30d=checkins_30d,
             revenue_30d=revenue_30d,
             confirmed_30d=confirmed_30d,
-            currency=currency,
+            currency=currency if mask.amounts else "",
         )
 
     @staticmethod
@@ -604,6 +613,17 @@ class ReservationsService:
                 "Zeitraum/Objekt lassen sich nicht mehr ändern.",
                 status_code=409,
             )
+        # Ein eingecheckter (physisch anwesender) Gast darf NICHT verschoben werden:
+        # bei einem Objektwechsel würden die Alt-Nächte freigegeben und als
+        # availability=1 an die OTAs gepusht, obwohl der Gast noch im Zimmer ist
+        # (Doppelbelegungs-/Überbuchungsrisiko). Symmetrisch zu check_out(), das
+        # checked_in_at ebenfalls als echten „im Haus"-Zustand behandelt.
+        if current.get("checked_in_at"):
+            raise ReservationError(
+                "Gast ist bereits eingecheckt — der Aufenthalt lässt sich nicht "
+                "mehr verschieben. Bitte zuerst auschecken.",
+                status_code=409,
+            )
 
         old_property = current["property_id"]
         old_nights = {
@@ -718,19 +738,48 @@ class ReservationsService:
             ).execute()
             self._release_channex(tenant_id, old_property, release)
 
-        # Neue Nächte belegen.
-        self._db().table("availability").upsert(
-            [
-                {
-                    "property_id": req.property_id,
-                    "date": day.isoformat(),
-                    "status": "booked",
-                    "source": current.get("channel") or "direct",
-                }
-                for day in new_nights
-            ],
-            on_conflict="property_id,date",
-        ).execute()
+        # Neue Nächte belegen — aber NICHT eine parallel importierte OTA-Belegung
+        # überschreiben. Der EXCLUDE-Constraint befreit OTA-Buchungen
+        # (source_channex_booking_id gesetzt, Migration 0104), sodass das UPDATE
+        # oben nicht fehlschlägt, wenn zwischen Vorprüfung und Write eine OTA-Nacht
+        # importiert wurde. Deshalb den Ist-Zustand der Zieltage frisch lesen und
+        # nur die Tage belegen, die NICHT bereits von einer fremden Quelle als
+        # 'booked' geführt werden (sonst würde source auf den lokalen Kanal
+        # geklobbert und die OTA-Herkunft ginge verloren).
+        occupied_now = {
+            r["date"]: r.get("source")
+            for r in (
+                self._db()
+                .table("availability")
+                .select("date,status,source")
+                .eq("property_id", req.property_id)
+                .gte("date", req.check_in.isoformat())
+                .lt("date", req.check_out.isoformat())
+                .eq("status", "booked")
+                .execute()
+            ).data or []
+        }
+        own_source = current.get("channel") or "direct"
+        occupy_rows = [
+            {
+                "property_id": req.property_id,
+                "date": day.isoformat(),
+                "status": "booked",
+                "source": own_source,
+            }
+            for day in new_nights
+            # Tag von fremder Quelle belegt (nicht unser eigener Kanal, nicht ein
+            # eigener Alt-Tag am selben Objekt) → nicht überschreiben.
+            if not (
+                day.isoformat() in occupied_now
+                and occupied_now[day.isoformat()] not in (own_source, None)
+                and not (same_property and day.isoformat() in old_nights)
+            )
+        ]
+        if occupy_rows:
+            self._db().table("availability").upsert(
+                occupy_rows, on_conflict="property_id,date"
+            ).execute()
         self._push_channex_availability(
             tenant_id, req.property_id, req.check_in, req.check_out, 0
         )

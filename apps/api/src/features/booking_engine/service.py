@@ -476,8 +476,15 @@ class BookingEngineService:
         # ließe sich eine 0-€-/Fantasiepreis-Buchung anlegen). Anders als die
         # interne reservations.create gibt es hier keinen Mitarbeiter-Override.
         from src.features.pricing.resolver import PricingResolver  # noqa: PLC0415
-        from src.features.pricing.schemas import QuoteRequest  # noqa: PLC0415
+        from src.features.pricing.schemas import (  # noqa: PLC0415
+            AddonSelection,
+            QuoteRequest,
+        )
 
+        # Die gewählten Addons MÜSSEN in den Quote — sonst enthält total_amount nur
+        # die Unterkunft und der spätere Stripe-PaymentIntent (payments.service liest
+        # ausschließlich reservations.total_amount) kassiert die Zusatzleistungen nie.
+        # Der Resolver bepreist sie serverseitig aus dem Katalog (nicht aus Input).
         quote = PricingResolver(service_client=self._db()).quote(
             QuoteRequest(
                 property_id=req.property_id,
@@ -485,6 +492,10 @@ class BookingEngineService:
                 check_out=req.check_out,
                 guests=max(req.guests, 1),
                 channel="direct",
+                addons=[
+                    AddonSelection(addon_id=a.addon_id, qty=a.qty)
+                    for a in (req.addons or [])
+                ],
             )
         )
         total_amount = quote.total
@@ -530,22 +541,35 @@ class BookingEngineService:
             raise BookingEngineError("Buchung fehlgeschlagen.", status_code=500)
         outbox_id = (ins or {}).get("outbox_id")
 
-        # Zusatzleistungen (Upsells) serverseitig bepreisen + anlegen + Task-Trigger.
+        # Zusatzleistungen (Upsells) als reservation_addons anlegen (Erfüllung/
+        # Anzeige). Der Zahlbetrag steckt bereits im total_amount (Quote oben mit
+        # addons). Die Reservierung ist an dieser Stelle schon verbindlich committet
+        # (atomare RPC) — ein Addon-Insert-Fehler darf sie deshalb NICHT mehr mit
+        # 500 kippen (sonst existiert die Buchung, der Gast sieht aber einen Fehler
+        # und ein Retry läuft in einen 409 gegen die eigene Buchung). Best-effort.
         if req.addons:
             from src.features.addons.service import purchase_addons  # noqa: PLC0415
 
-            purchase_addons(
-                self._db(),
-                tenant_id=tenant_id,
-                reservation_id=str(row["id"]),
-                property_id=req.property_id,
-                surface="booking_engine",
-                selections=[(a.addon_id, a.qty) for a in req.addons],
-                nights=len(nights),
-                guests=max(req.guests, 1),
-                check_in_iso=req.check_in.isoformat(),
-                is_before_checkin=True,
-            )
+            try:
+                purchase_addons(
+                    self._db(),
+                    tenant_id=tenant_id,
+                    reservation_id=str(row["id"]),
+                    property_id=req.property_id,
+                    surface="booking_engine",
+                    selections=[(a.addon_id, a.qty) for a in req.addons],
+                    nights=len(nights),
+                    guests=max(req.guests, 1),
+                    check_in_iso=req.check_in.isoformat(),
+                    is_before_checkin=True,
+                )
+            except Exception as exc:  # noqa: BLE001 — Buchung ist schon committet
+                log.error(
+                    "public_booking_addons_failed",
+                    tenant_id=tenant_id,
+                    reservation_id=str(row["id"]),
+                    error=str(exc),
+                )
 
         # Kalender-Belegung ist bereits Teil der atomaren RPC (oben).
         # Realtime an Channex/OTAs sperren (availability=0) — kein OTA-Doppel.

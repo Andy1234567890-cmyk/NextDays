@@ -445,6 +445,7 @@ class _StoreQuery:
         self._name = name
         self._updates = updates
         self._eq: dict = {}
+        self._ilike: dict = {}
         self._op = "select"
         self._payload = None
 
@@ -467,6 +468,10 @@ class _StoreQuery:
         self._eq[col] = val
         return self
 
+    def ilike(self, col, val):  # noqa: ANN001, ANN201
+        self._ilike[col] = val.replace("\\", "")
+        return self
+
     def limit(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
         return self
 
@@ -476,7 +481,15 @@ class _StoreQuery:
             row.setdefault("id", f"{self._name}-{len(self._store) + 1}")
             self._store.append(row)
             return _Res([row])
-        match = [r for r in self._store if all(r.get(k) == v for k, v in self._eq.items())]
+        match = [
+            r
+            for r in self._store
+            if all(r.get(k) == v for k, v in self._eq.items())
+            and all(
+                str(r.get(k) or "").casefold() == str(v).casefold()
+                for k, v in self._ilike.items()
+            )
+        ]
         if self._op == "update":
             for r in match:
                 r.update(self._payload)

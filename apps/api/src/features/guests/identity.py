@@ -125,14 +125,28 @@ def contact_from_ota_customer(
     )
 
 
+def _like_escape(value: str) -> str:
+    """LIKE/ILIKE-Sonderzeichen escapen, damit der Wert als LITERAL matcht.
+    E-Mails enthalten regelmäßig '_' (ein ILIKE-Wildcard für ein beliebiges
+    Zeichen); ohne Escaping würde 'max_muster@x.de' fälschlich auch 'maxamuster@…'
+    treffen. Backslash zuerst, dann die Wildcards."""
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 def _find_by_email(
     db: Client, tenant_id: str, email: str
 ) -> str | None:
+    # Case-INSENSITIVE suchen: der Unique-Index ist auf (tenant_id, lower(email))
+    # (0113). Ein exaktes .eq('email', …) würde einen Bestandsgast mit mixed-case
+    # E-Mail (Legacy/anderer Schreibpfad) NICHT finden — der folgende Insert würde
+    # dann am lower(email)-Index kollidieren und die Idempotenz-Recovery liefe ins
+    # Leere (500). `ilike` mit escapten Wildcards ist ein case-insensitiver
+    # LITERAL-Vergleich und trifft dieselbe Zeile wie der Index.
     rows = (
         db.table("guests")
         .select("id")
         .eq("tenant_id", tenant_id)
-        .eq("email", email)
+        .ilike("email", _like_escape(email))
         .limit(1)
         .execute()
     ).data

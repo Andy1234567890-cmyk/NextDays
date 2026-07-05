@@ -65,18 +65,25 @@ def health() -> SliceHealth:
 def effective_prices(
     resolver: PricingResolverDep,
     settings: DpSettingsServiceDep,
-    ctx: Annotated[AuthContext, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    ctx: Annotated[
+        AuthContext,
+        Depends(require_lodgify_permission(Permission.PM_BOOKING_TOTAL)),
+    ],
     property_id: Annotated[str, Query()],
     start: Annotated[date, Query()],
     end: Annotated[date, Query()],
 ) -> list[EffectivePriceDay]:
     """Effektivpreis je Tag [start, end) — override > dynamic > weekday > base.
 
+    Preis-Sichtbarkeit (PM_BOOKING_TOTAL) ist Pflicht: ein Eigentümer sieht laut
+    Daten-Split §4.2 keine Preise/Gesamtbeträge — deshalb reicht VIEW_CALENDAR
+    hier NICHT (sonst umginge der Owner die Preis-Maskierung über /effective).
+
     Tenant-Scope: der Resolver liest nur nach property_id (Service-Role-Key umgeht
     RLS), daher muss das Objekt-Eigentum HIER geprüft werden, bevor Preise eines
     fremden Objekts ausgegeben werden könnten."""
     try:
-        settings._require_own_property(ctx, property_id)  # noqa: SLF001
+        settings.require_own_property(ctx, property_id)
         return resolver.effective_prices(property_id, start, end)
     except PricingError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
@@ -87,14 +94,19 @@ def quote(
     req: QuoteRequest,
     resolver: PricingResolverDep,
     settings: DpSettingsServiceDep,
-    ctx: Annotated[AuthContext, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    ctx: Annotated[
+        AuthContext,
+        Depends(require_lodgify_permission(Permission.PM_BOOKING_TOTAL)),
+    ],
 ) -> QuoteResponse:
     """Vollständige Preisaufschlüsselung eines Aufenthalts (Wizard/Buchung).
 
-    Tenant-Scope wie /effective: Eigentum am Objekt prüfen, bevor ein vollständiger
-    Quote (inkl. Konfig/Gebühren/Add-ons eines fremden Objekts) berechnet wird."""
+    Preis-Sichtbarkeit (PM_BOOKING_TOTAL) ist Pflicht (wie /effective): der Quote
+    gibt Gesamtpreis + Aufschlüsselung aus, die ein Owner laut §4.2 nicht sehen
+    darf. Tenant-Scope: Eigentum am Objekt prüfen, bevor ein vollständiger Quote
+    (inkl. Konfig/Gebühren/Add-ons eines fremden Objekts) berechnet wird."""
     try:
-        settings._require_own_property(ctx, req.property_id)  # noqa: SLF001
+        settings.require_own_property(ctx, req.property_id)
         return resolver.quote(req)
     except PricingError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
@@ -188,7 +200,7 @@ def explain_dynamic_price(
     # Eigentum/Tenant-Scope über den Settings-Service (wirft 403/404 sauber).
     service = DpSettingsService(service_client=db)
     try:
-        service._require_own_property(ctx, property_id)  # noqa: SLF001
+        service.require_own_property(ctx, property_id)
     except PricingError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

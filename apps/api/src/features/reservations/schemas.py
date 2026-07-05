@@ -231,7 +231,9 @@ class DashboardResponse(BaseModel):
     checkins_today: list[DashboardEntry]
     upcoming: list[DashboardEntry]
     checkins_30d: DashboardKpi
-    revenue_30d: DashboardKpi
+    # None, wenn der Nutzer keine Beträge sehen darf (Owner ohne PM_BOOKING_TOTAL,
+    # Daten-Split §4.2 „kein Gesamtpreis") — kein maskierter 0-Betrag erfunden.
+    revenue_30d: DashboardKpi | None = None
     confirmed_30d: DashboardKpi
     currency: str = ""
 

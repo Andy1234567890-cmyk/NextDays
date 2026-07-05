@@ -199,13 +199,17 @@ export function ReservationsDashboard({ data }: { data: Dashboard }) {
           display={String(data.checkins_30d.value)}
           unitLabel="Gäste-Check-ins"
         />
-        <KpiCard
-          icon="ph:currency-circle-dollar"
-          title="Umsatz"
-          kpi={data.revenue_30d}
-          display={formatCurrency(data.revenue_30d.value, data.currency)}
-          unitLabel="Gesamtumsatz"
-        />
+        {/* Umsatz-Kachel nur, wenn der Nutzer Beträge sehen darf. Für einen Owner
+            ohne PM_BOOKING_TOTAL liefert das Backend revenue_30d=null (§4.2). */}
+        {data.revenue_30d && (
+          <KpiCard
+            icon="ph:currency-circle-dollar"
+            title="Umsatz"
+            kpi={data.revenue_30d}
+            display={formatCurrency(data.revenue_30d.value, data.currency)}
+            unitLabel="Gesamtumsatz"
+          />
+        )}
         <KpiCard
           icon="ph:check-circle"
           title="Bestätigt"

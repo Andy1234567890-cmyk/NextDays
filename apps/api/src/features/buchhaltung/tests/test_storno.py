@@ -105,6 +105,30 @@ def test_storno_rejects_storno_of_storno() -> None:
     assert exc.value.status_code == 409
 
 
+def test_storno_rejects_draft_original() -> None:
+    """Ein Entwurf (status='draft', invoice_number=NULL) ist kein Beleg — ein
+    Storno darauf würde eine ST-Nummer verbrennen + eine Gutschrift auf einen
+    nicht existenten Beleg erzeugen (GoBD). Muss mit 409 abgelehnt werden."""
+    service, db = _service(
+        {"invoices": [{**_ORIGINAL, "status": "draft", "invoice_number": None}]}
+    )
+    with pytest.raises(BuchhaltungError) as exc:
+        service.create_storno_invoice(CTX, "i1", "grund")
+    assert exc.value.status_code == 409
+    # KEINE ST-Nummer gezogen, KEIN Storno-Beleg angelegt (kein insert).
+    assert "insert" not in db.calls.get("invoices", [])
+
+
+def test_storno_rejects_original_without_number() -> None:
+    """Auch ein sonst 'finalized', aber unnummerierter Beleg ist nicht stornierbar."""
+    service, _ = _service(
+        {"invoices": [{**_ORIGINAL, "invoice_number": None}]}
+    )
+    with pytest.raises(BuchhaltungError) as exc:
+        service.create_storno_invoice(CTX, "i1", "grund")
+    assert exc.value.status_code == 409
+
+
 def test_storno_duplicate_is_idempotent_and_repairs_original() -> None:
     """Retry nach Teilfehler: bestehender Storno-Beleg wird zurückgegeben und
     das Original sicher auf 'cancelled' gesetzt (kein Sackgassen-409)."""

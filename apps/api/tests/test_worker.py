@@ -153,7 +153,7 @@ def test_run_job_erfolg_setzt_done(monkeypatch) -> None:  # noqa: ANN001
 
     called = {}
 
-    def _ok(_db, payload):  # noqa: ANN001, ANN202
+    def _ok(_db, payload, _budget=None):  # noqa: ANN001, ANN202
         called["payload"] = payload
 
     monkeypatch.setitem(worker_mod.HANDLERS, "sync_property_content", _ok)
@@ -171,7 +171,7 @@ def test_run_job_erfolg_setzt_done(monkeypatch) -> None:  # noqa: ANN001
 def test_run_job_fehler_requeued_mit_backoff(monkeypatch) -> None:  # noqa: ANN001
     import src.worker as worker_mod
 
-    def _boom(_db, _payload):  # noqa: ANN001, ANN202
+    def _boom(_db, _payload, _budget=None):  # noqa: ANN001, ANN202
         raise RuntimeError("Channex down")
 
     monkeypatch.setitem(worker_mod.HANDLERS, "sync_property_content", _boom)
@@ -191,7 +191,7 @@ def test_run_job_fehler_requeued_mit_backoff(monkeypatch) -> None:  # noqa: ANN0
 def test_run_job_budget_erschoepft_wird_dead(monkeypatch) -> None:  # noqa: ANN001
     import src.worker as worker_mod
 
-    def _boom(_db, _payload):  # noqa: ANN001, ANN202
+    def _boom(_db, _payload, _budget=None):  # noqa: ANN001, ANN202
         raise RuntimeError("immer noch kaputt")
 
     monkeypatch.setitem(worker_mod.HANDLERS, "sync_property_content", _boom)
@@ -205,24 +205,24 @@ def test_run_job_budget_erschoepft_wird_dead(monkeypatch) -> None:  # noqa: ANN0
     assert db.updates[-1]["status"] == "dead"
 
 
-def test_run_job_kein_budget_wird_deferred(monkeypatch) -> None:  # noqa: ANN001
-    # Channex-Job ohne freies Token: NICHT ausführen, sondern verzögern (queued),
-    # OHNE attempts zu verbrauchen (Warten ist kein Fehlversuch).
+def test_run_job_budget_erschoepft_mitten_im_job_wird_deferred(monkeypatch) -> None:  # noqa: ANN001
+    # Channex-Budget wird PRO ECHTEM HTTP-CALL im Client gezogen (nicht mehr vorab
+    # in _run_job). Reißt es mitten im Batch, wirft der Client ChannexBudgetExhausted
+    # → _run_job verzögert den Job (queued) OHNE attempts zu verbrauchen (Warten ist
+    # kein Fehlversuch), sodass er ab dem erledigten Punkt weiterläuft (idempotent).
     import src.worker as worker_mod
+    from src.features.channel_manager.channex_client import ChannexBudgetExhausted
 
-    called = {"ran": False}
-
-    def _handler(_db, _payload):  # noqa: ANN001, ANN202
-        called["ran"] = True
+    def _handler(_db, _payload, _budget=None):  # noqa: ANN001, ANN202
+        raise ChannexBudgetExhausted("Budget erschöpft", retry_after=45)
 
     monkeypatch.setitem(worker_mod.HANDLERS, "sync_property_content", _handler)
     db = _StatusDB()
-    w = _worker_with(db, budget=_FakeBudget(allow=False, retry_after=45))
+    w = _worker_with(db)
     w._run_job({
         "id": "j5", "job_type": "sync_property_content",
         "attempts": 3, "max_attempts": 10, "payload": {"property_id": "p1"},
     })
-    assert called["ran"] is False           # Handler NICHT gelaufen
     last = db.updates[-1]
     assert last["status"] == "queued"        # zurück in die Warteschlange
     assert last["attempts"] == 2             # 3 − 1 (Claim-Erhöhung zurückgedreht)
@@ -233,7 +233,7 @@ def test_run_job_nicht_channex_umgeht_budget(monkeypatch) -> None:  # noqa: ANN0
     # wenn das Budget leer wäre. Handler läuft, Status done.
     import src.worker as worker_mod
 
-    monkeypatch.setitem(worker_mod.HANDLERS, "recompute_property", lambda _d, _p: None)
+    monkeypatch.setitem(worker_mod.HANDLERS, "recompute_property", lambda _d, _p, _b=None: None)
     db = _StatusDB()
     denying = _FakeBudget(allow=False)
     w = _worker_with(db, budget=denying)
@@ -263,7 +263,7 @@ def _run_push_ari(monkeypatch, payload):  # noqa: ANN001, ANN202
     import src.worker as worker_mod
 
     svc = _RecordingService()
-    monkeypatch.setattr(worker_mod, "_svc", lambda _db: svc)
+    monkeypatch.setattr(worker_mod, "_svc", lambda _db, _b=None: svc)
     worker_mod._handle_push_ari(None, payload)
     return svc.calls
 
@@ -315,7 +315,7 @@ def test_process_ari_outbox_handler_ruft_service(monkeypatch) -> None:  # noqa: 
     # Der Host-Cron endete mit process_ari_outbox(); der Worker-Handler ersetzt das.
     import src.worker as worker_mod
     svc = _RecordingService()
-    monkeypatch.setattr(worker_mod, "_svc", lambda _db: svc)
+    monkeypatch.setattr(worker_mod, "_svc", lambda _db, _b=None: svc)
     worker_mod._handle_process_ari_outbox(None, {})
     name, _args, _kwargs = svc.calls[0]
     assert name == "process_ari_outbox"

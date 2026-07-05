@@ -712,16 +712,24 @@ export function CalendarBoard({
     const winStart = dayKeys[0];
     const winEnd = key(addDays(winDays[0], winDays.length)); // exklusiv
     const seen = new Set<string>();
-    let revenue = 0;
-    let revenueNights = 0;
     let amountsHidden = false;
-    // Währung aus den Buchungsdaten (Reservation.currency) — kein €-Hardcode.
-    let currency: string | null = null;
+    // Umsatz + Nächte PRO Währung getrennt aggregieren — EUR und CHF dürfen nie
+    // zu einer Zahl addiert werden (inkommensurable Beträge). Erst am Ende wird
+    // entschieden, ob genau eine Währung vorliegt (dann echte KPI) oder mehrere
+    // (dann keine sinnlose Mischsumme). Währung aus den Buchungsdaten, kein €-Hardcode.
+    const revByCur = new Map<string, number>();
+    const nightsByCur = new Map<string, number>();
     for (const p of shown) {
       for (const r of Object.values(resByProp[p.id] ?? {})) {
         if (seen.has(r.id) || r.status === "cancelled") continue;
         seen.add(r.id);
         if (r.total_amount == null) {
+          amountsHidden = true;
+          continue;
+        }
+        // currency kann "" sein (nullable seit 0078 bzw. maskiert) — leere
+        // Strings sind KEIN gültiger ISO-Code (toLocaleString wirft sonst).
+        if (!r.currency) {
           amountsHidden = true;
           continue;
         }
@@ -735,13 +743,17 @@ export function CalendarBoard({
           1,
           Math.round((new Date(`${r.check_out}T00:00:00`).getTime() - new Date(`${r.check_in}T00:00:00`).getTime()) / 86400000),
         );
-        revenue += (r.total_amount * nightsInWin) / totalResNights;
-        revenueNights += nightsInWin;
-        // currency kann "" sein (nullable seit 0078 bzw. maskiert) — leere
-        // Strings sind KEIN gültiger ISO-Code (toLocaleString wirft sonst).
-        if (currency == null && r.currency) currency = r.currency;
+        const cur = r.currency;
+        revByCur.set(cur, (revByCur.get(cur) ?? 0) + (r.total_amount * nightsInWin) / totalResNights);
+        nightsByCur.set(cur, (nightsByCur.get(cur) ?? 0) + nightsInWin);
       }
     }
+    const currencies = [...revByCur.keys()];
+    // Genau eine Währung → echte Umsatz-/ADR-Zahl. Mehrere → mixedCurrency=true,
+    // die KPI-Leiste zeigt dann keinen (physikalisch sinnlosen) Mischbetrag.
+    const singleCur = currencies.length === 1 ? currencies[0] : null;
+    const revenue = singleCur ? (revByCur.get(singleCur) ?? 0) : 0;
+    const revenueNights = singleCur ? (nightsByCur.get(singleCur) ?? 0) : 0;
     return {
       occupancy: totalNights ? bookedNights / totalNights : 0,
       bookedNights,
@@ -749,7 +761,8 @@ export function CalendarBoard({
       revenue,
       adr: revenueNights > 0 ? revenue / revenueNights : null,
       amountsHidden,
-      currency,
+      currency: singleCur,
+      mixedCurrency: currencies.length > 1,
     };
   }, [start, shown, dates, avail, resByProp, visFrom, view.rangeDays]);
 
@@ -1207,7 +1220,9 @@ export function CalendarBoard({
           icon="ph:currency-circle-dollar"
           label="Umsatz"
           value={
-            (metrics.amountsHidden && metrics.revenue === 0) || !metrics.currency
+            metrics.mixedCurrency ||
+            !metrics.currency ||
+            (metrics.amountsHidden && metrics.revenue === 0)
               ? "—"
               : metrics.revenue.toLocaleString("de-DE", {
                 style: "currency",
@@ -1215,13 +1230,19 @@ export function CalendarBoard({
                 maximumFractionDigits: 0,
               })
           }
-          hint={metrics.amountsHidden ? "ohne gesperrte Beträge" : "im Zeitraum"}
+          hint={
+            metrics.mixedCurrency
+              ? "gemischte Währungen"
+              : metrics.amountsHidden
+                ? "ohne gesperrte Beträge"
+                : "im Zeitraum"
+          }
         />
         <Metric
           icon="ph:bed"
           label="ADR"
           value={
-            metrics.adr == null || !metrics.currency
+            metrics.mixedCurrency || metrics.adr == null || !metrics.currency
               ? "—"
               : metrics.adr.toLocaleString("de-DE", {
                 style: "currency",
@@ -1229,7 +1250,7 @@ export function CalendarBoard({
                 maximumFractionDigits: 0,
               })
           }
-          hint="Ø Nachtpreis"
+          hint={metrics.mixedCurrency ? "gemischte Währungen" : "Ø Nachtpreis"}
         />
       </div>
 

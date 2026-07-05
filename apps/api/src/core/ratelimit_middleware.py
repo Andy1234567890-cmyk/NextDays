@@ -173,7 +173,23 @@ class RateLimitMiddleware:
         # aussperren, und Büro-NAT (mehrere Mitarbeiter, eine IP) teilt sich sonst
         # ein IP-Limit. Nicht-eingeloggte listings-Requests (öffentlicher
         # Marktplatz) bleiben pro IP (Scraper-Schutz). Alle anderen Buckets: IP.
+        #
+        # WICHTIG (Cross-Tenant-DoS): Beim listings-Pfad wird das IP-Limit ZUERST
+        # geprüft und der globale Tenant-Zähler erst DANACH inkrementiert. Die
+        # tenant_id stammt aus einem NICHT signaturgeprüften JWT — ein Angreifer
+        # könnte sonst mit der REALEN Opfer-tenant_id von wenigen IPs den globalen
+        # 1200/60-Zähler des Opfers vollschreiben und dessen echte Mitarbeiter
+        # tenant-weit aussperren. Der bedingungslose INCR im Limiter macht diesen
+        # Zähler unumkehrbar; deshalb muss der IP-Guard davorstehen (nicht danach).
         if bucket_name == "listings" and tenant:
+            ip_decision = await limiter.check(
+                f"listings:ip:{ip or 'unknown'}", self._buckets.listings
+            )
+            if ip_decision.degraded:
+                return self._handle_degraded(sensitive, path)
+            if not ip_decision.allowed:
+                return self._reject(ip_decision, "listings", path, scope="ip")
+
             primary_key = f"listings:tenant:{tenant}"
             limit = self._buckets.listings_tenant
             primary_scope = "listings-tenant"
@@ -186,20 +202,6 @@ class RateLimitMiddleware:
             return self._handle_degraded(sensitive, path)
         if not decision.allowed:
             return self._reject(decision, bucket_name, path, scope=primary_scope)
-
-        # Scraper-Schutz gegen unsignierte Tokens: die tenant_id im listings-Pfad
-        # stammt aus einem NICHT signaturgeprüften JWT (_tenant_from_bearer). Ein
-        # Angreifer könnte mit rotierenden Fantasie-tenant_ids beliebig viele
-        # 1200/60-Fenster öffnen und so das strengere IP-Limit umgehen. Deshalb
-        # koppeln wir das Tenant-Upgrade IMMER zusätzlich an ein IP-Limit — ein
-        # legitimer Betrieb bleibt unter beiden, ein Scraper von EINER IP kann
-        # über Token-Rotation trotzdem nie mehr als das IP-Fenster erzeugen.
-        if bucket_name == "listings" and tenant:
-            ip_decision = await limiter.check(
-                f"listings:ip:{ip or 'unknown'}", self._buckets.listings
-            )
-            if not ip_decision.degraded and not ip_decision.allowed:
-                return self._reject(ip_decision, "listings", path, scope="ip")
 
         # Zusätzliches Tenant-Fairness-Limit für eingeloggte Requests. Der
         # Schlüssel wird PRO IP gekeyt (tenant:{tenant}:ip:{ip}), NICHT global

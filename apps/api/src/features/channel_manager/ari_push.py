@@ -261,7 +261,15 @@ class AriPushMixin:
         (nicht nur der Cron), (2) es arbeitet TAG-GENAU (eine ältere Zeile wird
         nur für die überlappenden Tage übersprungen, ihre übrigen Tage gehen
         weiterhin raus). `created_at` kann fehlen (frisch angelegte Zeile ohne
-        DB-Roundtrip) → dann konservativ leer (nichts überspringen)."""
+        DB-Roundtrip) → dann konservativ leer (nichts überspringen).
+
+        NUR 'pending'/'done'-Zeilen zählen als Supersessor: eine 'failed'-Zeile hat
+        ihren Wert NIE zuverlässig an Channex übertragen — sie darf eine ältere,
+        echte Sperre (avail=0) nicht dauerhaft unterdrücken (sonst erreicht weder
+        der alte noch der neue Wert Channex, und die gebuchten Nächte bleiben auf
+        OTAs verkaufbar). 'pending' zählt weiter, weil diese neuere Zeile selbst
+        noch gepusht wird (jüngste Absicht) — kippt sie später auf 'failed', gibt
+        sie die Tage beim nächsten Retry der älteren Zeile automatisch frei."""
         if not created_at:
             return set()
         q = (
@@ -269,6 +277,7 @@ class AriPushMixin:
             .select("date_from,date_to,created_at")
             .eq("property_id", property_id)
             .gt("created_at", created_at)
+            .in_("status", ["pending", "done"])
         )
         if outbox_id is not None:
             q = q.neq("id", outbox_id)
@@ -839,9 +848,13 @@ class AriPushMixin:
                             }
                         ]
                     )
+                # Guard status='pending' wie in den übrigen Zweigen: arbeitet der
+                # schnelle push_availability_for_property-Pfad dieselbe Zeile
+                # nebenläufig ab, darf der Cron ihren Zustand/attempts-Zähler nicht
+                # blind überschreiben (konsistenter attempts-/last_error-Verlauf).
                 db.table("ari_outbox").update(
                     {"status": "done", "attempts": (r["attempts"] or 0) + 1}
-                ).eq("id", r["id"]).execute()
+                ).eq("id", r["id"]).eq("status", "pending").execute()
                 result["done"] += 1
             except ChannexError as exc:
                 attempts = (r["attempts"] or 0) + 1

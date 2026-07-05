@@ -154,7 +154,9 @@ export type Dashboard = {
   checkins_today: DashboardEntry[];
   upcoming: DashboardEntry[];
   checkins_30d: DashboardKpi;
-  revenue_30d: DashboardKpi;
+  // null, wenn der Nutzer keine Beträge sehen darf (Owner ohne PM_BOOKING_TOTAL,
+  // Daten-Split §4.2) — die Umsatz-Kachel wird dann nicht gerendert.
+  revenue_30d: DashboardKpi | null;
   confirmed_30d: DashboardKpi;
   currency: string;
 };

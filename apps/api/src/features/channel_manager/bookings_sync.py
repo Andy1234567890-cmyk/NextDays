@@ -309,21 +309,31 @@ class BookingsSyncMixin:
                 db.table("reservations").update({"status": "cancelled"}).eq(
                     "id", existing[0]["id"]
                 ).execute()
+            freed: list[str] = []
             for d in self._date_range_nights(arrival, departure):
                 # nur freigeben, wenn der Tag von DIESER OTA-Quelle belegt war
-                db.table("availability").update(
-                    {"status": "open", "source": "manual"}
-                ).eq("property_id", property_id).eq("date", d).eq(
-                    "status", "booked"
-                ).eq("source", channel).execute()
-            # Freigabe an Channex: Tage wieder verfügbar (availability=1).
-            self.push_availability_for_property(
-                tenant_id,
-                property_id,
-                date.fromisoformat(arrival),
-                date.fromisoformat(departure) - timedelta(days=1),
-                1,
-            )
+                upd = (
+                    db.table("availability")
+                    .update({"status": "open", "source": "manual"})
+                    .eq("property_id", property_id)
+                    .eq("date", d)
+                    .eq("status", "booked")
+                    .eq("source", channel)
+                    .execute()
+                ).data or []
+                if upd:
+                    freed.append(d)
+            # Freigabe an Channex NUR für die Tage, die lokal WIRKLICH frei wurden
+            # (availability=1). Der gesamte Zeitraum arrival..departure darf NICHT
+            # pauschal auf 1 gesetzt werden: bleibt eine Nacht lokal belegt (z. B.
+            # manueller Block oder eine überlappende Direkt-/Fremdkanal-Belegung,
+            # die der quellengefilterte Update nicht freigab), würde Channex sie
+            # sonst als wieder buchbar melden → Überbuchung.
+            for d in freed:
+                day = date.fromisoformat(d)
+                self.push_availability_for_property(
+                    tenant_id, property_id, day, day, 1
+                )
             return True
 
         if guest_id is None:

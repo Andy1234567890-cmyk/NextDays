@@ -162,15 +162,20 @@ _NO_PERMS: list[str] = []
 def _dashboard_db(
     reservations: list[dict], properties: list[dict],
     *, user_role: str = "admin", user_perms: list[str] | None = None,
+    owner_pids: list[str] | None = None,
 ) -> MagicMock:
-    """Mockt die im dashboard() benutzten Ketten (reservations + properties + users)."""
+    """Mockt die im dashboard() benutzten Ketten (reservations + properties +
+    users + owner_property_assignments)."""
     db = MagicMock(name="supabase")
 
     def table(name: str) -> MagicMock:
         t = MagicMock(name=f"table:{name}")
         if name == "reservations":
-            chain = t.select.return_value.eq.return_value
-            chain.execute.return_value.data = reservations
+            # Owner-Scope hängt ein .in_(property_id, ...) an → beide Ketten
+            # (mit/ohne in_) auf dieselben Daten zeigen lassen.
+            base = t.select.return_value.eq.return_value
+            base.execute.return_value.data = reservations
+            base.in_.return_value.execute.return_value.data = reservations
         elif name == "properties":
             chain = t.select.return_value.eq.return_value.in_.return_value
             chain.execute.return_value.data = properties
@@ -179,6 +184,11 @@ def _dashboard_db(
             perms = _FULL_PERMS if user_perms is None else user_perms
             chain.execute.return_value.data = [
                 {"role": user_role, "permissions": perms}
+            ]
+        elif name == "owner_property_assignments":
+            chain = t.select.return_value.eq.return_value.eq.return_value
+            chain.execute.return_value.data = [
+                {"property_id": p} for p in (owner_pids or [])
             ]
         return t
 
@@ -227,6 +237,33 @@ def test_dashboard_buckets_and_kpis() -> None:
     # keine Vorperiode → ehrlich None statt erfundener 0 %
     assert out.checkins_30d.change_pct is None
     assert out.currency == "EUR"
+
+
+def test_dashboard_owner_revenue_masked() -> None:
+    """Owner ohne PM_BOOKING_TOTAL sieht laut §4.2 keinen (auch nicht aggregierten)
+    Umsatz: revenue_30d=None + currency='' — die anderen KPIs bleiben sichtbar."""
+    today = date.today()
+    iso = lambda d: d.isoformat()  # noqa: E731
+    reservations = [
+        {"id": "r1", "property_id": "p1", "channel": "booking", "status": "confirmed",
+         "check_in": iso(today - timedelta(days=3)), "check_out": iso(today),
+         "total_amount": 300, "currency": "EUR", "guests": {"name": "Anna"}},
+        {"id": "r2", "property_id": "p1", "channel": "airbnb", "status": "confirmed",
+         "check_in": iso(today), "check_out": iso(today + timedelta(days=2)),
+         "total_amount": 200, "currency": "EUR", "guests": {"name": "Bea"}},
+    ]
+    properties = [{"id": "p1", "title": "Strandhaus", "currency": "EUR"}]
+    svc = _dashboard_db(
+        reservations, properties, user_role="owner", user_perms=_NO_PERMS,
+        owner_pids=["p1"],
+    )
+    out = svc.dashboard(AuthContext(user_id="u", tenant_id="t1", role="owner"))
+    # Umsatz maskiert (kein erfundener 0-Wert), Währung leer.
+    assert out.revenue_30d is None
+    assert out.currency == ""
+    # Nicht-Betrags-KPIs bleiben sichtbar.
+    assert out.checkins_30d.value == 2
+    assert out.confirmed_30d.value == 2
 
 
 # --- DSGVO-Daten-Split (§4): Maskierung je Rolle -----------------------------
@@ -478,7 +515,10 @@ def _move_db(store: dict) -> ReservationsService:
     return ReservationsService(service_client=db)
 
 
-def _move_store(*, check_in: str, check_out: str, status: str = "confirmed") -> dict:
+def _move_store(
+    *, check_in: str, check_out: str, status: str = "confirmed",
+    checked_in_at: str | None = None,
+) -> dict:
     return {
         "users": [{"id": "u", "role": "admin", "permissions": _FULL_PERMS}],
         "properties": [
@@ -491,6 +531,7 @@ def _move_store(*, check_in: str, check_out: str, status: str = "confirmed") -> 
                 "channel": "booking", "check_in": check_in, "check_out": check_out,
                 "status": status, "total_amount": 200, "currency": "EUR",
                 "ota_name": "Booking.com", "guests": {"name": "Anna"},
+                "checked_in_at": checked_in_at, "checked_out_at": None,
             }
         ],
         "availability": [
@@ -571,6 +612,31 @@ def test_move_rejects_cancelled() -> None:
             ),
         )
     assert exc.value.status_code == 409
+
+
+def test_move_rejects_checked_in_reservation() -> None:
+    """Ein eingecheckter (physisch anwesender) Gast darf nicht verschoben werden —
+    sonst würden die belegten Nächte freigegeben und als availability=1 an die OTAs
+    gepusht, obwohl der Gast noch im Zimmer ist (Überbuchungsgefahr)."""
+    store = _move_store(
+        check_in="2026-07-01", check_out="2026-07-03",
+        checked_in_at="2026-07-01T14:00:00+00:00",
+    )
+    svc = _move_db(store)
+    with pytest.raises(ReservationError) as exc:
+        svc.move(
+            AuthContext(user_id="u", tenant_id="t1", role="admin"),
+            "r1",
+            ReservationMove(
+                property_id="p2", check_in=date(2026, 7, 10),
+                check_out=date(2026, 7, 12),
+            ),
+        )
+    assert exc.value.status_code == 409
+    assert "eingecheckt" in exc.value.message
+    # Alt-Objekt bleibt belegt (kein Freigabe-Push).
+    avail = {(a["property_id"], a["date"]): a["status"] for a in store["availability"]}
+    assert avail[("p1", "2026-07-01")] == "booked"
 
 
 def test_move_unknown_reservation_404() -> None:

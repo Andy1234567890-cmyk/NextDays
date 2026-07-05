@@ -255,6 +255,41 @@ def test_listings_unsigned_token_rotation_cannot_bypass_ip_limit() -> None:
     assert codes == [200, 200, 429, 429, 429]
 
 
+def test_listings_ip_capped_attacker_cannot_fill_victim_tenant_counter() -> None:
+    # Cross-Tenant-DoS-Fix: Ein Angreifer sendet mit der REALEN Opfer-tenant_id
+    # (unsigniertes JWT) von EINER IP. Das IP-Limit (2/60) wird ZUERST geprüft —
+    # nach 2 Requests ist die Angreifer-IP dicht und der globale Opfer-Tenant-
+    # Zähler wurde nur 2× (statt bei jedem Request) inkrementiert. Danach kann das
+    # Opfer selbst (andere IP) seinen Kalender weiter laden, weil sein Tenant-
+    # Fenster (5/60) nicht vom Angreifer vollgeschrieben wurde.
+    settings = Settings(rate_limit_listings="2/60", rate_limit_listings_tenant="5/60")
+    client = TestClient(_app_with_limiter(_FakeRedis(), settings))
+    victim = _bearer("victim-tenant")
+    attacker_ip = {"X-Forwarded-For": "6.6.6.6"}
+    codes = [
+        client.get(
+            "/api/v1/booking-engine/listings",
+            headers={"Authorization": victim, **attacker_ip},
+        ).status_code
+        for _ in range(6)
+    ]
+    # Angreifer kommt nur 2× durch (IP-Limit), danach 429 — der Opfer-Tenant-
+    # Zähler wurde dadurch nur 2× erhöht, nicht 6×.
+    assert codes == [200, 200, 429, 429, 429, 429]
+    # Das Opfer von einer sauberen IP hat sein Tenant-Fenster (5/60) noch frei:
+    # der Angreifer hat es nur bis 2 gefüllt. 2 Requests (innerhalb des IP-Limits
+    # von 2) gehen durch — vor dem Fix hätte der Angreifer das Fenster längst voll.
+    clean_ip = {"X-Forwarded-For": "10.20.30.40"}
+    for _ in range(2):
+        assert (
+            client.get(
+                "/api/v1/booking-engine/listings",
+                headers={"Authorization": victim, **clean_ip},
+            ).status_code
+            == 200
+        )
+
+
 def test_fail_open_on_redis_outage_for_normal_endpoint() -> None:
     settings = Settings(rate_limit_listings="1/60")
     client = TestClient(_app_with_limiter(_FakeRedis(fail=True), settings))
