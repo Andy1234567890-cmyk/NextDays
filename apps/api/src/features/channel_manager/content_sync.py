@@ -642,9 +642,14 @@ class ContentSyncMixin:
             "associated_rate_plan_ids": channex_rate_plan_ids,
         }
         # Bestehendes Set wiederverwenden (an irgendeiner Map dieser Property).
+        # tenant_id-Filter zusätzlich zur property_id: channex_tax_map HAT eine
+        # tenant_id-Spalte, und der Service-Role-Key umgeht RLS — jede Query MUSS
+        # tenant-scopen (Belt-and-suspenders, auch wenn property_id upstream schon
+        # tenant-verifiziert ist).
         existing_set = (
             db.table("channex_tax_map")
             .select("channex_tax_set_id")
+            .eq("tenant_id", tenant_id)
             .eq("property_id", property_id)
             .not_.is_("channex_tax_set_id", "null")
             .limit(1)
@@ -659,7 +664,9 @@ class ContentSyncMixin:
             if tax_set_id:
                 db.table("channex_tax_map").update(
                     {"channex_tax_set_id": tax_set_id}
-                ).eq("property_id", property_id).is_("deleted_at", "null").execute()
+                ).eq("tenant_id", tenant_id).eq(
+                    "property_id", property_id
+                ).is_("deleted_at", "null").execute()
         log.info(
             "channex_taxes_synced",
             tenant_id=tenant_id,
