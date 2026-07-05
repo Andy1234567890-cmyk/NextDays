@@ -1,0 +1,84 @@
+# ──────────────────────────────────────────────────────────────────────────
+# nextdays-api — FastAPI-Backend als EIGENSTÄNDIGE Coolify-App.
+#
+# WARUM GETRENNT VOM DB-STACK (deploy/supabase/): Coolify deployt einen Compose-
+# Stack als EINE Einheit (stop-all → start-all, KEIN Rolling-Update). Solange die
+# api im DB-Stack liegt, fährt JEDER apps/api/-Deploy die Produktions-Datenbank
+# mit herunter. Als eigene App bekommt die api ihren eigenen Deploy-Lebenszyklus:
+# ein api-Deploy startet nur diesen Container neu, die DB bleibt unberührt.
+# (Quelle: Coolify-Doc „no rolling update for compose"; Mornati „Monolith→Decoupled".)
+#
+# Die DB, auth, storage, rest, realtime, kong bleiben im DB-Stack. Die api erreicht
+# kong (SUPABASE_URL=http://kong:8000) und redis über das stabile externe Netz
+# „supabase-internal" per Servicename — dieselbe Mechanik wie der Kong-Stack.
+#
+# Von außen erreichbar (REST-API) → hängt zusätzlich im Coolify-App-Netz, damit
+# Traefik/Caddy sie routet. Domain wird in Coolify gesetzt (docker_compose_domains).
+# ──────────────────────────────────────────────────────────────────────────
+services:
+  api:
+    # Build-Kontext = Repo-Root (Coolify base_directory). Dasselbe Image wie zuvor.
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    image: nextdays-api:prod
+    # KEIN container_name: Coolify/Traefik nutzt den Service-Namen für Discovery.
+    restart: unless-stopped
+    networks:
+      # coolify-Netz EXPLIZIT (sonst hängt Coolify den Container bei eigenem
+      # networks:-Block NICHT automatisch ins Ingress-Netz → Traefik erreicht die
+      # api nicht → 504). Das App-Netz (COOLIFY_RESOURCE_UUID) setzt Coolify selbst.
+      coolify:
+      default:
+      supabase-internal:
+        aliases: [api]
+    labels:
+      # Traefik muss wissen, ÜBER WELCHES Netz es die api anspricht (sie hängt in
+      # mehreren). MUSS das Coolify-App-Netz sein (= COOLIFY_RESOURCE_UUID), NICHT
+      # „coolify": Coolify hängt jeden Service in sein App-Netz und lässt die
+      # explizite coolify-Netz-Mitgliedschaft beim Generieren fallen. Zeigt das
+      # Label auf „coolify", trifft Traefik eine falsche IP → 504 nach JEDEM Deploy.
+      # COOLIFY_RESOURCE_UUID setzt Coolify je App automatisch (wie im Kong-Stack).
+      - traefik.docker.network=${COOLIFY_RESOURCE_UUID}
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # 4 Worker (8-Kern-Server); ~0,6 GB je Instanz.
+      UVICORN_WORKERS: ${UVICORN_WORKERS:-4}
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      # Kong intern im supabase-internal-Netz (kein Hairpin).
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      SUPABASE_JWT_SECRET: ${JWT_SECRET}
+      # Redis über supabase-internal (alias redis) — der redis-Service ist (nach
+      # der Trennung) selbst eine eigene App in supabase-internal, per Name erreichbar.
+      REDIS_URL: ${REDIS_URL:-redis://:${REDIS_PASSWORD}@redis:6379/0}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
+      GOOGLE_TRANSLATE_API_KEY: ${GOOGLE_TRANSLATE_API_KEY:-}
+    expose:
+      - "8000"
+    # Healthcheck = Voraussetzung für Coolifys Start-before-Stop (Zero-Downtime):
+    # der neue Container übernimmt Traffic erst, wenn /health grün ist.
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+# coolify + default = Coolify-verwaltete App-Netze. supabase-internal = das
+# stabile externe Netz zum DB-Stack (kong/redis/auth/rest per Name). external +
+# name: → Coolify nutzt das vorhandene Netz, legt kein isoliertes neues an.
+networks:
+  coolify:
+    external: true
+    name: coolify
+  default:
+  supabase-internal:
+    external: true
+    name: supabase-internal
