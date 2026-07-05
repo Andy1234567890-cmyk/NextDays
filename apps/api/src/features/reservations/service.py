@@ -13,11 +13,13 @@ from __future__ import annotations
 from datetime import UTC, date, datetime, timedelta
 from typing import TYPE_CHECKING
 
+from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.features.auth.guest_masking import GuestMask, load_guest_mask
+from src.features.auth.owner_scope import is_owner, owner_property_ids
 from src.features.guests.identity import (
     GuestContact as ResolverContact,
 )
@@ -64,6 +66,23 @@ class ReservationError(Exception):
         self.status_code = status_code
 
 
+def _map_booking_conflict(exc: APIError) -> Exception:
+    """Fehler der atomaren Buchung (RPC 0104) auf fachliche Fehler mappen.
+
+    RS409 = Konflikt aus create_reservation_atomic (belegt bzw. Stop-Sell, die
+    Message unterscheidet die Fälle). 23P01 = EXCLUDE-Constraint
+    reservations_no_local_overlap (DB-Backstop gegen Doppelbuchung). Alles
+    andere unverändert weiterreichen.
+    """
+    if exc.code == "RS409":
+        return ReservationError(exc.message, status_code=409)
+    if exc.code == "23P01":
+        return ReservationError(
+            "Zeitraum enthält bereits belegte/gesperrte Tage.", status_code=409
+        )
+    return exc
+
+
 def _nights(check_in: date, check_out: date) -> list[date]:
     days: list[date] = []
     cur = check_in
@@ -93,6 +112,54 @@ class ReservationsService:
             raise ReservationError("Kein Tenant im Konto.", status_code=400)
         return ctx.tenant_id
 
+    def _owner_scope_pids(self, ctx: AuthContext) -> list[str] | None:
+        """Objekt-IDs, auf die ein Eigentümer eingeschränkt ist (§4.2).
+
+        None = keine Einschränkung (admin/co_admin sehen den ganzen Tenant).
+        Liste (ggf. leer) = nur diese Objekte. Der Service läuft mit Service-
+        Role (RLS umgangen), also muss der Owner-Self-Scope hier greifen — sonst
+        sieht ein Eigentümer die Buchungen fremder Objekte desselben Tenants."""
+        if not is_owner(ctx):
+            return None
+        return list(owner_property_ids(self._db(), ctx))
+
+    def _write_ari_outbox(
+        self,
+        tenant_id: str,
+        property_id: str,
+        date_from: date,
+        date_to_incl: date,
+        availability: int,
+    ) -> str | None:
+        """Push-Absicht VOR dem Job-Enqueue in der ari_outbox persistieren:
+        scheitert das Einreihen (DB-Hiccup), zieht der process_ari_outbox-Tick
+        die Zeile nach — der Push geht nie ersatzlos verloren. Best-effort:
+        ohne Outbox-Zeile legt der Worker beim Push selbst eine an (Altpfad)."""
+        try:
+            ins = (
+                self._db()
+                .table("ari_outbox")
+                .insert(
+                    {
+                        "tenant_id": tenant_id,
+                        "property_id": property_id,
+                        "date_from": date_from.isoformat(),
+                        "date_to": date_to_incl.isoformat(),
+                        "availability": availability,
+                        "status": "pending",
+                    }
+                )
+                .execute()
+            )
+            return ins.data[0]["id"] if ins.data else None
+        except Exception as exc:  # noqa: BLE001 — Outbox darf den Request nie kippen
+            log.warning(
+                "ari_outbox_write_failed",
+                property_id=property_id,
+                error=str(exc)[:200],
+            )
+            return None
+
     def _push_channex_availability(
         self,
         tenant_id: str,
@@ -100,19 +167,30 @@ class ReservationsService:
         check_in: date,
         check_out: date,
         availability: int,
+        outbox_id: str | None = None,
     ) -> None:
         """Verfügbarkeit der belegten/freigegebenen Nächte als ARI-Push-Job
         einreihen (Phase 2). Doppelbuchungsschutz: die Belegung geht so ohne
         Request-Blockade an Channex. KEIN coalesce — jede Buchung/Freigabe betrifft
         einen eigenen Zeitraum, ein pauschaler dedup_key würde disjunkte Ranges
-        verschmelzen. Zusätzlich ist der Push über die ari_outbox abgesichert."""
+        verschmelzen. Die Push-Absicht liegt VOR dem Enqueue in der ari_outbox
+        (übergeben oder hier geschrieben) — verlorene Enqueues holt der Cron nach."""
         if self._client is None:
             return
+        if outbox_id is None:
+            outbox_id = self._write_ari_outbox(
+                tenant_id, property_id, check_in,
+                check_out - timedelta(days=1), availability,
+            )
+        fields: dict[str, object] = {
+            "date_from": check_in.isoformat(),
+            "date_to": (check_out - timedelta(days=1)).isoformat(),  # Abreise exkl.
+            "availability": availability,
+        }
+        if outbox_id:
+            fields["outbox_id"] = outbox_id
         try_enqueue_ari(
-            self._client, tenant_id, property_id, "availability",
-            {"date_from": check_in.isoformat(),
-             "date_to": (check_out - timedelta(days=1)).isoformat(),  # Abreise exkl.
-             "availability": availability},
+            self._client, tenant_id, property_id, "availability", fields,
         )
 
     def _recompute_dynamic_pricing(self, tenant_id: str, property_id: str) -> None:
@@ -128,13 +206,28 @@ class ReservationsService:
 
     def list(self, ctx: AuthContext, property_id: str | None = None) -> ReservationListResponse:
         tenant_id = self._require_tenant(ctx)
+        # Owner-Scope (§4.2): Eigentümer sehen NUR Buchungen ihrer zugeordneten
+        # Objekte. Leere Zuordnung → leere Liste (fail-closed).
+        owner_pids = self._owner_scope_pids(ctx)
+        if owner_pids is not None and not owner_pids:
+            return ReservationListResponse(items=[], total=0)
         query = (
             self._db()
             .table("reservations")
             .select("*, guests(name)")
             .eq("tenant_id", tenant_id)
         )
-        if property_id:
+        if owner_pids is not None:
+            # Ein vom Client übergebener property_id-Filter darf den Owner-Scope
+            # nicht ausweiten — Schnittmenge bilden.
+            scoped = (
+                [property_id] if property_id and property_id in owner_pids
+                else [] if property_id else owner_pids
+            )
+            if not scoped:
+                return ReservationListResponse(items=[], total=0)
+            query = query.in_("property_id", scoped)
+        elif property_id:
             query = query.eq("property_id", property_id)
         res = query.order("check_in", desc=True).execute()
         mask = load_guest_mask(self._client, ctx.user_id)
@@ -149,13 +242,20 @@ class ReservationsService:
         Tage, jeweils mit prozentualer Veränderung gegenüber den 30 Tagen davor.
         """
         tenant_id = self._require_tenant(ctx)
-        rows = (
+        # Owner-Scope (§4.2): KPIs + Listen nur über die eigenen Objekte, damit
+        # ein Eigentümer nicht den tenant-weiten Umsatz/Buchungsfluss sieht.
+        owner_pids = self._owner_scope_pids(ctx)
+        if owner_pids is not None and not owner_pids:
+            return self._empty_dashboard()
+        base_rows = (
             self._db()
             .table("reservations")
             .select("*, guests(name)")
             .eq("tenant_id", tenant_id)
-            .execute()
-        ).data or []
+        )
+        if owner_pids is not None:
+            base_rows = base_rows.in_("property_id", owner_pids)
+        rows = base_rows.execute().data or []
 
         # Objekttitel je property_id nachladen (Liste zeigt den Objektnamen).
         prop_ids = sorted({r["property_id"] for r in rows if r.get("property_id")})
@@ -247,6 +347,22 @@ class ReservationsService:
             currency=currency,
         )
 
+    @staticmethod
+    def _empty_dashboard() -> DashboardResponse:
+        """Leeres Dashboard (Owner ohne zugeordnete Objekte) — keine tenant-
+        weiten Zahlen leaken, sondern ehrlich Null zeigen."""
+        zero = DashboardKpi(value=0, change_pct=None)
+        return DashboardResponse(
+            today=date.today(),
+            checkouts_today=[],
+            checkins_today=[],
+            upcoming=[],
+            checkins_30d=zero,
+            revenue_30d=zero,
+            confirmed_30d=zero,
+            currency="",
+        )
+
     def create(self, ctx: AuthContext, req: ReservationCreate) -> ReservationResponse:
         tenant_id = self._require_tenant(ctx)
 
@@ -324,62 +440,64 @@ class ReservationsService:
             }
             for line in quote.lines
         ]
-        ins = (
-            self._db()
-            .table("reservations")
-            .insert(
-                {
-                    "tenant_id": tenant_id,
-                    "property_id": req.property_id,
-                    "guest_id": guest_id,
-                    "channel": req.channel.value,
-                    "check_in": req.check_in.isoformat(),
-                    "check_out": req.check_out.isoformat(),
-                    "status": req.status.value,
-                    "total_amount": total_amount,
-                    "quote_items": quote_items,
-                    "currency": currency,
-                    # Belegung (Gästezahl) für Balken + Detailansicht.
-                    "num_guests": (
-                        req.guests.adults
-                        + req.guests.children
-                        + req.guests.infants
-                    ),
-                    "adults": req.guests.adults,
-                    "children": req.guests.children,
-                    "infants": req.guests.infants,
-                    "pets": req.guests.pets,
-                    # Denormalisierte Kontaktdaten (für OTA-Buchungen ohne guests).
-                    "guest_email": req.contact.email or None,
-                    "guest_phone": req.contact.phone or None,
-                    "guest_language": req.contact.language or None,
-                    "guest_country": req.contact.country or None,
-                }
+        # 5) Reservierung + Kalender-Belegung + ari_outbox ATOMAR über die RPC
+        #    (Migration 0104): Advisory-Lock je Objekt + guarded Upsert schließen
+        #    das TOCTOU-Fenster zwischen Check und Write; der EXCLUDE-Constraint
+        #    reservations_no_local_overlap ist der DB-seitige Backstop. Die
+        #    ari_outbox-Zeile (availability=0) entsteht in derselben Transaktion —
+        #    der Channex-Push kann nicht mehr ersatzlos verloren gehen.
+        reservation_row = {
+            "tenant_id": tenant_id,
+            "property_id": req.property_id,
+            "guest_id": guest_id,
+            "channel": req.channel.value,
+            "check_in": req.check_in.isoformat(),
+            "check_out": req.check_out.isoformat(),
+            "status": req.status.value,
+            "total_amount": total_amount,
+            "quote_items": quote_items,
+            "currency": currency,
+            # Belegung (Gästezahl) für Balken + Detailansicht.
+            "num_guests": (
+                req.guests.adults
+                + req.guests.children
+                + req.guests.infants
+            ),
+            "adults": req.guests.adults,
+            "children": req.guests.children,
+            "infants": req.guests.infants,
+            "pets": req.guests.pets,
+            # Denormalisierte Kontaktdaten (für OTA-Buchungen ohne guests).
+            "guest_email": req.contact.email or None,
+            "guest_phone": req.contact.phone or None,
+            "guest_language": req.contact.language or None,
+            "guest_country": req.contact.country or None,
+        }
+        try:
+            ins = (
+                self._db()
+                .rpc(
+                    "create_reservation_atomic",
+                    {
+                        "p_reservation": reservation_row,
+                        "p_source": req.channel.value,
+                        "p_with_outbox": True,
+                    },
+                )
+                .execute()
             )
-            .execute()
-        )
-        if not ins.data:
+        except APIError as exc:
+            raise _map_booking_conflict(exc) from exc
+        result = ins.data or {}
+        row = result.get("reservation")
+        if not row:
             raise ReservationError("Reservierung konnte nicht angelegt werden.", status_code=500)
-        row = ins.data[0]
-
-        # 5) Kalender belegen: alle Übernachtungstage auf booked.
-        payload = [
-            {
-                "property_id": req.property_id,
-                "date": day.isoformat(),
-                "status": "booked",
-                "source": req.channel.value if req.channel.value != "direct" else "direct",
-            }
-            for day in nights
-        ]
-        self._db().table("availability").upsert(
-            payload, on_conflict="property_id,date"
-        ).execute()
 
         # Realtime: belegte Tage sofort an Channex/OTAs sperren (availability=0),
         # damit keine OTA-Doppelbuchung entsteht. Buchungskalender = Wahrheit.
         self._push_channex_availability(
-            tenant_id, req.property_id, req.check_in, req.check_out, 0
+            tenant_id, req.property_id, req.check_in, req.check_out, 0,
+            outbox_id=result.get("outbox_id"),
         )
         # Dynamic Pricing der betroffenen Tage neu rechnen (Auslastung/Orphan).
         self._recompute_dynamic_pricing(tenant_id, req.property_id)
@@ -500,6 +618,38 @@ class ReservationsService:
                 status_code=409,
             )
 
+        # Reservierungs-Zeile ZUERST umziehen: der EXCLUDE-Constraint
+        # reservations_no_local_overlap (0104) validiert den Ziel-Zeitraum
+        # atomar gegen alle anderen lokalen Buchungen. Kollidiert er, schlägt
+        # das UPDATE fehl (23P01 → 409), BEVOR ein Kalendertag angefasst wurde
+        # — kein halber Move (alte Tage frei, aber keine neue Belegung).
+        try:
+            upd = (
+                self._db()
+                .table("reservations")
+                .update(
+                    {
+                        "property_id": req.property_id,
+                        "check_in": req.check_in.isoformat(),
+                        "check_out": req.check_out.isoformat(),
+                    }
+                )
+                .eq("id", reservation_id)
+                .eq("tenant_id", tenant_id)
+                .execute()
+            )
+        except APIError as exc:
+            if exc.code == "23P01":
+                raise ReservationError(
+                    "Ziel-Zeitraum enthält bereits belegte/gesperrte Tage.",
+                    status_code=409,
+                ) from exc
+            raise
+        if not upd.data:
+            raise ReservationError(
+                "Reservierung konnte nicht verschoben werden.", status_code=500
+            )
+
         # Alte Belegung freigeben: nur Tage, die NICHT erneut belegt werden
         # (beim Resize am Platz bleiben überlappende Tage booked).
         release = sorted(old_nights - new_keys) if same_property else sorted(old_nights)
@@ -530,25 +680,6 @@ class ReservationsService:
         self._push_channex_availability(
             tenant_id, req.property_id, req.check_in, req.check_out, 0
         )
-
-        upd = (
-            self._db()
-            .table("reservations")
-            .update(
-                {
-                    "property_id": req.property_id,
-                    "check_in": req.check_in.isoformat(),
-                    "check_out": req.check_out.isoformat(),
-                }
-            )
-            .eq("id", reservation_id)
-            .eq("tenant_id", tenant_id)
-            .execute()
-        )
-        if not upd.data:
-            raise ReservationError(
-                "Reservierung konnte nicht verschoben werden.", status_code=500
-            )
         log.info(
             "reservation_moved",
             reservation_id=reservation_id,
@@ -879,6 +1010,11 @@ class ReservationsService:
         if not res.data:
             raise ReservationError("Reservierung nicht gefunden.", status_code=404)
         r = res.data[0]
+
+        # Owner-Scope (§4.2): fremdes Objekt → wie „nicht gefunden" behandeln.
+        owner_pids = self._owner_scope_pids(ctx)
+        if owner_pids is not None and r.get("property_id") not in owner_pids:
+            raise ReservationError("Reservierung nicht gefunden.", status_code=404)
 
         title = ""
         prop = (

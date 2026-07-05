@@ -139,21 +139,32 @@ async def webhook_receive(
 
     Sicherheit: Der ROHE Body wird gegen die `X-Hub-Signature-256` (HMAC mit dem
     App-Secret) geprüft, BEVOR er geparst/verarbeitet wird. Fehlende/falsche
-    Signatur → 403. Ist kein App-Secret konfiguriert (lokal/Test), wird die
-    Prüfung mit Warn-Log übersprungen, damit Dev ohne Secret weiterläuft.
+    Signatur → 403. Ohne konfiguriertes App-Secret wird die Prüfung NUR lokal
+    (app_env=local) mit Warn-Log übersprungen; in jeder anderen Umgebung lehnt
+    der Endpoint hart mit 503 ab (kein Fallback — sonst wäre der öffentliche,
+    JWT-lose Endpoint bei fehlkonfiguriertem Secret ein unauthentifizierter
+    Injektionspfad für gefälschte Nachrichten in beliebige Konversationen).
 
     Bei gültiger Signatur antwortet der Endpoint 200 (Meta erwartet schnelle
     Bestätigung); interne Fehler werden geloggt, nicht nach außen gegeben."""
     raw_body = await request.body()
-    app_secret = get_settings().whatsapp_app_secret.get_secret_value()
+    settings = get_settings()
+    app_secret = settings.whatsapp_app_secret.get_secret_value()
     if app_secret:
         if not _signature_ok(
             raw_body, request.headers.get("X-Hub-Signature-256"), app_secret
         ):
             log.warning("whatsapp_webhook_bad_signature")
             raise HTTPException(status_code=403, detail="Ungültige Signatur.")
+    elif settings.is_local:
+        log.warning("whatsapp_webhook_signature_skipped_no_secret_local")
     else:
-        log.warning("whatsapp_webhook_signature_skipped_no_secret")
+        # Prod/Staging ohne Secret: Endpoint deaktivieren statt still offen.
+        log.error("whatsapp_webhook_no_secret_configured")
+        raise HTTPException(
+            status_code=503,
+            detail="WHATSAPP_APP_SECRET ist nicht konfiguriert.",
+        )
 
     try:
         payload = json.loads(raw_body)

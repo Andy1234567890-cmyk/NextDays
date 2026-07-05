@@ -18,7 +18,7 @@ from fastapi import (
 )
 
 from src.core.config import get_settings
-from src.core.security import AuthContext, CurrentUser
+from src.core.security import AuthContext, CurrentUser, require_internal_cron_secret
 from src.features.auth.dependencies import require_lodgify_permission
 from src.features.auth.lodgify_permissions import Permission
 
@@ -394,14 +394,10 @@ async def internal_reconcile(
     x_internal_cron_secret: Annotated[str | None, Header()] = None,
 ) -> dict:
     """Interner Cron-Trigger: spiegelt Channex→DB für ALLE Tenants (Channex =
-    Quelle der Wahrheit). Kein JWT — via geteiltes Secret abgesichert, getriggert
-    durch einen Coolify-Scheduled-Task / Host-crontab (curl). Wiederverwendet das
-    CHANNEX_WEBHOOK_SECRET, damit kein neuer Env-Wert nötig ist."""
-    expected = get_settings().channex_webhook_secret.get_secret_value()
-    if not expected or x_internal_cron_secret != expected:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiges Secret."
-        )
+    Quelle der Wahrheit). Kein JWT — via eigenem INTERNAL_CRON_SECRET abgesichert
+    (nie das outbound geteilte Channex-Webhook-Secret), getriggert durch einen
+    Coolify-Scheduled-Task / Host-crontab (curl)."""
+    require_internal_cron_secret(x_internal_cron_secret)
     try:
         return service.reconcile_all_tenants()
     except ChannelManagerError as exc:

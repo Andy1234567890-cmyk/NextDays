@@ -39,6 +39,12 @@ router = APIRouter(prefix="/buchhaltung", tags=["buchhaltung"])
 _write = Annotated[
     AuthContext, Depends(require_lodgify_permission(Permission.OWNER_REPORTING))
 ]
+# Leserechte für Buchhaltung: ebenfalls OWNER_REPORTING. Rechnungen, Kunden-PII
+# (Name/Adresse/Steuer-ID), Nummernkreise und Firmenprofile sind Finanzdaten —
+# staff/cleaner (§4.3) haben KEINEN Finanz-Zugang und dürfen sie auch nicht
+# LESEN. Vorher waren die GETs nur mit CurrentUser (reine Authentifizierung)
+# geschützt; jeder eingeloggte Nutzer konnte die vollständige Kundenliste ziehen.
+_read = _write
 
 
 @router.get("/health", response_model=SliceHealth)
@@ -49,7 +55,7 @@ def health(service: BuchhaltungServiceDep) -> SliceHealth:
 # --- Kunden -----------------------------------------------------------------
 @router.get("/customers")
 def list_customers(
-    ctx: CurrentUser, service: BuchhaltungServiceDep
+    ctx: _read, service: BuchhaltungServiceDep
 ) -> list[dict]:
     """Kunden/Lieferanten als Array (vom übernommenen Bestand erwartet)."""
     try:
@@ -60,7 +66,7 @@ def list_customers(
 
 @router.get("/customers/company/{company_id}")
 def list_customers_for_company(
-    company_id: str, ctx: CurrentUser, service: BuchhaltungServiceDep
+    company_id: str, ctx: _read, service: BuchhaltungServiceDep
 ) -> list[dict]:
     """Kunden eines Unternehmens als Array (Bestands-Pfad)."""
     try:
@@ -111,7 +117,7 @@ def delete_customer(
 # --- Rechnungen -------------------------------------------------------------
 @router.get("/invoices", response_model=InvoiceListResponse)
 def list_invoices(
-    ctx: CurrentUser, service: BuchhaltungServiceDep
+    ctx: _read, service: BuchhaltungServiceDep
 ) -> InvoiceListResponse:
     try:
         return service.list_invoices(ctx)
@@ -121,7 +127,7 @@ def list_invoices(
 
 @router.get("/invoices/company/{company_id}")
 def list_invoices_for_company(
-    company_id: str, ctx: CurrentUser, service: BuchhaltungServiceDep
+    company_id: str, ctx: _read, service: BuchhaltungServiceDep
 ) -> list[dict]:
     """Rechnungen im `InvoiceData`-Format für das Buchhaltungs-Frontend.
 
@@ -156,7 +162,7 @@ async def create_storno_invoice(
 @router.get("/vat-check")
 def check_vat_id(
     vat_id: str,
-    ctx: CurrentUser,
+    ctx: _read,
     service: BuchhaltungServiceDep,
 ) -> dict:
     """USt-IdNr. gegen den offiziellen EU-Prüfdienst VIES prüfen (27 EU-Länder).
@@ -199,7 +205,7 @@ def invoice_preview(
 # --- Firmenprofil / Read-Endpoints für den Buchhaltungs-Bestand --------------
 @router.get("/companies/{company_id}/transaction-links")
 def list_transaction_links(
-    company_id: str, ctx: CurrentUser, service: BuchhaltungServiceDep
+    company_id: str, ctx: _read, service: BuchhaltungServiceDep
 ) -> list[dict]:
     """Beleg↔Bank-Verknüpfungen (Bankabgleich folgt separat → vorerst leer)."""
     try:
@@ -210,7 +216,7 @@ def list_transaction_links(
 
 @router.get("/companies/{company_id}")
 def get_company_profile(
-    company_id: str, ctx: CurrentUser, service: BuchhaltungServiceDep
+    company_id: str, ctx: _read, service: BuchhaltungServiceDep
 ) -> dict:
     """Firmen-/Rechnungsprofil des Tenants (tenant_billing_profile)."""
     try:
@@ -221,7 +227,7 @@ def get_company_profile(
 
 @router.get("/booking-accounts/{company_id}")
 def list_booking_accounts(
-    company_id: str, ctx: CurrentUser, service: BuchhaltungServiceDep
+    company_id: str, ctx: _read, service: BuchhaltungServiceDep
 ) -> list[dict]:
     """Buchungskonten/Kontenplan (eigenes Modul folgt → vorerst leer)."""
     try:
@@ -283,14 +289,14 @@ async def create_inline_service(
 
 
 @router.get("/inline-invoice-services")
-def list_inline_services(ctx: CurrentUser) -> list[dict]:
+def list_inline_services(ctx: _read) -> list[dict]:
     """Inline-Services lesen (Stub → leer)."""
     return []
 
 
 @router.get("/text-templates/{company_id}")
 def list_text_templates(
-    company_id: str, ctx: CurrentUser, service: BuchhaltungServiceDep
+    company_id: str, ctx: _read, service: BuchhaltungServiceDep
 ) -> list[dict]:
     """Textbausteine (Stub → leer; verhindert den 404-Render-Loop)."""
     try:
@@ -301,7 +307,7 @@ def list_text_templates(
 
 @router.get("/text-templates/{company_id}/default")
 def get_default_text_template(
-    company_id: str, ctx: CurrentUser, service: BuchhaltungServiceDep
+    company_id: str, ctx: _read, service: BuchhaltungServiceDep
 ) -> dict | None:
     """Standard-Textbaustein (Stub → null)."""
     return None
@@ -309,7 +315,7 @@ def get_default_text_template(
 
 @router.get("/number-sequences")
 def list_number_sequences(
-    ctx: CurrentUser, service: BuchhaltungServiceDep
+    ctx: _read, service: BuchhaltungServiceDep
 ) -> list[dict]:
     """Nummernkreise des Tenants (nur lesen)."""
     try:
@@ -320,7 +326,7 @@ def list_number_sequences(
 
 @router.get("/number-sequences/{company_id}")
 def list_number_sequences_for_company(
-    company_id: str, ctx: CurrentUser, service: BuchhaltungServiceDep
+    company_id: str, ctx: _read, service: BuchhaltungServiceDep
 ) -> list[dict]:
     """Nummernkreise eines Unternehmens als Array (Bestands-Pfad)."""
     try:
@@ -331,7 +337,7 @@ def list_number_sequences_for_company(
 
 @router.get("/invoices/next-number/{company_id}")
 def get_next_invoice_number(
-    company_id: str, ctx: CurrentUser, service: BuchhaltungServiceDep
+    company_id: str, ctx: _read, service: BuchhaltungServiceDep
 ) -> dict:
     """Nächste Rechnungsnummer nur ANZEIGEN (ohne Zähler zu erhöhen)."""
     try:
@@ -365,7 +371,7 @@ async def initialize_text_templates(company_id: str, request: Request, ctx: _wri
 
 @router.get("/invoices/{invoice_id}", response_model=InvoiceResponse)
 def get_invoice(
-    invoice_id: str, ctx: CurrentUser, service: BuchhaltungServiceDep
+    invoice_id: str, ctx: _read, service: BuchhaltungServiceDep
 ) -> InvoiceResponse:
     try:
         return service.get_invoice(ctx, invoice_id)
@@ -414,7 +420,7 @@ def delete_invoice(
 # --- Angebote ---------------------------------------------------------------
 @router.get("/quotes", response_model=QuoteListResponse)
 def list_quotes(
-    ctx: CurrentUser, service: BuchhaltungServiceDep
+    ctx: _read, service: BuchhaltungServiceDep
 ) -> QuoteListResponse:
     try:
         return service.list_quotes(ctx)
@@ -424,7 +430,7 @@ def list_quotes(
 
 @router.get("/quotes/{quote_id}", response_model=QuoteResponse)
 def get_quote(
-    quote_id: str, ctx: CurrentUser, service: BuchhaltungServiceDep
+    quote_id: str, ctx: _read, service: BuchhaltungServiceDep
 ) -> QuoteResponse:
     try:
         return service.get_quote(ctx, quote_id)

@@ -2,6 +2,7 @@
 // price_overrides und überträgt die Preise an alle Buchungsportale (Channex).
 import { SeasonPriceForm } from "@/components/objekte/season-price-form";
 import { getProperty } from "@/lib/properties";
+import { listRatePlans } from "@/lib/rates";
 
 export default async function Page({
   params,
@@ -17,5 +18,9 @@ export default async function Page({
       </div>
     );
   }
-  return <SeasonPriceForm initial={res.data} />;
+  // Objekt-Währung aus dem Rate-Plan (kein €-Hardcode). Ohne Rate-Plan null →
+  // Betrag ohne Symbol statt erfundenem Euro.
+  const rates = await listRatePlans(id);
+  const currency = rates.ok ? (rates.data.items[0]?.currency ?? null) : null;
+  return <SeasonPriceForm initial={res.data} currency={currency} />;
 }

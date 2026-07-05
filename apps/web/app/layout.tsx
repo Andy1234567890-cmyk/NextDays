@@ -26,8 +26,8 @@ const fraunces = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "NextDays — Dashboard",
-  description: "Vermieter-Dashboard für die NextDays-Vacation-Rental-Plattform.",
+  title: "myNextDays — Dashboard",
+  description: "Vermieter-Dashboard für die myNextDays-Vacation-Rental-Plattform.",
 };
 
 export default async function RootLayout({

@@ -566,7 +566,11 @@ liefert nur Nutzer mit Posteingang-Zugriff; jede Zuweisung setzt `assigned_by`/
 | `POST` | `/api/v1/inbox/{id}/ai-reply` | KI-Antwortvorschlag (Groq) |
 | `…` | `/api/v1/inbox/templates\|ai-settings\|automations` | Vorlagen / KI-Einstellungen / Automatisierungen |
 
-**Interner Cron (kein JWT, Secret-Header `X-Internal-Cron-Secret` = `CHANNEX_WEBHOOK_SECRET`):**
+**Interner Cron (kein JWT, Secret-Header `X-Internal-Cron-Secret` = `INTERNAL_CRON_SECRET`):**
+Eigenes Secret, bewusst getrennt vom `CHANNEX_WEBHOOK_SECRET` (das geht outbound
+an Channex und darf keine internen, tenant-übergreifenden Endpunkte
+autorisieren). Ohne gesetztes `INTERNAL_CRON_SECRET` antworten diese Endpunkte
+mit **503** (deaktiviert, kein Fallback).
 
 | `POST` | `/api/v1/inbox/internal/dispatch-scheduled` | Versendet fällige geplante Nachrichten (alle Tenants) |
 | `POST` | `/api/v1/inbox/internal/dispatch-automations` | Versendet fällige Automails (Buchungsbestätigung, Anreise-/Check-out-Info; alle Tenants) |
@@ -576,11 +580,11 @@ Per Coolify-Scheduled-Task / crontab regelmäßig aufrufen, analog zu
 
 ```
 */5 * * * * curl -fsS -X POST https://<api-host>/api/v1/inbox/internal/dispatch-scheduled \
-  -H "X-Internal-Cron-Secret: $CHANNEX_WEBHOOK_SECRET"
+  -H "X-Internal-Cron-Secret: $INTERNAL_CRON_SECRET"
 # Automails (planbare Auto-Nachrichten) — minütlich, damit die Uhrzeit (z. B.
 # 07:45) zeitnah getroffen wird:
 * * * * * curl -fsS -X POST https://<api-host>/api/v1/inbox/internal/dispatch-automations \
-  -H "X-Internal-Cron-Secret: $CHANNEX_WEBHOOK_SECRET"
+  -H "X-Internal-Cron-Secret: $INTERNAL_CRON_SECRET"
 ```
 
 **Tabellen (Migration 0040):** `channex_booking.assigned_user_id` (Zuweisung),

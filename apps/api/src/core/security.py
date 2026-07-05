@@ -7,6 +7,7 @@ beide: zuerst JWKS/ES256 (anhand des `kid` im Token-Header), sonst HS256-Fallbac
 Die Rollen-/Tenant-Auflösung erfolgt aus den JWT-Claims (`app_metadata`) — keine
 Platzhalter-Akzeptanz beliebiger Tokens.
 """
+import secrets
 from functools import lru_cache
 from typing import Annotated
 
@@ -98,3 +99,27 @@ def get_current_user(
 
 
 CurrentUser = Annotated[AuthContext, Depends(get_current_user)]
+
+
+def require_internal_cron_secret(provided: str | None) -> None:
+    """Guard für interne Cron-Endpunkte (tenant-übergreifend, service_role).
+
+    Eigenes INTERNAL_CRON_SECRET, das den Server NIE verlässt. Bewusst NICHT
+    das CHANNEX_WEBHOOK_SECRET: das geht bei register_global_webhook OUTBOUND
+    an Channex — wer es dort sieht, könnte sonst destruktive projektweite
+    Aktionen (Massen-Mailversand, Preis-Push, Owner-Abrechnungen) auslösen.
+
+    Kein Fallback: ohne konfiguriertes Secret sind die Cron-Endpunkte hart
+    deaktiviert (503) statt still offen oder still auf ein Fremd-Secret
+    zurückzufallen. Vergleich zeitkonstant (kein Timing-Seitenkanal).
+    """
+    expected = get_settings().internal_cron_secret.get_secret_value()
+    if not expected:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="INTERNAL_CRON_SECRET ist nicht konfiguriert.",
+        )
+    if not provided or not secrets.compare_digest(provided, expected):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiges Secret."
+        )

@@ -198,7 +198,7 @@ daher Spiegelung per **Polling**:
   `reconcile_properties_for_tenant(tenant_id)` (non-blocking; Channex-Ausfall
   bricht die Seite nie).
 - **Trigger 2 — Cron:** `POST /channel-manager/internal/reconcile`
-  (secret-geschützt via `X-Internal-Cron-Secret` = `CHANNEX_WEBHOOK_SECRET`,
+  (secret-geschützt via `X-Internal-Cron-Secret` = `INTERNAL_CRON_SECRET`,
   `include_in_schema=False`) → `reconcile_all_tenants()`. Server-Cron alle 15 Min:
   `/usr/local/bin/nextdays-reconcile.sh` (root-crontab) ruft den Endpunkt per
   `docker exec` im `api-*`-Container auf; Log `/var/log/nextdays-reconcile.log`.

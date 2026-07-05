@@ -98,6 +98,86 @@ wichtigsten Punkte konsolidiert:
 - **Redis-Rate-Limiting** für die API (`core/ratelimit*.py`, 429 +
   `Retry-After`/`X-RateLimit-*`) — Betrieb: `deploy/RATE-LIMITING.md`.
 
+### Behoben (kritische Befunde der Bug-Jagd 07/2026)
+- **Doppelbuchung DB-seitig ausgeschlossen** (Migration 0104): Reservierung +
+  Kalender-Belegung + `ari_outbox`-Eintrag entstehen atomar über die RPC
+  `create_reservation_atomic` (Advisory-Lock je Objekt, guarded
+  `availability`-Upsert). Zusätzlich EXCLUDE-Constraint
+  `reservations_no_local_overlap` (btree_gist, `daterange &&`) als Backstop —
+  zwei gleichzeitige Buchungen desselben Zeitraums können nicht mehr beide
+  durchkommen (`booking_engine.create_public_booking`, `reservations.create`;
+  `move()` validiert den Ziel-Zeitraum jetzt VOR dem Kalender-Umbau). OTA-
+  Importe (`source_channex_booking_id`) sind vom Constraint ausgenommen — echte
+  Überbuchungen bleiben lokal sichtbar.
+- **Kein verlorener Verfügbarkeits-Push mehr**: die `ari_outbox`-Zeile
+  (`availability=0`) wird in DERSELBEN Transaktion wie die Reservierung
+  persistiert (statt erst im Worker); Freigaben (Storno/Move) schreiben die
+  Outbox-Zeile vor dem Job-Enqueue. Scheitert das Einreihen, zieht der
+  `process_ari_outbox`-Tick den Push nach — der gebuchte Tag bleibt nie still
+  bei Booking.com offen.
+- **Rechnungsnummern race-sicher** (Migration 0105): `number_sequences` mit
+  `UNIQUE NULLS NOT DISTINCT`; `next_document_number()` legt den Erst-Zähler
+  per `INSERT … ON CONFLICT DO NOTHING` + erneutem `FOR UPDATE` an — zwei
+  parallele erste Checkouts bekommen RE-0001/RE-0002 statt zweimal RE-0001.
+  Backstop: partieller Unique-Index `invoices_tenant_number_uidx` (GoBD).
+- **Cross-Owner-Leck in Abrechnungen geschlossen**: `owner_statements` erzwingt
+  Owner-Self-Scope (`owners.user_id` → eigene `owner_id`) in `list`/`get`/
+  `preview`; alle Schreibpfade (generate/update/finalize/cancel/delete/
+  expenses) sind für die owner-Rolle gesperrt (403, §4.2 read-only).
+- **Internes Cron-Secret getrennt** (`INTERNAL_CRON_SECRET`): die internen
+  tenant-übergreifenden Endpunkte (pricing/recompute, channel_manager/
+  reconcile, owner-statements/auto-run, inbox/dispatch-*) akzeptieren nicht
+  mehr das outbound an Channex geteilte `CHANNEX_WEBHOOK_SECRET`; Vergleich
+  zeitkonstant, ohne konfiguriertes Secret sind die Endpunkte deaktiviert (503).
+- **Worker-Doppelausführung beendet**: laufende Jobs refreshen `locked_at` per
+  Heartbeat (60 s) — der Reaper (300 s) requeued nur noch Jobs toter Worker,
+  nicht mehr legitime Langläufer (reconcile über hunderte Objekte);
+  `_finish`/`_retry`/`_defer` schreiben nur noch den EIGENEN laufenden Claim
+  (`locked_by`-Guard). Migration 0106 sperrt `claim_jobs`/`requeue_stuck_jobs`
+  gegen anon/authenticated (nur noch service_role).
+
+### Behoben (High-Befunde der Bug-Jagd 07/2026)
+- **Owner-Scope im Kalender + Reservierungen (§4.2)**: Eigentümer sehen jetzt nur
+  ihre zugeordneten Objekte (neuer gemeinsamer Helfer `auth/owner_scope.py`).
+  `calendar` (availability/board/check/stop-sell/season-price) und `reservations`
+  (list/detail/dashboard) filtern über `owner_property_assignments`; fremde
+  Objekte wirken wie „nicht gefunden". Tagespreise werden für Eigentümer entfernt
+  (kein Preis-Recht), das Owner-Dashboard zeigt nur eigene KPIs statt tenant-weit.
+- **Buchhaltungs-Leseendpunkte** verlangen jetzt `OWNER_REPORTING` (wie die
+  Schreibpfade): Kunden-PII, Rechnungen, Nummernkreise und Firmenprofile waren
+  vorher für jeden authentifizierten Nutzer (staff/cleaner) lesbar.
+- **Kleinunternehmer-Rechnung konsistent** (§19 UStG): Positions-USt wird jetzt
+  auf 0 gezwungen, wenn der Kopf steuerfrei ist (`create_invoice`,
+  `create_invoice_from_bestand`, `update_invoice`) — Σ Positionen == Kopf, kein
+  GoBD-Widerspruch, kein falscher Storno.
+- **OTA-Import-Währung aus dem Objekt-Rate-Plan** statt hartem EUR-Fallback
+  (`bookings_sync.py`) — PLN/CZK/CHF-Buchungen tragen die echte Währung.
+- **Channex-Budget-Token-Leck geschlossen**: `try_consume` verbraucht Account-
+  und Property-Token jetzt atomar all-or-nothing (Lua) — eine Property-Ablehnung
+  verbrennt kein Account-Token mehr (kein Leerlaufen des Kontobudgets über
+  retryte, abgelehnte Jobs).
+- **Restriktionen/Stop-Sell/Rate erreichen ALLE Rate-Plans** (nicht nur einen
+  zufälligen `.limit(1)`): neuer `_resolve_channex_rate_plans` (Plural); ein
+  Stop-Sell sperrt jetzt jeden Rate-Plan (sonst verkauft z. B. Expedia weiter).
+- **ARI-Push-Retry bei Channex-Ausfall**: die push-Methoden signalisieren
+  Fehler an den Worker-Handler, der den Job-Backoff (1/5/15 min) auslöst — der
+  verlorene Push hing vorher allein am 15-min-Reconcile-Tick.
+- **Rate-Limit-JWT-Bypass geschlossen**: die (unsignierte) `tenant_id` im
+  listings-Pfad hebelt das strengere IP-Limit nicht mehr aus — das
+  Tenant-Bucket ist zusätzlich an ein IP-Limit gekoppelt (Token-Rotation von
+  einer IP kann nicht mehr als das IP-Fenster erzeugen).
+- **WhatsApp-Webhook fail-closed**: ohne `WHATSAPP_APP_SECRET` wird die
+  Signaturprüfung nur noch lokal übersprungen; in Prod/Staging antwortet der
+  öffentliche Endpoint mit 503 statt gefälschte Nachrichten zu verarbeiten.
+- **apps/web/Dockerfile**: `ENV HOSTNAME=0.0.0.0` (Next.js-standalone band sonst
+  an den Container-Hostnamen → 502/Healthcheck-Fail nach Deploy).
+- **Frontend-Konsistenz**: PDF-Steuer pro Position statt globalem Satz
+  (`usePDFTemplateData`), MwSt.-Anzeige ohne erfundenen 19er-Fallback
+  (`ItemsTable`, 0 % bleibt 0 %), Tagespreis-Währung im Belegungsplan
+  (`calendar-board`), €-Hardcodes in Richtlinien/Saisonpreisen aus dem
+  Rate-Plan, Brand-Fallback „NextDays"→leer bzw. „myNextDays", Storno-PDF über
+  den existierenden `/generate-pdf-single` (vorher 404), währungsneutrales Icon.
+
 ### Behoben (Stop-Sell-Integrität)
 - **Stop-Sell sperrt jetzt ALLE Kanäle**: die eigene Buchungsstrecke
   (`booking_engine`) und die interne Rezeptions-Buchung (`reservations.create`)

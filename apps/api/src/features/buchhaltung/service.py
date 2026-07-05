@@ -657,7 +657,12 @@ class BuchhaltungService:
             qty = Decimal(str(it.get("quantity") or 0))
             price = Decimal(str(it.get("unitPrice") or 0))
             disc = Decimal(str(it.get("discountPercent") or 0))
-            rate = Decimal(str(it.get("taxRate") or 0))
+            # Kleinunternehmer (§19 UStG): der Beleg weist KEINE USt aus. Der
+            # Kopf steht bereits auf tax_amount=0/gross=net — die Positionen
+            # MÜSSEN dazu passen (sonst Σ Positionen ≠ Kopf, GoBD-widersprüchlich,
+            # und ein späterer Storno erfände eine Steuerzeile). Satz je Position
+            # daher auf 0 zwingen, egal was das Formular schickt.
+            rate = Decimal("0") if is_klein else Decimal(str(it.get("taxRate") or 0))
             if it.get("category") == "discount":
                 price = -abs(price)
             gross_unit = qty * price
@@ -941,19 +946,26 @@ class BuchhaltungService:
         invoice["items"] = items.data or []
         return InvoiceResponse(**invoice)
 
-    def _compute_line(self, item: LineItemInput, position: int) -> dict:
-        """Netto/Steuer/Brutto einer Position berechnen (mit Rabatt)."""
+    def _compute_line(
+        self, item: LineItemInput, position: int, *, is_klein: bool = False
+    ) -> dict:
+        """Netto/Steuer/Brutto einer Position berechnen (mit Rabatt).
+
+        Kleinunternehmer (§19 UStG): der Beleg weist keine USt aus — der Satz
+        wird auf 0 gezwungen, damit die Positionen zum steuerfreien Kopf passen
+        (Σ Positionen == Kopf, GoBD-konsistent)."""
+        rate = Decimal("0") if is_klein else Decimal(item.tax_rate)
         gross_unit = Decimal(item.quantity) * Decimal(item.unit_price)
         discount = gross_unit * (Decimal(item.discount_percent) / Decimal(100))
         net = _q(gross_unit - discount)
-        tax = _q(net * (Decimal(item.tax_rate) / Decimal(100)))
+        tax = _q(net * (rate / Decimal(100)))
         return {
             "position": position,
             "description": item.description,
             "quantity": str(item.quantity),
             "unit": item.unit,
             "unit_price": str(item.unit_price),
-            "tax_rate": str(item.tax_rate),
+            "tax_rate": str(rate),
             "discount_percent": str(item.discount_percent),
             "sku": item.sku,
             "net_amount": str(net),
@@ -973,11 +985,14 @@ class BuchhaltungService:
         )
         is_klein = bool(profile.data and profile.data[0].get("is_kleinunternehmer"))
 
-        lines = [self._compute_line(it, i + 1) for i, it in enumerate(req.items)]
+        lines = [
+            self._compute_line(it, i + 1, is_klein=is_klein)
+            for i, it in enumerate(req.items)
+        ]
         net_total = _q(sum((Decimal(line_var["net_amount"]) for line_var in lines), Decimal(0)))
+        # tax_total aus den (bereits kleinunternehmer-bereinigten) Positionen —
+        # Kopf und Σ Positionen sind so zwingend konsistent.
         tax_total = _q(sum((Decimal(line_var["tax_amount"]) for line_var in lines), Decimal(0)))
-        if is_klein:
-            tax_total = Decimal("0.00")
         gross_total = _q(net_total + tax_total)
 
         payload = {
@@ -1013,7 +1028,7 @@ class BuchhaltungService:
         tenant_id = self._require_tenant(ctx)
         current = (
             self._db.table("invoices")
-            .select("is_locked")
+            .select("is_locked, is_kleinunternehmer")
             .eq("id", invoice_id)
             .eq("tenant_id", tenant_id)
             .limit(1)
@@ -1025,6 +1040,7 @@ class BuchhaltungService:
             raise BuchhaltungError(
                 "Rechnung ist GoBD-gesperrt und nicht änderbar.", status_code=409
             )
+        is_klein = bool(current.data[0].get("is_kleinunternehmer"))
 
         patch = req.model_dump(mode="json", exclude_unset=True, exclude={"items"})
         # Positionen ersetzen + Summen neu berechnen, falls items übergeben.
@@ -1032,7 +1048,10 @@ class BuchhaltungService:
             self._db.table("invoice_line_items").delete().eq(
                 "invoice_id", invoice_id
             ).execute()
-            lines = [self._compute_line(it, i + 1) for i, it in enumerate(req.items)]
+            lines = [
+                self._compute_line(it, i + 1, is_klein=is_klein)
+                for i, it in enumerate(req.items)
+            ]
             net_total = _q(sum((Decimal(line_var["net_amount"]) for line_var in lines), Decimal(0)))
             tax_total = _q(sum((Decimal(line_var["tax_amount"]) for line_var in lines), Decimal(0)))
             patch["net_amount"] = str(net_total)

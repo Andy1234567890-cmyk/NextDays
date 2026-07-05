@@ -88,6 +88,55 @@ class OwnerStatementsService:
             raise StatementError("Kein Tenant im Konto.", status_code=400)
         return ctx.tenant_id
 
+    # --- Owner-Scope (§4.2) ---------------------------------------------------
+    # Die owner-Rolle BESITZT Permission.OWNER_REPORTING (sie soll ihre eigenen
+    # Abrechnungen sehen). Die API läuft aber mit Service-Role (RLS umgangen) —
+    # ohne explizite Selbst-Zuordnung sähe ein Eigentümer die Abrechnungen ALLER
+    # Eigentümer des Tenants. Deshalb: user_id → eigene owners-Zeile auflösen
+    # und jede Lese-Query darauf einschränken; Schreiben ist für Eigentümer
+    # komplett gesperrt (read-only laut Lastenheft §4.2).
+
+    def _is_owner(self, ctx: AuthContext) -> bool:
+        """Eingeloggter Immobilien-Eigentümer (read-only, nur eigene Daten)."""
+        return ctx.role == "owner"
+
+    def _owner_self_id(self, ctx: AuthContext, tenant_id: str) -> str:
+        """owner_id des eingeloggten Eigentümers über den owners.user_id-Link.
+
+        Fail-closed: Owner-Rolle ohne verknüpfte owners-Zeile sieht nichts."""
+        rows = (
+            self._db.table("owners")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("user_id", ctx.user_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            raise StatementError(
+                "Keine Eigentümer-Zuordnung für dieses Konto.", status_code=404
+            )
+        return str(rows[0]["id"])
+
+    def _forbid_owner_writes(self, ctx: AuthContext) -> None:
+        """Erzeugen/Ändern/Finalisieren/Stornieren/Löschen ist der Agentur
+        vorbehalten — Eigentümer haben nur Lesezugriff (§4.2)."""
+        if self._is_owner(ctx):
+            raise StatementError(
+                "Eigentümer haben nur Lesezugriff auf Abrechnungen.",
+                status_code=403,
+            )
+
+    def _require_statement_visible(
+        self, ctx: AuthContext, tenant_id: str, row: dict
+    ) -> None:
+        """Eigentümer dürfen nur die EIGENE Abrechnung lesen (sonst 404 wie
+        nicht vorhanden — keine Existenz fremder Belege verraten)."""
+        if self._is_owner(ctx) and str(row["owner_id"]) != self._owner_self_id(
+            ctx, tenant_id
+        ):
+            raise StatementError("Statement nicht gefunden.", status_code=404)
+
     # --- Owner + Objekte ----------------------------------------------------
 
     def _owner(self, tenant_id: str, owner_id: str) -> dict:
@@ -539,6 +588,9 @@ class OwnerStatementsService:
         mit id='' (nicht gespeichert). Die Owner-Seite zeigt damit den Umsatz-
         Überblick; eine echte Abrechnung entsteht erst über generate()."""
         tenant_id = self._require_tenant(ctx)
+        # Owner-Scope: Eigentümer dürfen nur die EIGENE Auswertung ziehen.
+        if self._is_owner(ctx) and req.owner_id != self._owner_self_id(ctx, tenant_id):
+            raise StatementError("Eigentümer nicht gefunden.", status_code=404)
         owner = self._owner(tenant_id, req.owner_id)
         # Expliziter Editor-Override gewinnt; sonst Provision je Objekt aus Stammdaten.
         override = _d(req.commission_pct) if req.commission_pct is not None else None
@@ -596,6 +648,8 @@ class OwnerStatementsService:
         self, ctx: AuthContext, req: StatementGenerateRequest
     ) -> StatementResponse:
         tenant_id = self._require_tenant(ctx)
+        self._forbid_owner_writes(ctx)
+
         owner = self._owner(tenant_id, req.owner_id)
         # NULL = Provision je Objekt aus Stammdaten; Zahl = manueller Override.
         commission = (
@@ -772,6 +826,7 @@ class OwnerStatementsService:
     def get(self, ctx: AuthContext, statement_id: str) -> StatementResponse:
         tenant_id = self._require_tenant(ctx)
         row = self._statement_row(tenant_id, statement_id)
+        self._require_statement_visible(ctx, tenant_id, row)
         rental_rows, listing_rows, _titles = self._build_activity(
             tenant_id, row, ctx.user_id
         )
@@ -811,6 +866,10 @@ class OwnerStatementsService:
 
     def list(self, ctx: AuthContext, owner_id: str | None = None) -> StatementListResponse:
         tenant_id = self._require_tenant(ctx)
+        # Owner-Scope: Eigentümer sehen ausschließlich die EIGENEN Abrechnungen —
+        # ein client-übergebener owner_id-Filter wird dafür überschrieben.
+        if self._is_owner(ctx):
+            owner_id = self._owner_self_id(ctx, tenant_id)
         query = (
             self._db.table("owner_statements")
             .select(
@@ -844,6 +903,7 @@ class OwnerStatementsService:
         self, ctx: AuthContext, statement_id: str, req: StatementUpdate
     ) -> StatementResponse:
         tenant_id = self._require_tenant(ctx)
+        self._forbid_owner_writes(ctx)
         row = self._statement_row(tenant_id, statement_id)
         if row.get("status") != "draft":
             raise StatementError(
@@ -892,6 +952,7 @@ class OwnerStatementsService:
         Art. 226 RL 2006/112), Steuer aus den drei Ländern berechnen, Summen +
         Steuerwerte einfrieren. Danach unveränderbar."""
         tenant_id = self._require_tenant(ctx)
+        self._forbid_owner_writes(ctx)
         row = self._statement_row(tenant_id, statement_id)
         if row.get("status") == "finalized":
             return self.get(ctx, statement_id)
@@ -946,6 +1007,7 @@ class OwnerStatementsService:
         und markiert das Original als 'cancelled'. Das Original bleibt unverändert
         erhalten; die neue Stornorechnung wird zurückgegeben."""
         tenant_id = self._require_tenant(ctx)
+        self._forbid_owner_writes(ctx)
         row = self._statement_row(tenant_id, statement_id)
         if row.get("status") != "finalized":
             raise StatementError(
@@ -1027,6 +1089,7 @@ class OwnerStatementsService:
 
     def delete(self, ctx: AuthContext, statement_id: str) -> None:
         tenant_id = self._require_tenant(ctx)
+        self._forbid_owner_writes(ctx)
         row = self._statement_row(tenant_id, statement_id)
         if row.get("status") != "draft":
             # Finalisierte/stornierte Belege sind unveränderbar (GoBD) und dürfen
@@ -1053,6 +1116,7 @@ class OwnerStatementsService:
 
     def add_expense(self, ctx: AuthContext, req: ExpenseCreate) -> ExpenseResponse:
         tenant_id = self._require_tenant(ctx)
+        self._forbid_owner_writes(ctx)
         payload = req.model_dump(mode="json")
         payload["tenant_id"] = tenant_id
         res = self._db.table("owner_expenses").insert(payload).execute()
@@ -1066,6 +1130,7 @@ class OwnerStatementsService:
         self, ctx: AuthContext, expense_id: str, req: ExpenseUpdate
     ) -> ExpenseResponse:
         tenant_id = self._require_tenant(ctx)
+        self._forbid_owner_writes(ctx)
         existing = (
             self._db.table("owner_expenses")
             .select("*")
@@ -1095,6 +1160,7 @@ class OwnerStatementsService:
 
     def delete_expense(self, ctx: AuthContext, expense_id: str) -> None:
         tenant_id = self._require_tenant(ctx)
+        self._forbid_owner_writes(ctx)
         existing = (
             self._db.table("owner_expenses")
             .select("statement_id")

@@ -7,6 +7,7 @@ jede Buchung prüft Double-Booking (409) und pusht realtime an Channex/OTAs.
 """
 from datetime import date, timedelta
 
+from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.logging import get_logger
@@ -447,28 +448,46 @@ class BookingEngineService:
         _price, currency = self._price_from(
             req.property_id, req.check_in, req.check_out
         )
-        ins = (
-            self._db()
-            .table("reservations")
-            .insert(
-                {
-                    "tenant_id": tenant_id,
-                    "property_id": req.property_id,
-                    "guest_id": guest_id,
-                    "channel": "direct",          # eigene Plattform = Direktbuchung
-                    "ota_name": "myNextDays",      # Herkunft für Kalender/Posteingang
-                    "check_in": req.check_in.isoformat(),
-                    "check_out": req.check_out.isoformat(),
-                    "status": "confirmed",
-                    "total_amount": req.total_amount,
-                    "currency": currency or None,
-                }
-            )
-            .execute()
-        ).data
-        if not ins:
+        # Reservierung + Kalender-Belegung + ari_outbox ATOMAR (RPC 0104):
+        # Advisory-Lock je Objekt schließt das TOCTOU-Fenster zwischen dem Check
+        # oben und dem Write — zwei gleichzeitige Gäste bekommen nie dieselbe
+        # Nacht. Der EXCLUDE-Constraint reservations_no_local_overlap ist der
+        # DB-Backstop. Die ari_outbox-Zeile (availability=0) entsteht in
+        # derselben Transaktion → der Channex-Push geht nie verloren.
+        try:
+            ins = (
+                self._db()
+                .rpc(
+                    "create_reservation_atomic",
+                    {
+                        "p_reservation": {
+                            "tenant_id": tenant_id,
+                            "property_id": req.property_id,
+                            "guest_id": guest_id,
+                            "channel": "direct",      # eigene Plattform = Direktbuchung
+                            "ota_name": "myNextDays",  # Herkunft für Kalender/Posteingang
+                            "check_in": req.check_in.isoformat(),
+                            "check_out": req.check_out.isoformat(),
+                            "status": "confirmed",
+                            "total_amount": req.total_amount,
+                            "currency": currency or None,
+                        },
+                        "p_source": "direct",
+                        "p_with_outbox": True,
+                    },
+                )
+                .execute()
+            ).data
+        except APIError as exc:
+            if exc.code in ("RS409", "23P01"):
+                raise BookingEngineError(
+                    "Zeitraum ist nicht mehr verfügbar.", status_code=409
+                ) from exc
+            raise
+        row = (ins or {}).get("reservation")
+        if not row:
             raise BookingEngineError("Buchung fehlgeschlagen.", status_code=500)
-        row = ins[0]
+        outbox_id = (ins or {}).get("outbox_id")
 
         # Zusatzleistungen (Upsells) serverseitig bepreisen + anlegen + Task-Trigger.
         if req.addons:
@@ -487,22 +506,12 @@ class BookingEngineService:
                 is_before_checkin=True,
             )
 
-        # Kalender belegen.
-        self._db().table("availability").upsert(
-            [
-                {
-                    "property_id": req.property_id,
-                    "date": d.isoformat(),
-                    "status": "booked",
-                    "source": "direct",
-                }
-                for d in nights
-            ],
-            on_conflict="property_id,date",
-        ).execute()
-
+        # Kalender-Belegung ist bereits Teil der atomaren RPC (oben).
         # Realtime an Channex/OTAs sperren (availability=0) — kein OTA-Doppel.
-        self._push_channex(tenant_id, req.property_id, req.check_in, req.check_out, 0)
+        self._push_channex(
+            tenant_id, req.property_id, req.check_in, req.check_out, 0,
+            outbox_id=outbox_id,
+        )
 
         # Loyalty-Aggregate des Gastes (Aufenthalte/Umsatz) neu berechnen.
         if guest_id:
@@ -675,9 +684,12 @@ class BookingEngineService:
         check_in: date,
         check_out: date,
         availability: int,
+        outbox_id: str | None = None,
     ) -> None:
         """Realtime-Push an Channex (Doppelbuchungsschutz). Fehler dürfen die
-        Buchung NICHT scheitern lassen (ari_outbox-Retry)."""
+        Buchung NICHT scheitern lassen (ari_outbox-Retry). `outbox_id` = die
+        bereits mit der Buchung persistierte ari_outbox-Zeile (RPC 0104) — der
+        Push arbeitet sie ab, statt eine zweite anzulegen."""
         if self._client is None:
             return
         try:
@@ -691,6 +703,7 @@ class BookingEngineService:
                 check_in,
                 check_out - timedelta(days=1),
                 availability,
+                outbox_id=outbox_id,
             )
         except Exception as exc:  # noqa: BLE001
             log.warning("public_booking_channex_push_failed", error=str(exc))

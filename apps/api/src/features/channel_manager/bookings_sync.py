@@ -232,6 +232,21 @@ class BookingsSyncMixin:
                 on_conflict="property_id,date",
             ).execute()
 
+    def _property_currency(self, db: Client, property_id: str) -> str | None:
+        """Objekt-Währung aus dem (ältesten) Rate-Plan — die lokale Wahrheit für
+        die Währung dieses Objekts. Dient als Rückfall, wenn die OTA-Payload
+        keine currency trägt. KEIN EUR-Hardcode (27 EU-Länder): fehlt auch der
+        Rate-Plan, bleibt es None und der Aufrufer entscheidet."""
+        rows = (
+            db.table("rate_plans")
+            .select("currency, created_at")
+            .eq("property_id", property_id)
+            .order("created_at")
+            .limit(1)
+            .execute()
+        ).data or []
+        return rows[0].get("currency") if rows else None
+
     def _project_booking_to_reservation(
         self,
         db: Client,
@@ -341,7 +356,9 @@ class BookingsSyncMixin:
             "check_out": departure,
             "status": "confirmed",
             "total_amount": total_amount,
-            "currency": attrs.get("currency") or "EUR",
+            # Währung aus der OTA-Payload; fehlt sie, aus dem Objekt-Rate-Plan —
+            # nie hart auf EUR (verfälscht PLN/CZK/CHF-Buchungen + Rechnung).
+            "currency": attrs.get("currency") or self._property_currency(db, property_id),
             "source_channex_booking_id": booking_id,
             "num_guests": max(1, adults + children + infants),
             "adults": adults,
@@ -784,7 +801,12 @@ class BookingsSyncMixin:
                             "property_id": property_id,
                             "name": attrs.get("title") or "Rate",
                             "base_price": base_price,
-                            "currency": attrs.get("currency") or "EUR",
+                            # Währung aus dem Channex-Rate-Plan; fehlt sie, aus
+                            # einem vorhandenen Objekt-Rate-Plan — nie EUR raten.
+                            "currency": (
+                                attrs.get("currency")
+                                or self._property_currency(db, property_id)
+                            ),
                             "min_stay": 1,
                         }
                     )

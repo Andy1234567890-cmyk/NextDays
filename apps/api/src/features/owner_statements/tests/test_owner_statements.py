@@ -646,3 +646,113 @@ def test_cancelled_addon_excluded_from_statement() -> None:
     ]
     st = _gen(_svc(tables))
     assert st.summary.total_price == 1500.0  # unverändert (Addon ignoriert)
+
+
+# --- Owner-Scope (§4.2): Eigentümer sieht nur SICH, read-only -----------------
+
+def _owner_ctx(user: str = "u-owner-a") -> AuthContext:
+    return AuthContext(user_id=user, tenant_id="t-1", role="owner")
+
+
+def _two_owner_tables() -> dict[str, list[dict]]:
+    tables = _base_tables()
+    tables["owners"][0]["user_id"] = "u-owner-a"  # o-1 ↔ Owner A
+    tables["owners"].append(
+        {
+            "id": "o-2", "tenant_id": "t-1", "name": "Berta Owner",
+            "default_commission_pct": 20, "statement_frequency": "monthly",
+            "user_id": "u-owner-b",
+        }
+    )
+    return tables
+
+
+def _foreign_statement(tables: dict[str, list[dict]]) -> dict:
+    """Fertige Statement-Zeile von Owner B (o-2) direkt einlegen."""
+    row = {
+        "id": "st-fremd", "tenant_id": "t-1", "owner_id": "o-2",
+        "owner_name": "Berta Owner", "period_from": "2026-01-01",
+        "period_to": "2026-01-31", "status": "draft", "owner_payout": 999,
+        "pm_payout": 111, "currency": "EUR", "invoice_number": None,
+        "created_at": "2026-02-01T00:00:00Z", "basis": "check_in",
+        "reservation_statuses": ["confirmed"], "commission_pct": 20,
+    }
+    tables["owner_statements"].append(row)
+    return row
+
+
+def test_owner_list_scoped_to_self() -> None:
+    tables = _two_owner_tables()
+    svc = OwnerStatementsService(service_client=_DB(tables))
+    _gen(svc)                       # eigenes Statement (o-1, Agentur legt an)
+    _foreign_statement(tables)      # fremdes Statement (o-2)
+
+    res = svc.list(_owner_ctx())
+    assert res.total == 1
+    assert {i.owner_id for i in res.items} == {"o-1"}
+
+    # Ein client-übergebener fremder owner_id-Filter wird überschrieben.
+    res_filtered = svc.list(_owner_ctx(), owner_id="o-2")
+    assert {i.owner_id for i in res_filtered.items} == {"o-1"}
+
+
+def test_owner_get_foreign_statement_404() -> None:
+    tables = _two_owner_tables()
+    svc = OwnerStatementsService(service_client=_DB(tables))
+    row = _foreign_statement(tables)
+    with pytest.raises(StatementError) as exc:
+        svc.get(_owner_ctx(), row["id"])
+    assert exc.value.status_code == 404
+
+
+def test_owner_without_link_sees_nothing() -> None:
+    # Owner-Rolle ohne owners.user_id-Verknüpfung → fail-closed (404).
+    svc = OwnerStatementsService(service_client=_DB(_two_owner_tables()))
+    with pytest.raises(StatementError) as exc:
+        svc.list(_owner_ctx(user="u-unverknuepft"))
+    assert exc.value.status_code == 404
+
+
+def test_owner_writes_forbidden() -> None:
+    tables = _two_owner_tables()
+    svc = OwnerStatementsService(service_client=_DB(tables))
+    own = _gen(svc)  # eigenes Statement von o-1
+
+    req = StatementGenerateRequest(
+        owner_id="o-1", period_from=date(2026, 1, 1), period_to=date(2026, 1, 31),
+    )
+    with pytest.raises(StatementError) as exc:
+        svc.generate(_owner_ctx(), req)
+    assert exc.value.status_code == 403
+
+    for call in (
+        lambda: svc.update(_owner_ctx(), own.id, StatementUpdate(commission_pct=5)),
+        lambda: svc.finalize(_owner_ctx(), own.id),
+        lambda: svc.cancel(_owner_ctx(), own.id),
+        lambda: svc.delete(_owner_ctx(), own.id),
+        lambda: svc.add_expense(
+            _owner_ctx(),
+            ExpenseCreate(
+                concept="X", amount=1, date=date(2026, 1, 2), owner_id="o-1",
+            ),
+        ),
+    ):
+        with pytest.raises(StatementError) as write_exc:
+            call()
+        assert write_exc.value.status_code == 403
+
+
+def test_owner_preview_only_self() -> None:
+    svc = OwnerStatementsService(service_client=_DB(_two_owner_tables()))
+    fremd = StatementGenerateRequest(
+        owner_id="o-2", period_from=date(2026, 1, 1), period_to=date(2026, 1, 31),
+    )
+    with pytest.raises(StatementError) as exc:
+        svc.preview(_owner_ctx(), fremd)
+    assert exc.value.status_code == 404
+
+    eigen = StatementGenerateRequest(
+        owner_id="o-1", period_from=date(2026, 1, 1), period_to=date(2026, 1, 31),
+    )
+    resp = svc.preview(_owner_ctx(), eigen)
+    assert resp.owner_id == "o-1"

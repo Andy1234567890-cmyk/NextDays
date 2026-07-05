@@ -180,3 +180,50 @@ def test_ingest_webhook_creates_incoming(monkeypatch) -> None:  # noqa: ANN001
         x["channel"] == "whatsapp" and x["external_id"] == "491701234567"
         for x in db.store["guest_external_ids"]
     )
+
+
+# --- Webhook-Signaturpflicht (Prod-Fehlkonfiguration darf nicht offen sein) ---
+
+def test_webhook_prod_without_secret_returns_503(monkeypatch) -> None:  # noqa: ANN001
+    """Ohne WHATSAPP_APP_SECRET UND nicht-lokal → 503 (kein stiller Injektions-
+    pfad), NICHT stilles Verarbeiten."""
+    from src.features.whatsapp import router as wa_router
+
+    fake = type("S", (), {})()
+    fake.whatsapp_app_secret = type("Sec", (), {"get_secret_value": lambda self: ""})()
+    fake.is_local = False
+    monkeypatch.setattr(wa_router, "get_settings", lambda: fake)
+
+    resp = client.post("/api/v1/whatsapp/webhook", content=b'{"entry": []}')
+    assert resp.status_code == 503
+
+
+def test_webhook_local_without_secret_processes(monkeypatch) -> None:  # noqa: ANN001
+    """Lokal ohne Secret → Prüfung übersprungen, Body wird verarbeitet (Dev-DX)."""
+    from src.features.whatsapp import router as wa_router
+
+    fake = type("S", (), {})()
+    fake.whatsapp_app_secret = type("Sec", (), {"get_secret_value": lambda self: ""})()
+    fake.is_local = True
+    monkeypatch.setattr(wa_router, "get_settings", lambda: fake)
+
+    resp = client.post("/api/v1/whatsapp/webhook", content=b'{"entry": []}')
+    assert resp.status_code == 200
+
+
+def test_webhook_with_secret_rejects_bad_signature(monkeypatch) -> None:  # noqa: ANN001
+    """Mit Secret → falsche/fehlende Signatur → 403."""
+    from src.features.whatsapp import router as wa_router
+
+    fake = type("S", (), {})()
+    fake.whatsapp_app_secret = type(
+        "Sec", (), {"get_secret_value": lambda self: "geheim"}
+    )()
+    fake.is_local = False
+    monkeypatch.setattr(wa_router, "get_settings", lambda: fake)
+
+    resp = client.post(
+        "/api/v1/whatsapp/webhook", content=b'{"entry": []}',
+        headers={"X-Hub-Signature-256": "sha256=deadbeef"},
+    )
+    assert resp.status_code == 403

@@ -37,6 +37,10 @@ FROM node:22.16-slim AS run
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
+# Next.js-standalone-server.js bindet ohne HOSTNAME an den Container-Hostnamen
+# → Traefik/Healthcheck erreichen den Socket nicht → 502 nach jedem Deploy.
+# 0.0.0.0 = alle Interfaces (identisch zu apps/storybook/Dockerfile).
+ENV HOSTNAME=0.0.0.0
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN apt-get update && apt-get install -y --no-install-recommends \
       libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \

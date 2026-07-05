@@ -226,35 +226,57 @@ class AriPushMixin:
         date_from: date,
         date_to: date,
         availability: int,
-    ) -> None:
+        outbox_id: str | None = None,
+    ) -> bool:
         """Verfügbarkeit (absolute Menge je Tag) für einen Zeitraum an Channex
         pushen. date_to inklusiv. Persistiert in ari_outbox und versucht den
         Sofort-Push; bei Fehler bleibt die Zeile 'pending' (Cron-Retry). No-op,
-        wenn Channex nicht konfiguriert oder die Property nicht verbunden ist."""
+        wenn Channex nicht konfiguriert oder die Property nicht verbunden ist.
+
+        Rückgabe: True, wenn der Channex-Call fehlschlug (der Worker-Handler
+        wirft dann → schneller Job-Backoff); False bei Erfolg/No-op.
+
+        `outbox_id`: bereits vom Aufrufer persistierte ari_outbox-Zeile (z. B.
+        atomar mit der Buchung über die RPC 0104). Dann wird DIESE Zeile
+        abgearbeitet statt eine zweite anzulegen; ist sie nicht mehr 'pending'
+        (Cron war schneller), ist nichts zu tun."""
         if not self._channex.is_configured or self._db is None:
-            return
+            return False
         db = self._db
         mapping = self._resolve_channex_room_type(db, tenant_id, property_id)
         if mapping is None:
-            return  # nicht mit Channex verbunden → nichts zu pushen
+            return False  # nicht mit Channex verbunden → nichts zu pushen
         if not self._is_channex_managed(db, tenant_id, property_id):
-            return  # alle Kanäle des Objekts auf Aus → kein Verkauf, kein Push
+            return False  # alle Kanäle des Objekts auf Aus → kein Push
 
-        outbox = (
-            db.table("ari_outbox")
-            .insert(
-                {
-                    "tenant_id": tenant_id,
-                    "property_id": property_id,
-                    "date_from": date_from.isoformat(),
-                    "date_to": date_to.isoformat(),
-                    "availability": availability,
-                    "status": "pending",
-                }
-            )
-            .execute()
-        ).data
-        outbox_id = outbox[0]["id"] if outbox else None
+        prior_attempts = 0
+        if outbox_id is not None:
+            existing = (
+                db.table("ari_outbox")
+                .select("id,status,attempts")
+                .eq("id", outbox_id)
+                .limit(1)
+                .execute()
+            ).data
+            if not existing or existing[0]["status"] != "pending":
+                return False  # bereits abgearbeitet (Cron/Doppel) → fertig
+            prior_attempts = existing[0]["attempts"] or 0
+        else:
+            outbox = (
+                db.table("ari_outbox")
+                .insert(
+                    {
+                        "tenant_id": tenant_id,
+                        "property_id": property_id,
+                        "date_from": date_from.isoformat(),
+                        "date_to": date_to.isoformat(),
+                        "availability": availability,
+                        "status": "pending",
+                    }
+                )
+                .execute()
+            ).data
+            outbox_id = outbox[0]["id"] if outbox else None
 
         try:
             self._channex.update_availability(
@@ -270,7 +292,7 @@ class AriPushMixin:
             )
             if outbox_id:
                 db.table("ari_outbox").update(
-                    {"status": "done", "attempts": 1}
+                    {"status": "done", "attempts": prior_attempts + 1}
                 ).eq("id", outbox_id).execute()
             log.info(
                 "ari_push_done",
@@ -278,10 +300,11 @@ class AriPushMixin:
                 property_id=property_id,
                 availability=availability,
             )
+            return False
         except ChannexError as exc:
             if outbox_id:
                 db.table("ari_outbox").update(
-                    {"attempts": 1, "last_error": exc.message}
+                    {"attempts": prior_attempts + 1, "last_error": exc.message}
                 ).eq("id", outbox_id).execute()
             log.warning(
                 "ari_push_failed_queued",
@@ -289,16 +312,35 @@ class AriPushMixin:
                 property_id=property_id,
                 error=exc.message,
             )
+            # Fehler signalisieren: der Worker-Handler wirft → schneller
+            # Job-Backoff (1/5/15 min) statt erst der 15-min-Reconcile-Tick.
+            # Die ari_outbox bleibt der zusätzliche Backstop.
+            return True
 
     def _resolve_channex_rate_plan(
         self, db: Client, tenant_id: str, property_id: str
     ) -> dict[str, str] | None:
         """property_id → (channex_property_id, channex_rate_plan_id) über die
-        synthetische Room-Type/Rate-Plan-Kette. None, wenn nicht verbunden."""
+        synthetische Room-Type/Rate-Plan-Kette. None, wenn nicht verbunden.
+
+        Liefert den ERSTEN Rate-Plan (deterministisch: ältestes Mapping). Für
+        Restriktionen/Stop-Sell/Preise, die pro Rate-Plan wirken, IMMER
+        _resolve_channex_rate_plans (Plural) nutzen — sonst bleibt ein zweiter
+        Rate-Plan (z. B. Non-Refundable → Expedia) ungesperrt."""
+        plans = self._resolve_channex_rate_plans(db, tenant_id, property_id)
+        return plans[0] if plans else None
+
+    def _resolve_channex_rate_plans(
+        self, db: Client, tenant_id: str, property_id: str
+    ) -> list[dict[str, str]]:
+        """property_id → ALLE (channex_property_id, channex_rate_plan_id) der
+        Property über die Room-Type/Rate-Plan-Kette. Leere Liste, wenn nicht
+        verbunden. Channex-Restrictions (stop_sell/CTA/CTD/min_stay/rate) wirken
+        PRO Rate-Plan — hat ein Objekt mehrere (je OTA-Zimmer/Raten-Kombination),
+        muss jeder Plan bespielt werden, sonst verkauft ein OTA weiter."""
         rt = self._resolve_channex_room_type(db, tenant_id, property_id)
         if rt is None:
-            return None
-        # Rate-Plan-Map über die Room-Type-Map dieser Property.
+            return []
         pm = (
             db.table("channex_property_map")
             .select("id")
@@ -309,7 +351,7 @@ class AriPushMixin:
             .execute()
         ).data
         if not pm:
-            return None
+            return []
         rtm = (
             db.table("channex_room_type_map")
             .select("id")
@@ -321,22 +363,60 @@ class AriPushMixin:
             .execute()
         ).data
         if not rtm:
-            return None
-        rp = (
+            return []
+        rps = (
             db.table("channex_rate_plan_map")
             .select("channex_rate_plan_id")
             .eq("tenant_id", tenant_id)
             .eq("room_type_map_id", rtm[0]["id"])
             .is_("deleted_at", "null")
-            .limit(1)
+            .order("created_at")
             .execute()
-        ).data
-        if not rp:
+        ).data or []
+        return [
+            {
+                "channex_property_id": rt["channex_property_id"],
+                "channex_rate_plan_id": rp["channex_rate_plan_id"],
+            }
+            for rp in rps
+            if rp.get("channex_rate_plan_id")
+        ]
+
+    def _push_restriction_values_all_plans(
+        self,
+        tenant_id: str,
+        property_id: str,
+        fields: dict[str, Any],
+        date_from: date,
+        date_to: date,
+    ) -> int | None:
+        """Restriction-`fields` (rate/min_stay/max_stay/CTA/CTD) für ALLE
+        Rate-Plans der Property über den Zeitraum expandieren und gebündelt
+        pushen. Gibt die Anzahl gesendeter values zurück, oder None bei No-op
+        (nicht verbunden / alle Kanäle aus). Wirft ChannexError beim Sende-Fehler
+        (der Aufrufer entscheidet über Logging/Retry).
+
+        Der Kern des Rate-Plan-Fix: früher traf nur EIN (zufälliger) Rate-Plan
+        die Restriction; jetzt jeder — sonst verkauft ein OTA über einen anderen
+        Rate-Plan weiter."""
+        plans = self._resolve_channex_rate_plans(self._db, tenant_id, property_id)
+        if not plans:
             return None
-        return {
-            "channex_property_id": rt["channex_property_id"],
-            "channex_rate_plan_id": rp[0]["channex_rate_plan_id"],
-        }
+        if not self._is_channex_managed(self._db, tenant_id, property_id):
+            return None  # alle Kanäle des Objekts auf Aus → kein Push
+        values: list[dict[str, Any]] = []
+        for mapping in plans:
+            base = {
+                "property_id": mapping["channex_property_id"],
+                "rate_plan_id": mapping["channex_rate_plan_id"],
+                **fields,
+            }
+            values.extend(_expand_restriction_values(base, date_from, date_to))
+        if not values:
+            return 0
+        for i in range(0, len(values), self._RESTRICTIONS_CHUNK):
+            self._channex.update_restrictions(values[i : i + self._RESTRICTIONS_CHUNK])
+        return len(values)
 
     def push_rate_for_property(
         self,
@@ -347,41 +427,35 @@ class AriPushMixin:
         rate_cents: int | None = None,
         *,
         min_stay: int | None = None,
-    ) -> None:
+    ) -> bool:
         """Preis und/oder Mindestaufenthalt für einen Zeitraum an Channex pushen
-        (Restrictions). Mindestens eines von rate_cents/min_stay setzen.
-        Best-effort: bei Fehler loggen — der reconcile-Cron gleicht ohnehin ab.
-        No-op, wenn nicht mit Channex verbunden. date_to inklusiv."""
+        (Restrictions, ALLE Rate-Plans). Mindestens eines von rate_cents/min_stay
+        setzen. Rückgabe True = Channex-Fehler (Worker-Handler wirft → schneller
+        Job-Backoff statt Verlust). No-op, wenn nicht verbunden. date_to inkl."""
         if not self._channex.is_configured or self._db is None:
-            return
+            return False
         if rate_cents is None and min_stay is None:
-            return
-        mapping = self._resolve_channex_rate_plan(self._db, tenant_id, property_id)
-        if mapping is None:
-            return
-        if not self._is_channex_managed(self._db, tenant_id, property_id):
-            return  # alle Kanäle des Objekts auf Aus → kein Preis-Push
-        base: dict[str, Any] = {
-            "property_id": mapping["channex_property_id"],
-            "rate_plan_id": mapping["channex_rate_plan_id"],
-        }
+            return False
+        fields: dict[str, Any] = {}
         if rate_cents is not None:
-            base["rate"] = rate_cents
+            fields["rate"] = rate_cents
         if min_stay is not None:
-            base["min_stay_arrival"] = min_stay
-            base["min_stay_through"] = min_stay
-        values = _expand_restriction_values(base, date_from, date_to)
+            fields["min_stay_arrival"] = min_stay
+            fields["min_stay_through"] = min_stay
         try:
-            for i in range(0, len(values), self._RESTRICTIONS_CHUNK):
-                self._channex.update_restrictions(values[i : i + self._RESTRICTIONS_CHUNK])
-            log.info(
-                "restriction_push_done",
-                tenant_id=tenant_id,
-                property_id=property_id,
-                rate_cents=rate_cents,
-                min_stay=min_stay,
-                days=len(values),
+            sent = self._push_restriction_values_all_plans(
+                tenant_id, property_id, fields, date_from, date_to
             )
+            if sent is not None:
+                log.info(
+                    "restriction_push_done",
+                    tenant_id=tenant_id,
+                    property_id=property_id,
+                    rate_cents=rate_cents,
+                    min_stay=min_stay,
+                    days=sent,
+                )
+            return False
         except ChannexError as exc:
             log.warning(
                 "restriction_push_failed",
@@ -389,6 +463,7 @@ class AriPushMixin:
                 property_id=property_id,
                 error=exc.message,
             )
+            return True
 
     def push_max_stay_for_property(
         self,
@@ -397,38 +472,32 @@ class AriPushMixin:
         date_from: date,
         date_to: date,
         max_stay: int,
-    ) -> None:
+    ) -> bool:
         """Maximalaufenthalt (max_stay-Restriction) für einen Zeitraum an Channex
-        pushen. Channex-Key ist `max_stay` (NICHT max_stay_arrival — das nimmt
-        Channex zwar per 200 an, persistiert es aber nicht; live verifiziert).
-        0 = keine Obergrenze. Best-effort wie push_rate_for_property; No-op ohne
-        Verbindung/Mapping. date_to inklusiv."""
+        pushen (ALLE Rate-Plans). Channex-Key ist `max_stay` (NICHT
+        max_stay_arrival — das nimmt Channex zwar per 200 an, persistiert es aber
+        nicht; live verifiziert). 0 = keine Obergrenze. Rückgabe True =
+        Channex-Fehler (Job-Retry). No-op ohne Verbindung/Mapping. date_to inkl."""
         if not self._channex.is_configured or self._db is None:
-            return
-        mapping = self._resolve_channex_rate_plan(self._db, tenant_id, property_id)
-        if mapping is None:
-            return
-        if not self._is_channex_managed(self._db, tenant_id, property_id):
-            return  # alle Kanäle des Objekts auf Aus → kein Push
-        base: dict[str, Any] = {
-            "property_id": mapping["channex_property_id"],
-            "rate_plan_id": mapping["channex_rate_plan_id"],
-            "max_stay": max(0, int(max_stay)),
-        }
-        values = _expand_restriction_values(base, date_from, date_to)
+            return False
         try:
-            for i in range(0, len(values), self._RESTRICTIONS_CHUNK):
-                self._channex.update_restrictions(values[i : i + self._RESTRICTIONS_CHUNK])
-            log.info(
-                "max_stay_push_done",
-                tenant_id=tenant_id, property_id=property_id, max_stay=max_stay,
-                days=len(values),
+            sent = self._push_restriction_values_all_plans(
+                tenant_id, property_id,
+                {"max_stay": max(0, int(max_stay))}, date_from, date_to,
             )
+            if sent is not None:
+                log.info(
+                    "max_stay_push_done",
+                    tenant_id=tenant_id, property_id=property_id, max_stay=max_stay,
+                    days=sent,
+                )
+            return False
         except ChannexError as exc:
             log.warning(
                 "max_stay_push_failed",
                 tenant_id=tenant_id, property_id=property_id, error=exc.message,
             )
+            return True
 
     def push_restrictions_for_property(
         self,
@@ -439,42 +508,38 @@ class AriPushMixin:
         *,
         closed_to_arrival: bool | None = None,
         closed_to_departure: bool | None = None,
-    ) -> None:
-        """CTA/CTD-Restriktionen für einen Zeitraum an Channex pushen. Nur gesetzte
-        Felder (None = unverändert). Best-effort wie push_rate_for_property; No-op,
-        wenn nicht verbunden oder alle Kanäle aus. date_to inklusiv."""
+    ) -> bool:
+        """CTA/CTD-Restriktionen für einen Zeitraum an Channex pushen (ALLE
+        Rate-Plans). Nur gesetzte Felder (None = unverändert). Rückgabe True =
+        Channex-Fehler (Job-Retry). No-op, wenn nicht verbunden oder alle Kanäle
+        aus. date_to inklusiv."""
         if not self._channex.is_configured or self._db is None:
-            return
+            return False
         if closed_to_arrival is None and closed_to_departure is None:
-            return
-        mapping = self._resolve_channex_rate_plan(self._db, tenant_id, property_id)
-        if mapping is None:
-            return
-        if not self._is_channex_managed(self._db, tenant_id, property_id):
-            return  # alle Kanäle des Objekts auf Aus → kein Push
-        base: dict[str, Any] = {
-            "property_id": mapping["channex_property_id"],
-            "rate_plan_id": mapping["channex_rate_plan_id"],
-        }
+            return False
+        fields: dict[str, Any] = {}
         if closed_to_arrival is not None:
-            base["closed_to_arrival"] = closed_to_arrival
+            fields["closed_to_arrival"] = closed_to_arrival
         if closed_to_departure is not None:
-            base["closed_to_departure"] = closed_to_departure
-        values = _expand_restriction_values(base, date_from, date_to)
+            fields["closed_to_departure"] = closed_to_departure
         try:
-            for i in range(0, len(values), self._RESTRICTIONS_CHUNK):
-                self._channex.update_restrictions(values[i : i + self._RESTRICTIONS_CHUNK])
-            log.info(
-                "cta_ctd_push_done",
-                tenant_id=tenant_id, property_id=property_id,
-                cta=closed_to_arrival, ctd=closed_to_departure,
-                days=len(values),
+            sent = self._push_restriction_values_all_plans(
+                tenant_id, property_id, fields, date_from, date_to
             )
+            if sent is not None:
+                log.info(
+                    "cta_ctd_push_done",
+                    tenant_id=tenant_id, property_id=property_id,
+                    cta=closed_to_arrival, ctd=closed_to_departure,
+                    days=sent,
+                )
+            return False
         except ChannexError as exc:
             log.warning(
                 "cta_ctd_push_failed",
                 tenant_id=tenant_id, property_id=property_id, error=exc.message,
             )
+            return True
 
     def push_stop_sell_for_property(
         self,
@@ -484,46 +549,52 @@ class AriPushMixin:
         *,
         stop_sell: bool,
         days: list[str] | None = None,
-    ) -> None:
+    ) -> bool:
         """Verkaufsstopp (stop_sell-Restriction, Rate-Plan-Ebene) für einen oder
         mehrere Zeiträume an Channex pushen — EIN Request mit mehreren values.
         `days` filtert optional auf Wochentage (Channex-nativ: mo…su). Vergangene
-        Daten weist Channex ab → Spannen werden auf heute geklemmt. Best-effort
-        wie push_restrictions_for_property; No-op ohne Verbindung/Mapping.
-        date_to inklusiv."""
+        Daten weist Channex ab → Spannen werden auf heute geklemmt. Rückgabe True
+        = Channex-Fehler (Worker-Handler wirft → schneller Job-Backoff; ein
+        gescheiterter Verkaufsstopp würde OTAs sonst weiter verkaufen lassen).
+        No-op ohne Verbindung/Mapping. date_to inklusiv."""
         if not self._channex.is_configured or self._db is None or not spans:
-            return
-        mapping = self._resolve_channex_rate_plan(self._db, tenant_id, property_id)
-        if mapping is None:
-            return
+            return False
+        # ALLE Rate-Plans der Property — ein Stop-Sell wirkt pro Rate-Plan; sonst
+        # bleibt ein zweiter (z. B. Non-Refundable → Expedia) buchbar.
+        plans = self._resolve_channex_rate_plans(self._db, tenant_id, property_id)
+        if not plans:
+            return False
         if not self._is_channex_managed(self._db, tenant_id, property_id):
-            return  # alle Kanäle des Objekts auf Aus → kein Push
+            return False  # alle Kanäle des Objekts auf Aus → kein Push
         today = date.today()
         # Wochentag-Filter (mo…su) auf Python-weekday (Mo=0) abbilden.
         weekday_allow = None
         if days:
             names = ["mo", "tu", "we", "th", "fr", "sa", "su"]
             weekday_allow = {i for i, n in enumerate(names) if n in days}
-        base: dict[str, Any] = {
-            "property_id": mapping["channex_property_id"],
-            "rate_plan_id": mapping["channex_rate_plan_id"],
-            "stop_sell": stop_sell,
-        }
         values: list[dict[str, Any]] = []
-        for span_start, span_end in spans:
-            if span_end < today:
-                continue
-            # Pro Datum expandieren (restrictions ignoriert Bereiche still) und den
-            # optionalen Wochentag-Filter direkt hier anwenden — `days` am value
-            # wirkt beim per-Datum-Format nicht mehr.
-            for v in _expand_restriction_values(base, max(span_start, today), span_end):
-                if weekday_allow is not None:
-                    wd = date.fromisoformat(v["date"]).weekday()
-                    if wd not in weekday_allow:
-                        continue
-                values.append(v)
+        for mapping in plans:
+            base: dict[str, Any] = {
+                "property_id": mapping["channex_property_id"],
+                "rate_plan_id": mapping["channex_rate_plan_id"],
+                "stop_sell": stop_sell,
+            }
+            for span_start, span_end in spans:
+                if span_end < today:
+                    continue
+                # Pro Datum expandieren (restrictions ignoriert Bereiche still) und
+                # den optionalen Wochentag-Filter direkt hier anwenden — `days` am
+                # value wirkt beim per-Datum-Format nicht mehr.
+                for v in _expand_restriction_values(
+                    base, max(span_start, today), span_end
+                ):
+                    if weekday_allow is not None:
+                        wd = date.fromisoformat(v["date"]).weekday()
+                        if wd not in weekday_allow:
+                            continue
+                    values.append(v)
         if not values:
-            return
+            return False
         try:
             for i in range(0, len(values), self._RESTRICTIONS_CHUNK):
                 self._channex.update_restrictions(values[i : i + self._RESTRICTIONS_CHUNK])
@@ -532,11 +603,13 @@ class AriPushMixin:
                 tenant_id=tenant_id, property_id=property_id,
                 stop_sell=stop_sell, spans=len(values),
             )
+            return False
         except ChannexError as exc:
             log.warning(
                 "stop_sell_push_failed",
                 tenant_id=tenant_id, property_id=property_id, error=exc.message,
             )
+            return True
 
     # Channex akzeptiert viele Werte je Restrictions-Request; da restrictions
     # pro-DATUM gesendet werden müssen (date_from/date_to wird still ignoriert),
@@ -560,8 +633,10 @@ class AriPushMixin:
         No-op, wenn nicht verbunden oder keine Segmente."""
         if not self._channex.is_configured or self._db is None or not segments:
             return
-        mapping = self._resolve_channex_rate_plan(self._db, tenant_id, property_id)
-        if mapping is None:
+        # ALLE Rate-Plans der Property (nicht nur einer) — die Mappings werden
+        # EINMAL aufgelöst und für alle Segmente wiederverwendet.
+        plans = self._resolve_channex_rate_plans(self._db, tenant_id, property_id)
+        if not plans:
             return
         if not self._is_channex_managed(self._db, tenant_id, property_id):
             return  # alle Kanäle des Objekts auf Aus → kein Batch-Preis-Push
@@ -571,19 +646,20 @@ class AriPushMixin:
             min_stay = seg.get("min_stay")
             if rate_cents is None and min_stay is None:
                 continue
-            base: dict[str, Any] = {
-                "property_id": mapping["channex_property_id"],
-                "rate_plan_id": mapping["channex_rate_plan_id"],
-            }
-            if rate_cents is not None:
-                base["rate"] = rate_cents
-            if min_stay is not None:
-                base["min_stay_arrival"] = min_stay
-                base["min_stay_through"] = min_stay
-            # Pro Datum expandieren — restrictions ignoriert date_from/date_to still.
-            values.extend(
-                _expand_restriction_values(base, seg["date_from"], seg["date_to"])
-            )
+            for mapping in plans:
+                base: dict[str, Any] = {
+                    "property_id": mapping["channex_property_id"],
+                    "rate_plan_id": mapping["channex_rate_plan_id"],
+                }
+                if rate_cents is not None:
+                    base["rate"] = rate_cents
+                if min_stay is not None:
+                    base["min_stay_arrival"] = min_stay
+                    base["min_stay_through"] = min_stay
+                # Pro Datum expandieren — restrictions ignoriert date_from/date_to.
+                values.extend(
+                    _expand_restriction_values(base, seg["date_from"], seg["date_to"])
+                )
         if not values:
             return
         pushed = 0

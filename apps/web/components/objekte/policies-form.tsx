@@ -59,7 +59,21 @@ type Section =
   | "agreement"
   | null;
 
-export function PoliciesForm({ initial }: { initial: Property }) {
+// Betrag mit Objekt-Währung formatieren; ohne gültigen Code reine Zahl (kein
+// erfundenes € — Projektregel: keine Fallback-Ersatzwerte, kein €-Hardcode).
+function money(amount: number, currency: string | null | undefined): string {
+  const code = typeof currency === "string" ? currency.trim().toUpperCase() : "";
+  const valid = /^[A-Z]{3}$/.test(code);
+  return amount.toLocaleString("de-DE", valid ? { style: "currency", currency: code } : {});
+}
+
+export function PoliciesForm({
+  initial,
+  currency,
+}: {
+  initial: Property;
+  currency: string | null;
+}) {
   const [p, setP] = useState<Property>(initial);
   const [section, setSection] = useState<Section>(null);
   const pol = readPolicies(p.type_attributes);
@@ -95,7 +109,7 @@ export function PoliciesForm({ initial }: { initial: Property }) {
               <Summary title="Zahlungsplan" text={paymentSummary(pol.policy)} />
               <Summary title="Stornierung" text={CANCELLATION_OPTIONS.find((o) => o.value === pol.policy.cancellationType)?.info ?? ""} />
               {pol.policy.depositMode === "amount" && (
-                <Summary title="Kaution" text={`Eine Kaution von ${pol.policy.depositAmount} € wird einbehalten.`} />
+                <Summary title="Kaution" text={`Eine Kaution von ${money(pol.policy.depositAmount, currency)} wird einbehalten.`} />
               )}
             </div>
           ) : (
@@ -153,7 +167,7 @@ export function PoliciesForm({ initial }: { initial: Property }) {
       </section>
 
       {/* Editoren */}
-      {section === "policy" && <PolicyEditor pol={pol} onSave={save} onClose={() => setSection(null)} />}
+      {section === "policy" && <PolicyEditor pol={pol} onSave={save} onClose={() => setSection(null)} currency={currency} />}
       {section === "bookability" && <BookabilityEditor pol={pol} onSave={save} onClose={() => setSection(null)} />}
       {section === "times" && <TimesEditor pol={pol} onSave={save} onClose={() => setSection(null)} />}
       {section === "rates" && <LocalizedEditor title="Raten-Info" field="ratesInfo" pol={pol} onSave={save} onClose={() => setSection(null)} />}
@@ -202,10 +216,12 @@ function PolicyEditor({
   pol,
   onSave,
   onClose,
+  currency,
 }: {
   pol: Policies;
   onSave: (next: Policies) => Promise<true | string>;
   onClose: () => void;
+  currency: string | null;
 }) {
   const [creating, setCreating] = useState(false);
   const [v, setV] = useState<Policy>(pol.policy);
@@ -288,7 +304,7 @@ function PolicyEditor({
             </SelectContent>
           </Select>
           {v.depositMode === "amount" && (
-            <Field label="Kautionsbetrag (€)">
+            <Field label={`Kautionsbetrag${currency ? ` (${currency})` : ""}`}>
               <Input type="number" min={0} value={v.depositAmount} onChange={(e) => setV({ ...v, depositAmount: Number(e.target.value) || 0 })} />
             </Field>
           )}
@@ -331,7 +347,7 @@ function PolicyEditor({
             <Summary title="Zahlungsplan" text={paymentSummary(p)} />
             <Summary title="Stornierung" text={CANCELLATION_OPTIONS.find((o) => o.value === p.cancellationType)?.info ?? ""} />
             {p.depositMode === "amount" && (
-              <Summary title="Kaution" text={`Eine Kaution von ${p.depositAmount} € wird einbehalten.`} />
+              <Summary title="Kaution" text={`Eine Kaution von ${money(p.depositAmount, currency)} wird einbehalten.`} />
             )}
           </div>
         </div>

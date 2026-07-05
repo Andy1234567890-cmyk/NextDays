@@ -251,3 +251,62 @@ def test_round_coord_and_opt_int() -> None:
     assert _as_opt_int(None) is None
     assert _as_opt_int("4") == 4
     assert _as_opt_int("x") is None
+
+
+# --- Atomare Gastbuchung (RPC 0104) --------------------------------------------
+
+def test_public_booking_maps_rpc_conflict_to_409(monkeypatch) -> None:  # noqa: ANN001
+    """Verliert ein Gast das Buchungs-Race, kommt 409 mit neutraler Meldung —
+    die atomare RPC hat nichts geschrieben (kein halber Buchungszustand)."""
+    from datetime import date as _date
+    from unittest.mock import MagicMock
+
+    from postgrest.exceptions import APIError
+
+    from src.features.booking_engine.schemas import (
+        GuestContact,
+        PublicBookingRequest,
+    )
+    from src.features.booking_engine.service import (
+        BookingEngineError,
+        BookingEngineService,
+    )
+
+    db = MagicMock(name="supabase")
+
+    def table(name: str) -> MagicMock:
+        t = MagicMock(name=f"table:{name}")
+        if name in ("availability", "stop_sell"):
+            chain = (
+                t.select.return_value.eq.return_value.gte.return_value.lt.return_value
+            )
+            chain.execute.return_value.data = []  # Pre-Checks: frei
+        return t
+
+    db.table.side_effect = table
+    db.rpc.return_value.execute.side_effect = APIError({
+        "message": "Zeitraum enthält bereits belegte/gesperrte Tage.",
+        "code": "RS409", "hint": None, "details": None,
+    })
+
+    svc = BookingEngineService(service_client=db)
+    monkeypatch.setattr(svc, "_property_tenant", lambda *_a: "t-1")
+    monkeypatch.setattr(svc, "_upsert_guest", lambda *_a: None)
+    monkeypatch.setattr(svc, "_price_from", lambda *_a: (None, "EUR"))
+
+    req = PublicBookingRequest(
+        property_id="p-1",
+        check_in=_date(2026, 8, 1),
+        check_out=_date(2026, 8, 3),
+        guests=2,
+        total_amount=200.0,
+        contact=GuestContact(
+            first_name="Max", last_name="Gast", email="max@example.com",
+        ),
+    )
+    import pytest
+
+    with pytest.raises(BookingEngineError) as exc:
+        svc.create_public_booking(req)
+    assert exc.value.status_code == 409
+    assert exc.value.message == "Zeitraum ist nicht mehr verfügbar."

@@ -44,3 +44,23 @@ def test_totals_zero_rate_item_stays_zero() -> None:
     assert net == Decimal("113.46")
     assert tax == Decimal("6.54")
     assert gross == Decimal("120.00")
+
+
+def test_kleinunternehmer_line_has_zero_tax() -> None:
+    """§19 UStG: eine Position mit taxRate=19 aus dem Formular MUSS auf einem
+    Kleinunternehmer-Beleg 0 % USt tragen — sonst weichen Σ Positionen vom
+    steuerfreien Kopf ab (GoBD-Widerspruch, falscher Storno)."""
+    from src.features.buchhaltung.schemas import LineItemInput
+
+    item = LineItemInput(
+        description="Übernachtung", quantity=Decimal("1"),
+        unit_price=Decimal("100"), tax_rate=Decimal("19"),
+    )
+    normal = _service()._compute_line(item, 1, is_klein=False)
+    klein = _service()._compute_line(item, 1, is_klein=True)
+
+    assert normal["tax_amount"] == "19.00" and normal["gross_amount"] == "119.00"
+    # Kleinunternehmer: Satz + Steuer 0, Brutto == Netto.
+    assert klein["tax_rate"] == "0"
+    assert klein["tax_amount"] == "0.00"
+    assert klein["net_amount"] == klein["gross_amount"] == "100.00"

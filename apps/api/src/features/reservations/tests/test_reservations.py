@@ -234,8 +234,10 @@ def test_dashboard_buckets_and_kpis() -> None:
 def _list_db(
     reservations: list[dict], *, user_role: str = "admin",
     user_perms: list[str] | None = None,
+    owner_pids: list[str] | None = None,
 ) -> ReservationsService:
-    """Mockt die in list() benutzten Ketten (reservations mit guests-Join + users)."""
+    """Mockt die in list() benutzten Ketten (reservations mit guests-Join + users
+    + owner_property_assignments für den Owner-Scope)."""
     db = MagicMock(name="supabase")
 
     def table(name: str) -> MagicMock:
@@ -246,9 +248,19 @@ def _list_db(
             chain.execute.return_value.data = [
                 {"role": user_role, "permissions": perms}
             ]
+        elif name == "owner_property_assignments":
+            chain = t.select.return_value.eq.return_value.eq.return_value
+            chain.execute.return_value.data = [
+                {"property_id": p} for p in (owner_pids or [])
+            ]
         else:
-            chain = t.select.return_value.eq.return_value.order.return_value
-            chain.execute.return_value.data = reservations
+            # Owner-Pfad hängt .in_() vor .order(); Nicht-Owner nutzt direkt
+            # .order(). Beide Ketten liefern dieselben reservations-Zeilen.
+            base = t.select.return_value.eq.return_value
+            base.order.return_value.execute.return_value.data = reservations
+            base.in_.return_value.order.return_value.execute.return_value.data = (
+                reservations
+            )
         return t
 
     db.table.side_effect = table
@@ -283,13 +295,40 @@ def test_list_co_admin_with_full_perms() -> None:
 
 
 def test_list_owner_sees_only_first_name_no_amount() -> None:
-    svc = _list_db([dict(_GUEST_ROW)], user_role="owner", user_perms=_NO_PERMS)
+    # Owner ist p1 zugeordnet → sieht die Buchung, aber maskiert (nur Vorname).
+    svc = _list_db(
+        [dict(_GUEST_ROW)], user_role="owner", user_perms=_NO_PERMS,
+        owner_pids=["p1"],
+    )
     out = svc.list(AuthContext(user_id="u", tenant_id="t1", role="owner"))
     r = out.items[0]
     assert r.guest_name == "Anna"          # nur Vorname (kein view_guest_name)
     assert r.total_amount is None          # kein Betrag (HIDE_PRICES nicht nötig: …)
     assert r.currency == ""
     assert r.ota_name is None              # keine Quelle (kein view_booking_source)
+
+
+def test_list_owner_without_assignment_sees_nothing() -> None:
+    # Owner OHNE zugeordnete Objekte → leere Liste (fail-closed, §4.2).
+    svc = _list_db(
+        [dict(_GUEST_ROW)], user_role="owner", user_perms=_NO_PERMS,
+        owner_pids=[],
+    )
+    out = svc.list(AuthContext(user_id="u", tenant_id="t1", role="owner"))
+    assert out.total == 0 and out.items == []
+
+
+def test_list_owner_foreign_property_filter_ignored() -> None:
+    # Owner ist NUR p1 zugeordnet; fragt gezielt das fremde p2 an → leer,
+    # der client-Filter darf den Owner-Scope nicht ausweiten.
+    svc = _list_db(
+        [dict(_GUEST_ROW)], user_role="owner", user_perms=_NO_PERMS,
+        owner_pids=["p1"],
+    )
+    out = svc.list(
+        AuthContext(user_id="u", tenant_id="t1", role="owner"), property_id="p2"
+    )
+    assert out.total == 0
 
 
 def test_list_staff_with_hide_prices_overrides_total() -> None:
@@ -651,3 +690,104 @@ def test_cancel_direct_booking_also_frees_days() -> None:
     log_rows = store.get("reservation_cancellation_log", [])
     assert log_rows[0]["channel"] == "direct"
     assert log_rows[0]["ota_name"] is None
+
+
+# --- Service: atomare Buchung (RPC 0104) --------------------------------------
+
+def _rpc_service(monkeypatch) -> tuple[ReservationsService, MagicMock]:  # noqa: ANN001
+    """create() bis zur atomaren RPC durchlaufen lassen: Pre-Checks frei
+    (Property gefunden, Kalender offen, kein Stop-Sell), Gast/Quote gemockt."""
+    from types import SimpleNamespace
+
+    service = _service_for_create(property_found=True, taken_days=[], stopped_days=[])
+    db = service._client  # noqa: SLF001 — Test greift auf den Mock zu
+    monkeypatch.setattr(service, "_upsert_guest", lambda *_a, **_k: None)
+    quote = SimpleNamespace(total=300.0, currency="CHF", lines=[])
+    monkeypatch.setattr(service, "_quote", lambda *_a, **_k: quote)
+    mask = MagicMock()
+    mask.name.side_effect = lambda v: v or ""
+    mask.amount.side_effect = lambda v: v
+    mask.amounts = True
+    mask.source_value.side_effect = lambda v: v
+    monkeypatch.setattr(
+        "src.features.reservations.service.load_guest_mask", lambda *_a: mask
+    )
+    return service, db
+
+
+def test_create_books_atomically_via_rpc(monkeypatch) -> None:  # noqa: ANN001
+    """Reservierung + Kalender + ari_outbox entstehen über create_reservation_atomic
+    (eine Transaktion); die Outbox-Zeile wandert als outbox_id in den Push-Job."""
+    service, db = _rpc_service(monkeypatch)
+    row = {
+        "id": "r-1", "property_id": "p1", "guest_id": None, "channel": "direct",
+        "check_in": "2026-05-01", "check_out": "2026-05-03", "status": "confirmed",
+        "total_amount": 300.0, "currency": "CHF", "ota_name": None,
+        "external_ref": None,
+    }
+    db.rpc.return_value.execute.return_value.data = {
+        "reservation": row, "outbox_id": "ob-1",
+    }
+    req = ReservationCreate(
+        property_id="p1", check_in=date(2026, 5, 1), check_out=date(2026, 5, 3),
+    )
+    resp = service.create(AuthContext(user_id="u1", tenant_id="t1"), req)
+    assert resp.id == "r-1"
+    assert resp.currency == "CHF"
+
+    atomic_calls = [
+        c for c in db.rpc.call_args_list if c.args[0] == "create_reservation_atomic"
+    ]
+    assert len(atomic_calls) == 1
+    params = atomic_calls[0].args[1]
+    assert params["p_with_outbox"] is True
+    assert params["p_reservation"]["property_id"] == "p1"
+    assert params["p_reservation"]["tenant_id"] == "t1"
+
+    # Der ARI-Push-Job trägt die atomar persistierte Outbox-Zeile.
+    enqueue_calls = [c for c in db.rpc.call_args_list if c.args[0] == "enqueue_job"]
+    ari = [c for c in enqueue_calls if c.args[1]["p_job_type"] == "push_ari"]
+    assert ari and ari[0].args[1]["p_payload"]["outbox_id"] == "ob-1"
+
+
+def test_create_maps_rpc_conflict_to_409(monkeypatch) -> None:  # noqa: ANN001
+    """Verliert der Request das Buchungs-Race (RS409 aus der RPC), antwortet der
+    Service mit 409 statt 500 — die Transaktion hat nichts geschrieben."""
+    from postgrest.exceptions import APIError
+
+    service, db = _rpc_service(monkeypatch)
+    db.rpc.return_value.execute.side_effect = APIError({
+        "message": "Zeitraum enthält bereits belegte/gesperrte Tage.",
+        "code": "RS409", "hint": None, "details": None,
+    })
+    req = ReservationCreate(
+        property_id="p1", check_in=date(2026, 5, 1), check_out=date(2026, 5, 3),
+    )
+    with pytest.raises(ReservationError) as exc:
+        service.create(AuthContext(user_id="u1", tenant_id="t1"), req)
+    assert exc.value.status_code == 409
+
+
+def test_map_booking_conflict_codes() -> None:
+    """RS409 (RPC-Konflikt) und 23P01 (EXCLUDE-Backstop) → 409; Rest unverändert."""
+    from postgrest.exceptions import APIError
+
+    from src.features.reservations.service import _map_booking_conflict
+
+    rs = _map_booking_conflict(APIError({
+        "message": "belegt", "code": "RS409", "hint": None, "details": None,
+    }))
+    assert isinstance(rs, ReservationError)
+    assert rs.status_code == 409
+
+    excl = _map_booking_conflict(APIError({
+        "message": "conflicting key value", "code": "23P01",
+        "hint": None, "details": None,
+    }))
+    assert isinstance(excl, ReservationError)
+    assert excl.status_code == 409
+
+    other = APIError({
+        "message": "kaputt", "code": "42P01", "hint": None, "details": None,
+    })
+    assert _map_booking_conflict(other) is other

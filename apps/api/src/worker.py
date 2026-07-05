@@ -16,6 +16,7 @@ asyncio.to_thread, Fehler dürfen den Worker nie killen.
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import os
 import signal
 import socket
@@ -48,6 +49,12 @@ CONCURRENCY = int(os.getenv("WORKER_CONCURRENCY", "4"))
 IDLE_SLEEP_SECONDS = 1.0
 # Ein 'running'-Job, dessen Worker abgestürzt ist, wird nach dieser Zeit requeued.
 STUCK_AFTER_SECONDS = 300
+# locked_at-Refresh je laufendem Job: Langläufer (reconcile_tenant über hunderte
+# Objekte, process_ari_outbox mit 200 Zeilen) überschreiten STUCK_AFTER_SECONDS
+# regelmäßig. Ohne Heartbeat requeued der Reaper einen NOCH LAUFENDEN Job →
+# Doppelausführung/Doppel-Push an Channex. Mit Heartbeat trifft der Reaper nur
+# noch tote Worker (5 verpasste Heartbeats).
+JOB_HEARTBEAT_SECONDS = 60
 # Zeit-Tick: Reconcile aller Tenants einreihen (ersetzt den externen 15-min-Cron).
 RECONCILE_TICK_SECONDS = 15 * 60
 # Heartbeat-Datei für den Docker-Healthcheck: der Run-Loop schreibt sie je
@@ -121,23 +128,31 @@ def _handle_push_ari(db: Client, payload: dict[str, Any]) -> None:
     def _d(key: str) -> date:
         return date.fromisoformat(payload[key])
 
+    # Die push_*-Methoden geben True zurück, wenn der Channex-Call fehlschlug
+    # (statt zu werfen — im Request-Pfad sind sie best-effort). Hier im Worker
+    # heben wir das Signal zu einer Exception, damit _run_job → _retry den
+    # schnellen Job-Backoff (1/5/15 min) startet, statt den Push bis zum
+    # 15-min-Reconcile-Tick liegen zu lassen (oder ganz zu verlieren).
     if kind == "availability":
-        push.push_availability_for_property(
+        failed = push.push_availability_for_property(
             tenant_id, property_id, _d("date_from"), _d("date_to"),
             int(payload["availability"]),
+            # Vom Request-Pfad bereits persistierte Outbox-Zeile (RPC 0104 bzw.
+            # _write_ari_outbox) abarbeiten statt eine zweite anzulegen.
+            outbox_id=payload.get("outbox_id"),
         )
     elif kind == "rate":
-        push.push_rate_for_property(
+        failed = push.push_rate_for_property(
             tenant_id, property_id, _d("date_from"), _d("date_to"),
             rate_cents=payload.get("rate_cents"), min_stay=payload.get("min_stay"),
         )
     elif kind == "max_stay":
-        push.push_max_stay_for_property(
+        failed = push.push_max_stay_for_property(
             tenant_id, property_id, _d("date_from"), _d("date_to"),
             int(payload["max_stay"]),
         )
     elif kind == "restrictions":
-        push.push_restrictions_for_property(
+        failed = push.push_restrictions_for_property(
             tenant_id, property_id, _d("date_from"), _d("date_to"),
             closed_to_arrival=payload.get("closed_to_arrival"),
             closed_to_departure=payload.get("closed_to_departure"),
@@ -145,13 +160,21 @@ def _handle_push_ari(db: Client, payload: dict[str, Any]) -> None:
     elif kind == "stop_sell":
         spans = [(date.fromisoformat(a), date.fromisoformat(b))
                  for a, b in payload["spans"]]
-        push.push_stop_sell_for_property(
+        failed = push.push_stop_sell_for_property(
             tenant_id, property_id, spans,
             stop_sell=bool(payload["stop_sell"]),
             days=payload.get("days"),
         )
     else:
         raise ValueError(f"unbekannter ARI-kind: {kind}")
+
+    if failed:
+        # Channex war nicht erreichbar → Job-Retry auslösen (Backoff). _run_job
+        # fängt die Exception und ruft _retry (1/5/15-min-Staffel). Bei
+        # 'availability' bleibt die ari_outbox zusätzlich als Backstop bestehen.
+        raise RuntimeError(
+            f"ARI-Push ({kind}) an Channex fehlgeschlagen — Job wird erneut versucht."
+        )
 
 
 HANDLERS: dict[str, Callable[[Client, dict[str, Any]], None]] = {
@@ -199,7 +222,18 @@ class Worker:
         patch: dict[str, Any] = {"status": status, "locked_at": None, "locked_by": None}
         if error is not None:
             patch["last_error"] = error[:1000]
-        self._db.table("jobs").update(patch).eq("id", job_id).execute()
+        # Guard: nur den EIGENEN, noch laufenden Claim abschließen. Hat der
+        # Reaper den Job inzwischen requeued (und ggf. ein anderer Worker ihn
+        # neu geclaimt), würde ein blindes Update dessen Zustand überschreiben.
+        res = (
+            self._db.table("jobs").update(patch)
+            .eq("id", job_id)
+            .eq("locked_by", self._worker_id)
+            .eq("status", "running")
+            .execute()
+        )
+        if not (res.data or []):
+            log.warning("job_finish_lost_claim", id=job_id, status=status)
 
     def _retry(self, job: dict[str, Any], error: str) -> None:
         """Fehlgeschlagenen Job neu terminieren — oder 'dead', wenn Budget aus."""
@@ -212,7 +246,9 @@ class Worker:
             "status": "queued", "locked_at": None, "locked_by": None,
             "last_error": error[:1000],
             "run_after": next_run_after(attempts).isoformat(),
-        }).eq("id", job["id"]).execute()
+        }).eq("id", job["id"]).eq(
+            "locked_by", self._worker_id  # Guard wie _finish: nur eigenen Claim
+        ).eq("status", "running").execute()
 
     def _defer(self, job: dict[str, Any], retry_after: int) -> None:
         """Job wegen erschöpftem Channex-Budget verzögern: zurück auf queued mit
@@ -226,7 +262,9 @@ class Worker:
             "status": "queued", "locked_at": None, "locked_by": None,
             "attempts": attempts,
             "run_after": run_after.isoformat(),
-        }).eq("id", job["id"]).execute()
+        }).eq("id", job["id"]).eq(
+            "locked_by", self._worker_id  # Guard wie _finish: nur eigenen Claim
+        ).eq("status", "running").execute()
 
     def _run_job(self, job: dict[str, Any]) -> None:
         """Synchron im Thread: Budget prüfen, Handler ausführen, Status setzen."""
@@ -253,7 +291,33 @@ class Worker:
 
     async def _dispatch(self, job: dict[str, Any]) -> None:
         async with self._sem:
-            await asyncio.to_thread(self._run_job, job)
+            heartbeat = asyncio.create_task(self._job_heartbeat(job["id"]))
+            try:
+                await asyncio.to_thread(self._run_job, job)
+            finally:
+                heartbeat.cancel()
+                with contextlib.suppress(asyncio.CancelledError):
+                    await heartbeat
+
+    async def _job_heartbeat(self, job_id: str) -> None:
+        """locked_at des laufenden Jobs periodisch auffrischen, solange der
+        Handler läuft. Der Reaper requeued Jobs mit locked_at älter als
+        STUCK_AFTER_SECONDS — ohne Heartbeat traf das auch legitime Langläufer
+        (reconcile_tenant über hunderte Objekte ≫ 300 s) und erzeugte
+        Doppelausführungen. Mit Heartbeat heißt „stuck" nur noch: Worker tot."""
+        while True:
+            await asyncio.sleep(JOB_HEARTBEAT_SECONDS)
+            try:
+                await asyncio.to_thread(
+                    lambda: self._db.table("jobs")
+                    .update({"locked_at": datetime.now(UTC).isoformat()})
+                    .eq("id", job_id)
+                    .eq("locked_by", self._worker_id)
+                    .eq("status", "running")
+                    .execute()
+                )
+            except Exception as exc:  # noqa: BLE001 — Heartbeat-Fehler nie fatal
+                log.warning("job_heartbeat_failed", id=job_id, error=str(exc)[:200])
 
     async def _reap_stuck(self) -> None:
         try:

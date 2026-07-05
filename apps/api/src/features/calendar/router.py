@@ -56,7 +56,7 @@ def availability(
 ) -> list[DayAvailability]:
     try:
         return service.get_availability(
-            ctx.tenant_id, property_id, DateRange(start=start, end=end)
+            ctx, property_id, DateRange(start=start, end=end)
         )
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
@@ -74,7 +74,7 @@ def board(
     angefragten Objekte in EINEM Call (ersetzt die N+1-Einzelabrufe des Boards)."""
     try:
         return service.get_board(
-            ctx.tenant_id, property_ids, DateRange(start=start, end=end)
+            ctx, property_ids, DateRange(start=start, end=end)
         )
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
@@ -90,7 +90,7 @@ def check(
 ) -> AvailabilityCheck:
     try:
         return service.check_availability(
-            ctx.tenant_id, property_id, DateRange(start=start, end=end)
+            ctx, property_id, DateRange(start=start, end=end)
         )
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
@@ -139,7 +139,7 @@ def list_stop_sell(
 ) -> StopSellListResponse:
     try:
         items = service.list_stop_sell(
-            ctx.tenant_id, property_id, DateRange(start=start, end=end)
+            ctx, property_id, DateRange(start=start, end=end)
         )
         return StopSellListResponse(items=items, total=len(items))
     except CalendarError as exc:
@@ -208,7 +208,7 @@ def list_season_price(
 ) -> SeasonPriceListResponse:
     try:
         items = service.list_season_prices(
-            ctx.tenant_id, property_id, DateRange(start=start, end=end)
+            ctx, property_id, DateRange(start=start, end=end)
         )
         return SeasonPriceListResponse(items=items, total=len(items))
     except CalendarError as exc:

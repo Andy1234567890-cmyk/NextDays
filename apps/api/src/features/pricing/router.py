@@ -15,11 +15,9 @@ from fastapi import (
     Header,
     HTTPException,
     Query,
-    status,
 )
 
-from src.core.config import get_settings
-from src.core.security import AuthContext
+from src.core.security import AuthContext, require_internal_cron_secret
 from src.core.supabase import get_service_client
 from src.features.auth.dependencies import (
     require_lodgify_permission,
@@ -252,13 +250,10 @@ def recompute(
 ) -> RecomputeResponse:
     """Interner Cron-Trigger: berechnet die dynamischen Preise ALLER Objekte mit
     aktiviertem Dynamic Pricing neu (Horizont 540 Tage) und pusht sie an Channex.
-    Kein JWT — via geteiltem Secret (CHANNEX_WEBHOOK_SECRET) abgesichert,
-    getriggert durch einen Coolify-Scheduled-Task / Host-crontab (curl)."""
-    expected = get_settings().channex_webhook_secret.get_secret_value()
-    if not expected or x_internal_cron_secret != expected:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiges Secret."
-        )
+    Kein JWT — via eigenem INTERNAL_CRON_SECRET abgesichert (nie das outbound
+    geteilte Channex-Webhook-Secret), getriggert durch einen
+    Coolify-Scheduled-Task / Host-crontab (curl)."""
+    require_internal_cron_secret(x_internal_cron_secret)
     result = DynamicPricingRecompute(
         service_client=get_service_client()
     ).recompute_all()

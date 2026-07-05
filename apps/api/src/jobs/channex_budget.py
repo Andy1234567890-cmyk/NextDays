@@ -26,10 +26,46 @@ import redis
 
 from src.core.config import Settings
 from src.core.logging import get_logger
-from src.core.ratelimit import _WINDOW_LUA as WINDOW_LUA
 from src.core.ratelimit import Limit, parse_limit
 
 log = get_logger("nextdays.channex.budget")
+
+# Atomarer Zwei-Ebenen-Verbrauch (Account + optional Property): ALL-OR-NOTHING.
+# Zuerst BEIDE Zähler nur LESEN; nur wenn beide Ebenen noch Platz haben, BEIDE
+# per INCR verbrauchen. So wird nie ein Account-Token verbrannt, wenn die
+# Property-Ebene ablehnt (sonst leerte ein einzelnes überlastetes Objekt über
+# seine Retries das kontoweite Budget aller anderen Objekte).
+# Rückgabe: {allowed(0|1), account_ttl, prop_ttl}. KEYS[1]=account,
+# KEYS[2]=prop(optional). ARGV: 1=acc_max 2=acc_window 3=prop_max 4=prop_window
+# 5=has_prop(0|1).
+_TWO_LEVEL_LUA = """
+local has_prop = tonumber(ARGV[5])
+local acc = tonumber(redis.call('GET', KEYS[1]) or '0')
+local acc_ttl = redis.call('TTL', KEYS[1])
+local prop = 0
+local prop_ttl = -2
+if has_prop == 1 then
+  prop = tonumber(redis.call('GET', KEYS[2]) or '0')
+  prop_ttl = redis.call('TTL', KEYS[2])
+end
+-- Würde das Verbrauchen eine Ebene über ihr Maximum heben? Dann ablehnen,
+-- OHNE zu inkrementieren.
+if acc + 1 > tonumber(ARGV[1]) then
+  return {0, acc_ttl, prop_ttl}
+end
+if has_prop == 1 and prop + 1 > tonumber(ARGV[3]) then
+  return {0, acc_ttl, prop_ttl}
+end
+-- Beide Ebenen haben Platz → beide atomar verbrauchen.
+local acc_new = redis.call('INCR', KEYS[1])
+if acc_new == 1 then redis.call('EXPIRE', KEYS[1], ARGV[2]) end
+if has_prop == 1 then
+  local prop_new = redis.call('INCR', KEYS[2])
+  if prop_new == 1 then redis.call('EXPIRE', KEYS[2], ARGV[4]) end
+end
+return {1, redis.call('TTL', KEYS[1]),
+        has_prop == 1 and redis.call('TTL', KEYS[2]) or -2}
+"""
 
 
 @dataclass(frozen=True)
@@ -55,41 +91,42 @@ class ChannexBudget:
         self._redis = client or _build_sync_redis(settings.redis_url)
 
     def try_consume(self, channex_property_id: str | None) -> BudgetDecision:
-        """Ein Token je Ebene verbrauchen. Erlaubt nur, wenn BEIDE hergeben.
+        """Ein Token je Ebene verbrauchen — ATOMAR all-or-nothing. Erlaubt nur,
+        wenn BEIDE hergeben; lehnt die Property-Ebene ab, wird KEIN Account-Token
+        verbraucht (kein Leck über abgelehnte, retryte Jobs).
 
         channex_property_id=None → nur die Konto-Ebene (globaler/objektloser Push).
         Bei Redis-Fehler: NICHT erlaubt (Push verzögern statt Channex überfahren).
         """
-        acc = self._hit("channex:account", self._account)
-        if acc is None:  # Redis weg → Budget verweigern
-            return BudgetDecision(allowed=False, retry_after=self._account.window_seconds)
-        acc_current, acc_ttl = acc
-        if acc_current > self._account.max:
-            return BudgetDecision(allowed=False, retry_after=_retry(acc_ttl, self._account))
-
-        if channex_property_id:
-            prop = self._hit(f"channex:prop:{channex_property_id}", self._property)
-            if prop is None:
-                return BudgetDecision(
-                    allowed=False, retry_after=self._property.window_seconds
-                )
-            prop_current, prop_ttl = prop
-            if prop_current > self._property.max:
-                return BudgetDecision(
-                    allowed=False, retry_after=_retry(prop_ttl, self._property)
-                )
-        return BudgetDecision(allowed=True, retry_after=0)
-
-    def _hit(self, key: str, limit: Limit) -> tuple[int, int] | None:
-        """Atomarer INCR+EXPIRE. Gibt (current, ttl) zurück, None bei Redis-Fehler."""
+        has_prop = 1 if channex_property_id else 0
+        keys = ["rl:channex:account"]
+        keys.append(
+            f"rl:channex:prop:{channex_property_id}" if channex_property_id
+            else "rl:channex:prop:_none"  # ungenutzt (has_prop=0), nur Platzhalter
+        )
         try:
-            current, ttl = self._redis.eval(
-                WINDOW_LUA, 1, f"rl:{key}", limit.window_seconds
+            allowed, acc_ttl, prop_ttl = self._redis.eval(
+                _TWO_LEVEL_LUA, 2, keys[0], keys[1],
+                self._account.max, self._account.window_seconds,
+                self._property.max, self._property.window_seconds,
+                has_prop,
             )
         except (redis.RedisError, OSError) as exc:
             log.warning("channex_budget_redis_unavailable", error=type(exc).__name__)
-            return None
-        return int(current), int(ttl)
+            return BudgetDecision(
+                allowed=False, retry_after=self._account.window_seconds
+            )
+        if int(allowed) == 1:
+            return BudgetDecision(allowed=True, retry_after=0)
+        # Abgelehnt: die restriktivere (kürzere) Wartezeit der überschrittenen
+        # Ebene(n) melden. Property-TTL nur berücksichtigen, wenn vorhanden.
+        acc_wait = _retry(int(acc_ttl), self._account)
+        if has_prop and int(prop_ttl) >= 0:
+            return BudgetDecision(
+                allowed=False,
+                retry_after=min(acc_wait, _retry(int(prop_ttl), self._property)),
+            )
+        return BudgetDecision(allowed=False, retry_after=acc_wait)
 
 
 def _retry(ttl: int, limit: Limit) -> int:

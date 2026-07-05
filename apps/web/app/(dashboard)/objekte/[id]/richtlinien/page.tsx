@@ -3,6 +3,7 @@
 // lädt das Objekt, der Client-Teil rendert die bearbeitbaren Blöcke.
 import { PoliciesForm } from "@/components/objekte/policies-form";
 import { getProperty } from "@/lib/properties";
+import { listRatePlans } from "@/lib/rates";
 
 export default async function Page({
   params,
@@ -18,5 +19,9 @@ export default async function Page({
       </div>
     );
   }
-  return <PoliciesForm initial={res.data} />;
+  // Objekt-Währung aus dem Rate-Plan (kein €-Hardcode). Fehlt ein Rate-Plan,
+  // bleibt sie null → Beträge ohne Symbol statt erfundenem Euro.
+  const rates = await listRatePlans(id);
+  const currency = rates.ok ? (rates.data.items[0]?.currency ?? null) : null;
+  return <PoliciesForm initial={res.data} currency={currency} />;
 }

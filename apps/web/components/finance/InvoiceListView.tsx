@@ -313,15 +313,16 @@ export function InvoiceListView({
         }
 
         if (customerPhone) {
-          // Firmennamen laden
-          let companyName = 'NextDays';
+          // Firmennamen laden. Kein Brand-Fallback: fehlt der Name, bleibt er
+          // leer (kein erfundenes „NextDays" — Projektregel: keine Fallbacks).
+          let companyName = '';
           try {
             const companyResult = await api.get<{ name?: string }>(
               `/api/v1/companies/${companyId}`,
             );
-            companyName = companyResult?.name || 'NextDays';
+            companyName = companyResult?.name || '';
           } catch {
-            /* company name fallback is non-critical */
+            /* Firmenname optional — Benachrichtigung nennt dann keinen Absender */
           }
 
           await WhatsAppNotificationService.notifyInvoicePaid(

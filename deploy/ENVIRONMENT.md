@@ -69,7 +69,8 @@ verschlüsselten Coolify-Config-Sicherung. Diese Datei sagt nur, **welche** Vari
 |---|---|---|---|
 | `CHANNEX_API_KEY` | Channel-Manager-API | **ja** | → Passwort-Manager |
 | `CHANNEX_BASE_URL` | Channex-Endpoint | nein | Coolify-Env |
-| `CHANNEX_WEBHOOK_SECRET` | Channex-Webhook-Prüf-Secret | **ja** | → Passwort-Manager |
+| `CHANNEX_WEBHOOK_SECRET` | Channex-Webhook-Prüf-Secret (geht outbound an Channex — autorisiert NUR den Webhook-Empfang) | **ja** | → Passwort-Manager |
+| `INTERNAL_CRON_SECRET` | Eigenes Secret für interne Cron-Endpunkte (recompute/reconcile/auto-run/dispatch); verlässt den Server nie. Leer = Cron-Endpunkte deaktiviert (503) | **ja** | → Passwort-Manager |
 | `CHANNEX_SANDBOX_PORTALS` | Sandbox-Kanäle (Prod=false) | nein | Coolify-Env |
 | `STRIPE_SECRET_KEY` | Stripe-Secret | **ja** | → Passwort-Manager |
 | `STRIPE_WEBHOOK_SECRET` | Stripe-Webhook-Signatur | **ja** | → Passwort-Manager |

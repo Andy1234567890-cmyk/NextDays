@@ -391,7 +391,7 @@ export function ReservationWizard({
                   <Switch checked={policyOn} onCheckedChange={setPolicyOn} />
                 </label>
                 <p className="text-xs leading-relaxed text-muted-foreground">
-                  Bei aktivierten Richtlinien verwaltet NextDays den Ablauf automatisch:
+                  Bei aktivierten Richtlinien verwaltet myNextDays den Ablauf automatisch:
                   Anzahlungen berechnen, an überfällige Zahlungen erinnern und über
                   Statusänderungen informieren.
                 </p>

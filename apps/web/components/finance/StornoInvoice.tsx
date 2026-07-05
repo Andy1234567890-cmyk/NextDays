@@ -28,7 +28,7 @@ import {
   Label,
   Textarea,
 } from '@tasko/ui';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 import { useNewAuth } from '@/contexts/NewAuthContext';
@@ -48,6 +48,9 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
   const [stornoInvoice, setStornoInvoice] = useState<InvoiceData | null>(null);
   const [showStornoPreview, setShowStornoPreview] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  // Referenz auf den gerenderten Storno-Beleg (InvoiceTemplateRenderer) — dessen
+  // HTML wird für den PDF-Download an /api/v1/generate-pdf-single geschickt.
+  const stornoPreviewRef = useRef<HTMLDivElement>(null);
 
   const { user } = useNewAuth();
 
@@ -125,54 +128,84 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
       toast.error('Keine Storno-Rechnung verfügbar');
       return;
     }
+    const el = stornoPreviewRef.current;
+    if (!el) {
+      toast.error('Storno-Vorschau nicht bereit');
+      return;
+    }
 
     try {
       toast.info('PDF wird erstellt...');
 
-      // Nutze die bestehende PDF-Generation API
-      const response = await fetch('/api/v1/generate-invoice-pdf', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          invoiceData: stornoInvoice,
-        }),
+      // Styles der Seite einsammeln, damit das gerenderte Template im
+      // headless-Renderer identisch aussieht (gleicher Weg wie SendDocumentModal).
+      const styleSheets = Array.from(
+        document.querySelectorAll('style, link[rel="stylesheet"]'),
+      );
+      const allStyles: string[] = [];
+      styleSheets.forEach((node) => {
+        if (node.tagName === 'STYLE') {
+          allStyles.push(node.textContent || '');
+          return;
+        }
+        try {
+          const link = node as HTMLLinkElement;
+          if (link.sheet?.cssRules) {
+            let css = '';
+            for (let i = 0; i < link.sheet.cssRules.length; i++) {
+              css += `${link.sheet.cssRules[i].cssText}\n`;
+            }
+            allStyles.push(css);
+          }
+        } catch {
+          /* CORS-geschützte externe Stylesheets ignorieren */
+        }
       });
 
+      const completeHtml = `<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <style>
+    ${allStyles.join('\n\n')}
+    @page { size: A4; margin: 0; }
+    html, body { margin: 0 !important; padding: 0 !important; width: 210mm; background: white; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  </style>
+</head>
+<body>${el.outerHTML}</body>
+</html>`;
+
+      // Korrekter, existierender Endpunkt (Playwright) — NICHT das frühere
+      // /generate-invoice-pdf (existiert im Backend nicht → 404).
+      const response = await fetch('/api/v1/generate-pdf-single', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ htmlContent: completeHtml }),
+      });
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || 'PDF-Generierung fehlgeschlagen');
       }
-
-      const contentType = response.headers.get('content-type');
-
-      // Prüfe ob wir direkt ein PDF erhalten haben (Development mit Puppeteer)
-      if (contentType?.includes('application/pdf')) {
-        const pdfBlob = await response.blob();
-        const pdfUrl = window.URL.createObjectURL(pdfBlob);
-
-        // Download auslösen
-        const link = document.createElement('a');
-        link.href = pdfUrl;
-        link.download = `Storno-Rechnung_${stornoInvoice.invoiceNumber || stornoInvoice.number || 'storno'}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(pdfUrl);
-
-        toast.success('Storno-PDF erfolgreich heruntergeladen');
-      } else {
-        // Fallback: JSON Response mit Print-URL
-        const data = await response.json();
-        if (data.printUrl) {
-          // Öffne Print-Seite in neuem Tab für Browser-basierte PDF-Generierung
-          window.open(data.printUrl, '_blank');
-          toast.success('Storno-PDF wird in neuem Tab geöffnet');
-        } else {
-          throw new Error('Keine PDF-URL erhalten');
-        }
+      const result = await response.json();
+      if (!result.success || !result.pdfBase64) {
+        throw new Error('PDF-Generierung lieferte kein Dokument');
       }
+
+      // base64 → Blob → Download.
+      const bytes = Uint8Array.from(atob(result.pdfBase64), (c) => c.charCodeAt(0));
+      const pdfUrl = window.URL.createObjectURL(
+        new Blob([bytes], { type: 'application/pdf' }),
+      );
+      const link = document.createElement('a');
+      link.href = pdfUrl;
+      link.download = `Storno-Rechnung_${stornoInvoice.invoiceNumber || stornoInvoice.number || 'storno'}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(pdfUrl);
+
+      toast.success('Storno-PDF erfolgreich heruntergeladen');
     } catch (error) {
       console.error('PDF download error:', error);
       toast.error(
@@ -241,7 +274,7 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
             </div>
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <Icon icon="lucide:euro" className="h-4 w-4 text-gray-500" />
+                <Icon icon="lucide:banknote" className="h-4 w-4 text-gray-500" />
                 <span className="font-medium">Betrag:</span>
                 <span className="font-bold text-lg">
                   {formatCurrency(invoice.total, invoice.currency)}
@@ -371,7 +404,7 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Icon icon="lucide:euro" className="h-4 w-4 text-gray-500" />
+                  <Icon icon="lucide:banknote" className="h-4 w-4 text-gray-500" />
                   <span className="font-medium">Storno-Betrag:</span>
                   <span className="font-bold text-red-600">
                     {formatCurrency(stornoInvoice.total, stornoInvoice.currency)}
@@ -397,7 +430,7 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
                     <DialogTitle>Storno-Rechnung {stornoInvoice.sequentialNumber}</DialogTitle>
                     <DialogDescription>Vorschau der erstellten Storno-Rechnung</DialogDescription>
                   </DialogHeader>
-                  <div className="mt-4">
+                  <div className="mt-4" ref={stornoPreviewRef}>
                     <InvoiceTemplateRenderer data={stornoInvoice} template="TEMPLATE_NEUTRAL" />
                   </div>
                   <DialogFooter>

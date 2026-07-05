@@ -347,14 +347,21 @@ export function usePDFTemplateData(props: PDFTemplateProps): ProcessedPDFData {
 
     // Items verarbeiten
     const realItems = documentData.items || [];
-    // Bei steuerfreien Regeln (Reverse Charge, etc.) ist der Steuersatz effektiv 0
-    const vatRate: number = isTaxExempt
-      ? 0
-      : Number(documentData.vatRate || documentData.taxRate || 19);
+    // Beleg-Steuersatz als Fallback für Positionen OHNE eigenen Satz. Kein
+    // erfundener 19er-Default (Projektregel: keine Fallback-Ersatzwerte, MwSt.
+    // nie hartkodieren) und 0 ist ein gültiger Satz (?? statt ||) — fehlt jeder
+    // Satz, wird nicht besteuert statt „19 % weil Deutschland" zu erfinden.
+    const docRate = documentData.vatRate ?? documentData.taxRate;
+    const vatRate: number = isTaxExempt || docRate == null ? 0 : Number(docRate);
 
-    // Beträge berechnen
+    // Beträge berechnen. Steuer PRO Position aus deren eigenem Satz summieren
+    // (nicht ein globaler Satz auf die Zwischensumme) — sonst weicht `total` bei
+    // gemischten Sätzen (z. B. 19 % Übernachtung + 0 % Kurtaxe) von den pro Satz
+    // gerenderten Steuerzeilen (TotalsDisplay/taxGrouped) ab. Gleiche Regel wie
+    // calc.ts::computeTotals: Zeilen-Satz vor Beleg-Satz.
     let subtotal = 0;
     let taxAmount = 0;
+    const taxable = !documentData.isSmallBusiness && !isTaxExempt;
 
     realItems.forEach(item => {
       // Verwende unitPrice (nicht price) und berücksichtige discountPercent
@@ -366,12 +373,15 @@ export function usePDFTemplateData(props: PDFTemplateProps): ProcessedPDFData {
       // Berechne Gesamtpreis: (Menge × Einzelpreis) × (1 - Rabatt/100)
       const itemTotal = quantity * unitPrice * (1 - discountPercent / 100);
       subtotal += itemTotal;
-    });
 
-    // Steuer nur berechnen wenn NICHT Kleinunternehmer UND NICHT steuerbefreit (Reverse Charge, etc.)
-    if (!documentData.isSmallBusiness && !isTaxExempt) {
-      taxAmount = subtotal * (vatRate / 100);
-    }
+      if (taxable) {
+        // Zeilen-eigener Satz (0 ist gültig!) vor Beleg-Satz — ?? statt ||.
+        const rawRate = (item as unknown as Record<string, unknown>).vatRate ??
+          (item as unknown as Record<string, unknown>).taxRate;
+        const lineRate = rawRate == null ? vatRate : Number(rawRate);
+        taxAmount += itemTotal * (lineRate / 100);
+      }
+    });
 
     const total = subtotal + taxAmount;
 

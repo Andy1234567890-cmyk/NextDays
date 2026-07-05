@@ -12,6 +12,8 @@ from typing import TYPE_CHECKING
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.core.security import AuthContext
+from src.features.auth.owner_scope import is_owner, owner_property_ids
 from src.jobs.queue import try_enqueue_ari
 
 from .schemas import (
@@ -60,14 +62,42 @@ class CalendarService:
             raise CalendarError("Kalender-DB nicht verfügbar.", status_code=500)
         return self._client
 
-    def _require_own_property(self, tenant_id: str, property_id: str) -> None:
-        """Stellt sicher, dass das Objekt DIESEM Tenant gehört (sonst 404).
+    def _require_own_property(self, ctx: AuthContext, property_id: str) -> None:
+        """Stellt sicher, dass das Objekt sichtbar ist (sonst 404).
 
-        Der Service nutzt den Service-Role-Key und umgeht damit RLS — der Tenant-
-        Scope MUSS hier explizit erzwungen werden, sonst lassen sich über geratene
+        Der Service nutzt den Service-Role-Key und umgeht damit RLS — der Scope
+        MUSS hier explizit erzwungen werden, sonst lassen sich über geratene
         property_id fremde Verfügbarkeiten/Preise/Stop-Sells lesen oder ändern.
-        Einmal am Eintritt geprüft, sind die nachgelagerten property_id-Reads sicher.
+        Zwei Ebenen: (1) Tenant-Scope für alle, (2) Owner sieht laut §4.2 NUR
+        seine zugeordneten Objekte (owner_property_assignments), nicht die
+        anderer Eigentümer desselben Tenants. Einmal am Eintritt geprüft, sind
+        die nachgelagerten property_id-Reads sicher.
         """
+        if not ctx.tenant_id:
+            raise CalendarError("Kein Tenant im Konto.", status_code=400)
+        res = (
+            self._db()
+            .table("properties")
+            .select("id")
+            .eq("id", property_id)
+            .eq("tenant_id", ctx.tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not res:
+            raise CalendarError("Objekt nicht gefunden.", status_code=404)
+        # Eigentümer dürfen nur ihre zugeordneten Objekte sehen (§4.2) — fremde
+        # Objekte wie „nicht gefunden" behandeln (keine Existenz verraten).
+        if is_owner(ctx) and property_id not in owner_property_ids(self._db(), ctx):
+            raise CalendarError("Objekt nicht gefunden.", status_code=404)
+
+    def _require_tenant_property(self, tenant_id: str, property_id: str) -> None:
+        """Tenant-Scope-Prüfung für SCHREIB-Pfade (block/price/stop-sell/season).
+
+        Diese Endpunkte verlangen MANAGE_CALENDAR/EDIT_CALENDAR_BOOKINGS — die
+        owner-Rolle besitzt keine davon und erreicht sie nie. Deshalb reicht hier
+        der reine Tenant-Scope; der Owner-Self-Scope liegt auf den Lese-Pfaden
+        (_require_own_property mit ctx)."""
         if not tenant_id:
             raise CalendarError("Kein Tenant im Konto.", status_code=400)
         res = (
@@ -82,6 +112,22 @@ class CalendarService:
         if not res:
             raise CalendarError("Objekt nicht gefunden.", status_code=404)
 
+    @staticmethod
+    def _strip_prices_for_owner(
+        ctx: AuthContext, days: list[DayAvailability]
+    ) -> list[DayAvailability]:
+        """Eigentümer haben kein Preis-Recht (§4.2, kein VIEW_GUEST_FULL) — die
+        Tagespreise/Preisfaktoren werden für sie entfernt (Verfügbarkeit +
+        Min-Stay + Belegung bleiben sichtbar)."""
+        if not is_owner(ctx):
+            return days
+        return [
+            d.model_copy(
+                update={"price": None, "price_source": "none", "price_factors": None}
+            )
+            for d in days
+        ]
+
     def _resolver(self) -> "PricingResolver":
         """Zentraler Preis-Resolver (eine Preis-Wahrheit für Kalender + Quote)."""
         from src.features.pricing.resolver import PricingResolver
@@ -89,7 +135,7 @@ class CalendarService:
         return PricingResolver(service_client=self._db())
 
     def get_availability(
-        self, tenant_id: str, property_id: str, rng: DateRange
+        self, ctx: AuthContext, property_id: str, rng: DateRange
     ) -> list[DayAvailability]:
         """Tagesstatus im Zeitraum inkl. Preis + Min-Stay. Fehlende Tage = offen.
 
@@ -99,7 +145,14 @@ class CalendarService:
         Restriktionen sind v2). Ohne Rate-Plan/Override bleibt der Preis None
         (kein erfundener Fallback-Preis).
         """
-        self._require_own_property(tenant_id, property_id)
+        self._require_own_property(ctx, property_id)
+        days = self._days_for(property_id, rng)
+        return self._strip_prices_for_owner(ctx, days)
+
+    def _days_for(self, property_id: str, rng: DateRange) -> list[DayAvailability]:
+        """Tagesstatus + Preis + Min-Stay OHNE Scope-Prüfung — interner Helfer für
+        get_availability (nach Scope-Check) und die Schreib-Pfade (block), die den
+        Scope bereits über _require_tenant_property erzwungen haben."""
         rows = self._fetch_days(property_id, rng)
         effective = {
             d.date.isoformat(): d
@@ -152,7 +205,7 @@ class CalendarService:
         return result
 
     def get_board(
-        self, tenant_id: str, property_ids: list[str], rng: DateRange
+        self, ctx: AuthContext, property_ids: list[str], rng: DateRange
     ) -> BoardResponse:
         """Kalender-Batch: Availability + Preise + Min-Stay + Stop-Sell für ALLE
         angefragten Objekte des Tenants in EINEM Aufruf.
@@ -160,9 +213,11 @@ class CalendarService:
         Ersetzt die N+1-Einzelabrufe (früher 2 HTTP-Calls × je 6 DB-Queries pro
         Objekt) durch wenige gebündelte `.in_(property_ids)`-Queries. Nur Objekte,
         die DIESEM Tenant gehören, werden geladen (Tenant-Scope wie überall, da der
-        Service-Role-Key RLS umgeht); fremde/unbekannte IDs werden still verworfen.
+        Service-Role-Key RLS umgeht); ein Eigentümer sieht laut §4.2 zusätzlich
+        NUR seine zugeordneten Objekte. Fremde/unbekannte IDs werden still
+        verworfen; Tagespreise werden für Eigentümer entfernt (kein Preis-Recht).
         """
-        if not tenant_id:
+        if not ctx.tenant_id:
             raise CalendarError("Kein Tenant im Konto.", status_code=400)
         if not property_ids:
             return BoardResponse(items=[])
@@ -173,12 +228,15 @@ class CalendarService:
                 self._db()
                 .table("properties")
                 .select("id")
-                .eq("tenant_id", tenant_id)
+                .eq("tenant_id", ctx.tenant_id)
                 .in_("id", property_ids)
                 .execute()
             ).data or []
         }
-        # Eingabereihenfolge beibehalten, aber nur eigene IDs.
+        # Owner: zusätzlich auf die zugeordneten Objekte einschränken (§4.2).
+        if is_owner(ctx):
+            owned &= owner_property_ids(self._db(), ctx)
+        # Eingabereihenfolge beibehalten, aber nur sichtbare IDs.
         pids = [p for p in property_ids if p in owned]
         if not pids:
             return BoardResponse(items=[])
@@ -214,7 +272,7 @@ class CalendarService:
             items.append(
                 BoardProperty(
                     property_id=pid,
-                    days=days,
+                    days=self._strip_prices_for_owner(ctx, days),
                     stop_sell=stop_by_pid.get(pid, []),
                 )
             )
@@ -263,12 +321,12 @@ class CalendarService:
         return out
 
     def check_availability(
-        self, tenant_id: str, property_id: str, rng: DateRange
+        self, ctx: AuthContext, property_id: str, rng: DateRange
     ) -> AvailabilityCheck:
         """Double-Booking-Schutz: frei nur, wenn KEIN Tag booked/blocked ist."""
         conflicts: list[date] = [
             d.date
-            for d in self.get_availability(tenant_id, property_id, rng)
+            for d in self.get_availability(ctx, property_id, rng)
             if d.status != AvailabilityStatus.open
         ]
         return AvailabilityCheck(
@@ -282,10 +340,10 @@ class CalendarService:
 
         Schützt vor Double-Booking: bereits gebuchte Tage werden NICHT überschrieben.
         """
-        self._require_own_property(tenant_id, req.property_id)
+        self._require_tenant_property(tenant_id, req.property_id)
         booked = [
             d.date
-            for d in self.get_availability(tenant_id, req.property_id, req.range)
+            for d in self._days_for(req.property_id, req.range)
             if d.status == AvailabilityStatus.booked
         ]
         if booked:
@@ -316,7 +374,7 @@ class CalendarService:
 
         price=None nimmt die Überschreibung zurück (Tag folgt wieder dem Rate-Plan).
         """
-        self._require_own_property(tenant_id, req.property_id)
+        self._require_tenant_property(tenant_id, req.property_id)
         self._db().table("price_overrides").upsert(
             {
                 "property_id": req.property_id,
@@ -386,9 +444,9 @@ class CalendarService:
 
     # -- Stop-Sell (Verkaufsstopp je Tag) -------------------------------------
     def list_stop_sell(
-        self, tenant_id: str, property_id: str, rng: DateRange
+        self, ctx: AuthContext, property_id: str, rng: DateRange
     ) -> list[dict[str, object]]:
-        self._require_own_property(tenant_id, property_id)
+        self._require_own_property(ctx, property_id)
         res = (
             self._db()
             .table("stop_sell")
@@ -433,7 +491,7 @@ class CalendarService:
         Gibt ``{stopped_days, skipped_booked}`` zurück: gebuchte Tage werden
         NIE gestoppt (der Tag ist bereits verkauft) und stattdessen gemeldet,
         damit die UI die Überschneidung anzeigen kann."""
-        self._require_own_property(tenant_id, property_id)
+        self._require_tenant_property(tenant_id, property_id)
         if agency_id is not None:
             # Tenant-Scope explizit prüfen (Service-Role umgeht RLS) — sonst
             # ließen sich fremde Agenturen referenzieren/als Orakel abfragen.
@@ -519,7 +577,7 @@ class CalendarService:
         unangetastet — die spiegeln den OTA-Stand und werden per Import gepflegt.
         An Channex wird stop_sell=false NUR für Tage gepusht, die danach wirklich
         keinen Stop mehr haben (sonst würden OTA-seitige Stops geöffnet)."""
-        self._require_own_property(tenant_id, property_id)
+        self._require_tenant_property(tenant_id, property_id)
         wanted = [d for d in rng.nights() if not weekdays or d.weekday() in weekdays]
         if not wanted:
             return
@@ -617,9 +675,9 @@ class CalendarService:
 
     # -- Saisonpreise (Tagespreise je Zeitraum → price_overrides + Channex) ----
     def list_season_prices(
-        self, tenant_id: str, property_id: str, rng: DateRange
+        self, ctx: AuthContext, property_id: str, rng: DateRange
     ) -> list[dict[str, object]]:
-        self._require_own_property(tenant_id, property_id)
+        self._require_own_property(ctx, property_id)
         res = (
             self._db()
             .table("price_overrides")
@@ -638,7 +696,7 @@ class CalendarService:
     ) -> int:
         """Tagespreis für jeden Tag im Zeitraum setzen (price_overrides) und an
         Channex pushen (Restrictions/rate). Gibt Anzahl Tage zurück."""
-        self._require_own_property(tenant_id, property_id)
+        self._require_tenant_property(tenant_id, property_id)
         payload = [
             {
                 "property_id": property_id,
@@ -665,7 +723,7 @@ class CalendarService:
         je Tag individuellem Preis. Tage ohne auflösbaren Preis werden übersprungen
         (kein Crash, kein erfundener Basiswert). Gibt Anzahl geänderter Tage zurück.
         """
-        self._require_own_property(tenant_id, property_id)
+        self._require_tenant_property(tenant_id, property_id)
         days = self._resolver().effective_prices(property_id, rng.start, rng.end)
         factor = 1 + pct / 100
         payload = [
@@ -707,7 +765,7 @@ class CalendarService:
         an Channex pushen. Nur gesetzte Felder ändern sich (None = unverändert).
         availability-Zeilen werden wie bei Preis/Block auch für offene Tage
         angelegt. Gibt Anzahl Tage zurück."""
-        self._require_own_property(tenant_id, property_id)
+        self._require_tenant_property(tenant_id, property_id)
         if cta is None and ctd is None:
             return 0
         flags: dict[str, bool] = {}

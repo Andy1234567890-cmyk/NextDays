@@ -4,6 +4,7 @@ from datetime import date
 import pytest
 from fastapi.testclient import TestClient
 
+from src.core.security import AuthContext
 from src.features.calendar.schemas import (
     AvailabilityStatus,
     BlockRequest,
@@ -15,6 +16,10 @@ from src.features.calendar.service import CalendarError, CalendarService
 from src.main import create_app
 
 client = TestClient(create_app())
+
+
+def _ctx(role: str = "admin", tenant: str | None = "t1") -> AuthContext:
+    return AuthContext(user_id="u1", tenant_id=tenant, role=role)
 
 
 # --- Health (Smoke) ---
@@ -127,7 +132,7 @@ def _service(**tables: list[dict]) -> tuple[CalendarService, dict]:
 def test_missing_days_are_open() -> None:
     svc, _ = _service(properties=[{"id": "p1"}])
     rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3))
-    days = svc.get_availability("t1", "p1", rng)
+    days = svc.get_availability(_ctx(), "p1", rng)
     assert [d.status for d in days] == [
         AvailabilityStatus.open,
         AvailabilityStatus.open,
@@ -143,7 +148,7 @@ def test_availability_price_override_beats_base_price() -> None:
         price_overrides=[{"date": "2026-05-02", "price": 150.0}],
     )
     rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3))
-    days = svc.get_availability("t1", "p1", rng)
+    days = svc.get_availability(_ctx(), "p1", rng)
     # Tag 1 ohne Override → Basispreis; Tag 2 mit Override.
     assert days[0].price == 100.0
     assert days[1].price == 150.0
@@ -153,7 +158,7 @@ def test_availability_price_override_beats_base_price() -> None:
 def test_availability_no_rate_plan_keeps_price_none() -> None:
     svc, _ = _service(properties=[{"id": "p1"}])  # kein Rate-Plan → kein erfundener Preis
     rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2))
-    days = svc.get_availability("t1", "p1", rng)
+    days = svc.get_availability(_ctx(), "p1", rng)
     assert days[0].price is None
     assert days[0].min_stay is None
 
@@ -164,7 +169,7 @@ def test_availability_rejects_foreign_property() -> None:
     svc, _ = _service()  # keine eigene property im Store → Gate wirft 404
     rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2))
     with pytest.raises(CalendarError) as exc:
-        svc.get_availability("t1", "p-fremd", rng)
+        svc.get_availability(_ctx(), "p-fremd", rng)
     assert exc.value.status_code == 404
 
 
@@ -176,7 +181,7 @@ def test_check_detects_conflict() -> None:
         availability=[{"date": "2026-05-02", "status": "booked", "source": "booking"}],
     )
     rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3))
-    res = svc.check_availability("t1", "p1", rng)
+    res = svc.check_availability(_ctx(), "p1", rng)
     assert res.available is False
     assert res.conflicting_days == [date(2026, 5, 2)]
 
@@ -184,7 +189,7 @@ def test_check_detects_conflict() -> None:
 def test_check_all_open_is_available() -> None:
     svc, _ = _service(properties=[{"id": "p1"}])
     rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 5))
-    res = svc.check_availability("t1", "p1", rng)
+    res = svc.check_availability(_ctx(), "p1", rng)
     assert res.available is True
     assert res.conflicting_days == []
 
@@ -434,7 +439,7 @@ def test_get_availability_returns_cta_ctd_flags() -> None:
         }],
     )
     days = svc.get_availability(
-        "t1", "p1", DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3)),
+        _ctx(), "p1", DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3)),
     )
     # Tag 1 hat die Flags; Tag 2 (keine Zeile) → Default false.
     assert days[0].closed_to_arrival is True
@@ -465,7 +470,7 @@ def test_db_unavailable_raises_clean_error() -> None:
     svc = CalendarService(client=None)
     rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2))
     with pytest.raises(CalendarError) as exc:
-        svc.get_availability("t1", "p1", rng)
+        svc.get_availability(_ctx(), "p1", rng)
     assert exc.value.status_code == 500
 
 
@@ -605,3 +610,56 @@ def test_stop_sell_response_keeps_agency_name() -> None:
     }
     dumped = StopSellListResponse(items=[item], total=1).items[0].model_dump()
     assert dumped["agency_name"] == "TUI"
+
+
+# --- Owner-Scope (§4.2): Eigentümer sieht nur zugeordnete Objekte, keine Preise --
+
+def test_owner_sees_only_assigned_property() -> None:
+    # Owner u1 ist NUR p1 zugeordnet; p2 gehört demselben Tenant, aber Owner B.
+    svc, _ = _service(
+        properties=[{"id": "p1", "tenant_id": "t1"}, {"id": "p2", "tenant_id": "t1"}],
+        owner_property_assignments=[
+            {"tenant_id": "t1", "user_id": "u1", "property_id": "p1"}
+        ],
+    )
+    rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2))
+    # Eigenes Objekt: ok.
+    svc.get_availability(_ctx(role="owner"), "p1", rng)
+    # Fremdes Objekt desselben Tenants: 404 (keine Existenz verraten).
+    with pytest.raises(CalendarError) as exc:
+        svc.get_availability(_ctx(role="owner"), "p2", rng)
+    assert exc.value.status_code == 404
+
+
+def test_owner_prices_stripped() -> None:
+    svc, _ = _service(
+        properties=[{"id": "p1", "tenant_id": "t1"}],
+        rate_plans=[{"base_price": 100.0, "min_stay": 2}],
+        price_overrides=[{"date": "2026-05-01", "price": 150.0}],
+        owner_property_assignments=[
+            {"tenant_id": "t1", "user_id": "u1", "property_id": "p1"}
+        ],
+    )
+    rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 3))
+    # Admin sieht Preise; Owner nicht (kein Preis-Recht §4.2), aber min_stay bleibt.
+    admin_days = svc.get_availability(_ctx(), "p1", rng)
+    assert admin_days[0].price == 150.0
+    owner_days = svc.get_availability(_ctx(role="owner"), "p1", rng)
+    assert all(d.price is None and d.price_source == "none" for d in owner_days)
+    assert all(d.min_stay == 2 for d in owner_days)
+
+
+def test_owner_board_filters_and_strips() -> None:
+    svc, _ = _service(
+        properties=[{"id": "p1", "tenant_id": "t1"}, {"id": "p2", "tenant_id": "t1"}],
+        rate_plans=[{"property_id": "p1", "base_price": 100.0, "min_stay": 1}],
+        price_overrides=[{"property_id": "p1", "date": "2026-05-01", "price": 90.0}],
+        owner_property_assignments=[
+            {"tenant_id": "t1", "user_id": "u1", "property_id": "p1"}
+        ],
+    )
+    rng = DateRange(start=date(2026, 5, 1), end=date(2026, 5, 2))
+    board = svc.get_board(_ctx(role="owner"), ["p1", "p2"], rng)
+    # Nur das zugeordnete p1, ohne Preise.
+    assert [i.property_id for i in board.items] == ["p1"]
+    assert all(d.price is None for d in board.items[0].days)

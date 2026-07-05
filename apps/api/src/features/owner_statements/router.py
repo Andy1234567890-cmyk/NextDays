@@ -9,8 +9,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 
-from src.core.config import get_settings
-from src.core.security import AuthContext
+from src.core.security import AuthContext, require_internal_cron_secret
 from src.core.supabase import get_service_client
 from src.features.auth.dependencies import require_lodgify_permission
 from src.features.auth.lodgify_permissions import Permission
@@ -192,13 +191,10 @@ def auto_run(
     x_internal_cron_secret: Annotated[str | None, Header()] = None,
 ) -> AutoStatementRunResponse:
     """Interner Cron-Trigger: erzeugt für alle Owner mit monatlichem Rhythmus ein
-    Statement für den Zeitraum (1/Monat, künftige-only). Kein JWT — via geteiltem
-    Secret (CHANNEX_WEBHOOK_SECRET), getriggert durch einen Scheduled-Task."""
-    expected = get_settings().channex_webhook_secret.get_secret_value()
-    if not expected or x_internal_cron_secret != expected:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiges Secret."
-        )
+    Statement für den Zeitraum (1/Monat, künftige-only). Kein JWT — via eigenem
+    INTERNAL_CRON_SECRET (nie das outbound geteilte Channex-Webhook-Secret),
+    getriggert durch einen Scheduled-Task."""
+    require_internal_cron_secret(x_internal_cron_secret)
     return OwnerStatementsService(
         service_client=get_service_client()
     ).run_auto_statements(period_from, period_to)

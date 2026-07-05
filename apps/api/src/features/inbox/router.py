@@ -3,8 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 
-from src.core.config import get_settings
-from src.core.security import AuthContext, get_current_user
+from src.core.security import AuthContext, get_current_user, require_internal_cron_secret
 from src.core.supabase import get_service_client
 
 from .authz import InboxAccess
@@ -119,13 +118,10 @@ def dispatch_scheduled(
     x_internal_cron_secret: Annotated[str | None, Header()] = None,
 ) -> dict:
     """Interner Cron-Trigger: versendet fällige geplante Nachrichten über ALLE
-    Tenants. Kein JWT — via geteiltem Secret (CHANNEX_WEBHOOK_SECRET) abgesichert,
-    getriggert durch einen Coolify-Scheduled-Task / Host-crontab (curl)."""
-    expected = get_settings().channex_webhook_secret.get_secret_value()
-    if not expected or x_internal_cron_secret != expected:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiges Secret."
-        )
+    Tenants. Kein JWT — via eigenem INTERNAL_CRON_SECRET abgesichert (nie das
+    outbound geteilte Channex-Webhook-Secret), getriggert durch einen
+    Coolify-Scheduled-Task / Host-crontab (curl)."""
+    require_internal_cron_secret(x_internal_cron_secret)
     return InboxService(service_client=get_service_client()).dispatch_due_scheduled()
 
 
@@ -135,12 +131,8 @@ def dispatch_automations(
 ) -> dict:
     """Interner Cron-Trigger: versendet fällige Automails (Buchungsbestätigung,
     Anreise-/Check-out-Info) über ALLE Tenants. Wie /dispatch-scheduled per
-    geteiltem Secret abgesichert, getriggert durch einen Scheduled-Task."""
-    expected = get_settings().channex_webhook_secret.get_secret_value()
-    if not expected or x_internal_cron_secret != expected:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiges Secret."
-        )
+    INTERNAL_CRON_SECRET abgesichert, getriggert durch einen Scheduled-Task."""
+    require_internal_cron_secret(x_internal_cron_secret)
     return InboxService(service_client=get_service_client()).dispatch_due_automations()
 
 

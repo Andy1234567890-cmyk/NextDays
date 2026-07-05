@@ -237,10 +237,13 @@ export function EmailSendModal({
 
       setRecipients(recipientsList);
 
-      // Set dynamic subject based on document type
+      // Set dynamic subject based on document type. Kein Brand-Fallback: fehlt
+      // der Firmenname, entfällt der „von …"-Zusatz (statt einen Fremdbrand wie
+      // „NextDays" zu erfinden — Projektregel: keine Fallback-Ersatzwerte).
+      const fromCompany = companyData?.name ? ` von ${companyData.name}` : '';
       const subjectTemplates = {
-        invoice: `Rechnung ${currentDocumentNumber} von ${companyData?.name || 'NextDays'}`,
-        quote: `Angebot ${currentDocumentNumber} von ${companyData?.name || 'NextDays'}`,
+        invoice: `Rechnung ${currentDocumentNumber}${fromCompany}`,
+        quote: `Angebot ${currentDocumentNumber}${fromCompany}`,
         reminder: `Zahlungserinnerung - Rechnung ${currentDocumentNumber}`,
         delivery: `Lieferschein ${currentDocumentNumber}`,
         order: `Auftragsbestätigung ${currentDocumentNumber}`,
@@ -707,7 +710,9 @@ export function EmailSendModal({
 
               await WhatsAppNotificationService.notifyInvoiceSent(
                 companyId,
-                companyData?.name || document?.companyName || 'NextDays',
+                // Kein Brand-Fallback: echter Firmenname oder leer (kein erfundenes
+                // „NextDays"). Projektregel: keine Fallback-Ersatzwerte.
+                companyData?.name || document?.companyName || '',
                 customerId,
                 document?.customerName || '',
                 customerPhone,

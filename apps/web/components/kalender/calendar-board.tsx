@@ -154,11 +154,15 @@ function barDragTarget(d: BarDrag): { ci: string; co: string; pid: string } {
 }
 
 // Kompakter Tagespreis fürs Raster. null (kein Rate-Plan) → „–" statt erfundener 0.
-function fmtPrice(price: number | null | undefined): string {
+// Währung wird durchgereicht (kein €-Hardcode, 27 EU-Länder); ein leerer/ungültiger
+// Code ergibt eine reine Zahl (kein falsches Symbol, kein Crash) — analog zu
+// lib/currency.ts::formatCurrency, hier aber ohne Nachkommastellen fürs Raster.
+function fmtPrice(price: number | null | undefined, currency: string | null | undefined): string {
   if (price == null) return "–";
+  const code = typeof currency === "string" ? currency.trim().toUpperCase() : "";
+  const valid = /^[A-Z]{3}$/.test(code);
   return price.toLocaleString("de-DE", {
-    style: "currency",
-    currency: "EUR",
+    ...(valid ? { style: "currency", currency: code } : {}),
     maximumFractionDigits: 0,
   });
 }
@@ -1268,6 +1272,10 @@ export function CalendarBoard({
                 const restrictMap = restrictions[p.id] ?? {};
                 const resMap = resByProp[p.id] ?? {};
                 const stopMap = stopSell[p.id] ?? {};
+                // Objekt-Währung aus den eigenen Reservierungen (kein €-Hardcode);
+                // fehlt sie, formatiert fmtPrice eine reine Zahl.
+                const propCurrency =
+                  Object.values(resMap).find((r) => r.currency)?.currency ?? null;
                 const segs = toSegments(statusMap, sourceMap, resMap, dates, stopMap);
                 return (
                   <div key={p.id} className="flex border-b last:border-b-0">
@@ -1312,7 +1320,7 @@ export function CalendarBoard({
                                     Mindestaufenthalt und An-/Abreise-Sperren. */}
                                 {view.showPrice && (
                                   <span className={`flex items-center gap-1 ${inSel ? "text-white" : "text-muted-foreground"}`}>
-                                    {fmtPrice(priceMap[key(d)])}
+                                    {fmtPrice(priceMap[key(d)], propCurrency)}
                                     {priceSrcMap[key(d)] === "dynamic" && (
                                       <span
                                         title={

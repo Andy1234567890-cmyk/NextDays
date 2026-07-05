@@ -85,6 +85,11 @@ class Settings(BaseSettings):
     channex_api_key: SecretStr = SecretStr("")
     channex_base_url: str = "https://staging.channex.io/api/v1"
     channex_webhook_secret: SecretStr = SecretStr("")
+    # Eigenes Secret für interne Cron-Endpunkte (recompute/reconcile/auto-run/
+    # dispatch). Bewusst GETRENNT vom channex_webhook_secret: das geht outbound
+    # an Channex und darf deshalb keine internen, tenant-übergreifenden
+    # Endpunkte autorisieren. Leer = Cron-Endpunkte deaktiviert (503).
+    internal_cron_secret: SecretStr = SecretStr("")
     # Sandbox-Testkanäle (z.B. BookDirectOpen) als verbindbare „Portale" mit
     # anbieten — NUR zum Testen ohne echtes OTA-Konto. Im Prod IMMER false, sonst
     # sähe der Kunde Test-Kanäle. Echter Kunde sieht nur Booking.com/Airbnb/…

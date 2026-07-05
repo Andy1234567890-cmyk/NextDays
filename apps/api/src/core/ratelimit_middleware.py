@@ -162,6 +162,12 @@ class RateLimitMiddleware:
 
         tenant = _tenant_from_bearer(request.headers.get("authorization"))
 
+        ip = client_ip_from_xff(
+            request.headers.get("x-forwarded-for"),
+            request.client.host if request.client else None,
+            self._settings.rate_limit_trusted_proxy_hops,
+        )
+
         # listings/Kalender EINGELOGGT → pro TENANT keyen (nicht pro IP): ein
         # Betrieb, der seinen eigenen Kalender lädt, darf sich nicht selbst
         # aussperren, und Büro-NAT (mehrere Mitarbeiter, eine IP) teilt sich sonst
@@ -172,11 +178,6 @@ class RateLimitMiddleware:
             limit = self._buckets.listings_tenant
             primary_scope = "listings-tenant"
         else:
-            ip = client_ip_from_xff(
-                request.headers.get("x-forwarded-for"),
-                request.client.host if request.client else None,
-                self._settings.rate_limit_trusted_proxy_hops,
-            )
             primary_key = f"{bucket_name}:ip:{ip or 'unknown'}"
             primary_scope = "ip"
         decision = await limiter.check(primary_key, limit)
@@ -185,6 +186,20 @@ class RateLimitMiddleware:
             return self._handle_degraded(sensitive, path)
         if not decision.allowed:
             return self._reject(decision, bucket_name, path, scope=primary_scope)
+
+        # Scraper-Schutz gegen unsignierte Tokens: die tenant_id im listings-Pfad
+        # stammt aus einem NICHT signaturgeprüften JWT (_tenant_from_bearer). Ein
+        # Angreifer könnte mit rotierenden Fantasie-tenant_ids beliebig viele
+        # 1200/60-Fenster öffnen und so das strengere IP-Limit umgehen. Deshalb
+        # koppeln wir das Tenant-Upgrade IMMER zusätzlich an ein IP-Limit — ein
+        # legitimer Betrieb bleibt unter beiden, ein Scraper von EINER IP kann
+        # über Token-Rotation trotzdem nie mehr als das IP-Fenster erzeugen.
+        if bucket_name == "listings" and tenant:
+            ip_decision = await limiter.check(
+                f"listings:ip:{ip or 'unknown'}", self._buckets.listings
+            )
+            if not ip_decision.degraded and not ip_decision.allowed:
+                return self._reject(ip_decision, "listings", path, scope="ip")
 
         # Zusätzliches allgemeines Tenant-Limit (Fairness) für eingeloggte Requests.
         # Beim listings-Bucket ist das Tenant-Keying schon das Primärlimit oben →

@@ -204,13 +204,13 @@ def _bearer(tenant_id: str) -> str:
 
 
 def test_listings_logged_in_keyed_per_tenant_not_ip() -> None:
-    # Eingeloggte listings-Requests laufen gegen listings_tenant (pro Tenant),
-    # NICHT gegen das IP-Limit. Ein Betrieb sperrt sich beim eigenen Kalender-Load
-    # nicht selbst aus: das strenge IP-Limit greift hier gar nicht.
-    settings = Settings(rate_limit_listings="1/60", rate_limit_listings_tenant="3/60")
+    # Eingeloggte listings-Requests laufen gegen listings_tenant (pro Tenant).
+    # Das zusätzlich gekoppelte IP-Limit ist hier großzügig (Scraper-Schutz), der
+    # legitime Betrieb bleibt darunter — ein Kalender-Load sperrt sich nicht aus.
+    settings = Settings(rate_limit_listings="100/60", rate_limit_listings_tenant="3/60")
     client = TestClient(_app_with_limiter(_FakeRedis(), settings))
     h = {"Authorization": _bearer("tenant-A"), "X-Forwarded-For": "9.9.9.9"}
-    # 3 erlaubt (Tenant-Limit), obwohl das IP-Limit nur 1 wäre.
+    # 3 erlaubt (Tenant-Limit), das IP-Limit (100) greift nicht.
     assert client.get("/api/v1/booking-engine/listings", headers=h).status_code == 200
     assert client.get("/api/v1/booking-engine/listings", headers=h).status_code == 200
     assert client.get("/api/v1/booking-engine/listings", headers=h).status_code == 200
@@ -221,8 +221,9 @@ def test_listings_logged_in_keyed_per_tenant_not_ip() -> None:
 
 def test_listings_two_tenants_same_ip_have_separate_budgets() -> None:
     # Büro-NAT: zwei Betriebe teilen sich eine öffentliche IP, dürfen sich aber
-    # NICHT das Limit teilen — pro-Tenant-Keying trennt sie.
-    settings = Settings(rate_limit_listings="1/60", rate_limit_listings_tenant="1/60")
+    # NICHT das Tenant-Limit teilen — pro-Tenant-Keying trennt sie. Das IP-Limit
+    # ist großzügig genug, dass legitime NAT-Nutzung nicht kollidiert.
+    settings = Settings(rate_limit_listings="100/60", rate_limit_listings_tenant="1/60")
     client = TestClient(_app_with_limiter(_FakeRedis(), settings))
     ip = {"X-Forwarded-For": "5.5.5.5"}
     a = {"Authorization": _bearer("tenant-A"), **ip}
@@ -231,6 +232,27 @@ def test_listings_two_tenants_same_ip_have_separate_budgets() -> None:
     assert client.get("/api/v1/booking-engine/listings", headers=a).status_code == 429
     # Anderer Tenant, gleiche IP → eigenes Budget.
     assert client.get("/api/v1/booking-engine/listings", headers=b).status_code == 200
+
+
+def test_listings_unsigned_token_rotation_cannot_bypass_ip_limit() -> None:
+    # Sicherheitsfix: die tenant_id kommt aus einem NICHT signaturgeprüften JWT.
+    # Ein Scraper von EINER IP rotiert erfundene tenant_ids, um pro UUID ein
+    # eigenes 1200/60-Fenster zu bekommen. Das gekoppelte IP-Limit (hier 2/60)
+    # deckelt ihn trotzdem — nach 2 Requests ist Schluss, egal wie viele
+    # Fantasie-Tenants er durchprobiert.
+    settings = Settings(rate_limit_listings="2/60", rate_limit_listings_tenant="1000/60")
+    client = TestClient(_app_with_limiter(_FakeRedis(), settings))
+    ip = {"X-Forwarded-For": "6.6.6.6"}
+    codes = [
+        client.get(
+            "/api/v1/booking-engine/listings",
+            headers={"Authorization": _bearer(f"fake-tenant-{i}"), **ip},
+        ).status_code
+        for i in range(5)
+    ]
+    # Nur die ersten 2 (IP-Limit) kommen durch, der Rest wird trotz frischer
+    # tenant_id geblockt.
+    assert codes == [200, 200, 429, 429, 429]
 
 
 def test_fail_open_on_redis_outage_for_normal_endpoint() -> None:

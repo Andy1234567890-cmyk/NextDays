@@ -211,7 +211,7 @@ export default function InventorySelector({
                       <TableHead className="w-35 min-w-35">SKU</TableHead>
                       <TableHead className="w-37 min-w-37">Kategorie</TableHead>
                       <TableHead className="w-45 min-w-45">Verfügbar</TableHead>
-                      <TableHead className="w-30 min-w-30">Preis (€)</TableHead>
+                      <TableHead className="w-30 min-w-30">Preis</TableHead>
                       <TableHead className="w-25 min-w-25">Menge</TableHead>
                       <TableHead className="w-37 min-w-37">Aktion</TableHead>
                     </TableRow>

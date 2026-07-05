@@ -29,7 +29,20 @@ function plusDays(iso: string, n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-export function SeasonPriceForm({ initial }: { initial: Property }) {
+// Betrag mit Objekt-Währung; ohne gültigen Code reine Zahl (kein erfundenes €).
+function money(amount: number, currency: string | null | undefined): string {
+  const code = typeof currency === "string" ? currency.trim().toUpperCase() : "";
+  const valid = /^[A-Z]{3}$/.test(code);
+  return amount.toLocaleString("de-DE", valid ? { style: "currency", currency: code } : {});
+}
+
+export function SeasonPriceForm({
+  initial,
+  currency,
+}: {
+  initial: Property;
+  currency: string | null;
+}) {
   const today = new Date().toISOString().slice(0, 10);
   const [start, setStart] = useState(today);
   const [end, setEnd] = useState(plusDays(today, 7));
@@ -64,7 +77,7 @@ export function SeasonPriceForm({ initial }: { initial: Property }) {
     startTransition(async () => {
       const res = await setSeasonPrice(initial.id, start, end, p);
       if (res.ok) {
-        setMsg(`${res.data.days} Tag(e) auf ${p} € gesetzt.`);
+        setMsg(`${res.data.days} Tag(e) auf ${money(p, currency)} gesetzt.`);
         reload();
       } else {
         setMsg(res.error);
@@ -138,7 +151,7 @@ export function SeasonPriceForm({ initial }: { initial: Property }) {
               {days.map((d) => (
                 <li key={d.date} className="flex items-center justify-between p-3 text-sm">
                   <span>{d.date}</span>
-                  <span className="font-medium">{d.price} €</span>
+                  <span className="font-medium">{money(d.price, currency)}</span>
                 </li>
               ))}
             </ul>
