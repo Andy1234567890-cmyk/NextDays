@@ -5,7 +5,7 @@
 #
 # Prod-Unterschiede zum Dev-Image:
 #   - kein --reload, kein Code-Volume-Mount (Code ist fest im Image)
-#   - mehrere uvicorn-Worker (UVICORN_WORKERS, Default 2)
+#   - mehrere uvicorn-Worker (UVICORN_WORKERS, Default 4)
 #   - läuft als NON-ROOT-User (appuser)
 #   - HEALTHCHECK auf /health (Endpoint: src/main.py)
 #   - Multi-Stage: Build-Tools landen nicht im Runtime-Layer

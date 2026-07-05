@@ -26,6 +26,10 @@ COPY . .
 
 EXPOSE 8000
 
-# Kein CMD/ENTRYPOINT mit Auto-Start: der Start kommt aus docker-compose.yml.
-# Fallback für Standalone-Nutzung (z. B. `docker run`):
-CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Kein CMD/ENTRYPOINT mit Auto-Start: im Dev überschreibt das docker-compose.yml
+# den command (uvicorn --reload). Der Fallback hier greift, wenn KEIN command
+# gesetzt ist (z. B. der Prod-Deploy über deploy/supabase/docker-compose.yml, der
+# dieses Image baut). Deshalb MUSS er die Worker-Zahl respektieren — sonst läuft
+# die API mit nur einem Prozess (alle Requests seriell → CPU-Spike bei Last).
+ENV UVICORN_WORKERS=4
+CMD ["sh", "-c", "uvicorn src.main:app --host 0.0.0.0 --port 8000 --workers ${UVICORN_WORKERS}"]

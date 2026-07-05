@@ -27,8 +27,7 @@ import {
   type DayAvailability,
   blockRange,
   type StopSellDay,
-  getAvailability,
-  listStopSell,
+  getBoard,
 } from "@/lib/calendar";
 import { CHANNEL_META, CHANNEL_SOURCES, channelMeta } from "@/lib/calendar-channels";
 import { explainFactors } from "@/lib/dp-factors";
@@ -90,6 +89,13 @@ function daysBetween(a: Date, b: Date): number {
 const OVERSCAN = 24;
 // Chunk-Größe (Tage) für das Nachladen der Tagesdaten beim Scrollen.
 const CHUNK_DAYS = 90;
+// Vorlauf-Fenster (Tage) um heute, das im Hintergrund vorgeladen wird. Früher
+// wurde das GANZE Jahr (~730 Tage) vorgeladen — beim Batch-Board sind das zwar
+// wenige Requests, aber je ~0,5 MB. Wir laden nur ein halbes Jahr voraus + ein
+// Vierteljahr zurück; alles Weitere zieht der Scroll-Handler bedarfsgesteuert
+// über ensureLoaded nach (das existiert bereits). Spart Erst-Last-Bandbreite.
+const PREFETCH_AHEAD_DAYS = 180;
+const PREFETCH_BEHIND_DAYS = 90;
 
 // Segment-Status: availability-Status plus „stop_sell" (Stop-Sell aus der
 // stop_sell-Tabelle — der Tag ist frei, wird aber nicht aktiv verkauft; der
@@ -773,19 +779,23 @@ export function CalendarBoard({
       setLoading(true);
       const s = key(addDays(start, from));
       const e = key(addDays(start, to)); // exklusiv
-      const results = await Promise.all(
-        properties.map(async (p) => {
-          // Verfügbarkeit + Stop-Sells parallel — der Stop-Sell-Balken
-          // braucht Grund/Adressat aus stop_sell (availability kennt sie nicht).
-          const [res, ss] = await Promise.all([
-            getAvailability(p.id, s, e),
-            listStopSell(p.id, s, e),
-          ]);
-          const days: DayAvailability[] = res.ok ? (res.data as DayAvailability[]) : [];
-          const stops: StopSellDay[] = ss.ok ? ss.data.items : [];
-          return [p.id, days, stops] as const;
-        }),
+      // EIN Batch-Call für ALLE Objekte (statt früher 2 Calls je Objekt = N+1).
+      // Der Board-Endpunkt liefert Verfügbarkeit + Preise + Min-Stay + Stop-Sell
+      // gebündelt; das Merge-Format [pid, days, stops] bleibt unverändert.
+      const board = await getBoard(
+        properties.map((p) => p.id),
+        s,
+        e,
       );
+      const byPid = new Map(
+        board.ok ? board.data.items.map((it) => [it.property_id, it]) : [],
+      );
+      const results = properties.map((p) => {
+        const it = byPid.get(p.id);
+        const days: DayAvailability[] = it?.days ?? [];
+        const stops: StopSellDay[] = it?.stop_sell ?? [];
+        return [p.id, days, stops] as const;
+      });
       // Merge-Helfer: pro State-Map die neuen Tage einspielen (replace = ersetzen).
       const mergeInto = <V,>(
         prev: Record<string, Record<string, V>>,
@@ -886,25 +896,29 @@ export function CalendarBoard({
     if (!start || properties.length === 0) return;
     const myToken = ++prefetchToken.current;
     void loadReservations();
+    // Begrenztes Vorlauf-Fenster um heute (statt des ganzen Jahres). Alles
+    // außerhalb lädt der Scroll-Handler (ensureLoaded) bei Bedarf nach.
+    const loFrom = Math.max(0, todayIndex - PREFETCH_BEHIND_DAYS);
+    const hiTo = Math.min(totalDays, todayIndex + PREFETCH_AHEAD_DAYS);
     (async () => {
       // 1) Sichtbarer Block um heute zuerst.
       await loadDays(
         Math.max(0, todayIndex - CHUNK_DAYS / 3),
-        Math.min(totalDays, todayIndex + CHUNK_DAYS),
+        Math.min(hiTo, todayIndex + CHUNK_DAYS),
       );
-      // 2) Rest des Jahres in Blöcken nachziehen, bis [0, totalDays) voll ist.
+      // 2) Rest des Vorlauf-Fensters [loFrom, hiTo) in Blöcken nachziehen.
       //    Abbruch, wenn ein neuer Lauf gestartet wurde (Objektwechsel/Remount).
       let guard = 0;
       while (myToken === prefetchToken.current && guard < 64) {
         guard += 1;
         const cur = loadedRange.current;
         if (!cur) break;
-        if (cur.to < totalDays) {
-          await loadDays(cur.to, Math.min(totalDays, cur.to + CHUNK_DAYS));
-        } else if (cur.from > 0) {
-          await loadDays(Math.max(0, cur.from - CHUNK_DAYS), cur.from);
+        if (cur.to < hiTo) {
+          await loadDays(cur.to, Math.min(hiTo, cur.to + CHUNK_DAYS));
+        } else if (cur.from > loFrom) {
+          await loadDays(Math.max(loFrom, cur.from - CHUNK_DAYS), cur.from);
         } else {
-          break; // ganzes Jahr geladen
+          break; // Vorlauf-Fenster geladen
         }
       }
     })();

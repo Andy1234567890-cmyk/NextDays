@@ -346,19 +346,18 @@ class PricingResolver:
     def _load_dynamic_bulk(
         self, property_ids: list[str], check_in: date, check_out: date
     ) -> dict[str, dict[str, dict]]:
-        try:
-            res = (
-                self._db()
-                .table("dynamic_prices")
-                .select("property_id, date, price, factors")
-                .in_("property_id", property_ids)
-                .gte("date", check_in.isoformat())
-                .lt("date", check_out.isoformat())
-                .execute()
-            ).data or []
-        except Exception as exc:  # noqa: BLE001 — fehlende Tabelle/Spalte = kein DP
-            log.warning("dynamic_prices_bulk_unavailable", error=str(exc))
-            return {}
+        # KEIN try/except-Fallback: schlägt die Query fehl, muss der Board-Call
+        # hart scheitern (500) statt still leere DP-Preise zu liefern und damit
+        # falsche (zu niedrige) Tagespreise anzuzeigen.
+        res = (
+            self._db()
+            .table("dynamic_prices")
+            .select("property_id, date, price, factors")
+            .in_("property_id", property_ids)
+            .gte("date", check_in.isoformat())
+            .lt("date", check_out.isoformat())
+            .execute()
+        ).data or []
         out: dict[str, dict[str, dict]] = {}
         for r in res:
             pid, day, price = r.get("property_id"), r.get("date"), _to_float(r.get("price"))
@@ -371,17 +370,15 @@ class PricingResolver:
         return out
 
     def _load_config_bulk(self, property_ids: list[str]) -> dict[str, _PricingConfig]:
-        try:
-            res = (
-                self._db()
-                .table("property_pricing_config")
-                .select("*")
-                .in_("property_id", property_ids)
-                .execute()
-            ).data or []
-        except Exception as exc:  # noqa: BLE001 — fehlende Tabelle = leere Konfig
-            log.warning("pricing_config_bulk_unavailable", error=str(exc))
-            return {}
+        # KEIN try/except-Fallback: ein Query-Fehler muss den Board-Call scheitern
+        # lassen (500), nicht still eine leere Preis-Konfig unterstellen.
+        res = (
+            self._db()
+            .table("property_pricing_config")
+            .select("*")
+            .in_("property_id", property_ids)
+            .execute()
+        ).data or []
         return {
             r["property_id"]: _PricingConfig(r)
             for r in res

@@ -59,6 +59,28 @@ export async function getAvailability(
   return call(`/calendar/availability?${qs.toString()}`);
 }
 
+// Ein Objekt im Batch-Board: Tagesdaten + Stop-Sells in einem Rutsch.
+export type BoardProperty = {
+  property_id: string;
+  days: DayAvailability[];
+  stop_sell: StopSellDay[];
+};
+
+/** Batch-Kalender: Verfügbarkeit + Preise + Min-Stay + Stop-Sell für ALLE
+ *  Objekte im Zeitraum [start, end) in EINEM Call. Ersetzt die früheren
+ *  2 Einzel-Calls je Objekt (N+1) — der Board-Endpunkt lädt serverseitig mit
+ *  wenigen gebündelten Queries. Leere propertyIds → leeres Ergebnis. */
+export async function getBoard(
+  propertyIds: string[],
+  start: string,
+  end: string,
+): Promise<Result<{ items: BoardProperty[] }>> {
+  if (propertyIds.length === 0) return { ok: true, data: { items: [] } };
+  const qs = new URLSearchParams({ start, end });
+  for (const id of propertyIds) qs.append("property_ids", id);
+  return call(`/calendar/board?${qs.toString()}`);
+}
+
 /** Zeitraum sperren (manuell). end ist exklusiv. */
 export async function blockRange(
   propertyId: string,
