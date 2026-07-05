@@ -142,6 +142,9 @@ disable = [
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests", "src"]
+# rootdir (apps/api) auf den Import-Pfad, damit Tests unter tests/ `import src`
+# auflösen (src/-Tests finden es über die Paketstruktur, tests/-Tests nicht).
+pythonpath = ["."]
 markers = [
     "integration: benötigt laufenden Supabase-Stack (übersprungen wenn nicht erreichbar)",
 ]
