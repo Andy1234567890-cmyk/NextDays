@@ -29,6 +29,13 @@ services:
       # Stabiles externes Netz zu api + Worker (beide erreichen "redis" per Name).
       supabase-internal:
         aliases: [redis]
+      # ZUSÄTZLICH coolify-Netz: die api hängt (fürs Traefik-Ingress) im coolify-
+      # Netz, das IPv6 aktiv hat. Docker-DNS gab der api dann eine coolify-IPv6 für
+      # "redis" zurück, auf der redis NICHT lauschte → Verbindung scheiterte (sah
+      # aus wie AuthError). Redis muss deshalb AUCH im coolify-Netz sein, damit die
+      # aufgelöste IPv6 tatsächlich zu redis führt.
+      coolify:
+        aliases: [redis]
     volumes:
       # EXAKT derselbe absolute Host-Pfad wie zuvor im DB-Stack — Daten bleiben.
       - /mnt/HC_Volume_106086998/nextdays/redis:/data
@@ -48,3 +55,6 @@ networks:
   supabase-internal:
     external: true
     name: supabase-internal
+  coolify:
+    external: true
+    name: coolify
