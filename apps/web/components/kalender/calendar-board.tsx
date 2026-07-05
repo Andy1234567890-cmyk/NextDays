@@ -295,7 +295,7 @@ function segmentLabel(seg: Segment): string {
     // Adressat sichtbar machen: Reisebüro-Name (z. B. TUI), sonst Herkunft.
     const who =
       seg.stopSell?.agency_name ||
-      (seg.stopSell?.source === "channex" ? "OTA/Channex" : "alle Kanäle");
+      (seg.stopSell?.source === "channex" ? "OTA" : "alle Kanäle");
     return ["Stop-Sell", who, seg.stopSell?.reason].filter(Boolean).join(" · ");
   }
   if (seg.status !== "booked") return STATUS_LABEL[seg.status];

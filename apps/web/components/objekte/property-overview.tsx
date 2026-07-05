@@ -745,8 +745,8 @@ function AmenitiesEditor({
   return (
     <EditorShell open={open} onClose={onClose} title="Ausstattung bearbeiten">
       <p className="text-xs text-muted-foreground">
-        Die Ausstattung entspricht dem Channex-Katalog. Alle Merkmale werden an
-        die Buchungsportale (Booking.com, Airbnb &amp; Co.) übertragen.
+        Alle Ausstattungsmerkmale werden automatisch an die Buchungsportale
+        (Booking.com, Airbnb &amp; Co.) übertragen.
       </p>
 
       {/* Gewählte Ausstattung — kompakt oben, mit ✕ zum Entfernen */}
