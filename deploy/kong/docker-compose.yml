@@ -21,6 +21,18 @@ services:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /usr/local/kong/kong.yml
       KONG_DNS_ORDER: LAST,A,CNAME
+      # DNS-Cache-TTL — KRITISCH für Zero-Downtime nach einem Supabase-Deploy.
+      # Kong löst die Upstreams per Hostname auf (http://rest:3000/ etc.). Bei
+      # jedem Deploy bekommen die Stack-Container (rest/auth/…) NEUE Docker-IPs.
+      # Kongs Default KONG_DNS_STALE_TTL ist 3600s: eine tote Upstream-IP bleibt
+      # eine STUNDE im Cache → Kong rennt gegen die alte IP → "connect() failed
+      # (111: Connection refused)" → 502 Bad Gateway für ALLE Requests bis der
+      # Cache abläuft. Genau dieser Fall trat live auf (Kong 21h alt, rest neu
+      # deployt). Kurze TTLs zwingen Kong, die neue IP binnen Sekunden selbst zu
+      # finden — ohne manuelles "kong reload". Werte: offizielle Kong-Doku.
+      KONG_DNS_STALE_TTL: "10"      # tote IP max. 10s im Cache (Default 3600!)
+      KONG_DNS_VALID_TTL: "30"      # gültige IP alle 30s neu prüfen (Default: DNS-TTL)
+      KONG_DNS_ERROR_TTL: "1"       # Fehler nur 1s cachen (= Default, explizit)
       KONG_PLUGINS: request-transformer,cors,key-auth,acl,basic-auth,request-termination
       KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
       KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k

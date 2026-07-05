@@ -51,3 +51,13 @@ docker network create supabase-internal
    base_directory).
 4. **Domain-Wechsel:** alte Zuweisung am Supabase-Stack entfernen, sonst
    Domain-Konflikt in Traefik (beide Kongs → HTTP 000).
+5. **DNS-Cache nach Supabase-Deploy — die 502-Falle.** Kong löst die Upstreams
+   per Hostname auf (`http://rest:3000/`). Bei jedem Supabase-Stack-Deploy
+   bekommen `rest`/`auth`/… NEUE Docker-IPs. Kongs Default-`DNS_STALE_TTL` ist
+   **3600s** → Kong hält die tote IP eine STUNDE, rennt gegen sie ("connect()
+   failed (111: Connection refused)") und liefert **502 Bad Gateway für ALLE
+   Requests**, bis der Cache abläuft. Fix (im Compose gesetzt):
+   `KONG_DNS_STALE_TTL=10`, `KONG_DNS_VALID_TTL=30`, `KONG_DNS_ERROR_TTL=1` →
+   Kong findet die neue IP binnen Sekunden selbst. Soforthilfe ohne Recreate:
+   `docker exec <kong> kong reload` (leert den DNS-Cache, kein Neustart, keine
+   Downtime). Die TTL-Env greift erst nach einem Kong-Recreate (Rolling-Update).
