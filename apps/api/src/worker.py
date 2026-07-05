@@ -38,7 +38,7 @@ log = get_logger("nextdays.worker")
 # Recompute ohne Push) laufen ohne Budget-Gate. Der Wert je Eintrag ist der
 # Payload-Schlüssel, der die property_id trägt (für die pro-Property-Ebene).
 _CHANNEX_JOB_TYPES = frozenset(
-    {"sync_property_content", "reconcile_tenant", "push_ari"}
+    {"sync_property_content", "reconcile_tenant", "push_ari", "process_ari_outbox"}
 )
 
 # Parallel verarbeitete Jobs je Worker-Instanz. Begrenzt lokale Thread-/DB-Last;
@@ -75,6 +75,15 @@ def _handle_sync_property_content(db: Client, payload: dict[str, Any]) -> None:
 
 def _handle_reconcile_tenant(db: Client, payload: dict[str, Any]) -> None:
     _svc(db).reconcile_properties_for_tenant(payload["tenant_id"])
+
+
+def _handle_process_ari_outbox(db: Client, _payload: dict[str, Any]) -> None:
+    """Offene ari_outbox-Zeilen (ausgehende ARI-Pushes) erneut an Channex pushen.
+    Ersetzt den finalen process_ari_outbox()-Schritt des alten Host-Crons: die
+    per-Tenant-reconcile_tenant-Jobs spiegeln nur Channex→DB, arbeiten die outbox
+    aber NICHT ab. Tenant-übergreifend (die outbox ist nicht tenant-gefiltert),
+    darum einmal je Tick als eigener Job statt pro Tenant."""
+    _svc(db).process_ari_outbox()
 
 
 def _handle_recompute_property(db: Client, payload: dict[str, Any]) -> None:
@@ -140,6 +149,7 @@ HANDLERS: dict[str, Callable[[Client, dict[str, Any]], None]] = {
     "reconcile_tenant": _handle_reconcile_tenant,
     "recompute_property": _handle_recompute_property,
     "push_ari": _handle_push_ari,
+    "process_ari_outbox": _handle_process_ari_outbox,
 }
 
 
@@ -267,6 +277,13 @@ class Worker:
                 payload={"tenant_id": tid},
                 dedup_key=f"reconcile_tick:{tid}:{bucket}",
             )
+        # Ausgehende ARI-Pushes (ari_outbox) tenant-übergreifend nachziehen — den
+        # per-Tenant-Jobs fehlt dieser Schritt. Einmal je Tick (Bucket-Coalescing),
+        # entspricht dem finalen process_ari_outbox() des alten Host-Crons.
+        enqueue(
+            self._db, "process_ari_outbox",
+            payload={}, dedup_key=f"ari_outbox_tick:{bucket}",
+        )
 
     async def run(self) -> None:
         log.info("worker_started", worker_id=self._worker_id, concurrency=CONCURRENCY)

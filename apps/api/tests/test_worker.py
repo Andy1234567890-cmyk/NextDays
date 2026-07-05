@@ -296,3 +296,20 @@ def test_push_ari_unknown_kind_raises(monkeypatch) -> None:  # noqa: ANN001
         _run_push_ari(monkeypatch, {
             "kind": "gibts_nicht", "tenant_id": "t1", "property_id": "p1",
         })
+
+
+def test_process_ari_outbox_handler_ruft_service(monkeypatch) -> None:  # noqa: ANN001
+    # Der Host-Cron endete mit process_ari_outbox(); der Worker-Handler ersetzt das.
+    import src.worker as worker_mod
+    svc = _RecordingService()
+    monkeypatch.setattr(worker_mod, "_svc", lambda _db: svc)
+    worker_mod._handle_process_ari_outbox(None, {})
+    name, _args, _kwargs = svc.calls[0]
+    assert name == "process_ari_outbox"
+
+
+def test_process_ari_outbox_ist_registriert_und_channex_budgetiert() -> None:
+    # Muss im Dispatch-Table stehen UND ein Channex-Budget-Token ziehen (es pusht).
+    import src.worker as worker_mod
+    assert "process_ari_outbox" in worker_mod.HANDLERS
+    assert "process_ari_outbox" in worker_mod._CHANNEX_JOB_TYPES
