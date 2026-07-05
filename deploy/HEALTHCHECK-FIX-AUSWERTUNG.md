@@ -150,9 +150,24 @@ DB-Ausfall ausgelöst. Vor JEDEM Deploy dieses Stacks:
 5. DB-Stack deployen, dann die Container-Anzahl-Prüfung (Schritt 3 oben).
 6. In Coolify prüfen: `nextdays-supabase` = grün, jeder Dienst healthy.
 
-## Bekannter Rest-Zustand (Stand 2026-07-05, verifiziert)
+## ERGEBNIS (Stand 2026-07-05, nach Deploy live verifiziert)
 
-- Daten intakt: 65 properties, 21 tenants, 17 reservations.
-- api/redis/worker als eigene Coolify-Apps getrennt, DB-Stack = nur DB+Auth+Storage.
-- api extern 200, DB-Calls 200, api→redis True (nach coolify-Netz-Fix für IPv6).
-- Offen: die 5 Healthchecks oben (dieser Fix) → dann ist supabase grün.
+- **`nextdays-supabase` = `running:healthy` (grün).** Alle 8 Dienste melden
+  `(healthy)`: db, pooler, rest, auth, realtime, storage, meta, studio.
+  Genau 1 Container je Dienst (kein Race), Pre-Deploy-Backup lag vor,
+  consistent-names war `t`.
+- Daten intakt: 65 properties, 21 tenants, 17 reservations (identisch zu vor
+  dem Deploy). api extern HTTP 200. 66 Jobs in 30 min auf `done`.
+- worker + api neu deployt, beide `(healthy)`; Worker-Heartbeat live 0,4 s alt.
+
+**Zwei zusätzliche Ursachen gefunden und behoben:**
+1. Die „degraded:unhealthy"-Anzeige nach dem Deploy kam NICHT von den
+   Healthchecks, sondern von einem **zurückgebliebenen Exited-redis-Container**
+   aus der Zeit vor der Stack-Trennung (Coolify zählt alle Container mit dem
+   App-Label). `docker rm` des Leichnams → Status drehte auf grün.
+2. **watch_paths:** `nextdays-supabase` hatte noch `apps/api/**` (jeder api-Push
+   hätte den DB-Stack mitdeployt) → entfernt. api/worker hatten ihre Patterns
+   KOMMA-getrennt — Coolify erwartet zeilen-getrennt, die Apps deployten deshalb
+   still nie automatisch → auf Zeilentrennung umgestellt.
+3. Bonus: `nextdays-storybook` lief als nixpacks-Build und ignorierte das
+   Repo-Dockerfile (samt HEALTHCHECK) → build_pack auf `dockerfile` umgestellt.
