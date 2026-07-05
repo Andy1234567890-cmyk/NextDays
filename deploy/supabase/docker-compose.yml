@@ -399,44 +399,11 @@ services:
         limits:
           memory: 1g
 
-  # Background-Worker (Skalierung Phase 1c): arbeitet die generische jobs-Queue ab
-  # (Channex-Content-Sync, Reconcile, Recompute) AUSSERHALB des HTTP-Request-Pfads.
-  # Gleiches Image + Env wie die api, aber KEIN Traefik/Netz-Routing (nimmt keine
-  # HTTP-Requests an) und KEIN expose. Ersetzt den früheren externen 15-min-
-  # Reconcile-Cron (der Worker reiht den Reconcile selbst per Zeit-Tick ein).
-  worker:
-    image: nextdays-api:prod
-    restart: unless-stopped
-    command: ["python", "-m", "src.worker"]
-    networks:
-      # Nur die internen Netze — der Worker spricht Kong/rest/redis per Servicename
-      # an, braucht aber KEIN coolify/Traefik (kein eingehender HTTP-Verkehr).
-      default:
-      supabase-internal:
-    environment:
-      APP_ENV: ${APP_ENV:-production}
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      # Parallel verarbeitete Jobs je Worker-Instanz (Concurrency-Pool).
-      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-4}
-      SUPABASE_URL: http://kong:8000
-      SUPABASE_ANON_KEY: ${ANON_KEY}
-      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
-      SUPABASE_JWT_SECRET: ${JWT_SECRET}
-      REDIS_URL: ${REDIS_URL:-redis://:${REDIS_PASSWORD}@redis:6379/0}
-      # Channex-Zugang (aus Coolify-Env) — der Worker pusht ARI/Content an Channex.
-      CHANNEX_API_KEY: ${CHANNEX_API_KEY:-}
-      CHANNEX_BASE_URL: ${CHANNEX_BASE_URL:-}
-      CHANNEX_WEBHOOK_SECRET: ${CHANNEX_WEBHOOK_SECRET:-}
-      CHANNEX_SANDBOX_PORTALS: ${CHANNEX_SANDBOX_PORTALS:-false}
-    depends_on:
-      rest:
-        condition: service_started
-      redis:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 1g
+  # HINWEIS: Der Background-Worker (jobs-Queue) läuft als EIGENSTÄNDIGE Coolify-App
+  # (deploy/worker/), NICHT hier im DB-Stack. Grund: ein crashender Worker im
+  # selben Compose-Stack wie die Produktions-DB kann den ganzen Stack (inkl. DB)
+  # mitreißen — genau das ist einmal passiert. Der Worker-Stack hängt sich über das
+  # externe supabase-internal-Netz an kong/redis, ist aber vollständig isoliert.
 
   # Redis für Rate-Limiting/Backpressure (core/ratelimit*.py). Im default-Netz
   # des Stacks, damit die api ihn per "redis" auflöst. Passwortgeschützt;
@@ -453,6 +420,10 @@ services:
               "--maxmemory", "200mb", "--maxmemory-policy", "noeviction"]
     networks:
       default:
+      # ZUSÄTZLICH ins stabile externe Netz: damit der isolierte Worker-Stack
+      # (deploy/worker/) redis per "redis" erreicht, ohne im DB-Stack zu liegen.
+      supabase-internal:
+        aliases: [redis]
     volumes:
       - /mnt/HC_Volume_106086998/nextdays/redis:/data
     healthcheck:

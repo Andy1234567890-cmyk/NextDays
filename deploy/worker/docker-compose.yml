@@ -1,0 +1,64 @@
+# ──────────────────────────────────────────────────────────────────────────
+# Background-Worker — arbeitet die jobs-Queue ab, als EIGENSTÄNDIGE Coolify-App.
+#
+# WARUM GETRENNT VOM DB-STACK (deploy/supabase/): Ein crashender Worker im selben
+# Compose-Stack wie die Produktions-Datenbank kann den GANZEN Stack (inkl. DB)
+# mitreißen — genau das ist einmal passiert (Worker-Crash-Schleife → Coolify fuhr
+# den kompletten Supabase-Stack herunter). Als isolierte App bleibt ein Worker-
+# Crash folgenlos für die DB: er restartet nur sich selbst.
+#
+# Der Worker nimmt KEINEN HTTP-Verkehr an (kein Traefik/coolify-Netz nötig). Er
+# erreicht Kong (SUPABASE_URL=http://kong:8000) und Redis über das stabile externe
+# Netz "supabase-internal" per Servicename — dieselbe Mechanik wie der Kong-Stack.
+#
+# Voraussetzung: redis ist im DB-Stack zusätzlich in supabase-internal (alias
+# redis) — siehe deploy/supabase/docker-compose.yml.
+# ──────────────────────────────────────────────────────────────────────────
+services:
+  worker:
+    # Baut dasselbe Backend-Image wie der DB-Stack, aber unabhängig — der Worker-
+    # Stack hängt nicht am Build-Zeitpunkt des DB-Stacks. Build-Kontext = Repo-Root
+    # (Coolify löst relativ zum geklonten Repo auf).
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    image: nextdays-worker:prod
+    restart: unless-stopped
+    command: ["python", "-m", "src.worker"]
+    networks:
+      # NUR das stabile externe Netz zu kong/rest/redis. KEIN coolify/Traefik —
+      # der Worker ist nicht von außen erreichbar und braucht keinen Ingress.
+      - supabase-internal
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      # Parallel verarbeitete Jobs je Worker-Instanz (Concurrency-Pool).
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-4}
+      # Kong intern im supabase-internal-Netz (wie die api): kein Hairpin.
+      SUPABASE_URL: http://kong:8000
+      SUPABASE_ANON_KEY: ${ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
+      SUPABASE_JWT_SECRET: ${JWT_SECRET}
+      # redis ist über supabase-internal (alias redis) erreichbar.
+      REDIS_URL: ${REDIS_URL:-redis://:${REDIS_PASSWORD}@redis:6379/0}
+      # Channex-Zugang (aus Coolify-Env) — der Worker pusht ARI/Content an Channex.
+      CHANNEX_API_KEY: ${CHANNEX_API_KEY:-}
+      CHANNEX_BASE_URL: ${CHANNEX_BASE_URL:-}
+      CHANNEX_WEBHOOK_SECRET: ${CHANNEX_WEBHOOK_SECRET:-}
+      CHANNEX_SANDBOX_PORTALS: ${CHANNEX_SANDBOX_PORTALS:-false}
+      # Kontoweites Channex-Budget (Token-Bucket im Worker).
+      CHANNEX_ACCOUNT_BUDGET: ${CHANNEX_ACCOUNT_BUDGET:-200/60}
+      CHANNEX_PROPERTY_BUDGET: ${CHANNEX_PROPERTY_BUDGET:-20/60}
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+
+networks:
+  # STABILES, benanntes externes Netz zu den Stack-Services (kong/rest/redis).
+  # external + name → Coolify legt kein isoliertes neues Netz an, sondern nutzt das
+  # vorhandene (sonst Name-Resolution-Fehler). Anlegen (einmalig, falls nicht da):
+  # docker network create supabase-internal
+  supabase-internal:
+    external: true
+    name: supabase-internal
