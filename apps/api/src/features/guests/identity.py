@@ -26,11 +26,18 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.logging import get_logger
 
 log = get_logger("nextdays.guests.identity")
+
+# Partielle Unique-Indizes aus Migration 0113 (tenant_id, lower(email) / phone).
+# Verliert ein paralleler Insert das Race, meldet PostgREST diese Namen — dann
+# wird der vom Gewinner angelegte Gast geladen statt ein Duplikat zu erzeugen.
+_GUEST_EMAIL_UNIQUE = "guests_tenant_email_uq"
+_GUEST_PHONE_UNIQUE = "guests_tenant_phone_uq"
 
 
 def normalize_email(value: str | None) -> str | None:
@@ -360,7 +367,21 @@ def _create_guest(
             cleaned = (value or "").strip()
             if cleaned:
                 payload[column] = cleaned
-    ins = db.table("guests").insert(payload).execute()
+    try:
+        ins = db.table("guests").insert(payload).execute()
+    except APIError as exc:
+        # Race-Backstop (0113): ein paralleler Insert hat den Gast in der Lücke
+        # zwischen _find_by_* und diesem Insert bereits angelegt. Statt ein
+        # Duplikat zu erzwingen (oder mit 500 zu scheitern), den bestehenden
+        # Gast laden und dessen ID zurückgeben (Resolver bleibt idempotent).
+        matched = _guest_id_after_conflict(db, tenant_id, exc, email=email, phone=phone)
+        if matched is None:
+            raise
+        if channel and external_id:
+            _link_external_id(db, tenant_id, matched, channel, external_id)
+        if contact:
+            _ensure_country_address(db, tenant_id, matched, contact.country)
+        return matched
     if not ins.data:
         return None
     guest_id = ins.data[0]["id"]
@@ -370,3 +391,33 @@ def _create_guest(
         # Wohnsitzland → Adresse in der Gästemappe (nicht nationality).
         _ensure_country_address(db, tenant_id, guest_id, contact.country)
     return guest_id
+
+
+def _guest_id_after_conflict(
+    db: Client,
+    tenant_id: str,
+    exc: APIError,
+    *,
+    email: str | None,
+    phone: str | None,
+) -> str | None:
+    """Nach einer Unique-Verletzung beim Insert den bereits angelegten Gast finden.
+
+    Nur bei den erwarteten Gast-Unique-Indizes (E-Mail/Telefon) — jede andere
+    APIError wird vom Aufrufer weitergereicht (kein Verschlucken echter Fehler).
+    """
+    msg = str(exc)
+    if _GUEST_EMAIL_UNIQUE in msg and email:
+        return _find_by_email(db, tenant_id, email)
+    if _GUEST_PHONE_UNIQUE in msg and phone:
+        return _find_by_phone(db, tenant_id, phone)
+    # Manche PostgREST-Fehler nennen den Indexnamen nicht — generische
+    # Unique-Verletzung (23505) trotzdem über die vorhandenen Merkmale auflösen.
+    if getattr(exc, "code", None) == "23505" or "duplicate key" in msg:
+        if email:
+            found = _find_by_email(db, tenant_id, email)
+            if found:
+                return found
+        if phone:
+            return _find_by_phone(db, tenant_id, phone)
+    return None

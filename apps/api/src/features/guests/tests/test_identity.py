@@ -219,6 +219,64 @@ def test_returns_none_without_any_identifier():
     assert len(db.store["guests"]) == 0
 
 
+def test_create_guest_race_returns_existing_on_unique_violation():
+    """Verliert der Insert das Race (Unique-Index 0113), wird der vom Gewinner
+    angelegte Gast geladen statt ein Duplikat zu erzeugen (Resolver idempotent)."""
+    from postgrest.exceptions import APIError
+
+    class _RacingQ(_Q):
+        def execute(self):  # noqa: ANN201
+            if self._op == "insert" and self._name == "guests":
+                # Gewinner hat den Gast in der Lücke bereits angelegt.
+                self._store.append({
+                    "id": "guests-winner", "tenant_id": "t1",
+                    "email": "race@x.de", "phone": None, "needs_review": False,
+                })
+                raise APIError({
+                    "message": 'duplicate key value violates unique constraint '
+                               '"guests_tenant_email_uq"',
+                    "code": "23505", "hint": None, "details": None,
+                })
+            return super().execute()
+
+    class _RacingDB(_DB):
+        def table(self, name):  # noqa: ANN001, ANN201
+            return _RacingQ(self.store, name)
+
+    db = _RacingDB()
+    out = resolve_or_create_guest(
+        db, "t1", GuestContact(first_name="Race", email="race@x.de")
+    )
+    assert out == "guests-winner"
+    # Kein zweiter Gast entstanden (nur der Gewinner liegt im Store).
+    assert len(db.store["guests"]) == 1
+
+
+def test_create_guest_reraises_unrelated_api_error():
+    """Eine NICHT gast-bezogene APIError wird nicht verschluckt (weitergereicht)."""
+    import pytest
+    from postgrest.exceptions import APIError
+
+    class _FailingQ(_Q):
+        def execute(self):  # noqa: ANN201
+            if self._op == "insert" and self._name == "guests":
+                raise APIError({
+                    "message": "permission denied for table guests",
+                    "code": "42501", "hint": None, "details": None,
+                })
+            return super().execute()
+
+    class _FailingDB(_DB):
+        def table(self, name):  # noqa: ANN001, ANN201
+            return _FailingQ(self.store, name)
+
+    db = _FailingDB()
+    with pytest.raises(APIError):
+        resolve_or_create_guest(
+            db, "t1", GuestContact(first_name="X", email="x@x.de")
+        )
+
+
 def test_contact_from_ota_customer():
     c = contact_from_ota_customer(
         {"name": "Max", "surname": "Mustermann", "mail": "m@x.de", "phone": "+49170"},

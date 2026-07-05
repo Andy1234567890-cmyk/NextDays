@@ -294,6 +294,32 @@ class PaymentsService:
         if not currency:
             raise PaymentsError("Währung der Buchung fehlt.", status_code=422)
 
+        # Idempotenz: existiert bereits ein offener (pending) PaymentIntent für
+        # diese Buchung, den bestehenden wiederverwenden statt einen zweiten
+        # anzulegen (der öffentliche Endpoint ist unauthentifiziert und wird bei
+        # Doppelklick/Reload/Retry mehrfach getroffen → sonst mehrere Intents +
+        # payments-Rows für dieselbe Buchung).
+        existing = (
+            db.table("payments")
+            .select("id, gateway_ref")
+            .eq("reservation_id", reservation_id)
+            .eq("type", "full")
+            .eq("status", "pending")
+            .order("created_at", desc=True)
+            .limit(1)
+            .execute()
+        ).data
+        if existing and existing[0].get("gateway_ref"):
+            with _stripe_errors():
+                intent = sc.retrieve_payment_intent(
+                    existing[0]["gateway_ref"], client=self._stripe
+                )
+            return BookingPaymentResult(
+                client_secret=intent["client_secret"],
+                payment_id=existing[0]["id"],
+                publishable_key=get_settings().stripe_publishable_key,
+            )
+
         acct = self._connected_account(db, tenant_id)
         amount_cents = _to_cents(amount)
         with _stripe_errors():
@@ -411,9 +437,15 @@ class PaymentsService:
             gateway_ref=result["id"],
             status="succeeded",
         )
-        self._update_payment(db, payment_id, {"status": "refunded"})
+        # Teil- vs. Vollerstattung: amount=None ODER amount >= voller Betrag →
+        # 'refunded'; ein kleinerer Betrag → 'partially_refunded'. Sonst gälte
+        # eine Teilerstattung als komplette Rückabwicklung der Buchung.
+        full_amount = float(payment["amount"])
+        is_full = amount is None or float(amount) >= full_amount
+        status_val = "refunded" if is_full else "partially_refunded"
+        self._update_payment(db, payment_id, {"status": status_val})
         self._set_reservation_payment_status(
-            db, payment["reservation_id"], "refunded"
+            db, payment["reservation_id"], status_val
         )
         return {"payment_id": payment_id, "refund_id": result["id"]}
 

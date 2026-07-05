@@ -62,6 +62,8 @@ export async function getAvailability(
 // Ein Objekt im Batch-Board: Tagesdaten + Stop-Sells in einem Rutsch.
 export type BoardProperty = {
   property_id: string;
+  // Objekt-Währung (aus dem Rate-Plan) für die Tagespreis-Anzeige.
+  currency: string | null;
   days: DayAvailability[];
   stop_sell: StopSellDay[];
 };

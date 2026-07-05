@@ -97,7 +97,15 @@ def _dispatch_stripe_event(
         case "charge.refunded":
             pi_id = _field(obj, "payment_intent")
             if pi_id:
-                _set_payment_status(db, pi_id, "refunded", reservation="refunded")
+                # Stripe feuert charge.refunded auch bei TEILerstattung. Nur bei
+                # voller Erstattung die Buchung als 'refunded' markieren, sonst
+                # 'partially_refunded' — sonst gilt eine 10-€-Teilerstattung als
+                # komplette Rückabwicklung einer 200-€-Buchung.
+                amount = int(_field(obj, "amount", 0) or 0)
+                refunded = int(_field(obj, "amount_refunded", 0) or 0)
+                fully = refunded >= amount > 0
+                status_val = "refunded" if fully else "partially_refunded"
+                _set_payment_status(db, pi_id, status_val, reservation=status_val)
         case _:
             log.info("stripe_webhook_ignored", event_type=event_type)
     return {"status": "ok"}

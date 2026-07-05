@@ -300,20 +300,31 @@ class AddonsService:
             qty=max(int(qty), 1),
         )
         names = addon.get("name") or {}
-        self._db.table("reservation_addons").insert(
-            {
-                "tenant_id": tenant_id,
-                "reservation_id": reservation_id,
-                "addon_id": addon_id,
-                "name": names,
-                "price": float(addon.get("price") or 0),
-                "basis": str(addon.get("basis") or "per_stay"),
-                "tax_rate": tax_rate,
-                "qty": max(int(qty), 1),
-                "total": gross,
-                "status": AddonStatus.pending.value,
-            }
-        ).execute()
+        try:
+            self._db.table("reservation_addons").insert(
+                {
+                    "tenant_id": tenant_id,
+                    "reservation_id": reservation_id,
+                    "addon_id": addon_id,
+                    "name": names,
+                    "price": float(addon.get("price") or 0),
+                    "basis": str(addon.get("basis") or "per_stay"),
+                    "tax_rate": tax_rate,
+                    "qty": max(int(qty), 1),
+                    "total": gross,
+                    "status": AddonStatus.pending.value,
+                }
+            ).execute()
+        except APIError as exc:
+            # Idempotenz (0109-Unique-Index): diese Zusatzleistung ist für die
+            # Buchung schon aktiv gebucht → fachlicher 409 statt rohem 500
+            # (Doppelklick auf die Schnelltaste).
+            if "reservation_addons_active_uidx" not in str(exc):
+                raise
+            raise AddonError(
+                "Diese Zusatzleistung ist für die Buchung bereits gebucht.",
+                status_code=409,
+            ) from exc
         # Trigger „addon_purchased": Vorbereitungs-Aufgabe (best-effort).
         label = names.get("de") or next(iter(names.values()), "Zusatzleistung")
         try:

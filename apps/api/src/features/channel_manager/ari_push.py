@@ -21,6 +21,37 @@ from .schemas import (
 )
 
 
+def _iso_days(date_from: str, date_to: str) -> list[str]:
+    """Alle ISO-Tage [date_from … date_to] inklusiv."""
+    lo = date.fromisoformat(date_from[:10])
+    hi = date.fromisoformat(date_to[:10])
+    out: list[str] = []
+    cur = lo
+    while cur <= hi:
+        out.append(cur.isoformat())
+        cur += timedelta(days=1)
+    return out
+
+
+def _group_iso_days_to_ranges(days: set[str]) -> list[tuple[str, str]]:
+    """Sortierte ISO-Tage zu zusammenhängenden [von, bis]-Intervallen bündeln
+    (inklusiv), damit der Availability-Push wenige Ranges statt vieler Einzeltage
+    sendet. Leere Menge → keine Ranges."""
+    if not days:
+        return []
+    ordered = sorted(date.fromisoformat(d) for d in days)
+    ranges: list[tuple[str, str]] = []
+    start = prev = ordered[0]
+    for cur in ordered[1:]:
+        if (cur - prev).days == 1:
+            prev = cur
+            continue
+        ranges.append((start.isoformat(), prev.isoformat()))
+        start = prev = cur
+    ranges.append((start.isoformat(), prev.isoformat()))
+    return ranges
+
+
 def _expand_restriction_values(
     base: dict[str, Any], date_from: date, date_to: date
 ) -> list[dict[str, Any]]:
@@ -219,6 +250,34 @@ class AriPushMixin:
             return False
         return self._is_channex_managed(db, tenant_id, property_id)
 
+    def _newer_covered_days(
+        self, db: Client, property_id: str, created_at: str, outbox_id: str | None
+    ) -> set[str]:
+        """ISO-Tage, die von einer NEUEREN ari_outbox-Zeile desselben Objekts
+        abgedeckt sind (created_at strikt später). Diese Tage trägt die aktuelle
+        Zeile NICHT mehr an Channex — die jüngste Absicht je Tag gewinnt.
+
+        Deckt beide Superseding-Lücken ab: (1) der schnelle Job-Pfad nutzt es
+        (nicht nur der Cron), (2) es arbeitet TAG-GENAU (eine ältere Zeile wird
+        nur für die überlappenden Tage übersprungen, ihre übrigen Tage gehen
+        weiterhin raus). `created_at` kann fehlen (frisch angelegte Zeile ohne
+        DB-Roundtrip) → dann konservativ leer (nichts überspringen)."""
+        if not created_at:
+            return set()
+        q = (
+            db.table("ari_outbox")
+            .select("date_from,date_to,created_at")
+            .eq("property_id", property_id)
+            .gt("created_at", created_at)
+        )
+        if outbox_id is not None:
+            q = q.neq("id", outbox_id)
+        rows = q.execute().data or []
+        covered: set[str] = set()
+        for r in rows:
+            covered.update(_iso_days(str(r["date_from"]), str(r["date_to"])))
+        return covered
+
     def push_availability_for_property(
         self,
         tenant_id: str,
@@ -250,10 +309,11 @@ class AriPushMixin:
             return False  # alle Kanäle des Objekts auf Aus → kein Push
 
         prior_attempts = 0
+        created_at = ""
         if outbox_id is not None:
             existing = (
                 db.table("ari_outbox")
-                .select("id,status,attempts")
+                .select("id,status,attempts,created_at")
                 .eq("id", outbox_id)
                 .limit(1)
                 .execute()
@@ -261,6 +321,7 @@ class AriPushMixin:
             if not existing or existing[0]["status"] != "pending":
                 return False  # bereits abgearbeitet (Cron/Doppel) → fertig
             prior_attempts = existing[0]["attempts"] or 0
+            created_at = str(existing[0].get("created_at") or "")
         else:
             outbox = (
                 db.table("ari_outbox")
@@ -277,19 +338,33 @@ class AriPushMixin:
                 .execute()
             ).data
             outbox_id = outbox[0]["id"] if outbox else None
+            created_at = str(outbox[0].get("created_at") or "") if outbox else ""
+
+        # Superseding TAG-GENAU + im schnellen Pfad: nur die Tage pushen, für die
+        # KEINE neuere Outbox-Zeile desselben Objekts existiert (jüngste Absicht
+        # je Tag gewinnt). Verhindert, dass ein älterer avail-Wert (z. B. Storno-
+        # Freigabe) einen inzwischen live gegangenen neueren Wert (neue Buchung)
+        # überschreibt — auch wenn die Jobs nebenläufig/umsortiert laufen.
+        superseded = self._newer_covered_days(
+            db, property_id, created_at, outbox_id
+        )
+        push_ranges = _group_iso_days_to_ranges(
+            set(_iso_days(date_from.isoformat(), date_to.isoformat())) - superseded
+        )
 
         try:
-            self._channex.update_availability(
-                [
-                    {
-                        "property_id": mapping["channex_property_id"],
-                        "room_type_id": mapping["channex_room_type_id"],
-                        "date_from": date_from.isoformat(),
-                        "date_to": date_to.isoformat(),
-                        "availability": availability,
-                    }
-                ]
-            )
+            for r_from, r_to in push_ranges:
+                self._channex.update_availability(
+                    [
+                        {
+                            "property_id": mapping["channex_property_id"],
+                            "room_type_id": mapping["channex_room_type_id"],
+                            "date_from": r_from,
+                            "date_to": r_to,
+                            "availability": availability,
+                        }
+                    ]
+                )
             if outbox_id:
                 # Guard status='pending': falls ein paralleler process_ari_outbox-
                 # Tick dieselbe Zeile schon abgehakt hat, kein zweiter Übergang.
@@ -301,6 +376,8 @@ class AriPushMixin:
                 tenant_id=tenant_id,
                 property_id=property_id,
                 availability=availability,
+                pushed_ranges=len(push_ranges),
+                superseded_days=len(superseded),
             )
             return False
         except ChannexError as exc:
@@ -685,31 +762,31 @@ class AriPushMixin:
             )
 
     @staticmethod
-    def _superseded_outbox_ids(rows: list[dict]) -> set[str]:
-        """IDs der pending-Zeilen, die von einer NEUEREN pending-Zeile desselben
-        Objekts mit überlappendem Datumsbereich überholt sind. `rows` ist nach
-        created_at aufsteigend sortiert — eine Zeile ist superseded, wenn eine
-        SPÄTERE Zeile (größerer Index) dasselbe property_id und einen
-        überlappenden [date_from, date_to]-Bereich hat."""
-
-        def _overlap(a: dict, b: dict) -> bool:
-            return (
-                a["property_id"] == b["property_id"]
-                and str(a["date_from"]) <= str(b["date_to"])
-                and str(b["date_from"]) <= str(a["date_to"])
-            )
-
-        superseded: set[str] = set()
+    def _superseding_days_by_row(rows: list[dict]) -> dict[str, set[str]]:
+        """Je pending-Zeile die Tage, die von einer NEUEREN Zeile (späterer Index
+        bei created_at-Sortierung) desselben Objekts abgedeckt sind. TAG-GENAU:
+        eine ältere Zeile wird nur für die überlappenden Tage übersprungen, ihre
+        übrigen Tage gehen weiterhin an Channex (Teil-Überlappung verliert keine
+        Tage)."""
+        by_row: dict[str, set[str]] = {}
+        day_lists = [
+            _iso_days(str(r["date_from"]), str(r["date_to"])) for r in rows
+        ]
         for i, older in enumerate(rows):
-            for newer in rows[i + 1:]:
-                if _overlap(older, newer):
-                    superseded.add(older["id"])
-                    break
-        return superseded
+            covered: set[str] = set()
+            older_days = set(day_lists[i])
+            for j in range(i + 1, len(rows)):
+                if rows[j]["property_id"] != older["property_id"]:
+                    continue
+                covered |= older_days & set(day_lists[j])
+            by_row[older["id"]] = covered
+        return by_row
 
     def process_ari_outbox(self, limit: int = 200) -> dict[str, int]:
         """Offene ari_outbox-Zeilen erneut an Channex pushen (Cron-Retry).
-        Idempotent (absoluter Set-Wert je Tag)."""
+        Idempotent (absoluter Set-Wert je Tag). Superseding TAG-GENAU: von einer
+        neueren Absicht abgedeckte Tage werden übersprungen, die restlichen Tage
+        der Zeile aber weiterhin gepusht (keine verlorene Freigabe)."""
         result = {"processed": 0, "done": 0, "failed": 0}
         if not self._channex.is_configured or self._db is None:
             return result
@@ -722,22 +799,8 @@ class AriPushMixin:
             .limit(limit)
             .execute()
         ).data or []
-        # Superseding: eine ältere pending-Zeile für dieselben (überlappenden)
-        # Tage darf NICHT nach einer neueren Absicht gepusht werden — sonst
-        # überschreibt z. B. ein alter avail=1 (Storno, dessen Push scheiterte)
-        # einen inzwischen live gegangenen avail=0 (neue Buchung) und öffnet den
-        # real belegten Tag wieder. Für jede Zeile prüfen, ob eine NEUERE pending-
-        # Zeile desselben Objekts den Bereich überlappt; wenn ja, die ältere als
-        # 'superseded' abhaken statt sie zu pushen.
-        superseded_ids = self._superseded_outbox_ids(rows)
+        superseding = self._superseding_days_by_row(rows)
         for r in rows:
-            if r["id"] in superseded_ids:
-                db.table("ari_outbox").update(
-                    {"status": "done", "last_error": "superseded (neuere Absicht)"}
-                ).eq("id", r["id"]).eq("status", "pending").execute()
-                result["processed"] += 1
-                result["done"] += 1
-                continue
             result["processed"] += 1
             mapping = self._resolve_channex_room_type(
                 db, r["tenant_id"], r["property_id"]
@@ -753,18 +816,29 @@ class AriPushMixin:
                 ).eq("id", r["id"]).execute()
                 result["done"] += 1
                 continue
+            # Nur die Tage pushen, die keine NEUERE Zeile abdeckt.
+            days = set(_iso_days(str(r["date_from"]), str(r["date_to"])))
+            push_ranges = _group_iso_days_to_ranges(days - superseding.get(r["id"], set()))
+            if not push_ranges:
+                # Komplett von neueren Absichten überholt → nichts pushen, abhaken.
+                db.table("ari_outbox").update(
+                    {"status": "done", "last_error": "superseded (neuere Absicht)"}
+                ).eq("id", r["id"]).eq("status", "pending").execute()
+                result["done"] += 1
+                continue
             try:
-                self._channex.update_availability(
-                    [
-                        {
-                            "property_id": mapping["channex_property_id"],
-                            "room_type_id": mapping["channex_room_type_id"],
-                            "date_from": r["date_from"],
-                            "date_to": r["date_to"],
-                            "availability": r["availability"],
-                        }
-                    ]
-                )
+                for r_from, r_to in push_ranges:
+                    self._channex.update_availability(
+                        [
+                            {
+                                "property_id": mapping["channex_property_id"],
+                                "room_type_id": mapping["channex_room_type_id"],
+                                "date_from": r_from,
+                                "date_to": r_to,
+                                "availability": r["availability"],
+                            }
+                        ]
+                    )
                 db.table("ari_outbox").update(
                     {"status": "done", "attempts": (r["attempts"] or 0) + 1}
                 ).eq("id", r["id"]).execute()

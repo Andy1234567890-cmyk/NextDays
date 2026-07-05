@@ -7,6 +7,7 @@
 import hashlib
 import hmac
 import json
+import secrets
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
@@ -112,9 +113,18 @@ def webhook_verify(
     hub_challenge: Annotated[str | None, Query(alias="hub.challenge")] = None,
     hub_verify_token: Annotated[str | None, Query(alias="hub.verify_token")] = None,
 ) -> Response:
-    """Meta-Verify-Handshake: bei korrektem verify_token den Challenge zurückgeben."""
+    """Meta-Verify-Handshake: bei korrektem verify_token den Challenge zurückgeben.
+
+    Der Token-Vergleich läuft konstant-zeitig (secrets.compare_digest), damit ein
+    Angreifer den erwarteten Token nicht per Timing-Seitenkanal erraten kann.
+    Fehlender/leerer Token (Konfig- oder Request-Seite) → sauber abgelehnt."""
     expected = get_settings().whatsapp_verify_token.get_secret_value()
-    if hub_mode == "subscribe" and expected and hub_verify_token == expected:
+    if (
+        hub_mode == "subscribe"
+        and expected
+        and hub_verify_token
+        and secrets.compare_digest(hub_verify_token, expected)
+    ):
         return Response(content=hub_challenge or "", media_type="text/plain")
     raise HTTPException(status_code=403, detail="Verifizierung fehlgeschlagen.")
 

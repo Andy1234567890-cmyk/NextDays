@@ -9,6 +9,8 @@ import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback } from "react";
 
+import { useRealtime } from "@/lib/use-realtime";
+
 import { type Prop, CalendarBoard } from "@/components/kalender/calendar-board";
 import { NativeSelect } from "@/components/ui/native-select";
 
@@ -59,6 +61,13 @@ export function CalendarViews({
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
+
+  // Objektzeilen werden serverseitig geladen (KalenderPage). Ändert sich ein
+  // Objekt (Titel/Foto/Adresse/Status/Neuanlage/Löschung), die Server-Component
+  // neu laden, damit die Kalender-Ansichten nicht auf veralteten Objektzeilen
+  // stehen bleiben (Realtime-Pflicht — die einzelnen Ansichten abonnieren nur
+  // availability/preise, nicht die properties-Tabelle selbst).
+  useRealtime({ table: "properties", onChange: () => router.refresh() });
 
   const active: ViewKey = normalizeView(params.get("view"));
 

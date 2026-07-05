@@ -402,6 +402,27 @@ class PropertyMappingMixin:
                     "Channex lieferte keine Property-ID zurück.", status_code=502
                 )
 
+        # Fremdübernahme verhindern: die channex_property_id ist im upsert der
+        # Konflikt-Schlüssel (on_conflict="channex_property_id"). Ohne diese
+        # Prüfung könnte ein Tenant per client-übergebener external_property_ref
+        # das Mapping eines FREMDEN Tenants überschreiben/übernehmen. Belegt eine
+        # noch nicht gelöschte Zeile eines anderen Tenants diese ID → 409.
+        clash = (
+            db.table("channex_property_map")
+            .select("tenant_id")
+            .eq("channex_property_id", channex_id)
+            .is_("deleted_at", "null")
+            .neq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        if clash.data:
+            raise ChannelManagerError(
+                "Diese Channex-Property ist bereits einem anderen Konto "
+                "zugeordnet.",
+                status_code=409,
+            )
+
         row = {
             "tenant_id": tenant_id,
             "property_id": req.property_id,

@@ -12,6 +12,24 @@ export const meta = {
 
 const REPO = '/Users/andystaudinger/NextDays'
 
+// Bereits in Runde 1+2 gefixte Befunde — NICHT erneut melden (sonst Endlos-
+// schleife). Die Finder erhalten diese Liste als „bekannt & behoben".
+const KNOWN_FIXED = `BEREITS GEFIXT (NICHT erneut melden, nur NEUE/andere Bugs):
+- Doppelbuchung (EXCLUDE-Constraint + create_reservation_atomic RPC 0104)
+- verlorener/doppelter ARI-Push (ari_outbox + outbox_id + Superseding + Retry-Signal)
+- Rechnungsnummern-Race (0105, NULLS NOT DISTINCT); Nummer nur serverseitig+bei Finalisierung
+- Owner-Scope in owner_statements/calendar/reservations; Owner 403 in Buchhaltung
+- Buchhaltungs-Leseendpunkte hinter OWNER_REPORTING; channel-manager /bookings maskiert + Topologie-Lese-Scope
+- Cron-Secret getrennt (INTERNAL_CRON_SECRET); RPC-Grants gegen anon/authenticated (0106/0107)
+- Worker-Doppelausführung (Heartbeat + locked_by-Guards); enqueue_job-Coalescing nur queued (0108)
+- Kleinunternehmer-USt konsistent; finalisierte Rechnungen unlöschbar/unänderbar
+- hidden_from_owner gefiltert; Positions-Inserts mit Rollback; Nummern-Kollision 409
+- create_public_booking: nur active, serverseitiges Pricing, async Push, recompute
+- move()/cancel(): Stop-Sell + keine Freigabe OTA-belegter Tage
+- Inbox-Doppelversand (atomares Claim); Cloudflare-Hostname-Rollback
+- Rate-Limit tenant-Fairness pro IP; channex_budget retry_after; Stripe-Webhook-Claim; Addon-Idempotenz (0109)
+- WhatsApp-Webhook fail-closed; Dockerfile HOSTNAME; diverse EUR/Brand-Hardcodes, ItemsTable MwSt, Monatsgitter-Realtime`
+
 // Nur bestätigte, echte Bugs. Schema erzwingt strukturierte Rückgabe.
 const FINDINGS_SCHEMA = {
   type: 'object',
@@ -74,10 +92,12 @@ async function findAndVerify(items, findPhase, verifyPhase) {
     items,
     (d) => agent(
       `Du bist ein akribischer Bug-Finder für das NextDays-Monorepo. ${d.prompt}\n\n` +
-      `Melde NUR echte, am Code belegbare Bugs (keine Stil-Nits, keine Vermutungen). ` +
-      `Für jeden Bug: Schweregrad, kurzer Titel, Datei:Zeile, konkretes Problem, ` +
-      `Auslöse-Szenario. Wenn du nichts Belastbares findest, gib eine leere Liste zurück. ` +
-      `Setze dimension="${d.key}".`,
+      `${KNOWN_FIXED}\n\n` +
+      `Melde NUR echte, am Code belegbare, NEUE Bugs (keine Stil-Nits, keine ` +
+      `Vermutungen, KEINE der oben als gefixt gelisteten). Lies den ECHTEN, aktuellen ` +
+      `Code — die genannten Fixes sind bereits im Repo. Für jeden Bug: Schweregrad, ` +
+      `kurzer Titel, Datei:Zeile, konkretes Problem, Auslöse-Szenario. Wenn du nichts ` +
+      `Belastbares Neues findest, gib eine leere Liste zurück. Setze dimension="${d.key}".`,
       { label: `find:${d.key}`, phase: findPhase, schema: FINDINGS_SCHEMA, effort: 'high' },
     ),
     (result, d) => {

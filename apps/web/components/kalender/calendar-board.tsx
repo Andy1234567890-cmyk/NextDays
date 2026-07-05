@@ -327,6 +327,8 @@ export function CalendarBoard({
   const [sources, setSources] = useState<Record<string, Record<string, AvailabilitySource>>>({});
   // Tagespreis + Min-Stay je Objekt/Tag (aus get_availability) für die Anzeige.
   const [prices, setPrices] = useState<Record<string, Record<string, number | null>>>({});
+  // Objekt-Währung je property_id (aus dem Board/Rate-Plan) für die Tagespreise.
+  const [currencyByProp, setCurrencyByProp] = useState<Record<string, string | null>>({});
   const [priceSources, setPriceSources] = useState<Record<string, Record<string, string>>>({});
   const [priceFactors, setPriceFactors] = useState<Record<string, Record<string, Record<string, number>>>>({});
   const [minStays, setMinStays] = useState<Record<string, Record<string, number | null>>>({});
@@ -794,6 +796,15 @@ export function CalendarBoard({
       const byPid = new Map(
         board.ok ? board.data.items.map((it) => [it.property_id, it]) : [],
       );
+      // Objekt-Währung aus dem Board (Rate-Plan) — die zuverlässige Preisquelle,
+      // unabhängig davon, ob das Objekt Buchungen hat.
+      if (board.ok) {
+        setCurrencyByProp((prev) => {
+          const next = { ...prev };
+          for (const it of board.data.items) next[it.property_id] = it.currency;
+          return next;
+        });
+      }
       const results = properties.map((p) => {
         const it = byPid.get(p.id);
         const days: DayAvailability[] = it?.days ?? [];
@@ -1272,10 +1283,13 @@ export function CalendarBoard({
                 const restrictMap = restrictions[p.id] ?? {};
                 const resMap = resByProp[p.id] ?? {};
                 const stopMap = stopSell[p.id] ?? {};
-                // Objekt-Währung aus den eigenen Reservierungen (kein €-Hardcode);
-                // fehlt sie, formatiert fmtPrice eine reine Zahl.
+                // Objekt-Währung aus dem Board (Rate-Plan) — die zuverlässige
+                // Preisquelle; fällt auf die Reservierungs-Währung zurück, falls
+                // (noch) keine Board-Währung vorliegt. Kein €-Hardcode.
                 const propCurrency =
-                  Object.values(resMap).find((r) => r.currency)?.currency ?? null;
+                  currencyByProp[p.id] ??
+                  Object.values(resMap).find((r) => r.currency)?.currency ??
+                  null;
                 const segs = toSegments(statusMap, sourceMap, resMap, dates, stopMap);
                 return (
                   <div key={p.id} className="flex border-b last:border-b-0">

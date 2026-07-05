@@ -4,7 +4,7 @@ Chain-Mock wie in buchhaltung/tests/test_reservation_invoice.py: jede Query-
 Kette endet in execute() → hinterlegte Daten; Attribut-Zugriffe werden je
 Tabelle protokolliert (Beweis „kein Write vor Rechnung").
 """
-from datetime import date, timedelta
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
 import pytest
@@ -15,9 +15,10 @@ from src.features.reservations.schemas import CheckOutRequest
 from src.features.reservations.service import ReservationError, ReservationsService
 
 CTX = AuthContext(user_id="u1", tenant_id="t1")
-# Dynamische Daten: der Abreisetag-Guard vergleicht gegen HEUTE — Standard-
-# Buchung reist heute ab (Check-out erlaubt), Guard-Tests nutzen die Zukunft.
-_TODAY = date.today()
+# Dynamische Daten: der Abreisetag-Guard vergleicht gegen HEUTE IN UTC
+# (service.py: datetime.now(UTC).date()). Der Test MUSS dieselbe Zeitzone nutzen,
+# sonst divergieren „heute" lokal vs. UTC um Mitternacht → flaky Check-out-Tests.
+_TODAY = datetime.now(UTC).date()
 
 
 class _Chain:

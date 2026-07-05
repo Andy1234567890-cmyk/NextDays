@@ -171,6 +171,8 @@ export interface ProcessedPDFData {
   subtotal: number;
   taxAmount: number;
   total: number;
+  // Belegwährung — für formatCurrency in ItemsTable/TotalsDisplay (kein EUR-Default).
+  currency: string;
 
   // Formatted dates
   formattedInvoiceDate: string;

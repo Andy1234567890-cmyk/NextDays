@@ -617,12 +617,18 @@ export function EmailSendModal({
 
       toast.message('E-Mail wird versendet...');
 
-      // Get company slug for email sender
-      const companySlug = (document.companyName || 'nextdays')
+      // Absender-Slug aus dem echten Firmennamen \u2014 KEIN 'nextdays'-Fallback
+      // (erfundener Fremdbrand als Absenderidentit\u00e4t; Projektregel: keine
+      // Fallback-Ersatzwerte). Ohne Firmennamen den Versand sauber abbrechen.
+      const companySlug = (document.companyName || '')
         .normalize('NFKD')
         .replace(/[\u0300-\u036f]/g, '')
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '');
+      if (!companySlug) {
+        toast.error('Bitte zuerst den Firmennamen im Firmenprofil hinterlegen \u2014 er ist die Absenderidentit\u00e4t.');
+        return;
+      }
 
       // Send email via API
       const response = await fetch('/api/v1/email/send-document', {

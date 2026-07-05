@@ -34,10 +34,15 @@ from src.jobs.queue import enqueue, next_run_after
 
 log = get_logger("nextdays.worker")
 
-# Job-Typen, die tatsächlich an Channex pushen → vor dem Handler ein Token aus dem
-# kontoweiten Channex-Budget verbrauchen. Nicht-Channex-Jobs (z. B. reines
-# Recompute ohne Push) laufen ohne Budget-Gate. Der Wert je Eintrag ist der
-# Payload-Schlüssel, der die property_id trägt (für die pro-Property-Ebene).
+# Job-Typen, die tatsächlich an Channex pushen. Sie bekommen das kontoweite
+# Channex-Budget NICHT mehr als einmaliges Vorab-Gate, sondern PRO ECHTEM
+# HTTP-CALL: der ChannexClient zieht über ein before_call-Callback vor jedem
+# Request ein Token (siehe channex_client._request). Grund: Batch-Jobs
+# (reconcile_tenant über hunderte Objekte, process_ari_outbox mit bis zu 200
+# Zeilen) machen je Job SEHR VIELE Calls — ein einmaliges Vorab-Gate für 1
+# Token hätte das Konto-Limit umgangen. Ein per-Call abgelehnter Job wirft
+# ChannexBudgetExhausted → der Worker verzögert (deferred) ihn, ohne einen
+# Retry-Versuch zu verbrennen.
 _CHANNEX_JOB_TYPES = frozenset(
     {"sync_property_content", "reconcile_tenant", "push_ari", "process_ari_outbox"}
 )
@@ -74,15 +79,24 @@ HEARTBEAT_PATH = os.getenv(
 # gescopte Service-Methoden — keine neue Logik, nur Enqueue-Adapter. Ein Handler
 # wirft bei retry-würdigem Fehler; No-op/erledigt → sauber zurückkehren.
 
-def _svc(db: Client):  # noqa: ANN202 — interner Factory-Helper
+def _svc(db: Client, budget: ChannexBudget | None = None):  # noqa: ANN202
+    """ChannelManagerService bauen. Ist ein `budget` gegeben, bekommt der
+    ChannexClient dessen try_consume als before_call-Callback → jeder echte
+    HTTP-Call zieht ein Token (per-Call-Gate für Batch-Jobs). Ohne budget läuft
+    der Client unverändert (Nicht-Channex-Handler brauchen kein Gate)."""
     from src.features.channel_manager.channex_client import ChannexClient
     from src.features.channel_manager.service import ChannelManagerService
 
-    return ChannelManagerService(service_client=db, channex=ChannexClient())
+    before_call = budget.try_consume if budget is not None else None
+    return ChannelManagerService(
+        service_client=db, channex=ChannexClient(before_call=before_call)
+    )
 
 
-def _handle_sync_property_content(db: Client, payload: dict[str, Any]) -> None:
-    _svc(db).sync_property_to_channex(
+def _handle_sync_property_content(
+    db: Client, payload: dict[str, Any], budget: ChannexBudget | None = None
+) -> None:
+    _svc(db, budget).sync_property_to_channex(
         payload["tenant_id"],
         property_id=payload["property_id"],
         title=payload.get("title") or "Unbenannt",
@@ -90,20 +104,26 @@ def _handle_sync_property_content(db: Client, payload: dict[str, Any]) -> None:
     )
 
 
-def _handle_reconcile_tenant(db: Client, payload: dict[str, Any]) -> None:
-    _svc(db).reconcile_properties_for_tenant(payload["tenant_id"])
+def _handle_reconcile_tenant(
+    db: Client, payload: dict[str, Any], budget: ChannexBudget | None = None
+) -> None:
+    _svc(db, budget).reconcile_properties_for_tenant(payload["tenant_id"])
 
 
-def _handle_process_ari_outbox(db: Client, _payload: dict[str, Any]) -> None:
+def _handle_process_ari_outbox(
+    db: Client, _payload: dict[str, Any], budget: ChannexBudget | None = None
+) -> None:
     """Offene ari_outbox-Zeilen (ausgehende ARI-Pushes) erneut an Channex pushen.
     Ersetzt den finalen process_ari_outbox()-Schritt des alten Host-Crons: die
     per-Tenant-reconcile_tenant-Jobs spiegeln nur Channex→DB, arbeiten die outbox
     aber NICHT ab. Tenant-übergreifend (die outbox ist nicht tenant-gefiltert),
     darum einmal je Tick als eigener Job statt pro Tenant."""
-    _svc(db).process_ari_outbox()
+    _svc(db, budget).process_ari_outbox()
 
 
-def _handle_recompute_property(db: Client, payload: dict[str, Any]) -> None:
+def _handle_recompute_property(
+    db: Client, payload: dict[str, Any], _budget: ChannexBudget | None = None
+) -> None:
     from src.features.pricing.recompute import DynamicPricingRecompute
 
     DynamicPricingRecompute(service_client=db).recompute_property(
@@ -111,7 +131,9 @@ def _handle_recompute_property(db: Client, payload: dict[str, Any]) -> None:
     )
 
 
-def _handle_push_ari(db: Client, payload: dict[str, Any]) -> None:
+def _handle_push_ari(
+    db: Client, payload: dict[str, Any], budget: ChannexBudget | None = None
+) -> None:
     """Generischer ARI-Push (Availability/Rate/Max-Stay/Restrictions/Stop-Sell)
     für einen Zeitraum. `kind` wählt die Ziel-Methode; die übrigen Payload-Felder
     sind die Argumente. Ersetzt die früher synchron im Request-Pfad laufenden
@@ -120,7 +142,7 @@ def _handle_push_ari(db: Client, payload: dict[str, Any]) -> None:
     from datetime import date
 
     # push_*-Methoden liegen direkt am Service (AriPushMixin).
-    push = _svc(db)
+    push = _svc(db, budget)
     kind = payload["kind"]
     tenant_id = payload["tenant_id"]
     property_id = payload["property_id"]
@@ -177,7 +199,9 @@ def _handle_push_ari(db: Client, payload: dict[str, Any]) -> None:
         )
 
 
-HANDLERS: dict[str, Callable[[Client, dict[str, Any]], None]] = {
+HANDLERS: dict[
+    str, Callable[[Client, dict[str, Any], ChannexBudget | None], None]
+] = {
     "sync_property_content": _handle_sync_property_content,
     "reconcile_tenant": _handle_reconcile_tenant,
     "recompute_property": _handle_recompute_property,
@@ -267,24 +291,32 @@ class Worker:
         ).eq("status", "running").execute()
 
     def _run_job(self, job: dict[str, Any]) -> None:
-        """Synchron im Thread: Budget prüfen, Handler ausführen, Status setzen."""
+        """Synchron im Thread: Handler ausführen, Status setzen.
+
+        Das Channex-Budget wird NICHT mehr einmalig vorab gezogen, sondern
+        PRO ECHTEM HTTP-CALL im ChannexClient (before_call-Callback). Nur die
+        pushenden Job-Typen bekommen das Budget durchgereicht; Nicht-Channex-
+        Jobs (recompute_property) laufen ohne Gate. Reißt der Budget-Vorrat
+        mitten im Batch, wirft der Client ChannexBudgetExhausted → der Job wird
+        verzögert (deferred, ohne Retry-Versuch zu verbrennen) und läuft nach
+        retry_after ab dem bereits erledigten Punkt weiter (Handler idempotent).
+        """
+        from src.features.channel_manager.channex_client import ChannexBudgetExhausted
+
         handler = HANDLERS.get(job["job_type"])
         if handler is None:
             self._finish(job["id"], "dead", f"unknown job_type: {job['job_type']}")
             log.error("job_unknown_type", id=job["id"], job_type=job["job_type"])
             return
-        # Channex-Budget-Gate: nur für Job-Typen, die tatsächlich pushen.
-        if job["job_type"] in _CHANNEX_JOB_TYPES:
-            payload = job.get("payload") or {}
-            decision = self._budget.try_consume(payload.get("property_id"))
-            if not decision.allowed:
-                self._defer(job, decision.retry_after)
-                log.info("job_deferred_budget", id=job["id"], job_type=job["job_type"],
-                         retry_after=decision.retry_after)
-                return
+        budget = self._budget if job["job_type"] in _CHANNEX_JOB_TYPES else None
         try:
-            handler(self._db, job.get("payload") or {})
+            handler(self._db, job.get("payload") or {}, budget)
             self._finish(job["id"], "done")
+        except ChannexBudgetExhausted as exc:
+            # Budget mitten im Job erschöpft → verzögern statt Retry verbrennen.
+            self._defer(job, exc.retry_after)
+            log.info("job_deferred_budget", id=job["id"], job_type=job["job_type"],
+                     retry_after=exc.retry_after)
         except Exception as exc:  # noqa: BLE001 — ein Job-Fehler darf den Worker nie killen
             self._retry(job, str(exc))
             log.warning("job_failed", id=job["id"], job_type=job["job_type"], error=str(exc)[:300])

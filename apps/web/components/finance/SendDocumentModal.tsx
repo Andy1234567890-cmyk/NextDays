@@ -428,6 +428,14 @@ export function SendDocumentModal({
         setEpcQrCodeUrl(null);
         return;
       }
+      // EPC/Girocode (SEPA Credit Transfer) unterstützt ausschließlich EUR.
+      // Bei einer Fremdwährungs-Rechnung KEINEN QR erzeugen (ein EUR-Präfix auf
+      // einen CHF/PLN-Betrag ergäbe eine falsche Überweisungssumme).
+      const docCurrency = (inv.currency || '').toUpperCase();
+      if (docCurrency && docCurrency !== 'EUR') {
+        setEpcQrCodeUrl(null);
+        return;
+      }
       const epcData = [
         'BCD',
         '002',

@@ -84,7 +84,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                     </td>
                     <td className="px-3 py-4 text-right text-sm">{item.quantity}</td>
                     <td className="px-3 py-4 text-right text-sm">
-                      {formatCurrency(item.unitPrice)}
+                      {formatCurrency(item.unitPrice, data.currency)}
                     </td>
                     {hasAnyDiscount && (
                       <td className="px-3 py-4 text-right text-red-600 text-sm">
@@ -97,7 +97,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                       </td>
                     )}
                     <td className="px-3 py-4 text-right font-medium text-sm">
-                      {formatCurrency(discountedTotal)}
+                      {formatCurrency(discountedTotal, data.currency)}
                     </td>
                   </tr>
                 );
@@ -174,7 +174,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                   </td>
                   <td className="px-2 py-2 text-right font-mono text-xs">{item.quantity}</td>
                   <td className="px-2 py-2 text-right font-mono text-xs">
-                    {formatCurrency(item.unitPrice)}
+                    {formatCurrency(item.unitPrice, data.currency)}
                   </td>
                   {hasAnyDiscount && (
                     <td className="px-2 py-2 text-right font-mono text-red-600 text-xs">
@@ -187,7 +187,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                     </td>
                   )}
                   <td className="px-2 py-2 text-right font-bold font-mono text-xs">
-                    {formatCurrency(discountedTotal)}
+                    {formatCurrency(discountedTotal, data.currency)}
                   </td>
                 </tr>
               );
@@ -234,7 +234,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                 <td className="border p-3 text-center">
                   {item.quantity} {(item as any).unit || t('piece')}
                 </td>
-                <td className="border p-3 text-right">{formatCurrency(item.unitPrice)}</td>
+                <td className="border p-3 text-right">{formatCurrency(item.unitPrice, data.currency)}</td>
                 {hasAnyDiscount && (
                   <td className="border p-3 text-right">
                     {hasDiscount ? (
@@ -252,13 +252,13 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                 <td className="border p-3 text-right">
                   {hasDiscount ? (
                     <span className="font-semibold text-red-600">
-                      {formatCurrency(totalWithDiscount)}
+                      {formatCurrency(totalWithDiscount, data.currency)}
                     </span>
                   ) : (
                     <span
                       className={item.category === 'discount' ? 'font-semibold text-red-600' : ''}
                     >
-                      {formatCurrency(item.total)}
+                      {formatCurrency(item.total, data.currency)}
                     </span>
                   )}
                 </td>

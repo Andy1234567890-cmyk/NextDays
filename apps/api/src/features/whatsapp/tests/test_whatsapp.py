@@ -16,10 +16,43 @@ def test_whatsapp_health() -> None:
     assert resp.json() == {"slice": "whatsapp", "status": "ok"}
 
 
-def test_webhook_verify_rejects_wrong_token() -> None:
+def _patch_verify_token(monkeypatch, token: str) -> None:  # noqa: ANN001
+    """whatsapp_verify_token für den Verify-Handshake setzen."""
+    from src.features.whatsapp import router as wa_router
+
+    fake = type("S", (), {})()
+    fake.whatsapp_verify_token = type(
+        "Sec", (), {"get_secret_value": lambda self: token}
+    )()
+    monkeypatch.setattr(wa_router, "get_settings", lambda: fake)
+
+
+def test_webhook_verify_rejects_wrong_token(monkeypatch) -> None:  # noqa: ANN001
+    _patch_verify_token(monkeypatch, "richtig")
     resp = client.get(
         "/api/v1/whatsapp/webhook",
         params={"hub.mode": "subscribe", "hub.verify_token": "falsch", "hub.challenge": "123"},
+    )
+    assert resp.status_code == 403
+
+
+def test_webhook_verify_accepts_correct_token(monkeypatch) -> None:  # noqa: ANN001
+    """Korrekter Token → 200 + Challenge (konstant-zeitiger Vergleich)."""
+    _patch_verify_token(monkeypatch, "richtig")
+    resp = client.get(
+        "/api/v1/whatsapp/webhook",
+        params={"hub.mode": "subscribe", "hub.verify_token": "richtig", "hub.challenge": "xyz"},
+    )
+    assert resp.status_code == 200
+    assert resp.text == "xyz"
+
+
+def test_webhook_verify_rejects_empty_token(monkeypatch) -> None:  # noqa: ANN001
+    """Leerer/fehlender Request-Token wird abgelehnt, auch bei leerem Erwartungswert."""
+    _patch_verify_token(monkeypatch, "")
+    resp = client.get(
+        "/api/v1/whatsapp/webhook",
+        params={"hub.mode": "subscribe", "hub.verify_token": "", "hub.challenge": "123"},
     )
     assert resp.status_code == 403
 

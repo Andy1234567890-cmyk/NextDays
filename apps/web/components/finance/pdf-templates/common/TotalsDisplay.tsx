@@ -81,7 +81,7 @@ export const TotalsDisplay: React.FC<TotalsDisplayProps> = ({
           <div className="space-y-3">
             <div className="flex justify-between py-1 text-sm">
               <span>{t('subtotal')}:</span>
-              <span>{formatCurrency(data.subtotal)}</span>
+              <span>{formatCurrency(data.subtotal, data.currency)}</span>
             </div>
             {taxLines.map(tax => (
               <div
@@ -89,24 +89,24 @@ export const TotalsDisplay: React.FC<TotalsDisplayProps> = ({
                 className="flex justify-between py-1 text-sm"
               >
                 <span>{t('vatAmount')} ({tax.rate}%):</span>
-                <span>{formatCurrency(tax.taxAmount)}</span>
+                <span>{formatCurrency(tax.taxAmount, data.currency)}</span>
               </div>
             ))}
             <div className="my-3 h-px bg-linear-to-r from-transparent via-gray-300 to-transparent" />
             <div className="flex justify-between py-2 font-bold text-lg" style={{ color }}>
               <span>{t('totalAmount')}:</span>
-              <span>{formatCurrency(data.total)}</span>
+              <span>{formatCurrency(data.total, data.currency)}</span>
             </div>
             {data.skontoEnabled && data.skontoDays && data.skontoPercentage && (
               <div className="mt-4 border-t pt-3" style={{ borderColor: color }}>
                 <div className="flex justify-between py-1 text-green-700 text-sm">
                   <span>{t('skonto')} ({data.skontoPercentage}%):</span>
-                  <span>-{formatCurrency(data.total * (data.skontoPercentage / 100))}</span>
+                  <span>-{formatCurrency(data.total * (data.skontoPercentage / 100), data.currency)}</span>
                 </div>
                 <div className="flex justify-between py-1 font-bold text-green-800 text-sm">
                   <span>{t('ifPaidBy')} {getSkontoDate(skontoDays)}:</span>
                   <span>
-                    {formatCurrency(data.total - data.total * (data.skontoPercentage / 100))}
+                    {formatCurrency(data.total - data.total * (data.skontoPercentage / 100), data.currency)}
                   </span>
                 </div>
               </div>
@@ -124,7 +124,7 @@ export const TotalsDisplay: React.FC<TotalsDisplayProps> = ({
           <div className="space-y-2">
             <div className="flex justify-between py-0.5 text-xs">
               <span>{t('subtotal')}:</span>
-              <span>{formatCurrency(data.subtotal)}</span>
+              <span>{formatCurrency(data.subtotal, data.currency)}</span>
             </div>
             {taxLines.map(tax => (
               <div
@@ -132,24 +132,24 @@ export const TotalsDisplay: React.FC<TotalsDisplayProps> = ({
                 className="flex justify-between py-0.5 text-xs"
               >
                 <span>{t('vatAmount')} ({tax.rate}%):</span>
-                <span>{formatCurrency(tax.taxAmount)}</span>
+                <span>{formatCurrency(tax.taxAmount, data.currency)}</span>
               </div>
             ))}
             <div className="my-2 h-px bg-linear-to-r from-transparent via-gray-300 to-transparent" />
             <div className="flex justify-between py-1 font-bold text-sm" style={{ color }}>
               <span>{t('totalAmount')}:</span>
-              <span>{formatCurrency(data.total)}</span>
+              <span>{formatCurrency(data.total, data.currency)}</span>
             </div>
             {data.skontoEnabled && data.skontoDays && data.skontoPercentage && (
               <div className="mt-2 border-t pt-2" style={{ borderColor: color }}>
                 <div className="flex justify-between py-0.5 text-green-700 text-xs">
                   <span>{t('skonto')} ({data.skontoPercentage}%):</span>
-                  <span>-{formatCurrency(data.total * (data.skontoPercentage / 100))}</span>
+                  <span>-{formatCurrency(data.total * (data.skontoPercentage / 100), data.currency)}</span>
                 </div>
                 <div className="flex justify-between py-0.5 font-medium text-green-800 text-xs">
                   <span>{t('ifPaidBy')} {getSkontoDate(skontoDays)}:</span>
                   <span>
-                    {formatCurrency(data.total - data.total * (data.skontoPercentage / 100))}
+                    {formatCurrency(data.total - data.total * (data.skontoPercentage / 100), data.currency)}
                   </span>
                 </div>
               </div>
@@ -165,27 +165,27 @@ export const TotalsDisplay: React.FC<TotalsDisplayProps> = ({
     <div className={`w-64 shrink-0 ${className}`}>
       <div className="flex justify-between py-2">
         <span>{t('subtotal')}:</span>
-        <span>{formatCurrency(data.subtotal)}</span>
+        <span>{formatCurrency(data.subtotal, data.currency)}</span>
       </div>
       {taxLines.map(tax => (
         <div key={`${tax.rate}-${tax.taxAmount}`} className="flex justify-between py-2">
           <span>{t('vatAmount')} ({tax.rate}%):</span>
-          <span>{formatCurrency(tax.taxAmount)}</span>
+          <span>{formatCurrency(tax.taxAmount, data.currency)}</span>
         </div>
       ))}
       <div className="flex justify-between border-t py-2 font-bold text-lg">
         <span>{t('totalAmount')}:</span>
-        <span>{formatCurrency(data.total)}</span>
+        <span>{formatCurrency(data.total, data.currency)}</span>
       </div>
       {data.skontoEnabled && data.skontoDays && data.skontoPercentage && (
         <div className="mt-2 border-gray-300 border-t pt-2">
           <div className="flex justify-between py-1 text-green-700 text-sm">
             <span>{t('skonto')} ({data.skontoPercentage}%):</span>
-            <span>-{formatCurrency(data.total * (data.skontoPercentage / 100))}</span>
+            <span>-{formatCurrency(data.total * (data.skontoPercentage / 100), data.currency)}</span>
           </div>
           <div className="flex justify-between border-green-200 border-t py-1 font-bold text-green-800">
             <span>{t('ifPaidBy')} {getSkontoDate(skontoDays)}:</span>
-            <span>{formatCurrency(data.total - data.total * (data.skontoPercentage / 100))}</span>
+            <span>{formatCurrency(data.total - data.total * (data.skontoPercentage / 100), data.currency)}</span>
           </div>
         </div>
       )}

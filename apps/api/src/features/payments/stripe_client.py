@@ -81,6 +81,18 @@ def create_payment_intent(
     return {"id": pi.id, "client_secret": pi.client_secret, "status": pi.status}
 
 
+def retrieve_payment_intent(
+    intent_id: str,
+    *,
+    client: StripeClient | None = None,
+) -> dict[str, Any]:
+    """Bestehenden PaymentIntent laden (für Idempotenz: einen offenen Intent
+    einer Buchung wiederverwenden statt einen zweiten zu erzeugen)."""
+    stripe = client or get_stripe()
+    pi = stripe.v1.payment_intents.retrieve(intent_id)
+    return {"id": pi.id, "client_secret": pi.client_secret, "status": pi.status}
+
+
 def capture_payment_intent(
     intent_id: str,
     amount_cents: int | None = None,

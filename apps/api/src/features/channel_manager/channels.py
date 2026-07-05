@@ -422,6 +422,20 @@ class ChannelsMixin:
         """Kanal trennen: erst deaktivieren (sonst 422 'is active'), dann löschen."""
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
+        # ZUERST Tenant-Eigentum prüfen (IDOR-Schutz): der channel_id kommt aus
+        # dem Pfad. Ohne diese Prüfung könnte ein Tenant über eine fremde
+        # Channex-Channel-ID den OTA-Kanal eines ANDEREN Betriebs deaktivieren/
+        # löschen (die Channex-Calls laufen mit dem geteilten Account-Key).
+        owns = (
+            db.table("channex_channel_connection")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("channex_channel_id", channel_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not owns:
+            raise ChannelManagerError("Kanal nicht gefunden.", status_code=404)
         try:
             self._channex.deactivate_channel(channel_id)
         except ChannexError as exc:

@@ -18,7 +18,7 @@ import {
 } from "@/lib/calendar";
 import { dateKey } from "@/lib/calendar-views";
 import { formatCurrency } from "@/lib/utils";
-import { type Reservation, listReservations } from "@/lib/reservations";
+import { getBoard } from "@/lib/calendar";
 import { useRealtime } from "@/lib/use-realtime";
 
 const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
@@ -85,9 +85,11 @@ export function CalendarMonthGridView({
     const startKey = dateKey(start);
     const endKey = dateKey(endExcl);
 
-    const [av, resv] = await Promise.all([
+    const [av, board] = await Promise.all([
       getAvailability(propertyId, startKey, endKey),
-      listReservations(propertyId),
+      // Board liefert die Objekt-Währung aus dem Rate-Plan (zuverlässige
+      // Preisquelle, unabhängig von Buchungen) — nicht mehr aus Reservierungen.
+      getBoard([propertyId], startKey, endKey),
     ]);
 
     if (av.ok) {
@@ -95,11 +97,9 @@ export function CalendarMonthGridView({
       for (const d of av.data) map[d.date] = d;
       setDays(map);
     }
-    // Währung aus den Buchungsdaten des Objekts (kein €-Hardcode); ohne Buchung
-    // bleibt sie null → Preis wird ohne erfundenes Symbol gezeigt.
-    if (resv.ok) {
-      const withCur = resv.data.items.find((r) => r.currency);
-      setCurrency(withCur?.currency ?? null);
+    if (board.ok) {
+      const item = board.data.items.find((it) => it.property_id === propertyId);
+      setCurrency(item?.currency ?? null);
     }
     setLoading(false);
   }, [propertyId, start, weeks]);

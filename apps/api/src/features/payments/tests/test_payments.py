@@ -463,3 +463,37 @@ def test_refund_cross_tenant_is_blocked() -> None:
     with pytest.raises(PaymentsError) as exc:
         svc.refund_payment(_OTHER, "pay-1")
     assert exc.value.status_code == 404
+
+
+def test_webhook_partial_refund_marks_partially_refunded() -> None:
+    """charge.refunded mit amount_refunded < amount → partially_refunded,
+    NICHT refunded (Stripe feuert charge.refunded auch bei Teilerstattung)."""
+    db = _DB()
+    db.store["payments"] = [
+        {"id": "pay-1", "reservation_id": "res-1", "gateway_ref": "pi_abc",
+         "status": "succeeded"}
+    ]
+    db.store["reservations"] = [{"id": "res-1", "payment_status": "paid"}]
+    event = {
+        "id": "evt_pr", "type": "charge.refunded",
+        "data": {"object": {"id": "ch_1", "payment_intent": "pi_abc",
+                            "amount": 20000, "amount_refunded": 5000}},
+    }
+    handle_stripe_event(db, event, now_iso="2026-06-30T00:00:00Z")
+    assert db.store["reservations"][0]["payment_status"] == "partially_refunded"
+
+
+def test_webhook_full_refund_marks_refunded() -> None:
+    db = _DB()
+    db.store["payments"] = [
+        {"id": "pay-1", "reservation_id": "res-1", "gateway_ref": "pi_abc",
+         "status": "succeeded"}
+    ]
+    db.store["reservations"] = [{"id": "res-1", "payment_status": "paid"}]
+    event = {
+        "id": "evt_fr", "type": "charge.refunded",
+        "data": {"object": {"id": "ch_1", "payment_intent": "pi_abc",
+                            "amount": 20000, "amount_refunded": 20000}},
+    }
+    handle_stripe_event(db, event, now_iso="2026-06-30T00:00:00Z")
+    assert db.store["reservations"][0]["payment_status"] == "refunded"

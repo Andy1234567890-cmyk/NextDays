@@ -290,7 +290,11 @@ def test_public_booking_maps_rpc_conflict_to_409(monkeypatch) -> None:  # noqa: 
     })
 
     svc = BookingEngineService(service_client=db)
-    monkeypatch.setattr(svc, "_property_tenant", lambda *_a: "t-1")
+    monkeypatch.setattr(
+        svc,
+        "_public_property",
+        lambda *_a: {"tenant_id": "t-1", "status": "active", "max_guests": 6},
+    )
     monkeypatch.setattr(svc, "_upsert_guest", lambda *_a: None)
     # Preis kommt serverseitig aus dem Resolver — Quote mocken.
     from types import SimpleNamespace
@@ -335,3 +339,80 @@ def test_property_tenant_rejects_non_active() -> None:
     assert _svc("active")._property_tenant("p-1") == "t-1"
     assert _svc("draft")._property_tenant("p-1") is None
     assert _svc("inactive")._property_tenant("p-1") is None
+
+
+def test_public_booking_rejects_overcapacity(monkeypatch) -> None:
+    """Mehr Gäste als max_guests → 422, BEVOR Kalender/Reservierung geschrieben wird."""
+    from datetime import date as _date
+    from unittest.mock import MagicMock
+
+    import pytest
+
+    from src.features.booking_engine.schemas import (
+        GuestContact,
+        PublicBookingRequest,
+    )
+    from src.features.booking_engine.service import (
+        BookingEngineError,
+        BookingEngineService,
+    )
+
+    db = MagicMock(name="db")
+    svc = BookingEngineService(service_client=db)
+    monkeypatch.setattr(
+        svc,
+        "_public_property",
+        lambda *_a: {"tenant_id": "t-1", "status": "active", "max_guests": 4},
+    )
+    req = PublicBookingRequest(
+        property_id="p-1",
+        check_in=_date(2099, 8, 1),
+        check_out=_date(2099, 8, 3),
+        guests=5,
+        contact=GuestContact(
+            first_name="Max", last_name="Gast", email="max@example.com",
+        ),
+    )
+    with pytest.raises(BookingEngineError) as exc:
+        svc.create_public_booking(req)
+    assert exc.value.status_code == 422
+    # Kein Schreibpfad angefasst (kein RPC, keine availability-Query).
+    db.rpc.assert_not_called()
+
+
+def test_public_booking_rejects_past_check_in(monkeypatch) -> None:
+    """Anreise in der Vergangenheit → 422 (keine availability-Zeilen für alte Tage)."""
+    from datetime import date as _date
+    from unittest.mock import MagicMock
+
+    import pytest
+
+    from src.features.booking_engine.schemas import (
+        GuestContact,
+        PublicBookingRequest,
+    )
+    from src.features.booking_engine.service import (
+        BookingEngineError,
+        BookingEngineService,
+    )
+
+    db = MagicMock(name="db")
+    svc = BookingEngineService(service_client=db)
+    monkeypatch.setattr(
+        svc,
+        "_public_property",
+        lambda *_a: {"tenant_id": "t-1", "status": "active", "max_guests": 4},
+    )
+    req = PublicBookingRequest(
+        property_id="p-1",
+        check_in=_date(2000, 1, 1),
+        check_out=_date(2000, 1, 3),
+        guests=2,
+        contact=GuestContact(
+            first_name="Max", last_name="Gast", email="max@example.com",
+        ),
+    )
+    with pytest.raises(BookingEngineError) as exc:
+        svc.create_public_booking(req)
+    assert exc.value.status_code == 422
+    db.rpc.assert_not_called()

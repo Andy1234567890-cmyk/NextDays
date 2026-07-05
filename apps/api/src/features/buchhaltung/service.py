@@ -544,20 +544,29 @@ class BuchhaltungService:
             payload.get("isSmallBusiness") or payload.get("is_kleinunternehmer")
         )
         status = payload.get("status") or "draft"
-        # GoBD-Nummer NUR bei Finalisierung und NUR serverseitig atomar ziehen —
-        # nie die (fälschbare/fabrizierte) Client-Nummer übernehmen. Entwürfe
-        # bekommen KEINE Nummer (sonst reißt jeder verworfene Entwurf eine
-        # dauerhafte Lücke in den fortlaufenden Nummernkreis).
-        invoice_number = None
-        invoice_sequence = None
-        if status != "draft":
-            num = self.next_number(ctx, "Rechnung")
-            invoice_number = num["formattedNumber"]
-            invoice_sequence = num["sequentialNumber"]
+
+        # Client-übergebenen Debitor gegen den Tenant prüfen (kein fremder Kunde):
+        # ohne diese Prüfung landete eine beliebige customer_id im Beleg. Der aus
+        # der Buchung abgeleitete Debitor (unten) ist immer tenant-eigen und wird
+        # nicht erneut geprüft.
+        customer_id = payload.get("customerId") or payload.get("customer_id")
+        if customer_id:
+            cust_rows = (
+                self._db.table("customers")
+                .select("id")
+                .eq("id", customer_id)
+                .eq("tenant_id", tenant_id)
+                .limit(1)
+                .execute()
+            ).data
+            if not cust_rows:
+                raise BuchhaltungError("Kunde nicht gefunden.", status_code=404)
 
         # Buchungs-Brücke: „Rechnung aus Buchung" aus dem Formular. Regeln wie
         # beim Check-out: Buchung muss dem Tenant gehören, eingecheckt und
         # nicht storniert sein; nur EINE aktive Rechnung je Buchung (0092).
+        # WICHTIG: die gesamte Validierung läuft VOR dem Ziehen der GoBD-Nummer —
+        # scheitert sie, darf keine fortlaufende Nummer verbrannt sein (Lücke).
         reservation_id = payload.get("reservationId") or payload.get("reservation_id")
         if reservation_id:
             res_rows = (
@@ -611,6 +620,19 @@ class BuchhaltungService:
                         reservation_id=reservation_id,
                         reason=exc.message,
                     )
+
+        # GoBD-Nummer NUR bei Finalisierung und NUR serverseitig atomar ziehen —
+        # nie die (fälschbare/fabrizierte) Client-Nummer übernehmen. Entwürfe
+        # bekommen KEINE Nummer (sonst reißt jeder verworfene Entwurf eine
+        # dauerhafte Lücke in den fortlaufenden Nummernkreis). ERST HIER — nach
+        # aller Validierung —, sodass eine gescheiterte Prüfung keine Nummer
+        # verbrennt (sonst entstünde eine dauerhafte Lücke im Nummernkreis).
+        invoice_number = None
+        invoice_sequence = None
+        if status != "draft":
+            num = self.next_number(ctx, "Rechnung")
+            invoice_number = num["formattedNumber"]
+            invoice_sequence = num["sequentialNumber"]
 
         row = {
             "tenant_id": tenant_id,
@@ -723,14 +745,19 @@ class BuchhaltungService:
         tenant_id = self._require_tenant(ctx)
         existing = (
             self._db.table("invoices")
-            .select("is_locked")
+            .select("is_locked, status, invoice_number")
             .eq("id", invoice_id).eq("tenant_id", tenant_id).limit(1).execute()
         )
         if not existing.data:
             raise BuchhaltungError("Rechnung nicht gefunden.", status_code=404)
-        if existing.data[0].get("is_locked"):
-            raise BuchhaltungError("Rechnung ist festgeschrieben (GoBD).", status_code=409)
-
+        row = existing.data[0]
+        # Festgeschrieben = is_locked ODER Status ≠ draft ODER Nummer vergeben
+        # (is_locked allein reicht als Gate NICHT — wird nie gesetzt).
+        is_finalized = (
+            bool(row.get("is_locked"))
+            or row.get("status") not in self._MUTABLE_INVOICE_STATUSES
+            or bool(row.get("invoice_number"))
+        )
         allowed = {
             "status": payload.get("status"),
             "e_invoice_xml": payload.get("eInvoiceXml") or payload.get("e_invoice_xml"),
@@ -739,6 +766,16 @@ class BuchhaltungService:
             "notes": payload.get("notes"),
         }
         allowed = {k: v for k, v in allowed.items() if v is not None}
+        if is_finalized:
+            # An festgeschriebenen Belegen nur technische Anlagen nachtragbar
+            # (E-Rechnungs-XML/-Format, PDF-URL); Status/Notizen/Inhalt sind tabu.
+            forbidden = set(allowed) - {"e_invoice_xml", "e_invoice_format", "pdf_url"}
+            if forbidden:
+                raise BuchhaltungError(
+                    "Festgeschriebene Rechnung: nur E-Rechnungs-Anlagen "
+                    "nachtragbar, keine inhaltlichen Änderungen.",
+                    status_code=409,
+                )
         if allowed:
             self._db.table("invoices").update(allowed).eq("id", invoice_id).eq(
                 "tenant_id", tenant_id

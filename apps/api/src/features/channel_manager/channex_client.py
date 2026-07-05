@@ -18,14 +18,48 @@ Beträge: Channex akzeptiert Cent-Integer (20000 = 200,00) ODER Dezimal-String
 from __future__ import annotations
 
 import time
-from typing import Any
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
 import httpx
 
 from src.core.config import get_settings
 from src.core.logging import get_logger
 
+if TYPE_CHECKING:
+    from src.jobs.channex_budget import BudgetDecision
+
 log = get_logger("nextdays.channex")
+
+# Callback-Signatur des kontoweiten Channex-Budgets: bekommt die (optionale)
+# Channex-Property-ID des anstehenden Calls, gibt eine BudgetDecision zurück.
+# So kann JEDER echte HTTP-Call (nicht nur der erste Job-Schritt) ein Token
+# ziehen — sonst umgeht ein Batch-Job (reconcile_tenant, process_ari_outbox)
+# mit N Calls das Konto-Limit für 1 Token.
+BudgetCallback = Callable[[str | None], "BudgetDecision"]
+
+
+def _budget_property_id(
+    params: dict[str, Any] | None, json: dict[str, Any] | None
+) -> str | None:
+    """Channex-Property-ID des anstehenden Calls für die Property-Budget-Ebene
+    ermitteln (best effort). ARI-Pushes tragen sie je Eintrag in
+    ``values[].property_id`` (availability/restrictions), Reads im Query-Filter
+    ``filter[property_id]``. Findet sich keine (z. B. Gruppen-/Property-Liste),
+    zählt der Call nur auf der Konto-Ebene — das Konto-Limit greift IMMER."""
+    if params:
+        pid = params.get("filter[property_id]")
+        if isinstance(pid, str) and pid:
+            return pid
+    if json:
+        values = json.get("values")
+        if isinstance(values, list):
+            for entry in values:
+                if isinstance(entry, dict):
+                    pid = entry.get("property_id")
+                    if isinstance(pid, str) and pid:
+                        return pid
+    return None
 
 
 class ChannexError(Exception):
@@ -50,6 +84,29 @@ class ChannexError(Exception):
         self.payload = payload
 
 
+class ChannexBudgetExhausted(Exception):
+    """Kontoweites Channex-Token-Budget vor einem Call erschöpft.
+
+    Wird geworfen, wenn das Budget-Callback einen Call ablehnt und auch die
+    gedeckelte Kurz-Wartezeit kein Token freigab. Der Worker behandelt das als
+    retry-würdig → der laufende (Batch-)Job wird verzögert (deferred), statt
+    Channex mit weiteren Calls zu überfahren. `retry_after` = Sekunden, bis
+    frühestens wieder ein Token frei wird.
+
+    BEWUSST KEINE Unterklasse von ChannexError: die Batch-Handler (reconcile,
+    process_ari_outbox) fangen ChannexError intern ab (echter Push-Fehler →
+    Zeile failed / Reconcile no-op). Eine Budget-Erschöpfung ist aber KEIN
+    Push-Fehler, sondern muss ungefiltert bis zum Worker durchschlagen, damit
+    der GANZE Job verzögert wird — nicht einzelne Zeilen als „fehlgeschlagen"
+    markiert werden. Als eigenständige Exception passiert genau das.
+    """
+
+    def __init__(self, message: str, *, retry_after: int) -> None:
+        super().__init__(message)
+        self.message = message
+        self.retry_after = retry_after
+
+
 class ChannexClient:
     """Dünner, synchroner Client um die Channex-API.
 
@@ -61,17 +118,30 @@ class ChannexClient:
     # 429-Backoff: Channex empfiehlt ~1 Min Pause. Wir staffeln vorsichtig.
     _RETRY_BACKOFF_SECONDS = (2.0, 5.0, 15.0)
 
+    # Budget-Ablehnung: max. so viele kurze Waits im Request-Thread, bevor der
+    # Call als ChannexBudgetExhausted abgebrochen wird (→ Job-Retry statt den
+    # Event-Loop/Thread über Sekunden zu blockieren). Der Job wacht dann per
+    # retry_after wieder auf. Deckel je Wait, damit ein volles Fenster (z. B.
+    # 60 s) nicht sekundenlang im Thread hängt.
+    _BUDGET_MAX_WAITS = 2
+    _BUDGET_WAIT_CAP_SECONDS = 1.0
+
     def __init__(
         self,
         *,
         api_key: str | None = None,
         base_url: str | None = None,
         timeout: float = 30.0,
+        before_call: BudgetCallback | None = None,
     ) -> None:
         settings = get_settings()
         self._api_key = api_key or settings.channex_api_key.get_secret_value()
         self._base_url = (base_url or settings.channex_base_url).rstrip("/")
         self._timeout = timeout
+        # Optionales Budget-Callback: der Worker reicht hier das kontoweite
+        # Channex-Token-Budget durch. Ohne Callback (Request-Pfad, Tests) läuft
+        # der Client unverändert — jeder echte HTTP-Call geht ohne Token-Gate.
+        self._before_call = before_call
 
     @property
     def is_configured(self) -> bool:
@@ -112,6 +182,11 @@ class ChannexClient:
         else:
             headers["user-api-key"] = self._api_key
 
+        # Kontoweites Budget VOR dem echten HTTP-Call ziehen (falls ein Callback
+        # gesetzt ist). So zahlt JEDER Call ein Token — Batch-Jobs mit N Calls
+        # umgehen das Konto-Limit nicht mehr über das einmalige Vorab-Gate.
+        self._acquire_budget(_budget_property_id(params, json))
+
         last_exc: Exception | None = None
         # +1 finaler Versuch nach allen Backoffs.
         for attempt in range(len(self._RETRY_BACKOFF_SECONDS) + 1):
@@ -145,6 +220,36 @@ class ChannexClient:
         raise ChannexError(
             "Channex-Aufruf fehlgeschlagen.", status_code=502
         ) from last_exc
+
+    def _acquire_budget(self, channex_property_id: str | None) -> None:
+        """Vor jedem echten HTTP-Call ein Token aus dem kontoweiten Budget ziehen.
+
+        Ohne gesetztes Callback (Request-Pfad, Tests) passiert nichts. Wird der
+        Call abgelehnt, warten wir GEDECKELT ein paar Mal kurz (ein Fenster kann
+        gerade abgelaufen sein); gibt das Budget dann immer noch kein Token her,
+        werfen wir ChannexBudgetExhausted → der Worker verzögert den Job (statt
+        den Thread über Sekunden zu blockieren oder Channex zu überfahren).
+        """
+        if self._before_call is None:
+            return
+        for _ in range(self._BUDGET_MAX_WAITS + 1):
+            decision = self._before_call(channex_property_id)
+            if decision.allowed:
+                return
+            wait = min(max(decision.retry_after, 0), self._BUDGET_WAIT_CAP_SECONDS)
+            if wait <= 0:
+                break
+            log.info(
+                "channex_budget_wait",
+                property_id=channex_property_id,
+                retry_after=decision.retry_after,
+            )
+            time.sleep(wait)
+        # Nach den gedeckelten Waits immer noch kein Token → Job-Retry auslösen.
+        raise ChannexBudgetExhausted(
+            "Channex-Budget erschöpft — Call verzögert.",
+            retry_after=max(decision.retry_after, 1),
+        )
 
     def _handle_response(self, resp: httpx.Response, url: str) -> dict[str, Any]:
         try:

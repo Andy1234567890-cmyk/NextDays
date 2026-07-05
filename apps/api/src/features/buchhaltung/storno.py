@@ -114,7 +114,32 @@ def create_storno_invoice(
         ),
     }
     storno_row = {k: v for k, v in storno_row.items() if v is not None}
-    ins = db.table("invoices").insert(storno_row).execute()
+    try:
+        ins = db.table("invoices").insert(storno_row).execute()
+    except APIError as exc:
+        # Doppel-Storno-Race (0110 Unique-Index): ein paralleler Request hat den
+        # Storno schon angelegt. Idempotent den existierenden zurückgeben statt
+        # eine zweite Gutschrift zu erzeugen.
+        if "invoices_storno_per_original_uidx" not in str(exc):
+            raise
+        dupe = (
+            db.table("invoices")
+            .select("*")
+            .eq("tenant_id", tenant_id)
+            .eq("original_invoice_id", invoice_id)
+            .eq("invoice_type", "storno")
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        ).data
+        if dupe:
+            db.table("invoices").update(
+                {"status": "cancelled", "storno_reason": clean_reason}
+            ).eq("id", invoice_id).eq("tenant_id", tenant_id).execute()
+            return _storno_response(db, tenant_id, dupe[0])
+        raise BuchhaltungError(
+            "Stornorechnung konnte nicht gespeichert werden.", status_code=500
+        ) from exc
     if not ins.data:
         raise BuchhaltungError(
             "Stornorechnung konnte nicht gespeichert werden.", status_code=500

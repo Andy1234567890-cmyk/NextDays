@@ -255,6 +255,12 @@ export function LivePreviewModal({
         setEpcQrCodeUrl(null);
         return;
       }
+      // EPC/Girocode unterstützt nur EUR — bei Fremdwährung keinen QR erzeugen.
+      const docCurrency = ((invoiceData as { currency?: string }).currency || '').toUpperCase();
+      if (docCurrency && docCurrency !== 'EUR') {
+        setEpcQrCodeUrl(null);
+        return;
+      }
       const epcData = [
         'BCD',
         '002',

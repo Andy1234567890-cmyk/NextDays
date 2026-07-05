@@ -80,6 +80,10 @@ class BoardProperty(BaseModel):
     zugrundeliegenden Tabellen mit wenigen `.in_(property_ids)`-Queries statt mit
     6 Queries pro Objekt."""
     property_id: str
+    # Objekt-Währung (aus dem Rate-Plan) für die Tagespreis-Anzeige — damit das
+    # Frontend die Währung nicht mehr behelfsweise aus Reservierungen ableitet
+    # (Objekte ohne Buchung hätten sonst keine Währung).
+    currency: str | None = None
     days: list[DayAvailability] = []
     stop_sell: list["StopSellDay"] = []
 

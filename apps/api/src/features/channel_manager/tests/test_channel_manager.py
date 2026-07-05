@@ -180,6 +180,10 @@ class _ReconcileQuery:
         self._filters.append(("eq", field, value, False))
         return self
 
+    def neq(self, field, value):  # noqa: ANN001, ANN201
+        self._filters.append(("neq", field, value, False))
+        return self
+
     def in_(self, field, values):  # noqa: ANN001, ANN201
         self._filters.append(("in", field, values, False))
         return self
@@ -207,6 +211,8 @@ class _ReconcileQuery:
         for kind, field, value, neg in self._filters:
             if kind == "eq":
                 ok = row.get(field) == value
+            elif kind == "neq":
+                ok = row.get(field) != value
             elif kind == "in":
                 ok = row.get(field) in value
             elif kind == "isnull":
@@ -1136,6 +1142,57 @@ def test_set_connection_active_unknown_connection_404() -> None:
         raise AssertionError("fremder/unbekannter Kanal muss 404 liefern")
 
 
+def test_connect_property_rejects_foreign_channex_id() -> None:
+    """Eine channex_property_id, die einem FREMDEN Tenant gehört, darf nicht per
+    client-übergebener external_property_ref übernommen/überschrieben werden (409)."""
+    from src.features.channel_manager.schemas import PropertyConnectRequest
+
+    db = _ImportDB()
+    # Eigenes Objekt von t1.
+    db.tables["properties"].append(
+        {"id": "p1", "tenant_id": "t1", "title": "Haus", "currency": "EUR"}
+    )
+    # Fremdes, bereits verbundenes Mapping von t2 mit derselben Channex-ID.
+    db.tables["channex_property_map"].append(
+        {"id": "m-foreign", "tenant_id": "t2", "property_id": "p-foreign",
+         "channex_property_id": "cx-shared", "deleted_at": None}
+    )
+    ctx = AuthContext(user_id="u", tenant_id="t1")
+    channex = _ImportChannex()
+    req = PropertyConnectRequest(property_id="p1", external_property_ref="cx-shared")
+    try:
+        _import_svc(channex, db).connect_property(ctx, req)
+    except ChannelManagerError as exc:
+        assert exc.status_code == 409
+    else:
+        raise AssertionError("fremde channex_property_id muss 409 liefern")
+    # Das fremde Mapping bleibt unverändert bei t2 (nicht übernommen).
+    foreign = db.tables["channex_property_map"][0]
+    assert foreign["tenant_id"] == "t2"
+    # Kein neues Mapping für t1 entstanden.
+    assert len(db.tables["channex_property_map"]) == 1
+
+
+def test_connect_property_reuses_own_channex_id() -> None:
+    """Dieselbe channex_property_id des EIGENEN Tenants ist erlaubt (Re-Connect)."""
+    from src.features.channel_manager.schemas import PropertyConnectRequest
+
+    db = _ImportDB()
+    db.tables["properties"].append(
+        {"id": "p1", "tenant_id": "t1", "title": "Haus", "currency": "EUR"}
+    )
+    db.tables["channex_property_map"].append(
+        {"id": "m1", "tenant_id": "t1", "property_id": "p1",
+         "channex_property_id": "cx-own", "deleted_at": None}
+    )
+    ctx = AuthContext(user_id="u", tenant_id="t1")
+    channex = _ImportChannex()
+    req = PropertyConnectRequest(property_id="p1", external_property_ref="cx-own")
+    res = _import_svc(channex, db).connect_property(ctx, req)
+    assert res.property_id == "p1"
+    assert len(db.tables["channex_property_map"]) == 1
+
+
 class _ResyncChannex(_ImportChannex):
     """Wie _ImportChannex, zeichnet aber den Availability-Pull (Resync) auf."""
 
@@ -1720,3 +1777,109 @@ def test_to_booking_masks_customer_via_mixin() -> None:
     assert booking.external_id == "cx-1"
     # Maskierung greift: voller Name/Kontakt sind ohne Rechte nicht sichtbar.
     assert booking.customer.get("mail") is None or booking.customer.get("mail") == ""
+
+
+# --- Kontoweites Channex-Budget: PRO-CALL-Gate (Bypass-Fix) ------------------
+# Regression für den Batch-Bypass: früher zog der Worker EIN Token vor dem
+# Handler; ein Batch-Job (process_ari_outbox mit bis zu 200 Zeilen, reconcile
+# über hunderte Objekte) feuerte danach N Channex-Calls für dieses 1 Token und
+# umging das kontoweite Limit. Der Fix zieht ein Token PRO ECHTEM HTTP-CALL im
+# ChannexClient (before_call-Callback); erschöpftes Budget → ChannexBudgetExhausted.
+
+def _budget_client(*, allow: bool):  # noqa: ANN202
+    """Realer ChannexClient mit gesetztem before_call. `allow=False` verweigert
+    jedes Token (deny-all), damit KEIN echter HTTP-Call passiert. api_key gesetzt
+    → is_configured, damit die Handler nicht schon am Konfig-Gate no-oppen.
+
+    retry_after=0 bei Ablehnung: kein Kurz-Wait (die Waits sind für „Fenster
+    gleich frei"-Fälle da), damit der Test ohne echte time.sleep-Wartezeit
+    genau EINEN before_call-Aufruf je HTTP-Call sieht."""
+    from src.features.channel_manager.channex_client import ChannexClient
+    from src.jobs.channex_budget import BudgetDecision
+
+    calls: list[str | None] = []
+
+    def before_call(channex_property_id):  # noqa: ANN001, ANN202
+        calls.append(channex_property_id)
+        return BudgetDecision(allowed=allow, retry_after=0)
+
+    client = ChannexClient(
+        api_key="test-key", base_url="https://channex.test/api/v1",
+        before_call=before_call,
+    )
+    return client, calls
+
+
+def test_channex_client_raises_when_budget_exhausted_without_http() -> None:
+    from unittest.mock import patch
+
+    from src.features.channel_manager.channex_client import ChannexBudgetExhausted
+
+    client, calls = _budget_client(allow=False)
+    # httpx darf gar nicht erst aufgerufen werden — der Budget-Gate schlägt davor zu.
+    with patch("httpx.Client") as httpx_client:
+        try:
+            client.update_availability(
+                [{"property_id": "cx-prop", "room_type_id": "cx-rt",
+                  "date_from": "2026-06-23", "date_to": "2026-06-25", "availability": 0}]
+            )
+        except ChannexBudgetExhausted as exc:
+            assert exc.retry_after >= 1
+        else:
+            raise AssertionError("erschöpftes Budget muss ChannexBudgetExhausted werfen")
+    httpx_client.assert_not_called()  # KEIN Channex-Call trotz Aufruf
+    # Property-Ebene: die channex_property_id aus values[] wurde durchgereicht.
+    assert calls == ["cx-prop"]
+
+
+def test_process_ari_outbox_stops_at_first_call_when_budget_exhausted() -> None:
+    from src.features.channel_manager.channex_client import ChannexBudgetExhausted
+
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    # Mehrere offene Outbox-Zeilen mit DISJUNKTEN Zeiträumen (keine supersedet die
+    # andere) → alle drei sind echte Push-Kandidaten. OHNE das Pro-Call-Gate würden
+    # alle drei gepusht (3 Channex-Calls für 1 Vorab-Token = der frühere Bypass).
+    for i in range(3):
+        db.tables["ari_outbox"].append({
+            "id": f"o{i}", "tenant_id": "t1", "property_id": "p1",
+            "date_from": f"2026-0{6 + i}-10", "date_to": f"2026-0{6 + i}-12",
+            "availability": 0, "status": "pending", "attempts": 0,
+        })
+    client, calls = _budget_client(allow=False)
+    svc = _import_svc(client, db)
+    # Erschöpftes Budget → beim ERSTEN Push-Versuch ChannexBudgetExhausted, das
+    # (bewusst KEIN ChannexError) nicht vom outbox-internen except geschluckt wird,
+    # sondern bis zum Worker durchschlägt → der ganze Job wird verzögert.
+    try:
+        svc.process_ari_outbox()
+    except ChannexBudgetExhausted:
+        pass
+    else:
+        raise AssertionError("erschöpftes Budget muss den Batch abbrechen")
+    # Genau EIN Token-Versuch (deny), danach Abbruch — keine N Calls.
+    assert len(calls) == 1
+    # KEINE Zeile wurde als fehlgeschlagen markiert (Budget ≠ Push-Fehler): alle
+    # bleiben pending und laufen nach retry_after erneut.
+    assert all(r["status"] == "pending" for r in db.tables["ari_outbox"])
+
+
+def test_channex_client_allows_and_hits_http_when_budget_free() -> None:
+    """Gegenprobe zum Bypass-Fix: erlaubt das Budget, geht der Call durch bis
+    httpx (ein Token je Call gezogen), statt zu werfen."""
+    from unittest.mock import MagicMock, patch
+
+    client, calls = _budget_client(allow=True)
+    resp = MagicMock()
+    resp.status_code = 200
+    resp.is_success = True
+    resp.content = b"{}"
+    resp.json.return_value = {"data": []}
+    with patch("httpx.Client") as httpx_client:
+        httpx_client.return_value.__enter__.return_value.request.return_value = resp
+        client.update_availability(
+            [{"property_id": "cx-prop", "room_type_id": "cx-rt",
+              "date_from": "2026-06-23", "date_to": "2026-06-25", "availability": 0}]
+        )
+    httpx_client.assert_called_once()  # Budget frei → echter Call läuft
+    assert calls == ["cx-prop"]  # genau ein Token für diesen einen Call

@@ -256,8 +256,8 @@ class CalendarService:
         for r in avail_rows:
             avail_by_pid.setdefault(r["property_id"], []).append(r)
 
-        # 1 Query: Rate-Plans (Min-Stay je Objekt; ältester gewinnt wie Einzelpfad).
-        min_stay_by_pid = self._fetch_min_stay_bulk(pids)
+        # 1 Query: Rate-Plans (Min-Stay + Währung je Objekt; ältester gewinnt).
+        min_stay_by_pid, currency_by_pid = self._fetch_rate_plan_bulk(pids)
         # 4 Queries (im Resolver): effektive Preise aller Objekte.
         prices = self._resolver().effective_prices_bulk(pids, rng.start, rng.end)
         # 1 Query: Stop-Sells aller Objekte im Zeitraum.
@@ -272,29 +272,38 @@ class CalendarService:
             items.append(
                 BoardProperty(
                     property_id=pid,
+                    # Owner sehen keine Preise — dann auch keine Währung nötig.
+                    currency=None if is_owner(ctx) else currency_by_pid.get(pid),
                     days=self._strip_prices_for_owner(ctx, days),
                     stop_sell=stop_by_pid.get(pid, []),
                 )
             )
         return BoardResponse(items=items)
 
-    def _fetch_min_stay_bulk(self, property_ids: list[str]) -> dict[str, int | None]:
-        """Min-Stay je Objekt aus dem ältesten Rate-Plan (eine `.in_()`-Query)."""
+    def _fetch_rate_plan_bulk(
+        self, property_ids: list[str]
+    ) -> tuple[dict[str, int | None], dict[str, str | None]]:
+        """Min-Stay UND Währung je Objekt aus dem ältesten Rate-Plan (eine
+        `.in_()`-Query). Die Währung reicht das Board ans Frontend durch, damit
+        die Tagespreise korrekt formatiert werden (nicht mehr aus Reservierungen
+        abgeleitet — Objekte ohne Buchung hätten sonst keine Währung)."""
         rows = (
             self._db()
             .table("rate_plans")
-            .select("property_id,min_stay,created_at")
+            .select("property_id,min_stay,currency,created_at")
             .in_("property_id", property_ids)
             .order("created_at")
             .execute()
         ).data or []
-        out: dict[str, int | None] = {}
+        min_stay: dict[str, int | None] = {}
+        currency: dict[str, str | None] = {}
         for r in rows:
             pid = r.get("property_id")
-            if isinstance(pid, str) and pid not in out:  # erster = ältester
+            if isinstance(pid, str) and pid not in min_stay:  # erster = ältester
                 ms = r.get("min_stay")
-                out[pid] = int(ms) if ms is not None else None
-        return out
+                min_stay[pid] = int(ms) if ms is not None else None
+                currency[pid] = r.get("currency") or None
+        return min_stay, currency
 
     def _list_stop_sell_bulk(
         self, property_ids: list[str], rng: DateRange
@@ -678,6 +687,11 @@ class CalendarService:
         self, ctx: AuthContext, property_id: str, rng: DateRange
     ) -> list[dict[str, object]]:
         self._require_own_property(ctx, property_id)
+        # Eigentümer haben kein Preis-Recht (§4.2) — Saisonpreise bestehen NUR aus
+        # Preisen, daher für Owner leer (die anderen Kalender-Reads maskieren die
+        # Tagespreise über _strip_prices_for_owner; hier gibt es nichts anderes).
+        if is_owner(ctx):
+            return []
         res = (
             self._db()
             .table("price_overrides")

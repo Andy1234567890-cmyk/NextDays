@@ -366,17 +366,23 @@ class BookingEngineService:
         noch nicht veröffentlichtes oder deaktiviertes Objekt nicht über die
         geratene UUID direkt gebucht werden kann (der Docstring galt bisher nur
         auf dem Papier — status wurde nicht geprüft)."""
+        row = self._public_property(property_id)
+        return row["tenant_id"] if row else None
+
+    def _public_property(self, property_id: str) -> dict | None:
+        """tenant_id + max_guests einer ÖFFENTLICHEN (active) Property, oder None.
+        Nur 'active' ist öffentlich buchbar — draft/inactive → None (→ 404)."""
         res = (
             self._db()
             .table("properties")
-            .select("tenant_id, status")
+            .select("tenant_id, status, max_guests")
             .eq("id", property_id)
             .limit(1)
             .execute()
         ).data
         if not res or res[0].get("status") != "active":
             return None
-        return res[0]["tenant_id"]
+        return res[0]
 
     def public_availability(
         self, property_id: str, start: date, end: date
@@ -406,9 +412,27 @@ class BookingEngineService:
     ) -> PublicBookingResponse:
         """Gastbuchung über die eigene Plattform. Double-Booking-Schutz (409),
         belegt den Kalender und sperrt realtime an Channex/OTAs."""
-        tenant_id = self._property_tenant(req.property_id)
-        if tenant_id is None:
+        prop = self._public_property(req.property_id)
+        if prop is None:
             raise BookingEngineError("Objekt nicht gefunden.", status_code=404)
+        tenant_id = prop["tenant_id"]
+
+        # Vergangene Anreise ablehnen: für Tage vor heute existieren keine
+        # availability-Zeilen → der Double-Booking-Check unten griffe nicht.
+        # Das Schema prüft nur check_out > check_in, nicht die Gegenwart.
+        if req.check_in < date.today():
+            raise BookingEngineError(
+                "Das Anreisedatum liegt in der Vergangenheit.", status_code=422
+            )
+
+        # Überbelegung ablehnen: der Resolver bepreist Zusatzgäste zwar, lehnt
+        # aber nie ab. max_guests ist die harte Kapazitätsgrenze des Objekts.
+        max_guests = _as_opt_int(prop.get("max_guests"))
+        if max_guests is not None and req.guests > max_guests:
+            raise BookingEngineError(
+                "Die Gästezahl übersteigt die Kapazität des Objekts.",
+                status_code=422,
+            )
 
         nights = _nights(req.check_in, req.check_out)
 
