@@ -26,12 +26,17 @@ export function PropertyLabel({
   showPicture,
   showInternalName,
   showId,
+  isHotel,
 }: {
   p: LabelProp;
   width: number; // rem
   showPicture: boolean;
   showInternalName: boolean;
   showId: boolean;
+  // Hotel: hinter dem Zimmer den Zimmertyp (EZ/DZ/Suite) zeigen, KEINE Stadt.
+  // Ferienvermietung: wie bisher Adresse/Typ + Stadt (Ferienobjekte sind über
+  // ihren Ort auffindbar, Hotelzimmer stehen alle am selben Ort → redundant).
+  isHotel: boolean;
 }) {
   return (
     <Link
@@ -65,9 +70,9 @@ export function PropertyLabel({
           </span>
         )}
         <span className="truncate text-xs text-muted-foreground">
-          {p.address || TYPE_LABELS[p.type]}
+          {isHotel ? TYPE_LABELS[p.type] : p.address || TYPE_LABELS[p.type]}
         </span>
-        {p.city && (
+        {!isHotel && p.city && (
           <span className="truncate text-xs text-muted-foreground">{p.city}</span>
         )}
         {showId && (

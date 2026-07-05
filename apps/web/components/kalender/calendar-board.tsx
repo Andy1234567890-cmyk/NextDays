@@ -1264,6 +1264,7 @@ export function CalendarBoard({
                       showPicture={view.showPicture}
                       showInternalName={view.showInternalName}
                       showId={view.showId}
+                      isHotel={accommodationType === "hotel"}
                     />
 
                     {/* Tagesbereich — volle Breite (für absolut positionierte
