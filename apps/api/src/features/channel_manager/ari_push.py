@@ -6,7 +6,7 @@ von der Fassade; Patch-Ziel für Modul-Helfer ist channel_manager.common.
 """
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from typing import Any
 
 from supabase import Client
@@ -19,6 +19,31 @@ from .schemas import (
     AriPushRequest,
     AriPushResponse,
 )
+
+
+def _expand_restriction_values(
+    base: dict[str, Any], date_from: date, date_to: date
+) -> list[dict[str, Any]]:
+    """Einen Restriction-Wert mit Datumsbereich in per-DATUM-Werte expandieren.
+
+    KRITISCH (live verifiziert): der Channex-`restrictions`-Endpoint erwartet PRO
+    Wert ein einzelnes `date`-Feld. `date_from`/`date_to` (bzw. ein `dates`-Array)
+    wird zwar mit HTTP 200 angenommen, aber STILL IGNORIERT — die Werte
+    persistieren nicht (das ist der Grund, warum min_stay/rate/CTA im Channex-
+    Kalender auf dem Default blieben, obwohl der Push „erfolgreich" war). Also:
+    ein value je Tag [date_from … date_to] inklusiv. Der Availability-Endpoint
+    ist NICHT betroffen (der akzeptiert Bereiche) — nur `restrictions`.
+
+    `base` enthält property_id/rate_plan_id + die Restriction-Felder (rate,
+    min_stay_*, stop_sell, closed_to_*, max_stay, days). date_from/date_to werden
+    NICHT aus base gelesen — der Aufrufer übergibt sie explizit.
+    """
+    out: list[dict[str, Any]] = []
+    day = date_from
+    while day <= date_to:
+        out.append({**base, "date": day.isoformat()})
+        day += timedelta(days=1)
+    return out
 
 
 class AriPushMixin:
@@ -71,19 +96,21 @@ class AriPushMixin:
                     "(nicht bei Channex angelegt)."
                 )
                 continue
-            value: dict[str, Any] = {
+            base: dict[str, Any] = {
                 "property_id": mapping["channex_property_id"],
                 "rate_plan_id": mapping["channex_rate_plan_id"],
-                "date_from": upd.date_from.isoformat(),
-                "date_to": upd.date_to.isoformat(),
             }
             if upd.rate_cents is not None:
-                value["rate"] = upd.rate_cents  # Cent-Integer
+                base["rate"] = upd.rate_cents  # Cent-Integer
             if upd.min_stay_arrival is not None:
-                value["min_stay_arrival"] = upd.min_stay_arrival
+                base["min_stay_arrival"] = upd.min_stay_arrival
             if upd.stop_sell is not None:
-                value["stop_sell"] = 1 if upd.stop_sell else 0
-            rate_values.append(value)
+                base["stop_sell"] = 1 if upd.stop_sell else 0
+            # restrictions erfordert ein value je Datum — date_from/date_to wird
+            # von Channex still ignoriert (live verifiziert).
+            rate_values.extend(
+                _expand_restriction_values(base, upd.date_from, upd.date_to)
+            )
 
         avail_tasks = rate_tasks = 0
         try:
@@ -334,25 +361,26 @@ class AriPushMixin:
             return
         if not self._is_channex_managed(self._db, tenant_id, property_id):
             return  # alle Kanäle des Objekts auf Aus → kein Preis-Push
-        value: dict[str, Any] = {
+        base: dict[str, Any] = {
             "property_id": mapping["channex_property_id"],
             "rate_plan_id": mapping["channex_rate_plan_id"],
-            "date_from": date_from.isoformat(),
-            "date_to": date_to.isoformat(),
         }
         if rate_cents is not None:
-            value["rate"] = rate_cents
+            base["rate"] = rate_cents
         if min_stay is not None:
-            value["min_stay_arrival"] = min_stay
-            value["min_stay_through"] = min_stay
+            base["min_stay_arrival"] = min_stay
+            base["min_stay_through"] = min_stay
+        values = _expand_restriction_values(base, date_from, date_to)
         try:
-            self._channex.update_restrictions([value])
+            for i in range(0, len(values), self._RESTRICTIONS_CHUNK):
+                self._channex.update_restrictions(values[i : i + self._RESTRICTIONS_CHUNK])
             log.info(
                 "restriction_push_done",
                 tenant_id=tenant_id,
                 property_id=property_id,
                 rate_cents=rate_cents,
                 min_stay=min_stay,
+                days=len(values),
             )
         except ChannexError as exc:
             log.warning(
@@ -382,18 +410,19 @@ class AriPushMixin:
             return
         if not self._is_channex_managed(self._db, tenant_id, property_id):
             return  # alle Kanäle des Objekts auf Aus → kein Push
-        value: dict[str, Any] = {
+        base: dict[str, Any] = {
             "property_id": mapping["channex_property_id"],
             "rate_plan_id": mapping["channex_rate_plan_id"],
-            "date_from": date_from.isoformat(),
-            "date_to": date_to.isoformat(),
             "max_stay": max(0, int(max_stay)),
         }
+        values = _expand_restriction_values(base, date_from, date_to)
         try:
-            self._channex.update_restrictions([value])
+            for i in range(0, len(values), self._RESTRICTIONS_CHUNK):
+                self._channex.update_restrictions(values[i : i + self._RESTRICTIONS_CHUNK])
             log.info(
                 "max_stay_push_done",
                 tenant_id=tenant_id, property_id=property_id, max_stay=max_stay,
+                days=len(values),
             )
         except ChannexError as exc:
             log.warning(
@@ -423,22 +452,23 @@ class AriPushMixin:
             return
         if not self._is_channex_managed(self._db, tenant_id, property_id):
             return  # alle Kanäle des Objekts auf Aus → kein Push
-        value: dict[str, Any] = {
+        base: dict[str, Any] = {
             "property_id": mapping["channex_property_id"],
             "rate_plan_id": mapping["channex_rate_plan_id"],
-            "date_from": date_from.isoformat(),
-            "date_to": date_to.isoformat(),
         }
         if closed_to_arrival is not None:
-            value["closed_to_arrival"] = closed_to_arrival
+            base["closed_to_arrival"] = closed_to_arrival
         if closed_to_departure is not None:
-            value["closed_to_departure"] = closed_to_departure
+            base["closed_to_departure"] = closed_to_departure
+        values = _expand_restriction_values(base, date_from, date_to)
         try:
-            self._channex.update_restrictions([value])
+            for i in range(0, len(values), self._RESTRICTIONS_CHUNK):
+                self._channex.update_restrictions(values[i : i + self._RESTRICTIONS_CHUNK])
             log.info(
                 "cta_ctd_push_done",
                 tenant_id=tenant_id, property_id=property_id,
                 cta=closed_to_arrival, ctd=closed_to_departure,
+                days=len(values),
             )
         except ChannexError as exc:
             log.warning(
@@ -469,24 +499,34 @@ class AriPushMixin:
         if not self._is_channex_managed(self._db, tenant_id, property_id):
             return  # alle Kanäle des Objekts auf Aus → kein Push
         today = date.today()
+        # Wochentag-Filter (mo…su) auf Python-weekday (Mo=0) abbilden.
+        weekday_allow = None
+        if days:
+            names = ["mo", "tu", "we", "th", "fr", "sa", "su"]
+            weekday_allow = {i for i, n in enumerate(names) if n in days}
+        base: dict[str, Any] = {
+            "property_id": mapping["channex_property_id"],
+            "rate_plan_id": mapping["channex_rate_plan_id"],
+            "stop_sell": stop_sell,
+        }
         values: list[dict[str, Any]] = []
         for span_start, span_end in spans:
             if span_end < today:
                 continue
-            value: dict[str, Any] = {
-                "property_id": mapping["channex_property_id"],
-                "rate_plan_id": mapping["channex_rate_plan_id"],
-                "date_from": max(span_start, today).isoformat(),
-                "date_to": span_end.isoformat(),
-                "stop_sell": stop_sell,
-            }
-            if days:
-                value["days"] = days
-            values.append(value)
+            # Pro Datum expandieren (restrictions ignoriert Bereiche still) und den
+            # optionalen Wochentag-Filter direkt hier anwenden — `days` am value
+            # wirkt beim per-Datum-Format nicht mehr.
+            for v in _expand_restriction_values(base, max(span_start, today), span_end):
+                if weekday_allow is not None:
+                    wd = date.fromisoformat(v["date"]).weekday()
+                    if wd not in weekday_allow:
+                        continue
+                values.append(v)
         if not values:
             return
         try:
-            self._channex.update_restrictions(values)
+            for i in range(0, len(values), self._RESTRICTIONS_CHUNK):
+                self._channex.update_restrictions(values[i : i + self._RESTRICTIONS_CHUNK])
             log.info(
                 "stop_sell_push_done",
                 tenant_id=tenant_id, property_id=property_id,
@@ -498,10 +538,11 @@ class AriPushMixin:
                 tenant_id=tenant_id, property_id=property_id, error=exc.message,
             )
 
-    # Channex akzeptiert viele Werte je Restrictions-Request; wir chunken
-    # defensiv, damit ein Push über den vollen Horizont 1–wenige Requests ist
-    # statt hunderter Einzel-Requests (sonst 429-Flut, siehe Channex-Skill:
-    # „batch via ranges, hundreds of small requests per minute is abuse-shaped").
+    # Channex akzeptiert viele Werte je Restrictions-Request; da restrictions
+    # pro-DATUM gesendet werden müssen (date_from/date_to wird still ignoriert),
+    # sammeln wir alle Tage in wenige Batch-Requests je ≤500 values — statt
+    # hunderter Einzel-Requests (sonst 429-Flut, Channex-Skill: „batch, hundreds
+    # of small requests per minute is abuse-shaped"). 365 Tage = 1 Request.
     _RESTRICTIONS_CHUNK = 500
 
     def push_rates_batch(
@@ -530,18 +571,19 @@ class AriPushMixin:
             min_stay = seg.get("min_stay")
             if rate_cents is None and min_stay is None:
                 continue
-            value: dict[str, Any] = {
+            base: dict[str, Any] = {
                 "property_id": mapping["channex_property_id"],
                 "rate_plan_id": mapping["channex_rate_plan_id"],
-                "date_from": seg["date_from"].isoformat(),
-                "date_to": seg["date_to"].isoformat(),
             }
             if rate_cents is not None:
-                value["rate"] = rate_cents
+                base["rate"] = rate_cents
             if min_stay is not None:
-                value["min_stay_arrival"] = min_stay
-                value["min_stay_through"] = min_stay
-            values.append(value)
+                base["min_stay_arrival"] = min_stay
+                base["min_stay_through"] = min_stay
+            # Pro Datum expandieren — restrictions ignoriert date_from/date_to still.
+            values.extend(
+                _expand_restriction_values(base, seg["date_from"], seg["date_to"])
+            )
         if not values:
             return
         pushed = 0

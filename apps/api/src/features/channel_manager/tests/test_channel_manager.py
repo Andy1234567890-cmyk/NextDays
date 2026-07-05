@@ -965,10 +965,15 @@ def test_push_restrictions_cta_ctd_sends_to_channex() -> None:
         "t1", "p1", date(2026, 6, 23), date(2026, 6, 25),
         closed_to_arrival=True, closed_to_departure=False,
     )
-    assert len(channex.restrictions_pushed) == 1
+    # restrictions muss PRO DATUM gesendet werden (date_from/date_to wird von
+    # Channex still ignoriert, live verifiziert) → 23.–25. Juni = 3 values.
+    assert len(channex.restrictions_pushed) == 3
+    dates = {v["date"] for v in channex.restrictions_pushed}
+    assert dates == {"2026-06-23", "2026-06-24", "2026-06-25"}
     val = channex.restrictions_pushed[0]
     assert val["property_id"] == "cx-prop"
     assert val["rate_plan_id"] == "cx-rate"
+    assert "date_from" not in val  # kein Bereich mehr
     assert val["closed_to_arrival"] is True
     assert val["closed_to_departure"] is False
 
@@ -1017,12 +1022,31 @@ def test_push_max_stay_sends_to_channex() -> None:
     _import_svc(channex, db).push_max_stay_for_property(
         "t1", "p1", date(2026, 6, 23), date(2026, 6, 25), 14
     )
-    assert len(channex.restrictions_pushed) == 1
+    # Pro Datum (date_from/date_to wird still ignoriert): 23.–25. Juni = 3 values.
+    assert len(channex.restrictions_pushed) == 3
     val = channex.restrictions_pushed[0]
     assert val["property_id"] == "cx-prop"
     assert val["rate_plan_id"] == "cx-rate"
     assert val["max_stay"] == 14
+    assert "date" in val and "date_from" not in val
     assert "max_stay_arrival" not in val
+
+
+def test_push_rate_min_stay_expands_per_date() -> None:
+    # Regression (der Bug, den der Nutzer sah): min_stay per date_from/date_to
+    # wurde von Channex still ignoriert -> Kalender blieb auf 1. Jetzt: ein value
+    # PRO Datum mit `date`, min_stay_arrival UND min_stay_through gesetzt.
+    db = _ImportDB()
+    _seed_with_rate_plan(db)
+    channex = _ImportChannex()
+    _import_svc(channex, db).push_rate_for_property(
+        "t1", "p1", date(2026, 6, 23), date(2026, 6, 25), min_stay=3
+    )
+    assert len(channex.restrictions_pushed) == 3
+    for v in channex.restrictions_pushed:
+        assert "date" in v and "date_from" not in v
+        assert v["min_stay_arrival"] == 3
+        assert v["min_stay_through"] == 3
 
 
 def test_push_max_stay_skipped_when_not_managed() -> None:

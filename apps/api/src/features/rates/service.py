@@ -190,6 +190,16 @@ class RatesService:
         self._sync_property(
             tenant_id, row["property_id"], prop.get("title"), row.get("currency")
         )
+        # Mindestaufenthalt zusätzlich als datums­bezogene RESTRICTION pushen.
+        # sync_property setzt nur den Rate-Plan-DEFAULT (min_stay_arrival/through
+        # am Rate-Plan-Objekt). Der Wert, den Channex im Kalender/UI anzeigt und
+        # für Buchungen erzwingt, kommt aus den per-Datum-Restrictions — die
+        # überschreiben den Default. Ohne diesen Push bleibt der Kalender auf 1,
+        # obwohl der Rate-Plan-Default 3 zeigt (live verifiziert).
+        if "min_stay" in patch and isinstance(patch["min_stay"], int):
+            self._push_min_stay_restriction(
+                tenant_id, row["property_id"], patch["min_stay"]
+            )
         log.info("rate_plan_updated", tenant_id=tenant_id, rate_plan_id=rate_plan_id)
         return self._row(row)
 
@@ -226,3 +236,38 @@ class RatesService:
             )
         except Exception as exc:  # noqa: BLE001 — Sync darf das Speichern nie blockieren
             log.warning("rate_plan_channex_sync_failed", property_id=property_id, error=str(exc))
+
+    # Planungshorizont für den Restriction-Push (deckt den 365-Tage-Availability-
+    # Init ab). Ab heute, damit vergangene Tage nicht angefasst werden.
+    _RESTRICTION_HORIZON_DAYS = 365
+
+    def _push_min_stay_restriction(
+        self, tenant_id: str, property_id: str, min_stay: int
+    ) -> None:
+        """Mindestaufenthalt als per-Datum-Restriction an Channex pushen (der
+        Wert, den das Channex-Kalender-UI zeigt und für Buchungen erzwingt).
+        Non-blocking: ein Channex-Fehler darf das Speichern nie kippen; der
+        reconcile-Cron gleicht ohnehin ab."""
+        if min_stay < 1:
+            return
+        try:
+            from datetime import date, timedelta
+
+            from src.features.channel_manager.service import ChannelManagerService
+
+            today = date.today()
+            ChannelManagerService(
+                service_client=self._db()
+            ).push_rate_for_property(
+                tenant_id,
+                property_id,
+                today,
+                today + timedelta(days=self._RESTRICTION_HORIZON_DAYS),
+                min_stay=min_stay,
+            )
+        except Exception as exc:  # noqa: BLE001 — Push darf das Speichern nie blockieren
+            log.warning(
+                "min_stay_restriction_push_failed",
+                property_id=property_id,
+                error=str(exc),
+            )
