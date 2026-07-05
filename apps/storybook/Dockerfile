@@ -33,6 +33,9 @@ FROM node:22.16-slim AS run
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
+# Next.js-standalone bindet sonst an den Container-Hostnamen → localhost-
+# Healthcheck schlägt fehl + Traefik-502 (gleicher Fix wie apps/web, 2faee7d).
+ENV HOSTNAME=0.0.0.0
 # Nicht als root laufen.
 RUN groupadd --system --gid 1001 nodejs \
   && useradd --system --uid 1001 --gid nodejs nextjs
