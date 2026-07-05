@@ -321,9 +321,22 @@ services:
       # Studio in Prod hinter Basic-Auth/Proxy stellen (Coolify) — Admin-UI.
       AUTH_USERNAME: ${DASHBOARD_USERNAME}
       AUTH_PASSWORD: ${DASHBOARD_PASSWORD}
+      # Next.js an ALLE Interfaces binden, sonst lauscht es nur auf dem Container-
+      # Hostnamen und der Healthcheck (localhost:3000) schlägt fehl → dauerhaft
+      # "unhealthy" (zieht den ganzen DB-Stack in Coolify auf gelb).
+      HOSTNAME: "0.0.0.0"
     depends_on:
       meta:
         condition: service_started
+    # Healthcheck überschreiben: das Studio-Image prüft localhost:3000, aber
+    # Next.js band bisher nicht auf localhost → nie grün. Mit HOSTNAME=0.0.0.0
+    # (oben) lauscht es überall; dieser Check bestätigt den Ready-Zustand.
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/platform/profile').then(r=>{if(r.status!==200)throw new Error(r.status)}).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     deploy:
       resources:
         limits:
