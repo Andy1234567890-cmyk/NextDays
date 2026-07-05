@@ -61,27 +61,66 @@ export const WEEKDAYS: { key: keyof WeekdayFlags; label: string }[] = [
   { key: "sun", label: "Sonntag" },
 ];
 
+// Mindestaufenthalt-Typ (Channex settings.min_stay_type). "both" = beide Regeln,
+// "arrival" = nur bei Anreise, "through" = durchgehend.
+export type MinStayType = "both" | "arrival" | "through";
+
 export type Availability = {
   minStay: number; // Mindestaufenthalt (Nächte)
   minStayByDays: boolean; // Regeln nach Buchungstagen aktiv
+  minStayType: MinStayType; // welche Mindestaufenthalts-Regel gilt (Channex)
   maxStay: number; // Maximalaufenthalt (Nächte)
   preparationDays: PerChannel<number>; // Vorbereitungszeit zwischen Buchungen
   bookingWindowDays: PerChannel<number>; // wie weit im Voraus buchbar
   advanceNotice: PerChannel<string>; // späteste Buchungszeit (z. B. "12:00")
   unavailableCheckIn: WeekdayFlags;
   unavailableCheckOut: WeekdayFlags;
+  // Verkaufssteuerung → geht an Booking/Airbnb & Co. (Channex property.settings).
+  cutOffTime: string; // Same-Day-Verkaufsstopp ab Uhrzeit ("" = aus)
+  cutOffDays: number; // Verkaufsstopp N Tage vor Anreise (0 = aus)
+  maxDayAdvance: number; // ferne Zukunft schließen (0 = aus)
+  // Automatische Verfügbarkeitsanpassung bei Buchungsereignissen (Channex).
+  autoUpdateOnConfirmation: boolean; // neue Buchung → Verfügbarkeit senken
+  autoUpdateOnModification: boolean; // geänderte Buchung anpassen
+  autoUpdateOnCancellation: boolean; // Storno → Verfügbarkeit zurückgeben
 };
 
 export const DEFAULT_AVAILABILITY: Availability = {
   minStay: 1,
   minStayByDays: false,
+  minStayType: "both",
   maxStay: 365,
   preparationDays: perChannel(0),
   bookingWindowDays: perChannel(365),
   advanceNotice: perChannel("00:00"),
   unavailableCheckIn: { ...NO_DAYS },
   unavailableCheckOut: { ...NO_DAYS },
+  cutOffTime: "",
+  cutOffDays: 0,
+  maxDayAdvance: 0,
+  // Channex-Defaults (live gegengelesen): neue Buchung senkt automatisch, Storno
+  // gibt nicht automatisch zurück, Änderung wird nicht automatisch angepasst.
+  autoUpdateOnConfirmation: true,
+  autoUpdateOnModification: false,
+  autoUpdateOnCancellation: false,
 };
+
+// Auswahloptionen für die Verkaufssteuerung.
+export const CUT_OFF_TIME_OPTIONS = [
+  { value: "", label: "Aus (bis Mitternacht buchbar)" },
+  { value: "12:00", label: "12:00 Uhr" },
+  { value: "14:00", label: "14:00 Uhr" },
+  { value: "16:00", label: "16:00 Uhr" },
+  { value: "18:00", label: "18:00 Uhr" },
+  { value: "20:00", label: "20:00 Uhr" },
+  { value: "22:00", label: "22:00 Uhr" },
+];
+
+export const MIN_STAY_TYPE_OPTIONS: { value: MinStayType; label: string }[] = [
+  { value: "both", label: "Beide (Anreise + durchgehend)" },
+  { value: "arrival", label: "Nur bei Anreise" },
+  { value: "through", label: "Durchgehend" },
+];
 
 // Auswahloptionen.
 export const PREPARATION_OPTIONS = [

@@ -31,12 +31,15 @@ import { Switch } from "@/components/ui/switch";
 import {
   type Availability,
   type Channel,
+  type MinStayType,
   type PerChannel,
   type WeekdayFlags,
   ADVANCE_NOTICE_OPTIONS,
   BOOKING_WINDOW_OPTIONS,
   CHANNEL_LABELS,
   CHANNELS,
+  CUT_OFF_TIME_OPTIONS,
+  MIN_STAY_TYPE_OPTIONS,
   PREPARATION_OPTIONS,
   WEEKDAYS,
   countDays,
@@ -53,6 +56,8 @@ type Section =
   | "window"
   | "notice"
   | "days"
+  | "sales"
+  | "autoupdate"
   | null;
 
 export function AvailabilityForm({ initial }: { initial: Property }) {
@@ -139,6 +144,24 @@ export function AvailabilityForm({ initial }: { initial: Property }) {
         </Pill>
       </BlockCard>
 
+      <BlockCard
+        title="Verkaufssteuerung"
+        hint="Verkaufsstopp am selben Tag ab einer Uhrzeit, Vorlauf in Tagen und wie weit in die Zukunft buchbar ist. Gilt für alle Portale."
+        channels={["direct", "airbnb", "booking", "google"]}
+        onEdit={() => setSection("sales")}
+      >
+        <Pill>{salesLabel(av)}</Pill>
+      </BlockCard>
+
+      <BlockCard
+        title="Automatische Verfügbarkeit"
+        hint="Was bei neuer, geänderter oder stornierter Buchung mit der Verfügbarkeit passieren soll."
+        channels={["direct", "airbnb", "booking", "google"]}
+        onEdit={() => setSection("autoupdate")}
+      >
+        <Pill>{autoUpdateLabel(av)}</Pill>
+      </BlockCard>
+
       {/* Editoren */}
       {section === "min" && <MinStayEditor av={av} onSave={save} onClose={() => setSection(null)} />}
       {section === "max" && <MaxStayEditor av={av} onSave={save} onClose={() => setSection(null)} />}
@@ -176,8 +199,31 @@ export function AvailabilityForm({ initial }: { initial: Property }) {
         />
       )}
       {section === "days" && <DaysEditor av={av} onSave={save} onClose={() => setSection(null)} />}
+      {section === "sales" && <SalesEditor av={av} onSave={save} onClose={() => setSection(null)} />}
+      {section === "autoupdate" && (
+        <AutoUpdateEditor av={av} onSave={save} onClose={() => setSection(null)} />
+      )}
     </div>
   );
+}
+
+// Kurzbeschreibung der Verkaufssteuerung für die Karte.
+function salesLabel(av: Availability): string {
+  const parts: string[] = [];
+  parts.push(av.cutOffTime ? `Stopp ${av.cutOffTime} Uhr` : "kein Tagesstopp");
+  if (av.cutOffDays > 0) parts.push(`${av.cutOffDays} Tag(e) Vorlauf`);
+  if (av.maxDayAdvance > 0) parts.push(`max. ${av.maxDayAdvance} Tage im Voraus`);
+  return parts.join(" · ");
+}
+
+// Kurzbeschreibung der Auto-Aktualisierung für die Karte.
+function autoUpdateLabel(av: Availability): string {
+  const on: string[] = [];
+  if (av.autoUpdateOnModification) on.push("Änderung");
+  if (av.autoUpdateOnCancellation) on.push("Storno");
+  // Neue Buchung senkt immer (Channex erzwingt das) — daher separat nennen.
+  const base = "Neue Buchung senkt automatisch";
+  return on.length ? `${base} · auch bei ${on.join(" + ")}` : base;
 }
 
 // --- Karten/Bausteine ------------------------------------------------------
@@ -470,6 +516,160 @@ function DaysEditor({
           onChange={(f) => setV({ ...v, unavailableCheckOut: f })}
         />
       </div>
+    </EditorShell>
+  );
+}
+
+// Verkaufssteuerung: Cut-Off-Zeit, Cut-Off-Tage, Max-Days-Advance, min_stay-Typ.
+// Alle Werte gehen 1:1 in die Channex-property.settings → an Booking/Airbnb & Co.
+function SalesEditor({
+  av,
+  onSave,
+  onClose,
+}: {
+  av: Availability;
+  onSave: (next: Availability) => Promise<true | string>;
+  onClose: () => void;
+}) {
+  const [v, setV] = useState(av);
+  const { busy, error, run } = useSaver(onSave);
+  return (
+    <EditorShell
+      title="Verkaufssteuerung"
+      subtitle="Steuere, bis wann und wie weit im Voraus dein Objekt buchbar ist. Diese Regeln gelten für alle Portale."
+      channels={["direct", "airbnb", "booking", "google"]}
+      onClose={onClose}
+      footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
+    >
+      <Field label="Verkaufsstopp am selben Tag ab">
+        <Select
+          value={v.cutOffTime}
+          onValueChange={(val) => setV({ ...v, cutOffTime: val })}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {CUT_OFF_TIME_OPTIONS.map((o) => (
+              <SelectItem key={o.value || "off"} value={o.value}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+      <Hint>
+        Ist die Uhrzeit (Zeitzone des Objekts) erreicht, wird der aktuelle Tag für
+        Buchungen geschlossen — verhindert Last-Minute-Buchungen ohne Vorlauf.
+      </Hint>
+
+      <Field label="Vorlauf vor Anreise">
+        <div className="flex items-center gap-2">
+          <Input
+            type="number"
+            min={0}
+            value={v.cutOffDays}
+            onChange={(e) => setV({ ...v, cutOffDays: Math.max(0, Number(e.target.value) || 0) })}
+          />
+          <span className="text-sm text-muted-foreground">Tage (0 = aus)</span>
+        </div>
+      </Field>
+
+      <Field label="Maximal buchbar im Voraus">
+        <div className="flex items-center gap-2">
+          <Input
+            type="number"
+            min={0}
+            value={v.maxDayAdvance}
+            onChange={(e) => setV({ ...v, maxDayAdvance: Math.max(0, Number(e.target.value) || 0) })}
+          />
+          <span className="text-sm text-muted-foreground">Tage (0 = aus)</span>
+        </div>
+      </Field>
+      <Hint>
+        Schließt Daten, die weiter in der Zukunft liegen. Achtung: Diese Tage werden
+        nicht automatisch wieder geöffnet.
+      </Hint>
+
+      <div className="h-px bg-border" />
+
+      <Field label="Mindestaufenthalt-Regel">
+        <Select
+          value={v.minStayType}
+          onValueChange={(val) => setV({ ...v, minStayType: val as MinStayType })}
+        >
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {MIN_STAY_TYPE_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+      <Hint>
+        „Nur bei Anreise" prüft den Mindestaufenthalt am Anreisetag, „durchgehend"
+        an jedem Tag des Zeitraums. „Beide" ist der sicherste Standard.
+      </Hint>
+    </EditorShell>
+  );
+}
+
+// Automatische Verfügbarkeitsanpassung bei Buchungsereignissen (Channex).
+function AutoUpdateEditor({
+  av,
+  onSave,
+  onClose,
+}: {
+  av: Availability;
+  onSave: (next: Availability) => Promise<true | string>;
+  onClose: () => void;
+}) {
+  const [v, setV] = useState(av);
+  const { busy, error, run } = useSaver(onSave);
+  return (
+    <EditorShell
+      title="Automatische Verfügbarkeit"
+      subtitle="Entscheide, was mit der Verfügbarkeit passiert, wenn eine Buchung eingeht, geändert oder storniert wird."
+      channels={["direct", "airbnb", "booking", "google"]}
+      onClose={onClose}
+      footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
+    >
+      <label className="flex items-start justify-between gap-3 text-sm opacity-70">
+        <span>
+          <span className="font-medium">Neue Buchung</span>
+          <span className="mt-0.5 block text-muted-foreground">
+            Bei jeder neuen Buchung wird die Verfügbarkeit automatisch gesenkt.
+            Aus Sicherheitsgründen nicht abschaltbar.
+          </span>
+        </span>
+        <Switch checked disabled />
+      </label>
+
+      <label className="flex cursor-pointer items-start justify-between gap-3 text-sm">
+        <span>
+          <span className="font-medium">Geänderte Buchung</span>
+          <span className="mt-0.5 block text-muted-foreground">
+            Bei Änderung einer Buchung wird die Verfügbarkeit automatisch angepasst.
+          </span>
+        </span>
+        <Switch
+          checked={v.autoUpdateOnModification}
+          onCheckedChange={(c) => setV({ ...v, autoUpdateOnModification: c })}
+        />
+      </label>
+
+      <label className="flex cursor-pointer items-start justify-between gap-3 text-sm">
+        <span>
+          <span className="font-medium">Stornierte Buchung</span>
+          <span className="mt-0.5 block text-muted-foreground">
+            Bei Stornierung wird die Verfügbarkeit automatisch wieder freigegeben.
+          </span>
+        </span>
+        <Switch
+          checked={v.autoUpdateOnCancellation}
+          onCheckedChange={(c) => setV({ ...v, autoUpdateOnCancellation: c })}
+        />
+      </label>
     </EditorShell>
   );
 }

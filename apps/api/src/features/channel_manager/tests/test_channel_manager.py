@@ -577,6 +577,64 @@ def test_property_attrs_includes_facilities() -> None:
     assert "facilities" not in attrs_none
 
 
+def test_availability_settings_maps_valid_channex_keys() -> None:
+    from src.features.channel_manager.service import _availability_settings
+
+    out = _availability_settings(
+        {
+            "cutOffTime": "18:00",
+            "cutOffDays": 2,
+            "maxDayAdvance": 400,
+            "minStayType": "arrival",
+            "autoUpdateOnConfirmation": True,
+            "autoUpdateOnModification": True,
+            "autoUpdateOnCancellation": False,
+        }
+    )
+    assert out == {
+        "cut_off_time": "18:00",
+        "cut_off_days": 2,
+        "max_day_advance": 400,
+        "min_stay_type": "arrival",
+        "allow_availability_autoupdate_on_confirmation": True,
+        "allow_availability_autoupdate_on_modification": True,
+        "allow_availability_autoupdate_on_cancellation": False,
+    }
+
+
+def test_availability_settings_drops_invalid_and_empty() -> None:
+    from src.features.channel_manager.service import _availability_settings
+
+    # Leerer Block → keine Keys (kein erfundener Default).
+    assert _availability_settings({}) == {}
+    # Ungültige Cut-Off-Zeit / negative Zahlen / unbekannter Typ → weglassen.
+    out = _availability_settings(
+        {
+            "cutOffTime": "25:99",
+            "cutOffDays": -1,
+            "maxDayAdvance": 0,
+            "minStayType": "raumschiff",
+        }
+    )
+    assert out == {}
+    # cutOffTime="" (Nutzer schaltet aus) ist kein gültiges HH:MM → nicht senden.
+    assert "cut_off_time" not in _availability_settings({"cutOffTime": ""})
+    # bool ist kein gültiger int für cut_off_days (Python: True == 1) — abweisen.
+    assert _availability_settings({"cutOffDays": True}) == {}
+
+
+def test_property_attrs_includes_availability_settings() -> None:
+    attrs = ChannelManagerService._property_attrs(
+        {
+            "country": "DE",
+            "type_attributes": {"availability": {"cutOffTime": "20:00"}},
+        }
+    )
+    assert attrs["settings"]["cut_off_time"] == "20:00"
+    # state_length bleibt der 365-Tage-Init-Wert.
+    assert attrs["settings"]["state_length"] == 365
+
+
 def test_import_booking_creates_reservation_and_blocks_calendar() -> None:
     db = _ImportDB()
     _seed_property(db)

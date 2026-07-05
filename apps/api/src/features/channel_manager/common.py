@@ -6,6 +6,9 @@ Slice-Exception. Patch-Ziel für Tests, die Modul-Helfer ersetzen wollen
 """
 from __future__ import annotations
 
+import re
+from typing import Any
+
 from src.core.logging import get_logger
 
 log = get_logger("nextdays.channel_manager")
@@ -63,6 +66,54 @@ def _channex_property_type(local: str | None) -> str | None:
     if not local:
         return None
     return _CHANNEX_PROPERTY_TYPE.get(local.lower())
+
+
+# Gültige Werte für den Mindestaufenthalt-Typ (Channex-settings.min_stay_type,
+# live verifiziert): "both" (Standard), "arrival" (nur bei Anreise) oder
+# "through" (durchgehend). Alles andere wird ignoriert (kein 422 riskieren).
+_MIN_STAY_TYPES = frozenset({"both", "arrival", "through"})
+# HH:MM (optional :SS) 00:00–23:59 — Channex-cut_off_time; das Feld kommt aus
+# unserem Select als "HH:MM", Channex gibt es mit Sekunden zurück ("18:00:00"),
+# beide Formen dürfen durch (idempotent bei einem eventuellen Round-Trip).
+_CUT_OFF_TIME = re.compile(r"^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$")
+
+
+def _availability_settings(av: dict[str, Any]) -> dict[str, Any]:
+    """Verfügbarkeits-/Verkaufssteuerung aus type_attributes.availability in die
+    Channex-property-`settings` übersetzen. Alle Keys 1:1 wie live in /properties
+    gegengelesen. NUR gesetzte Werte übernehmen (keine erfundenen Defaults —
+    [[keine-fallbacks]]); ungültige Eingaben stillschweigend weglassen, damit ein
+    422 den Content-Sync nicht kippt.
+
+    - cutOffTime  "HH:MM"  → cut_off_time   (Same-Day-Verkaufsstopp ab Uhrzeit)
+    - cutOffDays  int ≥ 0  → cut_off_days    (Verkaufsstopp N Tage vor Anreise)
+    - maxDayAdvance int ≥ 1 → max_day_advance (ferne Zukunft schließen)
+    - minStayType "both|arrival|through" → min_stay_type
+    - autoUpdateOnConfirmation/Modification/Cancellation bool →
+      allow_availability_autoupdate_on_{confirmation,modification,cancellation}
+    """
+    out: dict[str, Any] = {}
+    cut_time = av.get("cutOffTime")
+    if isinstance(cut_time, str) and _CUT_OFF_TIME.match(cut_time.strip()):
+        out["cut_off_time"] = cut_time.strip()
+    cut_days = av.get("cutOffDays")
+    if isinstance(cut_days, int) and not isinstance(cut_days, bool) and cut_days >= 0:
+        out["cut_off_days"] = cut_days
+    max_adv = av.get("maxDayAdvance")
+    if isinstance(max_adv, int) and not isinstance(max_adv, bool) and max_adv >= 1:
+        out["max_day_advance"] = max_adv
+    mst = av.get("minStayType")
+    if isinstance(mst, str) and mst in _MIN_STAY_TYPES:
+        out["min_stay_type"] = mst
+    for local_key, cx_key in (
+        ("autoUpdateOnConfirmation", "allow_availability_autoupdate_on_confirmation"),
+        ("autoUpdateOnModification", "allow_availability_autoupdate_on_modification"),
+        ("autoUpdateOnCancellation", "allow_availability_autoupdate_on_cancellation"),
+    ):
+        val = av.get(local_key)
+        if isinstance(val, bool):
+            out[cx_key] = val
+    return out
 
 
 # Channex-Facility-Katalog: lokaler Ausstattungs-Slug → Channex-Facility-UUID.

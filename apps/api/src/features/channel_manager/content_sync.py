@@ -15,6 +15,7 @@ from . import content_builder
 from .channex_client import ChannexError
 from .common import (
     ChannelManagerError,
+    _availability_settings,
     _channex_facility_ids,
     _channex_property_type,
     _timezone_for_country,
@@ -351,6 +352,14 @@ class ContentSyncMixin:
             settings["min_price"] = min_price
         if isinstance(max_price, (int, float)) and max_price > 0:
             settings["max_price"] = max_price
+        # Verfügbarkeits-/Verkaufssteuerung aus type_attributes.availability —
+        # 1:1 die Channex-settings-Keys (live gegen /properties gegengelesen):
+        # cut_off_time/cut_off_days, max_day_advance, min_stay_type,
+        # allow_availability_autoupdate_on_{confirmation,modification,cancellation}.
+        # Nur senden, was der Nutzer gesetzt hat; keine erfundenen Defaults.
+        settings.update(_availability_settings(
+            (prop_row.get("type_attributes") or {}).get("availability") or {}
+        ))
         attrs["settings"] = settings
         return attrs
 
