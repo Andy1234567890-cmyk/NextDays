@@ -346,33 +346,12 @@ services:
   # Redis für Rate-Limiting/Backpressure (core/ratelimit*.py). Im default-Netz
   # des Stacks, damit die api ihn per "redis" auflöst. Passwortgeschützt;
   # persistenter Bind-Mount auf dem Hetzner-Volume wie Postgres/Storage.
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    # maxmemory unter dem 256m-Container-Limit → Redis regelt selbst, statt vom OS
-    # OOM-gekillt zu werden (ein Redis-Ausfall sperrt Logins: Auth/Payments sind
-    # fail-closed). noeviction: Rate-Limit- und Queue-Daten dürfen NICHT still
-    # verworfen werden; die Keys sind winzig und laufen per TTL ab, 200m wird nie
-    # erreicht. So bleibt der Ratelimiter korrekt statt Keys unter Druck zu verlieren.
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes",
-              "--maxmemory", "200mb", "--maxmemory-policy", "noeviction"]
-    networks:
-      default:
-      # ZUSÄTZLICH ins stabile externe Netz: damit der isolierte Worker-Stack
-      # (deploy/worker/) redis per "redis" erreicht, ohne im DB-Stack zu liegen.
-      supabase-internal:
-        aliases: [redis]
-    volumes:
-      - /mnt/HC_Volume_106086998/nextdays/redis:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-    deploy:
-      resources:
-        limits:
-          memory: 256m
+# HINWEIS: Redis (Cache/Queue-Broker/Rate-Limiter) läuft seit der Stack-Trennung
+# als EIGENSTÄNDIGE Coolify-App (deploy/redis-standalone/), NICHT mehr hier. Grund
+# wie bei api: Coolify deployt einen Compose-Stack als Einheit — solange redis hier
+# lag, fuhr jeder DB-Stack-Deploy auch redis neu (und ein Deploy-Race konnte einen
+# zweiten redis daneben starten). api + Worker erreichen redis weiter über das
+# externe supabase-internal-Netz per Name. Bind-Mount /mnt/.../redis unverändert.
 
 # HINWEIS: Der frühere "kong"-Service wurde in eine EIGENSTÄNDIGE Coolify-App
 # ausgelagert (deploy/kong/) — nur so bekommt Kong Coolifys Rolling-Update
