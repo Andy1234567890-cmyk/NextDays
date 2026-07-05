@@ -50,6 +50,16 @@ IDLE_SLEEP_SECONDS = 1.0
 STUCK_AFTER_SECONDS = 300
 # Zeit-Tick: Reconcile aller Tenants einreihen (ersetzt den externen 15-min-Cron).
 RECONCILE_TICK_SECONDS = 15 * 60
+# Heartbeat-Datei für den Docker-Healthcheck: der Run-Loop schreibt sie je
+# Durchlauf neu (idle ≤ 1 s, unter Last je Claim-Zyklus). Der Healthcheck im
+# Worker-Compose meldet unhealthy, wenn sie älter als 120 s ist — so wird ein
+# HÄNGENDER Event-Loop sichtbar, nicht nur ein toter Prozess (den fängt schon
+# restart: unless-stopped, weil der Worker PID 1 ist).
+HEARTBEAT_PATH = os.getenv(
+    "WORKER_HEARTBEAT_PATH",
+    # noqa: S108 — Container-privates /tmp (1 Prozess); per Env übersteuerbar.
+    "/tmp/worker-heartbeat",  # noqa: S108
+)
 
 
 # --- Job-Handler ------------------------------------------------------------
@@ -174,6 +184,10 @@ class Worker:
     def request_stop(self) -> None:
         self._stop.set()
 
+    def _touch_heartbeat(self) -> None:
+        with open(HEARTBEAT_PATH, "w", encoding="utf-8") as fh:
+            fh.write(datetime.now(UTC).isoformat())
+
     def _claim(self, limit: int) -> list[dict[str, Any]]:
         return (
             self._db.rpc(
@@ -288,6 +302,7 @@ class Worker:
     async def run(self) -> None:
         log.info("worker_started", worker_id=self._worker_id, concurrency=CONCURRENCY)
         while not self._stop.is_set():
+            self._touch_heartbeat()
             loop_time = asyncio.get_running_loop().time()
             await self._reap_stuck()
             await self._reconcile_tick(loop_time)

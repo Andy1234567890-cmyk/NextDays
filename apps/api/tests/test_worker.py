@@ -128,6 +128,19 @@ def _worker_with(db, budget=None):  # noqa: ANN001, ANN202
     return Worker(db=db, budget=budget or _FakeBudget(allow=True))
 
 
+def test_touch_heartbeat_schreibt_iso_zeitstempel(monkeypatch, tmp_path) -> None:  # noqa: ANN001
+    """Der Run-Loop-Heartbeat (Docker-Healthcheck-Grundlage) schreibt die Datei
+    bei jedem Aufruf neu; Inhalt = parsebarer UTC-ISO-Zeitstempel."""
+    import src.worker as worker_mod
+
+    hb = tmp_path / "heartbeat"
+    monkeypatch.setattr(worker_mod, "HEARTBEAT_PATH", str(hb))
+    w = _worker_with(_StatusDB())
+    w._touch_heartbeat()
+    assert hb.exists()
+    assert datetime.fromisoformat(hb.read_text()).tzinfo is not None
+
+
 def test_run_job_unbekannter_typ_wird_dead() -> None:
     db = _StatusDB()
     w = _worker_with(db)

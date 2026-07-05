@@ -49,6 +49,16 @@ services:
       # Kontoweites Channex-Budget (Token-Bucket im Worker).
       CHANNEX_ACCOUNT_BUDGET: ${CHANNEX_ACCOUNT_BUDGET:-200/60}
       CHANNEX_PROPERTY_BUDGET: ${CHANNEX_PROPERTY_BUDGET:-20/60}
+    healthcheck:
+      # Echter Liveness-Check: der Run-Loop schreibt je Durchlauf einen Heartbeat
+      # (src/worker.py, HEARTBEAT_PATH); ist die Datei älter als 120 s, hängt der
+      # Event-Loop → unhealthy. Über python (im Image) — der Worker hat bewusst
+      # keinen HTTP-Port, ein Portcheck wäre hier nur ein Fake.
+      test: ["CMD", "python", "-c", "import os,sys,time; sys.exit(0 if time.time()-os.stat('/tmp/worker-heartbeat').st_mtime<120 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     deploy:
       resources:
         limits:

@@ -110,6 +110,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # supavisor stellt seinen Health-Endpunkt am HTTP-Port (4000) bereit; das Image
+    # bringt curl mit. Form + Timings = offizielle supabase/supabase-Compose
+    # (live im Container verifiziert).
+    healthcheck:
+      test: ["CMD", "curl", "-sSfL", "--head", "-o", "/dev/null", "http://127.0.0.1:4000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     deploy:
       resources:
         limits:
@@ -137,9 +146,25 @@ services:
       # zusammen ~50, +25 PostgREST = ~75, sicherer Puffer.
       PGRST_DB_POOL: ${PGRST_DB_POOL:-25}
       PGRST_DB_USE_LEGACY_GUCS: "false"
+      # Admin-Server für PostgRESTs EIGENEN Ready-Check (`postgrest --ready`) —
+      # das distroless-Image hat kein curl/wget, aber das postgrest-Binary bringt
+      # den Selbsttest mit. v14 verweigert --ready bei Wildcard-server-host
+      # ("!4"/"*"), darum lauscht NUR der Admin-Endpunkt auf localhost; der
+      # Haupt-Server (Port 3000) bleibt unverändert für kong/storage erreichbar
+      # (beides live gegen die echte Umgebung verifiziert).
+      PGRST_ADMIN_SERVER_PORT: 3001
+      PGRST_ADMIN_SERVER_HOST: localhost
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      # Offizieller Supabase-Check: /ready am Admin-Server (503 solange die
+      # DB-Verbindung/Schema-Cache nicht steht → ehrliche Readiness, kein TCP-Hack).
+      test: ["CMD", "postgrest", "--ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     deploy:
       resources:
         limits:
@@ -190,6 +215,14 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      # GoTrue-eigener /health-Endpunkt; wget ist im Image (offizieller
+      # Supabase-Check, live im laufenden Container verifiziert).
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9999/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     deploy:
       resources:
         limits:
@@ -228,6 +261,18 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      # Tenant-Health-Endpunkt (offizieller Supabase-Check). Tenant "realtime-dev"
+      # existiert real (live in _realtime.tenants geprüft); der Check braucht den
+      # ANON_KEY als Bearer — compose interpoliert ${ANON_KEY} beim Deploy (gleiche
+      # Mechanik wie beim storage-Service, dort nachweislich funktionierend).
+      # CMD-Array statt CMD-SHELL: keine Shell-Quoting-Fallen (live verifiziert).
+      # start_period großzügig — der Elixir-Boot braucht länger als 10 s.
+      test: ["CMD", "curl", "-sSfL", "--head", "-o", "/dev/null", "-H", "Authorization: Bearer ${ANON_KEY}", "http://localhost:4000/api/tenants/realtime-dev/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     deploy:
       resources:
         limits:
@@ -279,6 +324,16 @@ services:
         condition: service_healthy
       rest:
         condition: service_started
+    healthcheck:
+      # storage-api /status; wget ist im Image (offizieller Supabase-Check).
+      # WICHTIG: über den Servicenamen "storage", NICHT localhost — der Dienst
+      # lauscht nicht auf ::1, localhost wird aber IPv6-aufgelöst → Connection
+      # refused (live verifiziert; der Netz-Alias funktioniert nachweislich).
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://storage:5000/status"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     deploy:
       resources:
         limits:
