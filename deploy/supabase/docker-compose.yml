@@ -329,75 +329,13 @@ services:
         limits:
           memory: 512m
 
-  # FastAPI-Backend — im SELBEN Stack wie Supabase, damit es Kong/auth/rest
-  # direkt intern über http://kong:8000 erreicht (kein Internet-/Hairpin-Umweg).
-  api:
-    # Build-Kontext relativ zum Coolify base_directory (= Repo-Root), NICHT zur
-    # Compose-Datei. Coolify löst Pfade vom geklonten Repo-Root auf.
-    build:
-      context: ./apps/api
-      dockerfile: Dockerfile
-    image: nextdays-api:prod
-    # KEIN container_name: Coolify/Traefik nutzt den Service-Namen "api" für die
-    # Discovery; ein fester container_name (nextdays-api) bricht das Routing.
-    restart: unless-stopped
-    networks:
-      # coolify-Netz EXPLIZIT, sonst hängt Coolify den Container bei einem
-      # eigenen networks:-Block NICHT automatisch dort ein → Traefik erreicht die
-      # api nicht → 504/Timeout nach jedem Deploy. (web-App hat keinen networks:-
-      # Block und kommt deshalb automatisch ins coolify-Netz.)
-      coolify:
-      default:
-      supabase-internal:
-        aliases: [api]
-    labels:
-      # Die api hängt in mehreren Netzen → Traefik muss wissen, ÜBER WELCHES es
-      # die api anspricht (sonst wählt es mehrdeutig das falsche → 503/504).
-      #
-      # MUSS das App-Netz (= Coolify-App-UUID) sein, NICHT "coolify": Coolify
-      # hängt jeden Compose-Service automatisch in sein App-Netz
-      # cdqxi7d0w34sxzr4wr8jy8um (in dem AUCH der coolify-proxy liegt) und lässt
-      # die explizite coolify-Netz-Mitgliedschaft des Service beim Generieren
-      # fallen. Zeigt das Label dann auf "coolify", trifft Traefik eine IP, in der
-      # der Container nicht erreichbar ist → 504 nach JEDEM Deploy. Das App-Netz
-      # ist stabil (UUID ändert sich nicht) und deckt sich mit dem von Coolify
-      # selbst gesetzten caddy_ingress_network-Label.
-      - traefik.docker.network=cdqxi7d0w34sxzr4wr8jy8um
-    environment:
-      APP_ENV: ${APP_ENV:-production}
-      LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      # 4 statt 2: Der Server hat 8 Kerne; mit 2 Workern lag der Großteil der CPU
-      # brach, während einzelne Kalender-Requests (viele blockierende PostgREST-
-      # Roundtrips) einen Worker-Thread lange hielten. 4 Worker verteilen die Last
-      # besser; ~0,6 GB je Instanz ist beim 16-GB-Server unkritisch.
-      UVICORN_WORKERS: ${UVICORN_WORKERS:-4}
-      CORS_ORIGINS: ${CORS_ORIGINS}
-      # Kong intern im selben Netz (wie studio: http://kong:8000) — kein Hairpin.
-      SUPABASE_URL: http://kong:8000
-      SUPABASE_ANON_KEY: ${ANON_KEY}
-      SUPABASE_SERVICE_ROLE_KEY: ${SERVICE_ROLE_KEY}
-      SUPABASE_JWT_SECRET: ${JWT_SECRET}
-      # Rate-Limiter/Backpressure-Redis: der Service "redis" liegt im SELBEN
-      # Stack (default-Netz) → per Servicename erreichbar, KEIN localhost (das
-      # wäre der api-Container selbst → ConnectionError → Login-fail-closed 503).
-      # Coolifys eigener "coolify-redis" liegt in einem fremden Netz und ist
-      # bewusst NICHT für die App gedacht.
-      REDIS_URL: ${REDIS_URL:-redis://:${REDIS_PASSWORD}@redis:6379/0}
-      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
-      GOOGLE_TRANSLATE_API_KEY: ${GOOGLE_TRANSLATE_API_KEY:-}
-    expose:
-      - "8000"
-    depends_on:
-      auth:
-        condition: service_started
-      rest:
-        condition: service_started
-      redis:
-        condition: service_healthy
-    deploy:
-      resources:
-        limits:
-          memory: 1g
+  # HINWEIS: Das FastAPI-Backend (api) läuft seit der Stack-Trennung als
+  # EIGENSTÄNDIGE Coolify-App (deploy/api-standalone/), NICHT mehr hier im
+  # DB-Stack. Grund: Coolify deployt einen Compose-Stack als Einheit (kein
+  # Rolling-Update) — solange die api hier lag, fuhr JEDER apps/api/-Deploy die
+  # Produktions-DB mit herunter. Als eigene App hat die api ihren eigenen
+  # Deploy-Lebenszyklus; die DB bleibt bei api-Deploys unberührt. Die api erreicht
+  # kong/redis weiterhin über das externe supabase-internal-Netz per Servicename.
 
   # HINWEIS: Der Background-Worker (jobs-Queue) läuft als EIGENSTÄNDIGE Coolify-App
   # (deploy/worker/), NICHT hier im DB-Stack. Grund: ein crashender Worker im
