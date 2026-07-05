@@ -59,9 +59,10 @@ services:
     expose:
       - "8000"
     # Healthcheck = Voraussetzung für Coolifys Start-before-Stop (Zero-Downtime):
-    # der neue Container übernimmt Traffic erst, wenn /health grün ist.
+    # der neue Container übernimmt Traffic erst, wenn /health grün ist. Über python
+    # (im Image), NICHT curl/wget — das schlanke python:3.12-slim-Image hat kein curl.
     healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)"]
       interval: 30s
       timeout: 5s
       retries: 3
