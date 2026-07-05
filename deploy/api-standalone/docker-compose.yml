@@ -38,8 +38,11 @@ services:
       # „coolify": Coolify hängt jeden Service in sein App-Netz und lässt die
       # explizite coolify-Netz-Mitgliedschaft beim Generieren fallen. Zeigt das
       # Label auf „coolify", trifft Traefik eine falsche IP → 504 nach JEDEM Deploy.
-      # COOLIFY_RESOURCE_UUID setzt Coolify je App automatisch (wie im Kong-Stack).
-      - traefik.docker.network=${COOLIFY_RESOURCE_UUID}
+      # Wie der funktionierende kong-Stack: Traefik erreicht die api über das
+      # "coolify"-Netz (dort lauscht coolify-proxy). Die api MUSS deshalb im
+      # coolify-Netz hängen (networks: coolify unten) UND dieses Label tragen —
+      # Coolify expandiert ${VARS} in Labels NICHT, also fest "coolify".
+      - traefik.docker.network=coolify
     environment:
       APP_ENV: ${APP_ENV:-production}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
