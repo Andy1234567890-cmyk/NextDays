@@ -37,7 +37,7 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PATH="/opt/venv/bin:$PATH" \
     VIRTUAL_ENV=/opt/venv \
-    UVICORN_WORKERS=2
+    UVICORN_WORKERS=4
 
 # curl nur für den HEALTHCHECK; danach Caches aufräumen (kleines Image).
 RUN apt-get update && apt-get install -y --no-install-recommends curl && \

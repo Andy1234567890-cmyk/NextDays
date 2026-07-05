@@ -35,8 +35,16 @@ class Settings(BaseSettings):
     rate_limit_auth: str = "10/60"
     # Streng: teure Zahlungs-Endpunkte (pro IP).
     rate_limit_payments: str = "30/60"
-    # Mittel: öffentliche Such-/Listings-/Kalender-Endpunkte (Scraper-Schutz, pro IP).
-    rate_limit_listings: str = "60/60"
+    # Öffentliche (nicht-eingeloggte) Such-/Listings-/Kalender-Endpunkte:
+    # Scraper-Schutz PRO IP. 240/60 statt 60/60 — 60 war zu knapp und traf bei
+    # Büro-NAT (mehrere Mitarbeiter, eine IP) mehrere Nutzer gemeinsam.
+    rate_limit_listings: str = "240/60"
+    # EINGELOGGTE Kalender-/Listings-Requests werden PRO TENANT limitiert (nicht
+    # pro IP) — sonst sperrt sich ein Betrieb, der seinen eigenen Kalender lädt,
+    # selbst aus. Großzügig, weil ein Kalender-Load (bis der Batch-Endpunkt greift)
+    # viele Objekt-Requests bündelt. Missbrauch bleibt durch das allgemeine
+    # tenant-Limit gedeckelt.
+    rate_limit_listings_tenant: str = "1200/60"
     # Multi-Tenant-Fairness: ein eingeloggter Tenant darf den Pool nicht leeren.
     rate_limit_tenant: str = "600/60"
     # Vertrauenswürdige Proxy-Hops für die X-Forwarded-For-Auswertung. Anzahl der

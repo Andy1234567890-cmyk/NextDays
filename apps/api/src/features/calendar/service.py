@@ -18,12 +18,15 @@ from .schemas import (
     AvailabilitySource,
     AvailabilityStatus,
     BlockRequest,
+    BoardProperty,
+    BoardResponse,
     BulkEditRequest,
     BulkEditResult,
     DateRange,
     DayAvailability,
     PriceOverrideRequest,
     SliceHealth,
+    StopSellDay,
 )
 
 if TYPE_CHECKING:
@@ -97,12 +100,24 @@ class CalendarService:
         """
         self._require_own_property(tenant_id, property_id)
         rows = self._fetch_days(property_id, rng)
-        by_date = {r["date"]: r for r in rows}
         effective = {
             d.date.isoformat(): d
             for d in self._resolver().effective_prices(property_id, rng.start, rng.end)
         }
         _base, min_stay = self._fetch_rate_plan(property_id)
+        return self._build_days(rng, rows, effective, min_stay)
+
+    @staticmethod
+    def _build_days(
+        rng: DateRange,
+        rows: list[dict],
+        effective: dict,
+        min_stay: int | None,
+    ) -> list[DayAvailability]:
+        """Tagesliste aus availability-Zeilen + effektiven Preisen bauen. Eine
+        Quelle für Einzel- (get_availability) und Batch-Pfad (get_board), damit
+        beide identische DayAvailability liefern."""
+        by_date = {r["date"]: r for r in rows}
         result: list[DayAvailability] = []
         for day in rng.nights():
             key = day.isoformat()
@@ -134,6 +149,117 @@ class CalendarService:
                 )
             )
         return result
+
+    def get_board(
+        self, tenant_id: str, property_ids: list[str], rng: DateRange
+    ) -> BoardResponse:
+        """Kalender-Batch: Availability + Preise + Min-Stay + Stop-Sell für ALLE
+        angefragten Objekte des Tenants in EINEM Aufruf.
+
+        Ersetzt die N+1-Einzelabrufe (früher 2 HTTP-Calls × je 6 DB-Queries pro
+        Objekt) durch wenige gebündelte `.in_(property_ids)`-Queries. Nur Objekte,
+        die DIESEM Tenant gehören, werden geladen (Tenant-Scope wie überall, da der
+        Service-Role-Key RLS umgeht); fremde/unbekannte IDs werden still verworfen.
+        """
+        if not tenant_id:
+            raise CalendarError("Kein Tenant im Konto.", status_code=400)
+        if not property_ids:
+            return BoardResponse(items=[])
+        # 1 Query: eigene Objekte des Tenants (zugleich Scope-Filter).
+        owned = {
+            r["id"]
+            for r in (
+                self._db()
+                .table("properties")
+                .select("id")
+                .eq("tenant_id", tenant_id)
+                .in_("id", property_ids)
+                .execute()
+            ).data or []
+        }
+        # Eingabereihenfolge beibehalten, aber nur eigene IDs.
+        pids = [p for p in property_ids if p in owned]
+        if not pids:
+            return BoardResponse(items=[])
+
+        start_iso, end_iso = rng.start.isoformat(), rng.end.isoformat()
+        # 1 Query: availability aller Objekte im Zeitraum.
+        avail_rows = (
+            self._db()
+            .table("availability")
+            .select("property_id,date,status,source,closed_to_arrival,closed_to_departure")
+            .in_("property_id", pids)
+            .gte("date", start_iso)
+            .lt("date", end_iso)
+            .execute()
+        ).data or []
+        avail_by_pid: dict[str, list[dict]] = {}
+        for r in avail_rows:
+            avail_by_pid.setdefault(r["property_id"], []).append(r)
+
+        # 1 Query: Rate-Plans (Min-Stay je Objekt; ältester gewinnt wie Einzelpfad).
+        min_stay_by_pid = self._fetch_min_stay_bulk(pids)
+        # 4 Queries (im Resolver): effektive Preise aller Objekte.
+        prices = self._resolver().effective_prices_bulk(pids, rng.start, rng.end)
+        # 1 Query: Stop-Sells aller Objekte im Zeitraum.
+        stop_by_pid = self._list_stop_sell_bulk(pids, rng)
+
+        items: list[BoardProperty] = []
+        for pid in pids:
+            effective = {d.date.isoformat(): d for d in prices.get(pid, [])}
+            days = self._build_days(
+                rng, avail_by_pid.get(pid, []), effective, min_stay_by_pid.get(pid)
+            )
+            items.append(
+                BoardProperty(
+                    property_id=pid,
+                    days=days,
+                    stop_sell=stop_by_pid.get(pid, []),
+                )
+            )
+        return BoardResponse(items=items)
+
+    def _fetch_min_stay_bulk(self, property_ids: list[str]) -> dict[str, int | None]:
+        """Min-Stay je Objekt aus dem ältesten Rate-Plan (eine `.in_()`-Query)."""
+        rows = (
+            self._db()
+            .table("rate_plans")
+            .select("property_id,min_stay,created_at")
+            .in_("property_id", property_ids)
+            .order("created_at")
+            .execute()
+        ).data or []
+        out: dict[str, int | None] = {}
+        for r in rows:
+            pid = r.get("property_id")
+            if isinstance(pid, str) and pid not in out:  # erster = ältester
+                ms = r.get("min_stay")
+                out[pid] = int(ms) if ms is not None else None
+        return out
+
+    def _list_stop_sell_bulk(
+        self, property_ids: list[str], rng: DateRange
+    ) -> dict[str, list[StopSellDay]]:
+        """Stop-Sells aller Objekte im Zeitraum (eine `.in_()`-Query) inkl.
+        travel_agencies-Name fürs Balken-Label — gruppiert nach property_id."""
+        rows = (
+            self._db()
+            .table("stop_sell")
+            .select(
+                "id,property_id,date,reason,source,agency_id,travel_agencies(name)"
+            )
+            .in_("property_id", property_ids)
+            .gte("date", rng.start.isoformat())
+            .lt("date", rng.end.isoformat())
+            .order("date")
+            .execute()
+        ).data or []
+        out: dict[str, list[StopSellDay]] = {}
+        for row in rows:
+            agency = row.pop("travel_agencies", None) or {}
+            row["agency_name"] = agency.get("name") if isinstance(agency, dict) else None
+            out.setdefault(row["property_id"], []).append(StopSellDay(**row))
+        return out
 
     def check_availability(
         self, tenant_id: str, property_id: str, rng: DateRange

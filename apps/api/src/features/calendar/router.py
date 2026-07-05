@@ -16,6 +16,7 @@ from src.features.auth.permissions import Capability
 from .schemas import (
     AvailabilityCheck,
     BlockRequest,
+    BoardResponse,
     BulkEditRequest,
     BulkEditResult,
     DateRange,
@@ -56,6 +57,24 @@ def availability(
     try:
         return service.get_availability(
             ctx.tenant_id, property_id, DateRange(start=start, end=end)
+        )
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/board", response_model=BoardResponse)
+def board(
+    service: CalendarServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    property_ids: Annotated[list[str], Query(max_length=500)],
+    start: Annotated[date, Query()],
+    end: Annotated[date, Query()],
+) -> BoardResponse:
+    """Batch-Kalender: Availability + Preise + Min-Stay + Stop-Sell für ALLE
+    angefragten Objekte in EINEM Call (ersetzt die N+1-Einzelabrufe des Boards)."""
+    try:
+        return service.get_board(
+            ctx.tenant_id, property_ids, DateRange(start=start, end=end)
         )
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

@@ -129,6 +129,13 @@ services:
       PGRST_DB_ANON_ROLE: anon
       PGRST_JWT_SECRET: ${JWT_SECRET}
       PGRST_DB_MAX_ROWS: 1000
+      # Connection-Pool an Postgres. Default wäre 10 — der Durchsatz-Deckel des
+      # gesamten API-getriebenen Traffics (die FastAPI-API spricht ausschließlich
+      # über PostgREST, hält selbst keine DB-Connections). Bei ~100 Nutzern stauen
+      # sich sonst tausende Queries an 10 Connections. 25 gewählt, damit
+      # Σ Pools < max_connections (100) bleibt: Realtime/Supavisor/Auth belegen
+      # zusammen ~50, +25 PostgREST = ~75, sicherer Puffer.
+      PGRST_DB_POOL: ${PGRST_DB_POOL:-25}
       PGRST_DB_USE_LEGACY_GUCS: "false"
     depends_on:
       db:
@@ -359,7 +366,11 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-production}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      UVICORN_WORKERS: ${UVICORN_WORKERS:-2}
+      # 4 statt 2: Der Server hat 8 Kerne; mit 2 Workern lag der Großteil der CPU
+      # brach, während einzelne Kalender-Requests (viele blockierende PostgREST-
+      # Roundtrips) einen Worker-Thread lange hielten. 4 Worker verteilen die Last
+      # besser; ~0,6 GB je Instanz ist beim 16-GB-Server unkritisch.
+      UVICORN_WORKERS: ${UVICORN_WORKERS:-4}
       CORS_ORIGINS: ${CORS_ORIGINS}
       # Kong intern im selben Netz (wie studio: http://kong:8000) — kein Hairpin.
       SUPABASE_URL: http://kong:8000
@@ -394,7 +405,13 @@ services:
   redis:
     image: redis:7-alpine
     restart: unless-stopped
-    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes"]
+    # maxmemory unter dem 256m-Container-Limit → Redis regelt selbst, statt vom OS
+    # OOM-gekillt zu werden (ein Redis-Ausfall sperrt Logins: Auth/Payments sind
+    # fail-closed). noeviction: Rate-Limit- und Queue-Daten dürfen NICHT still
+    # verworfen werden; die Keys sind winzig und laufen per TTL ab, 200m wird nie
+    # erreicht. So bleibt der Ratelimiter korrekt statt Keys unter Druck zu verlieren.
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes",
+              "--maxmemory", "200mb", "--maxmemory-policy", "noeviction"]
     networks:
       default:
     volumes:

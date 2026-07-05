@@ -81,7 +81,8 @@ verschlüsselten Coolify-Config-Sicherung. Diese Datei sagt nur, **welche** Vari
 | `WHATSAPP_DEFAULT_TENANT_ID` | Default-Tenant für neue Nummern | nein | Coolify-Env |
 | `PUBLIC_API_URL` | öffentliche API-URL (Webhook-Callbacks) | nein | Coolify-Env |
 | `CORS_ORIGINS` | erlaubte Frontend-Origins | nein | Coolify-Env |
-| `UVICORN_WORKERS` | API-Worker-Anzahl (2) | nein | Coolify-Env |
+| `UVICORN_WORKERS` | API-Worker-Anzahl (Default 4, 8-Kern-Server) | nein | Coolify-Env |
+| `PGRST_DB_POOL` | PostgREST-Connection-Pool (Default 25; Σ Pools < max_connections 100) | nein | Coolify-Env |
 
 ### Page-Builder (`site_config`-Slice)
 | Variable | Zweck | Secret? | Quelle |

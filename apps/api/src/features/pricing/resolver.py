@@ -295,6 +295,119 @@ class PricingResolver:
             for day in _nights(check_in, check_out)
         ]
 
+    # -- Batch: viele Objekte in EINEM Lauf (Board-Endpunkt) ------------------
+    def effective_prices_bulk(
+        self, property_ids: list[str], check_in: date, check_out: date
+    ) -> dict[str, list[EffectivePriceDay]]:
+        """Effektivpreise für VIELE Objekte, mit je EINER `.in_()`-Query pro Quelle
+        statt 4 Queries pro Objekt (N+1-Auflösung → 4 Queries gesamt).
+
+        Liefert {property_id: [EffectivePriceDay,…]}. Nutzt dieselbe
+        `_effective_for_day`-Logik wie der Einzelpfad — eine Preis-Wahrheit."""
+        if not property_ids:
+            return {}
+        overrides = self._load_overrides_bulk(property_ids, check_in, check_out)
+        dynamic = self._load_dynamic_bulk(property_ids, check_in, check_out)
+        configs = self._load_config_bulk(property_ids)
+        bases = self._load_rate_plan_bulk(property_ids)
+        days = _nights(check_in, check_out)
+        empty_cfg = _PricingConfig(None)
+        out: dict[str, list[EffectivePriceDay]] = {}
+        for pid in property_ids:
+            ov = overrides.get(pid, {})
+            dyn = dynamic.get(pid, {})
+            cfg = configs.get(pid, empty_cfg)
+            base = bases.get(pid)
+            out[pid] = [
+                self._effective_for_day(day, ov, dyn, cfg, base) for day in days
+            ]
+        return out
+
+    def _load_overrides_bulk(
+        self, property_ids: list[str], check_in: date, check_out: date
+    ) -> dict[str, dict[str, float]]:
+        res = (
+            self._db()
+            .table("price_overrides")
+            .select("property_id, date, price")
+            .in_("property_id", property_ids)
+            .gte("date", check_in.isoformat())
+            .lt("date", check_out.isoformat())
+            .not_.is_("price", "null")
+            .execute()
+        ).data or []
+        out: dict[str, dict[str, float]] = {}
+        for r in res:
+            pid, day, price = r.get("property_id"), r.get("date"), _to_float(r.get("price"))
+            if isinstance(pid, str) and isinstance(day, str) and price is not None:
+                out.setdefault(pid, {})[day] = price
+        return out
+
+    def _load_dynamic_bulk(
+        self, property_ids: list[str], check_in: date, check_out: date
+    ) -> dict[str, dict[str, dict]]:
+        try:
+            res = (
+                self._db()
+                .table("dynamic_prices")
+                .select("property_id, date, price, factors")
+                .in_("property_id", property_ids)
+                .gte("date", check_in.isoformat())
+                .lt("date", check_out.isoformat())
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — fehlende Tabelle/Spalte = kein DP
+            log.warning("dynamic_prices_bulk_unavailable", error=str(exc))
+            return {}
+        out: dict[str, dict[str, dict]] = {}
+        for r in res:
+            pid, day, price = r.get("property_id"), r.get("date"), _to_float(r.get("price"))
+            if isinstance(pid, str) and isinstance(day, str) and price is not None:
+                factors = r.get("factors")
+                out.setdefault(pid, {})[day] = {
+                    "price": price,
+                    "factors": factors if isinstance(factors, dict) else None,
+                }
+        return out
+
+    def _load_config_bulk(self, property_ids: list[str]) -> dict[str, _PricingConfig]:
+        try:
+            res = (
+                self._db()
+                .table("property_pricing_config")
+                .select("*")
+                .in_("property_id", property_ids)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — fehlende Tabelle = leere Konfig
+            log.warning("pricing_config_bulk_unavailable", error=str(exc))
+            return {}
+        return {
+            r["property_id"]: _PricingConfig(r)
+            for r in res
+            if isinstance(r.get("property_id"), str)
+        }
+
+    def _load_rate_plan_bulk(
+        self, property_ids: list[str]
+    ) -> dict[str, float | None]:
+        """Basispreis je Objekt (erster Rate-Plan). Bei mehreren Plänen gewinnt der
+        älteste (created_at) — wie der Einzelpfad `_load_rate_plan`."""
+        res = (
+            self._db()
+            .table("rate_plans")
+            .select("property_id, base_price, created_at")
+            .in_("property_id", property_ids)
+            .order("created_at")
+            .execute()
+        ).data or []
+        out: dict[str, float | None] = {}
+        for r in res:
+            pid = r.get("property_id")
+            if isinstance(pid, str) and pid not in out:  # erster = ältester
+                out[pid] = _to_float(r.get("base_price"))
+        return out
+
     # -- Vollständiger Quote --------------------------------------------------
     def quote(self, req: QuoteRequest) -> QuoteResponse:
         """Vollständige Preisaufschlüsselung. Reihenfolge:

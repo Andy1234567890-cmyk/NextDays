@@ -16,6 +16,8 @@ export type LabelProp = {
   photo: string | null;
   address: string;
   city: string;
+  // Am Objekt eingestellte Personenkapazität → Badge hinter dem Namen.
+  maxGuests: number;
   // Dynamic Pricing für dieses Objekt aktiv → Blitz-Badge an der Zeile.
   dynamicEnabled?: boolean;
 };
@@ -58,6 +60,14 @@ export function PropertyLabel({
         {showInternalName && (
           <span className="flex items-center gap-1.5">
             <span className="truncate text-sm font-semibold">{p.title}</span>
+            {/* Am Objekt eingestellte Personenkapazität (nicht die Belegung). */}
+            <span
+              title="Für dieses Objekt eingestellte Personenzahl"
+              className="flex shrink-0 items-center gap-0.5 rounded-full bg-secondary px-1.5 py-0.5 text-[0.65rem] font-semibold text-muted-foreground tabular-nums"
+            >
+              <Icon icon="ph:user" className="size-2.5" />
+              {p.maxGuests}
+            </span>
             {p.dynamicEnabled && (
               <span
                 title="Dynamic Pricing aktiv — die Tagespreise werden automatisch berechnet."

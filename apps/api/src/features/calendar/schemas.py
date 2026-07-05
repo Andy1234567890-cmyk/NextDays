@@ -72,6 +72,22 @@ class AvailabilityCheck(BaseModel):
     conflicting_days: list[date] = []
 
 
+class BoardProperty(BaseModel):
+    """Ein Objekt im Batch-Kalender: Tagesdaten + Stop-Sells in einem Rutsch.
+
+    Ersetzt die N+1-Einzelabrufe (früher 2 HTTP-Calls je Objekt) durch EINE
+    gebündelte Antwort für alle Objekte des Tenants — der Board-Endpunkt lädt die
+    zugrundeliegenden Tabellen mit wenigen `.in_(property_ids)`-Queries statt mit
+    6 Queries pro Objekt."""
+    property_id: str
+    days: list[DayAvailability] = []
+    stop_sell: list["StopSellDay"] = []
+
+
+class BoardResponse(BaseModel):
+    items: list[BoardProperty] = []
+
+
 class BlockRequest(BaseModel):
     property_id: str
     range: DateRange

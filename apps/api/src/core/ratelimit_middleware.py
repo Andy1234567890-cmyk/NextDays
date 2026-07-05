@@ -52,6 +52,7 @@ class _Buckets:
         self.auth = parse_limit(settings.rate_limit_auth)
         self.payments = parse_limit(settings.rate_limit_payments)
         self.listings = parse_limit(settings.rate_limit_listings)
+        self.listings_tenant = parse_limit(settings.rate_limit_listings_tenant)
         self.tenant = parse_limit(settings.rate_limit_tenant)
 
 
@@ -159,22 +160,37 @@ class RateLimitMiddleware:
         bucket_name, limit, sensitive = _select_bucket(path, self._buckets)
         limiter = self._limiter_for_loop()
 
-        ip = client_ip_from_xff(
-            request.headers.get("x-forwarded-for"),
-            request.client.host if request.client else None,
-            self._settings.rate_limit_trusted_proxy_hops,
-        )
-        ip_key = f"{bucket_name}:ip:{ip or 'unknown'}"
-        decision = await limiter.check(ip_key, limit)
+        tenant = _tenant_from_bearer(request.headers.get("authorization"))
+
+        # listings/Kalender EINGELOGGT → pro TENANT keyen (nicht pro IP): ein
+        # Betrieb, der seinen eigenen Kalender lädt, darf sich nicht selbst
+        # aussperren, und Büro-NAT (mehrere Mitarbeiter, eine IP) teilt sich sonst
+        # ein IP-Limit. Nicht-eingeloggte listings-Requests (öffentlicher
+        # Marktplatz) bleiben pro IP (Scraper-Schutz). Alle anderen Buckets: IP.
+        if bucket_name == "listings" and tenant:
+            primary_key = f"listings:tenant:{tenant}"
+            limit = self._buckets.listings_tenant
+            primary_scope = "listings-tenant"
+        else:
+            ip = client_ip_from_xff(
+                request.headers.get("x-forwarded-for"),
+                request.client.host if request.client else None,
+                self._settings.rate_limit_trusted_proxy_hops,
+            )
+            primary_key = f"{bucket_name}:ip:{ip or 'unknown'}"
+            primary_scope = "ip"
+        decision = await limiter.check(primary_key, limit)
 
         if decision.degraded:
             return self._handle_degraded(sensitive, path)
         if not decision.allowed:
-            return self._reject(decision, bucket_name, path, scope="ip")
+            return self._reject(decision, bucket_name, path, scope=primary_scope)
 
-        # Zusätzliches Tenant-Limit (Fairness) nur für eingeloggte Requests.
-        tenant = _tenant_from_bearer(request.headers.get("authorization"))
-        if tenant:
+        # Zusätzliches allgemeines Tenant-Limit (Fairness) für eingeloggte Requests.
+        # Beim listings-Bucket ist das Tenant-Keying schon das Primärlimit oben →
+        # das schwächere Fairness-Limit hier würde es fälschlich zuerst greifen
+        # lassen; deshalb nur für die übrigen (IP-gekeyten) Buckets anwenden.
+        if tenant and bucket_name != "listings":
             t_decision = await limiter.check(
                 f"tenant:{tenant}", self._buckets.tenant
             )

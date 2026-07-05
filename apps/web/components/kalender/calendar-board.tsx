@@ -1293,10 +1293,9 @@ export function CalendarBoard({
                           >
                             {status === "open" && (
                               <>
-                                <span className={`flex items-center gap-0.5 ${inSel ? "text-white" : "text-muted-foreground"}`}>
-                                  <Icon icon="ph:user" className="size-3.5" />
-                                  {p.maxGuests}
-                                </span>
+                                {/* Personenzahl steht als Badge hinter dem Zimmernamen
+                                    (konstant je Objekt) → in der Tageszelle nur Preis,
+                                    Mindestaufenthalt und An-/Abreise-Sperren. */}
                                 {view.showPrice && (
                                   <span className={`flex items-center gap-1 ${inSel ? "text-white" : "text-muted-foreground"}`}>
                                     {fmtPrice(priceMap[key(d)])}

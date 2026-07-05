@@ -191,6 +191,48 @@ def test_distinct_ips_have_separate_budgets() -> None:
     assert client.get("/api/v1/booking-engine/listings", headers=b).status_code == 200
 
 
+def _bearer(tenant_id: str) -> str:
+    """Minimaler Bearer-Token mit tenant_id in app_metadata (nur fürs Keying;
+    die Middleware liest den Claim ohne Signaturprüfung)."""
+    import base64
+    import json
+
+    body = base64.urlsafe_b64encode(
+        json.dumps({"app_metadata": {"tenant_id": tenant_id}}).encode()
+    ).rstrip(b"=").decode()
+    return f"Bearer h.{body}.sig"
+
+
+def test_listings_logged_in_keyed_per_tenant_not_ip() -> None:
+    # Eingeloggte listings-Requests laufen gegen listings_tenant (pro Tenant),
+    # NICHT gegen das IP-Limit. Ein Betrieb sperrt sich beim eigenen Kalender-Load
+    # nicht selbst aus: das strenge IP-Limit greift hier gar nicht.
+    settings = Settings(rate_limit_listings="1/60", rate_limit_listings_tenant="3/60")
+    client = TestClient(_app_with_limiter(_FakeRedis(), settings))
+    h = {"Authorization": _bearer("tenant-A"), "X-Forwarded-For": "9.9.9.9"}
+    # 3 erlaubt (Tenant-Limit), obwohl das IP-Limit nur 1 wäre.
+    assert client.get("/api/v1/booking-engine/listings", headers=h).status_code == 200
+    assert client.get("/api/v1/booking-engine/listings", headers=h).status_code == 200
+    assert client.get("/api/v1/booking-engine/listings", headers=h).status_code == 200
+    r = client.get("/api/v1/booking-engine/listings", headers=h)
+    assert r.status_code == 429
+    assert r.headers.get("X-RateLimit-Limit") == "3"
+
+
+def test_listings_two_tenants_same_ip_have_separate_budgets() -> None:
+    # Büro-NAT: zwei Betriebe teilen sich eine öffentliche IP, dürfen sich aber
+    # NICHT das Limit teilen — pro-Tenant-Keying trennt sie.
+    settings = Settings(rate_limit_listings="1/60", rate_limit_listings_tenant="1/60")
+    client = TestClient(_app_with_limiter(_FakeRedis(), settings))
+    ip = {"X-Forwarded-For": "5.5.5.5"}
+    a = {"Authorization": _bearer("tenant-A"), **ip}
+    b = {"Authorization": _bearer("tenant-B"), **ip}
+    assert client.get("/api/v1/booking-engine/listings", headers=a).status_code == 200
+    assert client.get("/api/v1/booking-engine/listings", headers=a).status_code == 429
+    # Anderer Tenant, gleiche IP → eigenes Budget.
+    assert client.get("/api/v1/booking-engine/listings", headers=b).status_code == 200
+
+
 def test_fail_open_on_redis_outage_for_normal_endpoint() -> None:
     settings = Settings(rate_limit_listings="1/60")
     client = TestClient(_app_with_limiter(_FakeRedis(fail=True), settings))

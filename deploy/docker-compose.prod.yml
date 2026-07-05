@@ -24,7 +24,7 @@ services:
     environment:
       APP_ENV: ${APP_ENV:-production}
       LOG_LEVEL: ${LOG_LEVEL:-INFO}
-      UVICORN_WORKERS: ${UVICORN_WORKERS:-2}
+      UVICORN_WORKERS: ${UVICORN_WORKERS:-4}
       CORS_ORIGINS: ${CORS_ORIGINS}
       # --- Supabase (self-hosted; zeigt auf den Kong-Gateway des SB-Stacks) ---
       SUPABASE_URL: ${SUPABASE_URL}
