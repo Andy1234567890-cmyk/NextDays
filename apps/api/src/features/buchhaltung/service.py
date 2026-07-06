@@ -1142,7 +1142,9 @@ class BuchhaltungService:
             "status": req.status,
             "issue_date": req.issue_date.isoformat() if req.issue_date else None,
             "due_date": req.due_date.isoformat() if req.due_date else None,
-            "currency": req.currency,
+            # Wurzel 4: Währung aus dem Request ODER aus der Mandanten-Währung
+            # (fail-closed 422), nie ein erfundenes EUR in den GoBD-Beleg.
+            "currency": req.currency or self._tenant_currency(tenant_id),
             "tax_rule": req.tax_rule,
             "head_text": req.head_text,
             "footer_text": req.footer_text,
@@ -1326,7 +1328,9 @@ class BuchhaltungService:
             "status": req.status,
             "issue_date": req.issue_date.isoformat() if req.issue_date else None,
             "valid_until": req.valid_until.isoformat() if req.valid_until else None,
-            "currency": req.currency,
+            # Wurzel 4: Währung aus dem Request ODER aus der Mandanten-Währung
+            # (fail-closed 422), nie ein erfundenes EUR auf dem Angebot.
+            "currency": req.currency or self._tenant_currency(tenant_id),
             "tax_rule": req.tax_rule,
             "head_text": req.head_text,
             "footer_text": req.footer_text,

@@ -290,3 +290,16 @@ h1, h2, h3 {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
   cursor: pointer;
 }
+
+/* Google-Places-Autocomplete-Dropdown: Google hängt die Vorschlagsliste
+   (.pac-container) unten an <body> mit z-index:1000. In einem Slide-over/Dialog
+   liegt der Overlay-Layer darüber → die Vorschläge sind unsichtbar/nicht
+   klickbar, und die Adressauswahl befüllt nichts. Diese Regel hebt das Dropdown
+   über jeden Dialog, damit die Vorschläge erscheinen und klickbar sind. */
+.pac-container {
+  z-index: 100000 !important;
+  /* Radix setzt bei offenem Dialog pointer-events:none auf den <body>. Das
+     .pac-container hängt am <body> und erbt das → die Vorschläge sind sichtbar,
+     aber NICHT klickbar (place_changed feuert nie). Explizit reaktivieren. */
+  pointer-events: auto !important;
+}

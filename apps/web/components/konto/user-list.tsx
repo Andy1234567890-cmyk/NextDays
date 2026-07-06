@@ -2,7 +2,8 @@
 
 // Nutzerliste im Konto → Benutzer: zeigt alle Tenant-Mitglieder (Avatar,
 // Name, E-Mail, Rolle). Der Account-Inhaber steht zuerst (Backend-Sortierung).
-// Bei Eigentümern (Rolle 'owner') zusätzlich „Objekte zuordnen" (§4.2).
+// Bei Eigentümern (Rolle 'owner') „Objekte zuordnen" (§4.2), bei Mitarbeitern
+// (staff/cleaner) „Objekte freigeben" (§4.3).
 import { Icon } from "@iconify/react";
 import { useState } from "react";
 
@@ -11,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import type { TenantUser, UserRole } from "@/lib/account";
 
 import { OwnerPropertiesDialog } from "./owner-properties-dialog";
+import { StaffPropertiesDialog } from "./staff-properties-dialog";
 
 const ROLE_LABELS: Record<UserRole, string> = {
   admin: "Admin",
@@ -30,6 +32,8 @@ function initials(user: TenantUser): string {
 export function UserList({ users }: { users: TenantUser[] }) {
   // Welcher Eigentümer gerade die Objekt-Zuordnung offen hat (null = keiner).
   const [assigning, setAssigning] = useState<TenantUser | null>(null);
+  // Welcher Mitarbeiter gerade die Objekt-Freigabe offen hat (null = keiner).
+  const [releasing, setReleasing] = useState<TenantUser | null>(null);
 
   return (
     <>
@@ -64,6 +68,17 @@ export function UserList({ users }: { users: TenantUser[] }) {
                 Objekte zuordnen
               </Button>
             )}
+            {(user.role === "staff" || user.role === "cleaner") && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="shrink-0 gap-1.5"
+                onClick={() => setReleasing(user)}
+              >
+                <Icon icon="ph:house-line" className="size-4" />
+                Objekte freigeben
+              </Button>
+            )}
             {user.role && (
               <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
                 {ROLE_LABELS[user.role]}
@@ -78,6 +93,14 @@ export function UserList({ users }: { users: TenantUser[] }) {
           userId={assigning.user_id}
           userName={assigning.full_name || assigning.email || "Eigentümer"}
           onClose={() => setAssigning(null)}
+        />
+      )}
+
+      {releasing && (
+        <StaffPropertiesDialog
+          userId={releasing.user_id}
+          userName={releasing.full_name || releasing.email || "Mitarbeiter"}
+          onClose={() => setReleasing(null)}
         />
       )}
     </>

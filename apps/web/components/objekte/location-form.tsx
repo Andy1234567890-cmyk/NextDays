@@ -224,6 +224,8 @@ type Addr = {
   country: string;
   lat: number | null;
   lng: number | null;
+  // Transport aus dem Picker in den separaten stateProvince-State.
+  state_province?: string;
 };
 
 function AddressEditor({
@@ -296,10 +298,16 @@ function AddressEditor({
               placeholder="z. B. Dänemark"
             />
           </Field>
-          <PlacesSearch onPick={(picked) => setA((prev) => ({ ...prev, ...picked }))} />
           <div className="grid grid-cols-[1fr_6rem] gap-3">
             <Field label="Straße" required>
-              <Input value={a.street} onChange={(e) => setA({ ...a, street: e.target.value })} />
+              <PlacesSearch
+                value={a.street}
+                onPick={(picked) => {
+                  const { state_province, ...addr } = picked;
+                  setA((prev) => ({ ...prev, ...addr }));
+                  if (state_province) setStateProvince(state_province);
+                }}
+              />
             </Field>
             <Field label="Nr.">
               <Input value={a.house_number} onChange={(e) => setA({ ...a, house_number: e.target.value })} />
@@ -382,10 +390,22 @@ function Recenter({ lat, lng }: { lat: number | null; lng: number | null }) {
   return null;
 }
 
-function PlacesSearch({ onPick }: { onPick: (p: Partial<Addr>) => void }) {
+function PlacesSearch({
+  value,
+  onPick,
+}: {
+  value: string;
+  onPick: (p: Partial<Addr>) => void;
+}) {
   const places = useMapsLibrary("places");
   const inputRef = useRef<HTMLInputElement>(null);
   const [ready, setReady] = useState(false);
+  // onPick in einer Ref halten: der Parent gibt bei JEDEM Render eine neue
+  // onPick-Funktion. Hinge der Effect an onPick, würde das Autocomplete ständig
+  // neu erzeugt und der place_changed-Listener neu registriert — der alte
+  // Listener hinge dann am toten Objekt, und die Auswahl befüllte NICHTS.
+  const onPickRef = useRef(onPick);
+  onPickRef.current = onPick;
 
   useEffect(() => {
     if (!places || !inputRef.current) return;
@@ -397,31 +417,35 @@ function PlacesSearch({ onPick }: { onPick: (p: Partial<Addr>) => void }) {
     const listener = ac.addListener("place_changed", () => {
       const place = ac.getPlace();
       const comps = place.address_components ?? [];
-      const get = (type: string) => {
+      const get = (type: string, short = false) => {
         const c = comps.find((x: (typeof comps)[number]) => x.types.includes(type));
-        return c ? c.long_name : "";
+        return c ? (short ? c.short_name : c.long_name) : "";
       };
-      onPick({
+      onPickRef.current({
         street: get("route"),
         house_number: get("street_number"),
         postal_code: get("postal_code"),
-        city: get("locality") || get("postal_town"),
+        city:
+          get("locality") ||
+          get("postal_town") ||
+          get("sublocality") ||
+          get("administrative_area_level_2"),
         country: get("country"),
+        state_province: get("administrative_area_level_1"),
         lat: place.geometry?.location?.lat() ?? null,
         lng: place.geometry?.location?.lng() ?? null,
       });
     });
     return () => listener.remove();
-  }, [places, onPick]);
+  }, [places]);
 
   return (
-    <Field label="Adresse suchen (Google)">
-      <Input
-        ref={inputRef}
-        placeholder={ready ? "Straße, Stadt …" : "Lädt …"}
-        disabled={!ready}
-      />
-    </Field>
+    <Input
+      ref={inputRef}
+      defaultValue={value}
+      placeholder={ready ? "Adresse eingeben und Vorschlag wählen …" : "Lädt …"}
+      disabled={!ready}
+    />
   );
 }
 

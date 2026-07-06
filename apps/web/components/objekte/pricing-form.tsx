@@ -524,7 +524,8 @@ function MoneyInput({
 }: {
   value: number;
   onChange: (v: number) => void;
-  currency: Currency;
+  // Wurzel 4: "" = noch keine Währung gewählt → Symbol bleibt leer, kein EUR.
+  currency: Currency | "";
 }) {
   return (
     <div className="flex items-center gap-2">

@@ -87,7 +87,9 @@ class InvoiceCreate(BaseModel):
     status: str = "draft"
     issue_date: date | None = None
     due_date: date | None = None
-    currency: str = "EUR"
+    # Wurzel 4: kein erfundener EUR-Default. Fehlt die Währung, löst der Service
+    # sie aus der Mandanten-Währung auf (_tenant_currency, fail-closed 422).
+    currency: str | None = None
     tax_rule: str | None = None
     head_text: str | None = None
     footer_text: str | None = None
@@ -162,7 +164,9 @@ class QuoteCreate(BaseModel):
     status: str = "draft"  # draft|sent|accepted|rejected|expired|converted
     issue_date: date | None = None
     valid_until: date | None = None
-    currency: str = "EUR"
+    # Wurzel 4: kein erfundener EUR-Default. Fehlt die Währung, löst der Service
+    # sie aus der Mandanten-Währung auf (_tenant_currency, fail-closed 422).
+    currency: str | None = None
     tax_rule: str | None = None
     head_text: str | None = None
     footer_text: str | None = None

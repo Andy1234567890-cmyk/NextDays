@@ -7,6 +7,8 @@ unterkunftslos). Supabase-Client injiziert → mockbar.
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.core.security import AuthContext
+from src.features.auth.staff_scope import is_staff, staff_property_ids
 
 from .schemas import (
     BookingTasksRequest,
@@ -64,12 +66,30 @@ class TasksService:
         )
         return self._to_task(row)
 
-    def list_tasks(self, tenant_id: str, assignee_id: str | None = None) -> list[Task]:
+    def list_tasks(
+        self,
+        tenant_id: str,
+        assignee_id: str | None = None,
+        ctx: AuthContext | None = None,
+    ) -> list[Task]:
         q = self._db().table("tasks").select("*").eq("tenant_id", tenant_id)
         if assignee_id is not None:
             q = q.eq("assignee_id", assignee_id)
         res = q.execute()
-        return [self._to_task(r) for r in (res.data or [])]
+        tasks = [self._to_task(r) for r in (res.data or [])]
+        # Defense-in-depth (§4.3): ein Mitarbeiter sieht objektgebundene Aufgaben
+        # nur an seinen freigegebenen Objekten (staff_property_assignments), selbst
+        # wenn ihm versehentlich eine Aufgabe an einem nicht freigegebenen Objekt
+        # zugewiesen wurde. Pool-Aufgaben ohne Objektbezug (property_id=None,
+        # z. B. Lager/Büro) bleiben sichtbar. Fail-closed bei objektgebundenen.
+        if ctx is not None and is_staff(ctx):
+            allowed = staff_property_ids(self._db(), ctx)
+            tasks = [
+                t
+                for t in tasks
+                if t.property_id is None or t.property_id in allowed
+            ]
+        return tasks
 
     def set_status(self, tenant_id: str, task_id: str, status: TaskStatus) -> Task:
         res = (

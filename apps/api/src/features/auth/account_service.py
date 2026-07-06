@@ -144,13 +144,70 @@ class AccountService:
             return []
         res = (
             self._service.table("users")
-            .select("id, email, full_name, role, phone, avatar_url, tenant_id, permissions")
+            .select("id, email, full_name, role, tenant_id, permissions")
             .eq("tenant_id", tenant_id)
             .order("created_at")
             .execute()
         )
         users = [self._to_tenant_user(u) for u in (res.data or [])]
         # Account-Inhaber (admin/owner/co_admin) nach vorne sortieren.
+        rank = {UserRole.admin: 0, UserRole.owner: 1, UserRole.co_admin: 2}
+        users.sort(key=lambda u: rank.get(u.role, 9))
+        return users
+
+    def list_property_contacts(
+        self, ctx: AuthContext, property_id: str
+    ) -> list[TenantUser]:
+        """Für ein Objekt als Hauptkontakt wählbare Nutzer (Soll-Modell §4.2/§4.3).
+
+        NICHT pauschal alle Tenant-Nutzer, sondern die dem Objekt zugeordneten/
+        berechtigten: admin/co_admin des Tenants (immer verantwortlich) + die dem
+        Objekt zugewiesenen Eigentümer-Logins (owner_property_assignments) + die
+        dem Objekt freigegebenen Stamm-Mitarbeiter (staff_property_assignments).
+        """
+        row = self._ensure_user_row(ctx)
+        tenant_id = row.get("tenant_id") or ctx.tenant_id
+        if not tenant_id:
+            return []
+        # Objekt muss zum eigenen Tenant gehören (Wurzel 3: Scope erzwingen).
+        prop = (
+            self._service.table("properties")
+            .select("id")
+            .eq("id", property_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not prop:
+            raise AuthError("Objekt nicht gefunden.", status_code=404)
+
+        # Dem Objekt zugeordnete Nutzer-IDs (Owner-Portal + Stamm-Mitarbeiter).
+        assigned_ids: set[str] = set()
+        for table in ("owner_property_assignments", "staff_property_assignments"):
+            rows = (
+                self._service.table(table)
+                .select("user_id")
+                .eq("tenant_id", tenant_id)
+                .eq("property_id", property_id)
+                .execute()
+            ).data or []
+            assigned_ids.update(r["user_id"] for r in rows)
+
+        res = (
+            self._service.table("users")
+            .select("id, email, full_name, role, tenant_id, permissions")
+            .eq("tenant_id", tenant_id)
+            .order("created_at")
+            .execute()
+        )
+        contacts = [
+            u
+            for u in (res.data or [])
+            # admin/co_admin sind tenant-weit verantwortlich → immer wählbar;
+            # alle anderen nur, wenn dem Objekt zugeordnet/freigegeben.
+            if u.get("role") in ("admin", "co_admin") or u["id"] in assigned_ids
+        ]
+        users = [self._to_tenant_user(u) for u in contacts]
         rank = {UserRole.admin: 0, UserRole.owner: 1, UserRole.co_admin: 2}
         users.sort(key=lambda u: rank.get(u.role, 9))
         return users
@@ -190,7 +247,7 @@ class AccountService:
 
         query = (
             self._service.table("users")
-            .select("id, email, full_name, role, phone, avatar_url, tenant_id, permissions")
+            .select("id, email, full_name, role, tenant_id, permissions")
             .order("created_at")
         )
         # Nicht-Admins sehen nur den eigenen Tenant.

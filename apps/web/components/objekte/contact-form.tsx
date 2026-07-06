@@ -25,10 +25,12 @@ const ROLE_LABELS: Record<string, string> = {
 export function ContactForm({
   initial,
   users,
+  usersError = null,
   account,
 }: {
   initial: Property;
   users: TenantUser[];
+  usersError?: string | null;
   account: Account;
 }) {
   const [p, setP] = useState<Property>(initial);
@@ -86,9 +88,15 @@ export function ContactForm({
 
         {/* Kontaktliste */}
         <div className="flex flex-col divide-y rounded-(--radius) border">
-          {filtered.length === 0 ? (
+          {usersError ? (
+            <p className="p-5 text-sm text-destructive">
+              Nutzer konnten nicht geladen werden: {usersError}
+            </p>
+          ) : filtered.length === 0 ? (
             <p className="p-5 text-sm text-muted-foreground/70">
-              Keine Nutzer gefunden.
+              {users.length === 0
+                ? "Keine berechtigten Nutzer für dieses Objekt gefunden."
+                : "Keine Treffer für die Suche."}
             </p>
           ) : (
             filtered.map((u) => {

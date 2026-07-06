@@ -130,6 +130,22 @@ class OwnerAssignmentResponse(BaseModel):
     property_ids: list[str] = []
 
 
+class StaffAssignmentUpdate(BaseModel):
+    """Setzt die Objekt-Zuordnung eines Mitarbeiters (Lastenheft §4.3).
+
+    Vollständige Liste (Replace-Semantik): genau diese property_ids werden dem
+    Mitarbeiter (Rolle staff/cleaner) zugeordnet, alle anderen entfernt."""
+
+    property_ids: list[str] = []
+
+
+class StaffAssignmentResponse(BaseModel):
+    """Aktuelle Objekt-Zuordnung eines Mitarbeiters."""
+
+    user_id: str
+    property_ids: list[str] = []
+
+
 class UpdateEmailRequest(BaseModel):
     new_email: EmailStr
 

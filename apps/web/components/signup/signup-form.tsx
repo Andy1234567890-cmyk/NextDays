@@ -30,6 +30,12 @@ export function SignupForm({ onBack }: { onBack: () => void }) {
     e.preventDefault();
     setError(null);
     const currency = currencyForCountry(country);
+    // Wurzel 4: keine Registrierung mit erfundener Währung — fehlt sie für das
+    // gewählte Land, klar melden statt EUR zu unterstellen.
+    if (!currency) {
+      setError("Für das gewählte Land ist keine Währung hinterlegt.");
+      return;
+    }
 
     startTransition(async () => {
       const res = await register({

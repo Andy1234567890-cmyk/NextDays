@@ -5,10 +5,15 @@
 // 4 Objektzuweisung. Beim Erstellen wird der Nutzer mit Rolle + Berechtigungen
 // über /auth/invite angelegt; ein Sofort-Passwort wird generiert und angezeigt.
 import { Icon } from "@iconify/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import { inviteUser } from "@/lib/account";
+import {
+  inviteUser,
+  setOwnerProperties,
+  setStaffProperties,
+} from "@/lib/account";
 import type { UserRole } from "@/lib/account";
+import { listProperties, type Property } from "@/lib/properties";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -57,6 +62,9 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
   // Schritt 3
   const [role, setRole] = useState("");
   const [perms, setPerms] = useState<Set<string>>(new Set());
+  // Schritt 4 — Objektzuweisung (nur für Rollen mit Objektbezug)
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [selectedProps, setSelectedProps] = useState<Set<string>>(new Set());
   // Anlegen
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -69,8 +77,25 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
     setFirstName(""); setLastName(""); setEmail(""); setHidePhones(false);
     setLanguage("de"); setSpoken([]); setNotes("");
     setRole(""); setPerms(new Set());
+    setSelectedProps(new Set());
     setSubmitting(false); setError(null); setCreated(null);
   };
+
+  // Objekte laden, sobald der Wizard geöffnet wird (für Schritt 4).
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    void listProperties().then((res) => {
+      if (active && res.ok) setProperties(res.data.items);
+    });
+    return () => {
+      active = false;
+    };
+  }, [open]);
+
+  // Nur diese Rollen haben einen Objektbezug (Zuweisung/Freigabe pro Objekt).
+  const roleNeedsProperties =
+    role === "owner" || role === "staff" || role === "cleaner";
 
   const last = WIZARD_STEPS.length - 1;
   const next = () => setStep((s) => Math.min(s + 1, last));
@@ -100,12 +125,32 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
       role: role as UserRole,
       permissions: [...perms],
     });
-    setSubmitting(false);
-    if (res.ok) {
-      setCreated({ email, password });
-    } else {
+    if (!res.ok) {
+      setSubmitting(false);
       setError(res.error);
+      return;
     }
+    // Objekte zuweisen (rollenabhängig): owner → Portal-Sicht (§4.2),
+    // staff/cleaner → operative Freigabe (§4.3). Fehler hier meldet, aber der
+    // Nutzer wurde bereits angelegt — daher trotzdem den Erfolg zeigen.
+    if (roleNeedsProperties && selectedProps.size > 0) {
+      const ids = [...selectedProps];
+      const assign =
+        role === "owner"
+          ? setOwnerProperties(res.data.user_id, ids)
+          : setStaffProperties(res.data.user_id, ids);
+      const assignRes = await assign;
+      if (!assignRes.ok) {
+        setSubmitting(false);
+        setError(
+          `Nutzer angelegt, aber Objektzuweisung fehlgeschlagen: ${assignRes.error}`,
+        );
+        setCreated({ email, password });
+        return;
+      }
+    }
+    setSubmitting(false);
+    setCreated({ email, password });
   };
 
   const togglePerm = (id: string) =>
@@ -170,7 +215,21 @@ export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
                   perms={perms} togglePerm={togglePerm}
                 />
               )}
-              {step === 3 && <StepProperties />}
+              {step === 3 && (
+                <StepProperties
+                  roleNeedsProperties={roleNeedsProperties}
+                  properties={properties}
+                  selected={selectedProps}
+                  onToggle={(id, on) =>
+                    setSelectedProps((prev) => {
+                      const n = new Set(prev);
+                      if (on) n.add(id);
+                      else n.delete(id);
+                      return n;
+                    })
+                  }
+                />
+              )}
               {error && (
                 <p className="mt-4 rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm text-destructive">
                   {error}
@@ -504,23 +563,80 @@ function PermissionGroup({
 }
 
 /* ---------- Schritt 4: Objektzuweisung ---------- */
-function StepProperties() {
+function StepProperties({
+  roleNeedsProperties,
+  properties,
+  selected,
+  onToggle,
+}: {
+  roleNeedsProperties: boolean;
+  properties: Property[];
+  selected: Set<string>;
+  onToggle: (id: string, on: boolean) => void;
+}) {
+  // Rollen ohne Objektbezug (admin/co_admin) brauchen keine Zuweisung.
+  if (!roleNeedsProperties) {
+    return (
+      <div className="flex flex-col items-center gap-3 py-12 text-center">
+        <Icon icon="ph:shield-check" className="size-10 text-muted-foreground" />
+        <p className="font-display text-lg font-extrabold">
+          Keine Objektzuweisung nötig
+        </p>
+        <p className="max-w-xs text-sm text-muted-foreground">
+          Diese Rolle hat Zugriff auf alle Objekte des Kontos. Eine Zuweisung
+          einzelner Objekte gilt nur für Eigentümer und Mitarbeiter.
+        </p>
+      </div>
+    );
+  }
+
+  if (properties.length === 0) {
+    return (
+      <div className="flex flex-col items-center gap-3 py-12 text-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/illustrations/rentals-building.svg"
+          alt=""
+          aria-hidden
+          className="h-32 w-auto"
+        />
+        <p className="font-display text-lg font-extrabold">
+          Noch keine Unterkünfte
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Erstellen Sie Ihre Unterkünfte, damit Sie sie später Ihren Benutzern
+          zuweisen können.
+        </p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex flex-col items-center gap-3 py-12 text-center">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/illustrations/rentals-building.svg"
-        alt=""
-        aria-hidden
-        className="h-32 w-auto"
-      />
-      <p className="font-display text-lg font-extrabold">
-        Noch keine Unterkünfte
-      </p>
+    <div className="flex flex-col gap-3">
       <p className="text-sm text-muted-foreground">
-        Erstellen Sie Ihre Unterkünfte, damit Sie sie später Ihren Benutzern
-        zuweisen können.
+        Wählen Sie die Objekte, auf die dieser Benutzer Zugriff erhält.
       </p>
+      <ul className="flex flex-col gap-1">
+        {properties.map((p) => (
+          <li key={p.id}>
+            <label className="flex cursor-pointer items-center gap-3 rounded-(--radius) p-2 hover:bg-muted/50">
+              <Checkbox
+                checked={selected.has(p.id)}
+                onCheckedChange={(c) => onToggle(p.id, c === true)}
+              />
+              <span className="flex min-w-0 flex-col leading-tight">
+                <span className="truncate text-sm font-medium">{p.title}</span>
+                <span className="truncate text-xs text-muted-foreground">
+                  ID {p.id.slice(0, 8)}
+                </span>
+              </span>
+            </label>
+          </li>
+        ))}
+      </ul>
+      <span className="text-xs text-muted-foreground">
+        {selected.size} ausgewählt
+      </span>
     </div>
   );
 }

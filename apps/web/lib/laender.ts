@@ -43,8 +43,11 @@ export const LAENDER: readonly Land[] = [
   { code: "SE", currency: "SEK" },
 ];
 
+// Währung zum Ländercode aus der Stammdaten-Liste. Wurzel 4: bei unbekanntem
+// Code KEIN erfundenes EUR — leer zurückgeben, der Aufrufer muss fail-closed
+// eine echte Länderwahl erzwingen (die 27 EU-Länder haben nicht alle den Euro).
 export function currencyForCountry(code: string): string {
-  return LAENDER.find((l) => l.code === code)?.currency ?? "EUR";
+  return LAENDER.find((l) => l.code === code)?.currency ?? "";
 }
 
 // Haupt-IANA-Zeitzone je Land (DACH+EU+CH). Channex verlangt eine Zeitzone an

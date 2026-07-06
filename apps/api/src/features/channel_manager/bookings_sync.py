@@ -317,7 +317,7 @@ class BookingsSyncMixin:
         status_in = (attrs.get("status") or "new").lower()
         existing = (
             db.table("reservations")
-            .select("id, checked_out_at, check_in, check_out")
+            .select("id, checked_out_at, check_in, check_out, property_id")
             .eq("tenant_id", tenant_id)
             .eq("source_channex_booking_id", booking_id)
             .limit(1)
@@ -327,12 +327,13 @@ class BookingsSyncMixin:
         # OTA-Resync darf status='completed' nicht mehr überschreiben (weder
         # auf confirmed zurückdrehen noch nachträglich stornieren + freigeben).
         already_checked_out = bool(existing and existing[0].get("checked_out_at"))
-        # Alten Zeitraum JETZT sichern (vor dem update(row) unten) — für den Alt-/
-        # Neu-Diff bei einer Buchungsverkürzung/-verschiebung. Nach dem Update ist
-        # existing[0] überschrieben, dann wäre der Diff leer und Alt-Nächte blieben
-        # als Phantom-Belegung gesperrt.
+        # Alten Zeitraum UND altes Objekt JETZT sichern (vor dem update(row) unten)
+        # — für den Alt-/Neu-Diff bei Verkürzung/Verschiebung UND für den
+        # Objektwechsel. Nach dem Update ist existing[0] überschrieben, dann wäre
+        # der Diff leer und Alt-Nächte blieben als Phantom-Belegung gesperrt.
         old_check_in = existing[0].get("check_in") if existing else None
         old_check_out = existing[0].get("check_out") if existing else None
+        old_property_id = existing[0].get("property_id") if existing else None
 
         # Storno: reservation stornieren + Nächte dieser OTA-Quelle wieder frei.
         if status_in == "cancelled":
@@ -348,12 +349,23 @@ class BookingsSyncMixin:
                     "id", existing[0]["id"]
                 ).execute()
             # Alle Nächte dieser Buchung quellengenau freigeben (lokal + Channex).
+            # Wurzel 1: den LOKAL gebuchten Alt-Zeitraum auf dem LOKAL gebuchten
+            # Alt-Objekt freigeben — NICHT den Zeitraum/das Objekt aus dem Storno-
+            # Payload. Weicht die Storno-Revision ab (anderer Zeitraum / anderes
+            # property_id), blieben sonst die echten gesperrten Alt-Nächte hängen.
+            free_property_id = old_property_id or property_id
+            if existing and old_check_in and old_check_out:
+                cancel_nights = self._date_range_nights(
+                    str(old_check_in), str(old_check_out)
+                )
+            else:
+                cancel_nights = self._date_range_nights(arrival, departure)
             self._free_ota_nights(
                 db,
                 tenant_id,
-                property_id,
+                free_property_id,
                 channel,
-                self._date_range_nights(arrival, departure),
+                cancel_nights,
             )
             return True
 
@@ -448,22 +460,29 @@ class BookingsSyncMixin:
             date.fromisoformat(departure) - timedelta(days=1),
             0,
         )
-        # Buchungs-MODIFIKATION (Verkürzung/Verschiebung einer bestehenden OTA-
-        # Buchung): die neuen Nächte sind jetzt gesperrt, aber die durch die
-        # Änderung GERÄUMTEN Alt-Nächte (im alten, nicht mehr im neuen Zeitraum)
-        # bleiben sonst dauerhaft 'booked'/avail=0 → Phantom-Belegung, auf allen
-        # Kanälen unverkäuflich. Alt-/Neu-Diff bilden und die frei gewordenen Tage
-        # quellengenau freigeben (wie beim Voll-Storno, nur auf die Differenz).
+        # Buchungs-MODIFIKATION (Verkürzung/Verschiebung/OBJEKTWECHSEL einer
+        # bestehenden OTA-Buchung): die neuen Nächte sind jetzt gesperrt, aber die
+        # durch die Änderung GERÄUMTEN Alt-Nächte bleiben sonst dauerhaft
+        # 'booked'/avail=0 → Phantom-Belegung, auf allen Kanälen unverkäuflich.
         if existing and old_check_in and old_check_out:
-            freed_nights = [
-                d
-                for d in self._date_range_nights(str(old_check_in), str(old_check_out))
-                if d not in set(new_nights)
-            ]
-            if freed_nights:
+            old_nights = self._date_range_nights(str(old_check_in), str(old_check_out))
+            if old_property_id and old_property_id != property_id:
+                # Objektwechsel (Gast bucht auf der OTA von Objekt A auf B um): die
+                # Reservierung wurde oben auf Objekt B umgehängt. Der KOMPLETTE
+                # alte Zeitraum auf dem ALTEN Objekt A muss frei werden — sonst
+                # bleibt A dauerhaft phantombelegt. Der Datums-Diff (der auf B
+                # rechnet) träfe A nie.
                 self._free_ota_nights(
-                    db, tenant_id, property_id, channel, freed_nights
+                    db, tenant_id, old_property_id, channel, old_nights
                 )
+            else:
+                # Gleiches Objekt: nur die aus dem alten Zeitraum herausfallenden
+                # Tage (Verkürzung/Verschiebung) freigeben.
+                freed_nights = [d for d in old_nights if d not in set(new_nights)]
+                if freed_nights:
+                    self._free_ota_nights(
+                        db, tenant_id, property_id, channel, freed_nights
+                    )
         return True
 
     def _booking_occupancy(self, attrs: dict[str, Any]) -> tuple[int, int, int]:

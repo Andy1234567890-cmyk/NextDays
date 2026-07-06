@@ -10,6 +10,7 @@ from .dependencies import (
     AccountServiceDep,
     AuthServiceDep,
     OwnerAssignmentServiceDep,
+    StaffAssignmentServiceDep,
     require_permission,
 )
 from .permissions import Capability
@@ -25,6 +26,8 @@ from .schemas import (
     RegisterRequest,
     SessionResponse,
     SliceHealth,
+    StaffAssignmentResponse,
+    StaffAssignmentUpdate,
     TenantUser,
     TotpDisableRequest,
     TotpEnrollResponse,
@@ -151,6 +154,45 @@ def set_owner_properties(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.get(
+    "/staff/{user_id}/properties",
+    response_model=StaffAssignmentResponse,
+)
+def get_staff_properties(
+    user_id: str,
+    service: StaffAssignmentServiceDep,
+    ctx: Annotated[
+        AuthContext,
+        Depends(require_permission(Capability.ASSIGN_STAFF_TO_PROPERTY)),
+    ],
+) -> StaffAssignmentResponse:
+    """Aktuelle Objekt-Freigabe eines Mitarbeiters (Agentur-Sicht)."""
+    try:
+        return service.get(ctx, user_id)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put(
+    "/staff/{user_id}/properties",
+    response_model=StaffAssignmentResponse,
+)
+def set_staff_properties(
+    user_id: str,
+    req: StaffAssignmentUpdate,
+    service: StaffAssignmentServiceDep,
+    ctx: Annotated[
+        AuthContext,
+        Depends(require_permission(Capability.ASSIGN_STAFF_TO_PROPERTY)),
+    ],
+) -> StaffAssignmentResponse:
+    """Objekt-Freigabe eines Mitarbeiters setzen (Replace). Nur eigene Objekte."""
+    try:
+        return service.set(ctx, user_id, req)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 # --- Konto & 2FA (Sicherheit-Seite) ---------------------------------------
 
 
@@ -168,6 +210,21 @@ def list_tenant_users(
 ) -> list[TenantUser]:
     try:
         return service.list_tenant_users(ctx)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/account/properties/{property_id}/contacts",
+    response_model=list[TenantUser],
+)
+def list_property_contacts(
+    property_id: str, ctx: CurrentUser, service: AccountServiceDep
+) -> list[TenantUser]:
+    """Für ein Objekt als Hauptkontakt wählbare Nutzer (§4.2/§4.3): admin/
+    co_admin + dem Objekt zugewiesene Eigentümer + freigegebene Mitarbeiter."""
+    try:
+        return service.list_property_contacts(ctx, property_id)
     except AuthError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

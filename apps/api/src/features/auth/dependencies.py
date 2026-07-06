@@ -13,6 +13,7 @@ from .owner_assignment_service import OwnerAssignmentService
 from .permissions import Capability, has_capability
 from .schemas import UserRole
 from .service import AuthService
+from .staff_assignment_service import StaffAssignmentService
 
 
 def get_auth_service() -> AuthService:
@@ -33,10 +34,17 @@ def get_owner_assignment_service() -> OwnerAssignmentService:
     return OwnerAssignmentService(service_client=get_service_client())
 
 
+def get_staff_assignment_service() -> StaffAssignmentService:
+    return StaffAssignmentService(service_client=get_service_client())
+
+
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
 AccountServiceDep = Annotated[AccountService, Depends(get_account_service)]
 OwnerAssignmentServiceDep = Annotated[
     OwnerAssignmentService, Depends(get_owner_assignment_service)
+]
+StaffAssignmentServiceDep = Annotated[
+    StaffAssignmentService, Depends(get_staff_assignment_service)
 ]
 
 

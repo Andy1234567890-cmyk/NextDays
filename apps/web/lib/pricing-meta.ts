@@ -4,16 +4,40 @@
 
 import type { Channel } from "@/lib/availability-meta";
 
-export type Currency = "EUR" | "DKK" | "USD" | "GBP" | "CHF";
+// Alle in den 27 EU-Staaten + CH real vorkommenden Währungen (Quelle: laender.ts)
+// plus die beiden gängigsten internationalen (USD/GBP). Wurzel 4: nicht 5
+// willkürliche Codes hardcoden — die Liste MUSS jede Währung abdecken, in der ein
+// Objekt tatsächlich abrechnet, sonst zwingt der Dropdown zu einer falschen Wahl.
+export type Currency =
+  | "EUR"
+  | "CHF"
+  | "BGN"
+  | "CZK"
+  | "DKK"
+  | "HUF"
+  | "PLN"
+  | "RON"
+  | "SEK"
+  | "USD"
+  | "GBP";
 export const CURRENCY_OPTIONS: { value: Currency; label: string; symbol: string }[] = [
   { value: "EUR", label: "EUR €", symbol: "€" },
+  { value: "CHF", label: "CHF", symbol: "CHF" },
+  { value: "BGN", label: "BGN лв", symbol: "лв" },
+  { value: "CZK", label: "CZK Kč", symbol: "Kč" },
   { value: "DKK", label: "DKK kr", symbol: "kr" },
+  { value: "HUF", label: "HUF Ft", symbol: "Ft" },
+  { value: "PLN", label: "PLN zł", symbol: "zł" },
+  { value: "RON", label: "RON lei", symbol: "lei" },
+  { value: "SEK", label: "SEK kr", symbol: "kr" },
   { value: "USD", label: "USD $", symbol: "$" },
   { value: "GBP", label: "GBP £", symbol: "£" },
-  { value: "CHF", label: "CHF", symbol: "CHF" },
 ];
 
-export function currencySymbol(c: Currency): string {
+export function currencySymbol(c: Currency | ""): string {
+  // Leere Währung → kein Symbol (Wurzel 4: kein erfundenes €). Unbekannter
+  // Code → der Code selbst (symbollose, aber informative Anzeige).
+  if (!c) return "";
   return CURRENCY_OPTIONS.find((o) => o.value === c)?.symbol ?? c;
 }
 
@@ -101,7 +125,10 @@ export type AddOn = {
 };
 
 export type Pricing = {
-  currency: Currency;
+  // Wurzel 4: "" = noch keine Währung gewählt (kein erfundenes EUR). Der
+  // Währungs-Select im Formular erzwingt die echte Wahl; Beträge rendern bis
+  // dahin symbollos (currencySymbol/MoneyInput), statt einen Euro vorzutäuschen.
+  currency: Currency | "";
   basePrice: number; // Grundpreis pro Nacht
   dynamicPricing: boolean;
   customByWeekday: boolean; // Preis pro Wochentag anpassen
@@ -126,7 +153,7 @@ export type Pricing = {
 };
 
 export const DEFAULT_PRICING: Pricing = {
-  currency: "EUR",
+  currency: "",
   basePrice: 0,
   dynamicPricing: false,
   customByWeekday: false,
@@ -163,6 +190,8 @@ export function readPricing(typeAttributes: Record<string, unknown> | undefined)
 }
 
 // Preis formatieren (z. B. "kr 450").
-export function fmtPrice(amount: number, currency: Currency): string {
-  return `${currencySymbol(currency)} ${amount.toLocaleString("de-DE")}`;
+export function fmtPrice(amount: number, currency: Currency | ""): string {
+  const sym = currencySymbol(currency);
+  // Ohne Währung nur die Zahl (kein führendes Leerzeichen/Symbol).
+  return sym ? `${sym} ${amount.toLocaleString("de-DE")}` : amount.toLocaleString("de-DE");
 }

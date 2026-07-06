@@ -60,7 +60,7 @@ def my_tasks(
         AuthContext, Depends(require_permission(Capability.VIEW_OWN_TASKS))
     ],
 ) -> list[Task]:
-    return service.list_tasks(_tenant(ctx), assignee_id=ctx.user_id)
+    return service.list_tasks(_tenant(ctx), assignee_id=ctx.user_id, ctx=ctx)
 
 
 @router.post("/from-booking", response_model=list[Task], status_code=201)

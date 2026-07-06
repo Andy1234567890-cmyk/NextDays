@@ -742,6 +742,43 @@ def test_import_booking_shortened_frees_old_nights() -> None:
     assert db.tables["reservations"][0]["check_out"] == "2026-07-11"
 
 
+def test_import_booking_object_change_frees_old_property() -> None:
+    """Regression (Wurzel 1): eine OTA-Revision behält die booking_id, ändert aber
+    das Objekt (Gast bucht von Objekt A auf B um). Die Alt-Nächte auf Objekt A
+    müssen komplett freigegeben werden — sonst bleibt A dauerhaft phantombelegt,
+    während die Reservierung + Sperre auf B liegen."""
+    db = _ImportDB()
+    _seed_property(db, channex_pid="cx-a", property_id="p-a")
+    _seed_property(db, channex_pid="cx-b", property_id="p-b")
+    # Erstbuchung auf Objekt A (cx-a), 10.-12. (2 Nächte).
+    _import_svc(_ImportChannex(bookings=[{"attributes": {
+        "booking_id": "BK1", "property_id": "cx-a", "status": "new",
+        "ota_name": "Booking.com", "arrival_date": "2026-07-10",
+        "departure_date": "2026-07-12", "amount": "200", "currency": "EUR",
+        "customer": {"name": "A", "surname": "B"}}}]), db).import_bookings_for_property(
+            "t1", "cx-a")
+    booked_a = {a["date"] for a in db.tables["availability"]
+                if a["property_id"] == "p-a" and a["status"] == "booked"}
+    assert booked_a == {"2026-07-10", "2026-07-11"}
+    # Objektwechsel: gleiche booking_id, jetzt Objekt B (cx-b), gleicher Zeitraum.
+    _import_svc(_ImportChannex(bookings=[{"attributes": {
+        "booking_id": "BK1", "property_id": "cx-b", "status": "modified",
+        "ota_name": "Booking.com", "arrival_date": "2026-07-10",
+        "departure_date": "2026-07-12", "amount": "200", "currency": "EUR",
+        "customer": {"name": "A", "surname": "B"}}}]), db).import_bookings_for_property(
+            "t1", "cx-b")
+    avail = {(a["property_id"], a["date"]): a["status"] for a in db.tables["availability"]}
+    # Objekt A: beide Alt-Nächte wieder frei (kein Phantom).
+    assert avail[("p-a", "2026-07-10")] == "open"
+    assert avail[("p-a", "2026-07-11")] == "open"
+    # Objekt B: die neuen Nächte gesperrt.
+    assert avail[("p-b", "2026-07-10")] == "booked"
+    assert avail[("p-b", "2026-07-11")] == "booked"
+    # Dieselbe Reservierung, jetzt auf Objekt B (kein Duplikat).
+    assert len(db.tables["reservations"]) == 1
+    assert db.tables["reservations"][0]["property_id"] == "p-b"
+
+
 def test_import_booking_skips_without_property_mapping() -> None:
     db = _ImportDB()  # KEIN seed → kein Mapping
     channex = _ImportChannex(bookings=[{"attributes": {

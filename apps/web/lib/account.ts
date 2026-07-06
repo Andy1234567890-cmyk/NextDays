@@ -112,9 +112,20 @@ export async function updateProfile(
   });
 }
 
-// Nutzer des eigenen Tenants (für die Kontakt-Auswahl eines Objekts).
+// Nutzer des eigenen Tenants (allgemein, ungefiltert).
 export async function listTenantUsers(): Promise<Result<TenantUser[]>> {
   return call<TenantUser[]>("/auth/account/users");
+}
+
+// Für ein Objekt als Hauptkontakt wählbare Nutzer (§4.2/§4.3): admin/co_admin +
+// dem Objekt zugewiesene Eigentümer + freigegebene Mitarbeiter — NICHT pauschal
+// alle Tenant-Nutzer.
+export async function listPropertyContacts(
+  propertyId: string,
+): Promise<Result<TenantUser[]>> {
+  return call<TenantUser[]>(
+    `/auth/account/properties/${propertyId}/contacts`,
+  );
 }
 
 // Nutzerverwaltung (Konto → Benutzer): Admins sehen alle Nutzer plattformweit,
@@ -158,6 +169,28 @@ export async function setOwnerProperties(
   propertyIds: string[],
 ): Promise<Result<OwnerAssignment>> {
   const res = await call<OwnerAssignment>(`/auth/owners/${userId}/properties`, {
+    method: "PUT",
+    body: { property_ids: propertyIds },
+  });
+  if (res.ok) revalidatePath("/konto/nutzer");
+  return res;
+}
+
+// --- Mitarbeiter-Objekt-Freigabe (Lastenheft §4.3) -------------------------
+// Welche Objekte ein Mitarbeiter (staff/cleaner) operativ sieht/bearbeitet.
+export type StaffAssignment = { user_id: string; property_ids: string[] };
+
+export async function getStaffProperties(
+  userId: string,
+): Promise<Result<StaffAssignment>> {
+  return call<StaffAssignment>(`/auth/staff/${userId}/properties`);
+}
+
+export async function setStaffProperties(
+  userId: string,
+  propertyIds: string[],
+): Promise<Result<StaffAssignment>> {
+  const res = await call<StaffAssignment>(`/auth/staff/${userId}/properties`, {
     method: "PUT",
     body: { property_ids: propertyIds },
   });

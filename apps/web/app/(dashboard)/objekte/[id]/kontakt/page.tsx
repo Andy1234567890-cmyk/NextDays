@@ -3,7 +3,7 @@
 // („Kontaktdaten bearbeiten"). Server Component lädt Objekt, Nutzerliste und
 // das eigene Konto; der Client-Teil rendert Liste, Suche und Editor.
 import { ContactForm } from "@/components/objekte/contact-form";
-import { getAccount, listTenantUsers } from "@/lib/account";
+import { getAccount, listPropertyContacts } from "@/lib/account";
 import { getProperty } from "@/lib/properties";
 
 export default async function Page({
@@ -14,7 +14,7 @@ export default async function Page({
   const { id } = await params;
   const [propertyRes, usersRes, accountRes] = await Promise.all([
     getProperty(id),
-    listTenantUsers(),
+    listPropertyContacts(id),
     getAccount(),
   ]);
 
@@ -37,6 +37,10 @@ export default async function Page({
     <ContactForm
       initial={propertyRes.data}
       users={usersRes.ok ? usersRes.data : []}
+      // Fehler beim Nutzer-Abruf NICHT verschlucken (sonst zeigt die UI still
+      // „Keine Nutzer“, obwohl der Call scheiterte). Den echten Grund
+      // durchreichen, damit die Kontakt-Form ihn anzeigen kann.
+      usersError={usersRes.ok ? null : usersRes.error}
       account={accountRes.data}
     />
   );

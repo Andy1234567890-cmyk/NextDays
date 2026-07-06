@@ -64,7 +64,22 @@ export function EditorShell({
 }) {
   return (
     <Sheet open onOpenChange={(o) => !o && onClose()}>
-      <SheetContent className="flex h-full w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
+      <SheetContent
+        className="flex h-full w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg"
+        // Das Google-Places-Autocomplete-Dropdown (.pac-container) hängt am
+        // <body>, also AUSSERHALB des Sheets. Ohne diese Ausnahme wertet Radix
+        // den Klick auf einen Adressvorschlag als „außerhalb“, verschluckt ihn
+        // und schließt/blockiert — das Auswahl-Event feuert dann nie und die
+        // Adressfelder bleiben leer. Klicks aufs .pac-container zulassen.
+        onPointerDownOutside={(e) => {
+          const target = e.target as HTMLElement | null;
+          if (target?.closest(".pac-container")) e.preventDefault();
+        }}
+        onInteractOutside={(e) => {
+          const target = e.target as HTMLElement | null;
+          if (target?.closest(".pac-container")) e.preventDefault();
+        }}
+      >
         <SheetHeader className="shrink-0 border-b">
           <SheetTitle className="font-display text-xl font-extrabold">{title}</SheetTitle>
           <SheetDescription className={subtitle ? "" : "sr-only"}>
