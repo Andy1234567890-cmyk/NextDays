@@ -120,6 +120,10 @@ export class EInvoiceService {
     companyData: any,
   ): Promise<string> {
     try {
+      // Wurzel 4: Waehrung IMMER aus den Belegdaten, nie hardcoden. Fehlt sie,
+      // ist das ein Datenfehler → fail-closed, kein plausibler EUR-Ersatzwert
+      // (die E-Rechnung ist rechtsverbindlich, eine falsche Waehrung ist fatal).
+      const currency = EInvoiceService.requireCurrency(invoiceData);
       const xmlTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 <rsm:CrossIndustryInvoice xmlns:rsm="urn:un:unece:uncefact:data:standard:CrossIndustryInvoice:100"
                           xmlns:qdt="urn:un:unece:uncefact:data:standard:QualifiedDataType:100"
@@ -184,7 +188,7 @@ export class EInvoiceService {
     <ram:ApplicableHeaderTradeSettlement>
       ${invoiceData.buyerAccountingReference || invoiceData.purchaseOrderNumber ? `<ram:ReceivableSpecifiedTradeAccountingAccount>\n        <ram:ID>${invoiceData.buyerAccountingReference || invoiceData.purchaseOrderNumber}</ram:ID>\n      </ram:ReceivableSpecifiedTradeAccountingAccount>` : ''}
       <ram:PaymentReference>${invoiceData.invoiceNumber}</ram:PaymentReference>
-      <ram:InvoiceCurrencyCode>EUR</ram:InvoiceCurrencyCode>
+      <ram:InvoiceCurrencyCode>${currency}</ram:InvoiceCurrencyCode>
       ${companyData.iban ? `<ram:SpecifiedTradeSettlementPaymentMeans>\n        <ram:TypeCode>58</ram:TypeCode>\n        <ram:PayeePartyCreditorFinancialAccount>\n          <ram:IBANID>${companyData.iban}</ram:IBANID>\n          <ram:AccountName>${companyData.accountHolder || companyData.companyName}</ram:AccountName>\n        </ram:PayeePartyCreditorFinancialAccount>\n        ${companyData.bic ? `<ram:PayeeSpecifiedCreditorFinancialInstitution>\n          <ram:BICID>${companyData.bic}</ram:BICID>\n        </ram:PayeeSpecifiedCreditorFinancialInstitution>` : ''}\n      </ram:SpecifiedTradeSettlementPaymentMeans>` : ''}
 
       <ram:ApplicableTradeTax>
@@ -205,7 +209,7 @@ export class EInvoiceService {
       <ram:SpecifiedTradeSettlementHeaderMonetarySummation>
         <ram:LineTotalAmount>${invoiceData.amount.toFixed(2)}</ram:LineTotalAmount>
         <ram:TaxBasisTotalAmount>${invoiceData.amount.toFixed(2)}</ram:TaxBasisTotalAmount>
-        <ram:TaxTotalAmount currencyID="EUR">${invoiceData.tax.toFixed(2)}</ram:TaxTotalAmount>
+        <ram:TaxTotalAmount currencyID="${currency}">${invoiceData.tax.toFixed(2)}</ram:TaxTotalAmount>
         <ram:GrandTotalAmount>${invoiceData.total.toFixed(2)}</ram:GrandTotalAmount>
         <ram:TotalPrepaidAmount>0.00</ram:TotalPrepaidAmount>
         <ram:DuePayableAmount>${invoiceData.total.toFixed(2)}</ram:DuePayableAmount>
@@ -234,6 +238,9 @@ export class EInvoiceService {
     companyData: any,
   ): Promise<string> {
     try {
+      // Wurzel 4: Belegwaehrung durchreichen statt EUR hardcoden; fehlt sie,
+      // fail-closed (rechtsverbindliches Dokument, kein Ersatzwert).
+      const currency = EInvoiceService.requireCurrency(invoiceData);
       const xmlTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 <Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
          xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
@@ -245,7 +252,7 @@ export class EInvoiceService {
   <cbc:IssueDate>${invoiceData.issueDate}</cbc:IssueDate>
   <cbc:DueDate>${invoiceData.dueDate}</cbc:DueDate>
   <cbc:InvoiceTypeCode>${invoiceData.isStorno ? '381' : '380'}</cbc:InvoiceTypeCode>
-  <cbc:DocumentCurrencyCode>EUR</cbc:DocumentCurrencyCode>
+  <cbc:DocumentCurrencyCode>${currency}</cbc:DocumentCurrencyCode>
   <cbc:BuyerReference>${metadata.buyerReference}</cbc:BuyerReference>
 
   ${metadata.processingNote ? `<cbc:Note>${metadata.processingNote}</cbc:Note>` : ''}
@@ -294,10 +301,10 @@ export class EInvoiceService {
   </cac:PaymentMeans>
 
   <cac:TaxTotal>
-    <cbc:TaxAmount currencyID="EUR">${invoiceData.tax.toFixed(2)}</cbc:TaxAmount>
+    <cbc:TaxAmount currencyID="${currency}">${invoiceData.tax.toFixed(2)}</cbc:TaxAmount>
     <cac:TaxSubtotal>
-      <cbc:TaxableAmount currencyID="EUR">${invoiceData.amount.toFixed(2)}</cbc:TaxableAmount>
-      <cbc:TaxAmount currencyID="EUR">${invoiceData.tax.toFixed(2)}</cbc:TaxAmount>
+      <cbc:TaxableAmount currencyID="${currency}">${invoiceData.amount.toFixed(2)}</cbc:TaxableAmount>
+      <cbc:TaxAmount currencyID="${currency}">${invoiceData.tax.toFixed(2)}</cbc:TaxAmount>
       <cac:TaxCategory>
         <cbc:ID>S</cbc:ID>
         <cbc:Percent>${invoiceData.vatRate}</cbc:Percent>
@@ -309,13 +316,13 @@ export class EInvoiceService {
   </cac:TaxTotal>
 
   <cac:LegalMonetaryTotal>
-    <cbc:LineExtensionAmount currencyID="EUR">${invoiceData.amount.toFixed(2)}</cbc:LineExtensionAmount>
-    <cbc:TaxExclusiveAmount currencyID="EUR">${invoiceData.amount.toFixed(2)}</cbc:TaxExclusiveAmount>
-    <cbc:TaxInclusiveAmount currencyID="EUR">${invoiceData.total.toFixed(2)}</cbc:TaxInclusiveAmount>
-    <cbc:PayableAmount currencyID="EUR">${invoiceData.total.toFixed(2)}</cbc:PayableAmount>
+    <cbc:LineExtensionAmount currencyID="${currency}">${invoiceData.amount.toFixed(2)}</cbc:LineExtensionAmount>
+    <cbc:TaxExclusiveAmount currencyID="${currency}">${invoiceData.amount.toFixed(2)}</cbc:TaxExclusiveAmount>
+    <cbc:TaxInclusiveAmount currencyID="${currency}">${invoiceData.total.toFixed(2)}</cbc:TaxInclusiveAmount>
+    <cbc:PayableAmount currencyID="${currency}">${invoiceData.total.toFixed(2)}</cbc:PayableAmount>
   </cac:LegalMonetaryTotal>
 
-  ${EInvoiceService.generateXRechnungLineItems(invoiceData.items)}
+  ${EInvoiceService.generateXRechnungLineItems(invoiceData.items, currency)}
 </Invoice>`;
 
       return xmlTemplate;
@@ -517,23 +524,41 @@ export class EInvoiceService {
   }
 
   // Generiert Positionen für XRechnung
-  private static generateXRechnungLineItems(items: any[]): string {
+  private static generateXRechnungLineItems(items: any[], currency: string): string {
     return items
       .map(
         (item, index) => `
   <cac:InvoiceLine>
     <cbc:ID>${index + 1}</cbc:ID>
     <cbc:InvoicedQuantity unitCode="HUR">${item.quantity}</cbc:InvoicedQuantity>
-    <cbc:LineExtensionAmount currencyID="EUR">${item.total.toFixed(2)}</cbc:LineExtensionAmount>
+    <cbc:LineExtensionAmount currencyID="${currency}">${item.total.toFixed(2)}</cbc:LineExtensionAmount>
     <cac:Item>
       <cbc:Name>${item.description}</cbc:Name>
     </cac:Item>
     <cac:Price>
-      <cbc:PriceAmount currencyID="EUR">${item.unitPrice.toFixed(2)}</cbc:PriceAmount>
+      <cbc:PriceAmount currencyID="${currency}">${item.unitPrice.toFixed(2)}</cbc:PriceAmount>
     </cac:Price>
   </cac:InvoiceLine>`,
       )
       .join('');
+  }
+
+  /**
+   * Belegwaehrung aus den Rechnungsdaten holen (Wurzel 4). Fehlt sie, ist das
+   * ein Datenfehler → fail-closed statt EUR erfinden. Das erzeugte ZUGFeRD/
+   * XRechnung-XML ist rechtsverbindlich; eine falsche Waehrung waere fatal.
+   * Akzeptiert die ueblichen Feldnamen aus dem Rechnungs-API (currency /
+   * currencyCode) und normalisiert auf ISO-4217 (Grossbuchstaben).
+   */
+  private static requireCurrency(invoiceData: any): string {
+    const raw = invoiceData?.currency ?? invoiceData?.currencyCode;
+    const currency = typeof raw === 'string' ? raw.trim().toUpperCase() : '';
+    if (!/^[A-Z]{3}$/.test(currency)) {
+      throw new Error(
+        'Belegwährung fehlt oder ist ungültig — E-Rechnung kann ohne gültigen ISO-4217-Währungscode nicht erzeugt werden.',
+      );
+    }
+    return currency;
   }
 
   /**

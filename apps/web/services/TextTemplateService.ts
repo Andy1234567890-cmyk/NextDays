@@ -1,6 +1,7 @@
 'use client';
 
 import { api } from '@/lib/api-client';
+import { currencySymbol, formatCurrency } from '@/lib/currency';
 import type { TextTemplate } from '@/types/textTemplates';
 
 interface TemplateRenderData {
@@ -174,14 +175,11 @@ export class TextTemplateService {
   ): string {
     let result = text;
 
-    // Formatierungsfunktionen
-    const formatCurrency = (value?: number) =>
-      typeof value === 'number'
-        ? new Intl.NumberFormat('de-DE', {
-            style: 'currency',
-            currency: data.currency || 'EUR',
-          }).format(value)
-        : '';
+    // Formatierungsfunktionen — Wurzel 4: Betrag über die zentrale
+    // formatCurrency (rendert symbollos bei fehlender Währung statt EUR zu
+    // erfinden), keine dritte Kopie mit eigenem EUR-Fallback.
+    const fmtCurrency = (value?: number) =>
+      typeof value === 'number' ? formatCurrency(value, data.currency) : '';
 
     const formatDate = (date?: Date | string) => {
       if (!date) return '';
@@ -233,14 +231,14 @@ export class TextTemplateService {
       '[%ORT%]': data.customerAddress?.city || '',
 
       // Finanzen
-      '[%BETRAG%]': formatCurrency(data.total),
-      '[%WAEHRUNG%]': data.currency || 'EUR',
+      '[%BETRAG%]': fmtCurrency(data.total),
+      '[%WAEHRUNG%]': currencySymbol(data.currency),
       '[%ANGEBOTSNUMMER%]': data.quoteNumber || '',
       '[%RECHNUNGSNUMMER%]': data.invoiceNumber || '',
       '[%ZAHLUNGSZIEL%]': formatDate(data.paymentDue),
       '[%ZAHLDATUM%]': formatDate(data.paymentDate),
-      '[%NETTOBETRAG%]': formatCurrency(data.subtotal),
-      '[%STEUERBETRAG%]': formatCurrency(data.taxAmount),
+      '[%NETTOBETRAG%]': fmtCurrency(data.subtotal),
+      '[%STEUERBETRAG%]': fmtCurrency(data.taxAmount),
 
       // Unternehmen
       '[%KONTAKTPERSON%]': companySettings?.contactPerson || '',

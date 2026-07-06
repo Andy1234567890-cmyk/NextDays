@@ -56,7 +56,9 @@ export class UserPreferencesService {
         preferredLetterTemplate: data.preferredLetterTemplate || null,
         preferredCreditTemplate: data.preferredCreditTemplate || null,
         preferredLanguage: data.preferredLanguage || 'de',
-        preferredCurrency: data.preferredCurrency || 'EUR',
+        // Wurzel 4: echte Präferenz durchreichen, keine erfundene EUR-Vorgabe.
+        // Fehlt sie, undefined lassen — Konsumenten nutzen die Belegwährung.
+        preferredCurrency: data.preferredCurrency || undefined,
       };
     } catch (_error) {
       // Fallback wenn Fehler auftritt - verwende die ersten verfügbaren Templates aus NEW_TEMPLATES
@@ -69,7 +71,7 @@ export class UserPreferencesService {
         preferredLetterTemplate: 'professional-business-letter', // Erste aus NEW_TEMPLATES.letter
         preferredCreditTemplate: 'professional-business-credit', // Erste aus NEW_TEMPLATES.credit
         preferredLanguage: 'de',
-        preferredCurrency: 'EUR',
+        preferredCurrency: undefined,
       };
     }
   }

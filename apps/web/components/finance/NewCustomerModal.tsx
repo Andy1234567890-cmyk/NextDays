@@ -168,7 +168,10 @@ const DEFAULT_FORM_DATA: ExtendedFormData = {
   notes: '',
   paymentTerms: '30 Tage netto',
   discount: 0,
-  currency: 'EUR',
+  // Wurzel 4: keine erfundene EUR-Vorgabe. Leer starten — die Anzeige rendert
+  // symbollos (currencySymbol/formatCurrency), und die Belegwährung/Auswahl
+  // füllt das Feld, sobald sie bekannt ist.
+  currency: '',
   language: 'de',
   companySize: '',
   industry: '',

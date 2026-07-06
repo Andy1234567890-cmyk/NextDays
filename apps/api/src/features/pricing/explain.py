@@ -46,7 +46,9 @@ def explain_price(
     base_price: float,
     final_price: float,
     factors: dict[str, float],
-    currency: str = "EUR",
+    # Wurzel 4: kein "EUR"-Default. Der Aufrufer liefert die echte Rate-Plan-
+    # Währung (oder "" bei fehlendem Plan → Formatierung bleibt symbollos).
+    currency: str,
     day: str | None = None,
     client: GroqClient | None = None,
 ) -> str:

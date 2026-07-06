@@ -382,9 +382,15 @@ class AccountService:
 
         tenant_id = ctx.tenant_id
         if not tenant_id:
+            # Wurzel 4: KEIN erfundenes DE/EUR. Beim reinen OAuth-Login (noch kein
+            # Onboarding) ist dies nur ein Platzhalter-Tenant; Land und Währung
+            # gehören verbindlich zum Objekt (Property/Hotel) und werden dort beim
+            # Anlegen zur Pflicht. country/currency sind NOT NULL → leer anlegen;
+            # die Finanzpfade sind fail-closed und verweigern bis dahin jeden
+            # Geldvorgang, statt einen falschen Euro/ein falsches Land vorzutäuschen.
             tenant = (
                 self._service.table("tenants")
-                .insert({"name": full_name, "country": "DE", "currency": "EUR"})
+                .insert({"name": full_name, "country": "", "currency": ""})
                 .execute()
             )
             if not tenant.data:

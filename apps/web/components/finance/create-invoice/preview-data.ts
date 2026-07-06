@@ -178,11 +178,14 @@ export function buildPreviewData(args: PreviewDataArgs): PreviewTemplateData {
       : undefined,
     title: formData.title || undefined,
     reference: formData.customerOrderNumber || undefined,
+    // Wurzel 4: echte Währung aus Formular/Firma/Einstellungen, KEIN 'EUR'-
+    // Endfallback. Fehlt sie überall, leer lassen — die PDF-Templates rendern
+    // Beträge über formatCurrency symbollos statt einen Euro zu erfinden.
     currency:
       formData.currency ||
       (company?.defaultCurrency as string) ||
       settings?.defaultCurrency ||
-      'EUR',
+      '',
     taxRule: formData.taxRule,
     taxRuleLabel: taxRuleLabelMap[formData.taxRule] || undefined,
     customerName: formData.customerName || '',

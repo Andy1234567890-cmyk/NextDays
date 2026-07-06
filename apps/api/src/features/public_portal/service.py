@@ -372,6 +372,9 @@ class PublicPortalService:
             return 0
 
     def _tenant_currency(self, tenant_id: str) -> str:
+        """Mandantenwährung für die Owner-Portal-Einnahmen. Fehlt sie, ist das
+        ein Datenfehler → fail-closed (422), kein erfundenes EUR (Wurzel 4):
+        diese Währung speist echte Geldbeträge (earnings/payout)."""
         rows = (
             self._db.table("tenants")
             .select("currency")
@@ -379,7 +382,12 @@ class PublicPortalService:
             .limit(1)
             .execute()
         ).data or []
-        return (rows[0].get("currency") if rows else None) or "EUR"
+        currency = (rows[0].get("currency") if rows else None) or ""
+        if not currency.strip():
+            raise PortalError(
+                "Keine Währung für den Mandanten hinterlegt.", status_code=422
+            )
+        return currency
 
 
 def _block(r: dict) -> BlockRequestItem:

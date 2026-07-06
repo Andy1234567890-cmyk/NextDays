@@ -17,6 +17,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from "@/components/ui/chart";
+import { currencySymbol, formatCurrency } from "@/lib/currency";
 
 const data = [
   { monat: "Jan", umsatz: 12400 },
@@ -31,7 +32,10 @@ const config = {
   umsatz: { label: "Umsatz", color: "var(--chart-1)" },
 } satisfies ChartConfig;
 
-export function RevenueChart() {
+// Wurzel 4: Währung als Prop statt hartem €. Fehlt sie, rendert die Achse/der
+// Tooltip symbollos (currencySymbol/formatCurrency), kein erfundener Euro.
+export function RevenueChart({ currency }: { currency?: string }) {
+  const symbol = currencySymbol(currency);
   return (
     <Card>
       <CardHeader>
@@ -59,14 +63,14 @@ export function RevenueChart() {
               axisLine={false}
               tickMargin={8}
               width={48}
-              tickFormatter={(v) => `${(v / 1000).toLocaleString("de-DE")}k €`}
+              tickFormatter={(v) =>
+                `${(v / 1000).toLocaleString("de-DE")}k${symbol ? ` ${symbol}` : ""}`
+              }
             />
             <ChartTooltip
               content={
                 <ChartTooltipContent
-                  formatter={(value) =>
-                    `${Number(value).toLocaleString("de-DE")} €`
-                  }
+                  formatter={(value) => formatCurrency(Number(value), currency, "de-DE", 0)}
                 />
               }
             />

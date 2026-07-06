@@ -188,16 +188,20 @@ class PropertiesService:
         # Auto-Anbindung an den Channel-Manager (non-blocking): legt das Objekt
         # automatisch beim Provider an. Schlägt das fehl, bleibt die Objekt-
         # Anlage trotzdem erfolgreich (Fehler wird im Mapping vermerkt).
+        # currency=None: properties hat keine currency-Spalte (die liegt im
+        # rate_plan). sync_content lädt die ECHTE Objektwährung selbst und
+        # schlägt fail-closed fehl (422), wenn keine existiert — ein "EUR"-
+        # Platzhalter hier würde genau diesen Schutz aushebeln (Wurzel 4).
         self._sync_to_channel_manager(
             tenant_id,
             property_id=row["id"],
             title=row.get("title") or "Unbenannt",
-            currency=row.get("currency") or "EUR",
+            currency=None,
         )
         return PropertyResponse(**_row(row))
 
     def _sync_to_channel_manager(
-        self, tenant_id: str, *, property_id: str, title: str, currency: str
+        self, tenant_id: str, *, property_id: str, title: str, currency: str | None
     ) -> None:
         """Reiht den Channex-Content-Sync des Objekts als Hintergrund-Job ein
         (Phase 2: raus aus dem Request-Pfad). Früher lief hier der volle Content-
@@ -230,7 +234,7 @@ class PropertiesService:
             tenant_id,
             property_id=property_id,
             title=r.get("title") or "Unbenannt",
-            currency=r.get("currency") or "EUR",
+            currency=None,
         )
         self._push_max_stay(tenant_id, property_id, _max_stay_of(r))
         log.info("property_resynced", tenant_id=tenant_id, property_id=property_id)
@@ -273,7 +277,7 @@ class PropertiesService:
                 tenant_id,
                 property_id=property_id,
                 title=row.get("title") or "Unbenannt",
-                currency=row.get("currency") or "EUR",
+                currency=None,
             )
         # Maximalaufenthalt (Verfügbarkeits-Formular) an die Portale spiegeln,
         # sobald type_attributes sich ändert — sonst bliebe die Obergrenze bei
@@ -641,8 +645,8 @@ class PropertiesService:
         # sonst kämen Fotos NIE bei Booking/Airbnb an (Upload triggerte bisher nur
         # den lokalen properties.photos-Spiegel, keinen Channex-Sync).
         # Nur `title` selektieren — die Währung hat properties NICHT als Spalte
-        # (sie liegt im rate_plan); sync_property_to_channex lädt die echte
-        # currency ohnehin selbst aus dem rate_plan. "EUR" ist nur Platzhalter.
+        # (sie liegt im rate_plan); sync_content lädt die echte currency selbst
+        # aus dem rate_plan und schlägt fail-closed fehl, wenn keine existiert.
         prop = (
             self._db.table("properties")
             .select("title")
@@ -656,7 +660,7 @@ class PropertiesService:
                 tenant_id,
                 property_id=property_id,
                 title=prop[0].get("title") or "Unbenannt",
-                currency="EUR",
+                currency=None,
             )
 
     def publish(self, ctx: AuthContext, property_id: str) -> PropertyResponse:

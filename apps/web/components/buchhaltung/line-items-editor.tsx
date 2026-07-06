@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { LineItemInput } from "@/lib/buchhaltung";
-import { formatCurrency } from "@/lib/currency";
+import { currencySymbol, formatCurrency } from "@/lib/currency";
 
 export type LineItemRow = {
   description: string;
@@ -77,12 +77,17 @@ export function LineItemsEditor({
   onRowChange,
   onAdd,
   onRemove,
+  currency,
 }: {
   rows: LineItemRow[];
   onRowChange: (i: number, patch: Partial<LineItemRow>) => void;
   onAdd: () => void;
   onRemove: (i: number) => void;
+  // Belegwährung fürs Feld-Label (Wurzel 4: kein hartes €). Fehlt sie, rendert
+  // currencySymbol leer → Label bleibt „Einzelpreis" ohne erfundenes Symbol.
+  currency?: string;
 }) {
+  const priceLabel = `Einzelpreis ${currencySymbol(currency)}`.trim();
   return (
     <div className="flex flex-col gap-3">
       {rows.map((r, i) => (
@@ -121,7 +126,7 @@ export function LineItemsEditor({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <Label className="text-xs text-muted-foreground">Einzelpreis €</Label>
+              <Label className="text-xs text-muted-foreground">{priceLabel}</Label>
               <Input
                 type="number"
                 inputMode="decimal"

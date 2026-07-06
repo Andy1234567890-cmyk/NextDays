@@ -1,6 +1,7 @@
 'use client';
 
 import { api } from '@/lib/api-client';
+import { formatCurrency } from '@/lib/currency';
 import type { TaxRuleType } from '@/types/taxRules';
 import { InventoryService } from './inventoryService';
 import { NumberSequenceService } from './numberSequenceService';
@@ -209,7 +210,7 @@ export class QuoteService {
           quoteData.customerId || quoteData.customerName,
           'document',
           `Angebot erstellt: ${number}`,
-          `Ein neues Angebot über ${new Intl.NumberFormat('de-DE', { style: 'currency', currency: quoteData.currency || 'EUR' }).format(quoteData.total)} wurde erstellt.`,
+          `Ein neues Angebot über ${formatCurrency(quoteData.total, quoteData.currency)} wurde erstellt.`,
           {
             quoteId: response.id,
             quoteNumber: number,
@@ -621,7 +622,10 @@ export class QuoteService {
       subtotal: (data.subtotal_cents || 0) / 100,
       taxAmount: (data.tax_cents || 0) / 100,
       total: (data.total_cents || 0) / 100,
-      currency: 'EUR',
+      // Wurzel 4: echte gespeicherte Angebotswaehrung durchreichen (die API
+      // liefert sie als Pflichtfeld), nicht bedingungslos EUR erfinden. Fehlt
+      // sie ausnahmsweise, leer lassen — Formatter rendern symbollos statt EUR.
+      currency: data.currency || '',
       pdfUrl: data.pdf_url || data.pdfUrl,
       sentAt: data.sent_at ? toDate(data.sent_at) : undefined,
       acceptedAt: data.accepted_at ? toDate(data.accepted_at) : undefined,
