@@ -19,6 +19,7 @@ import {
 } from '@tasko/ui';
 import { useEffect, useState } from 'react';
 
+import { formatCurrency } from '@/lib/currency';
 import { type InventoryItem, InventoryService } from '@/services/inventoryService';
 
 interface InventorySelectorProps {
@@ -26,6 +27,10 @@ interface InventorySelectorProps {
   onSelectItem: (item: InventoryItem, quantity: number) => void;
   selectedItems?: string[]; // IDs bereits ausgewählter Items
   quickAddOnClick?: boolean; // optional: beim Klick sofort ersten verfügbaren Artikel hinzufügen
+  // Währung des Belegs/der Rechnung — der Artikelpreis wird darin angezeigt
+  // (kein währungsloser Betrag). Optional: fehlt sie, zeigt formatCurrency die
+  // reine Zahl (kein erfundenes €-Symbol).
+  currency?: string;
 }
 
 export default function InventorySelector({
@@ -33,6 +38,7 @@ export default function InventorySelector({
   onSelectItem,
   selectedItems = [],
   quickAddOnClick = false,
+  currency,
 }: InventorySelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
@@ -287,10 +293,7 @@ export default function InventorySelector({
                           </TableCell>
                           <TableCell>
                             <span className="font-medium">
-                              {item.sellingPrice.toLocaleString('de-DE', {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                              })}
+                              {formatCurrency(item.sellingPrice, currency)}
                             </span>
                           </TableCell>
                           <TableCell>

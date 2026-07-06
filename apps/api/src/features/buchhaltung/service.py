@@ -786,6 +786,25 @@ class BuchhaltungService:
             "notes": payload.get("notes"),
         }
         allowed = {k: v for k, v in allowed.items() if v is not None}
+        # Ein Entwurf (ohne Nummer) darf über diesen Roh-Endpunkt NICHT auf einen
+        # ausgestellten Status (finalized/paid/sent) gehoben werden: dabei würde
+        # KEINE fortlaufende GoBD-Nummer gezogen → ein festgeschriebener Beleg ohne
+        # Rechnungsnummer (Lückenlosigkeit verletzt) und wegen des Status-Gates
+        # danach unrettbar (nicht mehr editier-/löschbar). Finalisierung mit
+        # Nummernzug läuft ausschließlich über den regulären Erstell-/Finalisierungs-
+        # pfad (create_invoice_from_bestand mit status!=draft).
+        new_status = allowed.get("status")
+        if (
+            not is_finalized
+            and not row.get("invoice_number")
+            and new_status is not None
+            and new_status not in self._MUTABLE_INVOICE_STATUSES
+        ):
+            raise BuchhaltungError(
+                "Ein Entwurf ohne Rechnungsnummer kann hier nicht ausgestellt "
+                "werden — bitte über die reguläre Rechnungserstellung finalisieren.",
+                status_code=409,
+            )
         if is_finalized:
             # An festgeschriebenen Belegen nur technische Anlagen nachtragbar
             # (E-Rechnungs-XML/-Format, PDF-URL); Status/Notizen/Inhalt sind tabu.
@@ -891,7 +910,7 @@ class BuchhaltungService:
                 fields = _connect_fields_from_profile(profile)
                 if fields:
                     payments.update_connect_account(
-                        existing[0]["stripe_account_id"], fields
+                        tenant_id, existing[0]["stripe_account_id"], fields
                     )
             except PaymentsError as exc:
                 log.warning(
@@ -924,8 +943,11 @@ class BuchhaltungService:
             self._db.table("tenant_billing_profile").update(
                 {"stripe_account_id": account.stripe_account_id}
             ).eq("tenant_id", tenant_id).execute()
-            # Firmen-/Inhaberdaten an den Account übertragen (best effort).
+            # Firmen-/Inhaberdaten an den Account übertragen (best effort). Die
+            # acct_-ID wurde direkt oben in tenant_billing_profile geschrieben →
+            # der _require_own_connect_account-Guard findet sie für diesen Tenant.
             payments.update_connect_account(
+                tenant_id,
                 account.stripe_account_id,
                 _connect_fields_from_profile(profile),
             )
@@ -933,6 +955,7 @@ class BuchhaltungService:
             holder = profile.get("account_holder") or _account_holder_from(profile)
             if iban and holder:
                 payments.set_external_account(
+                    tenant_id,
                     account.stripe_account_id,
                     iban=iban, account_holder=holder, country=country,
                 )

@@ -38,6 +38,27 @@ if TYPE_CHECKING:
 log = get_logger("nextdays.calendar")
 
 
+def _contiguous_open_spans(
+    rng: "DateRange", booked_iso: set[str]
+) -> list[tuple[date, date]]:
+    """Zusammenhängende [start, end)-Zeiträume der Tage in `rng`, die NICHT in
+    `booked_iso` (belegte ISO-Tage) liegen. Für den tag-genauen Channex-Freigabe-
+    Push: gebuchte Tage unterbrechen einen Span, sodass availability=1 nie für einen
+    belegten Tag gesendet wird. `end` ist exklusiv (wie DateRange)."""
+    spans: list[tuple[date, date]] = []
+    span_start: date | None = None
+    for day in rng.nights():
+        if day.isoformat() in booked_iso:
+            if span_start is not None:
+                spans.append((span_start, day))  # end exklusiv = erster belegter Tag
+                span_start = None
+        elif span_start is None:
+            span_start = day
+    if span_start is not None:
+        spans.append((span_start, rng.end))
+    return spans
+
+
 class CalendarError(Exception):
     """Fachlicher Kalender-Fehler; vom Router auf HTTP-Status gemappt."""
 
@@ -911,13 +932,33 @@ class CalendarService:
 
     def _unblock(self, property_id: str, rng: DateRange) -> None:
         """Manuelle Sperre im Zeitraum aufheben (nur source=manual; gebuchte Tage
-        bleiben unberührt). Gibt die Tage an Channex frei (availability=1)."""
+        bleiben unberührt). Gibt an Channex NUR die Tage frei (availability=1), die
+        danach WIRKLICH offen sind — NICHT den ganzen Range."""
         self._db().table("availability").delete().eq(
             "property_id", property_id
         ).eq("status", "blocked").eq("source", "manual").gte(
             "date", rng.start.isoformat()
         ).lt("date", rng.end.isoformat()).execute()
-        self._push_channex_availability(property_id, rng.start, rng.end, 1)
+        # Tag-genau: Tage, die im Range noch belegt sind (echte Direkt-/Plattform-
+        # Reservierung ODER importierte OTA-Buchung, status='booked'), NICHT als
+        # availability=1 an Channex melden — sonst würde das Portal einen gebuchten
+        # Tag erneut verkaufbar machen (Überbuchung). Nur die tatsächlich offenen
+        # Tage freigeben, gruppiert in zusammenhängende Zeiträume.
+        still_booked = {
+            r["date"]
+            for r in (
+                self._db()
+                .table("availability")
+                .select("date")
+                .eq("property_id", property_id)
+                .eq("status", "booked")
+                .gte("date", rng.start.isoformat())
+                .lt("date", rng.end.isoformat())
+                .execute()
+            ).data or []
+        }
+        for span_start, span_end in _contiguous_open_spans(rng, still_booked):
+            self._push_channex_availability(property_id, span_start, span_end, 1)
 
     def _push_channex_rate(
         self,

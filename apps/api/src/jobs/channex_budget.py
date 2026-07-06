@@ -139,7 +139,15 @@ class ChannexBudget:
 
 
 def _retry(ttl: int, limit: Limit) -> int:
-    return ttl if ttl and ttl > 0 else limit.window_seconds
+    # ttl>0: exakt bis das Fenster frei wird. ttl==0: der Schlüssel läuft in <1 s
+    # ab (Redis-TTL rundet auf ganze Sekunden ab) → ~1 s warten, NICHT das volle
+    # Fenster (sonst schläft der Job unnötig eine ganze Minute). ttl<0 (kein
+    # Schlüssel/TTL unbekannt) → konservativ das volle Fenster.
+    if ttl > 0:
+        return ttl
+    if ttl == 0:
+        return 1
+    return limit.window_seconds
 
 
 def _build_sync_redis(redis_url: str) -> redis.Redis:

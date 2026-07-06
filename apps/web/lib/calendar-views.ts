@@ -80,6 +80,11 @@ export function occupancyMatrix(
   propertyIds: string[],
   start: Date,
   days: number,
+  // Zusätzlich belegte/gesperrte Tage je Objekt, die NICHT als reservations-Zeile
+  // erscheinen (manueller Block, Stop-Sell, OTA-Import über availability). Ohne
+  // sie zählte die Heatmap gesperrte Tage fälschlich als „frei" und wies eine zu
+  // niedrige Auslastung aus. Map propertyId → Menge belegter ISO-Tage.
+  blockedByProp: Record<string, Set<string>> = {},
 ): {
   /** Tagesschlüssel der Spalten (YYYY-MM-DD), Länge = days. */
   dayKeys: string[];
@@ -98,16 +103,28 @@ export function occupancyMatrix(
   const perDayCount: Record<string, number> = {};
   for (const k of dayKeys) perDayCount[k] = 0;
 
+  const markBooked = (pid: string, k: string): void => {
+    if (!perProperty[pid][k]) {
+      perProperty[pid][k] = true;
+      perDayCount[k] += 1;
+    }
+  };
+
   for (const res of reservations) {
     if (res.status === "cancelled") continue;
     if (!idSet.has(res.property_id)) continue;
     for (const k of dayKeys) {
-      if (res.check_in <= k && k < res.check_out) {
-        if (!perProperty[res.property_id][k]) {
-          perProperty[res.property_id][k] = true;
-          perDayCount[k] += 1;
-        }
-      }
+      if (res.check_in <= k && k < res.check_out) markBooked(res.property_id, k);
+    }
+  }
+
+  // Blocks/Stop-Sell/OTA-Belegung (availability=0) ebenfalls als belegt zählen —
+  // sonst wirken gesperrte Tage in der Heatmap als „frei".
+  for (const pid of propertyIds) {
+    const blocked = blockedByProp[pid];
+    if (!blocked) continue;
+    for (const k of dayKeys) {
+      if (blocked.has(k)) markBooked(pid, k);
     }
   }
 

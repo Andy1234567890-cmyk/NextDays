@@ -193,7 +193,8 @@ def test_ensure_connect_account_is_idempotent_but_syncs_fields() -> None:
     fake_payments.create_connect_account.assert_not_called()
     fake_payments.set_external_account.assert_not_called()
     fake_payments.update_connect_account.assert_called_once()
-    account_id, fields = fake_payments.update_connect_account.call_args.args
+    tenant_id, account_id, fields = fake_payments.update_connect_account.call_args.args
+    assert tenant_id == "t1"
     assert account_id == "acct_exists"
     assert fields["business_profile"]["url"] == "https://muster.example"
 

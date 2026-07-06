@@ -25,6 +25,7 @@ from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
+from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.config import get_settings
@@ -46,7 +47,10 @@ log = get_logger("nextdays.worker")
 # Retry-Versuch zu verbrennen.
 _CHANNEX_JOB_TYPES = frozenset(
     {"sync_property_content", "reconcile_tenant", "push_ari", "process_ari_outbox",
-     "process_restriction_outbox"}
+     "process_restriction_outbox",
+     # recompute_property pusht die meisten Rate-Calls (Tagespreise über den
+     # 365-Tage-Horizont) — MUSS das kontoweite Channex-Token-Budget ziehen.
+     "recompute_property"}
 )
 
 # Parallel verarbeitete Jobs je Worker-Instanz. Begrenzt lokale Thread-/DB-Last;
@@ -64,6 +68,10 @@ STUCK_AFTER_SECONDS = 300
 JOB_HEARTBEAT_SECONDS = 60
 # Zeit-Tick: Reconcile aller Tenants einreihen (ersetzt den externen 15-min-Cron).
 RECONCILE_TICK_SECONDS = 15 * 60
+# Max. aufeinanderfolgende Budget-Verzögerungen (defer_count), bevor ein Job
+# aufgibt ('dead'). Deckel gegen Endlos-Defer-Livelock bei dauerhaft totem Redis.
+# Großzügig, damit legitimes Warten auf ein volles Budget-Fenster nie greift.
+_MAX_DEFERS = 100
 # Heartbeat-Datei für den Docker-Healthcheck: der Run-Loop schreibt sie je
 # Durchlauf neu (idle ≤ 1 s, unter Last je Claim-Zyklus). Der Healthcheck im
 # Worker-Compose meldet unhealthy, wenn sie älter als 120 s ist — so wird ein
@@ -136,13 +144,15 @@ def _handle_process_restriction_outbox(
 
 
 def _handle_recompute_property(
-    db: Client, payload: dict[str, Any], _budget: ChannexBudget | None = None
+    db: Client, payload: dict[str, Any], budget: ChannexBudget | None = None
 ) -> None:
     from src.features.pricing.recompute import DynamicPricingRecompute
 
-    DynamicPricingRecompute(service_client=db).recompute_property(
-        payload["property_id"]
-    )
+    # Budget durchreichen → der Rate-Push aus dem Recompute zieht pro HTTP-Call ein
+    # Channex-Token (kein Umgehen des kontoweiten Limits bei Churn über viele Objekte).
+    DynamicPricingRecompute(
+        service_client=db, channex_budget=budget
+    ).recompute_property(payload["property_id"])
 
 
 def _handle_push_ari(
@@ -274,6 +284,33 @@ class Worker:
         if not (res.data or []):
             log.warning("job_finish_lost_claim", id=job_id, status=status)
 
+    def _requeue(self, job: dict[str, Any], patch: dict[str, Any]) -> None:
+        """Einen laufenden Job zurück auf 'queued' setzen (Retry/Defer).
+
+        Fängt die Kollision mit dem partiellen Unique-Index jobs_dedup_queued_uq
+        (0108: dedup_key WHERE status='queued') ab: solange dieser Job 'running'
+        war, durfte ein neuer enqueue_job(dedup_key) eine ZWEITE 'queued'-Zeile
+        anlegen (genau das Ziel von 0108). Ein blindes running→queued würde dann
+        eine zweite 'queued'-Zeile mit demselben dedup_key erzeugen → 23505; ohne
+        Fangen bliebe der Job dauerhaft 'running' stecken. In dem Fall erledigt der
+        bereits eingereihte Zwilling die Arbeit → diesen Job sauber als 'done'
+        abschließen (kein Verlust, keine Dublette)."""
+        try:
+            self._db.table("jobs").update(patch).eq("id", job["id"]).eq(
+                "locked_by", self._worker_id  # Guard wie _finish: nur eigenen Claim
+            ).eq("status", "running").execute()
+        except APIError as exc:
+            if "jobs_dedup_queued_uq" not in str(exc):
+                raise
+            log.info(
+                "job_requeue_dedup_yield",
+                id=job["id"], job_type=job.get("job_type"),
+            )
+            self._finish(
+                job["id"], "done",
+                "übersprungen — bereits neu eingereiht (dedup_key)",
+            )
+
     def _retry(self, job: dict[str, Any], error: str) -> None:
         """Fehlgeschlagenen Job neu terminieren — oder 'dead', wenn Budget aus."""
         attempts = job.get("attempts") or 0
@@ -281,29 +318,44 @@ class Worker:
             self._finish(job["id"], "dead", error)
             log.error("job_dead", id=job["id"], job_type=job["job_type"], error=error[:300])
             return
-        self._db.table("jobs").update({
+        self._requeue(job, {
             "status": "queued", "locked_at": None, "locked_by": None,
             "last_error": error[:1000],
             "run_after": next_run_after(attempts).isoformat(),
-        }).eq("id", job["id"]).eq(
-            "locked_by", self._worker_id  # Guard wie _finish: nur eigenen Claim
-        ).eq("status", "running").execute()
+        })
 
     def _defer(self, job: dict[str, Any], retry_after: int) -> None:
         """Job wegen erschöpftem Channex-Budget verzögern: zurück auf queued mit
         run_after = jetzt + retry_after (genau bis das nächste Token frei wird),
         OHNE attempts zu verbrauchen (es ist kein Fehler, nur Warten). claim_jobs
         hat attempts beim Claim erhöht → hier −1 zurückdrehen, damit das Retry-
-        Budget nicht durch Budget-Wartephasen aufgezehrt wird."""
+        Budget nicht durch Budget-Wartephasen aufgezehrt wird.
+
+        Deckel gegen Livelock: bei DAUERHAFT totem Redis liefert das Budget nie ein
+        Token → der Job defert unendlich (attempts wird nie verbraucht, erreicht nie
+        'dead'). Ein separater defer_count deckelt das: nach _MAX_DEFERS aufeinander-
+        folgenden Verzögerungen gibt der Job auf ('dead'), statt zyklisch einen Slot
+        zu belegen. Bei intaktem Budget (Fenster läuft frei) wird der Job längst
+        vorher normal ausgeführt und defer_count spielt keine Rolle."""
+        defer_count = (job.get("defer_count") or 0) + 1
+        if defer_count > _MAX_DEFERS:
+            self._finish(
+                job["id"], "dead",
+                "Channex-Budget dauerhaft nicht verfügbar (Redis-Ausfall?) — "
+                f"nach {_MAX_DEFERS} Verzögerungen aufgegeben.",
+            )
+            log.error(
+                "job_dead_defer_livelock",
+                id=job["id"], job_type=job.get("job_type"), defer_count=defer_count,
+            )
+            return
         attempts = max((job.get("attempts") or 1) - 1, 0)
         run_after = datetime.now(UTC) + timedelta(seconds=max(retry_after, 1))
-        self._db.table("jobs").update({
+        self._requeue(job, {
             "status": "queued", "locked_at": None, "locked_by": None,
-            "attempts": attempts,
+            "attempts": attempts, "defer_count": defer_count,
             "run_after": run_after.isoformat(),
-        }).eq("id", job["id"]).eq(
-            "locked_by", self._worker_id  # Guard wie _finish: nur eigenen Claim
-        ).eq("status", "running").execute()
+        })
 
     def _run_job(self, job: dict[str, Any]) -> None:
         """Synchron im Thread: Handler ausführen, Status setzen.

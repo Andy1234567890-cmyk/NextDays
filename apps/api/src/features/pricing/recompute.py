@@ -39,8 +39,17 @@ def _as_date(value: object) -> date:
 class DynamicPricingRecompute:
     """Berechnet dynamische Preise und verteilt sie (Channex-Push)."""
 
-    def __init__(self, service_client: Client | None = None) -> None:
+    def __init__(
+        self, service_client: Client | None = None, channex_budget: object = None
+    ) -> None:
         self._client = service_client
+        # Optionales Channex-Token-Budget: der Recompute pusht die MEISTEN Rate-
+        # Calls (Tagespreise über den 365-Tage-Horizont je Objekt). Ohne Budget
+        # (before_call=None) umgingen diese Pushes das kontoweite Rate-Limit — bei
+        # Churn über viele Objekte überfahren sie Channex' Konto-Limit. Der Worker
+        # reicht sein ChannexBudget durch; der synchrone Hintergrund-Task (nach
+        # dem Speichern) läuft ohne (einzelnes Objekt, kein Batch-Risiko).
+        self._channex_budget = channex_budget
         # Rohzeile der zuletzt geladenen dp_settings (für market_key/comp_refs,
         # die nicht in der Rechen-Dataclass DpSettings liegen).
         self._settings_row: dict | None = None
@@ -649,9 +658,21 @@ class DynamicPricingRecompute:
         if not tenant_id or self._client is None or not rows:
             return
         try:
+            from src.features.channel_manager.channex_client import ChannexClient
             from src.features.channel_manager.service import ChannelManagerService
 
-            cm = ChannelManagerService(service_client=self._client)
+            # Budget-gebundener Channex-Client (falls der Worker ein Budget durch-
+            # reicht), damit jeder Rate-Push ein Token zieht (kein Umgehen des
+            # kontoweiten Limits). Ohne Budget → unveränderter Client.
+            before_call = (
+                self._channex_budget.try_consume
+                if self._channex_budget is not None
+                else None
+            )
+            cm = ChannelManagerService(
+                service_client=self._client,
+                channex=ChannexClient(before_call=before_call),
+            )
             ordered = sorted(rows, key=lambda r: r["date"])
             # RLE: aufeinanderfolgende Tage mit gleichem (price, min_stay) zu
             # einem Intervall bündeln, dann ALLE Intervalle in EINEM gebatchten

@@ -528,6 +528,7 @@ export default function CreateQuotePage() {
           showNet={showNet}
           setShowNet={setShowNet}
           formatCurrency={formatCurrency}
+          currency={formData.currency}
           savedServices={savedServices}
           loadingSavedServices={loadingSavedServices}
           serviceModalOpen={serviceModalOpen}

@@ -72,7 +72,7 @@ def get_connect_account_status(
 ) -> ConnectAccountStatus:
     """KYC-/Aktivierungsstatus + offene Requirements (für die eigene Onboarding-UI)."""
     try:
-        return service.get_connect_account_status(stripe_account_id)
+        return service.get_connect_account_status(ctx.tenant_id, stripe_account_id)
     except PaymentsError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -86,7 +86,7 @@ def update_connect_account(
 ) -> ConnectAccountStatus:
     """Geschäfts-/Inhaberdaten an den Custom-Account senden (eigene UI)."""
     try:
-        return service.update_connect_account(stripe_account_id, req.fields)
+        return service.update_connect_account(ctx.tenant_id, stripe_account_id, req.fields)
     except PaymentsError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -109,7 +109,8 @@ def accept_tos(
     )
     try:
         return service.accept_tos(
-            stripe_account_id, ip=ip, when=int(datetime.now(UTC).timestamp())
+            ctx.tenant_id, stripe_account_id, ip=ip,
+            when=int(datetime.now(UTC).timestamp()),
         )
     except PaymentsError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
@@ -125,6 +126,7 @@ def set_external_account(
     """Auszahlungs-Bankkonto (IBAN) am Custom-Account hinterlegen."""
     try:
         return service.set_external_account(
+            ctx.tenant_id,
             stripe_account_id,
             iban=req.iban,
             account_holder=req.account_holder,

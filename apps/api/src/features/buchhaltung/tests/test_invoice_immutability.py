@@ -48,3 +48,26 @@ def test_draft_without_number_deletable() -> None:
         {"is_locked": False, "status": "draft", "invoice_number": None}
     )
     svc.delete_invoice(CTX, "i1")  # kein Raise → Soft-Delete erlaubt
+
+
+def test_raw_update_cannot_finalize_numberless_draft() -> None:
+    """update_invoice_raw darf einen nummernlosen Entwurf NICHT auf 'finalized'
+    (oder paid/sent) heben — dabei würde keine GoBD-Nummer gezogen → ein
+    festgeschriebener Beleg ohne Rechnungsnummer + unrettbar."""
+    svc = _service_with_invoice(
+        {"is_locked": False, "status": "draft", "invoice_number": None}
+    )
+    for status in ("finalized", "paid", "sent"):
+        with pytest.raises(BuchhaltungError) as exc:
+            svc.update_invoice_raw(CTX, "i1", {"status": status})
+        assert exc.value.status_code == 409
+
+
+def test_raw_update_draft_stays_draft_ok() -> None:
+    """Ein Entwurf darf über den Roh-Endpunkt weiter im Entwurf bleiben / Notizen
+    ändern (kein Statuswechsel weg von draft)."""
+    svc = _service_with_invoice(
+        {"is_locked": False, "status": "draft", "invoice_number": None}
+    )
+    # status='draft' + Notiz → erlaubt (kein Raise).
+    svc.update_invoice_raw(CTX, "i1", {"status": "draft", "notes": "Hinweis"})

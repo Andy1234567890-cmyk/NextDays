@@ -624,6 +624,19 @@ class ReservationsService:
                 "mehr verschieben. Bitte zuerst auschecken.",
                 status_code=409,
             )
+        # Eine OTA-importierte Buchung (source_channex_booking_id gesetzt) darf
+        # lokal NICHT verschoben werden: der Move hebt die Buchung beim Portal
+        # (Booking/Airbnb) NICHT auf, gibt aber die Alt-Nächte lokal frei und pusht
+        # availability=1 an Channex → das Portal verkauft die vom Gast dort weiter
+        # gehaltenen Nächte erneut (Überbuchung). OTA-Rows sind zudem vom EXCLUDE-
+        # Constraint (0104) ausgenommen, sodass der Ziel-Guard sie nicht abfängt.
+        # Änderungen an OTA-Buchungen laufen ausschließlich über das Portal → Import.
+        if current.get("source_channex_booking_id"):
+            raise ReservationError(
+                "OTA-Buchungen (Booking, Airbnb & Co.) lassen sich nicht lokal "
+                "verschieben — bitte die Änderung im Portal vornehmen.",
+                status_code=409,
+            )
 
         old_property = current["property_id"]
         old_nights = {

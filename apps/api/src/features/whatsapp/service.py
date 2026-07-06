@@ -460,6 +460,19 @@ class WhatsAppService:
         status = st.get("status")
         if not (wa_message_id and status):
             return
-        db.table("whatsapp_message").update({"status": status}).eq(
-            "wa_message_id", wa_message_id
-        ).execute()
+        # Der Meta-Status-Webhook trägt keinen Tenant. Die wa_message_id ist NUR pro
+        # (tenant_id, wa_message_id) eindeutig (0041) — dieselbe Meta-ID KANN unter
+        # zwei Tenants existieren. Ein Update allein über wa_message_id würde dann
+        # beide Zeilen tenant-übergreifend treffen (falscher Zustellstatus in fremder
+        # Konversation). Deshalb die Zeile(n) zuerst laden und je Zeile TENANT-scoped
+        # aktualisieren (jede bleibt in ihrem Tenant) — nie ein tenant-loser Update.
+        rows = (
+            db.table("whatsapp_message")
+            .select("tenant_id")
+            .eq("wa_message_id", wa_message_id)
+            .execute()
+        ).data or []
+        for row in rows:
+            db.table("whatsapp_message").update({"status": status}).eq(
+                "tenant_id", row["tenant_id"]
+            ).eq("wa_message_id", wa_message_id).execute()

@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Prop } from "@/components/kalender/calendar-board";
 import { Card } from "@/components/ui/card";
 import { Segmented } from "@/components/ui/segmented";
+import { getBoard } from "@/lib/calendar";
 import {
   addDays,
   dateKey,
@@ -28,26 +29,53 @@ const WINDOWS = [
 
 export function CalendarOccupancyView({ properties }: { properties: Prop[] }) {
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  // Belegte/gesperrte Tage je Objekt aus dem Board (availability=0: Block,
+  // Stop-Sell, OTA-Import) — sie erscheinen NICHT in reservations.
+  const [blockedByProp, setBlockedByProp] = useState<Record<string, Set<string>>>(
+    {},
+  );
   const [days, setDays] = useState<number>(30);
 
   // Fenster startet heute (lokale Mitternacht), stabil pro Mount.
   const start = useMemo(() => parseKey(dateKey(new Date())), []);
 
+  const propertyIds = useMemo(() => properties.map((p) => p.id), [properties]);
+
   const load = useCallback(async () => {
     const res = await listReservations();
     if (res.ok) setReservations(res.data.items);
-  }, []);
+    // Board für den sichtbaren Zeitraum laden → gesperrte/gebuchte Tage (status
+    // != 'open') und Stop-Sell-Tage als belegt markieren.
+    const end = dateKey(addDays(start, days));
+    const board = await getBoard(propertyIds, dateKey(start), end);
+    if (board.ok) {
+      const map: Record<string, Set<string>> = {};
+      for (const item of board.data.items) {
+        const set = new Set<string>();
+        for (const d of item.days) {
+          if (d.status !== "open") set.add(d.date);
+        }
+        for (const s of item.stop_sell) set.add(s.date);
+        map[item.property_id] = set;
+      }
+      setBlockedByProp(map);
+    }
+  }, [propertyIds, start, days]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
+  // Realtime-Pflicht: NICHT nur reservations — auch availability + stop_sell,
+  // damit ein Block/Stop-Sell/OTA-Import die Auslastung sofort aktualisiert
+  // (konsistent zum Timeline-Board).
   useRealtime({ table: "reservations", onChange: load });
+  useRealtime({ table: "availability", onChange: load });
+  useRealtime({ table: "stop_sell", onChange: load });
 
-  const propertyIds = useMemo(() => properties.map((p) => p.id), [properties]);
   const matrix = useMemo(
-    () => occupancyMatrix(reservations, propertyIds, start, days),
-    [reservations, propertyIds, start, days],
+    () => occupancyMatrix(reservations, propertyIds, start, days, blockedByProp),
+    [reservations, propertyIds, start, days, blockedByProp],
   );
 
   // Durchschnittliche Auslastung über das Fenster (für die Kopfkennzahl).

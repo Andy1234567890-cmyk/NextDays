@@ -301,6 +301,37 @@ Sechster Multi-Agenten-Loop über den deployten Stand; alle 17 Befunde gefixt
   inkrementierender `POST /number-sequences/next` mehr (GoBD-Lücke); Übersetzungs-
   Endpoint mit Längen-/Format-Limit (Kostenschutz Google-API).
 
+### Behoben (7. Bug-Jagd-Runde 07/2026 — 13 verifizierte Befunde)
+Siebter Multi-Agenten-Loop über den deployten Stand; alle 13 Befunde gefixt
+(1 Critical, 6 High, 2 Medium, 4 Low). Migration 0116. Kernpunkte:
+- **CRITICAL — Stripe-Connect-IDOR geschlossen**: die vier Connect-Endpunkte
+  (Status/Update/ToS/Bank-IBAN) prüfen jetzt, dass die `stripe_account_id` dem
+  Tenant des Aufrufers gehört (`tenant_billing_profile`). Zuvor konnte ein
+  Admin/Co-Admin mit MANAGE_BILLING die Account-ID EINES ANDEREN Tenants
+  angeben — Auszahlungs-IBAN umleiten, KYC überschreiben, Status auslesen
+  (direkter Geldabfluss).
+- **OTA-Buchung nicht mehr lokal verschiebbar**: `move()` lehnt eine OTA-
+  importierte Reservierung ab — ein lokaler Move hätte die Nächte lokal
+  freigegeben und `availability=1` gepusht, während die Buchung im Portal
+  bestehen bleibt (Überbuchung). Analog gibt `calendar._unblock` jetzt NUR die
+  wirklich freien Tage frei (tag-genau, keine gebuchten/OTA-Tage).
+- **Restriktions-Outbox mit Superseding**: der Cron-Nachzieher überspringt eine
+  veraltete pending-Zeile, wenn für dasselbe (Objekt, kind, Zeitraum) eine
+  neuere Absicht existiert — ein stale Retry überschreibt keinen jüngeren
+  Stop-Sell/Preis mehr (Re-Open/Überbuchung).
+- **GoBD**: `update_invoice_raw` kann einen nummernlosen Entwurf nicht mehr auf
+  `finalized`/`paid`/`sent` heben (Beleg ohne Rechnungsnummer + unrettbar).
+- **Job-Queue robust** (0116): `_retry`/`_defer` + Reaper kollidieren nicht mehr
+  mit dem dedup-Index (23505 → Job blieb 'running' stecken); ein Budget-
+  Livelock bei dauerhaft totem Redis endet nach `defer_count`-Deckel in 'dead'.
+- **Channex-Budget**: `recompute_property` (die meisten Rate-Calls) zieht jetzt
+  pro HTTP-Call ein Token (kein Umgehen des Konto-Limits); `retry_after` wartet
+  bei TTL==0 ~1 s statt eines vollen Fensters.
+- **Weitere**: PDF-Versand nutzt den existierenden `generate-pdf-single`-Endpunkt
+  (der `-multi`-Pfad war 404); Auslastungs-Heatmap zählt Blocks/Stop-Sell/OTA-
+  Belegung (+ availability/stop_sell-Realtime); InventorySelector zeigt die
+  Belegwährung; WhatsApp-Status-Update tenant-scoped.
+
 ### Behoben (High-Befunde der Bug-Jagd 07/2026)
 - **Owner-Scope im Kalender + Reservierungen (§4.2)**: Eigentümer sehen jetzt nur
   ihre zugeordneten Objekte (neuer gemeinsamer Helfer `auth/owner_scope.py`).

@@ -83,7 +83,9 @@ interface EmailSendModalProps {
     | 'receipt';
   companyId: string;
   selectedTemplate: string; // Template from SendDocumentModal
-  pageMode?: 'single' | 'multi'; // ✅ Page mode for PDF generation
+  // Ungenutzt: es gibt nur den generate-pdf-single-Endpunkt (Playwright paginiert
+  // selbst). Prop bleibt für Aufrufer-Kompatibilität, wird aber nicht mehr gelesen.
+  pageMode?: 'single' | 'multi';
   getRenderedHtml: () => Promise<string | null>; // Get rendered HTML from SendDocumentModal
   isTemplateReady: boolean; // Check if template is rendered and ready
   _onSend?: (emailData: EmailSendData) => Promise<void>;
@@ -127,7 +129,6 @@ export function EmailSendModal({
   documentType,
   companyId,
   selectedTemplate,
-  pageMode = 'single',
   getRenderedHtml,
   isTemplateReady,
   _onSend,
@@ -479,22 +480,12 @@ export function EmailSendModal({
         );
       }
 
-      // 🤖 SMART API SELECTION: Auto-detect based on items count
-      const itemsCount = document?.items?.length || 0;
-      const shouldUseSingle = itemsCount < 3; // 1-2 items = single, 3+ items = multi
-      const smartApiEndpoint = shouldUseSingle
-        ? '/api/v1/generate-pdf-single'
-        : '/api/v1/generate-pdf-multi';
-
-      // Use smart detection OR manual pageMode (if user explicitly set it)
-      const finalApiEndpoint =
-        pageMode === 'single'
-          ? '/api/v1/generate-pdf-single'
-          : pageMode === 'multi'
-            ? '/api/v1/generate-pdf-multi'
-            : smartApiEndpoint;
-
-      const response = await fetch(finalApiEndpoint, {
+      // Es gibt genau EINEN PDF-Render-Endpunkt: /api/v1/generate-pdf-single
+      // (Playwright, paginiert HTML automatisch über @page A4 — auch mehrseitige
+      // Belege). Der frühere '…-multi'-Pfad existierte nicht (weder Next-Route noch
+      // FastAPI) → 404 „PDF generation failed" und der Versand brach ab. Daher
+      // immer den Single-Endpunkt nutzen, unabhängig von pageMode/Positionszahl.
+      const response = await fetch('/api/v1/generate-pdf-single', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

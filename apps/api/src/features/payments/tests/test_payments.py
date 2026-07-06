@@ -52,9 +52,12 @@ def test_stripe_not_configured_raises_clean_error(monkeypatch) -> None:  # noqa:
         get_settings().stripe_secret_key, "get_secret_value", lambda: ""
     )
     # Kein injizierter Client → Service muss lazy initialisieren und sauber scheitern.
-    svc = PaymentsService(service_client=None, stripe=None)
+    # DB liefert die eigene acct_-ID, damit der Tenant-Guard passiert und der
+    # Stripe-Key-Fehler (503) tatsächlich erreicht wird.
+    db = _connect_db("acct_does_not_matter")
+    svc = PaymentsService(service_client=db, stripe=None)
     with pytest.raises(PaymentsError) as exc:
-        svc.get_connect_account_status("acct_does_not_matter")
+        svc.get_connect_account_status("t-1", "acct_does_not_matter")
     assert exc.value.status_code == 503
     assert "nicht konfiguriert" in exc.value.message.lower()
     sc.get_stripe.cache_clear()
@@ -80,11 +83,34 @@ def test_stripe_invalid_request_becomes_clean_400() -> None:
     class _FakeStripe:
         v1 = _V1()
 
-    svc = PaymentsService(service_client=None, stripe=_FakeStripe())
+    svc = PaymentsService(service_client=_connect_db("acct_x"), stripe=_FakeStripe())
     with pytest.raises(PaymentsError) as exc:
-        svc.update_connect_account("acct_x", {"individual": {}})
+        svc.update_connect_account("t-1", "acct_x", {"individual": {}})
     assert exc.value.status_code == 400
     assert "postal code" in exc.value.message.lower()
+
+
+def test_connect_account_foreign_tenant_rejected() -> None:
+    """IDOR-Guard: eine acct_-ID, die NICHT zum Tenant gehört, wird mit 404
+    abgelehnt (kein Cross-Tenant-Zugriff auf fremde Stripe-Accounts)."""
+    class _V1:
+        accounts = object()  # darf NIE erreicht werden
+
+    class _FakeStripe:
+        v1 = _V1()
+
+    # DB kennt für t-1 nur acct_own — der Angreifer versucht acct_victim.
+    svc = PaymentsService(service_client=_connect_db("acct_own"), stripe=_FakeStripe())
+    for call in (
+        lambda: svc.get_connect_account_status("t-1", "acct_victim"),
+        lambda: svc.update_connect_account("t-1", "acct_victim", {}),
+        lambda: svc.set_external_account(
+            "t-1", "acct_victim", iban="DE00", account_holder="X", country="DE"
+        ),
+    ):
+        with pytest.raises(PaymentsError) as exc:
+            call()
+        assert exc.value.status_code == 404
 
 
 # --- Fake-DB (Insert/Update/Select) -----------------------------------------
@@ -192,6 +218,16 @@ def _db_with_booking(*, charges_enabled: bool, tenant: str = "t1") -> _DB:
         }
     ]
     db.store["properties"] = [{"id": "prop-1", "deposit_amount": 50.0}]
+    return db
+
+
+def _connect_db(stripe_account_id: str, *, tenant: str = "t-1") -> _DB:
+    """DB, deren tenant_billing_profile für `tenant` die gegebene acct_-ID trägt —
+    damit der _require_own_connect_account-Guard sie als eigenen Account akzeptiert."""
+    db = _DB()
+    db.store["tenant_billing_profile"] = [
+        {"tenant_id": tenant, "stripe_account_id": stripe_account_id}
+    ]
     return db
 
 

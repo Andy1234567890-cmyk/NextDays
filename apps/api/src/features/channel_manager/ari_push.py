@@ -1173,6 +1173,18 @@ class AriPushMixin:
         for r in rows:
             result["processed"] += 1
             tenant_id, property_id = r["tenant_id"], r["property_id"]
+            # Superseding: existiert für dasselbe (property_id, kind) eine NEUERE
+            # Zeile (created_at später), deren Zeitraum diesen überlappt, dann ist
+            # DIESE Absicht veraltet. Ein stale Retry würde sonst den jüngeren,
+            # korrekten Wert (z. B. Stop-Sell=True) mit dem alten (Stop-Sell=False)
+            # überschreiben → Re-Open eines gesperrten Tages/Überbuchung. Abhaken
+            # statt pushen (der Availability-Pfad macht dasselbe tag-genau).
+            if self._restriction_superseded(db, r):
+                db.table("ari_restriction_outbox").update(
+                    {"status": "done", "last_error": "superseded (neuere Absicht)"}
+                ).eq("id", r["id"]).eq("status", "pending").execute()
+                result["done"] += 1
+                continue
             if not self._is_channex_managed(db, tenant_id, property_id):
                 # Nicht (mehr) bei Channex angelegt → nichts zu pushen, abhaken
                 # (kein Endlos-Retry). Analog zu process_ari_outbox.
@@ -1208,6 +1220,33 @@ class AriPushMixin:
         if result["processed"]:
             log.info("ari_restriction_outbox_processed", **result)
         return result
+
+    def _restriction_superseded(self, db: Client, row: dict[str, Any]) -> bool:
+        """True, wenn für dasselbe (property_id, kind) eine NEUERE Outbox-Zeile
+        existiert (created_at später), deren Zeitraum den dieser Zeile überlappt.
+        Nur pending/done zählen als gültiger Supersessor (eine failed-Zeile hat
+        ihren Wert nie zuverlässig übertragen — analog _newer_covered_days). Die
+        Superseding ist pro `kind`, weil verschiedene Restriktions-Arten (stop_sell
+        vs. rate) unabhängig sind und sich nicht gegenseitig veralten."""
+        created_at = str(row.get("created_at") or "")
+        if not created_at:
+            return False
+        newer = (
+            db.table("ari_restriction_outbox")
+            .select("id")
+            .eq("property_id", row["property_id"])
+            .eq("kind", row["kind"])
+            .gt("created_at", created_at)
+            .in_("status", ["pending", "done"])
+            # Datumsüberlappung: neuer.date_from <= alt.date_to UND
+            # neuer.date_to >= alt.date_from.
+            .lte("date_from", str(row["date_to"]))
+            .gte("date_to", str(row["date_from"]))
+            .neq("id", row["id"])
+            .limit(1)
+            .execute()
+        ).data
+        return bool(newer)
 
     def _bump_restriction_attempts(
         self, row: dict[str, Any], attempts: int, error: str, result: dict[str, int]

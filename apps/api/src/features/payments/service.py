@@ -117,6 +117,28 @@ class PaymentsService:
             raise PaymentsError("Payments-DB nicht verfügbar.", status_code=500)
         return self._db
 
+    def _require_own_connect_account(
+        self, tenant_id: str, stripe_account_id: str
+    ) -> None:
+        """Die stripe_account_id MUSS die im tenant_billing_profile dieses Tenants
+        hinterlegte sein. Ohne diesen Abgleich könnte ein Admin/Co-Admin mit
+        MANAGE_BILLING die acct_-ID EINES ANDEREN Tenants an die Stripe-Endpunkte
+        geben (Auszahlungs-IBAN umleiten, KYC überschreiben, ToS akzeptieren, Status
+        auslesen) — reines Cross-Tenant-IDOR mit direktem Geldabfluss. Die Rollen-
+        Capability allein prüft NICHT die Account-Zugehörigkeit."""
+        db = self._db_or_fail()
+        row = (
+            db.table("tenant_billing_profile")
+            .select("stripe_account_id")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        own = row[0].get("stripe_account_id") if row else None
+        if not own or own != stripe_account_id:
+            # 404 (nicht 403) — die Existenz eines fremden Accounts nicht bestätigen.
+            raise PaymentsError("Konto nicht gefunden.", status_code=404)
+
     # --- Stripe Connect (Custom, voll white-label) --------------------------
 
     def create_connect_account(
@@ -152,9 +174,10 @@ class PaymentsService:
         return ConnectAccountResponse(stripe_account_id=account.id)
 
     def get_connect_account_status(
-        self, stripe_account_id: str
+        self, tenant_id: str, stripe_account_id: str
     ) -> ConnectAccountStatus:
         """Liest KYC-/Aktivierungsstatus + offene Requirements (für die eigene UI)."""
+        self._require_own_connect_account(tenant_id, stripe_account_id)
         with _stripe_errors():
             account = self._stripe.v1.accounts.retrieve(stripe_account_id)
         requirements: list[str] = list(account.requirements.currently_due or [])
@@ -168,23 +191,25 @@ class PaymentsService:
         )
 
     def update_connect_account(
-        self, stripe_account_id: str, fields: dict[str, Any]
+        self, tenant_id: str, stripe_account_id: str, fields: dict[str, Any]
     ) -> ConnectAccountStatus:
         """Geschäfts-/Inhaber-/Vertreterdaten an den Custom-Account senden
         (eigene Onboarding-UI statt Stripe-hosted). ``fields`` ist das von der UI
         zusammengestellte Stripe-Account-Update (business_profile, company,
         individual, …)."""
+        self._require_own_connect_account(tenant_id, stripe_account_id)
         with _stripe_errors():
             self._stripe.v1.accounts.update(stripe_account_id, params=fields)
-        return self.get_connect_account_status(stripe_account_id)
+        return self.get_connect_account_status(tenant_id, stripe_account_id)
 
     def accept_tos(
-        self, stripe_account_id: str, *, ip: str, when: int
+        self, tenant_id: str, stripe_account_id: str, *, ip: str, when: int
     ) -> ConnectAccountStatus:
         """Stripe-Services-Vereinbarung für den Connected Account akzeptieren.
         ``ip``/``when`` müssen die ECHTE Nutzer-IP + der Zeitpunkt der Zustimmung
         sein (Compliance-Nachweis) — nie geraten. Erst danach kann der Account
         ``charges_enabled`` werden."""
+        self._require_own_connect_account(tenant_id, stripe_account_id)
         if not ip:
             raise PaymentsError("IP für die ToS-Akzeptanz fehlt.", status_code=422)
         with _stripe_errors():
@@ -192,12 +217,14 @@ class PaymentsService:
                 stripe_account_id,
                 params={"tos_acceptance": {"date": when, "ip": ip}},
             )
-        return self.get_connect_account_status(stripe_account_id)
+        return self.get_connect_account_status(tenant_id, stripe_account_id)
 
     def set_external_account(
-        self, stripe_account_id: str, *, iban: str, account_holder: str, country: str
+        self, tenant_id: str, stripe_account_id: str, *,
+        iban: str, account_holder: str, country: str,
     ) -> ConnectAccountStatus:
         """Auszahlungs-Bankkonto (IBAN) am Custom-Account hinterlegen."""
+        self._require_own_connect_account(tenant_id, stripe_account_id)
         with _stripe_errors():
             self._stripe.v1.accounts.update(
                 stripe_account_id,
@@ -211,7 +238,7 @@ class PaymentsService:
                     }
                 },
             )
-        return self.get_connect_account_status(stripe_account_id)
+        return self.get_connect_account_status(tenant_id, stripe_account_id)
 
     # --- Gast-Zahlung (Stufe A) ---------------------------------------------
 

@@ -54,6 +54,8 @@ type ItemsCardProps = {
   showNet: boolean;
   setShowNet: Dispatch<SetStateAction<boolean>>;
   formatCurrency: (amount: number) => string;
+  // Belegwährung — für die Preisanzeige im Inventar-Auswähler (kein €-Hardcode).
+  currency?: string;
   savedServices: InvoiceService[];
   loadingSavedServices: boolean;
   serviceModalOpen: boolean;
@@ -85,6 +87,7 @@ export default function ItemsCard({
   showNet,
   setShowNet,
   formatCurrency,
+  currency,
   savedServices,
   loadingSavedServices,
   serviceModalOpen,
@@ -164,6 +167,7 @@ export default function ItemsCard({
           </Button>
           <InventorySelector
             companyId={uid}
+            currency={currency}
             onSelectItem={(invItem, quantity) => {
               const qty = Math.max(1, quantity || 1);
               const unitPriceNet = invItem.sellingPrice || 0;

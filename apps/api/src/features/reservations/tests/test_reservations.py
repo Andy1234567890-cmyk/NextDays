@@ -518,6 +518,7 @@ def _move_db(store: dict) -> ReservationsService:
 def _move_store(
     *, check_in: str, check_out: str, status: str = "confirmed",
     checked_in_at: str | None = None,
+    source_channex_booking_id: str | None = None,
 ) -> dict:
     return {
         "users": [{"id": "u", "role": "admin", "permissions": _FULL_PERMS}],
@@ -532,6 +533,7 @@ def _move_store(
                 "status": status, "total_amount": 200, "currency": "EUR",
                 "ota_name": "Booking.com", "guests": {"name": "Anna"},
                 "checked_in_at": checked_in_at, "checked_out_at": None,
+                "source_channex_booking_id": source_channex_booking_id,
             }
         ],
         "availability": [
@@ -635,6 +637,30 @@ def test_move_rejects_checked_in_reservation() -> None:
     assert exc.value.status_code == 409
     assert "eingecheckt" in exc.value.message
     # Alt-Objekt bleibt belegt (kein Freigabe-Push).
+    avail = {(a["property_id"], a["date"]): a["status"] for a in store["availability"]}
+    assert avail[("p1", "2026-07-01")] == "booked"
+
+
+def test_move_rejects_ota_booking() -> None:
+    """Eine OTA-importierte Buchung (source_channex_booking_id gesetzt) darf lokal
+    nicht verschoben werden — der Move würde die Alt-Nächte freigeben und als
+    availability=1 an das Portal pushen, obwohl der Gast dort weiter gebucht ist."""
+    store = _move_store(
+        check_in="2026-07-01", check_out="2026-07-03",
+        source_channex_booking_id="OTA-77",
+    )
+    svc = _move_db(store)
+    with pytest.raises(ReservationError) as exc:
+        svc.move(
+            AuthContext(user_id="u", tenant_id="t1", role="admin"),
+            "r1",
+            ReservationMove(
+                property_id="p2", check_in=date(2026, 7, 10),
+                check_out=date(2026, 7, 12),
+            ),
+        )
+    assert exc.value.status_code == 409
+    assert "OTA" in exc.value.message
     avail = {(a["property_id"], a["date"]): a["status"] for a in store["availability"]}
     assert avail[("p1", "2026-07-01")] == "booked"
 
