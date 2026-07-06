@@ -245,6 +245,83 @@ def build_positions(
     return positions
 
 
+def _finalize_reservation_draft(
+    db: Client,
+    tenant_id: str,
+    invoice_id: str,
+    reservation_id: str,
+    *,
+    payment_method: str,
+    card_brand: str | None,
+) -> dict:
+    """Einen bestehenden Buchungs-Entwurf (ohne Nummer) beim Check-out finalisieren:
+    fortlaufende GoBD-Nummer ziehen + Status auf finalized/paid setzen. Positionen +
+    Beträge bleiben (der Entwurf trägt sie schon). Gibt {id, invoice_number,
+    already_existed:False} zurück."""
+    row = (
+        db.table("invoices")
+        .select("gross_amount, paid_amount, currency")
+        .eq("id", invoice_id)
+        .eq("tenant_id", tenant_id)
+        .limit(1)
+        .execute()
+    ).data
+    if not row:
+        raise BuchhaltungError("Rechnungsentwurf nicht gefunden.", status_code=404)
+    gross_total = _dec(row[0].get("gross_amount"))
+    paid_before = _dec(row[0].get("paid_amount"))
+    # GoBD-Nummer atomar ziehen (Row-Lock in next_document_number).
+    num = (
+        db.rpc(
+            "next_document_number",
+            {"p_tenant_id": tenant_id, "p_doc_type": "invoice", "p_prefix": "RE-"},
+        ).execute()
+    ).data or [{}]
+    invoice_number = num[0].get("formatted_number")
+    seq = num[0].get("sequential_number")
+    if not invoice_number:
+        raise BuchhaltungError(
+            "Rechnungsnummer konnte nicht gezogen werden.", status_code=500
+        )
+    today = datetime.now(UTC).date()
+    paid_at_desk = payment_method in ("cash", "card")
+    paid = gross_total if paid_at_desk else paid_before
+    fully_paid = paid_at_desk or Decimal("0") < gross_total <= paid
+    patch: dict = {
+        "invoice_number": invoice_number,
+        "invoice_sequence": seq,
+        "invoice_year": today.year,
+        "status": "paid" if fully_paid else "finalized",
+        "issue_date": today.isoformat(),
+        "paid_amount": str(min(paid, gross_total)),
+        "payment_method": payment_method,
+        "card_brand": card_brand if payment_method == "card" else None,
+    }
+    if fully_paid:
+        patch["paid_at"] = datetime.now(UTC).isoformat()
+    patch = {k: v for k, v in patch.items() if v is not None}
+    try:
+        db.table("invoices").update(patch).eq("id", invoice_id).eq(
+            "tenant_id", tenant_id
+        ).execute()
+    except APIError as exc:
+        if "invoices_tenant_number_uidx" in str(exc):
+            raise BuchhaltungError(
+                "Diese Rechnungsnummer ist bereits vergeben.", status_code=409
+            ) from exc
+        raise
+    log.info(
+        "reservation_draft_finalized",
+        reservation_id=reservation_id, invoice_id=invoice_id,
+        invoice_number=invoice_number,
+    )
+    return {
+        "id": invoice_id,
+        "invoice_number": invoice_number,
+        "already_existed": False,
+    }
+
+
 def find_active_invoice(db: Client, tenant_id: str, reservation_id: str) -> dict | None:
     """Aktive (nicht stornierte, nicht gelöschte) Rechnung zu einer Buchung."""
     rows = (
@@ -643,12 +720,25 @@ def create_from_reservation(
     aktive Rechnung, wird sie zurückgegeben (Check-out-Retry ist damit sicher).
     """
     existing = find_active_invoice(db, tenant_id, reservation_id)
-    if existing:
+    if existing and existing.get("invoice_number"):
+        # Bereits FINALISIERT (nummeriert) → idempotent zurückgeben (Retry sicher).
         return {
             "id": existing["id"],
             "invoice_number": existing.get("invoice_number"),
             "already_existed": True,
         }
+    if existing:
+        # Es existiert ein ENTWURF zur Buchung (status='draft', keine Nummer). Der
+        # belegt den invoices_reservation_active_uq-Slot (0092), sodass keine zweite
+        # Rechnung angelegt werden kann — würde man ihn als „bereits vorhanden"
+        # durchwinken (Altverhalten), entstünde beim Check-out NIE die verpflichtende
+        # nummerierte GoBD-Rechnung. Deshalb den Entwurf JETZT finalisieren:
+        # fortlaufende Nummer ziehen + Status setzen (kein zweiter Beleg, kein
+        # Slot-Konflikt).
+        return _finalize_reservation_draft(
+            db, tenant_id, existing["id"], reservation_id,
+            payment_method=payment_method, card_brand=card_brand,
+        )
 
     ctx = _load_context(db, tenant_id, reservation_id)
     reservation = ctx["reservation"]

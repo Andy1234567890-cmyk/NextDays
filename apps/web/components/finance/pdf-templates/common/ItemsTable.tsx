@@ -28,6 +28,19 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
 
   const hasAnyDiscount = data.realItems.some(item => (item as any).discountPercent > 0);
 
+  // Weist der Beleg überhaupt USt aus? Dieselbe Regel wie TotalsDisplay: bei
+  // Reverse-Charge/steuerfrei/OSS/Auslands-/Kleinunternehmer-Belegen wird KEINE
+  // MwSt-Zeile gezeigt — dann darf auch die per-Position-USt-Spalte keinen Satz
+  // ausweisen (sonst widerspricht die Positionsspalte dem steuerfreien Kopf).
+  const rule = `${(data as any).taxRule ?? ''} ${(data as any).taxRuleType ?? ''}`;
+  const belegAusweistUst =
+    !/REVERSE|13B|18B/.test(rule) &&
+    !/EXEMPT|INTRACOMMUNITY|EXPORT|OUT_OF_SCOPE|NON_EU|3a|OUTSIDE_GERMANY/.test(rule) &&
+    !/OSS|18j/.test(rule) &&
+    !/SMALL_BUSINESS/.test(rule) &&
+    !(data as any).isSmallBusiness;
+  const showVAT = showVATPerPosition && belegAusweistUst;
+
   if (variant === 'elegant') {
     return (
       <div className="mb-8">
@@ -48,7 +61,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                 {hasAnyDiscount && (
                   <th className="px-3 py-4 text-right font-light text-white">{t('discount')}</th>
                 )}
-                {showVATPerPosition && (
+                {showVAT && (
                   <th className="px-3 py-4 text-right font-light text-white">{t('vatRate')}</th>
                 )}
                 <th className="px-3 py-4 text-right font-light text-white">{t('amount')}</th>
@@ -91,7 +104,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                         {discountPercent > 0 ? `-${discountPercent}%` : ''}
                       </td>
                     )}
-                    {showVATPerPosition && (
+                    {showVAT && (
                       <td className="px-3 py-4 text-right text-sm">
                         {(() => { const r = (item as any).vatRate ?? (item as any).taxRate ?? (data as any).vatRate; return r == null ? '' : `${r}%`; })()}
                       </td>
@@ -135,7 +148,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                   {t('discount').toUpperCase()}
                 </th>
               )}
-              {showVATPerPosition && (
+              {showVAT && (
                 <th className="px-2 py-3 text-right font-mono text-xs">
                   {t('vatRate').toUpperCase()}
                 </th>
@@ -181,7 +194,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                       {discountPercent > 0 ? `-${discountPercent}%` : 'N/A'}
                     </td>
                   )}
-                  {showVATPerPosition && (
+                  {showVAT && (
                     <td className="px-2 py-2 text-right font-mono text-xs">
                       {(() => { const r = (item as any).vatRate ?? (item as any).taxRate ?? (data as any).vatRate; return r == null ? '' : `${r}%`; })()}
                     </td>
@@ -209,7 +222,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
             <th className="border p-3 text-center">{t('quantity')}</th>
             <th className="border p-3 text-right">{t('unitPrice')}</th>
             {hasAnyDiscount && <th className="border p-3 text-right">{t('discount')} %</th>}
-            {showVATPerPosition && <th className="border p-3 text-right">{t('vatRate')}</th>}
+            {showVAT && <th className="border p-3 text-right">{t('vatRate')}</th>}
             <th className="border p-3 text-right">{t('total')}</th>
           </tr>
         </thead>
@@ -244,7 +257,7 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
                     )}
                   </td>
                 )}
-                {showVATPerPosition && (
+                {showVAT && (
                   <td className="border p-3 text-right text-sm">
                     {(() => { const r = (item as any).vatRate ?? (item as any).taxRate ?? (data as any).vatRate; return r == null ? '' : `${r}%`; })()}
                   </td>

@@ -512,20 +512,37 @@ class PricingResolver:
                 )
                 subtotal += amount
 
-        # 4) Aktion (prozentualer Rabatt auf die bisherige Zwischensumme).
+        # 4) Aktion (prozentualer Rabatt auf die bisherige Zwischensumme). Der
+        #    Rabatt wird PRO STEUERSATZ aufgeteilt (eine discount-Zeile je Satz mit
+        #    dem passenden tax_rate-Snapshot): sonst würde der auf eine höher
+        #    besteuerte Gebühr (z. B. Frühstück 19 %) entfallende Rabattanteil mit
+        #    dem niedrigeren Übernachtungssatz (z. B. 7 %) gutgeschrieben — falsche
+        #    USt auf der Rechnung. tax_rate=None = Übernachtungssatz (die Rechnung
+        #    setzt ihn dort ein, wo der Resolver ihn noch nicht kennt).
         for promo in config.promotions:
             pct = _to_float(promo.get("percent")) or 0.0
-            if pct > 0 and subtotal > 0:
-                discount = subtotal * pct / 100.0
-                name = str(promo.get("name") or "Rabatt")
+            if pct <= 0 or subtotal <= 0:
+                continue
+            name = str(promo.get("name") or "Rabatt")
+            # Bisherige POSITIVE Zeilen nach ihrem tax_rate-Snapshot gruppieren
+            # (None = Übernachtungssatz). Reihenfolge stabil halten.
+            by_rate: dict[float | None, float] = {}
+            for ln in lines:
+                if ln.amount > 0:
+                    by_rate[ln.tax_rate] = by_rate.get(ln.tax_rate, 0.0) + ln.amount
+            for rate, base in by_rate.items():
+                part = base * pct / 100.0
+                if part <= 0:
+                    continue
                 lines.append(
                     QuoteLine(
                         label=f"{name} (−{pct:g}%)",
-                        amount=round(-discount, 2),
+                        amount=round(-part, 2),
                         kind="discount",
+                        tax_rate=rate,
                     )
                 )
-                subtotal -= discount
+            subtotal -= subtotal * pct / 100.0
 
         # 5) Steuern (nicht im Preis enthaltene werden addiert).
         for tax in config.taxes:

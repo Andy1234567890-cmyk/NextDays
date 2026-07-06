@@ -540,9 +540,19 @@ class BuchhaltungService:
         items = payload.get("items") or []
         net_amount, tax_amount, gross_amount = self._compute_totals(items)
 
-        is_klein = bool(
-            payload.get("isSmallBusiness") or payload.get("is_kleinunternehmer")
-        )
+        # §19-Status AUTORITATIV aus tenant_billing_profile — NICHT aus dem
+        # (fälschbaren/veralteten) Client-Flag. Dieser Pfad schreibt einen GoBD-
+        # festgeschriebenen Beleg mit fortlaufender Nummer; ein falsches Client-Flag
+        # (z. B. isSmallBusiness=false trotz Kleinunternehmer) erzeugte sonst eine
+        # unlöschbare Rechnung mit fälschlich ausgewiesener USt.
+        profile_klein = (
+            self._db.table("tenant_billing_profile")
+            .select("is_kleinunternehmer")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        is_klein = bool(profile_klein[0].get("is_kleinunternehmer")) if profile_klein else False
         status = payload.get("status") or "draft"
 
         # Client-übergebenen Debitor gegen den Tenant prüfen (kein fremder Kunde):
@@ -1383,10 +1393,28 @@ class BuchhaltungService:
                 items=items,
             ),
         )
-        # Angebot als konvertiert markieren.
-        self._db.table("quotes").update(
-            {"status": "converted", "converted_invoice_id": invoice.id}
-        ).eq("id", quote_id).eq("tenant_id", tenant_id).execute()
+        # Angebot atomar als konvertiert markieren — mit Guard converted_invoice_id
+        # IS NULL: bei Doppelklick/Retry passieren zwei parallele Requests den Check
+        # oben (converted_invoice_id=NULL), erzeugen je eine Rechnung, aber nur EINER
+        # gewinnt dieses guarded UPDATE. Der Verlierer (leeres Ergebnis) verwirft
+        # seine gerade erzeugte Rechnung wieder (kein verwaister Doppel-Beleg).
+        won = (
+            self._db.table("quotes")
+            .update({"status": "converted", "converted_invoice_id": invoice.id})
+            .eq("id", quote_id)
+            .eq("tenant_id", tenant_id)
+            .is_("converted_invoice_id", "null")
+            .execute()
+        ).data
+        if not won:
+            # Ein paralleler Request hat das Angebot bereits umgewandelt → die hier
+            # erzeugte Rechnung ist ein Duplikat und wird (soft) gelöscht.
+            self._db.table("invoices").update(
+                {"deleted_at": "now()"}
+            ).eq("id", invoice.id).eq("tenant_id", tenant_id).execute()
+            raise BuchhaltungError(
+                "Angebot wurde bereits umgewandelt.", status_code=409
+            )
         return invoice
 
 

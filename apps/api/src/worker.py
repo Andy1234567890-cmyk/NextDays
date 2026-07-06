@@ -31,7 +31,7 @@ from supabase import Client
 from src.core.config import get_settings
 from src.core.logging import configure_logging, get_logger
 from src.core.supabase import get_service_client
-from src.jobs.channex_budget import ChannexBudget
+from src.jobs.channex_budget import BudgetDecision, ChannexBudget
 from src.jobs.queue import enqueue, next_run_after
 
 log = get_logger("nextdays.worker")
@@ -223,6 +223,24 @@ def _handle_push_ari(
         )
 
 
+class _ProgressBudget:
+    """Dünner Wrapper um ein ChannexBudget, der die ERFOLGREICH vergebenen Token
+    zählt (= echte Channex-Calls, die durchgingen). So erkennt _run_job, ob ein
+    Batch-Job vor einem ChannexBudgetExhausted schon Fortschritt gemacht hat, und
+    setzt dann den defer_count-Livelock-Zähler zurück. Erfüllt das before_call-
+    Kontrakt (try_consume) transparent — der ChannexClient merkt keinen Unterschied."""
+
+    def __init__(self, inner: ChannexBudget) -> None:
+        self._inner = inner
+        self.granted = 0
+
+    def try_consume(self, channex_property_id: str | None) -> BudgetDecision:
+        decision = self._inner.try_consume(channex_property_id)
+        if decision.allowed:
+            self.granted += 1
+        return decision
+
+
 HANDLERS: dict[
     str, Callable[[Client, dict[str, Any], ChannexBudget | None], None]
 ] = {
@@ -324,7 +342,9 @@ class Worker:
             "run_after": next_run_after(attempts).isoformat(),
         })
 
-    def _defer(self, job: dict[str, Any], retry_after: int) -> None:
+    def _defer(
+        self, job: dict[str, Any], retry_after: int, *, progressed: bool = False
+    ) -> None:
         """Job wegen erschöpftem Channex-Budget verzögern: zurück auf queued mit
         run_after = jetzt + retry_after (genau bis das nächste Token frei wird),
         OHNE attempts zu verbrauchen (es ist kein Fehler, nur Warten). claim_jobs
@@ -333,11 +353,12 @@ class Worker:
 
         Deckel gegen Livelock: bei DAUERHAFT totem Redis liefert das Budget nie ein
         Token → der Job defert unendlich (attempts wird nie verbraucht, erreicht nie
-        'dead'). Ein separater defer_count deckelt das: nach _MAX_DEFERS aufeinander-
-        folgenden Verzögerungen gibt der Job auf ('dead'), statt zyklisch einen Slot
-        zu belegen. Bei intaktem Budget (Fenster läuft frei) wird der Job längst
-        vorher normal ausgeführt und defer_count spielt keine Rolle."""
-        defer_count = (job.get("defer_count") or 0) + 1
+        'dead'). Ein separater defer_count deckelt das: nach _MAX_DEFERS Verzögerungen
+        OHNE Fortschritt gibt der Job auf ('dead'), statt zyklisch einen Slot zu
+        belegen. `progressed`=True (der Batch-Job hat vor dem Erschöpfen echte Calls
+        gepusht) setzt defer_count ZURÜCK — ein Batch, der je Tick voranarbeitet
+        (Normalbetrieb unter Last), stirbt so nicht fälschlich mid-batch."""
+        defer_count = 0 if progressed else (job.get("defer_count") or 0) + 1
         if defer_count > _MAX_DEFERS:
             self._finish(
                 job["id"], "dead",
@@ -375,15 +396,26 @@ class Worker:
             self._finish(job["id"], "dead", f"unknown job_type: {job['job_type']}")
             log.error("job_unknown_type", id=job["id"], job_type=job["job_type"])
             return
-        budget = self._budget if job["job_type"] in _CHANNEX_JOB_TYPES else None
+        # Fortschritts-Zähler: der Budget-Wrapper zählt jeden ERFOLGREICH vergebenen
+        # Token = jeder echte Channex-Call, der durchging. Erschöpft das Budget
+        # MITTEN im Batch (Normalbetrieb unter Last), hat der Job bis dahin bereits
+        # Zeilen gepusht → progressed=True → _defer setzt defer_count zurück. Nur ein
+        # Job OHNE jeden Fortschritt (echter Redis-Ausfall: schon der 1. Token wird
+        # verweigert) läuft in den defer_count-Deckel und stirbt als 'dead'.
+        budget = (
+            _ProgressBudget(self._budget)
+            if job["job_type"] in _CHANNEX_JOB_TYPES
+            else None
+        )
         try:
             handler(self._db, job.get("payload") or {}, budget)
             self._finish(job["id"], "done")
         except ChannexBudgetExhausted as exc:
             # Budget mitten im Job erschöpft → verzögern statt Retry verbrennen.
-            self._defer(job, exc.retry_after)
+            progressed = budget is not None and budget.granted > 0
+            self._defer(job, exc.retry_after, progressed=progressed)
             log.info("job_deferred_budget", id=job["id"], job_type=job["job_type"],
-                     retry_after=exc.retry_after)
+                     retry_after=exc.retry_after, progressed=progressed)
         except Exception as exc:  # noqa: BLE001 — ein Job-Fehler darf den Worker nie killen
             self._retry(job, str(exc))
             log.warning("job_failed", id=job["id"], job_type=job["job_type"], error=str(exc)[:300])

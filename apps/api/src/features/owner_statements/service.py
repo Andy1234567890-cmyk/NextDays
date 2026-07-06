@@ -363,12 +363,17 @@ class OwnerStatementsService:
         if not ids:
             return {}
         try:
-            rows = (
+            # VOLLSTÄNDIG paginiert (fetch_all_rows) wie _reservations(): der Add-on-
+            # Umsatz fließt in payout/owner_payout des finalisierten Statements. Ein
+            # stiller 1000-Zeilen-Cap (PGRST_DB_MAX_ROWS) hätte bei vielen Add-ons
+            # (Endreinigung, Kurtaxe, Frühstück …) über viele Reservierungen einen zu
+            # niedrigen, aber nummerierten Auszahlungsbetrag ergeben.
+            rows = fetch_all_rows(
                 self._db.table("reservation_addons")
-                .select("reservation_id, total, status")
+                .select("id, reservation_id, total, status")
                 .in_("reservation_id", ids)
-                .execute()
-            ).data or []
+                .order("id")
+            )
         except Exception as exc:  # noqa: BLE001 — fehlende Tabelle = kein Extra-Umsatz
             log.warning("statement_addons_unavailable", error=str(exc))
             return {}

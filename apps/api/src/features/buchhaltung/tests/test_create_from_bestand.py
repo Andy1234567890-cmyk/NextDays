@@ -161,11 +161,15 @@ def test_client_isstorno_flag_does_not_create_storno_beleg() -> None:
 
 def test_kleinunternehmer_head_tax_rate_forced_to_zero() -> None:
     """§19: bei is_kleinunternehmer MUSS der Kopf-Satz 0 sein (nicht 19 aus dem
-    Payload), passend zu tax_amount=0 — sonst §19-Inkonsistenz im Beleg/PDF."""
-    db = _DB()
+    Payload), passend zu tax_amount=0 — sonst §19-Inkonsistenz im Beleg/PDF. Der
+    §19-Status kommt AUTORITATIV aus tenant_billing_profile, nicht aus dem Payload."""
+    db = _DB(
+        tenant_billing_profile=[{"tenant_id": TENANT, "is_kleinunternehmer": True}]
+    )
     svc = BuchhaltungService(service_client=db)
+    # Payload sendet bewusst KEIN isSmallBusiness — der Status kommt aus dem Profil.
     svc.create_invoice_from_bestand(
-        _ctx(), _payload(isSmallBusiness=True, items=[
+        _ctx(), _payload(items=[
             {"quantity": 1, "unitPrice": 100.0, "taxRate": 19.0},
         ])
     )
@@ -176,6 +180,23 @@ def test_kleinunternehmer_head_tax_rate_forced_to_zero() -> None:
     # Positionen tragen ebenfalls Satz 0.
     line = db.tables["invoice_line_items"].inserts[0][0]
     assert Decimal(str(line["tax_rate"])) == Decimal("0")
+
+
+def test_klein_from_profile_ignores_false_client_flag() -> None:
+    """Ein Kleinunternehmer-Tenant bleibt §19, auch wenn der Client fälschlich
+    isSmallBusiness=false sendet (autoritativ = Profil, kein USt-Ausweis)."""
+    db = _DB(
+        tenant_billing_profile=[{"tenant_id": TENANT, "is_kleinunternehmer": True}]
+    )
+    svc = BuchhaltungService(service_client=db)
+    svc.create_invoice_from_bestand(
+        _ctx(), _payload(isSmallBusiness=False, items=[
+            {"quantity": 1, "unitPrice": 100.0, "taxRate": 19.0},
+        ])
+    )
+    head = db.tables["invoices"].inserts[0]
+    assert head["is_kleinunternehmer"] is True
+    assert str(head["tax_amount"]) == "0"
 
 
 def test_snake_case_positions_match_header() -> None:

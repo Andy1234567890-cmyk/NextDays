@@ -101,10 +101,17 @@ class ChannexBudgetExhausted(Exception):
     markiert werden. Als eigenständige Exception passiert genau das.
     """
 
-    def __init__(self, message: str, *, retry_after: int) -> None:
+    def __init__(
+        self, message: str, *, retry_after: int, progressed: bool = False
+    ) -> None:
         super().__init__(message)
         self.message = message
         self.retry_after = retry_after
+        # True, wenn der (Batch-)Job VOR dem Erschöpfen bereits echten Fortschritt
+        # gemacht hat (Zeilen erfolgreich gepusht). Der Worker setzt dann den
+        # defer_count-Livelock-Zähler zurück — nur ein Job OHNE jeden Fortschritt
+        # (echter Redis-Ausfall) läuft in den Deckel und stirbt als 'dead'.
+        self.progressed = progressed
 
 
 class ChannexClient:

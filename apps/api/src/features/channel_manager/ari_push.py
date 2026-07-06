@@ -1173,13 +1173,16 @@ class AriPushMixin:
         for r in rows:
             result["processed"] += 1
             tenant_id, property_id = r["tenant_id"], r["property_id"]
-            # Superseding: existiert für dasselbe (property_id, kind) eine NEUERE
-            # Zeile (created_at später), deren Zeitraum diesen überlappt, dann ist
-            # DIESE Absicht veraltet. Ein stale Retry würde sonst den jüngeren,
-            # korrekten Wert (z. B. Stop-Sell=True) mit dem alten (Stop-Sell=False)
-            # überschreiben → Re-Open eines gesperrten Tages/Überbuchung. Abhaken
-            # statt pushen (der Availability-Pfad macht dasselbe tag-genau).
-            if self._restriction_superseded(db, r):
+            # Superseding TAG-GENAU: die von einer NEUEREN Zeile desselben
+            # (property_id, kind) abgedeckten Tage werden übersprungen, die
+            # RESTLICHEN Tage dieser Zeile gehen weiter an Channex. Sonst würde eine
+            # schmale neuere Zeile (z. B. Preis 15.–16.) den weiten älteren Wert
+            # (1.–31.) für dessen GESAMTEN Zeitraum unterdrücken → 29 Tage bleiben
+            # stale (Falschpreis/-Sperre an OTAs). Ist die Zeile KOMPLETT überdeckt,
+            # abhaken (nichts mehr zu pushen).
+            superseded_days = self._superseded_restriction_days(db, r)
+            own_days = self._restriction_row_days(r)
+            if own_days and own_days <= superseded_days:
                 db.table("ari_restriction_outbox").update(
                     {"status": "done", "last_error": "superseded (neuere Absicht)"}
                 ).eq("id", r["id"]).eq("status", "pending").execute()
@@ -1207,6 +1210,11 @@ class AriPushMixin:
                 continue
             try:
                 values = self._restriction_values_from_row(r, plans)
+                # Von einer neueren Zeile abgedeckte Tage herausfiltern (tag-genau).
+                if superseded_days:
+                    values = [
+                        v for v in values if v.get("date") not in superseded_days
+                    ]
                 for i in range(0, len(values), self._RESTRICTIONS_CHUNK):
                     self._channex.update_restrictions(
                         values[i : i + self._RESTRICTIONS_CHUNK]
@@ -1221,32 +1229,55 @@ class AriPushMixin:
             log.info("ari_restriction_outbox_processed", **result)
         return result
 
-    def _restriction_superseded(self, db: Client, row: dict[str, Any]) -> bool:
-        """True, wenn für dasselbe (property_id, kind) eine NEUERE Outbox-Zeile
-        existiert (created_at später), deren Zeitraum den dieser Zeile überlappt.
-        Nur pending/done zählen als gültiger Supersessor (eine failed-Zeile hat
-        ihren Wert nie zuverlässig übertragen — analog _newer_covered_days). Die
-        Superseding ist pro `kind`, weil verschiedene Restriktions-Arten (stop_sell
-        vs. rate) unabhängig sind und sich nicht gegenseitig veralten."""
+    @staticmethod
+    def _restriction_row_days(row: dict[str, Any]) -> set[str]:
+        """Die von einer Restriktions-Outbox-Zeile TATSÄCHLICH abgedeckten ISO-Tage.
+        stop_sell (spans) und rate (segments) tragen ihre echten Tage im payload —
+        so werden Lücken zwischen disjunkten Spans/Segmenten NICHT als abgedeckt
+        gezählt (sonst würde ein älterer Wert für einen Lückentag fälschlich
+        superseded). Generische Zeilen decken date_from..date_to durchgehend ab."""
+        payload = row.get("payload") or {}
+        days: set[str] = set()
+        if row["kind"] == "stop_sell" and payload.get("spans"):
+            for a, b in payload["spans"]:
+                days.update(_iso_days(str(a), str(b)))
+            return days
+        if row["kind"] == "rate" and payload.get("segments") is not None:
+            for seg in payload["segments"]:
+                days.update(_iso_days(str(seg["date_from"]), str(seg["date_to"])))
+            return days
+        return set(_iso_days(str(row["date_from"]), str(row["date_to"])))
+
+    def _superseded_restriction_days(
+        self, db: Client, row: dict[str, Any]
+    ) -> set[str]:
+        """ISO-Tage dieser Zeile, die von einer NEUEREN Outbox-Zeile desselben
+        (property_id, kind) abgedeckt sind (created_at später). TAG-GENAU wie der
+        Availability-Pfad (_newer_covered_days): nur die überlappenden Tage werden
+        übersprungen, die restlichen Tage der Zeile gehen weiter an Channex — sonst
+        unterdrückt eine schmale neuere Zeile (z. B. Preis für 15.–16.) den weiten
+        älteren Wert (1.–31.) für dessen GESAMTEN Zeitraum (stale Falschpreis/-Sperre
+        an OTAs). Nur pending/done zählen als gültiger Supersessor (failed nie)."""
         created_at = str(row.get("created_at") or "")
         if not created_at:
-            return False
-        newer = (
+            return set()
+        own_days = self._restriction_row_days(row)
+        newer_rows = (
             db.table("ari_restriction_outbox")
-            .select("id")
+            .select("kind, payload, date_from, date_to")
             .eq("property_id", row["property_id"])
             .eq("kind", row["kind"])
             .gt("created_at", created_at)
             .in_("status", ["pending", "done"])
-            # Datumsüberlappung: neuer.date_from <= alt.date_to UND
-            # neuer.date_to >= alt.date_from.
             .lte("date_from", str(row["date_to"]))
             .gte("date_to", str(row["date_from"]))
             .neq("id", row["id"])
-            .limit(1)
             .execute()
-        ).data
-        return bool(newer)
+        ).data or []
+        covered: set[str] = set()
+        for nr in newer_rows:
+            covered |= self._restriction_row_days(nr)
+        return own_days & covered
 
     def _bump_restriction_attempts(
         self, row: dict[str, Any], attempts: int, error: str, result: dict[str, int]

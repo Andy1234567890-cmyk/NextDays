@@ -867,6 +867,18 @@ class ReservationsService:
                 "Korrekturen laufen über die Stornorechnung in der Buchhaltung.",
                 status_code=409,
             )
+        # Eine OTA-importierte Buchung (source_channex_booking_id gesetzt) darf lokal
+        # NICHT storniert werden: der lokale Storno gibt die Nächte frei und pusht
+        # availability=1 an Channex, während der Gast beim Portal (Booking/Airbnb)
+        # weiter gebucht ist → das Portal verkauft die Nächte erneut (Überbuchung).
+        # OTA-Stornos laufen ausschließlich über das Portal → Import (bookings_sync
+        # gibt dann quellen-/tag-genau nur die wirklich frei gewordenen Tage frei).
+        if current.get("source_channex_booking_id"):
+            raise ReservationError(
+                "OTA-Buchungen (Booking, Airbnb & Co.) lassen sich nicht lokal "
+                "stornieren — bitte die Stornierung im Portal auslösen.",
+                status_code=409,
+            )
 
         now = datetime.now(UTC).isoformat()
         upd = (

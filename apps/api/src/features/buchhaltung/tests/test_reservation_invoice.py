@@ -490,6 +490,24 @@ def test_create_is_idempotent_for_existing_invoice() -> None:
                       "already_existed": True}
 
 
+def test_create_finalizes_existing_draft() -> None:
+    """Existiert nur ein ENTWURF (ohne Nummer) zur Buchung, wird er beim Check-out
+    FINALISIERT (Nummer gezogen, Status gesetzt) — statt als „bereits vorhanden"
+    durchgewunken. Sonst entstünde nie die verpflichtende nummerierte GoBD-Rechnung.
+    Antworten: 1) find_active (draft), 2) _finalize SELECT (gross/paid), dann rpc."""
+    db = _DB(_tables(invoices=deque([
+        [{"id": "i-draft", "invoice_number": None, "status": "draft"}],
+        [{"id": "i-draft", "gross_amount": "119.00", "paid_amount": "0",
+          "currency": "EUR"}],
+    ])))
+    result = create_from_reservation(db, TENANT, "r1", payment_method="cash")
+    assert result["id"] == "i-draft"
+    assert result["invoice_number"] == "RE-0007"  # Nummer gezogen
+    assert result["already_existed"] is False
+    assert "rpc:next_document_number" in db.calls
+    assert "update" in db.calls["invoices"]  # Entwurf finalisiert, kein Insert
+
+
 def test_create_inserts_invoice_and_lines() -> None:
     # invoices: 1. Antwort = find_active (leer), 2. Antwort = Insert-Ergebnis,
     # danach Line-Insert auf invoice_line_items.

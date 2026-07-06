@@ -658,7 +658,10 @@ class DynamicPricingRecompute:
         if not tenant_id or self._client is None or not rows:
             return
         try:
-            from src.features.channel_manager.channex_client import ChannexClient
+            from src.features.channel_manager.channex_client import (
+                ChannexBudgetExhausted,
+                ChannexClient,
+            )
             from src.features.channel_manager.service import ChannelManagerService
 
             # Budget-gebundener Channex-Client (falls der Worker ein Budget durch-
@@ -701,6 +704,13 @@ class DynamicPricingRecompute:
                 )
                 seg_start = i
             cm.push_rates_batch(tenant_id, property_id, segments)
+        except ChannexBudgetExhausted:
+            # MUSS bis _run_job durchschlagen, damit der Job DEFERRED wird (statt
+            # fälschlich 'done'): das kontoweite Channex-Budget ist erschöpft, der
+            # Rate-Push soll nach retry_after ab dem erledigten Punkt weiterlaufen.
+            # Das breite except unten würde ihn sonst als „best-effort-Fehler"
+            # schlucken → die neu berechneten Preise erreichen Channex nie.
+            raise
         except Exception as exc:  # noqa: BLE001
             log.warning(
                 "dynamic_pricing_channex_push_failed",

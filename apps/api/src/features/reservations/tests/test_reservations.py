@@ -756,6 +756,24 @@ def test_cancel_sets_status_frees_days_and_audits() -> None:
     assert log_rows[0]["ota_name"] == "Booking.com"
 
 
+def test_cancel_rejects_ota_booking() -> None:
+    """Eine OTA-importierte Buchung (source_channex_booking_id) darf lokal NICHT
+    storniert werden — der lokale Storno würde die vom Portal gehaltenen Nächte
+    freigeben und availability=1 pushen (Überbuchung). Storno läuft übers Portal."""
+    store = _move_store(
+        check_in="2026-07-01", check_out="2026-07-03",
+        source_channex_booking_id="OTA-99",
+    )
+    svc = _move_db(store)
+    with pytest.raises(ReservationError) as exc:
+        svc.cancel(_CANCEL_CTX, "r1", "Gast hat abgesagt")
+    assert exc.value.status_code == 409
+    assert "OTA" in exc.value.message
+    # Nichts freigegeben — Tage bleiben belegt.
+    avail = {(a["property_id"], a["date"]): a["status"] for a in store["availability"]}
+    assert avail[("p1", "2026-07-01")] == "booked"
+
+
 def test_cancel_requires_reason() -> None:
     store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
     svc = _move_db(store)

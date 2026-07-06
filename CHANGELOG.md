@@ -332,6 +332,31 @@ Siebter Multi-Agenten-Loop über den deployten Stand; alle 13 Befunde gefixt
   Belegung (+ availability/stop_sell-Realtime); InventorySelector zeigt die
   Belegwährung; WhatsApp-Status-Update tenant-scoped.
 
+### Behoben (8. Bug-Jagd-Runde 07/2026 — 11 verifizierte Befunde)
+Achter Multi-Agenten-Loop über den deployten Stand; alle 11 Befunde gefixt
+(6 High, 4 Medium, 1 Low), ohne neue Migration. Mehrere waren Nacharbeit an
+eigenen jüngsten Fixes:
+- **Job-Queue-Resilienz**: `defer_count` (R7-Livelock-Deckel) wird bei echtem
+  Fortschritt zurückgesetzt — ein Batch-Job (process_ari_outbox mit 500 Zeilen),
+  der je Tick voranarbeitet, stirbt nicht mehr fälschlich mid-batch als 'dead'
+  (Fortschritts-Zähler über einen Budget-Wrapper). `recompute_property` verschluckt
+  `ChannexBudgetExhausted` nicht mehr (re-raise → Job wird deferred statt 'done').
+- **Restriktions-Superseding jetzt TAG-GENAU** (wie der Availability-Pfad): eine
+  schmale neuere Zeile (Preis 15.–16.) unterdrückt nicht mehr den weiten älteren
+  Wert (1.–31.) für dessen ganzen Zeitraum — die restlichen Tage gehen weiter an
+  Channex (kein stale Falschpreis/-Sperre).
+- **OTA-cancel-Guard**: `cancel()` lehnt eine OTA-importierte Buchung ab (wie
+  `move()`) — kein lokaler Storno, der am Portal gehaltene Nächte freigibt.
+- **GoBD**: ein Buchungs-Entwurf blockiert die Check-out-Rechnung nicht mehr — er
+  wird beim Check-out finalisiert (Nummer gezogen); `is_kleinunternehmer` kommt
+  autoritativ aus `tenant_billing_profile` (nicht aus dem Client-Flag); der
+  Aktions-Rabatt wird pro Steuersatz aufgeteilt (gemischte USt korrekt);
+  Angebots-Umwandlung race-sicher (guarded UPDATE, kein Doppel-Beleg).
+- **Weitere**: PDF-Positionsspalte zeigt bei Reverse-Charge/steuerfrei/OSS keinen
+  USt-Satz mehr (konsistent zum steuerfreien Kopf); Girocode-QR nur bei
+  ausdrücklich EUR (leere Währung ≠ EUR); Owner-Statement-Add-on-Umsatz paginiert
+  (kein 1000-Cap → korrekte Auszahlung).
+
 ### Behoben (High-Befunde der Bug-Jagd 07/2026)
 - **Owner-Scope im Kalender + Reservierungen (§4.2)**: Eigentümer sehen jetzt nur
   ihre zugeordneten Objekte (neuer gemeinsamer Helfer `auth/owner_scope.py`).
