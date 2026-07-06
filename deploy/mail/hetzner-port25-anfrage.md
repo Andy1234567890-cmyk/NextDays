@@ -1,14 +1,34 @@
 # Hetzner-Anfrage: Port 25 + 465 ausgehend freischalten
 
 Hetzner blockt ausgehenden SMTP-Traffic (Port 25 und 465) auf neuen Cloud-Servern
-standardmäßig. Diese Anfrage stellen, damit unser Mailserver Mails nach außen
-zustellen kann.
+standardmäßig. Damit unser Mailserver Mails nach außen zustellen kann, muss die
+Freischaltung beantragt werden.
 
-**Bevorzugter Weg:** Hetzner Cloud Console → Projekt → **Support** (bzw. das
-„Port 25 / SMTP unblock"-Formular). Alternativ per E-Mail an `support@hetzner.com`.
+## ✅ RICHTIGER WEG (von Hetzner bestätigt, 2026-07-06): Limits-Formular
+
+**NICHT per E-Mail/Support-Ticket** — Hetzner verweist auf das Self-Service-Formular:
+
+1. **https://console.hetzner.com/limits** öffnen
+2. **„Änderung anfragen"** → **„Ports freigeben"**
+3. Server **`#148398616`** (`62.238.4.193`) wählen
+4. Ports **25 und 465**
+5. Anwendungsfall/Begründung:
+   *„Eigener Mailserver (Mailcow) für transaktionale E-Mails unseres SaaS-Produkts
+   (Rechnungen, Benachrichtigungen, Support). Kein Massenversand/Spam. PTR, SPF,
+   DKIM, DMARC sind konfiguriert bzw. werden vollständig gesetzt."*
+
+> **Bedingung (Hetzner):** Entsperrung nur für Konten **älter als 1 Monat** und nur
+> für Ports, die noch tatsächlich gesperrt sind. Meldet das Formular „Konto zu
+> jung", bis zum Erreichen der 1-Monats-Grenze (ab **Konto-Registrierung**, nicht
+> Server-Erstellung) warten.
+
+---
+
+## (Veraltet) E-Mail-Text — nur falls das Formular nicht verfügbar ist
+
+Hetzner bevorzugt das Formular oben. Der folgende Text ist nur Fallback.
 
 **Absender:** ein Postfach, das zum Hetzner-Konto passt (Jeanine).
-**Sprache:** Deutsch (Betreff/Text unten). Englische Fassung darunter.
 
 ---
 
