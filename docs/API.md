@@ -702,7 +702,7 @@ fälschen. GoBD-gesperrte Rechnungen (`is_locked`) sind nicht mehr änderbar/lö
 | `POST /api/v1/buchhaltung/invoices` | Rechnung anlegen — nimmt das reiche camelCase-Payload der Erstellen-Seite, Beträge serverseitig → `201` |
 | `PATCH /api/v1/buchhaltung/invoices/{id}` | Rechnung ändern / E-Rechnung-XML nachtragen (`409` wenn GoBD-gesperrt) |
 | `DELETE /api/v1/buchhaltung/invoices/{id}` | Rechnung (soft) löschen (`409` wenn gesperrt) |
-| `POST /api/v1/buchhaltung/number-sequences/next` | Nächste fortlaufende Dokumentnummer (GoBD-lückenlos, `next_document_number()`, Row-Lock) |
+| `GET /api/v1/buchhaltung/number-sequences/{company_id}` | Vorschau der nächsten Nummer (nicht-inkrementierend). Die echte GoBD-Nummer wird nur beim Speichern eines Belegs gezogen — es gibt bewusst keinen inkrementierenden Endpunkt, der eine Nummer ohne Beleg verbrennt. |
 | `GET /api/v1/buchhaltung/companies/{id}` | Firmen-/Rechnungsprofil des Tenants (`tenant_billing_profile`) |
 | `PATCH /api/v1/buchhaltung/companies/{id}` | Firmenprofil anlegen/ändern (Upsert) |
 | `GET /api/v1/buchhaltung/companies/{id}/transaction-links` | Beleg↔Bank-Verknüpfungen (Stub → leer, Bankabgleich folgt) |

@@ -48,8 +48,15 @@ def list_properties(
 
 @router.post("", response_model=PropertyResponse, status_code=status.HTTP_201_CREATED)
 def create_property(
-    req: PropertyCreate, ctx: CurrentUser, service: PropertiesServiceDep
+    req: PropertyCreate,
+    service: PropertiesServiceDep,
+    ctx: Annotated[
+        AuthContext,
+        Depends(require_lodgify_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
+    ],
 ) -> PropertyResponse:
+    # Objekt anlegen ist Objektverwaltung (wie publish/resync) — owner/staff/cleaner
+    # haben MANAGE_PROPERTY_SETTINGS nicht und dürfen keine Objekte erzeugen.
     try:
         return service.create(ctx, req)
     except PropertyError as exc:
@@ -83,8 +90,16 @@ def update_property(
 
 @router.delete("/{property_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_property(
-    property_id: str, ctx: CurrentUser, service: PropertiesServiceDep
+    property_id: str,
+    service: PropertiesServiceDep,
+    ctx: Annotated[
+        AuthContext,
+        Depends(require_lodgify_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
+    ],
 ) -> None:
+    # Löschen ist die destruktivste Operation (harter Delete + Channex-Abkopplung)
+    # — sie MUSS wie publish/resync MANAGE_PROPERTY_SETTINGS verlangen. Zuvor reichte
+    # ein beliebiges Tenant-JWT (auch cleaner/owner), jedes Objekt zu löschen.
     try:
         service.delete(ctx, property_id)
     except PropertyError as exc:

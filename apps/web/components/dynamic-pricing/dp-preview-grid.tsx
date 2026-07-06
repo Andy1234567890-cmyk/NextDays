@@ -8,18 +8,17 @@ import { useState } from "react";
 
 import type { DayAvailability } from "@/lib/calendar";
 import { Card } from "@/components/ui/card";
+import { formatCurrency } from "@/lib/currency";
 import { explainFactors } from "@/lib/dp-factors";
 import { explainDpPrice } from "@/lib/dynamic-pricing";
 
 const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
-function fmt(value: number | null): string {
+// Preis in der OBJEKT-Währung (aus dem Rate-Plan) — kein €-Hardcode (27 EU-Länder).
+// 0 Nachkommastellen für die kompakte Rasteranzeige.
+function fmt(value: number | null, currency: string | null): string {
   if (value === null) return "—";
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(value);
+  return formatCurrency(value, currency, "de-DE", 0);
 }
 
 // Mo=0 … So=6 (JS getDay: So=0).
@@ -36,9 +35,11 @@ function todayIso(): string {
 export function DpPreviewGrid({
   days,
   propertyId,
+  currency,
 }: {
   days: DayAvailability[];
   propertyId: string;
+  currency: string | null;
 }) {
   // Geladene KI-Erklärung je Tag (ISO → Text | "…" beim Laden | Fehlertext).
   const [explained, setExplained] = useState<Record<string, string>>({});
@@ -119,7 +120,7 @@ export function DpPreviewGrid({
                       ⚡
                     </span>
                   )}
-                  {fmt(d.price)}
+                  {fmt(d.price, currency)}
                 </span>
               </div>
               {/* KI-Erklärung: bei dynamischem Preis on-demand abrufbar */}

@@ -7,7 +7,7 @@ import { notFound } from "next/navigation";
 import { DpPreviewGrid } from "@/components/dynamic-pricing/dp-preview-grid";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card } from "@/components/ui/card";
-import { getAvailability } from "@/lib/calendar";
+import { getAvailability, getBoard } from "@/lib/calendar";
 import { getProperty } from "@/lib/properties";
 
 export const dynamic = "force-dynamic";
@@ -27,10 +27,14 @@ export default async function Page({
   const { id } = await params;
   const start = isoDay(0);
   const end = isoDay(35); // exklusiv → 35 Tage Vorschau
-  const [prop, avail] = await Promise.all([
+  const [prop, avail, board] = await Promise.all([
     getProperty(id),
     getAvailability(id, start, end),
+    // Objekt-Währung (aus dem Rate-Plan) für die Preisanzeige — kein €-Hardcode.
+    getBoard([id], start, end),
   ]);
+  const currency =
+    (board.ok ? board.data.items[0]?.currency : null) ?? null;
   if (!prop.ok) {
     if (prop.error.includes("nicht gefunden")) notFound();
     return (
@@ -43,8 +47,20 @@ export default async function Page({
   }
   return (
     <div className="flex w-full flex-col gap-6 p-6">
-      {/* Realtime-Pflicht: Preis-/Verfügbarkeitsänderungen live in der Vorschau. */}
-      <RealtimeRefresh tables={["dynamic_prices", "availability", "dp_settings"]} />
+      {/* Realtime-Pflicht: ALLE preis-speisenden Tabellen der Resolver-Kette live —
+          ein manueller Tagespreis (price_overrides, gewinnt immer), ein geänderter
+          Basispreis (rate_plans) oder Wochentagspreis (property_pricing_config)
+          erscheint sofort, ohne dass die Seite manuell neu geladen werden muss. */}
+      <RealtimeRefresh
+        tables={[
+          "price_overrides",
+          "dynamic_prices",
+          "property_pricing_config",
+          "rate_plans",
+          "availability",
+          "dp_settings",
+        ]}
+      />
       <header className="flex flex-col gap-1">
         <a
           href="/dynamic-pricing"
@@ -61,7 +77,7 @@ export default async function Page({
         </p>
       </header>
       {avail.ok ? (
-        <DpPreviewGrid days={avail.data} propertyId={id} />
+        <DpPreviewGrid days={avail.data} propertyId={id} currency={currency} />
       ) : (
         <Card className="p-5 text-sm text-destructive">
           Preise konnten nicht geladen werden: {avail.error}

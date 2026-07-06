@@ -271,6 +271,36 @@ Fünfter Multi-Agenten-Loop über den deployten Stand; alle 17 Befunde gefixt
   €-Hardcode); `owner_expenses` validieren statement_id/owner_id/listing_id/
   reservation_id gegen den Tenant (kein Fremd-FK).
 
+### Behoben (6. Bug-Jagd-Runde 07/2026 — 17 verifizierte Befunde)
+Sechster Multi-Agenten-Loop über den deployten Stand; alle 17 Befunde gefixt
+(1 Critical, 8 High, 6 Medium, 2 Low). Migration 0115. Kernpunkte:
+- **CRITICAL — properties-Router abgesichert**: `DELETE`/`POST /properties`
+  verlangen jetzt `MANAGE_PROPERTY_SETTINGS` (zuvor genügte ein beliebiges
+  Tenant-JWT — cleaner/owner konnten jedes Objekt löschen/anlegen); `GET
+  /properties` + `/{id}` erzwingen den Owner-Self-Scope (§4.2, Eigentümer sieht
+  nur zugeordnete Objekte, kein Stammdaten-Leak fremder Objekte).
+- **Add-on-Fakturierung korrekt**: `create_public_booking` preist nur die für die
+  Buchungsstrecke freigegebenen Add-ons ein (appears_in-Filter, gleiche Auswahl wie
+  purchase_addons) und persistiert `quote_items` OHNE die Add-on-Zeilen — die
+  Check-out-Rechnung fakturiert die Add-ons nicht mehr doppelt (build_positions
+  prüft items_sum + Add-on-Summe gegen total_amount).
+- **Restriktions-Pushes dauerhaft abgesichert** (0115 `ari_restriction_outbox`):
+  Stop-Sell/Rate/Min-/Max-Stay/CTA-CTD werden vor dem Channex-Call persistiert und
+  vom neuen `process_restriction_outbox`-Cron nachgezogen — ein Verkaufsstopp geht
+  bei Channex-Ausfall/Job-Tod nicht mehr verloren, und ein channex-managtes Objekt
+  ohne Rate-Plan-Mapping heilt sich beim Retry selbst (kein stilles Verwerfen).
+- **Reservierungsrechnungs-Positionen NETTO**: `total` = quantity*unitPrice (netto)
+  statt brutto — Zeilenbetrag und Zwischensumme stimmen im PDF wieder überein.
+- **Mehrwährung**: Dynamic-Pricing-Vorschau + Builder-Checkout nutzen die Objekt-
+  Währung (kein €-Hardcode); OSS-Steuerregel im PDF-Hook konsistent steuerfrei.
+- **Marktplatz skaliert**: öffentliches Listing paginiert (kein 1000-Cap) und
+  deckelt die datierte Preisauflösung (kein N+1 über hunderte Objekte).
+- **Weitere**: Dynamic-Pricing-Vorschau abonniert alle preis-speisenden Tabellen
+  (RealtimeRefresh auf 6 Tabellen erweitert); process_ari_outbox-Fehler-Zweig mit
+  pending-Guard; Bank-Transaktion-Modals bleiben mehrwährungsfähig; kein
+  inkrementierender `POST /number-sequences/next` mehr (GoBD-Lücke); Übersetzungs-
+  Endpoint mit Längen-/Format-Limit (Kostenschutz Google-API).
+
 ### Behoben (High-Befunde der Bug-Jagd 07/2026)
 - **Owner-Scope im Kalender + Reservierungen (§4.2)**: Eigentümer sehen jetzt nur
   ihre zugeordneten Objekte (neuer gemeinsamer Helfer `auth/owner_scope.py`).

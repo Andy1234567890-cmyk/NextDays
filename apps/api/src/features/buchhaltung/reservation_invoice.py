@@ -154,6 +154,19 @@ def build_positions(
         it for it in (reservation.get("quote_items") or []) if isinstance(it, dict)
     ]
     items_sum = _q(sum((_dec(it.get("amount")) for it in quote_items), Decimal("0")))
+    # Add-on-Bruttosumme (nicht stornierte): quote_items enthält die Add-ons NICHT
+    # (sie werden separat als eigene Positionen fakturiert), aber total_amount kann
+    # sie enthalten (öffentliche Buchung/Direktbuchung: total = Unterkunft + Add-ons).
+    # Für den Abgleich „Aufschlüsselung passt zum Gesamtpreis" daher items_sum PLUS
+    # Add-on-Summe gegen total_amount prüfen — sonst würde die Aufschlüsselung als
+    # nicht-passend verworfen und eine Sammelposition über den vollen total_amount
+    # (inkl. Add-on-Anteil) erzeugt, wodurch die Add-ons DOPPELT fakturiert würden.
+    addons_sum = _q(
+        sum(
+            (_dec(a.get("total")) for a in addons if a.get("status") != "cancelled"),
+            Decimal("0"),
+        )
+    )
 
     def lodging_rate() -> Decimal:
         if is_klein:
@@ -177,7 +190,9 @@ def build_positions(
     # Betrag fakturiert — keine erfundene Aufschlüsselung. Auch 0 € ist ein
     # gültiger vereinbarter Preis (Comp-Aufenthalt): der Check-out darf nie an
     # einem 0-Beleg scheitern (Pflicht-Rechnung beim Check-out).
-    breakdown_matches = quote_items and abs(items_sum - total_amount) <= Decimal("0.01")
+    breakdown_matches = quote_items and abs(
+        items_sum + addons_sum - total_amount
+    ) <= Decimal("0.01")
     if breakdown_matches:
         for it in quote_items:
             gross = _q(_dec(it.get("amount")))
@@ -597,7 +612,12 @@ def preview_for_reservation(db: Client, tenant_id: str, reservation_id: str) -> 
                 "unit": p["unit"],
                 "unitPrice": float(p["unit_price"]),
                 "taxRate": float(p["tax_rate"]),
-                "total": float(p["gross_amount"]),
+                # total = NETTO (quantity*unitPrice), wie es der PDF-Hook
+                # (usePDFTemplateData: subtotal += quantity*unitPrice) und die
+                # zentrale calc.ts erwarten. Zuvor stand hier gross_amount → die
+                # Betragsspalte (ItemsTable rendert item.total) zeigte Brutto,
+                # während die Zwischensumme netto rechnete: Zeilenbetrag ≠ Summe.
+                "total": float(p["net_amount"]),
             }
             for p in ctx["positions"]
         ],

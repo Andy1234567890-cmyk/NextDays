@@ -51,8 +51,13 @@ class _Q:
         self._filters: dict[str, object] = {}
         self._gte: dict[str, object] = {}
         self._in: dict[str, set] = {}
+        self._range: tuple[int, int] | None = None
 
     def select(self, *_a: object, **_k: object) -> "_Q":
+        return self
+
+    def range(self, start: int, end: int) -> "_Q":
+        self._range = (start, end)
         return self
 
     def eq(self, col: str, val: object) -> "_Q":
@@ -91,6 +96,9 @@ class _Q:
             rows = [r for r in rows if (r.get(col) or 0) >= val]
         for col, vals in self._in.items():
             rows = [r for r in rows if r.get(col) in vals]
+        if self._range is not None:
+            start, end = self._range
+            rows = rows[start : end + 1]  # PostgREST-range inklusiv
 
         class _R:
             pass
@@ -349,6 +357,14 @@ def test_public_booking_includes_addons_in_quote(monkeypatch) -> None:  # noqa: 
                 t.select.return_value.eq.return_value.gte.return_value.lt.return_value
             )
             chain.execute.return_value.data = []
+        elif name == "property_addons":
+            # _bookable_addon_selections: a-1 ist für die Buchungsstrecke freigegeben.
+            chain = (
+                t.select.return_value.eq.return_value.eq.return_value.in_.return_value
+            )
+            chain.execute.return_value.data = [
+                {"id": "a-1", "appears_in": ["booking_engine"]}
+            ]
         return t
 
     db.table.side_effect = table

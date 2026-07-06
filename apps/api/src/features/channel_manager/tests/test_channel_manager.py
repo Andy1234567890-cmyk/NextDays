@@ -369,6 +369,7 @@ class _ImportChannex:
         room_types=None,
         rate_plans=None,
         fail_availability=False,
+        fail_restrictions=False,
     ) -> None:
         self.is_configured = True
         self._bookings = bookings or []
@@ -377,6 +378,7 @@ class _ImportChannex:
         self._room_types = room_types or []
         self._rate_plans = rate_plans or []
         self._fail_availability = fail_availability
+        self._fail_restrictions = fail_restrictions
         self.pushed: list[dict] = []  # update_availability-Aufrufe
         self.restrictions_pushed: list[dict] = []  # update_restrictions-Aufrufe
         self.activated: list[str] = []
@@ -391,6 +393,10 @@ class _ImportChannex:
         return {"data": values}
 
     def update_restrictions(self, values):  # noqa: ANN001, ANN201
+        if self._fail_restrictions:
+            from src.features.channel_manager.channex_client import ChannexError
+
+            raise ChannexError("Channex down", status_code=502)
         self.restrictions_pushed.extend(values)
         return {"data": values}
 
@@ -454,6 +460,7 @@ class _ImportDB:
             "properties": [],
             "rate_plans": [],
             "ari_outbox": [],
+            "ari_restriction_outbox": [],
             "channex_tax_map": [],
             "channex_channel_connection": [],
             "channex_group_map": [],
@@ -1889,3 +1896,224 @@ def test_channex_client_allows_and_hits_http_when_budget_free() -> None:
         )
     httpx_client.assert_called_once()  # Budget frei → echter Call läuft
     assert calls == ["cx-prop"]  # genau ein Token für diesen einen Call
+
+
+# --- Restriktions-Outbox: dauerhafter Backstop (BUG 2) + BUG 9 ---------------
+# Vor 0115 hatte NUR der Availability-Push (ari_outbox) einen persistenten Retry-
+# Backstop. Stop-Sell/Rate/CTA-CTD schrieben nichts → nach Job-Tod war der Wert
+# verloren (Überbuchung trotz Sperre). Jetzt: Absicht VOR dem Channex-Call in
+# ari_restriction_outbox, bei Fehler 'pending', Cron zieht nach.
+
+def test_stop_sell_success_marks_restriction_outbox_done() -> None:
+    # Erfolgsfall: Push geht durch, Outbox-Zeile wird 'done'.
+    db = _ImportDB()
+    _seed_with_rate_plan(db)
+    channex = _ImportChannex()
+    result = _import_svc(channex, db).push_stop_sell_for_property(
+        "t1", "p1", [(date(2099, 6, 23), date(2099, 6, 25))], stop_sell=True
+    )
+    assert result is False  # kein Fehler
+    assert channex.restrictions_pushed != []  # an Channex gepusht
+    assert len(db.tables["ari_restriction_outbox"]) == 1
+    row = db.tables["ari_restriction_outbox"][0]
+    assert row["status"] == "done" and row["kind"] == "stop_sell"
+
+
+def test_stop_sell_channex_failure_keeps_outbox_pending() -> None:
+    # BUG 2: Channex-Ausfall → Outbox bleibt 'pending' (Backstop), Rückgabe True
+    # (Worker-Handler wirft → Job-Retry). Ohne diese Zeile wäre der Verkaufsstopp
+    # nach Job-Tod endgültig verloren.
+    db = _ImportDB()
+    _seed_with_rate_plan(db)
+    channex = _ImportChannex(fail_restrictions=True)
+    result = _import_svc(channex, db).push_stop_sell_for_property(
+        "t1", "p1", [(date(2099, 6, 23), date(2099, 6, 25))], stop_sell=True
+    )
+    assert result is True  # Fehler signalisiert
+    assert db.tables["ari_restriction_outbox"][0]["status"] == "pending"
+
+
+def test_stop_sell_managed_without_rate_plan_stays_pending() -> None:
+    # BUG 9: channex-managed, aber KEIN Rate-Plan-Mapping (Import noch nicht
+    # gelaufen). Der Push darf NICHT still als Erfolg (False) enden — die Zeile
+    # bleibt 'pending' (Cron zieht sie nach) und die Rückgabe ist True (Job-Retry).
+    db = _ImportDB()
+    _seed_with_room_type(db)  # room_type, aber KEIN rate_plan_map
+    channex = _ImportChannex()
+    result = _import_svc(channex, db).push_stop_sell_for_property(
+        "t1", "p1", [(date(2099, 6, 23), date(2099, 6, 25))], stop_sell=True
+    )
+    assert result is True  # NICHT still Erfolg
+    assert channex.restrictions_pushed == []  # nichts gepusht (kein Plan)
+    assert db.tables["ari_restriction_outbox"][0]["status"] == "pending"
+
+
+def test_stop_sell_not_managed_is_noop_no_outbox() -> None:
+    # Nicht bei Channex angelegt → echter No-op: keine Outbox-Zeile, kein Push,
+    # kein Fehler (der Cron soll nichts für ein nicht-verbundenes Objekt retryen).
+    db = _ImportDB()
+    _seed_with_rate_plan(db)
+    _unmanage(db)
+    channex = _ImportChannex()
+    result = _import_svc(channex, db).push_stop_sell_for_property(
+        "t1", "p1", [(date(2099, 6, 23), date(2099, 6, 25))], stop_sell=True
+    )
+    assert result is False
+    assert db.tables["ari_restriction_outbox"] == []
+    assert channex.restrictions_pushed == []
+
+
+def test_push_rate_managed_without_rate_plan_stays_pending() -> None:
+    # BUG 9 auch für Preis/Restrictions-Pfad (_push_restriction_values_all_plans).
+    db = _ImportDB()
+    _seed_with_room_type(db)  # KEIN rate_plan_map
+    channex = _ImportChannex()
+    result = _import_svc(channex, db).push_rate_for_property(
+        "t1", "p1", date(2099, 6, 23), date(2099, 6, 25), rate_cents=13800
+    )
+    assert result is True  # nicht still Erfolg
+    assert db.tables["ari_restriction_outbox"][0]["status"] == "pending"
+
+
+def test_push_rate_success_marks_outbox_done() -> None:
+    db = _ImportDB()
+    _seed_with_rate_plan(db)
+    channex = _ImportChannex()
+    result = _import_svc(channex, db).push_rate_for_property(
+        "t1", "p1", date(2099, 6, 23), date(2099, 6, 25), rate_cents=13800
+    )
+    assert result is False
+    assert db.tables["ari_restriction_outbox"][0]["status"] == "done"
+
+
+def test_cta_ctd_failure_keeps_outbox_pending() -> None:
+    db = _ImportDB()
+    _seed_with_rate_plan(db)
+    channex = _ImportChannex(fail_restrictions=True)
+    result = _import_svc(channex, db).push_restrictions_for_property(
+        "t1", "p1", date(2099, 6, 23), date(2099, 6, 25), closed_to_arrival=True
+    )
+    assert result is True
+    row = db.tables["ari_restriction_outbox"][0]
+    assert row["status"] == "pending" and row["kind"] == "cta_ctd"
+
+
+def test_process_restriction_outbox_retries_stop_sell() -> None:
+    # Cron zieht eine offene stop_sell-Zeile nach und pusht sie an Channex.
+    db = _ImportDB()
+    _seed_with_rate_plan(db)
+    db.tables["ari_restriction_outbox"].append({
+        "id": "r1", "tenant_id": "t1", "property_id": "p1", "kind": "stop_sell",
+        "payload": {"spans": [["2099-06-23", "2099-06-25"]],
+                    "stop_sell": True, "days": None},
+        "date_from": "2099-06-23", "date_to": "2099-06-25",
+        "status": "pending", "attempts": 1,
+    })
+    channex = _ImportChannex()
+    res = _import_svc(channex, db).process_restriction_outbox()
+    assert res["done"] == 1
+    assert db.tables["ari_restriction_outbox"][0]["status"] == "done"
+    # Pro Datum expandiert (23.–25. = 3 values), stop_sell gesetzt.
+    assert len(channex.restrictions_pushed) == 3
+    assert all(v["stop_sell"] is True for v in channex.restrictions_pushed)
+
+
+def test_process_restriction_outbox_self_heals_when_rate_plan_appears() -> None:
+    # BUG-9-Selbstheilung: eine Zeile, die OHNE Rate-Plan pending blieb, wird vom
+    # Cron gepusht, SOBALD der Rate-Plan-Import das Mapping angelegt hat.
+    db = _ImportDB()
+    _seed_with_room_type(db)  # zunächst KEIN rate_plan_map
+    db.tables["ari_restriction_outbox"].append({
+        "id": "r1", "tenant_id": "t1", "property_id": "p1", "kind": "stop_sell",
+        "payload": {"spans": [["2099-06-23", "2099-06-24"]],
+                    "stop_sell": True, "days": None},
+        "date_from": "2099-06-23", "date_to": "2099-06-24",
+        "status": "pending", "attempts": 0,
+    })
+    channex = _ImportChannex()
+    svc = _import_svc(channex, db)
+    # Erster Cron-Lauf: noch kein Mapping → bleibt pending (attempts hochgezählt).
+    res1 = svc.process_restriction_outbox()
+    assert res1["done"] == 0
+    assert db.tables["ari_restriction_outbox"][0]["status"] == "pending"
+    assert channex.restrictions_pushed == []
+    # Rate-Plan-Import läuft nach → Mapping erscheint.
+    db.tables["channex_rate_plan_map"].append(
+        {"id": "rpm1", "tenant_id": "t1", "property_id": "p1",
+         "room_type_map_id": "rt1", "channex_rate_plan_id": "cx-rate",
+         "deleted_at": None}
+    )
+    # Zweiter Lauf: jetzt heilt es sich und pusht.
+    res2 = svc.process_restriction_outbox()
+    assert res2["done"] == 1
+    assert db.tables["ari_restriction_outbox"][0]["status"] == "done"
+    assert channex.restrictions_pushed != []
+
+
+def test_process_restriction_outbox_skips_unmanaged_as_done() -> None:
+    # Nicht (mehr) bei Channex gemanaged → als done abhaken (kein Endlos-Retry).
+    db = _ImportDB()
+    _seed_with_rate_plan(db)
+    _unmanage(db)
+    db.tables["ari_restriction_outbox"].append({
+        "id": "r1", "tenant_id": "t1", "property_id": "p1", "kind": "stop_sell",
+        "payload": {"spans": [["2099-06-23", "2099-06-24"]],
+                    "stop_sell": True, "days": None},
+        "date_from": "2099-06-23", "date_to": "2099-06-24",
+        "status": "pending", "attempts": 0,
+    })
+    channex = _ImportChannex()
+    res = _import_svc(channex, db).process_restriction_outbox()
+    assert res["done"] == 1
+    assert channex.restrictions_pushed == []
+    assert db.tables["ari_restriction_outbox"][0]["status"] == "done"
+
+
+def test_process_restriction_outbox_gives_up_after_max_attempts() -> None:
+    # Dauerhaft ohne Rate-Plan (10. Versuch) → 'failed', kein Endlos-Retry.
+    db = _ImportDB()
+    _seed_with_room_type(db)  # KEIN rate_plan_map
+    db.tables["ari_restriction_outbox"].append({
+        "id": "r1", "tenant_id": "t1", "property_id": "p1", "kind": "stop_sell",
+        "payload": {"spans": [["2099-06-23", "2099-06-24"]],
+                    "stop_sell": True, "days": None},
+        "date_from": "2099-06-23", "date_to": "2099-06-24",
+        "status": "pending", "attempts": 9,
+    })
+    channex = _ImportChannex()
+    res = _import_svc(channex, db).process_restriction_outbox()
+    assert res["failed"] == 1
+    assert db.tables["ari_restriction_outbox"][0]["status"] == "failed"
+
+
+def test_process_restriction_outbox_retries_rate_batch() -> None:
+    # push_rates_batch-Ursprung (segments im payload) wird vom Cron neu aufgebaut.
+    db = _ImportDB()
+    _seed_with_rate_plan(db)
+    db.tables["ari_restriction_outbox"].append({
+        "id": "r1", "tenant_id": "t1", "property_id": "p1", "kind": "rate",
+        "payload": {"segments": [
+            {"date_from": "2099-06-23", "date_to": "2099-06-24", "rate_cents": 15000},
+        ]},
+        "date_from": "2099-06-23", "date_to": "2099-06-24",
+        "status": "pending", "attempts": 0,
+    })
+    channex = _ImportChannex()
+    res = _import_svc(channex, db).process_restriction_outbox()
+    assert res["done"] == 1
+    assert len(channex.restrictions_pushed) == 2  # 23.+24. = 2 values
+    assert all(v["rate"] == 15000 for v in channex.restrictions_pushed)
+
+
+def test_push_rates_batch_failure_keeps_outbox_pending() -> None:
+    # push_rates_batch (best-effort) persistiert die Absicht ebenfalls; Ausfall →
+    # Outbox pending.
+    db = _ImportDB()
+    _seed_with_rate_plan(db)
+    channex = _ImportChannex(fail_restrictions=True)
+    _import_svc(channex, db).push_rates_batch(
+        "t1", "p1",
+        [{"date_from": date(2099, 6, 23), "date_to": date(2099, 6, 24),
+          "rate_cents": 15000}],
+    )
+    assert db.tables["ari_restriction_outbox"][0]["status"] == "pending"

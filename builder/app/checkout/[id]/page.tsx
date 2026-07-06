@@ -45,8 +45,9 @@ export default async function CheckoutPage({
         </div>
 
         <div className="grid gap-12 lg:grid-cols-[1fr_24rem]">
-          {/* Linke Spalte: Schritte */}
-          <CheckoutSteps gesamt={formatEuro(gesamt)} />
+          {/* Linke Spalte: Schritte — Betrag in der OBJEKT-Währung (cur), nicht
+              hart EUR (die Zusammenfassung rechts nutzt cur bereits). */}
+          <CheckoutSteps gesamt={formatEuro(gesamt, cur)} />
 
           {/* Rechte Spalte: Buchungs-Zusammenfassung */}
           <div className="lg:relative">

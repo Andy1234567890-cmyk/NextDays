@@ -45,7 +45,8 @@ log = get_logger("nextdays.worker")
 # ChannexBudgetExhausted → der Worker verzögert (deferred) ihn, ohne einen
 # Retry-Versuch zu verbrennen.
 _CHANNEX_JOB_TYPES = frozenset(
-    {"sync_property_content", "reconcile_tenant", "push_ari", "process_ari_outbox"}
+    {"sync_property_content", "reconcile_tenant", "push_ari", "process_ari_outbox",
+     "process_restriction_outbox"}
 )
 
 # Parallel verarbeitete Jobs je Worker-Instanz. Begrenzt lokale Thread-/DB-Last;
@@ -120,6 +121,18 @@ def _handle_process_ari_outbox(
     aber NICHT ab. Tenant-übergreifend (die outbox ist nicht tenant-gefiltert),
     darum einmal je Tick als eigener Job statt pro Tenant."""
     _svc(db, budget).process_ari_outbox()
+
+
+def _handle_process_restriction_outbox(
+    db: Client, _payload: dict[str, Any], budget: ChannexBudget | None = None
+) -> None:
+    """Offene ari_restriction_outbox-Zeilen (Stop-Sell/Rate/Min-Stay/Max-Stay/
+    CTA-CTD) erneut an Channex pushen — der dauerhafte Backstop für Restriktions-
+    Pushes (analog process_ari_outbox für Availability). Baut je Zeile die values
+    aus dem persistierten kind+payload neu auf und löst das Rate-Plan-Mapping
+    frisch auf (Selbstheilung, sobald der Rate-Plan-Import gelaufen ist). Tenant-
+    übergreifend, darum einmal je Tick als eigener Job statt pro Tenant."""
+    _svc(db, budget).process_restriction_outbox()
 
 
 def _handle_recompute_property(
@@ -208,6 +221,7 @@ HANDLERS: dict[
     "recompute_property": _handle_recompute_property,
     "push_ari": _handle_push_ari,
     "process_ari_outbox": _handle_process_ari_outbox,
+    "process_restriction_outbox": _handle_process_restriction_outbox,
 }
 
 
@@ -401,6 +415,14 @@ class Worker:
         enqueue(
             self._db, "process_ari_outbox",
             payload={}, dedup_key=f"ari_outbox_tick:{bucket}",
+        )
+        # Ausgehende Restriktions-Pushes (Stop-Sell/Rate/Min-/Max-Stay/CTA-CTD)
+        # tenant-übergreifend nachziehen — der dauerhafte Backstop, den es vor 0115
+        # nur für Availability gab. Ein gescheiterter Verkaufsstopp/Preis heilt so
+        # selbst (auch nach nachträglichem Rate-Plan-Import). Einmal je Tick.
+        enqueue(
+            self._db, "process_restriction_outbox",
+            payload={}, dedup_key=f"ari_restriction_outbox_tick:{bucket}",
         )
 
     async def run(self) -> None:

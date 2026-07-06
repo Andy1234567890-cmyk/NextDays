@@ -26,8 +26,10 @@ from src.main import create_app
 client = TestClient(create_app())
 
 
-def _ctx(tenant: str | None = "t-1") -> AuthContext:
-    return AuthContext(user_id="u-1", tenant_id=tenant, role="owner")
+def _ctx(tenant: str | None = "t-1", role: str = "admin") -> AuthContext:
+    # Default admin: die meisten Tests prüfen NICHT den Owner-Scope. Der Owner-
+    # Self-Scope (§4.2) hat eigene Tests, die role='owner' explizit setzen.
+    return AuthContext(user_id="u-1", tenant_id=tenant, role=role)
 
 
 def _row(**over: object) -> dict:
@@ -567,6 +569,42 @@ def test_list_without_accommodation_type_shows_all() -> None:
     svc = PropertiesService(service_client=_accommodation_db(None))
     res = svc.list(_ctx())
     assert res.total == 2
+
+
+# --- Owner-Scope (§4.2): Eigentümer sieht nur zugeordnete Objekte ------------
+
+def test_list_owner_scoped_to_assigned() -> None:
+    """Ein Eigentümer sieht in der Objektliste NUR seine zugeordneten Objekte,
+    nicht die aller anderen Eigentümer desselben Mandanten."""
+    db = _accommodation_db(None)
+    db.tables["owner_property_assignments"] = [
+        {"tenant_id": "t-1", "user_id": "u-1", "property_id": "p-fewo"}
+    ]
+    svc = PropertiesService(service_client=db)
+    res = svc.list(_ctx(role="owner"))
+    assert [i.id for i in res.items] == ["p-fewo"]
+
+
+def test_get_owner_foreign_property_404() -> None:
+    """Ein Eigentümer erhält für ein NICHT zugeordnetes Objekt 404 (keine
+    Stammdaten-Leaks fremder Objekte)."""
+    db = _accommodation_db(None)
+    db.tables["owner_property_assignments"] = [
+        {"tenant_id": "t-1", "user_id": "u-1", "property_id": "p-fewo"}
+    ]
+    svc = PropertiesService(service_client=db)
+    with pytest.raises(PropertyError) as exc:
+        svc.get(_ctx(role="owner"), "p-zimmer")  # fremdes Objekt
+    assert exc.value.status_code == 404
+
+
+def test_list_owner_without_assignments_sees_nothing() -> None:
+    """Ein Eigentümer ohne jede Zuordnung sieht keine Objekte (fail-closed)."""
+    db = _accommodation_db(None)
+    db.tables["owner_property_assignments"] = []
+    svc = PropertiesService(service_client=db)
+    res = svc.list(_ctx(role="owner"))
+    assert res.total == 0
 
 
 def test_create_rejects_type_outside_accommodation() -> None:

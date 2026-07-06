@@ -21,6 +21,96 @@ from .schemas import (
 )
 
 
+class _PendingRatePlanMapping(Exception):
+    """Signal: das Objekt ist bei Channex gemanaged, hat aber (noch) KEINE
+    Rate-Plans gemappt (Rate-Plan-Import noch nicht/teilweise gelaufen). Ein
+    Restriktions-Push darf in diesem Fenster NICHT still als Erfolg gelten
+    (BUG 9) — die Outbox-Zeile bleibt 'pending' und der Cron zieht sie nach,
+    sobald das Mapping existiert. Interner Sentinel (nicht Teil des Channex-
+    Fehlerpfads, deshalb KEIN ChannexError)."""
+
+    def __init__(self, property_id: str) -> None:
+        super().__init__(f"Rate-Plan-Mapping fehlt noch für {property_id}")
+        self.property_id = property_id
+
+
+def _as_date(value: date | str) -> date:
+    """Ein Datum robust zu `date` normalisieren — akzeptiert `date` (Request-Pfad)
+    ODER ISO-String (aus dem persistierten Outbox-payload)."""
+    return value if isinstance(value, date) else date.fromisoformat(value[:10])
+
+
+def _as_iso(value: date | str) -> str:
+    """Ein Datum (date ODER ISO-String) zu einem ISO-Datumsstring normalisieren."""
+    return _as_date(value).isoformat()
+
+
+def _segment_to_payload(seg: dict[str, Any]) -> dict[str, Any]:
+    """Ein push_rates_batch-Segment JSON-serialisierbar machen (date → ISO), damit
+    es im Outbox-payload liegen und der Cron es unverändert neu aufbauen kann."""
+    out: dict[str, Any] = {
+        "date_from": _as_iso(seg["date_from"]),
+        "date_to": _as_iso(seg["date_to"]),
+    }
+    if seg.get("rate_cents") is not None:
+        out["rate_cents"] = seg["rate_cents"]
+    if seg.get("min_stay") is not None:
+        out["min_stay"] = seg["min_stay"]
+    return out
+
+
+def _rate_fields(rate_cents: int | None, min_stay: int | None) -> dict[str, Any]:
+    """Preis/Min-Stay zu Channex-restriction-Feldern. Leer, wenn beide None."""
+    fields: dict[str, Any] = {}
+    if rate_cents is not None:
+        fields["rate"] = rate_cents
+    if min_stay is not None:
+        fields["min_stay_arrival"] = min_stay
+        fields["min_stay_through"] = min_stay
+    return fields
+
+
+def _restriction_fields_from_payload(
+    kind: str, payload: dict[str, Any]
+) -> dict[str, Any]:
+    """Aus dem persistierten Outbox-payload die Channex-restriction-Felder für
+    rate/min_stay/max_stay/cta_ctd rekonstruieren (kind-spezifisch). stop_sell und
+    der batch-rate-Fall (segments) werden vom Aufrufer separat behandelt."""
+    if kind in ("rate", "min_stay"):
+        return _rate_fields(payload.get("rate_cents"), payload.get("min_stay"))
+    if kind == "max_stay":
+        return {"max_stay": max(0, int(payload["max_stay"]))}
+    if kind == "cta_ctd":
+        fields: dict[str, Any] = {}
+        if payload.get("closed_to_arrival") is not None:
+            fields["closed_to_arrival"] = payload["closed_to_arrival"]
+        if payload.get("closed_to_departure") is not None:
+            fields["closed_to_departure"] = payload["closed_to_departure"]
+        return fields
+    return {}
+
+
+def _restriction_values(
+    plans: list[dict[str, str]],
+    fields: dict[str, Any],
+    date_from: date,
+    date_to: date,
+) -> list[dict[str, Any]]:
+    """`fields` für ALLE Rate-Plans pro Datum expandieren (Channex ignoriert
+    date_from/date_to still — ein value je Tag). Leer, wenn keine fields."""
+    if not fields:
+        return []
+    values: list[dict[str, Any]] = []
+    for mapping in plans:
+        base = {
+            "property_id": mapping["channex_property_id"],
+            "rate_plan_id": mapping["channex_rate_plan_id"],
+            **fields,
+        }
+        values.extend(_expand_restriction_values(base, date_from, date_to))
+    return values
+
+
 def _iso_days(date_from: str, date_to: str) -> list[str]:
     """Alle ISO-Tage [date_from … date_to] inklusiv."""
     lo = date.fromisoformat(date_from[:10])
@@ -470,6 +560,65 @@ class AriPushMixin:
             if rp.get("channex_rate_plan_id")
         ]
 
+    # -- Restriktions-Outbox (dauerhafter Backstop) ----------------------------
+    # Wie ari_outbox (0033) für Availability, aber für Stop-Sell/Rate/Min-Stay/
+    # Max-Stay/CTA-CTD/restrictions: jede Push-Absicht wird VOR dem Channex-Call
+    # persistiert und nach Erfolg 'done' markiert. Bei Channex-Ausfall bleibt sie
+    # 'pending' und der Reconcile-Cron (process_restriction_outbox) zieht sie nach.
+    # Persistiert werden die PARAMETER (kind + payload), nicht die aufgelösten
+    # Channex-values — so löst der Retry das Rate-Plan-Mapping NEU auf und heilt
+    # auch das Fenster, in dem ein channex-managtes Objekt noch KEINEN Rate-Plan
+    # gemappt hat (BUG 9: sonst würde der Push still als Erfolg verworfen).
+    def _enqueue_restriction_outbox(
+        self,
+        tenant_id: str,
+        property_id: str,
+        kind: str,
+        payload: dict[str, Any],
+        date_from: date,
+        date_to: date,
+    ) -> str | None:
+        """Restriktions-Push-Absicht als 'pending'-Zeile persistieren. Gibt die
+        Zeilen-ID zurück (oder None, wenn kein DB-Client vorhanden)."""
+        if self._db is None:
+            return None
+        row = (
+            self._db.table("ari_restriction_outbox")
+            .insert(
+                {
+                    "tenant_id": tenant_id,
+                    "property_id": property_id,
+                    "kind": kind,
+                    "payload": payload,
+                    "date_from": date_from.isoformat(),
+                    "date_to": date_to.isoformat(),
+                    "status": "pending",
+                }
+            )
+            .execute()
+        ).data
+        return row[0]["id"] if row else None
+
+    def _mark_restriction_outbox(
+        self, outbox_id: str | None, status: str, *, error: str | None = None
+    ) -> None:
+        """Eine Restriktions-Outbox-Zeile abschließen (done) oder als fehlgeschlagen
+        markieren. Guard status='pending', damit ein paralleler Cron-Tick den
+        Zustand nicht doppelt umschreibt. 'pending' lässt der Cron liegen — hier
+        wird nie AKTIV auf 'pending' gesetzt (die Zeile ist bereits pending)."""
+        if outbox_id is None or self._db is None:
+            return
+        patch: dict[str, Any] = {"status": status}
+        if error is not None:
+            patch["last_error"] = error
+        (
+            self._db.table("ari_restriction_outbox")
+            .update(patch)
+            .eq("id", outbox_id)
+            .eq("status", "pending")
+            .execute()
+        )
+
     def _push_restriction_values_all_plans(
         self,
         tenant_id: str,
@@ -481,30 +630,82 @@ class AriPushMixin:
         """Restriction-`fields` (rate/min_stay/max_stay/CTA/CTD) für ALLE
         Rate-Plans der Property über den Zeitraum expandieren und gebündelt
         pushen. Gibt die Anzahl gesendeter values zurück, oder None bei No-op
-        (nicht verbunden / alle Kanäle aus). Wirft ChannexError beim Sende-Fehler
-        (der Aufrufer entscheidet über Logging/Retry).
+        (nicht bei Channex gemanaged). Wirft ChannexError beim Sende-Fehler ODER
+        einen _PendingRatePlanMapping-Sentinel, wenn das Objekt zwar managed ist,
+        aber (noch) KEINE Rate-Plans gemappt hat — der Aufrufer lässt die
+        Outbox-Zeile dann 'pending' (BUG 9: kein stilles Verwerfen als Erfolg).
 
         Der Kern des Rate-Plan-Fix: früher traf nur EIN (zufälliger) Rate-Plan
         die Restriction; jetzt jeder — sonst verkauft ein OTA über einen anderen
         Rate-Plan weiter."""
+        if not self._is_channex_managed(self._db, tenant_id, property_id):
+            return None  # nicht bei Channex angelegt → kein Push (echter No-op)
         plans = self._resolve_channex_rate_plans(self._db, tenant_id, property_id)
         if not plans:
-            return None
-        if not self._is_channex_managed(self._db, tenant_id, property_id):
-            return None  # alle Kanäle des Objekts auf Aus → kein Push
-        values: list[dict[str, Any]] = []
-        for mapping in plans:
-            base = {
-                "property_id": mapping["channex_property_id"],
-                "rate_plan_id": mapping["channex_rate_plan_id"],
-                **fields,
-            }
-            values.extend(_expand_restriction_values(base, date_from, date_to))
+            # BUG 9: managed, aber Rate-Plan-Mapping fehlt noch (Import nicht/teils
+            # gelaufen). NICHT still als Erfolg abhaken — der Push muss offen bleiben
+            # und der Cron ihn nachziehen, sobald das Mapping existiert.
+            raise _PendingRatePlanMapping(property_id)
+        values = _restriction_values(plans, fields, date_from, date_to)
         if not values:
             return 0
         for i in range(0, len(values), self._RESTRICTIONS_CHUNK):
             self._channex.update_restrictions(values[i : i + self._RESTRICTIONS_CHUNK])
         return len(values)
+
+    def _push_fields_with_outbox(
+        self,
+        tenant_id: str,
+        property_id: str,
+        kind: str,
+        payload: dict[str, Any],
+        fields: dict[str, Any],
+        date_from: date,
+        date_to: date,
+        log_event: str,
+    ) -> bool:
+        """Gemeinsamer Pfad für rate/max_stay/cta_ctd: Absicht in die Restriktions-
+        Outbox persistieren, dann für ALLE Rate-Plans pushen und die Zeile
+        abschließen. Rückgabe True = Channex-Fehler ODER fehlendes Rate-Plan-Mapping
+        (Worker-Handler wirft → Job-Retry); die Outbox-Zeile bleibt in beiden Fällen
+        'pending' und der Cron zieht sie nach. `payload` sind die Parameter zum
+        Neu-Aufbauen beim Retry (Selbstheilung); `fields` die daraus abgeleiteten
+        Channex-Restriction-Felder für den Sofort-Push."""
+        # Zuerst persistieren (VOR dem Channex-Call), damit ein Ausfall/Prozesstod
+        # den Wert nicht verliert. Bei nicht-gemanagtem Objekt gar nicht erst
+        # anlegen (echter No-op) — sonst würde der Cron endlos eine Zeile für ein
+        # Objekt retryen, das gar nicht bei Channex liegt.
+        if not self._is_channex_managed(self._db, tenant_id, property_id):
+            return False
+        outbox_id = self._enqueue_restriction_outbox(
+            tenant_id, property_id, kind, payload, date_from, date_to
+        )
+        try:
+            sent = self._push_restriction_values_all_plans(
+                tenant_id, property_id, fields, date_from, date_to
+            )
+            self._mark_restriction_outbox(outbox_id, "done")
+            if sent is not None:
+                log.info(
+                    log_event, tenant_id=tenant_id, property_id=property_id, days=sent,
+                )
+            return False
+        except _PendingRatePlanMapping:
+            # BUG 9: managed, aber Rate-Plan-Mapping fehlt noch → Zeile bleibt
+            # 'pending' (nicht 'done'), der Cron zieht sie nach, sobald das Mapping
+            # existiert. True → Job-Retry (Backoff), statt still Erfolg zu melden.
+            log.info(
+                "restriction_push_deferred_no_rate_plan",
+                tenant_id=tenant_id, property_id=property_id, kind=kind,
+            )
+            return True
+        except ChannexError as exc:
+            # Outbox-Zeile bleibt 'pending' (Cron-Backstop); zusätzlich Job-Retry.
+            log.warning(
+                f"{log_event}_failed",
+                tenant_id=tenant_id, property_id=property_id, error=exc.message,
+            )
+            return True
 
     def push_rate_for_property(
         self,
@@ -518,8 +719,9 @@ class AriPushMixin:
     ) -> bool:
         """Preis und/oder Mindestaufenthalt für einen Zeitraum an Channex pushen
         (Restrictions, ALLE Rate-Plans). Mindestens eines von rate_cents/min_stay
-        setzen. Rückgabe True = Channex-Fehler (Worker-Handler wirft → schneller
-        Job-Backoff statt Verlust). No-op, wenn nicht verbunden. date_to inkl."""
+        setzen. Rückgabe True = Channex-Fehler/fehlendes Mapping (Worker-Handler
+        wirft → Job-Backoff); die Restriktions-Outbox bleibt der Backstop. No-op,
+        wenn nicht verbunden. date_to inkl."""
         if not self._channex.is_configured or self._db is None:
             return False
         if rate_cents is None and min_stay is None:
@@ -530,28 +732,14 @@ class AriPushMixin:
         if min_stay is not None:
             fields["min_stay_arrival"] = min_stay
             fields["min_stay_through"] = min_stay
-        try:
-            sent = self._push_restriction_values_all_plans(
-                tenant_id, property_id, fields, date_from, date_to
-            )
-            if sent is not None:
-                log.info(
-                    "restriction_push_done",
-                    tenant_id=tenant_id,
-                    property_id=property_id,
-                    rate_cents=rate_cents,
-                    min_stay=min_stay,
-                    days=sent,
-                )
-            return False
-        except ChannexError as exc:
-            log.warning(
-                "restriction_push_failed",
-                tenant_id=tenant_id,
-                property_id=property_id,
-                error=exc.message,
-            )
-            return True
+        # kind unterscheidet Preis (rate) von reinem Min-Stay, damit der Cron beim
+        # Retry dieselben Parameter neu aufbaut.
+        kind = "rate" if rate_cents is not None else "min_stay"
+        payload = {"rate_cents": rate_cents, "min_stay": min_stay}
+        return self._push_fields_with_outbox(
+            tenant_id, property_id, kind, payload, fields, date_from, date_to,
+            "restriction_push_done",
+        )
 
     def push_max_stay_for_property(
         self,
@@ -565,27 +753,15 @@ class AriPushMixin:
         pushen (ALLE Rate-Plans). Channex-Key ist `max_stay` (NICHT
         max_stay_arrival — das nimmt Channex zwar per 200 an, persistiert es aber
         nicht; live verifiziert). 0 = keine Obergrenze. Rückgabe True =
-        Channex-Fehler (Job-Retry). No-op ohne Verbindung/Mapping. date_to inkl."""
+        Channex-Fehler/fehlendes Mapping (Job-Retry); die Restriktions-Outbox bleibt
+        der Backstop. No-op ohne Verbindung/Mapping. date_to inkl."""
         if not self._channex.is_configured or self._db is None:
             return False
-        try:
-            sent = self._push_restriction_values_all_plans(
-                tenant_id, property_id,
-                {"max_stay": max(0, int(max_stay))}, date_from, date_to,
-            )
-            if sent is not None:
-                log.info(
-                    "max_stay_push_done",
-                    tenant_id=tenant_id, property_id=property_id, max_stay=max_stay,
-                    days=sent,
-                )
-            return False
-        except ChannexError as exc:
-            log.warning(
-                "max_stay_push_failed",
-                tenant_id=tenant_id, property_id=property_id, error=exc.message,
-            )
-            return True
+        clamped = max(0, int(max_stay))
+        return self._push_fields_with_outbox(
+            tenant_id, property_id, "max_stay", {"max_stay": clamped},
+            {"max_stay": clamped}, date_from, date_to, "max_stay_push_done",
+        )
 
     def push_restrictions_for_property(
         self,
@@ -599,8 +775,8 @@ class AriPushMixin:
     ) -> bool:
         """CTA/CTD-Restriktionen für einen Zeitraum an Channex pushen (ALLE
         Rate-Plans). Nur gesetzte Felder (None = unverändert). Rückgabe True =
-        Channex-Fehler (Job-Retry). No-op, wenn nicht verbunden oder alle Kanäle
-        aus. date_to inklusiv."""
+        Channex-Fehler/fehlendes Mapping (Job-Retry); die Restriktions-Outbox bleibt
+        der Backstop. No-op, wenn nicht verbunden. date_to inklusiv."""
         if not self._channex.is_configured or self._db is None:
             return False
         if closed_to_arrival is None and closed_to_departure is None:
@@ -610,52 +786,27 @@ class AriPushMixin:
             fields["closed_to_arrival"] = closed_to_arrival
         if closed_to_departure is not None:
             fields["closed_to_departure"] = closed_to_departure
-        try:
-            sent = self._push_restriction_values_all_plans(
-                tenant_id, property_id, fields, date_from, date_to
-            )
-            if sent is not None:
-                log.info(
-                    "cta_ctd_push_done",
-                    tenant_id=tenant_id, property_id=property_id,
-                    cta=closed_to_arrival, ctd=closed_to_departure,
-                    days=sent,
-                )
-            return False
-        except ChannexError as exc:
-            log.warning(
-                "cta_ctd_push_failed",
-                tenant_id=tenant_id, property_id=property_id, error=exc.message,
-            )
-            return True
+        payload = {
+            "closed_to_arrival": closed_to_arrival,
+            "closed_to_departure": closed_to_departure,
+        }
+        return self._push_fields_with_outbox(
+            tenant_id, property_id, "cta_ctd", payload, fields, date_from, date_to,
+            "cta_ctd_push_done",
+        )
 
-    def push_stop_sell_for_property(
-        self,
-        tenant_id: str,
-        property_id: str,
+    @staticmethod
+    def _stop_sell_values(
+        plans: list[dict[str, str]],
         spans: list[tuple[date, date]],
-        *,
         stop_sell: bool,
-        days: list[str] | None = None,
-    ) -> bool:
-        """Verkaufsstopp (stop_sell-Restriction, Rate-Plan-Ebene) für einen oder
-        mehrere Zeiträume an Channex pushen — EIN Request mit mehreren values.
-        `days` filtert optional auf Wochentage (Channex-nativ: mo…su). Vergangene
-        Daten weist Channex ab → Spannen werden auf heute geklemmt. Rückgabe True
-        = Channex-Fehler (Worker-Handler wirft → schneller Job-Backoff; ein
-        gescheiterter Verkaufsstopp würde OTAs sonst weiter verkaufen lassen).
-        No-op ohne Verbindung/Mapping. date_to inklusiv."""
-        if not self._channex.is_configured or self._db is None or not spans:
-            return False
-        # ALLE Rate-Plans der Property — ein Stop-Sell wirkt pro Rate-Plan; sonst
-        # bleibt ein zweiter (z. B. Non-Refundable → Expedia) buchbar.
-        plans = self._resolve_channex_rate_plans(self._db, tenant_id, property_id)
-        if not plans:
-            return False
-        if not self._is_channex_managed(self._db, tenant_id, property_id):
-            return False  # alle Kanäle des Objekts auf Aus → kein Push
+        days: list[str] | None,
+    ) -> list[dict[str, Any]]:
+        """Aus Rate-Plans + Spannen die per-Datum-Stop-Sell-values bauen.
+        Vergangene Tage werden auf heute geklemmt (Channex weist sie sonst ab);
+        `days` filtert optional auf Wochentage (mo…su → Python-weekday, Mo=0).
+        Statisch/pur, damit Direktpfad und Cron dieselbe Aufbaulogik teilen."""
         today = date.today()
-        # Wochentag-Filter (mo…su) auf Python-weekday (Mo=0) abbilden.
         weekday_allow = None
         if days:
             names = ["mo", "tu", "we", "th", "fr", "sa", "su"]
@@ -681,11 +832,65 @@ class AriPushMixin:
                         if wd not in weekday_allow:
                             continue
                     values.append(v)
+        return values
+
+    def push_stop_sell_for_property(
+        self,
+        tenant_id: str,
+        property_id: str,
+        spans: list[tuple[date, date]],
+        *,
+        stop_sell: bool,
+        days: list[str] | None = None,
+    ) -> bool:
+        """Verkaufsstopp (stop_sell-Restriction, Rate-Plan-Ebene) für einen oder
+        mehrere Zeiträume an Channex pushen — EIN Request mit mehreren values.
+        `days` filtert optional auf Wochentage (Channex-nativ: mo…su). Vergangene
+        Daten weist Channex ab → Spannen werden auf heute geklemmt. Rückgabe True
+        = Channex-Fehler/fehlendes Rate-Plan-Mapping (Worker-Handler wirft →
+        schneller Job-Backoff; ein gescheiterter Verkaufsstopp würde OTAs sonst
+        weiter verkaufen lassen). Die Absicht wird VOR dem Push in der Restriktions-
+        Outbox persistiert (Cron-Backstop). No-op ohne Verbindung/Mapping. date_to
+        inklusiv."""
+        if not self._channex.is_configured or self._db is None or not spans:
+            return False
+        if not self._is_channex_managed(self._db, tenant_id, property_id):
+            return False  # nicht bei Channex angelegt → kein Push (echter No-op)
+        # Absicht ZUERST persistieren (VOR dem Channex-Call): ein gescheiterter
+        # Verkaufsstopp darf nicht verloren gehen. Outbox-Range = Min/Max über alle
+        # Spannen; die vollständigen Spannen/Tage liegen im payload (Neu-Aufbau beim
+        # Cron-Retry, inkl. Selbstheilung bei nachträglichem Rate-Plan-Mapping).
+        out_from = min(s for s, _ in spans)
+        out_to = max(e for _, e in spans)
+        payload = {
+            "spans": [[s.isoformat(), e.isoformat()] for s, e in spans],
+            "stop_sell": stop_sell,
+            "days": days,
+        }
+        outbox_id = self._enqueue_restriction_outbox(
+            tenant_id, property_id, "stop_sell", payload, out_from, out_to
+        )
+        # ALLE Rate-Plans der Property — ein Stop-Sell wirkt pro Rate-Plan; sonst
+        # bleibt ein zweiter (z. B. Non-Refundable → Expedia) buchbar.
+        plans = self._resolve_channex_rate_plans(self._db, tenant_id, property_id)
+        if not plans:
+            # BUG 9: managed, aber Rate-Plan-Mapping fehlt noch → Zeile bleibt
+            # 'pending', der Cron zieht sie nach. True → Job-Retry statt still Erfolg.
+            log.info(
+                "stop_sell_push_deferred_no_rate_plan",
+                tenant_id=tenant_id, property_id=property_id,
+            )
+            return True
+        values = self._stop_sell_values(plans, spans, stop_sell, days)
         if not values:
+            # Nur Vergangenheit/leerer Wochentag-Filter → nichts zu senden; Absicht
+            # ist erledigt (kein echter Wert offen).
+            self._mark_restriction_outbox(outbox_id, "done")
             return False
         try:
             for i in range(0, len(values), self._RESTRICTIONS_CHUNK):
                 self._channex.update_restrictions(values[i : i + self._RESTRICTIONS_CHUNK])
+            self._mark_restriction_outbox(outbox_id, "done")
             log.info(
                 "stop_sell_push_done",
                 tenant_id=tenant_id, property_id=property_id,
@@ -693,6 +898,7 @@ class AriPushMixin:
             )
             return False
         except ChannexError as exc:
+            # Outbox-Zeile bleibt 'pending' (Cron-Backstop); zusätzlich Job-Retry.
             log.warning(
                 "stop_sell_push_failed",
                 tenant_id=tenant_id, property_id=property_id, error=exc.message,
@@ -717,17 +923,34 @@ class AriPushMixin:
 
         `segments` = Liste von {date_from, date_to (inkl.), rate_cents?, min_stay?}.
         Das Channex-Mapping wird nur EINMAL aufgelöst (statt pro Intervall).
-        Best-effort: bei Fehler loggen — der reconcile-Cron gleicht ab.
-        No-op, wenn nicht verbunden oder keine Segmente."""
+        Die Absicht wird VOR dem Push in der Restriktions-Outbox persistiert; bei
+        Fehler/fehlendem Rate-Plan-Mapping bleibt sie 'pending' und der Cron zieht
+        sie nach. No-op, wenn nicht verbunden oder keine Segmente."""
         if not self._channex.is_configured or self._db is None or not segments:
             return
+        if not self._is_channex_managed(self._db, tenant_id, property_id):
+            return  # nicht bei Channex angelegt → kein Batch-Preis-Push (No-op)
+        # Absicht ZUERST persistieren. Outbox-Range = Min/Max über alle Segmente;
+        # die Segmente liegen im payload (Neu-Aufbau beim Cron-Retry). date_from/
+        # date_to der Segmente können date oder ISO-String sein → normalisieren.
+        seg_from = min(_as_iso(s["date_from"]) for s in segments)
+        seg_to = max(_as_iso(s["date_to"]) for s in segments)
+        payload = {"segments": [_segment_to_payload(s) for s in segments]}
+        outbox_id = self._enqueue_restriction_outbox(
+            tenant_id, property_id, "rate",
+            payload, date.fromisoformat(seg_from), date.fromisoformat(seg_to),
+        )
         # ALLE Rate-Plans der Property (nicht nur einer) — die Mappings werden
         # EINMAL aufgelöst und für alle Segmente wiederverwendet.
         plans = self._resolve_channex_rate_plans(self._db, tenant_id, property_id)
         if not plans:
+            # BUG 9: managed, aber Rate-Plan-Mapping fehlt noch → Zeile bleibt
+            # 'pending', der Cron zieht sie nach. Best-effort-Kontrakt (kein Return).
+            log.info(
+                "restriction_push_batch_deferred_no_rate_plan",
+                tenant_id=tenant_id, property_id=property_id,
+            )
             return
-        if not self._is_channex_managed(self._db, tenant_id, property_id):
-            return  # alle Kanäle des Objekts auf Aus → kein Batch-Preis-Push
         values: list[dict[str, Any]] = []
         for seg in segments:
             rate_cents = seg.get("rate_cents")
@@ -746,9 +969,12 @@ class AriPushMixin:
                     base["min_stay_through"] = min_stay
                 # Pro Datum expandieren — restrictions ignoriert date_from/date_to.
                 values.extend(
-                    _expand_restriction_values(base, seg["date_from"], seg["date_to"])
+                    _expand_restriction_values(
+                        base, _as_date(seg["date_from"]), _as_date(seg["date_to"])
+                    )
                 )
         if not values:
+            self._mark_restriction_outbox(outbox_id, "done")
             return
         pushed = 0
         try:
@@ -756,6 +982,7 @@ class AriPushMixin:
                 chunk = values[i : i + self._RESTRICTIONS_CHUNK]
                 self._channex.update_restrictions(chunk)
                 pushed += len(chunk)
+            self._mark_restriction_outbox(outbox_id, "done")
             log.info(
                 "restriction_push_batch_done",
                 tenant_id=tenant_id,
@@ -763,6 +990,7 @@ class AriPushMixin:
                 intervals=pushed,
             )
         except ChannexError as exc:
+            # Outbox-Zeile bleibt 'pending' (Cron-Backstop).
             log.warning(
                 "restriction_push_batch_failed",
                 tenant_id=tenant_id,
@@ -870,14 +1098,128 @@ class AriPushMixin:
                 attempts = (r["attempts"] or 0) + 1
                 # Nach 10 Versuchen aufgeben (failed), sonst weiter pending.
                 new_status = "failed" if attempts >= 10 else "pending"
+                # Guard status='pending' wie in den Erfolgs-Zweigen: arbeitet der
+                # schnelle push_availability_for_property-Pfad dieselbe Zeile
+                # nebenläufig ab und hat sie bereits erfolgreich auf 'done' gesetzt,
+                # darf dieser Cron-Fehler sie NICHT auf 'failed'/'pending'
+                # zurückkippen — sonst zählt _newer_covered_days sie erneut als
+                # aktiven Supersessor (done→failed) bzw. der Push liefe doppelt.
                 db.table("ari_outbox").update(
                     {"status": new_status, "attempts": attempts, "last_error": exc.message}
-                ).eq("id", r["id"]).execute()
+                ).eq("id", r["id"]).eq("status", "pending").execute()
                 if new_status == "failed":
                     result["failed"] += 1
         if result["processed"]:
             log.info("ari_outbox_processed", **result)
         return result
+
+    def _restriction_values_from_row(
+        self, row: dict[str, Any], plans: list[dict[str, str]]
+    ) -> list[dict[str, Any]]:
+        """Aus einer persistierten Restriktions-Outbox-Zeile (kind + payload) und den
+        AKTUELL aufgelösten Rate-Plans die Channex-restriction-values neu aufbauen.
+        Selbstheilung: das Rate-Plan-Mapping wird beim Retry frisch übergeben — eine
+        Zeile, die beim Ersteinstellen noch kein Mapping hatte, wird jetzt bespielt.
+        Leere Liste, wenn nichts (mehr) zu senden ist."""
+        kind = row["kind"]
+        payload = row.get("payload") or {}
+        date_from = _as_date(row["date_from"])
+        date_to = _as_date(row["date_to"])
+        if kind == "stop_sell":
+            spans = [
+                (_as_date(a), _as_date(b)) for a, b in (payload.get("spans") or [])
+            ]
+            return self._stop_sell_values(
+                plans, spans, bool(payload.get("stop_sell")), payload.get("days")
+            )
+        if kind == "rate" and payload.get("segments") is not None:
+            # push_rates_batch-Ursprung: mehrere Segmente in EINER Zeile.
+            values: list[dict[str, Any]] = []
+            for seg in payload["segments"]:
+                fields = _rate_fields(seg.get("rate_cents"), seg.get("min_stay"))
+                if not fields:
+                    continue
+                values.extend(
+                    _restriction_values(
+                        plans, fields, _as_date(seg["date_from"]),
+                        _as_date(seg["date_to"]),
+                    )
+                )
+            return values
+        fields = _restriction_fields_from_payload(kind, payload)
+        if not fields:
+            return []
+        return _restriction_values(plans, fields, date_from, date_to)
+
+    def process_restriction_outbox(self, limit: int = 200) -> dict[str, int]:
+        """Offene ari_restriction_outbox-Zeilen erneut an Channex pushen (Cron-Retry,
+        dauerhafter Backstop für Stop-Sell/Rate/Min-Stay/Max-Stay/CTA-CTD). Baut die
+        values je Zeile aus dem persistierten kind+payload NEU auf und löst das Rate-
+        Plan-Mapping frisch auf (Selbstheilung: eine Zeile ohne Mapping beim
+        Ersteinstellen wird bespielt, sobald der Rate-Plan-Import gelaufen ist).
+        Nach 10 Versuchen ohne Mapping/mit Fehler → 'failed'."""
+        result = {"processed": 0, "done": 0, "failed": 0}
+        if not self._channex.is_configured or self._db is None:
+            return result
+        db = self._db
+        rows = (
+            db.table("ari_restriction_outbox")
+            .select("*")
+            .eq("status", "pending")
+            .order("created_at")
+            .limit(limit)
+            .execute()
+        ).data or []
+        for r in rows:
+            result["processed"] += 1
+            tenant_id, property_id = r["tenant_id"], r["property_id"]
+            if not self._is_channex_managed(db, tenant_id, property_id):
+                # Nicht (mehr) bei Channex angelegt → nichts zu pushen, abhaken
+                # (kein Endlos-Retry). Analog zu process_ari_outbox.
+                db.table("ari_restriction_outbox").update(
+                    {"status": "done",
+                     "last_error": "nicht bei Channex angelegt (übersprungen)"}
+                ).eq("id", r["id"]).eq("status", "pending").execute()
+                result["done"] += 1
+                continue
+            plans = self._resolve_channex_rate_plans(db, tenant_id, property_id)
+            attempts = (r.get("attempts") or 0) + 1
+            if not plans:
+                # BUG 9: managed, aber Rate-Plan-Mapping fehlt weiterhin → 'pending'
+                # lassen (weiter warten), bis der Import es anlegt; erst nach 10
+                # Versuchen aufgeben, damit eine dauerhaft kaputte Zeile nicht ewig
+                # retryt.
+                self._bump_restriction_attempts(
+                    r, attempts, "Rate-Plan-Mapping fehlt noch", result
+                )
+                continue
+            try:
+                values = self._restriction_values_from_row(r, plans)
+                for i in range(0, len(values), self._RESTRICTIONS_CHUNK):
+                    self._channex.update_restrictions(
+                        values[i : i + self._RESTRICTIONS_CHUNK]
+                    )
+                db.table("ari_restriction_outbox").update(
+                    {"status": "done", "attempts": attempts}
+                ).eq("id", r["id"]).eq("status", "pending").execute()
+                result["done"] += 1
+            except ChannexError as exc:
+                self._bump_restriction_attempts(r, attempts, exc.message, result)
+        if result["processed"]:
+            log.info("ari_restriction_outbox_processed", **result)
+        return result
+
+    def _bump_restriction_attempts(
+        self, row: dict[str, Any], attempts: int, error: str, result: dict[str, int]
+    ) -> None:
+        """attempts erhöhen und nach 10 Versuchen auf 'failed' schalten, sonst
+        'pending' lassen (Guard status='pending'). Zählt fehlgeschlagene Zeilen."""
+        new_status = "failed" if attempts >= 10 else "pending"
+        self._db.table("ari_restriction_outbox").update(
+            {"status": new_status, "attempts": attempts, "last_error": error}
+        ).eq("id", row["id"]).eq("status", "pending").execute()
+        if new_status == "failed":
+            result["failed"] += 1
 
     # -- DB-Mapping-Lookups ----------------------------------------------------
     def _room_type_mapping(

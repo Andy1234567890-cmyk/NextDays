@@ -60,6 +60,14 @@ function isTaxExemptRule(taxRule: string | undefined): boolean {
   if (taxRule === TaxRuleType.NON_EU_EXPORT) return true;
   if (taxRule === TaxRuleType.NON_EU_OUT_OF_SCOPE) return true;
 
+  // OSS (One-Stop-Shop): im Beleg wird KEINE deutsche USt ausgewiesen — konsistent
+  // zu TotalsDisplay (showVat=false blendet die MwSt-Zeile aus). Ohne diesen Fall
+  // versteuerte der Hook die Positionen (taxAmount>0, in total eingerechnet),
+  // während TotalsDisplay die Steuerzeile ausblendet → Zwischensumme + (keine
+  // sichtbare Steuer) ≠ Gesamtbetrag.
+  if (taxRule === TaxRuleType.EU_OSS) return true;
+  if (taxRule.includes('OSS')) return true;
+
   return false;
 }
 

@@ -11,6 +11,7 @@ from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.core.supabase import fetch_all_rows
 
 from .schemas import (
     GuestContact,
@@ -37,6 +38,11 @@ _PUBLIC_PROPERTY_COLUMNS = (
     "id, title, description, platform_description, property_type, city, country, "
     "lat, lng, max_guests, amenities, photos, type_attributes, status"
 )
+
+# Max. angezeigte Marktplatz-Treffer je Suche. Deckelt die datierte Preisauflösung
+# (je Objekt ein Resolver-Lauf) und die Antwortgröße. Über diesem Wert wird
+# getruncated + geloggt (keine stille Begrenzung).
+_MAX_LISTING_RESULTS = 200
 
 
 class BookingEngineError(Exception):
@@ -135,7 +141,12 @@ class BookingEngineService:
             query = query.in_("id", property_ids)
         if guests:
             query = query.gte("max_guests", guests)
-        rows = query.order("title").execute().data or []
+        # VOLLSTÄNDIG paginiert (fetch_all_rows) statt einer ungelimitierten Query:
+        # auf dem zentralen Marktplatz (tenant=None) greift sonst der stille
+        # PostgREST-1000-Cap und die Python-Filterung (q/Verfügbarkeit) liefe nur auf
+        # den ersten 1000 alphabetischen Objekten → aktive, verfügbare Objekte hinter
+        # Position 1000 tauchten in Suche/Grid nie auf.
+        rows = fetch_all_rows(query.order("title"))
 
         if q:
             needle = q.strip().lower()
@@ -156,7 +167,21 @@ class BookingEngineService:
         if start and end:
             blocked = self._unavailable_property_ids(property_ids, start, end)
             rows = [r for r in rows if r["id"] not in blocked]
-            property_ids = [r["id"] for r in rows]
+
+        # Ergebnis-Deckel VOR der teuren Preisauflösung: die datierte Preisauflösung
+        # (mit Zeitraum) läuft je Objekt über den Resolver (mehrere Queries) — ohne
+        # Deckel wäre das ein N+1 über hunderte Marktplatz-Objekte. Der Deckel wird
+        # bewusst geloggt, damit die Begrenzung sichtbar bleibt (keine stille
+        # Truncation). Für White-Label-Seiten (tenant gesetzt, wenige Objekte) greift
+        # er praktisch nie.
+        if len(rows) > _MAX_LISTING_RESULTS:
+            log.info(
+                "listings_truncated",
+                total_matched=len(rows), shown=_MAX_LISTING_RESULTS,
+                dated=bool(start and end),
+            )
+            rows = rows[:_MAX_LISTING_RESULTS]
+        property_ids = [r["id"] for r in rows]
 
         # „ab"-Preis für ALLE Objekte gebündelt (statt N×~6 Resolver-Queries):
         # ohne Zeitraum der Basispreis (stabil, eine rate_plans-Query); mit
@@ -272,6 +297,32 @@ class BookingEngineService:
             nights=nights,
             addons=self._public_addons(listing_id),
         )
+
+    def _bookable_addon_selections(
+        self, property_id: str, selections: list[tuple[str, int]]
+    ) -> list[tuple[str, int]]:
+        """Die vom Gast gewählten Add-ons auf die für die BUCHUNGSSTRECKE
+        freigegebenen filtern (appears_in enthält 'booking_engine' + aktiv). So
+        bepreist der Quote (total_amount/Stripe) GENAU die Add-ons, die
+        purchase_addons danach auch als reservation_addons anlegt — sonst würde ein
+        nur-guest_portal-Add-on kassiert, aber nie angelegt/erfüllt (Geldschaden)."""
+        if not selections:
+            return []
+        ids = [aid for aid, _ in selections]
+        rows = (
+            self._db()
+            .table("property_addons")
+            .select("id, appears_in")
+            .eq("property_id", property_id)
+            .eq("active", True)
+            .in_("id", ids)
+            .execute()
+        ).data or []
+        allowed = {
+            str(a["id"]) for a in rows
+            if "booking_engine" in (a.get("appears_in") or [])
+        }
+        return [(aid, qty) for aid, qty in selections if aid in allowed]
 
     def _public_addons(self, property_id: str) -> list[PublicAddon]:
         """Aktive, für die Buchungsstrecke freigegebene Zusatzleistungen."""
@@ -484,7 +535,12 @@ class BookingEngineService:
         # Die gewählten Addons MÜSSEN in den Quote — sonst enthält total_amount nur
         # die Unterkunft und der spätere Stripe-PaymentIntent (payments.service liest
         # ausschließlich reservations.total_amount) kassiert die Zusatzleistungen nie.
-        # Der Resolver bepreist sie serverseitig aus dem Katalog (nicht aus Input).
+        # Nur die für die BUCHUNGSSTRECKE freigegebenen Add-ons einpreisen (gleiche
+        # Auswahl wie purchase_addons unten) — sonst zahlt der Gast für ein Add-on,
+        # das nie als reservation_addons angelegt/erfüllt wird.
+        bookable_addons = self._bookable_addon_selections(
+            req.property_id, [(a.addon_id, a.qty) for a in (req.addons or [])]
+        )
         quote = PricingResolver(service_client=self._db()).quote(
             QuoteRequest(
                 property_id=req.property_id,
@@ -493,13 +549,30 @@ class BookingEngineService:
                 guests=max(req.guests, 1),
                 channel="direct",
                 addons=[
-                    AddonSelection(addon_id=a.addon_id, qty=a.qty)
-                    for a in (req.addons or [])
+                    AddonSelection(addon_id=aid, qty=qty)
+                    for aid, qty in bookable_addons
                 ],
             )
         )
         total_amount = quote.total
         currency = quote.currency
+        # quote_items als Snapshot für die Check-out-Rechnung persistieren — aber
+        # OHNE die Add-on-Zeilen (kind='addon'): die Add-ons werden beim Check-out
+        # separat aus reservation_addons fakturiert. Lägen sie zusätzlich in
+        # quote_items, würde build_positions sie DOPPELT fakturieren (einmal in der
+        # Aufenthalts-Aufschlüsselung, einmal als Add-on-Position). items_sum deckt
+        # dann die Unterkunft ab; die Prüfung breakdown_matches zieht die Add-on-
+        # Summe hinzu (reservation_invoice), sodass total_amount konsistent bleibt.
+        quote_items = [
+            {
+                "label": line.label,
+                "amount": line.amount,
+                "kind": line.kind,
+                "tax_rate": line.tax_rate,
+            }
+            for line in quote.lines
+            if line.kind != "addon"
+        ]
         # Reservierung + Kalender-Belegung + ari_outbox ATOMAR (RPC 0104):
         # Advisory-Lock je Objekt schließt das TOCTOU-Fenster zwischen dem Check
         # oben und dem Write — zwei gleichzeitige Gäste bekommen nie dieselbe
@@ -522,6 +595,7 @@ class BookingEngineService:
                             "check_out": req.check_out.isoformat(),
                             "status": "confirmed",
                             "total_amount": total_amount,
+                            "quote_items": quote_items,
                             "currency": currency or None,
                         },
                         "p_source": "direct",
@@ -547,17 +621,19 @@ class BookingEngineService:
         # (atomare RPC) — ein Addon-Insert-Fehler darf sie deshalb NICHT mehr mit
         # 500 kippen (sonst existiert die Buchung, der Gast sieht aber einen Fehler
         # und ein Retry läuft in einen 409 gegen die eigene Buchung). Best-effort.
-        if req.addons:
+        if bookable_addons:
             from src.features.addons.service import purchase_addons  # noqa: PLC0415
 
             try:
+                # Dieselbe gefilterte Auswahl wie im Quote → der kassierte Betrag
+                # (total_amount) und die angelegten reservation_addons stimmen überein.
                 purchase_addons(
                     self._db(),
                     tenant_id=tenant_id,
                     reservation_id=str(row["id"]),
                     property_id=req.property_id,
                     surface="booking_engine",
-                    selections=[(a.addon_id, a.qty) for a in req.addons],
+                    selections=bookable_addons,
                     nights=len(nights),
                     guests=max(req.guests, 1),
                     check_in_iso=req.check_in.isoformat(),

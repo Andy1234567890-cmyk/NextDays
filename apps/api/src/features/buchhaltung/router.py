@@ -255,17 +255,15 @@ def list_booking_accounts(
 
 
 # --- Nummernkreis / Schreib-Endpoints für den Buchhaltungs-Bestand -----------
-@router.post("/number-sequences/next")
-async def next_number(
-    request: Request, service: BuchhaltungServiceDep, ctx: _write
-) -> dict:
-    """Nächste fortlaufende Dokumentnummer ziehen (GoBD-lückenlos)."""
-    body = await request.json()
-    doc_type = body.get("type") or "Rechnung"
-    try:
-        return service.next_number(ctx, doc_type)
-    except BuchhaltungError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+# HINWEIS: Es gibt bewusst KEINEN öffentlichen POST /number-sequences/next mehr.
+# Das Ziehen einer fortlaufenden Nummer erhöht den GoBD-Zähler DAUERHAFT — würde
+# der Endpunkt zur bloßen Anzeige der „nächsten Nummer" aufgerufen (oder danach
+# abgebrochen), verbrennt jeder Aufruf eine RE-Nummer, ohne dass je ein Beleg mit
+# dieser Nummer existiert → nicht erklärbare Lücke im Nummernkreis (GoBD-Lückenlos-
+# heit verletzt). Die echte Nummer wird AUSSCHLIESSLICH serverseitig beim Speichern
+# des Belegs gezogen (create_invoice_from_bestand); für die reine Anzeige der
+# nächsten Nummer dient der nicht-inkrementierende GET /number-sequences/{company_id}
+# (next_number_preview).
 
 
 @router.patch("/companies/{company_id}")

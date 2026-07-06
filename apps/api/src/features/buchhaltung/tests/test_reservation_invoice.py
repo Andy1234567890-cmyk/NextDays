@@ -350,7 +350,9 @@ def test_preview_returns_net_items_and_customer() -> None:
     )
     assert lodging["unitPrice"] == 261.68  # 280 / 1.07
     assert lodging["taxRate"] == 7.0
-    assert lodging["total"] == 280.0
+    # total = NETTO (quantity*unitPrice), wie der PDF-Hook/ItemsTable es erwarten —
+    # NICHT der Brutto-Wert (sonst Zeilenbetrag ≠ Zwischensumme).
+    assert lodging["total"] == 261.68
 
 
 def test_preview_rejects_existing_invoice_with_409() -> None:
