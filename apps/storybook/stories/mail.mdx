@@ -81,31 +81,31 @@ instead of via a third-party provider.
 
 <De>
 <Mermaid
-  title="API → Mailcow → Empfänger (Transaktions-Mail)"
+  title="API zu Mailcow zu Empfaenger (Transaktions-Mail)"
   chart={`flowchart LR
-    API["FastAPI Backend\\ncore/mail.py (MailService)"]
-    subgraph MAILHOST["Separater Host — mail.mynextdays.dk"]
-      MC["Mailcow\\nPostfix · Dovecot · Rspamd"]
+    API["FastAPI Backend<br/>core/mail.py (MailService)"]
+    subgraph MAILHOST["Separater Host: mail.mynextdays.dk"]
+      MC["Mailcow<br/>Postfix, Dovecot, Rspamd"]
     end
-    EXT["Empfänger-Mailserver\\n(Gmail, Web.de, …)"]
-    API -->|"SMTP-Submission 587\\nSTARTTLS, Login developer@"| MC
-    MC -->|"SMTP 25 (ausgehend)\\nDKIM-signiert"| EXT
-    Note["Ohne SMTP_HOST/FROM → fail-closed 503\\n(kein stiller Erfolg, kein erfundener Absender)"]`}
+    EXT["Empfaenger-Mailserver<br/>(Gmail, Web.de)"]
+    API -->|"SMTP-Submission 587 STARTTLS<br/>Login developer@"| MC
+    MC -->|"SMTP 25 ausgehend<br/>DKIM-signiert"| EXT
+    API -.->|"Ohne SMTP_HOST/FROM:<br/>fail-closed 503"| NOTE["kein stiller Erfolg,<br/>kein erfundener Absender"]`}
 />
 </De>
 
 <En>
 <Mermaid
-  title="API → Mailcow → recipient (transactional mail)"
+  title="API to Mailcow to recipient (transactional mail)"
   chart={`flowchart LR
-    API["FastAPI backend\\ncore/mail.py (MailService)"]
-    subgraph MAILHOST["Separate host — mail.mynextdays.dk"]
-      MC["Mailcow\\nPostfix · Dovecot · Rspamd"]
+    API["FastAPI backend<br/>core/mail.py (MailService)"]
+    subgraph MAILHOST["Separate host: mail.mynextdays.dk"]
+      MC["Mailcow<br/>Postfix, Dovecot, Rspamd"]
     end
-    EXT["Recipient mail server\\n(Gmail, Web.de, …)"]
-    API -->|"SMTP submission 587\\nSTARTTLS, login developer@"| MC
-    MC -->|"SMTP 25 (outbound)\\nDKIM-signed"| EXT
-    Note["Without SMTP_HOST/FROM → fail-closed 503\\n(no silent success, no invented sender)"]`}
+    EXT["Recipient mail server<br/>(Gmail, Web.de)"]
+    API -->|"SMTP submission 587 STARTTLS<br/>login developer@"| MC
+    MC -->|"SMTP 25 outbound<br/>DKIM-signed"| EXT
+    API -.->|"Without SMTP_HOST/FROM:<br/>fail-closed 503"| NOTE["no silent success,<br/>no invented sender"]`}
 />
 </En>
 
