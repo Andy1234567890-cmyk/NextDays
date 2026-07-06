@@ -1277,9 +1277,27 @@ class BuchhaltungService:
         quote["items"] = items.data or []
         return QuoteResponse(**quote)
 
+    def _is_kleinunternehmer(self, tenant_id: str) -> bool:
+        """§19-UStG-Status autoritativ aus dem Tenant-Billing-Profil (nie aus
+        Client-Flags/Positions-Sätzen). Kleinunternehmer dürfen keine USt
+        ausweisen — auch nicht auf Angeboten."""
+        profile = (
+            self._db.table("tenant_billing_profile")
+            .select("is_kleinunternehmer")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        return bool(profile.data and profile.data[0].get("is_kleinunternehmer"))
+
     def create_quote(self, ctx: AuthContext, req: QuoteCreate) -> QuoteResponse:
         tenant_id = self._require_tenant(ctx)
-        lines = [self._compute_line(it, i + 1) for i, it in enumerate(req.items)]
+        # §19: Angebote weisen für Kleinunternehmer KEINE USt aus (wie Rechnungen).
+        is_klein = self._is_kleinunternehmer(tenant_id)
+        lines = [
+            self._compute_line(it, i + 1, is_klein=is_klein)
+            for i, it in enumerate(req.items)
+        ]
         net_total = _q(sum((Decimal(ln["net_amount"]) for ln in lines), Decimal(0)))
         tax_total = _q(sum((Decimal(ln["tax_amount"]) for ln in lines), Decimal(0)))
         gross_total = _q(net_total + tax_total)
@@ -1331,7 +1349,12 @@ class BuchhaltungService:
             self._db.table("quote_line_items").delete().eq(
                 "quote_id", quote_id
             ).execute()
-            lines = [self._compute_line(it, i + 1) for i, it in enumerate(req.items)]
+            # §19: Angebots-Positionen kleinunternehmer-bereinigt (rate=0).
+            is_klein = self._is_kleinunternehmer(tenant_id)
+            lines = [
+                self._compute_line(it, i + 1, is_klein=is_klein)
+                for i, it in enumerate(req.items)
+            ]
             net_total = _q(sum((Decimal(ln["net_amount"]) for ln in lines), Decimal(0)))
             tax_total = _q(sum((Decimal(ln["tax_amount"]) for ln in lines), Decimal(0)))
             patch["net_amount"] = str(net_total)

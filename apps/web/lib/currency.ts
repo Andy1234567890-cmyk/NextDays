@@ -31,3 +31,22 @@ export function formatCurrency(
     maximumFractionDigits: fractionDigits,
   }).format(amount);
 }
+
+// Reines Währungssymbol für Feld-Labels/Hilfetexte ('€', '$', 'CHF', …) — statt
+// eines hartkodierten €. Leitet das Symbol über Intl aus dem ISO-Code ab; bei
+// ungültigem/fehlendem Code den (getrimmten) Code selbst, sonst leer (kein
+// erfundenes €). Für Beträge weiterhin formatCurrency nutzen.
+export function currencySymbol(
+  currency: string | null | undefined,
+  locale = "de-DE",
+): string {
+  const code = typeof currency === "string" ? currency.trim().toUpperCase() : "";
+  if (!/^[A-Z]{3}$/.test(code)) return code;
+  const parts = new Intl.NumberFormat(locale, {
+    style: "currency",
+    currency: code,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).formatToParts(0);
+  return parts.find((p) => p.type === "currency")?.value ?? code;
+}

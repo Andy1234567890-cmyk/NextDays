@@ -708,6 +708,40 @@ def test_import_booking_cancel_frees_calendar() -> None:
     assert db.tables["availability"][0]["status"] == "open"
 
 
+def test_import_booking_shortened_frees_old_nights() -> None:
+    """Regression: eine OTA-Buchung wird verkürzt (10.-13. → 10.-11.). Die durch
+    die Änderung geräumten Alt-Nächte (11., 12.) müssen lokal auf 'open' und bei
+    Channex auf availability=1 zurückfallen — sonst dauerhafte Phantom-Belegung."""
+    db = _ImportDB()
+    _seed_property(db)
+    svc = _import_svc(_ImportChannex(bookings=[{"attributes": {
+        "booking_id": "BK1", "property_id": "cx-prop", "status": "new",
+        "ota_name": "Booking.com", "arrival_date": "2026-07-10",
+        "departure_date": "2026-07-13", "amount": "300", "currency": "EUR",
+        "customer": {"name": "A", "surname": "B"}}}]), db)
+    svc.import_bookings_for_property("t1", "cx-prop")
+    # Ursprünglich 3 Nächte gesperrt (10., 11., 12.).
+    booked = {a["date"] for a in db.tables["availability"] if a["status"] == "booked"}
+    assert booked == {"2026-07-10", "2026-07-11", "2026-07-12"}
+    # Verkürzung auf 10.-11. (nur noch 1 Nacht: der 10.).
+    channex2 = _ImportChannex(bookings=[{"attributes": {
+        "booking_id": "BK1", "property_id": "cx-prop", "status": "modified",
+        "ota_name": "Booking.com", "arrival_date": "2026-07-10",
+        "departure_date": "2026-07-11", "amount": "100", "currency": "EUR",
+        "customer": {"name": "A", "surname": "B"}}}])
+    _import_svc(channex2, db).import_bookings_for_property("t1", "cx-prop")
+    avail = {a["date"]: a["status"] for a in db.tables["availability"]}
+    # Die verbliebene Nacht bleibt gesperrt, die geräumten Alt-Nächte sind frei
+    # (quellengenau über _free_ota_nights, denselben Pfad wie der Voll-Storno, der
+    # die Channex-Freigabe availability=1 bereits abgedeckt hat).
+    assert avail["2026-07-10"] == "booked"
+    assert avail["2026-07-11"] == "open"
+    assert avail["2026-07-12"] == "open"
+    # Kein Duplikat — dieselbe Reservierung, neuer Zeitraum.
+    assert len(db.tables["reservations"]) == 1
+    assert db.tables["reservations"][0]["check_out"] == "2026-07-11"
+
+
 def test_import_booking_skips_without_property_mapping() -> None:
     db = _ImportDB()  # KEIN seed → kein Mapping
     channex = _ImportChannex(bookings=[{"attributes": {

@@ -257,7 +257,13 @@ class OwnerStatementsService:
             .limit(1)
             .execute()
         ).data or []
-        return (rows[0].get("currency") if rows else None) or "EUR"
+        currency = rows[0].get("currency") if rows else None
+        if not currency:
+            raise StatementError(
+                "Mandanten-Währung fehlt — bitte im Konto die Währung setzen.",
+                status_code=422,
+            )
+        return currency
 
     def _tenant_tax_profile(self, tenant_id: str) -> dict:
         """Steuerprofil des Mandanten (Aussteller). Quelle ist das vorhandene
@@ -833,7 +839,7 @@ class OwnerStatementsService:
             rental_rows,
             expenses,
             str(row["owner_id"]),
-            row.get("currency") or "EUR",
+            row.get("currency") or self._tenant_currency(tenant_id),
             owner_currency,
         )
         if row.get("status") != "finalized":
@@ -878,7 +884,7 @@ class OwnerStatementsService:
                 expenses_total=_money(_d(row.get("expenses_total"))),
                 owner_payout=_money(_d(row.get("owner_payout"))),
                 pm_payout=_money(_d(row.get("pm_payout"))),
-                currency=row.get("currency") or "EUR",
+                currency=row.get("currency") or self._tenant_currency(tenant_id),
                 booking_count=len(rental_rows),
                 owner_currency=row.get("owner_currency") or owner_currency,
             )
@@ -887,7 +893,7 @@ class OwnerStatementsService:
                 rental_rows,
                 expenses,
                 str(row["owner_id"]),
-                row.get("currency") or "EUR",
+                row.get("currency") or self._tenant_currency(tenant_id),
                 owner_currency,
             )
         return _to_response(
@@ -921,7 +927,7 @@ class OwnerStatementsService:
                 status=r.get("status") or "draft",
                 owner_payout=_money(_d(r.get("owner_payout"))),
                 pm_payout=_money(_d(r.get("pm_payout"))),
-                currency=r.get("currency") or "EUR",
+                currency=r.get("currency") or self._tenant_currency(tenant_id),
                 invoice_number=r.get("invoice_number"),
                 created_at=str(r["created_at"]) if r.get("created_at") else None,
             )
@@ -1067,7 +1073,7 @@ class OwnerStatementsService:
             "kind": "cancellation",
             "cancels_statement_id": statement_id,
             "commission_pct": row.get("commission_pct") or 0,
-            "currency": row.get("currency") or "EUR",
+            "currency": row.get("currency") or self._tenant_currency(tenant_id),
             "invoice_number": number,
             "invoice_date": today.isoformat(),
             "supply_country": row.get("supply_country"),

@@ -501,6 +501,41 @@ def test_refund_cross_tenant_is_blocked() -> None:
     assert exc.value.status_code == 404
 
 
+def test_refund_already_fully_refunded_is_rejected() -> None:
+    """Regression: eine bereits voll erstattete Zahlung darf nicht erneut erstattet
+    werden (Doppelklick/Retry). Der Guard greift VOR dem Stripe-Aufruf → 409, auch
+    ohne echten Stripe-Key testbar."""
+    db = _db_with_booking(charges_enabled=True, tenant="t1")
+    db.store["payments"] = [
+        {"id": "pay-1", "reservation_id": "res-1", "amount": 120.0,
+         "currency": "eur", "type": "full", "status": "refunded",
+         "gateway_ref": "pi_abc"},
+    ]
+    svc = PaymentsService(service_client=db, stripe=_stripe())
+    with pytest.raises(PaymentsError) as exc:
+        svc.refund_payment(_CTX, "pay-1")
+    assert exc.value.status_code == 409
+
+
+def test_refund_over_remaining_amount_is_rejected() -> None:
+    """Regression: die Summe der Teilerstattungen darf den Ursprungsbetrag nicht
+    übersteigen. Bei bereits 100 von 120 erstattet lehnt ein weiterer 50er-Refund
+    ab (Rest nur 20) → 422, vor dem Stripe-Aufruf."""
+    db = _db_with_booking(charges_enabled=True, tenant="t1")
+    db.store["payments"] = [
+        {"id": "pay-1", "reservation_id": "res-1", "amount": 120.0,
+         "currency": "eur", "type": "full", "status": "partially_refunded",
+         "gateway_ref": "pi_abc"},
+        {"id": "ref-1", "reservation_id": "res-1", "amount": 100.0,
+         "currency": "eur", "type": "refund", "status": "succeeded",
+         "gateway_ref": "re_1"},
+    ]
+    svc = PaymentsService(service_client=db, stripe=_stripe())
+    with pytest.raises(PaymentsError) as exc:
+        svc.refund_payment(_CTX, "pay-1", amount=50.0)
+    assert exc.value.status_code == 422
+
+
 def test_webhook_partial_refund_marks_partially_refunded() -> None:
     """charge.refunded mit amount_refunded < amount → partially_refunded,
     NICHT refunded (Stripe feuert charge.refunded auch bei Teilerstattung)."""

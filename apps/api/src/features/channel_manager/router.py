@@ -5,7 +5,6 @@ sind tenant-scoped (tenant_id aus dem JWT) und erfordern MANAGE_PROPERTY_SETTING
 Der Webhook-Endpoint ist bewusst ohne JWT (Channex ruft ihn auf) und wird über
 ein geteiltes Secret im Header abgesichert.
 """
-import secrets
 from typing import Annotated
 
 from fastapi import (
@@ -19,7 +18,12 @@ from fastapi import (
 )
 
 from src.core.config import get_settings
-from src.core.security import AuthContext, CurrentUser, require_internal_cron_secret
+from src.core.security import (
+    AuthContext,
+    CurrentUser,
+    require_internal_cron_secret,
+    secrets_match,
+)
 from src.features.auth.dependencies import require_lodgify_permission
 from src.features.auth.lodgify_permissions import Permission
 
@@ -117,8 +121,11 @@ def push_ari(
 # --- Bookings ----------------------------------------------------------------
 @router.get("/bookings", response_model=BookingListResponse)
 def list_bookings(
-    ctx: CurrentUser, service: ChannelManagerServiceDep
+    ctx: _read, service: ChannelManagerServiceDep
 ) -> BookingListResponse:
+    # _read (MANAGE_PROPERTY_SETTINGS) wie list_channels — sonst liest jeder
+    # staff/cleaner/owner tenant-weite OTA-Buchungen (Zeiträume, Status, Buchungs-
+    # IDs), auch für nicht zugeordnete Objekte (§4.3, Vertriebs-/Belegungsschutz).
     try:
         return service.list_bookings(ctx)
     except ChannelManagerError as exc:
@@ -385,16 +392,12 @@ async def channex_webhook(
     if not isinstance(payload, dict) or not payload.get("event"):
         return {"status": "ok"}
 
-    # Echtes Event → Secret zwingend. Vergleich konstant-zeitig
-    # (secrets.compare_digest) wie beim WhatsApp-verify_token — ein byteweiser
-    # !=-Vergleich wäre ein Timing-Seitenkanal auf das Secret, über das gefälschte
-    # Channex-Events (Buchungen/ARI) in fremde Tenants eingespeist werden könnten.
+    # Echtes Event → Secret zwingend. Vergleich konstant-zeitig via secrets_match
+    # (byteweise, robust gegen nicht-ASCII-Header) — ein einfacher !=-Vergleich
+    # wäre ein Timing-Seitenkanal auf das Secret, über das gefälschte Channex-
+    # Events (Buchungen/ARI) in fremde Tenants eingespeist werden könnten.
     expected = get_settings().channex_webhook_secret.get_secret_value()
-    if (
-        not expected
-        or not x_channex_webhook_secret
-        or not secrets.compare_digest(x_channex_webhook_secret, expected)
-    ):
+    if not secrets_match(x_channex_webhook_secret, expected):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiges Webhook-Secret."
         )

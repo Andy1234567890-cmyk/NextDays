@@ -40,6 +40,25 @@ def test_correct_secret_passes(monkeypatch) -> None:  # noqa: ANN001
     security.require_internal_cron_secret("richtig")  # kein Raise
 
 
+def test_non_ascii_secret_is_rejected_not_500(monkeypatch) -> None:  # noqa: ANN001
+    """Regression: ein nicht-ASCII-Header (angreiferkontrolliert) darf keinen
+    TypeError→500 auslösen (secrets.compare_digest verträgt kein Zeichen > 127),
+    sondern muss als sauberes 401 abgelehnt werden."""
+    monkeypatch.setattr(security, "get_settings", lambda: _settings("richtig"))
+    with pytest.raises(HTTPException) as exc:
+        security.require_internal_cron_secret("fooé")  # nicht-ASCII
+    assert exc.value.status_code == 401
+
+
+def test_secrets_match_handles_non_ascii() -> None:
+    """secrets_match vergleicht byteweise und ist robust gegen nicht-ASCII —
+    ergibt False statt zu werfen; identische Werte (auch mit Nicht-ASCII) True."""
+    assert security.secrets_match("fooé", "richtig") is False
+    assert security.secrets_match("gleiché", "gleiché") is True
+    assert security.secrets_match(None, "x") is False
+    assert security.secrets_match("x", "") is False
+
+
 def test_channex_webhook_secret_no_longer_authorizes_cron(monkeypatch) -> None:  # noqa: ANN001
     """Das an Channex ausgeleakte Webhook-Secret darf interne Cron-Endpunkte
     NICHT mehr öffnen — nur das eigene INTERNAL_CRON_SECRET zählt."""

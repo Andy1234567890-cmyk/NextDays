@@ -101,6 +101,20 @@ def get_current_user(
 CurrentUser = Annotated[AuthContext, Depends(get_current_user)]
 
 
+def secrets_match(provided: str | None, expected: str | None) -> bool:
+    """Zeitkonstanter Vergleich zweier Secret-Strings, robust gegen nicht-ASCII.
+
+    secrets.compare_digest wirft bei einem str mit Zeichen > 127 einen TypeError
+    ('comparing strings with non-ASCII characters is not supported'). Der Wert
+    kommt bei Webhook-/Cron-Guards aus einem angreiferkontrollierten Header —
+    ein nicht-ASCII-Zeichen darf keinen 500 (unbehandelte Exception, Log-Flooding)
+    auslösen, sondern muss schlicht als 'passt nicht' gelten. Byteweiser Vergleich
+    (.encode()) umgeht das und bleibt zeitkonstant."""
+    if not provided or not expected:
+        return False
+    return secrets.compare_digest(provided.encode("utf-8"), expected.encode("utf-8"))
+
+
 def require_internal_cron_secret(provided: str | None) -> None:
     """Guard für interne Cron-Endpunkte (tenant-übergreifend, service_role).
 
@@ -119,7 +133,7 @@ def require_internal_cron_secret(provided: str | None) -> None:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="INTERNAL_CRON_SECRET ist nicht konfiguriert.",
         )
-    if not provided or not secrets.compare_digest(provided, expected):
+    if not secrets_match(provided, expected):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiges Secret."
         )

@@ -70,9 +70,14 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
             <tbody>
               {data.realItems.map((item, index) => {
                 const discountPercent = (item as any).discountPercent || 0;
-                const originalTotal = item.total || item.unitPrice * item.quantity;
+                // item.total ist bereits der RABATTIERTE Netto-Zeilenbetrag (Hook).
+                // Rabatt daher NUR aus unitPrice*quantity ableiten (wie die Standard-
+                // Variante) — sonst würde er ein zweites Mal auf item.total angewandt
+                // und der Zeilenbetrag wiche von Zwischensumme/Totals ab.
                 const discountedTotal =
-                  discountPercent > 0 ? originalTotal * (1 - discountPercent / 100) : originalTotal;
+                  discountPercent > 0
+                    ? item.unitPrice * item.quantity * (1 - discountPercent / 100)
+                    : item.total || item.unitPrice * item.quantity;
                 const isEven = index % 2 === 0;
 
                 return (
@@ -161,9 +166,12 @@ export const ItemsTable: React.FC<ItemsTableProps> = ({
           <tbody>
             {data.realItems.map((item, index) => {
               const discountPercent = (item as any).discountPercent || 0;
-              const originalTotal = item.total || item.unitPrice * item.quantity;
+              // item.total ist bereits rabattiert — Rabatt nur aus unitPrice*quantity
+              // ableiten (wie Standard-Variante), sonst doppelte Rabattierung.
               const discountedTotal =
-                discountPercent > 0 ? originalTotal * (1 - discountPercent / 100) : originalTotal;
+                discountPercent > 0
+                  ? item.unitPrice * item.quantity * (1 - discountPercent / 100)
+                  : item.total || item.unitPrice * item.quantity;
 
               return (
                 <tr

@@ -326,24 +326,11 @@ class PaymentsService:
         # anzulegen (der öffentliche Endpoint ist unauthentifiziert und wird bei
         # Doppelklick/Reload/Retry mehrfach getroffen → sonst mehrere Intents +
         # payments-Rows für dieselbe Buchung).
-        existing = (
-            db.table("payments")
-            .select("id, gateway_ref")
-            .eq("reservation_id", reservation_id)
-            .eq("type", "full")
-            .eq("status", "pending")
-            .order("created_at", desc=True)
-            .limit(1)
-            .execute()
-        ).data
-        if existing and existing[0].get("gateway_ref"):
-            with _stripe_errors():
-                intent = sc.retrieve_payment_intent(
-                    existing[0]["gateway_ref"], client=self._stripe
-                )
+        reuse = self._reuse_pending_intent(db, reservation_id, "full")
+        if reuse:
             return BookingPaymentResult(
-                client_secret=intent["client_secret"],
-                payment_id=existing[0]["id"],
+                client_secret=reuse["client_secret"],
+                payment_id=reuse["payment_id"],
                 publishable_key=get_settings().stripe_publishable_key,
             )
 
@@ -389,6 +376,16 @@ class PaymentsService:
         currency = res["currency"]
         if not currency:
             raise PaymentsError("Währung der Buchung fehlt.", status_code=422)
+        # Idempotenz: offenen Kautions-Hold wiederverwenden statt eines zweiten
+        # manual-capture-Intents (sonst blockiert ein Doppelklick/Retry zwei
+        # Beträge auf der Gastkarte). Zentrale Prüfung (wie create_booking_payment).
+        reuse = self._reuse_pending_intent(db, reservation_id, "deposit")
+        if reuse:
+            return {
+                "client_secret": reuse["client_secret"],
+                "payment_id": reuse["payment_id"],
+                "publishable_key": get_settings().stripe_publishable_key,
+            }
         acct = self._connected_account(db, tenant_id)
         amount_cents = _to_cents(amount)
         with _stripe_errors():
@@ -450,7 +447,29 @@ class PaymentsService:
         markiert die Ursprungszahlung als (teil-)erstattet."""
         db, tenant_id = self._require(ctx)
         payment = self._load_payment(db, payment_id, tenant_id)
-        amount_cents = _to_cents(amount) if amount is not None else None
+        full_amount = float(payment["amount"])
+        # Idempotenz-/Doppelerstattungs-Guard: eine bereits voll erstattete Zahlung
+        # darf nicht erneut erstattet werden. Bei Teilerstattungen gegen den REST-
+        # betrag prüfen (Summe bereits erstatteter refund-Rows), nicht gegen den
+        # vollen Betrag — sonst ließen sich per Doppelklick/Retry mehrere Teil-
+        # erstattungen bis über den Ursprungsbetrag hinaus auslösen.
+        if payment["status"] == "refunded":
+            raise PaymentsError(
+                "Zahlung ist bereits vollständig erstattet.", status_code=409
+            )
+        already_refunded = self._refunded_sum(db, payment["reservation_id"])
+        remaining = full_amount - already_refunded
+        if remaining <= 0:
+            raise PaymentsError(
+                "Zahlung ist bereits vollständig erstattet.", status_code=409
+            )
+        refund_amount = float(amount) if amount is not None else remaining
+        if refund_amount > remaining + 1e-9:
+            raise PaymentsError(
+                "Erstattungsbetrag übersteigt den noch nicht erstatteten Betrag.",
+                status_code=422,
+            )
+        amount_cents = _to_cents(refund_amount) if amount is not None else None
         with _stripe_errors():
             result = sc.refund(
                 payment["gateway_ref"], amount_cents, client=self._stripe
@@ -458,17 +477,15 @@ class PaymentsService:
         self._insert_payment(
             db,
             reservation_id=payment["reservation_id"],
-            amount=amount if amount is not None else float(payment["amount"]),
+            amount=refund_amount,
             currency=payment.get("currency"),
             ptype="refund",
             gateway_ref=result["id"],
             status="succeeded",
         )
-        # Teil- vs. Vollerstattung: amount=None ODER amount >= voller Betrag →
-        # 'refunded'; ein kleinerer Betrag → 'partially_refunded'. Sonst gälte
-        # eine Teilerstattung als komplette Rückabwicklung der Buchung.
-        full_amount = float(payment["amount"])
-        is_full = amount is None or float(amount) >= full_amount
+        # Voll erstattet, sobald die Summe aller Erstattungen den Ursprungsbetrag
+        # erreicht (nicht nur wenn EINE Erstattung >= voller Betrag ist).
+        is_full = (already_refunded + refund_amount) >= full_amount - 1e-9
         status_val = "refunded" if is_full else "partially_refunded"
         self._update_payment(db, payment_id, {"status": status_val})
         self._set_reservation_payment_status(
@@ -504,6 +521,52 @@ class PaymentsService:
 
     def _update_payment(self, db: Client, payment_id: str, patch: dict) -> None:
         db.table("payments").update(patch).eq("id", payment_id).execute()
+
+    def _reuse_pending_intent(
+        self, db: Client, reservation_id: str, ptype: str
+    ) -> dict | None:
+        """Idempotenz-Kern: existiert für (reservation, ptype) bereits ein offener
+        (pending) Stripe-PaymentIntent, gib {payment_id, client_secret} zurück, um
+        ihn wiederzuverwenden — sonst None. Die EINE Stelle, die Doppel-Intents bei
+        Doppelklick/Reload/Retry/Webhook-Redelivery verhindert (Wurzel: „einmal
+        aufgerufen" als Annahme). Jeder neue Intent-erzeugende Pfad ruft das ZUERST.
+        """
+        existing = (
+            db.table("payments")
+            .select("id, gateway_ref")
+            .eq("reservation_id", reservation_id)
+            .eq("type", ptype)
+            .eq("status", "pending")
+            .order("created_at", desc=True)
+            .limit(1)
+            .execute()
+        ).data
+        if not (existing and existing[0].get("gateway_ref")):
+            return None
+        with _stripe_errors():
+            intent = sc.retrieve_payment_intent(
+                existing[0]["gateway_ref"], client=self._stripe
+            )
+        return {
+            "payment_id": existing[0]["id"],
+            "client_secret": intent["client_secret"],
+        }
+
+    def _refunded_sum(self, db: Client, reservation_id: str) -> float:
+        """Summe der bereits erfolgten Erstattungen dieser Buchung. payments hat
+        keine Parent-Verknüpfung (refund-Rows tragen nur reservation_id) — für den
+        Doppelklick-/Retry-Fall auf DERSELBEN Zahlung ist die Summe über
+        (reservation_id, type='refund', succeeded) die konservative, korrekte
+        Bemessungsgrundlage für den noch erstattbaren Restbetrag."""
+        rows = (
+            db.table("payments")
+            .select("amount")
+            .eq("reservation_id", reservation_id)
+            .eq("type", "refund")
+            .eq("status", "succeeded")
+            .execute()
+        ).data or []
+        return float(sum(float(r.get("amount") or 0) for r in rows))
 
     def _load_payment(
         self,

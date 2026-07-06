@@ -129,3 +129,34 @@ def fetch_all_rows(query: object, *, page_size: int = _PAGE_SIZE) -> list[dict]:
         if len(page) < page_size:
             return rows
         offset += page_size
+
+
+def load_scoped(
+    db: Client,
+    table: str,
+    row_id: str,
+    tenant_id: str,
+    *,
+    columns: str = "*",
+    not_found: Exception,
+) -> dict:
+    """Lädt EINE Zeile per ID UND erzwingt tenant-Scope in EINEM Schritt.
+
+    Service-Role umgeht RLS, daher MUSS jeder per-ID-Zugriff explizit auf den
+    Tenant scopen (Wurzel: „der Anfrage vertrauen"). Getrennt in Load-dann-Check
+    lässt sich der Check vergessen — hier ist beides untrennbar: filtert direkt
+    per (id, tenant_id) und wirft `not_found`, wenn die Zeile nicht existiert ODER
+    einem fremden Tenant gehört (bewusst dieselbe Meldung — kein Existenz-Leak an
+    einen fremden Tenant). Jeder Slice übergibt seine eigene Fehlerklasse.
+    """
+    rows = (
+        db.table(table)
+        .select(columns)
+        .eq("id", row_id)
+        .eq("tenant_id", tenant_id)
+        .limit(1)
+        .execute()
+    ).data
+    if not rows:
+        raise not_found
+    return rows[0]

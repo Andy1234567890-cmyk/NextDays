@@ -1,8 +1,8 @@
 {
   "_comment": "Stop-Rule-State der Bug-Jagd-Schleife (Loop Engineering 101, Baustein 4: Cap). Der Loop stoppt bei ZWEI Bedingungen (ODER): (1) eine Runde liefert 0 bestätigte Bugs [success], (2) round >= maxRounds [failure/cap]. Beides wird vor jedem Relaunch geprüft.",
   "maxRounds": 15,
-  "round": 9,
-  "totalConfirmedFixed": 146,
+  "round": 11,
+  "totalConfirmedFixed": 156,
   "history": [
     { "round": 1, "confirmed": 23 },
     { "round": 2, "confirmed": 31 },

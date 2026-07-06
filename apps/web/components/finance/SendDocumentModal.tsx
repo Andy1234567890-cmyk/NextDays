@@ -700,7 +700,8 @@ export function SendDocumentModal({
         issueDate: invoiceData.date || invoiceData.issueDate,
         dueDate: invoiceData.dueDate || docWithExtras.validUntil,
         totalAmount: invoiceData.total,
-        currency: invoiceData.currency || 'EUR',
+        // Belegwährung ohne EUR-Erfindung — leer → formatCurrency rendert symbollos.
+        currency: invoiceData.currency || '',
         seller: {
           name: invoiceData.companyName,
           vatId: invoiceData.companyVatId,

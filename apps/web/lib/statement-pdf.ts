@@ -7,9 +7,14 @@
 import type { Statement } from "@/lib/owner-statements";
 
 function fmt(amount: number, currency: string): string {
+  // Ungültige/leere Währung: reine Zahl OHNE Symbol (kein erfundenes EUR, kein
+  // Intl-Crash) — konsistent zu lib/currency.formatCurrency, keine EUR-Erfindung.
+  const code = typeof currency === "string" ? currency.trim().toUpperCase() : "";
+  const valid = /^[A-Z]{3}$/.test(code);
   return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: currency || "EUR",
+    ...(valid ? { style: "currency" as const, currency: code } : {}),
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount);
 }
 

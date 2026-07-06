@@ -20,7 +20,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-import { formatCurrency } from '@/lib/currency';
+import { currencySymbol, formatCurrency } from '@/lib/currency';
 import { type NumberSequence, NumberSequenceService } from '@/services/numberSequenceService';
 import { validateVATNumber } from '@/utils/vatValidation';
 import NewCategoryModal from './NewCategoryModal';
@@ -964,7 +964,7 @@ export default function NewCustomerModal({
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Kreditlimit (€)</Label>
+                        <Label>Kreditlimit ({currencySymbol(formData.currency)})</Label>
                         <Input
                           type="number"
                           value={formData.creditLimit}
@@ -1613,7 +1613,7 @@ export default function NewCustomerModal({
                 <h4 className="font-medium text-gray-800 text-md">Mahnwesen</h4>
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>Mahngebühr (€)</Label>
+                    <Label>Mahngebühr ({currencySymbol(formData.currency)})</Label>
                     <Input
                       type="number"
                       value={formData.reminderFee}
@@ -1684,7 +1684,10 @@ export default function NewCustomerModal({
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Label>Skonto (%)</Label>
-                      <TooltipIcon text="Preisnachlass in Prozent bei Zahlung innerhalb der Skontofrist. Üblich sind 2-3%. Beispiel: 2% Skonto bedeutet bei 1000€ Rechnung nur 980€ bei frühzeitiger Zahlung." />
+                      <TooltipIcon
+                        text={`Preisnachlass in Prozent bei Zahlung innerhalb der Skontofrist. Üblich sind 2-3%. Beispiel: 2% Skonto bedeutet bei ${formatCurrency(1000, formData.currency)} Rechnung nur ${formatCurrency(980, formData.currency)} bei frühzeitiger Zahlung.`}
+                      />
+
                     </div>
                     <Input
                       type="number"
@@ -1737,7 +1740,7 @@ export default function NewCustomerModal({
 
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label>Kreditlimit (€)</Label>
+                      <Label>Kreditlimit ({currencySymbol(formData.currency)})</Label>
                       <TooltipIcon text="Maximaler Kreditbetrag für diesen Kunden. Bei Überschreitung werden keine weiteren Lieferungen ohne Vorauszahlung getätigt." />
                     </div>
                     <Input

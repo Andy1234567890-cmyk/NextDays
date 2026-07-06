@@ -547,7 +547,7 @@ export default function SelectBankingTransactionModal({
             </div>
             <Badge variant="outline">
               {documentType === 'INVOICE' ? 'Rechnungsbetrag' : 'Belegbetrag'}:{' '}
-              {formatCurrency(invoiceAmount)}
+              {formatCurrency(invoiceAmount, invoiceCurrency)}
             </Badge>
             <Badge variant="default" className="bg-blue-100 text-blue-800">
               {availableTransactions.length} verfügbare{' '}
@@ -670,6 +670,7 @@ export default function SelectBankingTransactionModal({
                                 ⚠️ Große Differenz:{' '}
                                 {formatCurrency(
                                   Math.abs(Math.abs(transaction.betrag) - invoiceAmount),
+                                  invoiceCurrency,
                                 )}
                               </span>
                             </div>
@@ -750,7 +751,10 @@ export default function SelectBankingTransactionModal({
                     <span className="text-gray-600">Transaktionsbetrag:</span>
                     <span className="font-medium">
                       {warningModal.transaction
-                        ? formatCurrency(warningModal.transaction.betrag)
+                        ? formatCurrency(
+                            warningModal.transaction.betrag,
+                            warningModal.transaction.currency,
+                          )
                         : ''}
                     </span>
                   </div>
@@ -768,13 +772,18 @@ export default function SelectBankingTransactionModal({
                     <span className="text-gray-600">
                       {documentType === 'INVOICE' ? 'Rechnungsbetrag' : 'Belegbetrag'}:
                     </span>
-                    <span className="font-medium">{formatCurrency(invoiceAmount)}</span>
+                    <span className="font-medium">
+                      {formatCurrency(invoiceAmount, invoiceCurrency)}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-600">Transaktionsbetrag:</span>
                     <span className="font-medium">
                       {warningModal.transaction
-                        ? formatCurrency(warningModal.transaction.betrag)
+                        ? formatCurrency(
+                            warningModal.transaction.betrag,
+                            warningModal.transaction.currency,
+                          )
                         : ''}
                     </span>
                   </div>
@@ -782,13 +791,13 @@ export default function SelectBankingTransactionModal({
                     <div className="flex justify-between">
                       <span className="text-gray-600">Differenz:</span>
                       <span className="font-medium text-red-600">
-                        {formatCurrency(warningModal.difference)}
+                        {formatCurrency(warningModal.difference, invoiceCurrency)}
                       </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Maximal erlaubt:</span>
                       <span className="font-medium text-gray-500">
-                        {formatCurrency(warningModal.tolerance)}
+                        {formatCurrency(warningModal.tolerance, invoiceCurrency)}
                       </span>
                     </div>
                   </div>

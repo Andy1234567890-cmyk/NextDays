@@ -232,6 +232,38 @@ class BookingsSyncMixin:
                 on_conflict="property_id,date",
             ).execute()
 
+    def _free_ota_nights(
+        self,
+        db: Client,
+        tenant_id: str,
+        property_id: str,
+        channel: str,
+        nights: list[str],
+    ) -> None:
+        """Gibt die genannten Nächte quellengenau frei — lokal (availability
+        'open') NUR wo sie WIRKLICH von DIESER OTA-Quelle belegt waren, und an
+        Channex (availability=1) NUR für die tatsächlich frei gewordenen Tage.
+        Gemeinsame Logik von Voll-Storno und Buchungs-Verkürzung/-Verschiebung:
+        ein Tag, der lokal noch belegt ist (überlappende Direkt-/Fremdbelegung,
+        manueller Block), darf NICHT als buchbar an Channex gemeldet werden
+        (Überbuchung)."""
+        freed: list[str] = []
+        for d in nights:
+            upd = (
+                db.table("availability")
+                .update({"status": "open", "source": "manual"})
+                .eq("property_id", property_id)
+                .eq("date", d)
+                .eq("status", "booked")
+                .eq("source", channel)
+                .execute()
+            ).data or []
+            if upd:
+                freed.append(d)
+        for d in freed:
+            day = date.fromisoformat(d)
+            self.push_availability_for_property(tenant_id, property_id, day, day, 1)
+
     def _property_currency(self, db: Client, property_id: str) -> str | None:
         """Objekt-Währung aus dem (ältesten) Rate-Plan — die lokale Wahrheit für
         die Währung dieses Objekts. Dient als Rückfall, wenn die OTA-Payload
@@ -285,7 +317,7 @@ class BookingsSyncMixin:
         status_in = (attrs.get("status") or "new").lower()
         existing = (
             db.table("reservations")
-            .select("id, checked_out_at")
+            .select("id, checked_out_at, check_in, check_out")
             .eq("tenant_id", tenant_id)
             .eq("source_channex_booking_id", booking_id)
             .limit(1)
@@ -295,6 +327,12 @@ class BookingsSyncMixin:
         # OTA-Resync darf status='completed' nicht mehr überschreiben (weder
         # auf confirmed zurückdrehen noch nachträglich stornieren + freigeben).
         already_checked_out = bool(existing and existing[0].get("checked_out_at"))
+        # Alten Zeitraum JETZT sichern (vor dem update(row) unten) — für den Alt-/
+        # Neu-Diff bei einer Buchungsverkürzung/-verschiebung. Nach dem Update ist
+        # existing[0] überschrieben, dann wäre der Diff leer und Alt-Nächte blieben
+        # als Phantom-Belegung gesperrt.
+        old_check_in = existing[0].get("check_in") if existing else None
+        old_check_out = existing[0].get("check_out") if existing else None
 
         # Storno: reservation stornieren + Nächte dieser OTA-Quelle wieder frei.
         if status_in == "cancelled":
@@ -309,31 +347,14 @@ class BookingsSyncMixin:
                 db.table("reservations").update({"status": "cancelled"}).eq(
                     "id", existing[0]["id"]
                 ).execute()
-            freed: list[str] = []
-            for d in self._date_range_nights(arrival, departure):
-                # nur freigeben, wenn der Tag von DIESER OTA-Quelle belegt war
-                upd = (
-                    db.table("availability")
-                    .update({"status": "open", "source": "manual"})
-                    .eq("property_id", property_id)
-                    .eq("date", d)
-                    .eq("status", "booked")
-                    .eq("source", channel)
-                    .execute()
-                ).data or []
-                if upd:
-                    freed.append(d)
-            # Freigabe an Channex NUR für die Tage, die lokal WIRKLICH frei wurden
-            # (availability=1). Der gesamte Zeitraum arrival..departure darf NICHT
-            # pauschal auf 1 gesetzt werden: bleibt eine Nacht lokal belegt (z. B.
-            # manueller Block oder eine überlappende Direkt-/Fremdkanal-Belegung,
-            # die der quellengefilterte Update nicht freigab), würde Channex sie
-            # sonst als wieder buchbar melden → Überbuchung.
-            for d in freed:
-                day = date.fromisoformat(d)
-                self.push_availability_for_property(
-                    tenant_id, property_id, day, day, 1
-                )
+            # Alle Nächte dieser Buchung quellengenau freigeben (lokal + Channex).
+            self._free_ota_nights(
+                db,
+                tenant_id,
+                property_id,
+                channel,
+                self._date_range_nights(arrival, departure),
+            )
             return True
 
         if guest_id is None:
@@ -410,11 +431,12 @@ class BookingsSyncMixin:
             # ihre Nächte zu sperren erzeugte verwaiste Blockierungen.
             return True
 
+        new_nights = self._date_range_nights(arrival, departure)
         # Kalender: belegte Nächte sperren (Buchung ist autoritativ für 'booked').
         self._set_availability(
             db,
             property_id,
-            self._date_range_nights(arrival, departure),
+            new_nights,
             status="booked",
             source=channel,
         )
@@ -426,6 +448,22 @@ class BookingsSyncMixin:
             date.fromisoformat(departure) - timedelta(days=1),
             0,
         )
+        # Buchungs-MODIFIKATION (Verkürzung/Verschiebung einer bestehenden OTA-
+        # Buchung): die neuen Nächte sind jetzt gesperrt, aber die durch die
+        # Änderung GERÄUMTEN Alt-Nächte (im alten, nicht mehr im neuen Zeitraum)
+        # bleiben sonst dauerhaft 'booked'/avail=0 → Phantom-Belegung, auf allen
+        # Kanälen unverkäuflich. Alt-/Neu-Diff bilden und die frei gewordenen Tage
+        # quellengenau freigeben (wie beim Voll-Storno, nur auf die Differenz).
+        if existing and old_check_in and old_check_out:
+            freed_nights = [
+                d
+                for d in self._date_range_nights(str(old_check_in), str(old_check_out))
+                if d not in set(new_nights)
+            ]
+            if freed_nights:
+                self._free_ota_nights(
+                    db, tenant_id, property_id, channel, freed_nights
+                )
         return True
 
     def _booking_occupancy(self, attrs: dict[str, Any]) -> tuple[int, int, int]:

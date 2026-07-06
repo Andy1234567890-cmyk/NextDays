@@ -740,22 +740,13 @@ class ReservationsService:
             )
 
         # Alte Belegung freigeben: nur Tage, die NICHT erneut belegt werden
-        # (beim Resize am Platz bleiben überlappende Tage booked).
+        # (beim Resize am Platz bleiben überlappende Tage booked). Zentrale
+        # Freigabe (gefiltert gegen Fremdbelegung, lokal + Channex); der Recompute
+        # läuft weiter unten gebündelt für BEIDE betroffenen Objekte.
         release = sorted(old_nights - new_keys) if same_property else sorted(old_nights)
-        # Tage, die noch von einer anderen aktiven Buchung (z. B. OTA) belegt
-        # sind, nicht freigeben (kein availability=1-Push für real belegte Tage).
-        still = self._days_still_booked_by_others(old_property, release, reservation_id)
-        release = [d for d in release if d not in still]
-        if release:
-            self._db().table("availability").upsert(
-                [
-                    {"property_id": old_property, "date": d,
-                     "status": "open", "source": "manual"}
-                    for d in release
-                ],
-                on_conflict="property_id,date",
-            ).execute()
-            self._release_channex(tenant_id, old_property, release)
+        self._release_nights(
+            tenant_id, old_property, release, reservation_id, recompute=False
+        )
 
         # Neue Nächte belegen — aber NICHT eine parallel importierte OTA-Belegung
         # überschreiben. Der EXCLUDE-Constraint befreit OTA-Buchungen
@@ -907,27 +898,13 @@ class ReservationsService:
                 "Reservierung konnte nicht storniert werden.", status_code=500
             )
 
-        # Belegte Nächte freigeben (nur die dieser Reservierung) + Channex zurück.
+        # Belegte Nächte freigeben (nur die dieser Reservierung) — zentrale
+        # Freigabe: gefiltert gegen Fremdbelegung, lokal + Channex + Recompute.
         property_id = current["property_id"]
         nights = _nights(_as_date(current["check_in"]), _as_date(current["check_out"]))
-        release = [d.isoformat() for d in nights]
-        # Tage, die noch von einer ANDEREN aktiven Buchung (z. B. OTA) belegt
-        # sind, NICHT freigeben — sonst würde ein real belegter Tag an Channex
-        # als verkaufbar zurückgemeldet (Doppelbuchung).
-        still = self._days_still_booked_by_others(property_id, release, reservation_id)
-        release = [d for d in release if d not in still]
-        if release:
-            self._db().table("availability").upsert(
-                [
-                    {"property_id": property_id, "date": d,
-                     "status": "open", "source": "manual"}
-                    for d in release
-                ],
-                on_conflict="property_id,date",
-            ).execute()
-            self._release_channex(tenant_id, property_id, release)
-            # Freigewordene Tage neu bepreisen (Auslastung/Orphan ändern sich).
-            self._recompute_dynamic_pricing(tenant_id, property_id)
+        self._release_nights(
+            tenant_id, property_id, [d.isoformat() for d in nights], reservation_id
+        )
 
         # Audit: append-only Storno-Historie (Best-Effort — Log-Fehler darf die
         # Stornierung nicht kippen).
@@ -1250,6 +1227,45 @@ class ReservationsService:
             guest_country=r.get("guest_country"),
             created_at=r.get("created_at"),
         )
+
+    def _release_nights(
+        self,
+        tenant_id: str,
+        property_id: str,
+        nights: list[str],
+        reservation_id: str,
+        *,
+        recompute: bool = True,
+    ) -> None:
+        """Gibt geräumte Nächte einer Reservierung frei — die EINE Stelle, an der
+        eine Reservierung Kalendertage zurückgibt (move-Resize, cancel, künftig
+        jeder weitere Pfad). Zusammengeführt aus den zuvor kopierten Blöcken in
+        move()/cancel(), damit der Alt-/Neu-Diff nie an einer neuen Stelle
+        vergessen werden kann (Wurzel: „Vorwärts-Schritt ohne Gegenzustand").
+
+        Gibt lokal (availability='open') UND an Channex (availability=1) NUR die
+        Tage frei, die NICHT noch von einer anderen aktiven Buchung (z. B. OTA)
+        belegt sind — sonst würde ein real belegter Tag als verkaufbar gemeldet
+        (Überbuchung). Rechnet danach Dynamic Pricing neu (Auslastung/Orphan
+        ändern sich), sofern gewünscht.
+        """
+        if not nights:
+            return
+        still = self._days_still_booked_by_others(property_id, nights, reservation_id)
+        release = [d for d in nights if d not in still]
+        if not release:
+            return
+        self._db().table("availability").upsert(
+            [
+                {"property_id": property_id, "date": d,
+                 "status": "open", "source": "manual"}
+                for d in release
+            ],
+            on_conflict="property_id,date",
+        ).execute()
+        self._release_channex(tenant_id, property_id, release)
+        if recompute:
+            self._recompute_dynamic_pricing(tenant_id, property_id)
 
     def _release_channex(
         self, tenant_id: str, property_id: str, days: list[str]
