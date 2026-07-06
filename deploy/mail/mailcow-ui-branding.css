@@ -1,0 +1,126 @@
+/*
+ * myNextDays — Branding für die Mailcow-UI-Login-Seite (mail.mynextdays.dk)
+ * ---------------------------------------------------------------------------
+ * Wird auf dem Mailserver nach data/web/css/build/0081-custom-mailcow.css
+ * kopiert (offizieller, upgrade-fester Custom-CSS-Override von Mailcow).
+ * Das Logo selbst (Kuh -> myNextDays) liegt als MAIN_LOGO / MAIN_LOGO_DARK
+ * im Redis des Mailservers, NICHT hier.
+ *
+ * Farben = offizielle NextDays-Markenfarben (identisch apps/web/app/globals.css):
+ *   Schwarz  #0a0a0a  (Primär / Login-Button)
+ *   Rot      #b82028  (Akzent / Fokus / Links)
+ * Keine erfundenen Werte (Wurzel 4). Quelle: globals.css Zeile 98/104.
+ */
+
+:root {
+  --mnd-black: #0a0a0a;
+  --mnd-black-hover: #262626;
+  --mnd-red: #b82028;
+  --mnd-red-hover: #9a1a21;
+  --mnd-bg: #f4f4f5;      /* --secondary aus globals.css */
+  --mnd-border: #e4e4e7;
+}
+
+/* --- Seitenhintergrund: ruhiges Marken-Grau statt Bootstrap-Weiß --- */
+body {
+  background-color: var(--mnd-bg);
+}
+
+/* --- Login-Card: klare Kante, weiche Erhöhung, Marken-Rahmen --- */
+.card {
+  border: 1px solid var(--mnd-border);
+  border-radius: 1rem;
+  box-shadow: 0 0.25rem 1.5rem rgba(10, 10, 10, 0.08);
+}
+
+.card-header {
+  border-top-left-radius: 1rem !important;
+  border-top-right-radius: 1rem !important;
+  background-color: #ffffff;
+  border-bottom: 1px solid var(--mnd-border);
+  font-weight: 600;
+}
+
+/* --- Logo-Größe zähmen (unser Logo ist ein breites Wortmarken-PNG) --- */
+.mailcow-logo .main-logo,
+.mailcow-logo .main-logo-dark {
+  max-height: 3.5rem;
+  width: auto;
+  max-width: 15rem;
+}
+
+/* --- Login-Button: Bootstrap-Grün -> Marken-Schwarz --- */
+.btn-success {
+  background-color: var(--mnd-black);
+  border-color: var(--mnd-black);
+  border-radius: 999px;   /* pill, wie die App-Buttons (button.tsx) */
+  font-weight: 600;
+}
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active {
+  background-color: var(--mnd-black-hover) !important;
+  border-color: var(--mnd-black-hover) !important;
+}
+.btn-success:focus,
+.btn-success:focus-visible {
+  box-shadow: 0 0 0 0.2rem rgba(184, 32, 40, 0.35) !important;  /* Rot-Fokusring */
+}
+
+/* --- Sekundär-Buttons (FIDO2 / SSO) rund + dezent --- */
+.btn-secondary,
+.btn-primary {
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+/* --- Eingabefelder: Fokus in Marken-Rot statt Bootstrap-Blau --- */
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--mnd-red);
+  box-shadow: 0 0 0 0.2rem rgba(184, 32, 40, 0.15);
+}
+.input-group-text {
+  background-color: var(--mnd-bg);
+  border-color: var(--mnd-border);
+  color: var(--mnd-black);
+}
+
+/* --- Links (Passwort vergessen, Admin-Login) in Marken-Rot --- */
+a { color: var(--mnd-red); }
+a:hover { color: var(--mnd-red-hover); }
+
+/* --- Trennlinie/Legende dezenter --- */
+legend { font-weight: 600; color: var(--mnd-black); }
+
+/* ======================= DARK MODE ======================= *
+ * Mailcow toggelt Dark-Mode über [data-bs-theme="dark"].     */
+[data-bs-theme="dark"] body {
+  background-color: #0a0a0a;
+}
+[data-bs-theme="dark"] .card {
+  background-color: #18181b;
+  border-color: #27272a;
+  box-shadow: 0 0.25rem 1.5rem rgba(0, 0, 0, 0.4);
+}
+[data-bs-theme="dark"] .card-header {
+  background-color: #18181b;
+  border-bottom-color: #27272a;
+}
+[data-bs-theme="dark"] .input-group-text {
+  background-color: #27272a;
+  border-color: #3f3f46;
+  color: #fafafa;
+}
+[data-bs-theme="dark"] .btn-success {
+  /* im Dunkeln liest sich Rot als Primär-Akzent besser als reines Schwarz */
+  background-color: var(--mnd-red);
+  border-color: var(--mnd-red);
+}
+[data-bs-theme="dark"] .btn-success:hover,
+[data-bs-theme="dark"] .btn-success:focus,
+[data-bs-theme="dark"] .btn-success:active {
+  background-color: var(--mnd-red-hover) !important;
+  border-color: var(--mnd-red-hover) !important;
+}
+[data-bs-theme="dark"] a { color: #f87171; }
