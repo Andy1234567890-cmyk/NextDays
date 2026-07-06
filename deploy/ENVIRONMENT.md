@@ -49,11 +49,21 @@ verschlüsselten Coolify-Config-Sicherung. Diese Datei sagt nur, **welche** Vari
 | `REDIS_URL` | Redis-Verbindung inkl. Passwort | **ja** | → Passwort-Manager |
 | `REDIS_PASSWORD` | Redis-Passwort (AOF-Persistenz an) | **ja** | → Passwort-Manager |
 
-### SMTP (Mailversand)
+### SMTP (Mailversand) — eigener Mailcow-Server, siehe [mail/README.md](mail/README.md)
 | Variable | Zweck | Secret? | Quelle |
 |---|---|---|---|
-| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_SENDER_NAME` / `SMTP_ADMIN_EMAIL` | SMTP-Konfig | nein | Coolify-Env |
-| `SMTP_PASS` | SMTP-Passwort | **ja** | → Passwort-Manager |
+| `SMTP_HOST` | Mailcow-Server (`mail.mynextdays.dk`) | nein | Coolify-Env |
+| `SMTP_PORT` | 587 (STARTTLS; 25/465 bei Hetzner ausgehend geblockt) | nein | Coolify-Env |
+| `SMTP_USER` | echtes Mailcow-Postfach (`developer@mynextdays.dk`) | nein | Coolify-Env |
+| `SMTP_PASSWORD` | Passwort dieses Postfachs | **ja** | → Passwort-Manager |
+| `SMTP_FROM_ADDRESS` | sichtbarer Absender (`noreply@mynextdays.dk`) | nein | Coolify-Env |
+| `SMTP_FROM_NAME` | Anzeigename (`myNextDays`) | nein | Coolify-Env |
+| `SMTP_STARTTLS` | `true` (Port 587) vs. impl. TLS (Port 465) | nein | Coolify-Env |
+| `MAIL_SANDBOX` | `true` → nur Log, kein Versand (Dev). Prod `false` | nein | Coolify-Env |
+
+> Fehlt `SMTP_HOST` oder `SMTP_FROM_ADDRESS` → Versand deaktiviert (`send()` gibt
+> 503, kein stiller Erfolg). Der Mailserver selbst läuft auf einem separaten Host
+> (`62.238.4.193`), NICHT im DB-/App-Stack.
 
 ### Google OAuth / APIs
 | Variable | Zweck | Secret? | Quelle |

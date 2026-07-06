@@ -155,6 +155,34 @@ class Settings(BaseSettings):
     airdna_api_key: SecretStr = SecretStr("")
     airdna_base_url: str = "https://api.airdna.co/api/v1"
 
+    # --- E-Mail-Versand (eigener Mailcow-SMTP-Server, deploy/mail/) ---
+    # host/port: der Mailcow-Server. port 587 = STARTTLS (Submission, empfohlen),
+    #   465 = implizites TLS (SMTPS). user/password: ein echtes Mailcow-Postfach
+    #   (z.B. developer@… oder noreply@…), NICHT der Admin. from_address: die
+    #   sichtbare Absenderadresse; MUSS zu einer Domain gehören, für die der
+    #   Mailcow-Server DKIM signiert (sonst Spam). from_name: Anzeigename.
+    # WICHTIG (keine Fallbacks): Fehlt host ODER from_address, ist Versand NICHT
+    #   konfiguriert → send() schlägt fail-CLOSED fehl (kein stiller „Erfolg", keine
+    #   erfundene Absenderadresse). Im Dev bleibt es leer → mail_sandbox greift.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: SecretStr = SecretStr("")
+    smtp_from_address: str = ""
+    smtp_from_name: str = "myNextDays"
+    # STARTTLS (True, Port 587) vs. implizites TLS/SMTPS (False, Port 465). Beides
+    # verschlüsselt; unterscheidet nur, WANN der TLS-Handshake beginnt.
+    smtp_starttls: bool = True
+    # Sandbox: kein echter SMTP-Call, die Mail wird nur geloggt (lokale Tests/Dev
+    # ohne Mailserver). Im Prod IMMER false, sonst würde nichts real versendet.
+    mail_sandbox: bool = False
+
+    @property
+    def mail_configured(self) -> bool:
+        """Versand ist nutzbar, wenn Server UND Absender gesetzt sind. Fehlt eins,
+        ist es ein Konfig-Fehler (kein Ersatzwert) → send() schlägt fehl."""
+        return bool(self.smtp_host and self.smtp_from_address)
+
     @property
     def is_local(self) -> bool:
         return self.app_env == "local"

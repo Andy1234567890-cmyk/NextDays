@@ -520,8 +520,12 @@ das PDF-Frontend übersetzt seine statischen Beschriftungen über
 `messages/*`) und belegt die Sprach-Auswahl im Versand-Dialog damit vor.
 Der Kalender-Slider öffnet den Dokument-Dialog (PDF-Vorschau/Download/Druck)
 direkt („Ansehen & versenden", `lib/invoice-document.ts` mappt die
-snake_case-`InvoiceResponse` auf die camelCase-Dokumentform des Bestands);
-E-Mail-Versand bleibt bis zum Mailcow-SMTP-Ausbau deaktiviert.
+snake_case-`InvoiceResponse` auf die camelCase-Dokumentform des Bestands).
+Der **E-Mail-Versand** läuft über einen **eigenen Mailcow-Server** auf separatem
+Host (`mail.mynextdays.dk`, außerhalb des DB-/App-Stacks); die API sendet per
+SMTP-Submission (Port 587, STARTTLS) über `core/mail.py` (`MailService`). Ohne
+konfigurierten `SMTP_HOST`/`SMTP_FROM_ADDRESS` ist der Versand fail-closed
+deaktiviert (503, kein stiller Erfolg). Setup/DNS/Betrieb: [`deploy/mail/`](../deploy/mail/README.md).
 
 **Zentrale Preis-Wahrheit (pricing-Slice, Migrationen `0051`/`0052`/`0053`):** Preise
 liefen früher in vier unverbundenen Quellen auseinander — im Objekt bearbeitete
@@ -1029,6 +1033,10 @@ flowchart TB
         A1 --> OCR
     end
 
+    subgraph MAILHOST["EU / Hetzner — SEPARATER Host (mail.mynextdays.dk)"]
+        MAILCOW["Mailcow (Docker)<br/>Postfix · Dovecot · Rspamd · SOGo<br/>eigene IP + Reputation"]
+    end
+
     FRONTS["Coolify-Apps — Next.js-Frontends (web/plattform/builder/storybook/marketing)"]
     STRIPE["Stripe — Payments"]
     GOOG["Google APIs — DPF-zertifiziert"]
@@ -1036,10 +1044,18 @@ flowchart TB
 
     FRONTS -->|HTTPS| LB
     CFSAAS -->|"HTTPS (Fallback-Origin)"| LB
+    A1 -.->|"SMTP-Submission 587 (STARTTLS)"| MAILCOW
     A1 -.->|"Custom Hostnames (API)"| CFSAAS
     A1 -.->|"Transfer: SCC/DPF"| STRIPE
     A1 -.->|"Transfer: DPF"| GOOG
 ```
+
+> **Mailserver bewusst auf separatem Host:** Ein Mailserver braucht exklusive Ports
+> (25/465/587/…) und eine saubere IP-Reputation und darf beim Crash NICHT den
+> DB-Stack mitreißen (Regel „Worker nie in DB-Stack"). Deshalb läuft Mailcow auf
+> einem eigenen Hetzner-Server außerhalb der Coolify-Datenresidenz-Gruppe, aber
+> weiterhin in der EU. Die API erreicht ihn nur outbound über SMTP-Submission (587,
+> STARTTLS). Setup/DNS/Härtung: [`deploy/mail/`](../deploy/mail/README.md).
 
 **Prinzipien:**
 - FastAPI **zustandslos & containerisiert** → horizontale Skalierung (`x1..N` hinter LB).
