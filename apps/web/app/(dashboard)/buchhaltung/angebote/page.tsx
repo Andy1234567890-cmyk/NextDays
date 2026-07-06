@@ -7,6 +7,7 @@ import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card } from "@/components/ui/card";
 import { listCustomers, listQuotes } from "@/lib/buchhaltung";
 import type { Customer, QuoteStatus } from "@/lib/buchhaltung";
+import { formatCurrency } from "@/lib/currency";
 
 const STATUS_LABELS: Record<QuoteStatus, string> = {
   draft: "Entwurf",
@@ -26,12 +27,11 @@ const STATUS_CLASSES: Record<QuoteStatus, string> = {
   converted: "bg-accent/15 text-accent",
 };
 
+// Zentrale lib/currency.formatCurrency (Wurzel 4: kein eigener EUR-Fallback).
+// Leere Angebotswährung → symbollos statt erfundenem EUR.
 function formatMoney(amount: string, currency: string): string {
   const n = Number(amount);
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: currency || "EUR",
-  }).format(Number.isFinite(n) ? n : 0);
+  return formatCurrency(Number.isFinite(n) ? n : 0, currency);
 }
 
 function formatDate(iso: string | null): string {

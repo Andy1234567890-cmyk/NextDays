@@ -427,20 +427,24 @@ export function replacePlaceholders(
   result = result.replace(/\[%UMSATZSTEUERBETRAG%\]/g, formatCurrency(taxAmount));
 
   // Steuersatz und Währung
+  // Kein erfundener 19%-Default (Wurzel 4): fehlt der Satz, leer statt DE-USt.
   const taxRate =
     typeof dataRecord.vatRate === 'number'
       ? dataRecord.vatRate
       : typeof dataRecord.taxRate === 'number'
         ? dataRecord.taxRate
-        : 19;
-  result = result.replace(/\[%MEHRWERTSTEUERSATZ%\]/g, `${taxRate}%`);
-  result = result.replace(/\[%STEUERSATZ%\]/g, `${taxRate}%`);
+        : null;
+  const taxRateStr = taxRate == null ? '' : `${taxRate}%`;
+  result = result.replace(/\[%MEHRWERTSTEUERSATZ%\]/g, taxRateStr);
+  result = result.replace(/\[%STEUERSATZ%\]/g, taxRateStr);
 
-  const currencyStr = typeof dataRecord.currency === 'string' ? dataRecord.currency : 'EUR';
+  // Kein EUR-Default: fehlt die Belegwährung, leer statt erfundenem EUR.
+  const currencyStr = typeof dataRecord.currency === 'string' ? dataRecord.currency : '';
   result = result.replace(/\[%WAEHRUNG%\]/g, currencyStr);
 
-  // Rabatt und Skonto
-  result = result.replace(/\[%RABATT%\]/g, '0,00 €'); // Placeholder für Rabatt
+  // Rabatt/Skonto — Betrag ohne hartkodiertes €-Symbol (Belegwährung folgt aus
+  // [%WAEHRUNG%]); reiner Nullbetrag als Platzhalter.
+  result = result.replace(/\[%RABATT%\]/g, '0,00');
   result = result.replace(/\[%SKONTO%\]/g, data.skontoText || '');
 
   // Bestellnummer

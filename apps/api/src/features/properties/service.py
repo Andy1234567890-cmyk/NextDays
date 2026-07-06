@@ -311,7 +311,6 @@ class PropertiesService:
             row = {
                 "property_id": property_id,
                 "tenant_id": tenant_id,
-                "currency": pricing.get("currency") or "EUR",
                 "custom_by_weekday": bool(pricing.get("customByWeekday")),
                 "weekday_prices": pricing.get("weekdayPrices") or {},
                 "markup": pricing.get("markup") or {},
@@ -325,6 +324,11 @@ class PropertiesService:
                 "promotions": pricing.get("promotions") or [],
                 "add_ons": pricing.get("addOns") or [],
             }
+            # Währung nur setzen, wenn explizit übergeben — kein EUR erfinden
+            # (Wurzel 4). Fehlt sie, greift bei Insert der Spalten-Default bzw. der
+            # bestehende Wert bleibt bei Update erhalten.
+            if pricing.get("currency"):
+                row["currency"] = pricing["currency"]
             self._db.table("property_pricing_config").upsert(
                 row, on_conflict="property_id"
             ).execute()

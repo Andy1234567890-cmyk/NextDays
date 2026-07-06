@@ -110,7 +110,9 @@ def _handle_sync_property_content(
         payload["tenant_id"],
         property_id=payload["property_id"],
         title=payload.get("title") or "Unbenannt",
-        currency=payload.get("currency") or "EUR",
+        # None → sync_content lädt die echte Objektwährung aus dem Rate-Plan (kein
+        # EUR-Default, der CHF/DKK-Objekte an den OTAs verfälscht, Wurzel 4).
+        currency=payload.get("currency") or None,
     )
 
 

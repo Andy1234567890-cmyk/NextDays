@@ -104,9 +104,11 @@ export function OwnerStatementsForOwner({
       expenses_total: 0,
       owner_payout: 0,
       pm_payout: 0,
-      currency: "EUR",
+      // Leerzustand-Platzhalter (alle Betraege 0) — keine erfundene Waehrung
+      // (Wurzel 4); die echte Waehrung kommt mit der ersten realen Abrechnung.
+      currency: "",
       booking_count: 0,
-      owner_currency: "EUR",
+      owner_currency: "",
       pm_payout_by_currency: [],
       totals_by_currency: [],
     },

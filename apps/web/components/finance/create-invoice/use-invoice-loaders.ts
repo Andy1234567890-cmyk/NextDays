@@ -463,8 +463,9 @@ export function useInvoiceLoaders({
         next.paymentTerms = baseText;
       }
 
-      // Währung vorbelegen (falls vorhanden und noch nicht bewusst geändert)
-      if (prev.currency === 'EUR' && (company?.defaultCurrency as string)) {
+      // Währung vorbelegen aus der Firmen-Default, solange noch keine gesetzt ist
+      // (leerer Seed = "nicht gesetzt", kein EUR-Sentinel — Wurzel 4).
+      if (!prev.currency && (company?.defaultCurrency as string)) {
         next.currency = company?.defaultCurrency as string;
       }
 

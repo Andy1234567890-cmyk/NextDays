@@ -425,8 +425,9 @@ export function useInvoiceActions({
         extendedDescription: item.extendedDescription || '', // Erweiterte Beschreibung
       })),
 
-      // Additional fields
-      currency: formData.currency || 'EUR',
+      // Additional fields — kein EUR-Fallback (Wurzel 4): leer durchreichen, das
+      // Backend setzt autoritativ die Mandanten-Währung (create_invoice_from_bestand).
+      currency: formData.currency || '',
       paymentTerms: formData.paymentTerms || finalPaymentTerms,
       internalContactPerson: formData.internalContactPerson || '',
       deliveryTerms: formData.deliveryTerms || '',
@@ -629,8 +630,8 @@ export function useInvoiceActions({
         taxRule: (formData.taxRule as TaxRuleType) || 'DE_TAXABLE',
         showNet: showNet,
 
-        // Currency & Formatting
-        currency: formData.currency || 'EUR',
+        // Currency & Formatting — kein EUR-Fallback (Wurzel 4); leer → symbollos.
+        currency: formData.currency || '',
 
         // Required metadata fields
         year: new Date().getFullYear(),

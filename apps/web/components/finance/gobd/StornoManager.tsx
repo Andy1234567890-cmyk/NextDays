@@ -1,6 +1,8 @@
 'use client';
 
 import { Icon } from '@iconify/react';
+
+import { formatCurrency } from '@/lib/currency';
 import {
   Alert,
   AlertDescription,
@@ -162,10 +164,7 @@ export function StornoManager({
                 <div className="flex justify-between">
                   <span className="text-gray-600 text-sm">Betrag:</span>
                   <span className="font-medium">
-                    {document.amount.toLocaleString('de-DE', {
-                      style: 'currency',
-                      currency: 'EUR',
-                    })}
+                    {formatCurrency(document.amount, document.currency)}
                   </span>
                 </div>
                 <div className="flex justify-between">
@@ -407,10 +406,7 @@ export function StornoManager({
                       </div>
                       <p className="mt-1 text-gray-500 text-xs">
                         Maximum:{' '}
-                        {document.amount.toLocaleString('de-DE', {
-                          style: 'currency',
-                          currency: 'EUR',
-                        })}
+                        {formatCurrency(document.amount, document.currency)}
                       </p>
                     </div>
 

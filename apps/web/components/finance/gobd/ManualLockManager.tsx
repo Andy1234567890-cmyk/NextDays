@@ -1,6 +1,8 @@
 'use client';
 
 import { Icon } from '@iconify/react';
+
+import { formatCurrency } from '@/lib/currency';
 import {
   Alert,
   AlertDescription,
@@ -225,7 +227,7 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
             </div>
             <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-center">
               <div className="font-bold text-2xl text-green-600">
-                {totalAmount.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
+                {formatCurrency(totalAmount)}
               </div>
               <p className="text-green-700 text-sm">Offener Betrag</p>
             </div>
@@ -391,7 +393,7 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
                     <div className="mt-1 flex items-center gap-4 text-gray-600 text-sm">
                       <span>{format(doc.createdAt, 'dd.MM.yyyy')}</span>
                       <span>
-                        {doc.amount.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
+                        {formatCurrency(doc.amount, doc.currency)}
                       </span>
                       {doc.gobdStatus.isLocked && doc.gobdStatus.lockedAt && (
                         <span>

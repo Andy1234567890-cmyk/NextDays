@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { LineItemInput } from "@/lib/buchhaltung";
+import { formatCurrency } from "@/lib/currency";
 
 export type LineItemRow = {
   description: string;
@@ -30,15 +31,13 @@ export function lineNet(r: LineItemRow): number {
   return (Number(r.quantity) || 0) * (Number(r.unit_price) || 0);
 }
 
-// Offener Punkt: Im Anlage-Flow gibt es (noch) keine echte Währungsquelle —
-// das Backend setzt neue Rechnungen/Angebote fix auf EUR (schemas.py-Default).
-// Bis eine Tenant-/Beleg-Währung existiert, hier EINE zentrale Formatierung
-// statt Kopien pro Button; dann auf formatCurrency (lib/currency) umstellen.
-export function formatEur(n: number): string {
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: "EUR",
-  }).format(n);
+// Betragsformat über die zentrale lib/currency.formatCurrency (Wurzel 4: kein
+// eigener EUR-Formatter). Ohne Währung rendert sie symbollos statt ein falsches €
+// zu erfinden; die Belegwährung wird durchgereicht, sobald der Flow sie kennt.
+// Name bleibt formatEur (Aufrufer in new-invoice-/new-quote-button), Verhalten
+// ist jetzt aber währungsneutral.
+export function formatEur(n: number, currency?: string): string {
+  return formatCurrency(n, currency);
 }
 
 // Zeilen-State: Mutatoren, Summen und Mapping auf LineItemInput fürs Backend.

@@ -269,6 +269,29 @@ class ChannelsMixin:
             )
 
         channex_property_id = self._require_property_mapping(db, tenant_id, property_id)
+
+        # Idempotenz (Wurzel 2): existiert für (property_id, portal_code) bereits
+        # eine Verbindung mit einem Channex-Kanal, den bestehenden zurückgeben statt
+        # bei Doppelklick/Retry einen ZWEITEN Channex-Kanal anzulegen (der DB-UNIQUE
+        # channex_channel_connection_property_portal_uidx griffe erst NACH dem
+        # Channex-create, sodass ein verwaister Zweit-Kanal bei Channex zurückbliebe).
+        existing = (
+            db.table("channex_channel_connection")
+            .select("channex_channel_id, is_active, ota_portal_code")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .eq("ota_portal_code", portal_code)
+            .limit(1)
+            .execute()
+        ).data
+        if existing and existing[0].get("channex_channel_id"):
+            return {
+                "id": existing[0]["channex_channel_id"],
+                "portal": self._portal_labels[portal_code],
+                "title": title or self._portal_labels[portal_code],
+                "is_active": bool(existing[0].get("is_active")),
+            }
+
         group_id = self._require_group(db, tenant_id, channex_property_id)
         settings = self._inject_sandbox_settings(portal_code, property_id, settings)
 

@@ -28,6 +28,9 @@ export interface GoBDDocument {
   documentType: 'invoice' | 'quote' | 'delivery' | 'credit-note' | 'cancellation';
   createdAt: Date;
   amount: number;
+  // Belegwährung (Wurzel 4: kein hartes EUR in der Anzeige). Optional, solange
+  // nicht jeder Erzeuger sie liefert — die Anzeige rendert dann symbollos.
+  currency?: string;
   customerId: string;
   companyId: string;
   gobdStatus: GoBDLockStatus;

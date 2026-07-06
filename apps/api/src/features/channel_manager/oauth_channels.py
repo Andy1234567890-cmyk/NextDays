@@ -44,27 +44,47 @@ class OAuthChannelsMixin:
             )
 
         channex_property_id = self._require_property_mapping(db, tenant_id, property_id)
+
+        # Idempotenz (Wurzel 2): existiert für (property_id, portal_code) bereits ein
+        # Channex-Kanal, ihn wiederverwenden statt bei Doppelklick/Retry einen zweiten
+        # anzulegen (sonst verwaister Zweit-Kanal bei Channex vor dem DB-UNIQUE).
+        existing = (
+            db.table("channex_channel_connection")
+            .select("channex_channel_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .eq("ota_portal_code", portal_code)
+            .limit(1)
+            .execute()
+        ).data
+        existing_channel_id = (
+            existing[0].get("channex_channel_id") if existing else None
+        )
+
         group_id = self._require_group(db, tenant_id, channex_property_id)
         channel_title = title or self._portal_labels.get(portal_code, "Airbnb")
 
-        # 1) Channel inaktiv anlegen (ohne rate_plans/settings — Mapping kommt später).
-        try:
-            created = self._channex.create_channel(
-                {
-                    "channel": portal_code,
-                    "group_id": group_id,
-                    "is_active": False,
-                    "title": channel_title,
-                    "properties": [channex_property_id],
-                }
-            )
-        except ChannexError as exc:
-            raise self._wrap_channex(exc) from exc
-        channel_id = (created.get("data") or {}).get("id")
-        if not channel_id:
-            raise ChannelManagerError(
-                "Channex hat keinen Kanal angelegt.", status_code=502
-            )
+        if existing_channel_id:
+            channel_id = existing_channel_id
+        else:
+            # 1) Channel inaktiv anlegen (ohne rate_plans/settings — Mapping folgt).
+            try:
+                created = self._channex.create_channel(
+                    {
+                        "channel": portal_code,
+                        "group_id": group_id,
+                        "is_active": False,
+                        "title": channel_title,
+                        "properties": [channex_property_id],
+                    }
+                )
+            except ChannexError as exc:
+                raise self._wrap_channex(exc) from exc
+            channel_id = (created.get("data") or {}).get("id")
+            if not channel_id:
+                raise ChannelManagerError(
+                    "Channex hat keinen Kanal angelegt.", status_code=502
+                )
 
         # 2) Frischer JWT (pro Connect, kein Cache) → echte OAuth-URL.
         try:

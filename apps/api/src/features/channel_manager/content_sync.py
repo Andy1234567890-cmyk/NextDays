@@ -69,10 +69,12 @@ class ContentSyncMixin:
         *,
         property_id: str,
         title: str,
-        currency: str = "EUR",
+        currency: str | None = None,
     ) -> None:
         """Non-blocking Auto-Sync beim Anlegen/Ändern eines Objekts.
 
+        currency=None (Default): sync_content lädt die echte Objektwährung aus dem
+        Rate-Plan — kein EUR-Default, der CHF/DKK-Objekte verfälscht (Wurzel 4).
         Delegiert an den vollständigen, idempotenten Content-Sync und schluckt
         Fehler (loggt sie), damit die Objekt-Anlage nie an Channex scheitert."""
         if not self._channex.is_configured or self._db is None:
@@ -112,9 +114,13 @@ class ContentSyncMixin:
         ).data or []
         for p in props:
             try:
+                # currency=None: sync_content lädt die ECHTE Objektwährung aus dem
+                # Rate-Plan (Docstring oben). Ein hartes "EUR" hier (truthy) würde
+                # das Nachladen per `currency or rate_plans[0]...` kurzschließen und
+                # CHF/DKK-Objekte fälschlich als EUR an die OTAs pushen (Wurzel 4).
                 self.sync_content(
                     tenant_id, property_id=p["id"],
-                    title=p.get("title") or "Unbenannt", currency="EUR",
+                    title=p.get("title") or "Unbenannt", currency=None,
                 )
             except Exception as exc:  # noqa: BLE001 — pro Objekt best-effort
                 log.warning(
@@ -180,9 +186,16 @@ class ContentSyncMixin:
                 "an die Buchungsportale übermittelt werden.",
                 status_code=422,
             )
-        prop_currency = (
-            currency or rate_plans[0].get("currency") or "EUR"
-        ).upper()
+        # Währung: übergebene (falls gesetzt), sonst die ECHTE Rate-Plan-Währung
+        # (rate_plans.currency ist NOT NULL, Migration 0003) — kein EUR-Fallback.
+        rate_currency = rate_plans[0].get("currency")
+        prop_currency = (currency or rate_currency or "").upper()
+        if not prop_currency:
+            raise ChannelManagerError(
+                "Objektwährung fehlt im Preisplan — kann nicht an die "
+                "Buchungsportale übermittelt werden.",
+                status_code=422,
+            )
 
         try:
             channex_property_id = self._upsert_channex_property(

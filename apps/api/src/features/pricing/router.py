@@ -237,7 +237,10 @@ def explain_dynamic_price(
         if rate_rows and rate_rows[0].get("base_price") is not None
         else price
     )
-    currency = (rate_rows[0].get("currency") if rate_rows else None) or "EUR"
+    # rate_plans.currency ist NOT NULL — existiert ein Rate-Plan, ist die Währung
+    # gesetzt. Fehlt der Rate-Plan ganz, keine Währung erfinden (Wurzel 4): leer
+    # lassen, die Formatierung rendert dann symbollos statt ein falsches EUR.
+    currency = (rate_rows[0].get("currency") if rate_rows else None) or ""
 
     try:
         explanation = explain_price(

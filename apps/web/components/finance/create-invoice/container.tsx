@@ -175,7 +175,9 @@ export default function CreateQuotePage() {
     footerText:
       'Wir bitten Sie, den Rechnungsbetrag von [%GESAMTBETRAG%] unter Angabe der Rechnungsnummer [%RECHNUNGSNUMMER%] auf das unten angegebene Konto zu überweisen. Zahlungsziel: [%ZAHLUNGSZIEL%] Rechnungsdatum: [%RECHNUNGSDATUM%] Vielen Dank für Ihr Vertrauen und die angenehme Zusammenarbeit!<br>Mit freundlichen Grüßen<br>[%KONTAKTPERSON%]',
     notes: '',
-    currency: 'EUR',
+    // Leer = "noch nicht gesetzt" (Wurzel 4: kein EUR-Seed als Doppel-Sentinel).
+    // use-invoice-loaders uebernimmt dann company.defaultCurrency.
+    currency: '',
     internalContactPerson: '',
     deliveryTerms: '',
     paymentTerms: 'Zahlbar binnen 14 Tagen ohne Abzug',

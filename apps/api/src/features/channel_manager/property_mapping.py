@@ -373,9 +373,11 @@ class PropertyMappingMixin:
         db = self._require_db()
 
         # Property muss dem Tenant gehören (Schutz vor Fremd-Referenzen).
+        # properties hat KEINE currency-Spalte — die echte Objektwährung liegt im
+        # Rate-Plan (Migration 0003, NOT NULL). Nicht EUR erfinden (Wurzel 4).
         prop = (
             db.table("properties")
-            .select("id, title, currency")
+            .select("id, title")
             .eq("id", req.property_id)
             .eq("tenant_id", tenant_id)
             .limit(1)
@@ -387,10 +389,17 @@ class PropertyMappingMixin:
 
         channex_id = req.external_property_ref
         if not channex_id:
+            currency = req.currency or self._property_currency(db, req.property_id)
+            if not currency:
+                raise ChannelManagerError(
+                    "Objektwährung fehlt (kein Preisplan) — bitte zuerst einen "
+                    "Preisplan mit Währung anlegen.",
+                    status_code=422,
+                )
             # Neu in Channex anlegen.
             attributes = {
                 "title": req.title or local.get("title") or "Unbenannt",
-                "currency": (req.currency or local.get("currency") or "EUR").upper(),
+                "currency": currency.upper(),
             }
             try:
                 created = self._channex.create_property(attributes)

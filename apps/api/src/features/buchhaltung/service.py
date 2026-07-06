@@ -132,6 +132,25 @@ class BuchhaltungService:
             raise BuchhaltungError("Kein Tenant im Konto.", status_code=400)
         return ctx.tenant_id
 
+    def _tenant_currency(self, tenant_id: str) -> str:
+        """Mandanten-Währung aus den Daten (Wurzel 4: kein erfundenes EUR). Fehlt
+        sie, ist das ein echter Datenfehler → 422 statt EUR in einen GoBD-Beleg
+        zu schreiben (der unveränderlich ist und PLN/CHF still verfälschte)."""
+        rows = (
+            self._db.table("tenants")
+            .select("currency")
+            .eq("id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        currency = rows[0].get("currency") if rows else None
+        if not currency:
+            raise BuchhaltungError(
+                "Mandanten-Währung fehlt — bitte im Konto die Währung setzen.",
+                status_code=422,
+            )
+        return currency
+
     # ---------------------------------------------------------------- Kunden
     def _customers_rows(self, ctx: AuthContext) -> list[dict]:
         tenant_id = self._require_tenant(ctx)
@@ -660,7 +679,7 @@ class BuchhaltungService:
             "status": status,
             "issue_date": payload.get("issueDate") or payload.get("date"),
             "due_date": payload.get("dueDate"),
-            "currency": payload.get("currency") or "EUR",
+            "currency": payload.get("currency") or self._tenant_currency(tenant_id),
             "net_amount": str(net_amount),
             "tax_amount": str(Decimal("0") if is_klein else tax_amount),
             "gross_amount": str(net_amount if is_klein else gross_amount),
