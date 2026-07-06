@@ -54,7 +54,30 @@ GEFIXT IN RUNDE 4 (ebenfalls NICHT erneut melden):
 - ChannexClient _acquire_budget PRO HTTP-Round-Trip in der Retry-Schleife (auch 429-Retries zählen Token)
 - worker _enqueue_reconcile_all Bucket aus time.time() (Wall-Clock) statt loop.time() (Monotonic) → Cross-Instance/Restart-Coalescing
 - guests _find_by_email case-insensitiv via ilike + _like_escape (mixed-case Bestands-E-Mail findbar, kein 500 an lower(email)-Index)
-- Kalender-KPIs (calendar-board) aggregieren Umsatz/ADR pro Währung, mixedCurrency → keine Mischsumme; Channex-Webhook-Secret secrets.compare_digest; Forecast-Training paginiert (kein 1000-Cap)`
+- Kalender-KPIs (calendar-board) aggregieren Umsatz/ADR pro Währung, mixedCurrency → keine Mischsumme; Channex-Webhook-Secret secrets.compare_digest; Forecast-Training paginiert (kein 1000-Cap)
+GEFIXT IN RUNDE 5 (ebenfalls NICHT erneut melden):
+- booking_engine._upsert_guest delegiert an resolve_or_create_guest (case-insensitive ilike + 23505-Handling); kein 500 bei mixed-case-E-Mail/gleicher Telefonnummer/Race gegen 0113-Unique-Indizes
+- process_ari_outbox (Cron) berücksichtigt beim Superseding auch neuere done-Zeilen via _newer_covered_days (nicht nur pending-Batch); ältere Storno-Freigabe avail=1 überschreibt keine neuere Buchung avail=0
+- create_invoice_from_bestand: invoice_type IMMER 'invoice' (kein Client-isStorno-Beleg); Kleinunternehmer Kopf-tax_rate=0 erzwungen; Positions-Schleife liest snake_case+camelCase (Σ Positionen = Kopf)
+- Storno-PDF: TotalsDisplay zeigt negative MwSt (taxAmount !== 0 statt > 0); documentType='cancellation' (korrekte Beschriftung „Stornorechnung")
+- Geld-Aggregationen paginiert via core/supabase.fetch_all_rows: owner_statements._reservations, public_portal.earnings, pricing forecast-Training (kein stiller 1000-Zeilen-Cap)
+- tasks add_checklist_item/add_checklist_photo prüfen Tenant-Zugehörigkeit der task_id/item_id (IDOR); request_substitution nur durch zugewiesenen Mitarbeiter (§4.3 assignee_id-Check)
+- jobs (0114): requeue_stuck_jobs setzt attempts>=max_attempts running-Jobs auf 'dead'; claim_jobs claimt nur attempts<max_attempts (hart-crashende Jobs loopen nicht mehr ewig)
+- Rate-Limit listings-tenant pro (tenant, ip) gekeyt (listings:tenant:{t}:ip:{ip}) — Multi-IP-Cross-Tenant-DoS über gefälschte Opfer-tenant_id geschlossen
+- move() rechnet Dynamic Pricing für Alt- UND Ziel-Objekt neu (_recompute_dynamic_pricing)
+- SelectBankingTransactionModal blockt Cross-Currency-Match (invoiceCurrency-Prop vs transaction.currency); BookingAccountSelectionModal nutzt formatCurrency(betrag, transaction.currency) statt EUR-Hardcode
+- owner_expenses add/update validieren statement_id/owner_id/listing_id/reservation_id gegen Tenant (_require_own_fk, kein Fremd-FK)
+GEFIXT IN RUNDE 6 (ebenfalls NICHT erneut melden):
+- properties-Router: DELETE + POST hinter MANAGE_PROPERTY_SETTINGS (kein cleaner/owner-Delete/Create); GET list/get erzwingen Owner-Self-Scope (§4.2, is_owner + owner_property_ids)
+- create_public_booking: nur booking_engine-freigegebene Add-ons in den Quote (_bookable_addon_selections/appears_in-Filter) + quote_items OHNE Add-on-Zeilen; build_positions prüft items_sum + Add-on-Summe gegen total_amount (keine Doppelfaktura)
+- Restriktions-Backstop (0115 ari_restriction_outbox): push_stop_sell/rate/min_stay/max_stay/cta_ctd/restrictions persistieren vor dem Channex-Call, process_restriction_outbox-Cron zieht nach; channex-managed ohne Rate-Plan-Mapping bleibt pending (Selbstheilung, kein stilles done)
+- reservation_invoice: Positions-total = NETTO (net_amount) statt gross (Zeilenbetrag = Zwischensumme im PDF-Hook/ItemsTable)
+- dp-preview-grid + Builder-Checkout nutzen Objektwährung (formatCurrency mit currency, kein €-Hardcode); formatCurrency hat fractionDigits-Param
+- usePDFTemplateData isTaxExemptRule deckt EU_OSS/OSS ab (taxAmount=0, konsistent zu TotalsDisplay showVat=false)
+- process_ari_outbox Fehler-Zweig mit .eq(status,pending)-Guard (kein done→failed-Rückfall bei Nebenläufigkeit)
+- RealtimeRefresh auf 6 Tabellen; dp-preview abonniert price_overrides/dynamic_prices/property_pricing_config/rate_plans/availability/dp_settings
+- Marktplatz list_listings paginiert via fetch_all_rows (kein 1000-Cap) + _MAX_LISTING_RESULTS-Deckel (kein N+1 datierte Preisauflösung, geloggt)
+- kein inkrementierender POST /number-sequences/next mehr (nur GET-Preview + serverseitiges Ziehen beim Speichern); TranslateRequest max_length=50000 + fmt Literal html|text`
 
 // Nur bestätigte, echte Bugs. Schema erzwingt strukturierte Rückgabe.
 const FINDINGS_SCHEMA = {
@@ -108,7 +131,7 @@ const L2_TRACES = [
   { key: 'trace-auth-scope', prompt: `Trace Berechtigungen/Scoping über ALLE Slices in ${REPO}: welche GET/POST-Endpunkte laufen mit Service-Role (RLS umgangen) und scopen NICHT explizit auf tenant/owner? Prüfe systematisch calendar, reservations, buchhaltung, owner_statements, pricing, channel_manager, inbox. Suche: fehlende require_permission/require_lodgify_permission, Owner der fremde Daten sieht, staff/cleaner der Finanzdaten liest, Client-Parameter der Scope ausweitet.` },
   { key: 'trace-worker-resilienz', prompt: `Trace die Worker-Resilienz in ${REPO}: worker.py claim_jobs → _dispatch → _job_heartbeat → _finish/_retry/_defer + Reaper (requeue_stuck_jobs) + Migration 0102/0106/0107. Suche: kann ein Job doppelt laufen? Kann der Heartbeat einen fremden Claim auffrischen? locked_by-Guard-Lücken? Kann ein Push-Fehler den Job in eine Endlosschleife bringen? Interagiert der neue bool-Rückgabewert korrekt mit _retry?` },
   { key: 'trace-realtime-currency', prompt: `Trace Realtime + Mehrwährung im Frontend in ${REPO}: welche Listen/Detail-UIs abonnieren NICHT alle relevanten Tabellen (stale Daten)? Wo wird noch €/EUR hartkodiert statt formatCurrency/Objekt-Währung? Prüfe kalender/, objekte/, finance/, quotes/. Suche: fehlende useRealtime-Abos, verbliebene Währungs-Hardcodes, Preis-Quellen die nicht live nachziehen.` },
-  { key: 'trace-luecken-kritik', prompt: `Vollständigkeits-Kritiker für ${REPO}: Vier Fix-Runden (insgesamt 83 bestätigte Bugs) sind bereits durch — siehe die BEREITS-GEFIXT-Liste, melde davon NICHTS erneut. Welche Bereiche haben dieselben Fehlerklassen, wurden aber noch NICHT geprüft? Denke an: public_portal/, site_config/, content/, media/, quotes/, tasks/, travel_agencies/, weitere RPCs/Migrationen mit offenen Grants oder fehlendem RLS (wie 0107 fand!), fehlende DB-Transaktionen wo mehrere Schreibvorgänge atomar sein müssten, N+1 bei 1000 Usern, fehlende Pagination-Limits (PostgREST 1000-Cap wie im Forecast-Fix), fehlende Idempotenz bei öffentlichen/retry-baren Endpunkten, Geld-/Scope-/Realtime-Lücken in bisher ungeprüften Slices. Prüfe deployte Realität, nicht Vermutung.` },
+  { key: 'trace-luecken-kritik', prompt: `Vollständigkeits-Kritiker für ${REPO}: SECHS Fix-Runden (insgesamt 117 bestätigte Bugs) sind bereits durch — siehe die BEREITS-GEFIXT-Liste, melde davon NICHTS erneut (auch keine Variante/Nachbarstelle eines bereits gefixten Bugs, außer sie ist ein GENUIN anderer, konkret belegbarer Fehler). Prüfe systematisch die noch UNGEPRÜFTEN Slices/Router auf dieselben Fehlerklassen: fehlende require_permission/require_lodgify_permission an Schreib-/Lese-Endpunkten (wie der properties-DELETE-Fund!), Owner-/Tenant-Scope-Lücken (§4.2), fehlendes RLS auf public-Tabellen, fehlende DB-Transaktionen/Atomarität, N+1 bei 1000 Usern, fehlende Pagination (PostgREST 1000-Cap in ANDEREN Aggregations-Queries), fehlende Idempotenz bei öffentlichen/retry-baren Endpunkten, €-Hardcodes, fehlende Realtime-Abos. Kandidaten: site_config/, content/, media/, quotes/, travel_agencies/, whatsapp/, channels/, addons/, payments/-Randpfade, weitere Router mit reinem CurrentUser statt Capability. Sei streng: nur echte, am deployten Code belegbare Bugs, keine Vermutung.` },
 ]
 
 async function findAndVerify(items, findPhase, verifyPhase) {
