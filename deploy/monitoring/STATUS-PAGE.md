@@ -42,6 +42,23 @@ den ntfy-Kanal (siehe [Backup-Monitoring](../backup/README.md#monitoring)).
 | Marketing-Site | Werbeseite — kein Kundendienst |
 | Storybook | internes Dev-Werkzeug |
 | NextDays Backup (Dead-man) | nächtlicher Backup-Ping (siehe Backup-README) |
+| **Mailserver Blacklist** | Push/Dead-man: DNSBL-Reputation der Mail-IP. **Bewusst NICHT öffentlich** — „auf Blacklist" gehört nicht auf die Kundenseite. |
+
+### Mailserver-Monitore (Push, ausgehend vom Mailserver)
+Der Mailserver (`62.238.4.193`, `mail.mynextdays.dk`) ist vom Coolify-Netz **nicht
+direkt eingehend** erreichbar, daher **Push-Monitore** (wie der Backup-Dead-man):
+ein Cron auf dem Mailserver (`/opt/mail-heartbeat.sh`, jede Minute) meldet aktiv an
+Kuma.
+
+| Monitor | Typ | Sichtbar | „up"-Ping wenn |
+|---|---|---|---|
+| **E-Mail-Versand** | push | öffentlich (Server-Infrastruktur) | Mailcow-Stack läuft (≥15 Container) UND Web-UI liefert 200 |
+| **Mailserver Blacklist** | push | intern | IP auf KEINER DNSBL (`/opt/blacklist-monitor.sh` exit 0) |
+
+> Bleibt der Ping aus (Stack down oder IP gelistet), schlägt Kuma nach der
+> Grace-Zeit Alarm an den ntfy-Kanal. Die Skripte sind im Repo unter `deploy/mail/`
+> (`blacklist-monitor.sh`); `mail-heartbeat.sh` mit den Push-Tokens liegt nur auf
+> dem Server (Tokens sind Secrets).
 
 **Warum 401 bei „up" zählt:** Das Gateway antwortet auf den Health-Pfad ohne
 API-Key mit `401` — das ist ein *erreichbares* Signal („Gateway lebt"). Ein totes

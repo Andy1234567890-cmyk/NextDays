@@ -56,6 +56,50 @@ Mailcows `update.sh` aktualisiert (nicht automatisch — kontrolliert, mit Snaps
 SPF (`-all`), DKIM und DMARC (`p=quarantine` → später `p=reject`) verhindern, dass
 Dritte in deinem Namen versenden. Siehe [dns-records.md](dns-records.md).
 
+## 7. Missbrauchs-Schutz: ausgehende Rate-Limits (WICHTIG)
+
+Häufigste Ursache für „mein Server versendet plötzlich Spam" (→ Blacklist →
+Beschwerden → im Extremfall Behörden-Kontakt): **ein Konto wird gekapert**
+(schwaches/geleaktes Passwort) und der Angreifer versendet über den legitimen,
+authentifizierten Zugang massenhaft Mail. Dagegen sind **ausgehende Rate-Limits**
+gesetzt (Mailcow-UI → Mailbox/Domain → Rate Limit, bzw. per API):
+
+| Ebene | Limit | Zweck |
+| --- | --- | --- |
+| Postfächer info/support/verkauf/torsten/jeanine | **150/h** | reicht für legitime Nutzung, deckelt ein gekapertes Konto |
+| `developer@` (App-System-Absender) | **500/h** | Transaktions-Mails (Rechnungen/Belege) — großzügiger, aber gedeckelt |
+| Domain `mynextdays.dk` (alle Konten) | **1000/h** | Gesamt-Deckel, falls mehrere Konten gleichzeitig missbraucht werden |
+
+> Diese Werte sind konservativ. Wächst der legitime Versand, in der UI erhöhen —
+> aber nie unbegrenzt lassen.
+
+## 8. Blacklist-Monitoring
+
+Damit ein Reputationsproblem SOFORT auffällt (nicht erst, wenn Kunden Zustellprobleme
+melden), prüft [`blacklist-monitor.sh`](blacklist-monitor.sh) die Server-IP täglich
+per Cron gegen die großen DNSBL (Spamhaus, Spamcop, Barracuda, SORBS, CBL, PSBL):
+
+```bash
+# auf dem Server als root (bereits eingerichtet):
+0 6 * * * bash /opt/blacklist-monitor.sh >> /var/log/mail-blacklist.log 2>&1
+```
+
+- **Spamhaus-Hinweis:** Über öffentliche/rate-limitierte Resolver liefert Spamhaus
+  einen Fehlercode `127.255.255.x` zurück (= „Resolver blockiert", KEIN Listing).
+  Das Skript ignoriert diese Codes → keine False-Positive-Alarme. Für dauerhaft
+  zuverlässige Spamhaus-Abfragen später einen eigenen Spamhaus-Data-Query-Key
+  hinterlegen; die anderen 5 DNSBL funktionieren ohne.
+
+## 9. IP-Reputation & Warmup (vor Produktiv-Versand)
+
+- Neue IP `62.238.4.193` vor dem ersten echten Versand gegen Blacklists prüfen
+  (`blacklist-monitor.sh` bzw. <https://check.spamhaus.org>) — Stand Einrichtung:
+  **sauber**.
+- **Warmup:** Reputation langsam aufbauen — die ersten Tage nur wenige Mails, dann
+  steigern. Ein frischer Mailserver, der sofort viel versendet, wirkt verdächtig.
+- **Nach Freischaltung** (Port 25) extern testen: <https://www.mail-tester.com>
+  (Ziel 10/10) prüft SPF/DKIM/DMARC/PTR/Reputation in einem Rutsch.
+
 ## Verifikation (nach Umsetzung)
 ```bash
 ssh root@62.238.4.193 'ufw status verbose'         # Firewall-Regeln

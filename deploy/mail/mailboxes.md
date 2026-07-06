@@ -13,11 +13,20 @@ per Mailcow-API (siehe unten).
 | `jeanine@mynextdays.dk` | Persönliches Postfach Jeanine | Jeanine |
 | `developer@mynextdays.dk` | Technik / System-Absender für die App (SMTP-Login) | myNextDays Developer |
 
-## Empfohlene Zusatz-Adressen
-- `noreply@mynextdays.dk` — sichtbarer Absender für automatische Transaktions-Mails
-  (Rechnungen/Belege). Als **Alias** auf `info@` oder eigenes Postfach.
-- `postmaster@mynextdays.dk` — Pflicht-Adresse laut RFC (DMARC-`rua`-Ziel). Mailcow
-  legt sie i.d.R. automatisch an; sonst als Alias auf `info@`.
+## Angelegte Aliase (Pflicht + Standard) — alle → `info@mynextdays.dk`
+
+Diese Aliase sind bereits angelegt (Ziel: Sammel-Postfach `info@`):
+
+| Alias | Zweck | Pflicht? |
+| --- | --- | --- |
+| `abuse@mynextdays.dk` | **Beschwerde-/Missbrauchs-Kontakt** — hierüber erreichen Blacklist-Betreiber, andere Mailprovider und ggf. Behörden den Serverbetreiber. **RFC 2142 Pflicht.** Fehlt sie, verpuffen Beschwerden und man landet unbemerkt auf Blacklists. | ✅ Pflicht |
+| `postmaster@mynextdays.dk` | RFC-Pflicht-Adresse + **Ziel der DMARC-Reports** (`rua`/`ruf`). | ✅ Pflicht |
+| `hostmaster@mynextdays.dk` | RFC-2142-Standard (DNS-/Domain-Kontakt). | empfohlen |
+| `noreply@mynextdays.dk` | Sichtbarer Absender automatischer Transaktions-Mails (`SMTP_FROM_ADDRESS`). | empfohlen |
+
+> Ziel aller vier ist aktuell `info@`. Bei Bedarf kann `abuse@`/`postmaster@` auf ein
+> überwachtes Support-Postfach umgeleitet werden — wichtig ist nur, dass die Mails
+> tatsächlich **gelesen** werden (sonst ist der Alias wertlos).
 
 ## Hinweise
 - **`developer@`** ist der SMTP-Login der App (`SMTP_USER`). Ein starkes, eigenes

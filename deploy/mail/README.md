@@ -128,6 +128,31 @@ MAIL_SANDBOX=false
 Siehe [SECURITY.md](SECURITY.md) — UFW-Firewall (nur die nötigen Mail-Ports + SSH),
 fail2ban, SSH-Härtung, automatische Security-Updates.
 
+## Regelkonformität (gegen Blacklisting / Beschwerden / Behörden-Kontakt)
+
+Damit der Server nicht auffällig wird (Spam-Blacklists, Beschwerden, im schlimmsten
+Fall Kontakt durch die Bundesnetzagentur), ist Folgendes eingebaut und live geprüft:
+
+| Punkt | Status | Warum |
+| --- | --- | --- |
+| **Kein Open Relay** | ✅ | `defer_unauth_destination` + `permit_sasl_authenticated`: NUR authentifizierte Nutzer dürfen an fremde Domains senden. Offene Relays sind der Hauptgrund für sofortiges Blacklisting. |
+| **`abuse@` + `postmaster@`** | ✅ angelegt | RFC-2142-Pflicht. Beschwerden/Blacklist-Betreiber/Behörden erreichen den Betreiber → Reaktion möglich, statt unbemerkt geblockt zu werden. Ziel: `info@` (MUSS gelesen werden). |
+| **DKIM (2048)** | ✅ | Signiert ausgehende Mail → Echtheit beweisbar, keine Fälschung im eigenen Namen. |
+| **SPF `-all` + DMARC `p=quarantine`** | ✅ (DNS) | Legt fest, wer senden darf; regelt Umgang mit Fälschungen + Reports an `postmaster@`. |
+| **TLS erzwungen** | ✅ | Kein Klartext-Versand (Datenschutz/DSGVO). |
+| **Ausgehender Spam-Filter (rspamd)** | ✅ | Verhindert versehentlichen Spam-Versand über eigene (evtl. kompromittierte) Konten. |
+| **Firewall + fail2ban** | ✅ | Kein Missbrauch durch Brute-Force auf SMTP/IMAP/SSH. |
+
+**NICHT am Server, sondern bei euch (rechtlich):** Bei geschäftlicher Mail-Nutzung
+gilt Impressumspflicht (DDG/§5). Der rechtliche Betreiber-Kontakt gehört ins
+Firmen-Impressum, nicht in die Server-Config.
+
+> **Bei Wiederholung eines früheren Vorfalls:** Wenn ein Server/eine IP schon einmal
+> auffällig war, kann die **IP-Reputation vorbelastet** sein. Deshalb VOR dem ersten
+> Produktiv-Versand die neue IP `62.238.4.193` gegen die großen Blacklists prüfen
+> (siehe SECURITY.md → „IP-Reputation prüfen") und langsam „warmlaufen" lassen
+> (erst wenige Mails/Tag), damit die Reputation sauber aufgebaut wird.
+
 ## Bewusst (noch) NICHT Teil
 Backup/Restore der Mailcow-Volumes (kommt separat, analog `deploy/backup/`),
 Cluster/HA, mehrere Mail-Domains, White-Label-Kundendomains.
