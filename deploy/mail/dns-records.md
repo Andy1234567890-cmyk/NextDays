@@ -1,7 +1,26 @@
-# DNS-Records für `mynextdays.dk` — fertig zum Eintragen
+# DNS-Records für `mynextdays.dk`
 
-Diese Records bei der **DNS-Verwaltung von `mynextdays.dk`** setzen. Ohne sie
-(besonders PTR + SPF + DKIM) landen ausgehende Mails im Spam oder werden abgelehnt.
+## ✅ ERLEDIGT (2026-07-06): DNS läuft über Cloudflare
+
+Die Domain `mynextdays.dk` wurde von den DanDomain-Nameservern auf **Cloudflare**
+umgestellt (Nameserver `devin.ns.cloudflare.com` + `yolanda.ns.cloudflare.com`),
+Zone-Status **active**. Alle Records unten sind bereits **live gesetzt** (per
+Cloudflare-API). Cloudflare-Zone-ID + API-Token liegen in der Coolify-Env der
+`nextdays-supabase`-App (`CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_API_TOKEN`).
+
+Gesetzte Records: A/AAAA `mail`, MX, SPF, DKIM, DMARC, CNAME autodiscover/autoconfig.
+Verifiziert: `mail.mynextdays.dk` → 62.238.4.193, MX → mail.mynextdays.dk,
+Webmailer (SOGo) unter `https://mail.mynextdays.dk/SOGo/` erreichbar (HTTP 200).
+
+**Noch offen:** PTR/Reverse-DNS in der Hetzner-Konsole (kein DNS-Record, separater
+Schritt) + Port 25/465-Freischaltung (ab ~20.07.).
+
+---
+
+## Referenz: die gesetzten Records (falls Neuaufbau/Kontrolle)
+
+Ohne sie (besonders PTR + SPF + DKIM) landen ausgehende Mails im Spam oder werden
+abgelehnt.
 
 Server: `mail.mynextdays.dk` · IPv4 `62.238.4.193` · IPv6 `2a01:4f9:c014:7997::1`
 
