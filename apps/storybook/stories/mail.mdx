@@ -1,0 +1,377 @@
+import { Meta } from "@storybook/blocks";
+import { Mermaid } from "@/components/docs/mermaid";
+import { De, En } from "@/components/docs/lang";
+
+<Meta title="Architektur/E-Mail & Mailserver" />
+
+<De>
+
+# E-Mail & Mailserver (Mailcow)
+
+myNextDays betreibt einen **eigenen Open-Source-Mailserver (Mailcow)** auf einem
+**separaten Hetzner-Host** — bewusst außerhalb des DB-/App-Stacks. Damit gehen
+Transaktions-Mails (Rechnungen, Belege, Onboarding, Benachrichtigungen) über die
+**eigene Domain** raus, statt über einen externen Anbieter.
+
+> **Warum ein eigener Host:** ein Mailserver braucht exklusive Ports
+> (25/465/587/143/993 …), eine saubere IP-Reputation und darf beim Crash NICHT den
+> DB-Stack mitreißen. Deshalb läuft Mailcow eigenständig per `docker compose`,
+> nicht in Coolify verwaltet. Betriebsdoku im Repo: `deploy/mail/`.
+
+</De>
+
+<En>
+
+# Email & mail server (Mailcow)
+
+myNextDays runs its **own open-source mail server (Mailcow)** on a **separate
+Hetzner host** — deliberately outside the DB/app stack. Transactional mail
+(invoices, receipts, onboarding, notifications) is sent from our **own domain**
+instead of via a third-party provider.
+
+> **Why a dedicated host:** a mail server needs exclusive ports
+> (25/465/587/143/993 …), a clean IP reputation, and must NOT take down the DB
+> stack when it crashes. Mailcow therefore runs standalone via `docker compose`,
+> not managed by Coolify. Ops docs in the repo: `deploy/mail/`.
+
+</En>
+
+---
+
+<De>
+
+## Eckdaten
+
+| Feld | Wert |
+| --- | --- |
+| Server | Hetzner CPX32 (4 vCPU, 8 GB RAM, 150 GB) |
+| IPv4 / IPv6 | `62.238.4.193` / `2a01:4f9:c014:7997::1` |
+| Mail-Hostname (FQDN) | `mail.mynextdays.dk` |
+| Mail-Domain (Postfächer) | `mynextdays.dk` |
+| Web-UI / Webmail | `https://mail.mynextdays.dk/` · Webmail: SOGo (`/SOGo/`) |
+| Stack | Mailcow (18 Container: Postfix, Dovecot, Rspamd, ClamAV, SOGo, …) |
+| Coolify | Host als 2. Server `nextdays-mail` eingebunden (Proxy=NONE, kein Port-Konflikt) |
+
+</De>
+
+<En>
+
+## Key facts
+
+| Field | Value |
+| --- | --- |
+| Server | Hetzner CPX32 (4 vCPU, 8 GB RAM, 150 GB) |
+| IPv4 / IPv6 | `62.238.4.193` / `2a01:4f9:c014:7997::1` |
+| Mail hostname (FQDN) | `mail.mynextdays.dk` |
+| Mail domain (mailboxes) | `mynextdays.dk` |
+| Web UI / webmail | `https://mail.mynextdays.dk/` · webmail: SOGo (`/SOGo/`) |
+| Stack | Mailcow (18 containers: Postfix, Dovecot, Rspamd, ClamAV, SOGo, …) |
+| Coolify | Host added as 2nd server `nextdays-mail` (proxy=NONE, no port clash) |
+
+</En>
+
+---
+
+<De>
+## Architektur & Versandfluss
+</De>
+<En>
+## Architecture & send flow
+</En>
+
+<De>
+<Mermaid
+  title="API → Mailcow → Empfänger (Transaktions-Mail)"
+  chart={`flowchart LR
+    API["FastAPI Backend\\ncore/mail.py (MailService)"]
+    subgraph MAILHOST["Separater Host — mail.mynextdays.dk"]
+      MC["Mailcow\\nPostfix · Dovecot · Rspamd"]
+    end
+    EXT["Empfänger-Mailserver\\n(Gmail, Web.de, …)"]
+    API -->|"SMTP-Submission 587\\nSTARTTLS, Login developer@"| MC
+    MC -->|"SMTP 25 (ausgehend)\\nDKIM-signiert"| EXT
+    Note["Ohne SMTP_HOST/FROM → fail-closed 503\\n(kein stiller Erfolg, kein erfundener Absender)"]`}
+/>
+</De>
+
+<En>
+<Mermaid
+  title="API → Mailcow → recipient (transactional mail)"
+  chart={`flowchart LR
+    API["FastAPI backend\\ncore/mail.py (MailService)"]
+    subgraph MAILHOST["Separate host — mail.mynextdays.dk"]
+      MC["Mailcow\\nPostfix · Dovecot · Rspamd"]
+    end
+    EXT["Recipient mail server\\n(Gmail, Web.de, …)"]
+    API -->|"SMTP submission 587\\nSTARTTLS, login developer@"| MC
+    MC -->|"SMTP 25 (outbound)\\nDKIM-signed"| EXT
+    Note["Without SMTP_HOST/FROM → fail-closed 503\\n(no silent success, no invented sender)"]`}
+/>
+</En>
+
+---
+
+<De>
+
+## SMTP-Anbindung der API (`core/mail.py`)
+
+Die API sendet über `MailService` per **SMTP-Submission (Port 587, STARTTLS)** —
+Port 25/465 sind bei Hetzner **ausgehend geblockt**. Wurzeln (CLAUDE.md):
+
+- **W4 (keine Fallbacks):** Fehlt `SMTP_HOST` oder `SMTP_FROM_ADDRESS`, ist der
+  Versand deaktiviert → `send()` gibt **503**. Es wird NIE eine plausible
+  Ersatz-Absenderadresse erfunden und NIE still „gesendet" gemeldet.
+- **W5 (fail-closed):** SMTP-Fehler werden spezifisch gefangen und als `MailError`
+  re-raised — nie verschluckt und als Erfolg markiert.
+- **Sandbox:** `MAIL_SANDBOX=true` → nur Log, kein realer Versand (lokale Tests).
+
+| Variable | Bedeutung |
+| --- | --- |
+| `SMTP_HOST` | `mail.mynextdays.dk` |
+| `SMTP_PORT` | `587` (STARTTLS) |
+| `SMTP_USER` / `SMTP_PASSWORD` | echtes Postfach (`developer@mynextdays.dk`) |
+| `SMTP_FROM_ADDRESS` | sichtbarer Absender (`noreply@mynextdays.dk`) |
+| `SMTP_FROM_NAME` | Anzeigename (`myNextDays`) |
+| `SMTP_STARTTLS` | `true` (587) vs. implizites TLS (465) |
+| `MAIL_SANDBOX` | `true` = nur Log. Prod `false` |
+
+</De>
+
+<En>
+
+## API SMTP integration (`core/mail.py`)
+
+The API sends via `MailService` using **SMTP submission (port 587, STARTTLS)** —
+ports 25/465 are **blocked outbound** at Hetzner. Root rules (CLAUDE.md):
+
+- **W4 (no fallbacks):** if `SMTP_HOST` or `SMTP_FROM_ADDRESS` is missing, sending
+  is disabled → `send()` returns **503**. It never invents a plausible sender and
+  never silently reports "sent".
+- **W5 (fail-closed):** SMTP errors are caught specifically and re-raised as
+  `MailError` — never swallowed and marked as success.
+- **Sandbox:** `MAIL_SANDBOX=true` → log only, no real send (local tests).
+
+| Variable | Meaning |
+| --- | --- |
+| `SMTP_HOST` | `mail.mynextdays.dk` |
+| `SMTP_PORT` | `587` (STARTTLS) |
+| `SMTP_USER` / `SMTP_PASSWORD` | real mailbox (`developer@mynextdays.dk`) |
+| `SMTP_FROM_ADDRESS` | visible sender (`noreply@mynextdays.dk`) |
+| `SMTP_FROM_NAME` | display name (`myNextDays`) |
+| `SMTP_STARTTLS` | `true` (587) vs. implicit TLS (465) |
+| `MAIL_SANDBOX` | `true` = log only. Prod `false` |
+
+</En>
+
+---
+
+<De>
+
+## Postfächer (`@mynextdays.dk`)
+
+| Adresse | Zweck |
+| --- | --- |
+| `info@` | Allgemeine Anfragen / zentrale Info |
+| `support@` | Kundensupport |
+| `verkauf@` | Vertrieb |
+| `torsten@` / `jeanine@` | Persönliche Postfächer |
+| `developer@` | System-Absender der App (SMTP-Login) |
+
+> `noreply@` (Absender automatischer Mails) und `postmaster@` (RFC/DMARC-Pflicht)
+> als Alias ergänzen.
+
+</De>
+
+<En>
+
+## Mailboxes (`@mynextdays.dk`)
+
+| Address | Purpose |
+| --- | --- |
+| `info@` | General inquiries / central info |
+| `support@` | Customer support |
+| `verkauf@` | Sales |
+| `torsten@` / `jeanine@` | Personal mailboxes |
+| `developer@` | App system sender (SMTP login) |
+
+> Add `noreply@` (sender of automated mail) and `postmaster@` (RFC/DMARC required)
+> as aliases.
+
+</En>
+
+---
+
+<De>
+
+## DNS & Zustellbarkeit (Pflicht)
+
+Ohne diese Records landen ausgehende Mails im Spam oder werden abgelehnt. Die
+konkreten Werte (inkl. DKIM-Key) stehen in `deploy/mail/dns-records.md`.
+
+| Typ | Name | Wert |
+| --- | --- | --- |
+| A / AAAA | `mail` | `62.238.4.193` / `2a01:4f9:c014:7997::1` |
+| MX | `@` | `10 mail.mynextdays.dk.` |
+| TXT (SPF) | `@` | `v=spf1 mx a:mail.mynextdays.dk -all` |
+| TXT (DKIM) | `dkim._domainkey` | (DKIM-Key, Selector `dkim`, 2048 bit) |
+| TXT (DMARC) | `_dmarc` | `v=DMARC1; p=quarantine; rua=mailto:postmaster@…` |
+| PTR | (Hetzner-Konsole) | `62.238.4.193` → `mail.mynextdays.dk` |
+
+> **Port 25 + 465 ausgehend** sind bei Hetzner standardmäßig geblockt und müssen
+> per Support-Ticket freigeschaltet werden — sonst kommt keine Mail nach draußen.
+
+</De>
+
+<En>
+
+## DNS & deliverability (required)
+
+Without these records, outbound mail lands in spam or is rejected. Concrete values
+(incl. DKIM key) are in `deploy/mail/dns-records.md`.
+
+| Type | Name | Value |
+| --- | --- | --- |
+| A / AAAA | `mail` | `62.238.4.193` / `2a01:4f9:c014:7997::1` |
+| MX | `@` | `10 mail.mynextdays.dk.` |
+| TXT (SPF) | `@` | `v=spf1 mx a:mail.mynextdays.dk -all` |
+| TXT (DKIM) | `dkim._domainkey` | (DKIM key, selector `dkim`, 2048 bit) |
+| TXT (DMARC) | `_dmarc` | `v=DMARC1; p=quarantine; rua=mailto:postmaster@…` |
+| PTR | (Hetzner console) | `62.238.4.193` → `mail.mynextdays.dk` |
+
+> **Ports 25 + 465 outbound** are blocked by default at Hetzner and must be
+> unblocked via a support ticket — otherwise no mail leaves the server.
+
+</En>
+
+---
+
+<De>
+
+## Sicherheit & Härtung
+
+Ein Mailserver ist ein permanentes Angriffsziel (Spam-Relay, Brute-Force auf
+SMTP/IMAP, offene Ports). Der Host ist entsprechend gehärtet — umgesetzt und
+idempotent wiederholbar über `deploy/mail/harden.sh`, Konzept in
+`deploy/mail/SECURITY.md`.
+
+### 1. Firewall (UFW) — nur die nötigen Ports
+`default deny incoming`, `allow outgoing`. Eingehend nur: **22** (SSH), **25**
+(SMTP-Empfang), **80/443** (Web-UI/ACME), **465/587** (Submission), **143/993**
+(IMAP/IMAPS), optional **110/995** (POP3) und **4190** (ManageSieve). Alles andere
+geblockt.
+
+### 2. SSH-Härtung
+Kein Passwort-Login (`PasswordAuthentication no`, `PermitRootLogin
+prohibit-password`) — nur SSH-Key. Wird NUR gesetzt, wenn ein Key hinterlegt ist
+(kein Aussperren).
+
+### 3. Brute-Force-Schutz (zwei Ebenen)
+- **Mailcow-eigen:** `netfilter-mailcow` bannt IPs nach Fehlversuchen auf
+  SMTP/IMAP.
+- **Host-`fail2ban`:** sichert zusätzlich den SSH-Port (5 Fehlversuche → 1 h Bann).
+
+### 4. Automatische Security-Updates
+`unattended-upgrades` für Host-Sicherheits-Patches. Mailcow-Images werden
+kontrolliert über `./update.sh` aktualisiert (nicht automatisch).
+
+### 5. Web-UI & Zustellbarkeit
+Admin-Passwort sofort von `moohoo` auf ein starkes ändern; optional 2FA (TOTP).
+SPF (`-all`), DKIM und DMARC (`p=quarantine` → später `p=reject`) verhindern, dass
+Dritte in unserem Namen versenden.
+
+### 6. Coolify-Anbindung ohne Kollision
+Der Host ist als Coolify-Server `nextdays-mail` eingebunden, aber mit **Proxy=NONE**
+— Coolify startet dort KEINEN Traefik, damit Mailcows Port 80/443 exklusiv bleibt.
+Nur der Coolify-`sentinel` (Monitoring) läuft zusätzlich.
+
+### Verifikation
+```bash
+ssh root@62.238.4.193 'ufw status verbose'
+ssh root@62.238.4.193 'systemctl is-active fail2ban unattended-upgrades'
+ssh root@62.238.4.193 'grep -E "PasswordAuthentication|PermitRootLogin" /etc/ssh/sshd_config'
+```
+
+</De>
+
+<En>
+
+## Security & hardening
+
+A mail server is a permanent attack target (spam relay, SMTP/IMAP brute force,
+open ports). The host is hardened accordingly — applied and idempotently
+repeatable via `deploy/mail/harden.sh`, concept in `deploy/mail/SECURITY.md`.
+
+### 1. Firewall (UFW) — only the necessary ports
+`default deny incoming`, `allow outgoing`. Inbound only: **22** (SSH), **25**
+(SMTP receive), **80/443** (web UI/ACME), **465/587** (submission), **143/993**
+(IMAP/IMAPS), optional **110/995** (POP3) and **4190** (ManageSieve). Everything
+else blocked.
+
+### 2. SSH hardening
+No password login (`PasswordAuthentication no`, `PermitRootLogin
+prohibit-password`) — key only. Set ONLY when a key is present (no lockout).
+
+### 3. Brute-force protection (two layers)
+- **Mailcow's own:** `netfilter-mailcow` bans IPs after failed SMTP/IMAP attempts.
+- **Host `fail2ban`:** additionally protects SSH (5 failures → 1 h ban).
+
+### 4. Automatic security updates
+`unattended-upgrades` for host security patches. Mailcow images are updated
+deliberately via `./update.sh` (not automatically).
+
+### 5. Web UI & deliverability
+Change the admin password from `moohoo` to a strong one immediately; optional 2FA
+(TOTP). SPF (`-all`), DKIM and DMARC (`p=quarantine` → later `p=reject`) prevent
+third parties from sending in our name.
+
+### 6. Coolify integration without clash
+The host is added as Coolify server `nextdays-mail`, but with **proxy=NONE** —
+Coolify starts NO Traefik there so Mailcow's ports 80/443 stay exclusive. Only the
+Coolify `sentinel` (monitoring) runs additionally.
+
+### Verification
+```bash
+ssh root@62.238.4.193 'ufw status verbose'
+ssh root@62.238.4.193 'systemctl is-active fail2ban unattended-upgrades'
+ssh root@62.238.4.193 'grep -E "PasswordAuthentication|PermitRootLogin" /etc/ssh/sshd_config'
+```
+
+</En>
+
+---
+
+<De>
+
+## Betrieb
+
+```bash
+cd /opt/mailcow-dockerized
+docker compose ps          # Status
+docker compose up -d        # Starten
+docker compose down         # Stoppen
+./update.sh                 # Update (kontrolliert, mit Snapshot)
+docker compose logs -f postfix-mailcow   # Logs eines Dienstes
+```
+
+Repo-Doku: `deploy/mail/` — README, SECURITY, dns-records, mailboxes, setup.sh,
+harden.sh, coolify-server.md.
+
+</De>
+
+<En>
+
+## Operations
+
+```bash
+cd /opt/mailcow-dockerized
+docker compose ps          # status
+docker compose up -d        # start
+docker compose down         # stop
+./update.sh                 # update (controlled, with snapshot)
+docker compose logs -f postfix-mailcow   # logs of a service
+```
+
+Repo docs: `deploy/mail/` — README, SECURITY, dns-records, mailboxes, setup.sh,
+harden.sh, coolify-server.md.
+
+</En>
