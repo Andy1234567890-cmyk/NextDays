@@ -100,3 +100,32 @@ def get_service_client() -> Client:
             settings.supabase_service_role_key.get_secret_value(),
         )
     )
+
+
+# PostgREST cappt jede Antwort standardmäßig bei PGRST_DB_MAX_ROWS (deploy: 1000).
+# Ein Query ohne .range()/.limit() liefert also STILL höchstens so viele Zeilen —
+# für Aggregationen über viele Zeilen (Owner-Statement-Summen, Portal-Einnahmen,
+# Forecast-Training) ist das ein geräuschloser Datenverlust. `fetch_all_rows` holt
+# ALLE Zeilen paginiert nach.
+_PAGE_SIZE = 1000
+
+
+def fetch_all_rows(query: object, *, page_size: int = _PAGE_SIZE) -> list[dict]:
+    """Alle Zeilen eines PostgREST-Selects paginiert laden (umgeht den 1000er-Cap).
+
+    `query` ist ein fertig gefilterter, NOCH NICHT ausgeführter PostgREST-Query
+    (ohne .range()/.limit()/.execute()); er MUSS eine stabile Sortierung tragen
+    (.order(...)), sonst kann Pagination Zeilen doppelt/gar nicht liefern. Der
+    Query wird für jede Seite frisch mit .range() ausgeführt — supabase-py-Builder
+    sind wiederverwendbar, solange man .range() je Aufruf neu setzt.
+    """
+    rows: list[dict] = []
+    offset = 0
+    while True:
+        page = (
+            query.range(offset, offset + page_size - 1).execute().data or []
+        )
+        rows.extend(page)
+        if len(page) < page_size:
+            return rows
+        offset += page_size

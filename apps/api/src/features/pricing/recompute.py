@@ -17,6 +17,7 @@ from datetime import UTC, date, datetime, timedelta
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.core.supabase import fetch_all_rows
 
 from .engine import DaySignals, DpSettings, compute_day
 from .market import MarketDay, MarketSignalProvider, get_market_provider
@@ -321,30 +322,20 @@ class DynamicPricingRecompute:
         from .forecast import PickupCurveModel, PickupObservation
 
         train_from = today - timedelta(days=self._FORECAST_TRAIN_DAYS)
-        # VOLLSTÄNDIG paginiert laden: ein Objekt schreibt pro Recompute je Tag im
-        # Horizont (bis 540 Tage) einen Snapshot, die 365-Tage-Trainingsmenge
-        # übersteigt das PostgREST-Default-Limit (1000 Zeilen) also bei weitem.
-        # Ohne Pagination würde die Kurve stillschweigend auf einem willkürlichen
-        # 1000-Zeilen-Ausschnitt trainieren → verzerrte Forecast-Velocity.
-        page_size = 1000
-        rows: list[dict] = []
+        # VOLLSTÄNDIG paginiert laden (fetch_all_rows): ein Objekt schreibt pro
+        # Recompute je Tag im Horizont (bis 540 Tage) einen Snapshot, die 365-Tage-
+        # Trainingsmenge übersteigt das PostgREST-Default-Limit (1000 Zeilen) also
+        # bei weitem. Ohne Pagination würde die Kurve stillschweigend auf einem
+        # willkürlichen 1000-Zeilen-Ausschnitt trainieren → verzerrte Velocity.
         try:
-            offset = 0
-            while True:
-                page = (
-                    self._db()
-                    .table("dp_pickup_snapshots")
-                    .select("stay_date, days_before, booked")
-                    .eq("property_id", property_id)
-                    .gte("snapshot_date", train_from.isoformat())
-                    .order("snapshot_date")
-                    .range(offset, offset + page_size - 1)
-                    .execute()
-                ).data or []
-                rows.extend(page)
-                if len(page) < page_size:
-                    break
-                offset += page_size
+            rows = fetch_all_rows(
+                self._db()
+                .table("dp_pickup_snapshots")
+                .select("stay_date, days_before, booked")
+                .eq("property_id", property_id)
+                .gte("snapshot_date", train_from.isoformat())
+                .order("id")  # eindeutig → stabile Pagination
+            )
         except Exception as exc:  # noqa: BLE001 — Forecast ist best-effort
             log.warning("forecast_train_read_failed", error=str(exc))
             return {}

@@ -640,7 +640,13 @@ class BuchhaltungService:
             "invoice_number": invoice_number,
             "invoice_sequence": invoice_sequence,
             "invoice_year": payload.get("year"),
-            "invoice_type": "storno" if payload.get("isStorno") else "invoice",
+            # Dieser Pfad erzeugt IMMER eine reguläre Rechnung. Ein Storno entsteht
+            # NUR über create_storno_invoice (Negation, original_invoice_id,
+            # invoices_storno_per_original_uidx, Original→cancelled). Ein Client-
+            # Flag isStorno darf hier keinen Storno-Beleg mit POSITIVEN Beträgen
+            # und ohne Original-Verweis fabrizieren (GoBD-Widerspruch + Aushebeln
+            # der „eine aktive Rechnung je Buchung"-Invariante).
+            "invoice_type": "invoice",
             "status": status,
             "issue_date": payload.get("issueDate") or payload.get("date"),
             "due_date": payload.get("dueDate"),
@@ -648,7 +654,13 @@ class BuchhaltungService:
             "net_amount": str(net_amount),
             "tax_amount": str(Decimal("0") if is_klein else tax_amount),
             "gross_amount": str(net_amount if is_klein else gross_amount),
-            "tax_rate": payload.get("vatRate") or payload.get("taxRate"),
+            # Kleinunternehmer (§19): der Beleg weist KEINE USt aus — der Kopf-Satz
+            # MUSS 0 sein (sonst tax_rate=19 bei tax_amount=0 → §19-Inkonsistenz,
+            # und die PDF-Templates nutzen data.vatRate als Positions-Fallback).
+            "tax_rate": (
+                Decimal("0") if is_klein
+                else (payload.get("vatRate") or payload.get("taxRate"))
+            ),
             "tax_rule": payload.get("taxRule") or payload.get("taxRuleType") or "DE_TAXABLE",
             "is_kleinunternehmer": is_klein,
             "head_text": payload.get("headTextHtml") or payload.get("description"),
@@ -694,15 +706,23 @@ class BuchhaltungService:
         # Storno würde den Rabatt als Zuschlag negieren.
         line_rows = []
         for pos, it in enumerate(items, start=1):
+            # BEIDE Schreibweisen tolerieren (wie _compute_totals): sonst berechnet
+            # der Kopf bei snake_case-Payload korrekte Beträge, während jede Position
+            # auf 0 fiele → Σ Positionen ≠ Kopf (GoBD-Widerspruch, unlöschbar).
             qty = Decimal(str(it.get("quantity") or 0))
-            price = Decimal(str(it.get("unitPrice") or 0))
-            disc = Decimal(str(it.get("discountPercent") or 0))
+            price = Decimal(str(it.get("unitPrice") or it.get("unit_price") or 0))
+            disc = Decimal(
+                str(it.get("discountPercent") or it.get("discount_percent") or 0)
+            )
             # Kleinunternehmer (§19 UStG): der Beleg weist KEINE USt aus. Der
             # Kopf steht bereits auf tax_amount=0/gross=net — die Positionen
             # MÜSSEN dazu passen (sonst Σ Positionen ≠ Kopf, GoBD-widersprüchlich,
             # und ein späterer Storno erfände eine Steuerzeile). Satz je Position
             # daher auf 0 zwingen, egal was das Formular schickt.
-            rate = Decimal("0") if is_klein else Decimal(str(it.get("taxRate") or 0))
+            rate = (
+                Decimal("0") if is_klein
+                else Decimal(str(it.get("taxRate") or it.get("tax_rate") or 0))
+            )
             if it.get("category") == "discount":
                 price = -abs(price)
             gross_unit = qty * price

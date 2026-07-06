@@ -168,19 +168,22 @@ class RateLimitMiddleware:
             self._settings.rate_limit_trusted_proxy_hops,
         )
 
-        # listings/Kalender EINGELOGGT → pro TENANT keyen (nicht pro IP): ein
-        # Betrieb, der seinen eigenen Kalender lädt, darf sich nicht selbst
-        # aussperren, und Büro-NAT (mehrere Mitarbeiter, eine IP) teilt sich sonst
-        # ein IP-Limit. Nicht-eingeloggte listings-Requests (öffentlicher
-        # Marktplatz) bleiben pro IP (Scraper-Schutz). Alle anderen Buckets: IP.
+        # listings/Kalender EINGELOGGT → pro (TENANT, IP) keyen. Das großzügige
+        # Tenant-Limit (1200/60) verhindert, dass ein Betrieb sich selbst aussperrt
+        # und Büro-NAT (mehrere Mitarbeiter, eine IP) am strengen IP-Limit scheitert.
+        # Nicht-eingeloggte listings-Requests (öffentlicher Marktplatz) bleiben pro
+        # IP (Scraper-Schutz). Alle anderen Buckets: IP.
         #
-        # WICHTIG (Cross-Tenant-DoS): Beim listings-Pfad wird das IP-Limit ZUERST
-        # geprüft und der globale Tenant-Zähler erst DANACH inkrementiert. Die
-        # tenant_id stammt aus einem NICHT signaturgeprüften JWT — ein Angreifer
-        # könnte sonst mit der REALEN Opfer-tenant_id von wenigen IPs den globalen
-        # 1200/60-Zähler des Opfers vollschreiben und dessen echte Mitarbeiter
-        # tenant-weit aussperren. Der bedingungslose INCR im Limiter macht diesen
-        # Zähler unumkehrbar; deshalb muss der IP-Guard davorstehen (nicht danach).
+        # WICHTIG (Cross-Tenant-DoS): Der Tenant-Schlüssel enthält die IP
+        # (`listings:tenant:{tenant}:ip:{ip}`), NICHT nur die tenant_id. Die
+        # tenant_id stammt aus einem NICHT signaturgeprüften JWT — ein rein globaler
+        # `listings:tenant:{tenant}`-Zähler ließe sich mit der REALEN Opfer-tenant_id
+        # von MEHREREN IPs gemeinsam vollschreiben (jede IP unter ihrem IP-Limit,
+        # zusammen über dem Tenant-Fenster) und würde so die echten Mitarbeiter des
+        # Opfers von IHREN sauberen IPs aussperren. Mit der IP im Schlüssel füllt ein
+        # Angreifer nur seinen eigenen (Opfer-Tenant, Angreifer-IP)-Zähler; die echten
+        # Mitarbeiter haben andere IPs → eigener Zähler, keine Aussperrung. Analog zum
+        # Nicht-listings-Fairness-Bucket unten. Der IP-Scraper-Guard bleibt zusätzlich.
         if bucket_name == "listings" and tenant:
             ip_decision = await limiter.check(
                 f"listings:ip:{ip or 'unknown'}", self._buckets.listings
@@ -190,7 +193,7 @@ class RateLimitMiddleware:
             if not ip_decision.allowed:
                 return self._reject(ip_decision, "listings", path, scope="ip")
 
-            primary_key = f"listings:tenant:{tenant}"
+            primary_key = f"listings:tenant:{tenant}:ip:{ip or 'unknown'}"
             limit = self._buckets.listings_tenant
             primary_scope = "listings-tenant"
         else:

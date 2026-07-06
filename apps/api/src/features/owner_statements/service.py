@@ -23,6 +23,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.core.supabase import fetch_all_rows
 from src.features.auth.guest_masking import GuestMask, load_guest_mask
 
 from .currencies import currency_for_country
@@ -319,10 +320,16 @@ class OwnerStatementsService:
             .in_("property_id", property_ids)
             .gte(basis_col, period_from.isoformat())
             .lte(basis_col, period_to.isoformat())
+            # Stabile Sortierung für die Pagination (id ist eindeutig).
+            .order("id")
         )
         if statuses:
             query = query.in_("status", statuses)
-        return query.execute().data or []
+        # VOLLSTÄNDIG paginiert: das finalisierte Owner-Statement summiert
+        # total_amount/Payout über ALLE Reservierungen des Zeitraums. Ein stiller
+        # 1000-Zeilen-Cap (PGRST_DB_MAX_ROWS) würde bei vielen kurzen OTA-Aufenthalten
+        # zu einem dauerhaft zu niedrigen, aber nummerierten Abrechnungsbetrag führen.
+        return fetch_all_rows(query)
 
     @staticmethod
     def _nights(check_in: str, check_out: str) -> int:
@@ -1132,10 +1139,44 @@ class OwnerStatementsService:
 
     # --- Expenses CRUD ------------------------------------------------------
 
+    def _require_own_fk(
+        self, tenant_id: str, table: str, fk_id: object, label: str
+    ) -> None:
+        """Sicherstellen, dass ein optionaler Fremdschlüssel demselben Tenant
+        gehört. Der Service läuft mit service_role (RLS umgangen), sonst ließe sich
+        eine Expense mit tenant-fremder statement_id/owner_id/listing_id anlegen
+        (Fremd-FK-Injektion / verwaiste Datensätze)."""
+        if not fk_id:
+            return
+        owned = (
+            self._db.table(table)
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("id", str(fk_id))
+            .limit(1)
+            .execute()
+        ).data
+        if not owned:
+            raise StatementError(f"{label} nicht gefunden.", status_code=404)
+
+    def _validate_expense_fks(self, tenant_id: str, data: dict) -> None:
+        self._require_own_fk(
+            tenant_id, "owner_statements", data.get("statement_id"), "Statement"
+        )
+        self._require_own_fk(tenant_id, "owners", data.get("owner_id"), "Eigentümer")
+        self._require_own_fk(
+            tenant_id, "properties", data.get("listing_id"), "Objekt"
+        )
+        self._require_own_fk(
+            tenant_id, "reservations", data.get("reservation_id"), "Reservierung"
+        )
+
     def add_expense(self, ctx: AuthContext, req: ExpenseCreate) -> ExpenseResponse:
         tenant_id = self._require_tenant(ctx)
         self._forbid_owner_writes(ctx)
         payload = req.model_dump(mode="json")
+        # Alle Fremdschlüssel müssen DIESEM Tenant gehören (kein Fremd-FK).
+        self._validate_expense_fks(tenant_id, payload)
         payload["tenant_id"] = tenant_id
         res = self._db.table("owner_expenses").insert(payload).execute()
         if not res.data:
@@ -1160,6 +1201,8 @@ class OwnerStatementsService:
         if not existing:
             raise StatementError("Position nicht gefunden.", status_code=404)
         changes = req.model_dump(mode="json", exclude_unset=True)
+        # Neu gesetzte Fremdschlüssel müssen ebenfalls DIESEM Tenant gehören.
+        self._validate_expense_fks(tenant_id, changes)
         if changes:
             self._db.table("owner_expenses").update(changes).eq(
                 "tenant_id", tenant_id

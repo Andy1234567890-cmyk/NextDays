@@ -79,12 +79,12 @@ def from_booking(
 def checklist_item(
     req: ChecklistItemCreate,
     service: TasksServiceDep,
-    _ctx: Annotated[
+    ctx: Annotated[
         AuthContext, Depends(require_permission(Capability.VIEW_OWN_TASKS))
     ],
 ) -> dict[str, str]:
     try:
-        return {"id": service.add_checklist_item(req).id}
+        return {"id": service.add_checklist_item(_tenant(ctx), req).id}
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -93,12 +93,12 @@ def checklist_item(
 def checklist_photo(
     req: ChecklistPhotoCreate,
     service: TasksServiceDep,
-    _ctx: Annotated[
+    ctx: Annotated[
         AuthContext, Depends(require_permission(Capability.VIEW_OWN_TASKS))
     ],
 ) -> dict[str, str]:
     try:
-        return {"id": service.add_checklist_photo(req)}
+        return {"id": service.add_checklist_photo(_tenant(ctx), req)}
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

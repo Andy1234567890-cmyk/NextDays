@@ -147,7 +147,42 @@ class TasksService:
 
     # --- Checklisten + Foto-Nachweise (§2.5) ---
 
-    def add_checklist_item(self, req: ChecklistItemCreate) -> ChecklistItem:
+    def _require_own_task(self, tenant_id: str, task_id: str) -> None:
+        """Die Aufgabe MUSS dem Tenant gehören. checklist_items/-photos tragen
+        keine tenant_id (Migration 0012) — der Service läuft mit service_role
+        (RLS umgangen), also ist dieser explizite Check der EINZIGE Cross-Tenant-
+        Schutz: sonst könnte ein Mitarbeiter mit einer erratenen fremden task_id
+        Einträge an fremde Aufgaben schreiben (IDOR)."""
+        owned = (
+            self._db()
+            .table("tasks")
+            .select("id")
+            .eq("id", task_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not owned:
+            raise TaskError("Aufgabe nicht gefunden.", status_code=404)
+
+    def _require_own_checklist_item(self, tenant_id: str, item_id: str) -> None:
+        """Das Checklist-Item MUSS über seine Aufgabe zum Tenant gehören."""
+        item = (
+            self._db()
+            .table("checklist_items")
+            .select("task_id")
+            .eq("id", item_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not item:
+            raise TaskError("Checklisten-Eintrag nicht gefunden.", status_code=404)
+        self._require_own_task(tenant_id, str(item[0]["task_id"]))
+
+    def add_checklist_item(
+        self, tenant_id: str, req: ChecklistItemCreate
+    ) -> ChecklistItem:
+        self._require_own_task(tenant_id, req.task_id)
         row = self._insert(
             "checklist_items",
             {
@@ -159,8 +194,9 @@ class TasksService:
         )
         return ChecklistItem(**{k: row.get(k) for k in ChecklistItem.model_fields})
 
-    def add_checklist_photo(self, req: ChecklistPhotoCreate) -> str:
+    def add_checklist_photo(self, tenant_id: str, req: ChecklistPhotoCreate) -> str:
         """Bildnachweis (unbegrenzt pro Raum) referenzieren. Gibt Foto-ID zurück."""
+        self._require_own_checklist_item(tenant_id, req.item_id)
         row = self._insert(
             "checklist_photos",
             {"item_id": req.item_id, "storage_path": req.storage_path},
@@ -172,7 +208,28 @@ class TasksService:
     def request_substitution(
         self, tenant_id: str, user_id: str, req: SubstitutionRequest
     ) -> Substitution:
-        """Zugewiesener Mitarbeiter fragt Vertretung für eine Aufgabe an."""
+        """Zugewiesener Mitarbeiter fragt Vertretung für eine Aufgabe an.
+
+        §4.3: NUR der zugewiesene Mitarbeiter darf eine Vertretung anfragen. Ohne
+        diesen Check könnte ein Mitarbeiter Vertretung für fremde/nicht zugewiesene
+        Aufgaben erzeugen, die ein Kollege dann übernimmt (Umgehung der Zuweisung).
+        Der Service läuft mit service_role (RLS umgangen) → Check hier zwingend."""
+        task = (
+            self._db()
+            .table("tasks")
+            .select("id, assignee_id")
+            .eq("id", req.task_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not task:
+            raise TaskError("Aufgabe nicht gefunden.", status_code=404)
+        if str(task[0].get("assignee_id") or "") != user_id:
+            raise TaskError(
+                "Nur der zugewiesene Mitarbeiter kann eine Vertretung anfragen.",
+                status_code=403,
+            )
         row = self._insert(
             "task_substitutions",
             {

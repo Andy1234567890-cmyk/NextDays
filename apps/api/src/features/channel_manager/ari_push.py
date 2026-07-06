@@ -825,9 +825,19 @@ class AriPushMixin:
                 ).eq("id", r["id"]).execute()
                 result["done"] += 1
                 continue
-            # Nur die Tage pushen, die keine NEUERE Zeile abdeckt.
+            # Nur die Tage pushen, die keine NEUERE Zeile abdeckt. Superseding aus
+            # ZWEI Quellen vereinigen: (1) die Batch-lokalen pending-Zeilen und
+            # (2) neuere pending/done-Zeilen aus der DB (_newer_covered_days). Ohne
+            # (2) sähe der Cron eine bereits erfolgreich gepushte NEUERE done-Zeile
+            # (z. B. neue Buchung avail=0) nicht und würde eine ältere pending-Zeile
+            # (z. B. Storno-Freigabe avail=1) für dieselben Tage pushen → er
+            # überschreibt das jüngere avail=0 und öffnet einen gebuchten Tag wieder
+            # bei den OTAs. Symmetrisch zum schnellen push_availability-Pfad.
+            superseded_days = superseding.get(r["id"], set()) | self._newer_covered_days(
+                db, r["property_id"], str(r.get("created_at") or ""), r["id"]
+            )
             days = set(_iso_days(str(r["date_from"]), str(r["date_to"])))
-            push_ranges = _group_iso_days_to_ranges(days - superseding.get(r["id"], set()))
+            push_ranges = _group_iso_days_to_ranges(days - superseded_days)
             if not push_ranges:
                 # Komplett von neueren Absichten überholt → nichts pushen, abhaken.
                 db.table("ari_outbox").update(

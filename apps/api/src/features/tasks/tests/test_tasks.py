@@ -64,6 +64,12 @@ def test_generate_for_booking_creates_arrival_and_cleaning() -> None:
 
 def test_request_substitution_records_requester() -> None:
     svc, m = _svc()
+    # §4.3-Guard: der Assignee-Check lädt zuerst die Aufgabe (select) — sie muss
+    # dem Tenant gehören UND dem Antragsteller (u1) zugewiesen sein.
+    m.table.return_value.select.return_value.eq.return_value.eq.return_value.limit.\
+        return_value.execute.return_value.data = [
+            {"id": "t1", "assignee_id": "u1"}
+        ]
     _insert_returns(
         m,
         [{"id": "s1", "task_id": "t1", "requested_by": "u1",
@@ -72,6 +78,39 @@ def test_request_substitution_records_requester() -> None:
     sub = svc.request_substitution("T", "u1", SubstitutionRequest(task_id="t1"))
     assert sub.requested_by == "u1"
     assert sub.status.value == "requested"
+
+
+def test_add_checklist_item_rejects_foreign_task() -> None:
+    """IDOR-Guard: eine task_id, die NICHT dem Tenant gehört, wird mit 404
+    abgelehnt (kein Checklist-Insert an fremde Aufgabe)."""
+    from src.features.tasks.schemas import ChecklistItemCreate
+
+    svc, m = _svc()
+    # tasks-Select liefert NICHTS → fremde/unbekannte Aufgabe.
+    m.table.return_value.select.return_value.eq.return_value.eq.return_value.limit.\
+        return_value.execute.return_value.data = []
+    with pytest.raises(TaskError) as exc:
+        svc.add_checklist_item(
+            "T", ChecklistItemCreate(task_id="foreign-task", label="X")
+        )
+    assert exc.value.status_code == 404
+
+
+def test_request_substitution_rejects_non_assignee() -> None:
+    """Nur der zugewiesene Mitarbeiter darf Vertretung anfragen — sonst 403."""
+    import pytest
+
+    from src.features.tasks.service import TaskError
+
+    svc, m = _svc()
+    # Aufgabe existiert, ist aber einem ANDEREN Mitarbeiter zugewiesen.
+    m.table.return_value.select.return_value.eq.return_value.eq.return_value.limit.\
+        return_value.execute.return_value.data = [
+            {"id": "t1", "assignee_id": "someone-else"}
+        ]
+    with pytest.raises(TaskError) as exc:
+        svc.request_substitution("T", "u1", SubstitutionRequest(task_id="t1"))
+    assert exc.value.status_code == 403
 
 
 # --- Inventar auch ohne property (§2.5 zentraler Pool) ---

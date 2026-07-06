@@ -45,6 +45,7 @@ class _Query:
         self._lte: tuple[str, str] | None = None
         self._isnull: str | None = None
         self._order: str | None = None
+        self._range: tuple[int, int] | None = None
 
     def select(self, *_a: object, **_k: object) -> "_Query":
         self._op = "select"
@@ -91,6 +92,11 @@ class _Query:
 
     def order(self, col: str, **_k: object) -> "_Query":
         self._order = col
+        return self
+
+    def range(self, start: int, end: int) -> "_Query":
+        # PostgREST-range ist inklusiv [start, end]; fetch_all_rows paginiert damit.
+        self._range = (start, end)
         return self
 
     def limit(self, _n: int) -> "_Query":
@@ -141,6 +147,9 @@ class _Query:
             return _Result(selected)
         if self._order:
             selected = sorted(selected, key=lambda r: str(r.get(self._order) or ""))
+        if self._range is not None:
+            start, end = self._range
+            selected = selected[start : end + 1]  # PostgREST-range inklusiv
         return _Result(selected)
 
 

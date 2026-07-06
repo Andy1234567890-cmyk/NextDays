@@ -50,6 +50,10 @@ interface SelectBankingTransactionModalProps {
   isOpen: boolean;
   companyId: string;
   invoiceAmount: number;
+  // Währung der Rechnung — verhindert Cross-Currency-Matches (CHF-Transaktion darf
+  // keine EUR-Rechnung als „exakter Treffer" verknüpfen). Optional für Aufrufer,
+  // die (noch) keine Währung liefern; dann greift nur der numerische Vergleich.
+  invoiceCurrency?: string;
   documentType: 'INVOICE' | 'EXPENSE';
   documentNumber?: string;
   transactionType?: 'CREDIT' | 'DEBIT' | 'ALL';
@@ -61,6 +65,7 @@ export default function SelectBankingTransactionModal({
   isOpen,
   companyId,
   invoiceAmount,
+  invoiceCurrency,
   documentType,
   documentNumber,
   transactionType = 'CREDIT',
@@ -435,6 +440,21 @@ export default function SelectBankingTransactionModal({
     }
 
     if (documentType === 'EXPENSE' && isPositiveTransaction) {
+      setWarningModal({
+        isOpen: true,
+        transaction,
+        difference: 0,
+        tolerance: 0,
+      });
+      return; // STOPPE die Verknüpfung
+    }
+
+    // Währungs-Guard: eine Fremdwährungs-Transaktion darf NICHT als Zahlung einer
+    // Rechnung anderer Währung verknüpft werden (sonst gilt CHF 100 als exakter
+    // Treffer für EUR 100). Nur prüfen, wenn beide Währungen bekannt sind.
+    const invCur = invoiceCurrency?.trim().toUpperCase();
+    const txCur = transaction.currency?.trim().toUpperCase();
+    if (invCur && txCur && invCur !== txCur) {
       setWarningModal({
         isOpen: true,
         transaction,

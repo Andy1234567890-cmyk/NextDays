@@ -45,6 +45,7 @@ class _Query:
         self._gte: tuple[str, str] | None = None
         self._lt: tuple[str, str] | None = None
         self._lte: tuple[str, str] | None = None
+        self._range: tuple[int, int] | None = None
 
     def select(self, *_a: object, **_k: object) -> "_Query":
         self._op = "select"
@@ -78,6 +79,10 @@ class _Query:
     def order(self, *_a: object, **_k: object) -> "_Query":
         return self
 
+    def range(self, start: int, end: int) -> "_Query":
+        self._range = (start, end)
+        return self
+
     def limit(self, _n: int) -> "_Query":
         return self
 
@@ -102,7 +107,11 @@ class _Query:
             row.setdefault("created_at", "2026-06-25T00:00:00Z")
             rows.append(row)
             return _Result([row])
-        return _Result([r for r in rows if self._match(r)])
+        selected = [r for r in rows if self._match(r)]
+        if self._range is not None:
+            start, end = self._range
+            selected = selected[start : end + 1]  # PostgREST-range inklusiv
+        return _Result(selected)
 
 
 class _DB:

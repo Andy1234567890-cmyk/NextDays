@@ -7,6 +7,7 @@ Fokus:
   * eine client-übergebene customer_id, die einem FREMDEN Tenant gehört, wird
     abgelehnt (404) statt in den Beleg geschrieben.
 """
+from decimal import Decimal
 from types import SimpleNamespace
 
 import pytest
@@ -143,3 +144,52 @@ def test_number_not_burned_when_reservation_cancelled() -> None:
         svc.create_invoice_from_bestand(_ctx(), _payload(reservationId="r1"))
     assert exc.value.status_code == 409
     assert db.rpc_calls == 0
+
+
+def test_client_isstorno_flag_does_not_create_storno_beleg() -> None:
+    """Ein Client-Flag isStorno darf über diesen Pfad KEINEN storno-Beleg mit
+    positiven Beträgen und ohne Original-Verweis fabrizieren — immer 'invoice'."""
+    db = _DB()
+    svc = BuchhaltungService(service_client=db)
+    svc.create_invoice_from_bestand(_ctx(), _payload(isStorno=True))
+    inserts = db.tables["invoices"].inserts
+    assert len(inserts) == 1
+    assert inserts[0]["invoice_type"] == "invoice"
+    # Positive Beträge (kein Storno-Negat), kein Original-Verweis.
+    assert "original_invoice_id" not in inserts[0]
+
+
+def test_kleinunternehmer_head_tax_rate_forced_to_zero() -> None:
+    """§19: bei is_kleinunternehmer MUSS der Kopf-Satz 0 sein (nicht 19 aus dem
+    Payload), passend zu tax_amount=0 — sonst §19-Inkonsistenz im Beleg/PDF."""
+    db = _DB()
+    svc = BuchhaltungService(service_client=db)
+    svc.create_invoice_from_bestand(
+        _ctx(), _payload(isSmallBusiness=True, items=[
+            {"quantity": 1, "unitPrice": 100.0, "taxRate": 19.0},
+        ])
+    )
+    head = db.tables["invoices"].inserts[0]
+    assert head["is_kleinunternehmer"] is True
+    assert str(head["tax_amount"]) == "0"
+    assert str(head["tax_rate"]) == "0"
+    # Positionen tragen ebenfalls Satz 0.
+    line = db.tables["invoice_line_items"].inserts[0][0]
+    assert Decimal(str(line["tax_rate"])) == Decimal("0")
+
+
+def test_snake_case_positions_match_header() -> None:
+    """snake_case-Positionsfelder (unit_price/tax_rate) werden gelesen — sonst
+    fiele jede Position auf 0 und Σ Positionen ≠ Kopf (GoBD-Widerspruch)."""
+    db = _DB()
+    svc = BuchhaltungService(service_client=db)
+    svc.create_invoice_from_bestand(
+        _ctx(), _payload(items=[
+            {"quantity": 1, "unit_price": 100.0, "tax_rate": 19.0},
+        ])
+    )
+    head = db.tables["invoices"].inserts[0]
+    line = db.tables["invoice_line_items"].inserts[0][0]
+    # Kopf-Netto = Positions-Netto (beide 100), nicht Kopf 100 / Position 0.
+    assert str(head["net_amount"]) == "100.00"
+    assert str(line["net_amount"]) == "100.00"

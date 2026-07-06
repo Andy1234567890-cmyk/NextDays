@@ -290,6 +290,38 @@ def test_listings_ip_capped_attacker_cannot_fill_victim_tenant_counter() -> None
         )
 
 
+def test_listings_multi_ip_attack_cannot_lock_out_victim_employees() -> None:
+    # Kernbeweis des Multi-IP-Fixes: der Tenant-Zähler ist pro (tenant, ip) gekeyt.
+    # Mehrere Angreifer-IPs mit der REALEN Opfer-tenant_id können zusammen NICHT das
+    # Fenster der echten Mitarbeiter (andere IP) vollschreiben — jeder Angreifer
+    # füllt nur seinen eigenen (Opfer-Tenant, Angreifer-IP)-Zähler. Ein globaler
+    # `listings:tenant:{tenant}`-Zähler wäre hier nach 3 IPs × 4 = 12 > 5 voll und
+    # hätte die Mitarbeiter ausgesperrt.
+    settings = Settings(rate_limit_listings="4/60", rate_limit_listings_tenant="5/60")
+    client = TestClient(_app_with_limiter(_FakeRedis(), settings))
+    victim = _bearer("victim-tenant")
+    # 3 Angreifer-IPs feuern je 4 Requests (unter ihrem IP-Limit von 4).
+    for ip in ("1.1.1.1", "2.2.2.2", "3.3.3.3"):
+        for _ in range(4):
+            client.get(
+                "/api/v1/booking-engine/listings",
+                headers={"Authorization": victim, "X-Forwarded-For": ip},
+            )
+    # Echter Mitarbeiter des Opfer-Tenants von SEINER sauberen IP: sein
+    # (tenant, ip)-Fenster ist unberührt → alle 4 Requests (unter dem IP-Limit)
+    # gehen durch. Ohne den Fix hätten die 12 Angreifer-Requests den globalen
+    # Tenant-Zähler (5/60) längst gefüllt und den Mitarbeiter mit 429 ausgesperrt.
+    emp_ip = {"X-Forwarded-For": "9.8.7.6"}
+    codes = [
+        client.get(
+            "/api/v1/booking-engine/listings",
+            headers={"Authorization": victim, **emp_ip},
+        ).status_code
+        for _ in range(4)
+    ]
+    assert codes == [200, 200, 200, 200]
+
+
 def test_fail_open_on_redis_outage_for_normal_endpoint() -> None:
     settings = Settings(rate_limit_listings="1/60")
     client = TestClient(_app_with_limiter(_FakeRedis(fail=True), settings))

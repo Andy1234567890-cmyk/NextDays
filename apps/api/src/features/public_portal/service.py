@@ -15,6 +15,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.core.supabase import fetch_all_rows
 from src.features.auth.guest_masking import load_guest_mask
 
 from .schemas import (
@@ -178,16 +179,19 @@ class PublicPortalService:
             ).data
             or []
         }
-        reservations = (
+        # Vollständig paginiert: die Einnahmen-Übersicht aggregiert payout/nights
+        # über ALLE Reservierungen des Zeitraums. Ein stiller 1000-Zeilen-Cap würde
+        # dem Owner im Portal zu niedrige Summen anzeigen.
+        reservations = fetch_all_rows(
             self._db.table("reservations")
-            .select("property_id, check_in, check_out, total_amount, channel_fee")
+            .select("id, property_id, check_in, check_out, total_amount, channel_fee")
             .eq("tenant_id", tenant_id)
             .in_("property_id", ids)
             .gte("check_in", period_from.isoformat())
             .lte("check_in", period_to.isoformat())
             .in_("status", ["confirmed", "completed"])
-            .execute()
-        ).data or []
+            .order("id")
+        )
 
         agg: dict[str, dict] = {
             pid: {"nights": 0, "reservations": 0, "payout": Decimal("0")} for pid in ids

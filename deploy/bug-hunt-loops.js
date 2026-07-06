@@ -39,7 +39,22 @@ GEFIXT IN RUNDE 3 (ebenfalls NICHT erneut melden):
 - Admin-Addon-Schnelltaste fängt 0109-Kollision (409); öffentliche Buchung: max_guests + Vergangenheitsdatum abgelehnt (_public_property)
 - connect_property fremde channex_property_id abgewiesen; GoBD-Nummer erst nach Validierung; customer_id tenant-gescopt
 - WhatsApp verify_token konstant-zeitig (compare_digest); Gäste-Dedup (0113 guests_tenant_email/phone_uq); properties-Realtime im Kalender
-- Nummernkreis-Constraint defensiv (0112); EmailSendModal Brand-Slug ohne Fallback; Banking-Modal Transaktions-Währung`
+- Nummernkreis-Constraint defensiv (0112); EmailSendModal Brand-Slug ohne Fallback; Banking-Modal Transaktions-Währung
+GEFIXT IN RUNDE 4 (ebenfalls NICHT erneut melden):
+- create_public_booking reicht Add-ons in den PricingResolver.quote → total_amount/Stripe-PaymentIntent enthält sie (AddonSelection aus req.addons)
+- move() lehnt eingecheckte Reservierung ab (checked_in_at-Guard, 409); move() belegt neue Nächte nur wo nicht fremd-OTA-belegt (Open-Guard, kein source-Klobbern)
+- OTA-Storno (bookings_sync) pusht Channex nur die WIRKLICH freigewordenen Tage (tag-/quellengenau, kein pauschales availability=1 für ganzen Zeitraum)
+- _newer_covered_days filtert status IN (pending,done) — failed-Outbox-Zeile superseded keine ältere Sperre; process_ari_outbox Erfolgs-Update mit status=pending-Guard
+- Owner-Dashboard revenue_30d=None + currency='' ohne PM_BOOKING_TOTAL (§4.2); pricing /effective + /quote hinter require_lodgify_permission(PM_BOOKING_TOTAL)
+- Storno nur auf ausgestellte Rechnung (status!=draft UND invoice_number gesetzt) — kein draft-Storno, keine verbrannte ST-Nummer
+- Rate-Limit listings: IP-Check VOR globalem Tenant-INCR (Cross-Tenant-DoS über gefälschte Opfer-tenant_id)
+- PDF usePDFTemplateData: Rabatt-Positionen (category=discount) mindern subtotal/tax negativ; taxGrouped aus Positionen abgeleitet wenn nicht mitgegeben
+- purchase_addons Einzel-Insert (Teilkollision verliert keine neuen Add-ons); Add-on-Fehler nach committer Buchung kippt sie nicht (try/except, kein 500+409-Sackgasse)
+- Inbox-Scheduler: sending-Reaper (SENDING_REAP_MINUTES, verwaiste sending-Zeile läuft nach Crash wieder an); cancel_scheduled erzwingt Thread-Scope (assigned-only)
+- ChannexClient _acquire_budget PRO HTTP-Round-Trip in der Retry-Schleife (auch 429-Retries zählen Token)
+- worker _enqueue_reconcile_all Bucket aus time.time() (Wall-Clock) statt loop.time() (Monotonic) → Cross-Instance/Restart-Coalescing
+- guests _find_by_email case-insensitiv via ilike + _like_escape (mixed-case Bestands-E-Mail findbar, kein 500 an lower(email)-Index)
+- Kalender-KPIs (calendar-board) aggregieren Umsatz/ADR pro Währung, mixedCurrency → keine Mischsumme; Channex-Webhook-Secret secrets.compare_digest; Forecast-Training paginiert (kein 1000-Cap)`
 
 // Nur bestätigte, echte Bugs. Schema erzwingt strukturierte Rückgabe.
 const FINDINGS_SCHEMA = {
@@ -93,7 +108,7 @@ const L2_TRACES = [
   { key: 'trace-auth-scope', prompt: `Trace Berechtigungen/Scoping über ALLE Slices in ${REPO}: welche GET/POST-Endpunkte laufen mit Service-Role (RLS umgangen) und scopen NICHT explizit auf tenant/owner? Prüfe systematisch calendar, reservations, buchhaltung, owner_statements, pricing, channel_manager, inbox. Suche: fehlende require_permission/require_lodgify_permission, Owner der fremde Daten sieht, staff/cleaner der Finanzdaten liest, Client-Parameter der Scope ausweitet.` },
   { key: 'trace-worker-resilienz', prompt: `Trace die Worker-Resilienz in ${REPO}: worker.py claim_jobs → _dispatch → _job_heartbeat → _finish/_retry/_defer + Reaper (requeue_stuck_jobs) + Migration 0102/0106/0107. Suche: kann ein Job doppelt laufen? Kann der Heartbeat einen fremden Claim auffrischen? locked_by-Guard-Lücken? Kann ein Push-Fehler den Job in eine Endlosschleife bringen? Interagiert der neue bool-Rückgabewert korrekt mit _retry?` },
   { key: 'trace-realtime-currency', prompt: `Trace Realtime + Mehrwährung im Frontend in ${REPO}: welche Listen/Detail-UIs abonnieren NICHT alle relevanten Tabellen (stale Daten)? Wo wird noch €/EUR hartkodiert statt formatCurrency/Objekt-Währung? Prüfe kalender/, objekte/, finance/, quotes/. Suche: fehlende useRealtime-Abos, verbliebene Währungs-Hardcodes, Preis-Quellen die nicht live nachziehen.` },
-  { key: 'trace-luecken-kritik', prompt: `Vollständigkeits-Kritiker für ${REPO}: Welche Bereiche hat die letzte Fix-Runde (6 Critical + 17 High) NICHT berührt und könnten dieselben Fehlerklassen haben? Denke an: inbox/scheduler.py (Doppelversand), pricing/resolver.py + recompute.py, guests/, addons/, payments/, public_portal/, site_config/, weitere RPCs/Migrationen mit offenen Grants (wie 0107 gerade fand!), fehlende DB-Transaktionen wo mehrere Schreibvorgänge atomar sein müssten, N+1 bei 1000 Usern, fehlende Pagination-Limits. Prüfe deployte Realität, nicht Vermutung.` },
+  { key: 'trace-luecken-kritik', prompt: `Vollständigkeits-Kritiker für ${REPO}: Vier Fix-Runden (insgesamt 83 bestätigte Bugs) sind bereits durch — siehe die BEREITS-GEFIXT-Liste, melde davon NICHTS erneut. Welche Bereiche haben dieselben Fehlerklassen, wurden aber noch NICHT geprüft? Denke an: public_portal/, site_config/, content/, media/, quotes/, tasks/, travel_agencies/, weitere RPCs/Migrationen mit offenen Grants oder fehlendem RLS (wie 0107 fand!), fehlende DB-Transaktionen wo mehrere Schreibvorgänge atomar sein müssten, N+1 bei 1000 Usern, fehlende Pagination-Limits (PostgREST 1000-Cap wie im Forecast-Fix), fehlende Idempotenz bei öffentlichen/retry-baren Endpunkten, Geld-/Scope-/Realtime-Lücken in bisher ungeprüften Slices. Prüfe deployte Realität, nicht Vermutung.` },
 ]
 
 async function findAndVerify(items, findPhase, verifyPhase) {

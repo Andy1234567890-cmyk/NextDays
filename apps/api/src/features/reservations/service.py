@@ -783,6 +783,14 @@ class ReservationsService:
         self._push_channex_availability(
             tenant_id, req.property_id, req.check_in, req.check_out, 0
         )
+        # Dynamic Pricing für BEIDE betroffenen Objekte neu rechnen — ein Move
+        # ändert Auslastung + Orphan-Lücken am freigegebenen Alt-Objekt UND am neu
+        # belegten Ziel-Objekt genau wie eine Buchung/Storno. Ohne den Recompute
+        # (den create()/cancel() bereits machen) drifteten die Tagespreise beider
+        # Zeiträume bis zum nächsten 15-min-reconcile-Tick.
+        self._recompute_dynamic_pricing(tenant_id, req.property_id)
+        if not same_property:
+            self._recompute_dynamic_pricing(tenant_id, old_property)
         log.info(
             "reservation_moved",
             reservation_id=reservation_id,

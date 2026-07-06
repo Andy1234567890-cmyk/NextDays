@@ -798,6 +798,7 @@ export function InvoiceListView({
           isOpen={showLinkTransactionModal}
           companyId={companyId}
           invoiceAmount={selectedInvoiceForLink.total || 0}
+          invoiceCurrency={selectedInvoiceForLink.currency}
           documentType="INVOICE"
           documentNumber={selectedInvoiceForLink.invoiceNumber || selectedInvoiceForLink.number}
           transactionType="CREDIT"

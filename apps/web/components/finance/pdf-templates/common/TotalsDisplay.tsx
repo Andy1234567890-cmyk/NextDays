@@ -65,12 +65,15 @@ export const TotalsDisplay: React.FC<TotalsDisplayProps> = ({
     !isReverseCharge && !isTaxExempt && !isOSS && !isNotTaxableInGermany && !isSmallBusiness;
   const skontoDays = typeof data.skontoDays === 'number' ? data.skontoDays : 0;
 
-  // SevDesk-style: Verwende taxGrouped wenn verfügbar, sonst fallback zu altem System
+  // SevDesk-style: Verwende taxGrouped wenn verfügbar, sonst fallback zu altem System.
+  // Filter auf taxAmount !== 0 (nicht > 0): eine Stornorechnung/Gutschrift trägt
+  // NEGATIVE Steuerbeträge — würde man nur > 0 zulassen, fehlte im Storno-PDF die
+  // (negative) MwSt-Zeile und Zwischensumme + Steuer ergäben nicht die Gesamtsumme.
   type TaxLine = { rate: number; taxAmount: number };
   const taxLines: TaxLine[] =
     data.taxGrouped && (data.taxGrouped as TaxLine[]).length > 0
-      ? (data.taxGrouped as TaxLine[]).filter((tax: TaxLine) => showVat && tax.taxAmount > 0)
-      : showVat && data.taxAmount > 0
+      ? (data.taxGrouped as TaxLine[]).filter((tax: TaxLine) => showVat && tax.taxAmount !== 0)
+      : showVat && data.taxAmount !== 0
         ? [{ rate: data.vatRate, taxAmount: data.taxAmount }]
         : [];
 

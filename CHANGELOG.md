@@ -233,6 +233,44 @@ ohne neue Migration (reine Code-Fixes gegen den 0104–0113-Stand):
   Channex-Webhook-Secret zeitkonstant verglichen; Forecast-Training paginiert
   (kein stiller 1000-Zeilen-Cap).
 
+### Behoben (5. Bug-Jagd-Runde 07/2026 — 17 verifizierte Befunde)
+Fünfter Multi-Agenten-Loop über den deployten Stand; alle 17 Befunde gefixt
+(6 High, 8 Medium, 3 Low). Migration 0114. Kernpunkte:
+- **Öffentliche Buchung crasht nicht mehr bei wiederkehrendem Gast**:
+  `booking_engine._upsert_guest` delegiert jetzt an den zentralen
+  `resolve_or_create_guest` (case-insensitive E-Mail-Suche + 23505-Handling) statt
+  einer eigenen case-sensitiven Insert-Logik, die bei mixed-case-E-Mail/gleicher
+  Telefonnummer/Race mit 500 gegen die 0113-Unique-Indizes lief.
+- **Cron-ARI-Superseding gegen done-Zeilen**: `process_ari_outbox` berücksichtigt
+  jetzt auch neuere bereits erfolgreich gepushte (done) Outbox-Zeilen als
+  Supersessor (nicht nur die pending-Batch) — eine ältere Storno-Freigabe (avail=1)
+  überschreibt keine neuere Buchung (avail=0) mehr (Überbuchung).
+- **Kein Client-fabrizierter Storno + §19-Konsistenz**: `create_invoice_from_bestand`
+  erzeugt immer `invoice_type='invoice'` (Storno nur über den echten Weg mit
+  Negation/Original-Verweis); bei Kleinunternehmer wird der Kopf-`tax_rate` auf 0
+  gezwungen; die Positions-Schleife liest snake_case + camelCase (Σ Positionen = Kopf).
+- **Storno-PDF vollständig**: die (negative) MwSt-Zeile wird ausgewiesen
+  (`taxAmount !== 0` statt `> 0`) und der Beleg als „Stornorechnung" beschriftet
+  (`documentType='cancellation'`).
+- **Geld-Aggregationen vollständig (PostgREST-1000-Cap)**: neuer Helfer
+  `core/supabase.fetch_all_rows` paginiert; Owner-Statement-Summen,
+  Portal-Einnahmen und Forecast-Training laden jetzt ALLE Zeilen (kein stiller
+  Datenverlust bei >1000 Reservierungen/Snapshots).
+- **Tasks-IDOR + §4.3**: `add_checklist_item`/`add_checklist_photo` prüfen die
+  Tenant-Zugehörigkeit der Aufgabe (checklist-Tabellen tragen keine tenant_id);
+  `request_substitution` nur durch den zugewiesenen Mitarbeiter.
+- **Job-Queue: hart-crashende Jobs gehen 'dead'** (0114): `requeue_stuck_jobs`
+  setzt running-Jobs mit erschöpftem Budget auf 'dead' statt sie endlos zu
+  requeuen; `claim_jobs` claimt keine Jobs mit `attempts >= max_attempts` mehr.
+- **Rate-Limit Cross-Tenant-DoS geschlossen**: der listings-Tenant-Zähler ist jetzt
+  pro (Tenant, IP) gekeyt — mehrere Angreifer-IPs mit gefälschter Opfer-tenant_id
+  können das Fenster der echten Mitarbeiter (andere IP) nicht mehr vollschreiben.
+- **Weitere**: `move()` rechnet Dynamic Pricing für Alt- + Ziel-Objekt neu;
+  Bank-Transaktion↔Rechnung nur bei gleicher Währung verknüpfbar;
+  `BookingAccountSelectionModal` nutzt die echte Transaktions-Währung (kein
+  €-Hardcode); `owner_expenses` validieren statement_id/owner_id/listing_id/
+  reservation_id gegen den Tenant (kein Fremd-FK).
+
 ### Behoben (High-Befunde der Bug-Jagd 07/2026)
 - **Owner-Scope im Kalender + Reservierungen (§4.2)**: Eigentümer sehen jetzt nur
   ihre zugeordneten Objekte (neuer gemeinsamer Helfer `auth/owner_scope.py`).

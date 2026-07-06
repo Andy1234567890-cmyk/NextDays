@@ -4,6 +4,7 @@ import { Icon } from '@iconify/react';
 import { Badge, Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input } from '@tasko/ui';
 import { useEffect, useState } from 'react';
 
+import { formatCurrency } from '@/lib/currency';
 import { type BookingAccount, BookingAccountService } from '@/services/bookingAccountService';
 import type { ModalTransaction } from '@/types/banking';
 
@@ -79,13 +80,6 @@ export default function BookingAccountSelectionModal({
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('de-DE', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(amount);
-  };
-
   if (!transaction) return null;
 
   return (
@@ -119,7 +113,7 @@ export default function BookingAccountSelectionModal({
                 <span
                   className={`ml-2 font-medium ${transaction.betrag > 0 ? 'text-green-600' : 'text-red-600'}`}
                 >
-                  {formatCurrency(transaction.betrag)}
+                  {formatCurrency(transaction.betrag, transaction.currency)}
                 </span>
               </div>
               <div className="col-span-2">

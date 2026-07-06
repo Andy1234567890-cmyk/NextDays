@@ -722,33 +722,31 @@ class BookingEngineService:
         return self.reservation_addons_view(reservation_id, str(req.email), today=today)
 
     def _upsert_guest(self, tenant_id: str, contact: GuestContact) -> str | None:
-        name = f"{contact.first_name} {contact.last_name}".strip()
-        email = str(contact.email)
-        existing = (
-            self._db()
-            .table("guests")
-            .select("id")
-            .eq("tenant_id", tenant_id)
-            .eq("email", email)
-            .limit(1)
-            .execute()
-        ).data
-        if existing:
-            return existing[0]["id"]
-        ins = (
-            self._db()
-            .table("guests")
-            .insert(
-                {
-                    "tenant_id": tenant_id,
-                    "name": name or email,
-                    "email": email,
-                    "phone": contact.phone or None,
-                }
-            )
-            .execute()
-        ).data
-        return ins[0]["id"] if ins else None
+        # An den ZENTRALEN Resolver delegieren (ein Pfad für alle Kanäle) statt
+        # einer Eigenimplementierung: der Resolver sucht case-insensitiv per ilike
+        # (mixed-case Bestands-E-Mail), sucht per Telefon UND fängt die 23505-
+        # Verletzung der Unique-Indizes (0113: lower(email)/phone) ab, indem er den
+        # bestehenden Gast nachlädt. Die vorherige Eigen-Logik (.eq case-sensitiv +
+        # ungeschützter Insert) crashte bei wiederkehrenden Gästen mit anderer
+        # Schreibweise/gleicher Nummer/Race mit 500 gegen die Unique-Indizes.
+        from src.features.guests.identity import (  # noqa: PLC0415
+            GuestContact as ResolverContact,
+        )
+        from src.features.guests.identity import (  # noqa: PLC0415
+            resolve_or_create_guest,
+        )
+
+        return resolve_or_create_guest(
+            self._db(),
+            tenant_id,
+            ResolverContact(
+                first_name=contact.first_name,
+                last_name=contact.last_name,
+                email=str(contact.email),
+                phone=contact.phone or None,
+                channel="direct",
+            ),
+        )
 
     def _push_channex(
         self,

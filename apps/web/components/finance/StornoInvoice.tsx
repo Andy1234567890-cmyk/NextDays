@@ -431,7 +431,14 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
                     <DialogDescription>Vorschau der erstellten Storno-Rechnung</DialogDescription>
                   </DialogHeader>
                   <div className="mt-4" ref={stornoPreviewRef}>
-                    <InvoiceTemplateRenderer data={stornoInvoice} template="TEMPLATE_NEUTRAL" />
+                    {/* documentType explizit als 'cancellation' setzen: das Storno-
+                        Objekt trägt weder documentType noch einen 'sto'-Nummern-
+                        präfix, sonst würde detectDocumentType es als 'Rechnung'
+                        rendern (falsch beschrifteter Beleg mit negativen Beträgen). */}
+                    <InvoiceTemplateRenderer
+                      data={{ ...stornoInvoice, documentType: 'cancellation' }}
+                      template="TEMPLATE_NEUTRAL"
+                    />
                   </div>
                   <DialogFooter>
                     <Button variant="outline" onClick={() => setShowStornoPreview(false)}>
