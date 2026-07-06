@@ -332,6 +332,44 @@ Siebter Multi-Agenten-Loop über den deployten Stand; alle 13 Befunde gefixt
   Belegung (+ availability/stop_sell-Realtime); InventorySelector zeigt die
   Belegwährung; WhatsApp-Status-Update tenant-scoped.
 
+### Behoben (9. Bug-Jagd-Runde 07/2026 — 5 verifizierte Befunde)
+Neunter Multi-Agenten-Loop über den deployten Stand; alle 5 Befunde gefixt
+(2 High, 2 Medium, 1 Low), ohne neue Migration. Drei davon waren Lücken in
+eigenen früheren Fixes:
+- **Keine Add-on-Doppelfaktura mehr im Fallback** (Nacharbeit R6): Wenn die
+  Buchungs-Aufschlüsselung nicht mehr zum Gesamtpreis passt (Gast kauft/storniert
+  nachträglich ein Add-on → `addons_sum` verschiebt sich, `total_amount` bleibt),
+  nahm der Fallback bislang den vollen (add-on-haltigen) `total_amount` als
+  Sammelposition UND buchte die Add-ons erneut on-top. Jetzt ist der Aufenthalt
+  der verlässliche Snapshot `items_sum` (add-on-frei per Invariante); ohne
+  `quote_items` wird `total_amount` um die gedeckte Add-on-Summe gekürzt; ohne
+  Add-ons bleibt der Wizard-`total_amount`-Override die Sammelposition. Betroffen
+  war die verpflichtende GoBD-Check-out-Rechnung.
+- **Girocode-QR im Versand-Modal** (Nacharbeit R8): `SendDocumentModal` erzeugt
+  nur noch bei ausdrücklich als EUR ausgewiesener Rechnung einen EPC-QR — leere
+  ODER Fremdwährung ergibt keinen QR (kein `EUR`-Präfix auf einem CHF/PLN- oder
+  währungslosen Betrag → keine falsche Überweisungssumme). Bisher nur in
+  `LivePreviewModal` gefixt, nicht in der eigentlichen Versand-Instanz.
+- **Dashboard-Umsatz bei Mehrwährung**: `reservations.dashboard` addiert
+  EUR/CHF/… nicht mehr stumpf zu einer Zahl mit beliebigem Label — bei mehr als
+  einer Währung im 30-Tage-Fenster ist `revenue_30d=None` + `currency=''` (Frontend
+  blendet die KPI aus, wie beim maskierten Owner). Gleiche Klasse wie der R4-Fix
+  der Kalender-KPIs.
+- **Kein erfundenes € im PDF-Hook**: `usePDFTemplateData` reicht `currency` ohne
+  `|| 'EUR'`-Fallback durch (leer → `formatCurrency` rendert bewusst symbollos)
+  — an beiden Stellen (`placeholderData` + `processedData`); hebelt das
+  gewollte Verhalten nicht mehr aus (Regeln „keine Fallbacks"/„kein €-Hardcode").
+- **ari_push Fehlerpfad mit `pending`-Guard**: der `ChannexError`-Zweig in
+  `push_availability_for_property` schreibt `attempts`/`last_error` nur noch auf
+  eine noch `pending` Outbox-Zeile — ein verzögerter Fehler des schnellen
+  Job-Pfads überschreibt keine bereits vom Cron auf `done` gesetzte Zeile mehr
+  (Guard-Invariante wie überall sonst im Modul).
+
+Stop-Rule ergänzt (Loop Engineering 101, Baustein 4): die Bug-Jagd-Schleife hat
+jetzt einen Iterations-Cap (`deploy/bug-hunt-loop-state.json`, `maxRounds=15`) —
+sie stoppt bei 0 bestätigten Bugs (Konvergenz) ODER beim Cap, nicht mehr
+unbegrenzt.
+
 ### Behoben (8. Bug-Jagd-Runde 07/2026 — 11 verifizierte Befunde)
 Achter Multi-Agenten-Loop über den deployten Stand; alle 11 Befunde gefixt
 (6 High, 4 Medium, 1 Low), ohne neue Migration. Mehrere waren Nacharbeit an

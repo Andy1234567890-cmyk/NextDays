@@ -481,9 +481,14 @@ class AriPushMixin:
             return False
         except ChannexError as exc:
             if outbox_id:
+                # Guard status='pending' (wie Erfolgspfad + process_ari_outbox):
+                # hat ein paralleler Cron-Tick die Zeile bereits erfolgreich auf
+                # 'done' gesetzt, darf der leicht verzögerte Fehler dieses Job-
+                # Pfads nicht einen veralteten last_error/attempts blind auf die
+                # erledigte Zeile schreiben.
                 db.table("ari_outbox").update(
                     {"attempts": prior_attempts + 1, "last_error": exc.message}
-                ).eq("id", outbox_id).execute()
+                ).eq("id", outbox_id).eq("status", "pending").execute()
             log.warning(
                 "ari_push_failed_queued",
                 tenant_id=tenant_id,

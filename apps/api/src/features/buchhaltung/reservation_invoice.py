@@ -225,8 +225,34 @@ def build_positions(
         except ValueError:
             nights = 0
         label = doc_i18n.stay_label(language, property_title, check_in, check_out, nights)
-        rate = Decimal("0") if total_amount == 0 else lodging_rate()
-        positions.append(_line(label, total_amount, rate, unit))
+        # Add-ons werden unten IMMER als eigene Positionen fakturiert. Der Sammel-
+        # betrag für den Aufenthalt muss daher OHNE den Add-on-Anteil bestimmt
+        # werden, sonst Doppelfaktura. Der Fallback greift nur, wenn die Aufschlüss-
+        # elung NICHT zum Gesamtpreis passt — dafür gibt es zwei Ursachen:
+        #  1) Add-ons im Spiel (addons_sum > 0): breakdown kippte, weil sich die
+        #     Add-on-Summe verschob (nachträglicher Kauf/Storno). Der Aufenthalt
+        #     bleibt der verlässliche Snapshot items_sum (add-on-frei per Invariante),
+        #     Add-ons on-top → Summe = items_sum + addons_sum, keine Doppelfaktura.
+        #     Ohne quote_items (Bestand/OTA) nur total_amount bekannt: enthält es die
+        #     Add-ons (total >= addons_sum), abziehen; sonst (Add-ons on-top) belassen.
+        #  2) Keine Add-ons (addons_sum == 0): breakdown kippte durch manuellen
+        #     total_amount-Override (Wizard) → der vereinbarte total_amount ist die
+        #     Wahrheit, EINE ehrliche Sammelposition darüber (kein items_sum).
+        if addons_sum > 0:
+            if quote_items:
+                stay_amount = items_sum
+            elif total_amount >= addons_sum:
+                stay_amount = _q(total_amount - addons_sum)
+            else:
+                stay_amount = total_amount
+        else:
+            stay_amount = total_amount
+        rate = Decimal("0") if stay_amount == 0 else lodging_rate()
+        # 0-Sammelposition nur unterdrücken, wenn Add-ons folgen (sie tragen den
+        # Beleg). Ohne Add-ons (Comp-Aufenthalt 0 €) MUSS die 0-Position bleiben,
+        # damit der Pflicht-Check-out-Beleg nicht leer ist.
+        if stay_amount != 0 or addons_sum == 0:
+            positions.append(_line(label, stay_amount, rate, unit))
 
     # Upsells: eigene Positionen mit Snapshot-Steuersatz (NULL = 0 % ist die
     # dokumentierte Kaufzeitpunkt-Wahrheit aus 0075, kein erfundener Default).

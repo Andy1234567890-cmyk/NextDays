@@ -239,6 +239,34 @@ def test_dashboard_buckets_and_kpis() -> None:
     assert out.currency == "EUR"
 
 
+def test_dashboard_mixed_currency_suppresses_revenue() -> None:
+    """Objekte in mehreren Währungen: der 30-Tage-Umsatz darf NICHT zu einer
+    Mischsumme mit beliebigem Label addiert werden. revenue_30d=None,
+    currency='' — die Zähl-KPIs bleiben unberührt."""
+    today = date.today()
+    iso = lambda d: d.isoformat()  # noqa: E731
+    reservations = [
+        {"id": "r1", "property_id": "p1", "channel": "booking", "status": "confirmed",
+         "check_in": iso(today - timedelta(days=3)), "check_out": iso(today),
+         "total_amount": 100, "currency": "EUR", "guests": {"name": "Anna"}},
+        {"id": "r2", "property_id": "p2", "channel": "direct", "status": "confirmed",
+         "check_in": iso(today - timedelta(days=1)), "check_out": iso(today + timedelta(days=2)),
+         "total_amount": 100, "currency": "CHF", "guests": {"name": "Bea"}},
+    ]
+    properties = [
+        {"id": "p1", "title": "Strandhaus", "currency": "EUR"},
+        {"id": "p2", "title": "Alphütte", "currency": "CHF"},
+    ]
+    svc = _dashboard_db(reservations, properties)
+    out = svc.dashboard(AuthContext(user_id="u1", tenant_id="t1", role="admin"))
+    # Gemischte Währungen → keine (falsche) Umsatz-Mischsumme, kein Label.
+    assert out.revenue_30d is None
+    assert out.currency == ""
+    # Zähl-KPIs bleiben korrekt.
+    assert out.checkins_30d.value == 2
+    assert out.confirmed_30d.value == 2
+
+
 def test_dashboard_owner_revenue_masked() -> None:
     """Owner ohne PM_BOOKING_TOTAL sieht laut §4.2 keinen (auch nicht aggregierten)
     Umsatz: revenue_30d=None + currency='' — die anderen KPIs bleiben sichtbar."""

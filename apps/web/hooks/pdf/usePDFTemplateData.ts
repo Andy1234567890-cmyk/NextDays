@@ -672,7 +672,9 @@ export function usePDFTemplateData(props: PDFTemplateProps): ProcessedPDFData {
       discountAmount: documentData.discountAmount || 0,
       discountPercentage: documentData.discountPercentage || 0,
       orderNumber: documentData.orderNumber || documentData.purchaseOrderNumber || '',
-      currency: documentData.currency || 'EUR',
+      // Belegwährung ohne EUR-Default — bei fehlender Währung rendert
+      // formatCurrency bewusst symbollos (kein erfundenes €, Mehrwährungs-Regel).
+      currency: documentData.currency || '',
 
       // Steuersatz
       vatRate: vatRate,
@@ -786,7 +788,9 @@ export function usePDFTemplateData(props: PDFTemplateProps): ProcessedPDFData {
       eInvoice: documentData.eInvoice || false,
       eInvoiceData: documentData.eInvoiceData || {},
       status: documentData.status || 'draft',
-      currency: documentData.currency || 'EUR',
+      // Belegwährung ohne EUR-Default — kein erfundenes € auf währungslosen/
+      // Fremdwährungs-Belegen (formatCurrency rendert dann symbollos).
+      currency: documentData.currency || '',
       createdBy: documentData.createdBy || '',
       deliveryTerms: documentData.deliveryTerms || '',
       companyLogo: (() => {

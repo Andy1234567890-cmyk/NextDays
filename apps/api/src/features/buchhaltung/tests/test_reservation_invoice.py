@@ -225,6 +225,65 @@ def test_addons_added_without_dedup_and_cancelled_excluded() -> None:
     assert breakfast["gross_amount"] == Decimal("30.00")
 
 
+def test_fallback_uses_items_sum_not_stale_total_no_double_billing() -> None:
+    """Regression: quote_items (nur Unterkunft) ist der verlässliche Aufenthalts-
+    betrag; total_amount ist ein veralteter Snapshot (Gast kaufte nachträglich ein
+    Add-on, addons_sum verschob sich, breakdown_matches kippte → Fallback). Der
+    Aufenthalt bleibt items_sum, Add-ons on-top — die Add-ons werden NICHT über
+    total_amount doppelt berechnet. Geprüft wird die GESAMTSUMME."""
+    # Buchung: 450 Unterkunft, total_amount=480 (enthielt urspr. 30 Frühstück).
+    # quote_items nur Unterkunft (Invariante). Gast kauft nachträglich Spätanreise
+    # 20 → addons_sum=50. items_sum(450)+addons_sum(50)=500 != 480 → Fallback.
+    res = _reservation(
+        total_amount=480.0,
+        quote_items=[{"label": "Übernachtung", "amount": 450.0, "kind": "lodging"}],
+    )
+    addons = [
+        {"status": "paid", "total": 30.0, "tax_rate": 0.0, "qty": 1,
+         "name": {"de": "Frühstück"}},
+        {"status": "paid", "total": 20.0, "tax_rate": 0.0, "qty": 1,
+         "name": {"de": "Spätanreise"}},
+    ]
+    pos = build_positions(res, addons, [], Decimal("7"), False, "Ferienhaus")
+    gross_total = sum(p["gross_amount"] for p in pos)
+    # Korrekt: Aufenthalt 450 (items_sum) + Frühstück 30 + Spätanreise 20 = 500,
+    # NICHT 480 + 30 + 20 = 530 (Doppelfaktura des im 480 enthaltenen Frühstücks).
+    assert gross_total == Decimal("500.00")
+    by_label = {p["description"]: p for p in pos}
+    assert by_label["Frühstück"]["gross_amount"] == Decimal("30.00")
+    assert by_label["Spätanreise"]["gross_amount"] == Decimal("20.00")
+    stay = next(p for p in pos if "Frühstück" not in p["description"]
+                and "Spätanreise" not in p["description"])
+    assert stay["gross_amount"] == Decimal("450.00")
+
+
+def test_fallback_total_covers_addons_sum_equals_total() -> None:
+    """Fallback ohne Aufschlüsselung: total_amount deckt die Add-ons (>= addons_sum).
+    Sammelbetrag = total_amount - addons_sum, Add-ons on-top → Gesamtsumme bleibt
+    exakt total_amount (keine Doppelfaktura, kein zu hoher Beleg)."""
+    res = _reservation(total_amount=300.0, quote_items=[])
+    addons = [{"status": "paid", "total": 30.0, "tax_rate": 0.0, "qty": 1,
+               "name": {"de": "Frühstück"}}]
+    pos = build_positions(res, addons, [], Decimal("7"), False, "Ferienhaus")
+    gross_total = sum(p["gross_amount"] for p in pos)
+    # 300-30=270 Sammelposition + 30 Frühstück = 300.
+    assert gross_total == Decimal("300.00")
+
+
+def test_fallback_total_below_addons_no_subtract() -> None:
+    """total_amount (nur Unterkunft) < addons_sum (Add-ons getrennt on-top,
+    Bestandsfall): NICHTS abziehen — sonst würde die Unterkunft negativ/zu niedrig.
+    Sammelbetrag = volle 100, Add-ons on-top → 100 + 150 = 250."""
+    res = _reservation(total_amount=100.0, quote_items=[])
+    addons = [{"status": "paid", "total": 150.0, "tax_rate": 0.0, "qty": 1,
+               "name": {"de": "Ausflugspaket"}}]
+    pos = build_positions(res, addons, [], Decimal("7"), False, "Ferienhaus")
+    gross_total = sum(p["gross_amount"] for p in pos)
+    assert gross_total == Decimal("250.00")
+    stay = next(p for p in pos if "Ausflugspaket" not in p["description"])
+    assert stay["gross_amount"] == Decimal("100.00")
+
+
 def test_addon_null_tax_rate_stays_zero() -> None:
     """Snapshot-tax_rate NULL = 0 % (Kaufzeitpunkt-Wahrheit, kein Default)."""
     addons = [{"status": "pending", "total": 10.0, "tax_rate": None, "qty": 1,

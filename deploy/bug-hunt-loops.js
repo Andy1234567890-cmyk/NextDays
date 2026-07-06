@@ -12,6 +12,14 @@ export const meta = {
 
 const REPO = '/Users/andystaudinger/NextDays'
 
+// STOP-RULE (Loop Engineering 101, Baustein 4 — Cap): dieses Script ist EINE
+// Runde. Die äußere Schleife (Relaunch nach jedem Ergebnis) stoppt bei ODER:
+//   (1) success  — eine Runde liefert 0 bestätigte Bugs (Konvergenz), oder
+//   (2) cap      — round >= maxRounds aus deploy/bug-hunt-loop-state.json (15).
+// Ohne (2) liefe der Loop bei einem hartnäckigen Falsch-Positiv oder einer nicht
+// abschließend fixbaren Klasse unbegrenzt. Der Rundenzähler + Verlauf liegen in
+// bug-hunt-loop-state.json und werden vor jedem Relaunch geprüft/fortgeschrieben.
+
 // Bereits in Runde 1+2 gefixte Befunde — NICHT erneut melden (sonst Endlos-
 // schleife). Die Finder erhalten diese Liste als „bekannt & behoben".
 const KNOWN_FIXED = `BEREITS GEFIXT (NICHT erneut melden, nur NEUE/andere Bugs):
@@ -98,7 +106,13 @@ GEFIXT IN RUNDE 8 (ebenfalls NICHT erneut melden):
 - create_invoice_from_bestand liest is_kleinunternehmer AUTORITATIV aus tenant_billing_profile (nicht Client-Flag isSmallBusiness)
 - Resolver teilt Aktions-Rabatt pro Steuersatz auf (discount-Zeilen mit tax_rate-Snapshot) — gemischte USt korrekt gutgeschrieben
 - LivePreviewModal Girocode nur bei docCurrency === 'EUR' (leere Währung ≠ EUR); owner_statements _addon_sums paginiert via fetch_all_rows
-- convert_quote_to_invoice guarded UPDATE (converted_invoice_id IS NULL) + Verlierer verwirft Doppel-Rechnung (Race)`
+- convert_quote_to_invoice guarded UPDATE (converted_invoice_id IS NULL) + Verlierer verwirft Doppel-Rechnung (Race)
+GEFIXT IN RUNDE 9 (ebenfalls NICHT erneut melden):
+- build_positions-Fallback bucht Add-ons NICHT mehr doppelt: bei Add-ons (addons_sum>0) ist der Aufenthalt items_sum (Snapshot, add-on-frei) statt des veralteten total_amount; ohne quote_items wird total_amount um addons_sum gekürzt (soweit gedeckt); ohne Add-ons bleibt der Wizard-total_amount-Override die Sammelposition
+- SendDocumentModal Girocode nur bei docCurrency === 'EUR' (leere/Fremdwährung ≠ EUR → kein QR), wie R8 für LivePreviewModal
+- reservations.dashboard revenue_30d=None + currency='' bei gemischten Währungen (currencies-Set), keine addierte Mischsumme mit beliebigem Label (wie R4 für Kalender-KPIs)
+- usePDFTemplateData currency ohne '|| EUR'-Fallback (leer → formatCurrency rendert symbollos, kein erfundenes €) an beiden Stellen (placeholderData + processedData)
+- ari_push push_availability_for_property ChannexError-Zweig mit .eq(status,pending)-Guard (kein stale last_error/attempts auf bereits done-Zeile bei Nebenläufigkeit fast-path vs Cron)`
 
 // Nur bestätigte, echte Bugs. Schema erzwingt strukturierte Rückgabe.
 const FINDINGS_SCHEMA = {
@@ -152,7 +166,7 @@ const L2_TRACES = [
   { key: 'trace-auth-scope', prompt: `Trace Berechtigungen/Scoping über ALLE Slices in ${REPO}: welche GET/POST-Endpunkte laufen mit Service-Role (RLS umgangen) und scopen NICHT explizit auf tenant/owner? Prüfe systematisch calendar, reservations, buchhaltung, owner_statements, pricing, channel_manager, inbox. Suche: fehlende require_permission/require_lodgify_permission, Owner der fremde Daten sieht, staff/cleaner der Finanzdaten liest, Client-Parameter der Scope ausweitet.` },
   { key: 'trace-worker-resilienz', prompt: `Trace die Worker-Resilienz in ${REPO}: worker.py claim_jobs → _dispatch → _job_heartbeat → _finish/_retry/_defer + Reaper (requeue_stuck_jobs) + Migration 0102/0106/0107. Suche: kann ein Job doppelt laufen? Kann der Heartbeat einen fremden Claim auffrischen? locked_by-Guard-Lücken? Kann ein Push-Fehler den Job in eine Endlosschleife bringen? Interagiert der neue bool-Rückgabewert korrekt mit _retry?` },
   { key: 'trace-realtime-currency', prompt: `Trace Realtime + Mehrwährung im Frontend in ${REPO}: welche Listen/Detail-UIs abonnieren NICHT alle relevanten Tabellen (stale Daten)? Wo wird noch €/EUR hartkodiert statt formatCurrency/Objekt-Währung? Prüfe kalender/, objekte/, finance/, quotes/. Suche: fehlende useRealtime-Abos, verbliebene Währungs-Hardcodes, Preis-Quellen die nicht live nachziehen.` },
-  { key: 'trace-luecken-kritik', prompt: `Vollständigkeits-Kritiker für ${REPO}: ACHT Fix-Runden (insgesamt 141 bestätigte Bugs) sind bereits durch — siehe die BEREITS-GEFIXT-Liste, melde davon NICHTS erneut (auch keine Variante/Nachbarstelle eines bereits gefixten Bugs, außer sie ist ein GENUIN anderer, konkret belegbarer Fehler). Prüfe systematisch die noch UNGEPRÜFTEN Slices/Router auf dieselben Fehlerklassen: fehlende require_permission/require_lodgify_permission an Schreib-/Lese-Endpunkten (wie der properties-DELETE- und Stripe-Connect-IDOR-Fund!), Owner-/Tenant-Scope-Lücken bei per-ID-Zugriff auf externe Ressourcen, fehlendes RLS auf public-Tabellen, fehlende DB-Transaktionen/Atomarität, N+1/Pagination (PostgREST 1000-Cap in ANDEREN Aggregations-Queries), fehlende Idempotenz bei öffentlichen/retry-baren Endpunkten, €-Hardcodes, fehlende Realtime-Abos. Kandidaten: site_config/, content/, media/, quotes/, travel_agencies/, channels/, addons/, inbox/-Randpfade, guests/, owners/, weitere per-ID-Endpunkte die eine externe/fremde Ressourcen-ID ungeprüft weiterreichen. Sei streng: nur echte, am deployten Code belegbare Bugs, keine Vermutung.` },
+  { key: 'trace-luecken-kritik', prompt: `Vollständigkeits-Kritiker für ${REPO}: NEUN Fix-Runden (insgesamt 146 bestätigte Bugs) sind bereits durch — siehe die BEREITS-GEFIXT-Liste, melde davon NICHTS erneut (auch keine Variante/Nachbarstelle eines bereits gefixten Bugs, außer sie ist ein GENUIN anderer, konkret belegbarer Fehler). Prüfe systematisch die noch UNGEPRÜFTEN Slices/Router auf dieselben Fehlerklassen: fehlende require_permission/require_lodgify_permission an Schreib-/Lese-Endpunkten (wie der properties-DELETE- und Stripe-Connect-IDOR-Fund!), Owner-/Tenant-Scope-Lücken bei per-ID-Zugriff auf externe Ressourcen, fehlendes RLS auf public-Tabellen, fehlende DB-Transaktionen/Atomarität, N+1/Pagination (PostgREST 1000-Cap in ANDEREN Aggregations-Queries), fehlende Idempotenz bei öffentlichen/retry-baren Endpunkten, €-Hardcodes, fehlende Realtime-Abos. Kandidaten: site_config/, content/, media/, quotes/, travel_agencies/, channels/, addons/, inbox/-Randpfade, guests/, owners/, weitere per-ID-Endpunkte die eine externe/fremde Ressourcen-ID ungeprüft weiterreichen. Sei streng: nur echte, am deployten Code belegbare Bugs, keine Vermutung.` },
 ]
 
 async function findAndVerify(items, findPhase, verifyPhase) {

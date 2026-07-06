@@ -305,9 +305,13 @@ class ReservationsService:
                 titles[p["id"]] = p.get("title") or ""
 
         # Währung trägt die Reservierung selbst (properties hat keine currency-Spalte).
-        currency = next(
-            (r["currency"] for r in rows if r.get("currency")), ""
-        )
+        # Betreibt ein Tenant Objekte in mehreren Währungen, darf der Umsatz NICHT
+        # zu einer Mischsumme mit beliebigem Label addiert werden (wie R4 für die
+        # Kalender-KPIs): nur bei GENAU EINER Währung im Datensatz gibt es eine
+        # echte Umsatzzahl, sonst mixed_currency → keine Umsatz-KPI.
+        currencies = {r["currency"] for r in rows if r.get("currency")}
+        currency = next(iter(currencies)) if len(currencies) == 1 else ""
+        mixed_currency = len(currencies) > 1
 
         today = date.today()
         mask = load_guest_mask(self._client, ctx.user_id)
@@ -364,12 +368,14 @@ class ReservationsService:
         # weder einzeln (überall sonst gegated) noch aggregiert hier. Sonst würde
         # der aggregierte 30-Tage-Umsatz seiner Objekte die Preis-Maskierung
         # durchlöchern. None statt eines maskierten 0-Werts (kein erfundener Betrag).
+        # Bei gemischten Währungen ebenfalls None — eine addierte Mischsumme mit
+        # einem beliebig herausgegriffenen Label wäre schlicht falsch.
         revenue_30d = (
             kpi(
                 sum(float(r.get("total_amount") or 0) for r in cur),
                 sum(float(r.get("total_amount") or 0) for r in prev),
             )
-            if mask.amounts
+            if mask.amounts and not mixed_currency
             else None
         )
         confirmed_30d = kpi(
