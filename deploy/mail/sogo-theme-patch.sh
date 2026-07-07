@@ -71,6 +71,20 @@ sed -i \
 
 echo "   gepatcht: $(wc -c < "$CSS") Bytes"
 
+# --- CKEditor "Powered by"-Badge ausblenden ---
+# SOGo bindet CKEditor 5 unter GPL ein (config.licenseKey = "GPL"); CKEditor
+# zeigt dann trotzdem das "Powered by CKEditor"-Badge. Unter GPL ist das
+# Ausblenden per CSS zulaessig. Das Badge ist ein Overlay .ck-powered-by
+# (bzw. .ck-powered-by-balloon). theme-default.css wird als LETZTE CSS
+# geladen -> !important hier gewinnt sicher. Idempotent (Marker-Guard).
+if ! grep -q "MND-HIDE-CKEDITOR-BADGE" "$CSS"; then
+  cat >> "$CSS" <<'BADGEEOF'
+/* MND-HIDE-CKEDITOR-BADGE: "Powered by CKEditor"-Werbung ausblenden (GPL-konform) */
+.ck.ck-powered-by,.ck-powered-by,.ck-powered-by-balloon,a.ck-powered-by{display:none!important;opacity:0!important;pointer-events:none!important}
+BADGEEOF
+  echo "   CKEditor-Badge-Ausblendung angehaengt ✓"
+fi
+
 echo
 echo "=== 3) Rest-Grün? (Kontrolle: dürfen nur noch neutrale Grautöne übrig sein) ==="
 LEFT=$(grep -oE 'rgba?\((77,128,128|136,199,129|178,214,211|142,191,187|225,245,243|99,153,151|125,179,176|161,204,200|203,229,200|86,176,76|0,200,83|56,142,60)' "$CSS" | wc -l)
@@ -105,8 +119,12 @@ else
 fi
 
 echo
-echo "=== 5) sogo-Container mit neuem Mount neu erstellen ==="
-docker compose up -d sogo-mailcow 2>&1 | tail -3
+echo "=== 5) sogo-Container neu erstellen ==="
+# WICHTIG: Ein Bind-Mount einer EINZELNEN Datei zeigt im laufenden Container
+# weiter auf den alten Inhalt, wenn die Datei auf der Platte geaendert wurde.
+# 'docker compose up -d' erkennt das NICHT (Config unveraendert -> kein Recreate).
+# Daher IMMER --force-recreate, damit der Container den aktuellen Dateistand mountet.
+docker compose up -d --force-recreate sogo-mailcow 2>&1 | tail -3
 echo "   warte auf SOGo..."
 for i in $(seq 1 25); do
   code=$(curl -sk -o /dev/null -w "%{http_code}" --max-time 5 "https://mail.mynextdays.dk/SOGo/" || echo 000)
