@@ -85,6 +85,18 @@ BADGEEOF
   echo "   CKEditor-Badge-Ausblendung angehaengt ✓"
 fi
 
+# --- Signatur-Editor auf der Mail-Einstellungsseite hoeher machen ---
+# Der Editor (.mnd-signature-editor, siehe UIxPreferences.wox) soll bei halber
+# Breite dafuer hoeher sein. CKEditor-Content-Bereich = .ck-editor__editable.
+if ! grep -q "MND-SIGNATURE-EDITOR-HEIGHT" "$CSS"; then
+  cat >> "$CSS" <<'SIGEOF'
+/* MND-SIGNATURE-EDITOR-HEIGHT: Signatur-Editor auf der Mail-Seite hoeher */
+.mnd-signature-editor .ck-editor__editable,.mnd-signature-editor .ck-editor__editable_inline{min-height:16rem!important}
+.mnd-signature-editor textarea{min-height:16rem!important}
+SIGEOF
+  echo "   Signatur-Editor-Hoehe angehaengt ✓"
+fi
+
 echo
 echo "=== 3) Rest-Grün? (Kontrolle: dürfen nur noch neutrale Grautöne übrig sein) ==="
 LEFT=$(grep -oE 'rgba?\((77,128,128|136,199,129|178,214,211|142,191,187|225,245,243|99,153,151|125,179,176|161,204,200|203,229,200|86,176,76|0,200,83|56,142,60)' "$CSS" | wc -l)

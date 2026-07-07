@@ -865,10 +865,11 @@
             </div>
 
             <!-- myNextDays: Signatur-Editor direkt auf der Mail-Seite (statt nur im Konto-Dialog).
-                 Bindet an die primaere Identitaet; speichert ueber den normalen Speichern-Button. -->
-            <div layout="column"
+                 Bindet an die primaere Identitaet; speichert ueber den normalen Speichern-Button.
+                 layout=row + flex=50 -> halbe Breite; Hoehe via CSS (.mnd-signature-editor). -->
+            <div layout="row"
                  ng-if="app.preferences.defaults.AuxiliaryMailAccounts[0].identities[0]">
-              <div class="pseudo-input-container"
+              <div class="pseudo-input-container mnd-signature-editor" flex="50" flex-xs="100"
                    ng-if="app.preferences.defaults.SOGoMailComposeMessageType == 'html'">
                 <label class="pseudo-input-label"><var:string label:value="Signature"/></label>
                 <sg-ckeditor
@@ -876,10 +877,10 @@
                     ck-margin="8px"
                     ng-model="app.preferences.defaults.AuxiliaryMailAccounts[0].identities[0].signature"><!-- HTML signature editor --></sg-ckeditor>
               </div>
-              <md-input-container class="md-block"
+              <md-input-container class="md-block mnd-signature-editor" flex="50" flex-xs="100"
                    ng-if="app.preferences.defaults.SOGoMailComposeMessageType != 'html'">
                 <label><var:string label:value="Signature"/></label>
-                <textarea ng-model="app.preferences.defaults.AuxiliaryMailAccounts[0].identities[0].signature"><!-- signature --></textarea>
+                <textarea rows="12" ng-model="app.preferences.defaults.AuxiliaryMailAccounts[0].identities[0].signature"><!-- signature --></textarea>
               </md-input-container>
             </div>
 
