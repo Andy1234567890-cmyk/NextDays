@@ -75,6 +75,19 @@ NICHT in den Monorepo-Stack. **Mailcow-Stack selbst bleibt unberührt.**
 > beim Bau klären: (a) der mail-sync-Dienst pusht Status per WebSocket/SSE an den
 > Webmailer, oder (b) meldet Status an eine kleine Statuszeile im Webmailer-UI.
 
+## Fortschritt (erledigt)
+
+- ✅ **DNS:** `sync.mynextdays.dk` → `62.238.4.193` (Cloudflare A-Record, DNS-only/
+  nicht proxied). Propagiert (1.1.1.1 + 8.8.8.8 verifiziert).
+- ✅ **TLS:** Let's-Encrypt-Zertifikat für `sync.mynextdays.dk` über Mailcows
+  eigenen ACME (`ADDITIONAL_SAN=sync.mynextdays.dk` + `ADDITIONAL_SERVER_NAMES`
+  in `mailcow.conf`). Von außen: `SSL certificate verify ok`, HTTP 200. Mailcow
+  erneuert automatisch. Mailcow-Stack nur über vorgesehene Config-Optionen
+  erweitert (unberührt). Backup: `mailcow.conf.bak-*` auf dem Server.
+  - Aktuell zeigt die Domain noch auf die Mailcow-UI; sobald der mail-sync-
+    Container läuft, kommt ein nginx-Proxy-Block (`/etc/nginx/conf.d/*.conf` bzw.
+    `data/conf/nginx/`) der `sync.` an den Container weiterleitet.
+
 ## Komponenten & Bau-Reihenfolge
 
 1. **Google-Cloud-Projekt (zuerst — Verifizierung dauert Wochen):**
