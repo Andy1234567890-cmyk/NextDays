@@ -31,12 +31,19 @@ jobs:
 
           # App-Definitionen: "uuid|name|pfad-präfix1 pfad-präfix2 …"
           # Pfad-Präfixe entsprechen den Coolify-watch_paths (ohne /**).
+          # WICHTIG: Pfade müssen den echten Coolify-watch_paths der App
+          # entsprechen. apps/api/ gehört an nextdays-api + nextdays-worker —
+          # NICHT an nextdays-supabase (sonst reißt jeder API-Push den DB-Stack
+          # mit → Container-Race/WAL-Korruptionsrisiko). supabase deployt NUR
+          # bei deploy/supabase/**.
           APPS=(
             "jt5gdgragv2jzivpx4oiqfir|nextdays-kong|deploy/kong/"
             "y13cm245vlmvq3yv38gdbtat|nextdays-marketing|marketing/"
             "rh4f581hqashrnmiwnxb6pcu|nextdays-plattform|plattform/"
             "u67kn5pj9cb2gqryt2ezsc8r|nextdays-storybook|apps/storybook/"
-            "cdqxi7d0w34sxzr4wr8jy8um|nextdays-supabase|deploy/supabase/ apps/api/"
+            "cdqxi7d0w34sxzr4wr8jy8um|nextdays-supabase|deploy/supabase/"
+            "kilcrxob5u434k3vsyf54ble|nextdays-api|apps/api/ deploy/api-standalone/"
+            "ly4w6vw4ffxk2987nyg5z5kt|nextdays-worker|apps/api/ deploy/worker/"
             "bln3q0n1l1se2hna8utkuag9|nextdays-web|apps/web/"
           )
 
