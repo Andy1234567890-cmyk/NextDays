@@ -28,26 +28,52 @@ Infra, kein Drittanbieter.
 - **UI-Realtime (NextDays-Pflicht):** Der Sync-Status/-Fortschritt wird über
   Supabase-Realtime (`use-realtime.ts`) live angezeigt, kein Reload/Polling.
 
-## Architektur (an bestehende Bausteine angedockt)
+## WICHTIG: Läuft auf dem MAIL-Server, getrennt vom Hauptprojekt
+
+Der Mail-Server (`62.238.4.193`) ist eine **eigene, isolierte Einheit** und bleibt
+das. Der Kalender-Sync ist Mail-nah → **eigener kleiner Dienst NEBEN Mailcow auf
+dem Mail-Server**, NICHT die Haupt-API (`nextdays-api` auf dem Staging-Server),
+NICHT in den Monorepo-Stack. **Mailcow-Stack selbst bleibt unberührt.**
+
+- **Eigener Container** (z.B. `mail-sync`) auf `62.238.4.193`, eigenes
+  Compose (NICHT im Mailcow-Compose, NICHT im DB-Stack).
+- **Die TERMINE selbst landen in SOGos Kalender** (Mailcow-MySQL, via CalDAV) —
+  KEINE eigene Termin-DB. Google-Termine erscheinen im ganz normalen
+  SOGo-Kalender des Nutzers, wie alle anderen Termine auch.
+- **Nur die Sync-VERWALTUNG** (Google-Token, Verbindungsstatus, Event-Mapping)
+  kommt in **zusätzliche Tabellen in der BESTEHENDEN Mailcow-MySQL** — keine
+  neue/separate Datenbank.
+- **Domain:** `sync.mynextdays.dk` (Cloudflare-Zone liegt schon dort) mit
+  eigenem TLS (Let's Encrypt) — nötig für Google-OAuth-Redirect + Push-Webhook
+  (Google akzeptiert KEINE sslip.io/IP-Domains bei Verifizierung).
+
+## Architektur
 
 ```
-  Google Calendar ──(events.watch Push-Webhook)──▶ myNextDays API
-        ▲                                          (features/calendar_sync)
-        │ Calendar API v3 (OAuth)                        │
-        │                                                ▼
-        └───────────────  Sync-Worker (worker.py) ──(CalDAV, App-Passwort)──▶ SOGo
+  Google Calendar ──(events.watch Push-Webhook)──▶ mail-sync Dienst
+        ▲                                          (sync.mynextdays.dk, eigener
+        │ Calendar API v3 (OAuth)                   Container auf 62.238.4.193)
+        │                                                │
+        └───────────────  Sync-Worker ──(CalDAV, DAV-App-Passwort)──▶ SOGo (lokal)
                                                           persönlicher Kalender
    Webmailer-Änderung ──(Hook/Delta sync-collection)──▶ Worker ──▶ Google
 ```
 
-**Wiederverwendet (schon im Repo, live geprüft):**
-- `apps/api/src/worker.py` + Muster `features/channel_manager/bookings_sync.py`.
+**Als VORLAGE/Muster aus dem Hauptrepo übernehmen (nicht direkt nutzen):**
+- Worker-Muster `features/channel_manager/bookings_sync.py` (Struktur).
 - **Webhook-Muster** `features/payments/webhook.py` (Idempotenz `_claim_event`,
   `secrets_match`) → Vorlage für den Google-Push-Callback (Wurzel 2 + 5).
+
+**Direkt auf dem Mail-Server verfügbar (live geprüft):**
 - **CalDAV-Auth:** Mailcow `app_passwd` mit **`dav_access=1`** → pro Nutzer ein
-  **DAV-only App-Passwort** anlegen; Worker nutzt das, NIE das Klartext-Passwort.
-- Supabase-Realtime (`use-realtime.ts`) für Status-UI.
-- SOGo CalDAV live: `https://mail.mynextdays.dk/SOGo/dav/<user>/Calendar/personal/`.
+  **DAV-only App-Passwort**; Worker nutzt das lokal, NIE das Klartext-Passwort.
+- SOGo CalDAV: `https://mail.mynextdays.dk/SOGo/dav/<user>/Calendar/personal/`
+  (bzw. containerintern erreichbar — Worker läuft auf demselben Server).
+
+> **Realtime-UI-Status:** Da der Sync auf dem getrennten Mail-Server läuft, kann
+> die Status-Anzeige NICHT direkt über die PMS-Supabase-Realtime laufen. Optionen
+> beim Bau klären: (a) der mail-sync-Dienst pusht Status per WebSocket/SSE an den
+> Webmailer, oder (b) meldet Status an eine kleine Statuszeile im Webmailer-UI.
 
 ## Komponenten & Bau-Reihenfolge
 
@@ -59,38 +85,46 @@ Infra, kein Drittanbieter.
    - **Verifizierung starten** (sensibler Scope → Google-Review Tage–Wochen).
      Bis dahin Test-User-Modus (max. 100).
 
-2. **Datenmodell (neue Tabellen, RLS Pflicht — Wurzel 3):**
-   - `calendar_sync_accounts`: user_id, tenant_id, google_refresh_token
+2. **Datenmodell — NUR Verwaltung, in der BESTEHENDEN Mailcow-MySQL:**
+   > Die Termine gehen NICHT hier rein — die landen via CalDAV in SOGos
+   > eigenem Kalender. Diese Tabellen sind nur der Sync-„Klebstoff".
+   - `mnd_calsync_accounts`: mailbox (SOGo-Nutzer), google_refresh_token
      (verschlüsselt), google_calendar_id, google_channel_id/expiry (Push),
      dav_app_password_ref, sync_token_google, sync_token_caldav, status, fehler.
-   - `calendar_sync_event_map`: google_event_id ⇄ caldav_uid ⇄ etag/updated;
+   - `mnd_calsync_event_map`: google_event_id ⇄ caldav_uid ⇄ etag/updated;
      UNIQUE(google_event_id), UNIQUE(caldav_uid) → Idempotenz-Backstop (Wurzel 2).
-   - Migration + `supabase/apply-migrations.sh`; jede neue Tabelle bekommt RLS.
+   - Als eigene Tabellen (Präfix `mnd_`) in der Mailcow-DB, damit Mailcow-Updates
+     sie nicht anfassen. Migration als eigenes SQL-Skript im mail-sync-Dienst.
 
-3. **OAuth-Flow (`features/calendar_sync`, FastAPI):**
+3. **OAuth-Flow (mail-sync Dienst, kleine FastAPI):**
    - connect → Google-Consent; callback → Tokens tauschen, Refresh-Token
-     verschlüsselt speichern; disconnect → widerrufen + Push-Channel schließen.
-   - Beim Connect: DAV-App-Passwort für den Nutzer erzeugen (Mailcow-API/DB),
-     Referenz speichern.
-   - Scope serverseitig auf tenant/user erzwingen (`load_scoped`).
+     verschlüsselt in `mnd_calsync_accounts` speichern; disconnect → widerrufen
+     + Push-Channel schließen.
+   - Beim Connect: DAV-App-Passwort für den Nutzer erzeugen (Mailcow
+     `app_passwd`, `dav_access=1`), Referenz speichern.
+   - Zugriff pro Mailbox scopen (nur eigener Kalender).
 
-4. **Push-Webhook-Empfänger (`calendar_sync/webhook.py`):**
+4. **Push-Webhook-Empfänger (im mail-sync Dienst):**
    - `events.watch` registrieren; Google-Callback verifizieren
      (Channel-Token via `secrets_match`, fail-closed → 401, Wurzel 5).
    - Idempotent (`_claim_event`-Muster) → Redelivery ungefährlich.
    - Channel-Erneuerung vor Ablauf (Worker-Task).
 
-5. **Sync-Worker (dockt an `worker.py`):**
-   - Google→SOGo: `events.list` mit `syncToken` (Deltas) → CalDAV PUT/DELETE.
-   - SOGo→Google: `sync-collection` (RFC 6578) Deltas → Google insert/update/delete.
-   - Mapping über `calendar_sync_event_map`; last-writer-wins per `updated`/ETag;
+5. **Sync-Worker (im mail-sync Dienst):**
+   - Google→SOGo: `events.list` mit `syncToken` (Deltas) → **CalDAV PUT/DELETE
+     in SOGos Kalender** (Termine landen in Mailcow/SOGo, wie gewünscht).
+   - SOGo→Google: CalDAV `sync-collection` (RFC 6578) Deltas → Google
+     insert/update/delete.
+   - Mapping über `mnd_calsync_event_map`; last-writer-wins per `updated`/ETag;
      Löschungen als Tombstone. Kein Doppelanlegen (UNIQUE-Backstop).
 
-6. **UI + Realtime + Monitoring + Doku:**
-   - Button „Google-Kalender verbinden" (im Webmailer-Kontext/Dashboard).
-   - Status live via `use-realtime.ts` (kein Polling).
-   - Worker-Heartbeat in Uptime-Kuma. Worker NICHT in DB-Stack.
-   - docs/ARCHITECTURE.md + Storybook-Diagramme aktualisieren.
+6. **UI + Realtime-Status + Monitoring + Doku:**
+   - Button „Google-Kalender verbinden" **im Webmailer** (SOGo-Kalender-UI oder
+     Einstellungen) — white-label, kein „Google/SOGo" außer dem Consent-Screen.
+   - Sync-Status live im Webmailer anzeigen (WebSocket/SSE vom mail-sync-Dienst,
+     kein Polling).
+   - mail-sync-Heartbeat in Uptime-Kuma (wie mail-heartbeat). Dienst NICHT in
+     den Mailcow-/DB-Stack. Storybook-Mail-Doku aktualisieren.
 
 ## Fehlerbehandlung (Wurzel 5, fail-closed)
 
