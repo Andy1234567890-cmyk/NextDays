@@ -864,23 +864,56 @@
               </md-checkbox>
             </div>
 
-            <!-- myNextDays: Signatur-Editor direkt auf der Mail-Seite (statt nur im Konto-Dialog).
-                 Bindet an die primaere Identitaet; speichert ueber den normalen Speichern-Button.
-                 layout=row + flex=50 -> halbe Breite; Hoehe via CSS (.mnd-signature-editor). -->
-            <div layout="row"
+            <!-- myNextDays: Mehrere Signaturen verwalten (Privat/Arbeit/...).
+                 Dropdown waehlt die Signatur (Index in mndSelectedIndex), darunter
+                 Umbenennen + Editor der GEWAEHLTEN. Anlegen/Loeschen via $root-Helfer
+                 (custom-sogo.js). Speichert ueber den normalen Speichern-Button. -->
+            <div layout="column"
                  ng-if="app.preferences.defaults.AuxiliaryMailAccounts[0].identities[0]">
+
+              <!-- Auswahl-Dropdown + Aktionen -->
+              <div layout="row" layout-align="start center">
+                <md-input-container class="md-block" flex="50" flex-xs="100" style="margin-right:1rem">
+                  <label>Signatur ausw&#228;hlen</label>
+                  <md-select ng-model="app.mndSelectedIndex" aria-label="Signatur ausw&#228;hlen">
+                    <md-option ng-repeat="identity in app.preferences.defaults.AuxiliaryMailAccounts[0].identities track by $index"
+                               ng-if="!identity.isReadOnly"
+                               ng-value="$index">
+                      {{ identity.fullName || identity.email || 'Signatur ' + ($index + 1) }}
+                    </md-option>
+                  </md-select>
+                </md-input-container>
+                <md-button class="md-icon-button" aria-label="Neue Signatur"
+                           ng-click="$root.mndAddSignature(app, preferencesForm)">
+                  <md-icon>add</md-icon>
+                </md-button>
+                <md-button class="md-icon-button" aria-label="Signatur l&#246;schen"
+                           ng-disabled="app.preferences.defaults.AuxiliaryMailAccounts[0].identities.length &lt;= 1"
+                           ng-click="$root.mndRemoveSignature(app, preferencesForm)">
+                  <md-icon>delete</md-icon>
+                </md-button>
+              </div>
+
+              <!-- Name der gewaehlten Signatur (Privat/Arbeit) -->
+              <md-input-container class="md-block" flex="50" flex-xs="100"
+                   ng-if="app.preferences.defaults.AuxiliaryMailAccounts[0].identities[app.mndSelectedIndex || 0]">
+                <label>Name dieser Signatur (z.B. Privat, Arbeit)</label>
+                <input ng-model="app.preferences.defaults.AuxiliaryMailAccounts[0].identities[app.mndSelectedIndex || 0].fullName"/>
+              </md-input-container>
+
+              <!-- Editor der GEWAEHLTEN Signatur -->
               <div class="pseudo-input-container mnd-signature-editor" flex="50" flex-xs="100"
-                   ng-if="app.preferences.defaults.SOGoMailComposeMessageType == 'html'">
+                   ng-if="app.preferences.defaults.SOGoMailComposeMessageType == 'html' &amp;&amp; app.preferences.defaults.AuxiliaryMailAccounts[0].identities[app.mndSelectedIndex || 0]">
                 <label class="pseudo-input-label"><var:string label:value="Signature"/></label>
                 <sg-ckeditor
                     class="ng-cloak"
                     ck-margin="8px"
-                    ng-model="app.preferences.defaults.AuxiliaryMailAccounts[0].identities[0].signature"><!-- HTML signature editor --></sg-ckeditor>
+                    ng-model="app.preferences.defaults.AuxiliaryMailAccounts[0].identities[app.mndSelectedIndex || 0].signature"><!-- HTML signature editor --></sg-ckeditor>
               </div>
               <md-input-container class="md-block mnd-signature-editor" flex="50" flex-xs="100"
-                   ng-if="app.preferences.defaults.SOGoMailComposeMessageType != 'html'">
+                   ng-if="app.preferences.defaults.SOGoMailComposeMessageType != 'html' &amp;&amp; app.preferences.defaults.AuxiliaryMailAccounts[0].identities[app.mndSelectedIndex || 0]">
                 <label><var:string label:value="Signature"/></label>
-                <textarea rows="12" ng-model="app.preferences.defaults.AuxiliaryMailAccounts[0].identities[0].signature"><!-- signature --></textarea>
+                <textarea rows="12" ng-model="app.preferences.defaults.AuxiliaryMailAccounts[0].identities[app.mndSelectedIndex || 0].signature"><!-- signature --></textarea>
               </md-input-container>
             </div>
 
