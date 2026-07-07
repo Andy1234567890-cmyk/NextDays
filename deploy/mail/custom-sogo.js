@@ -92,8 +92,23 @@ if (typeof CKEDITOR !== 'undefined') {
         if (form) form.$setDirty();
       };
 
+      // WICHTIG: Der CKEditor crasht (setData(undefined) -> "Cannot convert
+      // undefined or null to object"), wenn identity.signature nicht gesetzt
+      // ist. SOGo laedt bestehende Identitaeten OHNE signature-Feld. Daher
+      // jede Identitaet defensiv auf einen String normalisieren.
+      function ensureSignatures(app) {
+        var ids = primaryIdentities(app);
+        if (!ids) return;
+        for (var i = 0; i < ids.length; i++) {
+          if (typeof ids[i].signature !== 'string') ids[i].signature = '';
+        }
+        if (typeof app.mndSelectedIndex !== 'number') app.mndSelectedIndex = 0;
+      }
+
       // Die gerade gewaehlte Identitaet (fuer den Editor darunter).
+      // Normalisiert VOR Rueckgabe -> der CKEditor bekommt nie undefined.
       $rootScope.mndCurrent = function (app) {
+        ensureSignatures(app);
         var ids = primaryIdentities(app);
         if (!ids || !ids.length) return null;
         var idx = app.mndSelectedIndex || 0;

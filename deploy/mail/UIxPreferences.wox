@@ -904,8 +904,10 @@
               <!-- Editor der GEWAEHLTEN Signatur.
                    WICHTIG: kein "&&" im ng-if (WOX escaped es doppelt kaputt) —
                    stattdessen aeusserer ng-if (Identitaet existiert) + innerer
-                   ng-if (HTML vs. Text). -->
-              <div ng-if="app.preferences.defaults.AuxiliaryMailAccounts[0].identities[app.mndSelectedIndex || 0]">
+                   ng-if (HTML vs. Text). mndCurrent(app) normalisiert dabei
+                   signature -> String, damit der CKEditor nicht mit undefined
+                   crasht ("Cannot convert undefined or null to object"). -->
+              <div ng-if="$root.mndCurrent(app)">
                 <div class="pseudo-input-container mnd-signature-editor" flex="50" flex-xs="100"
                      ng-if="app.preferences.defaults.SOGoMailComposeMessageType == 'html'">
                   <label class="pseudo-input-label"><var:string label:value="Signature"/></label>
