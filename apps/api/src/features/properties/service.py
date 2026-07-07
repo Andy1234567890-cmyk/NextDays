@@ -198,7 +198,26 @@ class PropertiesService:
             title=row.get("title") or "Unbenannt",
             currency=None,
         )
+        # Objektzahl-Änderung an das Abo melden (Wurzel 1: Gegenzustand). Nur wenn
+        # das neue Objekt bereits abrechenbar (status='active') ist — ein Entwurf
+        # ändert die quantity nicht. Best-effort, kippt die Anlage nie (Wurzel 5).
+        if row.get("status") == "active":
+            self._sync_subscription_quantity(tenant_id)
         return PropertyResponse(**_row(row))
+
+    def _sync_subscription_quantity(self, tenant_id: str) -> None:
+        """Zieht die graduated-quantity der Tenant-Subscription auf die aktuelle
+        abrechenbare Objektzahl nach. Best-effort: ein Fehler hier (Stripe nicht
+        konfiguriert, kein Abo, Netzwerk) darf den Property-Hauptpfad NICHT kippen
+        — die Objektzahl wird neu berechnet, ein späterer Aufruf holt sie ein."""
+        try:
+            from src.features.subscriptions.service import SubscriptionsService
+
+            SubscriptionsService(
+                service_client=self._db
+            ).sync_quantity_for_tenant(tenant_id)
+        except Exception:  # noqa: BLE001 — best-effort, kein Kippen des Hauptpfads
+            log.warning("subscription_quantity_sync_failed", tenant_id=tenant_id)
 
     def _sync_to_channel_manager(
         self, tenant_id: str, *, property_id: str, title: str, currency: str | None
@@ -284,6 +303,10 @@ class PropertiesService:
         # Booking/Airbnb veraltet. Best-effort, blockiert das Speichern nie.
         if "type_attributes" in changes:
             self._push_max_stay(tenant_id, property_id, _max_stay_of(row))
+        # Statuswechsel (active↔draft/inactive) ändert die abrechenbare Objektzahl
+        # → Abo-quantity nachziehen (Wurzel 1). Neu berechnet, daher idempotent.
+        if "status" in changes:
+            self._sync_subscription_quantity(tenant_id)
         log.info("property_updated", tenant_id=tenant_id, property_id=property_id)
         return PropertyResponse(**_row(row))
 
@@ -815,6 +838,11 @@ class PropertiesService:
         ).eq("tenant_id", tenant_id).eq("property_id", property_id).is_(
             "deleted_at", "null"
         ).execute()
+
+        # Objektzahl nach dem Löschen ans Abo melden (Wurzel 1: Gegenzustand). Nur
+        # wenn das gelöschte Objekt abrechenbar (active) war — sonst keine Änderung.
+        if (res.data[0] or {}).get("status") == "active":
+            self._sync_subscription_quantity(tenant_id)
 
         log.info("property_deleted", tenant_id=tenant_id, property_id=property_id)
 

@@ -36,6 +36,7 @@ from .features.rates.router import router as rates_router
 from .features.reservations.router import router as reservations_router
 from .features.site_config.router import manage_router as site_config_manage_router
 from .features.site_config.router import public_router as site_config_public_router
+from .features.subscriptions.router import router as subscriptions_router
 from .features.tasks.router import router as tasks_router
 from .features.travel_agencies.router import router as travel_agencies_router
 from .features.whatsapp.router import router as whatsapp_router
@@ -54,6 +55,7 @@ _SLICE_ROUTERS = [
     guests_router,
     inbox_router,
     payments_router,
+    subscriptions_router,
     channel_manager_router,
     sandbox_ota_router,
     booking_engine_router,

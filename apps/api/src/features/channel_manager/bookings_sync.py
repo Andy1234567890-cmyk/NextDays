@@ -367,6 +367,10 @@ class BookingsSyncMixin:
                 channel,
                 cancel_nights,
             )
+            # Offene externe Provision dieser Buchung entfernen (Gegenzustand,
+            # Wurzel 1). Best-effort — Storno-Pfad darf nie kippen (Wurzel 5).
+            if existing:
+                self._cancel_commission_safe(tenant_id, existing[0]["id"])
             return True
 
         if guest_id is None:
@@ -434,8 +438,10 @@ class BookingsSyncMixin:
                 ):
                     row.pop(frozen, None)
             db.table("reservations").update(row).eq("id", existing[0]["id"]).execute()
+            reservation_id = existing[0]["id"]
         else:
-            db.table("reservations").insert(row).execute()
+            inserted = db.table("reservations").insert(row).execute().data
+            reservation_id = inserted[0]["id"] if inserted else None
 
         if already_checked_out:
             # Auch Kalender/Channex nicht mehr anfassen: die OTA-Revision kann
@@ -483,7 +489,59 @@ class BookingsSyncMixin:
                     self._free_ota_nights(
                         db, tenant_id, property_id, channel, freed_nights
                     )
+        # Externe Provision (1 %/0,5 %) für diese OTA-Buchung erfassen. Best-effort
+        # — der Buchungs-Import darf nie an der Provision scheitern (Wurzel 5).
+        # Idempotent über reservation_id (Wurzel 2), Satz aus der Objektzahl.
+        if reservation_id:
+            self._record_commission_safe(
+                db, tenant_id, reservation_id, channel, total_amount, row["currency"]
+            )
         return True
+
+    def _record_commission_safe(
+        self,
+        db: Client,
+        tenant_id: str,
+        reservation_id: str,
+        channel: str,
+        gross_amount: float,
+        currency: str | None,
+    ) -> None:
+        """OTA-Provision erfassen, ohne den Import-Pfad zu gefährden (Wurzel 5).
+        Nur externe Kanäle mit Umsatz erzeugen eine Ledger-Zeile."""
+        try:
+            from src.features.subscriptions.service import SubscriptionsService
+
+            SubscriptionsService(service_client=db).record_commission(
+                tenant_id,
+                reservation_id=reservation_id,
+                channel=channel,
+                gross_amount=gross_amount,
+                currency=currency or "",
+            )
+        except Exception:  # noqa: BLE001 — best-effort, kein Kippen des Imports
+            log.warning(
+                "commission_record_failed",
+                tenant_id=tenant_id,
+                reservation_id=reservation_id,
+            )
+
+    def _cancel_commission_safe(
+        self, tenant_id: str, reservation_id: str
+    ) -> None:
+        """Offene Provision bei Storno entfernen (Gegenzustand, best-effort)."""
+        try:
+            from src.features.subscriptions.service import SubscriptionsService
+
+            SubscriptionsService(service_client=self._db).cancel_commission(
+                tenant_id, reservation_id=reservation_id
+            )
+        except Exception:  # noqa: BLE001 — best-effort, kein Kippen des Stornos
+            log.warning(
+                "commission_cancel_failed",
+                tenant_id=tenant_id,
+                reservation_id=reservation_id,
+            )
 
     def _booking_occupancy(self, attrs: dict[str, Any]) -> tuple[int, int, int]:
         """Gästezahl (adults, children, infants) aus einem Channex-Booking.

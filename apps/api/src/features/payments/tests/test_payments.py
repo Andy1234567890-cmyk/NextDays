@@ -344,6 +344,63 @@ def test_booking_payment_creates_intent_and_row() -> None:
     assert db.store["reservations"][0]["payment_status"] == "pending"
 
 
+@_needs_stripe
+def test_portal_booking_charges_8pct_fee(monkeypatch) -> None:  # noqa: ANN001
+    """E2E gegen echte Stripe-Test-API: eine Portal-Buchung (eigener Kanal) muss
+    application_fee_amount = 8 % des Buchungsbetrags tragen. Betrag 120,00 € →
+    Fee 9,60 € (960 Cent). Gegengelesen aus dem echten PaymentIntent (nicht nur
+    Config). Das ist der Portal-Provisions-Beweis (Preisliste: 8 % all-in)."""
+    monkeypatch.setattr(get_settings(), "stripe_platform_fee_pct", 8.0)
+    stripe = _stripe()
+    db = _db_with_booking(charges_enabled=True)
+    res = db.store["reservations"][0]
+    res["channel"] = "portal"
+    res["ota_name"] = None
+    res["source_channex_booking_id"] = None
+    db.store["tenant_billing_profile"][0]["stripe_account_id"] = (
+        _make_transfer_ready_account(stripe)
+    )
+    svc = PaymentsService(service_client=db, stripe=stripe)
+    result = svc.create_booking_payment(reservation_id="res-1")
+    pi = stripe.v1.payment_intents.retrieve(db.store["payments"][0]["gateway_ref"])
+    fee = pi["application_fee_amount"] if "application_fee_amount" in pi else None
+    assert fee == 960, f"erwartet 960 Cent (8% von 120€), Stripe liefert {fee}"
+    assert result.client_secret.startswith("pi_")
+
+
+def test_fee_cents_math_and_guards(monkeypatch) -> None:  # noqa: ANN001
+    """_fee_cents: 8 % korrekt gerundet, 0/negativ → 0, >100 % → klarer Fehler
+    (kein Charge über dem Betrag). Braucht keine Stripe-Verbindung."""
+    svc = PaymentsService(service_client=_db_with_booking(charges_enabled=True))
+    monkeypatch.setattr(get_settings(), "stripe_platform_fee_pct", 8.0)
+    assert svc._fee_cents(12000) == 960  # 8 % von 120 €  # noqa: SLF001
+    assert svc._fee_cents(12345) == 988  # Rundung  # noqa: SLF001
+    monkeypatch.setattr(get_settings(), "stripe_platform_fee_pct", 0.0)
+    assert svc._fee_cents(12000) == 0  # noqa: SLF001
+    monkeypatch.setattr(get_settings(), "stripe_platform_fee_pct", -5.0)
+    assert svc._fee_cents(12000) == 0  # noqa: SLF001
+    monkeypatch.setattr(get_settings(), "stripe_platform_fee_pct", 800.0)
+    with pytest.raises(PaymentsError) as exc:
+        svc._fee_cents(12000)  # noqa: SLF001
+    assert exc.value.status_code == 500
+
+
+@_needs_stripe
+def test_ota_booking_charges_no_fee_and_blocks(monkeypatch) -> None:  # noqa: ANN001
+    """Gegenprobe: Bei 8 % Fee-Config darf eine OTA-Buchung TROTZDEM keinen Charge
+    erzeugen (die OTA kassiert den Gast) — 409, keine payments-Row, keine Fee."""
+    monkeypatch.setattr(get_settings(), "stripe_platform_fee_pct", 8.0)
+    db = _db_with_booking(charges_enabled=True)
+    res = db.store["reservations"][0]
+    res["channel"] = "booking"
+    res["ota_name"] = "Booking.com"
+    svc = PaymentsService(service_client=db, stripe=_stripe())
+    with pytest.raises(PaymentsError) as exc:
+        svc.create_booking_payment(reservation_id="res-1")
+    assert exc.value.status_code == 409
+    assert len(db.store.get("payments", [])) == 0  # kein Charge, keine Fee
+
+
 # --- Stufe D: Webhook -------------------------------------------------------
 
 def test_webhook_succeeded_marks_paid() -> None:

@@ -303,6 +303,15 @@ class PaymentsService:
         pct = get_settings().stripe_platform_fee_pct
         if pct <= 0:
             return 0
+        # Ein Konfig-Tippfehler (z. B. 800 statt 8) darf keinen Charge erzeugen,
+        # dessen application_fee den Buchungsbetrag übersteigt — Stripe lehnt das
+        # ab und der GAST bekäme einen 500. Absurd hohe Sätze sind ein Konfig-
+        # fehler → klar fehlschlagen (kein stiller Ersatzwert, Wurzel 4/5).
+        if pct > 100:
+            raise PaymentsError(
+                "Provisions-Satz (STRIPE_PLATFORM_FEE_PCT) ist ungültig (>100 %).",
+                status_code=500,
+            )
         return int(round(amount_cents * pct / 100.0))
 
     def create_booking_payment(self, *, reservation_id: str) -> BookingPaymentResult:

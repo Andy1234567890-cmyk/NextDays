@@ -1,9 +1,9 @@
 "use client";
 
-// Unter-Navigation der Konto-Seite (Profil / Nutzer / Sicherheit).
+// Unter-Navigation der Konto-Seite (Profil / Tarif / Branding / Nutzer / Sicherheit).
 // Aktiver Punkt anhand des Pfads. Icons via Iconify (ph:*).
-// Zahlungen liegen NICHT als eigener Tab vor, sondern als Abschnitt direkt auf
-// der Profil-Seite (/konto) — alles im Admin-Konto gebündelt.
+// Zahlungen liegen als Abschnitt auf der Profil-Seite; Tarif & Abo (Buchungen/
+// Objekt-Staffel/Module/Provisionen) hat einen EIGENEN Tab.
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 
 const ITEMS = [
   { title: "Profil", href: "/konto", icon: "ph:user-circle" },
+  { title: "Tarif & Abo", href: "/konto/tarif", icon: "ph:receipt" },
   { title: "Branding & Domains", href: "/konto/branding", icon: "ph:paint-brush" },
   { title: "Nutzer", href: "/konto/nutzer", icon: "ph:users" },
   { title: "Sicherheit", href: "/konto/sicherheit", icon: "ph:shield-check" },
