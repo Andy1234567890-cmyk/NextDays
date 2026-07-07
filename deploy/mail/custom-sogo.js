@@ -1,4 +1,4 @@
-// redirect to mailcow login form
+// redirect to central login form
 document.addEventListener('DOMContentLoaded', function () {
     var loginForm = document.forms.namedItem("loginForm");
     if (loginForm) {
