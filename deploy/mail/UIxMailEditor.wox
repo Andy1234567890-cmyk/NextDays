@@ -64,7 +64,7 @@
           <!-- myNextDays: Signatur-Auswahl-Dropdown. Waehlt eine Identitaet;
                setFromIdentity() tauscht Absender + laedt deren Signatur (SOGo-Logik). -->
           <md-input-container class="md-margin hide-xs mnd-signature-picker"
-                              ng-if="editor.identities.length &gt; 1" style="min-width:12rem;max-width:16rem">
+                              ng-if="editor.identities[1]" style="min-width:12rem;max-width:16rem">
             <label>Signatur</label>
             <md-select ng-model="editor.fromIdentity"
                        ng-change="editor.setFromIdentity(editor.fromIdentity)"

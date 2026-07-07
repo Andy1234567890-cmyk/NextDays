@@ -19,7 +19,12 @@ function mc_logout() {
 // Custom SOGo JS
 
 // Change the visible font-size in the editor, this does not change the font of a html message by default
-CKEDITOR.addCss("body {font-size: 16px !important}");
+// WICHTIG: CKEDITOR ist nicht auf allen Seiten (z.B. Einstellungen) geladen.
+// Ohne Guard wirft diese Zeile einen ReferenceError und bricht die restliche
+// Datei ab -> nachfolgende Signatur-Helfer wuerden nie registriert.
+if (typeof CKEDITOR !== 'undefined') {
+  CKEDITOR.addCss("body {font-size: 16px !important}");
+}
 
 // Enable scayt by default
 //CKEDITOR.config.scayt_autoStartup = true;
