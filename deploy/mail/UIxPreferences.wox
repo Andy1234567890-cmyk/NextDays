@@ -1,0 +1,1536 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE var:component>
+<var:component
+    xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:var="http://www.skyrix.com/od/binding"
+    xmlns:const="http://www.skyrix.com/od/constant"
+    xmlns:rsrc="OGo:url"
+    xmlns:label="OGo:label"
+    className="UIxPageFrame"
+    title="moduleName"
+    const:jsFiles="vendor/ckeditor/build/ckeditor.js, Common/sgCkeditor.component.js, vendor/angular-file-upload.min.js, vendor/ng-sortable.min.js, vendor/qrcode.min.js, Common.js, Preferences.js, Preferences.services.js, Mailer.services.js, Contacts.services.js">
+
+  <main layout-fill="layout-fill" ui-view="preferences"
+        ng-controller="navController"><!-- preferences --> </main>
+
+  <script type="text/javascript">
+    var mailCustomFromEnabled = <var:string value="mailCustomFromEnabled" const:escapeHTML="NO"/>;
+    var forwardEnabled = <var:string value="forwardEnabled" const:escapeHTML="NO"/>;
+    var notificationEnabled = <var:string value="notificationEnabled" const:escapeHTML="NO"/>;
+    var vacationEnabled = <var:string value="isVacationEnabled" const:escapeHTML="NO"/>;
+    var timeZonesList = <var:string value="timeZonesList" const:escapeHTML="NO"/>;
+    var defaultEmailAddresses = <var:string value="defaultEmailAddresses" const:escapeHTML="NO"/>;
+    var defaultCalendarCategories = <var:string value="defaultCalendarCategoriesColors" const:escapeHTML="NO"/>;
+    var defaultContactsCategories = <var:string value="defaultContactsCategories" const:escapeHTML="NO"/>;
+    var forwardConstraints = <var:string value="forwardConstraints" const:escapeHTML="NO"/>;
+    var forwardConstraintsDomains = <var:string value="forwardConstraintsDomains" const:escapeHTML="NO"/>;
+    <var:if condition="userHasMailAccess"> var sieveCapabilities = <var:string value="sieveCapabilities" const:escapeHTML="NO"/>;</var:if>
+  </script>
+
+  <script type="text/ng-template" id="preferences.html">
+    <form name="preferencesForm" class="view"
+          layout="row" layout-fill="layout-fill">
+    <md-sidenav id="left-sidenav" class="md-sidenav-left md-whiteframe-z1" layout="column"
+                md-component-id="left" md-is-locked-open="isGtMedium"
+                ng-class="{ 'sg-close': leftIsClose }">
+      <var:component className="UIxSidenavToolbarTemplate" />
+      <md-content md-scroll-y="md-scroll-y" class="md-flex"
+                  md-colors="::{ backgroundColor: 'default-background-300' }">
+        <md-subheader
+            md-colors="::{background: 'default-background-300'}">{{ ::'Preferences' | loc }}</md-subheader>
+        <md-list>
+          <md-list-item ng-click="app.go('general', preferencesForm)"
+                        ng-disabled="preferencesForm.$invalid"
+                        ui-sref="preferences.general"
+                        ui-sref-active="md-default-theme md-background md-bg md-hue-1">
+            <md-icon>settings</md-icon>
+            <p class="sg-item-name"><var:string label:value="General"/></p>
+          </md-list-item>
+          <var:if condition="userHasCalendarAccess">
+            <md-list-item ng-click="app.go('calendars', preferencesForm)"
+                          ng-disabled="preferencesForm.$invalid"
+                          ui-sref="preferences.calendars"
+                          ui-sref-active="md-default-theme md-background md-bg md-hue-1">
+              <md-icon>event</md-icon>
+              <p class="sg-item-name"><var:string label:value="Calendar"/></p>
+            </md-list-item>
+          </var:if>
+          <md-list-item ng-click="app.go('addressbooks', preferencesForm)"
+                        ng-disabled="preferencesForm.$invalid"
+                        ui-sref="preferences.addressbooks"
+                        ui-sref-active="md-default-theme md-background md-bg md-hue-1">
+            <md-icon>contacts</md-icon>
+            <p class="sg-item-name"><var:string label:value="Contacts"/></p>
+          </md-list-item>
+          <var:if condition="userHasMailAccess">
+            <md-list-item ng-click="app.go('mailer', preferencesForm)"
+                          ng-disabled="preferencesForm.$invalid"
+                          ui-sref="preferences.mailer"
+                          ui-sref-active="md-default-theme md-background md-bg md-hue-1">
+              <md-icon>email</md-icon>
+              <p class="sg-item-name"><var:string label:value="Mail"/></p>
+            </md-list-item>
+          </var:if>
+        </md-list>
+      </md-content>
+    </md-sidenav>
+
+    <section  layout="column" layout-fill="layout-fill">
+
+      <!-- TOP RIGHT TOOLBAR -->
+      <md-toolbar layout="row" layout-align="space-between start" class="md-tall">
+        <var:component className="UIxTopnavToolbar" const:navButtonClick="app.confirmChanges($event, preferencesForm)"/>
+        <md-button type="button" class="md-fab md-fab-bottom-right md-fab-overlap-bottom"
+                   ng-disabled="preferencesForm.$invalid || preferencesForm.$pristine"
+                   ng-click="app.save(preferencesForm)">
+          <md-icon>save</md-icon>
+        </md-button>
+      </md-toolbar>
+
+      <md-content layout="column">
+        <div ui-view="module"><!-- view --></div>
+      </md-content>
+    </section>
+
+    </form>
+  </script>
+
+  <!--
+      GENERAL PREFERENCE PANEL
+  -->
+  <script type="text/ng-template" id="generalPreferences.html">
+
+    <md-tabs class="md-flex" md-border-bottom="md-border-bottom" md-dynamic-height="true">
+
+      <!-- GENERAL OPTIONS -->
+      <md-tab id="generalOptionsView" aria-controls="generalOptionsView-content" label:label="General">
+        <md-content layout="row"
+                    aria-labelledby="generalOptionsView"
+                    id="generalOptionsView-content" class="md-inline-form md-padding">
+          <div layout="column" flex="100">
+            <md-input-container>
+              <label><var:string label:value="SOGo Version"/></label>
+              <input type="text" ng-readonly="true" var:value="sogoVersion"/>
+            </md-input-container>
+
+            <div layout="row">
+              <md-input-container class="md-block" flex="50">
+                <label><var:string label:value="Language"/></label>
+                <md-select ng-model="app.preferences.defaults.SOGoLanguage"
+                           ng-change="app.onLanguageChange(preferencesForm)">
+                  <var:foreach list="languages" item="item">
+                    <md-option var:value="item">
+                      <var:string value="languageText"/> <small md-colors="::{ color: 'default-background-500'}"><var:string value="languageLocale.NSLocaleCode"/></small>
+                    </md-option>
+                  </var:foreach>
+                </md-select>
+              </md-input-container>
+              <md-autocomplete
+                  class="md-block" flex="50"
+                  md-search-text="app.timeZonesSearchText"
+                  md-selected-item="app.preferences.defaults.SOGoTimeZone"
+                  md-items="timezone in app.timeZonesListFilter(app.timeZonesSearchText)"
+                  md-item-text="timezone"
+                  md-min-length="3"
+                  md-select-on-match="true"
+                  md-match-case-insensitive="true"
+                  ng-required="true"
+                  sg-select-only="sg-select-only"
+                  label:md-floating-label="Time Zone">
+                <md-item-template>
+                  <span md-highlight-text="app.timeZonesSearchText">{{timezone}}</span>
+                </md-item-template>
+                <md-not-found>
+                  <var:string label:value="No matches found."/>
+                </md-not-found>
+              </md-autocomplete>
+            </div>
+
+            <div layout="row" layout-xs="column">
+              <md-input-container class="md-block" flex="30" flex-xs="100">
+                <label><var:string label:value="Short Date Format"/></label>
+                <md-select ng-model="app.preferences.defaults.SOGoShortDateFormat">
+                  <var:foreach list="shortDateFormatsList" item="item">
+                    <md-option var:value="item">
+                      <var:string value="itemShortDateFormatText"/>
+                    </md-option>
+                  </var:foreach>
+                </md-select>
+              </md-input-container>
+              <md-input-container class="md-block" flex="40" flex-xs="100">
+                <label><var:string label:value="Long Date Format"/></label>
+                <md-select ng-model="app.preferences.defaults.SOGoLongDateFormat">
+                  <var:foreach list="longDateFormatsList" item="item">
+                    <md-option var:value="item">
+                      <var:string value="itemLongDateFormatText"/>
+                    </md-option>
+                  </var:foreach>
+                </md-select>
+              </md-input-container>
+              <md-input-container class="md-block" flex="30" flex-xs="100">
+                <label><var:string label:value="Time Format"/></label>
+                <md-select ng-model="app.preferences.defaults.SOGoTimeFormat">
+                  <var:foreach list="timeFormatsList" item="item">
+                    <md-option var:value="item">
+                      <var:string value="itemTimeFormatText"/>
+                    </md-option>
+                  </var:foreach>
+                </md-select>
+              </md-input-container>
+            </div>
+
+            <md-input-container>
+              <label><var:string label:value="Default Module"/></label>
+              <md-select ng-model="app.preferences.defaults.SOGoLoginModule">
+                <var:foreach list="availableModules" item="item">
+                  <md-option var:value="item">
+                    <var:string value="itemModuleText"/>
+                  </md-option>
+                </var:foreach>
+              </md-select>
+            </md-input-container>
+
+            <md-input-container>
+              <label><var:string label:value="Refresh View"/></label>
+              <md-select ng-model="app.preferences.defaults.SOGoRefreshViewCheck">
+                <var:foreach list="refreshViewList" item="item">
+                  <md-option var:value="item">
+                    <var:string value="itemRefreshViewCheckText"/>
+                  </md-option>
+                </var:foreach>
+              </md-select>
+            </md-input-container>
+
+            <div layout="row" layout-align="start start" ng-if="app.preferences.supportsNotifications()">
+              <md-checkbox
+                           ng-model="app.preferences.defaults.SOGoDesktopNotifications"
+                           ng-true-value="1"
+                           ng-false-value="0"
+                           ng-change="app.onDesktopNotificationsChange()"
+                           label:aria-label="Enable Desktop Notifications">
+                <var:string label:value="Enable Desktop Notifications"/>
+              </md-checkbox>
+            </div>
+
+            <var:if condition="externalAvatarsEnabled">
+            <div layout="row" layout-align="start start">
+              <md-checkbox flex="20"
+                           ng-model="app.preferences.defaults.SOGoGravatarEnabled"
+                           ng-true-value="1"
+                           ng-false-value="0"
+                           label:aria-label="Use Gravatar">
+                <var:string label:value="Use Gravatar"/>
+              </md-checkbox>
+              <md-input-container class="md-flex">
+                <label><var:string label:value="Alternate Avatar"/></label>
+                <md-select ng-model="app.preferences.defaults.SOGoAlternateAvatar"
+                           ng-disabled="!app.preferences.defaults.SOGoGravatarEnabled">
+                  <var:foreach list="alternateAvatar" item="item">
+                    <md-option var:value="item">
+                      <var:string value="itemAlternateAvatarText"/>
+                    </md-option>
+                  </var:foreach>
+                </md-select>
+              </md-input-container>
+            </div>
+            </var:if>
+
+            <md-input-container class="md-block md-input-has-value">
+              <label><var:string label:value="Animation Level"/></label>
+              <md-radio-group ng-model="app.preferences.defaults.SOGoAnimationMode">
+                <md-radio-button value="normal"><var:string label:value="animation_NORMAL"/></md-radio-button>
+                <md-radio-button value="limited"><var:string label:value="animation_LIMITED"/></md-radio-button>
+                <md-radio-button value="none"><var:string label:value="animation_NONE"/></md-radio-button>
+              </md-radio-group>
+            </md-input-container>
+
+            <var:if condition="isTotpEnabled">
+              <md-checkbox ng-model="app.preferences.defaults.SOGoTOTPEnabled"
+                           ng-true-value="1"
+                           ng-false-value="0"
+                           label:aria-label="Enable two-factor authentication using a TOTP application">
+                <var:string label:value="Enable two-factor authentication using a TOTP application"/>
+              </md-checkbox>
+              <div layout="row" layout-align="start center" layout-xs="column"
+                   layout-padding="layout-padding" layout-margin="layout-margin"
+                   ng-show="app.preferences.defaults.SOGoTOTPEnabled == 1">
+                <div>
+                  <sg-qr-code var:text="totpKey" />
+                </div>
+                <div flex="100" flex-sm="60" flex-gt-sm="50">
+                  <var:string label:value="You must enter this key into your TOTP application."/> <b><var:string label:value="If you do not and you log out you will not be able to login again."/></b>
+                  <md-input-container class="md-block md-input-has-value md-auto-horizontal-margin">
+                    <label><var:string label:value="Enter TOTP verification code :"/></label>
+                    <input type="text" ng-model="app.preferences.defaults.totpVerificationCode" name="totpVerificationCode" autocomplete="one-time-code" id="totpVerificationCode" sg-no-dirty-check="true" ng-change="app.resetTotpVerificationCode(preferencesForm)"/>
+                    <div ng-messages="preferencesForm.totpVerificationCode.$error">
+                      <div ng-message="invalidTotpCode"><var:string label:value="Invalid TOTP verification code"/></div>
+                    </div>
+                  </md-input-container>
+                </div>
+                
+              </div>
+            </var:if>
+
+          </div>
+        </md-content>
+      </md-tab>
+
+      <!-- PASSWORD OPTIONS -->
+      <var:if condition="shouldDisplayPasswordSection">
+        <md-tab id="generalPasswordView"
+                  aria-controls="generalPasswordView-content"
+                  label:label="Password">
+            <md-content id="passwordView" class="md-padding">
+              <!-- Password recovery -->
+              <var:if condition="shouldDisplayPasswordRecovery">
+                <h5><var:string label:value="Password recovery"/></h5>
+                <div layout="row" layout-align="start start">
+                  <md-input-container class="md-block md-input-has-value">
+                    <label><var:string label:value="Password recovery mode"/></label>
+                      <md-select ng-model="app.preferences.defaults.SOGoPasswordRecoveryMode">
+                        <var:foreach list="passwordRecoveryList" item="item">
+                          <md-option var:value="item">
+                            <var:string value="itemPasswordRecoveryText"/>
+                          </md-option>
+                        </var:foreach>
+                      </md-select>
+                  </md-input-container>
+                </div>
+                <div layout="row" layout-align="start start" ng-if="app.preferences.isItemSecretQuestion()">
+                  <md-input-container class="md-block md-input-has-value">
+                    <label><var:string label:value="Question"/></label>
+                      <md-select ng-model="app.preferences.defaults.SOGoPasswordRecoveryQuestion">
+                        <var:foreach list="passwordRecoveryQuestionList" item="item">
+                          <md-option var:value="item">
+                            <var:string value="itemPasswordRecoveryText"/>
+                          </md-option>
+                        </var:foreach>
+                      </md-select>
+                  </md-input-container>
+                  <md-input-container class="md-block">
+                    <label><var:string label:value="Answer"/></label>
+                    <input autocorrect="off" autocapitalize="off" type="text" ng-model="app.preferences.defaults.SOGoPasswordRecoveryQuestionAnswer" ng-required="app.preferences.isItemSecretQuestion()"/>
+                  </md-input-container>
+                </div>
+                <div layout="row" layout-align="start start" ng-if="app.preferences.isItemSecondaryEmail()">
+                  <md-input-container class="md-block">
+                    <label><var:string label:value="Secondary e-mail"/></label>
+                    <input autocorrect="off" autocapitalize="off" type="text" ng-model="app.preferences.defaults.SOGoPasswordRecoverySecondaryEmail" ng-required="app.preferences.isItemSecondaryEmail()" pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,3}$"/>
+                  </md-input-container>
+                </div>
+              </var:if>
+              <!-- Password change -->
+              <var:if condition="shouldDisplayPasswordChange">
+                <h5><var:string label:value="Password change"/></h5>
+                <div layout="row" layout-xs="column">
+                  <md-input-container class="md-block" flex="flex">
+                    <label><var:string label:value="Current password"/>
+                    </label>
+                    <input type="password" sg-no-dirty-check="true" ng-model="app.passwords.oldPassword"/>
+                  </md-input-container>
+                  <md-input-container class="md-block" flex="flex">
+                    <label><var:string label:value="New password"/>
+                    </label>
+                    <input type="password" sg-no-dirty-check="true" ng-model="app.passwords.newPassword"/>
+                    <div class="sg-hint">
+                      <ul class="sg-padded">
+                        <var:foreach list="passwordPolicy" item="item">
+                          <li><var:string value="item.label"/></li>
+                        </var:foreach>
+                      </ul>
+                    </div>
+                  </md-input-container>
+                  <md-input-container class="md-block" flex="flex">
+                    <label><var:string label:value="Confirmation"/>
+                    </label>
+                    <input type="password" name="newPasswordConfirmation" sg-no-dirty-check="true" ng-model="app.passwords.newPasswordConfirmation"/>
+                    <div ng-messages="preferencesForm.newPasswordConfirmation.$error">
+                      <div ng-message="newPasswordMismatch"><var:string label:value="Passwords don't match"/></div>
+                    </div>
+                  </md-input-container>
+                </div>
+                <div layout="row" layout-align="end center">
+                  <md-button ng-click="app.changePassword()" type="button" ng-disabled="!app.canChangePassword(preferencesForm)">
+                    <var:string label:value="Change"/>
+                  </md-button>
+                </div>
+              </var:if>
+          </md-content>
+        </md-tab>
+      </var:if>
+    </md-tabs>
+  </script>
+
+  <!--
+      CALENDAR PREFERENCE PANEL
+  -->
+  <script type="text/ng-template" id="calendarsPreferences.html">
+    <var:if condition="userHasCalendarAccess">
+      <md-tabs md-border-bottom="md-border-bottom" md-dynamic-height="true">
+
+        <!-- CALENDAR - GENERAL -->
+        <md-tab id="calendarOptionsView"
+                aria-controls="calendarOptionsView-content"
+                label:label="General">
+          <md-content layout="row" layout-align="center center"
+                      aria-labelledby="calendarOptionsView"
+                      class="md-padding"
+                      id="calendarOptionsView-content">
+            <div layout="column" flex="100">
+              <div layout="row">
+                <md-input-container class="md-block" flex="33">
+                  <label><var:string label:value="Week begins on" /></label>
+                  <md-select ng-model="app.preferences.defaults.SOGoFirstDayOfWeek">
+                    <var:foreach list="daysList" item="item">
+                      <md-option var:value="item">
+                        <var:string value="itemWeekStartDay"/>
+                      </md-option>
+                    </var:foreach>
+                  </md-select>
+                </md-input-container>
+
+                <md-input-container class="md-block" flex="33">
+                  <label><var:string label:value="Day start time" /></label>
+                  <md-select ng-model="app.preferences.defaults.SOGoDayStartTime">
+                    <var:foreach list="hoursList" item="item">
+                      <md-option var:value="item">
+                        <var:string value="item"/>
+                      </md-option>
+                    </var:foreach>
+                  </md-select>
+                </md-input-container>
+
+                <md-input-container class="md-block" flex="33">
+                  <label><var:string label:value="Day end time" /></label>
+                  <md-select ng-model="app.preferences.defaults.SOGoDayEndTime">
+                    <var:foreach list="hoursList" item="item">
+                      <md-option var:value="item">
+                        <var:string value="item"/>
+                      </md-option>
+                    </var:foreach>
+                  </md-select>
+                </md-input-container>
+              </div>
+
+              <div class="pseudo-input-container"
+                   layout="row" layout-align="center center">
+                <label class="pseudo-input-label"><var:string label:value="Week days to display"/></label>
+                <md-grid-list md-cols="7" md-row-height="2em" md-gutter="0.5em"
+                              flex="50" flex-sm="80" flex-xs="100"
+                              ng-model="app.preferences.defaults.SOGoCalendarWeekdays"
+                              ng-required="true"
+                              sg-toggle-grid="sg-toggle-grid">
+                  <var:foreach list="shortWeekDaysList" item="item">
+                    <md-grid-tile var:value="valueForWeekDay"><var:string value="item"/></md-grid-tile>
+                  </var:foreach>
+                </md-grid-list>
+              </div>
+
+              <md-checkbox layout-padding="layout-padding"
+                  ng-model="app.preferences.defaults.SOGoBusyOffHours"
+                  ng-true-value="1"
+                  ng-false-value="0">
+                <var:string label:value="Show time as busy outside working hours"/>
+              </md-checkbox>
+
+              <md-input-container>
+                <label><var:string label:value="First week of year"/></label>
+                <md-select label:aria-label="First week of year"
+                           ng-model="app.preferences.defaults.SOGoFirstWeekOfYear">
+                  <var:foreach list="firstWeekList" item="item">
+                    <md-option var:value="item">
+                      <var:string value="itemFirstWeekText"/>
+                    </md-option>
+                  </var:foreach>
+                </md-select>
+              </md-input-container>
+
+              <md-input-container>
+                <label><var:string label:value="Default calendar" /></label>
+                <md-select ng-model="app.preferences.defaults.SOGoDefaultCalendar">
+                  <var:foreach list="defaultCalendarList" item="item">
+                    <md-option var:value="item">
+                      <var:string value="itemCalendarText"/>
+                    </md-option>
+                  </var:foreach>
+                </md-select>
+              </md-input-container>
+
+              <div layout="row">
+                <md-input-container class="md-block" flex="50">
+                  <label><var:string label:value="Default events classification" /></label>
+                  <md-select ng-model="app.preferences.defaults.SOGoCalendarEventsDefaultClassification">
+                    <var:foreach list="calendarClassificationsList" item="item">
+                      <md-option var:value="item">
+                        <var:string value="itemClassificationText"/>
+                      </md-option>
+                    </var:foreach>
+                  </md-select>
+                </md-input-container>
+
+                <md-input-container class="md-block" flex="50">
+                  <label><var:string label:value="Default tasks classification"/></label>
+                  <md-select ng-model="app.preferences.defaults.SOGoCalendarTasksDefaultClassification">
+                    <var:foreach list="calendarClassificationsList" item="item">
+                      <md-option var:value="item">
+                        <var:string value="itemClassificationText"/>
+                      </md-option>
+                    </var:foreach>
+                  </md-select>
+                </md-input-container>
+              </div>
+
+              <md-input-container>
+                <label><var:string label:value="Default reminder"/></label>
+                <md-select ng-model="app.preferences.defaults.SOGoCalendarDefaultReminder">
+                  <var:foreach list="reminderValues" item="item">
+                    <md-option var:value="item">
+                      <var:string value="itemReminderText"/>
+                    </md-option>
+                  </var:foreach>
+                </md-select>
+              </md-input-container>
+            </div>
+          </md-content>
+        </md-tab>
+
+        <!-- CALENDAR - CATEGORIES -->
+        <md-tab id="calendarCategories"
+                aria-controls="calendarCategories-content"
+                label:label="Categories">
+          <md-content class="md-padding">
+            <div layout="column" flex="100">
+              <md-list layout="row" layout-wrap="layout-wrap">
+                <md-list-item flex="50" flex-xs="100"
+                              ng-repeat="item in
+                                         app.preferences.defaults.SOGoCalendarCategories
+                                         track by $index">
+                  <sg-color-picker ng-model="app.preferences.defaults.SOGoCalendarCategoriesColorsValues[$index]"><!-- color picker--></sg-color-picker>
+                  <md-input-container class="md-block md-flex">
+	            <input type="text" label:aria-label="Calendar Category" required="required"
+                           name="calendarCategory_{{$index}}"
+                           ng-model="app.preferences.defaults.SOGoCalendarCategories[$index]"
+                           ng-change="app.resetCalendarCategoryValidity($index, preferencesForm)"
+                           sg-focus-on="calendarCategory_{{$index}}"/>
+                    <div ng-messages="preferencesForm['calendarCategory_' + $index].$error">
+                      <div ng-message="duplicate"><var:string label:value="Duplicate name"/></div>
+                    </div>
+                  </md-input-container>
+                  <md-button class="sg-icon-button" type="button"
+                             layout="row" layout-align="end center"
+                             label:aria-label="Remove Calendar Category"
+                             ng-click="app.removeCalendarCategory($index, preferencesForm)">
+                    <md-icon>remove_circle</md-icon>
+                  </md-button>
+                </md-list-item>
+              </md-list>
+
+              <div layout="row" layout-align="end center">
+                <md-button type="button"
+                           label:aria-label="Reset to defaults"
+                           ng-click="app.resetCalendarCategories(preferencesForm)">
+                  <var:string label:value="Reset to defaults"/>
+                </md-button>
+                <md-button type="button"
+                           label:aria-label="Add Calendar Category"
+                           ng-click="app.addCalendarCategory(preferencesForm)">
+                  <var:string label:value="Add Calendar Category"/>
+                </md-button>
+              </div>
+            </div>
+          </md-content>
+
+        </md-tab>
+
+        <!-- CALENDAR - INVITATIONS -->
+        <md-tab id="calendarInvitationsTab"
+                aria-controls="calendarInvitationsTab-content"
+                label:label="Invitations">
+          <md-content layout="row" layout-align="space-around start"
+                      class="md-padding"
+                      aria-labelledby="calendarInvitationsTab"
+                      id="calendarInvitationsTab-content">
+
+            <div layout="column" flex="100">
+              <md-checkbox
+                  ng-model="app.preferences.settings.Calendar.InvitationNotificationsOnCalDavDisabled"
+                  ng-true-value="1"
+                  ng-false-value="0">
+                <var:string label:value="Disable e-mail notifications on CalDAV"/>
+              </md-checkbox>
+              <md-checkbox
+                  ng-model="app.preferences.settings.Calendar.PreventInvitations"
+                  ng-true-value="1"
+                  ng-false-value="0">
+                <var:string label:value="Prevent from being invited to appointments"/>
+              </md-checkbox>
+              <div flex-offset="5"
+                   ng-show="app.preferences.settings.Calendar.PreventInvitations == 1">
+                <label>
+                  <var:string label:value="White list for appointment invitations"/>
+                </label>
+                <md-contact-chips
+                    flex="100"
+                    class="sg-chips-autocomplete"
+                    ng-model="app.preferences.settings.Calendar.PreventInvitationsWhitelist"
+                    md-contacts="app.userFilter($query, app.preferences.settings.Calendar.PreventInvitationsWhitelist)"
+                    md-contact-name="cn"
+                    md-contact-image="$$image"
+                    md-contact-email="c_email"
+                    md-require-match="true"
+                    md-highlight-flags="i"
+                    filter-selected="false"
+                    label:placeholder="Add"><!-- users --></md-contact-chips>
+              </div>
+            </div>
+          </md-content>
+        </md-tab>
+
+      </md-tabs>
+    </var:if>
+  </script>
+
+  <!--
+      CONTACTS PREFERENCE PANEL
+  -->
+  <script type="text/ng-template" id="addressbooksPreferences.html">
+    <md-tabs md-dynamic-height="true">
+
+      <!-- CONTACT > CATEGORIES -->
+      <md-tab id="contactsCategoriesTab" aria-controls="contactsCategoriesTab-content" label:label="Categories">
+
+        <md-content role="tabpanel" aria-labelledby="contactsCategoriesView"
+                    id="contactsCategoriesView-content" class="md-padding">
+          <div layout="column" flex="100">
+            <md-list layout="row" layout-wrap="layout-wrap">
+              <md-list-item flex="50" flex-sm="100"
+                            ng-repeat="item in
+                                       app.preferences.defaults.SOGoContactsCategories
+                                       track by $index">
+                <md-input-container class="md-block md-flex">
+	          <input type="text"
+                         label:aria-label="Contact Category"
+                         required="required"
+                         name="contactCategory_{{$index}}"
+                         ng-model="app.preferences.defaults.SOGoContactsCategories[$index]"
+                         sg-focus-on="contactCategory_{{$index}}"/>
+                    <div ng-messages="preferencesForm['contactCategory_' + $index].$error">
+                      <div ng-message="duplicate"><var:string label:value="Duplicate name"/></div>
+                    </div>
+                </md-input-container>
+                <md-button type="button" class="sg-icon-button"
+                           label:aria-label="Remove Contact Category"
+                           ng-click="app.removeContactCategory($index, preferencesForm)">
+                  <md-icon>remove_circle</md-icon>
+                </md-button>
+              </md-list-item>
+            </md-list>
+
+            <div layout="row" layout-align="end center">
+              <md-button type="button"
+                         label:aria-label="Reset to defaults"
+                         ng-click="app.resetContactsCategories(preferencesForm)">
+                <var:string label:value="Reset to defaults"/>
+              </md-button>
+              <md-button type="button"
+                         label:aria-label="Add Contact Category"
+                         ng-click="app.addContactCategory(preferencesForm)">
+                <var:string label:value="Add Contact Category"/>
+              </md-button>
+            </div>
+          </div>
+        </md-content>
+
+      </md-tab>
+      <!-- END OF CONTACT > CATEGORIES -->
+
+    </md-tabs>
+  </script>
+
+  <!--
+      MAIL PREFERENCE PANEL
+  -->
+  <script type="text/ng-template" id="mailerPreferences.html">
+    <var:if condition="userHasMailAccess">
+      <md-tabs md-dynamic-height="true">
+
+        <!-- MAIL > GENERAL -->
+        <md-tab id="mailGeneralTab" aria-controls="mailGeneralTab-content" label:label="General">
+          <md-content role="tabpanel" aria-labelledby="mailGeneralView"
+                      id="mailGeneralView-content" class="md-padding md-inline-form">
+
+            <div>
+              <md-checkbox
+                  ng-model="app.preferences.defaults.SOGoMailShowSubscribedFoldersOnly"
+                  ng-true-value="1"
+                  ng-false-value="0"
+                  label:aria-label="Show subscribed mailboxes only">
+                <var:string label:value="Show subscribed mailboxes only"/>
+              </md-checkbox>
+            </div>
+
+            <var:if condition="isEasUIEnabled">
+              <div>
+                <md-checkbox
+                    ng-model="app.preferences.defaults.SOGoMailSynchronizeOnlyDefaultFolders"
+                    ng-true-value="1"
+                    ng-false-value="0"
+                    label:aria-label="Synchronize only default mail folders (EAS)">
+                  <var:string label:value="Synchronize only default mail folders (EAS)"/>
+                </md-checkbox>
+              </div>
+            </var:if>
+
+            <div>
+              <md-checkbox
+                  ng-model="app.preferences.defaults.SOGoMailFetchAllUnseenCountFolders"
+                  ng-true-value="1"
+                  ng-false-value="0"
+                  label:aria-label="Fetch count of unseen messages for all mailboxes">
+                <var:string label:value="Fetch count of unseen messages for all mailboxes"/>
+              </md-checkbox>
+            </div>
+
+            <div>
+              <md-checkbox
+                  ng-model="app.preferences.defaults.SOGoMailSortByThreads"
+                  ng-true-value="1"
+                  ng-false-value="0"
+                  label:aria-label="Sort messages by threads">
+                <var:string label:value="Sort messages by threads"/>
+              </md-checkbox>
+            </div>
+
+            <div>
+              <md-checkbox
+                  ng-model="app.preferences.defaults.SOGoMailDisplayFullEmail"
+                  ng-true-value="1"
+                  ng-false-value="0"
+                  label:aria-label="Show recipients or sender full email in mailboxes">
+                <var:string label:value="Show recipients or sender full email in mailboxes"/>
+              </md-checkbox>
+            </div>
+
+            <div>
+              <md-checkbox
+                  ng-model="app.preferences.defaults.SOGoMailHideInlineAttachments"
+                  ng-true-value="1"
+                  ng-false-value="0"
+                  label:aria-label="Hide attachments for inline images">
+                <var:string label:value="Hide attachements for inline images"/>
+              </md-checkbox>
+            </div>
+
+            <div>
+              <md-checkbox
+                  ng-model="app.preferences.defaults.SOGoMailDisplayAttachmentAbove"
+                  ng-true-value="1"
+                  ng-false-value="0"
+                  label:aria-label="Show attachments above the message">
+                <var:string label:value="Show attachments above the message"/>
+              </md-checkbox>
+            </div>
+
+            <div>
+              <md-checkbox
+                  ng-model="app.preferences.defaults.SOGoMailAutoMarkAsReadEnabled"
+                  label:aria-label="Automatically mark messages as read">
+                <var:string label:value="Automatically mark messages as read"/>
+              </md-checkbox>
+              <div flex-offset="5">
+                <md-radio-group
+                    layout="row" layout-align="start center"
+                    ng-change="app.onMailAutoMarkAsReadDelay()"
+                    ng-model="app.preferences.defaults.SOGoMailAutoMarkAsReadMode"
+                    ng-disabled="!app.preferences.defaults.SOGoMailAutoMarkAsReadEnabled">
+                  <md-radio-button value="immediate"><var:string label:value="Immediately on display"/></md-radio-button>
+                  <md-radio-button value="delay" style="padding-right: 0">
+                    <var:string label:value="After displaying for"/>
+                  </md-radio-button>
+                  <md-input-container class="md-input-number" style="margin: 0" md-no-float="md-no-float">
+                    <input type="number" min="1" label:aria-label="seconds"
+                           ng-disabled="!app.preferences.defaults.SOGoMailAutoMarkAsReadEnabled"
+                           ng-change="app.onMailAutoMarkAsReadDelay()"
+                           ng-model="app.mailAutoMarkAsReadDelay"/>
+                  </md-input-container>
+                  <var:string label:value="seconds"/>
+                </md-radio-group>
+              </div>
+            </div>
+
+            <div layout="row" layout-align="start center" flex="50" flex-xs="100">
+              <md-checkbox
+                  class="md-align-top-left"
+                  ng-model="app.preferences.defaults.SOGoMailComposeWindowEnabled"
+                  label:aria-label="Always show mail composer">
+                <!-- SOGoMailComposeWindow -->
+              </md-checkbox>
+
+              <md-input-container class="md-block md-flex">
+                <label><var:string label:value="Always open mail composer"/></label>
+                <md-select
+                    ng-disabled="!app.preferences.defaults.SOGoMailComposeWindowEnabled"
+                    ng-model="app.preferences.defaults.SOGoMailComposeWindow">
+                  <md-option value="inline">
+                    <var:string label:value="Inside current window"/>
+                  </md-option>
+                  <md-option value="popup">
+                    <var:string label:value="In a popup window"/>
+                  </md-option>
+                </md-select>
+              </md-input-container>
+            </div>
+
+            <div layout="row" layout-align="start center" flex="50" flex-xs="100">
+              <md-checkbox
+                  class="md-align-top-left"
+                  ng-model="app.preferences.defaults.SOGoMailAddOutgoingAddresses"
+                  ng-true-value="1"
+                  ng-false-value="0"
+                  label:aria-label="When sending mail, add unknown recipients to my">
+                <!-- SOGoMailAddOutgoingAddresses -->
+              </md-checkbox>
+
+              <md-input-container class="md-block md-flex">
+                <label><var:string label:value="When sending mail, add unknown recipients to my"/></label>
+                <md-select
+                    ng-disabled="app.preferences.defaults.SOGoMailAddOutgoingAddresses != 1"
+                    ng-model="app.preferences.defaults.SOGoSelectedAddressBook">
+                  <var:foreach list="addressBookList" item="item">
+                    <md-option var:value="item.id">
+                      <var:string value="item.name"/>
+                    </md-option>
+                  </var:foreach>
+                </md-select>
+              </md-input-container>
+            </div>
+
+            <md-input-container class="md-block" flex="50" flex-xs="100">
+              <label><var:string label:value="Forward messages"/></label>
+              <md-select ng-model="app.preferences.defaults.SOGoMailMessageForwarding">
+                <var:foreach list="messageForwardingList" item="item">
+                  <md-option var:value="item">
+                    <var:string value="itemMessageForwardingText"/>
+                  </md-option>
+                </var:foreach>
+              </md-select>
+            </md-input-container>
+
+            <div layout="row" layout-xs="column">
+              <md-input-container class="md-block" flex="flex">
+                <label><var:string label:value="When replying to a message"/></label>
+                <md-select ng-model="app.preferences.defaults.SOGoMailReplyPlacement">
+                  <var:foreach list="replyPlacementList" item="item">
+                    <md-option var:value="item">
+                      <var:string value="itemReplyPlacementText"/>
+                    </md-option>
+                  </var:foreach>
+                </md-select>
+              </md-input-container>
+
+              <md-input-container class="md-block" flex="flex">
+                <label><var:string label:value="And place my signature"/></label>
+                <md-select ng-model="app.preferences.defaults.SOGoMailSignaturePlacement">
+                  <var:foreach list="signaturePlacementList" item="item">
+                    <md-option var:value="item">
+                      <var:string value="itemSignaturePlacementText"/>
+                    </md-option>
+                  </var:foreach>
+                </md-select>
+              </md-input-container>
+            </div>
+
+            <div layout="row" layout-xs="column">
+              <md-checkbox
+                  ng-model="app.preferences.defaults.SOGoMailUseSignatureOnNew"
+                  ng-true-value="1"
+                  ng-false-value="0"
+                  label:aria-label="Insert signature on new message">
+                <var:string label:value="Insert signature on new message"/>
+              </md-checkbox>
+              <md-checkbox
+                  ng-model="app.preferences.defaults.SOGoMailUseSignatureOnReply"
+                  ng-true-value="1"
+                  ng-false-value="0"
+                  label:aria-label="Insert signature on reply">
+                <var:string label:value="Insert signature on reply"/>
+              </md-checkbox>
+              <md-checkbox
+                  ng-model="app.preferences.defaults.SOGoMailUseSignatureOnForward"
+                  ng-true-value="1"
+                  ng-false-value="0"
+                  label:aria-label="Insert signature on forward">
+                <var:string label:value="Insert signature on forward"/>
+              </md-checkbox>
+            </div>
+
+            <!-- myNextDays: Signatur-Editor direkt auf der Mail-Seite (statt nur im Konto-Dialog).
+                 Bindet an die primaere Identitaet; speichert ueber den normalen Speichern-Button. -->
+            <div layout="column"
+                 ng-if="app.preferences.defaults.AuxiliaryMailAccounts[0].identities[0]">
+              <div class="pseudo-input-container"
+                   ng-if="app.preferences.defaults.SOGoMailComposeMessageType == 'html'">
+                <label class="pseudo-input-label"><var:string label:value="Signature"/></label>
+                <sg-ckeditor
+                    class="ng-cloak"
+                    ck-margin="8px"
+                    ng-model="app.preferences.defaults.AuxiliaryMailAccounts[0].identities[0].signature"><!-- HTML signature editor --></sg-ckeditor>
+              </div>
+              <md-input-container class="md-block"
+                   ng-if="app.preferences.defaults.SOGoMailComposeMessageType != 'html'">
+                <label><var:string label:value="Signature"/></label>
+                <textarea ng-model="app.preferences.defaults.AuxiliaryMailAccounts[0].identities[0].signature"><!-- signature --></textarea>
+              </md-input-container>
+            </div>
+
+            <div layout="row">
+              <md-input-container class="md-block" flex="50">
+                <label><var:string label:value="Compose messages in"/></label>
+                <md-select ng-model="app.preferences.defaults.SOGoMailComposeMessageType">
+                  <var:foreach list="composeMessagesType" item="item">
+                    <md-option var:value="item">
+                      <var:string value="itemComposeMessagesText"/>
+                    </md-option>
+                  </var:foreach>
+                </md-select>
+              </md-input-container>
+
+              <div class="md-auto-horizontal-margin" flex="50">
+                <div layout="row" ng-show="app.preferences.defaults.SOGoMailComposeMessageType == 'html'">
+                  <md-checkbox
+                      ng-model="app.preferences.defaults.SOGoMailComposeFontSizeEnabled"
+                      label:aria-label="Default font size"><!-- default font size -->
+                  </md-checkbox>
+                  <md-input-container class="md-block md-flex">
+                    <label><var:string label:value="Default font size"/></label>
+                    <md-select label:aria-label="Default font size"
+                               ng-disabled="!app.preferences.defaults.SOGoMailComposeFontSizeEnabled"
+                               ng-required="app.preferences.defaults.SOGoMailComposeFontSizeEnabled"
+                               ng-model="app.preferences.defaults.SOGoMailComposeFontSize">
+                      <var:foreach list="fontSizesList" item="item">
+                        <md-option var:value="item">
+                          <var:string value="itemFontSizeText"/>
+                        </md-option>
+                      </var:foreach>
+                    </md-select>
+                  </md-input-container>
+                </div>
+              </div>
+            </div>
+
+            <md-input-container class="md-block" flex="50" flex-xs="100">
+              <label><var:string label:value="Display remote inline images"/></label>
+              <md-select ng-model="app.preferences.defaults.SOGoMailDisplayRemoteInlineImages">
+                <var:foreach list="displayRemoteInlineImages" item="item">
+                  <md-option var:value="item">
+                    <var:string value="itemDisplayRemoteInlineImagesText"/>
+                  </md-option>
+                </var:foreach>
+              </md-select>
+            </md-input-container>
+
+            <div layout="row" layout-align="start center">
+              <p><var:string label:value="Auto save every"/></p>
+              <md-input-container class="md-input-number" md-no-float="md-no-float">
+                <input type="number" min="0" label:aria-label="minutes"
+                       ng-model="app.preferences.defaults.SOGoMailAutoSave"/>
+              </md-input-container>
+              <var:string label:value="minutes"/>
+            </div>
+
+          </md-content>
+        </md-tab>
+        <!-- END OF MAIL > GENERAL -->
+
+        <!-- MAIL > LABELS -->
+        <md-tab id="mailLabelsTab"
+                aria-controls="mailLabelsTab-content" label:label="Labels">
+
+          <md-content role="tabpanel" aria-labelledby="mailLabelsView"
+                      id="mailLabelsView-content" class="md-padding">
+            <md-list layout="row" layout-xs="column" layout-wrap="layout-wrap">
+              <md-list-item flex="50" flex-xs="100"
+                            ng-repeat="key in app.preferences.defaults.SOGoMailLabelsColorsKeys
+                                       track by $index">
+                <sg-color-picker ng-model="app.preferences.defaults.SOGoMailLabelsColorsValues[$index][1]"><!-- color picker--></sg-color-picker>
+                <div layout="row" class="md-flex">
+                  <md-input-container class="md-block md-flex">
+                    <label><var:string label:value="Label"/></label>
+	            <input type="text"
+                           label:aria-label="Label"
+                           ng-model="app.preferences.defaults.SOGoMailLabelsColorsValues[$index][0]"
+                           sg-focus-on="mailLabel_{{$index}}"/>
+                  </md-input-container>
+                  <md-input-container class="md-block md-flex">
+                    <label><var:string label:value="IMAP Label"/></label>
+	            <input type="text"
+                           name="mailIMAPLabel_{{$index}}"
+                           label:aria-label="IMAP Label"
+                           ng-model="app.preferences.defaults.SOGoMailLabelsColorsKeys[$index]"
+                           ng-change="app.resetMailLabelValidity($index, preferencesForm)"
+                           ng-pattern="app.mailLabelKeyRE" />
+                    <div ng-messages="preferencesForm['mailIMAPLabel_' + $index].$error">
+                      <div ng-message="pattern"><var:string label:value="Invalid label"/></div>
+                      <div ng-message="duplicate"><var:string label:value="Duplicate label"/></div>
+                    </div>
+                  </md-input-container>
+                </div>
+                <md-button class="md-icon-button" type="button"
+                           layout="row" layout-align="end center"
+                           label:aria-label="Delete Label"
+                           ng-click="app.removeMailLabel($index, preferencesForm)">
+                  <md-icon>remove_circle</md-icon>
+                </md-button>
+              </md-list-item>
+            </md-list>
+
+            <div layout="row" layout-align="end center">
+              <md-button type="button"
+                         label:aria-label="Create Label"
+                         ng-click="app.addMailLabel(preferencesForm)">
+                <var:string label:value="Create Label"/>
+              </md-button>
+            </div>
+          </md-content>
+        </md-tab>
+        <!-- END OF MAIL > LABELS -->
+
+        <!-- MAIL > ACCOUNTS -->
+        <md-tab id="mailAccountsTab"
+                aria-controls="mailAccountsTab-content"
+                label:label="IMAP Accounts">
+
+          <md-list class="md-padding">
+            <md-list-item ng-repeat="item in
+                                     app.preferences.defaults.AuxiliaryMailAccounts
+                                     track by $index">
+              <md-input-container class="md-block md-flex">
+	        <input type="text"
+                       label:aria-label="Mail Account"
+                       ng-model="app.preferences.defaults.AuxiliaryMailAccounts[$index].name"
+                       ng-readonly="$index == 0"/>
+              </md-input-container>
+              <md-button class="sg-icon-button" type="button"
+                         ng-click="app.editMailAccount($event, $index, preferencesForm)"
+                         layout="row"
+                         layout-align="end center"
+                         label:aria-label="Edit Account">
+                <md-icon>edit</md-icon>
+              </md-button>
+              <md-button class="sg-icon-button" type="button"
+                         ng-click="app.removeMailAccount($index, preferencesForm)"
+                         ng-show="$index > 0"
+                         layout="row"
+                         layout-align="end center"
+                         label:aria-label="Delete Account">
+                <md-icon>remove_circle</md-icon>
+              </md-button>
+            </md-list-item>
+          </md-list>
+
+          <var:if condition="mailAuxiliaryUserAccountsEnabled">
+            <var:if condition="showCreateIdentity">
+              <div layout="row" layout-align="end center">
+                <md-button type="button"
+                          ng-click="app.addMailAccount($event, preferencesForm)"
+                          label:aria-label="Create Account">
+                  <var:string label:value="New Mail Account"/>
+                </md-button>
+              </div>
+            </var:if>
+          </var:if>
+
+        </md-tab>
+        <!-- END OF MAIL > ACCOUNTS -->
+
+        <!-- MAIL > FILTERS -->
+        <var:if condition="isSieveScriptsEnabled">
+          <md-tab id="mailFiltersTab"
+                  aria-controls="mailFiltersTab-content"
+                  label:label="Filters"
+                  sg-labels="MailerUI">
+            <md-content class="md-padding"
+                        ng-include="'hasActiveExternalSieveScripts.html'"
+                        ng-show="app.preferences.defaults.hasActiveExternalSieveScripts">
+              <!-- external Sieve script detected -->
+            </md-content>
+            <md-content role="tabpanel" aria-labelledby="mailFiltersView">
+              <div class="sg-list-sortable"
+                   ng-model="app.preferences.defaults.SOGoSieveFilters"
+                   as-sortable="{ scrollableContainer: '.sg-list-sortable', containment: '.sg-list-sortable', containerPositioning: 'relative', orderChanged: app.onFiltersOrderChanged(preferencesForm) }">
+                <div layout="row" layout-align="start center"
+                     ng-repeat="item in app.preferences.defaults.SOGoSieveFilters"
+                     as-sortable-item="as-sortable-item">
+                  <md-button class="md-icon-button" md-no-ink="md-no-ink"
+                             as-sortable-item-handle="as-sortable-item-handle">
+                    <md-icon class="sg-sortable-grip">drag_handle</md-icon>
+                  </md-button>
+                  <md-checkbox
+                      style="margin-bottom: 0;"
+                      label:aria-label="Enable filter"
+                      ng-model="app.preferences.defaults.SOGoSieveFilters[$index].active"
+                      ng-true-value="1"
+                      ng-false-value="0">
+                    <!-- active or not-->
+                  </md-checkbox>
+                  <md-input-container class="md-flex">
+	            <input type="text" label:aria-label="Filter name"
+                           ng-model="app.preferences.defaults.SOGoSieveFilters[$index].name"/>
+                  </md-input-container>
+                  <md-button class="sg-icon-button" type="button"
+                             ng-click="app.editMailFilter($event, $index, preferencesForm)"
+                             layout="row" layout-align="end center"
+                             label:aria-label="Edit Filter">
+                    <md-icon>edit</md-icon>
+                  </md-button>
+                  <md-button class="sg-icon-button" type="button"
+                             ng-click="app.removeMailFilter($index, preferencesForm)"
+                             layout="row" layout-align="end center"
+                             label:aria-label="Delete Filter">
+                    <md-icon>remove_circle</md-icon>
+                  </md-button>
+                </div>
+              </div>
+
+              <div layout="row" layout-align="end center">
+                <md-button type="button"
+                           ng-click="app.addMailFilter($event, preferencesForm)"
+                           label:aria-label="Create Filter">
+                  <var:string label:value="Create Filter"/>
+                </md-button>
+              </div>
+            </md-content>
+          </md-tab>
+        </var:if>
+        <!-- END OF MAIL > FILTERS -->
+
+        <!-- MAIL > VACATION -->
+        <var:if condition="isVacationEnabled">
+          <md-tab id="mailVacationTab" aria-controls="mailVacationTab-content" label:label="Vacation">
+            <md-content class="md-padding"
+                        ng-include="'hasActiveExternalSieveScripts.html'"
+                        ng-show="app.preferences.defaults.hasActiveExternalSieveScripts">
+              <!-- external Sieve script detected -->
+            </md-content>
+            <div role="tabpanel" aria-labelledby="mailVacationView"
+                 id="mailVacationView-content" class="md-padding">
+
+              <md-checkbox
+                  ng-model="app.preferences.defaults.Vacation.enabled"
+                  ng-true-value="1"
+                  ng-false-value="0"
+                  ng-change="app.updateVacationDates()"
+                  label:aria-label="Enable vacation auto reply">
+                <var:string label:value="Enable vacation auto reply"/>
+              </md-checkbox>
+
+              <div class="md-inline-form" layout="column" flex-offset="5"
+                   ng-show="app.preferences.defaults.Vacation.enabled == 1">
+
+                <div layout="row">
+                  <md-checkbox
+                      ng-model="app.preferences.defaults.Vacation.customSubjectEnabled"
+                      ng-true-value="1"
+                      ng-false-value="0"
+                      label:aria-label="Enable custom auto reply subject">
+                  <!-- enable auto reply subject --></md-checkbox>
+                  <md-input-container class="md-block md-flex">
+                    <label><var:string label:value="Auto reply subject"/></label>
+                    <input type="text"
+                           ng-required="app.preferences.defaults.Vacation.customSubjectEnabled"
+                           ng-disabled="!app.preferences.defaults.Vacation.customSubjectEnabled"
+                           ng-model="app.preferences.defaults.Vacation.customSubject"/>
+                    <div class="sg-hint" ng-show="app.sieveVariablesCapability">
+                      <var:string label:value="You can write ${subject} to insert the original subject"/>
+                    </div>
+                  </md-input-container>
+                </div>
+
+                <md-input-container class="md-block md-flex md-input-has-placeholder">
+                  <label><var:string label:value="Auto reply message"/></label>
+                  <var:if condition="vacationHeader.length">
+                    <p class="text-preview" md-colors="::{color: 'default-background-600'}"><var:string value="vacationHeader"/></p>
+                  </var:if>
+                  <textarea name="autoReplyText"
+                            id="autoReplyText"
+                            ng-required="app.preferences.defaults.Vacation.enabled == 1"
+                            ng-model="app.preferences.defaults.Vacation.autoReplyText"/>
+                  <var:if condition="vacationFooter.length">
+                    <p class="text-preview" md-colors="::{color: 'default-background-600'}"><var:string value="vacationFooter"/></p>
+                  </var:if>
+                </md-input-container>
+
+                <div layout="row" layout-align="start center">
+                  <md-input-container class="md-block md-flex">
+                    <label><var:string label:value="Email addresses"/></label>
+                    <md-chips
+                        id="autoReplyEmailAddresses"
+                        name="autoReplyEmailAddresses"
+                        ng-model="app.preferences.defaults.Vacation.autoReplyEmailAddresses"
+                        ng-required="app.preferences.defaults.Vacation.enabled == 1"
+                        md-separator-keys="app.emailSeparatorKeys"
+                        md-add-on-blur="true"
+                        md-autocomplete-snap="width">
+                      <md-autocomplete
+                          md-menu-class="md-2-line"
+                          md-search-text="app.addressesSearchText"
+                          md-items="address in app.filterEmailAddresses(app.addressesSearchText)"
+                          md-no-cache="true"
+                          md-min-length="0"
+                          md-autofocus="true"
+                          md-autoselect="true"
+                          label:placeholder="Enter an email"
+                          label:secondary-placeholder="Add another email">
+                        <md-item-template>
+                          <div class="sg-tile-content">
+                            <div class="sg-md-subhead">
+                              <div md-highlight-text="app.addressesSearchText"
+                                   md-highlight-flags="gi">{{ address }}</div>
+                            </div>
+                          </div>
+                        </md-item-template>
+                      </md-autocomplete>
+                    </md-chips>
+                  </md-input-container>
+                  <md-button ng-click="app.addDefaultEmailAddresses(preferencesForm)">
+                    <var:string label:value="Add default email addresses"/>
+                  </md-button>
+                </div>
+
+                <div layout="row">
+                  <md-input-container class="md-block" flex="50" flex-xs="100">
+                    <label><var:string label:value="Days between responses"/></label>
+                    <md-select label:aria-label="Days between responses"
+                               ng-model="app.preferences.defaults.Vacation.daysBetweenResponse">
+                      <var:foreach list="daysBetweenResponsesList" item="item">
+                        <md-option var:value="item">
+                          <var:if condition="item" const:value="0">
+                             <i><var:string label:value="Always send vacation message response"/></i>
+                          </var:if>
+                          <var:if condition="item" const:value="0" const:negate="YES">
+                             <var:string value="item"/>
+                          </var:if>
+                        </md-option>
+                      </var:foreach>
+                    </md-select>
+                  </md-input-container>
+                </div>
+
+                <div>
+                  <md-checkbox
+                      ng-model="app.preferences.defaults.Vacation.ignoreLists"
+                      ng-true-value="1"
+                      ng-false-value="0">
+                    <var:string label:value="Do not send responses to mailing lists" />
+                  </md-checkbox>
+                </div>
+
+                <div>
+                  <md-checkbox
+                      ng-model="app.preferences.defaults.Vacation.alwaysSend"
+                      ng-true-value="1"
+                      ng-false-value="0">
+                    <var:string label:value="Always send vacation message response"/>
+                    <div class="sg-hint"><var:string label:value="The vacation message is sent prior to apply your filters."/></div>
+                  </md-checkbox>
+                </div>
+
+                <div>
+                  <md-checkbox
+                      ng-model="app.preferences.defaults.Vacation.discardMails"
+                      ng-true-value="1"
+                      ng-false-value="0">
+                    <var:string label:value="Discard incoming mails during vacation"/>
+                    <div class="sg-hint"><var:string label:value="The vacation message is sent but incoming messages are not delivered to your inbox."/></div>
+                  </md-checkbox>
+                </div>
+
+                <var:if condition="isVacationPeriodEnabled">
+                <h4 class="md-title"><var:string label:value="Activation Constraints"/></h4>
+                <div layout="row" class="sub-information" layout-wrap="layout-wrap">
+                  <var:string label:value="Customize day and hour ranges independently and optionally combine them with specific weekdays to tailor your vacation filters to your preferences"/>
+                </div>
+                <div layout="row" layout-wrap="layout-wrap">
+                  
+                  <div class="md-block" flex="50" flex-xs="100">
+                    <md-checkbox
+                        ng-model="app.preferences.defaults.Vacation.startDateEnabled"
+                        ng-true-value="1"
+                        ng-false-value="0"
+                        ng-change="app.toggleVacationStartDate()">
+                      <var:string label:value="Enable auto reply on" />
+                    </md-checkbox>
+                    <md-input-container>
+                      <label class="md-no-truncate"><var:string label:value="First day of vacation"/></label>
+                      <md-datepicker
+                          name="vacationStartDate"
+                          label:md-placeholder="Enter date"
+                          ng-change="app.toggleVacationEndDate()"
+                          ng-disabled="!app.preferences.defaults.Vacation.startDateEnabled"
+                          ng-required="app.preferences.defaults.Vacation.startDateEnabled"
+                          ng-model="app.preferences.defaults.Vacation.startDate"
+                          sg-reset-on-disabled="sg-reset-on-disabled"><!-- datepicker --></md-datepicker>
+                    </md-input-container>
+                  </div>
+
+                  <div class="md-block" flex="50" flex-xs="100">
+                    <md-checkbox
+                        ng-model="app.preferences.defaults.Vacation.endDateEnabled"
+                        ng-true-value="1"
+                        ng-false-value="0"
+                        ng-change="app.toggleVacationEndDate()">
+                      <var:string label:value="Disable auto reply after" />
+                    </md-checkbox>
+                    <md-input-container>
+                      <label class="md-no-truncate"><var:string label:value="Last day of vacation"/></label>
+                      <md-datepicker
+                          name="vacationEndDate"
+                          label:md-placeholder="Enter date"
+                          ng-disabled="!app.preferences.defaults.Vacation.endDateEnabled"
+                          ng-required="app.preferences.defaults.Vacation.endDateEnabled"
+                          ng-model="app.preferences.defaults.Vacation.endDate"
+                          md-date-filter="app.validateVacationEndDate"
+                          sg-reset-on-disabled="sg-reset-on-disabled"><!-- datepicker --></md-datepicker>
+                    </md-input-container>
+                  </div>
+                </div>
+
+                <div layout="row" layout-wrap="layout-wrap">
+                  <div class="md-block" flex="50" flex-xs="100">
+                    <md-checkbox
+                        ng-model="app.preferences.defaults.Vacation.startTimeEnabled"
+                        ng-true-value="1"
+                        ng-false-value="0"
+                        ng-change="app.toggleVacationStartTime()">
+                      <var:string label:value="Enable auto reply at" />
+                    </md-checkbox>
+                    <md-input-container>
+                      <sg-timepicker
+                          name="vacationStartTime"
+                          label:md-placeholder="Enter time"
+                          ng-disabled="!app.preferences.defaults.Vacation.startTimeEnabled"
+                          ng-required="app.preferences.defaults.Vacation.startTimeEnabled"
+                          ng-model="app.preferences.defaults.Vacation.startTime"><!-- timepicker --></sg-timepicker>
+                    </md-input-container>
+                  </div>
+
+                  <div class="md-block" flex="50" flex-xs="100">
+                    <md-checkbox
+                        ng-disabled="!app.preferences.defaults.Vacation.startTimeEnabled"
+                        ng-model="app.preferences.defaults.Vacation.endTimeEnabled"
+                        ng-true-value="1"
+                        ng-false-value="0"
+                        ng-change="app.toggleVacationEndTime()">
+                      <var:string label:value="Disable auto reply at" />
+                    </md-checkbox>
+                    <md-input-container>
+                      <sg-timepicker
+                          name="vacationEndTime"
+                          label:md-placeholder="Enter time"
+                          ng-disabled="!app.preferences.defaults.Vacation.endTimeEnabled"
+                          ng-required="app.preferences.defaults.Vacation.endTimeEnabled"
+                          ng-model="app.preferences.defaults.Vacation.endTime"><!-- timepicker --></sg-timepicker>
+                    </md-input-container>
+                  </div>
+                </div>
+
+                <div class="sg-padded--bottom" layout="row" layout-align="start end">
+                  <md-checkbox
+                      ng-model="app.preferences.defaults.Vacation.weekdaysEnabled"
+                      ng-true-value="1"
+                      ng-false-value="0">
+                 </md-checkbox>
+                  <div class="pseudo-input-container layout-padding" flex="50" flex-sm="80" flex-xs="100">
+                    <label class="pseudo-input-label"><var:string label:value="Enable auto reply on these days"/></label>
+                    <md-grid-list md-cols="7" md-row-height="2em" md-gutter="0.5em"
+                                  ng-model="app.preferences.defaults.Vacation.days"
+                                  ng-required="app.preferences.defaults.Vacation.weekdaysEnabled"
+                                  sg-toggle-grid="sg-toggle-grid">
+                      <var:foreach list="shortWeekDaysList" item="item">
+                        <md-grid-tile var:value="numberForWeekDay"><var:string value="item"/></md-grid-tile>
+                      </var:foreach>
+                    </md-grid-list>
+                  </div>
+                </div>
+
+                </var:if>
+
+              </div>
+            </div>
+          </md-tab>
+        </var:if>
+        <!-- END OF MAIL > VACATION -->
+
+        <!-- MAIL > FORWARD -->
+        <var:if condition="isForwardEnabled">
+          <md-tab id="mailForwardTab" aria-controls="mailForwardTab-content" label:label="Forward">
+            <md-content class="md-padding"
+                        ng-include="'hasActiveExternalSieveScripts.html'"
+                        ng-show="app.preferences.defaults.hasActiveExternalSieveScripts">
+              <!-- external Sieve script detected -->
+            </md-content>
+            <div role="tabpanel" aria-labelledby="mailForwardView"
+                 id="mailForwardView-content" class="md-padding">
+
+              <md-checkbox
+                  ng-model="app.preferences.defaults.Forward.enabled"
+                  ng-true-value="1"
+                  ng-false-value="0">
+                <var:string label:value="Forward incoming messages"/>
+              </md-checkbox>
+
+              <div flex-offset="5" ng-show="app.preferences.defaults.Forward.enabled == 1">
+                <md-input-container class="md-block md-flex">
+                  <label><var:string label:value="Email addresses"/></label>
+                    <md-chips
+                        id="forwardAddress"
+                        name="forwardAddress"
+                        ng-model="app.preferences.defaults.Forward.forwardAddress"
+                        md-transform-chip="app.addRecipient($chip, 'forward')"
+                        ng-required="app.preferences.defaults.Forward.enabled == 1"
+                        md-separator-keys="app.emailSeparatorKeys"
+                        md-add-on-blur="true"
+                        md-autocomplete-snap="width">
+                      <!-- forward addresses -->
+                      <md-autocomplete
+                          ng-keydown="app.ignoreReturn($event)"
+                          md-menu-class="md-2-line"
+                          md-search-text="app.autocomplete.forward.searchText"
+                          md-selected-item="app.autocomplete.forward.selected"
+                          md-items="user in app.contactFilter(app.autocomplete.forward.searchText)"
+                          var:md-min-length="minimumSearchLength"
+                          md-delay="150"
+                          md-no-cache="true"
+                          label:placeholder="Enter an email"
+                          label:secondary-placeholder="Add another email">
+                        <md-item-template>
+                          <div class="sg-tile-content">
+                            <div class="sg-md-subhead">
+                              <div md-highlight-text="app.autocomplete.forward.searchText"
+                                  md-highlight-flags="gi">{{ user.$shortFormat(app.autocomplete.forward.searchText) }}</div>
+                            </div>
+                            <div class="sg-md-body"
+                                md-colors="::{color: 'default-background-500'}">{{ user.containername }}</div>
+                          </div>
+                        </md-item-template>
+                      </md-autocomplete>
+                    </md-chips>
+                </md-input-container>
+
+                <div>
+                  <md-checkbox
+                      ng-model="app.preferences.defaults.Forward.alwaysSend"
+                      ng-true-value="1"
+                      ng-false-value="0">
+                    <var:string label:value="Always forward"/>
+                    <div class="sg-hint"><var:string label:value="Incoming messages are forwarded prior to apply your filters."/></div>
+                  </md-checkbox>
+                </div>
+
+                <div>
+                  <md-checkbox
+                      ng-model="app.preferences.defaults.Forward.keepCopy"
+                      ng-true-value="1"
+                      ng-false-value="0">
+                    <var:string label:value="Keep a copy" />
+                  </md-checkbox>
+                </div>
+
+              </div>
+            </div>
+          </md-tab>
+        </var:if>
+        <!-- END OF MAIL > FORWARD -->
+
+        <!-- MAIL > NOTIFICATIONS -->
+        <var:if condition="isNotificationEnabled">
+          <md-tab id="mailNotificationTab" aria-controls="mailNotificationTab-content" label:label="Notification">
+            <md-content class="md-padding"
+                        ng-include="'hasActiveExternalSieveScripts.html'"
+                        ng-show="app.preferences.defaults.hasActiveExternalSieveScripts">
+              <!-- external Sieve script detected -->
+            </md-content>
+            <div role="tabpanel" aria-labelledby="mailNotificationView"
+                 id="mailNotificationView-content" class="md-padding">
+
+              <md-checkbox
+                  ng-model="app.preferences.defaults.Notification.enabled"
+                  ng-true-value="1"
+                  ng-false-value="0">
+                <var:string label:value="Notify incoming messsages"/>
+              </md-checkbox>
+
+              <div flex-offset="5" ng-show="app.preferences.defaults.Notification.enabled == 1">
+                <md-input-container class="md-block md-flex">
+                  <label><var:string label:value="Email addresses"/></label>
+                    <md-chips
+                        id="notificationAddress"
+                        name="notificationAddress"
+                        ng-model="app.preferences.defaults.Notification.notificationAddress"
+                        md-transform-chip="app.addRecipient($chip, 'notification')"
+                        ng-required="app.preferences.defaults.Notification.enabled == 1"
+                        md-separator-keys="app.emailSeparatorKeys"
+                        md-add-on-blur="true"
+                        md-autocomplete-snap="width">
+                      <!-- notifications addresses -->
+                      <md-autocomplete
+                          ng-keydown="app.ignoreReturn($event)"
+                          md-menu-class="md-2-line"
+                          md-search-text="app.autocomplete.notification.searchText"
+                          md-selected-item="app.autocomplete.notification.selected"
+                          md-items="user in app.contactFilter(app.autocomplete.notification.searchText)"
+                          var:md-min-length="minimumSearchLength"
+                          md-delay="150"
+                          md-no-cache="true"
+                          label:placeholder="Enter an email"
+                          label:secondary-placeholder="Add another email">
+                        <md-item-template>
+                          <div class="sg-tile-content">
+                            <div class="sg-md-subhead">
+                              <div md-highlight-text="app.autocomplete.notification.searchText"
+                                  md-highlight-flags="gi">{{ user.$shortFormat(app.autocomplete.notification.searchText) }}</div>
+                            </div>
+                            <div class="sg-md-body"
+                                md-colors="::{color: 'default-background-500'}">{{ user.containername }}</div>
+                          </div>
+                        </md-item-template>
+                      </md-autocomplete>
+                    </md-chips>
+                </md-input-container>
+
+                <md-input-container class="md-block md-flex md-input-has-placeholder">
+                  <label><var:string label:value="Notification Message Sent"/></label>
+                  <textarea name="notificationMessage"
+                            id="notificationMessage"
+                            ng-model="app.preferences.defaults.Notification.notificationMessage"
+                            ng-required="app.preferences.defaults.Notification.enabled == 1">
+                  </textarea>
+                </md-input-container>
+              </div>
+            </div>
+          </md-tab>
+        </var:if>
+        <!-- END OF MAIL > NOTIFICATIONS -->
+
+      </md-tabs>
+    </var:if>
+  </script>
+  <script type="text/ng-template" id="hasActiveExternalSieveScripts.html">
+    <md-card>
+      <md-card-title>
+        <md-card-title-text>
+          <span class="md-headline"><var:string label:value="An external Sieve script is active"/></span>
+          <span class="md-subhead"><var:string label:value="Sieve is a programming language that can be used for email filtering. If you let SOGo handle your filters, vacation and forward settings, your active script will be disabled." /></span>
+        </md-card-title-text>
+      </md-card-title>
+      <md-card-actions layout="row" layout-align="end center">
+        <md-button type="button" class="md-raised md-warn"
+                   ng-click="app.manageSieveScript(preferencesForm)">
+          <var:string label:value="Let SOGo handle everything" />
+        </md-button>
+      </md-card-actions>
+    </md-card>
+  </script>
+
+
+</var:component>
