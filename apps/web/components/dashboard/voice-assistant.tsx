@@ -161,6 +161,44 @@ function matchWake(text: string): { hit: boolean; rest: string } {
   return { hit: false, rest: "" };
 }
 
+function toUiText(value: unknown, fallback = "Unbekannter Fehler."): string {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed || fallback;
+  }
+  if (value instanceof Error) {
+    return toUiText(value.message, fallback);
+  }
+  if (Array.isArray(value)) {
+    const parts = value
+      .map((entry) => toUiText(entry, ""))
+      .filter((entry) => entry.length > 0);
+    if (parts.length > 0) {
+      return parts.join("; ");
+    }
+    return fallback;
+  }
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    if ("detail" in record) {
+      return toUiText(record.detail, fallback);
+    }
+    if ("message" in record) {
+      return toUiText(record.message, fallback);
+    }
+    if ("error" in record) {
+      return toUiText(record.error, fallback);
+    }
+    try {
+      const serialized = JSON.stringify(record);
+      return serialized && serialized !== "{}" ? serialized : fallback;
+    } catch {
+      return fallback;
+    }
+  }
+  return fallback;
+}
+
 export function DashboardVoiceAssistant({
   dashboard: dashboardProp,
   userLabel: userLabelProp,
@@ -247,9 +285,10 @@ export function DashboardVoiceAssistant({
 
       // Antwort sprechen; danach bleibt Andy kurz wach fuer eine Folgefrage.
       const say = (text: string) => {
-        setReply(text);
+        const spoken = toUiText(text, "Alles klar.");
+        setReply(spoken);
         setPhaseBoth("speaking");
-        speakText(text, () => {
+        speakText(spoken, () => {
           enterFollowUp();
         });
       };
@@ -286,8 +325,7 @@ export function DashboardVoiceAssistant({
             const verb = pending.action.turnOn ? "eingeschaltet" : "ausgeschaltet";
             say(`Erledigt. Die Preisautomatik ist jetzt ${verb}.`);
           } catch (err) {
-            const message =
-              err instanceof Error ? err.message : "Unbekannter Fehler.";
+            const message = toUiText(err, "Unbekannter Fehler.");
             setError(message);
             say("Das hat leider nicht geklappt.");
           }
@@ -324,8 +362,7 @@ export function DashboardVoiceAssistant({
           }
           say(spoken);
         } catch (err) {
-          const message =
-            err instanceof Error ? err.message : "Unbekannter Fehler.";
+          const message = toUiText(err, "Unbekannter Fehler.");
           setError(message);
           say("Das hat leider nicht geklappt.");
         }
@@ -352,10 +389,9 @@ export function DashboardVoiceAssistant({
           if (!res.ok) {
             throw new Error("Bereich nicht erreichbar.");
           }
-          say(command.skill.summarize(payload));
+          say(toUiText(command.skill.summarize(payload), "Keine klare Antwort verfügbar."));
         } catch (err) {
-          const message =
-            err instanceof Error ? err.message : "Unbekannter Fehler.";
+          const message = toUiText(err, "Unbekannter Fehler.");
           setError(message);
           enterFollowUp();
         }
@@ -390,7 +426,7 @@ export function DashboardVoiceAssistant({
           | null;
         if (!response.ok) {
           throw new Error(
-            data?.detail ?? data?.message ?? "Andy ist nicht erreichbar.",
+            toUiText(data?.detail ?? data?.message, "Andy ist nicht erreichbar."),
           );
         }
         const answer = data?.reply?.trim() || "";
@@ -399,7 +435,7 @@ export function DashboardVoiceAssistant({
         }
         say(answer);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Unbekannter Fehler.";
+        const message = toUiText(err, "Unbekannter Fehler.");
         setError(message);
         enterFollowUp();
       }
