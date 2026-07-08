@@ -17,6 +17,8 @@ uv run uvicorn src.main:app --reload --port 8000
 Supabase-Zugang und Secrets über Umgebungsvariablen (siehe `src/core/config.py`
 und — vom Repo-Root aus — `deploy/ENVIRONMENT.md`).
 
+Hinweis: Deploys der API erfolgen ueber den Coolify-Workflow bei Aenderungen unter `apps/api/`.
+
 ## Gates (vor jedem Push)
 
 ```bash
