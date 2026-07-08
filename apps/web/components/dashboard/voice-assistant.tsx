@@ -393,7 +393,10 @@ export function DashboardVoiceAssistant({
           return;
         }
         // unklar → nachfragen, Aktion bleibt ausstehend.
-        say("Soll ich das tun? Bitte sag ja oder nein.");
+        say(
+          "Ich habe dich nicht ganz verstanden. Sag einfach kurz ja oder nein. " +
+            "Zum Beispiel: Ja, bitte ausschalten.",
+        );
         return;
       }
 
@@ -646,6 +649,19 @@ export function DashboardVoiceAssistant({
         askAndyRef.current(w && r ? r : said);
         return;
       }
+
+      // Wenn eine Aktion auf Ja/Nein wartet, akzeptieren wir im Idle explizite
+      // Bestätigungen auch ohne erneutes Wake-Word.
+      if (phaseRef.current === "idle" && pendingActionRef.current) {
+        const conf = classifyConfirmation(said);
+        appendDebug("IDLE_CONFIRMATION_CLASSIFIED", conf);
+        if (conf === "yes" || conf === "no") {
+          appendDebug("IDLE_CONFIRMATION_BYPASS_WAKE", "pending-action");
+          askAndyRef.current(said);
+          return;
+        }
+      }
+
       // idle → auf Wake-Word pruefen.
       const { hit, rest } = matchWake(said);
       appendDebug("IDLE_WAKE_MATCH", { hit, rest });
