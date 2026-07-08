@@ -22,6 +22,7 @@ from .features.channel_manager.sandbox_ota import router as sandbox_ota_router
 from .features.content.router import router as content_router
 from .features.crm.router import router as crm_router
 from .features.dashboard.router import router as dashboard_router
+from .features.external_calendar.router import router as external_calendar_router
 from .features.guests.router import router as guests_router
 from .features.inbox import scheduler as inbox_scheduler
 from .features.inbox.router import router as inbox_router
@@ -56,6 +57,7 @@ _SLICE_ROUTERS = [
     inbox_router,
     payments_router,
     subscriptions_router,
+    external_calendar_router,
     channel_manager_router,
     sandbox_ota_router,
     booking_engine_router,

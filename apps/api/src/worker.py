@@ -68,6 +68,11 @@ STUCK_AFTER_SECONDS = 300
 JOB_HEARTBEAT_SECONDS = 60
 # Zeit-Tick: Reconcile aller Tenants einreihen (ersetzt den externen 15-min-Cron).
 RECONCILE_TICK_SECONDS = 15 * 60
+# Zeit-Tick: externe iCal-Kalender syncen (analog Lodgify "alle 2 Stunden").
+# Feeds, deren letzter Sync älter ist, werden nachgezogen.
+ICAL_TICK_SECONDS = 30 * 60          # alle 30 min prüfen, ...
+ICAL_STALE_SECONDS = 2 * 60 * 60     # ... aber nur Feeds syncen, die > 2h alt sind
+ICAL_BATCH = 25                      # pro Tick höchstens so viele Feeds (Fairness)
 # Max. aufeinanderfolgende Budget-Verzögerungen (defer_count), bevor ein Job
 # aufgibt ('dead'). Deckel gegen Endlos-Defer-Livelock bei dauerhaft totem Redis.
 # Großzügig, damit legitimes Warten auf ein volles Budget-Fenster nie greift.
@@ -269,6 +274,7 @@ class Worker:
         self._inflight: set[asyncio.Task] = set()
         self._worker_id = f"{socket.gethostname()}:{os.getpid()}"
         self._last_reconcile_tick = 0.0
+        self._last_ical_tick = 0.0
         # Kontoweites Channex-Token-Budget (Phase 1b): vor jedem Channex-Push wird
         # ein Token verbraucht, sonst wird der Job verzögert statt Channex überfahren.
         self._budget = budget or ChannexBudget(get_settings())
@@ -476,6 +482,48 @@ class Worker:
         except Exception as exc:  # noqa: BLE001
             log.warning("reconcile_tick_failed", error=str(exc)[:200])
 
+    async def _ical_tick(self, loop_time: float) -> None:
+        """Alle 30 min prüfen und fällige externe iCal-Feeds (> 2h alt) syncen.
+        Netzwerk-/DB-Arbeit im Thread; robust: ein kaputter Feed kippt weder den
+        Tick noch die anderen Feeds (der Sync selbst schreibt Fehler an den Feed)."""
+        if loop_time - self._last_ical_tick < ICAL_TICK_SECONDS:
+            return
+        self._last_ical_tick = loop_time
+        try:
+            await asyncio.to_thread(self._sync_due_icals)
+        except Exception as exc:  # noqa: BLE001
+            log.warning("ical_tick_failed", error=str(exc)[:200])
+
+    def _sync_due_icals(self) -> None:
+        """Fällige aktive Feeds laden und synchronisieren. Fällig = noch nie
+        gesynct ODER letzter Sync älter als ICAL_STALE_SECONDS."""
+        from src.features.external_calendar.service import ExternalCalendarService
+
+        cutoff = (
+            datetime.now(UTC) - timedelta(seconds=ICAL_STALE_SECONDS)
+        ).isoformat()
+        # Fällige Feeds: last_synced_at is null ODER < cutoff. Zwei Abfragen
+        # (PostgREST-or wäre möglich, aber getrennt ist klarer), zusammengeführt.
+        never = (
+            self._db.table("external_calendar").select("*")
+            .eq("is_active", True).is_("last_synced_at", "null")
+            .limit(ICAL_BATCH).execute()
+        ).data or []
+        stale = (
+            self._db.table("external_calendar").select("*")
+            .eq("is_active", True).lt("last_synced_at", cutoff)
+            .limit(ICAL_BATCH).execute()
+        ).data or []
+        seen: set[str] = set()
+        svc = ExternalCalendarService(service_client=self._db)
+        for cal in (*never, *stale):
+            if cal["id"] in seen:
+                continue
+            seen.add(cal["id"])
+            svc.sync_calendar(self._db, cal)  # schreibt Status/Fehler selbst
+        if seen:
+            log.info("ical_sync_tick", synced=len(seen))
+
     def _enqueue_reconcile_all(self) -> None:
         # Coalescing-Bucket aus der WALL-CLOCK (time.time()), NICHT aus der
         # Monotonic-Loop-Uhr: loop.time() hat pro Prozess einen anderen, undefinierten
@@ -518,6 +566,7 @@ class Worker:
             loop_time = asyncio.get_running_loop().time()
             await self._reap_stuck()
             await self._reconcile_tick(loop_time)
+            await self._ical_tick(loop_time)
             free = CONCURRENCY - len(self._inflight)
             jobs = await asyncio.to_thread(self._claim, free) if free > 0 else []
             for job in jobs:

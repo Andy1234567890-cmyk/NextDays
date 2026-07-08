@@ -4,6 +4,53 @@ from __future__ import annotations
 from pydantic import BaseModel, Field
 
 
+
+class DashboardEntrySnapshot(BaseModel):
+    guest_name: str | None = None
+    property_title: str | None = None
+    channel: str
+    ota_name: str | None = None
+    check_in: str
+    check_out: str
+    status: str
+
+
+class DashboardKpiSnapshot(BaseModel):
+    value: int
+    change_pct: float | None = None
+
+
+class DashboardPropertySnapshot(BaseModel):
+    id: str
+    title: str
+    property_type: str
+    status: str
+    city: str | None = None
+    country: str | None = None
+    max_guests: int | None = None
+
+
+class DashboardVoiceSnapshot(BaseModel):
+    today: str
+    checkouts_today: list[DashboardEntrySnapshot] = Field(default_factory=list)
+    checkins_today: list[DashboardEntrySnapshot] = Field(default_factory=list)
+    upcoming: list[DashboardEntrySnapshot] = Field(default_factory=list)
+    properties: list[DashboardPropertySnapshot] = Field(default_factory=list)
+    checkins_30d: DashboardKpiSnapshot
+    revenue_30d: DashboardKpiSnapshot | None = None
+    confirmed_30d: DashboardKpiSnapshot
+    currency: str
+
+
+class DashboardVoiceRequest(BaseModel):
+    utterance: str
+    snapshot: DashboardVoiceSnapshot
+
+
+class DashboardVoiceResponse(BaseModel):
+    reply: str
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"

@@ -6,6 +6,7 @@
 import { redirect } from "next/navigation";
 
 import { AppSidebar } from "@/components/app-sidebar";
+import { DashboardVoiceAssistant } from "@/components/dashboard/voice-assistant";
 import { Topbar } from "@/components/topbar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { getMe } from "@/lib/auth";
@@ -53,6 +54,9 @@ export default async function DashboardLayout({
         {/* Inhaltsbereich — hier kommen später KPI-Kacheln & Charts hinein. */}
         <main className="flex min-w-0 flex-1 flex-col p-4 md:p-6">{children}</main>
       </SidebarInset>
+      {/* Andy lebt im Layout → bleibt beim Navigieren auf jeder Seite bestehen
+          und laedt seine Daten selbst. */}
+      <DashboardVoiceAssistant userLabel={email || null} />
     </SidebarProvider>
   );
 }

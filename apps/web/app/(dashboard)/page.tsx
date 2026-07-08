@@ -10,17 +10,18 @@ import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
 import { PaymentsStatusBanner } from "@/components/zahlungen/payments-status-banner";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card, CardContent } from "@/components/ui/card";
+import { getMe } from "@/lib/auth";
 import { getOnboarding } from "@/lib/onboarding";
 import { getDashboard } from "@/lib/reservations";
-import { currentUserEmail } from "@/lib/session-token";
 
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const [onboarding, loginEmail] = await Promise.all([
+  const [onboarding, me] = await Promise.all([
     getOnboarding(),
-    currentUserEmail(),
+    getMe(),
   ]);
+  const loginEmail = me?.email ?? null;
 
   // Onboarding noch offen → Assistent im Dashboard anzeigen.
   const status = onboarding.ok ? onboarding.data : null;

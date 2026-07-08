@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "myNextDays – Lodgify-Umzug",
+  "version": "1.0.0",
+  "description": "Übernimmt deine Lodgify-Objekte sicher zu myNextDays (ohne Passwort).",
+  "permissions": ["cookies", "storage"],
+  "host_permissions": [
+    "https://app.lodgify.com/*",
+    "https://*.lodgify.com/*",
+    "http://localhost:3000/*",
+    "https://*.mynextdays.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "myNextDays – Lodgify-Umzug"
+  }
+}

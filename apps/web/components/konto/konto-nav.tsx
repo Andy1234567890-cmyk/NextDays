@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 const ITEMS = [
   { title: "Profil", href: "/konto", icon: "ph:user-circle" },
   { title: "Tarif & Abo", href: "/konto/tarif", icon: "ph:receipt" },
+  { title: "Umzug (Lodgify …)", href: "/konto/umzug", icon: "ph:arrows-left-right" },
   { title: "Branding & Domains", href: "/konto/branding", icon: "ph:paint-brush" },
   { title: "Nutzer", href: "/konto/nutzer", icon: "ph:users" },
   { title: "Sicherheit", href: "/konto/sicherheit", icon: "ph:shield-check" },

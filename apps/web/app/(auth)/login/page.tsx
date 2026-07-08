@@ -28,8 +28,11 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+
     const res = await login(email, password);
     if (res.ok) {
+      // Andy begruesst im Dashboard selbst — dort liegt eine gueltige
+      // User-Geste (Consent-Klick) vor, ohne die der Browser Sprache verwirft.
       router.replace("/");
       router.refresh();
     } else {

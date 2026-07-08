@@ -11,8 +11,17 @@ from typing import Any
 from supabase import Client
 
 from src.core.security import AuthContext
+from src.features.inbox.ai import GroqClient, GroqError
 
-from .schemas import OnboardingStatus, OnboardingUpdate, SliceHealth
+from .schemas import DashboardVoiceSnapshot
+
+from .schemas import (
+    DashboardVoiceRequest,
+    DashboardVoiceResponse,
+    OnboardingStatus,
+    OnboardingUpdate,
+    SliceHealth,
+)
 
 
 class DashboardError(Exception):
@@ -77,6 +86,110 @@ class DashboardService:
         if not saved.data:
             raise DashboardError("Onboarding konnte nicht gespeichert werden.", status_code=500)
         return self._to_status(saved.data[0])
+
+    def voice_assistant(
+        self, ctx: AuthContext, req: DashboardVoiceRequest
+    ) -> DashboardVoiceResponse:
+        self._require_tenant(ctx)
+        utterance = req.utterance.strip()
+        if not utterance:
+            raise DashboardError("Keine Spracheingabe erkannt.", status_code=400)
+
+        prompt = self._build_voice_prompt(utterance, req.snapshot)
+        try:
+            reply = GroqClient().chat(
+                system=(
+                    "Du bist Andy, ein sprachgesteuerter Assistent fuer das myNextDays-"
+                    "Dashboard. Antworte knapp, direkt und professionell. Nutze nur die "
+                    "Kennzahlen und Listen aus dem Kontext. Wenn etwas nicht im Kontext "
+                    "steht, sage das klar statt etwas zu erfinden. Falls der Nutzer eine "
+                    "Kommunikation mit einem Gast anstossen will, formuliere den Vorschlag "
+                    "als kurze gesprochene Antwort. Wenn die Anfrage ein normaler "
+                    "Gesprächseinstieg oder Smalltalk ist (z. B. 'Wie geht es dir heute?'), "
+                    "antworte natürlich und freundlich wie ein Assistent, nicht mit dem Satz "
+                    "dass Daten fehlen. Wenn nach Objekten gefragt wird, nenne die "
+                    "Objektliste aus dem Kontext und fasse sie knapp zusammen. Keine Emojis, "
+                    "keine Markdown-Listen, keine Füllwörter. Antworte in der Sprache der "
+                    "Anfrage."
+                ),
+                user=prompt,
+                temperature=0.35,
+                max_tokens=280,
+            )
+        except GroqError as exc:
+            raise DashboardError(exc.message, status_code=exc.status_code) from exc
+        return DashboardVoiceResponse(reply=reply)
+
+    @staticmethod
+    def _build_voice_prompt(utterance: str, snapshot: DashboardVoiceSnapshot) -> str:
+        snap = snapshot
+
+        def fmt_entry(entry: Any) -> str:
+            guest = entry.guest_name or "unbekannt"
+            prop = f", Objekt: {entry.property_title}" if entry.property_title else ""
+            ota = f", Kanal: {entry.ota_name}" if entry.ota_name else ""
+            return (
+                f"- {guest}{prop}{ota}, {entry.check_in} bis {entry.check_out}, "
+                f"Status: {entry.status}"
+            )
+
+        def fmt_property(entry: Any) -> str:
+            place_bits = [entry.city, entry.country]
+            place = ", ".join(part for part in place_bits if part)
+            place_text = f", Ort: {place}" if place else ""
+            guests_text = f", max. {entry.max_guests} Gäste" if entry.max_guests else ""
+            return (
+                f"- {entry.title} ({entry.property_type}, {entry.status})"
+                f"{place_text}{guests_text}"
+            )
+
+        sections = [
+            f"Datum: {snap.today}",
+            f"Objekte im Bestand: {len(snap.properties)}",
+            f"Check-outs heute: {len(snap.checkouts_today)}",
+            f"Check-ins heute: {len(snap.checkins_today)}",
+            f"Anstehende Reservierungen: {len(snap.upcoming)}",
+            (
+                f"Check-ins 30 Tage: {snap.checkins_30d.value}"
+                + (
+                    f" (Trend {snap.checkins_30d.change_pct} %)"
+                    if snap.checkins_30d.change_pct is not None
+                    else ""
+                )
+            ),
+            (
+                f"Umsatz 30 Tage: {snap.revenue_30d.value} {snap.currency}"
+                if snap.revenue_30d
+                else "Umsatz 30 Tage: nicht sichtbar"
+            ),
+            (
+                f"Bestaetigt 30 Tage: {snap.confirmed_30d.value}"
+                + (
+                    f" (Trend {snap.confirmed_30d.change_pct} %)"
+                    if snap.confirmed_30d.change_pct is not None
+                    else ""
+                )
+            ),
+        ]
+
+        if snap.checkouts_today:
+            sections.append("Heutige Check-outs:")
+            sections.extend(fmt_entry(entry) for entry in snap.checkouts_today[:3])
+        if snap.checkins_today:
+            sections.append("Heutige Check-ins:")
+            sections.extend(fmt_entry(entry) for entry in snap.checkins_today[:3])
+        if snap.upcoming:
+            sections.append("Naechste anstehende Reservierungen:")
+            sections.extend(fmt_entry(entry) for entry in snap.upcoming[:3])
+        if snap.properties:
+            sections.append("Objekte im Bestand:")
+            sections.extend(fmt_property(entry) for entry in snap.properties)
+
+        sections.append(f"Nutzeranfrage: {utterance}")
+        sections.append(
+            "Antworte direkt auf die Nutzeranfrage und nutze nur die Daten oben."
+        )
+        return "\n".join(sections)
 
     @staticmethod
     def _to_status(row: dict[str, Any]) -> OnboardingStatus:

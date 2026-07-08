@@ -8,7 +8,13 @@ from fastapi import APIRouter, HTTPException
 from src.core.security import CurrentUser
 
 from .dependencies import DashboardServiceDep
-from .schemas import OnboardingStatus, OnboardingUpdate, SliceHealth
+from .schemas import (
+    DashboardVoiceRequest,
+    DashboardVoiceResponse,
+    OnboardingStatus,
+    OnboardingUpdate,
+    SliceHealth,
+)
 from .service import DashboardError
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
@@ -35,5 +41,15 @@ def update_onboarding(
 ) -> OnboardingStatus:
     try:
         return service.update_onboarding(ctx, req)
+    except DashboardError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/voice", response_model=DashboardVoiceResponse)
+def voice_assistant(
+    req: DashboardVoiceRequest, ctx: CurrentUser, service: DashboardServiceDep
+) -> DashboardVoiceResponse:
+    try:
+        return service.voice_assistant(ctx, req)
     except DashboardError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
