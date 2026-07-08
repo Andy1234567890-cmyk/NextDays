@@ -110,7 +110,7 @@ class DashboardService:
                     "dass Daten fehlen. Wenn nach Objekten gefragt wird, nenne die "
                     "Objektliste aus dem Kontext und fasse sie knapp zusammen. Keine Emojis, "
                     "keine Markdown-Listen, keine Füllwörter. Antworte in der Sprache der "
-                    "Anfrage."
+                    "Anfrage. Beginne jede Antwort exakt mit 'Hallo Andy'."
                 ),
                 user=prompt,
                 temperature=0.35,

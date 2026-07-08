@@ -16,7 +16,7 @@ class DashboardEntrySnapshot(BaseModel):
 
 
 class DashboardKpiSnapshot(BaseModel):
-    value: int
+    value: float
     change_pct: float | None = None
 
 
