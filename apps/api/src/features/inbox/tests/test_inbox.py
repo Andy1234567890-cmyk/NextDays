@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from src.core.security import AuthContext
+from src.features.channel_manager.channex_client import ChannexError
 from src.features.inbox.service import InboxError, InboxService
 from src.main import create_app
 
@@ -21,11 +22,14 @@ class _Res:
 
 
 class _FakeChannex:
-    def __init__(self, messages=None) -> None:  # noqa: ANN001
+    def __init__(self, messages=None, get_error: ChannexError | None = None) -> None:  # noqa: ANN001
         self._messages = messages or []
+        self._get_error = get_error
         self.sent: list[tuple[str, str]] = []
 
     def get_messages_for_booking(self, cbid):  # noqa: ANN001, ANN201
+        if self._get_error is not None:
+            raise self._get_error
         return {"data": self._messages}
 
     def send_message_for_booking(self, cbid, message):  # noqa: ANN001, ANN201
@@ -242,6 +246,20 @@ def test_send_message_calls_channex(monkeypatch) -> None:  # noqa: ANN001
     msg = svc.send_message(_CTX, "th1", "Danke!")
     assert fake.sent == [("cx-b1", "Danke!")]
     assert msg.sender == "property" and msg.message == "Danke!"
+
+
+def test_get_messages_invalid_booking_id_falls_back_to_notes(monkeypatch) -> None:  # noqa: ANN001
+    monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
+    bookings = [{"id": "th1", "tenant_id": "t1", "channex_booking_id": "sandbox-invalid"}]
+    err = ChannexError(
+        "Bad Request",
+        status_code=422,
+        channex_status=422,
+        payload={"code": "bad_request", "details": {"booking_id": ["is invalid"]}},
+    )
+    svc = InboxService(service_client=_FakeDB(bookings, []), channex=_FakeChannex(get_error=err))
+    out = svc.get_messages(_CTX, "th1")
+    assert out.total == 0
 
 
 def test_load_thread_404_when_foreign() -> None:

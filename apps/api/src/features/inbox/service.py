@@ -317,10 +317,36 @@ class InboxService:
         try:
             res = self._channex.get_messages_for_booking(cbid)
         except ChannexError as exc:
+            # Channex liefert bei einzelnen Sandbox-/Legacy-Buchungen 422
+            # (details.booking_id: "is invalid"). In dem Fall degradieren wir
+            # kontrolliert auf lokale Notizen statt die Inbox-Ansicht zu brechen.
+            if self._is_invalid_booking_id_error(exc):
+                log.warning(
+                    "inbox_channex_invalid_booking_id",
+                    tenant_id=tenant_id,
+                    thread_id=thread_id,
+                    channex_booking_id=cbid,
+                    channex_status=exc.channex_status,
+                )
+                items = self._merge_notes(db, tenant_id, thread_id, [])
+                return InboxMessagesResponse(items=items, total=len(items))
             raise InboxError(exc.message, status_code=exc.status_code) from exc
         items = [self._to_message(m) for m in (res.get("data") or [])]
         items = self._merge_notes(db, tenant_id, thread_id, items)
         return InboxMessagesResponse(items=items, total=len(items))
+
+    @staticmethod
+    def _is_invalid_booking_id_error(exc: ChannexError) -> bool:
+        if exc.channex_status not in (400, 422):
+            return False
+        payload = exc.payload if isinstance(exc.payload, dict) else {}
+        details = payload.get("details") if isinstance(payload.get("details"), dict) else payload
+        booking_error = details.get("booking_id") if isinstance(details, dict) else None
+        if isinstance(booking_error, list):
+            return any("invalid" in str(item).lower() for item in booking_error)
+        if isinstance(booking_error, str):
+            return "invalid" in booking_error.lower()
+        return False
 
     def _merge_notes(
         self, db: Client, tenant_id: str, thread_id: str, msgs: list[InboxMessage]
