@@ -168,9 +168,7 @@ export type LocalQueryKind =
   | "arrivals-30d";
 
 function matchLocalQuery(text: string, isQuestion: boolean): LocalQueryKind | null {
-  if (!isQuestion) {
-    return null;
-  }
+  const shortPhrase = text.split(" ").length <= 5;
   const asks30d =
     /\b(letzte\w*|letzten|letzter|vergangene\w*|vergangenen)\s+30\s*(tage|tagen)\b/.test(text) ||
     /\b30\s*(tage|tagen)\b/.test(text);
@@ -179,6 +177,7 @@ function matchLocalQuery(text: string, isQuestion: boolean): LocalQueryKind | nu
   // "heute anreisen" fehlklassifiziert werden.
   const arrivals30d =
     asks30d &&
+    (isQuestion || shortPhrase) &&
     (/\b(check[- ]?ins?|anreise\w*|ankunft|ankünfte|ankuenfte|anreist)\b/.test(text) ||
       /\bwie\s+viel\w*\s+check/.test(text));
   if (arrivals30d) {
@@ -188,21 +187,28 @@ function matchLocalQuery(text: string, isQuestion: boolean): LocalQueryKind | nu
   // Reihenfolge: spezifischer zuerst. „reist … ab/an" wird gesondert erkannt,
   // da hier das Verb (nicht ein Substantiv) die Absicht traegt.
   const departs =
-    /\b(abreise\w*|check[- ]?outs?|auschecken|abfahrt|abreist)\b/.test(text) ||
-    /reis\w*\s+\w*\s*ab\b/.test(text) ||
-    /\breist\w*\s+ab\b/.test(text);
+    (isQuestion || shortPhrase) &&
+    (
+      /\b(abreise\w*|check[- ]?outs?|auschecken|abfahrt|abreist)\b/.test(text) ||
+      /reis\w*\s+\w*\s*ab\b/.test(text) ||
+      /\breist\w*\s+ab\b/.test(text)
+    );
   if (departs) {
     return "departures-today";
   }
   const arrives =
-    /\b(anreise\w*|check[- ]?ins?|einchecken|ankunft|ankünfte|ankuenfte|anreist)\b/.test(text) ||
-    /reis\w*\s+\w*\s*an\b/.test(text) ||
-    /\breist\w*\s+an\b/.test(text) ||
-    /\bheute\s+an\b/.test(text);
+    (isQuestion || shortPhrase) &&
+    (
+      /\b(anreise\w*|check[- ]?ins?|einchecken|ankunft|ankünfte|ankuenfte|anreist)\b/.test(text) ||
+      /reis\w*\s+\w*\s*an\b/.test(text) ||
+      /\breist\w*\s+an\b/.test(text) ||
+      /\bheute\s+an\b/.test(text)
+    );
   if (arrives) {
     return "arrivals-today";
   }
   if (
+    (isQuestion || shortPhrase) &&
     /\b(anstehend\w*|kommende\w*|nächste\w*|naechste\w*|bevorstehend\w*)\b/.test(text) &&
     /\b(reservierung\w*|buchung\w*)\b/.test(text)
   ) {
@@ -248,6 +254,7 @@ function matchAction(text: string): VoiceAction | null {
   }
   return null;
 }
+
 
 export type VoiceCommand =
   | { kind: "navigate"; target: NavTarget }

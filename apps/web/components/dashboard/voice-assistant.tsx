@@ -218,6 +218,34 @@ function debugValue(value: unknown): string {
   }
 }
 
+function detectAmbiguousAction(utterance: string):
+  | { type: "toggle"; suggestions: string[] }
+  | null {
+  const text = utterance.toLowerCase();
+  const hasGenericToggle =
+    /\b(ausschalten|ausmachen|deaktivieren|deaktiviere|abschalten|abstellen|einschalten|anmachen|aktivieren|aktiviere)\b/.test(
+      text,
+    );
+  if (!hasGenericToggle) {
+    return null;
+  }
+  const hasKnownTarget =
+    /\b(dynamic pricing|preisautomatik|kalender|posteingang|inbox|objekt|buchhaltung|umsatz|zahlung|gäste|gaeste)\b/.test(
+      text,
+    );
+  if (hasKnownTarget) {
+    return null;
+  }
+  return {
+    type: "toggle",
+    suggestions: [
+      "Schalte Dynamic Pricing aus.",
+      "Schalte Dynamic Pricing ein.",
+      "Ist Dynamic Pricing aktiv?",
+    ],
+  };
+}
+
 export function DashboardVoiceAssistant({
   dashboard: dashboardProp,
   userLabel: userLabelProp,
@@ -445,6 +473,20 @@ export function DashboardVoiceAssistant({
         // Kein Snapshot → an die KI weiterreichen (unten).
       }
 
+      // 3b) Unklare Aktion ohne Ziel: menschlich nachfragen statt steifer KI-Text.
+      if (command.kind === "ai") {
+        const ambiguous = detectAmbiguousAction(interpretedUtterance);
+        if (ambiguous?.type === "toggle") {
+          appendDebug("WHY_NOT_UNDERSTOOD", "ambiguous-action-missing-target");
+          appendDebug("SUGGESTIONS", ambiguous.suggestions);
+          say(
+            "Klar, ich helfe dir gern. Was genau soll ich schalten? " +
+              `Du kannst zum Beispiel sagen: ${ambiguous.suggestions.join(" ")}`,
+          );
+          return;
+        }
+      }
+
       // 4) Sonst: Frage ans KI-Backend.
       setPhaseBoth("thinking");
       setReply("");
@@ -608,6 +650,7 @@ export function DashboardVoiceAssistant({
       const { hit, rest } = matchWake(said);
       appendDebug("IDLE_WAKE_MATCH", { hit, rest });
       if (!hit) {
+        appendDebug("IGNORED", "no-wake-word-in-idle");
         return;
       }
       if (rest) {
