@@ -199,6 +199,25 @@ function toUiText(value: unknown, fallback = "Unbekannter Fehler."): string {
   return fallback;
 }
 
+function normalizeUtterance(raw: string): string {
+  const compact = raw.replace(/\s+/g, " ").trim();
+  const stripped = compact
+    .replace(/^(?:ja|okay|ok|also|äh|ähm|hm|hmm)[\s,.:;-]+/i, "")
+    .trim();
+  return stripped || compact;
+}
+
+function debugValue(value: unknown): string {
+  if (typeof value === "string") {
+    return value;
+  }
+  try {
+    return JSON.stringify(value);
+  } catch {
+    return String(value);
+  }
+}
+
 export function DashboardVoiceAssistant({
   dashboard: dashboardProp,
   userLabel: userLabelProp,
@@ -247,6 +266,14 @@ export function DashboardVoiceAssistant({
   const [transcript, setTranscript] = useState("");
   const [reply, setReply] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [debugOpen, setDebugOpen] = useState(false);
+  const [debugLines, setDebugLines] = useState<string[]>([]);
+
+  const appendDebug = useCallback((label: string, value?: unknown) => {
+    const stamp = new Date().toLocaleTimeString("de-DE", { hour12: false });
+    const line = value === undefined ? `[${stamp}] ${label}` : `[${stamp}] ${label}: ${debugValue(value)}`;
+    setDebugLines((prev) => [line, ...prev].slice(0, 40));
+  }, []);
 
   const setPhaseBoth = useCallback((p: AndyPhase) => {
     phaseRef.current = p;
@@ -273,6 +300,11 @@ export function DashboardVoiceAssistant({
   // Frage ans Backend schicken und Antwort vorlesen.
   const askAndy = useCallback(
     async (utterance: string) => {
+      const normalizedUtterance = normalizeUtterance(utterance);
+      appendDebug("UTTERANCE_RAW", utterance);
+      if (normalizedUtterance !== utterance) {
+        appendDebug("UTTERANCE_NORMALIZED", normalizedUtterance);
+      }
       // Folgefrage kam rechtzeitig → Ruhemodus-Timer stoppen.
       if (followUpTimerRef.current) {
         window.clearTimeout(followUpTimerRef.current);
@@ -280,7 +312,7 @@ export function DashboardVoiceAssistant({
       }
       // Erkennung stoppen, solange Andy denkt/spricht (kein Selbst-Zuhoeren).
       pauseListeningRef.current();
-      setTranscript(utterance);
+      setTranscript(normalizedUtterance || utterance);
       setError(null);
 
       // Antwort sprechen; danach bleibt Andy kurz wach fuer eine Folgefrage.
@@ -296,7 +328,8 @@ export function DashboardVoiceAssistant({
       // 0) Steht eine bestaetigungspflichtige Aktion aus? Dann Ja/Nein werten.
       const pending = pendingActionRef.current;
       if (pending) {
-        const conf = classifyConfirmation(utterance);
+        const conf = classifyConfirmation(normalizedUtterance || utterance);
+        appendDebug("CONFIRMATION_CLASSIFIED", conf ?? "unknown");
         if (conf === "no") {
           pendingActionRef.current = null;
           say("Alles klar, ich habe nichts geändert.");
@@ -336,7 +369,9 @@ export function DashboardVoiceAssistant({
         return;
       }
 
-      const command = classifyCommand(utterance);
+      const interpretedUtterance = normalizedUtterance || utterance;
+      const command = classifyCommand(interpretedUtterance);
+      appendDebug("COMMAND_KIND", command.kind);
 
       // 1) Aktion (Daten aendern) → betroffene Objekte holen, Rueckfrage stellen.
       if (command.kind === "action") {
@@ -402,6 +437,7 @@ export function DashboardVoiceAssistant({
       if (command.kind === "local-query") {
         const answer = answerLocalQuery(command.query, dashboard);
         if (answer) {
+          appendDebug("ANSWER_SOURCE", "local-query");
           say(answer);
           return;
         }
@@ -412,12 +448,14 @@ export function DashboardVoiceAssistant({
       setPhaseBoth("thinking");
       setReply("");
       try {
+        appendDebug("ANSWER_SOURCE", "backend");
+        appendDebug("BACKEND_REQUEST", { utterance: interpretedUtterance });
         const response = await fetch("/api/v1/dashboard/voice", {
           method: "POST",
           credentials: "include",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            utterance,
+            utterance: interpretedUtterance,
             snapshot: buildSnapshot(dashboard),
           }),
         });
@@ -433,14 +471,16 @@ export function DashboardVoiceAssistant({
         if (!answer) {
           throw new Error("Leere Antwort von Andy.");
         }
+        appendDebug("BACKEND_REPLY", answer);
         say(answer);
       } catch (err) {
         const message = toUiText(err, "Unbekannter Fehler.");
+        appendDebug("BACKEND_ERROR", message);
         setError(message);
         enterFollowUp();
       }
     },
-    [dashboard, setPhaseBoth, router, enterFollowUp],
+    [dashboard, setPhaseBoth, router, enterFollowUp, appendDebug],
   );
 
   // askAndy-Ref immer auf die aktuelle Version zeigen lassen.
@@ -550,6 +590,7 @@ export function DashboardVoiceAssistant({
       if (!said) {
         return;
       }
+      appendDebug("PHRASE_FINAL", said);
       // Waehrend Andy denkt/spricht: nichts annehmen (verhindert Selbst-Trigger).
       if (phaseRef.current === "thinking" || phaseRef.current === "speaking") {
         return;
@@ -558,11 +599,13 @@ export function DashboardVoiceAssistant({
         // Andy wartet auf die Frage → dieser Satz ist die Frage. Ein evtl. erneut
         // vorangestelltes „Hallo Andy" wird abgeschnitten.
         const { hit: w, rest: r } = matchWake(said);
+        appendDebug("AWAKE_WAKE_MATCH", { hit: w, rest: r });
         askAndyRef.current(w && r ? r : said);
         return;
       }
       // idle → auf Wake-Word pruefen.
       const { hit, rest } = matchWake(said);
+      appendDebug("IDLE_WAKE_MATCH", { hit, rest });
       if (!hit) {
         return;
       }
@@ -592,6 +635,7 @@ export function DashboardVoiceAssistant({
           continue;
         }
         phraseBufferRef.current = (phraseBufferRef.current + " " + chunk).trim();
+        appendDebug("ASR_CHUNK_FINAL", chunk);
         addedFinal = true;
       }
       if (!addedFinal) {
@@ -605,6 +649,7 @@ export function DashboardVoiceAssistant({
     };
 
     recognition.onerror = (event) => {
+      appendDebug("ASR_ERROR", event.error);
       if (event.error === "not-allowed" || event.error === "service-not-allowed") {
         activeRef.current = false;
         setError("Mikrofonzugriff nicht erlaubt.");
@@ -684,7 +729,7 @@ export function DashboardVoiceAssistant({
         window.speechSynthesis.cancel();
       }
     };
-  }, [consent, setPhaseBoth]);
+  }, [consent, setPhaseBoth, appendDebug]);
 
   // Consent erteilen: speichern, begruessen (in der Klick-Geste → Speech frei).
   function activateAndy(): void {
@@ -822,6 +867,41 @@ export function DashboardVoiceAssistant({
         <p className="min-h-10 text-sm leading-6">
           {reply || "Sag „Hallo Andy“ und dann deine Frage."}
         </p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setDebugOpen((v) => !v)}
+            className="text-xs text-muted-foreground underline-offset-2 transition hover:text-foreground hover:underline"
+          >
+            {debugOpen ? "Debug ausblenden" : "Debug anzeigen"}
+          </button>
+          {debugLines.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => setDebugLines([])}
+              className="text-xs text-muted-foreground underline-offset-2 transition hover:text-foreground hover:underline"
+            >
+              Log leeren
+            </button>
+          ) : null}
+        </div>
+        {debugOpen ? (
+          <div className="max-h-44 overflow-auto rounded-md border border-border/70 bg-muted/30 p-2">
+            {debugLines.length > 0 ? (
+              <div className="space-y-1">
+                {debugLines.map((line, idx) => (
+                  <p key={`${idx}-${line}`} className="break-words font-mono text-[11px] leading-4 text-muted-foreground">
+                    {line}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[11px] text-muted-foreground">
+                Noch keine Debug-Ereignisse.
+              </p>
+            )}
+          </div>
+        ) : null}
         {error ? <p className="text-xs text-destructive">{error}</p> : null}
         {!supported ? (
           <p className="text-xs text-muted-foreground">
