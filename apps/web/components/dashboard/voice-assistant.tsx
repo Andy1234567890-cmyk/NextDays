@@ -731,11 +731,11 @@ export function DashboardVoiceAssistant({
   // askAndy in einer Ref, damit der Recognition-Effekt NICHT von askAndy abhaengt
   // (sonst wird die Erkennung bei jeder dashboard-Aenderung neu aufgesetzt und
   // bleibt nach der ersten Antwort haengen).
-  const askAndyRef = useRef<(utterance: string) => void>(() => {});
+  const askAndyRef = useRef<(utterance: string) => void>(() => { });
   // Steuert die Erkennung von aussen: waehrend Andy spricht wird sie pausiert,
   // damit sie sich nicht selbst hoert und den Audio-Output nicht stoert.
-  const pauseListeningRef = useRef<() => void>(() => {});
-  const resumeListeningRef = useRef<() => void>(() => {});
+  const pauseListeningRef = useRef<() => void>(() => { });
+  const resumeListeningRef = useRef<() => void>(() => { });
 
   const [consent, setConsent] = useState<VoiceConsent>(null);
   const [open, setOpen] = useState(true);
@@ -971,7 +971,7 @@ export function DashboardVoiceAssistant({
         // unklar → nachfragen, Aktion bleibt ausstehend.
         say(
           "Ich habe dich nicht ganz verstanden. Sag einfach kurz ja oder nein. " +
-            "Zum Beispiel: Ja, bitte ausschalten.",
+          "Zum Beispiel: Ja, bitte ausschalten.",
         );
         return;
       }
@@ -1178,7 +1178,7 @@ export function DashboardVoiceAssistant({
           appendDebug("SUGGESTIONS", ambiguous.suggestions);
           say(
             "Klar, ich helfe dir gern. Was genau soll ich schalten? " +
-              `Du kannst zum Beispiel sagen: ${ambiguous.suggestions.join(" ")}`,
+            `Du kannst zum Beispiel sagen: ${ambiguous.suggestions.join(" ")}`,
           );
           return;
         }

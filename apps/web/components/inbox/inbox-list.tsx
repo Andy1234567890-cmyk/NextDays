@@ -383,350 +383,350 @@ export function InboxList({
         <ManageTab />
       ) : (
         <>
-      {error && (
-        <p className="mx-6 mt-3 rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm text-destructive">
-          {error}
-        </p>
-      )}
+          {error && (
+            <p className="mx-6 mt-3 rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </p>
+          )}
 
-      {/* 3-Spalten-Gerüst — IMMER sichtbar, füllt die restliche Fläche */}
-      <div className="grid min-h-0 flex-1 grid-cols-12 gap-3 p-4">
-        {/* Spalte 1: Thread-Liste */}
-        <div className="col-span-12 flex min-h-0 flex-col rounded-2xl border border-border bg-card sm:col-span-4 lg:col-span-3 xl:col-span-3">
-          {/* Ansicht: Aktiv | Archiv | Papierkorb */}
-          <div className="flex items-center gap-1 border-b border-border p-2 text-xs">
-            {([
-              { key: "active", icon: "ph:tray", label: t("viewActive") },
-              { key: "archived", icon: "ph:archive-box", label: t("viewArchive") },
-              { key: "trashed", icon: "ph:trash", label: t("viewTrash") },
-            ] as const).map((v) => (
-              <button
-                key={v.key}
-                type="button"
-                onClick={() => {
-                  setView(v.key);
-                  setActive(null);
-                }}
-                className={
-                  "flex flex-1 items-center justify-center gap-1.5 rounded-full px-2 py-1.5 font-medium transition-colors " +
-                  (view === v.key
-                    ? "bg-accent/10 text-accent"
-                    : "text-muted-foreground hover:bg-muted/50")
-                }
-              >
-                <Icon icon={v.icon} className="size-4" />
-                {v.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Filterleiste */}
-          <div className="relative flex items-center gap-2 border-b border-border p-2">
-            <Popover open={showFilter} onOpenChange={setShowFilter}>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  title={t("filter")}
-                  className={
-                    "relative flex size-8 items-center justify-center rounded-(--radius) " +
-                    (activeFilterCount > 0
-                      ? "bg-accent/10 text-accent"
-                      : "bg-secondary text-muted-foreground hover:text-foreground")
-                  }
-                >
-                  <Icon icon="ph:funnel" className="size-4" />
-                  {activeFilterCount > 0 && (
-                    <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-accent text-[0.6rem] font-bold text-accent-foreground">
-                      {activeFilterCount}
-                    </span>
-                  )}
-                </button>
-              </PopoverTrigger>
-              <PopoverContent
-                align="start"
-                className="flex max-h-[80vh] w-72 flex-col gap-3 overflow-y-auto p-3"
-              >
-                <span className="text-sm font-semibold">{t("filterTitle")}</span>
-
-                {access.scope === "all" ? (
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      checked={onlyUnassigned}
-                      onChange={(e) => setOnlyUnassigned(e.target.checked)}
-                      className="size-4 accent-[var(--color-accent)]"
-                    />
-                    {t("filterUnassigned")}
-                  </label>
-                ) : (
-                  <p className="text-xs text-muted-foreground">{t("filterAssignedOnly")}</p>
-                )}
-
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs font-medium text-muted-foreground">{t("filterChannel")}</span>
-                  <MultiSelect
-                    options={channelOptions}
-                    selected={fChannels}
-                    onChange={setFChannels}
-                    placeholder={t("filterAllChannels")}
-                    searchPlaceholder={t("filterSearchChannel")}
-                    allLabel={t("filterAllChannels")}
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs font-medium text-muted-foreground">{t("filterProperty")}</span>
-                  <MultiSelect
-                    options={propertyOptions}
-                    selected={fProperties}
-                    onChange={setFProperties}
-                    placeholder={t("filterAllProperties")}
-                    searchPlaceholder={t("filterSearchProperty")}
-                    allLabel={t("filterAllProperties")}
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs font-medium text-muted-foreground">{t("filterStatus")}</span>
-                  <NativeSelect value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
-                    <option value="">{t("filterStatusAll")}</option>
-                    <option value="new">{t("filterStatusNew")}</option>
-                    <option value="modified">{t("filterStatusModified")}</option>
-                    <option value="cancelled">{t("filterStatusCancelled")}</option>
-                  </NativeSelect>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs font-medium text-muted-foreground">{t("filterRead")}</span>
-                  <NativeSelect
-                    value={fRead}
-                    onChange={(e) => setFRead(e.target.value as "all" | "unread" | "read")}
-                  >
-                    <option value="all">{t("filterReadAll")}</option>
-                    <option value="unread">{t("filterReadUnread")}</option>
-                    <option value="read">{t("filterReadRead")}</option>
-                  </NativeSelect>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <span className="text-xs font-medium text-muted-foreground">{t("filterArrivalRange")}</span>
-                  <div className="grid grid-cols-2 gap-2">
-                    <DatePicker value={fFrom} onChange={setFFrom} placeholder={t("filterFrom")} />
-                    <DatePicker value={fTo} onChange={setFTo} placeholder={t("filterTo")} />
-                  </div>
-                </div>
-
-                {activeFilterCount > 0 && (
+          {/* 3-Spalten-Gerüst — IMMER sichtbar, füllt die restliche Fläche */}
+          <div className="grid min-h-0 flex-1 grid-cols-12 gap-3 p-4">
+            {/* Spalte 1: Thread-Liste */}
+            <div className="col-span-12 flex min-h-0 flex-col rounded-2xl border border-border bg-card sm:col-span-4 lg:col-span-3 xl:col-span-3">
+              {/* Ansicht: Aktiv | Archiv | Papierkorb */}
+              <div className="flex items-center gap-1 border-b border-border p-2 text-xs">
+                {([
+                  { key: "active", icon: "ph:tray", label: t("viewActive") },
+                  { key: "archived", icon: "ph:archive-box", label: t("viewArchive") },
+                  { key: "trashed", icon: "ph:trash", label: t("viewTrash") },
+                ] as const).map((v) => (
                   <button
+                    key={v.key}
                     type="button"
                     onClick={() => {
-                      setOnlyUnassigned(false);
-                      setFChannels([]);
-                      setFProperties([]);
-                      setFStatus("");
-                      setFRead("all");
-                      setFFrom("");
-                      setFTo("");
+                      setView(v.key);
+                      setActive(null);
                     }}
-                    className="text-xs text-accent hover:underline"
-                  >
-                    {t("filterClear")}
-                  </button>
-                )}
-              </PopoverContent>
-            </Popover>
-            <div className="flex flex-1 items-center gap-2 rounded-full border border-border px-3 py-1.5">
-              <Icon icon="ph:magnifying-glass" className="size-4 text-muted-foreground" />
-              <input
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={t("searchGuests")}
-                className="w-full bg-transparent text-sm outline-none"
-              />
-            </div>
-            <Popover open={showNewWa} onOpenChange={setShowNewWa}>
-              <PopoverTrigger asChild>
-                <button
-                  type="button"
-                  title={t("whatsappNewChat")}
-                  className="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 transition-colors hover:bg-emerald-200"
-                >
-                  <Icon icon="ph:whatsapp-logo" className="size-4" />
-                </button>
-              </PopoverTrigger>
-              <PopoverContent align="end" className="flex w-64 flex-col gap-2 p-3">
-                <span className="text-sm font-semibold">{t("whatsappNewChat")}</span>
-                <input
-                  autoFocus
-                  value={newWaPhone}
-                  onChange={(e) => setNewWaPhone(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") startWhatsApp();
-                  }}
-                  placeholder={t("whatsappNewPlaceholder")}
-                  className="rounded-full border border-border bg-transparent px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-accent/40"
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  className="self-end"
-                  disabled={newWaPhone.replace(/\D/g, "").length < 6}
-                  onClick={startWhatsApp}
-                >
-                  <Icon icon="ph:chat-circle-text" className="size-4" />
-                  {t("whatsappNewStart")}
-                </Button>
-              </PopoverContent>
-            </Popover>
-          </div>
-          {/* Liste oder Leerzustand */}
-          {filtered.length === 0 ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
-              <Icon
-                icon={
-                  view === "trashed"
-                    ? "ph:trash"
-                    : view === "archived"
-                      ? "ph:archive-box"
-                      : "ph:chat-circle-dots"
-                }
-                className="size-8 text-muted-foreground/50"
-              />
-              <p className="text-sm text-muted-foreground">
-                {view === "trashed"
-                  ? t("emptyTrash")
-                  : view === "archived"
-                    ? t("emptyArchive")
-                    : t("emptyList")}
-              </p>
-            </div>
-          ) : (
-            <ul className="min-h-0 flex-1 divide-y divide-border overflow-y-auto">
-              {filtered.map((th) => (
-                <li key={th.id}>
-                  <button
-                    data-testid="inbox-thread-item"
-                    data-thread-id={th.id}
-                    data-thread-guest={(th.guest_name ?? "").toLowerCase()}
-                    type="button"
-                    onClick={() => selectThread(th.id)}
                     className={
-                      "flex w-full items-start gap-3 p-3 text-left " +
-                      (th.id === active ? "bg-muted/60" : "hover:bg-muted/30")
+                      "flex flex-1 items-center justify-center gap-1.5 rounded-full px-2 py-1.5 font-medium transition-colors " +
+                      (view === v.key
+                        ? "bg-accent/10 text-accent"
+                        : "text-muted-foreground hover:bg-muted/50")
                     }
                   >
-                    <span className="relative mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary">
-                      <Icon icon={otaIcon(th.ota_name)} className="size-5 text-muted-foreground" />
-                      {/* Ungelesen-Punkt */}
-                      {!th.is_read && (
-                        <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-accent ring-2 ring-card" />
+                    <Icon icon={v.icon} className="size-4" />
+                    {v.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Filterleiste */}
+              <div className="relative flex items-center gap-2 border-b border-border p-2">
+                <Popover open={showFilter} onOpenChange={setShowFilter}>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      title={t("filter")}
+                      className={
+                        "relative flex size-8 items-center justify-center rounded-(--radius) " +
+                        (activeFilterCount > 0
+                          ? "bg-accent/10 text-accent"
+                          : "bg-secondary text-muted-foreground hover:text-foreground")
+                      }
+                    >
+                      <Icon icon="ph:funnel" className="size-4" />
+                      {activeFilterCount > 0 && (
+                        <span className="absolute -right-1 -top-1 flex size-4 items-center justify-center rounded-full bg-accent text-[0.6rem] font-bold text-accent-foreground">
+                          {activeFilterCount}
+                        </span>
                       )}
-                    </span>
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <span
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    align="start"
+                    className="flex max-h-[80vh] w-72 flex-col gap-3 overflow-y-auto p-3"
+                  >
+                    <span className="text-sm font-semibold">{t("filterTitle")}</span>
+
+                    {access.scope === "all" ? (
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={onlyUnassigned}
+                          onChange={(e) => setOnlyUnassigned(e.target.checked)}
+                          className="size-4 accent-[var(--color-accent)]"
+                        />
+                        {t("filterUnassigned")}
+                      </label>
+                    ) : (
+                      <p className="text-xs text-muted-foreground">{t("filterAssignedOnly")}</p>
+                    )}
+
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-medium text-muted-foreground">{t("filterChannel")}</span>
+                      <MultiSelect
+                        options={channelOptions}
+                        selected={fChannels}
+                        onChange={setFChannels}
+                        placeholder={t("filterAllChannels")}
+                        searchPlaceholder={t("filterSearchChannel")}
+                        allLabel={t("filterAllChannels")}
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-medium text-muted-foreground">{t("filterProperty")}</span>
+                      <MultiSelect
+                        options={propertyOptions}
+                        selected={fProperties}
+                        onChange={setFProperties}
+                        placeholder={t("filterAllProperties")}
+                        searchPlaceholder={t("filterSearchProperty")}
+                        allLabel={t("filterAllProperties")}
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-medium text-muted-foreground">{t("filterStatus")}</span>
+                      <NativeSelect value={fStatus} onChange={(e) => setFStatus(e.target.value)}>
+                        <option value="">{t("filterStatusAll")}</option>
+                        <option value="new">{t("filterStatusNew")}</option>
+                        <option value="modified">{t("filterStatusModified")}</option>
+                        <option value="cancelled">{t("filterStatusCancelled")}</option>
+                      </NativeSelect>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-medium text-muted-foreground">{t("filterRead")}</span>
+                      <NativeSelect
+                        value={fRead}
+                        onChange={(e) => setFRead(e.target.value as "all" | "unread" | "read")}
+                      >
+                        <option value="all">{t("filterReadAll")}</option>
+                        <option value="unread">{t("filterReadUnread")}</option>
+                        <option value="read">{t("filterReadRead")}</option>
+                      </NativeSelect>
+                    </div>
+
+                    <div className="flex flex-col gap-1">
+                      <span className="text-xs font-medium text-muted-foreground">{t("filterArrivalRange")}</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <DatePicker value={fFrom} onChange={setFFrom} placeholder={t("filterFrom")} />
+                        <DatePicker value={fTo} onChange={setFTo} placeholder={t("filterTo")} />
+                      </div>
+                    </div>
+
+                    {activeFilterCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOnlyUnassigned(false);
+                          setFChannels([]);
+                          setFProperties([]);
+                          setFStatus("");
+                          setFRead("all");
+                          setFFrom("");
+                          setFTo("");
+                        }}
+                        className="text-xs text-accent hover:underline"
+                      >
+                        {t("filterClear")}
+                      </button>
+                    )}
+                  </PopoverContent>
+                </Popover>
+                <div className="flex flex-1 items-center gap-2 rounded-full border border-border px-3 py-1.5">
+                  <Icon icon="ph:magnifying-glass" className="size-4 text-muted-foreground" />
+                  <input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder={t("searchGuests")}
+                    className="w-full bg-transparent text-sm outline-none"
+                  />
+                </div>
+                <Popover open={showNewWa} onOpenChange={setShowNewWa}>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      title={t("whatsappNewChat")}
+                      className="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 transition-colors hover:bg-emerald-200"
+                    >
+                      <Icon icon="ph:whatsapp-logo" className="size-4" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="flex w-64 flex-col gap-2 p-3">
+                    <span className="text-sm font-semibold">{t("whatsappNewChat")}</span>
+                    <input
+                      autoFocus
+                      value={newWaPhone}
+                      onChange={(e) => setNewWaPhone(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") startWhatsApp();
+                      }}
+                      placeholder={t("whatsappNewPlaceholder")}
+                      className="rounded-full border border-border bg-transparent px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-accent/40"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="self-end"
+                      disabled={newWaPhone.replace(/\D/g, "").length < 6}
+                      onClick={startWhatsApp}
+                    >
+                      <Icon icon="ph:chat-circle-text" className="size-4" />
+                      {t("whatsappNewStart")}
+                    </Button>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              {/* Liste oder Leerzustand */}
+              {filtered.length === 0 ? (
+                <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center">
+                  <Icon
+                    icon={
+                      view === "trashed"
+                        ? "ph:trash"
+                        : view === "archived"
+                          ? "ph:archive-box"
+                          : "ph:chat-circle-dots"
+                    }
+                    className="size-8 text-muted-foreground/50"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    {view === "trashed"
+                      ? t("emptyTrash")
+                      : view === "archived"
+                        ? t("emptyArchive")
+                        : t("emptyList")}
+                  </p>
+                </div>
+              ) : (
+                <ul className="min-h-0 flex-1 divide-y divide-border overflow-y-auto">
+                  {filtered.map((th) => (
+                    <li key={th.id}>
+                      <button
+                        data-testid="inbox-thread-item"
+                        data-thread-id={th.id}
+                        data-thread-guest={(th.guest_name ?? "").toLowerCase()}
+                        type="button"
+                        onClick={() => selectThread(th.id)}
                         className={
-                          "flex items-center gap-1 truncate text-sm " +
-                          (th.is_read ? "font-semibold" : "font-extrabold")
+                          "flex w-full items-start gap-3 p-3 text-left " +
+                          (th.id === active ? "bg-muted/60" : "hover:bg-muted/30")
                         }
                       >
-                        {th.guest_name ?? t("unknownGuest")}
-                        {th.is_starred && (
-                          <Icon icon="ph:star-fill" className="size-3.5 text-amber-500" />
-                        )}
-                      </span>
-                      <span className="truncate text-xs text-muted-foreground">
-                        {fmtRange(th.arrival_date, th.departure_date)}
-                      </span>
-                      {th.last_message && (
-                        <span className="truncate text-xs text-muted-foreground/80">
-                          {th.last_message}
+                        <span className="relative mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-secondary">
+                          <Icon icon={otaIcon(th.ota_name)} className="size-5 text-muted-foreground" />
+                          {/* Ungelesen-Punkt */}
+                          {!th.is_read && (
+                            <span className="absolute -right-0.5 -top-0.5 size-2.5 rounded-full bg-accent ring-2 ring-card" />
+                          )}
                         </span>
-                      )}
-                      {th.assigned_user_name && (
-                        <span className="mt-0.5 flex w-fit items-center gap-1 rounded-full bg-secondary px-1.5 py-0.5 text-[0.65rem] text-muted-foreground">
-                          <Icon icon="ph:user" className="size-3" />
-                          {th.assigned_user_name}
-                        </span>
-                      )}
-                    </div>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+                        <div className="flex min-w-0 flex-1 flex-col">
+                          <span
+                            className={
+                              "flex items-center gap-1 truncate text-sm " +
+                              (th.is_read ? "font-semibold" : "font-extrabold")
+                            }
+                          >
+                            {th.guest_name ?? t("unknownGuest")}
+                            {th.is_starred && (
+                              <Icon icon="ph:star-fill" className="size-3.5 text-amber-500" />
+                            )}
+                          </span>
+                          <span className="truncate text-xs text-muted-foreground">
+                            {fmtRange(th.arrival_date, th.departure_date)}
+                          </span>
+                          {th.last_message && (
+                            <span className="truncate text-xs text-muted-foreground/80">
+                              {th.last_message}
+                            </span>
+                          )}
+                          {th.assigned_user_name && (
+                            <span className="mt-0.5 flex w-fit items-center gap-1 rounded-full bg-secondary px-1.5 py-0.5 text-[0.65rem] text-muted-foreground">
+                              <Icon icon="ph:user" className="size-3" />
+                              {th.assigned_user_name}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
-        {/* Spalte 2: Konversation — WhatsApp-Threads nutzen das WhatsApp-Chat-
+            {/* Spalte 2: Konversation — WhatsApp-Threads nutzen das WhatsApp-Chat-
             Panel (Meta Cloud API), OTA-Threads die Channex-Konversation. */}
-        <div className="col-span-12 flex min-h-0 flex-col rounded-2xl border border-border bg-card sm:col-span-8 lg:col-span-5 xl:col-span-5">
-          {!current ? (
-            <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">
-              <Icon icon="ph:chats-circle" className="size-10 text-muted-foreground/40" />
-              {t("emptyConversation")}
+            <div className="col-span-12 flex min-h-0 flex-col rounded-2xl border border-border bg-card sm:col-span-8 lg:col-span-5 xl:col-span-5">
+              {!current ? (
+                <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">
+                  <Icon icon="ph:chats-circle" className="size-10 text-muted-foreground/40" />
+                  {t("emptyConversation")}
+                </div>
+              ) : isWhatsApp(current.id) ? (
+                <WhatsAppChat
+                  key={current.id}
+                  conversationId={
+                    current.id.startsWith(WA_NEW_PREFIX)
+                      ? null
+                      : current.id.slice(WA_PREFIX.length)
+                  }
+                  phone={
+                    current.id.startsWith(WA_NEW_PREFIX)
+                      ? current.id.slice(WA_NEW_PREFIX.length)
+                      : ""
+                  }
+                  name={current.guest_name}
+                  onSent={reloadThreads}
+                />
+              ) : (
+                <Conversation
+                  key={current.id}
+                  thread={current}
+                  view={view}
+                  access={access}
+                  onMarkUnread={() => markUnread(current.id)}
+                  onStatus={(s) => changeStatus(current.id, s)}
+                  onNext={() => gotoNext(current.id)}
+                  onOpenNote={() => setOpenNoteSignal((n) => n + 1)}
+                  onAssigned={(uid, name) =>
+                    patchThread(current.id, {
+                      assigned_user_id: uid,
+                      assigned_user_name: name,
+                    })
+                  }
+                />
+              )}
             </div>
-          ) : isWhatsApp(current.id) ? (
-            <WhatsAppChat
-              key={current.id}
-              conversationId={
-                current.id.startsWith(WA_NEW_PREFIX)
-                  ? null
-                  : current.id.slice(WA_PREFIX.length)
-              }
-              phone={
-                current.id.startsWith(WA_NEW_PREFIX)
-                  ? current.id.slice(WA_NEW_PREFIX.length)
-                  : ""
-              }
-              name={current.guest_name}
-              onSent={reloadThreads}
-            />
-          ) : (
-            <Conversation
-              key={current.id}
-              thread={current}
-              view={view}
-              access={access}
-              onMarkUnread={() => markUnread(current.id)}
-              onStatus={(s) => changeStatus(current.id, s)}
-              onNext={() => gotoNext(current.id)}
-              onOpenNote={() => setOpenNoteSignal((n) => n + 1)}
-              onAssigned={(uid, name) =>
-                patchThread(current.id, {
-                  assigned_user_id: uid,
-                  assigned_user_name: name,
-                })
-              }
-            />
-          )}
-        </div>
 
-        {/* Spalte 3: Reservierungs-Panel (nur für OTA-Threads; WhatsApp hat im
+            {/* Spalte 3: Reservierungs-Panel (nur für OTA-Threads; WhatsApp hat im
             inbox-Slice keinen Reservierungskontext). */}
-        <div className="col-span-12 hidden min-h-0 flex-col overflow-y-auto rounded-2xl border border-border bg-card lg:col-span-4 lg:flex xl:col-span-4">
-          {current && !isWhatsApp(current.id) ? (
-            <ReservationPanel
-              key={`${current.id}-res`}
-              thread={current}
-              openNoteSignal={openNoteSignal}
-              onWhatsApp={openWhatsApp}
-            />
-          ) : (
-            <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">
-              <Icon
-                icon={
-                  current && isWhatsApp(current.id)
-                    ? "ph:whatsapp-logo"
-                    : "ph:identification-card"
-                }
-                className="size-8 text-muted-foreground/40"
-              />
-              {current && isWhatsApp(current.id)
-                ? t("whatsappNoReservation")
-                : t("emptyReservation")}
+            <div className="col-span-12 hidden min-h-0 flex-col overflow-y-auto rounded-2xl border border-border bg-card lg:col-span-4 lg:flex xl:col-span-4">
+              {current && !isWhatsApp(current.id) ? (
+                <ReservationPanel
+                  key={`${current.id}-res`}
+                  thread={current}
+                  openNoteSignal={openNoteSignal}
+                  onWhatsApp={openWhatsApp}
+                />
+              ) : (
+                <div className="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center text-sm text-muted-foreground">
+                  <Icon
+                    icon={
+                      current && isWhatsApp(current.id)
+                        ? "ph:whatsapp-logo"
+                        : "ph:identification-card"
+                    }
+                    className="size-8 text-muted-foreground/40"
+                  />
+                  {current && isWhatsApp(current.id)
+                    ? t("whatsappNoReservation")
+                    : t("emptyReservation")}
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
         </>
       )}
     </div>
@@ -934,50 +934,50 @@ function Conversation({
           />
           {/* Zuweisen an Team-Benutzer — nur mit INBOX_ASSIGN */}
           {access.canAssign && (
-          <div className="relative">
-            <HeadAction
-              icon="ph:user-circle-gear"
-              title={t("assign")}
-              active={!!thread.assigned_user_id}
-              onClick={() => setShowAssign((v) => !v)}
-            />
-            {showAssign && (
-              <div className="absolute right-0 top-9 z-20 max-h-72 w-56 overflow-y-auto rounded-2xl border border-border bg-card p-1 shadow-xl">
-                <p className="px-2 py-1 text-xs font-semibold text-muted-foreground">
-                  {t("assignTo")}
-                </p>
-                {team.length === 0 && (
-                  <p className="px-2 py-2 text-xs text-muted-foreground">
-                    {t("assignEmpty")}
+            <div className="relative">
+              <HeadAction
+                icon="ph:user-circle-gear"
+                title={t("assign")}
+                active={!!thread.assigned_user_id}
+                onClick={() => setShowAssign((v) => !v)}
+              />
+              {showAssign && (
+                <div className="absolute right-0 top-9 z-20 max-h-72 w-56 overflow-y-auto rounded-2xl border border-border bg-card p-1 shadow-xl">
+                  <p className="px-2 py-1 text-xs font-semibold text-muted-foreground">
+                    {t("assignTo")}
                   </p>
-                )}
-                {team.map((member) => (
-                  <button
-                    key={member.id}
-                    type="button"
-                    onClick={() => assign(member)}
-                    className={
-                      "flex w-full items-center gap-2 rounded-(--radius) px-2 py-1.5 text-left text-sm hover:bg-muted/50 " +
-                      (thread.assigned_user_id === member.id ? "text-accent" : "")
-                    }
-                  >
-                    <Icon icon="ph:user" className="size-4" />
-                    {member.name}
-                  </button>
-                ))}
-                {thread.assigned_user_id && (
-                  <button
-                    type="button"
-                    onClick={() => assign(null)}
-                    className="mt-1 flex w-full items-center gap-2 rounded-(--radius) px-2 py-1.5 text-left text-sm text-destructive hover:bg-muted/50"
-                  >
-                    <Icon icon="ph:user-minus" className="size-4" />
-                    {t("assignNone")}
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
+                  {team.length === 0 && (
+                    <p className="px-2 py-2 text-xs text-muted-foreground">
+                      {t("assignEmpty")}
+                    </p>
+                  )}
+                  {team.map((member) => (
+                    <button
+                      key={member.id}
+                      type="button"
+                      onClick={() => assign(member)}
+                      className={
+                        "flex w-full items-center gap-2 rounded-(--radius) px-2 py-1.5 text-left text-sm hover:bg-muted/50 " +
+                        (thread.assigned_user_id === member.id ? "text-accent" : "")
+                      }
+                    >
+                      <Icon icon="ph:user" className="size-4" />
+                      {member.name}
+                    </button>
+                  ))}
+                  {thread.assigned_user_id && (
+                    <button
+                      type="button"
+                      onClick={() => assign(null)}
+                      className="mt-1 flex w-full items-center gap-2 rounded-(--radius) px-2 py-1.5 text-left text-sm text-destructive hover:bg-muted/50"
+                    >
+                      <Icon icon="ph:user-minus" className="size-4" />
+                      {t("assignNone")}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
           )}
           {/* Wiederherstellen, wenn nicht in der aktiven Ansicht */}
           {view !== "active" && (
@@ -1214,98 +1214,98 @@ function Conversation({
           {t("readOnlyHint")}
         </div>
       ) : (
-      // Composer als EINE Eingabe-Box (moderner Messenger-Stil): Textarea oben,
-      // Werkzeug-Zeile (Vorlagen/KI/Geplant + Senden) INNEN unten rechts. So
-      // bleibt das Textfeld in jeder Spaltenbreite voll breit — ohne Breakpoints.
-      <div className="relative border-t border-border p-3">
-      <div className="flex flex-col rounded-2xl border border-border bg-background focus-within:ring-2 focus-within:ring-accent/40">
-        {/* Geplant-senden-Popover */}
-        {showSchedule && (
-          <SchedulePopover
-            onClose={() => setShowSchedule(false)}
-            onPick={planMessage}
-            disabled={!text.trim()}
-          />
-        )}
-        {/* Vorlagen-Dropdown */}
-        {showTemplates && (
-          <div className="absolute bottom-full left-3 z-10 mb-1 max-h-60 w-72 overflow-y-auto rounded-2xl border border-border bg-card p-1 shadow-xl">
-            {templates.length === 0 ? (
-              <p className="p-3 text-sm text-muted-foreground">
-                {t("templatesEmpty")}
-              </p>
-            ) : (
-              templates.map((tpl) => (
-                <button
-                  key={tpl.id}
-                  type="button"
-                  onClick={() => {
-                    setText((prev) => (prev ? `${prev}\n${tpl.body}` : tpl.body));
-                    setShowTemplates(false);
-                  }}
-                  className="flex w-full flex-col gap-0.5 rounded-(--radius) p-2 text-left hover:bg-muted/50"
-                >
-                  <span className="text-sm font-medium">{tpl.title}</span>
-                  <span className="line-clamp-1 text-xs text-muted-foreground">
-                    {tpl.body}
-                  </span>
-                </button>
-              ))
+        // Composer als EINE Eingabe-Box (moderner Messenger-Stil): Textarea oben,
+        // Werkzeug-Zeile (Vorlagen/KI/Geplant + Senden) INNEN unten rechts. So
+        // bleibt das Textfeld in jeder Spaltenbreite voll breit — ohne Breakpoints.
+        <div className="relative border-t border-border p-3">
+          <div className="flex flex-col rounded-2xl border border-border bg-background focus-within:ring-2 focus-within:ring-accent/40">
+            {/* Geplant-senden-Popover */}
+            {showSchedule && (
+              <SchedulePopover
+                onClose={() => setShowSchedule(false)}
+                onPick={planMessage}
+                disabled={!text.trim()}
+              />
             )}
+            {/* Vorlagen-Dropdown */}
+            {showTemplates && (
+              <div className="absolute bottom-full left-3 z-10 mb-1 max-h-60 w-72 overflow-y-auto rounded-2xl border border-border bg-card p-1 shadow-xl">
+                {templates.length === 0 ? (
+                  <p className="p-3 text-sm text-muted-foreground">
+                    {t("templatesEmpty")}
+                  </p>
+                ) : (
+                  templates.map((tpl) => (
+                    <button
+                      key={tpl.id}
+                      type="button"
+                      onClick={() => {
+                        setText((prev) => (prev ? `${prev}\n${tpl.body}` : tpl.body));
+                        setShowTemplates(false);
+                      }}
+                      className="flex w-full flex-col gap-0.5 rounded-(--radius) p-2 text-left hover:bg-muted/50"
+                    >
+                      <span className="text-sm font-medium">{tpl.title}</span>
+                      <span className="line-clamp-1 text-xs text-muted-foreground">
+                        {tpl.body}
+                      </span>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+            <textarea
+              data-testid="inbox-composer-textarea"
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder={t("placeholder")}
+              rows={2}
+              className="min-h-[2.5rem] w-full resize-none bg-transparent px-3 pt-2.5 pb-1 text-sm outline-none"
+            />
+            <div className="flex items-center justify-end gap-1.5 px-2 pb-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                title={t("tabTemplates")}
+                onClick={() => setShowTemplates((v) => !v)}
+              >
+                <Icon icon="ph:note" className="size-4" />
+              </Button>
+              <Button
+                data-testid="inbox-ai-reply-button"
+                type="button"
+                variant="outline"
+                size="icon"
+                title={t("aiSuggest")}
+                onClick={suggest}
+                disabled={aiLoading}
+              >
+                <Icon
+                  icon={aiLoading ? "ph:spinner" : "ph:sparkle"}
+                  className={"size-4 " + (aiLoading ? "animate-spin" : "")}
+                />
+              </Button>
+              {/* Geplant senden (Uhr) */}
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                title={t("scheduleSend")}
+                onClick={() => setShowSchedule((v) => !v)}
+              >
+                <Icon icon="ph:clock" className="size-4" />
+              </Button>
+              <Button data-testid="inbox-composer-send-button" type="button" onClick={() => send(text)} disabled={sending || !text.trim()}>
+                <Icon
+                  icon={sending ? "ph:spinner" : "ph:paper-plane-tilt"}
+                  className={"size-4 " + (sending ? "animate-spin" : "")}
+                />
+                {sending ? t("sending") : t("send")}
+              </Button>
+            </div>
           </div>
-        )}
-        <textarea
-          data-testid="inbox-composer-textarea"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder={t("placeholder")}
-          rows={2}
-          className="min-h-[2.5rem] w-full resize-none bg-transparent px-3 pt-2.5 pb-1 text-sm outline-none"
-        />
-        <div className="flex items-center justify-end gap-1.5 px-2 pb-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          title={t("tabTemplates")}
-          onClick={() => setShowTemplates((v) => !v)}
-        >
-          <Icon icon="ph:note" className="size-4" />
-        </Button>
-        <Button
-          data-testid="inbox-ai-reply-button"
-          type="button"
-          variant="outline"
-          size="icon"
-          title={t("aiSuggest")}
-          onClick={suggest}
-          disabled={aiLoading}
-        >
-          <Icon
-            icon={aiLoading ? "ph:spinner" : "ph:sparkle"}
-            className={"size-4 " + (aiLoading ? "animate-spin" : "")}
-          />
-        </Button>
-        {/* Geplant senden (Uhr) */}
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          title={t("scheduleSend")}
-          onClick={() => setShowSchedule((v) => !v)}
-        >
-          <Icon icon="ph:clock" className="size-4" />
-        </Button>
-        <Button data-testid="inbox-composer-send-button" type="button" onClick={() => send(text)} disabled={sending || !text.trim()}>
-          <Icon
-            icon={sending ? "ph:spinner" : "ph:paper-plane-tilt"}
-            className={"size-4 " + (sending ? "animate-spin" : "")}
-          />
-          {sending ? t("sending") : t("send")}
-        </Button>
         </div>
-      </div>
-      </div>
       )}
     </>
   );
@@ -1365,11 +1365,11 @@ function ReservationPanel({
   const fmtDay = (s: string | null) =>
     s
       ? new Date(`${s}T00:00:00`).toLocaleDateString("de-DE", {
-          weekday: "short",
-          day: "2-digit",
-          month: "short",
-          year: "2-digit",
-        })
+        weekday: "short",
+        day: "2-digit",
+        month: "short",
+        year: "2-digit",
+      })
       : "—";
   const guests = [
     res.adults != null ? `${res.adults} Erwachsene` : null,
@@ -1640,13 +1640,12 @@ function StayCalendar({
           ) : (
             <span
               key={day}
-              className={`flex aspect-square items-center justify-center rounded-full text-sm ${
-                inStay(day)
+              className={`flex aspect-square items-center justify-center rounded-full text-sm ${inStay(day)
                   ? isStart(day) || isEnd(day)
                     ? "bg-accent font-semibold text-white"
                     : "bg-accent/15 text-accent"
                   : "text-foreground"
-              }`}
+                }`}
             >
               {day}
             </span>
