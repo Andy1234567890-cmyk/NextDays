@@ -92,6 +92,7 @@ type AndyPhase = "idle" | "awake" | "thinking" | "speaking";
 type SpeechRecognitionAlt = { transcript: string };
 type SpeechRecognitionResultLike = ArrayLike<SpeechRecognitionAlt> & {
   isFinal: boolean;
+  length: number;
 };
 type SpeechRecognitionEventLike = {
   resultIndex: number;
@@ -124,6 +125,7 @@ declare global {
 // zuerst, damit „Hallo Andy, …" den Rest korrekt abschneidet.
 const WAKE_PATTERNS: { re: RegExp }[] = [
   { re: /\b(?:hallo|hey|hi|hallöchen|hallöchen)\s+andy\b/i },
+  { re: /\b(?:hallo|hey|hi)\s+andi\b/i },
   { re: /\bandy\b/i },
 ];
 
@@ -134,6 +136,19 @@ const FOLLOW_UP_MS = 9000;
 // Sprechpause, nach der ein gesammelter Satz als fertig gilt und verarbeitet
 // wird (verhindert, dass ein laengerer Satz stueckweise interpretiert wird).
 const PHRASE_PAUSE_MS = 1200;
+
+const DOMAIN_HINTS = [
+  "dynamic pricing",
+  "preisautomatik",
+  "check-in",
+  "check-out",
+  "posteingang",
+  "kalender",
+  "reservierung",
+  "buchung",
+  "umsatz",
+  "objekt",
+];
 
 function buildSnapshot(dashboard: DashboardVoiceSnapshot): DashboardVoiceSnapshot {
   return {
@@ -204,7 +219,15 @@ function normalizeUtterance(raw: string): string {
   const stripped = compact
     .replace(/^(?:ja|okay|ok|also|äh|ähm|hm|hmm)[\s,.:;-]+/i, "")
     .trim();
-  return stripped || compact;
+  const corrected = (stripped || compact)
+    // Typische de-DE-Transkriptionsfehler im Domain-Kontext glätten.
+    .replace(/\bdynamic\s*(preising|prizing|pricing)\b/gi, "dynamic pricing")
+    .replace(/\bdynamik\s*pricing\b/gi, "dynamic pricing")
+    .replace(/\bpreis\s*automatik\b/gi, "preisautomatik")
+    .replace(/\bcheck\s*-?\s*ins?\b/gi, "check-in")
+    .replace(/\bcheck\s*-?\s*outs?\b/gi, "check-out")
+    .trim();
+  return corrected;
 }
 
 function debugValue(value: unknown): string {
@@ -216,6 +239,43 @@ function debugValue(value: unknown): string {
   } catch {
     return String(value);
   }
+}
+
+function scoreTranscriptCandidate(candidate: string): number {
+  const text = candidate.toLowerCase();
+  if (!text) {
+    return Number.NEGATIVE_INFINITY;
+  }
+  let score = 0;
+  for (const hint of DOMAIN_HINTS) {
+    if (text.includes(hint)) {
+      score += 3;
+    }
+  }
+  // Leicht längere Kandidaten bevorzugen (mehr Kontext), aber moderat.
+  score += Math.min(text.length / 40, 2);
+  if (text.split(" ").length <= 2) {
+    score -= 0.5;
+  }
+  return score;
+}
+
+function pickBestTranscript(res: SpeechRecognitionResultLike): string {
+  let best = "";
+  let bestScore = Number.NEGATIVE_INFINITY;
+  for (let j = 0; j < res.length; j += 1) {
+    const alt = res[j]?.transcript?.trim() ?? "";
+    if (!alt) {
+      continue;
+    }
+    const normalized = normalizeUtterance(alt);
+    const score = scoreTranscriptCandidate(normalized);
+    if (score > bestScore) {
+      bestScore = score;
+      best = normalized;
+    }
+  }
+  return best;
 }
 
 function detectAmbiguousAction(utterance: string):
@@ -244,6 +304,24 @@ function detectAmbiguousAction(utterance: string):
       "Ist Dynamic Pricing aktiv?",
     ],
   };
+}
+
+function isHelpRequest(utterance: string): boolean {
+  const text = utterance.toLowerCase();
+  return /\b(hilfe|help|was kannst du|was kannst du machen|welche befehle|was geht)\b/.test(
+    text,
+  );
+}
+
+function buildHelpMessage(): string {
+  return (
+    "Gern. Ich kann dir beim Dashboard helfen: " +
+    "Ich beantworte Fragen zu Umsatz, Check-ins und Reservierungen, " +
+    "prüfe ob Dynamic Pricing aktiv ist, öffne Bereiche wie Kalender oder Posteingang " +
+    "und kann Dynamic Pricing nach deiner Bestätigung ein- oder ausschalten. " +
+    "Beispiele: Sag 'Wie viel Umsatz in den letzten 30 Tagen?', " +
+    "'Ist Dynamic Pricing aktiv?', 'Öffne den Kalender' oder 'Schalte Dynamic Pricing aus'."
+  );
 }
 
 export function DashboardVoiceAssistant({
@@ -401,6 +479,14 @@ export function DashboardVoiceAssistant({
       }
 
       const interpretedUtterance = normalizedUtterance || utterance;
+
+      // Hilfe-Intent: erklärt kurz, was Andy bereits kann.
+      if (isHelpRequest(interpretedUtterance)) {
+        appendDebug("HELP_INTENT", true);
+        say(buildHelpMessage());
+        return;
+      }
+
       const command = classifyCommand(interpretedUtterance);
       appendDebug("COMMAND_KIND", command.kind);
 
@@ -610,7 +696,7 @@ export function DashboardVoiceAssistant({
     recognition.lang = "de-DE";
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.maxAlternatives = 1;
+    recognition.maxAlternatives = 3;
 
     // Startet die Erkennung, falls sie gerade NICHT laeuft. Idempotent — der
     // running-Guard verhindert den „InvalidStateError: already started".
@@ -690,7 +776,17 @@ export function DashboardVoiceAssistant({
         if (!res.isFinal) {
           continue;
         }
-        const chunk = res[0].transcript.trim();
+        const alternatives: string[] = [];
+        for (let j = 0; j < res.length; j += 1) {
+          const alt = res[j]?.transcript?.trim();
+          if (alt) {
+            alternatives.push(alt);
+          }
+        }
+        if (alternatives.length > 1) {
+          appendDebug("ASR_ALTERNATIVES", alternatives);
+        }
+        const chunk = pickBestTranscript(res).trim();
         if (!chunk) {
           continue;
         }
@@ -711,6 +807,8 @@ export function DashboardVoiceAssistant({
     recognition.onerror = (event) => {
       if (event.error === "aborted") {
         appendDebug("ASR_INFO", "aborted (expected during pause/speak)");
+      } else if (event.error === "no-speech") {
+        appendDebug("ASR_INFO", "no-speech");
       } else {
         appendDebug("ASR_ERROR", event.error);
       }
