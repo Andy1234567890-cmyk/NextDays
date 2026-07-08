@@ -435,6 +435,7 @@ export function DashboardVoiceAssistant({
 
       // 3) Lokale Snapshot-Frage → sofort aus vorhandenen Daten antworten.
       if (command.kind === "local-query") {
+        appendDebug("LOCAL_QUERY", command.query);
         const answer = answerLocalQuery(command.query, dashboard);
         if (answer) {
           appendDebug("ANSWER_SOURCE", "local-query");
@@ -649,7 +650,11 @@ export function DashboardVoiceAssistant({
     };
 
     recognition.onerror = (event) => {
-      appendDebug("ASR_ERROR", event.error);
+      if (event.error === "aborted") {
+        appendDebug("ASR_INFO", "aborted (expected during pause/speak)");
+      } else {
+        appendDebug("ASR_ERROR", event.error);
+      }
       if (event.error === "not-allowed" || event.error === "service-not-allowed") {
         activeRef.current = false;
         setError("Mikrofonzugriff nicht erlaubt.");

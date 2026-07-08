@@ -164,12 +164,27 @@ export const DATA_SKILLS: DataSkill[] = [
 export type LocalQueryKind =
   | "arrivals-today"
   | "departures-today"
-  | "upcoming";
+  | "upcoming"
+  | "arrivals-30d";
 
 function matchLocalQuery(text: string, isQuestion: boolean): LocalQueryKind | null {
   if (!isQuestion) {
     return null;
   }
+  const asks30d =
+    /\b(letzte\w*|letzten|letzter|vergangene\w*|vergangenen)\s+30\s*(tage|tagen)\b/.test(text) ||
+    /\b30\s*(tage|tagen)\b/.test(text);
+
+  // 30-Tage-Check-ins zuerst pruefen, damit diese Fragen nicht als
+  // "heute anreisen" fehlklassifiziert werden.
+  const arrivals30d =
+    asks30d &&
+    (/\b(check[- ]?ins?|anreise\w*|ankunft|ankünfte|ankuenfte|anreist)\b/.test(text) ||
+      /\bwie\s+viel\w*\s+check/.test(text));
+  if (arrivals30d) {
+    return "arrivals-30d";
+  }
+
   // Reihenfolge: spezifischer zuerst. „reist … ab/an" wird gesondert erkannt,
   // da hier das Verb (nicht ein Substantiv) die Absicht traegt.
   const departs =
@@ -401,6 +416,7 @@ export type SnapshotLite = {
   checkins_today?: SnapshotEntryLite[];
   checkouts_today?: SnapshotEntryLite[];
   upcoming?: SnapshotEntryLite[];
+  checkins_30d?: { value?: number | null } | null;
 };
 
 function nameList(entries: SnapshotEntryLite[], max = 3): string {
@@ -441,6 +457,19 @@ export function answerLocalQuery(
     return list.length === 1
       ? `Heute reist ein Gast ab.${whoPart}`
       : `Heute reisen ${list.length} Gäste ab.${whoPart}`;
+  }
+  if (query === "arrivals-30d") {
+    const countRaw = snap.checkins_30d?.value;
+    const count =
+      typeof countRaw === "number" && Number.isFinite(countRaw)
+        ? Math.round(countRaw)
+        : null;
+    if (count === null) {
+      return "Die Check-In-Zahl für die letzten 30 Tage ist gerade nicht verfügbar.";
+    }
+    return count === 1
+      ? "In den letzten 30 Tagen gab es einen Check-In."
+      : `In den letzten 30 Tagen gab es ${count} Check-Ins.`;
   }
   // upcoming
   const list = snap.upcoming ?? [];
