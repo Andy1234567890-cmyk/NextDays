@@ -605,6 +605,9 @@ export function InboxList({
               {filtered.map((th) => (
                 <li key={th.id}>
                   <button
+                    data-testid="inbox-thread-item"
+                    data-thread-id={th.id}
+                    data-thread-guest={(th.guest_name ?? "").toLowerCase()}
                     type="button"
                     onClick={() => selectThread(th.id)}
                     className={
@@ -1122,6 +1125,7 @@ function Conversation({
 
             {aiEditing ? (
               <textarea
+                data-testid="inbox-ai-draft-textarea"
                 value={ai}
                 onChange={(e) => setAi(e.target.value)}
                 rows={6}
@@ -1129,7 +1133,7 @@ function Conversation({
                 className="w-full resize-none rounded-(--radius) border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-accent/40"
               />
             ) : (
-              <p className="whitespace-pre-wrap text-sm">{ai}</p>
+              <p data-testid="inbox-ai-draft-preview" className="whitespace-pre-wrap text-sm">{ai}</p>
             )}
 
             <div className="mt-3 flex justify-end gap-2">
@@ -1144,6 +1148,7 @@ function Conversation({
                 </Button>
               ) : (
                 <Button
+                  data-testid="inbox-ai-edit-button"
                   type="button"
                   variant="outline"
                   size="sm"
@@ -1154,6 +1159,7 @@ function Conversation({
                 </Button>
               )}
               <Button
+                data-testid="inbox-ai-send-button"
                 type="button"
                 size="sm"
                 onClick={() => send(ai)}
@@ -1249,6 +1255,7 @@ function Conversation({
           </div>
         )}
         <textarea
+          data-testid="inbox-composer-textarea"
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder={t("placeholder")}
@@ -1266,6 +1273,7 @@ function Conversation({
           <Icon icon="ph:note" className="size-4" />
         </Button>
         <Button
+          data-testid="inbox-ai-reply-button"
           type="button"
           variant="outline"
           size="icon"
@@ -1288,7 +1296,7 @@ function Conversation({
         >
           <Icon icon="ph:clock" className="size-4" />
         </Button>
-        <Button type="button" onClick={() => send(text)} disabled={sending || !text.trim()}>
+        <Button data-testid="inbox-composer-send-button" type="button" onClick={() => send(text)} disabled={sending || !text.trim()}>
           <Icon
             icon={sending ? "ph:spinner" : "ph:paper-plane-tilt"}
             className={"size-4 " + (sending ? "animate-spin" : "")}

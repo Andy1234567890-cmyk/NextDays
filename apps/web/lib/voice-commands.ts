@@ -225,6 +225,10 @@ export type VoiceAction = {
   turnOn: boolean;
 };
 
+export type UiAction = {
+  key: "inbox-ai-reply" | "inbox-ai-edit" | "inbox-ai-send" | "inbox-ai-read";
+};
+
 // AUSschalten: entweder ein eindeutiges Verb (deaktivieren, ausschalten …) ODER
 // ein Aktions-Verb (mach/schalt/setz/dreh) zusammen mit dem Partikel „aus".
 const OFF_RE =
@@ -255,10 +259,47 @@ function matchAction(text: string): VoiceAction | null {
   return null;
 }
 
+function matchUiAction(text: string, target: NavTarget | null): UiAction | null {
+  const explicitAiReply = /\b(?:ki|ai)\s*-?\s*antwort\w*\b/.test(text);
+  const directReply = /\b(?:da\s*rauf|darauf)\s+antwort\w*\b/.test(text);
+  const genericReply = /\bantwort\w*\b/.test(text);
+  const wantsEdit = /\b(bearbeit\w*|editier\w*|anpass\w*|umschreib\w*)\b/.test(text);
+  const wantsSend = /\b(send\w*|abschick\w*|verschick\w*|rausschick\w*)\b/.test(text);
+  const wantsRead =
+    /\b(vorles\w*|lies\w*\s+vor|lese\w*\s+vor|les\w*\s+mir\s+vor)\b/.test(text) &&
+    /\b(?:ki|ai)?\s*-?\s*(antwort|vorschlag|entwurf)\w*\b/.test(text);
+  const shortSingleIntent = text.split(" ").length <= 2;
+  const inboxContext =
+    target?.key === "inbox" ||
+    /\b(posteingang|inbox|nachricht\w*|buchung\w*|anfrage\w*)\b/.test(text);
+
+  if (wantsRead && (inboxContext || shortSingleIntent)) {
+    return { key: "inbox-ai-read" };
+  }
+
+  if (genericReply && inboxContext) {
+    return { key: "inbox-ai-reply" };
+  }
+
+  if (wantsEdit && (inboxContext || shortSingleIntent)) {
+    return { key: "inbox-ai-edit" };
+  }
+
+  if (wantsSend && (inboxContext || shortSingleIntent)) {
+    return { key: "inbox-ai-send" };
+  }
+
+  if (explicitAiReply || (directReply && inboxContext) || directReply) {
+    return { key: "inbox-ai-reply" };
+  }
+  return null;
+}
+
 
 export type VoiceCommand =
   | { kind: "navigate"; target: NavTarget }
   | { kind: "data-query"; skill: DataSkill } // echten Bereichs-Zustand lesen (Fetch)
+  | { kind: "ui-action"; action: UiAction } // lokalen UI-Button ausloesen
   | { kind: "local-query"; query: LocalQueryKind } // aus vorhandenem Snapshot
   | { kind: "action"; action: VoiceAction } // echte Daten aendern (mit Rueckfrage)
   | { kind: "ai" }; // an die KI weiterreichen
@@ -286,6 +327,12 @@ export function classifyCommand(utterance: string): VoiceCommand {
     if (skill.matches(text, isQuestion, target)) {
       return { kind: "data-query", skill };
     }
+  }
+
+  // 1a) Lokale UI-Aktionen wie "KI-Antwort ausloesen".
+  const uiAction = matchUiAction(text, target);
+  if (uiAction) {
+    return { kind: "ui-action", action: uiAction };
   }
 
   // 1b) Ziel hat einen Daten-Skill mit preferAnswer (z. B. Dynamic Pricing) und
@@ -330,6 +377,18 @@ export type InboxThreadLite = {
   last_message?: string | null;
 };
 
+function bookingWho(thread: InboxThreadLite): string | null {
+  const guest = thread.guest_name?.trim();
+  if (guest) {
+    return guest;
+  }
+  const ota = thread.ota_name?.trim();
+  if (ota) {
+    return `einen Gast über ${ota}`;
+  }
+  return null;
+}
+
 // Baut aus der Thread-Liste eine gesprochene Zusammenfassung: wie viele
 // ungelesen, wie viele neue Buchungen, und die neuesten Absender.
 export function summarizeInbox(threads: InboxThreadLite[]): string {
@@ -341,6 +400,31 @@ export function summarizeInbox(threads: InboxThreadLite[]): string {
   const newBookings = threads.filter((t) => t.status === "new");
 
   const parts: string[] = [];
+
+  // Bei der häufigen Frage "Ist eine neue Buchung da?" zuerst klar antworten.
+  if (newBookings.length === 0) {
+    parts.push("Nein, aktuell ist keine neue Buchung im Posteingang.");
+  } else if (newBookings.length === 1) {
+    const who = bookingWho(newBookings[0]);
+    parts.push(
+      who
+        ? `Ja, es ist eine neue Buchung von ${who} dabei.`
+        : "Ja, es ist eine neue Buchung dabei.",
+    );
+  } else {
+    const names = newBookings
+      .map((t) => bookingWho(t))
+      .filter((n): n is string => Boolean(n));
+    if (names.length === 1) {
+      parts.push(`Ja, es sind ${newBookings.length} neue Buchungen dabei, unter anderem von ${names[0]}.`);
+    } else if (names.length > 1) {
+      parts.push(
+        `Ja, es sind ${newBookings.length} neue Buchungen dabei, unter anderem von ${names.slice(0, 3).join(", ")}.`,
+      );
+    } else {
+      parts.push(`Ja, es sind ${newBookings.length} neue Buchungen dabei.`);
+    }
+  }
 
   if (unread.length === 0) {
     parts.push("Du hast keine ungelesenen Nachrichten.");
@@ -360,12 +444,6 @@ export function summarizeInbox(threads: InboxThreadLite[]): string {
     const namePart =
       names.length > 0 ? ` Unter anderem von ${names.join(", ")}.` : "";
     parts.push(`Du hast ${unread.length} ungelesene Nachrichten.${namePart}`);
-  }
-
-  if (newBookings.length === 1) {
-    parts.push("Es ist eine neue Buchung dabei.");
-  } else if (newBookings.length > 1) {
-    parts.push(`Es sind ${newBookings.length} neue Buchungen dabei.`);
   }
 
   return parts.join(" ");

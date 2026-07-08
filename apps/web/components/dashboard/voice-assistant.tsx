@@ -22,6 +22,7 @@ import {
   classifyCommand,
   classifyConfirmation,
   type PricingItemLite,
+  type UiAction,
   type VoiceAction,
 } from "@/lib/voice-commands";
 import {
@@ -124,14 +125,18 @@ declare global {
 // wuerde „Sandy", „Mandy" etc. faelschlich ausloesen. Die laengeren Varianten
 // zuerst, damit „Hallo Andy, …" den Rest korrekt abschneidet.
 const WAKE_PATTERNS: { re: RegExp }[] = [
-  { re: /\b(?:hallo|hey|hi|hallöchen|hallöchen)\s+andy\b/i },
-  { re: /\b(?:hallo|hey|hi)\s+andi\b/i },
-  { re: /\bandy\b/i },
+  { re: /\b(?:hallo|hey|hi|hallöchen)\s+(?:and(?:y|i|ie)|handy)\b/i },
+  { re: /\b(?:and(?:y|i|ie)|handy)\b/i },
 ];
+
+// Nur am SATZANFANG verwendbar (awake-Modus), damit ein Name wie
+// "... mit freundlichen Grüßen Andy Staudinger" nicht den Satz abschneidet.
+const LEADING_WAKE_RE =
+  /^(?:\s*)(?:(?:hallo|hey|hi|hallöchen)\s+)?(?:and(?:y|i|ie)|handy)\b[\s,.!?-]*/i;
 
 // Zeitfenster nach einer Antwort, in dem Andy ohne erneutes Wake-Word weiter
 // zuhoert (echtes Gespraech). Danach zurueck in den Ruhemodus.
-const FOLLOW_UP_MS = 9000;
+const FOLLOW_UP_MS = 20000;
 
 // Sprechpause, nach der ein gesammelter Satz als fertig gilt und verarbeitet
 // wird (verhindert, dass ein laengerer Satz stueckweise interpretiert wird).
@@ -174,6 +179,15 @@ function matchWake(text: string): { hit: boolean; rest: string } {
     }
   }
   return { hit: false, rest: "" };
+}
+
+function stripLeadingWake(text: string): { hit: boolean; rest: string } {
+  const m = LEADING_WAKE_RE.exec(text);
+  if (!m) {
+    return { hit: false, rest: text.trim() };
+  }
+  const rest = text.slice(m[0].length).trim();
+  return { hit: true, rest };
 }
 
 function toUiText(value: unknown, fallback = "Unbekannter Fehler."): string {
@@ -221,6 +235,10 @@ function normalizeUtterance(raw: string): string {
     .trim();
   const corrected = (stripped || compact)
     // Typische de-DE-Transkriptionsfehler im Domain-Kontext glätten.
+    .replace(/\b(hallo|hey|hi|hallöchen)\s+handy\b/gi, "$1 andy")
+    .replace(/\bandie\b/gi, "andy")
+    .replace(/^verarbeiten$/gi, "bearbeiten")
+    .replace(/^arbeiten$/gi, "bearbeiten")
     .replace(/\bdynamic\s*(preising|prizing|pricing)\b/gi, "dynamic pricing")
     .replace(/\bdynamik\s*pricing\b/gi, "dynamic pricing")
     .replace(/\bpreis\s*automatik\b/gi, "preisautomatik")
@@ -239,6 +257,359 @@ function debugValue(value: unknown): string {
   } catch {
     return String(value);
   }
+}
+
+function setNativeTextareaValue(node: HTMLTextAreaElement, value: string): void {
+  const setter = Object.getOwnPropertyDescriptor(
+    window.HTMLTextAreaElement.prototype,
+    "value",
+  )?.set;
+  if (setter) {
+    setter.call(node, value);
+  } else {
+    node.value = value;
+  }
+  node.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
+function applyInboxAiDraftText(text: string): boolean {
+  const area = document.querySelector<HTMLTextAreaElement>(
+    '[data-testid="inbox-ai-draft-textarea"]',
+  );
+  if (!area) {
+    return false;
+  }
+  setNativeTextareaValue(area, text.trim());
+  area.focus();
+  return true;
+}
+
+function applyInboxComposerText(text: string): boolean {
+  const area = document.querySelector<HTMLTextAreaElement>(
+    '[data-testid="inbox-composer-textarea"]',
+  );
+  if (!area) {
+    return false;
+  }
+  setNativeTextareaValue(area, text.trim());
+  area.focus();
+  return true;
+}
+
+function applyInboxReplyText(text: string): { ok: boolean; target: "ai-draft" | "composer" | "none" } {
+  if (applyInboxAiDraftText(text)) {
+    return { ok: true, target: "ai-draft" };
+  }
+  if (applyInboxComposerText(text)) {
+    return { ok: true, target: "composer" };
+  }
+  return { ok: false, target: "none" };
+}
+
+function readInboxAiDraftText(): string {
+  const area = document.querySelector<HTMLTextAreaElement>(
+    '[data-testid="inbox-ai-draft-textarea"]',
+  );
+  if (area?.value?.trim()) {
+    return area.value.trim();
+  }
+  const preview = document.querySelector<HTMLElement>(
+    '[data-testid="inbox-ai-draft-preview"]',
+  );
+  return preview?.innerText?.trim() ?? "";
+}
+
+function readInboxComposerText(): string {
+  const area = document.querySelector<HTMLTextAreaElement>(
+    '[data-testid="inbox-composer-textarea"]',
+  );
+  return area?.value?.trim() ?? "";
+}
+
+function applyOrthographyInstructionToReplyText(instruction: string): {
+  ok: boolean;
+  target: "ai-draft" | "composer" | "none";
+  text: string;
+} {
+  const sourceText = readInboxAiDraftText() || readInboxComposerText();
+  if (!sourceText) {
+    return { ok: false, target: "none", text: "" };
+  }
+  let nextText = sourceText;
+  const normalizedInstruction = normalizeForMatch(instruction);
+  const wantsHalloCapitalized =
+    /\bhallo\b/.test(normalizedInstruction) &&
+    /\b(gross|gro[sz])\b/.test(normalizedInstruction) &&
+    /\b(schreib|anfang)\b/.test(normalizedInstruction);
+  if (wantsHalloCapitalized) {
+    nextText = nextText.replace(/^\s*hallo\b/i, (m) =>
+      m.replace(/hallo/i, "Hallo"),
+    );
+  }
+  const write = applyInboxReplyText(nextText);
+  return { ok: write.ok, target: write.target, text: nextText };
+}
+
+function normalizeForMatch(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/\p{Diacritic}+/gu, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function extractInboxDictatedText(utterance: string): string | null {
+  const normalized = normalizeForMatch(utterance);
+  const asksToWrite =
+    /(schreib|beantwort|antworte|verfass|erstell).*(nachricht|antwort)/.test(
+      normalized,
+    ) ||
+    /(schreib|beantwort|antworte|verfass|erstell).*(posteingang|buchung|reservierung)/.test(
+      normalized,
+    );
+  if (!asksToWrite) {
+    return null;
+  }
+
+  // Alles vor dem eigentlichen Nachrichtentext abschneiden.
+  let tail = utterance
+    .replace(
+      /^.*?(?:schreibe?|beantworte?|antworte?|verfasse?|erstelle?)\s*(?:bitte\s*)?(?:eine\s*)?(?:nachricht|antwort)?\s*/i,
+      "",
+    )
+    .trim();
+
+  const starterWords = [
+    "hallo",
+    "guten",
+    "danke",
+    "vielen",
+    "wir",
+    "bitte",
+    "sehr geehrte",
+    "liebe",
+  ];
+  const lowerTail = tail.toLowerCase();
+  const starterIndex = starterWords
+    .map((w) => lowerTail.indexOf(w))
+    .filter((idx) => idx >= 0)
+    .sort((a, b) => a - b)[0];
+  if (starterIndex !== undefined) {
+    tail = tail.slice(starterIndex).trim();
+  }
+
+  if (!tail) {
+    return null;
+  }
+  const cleaned = tail.replace(/^[:,\-\s]+/, "").trim();
+  if (!cleaned) {
+    return null;
+  }
+  return cleaned;
+}
+
+function isCorrectionFeedback(utterance: string): boolean {
+  const text = normalizeForMatch(utterance);
+  const hasCorrectionTopic =
+    /\b(rechtschreib\w*|schreibweise|grammatik|formulierung|text|satz|wortwahl)\b/.test(
+      text,
+    ) || /\b(korrigier\w*|verbesser\w*|umschreib\w*)\b/.test(text);
+  const hasNegativeSignal =
+    /\b(stimmt\s+nicht|falsch|nicht\s+gut|fehlerhaft|passt\s+nicht|ist\s+nicht\s+gut)\b/.test(
+      text,
+    ) || text.startsWith("aber ");
+  return hasCorrectionTopic && hasNegativeSignal;
+}
+
+function isInboxInsertInstruction(utterance: string): boolean {
+  const text = normalizeForMatch(utterance);
+  const hasInsertVerb = /\b(einfug\w*|einfueg\w*|erganz\w*|ergaenz\w*|hinzu\w*|rein\s*schreib\w*)\b/.test(
+    text,
+  );
+  const hasTextTarget = /\b(text|sendetext|nachricht|antwort|entwurf)\b/.test(text);
+  return hasInsertVerb && hasTextTarget;
+}
+
+function isLikelyReplyGreetingText(utterance: string): boolean {
+  const text = normalizeForMatch(utterance);
+  if (text.split(" ").length < 3) {
+    return false;
+  }
+  if (/\b(hallo\s+andy|hallo\s+andi|hallo\s+handy)\b/.test(text)) {
+    return false;
+  }
+  // Korrektur-Anweisungen duerfen NICHT als neuer Nachrichtentext landen.
+  if (
+    /\b(gross|gro[sz]|anfang|geschrieben|grossschreiben|rechtschreib\w*|korrigier\w*|verbesser\w*)\b/.test(
+      text,
+    )
+  ) {
+    return false;
+  }
+  return /^(hallo|guten\s+tag|liebe\w*|sehr\s+geehrte\w*)\b/.test(text);
+}
+
+function toTitleCaseWords(value: string): string {
+  return value
+    .split(" ")
+    .map((part) => {
+      if (!part) {
+        return part;
+      }
+      return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+    })
+    .join(" ");
+}
+
+function extractCorrectedGuestName(utterance: string): string | null {
+  const m = utterance.match(
+    /\b(?:und\s+)?(?:sie|er)\s+hei(?:s|ß)t(?:\s+doch)?(?:\s+als)?\s+(.+)$/i,
+  );
+  if (!m) {
+    return null;
+  }
+  const raw = m[1]
+    .trim()
+    .replace(/^[,:;\-\s]+/, "")
+    .replace(/\s+/g, " ");
+  const safe = raw.replace(/[^a-zA-ZäöüÄÖÜß'\-\s]/g, " ").replace(/\s+/g, " ").trim();
+  if (!safe) {
+    return null;
+  }
+  const words = safe.split(" ").filter((w) => w.length >= 2);
+  if (words.length < 2) {
+    return null;
+  }
+  return toTitleCaseWords(words.join(" "));
+}
+
+function applyGuestNameCorrectionToReplyText(name: string): {
+  ok: boolean;
+  target: "ai-draft" | "composer" | "none";
+  text: string;
+} {
+  const sourceText = readInboxAiDraftText() || readInboxComposerText();
+  if (!sourceText) {
+    return { ok: false, target: "none", text: "" };
+  }
+  let nextText = sourceText;
+
+  if (/\bhallo\s+(?:frau|herr)\s+/i.test(nextText)) {
+    nextText = nextText.replace(
+      /(\bhallo\s+(?:frau|herr)\s+)([^,.!\n]+)/i,
+      (_, prefix: string) => `${prefix}${name}`,
+    );
+  } else if (/\bhallo\s+/i.test(nextText)) {
+    nextText = nextText.replace(
+      /(\bhallo\s+)([^,.!\n]+)/i,
+      (_, prefix: string) => `${prefix}${name}`,
+    );
+  }
+
+  const write = applyInboxReplyText(nextText);
+  return { ok: write.ok, target: write.target, text: nextText };
+}
+
+function trySelectInboxThreadByUtterance(utterance: string): { selected: boolean; guest?: string } {
+  const normalizedUtterance = normalizeForMatch(utterance);
+  if (!normalizedUtterance || !normalizedUtterance.includes("posteingang")) {
+    return { selected: false };
+  }
+  const items = Array.from(
+    document.querySelectorAll<HTMLButtonElement>('[data-testid="inbox-thread-item"]'),
+  );
+  for (const item of items) {
+    const guest = normalizeForMatch(item.getAttribute("data-thread-guest") ?? "");
+    if (!guest) {
+      continue;
+    }
+    const parts = guest.split(" ").filter((p) => p.length >= 3);
+    if (parts.length === 0) {
+      continue;
+    }
+    const matchCount = parts.filter((p) => normalizedUtterance.includes(p)).length;
+    if (matchCount >= Math.min(2, parts.length)) {
+      item.click();
+      return { selected: true, guest };
+    }
+  }
+  return { selected: false };
+}
+
+function runUiAction(action: UiAction): { ok: boolean; detail: string } {
+  if (action.key === "inbox-ai-edit") {
+    const editBtn = document.querySelector<HTMLElement>(
+      '[data-testid="inbox-ai-edit-button"]',
+    );
+    if (!editBtn) {
+      return { ok: false, detail: "edit-button-not-found" };
+    }
+    editBtn.click();
+    return { ok: true, detail: "edit-clicked" };
+  }
+
+  if (action.key === "inbox-ai-send") {
+    const sendBtn = document.querySelector<HTMLElement>(
+      '[data-testid="inbox-ai-send-button"]',
+    );
+    if (sendBtn) {
+      sendBtn.click();
+      return { ok: true, detail: "ai-send-clicked" };
+    }
+    const composerSend = document.querySelector<HTMLElement>(
+      '[data-testid="inbox-composer-send-button"]',
+    );
+    if (composerSend) {
+      composerSend.click();
+      return { ok: true, detail: "composer-send-clicked" };
+    }
+    return { ok: false, detail: "send-button-not-found" };
+  }
+
+  const selectors = [
+    '[data-testid="inbox-ai-reply-button"]',
+    '[data-testid="inbox-ai-reply"]',
+    '[aria-label*="KI-Antwort"]',
+    '[title*="KI-Antwort"]',
+  ];
+  for (const selector of selectors) {
+    const node = document.querySelector<HTMLElement>(selector);
+    if (node) {
+      node.click();
+      return { ok: true, detail: `selector:${selector}` };
+    }
+  }
+
+  const controls = Array.from(
+    document.querySelectorAll<HTMLElement>(
+      'button,[role="button"],a,[role="tab"],[data-slot="tab"]',
+    ),
+  );
+  const target = controls.find((el) => {
+    const text = [
+      el.innerText,
+      el.textContent,
+      el.getAttribute("aria-label"),
+      el.getAttribute("title"),
+    ]
+      .filter((x): x is string => Boolean(x))
+      .join(" ")
+      .toLowerCase();
+    return (
+      text.includes("ki-antwort") ||
+      text.includes("ki antwort") ||
+      text.includes("ai-antwort") ||
+      text.includes("ai antwort") ||
+      text.includes("darauf antworten")
+    );
+  });
+  if (!target) {
+    return { ok: false, detail: "control-not-found" };
+  }
+  target.click();
+  return { ok: true, detail: "control-text-match" };
 }
 
 function scoreTranscriptCandidate(candidate: string): number {
@@ -356,6 +727,7 @@ export function DashboardVoiceAssistant({
     action: VoiceAction;
     targets: PricingItemLite[];
   } | null>(null);
+  const pendingInboxDraftRef = useRef(false);
   // askAndy in einer Ref, damit der Recognition-Effekt NICHT von askAndy abhaengt
   // (sonst wird die Erkennung bei jeder dashboard-Aenderung neu aufgesetzt und
   // bleibt nach der ersten Antwort haengen).
@@ -431,7 +803,133 @@ export function DashboardVoiceAssistant({
         });
       };
 
+      const interpretedUtterance = normalizedUtterance || utterance;
+
+      if (window.location.pathname.startsWith("/posteingang")) {
+        const correctedGuestName = extractCorrectedGuestName(interpretedUtterance);
+        if (correctedGuestName) {
+          const correction = applyGuestNameCorrectionToReplyText(correctedGuestName);
+          appendDebug("UI_NAME_CORRECTION", {
+            ok: correction.ok,
+            target: correction.target,
+            guest: correctedGuestName,
+          });
+          if (correction.ok) {
+            say(
+              `Verstanden. Ich habe den Namen auf ${correctedGuestName} korrigiert. Neuer Text: ${correction.text}`,
+            );
+          } else {
+            say(
+              "Ich sehe gerade keinen Entwurf zum Korrigieren. Sag zuerst bitte eine Antwort, dann passe ich den Namen an.",
+            );
+          }
+          return;
+        }
+
+        const directOrthography = applyOrthographyInstructionToReplyText(
+          interpretedUtterance,
+        );
+        if (directOrthography.ok && directOrthography.text) {
+          appendDebug("UI_DRAFT_APPLY", {
+            ok: true,
+            target: directOrthography.target,
+            mode: "orthography-direct",
+          });
+          say(
+            `Alles klar. Ich habe die Korrektur angewendet. Neuer Text: ${directOrthography.text}`,
+          );
+          return;
+        }
+
+        if (isInboxInsertInstruction(interpretedUtterance)) {
+          pendingInboxDraftRef.current = true;
+          appendDebug("UI_INSERT_MODE", "armed");
+          say("Alles klar. Sag mir jetzt bitte den genauen Text, den ich in den Sendetext einfügen soll.");
+          return;
+        }
+
+        if (isLikelyReplyGreetingText(interpretedUtterance)) {
+          const writeResult = applyInboxReplyText(interpretedUtterance);
+          appendDebug("UI_DICTATED_WRITE", { ...writeResult, mode: "greeting-fallback" });
+          if (writeResult.ok) {
+            say(`Erledigt. Ich habe folgenden Text eingetragen: ${interpretedUtterance}`);
+            return;
+          }
+        }
+      }
+
+      if (
+        isCorrectionFeedback(interpretedUtterance) &&
+        window.location.pathname.startsWith("/posteingang")
+      ) {
+        const existingDraft = readInboxAiDraftText();
+        const existingComposer = readInboxComposerText();
+        if (!existingDraft && !existingComposer) {
+          say(
+            "Verstanden. Ich sehe gerade keinen Entwurf zum Korrigieren. Sag zuerst bitte eine Antwort oder KI-Antwort, dann überarbeite ich sie mit dir.",
+          );
+          return;
+        }
+        if (existingDraft) {
+          runUiAction({ key: "inbox-ai-edit" });
+        }
+        pendingInboxDraftRef.current = true;
+        appendDebug("UI_CORRECTION_MODE", { source: existingDraft ? "ai-draft" : "composer" });
+        say(
+          "Alles klar. Diktiere mir bitte die korrigierte Version, ich überschreibe den Text und lese ihn dir vor.",
+        );
+        return;
+      }
+
       // 0) Steht eine bestaetigungspflichtige Aktion aus? Dann Ja/Nein werten.
+      if (pendingInboxDraftRef.current) {
+        if (/\b(abbrechen|stopp|vergiss es|doch nicht)\b/i.test(interpretedUtterance)) {
+          pendingInboxDraftRef.current = false;
+          say("Alles klar, ich breche das Bearbeiten ab.");
+          return;
+        }
+
+        if (/\b(bearbeit\w*|editier\w*|verarbeit\w*)\b/i.test(interpretedUtterance)) {
+          runUiAction({ key: "inbox-ai-edit" });
+          say("Bearbeiten ist aktiv. Diktiere mir bitte jetzt den gewünschten Text.");
+          return;
+        }
+
+        const orthography = applyOrthographyInstructionToReplyText(
+          interpretedUtterance,
+        );
+        if (orthography.ok && orthography.text) {
+          appendDebug("UI_DRAFT_APPLY", {
+            ok: true,
+            target: orthography.target,
+            mode: "orthography",
+          });
+          pendingInboxDraftRef.current = false;
+          say(
+            `Erledigt. Ich habe die Korrektur angewendet. Neuer Text: ${orthography.text}`,
+          );
+          return;
+        }
+
+        const writeResult = applyInboxReplyText(interpretedUtterance);
+        appendDebug("UI_DRAFT_APPLY", {
+          ok: writeResult.ok,
+          target: writeResult.target,
+          mode: "overwrite",
+        });
+        if (writeResult.ok) {
+          pendingInboxDraftRef.current = false;
+          say(
+            `Erledigt. Ich habe folgenden Entwurf eingetragen: ${interpretedUtterance}`,
+          );
+          return;
+        }
+        say(
+          "Ich finde das Bearbeitungsfeld nicht. Sag zuerst bearbeiten, dann kann ich deinen Text eintragen.",
+        );
+        return;
+      }
+
       const pending = pendingActionRef.current;
       if (pending) {
         const conf = classifyConfirmation(normalizedUtterance || utterance);
@@ -478,7 +976,35 @@ export function DashboardVoiceAssistant({
         return;
       }
 
-      const interpretedUtterance = normalizedUtterance || utterance;
+      // Hilfe-Intent: erklärt kurz, was Andy bereits kann.
+      const dictatedText = extractInboxDictatedText(interpretedUtterance);
+      if (dictatedText) {
+        if (!window.location.pathname.startsWith("/posteingang")) {
+          router.push("/posteingang");
+          say(
+            "Ich öffne den Posteingang. Sag den Nachrichtentext danach bitte noch einmal.",
+          );
+          return;
+        }
+
+        const pick = trySelectInboxThreadByUtterance(interpretedUtterance);
+        if (pick.selected) {
+          appendDebug("UI_THREAD_SELECTED", pick.guest ?? "match");
+          await new Promise((resolve) => {
+            window.setTimeout(resolve, 220);
+          });
+        }
+        const writeResult = applyInboxReplyText(dictatedText);
+        appendDebug("UI_DICTATED_WRITE", writeResult);
+        if (writeResult.ok) {
+          say(`Alles klar. Ich habe folgenden Text eingetragen: ${dictatedText}`);
+        } else {
+          say(
+            "Ich kann den Nachrichteneditor gerade nicht finden. Wähl bitte erst eine Unterhaltung im Posteingang aus.",
+          );
+        }
+        return;
+      }
 
       // Hilfe-Intent: erklärt kurz, was Andy bereits kann.
       if (isHelpRequest(interpretedUtterance)) {
@@ -546,6 +1072,88 @@ export function DashboardVoiceAssistant({
           const message = toUiText(err, "Unbekannter Fehler.");
           setError(message);
           enterFollowUp();
+        }
+        return;
+      }
+
+      // 2b) UI-Aktion (z. B. KI-Antwort-Button in Posteingang ausloesen).
+      if (command.kind === "ui-action") {
+        const shouldTargetInboxThread =
+          command.action.key === "inbox-ai-reply" ||
+          command.action.key === "inbox-ai-edit" ||
+          command.action.key === "inbox-ai-send" ||
+          command.action.key === "inbox-ai-read";
+        if (shouldTargetInboxThread) {
+          const pick = trySelectInboxThreadByUtterance(interpretedUtterance);
+          if (pick.selected) {
+            appendDebug("UI_THREAD_SELECTED", pick.guest ?? "match");
+            await new Promise((resolve) => {
+              window.setTimeout(resolve, 220);
+            });
+          }
+        }
+
+        if (command.action.key === "inbox-ai-read") {
+          const draft = readInboxAiDraftText();
+          appendDebug("UI_ACTION_READ", { hasDraft: Boolean(draft) });
+          if (draft) {
+            say(`Hier ist der aktuelle KI-Vorschlag: ${draft}`);
+          } else {
+            say(
+              "Ich finde gerade keinen KI-Vorschlag. Sag zuerst bitte KI-Antwort, dann lese ich ihn dir vor.",
+            );
+          }
+          return;
+        }
+
+        const result = runUiAction(command.action);
+        appendDebug("UI_ACTION", result);
+        if (result.ok) {
+          if (command.action.key === "inbox-ai-edit") {
+            pendingInboxDraftRef.current = true;
+            say(
+              "Bearbeiten ist aktiv. Welchen Text soll ich verfassen? Ich lese ihn dir danach vor.",
+            );
+            return;
+          }
+          if (command.action.key === "inbox-ai-send") {
+            say("Erledigt, ich habe auf Senden geklickt.");
+            return;
+          }
+          const draft = readInboxAiDraftText();
+          if (draft) {
+            say(
+              `Erledigt, ich habe die KI-Antwort ausgelöst. Aktueller Entwurf: ${draft}`,
+            );
+          } else {
+            say("Erledigt, ich habe die KI-Antwort ausgelöst.");
+          }
+          return;
+        }
+
+        if (!window.location.pathname.startsWith("/posteingang")) {
+          router.push("/posteingang");
+          window.setTimeout(() => {
+            const retry = runUiAction(command.action);
+            appendDebug("UI_ACTION_RETRY", retry);
+          }, 700);
+          if (command.action.key === "inbox-ai-send") {
+            say("Ich öffne den Posteingang und versuche dort auf Senden zu klicken.");
+          } else if (command.action.key === "inbox-ai-edit") {
+            pendingInboxDraftRef.current = true;
+            say("Ich öffne den Posteingang und aktiviere Bearbeiten. Danach sag mir bitte den gewünschten Text.");
+          } else {
+            say("Ich öffne den Posteingang und versuche die KI-Antwort dort auszulösen.");
+          }
+          return;
+        }
+
+        if (command.action.key === "inbox-ai-send") {
+          say("Ich finde den Senden-Button gerade nicht. Wähl bitte zuerst eine Unterhaltung oder einen Entwurf aus.");
+        } else if (command.action.key === "inbox-ai-edit") {
+          say("Ich finde den Bearbeiten-Button gerade nicht. Bitte erst eine KI-Antwort erzeugen oder eine Unterhaltung auswählen.");
+        } else {
+          say("Ich finde den KI-Antwort-Button gerade nicht. Wähl bitte zuerst eine Unterhaltung aus.");
         }
         return;
       }
@@ -730,7 +1338,7 @@ export function DashboardVoiceAssistant({
       if (phaseRef.current === "awake") {
         // Andy wartet auf die Frage → dieser Satz ist die Frage. Ein evtl. erneut
         // vorangestelltes „Hallo Andy" wird abgeschnitten.
-        const { hit: w, rest: r } = matchWake(said);
+        const { hit: w, rest: r } = stripLeadingWake(said);
         appendDebug("AWAKE_WAKE_MATCH", { hit: w, rest: r });
         askAndyRef.current(w && r ? r : said);
         return;
