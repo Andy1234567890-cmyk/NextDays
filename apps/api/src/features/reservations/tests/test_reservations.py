@@ -709,6 +709,62 @@ def test_move_unknown_reservation_404() -> None:
     assert exc.value.status_code == 404
 
 
+def test_move_without_reprice_keeps_price() -> None:
+    # protel-Modell: ohne reprice bleibt der vereinbarte Preis unverändert
+    # (kostenloses Upgrade / bindender Preis). total_amount aus dem Store: 200.
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    svc = _move_db(store)
+    svc._quote = MagicMock(name="_quote")  # darf NICHT aufgerufen werden
+    out = svc.move(
+        AuthContext(user_id="u", tenant_id="t1", role="admin"),
+        RID,
+        ReservationMove(
+            property_id="p2", check_in=date(2026, 7, 10), check_out=date(2026, 7, 12)
+        ),
+    )
+    assert out.property_id == "p2"
+    svc._quote.assert_not_called()
+    moved = next(r for r in store["reservations"] if r["id"] == RID)
+    assert moved["total_amount"] == 200  # unverändert
+
+
+def test_move_with_reprice_recomputes_price() -> None:
+    # Upsell: reprice=True → Preis fürs Ziel-Objekt neu quoten. tax_rate=None
+    # bleibt (Beherbergungssatz erbt später das Ziel-Objekt-Land, EU-27).
+    from src.features.pricing.schemas import QuoteLine, QuoteResponse
+
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    svc = _move_db(store)
+    svc._quote = MagicMock(
+        name="_quote",
+        return_value=QuoteResponse(
+            property_id="p2",
+            check_in=date(2026, 7, 10),
+            check_out=date(2026, 7, 12),
+            nights=2,
+            guests=1,
+            channel="booking",
+            currency="EUR",
+            nightly_total=450.0,
+            total=450.0,
+            lines=[QuoteLine(label="Übernachtung (2 Nächte)", amount=450.0, kind=None)],
+        ),
+    )
+    out = svc.move(
+        AuthContext(user_id="u", tenant_id="t1", role="admin"),
+        RID,
+        ReservationMove(
+            property_id="p2", check_in=date(2026, 7, 10), check_out=date(2026, 7, 12),
+            reprice=True,
+        ),
+    )
+    assert out.property_id == "p2"
+    svc._quote.assert_called_once()
+    moved = next(r for r in store["reservations"] if r["id"] == RID)
+    assert moved["total_amount"] == 450.0
+    assert moved["quote_items"][0]["tax_rate"] is None  # erbt Landessatz
+
+
 # --- detail: vollständige Detailansicht + Maskierung -------------------------
 
 def test_detail_admin_sees_full_amounts_and_quote() -> None:

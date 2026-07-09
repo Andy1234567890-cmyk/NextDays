@@ -189,10 +189,18 @@ export async function moveReservation(
   propertyId: string,
   checkIn: string,
   checkOut: string,
+  // Preisverhalten (protel-Modell): undefined/false = Preis behalten (kostenloses
+  // Upgrade / bindender Preis); true = Preis fürs Ziel-Objekt neu berechnen (Upsell).
+  reprice?: boolean,
 ): Promise<Result<Reservation>> {
   return call(`/reservations/${encodeURIComponent(reservationId)}/move`, {
     method: "PATCH",
-    body: { property_id: propertyId, check_in: checkIn, check_out: checkOut },
+    body: {
+      property_id: propertyId,
+      check_in: checkIn,
+      check_out: checkOut,
+      ...(reprice ? { reprice: true } : {}),
+    },
   });
 }
 

@@ -493,7 +493,9 @@ export function CalendarBoard({
   //       idempotenten applyReservation mit der echten Server-Zeile an (gleiche id →
   //       ersetzt, kein Doppel, kein Flackern).
   //   3b) Fehler (z. B. 409 Konflikt): auf den Snapshot zurückrollen und Grund melden.
-  const confirmMove = useCallback(async () => {
+  // reprice=true → Upsell (Preis fürs Zielobjekt neu berechnen); sonst Preis
+  // behalten (kostenloses Upgrade / bindender Preis, protel-Modell).
+  const confirmMove = useCallback(async (reprice?: boolean) => {
     const m = pendingMove;
     if (!m) return;
     setPendingMove(null);
@@ -539,9 +541,11 @@ export function CalendarBoard({
       return next;
     });
     try {
-      const res = await moveReservation(m.res.id, m.targetPid, m.ci, m.co);
+      const res = await moveReservation(m.res.id, m.targetPid, m.ci, m.co, reprice);
       if (res.ok) {
-        toast.success("Reservierung verschoben.");
+        toast.success(
+          reprice ? "Verschoben & Preis neu berechnet." : "Reservierung verschoben.",
+        );
         // Kein Reload: die Realtime-Events (reservations + availability) bestätigen/
         // korrigieren den Stand idempotent mit den echten Server-Zeilen.
       } else {
@@ -1266,8 +1270,14 @@ export function CalendarBoard({
     );
   }
 
-  const titleMonth = start ? MONTHS[start.getMonth()] : "";
-  const titleYear = start ? `${start.getFullYear()}` : "";
+  // Titel + Datums-Sprung zeigen den AKTUELL SICHTBAREN Tag, NICHT den fixen
+  // Timeline-Anker `start` (immer 1. Januar). `visFrom` enthält den OVERSCAN-Puffer
+  // links → um ihn korrigieren, damit der erste WIRKLICH sichtbare Tag gemeint ist.
+  // Fällt auf `start` zurück, solange das Fenster noch nicht steht.
+  const visibleDay =
+    dates[Math.min(dates.length - 1, visFrom + OVERSCAN)] ?? start ?? null;
+  const titleMonth = visibleDay ? MONTHS[visibleDay.getMonth()] : "";
+  const titleYear = visibleDay ? `${visibleDay.getFullYear()}` : "";
 
   // „Erstellen"-Menü im Kopf: Sperren geschieht im Raster per Ziehen;
   // „Reservierung" öffnet den Assistenten mit dem ersten Objekt ab morgen.
@@ -1292,7 +1302,7 @@ export function CalendarBoard({
         onNext={() => shift(view.rangeDays)}
         onToday={goToday}
         onJump={jumpTo}
-        jumpValue={start ? key(start) : ""}
+        jumpValue={visibleDay ? key(visibleDay) : ""}
         onCreate={onCreate}
         viewSwitcher={viewSwitcher}
       />
@@ -1913,14 +1923,52 @@ export function CalendarBoard({
             <p className="mt-1 text-xs text-muted-foreground">
               Es wird erneut auf Doppelbuchung geprüft.
             </p>
-            <div className="mt-5 flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setPendingMove(null)} disabled={saving}>
-                Abbrechen
-              </Button>
-              <Button onClick={confirmMove} disabled={saving}>
-                {saving ? "Verschiebe…" : "Verschieben"}
-              </Button>
-            </div>
+            {/* Preisverhalten bei echtem OBJEKTWECHSEL (nicht Resize): protel-Modell
+                — „Preis behalten" (kostenloses Upgrade / vereinbarter Preis bleibt
+                bindend) ODER „Preis neu berechnen" (Upsell, Ziel-Objekt-Rate + der
+                korrekte Beherbergungs-Steuersatz je Objekt-Land). Bei Resize am
+                selben Objekt gibt es nur das schlichte Verschieben. */}
+            {pendingMove.targetPid !== pendingMove.res.property_id ? (
+              <>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Der Preis der Buchung ist vereinbart. Bei einem Zimmerwechsel:
+                  entweder den vereinbarten Preis <b>behalten</b> (kostenloses
+                  Upgrade) oder für das neue Objekt <b>neu berechnen</b> (Upsell).
+                </p>
+                <div className="mt-5 flex flex-col gap-2">
+                  <Button onClick={() => confirmMove(false)} disabled={saving}>
+                    {saving ? "Verschiebe…" : "Verschieben · Preis behalten"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => confirmMove(true)}
+                    disabled={saving}
+                  >
+                    {saving ? "Verschiebe…" : "Verschieben · Preis neu berechnen"}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setPendingMove(null)}
+                    disabled={saving}
+                  >
+                    Abbrechen
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="mt-5 flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setPendingMove(null)}
+                  disabled={saving}
+                >
+                  Abbrechen
+                </Button>
+                <Button onClick={() => confirmMove(false)} disabled={saving}>
+                  {saving ? "Verschiebe…" : "Verschieben"}
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       )}

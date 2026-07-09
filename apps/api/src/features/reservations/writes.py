@@ -332,6 +332,37 @@ class WritesMixin(ReservationsBase):
                 "Stop-Sell aufheben.", status_code=409,
             )
 
+        # Preis (protel-Modell): NUR bei ausdrücklichem Upsell (reprice=True) den
+        # Preis fürs Ziel-Objekt/den neuen Zeitraum NEU berechnen. Ohne Flag bleibt
+        # total_amount/quote_items UNVERÄNDERT (kostenloses Upgrade / vereinbarter
+        # Preis ist bindend). Der Resolver ist die eine Preis-Wahrheit; der
+        # Beherbergungs-Steuersatz erbt später bei der Rechnung das Ziel-Objekt-Land
+        # (EU-27) — hier wird kein Satz gesetzt, quote_items[].tax_rate=None bleibt.
+        update_fields: dict[str, object] = {
+            "property_id": req.property_id,
+            "check_in": req.check_in.isoformat(),
+            "check_out": req.check_out.isoformat(),
+        }
+        if req.reprice:
+            guests_total = int(current.get("num_guests") or 1)
+            quote = self._quote(
+                req.property_id,
+                req.check_in,
+                req.check_out,
+                guests_total,
+                current.get("channel") or "direct",
+            )
+            update_fields["total_amount"] = quote.total
+            update_fields["quote_items"] = [
+                {
+                    "label": line.label,
+                    "amount": line.amount,
+                    "kind": line.kind,
+                    "tax_rate": line.tax_rate,
+                }
+                for line in quote.lines
+            ]
+
         # Reservierungs-Zeile ZUERST umziehen: der EXCLUDE-Constraint
         # reservations_no_local_overlap (0104) validiert den Ziel-Zeitraum
         # atomar gegen alle anderen lokalen Buchungen. Kollidiert er, schlägt
@@ -341,13 +372,7 @@ class WritesMixin(ReservationsBase):
             upd = (
                 self._db()
                 .table("reservations")
-                .update(
-                    {
-                        "property_id": req.property_id,
-                        "check_in": req.check_in.isoformat(),
-                        "check_out": req.check_out.isoformat(),
-                    }
-                )
+                .update(update_fields)
                 .eq("id", reservation_id)
                 .eq("tenant_id", tenant_id)
                 .execute()

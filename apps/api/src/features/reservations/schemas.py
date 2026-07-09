@@ -76,6 +76,16 @@ class ReservationMove(BaseModel):
     property_id: str
     check_in: date
     check_out: date  # exklusiv
+    # Preisverhalten beim Move (protel-Modell „Upsell vs. kostenloses Upgrade"):
+    #   None  → Preis UNVERÄNDERT lassen (Default; kostenloses Upgrade / Kulanz /
+    #           bereits vereinbarter Preis bleibt bindend — Server ändert nichts).
+    #   True  → Preis für das ZIEL-Objekt/den neuen Zeitraum NEU berechnen (Upsell):
+    #           der zentrale Resolver quotet neu, total_amount + quote_items werden
+    #           ersetzt. Der Beherbergungs-Steuersatz erbt automatisch das Ziel-
+    #           Objekt-Land (EU-27, siehe reservation_invoice._property_vat_rate).
+    # Bewusste Nutzer-Entscheidung, nie automatisch — der vereinbarte Preis ist
+    # sonst bindend (deutsche Rechtslage + protel/Fidelio/Fewo-Verwalter-Praxis).
+    reprice: bool | None = None
 
     @model_validator(mode="after")
     def _check_order(self) -> "ReservationMove":
