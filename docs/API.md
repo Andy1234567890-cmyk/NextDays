@@ -902,6 +902,8 @@ Aufgaben, Checklisten mit Foto-Nachweisen, Vertretung, Inventar.
 |---|---|---|---|
 | `POST` | `/api/v1/tasks` | `manage_tasks` | Aufgabe anlegen |
 | `GET` | `/api/v1/tasks/mine` | `view_own_tasks` | eigene Aufgaben |
+| `GET` | `/api/v1/tasks/by-reservation/{id}` | `view_calendar` | Aufgaben zu einer Buchung (PM-Detailseite) |
+| `PATCH` | `/api/v1/tasks/{id}/status` | `manage_tasks` | Aufgaben-Status setzen (offen/in Arbeit/erledigt/abgebrochen) |
 | `POST` | `/api/v1/tasks/from-booking` | `manage_tasks` | aus Buchung: Anreise-Check + Endreinigung |
 | `POST` | `/api/v1/tasks/checklist/item` | `view_own_tasks` | Checklisten-Punkt |
 | `POST` | `/api/v1/tasks/checklist/photo` | `view_own_tasks` | Foto-Nachweis (unbegrenzt/Raum) |

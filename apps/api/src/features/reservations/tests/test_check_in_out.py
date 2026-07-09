@@ -15,6 +15,7 @@ from src.features.reservations.schemas import CheckOutRequest
 from src.features.reservations.service import ReservationError, ReservationsService
 
 CTX = AuthContext(user_id="u1", tenant_id="t1")
+RID = "11111111-1111-4111-8111-111111111111"
 # Dynamische Daten: der Abreisetag-Guard vergleicht gegen HEUTE IN UTC
 # (service.py: datetime.now(UTC).date()). Der Test MUSS dieselbe Zeitzone nutzen,
 # sonst divergieren „heute" lokal vs. UTC um Mitternacht → flaky Check-out-Tests.
@@ -49,7 +50,7 @@ class _DB:
 
 def _reservation(**overrides: object) -> dict:
     base = {
-        "id": "r1",
+        "id": RID,
         "tenant_id": "t1",
         "property_id": "p1",
         "guest_id": "g1",
@@ -84,14 +85,14 @@ def _service(reservation: dict | None, extra: dict[str, object] | None = None
 def test_check_in_requires_confirmed() -> None:
     service, _ = _service(_reservation(status="pending"))
     with pytest.raises(ReservationError) as exc:
-        service.check_in(CTX, "r1")
+        service.check_in(CTX, RID)
     assert exc.value.status_code == 409
 
 
 def test_check_in_rejects_cancelled() -> None:
     service, _ = _service(_reservation(status="cancelled"))
     with pytest.raises(ReservationError) as exc:
-        service.check_in(CTX, "r1")
+        service.check_in(CTX, RID)
     assert exc.value.status_code == 409
 
 
@@ -100,22 +101,37 @@ def test_check_in_rejects_double() -> None:
         _reservation(checked_in_at="2026-07-01T14:00:00+00:00")
     )
     with pytest.raises(ReservationError) as exc:
-        service.check_in(CTX, "r1")
+        service.check_in(CTX, RID)
     assert exc.value.status_code == 409
 
 
 def test_check_in_unknown_reservation_404() -> None:
     service, _ = _service(None)
     with pytest.raises(ReservationError) as exc:
-        service.check_in(CTX, "r1")
+        service.check_in(CTX, RID)
     assert exc.value.status_code == 404
+
+
+def test_non_uuid_reservation_id_is_404_not_500() -> None:
+    """Ein Nicht-UUID-Pfad (z. B. /reservierungen/einstellungen, das Next.js
+    auf [id] mappt) darf keinen 500 werfen, sondern 404 — der Guard fängt ihn
+    VOR der DB ab (CLAUDE.md Wurzel 5, fail-closed). Gilt für alle per-ID-Pfade."""
+    service, _ = _service(_reservation())
+    for action in (
+        lambda: service.detail(CTX, "einstellungen"),
+        lambda: service.check_in(CTX, "einstellungen"),
+        lambda: service.cancel(CTX, "einstellungen", "Grund"),
+    ):
+        with pytest.raises(ReservationError) as exc:
+            action()
+        assert exc.value.status_code == 404
 
 
 def test_check_in_sets_timestamp() -> None:
     service, db = _service(_reservation())
-    result = service.check_in(CTX, "r1")
+    result = service.check_in(CTX, RID)
     assert "update" in db.calls["reservations"]
-    assert result.id == "r1"
+    assert result.id == RID
 
 
 # --- Check-out ---------------------------------------------------------------
@@ -123,7 +139,7 @@ def test_check_in_sets_timestamp() -> None:
 def test_check_out_requires_check_in() -> None:
     service, db = _service(_reservation())
     with pytest.raises(ReservationError) as exc:
-        service.check_out(CTX, "r1")
+        service.check_out(CTX, RID)
     assert exc.value.status_code == 409
     assert "update" not in db.calls["reservations"]
 
@@ -136,7 +152,7 @@ def test_check_out_rejects_double() -> None:
         )
     )
     with pytest.raises(ReservationError) as exc:
-        service.check_out(CTX, "r1")
+        service.check_out(CTX, RID)
     assert exc.value.status_code == 409
 
 
@@ -157,7 +173,7 @@ def test_check_out_aborts_without_touching_reservation_when_invoice_fails(
         _boom,
     )
     with pytest.raises(ReservationError) as exc:
-        service.check_out(CTX, "r1")
+        service.check_out(CTX, RID)
     assert exc.value.status_code == 422
     assert "Steuersatz" in exc.value.message
     assert "update" not in db.calls["reservations"]
@@ -174,7 +190,7 @@ def test_check_out_creates_invoice_then_completes(
         lambda *a, **k: {"id": "i1", "invoice_number": "RE-0001",
                          "already_existed": False},
     )
-    result = service.check_out(CTX, "r1")
+    result = service.check_out(CTX, RID)
     assert result.invoice_id == "i1"
     assert result.invoice_number == "RE-0001"
     assert result.invoice_already_existed is False
@@ -191,7 +207,7 @@ def test_check_out_blocked_before_departure_day() -> None:
         )
     )
     with pytest.raises(ReservationError) as exc:
-        service.check_out(CTX, "r1")
+        service.check_out(CTX, RID)
     assert exc.value.status_code == 409
     assert "Abreisetag" in exc.value.message
     assert "update" not in db.calls["reservations"]
@@ -222,7 +238,7 @@ def test_check_out_passes_payment_to_builder(
         _reservation(checked_in_at="2026-07-01T14:00:00+00:00")
     )
     result = service.check_out(
-        CTX, "r1", CheckOutRequest(payment_method="card", card_brand="Visa")
+        CTX, RID, CheckOutRequest(payment_method="card", card_brand="Visa")
     )
     assert captured == {"method": "card", "brand": "Visa"}
     assert result.invoice_id == "i1"
@@ -241,5 +257,5 @@ def test_check_out_retry_reuses_existing_invoice(
         lambda *a, **k: {"id": "i1", "invoice_number": "RE-0001",
                          "already_existed": True},
     )
-    result = service.check_out(CTX, "r1")
+    result = service.check_out(CTX, RID)
     assert result.invoice_already_existed is True

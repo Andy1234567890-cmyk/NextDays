@@ -101,6 +101,9 @@ class ReservationResponse(BaseModel):
     status: ReservationStatus
     # None für Rollen ohne VIEW_GUEST_FULL (DSGVO-Daten-Split §4).
     total_amount: float | None = None
+    # Bereits bezahlter Betrag (für den Bezahlt-Anteil in der Buchungsliste).
+    # Gleiche Maskierung wie total_amount → None ohne Betrags-Sichtbarkeit.
+    paid_amount: float | None = None
     currency: str = ""
     ota_name: str | None = None       # echter Portal-Name (Kalender-Herkunft)
     external_ref: str | None = None   # OTA-Reservierungscode
@@ -236,6 +239,47 @@ class DashboardResponse(BaseModel):
     revenue_30d: DashboardKpi | None = None
     confirmed_30d: DashboardKpi
     currency: str = ""
+
+
+class ChannelBreakdown(BaseModel):
+    """Verteilung je Kanal (für die Donut-Diagramme). amount=None ohne Betrags-
+    Sichtbarkeit (Daten-Split); nights bleibt sichtbar (keine Finanzangabe)."""
+
+    channel: str
+    ota_name: str | None = None
+    amount: float | None = None
+    nights: int = 0
+
+
+class PropertyStats(BaseModel):
+    """Objekt-Kennzahlen für den Statistiken-Reiter (Lodgify „Kontrollzentrum").
+
+    Alle Betrags-KPIs sind maskierbar (None ohne Betrags-Sichtbarkeit, §4.2) und
+    tragen die Währung aus den Daten (leer bei gemischten Währungen — keine
+    Mischsumme). Zähl-KPIs (Gäste, Nächte, Reservierungen) sind immer sichtbar.
+    Jede KPI vergleicht die gewählte Periode mit der gleich langen Vorperiode."""
+
+    property_id: str
+    property_title: str = ""
+    currency: str = ""
+    date_from: date
+    date_to: date
+    # Betrags-KPIs (None ohne Betrags-Sichtbarkeit)
+    revenue: DashboardKpi | None = None
+    payments_received: DashboardKpi | None = None
+    avg_booking_value: DashboardKpi | None = None
+    avg_price_per_night: DashboardKpi | None = None
+    # Zähl-KPIs (immer sichtbar)
+    hosted_guests: DashboardKpi
+    booked_nights: DashboardKpi
+    occupancy_rate: DashboardKpi  # Prozent 0..100 (value), change ggü. Vorperiode
+    days_booked_ahead: DashboardKpi
+    avg_stay_length: DashboardKpi
+    created_reservations: DashboardKpi
+    cancelled_reservations: DashboardKpi
+    cancelled_nights: DashboardKpi
+    # Kanal-Verteilung (Einnahmen + Nächte je Kanal)
+    by_channel: list[ChannelBreakdown] = []
 
 
 class SliceHealth(BaseModel):

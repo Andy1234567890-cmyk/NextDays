@@ -148,6 +148,8 @@ def test_channel_enum_values() -> None:
     assert ReservationChannel.airbnb.value == "airbnb"
 
 
+RID = "11111111-1111-4111-8111-111111111111"
+
 # --- Service: Dashboard ---
 
 # Volle Berechtigungen (Name, Kontakt, Quelle, Beträge sichtbar).
@@ -201,7 +203,7 @@ def test_dashboard_buckets_and_kpis() -> None:
     iso = lambda d: d.isoformat()  # noqa: E731
     reservations = [
         # heutiger Check-out
-        {"id": "r1", "property_id": "p1", "channel": "booking", "status": "confirmed",
+        {"id": RID, "property_id": "p1", "channel": "booking", "status": "confirmed",
          "check_in": iso(today - timedelta(days=3)), "check_out": iso(today),
          "total_amount": 300, "currency": "EUR", "guests": {"name": "Anna"}},
         # heutiger Check-in
@@ -224,7 +226,7 @@ def test_dashboard_buckets_and_kpis() -> None:
     svc = _dashboard_db(reservations, properties)
     out = svc.dashboard(AuthContext(user_id="u1", tenant_id="t1", role="admin"))
 
-    assert [e.reservation_id for e in out.checkouts_today] == ["r1"]
+    assert [e.reservation_id for e in out.checkouts_today] == [RID]
     assert [e.reservation_id for e in out.checkins_today] == ["r2"]
     assert [e.reservation_id for e in out.upcoming] == ["r3"]
     assert out.checkouts_today[0].property_title == "Strandhaus"
@@ -246,7 +248,7 @@ def test_dashboard_mixed_currency_suppresses_revenue() -> None:
     today = date.today()
     iso = lambda d: d.isoformat()  # noqa: E731
     reservations = [
-        {"id": "r1", "property_id": "p1", "channel": "booking", "status": "confirmed",
+        {"id": RID, "property_id": "p1", "channel": "booking", "status": "confirmed",
          "check_in": iso(today - timedelta(days=3)), "check_out": iso(today),
          "total_amount": 100, "currency": "EUR", "guests": {"name": "Anna"}},
         {"id": "r2", "property_id": "p2", "channel": "direct", "status": "confirmed",
@@ -273,7 +275,7 @@ def test_dashboard_owner_revenue_masked() -> None:
     today = date.today()
     iso = lambda d: d.isoformat()  # noqa: E731
     reservations = [
-        {"id": "r1", "property_id": "p1", "channel": "booking", "status": "confirmed",
+        {"id": RID, "property_id": "p1", "channel": "booking", "status": "confirmed",
          "check_in": iso(today - timedelta(days=3)), "check_out": iso(today),
          "total_amount": 300, "currency": "EUR", "guests": {"name": "Anna"}},
         {"id": "r2", "property_id": "p1", "channel": "airbnb", "status": "confirmed",
@@ -333,7 +335,7 @@ def _list_db(
 
 
 _GUEST_ROW = {
-    "id": "r1", "property_id": "p1", "guest_id": "g1", "channel": "booking",
+    "id": RID, "property_id": "p1", "guest_id": "g1", "channel": "booking",
     "check_in": "2026-07-01", "check_out": "2026-07-03", "status": "confirmed",
     "total_amount": 250, "currency": "EUR", "ota_name": "Booking.com",
     "guests": {"name": "Anna Müller"},
@@ -556,7 +558,7 @@ def _move_store(
         ],
         "reservations": [
             {
-                "id": "r1", "tenant_id": "t1", "property_id": "p1", "guest_id": "g1",
+                "id": RID, "tenant_id": "t1", "property_id": "p1", "guest_id": "g1",
                 "channel": "booking", "check_in": check_in, "check_out": check_out,
                 "status": status, "total_amount": 200, "currency": "EUR",
                 "ota_name": "Booking.com", "guests": {"name": "Anna"},
@@ -578,7 +580,7 @@ def test_move_to_other_property_and_dates() -> None:
     svc = _move_db(store)
     out = svc.move(
         AuthContext(user_id="u", tenant_id="t1", role="admin"),
-        "r1",
+        RID,
         ReservationMove(
             property_id="p2", check_in=date(2026, 7, 10), check_out=date(2026, 7, 12)
         ),
@@ -598,7 +600,7 @@ def test_resize_in_place_ignores_own_days() -> None:
     svc = _move_db(store)
     out = svc.move(
         AuthContext(user_id="u", tenant_id="t1", role="admin"),
-        "r1",
+        RID,
         ReservationMove(
             property_id="p1", check_in=date(2026, 7, 1), check_out=date(2026, 7, 4)
         ),
@@ -619,7 +621,7 @@ def test_move_rejects_conflict_with_foreign_booking() -> None:
     with pytest.raises(ReservationError) as exc:
         svc.move(
             AuthContext(user_id="u", tenant_id="t1", role="admin"),
-            "r1",
+            RID,
             ReservationMove(
                 property_id="p2", check_in=date(2026, 7, 10),
                 check_out=date(2026, 7, 12),
@@ -636,7 +638,7 @@ def test_move_rejects_cancelled() -> None:
     with pytest.raises(ReservationError) as exc:
         svc.move(
             AuthContext(user_id="u", tenant_id="t1", role="admin"),
-            "r1",
+            RID,
             ReservationMove(
                 property_id="p1", check_in=date(2026, 7, 5), check_out=date(2026, 7, 7)
             ),
@@ -656,7 +658,7 @@ def test_move_rejects_checked_in_reservation() -> None:
     with pytest.raises(ReservationError) as exc:
         svc.move(
             AuthContext(user_id="u", tenant_id="t1", role="admin"),
-            "r1",
+            RID,
             ReservationMove(
                 property_id="p2", check_in=date(2026, 7, 10),
                 check_out=date(2026, 7, 12),
@@ -681,7 +683,7 @@ def test_move_rejects_ota_booking() -> None:
     with pytest.raises(ReservationError) as exc:
         svc.move(
             AuthContext(user_id="u", tenant_id="t1", role="admin"),
-            "r1",
+            RID,
             ReservationMove(
                 property_id="p2", check_in=date(2026, 7, 10),
                 check_out=date(2026, 7, 12),
@@ -721,7 +723,7 @@ def test_detail_admin_sees_full_amounts_and_quote() -> None:
         "checkin_time": "16:00", "checkout_time": "10:00",
     })
     svc = _move_db(store)
-    d = svc.detail(AuthContext(user_id="u", tenant_id="t1", role="admin"), "r1")
+    d = svc.detail(AuthContext(user_id="u", tenant_id="t1", role="admin"), RID)
     assert d.nights == 2
     assert d.num_guests == 4
     assert d.total_amount == 400
@@ -740,7 +742,7 @@ def test_detail_masks_amounts_and_contact_without_permission() -> None:
         "guest_email": "a@x.de",
     })
     svc = _move_db(store)
-    d = svc.detail(AuthContext(user_id="u", tenant_id="t1", role=None), "r1")
+    d = svc.detail(AuthContext(user_id="u", tenant_id="t1", role=None), RID)
     assert d.total_amount is None
     assert d.due_amount is None
     assert d.quote_items == []
@@ -763,10 +765,10 @@ _CANCEL_CTX = AuthContext(user_id="u", tenant_id="t1", role="admin")
 def test_cancel_sets_status_frees_days_and_audits() -> None:
     store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
     svc = _move_db(store)
-    out = svc.cancel(_CANCEL_CTX, "r1", "Gast hat abgesagt")
+    out = svc.cancel(_CANCEL_CTX, RID, "Gast hat abgesagt")
     assert out.status == "cancelled"
     # Reservierungs-Storno-Felder gesetzt.
-    r = next(x for x in store["reservations"] if x["id"] == "r1")
+    r = next(x for x in store["reservations"] if x["id"] == RID)
     assert r["status"] == "cancelled"
     assert r["cancel_reason"] == "Gast hat abgesagt"
     assert r["cancelled_by"] == "u"
@@ -794,7 +796,7 @@ def test_cancel_rejects_ota_booking() -> None:
     )
     svc = _move_db(store)
     with pytest.raises(ReservationError) as exc:
-        svc.cancel(_CANCEL_CTX, "r1", "Gast hat abgesagt")
+        svc.cancel(_CANCEL_CTX, RID, "Gast hat abgesagt")
     assert exc.value.status_code == 409
     assert "OTA" in exc.value.message
     # Nichts freigegeben — Tage bleiben belegt.
@@ -806,7 +808,7 @@ def test_cancel_requires_reason() -> None:
     store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
     svc = _move_db(store)
     with pytest.raises(ReservationError) as exc:
-        svc.cancel(_CANCEL_CTX, "r1", "   ")
+        svc.cancel(_CANCEL_CTX, RID, "   ")
     assert exc.value.status_code == 422
     # Nichts storniert, keine Audit-Zeile.
     assert store["reservations"][0]["status"] == "confirmed"
@@ -819,7 +821,7 @@ def test_cancel_already_cancelled_409() -> None:
     )
     svc = _move_db(store)
     with pytest.raises(ReservationError) as exc:
-        svc.cancel(_CANCEL_CTX, "r1", "nochmal")
+        svc.cancel(_CANCEL_CTX, RID, "nochmal")
     assert exc.value.status_code == 409
 
 
@@ -839,7 +841,7 @@ def test_cancel_direct_booking_also_frees_days() -> None:
     for a in store["availability"]:
         a["source"] = "direct"
     svc = _move_db(store)
-    out = svc.cancel(_CANCEL_CTX, "r1", "Storno Direktbuchung")
+    out = svc.cancel(_CANCEL_CTX, RID, "Storno Direktbuchung")
     assert out.status == "cancelled"
     log_rows = store.get("reservation_cancellation_log", [])
     assert log_rows[0]["channel"] == "direct"
@@ -956,11 +958,13 @@ def test_cancel_keeps_days_still_booked_by_ota() -> None:
         "properties": [{"id": "p1", "tenant_id": "t1", "title": "A1"}],
         "reservations": [
             # lokale Buchung (wird storniert), 01.-03.
-            {"id": "r-local", "tenant_id": "t1", "property_id": "p1",
+            {"id": "22222222-2222-4222-8222-222222222222", "tenant_id": "t1",
+             "property_id": "p1",
              "channel": "direct", "check_in": "2026-07-01", "check_out": "2026-07-03",
              "status": "confirmed", "total_amount": 100, "currency": "EUR"},
             # OTA-Buchung überlappt am 02., bleibt aktiv
-            {"id": "r-ota", "tenant_id": "t1", "property_id": "p1",
+            {"id": "33333333-3333-4333-8333-333333333333", "tenant_id": "t1",
+             "property_id": "p1",
              "channel": "booking", "source_channex_booking_id": "OTA-1",
              "check_in": "2026-07-02", "check_out": "2026-07-04",
              "status": "confirmed", "total_amount": 100, "currency": "EUR"},
@@ -971,7 +975,11 @@ def test_cancel_keeps_days_still_booked_by_ota() -> None:
         ],
     }
     svc = _move_db(store)
-    svc.cancel(AuthContext(user_id="u", tenant_id="t1", role="admin"), "r-local", "Testgrund")
+    svc.cancel(
+        AuthContext(user_id="u", tenant_id="t1", role="admin"),
+        "22222222-2222-4222-8222-222222222222",
+        "Testgrund",
+    )
     avail = {r["date"]: r["status"] for r in store["availability"]}
     # 01. wird frei (nur lokal belegt), 02. bleibt booked (OTA belegt ihn noch).
     assert avail["2026-07-01"] == "open"

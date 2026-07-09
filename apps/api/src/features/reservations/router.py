@@ -1,4 +1,5 @@
 """Router für reservations. Gemountet unter /api/v1/reservations."""
+from datetime import date, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -16,6 +17,7 @@ from .schemas import (
     CheckOutRequest,
     CheckOutResponse,
     DashboardResponse,
+    PropertyStats,
     ReservationCancel,
     ReservationCreate,
     ReservationDetail,
@@ -50,6 +52,25 @@ def dashboard(
 ) -> DashboardResponse:
     try:
         return service.dashboard(ctx)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/property/{property_id}/stats", response_model=PropertyStats)
+def property_stats(
+    property_id: str,
+    service: ReservationsServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    date_from: Annotated[date | None, Query()] = None,
+    date_to: Annotated[date | None, Query()] = None,
+) -> PropertyStats:
+    """Objekt-Kennzahlen für den Statistiken-Reiter. Ohne Zeitraum: letzte 30
+    Tage (inkl. heute). Owner-scoped; Beträge maskiert."""
+    today = date.today()
+    end = date_to or today
+    start = date_from or (end - timedelta(days=29))
+    try:
+        return service.property_stats(ctx, property_id, start, end)
     except ReservationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

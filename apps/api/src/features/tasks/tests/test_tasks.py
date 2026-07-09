@@ -140,6 +140,50 @@ def test_create_task_defaults_open() -> None:
     assert t.status == TaskStatus.open
 
 
+# --- Aufgaben je Buchung (PM-Detailseite) ---
+
+def test_list_by_reservation_scopes_tenant_and_reservation() -> None:
+    svc, m = _svc()
+    chain = (
+        m.table.return_value.select.return_value.eq.return_value.eq.return_value.order.return_value
+    )
+    chain.execute.return_value.data = [
+        {"id": "t1", "tenant_id": "T", "reservation_id": "r1",
+         "title": "Endreinigung", "status": "open", "property_id": "p1"},
+    ]
+    tasks = svc.list_by_reservation("T", "r1")
+    assert [t.title for t in tasks] == ["Endreinigung"]
+    assert tasks[0].reservation_id == "r1"
+    # Beide Filter gesetzt: tenant_id + reservation_id (Wurzel 3 — kein
+    # ungescopter Roh-Zugriff per ID).
+    eq_calls = m.table.return_value.select.return_value.eq.call_args_list
+    assert eq_calls[0].args == ("tenant_id", "T")
+    second_eq = m.table.return_value.select.return_value.eq.return_value.eq
+    assert second_eq.call_args.args == ("reservation_id", "r1")
+
+
+def test_set_status_updates_scoped_and_returns_task() -> None:
+    svc, m = _svc()
+    (
+        m.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value
+    ).data = [
+        {"id": "t1", "tenant_id": "T", "title": "X", "status": "done",
+         "reservation_id": "r1"},
+    ]
+    t = svc.set_status("T", "t1", TaskStatus.done)
+    assert t.status == TaskStatus.done
+
+
+def test_set_status_missing_task_raises_404() -> None:
+    svc, m = _svc()
+    (
+        m.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value
+    ).data = []
+    with pytest.raises(TaskError) as exc:
+        svc.set_status("T", "missing", TaskStatus.done)
+    assert exc.value.status_code == 404
+
+
 # --- ohne Client: sauberer Fehler ---
 
 def test_no_client_raises_clean_error() -> None:

@@ -50,6 +50,7 @@ export type Reservation = {
   check_out: string;
   status: ReservationStatus;
   total_amount: number | null; // null für Rollen ohne Finanz-/Vollzugriff (DSGVO-Split)
+  paid_amount: number | null; // bereits bezahlt (für Bezahlt-Anteil in der Liste); null wie total_amount
   currency: string;
   ota_name: string | null; // echter Portal-Name (Booking.com, Airbnb, Expedia …)
   external_ref: string | null; // OTA-Reservierungscode
@@ -248,4 +249,52 @@ export async function listReservations(
 ): Promise<Result<{ items: Reservation[]; total: number }>> {
   const qs = propertyId ? `?property_id=${encodeURIComponent(propertyId)}` : "";
   return call(`/reservations${qs}`);
+}
+
+// --- Objekt-Statistiken (Statistiken-Reiter) -------------------------------
+export type StatKpi = { value: number; change_pct: number | null };
+
+export type ChannelBreakdown = {
+  channel: string;
+  ota_name: string | null;
+  amount: number | null; // null ohne Betrags-Sichtbarkeit
+  nights: number;
+};
+
+export type PropertyStats = {
+  property_id: string;
+  property_title: string;
+  currency: string;
+  date_from: string;
+  date_to: string;
+  // Betrags-KPIs: null ohne Betrags-Sichtbarkeit / bei gemischten Währungen.
+  revenue: StatKpi | null;
+  payments_received: StatKpi | null;
+  avg_booking_value: StatKpi | null;
+  avg_price_per_night: StatKpi | null;
+  // Zähl-KPIs (immer sichtbar)
+  hosted_guests: StatKpi;
+  booked_nights: StatKpi;
+  occupancy_rate: StatKpi;
+  days_booked_ahead: StatKpi;
+  avg_stay_length: StatKpi;
+  created_reservations: StatKpi;
+  cancelled_reservations: StatKpi;
+  cancelled_nights: StatKpi;
+  by_channel: ChannelBreakdown[];
+};
+
+/** Objekt-Kennzahlen im Zeitraum (Default Backend: letzte 30 Tage). */
+export async function getPropertyStats(
+  propertyId: string,
+  dateFrom?: string,
+  dateTo?: string,
+): Promise<Result<PropertyStats>> {
+  const params = new URLSearchParams();
+  if (dateFrom) params.set("date_from", dateFrom);
+  if (dateTo) params.set("date_to", dateTo);
+  const qs = params.toString();
+  return call(
+    `/reservations/property/${encodeURIComponent(propertyId)}/stats${qs ? `?${qs}` : ""}`,
+  );
 }

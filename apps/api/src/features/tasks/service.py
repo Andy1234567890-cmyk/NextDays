@@ -91,6 +91,24 @@ class TasksService:
             ]
         return tasks
 
+    def list_by_reservation(
+        self, tenant_id: str, reservation_id: str
+    ) -> list[Task]:
+        """Aufgaben zu einer Buchung (PM-Detailseite). Tenant-scoped: der
+        Service läuft mit service_role (RLS umgangen), also filtert der explizite
+        tenant_id-Filter fremde Aufgaben aus (Wurzel 3). Die reservation_id ist
+        zusätzlich gebunden — keine ungescopte Roh-Abfrage per ID."""
+        res = (
+            self._db()
+            .table("tasks")
+            .select("*")
+            .eq("tenant_id", tenant_id)
+            .eq("reservation_id", reservation_id)
+            .order("due_at")
+            .execute()
+        )
+        return [self._to_task(r) for r in (res.data or [])]
+
     def set_status(self, tenant_id: str, task_id: str, status: TaskStatus) -> Task:
         res = (
             self._db()
@@ -312,6 +330,7 @@ class TasksService:
             id=row["id"],
             tenant_id=row["tenant_id"],
             property_id=row.get("property_id"),
+            reservation_id=row.get("reservation_id"),
             assignee_id=row.get("assignee_id"),
             title=row["title"],
             status=TaskStatus(row["status"]),

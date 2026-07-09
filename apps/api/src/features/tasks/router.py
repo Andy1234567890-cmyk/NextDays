@@ -17,6 +17,7 @@ from .schemas import (
     SubstitutionRequest,
     Task,
     TaskCreate,
+    TaskStatusUpdate,
 )
 from .service import TaskError, TasksService
 
@@ -61,6 +62,32 @@ def my_tasks(
     ],
 ) -> list[Task]:
     return service.list_tasks(_tenant(ctx), assignee_id=ctx.user_id, ctx=ctx)
+
+
+@router.get("/by-reservation/{reservation_id}", response_model=list[Task])
+def tasks_by_reservation(
+    reservation_id: str,
+    service: TasksServiceDep,
+    ctx: Annotated[
+        AuthContext, Depends(require_permission(Capability.VIEW_CALENDAR))
+    ],
+) -> list[Task]:
+    """Aufgaben zu einer Buchung (PM-Detailseite). Wer die Buchung sieht
+    (VIEW_CALENDAR), sieht ihre Aufgaben; tenant-scoped im Service."""
+    return service.list_by_reservation(_tenant(ctx), reservation_id)
+
+
+@router.patch("/{task_id}/status", response_model=Task)
+def update_task_status(
+    task_id: str,
+    req: TaskStatusUpdate,
+    service: TasksServiceDep,
+    ctx: Annotated[AuthContext, Depends(require_permission(Capability.MANAGE_TASKS))],
+) -> Task:
+    try:
+        return service.set_status(_tenant(ctx), task_id, req.status)
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.post("/from-booking", response_model=list[Task], status_code=201)

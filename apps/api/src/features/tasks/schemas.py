@@ -35,10 +35,15 @@ class Task(BaseModel):
     id: str
     tenant_id: str
     property_id: str | None = None
+    reservation_id: str | None = None
     assignee_id: str | None = None
     title: str
     status: TaskStatus
     due_at: datetime | None = None
+
+
+class TaskStatusUpdate(BaseModel):
+    status: TaskStatus
 
 
 # --- Auto-Generierung bei Buchung (§2.5) ---

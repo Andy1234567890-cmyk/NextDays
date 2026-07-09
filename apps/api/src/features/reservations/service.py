@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta
 from typing import TYPE_CHECKING
+from uuid import UUID
 
 from postgrest.exceptions import APIError
 from supabase import Client
@@ -28,12 +29,14 @@ from src.features.guests.identity import (
 )
 from src.jobs.queue import try_enqueue_ari, try_enqueue_recompute
 
+from .property_stats import compute_property_stats
 from .schemas import (
     CheckOutRequest,
     CheckOutResponse,
     DashboardEntry,
     DashboardKpi,
     DashboardResponse,
+    PropertyStats,
     QuoteItem,
     ReservationCreate,
     ReservationDetail,
@@ -55,6 +58,22 @@ def _as_date(value: object) -> date:
     if isinstance(value, date):
         return value
     return date.fromisoformat(str(value)[:10])
+
+
+def _require_uuid(reservation_id: str) -> None:
+    """Reservierungs-ID MUSS eine UUID sein → sonst 404 (nicht 500).
+
+    Die Route /reservierungen/{id} fängt in Next.js auch nicht existierende
+    Unterpfade (z. B. „einstellungen"). Ohne diesen Guard reicht Postgres den
+    Nicht-UUID-Wert bis zur DB durch und wirft 22P02 → ein nutzer-/pfad-
+    getriebener 500 (CLAUDE.md Wurzel 5: Fehl-Input darf keinen 500 werfen,
+    fail-closed). Fachlich ist eine unbekannte ID schlicht „nicht gefunden"."""
+    try:
+        UUID(str(reservation_id))
+    except (ValueError, AttributeError, TypeError) as exc:
+        raise ReservationError(
+            "Reservierung nicht gefunden.", status_code=404
+        ) from exc
 
 
 class ReservationError(Exception):
@@ -410,6 +429,66 @@ class ReservationsService:
             currency="",
         )
 
+    def property_stats(
+        self,
+        ctx: AuthContext,
+        property_id: str,
+        date_from: date,
+        date_to: date,
+    ) -> PropertyStats:
+        """Objekt-Kennzahlen für den Statistiken-Reiter (Lodgify „Kontrollzentrum").
+
+        Aggregiert AUSSCHLIESSLICH über die Buchungen DIESES Objekts im Zeitraum
+        [date_from, date_to]. Owner-Scope (§4.2): ein Eigentümer erhält nur Zahlen
+        seiner eigenen Objekte (fremdes Objekt → 404 wie „nicht gefunden"). Beträge
+        sind maskiert (§4.2 „kein Gesamtpreis" → None); die Währung kommt aus den
+        Daten (leer bei gemischten Währungen — keine Mischsumme). Jede KPI
+        vergleicht die Periode mit der gleich langen Vorperiode.
+        """
+        tenant_id = self._require_tenant(ctx)
+        _require_uuid(property_id)
+        if date_to < date_from:
+            raise ReservationError(
+                "date_to muss nach date_from liegen.", status_code=422
+            )
+
+        # Objekt tenant-scoped laden (Titel + Existenz). Owner-Scope zusätzlich.
+        prop = (
+            self._db()
+            .table("properties")
+            .select("id, title")
+            .eq("id", property_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not prop:
+            raise ReservationError("Objekt nicht gefunden.", status_code=404)
+        owner_pids = self._owner_scope_pids(ctx)
+        if owner_pids is not None and property_id not in owner_pids:
+            raise ReservationError("Objekt nicht gefunden.", status_code=404)
+
+        rows = (
+            self._db()
+            .table("reservations")
+            .select("*")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .execute()
+        ).data or []
+
+        mask = load_guest_mask(self._client, ctx.user_id)
+        # Reine Aggregation (property_stats.py) — hält service.py schlank und
+        # trennt Rechenlogik von Scope/DB.
+        return compute_property_stats(
+            property_id=property_id,
+            property_title=prop[0].get("title") or "",
+            rows=rows,
+            date_from=date_from,
+            date_to=date_to,
+            show_amounts=mask.amounts,
+        )
+
     def create(self, ctx: AuthContext, req: ReservationCreate) -> ReservationResponse:
         tenant_id = self._require_tenant(ctx)
 
@@ -596,6 +675,7 @@ class ReservationsService:
           5) reservations-Zeile aktualisieren.
         """
         tenant_id = self._require_tenant(ctx)
+        _require_uuid(reservation_id)
         res = (
             self._db()
             .table("reservations")
@@ -836,6 +916,7 @@ class ReservationsService:
         (das UI weist darauf hin) — wir geben nur die lokale Belegung frei.
         """
         tenant_id = self._require_tenant(ctx)
+        _require_uuid(reservation_id)
         clean_reason = (reason or "").strip()
         if not clean_reason:
             raise ReservationError(
@@ -951,6 +1032,7 @@ class ReservationsService:
 
     def _load_owned(self, tenant_id: str, reservation_id: str) -> dict:
         """Reservierung tenant-scoped laden (404, wenn fremd/fehlend)."""
+        _require_uuid(reservation_id)
         rows = (
             self._db()
             .table("reservations")
@@ -1122,6 +1204,7 @@ class ReservationsService:
         """Vollständige Reservierungs-Detailansicht (rechter Slider). Tenant-
         scoped; Beträge + Kontaktdaten werden maskierungskonform geliefert."""
         tenant_id = self._require_tenant(ctx)
+        _require_uuid(reservation_id)
         res = (
             self._db()
             .table("reservations")
@@ -1350,6 +1433,7 @@ class ReservationsService:
         guest = r.get("guests") or {}
         guest_name = guest.get("name", "") if isinstance(guest, dict) else ""
         amount = mask.amount(float(r.get("total_amount") or 0))
+        paid = mask.amount(float(r.get("paid_amount") or 0))
         return ReservationResponse(
             id=r["id"],
             property_id=r["property_id"],
@@ -1360,6 +1444,7 @@ class ReservationsService:
             check_out=r["check_out"],
             status=r["status"],
             total_amount=amount,
+            paid_amount=paid,
             currency=(r.get("currency") or "") if mask.amounts else "",
             ota_name=mask.source_value(r.get("ota_name")),
             external_ref=r.get("external_ref"),
