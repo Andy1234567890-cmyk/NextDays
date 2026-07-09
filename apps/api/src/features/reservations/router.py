@@ -25,6 +25,8 @@ from .schemas import (
     ReservationMove,
     ReservationResponse,
     SliceHealth,
+    StatMetricDetail,
+    StatMetricDetailResponse,
 )
 from .service import ReservationError, ReservationsService
 
@@ -56,6 +58,48 @@ def dashboard(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.get("/stats", response_model=PropertyStats)
+def tenant_stats(
+    service: ReservationsServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    date_from: Annotated[date | None, Query()] = None,
+    date_to: Annotated[date | None, Query()] = None,
+    property_id: Annotated[list[str] | None, Query()] = None,
+) -> PropertyStats:
+    """Globale Kontrollzentrum-Kennzahlen: zusammengefasst über ALLE (owner-
+    sichtbaren) Objekte des Tenants. `property_id` (wiederholbar) filtert auf
+    ausgewählte Objekte („Ausgewählte Unterkünfte"). Ohne Zeitraum: letzte 30
+    Tage. Beträge maskiert; Belegungsrate durch die Objektanzahl geteilt."""
+    today = date.today()
+    end = date_to or today
+    start = date_from or (end - timedelta(days=29))
+    try:
+        return service.tenant_stats(ctx, start, end, property_id)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/stats/{metric}", response_model=StatMetricDetail)
+def tenant_metric_detail(
+    metric: str,
+    service: ReservationsServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    date_from: Annotated[date | None, Query()] = None,
+    date_to: Annotated[date | None, Query()] = None,
+    property_id: Annotated[list[str] | None, Query()] = None,
+) -> StatMetricDetail:
+    """KPI-Detailseite (Kontrollzentrum „ANSEHEN") tenant-weit: Tagesreihe +
+    Vergleichsperioden + Breakout für EINE Metrik über alle (gefilterten)
+    Objekte. Ohne Zeitraum: letzte 30 Tage."""
+    today = date.today()
+    end = date_to or today
+    start = date_from or (end - timedelta(days=29))
+    try:
+        return service.tenant_metric_detail(ctx, metric, start, end, property_id)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.get("/property/{property_id}/stats", response_model=PropertyStats)
 def property_stats(
     property_id: str,
@@ -73,6 +117,35 @@ def property_stats(
         return service.property_stats(ctx, property_id, start, end)
     except ReservationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/property/{property_id}/stats/{metric}",
+    response_model=StatMetricDetailResponse,
+)
+def property_metric_detail(
+    property_id: str,
+    metric: str,
+    service: ReservationsServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    date_from: Annotated[date | None, Query()] = None,
+    date_to: Annotated[date | None, Query()] = None,
+) -> StatMetricDetailResponse:
+    """KPI-Detailseite (Klick auf eine Statistik-Kachel): Tagesreihe + vier
+    gleich lange Vergleichsperioden davor + Breakout-Matrix für EINE Kennzahl.
+    Ohne Zeitraum: letzte 30 Tage. Owner-scoped; Geldmetriken maskiert."""
+    today = date.today()
+    end = date_to or today
+    start = date_from or (end - timedelta(days=29))
+    try:
+        title, detail = service.property_metric_detail(
+            ctx, property_id, metric, start, end
+        )
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return StatMetricDetailResponse(
+        property_id=property_id, property_title=title, detail=detail
+    )
 
 
 @router.get("", response_model=ReservationListResponse)

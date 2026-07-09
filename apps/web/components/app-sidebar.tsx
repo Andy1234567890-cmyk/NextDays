@@ -136,7 +136,7 @@ function buildGroups(accommodationType: AccommodationType): readonly NavGroup[] 
       groupKey: "reservations",
       icon: "ph:bookmark-simple",
       items: [
-        { key: "overview", href: "/reservierungen", icon: "ph:bookmark-simple" },
+        { key: "overview", href: "/reservierungen/kontrollzentrum", icon: "ph:bookmark-simple" },
         { key: "reservationGroups", href: "/reservierungen/gruppen", icon: "ph:users-three" },
         { key: "stopSell", href: "/stop-sell", icon: "ph:hand-palm" },
         { key: "settings", href: "/reservierungen/einstellungen", icon: "ph:gear" },

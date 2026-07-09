@@ -5,6 +5,12 @@
 // die Kalendertage. Business-Logik bleibt im Backend (PROJECT.md §2).
 import { ApiError, api } from "@/lib/api";
 import { currentToken } from "@/lib/session-token";
+import type {
+  StatMetric,
+  StatMetricDetail,
+  StatMetricDetailResponse,
+  StatSeries,
+} from "@/lib/stats-meta";
 
 export type ReservationChannel = "direct" | "portal" | "booking" | "airbnb" | "vrbo";
 export type ReservationStatus = "pending" | "confirmed" | "cancelled" | "completed";
@@ -55,6 +61,8 @@ export type Reservation = {
   ota_name: string | null; // echter Portal-Name (Booking.com, Airbnb, Expedia …)
   external_ref: string | null; // OTA-Reservierungscode
   num_guests: number; // Gästezahl (Balken-Anzeige)
+  adults: number; // Aufschlüsselung (Buchungsliste: Gäste-/Kinder-Icons)
+  children: number; // Kinderzahl (Kinder-Icon nur wenn > 0)
   // Echter Check-in/Check-out-Zustand (0091) — null = noch nicht erfolgt.
   checked_in_at: string | null;
   checked_out_at: string | null;
@@ -261,6 +269,18 @@ export type ChannelBreakdown = {
   nights: number;
 };
 
+// Statistik-Detail-Typen + Metrik-Liste liegen in stats-meta.ts (diese Datei ist
+// "use server" und darf keine Laufzeit-Konstanten exportieren). Typen werden
+// re-exportiert, damit bestehende Importe aus "@/lib/reservations" weiter gehen.
+export type {
+  StatComparePeriod,
+  StatMetric,
+  StatMetricDetail,
+  StatMetricDetailResponse,
+  StatPoint,
+  StatSeries,
+} from "@/lib/stats-meta";
+
 export type PropertyStats = {
   property_id: string;
   property_title: string;
@@ -282,6 +302,8 @@ export type PropertyStats = {
   cancelled_reservations: StatKpi;
   cancelled_nights: StatKpi;
   by_channel: ChannelBreakdown[];
+  // Tages-Zeitreihen je KPI (Kachel-Sparkline). metric = KPI-Kennung.
+  series: StatSeries[];
 };
 
 /** Objekt-Kennzahlen im Zeitraum (Default Backend: letzte 30 Tage). */
@@ -296,5 +318,61 @@ export async function getPropertyStats(
   const qs = params.toString();
   return call(
     `/reservations/property/${encodeURIComponent(propertyId)}/stats${qs ? `?${qs}` : ""}`,
+  );
+}
+
+/** KPI-Detailseite (Klick auf eine Statistik-Kachel): Tagesreihe +
+ * Vergleichsperioden + Breakout für EINE Kennzahl. */
+export async function getMetricDetail(
+  propertyId: string,
+  metric: StatMetric,
+  dateFrom?: string,
+  dateTo?: string,
+): Promise<Result<StatMetricDetailResponse>> {
+  const params = new URLSearchParams();
+  if (dateFrom) params.set("date_from", dateFrom);
+  if (dateTo) params.set("date_to", dateTo);
+  const qs = params.toString();
+  return call(
+    `/reservations/property/${encodeURIComponent(propertyId)}/stats/${metric}${
+      qs ? `?${qs}` : ""
+    }`,
+  );
+}
+
+// Statistik-Query-String bauen — Zeitraum + optionaler (wiederholbarer)
+// property_id-Filter fürs globale Kontrollzentrum („Ausgewählte Unterkünfte").
+function statsQuery(
+  dateFrom?: string,
+  dateTo?: string,
+  propertyIds?: string[],
+): string {
+  const params = new URLSearchParams();
+  if (dateFrom) params.set("date_from", dateFrom);
+  if (dateTo) params.set("date_to", dateTo);
+  for (const id of propertyIds ?? []) params.append("property_id", id);
+  const qs = params.toString();
+  return qs ? `?${qs}` : "";
+}
+
+/** Globales Kontrollzentrum: zusammengefasste Kennzahlen über ALLE (owner-
+ * sichtbaren) Objekte. `propertyIds` filtert auf ausgewählte Unterkünfte. */
+export async function getTenantStats(
+  dateFrom?: string,
+  dateTo?: string,
+  propertyIds?: string[],
+): Promise<Result<PropertyStats>> {
+  return call(`/reservations/stats${statsQuery(dateFrom, dateTo, propertyIds)}`);
+}
+
+/** KPI-Detailseite tenant-weit (Kontrollzentrum „ANSEHEN"). */
+export async function getTenantMetricDetail(
+  metric: StatMetric,
+  dateFrom?: string,
+  dateTo?: string,
+  propertyIds?: string[],
+): Promise<Result<StatMetricDetail>> {
+  return call(
+    `/reservations/stats/${metric}${statsQuery(dateFrom, dateTo, propertyIds)}`,
   );
 }

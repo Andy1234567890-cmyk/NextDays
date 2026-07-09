@@ -16,6 +16,8 @@ export type ChannelMeta = {
   barFg: string;
   /** Akzent-Punkt in der Legende. */
   dotBg: string;
+  /** Textfarbe in Kanalfarbe (z. B. Quelle-Link „#booking.com" in der Buchungsliste). */
+  textFg: string;
 };
 
 // `manual` ist keine echte Plattform, sondern eine intern gesperrte/gepflegte
@@ -32,6 +34,7 @@ export const CHANNEL_META: Record<AvailabilitySource, ChannelMeta> = {
     barBg: "bg-channel-direct",
     barFg: "text-white",
     dotBg: "bg-channel-direct",
+    textFg: "text-channel-direct",
   },
   booking: {
     label: "Booking.com",
@@ -39,6 +42,7 @@ export const CHANNEL_META: Record<AvailabilitySource, ChannelMeta> = {
     barBg: "bg-channel-booking",
     barFg: "text-white",
     dotBg: "bg-channel-booking",
+    textFg: "text-channel-booking",
   },
   airbnb: {
     label: "Airbnb",
@@ -46,6 +50,7 @@ export const CHANNEL_META: Record<AvailabilitySource, ChannelMeta> = {
     barBg: "bg-channel-airbnb",
     barFg: "text-white",
     dotBg: "bg-channel-airbnb",
+    textFg: "text-channel-airbnb",
   },
   vrbo: {
     label: "Vrbo",
@@ -54,6 +59,7 @@ export const CHANNEL_META: Record<AvailabilitySource, ChannelMeta> = {
     barBg: "bg-channel-vrbo",
     barFg: "text-white",
     dotBg: "bg-channel-vrbo",
+    textFg: "text-channel-vrbo",
   },
   portal: {
     label: "Portal",
@@ -61,6 +67,7 @@ export const CHANNEL_META: Record<AvailabilitySource, ChannelMeta> = {
     barBg: "bg-channel-portal",
     barFg: "text-white",
     dotBg: "bg-channel-portal",
+    textFg: "text-channel-portal",
   },
   manual: {
     label: "Manuell",
@@ -68,6 +75,7 @@ export const CHANNEL_META: Record<AvailabilitySource, ChannelMeta> = {
     barBg: "bg-neutral-700",
     barFg: "text-white",
     dotBg: "bg-neutral-700",
+    textFg: "text-foreground",
   },
 };
 

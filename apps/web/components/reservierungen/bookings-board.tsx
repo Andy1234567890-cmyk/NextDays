@@ -15,9 +15,9 @@ import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { BookingsFilter } from "@/components/reservierungen/bookings-filter";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
 import { channelMeta } from "@/lib/calendar-channels";
 import { STATUS_META } from "@/lib/calendar-status";
 import {
@@ -28,10 +28,11 @@ import {
   nights,
   occupiesNight,
 } from "@/lib/calendar-views";
+import type { PropertyType } from "@/lib/properties";
 import { type Reservation, listReservations } from "@/lib/reservations";
 import { useRealtime } from "@/lib/use-realtime";
 
-type Prop = { id: string; title: string };
+type Prop = { id: string; title: string; property_type: PropertyType };
 
 type TabKey = "occupied" | "arrivals" | "departures" | "future" | "past";
 
@@ -75,13 +76,22 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<TabKey>("occupied");
   const [query, setQuery] = useState("");
-  const [propFilter, setPropFilter] = useState<string>("all");
+  // Multiselect-Filter (leer = alle): einzelne Objekte + Unterkunftsarten.
+  const [propFilter, setPropFilter] = useState<string[]>([]);
+  const [typeFilter, setTypeFilter] = useState<string[]>([]);
 
   const todayKey = useMemo(() => dateKey(new Date()), []);
 
   const titleOf = useMemo(() => {
     const map: Record<string, string> = {};
     for (const p of properties) map[p.id] = p.title;
+    return map;
+  }, [properties]);
+
+  // property_id → property_type (für den Ressourcen-Filter).
+  const typeOf = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const p of properties) map[p.id] = p.property_type;
     return map;
   }, [properties]);
 
@@ -116,7 +126,13 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
     const q = query.trim().toLowerCase();
     return reservations
       .filter((r) => matchesTab(r, tab, todayKey))
-      .filter((r) => propFilter === "all" || r.property_id === propFilter)
+      // Multiselect-Filter (leer = alle): Objekt UND Unterkunftsart müssen passen.
+      .filter((r) => propFilter.length === 0 || propFilter.includes(r.property_id))
+      .filter(
+        (r) =>
+          typeFilter.length === 0 ||
+          typeFilter.includes(typeOf[r.property_id] ?? ""),
+      )
       .filter((r) => {
         if (!q) return true;
         const hay = `${r.guest_name} ${titleOf[r.property_id] ?? ""} ${
@@ -133,7 +149,7 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
         if (av === bv) return 0;
         return (av < bv ? -1 : 1) * (asc ? 1 : -1);
       });
-  }, [reservations, tab, query, propFilter, todayKey, titleOf]);
+  }, [reservations, tab, query, propFilter, typeFilter, typeOf, todayKey, titleOf]);
 
   return (
     <div className="flex flex-col gap-5">
@@ -145,8 +161,9 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
         </span>
       </div>
 
-      {/* Reiter (Lodgify-Tabs) */}
-      <div className="flex flex-wrap gap-2 border-b">
+      {/* Reiter (Lodgify-Tabs): GROß, zentriert, gleichmäßig über die Breite
+          verteilt; Zähler dezent als Suffix. */}
+      <div className="flex border-b">
         {TABS.map((t) => {
           const active = tab === t.key;
           return (
@@ -156,7 +173,7 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
               aria-current={active ? "true" : undefined}
               onClick={() => setTab(t.key)}
               className={
-                "-mb-px flex items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-semibold transition-colors " +
+                "-mb-px flex flex-1 items-center justify-center gap-2 border-b-2 px-3 py-3 text-sm font-bold uppercase tracking-wide transition-colors " +
                 (active
                   ? "border-accent text-accent"
                   : "border-transparent text-muted-foreground hover:text-foreground")
@@ -165,10 +182,8 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
               {t.label}
               <span
                 className={
-                  "rounded-full px-2 py-0.5 text-xs font-bold " +
-                  (active
-                    ? "bg-accent/10 text-accent"
-                    : "bg-secondary text-muted-foreground")
+                  "text-xs font-semibold " +
+                  (active ? "text-accent/70" : "text-muted-foreground/70")
                 }
               >
                 {counts[t.key]}
@@ -178,7 +193,7 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
         })}
       </div>
 
-      {/* Filterzeile */}
+      {/* Filterzeile: Suche + Unterkünfte-/Ressourcen-Filter (Lodgify) */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative">
           <Icon
@@ -192,18 +207,13 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
             className="w-64 pl-9"
           />
         </div>
-        <NativeSelect
-          value={propFilter}
-          onChange={(e) => setPropFilter(e.target.value)}
-          className="h-9 w-auto"
-        >
-          <option value="all">Alle Unterkünfte</option>
-          {properties.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.title}
-            </option>
-          ))}
-        </NativeSelect>
+        <BookingsFilter
+          properties={properties}
+          selectedProps={propFilter}
+          onProps={setPropFilter}
+          selectedTypes={typeFilter}
+          onTypes={setTypeFilter}
+        />
         <span className="ml-auto text-sm text-muted-foreground">
           {rows.length} {rows.length === 1 ? "Eintrag" : "Einträge"}
         </span>
@@ -309,17 +319,35 @@ function BookingRow({
         </span>
       </td>
       <td className="px-4 py-3">
-        <span className="inline-flex items-center gap-1.5">
+        {/* Quelle in Kanalfarbe mit #-Präfix (Lodgify „#booking.com"/„#airbnb").
+            Farbe aus channelMeta.textFg (Token-System), kein Inline-Hex. */}
+        <span
+          className={"inline-flex items-center gap-1.5 font-semibold " + cm.textFg}
+        >
           {cm.logo.kind === "icon" ? (
             <Icon icon={cm.logo.icon} className="size-4" />
           ) : null}
-          {r.ota_name ?? cm.label}
+          #{r.ota_name ?? cm.label}
         </span>
       </td>
       <td className="px-4 py-3 text-right tabular-nums">
-        <span className="inline-flex items-center justify-end gap-1">
-          <Icon icon="ph:users" className="size-4 text-muted-foreground" />
-          {r.num_guests}
+        {/* Gäste: Personen-Icon + Zahl; Kinder-Icon nur wenn Kinder dabei sind
+            (echte Aufschlüsselung aus den Daten — kein erfundener Wert). */}
+        <span className="inline-flex items-center justify-end gap-1.5">
+          <span className="inline-flex items-center gap-1">
+            <Icon icon="ph:users" className="size-4 text-muted-foreground" />
+            {r.num_guests}
+          </span>
+          {r.children > 0 && (
+            <span
+              className="inline-flex items-center gap-0.5 text-muted-foreground"
+              title={`${r.children} ${r.children === 1 ? "Kind" : "Kinder"}`}
+              aria-label={`${r.children} ${r.children === 1 ? "Kind" : "Kinder"}`}
+            >
+              <Icon icon="ph:baby" className="size-4" />
+              {r.children}
+            </span>
+          )}
         </span>
       </td>
       <td className="px-4 py-3 text-right tabular-nums">

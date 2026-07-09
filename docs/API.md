@@ -248,7 +248,11 @@ Plattform gepflegt.
 `type_attributes.messaging`: pro Block (`checkIn`, `checkOut`, `directions`,
 `doorInstructions`, `rules`, `wifi`, `localGuide`, `emergency`) ein
 mehrsprachiger `LocalizedText` (`{de,en,da}`). Jeder Block hat einen Shortcode
-(`{{CheckinInstructions}}` …) für automatische Gästenachrichten.
+(`{{CheckinInstructions}}` …) für automatische Gästenachrichten. **Dies ist die
+EINZIGE Wahrheit für Gäste-Info-Texte** — der PM-Reiter „Gästemappe" und die
+WLAN-/Türzugang-Texte im PM-Reiter „Gastmodul" editieren dieselben Felder (keine
+zweite Tabelle; `content_blocks` ist ungenutzt, siehe
+`docs/ANALYSE-gaeste-info-gastmodul-gaestemappe.md`).
 
 **Standort-Zusätze** (Lodgify „Location") liegen in `type_attributes.location`
 (die Basis-Adresse `street`/`house_number`/`postal_code`/`city`/`country`/`lat`/
@@ -262,6 +266,22 @@ Objekt-Bilder werden über `POST /api/v1/properties/{id}/image` (multipart, Feld
 
 Alle Bereiche werden über `PATCH /api/v1/properties/{id}` mit
 `type_attributes` gespeichert (kein eigener Endpunkt; flexibles jsonb).
+
+---
+
+## property_portal (Gastmodul je Objekt — implementiert)
+
+Strukturierte Portal-**Schalter** je Objekt (Lodgify „Gastmodul"): `enabled`,
+`self_checkin`, `door_code` (+ Anzeige-Regeln `show_code_only_if_paid`,
+`hide_code_until_checkin`, `code_visible_from`), `contact_name`/`contact_phone`,
+`maintenance_phone`, `header_image_path`. Tabelle `property_guest_portal`
+(Migration 0121, RLS + Realtime). Die Info-**Texte** (WLAN/Türzugang) liegen
+bewusst NICHT hier, sondern in `type_attributes.messaging` (eine Wahrheit).
+
+| Methode | Pfad | Capability | Beschreibung |
+|---|---|---|---|
+| `GET` | `/api/v1/property-portal/{property_id}/guest-portal` | `view_calendar` | Gastmodul-Einstellungen; `door_code` nur mit `manage_properties` (sonst `null`), fremdes/Nicht-UUID-Objekt → `404` |
+| `PUT` | `/api/v1/property-portal/{property_id}/guest-portal` | `manage_properties` | Einstellungen upserten (ein Datensatz je Objekt) |
 
 ---
 
@@ -383,6 +403,10 @@ werden zusätzlich unterdrückt).
 |---|---|---|
 | `GET` | `/api/v1/reservations?property_id` | Reservierungen des Tenants (optional je Objekt); inkl. `num_guests` |
 | `GET` | `/api/v1/reservations/dashboard` | Startseiten-Kennzahlen (echte Daten, im Backend berechnet) |
+| `GET` | `/api/v1/reservations/stats?date_from&date_to&property_id` | Globales Kontrollzentrum (PM-Startseite): dieselben KPIs + Sparklines + Kanal-Donuts wie der Objekt-Reiter, aber zusammengefasst über ALLE (owner-sichtbaren) Objekte. `property_id` (wiederholbar) filtert auf ausgewählte Unterkünfte; Belegungsrate durch die Objektanzahl geteilt. Ohne Zeitraum = letzte 30 Tage. Owner-scoped, Beträge maskiert |
+| `GET` | `/api/v1/reservations/stats/{metric}?date_from&date_to&property_id` | KPI-Detailseite tenant-weit („ANSEHEN"): Tagesreihe + vier Vergleichsperioden + Breakout für EINE Kennzahl über alle (gefilterten) Objekte. Unbekannte Metrik → `422` |
+| `GET` | `/api/v1/reservations/property/{id}/stats?date_from&date_to` | Objekt-Kennzahlen (Statistiken-Reiter): Umsatz/Zahlungen/Belegung/Ø-Werte + Kanal-Verteilung + Tages-Zeitreihen je KPI (Sparkline), Vergleich zur Vorperiode; ohne Zeitraum = letzte 30 Tage. Zuordnung über Buchungsdatum (`created_at`). Owner-scoped, Beträge maskiert, Währung aus den Daten. Nicht-UUID → `404` |
+| `GET` | `/api/v1/reservations/property/{id}/stats/{metric}?date_from&date_to` | KPI-Detailseite (Klick auf eine Statistik-Kachel): Tagesreihe EINER Kennzahl + vier gleich lange Vergleichsperioden davor (mit %-Vergleich) + Breakout-Matrix. `metric` ∈ revenue/payments_received/hosted_guests/booked_nights/created_reservations/cancelled_reservations/cancelled_nights. Unbekannte Metrik → `422`; Geldmetrik ohne Sicht maskiert. Owner-scoped |
 | `GET` | `/api/v1/reservations/{id}` | Vollständige Detailansicht (Slider): Belegung, Quote, Zahlung, Policy-Zeiten, Kontakt — maskierungskonform |
 | `POST` | `/api/v1/reservations` | Reservierung anlegen — `404` (fremdes Objekt), `409` (Tage belegt) |
 | `PATCH` | `/api/v1/reservations/{id}/move` | Verschieben (Objekt/Zeitraum) oder resizen (Check-in/out) — `409` bei Doppelbuchung, eigene Alt-Tage ausgenommen |

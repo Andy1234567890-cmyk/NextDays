@@ -865,8 +865,10 @@ def _rpc_service(monkeypatch) -> tuple[ReservationsService, MagicMock]:  # noqa:
     mask.amount.side_effect = lambda v: v
     mask.amounts = True
     mask.source_value.side_effect = lambda v: v
+    # create() lebt im Schreibpfad (writes.py) — dort löst der Name
+    # load_guest_mask auf, also dort patchen, damit die Maske greift.
     monkeypatch.setattr(
-        "src.features.reservations.service.load_guest_mask", lambda *_a: mask
+        "src.features.reservations.writes.load_guest_mask", lambda *_a: mask
     )
     return service, db
 

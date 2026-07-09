@@ -32,6 +32,7 @@ from .features.owners.router import router as owners_router
 from .features.payments.router import router as payments_router
 from .features.pricing.router import router as pricing_router
 from .features.properties.router import router as properties_router
+from .features.property_portal.router import router as property_portal_router
 from .features.public_portal.router import router as public_portal_router
 from .features.rates.router import router as rates_router
 from .features.reservations.router import router as reservations_router
@@ -46,6 +47,7 @@ _SLICE_ROUTERS = [
     auth_router,
     buchhaltung_router,
     properties_router,
+    property_portal_router,
     owners_router,
     owner_statements_router,
     addons_router,

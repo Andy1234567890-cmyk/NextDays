@@ -20,7 +20,11 @@ export default async function ReservierungenPage() {
     );
   }
 
-  const properties = res.data.items.map((p) => ({ id: p.id, title: p.title }));
+  const properties = res.data.items.map((p) => ({
+    id: p.id,
+    title: p.title,
+    property_type: p.property_type,
+  }));
 
   return <BookingsBoard properties={properties} />;
 }

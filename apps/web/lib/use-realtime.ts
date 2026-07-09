@@ -44,33 +44,60 @@ function realtimeClient(): SupabaseClient {
 // subscribe()". Jede Hook-Instanz bekommt daher ihren eigenen Channel.
 let channelSeq = 0;
 
-type RealtimeOpts = {
+/**
+ * Roher postgres_changes-Payload, wie ihn supabase-js liefert. `eventType` ist
+ * INSERT|UPDATE|DELETE; `new` trägt die neue Zeile (INSERT/UPDATE), `old` die
+ * alte (UPDATE/DELETE — bei DELETE standardmäßig nur der Primary Key, für volle
+ * Alt-Daten braucht die Tabelle REPLICA IDENTITY FULL).
+ */
+export type RealtimePayload<T = Record<string, unknown>> = {
+  eventType: "INSERT" | "UPDATE" | "DELETE";
+  new: T | Record<string, never>;
+  old: Partial<T> | Record<string, never>;
+};
+
+type RealtimeOpts<T = Record<string, unknown>> = {
   /** Tabelle in public, z.B. "channex_booking". */
   table: string;
   /** Optionaler Server-Filter, z.B. `thread_id=eq.${id}`. */
   filter?: string;
-  /** Wird bei jeder relevanten Änderung aufgerufen. */
-  onChange: () => void;
+  /**
+   * Vollreload-Modus: wird (debounced) bei jeder relevanten Änderung ohne
+   * Payload aufgerufen. Für Abonnenten, die einfach alles neu laden. Genau EINER
+   * von onChange/onEvent muss gesetzt sein.
+   */
+  onChange?: () => void;
+  /**
+   * Inkrementeller Modus: wird pro Event mit dem rohen Payload aufgerufen — OHNE
+   * Debounce (jedes INSERT/UPDATE/DELETE einzeln), damit der Abonnent den
+   * lokalen State gezielt aus payload.new/old pflegen kann (Notion-Muster: kein
+   * Vollreload). Debounce würde hier Events verschlucken/bündeln → deaktiviert.
+   */
+  onEvent?: (payload: RealtimePayload<T>) => void;
   /** Abo nur aktiv, wenn true (default true). */
   enabled?: boolean;
   /**
    * Events innerhalb dieses Fensters (ms) zu EINEM onChange zusammenfassen.
    * Schützt vor Reload-Fluten, wenn ein Sync viele Zeilen auf einmal schreibt
-   * (z. B. OTA-ARI-Import: 365 availability-Zeilen). Default 400ms.
+   * (z. B. OTA-ARI-Import: 365 availability-Zeilen). Default 400ms. Gilt NUR im
+   * onChange-Modus; onEvent ist immer un-debounced (jedes Event einzeln).
    */
   debounceMs?: number;
 };
 
-export function useRealtime({
+export function useRealtime<T = Record<string, unknown>>({
   table,
   filter,
   onChange,
+  onEvent,
   enabled = true,
   debounceMs = 400,
-}: RealtimeOpts) {
-  // Callback in ref halten, damit das Abo nicht bei jedem Render neu aufgebaut wird.
+}: RealtimeOpts<T>) {
+  // Callbacks in refs halten, damit das Abo nicht bei jedem Render neu aufgebaut wird.
   const cb = useRef(onChange);
   cb.current = onChange;
+  const evCb = useRef(onEvent);
+  evCb.current = onEvent;
 
   // Eindeutige, über die Lebensdauer stabile ID dieser Hook-Instanz — damit zwei
   // Komponenten mit derselben Tabelle nicht denselben Channel-Namen erzeugen.
@@ -94,16 +121,22 @@ export function useRealtime({
     const supabase = realtimeClient();
     let channel: ReturnType<typeof supabase.channel> | null = null;
     let cancelled = false;
-    // Debounce: viele Events kurz hintereinander → ein onChange.
+    // Debounce NUR für den onChange-Vollreload-Modus: viele Events kurz
+    // hintereinander → ein onChange. Der onEvent-Modus feuert un-debounced.
     let timer: ReturnType<typeof setTimeout> | null = null;
-    const fire = () => {
+    const fireChange = () => {
+      if (!cb.current) return;
       if (timer) clearTimeout(timer);
-      timer = setTimeout(() => cb.current(), debounceMs);
+      timer = setTimeout(() => cb.current?.(), debounceMs);
     };
 
+    // Re-Enable-Nachholung gilt nur für Vollreload (onChange): war das Abo
+    // pausiert, könnte die Liste stale sein → einmal neu laden. Im onEvent-Modus
+    // gibt es keinen sinnvollen „leeren" Nachhol-Event (kein Payload), und das
+    // reservations-Abo wird im reinen-Realtime-Modell ohnehin nicht pausiert.
     if (wasDisabled.current) {
       wasDisabled.current = false;
-      fire();
+      fireChange();
     }
 
     (async () => {
@@ -122,7 +155,14 @@ export function useRealtime({
         .on(
           "postgres_changes",
           { event: "*", schema: "public", table, ...(filter ? { filter } : {}) },
-          () => fire(),
+          (payload) => {
+            // Inkrementeller Modus hat Vorrang: rohen Payload einzeln durchreichen.
+            if (evCb.current) {
+              evCb.current(payload as unknown as RealtimePayload<T>);
+              return;
+            }
+            fireChange();
+          },
         )
         .subscribe();
     })();

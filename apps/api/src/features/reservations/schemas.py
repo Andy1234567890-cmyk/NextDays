@@ -108,6 +108,8 @@ class ReservationResponse(BaseModel):
     ota_name: str | None = None       # echter Portal-Name (Kalender-Herkunft)
     external_ref: str | None = None   # OTA-Reservierungscode
     num_guests: int = 1               # Gästezahl (Balken-Anzeige)
+    adults: int = 1                   # Aufschlüsselung (Buchungsliste: Gäste-Icons)
+    children: int = 0                 # Kinderzahl (Kinder-Icon nur wenn > 0)
     # Echter Check-in/Check-out-Zustand (0091) — None = noch nicht erfolgt.
     checked_in_at: str | None = None
     checked_out_at: str | None = None
@@ -251,6 +253,56 @@ class ChannelBreakdown(BaseModel):
     nights: int = 0
 
 
+class StatPoint(BaseModel):
+    """Ein Tageswert einer KPI-Zeitreihe (Sparkline / Detail-Chart)."""
+
+    date: date
+    value: float
+
+
+class StatSeries(BaseModel):
+    """Zeitreihe EINER KPI über die gewählte Periode (Tagesauflösung).
+
+    Trägt die Kennung (metric) für die Detailseite, den maskierbaren Sichtbar-
+    keits-Schalter und die Tagespunkte. Bei Beträgen ohne Sichtbarkeit ist
+    `points` leer und `visible=False` (keine erfundenen Werte)."""
+
+    metric: str
+    visible: bool = True
+    points: list[StatPoint] = []
+
+
+class StatComparePeriod(BaseModel):
+    """Eine Vergleichsperiode auf der KPI-Detailseite (gleiche Länge, davor).
+
+    label = Perioden-Bereich („10 Mai – 8 Jun"); value = Summe/Wert der Periode;
+    change_pct = Veränderung ggü. dieser Periode (None ohne Basis)."""
+
+    label: str
+    date_from: date
+    date_to: date
+    value: float | None = None
+    change_pct: float | None = None
+
+
+class StatMetricDetail(BaseModel):
+    """Detail-Daten EINER KPI (Lodgify-KPI-Detailseite): die aktuelle Tagesreihe,
+    bis zu vier gleich lange Vergleichsperioden davor und die Breakout-Matrix
+    (Perioden × Tag-Offset). Beträge maskiert (visible=False → leer)."""
+
+    metric: str
+    is_money: bool = False
+    visible: bool = True
+    currency: str = ""
+    date_from: date
+    date_to: date
+    series: list[StatPoint] = []
+    periods: list[StatComparePeriod] = []
+    # Breakout: je Vergleichsperiode die Tageswerte (Index 0 = erster Tag der
+    # jeweiligen Periode) — für die Tabelle unten auf der Detailseite.
+    breakout: list[list[float]] = []
+
+
 class PropertyStats(BaseModel):
     """Objekt-Kennzahlen für den Statistiken-Reiter (Lodgify „Kontrollzentrum").
 
@@ -280,6 +332,17 @@ class PropertyStats(BaseModel):
     cancelled_nights: DashboardKpi
     # Kanal-Verteilung (Einnahmen + Nächte je Kanal)
     by_channel: list[ChannelBreakdown] = []
+    # Tages-Zeitreihen je KPI (Sparkline in der Kachel). metric = KPI-Kennung;
+    # Betrags-Metriken sind bei fehlender Sichtbarkeit visible=False + leer.
+    series: list[StatSeries] = []
+
+
+class StatMetricDetailResponse(BaseModel):
+    """Antwort der KPI-Detailseite (ein einzelnes Aggregat je Metrik)."""
+
+    property_id: str
+    property_title: str = ""
+    detail: StatMetricDetail
 
 
 class SliceHealth(BaseModel):

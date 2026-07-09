@@ -68,6 +68,21 @@ const MONTHS = [
 const COL = 5.5; // rem pro Tagesspalte (breit & lesbar wie Lodgify, konstant)
 const LABEL = 17; // rem für die Objektspalte
 const ROW_H = 3.5; // rem Zeilenhöhe (kompakter — mehr Objekte pro Bildschirm)
+// Halbtags-Versatz der Buchungsbalken (Anreise ab Spaltenmitte, Auslauf bis zur
+// Mitte des Abreisetags). EINE Quelle für Balken-Rendering UND Geister-Vorschau,
+// damit beide denselben Wechseltag optisch teilen (kein zweites verstreutes 0.5).
+const HALF_DAY = 0.5;
+
+// Absoluter Tag-Index unter dem Cursor, rein geometrisch aus der Mausposition.
+// EINE Quelle der Wahrheit für Drag-Start (onBarDown) UND Drag-Bewegung (onMove):
+// beide müssen dasselbe Koordinatensystem nutzen, sonst entsteht schon beim
+// Greifen ein Offset (der Balken „springt" um den Halbtags-Überhang). `remPx`
+// wird vom Aufrufer gemessen (einmal pro Drag) und durchgereicht.
+function cursorDayIndex(clientX: number, grid: HTMLElement, remPx: number): number {
+  const rect = grid.getBoundingClientRect();
+  // Jede Zeile beginnt mit der (sticky) LABEL-Spalte → diese Breite abziehen.
+  return Math.floor((clientX - rect.left - LABEL * remPx) / (COL * remPx));
+}
 
 // Durchgehende Timeline: Bereich vom 1. Januar des LAUFENDEN Jahres bis Ende des
 // FOLGEJAHRES — so reicht das Scrollen zurück bis 01.01. UND mehr als ein Jahr
@@ -182,8 +197,9 @@ type BarDrag = {
   res: Reservation;
   mode: "move" | "start" | "end";
   startPid: string; // Objekt, in dem der Zug begann
-  startDi: number; // Tag-Index unter dem Cursor beim Drücken
-  dayOffset: number; // Verschiebung in Tagen (move/Kante)
+  startDi: number; // CURSOR-Tag-Index beim Drücken (via cursorDayIndex, nicht
+  // die Balken-/Segment-Geometrie) — Referenz für das greifpunkt-invariante Delta
+  dayOffset: number; // Verschiebung in Tagen (di_jetzt − startDi; move/Kante)
   targetPid: string; // aktuelles Ziel-Objekt (nur move)
 };
 
@@ -293,6 +309,47 @@ function reservationsByDay(reservations: Reservation[]): Record<string, Reservat
   return map;
 }
 
+// ── Inkrementelle, ID-basierte State-Übergänge für resByProp (Record<pid, Res[]>).
+// Reine Funktionen: alter State rein, neuer State raus — die einzige Wahrheit ist
+// die Buchungs-`id`. Alle Operationen sind IDEMPOTENT (Wurzel 2: das eigene
+// Realtime-Echo, ein Doppelklick oder eine Webhook-Redelivery desselben Events
+// darf keinen Doppel-Zustand erzeugen). Genutzt vom Realtime-onEvent-Handler UND
+// vom optimistischen Move — beide teilen sich dieselben Übergänge, damit das Echo
+// des eigenen Moves exakt denselben Endzustand ergibt (kein Flackern).
+
+type ResByProp = Record<string, Reservation[]>;
+
+// Eine Buchung ohne Doppel in ein Objekt legen (erst per id herausfiltern, dann
+// anhängen — idempotent gegen Mehrfach-Zustellung).
+function upsertInto(list: Reservation[], r: Reservation): Reservation[] {
+  return [...list.filter((x) => x.id !== r.id), r];
+}
+
+// Buchung mit dieser id aus ALLEN Objekten entfernen (Move/Storno/Delete).
+function removeEverywhere(state: ResByProp, id: string): ResByProp {
+  const next: ResByProp = {};
+  for (const [pid, list] of Object.entries(state)) {
+    const filtered = list.filter((r) => r.id !== id);
+    if (filtered.length) next[pid] = filtered;
+  }
+  return next;
+}
+
+// Zentraler Übergang für eine (neue/aktualisierte/verschobene) Buchung. ATOMAR in
+// EINEM Ergebnis-State: aus dem alten Objekt raus (falls property_id wechselte)
+// UND ins Ziel-Objekt rein — nie zwei getrennte Updates (sonst Zwischen-Render mit
+// der Buchung in beiden Zeilen). Stornierte Buchung → überall entfernen.
+function applyReservation(state: ResByProp, r: Reservation): ResByProp {
+  if (r.status === "cancelled") return removeEverywhere(state, r.id);
+  // Erst überall per id entfernen (auch aus dem alten Objekt bei Objektwechsel),
+  // dann genau einmal ins Ziel-Objekt legen — ein einziger neuer State.
+  const cleaned = removeEverywhere(state, r.id);
+  return {
+    ...cleaned,
+    [r.property_id]: upsertInto(cleaned[r.property_id] ?? [], r),
+  };
+}
+
 // Menschliches Herkunfts-/Gastlabel für einen Buchungsbalken.
 function segmentLabel(seg: Segment): string {
   if (seg.status === "stop_sell") {
@@ -342,7 +399,11 @@ export function CalendarBoard({
     Record<string, Record<string, StopSellDay>>
   >({});
   // Buchungen je Objekt → Tages-Map (Gastname im Balken + Detail-Popover).
-  const [resByProp, setResByProp] = useState<Record<string, Record<string, Reservation>>>({});
+  // Buchungen pro Objekt als ID-basierte LISTE (nicht Tag-Map): Realtime pflegt
+  // sie inkrementell per id (UPDATE ersetzt, INSERT hängt an, DELETE filtert,
+  // MOVE entfernt+fügt atomar ein). Die Tag→Buchung-Map für das Segment-Rendering
+  // wird beim Rendern pro Objekt aus dieser Liste abgeleitet (reservationsByDay).
+  const [resByProp, setResByProp] = useState<Record<string, Reservation[]>>({});
   // Aktuell geöffnetes Buchungsdetail (per Klick auf einen Balken).
   // Geöffnetes Buchungsdetail: nur die Reservierungs-ID (Slider lädt die Daten).
   const [detail, setDetail] = useState<string | null>(null);
@@ -406,21 +467,49 @@ export function CalendarBoard({
     [],
   );
 
-  // Bestätigte Verschiebung an den Server schicken (optimistisch mit Rollback
-  // über Neuladen). Konflikt (409) wird klar zurückgemeldet.
+  // Bestätigte Verschiebung: OPTIMISTISCH + reines Realtime (kein manuelles Reload).
+  // Ablauf (Notion-Muster):
+  //   1) Move SOFORT lokal anwenden (applyReservation, atomar: raus aus altem Objekt,
+  //      rein ins neue) → der Balken springt ohne Latenz. Snapshot vorher sichern.
+  //   2) Server-PATCH im Hintergrund.
+  //   3a) Erfolg: nichts weiter tun — das reservations-Realtime-Event wendet DENSELBEN
+  //       idempotenten applyReservation mit der echten Server-Zeile an (gleiche id →
+  //       ersetzt, kein Doppel, kein Flackern).
+  //   3b) Fehler (z. B. 409 Konflikt): auf den Snapshot zurückrollen und Grund melden.
   const confirmMove = useCallback(async () => {
     const m = pendingMove;
     if (!m) return;
     setPendingMove(null);
     setSaving(true);
-    const res = await moveReservation(m.res.id, m.targetPid, m.ci, m.co);
-    setSaving(false);
-    if (res.ok) {
-      toast.success("Reservierung verschoben.");
-    } else {
-      toast.error(res.error || "Verschieben nicht möglich.");
+    // Optimistische Ziel-Buchung: dieselbe id/Buchung, nur Objekt+Zeitraum neu.
+    const optimistic: Reservation = {
+      ...m.res,
+      property_id: m.targetPid,
+      check_in: m.ci,
+      check_out: m.co,
+    };
+    let snapshot: Record<string, Reservation[]> | null = null;
+    setResByProp((prev) => {
+      snapshot = prev; // Rollback-Stand VOR der optimistischen Änderung
+      return applyReservation(prev, optimistic);
+    });
+    try {
+      const res = await moveReservation(m.res.id, m.targetPid, m.ci, m.co);
+      if (res.ok) {
+        toast.success("Reservierung verschoben.");
+        // Kein Reload: das Realtime-Echo bestätigt/korrigiert den Stand idempotent.
+      } else {
+        // Server lehnt ab → optimistische Änderung zurücknehmen.
+        if (snapshot) setResByProp(snapshot);
+        toast.error(res.error || "Verschieben nicht möglich.");
+      }
+    } catch (err) {
+      if (snapshot) setResByProp(snapshot);
+      toast.error("Verschieben nicht möglich.");
+      throw err;
+    } finally {
+      setSaving(false);
     }
-    await load();
   }, [pendingMove]);
 
   // Hervorhebung: während des Ziehens die Vorschau, sonst die fertige Auswahl.
@@ -435,11 +524,16 @@ export function CalendarBoard({
     [drag, sel],
   );
 
-  const onCellDown = useCallback((pid: string, di: number) => {
-    // Neuer Zug startet: alte Auswahl/Leiste verwerfen.
-    setSel(null);
-    setDrag({ pid, from: di, to: di });
-  }, []);
+  const onCellDown = useCallback(
+    (pid: string, di: number, ev: React.MouseEvent) => {
+      // Native Text-Selektion beim Aufziehen einer Zell-Auswahl unterbinden.
+      ev.preventDefault();
+      // Neuer Zug startet: alte Auswahl/Leiste verwerfen.
+      setSel(null);
+      setDrag({ pid, from: di, to: di });
+    },
+    [],
+  );
 
   const onCellEnter = useCallback(
     (pid: string, di: number) => {
@@ -460,25 +554,35 @@ export function CalendarBoard({
   );
 
   // Balken-Zug starten (auf einem belegten Buchungsbalken). mode unterscheidet
-  // Verschieben vs. Resizen an den Kanten. di = Tag-Index unter dem Cursor.
+  // Verschieben vs. Resizen an den Kanten. `startDi` wird NICHT vom Aufrufer
+  // (Segment-Geometrie) übergeben, sondern hier aus der Cursor-Position gemessen
+  // — genau wie in onMove. Nur so ist `dayOffset = di_jetzt − startDi` ein reines
+  // Cursor-Delta (greifpunkt-invariant): rein vertikales Ziehen ⇒ dayOffset 0,
+  // der Balken springt nicht mehr um den Halbtags-Überhang.
   const onBarDown = useCallback(
     (
       res: Reservation,
       pid: string,
-      di: number,
       mode: BarDrag["mode"],
       ev: React.MouseEvent,
     ) => {
+      // Native Text-Selektion beim Ziehen unterbinden — sonst markiert der
+      // Browser den Balken-/Zellentext (blaue Auswahl) und der Drag „bugt rum".
+      ev.preventDefault();
       setSel(null);
       setDrag(null);
       // Klick-vs-Drag-Erkennung: Startposition merken, "bewegt" zurücksetzen.
       barDownPos.current = { x: ev.clientX, y: ev.clientY };
       barMoved.current = false;
+      const grid = gridRef.current;
+      const remPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      // Fehlt das Grid (sollte nie), bleibt startDi=0 → erster onMove korrigiert.
+      const startDi = grid ? cursorDayIndex(ev.clientX, grid, remPx) : 0;
       setBarDrag({
         res,
         mode,
         startPid: pid,
-        startDi: di,
+        startDi,
         dayOffset: 0,
         targetPid: pid,
       });
@@ -493,8 +597,6 @@ export function CalendarBoard({
   useEffect(() => {
     if (!barDrag) return;
     const remPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-    const colPx = COL * remPx;
-    const rowPx = ROW_H * remPx;
     const onMove = (e: MouseEvent) => {
       const grid = gridRef.current;
       const bd = barDragRef.current;
@@ -504,15 +606,18 @@ export function CalendarBoard({
       if (down && (Math.abs(e.clientX - down.x) > 4 || Math.abs(e.clientY - down.y) > 4)) {
         barMoved.current = true;
       }
-      const rect = grid.getBoundingClientRect();
-      // Jede Zeile beginnt mit der (sticky) LABEL-Spalte → diese Breite abziehen.
-      const di = Math.floor((e.clientX - rect.left - LABEL * remPx) / colPx);
-      const rows = shownRef.current;
-      const rowIdx = Math.min(
-        rows.length - 1,
-        Math.max(0, Math.floor((e.clientY - rect.top) / rowPx)),
-      );
-      const overPid = rows[rowIdx]?.id ?? bd.startPid;
+      // Cursor-Tag über denselben Helper wie beim Drag-Start (onBarDown) — EIN
+      // Koordinatensystem, kein Greif-Offset.
+      const di = cursorDayIndex(e.clientX, grid, remPx);
+      // Ziel-Objektzeile per DOM-Treffer bestimmen, NICHT über eine konstante
+      // Zeilenhöhe: die reale Zeilenhöhe schwankt (PropertyLabel mit Bild/mehreren
+      // Textzeilen ist höher als ROW_H), wodurch (clientY-top)/rowPx nach unten
+      // wegdriftet (rowIdx klemmt am Ende fest → Move in andere Objekte scheitert).
+      // Jede Zeile trägt data-row-pid; elementFromPoint findet die echte Zeile
+      // unabhängig von ihrer Höhe. `di` (Cursor-Tag) bleibt die einzige X-Quelle.
+      const hit = document.elementFromPoint(e.clientX, e.clientY);
+      const rowEl = hit?.closest<HTMLElement>("[data-row-pid]");
+      const overPid = rowEl?.dataset.rowPid ?? bd.startPid;
       setBarDrag((cur) =>
         cur
           ? {
@@ -661,7 +766,7 @@ export function CalendarBoard({
         p.address.toLowerCase().includes(q) ||
         p.city.toLowerCase().includes(q);
       if (inProp) return true;
-      const guests = Object.values(resByProp[p.id] ?? {});
+      const guests = resByProp[p.id] ?? [];
       return guests.some((r) => r.guest_name?.toLowerCase().includes(q));
     });
   }, [properties, typeFilter, q, resByProp]);
@@ -720,7 +825,7 @@ export function CalendarBoard({
     const revByCur = new Map<string, number>();
     const nightsByCur = new Map<string, number>();
     for (const p of shown) {
-      for (const r of Object.values(resByProp[p.id] ?? {})) {
+      for (const r of resByProp[p.id] ?? []) {
         if (seen.has(r.id) || r.status === "cancelled") continue;
         seen.add(r.id);
         if (r.total_amount == null) {
@@ -775,15 +880,15 @@ export function CalendarBoard({
   const loadReservations = useCallback(async () => {
     const resAll = await listReservations();
     if (!resAll.ok) return;
+    // Nur der EINMALIGE Initial-Load (bzw. Realtime-Re-Enable-Nachholung).
+    // Danach pflegt der onEvent-Handler die Listen inkrementell — kein Vollreload
+    // nach eigenen Aktionen. Stornierte Buchungen tragen keinen Balken → raus.
     const byProp: Record<string, Reservation[]> = {};
     for (const r of resAll.data.items) {
+      if (r.status === "cancelled") continue;
       (byProp[r.property_id] ??= []).push(r);
     }
-    setResByProp(
-      Object.fromEntries(
-        Object.entries(byProp).map(([pid, list]) => [pid, reservationsByDay(list)]),
-      ),
-    );
+    setResByProp(byProp);
   }, []);
 
   // Tagesdaten (Status/Preis/Min-Stay/CTA-CTD) für ein Index-Fenster laden und
@@ -908,8 +1013,19 @@ export function CalendarBoard({
 
   // Realtime-/Erst-Reload: Buchungen frisch + den AKTUELL geladenen Tagesbereich
   // neu (replace). Lädt NICHT die ganzen ~395 Tage.
+  //
+  // Sequenz-Token als Backstop gegen überlappende Vollreload-Läufe (Wurzel 2):
+  // load() ist zweistufig (loadReservations → loadDays), jeder Schritt schreibt
+  // State. Rennen zwei durch verschiedene Realtime-Tabellen ausgelöste Läufe, darf
+  // der ÄLTERE nach dem jüngeren nichts mehr überschreiben. Jeder Aufruf zieht ein
+  // Token; nach jedem await bricht ein überholter Lauf ab, bevor er erneut schreibt
+  // — der jüngste Lauf setzt immer den korrekten Endzustand. (reservations läuft
+  // separat inkrementell und nutzt load() nicht mehr.)
+  const loadSeq = useRef(0);
   const load = useCallback(async () => {
+    const myToken = ++loadSeq.current;
     await loadReservations();
+    if (myToken !== loadSeq.current) return; // überholt → nicht weiter schreiben
     const cur = loadedRange.current;
     if (cur) await loadDays(cur.from, cur.to, true);
   }, [loadReservations, loadDays]);
@@ -971,13 +1087,34 @@ export function CalendarBoard({
     recomputeWindow();
   }, [start, dates.length, todayKey, todayIndex, scrollToIndex, recomputeWindow]);
 
-  // Realtime: Kalender live aktualisieren, sobald sich Buchungen, Belegung,
-  // Preise oder Stop-Sells ändern (eigene Aktionen, andere Nutzer oder
-  // OTA-Importe). RLS liefert nur Tenant-Zeilen. Während eines aktiven Zugs
-  // (Drag/Resize/Selektion) pausieren wir, damit kein Reload die Interaktion
-  // unterbricht.
+  // reservations: REIN inkrementelles Realtime (Notion-Muster) — kein Vollreload.
+  // Der onEvent-Handler pflegt die Buchungslisten gezielt aus payload.new/old per
+  // id (Wurzel 2 — idempotent gegen das eigene Echo, Doppelklick, Redelivery). Das
+  // Abo wird bewusst NICHT pausiert: das durch die eigene Aktion ausgelöste Event
+  // MUSS ankommen; da der Übergang idempotent ist und keinen Vollreload auslöst,
+  // stört es auch während eines Drags nicht (kein Flackern, keine Race mit load()).
+  useRealtime<Reservation>({
+    table: "reservations",
+    onEvent: (payload) => {
+      setResByProp((prev) => {
+        if (payload.eventType === "DELETE") {
+          const oldId = (payload.old as Partial<Reservation>).id;
+          return oldId ? removeEverywhere(prev, oldId) : prev;
+        }
+        // INSERT/UPDATE (inkl. Move: property_id und/oder Zeitraum geändert).
+        const row = payload.new as Reservation;
+        if (!row?.id) return prev;
+        return applyReservation(prev, row);
+      });
+    },
+  });
+
+  // Belegung/Preise/Stop-Sell: weiterhin Vollreload der Tagesdaten (chunked,
+  // komplex — kein inkrementelles Modell). Diese Abos pausieren während einer
+  // aktiven Interaktion (Drag/Resize/Selektion), damit kein Reload sie unterbricht;
+  // beim Re-Enable holt der Hook einmal nach. `saving` gehört NICHT mehr in den
+  // Guard — der reservations-Race, für den es da war, existiert nicht mehr.
   const interacting = !!barDrag || !!drag || !!sel;
-  useRealtime({ table: "reservations", onChange: load, enabled: !interacting });
   useRealtime({ table: "availability", onChange: load, enabled: !interacting });
   useRealtime({ table: "price_overrides", onChange: load, enabled: !interacting });
   useRealtime({ table: "stop_sell", onChange: load, enabled: !interacting });
@@ -1258,7 +1395,12 @@ export function CalendarBoard({
       {/* overflow-clip statt overflow-hidden: clippt Inhalte an Rundungen, ohne */}
       {/* einen Scroll-Kontext zu erzeugen — sonst bricht sticky left-0. */}
       <Card className="min-w-0 overflow-clip p-0">
-        <div ref={scrollRef} className="overflow-x-auto">
+        {/* Während eines Zugs (Move/Resize/Zell-Auswahl) Text-Selektion global
+            unterbinden — Backstop zu ev.preventDefault (kein blaues Markieren). */}
+        <div
+          ref={scrollRef}
+          className={"overflow-x-auto " + (interacting ? "select-none" : "")}
+        >
           <div style={{ width: `${LABEL + dates.length * COL}rem` }}>
             {/* Tageskopf — virtualisiert: Spacer + nur sichtbare Spalten. */}
             <div className="flex border-b">
@@ -1302,18 +1444,21 @@ export function CalendarBoard({
                 const factorsMap = priceFactors[p.id] ?? {};
                 const minStayMap = minStays[p.id] ?? {};
                 const restrictMap = restrictions[p.id] ?? {};
-                const resMap = resByProp[p.id] ?? {};
+                const resList = resByProp[p.id] ?? [];
+                // Tag→Buchung-Map fürs Segment-Rendering aus der ID-Liste ableiten
+                // (single source of truth = die Liste; Realtime pflegt nur die Liste).
+                const resMap = reservationsByDay(resList);
                 const stopMap = stopSell[p.id] ?? {};
                 // Objekt-Währung aus dem Board (Rate-Plan) — die zuverlässige
                 // Preisquelle; fällt auf die Reservierungs-Währung zurück, falls
                 // (noch) keine Board-Währung vorliegt. Kein €-Hardcode.
                 const propCurrency =
                   currencyByProp[p.id] ??
-                  Object.values(resMap).find((r) => r.currency)?.currency ??
+                  resList.find((r) => r.currency)?.currency ??
                   null;
                 const segs = toSegments(statusMap, sourceMap, resMap, dates, stopMap);
                 return (
-                  <div key={p.id} className="flex border-b last:border-b-0">
+                  <div key={p.id} data-row-pid={p.id} className="flex border-b last:border-b-0">
                     {/* Objektspalte (eigene Komponente, sticky links) */}
                     <PropertyLabel
                       p={p}
@@ -1327,7 +1472,7 @@ export function CalendarBoard({
                     {/* Tagesbereich — volle Breite (für absolut positionierte
                       Balken), Zellen virtualisiert mit Spacern; di bleibt
                       ABSOLUT (= visFrom + i), damit Drag/Selektion stimmen. */}
-                    <div className="relative flex" style={{ width: `${dates.length * COL}rem`, height: `${ROW_H}rem` }}>
+                    <div className="relative flex self-stretch" style={{ width: `${dates.length * COL}rem`, minHeight: `${ROW_H}rem` }}>
                       {/* Spacer links (Zellen vor dem sichtbaren Fenster). */}
                       <div style={{ width: `${visFrom * COL}rem` }} className="shrink-0" />
                       {/* Zellen mit Gäste + Preis-Platzhalter — klickbar (sperren/freigeben) */}
@@ -1340,13 +1485,13 @@ export function CalendarBoard({
                           <button
                             type="button"
                             key={key(d)}
-                            onMouseDown={() => onCellDown(p.id, di)}
+                            onMouseDown={(ev) => onCellDown(p.id, di, ev)}
                             onMouseEnter={() => onCellEnter(p.id, di)}
-                            className={`flex shrink-0 cursor-pointer flex-col items-center justify-center gap-0.5 border-r text-sm transition-colors ${inSel
+                            className={`flex shrink-0 cursor-pointer flex-col items-center justify-center gap-0.5 self-stretch border-r text-sm transition-colors ${inSel
                                 ? "bg-neutral-800 text-white"
                                 : `hover:bg-accent/10 ${isToday ? "bg-accent/5" : ""}`
                               }`}
-                            style={{ width: `${COL}rem`, height: `${ROW_H}rem` }}
+                            style={{ width: `${COL}rem`, minHeight: `${ROW_H}rem` }}
                           >
                             {status === "open" && (
                               <>
@@ -1487,11 +1632,13 @@ export function CalendarBoard({
                         // im Fenster liegt (Segment endet sonst hart am Fensterrand).
                         const endsAtCheckOut =
                           isBooking && seg.reservation!.check_out <= lastDayKey;
-                        const leftPad = startsAtCheckIn ? 0.5 : 0;
+                        const leftPad = startsAtCheckIn ? HALF_DAY : 0;
                         // Breite: Nächte minus halbe Anreise-Spalte, plus halbe
                         // Auslauf-Spalte in den Abreisetag.
                         const widthCols =
-                          seg.span - (startsAtCheckIn ? 0.5 : 0) + (endsAtCheckOut ? 0.5 : 0);
+                          seg.span
+                          - (startsAtCheckIn ? HALF_DAY : 0)
+                          + (endsAtCheckOut ? HALF_DAY : 0);
                         const barStyle = {
                           left: `calc(${seg.start + leftPad} * ${COL}rem + 0.25rem)`,
                           width: `calc(${widthCols} * ${COL}rem - 0.5rem)`,
@@ -1547,7 +1694,7 @@ export function CalendarBoard({
                             title={barTitle}
                             onMouseDown={(ev) => {
                               ev.stopPropagation();
-                              onBarDown(res, p.id, seg.start, "move", ev);
+                              onBarDown(res, p.id, "move", ev);
                             }}
                             // Während IRGENDEIN Balken gezogen wird, müssen ALLE
                             // Balken — auch der gezogene — Mausereignisse durch-
@@ -1562,7 +1709,7 @@ export function CalendarBoard({
                               role="presentation"
                               onMouseDown={(ev) => {
                                 ev.stopPropagation();
-                                onBarDown(res, p.id, seg.start, "start", ev);
+                                onBarDown(res, p.id, "start", ev);
                               }}
                               className="absolute left-0 top-0 h-full w-2 cursor-ew-resize opacity-0 group-hover:opacity-100"
                             />
@@ -1572,7 +1719,7 @@ export function CalendarBoard({
                               role="presentation"
                               onMouseDown={(ev) => {
                                 ev.stopPropagation();
-                                onBarDown(res, p.id, seg.start + seg.span - 1, "end", ev);
+                                onBarDown(res, p.id, "end", ev);
                               }}
                               className="absolute right-0 top-0 h-full w-2 cursor-ew-resize opacity-0 group-hover:opacity-100"
                             />
@@ -1595,8 +1742,12 @@ export function CalendarBoard({
                         return (
                           <div
                             className="pointer-events-none absolute top-1/2 -translate-y-1/2 rounded-full border-2 border-dashed border-accent bg-accent/15"
+                            // Halbtags wie die echten Balken (HALF_DAY): startet in der
+                            // Anreisemitte und läuft bis zur Abreisemitte — so deckt die
+                            // Vorschau exakt den Zielzustand und teilt sich den Wechseltag
+                            // sichtbar mit einem Bestandsbalken (statt ganztags zu wirken).
                             style={{
-                              left: `calc(${ciIdx} * ${COL}rem + 0.25rem)`,
+                              left: `calc(${ciIdx + HALF_DAY} * ${COL}rem + 0.25rem)`,
                               width: `calc(${span} * ${COL}rem - 0.5rem)`,
                               height: "1.75rem",
                             }}

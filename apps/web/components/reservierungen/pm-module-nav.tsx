@@ -31,7 +31,7 @@ const GROUPS: NavGroup[] = [
   {
     title: "Startseite",
     items: [
-      { key: "control", label: "Kontrollzentrum", href: "/", icon: "ph:squares-four", exact: true },
+      { key: "control", label: "Kontrollzentrum", href: "/reservierungen/kontrollzentrum", icon: "ph:squares-four", exact: true },
       { key: "bookings", label: "Buchungen", href: "/reservierungen", icon: "ph:bookmark-simple", exact: true },
       { key: "properties", label: "Unterkünfte", href: "/reservierungen/unterkuenfte", icon: "ph:house-line" },
       { key: "tasks", label: "Aufgaben", href: "/reservierungen/aufgaben", icon: "ph:check-square" },
