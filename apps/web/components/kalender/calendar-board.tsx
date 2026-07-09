@@ -244,11 +244,16 @@ function toSegments(
   let cur: Segment | null = null;
   dates.forEach((d, i) => {
     const res = resByDay[key(d)];
-    // Eine vorhandene (nicht stornierte) Reservierung macht den Tag gebucht —
-    // auch wenn availability ihn (noch) als "open" führt. reservations ist die
-    // Buchungs-Wahrheit; availability kann je nach Sync hinterherhinken. Sonst
-    // blieben real gebuchte Tage im Kalender unsichtbar (Balken fehlt).
-    const rawStatus = statusByDay[key(d)] ?? "open";
+    // EINE Wahrheit für „gebucht": ausschließlich `reservations` (inkrementell per
+    // Realtime immer aktuell). Ein availability-`booked` OHNE zugehörige Buchung ist
+    // ein GEISTERZUSTAND (z. B. eingefrorener availability-Rest nach einem Move, den
+    // der Vollreload noch nicht überschrieben hat) → er darf KEINEN Buchungsbalken
+    // erzeugen. Wir behandeln availability-`booked` ohne Buchung daher wie `open`.
+    // `blocked`/`open` aus availability bleiben eigenständige Zustände; „gebucht"
+    // kommt nur aus der Buchung. (Wurzel 1: der availability-Gegenzustand nach einem
+    // Move ist nicht mehr die Quelle des Balkens → kein Split-Brain zweier Quellen.)
+    const rawAvail = statusByDay[key(d)] ?? "open";
+    const rawStatus: AvailabilityStatus = rawAvail === "booked" && !res ? "open" : rawAvail;
     // Stop-Sell: der Tag wird nicht verkauft — eigener Balken mit
     // Grund/Adressat statt nur „Gesperrt". Der Stop-Sell hat Vorrang vor der
     // generischen availability-Sperre (blocked): OTAs/Channex setzen an
@@ -296,6 +301,18 @@ function toSegments(
 
 // Buchungen eines Objekts auf Tages-Keys abbilden: jeder Übernachtungstag
 // [check_in, check_out) → Reservierung. So findet ein belegtes Segment seinen Gast.
+// Tages-Keys der Nächte einer Buchung [check_in, check_out) — für den lokalen
+// availability-Gegenzustand beim optimistischen Move (dieselbe Halb-offen-Logik
+// wie reservationsByDay, nur die Keys statt der Buchung).
+function nightKeys(checkIn: string, checkOut: string): string[] {
+  const out: string[] = [];
+  const co = new Date(`${checkOut}T00:00:00`);
+  for (let d = new Date(`${checkIn}T00:00:00`); d < co; d = addDays(d, 1)) {
+    out.push(key(d));
+  }
+  return out;
+}
+
 function reservationsByDay(reservations: Reservation[]): Record<string, Reservation> {
   const map: Record<string, Reservation> = {};
   for (const r of reservations) {
@@ -488,23 +505,56 @@ export function CalendarBoard({
       check_in: m.ci,
       check_out: m.co,
     };
-    let snapshot: Record<string, Reservation[]> | null = null;
+    // Optimistisch ALLE betroffenen Records atomar mitpflegen (Notion-Muster):
+    // die Buchung selbst UND den availability-Gegenzustand (Wurzel 1). Snapshots
+    // für Rollback bei Server-Ablehnung.
+    let snapResByProp: Record<string, Reservation[]> | null = null;
+    let snapAvail: Record<string, Record<string, AvailabilityStatus>> | null = null;
+    let snapSources: Record<string, Record<string, AvailabilitySource>> | null = null;
     setResByProp((prev) => {
-      snapshot = prev; // Rollback-Stand VOR der optimistischen Änderung
+      snapResByProp = prev;
       return applyReservation(prev, optimistic);
+    });
+    // Gegenzustand: ALTE Nächte (Quell-Objekt) freigeben, NEUE Nächte (Ziel-Objekt)
+    // belegen — in-memory, damit der Balken sofort in genau einer Zeile steht.
+    const oldNights = nightKeys(m.res.check_in, m.res.check_out);
+    const newNights = nightKeys(m.ci, m.co);
+    setAvail((prev) => {
+      snapAvail = prev;
+      const next = { ...prev };
+      const src = { ...(next[m.res.property_id] ?? {}) };
+      for (const dk of oldNights) src[dk] = "open";
+      next[m.res.property_id] = src;
+      const dst = { ...(next[m.targetPid] ?? {}) };
+      for (const dk of newNights) dst[dk] = "booked";
+      next[m.targetPid] = dst;
+      return next;
+    });
+    setSources((prev) => {
+      snapSources = prev;
+      const next = { ...prev };
+      const dst = { ...(next[m.targetPid] ?? {}) };
+      for (const dk of newNights) dst[dk] = m.res.channel as AvailabilitySource;
+      next[m.targetPid] = dst;
+      return next;
     });
     try {
       const res = await moveReservation(m.res.id, m.targetPid, m.ci, m.co);
       if (res.ok) {
         toast.success("Reservierung verschoben.");
-        // Kein Reload: das Realtime-Echo bestätigt/korrigiert den Stand idempotent.
+        // Kein Reload: die Realtime-Events (reservations + availability) bestätigen/
+        // korrigieren den Stand idempotent mit den echten Server-Zeilen.
       } else {
-        // Server lehnt ab → optimistische Änderung zurücknehmen.
-        if (snapshot) setResByProp(snapshot);
+        // Server lehnt ab → ALLE optimistischen Änderungen zurücknehmen.
+        if (snapResByProp) setResByProp(snapResByProp);
+        if (snapAvail) setAvail(snapAvail);
+        if (snapSources) setSources(snapSources);
         toast.error(res.error || "Verschieben nicht möglich.");
       }
     } catch (err) {
-      if (snapshot) setResByProp(snapshot);
+      if (snapResByProp) setResByProp(snapResByProp);
+      if (snapAvail) setAvail(snapAvail);
+      if (snapSources) setSources(snapSources);
       toast.error("Verschieben nicht möglich.");
       throw err;
     } finally {
@@ -1109,13 +1159,46 @@ export function CalendarBoard({
     },
   });
 
-  // Belegung/Preise/Stop-Sell: weiterhin Vollreload der Tagesdaten (chunked,
-  // komplex — kein inkrementelles Modell). Diese Abos pausieren während einer
-  // aktiven Interaktion (Drag/Resize/Selektion), damit kein Reload sie unterbricht;
-  // beim Re-Enable holt der Hook einmal nach. `saving` gehört NICHT mehr in den
-  // Guard — der reservations-Race, für den es da war, existiert nicht mehr.
+  // availability: REIN inkrementelles Realtime (wie reservations) — eine Wahrheit
+  // pro (property_id, date), gepflegt aus dem Payload, KEIN Vollreload. Jede Zeile
+  // betrifft genau einen Tag → avail[pid][date]=status, sources[pid][date]=source.
+  // Das Abo pausiert NICHT (auch nicht beim Drag): der Übergang ist idempotent und
+  // löst keinen Reload aus. So bleibt der Tagesstatus in Echtzeit konsistent mit
+  // den Buchungen — kein eingefrorener availability-Rest mehr (Notion-Muster:
+  // atomare Records, Client zieht die geänderte Zeile gezielt nach).
+  type AvailabilityRow = {
+    property_id: string;
+    date: string;
+    status: AvailabilityStatus;
+    source: AvailabilitySource;
+  };
+  useRealtime<AvailabilityRow>({
+    table: "availability",
+    onEvent: (payload) => {
+      const row = (payload.eventType === "DELETE" ? payload.old : payload.new) as AvailabilityRow;
+      if (!row?.property_id || !row?.date) return;
+      const del = payload.eventType === "DELETE";
+      // Status setzen/entfernen (DELETE → Tag fällt auf implizit „open" zurück).
+      setAvail((prev) => {
+        const day = { ...(prev[row.property_id] ?? {}) };
+        if (del) delete day[row.date];
+        else day[row.date] = row.status;
+        return { ...prev, [row.property_id]: day };
+      });
+      setSources((prev) => {
+        const day = { ...(prev[row.property_id] ?? {}) };
+        if (del) delete day[row.date];
+        else day[row.date] = row.source;
+        return { ...prev, [row.property_id]: day };
+      });
+    },
+  });
+
+  // Preise/Stop-Sell: weiterhin Vollreload der Tagesdaten (chunked, komplex — noch
+  // kein inkrementelles Modell). Diese Abos pausieren während einer aktiven
+  // Interaktion (Drag/Resize/Selektion), damit kein Reload sie unterbricht; beim
+  // Re-Enable holt der Hook einmal nach.
   const interacting = !!barDrag || !!drag || !!sel;
-  useRealtime({ table: "availability", onChange: load, enabled: !interacting });
   useRealtime({ table: "price_overrides", onChange: load, enabled: !interacting });
   useRealtime({ table: "stop_sell", onChange: load, enabled: !interacting });
   // Preisänderungen live: Basispreis (rate_plans) + Pricing-Konfig
