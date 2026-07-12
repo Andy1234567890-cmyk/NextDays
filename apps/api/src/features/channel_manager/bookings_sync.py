@@ -442,6 +442,25 @@ class BookingsSyncMixin:
         else:
             inserted = db.table("reservations").insert(row).execute().data
             reservation_id = inserted[0]["id"] if inserted else None
+            # Zeitleiste (0122): „Buchung erstellt" für die eingehende OTA-Buchung
+            # (Booking/Airbnb & Co.). Nur bei NEUanlage — eine Modifikation ist
+            # keine Erst-Erstellung. Best-effort: ein Log-Fehler darf den Import
+            # nicht kippen (Wurzel 5, breites except bewusst markiert).
+            if reservation_id:
+                try:
+                    db.table("reservation_events").insert({
+                        "tenant_id": tenant_id,
+                        "reservation_id": reservation_id,
+                        "kind": "created",
+                        "detail": {"channel": channel, "ota_name": ota_name},
+                    }).execute()
+                except Exception as exc:  # noqa: BLE001 — Zeitleiste ist best-effort
+                    log.warning(
+                        "reservation_event_log_failed",
+                        reservation_id=reservation_id,
+                        kind="created",
+                        error=str(exc)[:200],
+                    )
 
         if already_checked_out:
             # Auch Kalender/Channex nicht mehr anfassen: die OTA-Revision kann

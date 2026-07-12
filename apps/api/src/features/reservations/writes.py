@@ -187,6 +187,15 @@ class WritesMixin(ReservationsBase):
             nights=len(nights),
             reservation_id=row["id"],
         )
+        # Zeitleiste (0122): „Buchung erstellt". detail hält Kanal + Nächte für
+        # die Anzeige; Beträge bleiben draußen (der Lesepfad maskiert separat).
+        self._log_event(
+            tenant_id,
+            str(row["id"]),
+            "created",
+            by_user_id=ctx.user_id,
+            detail={"channel": req.channel.value, "nights": len(nights)},
+        )
 
         mask = load_guest_mask(self._client, ctx.user_id)
         guest_name = f"{req.contact.first_name} {req.contact.last_name}".strip()
@@ -457,6 +466,34 @@ class WritesMixin(ReservationsBase):
             property_id=req.property_id,
             nights=len(new_nights),
         )
+        # Zeitleiste (0122): „verschoben" — Objektwechsel und/oder Zeitraum. detail
+        # hält Alt/Neu (Objekt-IDs + Zeitraum) für die Anzeige. Bei ausdrücklichem
+        # Upsell (reprice) zusätzlich ein eigenes „Preis neu berechnet"-Event, das
+        # den neuen Betrag/Währung trägt (protel-Modell nachvollziehbar).
+        self._log_event(
+            tenant_id,
+            reservation_id,
+            "moved",
+            by_user_id=ctx.user_id,
+            detail={
+                "from_property_id": old_property,
+                "to_property_id": req.property_id,
+                "same_property": same_property,
+                "check_in": req.check_in.isoformat(),
+                "check_out": req.check_out.isoformat(),
+            },
+        )
+        if req.reprice:
+            self._log_event(
+                tenant_id,
+                reservation_id,
+                "repriced",
+                by_user_id=ctx.user_id,
+                detail={
+                    "total_amount": update_fields.get("total_amount"),
+                    "currency": current.get("currency"),
+                },
+            )
         # guests(name) für die maskierte Antwort nachladen.
         full = (
             self._db()
@@ -589,6 +626,15 @@ class WritesMixin(ReservationsBase):
             by_user_id=ctx.user_id,
             channel=current.get("channel"),
         )
+        # Zeitleiste (0122): „storniert" — mit Begründung (in der Zeitleiste
+        # ohnehin nur tenant-intern sichtbar, RLS).
+        self._log_event(
+            tenant_id,
+            reservation_id,
+            "cancelled",
+            by_user_id=ctx.user_id,
+            detail={"reason": clean_reason, "channel": current.get("channel")},
+        )
         full = (
             self._db()
             .table("reservations")
@@ -644,6 +690,10 @@ class WritesMixin(ReservationsBase):
             "reservation_checked_in",
             reservation_id=reservation_id,
             by_user_id=ctx.user_id,
+        )
+        # Zeitleiste (0122): „eingecheckt".
+        self._log_event(
+            tenant_id, reservation_id, "checked_in", by_user_id=ctx.user_id
         )
         mask = load_guest_mask(self._client, ctx.user_id)
         return self._row(self._load_owned(tenant_id, reservation_id), mask)
@@ -745,6 +795,14 @@ class WritesMixin(ReservationsBase):
             by_user_id=ctx.user_id,
             invoice_id=invoice["id"],
             invoice_already_existed=invoice["already_existed"],
+        )
+        # Zeitleiste (0122): „ausgecheckt" + erzeugte Rechnungsnummer (Beleg-Bezug).
+        self._log_event(
+            tenant_id,
+            reservation_id,
+            "checked_out",
+            by_user_id=ctx.user_id,
+            detail={"invoice_number": invoice.get("invoice_number")},
         )
         mask = load_guest_mask(self._client, ctx.user_id)
         return CheckOutResponse(

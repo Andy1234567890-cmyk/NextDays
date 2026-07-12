@@ -470,6 +470,29 @@ freigegeben und an Channex zurückgemeldet (availability=1); eine lokale Storno
 hebt die OTA-Buchung NICHT beim Portal auf (das UI weist darauf hin). Guard:
 `MANAGE_CALENDAR` + `EDIT_CALENDAR_BOOKINGS` (wie Verschieben).
 
+**Buchungs-Zeitleiste (Migration `0122`):** Append-only Ereignis-Log je Buchung
+(Lodgify „Zeitleiste") — `reservation_events` (tenant-scoped RLS + Realtime). Die
+Schreibpfade (`create/move/cancel/check_in/check_out`) protokollieren über den
+zentralen best-effort-Helfer `ReservationsBase._log_event` je ein Ereignis
+(`created/moved/repriced/checked_in/checked_out/cancelled`) — ein fehlgeschlagener
+Log-Insert kippt die auslösende Aktion NIE (Wurzel 5, `# noqa: BLE001`). Der
+Lesepfad `GET /reservations/{id}/timeline` bildet den **kompletten Buchungs-Flow**
+ab: er mischt die echten Events mit **synthetischen Events aus ALLEN an der Buchung
+hängenden Tabellen** — Reservierungs-Zeitstempel
+(`created_at/checked_in_at/checked_out_at/cancelled_at`), Aufgaben (`tasks` →
+`task_created`), Nachrichten (`messages` → `message`), Zahlungen (`payments` →
+`payment`) und Zusatzleistungen (`reservation_addons` → `addon`). Eingehende
+OTA-Buchungen (Booking/Airbnb) schreiben ihr `created`-Event direkt beim Import
+(`bookings_sync._project_booking_to_reservation`, nur bei Neuanlage). So haben
+Altbuchungen OHNE DB-Backfill sofort eine vollständige Zeitleiste; ein echtes Event
+verdrängt das synthetische gleicher Art. Beträge + Nachrichtentext im `detail` sind
+maskierungskonform (§4.3 — Personal/Cleaner ohne Finanz-/Kontakt-Einblick). Die
+Zeitleiste ist ein **eigenes Tab** (`/reservierungen/{id}/zeitleiste`) mit
+Ereignis-Filter; sie abonniert alle speisenden Tabellen per Realtime und stellt
+neue `reservation_events` inkrementell voran (kein Reload). Der Detail-Slider zeigt
+zusätzlich den **Objekt-Standort** (Adresse + OpenStreetMap-Karte aus
+`properties.lat/lng` — kein Fremd-Key, white-label).
+
 **Check-in/Check-out + Zimmerrechnung (Migrationen `0091`/`0092`):** Echte
 Front-Desk-Aktionen im Kalender-Buchungs-Slider — `POST /reservations/{id}/
 check-in|check-out` persistiert `checked_in_at`/`checked_out_at` (Guards wie

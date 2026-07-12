@@ -13,8 +13,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { ReservationAddonsSection } from "@/components/kalender/reservation-addons-section";
+import { BookingDetailTabs } from "@/components/reservierungen/booking-detail-tabs";
 import { BookingTasksSection } from "@/components/reservierungen/booking-tasks-section";
 import { CheckoutPaymentDialog } from "@/components/reservierungen/checkout-payment-dialog";
+import { PropertyLocation } from "@/components/reservierungen/property-location";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { AvailabilitySource } from "@/lib/calendar";
@@ -132,17 +134,20 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
             </span>
           </div>
         </div>
-        {data.external_url && (
-          <a
-            href={data.external_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
-          >
-            <Icon icon="ph:arrow-square-out" className="size-4" />
-            Im Portal öffnen
-          </a>
-        )}
+        <div className="flex flex-wrap items-center gap-3">
+          {data.external_url && (
+            <a
+              href={data.external_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
+            >
+              <Icon icon="ph:arrow-square-out" className="size-4" />
+              Im Portal öffnen
+            </a>
+          )}
+          <BookingDetailTabs reservationId={reservationId} />
+        </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-3">
@@ -464,8 +469,19 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
           )}
         </div>
 
-        {/* ===== Rechte Spalte: Kostenaufteilung / Kunde / Aufgaben / Fotos ===== */}
+        {/* ===== Rechte Spalte: Standort / Kostenaufteilung / Kunde / Aufgaben / Fotos ===== */}
         <div className="flex flex-col gap-5">
+          {/* Objekt-Standort (Karte + Adresse), wie Lodgify rechts oben. */}
+          <PropertyLocation
+            title={data.property_title || "Objekt"}
+            street={data.property_street}
+            postalCode={data.property_postal_code}
+            city={data.property_city}
+            country={data.property_country}
+            lat={data.property_lat}
+            lng={data.property_lng}
+          />
+
           {/* Kostenaufteilungsdetails */}
           <Card className="flex flex-col gap-3 p-5">
             <h2 className="font-display text-lg font-bold">

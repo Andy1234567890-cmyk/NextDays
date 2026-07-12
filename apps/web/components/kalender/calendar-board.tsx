@@ -73,16 +73,6 @@ const ROW_H = 3.5; // rem Zeilenhöhe (kompakter — mehr Objekte pro Bildschirm
 // damit beide denselben Wechseltag optisch teilen (kein zweites verstreutes 0.5).
 const HALF_DAY = 0.5;
 
-// Absoluter Tag-Index unter dem Cursor, rein geometrisch aus der Mausposition.
-// EINE Quelle der Wahrheit für Drag-Start (onBarDown) UND Drag-Bewegung (onMove):
-// beide müssen dasselbe Koordinatensystem nutzen, sonst entsteht schon beim
-// Greifen ein Offset (der Balken „springt" um den Halbtags-Überhang). `remPx`
-// wird vom Aufrufer gemessen (einmal pro Drag) und durchgereicht.
-function cursorDayIndex(clientX: number, grid: HTMLElement, remPx: number): number {
-  const rect = grid.getBoundingClientRect();
-  // Jede Zeile beginnt mit der (sticky) LABEL-Spalte → diese Breite abziehen.
-  return Math.floor((clientX - rect.left - LABEL * remPx) / (COL * remPx));
-}
 
 // Durchgehende Timeline: Bereich vom 1. Januar des LAUFENDEN Jahres bis Ende des
 // FOLGEJAHRES — so reicht das Scrollen zurück bis 01.01. UND mehr als ein Jahr
@@ -197,9 +187,9 @@ type BarDrag = {
   res: Reservation;
   mode: "move" | "start" | "end";
   startPid: string; // Objekt, in dem der Zug begann
-  startDi: number; // CURSOR-Tag-Index beim Drücken (via cursorDayIndex, nicht
-  // die Balken-/Segment-Geometrie) — Referenz für das greifpunkt-invariante Delta
-  dayOffset: number; // Verschiebung in Tagen (di_jetzt − startDi; move/Kante)
+  // Verschiebung in Tagen, gerundet aus dem Pixel-Delta zum Greifpunkt
+  // (barDownPos in onMove) — greifpunkt-invariant, kein Kanten-Floor.
+  dayOffset: number;
   targetPid: string; // aktuelles Ziel-Objekt (nur move)
 };
 
@@ -591,17 +581,10 @@ export function CalendarBoard({
 
   const onCellEnter = useCallback(
     (pid: string, di: number) => {
-      // Während eines Balken-Zugs: Offset + Ziel-Objekt aus der überfahrenen
-      // Zelle ableiten (Move folgt dem Objekt, Resize bleibt im selben Objekt).
-      setBarDrag((cur) => {
-        if (!cur) return cur;
-        const dayOffset = di - cur.startDi;
-        return {
-          ...cur,
-          dayOffset,
-          targetPid: cur.mode === "move" ? pid : cur.res.property_id,
-        };
-      });
+      // NUR die Zell-Auswahl (Sperren/Preise) pflegt hier ihre Endzelle. Der
+      // Balken-Zug (barDrag) wird AUSSCHLIESSLICH im window-mousemove-Handler
+      // fortgeschrieben (gerundetes Pixel-Delta) — kein zweiter, kanten-
+      // quantisierter Schreibpfad, der sich damit überschreibt.
       setDrag((cur) => (cur && cur.pid === pid ? { ...cur, to: di } : cur));
     },
     [],
@@ -625,18 +608,15 @@ export function CalendarBoard({
       ev.preventDefault();
       setSel(null);
       setDrag(null);
-      // Klick-vs-Drag-Erkennung: Startposition merken, "bewegt" zurücksetzen.
+      // Klick-vs-Drag-Erkennung + Greif-Referenz für das Pixel-Delta in onMove:
+      // die Cursor-Startposition ist der einzige Bezugspunkt, aus dem der
+      // Tag-Offset gerundet wird (greifpunkt-invariant, kein Kanten-Floor).
       barDownPos.current = { x: ev.clientX, y: ev.clientY };
       barMoved.current = false;
-      const grid = gridRef.current;
-      const remPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-      // Fehlt das Grid (sollte nie), bleibt startDi=0 → erster onMove korrigiert.
-      const startDi = grid ? cursorDayIndex(ev.clientX, grid, remPx) : 0;
       setBarDrag({
         res,
         mode,
         startPid: pid,
-        startDi,
         dayOffset: 0,
         targetPid: pid,
       });
@@ -651,24 +631,38 @@ export function CalendarBoard({
   useEffect(() => {
     if (!barDrag) return;
     const remPx = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    const colPx = COL * remPx;
     const onMove = (e: MouseEvent) => {
       const grid = gridRef.current;
       const bd = barDragRef.current;
-      if (!grid || !bd) return;
-      // Ab ~4px Bewegung gilt es als echtes Ziehen (nicht mehr als Klick).
       const down = barDownPos.current;
-      if (down && (Math.abs(e.clientX - down.x) > 4 || Math.abs(e.clientY - down.y) > 4)) {
+      // fail-closed (Wurzel 5): fehlt die Greif-Referenz, keine Verschiebung
+      // raten — bei 0 bleiben, bis wieder ein sauberer Bezug da ist.
+      if (!grid || !bd || !down) return;
+      // Ab ~4px Bewegung gilt es als echtes Ziehen (nicht mehr als Klick).
+      if (Math.abs(e.clientX - down.x) > 4 || Math.abs(e.clientY - down.y) > 4) {
         barMoved.current = true;
       }
-      // Cursor-Tag über denselben Helper wie beim Drag-Start (onBarDown) — EIN
-      // Koordinatensystem, kein Greif-Offset.
-      const di = cursorDayIndex(e.clientX, grid, remPx);
+      // Tag-Offset aus dem KONTINUIERLICHEN Pixel-Delta zum Greifpunkt runden —
+      // NICHT aus der Differenz zweier kanten-gefloorter Tag-Indizes. Die Balken
+      // liegen halbtags versetzt über den Spaltenkanten; ihre Greifpunkte
+      // (Mitte/Enden) fallen exakt auf eine Kante, wo Math.floor pro Pixel kippt
+      // (der „halbe Tag"). Math.round auf dem Delta ist greifpunkt-invariant:
+      // bei 0 Drift bleibt der Offset 0, erst ab ~½ Spalte kippt der Tag.
+      let dayOffset = Math.round((e.clientX - down.x) / colPx);
+      // Steht der Cursor über der linken (sticky) LABEL-Spalte, verdeckt diese
+      // die Tagesspalten → der X-Anteil wäre unsinnig (weggescrollte/negative
+      // Spalten). Dann X einfrieren (letzten Offset behalten), nur die Zielzeile
+      // weiter aktualisieren.
+      const scroll = scrollRef.current;
+      if (scroll) {
+        const sr = scroll.getBoundingClientRect();
+        if (e.clientX < sr.left + LABEL * remPx) dayOffset = bd.dayOffset;
+      }
       // Ziel-Objektzeile per DOM-Treffer bestimmen, NICHT über eine konstante
       // Zeilenhöhe: die reale Zeilenhöhe schwankt (PropertyLabel mit Bild/mehreren
-      // Textzeilen ist höher als ROW_H), wodurch (clientY-top)/rowPx nach unten
-      // wegdriftet (rowIdx klemmt am Ende fest → Move in andere Objekte scheitert).
-      // Jede Zeile trägt data-row-pid; elementFromPoint findet die echte Zeile
-      // unabhängig von ihrer Höhe. `di` (Cursor-Tag) bleibt die einzige X-Quelle.
+      // Textzeilen ist höher als ROW_H). Jede Zeile trägt data-row-pid;
+      // elementFromPoint findet die echte Zeile unabhängig von ihrer Höhe.
       const hit = document.elementFromPoint(e.clientX, e.clientY);
       const rowEl = hit?.closest<HTMLElement>("[data-row-pid]");
       const overPid = rowEl?.dataset.rowPid ?? bd.startPid;
@@ -676,7 +670,7 @@ export function CalendarBoard({
         cur
           ? {
             ...cur,
-            dayOffset: di - cur.startDi,
+            dayOffset,
             targetPid: cur.mode === "move" ? overPid : cur.res.property_id,
           }
           : cur,

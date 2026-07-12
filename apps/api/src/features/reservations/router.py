@@ -27,6 +27,7 @@ from .schemas import (
     SliceHealth,
     StatMetricDetail,
     StatMetricDetailResponse,
+    TimelineResponse,
 )
 from .service import ReservationError, ReservationsService
 
@@ -169,6 +170,21 @@ def reservation_detail(
     """Vollständige Reservierungs-Detailansicht (rechter Slider)."""
     try:
         return service.detail(ctx, reservation_id)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/{reservation_id}/timeline", response_model=TimelineResponse)
+def reservation_timeline(
+    reservation_id: str,
+    service: ReservationsServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+) -> TimelineResponse:
+    """Ereignis-Zeitleiste einer Buchung (Lodgify „Zeitleiste"). Tenant-/owner-
+    scoped; kombiniert echte reservation_events mit synthetischen Basis-Events
+    aus vorhandenen Zeitstempeln + Aufgaben. Neueste zuerst."""
+    try:
+        return service.timeline(ctx, reservation_id)
     except ReservationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

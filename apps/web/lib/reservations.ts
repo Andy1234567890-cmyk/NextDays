@@ -85,6 +85,14 @@ export type ReservationDetail = {
   id: string;
   property_id: string;
   property_title: string;
+  // Objekt-Standort (aus properties): strukturierte Adresse + optionale
+  // Koordinaten für die Standortkarte. lat/lng null → keine Karte, nur Text.
+  property_street: string | null;
+  property_postal_code: string | null;
+  property_city: string | null;
+  property_country: string | null;
+  property_lat: number | null;
+  property_lng: number | null;
   guest_id: string | null;
   guest_name: string;
   channel: ReservationChannel;
@@ -209,6 +217,51 @@ export async function getReservationDetail(
   reservationId: string,
 ): Promise<Result<ReservationDetail>> {
   return call(`/reservations/${encodeURIComponent(reservationId)}`);
+}
+
+// --- Zeitleiste (Ereignis-Log einer Buchung, Lodgify „Zeitleiste") ----------
+
+// Stabiler Ereignis-Schlüssel; die Beschriftung/Übersetzung macht das UI.
+// Deckt den KOMPLETTEN Buchungs-Flow ab (Lifecycle + Nachrichten/Zahlungen/
+// Aufgaben/Add-ons) — [[buchungs-zeitleiste-kompletter-flow]].
+export type TimelineEventKind =
+  | "created"
+  | "moved"
+  | "repriced"
+  | "checked_in"
+  | "checked_out"
+  | "cancelled"
+  | "task_created"
+  | "message"
+  | "payment"
+  | "addon";
+
+export type TimelineEvent = {
+  id: string;
+  kind: TimelineEventKind | string;
+  at: string; // ISO-Zeitstempel
+  by_user_id: string | null;
+  // Frei strukturierte Detaildaten (Alt/Neu-Objekt, Grund, Titel, Betrag …).
+  // Beträge sind serverseitig bereits maskiert (null ohne Freigabe).
+  detail: Record<string, unknown>;
+  synthetic: boolean;
+};
+
+export type Timeline = {
+  // Objekt-Kontext aller Ereignisse (Thumbnail + Name je Karte, wie Lodgify).
+  // property_id für den klickbaren Objekt-Badge.
+  property_id: string;
+  property_title: string;
+  property_photo: string | null;
+  items: TimelineEvent[];
+};
+
+/** Ereignis-Zeitleiste einer Buchung (neueste zuerst). Kombiniert echte
+ *  reservation_events mit synthetischen Basis-Events (Altbuchungen). */
+export async function getReservationTimeline(
+  reservationId: string,
+): Promise<Result<Timeline>> {
+  return call(`/reservations/${encodeURIComponent(reservationId)}/timeline`);
 }
 
 /** Reservierung stornieren — Begründung ist Pflicht (wird dokumentiert/auditiert).

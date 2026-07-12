@@ -10,6 +10,7 @@ from datetime import date, timedelta
 from src.core.security import AuthContext
 
 from ._base import (
+    GuestMask,
     ReservationError,
     ReservationsBase,
     _as_date,
@@ -33,6 +34,8 @@ from .schemas import (
     ReservationInvoiceInfo,
     ReservationListResponse,
     StatMetricDetail,
+    TimelineEvent,
+    TimelineResponse,
 )
 
 
@@ -434,16 +437,18 @@ class ReadsMixin(ReservationsBase):
             raise ReservationError("Reservierung nicht gefunden.", status_code=404)
 
         title = ""
+        prop_row: dict = {}
         prop = (
             self._db()
             .table("properties")
-            .select("title")
+            .select("title, street, postal_code, city, country, lat, lng")
             .eq("id", r["property_id"])
             .limit(1)
             .execute()
         ).data
         if prop:
-            title = prop[0].get("title") or ""
+            prop_row = prop[0]
+            title = prop_row.get("title") or ""
 
         mask = load_guest_mask(self._client, ctx.user_id)
         guest = r.get("guests") or {}
@@ -486,6 +491,12 @@ class ReadsMixin(ReservationsBase):
             id=r["id"],
             property_id=r["property_id"],
             property_title=title,
+            property_street=prop_row.get("street"),
+            property_postal_code=prop_row.get("postal_code"),
+            property_city=prop_row.get("city"),
+            property_country=prop_row.get("country"),
+            property_lat=prop_row.get("lat"),
+            property_lng=prop_row.get("lng"),
             guest_id=r.get("guest_id"),
             guest_name=mask.name(guest_name) or "",
             channel=r["channel"],
@@ -520,3 +531,258 @@ class ReadsMixin(ReservationsBase):
             guest_country=r.get("guest_country"),
             created_at=r.get("created_at"),
         )
+
+    def timeline(self, ctx: AuthContext, reservation_id: str) -> TimelineResponse:
+        """Chronologische Ereignis-Zeitleiste einer Buchung (Lodgify „Zeitleiste").
+
+        Tenant-/owner-scoped (Wurzel 3): die Reservierung wird zuerst als eigenes
+        Objekt geladen — fremde → 404. Kombiniert:
+          * echte reservation_events (0122) — ab Einführung protokolliert,
+          * synthetische Basis-Events aus vorhandenen Zeitstempeln
+            (created_at/checked_in_at/checked_out_at/cancelled_at) UND den
+            Aufgaben (tasks.created_at), damit ALT-Buchungen ohne Log sofort eine
+            Zeitleiste haben (kein DB-Backfill).
+        Ein echtes Event verdrängt das synthetische derselben Art (die echte Zeile
+        ist genauer). Rückgabe: neueste zuerst. Beträge im detail nur mit Freigabe.
+        """
+        tenant_id = self._require_tenant(ctx)
+        r = self._load_owned(tenant_id, reservation_id)
+        owner_pids = self._owner_scope_pids(ctx)
+        if owner_pids is not None and r.get("property_id") not in owner_pids:
+            raise ReservationError("Reservierung nicht gefunden.", status_code=404)
+        mask = load_guest_mask(self._client, ctx.user_id)
+
+        # Objekt-Kontext (Titel + Cover-Foto) — Lodgify zeigt je Karte das
+        # Objekt-Thumbnail. Einmal geladen für die ganze Zeitleiste.
+        prop_title, prop_photo = self._property_context(str(r.get("property_id") or ""))
+
+        # 1) Echte protokollierte Ereignisse.
+        real_rows = (
+            self._db()
+            .table("reservation_events")
+            .select("id, kind, by_user_id, detail, created_at")
+            .eq("reservation_id", reservation_id)
+            .eq("tenant_id", tenant_id)
+            .order("created_at", desc=False)
+            .execute()
+        ).data or []
+        events: list[TimelineEvent] = []
+        real_kinds: set[str] = set()
+        for ev in real_rows:
+            kind = str(ev.get("kind") or "")
+            real_kinds.add(kind)
+            events.append(
+                TimelineEvent(
+                    id=str(ev["id"]),
+                    kind=kind,
+                    at=str(ev.get("created_at")),
+                    by_user_id=ev.get("by_user_id"),
+                    detail=self._mask_event_detail(ev.get("detail") or {}, mask),
+                    synthetic=False,
+                )
+            )
+
+        # 2) Synthetische Basis-Events aus vorhandenen Zeitstempeln — nur, wenn für
+        #    dieselbe Art noch KEIN echtes Event existiert (echt gewinnt).
+        def add_synth(kind: str, at: object, detail: dict | None = None) -> None:
+            if not at or kind in real_kinds:
+                return
+            events.append(
+                TimelineEvent(
+                    id=f"synth:{kind}:{reservation_id}",
+                    kind=kind,
+                    at=str(at),
+                    detail=self._mask_event_detail(detail or {}, mask),
+                    synthetic=True,
+                )
+            )
+
+        # Das „Buchung erstellt"-Event trägt die Eckdaten (Ankunft/Abreise/Gäste/
+        # Preis) wie bei Lodgify — Betrag maskierungskonform.
+        add_synth("created", r.get("created_at"), {
+            "channel": r.get("channel"),
+            "ota_name": r.get("ota_name"),
+            "check_in": r.get("check_in"),
+            "check_out": r.get("check_out"),
+            "num_guests": int(r.get("num_guests") or 1),
+            "total_amount": (
+                mask.amount(float(r.get("total_amount") or 0))
+                if mask.amounts else None
+            ),
+            "currency": (r.get("currency") or "") if mask.amounts else "",
+        })
+        add_synth("checked_in", r.get("checked_in_at"))
+        add_synth(
+            "checked_out",
+            r.get("checked_out_at"),
+            {"invoice_number": None},
+        )
+        if r.get("status") == "cancelled":
+            add_synth(
+                "cancelled",
+                r.get("cancelled_at"),
+                {"reason": r.get("cancel_reason"), "channel": r.get("channel")},
+            )
+
+        # 3) Der KOMPLETTE Buchungs-Flow aus allen an der Buchung hängenden
+        #    Tabellen (Aufgaben, Nachrichten, Zahlungen, Zusatzleistungen). Jede
+        #    Quelle liefert ein synthetisches Event aus ihrem created_at — so zeigt
+        #    die Zeitleiste den ganzen Vorgang, nicht nur den Lifecycle.
+        events.extend(self._flow_events(reservation_id, mask))
+
+        # Neueste zuerst (Lodgify-Reihenfolge).
+        events.sort(key=lambda e: e.at, reverse=True)
+        return TimelineResponse(
+            property_id=str(r.get("property_id") or ""),
+            property_title=prop_title,
+            property_photo=prop_photo,
+            items=events,
+        )
+
+    def _flow_events(
+        self, reservation_id: str, mask: GuestMask
+    ) -> list[TimelineEvent]:
+        """Synthetische Events aus allen an der Buchung hängenden Tabellen —
+        der komplette Flow (Aufgaben/Nachrichten/Zahlungen/Add-ons). Jede Zeile
+        wird über ihr created_at eingeordnet; Beträge/Kontakt maskierungskonform
+        (Grund: Personal/Cleaner ohne Finanz-/Kontakt-Einblick, §4.3, Wurzel 3).
+
+        Scope (Wurzel 3): der Aufrufer hat die Reservierung bereits tenant-/owner-
+        scoped geladen; diese Tabellen (messages/tasks/payments/reservation_addons)
+        haben KEINE eigene tenant_id-Spalte, sondern hängen per FK an genau dieser
+        Reservierung — deshalb reicht der reservation_id-Filter (kein tenant_id)."""
+        out: list[TimelineEvent] = []
+
+        def rows(table: str, cols: str) -> list[dict]:
+            return (
+                self._db()
+                .table(table)
+                .select(cols)
+                .eq("reservation_id", reservation_id)
+                .order("created_at", desc=False)
+                .execute()
+            ).data or []
+
+        # Aufgaben → „Aufgabe erstellt" (mit Zuständigem + Fälligkeit, wie Lodgify).
+        task_rows = rows("tasks", "id, title, status, assignee_id, due_at, created_at")
+        assignee_names = self._user_names(
+            [t["assignee_id"] for t in task_rows if t.get("assignee_id")]
+        )
+        for t in task_rows:
+            if not t.get("created_at"):
+                continue
+            out.append(TimelineEvent(
+                id=f"task:{t['id']}", kind="task_created", at=str(t["created_at"]),
+                detail={
+                    "title": t.get("title") or "",
+                    "status": t.get("status"),
+                    "assignee": assignee_names.get(t.get("assignee_id")),
+                    "due_at": t.get("due_at"),
+                },
+                synthetic=True,
+            ))
+
+        # Nachrichten → „Nachricht" (Gast↔Host). Der Nachrichtentext ist Kontakt-
+        # inhalt → nur mit Kontakt-Freigabe zeigen, sonst nur „Nachricht" + Kanal.
+        for m in rows("messages", "id, sender, body, channel, created_at"):
+            if not m.get("created_at"):
+                continue
+            body = mask.contact_value(m.get("body"))
+            out.append(TimelineEvent(
+                id=f"msg:{m['id']}", kind="message", at=str(m["created_at"]),
+                detail={
+                    "sender": m.get("sender"),
+                    "channel": m.get("channel"),
+                    "preview": (body[:120] if isinstance(body, str) else None),
+                },
+                synthetic=True,
+            ))
+
+        # Zahlungen → „Zahlung". Betrag/Währung nur mit Betrags-Freigabe.
+        for p in rows("payments", "id, amount, currency, type, status, created_at"):
+            if not p.get("created_at"):
+                continue
+            out.append(TimelineEvent(
+                id=f"pay:{p['id']}", kind="payment", at=str(p["created_at"]),
+                detail={
+                    "amount": mask.amount(float(p.get("amount") or 0))
+                    if mask.amounts else None,
+                    "currency": (p.get("currency") or "") if mask.amounts else "",
+                    "type": p.get("type"),
+                    "status": p.get("status"),
+                },
+                synthetic=True,
+            ))
+
+        # Zusatzleistungen → „Zusatzleistung gebucht". Preis nur mit Freigabe.
+        for a in rows("reservation_addons", "id, name, price, status, created_at"):
+            if not a.get("created_at"):
+                continue
+            out.append(TimelineEvent(
+                id=f"addon:{a['id']}", kind="addon", at=str(a["created_at"]),
+                detail={
+                    "name": a.get("name"),
+                    "price": mask.amount(float(a.get("price") or 0))
+                    if mask.amounts else None,
+                    "status": a.get("status"),
+                },
+                synthetic=True,
+            ))
+
+        return out
+
+    def _property_context(self, property_id: str) -> tuple[str, str | None]:
+        """Objekt-Titel + Cover-Foto-URL für die Zeitleiste (je Karte gezeigt).
+        Foto = Cover (is_cover), sonst das erste nach sort_order; keins → None
+        (kein erfundenes Bild). property_photos.url ist bereits eine fertige URL."""
+        if not property_id:
+            return "", None
+        prop = (
+            self._db()
+            .table("properties")
+            .select("title")
+            .eq("id", property_id)
+            .limit(1)
+            .execute()
+        ).data
+        title = (prop[0].get("title") or "") if prop else ""
+        photos = (
+            self._db()
+            .table("property_photos")
+            .select("url, is_cover, sort_order")
+            .eq("property_id", property_id)
+            .order("is_cover", desc=True)
+            .order("sort_order", desc=False)
+            .limit(1)
+            .execute()
+        ).data
+        photo = photos[0].get("url") if photos else None
+        return title, photo
+
+    def _user_names(self, user_ids: list[str]) -> dict[str, str]:
+        """full_name je Nutzer-ID (für „Zuständig" an Aufgaben-Events). Leere
+        Eingabe → leeres Dict; unbekannte IDs fehlen einfach."""
+        ids = [u for u in dict.fromkeys(user_ids) if u]
+        if not ids:
+            return {}
+        rows = (
+            self._db()
+            .table("users")
+            .select("id, full_name")
+            .in_("id", ids)
+            .execute()
+        ).data or []
+        return {row["id"]: (row.get("full_name") or "") for row in rows}
+
+    @staticmethod
+    def _mask_event_detail(detail: dict, mask: GuestMask) -> dict:
+        """Betragsführende Detailfelder eines Events hinter der Betrags-Maske
+        halten (Wurzel 4 — keine Beträge ohne Freigabe). Nicht-Geld-Felder
+        (Objekt-IDs, Kanal, Titel, Grund) bleiben unverändert."""
+        if mask.amounts:
+            return detail
+        redacted = dict(detail)
+        for money_key in ("total_amount",):
+            if money_key in redacted:
+                redacted[money_key] = None
+        return redacted

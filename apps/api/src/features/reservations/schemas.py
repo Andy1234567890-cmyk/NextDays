@@ -150,6 +150,15 @@ class ReservationDetail(BaseModel):
     id: str
     property_id: str
     property_title: str = ""
+    # Objekt-Standort (aus properties): strukturierte Adresse + optionale
+    # Koordinaten für die Standortkarte. lat/lng None → keine Karte, nur Text
+    # (kein erfundener Punkt, Wurzel 4). Adresse speist den „In Karte öffnen"-Link.
+    property_street: str | None = None
+    property_postal_code: str | None = None
+    property_city: str | None = None
+    property_country: str | None = None
+    property_lat: float | None = None
+    property_lng: float | None = None
     guest_id: str | None = None
     guest_name: str = ""
     channel: ReservationChannel
@@ -353,6 +362,37 @@ class StatMetricDetailResponse(BaseModel):
     property_id: str
     property_title: str = ""
     detail: StatMetricDetail
+
+
+class TimelineEvent(BaseModel):
+    """Ein Eintrag der Buchungs-Zeitleiste (Lodgify „Zeitleiste").
+
+    `kind` ist der stabile Schlüssel (created/moved/repriced/checked_in/
+    checked_out/cancelled/task_created) — die Beschriftung/Übersetzung macht das
+    Frontend. `synthetic=True` markiert ein aus vorhandenen Zeitstempeln
+    abgeleitetes Basis-Event (Altbuchungen ohne echten Log-Eintrag). `detail`
+    ist bereits maskierungsbereinigt (keine Beträge ohne Freigabe)."""
+
+    id: str
+    kind: str
+    at: str  # ISO-Zeitstempel
+    by_user_id: str | None = None
+    detail: dict = {}
+    synthetic: bool = False
+
+
+class TimelineResponse(BaseModel):
+    """Chronologische Ereignis-Zeitleiste einer Buchung (neueste zuerst).
+
+    `property_title`/`property_photo` sind der gemeinsame Objekt-Kontext aller
+    Ereignisse (Lodgify zeigt je Karte das Objekt-Thumbnail + den Namen) — einmal
+    geliefert statt je Event dupliziert. `photo` = null → das UI zeigt einen
+    Platzhalter (kein erfundenes Bild)."""
+
+    property_id: str = ""
+    property_title: str = ""
+    property_photo: str | None = None
+    items: list[TimelineEvent] = []
 
 
 class SliceHealth(BaseModel):

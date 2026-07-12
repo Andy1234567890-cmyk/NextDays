@@ -1042,3 +1042,121 @@ def test_cancel_keeps_days_still_booked_by_ota() -> None:
     # 01. wird frei (nur lokal belegt), 02. bleibt booked (OTA belegt ihn noch).
     assert avail["2026-07-01"] == "open"
     assert avail["2026-07-02"] == "booked"
+
+
+# --- Zeitleiste (Ereignis-Log + synthetische Basis-Events) -------------------
+
+def test_timeline_synthesizes_base_events_for_old_booking() -> None:
+    """Altbuchung ohne echte reservation_events: die Zeitleiste leitet Basis-
+    Events (created/checked_in) aus den vorhandenen Zeitstempeln ab und hängt
+    Aufgaben als task_created an. Neueste zuerst."""
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["reservations"][0].update({
+        "created_at": "2026-06-20T09:00:00+00:00",
+        "checked_in_at": "2026-07-01T16:00:00+00:00",
+    })
+    store["tasks"] = [
+        {"id": "task-1", "tenant_id": "t1", "reservation_id": RID,
+         "title": "Reinigung", "created_at": "2026-06-25T08:00:00+00:00"},
+    ]
+    svc = _move_db(store)
+    tl = svc.timeline(AuthContext(user_id="u", tenant_id="t1", role="admin"), RID)
+    kinds = [e.kind for e in tl.items]
+    assert "created" in kinds
+    assert "checked_in" in kinds
+    assert "task_created" in kinds
+    # Alle synthetisch (kein echtes Event vorhanden).
+    assert all(e.synthetic for e in tl.items)
+    # Neueste zuerst: checked_in (Juli) vor created (Juni).
+    assert tl.items[0].at > tl.items[-1].at
+
+
+def test_timeline_real_event_wins_over_synthetic() -> None:
+    """Existiert ein echtes 'created'-Event, wird das synthetische NICHT zusätzlich
+    erzeugt (echt gewinnt) — sonst stünde 'Buchung erstellt' doppelt."""
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["reservations"][0]["created_at"] = "2026-06-20T09:00:00+00:00"
+    store["reservation_events"] = [
+        {"id": "ev-1", "tenant_id": "t1", "reservation_id": RID, "kind": "created",
+         "by_user_id": "u", "detail": {"channel": "booking"},
+         "created_at": "2026-06-20T09:00:05+00:00"},
+    ]
+    svc = _move_db(store)
+    tl = svc.timeline(AuthContext(user_id="u", tenant_id="t1", role="admin"), RID)
+    created = [e for e in tl.items if e.kind == "created"]
+    assert len(created) == 1
+    assert created[0].synthetic is False
+
+
+def test_timeline_masks_amount_detail_without_permission() -> None:
+    """Ohne Betragsfreigabe darf ein repriced-Event keinen Betrag zeigen."""
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["users"] = [{"id": "u", "role": "cleaner", "permissions": _NO_PERMS}]
+    store["reservation_events"] = [
+        {"id": "ev-1", "tenant_id": "t1", "reservation_id": RID, "kind": "repriced",
+         "by_user_id": "u", "detail": {"total_amount": 450.0, "currency": "EUR"},
+         "created_at": "2026-06-21T09:00:00+00:00"},
+    ]
+    svc = _move_db(store)
+    tl = svc.timeline(AuthContext(user_id="u", tenant_id="t1", role=None), RID)
+    repriced = next(e for e in tl.items if e.kind == "repriced")
+    assert repriced.detail["total_amount"] is None
+
+
+def test_timeline_unknown_404() -> None:
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    svc = _move_db(store)
+    with pytest.raises(ReservationError) as exc:
+        svc.timeline(AuthContext(user_id="u", tenant_id="t1", role="admin"), "nope")
+    assert exc.value.status_code == 404
+
+
+def test_timeline_includes_full_flow_messages_payments_addons() -> None:
+    """Die Zeitleiste zeigt den KOMPLETTEN Flow: Nachrichten, Zahlungen und
+    Zusatzleistungen — nicht nur den Reservierungs-Lifecycle."""
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["reservations"][0]["created_at"] = "2026-06-20T09:00:00+00:00"
+    store["messages"] = [
+        {"id": "m1", "tenant_id": "t1", "reservation_id": RID, "sender": "guest",
+         "body": "Wann ist Check-in?", "channel": "booking",
+         "created_at": "2026-06-21T10:00:00+00:00"},
+    ]
+    store["payments"] = [
+        {"id": "pay1", "tenant_id": "t1", "reservation_id": RID, "amount": 200,
+         "currency": "EUR", "type": "charge", "status": "paid",
+         "created_at": "2026-06-22T10:00:00+00:00"},
+    ]
+    store["reservation_addons"] = [
+        {"id": "ad1", "tenant_id": "t1", "reservation_id": RID,
+         "name": {"de": "Frühstück"}, "price": 30, "status": "paid",
+         "created_at": "2026-06-23T10:00:00+00:00"},
+    ]
+    svc = _move_db(store)
+    tl = svc.timeline(AuthContext(user_id="u", tenant_id="t1", role="admin"), RID)
+    kinds = {e.kind for e in tl.items}
+    assert {"message", "payment", "addon"} <= kinds
+    pay = next(e for e in tl.items if e.kind == "payment")
+    assert pay.detail["amount"] == 200  # Betrag sichtbar (admin)
+
+
+def test_timeline_masks_flow_amounts_and_message_for_cleaner() -> None:
+    """Personal/Cleaner ohne Finanz-/Kontakt-Einblick (§4.3): Zahlungsbetrag und
+    Nachrichtentext werden maskiert, das Ereignis selbst bleibt sichtbar."""
+    store = _move_store(check_in="2026-07-01", check_out="2026-07-03")
+    store["users"] = [{"id": "u", "role": "cleaner", "permissions": _NO_PERMS}]
+    store["messages"] = [
+        {"id": "m1", "tenant_id": "t1", "reservation_id": RID, "sender": "guest",
+         "body": "Geheime Nachricht", "channel": "booking",
+         "created_at": "2026-06-21T10:00:00+00:00"},
+    ]
+    store["payments"] = [
+        {"id": "pay1", "tenant_id": "t1", "reservation_id": RID, "amount": 200,
+         "currency": "EUR", "type": "charge", "status": "paid",
+         "created_at": "2026-06-22T10:00:00+00:00"},
+    ]
+    svc = _move_db(store)
+    tl = svc.timeline(AuthContext(user_id="u", tenant_id="t1", role=None), RID)
+    pay = next(e for e in tl.items if e.kind == "payment")
+    assert pay.detail["amount"] is None
+    msg = next(e for e in tl.items if e.kind == "message")
+    assert msg.detail["preview"] is None  # Nachrichtentext maskiert

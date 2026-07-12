@@ -265,6 +265,43 @@ class ReservationsBase:
             return
         try_enqueue_recompute(self._client, tenant_id, property_id)
 
+    def _log_event(
+        self,
+        tenant_id: str,
+        reservation_id: str,
+        kind: str,
+        *,
+        by_user_id: str | None = None,
+        detail: dict | None = None,
+    ) -> None:
+        """Ein Ereignis in die Buchungs-Zeitleiste schreiben (0122).
+
+        Append-only, best-effort: ein fehlgeschlagener Log-Insert darf die
+        auslösende Aktion (Buchung/Move/Storno/Check-in-out) NIEMALS kippen
+        (Wurzel 5 — Audit ist Best-Effort, `# noqa: BLE001`). Die Zeitleiste
+        ist eine Anzeige-/Nachvollziehbarkeits-Schicht, keine Transaktions-
+        wahrheit; Basis-Events für Altbuchungen synthetisiert der Lesepfad.
+        """
+        if self._client is None:
+            return
+        try:
+            self._db().table("reservation_events").insert(
+                {
+                    "tenant_id": tenant_id,
+                    "reservation_id": reservation_id,
+                    "kind": kind,
+                    "by_user_id": by_user_id,
+                    "detail": detail or {},
+                }
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 — Zeitleiste ist best-effort
+            log.warning(
+                "reservation_event_log_failed",
+                reservation_id=reservation_id,
+                kind=kind,
+                error=str(exc)[:200],
+            )
+
     def _load_owned(self, tenant_id: str, reservation_id: str) -> dict:
         """Reservierung tenant-scoped laden (404, wenn fremd/fehlend)."""
         _require_uuid(reservation_id)
