@@ -26,12 +26,14 @@ from .features.external_calendar.router import router as external_calendar_route
 from .features.guests.router import router as guests_router
 from .features.inbox import scheduler as inbox_scheduler
 from .features.inbox.router import router as inbox_router
+from .features.media.router import router as media_router
 from .features.ocr.router import router as ocr_router
 from .features.owner_statements.router import router as owner_statements_router
 from .features.owners.router import router as owners_router
 from .features.payments.router import router as payments_router
 from .features.pricing.router import router as pricing_router
 from .features.properties.router import router as properties_router
+from .features.property_dossier.router import router as property_dossier_router
 from .features.property_portal.router import router as property_portal_router
 from .features.public_portal.router import router as public_portal_router
 from .features.rates.router import router as rates_router
@@ -39,7 +41,6 @@ from .features.reservations.router import router as reservations_router
 from .features.site_config.router import manage_router as site_config_manage_router
 from .features.site_config.router import public_router as site_config_public_router
 from .features.subscriptions.router import router as subscriptions_router
-from .features.media.router import router as media_router
 from .features.tasks.router import router as tasks_router
 from .features.travel_agencies.router import router as travel_agencies_router
 from .features.whatsapp.router import router as whatsapp_router
@@ -49,6 +50,7 @@ _SLICE_ROUTERS = [
     buchhaltung_router,
     properties_router,
     property_portal_router,
+    property_dossier_router,
     owners_router,
     owner_statements_router,
     addons_router,

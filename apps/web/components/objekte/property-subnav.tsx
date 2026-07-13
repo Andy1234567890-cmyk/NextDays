@@ -17,6 +17,7 @@ const GROUPS: { label: string; items: { slug: string; title: string; icon: strin
       { slug: "fotos", title: "Fotos", icon: "ph:image" },
       { slug: "standort", title: "Standort", icon: "ph:map-pin" },
       { slug: "kontakt", title: "Kontakt", icon: "ph:address-book" },
+      { slug: "kartei", title: "Kartei", icon: "ph:clipboard-text" },
       { slug: "nachrichten", title: "Nachrichten-Platzhalter", icon: "ph:chat-text" },
       { slug: "compliance", title: "Compliance", icon: "ph:seal-check" },
     ],

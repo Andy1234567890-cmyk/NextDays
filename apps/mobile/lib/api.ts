@@ -1,10 +1,11 @@
 // API-Client für das FastAPI-Backend (gleiche /api/v1-Schnittstelle wie die
-// Web-App). Business-Logik bleibt im Backend; die App ruft nur HTTP.
-// Basis-URL aus lib/config (Simulator: localhost; echtes Gerät: LAN-IP).
-import { getToken } from "@/lib/auth";
-import { API_URL } from "@/lib/config";
+// Web-App). Business-Logik bleibt im Backend; die App ruft nur HTTP. URL/Env
+// ausschließlich aus lib/config. Bei 401 wird GENAU EINMAL still refresht und
+// der Request wiederholt (CLAUDE.md Mobile: kein Retry-Loop).
+import { getToken, refreshSession } from "@/lib/auth";
+import { CONFIG } from "@/lib/config";
 
-const BASE = API_URL;
+const BASE = CONFIG.apiUrl;
 const PREFIX = "/api/v1";
 
 export class ApiError extends Error {
@@ -18,16 +19,27 @@ export class ApiError extends Error {
 export type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
 type Options = {
-  method?: "GET" | "POST" | "PATCH" | "DELETE";
+  method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   body?: unknown;
 };
 
-// Roher Aufruf — wirft ApiError. Nutze `call` für ein Result.
-export async function api<T>(path: string, opts: Options = {}): Promise<T> {
+// Auth-Pfade dürfen NICHT den 401→Refresh→Retry-Zyklus auslösen (sonst
+// Rekursion: /auth/refresh, das 401 gibt, würde erneut refreshen; ein 401 aus
+// login/register ist eine fachliche Antwort, kein Session-Ablauf).
+function isAuthPath(path: string): boolean {
+  return (
+    path.startsWith("/auth/login") ||
+    path.startsWith("/auth/register") ||
+    path.startsWith("/auth/refresh")
+  );
+}
+
+async function doFetch<T>(path: string, opts: Options): Promise<T> {
   const token = await getToken();
+  // Content-Type braucht Bracket-Notation (Bindestrich im Header-Namen).
   const headers: Record<string, string> = {};
   if (opts.body !== undefined) headers["Content-Type"] = "application/json";
-  if (token) headers["Authorization"] = `Bearer ${token}`;
+  if (token) headers.Authorization = `Bearer ${token}`;
 
   let res: Response;
   try {
@@ -53,6 +65,23 @@ export async function api<T>(path: string, opts: Options = {}): Promise<T> {
 
   if (res.status === 204) return undefined as T;
   return (await res.json()) as T;
+}
+
+// Roher Aufruf — wirft ApiError. Nutze `call` für ein Result.
+export async function api<T>(path: string, opts: Options = {}): Promise<T> {
+  try {
+    return await doFetch<T>(path, opts);
+  } catch (exc) {
+    // Genau EIN Refresh-Versuch bei 401 (nicht auf Auth-Pfaden selbst), dann
+    // Request einmal wiederholen. Schlägt der Refresh fehl → 401 bleibt.
+    if (exc instanceof ApiError && exc.status === 401 && !isAuthPath(path)) {
+      const refreshed = await refreshSession();
+      if (refreshed) {
+        return doFetch<T>(path, opts);
+      }
+    }
+    throw exc;
+  }
 }
 
 // Bequemer Wrapper: nie werfen, immer ein Result zurückgeben.

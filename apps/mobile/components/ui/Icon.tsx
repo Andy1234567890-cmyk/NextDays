@@ -45,6 +45,7 @@ export const NIC: Record<string, string> = {
   chart: "M5 20V5M5 20h15M9 16v-4M13 16V8M17 16v-6",
   download: "M12 3v11m0 0l-4-4m4 4l4-4M5 20h14",
   arrowup: "M12 19V6M6 11l6-6 6 6",
+  caretdown: "M6 9l6 6 6-6",
   dot: "M12 12h.01",
   globe:
     "M12 3a9 9 0 100 18 9 9 0 000-18M3 12h18M12 3c2.5 2.4 3.8 5.6 3.8 9s-1.3 6.6-3.8 9c-2.5-2.4-3.8-5.6-3.8-9S9.5 5.4 12 3",

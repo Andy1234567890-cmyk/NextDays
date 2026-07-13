@@ -29,6 +29,13 @@ class LoginRequest(BaseModel):
     password: SecretStr
 
 
+class RefreshRequest(BaseModel):
+    """Silent-Refresh (Mobile): tauscht ein gültiges Refresh-Token gegen eine
+    frische Session. Antwort ist die bestehende SessionResponse."""
+
+    refresh_token: SecretStr
+
+
 class InviteRequest(BaseModel):
     """Einladung eines weiteren Nutzers in den eigenen Tenant (Mitarbeiter etc.).
 

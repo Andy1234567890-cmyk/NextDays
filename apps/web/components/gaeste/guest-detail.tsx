@@ -15,6 +15,7 @@ import { useRealtime } from "@/lib/use-realtime";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
+import { OverflowTabs } from "@/components/ui/overflow-tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { ReservationDetailSlider } from "@/components/kalender/reservation-detail-slider";
 import { ReservationWizard } from "@/components/kalender/reservation-wizard";
@@ -204,23 +205,15 @@ export function GuestDetail({
           </div>
         </div>
 
-        {/* Ordner-Tabs am Band-Unterrand: aktiv = Hintergrundfarbe des
-            Inhalts (nahtloser Übergang), inaktiv = aufgehellter Reiter. */}
-        <div className="flex flex-wrap gap-1 px-4">
-          {tabs.map((k) => (
-            <button
-              key={k}
-              type="button"
-              onClick={() => setTab(k)}
-              className={
-                k === tab
-                  ? "rounded-t-lg bg-background px-4 py-2.5 text-sm font-semibold text-foreground"
-                  : "rounded-t-lg bg-white/15 px-4 py-2.5 text-sm font-medium text-white hover:bg-white/25"
-              }
-            >
-              {t(`tab.${k}`)}
-            </button>
-          ))}
+        {/* Einzeilige Tab-Leiste am Band-Unterrand; überzählige Tabs hinter
+            „⋯". Aktiv = Inhalts-Hintergrund, inaktiv = aufgehellter Reiter. */}
+        <div className="px-4 pb-1">
+          <OverflowTabs
+            tone="accent"
+            active={tab}
+            onSelect={(k) => setTab(k as TabKey)}
+            tabs={tabs.map((k) => ({ key: k, label: t(`tab.${k}`) }))}
+          />
         </div>
       </div>
 

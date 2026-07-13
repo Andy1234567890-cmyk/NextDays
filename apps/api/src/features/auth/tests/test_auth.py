@@ -21,6 +21,7 @@ from src.features.auth.permissions import (
 from src.features.auth.schemas import (
     AccommodationTypeUpdate,
     InviteRequest,
+    RefreshRequest,
     RegisterRequest,
     UserRole,
 )
@@ -339,3 +340,56 @@ def test_set_accommodation_type_404_when_tenant_missing() -> None:
     service.table.return_value.update.return_value.eq.return_value.execute.return_value.data = []
     with pytest.raises(AuthError):
         svc.set_accommodation_type(ctx, "vacation_rental")
+
+
+# --- Token-Refresh (P1: Silent-Refresh für Mobile) ---
+
+def test_refresh_request_rejects_missing_token() -> None:
+    with pytest.raises(ValidationError):
+        RefreshRequest()  # type: ignore[call-arg]
+
+
+def test_refresh_returns_fresh_session_on_success() -> None:
+    svc, anon, _service = _service_with_mocks()
+    session = MagicMock()
+    session.access_token = "new-access"
+    session.refresh_token = "new-refresh"
+    session.expires_in = 3600
+    anon.auth.refresh_session.return_value = MagicMock(session=session)
+
+    res = svc.refresh(RefreshRequest(refresh_token="old-refresh"))
+
+    anon.auth.refresh_session.assert_called_once_with("old-refresh")
+    assert res.access_token == "new-access"
+    assert res.refresh_token == "new-refresh"
+    assert res.expires_in == 3600
+
+
+def test_refresh_maps_gotrue_error_to_401() -> None:
+    from supabase_auth.errors import AuthApiError
+
+    svc, anon, _service = _service_with_mocks()
+    anon.auth.refresh_session.side_effect = AuthApiError(
+        "invalid refresh token", 400, "invalid_grant"
+    )
+
+    with pytest.raises(AuthError) as exc:
+        svc.refresh(RefreshRequest(refresh_token="revoked"))
+    assert exc.value.status_code == 401
+
+
+def test_refresh_401_when_session_missing() -> None:
+    svc, anon, _service = _service_with_mocks()
+    anon.auth.refresh_session.return_value = MagicMock(session=None)
+
+    with pytest.raises(AuthError) as exc:
+        svc.refresh(RefreshRequest(refresh_token="x"))
+    assert exc.value.status_code == 401
+
+
+# Hinweis: Route-Level-Tests für /auth/refresh laufen bewusst NICHT hier — echte
+# TestClient-Requests gegen /api/v1/auth/* teilen den Auth-Rate-Limit-Bucket
+# (10/60/IP) und würden nachfolgende Auth-Tests (z. B. register_login_me) ins
+# Limit treiben. Das 401-Mapping ist über die Service-Unit-Tests oben
+# deterministisch abgedeckt; die Schema-Validierung über
+# test_refresh_request_rejects_missing_token.

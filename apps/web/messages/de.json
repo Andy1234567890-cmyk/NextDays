@@ -1260,5 +1260,135 @@
     "parking": "Parken",
     "pets": "Haustiere",
     "sustainable_practice": "Nachhaltigkeit"
+  },
+  "dossier": {
+    "title": "Kartei",
+    "brand": "myNextDays",
+    "pdfExport": "Als PDF exportieren",
+    "pdfBuilding": "Erstelle PDF…",
+    "save": "Speichern",
+    "saving": "Speichern…",
+    "saved": "Gespeichert.",
+    "cancel": "Abbrechen",
+    "add": "Hinzufügen",
+    "edit": "Bearbeiten",
+    "delete": "Löschen",
+    "empty": "Noch keine Einträge.",
+    "noOwner": "Diesem Objekt ist kein Eigentümer zugeordnet. Ordne einen im Bereich Eigentümer zu.",
+    "ownerLink": "Zum Eigentümer",
+    "step": {
+      "object_info": "Objektinformation",
+      "process": "Prozess & Vertrag",
+      "access": "Zugang & Technik",
+      "service_agreements": "Serviceverträge",
+      "tradespeople": "Handwerker",
+      "marketing": "Marketing",
+      "housebook": "Hausmappe",
+      "listing": "Vermarktung"
+    },
+    "objectInfo": {
+      "capacityPersons": "Kapazität (Personen)",
+      "capacitySqm": "Fläche (m²)",
+      "bfeNumber": "BFE-Nummer",
+      "name": "Name",
+      "type": "Typ"
+    },
+    "owner": {
+      "heading": "Eigentümer",
+      "name": "Name",
+      "company": "Firma",
+      "email": "E-Mail",
+      "phone": "Telefon",
+      "iban": "IBAN",
+      "bic": "BIC",
+      "bankName": "Bank",
+      "accountHolder": "Kontoinhaber",
+      "taxId": "Steuernummer",
+      "vatId": "USt-IdNr.",
+      "cprNumber": "CPR-Nummer",
+      "ownershipShare": "Anteil (%)",
+      "readOnlyHint": "Eigentümerdaten werden im Bereich Eigentümer gepflegt."
+    },
+    "process": {
+      "firstMeeting": "Erstgespräch",
+      "contractSent": "Vertrag versendet",
+      "contractSigned": "Unterzeichnet retour",
+      "invoiceSent": "Onboarding-Rechnung versendet",
+      "invoicePaid": "Rechnung bezahlt"
+    },
+    "access": {
+      "keyStatus": "Schlüssel-Status",
+      "keyPlacement": "Physische Platzierung",
+      "fromGuestModule": "Türcode, Selbst-Check-in und WLAN werden im Gastmodul gepflegt."
+    },
+    "keyStatus": {
+      "agency_extra": "Extra-Schlüssel bei Agentur",
+      "owner_only": "Nur beim Eigentümer"
+    },
+    "service": {
+      "heading": "Serviceverträge",
+      "serviceType": "Leistung",
+      "frequency": "Frequenz",
+      "price": "Preis",
+      "currency": "Währung",
+      "notes": "Notizen"
+    },
+    "serviceType": {
+      "caretaker": "Hausmeister-Runde",
+      "window_cleaning": "Fensterreinigung",
+      "lawn_mowing": "Rasenmähen"
+    },
+    "trades": {
+      "heading": "Handwerker",
+      "trade": "Gewerk",
+      "name": "Name",
+      "phone": "Telefon",
+      "notes": "Notizen",
+      "authorityHeading": "Akut-Vollmacht",
+      "authorityMode": "Modus",
+      "authorityLimit": "Höchstbetrag",
+      "currency": "Währung"
+    },
+    "trade": {
+      "electrician": "Elektriker",
+      "plumbing": "Sanitär & Heizung",
+      "carpenter": "Zimmermann",
+      "locksmith": "Schlüsseldienst"
+    },
+    "authorityMode": {
+      "up_to_amount": "Bis Betrag X",
+      "always_owner": "Immer Eigentümer kontaktieren"
+    },
+    "marketing": {
+      "photographerBooked": "Fotograf beauftragt",
+      "mediaReceived": "Medien erhalten",
+      "siteWalkthrough": "Hausbegehung",
+      "defectsListSent": "Mängelliste übermittelt"
+    },
+    "housebook": {
+      "welcomeStatus": "Begrüßungstext",
+      "physicalPlaced": "Physische Hausmappe platziert",
+      "textsHint": "Begrüßungstext, Reiseführer und Geheimtipps werden im Bereich Nachrichten gepflegt."
+    },
+    "welcomeStatus": {
+      "received": "Erhalten",
+      "open": "Offen"
+    },
+    "listing": {
+      "heading": "Plattform-Matrix & Launch-Termine",
+      "platform": "Plattform",
+      "launchAt": "Launch-Termin",
+      "status": "Status",
+      "sourcesHint": "Grundpreis, Sperrungen und Portal-Anbindung werden in den Bereichen Preise, Verfügbarkeit und Kanäle gesetzt — hier hältst du den Onboarding-Status fest."
+    },
+    "platform": {
+      "native": "Nativ-Website",
+      "airbnb": "Airbnb",
+      "booking": "Booking.com",
+      "vrbo": "Vrbo"
+    },
+    "yes": "Ja",
+    "no": "Nein",
+    "pickDate": "Datum wählen"
   }
 }

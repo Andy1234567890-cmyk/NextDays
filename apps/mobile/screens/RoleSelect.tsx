@@ -6,7 +6,9 @@ import { View, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Btn, Col, Txt } from "@/components/ui/kit";
-import { getToken } from "@/lib/auth";
+import { useAuth } from "@/contexts/AuthContext";
+import { experienceFor } from "@/lib/experience";
+// (fail-closed: experienceFor kann null liefern → dann Logout + Login)
 import type { RootStackParamList } from "@/navigation/types";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -14,16 +16,29 @@ export default function RoleSelect() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { status, me, logout } = useAuth();
 
-  // Gastgeber-Bereich nur mit Anmeldung: Token vorhanden → direkt in die Tabs,
-  // sonst zuerst der Gastgeber-Login (dieselbe Auth wie das Web-Dashboard).
+  // „Verwalten & Arbeiten": angemeldet → direkt ins rollenbasierte Erlebnis
+  // (experienceFor, zentrale Stelle); sonst zuerst der Login (dieselbe Auth wie
+  // das Web-Dashboard).
   const goHost = async () => {
-    const token = await getToken();
-    if (token) {
-      navigation.navigate("HostTabs", { screen: "Dashboard" });
-    } else {
+    if (status !== "signedIn") {
       navigation.navigate("HostLogin");
+      return;
     }
+    // Rollenbasiertes Erlebnis (zentrale Ableitung in experienceFor).
+    const target = experienceFor(me);
+    if (!target) {
+      // Fail-closed (Wurzel 5): Konto ohne gültige Rolle → Session beenden,
+      // zurück zum Login — NIE Default ins Agentur-Dashboard.
+      await logout();
+      navigation.navigate("HostLogin");
+      return;
+    }
+    // Ziel + verschachtelte Tab-Auswahl kommen zentral aus experienceFor —
+    // kein hartkodierter screen-Name hier (überlebt Tab-Umbenennungen).
+    const nav = navigation.navigate as (route: string, params?: object) => void;
+    nav(target.route, target.params);
   };
   return (
     <View

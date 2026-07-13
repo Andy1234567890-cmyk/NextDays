@@ -32,6 +32,7 @@ Tragfähiger PMS-Kern + Vermieter-Seite (PMS, Objektpflege, Channel-Sync-Grundla
 | Zahlungen | **Stripe Connect Custom** (primäres Gateway: Mieten, Kautionen, Zusatzleistungen, white-label) · **Revolut** sekundär/konfigurierbar — Gateway-Adapter-Pattern (siehe ADR-0011) |
 | Sprachen (nativ) | **DE / DK / EN** — UI + automatisierte Kommunikation (i18n, siehe ADR-0004) |
 | Währungsdarstellung | **Glatte Beträge** systemweit, keine Cent-/Øre-Anzeige (siehe ADR-0005) |
+| Mobile-App | **React Native 0.86** (bare, pnpm) — gleiches FastAPI `/api/v1` + Supabase-JWT wie Web; Tokens in Keychain. Siehe `docs/mobile-integration-plan.md` |
 | Package Manager (Web) | **Bun** |
 | Deployment | Web → Vercel; API → Hetzner (Coolify); DSGVO-konform, self-hosted bevorzugt |
 
@@ -89,6 +90,11 @@ nextdays/
 │   ├── public/
 │   └── package.json           # eigene Dependencies, eigene CI/CD-Strecke
 ├── apps/
+│   ├── mobile/                # React Native (bare) — Host-App = mobiles Dashboard.
+│   │   │                      # Spricht NUR FastAPI /api/v1 (Bearer, Keychain).
+│   │   ├── lib/               # api.ts, auth.ts, config.ts (einzige URL-Quelle)
+│   │   ├── screens/           # Host*- (echt) und Guest*-Screens (Phase 2)
+│   │   └── navigation/        # RoleSelect → HostTabs/GuestTabs
 │   ├── web/                   # Next.js — Vermieter-Dashboard (eingeloggt)
 │   │   ├── app/
 │   │   │   ├── (auth)/        # Login, Registrierung

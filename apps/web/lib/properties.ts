@@ -39,6 +39,10 @@ export type Property = {
   country: string | null;
   lat: number | null;
   lng: number | null;
+  // Objektkartei (Lastenheft §6): nur bfe_number (DK-Katasternummer) ist ein
+  // echtes neues Kartei-Feld. Name/Typ/Adresse/Kapazität kommen aus dem Bestand
+  // (title, property_type, house_number, max_guests, type_attributes.size_m2).
+  bfe_number: string | null;
   amenities: string[];
   photos: string[];
   // Flexible Sektionen (Rooms, Sleeping arrangements, m², Einheiten …).

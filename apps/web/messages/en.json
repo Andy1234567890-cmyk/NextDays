@@ -1260,5 +1260,135 @@
     "parking": "Parking",
     "pets": "Pets",
     "sustainable_practice": "Sustainability"
+  },
+  "dossier": {
+    "title": "Dossier",
+    "brand": "myNextDays",
+    "pdfExport": "Export as PDF",
+    "pdfBuilding": "Creating PDF…",
+    "save": "Save",
+    "saving": "Saving…",
+    "saved": "Saved.",
+    "cancel": "Cancel",
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "empty": "No entries yet.",
+    "noOwner": "No owner is linked to this property. Assign one in the Owners area.",
+    "ownerLink": "Go to owner",
+    "step": {
+      "object_info": "Property information",
+      "process": "Process & contract",
+      "access": "Access & technical",
+      "service_agreements": "Service agreements",
+      "tradespeople": "Tradespeople",
+      "marketing": "Marketing",
+      "housebook": "House manual",
+      "listing": "Listing"
+    },
+    "objectInfo": {
+      "capacityPersons": "Capacity (persons)",
+      "capacitySqm": "Area (m²)",
+      "bfeNumber": "BFE number",
+      "name": "Name",
+      "type": "Type"
+    },
+    "owner": {
+      "heading": "Owner",
+      "name": "Name",
+      "company": "Company",
+      "email": "Email",
+      "phone": "Phone",
+      "iban": "IBAN",
+      "bic": "BIC",
+      "bankName": "Bank",
+      "accountHolder": "Account holder",
+      "taxId": "Tax ID",
+      "vatId": "VAT ID",
+      "cprNumber": "CPR number",
+      "ownershipShare": "Share (%)",
+      "readOnlyHint": "Owner data is maintained in the Owners area."
+    },
+    "process": {
+      "firstMeeting": "First meeting",
+      "contractSent": "Contract sent",
+      "contractSigned": "Signed & returned",
+      "invoiceSent": "Onboarding invoice sent",
+      "invoicePaid": "Invoice paid"
+    },
+    "access": {
+      "keyStatus": "Key status",
+      "keyPlacement": "Physical placement",
+      "fromGuestModule": "Door code, self check-in and Wi-Fi are maintained in the guest module."
+    },
+    "keyStatus": {
+      "agency_extra": "Spare key at agency",
+      "owner_only": "Owner only"
+    },
+    "service": {
+      "heading": "Service agreements",
+      "serviceType": "Service",
+      "frequency": "Frequency",
+      "price": "Price",
+      "currency": "Currency",
+      "notes": "Notes"
+    },
+    "serviceType": {
+      "caretaker": "Caretaker round",
+      "window_cleaning": "Window cleaning",
+      "lawn_mowing": "Lawn mowing"
+    },
+    "trades": {
+      "heading": "Tradespeople",
+      "trade": "Trade",
+      "name": "Name",
+      "phone": "Phone",
+      "notes": "Notes",
+      "authorityHeading": "Emergency authority",
+      "authorityMode": "Mode",
+      "authorityLimit": "Limit",
+      "currency": "Currency"
+    },
+    "trade": {
+      "electrician": "Electrician",
+      "plumbing": "Plumbing & heating",
+      "carpenter": "Carpenter",
+      "locksmith": "Locksmith"
+    },
+    "authorityMode": {
+      "up_to_amount": "Up to amount X",
+      "always_owner": "Always contact owner"
+    },
+    "marketing": {
+      "photographerBooked": "Photographer booked",
+      "mediaReceived": "Media received",
+      "siteWalkthrough": "Site walkthrough",
+      "defectsListSent": "Defects list sent"
+    },
+    "housebook": {
+      "welcomeStatus": "Welcome text",
+      "physicalPlaced": "Physical house manual placed",
+      "textsHint": "Welcome text, local guide and secret tips are maintained in the Messages area."
+    },
+    "welcomeStatus": {
+      "received": "Received",
+      "open": "Open"
+    },
+    "listing": {
+      "heading": "Platform matrix & launch dates",
+      "platform": "Platform",
+      "launchAt": "Launch date",
+      "status": "Status",
+      "sourcesHint": "Base price, blocks and portal connections are set in the Pricing, Availability and Channels areas — here you track the onboarding status."
+    },
+    "platform": {
+      "native": "Native website",
+      "airbnb": "Airbnb",
+      "booking": "Booking.com",
+      "vrbo": "Vrbo"
+    },
+    "yes": "Yes",
+    "no": "No",
+    "pickDate": "Select date"
   }
 }

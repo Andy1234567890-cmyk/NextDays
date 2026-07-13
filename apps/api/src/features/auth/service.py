@@ -7,6 +7,7 @@ kein stilles Schlucken von Fehlern (PROJECT.md).
 """
 from pydantic import SecretStr
 from supabase import Client
+from supabase_auth.errors import AuthError as GoTrueAuthError
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
@@ -22,6 +23,7 @@ from .schemas import (
     InviteResponse,
     LoginRequest,
     MeResponse,
+    RefreshRequest,
     RegisterRequest,
     SessionResponse,
     SliceHealth,
@@ -164,6 +166,33 @@ class AuthService:
         session = res.session
         if session is None:
             raise AuthError("Login fehlgeschlagen.", status_code=401)
+        return SessionResponse(
+            access_token=session.access_token,
+            refresh_token=session.refresh_token,
+            expires_in=session.expires_in,
+        )
+
+    def refresh(self, req: RefreshRequest) -> SessionResponse:
+        """Tauscht ein Refresh-Token gegen eine frische Session (GoTrue
+        grant_type=refresh_token über den anon-Client).
+
+        Fail-closed (Wurzel 5): ein ungültiges/abgelaufenes/widerrufenes Token
+        ist ein 401 — spezifisch die GoTrue-AuthError fangen, kein breites
+        `except Exception`, das Programmierfehler verschluckt. Der Token-Wert
+        wird NICHT geloggt (nur der Fehlertext)."""
+        try:
+            res = self._anon.auth.refresh_session(
+                req.refresh_token.get_secret_value()
+            )
+        except GoTrueAuthError as exc:
+            log.warning("refresh_failed", error=str(exc))
+            raise AuthError(
+                "Sitzung abgelaufen.", status_code=401
+            ) from exc
+
+        session = res.session
+        if session is None:
+            raise AuthError("Sitzung abgelaufen.", status_code=401)
         return SessionResponse(
             access_token=session.access_token,
             refresh_token=session.refresh_token,

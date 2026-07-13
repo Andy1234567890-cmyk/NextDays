@@ -94,6 +94,13 @@ class PropertyBase(BaseModel):
     lat: float | None = None
     lng: float | None = None
 
+    # Objektkartei Stufe 1 — OBJEKTINFORMATION (Lastenheft §6). Nur bfe_number
+    # (DK-Katasternummer) ist ein echtes neues Kartei-Feld. Bewusst NICHT in
+    # _CONTENT_FIELDS (service.py) → kein Channex/OTA-Sync. Name/Typ/Adresse/
+    # Kapazität kommen aus dem Bestand (title, property_type, house_number,
+    # max_guests, type_attributes.size_m2) — keine zweite Wahrheit.
+    bfe_number: str | None = None
+
     # Listen.
     amenities: list[str] = Field(default_factory=list)
     photos: list[str] = Field(default_factory=list)
@@ -123,6 +130,8 @@ class PropertyUpdate(BaseModel):
     country: str | None = None
     lat: float | None = None
     lng: float | None = None
+    # Objektkartei (Lastenheft §6) — nur bfe_number, kein OTA-Sync (nicht in _CONTENT_FIELDS).
+    bfe_number: str | None = None
     amenities: list[str] | None = None
     photos: list[str] | None = None
     type_attributes: dict | None = None

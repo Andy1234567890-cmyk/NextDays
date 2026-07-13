@@ -23,6 +23,7 @@ from .schemas import (
     MeResponse,
     OwnerAssignmentResponse,
     OwnerAssignmentUpdate,
+    RefreshRequest,
     RegisterRequest,
     SessionResponse,
     SliceHealth,
@@ -65,6 +66,17 @@ def register(req: RegisterRequest, service: AuthServiceDep) -> SessionResponse:
 def login(req: LoginRequest, service: AuthServiceDep) -> SessionResponse:
     try:
         return service.login(req)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/refresh", response_model=SessionResponse)
+def refresh(req: RefreshRequest, service: AuthServiceDep) -> SessionResponse:
+    """Silent-Refresh (Mobile): frische Session aus dem Refresh-Token. KEIN
+    CurrentUser-Guard — der Access-Token ist ja gerade abgelaufen. Rate-Limit
+    läuft über den Auth-Bucket (siehe _select_bucket im ratelimit-Middleware)."""
+    try:
+        return service.refresh(req)
     except AuthError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

@@ -65,7 +65,7 @@ def _is_exempt(path: str) -> bool:
 
 def _select_bucket(path: str, buckets: _Buckets) -> tuple[str, Limit, bool]:
     """Pfad → (Bucket-Name, Limit, sensibel?). Sensibel = Kandidat für fail-closed."""
-    if "/auth/login" in path or "/auth/register" in path:
+    if "/auth/login" in path or "/auth/register" in path or "/auth/refresh" in path:
         return "auth", buckets.auth, True
     if "/payments/" in path:
         return "payments", buckets.payments, True

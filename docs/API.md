@@ -285,6 +285,34 @@ bewusst NICHT hier, sondern in `type_attributes.messaging` (eine Wahrheit).
 
 ---
 
+## property_dossier (8-stufige Objektkartei — implementiert)
+
+Objekt-Onboarding-Datenblatt (Lastenheft §6). Baut auf Bestehendem auf statt zu
+duplizieren: Stufe 1 liefert den Eigentümer READ-ONLY aus `owners`+`owner_properties`
+(`GET …/owner` / im `…/full`-Aggregat), Objekt-Basisfelder (`internal_house_no`,
+`house_name`, `capacity_*`, `bfe_number`, `boligtype`) laufen über `PATCH /properties/{id}`
+(NICHT in `_CONTENT_FIELDS` → kein OTA-Sync). Zugangscode/WLAN/Begrüßungstexte bleiben
+im Gastmodul/`messaging`. Lesen `view_calendar`, Schreiben `manage_properties`. Jeder
+Zugriff scopet property→tenant (fremdes/Nicht-UUID-Objekt → `404`). **i18n:** Enum-Felder
+(service_type, trade, platform, boligtype, …) speichern sprachneutrale Keys; Labels leben
+im next-intl-Namespace `dossier`.
+
+Neue Tabellen (Mig. 0127/0128, alle RLS + owner-scope + Realtime): `property_process`,
+`property_access`, `property_service_agreements`, `property_tradespeople`,
+`property_emergency_authority`, `property_marketing`, `property_housebook`,
+`property_platform_launches`. Zusätzlich `owners.cpr_number` (CPR).
+
+| Methode | Pfad | Zweck |
+|---|---|---|
+| `GET` | `…/{property_id}/full` | Alle Stufen + verknüpfter Eigentümer (read-only), für Übersicht/PDF |
+| `GET` | `…/{property_id}/owner` | Verknüpfter Eigentümer (read-only aus owners) |
+| `GET/PUT` | `…/process` · `…/access` · `…/emergency-authority` · `…/marketing` · `…/housebook` | 1:1-Stufen (Upsert) |
+| `GET/POST` · `PUT/DELETE …/{id}` | `…/service-agreements` · `…/tradespeople` · `…/platform-launches` | 1:n-Listen |
+
+Web: `/objekte/[id]/kartei` (8-Stufen-Stepper, next-intl) mit PDF-Export.
+
+---
+
 ## pricing (Kern-Logik implementiert — eine Preis-Wahrheit)
 
 Zentraler Preis-Resolver (`pricing/resolver.py`): die EINZIGE Stelle, die Effektiv-

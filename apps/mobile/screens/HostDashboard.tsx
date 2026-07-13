@@ -1,132 +1,234 @@
-// Gastgeber · Übersicht (aus host-app.jsx HostDashboard): KPI-Karten, Umsatz-
-// Balken (7 Tage), heutige Anreisen/Abreisen.
-import { View } from "react-native";
+// Gastgeber · Übersicht. Echte KPIs + heutige An-/Abreisen + Anstehendes aus
+// GET /api/v1/reservations/dashboard (dieselbe Quelle wie das Web-Dashboard).
+// Lade-/Fehler-/Leerzustand getrennt; Demo-Daten NUR als gekennzeichneter
+// Fallback (usingDemo, wie HostListings). Beträge/Währung aus den Daten
+// (§4.2: revenue_30d = null → keine Umsatz-Kachel, kein erfundener Wert).
+import { useCallback, useEffect, useState } from "react";
+import { RefreshControl, ScrollView, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/ui/Icon";
-import { Card, Chip, Col, Divider, IconBtn, Photo, Row, Txt } from "@/components/ui/kit";
-import { Screen } from "@/components/ui/Screen";
-import { ND_PHOTOS as P, PH } from "@/lib/photos";
+import { Card, Chip, Col, Divider, IconBtn, Row, Spinner, Txt } from "@/components/ui/kit";
+import { useAuth } from "@/contexts/AuthContext";
+import { formatCurrency } from "@/lib/currency";
+import { getDashboard, type Dashboard, type DashboardEntry } from "@/lib/dashboard";
+import { useRealtime } from "@/lib/realtime";
 import { useTheme } from "@/theme/ThemeProvider";
 
-function MiniBars({ data, accentIdx }: { data: number[]; accentIdx: number }) {
-  const t = useTheme();
-  const max = Math.max(...data);
-  return (
-    <Row style={{ alignItems: "flex-end", gap: 7, height: 70 }}>
-      {data.map((v, i) => (
-        <View key={i} style={{ flex: 1, justifyContent: "flex-end", height: "100%" }}>
-          <View
-            style={{
-              height: `${(v / max) * 100}%`,
-              borderRadius: 6,
-              backgroundColor: i === accentIdx ? t.palette.accent : t.palette.surface2,
-            }}
-          />
-        </View>
-      ))}
-    </Row>
-  );
+// Demo-Fallback (nur wenn Backend nicht erreichbar) — klar als Demo markiert.
+const DEMO: Dashboard = {
+  today: "",
+  checkins_today: [],
+  checkouts_today: [],
+  upcoming: [],
+  checkins_30d: { value: 0, change_pct: null },
+  revenue_30d: null,
+  confirmed_30d: { value: 0, change_pct: null },
+  currency: "",
+};
+
+function todayLabel(iso: string): string {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString("de-DE", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+}
+
+function dayShort(iso: string): string {
+  return new Date(iso).toLocaleDateString("de-DE", { day: "numeric", month: "short" });
 }
 
 export default function HostDashboard() {
-  const days = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
+  const t = useTheme();
+  const insets = useSafeAreaInsets();
+  const { me } = useAuth();
+  const [data, setData] = useState<Dashboard | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [usingDemo, setUsingDemo] = useState(false);
+
+  const load = useCallback(async () => {
+    const res = await getDashboard();
+    if (res.ok) {
+      setData(res.data);
+      setError(null);
+      setUsingDemo(false);
+    } else {
+      // Kein Backend/Fehler → gekennzeichneter Demo-Fallback (kein stiller Fake).
+      setData(DEMO);
+      setError(res.error);
+      setUsingDemo(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  // Realtime: Buchungsänderungen → KPIs/Listen debounced neu laden (400ms wie
+  // Web). reservations speist alle Zahlen dieser Übersicht.
+  useRealtime({ table: "reservations", onChange: load });
+
+  if (!data) {
+    return (
+      <View style={{ flex: 1, backgroundColor: t.palette.bg }}>
+        <Spinner />
+      </View>
+    );
+  }
+
+  const confirmed = Math.round(data.confirmed_30d.value);
+  const revenue = data.revenue_30d;
+
   return (
-    <Screen contentStyle={{ gap: 18 }}>
-      <Row style={{ justifyContent: "space-between" }}>
-        <Col gap={2}>
-          <Txt v="sm" soft>
-            Dienstag, 18. Juni
-          </Txt>
-          <Txt v="h1">Hej, Mette 👋</Txt>
-        </Col>
-        <IconBtn icon="bell" badge={3} />
-      </Row>
-
-      <Row gap={12}>
-        <Kpi icon="chart" value="78%" label="Belegung · Juni" />
-        <Kpi icon="euro" value="€12,4k" label="Umsatz · Monat" />
-      </Row>
-
-      <Card style={{ padding: 18, gap: 14 }}>
-        <Row style={{ justifyContent: "space-between" }}>
-          <Txt v="title">Umsatz letzte 7 Tage</Txt>
-          <Chip variant="ghost">
-            <Row gap={3}>
-              <Icon n="arrowup" s={13} sw={2.2} c="#1F8A5B" />
-              <Txt v="xs" color="#1F8A5B">
-                +14%
-              </Txt>
-            </Row>
-          </Chip>
-        </Row>
-        <MiniBars data={[5, 7, 4, 8, 6, 9, 7]} accentIdx={5} />
-        <Row style={{ justifyContent: "space-between" }}>
-          {days.map((d) => (
-            <Txt key={d} v="xs" faint style={{ flex: 1, textAlign: "center" }}>
-              {d}
+    <View style={{ flex: 1, backgroundColor: t.palette.bg }}>
+      <ScrollView
+        contentContainerStyle={{
+          padding: 20,
+          // Echte Safe-Area statt hartkodierter 60 — sonst rutscht die
+          // Titelzeile unter Notch/Dynamic Island (gerätabhängig).
+          paddingTop: insets.top + 12,
+          gap: 18,
+          paddingBottom: 40,
+        }}
+        refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
+      >
+        <Row style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+          <Col gap={2}>
+            <Txt v="sm" soft>
+              {todayLabel(data.today) || "Übersicht"}
             </Txt>
-          ))}
+            <Txt v="h1">{me?.email ? me.email : "Übersicht"}</Txt>
+          </Col>
+          <IconBtn icon="bell" />
         </Row>
-      </Card>
 
-      <Row style={{ justifyContent: "space-between" }}>
-        <Txt v="h2">Heute</Txt>
-        <Txt v="sm" accent>
-          Alle
-        </Txt>
-      </Row>
+        {usingDemo && (
+          <Card style={{ padding: 12, backgroundColor: "rgba(245,158,11,0.10)" }}>
+            <Txt v="xs" color="#B45309">
+              Demo-Daten — Backend nicht erreichbar{error ? ` (${error})` : ""}.
+            </Txt>
+          </Card>
+        )}
 
-      <Card style={{ padding: 6 }}>
-        <EventRow photo={PH(P.villa, 160)} grad="grad1" title="Anreise · Familie Berg" sub="Villa Solnedgang · 15:00" chip="Check-in" accent />
-        <Divider style={{ marginHorizontal: 12 }} />
-        <EventRow photo={PH(P.loft, 160)} grad="grad3" title="Abreise · L. Hansen" sub="Lys Loft · 11:00" chip="Check-out" />
-      </Card>
-    </Screen>
+        <Row gap={12}>
+          <Kpi
+            icon="chart"
+            value={`${confirmed}`}
+            label="Buchungen · 30 Tage"
+            change={data.confirmed_30d.change_pct}
+          />
+          {revenue && (
+            <Kpi
+              icon="euro"
+              value={formatCurrency(revenue.value, data.currency)}
+              label="Umsatz · 30 Tage"
+              change={revenue.change_pct}
+            />
+          )}
+        </Row>
+
+        <Section
+          title="Heute · Anreisen"
+          entries={data.checkins_today}
+          empty="Keine Anreisen heute."
+          chip="Check-in"
+          field="check_in"
+          accent
+        />
+        <Section
+          title="Heute · Abreisen"
+          entries={data.checkouts_today}
+          empty="Keine Abreisen heute."
+          chip="Check-out"
+          field="check_out"
+        />
+        <Section
+          title="Anstehend"
+          entries={data.upcoming}
+          empty="Nichts Anstehendes."
+          chip=""
+          field="check_in"
+        />
+      </ScrollView>
+    </View>
   );
 }
 
-function Kpi({ icon, value, label }: { icon: "chart" | "euro"; value: string; label: string }) {
+function Kpi({
+  icon,
+  value,
+  label,
+  change,
+}: {
+  icon: "chart" | "euro";
+  value: string;
+  label: string;
+  change: number | null;
+}) {
   const t = useTheme();
   return (
     <Card style={{ flex: 1, padding: 16, gap: 4 }}>
       <Icon n={icon} s={18} sw={1.8} c={t.palette.accent} />
-      <Txt v="display" style={{ fontSize: 28 }}>
+      <Txt v="display" style={{ fontSize: 26 }}>
         {value}
       </Txt>
       <Txt v="xs" soft>
         {label}
       </Txt>
+      {change !== null && (
+        <Txt v="xs" color={change >= 0 ? "#1F8A5B" : t.palette.accent}>
+          {change >= 0 ? "+" : ""}
+          {Math.round(change)}%
+        </Txt>
+      )}
     </Card>
   );
 }
 
-function EventRow({
-  photo,
-  grad,
+function Section({
   title,
-  sub,
+  entries,
+  empty,
   chip,
+  field,
   accent,
 }: {
-  photo: string;
-  grad: "grad1" | "grad3";
   title: string;
-  sub: string;
+  entries: DashboardEntry[];
+  empty: string;
   chip: string;
+  field: "check_in" | "check_out";
   accent?: boolean;
 }) {
   return (
-    <Row style={{ padding: 12, gap: 12 }}>
-      <Photo src={photo} grad={grad} h={46} w={46} r={12} />
-      <Col gap={1} style={{ flex: 1 }}>
-        <Txt v="sm" style={{ fontWeight: "600" }}>
-          {title}
+    <Col gap={10}>
+      <Txt v="h2">{title}</Txt>
+      {entries.length === 0 ? (
+        <Txt v="sm" soft>
+          {empty}
         </Txt>
-        <Txt v="xs" soft>
-          {sub}
-        </Txt>
-      </Col>
-      <Chip variant={accent ? "accent" : ""}>{chip}</Chip>
-    </Row>
+      ) : (
+        <Card style={{ padding: 6 }}>
+          {entries.map((e, i) => (
+            <View key={e.reservation_id}>
+              {i > 0 && <Divider style={{ marginHorizontal: 12 }} />}
+              <Row style={{ padding: 12, gap: 12, alignItems: "center" }}>
+                <Col gap={1} style={{ flex: 1 }}>
+                  <Txt v="sm" numberOfLines={1} style={{ fontWeight: "600" }}>
+                    {e.guest_name || "Gast"}
+                  </Txt>
+                  <Txt v="xs" soft numberOfLines={1}>
+                    {e.property_title} · {dayShort(e[field])}
+                  </Txt>
+                </Col>
+                {chip ? <Chip variant={accent ? "accent" : ""}>{chip}</Chip> : null}
+              </Row>
+            </View>
+          ))}
+        </Card>
+      )}
+    </Col>
   );
 }

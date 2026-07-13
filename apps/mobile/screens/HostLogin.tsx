@@ -5,11 +5,11 @@
 import { useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState } from "react";
-import { Image, TextInput, View } from "react-native";
+import { Image, Pressable, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Btn, Col, Txt } from "@/components/ui/kit";
-import { login } from "@/lib/auth";
+import { Btn, Col, Row, Txt } from "@/components/ui/kit";
+import { useAuth } from "@/contexts/AuthContext";
 import type { RootStackParamList } from "@/navigation/types";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -17,11 +17,16 @@ export default function HostLogin() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // Kein manuelles Navigieren: nach erfolgreichem Login wechselt der Auth-Status
+  // auf "signedIn", und die Root-Navigation (App.tsx) rendert automatisch das
+  // rollenbasierte Erlebnis (experienceFor). Eine zentrale Stelle, kein
+  // verstreutes reset() in Screens.
   const submit = async () => {
     if (!email.trim() || !password) {
       setError("Bitte E-Mail und Passwort eingeben.");
@@ -31,15 +36,7 @@ export default function HostLogin() {
     setError(null);
     const res = await login(email.trim(), password);
     setBusy(false);
-    if (!res.ok) {
-      setError(res.error);
-      return;
-    }
-    // Login-Screen aus dem Stack ersetzen → kein Zurück auf den Login.
-    navigation.reset({
-      index: 0,
-      routes: [{ name: "HostTabs", params: { screen: "Dashboard" } }],
-    });
+    if (!res.ok) setError(res.error);
   };
 
   const field = {
@@ -112,6 +109,17 @@ export default function HostLogin() {
         <Btn variant="primary" block icon="key" onPress={busy ? undefined : submit}>
           {busy ? "Anmeldung läuft …" : "Anmelden"}
         </Btn>
+
+        <Row style={{ justifyContent: "center", gap: 6, marginTop: 4 }}>
+          <Txt v="sm" soft>
+            Noch kein Konto?
+          </Txt>
+          <Pressable onPress={busy ? undefined : () => navigation.navigate("HostSignup")}>
+            <Txt v="sm" color={t.palette.accent} style={{ fontWeight: "600" }}>
+              Unternehmen anlegen
+            </Txt>
+          </Pressable>
+        </Row>
       </Col>
     </View>
   );

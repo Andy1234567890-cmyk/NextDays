@@ -62,9 +62,9 @@
 
 | Anforderung | Status | Hinweis |
 |---|---|---|
-| 8-stufige Objektkartei (BFE, CPR, Boligtype, Bank, Verträge, Technik, Serviceverträge, Handwerker, Marketing, Husmappe, Annoncering) | 🔴 | Große Erweiterung von `properties` + neue verknüpfte Tabellen; PDF-Export/Druck. Viele Felder sind **DK-spezifisch** (BFE, CPR, Boligtype) → nullable, da global einsetzbar. |
-| Adress-Split (Straße/Nr./PLZ/Ort/Land) | 🔴 | `properties.address` (heute Freitext) auf strukturierte Felder umstellen. |
-| Miteigentümer | 🔴 | `co_owners`-Tabelle. |
+| 8-stufige Objektkartei (BFE, CPR, Boligtype, Bank, Verträge, Technik, Serviceverträge, Handwerker, Marketing, Husmappe, Annoncering) | 🟢 | Slice `property_dossier` (Mig. 0127/0128). Baut auf Bestehendem auf statt zu duplizieren: Eigentümer/Bank read-only aus `owners`+`owner_properties` (CPR als `owners.cpr_number` ergänzt); Zugangscode/WLAN aus `property_guest_portal`/`messaging`; Grundpreis/Sperrungen aus pricing_config/availability/channex. NEU nur: process/access/service_agreements/tradespeople/emergency_authority/marketing/housebook(Status)/platform_launches. i18n: Enum-Werte = neutrale Keys, Labels über next-intl-Namespace `dossier`. Web `/objekte/[id]/kartei` (8-Stufen-Stepper) + PDF-Export. |
+| Adress-Split (Straße/Nr./PLZ/Ort/Land) | 🟢 | `properties.street/house_number/postal_code/city/country` (bereits umgesetzt). |
+| Miteigentümer | ⚪ | Entscheidung: ein Eigentümer je Objekt (`owner_properties.property_id` UNIQUE). Miteigentum bewusst nicht umgesetzt; `co_owners` ist DEPRECATED (0063). |
 
 ## G. Ergänzungs-Modul: Ökosystem (Lastenheft §7)
 
