@@ -155,6 +155,27 @@ const DOMAIN_HINTS = [
   "objekt",
 ];
 
+// Erzwingt das Freigeben des Mikrofons: Chrome/Safari halten den Mic-Indikator
+// nach SpeechRecognition.abort() weiter, weil der intern gekapselte Stream nicht
+// sofort freigegeben wird. Ein kurz geholter eigener Stream, dessen Tracks wir
+// sofort stoppen, zwingt den Browser, den Indikator zu löschen. Da der Consent
+// beim Deaktivieren bereits erteilt war, kommt kein neuer Erlaubnis-Prompt.
+function releaseMicrophone(): void {
+  if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+    return;
+  }
+  navigator.mediaDevices
+    .getUserMedia({ audio: true })
+    .then((stream) => {
+      for (const track of stream.getTracks()) {
+        track.stop();
+      }
+    })
+    .catch(() => {
+      // Kein Zugriff / bereits frei — nichts zu tun.
+    });
+}
+
 function buildSnapshot(dashboard: DashboardVoiceSnapshot): DashboardVoiceSnapshot {
   return {
     ...dashboard,
@@ -1491,6 +1512,7 @@ export function DashboardVoiceAssistant({
       recognition.onerror = null;
       try {
         recognition.abort();
+        recognition.stop();
       } catch {
         // egal
       }
@@ -1498,6 +1520,9 @@ export function DashboardVoiceAssistant({
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
       }
+      // Mikrofon-Indikator sicher löschen (Chrome/Safari geben den intern
+      // gekapselten SpeechRecognition-Stream nach abort() nicht immer frei).
+      releaseMicrophone();
     };
   }, [consent, setPhaseBoth, appendDebug]);
 
@@ -1514,12 +1539,22 @@ export function DashboardVoiceAssistant({
   }
 
   function deactivateAndy(): void {
+    // Zuerst den Auto-Restart hart stoppen: activeRef=false + laufende Timer
+    // clearen, damit onend NICHT ensureRunning() neu aufruft (sonst zieht das
+    // Mikrofon direkt nach dem abort() wieder hoch → „Micro bleibt an").
     activeRef.current = false;
-    writeVoiceConsent("denied");
-    setConsent("denied");
+    runningRef.current = false;
+    if (restartTimerRef.current) {
+      window.clearTimeout(restartTimerRef.current);
+      restartTimerRef.current = null;
+    }
     if (recognitionRef.current) {
       try {
+        // onend abklemmen, bevor abort/stop den Stream schließt — kein Restart.
+        recognitionRef.current.onend = null;
+        recognitionRef.current.onresult = null;
         recognitionRef.current.abort();
+        recognitionRef.current.stop();
       } catch {
         // egal
       }
@@ -1528,9 +1563,28 @@ export function DashboardVoiceAssistant({
       window.speechSynthesis.cancel();
     }
     setPhaseBoth("idle");
+    writeVoiceConsent("denied");
+    setConsent("denied");
+    releaseMicrophone();
   }
 
-  // --- Consent-Gate ---------------------------------------------------------
+  // Ausgeschaltet (denied) → nur ein kleines, unaufdringliches Icon zum
+  // Wieder-Einschalten. Andy lauscht NICHT und verdeckt den Bildschirm nicht.
+  if (consent === "denied") {
+    return (
+      <button
+        type="button"
+        aria-label="Andy einschalten"
+        title="Andy einschalten"
+        onClick={activateAndy}
+        className="fixed bottom-6 right-6 z-50 flex size-10 items-center justify-center rounded-full border bg-card text-muted-foreground shadow-md transition hover:text-foreground"
+      >
+        <Icon icon="ph:microphone-slash" className="size-5" />
+      </button>
+    );
+  }
+
+  // --- Consent-Gate (erstmalig / null) --------------------------------------
   if (consent !== "granted") {
     return (
       <div className="fixed bottom-6 right-6 z-50 w-[min(22rem,calc(100vw-3rem))] rounded-2xl border border-border/80 bg-card/98 p-4 shadow-xl backdrop-blur">
@@ -1618,14 +1672,25 @@ export function DashboardVoiceAssistant({
           <span className="font-display text-sm font-semibold">Andy</span>
           <span className="text-xs text-muted-foreground">{statusLabel}</span>
         </div>
-        <button
-          type="button"
-          aria-label="Andy einklappen"
-          onClick={() => setOpen(false)}
-          className="text-muted-foreground transition hover:text-foreground"
-        >
-          <Icon icon="ph:minus" className="size-4" />
-        </button>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            aria-label="Andy einklappen"
+            onClick={() => setOpen(false)}
+            className="flex size-7 items-center justify-center rounded-full text-muted-foreground transition hover:bg-secondary hover:text-foreground"
+          >
+            <Icon icon="ph:minus" className="size-4" />
+          </button>
+          <button
+            type="button"
+            aria-label="Andy ausschalten"
+            title="Andy ausschalten"
+            onClick={deactivateAndy}
+            className="flex size-7 items-center justify-center rounded-full text-muted-foreground transition hover:bg-secondary hover:text-foreground"
+          >
+            <Icon icon="ph:power" className="size-4" />
+          </button>
+        </div>
       </div>
 
       <div className="space-y-2 px-4 py-3">

@@ -191,3 +191,143 @@ def test_no_client_raises_clean_error() -> None:
     with pytest.raises(TaskError) as exc:
         svc.create_task("T", TaskCreate(title="X"))
     assert exc.value.status_code == 500
+
+
+# --- PM-Modul: menschenlesbares Zeitplan-Label (UX-Verbesserung) ---
+
+def test_schedule_label_weekly_pattern() -> None:
+    from src.features.tasks.schedule_label import schedule_label
+
+    # Mo (bit0) + Fr (bit4) = 1 + 16 = 17
+    label = schedule_label({"frequency": "weekly", "weekday_mask": 17})
+    assert label is not None
+    assert "Montag" in label and "Freitag" in label
+
+
+def test_schedule_label_monthly_weekday_pattern() -> None:
+    from src.features.tasks.schedule_label import schedule_label
+
+    label = schedule_label(
+        {
+            "frequency": "monthly",
+            "weekday_pattern_position": "first",
+            "weekday_pattern_weekday": 0,  # Montag
+        }
+    )
+    assert label == "Monatlich · jeden 1. Montag"
+
+
+def test_schedule_label_daily_interval() -> None:
+    from src.features.tasks.schedule_label import schedule_label
+
+    assert schedule_label({"frequency": "daily", "interval": 3}) == "Alle 3 Tage"
+
+
+def test_schedule_label_empty_returns_none() -> None:
+    """Keine erfundenen Fallback-Werte (CLAUDE.md Wurzel 4)."""
+    from src.features.tasks.schedule_label import schedule_label
+
+    assert schedule_label({}) is None
+    assert schedule_label(None) is None
+    assert schedule_label({"frequency": "unknown"}) is None
+
+
+# --- PM-Modul: Foto-Pflicht beim Abschließen ---
+
+def test_complete_task_rejects_missing_required_photo() -> None:
+    """Ein requires_photo-Item ohne Foto → 422 (Foto-Pflicht, Prompt-1 §8)."""
+    from src.features.tasks.schemas import ChecklistItem, TaskDetail
+
+    svc, _ = _svc()
+    detail = TaskDetail(
+        id="t1",
+        tenant_id="T",
+        title="Endreinigung",
+        status=TaskStatus.in_progress,
+        checklist=[
+            ChecklistItem(
+                id="c1", task_id="t1", label="Bad", requires_photo=True, photos=[]
+            )
+        ],
+    )
+    svc.get_detail = MagicMock(return_value=detail)  # type: ignore[method-assign]
+    with pytest.raises(TaskError) as exc:
+        svc.complete_task("T", "t1", "u1")
+    assert exc.value.status_code == 422
+
+
+def test_complete_task_ok_when_photos_present() -> None:
+    from src.features.tasks.schemas import ChecklistItem, TaskDetail
+
+    svc, m = _svc()
+    detail = TaskDetail(
+        id="t1",
+        tenant_id="T",
+        title="Endreinigung",
+        status=TaskStatus.in_progress,
+        needs_inspection=True,
+        checklist=[
+            ChecklistItem(
+                id="c1",
+                task_id="t1",
+                label="Bad",
+                requires_photo=True,
+                photos=["path/a.jpg"],
+            )
+        ],
+    )
+    done = detail.model_copy(update={"status": TaskStatus.done})
+    svc.get_detail = MagicMock(  # type: ignore[method-assign]
+        side_effect=[detail, done]
+    )
+    (
+        m.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value
+    ).data = [{"id": "t1"}]
+    result = svc.complete_task("T", "t1", "u1")
+    assert result.status == TaskStatus.done
+    # needs_inspection → inspection_state auf to_review gesetzt.
+    update_payload = m.table.return_value.update.call_args.args[0]
+    assert update_payload["inspection_state"] == "to_review"
+
+
+# --- PM-Modul: Inspektions-Entscheidung ---
+
+def test_inspect_reject_reopens_task() -> None:
+    """Zurückweisung setzt inspection_state=to_review UND status=open zur
+    Nachbearbeitung."""
+    from src.features.tasks.schemas import InspectionDecision
+
+    svc, m = _svc()
+    (
+        m.table.return_value.update.return_value.eq.return_value.eq.return_value.execute.return_value
+    ).data = [{"id": "t1"}]
+    svc.get_detail = MagicMock(  # type: ignore[method-assign]
+        return_value=MagicMock()
+    )
+    svc.inspect("T", "t1", InspectionDecision(approved=False))
+    update_payload = m.table.return_value.update.call_args.args[0]
+    assert update_payload["inspection_state"] == "to_review"
+    assert update_payload["status"] == "open"
+
+
+# --- PM-Modul: Status-Bucket-Filter (Meine/Team-Tabs) ---
+
+def test_filter_bucket_maps_status() -> None:
+    from src.features.tasks.schemas import Task
+
+    def _t(status: TaskStatus) -> Task:
+        return Task(id="x", tenant_id="T", title="x", status=status)
+
+    tasks = [
+        _t(TaskStatus.open),
+        _t(TaskStatus.in_progress),
+        _t(TaskStatus.done),
+    ]
+    assert len(TasksService._filter_bucket(tasks, "done")) == 1
+    assert TasksService._filter_bucket(tasks, "current")[0].status == (
+        TaskStatus.in_progress
+    )
+    assert TasksService._filter_bucket(tasks, "upcoming")[0].status == (
+        TaskStatus.open
+    )
+    assert len(TasksService._filter_bucket(tasks, None)) == 3

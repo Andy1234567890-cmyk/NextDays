@@ -13,6 +13,7 @@ import { HostTabs } from "@/navigation/HostTabs";
 import type { RootStackParamList } from "@/navigation/types";
 import Checkin from "@/screens/Checkin";
 import Checkout from "@/screens/Checkout";
+import HostLogin from "@/screens/HostLogin";
 import ListingDetail from "@/screens/ListingDetail";
 import RoleSelect from "@/screens/RoleSelect";
 import { ThemeProvider } from "@/theme/ThemeProvider";
@@ -28,6 +29,7 @@ export default function App() {
             <Stack.Navigator initialRouteName="GuestTabs" screenOptions={{ headerShown: false }}>
               <Stack.Screen name="GuestTabs" component={GuestTabs} />
               <Stack.Screen name="RoleSelect" component={RoleSelect} />
+              <Stack.Screen name="HostLogin" component={HostLogin} />
               <Stack.Screen name="HostTabs" component={HostTabs} />
               <Stack.Screen name="ListingDetail" component={ListingDetail} />
               <Stack.Screen name="Checkout" component={Checkout} options={{ presentation: "card" }} />

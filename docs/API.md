@@ -919,9 +919,13 @@ eingeloggte Nutzer.
 
 ---
 
-## tasks (Logik implementiert — Lastenheft §2.5/§4.3)
+## tasks (Logik implementiert — Lastenheft §2.5/§4.3 + PM-Aufgaben-Modul)
 
-Aufgaben, Checklisten mit Foto-Nachweisen, Vertretung, Inventar.
+Aufgaben, Checklisten mit Foto-Nachweisen, Vertretung, Inventar sowie das
+PM-Aufgaben-Modul (Lodgify-Nachbau): Kalender-Timeline, Teamaufgaben,
+Inspektions-Workflow und Regeln/Vorlagen (`task_rules` mit `kind` =
+`template|auto|recurring`). Auf dem bestehenden schlanken Datenmodell (0012/0019)
+aufgesetzt, ergänzt durch Migration 0123 (Inspektion + PM-Metadaten + Realtime).
 
 | Methode | Pfad | Capability | Beschreibung |
 |---|---|---|---|
@@ -934,6 +938,47 @@ Aufgaben, Checklisten mit Foto-Nachweisen, Vertretung, Inventar.
 | `POST` | `/api/v1/tasks/checklist/photo` | `view_own_tasks` | Foto-Nachweis (unbegrenzt/Raum) |
 | `POST` | `/api/v1/tasks/substitution` | `request_substitute` | Vertretung anfragen (§4.3) |
 | `POST` | `/api/v1/tasks/inventory` | `manage_inventory` | Inventar (property_id null = zentraler Pool) |
+| `GET` | `/api/v1/tasks/team` | `manage_tasks` | Teamaufgaben (Assignee + Objekt-Namen; `status_bucket`-Filter). KEINE Gast-PII/Beträge (§4.3) |
+| `GET` | `/api/v1/tasks/calendar` | `manage_tasks` | Kalender-Timeline (`month_from`/`month_to`), nach Objekt gruppiert |
+| `GET` | `/api/v1/tasks/detail/{id}` | `view_own_tasks` | Aufgaben-Detail inkl. Checkliste + Foto-Status |
+| `POST` | `/api/v1/tasks/{id}/complete` | `view_own_tasks` | Abschließen — 422, wenn ein `requires_photo`-Punkt kein Foto hat; setzt bei `needs_inspection` → `inspection_state=to_review` |
+| `GET` | `/api/v1/tasks/inspection` | `manage_tasks` | Inspektions-Liste (`tab` = to_review\|upcoming\|reviewed) |
+| `POST` | `/api/v1/tasks/{id}/inspect` | `manage_tasks` | Freigeben (reviewed) / Zurückweisen (open + to_review) |
+| `GET` | `/api/v1/tasks/templates` | `manage_tasks` | Aufgabenvorlagen (task_rules kind=template) |
+| `GET` | `/api/v1/tasks/auto` | `manage_tasks` | Planmäßige Aufgaben (buchungs-getriggert) |
+| `GET` | `/api/v1/tasks/recurring` | `manage_tasks` | Regelmäßige Aufgaben (zeitplan-getriggert, menschenlesbares `schedule_label`) |
+| `GET` | `/api/v1/tasks/rules/{id}` | `manage_tasks` | Regel/Vorlage-Detail (Items + Objekt-Zuordnung) |
+| `POST` | `/api/v1/tasks/rules` | `manage_tasks` | Regel/Vorlage anlegen |
+| `PUT` | `/api/v1/tasks/rules/{id}` | `manage_tasks` | Regel/Vorlage ändern (Objekte + Items als Alt/Neu-Diff) |
+| `DELETE` | `/api/v1/tasks/rules/{id}` | `manage_tasks` | Regel/Vorlage löschen |
+
+Frontend: `(dashboard)/reservierungen/aufgaben/*` — 7 Reiter (Kalender,
+Meine, Team, Inspektion, Vorlagen, Planmäßig, Regelmäßig), alle live über
+`useRealtime` (`tasks`, `task_rules`).
+
+---
+
+## media (Bilder-Modul — implementiert)
+
+Aggregiert Foto-Nachweise aus mehreren Quellen zu einer tenant-scoped Liste:
+**Objektfotos** (`property_photos`, public Bucket `property-images`, URL fertig)
+und **Buchungs-/Aufgabenfotos** (`checklist_photos`, privater Bucket
+`task-photos` → signierte URL, verknüpft über item→task→reservation/property).
+Zahlungsbilder existieren im Datenmodell NICHT und werden nicht erfunden
+(CLAUDE.md Wurzel 4). Bucket ist privat (fail-closed: ohne Backend-Signatur kein
+Zugriff); `checklist_photos` in Realtime (RLS via item→task→tenant, 0126).
+
+| Methode | Pfad | Capability | Beschreibung |
+|---|---|---|---|
+| `GET` | `/api/v1/media` | `view_calendar` | Bilder-Karten; Query `booking`/`property_` (Quellen-Toggle), `property_id` (Objektfilter). Signierte URLs für Buchungsfotos |
+| `DELETE` | `/api/v1/media/{kind}/{id}` | `manage_tasks` | Bild löschen (`kind` = booking\|property), IDOR-Guard über die Eltern-Kette |
+
+Frontend: `(dashboard)/reservierungen/bilder` — Karten (Objekt-Titel, Typ,
+Autor, Hochgeladen am, Buchungszeitraum, Unterkunft/Buchung ansehen, Löschen),
+Toggles Buchungsbilder/Objektfotos, live über `useRealtime` (`property_photos`,
+`checklist_photos`). Migration 0126: Bucket `task-photos` + Realtime.
+**Offen:** echter Foto-Upload-Flow beim Task-Abschluss (Multipart →
+`task-photos`) — aktuell 0 Buchungsfotos, Modul zeigt die Objektfotos.
 
 ---
 

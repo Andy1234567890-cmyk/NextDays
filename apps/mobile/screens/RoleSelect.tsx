@@ -6,6 +6,7 @@ import { View, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Btn, Col, Txt } from "@/components/ui/kit";
+import { getToken } from "@/lib/auth";
 import type { RootStackParamList } from "@/navigation/types";
 import { useTheme } from "@/theme/ThemeProvider";
 
@@ -13,6 +14,17 @@ export default function RoleSelect() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+
+  // Gastgeber-Bereich nur mit Anmeldung: Token vorhanden → direkt in die Tabs,
+  // sonst zuerst der Gastgeber-Login (dieselbe Auth wie das Web-Dashboard).
+  const goHost = async () => {
+    const token = await getToken();
+    if (token) {
+      navigation.navigate("HostTabs", { screen: "Dashboard" });
+    } else {
+      navigation.navigate("HostLogin");
+    }
+  };
   return (
     <View
       style={{
@@ -39,7 +51,7 @@ export default function RoleSelect() {
         <Btn variant="primary" block icon="home" iconR="fwd" onPress={() => navigation.navigate("GuestTabs", { screen: "Discover" })}>
           Als Gast entdecken
         </Btn>
-        <Btn variant="dark" block icon="chart" iconR="fwd" onPress={() => navigation.navigate("HostTabs", { screen: "Dashboard" })}>
+        <Btn variant="dark" block icon="chart" iconR="fwd" onPress={goHost}>
           Als Gastgeber verwalten
         </Btn>
       </Col>

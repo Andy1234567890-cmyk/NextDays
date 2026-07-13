@@ -14,9 +14,13 @@ import { PmModuleNav } from "@/components/reservierungen/pm-module-nav";
 // /reservierungen/unterkuenfte        → Objektliste  (globale Nav an).
 const PROPERTY_DETAIL_RE = /^\/reservierungen\/unterkuenfte\/[^/]+/;
 
+// /reservierungen/aufgaben[/…] → Aufgaben-Modul mit eigener linker Sub-Nav
+// (wie Lodgify): globale PM-Nav ausblenden, sonst stünden zwei Nav-Spalten.
+const TASKS_RE = /^\/reservierungen\/aufgaben(\/|$)/;
+
 export function PmModuleShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const hideNav = PROPERTY_DETAIL_RE.test(pathname);
+  const hideNav = PROPERTY_DETAIL_RE.test(pathname) || TASKS_RE.test(pathname);
 
   if (hideNav) {
     return <>{children}</>;

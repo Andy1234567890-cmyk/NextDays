@@ -20,6 +20,7 @@ export type HostTabParamList = {
 
 export type RootStackParamList = {
   RoleSelect: undefined;
+  HostLogin: undefined;
   GuestTabs: NavigatorScreenParams<GuestTabParamList>;
   HostTabs: NavigatorScreenParams<HostTabParamList>;
   ListingDetail: { id: string };
