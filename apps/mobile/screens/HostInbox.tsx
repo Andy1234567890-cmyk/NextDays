@@ -6,7 +6,7 @@
 // übernimmt useRealtime.
 import type { RouteProp } from "@react-navigation/native";
 import { useRoute } from "@react-navigation/native";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -19,7 +19,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/ui/Icon";
-import { Avatar, Card, Chip, Col, Divider, IconBtn, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Card, Chip, Col, Divider, IconBtn, Row, Spinner, Txt } from "@/components/ui/kit";
+import { channelMeta } from "@/lib/calendar-channels";
 import {
   getInboxMessages,
   listInboxThreads,
@@ -81,53 +82,253 @@ function ThreadList({
   useRealtime({ table: "channex_booking", onChange: load });
   useRealtime({ table: "whatsapp_conversation", onChange: load });
 
+  const [query, setQuery] = useState("");
+  const [readFilter, setReadFilter] = useState<"all" | "unread">("all");
+  const [channelFilter, setChannelFilter] = useState<string | "all">("all");
+
+  const channels = useMemo(() => {
+    const set = new Set<string>();
+    for (const th of threads ?? []) if (th.ota_name) set.add(th.ota_name);
+    return [...set];
+  }, [threads]);
+
+  const visible = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return (threads ?? []).filter((th) => {
+      if (readFilter === "unread" && th.is_read) return false;
+      if (channelFilter !== "all" && th.ota_name !== channelFilter) return false;
+      if (q) {
+        const hay = `${th.guest_name ?? ""} ${th.property_title ?? ""} ${th.ota_reservation_code ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [threads, query, readFilter, channelFilter]);
+
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
-      <Col style={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 12 }}>
-        <Txt v="h1">Posteingang</Txt>
+      <Col style={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 10, gap: 12 }}>
+        <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
+          <Txt v="h1">Nachrichten</Txt>
+          <IconBtn icon="chat" flat />
+        </Row>
+
+        {/* Suchleiste */}
+        <Row
+          style={{
+            alignItems: "center",
+            gap: 8,
+            paddingHorizontal: 12,
+            height: 44,
+            borderRadius: t.radius.card,
+            backgroundColor: t.palette.surface,
+            borderWidth: 1,
+            borderColor: t.palette.line,
+          }}
+        >
+          <Icon n="search" s={18} sw={2} c={t.palette.soft} />
+          <TextInput
+            value={query}
+            onChangeText={setQuery}
+            placeholder="Nach Buchungsref. oder Gast suchen"
+            placeholderTextColor={t.palette.faint}
+            style={{ flex: 1, fontFamily: t.type.body.fontFamily, fontSize: 14, color: t.palette.ink }}
+          />
+        </Row>
+
+        {/* Filter-Chips: Kanal + Konversationsstatus */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <Row gap={8} style={{ paddingRight: 20 }}>
+            <FilterChip label="Alle Kanäle" active={channelFilter === "all"} onPress={() => setChannelFilter("all")} />
+            {channels.map((c) => (
+              <FilterChip
+                key={c}
+                label={c}
+                active={channelFilter === c}
+                onPress={() => setChannelFilter((v) => (v === c ? "all" : c))}
+              />
+            ))}
+            <FilterChip label="Alle" active={readFilter === "all"} onPress={() => setReadFilter("all")} />
+            <FilterChip label="Ungelesen" active={readFilter === "unread"} onPress={() => setReadFilter("unread")} />
+          </Row>
+        </ScrollView>
       </Col>
 
       {!threads && <Spinner />}
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 32 }}
         refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
+        showsVerticalScrollIndicator={false}
       >
-        {threads && threads.length === 0 && (
+        {threads && visible.length === 0 && (
           <Txt v="sm" soft style={{ textAlign: "center", marginTop: 40 }}>
             Keine Konversationen.
           </Txt>
         )}
-        {threads?.map((thread, i) => (
+        {visible.map((thread, i) => (
           <View key={thread.id}>
             {i > 0 && <Divider style={{ marginHorizontal: 4 }} />}
-            <Pressable onPress={() => onOpen(thread)}>
-              <Row style={{ paddingVertical: 12, paddingHorizontal: 4, gap: 12, alignItems: "flex-start" }}>
-                <Avatar s={48} icon="user" />
-                <Col gap={3} style={{ flex: 1 }}>
-                  <Row style={{ justifyContent: "space-between" }}>
-                    <Txt v="sm" style={{ fontFamily: t.type.bold.fontFamily }} numberOfLines={1}>
-                      {thread.guest_name || "Gast"}
-                    </Txt>
-                    <Txt v="xs" soft>
-                      {thread.updated_at ? new Date(thread.updated_at).toLocaleDateString("de-DE") : ""}
-                    </Txt>
-                  </Row>
-                  <Txt v="sm" soft={thread.is_read} numberOfLines={1}>
-                    {thread.last_message ?? "—"}
-                  </Txt>
-                  <Row style={{ justifyContent: "space-between", marginTop: 2, alignItems: "center" }}>
-                    {thread.ota_name ? <Chip variant="ghost">{thread.ota_name}</Chip> : <View />}
-                    {!thread.is_read && (
-                      <View style={{ width: 9, height: 9, borderRadius: 999, backgroundColor: t.palette.accent }} />
-                    )}
-                  </Row>
-                </Col>
-              </Row>
-            </Pressable>
+            <ThreadRow thread={thread} onPress={() => onOpen(thread)} />
           </View>
         ))}
       </ScrollView>
     </View>
+  );
+}
+
+// Relative Zeit „vor X" aus einem ISO-Timestamp (echte Daten, kein Mock).
+function relTime(iso: string | null): string {
+  if (!iso) return "";
+  const then = new Date(iso).getTime();
+  const diff = Date.now() - then;
+  const min = Math.round(diff / 60000);
+  if (min < 1) return "gerade eben";
+  if (min < 60) return `vor ${min} min`;
+  const h = Math.round(min / 60);
+  if (h < 24) return `vor ${h} Std.`;
+  const d = Math.round(h / 24);
+  if (d < 7) return `vor ${d} Tg.`;
+  return new Date(iso).toLocaleDateString("de-DE");
+}
+
+function fmtShortDate(iso: string | null): string {
+  if (!iso) return "";
+  const [y, m, d] = iso.split("-");
+  return `${Number(d)}.${m}.${y}`;
+}
+
+// ota_name (Freitext) → Kanal-Key für die Badge-Farbe. Unbekannt → Direkt.
+function channelKeyOf(ota: string | null): "direct" | "portal" | "booking" | "airbnb" | "vrbo" {
+  const s = (ota ?? "").toLowerCase();
+  if (s.includes("booking")) return "booking";
+  if (s.includes("airbnb")) return "airbnb";
+  if (s.includes("vrbo") || s.includes("expedia")) return "vrbo";
+  if (s.includes("mynextdays") || s.includes("nextdays")) return "portal";
+  return "direct";
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  confirmed: "Bestätigt",
+  pending: "Angefragt",
+  cancelled: "Storniert",
+  completed: "Abgeschlossen",
+};
+
+function initials(name: string | null): string {
+  return (name ?? "—")
+    .split(" ")
+    .map((s) => s[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+// Deterministische Avatar-Tönung aus dem Namen (feste Palette, kein Zufall).
+const AVATAR_TINTS = ["#FCE3C6", "#DCE6F5", "#F7D6DA", "#D8ECD9", "#EADBF6", "#F5E5C8"];
+function tintOf(name: string | null): string {
+  const s = name ?? "";
+  let h = 0;
+  for (let i = 0; i < s.length; i += 1) h = (h + s.charCodeAt(i)) % AVATAR_TINTS.length;
+  return AVATAR_TINTS[h];
+}
+
+function ThreadRow({ thread, onPress }: { thread: InboxThread; onPress: () => void }) {
+  const t = useTheme();
+  const ch = channelMeta(channelKeyOf(thread.ota_name));
+  const statusLabel = thread.status ? STATUS_LABEL[thread.status] ?? thread.status : null;
+
+  return (
+    <Pressable onPress={onPress}>
+      <Row style={{ paddingVertical: 12, paddingHorizontal: 4, gap: 12, alignItems: "flex-start" }}>
+        {/* Avatar mit Initialen + Kanal-Badge unten rechts. */}
+        <View style={{ width: 52, height: 52 }}>
+          <View
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 26,
+              backgroundColor: tintOf(thread.guest_name),
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Txt v="sm" style={{ fontFamily: t.type.bold.fontFamily }} color={t.palette.ink}>
+              {initials(thread.guest_name)}
+            </Txt>
+          </View>
+          <View
+            style={{
+              position: "absolute",
+              right: -2,
+              bottom: -2,
+              width: 22,
+              height: 22,
+              borderRadius: 11,
+              backgroundColor: ch.bar,
+              alignItems: "center",
+              justifyContent: "center",
+              borderWidth: 2,
+              borderColor: t.palette.bg,
+            }}
+          >
+            <Txt v="xs" color={ch.text} style={{ fontFamily: t.type.bold.fontFamily, fontSize: 10 }}>
+              {ch.label.slice(0, 1)}
+            </Txt>
+          </View>
+        </View>
+
+        <Col gap={2} style={{ flex: 1 }}>
+          <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
+            <Row gap={7} style={{ flex: 1, alignItems: "center" }}>
+              <Txt v="sm" style={{ fontFamily: t.type.bold.fontFamily }} numberOfLines={1}>
+                {thread.guest_name || "Gast"}
+              </Txt>
+              {statusLabel && (
+                <Chip variant={thread.status === "confirmed" ? "accent" : "ghost"}>{statusLabel}</Chip>
+              )}
+            </Row>
+            <Txt v="xs" soft>{relTime(thread.updated_at)}</Txt>
+          </Row>
+
+          {(thread.property_title || thread.arrival_date) && (
+            <Txt v="xs" soft numberOfLines={1}>
+              {thread.property_title ?? ""}
+              {thread.property_title && thread.arrival_date ? "  ·  " : ""}
+              {fmtShortDate(thread.arrival_date)}
+            </Txt>
+          )}
+
+          <Row style={{ justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
+            <Txt v="sm" soft={thread.is_read} numberOfLines={2} style={{ flex: 1 }}>
+              {thread.last_message ?? "—"}
+            </Txt>
+            {!thread.is_read && (
+              <View style={{ width: 9, height: 9, borderRadius: 999, marginTop: 5, backgroundColor: t.palette.accent }} />
+            )}
+          </Row>
+        </Col>
+      </Row>
+    </Pressable>
+  );
+}
+
+function FilterChip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  const t = useTheme();
+  return (
+    <Pressable
+      onPress={onPress}
+      style={{
+        paddingHorizontal: 14,
+        paddingVertical: 8,
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: active ? t.palette.ink : t.palette.line,
+        backgroundColor: active ? t.palette.ink : t.palette.surface,
+      }}
+    >
+      <Txt v="sm" color={active ? t.palette.surface : t.palette.ink}>{label}</Txt>
+    </Pressable>
   );
 }
 

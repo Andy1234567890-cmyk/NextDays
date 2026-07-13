@@ -32,18 +32,18 @@ const DEV: AppConfig = {
   // wie die REST-Daten, sonst nutzlos/irreführend. Stand heute: beide zeigen
   // auf den self-hosted Kong (sslip.io).
   supabaseUrl: "https://supabase-kong.65.21.144.136.sslip.io",
-  // TODO(Andy): anon-Key aus Coolify eintragen (öffentlicher Key, RLS schützt).
-  // KEIN erfundener Wert (Wurzel 4): leer = Realtime degradiert sauber,
-  // REST/Auth laufen unberührt weiter.
-  supabaseAnonKey: "",
+  // Öffentlicher anon-Key des self-hosted Kong (nur für Realtime-WebSocket;
+  // RLS schützt die Daten). REST/Auth laufen über die API mit Bearer-Token.
+  supabaseAnonKey:
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzUwMDAwMDAwLCJleHAiOjIwNjUzNjAwMDB9.j0vFr_Wttmw3kTluPio9ctHchDrgN0cjLwmhzkxk-hI",
 };
 
 const PROD: AppConfig = {
   apiUrl: "https://nextdays-api.65.21.144.136.sslip.io",
   supabaseUrl: "https://supabase-kong.65.21.144.136.sslip.io",
-  // TODO(Andy): Prod-anon-Key aus Coolify eintragen. Leer = Realtime degradiert
-  // sauber (kein Crash), REST/Auth laufen davon unberührt weiter.
-  supabaseAnonKey: "",
+  // Öffentlicher anon-Key (derselbe Kong wie Dev). RLS schützt die Daten.
+  supabaseAnonKey:
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzUwMDAwMDAwLCJleHAiOjIwNjUzNjAwMDB9.j0vFr_Wttmw3kTluPio9ctHchDrgN0cjLwmhzkxk-hI",
 };
 
 export const CONFIG: AppConfig = __DEV__ ? DEV : PROD;
