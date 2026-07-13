@@ -76,9 +76,39 @@ export type RateUpdate = {
   stop_sell?: boolean;
 };
 
+// Flow-Debugging: ein einzelner Channex-Call als Trace-Zeile (channex_debug_log).
+export type ChannexDebugEntry = {
+  id: string;
+  property_id: string | null;
+  step: string;
+  channex_method: string;
+  channex_path: string;
+  request_body: unknown;
+  response_body: unknown;
+  channex_id: string | null;
+  http_status: number | null;
+  duration_ms: number | null;
+  ok: boolean;
+  error: string | null;
+  created_at: string | null;
+};
+
 // --- Health -----------------------------------------------------------------
 export async function getChannexHealth(): Promise<Result<ChannexHealth>> {
   return call<ChannexHealth>("/health");
+}
+
+// --- Flow-Debugging (Portale-Sync-Verlauf) ----------------------------------
+export async function listChannexDebugTrace(
+  propertyId?: string,
+  limit = 100,
+): Promise<Result<{ items: ChannexDebugEntry[]; total: number }>> {
+  const p = new URLSearchParams();
+  if (propertyId) p.set("property_id", propertyId);
+  p.set("limit", String(limit));
+  return call<{ items: ChannexDebugEntry[]; total: number }>(
+    `/debug/trace?${p.toString()}`,
+  );
 }
 
 // --- Property-Mapping -------------------------------------------------------

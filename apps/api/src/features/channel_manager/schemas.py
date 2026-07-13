@@ -279,3 +279,27 @@ class WebhookRegisterResponse(BaseModel):
     callback_url: str
     event_mask: str
     webhook: WebhookInfo | None = None
+
+
+# --- Flow-Debugging (channex_debug_log) -------------------------------------
+class ChannexDebugEntry(BaseModel):
+    """Ein Channex-Call als Trace-Zeile (sichtbares Flow-Debugging)."""
+
+    id: str
+    property_id: str | None = None
+    step: str
+    channex_method: str
+    channex_path: str
+    request_body: dict | list | None = None
+    response_body: dict | list | None = None
+    channex_id: str | None = None
+    http_status: int | None = None
+    duration_ms: int | None = None
+    ok: bool = False
+    error: str | None = None
+    created_at: str | None = None
+
+
+class ChannexDebugResponse(BaseModel):
+    items: list[ChannexDebugEntry]
+    total: int

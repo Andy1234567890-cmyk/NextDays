@@ -2,21 +2,24 @@
 // Verteilt Objekte an Buchungsportale, zeigt verbundene Kanäle/Objekte und
 // eingehende OTA-Buchungen. Status + Daten server-seitig laden, an die
 // Client-Komponente reichen. White-label: kein Provider-Name sichtbar.
+import { ChannexDebugPanel } from "@/components/channel-manager/channex-debug-panel";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { ChannelManagerSettings } from "@/components/settings/channel-manager-settings";
 import {
   getChannexHealth,
   listChannexBookings,
+  listChannexDebugTrace,
   listPropertyMaps,
 } from "@/lib/channex";
 
 export const dynamic = "force-dynamic";
 
 export default async function ChannelsPage() {
-  const [health, maps, bookings] = await Promise.all([
+  const [health, maps, bookings, trace] = await Promise.all([
     getChannexHealth(),
     listPropertyMaps(),
     listChannexBookings(),
+    listChannexDebugTrace(),
   ]);
 
   return (
@@ -35,6 +38,8 @@ export default async function ChannelsPage() {
         propertyMaps={maps.ok ? maps.data.items : []}
         bookings={bookings.ok ? bookings.data.items : []}
       />
+
+      <ChannexDebugPanel initial={trace.ok ? trace.data.items : []} />
     </div>
   );
 }

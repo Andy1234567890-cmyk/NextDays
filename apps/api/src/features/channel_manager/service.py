@@ -19,18 +19,19 @@ from src.core.security import AuthContext
 from .ari_push import AriPushMixin
 from .bookings_sync import BookingsSyncMixin
 from .channels import ChannelsMixin
-from .channex_client import ChannexClient, ChannexError
+from .channex_client import ChannexCallTrace, ChannexClient, ChannexError
 from .common import (
     ChannelManagerError,
     _availability_settings,
     _channex_facility_ids,
     _channex_property_type,
     _timezone_for_country,
+    log,
 )
 from .content_sync import ContentSyncMixin
 from .oauth_channels import OAuthChannelsMixin
 from .property_mapping import PropertyMappingMixin
-from .schemas import SliceHealth
+from .schemas import ChannexDebugEntry, ChannexDebugResponse, SliceHealth
 
 __all__ = [
     "ChannelManagerError",
@@ -59,7 +60,20 @@ class ChannelManagerService(
         channex: ChannexClient | None = None,
     ) -> None:
         self._db = service_client
-        self._channex = channex or ChannexClient()
+        # Trace-Kontext (tenant/property/step) des gerade laufenden Push-Schritts.
+        # Die Mixins setzen ihn über `_trace_step(...)`, der Client-Sink liest ihn
+        # und persistiert jeden Channex-Call in channex_debug_log (Flow-Debugging).
+        self._trace_ctx: dict[str, str | None] = {
+            "tenant_id": None, "property_id": None, "step": None,
+        }
+        if channex is not None:
+            self._channex = channex
+        else:
+            # Eigener Client mit Trace-Sink — nur wenn eine DB da ist (sonst
+            # nichts zu persistieren, z. B. reine Health-Checks/Tests).
+            self._channex = ChannexClient(
+                trace_sink=self._persist_trace if service_client is not None else None
+            )
 
     # -- Helpers ---------------------------------------------------------------
     def health(self) -> SliceHealth:
@@ -81,6 +95,92 @@ class ChannelManagerService(
     @staticmethod
     def _wrap_channex(exc: ChannexError) -> ChannelManagerError:
         return ChannelManagerError(exc.message, status_code=exc.status_code)
+
+    # -- Sichtbares Flow-Debugging (channex_debug_log) -------------------------
+    def _trace_step(
+        self,
+        *,
+        tenant_id: str | None,
+        property_id: str | None = None,
+        step: str,
+    ) -> None:
+        """Trace-Kontext des gerade anstehenden Channex-Schritts setzen. Der
+        Client-Sink liest ihn beim nächsten HTTP-Call und schreibt die DB-Zeile.
+        Vor jedem semantischen Schritt (property_create, rate_plan_create …)
+        aufrufen — der Kontext gilt, bis er neu gesetzt wird."""
+        self._trace_ctx = {
+            "tenant_id": tenant_id, "property_id": property_id, "step": step,
+        }
+
+    def _persist_trace(self, trace: ChannexCallTrace) -> None:
+        """Client-Sink: einen Channex-Call in channex_debug_log persistieren.
+        Best effort — ein Trace-Fehler darf den Push nie kippen (Wurzel 5). Ohne
+        gesetzten Tenant (kein Kontext) wird nichts geschrieben (RLS/NOT NULL)."""
+        tenant_id = self._trace_ctx.get("tenant_id")
+        if not tenant_id or self._db is None:
+            return
+        try:
+            self._db.table("channex_debug_log").insert(
+                {
+                    "tenant_id": tenant_id,
+                    "property_id": self._trace_ctx.get("property_id"),
+                    "step": self._trace_ctx.get("step") or "call",
+                    "channex_method": trace.method,
+                    "channex_path": trace.path,
+                    "request_body": trace.request_body,
+                    "response_body": trace.response_body,
+                    "channex_id": trace.channex_id,
+                    "http_status": trace.http_status,
+                    "duration_ms": trace.duration_ms,
+                    "ok": trace.ok,
+                    "error": trace.error,
+                }
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 - Trace nie den Hauptpfad kippen
+            log.warning("channex_debug_log_insert_failed", error=str(exc))
+
+    def list_debug_trace(
+        self,
+        ctx: AuthContext,
+        *,
+        property_id: str | None = None,
+        limit: int = 100,
+    ) -> ChannexDebugResponse:
+        """Letzte Channex-Call-Traces des Tenants (Flow-Debugging), neueste zuerst.
+        Optional auf ein Objekt gefiltert. Tenant-Scope via RLS + expliziter eq."""
+        db = self._require_db()
+        tenant_id = self._require_tenant(ctx)
+        query = (
+            db.table("channex_debug_log")
+            .select("*")
+            .eq("tenant_id", tenant_id)
+        )
+        if property_id:
+            query = query.eq("property_id", property_id)
+        res = (
+            query.order("created_at", desc=True)
+            .limit(max(1, min(limit, 500)))
+            .execute()
+        )
+        items = [
+            ChannexDebugEntry(
+                id=str(r["id"]),
+                property_id=r.get("property_id"),
+                step=r["step"],
+                channex_method=r["channex_method"],
+                channex_path=r["channex_path"],
+                request_body=r.get("request_body"),
+                response_body=r.get("response_body"),
+                channex_id=r.get("channex_id"),
+                http_status=r.get("http_status"),
+                duration_ms=r.get("duration_ms"),
+                ok=bool(r.get("ok")),
+                error=r.get("error"),
+                created_at=str(r["created_at"]) if r.get("created_at") else None,
+            )
+            for r in (res.data or [])
+        ]
+        return ChannexDebugResponse(items=items, total=len(items))
 
     # -- Channel-Hilfen --------------------------------------------------------
     def _tenant_channex_property_ids(self, db: Client, tenant_id: str) -> set[str]:

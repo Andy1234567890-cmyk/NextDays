@@ -198,21 +198,27 @@ class ContentSyncMixin:
             )
 
         try:
+            # Flow-Debugging: jeden Kettenschritt vor dem Channex-Call markieren,
+            # damit die Trace-Zeile (channex_debug_log) den Schritt kennt.
+            self._trace_step(tenant_id=tenant_id, property_id=property_id, step="property")
             channex_property_id = self._upsert_channex_property(
                 db, tenant_id, property_id, prop_title, prop_currency, prop_row, photos
             )
+            self._trace_step(tenant_id=tenant_id, property_id=property_id, step="room_type")
             channex_room_type_id, room_type_map_id = self._upsert_channex_room_type(
                 db, tenant_id, channex_property_id, property_id, prop_title,
                 prop_row, photos,
             )
             channex_rate_plan_ids: list[str] = []
             for rp in rate_plans:
+                self._trace_step(tenant_id=tenant_id, property_id=property_id, step="rate_plan")
                 crp = self._upsert_channex_rate_plan(
                     db, tenant_id, room_type_map_id, channex_property_id,
                     channex_room_type_id, rp, prop_currency, prop_row,
                 )
                 channex_rate_plan_ids.append(crp)
             # Steuern (USt./City-Tax) → Channex tax_sets + tax_set_id am Rate-Plan.
+            self._trace_step(tenant_id=tenant_id, property_id=property_id, step="taxes")
             self._sync_taxes(
                 db, tenant_id, property_id, channex_property_id,
                 channex_rate_plan_ids, prop_currency, prop_row,

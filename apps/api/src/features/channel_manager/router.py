@@ -37,6 +37,7 @@ from .schemas import (
     ChannelConnectionResponse,
     ChannelListResponse,
     ChannelResponse,
+    ChannexDebugResponse,
     ConnectChannelRequest,
     ConnectionToggleRequest,
     OAuthBeginRequest,
@@ -102,6 +103,21 @@ def disconnect_property(
 ) -> None:
     try:
         service.disconnect_property(ctx, map_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Flow-Debugging (channex_debug_log) --------------------------------------
+@router.get("/debug/trace", response_model=ChannexDebugResponse)
+def list_debug_trace(
+    ctx: _read,
+    service: ChannelManagerServiceDep,
+    property_id: str | None = None,
+    limit: int = 100,
+) -> ChannexDebugResponse:
+    """Letzte Channex-Call-Traces (sichtbares Flow-Debugging), neueste zuerst."""
+    try:
+        return service.list_debug_trace(ctx, property_id=property_id, limit=limit)
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

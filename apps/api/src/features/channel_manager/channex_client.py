@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import time
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
 import httpx
@@ -28,6 +29,31 @@ from src.core.logging import get_logger
 
 if TYPE_CHECKING:
     from src.jobs.channex_budget import BudgetDecision
+
+
+@dataclass(slots=True)
+class ChannexCallTrace:
+    """Ein einzelner Channex-HTTP-Call als Trace-Zeile (sichtbares Flow-Debugging).
+
+    Der Client füllt die technischen Felder (Methode/Pfad/Status/Bodies/Dauer/ID);
+    tenant/property/step reicht der Slice über den ``trace_sink`` nach — der Client
+    bleibt tenant-agnostisch (kein DB-Zugriff hier)."""
+
+    method: str
+    path: str
+    request_body: dict[str, Any] | None
+    response_body: dict[str, Any] | None
+    channex_id: str | None
+    http_status: int | None
+    duration_ms: int
+    ok: bool
+    error: str | None
+
+
+# Sink für Call-Traces: der Slice hängt hier das Persistieren in channex_debug_log
+# ein (mit tenant/property/step). Ohne Sink (Tests, Request-Pfad ohne Debug) läuft
+# der Client unverändert — nur strukturiertes Logging, keine DB-Zeile.
+TraceSink = Callable[[ChannexCallTrace], None]
 
 log = get_logger("nextdays.channex")
 
@@ -60,6 +86,15 @@ def _budget_property_id(
                     if isinstance(pid, str) and pid:
                         return pid
     return None
+
+
+def _json_or_none(resp: httpx.Response) -> dict[str, Any] | None:
+    """Response-Body als dict (für Fehler-Traces), sonst None — nie werfen."""
+    try:
+        body = resp.json() if resp.content else None
+    except ValueError:
+        return None
+    return body if isinstance(body, dict) else None
 
 
 class ChannexError(Exception):
@@ -140,6 +175,7 @@ class ChannexClient:
         base_url: str | None = None,
         timeout: float = 30.0,
         before_call: BudgetCallback | None = None,
+        trace_sink: TraceSink | None = None,
     ) -> None:
         settings = get_settings()
         self._api_key = api_key or settings.channex_api_key.get_secret_value()
@@ -149,6 +185,59 @@ class ChannexClient:
         # Channex-Token-Budget durch. Ohne Callback (Request-Pfad, Tests) läuft
         # der Client unverändert — jeder echte HTTP-Call geht ohne Token-Gate.
         self._before_call = before_call
+        # Optionaler Trace-Sink: sichtbares Flow-Debugging. Der Slice persistiert
+        # hier jeden Call (channex_debug_log). Ohne Sink: nur strukturiertes Log.
+        self._trace_sink = trace_sink
+
+    def _emit_trace(
+        self,
+        *,
+        method: str,
+        path: str,
+        request_body: dict[str, Any] | None,
+        response_body: dict[str, Any] | None,
+        http_status: int | None,
+        started: float,
+        ok: bool,
+        error: str | None,
+    ) -> None:
+        """Einen Call-Trace an Log UND Sink geben (best effort, nie den Hauptpfad
+        kippen: Wurzel 5)."""
+        duration_ms = int((time.perf_counter() - started) * 1000)
+        channex_id: str | None = None
+        if isinstance(response_body, dict):
+            data = response_body.get("data")
+            if isinstance(data, dict):
+                cid = data.get("id")
+                channex_id = cid if isinstance(cid, str) else None
+        # Strukturiertes Log für JEDEN Call (Erfolg inklusive — bisher fehlte das).
+        log.info(
+            "channex_call",
+            method=method,
+            path=path,
+            status=http_status,
+            duration_ms=duration_ms,
+            ok=ok,
+            channex_id=channex_id,
+        )
+        if self._trace_sink is None:
+            return
+        try:
+            self._trace_sink(
+                ChannexCallTrace(
+                    method=method,
+                    path=path,
+                    request_body=request_body,
+                    response_body=response_body,
+                    channex_id=channex_id,
+                    http_status=http_status,
+                    duration_ms=duration_ms,
+                    ok=ok,
+                    error=error,
+                )
+            )
+        except Exception as exc:  # noqa: BLE001 - Trace darf den Call nie kippen
+            log.warning("channex_trace_sink_failed", error=str(exc))
 
     @property
     def is_configured(self) -> bool:
@@ -200,6 +289,8 @@ class ChannexClient:
             # die reale Last genau dann, wenn Channex bereits 429 liefert (die
             # Situation, für die die Drosselung gebaut ist).
             self._acquire_budget(budget_property_id)
+            # Trace-Zeitmessung je echtem Round-Trip (sichtbares Flow-Debugging).
+            started = time.perf_counter()
             try:
                 with httpx.Client(timeout=self._timeout) as client:
                     resp = client.request(
@@ -207,6 +298,11 @@ class ChannexClient:
                     )
             except httpx.HTTPError as exc:
                 log.error("channex_network_error", url=url, error=str(exc))
+                self._emit_trace(
+                    method=method, path=path, request_body=json, response_body=None,
+                    http_status=None, started=started, ok=False,
+                    error=f"Netzwerkfehler: {exc}",
+                )
                 raise ChannexError(
                     "Channex nicht erreichbar (Netzwerkfehler).", status_code=502
                 ) from exc
@@ -218,13 +314,32 @@ class ChannexClient:
                     log.warning("channex_rate_limited", url=url, retry_in=wait)
                     time.sleep(wait)
                     continue
+                self._emit_trace(
+                    method=method, path=path, request_body=json, response_body=None,
+                    http_status=429, started=started, ok=False,
+                    error="Rate-Limit (429).",
+                )
                 raise ChannexError(
                     "Channex-Rate-Limit erreicht (429). Bitte später erneut.",
                     status_code=429,
                     channex_status=429,
                 )
 
-            return self._handle_response(resp, url)
+            # Antwort (Erfolg oder Fehler) verarbeiten — Trace in beiden Fällen.
+            try:
+                body = self._handle_response(resp, url)
+            except ChannexError as exc:
+                self._emit_trace(
+                    method=method, path=path, request_body=json,
+                    response_body=_json_or_none(resp), http_status=resp.status_code,
+                    started=started, ok=False, error=exc.message,
+                )
+                raise
+            self._emit_trace(
+                method=method, path=path, request_body=json, response_body=body,
+                http_status=resp.status_code, started=started, ok=True, error=None,
+            )
+            return body
 
         # Theoretisch unerreichbar (Schleife kehrt immer zurück oder wirft).
         raise ChannexError(
