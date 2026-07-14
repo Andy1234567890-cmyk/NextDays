@@ -15,6 +15,7 @@ from src.core.security import AuthContext
 from src.features.auth.owner_scope import is_owner, owner_property_ids
 from src.features.auth.staff_scope import is_staff, staff_property_ids
 from src.jobs.queue import (
+    enqueue,
     try_enqueue_ari,
     try_enqueue_content_sync,
     try_enqueue_recompute,
@@ -802,17 +803,30 @@ class PropertiesService:
                 new_rows, on_conflict="property_id,date"
             ).execute()
 
-        # 4) Verfügbarkeit + Mindest-/Maximalaufenthalt als ARI-Jobs einreihen
-        #    (Phase 2: raus aus dem Request-Pfad). Alle decken den vollen 500-Tage-
-        #    Horizont ab → coalesce=True sicher. Der Content-Sync oben (Schritt 3)
-        #    blieb synchron, weil sein Ergebnis den HTTP-Status bestimmt.
+        # 4) Go-Live-Full-Sync: EIN full_sync_property-Job deckt Verfügbarkeit UND
+        #    Preise/Restriktionen über den vollen 500-Tage-Horizont in genau zwei
+        #    Channex-Calls ab (1× availability RLE, 1× rates&restrictions via
+        #    push_rates_batch aus dem Preis-Resolver — autopilot-unabhängig). Das ist
+        #    die dokumentierte „Hotel goes Live"-Semantik (Channex-Zertifizierung
+        #    Test 1). Ersetzt den früheren availability-Einzel-Push, der ohne
+        #    Autopilot KEINEN Preis-Push erzeugte (recompute pusht nur bei Autopilot).
+        #    Tages-Dedup wie der nächtliche Lauf: mehrfaches draft↔active-Togglen am
+        #    selben Tag erzeugt keinen zweiten Voll-Push (kein Timer-Anti-Pattern).
         horizon_to = (today + timedelta(days=_PUBLISH_HORIZON_DAYS - 1)).isoformat()
         today_iso = today.isoformat()
-        try_enqueue_ari(
-            self._db, tenant_id, property_id, "availability",
-            {"date_from": today_iso, "date_to": horizon_to, "availability": 1},
-            coalesce=True,
-        )
+        try:
+            enqueue(
+                self._db, "full_sync_property", tenant_id=tenant_id,
+                payload={"tenant_id": tenant_id, "property_id": property_id},
+                dedup_key=f"full_sync:{property_id}:{today_iso}",
+            )
+        except Exception as exc:  # noqa: BLE001 — Einreihen darf Publish nie kippen
+            log.warning("publish_full_sync_enqueue_failed",
+                        property_id=property_id, error=str(exc)[:200])
+
+        # Min-/Max-Stay separat als ARI-Job — der Full-Sync pusht nur Preise+
+        # Verfügbarkeit, nicht die Aufenthalts-Restriktionen (die haben keine
+        # Ganz-Horizont-Tabelle). Nur wenn vom Rate-Plan/Formular gesetzt.
         min_stay = int(rates[0].get("min_stay") or 1)
         if min_stay > 1:
             try_enqueue_ari(
@@ -828,9 +842,9 @@ class PropertiesService:
                 coalesce=True,
             )
 
-        # 5) Tagesgenaue Preise nachrechnen + pushen als recompute_property-Job
-        #    (Coalescing je Objekt). Ohne diesen Schritt kennt der OTA nur den
-        #    Rate-Plan-Ankerpreis, nicht Saison-/Dynamic-Preise.
+        # 5) Tagesgenaue Preise nachrechnen als recompute_property-Job (Coalescing
+        #    je Objekt) — für Autopilot-Objekte, die danach dynamisch weiterpushen.
+        #    Der initiale Preis-Push kommt bereits aus dem Full-Sync (Schritt 4).
         try_enqueue_recompute(self._db, tenant_id, property_id)
 
         log.info("property_published", tenant_id=tenant_id, property_id=property_id)
