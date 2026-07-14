@@ -30,53 +30,116 @@ from .schemas import (
 class BookingsSyncMixin:
     """Inbound: Booking-Feed, Staging, Reservierungs-Projektion, Importe."""
 
+    # Feed-Pagination: Channex liefert ohne Argumente nur 10 Revisionen. Wir
+    # holen 100 je Seite (Maximum), älteste zuerst, und blättern bis der Feed
+    # leer ist — gedeckelt gegen Endlosschleifen (Deckel wird geloggt, kein
+    # stilles Abschneiden).
+    _FEED_PAGE_LIMIT = 100
+    _FEED_MAX_PAGES = 20
 
     # -- Bookings: Feed-Pull + Ack --------------------------------------------
     def sync_bookings(self, ctx: AuthContext) -> BookingSyncResponse:
+        """Feed-Pull für DEN Tenant des Requests (manueller Sync im UI)."""
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
-        result = BookingSyncResponse()
-
         # KRITISCH (Mandantentrennung): Der Revisions-Feed ist KONTOWEIT — er
         # enthält die Buchungen ALLER Tenants. Wir dürfen ausschließlich
         # Revisionen verarbeiten, deren property_id zu DIESEM Tenant gehört.
         # Fremde Revisionen werden übersprungen und NICHT ge-ackt (damit der
         # zuständige Tenant sie noch aus dem Feed bekommt).
-        own_property_ids = self._tenant_channex_property_ids(db, tenant_id)
+        tenant_by_property = dict.fromkeys(
+            self._tenant_channex_property_ids(db, tenant_id), tenant_id
+        )
+        return self._sync_feed(db, tenant_by_property)
 
-        try:
-            feed = self._channex.get_booking_revisions_feed()
-        except ChannexError as exc:
-            raise self._wrap_channex(exc) from exc
+    def sync_bookings_all(self) -> BookingSyncResponse:
+        """Feed-Pull über ALLE Tenants (Worker-Job: Webhook-Trigger + Backstop-
+        Tick). Ordnet jede Revision über channex_property_map ihrem Tenant zu;
+        Revisionen ohne aktives Mapping werden übersprungen und NICHT ge-ackt
+        (Channex liefert sie erneut, bis das Mapping existiert)."""
+        db = self._require_db()
+        rows = (
+            db.table("channex_property_map")
+            .select("tenant_id, channex_property_id")
+            .is_("deleted_at", "null")
+            .execute()
+        ).data or []
+        tenant_by_property = {
+            r["channex_property_id"]: r["tenant_id"]
+            for r in rows
+            if r.get("channex_property_id") and r.get("tenant_id")
+        }
+        return self._sync_feed(db, tenant_by_property)
 
-        revisions = feed.get("data") or []
-        result.fetched = len(revisions)
-
+    def _sync_feed(
+        self, db: Client, tenant_by_property: dict[str, str]
+    ) -> BookingSyncResponse:
+        """Gemeinsamer Feed-Kern: paginiert (älteste zuerst) durch alle offenen
+        Revisionen, verarbeitet nur Revisionen mit bekanntem Tenant-Mapping und
+        ackt erst NACH erfolgreichem Speichern (Channex Best Practice)."""
+        result = BookingSyncResponse()
         # Fehler lokal sammeln und am Ende einmalig zuweisen — Pylint erkennt
         # das Pydantic-Field sonst statisch als FieldInfo (ohne .append).
         errors: list[str] = []
-        for rev in revisions:
-            attrs = rev.get("attributes") or rev
-            revision_id = rev.get("id") or attrs.get("revision_id")
-            rev_property_id = attrs.get("property_id")
 
-            # Gehört diese Revision diesem Tenant? Sonst überspringen (kein ack!).
-            if rev_property_id not in own_property_ids:
-                result.skipped += 1
-                continue
-
+        for page in range(1, self._FEED_MAX_PAGES + 1):
             try:
-                guest_id = self._upsert_booking(db, tenant_id, attrs, revision_id)
-                # In die zentrale reservations-Tabelle + Kalender projizieren.
-                self._project_booking_to_reservation(db, tenant_id, attrs, guest_id)
-                result.saved += 1
-                if revision_id:
-                    self._channex.ack_booking_revision(revision_id)
-                    result.acknowledged += 1
-            except (ChannexError, ChannelManagerError) as exc:
-                msg = getattr(exc, "message", str(exc))
-                errors.append(f"Revision {revision_id}: {msg}")
-                log.error("channex_booking_sync_failed", revision=revision_id, error=msg)
+                feed = self._channex.get_booking_revisions_feed(
+                    page=page, limit=self._FEED_PAGE_LIMIT
+                )
+            except ChannexError as exc:
+                if page == 1:
+                    raise self._wrap_channex(exc) from exc
+                # Folgeseite fehlgeschlagen: bereits Verarbeitetes ist ge-ackt
+                # und bleibt gültig — Rest holt der nächste Lauf.
+                errors.append(f"Feed-Seite {page}: {exc.message}")
+                break
+
+            revisions = feed.get("data") or []
+            if not revisions:
+                break
+            result.fetched += len(revisions)
+
+            for rev in revisions:
+                attrs = rev.get("attributes") or rev
+                revision_id = rev.get("id") or attrs.get("revision_id")
+                rev_property_id = attrs.get("property_id")
+
+                # Tenant der Revision bestimmen — unbekannt → skip, KEIN ack!
+                rev_tenant = tenant_by_property.get(rev_property_id or "")
+                if rev_tenant is None:
+                    result.skipped += 1
+                    continue
+
+                try:
+                    guest_id = self._upsert_booking(db, rev_tenant, attrs, revision_id)
+                    # In die zentrale reservations-Tabelle + Kalender projizieren.
+                    self._project_booking_to_reservation(
+                        db, rev_tenant, attrs, guest_id
+                    )
+                    result.saved += 1
+                    if revision_id:
+                        self._channex.ack_booking_revision(revision_id)
+                        result.acknowledged += 1
+                except (ChannexError, ChannelManagerError) as exc:
+                    msg = getattr(exc, "message", str(exc))
+                    errors.append(f"Revision {revision_id}: {msg}")
+                    log.error(
+                        "channex_booking_sync_failed", revision=revision_id, error=msg
+                    )
+
+            if len(revisions) < self._FEED_PAGE_LIMIT:
+                break
+        else:
+            # Deckel erreicht: sichtbar machen statt still abschneiden — der
+            # nächste Lauf (Webhook/Tick) zieht den Rest.
+            log.warning(
+                "channex_feed_page_cap_reached", pages=self._FEED_MAX_PAGES
+            )
+            errors.append(
+                f"Feed-Seiten-Deckel ({self._FEED_MAX_PAGES}) erreicht — "
+                "Rest folgt im nächsten Lauf."
+            )
 
         result.errors = errors
         return result

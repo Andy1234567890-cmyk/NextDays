@@ -47,8 +47,11 @@ class _FakeChannex:
         self._revisions = revisions
         self.acked: list[str] = []
 
-    def get_booking_revisions_feed(self) -> dict:
-        return {"data": self._revisions}
+    def get_booking_revisions_feed(self, *, page: int = 1, limit: int = 100) -> dict:
+        # Ein-Seiten-Feed: Seite 1 liefert alles, weitere Seiten sind leer
+        # (die Pagination selbst wird gegen den echten Client verifiziert).
+        del limit  # Signatur-Kompatibilität zum echten Client
+        return {"data": self._revisions if page == 1 else []}
 
     def ack_booking_revision(self, revision_id: str) -> dict:
         self.acked.append(revision_id)

@@ -458,6 +458,12 @@ class ChannexClient:
     def get_property(self, channex_id: str) -> dict[str, Any]:
         return self.get(f"properties/{channex_id}")
 
+    def delete_property(self, channex_id: str, *, force: bool = False) -> dict[str, Any]:
+        """Property in Channex löschen (irreversibel). Ohne `force` blockt Channex,
+        wenn noch ein Kanal hängt (422) — bewusst: erst Kanäle abbauen."""
+        params = {"force": "true"} if force else None
+        return self.delete(f"properties/{channex_id}", params=params)
+
     def list_properties(
         self, *, page: int = 1, limit: int = 100, group_id: str | None = None
     ) -> dict[str, Any]:
@@ -482,6 +488,12 @@ class ChannexClient:
         """Room-Types einer Property (für den Import). filter[property_id]."""
         return self.get("room_types", params={"filter[property_id]": property_id})
 
+    def delete_room_type(self, channex_id: str, *, force: bool = False) -> dict[str, Any]:
+        """Room-Type löschen. Ohne `force` Fehler, wenn an einen Kanal gemappt —
+        Löschkette (Doku: „break the chain") bewusst fail-closed."""
+        params = {"force": "true"} if force else None
+        return self.delete(f"room_types/{channex_id}", params=params)
+
     # ----- Rate Plans ---------------------------------------------------------
     def create_rate_plan(self, attributes: dict[str, Any]) -> dict[str, Any]:
         return self.post("rate_plans", json={"rate_plan": attributes})
@@ -493,6 +505,12 @@ class ChannexClient:
         """Rate-Plans einer Property (für den Import). filter[property_id].
         Bei READ kommt options[].rate als Dezimalstring zurück."""
         return self.get("rate_plans", params={"filter[property_id]": property_id})
+
+    def delete_rate_plan(self, channex_id: str, *, force: bool = False) -> dict[str, Any]:
+        """Rate-Plan löschen. Ohne `force` Fehler, wenn an einen Kanal gemappt —
+        Löschkette (Doku: „break the chain") bewusst fail-closed."""
+        params = {"force": "true"} if force else None
+        return self.delete(f"rate_plans/{channex_id}", params=params)
 
     # ----- Taxes & Tax-Sets ---------------------------------------------------
     def create_tax(self, attributes: dict[str, Any]) -> dict[str, Any]:
@@ -506,6 +524,17 @@ class ChannexClient:
 
     def update_tax_set(self, tax_set_id: str, attributes: dict[str, Any]) -> dict[str, Any]:
         return self.put(f"tax_sets/{tax_set_id}", json={"tax_set": attributes})
+
+    # ----- Hotel Policies (Check-in/-out, Haustiere, Parken, Internet, Rauchen) --
+    # Pflicht für Google-Kanal/Instant-Booking-Page-Readiness; children_fee am
+    # Rate-Plan greift nur mit Altersgrenzen aus der Policy.
+    def create_hotel_policy(self, attributes: dict[str, Any]) -> dict[str, Any]:
+        return self.post("hotel_policies", json={"hotel_policy": attributes})
+
+    def update_hotel_policy(
+        self, policy_id: str, attributes: dict[str, Any]
+    ) -> dict[str, Any]:
+        return self.put(f"hotel_policies/{policy_id}", json={"hotel_policy": attributes})
 
     # ----- ARI: Availability + Restrictions/Rates -----------------------------
     def update_availability(self, values: list[dict[str, Any]]) -> dict[str, Any]:
@@ -555,9 +584,22 @@ class ChannexClient:
         )
 
     # ----- Bookings (Pull via Revisions-Feed + Ack) ---------------------------
-    def get_booking_revisions_feed(self) -> dict[str, Any]:
-        """Nicht-bestätigte Buchungs-Revisionen (primärer Weg laut Channex)."""
-        return self.get("booking_revisions/feed")
+    def get_booking_revisions_feed(
+        self, *, page: int = 1, limit: int = 100
+    ) -> dict[str, Any]:
+        """Nicht-bestätigte Buchungs-Revisionen (primärer Weg laut Channex).
+
+        WICHTIG: ohne Pagination liefert Channex nur die ersten 10 — wir holen
+        max. 100 je Seite, älteste zuerst (order[inserted_at]=asc), damit
+        Revisionen in Ereignis-Reihenfolge verarbeitet werden."""
+        return self.get(
+            "booking_revisions/feed",
+            params={
+                "pagination[page]": page,
+                "pagination[limit]": limit,
+                "order[inserted_at]": "asc",
+            },
+        )
 
     def ack_booking_revision(self, revision_id: str) -> dict[str, Any]:
         """Revision bestätigen (erst NACH erfolgreichem Speichern aufrufen)."""
@@ -586,6 +628,36 @@ class ChannexClient:
         if inserted_after:
             params["filter[inserted_at][gte]"] = inserted_after
         return self.get("bookings", params=params)
+
+    # ----- Booking CRS (Buchungen in Channex anlegen/ändern; Beta) ------------
+    # Erfordert die installierte "Booking CRS"-App je Property. Hält Channex mit
+    # PMS-seitigen Änderungen (Move/Reprice/Storno) synchron — Channex mergt
+    # spätere OTA-Revisionen diff-basiert (Overrides-Logik der Doku).
+    def crs_create_booking(self, booking: dict[str, Any]) -> dict[str, Any]:
+        return self.post("bookings", json={"booking": booking})
+
+    def crs_update_booking(
+        self, booking_id: str, booking: dict[str, Any]
+    ) -> dict[str, Any]:
+        return self.put(f"bookings/{booking_id}", json={"booking": booking})
+
+    # ----- Reporting API (Booking.com: No-Show / Invalid Card) ----------------
+    def report_no_show(
+        self, booking_id: str, *, waived_fees: bool
+    ) -> dict[str, Any]:
+        """No-Show melden (ab 00:00 Objektzeit am Anreisetag, bis 48h danach)."""
+        return self.post(
+            f"bookings/{booking_id}/no_show",
+            json={"no_show_report": {"waived_fees": waived_fees}},
+        )
+
+    def report_invalid_card(self, booking_id: str) -> dict[str, Any]:
+        """Ungültige Kreditkarte melden (bis 00:00 Objektzeit am Anreisetag)."""
+        return self.post(f"bookings/{booking_id}/invalid_card", json={})
+
+    def report_cancel_due_invalid_card(self, booking_id: str) -> dict[str, Any]:
+        """Buchung wegen ungültiger Karte stornieren (Booking.com-Regeln)."""
+        return self.post(f"bookings/{booking_id}/cancel_due_invalid_card", json={})
 
     # ----- Channels (OTA-Verbindungen; inhouse Channel-API) -------------------
     # Verifizierter 4-Stufen-Flow (references/api.md, live gegen Staging geprüft):
@@ -749,3 +821,135 @@ class ChannexClient:
             f"bookings/{channex_booking_id}/messages",
             json={"message": {"message": message}},
         )
+
+    # ----- Message-Threads (inkl. Airbnb-Inquiries ohne Buchung) --------------
+    def list_message_threads(
+        self, *, page: int = 1, limit: int = 50
+    ) -> dict[str, Any]:
+        """Alle Threads des Kontos (relationships.property zeigt das Objekt —
+        der Aufrufer MUSS tenant-scopen). Enthält Airbnb-Inquiry-Threads ohne
+        Buchung."""
+        return self.get(
+            "message_threads",
+            params={"pagination[page]": page, "pagination[limit]": limit},
+        )
+
+    def get_message_thread(self, thread_id: str) -> dict[str, Any]:
+        """Einen Thread lesen (inkl. relationships.property für den Tenant-Scope)."""
+        return self.get(f"message_threads/{thread_id}")
+
+    def get_thread_messages(
+        self, thread_id: str, *, page: int = 1, limit: int = 50
+    ) -> dict[str, Any]:
+        return self.get(
+            f"message_threads/{thread_id}/messages",
+            params={"pagination[page]": page, "pagination[limit]": limit},
+        )
+
+    def send_thread_message(self, thread_id: str, message: str) -> dict[str, Any]:
+        return self.post(
+            f"message_threads/{thread_id}/messages",
+            json={"message": {"message": message}},
+        )
+
+    def close_message_thread(self, thread_id: str) -> dict[str, Any]:
+        return self.post(f"message_threads/{thread_id}/close", json={})
+
+    def mark_thread_no_reply_needed(self, thread_id: str) -> dict[str, Any]:
+        """Nur Booking.com: Thread als „keine Antwort nötig" markieren (zählt
+        deren Reaktionszeit-Scoring korrekt)."""
+        return self.post(f"message_threads/{thread_id}/no_reply_needed", json={})
+
+    def create_attachment(
+        self, *, file_b64: str, file_name: str, file_type: str
+    ) -> str:
+        """Anhang hochladen (Base64) → Attachment-ID für send_booking_attachment."""
+        res = self.post(
+            "attachments",
+            json={"attachment": {
+                "file": file_b64, "file_name": file_name, "file_type": file_type,
+            }},
+        )
+        attachment_id = (res.get("data") or {}).get("id")
+        if not attachment_id:
+            raise ChannexError(
+                "Channex lieferte keine Attachment-ID.", status_code=502, payload=res
+            )
+        return str(attachment_id)
+
+    def send_booking_attachment(
+        self, channex_booking_id: str, attachment_id: str, *, message: str | None = None
+    ) -> dict[str, Any]:
+        payload: dict[str, Any] = {"attachment_id": attachment_id}
+        if message:
+            payload["message"] = message
+        return self.post(
+            f"bookings/{channex_booking_id}/messages", json={"message": payload}
+        )
+
+    # ----- Reviews & Scores (Booking.com, Airbnb, Expedia) --------------------
+    def list_reviews(
+        self,
+        *,
+        property_ids: list[str] | None = None,
+        page: int = 1,
+        limit: int = 50,
+    ) -> dict[str, Any]:
+        """Gäste-Bewertungen (kontoweit; optional auf Channex-Property-IDs
+        gefiltert — der Aufrufer MUSS tenant-scopen)."""
+        params: dict[str, Any] = {
+            "pagination[page]": page,
+            "pagination[limit]": limit,
+        }
+        if property_ids:
+            params["filter[property_id]"] = ",".join(property_ids)
+        return self.get("reviews", params=params)
+
+    def get_review(self, review_id: str) -> dict[str, Any]:
+        return self.get(f"reviews/{review_id}")
+
+    def reply_review(self, review_id: str, reply: str) -> dict[str, Any]:
+        return self.post(
+            f"reviews/{review_id}/reply", json={"reply": {"reply": reply}}
+        )
+
+    def send_airbnb_guest_review(
+        self, review_id: str, review: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Gast-Bewertung des Hosts (nur Airbnb): scores/tags/public+private
+        review/is_reviewee_recommended — Struktur laut Reviews-Collection."""
+        return self.post(f"reviews/{review_id}/guest_review", json={"review": review})
+
+    def get_property_score(
+        self, channex_property_id: str, *, detailed: bool = False
+    ) -> dict[str, Any]:
+        suffix = "/detailed" if detailed else ""
+        return self.get(f"scores/{channex_property_id}{suffix}")
+
+    # ----- Availability Rules (kanal-spezifische Kontingente) -----------------
+    # close_out | availability_offset | max_availability je Kanal + Room-Type.
+    def list_availability_rules(self, channex_property_id: str) -> dict[str, Any]:
+        return self.get(
+            "channel_availability_rules",
+            params={"filter[property_id]": channex_property_id},
+        )
+
+    def get_availability_rule(self, rule_id: str) -> dict[str, Any]:
+        return self.get(f"channel_availability_rules/{rule_id}")
+
+    def create_availability_rule(self, attributes: dict[str, Any]) -> dict[str, Any]:
+        return self.post(
+            "channel_availability_rules",
+            json={"channel_availability_rule": attributes},
+        )
+
+    def update_availability_rule(
+        self, rule_id: str, attributes: dict[str, Any]
+    ) -> dict[str, Any]:
+        return self.put(
+            f"channel_availability_rules/{rule_id}",
+            json={"channel_availability_rule": attributes},
+        )
+
+    def delete_availability_rule(self, rule_id: str) -> dict[str, Any]:
+        return self.delete(f"channel_availability_rules/{rule_id}")

@@ -303,3 +303,59 @@ class ChannexDebugEntry(BaseModel):
 class ChannexDebugResponse(BaseModel):
     items: list[ChannexDebugEntry]
     total: int
+
+
+# --- OTA-Zusatzflächen (Reviews, Rules, Reporting, Threads, CRS, Ereignisse) --
+class ReviewReplyRequest(BaseModel):
+    """Antwort des Gastgebers auf eine Gäste-Bewertung."""
+
+    reply: str = Field(min_length=1, max_length=5000)
+
+
+class GuestReviewRequest(BaseModel):
+    """Gast-Bewertung des Hosts (nur Airbnb) — Struktur laut Reviews-Collection
+    (scores[], tags[], public_review, private_review, is_reviewee_recommended)."""
+
+    review: dict
+
+
+class AvailabilityRuleRequest(BaseModel):
+    """Kanal-Kontingent-Regel. type: close_out | availability_offset |
+    max_availability; value nur für offset/max Pflicht (Channex validiert)."""
+
+    title: str = Field(min_length=1, max_length=255)
+    type: str = Field(pattern="^(close_out|availability_offset|max_availability)$")
+    value: int | None = None
+    start_date: date
+    end_date: date | None = None
+    days: list[str] | None = None
+    affected_channels: list[str]
+    affected_room_types: list[str]
+
+
+class NoShowReportRequest(BaseModel):
+    waived_fees: bool
+
+
+class ThreadMessageRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=10000)
+
+
+class CrsBookingRequest(BaseModel):
+    """Booking-CRS-Payload (Public-Booking-API-Struktur, siehe Channex-Doku).
+    property_id/rooms/customer usw. werden serverseitig gegen den Tenant geprüft."""
+
+    booking: dict
+
+
+class WebhookEventEntry(BaseModel):
+    """Persistiertes Channex-Webhook-Ereignis (Airbnb-Anfragen, Sync-Fehler,
+    unmapped Bookings, Reviews, Kanal-Statuswechsel)."""
+
+    id: str
+    property_id: str | None = None
+    event: str
+    payload: dict | list | None = None
+    severity: str = "info"
+    resolved: bool = False
+    created_at: str | None = None

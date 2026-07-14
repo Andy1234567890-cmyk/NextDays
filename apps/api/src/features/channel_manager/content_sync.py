@@ -217,11 +217,32 @@ class ContentSyncMixin:
                     channex_room_type_id, rp, prop_currency, prop_row,
                 )
                 channex_rate_plan_ids.append(crp)
+            # Löschkette (Doku „Automated Mapping": entfernte Raten MÜSSEN auch
+            # in Channex entfernt werden, sonst „break the chain"): Mappings,
+            # deren lokaler Rate-Plan nicht mehr existiert, in Channex löschen.
+            self._trace_step(
+                tenant_id=tenant_id, property_id=property_id, step="rate_plan_prune"
+            )
+            self._prune_orphan_rate_plans(
+                db, tenant_id, room_type_map_id,
+                local_ids={rp["id"] for rp in rate_plans if rp.get("id")},
+            )
             # Steuern (USt./City-Tax) → Channex tax_sets + tax_set_id am Rate-Plan.
             self._trace_step(tenant_id=tenant_id, property_id=property_id, step="taxes")
             self._sync_taxes(
                 db, tenant_id, property_id, channex_property_id,
                 channex_rate_plan_ids, prop_currency, prop_row,
+            )
+            # Hotel Policy (Check-in/-out, Haustiere, Parken, Internet, Rauchen)
+            # → Pflicht für Google-Kanal/Instant-Booking-Readiness. Synct nur,
+            # wenn ALLE Channex-Pflichtfelder lokal gepflegt sind (fail-closed,
+            # keine erfundenen Defaults — Wurzel 4).
+            self._trace_step(
+                tenant_id=tenant_id, property_id=property_id, step="hotel_policy"
+            )
+            self._sync_hotel_policy(
+                db, tenant_id, property_id, channex_property_id,
+                prop_title, prop_currency, prop_row,
             )
         except ChannexError as exc:
             self._mark_property_sync(db, tenant_id, property_id, "error", exc.message)
@@ -233,6 +254,98 @@ class ContentSyncMixin:
             "channex_property_id": channex_property_id,
             "channex_room_type_id": channex_room_type_id,
         }
+
+    # -- Hotel Policy -----------------------------------------------------------
+    # Quelle: properties.type_attributes.policies (checkInTime/checkOutTime) +
+    # policies.hotelPolicy (strukturierte Channex-Felder: internetAccessType,
+    # internetAccessCoverage, internetAccessCost, parkingType, parkingReservation,
+    # parkingIsPrivate, petsPolicy, petsNonRefundableFee, petsRefundableDeposit,
+    # smokingPolicy, adultsOnly). max_count_of_guests = properties.max_guests.
+    @staticmethod
+    def _build_hotel_policy_attrs(
+        prop_row: dict[str, Any], title: str, currency: str
+    ) -> dict[str, Any] | None:
+        """Channex-hotel_policy-Attribute aus den lokalen Objektdaten. None, wenn
+        Pflichtfelder fehlen — dann wird NICHT gesynct (kein Fantasie-Default)."""
+        policies = (prop_row.get("type_attributes") or {}).get("policies") or {}
+        hp = policies.get("hotelPolicy") or {}
+        checkin = policies.get("checkInTime")
+        checkout = policies.get("checkOutTime")
+        max_guests = prop_row.get("max_guests")
+        pets_policy = hp.get("petsPolicy")
+        # Haustiere verboten → Gebühr/Kaution folgen logisch als 0 (keine
+        # Erfindung); sonst müssen sie explizit gepflegt sein (auch "0.00").
+        pets_fee = hp.get("petsNonRefundableFee")
+        pets_deposit = hp.get("petsRefundableDeposit")
+        if pets_policy == "not_allowed":
+            pets_fee = pets_fee if pets_fee is not None else "0.00"
+            pets_deposit = pets_deposit if pets_deposit is not None else "0.00"
+        required = {
+            "checkin_time": checkin,
+            "checkout_time": checkout,
+            "max_count_of_guests": max_guests,
+            "internet_access_type": hp.get("internetAccessType"),
+            "internet_access_coverage": hp.get("internetAccessCoverage"),
+            "parking_type": hp.get("parkingType"),
+            "parking_reservation": hp.get("parkingReservation"),
+            "parking_is_private": hp.get("parkingIsPrivate"),
+            "pets_policy": pets_policy,
+            "pets_non_refundable_fee": pets_fee,
+            "pets_refundable_deposit": pets_deposit,
+            "smoking_policy": hp.get("smokingPolicy"),
+        }
+        if any(v is None or v == "" for v in required.values()):
+            return None
+        attrs: dict[str, Any] = {
+            "title": title,
+            "currency": currency,
+            **required,
+        }
+        # Optionale Felder nur, wenn gepflegt.
+        if hp.get("internetAccessCost") not in (None, ""):
+            attrs["internet_access_cost"] = hp["internetAccessCost"]
+        if hp.get("adultsOnly") is not None:
+            attrs["is_adults_only"] = bool(hp["adultsOnly"])
+        return attrs
+
+    def _sync_hotel_policy(
+        self, db: Client, tenant_id: str, property_id: str,
+        channex_property_id: str, title: str, currency: str,
+        prop_row: dict[str, Any],
+    ) -> None:
+        """Hotel Policy anlegen/aktualisieren und an die Channex-Property binden.
+        Best effort auf Objekt-Ebene: unvollständige Daten → Skip mit Log (die
+        Objekt-Kette Property/Rooms/Rates/Taxes bleibt davon unberührt)."""
+        attrs = self._build_hotel_policy_attrs(prop_row, title, currency)
+        if attrs is None:
+            log.info(
+                "hotel_policy_skipped_incomplete",
+                tenant_id=tenant_id, property_id=property_id,
+            )
+            return
+        pm = (
+            db.table("channex_property_map")
+            .select("id, channex_hotel_policy_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        ).data
+        if not pm:
+            return
+        existing_id = pm[0].get("channex_hotel_policy_id")
+        if existing_id:
+            self._channex.update_hotel_policy(existing_id, attrs)
+            return
+        attrs["property_id"] = channex_property_id
+        created = self._channex.create_hotel_policy(attrs)
+        policy_id = (created.get("data") or {}).get("id")
+        if not policy_id:
+            raise ChannexError("Keine Hotel-Policy-ID erhalten.", status_code=502)
+        db.table("channex_property_map").update(
+            {"channex_hotel_policy_id": policy_id}
+        ).eq("id", pm[0]["id"]).execute()
 
     def _upsert_channex_property(
         self, db: Client, tenant_id: str, property_id: str, title: str,
@@ -578,6 +691,51 @@ class ContentSyncMixin:
             on_conflict="channex_rate_plan_id",
         ).execute()
         return channex_rate_plan_id
+
+    def _prune_orphan_rate_plans(
+        self, db: Client, tenant_id: str, room_type_map_id: str,
+        local_ids: set[str],
+    ) -> None:
+        """Channex-Rate-Plans löschen, deren lokaler Preisplan entfernt wurde.
+
+        Kette der Doku folgend fail-closed: OHNE force — ist der Rate-Plan noch
+        an einen Kanal gemappt, lehnt Channex ab (422). Dann bleibt das Mapping
+        bestehen und der Konflikt wird geloggt (erst Kanal-Mapping lösen, dann
+        verschwindet der Plan beim nächsten Sync). Erfolgreich gelöschte Pläne
+        werden im Mapping soft-deleted (deleted_at), damit ARI-Pushes sie nicht
+        mehr ansprechen (Wurzel 1: Gegenzustand pflegen)."""
+        rows = (
+            db.table("channex_rate_plan_map")
+            .select("id, local_rate_plan_id, channex_rate_plan_id")
+            .eq("tenant_id", tenant_id)
+            .eq("room_type_map_id", room_type_map_id)
+            .is_("deleted_at", "null")
+            .execute()
+        ).data or []
+        for row in rows:
+            local_id = row.get("local_rate_plan_id")
+            if local_id and local_id in local_ids:
+                continue  # lokal noch vorhanden → nichts zu tun
+            channex_id = row.get("channex_rate_plan_id")
+            try:
+                if channex_id:
+                    self._channex.delete_rate_plan(channex_id)
+            except ChannexError as exc:
+                # 404 = in Channex bereits weg (Retention/manuell) → Mapping
+                # trotzdem schließen; alles andere (422 Kanal-Mapping) → behalten.
+                if exc.channex_status != 404:
+                    log.warning(
+                        "channex_rate_plan_prune_blocked",
+                        channex_rate_plan_id=channex_id, error=exc.message,
+                    )
+                    continue
+            db.table("channex_rate_plan_map").update(
+                {"deleted_at": datetime.now(UTC).isoformat()}
+            ).eq("id", row["id"]).execute()
+            log.info(
+                "channex_rate_plan_pruned",
+                channex_rate_plan_id=channex_id, local_rate_plan_id=local_id,
+            )
 
     # Lokale Steuer-Logik → Channex tax.logic. percent→percent; amount → pro Nacht
     # (Pauschale je Nacht ist die gängige Auslegung eines festen Betrags).

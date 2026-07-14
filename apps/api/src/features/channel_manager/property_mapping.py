@@ -449,8 +449,48 @@ class PropertyMappingMixin:
         return self._to_property_map(saved.data[0])
 
     def disconnect_property(self, ctx: AuthContext, map_id: str) -> None:
+        """Objekt von Channex trennen. Löschkette (Wurzel 1 — Gegenzustand):
+        VOR dem Soft-Delete des Mappings alle Channex-Kanäle des Objekts
+        deaktivieren — sonst verkauft die OTA weiter, während unsere Pushes
+        aufhören (Blindverkauf → Overbooking). Schlägt eine Deaktivierung fehl,
+        bricht die Trennung ab (fail-closed); Channex räumt die Property nach
+        90 Tagen ohne Kanal selbst ab (Retention-Doku)."""
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
+        row = (
+            db.table("channex_property_map")
+            .select("id, channex_property_id")
+            .eq("id", map_id)
+            .eq("tenant_id", tenant_id)
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        ).data
+        if not row:
+            raise ChannelManagerError("Verbindung nicht gefunden.", status_code=404)
+        channex_property_id = row[0].get("channex_property_id")
+        if channex_property_id and self._channex.is_configured:
+            try:
+                channels = (
+                    self._channex.list_channels(property_id=channex_property_id)
+                    .get("data") or []
+                )
+                for ch in channels:
+                    ch_id = ch.get("id") or (ch.get("attributes") or {}).get("id")
+                    if ch_id:
+                        self._channex.deactivate_channel(str(ch_id))
+            except ChannexError as exc:
+                raise ChannelManagerError(
+                    "Trennung abgebrochen: Kanal-Deaktivierung bei Channex "
+                    f"fehlgeschlagen ({exc.message}). Bitte erneut versuchen.",
+                    status_code=502,
+                ) from exc
+            # Lokale Kanal-Verbindungen als inaktiv spiegeln (Gegenzustand).
+            db.table("channex_channel_connection").update(
+                {"is_active": False}
+            ).eq("tenant_id", tenant_id).eq(
+                "channex_property_id", channex_property_id
+            ).execute()
         db.table("channex_property_map").update(
             {"deleted_at": datetime.now(UTC).isoformat(), "sync_enabled": False}
         ).eq("id", map_id).eq("tenant_id", tenant_id).execute()

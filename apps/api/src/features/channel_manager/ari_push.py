@@ -1024,6 +1024,113 @@ class AriPushMixin:
             by_row[older["id"]] = covered
         return by_row
 
+    # -- Nächtlicher Full-Sync-Push DB→Channex ---------------------------------
+    # Channex-Doku (PMS-Guide/Best Practices): "Advisable to send a daily full
+    # update each night per property". Delta-Pushes bleiben der Normalfall; der
+    # Full-Sync heilt Drift aus verlorenen Deltas (Webhook-/Netz-Ausfälle).
+    # Horizont = 365 Tage — deckungsgleich mit dem lokalen Pricing-/Kalender-
+    # Horizont (state_length). NICHT weiter pushen als lokale Wahrheit existiert
+    # (Wurzel 4: für Tage ohne lokalen Preis keinen 0-€-Verkauf provozieren).
+    _FULL_SYNC_DAYS = 365
+
+    def full_sync_property(
+        self, tenant_id: str, property_id: str
+    ) -> dict[str, int]:
+        """Voll-Abgleich EINER Property: Availability über den ganzen Horizont in
+        einem gebatchten Push (RLE-Ranges), Preise/Min-Stay über einen Recompute-
+        Job (der den vollen Horizont rechnet UND pusht). Stop-Sell/CTA-CTD laufen
+        weiterhin event-basiert + Restriction-Outbox-Backstop (es gibt keine
+        lokale Ganz-Horizont-Tabelle dafür — nichts erfinden)."""
+        if not self._channex.is_configured or self._db is None:
+            return {"availability_values": 0, "days": 0}
+        db = self._db
+        mapping = self._resolve_channex_room_type(db, tenant_id, property_id)
+        if mapping is None or not self._is_channex_managed(db, tenant_id, property_id):
+            return {"availability_values": 0, "days": 0}
+
+        start = date.today()
+        end = start + timedelta(days=self._FULL_SYNC_DAYS - 1)
+
+        # Basis-Verfügbarkeit = count_of_rooms des synthetischen Room-Types —
+        # aus DENSELBEN Objektdaten wie der Content-Sync (keine zweite Wahrheit).
+        prop = (
+            db.table("properties")
+            .select("max_guests, type_attributes")
+            .eq("id", property_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not prop:
+            return {"availability_values": 0, "days": 0}
+        base = self._room_type_occupancy(prop[0])["count_of_rooms"]
+
+        # Belegte/gesperrte Tage: availability-Zeilen mit status != 'open';
+        # Tage ohne Zeile sind offen (Kalender-Modell, unique je property+date).
+        closed_rows = (
+            db.table("availability")
+            .select("date, status")
+            .eq("property_id", property_id)
+            .gte("date", start.isoformat())
+            .lte("date", end.isoformat())
+            .neq("status", "open")
+            .execute()
+        ).data or []
+        closed = {r["date"] for r in closed_rows}
+
+        # RLE über den Horizont: zusammenhängende Tage mit gleichem Wert werden
+        # EIN values-Eintrag mit date_from/date_to (Availability-Endpoint
+        # unterstützt Ranges) → der ganze Horizont passt in einen Call.
+        values: list[dict[str, Any]] = []
+        run_start = start
+        run_value = 0 if start.isoformat() in closed else base
+        cur = start + timedelta(days=1)
+        while cur <= end + timedelta(days=1):
+            val = (
+                (0 if cur.isoformat() in closed else base)
+                if cur <= end
+                else None  # Sentinel: letzten Run abschließen
+            )
+            if val != run_value:
+                values.append(
+                    {
+                        "property_id": mapping["channex_property_id"],
+                        "room_type_id": mapping["channex_room_type_id"],
+                        "date_from": run_start.isoformat(),
+                        "date_to": (cur - timedelta(days=1)).isoformat(),
+                        "availability": run_value,
+                    }
+                )
+                run_start = cur
+                run_value = val if val is not None else 0
+            cur += timedelta(days=1)
+
+        self._trace_step(
+            tenant_id=tenant_id, property_id=property_id, step="full_sync"
+        )
+        # Availability-Push in Chunks (weit unter 10 MB; ein Call im Regelfall).
+        for i in range(0, len(values), 500):
+            self._channex.update_availability(values[i:i + 500])
+
+        # Preise/Min-Stay: Recompute-Job rechnet den vollen Horizont neu und
+        # pusht ihn (gebatcht) — das ist der Rate-Teil des Full Syncs.
+        try:
+            from src.jobs.queue import try_enqueue_recompute
+
+            try_enqueue_recompute(db, tenant_id, property_id)
+        except Exception as exc:  # noqa: BLE001 — Rate-Teil holt der Tick nach
+            log.warning(
+                "full_sync_recompute_enqueue_failed",
+                property_id=property_id, error=str(exc)[:200],
+            )
+
+        log.info(
+            "channex_full_sync_pushed",
+            tenant_id=tenant_id, property_id=property_id,
+            values=len(values), days=self._FULL_SYNC_DAYS,
+        )
+        return {"availability_values": len(values), "days": self._FULL_SYNC_DAYS}
+
     def process_ari_outbox(self, limit: int = 200) -> dict[str, int]:
         """Offene ari_outbox-Zeilen erneut an Channex pushen (Cron-Retry).
         Idempotent (absoluter Set-Wert je Tag). Superseding TAG-GENAU: von einer

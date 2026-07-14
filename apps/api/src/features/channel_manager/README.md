@@ -13,3 +13,72 @@ Channel-Verwaltung im 4-Schritt-Flow (`POST /channels/prepare` →
 (`/webhooks`, `/webhook`) und eine interne Reconcile-Route. Für die Sandbox
 gibt es eine Mock-OTA (`sandbox_ota.py`, OpenChannel).
 Siehe ADR-0001 und ADR-0012.
+
+## Buchungs-Pull (automatisch)
+
+Buchungen kommen über den **Booking-Revisions-Feed** (paginiert, 100/Seite,
+älteste zuerst) und werden erst NACH erfolgreichem Speichern ge-ackt. Trigger:
+
+1. Channex-Webhook `booking_*`/`non_acked_booking` → Job `sync_bookings_feed`
+   (coalesced je Minute),
+2. Worker-Backstop-Tick alle 5 min (`BOOKINGS_TICK_SECONDS`) — fängt verlorene
+   Webhooks ab (Channex wiederholt nur ~24 h).
+
+`sync_bookings_all()` ordnet jede Revision über `channex_property_map` ihrem
+Tenant zu; Revisionen ohne aktives Mapping werden übersprungen und NICHT
+ge-ackt (Mandantentrennung / Selbstheilung nach Mapping).
+
+## Webhook-Ereignisse (`channex_webhook_event`, Migration 0132)
+
+Abonniert ist das volle Event-Set (inkl. `booking_unmapped_room/rate`,
+`sync_error`/`rate_error`, `reservation_request`/`alteration_request`/`inquiry`
+(Airbnb), `review`, Kanal-Statuswechsel). Ereignisse mit Operator-Relevanz
+werden tenant-scoped persistiert (`GET /events`, `POST /events/{id}/resolve`;
+Realtime-Publication für die Live-Liste). `ari`-Webhooks stoßen einen
+`import_ari_property`-Job an (Webhook = Trigger, Daten werden gepullt —
+Channex garantiert keine Reihenfolge).
+
+## Full-Sync-Push DB→Channex
+
+`full_sync_property` (Worker-Job): Availability über den 365-Tage-Horizont als
+RLE-Ranges in einem gebatchten Push + Recompute-Enqueue für Preise/Min-Stay.
+Nächtlich je aktiver Property (UTC-Fenster `FULL_SYNC_HOUR_UTC`, dedup je
+Property+Tag, gestaffelt) — Channex-Doku: „daily full update each night per
+property". Manuell: `POST /properties/{map_id}/full-sync`.
+
+## Löschkette („break the chain")
+
+- Entfernte lokale Preispläne werden beim Content-Sync auch in Channex gelöscht
+  (`_prune_orphan_rate_plans`) — fail-closed OHNE force: hängt der Plan noch an
+  einem Kanal, bleibt das Mapping bestehen und der Konflikt wird geloggt.
+- `disconnect_property` deaktiviert VOR dem Soft-Delete alle Channex-Kanäle des
+  Objekts (sonst verkauft die OTA blind weiter); Channex räumt die Property nach
+  90 Tagen ohne Kanal selbst ab (Retention).
+
+## Hotel Policy
+
+`_sync_hotel_policy` (Teil des Content-Syncs) legt die Channex-Hotel-Policy an
+(`channex_property_map.channex_hotel_policy_id`), sobald ALLE Pflichtfelder
+lokal gepflegt sind: `type_attributes.policies.checkInTime/checkOutTime` +
+`type_attributes.policies.hotelPolicy.{internetAccessType, internetAccessCoverage,
+parkingType, parkingReservation, parkingIsPrivate, petsPolicy,
+petsNonRefundableFee, petsRefundableDeposit, smokingPolicy}` (optional:
+`internetAccessCost`, `adultsOnly`). Unvollständig → Skip mit Log, keine
+erfundenen Defaults. Pflicht für Google-Kanal/Instant-Booking-Readiness.
+
+## OTA-Zusatzflächen (`ota_extras.py`)
+
+Alle tenant-gescopt über die Channex-Property-IDs des Tenants (Wurzel 3):
+
+- **Reviews**: `GET /reviews`, `POST /reviews/{id}/reply`,
+  `POST /reviews/{id}/guest-review` (Airbnb), `GET /properties/{map_id}/scores`.
+- **Availability Rules** (close_out/availability_offset/max_availability je
+  Kanal): CRUD unter `/properties/{map_id}/availability-rules` bzw.
+  `/availability-rules/{rule_id}`.
+- **Reporting (Booking.com)**: `POST /bookings/{id}/report/no-show`,
+  `/report/invalid-card`, `/report/cancel-invalid-card`.
+- **Message-Threads** (inkl. Airbnb-Inquiries ohne Buchung): `GET /threads`,
+  `GET|POST /threads/{id}/messages`, `POST /threads/{id}/close`,
+  `POST /threads/{id}/no-reply-needed` (nur Booking.com).
+- **Booking CRS** (Beta): `POST /crs/bookings`, `PUT /crs/bookings/{id}` —
+  PMS-Änderungen an (auch OTA-)Buchungen nach Channex zurückspiegeln.

@@ -30,6 +30,7 @@ from .common import (
 )
 from .content_sync import ContentSyncMixin
 from .oauth_channels import OAuthChannelsMixin
+from .ota_extras import OtaExtrasMixin
 from .property_mapping import PropertyMappingMixin
 from .schemas import ChannexDebugEntry, ChannexDebugResponse, SliceHealth
 
@@ -50,6 +51,7 @@ class ChannelManagerService(
     ChannelsMixin,
     OAuthChannelsMixin,
     BookingsSyncMixin,
+    OtaExtrasMixin,
 ):
     slice_name = "channel_manager"
 

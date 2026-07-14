@@ -757,11 +757,42 @@ class ChannelsMixin:
             return None
 
     # -- Webhook-Registrierung bei Channex (Admin) -----------------------------
-    # 'message' liefert Push bei neuen Gäste-Nachrichten (Posteingang). Der
-    # Handler nutzt es nur als Trigger; den Verlauf zieht der Posteingang live.
+    # Vollständiges Event-Abo (Webhook-Collection-Doku). Webhooks sind nur
+    # TRIGGER — Daten werden gepullt (Reihenfolge nicht garantiert):
+    #   booking_*            → Feed-Pull-Job (sync_bookings_feed)
+    #   booking_unmapped_*   → Mapping-Problem, hohe Prio (Overbooking-Gefahr)
+    #   non_acked_booking    → Buchung 30 min nicht ge-ackt (Feed-Pull erneut)
+    #   ari                  → ARI-Import-Job je Property (Änderung außerhalb PMS)
+    #   sync_error/warning,
+    #   rate_error           → sichtbares Flow-Debugging + Live-Ereignisse
+    #   reservation_request,
+    #   alteration_request,
+    #   inquiry              → Airbnb-Anfragen (Ereignisliste fürs UI)
+    #   review/updated_~     → neue Gäste-Bewertung eingetroffen
+    #   *_channel/listing    → Kanal-Statuswechsel (Deaktivierung sichtbar machen)
     _WEBHOOK_EVENTS = (
-        "ari;booking_new;booking_modification;booking_cancellation;message"
+        "ari;booking_new;booking_modification;booking_cancellation;"
+        "booking_unmapped_room;booking_unmapped_rate;non_acked_booking;message;"
+        "sync_error;sync_warning;rate_error;"
+        "reservation_request;alteration_request;inquiry;review;updated_review;"
+        "activate_channel;deactivate_channel;disconnect_channel;disconnect_listing"
     )
+
+    # Events, die einen kontoweiten Booking-Feed-Pull auslösen.
+    _BOOKING_PULL_EVENTS = frozenset(
+        {"booking", "booking_new", "booking_modification", "booking_cancellation",
+         "non_acked_booking", "reservation_request", "alteration_request"}
+    )
+    # Events, die auf ein Problem hinweisen (severity=error in der Ereignisliste).
+    _ERROR_EVENTS = frozenset(
+        {"booking_unmapped_room", "booking_unmapped_rate", "non_acked_booking",
+         "sync_error", "rate_error", "deactivate_channel", "disconnect_channel",
+         "disconnect_listing"}
+    )
+    # Hochvolumige Events, die NICHT in die Ereignisliste persistiert werden
+    # (ari feuert bei jeder Preis-/Verfügbarkeitsänderung; message läuft über
+    # den Posteingang).
+    _UNPERSISTED_EVENTS = frozenset({"ari", "message"})
 
     def register_global_webhook(self, *, callback_url: str) -> dict[str, Any]:
         """Registriert (idempotent) EINEN globalen Webhook bei Channex, der alle
@@ -819,10 +850,125 @@ class ChannelsMixin:
 
     def ingest_webhook(self, payload: dict[str, Any]) -> dict[str, str]:
         """Webhook von Channex verarbeiten. Wir nutzen das Event nur als TRIGGER
-        und ziehen den aktuellen Stand (Channex garantiert keine Reihenfolge)."""
-        event = payload.get("event", "unknown")
+        und ziehen den aktuellen Stand (Channex garantiert keine Reihenfolge —
+        Doku: Webhooks können out-of-order kommen, deshalb nie Payload-Daten
+        direkt anwenden). Alle Schritte sind best effort: der Webhook wird IMMER
+        mit 200 bestätigt (sonst wiederholt Channex bis ~24h und gibt dann auf);
+        die Backstop-Ticks holen Verlorenes nach."""
+        event = str(payload.get("event", "unknown"))
+        channex_property_id = payload.get("property_id")
         # 'event' ist bei structlog für die Message reserviert → eigenes Feld.
-        log.info("channex_webhook", webhook_event=event, property=payload.get("property_id"))
-        # Verarbeitung (Feed-Pull) erfolgt durch den regulären sync_bookings-Lauf
-        # bzw. einen Worker; hier nur Annahme bestätigen.
+        log.info("channex_webhook", webhook_event=event, property=channex_property_id)
+
+        tenant_id, property_id = self._resolve_webhook_property(channex_property_id)
+
+        # 1) Ereignis persistieren (Live-Ereignisliste, tenant-scoped; hoch-
+        #    volumige Events ausgenommen). Fehler-Events zusätzlich als error.
+        if event not in self._UNPERSISTED_EVENTS:
+            self._persist_webhook_event(
+                event, payload, tenant_id=tenant_id, property_id=property_id
+            )
+
+        # 2) Buchungs-Events → kontoweiten Feed-Pull einreihen (coalesced pro
+        #    Minute: viele Webhooks kurz hintereinander = EIN Pull).
+        if event in self._BOOKING_PULL_EVENTS or event == "booking":
+            self._enqueue_bookings_pull()
+
+        # 3) ARI-Änderung außerhalb unseres PMS → Import-Job für die Property.
+        if event == "ari" and tenant_id and channex_property_id:
+            self._enqueue_ari_import(tenant_id, str(channex_property_id))
+
         return {"status": "accepted", "event": event}
+
+    def _resolve_webhook_property(
+        self, channex_property_id: object
+    ) -> tuple[str | None, str | None]:
+        """Channex-Property-ID des Webhooks → (tenant_id, lokale property_id).
+        (None, None), wenn kein aktives Mapping existiert (z. B. Objekt bereits
+        getrennt) — das Ereignis wird dann ohne Tenant-Bezug geloggt."""
+        if not channex_property_id or self._db is None:
+            return None, None
+        try:
+            rows = (
+                self._db.table("channex_property_map")
+                .select("tenant_id, property_id")
+                .eq("channex_property_id", str(channex_property_id))
+                .is_("deleted_at", "null")
+                .limit(1)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — Ingest nie kippen (200 zurück)
+            log.warning("webhook_property_resolve_failed", error=str(exc)[:200])
+            return None, None
+        if not rows:
+            return None, None
+        return rows[0].get("tenant_id"), rows[0].get("property_id")
+
+    def _persist_webhook_event(
+        self,
+        event: str,
+        payload: dict[str, Any],
+        *,
+        tenant_id: str | None,
+        property_id: str | None,
+    ) -> None:
+        """Webhook-Ereignis in channex_webhook_event schreiben (Live-Ereignis-
+        liste: Airbnb-Anfragen, Sync-/Rate-Fehler, unmapped Bookings, Reviews,
+        Kanal-Statuswechsel). Ohne Tenant-Mapping wird NICHT persistiert (die
+        Tabelle ist tenant-scoped; kontolose Events stehen im Log)."""
+        if self._db is None or tenant_id is None:
+            return
+        severity = "error" if event in self._ERROR_EVENTS else "info"
+        if severity == "error":
+            log.error(
+                "channex_webhook_problem", webhook_event=event,
+                tenant_id=tenant_id, property_id=property_id,
+            )
+        try:
+            self._db.table("channex_webhook_event").insert(
+                {
+                    "tenant_id": tenant_id,
+                    "property_id": property_id,
+                    "event": event,
+                    "payload": payload,
+                    "severity": severity,
+                }
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 — Persistenz nie den Ingest kippen
+            log.warning("webhook_event_persist_failed", error=str(exc)[:200])
+
+    def _enqueue_bookings_pull(self) -> None:
+        """sync_bookings_feed-Job einreihen (coalesced je Minuten-Bucket)."""
+        if self._db is None:
+            return
+        try:
+            import time as _time
+
+            from src.jobs.queue import enqueue
+
+            bucket = int(_time.time() // 60)
+            enqueue(
+                self._db, "sync_bookings_feed",
+                payload={}, dedup_key=f"bookings_feed_webhook:{bucket}",
+            )
+        except Exception as exc:  # noqa: BLE001 — Backstop-Tick holt es nach
+            log.warning("webhook_bookings_enqueue_failed", error=str(exc)[:200])
+
+    def _enqueue_ari_import(self, tenant_id: str, channex_property_id: str) -> None:
+        """import_ari_property-Job einreihen (coalesced je Property+5-min-Bucket)."""
+        if self._db is None:
+            return
+        try:
+            import time as _time
+
+            from src.jobs.queue import enqueue
+
+            bucket = int(_time.time() // 300)
+            enqueue(
+                self._db, "import_ari_property", tenant_id=tenant_id,
+                payload={"tenant_id": tenant_id,
+                         "channex_property_id": channex_property_id},
+                dedup_key=f"ari_import:{channex_property_id}:{bucket}",
+            )
+        except Exception as exc:  # noqa: BLE001 — Reconcile-Tick holt es nach
+            log.warning("webhook_ari_enqueue_failed", error=str(exc)[:200])

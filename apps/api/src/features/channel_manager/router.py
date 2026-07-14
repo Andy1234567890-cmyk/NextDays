@@ -31,6 +31,7 @@ from .dependencies import ChannelManagerServiceDep
 from .schemas import (
     AriPushRequest,
     AriPushResponse,
+    AvailabilityRuleRequest,
     BookingListResponse,
     BookingSyncResponse,
     ChannelConnectionListResponse,
@@ -40,6 +41,9 @@ from .schemas import (
     ChannexDebugResponse,
     ConnectChannelRequest,
     ConnectionToggleRequest,
+    CrsBookingRequest,
+    GuestReviewRequest,
+    NoShowReportRequest,
     OAuthBeginRequest,
     OAuthBeginResponse,
     OAuthFinalizeRequest,
@@ -49,8 +53,11 @@ from .schemas import (
     PropertyConnectRequest,
     PropertyMapListResponse,
     PropertyMapResponse,
+    ReviewReplyRequest,
     SliceHealth,
     SupportedPortal,
+    ThreadMessageRequest,
+    WebhookEventEntry,
 )
 from .service import ChannelManagerError
 
@@ -418,6 +425,276 @@ async def channex_webhook(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiges Webhook-Secret."
         )
     return service.ingest_webhook(payload)
+
+
+# --- Reviews & Scores (Booking.com / Airbnb / Expedia) ------------------------
+@router.get("/reviews")
+def list_reviews(
+    service: ChannelManagerServiceDep, ctx: _read, page: int = 1, limit: int = 50
+) -> list[dict]:
+    """Gäste-Bewertungen der eigenen Objekte (live von den Portalen)."""
+    try:
+        return service.list_reviews(ctx, page=page, limit=limit)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/reviews/{review_id}/reply")
+def reply_review(
+    review_id: str,
+    req: ReviewReplyRequest,
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+) -> dict:
+    try:
+        return service.reply_review(ctx, review_id, req.reply)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/reviews/{review_id}/guest-review")
+def send_guest_review(
+    review_id: str,
+    req: GuestReviewRequest,
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+) -> dict:
+    """Gast bewerten (nur Airbnb)."""
+    try:
+        return service.send_guest_review(ctx, review_id, req.review)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/properties/{map_id}/scores")
+def get_property_scores(
+    map_id: str,
+    service: ChannelManagerServiceDep,
+    ctx: _read,
+    detailed: bool = False,
+) -> dict:
+    try:
+        return service.get_property_scores(ctx, map_id, detailed=detailed)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Availability Rules (kanal-spezifische Kontingente) ------------------------
+@router.get("/properties/{map_id}/availability-rules")
+def list_availability_rules(
+    map_id: str, service: ChannelManagerServiceDep, ctx: _read
+) -> list[dict]:
+    try:
+        return service.list_availability_rules(ctx, map_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/properties/{map_id}/availability-rules",
+    status_code=status.HTTP_201_CREATED,
+)
+def create_availability_rule(
+    map_id: str,
+    req: AvailabilityRuleRequest,
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+) -> dict:
+    try:
+        attrs = req.model_dump(exclude_none=True)
+        attrs["start_date"] = req.start_date.isoformat()
+        if req.end_date is not None:
+            attrs["end_date"] = req.end_date.isoformat()
+        return service.create_availability_rule(ctx, map_id, attrs)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put("/availability-rules/{rule_id}")
+def update_availability_rule(
+    rule_id: str,
+    req: AvailabilityRuleRequest,
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+) -> dict:
+    try:
+        attrs = req.model_dump(exclude_none=True)
+        attrs["start_date"] = req.start_date.isoformat()
+        if req.end_date is not None:
+            attrs["end_date"] = req.end_date.isoformat()
+        return service.update_availability_rule(ctx, rule_id, attrs)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete(
+    "/availability-rules/{rule_id}", status_code=status.HTTP_204_NO_CONTENT
+)
+def delete_availability_rule(
+    rule_id: str, service: ChannelManagerServiceDep, ctx: _write
+) -> None:
+    try:
+        service.delete_availability_rule(ctx, rule_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Reporting API (Booking.com: No-Show / ungültige Karte) --------------------
+@router.post("/bookings/{channex_booking_id}/report/no-show")
+def report_no_show(
+    channex_booking_id: str,
+    req: NoShowReportRequest,
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+) -> dict:
+    try:
+        return service.report_no_show(
+            ctx, channex_booking_id, waived_fees=req.waived_fees
+        )
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/bookings/{channex_booking_id}/report/invalid-card")
+def report_invalid_card(
+    channex_booking_id: str, service: ChannelManagerServiceDep, ctx: _write
+) -> dict:
+    try:
+        return service.report_invalid_card(ctx, channex_booking_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/bookings/{channex_booking_id}/report/cancel-invalid-card")
+def report_cancel_due_invalid_card(
+    channex_booking_id: str, service: ChannelManagerServiceDep, ctx: _write
+) -> dict:
+    try:
+        return service.report_cancel_due_invalid_card(ctx, channex_booking_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Message-Threads (inkl. Airbnb-Inquiries ohne Buchung) ---------------------
+@router.get("/threads")
+def list_message_threads(
+    service: ChannelManagerServiceDep, ctx: _read, page: int = 1, limit: int = 50
+) -> list[dict]:
+    try:
+        return service.list_message_threads(ctx, page=page, limit=limit)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/threads/{thread_id}/messages")
+def get_thread_messages(
+    thread_id: str,
+    service: ChannelManagerServiceDep,
+    ctx: _read,
+    page: int = 1,
+    limit: int = 50,
+) -> list[dict]:
+    try:
+        return service.get_thread_messages(ctx, thread_id, page=page, limit=limit)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/threads/{thread_id}/messages")
+def send_thread_message(
+    thread_id: str,
+    req: ThreadMessageRequest,
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+) -> dict:
+    try:
+        return service.send_thread_message(ctx, thread_id, req.message)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/threads/{thread_id}/close")
+def close_message_thread(
+    thread_id: str, service: ChannelManagerServiceDep, ctx: _write
+) -> dict:
+    try:
+        return service.close_message_thread(ctx, thread_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/threads/{thread_id}/no-reply-needed")
+def mark_thread_no_reply_needed(
+    thread_id: str, service: ChannelManagerServiceDep, ctx: _write
+) -> dict:
+    """Nur Booking.com: Thread als „keine Antwort nötig" markieren."""
+    try:
+        return service.mark_thread_no_reply_needed(ctx, thread_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Booking CRS (PMS-Änderungen an Channex zurückspiegeln; Beta) --------------
+@router.post("/crs/bookings", status_code=status.HTTP_201_CREATED)
+def crs_create_booking(
+    req: CrsBookingRequest, service: ChannelManagerServiceDep, ctx: _write
+) -> dict:
+    try:
+        return service.crs_create_booking(ctx, req.booking)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put("/crs/bookings/{channex_booking_id}")
+def crs_update_booking(
+    channex_booking_id: str,
+    req: CrsBookingRequest,
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+) -> dict:
+    try:
+        return service.crs_update_booking(ctx, channex_booking_id, req.booking)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Webhook-Ereignisliste (Airbnb-Anfragen, Sync-Fehler, Reviews, Kanäle) -----
+@router.get("/events", response_model=list[WebhookEventEntry])
+def list_webhook_events(
+    service: ChannelManagerServiceDep,
+    ctx: _read,
+    only_unresolved: bool = False,
+    limit: int = 100,
+) -> list[WebhookEventEntry]:
+    try:
+        rows = service.list_webhook_events(
+            ctx, only_unresolved=only_unresolved, limit=limit
+        )
+        return [WebhookEventEntry(**r) for r in rows]
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/events/{event_id}/resolve", status_code=status.HTTP_204_NO_CONTENT)
+def resolve_webhook_event(
+    event_id: str, service: ChannelManagerServiceDep, ctx: _write
+) -> None:
+    try:
+        service.resolve_webhook_event(ctx, event_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Full-Sync manuell auslösen -------------------------------------------------
+@router.post("/properties/{map_id}/full-sync", status_code=status.HTTP_202_ACCEPTED)
+def trigger_full_sync(
+    map_id: str, service: ChannelManagerServiceDep, ctx: _write
+) -> dict:
+    """Voll-Abgleich DB→Channex einreihen (zusätzlich zum nächtlichen Lauf)."""
+    try:
+        return service.trigger_full_sync(ctx, map_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.post("/internal/reconcile", include_in_schema=False)

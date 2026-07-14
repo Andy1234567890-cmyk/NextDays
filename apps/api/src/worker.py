@@ -50,7 +50,10 @@ _CHANNEX_JOB_TYPES = frozenset(
      "process_restriction_outbox",
      # recompute_property pusht die meisten Rate-Calls (Tagespreise über den
      # 365-Tage-Horizont) — MUSS das kontoweite Channex-Token-Budget ziehen.
-     "recompute_property"}
+     "recompute_property",
+     # Buchungs-Feed-Pull (Webhook-Trigger + Backstop-Tick), ARI-Import je
+     # Property (ari-Webhook) und nächtlicher Full-Sync-Push — alle rufen Channex.
+     "sync_bookings_feed", "import_ari_property", "full_sync_property"}
 )
 
 # Parallel verarbeitete Jobs je Worker-Instanz. Begrenzt lokale Thread-/DB-Last;
@@ -73,6 +76,15 @@ RECONCILE_TICK_SECONDS = 15 * 60
 ICAL_TICK_SECONDS = 30 * 60          # alle 30 min prüfen, ...
 ICAL_STALE_SECONDS = 2 * 60 * 60     # ... aber nur Feeds syncen, die > 2h alt sind
 ICAL_BATCH = 25                      # pro Tick höchstens so viele Feeds (Fairness)
+# Zeit-Tick: Buchungs-Feed-Backstop. Der PRIMÄRE Trigger ist der Channex-Webhook
+# (booking_* → sync_bookings_feed-Job); dieser Tick fängt verlorene Webhooks ab
+# (Channex wiederholt max. ~24h, danach wäre die Buchung ohne Backstop weg).
+BOOKINGS_TICK_SECONDS = 5 * 60
+# Nächtlicher Full-Sync-Push (Channex-Doku: "daily full update each night per
+# property"): im UTC-Stundenfenster [FULL_SYNC_HOUR_UTC, +1) je aktiver Property
+# EIN full_sync_property-Job pro Tag (dedup je Property+Tag), gestaffelt.
+FULL_SYNC_HOUR_UTC = 2
+FULL_SYNC_STAGGER_SECONDS = 5
 # Max. aufeinanderfolgende Budget-Verzögerungen (defer_count), bevor ein Job
 # aufgibt ('dead'). Deckel gegen Endlos-Defer-Livelock bei dauerhaft totem Redis.
 # Großzügig, damit legitimes Warten auf ein volles Budget-Fenster nie greift.
@@ -230,6 +242,45 @@ def _handle_push_ari(
         )
 
 
+def _handle_sync_bookings_feed(
+    db: Client, _payload: dict[str, Any], budget: ChannexBudget | None = None
+) -> None:
+    """Kontoweiten Booking-Revisions-Feed ziehen, je Revision dem Tenant zuordnen,
+    speichern/projizieren und erst danach acken. Getriggert vom Channex-Webhook
+    (booking_*) und vom 5-min-Backstop-Tick. Revision-Fehler sind im Ergebnis
+    isoliert (errors[]) — ein kompletter Feed-Ausfall wirft und geht in den
+    Job-Backoff."""
+    result = _svc(db, budget).sync_bookings_all()
+    if result.errors:
+        # Teilfehler sichtbar machen; die betroffenen Revisionen bleiben un-acked
+        # im Feed und kommen beim nächsten Lauf erneut.
+        log.warning("sync_bookings_feed_partial", errors=result.errors[:5],
+                    saved=result.saved, skipped=result.skipped)
+
+
+def _handle_import_ari_property(
+    db: Client, payload: dict[str, Any], budget: ChannexBudget | None = None
+) -> None:
+    """ARI einer Property aus Channex in die lokale DB spiegeln — getriggert vom
+    'ari'-Webhook (jemand hat Preise/Verfügbarkeit außerhalb unseres PMS
+    geändert). Webhook = nur Trigger, Daten werden gepullt (Channex-Doku:
+    Webhooks können out-of-order kommen)."""
+    _svc(db, budget).import_ari_for_property(
+        payload["tenant_id"], payload["channex_property_id"]
+    )
+
+
+def _handle_full_sync_property(
+    db: Client, payload: dict[str, Any], budget: ChannexBudget | None = None
+) -> None:
+    """Nächtlicher Voll-Push DB→Channex (Availability über den ganzen Horizont +
+    Recompute-Enqueue für Preise/Min-Stay). Heilt Drift aus verlorenen
+    Delta-Pushes."""
+    _svc(db, budget).full_sync_property(
+        payload["tenant_id"], payload["property_id"]
+    )
+
+
 class _ProgressBudget:
     """Dünner Wrapper um ein ChannexBudget, der die ERFOLGREICH vergebenen Token
     zählt (= echte Channex-Calls, die durchgingen). So erkennt _run_job, ob ein
@@ -257,6 +308,9 @@ HANDLERS: dict[
     "push_ari": _handle_push_ari,
     "process_ari_outbox": _handle_process_ari_outbox,
     "process_restriction_outbox": _handle_process_restriction_outbox,
+    "sync_bookings_feed": _handle_sync_bookings_feed,
+    "import_ari_property": _handle_import_ari_property,
+    "full_sync_property": _handle_full_sync_property,
 }
 
 
@@ -275,6 +329,7 @@ class Worker:
         self._worker_id = f"{socket.gethostname()}:{os.getpid()}"
         self._last_reconcile_tick = 0.0
         self._last_ical_tick = 0.0
+        self._last_bookings_tick = 0.0
         # Kontoweites Channex-Token-Budget (Phase 1b): vor jedem Channex-Push wird
         # ein Token verbraucht, sonst wird der Job verzögert statt Channex überfahren.
         self._budget = budget or ChannexBudget(get_settings())
@@ -524,6 +579,46 @@ class Worker:
         if seen:
             log.info("ical_sync_tick", synced=len(seen))
 
+    async def _bookings_tick(self, loop_time: float) -> None:
+        """Alle 5 min einen kontoweiten Booking-Feed-Pull einreihen (Backstop —
+        der primäre Trigger ist der booking_*-Webhook). Coalescing über den
+        Wall-Clock-Bucket, damit N Worker-Instanzen nur EINEN Job erzeugen."""
+        if loop_time - self._last_bookings_tick < BOOKINGS_TICK_SECONDS:
+            return
+        self._last_bookings_tick = loop_time
+        try:
+            bucket = int(time.time() // BOOKINGS_TICK_SECONDS)
+            await asyncio.to_thread(
+                enqueue,
+                self._db, "sync_bookings_feed",
+                payload={}, dedup_key=f"bookings_feed_tick:{bucket}",
+            )
+        except Exception as exc:  # noqa: BLE001
+            log.warning("bookings_tick_failed", error=str(exc)[:200])
+
+    def _enqueue_full_sync_nightly(self) -> None:
+        """Im nächtlichen UTC-Fenster je aktiver Channex-Property EINEN
+        full_sync_property-Job pro Tag einreihen (Channex-Doku: „daily full
+        update each night per property"; off-peak, gestaffelt). Dedup je
+        Property+Kalendertag → das 15-min-Tick-Fenster erzeugt keine Duplikate."""
+        now = datetime.now(UTC)
+        if now.hour != FULL_SYNC_HOUR_UTC:
+            return
+        rows = (
+            self._db.table("channex_property_map")
+            .select("tenant_id, property_id")
+            .is_("deleted_at", "null")
+            .execute()
+        ).data or []
+        day = now.date().isoformat()
+        for i, r in enumerate(rows):
+            enqueue(
+                self._db, "full_sync_property", tenant_id=r["tenant_id"],
+                payload={"tenant_id": r["tenant_id"], "property_id": r["property_id"]},
+                dedup_key=f"full_sync:{r['property_id']}:{day}",
+                delay_seconds=i * FULL_SYNC_STAGGER_SECONDS,
+            )
+
     def _enqueue_reconcile_all(self) -> None:
         # Coalescing-Bucket aus der WALL-CLOCK (time.time()), NICHT aus der
         # Monotonic-Loop-Uhr: loop.time() hat pro Prozess einen anderen, undefinierten
@@ -558,6 +653,9 @@ class Worker:
             self._db, "process_restriction_outbox",
             payload={}, dedup_key=f"ari_restriction_outbox_tick:{bucket}",
         )
+        # Nächtlicher Full-Sync-Push (dedup je Property+Tag; greift nur im
+        # UTC-Stundenfenster FULL_SYNC_HOUR_UTC).
+        self._enqueue_full_sync_nightly()
 
     async def run(self) -> None:
         log.info("worker_started", worker_id=self._worker_id, concurrency=CONCURRENCY)
@@ -567,6 +665,7 @@ class Worker:
             await self._reap_stuck()
             await self._reconcile_tick(loop_time)
             await self._ical_tick(loop_time)
+            await self._bookings_tick(loop_time)
             free = CONCURRENCY - len(self._inflight)
             jobs = await asyncio.to_thread(self._claim, free) if free > 0 else []
             for job in jobs:
