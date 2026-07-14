@@ -204,7 +204,12 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
       }
     }
     if (added.length > 0) {
-      setPhotos((prev) => [...prev, ...added]);
+      // Dedup per id: das Realtime-Event kann die neue Zeile bereits per
+      // reload() in den State gebracht haben — sonst erscheint das Foto doppelt.
+      setPhotos((prev) => {
+        const seen = new Set(prev.map((p) => p.id));
+        return [...prev, ...added.filter((a) => !seen.has(a.id))];
+      });
       toast.success(t("uploaded", { count: added.length }));
     }
     window.setTimeout(() => {
