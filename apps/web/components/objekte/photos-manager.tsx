@@ -282,6 +282,19 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
     setDragId(null);
     setOverId(null);
     if (from === -1 || to === -1) return;
+    // Cover ist über das is_cover-Flag immer an Position 1 — ein reiner
+    // sort_order-Tausch mit dem Cover wäre unsichtbar. Drop auf das Titelbild
+    // (oder Titelbild auf ein Foto) bedeutet deshalb: Cover wechseln.
+    const dragged = photos[from];
+    const target = photos[to];
+    if (target.is_cover) {
+      void setCover(dragged);
+      return;
+    }
+    if (dragged.is_cover) {
+      void setCover(target);
+      return;
+    }
     const next = [...photos];
     const [moved] = next.splice(from, 1);
     next.splice(to, 0, moved);
