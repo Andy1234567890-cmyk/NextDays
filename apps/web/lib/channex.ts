@@ -138,6 +138,17 @@ export async function disconnectProperty(mapId: string): Promise<Result<void>> {
   return res;
 }
 
+// Voll-Abgleich (Verfügbarkeit + Preise/Restriktionen, 500 Tage) für ein
+// Objekt sofort einreihen — z. B. nach Ausfall oder vermutetem Drift.
+export async function triggerFullSync(
+  mapId: string,
+): Promise<Result<{ status: string; property_id: string }>> {
+  return call<{ status: string; property_id: string }>(
+    `/properties/${mapId}/full-sync`,
+    { method: "POST" },
+  );
+}
+
 // --- ARI-Push ---------------------------------------------------------------
 export async function pushAri(input: {
   availability?: AvailabilityUpdate[];

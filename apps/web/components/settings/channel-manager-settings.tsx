@@ -24,6 +24,7 @@ import {
   listChannelConnections,
   setConnectionActive,
   syncChannexBookings,
+  triggerFullSync,
 } from "@/lib/channex";
 import { formatCurrency } from "@/lib/currency";
 import { useRealtime } from "@/lib/use-realtime";
@@ -144,6 +145,7 @@ export function ChannelManagerSettings({
                     >
                       {m.sync_enabled ? "Aktiv" : "Pausiert"}
                     </span>
+                    <FullSyncButton mapId={m.id} disabled={!m.sync_enabled} />
                   </div>
                   <PropertyConnections propertyId={m.property_id} />
                 </li>
@@ -209,6 +211,52 @@ export function ChannelManagerSettings({
         </section>
       </CardContent>
     </Card>
+  );
+}
+
+// Voll-Abgleich (Verfügbarkeit + Preise/Restriktionen, 500 Tage) für ein
+// verbundenes Objekt sofort anstoßen — Wiederanlauf nach Ausfall/Drift.
+function FullSyncButton({
+  mapId,
+  disabled,
+}: {
+  mapId: string;
+  disabled: boolean;
+}) {
+  const [pending, startTransition] = useTransition();
+  const [done, setDone] = useState<"ok" | "error" | null>(null);
+
+  function handleClick() {
+    setDone(null);
+    startTransition(async () => {
+      const res = await triggerFullSync(mapId);
+      setDone(res.ok ? "ok" : "error");
+    });
+  }
+
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={handleClick}
+      disabled={pending || disabled}
+      title="Verfügbarkeit, Preise und Restriktionen komplett neu an die Portale übertragen"
+    >
+      <Icon
+        icon={
+          pending
+            ? "ph:spinner"
+            : done === "ok"
+              ? "ph:check"
+              : done === "error"
+                ? "ph:warning"
+                : "ph:arrows-counter-clockwise"
+        }
+        className={"size-4 " + (pending ? "animate-spin" : "")}
+      />
+      {pending ? "Wird eingereiht …" : "Voll-Abgleich"}
+    </Button>
   );
 }
 

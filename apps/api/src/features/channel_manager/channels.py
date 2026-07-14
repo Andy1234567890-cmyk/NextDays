@@ -358,6 +358,24 @@ class ChannelsMixin:
                 error=getattr(exc, "message", str(exc)),
             )
 
+        # Go-Live-Push DB→Channex: beim Start eines Kanals den kompletten Stand
+        # (Verfügbarkeit + Preise/Restriktionen, 500 Tage) einreihen — das PMS
+        # ist Availability-Master, der neue Kanal darf nie mit leerem/altem ARI
+        # starten. Best effort: der Nightly-Full-Sync holt Verpasstes nach.
+        try:
+            from src.jobs.queue import dedup_key, enqueue
+
+            enqueue(
+                db, "full_sync_property", tenant_id=tenant_id,
+                payload={"tenant_id": tenant_id, "property_id": property_id},
+                dedup_key=dedup_key(tenant_id, property_id, "full_sync_property"),
+            )
+        except Exception as exc:  # noqa: BLE001 — Connect nie am Enqueue kippen
+            log.warning(
+                "channel_golive_full_sync_enqueue_failed",
+                property_id=property_id, error=str(exc)[:200],
+            )
+
         return {
             "id": channel_id,
             "portal": self._portal_labels[portal_code],
