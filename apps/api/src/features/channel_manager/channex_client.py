@@ -216,8 +216,14 @@ class ChannexClient:
         channex_id: str | None = None
         if isinstance(response_body, dict):
             data = response_body.get("data")
+            # Content-Sync (property/room_type/rate_plan): data = Objekt mit id.
+            # ARI (availability/restrictions): data = Liste von Task-Objekten —
+            # die Channex-Task-ID (fürs Zertifizierungsformular) ist data[0].id.
             if isinstance(data, dict):
                 cid = data.get("id")
+                channex_id = cid if isinstance(cid, str) else None
+            elif isinstance(data, list) and data and isinstance(data[0], dict):
+                cid = data[0].get("id")
                 channex_id = cid if isinstance(cid, str) else None
         # Strukturiertes Log für JEDEN Call (Erfolg inklusive — bisher fehlte das).
         log.info(
