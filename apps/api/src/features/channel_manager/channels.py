@@ -924,6 +924,16 @@ class ChannelsMixin:
                 "channex_webhook_problem", webhook_event=event,
                 tenant_id=tenant_id, property_id=property_id,
             )
+        # Payload-Deckel: rohe Webhook-Payloads (send_data) können groß sein
+        # und enthalten Gast-PII. Über 32 KB nur einen Marker speichern — die
+        # Wahrheit wird ohnehin gepullt (Webhook = Trigger, nie Datenquelle).
+        try:
+            import json as _json
+
+            if len(_json.dumps(payload, default=str)) > 32_000:
+                payload = {"event": event, "truncated": True}
+        except (TypeError, ValueError):
+            payload = {"event": event, "unserializable": True}
         try:
             self._db.table("channex_webhook_event").insert(
                 {
@@ -942,14 +952,14 @@ class ChannelsMixin:
         if self._db is None:
             return
         try:
-            import time as _time
-
             from src.jobs.queue import enqueue
 
-            bucket = int(_time.time() // 60)
+            # Konstanter Dedup-Key (gleiche Familie wie der Backstop-Tick):
+            # koalesziert Webhook-Stürme UND verhindert zwei parallel laufende
+            # Feed-Jobs aus getrennten Key-Familien.
             enqueue(
                 self._db, "sync_bookings_feed",
-                payload={}, dedup_key=f"bookings_feed_webhook:{bucket}",
+                payload={}, dedup_key="sync_bookings_feed",
             )
         except Exception as exc:  # noqa: BLE001 — Backstop-Tick holt es nach
             log.warning("webhook_bookings_enqueue_failed", error=str(exc)[:200])

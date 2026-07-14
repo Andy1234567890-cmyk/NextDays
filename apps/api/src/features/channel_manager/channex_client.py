@@ -536,6 +536,9 @@ class ChannexClient:
     ) -> dict[str, Any]:
         return self.put(f"hotel_policies/{policy_id}", json={"hotel_policy": attributes})
 
+    def delete_hotel_policy(self, policy_id: str) -> dict[str, Any]:
+        return self.delete(f"hotel_policies/{policy_id}")
+
     # ----- ARI: Availability + Restrictions/Rates -----------------------------
     def update_availability(self, values: list[dict[str, Any]]) -> dict[str, Any]:
         """Verfügbarkeit setzen. `values` = Liste von Updates (s. Channex-ARI).

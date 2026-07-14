@@ -6,7 +6,7 @@ von der Fassade; Patch-Ziel für Modul-Helfer ist channel_manager.common.
 """
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from supabase import Client
@@ -1050,6 +1050,11 @@ class AriPushMixin:
 
         start = date.today()
         end = start + timedelta(days=self._FULL_SYNC_DAYS - 1)
+        # Lesezeitpunkt VOR dem Snapshot merken: Delta-Pushes, die während des
+        # Full-Syncs entstehen (neue Buchung → avail=0), dürfen von unseren bei
+        # T0 gelesenen (dann veralteten) Werten nicht überschrieben werden —
+        # sonst wäre ein frisch gebuchter Tag bei den OTAs wieder verkaufbar.
+        read_started_at = datetime.now(UTC).isoformat()
 
         # Basis-Verfügbarkeit = count_of_rooms des synthetischen Room-Types —
         # aus DENSELBEN Objektdaten wie der Content-Sync (keine zweite Wahrheit).
@@ -1078,32 +1083,58 @@ class AriPushMixin:
         ).data or []
         closed = {r["date"] for r in closed_rows}
 
+        # Superseding gegen die Delta-Welt (Wurzel 1/Nebenläufigkeit): Tage, für
+        # die seit T0 eine ari_outbox-Zeile entstanden ist (pending ODER schon
+        # done), aus dem Voll-Push ausschließen — die jüngere Delta-Absicht
+        # gewinnt; der Outbox-/Reconcile-Pfad hält diese Tage konsistent.
+        fresh_rows = (
+            db.table("ari_outbox")
+            .select("date_from, date_to")
+            .eq("property_id", property_id)
+            .gte("created_at", read_started_at)
+            .execute()
+        ).data or []
+        superseded: set[str] = set()
+        for r in fresh_rows:
+            if r.get("date_from") and r.get("date_to"):
+                superseded.update(_iso_days(r["date_from"], r["date_to"]))
+
         # RLE über den Horizont: zusammenhängende Tage mit gleichem Wert werden
         # EIN values-Eintrag mit date_from/date_to (Availability-Endpoint
-        # unterstützt Ranges) → der ganze Horizont passt in einen Call.
+        # unterstützt Ranges). Superseded-Tage unterbrechen den Run und werden
+        # NICHT gepusht.
         values: list[dict[str, Any]] = []
-        run_start = start
-        run_value = 0 if start.isoformat() in closed else base
-        cur = start + timedelta(days=1)
-        while cur <= end + timedelta(days=1):
-            val = (
-                (0 if cur.isoformat() in closed else base)
-                if cur <= end
-                else None  # Sentinel: letzten Run abschließen
+        run_start: date | None = None
+        run_value: int | None = None
+
+        def _close_run(last_day: date) -> None:
+            if run_start is None or run_value is None:
+                return
+            values.append(
+                {
+                    "property_id": mapping["channex_property_id"],
+                    "room_type_id": mapping["channex_room_type_id"],
+                    "date_from": run_start.isoformat(),
+                    "date_to": last_day.isoformat(),
+                    "availability": run_value,
+                }
             )
-            if val != run_value:
-                values.append(
-                    {
-                        "property_id": mapping["channex_property_id"],
-                        "room_type_id": mapping["channex_room_type_id"],
-                        "date_from": run_start.isoformat(),
-                        "date_to": (cur - timedelta(days=1)).isoformat(),
-                        "availability": run_value,
-                    }
-                )
-                run_start = cur
-                run_value = val if val is not None else 0
+
+        cur = start
+        while cur <= end:
+            iso = cur.isoformat()
+            if iso in superseded:
+                _close_run(cur - timedelta(days=1))
+                run_start = run_value = None
+            else:
+                val = 0 if iso in closed else base
+                if run_value is None:
+                    run_start, run_value = cur, val
+                elif val != run_value:
+                    _close_run(cur - timedelta(days=1))
+                    run_start, run_value = cur, val
             cur += timedelta(days=1)
+        _close_run(end)
 
         self._trace_step(
             tenant_id=tenant_id, property_id=property_id, step="full_sync"

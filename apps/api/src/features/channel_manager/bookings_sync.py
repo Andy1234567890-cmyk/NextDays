@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
+from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.security import AuthContext
@@ -74,25 +75,37 @@ class BookingsSyncMixin:
     def _sync_feed(
         self, db: Client, tenant_by_property: dict[str, str]
     ) -> BookingSyncResponse:
-        """Gemeinsamer Feed-Kern: paginiert (älteste zuerst) durch alle offenen
-        Revisionen, verarbeitet nur Revisionen mit bekanntem Tenant-Mapping und
-        ackt erst NACH erfolgreichem Speichern (Channex Best Practice)."""
+        """Gemeinsamer Feed-Kern: verarbeitet alle offenen Revisionen (älteste
+        zuerst) und ackt erst NACH erfolgreichem Speichern (Channex Best
+        Practice).
+
+        WICHTIG zur Pagination: der Feed enthält NUR un-geackte Revisionen —
+        jedes Ack lässt die dahinterliegenden Einträge nachrücken. Ein naives
+        page+=1 würde deshalb genau die nachgerückten Revisionen überspringen
+        und ältere Revisionen NACH neueren verarbeiten (Buchungs-Regression,
+        z. B. Storno von einer späteren Modifikation „wiederbelebt"). Darum:
+        dieselbe Seite erneut holen, solange auf ihr ge-ackt wurde; nur wenn
+        eine Seite komplett aus Skips/Fehlern bestand, eine Seite weiter (sonst
+        käme man an Revisionen hinter einem Skip-Block nie vorbei). Gedeckelt
+        über _FEED_MAX_PAGES Abrufe (Deckel wird geloggt, kein stilles
+        Abschneiden)."""
         result = BookingSyncResponse()
         # Fehler lokal sammeln und am Ende einmalig zuweisen — Pylint erkennt
         # das Pydantic-Field sonst statisch als FieldInfo (ohne .append).
         errors: list[str] = []
 
-        for page in range(1, self._FEED_MAX_PAGES + 1):
+        page = 1
+        for fetch_no in range(1, self._FEED_MAX_PAGES + 1):
             try:
                 feed = self._channex.get_booking_revisions_feed(
                     page=page, limit=self._FEED_PAGE_LIMIT
                 )
             except ChannexError as exc:
-                if page == 1:
+                if fetch_no == 1:
                     raise self._wrap_channex(exc) from exc
-                # Folgeseite fehlgeschlagen: bereits Verarbeitetes ist ge-ackt
+                # Folgeabruf fehlgeschlagen: bereits Verarbeitetes ist ge-ackt
                 # und bleibt gültig — Rest holt der nächste Lauf.
-                errors.append(f"Feed-Seite {page}: {exc.message}")
+                errors.append(f"Feed-Abruf {fetch_no}: {exc.message}")
                 break
 
             revisions = feed.get("data") or []
@@ -100,6 +113,7 @@ class BookingsSyncMixin:
                 break
             result.fetched += len(revisions)
 
+            acked_this_page = 0
             for rev in revisions:
                 attrs = rev.get("attributes") or rev
                 revision_id = rev.get("id") or attrs.get("revision_id")
@@ -121,23 +135,49 @@ class BookingsSyncMixin:
                     if revision_id:
                         self._channex.ack_booking_revision(revision_id)
                         result.acknowledged += 1
-                except (ChannexError, ChannelManagerError) as exc:
+                        acked_this_page += 1
+                except (ChannexError, ChannelManagerError, APIError) as exc:
                     msg = getattr(exc, "message", str(exc))
                     errors.append(f"Revision {revision_id}: {msg}")
                     log.error(
                         "channex_booking_sync_failed", revision=revision_id, error=msg
                     )
+                    # Deterministische Validierungsfehler (422: z. B. Buchung
+                    # ohne ID) scheitern bei JEDEM Lauf identisch. Ohne Ack
+                    # stauen sie sich als Gift-Revisionen am Feed-Anfang (asc)
+                    # und fressen den Abruf-Deckel. Nach dem Protokollieren
+                    # acken — der Fehler ist dokumentiert, eine Wiederholung
+                    # brächte nie ein anderes Ergebnis.
+                    is_validation = (
+                        isinstance(exc, ChannelManagerError)
+                        and exc.status_code == 422
+                    )
+                    if is_validation and revision_id:
+                        try:
+                            self._channex.ack_booking_revision(revision_id)
+                            result.acknowledged += 1
+                            acked_this_page += 1
+                        except ChannexError as ack_exc:
+                            log.warning(
+                                "channex_poison_ack_failed",
+                                revision=revision_id, error=ack_exc.message,
+                            )
 
-            if len(revisions) < self._FEED_PAGE_LIMIT:
-                break
+            if len(revisions) < self._FEED_PAGE_LIMIT and acked_this_page == 0:
+                break  # letzte (Teil-)Seite und nichts nachgerückt → fertig
+            if acked_this_page == 0:
+                # Seite bestand nur aus Skips/Fehlern → weiterblättern, sonst
+                # blockiert ein Skip-Block alles dahinter.
+                page += 1
+            # sonst: dieselbe Seite erneut (Feed ist um die Acks geschrumpft).
         else:
             # Deckel erreicht: sichtbar machen statt still abschneiden — der
             # nächste Lauf (Webhook/Tick) zieht den Rest.
             log.warning(
-                "channex_feed_page_cap_reached", pages=self._FEED_MAX_PAGES
+                "channex_feed_fetch_cap_reached", fetches=self._FEED_MAX_PAGES
             )
             errors.append(
-                f"Feed-Seiten-Deckel ({self._FEED_MAX_PAGES}) erreicht — "
+                f"Feed-Abruf-Deckel ({self._FEED_MAX_PAGES}) erreicht — "
                 "Rest folgt im nächsten Lauf."
             )
 

@@ -13,6 +13,7 @@ from fastapi import (
     Depends,
     Header,
     HTTPException,
+    Query,
     Request,
     status,
 )
@@ -424,13 +425,21 @@ async def channex_webhook(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiges Webhook-Secret."
         )
-    return service.ingest_webhook(payload)
+    # ingest_webhook macht bis zu 3 synchrone DB-Roundtrips (Resolve, Persist,
+    # Enqueue) — im Thread ausführen, damit ein Webhook-Burst den Event-Loop
+    # (und damit ALLE anderen Requests) nicht blockiert.
+    import asyncio
+
+    return await asyncio.to_thread(service.ingest_webhook, payload)
 
 
 # --- Reviews & Scores (Booking.com / Airbnb / Expedia) ------------------------
 @router.get("/reviews")
 def list_reviews(
-    service: ChannelManagerServiceDep, ctx: _read, page: int = 1, limit: int = 50
+    service: ChannelManagerServiceDep,
+    ctx: _read,
+    page: Annotated[int, Query(ge=1, le=1000)] = 1,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
 ) -> list[dict]:
     """Gäste-Bewertungen der eigenen Objekte (live von den Portalen)."""
     try:
@@ -578,7 +587,10 @@ def report_cancel_due_invalid_card(
 # --- Message-Threads (inkl. Airbnb-Inquiries ohne Buchung) ---------------------
 @router.get("/threads")
 def list_message_threads(
-    service: ChannelManagerServiceDep, ctx: _read, page: int = 1, limit: int = 50
+    service: ChannelManagerServiceDep,
+    ctx: _read,
+    page: Annotated[int, Query(ge=1, le=1000)] = 1,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
 ) -> list[dict]:
     try:
         return service.list_message_threads(ctx, page=page, limit=limit)
@@ -591,8 +603,8 @@ def get_thread_messages(
     thread_id: str,
     service: ChannelManagerServiceDep,
     ctx: _read,
-    page: int = 1,
-    limit: int = 50,
+    page: Annotated[int, Query(ge=1, le=1000)] = 1,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
 ) -> list[dict]:
     try:
         return service.get_thread_messages(ctx, thread_id, page=page, limit=limit)
@@ -664,7 +676,7 @@ def list_webhook_events(
     service: ChannelManagerServiceDep,
     ctx: _read,
     only_unresolved: bool = False,
-    limit: int = 100,
+    limit: Annotated[int, Query(ge=1, le=200)] = 100,
 ) -> list[WebhookEventEntry]:
     try:
         rows = service.list_webhook_events(

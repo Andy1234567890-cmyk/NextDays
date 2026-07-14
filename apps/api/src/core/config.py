@@ -7,7 +7,12 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env", env_file_encoding="utf-8", extra="ignore"
+        env_file=".env", env_file_encoding="utf-8", extra="ignore",
+        # Leere Env-Variablen ignorieren statt Defaults zu überschreiben: die
+        # Compose-Dateien mappen Variablen als ${VAR:-} durch — ohne gesetzten
+        # Wert käme sonst "" an (z. B. CHANNEX_BASE_URL="" → kaputte URLs im
+        # Worker, live beobachtet), was den sinnvollen Default aushebelt.
+        env_ignore_empty=True,
     )
 
     app_env: str = "local"

@@ -587,11 +587,16 @@ class Worker:
             return
         self._last_bookings_tick = loop_time
         try:
-            bucket = int(time.time() // BOOKINGS_TICK_SECONDS)
+            # EINE Dedup-Familie mit dem Webhook-Trigger (konstanter Key):
+            # getrennte Key-Familien (tick vs. webhook) erlaubten zwei
+            # gleichzeitig laufende Feed-Jobs → parallele Feed-Läufe ackten
+            # sich gegenseitig die Seiten weg und der zweite Insert lief in
+            # den reservations-Unique-Index. Ein konstanter Key koalesziert
+            # alle offenen Anforderungen auf höchstens einen queued-Job.
             await asyncio.to_thread(
                 enqueue,
                 self._db, "sync_bookings_feed",
-                payload={}, dedup_key=f"bookings_feed_tick:{bucket}",
+                payload={}, dedup_key="sync_bookings_feed",
             )
         except Exception as exc:  # noqa: BLE001
             log.warning("bookings_tick_failed", error=str(exc)[:200])
@@ -611,13 +616,39 @@ class Worker:
             .execute()
         ).data or []
         day = now.date().isoformat()
+        keys = [f"full_sync:{r['property_id']}:{day}" for r in rows]
+        # Tages-Dedup über ALLE Status: der partielle queued-Unique-Index
+        # dedupliziert nur offene Jobs — ein bereits erledigter Full-Sync
+        # desselben Tages würde sonst bei jedem weiteren 15-min-Tick im
+        # Nachtfenster erneut eingereiht (4×N Voll-Pushes pro Nacht).
+        done_today: set[str] = set()
+        if keys:
+            existing = (
+                self._db.table("jobs")
+                .select("dedup_key")
+                .in_("dedup_key", keys)
+                .execute()
+            ).data or []
+            done_today = {e["dedup_key"] for e in existing if e.get("dedup_key")}
         for i, r in enumerate(rows):
+            key = f"full_sync:{r['property_id']}:{day}"
+            if key in done_today:
+                continue
             enqueue(
                 self._db, "full_sync_property", tenant_id=r["tenant_id"],
                 payload={"tenant_id": r["tenant_id"], "property_id": r["property_id"]},
-                dedup_key=f"full_sync:{r['property_id']}:{day}",
+                dedup_key=key,
                 delay_seconds=i * FULL_SYNC_STAGGER_SECONDS,
             )
+        # Retention der Webhook-Ereignisliste (rohe Payloads mit Gast-PII):
+        # analog zur Channex-Retention-Doku nach 90 Tagen aufräumen.
+        try:
+            cutoff = (now - timedelta(days=90)).isoformat()
+            self._db.table("channex_webhook_event").delete().lt(
+                "created_at", cutoff
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 — Aufräumen nie den Tick kippen
+            log.warning("webhook_event_retention_failed", error=str(exc)[:200])
 
     def _enqueue_reconcile_all(self) -> None:
         # Coalescing-Bucket aus der WALL-CLOCK (time.time()), NICHT aus der

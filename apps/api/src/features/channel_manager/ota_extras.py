@@ -82,29 +82,47 @@ class OtaExtrasMixin:
             raise ChannelManagerError("Buchung nicht gefunden.", status_code=404)
         return rows[0]
 
+    # Interne Blätter-Obergrenze für kontoweite Channex-Listen (Reviews/Threads):
+    # der Property-Filter ist bei Channex für diese Endpunkte nicht dokumentiert
+    # verifiziert (unbekannte Query-Keys werden still ignoriert) — deshalb wird
+    # serverseitig geblättert und HIER tenant-gefiltert, bis `limit` eigene
+    # Einträge gesammelt sind.
+    _ACCOUNT_LIST_MAX_PAGES = 10
+
     # -- Reviews & Scores --------------------------------------------------------
     def list_reviews(
         self, ctx: AuthContext, *, page: int = 1, limit: int = 50
     ) -> list[dict[str, Any]]:
-        """Gäste-Bewertungen (Booking.com/Airbnb/Expedia) der Tenant-Objekte."""
+        """Gäste-Bewertungen (Booking.com/Airbnb/Expedia) der Tenant-Objekte.
+
+        FAIL-CLOSED (Wurzel 5): Zeilen ohne property-Relationship werden
+        verworfen — der Channex-Account ist kontoweit, eine Zeile ohne belegbare
+        Objekt-Zuordnung darf nie bei einem Tenant landen."""
         own = self._own_channex_property_ids(ctx)
         if not own:
             return []
-        try:
-            res = self._channex.list_reviews(
-                property_ids=sorted(own), page=page, limit=limit
-            )
-        except ChannexError as exc:
-            raise self._wrap_channex(exc) from exc
         out: list[dict[str, Any]] = []
-        for row in _rows(res):
-            # Doppelter Boden zum Channex-Filter: nur eigene Objekte durchlassen.
-            prop_id = _related_property_id(row)
-            if prop_id and prop_id not in own:
-                continue
-            attrs = _attrs(row)
-            out.append({"id": row.get("id") or attrs.get("id"), **attrs})
-        return out
+        # `page` des Aufrufers = Seite über die GEFILTERTE Liste; intern wird
+        # kontoweit geblättert (Filterwirkung bei Channex nicht garantiert).
+        needed = page * limit
+        for feed_page in range(1, self._ACCOUNT_LIST_MAX_PAGES + 1):
+            try:
+                res = self._channex.list_reviews(
+                    property_ids=sorted(own), page=feed_page, limit=100
+                )
+            except ChannexError as exc:
+                raise self._wrap_channex(exc) from exc
+            rows = _rows(res)
+            for row in rows:
+                prop_id = _related_property_id(row)
+                if not prop_id or prop_id not in own:
+                    continue  # fail-closed: keine belegbare Zuordnung → raus
+                attrs = _attrs(row)
+                out.append({"id": row.get("id") or attrs.get("id"), **attrs})
+            if len(out) >= needed or len(rows) < 100:
+                break
+        start = (page - 1) * limit
+        return out[start:start + limit]
 
     def _require_own_review(self, ctx: AuthContext, review_id: str) -> dict[str, Any]:
         own = self._own_channex_property_ids(ctx)
@@ -165,12 +183,57 @@ class OtaExtrasMixin:
             for row in _rows(res)
         ]
 
+    def _require_own_channel_and_room_ids(
+        self, ctx: AuthContext, channels: list[str], room_types: list[str]
+    ) -> None:
+        """affected_channels/affected_room_types gegen die Channex-IDs des
+        Tenants prüfen (Wurzel 3): der Channex-Account ist kontoweit — auf
+        Channex-Validierung gegen fremde IDs wird NICHT vertraut („200 reicht
+        nicht")."""
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        own_channels = {
+            r["channex_channel_id"]
+            for r in (
+                db.table("channex_channel_connection")
+                .select("channex_channel_id")
+                .eq("tenant_id", tenant_id)
+                .execute()
+            ).data or []
+            if r.get("channex_channel_id")
+        }
+        own_rooms = {
+            r["channex_room_type_id"]
+            for r in (
+                db.table("channex_room_type_map")
+                .select("channex_room_type_id")
+                .eq("tenant_id", tenant_id)
+                .is_("deleted_at", "null")
+                .execute()
+            ).data or []
+            if r.get("channex_room_type_id")
+        }
+        foreign_ch = [c for c in channels if c not in own_channels]
+        foreign_rt = [r for r in room_types if r not in own_rooms]
+        if foreign_ch or foreign_rt:
+            raise ChannelManagerError(
+                "Regel verweist auf Kanäle/Zimmertypen, die nicht zu diesem "
+                "Konto gehören.",
+                status_code=422,
+            )
+
     def create_availability_rule(
         self, ctx: AuthContext, map_id: str, attributes: dict[str, Any]
     ) -> dict[str, Any]:
         """Regel (close_out | availability_offset | max_availability) anlegen.
-        property_id wird SERVERSEITIG gesetzt (nie aus dem Request übernommen)."""
+        property_id wird SERVERSEITIG gesetzt (nie aus dem Request übernommen);
+        affected_channels/room_types müssen dem Tenant gehören."""
         pm = self._require_own_property_map(ctx, map_id)
+        self._require_own_channel_and_room_ids(
+            ctx,
+            list(attributes.get("affected_channels") or []),
+            list(attributes.get("affected_room_types") or []),
+        )
         attrs = {**attributes, "property_id": pm["channex_property_id"]}
         try:
             res = self._channex.create_availability_rule(attrs)
@@ -193,11 +256,15 @@ class OtaExtrasMixin:
     def update_availability_rule(
         self, ctx: AuthContext, rule_id: str, attributes: dict[str, Any]
     ) -> dict[str, Any]:
-        rule = self._require_own_rule(ctx, rule_id)
+        self._require_own_rule(ctx, rule_id)
+        self._require_own_channel_and_room_ids(
+            ctx,
+            list(attributes.get("affected_channels") or []),
+            list(attributes.get("affected_room_types") or []),
+        )
         # property_id der Regel beibehalten (kein Umhängen auf fremde Objekte).
         attrs = dict(attributes)
         attrs.pop("property_id", None)
-        del rule
         try:
             res = self._channex.update_availability_rule(rule_id, attrs)
         except ChannexError as exc:
@@ -250,26 +317,32 @@ class OtaExtrasMixin:
         own = self._own_channex_property_ids(ctx)
         if not own:
             return []
-        try:
-            res = self._channex.list_message_threads(page=page, limit=limit)
-        except ChannexError as exc:
-            raise self._wrap_channex(exc) from exc
         out: list[dict[str, Any]] = []
-        for row in _rows(res):
-            prop_id = _related_property_id(row)
-            if not prop_id or prop_id not in own:
-                continue
-            attrs = _attrs(row)
-            rel = row.get("relationships") or {}
-            booking = (rel.get("booking") or {}).get("data") or {}
-            out.append(
-                {
-                    "id": row.get("id") or attrs.get("id"),
-                    "booking_id": booking.get("id"),
-                    **attrs,
-                }
-            )
-        return out
+        needed = page * limit
+        for feed_page in range(1, self._ACCOUNT_LIST_MAX_PAGES + 1):
+            try:
+                res = self._channex.list_message_threads(page=feed_page, limit=100)
+            except ChannexError as exc:
+                raise self._wrap_channex(exc) from exc
+            rows = _rows(res)
+            for row in rows:
+                prop_id = _related_property_id(row)
+                if not prop_id or prop_id not in own:
+                    continue
+                attrs = _attrs(row)
+                rel = row.get("relationships") or {}
+                booking = (rel.get("booking") or {}).get("data") or {}
+                out.append(
+                    {
+                        "id": row.get("id") or attrs.get("id"),
+                        "booking_id": booking.get("id"),
+                        **attrs,
+                    }
+                )
+            if len(out) >= needed or len(rows) < 100:
+                break
+        start = (page - 1) * limit
+        return out[start:start + limit]
 
     def _require_own_thread(self, ctx: AuthContext, thread_id: str) -> dict[str, Any]:
         own = self._own_channex_property_ids(ctx)
@@ -322,11 +395,60 @@ class OtaExtrasMixin:
             raise self._wrap_channex(exc) from exc
 
     # -- Booking CRS (PMS-Änderungen an Channex zurückspiegeln; Beta) --------------
+    def _require_own_crs_room_refs(
+        self, ctx: AuthContext, booking: dict[str, Any]
+    ) -> None:
+        """rooms[].room_type_id / rate_plan_id des CRS-Payloads gegen die
+        Channex-IDs des Tenants prüfen (Wurzel 3) — der Channex-Account ist
+        kontoweit; auf eine Channex-seitige Fremd-ID-Ablehnung wird NICHT
+        vertraut."""
+        rooms = booking.get("rooms")
+        if not isinstance(rooms, list) or not rooms:
+            return
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        own_rooms = {
+            r["channex_room_type_id"]
+            for r in (
+                db.table("channex_room_type_map")
+                .select("channex_room_type_id")
+                .eq("tenant_id", tenant_id)
+                .is_("deleted_at", "null")
+                .execute()
+            ).data or []
+            if r.get("channex_room_type_id")
+        }
+        own_plans = {
+            r["channex_rate_plan_id"]
+            for r in (
+                db.table("channex_rate_plan_map")
+                .select("channex_rate_plan_id")
+                .eq("tenant_id", tenant_id)
+                .is_("deleted_at", "null")
+                .execute()
+            ).data or []
+            if r.get("channex_rate_plan_id")
+        }
+        for room in rooms:
+            if not isinstance(room, dict):
+                continue
+            rt = room.get("room_type_id")
+            rp = room.get("rate_plan_id")
+            if (rt and str(rt) not in own_rooms) or (
+                rp and str(rp) not in own_plans
+            ):
+                raise ChannelManagerError(
+                    "Buchung verweist auf Zimmer/Preispläne, die nicht zu "
+                    "diesem Konto gehören.",
+                    status_code=422,
+                )
+
     def crs_create_booking(
         self, ctx: AuthContext, booking: dict[str, Any]
     ) -> dict[str, Any]:
         """Offline-/PMS-Buchung in Channex anlegen. property_id im Payload MUSS
-        ein Channex-Objekt dieses Tenants sein (Wurzel 3)."""
+        ein Channex-Objekt dieses Tenants sein (Wurzel 3); rooms[]-Referenzen
+        werden gegen die Tenant-Mappings geprüft."""
         own = self._own_channex_property_ids(ctx)
         prop_id = booking.get("property_id")
         if not prop_id or str(prop_id) not in own:
@@ -334,6 +456,7 @@ class OtaExtrasMixin:
                 "property_id fehlt oder gehört nicht zu diesem Konto.",
                 status_code=422,
             )
+        self._require_own_crs_room_refs(ctx, booking)
         try:
             return self._channex.crs_create_booking(booking)
         except ChannexError as exc:
@@ -343,8 +466,16 @@ class OtaExtrasMixin:
         self, ctx: AuthContext, channex_booking_id: str, booking: dict[str, Any]
     ) -> dict[str, Any]:
         """Bestehende (auch OTA-)Buchung in Channex modifizieren/stornieren —
-        Channex mergt spätere OTA-Revisionen diff-basiert (Overrides-Logik)."""
+        Channex mergt spätere OTA-Revisionen diff-basiert (Overrides-Logik).
+        Eine mitgeschickte property_id muss dem Tenant gehören; rooms[]-
+        Referenzen werden gegen die Tenant-Mappings geprüft."""
         self._require_own_channex_booking(ctx, channex_booking_id)
+        prop_id = booking.get("property_id")
+        if prop_id and str(prop_id) not in self._own_channex_property_ids(ctx):
+            raise ChannelManagerError(
+                "property_id gehört nicht zu diesem Konto.", status_code=422
+            )
+        self._require_own_crs_room_refs(ctx, booking)
         try:
             return self._channex.crs_update_booking(channex_booking_id, booking)
         except ChannexError as exc:

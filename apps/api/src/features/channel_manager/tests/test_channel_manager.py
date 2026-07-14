@@ -48,13 +48,16 @@ class _FakeChannex:
         self.acked: list[str] = []
 
     def get_booking_revisions_feed(self, *, page: int = 1, limit: int = 100) -> dict:
-        # Ein-Seiten-Feed: Seite 1 liefert alles, weitere Seiten sind leer
-        # (die Pagination selbst wird gegen den echten Client verifiziert).
-        del limit  # Signatur-Kompatibilität zum echten Client
-        return {"data": self._revisions if page == 1 else []}
+        # Wie das echte Channex: der Feed enthält NUR un-geackte Revisionen —
+        # ein Ack lässt die dahinterliegenden nachrücken (deshalb holt der
+        # Sync dieselbe Seite erneut, solange ge-ackt wurde).
+        start = (page - 1) * limit
+        return {"data": self._revisions[start:start + limit]}
 
     def ack_booking_revision(self, revision_id: str) -> dict:
         self.acked.append(revision_id)
+        # Geackte Revision verschwindet aus dem Feed (Channex-Semantik).
+        self._revisions = [r for r in self._revisions if r.get("id") != revision_id]
         return {}
 
 
@@ -349,10 +352,12 @@ def test_booking_feed_isolates_tenants() -> None:
 
     res = svc.sync_bookings(ctx)
 
-    # Nur Andys Buchung gespeichert, Steffens übersprungen.
-    assert res.fetched == 2
+    # Nur Andys Buchung gespeichert, Steffens übersprungen. (fetched/skipped
+    # zählen über die Abruf-Pässe: nach dem Ack wird dieselbe Seite erneut
+    # geholt — Steffens un-ackbare Revision wird dabei nochmals gesehen.)
     assert res.saved == 1
-    assert res.skipped == 1
+    assert res.skipped >= 1
+    assert res.fetched >= 2
     saved_ids = [b["channex_booking_id"] for b in fake_db.saved_bookings]
     assert saved_ids == ["bk-andy"]
     # Steffens Revision wurde NICHT ge-ackt (sein Tenant braucht sie noch).

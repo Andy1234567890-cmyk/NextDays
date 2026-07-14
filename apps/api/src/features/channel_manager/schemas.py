@@ -323,7 +323,8 @@ class AvailabilityRuleRequest(BaseModel):
     """Kanal-Kontingent-Regel. type: close_out | availability_offset |
     max_availability; value nur für offset/max Pflicht (Channex validiert)."""
 
-    title: str = Field(min_length=1, max_length=255)
+    # Channex führt title nicht als Pflichtfeld (nur in Beispielen) — optional.
+    title: str | None = Field(default=None, max_length=255)
     type: str = Field(pattern="^(close_out|availability_offset|max_availability)$")
     value: int | None = None
     start_date: date
