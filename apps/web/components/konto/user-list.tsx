@@ -3,16 +3,26 @@
 // Nutzerliste im Konto → Benutzer: zeigt alle Tenant-Mitglieder (Avatar,
 // Name, E-Mail, Rolle). Der Account-Inhaber steht zuerst (Backend-Sortierung).
 // Bei Eigentümern (Rolle 'owner') „Objekte zuordnen" (§4.2), bei Mitarbeitern
-// (staff/cleaner) „Objekte freigeben" (§4.3).
+// (staff/cleaner) „Objekte freigeben" (§4.3). „…"-Menü: Bearbeiten/Löschen
+// (der Kontoinhaber/Admin ist geschützt — Backend erzwingt das ebenfalls).
 import { Icon } from "@iconify/react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import type { TenantUser, UserRole } from "@/lib/account";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { type TenantUser, type UserRole, deleteManagedUser } from "@/lib/account";
 
 import { OwnerPropertiesDialog } from "./owner-properties-dialog";
 import { StaffPropertiesDialog } from "./staff-properties-dialog";
+import { UserEditDialog } from "./user-edit-dialog";
 
 const ROLE_LABELS: Record<UserRole, string> = {
   admin: "Admin",
@@ -34,6 +44,22 @@ export function UserList({ users }: { users: TenantUser[] }) {
   const [assigning, setAssigning] = useState<TenantUser | null>(null);
   // Welcher Mitarbeiter gerade die Objekt-Freigabe offen hat (null = keiner).
   const [releasing, setReleasing] = useState<TenantUser | null>(null);
+  // Welcher Nutzer gerade bearbeitet wird (null = keiner).
+  const [editing, setEditing] = useState<TenantUser | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  async function handleDelete(user: TenantUser) {
+    const label = user.full_name || user.email || "diesen Nutzer";
+    // Löschen ist endgültig (Login + Zuordnungen) → bewusst bestätigen lassen.
+    if (!window.confirm(`${label} wirklich löschen? Das Login wird entfernt.`)) {
+      return;
+    }
+    setDeletingId(user.user_id);
+    const res = await deleteManagedUser(user.user_id);
+    setDeletingId(null);
+    if (res.ok) toast.success("Nutzer gelöscht.");
+    else toast.error(res.error);
+  }
 
   return (
     <>
@@ -84,9 +110,53 @@ export function UserList({ users }: { users: TenantUser[] }) {
                 {ROLE_LABELS[user.role]}
               </span>
             )}
+            {/* Der Kontoinhaber (Admin) ist nicht bearbeit-/löschbar. */}
+            {user.role !== "admin" && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0"
+                    aria-label="Aktionen"
+                    disabled={deletingId === user.user_id}
+                  >
+                    <Icon
+                      icon={
+                        deletingId === user.user_id
+                          ? "ph:spinner"
+                          : "ph:dots-three-vertical"
+                      }
+                      className={
+                        "size-4 " +
+                        (deletingId === user.user_id ? "animate-spin" : "")
+                      }
+                    />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onSelect={() => setEditing(user)}>
+                    <Icon icon="ph:pencil-simple" />
+                    Bearbeiten
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    className="text-destructive focus:text-destructive"
+                    onSelect={() => void handleDelete(user)}
+                  >
+                    <Icon icon="ph:trash" />
+                    Löschen
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </li>
         ))}
       </ul>
+
+      {editing && (
+        <UserEditDialog user={editing} onClose={() => setEditing(null)} />
+      )}
 
       {assigning && (
         <OwnerPropertiesDialog

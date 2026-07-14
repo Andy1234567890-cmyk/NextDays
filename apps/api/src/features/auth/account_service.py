@@ -57,6 +57,9 @@ class AccountService:
         auth_user = self._get_auth_user(ctx.user_id)
         has_password = self._has_password(auth_user)
         return AccountResponse(
+            tenant_country=self._tenant_country(
+                row.get("tenant_id") or ctx.tenant_id
+            ),
             user_id=ctx.user_id,
             email=row.get("email") or self._auth_email(auth_user),
             full_name=row.get("full_name"),
@@ -73,6 +76,22 @@ class AccountService:
             avatar_url=row.get("avatar_url"),
             permissions=self._effective_perm_ids(row),
         )
+
+    def _tenant_country(self, tenant_id: str | None) -> str | None:
+        """Land des Unternehmens (ISO-2) — Vorbelegung z. B. der Telefon-
+        Ländervorwahl im Frontend. Kein Fallback-Wert (Wurzel 4)."""
+        if not tenant_id:
+            return None
+        res = (
+            self._service.table("tenants")
+            .select("country")
+            .eq("id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        rows = res.data if isinstance(res.data, list) else []
+        country = rows[0].get("country") if rows else None
+        return country if isinstance(country, str) and country else None
 
     def role_and_permissions(
         self, ctx: AuthContext
@@ -210,6 +229,60 @@ class AccountService:
         users = [self._to_tenant_user(u) for u in contacts]
         rank = {UserRole.admin: 0, UserRole.owner: 1, UserRole.co_admin: 2}
         users.sort(key=lambda u: rank.get(u.role, 9))
+        return self._merge_agency_into_admin(users, tenant_id)
+
+    def _agency_person(self, tenant_id: str | None) -> dict | None:
+        """Agentur-/Inhaber-Kontakt aus dem /konto-Profil des Tenants.
+
+        Der Registrierende IST der Super-Admin (eine Identität): sein
+        Admin-Login wird in Kontakt-/Nutzerlisten mit Name und Telefon aus
+        den /konto-Kontaktdaten angezeigt — nicht als zweite Person."""
+        if not tenant_id:
+            return None
+        res = (
+            self._service.table("tenant_billing_profile")
+            .select(
+                "managing_director_first_name, "
+                "managing_director_last_name, phone_number"
+            )
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        rows = res.data if isinstance(res.data, list) else []
+        if not rows:
+            return None
+        p = rows[0]
+
+        def _s(key: str) -> str:
+            val = p.get(key)
+            return val.strip() if isinstance(val, str) else ""
+
+        name = " ".join(
+            x
+            for x in (
+                _s("managing_director_first_name"),
+                _s("managing_director_last_name"),
+            )
+            if x
+        )
+        phone = _s("phone_number")
+        if not name and not phone:
+            return None
+        return {"full_name": name or None, "phone": phone or None}
+
+    def _merge_agency_into_admin(
+        self, users: list[TenantUser], tenant_id: str | None
+    ) -> list[TenantUser]:
+        """Admin-Einträge des EIGENEN Tenants mit den Agentur-Daten aus /konto
+        anreichern (Anzeige-Wahrheit, keine Daten-Doppelung)."""
+        agency = self._agency_person(tenant_id)
+        if not agency:
+            return users
+        for u in users:
+            if u.role is UserRole.admin and u.tenant_id == tenant_id:
+                u.full_name = agency["full_name"] or u.full_name
+                u.phone = agency["phone"] or u.phone
         return users
 
     def _to_tenant_user(self, u: dict) -> TenantUser:
@@ -261,7 +334,122 @@ class AccountService:
         users = [self._to_tenant_user(u) for u in (res.data or [])]
         rank = {UserRole.admin: 0, UserRole.owner: 1, UserRole.co_admin: 2}
         users.sort(key=lambda u: rank.get(u.role, 9))
-        return users
+        return self._merge_agency_into_admin(
+            users, row.get("tenant_id") or ctx.tenant_id
+        )
+
+    # Schreibende Nutzerverwaltung (Bearbeiten/Löschen): nur die Konto-Führung.
+    # Eigentümer sehen die Liste (read-only, §4.2), verwalten aber nicht.
+    _USER_WRITE_ROLES = frozenset({UserRole.admin, UserRole.co_admin})
+
+    def _require_user_write(self, ctx: AuthContext) -> tuple[dict, str]:
+        """Guard für Bearbeiten/Löschen: Rolle prüfen und (eigene Row,
+        tenant_id) zurückgeben. Wurzel 3: alles bleibt tenant-gescopt."""
+        row = self._ensure_user_row(ctx)
+        try:
+            role = UserRole(row.get("role") or ctx.role or "")
+        except ValueError:
+            role = None
+        if role not in self._USER_WRITE_ROLES:
+            raise AuthError(
+                "Keine Berechtigung für die Nutzerverwaltung.", status_code=403
+            )
+        tenant_id = row.get("tenant_id") or ctx.tenant_id
+        if not tenant_id:
+            raise AuthError("Kein Unternehmen zugeordnet.", status_code=403)
+        return row, tenant_id
+
+    def _own_managed_user(self, tenant_id: str, user_id: str) -> dict:
+        """Ziel-Nutzer NUR im eigenen Tenant laden (Load+Scope in einem)."""
+        res = (
+            self._service.table("users")
+            .select("id, email, full_name, role, tenant_id, permissions")
+            .eq("id", user_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        if not res.data:
+            raise AuthError("Nutzer nicht gefunden.", status_code=404)
+        return res.data[0]
+
+    def update_managed_user(
+        self,
+        ctx: AuthContext,
+        user_id: str,
+        *,
+        full_name: str | None = None,
+        role: UserRole | None = None,
+    ) -> TenantUser:
+        """Nutzer im eigenen Tenant bearbeiten (Konto → Benutzer): Name und
+        Rolle. Der Konto-Admin (Gründer) ist nicht umstufbar, und niemand kann
+        zur Rolle admin befördert werden (entsteht nur bei register — wie beim
+        Einladen)."""
+        _, tenant_id = self._require_user_write(ctx)
+        target = self._own_managed_user(tenant_id, user_id)
+        patch: dict = {}
+        if full_name is not None and full_name.strip():
+            patch["full_name"] = full_name.strip()
+        if role is not None and role != target.get("role"):
+            if target.get("role") == UserRole.admin.value:
+                raise AuthError(
+                    "Der Kontoinhaber (Admin) kann nicht umgestuft werden.",
+                    status_code=400,
+                )
+            if role is UserRole.admin:
+                raise AuthError(
+                    "Die Rolle Admin kann nicht vergeben werden.", status_code=400
+                )
+            patch["role"] = role.value
+        if not patch:
+            return self._to_tenant_user(target)
+        res = (
+            self._service.table("users")
+            .update(patch)
+            .eq("id", user_id)
+            .eq("tenant_id", tenant_id)
+            .execute()
+        )
+        updated = res.data[0] if res.data else {**target, **patch}
+        log.info(
+            "managed_user_updated",
+            tenant_id=tenant_id, user_id=user_id, fields=sorted(patch),
+        )
+        return self._to_tenant_user(updated)
+
+    def delete_managed_user(self, ctx: AuthContext, user_id: str) -> None:
+        """Nutzer aus dem eigenen Tenant löschen (Konto → Benutzer).
+
+        Nicht löschbar: das eigene Login (Aussperr-Schutz) und der Konto-Admin.
+        Entfernt die users-Row (FKs räumen per cascade/set null auf) und den
+        Auth-Login. Reihenfolge: erst Auth (verhindert weitere Logins), dann
+        Row — schlägt die Row fehl, bleibt der Nutzer sichtbar und der Vorgang
+        ist wiederholbar (kein Halbzustand mit funktionierendem Login)."""
+        row, tenant_id = self._require_user_write(ctx)
+        if user_id == row.get("id"):
+            raise AuthError(
+                "Das eigene Login kann nicht gelöscht werden.", status_code=400
+            )
+        target = self._own_managed_user(tenant_id, user_id)
+        if target.get("role") == UserRole.admin.value:
+            raise AuthError(
+                "Der Kontoinhaber (Admin) kann nicht gelöscht werden.",
+                status_code=400,
+            )
+        try:
+            self._service.auth.admin.delete_user(user_id)
+        except Exception as exc:  # noqa: BLE001 — SDK-Fehler einheitlich melden
+            log.warning(
+                "managed_user_auth_delete_failed",
+                user_id=user_id, error=str(exc)[:200],
+            )
+            raise AuthError(
+                "Login konnte nicht gelöscht werden.", status_code=502
+            ) from exc
+        self._service.table("users").delete().eq("id", user_id).eq(
+            "tenant_id", tenant_id
+        ).execute()
+        log.info("managed_user_deleted", tenant_id=tenant_id, user_id=user_id)
 
     AVATAR_BUCKET = "avatars"
     AVATAR_MAX_BYTES = 5 * 1024 * 1024

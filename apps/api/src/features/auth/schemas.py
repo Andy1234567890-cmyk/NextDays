@@ -105,6 +105,9 @@ class AccountResponse(BaseModel):
     description: str | None = None
     avatar_url: str | None = None
     permissions: list[str] = []  # Lodgify-Berechtigungen (für UI-Gating)
+    # Land des Unternehmens (ISO-2, aus tenants.country) — Vorbelegung z. B.
+    # der Telefon-Ländervorwahl im Frontend (kein Hardcode, Wurzel 4).
+    tenant_country: str | None = None
 
 
 class TenantUser(BaseModel):
@@ -159,6 +162,14 @@ class UpdateEmailRequest(BaseModel):
 
 class UpdateNameRequest(BaseModel):
     full_name: str = Field(min_length=1, max_length=200)
+
+
+class UpdateManagedUserRequest(BaseModel):
+    """Nutzer in der Verwaltung (Konto → Benutzer) bearbeiten. Gesendete
+    Felder werden gesetzt, weggelassene bleiben unverändert."""
+
+    full_name: str | None = Field(default=None, min_length=1, max_length=200)
+    role: UserRole | None = None
 
 
 class UpdateProfileRequest(BaseModel):

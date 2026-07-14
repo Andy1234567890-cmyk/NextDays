@@ -35,6 +35,7 @@ from .schemas import (
     TotpVerifyRequest,
     TotpVerifyResponse,
     UpdateEmailRequest,
+    UpdateManagedUserRequest,
     UpdateNameRequest,
     UpdatePasswordRequest,
     UpdateProfileRequest,
@@ -249,6 +250,33 @@ def list_managed_users(
     Tenant; normale Benutzer (staff/cleaner) erhalten 403."""
     try:
         return service.list_managed_users(ctx)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.patch("/account/users/{user_id}", response_model=TenantUser)
+def update_managed_user(
+    user_id: str,
+    req: UpdateManagedUserRequest,
+    ctx: CurrentUser,
+    service: AccountServiceDep,
+) -> TenantUser:
+    """Nutzer im eigenen Tenant bearbeiten (Konto → Benutzer; admin/co_admin)."""
+    try:
+        return service.update_managed_user(
+            ctx, user_id, full_name=req.full_name, role=req.role,
+        )
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/account/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_managed_user(
+    user_id: str, ctx: CurrentUser, service: AccountServiceDep
+) -> None:
+    """Nutzer aus dem eigenen Tenant löschen (Konto → Benutzer; admin/co_admin)."""
+    try:
+        service.delete_managed_user(ctx, user_id)
     except AuthError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

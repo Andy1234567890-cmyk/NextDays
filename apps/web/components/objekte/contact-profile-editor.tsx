@@ -12,14 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -33,13 +27,7 @@ import {
   updateProfile,
   uploadAvatar,
 } from "@/lib/account";
-import {
-  DIAL_CODES,
-  LANGUAGE_OPTIONS,
-  joinPhone,
-  languageLabel,
-  splitPhone,
-} from "@/lib/contact-meta";
+import { LANGUAGE_OPTIONS, languageLabel } from "@/lib/contact-meta";
 
 export function ContactProfileEditor({
   account,
@@ -54,12 +42,12 @@ export function ContactProfileEditor({
   const [lastName, setLastName] = useState(last);
   const [email, setEmail] = useState(account.email ?? "");
 
-  const phone = splitPhone(account.phone);
-  const addPhone = splitPhone(account.additional_phone);
-  const [dial, setDial] = useState(phone.dial);
-  const [phoneRest, setPhoneRest] = useState(phone.rest);
-  const [addDial, setAddDial] = useState(addPhone.dial);
-  const [addRest, setAddRest] = useState(addPhone.rest);
+  // Telefon als Gesamtwert; die Vorwahl-Vorbelegung kommt aus dem Land des
+  // Unternehmens (tenants.country) — kein Länder-Hardcode (Wurzel 4).
+  const [phone, setPhone] = useState(account.phone ?? "");
+  const [additionalPhone, setAdditionalPhone] = useState(
+    account.additional_phone ?? "",
+  );
 
   const [hidePhones, setHidePhones] = useState(account.hide_phones);
   const [languages, setLanguages] = useState<string[]>(account.spoken_languages);
@@ -95,8 +83,8 @@ export function ContactProfileEditor({
 
     const res = await updateProfile({
       full_name: fullName,
-      phone: joinPhone(dial, phoneRest) || null,
-      additional_phone: joinPhone(addDial, addRest) || null,
+      phone: phone.trim() || null,
+      additional_phone: additionalPhone.trim() || null,
       hide_phones: hidePhones,
       spoken_languages: languages,
       website: website.trim() || null,
@@ -159,18 +147,16 @@ export function ContactProfileEditor({
 
             <Field label="Telefonnummer" required>
               <PhoneInput
-                dial={dial}
-                rest={phoneRest}
-                onDial={setDial}
-                onRest={setPhoneRest}
+                value={phone}
+                onChange={setPhone}
+                defaultCountry={account.tenant_country ?? undefined}
               />
             </Field>
             <Field label="Zusätzliche Telefonnummer">
               <PhoneInput
-                dial={addDial}
-                rest={addRest}
-                onDial={setAddDial}
-                onRest={setAddRest}
+                value={additionalPhone}
+                onChange={setAdditionalPhone}
+                defaultCountry={account.tenant_country ?? undefined}
               />
             </Field>
 
@@ -240,42 +226,6 @@ export function ContactProfileEditor({
         </div>
       </SheetContent>
     </Sheet>
-  );
-}
-
-// Telefon-Eingabe: Ländervorwahl (Select) + Nummer (Input).
-function PhoneInput({
-  dial,
-  rest,
-  onDial,
-  onRest,
-}: {
-  dial: string;
-  rest: string;
-  onDial: (v: string) => void;
-  onRest: (v: string) => void;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <Select value={dial} onValueChange={onDial}>
-        <SelectTrigger>
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {DIAL_CODES.map((d) => (
-            <SelectItem key={d.code} value={d.dial}>
-              {d.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Input
-        inputMode="tel"
-        value={rest}
-        onChange={(e) => onRest(e.target.value)}
-        placeholder={`${dial} 20 30 40 50`}
-      />
-    </div>
   );
 }
 

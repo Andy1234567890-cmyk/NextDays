@@ -29,6 +29,8 @@ export type Account = {
   website: string | null;
   description: string | null;
   avatar_url: string | null;
+  // Land des Unternehmens (ISO-2) — z. B. Vorbelegung der Telefon-Vorwahl.
+  tenant_country: string | null;
 };
 
 // Ein Nutzer des eigenen Tenants (für die Objekt-Kontakt-Auswahl).
@@ -67,7 +69,10 @@ type Result<T> =
 
 async function call<T>(
   path: string,
-  opts: { method?: "GET" | "POST" | "PUT" | "PATCH"; body?: unknown } = {},
+  opts: {
+    method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+    body?: unknown;
+  } = {},
 ): Promise<Result<T>> {
   const token = await currentToken();
   if (!token) return { ok: false, error: "Nicht angemeldet." };
@@ -149,6 +154,31 @@ export async function inviteUser(
   const res = await call<{ user_id: string }>("/auth/invite", {
     method: "POST",
     body: input,
+  });
+  if (res.ok) revalidatePath("/konto/nutzer");
+  return res;
+}
+
+// Nutzer bearbeiten (Konto → Benutzer): Name, Rolle, Telefon (admin/co_admin).
+export async function updateManagedUser(
+  userId: string,
+  input: { full_name?: string; role?: UserRole; phone?: string | null },
+): Promise<Result<TenantUser>> {
+  const res = await call<TenantUser>(`/auth/account/users/${userId}`, {
+    method: "PATCH",
+    body: input,
+  });
+  if (res.ok) revalidatePath("/konto/nutzer");
+  return res;
+}
+
+// Nutzer löschen (Konto → Benutzer): entfernt Login + Zuordnungen
+// (admin/co_admin; eigener Login und Kontoinhaber sind geschützt).
+export async function deleteManagedUser(
+  userId: string,
+): Promise<Result<void>> {
+  const res = await call<void>(`/auth/account/users/${userId}`, {
+    method: "DELETE",
   });
   if (res.ok) revalidatePath("/konto/nutzer");
   return res;
