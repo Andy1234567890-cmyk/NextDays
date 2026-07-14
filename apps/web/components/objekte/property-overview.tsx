@@ -55,8 +55,7 @@ type Section =
   | "info"
   | "rooms"
   | "beds"
-  | "amenities"
-  | "location";
+  | "amenities";
 
 // Typsichere Helfer für die flexiblen type_attributes.
 function attrList(p: Property, key: string): string[] {
@@ -241,23 +240,6 @@ export function PropertyOverview({ initial }: { initial: Property }) {
         )}
       </SectionCard>
 
-      {/* Location */}
-      <SectionCard
-        title="Standort"
-        hint="Adresse des Objekts."
-        channel="ota"
-        onEdit={() => setSection("location")}
-      >
-        <p className="text-sm text-muted-foreground">
-          {[p.street, p.house_number].filter(Boolean).join(" ")}
-          {p.street && <br />}
-          {[p.postal_code, p.city].filter(Boolean).join(" ")}
-          {p.city && p.country ? ", " : ""}
-          {p.country}
-          {!p.street && !p.city && "Noch keine Adresse."}
-        </p>
-      </SectionCard>
-
       {/* --- Editoren --- */}
       <NameEditor
         open={section === "name"}
@@ -296,12 +278,6 @@ export function PropertyOverview({ initial }: { initial: Property }) {
         selected={p.amenities}
         onClose={() => setSection(null)}
         onSave={(vals) => save({ amenities: vals })}
-      />
-      <LocationEditor
-        open={section === "location"}
-        p={p}
-        onClose={() => setSection(null)}
-        onSave={save}
       />
     </div>
   );
@@ -814,79 +790,3 @@ function AmenitiesEditor({
   );
 }
 
-function LocationEditor({
-  open,
-  p,
-  onClose,
-  onSave,
-}: {
-  open: boolean;
-  p: Property;
-  onClose: () => void;
-  onSave: SaveFn;
-}) {
-  const [street, setStreet] = useState(p.street ?? "");
-  const [houseNo, setHouseNo] = useState(p.house_number ?? "");
-  const [zip, setZip] = useState(p.postal_code ?? "");
-  const [city, setCity] = useState(p.city ?? "");
-  const [country, setCountry] = useState(p.country ?? "");
-  const { busy, error, run } = useSaver(onSave);
-
-  return (
-    <EditorShell open={open} onClose={onClose} title="Standort bearbeiten">
-      <div className="grid grid-cols-[1fr_6rem] gap-2">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="e-street">Straße</Label>
-          <Input
-            id="e-street"
-            value={street}
-            onChange={(e) => setStreet(e.target.value)}
-          />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="e-no">Nr.</Label>
-          <Input
-            id="e-no"
-            value={houseNo}
-            onChange={(e) => setHouseNo(e.target.value)}
-          />
-        </div>
-      </div>
-      <div className="grid grid-cols-[8rem_1fr] gap-2">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="e-zip">PLZ</Label>
-          <Input id="e-zip" value={zip} onChange={(e) => setZip(e.target.value)} />
-        </div>
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="e-city">Stadt</Label>
-          <Input
-            id="e-city"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-          />
-        </div>
-      </div>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="e-country">Land</Label>
-        <Input
-          id="e-country"
-          value={country}
-          onChange={(e) => setCountry(e.target.value)}
-        />
-      </div>
-      <SaveBar
-        busy={busy}
-        error={error}
-        onSave={() =>
-          run({
-            street,
-            house_number: houseNo,
-            postal_code: zip,
-            city,
-            country,
-          })
-        }
-      />
-    </EditorShell>
-  );
-}
