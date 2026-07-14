@@ -281,6 +281,64 @@ def test_bulk_edit_min_stay_updates_rate_plans() -> None:
     assert updates and updates[0][1] == {"min_stay": 3}
 
 
+def test_bulk_edit_combined_action_is_single_channex_push(monkeypatch) -> None:
+    # Zertifizierung Test 8: Preis + Min-Stay + CTA/CTD in EINER Bulk-Aktion
+    # ergeben EINEN kombinierten ARI-Job (kind=restrictions, alle Felder).
+    from src.features.calendar import service as cal_service
+    from src.features.calendar.schemas import BulkEditRequest
+
+    calls: list[tuple[str, dict]] = []
+    monkeypatch.setattr(
+        cal_service, "try_enqueue_ari",
+        lambda _db, _tenant, _pid, kind, fields: calls.append((kind, fields)),
+    )
+    svc, _ = _service(properties=[{"id": "p1", "tenant_id": "t1"}])
+    svc.bulk_edit(
+        "t1",
+        BulkEditRequest(
+            property_ids=["p1"],
+            range=DateRange(start=date(2026, 12, 1), end=date(2027, 5, 1)),
+            price=432.0, min_stay=2,
+            closed_to_arrival=False, closed_to_departure=False,
+        ),
+    )
+    assert len(calls) == 1
+    kind, fields = calls[0]
+    assert kind == "restrictions"
+    assert fields["rate_cents"] == 43200
+    assert fields["min_stay"] == 2
+    assert fields["closed_to_arrival"] is False
+    assert fields["closed_to_departure"] is False
+
+
+def test_bulk_edit_price_plus_minstay_without_ctactd_single_push(
+    monkeypatch,
+) -> None:
+    # Test 8, Zeile 2: nur Preis + Min-Stay → EIN Rate-Push mit beiden Feldern.
+    from src.features.calendar import service as cal_service
+    from src.features.calendar.schemas import BulkEditRequest
+
+    calls: list[tuple[str, dict]] = []
+    monkeypatch.setattr(
+        cal_service, "try_enqueue_ari",
+        lambda _db, _tenant, _pid, kind, fields: calls.append((kind, fields)),
+    )
+    svc, _ = _service(properties=[{"id": "p1", "tenant_id": "t1"}])
+    svc.bulk_edit(
+        "t1",
+        BulkEditRequest(
+            property_ids=["p1"],
+            range=DateRange(start=date(2026, 12, 1), end=date(2027, 5, 1)),
+            price=342.0, min_stay=3,
+        ),
+    )
+    assert len(calls) == 1
+    kind, fields = calls[0]
+    assert kind == "rate"
+    assert fields["rate_cents"] == 34200
+    assert fields["min_stay"] == 3
+
+
 def test_bulk_edit_rejects_foreign_property() -> None:
     from src.features.calendar.schemas import BulkEditRequest
 
