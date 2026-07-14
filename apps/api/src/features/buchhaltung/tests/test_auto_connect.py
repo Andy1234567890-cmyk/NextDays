@@ -45,8 +45,52 @@ def test_connect_fields_from_profile_maps_address_and_individual() -> None:
 
 def test_connect_fields_omits_missing() -> None:
     # Nur E-Mail vorhanden → keine leeren Adress-/Business-Blöcke (keine Fallbacks).
+    # business_type ist ab jetzt IMMER gesetzt (Stripe-Pflicht) — ohne Rechtsform
+    # ist der Default individual (kein erfundener Firmenzwang).
     fields = _connect_fields_from_profile({"email": "h@example.com"})
-    assert fields == {"individual": {"email": "h@example.com"}}
+    assert fields == {
+        "business_type": "individual",
+        "individual": {"email": "h@example.com"},
+    }
+
+
+def test_connect_fields_einzelunternehmen_is_individual() -> None:
+    # Einzelunternehmen MUSS individual sein (kein representative/company),
+    # auch wenn das grobe account_type fälschlich "company" sagt.
+    fields = _connect_fields_from_profile(
+        {
+            "legal_form": "Einzelunternehmen",
+            "account_type": "company",
+            "legal_name": "Andy Staudinger",
+            "email": "a@example.com",
+            "managing_director_first_name": "Andy",
+            "managing_director_last_name": "Staudinger",
+        }
+    )
+    assert fields["business_type"] == "individual"
+    assert "company" not in fields
+    assert fields["individual"]["first_name"] == "Andy"
+
+
+def test_connect_fields_gmbh_is_company_with_structure() -> None:
+    # Echte GmbH → company + structure private_corporation + tax_id, keine Person
+    # im Account-Update (die kommt über die Persons-API).
+    fields = _connect_fields_from_profile(
+        {
+            "legal_form": "GmbH",
+            "account_type": "company",
+            "legal_name": "Muster GmbH",
+            "tax_number": "123/456/78910",
+            "company_city": "Berlin",
+            "company_country": "DE",
+            "phone_number": "+49301234567",
+        }
+    )
+    assert fields["business_type"] == "company"
+    assert fields["company"]["structure"] == "private_corporation"
+    assert fields["company"]["tax_id"] == "123/456/78910"
+    assert fields["company"]["phone"] == "+49301234567"
+    assert "individual" not in fields
 
 
 def test_account_holder_auto_derived() -> None:

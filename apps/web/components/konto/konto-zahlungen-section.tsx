@@ -111,11 +111,13 @@ export function KontoZahlungenSection() {
           die Aktivierung.
         </p>
       ) : (
-        <PaymentsActivation
-          accountId={state.accountId}
-          initialStatus={state.status}
-          initialStatusError={state.statusError}
-        />
+        <>
+          <PaymentsActivation
+            accountId={state.accountId}
+            initialStatus={state.status}
+            initialStatusError={state.statusError}
+          />
+        </>
       )}
     </section>
   );

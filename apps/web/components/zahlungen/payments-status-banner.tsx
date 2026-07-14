@@ -31,8 +31,10 @@ export async function PaymentsStatusBanner() {
     // Voll aktiviert → kein Banner.
     return null;
   }
-  // Account vorhanden, aber noch nicht freigeschaltet → offene Requirements zeigen.
-  return <Banner variant="incomplete" detail={status.data.requirements.join(", ")} />;
+  // Account vorhanden, aber noch nicht freigeschaltet. Rohe Stripe-Pfade
+  // (z. B. „individual.dob.day") NICHT anzeigen — der Nutzer kann damit nichts
+  // anfangen; der Banner-Text erklärt es bereits, Details pflegt er in /konto.
+  return <Banner variant="incomplete" />;
 }
 
 const COPY: Record<Variant, { color: string; title: string; body: string }> = {

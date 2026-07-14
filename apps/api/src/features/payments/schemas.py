@@ -107,3 +107,45 @@ class ExternalAccountRequest(BaseModel):
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"
+
+
+# --- Diagnose (sichtbares System-/Stripe-Debugging) -------------------------
+class DiagnosticCheck(BaseModel):
+    """Ein einzelner Health-Check (Redis/DB/Stripe) mit Klartext-Ergebnis."""
+
+    name: str
+    ok: bool
+    detail: str
+    duration_ms: int | None = None
+
+
+class StripeAccountDiagnostics(BaseModel):
+    """Vollständiger, roher Stripe-Connect-Status DIESES Tenants — damit sichtbar
+    ist, was Stripe WIRKLICH verlangt (nicht nur eine Ampel)."""
+
+    account_id: str | None = None
+    charges_enabled: bool = False
+    payouts_enabled: bool = False
+    details_submitted: bool = False
+    disabled_reason: str | None = None
+    currently_due: list[str] = []
+    past_due: list[str] = []
+    eventually_due: list[str] = []
+    pending_verification: list[str] = []
+    errors: list[str] = []
+
+
+class CountryRequirements(BaseModel):
+    """Pflicht-/Zusatzfelder pro Land live aus Stripe country_specs."""
+
+    country: str
+    individual_minimum: list[str] = []
+    individual_additional: list[str] = []
+    company_minimum: list[str] = []
+    company_additional: list[str] = []
+
+
+class PaymentsDiagnostics(BaseModel):
+    checks: list[DiagnosticCheck]
+    stripe_account: StripeAccountDiagnostics | None = None
+    country_requirements: CountryRequirements | None = None

@@ -17,6 +17,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LabelHint } from "@/components/ui/label-hint";
 import { NativeSelect } from "@/components/ui/native-select";
+import {
+  accountTypeForLegalForm,
+  legalFormsForCountry,
+} from "@/lib/legal-forms";
 import { PhoneInput } from "@/components/ui/phone-input";
 import { RichTextEditor } from "@/components/ui/rich-text-editor";
 import {
@@ -52,6 +56,9 @@ export default function ProfilPage() {
   const [accountType, setAccountType] = useState<"individual" | "company">(
     "individual",
   );
+  // Konkrete Rechtsform (GmbH, Einzelunternehmen, SARL, …) — landesabhängig.
+  // Sie bestimmt serverseitig den Stripe-business_type; "" = noch nicht gewählt.
+  const [legalForm, setLegalForm] = useState("");
 
   // --- Rechnungskontakt / Firma (vorher im Dialog, jetzt inline) ---
   const [companyName, setCompanyName] = useState("");
@@ -108,6 +115,7 @@ export default function ProfilPage() {
       if (s("ownerDob")) setOwnerDob(s("ownerDob"));
       const at = s("accountType");
       if (at === "individual" || at === "company") setAccountType(at);
+      if (s("legalForm")) setLegalForm(s("legalForm"));
       // Firma / Rechnungskontakt
       if (s("companyName")) setCompanyName(s("companyName"));
       if (s("companyStreet")) setStreet(s("companyStreet"));
@@ -132,6 +140,16 @@ export default function ProfilPage() {
       active = false;
     };
   }, []);
+
+  // accountType folgt IMMER aus der gewählten Rechtsform (individual/company/
+  // non_profit) — der Nutzer wählt die konkrete Form, nicht den groben Typ. So
+  // wird ein Einzelunternehmen NIE fälschlich als company an Stripe gemeldet.
+  useEffect(() => {
+    if (!legalForm) return;
+    const t = accountTypeForLegalForm(country, legalForm);
+    // non_profit läuft KYC-seitig wie company (Firmenname/Person nötig).
+    setAccountType(t === "individual" ? "individual" : "company");
+  }, [legalForm, country]);
 
   // Kontoinhaber automatisch vorbefüllen, solange der Nutzer ihn nicht manuell
   // gesetzt hat: Firma → Firmenname, Einzelperson → Vor+Nachname. So stimmt der
@@ -164,6 +182,7 @@ export default function ProfilPage() {
       phoneNumber: phone || undefined,
       website: website || undefined,
       accountType,
+      legalForm: legalForm || undefined,
       ownerDob: ownerDob || undefined,
       // Firma / Rechnungskontakt
       companyName: issuerName || undefined,
@@ -276,9 +295,9 @@ export default function ProfilPage() {
 
         <Separator />
 
-        {/* Kontaktdaten — EIN Abschnitt, in logischer Reihenfolge:
-            1) Kontotyp (bestimmt alles Weitere) → 2) Wer (Firma/Person) →
-            3) Adresse → 4) Kontakt → 5) Steuer → 6) Bank → 7) Sonstiges. */}
+        {/* Kontaktdaten — in belegter Reihenfolge (Stripe country→business_type→
+            entity, Baymard Adress-Regeln): Unternehmen → Person → Adresse →
+            Kontakt → Steuer → Bank. Jede Gruppe mit eigener Überschrift. */}
         <section className="flex flex-col gap-5">
           <div className="flex flex-col gap-1">
             <h3 className="font-display text-lg font-extrabold">Kontaktdaten</h3>
@@ -288,21 +307,31 @@ export default function ProfilPage() {
             </p>
           </div>
 
-          {/* 1) Kontotyp + (bei Firma) Firmenname — Kontotyp entscheidet, ob
-              ein Firmenname relevant ist. Bei Einzelperson füllt Kontotyp die
-              Zeile allein; bei Firma steht der Firmenname daneben. */}
+          {/* Gruppe A — Unternehmen: Rechtsform bestimmt den Stripe-Kontotyp
+              (Einzelunternehmer=individual, GmbH/SARL/…=company, Verein=non_profit).
+              Das Land gehört zur Adresse (Gruppe C). */}
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Unternehmen
+          </p>
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="accountType">Kontotyp</Label>
-              <NativeSelect
-                id="accountType"
-                value={accountType}
-                onChange={(e) =>
-                  setAccountType(e.target.value as "individual" | "company")
-                }
+              <LabelHint
+                htmlFor="legalForm"
+                hint="Bestimmt die Zahlungsfreischaltung (Stripe). Einzelunternehmer benötigen keine Firmendaten."
               >
-                <option value="individual">Einzelperson</option>
-                <option value="company">Firma</option>
+                Rechtsform <span className="text-destructive">*</span>
+              </LabelHint>
+              <NativeSelect
+                id="legalForm"
+                value={legalForm}
+                onChange={(e) => setLegalForm(e.target.value)}
+              >
+                <option value="">Bitte wählen …</option>
+                {legalFormsForCountry(country).map((f) => (
+                  <option key={f.key} value={f.key}>
+                    {f.label}
+                  </option>
+                ))}
               </NativeSelect>
             </div>
             {accountType === "company" && (
@@ -319,7 +348,15 @@ export default function ProfilPage() {
             )}
           </div>
 
-          {/* 2) Person — bei Firma die vertretungsberechtigte Person. */}
+          <Separator />
+
+          {/* Gruppe B — Person (Einzelunternehmer = die Person selbst; Firma =
+              gesetzlicher Vertreter). Geburtsdatum nur wegen KYC hier. */}
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            {accountType === "company"
+              ? "Verantwortliche Person"
+              : "Person"}
+          </p>
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="firstName">
@@ -368,7 +405,10 @@ export default function ProfilPage() {
 
           <Separator />
 
-          {/* 3) Adresse */}
+          {/* Gruppe C — Adresse (Straße vor PLZ/Stadt, Baymard). */}
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Adresse
+          </p>
           <div className="grid gap-5 sm:grid-cols-3">
             <div className="flex flex-col gap-1.5 sm:col-span-2">
               <Label htmlFor="street">Straße</Label>
@@ -431,7 +471,10 @@ export default function ProfilPage() {
 
           <Separator />
 
-          {/* 4) Kontakt */}
+          {/* Gruppe D — Kontakt. */}
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Kontakt
+          </p>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="email">E-Mail</Label>
             <Input
@@ -468,7 +511,10 @@ export default function ProfilPage() {
 
           <Separator />
 
-          {/* 5) Steuer */}
+          {/* Gruppe E — Steuer (Kleinunternehmer-Kennzeichen steuert USt-Satz). */}
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Steuer
+          </p>
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="vatId">{vatIdLabel(country)}</Label>
@@ -566,10 +612,13 @@ export default function ProfilPage() {
 
           <Separator />
 
-          {/* 6) Bank (Auszahlungen). Kontoinhaber automatisch vorbefüllt
-              (Firma → Firmenname, Einzelperson → Vor+Nachname), aber editierbar:
-              seit Okt 2025 gleicht die Bank bei jeder SEPA-Überweisung Name ↔
-              IBAN ab (Verification of Payee). */}
+          {/* Gruppe F — Bankverbindung/Auszahlung (bei Stripe stets am Ende).
+              Kontoinhaber automatisch vorbefüllt (Firma → Firmenname, Einzelperson
+              → Vor+Nachname), aber editierbar: seit Okt 2025 gleicht die Bank bei
+              jeder SEPA-Überweisung Name ↔ IBAN ab (Verification of Payee). */}
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            Bankverbindung
+          </p>
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="flex flex-col gap-1.5">
               <LabelHint

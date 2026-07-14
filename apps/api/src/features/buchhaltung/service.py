@@ -36,6 +36,7 @@ from .schemas import (
     QuoteUpdate,
     SliceHealth,
 )
+from .stripe_legal_form import business_type_for
 
 log = get_logger("nextdays.buchhaltung")
 
@@ -936,11 +937,15 @@ class BuchhaltungService:
             # würde ein zweites externes Konto anlegen).
             try:
                 payments = PaymentsService(service_client=self._db)
+                acct_id = existing[0]["stripe_account_id"]
                 fields = _connect_fields_from_profile(profile)
                 if fields:
-                    payments.update_connect_account(
-                        tenant_id, existing[0]["stripe_account_id"], fields
-                    )
+                    payments.update_connect_account(tenant_id, acct_id, fields)
+                # company/non_profit: Vertreter über die Persons-API anlegen
+                # (bei individual gibt _company_representative_from_profile None).
+                rep = _company_representative_from_profile(profile)
+                if rep:
+                    payments.upsert_company_representative(tenant_id, acct_id, rep)
             except PaymentsError as exc:
                 log.warning(
                     "connect_account_sync_failed",
@@ -958,7 +963,11 @@ class BuchhaltungService:
             log.info("connect_account_skipped_incomplete", tenant_id=tenant_id)
             return
 
-        account_type = profile.get("account_type") or "individual"
+        # business_type aus der Rechtsform ableiten (EU-weit) — nicht der grobe
+        # account_type, damit ein Einzelunternehmen als individual angelegt wird.
+        derived_business_type, _structure = business_type_for(
+            profile.get("legal_form"), profile.get("account_type")
+        )
         try:
             payments = PaymentsService(service_client=self._db)
             account = payments.create_connect_account(
@@ -966,7 +975,7 @@ class BuchhaltungService:
                     email=email,
                     country=country,
                     tenant_id=tenant_id,
-                    business_type=account_type,
+                    business_type=derived_business_type,
                 )
             )
             self._db.table("tenant_billing_profile").update(
@@ -980,6 +989,12 @@ class BuchhaltungService:
                 account.stripe_account_id,
                 _connect_fields_from_profile(profile),
             )
+            # company/non_profit: Vertreter über die Persons-API (individual → None).
+            rep = _company_representative_from_profile(profile)
+            if rep:
+                payments.upsert_company_representative(
+                    tenant_id, account.stripe_account_id, rep
+                )
             iban = profile.get("iban")
             holder = profile.get("account_holder") or _account_holder_from(profile)
             if iban and holder:
@@ -1482,6 +1497,52 @@ def _account_holder_from(profile: dict) -> str | None:
     return name or profile.get("legal_name") or None
 
 
+def _company_representative_from_profile(profile: dict) -> dict | None:
+    """Baut die Vertreter-Person (Persons-API) für company/non_profit-Accounts.
+    Bei business_type != individual MUSS die vertretungsberechtigte Person über
+    accounts.persons.create angelegt werden — sie deckt representative + director
+    + owner in Personalunion ab (Ein-Personen-Gesellschaft), zusammen mit den
+    *_provided-Flags. None bei individual oder ohne Personendaten."""
+    business_type, _structure = business_type_for(
+        profile.get("legal_form"), profile.get("account_type")
+    )
+    if business_type == "individual":
+        return None
+
+    street = profile.get("company_street")
+    house = profile.get("company_house_number")
+    line1 = " ".join(p for p in (street, house) if p) or None
+    address = {
+        "line1": line1,
+        "city": profile.get("company_city"),
+        "postal_code": profile.get("company_postal_code"),
+        "country": profile.get("company_country"),
+    }
+    address = {k: v for k, v in address.items() if v}
+    person = {
+        "first_name": profile.get("managing_director_first_name"),
+        "last_name": profile.get("managing_director_last_name"),
+        "email": profile.get("email"),
+        "phone": profile.get("phone_number"),
+    }
+    if address:
+        person["address"] = address
+    dob = _dob_parts(profile.get("owner_dob"))
+    if dob:
+        person["dob"] = dob
+    person = {k: v for k, v in person.items() if v}
+    if not person:
+        return None
+    person["relationship"] = {
+        "representative": True,
+        "director": True,
+        "owner": True,
+        "title": "Geschäftsführer",
+        "percent_ownership": 100,
+    }
+    return person
+
+
 def _connect_fields_from_profile(profile: dict) -> dict:
     """Baut das Stripe-Account-Update (`fields`) aus dem Firmenprofil — abhängig
     vom Kontotyp (Einzelperson vs. Firma). Nur vorhandene Felder (keine leeren/
@@ -1516,20 +1577,37 @@ def _connect_fields_from_profile(profile: dict) -> dict:
         person["dob"] = dob
     person = {k: v for k, v in person.items() if v}
 
-    account_type = profile.get("account_type") or "individual"
-    if account_type == "company":
-        company = {"name": profile.get("legal_name")}
+    # business_type + company.structure aus der RECHTSFORM ableiten (EU-weit,
+    # recherchiert/verifiziert) — NICHT pauschal aus dem groben account_type. Ein
+    # Einzelunternehmen ist Stripe-`individual`, keine Firma mit Vertretern.
+    business_type, structure = business_type_for(
+        profile.get("legal_form"), profile.get("account_type")
+    )
+    fields["business_type"] = business_type
+
+    if business_type == "individual":
+        # Genau EINE Person: Stripe erstellt das Person-Objekt AUTOMATISCH aus
+        # individual.* — kein representative/directors/owners (die gibt es beim
+        # Einzelunternehmer nicht). id_number ist für DE nicht initial Pflicht.
+        if person:
+            fields["individual"] = person
+    else:
+        # company / non_profit: Firmen-Ebene. name + address + phone + tax_id.
+        company: dict = {"name": profile.get("legal_name")}
+        if structure:
+            company["structure"] = structure
         if address:
             company["address"] = address
-        company = {k: v for k, v in company.items() if v}
+        if profile.get("phone_number"):
+            company["phone"] = profile["phone_number"]
+        if profile.get("tax_number"):
+            company["tax_id"] = profile["tax_number"]
+        company = {k: v for k, v in company.items() if v not in (None, "")}
         if company:
             fields["company"] = company
-        if person:
-            # Bei Firmen ist die Person der Vertreter (representative).
-            person["relationship"] = {"representative": True, "title": "Geschäftsführer"}
-            fields["individual"] = person
-    elif person:
-        fields["individual"] = person
+        # WICHTIG: Bei company/non_profit gehen die Personen (representative/
+        # directors/owners) NICHT ins Account-Update, sondern über die Persons-API
+        # (accounts.persons.create) — separater Schritt im Payments-Service.
 
     business_profile = {"name": profile.get("legal_name")}
     if profile.get("website"):

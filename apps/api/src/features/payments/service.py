@@ -32,7 +32,11 @@ from .schemas import (
     ConnectAccountCreate,
     ConnectAccountResponse,
     ConnectAccountStatus,
+    CountryRequirements,
+    DiagnosticCheck,
+    PaymentsDiagnostics,
     SliceHealth,
+    StripeAccountDiagnostics,
 )
 from .stripe_client import StripeNotConfiguredError, get_stripe
 
@@ -103,6 +107,144 @@ class PaymentsService:
 
     def health(self) -> SliceHealth:
         return SliceHealth(slice=self.slice_name)
+
+    def country_requirements(self, country: str) -> dict[str, Any]:
+        """Pflicht-/Zusatzfelder pro Land LIVE aus Stripe (GET /country_specs) —
+        kein Hardcode. Getrennt nach business_type (individual/company) und
+        minimum/additional. Quelle der Wahrheit für „welche KYC-Felder sammeln"."""
+        with _stripe_errors():
+            spec = self._stripe.v1.country_specs.retrieve(country.upper())
+        vf = getattr(spec, "verification_fields", None) or {}
+
+        def _fields(entity: str) -> dict[str, list[str]]:
+            block = vf.get(entity) if isinstance(vf, dict) else getattr(vf, entity, None)
+            if block is None:
+                return {"minimum": [], "additional": []}
+            get = block.get if isinstance(block, dict) else lambda k: getattr(block, k, None)
+            return {
+                "minimum": list(get("minimum") or []),
+                "additional": list(get("additional") or []),
+            }
+
+        return {
+            "country": country.upper(),
+            "individual": _fields("individual"),
+            "company": _fields("company"),
+        }
+
+    def diagnostics(self, ctx: AuthContext) -> PaymentsDiagnostics:
+        """Sichtbares System-/Stripe-Debugging: pingt Redis, DB und Stripe und
+        liest den ROHEN Stripe-Connect-Status dieses Tenants (was Stripe wirklich
+        verlangt). Jeder Check ist Klartext (kein roher Code) — damit sofort
+        sichtbar ist, WAS klemmt (z. B. Redis-Timeout → 503 auf accept-tos)."""
+        import time as _time
+
+        checks: list[DiagnosticCheck] = []
+
+        # 1) Redis (Rate-Limiter/Job-Queue). Timeout kurz halten (wie Limiter).
+        t0 = _time.perf_counter()
+        try:
+            import redis as _redis  # sync-Client nur für den Diagnose-Ping
+
+            settings = get_settings()
+            client = _redis.from_url(
+                settings.redis_url, socket_timeout=1.0, socket_connect_timeout=1.0
+            )
+            client.ping()
+            client.close()
+            checks.append(DiagnosticCheck(
+                name="Redis", ok=True, detail="erreichbar (ping ok)",
+                duration_ms=int((_time.perf_counter() - t0) * 1000),
+            ))
+        except Exception as exc:  # noqa: BLE001 - Diagnose darf nie werfen
+            checks.append(DiagnosticCheck(
+                name="Redis", ok=False,
+                detail=f"NICHT erreichbar: {exc} — Rate-Limiter sperrt fail-closed (503).",
+                duration_ms=int((_time.perf_counter() - t0) * 1000),
+            ))
+
+        # 2) Datenbank (Supabase/Kong).
+        t0 = _time.perf_counter()
+        try:
+            db = self._db_or_fail()
+            db.table("tenant_billing_profile").select("tenant_id").limit(1).execute()
+            checks.append(DiagnosticCheck(
+                name="Datenbank", ok=True, detail="erreichbar",
+                duration_ms=int((_time.perf_counter() - t0) * 1000),
+            ))
+        except Exception as exc:  # noqa: BLE001
+            checks.append(DiagnosticCheck(
+                name="Datenbank", ok=False, detail=f"NICHT erreichbar: {exc}",
+                duration_ms=int((_time.perf_counter() - t0) * 1000),
+            ))
+
+        # 3) Stripe erreichbar + konfiguriert.
+        t0 = _time.perf_counter()
+        try:
+            self._stripe.v1.accounts.list(params={"limit": 1})
+            checks.append(DiagnosticCheck(
+                name="Stripe", ok=True, detail="erreichbar (API-Key gültig)",
+                duration_ms=int((_time.perf_counter() - t0) * 1000),
+            ))
+        except Exception as exc:  # noqa: BLE001
+            checks.append(DiagnosticCheck(
+                name="Stripe", ok=False, detail=f"Problem: {exc}",
+                duration_ms=int((_time.perf_counter() - t0) * 1000),
+            ))
+
+        # 4) Roher Stripe-Connect-Status dieses Tenants (was fehlt WIRKLICH?).
+        stripe_acct: StripeAccountDiagnostics | None = None
+        account_country: str | None = None
+        try:
+            db, tenant_id = self._require(ctx)
+            row = (
+                db.table("tenant_billing_profile")
+                .select("stripe_account_id")
+                .eq("tenant_id", tenant_id)
+                .limit(1)
+                .execute()
+            ).data
+            acct_id = row[0].get("stripe_account_id") if row else None
+            if acct_id:
+                account = self._stripe.v1.accounts.retrieve(acct_id)
+                account_country = getattr(account, "country", None)
+                req = account.requirements
+                stripe_acct = StripeAccountDiagnostics(
+                    account_id=account.id,
+                    charges_enabled=bool(account.charges_enabled),
+                    payouts_enabled=bool(account.payouts_enabled),
+                    details_submitted=bool(account.details_submitted),
+                    disabled_reason=req.disabled_reason,
+                    currently_due=list(req.currently_due or []),
+                    past_due=list(req.past_due or []),
+                    eventually_due=list(req.eventually_due or []),
+                    pending_verification=list(req.pending_verification or []),
+                    errors=[
+                        f"{e.get('requirement')}: {e.get('reason')}"
+                        for e in (req.errors or [])
+                    ],
+                )
+        except Exception as exc:  # noqa: BLE001 - Diagnose robust halten
+            stripe_acct = StripeAccountDiagnostics(errors=[f"Status nicht lesbar: {exc}"])
+
+        # Pflichtfelder des Account-Landes live aus Stripe (kein Hardcode).
+        country_req: CountryRequirements | None = None
+        try:
+            if account_country:
+                cr = self.country_requirements(account_country)
+                country_req = CountryRequirements(
+                    country=cr["country"],
+                    individual_minimum=cr["individual"]["minimum"],
+                    individual_additional=cr["individual"]["additional"],
+                    company_minimum=cr["company"]["minimum"],
+                    company_additional=cr["company"]["additional"],
+                )
+        except Exception:  # noqa: BLE001 - Diagnose robust halten
+            country_req = None
+
+        return PaymentsDiagnostics(
+            checks=checks, stripe_account=stripe_acct, country_requirements=country_req
+        )
 
     def _require(self, ctx: AuthContext) -> tuple[Client, str]:
         if not ctx.tenant_id:
@@ -201,6 +343,54 @@ class PaymentsService:
         with _stripe_errors():
             self._stripe.v1.accounts.update(stripe_account_id, params=fields)
         return self.get_connect_account_status(tenant_id, stripe_account_id)
+
+    def upsert_company_representative(
+        self, tenant_id: str, stripe_account_id: str, person: dict[str, Any]
+    ) -> None:
+        """Legt für einen company/non_profit-Account die vertretungsberechtigte
+        Person über die Persons-API an (Stripe verlangt das bei business_type!=
+        individual — sie kann NICHT im Account-Update stecken). Idempotent: eine
+        bestehende representative-Person wird aktualisiert statt dupliziert. Danach
+        die *_provided-Flags setzen (keine weiteren Personen), damit Stripe nicht
+        endlos directors/owners/executives nachfragt.
+
+        `person` = {first_name, last_name, email, phone, dob, address,
+        relationship:{representative, director, owner, title, percent_ownership}}.
+        """
+        self._require_own_connect_account(tenant_id, stripe_account_id)
+        if not person:
+            return
+        with _stripe_errors():
+            existing = self._stripe.v1.accounts.persons.list(
+                stripe_account_id, params={"limit": 100}
+            )
+            rep_id: str | None = None
+            for p in existing.data:
+                rel = getattr(p, "relationship", None)
+                if rel and getattr(rel, "representative", False):
+                    rep_id = p.id
+                    break
+            if rep_id:
+                self._stripe.v1.accounts.persons.update(
+                    stripe_account_id, rep_id, params=person
+                )
+            else:
+                self._stripe.v1.accounts.persons.create(
+                    stripe_account_id, params=person
+                )
+            # Keine weiteren Personen vorhanden → attestieren (sonst bleibt
+            # requirements offen). Die eine Person deckt representative/director/
+            # owner in Personalunion ab (Ein-Personen-GmbH/UG).
+            self._stripe.v1.accounts.update(
+                stripe_account_id,
+                params={
+                    "company": {
+                        "directors_provided": True,
+                        "executives_provided": True,
+                        "owners_provided": True,
+                    }
+                },
+            )
 
     def accept_tos(
         self, tenant_id: str, stripe_account_id: str, *, ip: str, when: int

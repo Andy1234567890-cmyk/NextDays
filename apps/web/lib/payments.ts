@@ -132,6 +132,38 @@ export async function getConnectStatus(
   );
 }
 
+// --- Diagnose (sichtbares System-/Stripe-Debugging) -------------------------
+export type DiagnosticCheck = {
+  name: string;
+  ok: boolean;
+  detail: string;
+  duration_ms: number | null;
+};
+
+export type StripeAccountDiagnostics = {
+  account_id: string | null;
+  charges_enabled: boolean;
+  payouts_enabled: boolean;
+  details_submitted: boolean;
+  disabled_reason: string | null;
+  currently_due: string[];
+  past_due: string[];
+  eventually_due: string[];
+  pending_verification: string[];
+  errors: string[];
+};
+
+export type PaymentsDiagnostics = {
+  checks: DiagnosticCheck[];
+  stripe_account: StripeAccountDiagnostics | null;
+};
+
+export async function getPaymentsDiagnostics(): Promise<
+  Result<PaymentsDiagnostics>
+> {
+  return call<PaymentsDiagnostics>("/diagnostics");
+}
+
 // Geschäfts-/Inhaberdaten an Stripe übergeben (Account-Update). Gibt den
 // aktualisierten Status zurück.
 export async function updateConnectAccount(

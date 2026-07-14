@@ -29,6 +29,7 @@ from .schemas import (
     ConnectAccountUpdate,
     DepositCaptureRequest,
     ExternalAccountRequest,
+    PaymentsDiagnostics,
     RefundRequest,
     SliceHealth,
 )
@@ -50,6 +51,18 @@ _billing = Annotated[AuthContext, Depends(require_permission(Capability.MANAGE_B
 @router.get("/health", response_model=SliceHealth)
 def health(service: PaymentsServiceDep) -> SliceHealth:
     return service.health()
+
+
+@router.get("/diagnostics", response_model=PaymentsDiagnostics)
+def diagnostics(
+    service: PaymentsServiceDep, ctx: _billing
+) -> PaymentsDiagnostics:
+    """Sichtbares System-/Stripe-Debugging: Redis/DB/Stripe-Erreichbarkeit +
+    roher Stripe-Connect-Status (was Stripe wirklich verlangt)."""
+    try:
+        return service.diagnostics(ctx)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 # --- Stripe Connect (Custom, white-label) -------------------------------------

@@ -44,6 +44,49 @@ function realtimeClient(): SupabaseClient {
 // subscribe()". Jede Hook-Instanz bekommt daher ihren eigenen Channel.
 let channelSeq = 0;
 
+// --- Sichtbares Realtime-Debugging ------------------------------------------
+// Register aller aktiven Subscriptions: Status (SUBSCRIBED/CHANNEL_ERROR/…),
+// empfangene Events, letzte Aktivität. Das Debug-Overlay (RealtimeDebugPanel)
+// liest hier und macht sichtbar, ob Realtime WIRKLICH verbindet und Events
+// ankommen — statt im Dunkeln zu raten.
+export type RealtimeSubState = {
+  uid: number;
+  table: string;
+  filter?: string;
+  status: string; // "connecting" | "SUBSCRIBED" | "CHANNEL_ERROR" | "TIMED_OUT" | "CLOSED"
+  events: number;
+  hasToken: boolean;
+  lastEventAt: number | null;
+  error?: string;
+};
+
+const _rtRegistry = new Map<number, RealtimeSubState>();
+const _rtListeners = new Set<() => void>();
+
+function _rtNotify(): void {
+  for (const l of _rtListeners) l();
+}
+
+export function _rtUpdate(uid: number, patch: Partial<RealtimeSubState>): void {
+  const cur = _rtRegistry.get(uid);
+  if (!cur) return;
+  _rtRegistry.set(uid, { ...cur, ...patch });
+  _rtNotify();
+}
+
+/** Snapshot aller aktiven Subscriptions (für das Debug-Overlay). */
+export function getRealtimeDebugState(): RealtimeSubState[] {
+  return [..._rtRegistry.values()].sort((a, b) => a.uid - b.uid);
+}
+
+/** Änderungen am Register abonnieren (Debug-Overlay). Gibt eine Unsub-Funktion. */
+export function subscribeRealtimeDebug(listener: () => void): () => void {
+  _rtListeners.add(listener);
+  return () => {
+    _rtListeners.delete(listener);
+  };
+}
+
 /**
  * Roher postgres_changes-Payload, wie ihn supabase-js liefert. `eventType` ist
  * INSERT|UPDATE|DELETE; `new` trägt die neue Zeile (INSERT/UPDATE), `old` die
@@ -121,6 +164,12 @@ export function useRealtime<T = Record<string, unknown>>({
     const supabase = realtimeClient();
     let channel: ReturnType<typeof supabase.channel> | null = null;
     let cancelled = false;
+    // Debug: diese Subscription im Register anmelden (Overlay macht sie sichtbar).
+    _rtRegistry.set(uid, {
+      uid, table, filter, status: "connecting", events: 0,
+      hasToken: false, lastEventAt: null,
+    });
+    _rtNotify();
     // Debounce NUR für den onChange-Vollreload-Modus: viele Events kurz
     // hintereinander → ein onChange. Der onEvent-Modus feuert un-debounced.
     let timer: ReturnType<typeof setTimeout> | null = null;
@@ -148,6 +197,7 @@ export function useRealtime<T = Record<string, unknown>>({
       if (token) {
         await supabase.realtime.setAuth(token);
       }
+      _rtUpdate(uid, { hasToken: !!token });
       if (cancelled) return;
 
       channel = supabase
@@ -156,6 +206,12 @@ export function useRealtime<T = Record<string, unknown>>({
           "postgres_changes",
           { event: "*", schema: "public", table, ...(filter ? { filter } : {}) },
           (payload) => {
+            // Debug: jedes empfangene Event zählen (sichtbar im Overlay).
+            const cur = _rtRegistry.get(uid);
+            _rtUpdate(uid, {
+              events: (cur?.events ?? 0) + 1,
+              lastEventAt: Date.now(),
+            });
             // Inkrementeller Modus hat Vorrang: rohen Payload einzeln durchreichen.
             if (evCb.current) {
               evCb.current(payload as unknown as RealtimePayload<T>);
@@ -164,13 +220,23 @@ export function useRealtime<T = Record<string, unknown>>({
             fireChange();
           },
         )
-        .subscribe();
+        .subscribe((status, err) => {
+          // Debug: den ECHTEN Subscription-Status festhalten. Bisher wurde er
+          // verworfen — deshalb sah man nie, ob Realtime verbindet oder scheitert.
+          _rtUpdate(uid, {
+            status,
+            error: err ? String(err.message ?? err) : undefined,
+          });
+        });
     })();
 
     return () => {
       cancelled = true;
       if (timer) clearTimeout(timer);
       if (channel) supabase.removeChannel(channel);
+      // Debug: Subscription aus dem Register nehmen.
+      _rtRegistry.delete(uid);
+      _rtNotify();
     };
   }, [table, filter, enabled, debounceMs, uid]);
 }
