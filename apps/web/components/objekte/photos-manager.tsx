@@ -25,7 +25,6 @@ import {
   deletePropertyPhoto,
   listPropertyPhotos,
   reorderPropertyPhotos,
-  resyncProperty,
   updatePropertyPhoto,
   uploadPropertyPhoto,
 } from "@/lib/properties";
@@ -99,10 +98,14 @@ type UploadState = { name: string; error: string | null; busy: boolean };
 export function PhotosManager({ propertyId }: { propertyId: string }) {
   const t = useTranslations("fotos");
   const [photos, setPhotos] = useState<PropertyPhoto[]>([]);
-  const [resyncing, setResyncing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dragOver, setDragOver] = useState(false);
   const [uploads, setUploads] = useState<UploadState[]>([]);
+  // Fehlgeschlagene Uploads (Datei + Grund) für das Fehler-Popup — bleibt
+  // offen, bis der Nutzer es schließt (Toasts/Inline-Zeilen verschwinden).
+  const [failedUploads, setFailedUploads] = useState<
+    { name: string; error: string }[]
+  >([]);
   const [dragId, setDragId] = useState<string | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -146,11 +149,14 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
     if (files.length === 0) return;
     setUploads(files.map((f) => ({ name: f.name, error: null, busy: true })));
     const added: PropertyPhoto[] = [];
+    const failures: { name: string; error: string }[] = [];
     for (let i = 0; i < files.length; i += 1) {
-      const fail = (error: string) =>
+      const fail = (error: string) => {
+        failures.push({ name: files[i].name, error });
         setUploads((prev) =>
           prev.map((u, idx) => (idx === i ? { ...u, busy: false, error } : u)),
         );
+      };
       let file = files[i];
       const badType = validateType(file);
       if (badType) {
@@ -196,6 +202,7 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
           prev.map((u, idx) => (idx === i ? { ...u, busy: false } : u)),
         );
       } else {
+        failures.push({ name: files[i].name, error: res.error });
         setUploads((prev) =>
           prev.map((u, idx) =>
             idx === i ? { ...u, busy: false, error: res.error } : u,
@@ -212,8 +219,11 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
       });
       toast.success(t("uploaded", { count: added.length }));
     }
+    // Fehler prominent im Popup zeigen (bleibt offen, bis der Nutzer schließt);
+    // die Inline-Zeilen räumen sich danach komplett auf.
+    if (failures.length > 0) setFailedUploads(failures);
     window.setTimeout(() => {
-      setUploads((prev) => prev.filter((u) => u.error));
+      setUploads((prev) => prev.filter((u) => u.busy));
     }, 2500);
   }
 
@@ -315,35 +325,11 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
   const cover = photos.find((p) => p.is_cover) ?? null;
   const rest = photos.filter((p) => !p.is_cover);
 
-  async function resyncToPortals() {
-    setResyncing(true);
-    const res = await resyncProperty(propertyId);
-    setResyncing(false);
-    if (res.ok) toast.success(t("resyncDone"));
-    else toast.error(res.error);
-  }
-
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex flex-col gap-1">
-          <h1 className="font-display text-3xl font-extrabold">{t("title")}</h1>
-          <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
-        </div>
-        {photos.length > 0 && (
-          <Button
-            variant="outline"
-            onClick={() => void resyncToPortals()}
-            disabled={resyncing}
-            className="gap-2"
-          >
-            <Icon
-              icon={resyncing ? "ph:spinner" : "ph:upload-simple"}
-              className={`size-4 ${resyncing ? "animate-spin" : ""}`}
-            />
-            {t("resyncCta")}
-          </Button>
-        )}
+      <div className="flex flex-col gap-1">
+        <h1 className="font-display text-3xl font-extrabold">{t("title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("subtitle")}</p>
       </div>
 
       {/* Multi-Upload-Zone */}
@@ -400,6 +386,51 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
               {u.error && <span className="text-destructive">— {u.error}</span>}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Fehler-Popup: fehlgeschlagene Uploads mit Datei + Grund, bleibt offen
+          bis zum Schließen — der Nutzer kann die Dateien korrigieren und neu
+          hochladen. */}
+      {failedUploads.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/40"
+            role="presentation"
+            onClick={() => setFailedUploads([])}
+          />
+          <div className="relative z-10 flex w-full max-w-lg flex-col gap-4 rounded-(--radius) bg-card p-6 shadow-xl">
+            <div className="flex items-start gap-3">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-destructive/10">
+                <Icon
+                  icon="ph:warning-circle"
+                  className="size-5 text-destructive"
+                />
+              </span>
+              <div className="flex flex-col gap-1">
+                <h2 className="font-display text-lg font-extrabold">
+                  {t("errorDialogTitle")}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {t("errorDialogHint")}
+                </p>
+              </div>
+            </div>
+            <ul className="flex max-h-60 flex-col gap-2 overflow-y-auto rounded-(--radius) border border-border p-3">
+              {failedUploads.map((f, i) => (
+                // eslint-disable-next-line react/no-array-index-key
+                <li key={`${f.name}-${i}`} className="flex flex-col text-sm">
+                  <span className="truncate font-medium">{f.name}</span>
+                  <span className="text-destructive">{f.error}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="flex justify-end">
+              <Button onClick={() => setFailedUploads([])}>
+                {t("errorDialogClose")}
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -522,16 +553,26 @@ function PhotoCard({
     <div className="flex flex-col overflow-hidden rounded-(--radius) border border-border bg-card">
       <div
         draggable
-        onDragStart={() => setDragId(photo.id)}
+        onDragStart={(e) => {
+          // setData ist Pflicht, sonst startet der Drag in Firefox/Safari nicht.
+          e.dataTransfer.setData("text/plain", photo.id);
+          e.dataTransfer.effectAllowed = "move";
+          setDragId(photo.id);
+        }}
         onDragEnd={() => {
           setDragId(null);
           setOverId(null);
         }}
         onDragOver={(e) => {
           e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
           if (overId !== photo.id) setOverId(photo.id);
         }}
-        onDrop={() => onDropReorder(photo.id)}
+        onDrop={(e) => {
+          // Sonst öffnet der Browser die gezogene Bild-URL.
+          e.preventDefault();
+          onDropReorder(photo.id);
+        }}
         className={`group relative cursor-grab overflow-hidden bg-muted active:cursor-grabbing ${
           large ? "aspect-[21/9]" : "aspect-[4/3]"
         } ${
@@ -544,6 +585,7 @@ function PhotoCard({
         <img
           src={photo.url}
           alt={value}
+          draggable={false}
           className="h-full w-full object-cover"
         />
 

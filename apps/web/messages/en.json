@@ -591,7 +591,10 @@
     "saving": "Saving …",
     "resyncCta": "Send to booking portals",
     "resyncDone": "Sent to the booking portals.",
-    "authorPlaceholder": "Author / photographer (optional)"
+    "authorPlaceholder": "Author / photographer (optional)",
+    "errorDialogTitle": "Some photos could not be uploaded",
+    "errorDialogHint": "Please fix the files and upload them again.",
+    "errorDialogClose": "Close"
   },
   "owners": {
     "title": "Owners",

@@ -591,7 +591,10 @@
     "saving": "Speichert …",
     "resyncCta": "An Buchungsportale übertragen",
     "resyncDone": "An die Buchungsportale übertragen.",
-    "authorPlaceholder": "Urheber / Fotograf (optional)"
+    "authorPlaceholder": "Urheber / Fotograf (optional)",
+    "errorDialogTitle": "Einige Fotos konnten nicht hochgeladen werden",
+    "errorDialogHint": "Bitte korrigiere die Dateien und lade sie erneut hoch.",
+    "errorDialogClose": "Schließen"
   },
   "owners": {
     "title": "Eigentümer",
