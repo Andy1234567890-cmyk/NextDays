@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
+from uuid import uuid4
 
 from postgrest.exceptions import APIError
 from supabase import Client
@@ -53,14 +54,17 @@ class BookingsSyncMixin:
         )
         return self._sync_feed(db, tenant_by_property)
 
-    # Advisory-Lock-Schlüssel für den kontoweiten Feed-Pull. Der Job-Dedup-Key
-    # koalesziert nur QUEUED-Jobs (Migration 0108) — er verhindert NICHT, dass
+    # Single-Flight über eine LEASE (sync_lease-Tabelle, RPC 0135): der Job-
+    # Dedup-Key koalesziert nur QUEUED-Jobs (0108) — er verhindert NICHT, dass
     # ein Webhook-Job neben einem bereits LAUFENDEN Feed-Job geclaimt wird.
     # Zwei parallele _sync_feed-Läufe auf demselben kontoweiten Feed würden sich
     # gegenseitig die Seiten wegacken und in den reservations-Unique-Index
-    # laufen. Ein pg_try_advisory-Lock erzwingt echtes Single-Flight (konstante
-    # Zufallszahl, nur für diesen Zweck reserviert).
-    _FEED_LOCK_KEY = 792143008
+    # laufen. BEWUSST KEIN pg_advisory_lock: über PostgREST gehört die Session
+    # dem Connection-Pool — der Lock leakte auf einem fremden Backend (Review-
+    # Befund). Die Lease ist reiner Datenzugriff (poolsicher) und heilt sich
+    # bei Crash über die Ablaufzeit selbst.
+    _FEED_LEASE_NAME = "channex_bookings_feed"
+    _FEED_LEASE_SECONDS = 600  # großzügig über der realen Feed-Laufzeit
 
     def sync_bookings_all(self) -> BookingSyncResponse:
         """Feed-Pull über ALLE Tenants (Worker-Job: Webhook-Trigger + Backstop-
@@ -68,32 +72,48 @@ class BookingsSyncMixin:
         Revisionen ohne aktives Mapping werden übersprungen und NICHT ge-ackt
         (Channex liefert sie erneut, bis das Mapping existiert).
 
-        Single-Flight: läuft bereits ein Feed-Pull, kehrt dieser sofort ohne
+        Single-Flight: hält ein anderer Lauf die Lease, kehrt dieser sofort ohne
         Arbeit zurück (der laufende erledigt alles offene; der nächste Tick holt
         etwaigen Rest)."""
         db = self._require_db()
-        got_lock = False
+        owner = f"feed-{uuid4()}"
+        # Drei Ausgänge des Acquire: (a) Lease bekommen → laufen + am Ende
+        # releasen. (b) Lease belegt (RPC intakt, data=false) → busy, NICHT
+        # doppelt laufen. (c) RPC kaputt (Exception) → fail-open laufen, aber
+        # OHNE Release-Anspruch (nichts freigeben, was uns nicht gehört —
+        # die Ablaufzeit heilt jede verwaiste Lease).
+        lease_owned = False
+        run_anyway = False
         try:
-            got_lock = bool(
+            lease_owned = bool(
                 db.rpc(
-                    "try_channex_feed_lock", {"p_key": self._FEED_LOCK_KEY}
+                    "try_acquire_sync_lease",
+                    {
+                        "p_name": self._FEED_LEASE_NAME,
+                        "p_seconds": self._FEED_LEASE_SECONDS,
+                        "p_owner": owner,
+                    },
                 ).execute().data
             )
-        except Exception as exc:  # noqa: BLE001 — Lock-RPC-Fehler nie fatal
-            log.warning("channex_feed_lock_rpc_failed", error=str(exc)[:200])
-            got_lock = True  # RPC kaputt → lieber laufen als Buchungen liegen lassen
-        if not got_lock:
-            log.info("channex_feed_lock_busy")
+        except Exception as exc:  # noqa: BLE001 — Lease-RPC-Fehler nie fatal
+            log.warning("channex_feed_lease_rpc_failed", error=str(exc)[:200])
+            run_anyway = True  # lieber laufen als Buchungen liegen lassen
+        if not lease_owned and not run_anyway:
+            log.info("channex_feed_lease_busy")
             return BookingSyncResponse()
         try:
             return self._sync_all_locked(db)
         finally:
-            try:
-                db.rpc(
-                    "release_channex_feed_lock", {"p_key": self._FEED_LOCK_KEY}
-                ).execute()
-            except Exception as exc:  # noqa: BLE001 — Unlock best effort
-                log.warning("channex_feed_unlock_failed", error=str(exc)[:200])
+            if lease_owned:
+                try:
+                    db.rpc(
+                        "release_sync_lease",
+                        {"p_name": self._FEED_LEASE_NAME, "p_owner": owner},
+                    ).execute()
+                except Exception as exc:  # noqa: BLE001 — Ablaufzeit heilt
+                    log.warning(
+                        "channex_feed_lease_release_failed", error=str(exc)[:200]
+                    )
 
     def _sync_all_locked(self, db: Client) -> BookingSyncResponse:
         rows = (
@@ -877,11 +897,16 @@ class BookingsSyncMixin:
         # Änderungen ab.
         recent_cutoff = (datetime.now(UTC) - timedelta(minutes=30)).isoformat()
         recent_push_days: set[str] = set()
+        # Skip-Kriterium: frisch gepushte Tage (created_at >= cutoff) ODER noch
+        # offene Push-Absichten (status=pending, egal wie alt) — bleibt ein Push
+        # >30 min pending (Channex-Ausfall), darf der Import den ALTEN Channex-
+        # Wert nicht über die frischere lokale Wahrheit spiegeln; der Outbox-
+        # Retry repariert nur Channex, nicht den lokalen Kalender.
         for r in (
             db.table("ari_outbox")
             .select("date_from, date_to")
             .eq("property_id", property_id)
-            .gte("created_at", recent_cutoff)
+            .or_(f"created_at.gte.{recent_cutoff},status.eq.pending")
             .execute()
         ).data or []:
             if r.get("date_from") and r.get("date_to"):

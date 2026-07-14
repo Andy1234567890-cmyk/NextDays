@@ -690,8 +690,8 @@ def test_property_attrs_includes_availability_settings() -> None:
         }
     )
     assert attrs["settings"]["cut_off_time"] == "20:00"
-    # state_length bleibt der 365-Tage-Init-Wert.
-    assert attrs["settings"]["state_length"] == 365
+    # state_length = 500 (Channex-Zertifizierung Test 1: 500-Tage-Full-Sync).
+    assert attrs["settings"]["state_length"] == 500
 
 
 def test_import_booking_creates_reservation_and_blocks_calendar() -> None:
@@ -1546,7 +1546,7 @@ def test_property_attrs_includes_settings() -> None:
     attrs = ChannelManagerService._property_attrs(
         {"city": "Kiel", "type_attributes": {"pricing": {"minPrice": 50, "maxPrice": 0}}}
     )
-    assert attrs["settings"]["state_length"] == 365
+    assert attrs["settings"]["state_length"] == 500
     assert attrs["settings"]["min_price"] == 50
     # maxPrice=0 → NICHT gesendet (kein erfundener Wert).
     assert "max_price" not in attrs["settings"]
@@ -1556,7 +1556,7 @@ def test_property_attrs_settings_without_pricing() -> None:
     attrs = ChannelManagerService._property_attrs({"city": "Kiel"})
     # Inventartage + fest gepinnte Autoupdate-Flags (PMS = Master); keine Preisgrenzen.
     assert attrs["settings"] == {
-        "state_length": 365,
+        "state_length": 500,
         "allow_availability_autoupdate_on_modification": False,
         "allow_availability_autoupdate_on_cancellation": False,
     }

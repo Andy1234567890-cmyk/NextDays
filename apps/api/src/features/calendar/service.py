@@ -795,11 +795,15 @@ class CalendarService:
         *,
         cta: bool | None = None,
         ctd: bool | None = None,
+        min_stay: int | None = None,
     ) -> int:
         """CTA/CTD-Restriktionen je Tag setzen (availability-Upsert pro Tag) und
         an Channex pushen. Nur gesetzte Felder ändern sich (None = unverändert).
-        availability-Zeilen werden wie bei Preis/Block auch für offene Tage
-        angelegt. Gibt Anzahl Tage zurück."""
+        `min_stay` wird — falls gesetzt — im SELBEN Channex-Call mitgepusht
+        (kombinierte Bulk-Aktion, Zertifizierung Test 7); die lokale Persistenz
+        des Min-Stay macht der Aufrufer (_set_min_stay). availability-Zeilen
+        werden wie bei Preis/Block auch für offene Tage angelegt. Gibt Anzahl
+        Tage zurück."""
         self._require_tenant_property(tenant_id, property_id)
         if cta is None and ctd is None:
             return 0
@@ -815,7 +819,9 @@ class CalendarService:
         self._db().table("availability").upsert(
             payload, on_conflict="property_id,date"
         ).execute()
-        self._push_channex_restrictions(property_id, rng.start, rng.end, cta, ctd)
+        self._push_channex_restrictions(
+            property_id, rng.start, rng.end, cta, ctd, min_stay=min_stay
+        )
         log.info(
             "calendar_set_restrictions",
             property_id=property_id, cta=cta, ctd=ctd, days=len(payload),
@@ -829,30 +835,42 @@ class CalendarService:
         end: date,
         cta: bool | None,
         ctd: bool | None,
+        *,
+        min_stay: int | None = None,
     ) -> None:
-        """CTA/CTD als ARI-Push-Job einreihen (Phase 2). KEIN coalesce
-        (zeitraum-spezifisch)."""
+        """CTA/CTD (+ optional Min-Stay, kombinierte Bulk-Aktion) als EINEN
+        ARI-Push-Job einreihen (Phase 2). KEIN coalesce (zeitraum-spezifisch)."""
         tenant_id = self._tenant_of(property_id)
         if tenant_id is None:
             return
+        fields: dict[str, object] = {
+            "date_from": start.isoformat(),
+            "date_to": (end - timedelta(days=1)).isoformat(),  # end exklusiv→inkl.
+            "closed_to_arrival": cta, "closed_to_departure": ctd,
+        }
+        if min_stay is not None:
+            fields["min_stay"] = min_stay
         try_enqueue_ari(
-            self._db(), tenant_id, property_id, "restrictions",
-            {"date_from": start.isoformat(),
-             "date_to": (end - timedelta(days=1)).isoformat(),  # end exklusiv→inkl.
-             "closed_to_arrival": cta, "closed_to_departure": ctd},
+            self._db(), tenant_id, property_id, "restrictions", fields,
         )
 
     # -- Bulk-Edit (mehrere Objekte × ein Zeitraum) ---------------------------
-    def _set_min_stay(self, property_id: str, rng: DateRange, min_stay: int) -> None:
+    def _set_min_stay(
+        self, property_id: str, rng: DateRange, min_stay: int,
+        *, push_channex: bool = True,
+    ) -> None:
         """Mindestaufenthalt des Objekts setzen (rate_plans, property-weit) und
         als Restriktion für den Zeitraum an Channex pushen. Per-Tag-Min-Stay
-        ist v2 — hier gilt der Wert objektweit (so wie der Rate-Plan)."""
+        ist v2 — hier gilt der Wert objektweit (so wie der Rate-Plan).
+        `push_channex=False`, wenn der Wert in einer kombinierten Bulk-Aktion
+        bereits mit CTA/CTD in EINEM Call gepusht wird (Test 7)."""
         self._db().table("rate_plans").update({"min_stay": min_stay}).eq(
             "property_id", property_id
         ).execute()
-        self._push_channex_rate(
-            property_id, rng.start, rng.end, None, min_stay=min_stay
-        )
+        if push_channex:
+            self._push_channex_rate(
+                property_id, rng.start, rng.end, None, min_stay=min_stay
+            )
 
     def bulk_edit(self, tenant_id: str, req: BulkEditRequest) -> BulkEditResult:
         """Preis/Min-Stay/Sperre/Verkaufsstopp über mehrere Objekte × Zeitraum
@@ -888,12 +906,23 @@ class CalendarService:
                 self.adjust_season_price_pct(
                     tenant_id, pid, req.range, req.price_adjust_pct
                 )
+            combined_restrictions = req.min_stay is not None and (
+                req.closed_to_arrival is not None
+                or req.closed_to_departure is not None
+            )
             if req.min_stay is not None:
-                self._set_min_stay(pid, req.range, req.min_stay)
+                # Bei kombinierter Aktion KEINEN separaten Min-Stay-Push — der
+                # Wert geht unten mit CTA/CTD in EINEM Channex-Call raus
+                # (Zertifizierung Test 7: eine Aktion = ein Request).
+                self._set_min_stay(
+                    pid, req.range, req.min_stay,
+                    push_channex=not combined_restrictions,
+                )
             if req.closed_to_arrival is not None or req.closed_to_departure is not None:
                 self.set_restrictions(
                     tenant_id, pid, req.range,
                     cta=req.closed_to_arrival, ctd=req.closed_to_departure,
+                    min_stay=req.min_stay if combined_restrictions else None,
                 )
 
         if req.block is True:

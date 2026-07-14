@@ -217,6 +217,12 @@ class RatesService:
         if not existing or existing[0]["properties"]["tenant_id"] != tenant_id:
             raise RateError("Preisplan nicht gefunden.", status_code=404)
         self._db().table("rate_plans").delete().eq("id", rate_plan_id).execute()
+        # Löschkette (Channex-Doku „break the chain"): Content-Sync einreihen —
+        # dessen Prune entfernt den verwaisten Channex-Rate-Plan (fail-closed,
+        # wenn er noch an einen Kanal gemappt ist) und schließt das Mapping.
+        try_enqueue_content_sync(
+            self._db(), tenant_id, existing[0]["property_id"]
+        )
         log.info("rate_plan_deleted", tenant_id=tenant_id, rate_plan_id=rate_plan_id)
 
     def _sync_property(

@@ -86,6 +86,15 @@ def _restriction_fields_from_payload(
             fields["closed_to_arrival"] = payload["closed_to_arrival"]
         if payload.get("closed_to_departure") is not None:
             fields["closed_to_departure"] = payload["closed_to_departure"]
+        # Kombinierte Bulk-Restriktionen (Test 7): Min-/Max-Stay/Preis können
+        # im selben Outbox-Payload liegen und werden mit rekonstruiert.
+        if payload.get("min_stay") is not None:
+            fields["min_stay_arrival"] = payload["min_stay"]
+            fields["min_stay_through"] = payload["min_stay"]
+        if payload.get("max_stay") is not None:
+            fields["max_stay"] = max(0, int(payload["max_stay"]))
+        if payload.get("rate_cents") is not None:
+            fields["rate"] = payload["rate_cents"]
         return fields
     return {}
 
@@ -777,23 +786,39 @@ class AriPushMixin:
         *,
         closed_to_arrival: bool | None = None,
         closed_to_departure: bool | None = None,
+        min_stay: int | None = None,
+        max_stay: int | None = None,
+        rate_cents: int | None = None,
     ) -> bool:
-        """CTA/CTD-Restriktionen für einen Zeitraum an Channex pushen (ALLE
-        Rate-Plans). Nur gesetzte Felder (None = unverändert). Rückgabe True =
-        Channex-Fehler/fehlendes Mapping (Job-Retry); die Restriktions-Outbox bleibt
-        der Backstop. No-op, wenn nicht verbunden. date_to inklusiv."""
+        """Kombinierte Restriktionen (CTA/CTD/Min-Stay/Max-Stay/Preis) für einen
+        Zeitraum in EINEM Channex-Call pushen (ALLE Rate-Plans). Nur gesetzte
+        Felder (None = unverändert) — eine UI-Aktion, die mehrere Restriktionen
+        zugleich setzt (Bulk-Update), erzeugt so EINEN Request statt mehrerer
+        (Channex-Zertifizierung Test 7). Rückgabe True = Channex-Fehler/
+        fehlendes Mapping (Job-Retry); die Restriktions-Outbox bleibt der
+        Backstop. No-op, wenn nicht verbunden. date_to inklusiv."""
         if not self._channex.is_configured or self._db is None:
-            return False
-        if closed_to_arrival is None and closed_to_departure is None:
             return False
         fields: dict[str, Any] = {}
         if closed_to_arrival is not None:
             fields["closed_to_arrival"] = closed_to_arrival
         if closed_to_departure is not None:
             fields["closed_to_departure"] = closed_to_departure
+        if min_stay is not None:
+            fields["min_stay_arrival"] = min_stay
+            fields["min_stay_through"] = min_stay
+        if max_stay is not None:
+            fields["max_stay"] = max(0, int(max_stay))
+        if rate_cents is not None:
+            fields["rate"] = rate_cents
+        if not fields:
+            return False
         payload = {
             "closed_to_arrival": closed_to_arrival,
             "closed_to_departure": closed_to_departure,
+            "min_stay": min_stay,
+            "max_stay": max_stay,
+            "rate_cents": rate_cents,
         }
         return self._push_fields_with_outbox(
             tenant_id, property_id, "cta_ctd", payload, fields, date_from, date_to,

@@ -483,10 +483,11 @@ class ContentSyncMixin:
         if content:
             attrs["content"] = content
 
-        # Property-Settings: Inventartage (passt zu unserem 365-Tage-Init) und
+        # Property-Settings: Inventartage (500 — Channex-Zertifizierung Test 1;
         # Min/Max-Preis aus dem Preise-Tab — Preisgrenzen nur senden, wenn der
         # Nutzer sie gesetzt hat (kein erfundener Default).
-        settings: dict[str, Any] = {"state_length": 365}
+        # Full-Sync und Preis-Resolver decken 500+ Tage lokale Wahrheit ab) und
+        settings: dict[str, Any] = {"state_length": 500}
         pricing = (prop_row.get("type_attributes") or {}).get("pricing") or {}
         min_price = pricing.get("minPrice")
         max_price = pricing.get("maxPrice")

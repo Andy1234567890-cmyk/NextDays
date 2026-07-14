@@ -221,6 +221,10 @@ def _handle_push_ari(
             tenant_id, property_id, _d("date_from"), _d("date_to"),
             closed_to_arrival=payload.get("closed_to_arrival"),
             closed_to_departure=payload.get("closed_to_departure"),
+            # Kombinierte Bulk-Restriktionen (eine UI-Aktion = EIN Channex-Call).
+            min_stay=payload.get("min_stay"),
+            max_stay=payload.get("max_stay"),
+            rate_cents=payload.get("rate_cents"),
         )
     elif kind == "stop_sell":
         spans = [(date.fromisoformat(a), date.fromisoformat(b))

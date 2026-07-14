@@ -10,6 +10,8 @@ from __future__ import annotations
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
+from supabase import Client
+
 from .ari_push import _iso_days
 from .common import log
 
@@ -21,19 +23,24 @@ class FullSyncMixin:
     # Channex-Doku (PMS-Guide/Best Practices): "Advisable to send a daily full
     # update each night per property". Delta-Pushes bleiben der Normalfall; der
     # Full-Sync heilt Drift aus verlorenen Deltas (Webhook-/Netz-Ausfälle).
-    # Horizont = 365 Tage — deckungsgleich mit dem lokalen Pricing-/Kalender-
-    # Horizont (state_length). NICHT weiter pushen als lokale Wahrheit existiert
-    # (Wurzel 4: für Tage ohne lokalen Preis keinen 0-€-Verkauf provozieren).
-    _FULL_SYNC_DAYS = 365
+    # Horizont = 500 Tage (Channex-Zertifizierung Test 1 verlangt 500;
+    # state_length wird im Content-Sync ebenfalls auf 500 gesetzt). Lokale
+    # Preis-Wahrheit existiert darüber hinaus: der Resolver liefert
+    # override > dynamic > weekday > base, der DP-Recompute rechnet 540 Tage.
+    # Tage OHNE auflösbaren Preis werden im Rate-Teil übersprungen (Wurzel 4:
+    # kein 0-€-Verkauf).
+    _FULL_SYNC_DAYS = 500
 
     def full_sync_property(
         self, tenant_id: str, property_id: str
     ) -> dict[str, int]:
         """Voll-Abgleich EINER Property: Availability über den ganzen Horizont in
-        einem gebatchten Push (RLE-Ranges), Preise/Min-Stay über einen Recompute-
-        Job (der den vollen Horizont rechnet UND pusht). Stop-Sell/CTA-CTD laufen
-        weiterhin event-basiert + Restriction-Outbox-Backstop (es gibt keine
-        lokale Ganz-Horizont-Tabelle dafür — nichts erfinden)."""
+        einem gebatchten Push (RLE-Ranges) + Preise über den zentralen Preis-
+        Resolver (override > dynamic > weekday > base) via push_rates_batch —
+        damit heilt der Full-Sync Preis-Drift für JEDES Objekt, nicht nur für
+        Dynamic-Pricing-Objekte. Stop-Sell/CTA-CTD laufen weiterhin event-
+        basiert + Restriction-Outbox-Backstop (es gibt keine lokale Ganz-
+        Horizont-Tabelle dafür — nichts erfinden)."""
         if not self._channex.is_configured or self._db is None:
             return {"availability_values": 0, "days": 0}
         db = self._db
@@ -181,15 +188,19 @@ class FullSyncMixin:
                 property_id=property_id, late_days=len(catch_up),
             )
 
-        # Preise/Min-Stay: Recompute-Job rechnet den vollen Horizont neu und
-        # pusht ihn (gebatcht) — das ist der Rate-Teil des Full Syncs.
+        # Rate-Teil des Full Syncs: die EINE Preis-Wahrheit (PricingResolver:
+        # override > dynamic > weekday > base) über den Horizont rechnen und als
+        # RLE-Segmente über push_rates_batch pushen (Outbox-persistiert, alle
+        # Rate-Plans der Property, gechunkt). Ein Recompute-Enqueue reichte NICHT:
+        # ohne Dynamic Pricing ist recompute ein No-op und ohne Autopilot pusht
+        # er nicht — Preis-Drift wurde für normale Objekte nie geheilt.
         try:
-            from src.jobs.queue import try_enqueue_recompute
-
-            try_enqueue_recompute(db, tenant_id, property_id)
-        except Exception as exc:  # noqa: BLE001 — Rate-Teil holt der Tick nach
+            rate_segments = self._full_sync_rate_segments(db, property_id, start, end)
+            if rate_segments:
+                self.push_rates_batch(tenant_id, property_id, rate_segments)
+        except Exception as exc:  # noqa: BLE001 — Rate-Teil kippt nie den Avail-Teil
             log.warning(
-                "full_sync_recompute_enqueue_failed",
+                "full_sync_rates_failed",
                 property_id=property_id, error=str(exc)[:200],
             )
 
@@ -226,3 +237,47 @@ class FullSyncMixin:
             values=len(values), days=self._FULL_SYNC_DAYS,
         )
         return {"availability_values": len(values), "days": self._FULL_SYNC_DAYS}
+
+    def _full_sync_rate_segments(
+        self, db: Client, property_id: str, start: date, end: date
+    ) -> list[dict[str, Any]]:
+        """Effektivpreise des Horizonts (zentraler Resolver) → RLE-Segmente für
+        push_rates_batch. Tage ohne auflösbaren Preis werden übersprungen
+        (Wurzel 4: kein erfundener Preis, kein 0-€-Verkauf) und unterbrechen
+        den Run. min_stay bleibt hier None — Mindestaufenthalt wird property-
+        weit über den Rate-Plan (Content-Sync/rates-Events) gepflegt."""
+        from src.features.pricing.resolver import PricingResolver
+
+        days = PricingResolver(service_client=db).effective_prices(
+            property_id, start, end + timedelta(days=1)
+        )
+        segments: list[dict[str, Any]] = []
+        run_start: date | None = None
+        run_price_cents: int | None = None
+        prev_day: date | None = None
+
+        def _close(last_day: date | None) -> None:
+            if run_start is not None and run_price_cents is not None and last_day:
+                segments.append(
+                    {
+                        "date_from": run_start,
+                        "date_to": last_day,
+                        "rate_cents": run_price_cents,
+                    }
+                )
+
+        for entry in days:
+            day = entry.date
+            price = entry.price
+            cents = round(float(price) * 100) if price is not None else None
+            if cents is None or cents <= 0:
+                _close(prev_day)
+                run_start = run_price_cents = None
+            elif run_price_cents is None:
+                run_start, run_price_cents = day, cents
+            elif cents != run_price_cents:
+                _close(prev_day)
+                run_start, run_price_cents = day, cents
+            prev_day = day
+        _close(prev_day)
+        return segments
