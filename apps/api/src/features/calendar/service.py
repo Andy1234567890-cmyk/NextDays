@@ -810,6 +810,207 @@ class CalendarService:
         )
         return len(payload)
 
+    # -- Benannte Saisons (Jahres-Kalender, Drag&Drop) ------------------------
+    def list_seasons(self, ctx: AuthContext, property_id: str) -> list[dict]:
+        """Alle benannten Saisons eines Objekts inkl. ihrer Zeitraum-Zuweisungen.
+        Owner-/Tenant-Scope über _require_own_property (Lesepfad, Wurzel 3)."""
+        self._require_own_property(ctx, property_id)
+        seasons = (
+            self._db()
+            .table("property_seasons")
+            .select("*")
+            .eq("property_id", property_id)
+            .order("created_at")
+            .execute()
+        ).data or []
+        assigns = (
+            self._db()
+            .table("property_season_assignments")
+            .select("id, season_id, start_date, end_date")
+            .eq("property_id", property_id)
+            .order("start_date")
+            .execute()
+        ).data or []
+        by_season: dict[str, list[dict]] = {}
+        for a in assigns:
+            by_season.setdefault(a["season_id"], []).append(a)
+        for s in seasons:
+            s["assignments"] = by_season.get(s["id"], [])
+        return seasons
+
+    def create_season(
+        self, tenant_id: str, property_id: str, *,
+        name: str, color: str, mode: str, amount: float,
+    ) -> dict:
+        """Neue benannte Saison anlegen (noch ohne Zeitraum)."""
+        self._require_tenant_property(tenant_id, property_id)
+        row = (
+            self._db()
+            .table("property_seasons")
+            .insert({
+                "property_id": property_id, "name": name,
+                "color": color, "mode": mode, "amount": amount,
+            })
+            .execute()
+        ).data
+        if not row:
+            raise CalendarError("Saison konnte nicht angelegt werden.", status_code=500)
+        out = row[0]
+        out["assignments"] = []
+        return out
+
+    def update_season(
+        self, tenant_id: str, season_id: str, patch: dict,
+    ) -> dict:
+        """Saison-Stammdaten ändern (Name/Farbe/Modus/Betrag) und alle ihre
+        Zuweisungen neu materialisieren — sonst zeigte der Kalender die neue Farbe,
+        aber Channex noch den alten Preis (Gegenzustand, Wurzel 1)."""
+        season = self._own_season(tenant_id, season_id)
+        clean = {k: v for k, v in patch.items() if v is not None}
+        if clean:
+            self._db().table("property_seasons").update(clean).eq(
+                "id", season_id
+            ).execute()
+            season = {**season, **clean}
+        self._rematerialize_season(tenant_id, season)
+        season["assignments"] = self._season_assignments(season_id)
+        return season
+
+    def delete_season(self, tenant_id: str, season_id: str) -> None:
+        """Saison löschen. Die zugewiesenen Tage fallen auf den Basispreis zurück —
+        die Overrides dieser Tage werden entfernt und der wieder greifende Preis an
+        Channex gepusht (Gegenzustand, Wurzel 1)."""
+        season = self._own_season(tenant_id, season_id)
+        spans = self._season_spans(season_id)
+        # FK cascade räumt die assignments; erst die Overrides der Tage zurücknehmen.
+        self._db().table("property_seasons").delete().eq("id", season_id).execute()
+        for start, end_excl in spans:
+            self._clear_overrides_to_base(
+                season["property_id"], start, end_excl
+            )
+
+    def assign_season(
+        self, tenant_id: str, property_id: str, season_id: str, rng: DateRange,
+    ) -> int:
+        """Einen Datumsbereich einer Saison zuweisen und die effektiven Tagespreise
+        materialisieren (price_overrides + Channex-Push). end exklusiv. Gibt die
+        Anzahl betroffener Tage zurück. Spätere Zuweisung auf denselben Tag
+        gewinnt (last win, wie Kalender-Übermalen)."""
+        season = self._own_season(tenant_id, season_id)
+        if season["property_id"] != property_id:
+            raise CalendarError("Saison gehört nicht zum Objekt.", status_code=400)
+        self._db().table("property_season_assignments").insert({
+            "property_id": property_id, "season_id": season_id,
+            "start_date": rng.start.isoformat(),
+            "end_date": (rng.end - timedelta(days=1)).isoformat(),  # inklusiv
+        }).execute()
+        return self._materialize(tenant_id, season, rng.start, rng.end)
+
+    def unassign_season(self, tenant_id: str, assignment_id: str) -> None:
+        """Eine Zeitraum-Zuweisung entfernen; die Tage fallen auf den Basispreis
+        zurück (Overrides zurücknehmen + Channex-Push; Wurzel 1)."""
+        row = (
+            self._db()
+            .table("property_season_assignments")
+            .select("id, property_id, start_date, end_date, "
+                    "properties!inner(tenant_id)")
+            .eq("id", assignment_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not row or row[0]["properties"]["tenant_id"] != tenant_id:
+            raise CalendarError("Zuweisung nicht gefunden.", status_code=404)
+        a = row[0]
+        self._db().table("property_season_assignments").delete().eq(
+            "id", assignment_id
+        ).execute()
+        end_excl = date.fromisoformat(a["end_date"]) + timedelta(days=1)
+        self._clear_overrides_to_base(
+            a["property_id"], date.fromisoformat(a["start_date"]), end_excl
+        )
+
+    # -- Saison-Helfer --------------------------------------------------------
+    def _own_season(self, tenant_id: str, season_id: str) -> dict:
+        """Saison per ID laden UND auf den Tenant scopen (Load+Scope zusammen,
+        Wurzel 3 — kein ungescopter Load)."""
+        row = (
+            self._db()
+            .table("property_seasons")
+            .select("*, properties!inner(tenant_id)")
+            .eq("id", season_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not row or row[0]["properties"]["tenant_id"] != tenant_id:
+            raise CalendarError("Saison nicht gefunden.", status_code=404)
+        row[0].pop("properties", None)
+        return row[0]
+
+    def _season_assignments(self, season_id: str) -> list[dict]:
+        return (
+            self._db()
+            .table("property_season_assignments")
+            .select("id, season_id, start_date, end_date")
+            .eq("season_id", season_id)
+            .order("start_date")
+            .execute()
+        ).data or []
+
+    def _season_spans(self, season_id: str) -> list[tuple[date, date]]:
+        """(start, end_exklusiv) je Zuweisung der Saison."""
+        return [
+            (date.fromisoformat(a["start_date"]),
+             date.fromisoformat(a["end_date"]) + timedelta(days=1))
+            for a in self._season_assignments(season_id)
+        ]
+
+    def _season_price_for_day(
+        self, season: dict, base: float | None
+    ) -> float | None:
+        """Effektiver Nachtpreis eines Saison-Tags. fixed → Festpreis; percent →
+        Basispreis ± %. Ohne Basispreis bei percent: kein Preis (nichts erfinden)."""
+        mode, amount = season["mode"], float(season["amount"])
+        if mode == "fixed":
+            return round(amount, 2)
+        if base is None:
+            return None
+        return round(base * (1 + amount / 100), 2)
+
+    def _materialize(
+        self, tenant_id: str, season: dict, start: date, end: date,
+    ) -> int:
+        """Tagespreise einer Saison für [start, end) nach price_overrides schreiben
+        und an Channex pushen. Bei percent bezieht sich der Aufschlag auf den
+        Rate-Plan-Basispreis (vorhersehbar, kein Stapeln auf schon-Overrides)."""
+        property_id = season["property_id"]
+        base, _min = self._fetch_rate_plan(property_id)
+        price = self._season_price_for_day(season, base)
+        if price is None:
+            return 0  # percent ohne Basispreis → nichts materialisieren
+        rng = DateRange(start=start, end=end)
+        return self.set_season_price(tenant_id, property_id, rng, price)
+
+    def _rematerialize_season(self, tenant_id: str, season: dict) -> None:
+        """Alle Zeiträume einer Saison neu berechnen (nach Stammdaten-Änderung)."""
+        for start, end_excl in self._season_spans(season["id"]):
+            self._materialize(tenant_id, season, start, end_excl)
+
+    def _clear_overrides_to_base(
+        self, property_id: str, start: date, end: date,
+    ) -> None:
+        """Overrides in [start, end) löschen und den je Tag wieder greifenden Preis
+        (dynamic/weekday/base) an Channex pushen (Gegenzustand, Wurzel 1)."""
+        self._db().table("price_overrides").delete().eq(
+            "property_id", property_id
+        ).gte("date", start.isoformat()).lt("date", end.isoformat()).execute()
+        days = self._resolver().effective_prices(property_id, start, end)
+        for d in days:
+            if d.price is not None:
+                self._push_channex_rate(
+                    property_id, d.date, d.date + timedelta(days=1),
+                    round(d.price * 100),
+                )
+
     def set_restrictions(
         self,
         tenant_id: str,

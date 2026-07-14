@@ -176,6 +176,63 @@ class SeasonPriceListResponse(BaseModel):
     total: int = 0
 
 
+# -- Benannte Saisons (Jahres-Kalender, Drag&Drop) --------------------------
+class SeasonMode(StrEnum):
+    percent = "percent"  # amount = Aufschlag/Abschlag in % auf den Basispreis
+    fixed = "fixed"      # amount = fester Nachtpreis
+
+
+class SeasonCreate(BaseModel):
+    """Benannte Saison-Kategorie eines Objekts (Hochsaison, Event …)."""
+    property_id: str
+    name: str = Field(min_length=1, max_length=80)
+    color: str = Field(pattern=r"^#[0-9a-fA-F]{6}$")
+    mode: SeasonMode
+    amount: float
+
+    @model_validator(mode="after")
+    def _check_amount(self) -> "SeasonCreate":
+        if self.mode == SeasonMode.fixed and self.amount < 0:
+            raise ValueError("Fester Preis darf nicht negativ sein")
+        return self
+
+
+class SeasonUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=80)
+    color: str | None = Field(default=None, pattern=r"^#[0-9a-fA-F]{6}$")
+    mode: SeasonMode | None = None
+    amount: float | None = None
+
+
+class SeasonAssignRequest(BaseModel):
+    """Einen Datumsbereich einer Saison zuweisen. end exklusiv (wie DateRange)."""
+    property_id: str
+    season_id: str
+    range: DateRange
+
+
+class SeasonAssignment(BaseModel):
+    id: str
+    season_id: str
+    start_date: date
+    end_date: date  # inklusiv (DB speichert inklusiv)
+
+
+class SeasonResponse(BaseModel):
+    id: str
+    property_id: str
+    name: str
+    color: str
+    mode: SeasonMode
+    amount: float
+    assignments: list[SeasonAssignment] = []
+
+
+class SeasonListResponse(BaseModel):
+    items: list[SeasonResponse] = []
+    total: int = 0
+
+
 class BulkEditRequest(BaseModel):
     """Mehrere Objekte × ein Zeitraum in einem Rutsch bearbeiten (wie Hostaway).
 

@@ -22,8 +22,13 @@ from .schemas import (
     DateRange,
     DayAvailability,
     PriceOverrideRequest,
+    SeasonAssignRequest,
+    SeasonCreate,
+    SeasonListResponse,
     SeasonPriceListResponse,
     SeasonPriceRequest,
+    SeasonResponse,
+    SeasonUpdate,
     SliceHealth,
     StopSellClearRequest,
     StopSellListResponse,
@@ -247,5 +252,111 @@ def set_season_price(
                 ctx.tenant_id, req.property_id, req.range, req.price
             )
         }
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# -- Benannte Saisons (Jahres-Kalender, Drag&Drop) --------------------------
+@router.get("/seasons", response_model=SeasonListResponse)
+def list_seasons(
+    service: CalendarServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
+    property_id: Annotated[str, Query()],
+) -> SeasonListResponse:
+    try:
+        items = service.list_seasons(ctx, property_id)
+        return SeasonListResponse(
+            items=[SeasonResponse(**s) for s in items], total=len(items)
+        )
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/seasons", response_model=SeasonResponse, dependencies=[
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
+def create_season(
+    req: SeasonCreate,
+    service: CalendarServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> SeasonResponse:
+    try:
+        return SeasonResponse(**service.create_season(
+            ctx.tenant_id, req.property_id,
+            name=req.name, color=req.color, mode=req.mode, amount=req.amount,
+        ))
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.patch("/seasons/{season_id}", response_model=SeasonResponse, dependencies=[
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
+def update_season(
+    season_id: str,
+    req: SeasonUpdate,
+    service: CalendarServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> SeasonResponse:
+    try:
+        return SeasonResponse(**service.update_season(
+            ctx.tenant_id, season_id, req.model_dump(exclude_none=True)
+        ))
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/seasons/{season_id}", dependencies=[
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
+def delete_season(
+    season_id: str,
+    service: CalendarServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> dict[str, bool]:
+    try:
+        service.delete_season(ctx.tenant_id, season_id)
+        return {"deleted": True}
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/seasons/assign", dependencies=[
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
+def assign_season(
+    req: SeasonAssignRequest,
+    service: CalendarServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> dict[str, int]:
+    try:
+        return {"days": service.assign_season(
+            ctx.tenant_id, req.property_id, req.season_id, req.range
+        )}
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/seasons/assign/{assignment_id}", dependencies=[
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
+def unassign_season(
+    assignment_id: str,
+    service: CalendarServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> dict[str, bool]:
+    try:
+        service.unassign_season(ctx.tenant_id, assignment_id)
+        return {"removed": True}
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

@@ -1,6 +1,6 @@
-// Objekt → Saisonpreise: Tagespreise je Zeitraum (Hoch-/Nebensaison). Schreibt
-// price_overrides und überträgt die Preise an alle Buchungsportale (Channex).
-import { SeasonPriceForm } from "@/components/objekte/season-price-form";
+// Objekt → Saisonpreise: benannte Saisons auf einem Jahres-Kalender (Drag&Drop).
+// Schreibt price_overrides und überträgt die Preise an alle Buchungsportale (Channex).
+import { SeasonCalendar } from "@/components/objekte/season-calendar";
 import { getProperty } from "@/lib/properties";
 import { listRatePlans } from "@/lib/rates";
 
@@ -22,5 +22,5 @@ export default async function Page({
   // Betrag ohne Symbol statt erfundenem Euro.
   const rates = await listRatePlans(id);
   const currency = rates.ok ? (rates.data.items[0]?.currency ?? null) : null;
-  return <SeasonPriceForm initial={res.data} currency={currency} />;
+  return <SeasonCalendar initial={res.data} currency={currency} />;
 }

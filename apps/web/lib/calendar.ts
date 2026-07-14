@@ -35,7 +35,7 @@ type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
 async function call<T>(
   path: string,
-  opts: { method?: "GET" | "POST"; body?: unknown } = {},
+  opts: { method?: "GET" | "POST" | "PATCH" | "DELETE"; body?: unknown } = {},
 ): Promise<Result<T>> {
   const token = await currentToken();
   if (!token) return { ok: false, error: "Nicht angemeldet." };
@@ -230,4 +230,78 @@ export async function setSeasonPrice(
     method: "POST",
     body: { property_id: propertyId, range: { start, end }, price },
   });
+}
+
+// -- Benannte Saisons (Jahres-Kalender, Drag&Drop) --------------------------
+export type SeasonMode = "percent" | "fixed";
+
+export type SeasonAssignment = {
+  id: string;
+  season_id: string;
+  start_date: string; // YYYY-MM-DD (inklusiv)
+  end_date: string; // YYYY-MM-DD (inklusiv)
+};
+
+export type Season = {
+  id: string;
+  property_id: string;
+  name: string;
+  color: string; // #RRGGBB
+  mode: SeasonMode;
+  amount: number; // percent: ±% auf Basispreis; fixed: Nachtpreis
+  assignments: SeasonAssignment[];
+};
+
+/** Alle benannten Saisons eines Objekts inkl. Zeitraum-Zuweisungen. */
+export async function listSeasons(
+  propertyId: string,
+): Promise<Result<{ items: Season[]; total: number }>> {
+  return call(`/calendar/seasons?property_id=${encodeURIComponent(propertyId)}`);
+}
+
+/** Neue benannte Saison anlegen (Name, Farbe, Modus, Betrag). */
+export async function createSeason(input: {
+  property_id: string;
+  name: string;
+  color: string;
+  mode: SeasonMode;
+  amount: number;
+}): Promise<Result<Season>> {
+  return call("/calendar/seasons", { method: "POST", body: input });
+}
+
+/** Saison-Stammdaten ändern (rematerialisiert alle Zeiträume). */
+export async function updateSeason(
+  seasonId: string,
+  patch: Partial<Pick<Season, "name" | "color" | "mode" | "amount">>,
+): Promise<Result<Season>> {
+  return call(`/calendar/seasons/${seasonId}`, { method: "PATCH", body: patch });
+}
+
+/** Saison löschen (zugewiesene Tage fallen auf den Basispreis zurück). */
+export async function deleteSeason(
+  seasonId: string,
+): Promise<Result<{ deleted: boolean }>> {
+  return call(`/calendar/seasons/${seasonId}`, { method: "DELETE" });
+}
+
+/** Einen Zeitraum einer Saison zuweisen. end exklusiv. */
+export async function assignSeason(input: {
+  property_id: string;
+  season_id: string;
+  start: string;
+  end: string;
+}): Promise<Result<{ days: number }>> {
+  const { property_id, season_id, start, end } = input;
+  return call("/calendar/seasons/assign", {
+    method: "POST",
+    body: { property_id, season_id, range: { start, end } },
+  });
+}
+
+/** Eine Zeitraum-Zuweisung entfernen (Tage fallen auf Basispreis zurück). */
+export async function unassignSeason(
+  assignmentId: string,
+): Promise<Result<{ removed: boolean }>> {
+  return call(`/calendar/seasons/assign/${assignmentId}`, { method: "DELETE" });
 }
