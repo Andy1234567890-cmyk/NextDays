@@ -189,6 +189,15 @@ class ChannexClient:
         # hier jeden Call (channex_debug_log). Ohne Sink: nur strukturiertes Log.
         self._trace_sink = trace_sink
 
+    def set_trace_sink(self, sink: TraceSink | None) -> None:
+        """Trace-Sink nachträglich setzen — nötig, wenn der Client fertig gebaut
+        übergeben wird (Worker-Pfad mit before_call-Budget), damit AUCH die
+        ARI-/Availability-Pushes ihre Task-ID in channex_debug_log schreiben
+        (Zertifizierung braucht die Task-ID jedes Calls, nicht nur des
+        Content-Syncs). Vorhandener Sink wird nicht überschrieben."""
+        if self._trace_sink is None:
+            self._trace_sink = sink
+
     def _emit_trace(
         self,
         *,

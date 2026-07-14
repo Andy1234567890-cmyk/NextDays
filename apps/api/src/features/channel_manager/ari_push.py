@@ -242,14 +242,25 @@ class AriPushMixin:
                 _expand_restriction_values(base, upd.date_from, upd.date_to)
             )
 
+        # Trace-Kontext setzen, damit availability/restrictions-Pushes ihre
+        # Channex-Task-ID in channex_debug_log schreiben (sichtbarer Verlauf +
+        # Zertifizierung). property_id (lokal) aus dem ersten Mapping ableiten.
+        local_pid = self._local_property_for_push(db, tenant_id, avail_values, rate_values)
+
         avail_tasks = rate_tasks = 0
         try:
             # Availability getrennt senden (Channex-Priorität), dann Preise.
             if avail_values:
+                self._trace_step(
+                    tenant_id=tenant_id, property_id=local_pid, step="availability"
+                )
                 res_a = self._channex.update_availability(avail_values)
                 avail_tasks = len(res_a.get("data") or [])
                 warnings += list((res_a.get("meta") or {}).get("warnings") or [])
             if rate_values:
+                self._trace_step(
+                    tenant_id=tenant_id, property_id=local_pid, step="restrictions"
+                )
                 res_r = self._channex.update_restrictions(rate_values)
                 rate_tasks = len(res_r.get("data") or [])
                 warnings += list((res_r.get("meta") or {}).get("warnings") or [])
@@ -261,6 +272,29 @@ class AriPushMixin:
             rate_tasks=rate_tasks,
             warnings=[str(w) for w in warnings],
         )
+
+    def _local_property_for_push(
+        self, db: Client, tenant_id: str,
+        avail_values: list[dict[str, Any]], rate_values: list[dict[str, Any]],
+    ) -> str | None:
+        """Lokale property_id aus der channex_property_id des ersten Push-Werts
+        (für den Trace-Kontext). None, wenn kein Wert/kein Mapping — dann fällt der
+        Trace-Eintrag nur nicht dem Objekt zu, der Push läuft trotzdem."""
+        vals = avail_values or rate_values
+        if not vals:
+            return None
+        cpid = vals[0].get("property_id")
+        if not cpid:
+            return None
+        row = (
+            db.table("channex_property_map")
+            .select("property_id")
+            .eq("tenant_id", tenant_id)
+            .eq("channex_property_id", cpid)
+            .limit(1)
+            .execute()
+        ).data
+        return row[0]["property_id"] if row else None
 
     # -- Realtime-Verfügbarkeits-Push (Doppelbuchungsschutz) -------------------
     # Der Buchungskalender (availability) ist die oberste Wahrheit. Jede lokale
@@ -960,6 +994,11 @@ class AriPushMixin:
             return
         if not self._is_channex_managed(self._db, tenant_id, property_id):
             return  # nicht bei Channex angelegt → kein Batch-Preis-Push (No-op)
+        # Trace-Kontext: Task-ID des Preis-/Restriktions-Pushes sichtbar in
+        # channex_debug_log (Verlauf + Zertifizierung, Tests 2-4/8).
+        self._trace_step(
+            tenant_id=tenant_id, property_id=property_id, step="restrictions"
+        )
         # Absicht ZUERST persistieren. Outbox-Range = Min/Max über alle Segmente;
         # die Segmente liegen im payload (Neu-Aufbau beim Cron-Retry). date_from/
         # date_to der Segmente können date oder ISO-String sein → normalisieren.
@@ -1103,6 +1142,12 @@ class AriPushMixin:
                 ).eq("id", r["id"]).eq("status", "pending").execute()
                 result["done"] += 1
                 continue
+            # Trace-Kontext je Zeile: Task-ID des availability-Pushes wird sichtbar
+            # in channex_debug_log geschrieben (Verlauf + Zertifizierung).
+            self._trace_step(
+                tenant_id=r["tenant_id"], property_id=r["property_id"],
+                step="availability",
+            )
             try:
                 for r_from, r_to in push_ranges:
                     self._channex.update_availability(
@@ -1238,6 +1283,11 @@ class AriPushMixin:
                     r, attempts, "Rate-Plan-Mapping fehlt noch", result
                 )
                 continue
+            # Trace-Kontext je Zeile: Task-ID des restrictions-Pushes sichtbar
+            # in channex_debug_log (Verlauf + Zertifizierung).
+            self._trace_step(
+                tenant_id=tenant_id, property_id=property_id, step="restrictions"
+            )
             try:
                 values = self._restriction_values_from_row(r, plans)
                 # Von einer neueren Zeile abgedeckte Tage herausfiltern (tag-genau).

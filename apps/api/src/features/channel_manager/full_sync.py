@@ -48,6 +48,13 @@ class FullSyncMixin:
         if mapping is None or not self._is_channex_managed(db, tenant_id, property_id):
             return {"availability_values": 0, "days": 0}
 
+        # Trace-Kontext: jeder availability/restrictions-Push dieses Full-Syncs
+        # schreibt seine Channex-Task-ID in channex_debug_log (sichtbarer Verlauf
+        # + Zertifizierung braucht die Task-ID).
+        self._trace_step(
+            tenant_id=tenant_id, property_id=property_id, step="full_sync"
+        )
+
         start = date.today()
         end = start + timedelta(days=self._FULL_SYNC_DAYS - 1)
         # Lesezeitpunkt VOR dem Snapshot merken: Delta-Pushes, die während des

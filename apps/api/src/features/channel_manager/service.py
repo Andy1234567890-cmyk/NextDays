@@ -72,6 +72,14 @@ class ChannelManagerService(
         }
         if channex is not None:
             self._channex = channex
+            # Übergebener Client (Worker-Pfad mit Budget-Callback): Trace-Sink
+            # nachsetzen, damit AUCH ARI-/Availability-Pushes ihre Task-ID in
+            # channex_debug_log schreiben (nicht nur der Content-Sync). Sonst
+            # fehlten dem Frontend-Verlauf und der Zertifizierung die Task-IDs.
+            # hasattr: Test-Fakes/andere Clients ohne Trace-Fähigkeit werden
+            # unverändert gelassen (Duck-Typing, kein harter Typ-Zwang).
+            if service_client is not None and hasattr(self._channex, "set_trace_sink"):
+                self._channex.set_trace_sink(self._persist_trace)
         else:
             # Eigener Client mit Trace-Sink — nur wenn eine DB da ist (sonst
             # nichts zu persistieren, z. B. reine Health-Checks/Tests).
