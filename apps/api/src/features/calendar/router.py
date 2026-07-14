@@ -112,6 +112,22 @@ def block(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post("/unblock", dependencies=[
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
+def unblock(
+    req: BlockRequest,
+    service: CalendarServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> dict[str, int]:
+    try:
+        return {"unblocked_days": service.unblock(ctx.tenant_id, req.property_id, req.range)}
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.post("/price-override", dependencies=[
     Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
 ])

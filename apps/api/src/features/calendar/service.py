@@ -819,39 +819,47 @@ class CalendarService:
         cta: bool | None = None,
         ctd: bool | None = None,
         min_stay: int | None = None,
+        max_stay: int | None = None,
         rate_cents: int | None = None,
     ) -> int:
         """CTA/CTD-Restriktionen je Tag setzen (availability-Upsert pro Tag) und
         an Channex pushen. Nur gesetzte Felder ändern sich (None = unverändert).
-        `min_stay`/`rate_cents` werden — falls gesetzt — im SELBEN Channex-Call
-        mitgepusht (kombinierte Bulk-Aktion, Zertifizierung Test 7/8); die lokale
-        Persistenz von Min-Stay/Preis macht der Aufrufer (_set_min_stay /
-        set_season_price). availability-Zeilen werden wie bei Preis/Block auch
+        `min_stay`/`max_stay`/`rate_cents` werden — falls gesetzt — im SELBEN
+        Channex-Call mitgepusht (kombinierte Bulk-Aktion, Zertifizierung Test 7/8);
+        die lokale Persistenz von Min-Stay/Preis macht der Aufrufer (_set_min_stay /
+        set_season_price). Max-Stay ist rein Channex-seitig (kein lokaler
+        availability-Zustand). availability-Zeilen werden wie bei Preis/Block auch
         für offene Tage angelegt. Gibt Anzahl Tage zurück."""
         self._require_tenant_property(tenant_id, property_id)
-        if cta is None and ctd is None:
+        # Nichts zu pushen, wenn KEINE der kombinierbaren Restriktionen gesetzt ist.
+        if cta is None and ctd is None and max_stay is None and min_stay is None \
+                and rate_cents is None:
             return 0
         flags: dict[str, bool] = {}
         if cta is not None:
             flags["closed_to_arrival"] = cta
         if ctd is not None:
             flags["closed_to_departure"] = ctd
-        payload = [
-            {"property_id": property_id, "date": day.isoformat(), **flags}
-            for day in rng.nights()
-        ]
-        self._db().table("availability").upsert(
-            payload, on_conflict="property_id,date"
-        ).execute()
+        # availability-Zeilen nur bei CTA/CTD anlegen (das ist der lokale Zustand);
+        # max/min_stay/Preis sind reine Channex-Restriktionen ohne availability-Flag.
+        if flags:
+            payload = [
+                {"property_id": property_id, "date": day.isoformat(), **flags}
+                for day in rng.nights()
+            ]
+            self._db().table("availability").upsert(
+                payload, on_conflict="property_id,date"
+            ).execute()
         self._push_channex_restrictions(
             property_id, rng.start, rng.end, cta, ctd,
-            min_stay=min_stay, rate_cents=rate_cents,
+            min_stay=min_stay, max_stay=max_stay, rate_cents=rate_cents,
         )
         log.info(
             "calendar_set_restrictions",
-            property_id=property_id, cta=cta, ctd=ctd, days=len(payload),
+            property_id=property_id, cta=cta, ctd=ctd, max_stay=max_stay,
+            days=len(list(rng.nights())),
         )
-        return len(payload)
+        return len(list(rng.nights()))
 
     def _push_channex_restrictions(
         self,
@@ -862,10 +870,13 @@ class CalendarService:
         ctd: bool | None,
         *,
         min_stay: int | None = None,
+        max_stay: int | None = None,
         rate_cents: int | None = None,
     ) -> None:
-        """CTA/CTD (+ optional Min-Stay/Preis, kombinierte Bulk-Aktion) als EINEN
-        ARI-Push-Job einreihen (Phase 2). KEIN coalesce (zeitraum-spezifisch)."""
+        """CTA/CTD (+ optional Min-Stay/Max-Stay/Preis, kombinierte Bulk-Aktion) als
+        EINEN ARI-Push-Job einreihen (Phase 2). KEIN coalesce (zeitraum-spezifisch).
+        Max-Stay wandert in denselben restrictions-Call — so gehen CTA/CTD/min/max/
+        Preis gemeinsam an Channex (Zertifizierung Test 7: 1 API-Call)."""
         tenant_id = self._tenant_of(property_id)
         if tenant_id is None:
             return
@@ -876,6 +887,8 @@ class CalendarService:
         }
         if min_stay is not None:
             fields["min_stay"] = min_stay
+        if max_stay is not None:
+            fields["max_stay"] = max_stay
         if rate_cents is not None:
             fields["rate_cents"] = rate_cents
         try_enqueue_ari(
@@ -929,20 +942,22 @@ class CalendarService:
             elif req.stop_sell is False:
                 self.clear_stop_sell(tenant_id, pid, req.range)
             # Eine Bulk-Aktion = EIN Channex-Call (Zertifizierung Test 7/8):
-            # Preis und Min-Stay wandern mit in den CTA/CTD-Push; ohne CTA/CTD
-            # gehen Preis+Min-Stay gemeinsam in einen Rate-Push.
-            has_cta_ctd = (
+            # Preis und Min-Stay wandern mit in den CTA/CTD/Max-Stay-Push; ohne
+            # CTA/CTD/Max-Stay gehen Preis+Min-Stay gemeinsam in einen Rate-Push.
+            # Max-Stay bündelt IMMER in den restrictions-Call (Test 7).
+            has_restrictions = (
                 req.closed_to_arrival is not None
                 or req.closed_to_departure is not None
+                or req.max_stay is not None
             )
             price_cents = (
                 round(req.price * 100) if req.price is not None else None
             )
-            combine_into_restrictions = has_cta_ctd and (
+            combine_into_restrictions = has_restrictions and (
                 req.min_stay is not None or price_cents is not None
             )
             combine_rate_min_stay = (
-                not has_cta_ctd
+                not has_restrictions
                 and price_cents is not None
                 and req.min_stay is not None
             )
@@ -961,11 +976,11 @@ class CalendarService:
                     pid, req.range, req.min_stay,
                     push_channex=not combined,
                 )
-            if has_cta_ctd:
+            if has_restrictions:
                 self.set_restrictions(
                     tenant_id, pid, req.range,
                     cta=req.closed_to_arrival, ctd=req.closed_to_departure,
-                    min_stay=req.min_stay,
+                    min_stay=req.min_stay, max_stay=req.max_stay,
                     rate_cents=price_cents if combine_into_restrictions else None,
                 )
             elif combine_rate_min_stay:
@@ -1007,6 +1022,13 @@ class CalendarService:
             days=len(req.range.nights()),
             applied=applied,
         )
+
+    def unblock(self, tenant_id: str, property_id: str, rng: DateRange) -> int:
+        """Manuelle Sperre im Zeitraum aufheben (öffentlicher, tenant-gescopter
+        Einstieg — Wurzel 3). Gibt die Anzahl der Tage im Zeitraum zurück."""
+        self._require_tenant_property(tenant_id, property_id)
+        self._unblock(property_id, rng)
+        return len(list(rng.nights()))
 
     def _unblock(self, property_id: str, rng: DateRange) -> None:
         """Manuelle Sperre im Zeitraum aufheben (nur source=manual; gebuchte Tage

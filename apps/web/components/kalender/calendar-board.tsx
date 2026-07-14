@@ -26,6 +26,7 @@ import {
   type AvailabilityStatus,
   type DayAvailability,
   blockRange,
+  unblockRange,
   type StopSellDay,
   getBoard,
 } from "@/lib/calendar";
@@ -438,6 +439,10 @@ export function CalendarBoard({
   const [wizard, setWizard] = useState<{ pid: string; checkIn: string; checkOut: string } | null>(null);
   // Bulk-Edit-Dialog: Objekt + Zeitraum der aufgezogenen Selektion.
   const [bulk, setBulk] = useState<{ pid: string; checkIn: string; checkOut: string } | null>(null);
+  // Sperre-aufheben-Popup: geklickter Sperr-Balken (Objekt + Zeitraum, end exkl.).
+  const [unblockAt, setUnblockAt] = useState<
+    { pid: string; title: string; start: string; end: string } | null
+  >(null);
   const [saving, setSaving] = useState(false);
 
   // Balken-Interaktion: bestehende Buchung verschieben (move) ODER an den
@@ -1233,6 +1238,21 @@ export function CalendarBoard({
     }
   }, [sel, start, load]);
 
+  // Geklickte manuelle Sperre aufheben (unblockRange, gibt frei gewordene Tage
+  // an Channex zurück). Popup bestätigt, danach neu laden.
+  const confirmUnblock = useCallback(async () => {
+    if (!unblockAt) return;
+    setSaving(true);
+    const res = await unblockRange(unblockAt.pid, unblockAt.start, unblockAt.end);
+    setSaving(false);
+    if (res.ok) {
+      setUnblockAt(null);
+      await load();
+    } else {
+      toast.error(res.error || "Sperre konnte nicht aufgehoben werden.");
+    }
+  }, [unblockAt, load]);
+
   // ◀/▶: um den sichtbaren Granularitäts-Schritt weiterscrollen (statt `start`
   // zu verschieben — die Timeline ist durchgehend).
   function shift(deltaDays: number) {
@@ -1774,6 +1794,35 @@ export function CalendarBoard({
                             )}
                           </>
                         );
+                        // Manuelle Sperre ist per Klick aufhebbar (Popup) — OTA-/
+                        // gebuchte Sperren nicht. Öffnet das Unblock-Popup mit dem
+                        // Zeitraum des Balkens (Spalten → ISO, end exklusiv).
+                        const unblockable =
+                          seg.status === "blocked" &&
+                          seg.source === "manual" &&
+                          !!start;
+                        if (unblockable) {
+                          return (
+                            <button
+                              key={i}
+                              type="button"
+                              title="Sperre aufheben"
+                              onClick={(ev) => {
+                                ev.stopPropagation();
+                                setUnblockAt({
+                                  pid: p.id,
+                                  title: p.title,
+                                  start: key(addDays(start, seg.start)),
+                                  end: key(addDays(start, seg.start + seg.span)),
+                                });
+                              }}
+                              className={`group absolute top-1/2 flex -translate-y-1/2 cursor-pointer items-center gap-1 overflow-hidden rounded-full px-2 text-xs font-medium transition-shadow hover:ring-2 hover:ring-accent/40 ${barClass} ${dragging ? "pointer-events-none" : ""}`}
+                              style={barStyle}
+                            >
+                              {barInner}
+                            </button>
+                          );
+                        }
                         if (!clickable) {
                           return (
                             <div
@@ -1908,6 +1957,35 @@ export function CalendarBoard({
       )}
 
       {/* Bestätigung vor dem Verschieben/Resizen (Schutz vor Versehen) */}
+      {unblockAt && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-foreground/40 p-4">
+          <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl">
+            <div className="mb-2 flex items-center gap-2">
+              <Icon icon="ph:lock-simple-open" className="size-5 text-accent" />
+              <h3 className="font-display text-lg font-extrabold">Sperre aufheben?</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">{unblockAt.title}</span>{" "}
+              wird ab {unblockAt.start} wieder freigegeben. Nur die tatsächlich
+              offenen Tage gehen als verfügbar an die Portale (gebuchte Tage bleiben
+              gesperrt).
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => setUnblockAt(null)}
+                disabled={saving}
+              >
+                Abbrechen
+              </Button>
+              <Button onClick={confirmUnblock} disabled={saving}>
+                {saving ? "Hebe auf…" : "Sperre aufheben"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {pendingMove && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-foreground/40 p-4">
           <div className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-2xl">

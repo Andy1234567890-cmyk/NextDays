@@ -95,6 +95,19 @@ export async function blockRange(
   });
 }
 
+/** Manuelle Sperre im Zeitraum aufheben (gibt frei gewordene Tage an Channex
+ *  zurück, gebuchte Tage bleiben unberührt). end ist exklusiv. */
+export async function unblockRange(
+  propertyId: string,
+  start: string,
+  end: string,
+): Promise<Result<{ unblocked_days: number }>> {
+  return call("/calendar/unblock", {
+    method: "POST",
+    body: { property_id: propertyId, range: { start, end } },
+  });
+}
+
 export type StopSellSource = "manual" | "channex";
 
 export type StopSellDay = {
@@ -168,8 +181,11 @@ export type BulkEditInput = {
   price?: number;
   price_adjust_pct?: number; // prozentual (z. B. +10 / -15); schließt price aus
   min_stay?: number;
+  max_stay?: number; // Maximalaufenthalt (0 = keine Obergrenze)
   block?: boolean;
   stop_sell?: boolean;
+  closed_to_arrival?: boolean;
+  closed_to_departure?: boolean;
 };
 
 export type BulkEditResult = {

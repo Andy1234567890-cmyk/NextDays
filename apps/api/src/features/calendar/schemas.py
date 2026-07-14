@@ -6,7 +6,7 @@ Bildet die availability-Tabelle ab (Migration 0004): eine Zeile pro
 from datetime import date
 from enum import StrEnum
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 
 class AvailabilityStatus(StrEnum):
@@ -184,6 +184,7 @@ class BulkEditRequest(BaseModel):
       - price_adjust_pct:  prozentuale Anpassung des effektiven Tagespreises
                            (z. B. +10 / -15); schließt `price` aus
       - min_stay:          Mindestaufenthalt je Objekt (rate_plans + Channex)
+      - max_stay:          Maximalaufenthalt je Objekt (Channex-Restriction)
       - block:             True = sperren, False = Sperre aufheben (availability)
       - stop_sell:         True = Verkaufsstopp setzen, False = aufheben
     """
@@ -193,6 +194,7 @@ class BulkEditRequest(BaseModel):
     price: float | None = None
     price_adjust_pct: float | None = None
     min_stay: int | None = None
+    max_stay: int | None = Field(default=None, ge=0)
     block: bool | None = None
     stop_sell: bool | None = None
     closed_to_arrival: bool | None = None
@@ -210,6 +212,7 @@ class BulkEditRequest(BaseModel):
             self.price,
             self.price_adjust_pct,
             self.min_stay,
+            self.max_stay,
             self.block,
             self.stop_sell,
             self.closed_to_arrival,
