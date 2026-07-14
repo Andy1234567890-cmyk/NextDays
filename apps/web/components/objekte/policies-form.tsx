@@ -1,6 +1,6 @@
 "use client";
 
-// Richtlinien-Seite eines Objekts (wie Lodgify „Policies").
+// Richtlinien-Seite eines Objekts (Policies).
 //  Reservation policies: Policy (Storno/Zahlung/Kaution), Bookability,
 //  Check-in/out-Zeiten. Website legal info: Rates-Info, Mietvertrag.
 // Bearbeitung je Block über einen Sheet-Editor; gespeichert wird per
@@ -383,9 +383,8 @@ function BookabilityEditor({
             key={o.value}
             type="button"
             onClick={() => setV({ ...v, bookability: o.value })}
-            className={`flex w-full items-start gap-3 rounded-(--radius) border-2 p-4 text-left transition-colors ${
-              active ? "border-foreground" : "border-border hover:bg-muted/40"
-            }`}
+            className={`flex w-full items-start gap-3 rounded-(--radius) border-2 p-4 text-left transition-colors ${active ? "border-foreground" : "border-border hover:bg-muted/40"
+              }`}
           >
             <Icon
               icon={active ? "ph:radio-button-fill" : "ph:circle"}

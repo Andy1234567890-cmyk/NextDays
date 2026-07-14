@@ -126,6 +126,43 @@ def has_capability(role: UserRole | str | None, cap: Capability) -> bool:
     return cap in capabilities_for(role)
 
 
+# --- Brücke zwischen den zwei Rechtesystemen (Wurzel) -----------------------
+# Die Rollen-Capabilities allein reichen nicht: das feingranulare PM-Dach
+# (ACCESS_PM_FEATURES aus users.permissions) muss die PM-Capabilities freigeben.
+# Sonst wirkt der Entzug des PM-Zugriffs im Rechte-Dialog NICHT auf die Bereiche,
+# die nur an einer Rolle hängen (Kontrollzentrum, Buchungen, Aufgaben).
+#
+# PM-Capabilities = der operative Property-Management-Bereich. NICHT dabei:
+# Stammdaten/Objekte (MANAGE_PROPERTIES), Eigentümer (MANAGE_OWNERS), Finanzen
+# und die owner-spezifischen Fähigkeiten — die haben eigene Rechte und dürfen
+# das Owner-Portal nicht mit sperren.
+_PM_CAPABILITIES: frozenset[Capability] = frozenset({
+    Capability.VIEW_CALENDAR,
+    Capability.MANAGE_CALENDAR,
+    Capability.MANAGE_TASKS,
+    Capability.VIEW_OWN_TASKS,
+})
+
+
+def is_pm_capability(cap: Capability) -> bool:
+    return cap in _PM_CAPABILITIES
+
+
+def effective_capabilities(
+    role: UserRole | str | None, *, has_pm_access: bool
+) -> frozenset[Capability]:
+    """Tatsächliche Fähigkeiten eines Nutzers = Rollen-Capabilities, aber ohne
+    die PM-Capabilities, wenn das PM-Dach fehlt.
+
+    Eine Quelle der Wahrheit für Guard (require_permission) UND UI (me →
+    Sidebar-Gating). Admin hat immer das Dach (effective_permissions gibt ihm
+    ACCESS_PM_FEATURES), verliert hier also nichts."""
+    caps = capabilities_for(role)
+    if has_pm_access:
+        return caps
+    return caps - _PM_CAPABILITIES
+
+
 def first_name_only(full_name: str | None) -> str | None:
     """Nur den Vornamen (erstes Token) zurückgeben — DSGVO-Daten-Split (§4).
 

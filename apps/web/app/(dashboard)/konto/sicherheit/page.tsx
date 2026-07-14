@@ -1,6 +1,6 @@
 "use client";
 
-// Konto → Sicherheit (wie Lodgify), ANGEBUNDEN an den FastAPI-auth-Slice:
+// Konto → Sicherheit, ANGEBUNDEN an den FastAPI-auth-Slice:
 // echte Konto-Daten, E-Mail/Name/Passwort ändern, TOTP-2FA (Authenticator-App).
 // SMS-2FA folgt erst mit einem SMS-Provider — Karte zeigt „demnächst".
 import { Icon } from "@iconify/react";

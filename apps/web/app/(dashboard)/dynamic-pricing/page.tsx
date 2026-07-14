@@ -2,6 +2,8 @@
 // Basispreis (+ Modus), Min/Max, Aktiv-Toggle, Bearbeiten-Slider und 30-Tage-
 // Vorschau. Eine Preis-Wahrheit (Resolver); ein manueller Tagespreis im Kalender
 // gewinnt immer. Server Component lädt die Übersicht; der Client-Teil bearbeitet.
+import { notFound } from "next/navigation";
+
 import { DynamicPricingTable } from "@/components/dynamic-pricing/dynamic-pricing-table";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card } from "@/components/ui/card";
@@ -11,6 +13,9 @@ export const dynamic = "force-dynamic";
 
 export default async function DynamicPricingPage() {
   const res = await getDpOverview();
+  // Vertriebs-/Preis-Fläche (manage_calendar). Fehlt sie, existiert die Seite
+  // für diesen Nutzer nicht (Sidebar-Gate, Wurzel 3) — kein 403-Fehlerkasten.
+  if (!res.ok && res.status === 403) notFound();
   return (
     <div className="flex w-full flex-col gap-6 p-6">
       {/* Realtime-Pflicht: Toggle/Preise anderer Nutzer + neue Objekte live. */}

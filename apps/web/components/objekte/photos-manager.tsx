@@ -1,6 +1,6 @@
 "use client";
 
-// Foto-/Galerieverwaltung eines Objekts (wie Lodgify „Photos"): Multi-Upload per
+// Foto-/Galerieverwaltung eines Objekts (Photos): Multi-Upload per
 // Drag&Drop + Klick, Galerie mit Drag-to-Reorder, großem Titelbild (Cover) und
 // Inline-Bildunterschrift je Foto (max. 100 Zeichen, mehrsprachig). Die Sprache
 // der gerade editierten Caption steuert der Selektor oben. property_photos ist
@@ -378,11 +378,10 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
         }}
         onDragLeave={() => setDragOver(false)}
         onDrop={onDrop}
-        className={`flex flex-col items-center justify-center gap-2 rounded-(--radius) border-2 border-dashed px-6 py-12 text-center text-sm transition-colors ${
-          dragOver
+        className={`flex flex-col items-center justify-center gap-2 rounded-(--radius) border-2 border-dashed px-6 py-12 text-center text-sm transition-colors ${dragOver
             ? "border-foreground bg-muted/40"
             : "border-border text-muted-foreground hover:bg-muted/40"
-        }`}
+          }`}
       >
         <Icon icon="ph:images" className="size-8" />
         <span className="font-medium text-foreground">{t("dropTitle")}</span>
@@ -414,9 +413,8 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
                       ? "ph:warning-circle"
                       : "ph:check-circle"
                 }
-                className={`size-4 shrink-0 ${u.busy ? "animate-spin" : ""} ${
-                  u.error ? "text-destructive" : "text-muted-foreground"
-                }`}
+                className={`size-4 shrink-0 ${u.busy ? "animate-spin" : ""} ${u.error ? "text-destructive" : "text-muted-foreground"
+                  }`}
               />
               <span className="truncate">{u.name}</span>
               {u.error && <span className="text-destructive">— {u.error}</span>}
@@ -496,7 +494,7 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
         </div>
       ) : (
         <div className="flex flex-col gap-6">
-          {/* Großes Titelbild (Cover) — volle Breite, wie Lodgify. */}
+          {/* Großes Titelbild (Cover) — volle Breite. */}
           {cover && (
             <PhotoCard
               photo={cover}
@@ -609,13 +607,11 @@ function PhotoCard({
           e.preventDefault();
           onDropReorder(photo.id);
         }}
-        className={`group relative cursor-grab overflow-hidden bg-muted active:cursor-grabbing ${
-          large ? "aspect-[21/9]" : "aspect-[4/3]"
-        } ${
-          overId === photo.id && dragId !== photo.id
+        className={`group relative cursor-grab overflow-hidden bg-muted active:cursor-grabbing ${large ? "aspect-[21/9]" : "aspect-[4/3]"
+          } ${overId === photo.id && dragId !== photo.id
             ? "ring-2 ring-inset ring-foreground"
             : ""
-        } ${dragId === photo.id ? "opacity-50" : ""}`}
+          } ${dragId === photo.id ? "opacity-50" : ""}`}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img

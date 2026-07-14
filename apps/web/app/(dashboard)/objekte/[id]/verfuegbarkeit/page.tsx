@@ -1,8 +1,6 @@
-// Objekt → Verfügbarkeit (wie Lodgify „Availability"): Mindest-/Maximalaufenthalt,
-// Vorbereitungszeit, Buchungsfenster, Vorlaufzeit, gesperrte Check-in/out-Tage —
-// mit „Custom setup per channel" (NextDays / Airbnb / Booking.com / Google).
-// Externe Kalender (iCal-Umzug) liegen NICHT hier, sondern zentral im
-// Konto-Tab „Umzug" (/konto/umzug) — dort verbindet der Kunde alle Objekte.
+// Objekt → Verfügbarkeit: Mindest-/Maximalaufenthalt, Vorbereitungszeit,
+// Buchungsfenster, Vorlaufzeit, gesperrte Check-in/out-Tage — mit „Custom setup
+// per channel" (NextDays / Airbnb / Booking.com / Google).
 import { AvailabilityForm } from "@/components/objekte/availability-form";
 import { getProperty } from "@/lib/properties";
 

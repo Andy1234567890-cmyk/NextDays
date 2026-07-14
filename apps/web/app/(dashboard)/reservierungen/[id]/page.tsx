@@ -1,4 +1,4 @@
-// Buchungsdetail als eigene Vollseite (Lodgify „Buchung {ref}"). Server
+// Buchungsdetail als eigene Vollseite (Buchung {ref}). Server
 // Component reicht nur die id an den Client-Teil durch; alle Detaildaten holt
 // die Client-Komponente maskierungskonform über getReservationDetail().
 import { BookingDetail } from "@/components/reservierungen/booking-detail";

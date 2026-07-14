@@ -1,4 +1,4 @@
-// Objekt → Standort (wie Lodgify „Location"): vier Karten — Adresse
+// Objekt → Standort (Location): vier Karten — Adresse
 // (Google-Karte + Places), Entfernungen, eigene Karte (Bild), Wegbeschreibung.
 // Server Component lädt das Objekt, der Client-Teil rendert Karten + Editoren.
 import { LocationForm } from "@/components/objekte/location-form";

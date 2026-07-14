@@ -11,6 +11,7 @@ from typing import Any
 
 from supabase import Client
 
+from src.core.countries import normalize_country
 from src.core.security import AuthContext
 
 from .channex_client import ChannexError
@@ -142,7 +143,9 @@ class PropertyMappingMixin:
         if attrs.get("zip_code"):
             row["postal_code"] = attrs["zip_code"]
         if attrs.get("country"):
-            row["country"] = attrs["country"]
+            # Invariante halten: properties.country ist IMMER ISO-2 (auch aus
+            # dem Reverse-Import). Channex liefert bereits ISO-2; defensiv normen.
+            row["country"] = normalize_country(attrs["country"]) or attrs["country"]
         if attrs.get("latitude") is not None:
             row["lat"] = attrs["latitude"]
         if attrs.get("longitude") is not None:

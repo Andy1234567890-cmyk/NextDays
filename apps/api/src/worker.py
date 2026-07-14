@@ -71,7 +71,7 @@ STUCK_AFTER_SECONDS = 300
 JOB_HEARTBEAT_SECONDS = 60
 # Zeit-Tick: Reconcile aller Tenants einreihen (ersetzt den externen 15-min-Cron).
 RECONCILE_TICK_SECONDS = 15 * 60
-# Zeit-Tick: externe iCal-Kalender syncen (analog Lodgify "alle 2 Stunden").
+# Zeit-Tick: externe iCal-Kalender syncen (alle 2 Stunden).
 # Feeds, deren letzter Sync älter ist, werden nachgezogen.
 ICAL_TICK_SECONDS = 30 * 60          # alle 30 min prüfen, ...
 ICAL_STALE_SECONDS = 2 * 60 * 60     # ... aber nur Feeds syncen, die > 2h alt sind

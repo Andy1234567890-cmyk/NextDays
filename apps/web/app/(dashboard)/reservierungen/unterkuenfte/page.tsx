@@ -1,4 +1,4 @@
-// Unterkünfte-Reiter der PM-Fläche (Lodgify „Unterkünfte"): Kachelliste der
+// Unterkünfte-Reiter der PM-Fläche (Unterkünfte): Kachelliste der
 // Objekte. Klick auf eine Kachel öffnet die Objektfläche mit den sechs Reitern
 // (Kalender/Statistiken/Bilder/Warnungen/Gastmodul/Gästemappe).
 import { PropertyGrid } from "@/components/reservierungen/property-grid";

@@ -1,6 +1,6 @@
 "use client";
 
-// Mini-Verlaufsgraph in jeder KPI-Kachel (Lodgify): die Tagesreihe der Metrik
+// Mini-Verlaufsgraph in jeder KPI-Kachel (..): die Tagesreihe der Metrik
 // als kleiner Area-Chart ohne Achsen/Grid — nur die Kurve. recharts +
 // Chart-Token (var(--chart-1)), gleiche Infrastruktur wie die großen Charts.
 import { Area, AreaChart } from "recharts";

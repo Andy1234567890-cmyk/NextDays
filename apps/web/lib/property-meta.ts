@@ -510,7 +510,7 @@ export const AMENITY_LABELS_DE: Record<string, string> = {
   "yoga_classes": "Yogakurse",
 };
 
-// Räume (Lodgify „Rooms"). In type_attributes.rooms gespeichert.
+// Räume (Rooms). In type_attributes.rooms gespeichert.
 export const ROOM_OPTIONS = [
   "Badezimmer",
   "Schlafzimmer",
@@ -522,7 +522,7 @@ export const ROOM_OPTIONS = [
   "Arbeitszimmer",
 ];
 
-// Betten (Lodgify „Sleeping arrangements"). In type_attributes.beds gespeichert.
+// Betten (Sleeping arrangements). In type_attributes.beds gespeichert.
 export const BED_OPTIONS = [
   "Doppelbett",
   "Einzelbett",

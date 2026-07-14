@@ -1,6 +1,6 @@
 "use client";
 
-// Verfügbarkeits-Seite eines Objekts (wie Lodgify „Availability").
+// Verfügbarkeits-Seite eines Objekts (Availability).
 //  Mindest-/Maximalaufenthalt, Vorbereitungszeit, Buchungsfenster,
 //  Vorlaufzeit, gesperrte Check-in/out-Wochentage. Mehrere Blöcke erlauben
 //  „Custom setup per channel" (NextDays / Airbnb / Booking.com / Google).

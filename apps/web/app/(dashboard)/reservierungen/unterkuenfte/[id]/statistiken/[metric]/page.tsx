@@ -1,4 +1,4 @@
-// Objekt → Statistiken → KPI-Detail (Lodgify: Klick auf eine Statistik-Kachel).
+// Objekt → Statistiken → KPI-Detail (..: Klick auf eine Statistik-Kachel).
 // Große Zeitreihe EINER Kennzahl + Vergleichsperioden + Breakout-Tabelle + Export.
 // Unbekannte Metrik → 404 (kein 500 aus fehlgeleiteten Pfaden).
 import { notFound } from "next/navigation";

@@ -26,7 +26,7 @@ const REGELN = [
   {
     key: 'w3-tenant-scope',
     regel: 'Wurzel 3: JEDER per-ID-Zugriff MUSS explizit auf tenant/owner scopen (Service-Role umgeht RLS). Load+Scope untrennbar (load_scoped oder _require_own_*). Kein rohes inline !=tenant_id nach ungescoptem Load.',
-    suche: 'Suche Endpunkte/Methoden, die per Client-ID (reservation_id, invoice_id, payment_id, task_id, property_id, channex_*_id, customer_id, statement_id, page_id, agency_id, addon_id, owner_id) auf eine Ressource zugreifen OHNE tenant/owner-Scope, ODER die eine Ressource laden und den Scope erst spaeter (vergessbar) pruefen, ODER fehlende require_permission/require_lodgify_permission. Pruefe ALLE Slices + Router.',
+    suche: 'Suche Endpunkte/Methoden, die per Client-ID (reservation_id, invoice_id, payment_id, task_id, property_id, channex_*_id, customer_id, statement_id, page_id, agency_id, addon_id, owner_id) auf eine Ressource zugreifen OHNE tenant/owner-Scope, ODER die eine Ressource laden und den Scope erst spaeter (vergessbar) pruefen, ODER fehlende require_permission/require_.._permission. Pruefe ALLE Slices + Router.',
   },
   {
     key: 'w4-waehrung-fallback',

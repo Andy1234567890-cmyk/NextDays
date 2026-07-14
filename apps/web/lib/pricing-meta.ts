@@ -1,4 +1,4 @@
-// Preis-Datenmodell (Lodgify „Pricing", Etappe 1: Nightly + Length of stay).
+// Preis-Datenmodell (Pricing, Etappe 1: Nightly + Length of stay).
 // Gespeichert im flexiblen jsonb-Feld `type_attributes.pricing` eines Objekts —
 // keine Migration. Mark-up pro externem Kanal (Airbnb/Booking/Google).
 
@@ -55,7 +55,7 @@ export const WEEKDAY_LABELS: { key: Weekday; label: string }[] = [
   { key: "sun", label: "So" },
 ];
 
-// Längen-Preis (Lodgify „Length of stay"): Rabatt ab N Nächten.
+// Längen-Preis (Length of stay): Rabatt ab N Nächten.
 export type StayKind = "weekly" | "monthly" | "custom";
 export type LengthPrice = {
   id: string; // eindeutige ID (für Liste)
@@ -72,7 +72,7 @@ export const STAY_KIND_LABELS: Record<StayKind, string> = {
 
 // --- Etappe 2: Fees, Taxes, Promotions, Add-ons, Other information ---------
 
-// Gebühr (Lodgify „Fee"). Berechnung als Einmalbetrag oder pro Gast/Nacht.
+// Gebühr (Fee). Berechnung als Einmalbetrag oder pro Gast/Nacht.
 export type FeeBasis = "per_stay" | "per_night" | "per_guest_stay" | "per_guest_night";
 export const FEE_BASIS_LABELS: Record<FeeBasis, string> = {
   per_stay: "Einmalig pro Aufenthalt",
@@ -91,7 +91,7 @@ export type Fee = {
   taxRate?: number | null;
 };
 
-// Steuer (Lodgify „Taxes"): USt./Sales tax ODER lokale Steuer.
+// Steuer (Taxes): USt./Sales tax ODER lokale Steuer.
 export type TaxKind = "vat" | "local";
 export type TaxMode = "percent" | "amount";
 export const TAX_KIND_LABELS: Record<TaxKind, string> = {
@@ -107,7 +107,7 @@ export type Tax = {
   includedInPrice: boolean; // im Preis enthalten?
 };
 
-// Promotion (Lodgify „Promotions"): prozentualer Rabatt mit Bedingungen.
+// Promotion (Promotions): prozentualer Rabatt mit Bedingungen.
 export type Promotion = {
   id: string;
   name: string;
@@ -115,7 +115,7 @@ export type Promotion = {
   conditions: string; // z. B. „nur Juni 2026", Freitext
 };
 
-// Add-on (Lodgify „Add-ons"): aktivierbares Extra (z. B. Frühstück).
+// Add-on (Add-ons): aktivierbares Extra (z. B. Frühstück).
 export type AddOn = {
   id: string;
   name: string;

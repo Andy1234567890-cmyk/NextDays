@@ -1,6 +1,6 @@
 "use client";
 
-// Lodgify-artiges Kalender-Raster (Timeline): rollierend ab HEUTE, links
+// Kalender-Raster (Timeline): rollierend ab HEUTE, links
 // Objektzeilen (Foto/Name/Adresse), rechts scrollende Tagespalten mit
 // Wochentag+Datum. Zellen zeigen Gäste + Preis-Platzhalter; belegte/gesperrte
 // Zeiträume als Balken. Scrollt INNERHALB des Containers (kein Seiten-Overflow).
@@ -65,7 +65,7 @@ const MONTHS = [
   "Juli", "August", "September", "Oktober", "November", "Dezember",
 ];
 
-const COL = 5.5; // rem pro Tagesspalte (breit & lesbar wie Lodgify, konstant)
+const COL = 5.5; // rem pro Tagesspalte (breit & lesbar, konstant)
 const LABEL = 17; // rem für die Objektspalte
 const ROW_H = 3.5; // rem Zeilenhöhe (kompakter — mehr Objekte pro Bildschirm)
 // Halbtags-Versatz der Buchungsbalken (Anreise ab Spaltenmitte, Auslauf bis zur
@@ -428,7 +428,7 @@ export function CalendarBoard({
   const [statusFilter, setStatusFilter] = useState<DisplayStatus | "all">("all");
   const [typeFilter, setTypeFilter] = useState<PropertyType | "all">("all");
 
-  // Interaktion wie Lodgify: Anfangstag drücken → bis Endtag ziehen → loslassen.
+  // Interaktion: Anfangstag drücken → bis Endtag ziehen → loslassen.
   // `drag` ist nur die Vorschau WÄHREND des Ziehens; `sel` wird ERST beim
   // Loslassen gesetzt und löst dann die Bestätigungsleiste aus.
   const [drag, setDrag] = useState<{ pid: string; from: number; to: number } | null>(null);
@@ -1293,7 +1293,7 @@ export function CalendarBoard({
 
   return (
     <div className="flex min-w-0 flex-col gap-4">
-      {/* Kopfbereich (eigenes Element, wie Lodgify) */}
+      {/* Kopfbereich (eigenes Element) */}
       <CalendarHeader
         title={{ month: titleMonth, year: titleYear }}
         view={view}
@@ -1404,7 +1404,7 @@ export function CalendarBoard({
         {loading && <span>· lädt …</span>}
       </div>
 
-      {/* Aktionsmenü am Cursor nach dem Ziehen (eigene Komponente, wie Lodgify) */}
+      {/* Aktionsmenü am Cursor nach dem Ziehen (eigene Komponente) */}
       {sel && menuAt && start && (
         <CalendarActionMenu
           at={menuAt}
@@ -1457,8 +1457,8 @@ export function CalendarBoard({
           label="Umsatz"
           value={
             metrics.mixedCurrency ||
-            !metrics.currency ||
-            (metrics.amountsHidden && metrics.revenue === 0)
+              !metrics.currency ||
+              (metrics.amountsHidden && metrics.revenue === 0)
               ? "—"
               : metrics.revenue.toLocaleString("de-DE", {
                 style: "currency",
@@ -1587,8 +1587,8 @@ export function CalendarBoard({
                             onMouseDown={(ev) => onCellDown(p.id, di, ev)}
                             onMouseEnter={() => onCellEnter(p.id, di)}
                             className={`flex shrink-0 cursor-pointer flex-col items-center justify-center gap-0.5 self-stretch border-r text-sm transition-colors ${inSel
-                                ? "bg-neutral-800 text-white"
-                                : `hover:bg-accent/10 ${isToday ? "bg-accent/5" : ""}`
+                              ? "bg-neutral-800 text-white"
+                              : `hover:bg-accent/10 ${isToday ? "bg-accent/5" : ""}`
                               }`}
                             style={{ width: `${COL}rem`, minHeight: `${ROW_H}rem` }}
                           >
@@ -1650,7 +1650,7 @@ export function CalendarBoard({
                       {/* Spacer rechts (Zellen nach dem sichtbaren Fenster). */}
                       <div style={{ width: `${(totalDays - visTo) * COL}rem` }} className="shrink-0" />
 
-                      {/* Gestrichelter Rahmen um den ausgewählten Block (wie Lodgify) */}
+                      {/* Gestrichelter Rahmen um den ausgewählten Block */}
                       {(() => {
                         const active = drag ?? sel;
                         if (!active || active.pid !== p.id) return null;
@@ -1703,8 +1703,8 @@ export function CalendarBoard({
                         const bookedBar =
                           statusMeta?.barClass ?? `${meta.barBg} ${meta.barFg}`;
                         const barClass = `${seg.status === "booked"
-                            ? bookedBar
-                            : SEG_STYLE[seg.status]
+                          ? bookedBar
+                          : SEG_STYLE[seg.status]
                           } ${dimmed ? "opacity-25" : ""}`;
                         // Während IRGENDEIN Balken gezogen wird, lassen alle Balken
                         // Mausereignisse durch (damit die Zell-onMouseEnter feuert

@@ -1,4 +1,4 @@
-// Objekt → Gästemappe (Lodgify „Gästemappe"): die Info-Inhalte fürs Gästeportal
+// Objekt → Gästemappe: die Info-Inhalte fürs Gästeportal
 // (Check-in/out, Anfahrt, Türzugang, Hausordnung, WLAN, Reiseführer, Notfall).
 //
 // WICHTIG (siehe docs/ANALYSE-gaeste-info-gastmodul-gaestemappe.md): Diese

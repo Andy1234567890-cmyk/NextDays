@@ -1,6 +1,6 @@
 "use client";
 
-// NextDays-Dashboard-Navigation, am Lodgify-Vorbild ausgerichtet:
+// NextDays-Dashboard-Navigation:
 // Hauptbereiche + aufklappbare Gruppen (Accordion, Lastenheft §2.1) + User-Block.
 // Icons via Iconify (ph:*).
 import { Icon } from "@iconify/react";
@@ -41,12 +41,12 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
-// Navigation nach PMS-Konvergenz (Casona/Lodgify): oben die täglichen
-// Kernbereiche flach, darunter thematische Gruppen. Die Beherbergungsart
-// des Mandanten (vacation_rental | hotel, Migration 0090) steuert Begriffe
-// („Objekte" vs. „Zimmer") und Sichtbarkeit (Eigentümer nur Ferienvermietung).
-// `key` = i18n-Schlüssel (Namespace "nav"), `req` = benötigte Lodgify-Berechti-
-// gung; ohne `req` immer sichtbar. Admin sieht alles (siehe canSee).
+// Navigation: oben die täglichen Kernbereiche flach, darunter thematische
+// Gruppen. Die Beherbergungsart des Mandanten (vacation_rental | hotel,
+// Migration 0090) steuert Begriffe („Objekte" vs. „Zimmer") und Sichtbarkeit
+// (Eigentümer nur Ferienvermietung).
+// `key` = i18n-Schlüssel (Namespace "nav"), `req` = benötigte Berechtigung;
+// ohne `req` immer sichtbar. Admin sieht alles (siehe canSee).
 type NavItem = { key: string; href: string; icon: string; req?: string };
 type AccommodationType = "vacation_rental" | "hotel";
 
@@ -54,7 +54,7 @@ type AccommodationType = "vacation_rental" | "hotel";
 const MAIN: readonly NavItem[] = [
   { key: "dashboard", href: "/", icon: "ph:squares-four" },
   { key: "calendar", href: "/kalender", icon: "ph:calendar-blank", req: "view_calendar" },
-  { key: "inbox", href: "/posteingang", icon: "ph:chat-circle", req: "view_guest_contact" },
+  { key: "inbox", href: "/posteingang", icon: "ph:chat-circle", req: "pm_chat" },
 ];
 
 // Thematische Gruppen; werden zur Laufzeit nach Beherbergungsart gebaut.
@@ -258,8 +258,8 @@ export function AppSidebar({
     href === "/" ? pathname === "/" : pathname.startsWith(href);
 
   // Sichtbarkeit eines Menüpunkts: Admin sieht alles; sonst muss die ggf.
-  // geforderte Berechtigung vorhanden sein. `req` kann eine Lodgify-Permission
-  // ODER eine Capability sein (z. B. manage_owners = Agentur-Verwaltung).
+  // geforderte Berechtigung vorhanden sein. `req` kann eine feingranulare
+  // Permission ODER eine Capability sein (z. B. manage_owners = Agentur-Verwaltung).
   // Eigentümer (§4.2) sehen zusätzlich NUR die fürs read-only-Portal freigegebenen
   // Bereiche.
   const grantSet = new Set([...permissions, ...capabilities]);
@@ -377,7 +377,7 @@ export function AppSidebar({
         })}
       </SidebarContent>
 
-      {/* User-Block unten — Klick öffnet das Konto-Menü (wie Lodgify). */}
+      {/* User-Block unten — Klick öffnet das Konto-Menü. */}
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>

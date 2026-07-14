@@ -1,6 +1,6 @@
 """Tests für den zentralen Gast-Masking-Helper (DSGVO-Daten-Split §4)."""
 from src.features.auth.guest_masking import mask_for
-from src.features.auth.lodgify_permissions import (
+from src.features.auth.granular_permissions import (
     Permission,
     effective_permissions,
 )
@@ -49,3 +49,35 @@ def test_first_name_only_handles_empty() -> None:
     assert m.name(None) is None
     assert m.name("") is None
     assert m.name("Cher") == "Cher"
+
+
+# --- PM-Dach (access_pm_features) ------------------------------------------
+
+def test_pm_umbrella_removes_all_pm_children_when_dach_missing() -> None:
+    # Ohne access_pm_features fallen ALLE pm_*/inbox_*-Rechte weg, auch wenn
+    # sie einzeln gesetzt sind — der Entzug des Dachs sperrt das PM-Modul.
+    stored = [
+        "pm_chat", "pm_guest_details", "pm_booking_total", "inbox_view_all",
+        "edit_property", "owner_reporting",  # Nicht-PM bleibt
+    ]
+    eff = {p.value for p in effective_permissions(UserRole.co_admin, stored)}
+    assert "pm_chat" not in eff
+    assert "pm_guest_details" not in eff
+    assert "pm_booking_total" not in eff
+    assert "inbox_view_all" not in eff
+    # Nicht-PM-Rechte unberührt.
+    assert "edit_property" in eff
+    assert "owner_reporting" in eff
+
+
+def test_pm_umbrella_keeps_children_when_dach_present() -> None:
+    stored = ["access_pm_features", "pm_chat", "pm_guest_details", "inbox_reply"]
+    eff = {p.value for p in effective_permissions(UserRole.co_admin, stored)}
+    assert {"access_pm_features", "pm_chat", "pm_guest_details", "inbox_reply"} <= eff
+
+
+def test_pm_umbrella_admin_always_full() -> None:
+    # Admin bekommt immer alle Rechte, unabhängig vom Dach.
+    eff = effective_permissions(UserRole.admin, [])
+    assert Permission.PM_CHAT in eff
+    assert Permission.ACCESS_PM_FEATURES in eff

@@ -5,8 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from src.core.security import AuthContext, CurrentUser
 from src.core.uploads import read_upload
-from src.features.auth.dependencies import require_lodgify_permission
-from src.features.auth.lodgify_permissions import Permission
+from src.features.auth.dependencies import require_granular_permission
+from src.features.auth.granular_permissions import Permission
 
 from .dependencies import PropertiesServiceDep
 from .schemas import (
@@ -24,7 +24,7 @@ from .schemas import (
 from .service import PropertyError
 
 # Wiederverwendete Permission-Dependency für alle Foto-Endpunkte.
-_MANAGE_IMAGES = require_lodgify_permission(  # noqa: N816  pylint: disable=invalid-name
+_MANAGE_IMAGES = require_granular_permission(  # noqa: N816  pylint: disable=invalid-name
     Permission.PM_MANAGE_PROPERTY_IMAGES
 )
 
@@ -52,7 +52,7 @@ def create_property(
     service: PropertiesServiceDep,
     ctx: Annotated[
         AuthContext,
-        Depends(require_lodgify_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
+        Depends(require_granular_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
     ],
 ) -> PropertyResponse:
     # Objekt anlegen ist Objektverwaltung (wie publish/resync) — owner/staff/cleaner
@@ -79,7 +79,7 @@ def update_property(
     req: PropertyUpdate,
     service: PropertiesServiceDep,
     ctx: Annotated[
-        AuthContext, Depends(require_lodgify_permission(Permission.EDIT_PROPERTY))
+        AuthContext, Depends(require_granular_permission(Permission.EDIT_PROPERTY))
     ],
 ) -> PropertyResponse:
     try:
@@ -94,7 +94,7 @@ def delete_property(
     service: PropertiesServiceDep,
     ctx: Annotated[
         AuthContext,
-        Depends(require_lodgify_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
+        Depends(require_granular_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
     ],
 ) -> None:
     # Löschen ist die destruktivste Operation (harter Delete + Channex-Abkopplung)
@@ -112,7 +112,7 @@ def publish_property(
     service: PropertiesServiceDep,
     ctx: Annotated[
         AuthContext,
-        Depends(require_lodgify_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
+        Depends(require_granular_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
     ],
 ) -> PropertyResponse:
     """Objekt veröffentlichen (draft→active), an Channex übertragen und den
@@ -129,7 +129,7 @@ def resync_property(
     service: PropertiesServiceDep,
     ctx: Annotated[
         AuthContext,
-        Depends(require_lodgify_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
+        Depends(require_granular_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
     ],
 ) -> PropertyResponse:
     """Objekt-Inhalte (inkl. Fotos, Ausstattung, Belegung) erneut an die
@@ -147,7 +147,7 @@ async def upload_property_image(
     service: PropertiesServiceDep,
     ctx: Annotated[
         AuthContext,
-        Depends(require_lodgify_permission(Permission.PM_MANAGE_PROPERTY_IMAGES)),
+        Depends(require_granular_permission(Permission.PM_MANAGE_PROPERTY_IMAGES)),
     ],
     slot: str = "image",
 ) -> ImageUploadResponse:

@@ -10,8 +10,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.core.security import AuthContext
 from src.core.supabase import get_service_client
-from src.features.auth.dependencies import require_lodgify_permission
-from src.features.auth.lodgify_permissions import Permission
+from src.features.auth.dependencies import require_granular_permission
+from src.features.auth.granular_permissions import Permission
 
 from .schemas import (
     AddressCreate,
@@ -48,11 +48,11 @@ GuestsServiceDep = Annotated[GuestsService, Depends(get_guests_service)]
 
 # Lesen der Gästekarte erfordert PM_GUEST_DETAILS (Gäste-Detail-Modul).
 _guest = Annotated[
-    AuthContext, Depends(require_lodgify_permission(Permission.PM_GUEST_DETAILS))
+    AuthContext, Depends(require_granular_permission(Permission.PM_GUEST_DETAILS))
 ]
 # Schreiben (anlegen/ändern/löschen + Sub-Ressourcen) erfordert EDIT_GUEST.
 _edit = Annotated[
-    AuthContext, Depends(require_lodgify_permission(Permission.EDIT_GUEST))
+    AuthContext, Depends(require_granular_permission(Permission.EDIT_GUEST))
 ]
 
 router = APIRouter(prefix="/guests", tags=["guests"])

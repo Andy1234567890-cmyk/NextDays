@@ -1,6 +1,6 @@
 "use client";
 
-// Objekt-Kalender (Lodgify „Kalender"): drei Monate nebeneinander, belegte
+// Objekt-Kalender (.. „Kalender"): drei Monate nebeneinander, belegte
 // Nächte dieses Objekts hervorgehoben. Ein Klick auf eine belegte Zelle öffnet
 // die Buchungsdetailseite. Speist sich aus listReservations(propertyId); live
 // über useRealtime auf reservations. Belegung = occupiesNight (Check-out-Tag frei).
@@ -16,7 +16,7 @@ import { useRealtime } from "@/lib/use-realtime";
 
 const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
-// Zwölf Monate ab dem Anker sichtbar (ein Jahr Belegung im Blick, wie Lodgify).
+// Zwölf Monate ab dem Anker sichtbar (ein Jahr Belegung im Blick, wie ..).
 // Über die Kopf-Navigation verschiebt man das Fenster monats- oder jahresweise.
 const VISIBLE_MONTHS = 12;
 

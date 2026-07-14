@@ -122,7 +122,7 @@ def invite(
             detail="Einladender Nutzer hat keinen Tenant.",
         )
     try:
-        return service.invite(req, tenant_id=ctx.tenant_id)
+        return service.invite(req, tenant_id=ctx.tenant_id, granter_id=ctx.user_id)
     except AuthError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -264,7 +264,11 @@ def update_managed_user(
     """Nutzer im eigenen Tenant bearbeiten (Konto → Benutzer; admin/co_admin)."""
     try:
         return service.update_managed_user(
-            ctx, user_id, full_name=req.full_name, role=req.role,
+            ctx,
+            user_id,
+            full_name=req.full_name,
+            role=req.role,
+            permissions=req.permissions,
         )
     except AuthError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

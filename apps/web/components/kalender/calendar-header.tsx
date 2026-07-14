@@ -1,6 +1,6 @@
 "use client";
 
-// Kopfbereich des Kalenders (wie Lodgify): Titel links, dann
+// Kopfbereich des Kalenders: Titel links, dann
 // ◀ Zurück · ▶ Vor · 📅 Heute, rechts ⚙️ Ansicht-anpassen (Drawer) und
 // ＋ Erstellen (Menü). Eigenständiges Element, steuert das Raster über Props.
 import { Icon } from "@iconify/react";

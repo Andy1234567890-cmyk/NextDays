@@ -7,10 +7,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from src.core.security import CurrentUser
 from src.core.supabase import get_service_client
 from src.features.auth.dependencies import (
-    require_lodgify_permission,
+    require_granular_permission,
     require_permission,
 )
-from src.features.auth.lodgify_permissions import Permission
+from src.features.auth.granular_permissions import Permission
 from src.features.auth.permissions import Capability
 
 from .schemas import (
@@ -180,7 +180,7 @@ def reservation_timeline(
     service: ReservationsServiceDep,
     ctx: Annotated[CurrentUser, Depends(require_permission(Capability.VIEW_CALENDAR))],
 ) -> TimelineResponse:
-    """Ereignis-Zeitleiste einer Buchung (Lodgify „Zeitleiste"). Tenant-/owner-
+    """Ereignis-Zeitleiste einer Buchung (Zeitleiste). Tenant-/owner-
     scoped; kombiniert echte reservation_events mit synthetischen Basis-Events
     aus vorhandenen Zeitstempeln + Aufgaben. Neueste zuerst."""
     try:
@@ -207,7 +207,7 @@ def create_reservation(
     "/{reservation_id}/move",
     response_model=ReservationResponse,
     dependencies=[
-        Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+        Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
     ],
 )
 def move_reservation(
@@ -230,7 +230,7 @@ def move_reservation(
     "/{reservation_id}/cancel",
     response_model=ReservationResponse,
     dependencies=[
-        Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+        Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
     ],
 )
 def cancel_reservation(
@@ -253,7 +253,7 @@ def cancel_reservation(
     "/{reservation_id}/check-in",
     response_model=ReservationResponse,
     dependencies=[
-        Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+        Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
     ],
 )
 def check_in_reservation(
@@ -275,7 +275,7 @@ def check_in_reservation(
     "/{reservation_id}/check-out",
     response_model=CheckOutResponse,
     dependencies=[
-        Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+        Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
     ],
 )
 def check_out_reservation(

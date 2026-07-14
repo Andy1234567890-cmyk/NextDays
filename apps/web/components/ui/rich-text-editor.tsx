@@ -1,6 +1,6 @@
 "use client";
 
-// Rich-Text-Editor auf TipTap-Basis (für Beschreibungstexte, wie Lodgify).
+// Rich-Text-Editor auf TipTap-Basis (für Beschreibungstexte).
 // Toolbar mit Fett/Kursiv/Durchstreichen/Listen/Link. Icons via Iconify (ph:*).
 // Styling über semantische Tokens — fügt sich ins Formular ein.
 import { Icon } from "@iconify/react";

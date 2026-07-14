@@ -1,6 +1,6 @@
 "use client";
 
-// Tab-Umschalter im Buchungsdetail-Kopf (Lodgify: „Buchung {ref}" ↔ „Zeitleiste"
+// Tab-Umschalter im Buchungsdetail-Kopf (..: „Buchung {ref}" ↔ „Zeitleiste"
 // oben rechts). Zwei Reiter: Übersicht (die Detailseite) und Zeitleiste (der
 // komplette Ereignis-Flow als eigene Seite).
 import { Icon } from "@iconify/react";
@@ -28,11 +28,10 @@ export function BookingDetailTabs({ reservationId }: { reservationId: string }) 
             key={t.slug || "overview"}
             href={href}
             aria-current={active ? "page" : undefined}
-            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
-              active
+            className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${active
                 ? "bg-card text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
-            }`}
+              }`}
           >
             <Icon icon={t.icon} className="size-4" />
             {t.title}

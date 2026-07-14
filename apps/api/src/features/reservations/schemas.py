@@ -26,7 +26,7 @@ class ReservationStatus(StrEnum):
 
 
 class GuestBreakdown(BaseModel):
-    """Gäste-Aufschlüsselung (Lodgify Schritt 1)."""
+    """Gäste-Aufschlüsselung (Schritt 1)."""
 
     adults: int = Field(default=1, ge=1)
     children: int = Field(default=0, ge=0)
@@ -305,7 +305,7 @@ class StatComparePeriod(BaseModel):
 
 
 class StatMetricDetail(BaseModel):
-    """Detail-Daten EINER KPI (Lodgify-KPI-Detailseite): die aktuelle Tagesreihe,
+    """Detail-Daten EINER KPI (KPI-Detailseite): die aktuelle Tagesreihe,
     bis zu vier gleich lange Vergleichsperioden davor und die Breakout-Matrix
     (Perioden × Tag-Offset). Beträge maskiert (visible=False → leer)."""
 
@@ -323,7 +323,7 @@ class StatMetricDetail(BaseModel):
 
 
 class PropertyStats(BaseModel):
-    """Objekt-Kennzahlen für den Statistiken-Reiter (Lodgify „Kontrollzentrum").
+    """Objekt-Kennzahlen für den Statistiken-Reiter (Kontrollzentrum).
 
     Alle Betrags-KPIs sind maskierbar (None ohne Betrags-Sichtbarkeit, §4.2) und
     tragen die Währung aus den Daten (leer bei gemischten Währungen — keine
@@ -365,7 +365,7 @@ class StatMetricDetailResponse(BaseModel):
 
 
 class TimelineEvent(BaseModel):
-    """Ein Eintrag der Buchungs-Zeitleiste (Lodgify „Zeitleiste").
+    """Ein Eintrag der Buchungs-Zeitleiste (Zeitleiste).
 
     `kind` ist der stabile Schlüssel (created/moved/repriced/checked_in/
     checked_out/cancelled/task_created) — die Beschriftung/Übersetzung macht das
@@ -385,7 +385,7 @@ class TimelineResponse(BaseModel):
     """Chronologische Ereignis-Zeitleiste einer Buchung (neueste zuerst).
 
     `property_title`/`property_photo` sind der gemeinsame Objekt-Kontext aller
-    Ereignisse (Lodgify zeigt je Karte das Objekt-Thumbnail + den Namen) — einmal
+    Ereignisse (je Karte das Objekt-Thumbnail + den Namen) — einmal
     geliefert statt je Event dupliziert. `photo` = null → das UI zeigt einen
     Platzhalter (kein erfundenes Bild)."""
 

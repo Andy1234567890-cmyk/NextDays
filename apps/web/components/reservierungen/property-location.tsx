@@ -1,6 +1,6 @@
 "use client";
 
-// Objekt-Standort im Buchungsdetail (Lodgify: Karte rechts oben). Zeigt die
+// Objekt-Standort im Buchungsdetail (..: Karte rechts oben). Zeigt die
 // eingebettete OpenStreetMap-Karte mit Marker + die Adresse. Bewusst OHNE
 // Google/Mapbox (kein API-Key, kein Fremd-Branding — passt zu white-label und
 // dem self-hosted-Prinzip). Koordinaten kommen aus properties.lat/lng.
@@ -45,7 +45,7 @@ export function PropertyLocation(p: LocationProps) {
   // OSM-Embed: kleine BBox um den Punkt + Marker. Kein Key, kein Tracking-Skript.
   const lat = p.lat as number;
   const lng = p.lng as number;
-  const d = 0.008; // ~800 m Kantenlänge → Straßen-Zoom wie bei Lodgify
+  const d = 0.008; // ~800 m Kantenlänge → Straßen-Zoom wie bei ..
   const bbox = `${lng - d}%2C${lat - d}%2C${lng + d}%2C${lat + d}`;
   const embedSrc = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat}%2C${lng}`;
   // „In Karte öffnen": vollständige OSM-Ansicht (öffnet extern in neuem Tab).

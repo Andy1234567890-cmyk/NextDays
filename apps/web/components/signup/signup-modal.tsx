@@ -1,6 +1,6 @@
 "use client";
 
-// Sign-up-Modal über dem Demo-Kalender (wie Lodgify). Zwei Phasen:
+// Sign-up-Modal über dem Demo-Kalender. Zwei Phasen:
 //  1) Auswahl: Überschrift + Feature-Häkchen + Google/Apple/E-Mail + Login-Link
 //  2) Laden:   Fortschrittsbalken + „Deine eigene Buchungswebsite …"
 // Größen in rem, Buttons rounded-full (Projekt-Regeln), Icons via Iconify.

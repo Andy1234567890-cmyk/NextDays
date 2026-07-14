@@ -1,6 +1,6 @@
 "use client";
 
-// Belegungs-/Auslastungs-Heatmap (wie das Lodgify-„Performance"-Raster): Objekte
+// Belegungs-/Auslastungs-Heatmap (Performance-Raster): Objekte
 // als Zeilen, Tage als Spalten, Zelle eingefärbt nach belegt/frei; die Kopfzeile
 // zeigt die Tages-Gesamtauslastung (Anteil belegter Objekte) als Farbstufe. So
 // sieht man auf einen Blick volle und schwache Tage. Aggregat rein im Frontend
@@ -112,9 +112,8 @@ export function CalendarOccupancyView({ properties }: { properties: Prop[] }) {
                   return (
                     <th
                       key={k}
-                      title={`${d.toLocaleDateString("de-DE")} · ${cell.booked}/${
-                        propertyIds.length
-                      } belegt`}
+                      title={`${d.toLocaleDateString("de-DE")} · ${cell.booked}/${propertyIds.length
+                        } belegt`}
                       className={`h-12 w-7 border-b border-l px-0 text-center align-bottom font-medium ${occupancyClass(
                         cell.ratio,
                       )}`}
@@ -141,9 +140,8 @@ export function CalendarOccupancyView({ properties }: { properties: Prop[] }) {
                         title={`${p.title} · ${parseKey(k).toLocaleDateString(
                           "de-DE",
                         )} · ${booked ? "belegt" : "frei"}`}
-                        className={`h-6 w-7 border-b border-l ${
-                          booked ? "bg-accent/80" : "bg-card"
-                        }`}
+                        className={`h-6 w-7 border-b border-l ${booked ? "bg-accent/80" : "bg-card"
+                          }`}
                       />
                     );
                   })}

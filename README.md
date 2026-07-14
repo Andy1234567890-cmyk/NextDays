@@ -20,7 +20,7 @@ Ein PMS-Kern, der Channel Manager, Direktbuchung und ein eigenes Buchungsportal 
 
 NextDays kombiniert **zwei Geschäftsmodelle auf einem gemeinsamen Datenkern**:
 
-1. **Vermieter-Werkzeug (Supply-Seite)** — PMS + Channel Manager + **Page-Builder**: jeder Mandant bekommt eine eigene white-label Buchungs-Website unter eigener Custom-Domain, visuell bearbeitbar im Framer-artigen Editor (Spec: [docs/FRAMER-FEATURES.md](docs/FRAMER-FEATURES.md)). Vergleichbar mit Lodgify, aber einfacher, fairer, stabiler.
+1. **Vermieter-Werkzeug (Supply-Seite)** — PMS + Channel Manager + **Page-Builder**: jeder Mandant bekommt eine eigene white-label Buchungs-Website unter eigener Custom-Domain, visuell bearbeitbar im Framer-artigen Editor (Spec: [docs/FRAMER-FEATURES.md](docs/FRAMER-FEATURES.md)). Vergleichbar mit .., aber einfacher, fairer, stabiler.
 2. **Eigenes Buchungsportal (Demand-Seite)** — ein zweiseitiger Marktplatz, auf dem Gäste Unterkünfte suchen und direkt buchen.
 
 myNextDays bedient dabei **zwei Betriebsarten** pro Mandant: klassische
@@ -150,17 +150,17 @@ Details & technische Diagramme (C4, ER, Sequenz, Deployment):
 
 ## Tech-Stack
 
-| Ebene | Technologie |
-|---|---|
-| Web-Frontend | Next.js (App Router), TypeScript, **Bun** |
-| UI | shadcn/ui (Tailwind v4 via `@theme`), **Iconify**, Light/Dark via `next-themes` |
-| Design-System | **Storybook** (Komponenten-Doku, Light/Dark, Design-Tokens) — Marke aus NextDays-Logo |
-| Backend | **FastAPI** (Python 3.12), Vertical Slice Architecture |
-| Datenbank/Auth/Storage | **Supabase** (Postgres, Auth, Storage), Multi-Tenant mit Row-Level-Security |
-| Cache & Queue | **Redis** |
-| Zahlungen | **Stripe Connect Custom** (primär) · **Revolut** (sekundär) — Gateway-Adapter-Muster, vgl. [ADR-0011](docs/decisions/0011-zahlungs-gateway-stripe-primaer.md) |
-| Page-Builder | **craft.js**-Editor in `apps/web` · eigener Renderer `builder/` · Custom-Domains via **Cloudflare for SaaS** — Spec: [docs/FRAMER-FEATURES.md](docs/FRAMER-FEATURES.md), vgl. [ADR-0013](docs/decisions/0013-page-builder-renderer-editor-trennung.md) |
-| Deployment | Self-hosted auf Hetzner via **Coolify** (API + Supabase + Redis + Frontends als Docker-Apps) · DSGVO-konform |
+| Ebene                  | Technologie                                                                                                                                                                                                                                            |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Web-Frontend           | Next.js (App Router), TypeScript, **Bun**                                                                                                                                                                                                              |
+| UI                     | shadcn/ui (Tailwind v4 via `@theme`), **Iconify**, Light/Dark via `next-themes`                                                                                                                                                                        |
+| Design-System          | **Storybook** (Komponenten-Doku, Light/Dark, Design-Tokens) — Marke aus NextDays-Logo                                                                                                                                                                  |
+| Backend                | **FastAPI** (Python 3.12), Vertical Slice Architecture                                                                                                                                                                                                 |
+| Datenbank/Auth/Storage | **Supabase** (Postgres, Auth, Storage), Multi-Tenant mit Row-Level-Security                                                                                                                                                                            |
+| Cache & Queue          | **Redis**                                                                                                                                                                                                                                              |
+| Zahlungen              | **Stripe Connect Custom** (primär) · **Revolut** (sekundär) — Gateway-Adapter-Muster, vgl. [ADR-0011](docs/decisions/0011-zahlungs-gateway-stripe-primaer.md)                                                                                          |
+| Page-Builder           | **craft.js**-Editor in `apps/web` · eigener Renderer `builder/` · Custom-Domains via **Cloudflare for SaaS** — Spec: [docs/FRAMER-FEATURES.md](docs/FRAMER-FEATURES.md), vgl. [ADR-0013](docs/decisions/0013-page-builder-renderer-editor-trennung.md) |
+| Deployment             | Self-hosted auf Hetzner via **Coolify** (API + Supabase + Redis + Frontends als Docker-Apps) · DSGVO-konform                                                                                                                                           |
 
 ---
 
@@ -249,24 +249,24 @@ nextdays/
 
 ## Stand der Entwicklung
 
-| Bereich | Status |
-|---|---|
-| Monorepo-Gerüst + Infra (Docker, Supabase-Config) | ✅ |
-| FastAPI `core/` (Config, Logging, Supabase, Auth ES256/JWKS) | ✅ |
-| 24 Vertical Slices angelegt | ✅ |
-| `travel_agencies` (Reisebüro-Kartei: Verträge nach Jahren, Saison-Preise, Stop-Sell-Adressat) | ✅ |
-| `auth`-Slice voll (Register/Login/Me · Rollen · Capability-Matrix) | ✅ |
-| `calendar`-Slice (Verfügbarkeit, Sperrung, Preis-Override) | ✅ |
-| `tasks`-Slice (Aufgaben, Checklisten, Inventar, Vertretung) | ✅ |
-| `payments` — **Stripe Connect Custom** (primär, [ADR-0011](docs/decisions/0011-zahlungs-gateway-stripe-primaer.md)) · Revolut sekundär im Adapter | ✅ |
-| Supabase-Migrationen (90) auf echter DB · RLS · Realtime | ✅ |
-| Web-Frontend `apps/web` — volles Dashboard (shadcn-Stil · Iconify · next-themes · Tailwind v4) | ✅ |
-| **Page-Builder** — craft.js-Editor unter `/website`, `site_config`-Slice, `builder/`-Renderer, Custom-Domains via Cloudflare (0086/0087) | ✅ Kern · 🟡 Editor-Ausbau nach [FRAMER-FEATURES](docs/FRAMER-FEATURES.md) |
-| **Betriebsart** Hotel / Ferienvermietung (`tenants.accommodation_type`, 0090) — eigene Sidebar-Navigation, Wahl im 5-Schritte-Onboarding | ✅ |
-| Channel-Manager (Channex: ARI-Push, Buchungs-Sync, 4-Schritt-Channel-Flow) · Unified Inbox (inkl. WhatsApp) | ✅ |
-| Storybook (Design-System) — **live & zugangsgeschützt**, 22 UI-Bausteine + 15 PMS-Komponenten + 7 Eigentümer-Doku-Seiten | ✅ |
-| Storybook-Zugang: Supabase-Login (Middleware) · Admin-Bereich (Nutzer anlegen) · Realtime-Team-Chat | ✅ |
-| CRM-Ausbau · Gäste-Portal | ⏳ geplant |
+| Bereich                                                                                                                                           | Status                                                                     |
+| ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| Monorepo-Gerüst + Infra (Docker, Supabase-Config)                                                                                                 | ✅                                                                         |
+| FastAPI `core/` (Config, Logging, Supabase, Auth ES256/JWKS)                                                                                      | ✅                                                                         |
+| 24 Vertical Slices angelegt                                                                                                                       | ✅                                                                         |
+| `travel_agencies` (Reisebüro-Kartei: Verträge nach Jahren, Saison-Preise, Stop-Sell-Adressat)                                                     | ✅                                                                         |
+| `auth`-Slice voll (Register/Login/Me · Rollen · Capability-Matrix)                                                                                | ✅                                                                         |
+| `calendar`-Slice (Verfügbarkeit, Sperrung, Preis-Override)                                                                                        | ✅                                                                         |
+| `tasks`-Slice (Aufgaben, Checklisten, Inventar, Vertretung)                                                                                       | ✅                                                                         |
+| `payments` — **Stripe Connect Custom** (primär, [ADR-0011](docs/decisions/0011-zahlungs-gateway-stripe-primaer.md)) · Revolut sekundär im Adapter | ✅                                                                         |
+| Supabase-Migrationen (90) auf echter DB · RLS · Realtime                                                                                          | ✅                                                                         |
+| Web-Frontend `apps/web` — volles Dashboard (shadcn-Stil · Iconify · next-themes · Tailwind v4)                                                    | ✅                                                                         |
+| **Page-Builder** — craft.js-Editor unter `/website`, `site_config`-Slice, `builder/`-Renderer, Custom-Domains via Cloudflare (0086/0087)          | ✅ Kern · 🟡 Editor-Ausbau nach [FRAMER-FEATURES](docs/FRAMER-FEATURES.md) |
+| **Betriebsart** Hotel / Ferienvermietung (`tenants.accommodation_type`, 0090) — eigene Sidebar-Navigation, Wahl im 5-Schritte-Onboarding          | ✅                                                                         |
+| Channel-Manager (Channex: ARI-Push, Buchungs-Sync, 4-Schritt-Channel-Flow) · Unified Inbox (inkl. WhatsApp)                                       | ✅                                                                         |
+| Storybook (Design-System) — **live & zugangsgeschützt**, 22 UI-Bausteine + 15 PMS-Komponenten + 7 Eigentümer-Doku-Seiten                          | ✅                                                                         |
+| Storybook-Zugang: Supabase-Login (Middleware) · Admin-Bereich (Nutzer anlegen) · Realtime-Team-Chat                                               | ✅                                                                         |
+| CRM-Ausbau · Gäste-Portal                                                                                                                         | ⏳ geplant                                                                 |
 
 Aktueller Detail-Stand & nächste Schritte: **[NOTES.md](NOTES.md)**
 

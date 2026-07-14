@@ -2,7 +2,7 @@
 
 EINE Wahrheit für die Feldsichtbarkeit von Gastdaten — genutzt von inbox,
 reservations und dashboard. Welche Felder ein Nutzer sieht, hängt an seinen
-feingranularen Lodgify-Berechtigungen (users.permissions), nicht an der Rolle:
+feingranularen Berechtigungen (users.permissions), nicht an der Rolle:
 
 - voller Name      ← VIEW_GUEST_NAME (sonst nur Vorname, erstes Token)
 - E-Mail/Telefon   ← VIEW_GUEST_CONTACT (sonst None)
@@ -15,7 +15,7 @@ effective_permissions immer alle Berechtigungen → sieht alles.
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from .lodgify_permissions import Permission
+from .granular_permissions import Permission
 from .schemas import UserRole
 
 if TYPE_CHECKING:
@@ -65,7 +65,7 @@ def _first_name_only(full_name: str | None) -> str | None:
 
 
 def mask_for(role: UserRole | str | None, perms: frozenset[Permission]) -> GuestMask:
-    """Maske aus den effektiven Lodgify-Berechtigungen ableiten.
+    """Maske aus den effektiven feingranularen Berechtigungen ableiten.
 
     `perms` muss bereits die effektiven Berechtigungen sein (effective_permissions,
     Admin = alle).
@@ -100,7 +100,7 @@ def load_guest_mask(
     Das JWT kann veraltet sein → Rolle + permissions kommen aus `users`. Ohne
     Treffer/ohne Nutzer wird fail-closed maskiert (alles aus, nur Vorname).
     """
-    from .lodgify_permissions import effective_permissions
+    from .granular_permissions import effective_permissions
 
     if service_client is None or not user_id:
         return mask_for(None, frozenset())

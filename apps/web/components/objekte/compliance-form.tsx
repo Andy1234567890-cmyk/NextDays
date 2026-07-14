@@ -1,6 +1,6 @@
 "use client";
 
-// Compliance-Seite eines Objekts (wie Lodgify „Compliance").
+// Compliance-Seite eines Objekts (Compliance).
 //  Website: Registrierungsdetails (Registrierungsnummer(n) für die eigene
 //  Website). Bearbeitung über einen Sheet-Editor; gespeichert per
 //  updateProperty() in das flexible Feld type_attributes.compliance.
@@ -157,7 +157,7 @@ function RegistrationEditor({
             />
           </div>
 
-          {/* Hinweis nach dem Speichern (orange Box wie Lodgify). */}
+          {/* Hinweis nach dem Speichern (orange Box). */}
           <div className="flex items-start gap-2 rounded-(--radius) bg-amber-50 p-3 text-sm text-amber-900">
             <Icon icon="ph:warning" className="mt-0.5 size-4 shrink-0" />
             <span>

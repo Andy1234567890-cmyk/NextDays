@@ -104,9 +104,9 @@ class ExternalCalendarService:
         ).data
 
     def overview(self, ctx: AuthContext) -> list[dict]:
-        """Zentrale Umzugs-Übersicht: ALLE Objekte des Tenants + ihre bereits
+        """Zentrale Kalender-Übersicht: ALLE Objekte des Tenants + ihre bereits
         verbundenen externen Kalender, in EINEM Aufruf. Der Kunde trägt hier pro
-        Objekt seine Lodgify-/Airbnb-iCal-URL ein — statt sie einzeln auf jeder
+        Objekt seine externe iCal-URL ein — statt sie einzeln auf jeder
         Objektseite zu suchen. Tenant-Scope (Wurzel 3) über beide Tabellen."""
         db, tenant_id = self._require(ctx)
         props = (
@@ -216,7 +216,7 @@ class ExternalCalendarService:
         return res[0] if res else {**cal, **update}
 
     def _fetch(self, url: str) -> str:
-        """iCal laden (Redirects folgen — Lodgify 301→/oh/). Größe deckeln."""
+        """iCal laden (Redirects folgen — manche Anbieter 301). Größe deckeln."""
         with httpx.Client(timeout=_SYNC_TIMEOUT, follow_redirects=True) as client:
             resp = client.get(url, headers={"User-Agent": "myNextDays-Calendar/1.0"})
             resp.raise_for_status()

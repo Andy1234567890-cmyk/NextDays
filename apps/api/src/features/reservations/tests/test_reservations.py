@@ -154,6 +154,9 @@ RID = "11111111-1111-4111-8111-111111111111"
 
 # Volle Berechtigungen (Name, Kontakt, Quelle, Beträge sichtbar).
 _FULL_PERMS = [
+    # access_pm_features ist das PM-Dach: ohne es fiele pm_booking_total weg
+    # (effective_permissions). In der echten App kommt es nie ohne das Dach.
+    "access_pm_features",
     "view_guest_name", "view_guest_contact", "view_booking_source",
     "pm_booking_total",
 ]

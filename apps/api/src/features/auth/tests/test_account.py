@@ -164,3 +164,105 @@ def test_totp_disable_accepts_valid_code() -> None:
     code = pyotp.TOTP(secret).now()
     res = svc.totp_disable(_ctx(), TotpDisableRequest(code=code))
     assert res.totp_enabled is False
+
+
+# --- update_managed_user: Rollen-/Rechte-Bearbeitung (Wurzel 3) -------------
+
+def _svc_for_update(
+    editor: dict, target: dict
+) -> tuple[AccountService, dict]:
+    """AccountService, dessen users-Table den Editor (per select '*') und den
+    Ziel-Nutzer (per select+limit) liefert. Gibt den zuletzt geschriebenen
+    update-patch in ``captured`` zurück."""
+    service_client = MagicMock()
+    captured: dict = {}
+
+    def table(name: str) -> MagicMock:
+        tbl = MagicMock()
+        # _ensure_user_row: .select('*').eq(...).execute() -> Editor-Row
+        tbl.select.return_value.eq.return_value.execute.return_value = MagicMock(
+            data=[editor]
+        )
+        # _own_managed_user: .select(cols).eq().eq().limit().execute() -> Target
+        (
+            tbl.select.return_value.eq.return_value.eq.return_value.limit
+            .return_value.execute.return_value
+        ) = MagicMock(data=[target])
+
+        def do_update(patch: dict) -> MagicMock:
+            captured.update(patch)
+            upd = MagicMock()
+            upd.eq.return_value.eq.return_value.execute.return_value = MagicMock(
+                data=[{**target, **patch}]
+            )
+            return upd
+
+        tbl.update.side_effect = do_update
+        return tbl
+
+    service_client.table.side_effect = table
+    svc = AccountService(anon_client=MagicMock(), service_client=service_client)
+    return svc, captured
+
+
+def _admin_ctx() -> AuthContext:
+    return AuthContext(user_id="admin-1", tenant_id="t-1", role="admin")
+
+
+def test_update_managed_user_explicit_permissions_win_and_clamp() -> None:
+    # Admin-Editor (alle Rechte) setzt explizite Rechte für einen staff-Nutzer.
+    editor = {"id": "admin-1", "role": "admin", "permissions": [], "tenant_id": "t-1"}
+    target = {"id": "u-2", "role": "staff", "permissions": ["access_pm_features"],
+              "tenant_id": "t-1", "email": "s@x.de", "full_name": "S"}
+    svc, captured = _svc_for_update(editor, target)
+    svc.update_managed_user(
+        _admin_ctx(), "u-2", permissions=["pm_chat", "pm_property_area"]
+    )
+    assert captured["permissions"] == ["pm_chat", "pm_property_area"]
+    assert "role" not in captured  # Rolle unverändert
+
+
+def test_update_managed_user_clamps_to_editor_rights() -> None:
+    # Co-Admin-Editor ohne inbox_manage_config kann es nicht vergeben.
+    editor = {"id": "ca-1", "role": "co_admin",
+              "permissions": ["pm_chat", "access_pm_features"], "tenant_id": "t-1"}
+    target = {"id": "u-2", "role": "staff", "permissions": [],
+              "tenant_id": "t-1", "email": "s@x.de", "full_name": "S"}
+    svc, captured = _svc_for_update(editor, target)
+    ctx = AuthContext(user_id="ca-1", tenant_id="t-1", role="co_admin")
+    svc.update_managed_user(ctx, "u-2", permissions=["pm_chat", "inbox_manage_config"])
+    assert captured["permissions"] == ["pm_chat"]  # inbox_manage_config geklemmt
+
+
+def test_update_managed_user_role_change_sets_defaults() -> None:
+    # Rollenwechsel OHNE explizite Rechte -> Default-Rechte der neuen Rolle.
+    editor = {"id": "admin-1", "role": "admin", "permissions": [], "tenant_id": "t-1"}
+    target = {"id": "u-2", "role": "staff", "permissions": ["access_pm_features"],
+              "tenant_id": "t-1", "email": "s@x.de", "full_name": "S"}
+    svc, captured = _svc_for_update(editor, target)
+    from src.features.auth.schemas import UserRole
+    svc.update_managed_user(_admin_ctx(), "u-2", role=UserRole.owner)
+    assert captured["role"] == "owner"
+    assert "owner_reporting" in captured["permissions"]
+
+
+def test_update_managed_user_cannot_demote_admin() -> None:
+    editor = {"id": "admin-1", "role": "admin", "permissions": [], "tenant_id": "t-1"}
+    target = {"id": "admin-1", "role": "admin", "permissions": [],
+              "tenant_id": "t-1", "email": "a@x.de", "full_name": "A"}
+    svc, _captured = _svc_for_update(editor, target)
+    from src.features.auth.schemas import UserRole
+    with pytest.raises(AuthError) as exc:
+        svc.update_managed_user(_admin_ctx(), "admin-1", role=UserRole.staff)
+    assert exc.value.status_code == 400
+
+
+def test_update_managed_user_staff_editor_forbidden() -> None:
+    # staff/cleaner dürfen die Nutzerverwaltung nicht schreiben (403).
+    editor = {"id": "st-1", "role": "staff", "permissions": [], "tenant_id": "t-1"}
+    target = {"id": "u-2", "role": "cleaner", "permissions": [], "tenant_id": "t-1"}
+    svc, _captured = _svc_for_update(editor, target)
+    ctx = AuthContext(user_id="st-1", tenant_id="t-1", role="staff")
+    with pytest.raises(AuthError) as exc:
+        svc.update_managed_user(ctx, "u-2", full_name="X")
+    assert exc.value.status_code == 403

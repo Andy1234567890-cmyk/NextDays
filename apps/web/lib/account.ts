@@ -18,9 +18,9 @@ export type Account = {
   has_password: boolean;
   totp_enabled: boolean;
   role: UserRole | null;
-  // Effektive Lodgify-Berechtigungs-IDs (für UI-Gating; admin = alle).
+  // Effektive Berechtigungs-IDs (für UI-Gating; admin = alle).
   permissions: string[];
-  // Profilfelder (wie Lodgify „Contact information").
+  // Profilfelder (Kontaktdaten).
   phone: string | null;
   additional_phone: string | null;
   hide_phones: boolean;
@@ -42,6 +42,9 @@ export type TenantUser = {
   phone: string | null;
   avatar_url: string | null;
   tenant_id: string | null;
+  // Effektive Berechtigungs-IDs des Nutzers (admin = alle). Vorbelegung
+  // der Rechte-Checkboxen im Bearbeiten-Dialog.
+  permissions: string[];
 };
 
 // Profil-/Kontaktdaten-Update (nur gesetzte Felder werden geschrieben).
@@ -107,7 +110,7 @@ export async function updateName(fullName: string): Promise<Result<Account>> {
   });
 }
 
-// Profil-/Kontaktdaten (Lodgify „Edit contact information") aktualisieren.
+// Profil-/Kontaktdaten (Kontaktinformationen) aktualisieren.
 export async function updateProfile(
   input: ProfileInput,
 ): Promise<Result<Account>> {
@@ -159,10 +162,13 @@ export async function inviteUser(
   return res;
 }
 
-// Nutzer bearbeiten (Konto → Benutzer): Name, Rolle, Telefon (admin/co_admin).
+// Nutzer bearbeiten (Konto → Benutzer): Name, Rolle, feingranulare Rechte
+// (admin/co_admin). `permissions` = null/undefined lässt die Rechte unverändert;
+// eine (auch leere) Liste ersetzt sie — das Backend klemmt auf die eigenen
+// Rechte des Bearbeitenden.
 export async function updateManagedUser(
   userId: string,
-  input: { full_name?: string; role?: UserRole; phone?: string | null },
+  input: { full_name?: string; role?: UserRole; permissions?: string[] },
 ): Promise<Result<TenantUser>> {
   const res = await call<TenantUser>(`/auth/account/users/${userId}`, {
     method: "PATCH",

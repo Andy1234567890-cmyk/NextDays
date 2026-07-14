@@ -1,12 +1,12 @@
 -- 0119_external_calendar.sql — externe iCal-Kalender abonnieren (Belegungs-Sync)
 --
--- Der Kunde hinterlegt pro Objekt eine oder mehrere externe iCal-URLs (Lodgify,
+-- Der Kunde hinterlegt pro Objekt eine oder mehrere externe iCal-URLs (..,
 -- Airbnb, Booking, Vrbo, Google-Kalender …). Ein Worker liest die .ics-Feeds
 -- periodisch und traegt die belegten Zeitraeume als availability status='blocked'
 -- source='ical' ein → verhindert Doppelbuchungen ueber Plattformen hinweg.
 --
 -- Das ist KEIN Datenimport (keine Objekte/Preise/Gaeste werden kopiert) — nur
--- Belegungs-Synchronisierung, analog zu Lodgifys "Import Calendar".
+-- Belegungs-Synchronisierung, analog zu ..s "Import Calendar".
 
 -- =========================================================================
 -- 1. availability_source um 'ical' erweitern
@@ -22,7 +22,7 @@ create table if not exists public.external_calendar (
     id             uuid primary key default gen_random_uuid(),
     tenant_id      uuid not null references public.tenants(id) on delete cascade,
     property_id    uuid not null references public.properties(id) on delete cascade,
-    -- Anzeigename (z.B. "Lodgify", "Airbnb") + die abonnierte .ics-URL.
+    -- Anzeigename (z.B. "..", "Airbnb") + die abonnierte .ics-URL.
     name           text not null,
     ical_url       text not null,
     is_active      boolean not null default true,
@@ -82,7 +82,7 @@ alter table public.external_calendar replica identity full;
 alter publication supabase_realtime add table public.external_calendar;
 
 comment on table public.external_calendar is
-  'Abonnierte externe iCal-Feeds pro Objekt (Lodgify/Airbnb/Booking/Vrbo/Google). '
+  'Abonnierte externe iCal-Feeds pro Objekt (../Airbnb/Booking/Vrbo/Google). '
   'Ein Worker synct sie in availability (blocked, source=ical). Kein Datenimport.';
 comment on column public.availability.external_calendar_id is
   'Herkunft einer ical-Sperre → erlaubt gezieltes Aufraeumen bei Feed-Aenderung.';

@@ -1,6 +1,6 @@
 "use client";
 
-// Aufgabenvorlagen-Liste (Lodgify): Tabelle Titel · Anzahl Der Aufgaben ·
+// Aufgabenvorlagen-Liste (..): Tabelle Titel · Anzahl Der Aufgaben ·
 // Aktualisiert am · Details (grüner Button). Schwebender „+" unten rechts,
 // Lernen-Dialog, Breadcrumb. Editor ist eine eigene Seite (/vorlagen/[id]).
 // Live via useRealtime auf task_rules.
@@ -34,10 +34,10 @@ export function TemplateList() {
   const fmt = (iso: string | null) =>
     iso
       ? new Date(iso).toLocaleDateString("de-DE", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
       : "–";
 
   return (

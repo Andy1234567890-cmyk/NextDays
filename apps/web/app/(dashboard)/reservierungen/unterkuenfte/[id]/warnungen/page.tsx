@@ -1,4 +1,4 @@
-// Objekt → Warnungen (Lodgify „Warnungen"): aus den Buchungen dieses Objekts
+// Objekt → Warnungen: aus den Buchungen dieses Objekts
 // abgeleitete Hinweise (fehlende Zahlung, bereits abgereist ohne Check-out).
 import { PropertyWarnings } from "@/components/reservierungen/property-warnings";
 

@@ -18,21 +18,23 @@ Taskilo-Advertising, sowie Taskilos eigene Auth (`auth/`) und Onboarding
 
 Die beiden Codebases folgen **gegensätzlichen Paradigmen**:
 
-| Aspekt | NextDays (`apps/web`) | Taskilo |
-| --- | --- | --- |
-| Next.js | 15 | 16 |
-| React | 19 | 19 |
-| Tailwind | v4 | v4 |
-| Daten holen | **Server Actions** (`"use server"` in `lib/`) | **Client** (`"use client"`, `fetch /api/`, react-query) — 91/119 Finanz-Komponenten sind Client |
-| UI-Basis | eigene `components/ui/*` (shadcn-Stil, Token-basiert) | `@tasko/ui` + Emotion/styled |
-| Komponenten | klein, server-first | groß (Ø 486, bis 2763 Zeilen) |
-| Mandant | `tenant_id` (Vermieter = Tenant), RLS via `current_tenant_id()` | `company_id` (`companies.owner_id = auth.uid()`) |
+| Aspekt      | NextDays (`apps/web`)                                           | Taskilo                                                                                         |
+| ----------- | --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Next.js     | 15                                                              | 16                                                                                              |
+| React       | 19                                                              | 19                                                                                              |
+| Tailwind    | v4                                                              | v4                                                                                              |
+| Daten holen | **Server Actions** (`"use server"` in `lib/`)                   | **Client** (`"use client"`, `fetch /api/`, react-query) — 91/119 Finanz-Komponenten sind Client |
+| UI-Basis    | eigene `components/ui/*` (shadcn-Stil, Token-basiert)           | `@tasko/ui` + Emotion/styled                                                                    |
+| Komponenten | klein, server-first                                             | groß (Ø 486, bis 2763 Zeilen)                                                                   |
+| Mandant     | `tenant_id` (Vermieter = Tenant), RLS via `current_tenant_id()` | `company_id` (`companies.owner_id = auth.uid()`)                                                |
 
 ## Entscheidung
 
 ### 1. Frontend — NextDays-Paradigma erzwingen
+
 Jede übernommene Komponente wird ins **NextDays-Muster überführt**, nicht 1:1
 kopiert. Taskilo dient als **Logik- und Design-Vorlage**.
+
 - **Daten:** Server Actions in `apps/web/lib/<domäne>.ts` (`"use server"`, ruft
   FastAPI über `currentToken()`), KEIN react-query, KEINE direkten `/api/`-Calls
   aus Client-Komponenten.
@@ -46,9 +48,11 @@ kopiert. Taskilo dient als **Logik- und Design-Vorlage**.
   `marktplatz/`, `hr/`, `jobs/`).
 
 ### 2. Backend — ein Backend, viele Vertical Slices
+
 Alle Taskilo-Funktionen werden als **neue Vertical Slices in `apps/api`**
 umgesetzt (gleiche Struktur wie bestehende Slices: `router.py`, `service.py`,
 `schemas.py`, `dependencies.py`).
+
 - **EIN** FastAPI-Backend, **EIN** Supabase-Projekt, **EINE** Auth (Supabase-JWT,
   `AuthContext`).
 - **Mandant vereinheitlicht:** `company_id` → `tenant_id`; RLS via
@@ -59,18 +63,21 @@ umgesetzt (gleiche Struktur wie bestehende Slices: `router.py`, `service.py`,
   `marketplace`.
 
 ### 3. Datenbank — ins NextDays-Supabase mergen
+
 Taskilo-Tabellen werden als neue Migrationen (`0023+`) übernommen,
 `company_id`→`tenant_id` umgeschrieben, RLS auf `current_tenant_id()` gestellt,
 Namenskollisionen (`customers`, `invoices`, `payments`) aufgelöst.
 (✅ `0023_buchhaltung_fundament.sql` ist der erste Schritt.)
 
 ### 4. Navigation — eine große Sidebar
+
 Alles in **einer** Dashboard-Sidebar (`apps/web/components/app-sidebar.tsx`) mit
 aufklappbaren Gruppen. Neue Gruppen: **Buchhaltung**, **Marktplatz**, **HR**,
 **Jobs** — zusätzlich zu den bestehenden (Objekte, Kalender, …). Menüpunkte
-weiterhin per Lodgify-Berechtigung gegated (UI-Gating, ADR-Permissions).
+weiterhin per ..-Berechtigung gegated (UI-Gating, ADR-Permissions).
 
 ### 5. URL-Struktur — EINE App, Pfade statt Subdomains
+
 Alle Bereiche unter **einer** App-Domain, getrennt per **Pfad**
 (`/dashboard`, `/buchhaltung`, `/marktplatz`, `/hr`, `/jobs`) — **keine**
 Feature-Subdomains (`buchhaltung.mynextday.*`, `dashboard.mynextday.*`).
@@ -86,6 +93,7 @@ legitim für die **Trennung Marketing-Website ↔ App** (`mynextday.de` vs.
 ## Konsequenzen
 
 **Positiv**
+
 - Eine konsistente Architektur, eine Codebase, ein Stack (Next 15/React 19/
   Tailwind v4), ein Backend, ein Mandantenmodell → wartbar, kein Paradigmen-Bruch.
 - NextDays-Design durchgängig; keine `@tasko/ui`/Emotion-Altlast.
@@ -93,6 +101,7 @@ legitim für die **Trennung Marketing-Website ↔ App** (`mynextday.de` vs.
   neuen Bereiche.
 
 **Negativ / Aufwand**
+
 - **Hoher Portierungsaufwand:** ~600 Komponenten werden neu geschrieben, nicht
   kopiert. Große Taskilo-Komponenten (Wizards bis 2763 Zeilen) müssen in kleinere
   Server/Client-Teile zerlegt werden.

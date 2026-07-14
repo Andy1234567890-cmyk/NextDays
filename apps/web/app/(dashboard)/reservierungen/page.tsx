@@ -1,4 +1,4 @@
-// Buchungen-Hauptseite der PM-Fläche (Lodgify „Buchungen"): Reiter Belegt /
+// Buchungen-Hauptseite der PM-Fläche (Buchungen): Reiter Belegt /
 // Ankünfte / Abfahrten / Zukunft / Vergangen über der vollständigen Buchungs-
 // tabelle. Server Component lädt die Objekte (für Titel + Objekt-Filter); der
 // Client-Teil holt die Reservierungen und rendert die gefilterten Reiter.

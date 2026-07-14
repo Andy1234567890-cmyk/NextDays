@@ -1,6 +1,6 @@
 "use client";
 
-// Aufgabenvorlagen-Editor als EIGENE Seite (Lodgify): Aufgabenname,
+// Aufgabenvorlagen-Editor als EIGENE Seite (..): Aufgabenname,
 // Aufgabenbeschreibung, Liste von Artikeln (Checklisten-Punkte) mit Foto-
 // Pflicht, schwebender Speichern-Button unten rechts. Neu ODER Bearbeiten
 // (ruleId gesetzt). Nur kind=template.
@@ -207,7 +207,7 @@ export function TemplateEditorPage({ ruleId }: { ruleId: string | null }) {
         </div>
       </div>
 
-      {/* Schwebender Speichern-Button (Lodgify, unten rechts). Über Andy-Button. */}
+      {/* Schwebender Speichern-Button (.., unten rechts). Über Andy-Button. */}
       <button
         type="button"
         onClick={save}

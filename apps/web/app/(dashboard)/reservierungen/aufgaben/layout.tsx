@@ -1,7 +1,7 @@
 import { TasksSubnav } from "@/components/reservierungen/tasks-subnav";
 
 // Layout des Aufgaben-Moduls: eigene linke Sub-Nav-Spalte („AUFGABEN") neben
-// dem Inhalt — wie Lodgify beim Klick auf „Aufgaben". Die globale PM-Nav wird
+// dem Inhalt beim Klick auf „Aufgaben". Die globale PM-Nav wird
 // im Aufgaben-Bereich ausgeblendet (pm-module-shell.tsx), sonst stünden zwei
 // Nav-Spalten nebeneinander.
 export default function AufgabenLayout({

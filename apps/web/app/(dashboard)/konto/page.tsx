@@ -1,6 +1,6 @@
 "use client";
 
-// Konto → Profil (wie Lodgify „My account / Profile").
+// Konto → Profil (My account / Profile).
 // ALLES gebündelt auf einer Seite: Logo, Rechnungskontakt (Firma/Adresse/Steuer/
 // Bank), Stammdaten (Person/Telefon/Geburtsdatum/Kontotyp), Website — plus der
 // Zahlungs-Abschnitt darunter. Kein separater Dialog, kein eigener Tab. Quelle

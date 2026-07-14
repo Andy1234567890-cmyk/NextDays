@@ -1,6 +1,6 @@
 "use client";
 
-// Preis-Seite eines Objekts (wie Lodgify „Pricing", Etappe 1).
+// Preis-Seite eines Objekts (Pricing, Etappe 1).
 //  Nightly price: Grundpreis (Währung, Dynamic, Wochentag), Mark-up je Kanal,
 //  Extra-Gast-Aufschlag, Kurzaufenthalts-Aufschlag.
 //  Length of stay: Wochen-/Monats-/eigene Längenpreise.
@@ -244,9 +244,8 @@ export function PricingForm({ initial }: { initial: Property }) {
           <ListRow
             key={f.id}
             title={f.name}
-            pill={`${fmtPrice(f.amount, cur)} · ${FEE_BASIS_LABELS[f.basis]}${
-              f.taxRate != null ? ` · ${f.taxRate} % USt` : ""
-            }${f.optional ? " · optional" : ""}`}
+            pill={`${fmtPrice(f.amount, cur)} · ${FEE_BASIS_LABELS[f.basis]}${f.taxRate != null ? ` · ${f.taxRate} % USt` : ""
+              }${f.optional ? " · optional" : ""}`}
             onEdit={() => setSection({ fee: f.id })}
             onDelete={() => save({ ...pr, fees: pr.fees.filter((x) => x.id !== f.id) })}
           />

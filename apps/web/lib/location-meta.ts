@@ -1,4 +1,4 @@
-// Standort-Erweiterungen eines Objekts (wie Lodgify „Location"): Entfernungen
+// Standort-Erweiterungen eines Objekts (Location): Entfernungen
 // zu Verkehrsmitteln, eigene Karte (Bild), Wegbeschreibung sowie Adress-Zusätze
 // (Bundesland/Region, eigener Stadtname, Standortgenauigkeit). Die Basis-Adresse
 // (Straße, PLZ, Stadt, Land, lat/lng) liegt in eigenen Spalten; diese Zusätze
@@ -9,7 +9,7 @@ function emptyLocalized(): LocalizedText {
   return LANGS.reduce((acc, l) => ({ ...acc, [l]: "" }), {} as LocalizedText);
 }
 
-// Entfernungs-Kategorien (wie Lodgify): Flughafen, Bus, U-Bahn, Zug, Autobahn, Hafen.
+// Entfernungs-Kategorien: Flughafen, Bus, U-Bahn, Zug, Autobahn, Hafen.
 export type DistanceKey =
   | "airport"
   | "bus"

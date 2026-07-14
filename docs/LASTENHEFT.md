@@ -19,6 +19,7 @@
 ## 2. Modul-Architektur & Funktions-Spezifikationen
 
 ### 2.1 Custom Dashboard & Navigation
+
 - **Dynamische Kacheln:** Dashboard per Drag-and-Drop personalisierbar. Jede
   Daten-Kachel (inkl. Umsatzentwicklung, Kanalverteilung) verschiebbar, skalierbar,
   ausblendbar.
@@ -27,7 +28,8 @@
   entfernen (z. B. Personal).
 
 ### 2.2 Multi- & Einzelkalender (Herzstück)
-- **UI/UX:** Anpassung an Industriestandard (Vorbild: Lodgify-Multikalender).
+
+- **UI/UX:** Anpassung an Industriestandard (Vorbild: ..-Multikalender).
 - **Click-and-Hold-Logik:**
   - **Einzeltag-Klick** → Kontext-Popup mit drei Optionen:
     - **Direktbuchung:** automatische Periodenberechnung inkl. automatisierter
@@ -42,6 +44,7 @@
   entfernen (keine System-Sprünge).
 
 ### 2.3 Saison- & Event-Management (Preissystem)
+
 - **Taggenauer Saisonkalender:** Abschaffung der KW-Aufteilung. Saisons taggenau
   per Datums-Popup („Von X bis Y“).
 - **Saison-Templates:** globale Templates (z. B. „Standard“, „Skagen“), per
@@ -55,6 +58,7 @@
   Löschen im Admin-Bereich.
 
 ### 2.4 Unified Inbox & Variables Messaging
+
 - **Präzises Timing:** minutengenaues Trigger-System (z. B. Bestätigung 5 Min nach
   Buchung; Check-In-Info am Anreisetag 06:45; Erinnerung 3 Tage vor Anreise 19:00).
 - **Multi-Channel-Versand:** Mehrfachauswahl (E-Mail, SMS, OTA-In-App wie Airbnb).
@@ -68,6 +72,7 @@
   vollständig ausgefüllt“.
 
 ### 2.5 Operatives Aufgaben- & Checklistenmanagement
+
 - **Automatische Aufgaben-Generierung:** bei Buchung am Abreisetag „Endreinigung“,
   am Anreisetag „Anreise-Check/Inspektion“ (verknüpft mit Channel-Manager).
 - **Wiederkehrende Aufgaben:** Regelwerke (alle X Wochen/Tage/Monate, jährlich,
@@ -82,6 +87,7 @@
   Pool von 23 Wäschepaketen für Gast-Verkauf).
 
 ### 2.6 Daten-Akquise & Partnermanagement
+
 - **Eigentümer-Akquise (CRM):** Lead-DB mit Stammdaten (Name, Adresse, Telefon,
   E-Mail), Marketing-Attribution (Lead-Quelle), Objekt-Eckdaten (Adresse, qm,
   max. Personen), Fortschritts-Tracking (Notizen, Status).
@@ -109,6 +115,7 @@
 Granulare, erweiterbare Matrix; alle Konten per **Toggles** administrierbar.
 
 ### 4.1 Administrator & Co-Admin
+
 - **Administrator:** voller Zugriff (Finanzen, Plattform-Dienste,
   Mandanteneinstellungen).
 - **Co-Admin:** operative Rechte von Eigentümern + Mitarbeitern kombiniert; kann
@@ -116,6 +123,7 @@ Granulare, erweiterbare Matrix; alle Konten per **Toggles** administrierbar.
   volle Bearbeitungsrechte für Hausdaten, Inventar, Eigentümer-/Mitarbeiterdaten.
 
 ### 4.2 Eigentümer-Portal
+
 - **Sicherer Daten-Split:** Eigentümer sehen Belegungskalender inkl. Saisons/
   Legende; Buchungen nur mit **Vorname** + Buchungsquelle. Gast-Gesamtpreis
   unsichtbar; nur **Netto-Auszahlung pro Nacht** sichtbar.
@@ -130,6 +138,7 @@ Granulare, erweiterbare Matrix; alle Konten per **Toggles** administrierbar.
   Download verifizierter Monats-/Jahresberichte + Abrechnungsstand.
 
 ### 4.3 Mitarbeiter- & Dienstleister-Portal (Smartphone)
+
 - **Strikte Datentrennung:** kein Zugriff auf Bewertungen, Umsätze, Reports,
   Finanzen.
 - **Operative Ansicht:** persönlicher Aufgabenkalender, hausspezifische
@@ -183,6 +192,7 @@ PDF-Export + Druck. Acht Stufen:
 ## 7. Ergänzungs-Modul: Das NextDays-Ökosystem
 
 ### 7.1 „All-Inclusive-Premium“-Preisstruktur
+
 - **Kein Feature-Versteckspiel:** keine künstlichen Leistungsvariationen oder
   gesperrten Funktionen hinter teureren Paketen. Jeder Nutzer erhält sofort den
   vollen Funktionsumfang (Channel Manager, PMS, Aufgabenplanung, Eigentümer-Portal,
@@ -194,6 +204,7 @@ PDF-Export + Druck. Acht Stufen:
   kleine Unternehmen bezahlbar).
 
 ### 7.2 Universelles Unterkunfts-Ökosystem (Cross-Over-SaaS)
+
 Modulare Datenstruktur für **jede Art von Kurzzeitvermietung weltweit**. Ein
 primäres **Beherbergungs-Typ-Dropdown** beim Anlegen passt Checklisten und
 Shortcodes automatisch an:

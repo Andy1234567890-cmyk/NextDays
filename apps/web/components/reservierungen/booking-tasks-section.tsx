@@ -1,6 +1,6 @@
 "use client";
 
-// Aufgaben-Box der PM-Buchungsdetailseite (Lodgify „Aufgaben"). Listet die
+// Aufgaben-Box der PM-Buchungsdetailseite (.. „Aufgaben"). Listet die
 // Aufgaben zu genau dieser Buchung, erlaubt Status-Umschalten (erledigt/offen)
 // und das Erzeugen der Standard-Aufgaben (Anreise-Check + Endreinigung). Live
 // über useRealtime auf der tasks-Tabelle (Pflicht, kein Polling). Zeigt echte

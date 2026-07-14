@@ -1,4 +1,4 @@
-// Objekt → Preise (wie Lodgify „Pricing", Etappe 1): Grundpreis, Mark-up je
+// Objekt → Preise (Pricing, Etappe 1): Grundpreis, Mark-up je
 // Kanal, Extra-Gast-/Kurzaufenthalts-Aufschlag, längenabhängige Preise. Die
 // automatische Preisanpassung liegt im eigenen Tab „Dynamic Pricing".
 import { PricingForm } from "@/components/objekte/pricing-form";

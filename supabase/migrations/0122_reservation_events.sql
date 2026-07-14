@@ -1,4 +1,4 @@
--- 0122_reservation_events.sql — Ereignis-Zeitleiste je Buchung (Lodgify „Zeitleiste").
+-- 0122_reservation_events.sql — Ereignis-Zeitleiste je Buchung (.. „Zeitleiste").
 --
 -- Append-only Ereignis-Log einer Reservierung: „Buchung erstellt", „verschoben",
 -- „Preis neu berechnet", „eingecheckt", „ausgecheckt", „storniert", „Aufgabe

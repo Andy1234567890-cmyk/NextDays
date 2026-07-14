@@ -1,6 +1,6 @@
 "use client";
 
-// Datumsbereich-Wähler wie Lodgify: Trigger zeigt den Bereich, Popover hat links
+// Datumsbereich-Wähler wie ..: Trigger zeigt den Bereich, Popover hat links
 // Presets (Diese Woche, Letzte 30 Tage, Quartal, Jahr …) und rechts einen
 // Zwei-Monats-Kalender mit Bereichsauswahl. Daneben ← →-Buttons, die die aktuelle
 // Bereichslänge eine Periode zurück/vor schieben (wie in den Screenshots).
@@ -89,7 +89,7 @@ const PRESETS: { key: string; label: string; range: () => IsoRange }[] = [
 ];
 
 export function shiftRange(range: IsoRange, direction: -1 | 1): IsoRange {
-  // Um die volle Bereichslänge nach vorn/hinten schieben (Lodgify ← →).
+  // Um die volle Bereichslänge nach vorn/hinten schieben (.. ← →).
   const span = differenceInCalendarDays(toDate(range.to), toDate(range.from)) + 1;
   const from = addDays(toDate(range.from), direction * span);
   const to = addDays(toDate(range.to), direction * span);

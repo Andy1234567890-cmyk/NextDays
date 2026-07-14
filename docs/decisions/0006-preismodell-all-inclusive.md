@@ -5,8 +5,9 @@
 
 ## Kontext
 
-Lastenheft-Ergänzung (§7.1): NextDays positioniert sich als „vOffice-/Lodgify-
+Lastenheft-Ergänzung (§7.1): NextDays positioniert sich als „vOffice-/..-
 Killer" über ein radikal einfaches, faires Preismodell:
+
 - kein Feature-Versteckspiel (voller Funktionsumfang für alle),
 - 0% Buchungsgebühr im eigenen System (vs. vOffice 4 %),
 - Skalierung nur über die Anzahl verwalteter Unterkünfte.

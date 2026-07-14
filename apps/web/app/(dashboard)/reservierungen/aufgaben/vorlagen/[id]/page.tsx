@@ -1,6 +1,6 @@
 import { TemplateEditorPage } from "@/components/reservierungen/template-editor-page";
 
-// Aufgabenvorlage bearbeiten (eigene Seite, wie Lodgify).
+// Aufgabenvorlage bearbeiten (eigene Seite).
 export default async function VorlageBearbeitenPage({
   params,
 }: {

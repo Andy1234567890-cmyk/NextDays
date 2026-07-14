@@ -1,4 +1,4 @@
-// Objekt → Übersicht (Overview): Sektionskarten wie Lodgify. Das Untermenü +
+// Objekt → Übersicht (Overview): Sektionskarten. Das Untermenü +
 // der Kopf kommen aus dem Layout; hier nur der Overview-Inhalt.
 import { PropertyOverview } from "@/components/objekte/property-overview";
 import { getProperty } from "@/lib/properties";

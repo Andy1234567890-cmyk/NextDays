@@ -1,6 +1,6 @@
 "use client";
 
-// Buchungstabelle der PM-Fläche mit den fünf Lodgify-Reitern:
+// Buchungstabelle der PM-Fläche mit den fünf ..-Reitern:
 //   Belegt   – Aufenthalte, die HEUTE laufen (heute belegt, aktiv)
 //   Ankünfte – Anreisen ab heute (heute + zukünftig)
 //   Abfahrten– Abreisen ab heute
@@ -135,9 +135,8 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
       )
       .filter((r) => {
         if (!q) return true;
-        const hay = `${r.guest_name} ${titleOf[r.property_id] ?? ""} ${
-          r.ota_name ?? ""
-        } ${r.external_ref ?? ""}`.toLowerCase();
+        const hay = `${r.guest_name} ${titleOf[r.property_id] ?? ""} ${r.ota_name ?? ""
+          } ${r.external_ref ?? ""}`.toLowerCase();
         return hay.includes(q);
       })
       .sort((a, b) => {
@@ -161,7 +160,7 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
         </span>
       </div>
 
-      {/* Reiter (Lodgify-Tabs): GROß, zentriert, gleichmäßig über die Breite
+      {/* Reiter (..-Tabs): GROß, zentriert, gleichmäßig über die Breite
           verteilt; Zähler dezent als Suffix. */}
       <div className="flex border-b">
         {TABS.map((t) => {
@@ -193,7 +192,7 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
         })}
       </div>
 
-      {/* Filterzeile: Suche + Unterkünfte-/Ressourcen-Filter (Lodgify) */}
+      {/* Filterzeile: Suche + Unterkünfte-/Ressourcen-Filter (..) */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative">
           <Icon
@@ -219,7 +218,7 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
         </span>
       </div>
 
-      {/* Tabelle (Lodgify-Spalten) */}
+      {/* Tabelle (..-Spalten) */}
       <Card className="overflow-hidden p-0">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[60rem] text-sm">
@@ -287,7 +286,7 @@ function BookingRow({
   const sm = STATUS_META[ds];
   const cm = channelMeta(channelSource(r));
 
-  // Bezahlt-Anteil (Lodgify-Spalte): echter Prozentsatz aus paid/total. Nur wenn
+  // Bezahlt-Anteil (..-Spalte): echter Prozentsatz aus paid/total. Nur wenn
   // Beträge sichtbar sind (mask.amounts → total_amount nicht null); sonst „—"
   // (DSGVO-Daten-Split, kein erfundener Wert). total_amount == 0 → kein Prozent
   // (Division), stattdessen „—".
@@ -319,7 +318,7 @@ function BookingRow({
         </span>
       </td>
       <td className="px-4 py-3">
-        {/* Quelle in Kanalfarbe mit #-Präfix (Lodgify „#booking.com"/„#airbnb").
+        {/* Quelle in Kanalfarbe mit #-Präfix (.. „#booking.com"/„#airbnb").
             Farbe aus channelMeta.textFg (Token-System), kein Inline-Hex. */}
         <span
           className={"inline-flex items-center gap-1.5 font-semibold " + cm.textFg}

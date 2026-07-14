@@ -1,4 +1,4 @@
-// Objekt → Kontakt (wie Lodgify „Contact page"): Hauptkontakt für das Objekt
+// Objekt → Kontakt (Contact page): Hauptkontakt für das Objekt
 // wählen (Nutzer des eigenen Tenants); „Bearbeiten" öffnet das Profil
 // („Kontaktdaten bearbeiten"). Server Component lädt Objekt, Nutzerliste und
 // das eigene Konto; der Client-Teil rendert Liste, Suche und Editor.

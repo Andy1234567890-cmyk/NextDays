@@ -1,6 +1,6 @@
 import { ModulePlaceholder } from "@/components/reservierungen/module-placeholder";
 
-// Slack-Reiter (Lodgify „Slack-Benachrichtigungen"): Webhook-Integration für
+// Slack-Reiter (Slack-Benachrichtigungen): Webhook-Integration für
 // Team-Benachrichtigungen. Backend-Slice für Benachrichtigungen ist noch nicht
 // gebaut (prompt-5) — ehrlicher Platzhalter statt nicht funktionierendem Toggle.
 export default function SlackPage() {

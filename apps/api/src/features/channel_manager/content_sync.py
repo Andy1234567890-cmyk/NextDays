@@ -11,6 +11,8 @@ from typing import Any
 
 from supabase import Client
 
+from src.core.countries import normalize_country
+
 from . import content_builder
 from .channex_client import ChannexError
 from .common import (
@@ -434,7 +436,7 @@ class ContentSyncMixin:
             "address": street or None,
             "zip_code": p.get("company_postal_code"),
             "city": p.get("company_city"),
-            "country": p.get("company_country"),
+            "country": normalize_country(p.get("company_country")),
             "email": p.get("email"),
             "phone": p.get("phone_number"),
             "website": p.get("website"),
@@ -456,7 +458,10 @@ class ContentSyncMixin:
         street = " ".join(
             x for x in [prop_row.get("street"), prop_row.get("house_number")] if x
         ).strip()
-        country = prop_row.get("country")
+        # Land defensiv auf ISO-2 normalisieren (fail-safe): das Schema erzwingt
+        # es beim Speichern schon, aber Reverse-Import/Alt-Daten könnten Klartext
+        # tragen — Channex verlangt max. 2 Zeichen, sonst 422.
+        country = normalize_country(prop_row.get("country"))
         candidates: dict[str, Any] = {
             "address": street or None,
             "zip_code": prop_row.get("postal_code"),

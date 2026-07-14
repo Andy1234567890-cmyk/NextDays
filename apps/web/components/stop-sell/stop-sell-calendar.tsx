@@ -1,7 +1,7 @@
 "use client";
 
 // Stop-Sell-Kalender (Konvergenzmuster der PMS-Multikalender, verifiziert
-// gegen Hostaway/Guesty/Smoobu/Lodgify/Airbnb/Booking): Zeilen = Objekte
+// gegen Hostaway/Guesty/Smoobu/../Airbnb/Booking): Zeilen = Objekte
 // (sticky links), Spalten = Tage (180-Tage-Fenster ab heute), Drag über die
 // Tage einer Objektzeile wählt einen Zeitraum → rechtes Seiten-Panel setzt/
 // hebt den Stop-Sell auf (mit Wochentags-Maske, Grund + Notiz).
@@ -177,10 +177,10 @@ export function StopSellCalendar({
 
   const active = drag
     ? {
-        pid: drag.pid,
-        start: drag.a <= drag.b ? drag.a : drag.b,
-        end: drag.a <= drag.b ? drag.b : drag.a,
-      }
+      pid: drag.pid,
+      start: drag.a <= drag.b ? drag.a : drag.b,
+      end: drag.a <= drag.b ? drag.b : drag.a,
+    }
     : sel
       ? { pid: sel.propertyId, start: sel.start, end: sel.end }
       : null;

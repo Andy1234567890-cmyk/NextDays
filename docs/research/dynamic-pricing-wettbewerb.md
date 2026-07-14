@@ -23,15 +23,15 @@ eigene Schwellen-Tabelle. **Nahe Buckets reagieren stärker.**
 
 ## Konkrete, belegte Zahlen (übernehmbar)
 
-| Mechanik | Beleg (PriceLabs-Doku, konfigurierbare Defaults) |
-|---|---|
-| Hohe Belegung nah | 97 % am Tag 0 → **+15 %** Aufschlag |
-| Niedrige Belegung nah | 27 % am Tag 15 → **−10 %** Rabatt (Pickup fördern) |
-| Asymmetrische Caps | Rabatte bis **−20 %**, Aufschläge bis **+15 %** |
-| Last-Minute (Default) | **30 %** Rabatt graduell über die nächsten **15 Tage** |
-| Orphan-Gap (Default) | **20 %** Rabatt bei 1–2 freien Tagen zwischen Buchungen |
-| Wheelhouse-Multiplikator | „Normalnachfrage" (~40 % Markt-Belegung) = 1,0; darüber grob
-  linear, dann exponentiell; bei Niedrignachfrage nur leicht runter, nicht unter Floor |
+| Mechanik                                                                             | Beleg (PriceLabs-Doku, konfigurierbare Defaults)             |
+| ------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| Hohe Belegung nah                                                                    | 97 % am Tag 0 → **+15 %** Aufschlag                          |
+| Niedrige Belegung nah                                                                | 27 % am Tag 15 → **−10 %** Rabatt (Pickup fördern)           |
+| Asymmetrische Caps                                                                   | Rabatte bis **−20 %**, Aufschläge bis **+15 %**              |
+| Last-Minute (Default)                                                                | **30 %** Rabatt graduell über die nächsten **15 Tage**       |
+| Orphan-Gap (Default)                                                                 | **20 %** Rabatt bei 1–2 freien Tagen zwischen Buchungen      |
+| Wheelhouse-Multiplikator                                                             | „Normalnachfrage" (~40 % Markt-Belegung) = 1,0; darüber grob |
+| linear, dann exponentiell; bei Niedrignachfrage nur leicht runter, nicht unter Floor |
 
 ## Zwei entscheidende Erkenntnisse
 
@@ -41,8 +41,8 @@ eigene Schwellen-Tabelle. **Nahe Buckets reagieren stärker.**
    Wheelhouse: Booking-Pace gegen dasselbe Fenster im Vorjahr.
 
 2. **Konfliktauflösung gegen Über-Rabattierung** (PriceLabs): NICHT alle Prozente
-   addieren/multiplizieren. Regel: *mehrere Rabatte → nur der größte gilt; mehrere
-   Aufschläge → alle stapeln; gemischt → größter Rabatt + Aufschlag.* Worked Example:
+   addieren/multiplizieren. Regel: _mehrere Rabatte → nur der größte gilt; mehrere
+   Aufschläge → alle stapeln; gemischt → größter Rabatt + Aufschlag._ Worked Example:
    drei Rabatte 40/30/20 % → nur 40 % gilt.
 
 ## Stacking & Leitplanken (Konsens)
@@ -58,7 +58,7 @@ eigene Schwellen-Tabelle. **Nahe Buckets reagieren stärker.**
 - **Beyond** veröffentlicht KEINE Zahlen/Kurven (proprietär) — nur die Mechanik.
 - **Wheelhouse**-Zahlen sind von 2020, evtl. nachjustiert.
 - **AirDNA Rates** beschreibt Occupancy-Mechanik nicht explizit — nur Comp-Set/Guardrail.
-- **DPGO, Airbnb Smart Pricing, Hostaway, Lodgify, Guesty**: in den verifizierten
+- **DPGO, Airbnb Smart Pricing, Hostaway, .., Guesty**: in den verifizierten
   Claims KEINE belastbaren Mechanik-Details (nicht ausreichend recherchiert).
 - Single-Unit-Ferienwohnungen: Eigenbelegung springt 0/100 % → PriceLabs weicht hier
   auf Markt-/Portfolio-Belegung aus. **Für uns relevant** (viele Objekte sind Single-Unit).
@@ -67,14 +67,14 @@ eigene Schwellen-Tabelle. **Nahe Buckets reagieren stärker.**
 
 ## Gap-Analyse vs. unsere Engine (Stand 2026-06)
 
-| Aspekt | Unsere Engine | Best Practice | Lücke |
-|---|---|---|---|
-| Auslastungssignal | Ist-Belegung ±15 Tage, Pivot 0.5 | + Vorlauf-Buckets + Pickup-Velocity | **antizipativ fehlt** |
-| Markt-relativ | nur bei `market_enabled` | MPI (eigene vs. Markt) | ok, ausbaubar |
-| Faktor-Kombination | **alle multiplikativ** | „größter Rabatt gilt" | **Über-Rabattierung** |
-| Asymmetrie | symmetrisch (±sensitivity) | runter > rauf | **fehlt** |
-| Min/Max-Clamp | vorhanden | Standard | ok |
-| Lernen aus Historie | keins | Pickup-Kurven, Elastizität | **Daten-Erfassung fehlt** |
+| Aspekt              | Unsere Engine                    | Best Practice                       | Lücke                     |
+| ------------------- | -------------------------------- | ----------------------------------- | ------------------------- |
+| Auslastungssignal   | Ist-Belegung ±15 Tage, Pivot 0.5 | + Vorlauf-Buckets + Pickup-Velocity | **antizipativ fehlt**     |
+| Markt-relativ       | nur bei `market_enabled`         | MPI (eigene vs. Markt)              | ok, ausbaubar             |
+| Faktor-Kombination  | **alle multiplikativ**           | „größter Rabatt gilt"               | **Über-Rabattierung**     |
+| Asymmetrie          | symmetrisch (±sensitivity)       | runter > rauf                       | **fehlt**                 |
+| Min/Max-Clamp       | vorhanden                        | Standard                            | ok                        |
+| Lernen aus Historie | keins                            | Pickup-Kurven, Elastizität          | **Daten-Erfassung fehlt** |
 
 ## Nachtrag: RateBoard (DACH-Hotel-RMS)
 
@@ -85,13 +85,13 @@ eigene Schwellen-Tabelle. **Nahe Buckets reagieren stärker.**
 RateBoard ist ein hotelfokussiertes Revenue-Management-System (DACH, 1.500+ Kunden,
 80+ Schnittstellen). Verifizierte Produkt-Bausteine (wörtlich von der Seite):
 
-| Baustein | Aussage | Unser Pendant |
-|---|---|---|
-| **KI-Forecast** | „Erkennen Sie zukünftige Trends für eine optimale Preis- und Auslastungsplanung" | gelernte Pickup-Kurve ([forecast.py](../../apps/api/src/features/pricing/forecast.py), Phase 4) |
-| **Autopilot** | „passt Ihre Raten rund um die Uhr vollautomatisch an Marktveränderungen an" | `dp_settings.autopilot_enabled` (Push-Gate im Recompute) |
-| **Rate Rules** | „KI-Power kombiniert mit Ihrem Fachwissen … individuelle Regeln" | `dp_settings.rate_rules` (engine `_rate_rules_factor`) |
-| **Wetter & Events** | „externe Faktoren, wie Wetter und Veranstaltungen für Ihre Preisgestaltung" | Wetter ([weather.py](../../apps/api/src/features/pricing/weather.py), DWD/Bright Sky) + event_periods |
-| **Wettbewerbsvergleich** | „Vergleichen Sie Ihre Performance direkt mit dem Wettbewerb" | Comp-Set/Markt-Faktor (Phase 3, PlatformProvider) |
+| Baustein                 | Aussage                                                                          | Unser Pendant                                                                                         |
+| ------------------------ | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| **KI-Forecast**          | „Erkennen Sie zukünftige Trends für eine optimale Preis- und Auslastungsplanung" | gelernte Pickup-Kurve ([forecast.py](../../apps/api/src/features/pricing/forecast.py), Phase 4)       |
+| **Autopilot**            | „passt Ihre Raten rund um die Uhr vollautomatisch an Marktveränderungen an"      | `dp_settings.autopilot_enabled` (Push-Gate im Recompute)                                              |
+| **Rate Rules**           | „KI-Power kombiniert mit Ihrem Fachwissen … individuelle Regeln"                 | `dp_settings.rate_rules` (engine `_rate_rules_factor`)                                                |
+| **Wetter & Events**      | „externe Faktoren, wie Wetter und Veranstaltungen für Ihre Preisgestaltung"      | Wetter ([weather.py](../../apps/api/src/features/pricing/weather.py), DWD/Bright Sky) + event_periods |
+| **Wettbewerbsvergleich** | „Vergleichen Sie Ihre Performance direkt mit dem Wettbewerb"                     | Comp-Set/Markt-Faktor (Phase 3, PlatformProvider)                                                     |
 
 Marketing-Zahlen (unbelegt, nicht als Mechanik übernehmen): ⌀ +20 % Umsatz, bis
 20 % mehr Gewinn/Standort.

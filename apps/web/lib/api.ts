@@ -72,7 +72,7 @@ export type MeResponse = {
   tenant_id: string | null;
   role: "admin" | "co_admin" | "owner" | "staff" | "cleaner" | null;
   capabilities: string[];
-  permissions: string[];  // Lodgify-Berechtigungen (für UI-Gating)
+  permissions: string[];  // Feingranulare Berechtigungen (für UI-Gating)
   // Beherbergungsart des Mandanten (Migration 0090): steuert die Navigation.
   accommodation_type: AccommodationType | null;
 };

@@ -1,4 +1,4 @@
-// Objekt → Statistiken (Lodgify „Kontrollzentrum"): KPI-Kacheln + Kanal-
+// Objekt → Statistiken (Kontrollzentrum): KPI-Kacheln + Kanal-
 // Verteilung, mit Zeitraum-Wähler. Daten aus dem property/{id}/stats-Endpunkt.
 import { PropertyStatsView } from "@/components/reservierungen/property-stats";
 

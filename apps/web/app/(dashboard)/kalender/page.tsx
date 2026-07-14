@@ -1,4 +1,4 @@
-// Kalender-Übersicht (wie Lodgify): Timeline-Raster + vier Zusatzansichten
+// Kalender-Übersicht: Timeline-Raster + vier Zusatzansichten
 // (Liste, An-/Abreisen, Monatsgitter, Auslastung) über einen Top-Level-Umschalter.
 // Server Component lädt die Objekte; der Client-Teil holt die Verfügbarkeit und
 // rendert die jeweils aktive Ansicht.

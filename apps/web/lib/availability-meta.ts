@@ -1,9 +1,9 @@
-// Verfügbarkeits-Datenmodell (Lodgify „Availability"). Gespeichert im flexiblen
+// Verfügbarkeits-Datenmodell (Availability). Gespeichert im flexiblen
 // jsonb-Feld `type_attributes.availability` eines Objekts — keine Migration.
 // Mehrere Blöcke unterstützen „Custom setup per channel": ein globaler Wert
 // plus optional ein Wert je Kanal.
 
-// Vertriebskanäle. „direct" = NextDays-Direktbuchung (statt Lodgify).
+// Vertriebskanäle. „direct" = NextDays-Direktbuchung.
 export type Channel = "direct" | "airbnb" | "booking" | "google";
 export const CHANNELS: Channel[] = ["direct", "airbnb", "booking", "google"];
 

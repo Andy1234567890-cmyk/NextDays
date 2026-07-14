@@ -1,6 +1,6 @@
 "use client";
 
-// Buchungs-Filter (Lodgify): zwei Multiselect-Popover — „Unterkünfte" (einzelne
+// Buchungs-Filter (..): zwei Multiselect-Popover — „Unterkünfte" (einzelne
 // Objekte) und „Ressourcen" (Unterkunftsart/property_type, unsere echte Kategorie-
 // Ebene, da wir keine getrennten Zimmertypen je Objekt führen) — plus „Alles
 // zurücksetzen". Leere Auswahl = alles. Werte kommen aus den Daten (kein

@@ -265,7 +265,7 @@ class ReadsMixin(ReservationsBase):
         date_from: date,
         date_to: date,
     ) -> PropertyStats:
-        """Objekt-Kennzahlen für den Statistiken-Reiter (Lodgify „Kontrollzentrum").
+        """Objekt-Kennzahlen für den Statistiken-Reiter (Kontrollzentrum).
 
         Aggregiert AUSSCHLIESSLICH über die Buchungen DIESES Objekts im Zeitraum
         [date_from, date_to]. Owner-Scope (§4.2): ein Eigentümer erhält nur Zahlen
@@ -296,7 +296,7 @@ class ReadsMixin(ReservationsBase):
         date_from: date,
         date_to: date,
     ) -> tuple[str, StatMetricDetail]:
-        """KPI-Detailseite (Lodgify): Tagesreihe + vier Vergleichsperioden +
+        """KPI-Detailseite: Tagesreihe + vier Vergleichsperioden +
         Breakout für EINE Metrik eines Objekts. Gleiche Scope-/Masking-Regeln wie
         `property_stats`. Rückgabe: (property_title, detail)."""
         if metric not in _DETAIL_METRICS:
@@ -533,7 +533,7 @@ class ReadsMixin(ReservationsBase):
         )
 
     def timeline(self, ctx: AuthContext, reservation_id: str) -> TimelineResponse:
-        """Chronologische Ereignis-Zeitleiste einer Buchung (Lodgify „Zeitleiste").
+        """Chronologische Ereignis-Zeitleiste einer Buchung (Zeitleiste).
 
         Tenant-/owner-scoped (Wurzel 3): die Reservierung wird zuerst als eigenes
         Objekt geladen — fremde → 404. Kombiniert:
@@ -552,8 +552,8 @@ class ReadsMixin(ReservationsBase):
             raise ReservationError("Reservierung nicht gefunden.", status_code=404)
         mask = load_guest_mask(self._client, ctx.user_id)
 
-        # Objekt-Kontext (Titel + Cover-Foto) — Lodgify zeigt je Karte das
-        # Objekt-Thumbnail. Einmal geladen für die ganze Zeitleiste.
+        # Objekt-Kontext (Titel + Cover-Foto) — je Karte das Objekt-Thumbnail.
+        # Einmal geladen für die ganze Zeitleiste.
         prop_title, prop_photo = self._property_context(str(r.get("property_id") or ""))
 
         # 1) Echte protokollierte Ereignisse.
@@ -598,7 +598,7 @@ class ReadsMixin(ReservationsBase):
             )
 
         # Das „Buchung erstellt"-Event trägt die Eckdaten (Ankunft/Abreise/Gäste/
-        # Preis) wie bei Lodgify — Betrag maskierungskonform.
+        # Preis) — Betrag maskierungskonform.
         add_synth("created", r.get("created_at"), {
             "channel": r.get("channel"),
             "ota_name": r.get("ota_name"),
@@ -630,7 +630,7 @@ class ReadsMixin(ReservationsBase):
         #    die Zeitleiste den ganzen Vorgang, nicht nur den Lifecycle.
         events.extend(self._flow_events(reservation_id, mask))
 
-        # Neueste zuerst (Lodgify-Reihenfolge).
+        # Neueste zuerst.
         events.sort(key=lambda e: e.at, reverse=True)
         return TimelineResponse(
             property_id=str(r.get("property_id") or ""),
@@ -663,7 +663,7 @@ class ReadsMixin(ReservationsBase):
                 .execute()
             ).data or []
 
-        # Aufgaben → „Aufgabe erstellt" (mit Zuständigem + Fälligkeit, wie Lodgify).
+        # Aufgaben → „Aufgabe erstellt" (mit Zuständigem + Fälligkeit).
         task_rows = rows("tasks", "id, title, status, assignee_id, due_at, created_at")
         assignee_names = self._user_names(
             [t["assignee_id"] for t in task_rows if t.get("assignee_id")]

@@ -1,6 +1,6 @@
 "use client";
 
-// Objekt-Statistiken (Lodgify „Kontrollzentrum" je Objekt): KPI-Kacheln mit
+// Objekt-Statistiken (.. „Kontrollzentrum" je Objekt): KPI-Kacheln mit
 // Vergleich zur Vorperiode + Sparkline je Kachel + Kanal-Donuts (geteilte
 // Bausteine aus stats-cards.tsx — dieselben wie das globale Kontrollzentrum).
 // Oben der Datumsbereich-Wähler; Klick auf eine Kachel öffnet die KPI-Detailseite

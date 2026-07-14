@@ -1,6 +1,6 @@
 -- 0121_property_guest_portal.sql — Gästeportal je Objekt: Gastmodul + Gästemappe
 --
--- Zwei objektbezogene Tabellen für den PM-Objektbereich (Lodgify „Gastmodul" +
+-- Zwei objektbezogene Tabellen für den PM-Objektbereich (.. „Gastmodul" +
 -- „Gästemappe"):
 --   * property_guest_portal — Portal-Einstellungen (Kontakt, WiFi, Self-Check-in,
 --     Türcode + Anzeige-Regeln, Wartungs-Telefon, Kopfbild). Genau EINE Zeile je

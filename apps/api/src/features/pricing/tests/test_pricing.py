@@ -31,10 +31,10 @@ def test_price_endpoints_require_booking_total_permission() -> None:
     from fastapi import HTTPException
 
     from src.core.security import AuthContext
-    from src.features.auth.dependencies import require_lodgify_permission
-    from src.features.auth.lodgify_permissions import Permission, UserRole
+    from src.features.auth.dependencies import require_granular_permission
+    from src.features.auth.granular_permissions import Permission, UserRole
 
-    guard = require_lodgify_permission(Permission.PM_BOOKING_TOTAL)
+    guard = require_granular_permission(Permission.PM_BOOKING_TOTAL)
 
     # Owner ohne PM_BOOKING_TOTAL → 403.
     owner_ctx = AuthContext(user_id="u", tenant_id="t1", role="owner")
@@ -44,7 +44,7 @@ def test_price_endpoints_require_booking_total_permission() -> None:
         guard(owner_ctx, owner_svc)
     assert exc.value.status_code == 403
 
-    # Admin → durchgelassen (Admin hat implizit alle Lodgify-Permissions).
+    # Admin → durchgelassen (Admin hat implizit alle Berechtigungen).
     admin_ctx = AuthContext(user_id="a", tenant_id="t1", role="admin")
     admin_svc = MagicMock()
     admin_svc.role_and_permissions.return_value = (UserRole.admin, [])

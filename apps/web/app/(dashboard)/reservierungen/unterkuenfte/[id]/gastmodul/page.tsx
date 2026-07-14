@@ -1,4 +1,4 @@
-// Objekt → Gastmodul (Lodgify „Gastmodul"): Portal-Schalter (Self-Check-in,
+// Objekt → Gastmodul: Portal-Schalter (Self-Check-in,
 // Türcode + Regeln, Kontakt, Kopfbild) aus property_guest_portal PLUS die
 // WLAN-/Türzugang-TEXTE aus messaging (eine Wahrheit). Server Component lädt das
 // Objekt (für die messaging-Texte); der Client-Teil holt die Schalter und

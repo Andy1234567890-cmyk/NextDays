@@ -1,4 +1,4 @@
-// Nachrichten-Platzhalter eines Objekts (wie Lodgify „Messaging placeholders").
+// Nachrichten-Platzhalter eines Objekts (Messaging placeholders).
 // Wiederverwendbare, mehrsprachige Texte (Check-in/out, Anfahrt, Türzugang,
 // Hausordnung, WLAN, Reiseführer, Notfallkontakt), die in automatischen
 // Gästenachrichten per Shortcode ({{CheckinInstructions}} …) eingesetzt werden.
@@ -26,7 +26,7 @@ export type MessagingField =
 
 export type Messaging = Record<MessagingField, LocalizedText>;
 
-// Metadaten je Feld: Titel, Hilfetext, Shortcode (wie Lodgify) + Placeholder.
+// Metadaten je Feld: Titel, Hilfetext, Shortcode + Placeholder.
 export type MessagingFieldMeta = {
   key: MessagingField;
   title: string;

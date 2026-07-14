@@ -219,7 +219,7 @@ export async function getReservationDetail(
   return call(`/reservations/${encodeURIComponent(reservationId)}`);
 }
 
-// --- Zeitleiste (Ereignis-Log einer Buchung, Lodgify „Zeitleiste") ----------
+// --- Zeitleiste (Ereignis-Log einer Buchung) --------------------------------
 
 // Stabiler Ereignis-Schlüssel; die Beschriftung/Übersetzung macht das UI.
 // Deckt den KOMPLETTEN Buchungs-Flow ab (Lifecycle + Nachrichten/Zahlungen/
@@ -248,7 +248,7 @@ export type TimelineEvent = {
 };
 
 export type Timeline = {
-  // Objekt-Kontext aller Ereignisse (Thumbnail + Name je Karte, wie Lodgify).
+  // Objekt-Kontext aller Ereignisse (Thumbnail + Name je Karte).
   // property_id für den klickbaren Objekt-Badge.
   property_id: string;
   property_title: string;

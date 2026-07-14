@@ -1,7 +1,7 @@
 """Tests für den guests-Slice (Enterprise-Gästekarte).
 
 Flexible In-Memory-Fake-DB (deckt die genutzten Supabase-Query-Ketten ab) +
-Masking-Matrix über echte Lodgify-Permissions (load_guest_mask liest `users`).
+Masking-Matrix über echte feingranulare Berechtigungen (load_guest_mask liest `users`).
 """
 import pytest
 from fastapi.testclient import TestClient
@@ -157,12 +157,15 @@ class _FakeDB:
         return _Query(self._store, name)
 
 
-# Berechtigungssätze.
+# Berechtigungssätze. access_pm_features ist das PM-Dach: ohne es fallen
+# pm_guest_details/pm_booking_total weg (effective_permissions) — in der echten
+# App kommt pm_* nie ohne das Dach.
 _PERMS_FULL = [
+    "access_pm_features",
     "pm_guest_details", "edit_guest", "view_guest_name", "view_guest_contact",
     "view_guest_id_docs", "view_booking_source", "pm_booking_total",
 ]
-_PERMS_LIMITED = ["pm_guest_details"]  # Zugriff, aber alles maskiert
+_PERMS_LIMITED = ["access_pm_features", "pm_guest_details"]  # Zugriff, alles maskiert
 
 
 def _svc(store=None, *, role="admin", perms=None) -> GuestsService:  # noqa: ANN001
@@ -411,7 +414,7 @@ def test_merge_404_when_guest_foreign() -> None:
 
 # --- EDIT_GUEST-Berechtigung (Schreibrecht) ---------------------------------
 def test_edit_guest_default_assignment() -> None:
-    from src.features.auth.lodgify_permissions import (
+    from src.features.auth.granular_permissions import (
         Permission,
         default_permissions_for,
     )

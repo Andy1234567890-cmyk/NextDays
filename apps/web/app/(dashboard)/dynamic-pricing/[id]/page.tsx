@@ -36,7 +36,9 @@ export default async function Page({
   const currency =
     (board.ok ? board.data.items[0]?.currency : null) ?? null;
   if (!prop.ok) {
-    if (prop.error.includes("nicht gefunden")) notFound();
+    // Nicht gefunden ODER keine Berechtigung (manage_calendar) → für diesen
+    // Nutzer existiert die Vertriebs-Vorschau nicht (Wurzel 3), kein 403-Kasten.
+    if (prop.status === 403 || prop.error.includes("nicht gefunden")) notFound();
     return (
       <div className="mx-auto w-full max-w-5xl p-6">
         <Card className="p-5 text-sm text-destructive">

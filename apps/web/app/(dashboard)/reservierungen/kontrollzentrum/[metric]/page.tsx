@@ -1,4 +1,4 @@
-// Kontrollzentrum → KPI-Detail (Lodgify „ANSEHEN"): große Zeitreihe EINER
+// Kontrollzentrum → KPI-Detail (ANSEHEN): große Zeitreihe EINER
 // Kennzahl über ALLE (gefilterten) Objekte + Vergleichsperioden + Breakout +
 // Export. Der property_id-Filter (wiederholbar) wird durchgereicht. Unbekannte
 // Metrik → 404 (kein 500 aus fehlgeleiteten Pfaden).

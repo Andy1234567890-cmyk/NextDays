@@ -1,4 +1,4 @@
--- 0061_property_photos.sql — Foto-/Galerieverwaltung je Objekt (wie Lodgify)
+-- 0061_property_photos.sql — Foto-/Galerieverwaltung je Objekt (wie ..)
 --
 -- Bisher lagen Objekt-Fotos nur als URL-Array in properties.photos (keine
 -- Metadaten). Diese Tabelle ist ab jetzt die WAHRHEIT: jede Zeile ein Foto mit

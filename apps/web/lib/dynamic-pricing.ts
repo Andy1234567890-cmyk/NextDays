@@ -68,7 +68,9 @@ export type DpOverviewItem = {
   channels: string[];
 };
 
-type Result<T> = { ok: true; data: T } | { ok: false; error: string };
+type Result<T> =
+  | { ok: true; data: T }
+  | { ok: false; error: string; status?: number };
 
 async function call<T>(
   path: string,
@@ -83,6 +85,7 @@ async function call<T>(
     return {
       ok: false,
       error: exc instanceof ApiError ? exc.message : "Aktion fehlgeschlagen.",
+      status: exc instanceof ApiError ? exc.status : undefined,
     };
   }
 }

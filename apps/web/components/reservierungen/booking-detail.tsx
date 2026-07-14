@@ -1,6 +1,6 @@
 "use client";
 
-// Buchungsdetail-Vollseite (Lodgify „Buchung {ref}"-Layout): zweispaltig —
+// Buchungsdetail-Vollseite (.. „Buchung {ref}"-Layout): zweispaltig —
 // links Aufenthalt/Zahlungen/Anmerkungen, rechts Kostenaufteilung/Kundendaten/
 // Aufgaben/Fotos. Die gesamte Business-Logik (Laden, Realtime, Check-in/out,
 // Storno, Rechnungs-Dialog) kommt aus useReservationDetail — geteilt mit dem
@@ -94,7 +94,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
   const isOta = data.channel !== "direct";
   const refLabel = data.external_ref ?? data.id.slice(0, 8);
 
-  // Zahlungs-Fortschritt (Lodgify-Balken). Nur mit sichtbaren Beträgen; sonst
+  // Zahlungs-Fortschritt (..-Balken). Nur mit sichtbaren Beträgen; sonst
   // kein Balken (kein 0-Fallback, kein erfundener Prozentsatz).
   const total = data.total_amount;
   const paid = data.paid_amount;
@@ -164,13 +164,13 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                   {data.num_guests} Gäste
                   {data.adults || data.children || data.infants || data.pets
                     ? ` (${[
-                        data.adults && `${data.adults} Erw.`,
-                        data.children && `${data.children} Ki.`,
-                        data.infants && `${data.infants} Kleink.`,
-                        data.pets && `${data.pets} Haustier`,
-                      ]
-                        .filter(Boolean)
-                        .join(", ")})`
+                      data.adults && `${data.adults} Erw.`,
+                      data.children && `${data.children} Ki.`,
+                      data.infants && `${data.infants} Kleink.`,
+                      data.pets && `${data.pets} Haustier`,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")})`
                     : ""}
                 </p>
               </div>
@@ -331,7 +331,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
             )}
           </Card>
 
-          {/* Zahlungen (Lodgify-Fortschrittsbalken) */}
+          {/* Zahlungen (..-Fortschrittsbalken) */}
           <Card className="flex flex-col gap-3 p-5">
             <h2 className="font-display text-lg font-bold">Zahlungen</h2>
             {total == null ? (
@@ -471,7 +471,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
 
         {/* ===== Rechte Spalte: Standort / Kostenaufteilung / Kunde / Aufgaben / Fotos ===== */}
         <div className="flex flex-col gap-5">
-          {/* Objekt-Standort (Karte + Adresse), wie Lodgify rechts oben. */}
+          {/* Objekt-Standort (Karte + Adresse), wie .. rechts oben. */}
           <PropertyLocation
             title={data.property_title || "Objekt"}
             street={data.property_street}

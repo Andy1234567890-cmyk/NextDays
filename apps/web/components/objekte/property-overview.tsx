@@ -1,6 +1,6 @@
 "use client";
 
-// Objekt-Overview wie Lodgify: Kopf (Name/Status) + Sektionskarten
+// Objekt-Overview: Kopf (Name/Status) + Sektionskarten
 //  (Name & Beschreibung, Rental info, Rooms, Sleeping arrangements, Amenities,
 //   Location). Jede Karte öffnet einen Sheet-Editor; gespeichert wird per
 //  updateProperty(). Flexible Sektionen (rooms/beds/size/units) liegen in
@@ -714,8 +714,8 @@ function AmenitiesEditor({
   const q = query.trim().toLowerCase();
   const suggestions = q
     ? AMENITY_SLUGS.filter(
-        (s) => !vals.includes(s) && amenityLabel(s).toLowerCase().includes(q),
-      ).slice(0, 30)
+      (s) => !vals.includes(s) && amenityLabel(s).toLowerCase().includes(q),
+    ).slice(0, 30)
     : [];
 
   return (

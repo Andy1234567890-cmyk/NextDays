@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING
 
 from src.core.security import AuthContext
 from src.features.auth.guest_masking import GuestMask, mask_for
-from src.features.auth.lodgify_permissions import Permission, effective_permissions
+from src.features.auth.granular_permissions import Permission, effective_permissions
 from src.features.auth.schemas import UserRole
 
 if TYPE_CHECKING:

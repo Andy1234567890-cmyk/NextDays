@@ -1,6 +1,6 @@
 "use client";
 
-// Teamaufgaben (Lodgify /tasks/team): alle Aufgaben des Tenants mit Assignee-
+// Teamaufgaben (.. /tasks/team): alle Aufgaben des Tenants mit Assignee-
 // und Objekt-Spalte. Tabs AKTUELL/BEVORSTEHENDE/ABGESCHLOSSEN. Live via
 // useRealtime auf tasks. Klick öffnet das Detail-Modal.
 import { Icon } from "@iconify/react";
@@ -46,10 +46,10 @@ export function TeamTasks() {
   const fmt = (iso: string | null) =>
     iso
       ? new Date(iso).toLocaleDateString("de-DE", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-        })
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
       : "–";
 
   return (
@@ -62,11 +62,10 @@ export function TeamTasks() {
             key={t.key}
             type="button"
             onClick={() => setTab(t.bucket)}
-            className={`flex-1 border-b-2 px-3 py-2 text-sm font-medium uppercase tracking-wide transition-colors ${
-              tab === t.bucket
+            className={`flex-1 border-b-2 px-3 py-2 text-sm font-medium uppercase tracking-wide transition-colors ${tab === t.bucket
                 ? "border-primary text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
+              }`}
           >
             {t.label}
           </button>

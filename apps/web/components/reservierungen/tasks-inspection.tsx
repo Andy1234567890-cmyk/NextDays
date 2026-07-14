@@ -1,6 +1,6 @@
 "use client";
 
-// Inspektion (Lodgify /tasks/inspection): QA-Workflow über abgeschlossenen
+// Inspektion (.. /tasks/inspection): QA-Workflow über abgeschlossenen
 // Aufgaben mit needs_inspection. Tabs ZU ÜBERPRÜFEN/KOMMEND/ÜBERPRÜFT.
 // Foto-Nachweise ansehen, Freigeben/Zurückweisen. Live via useRealtime.
 import { Icon } from "@iconify/react";
@@ -59,11 +59,10 @@ export function TasksInspection() {
             key={t.tab}
             type="button"
             onClick={() => setTab(t.tab)}
-            className={`flex-1 border-b-2 px-3 py-2 text-sm font-medium uppercase tracking-wide transition-colors ${
-              tab === t.tab
+            className={`flex-1 border-b-2 px-3 py-2 text-sm font-medium uppercase tracking-wide transition-colors ${tab === t.tab
                 ? "border-primary text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground"
-            }`}
+              }`}
           >
             {t.label}
           </button>

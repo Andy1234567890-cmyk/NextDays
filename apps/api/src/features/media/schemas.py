@@ -1,4 +1,4 @@
-"""Pydantic-Schemas für das Bilder-Modul (PM „Bilder", Lodgify-Nachbau).
+"""Pydantic-Schemas für das Bilder-Modul (PM „Bilder").
 
 Aggregiert Foto-Nachweise aus mehreren Quellen zu einer einheitlichen Karte:
 Objektfotos (property_photos, public URL) + Buchungs-/Aufgabenfotos

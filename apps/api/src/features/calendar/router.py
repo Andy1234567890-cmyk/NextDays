@@ -7,10 +7,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from src.core.security import CurrentUser
 from src.core.supabase import get_service_client
 from src.features.auth.dependencies import (
-    require_lodgify_permission,
+    require_granular_permission,
     require_permission,
 )
-from src.features.auth.lodgify_permissions import Permission
+from src.features.auth.granular_permissions import Permission
 from src.features.auth.permissions import Capability
 
 from .schemas import (
@@ -97,7 +97,7 @@ def check(
 
 
 @router.post("/block", dependencies=[
-    Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
 ])
 def block(
     req: BlockRequest,
@@ -113,7 +113,7 @@ def block(
 
 
 @router.post("/price-override", dependencies=[
-    Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
 ])
 def price_override(
     req: PriceOverrideRequest,
@@ -147,7 +147,7 @@ def list_stop_sell(
 
 
 @router.post("/stop-sell", dependencies=[
-    Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
 ])
 def set_stop_sell(
     req: StopSellRequest,
@@ -166,7 +166,7 @@ def set_stop_sell(
 
 
 @router.post("/stop-sell/clear", dependencies=[
-    Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
 ])
 def clear_stop_sell(
     req: StopSellClearRequest,
@@ -183,7 +183,7 @@ def clear_stop_sell(
 
 
 @router.post("/bulk-edit", response_model=BulkEditResult, dependencies=[
-    Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
 ])
 def bulk_edit(
     req: BulkEditRequest,
@@ -216,7 +216,7 @@ def list_season_price(
 
 
 @router.post("/season-price", dependencies=[
-    Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
 ])
 def set_season_price(
     req: SeasonPriceRequest,

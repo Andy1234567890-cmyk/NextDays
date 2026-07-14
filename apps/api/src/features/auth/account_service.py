@@ -19,7 +19,11 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
-from .lodgify_permissions import default_permissions_for, effective_permissions
+from .granular_permissions import (
+    default_permissions_for,
+    effective_permissions,
+    normalize_permissions,
+)
 from .schemas import (
     AccountResponse,
     TenantUser,
@@ -119,6 +123,13 @@ class AccountService:
             role = None
         stored = data.get("permissions")
         return role, stored if isinstance(stored, list) else []
+
+    @staticmethod
+    def _role_of(row: dict) -> UserRole | None:
+        try:
+            return UserRole(row.get("role")) if row.get("role") else None
+        except ValueError:
+            return None
 
     @staticmethod
     def _effective_perm_ids(row: dict) -> list[str]:
@@ -389,13 +400,25 @@ class AccountService:
         *,
         full_name: str | None = None,
         role: UserRole | None = None,
+        permissions: list[str] | None = None,
     ) -> TenantUser:
-        """Nutzer im eigenen Tenant bearbeiten (Konto → Benutzer): Name und
-        Rolle. Der Konto-Admin (Gründer) ist nicht umstufbar, und niemand kann
-        zur Rolle admin befördert werden (entsteht nur bei register — wie beim
-        Einladen)."""
-        _, tenant_id = self._require_user_write(ctx)
+        """Nutzer im eigenen Tenant bearbeiten (Konto → Benutzer): Name, Rolle
+        und feingranulare Berechtigungen. Der Konto-Admin (Gründer) ist nicht
+        umstufbar, und niemand kann zur Rolle admin befördert werden (entsteht
+        nur bei register — wie beim Einladen).
+
+        Rechte-Logik: werden ``permissions`` explizit mitgeschickt, gewinnen sie
+        (auf die Rechte des Bearbeitenden geklemmt, Wurzel 3). Wird NUR die Rolle
+        gewechselt (ohne explizite Rechte), greifen die Default-Rechte der neuen
+        Rolle. Ohne beides bleiben die Rechte unverändert."""
+        editor_row, tenant_id = self._require_user_write(ctx)
         target = self._own_managed_user(tenant_id, user_id)
+        # Effektive Rechte des Bearbeitenden — klemmen jede Rechtevergabe.
+        try:
+            editor_role = UserRole(editor_row.get("role")) if editor_row.get("role") else None
+        except ValueError:
+            editor_role = None
+        granter = effective_permissions(editor_role, editor_row.get("permissions"))
         patch: dict = {}
         if full_name is not None and full_name.strip():
             patch["full_name"] = full_name.strip()
@@ -411,11 +434,22 @@ class AccountService:
                     "Die Rolle Admin kann nicht vergeben werden.", status_code=400
                 )
             patch["role"] = role.value
-            # Rechte MÜSSEN mit der Rolle wechseln: die Default-Berechtigungen
-            # der NEUEN Rolle setzen (sonst behielte der Nutzer die alten Rechte
-            # und die neue Rolle griffe nirgends). role/permissions in users sind
-            # die Quelle der Wahrheit für alle Guards.
-            patch["permissions"] = default_permissions_for(role)
+        # Ziel-Rolle für die Rechte-Normalisierung: die neue (falls gewechselt),
+        # sonst die bestehende. Admin-Ziel bekäme in normalize immer alle Rechte
+        # — hier aber nie erreichbar, da Admin weder Ziel noch vergebbar ist.
+        effective_role = role if role_changed else self._role_of(target)
+        if permissions is not None:
+            # Explizite Rechte gewinnen, auf die eigenen Rechte geklemmt.
+            patch["permissions"] = normalize_permissions(
+                permissions, effective_role, granter=granter
+            )
+        elif role_changed:
+            # Rollenwechsel ohne explizite Rechte: Default-Rechte der neuen Rolle
+            # setzen (ebenfalls geklemmt — ein co_admin darf keinen Nutzer mit
+            # mehr Rechten anlegen als er selbst hat).
+            patch["permissions"] = normalize_permissions(
+                default_permissions_for(role), role, granter=granter
+            )
         if not patch:
             return self._to_tenant_user(target)
         res = (
@@ -531,7 +565,7 @@ class AccountService:
     def update_profile(
         self, ctx: AuthContext, req: UpdateProfileRequest
     ) -> AccountResponse:
-        """Profil-/Kontaktdaten setzen (Lodgify „Edit contact information").
+        """Profil-/Kontaktdaten setzen (Kontaktinformationen).
 
         Nur gesendete Felder (``exclude_unset``) werden geschrieben — so bleiben
         nicht-bearbeitete Werte erhalten. E-Mail/Passwort laufen weiter über die

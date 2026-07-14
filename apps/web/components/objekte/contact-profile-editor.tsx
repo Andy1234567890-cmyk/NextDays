@@ -1,6 +1,6 @@
 "use client";
 
-// Profil-/Kontaktdaten-Editor (Lodgify „Edit contact information"): Slide-over
+// Profil-/Kontaktdaten-Editor (Kontaktinformationen): Slide-over
 // mit Avatar, Vor-/Nachname, E-Mail, Telefon (+ Zweitnummer & Ländervorwahl),
 // Sichtbarkeit auf der Website, gesprochene Sprachen, Website, Beschreibung.
 // Speichert das EIGENE Profil des eingeloggten Nutzers über updateProfile()
@@ -194,11 +194,10 @@ export function ContactProfileEditor({
                         key={o.value}
                         type="button"
                         onClick={() => toggleLanguage(o.value)}
-                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                          active
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${active
                             ? "border-foreground bg-foreground text-background"
                             : "border-border hover:bg-muted/40"
-                        }`}
+                          }`}
                       >
                         {active && <Icon icon="ph:check" className="size-3.5" />}
                         {languageLabel(o.value)}
@@ -244,7 +243,7 @@ export function ContactProfileEditor({
   );
 }
 
-// Avatar-Upload-Fläche (wie Lodgify „Add photo / Or drag it here"): Klick ODER
+// Avatar-Upload-Fläche (Add photo / Or drag it here): Klick ODER
 // Drag-&-Drop lädt das Bild via Supabase-Browser-Client nach
 // avatars/{userId}/… (RLS: nur eigener Ordner) und gibt die Public-URL zurück.
 function AvatarPicker({
@@ -342,11 +341,10 @@ function AvatarPicker({
         onDragLeave={() => setDragOver(false)}
         onDrop={onDrop}
         disabled={busy}
-        className={`flex w-fit flex-col items-center justify-center gap-2 rounded-(--radius) border-2 border-dashed px-10 py-8 text-center text-sm transition-colors ${
-          dragOver
+        className={`flex w-fit flex-col items-center justify-center gap-2 rounded-(--radius) border-2 border-dashed px-10 py-8 text-center text-sm transition-colors ${dragOver
             ? "border-foreground bg-muted/40"
             : "border-border text-muted-foreground hover:bg-muted/40"
-        }`}
+          }`}
       >
         <Icon
           icon={busy ? "ph:spinner" : "ph:upload-simple"}

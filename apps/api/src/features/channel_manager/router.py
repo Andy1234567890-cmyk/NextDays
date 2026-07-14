@@ -25,8 +25,8 @@ from src.core.security import (
     require_internal_cron_secret,
     secrets_match,
 )
-from src.features.auth.dependencies import require_lodgify_permission
-from src.features.auth.lodgify_permissions import Permission
+from src.features.auth.dependencies import require_granular_permission
+from src.features.auth.granular_permissions import Permission
 
 from .dependencies import ChannelManagerServiceDep
 from .schemas import (
@@ -66,7 +66,7 @@ router = APIRouter(prefix="/channel-manager", tags=["channel_manager"])
 
 # Schreibrechte für die Channel-Manager-Verwaltung.
 _write = Annotated[
-    AuthContext, Depends(require_lodgify_permission(Permission.MANAGE_PROPERTY_SETTINGS))
+    AuthContext, Depends(require_granular_permission(Permission.MANAGE_PROPERTY_SETTINGS))
 ]
 # Lesen der Kanal-/Vertriebstopologie (welche Objekte an welche OTAs, Kanal-
 # Verbindungsstatus) ist eine Management-Information — dieselbe Capability wie

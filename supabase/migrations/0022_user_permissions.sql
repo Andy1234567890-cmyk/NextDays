@@ -1,13 +1,13 @@
 -- 0022_user_permissions.sql
--- Feingranulare Lodgify-Berechtigungen pro Nutzer (Konto → Benutzer).
+-- Feingranulare ..-Berechtigungen pro Nutzer (Konto → Benutzer).
 -- Set aktivierter Berechtigungs-IDs (Allgemein + PM-Module). Admin = effektiv
--- alle (Durchsetzung im Backend, lodgify_permissions.py). Default: leer.
+-- alle (Durchsetzung im Backend, .._permissions.py). Default: leer.
 
 alter table public.users
   add column if not exists permissions jsonb not null default '[]'::jsonb;
 
 comment on column public.users.permissions is
-  'Lodgify-Berechtigungs-IDs (Allgemein + PM-Module). Admin = effektiv alle.';
+  '..-Berechtigungs-IDs (Allgemein + PM-Module). Admin = effektiv alle.';
 
 -- Bestand: Admins erhalten alle 43 Berechtigungen.
 update public.users set permissions = to_jsonb(array[

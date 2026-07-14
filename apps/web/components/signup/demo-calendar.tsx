@@ -1,4 +1,4 @@
-// Statischer Demo-Kalender als Hintergrund der Sign-up-Seite (wie Lodgify).
+// Statischer Demo-Kalender als Hintergrund der Sign-up-Seite.
 // Rein dekorativ: Objektzeilen links, Monatsraster mit Buchungsbalken rechts.
 // Wird abgeblendet/leicht unscharf hinter das Modal gelegt. Größen in rem.
 import { Icon } from "@iconify/react";

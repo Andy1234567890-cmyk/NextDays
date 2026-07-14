@@ -20,10 +20,10 @@ from fastapi import (
 from src.core.security import AuthContext, require_internal_cron_secret
 from src.core.supabase import get_service_client
 from src.features.auth.dependencies import (
-    require_lodgify_permission,
+    require_granular_permission,
     require_permission,
 )
-from src.features.auth.lodgify_permissions import Permission
+from src.features.auth.granular_permissions import Permission
 from src.features.auth.permissions import Capability
 
 from .recompute import DynamicPricingRecompute
@@ -67,7 +67,7 @@ def effective_prices(
     settings: DpSettingsServiceDep,
     ctx: Annotated[
         AuthContext,
-        Depends(require_lodgify_permission(Permission.PM_BOOKING_TOTAL)),
+        Depends(require_granular_permission(Permission.PM_BOOKING_TOTAL)),
     ],
     property_id: Annotated[str, Query()],
     start: Annotated[date, Query()],
@@ -96,7 +96,7 @@ def quote(
     settings: DpSettingsServiceDep,
     ctx: Annotated[
         AuthContext,
-        Depends(require_lodgify_permission(Permission.PM_BOOKING_TOTAL)),
+        Depends(require_granular_permission(Permission.PM_BOOKING_TOTAL)),
     ],
 ) -> QuoteResponse:
     """Vollständige Preisaufschlüsselung eines Aufenthalts (Wizard/Buchung).
@@ -147,7 +147,7 @@ def get_dp_settings(
 @router.put(
     "/settings/{property_id}",
     response_model=DpSettingsResponse,
-    dependencies=[Depends(require_lodgify_permission(Permission.EDIT_CALENDAR_BOOKINGS))],
+    dependencies=[Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS))],
 )
 def put_dp_settings(
     property_id: str,

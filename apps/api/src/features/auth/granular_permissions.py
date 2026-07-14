@@ -1,7 +1,7 @@
-"""Lodgify-Berechtigungsmatrix (Konto → Benutzer, feingranular pro Nutzer).
+"""Feingranulare Berechtigungsmatrix (Konto → Benutzer, feingranular pro Nutzer).
 
 Ergänzt das rollenbasierte Capability-System (permissions.py) um die ~43
-zuweisbaren Lodgify-Berechtigungen, die im Benutzer-Wizard pro Nutzer
+zuweisbaren feingranularen Berechtigungen, die im Benutzer-Wizard pro Nutzer
 ausgewählt und in users.permissions (JSONB) persistiert werden.
 
 Single Source of Truth für die IDs — identisch zur Frontend-Liste
@@ -66,9 +66,6 @@ class Permission(StrEnum):
     INBOX_REPLY = "inbox_reply"              # ausgehende Nachrichten senden
     INBOX_ASSIGN = "inbox_assign"            # Threads (um-)zuweisen
     INBOX_MANAGE_CONFIG = "inbox_manage_config"  # Vorlagen/Automationen/KI-Settings
-    # --- White-Label-Site (Branding + Custom-Domains) ---
-    # Spiegelt die Backend-Capability MANAGE_SITE_CONFIG; steuert den /konto/branding-Tab.
-    MANAGE_SITE_CONFIG = "manage_site_config"
     # --- Reisebüro-/Partner-Kartei (Stammdaten, Verträge, Jahres-Preise) ---
     MANAGE_PARTNERS = "manage_partners"
 
@@ -115,7 +112,6 @@ _CO_ADMIN: frozenset[Permission] = frozenset({
     Permission.INBOX_REPLY,
     Permission.INBOX_ASSIGN,
     Permission.INBOX_MANAGE_CONFIG,
-    Permission.MANAGE_SITE_CONFIG,
     Permission.MANAGE_PARTNERS,
 })
 
@@ -151,22 +147,53 @@ def default_permissions_for(role: UserRole) -> list[str]:
     return sorted(p.value for p in ROLE_DEFAULT_PERMISSIONS.get(role, frozenset()))
 
 
-def normalize_permissions(raw: object, role: UserRole | None = None) -> list[str]:
+def normalize_permissions(
+    raw: object,
+    role: UserRole | None = None,
+    *,
+    granter: frozenset[Permission] | None = None,
+) -> list[str]:
     """Eingabe (Liste von IDs) auf gültige Permission-IDs filtern.
 
-    Admin erhält immer ALLE Berechtigungen, unabhängig von der Eingabe.
-    Unbekannte IDs werden verworfen. Ergebnis ist sortiert + dedupliziert.
+    Admin (Ziel-Rolle) erhält immer ALLE Berechtigungen, unabhängig von der
+    Eingabe. Unbekannte IDs werden verworfen. Ergebnis ist sortiert + dedupliziert.
+
+    ``granter`` (Wurzel 3): die effektiven Rechte des VERGEBENDEN Nutzers. Ist er
+    gesetzt, wird die Eingabe zusätzlich darauf geklemmt — niemand kann ein Recht
+    vergeben, das er selbst nicht hat (Privilege-Escalation). Nur ein Admin
+    (granter == _ALL) darf uneingeschränkt vergeben.
     """
     if role is UserRole.admin:
         return sorted(p.value for p in _ALL)
     valid = {p.value for p in Permission}
     if not isinstance(raw, (list, tuple, set, frozenset)):
         return []
-    return sorted({str(x) for x in raw if str(x) in valid})
+    picked = {str(x) for x in raw if str(x) in valid}
+    if granter is not None:
+        allowed = {p.value for p in granter}
+        picked &= allowed
+    return sorted(picked)
+
+
+# Dach-Recht des PM-Moduls: ohne ACCESS_PM_FEATURES ist das GESAMTE PM-Modul
+# dicht — jedes pm_*-Recht wird unwirksam, egal ob es einzeln gesetzt ist. Der
+# Posteingang lebt im PM-Modul (pm_chat), die inbox_*-Rechte hängen an pm_chat
+# und fallen damit automatisch mit. Ein Hauptschalter, keine 30 Einzelpflege.
+def _pm_child_permissions() -> frozenset[Permission]:
+    return frozenset(
+        p for p in Permission if p.value.startswith("pm_") or p.value.startswith("inbox_")
+    )
+
+
+_PM_CHILDREN: frozenset[Permission] = _pm_child_permissions()
 
 
 def effective_permissions(role: UserRole | None, stored: object) -> frozenset[Permission]:
-    """Tatsächliche Berechtigungen eines Nutzers (Admin = alle)."""
+    """Tatsächliche Berechtigungen eines Nutzers (Admin = alle).
+
+    Wendet das PM-Dach an: fehlt ACCESS_PM_FEATURES, werden alle PM-Kind-Rechte
+    (pm_*, inbox_*) entfernt — der Entzug des Dach-Rechts sperrt das komplette
+    PM-Modul, serverseitig wie in der UI (Wurzel 3/5)."""
     if role is UserRole.admin:
         return _ALL
     if not isinstance(stored, (list, tuple, set, frozenset)):
@@ -177,8 +204,20 @@ def effective_permissions(role: UserRole | None, stored: object) -> frozenset[Pe
             out.add(Permission(str(x)))
         except ValueError:
             continue
+    if Permission.ACCESS_PM_FEATURES not in out:
+        out -= _PM_CHILDREN
     return frozenset(out)
 
 
 def has_permission(role: UserRole | None, stored: object, perm: Permission) -> bool:
     return perm in effective_permissions(role, stored)
+
+
+def has_pm_access(role: UserRole | None, stored: object) -> bool:
+    """Darf der Nutzer überhaupt ins PM-Modul (Dach-Recht ACCESS_PM_FEATURES)?
+
+    Admin immer. Sonst nur, wenn das Dach gesetzt ist. Verbindet die beiden
+    Rechtesysteme: PM-Endpunkte/UI, die an einer Rollen-Capability (VIEW_CALENDAR,
+    MANAGE_TASKS …) hängen, müssen ZUSÄTZLICH dieses Dach verlangen — sonst wirkt
+    der Entzug im Rechte-Dialog nicht (die Capability bleibt ja rollenbasiert)."""
+    return has_permission(role, stored, Permission.ACCESS_PM_FEATURES)

@@ -1,13 +1,13 @@
--- 0123_tasks_pm_module.sql — PM-Aufgaben-Modul (Lodgify-Nachbau, auf Bestand)
+-- 0123_tasks_pm_module.sql — PM-Aufgaben-Modul (..-Nachbau, auf Bestand)
 --
 -- Baut auf dem bestehenden tasks-Slice (0012/0019) auf, ohne die schlanke
--- Struktur zu verwerfen. Ergänzt NUR was für die 7 Lodgify-Unterseiten fehlt:
+-- Struktur zu verwerfen. Ergänzt NUR was für die 7 ..-Unterseiten fehlt:
 --   * Inspektions-Workflow (needs_inspection + inspection_state auf tasks)
 --   * Herkunft/Priorität/Zeitfenster auf tasks (Kalender-Timeline, Team)
 --   * task_status um in_review/reviewed erweitern? NEIN — Inspektion läuft über
 --     ein eigenes nullable inspection_state, damit der Status-Lebenszyklus
 --     (open/in_progress/done/cancelled) unangetastet bleibt (kein Doppel-Status).
---   * task_rules bekommt die Vorlagen-/Regel-Metadaten, die Lodgify als
+--   * task_rules bekommt die Vorlagen-/Regel-Metadaten, die .. als
 --     "Aufgabenvorlagen"/"Planmäßige"/"Regelmäßige" zeigt (kind, active,
 --     assignee, priority, needs_inspection). recurrence bleibt jsonb (Bestand).
 -- Realtime für die neuen Live-Flächen (checklist_items, task_rules) aktivieren.

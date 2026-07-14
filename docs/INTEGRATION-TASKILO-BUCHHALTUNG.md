@@ -16,21 +16,23 @@ Taskilo enthält eine **produktionsreife, deutschland-spezifische Buchhaltung** 
 deutlich umfangreicher als ein „Finanzen"-Tab. Kernbausteine:
 
 ### Backend (`apps/backend/api/src/features/`, FastAPI, Python 3.12)
-| Feature | Zweck |
-| --- | --- |
-| `invoices` | Rechnungen (Draft→Sent→Paid), Storno, Kleinunternehmer §19, GoBD-Lock, PDF (WeasyPrint) |
-| `recurring_invoices` | Serienrechnungen (Templates, Intervall, Auto-Versand, APScheduler) |
-| `invoice_validation` | Steuerregel-Validierung (8 Typen: §19, Reverse Charge 13b/18b, §4 UStG, EU-OSS, Export) |
-| `einvoice` | E-Rechnung: ZUGFeRD + XRechnung (EN16931/UBL), XML-Generator + Validator, Peppol/Leitweg-ID |
-| `tax` | Steuerberichte UStVA/EÜR/GuV/BWA + ELSTER-Anbindung (vorbereitet) |
-| `datev` | DATEV-Export (OAuth2, ASCII/CSV), aktuell Mock — echte API ausstehend |
-| `finance` | Beleg-OCR (Taskilo-KI), Order→Invoice-Sync, Kunden/Adressen |
-| `transaction_links` + `finapi` | Bankabgleich (FinAPI XS2A/FinTS), Transaktion↔Beleg-Zuordnung |
+
+| Feature                        | Zweck                                                                                       |
+| ------------------------------ | ------------------------------------------------------------------------------------------- |
+| `invoices`                     | Rechnungen (Draft→Sent→Paid), Storno, Kleinunternehmer §19, GoBD-Lock, PDF (WeasyPrint)     |
+| `recurring_invoices`           | Serienrechnungen (Templates, Intervall, Auto-Versand, APScheduler)                          |
+| `invoice_validation`           | Steuerregel-Validierung (8 Typen: §19, Reverse Charge 13b/18b, §4 UStG, EU-OSS, Export)     |
+| `einvoice`                     | E-Rechnung: ZUGFeRD + XRechnung (EN16931/UBL), XML-Generator + Validator, Peppol/Leitweg-ID |
+| `tax`                          | Steuerberichte UStVA/EÜR/GuV/BWA + ELSTER-Anbindung (vorbereitet)                           |
+| `datev`                        | DATEV-Export (OAuth2, ASCII/CSV), aktuell Mock — echte API ausstehend                       |
+| `finance`                      | Beleg-OCR (Taskilo-KI), Order→Invoice-Sync, Kunden/Adressen                                 |
+| `transaction_links` + `finapi` | Bankabgleich (FinAPI XS2A/FinTS), Transaktion↔Beleg-Zuordnung                               |
 
 **Buchhaltungs-Python-Deps:** `weasyprint` (PDF), `defusedxml` (E-Invoice),
 `apscheduler` (Serienrechnungen), `httpx` (OCR/FinAPI/DATEV), `orjson`, `python-dateutil`.
 
 ### Frontend (`apps/frontend/app` = `@taskilo/app`, **Next.js 16**, React 19)
+
 - Routen: `/datev`, `/datev-test`, `/print/[type]/[companyId]/[id]` (PDF-Druck),
   `/payment`, `/revolut/oauth-success`, `/dashboard/admin/storno-management`.
 - Features: Rechnungserstellung, E-Rechnung-Dashboard, DATEV-Export, GoBD-Lock/Audit,
@@ -43,6 +45,7 @@ deutlich umfangreicher als ein „Finanzen"-Tab. Kernbausteine:
   `fast-xml-parser`, `jszip` (DATEV-Export), `zod`, `jose`.
 
 ### Datenbank (Supabase) — **~26 Buchhaltungs-Tabellen**
+
 `invoices`, `invoice_line_items`, `quotes`, `customers`, `expenses`, `fixed_assets`,
 `booking_accounts` (Kontenplan SKR03/04), `payment_accounts`, `tax_settings`,
 `tax_reports`, `transaction_links`, `processed_revolut_transactions`,
@@ -54,14 +57,14 @@ deutlich umfangreicher als ein „Finanzen"-Tab. Kernbausteine:
 
 ## 2. Die zentralen Konflikte (warum kein simples Kopieren)
 
-| Thema | NextDays | Taskilo | Auswirkung |
-| --- | --- | --- | --- |
-| **Frontend Next.js** | **15** (`apps/web`) | **16** (`apps/frontend/app`) | Buchhaltung **nicht** in `apps/web` mergebar → als **eigene App** ins Monorepo |
-| **Mandanten-Konzept** | `tenant_id` (Vermieter = Tenant) | `company_id` (Firma, `companies.owner_id`) | **Schlüssel-Entscheidung** — siehe §4 |
-| **Build-System** | einfaches bun-Setup | Turbo + bun-Workspaces + `@tasko/*` | Workspace-Pakete + ggf. Turbo nötig |
-| **Backend** | FastAPI Vertical Slices, eigene `users`/`tenants` | FastAPI, `companies`-zentriert | Beide FastAPI/3.12 → gut kombinierbar, aber 2 getrennte Slices-Welten |
-| **Supabase** | 22 Migrationen, RLS auf `tenant_id` | 22+ Migrationen, RLS auf `company_id` (via `companies.owner_id = auth.uid()`) | Schema-Merge nötig (gewünscht) — Konflikt bei `customers`, `payments` möglich |
-| **Auth** | Supabase-JWT, `tenant_id`/`role` in app_metadata, Capability+Lodgify-Permissions | Supabase-JWT, `auth.uid()`→`companies` | JWT-Quelle gleich (Supabase) → vereinbar |
+| Thema                 | NextDays                                                                    | Taskilo                                                                       | Auswirkung                                                                     |
+| --------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| **Frontend Next.js**  | **15** (`apps/web`)                                                         | **16** (`apps/frontend/app`)                                                  | Buchhaltung **nicht** in `apps/web` mergebar → als **eigene App** ins Monorepo |
+| **Mandanten-Konzept** | `tenant_id` (Vermieter = Tenant)                                            | `company_id` (Firma, `companies.owner_id`)                                    | **Schlüssel-Entscheidung** — siehe §4                                          |
+| **Build-System**      | einfaches bun-Setup                                                         | Turbo + bun-Workspaces + `@tasko/*`                                           | Workspace-Pakete + ggf. Turbo nötig                                            |
+| **Backend**           | FastAPI Vertical Slices, eigene `users`/`tenants`                           | FastAPI, `companies`-zentriert                                                | Beide FastAPI/3.12 → gut kombinierbar, aber 2 getrennte Slices-Welten          |
+| **Supabase**          | 22 Migrationen, RLS auf `tenant_id`                                         | 22+ Migrationen, RLS auf `company_id` (via `companies.owner_id = auth.uid()`) | Schema-Merge nötig (gewünscht) — Konflikt bei `customers`, `payments` möglich  |
+| **Auth**              | Supabase-JWT, `tenant_id`/`role` in app_metadata, Capability+..-Permissions | Supabase-JWT, `auth.uid()`→`companies`                                        | JWT-Quelle gleich (Supabase) → vereinbar                                       |
 
 **Namens-/Überlappungs-Risiken beim DB-Merge:** Taskilo bringt eigene `customers`-
 und (im finance-Slice) `invoices`-Strukturen mit; NextDays hat bereits `payments`
@@ -104,6 +107,7 @@ inkl. aller Fremdschlüssel und RLS-Policies (statt `companies.owner_id = auth.u
 künftig die NextDays-Tenant-Logik).
 
 Konsequenzen für den Merge:
+
 - `companies` → wird auf NextDays-`tenants` abgebildet; firmenspezifische
   Buchhaltungs-Felder (`tax_number`, `vat_id`, `iban`, `is_kleinunternehmer`,
   `e_invoice_format`, `leitweg_id`, Skonto …) wandern als Spalten/JSONB an `tenants`
@@ -153,6 +157,7 @@ lieferte nur dünne Attrappen ohne GoBD-Logik. Möglich wird das, weil `@tasko/u
 reines Radix + Tailwind v4 ist (identische Basis wie NextDays `components/ui`).
 
 **Einbindungs-Mechanik:**
+
 - `@tasko/ui` liegt als Vendor-Paket unter `apps/web/vendor/tasko-ui/` (48 Radix-
   Komponenten, 1:1), eingebunden per tsconfig-Alias `@tasko/ui`. Die Finance-
   Komponenten importieren `from '@tasko/ui'` unverändert.
@@ -172,24 +177,24 @@ reines Radix + Tailwind v4 ist (identische Basis wie NextDays `components/ui`).
   durchgängig auf „NextDays" umgestellt.
 
 - [x] **Schritt 1 — DB-Fundament** (`0023`, `0024`, `0025`):
-  `tenant_billing_profile`, `customers`, `invoices`, `invoice_line_items`, `quotes`,
-  `number_sequences` + `next_document_number()` (GoBD-lückenlose Nummernkreise,
-  Row-Lock). Tenant-scoped, RLS via `current_tenant_id()`. Angewendet & verifiziert.
+      `tenant_billing_profile`, `customers`, `invoices`, `invoice_line_items`, `quotes`,
+      `number_sequences` + `next_document_number()` (GoBD-lückenlose Nummernkreise,
+      Row-Lock). Tenant-scoped, RLS via `current_tenant_id()`. Angewendet & verifiziert.
 - [x] **Schritt 2 — Backend-Slice `buchhaltung`** (`apps/api/src/features/buchhaltung/`):
-  Rechnungen-Liste im `InvoiceData`-Format, `POST /invoices` (reiches camelCase-
-  Payload → GoBD-Tabelle, **Beträge serverseitig** aus Positionen, Decimal/
-  Kleinunternehmer), `PATCH /invoices/{id}` (GoBD-Lock-Schutz, E-Rechnung-Nachtrag),
-  `POST /number-sequences/next`, `GET/PATCH /companies/{id}` (Firmenprofil),
-  Read-Stubs (transaction-links, booking-accounts), Schreibrechte via
-  `owner_reporting`.
+      Rechnungen-Liste im `InvoiceData`-Format, `POST /invoices` (reiches camelCase-
+      Payload → GoBD-Tabelle, **Beträge serverseitig** aus Positionen, Decimal/
+      Kleinunternehmer), `PATCH /invoices/{id}` (GoBD-Lock-Schutz, E-Rechnung-Nachtrag),
+      `POST /number-sequences/next`, `GET/PATCH /companies/{id}` (Firmenprofil),
+      Read-Stubs (transaction-links, booking-accounts), Schreibrechte via
+      `owner_reporting`.
 - [x] **Schritt 3 — Frontend Rechnungen 1:1** (`apps/web`, Next 15):
-  Echte `InvoiceListView` (816 Z., Tabs/Filter/Storno/Banking), `ImportXRechnung`,
-  komplette **Rechnungserstellung** (`create-invoice-page.tsx`, 5380 Z.) mit
-  Live-Vorschau, Steuerregeln, Footer/Header-Editor (TipTap), GoBD-Festschreibung,
-  E-Rechnung (ZUGFeRD/XRechnung via `fast-xml-parser`/`pdf-lib`). Route
-  `/buchhaltung` + `/buchhaltung/rechnungen/neu`. Sidebar `owner_reporting`-Gating.
+      Echte `InvoiceListView` (816 Z., Tabs/Filter/Storno/Banking), `ImportXRechnung`,
+      komplette **Rechnungserstellung** (`create-invoice-page.tsx`, 5380 Z.) mit
+      Live-Vorschau, Steuerregeln, Footer/Header-Editor (TipTap), GoBD-Festschreibung,
+      E-Rechnung (ZUGFeRD/XRechnung via `fast-xml-parser`/`pdf-lib`). Route
+      `/buchhaltung` + `/buchhaltung/rechnungen/neu`. Sidebar `owner_reporting`-Gating.
 - [ ] **Schritt 4+ — weitere Module** (gleiches 1:1-Muster):
-  Angebote, Ausgaben, Kassenbuch, Mahnwesen, Steuer (UStVA/EÜR), DATEV-Export,
-  Bankabgleich (FinAPI), Kontenplan, OCR-Belegerfassung — dann HR, Jobs, Marktplatz.
+      Angebote, Ausgaben, Kassenbuch, Mahnwesen, Steuer (UStVA/EÜR), DATEV-Export,
+      Bankabgleich (FinAPI), Kontenplan, OCR-Belegerfassung — dann HR, Jobs, Marktplatz.
 
 Webmailer/Drive/Meet/Chat/Photos/Notes/KI/WhatsApp/Admin/SEO bleiben **draußen**.

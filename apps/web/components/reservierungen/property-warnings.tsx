@@ -1,6 +1,6 @@
 "use client";
 
-// Objekt-Warnungen (Lodgify „Warnungen"): aus den Buchungen dieses Objekts
+// Objekt-Warnungen (.. „Warnungen"): aus den Buchungen dieses Objekts
 // abgeleitete Hinweise. KEIN erfundener Wert — nur Warnungen, die sich aus den
 // vorhandenen Feldern belegen lassen:
 //   • Fehlende Zahlung: paid_amount < total_amount (nur mit Betrags-Sichtbarkeit)

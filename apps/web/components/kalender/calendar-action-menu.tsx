@@ -1,6 +1,6 @@
 "use client";
 
-// Aktionsmenü nach dem Ziehen eines Zeitraums (wie Lodgify): erscheint am
+// Aktionsmenü nach dem Ziehen eines Zeitraums: erscheint am
 // Cursor, zeigt den gewählten Zeitraum und die Aktionen Reservierung (mit/ohne
 // Angebot) sowie Sperrzeitraum. Eigenständiges Element; schließt bei Klick
 // daneben oder Esc.

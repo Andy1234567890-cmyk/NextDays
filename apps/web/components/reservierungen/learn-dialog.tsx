@@ -1,6 +1,6 @@
 "use client";
 
-// „Lernen"-Dialog (Lodgify): erklärt die Kontrollzentrum-Fläche in einem
+// „Lernen"-Dialog (..): erklärt die Kontrollzentrum-Fläche in einem
 // zentrierten Modal. Wiederverwendbar — der Button rendert selbst und öffnet den
 // Dialog. Schließt per Escape, Klick aufs Overlay oder „Schließen". Der Inhalt
 // wird als Kinder übergeben (Kontrollzentrum-Text vs. Objekt-Text).
@@ -80,7 +80,7 @@ export function LearnButton({
   );
 }
 
-// Der Kontrollzentrum-Erklärtext (Lodgify-Wortlaut, an unsere Begriffe angepasst:
+// Der Kontrollzentrum-Erklärtext (..-Wortlaut, an unsere Begriffe angepasst:
 // „Unterkünfte" statt „Vermietungen").
 export function ControlCenterLearn() {
   return (

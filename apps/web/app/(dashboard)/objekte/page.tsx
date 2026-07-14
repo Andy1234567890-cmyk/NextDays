@@ -1,4 +1,4 @@
-// Objekte-Übersicht (wie Lodgify „Rentals"): Liste aller Objekte des Tenants.
+// Objekte-Übersicht (Rentals): Liste aller Objekte des Tenants.
 // Server Component — lädt über die Server-Action, rendert Karten + Anlage-Button.
 import Link from "next/link";
 

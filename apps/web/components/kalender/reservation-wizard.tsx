@@ -1,6 +1,6 @@
 "use client";
 
-// Reservierungs-Assistent (wie Lodgify, 3 Schritte): eigenständiger Drawer.
+// Reservierungs-Assistent (3 Schritte): eigenständiger Drawer.
 //  1) Reservierungsdetails: Objekt, Zeitraum, Quelle, Gäste, Kontakt
 //  2) Preise & Extras: Grundpreis, Aktion, Gebühren, Steuern, Add-ons → Summe
 //  3) Richtlinien: Policy-Automation + Übersicht, dann Bestätigen
@@ -228,13 +228,12 @@ export function ReservationWizard({
           {STEPS.map((label, i) => (
             <div key={label} className="flex flex-1 items-center gap-2">
               <span
-                className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
-                  i < step
+                className={`flex size-6 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${i < step
                     ? "bg-accent text-white"
                     : i === step
                       ? "border-2 border-accent text-accent"
                       : "border-2 border-muted text-muted-foreground"
-                }`}
+                  }`}
               >
                 {i < step ? <Icon icon="ph:check" className="size-3.5" /> : i + 1}
               </span>

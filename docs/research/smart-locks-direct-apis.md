@@ -1,9 +1,9 @@
 # Research: Direkt-APIs der 12 Smart-Lock-Marken (ohne Aggregator)
 
-> Frage: Können wir alle von Lodgify unterstützten Marken selbst integrieren,
+> Frage: Können wir alle von .. unterstützten Marken selbst integrieren,
 > ohne Aggregator (Seam) im Ökosystem? Stand 13.07.2026, Quellen jeweils
 > Hersteller-Doku (Links am Ende der Abschnitte in
-> `smart-locks-lodgify-seam.md`-Ergänzung).
+> `smart-locks-..-seam.md`-Ergänzung).
 
 ## Antwort in einem Satz
 
@@ -14,20 +14,20 @@ sind faktisch Aggregator- oder Closed-Partner-only.**
 
 ## Matrix
 
-| Marke | Eigene offizielle API | Zugang | Zeitgebundene Keypad-PINs per API | Webhooks | Direkt machbar? |
-|---|---|---|---|---|---|
-| **Nuki** (AT) | ✅ Web API (api.nuki.io) | Self-Service-Token; **Short-Rental kommerziell = Vertrag mit Nuki nötig**; Webhooks nur via „Advanced API" (Antrag) | ✅ voll (auth type 13, Zeitfenster) | Nur Advanced API, sonst Polling | **Ja** (Vertrag einplanen) |
-| **Tedee** (PL) | ✅ api.tedee.com | ✅ am offensten: Personal Access Key self-service; OAuth-App ~2 Wochen Freischaltung | ✅ (lockpin-Endpoints) | ✅ dokumentiert (Battery, Lock-Status, …) | **Ja — einfachster Einstieg** |
-| **TTLock/Sciener** (CN, EU-Server) | ✅ euopen.ttlock.com | Developer-Antrag (1–2 Tage Freigabe), kein NDA | ✅ (keyboardPwd/add mit start/end) — Remote nur mit Gateway + V4-Locks | ✅ Callback-URL pro App | **Ja** (Gateway-Pflicht) |
-| **Igloohome** (SG) | ✅ api.igloodeveloper.co | ✅ Self-Signup, ~2–2,50 USD/Lock/Monat | ✅ **algoPIN: algorithmische OFFLINE-PINs** (kein Internet am Schloss nötig!) | ✅ (Event-Liste nicht im Detail verifiziert) | **Ja — stärkster Kandidat** |
-| **Schlage** (Allegion, US) | ✅ Schlage Home API (developer.allegion.com) | Gated: Questionnaire + Business-Review + Gespräch, kein Self-Signup | ✅ offiziell, „Temporary" explizit für Airbnb/VRBO-Use-Case | Unklar (Referenz hinter Login) | **Ja, mit Freigabeprozess** |
-| **SmartThings** (Samsung) | ✅ REST-API + OAuth | Self-Reg.; produktiv = OAuth-SmartApp + Review | ⚠️ `lockCodes.setCode/deleteCode` — **kein natives Ablaufdatum**, Lifecycle selbst orchestrieren | ✅ Subscriptions | **Bedingt** — Endkunde braucht fast immer Hub; PIN-Support gerätespezifisch |
-| **4Suites** (NL, Hotel) | ✅ api.4suites.nl (OAuth2) | Partner-Onboarding [Vermutung — Portal nicht öffentlich lesbar] | ❓ nicht aus Primärquelle verifizierbar (Fokus Mobile Key) | ❓ nicht verifizierbar | **Vielleicht — direkt anfragen** |
-| **Yale** (ASSA ABLOY) | ❌ (läuft auf August-Backend) | Geschlossenes Partnerprogramm | nur via Aggregator | — | **Nein** (nur Partner-Deal) |
-| **August** (ASSA ABLOY) | ❌ öffentlich; partners.august.com = Login-Gate | Antrag, Konditionen nicht öffentlich | nicht öffentlich dokumentiert | — | **Nein** (nur Partner-Deal) |
-| **Kwikset** (Spectrum) | ❌ (Cloud-API existiert, undokumentiert) | Nur ausgewählte Partner (Seam, Jervis) | nur via Aggregator | inoffiz. WebSocket | **Nein** |
-| **Wyze** (US) | ❌ (API-Key nur für private App-API, unsupported) | — | nur Reverse-Engineering (wyze-sdk) | ❌ | **Nein — unseriös ohne offizielle API** |
-| **Lockly** | ⚠️ nur LocklyPRO/LocklyOS via Access Portal, keine öffentliche Doku | Partner/Abo-gated; Lockly selbst verweist auf Seam | Portal ja, API unverifiziert | ❓ | **Kaum** (gated, dünn dokumentiert) |
+| Marke                              | Eigene offizielle API                                               | Zugang                                                                                                              | Zeitgebundene Keypad-PINs per API                                                                | Webhooks                                     | Direkt machbar?                                                             |
+| ---------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------- | --------------------------------------------------------------------------- |
+| **Nuki** (AT)                      | ✅ Web API (api.nuki.io)                                            | Self-Service-Token; **Short-Rental kommerziell = Vertrag mit Nuki nötig**; Webhooks nur via „Advanced API" (Antrag) | ✅ voll (auth type 13, Zeitfenster)                                                              | Nur Advanced API, sonst Polling              | **Ja** (Vertrag einplanen)                                                  |
+| **Tedee** (PL)                     | ✅ api.tedee.com                                                    | ✅ am offensten: Personal Access Key self-service; OAuth-App ~2 Wochen Freischaltung                                | ✅ (lockpin-Endpoints)                                                                           | ✅ dokumentiert (Battery, Lock-Status, …)    | **Ja — einfachster Einstieg**                                               |
+| **TTLock/Sciener** (CN, EU-Server) | ✅ euopen.ttlock.com                                                | Developer-Antrag (1–2 Tage Freigabe), kein NDA                                                                      | ✅ (keyboardPwd/add mit start/end) — Remote nur mit Gateway + V4-Locks                           | ✅ Callback-URL pro App                      | **Ja** (Gateway-Pflicht)                                                    |
+| **Igloohome** (SG)                 | ✅ api.igloodeveloper.co                                            | ✅ Self-Signup, ~2–2,50 USD/Lock/Monat                                                                              | ✅ **algoPIN: algorithmische OFFLINE-PINs** (kein Internet am Schloss nötig!)                    | ✅ (Event-Liste nicht im Detail verifiziert) | **Ja — stärkster Kandidat**                                                 |
+| **Schlage** (Allegion, US)         | ✅ Schlage Home API (developer.allegion.com)                        | Gated: Questionnaire + Business-Review + Gespräch, kein Self-Signup                                                 | ✅ offiziell, „Temporary" explizit für Airbnb/VRBO-Use-Case                                      | Unklar (Referenz hinter Login)               | **Ja, mit Freigabeprozess**                                                 |
+| **SmartThings** (Samsung)          | ✅ REST-API + OAuth                                                 | Self-Reg.; produktiv = OAuth-SmartApp + Review                                                                      | ⚠️ `lockCodes.setCode/deleteCode` — **kein natives Ablaufdatum**, Lifecycle selbst orchestrieren | ✅ Subscriptions                             | **Bedingt** — Endkunde braucht fast immer Hub; PIN-Support gerätespezifisch |
+| **4Suites** (NL, Hotel)            | ✅ api.4suites.nl (OAuth2)                                          | Partner-Onboarding [Vermutung — Portal nicht öffentlich lesbar]                                                     | ❓ nicht aus Primärquelle verifizierbar (Fokus Mobile Key)                                       | ❓ nicht verifizierbar                       | **Vielleicht — direkt anfragen**                                            |
+| **Yale** (ASSA ABLOY)              | ❌ (läuft auf August-Backend)                                       | Geschlossenes Partnerprogramm                                                                                       | nur via Aggregator                                                                               | —                                            | **Nein** (nur Partner-Deal)                                                 |
+| **August** (ASSA ABLOY)            | ❌ öffentlich; partners.august.com = Login-Gate                     | Antrag, Konditionen nicht öffentlich                                                                                | nicht öffentlich dokumentiert                                                                    | —                                            | **Nein** (nur Partner-Deal)                                                 |
+| **Kwikset** (Spectrum)             | ❌ (Cloud-API existiert, undokumentiert)                            | Nur ausgewählte Partner (Seam, Jervis)                                                                              | nur via Aggregator                                                                               | inoffiz. WebSocket                           | **Nein**                                                                    |
+| **Wyze** (US)                      | ❌ (API-Key nur für private App-API, unsupported)                   | —                                                                                                                   | nur Reverse-Engineering (wyze-sdk)                                                               | ❌                                           | **Nein — unseriös ohne offizielle API**                                     |
+| **Lockly**                         | ⚠️ nur LocklyPRO/LocklyOS via Access Portal, keine öffentliche Doku | Partner/Abo-gated; Lockly selbst verweist auf Seam                                                                  | Portal ja, API unverifiziert                                                                     | ❓                                           | **Kaum** (gated, dünn dokumentiert)                                         |
 
 ## Strategische Bewertung für NextDays
 
@@ -63,7 +63,7 @@ sind faktisch Aggregator- oder Closed-Partner-only.**
      (Wurzel 4).
    - **Eigener Scheduler für Code-Lifecycle**, weil nicht jede API native
      Ablaufzeiten kann (SmartThings) und Provisionierung asynchron ist →
-     Status-Maschine wie bei Lodgify (scheduled/generating/active/expired),
+     Status-Maschine wie bei .. (scheduled/generating/active/expired),
      Jobs über die bestehende jobs-Queue (0102), idempotent (Wurzel 2).
    - Webhook-Empfang fail-closed mit Signatur/Secret je Anbieter (Wurzel 5);
      wo es keine Webhooks gibt (Nuki Standard): Polling mit dokumentierten

@@ -1,25 +1,25 @@
-# Research: Wie Lodgify Smart Locks macht (Stand 13.07.2026)
+# Research: Wie .. Smart Locks macht (Stand 13.07.2026)
 
-Quellen: help.lodgify.com — „Connect with smart locks and manage entry codes"
+Quellen: help....com — „Connect with smart locks and manage entry codes"
 (Artikel 15335695055004, aktualisiert vor 7 Tagen) · docs.seam.co (Smart Locks,
-Access Codes) · Lodgify-Marketingseite (Preis/Seam-Disclosure).
+Access Codes) · ..-Marketingseite (Preis/Seam-Disclosure).
 
 ## Kernbefund
 
-**Lodgify baut keine einzige Schloss-Integration selbst.** Der gesamte Dienst
-läuft über **Seam Labs, Inc. (seam.co)** als Aggregator — Lodgify legt das im
-Kleingedruckten offen („Der Smart Locks-Dienst wird Ihnen von Lodgify über
-Seam Labs, Inc. angeboten"). Lodgify integriert EINE API (Seam) und bekommt
+**.. baut keine einzige Schloss-Integration selbst.** Der gesamte Dienst
+läuft über **Seam Labs, Inc. (seam.co)** als Aggregator — .. legt das im
+Kleingedruckten offen („Der Smart Locks-Dienst wird Ihnen von .. über
+Seam Labs, Inc. angeboten"). .. integriert EINE API (Seam) und bekommt
 damit alle Marken: Nuki, August, Igloohome, Kwikset, Schlage, SmartThings,
 Tedee, TTLock, Wyze, Yale, Lockly, 4Suites — die Liste ist deckungsgleich mit
 Seams Gerätekatalog. Gerätevoraussetzungen: Tastatur (oder nachrüstbar), WLAN
 oder Bridge, ggf. Anbieter-Abo.
 
-## Ablauf bei Lodgify (aus dem Hilfeartikel)
+## Ablauf bei .. (aus dem Hilfeartikel)
 
 1. **Verbinden**: Einstellungen → Smart Locks → Abonnieren → Marke wählen →
    neuer Tab öffnet Anbieter-Login (= Seam **Connect Webview**; OAuth/Creds
-   laufen bei Seam, nie bei Lodgify). Nur Geräte, die programmatische
+   laufen bei Seam, nie bei ..). Nur Geräte, die programmatische
    Code-Erstellung können, werden importiert.
 2. **Abo/Billing**: Preis pro Gerät/Monat (7 USD / 6 EUR / 6 GBP), Vorauszahlung
    30 Tage, Anzahl jederzeit änderbar (sofortige Differenz-Abbuchung),
@@ -56,7 +56,7 @@ oder Bridge, ggf. Anbieter-Abo.
 - Seam empfiehlt heute die höhere Abstraktion „Access Grants" statt der
   Low-Level-Smart-Locks-API.
 - Asynchrone Programmierung: Codes werden auf dem Gerät provisioniert →
-  darum Lodgifys Generating/Updating/Deleting-Status.
+  darum ..s Generating/Updating/Deleting-Status.
 
 ## Was das für NextDays bedeutet (Empfehlung)
 
@@ -74,14 +74,14 @@ oder Bridge, ggf. Anbieter-Abo.
    Wurzel 1 (Storno/Umbuchung muss Codes löschen/verschieben — Alt/Neu-Diff!);
    Seam-Webhooks → Wurzel 2 (Redelivery-idempotent); Zeiten aus
    Reservierung/Policy, nie hardcoded (Wurzel 4).
-4. **Monetarisierung**: Lodgify verlangt 6 €/Gerät/Monat als Add-on —
+4. **Monetarisierung**: .. verlangt 6 €/Gerät/Monat als Add-on —
    Achtung Spannungsfeld zu unserem „All-Inclusive, kein Feature-Gating"
    (PROJECT.md §5): entweder in den Festpreis einpreisen oder als
    Hardware-nahen Durchleitungsposten begründen (Seam kostet pro Gerät).
    Geschäftsentscheidung Andy/Jeanine, kein Code.
 5. **DSGVO**: Seam ist US-Anbieter (Datenverarbeitung im Auftrag) — vor
    Integration AVV/SCC prüfen und als ADR dokumentieren (wie Google-Dienste,
-   PROJECT.md §2). Lodgify löst das per eigener Smart-Locks-Datenschutzerklärung.
+   PROJECT.md §2). .. löst das per eigener Smart-Locks-Datenschutzerklärung.
 6. **Einstieg über die Inbox**: `{{KeyCode}}`-artiger Platzhalter passt exakt
    in unser bestehendes Automail-/Template-System (inbox-Slice, Migration 0072).
 

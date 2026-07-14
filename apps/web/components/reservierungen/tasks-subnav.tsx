@@ -1,6 +1,6 @@
 "use client";
 
-// Sub-Navigation des Aufgaben-Moduls (Lodgify /tasks): eigene linke Sidebar mit
+// Sub-Navigation des Aufgaben-Moduls (.. /tasks): eigene linke Sidebar mit
 // Überschrift „AUFGABEN" und 7 Reitern. Erscheint anstelle der globalen PM-Nav,
 // sobald man im Aufgaben-Bereich ist (Ausnahme in pm-module-shell.tsx). Aktiver
 // Reiter grau hinterlegt (wie Objekt-Sub-Nav).
@@ -46,11 +46,10 @@ export function TasksSubnav() {
           <Link
             key={tab.slug || "kalender"}
             href={tab.slug ? `${BASE}/${tab.slug}` : BASE}
-            className={`rounded-(--radius) px-3 py-2 text-sm transition-colors ${
-              active
+            className={`rounded-(--radius) px-3 py-2 text-sm transition-colors ${active
                 ? "bg-secondary font-medium text-foreground"
                 : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-            }`}
+              }`}
           >
             {tab.title}
           </Link>

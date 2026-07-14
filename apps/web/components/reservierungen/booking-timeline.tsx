@@ -1,6 +1,6 @@
 "use client";
 
-// Ereignis-Zeitleiste einer Buchung (Lodgify „Zeitleiste") — der KOMPLETTE Flow:
+// Ereignis-Zeitleiste einer Buchung (.. „Zeitleiste") — der KOMPLETTE Flow:
 // Buchung erstellt (auch OTA-Import Booking/Airbnb), verschoben, Preis neu
 // berechnet, ein-/ausgecheckt, storniert, Nachrichten, Aufgaben, Zahlungen,
 // Zusatzleistungen. Chronologisch, neueste zuerst — als Karten mit Objekt-
@@ -26,7 +26,7 @@ import { useRealtime } from "@/lib/use-realtime";
 // Icon (auf der Achse) + Beschriftung + Filter-Kategorie je Ereignis-Art. Der
 // Kunde sieht nie „Channex"/Fachjargon ([[ui-nie-channex-nennen]]).
 type Category = "booking" | "message" | "task" | "payment";
-// icon = Achsen-Symbol (groß, kräftig, wie Lodgify: Häkchen/$/…). tone = Icon-
+// icon = Achsen-Symbol (groß, kräftig, wie ..: Häkchen/$/…). tone = Icon-
 // Farbe. label = fette Titelzeile über der Karte.
 const KIND_META: Record<
   string,
@@ -85,7 +85,7 @@ function fmtDate(iso: string, withTime = false): string {
   });
 }
 
-// Ausführliche Fußzeile (Wochentag, Datum, Uhrzeit) — wie Lodgify unter der Karte.
+// Ausführliche Fußzeile (Wochentag, Datum, Uhrzeit) — wie .. unter der Karte.
 function fmtFooter(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
@@ -296,7 +296,7 @@ export function BookingTimeline({
           >
             Zeitleiste
           </h2>
-          {/* „Lernen"-Button (wie Lodgify) mit dem Zeitleiste-Erklärtext. */}
+          {/* „Lernen"-Button (wie ..) mit dem Zeitleiste-Erklärtext. */}
           <LearnButton title="Zeitleiste">
             <p className="text-sm text-muted-foreground">
               Dies ist die Zeitleiste der Ereignisse, die wir für Ihr Team
@@ -315,11 +315,10 @@ export function BookingTimeline({
                   key={f.key}
                   type="button"
                   onClick={() => toggle(f.key)}
-                  className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                    on
+                  className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${on
                       ? "border-accent bg-accent/10 text-accent"
                       : "border-border text-muted-foreground hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   {f.label}
                 </button>
@@ -360,7 +359,7 @@ export function BookingTimeline({
             const last = i === shown.length - 1;
             return (
               <li key={ev.id} className="flex gap-5">
-                {/* Achse: großes Icon direkt auf der Linie (wie Lodgify) +
+                {/* Achse: großes Icon direkt auf der Linie (wie ..) +
                     durchgehende vertikale Linie bis zum nächsten Eintrag. */}
                 <div className="flex flex-col items-center">
                   <Icon icon={m.icon} className={`size-7 shrink-0 ${m.tone}`} />
@@ -400,7 +399,7 @@ export function BookingTimeline({
                           ))}
                         </dl>
                       )}
-                      {/* Kontext-Badges (klickbar, wie Lodgify): Objekt → dessen
+                      {/* Kontext-Badges (klickbar, wie ..): Objekt → dessen
                           Kalender-Seite, „Buchung" → die Buchungs-Übersicht. Der
                           Objekt-Badge erscheint, sobald ein Titel da ist; klickbar
                           nur mit property_id (sonst nicht-verlinkt, aber sichtbar). */}
@@ -426,7 +425,7 @@ export function BookingTimeline({
                         </Link>
                       </div>
 
-                      {/* Datums-Fußzeile (fett), wie Lodgify unter der Karte. */}
+                      {/* Datums-Fußzeile (fett), wie .. unter der Karte. */}
                       <p className="mt-3 text-xs font-bold text-foreground">
                         {fmtFooter(ev.at)}
                       </p>

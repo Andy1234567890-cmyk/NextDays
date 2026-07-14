@@ -1,4 +1,4 @@
-// Sign-up-Seite (vor dem Login, wie Lodgify): abgeblendeter Demo-Kalender im
+// Sign-up-Seite (vor dem Login): abgeblendeter Demo-Kalender im
 // Hintergrund, davor das zentrierte Sign-up-Modal. Server Component — das
 // Modal kapselt die Interaktion (Auswahl → Ladebalken).
 import { DemoCalendar } from "@/components/signup/demo-calendar";

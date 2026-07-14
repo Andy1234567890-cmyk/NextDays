@@ -152,8 +152,8 @@ def test_days_booked_ahead_uses_future_arrival() -> None:
 
 
 def test_period_uses_booking_date_not_checkin() -> None:
-    """Zuordnung + Sparkline über created_at (Buchungsdatum), wie Lodgify: eine
-    im Juni gebuchte Juli-Anreise zählt in die Juni-Periode, nicht in die Juli."""
+    """Zuordnung + Sparkline über created_at (Buchungsdatum): eine im Juni
+    gebuchte Juli-Anreise zählt in die Juni-Periode, nicht in die Juli."""
     row = _res(
         created_at="2026-06-15T09:00:00+00:00",
         check_in="2026-07-20", check_out="2026-07-23",

@@ -1,4 +1,4 @@
-// Stammdaten für den Benutzer-Wizard: Rollen (wie Lodgify) + Berechtigungsmatrix
+// Stammdaten für den Benutzer-Wizard: Rollen + Berechtigungsmatrix
 // (Allgemein + PM-Module). Zentral hier, damit Wizard-Schritt 3 sie nur rendert.
 
 // Rollen für den Wizard — die `value`s sind exakt die DB-UserRoles
@@ -79,7 +79,7 @@ export const PM_PERMISSIONS: Permission[] = [
 ];
 
 // Posteingang-Berechtigungen (Enterprise: Scope + Aktionen getrennt steuerbar).
-// IDs identisch zum Backend (lodgify_permissions.py) — Single Source of Truth.
+// IDs identisch zum Backend (granular_permissions.py) — Single Source of Truth.
 // Zugriff selbst = pm_chat (oben). Diese vier steuern, was der Nutzer im
 // Posteingang sehen und tun darf.
 export const INBOX_PERMISSIONS: Permission[] = [
@@ -97,7 +97,7 @@ export const WIZARD_STEPS = [
 ] as const;
 
 // Default-Berechtigungen je Rolle (gespiegelt aus dem Backend
-// lodgify_permissions.py). Beim Rollenwechsel im Wizard vorausgewählt; admin =
+// granular_permissions.py). Beim Rollenwechsel im Wizard vorausgewählt; admin =
 // alle. Frei überschreibbar.
 const ALL_PERMISSION_IDS = [
   ...GENERAL_PERMISSIONS.map((p) => p.id),

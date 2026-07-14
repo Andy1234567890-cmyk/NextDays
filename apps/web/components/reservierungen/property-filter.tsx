@@ -1,6 +1,6 @@
 "use client";
 
-// Objekt-Filter fürs globale Kontrollzentrum (Lodgify „Alle/Ausgewählte
+// Objekt-Filter fürs globale Kontrollzentrum (.. „Alle/Ausgewählte
 // Unterkünfte" + „Alles zurücksetzen"). Popover mit Checkbox-Liste; leere
 // Auswahl = alle Objekte (der Trigger zeigt dann „Alle Unterkünfte"). „Alles
 // zurücksetzen" leert die Auswahl. Kein Fantasie-Zustand — die Liste kommt aus

@@ -1,4 +1,4 @@
-// Compliance-Daten eines Objekts (wie Lodgify „Compliance" → Website).
+// Compliance-Daten eines Objekts (Compliance → Website).
 // Aktuell: Registrierungsnummer(n) für die eigene Website. Für Airbnb/
 // Booking.com werden die Nummern direkt in deren Plattform gepflegt.
 // Gespeichert im flexiblen Feld type_attributes.compliance.

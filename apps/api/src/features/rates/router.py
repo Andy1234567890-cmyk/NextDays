@@ -9,8 +9,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from src.core.security import AuthContext
 from src.core.supabase import get_service_client
-from src.features.auth.dependencies import require_lodgify_permission
-from src.features.auth.lodgify_permissions import Permission
+from src.features.auth.dependencies import require_granular_permission
+from src.features.auth.granular_permissions import Permission
 
 from .schemas import (
     RatePlanCreate,
@@ -29,7 +29,7 @@ def get_rates_service() -> RatesService:
 RatesServiceDep = Annotated[RatesService, Depends(get_rates_service)]
 
 _write = Annotated[
-    AuthContext, Depends(require_lodgify_permission(Permission.MANAGE_PROPERTY_SETTINGS))
+    AuthContext, Depends(require_granular_permission(Permission.MANAGE_PROPERTY_SETTINGS))
 ]
 
 router = APIRouter(prefix="/rates", tags=["rates"])

@@ -12,12 +12,13 @@ from supabase_auth.errors import AuthError as GoTrueAuthError
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
-from .lodgify_permissions import (
+from .granular_permissions import (
+    Permission,
     default_permissions_for,
     effective_permissions,
     normalize_permissions,
 )
-from .permissions import capabilities_for
+from .permissions import effective_capabilities
 from .schemas import (
     InviteRequest,
     InviteResponse,
@@ -101,12 +102,32 @@ class AuthService:
         except Exception as exc:  # noqa: BLE001 — darf Registrierung nie blockieren
             log.warning("channel_manager_group_failed", tenant_id=tenant_id, error=str(exc))
 
-    def invite(self, req: InviteRequest, tenant_id: str) -> InviteResponse:
+    def _effective_perms_of(self, user_id: str) -> frozenset:
+        """Effektive feingranulare Rechte eines Nutzers (Quelle der Wahrheit: DB).
+
+        Für den Escalation-Clamp (Wurzel 3): der Vergebende kann nur Rechte
+        weiterreichen, die er selbst besitzt. Admin = alle."""
+        row = (
+            self._service.table("users")
+            .select("role, permissions")
+            .eq("id", user_id)
+            .limit(1)
+            .execute()
+        )
+        data = row.data[0] if row.data else {}
+        role_raw = data.get("role")
+        role = UserRole(role_raw) if role_raw in UserRole.__members__ else None
+        return effective_permissions(role, data.get("permissions"))
+
+    def invite(
+        self, req: InviteRequest, tenant_id: str, granter_id: str
+    ) -> InviteResponse:
         """Weiteren Nutzer (Mitarbeiter, Co-Admin, …) in den Tenant einladen.
 
         Legt Auth-User mit der gewünschten Rolle im BESTEHENDEN Tenant an —
         kein neuer Tenant. Rollback des Auth-Users, falls die users-Row scheitert.
-        """
+        ``granter_id`` ist der einladende Nutzer: seine effektiven Rechte klemmen
+        die Vergabe (Wurzel 3, keine Privilege-Escalation)."""
         if req.role is UserRole.admin:
             # Admin entsteht nur bei register (Tenant-Gründung). Einladbar sind
             # co_admin, owner (Hauseigentümer mit Daten-Split), staff, cleaner.
@@ -114,13 +135,18 @@ class AuthService:
                 "Admin kann nicht eingeladen werden; entsteht bei register.",
                 status_code=400,
             )
-        # Berechtigungen: explizit gewählte (Wizard) oder Rollen-Defaults.
-        # Admin wäre hier ohnehin ausgeschlossen (s.o.); normalize filtert
-        # unbekannte IDs heraus.
+        # Berechtigungen: explizit gewählte (Wizard) oder Rollen-Defaults, in
+        # beiden Fällen auf die eigenen Rechte des Vergebenden geklemmt — niemand
+        # kann ein Recht weitergeben, das er selbst nicht hat.
+        granter = self._effective_perms_of(granter_id)
         if req.permissions is None:
-            permissions = default_permissions_for(req.role)
+            permissions = normalize_permissions(
+                default_permissions_for(req.role), req.role, granter=granter
+            )
         else:
-            permissions = normalize_permissions(req.permissions, req.role)
+            permissions = normalize_permissions(
+                req.permissions, req.role, granter=granter
+            )
 
         user_id = self._create_auth_user(
             email=req.email,
@@ -213,12 +239,18 @@ class AuthService:
         role_raw = data.get("role") or ctx.role
         role = UserRole(role_raw) if role_raw in UserRole.__members__ else None
         perms = effective_permissions(role, data.get("permissions"))
+        # Effektive Fähigkeiten = Rollen-Capabilities OHNE PM-Bereich, falls das
+        # PM-Dach fehlt (dieselbe Brücke wie im Guard). So blendet die Sidebar
+        # Kontrollzentrum/Buchungen/Aufgaben automatisch aus, wenn der PM-Zugriff
+        # im Rechte-Dialog entzogen wurde.
+        pm = Permission.ACCESS_PM_FEATURES in perms
+        caps = effective_capabilities(role, has_pm_access=pm)
         return MeResponse(
             user_id=ctx.user_id,
             email=data.get("email"),
             tenant_id=ctx.tenant_id,
             role=role,
-            capabilities=sorted(c.value for c in capabilities_for(role)),
+            capabilities=sorted(c.value for c in caps),
             permissions=sorted(p.value for p in perms),
             accommodation_type=self._accommodation_type(ctx.tenant_id),
         )

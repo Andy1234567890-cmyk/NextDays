@@ -11,8 +11,8 @@ from fastapi import APIRouter, Depends, Header, HTTPException, status
 
 from src.core.security import AuthContext, require_internal_cron_secret
 from src.core.supabase import get_service_client
-from src.features.auth.dependencies import require_lodgify_permission
-from src.features.auth.lodgify_permissions import Permission
+from src.features.auth.dependencies import require_granular_permission
+from src.features.auth.granular_permissions import Permission
 
 from .dependencies import OwnerStatementsServiceDep
 from .schemas import (
@@ -30,7 +30,7 @@ from .service import OwnerStatementsService, StatementError
 
 router = APIRouter(prefix="/owner-statements", tags=["owner_statements"])
 
-_REPORTING = require_lodgify_permission(  # noqa: N816  pylint: disable=invalid-name
+_REPORTING = require_granular_permission(  # noqa: N816  pylint: disable=invalid-name
     Permission.OWNER_REPORTING
 )
 

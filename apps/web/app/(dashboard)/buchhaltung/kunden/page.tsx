@@ -1,6 +1,7 @@
 // Buchhaltung → Kunden: Liste aller Kunden/Lieferanten des Tenants.
 // Server Component — lädt über die Server-Action, rendert Liste + Anlegen.
 import { Icon } from "@iconify/react";
+import { notFound } from "next/navigation";
 
 import { NewCustomerButton } from "@/components/buchhaltung/new-customer-button";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
@@ -31,11 +32,15 @@ export default async function KundenPage() {
       </div>
 
       {!res.ok ? (
-        <Card className="p-5 text-sm text-destructive">
-          {res.status === 403
-            ? "Keine Berechtigung für die Buchhaltung."
-            : "Kunden konnten nicht geladen werden. Ist das Backend erreichbar?"}
-        </Card>
+        // Fehlende Berechtigung (owner_reporting) → Buchhaltung existiert für
+        // diesen Nutzer nicht (Sidebar blendet sie aus, Wurzel 3).
+        res.status === 403 ? (
+          notFound()
+        ) : (
+          <Card className="p-5 text-sm text-destructive">
+            Kunden konnten nicht geladen werden. Ist das Backend erreichbar?
+          </Card>
+        )
       ) : res.data.items.length === 0 ? (
         <EmptyState />
       ) : (

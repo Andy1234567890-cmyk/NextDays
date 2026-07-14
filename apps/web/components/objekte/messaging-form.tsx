@@ -1,6 +1,6 @@
 "use client";
 
-// Nachrichten-Platzhalter eines Objekts (wie Lodgify „Messaging placeholders").
+// Nachrichten-Platzhalter eines Objekts (Messaging placeholders).
 //  Mehrsprachige, wiederverwendbare Texte (Check-in/out, Anfahrt, Türzugang,
 //  Hausordnung, WLAN, Reiseführer, Notfallkontakt). Jeder Block hat einen
 //  Shortcode ({{CheckinInstructions}} …) für automatische Gästenachrichten.
@@ -86,7 +86,7 @@ export function MessagingForm({ initial }: { initial: Property }) {
         ))}
       </div>
 
-      {/* Fußzeile: Speichern (wie Lodgify, ein Save für alle Blöcke). */}
+      {/* Fußzeile: Speichern (ein Save für alle Blöcke). */}
       <div className="sticky bottom-0 -mx-4 flex items-center gap-3 border-t bg-background/95 px-4 py-3 backdrop-blur">
         {error && <p className="text-sm text-destructive">{error}</p>}
         {saved && !error && (
@@ -103,7 +103,7 @@ export function MessagingForm({ initial }: { initial: Property }) {
   );
 }
 
-// „Tipps"-Popover (wie Lodgify „Tips"): erklärt, wie Platzhalter in
+// „Tipps"-Popover (Tips): erklärt, wie Platzhalter in
 // Nachrichten-Vorlagen eingesetzt werden, inkl. Beispiel-Shortcodes.
 function TipsPopover() {
   return (

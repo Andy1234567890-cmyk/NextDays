@@ -1,6 +1,7 @@
 // Buchhaltung → Angebote: Liste aller Angebote des Tenants.
 // Server Component — lädt über die Server-Action, rendert Tabelle + Anlegen.
 import { Icon } from "@iconify/react";
+import { notFound } from "next/navigation";
 
 import { NewQuoteButton } from "@/components/buchhaltung/new-quote-button";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
@@ -58,11 +59,16 @@ export default async function AngebotePage() {
       </div>
 
       {!res.ok ? (
-        <Card className="p-5 text-sm text-destructive">
-          {res.status === 403
-            ? "Keine Berechtigung für die Buchhaltung."
-            : "Angebote konnten nicht geladen werden. Ist das Backend erreichbar?"}
-        </Card>
+        // Fehlende Berechtigung (owner_reporting) → die Buchhaltung existiert für
+        // diesen Nutzer nicht (Sidebar blendet sie aus, Wurzel 3); echter Backend-
+        // Fehler bleibt sichtbar.
+        res.status === 403 ? (
+          notFound()
+        ) : (
+          <Card className="p-5 text-sm text-destructive">
+            Angebote konnten nicht geladen werden. Ist das Backend erreichbar?
+          </Card>
+        )
       ) : res.data.items.length === 0 ? (
         <EmptyState customers={customers} />
       ) : (

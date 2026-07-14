@@ -584,7 +584,7 @@ class InboxService:
     @staticmethod
     def _has_inbox_access(role: object, permissions: object) -> bool:
         """Hat der Nutzer Posteingang-Zugriff (PM_CHAT, Admin immer)?"""
-        from src.features.auth.lodgify_permissions import Permission, has_permission
+        from src.features.auth.granular_permissions import Permission, has_permission
         from src.features.auth.schemas import UserRole
 
         try:

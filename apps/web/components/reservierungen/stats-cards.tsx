@@ -63,11 +63,11 @@ export function Kpi({
       onKeyDown={
         clickable
           ? (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onClick?.();
-              }
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onClick?.();
             }
+          }
           : undefined
       }
     >
@@ -171,7 +171,7 @@ export function ChannelDonuts({
 
 // Kanal-Donut über recharts PieChart + shadcn ChartContainer. Ein Segment je
 // Kanal, Farbe aus dem Chart-Token-System; Legende + Tooltip vom Chart-Framework.
-// Links steht der Wert je Kanal als Text (Lodgify „Bookingcom: 7.030 kr").
+// Links steht der Wert je Kanal als Text (.. „Bookingcom: 7.030 kr").
 function ChannelDonut({
   title,
   stats,
@@ -215,7 +215,7 @@ function ChannelDonut({
         <p className="py-6 text-center text-sm text-muted-foreground">No Data Found</p>
       ) : (
         <div className="flex flex-col items-center gap-4 sm:flex-row">
-          {/* Wert je Kanal als Text (Lodgify) — links neben dem Donut. */}
+          {/* Wert je Kanal als Text (..) — links neben dem Donut. */}
           <ul className="flex min-w-32 flex-col gap-1.5 text-sm">
             {data.map((d) => (
               <li key={d.key} className="flex items-center gap-2">

@@ -7,41 +7,41 @@ Interaktive Doku (Swagger UI): **http://localhost:8000/docs**
 
 ## Meta-Endpoints
 
-| Methode | Pfad | Beschreibung |
-|---|---|---|
-| `GET` | `/` | Service-Info |
-| `GET` | `/health` | App-Health |
+| Methode | Pfad      | Beschreibung |
+| ------- | --------- | ------------ |
+| `GET`   | `/`       | Service-Info |
+| `GET`   | `/health` | App-Health   |
 
 ## Slices
 
 Jeder der 24 Vertical Slices stellt mindestens einen Health-Endpoint bereit:
 
-| Slice | Health-Endpoint |
-|---|---|
-| auth | `GET /api/v1/auth/health` |
-| buchhaltung | `GET /api/v1/buchhaltung/health` |
-| properties | `GET /api/v1/properties/health` |
-| rates | `GET /api/v1/rates/health` |
-| pricing | `GET /api/v1/pricing/health` |
-| calendar | `GET /api/v1/calendar/health` |
-| reservations | `GET /api/v1/reservations/health` |
-| guests | `GET /api/v1/guests/health` |
-| travel_agencies | `GET /api/v1/travel-agencies/health` |
-| inbox | `GET /api/v1/inbox/health` |
-| whatsapp | `GET /api/v1/whatsapp/health` (Meta Cloud API, s.u.) |
-| payments | `GET /api/v1/payments/health` (Stripe Connect + Zahlungen, s.u.) |
-| channel_manager | `GET /api/v1/channel-manager/health` (Channex-Integration, s.u.) |
-| booking_engine | `GET /api/v1/booking-engine/health` |
-| site_config | `GET /api/v1/site-config/health` (Page-Builder, s.u.) |
-| addons | `GET /api/v1/addons/health` |
-| owners | `GET /api/v1/owners/health` (Eigentümer-Stammdaten + Objekt-Zuweisung, s.u.) |
-| owner_statements | `GET /api/v1/owner-statements/health` (Auszahlungs-Abrechnung, s.u.) |
-| ocr | `GET /api/v1/ocr/health` |
-| public_portal | `GET /api/v1/public-portal/health` |
-| tasks | `GET /api/v1/tasks/health` |
-| crm | `GET /api/v1/crm/health` |
-| dashboard | `GET /api/v1/dashboard/health` |
-| content | `GET /api/v1/content/health` |
+| Slice            | Health-Endpoint                                                              |
+| ---------------- | ---------------------------------------------------------------------------- |
+| auth             | `GET /api/v1/auth/health`                                                    |
+| buchhaltung      | `GET /api/v1/buchhaltung/health`                                             |
+| properties       | `GET /api/v1/properties/health`                                              |
+| rates            | `GET /api/v1/rates/health`                                                   |
+| pricing          | `GET /api/v1/pricing/health`                                                 |
+| calendar         | `GET /api/v1/calendar/health`                                                |
+| reservations     | `GET /api/v1/reservations/health`                                            |
+| guests           | `GET /api/v1/guests/health`                                                  |
+| travel_agencies  | `GET /api/v1/travel-agencies/health`                                         |
+| inbox            | `GET /api/v1/inbox/health`                                                   |
+| whatsapp         | `GET /api/v1/whatsapp/health` (Meta Cloud API, s.u.)                         |
+| payments         | `GET /api/v1/payments/health` (Stripe Connect + Zahlungen, s.u.)             |
+| channel_manager  | `GET /api/v1/channel-manager/health` (Channex-Integration, s.u.)             |
+| booking_engine   | `GET /api/v1/booking-engine/health`                                          |
+| site_config      | `GET /api/v1/site-config/health` (Page-Builder, s.u.)                        |
+| addons           | `GET /api/v1/addons/health`                                                  |
+| owners           | `GET /api/v1/owners/health` (Eigentümer-Stammdaten + Objekt-Zuweisung, s.u.) |
+| owner_statements | `GET /api/v1/owner-statements/health` (Auszahlungs-Abrechnung, s.u.)         |
+| ocr              | `GET /api/v1/ocr/health`                                                     |
+| public_portal    | `GET /api/v1/public-portal/health`                                           |
+| tasks            | `GET /api/v1/tasks/health`                                                   |
+| crm              | `GET /api/v1/crm/health`                                                     |
+| dashboard        | `GET /api/v1/dashboard/health`                                               |
+| content          | `GET /api/v1/content/health`                                                 |
 
 Antwort-Schema:
 
@@ -82,11 +82,11 @@ bereits angelegte Artefakte zurückgerollt (kein verwaister Tenant).
 }
 ```
 
-| Status | Bedeutung |
-|---|---|
-| `201` | erstellt + direkt eingeloggt |
-| `409` | E-Mail bereits vergeben |
-| `500` | Tenant/User-Anlage fehlgeschlagen (mit Rollback) |
+| Status | Bedeutung                                        |
+| ------ | ------------------------------------------------ |
+| `201`  | erstellt + direkt eingeloggt                     |
+| `409`  | E-Mail bereits vergeben                          |
+| `500`  | Tenant/User-Anlage fehlgeschlagen (mit Rollback) |
 
 ### `POST /api/v1/auth/login`
 
@@ -109,7 +109,7 @@ Erfordert `Authorization: Bearer <access_token>`.
   "tenant_id": "uuid",
   "role": "owner",
   "capabilities": ["…"],
-  "permissions": ["edit_property", "…"],  // Lodgify-Berechtigungen (UI-Gating)
+  "permissions": ["edit_property", "…"], // ..-Berechtigungen (UI-Gating)
   "accommodation_type": "vacation_rental" // Betriebsart (0090): vacation_rental | hotel
 }
 ```
@@ -142,11 +142,11 @@ Rollen-Defaults gesetzt; ungültige IDs werden gefiltert, Admin erhält immer al
   "tenant_id": "uuid", "permissions": ["edit_property", "pm_chat"] }
 ```
 
-**Berechtigungsmodell (Lodgify):** Zwei Ebenen — die rollenbasierte
+**Berechtigungsmodell (..):** Zwei Ebenen — die rollenbasierte
 **Capability-Matrix** (intern, `permissions.py`, schützt Slice-Endpoints) und die
-feingranularen **Lodgify-Berechtigungen** (43 IDs, `lodgify_permissions.py`,
+feingranularen **..-Berechtigungen** (43 IDs, `.._permissions.py`,
 pro Nutzer in `users.permissions` JSONB). Letztere werden im Wizard zugewiesen,
-per `require_lodgify_permission(...)` an Endpoints durchgesetzt
+per `require_.._permission(...)` an Endpoints durchgesetzt
 (z. B. `PATCH /properties/{id}` → `edit_property`,
 `POST /properties/{id}/image` → `pm_manage_property_images`,
 `POST /calendar/block|price-override` → `edit_calendar_bookings`) und im
@@ -158,22 +158,22 @@ Alle Endpunkte erfordern eine gültige Session (Bearer-Token). Quelle der Wahrhe
 ist FastAPI; reine OAuth-Konten (Google) werden beim ersten Zugriff lazy
 provisioniert (Tenant + `users`-Row).
 
-| Methode & Pfad | Zweck |
-| --- | --- |
-| `GET /api/v1/auth/account` | Konto-/Profil-Übersicht (E-Mail, Name, Rolle, Telefon, Sprachen, Website, Beschreibung, Avatar, `has_password`, `totp_enabled`) |
-| `GET /api/v1/auth/account/users` | Nutzer des eigenen Tenants (für die Objekt-Kontakt-Auswahl) — `user_id`, Name, E-Mail, Rolle, Telefon, Avatar, `tenant_id`, `permissions` |
-| `GET /api/v1/auth/account/managed-users` | Nutzerverwaltung (Konto → Benutzer): **Admin** sieht alle Nutzer plattformweit, Owner/Co-Admin nur den eigenen Tenant; normale Benutzer (staff/cleaner) → `403` |
-| `PATCH /api/v1/auth/account/email` | E-Mail ändern (`{ "new_email": "…" }`) |
-| `PATCH /api/v1/auth/account/name` | Anzeigename ändern (`{ "full_name": "…" }`) |
-| `PATCH /api/v1/auth/account/profile` | Profil-/Kontaktdaten ändern (Lodgify „Edit contact information"): `full_name`, `phone`, `additional_phone`, `hide_phones`, `preferred_language`, `spoken_languages`, `website`, `description`, `avatar_url` — nur gesendete Felder werden geschrieben |
-| `POST /api/v1/auth/account/avatar` | Profilbild hochladen (`multipart/form-data`, Feld `file`) → legt in den `avatars`-Bucket (`{user_id}/avatar.<ext>`) und setzt `avatar_url`. Läuft über den Service-Client, daher für beide Login-Wege nutzbar |
-| `PATCH /api/v1/auth/account/password` | Passwort ändern (`{ "current_password"?, "new_password" }`) |
-| `POST /api/v1/auth/totp/enroll` | TOTP-Enrollment starten → `secret`, `otpauth_uri`, `qr_data_url` |
-| `POST /api/v1/auth/totp/verify` | Enrollment per Code bestätigen → `recovery_codes` |
-| `POST /api/v1/auth/totp/disable` | 2FA mit gültigem Code (oder Recovery) abschalten |
+| Methode & Pfad                           | Zweck                                                                                                                                                                                                                                            |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET /api/v1/auth/account`               | Konto-/Profil-Übersicht (E-Mail, Name, Rolle, Telefon, Sprachen, Website, Beschreibung, Avatar, `has_password`, `totp_enabled`)                                                                                                                  |
+| `GET /api/v1/auth/account/users`         | Nutzer des eigenen Tenants (für die Objekt-Kontakt-Auswahl) — `user_id`, Name, E-Mail, Rolle, Telefon, Avatar, `tenant_id`, `permissions`                                                                                                        |
+| `GET /api/v1/auth/account/managed-users` | Nutzerverwaltung (Konto → Benutzer): **Admin** sieht alle Nutzer plattformweit, Owner/Co-Admin nur den eigenen Tenant; normale Benutzer (staff/cleaner) → `403`                                                                                  |
+| `PATCH /api/v1/auth/account/email`       | E-Mail ändern (`{ "new_email": "…" }`)                                                                                                                                                                                                           |
+| `PATCH /api/v1/auth/account/name`        | Anzeigename ändern (`{ "full_name": "…" }`)                                                                                                                                                                                                      |
+| `PATCH /api/v1/auth/account/profile`     | Profil-/Kontaktdaten ändern (.. „Edit contact information"): `full_name`, `phone`, `additional_phone`, `hide_phones`, `preferred_language`, `spoken_languages`, `website`, `description`, `avatar_url` — nur gesendete Felder werden geschrieben |
+| `POST /api/v1/auth/account/avatar`       | Profilbild hochladen (`multipart/form-data`, Feld `file`) → legt in den `avatars`-Bucket (`{user_id}/avatar.<ext>`) und setzt `avatar_url`. Läuft über den Service-Client, daher für beide Login-Wege nutzbar                                    |
+| `PATCH /api/v1/auth/account/password`    | Passwort ändern (`{ "current_password"?, "new_password" }`)                                                                                                                                                                                      |
+| `POST /api/v1/auth/totp/enroll`          | TOTP-Enrollment starten → `secret`, `otpauth_uri`, `qr_data_url`                                                                                                                                                                                 |
+| `POST /api/v1/auth/totp/verify`          | Enrollment per Code bestätigen → `recovery_codes`                                                                                                                                                                                                |
+| `POST /api/v1/auth/totp/disable`         | 2FA mit gültigem Code (oder Recovery) abschalten                                                                                                                                                                                                 |
 
 Die **Profilfelder** (Telefon, Sprachen, Website, Beschreibung, Avatar) liegen
-als eigene Spalten in `public.users`. Der **Objekt-Hauptkontakt** (Lodgify
+als eigene Spalten in `public.users`. Der **Objekt-Hauptkontakt** (..
 „Contact page") verweist über `type_attributes.contact.userId` des Objekts auf
 einen dieser Nutzer. Profilbilder liegen im öffentlichen Storage-Bucket
 `avatars` (Lesen öffentlich; Schreiben nur in den eigenen `{user_id}/`-Ordner
@@ -200,51 +200,51 @@ def nur_owner(): ...
 
 ## properties (CRUD implementiert)
 
-Objekt-Verwaltung (Lodgify „Rentals"). Alle Endpunkte erfordern eine Session
+Objekt-Verwaltung (.. „Rentals"). Alle Endpunkte erfordern eine Session
 (Bearer-Token); der Tenant kommt aus dem JWT, jeder Zugriff ist tenant-scoped.
 
-| Methode & Pfad | Zweck |
-| --- | --- |
-| `GET /api/v1/properties` | Objekte des Tenants auflisten |
-| `POST /api/v1/properties` | Objekt anlegen → `201` |
-| `GET /api/v1/properties/{id}` | Einzelnes Objekt |
-| `PATCH /api/v1/properties/{id}` | Felder ändern (partiell) |
-| `DELETE /api/v1/properties/{id}` | Objekt löschen → `204` |
+| Methode & Pfad                   | Zweck                         |
+| -------------------------------- | ----------------------------- |
+| `GET /api/v1/properties`         | Objekte des Tenants auflisten |
+| `POST /api/v1/properties`        | Objekt anlegen → `201`        |
+| `GET /api/v1/properties/{id}`    | Einzelnes Objekt              |
+| `PATCH /api/v1/properties/{id}`  | Felder ändern (partiell)      |
+| `DELETE /api/v1/properties/{id}` | Objekt löschen → `204`        |
 
 Felder: `title`, `description`, `property_type`
 (`ferienhaus|appartement|glamping|tiny_house|stellplatz|hausboot`), `status`
 (`draft|active|inactive`), `max_guests`, strukturierte Adresse
 (`street|house_number|postal_code|city|country|lat|lng`), `amenities[]`,
 `photos[]`. Sektionen ohne eigene Spalte (Räume, Schlafmöglichkeiten, m²,
-Einheiten) liegen flexibel in `type_attributes` (jsonb) — neue Lodgify-Sektionen
+Einheiten) liegen flexibel in `type_attributes` (jsonb) — neue ..-Sektionen
 brauchen so keine Migration.
 
-**Richtlinien** (Lodgify „Policies") liegen ebenfalls in `type_attributes`
+**Richtlinien** (.. „Policies") liegen ebenfalls in `type_attributes`
 unter dem Key `policies`: strukturierte `policy` (Zahlungsplan, Stornoart,
 Kaution, Angebots-Gültigkeit), `bookability` (`instant|request|inquiry`),
 `checkInTime`, `checkOutTime`, mehrsprachige `ratesInfo`/`rentalAgreement`
 (`{de,en,da}`).
 
-**Preise** (Lodgify „Pricing") liegen in `type_attributes.pricing`:
+**Preise** (.. „Pricing") liegen in `type_attributes.pricing`:
 `currency`, `basePrice`, `dynamicPricing`, `customByWeekday`/`weekdayPrices`,
 `markup` (% je externem Kanal `airbnb`/`booking`/`google`), `extraGuestCharge`,
 `shortStay*`, `lengthPrices[]` (Wochen-/Monats-/eigene Längenpreise) sowie
 `fees[]`, `taxes[]` (USt./lokal), `promotions[]`, `addOns[]`, `businessTaxId`,
 `totRegistrationId` und `basePriceLabel`.
 
-**Verfügbarkeit** (Lodgify „Availability") liegt in `type_attributes.availability`:
+**Verfügbarkeit** (.. „Availability") liegt in `type_attributes.availability`:
 `minStay`, `minStayByDays`, `maxStay`, sowie pro-Kanal-fähige Werte
 (`preparationDays`, `bookingWindowDays`, `advanceNotice` je als
 `{custom, global, channels:{direct,airbnb,booking,google}}`) und gesperrte
 Wochentage (`unavailableCheckIn`/`unavailableCheckOut`).
 
-**Compliance** (Lodgify „Compliance") liegt in `type_attributes.compliance`:
+**Compliance** (.. „Compliance") liegt in `type_attributes.compliance`:
 `registrationNumbers` (komma-getrennter String, max. 100 Zeichen) — eine oder
 mehrere Registrierungsnummern für die eigene Website zur Erfüllung lokaler
 Vorschriften. Für Airbnb/Booking.com werden die Nummern direkt in deren
 Plattform gepflegt.
 
-**Nachrichten-Platzhalter** (Lodgify „Messaging placeholders") liegen in
+**Nachrichten-Platzhalter** (.. „Messaging placeholders") liegen in
 `type_attributes.messaging`: pro Block (`checkIn`, `checkOut`, `directions`,
 `doorInstructions`, `rules`, `wifi`, `localGuide`, `emergency`) ein
 mehrsprachiger `LocalizedText` (`{de,en,da}`). Jeder Block hat einen Shortcode
@@ -254,7 +254,7 @@ WLAN-/Türzugang-Texte im PM-Reiter „Gastmodul" editieren dieselben Felder (ke
 zweite Tabelle; `content_blocks` ist ungenutzt, siehe
 `docs/ANALYSE-gaeste-info-gastmodul-gaestemappe.md`).
 
-**Standort-Zusätze** (Lodgify „Location") liegen in `type_attributes.location`
+**Standort-Zusätze** (.. „Location") liegen in `type_attributes.location`
 (die Basis-Adresse `street`/`house_number`/`postal_code`/`city`/`country`/`lat`/
 `lng` bleibt in eigenen Spalten): `stateProvince`, `useCustomCity`+`customCity`,
 `showPreciseLocation`, `distances` (`unit` `km|mi` + `values` je Verkehrsmittel
@@ -271,17 +271,17 @@ Alle Bereiche werden über `PATCH /api/v1/properties/{id}` mit
 
 ## property_portal (Gastmodul je Objekt — implementiert)
 
-Strukturierte Portal-**Schalter** je Objekt (Lodgify „Gastmodul"): `enabled`,
+Strukturierte Portal-**Schalter** je Objekt (.. „Gastmodul"): `enabled`,
 `self_checkin`, `door_code` (+ Anzeige-Regeln `show_code_only_if_paid`,
 `hide_code_until_checkin`, `code_visible_from`), `contact_name`/`contact_phone`,
 `maintenance_phone`, `header_image_path`. Tabelle `property_guest_portal`
 (Migration 0121, RLS + Realtime). Die Info-**Texte** (WLAN/Türzugang) liegen
 bewusst NICHT hier, sondern in `type_attributes.messaging` (eine Wahrheit).
 
-| Methode | Pfad | Capability | Beschreibung |
-|---|---|---|---|
-| `GET` | `/api/v1/property-portal/{property_id}/guest-portal` | `view_calendar` | Gastmodul-Einstellungen; `door_code` nur mit `manage_properties` (sonst `null`), fremdes/Nicht-UUID-Objekt → `404` |
-| `PUT` | `/api/v1/property-portal/{property_id}/guest-portal` | `manage_properties` | Einstellungen upserten (ein Datensatz je Objekt) |
+| Methode | Pfad                                                 | Capability          | Beschreibung                                                                                                       |
+| ------- | ---------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `GET`   | `/api/v1/property-portal/{property_id}/guest-portal` | `view_calendar`     | Gastmodul-Einstellungen; `door_code` nur mit `manage_properties` (sonst `null`), fremdes/Nicht-UUID-Objekt → `404` |
+| `PUT`   | `/api/v1/property-portal/{property_id}/guest-portal` | `manage_properties` | Einstellungen upserten (ein Datensatz je Objekt)                                                                   |
 
 ---
 
@@ -302,12 +302,12 @@ Neue Tabellen (Mig. 0127/0128, alle RLS + owner-scope + Realtime): `property_pro
 `property_emergency_authority`, `property_marketing`, `property_housebook`,
 `property_platform_launches`. Zusätzlich `owners.cpr_number` (CPR).
 
-| Methode | Pfad | Zweck |
-|---|---|---|
-| `GET` | `…/{property_id}/full` | Alle Stufen + verknüpfter Eigentümer (read-only), für Übersicht/PDF |
-| `GET` | `…/{property_id}/owner` | Verknüpfter Eigentümer (read-only aus owners) |
-| `GET/PUT` | `…/process` · `…/access` · `…/emergency-authority` · `…/marketing` · `…/housebook` | 1:1-Stufen (Upsert) |
-| `GET/POST` · `PUT/DELETE …/{id}` | `…/service-agreements` · `…/tradespeople` · `…/platform-launches` | 1:n-Listen |
+| Methode                          | Pfad                                                                               | Zweck                                                               |
+| -------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| `GET`                            | `…/{property_id}/full`                                                             | Alle Stufen + verknüpfter Eigentümer (read-only), für Übersicht/PDF |
+| `GET`                            | `…/{property_id}/owner`                                                            | Verknüpfter Eigentümer (read-only aus owners)                       |
+| `GET/PUT`                        | `…/process` · `…/access` · `…/emergency-authority` · `…/marketing` · `…/housebook` | 1:1-Stufen (Upsert)                                                 |
+| `GET/POST` · `PUT/DELETE …/{id}` | `…/service-agreements` · `…/tradespeople` · `…/platform-launches`                  | 1:n-Listen                                                          |
 
 Web: `/objekte/[id]/kartei` (8-Stufen-Stepper, next-intl) mit PDF-Export.
 
@@ -319,14 +319,14 @@ Zentraler Preis-Resolver (`pricing/resolver.py`): die EINZIGE Stelle, die Effekt
 Tagespreise und Buchungs-Quotes berechnet. Kalender, Reservierungs-Wizard und
 Buchungsstrecke lesen Preise ausschließlich hierüber. Leseendpoints `view_calendar`.
 
-| Methode | Pfad | Beschreibung |
-|---|---|---|
-| `GET` | `/api/v1/pricing/effective?property_id&start&end` | Effektivpreis je Tag — Priorität manueller `price_overrides`(Tag) > `dynamic_prices` (Regel-Engine) > Wochentagspreis > `rate_plans.base_price`; sonst `null` (kein Fallback) |
-| `POST` | `/api/v1/pricing/quote` | Vollständige Aufschlüsselung `{property_id, check_in, check_out, guests, channel}` → `lines[]` (Übernachtung, Markup, Gebühren, Rabatt, Steuern), `nightly_total`, `total`, `priceless` |
-| `GET` | `/api/v1/pricing/overview` | Alle Objekte des Kontos mit DP-Status (eine Zeile je Objekt: `enabled`, `base_mode`, `base_rate_mode`, effektiver `base_rate`, `min_price`, `max_price`, `currency`) — die Dynamic-Pricing-Objekt-Tabelle. `manage_calendar` |
-| `GET` | `/api/v1/pricing/settings/{property_id}` | Dynamic-Pricing-Einstellungen (dp_settings) eines Objekts (Defaults, falls leer). `manage_calendar` |
-| `PUT` | `/api/v1/pricing/settings/{property_id}` | Dynamic-Pricing-Einstellungen setzen (Upsert); bei `enabled=true` sofortiger Recompute. `manage_calendar` + `edit_calendar_bookings` |
-| `POST` | `/api/v1/pricing/recompute` | Interner Cron (Header `X-Internal-Cron-Secret`): berechnet die dynamischen Preise aller Objekte mit aktiviertem DP neu (Horizont 540 Tage) + Channex-Push |
+| Methode | Pfad                                              | Beschreibung                                                                                                                                                                                                                 |
+| ------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`   | `/api/v1/pricing/effective?property_id&start&end` | Effektivpreis je Tag — Priorität manueller `price_overrides`(Tag) > `dynamic_prices` (Regel-Engine) > Wochentagspreis > `rate_plans.base_price`; sonst `null` (kein Fallback)                                                |
+| `POST`  | `/api/v1/pricing/quote`                           | Vollständige Aufschlüsselung `{property_id, check_in, check_out, guests, channel}` → `lines[]` (Übernachtung, Markup, Gebühren, Rabatt, Steuern), `nightly_total`, `total`, `priceless`                                      |
+| `GET`   | `/api/v1/pricing/overview`                        | Alle Objekte des Kontos mit DP-Status (eine Zeile je Objekt: `enabled`, `base_mode`, `base_rate_mode`, effektiver `base_rate`, `min_price`, `max_price`, `currency`) — die Dynamic-Pricing-Objekt-Tabelle. `manage_calendar` |
+| `GET`   | `/api/v1/pricing/settings/{property_id}`          | Dynamic-Pricing-Einstellungen (dp_settings) eines Objekts (Defaults, falls leer). `manage_calendar`                                                                                                                          |
+| `PUT`   | `/api/v1/pricing/settings/{property_id}`          | Dynamic-Pricing-Einstellungen setzen (Upsert); bei `enabled=true` sofortiger Recompute. `manage_calendar` + `edit_calendar_bookings`                                                                                         |
+| `POST`  | `/api/v1/pricing/recompute`                       | Interner Cron (Header `X-Internal-Cron-Secret`): berechnet die dynamischen Preise aller Objekte mit aktiviertem DP neu (Horizont 540 Tage) + Channex-Push                                                                    |
 
 **Dynamic Pricing (Phase 1, regelbasiert, Migration `0055`):** Eine Regel-Engine
 (`pricing/engine.py`, reine Funktionen) berechnet täglich je (Objekt, Tag) einen
@@ -336,11 +336,12 @@ dynamischen Preis + Min-Stay aus multiplikativen Faktoren — **Saison**
 `[min_price, max_price]`. Ergebnis → Tabelle `dynamic_prices` (DP schreibt NIE in
 `price_overrides`). Konfiguration je Objekt in `dp_settings` (opt-in, **default AUS**).
 Verteilung über den vorhandenen Resolver (Kalender/Quote/Plattform lesen automatisch)
-+ Channex-ARI-Push (Preis in Cent + Min-Stay, run-length-kodiert). Der tägliche Lauf
-kommt über einen **Coolify Scheduled Task** auf `POST /pricing/recompute`; zusätzlich
-werden bei neuer/stornierter Reservierung die betroffenen Tage (±2) neu gerechnet.
-**Manuell schlägt automatisch:** ein vom Host gesetzter `price_override` bleibt
-unangetastet und gewinnt im Resolver.
+
+- Channex-ARI-Push (Preis in Cent + Min-Stay, run-length-kodiert). Der tägliche Lauf
+  kommt über einen **Coolify Scheduled Task** auf `POST /pricing/recompute`; zusätzlich
+  werden bei neuer/stornierter Reservierung die betroffenen Tage (±2) neu gerechnet.
+  **Manuell schlägt automatisch:** ein vom Host gesetzter `price_override` bleibt
+  unangetastet und gewinnt im Resolver.
 
 **Dynamic Pricing (Phase 2, Markt-Signal + Preis-Erklärung, Migration `0056`):**
 Ein zusätzlicher **Markt-/Wettbewerbs-Faktor** über eine pluggable Provider-
@@ -350,13 +351,14 @@ Tag `comp_price` (Median vergleichbarer Objekte), `demand_index` (0..1) und
 (kein Signal → Markt-Faktor neutral 1.0 → identisch zu Phase 1). `AirDnaProvider`
 nur aktiv mit `AIRDNA_API_KEY` (B2B-Konto); ohne Key bleibt alles lauffähig. Der
 Markt-Faktor zieht den Preis gewichtet (`market_sensitivity`) Richtung Markt-Median
-+ Nachfrage, gedeckelt auf ±`market_max_adjust_pct`; Markt-Events werden mit
-`event_periods` **gemerged (Maximum, keine Doppelzählung)**. Markt ist opt-in
-zusätzlich (`dp_settings.market_enabled`, `market_key`, `comp_refs`). Die Engine
-liefert je Tag eine **Faktor-Aufschlüsselung** (`dynamic_prices.factors` jsonb), die
-über `GET /pricing/effective` (`factors`) bzw. `GET /calendar/availability`
-(`price_factors`) als „Warum dieser Preis?"-Tooltip im Kalender erscheint
-(Saison +X %, Wochenende +Y %, Markt +Z %, Auslastung −W %, …).
+
+- Nachfrage, gedeckelt auf ±`market_max_adjust_pct`; Markt-Events werden mit
+  `event_periods` **gemerged (Maximum, keine Doppelzählung)**. Markt ist opt-in
+  zusätzlich (`dp_settings.market_enabled`, `market_key`, `comp_refs`). Die Engine
+  liefert je Tag eine **Faktor-Aufschlüsselung** (`dynamic_prices.factors` jsonb), die
+  über `GET /pricing/effective` (`factors`) bzw. `GET /calendar/availability`
+  (`price_factors`) als „Warum dieser Preis?"-Tooltip im Kalender erscheint
+  (Saison +X %, Wochenende +Y %, Markt +Z %, Auslastung −W %, …).
 
 **Dynamic Pricing (Phase 3, zentrale Steuerung + Basispreis-Modus, Migration
 `0057`):** Bedienmodell nach Vorbild gängiger Channel-Manager (Hostaway). Eigener
@@ -390,22 +392,26 @@ erscheinen live im Kalender. Basispreis setzen: `PUT /api/v1/rates/base-price`
 Herzstück (Lastenheft §2.2). Double-Booking-Schutz über die `availability`-Tabelle.
 Alle Endpoints erfordern Auth; `block`/`price-override`/`stop-sell` zusätzlich die
 Capability `manage_calendar` (Stop-Sell-Schreibpfade außerdem die
-Lodgify-Berechtigung `edit_calendar_bookings`), Leseendpoints `view_calendar`.
+..-Berechtigung `edit_calendar_bookings`), Leseendpoints `view_calendar`.
 
-| Methode | Pfad | Beschreibung |
-|---|---|---|
-| `GET` | `/api/v1/calendar/availability?property_id&start&end` | Tagesstatus im Zeitraum inkl. `price` (aus dem pricing-Resolver) + `min_stay` je Tag (fehlende Tage = offen) |
-| `GET` | `/api/v1/calendar/check?property_id&start&end` | Verfügbarkeit + Konflikttage (Double-Booking-Prüfung) |
-| `POST` | `/api/v1/calendar/block` | Tage sperren — `409`, wenn bereits gebucht |
-| `POST` | `/api/v1/calendar/price-override` | Tagespreis setzen; `price: null` nimmt zurück |
-| `GET` | `/api/v1/calendar/stop-sell?property_id&start&end` | Verkaufsstopps im Zeitraum: `items[]` je Tag mit `id`, `date`, `reason`, `source` (`manual`\|`channex`), `agency_id` + `total`. `view_calendar` |
-| `POST` | `/api/v1/calendar/stop-sell` | Verkaufsstopp setzen: `{property_id, range, reason?, weekdays?, agency_id?}` → `{stopped_days}`. `weekdays` = ISO-Wochentagsmaske (0=Mo…6=So, nur passende Tage), `agency_id` = Adressat der Stop-Sale-Meldung (`travel_agencies`, `null` = alle Kanäle). Wird als `stop_sell`-Restriction an Channex gepusht |
-| `POST` | `/api/v1/calendar/stop-sell/clear` | Verkaufsstopp aufheben: `{property_id, range, weekdays?}` → `{status:"ok"}`. Löscht **nur manuelle** Stopps (`source=manual`); Channex-Stopps spiegeln den OTA-Stand und bleiben unangetastet. `stop_sell=false` geht nur für Tage an Channex, die danach wirklich frei sind |
-| `POST` | `/api/v1/calendar/bulk-edit` | Preis/Min-Stay/Sperre/Stop-Sell über mehrere Objekte × Zeitraum — `404` (fremdes Objekt) |
+| Methode | Pfad                                                  | Beschreibung                                                                                                                                                                                                                                                                                                  |
+| ------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`   | `/api/v1/calendar/availability?property_id&start&end` | Tagesstatus im Zeitraum inkl. `price` (aus dem pricing-Resolver) + `min_stay` je Tag (fehlende Tage = offen)                                                                                                                                                                                                  |
+| `GET`   | `/api/v1/calendar/check?property_id&start&end`        | Verfügbarkeit + Konflikttage (Double-Booking-Prüfung)                                                                                                                                                                                                                                                         |
+| `POST`  | `/api/v1/calendar/block`                              | Tage sperren — `409`, wenn bereits gebucht                                                                                                                                                                                                                                                                    |
+| `POST`  | `/api/v1/calendar/price-override`                     | Tagespreis setzen; `price: null` nimmt zurück                                                                                                                                                                                                                                                                 |
+| `GET`   | `/api/v1/calendar/stop-sell?property_id&start&end`    | Verkaufsstopps im Zeitraum: `items[]` je Tag mit `id`, `date`, `reason`, `source` (`manual`\|`channex`), `agency_id` + `total`. `view_calendar`                                                                                                                                                               |
+| `POST`  | `/api/v1/calendar/stop-sell`                          | Verkaufsstopp setzen: `{property_id, range, reason?, weekdays?, agency_id?}` → `{stopped_days}`. `weekdays` = ISO-Wochentagsmaske (0=Mo…6=So, nur passende Tage), `agency_id` = Adressat der Stop-Sale-Meldung (`travel_agencies`, `null` = alle Kanäle). Wird als `stop_sell`-Restriction an Channex gepusht |
+| `POST`  | `/api/v1/calendar/stop-sell/clear`                    | Verkaufsstopp aufheben: `{property_id, range, weekdays?}` → `{status:"ok"}`. Löscht **nur manuelle** Stopps (`source=manual`); Channex-Stopps spiegeln den OTA-Stand und bleiben unangetastet. `stop_sell=false` geht nur für Tage an Channex, die danach wirklich frei sind                                  |
+| `POST`  | `/api/v1/calendar/bulk-edit`                          | Preis/Min-Stay/Sperre/Stop-Sell über mehrere Objekte × Zeitraum — `404` (fremdes Objekt)                                                                                                                                                                                                                      |
 
 ```json
 // GET /check → 200
-{ "property_id": "uuid", "available": false, "conflicting_days": ["2026-05-02"] }
+{
+  "property_id": "uuid",
+  "available": false,
+  "conflicting_days": ["2026-05-02"]
+}
 ```
 
 `start` inklusive, `end` exklusiv (Check-out-Tag ist wieder frei).
@@ -427,19 +433,19 @@ unbekannte/fehlende Rolle, fail-closed) erhalten nur den **Vornamen**;
 die Anlage-Antwort gleichermaßen (im Posteingang analog: `guest_email`/`phone`
 werden zusätzlich unterdrückt).
 
-| Methode | Pfad | Beschreibung |
-|---|---|---|
-| `GET` | `/api/v1/reservations?property_id` | Reservierungen des Tenants (optional je Objekt); inkl. `num_guests` |
-| `GET` | `/api/v1/reservations/dashboard` | Startseiten-Kennzahlen (echte Daten, im Backend berechnet) |
-| `GET` | `/api/v1/reservations/stats?date_from&date_to&property_id` | Globales Kontrollzentrum (PM-Startseite): dieselben KPIs + Sparklines + Kanal-Donuts wie der Objekt-Reiter, aber zusammengefasst über ALLE (owner-sichtbaren) Objekte. `property_id` (wiederholbar) filtert auf ausgewählte Unterkünfte; Belegungsrate durch die Objektanzahl geteilt. Ohne Zeitraum = letzte 30 Tage. Owner-scoped, Beträge maskiert |
-| `GET` | `/api/v1/reservations/stats/{metric}?date_from&date_to&property_id` | KPI-Detailseite tenant-weit („ANSEHEN"): Tagesreihe + vier Vergleichsperioden + Breakout für EINE Kennzahl über alle (gefilterten) Objekte. Unbekannte Metrik → `422` |
-| `GET` | `/api/v1/reservations/property/{id}/stats?date_from&date_to` | Objekt-Kennzahlen (Statistiken-Reiter): Umsatz/Zahlungen/Belegung/Ø-Werte + Kanal-Verteilung + Tages-Zeitreihen je KPI (Sparkline), Vergleich zur Vorperiode; ohne Zeitraum = letzte 30 Tage. Zuordnung über Buchungsdatum (`created_at`). Owner-scoped, Beträge maskiert, Währung aus den Daten. Nicht-UUID → `404` |
-| `GET` | `/api/v1/reservations/property/{id}/stats/{metric}?date_from&date_to` | KPI-Detailseite (Klick auf eine Statistik-Kachel): Tagesreihe EINER Kennzahl + vier gleich lange Vergleichsperioden davor (mit %-Vergleich) + Breakout-Matrix. `metric` ∈ revenue/payments_received/hosted_guests/booked_nights/created_reservations/cancelled_reservations/cancelled_nights. Unbekannte Metrik → `422`; Geldmetrik ohne Sicht maskiert. Owner-scoped |
-| `GET` | `/api/v1/reservations/{id}` | Vollständige Detailansicht (Slider): Belegung, Quote, Zahlung, Policy-Zeiten, Kontakt + **Objekt-Standort** (`property_street/postal_code/city/country/lat/lng` für die Standortkarte) — maskierungskonform |
-| `GET` | `/api/v1/reservations/{id}/timeline` | Ereignis-Zeitleiste der Buchung (Lodgify „Zeitleiste"), neueste zuerst — der **komplette Flow**: echte `reservation_events` (created — auch OTA-Import Booking/Airbnb — /moved/repriced/checked_in/checked_out/cancelled) plus synthetische Events aus allen an der Buchung hängenden Tabellen (`tasks`→task_created, `messages`→message, `payments`→payment, `reservation_addons`→addon) und den Reservierungs-Zeitstempeln. Altbuchungen ohne Log haben so sofort eine Zeitleiste; echtes Event schlägt synthetisches gleicher Art. Tenant-/owner-scoped; Beträge + Nachrichtentext im `detail` maskiert (§4.3) |
-| `POST` | `/api/v1/reservations` | Reservierung anlegen — `404` (fremdes Objekt), `409` (Tage belegt) |
-| `PATCH` | `/api/v1/reservations/{id}/move` | Verschieben (Objekt/Zeitraum) oder resizen (Check-in/out) — `409` bei Doppelbuchung, eigene Alt-Tage ausgenommen. Optional `reprice=true` (protel-Upsell): berechnet den Preis fürs Ziel-Objekt neu; ohne Flag bleibt der Preis (kostenloses Upgrade). Beherbergungs-Steuersatz erbt später das Ziel-Objekt-Land (EU-27) |
-| `POST` | `/api/v1/reservations/{id}/cancel` | Stornieren mit Pflicht-`reason` (`422` ohne) — kanal-agnostisch (Direkt/Plattform/alle Channex-OTAs), gibt Tage frei (auch an Channex zurück), Audit in `reservation_cancellation_log`. Lokal: hebt OTA-Buchung NICHT beim Portal auf |
+| Methode | Pfad                                                                  | Beschreibung                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET`   | `/api/v1/reservations?property_id`                                    | Reservierungen des Tenants (optional je Objekt); inkl. `num_guests`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `GET`   | `/api/v1/reservations/dashboard`                                      | Startseiten-Kennzahlen (echte Daten, im Backend berechnet)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `GET`   | `/api/v1/reservations/stats?date_from&date_to&property_id`            | Globales Kontrollzentrum (PM-Startseite): dieselben KPIs + Sparklines + Kanal-Donuts wie der Objekt-Reiter, aber zusammengefasst über ALLE (owner-sichtbaren) Objekte. `property_id` (wiederholbar) filtert auf ausgewählte Unterkünfte; Belegungsrate durch die Objektanzahl geteilt. Ohne Zeitraum = letzte 30 Tage. Owner-scoped, Beträge maskiert                                                                                                                                                                                                                                                        |
+| `GET`   | `/api/v1/reservations/stats/{metric}?date_from&date_to&property_id`   | KPI-Detailseite tenant-weit („ANSEHEN"): Tagesreihe + vier Vergleichsperioden + Breakout für EINE Kennzahl über alle (gefilterten) Objekte. Unbekannte Metrik → `422`                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `GET`   | `/api/v1/reservations/property/{id}/stats?date_from&date_to`          | Objekt-Kennzahlen (Statistiken-Reiter): Umsatz/Zahlungen/Belegung/Ø-Werte + Kanal-Verteilung + Tages-Zeitreihen je KPI (Sparkline), Vergleich zur Vorperiode; ohne Zeitraum = letzte 30 Tage. Zuordnung über Buchungsdatum (`created_at`). Owner-scoped, Beträge maskiert, Währung aus den Daten. Nicht-UUID → `404`                                                                                                                                                                                                                                                                                         |
+| `GET`   | `/api/v1/reservations/property/{id}/stats/{metric}?date_from&date_to` | KPI-Detailseite (Klick auf eine Statistik-Kachel): Tagesreihe EINER Kennzahl + vier gleich lange Vergleichsperioden davor (mit %-Vergleich) + Breakout-Matrix. `metric` ∈ revenue/payments_received/hosted_guests/booked_nights/created_reservations/cancelled_reservations/cancelled_nights. Unbekannte Metrik → `422`; Geldmetrik ohne Sicht maskiert. Owner-scoped                                                                                                                                                                                                                                        |
+| `GET`   | `/api/v1/reservations/{id}`                                           | Vollständige Detailansicht (Slider): Belegung, Quote, Zahlung, Policy-Zeiten, Kontakt + **Objekt-Standort** (`property_street/postal_code/city/country/lat/lng` für die Standortkarte) — maskierungskonform                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `GET`   | `/api/v1/reservations/{id}/timeline`                                  | Ereignis-Zeitleiste der Buchung (.. „Zeitleiste"), neueste zuerst — der **komplette Flow**: echte `reservation_events` (created — auch OTA-Import Booking/Airbnb — /moved/repriced/checked_in/checked_out/cancelled) plus synthetische Events aus allen an der Buchung hängenden Tabellen (`tasks`→task_created, `messages`→message, `payments`→payment, `reservation_addons`→addon) und den Reservierungs-Zeitstempeln. Altbuchungen ohne Log haben so sofort eine Zeitleiste; echtes Event schlägt synthetisches gleicher Art. Tenant-/owner-scoped; Beträge + Nachrichtentext im `detail` maskiert (§4.3) |
+| `POST`  | `/api/v1/reservations`                                                | Reservierung anlegen — `404` (fremdes Objekt), `409` (Tage belegt)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `PATCH` | `/api/v1/reservations/{id}/move`                                      | Verschieben (Objekt/Zeitraum) oder resizen (Check-in/out) — `409` bei Doppelbuchung, eigene Alt-Tage ausgenommen. Optional `reprice=true` (protel-Upsell): berechnet den Preis fürs Ziel-Objekt neu; ohne Flag bleibt der Preis (kostenloses Upgrade). Beherbergungs-Steuersatz erbt später das Ziel-Objekt-Land (EU-27)                                                                                                                                                                                                                                                                                     |
+| `POST`  | `/api/v1/reservations/{id}/cancel`                                    | Stornieren mit Pflicht-`reason` (`422` ohne) — kanal-agnostisch (Direkt/Plattform/alle Channex-OTAs), gibt Tage frei (auch an Channex zurück), Audit in `reservation_cancellation_log`. Lokal: hebt OTA-Buchung NICHT beim Portal auf                                                                                                                                                                                                                                                                                                                                                                        |
 
 ```json
 // POST /reservations
@@ -450,7 +456,14 @@ werden zusätzlich unterdrückt).
   "channel": "direct",
   "source": "Telefon",
   "guests": { "adults": 2, "children": 0, "infants": 0, "pets": 0 },
-  "contact": { "first_name": "Max", "last_name": "Muster", "email": "m@x.de", "phone": "", "country": "DE", "language": "Deutsch" },
+  "contact": {
+    "first_name": "Max",
+    "last_name": "Muster",
+    "email": "m@x.de",
+    "phone": "",
+    "country": "DE",
+    "language": "Deutsch"
+  },
   "total_amount": 540,
   "status": "confirmed"
 }
@@ -491,14 +504,14 @@ abgeleitet. Listings zeigen STRIKT nur `status='active'` (draft/inactive nie) un
 NUR gast-sichere Felder (keine exakte Adresse, kein Eigentümer/Tenant, keine
 internen Preisdetails). Preis kommt aus dem Pricing-Resolver.
 
-| Methode | Pfad | Beschreibung |
-|---|---|---|
-| `GET` | `/api/v1/booking-engine/listings?q&guests&start&end&tenant` | Liste buchbarer (active) Objekte. Optional: `q` (Titel/Ort), `guests` (Kapazität), `start`/`end` (Verfügbarkeit + Effektivpreis), `tenant` (Default: alle active tenant-übergreifend) |
-| `GET` | `/api/v1/booking-engine/listings/{id}?start&end` | Detail eines active Objekts (`404` wenn nicht active): Beschreibung, Fotos, Ausstattung, ungefähre Lage (gerundete lat/lng), Preis via Resolver |
-| `GET` | `/api/v1/booking-engine/availability?property_id&start&end` | Öffentliche Tagesverfügbarkeit (buchbar/belegt) |
-| `POST` | `/api/v1/booking-engine/reservations` | Gastbuchung (Double-Booking-Schutz `409`, sperrt Kalender + Channex-Push). Body kann `guests` + `addons` (Auswahl) enthalten → Zusatzleistungen werden serverseitig bepreist + als `reservation_addons` angelegt |
-| `GET` | `/api/v1/booking-engine/reservations/{id}/addons?email` | Nach-Buchung-Sicht des Gasts: buchbare `guest_portal`-Zusatzleistungen (unter Beachtung der „wann anzeigen"-Regel) + bereits gekaufte. Verifikation über die Buchungs-E-Mail |
-| `POST` | `/api/v1/booking-engine/reservations/{id}/addons` | Nachträglicher Add-on-Kauf durch den Gast (`email` + `addons`); serverseitig bepreist, Verkaufsfläche `guest_portal` |
+| Methode | Pfad                                                        | Beschreibung                                                                                                                                                                                                     |
+| ------- | ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`   | `/api/v1/booking-engine/listings?q&guests&start&end&tenant` | Liste buchbarer (active) Objekte. Optional: `q` (Titel/Ort), `guests` (Kapazität), `start`/`end` (Verfügbarkeit + Effektivpreis), `tenant` (Default: alle active tenant-übergreifend)                            |
+| `GET`   | `/api/v1/booking-engine/listings/{id}?start&end`            | Detail eines active Objekts (`404` wenn nicht active): Beschreibung, Fotos, Ausstattung, ungefähre Lage (gerundete lat/lng), Preis via Resolver                                                                  |
+| `GET`   | `/api/v1/booking-engine/availability?property_id&start&end` | Öffentliche Tagesverfügbarkeit (buchbar/belegt)                                                                                                                                                                  |
+| `POST`  | `/api/v1/booking-engine/reservations`                       | Gastbuchung (Double-Booking-Schutz `409`, sperrt Kalender + Channex-Push). Body kann `guests` + `addons` (Auswahl) enthalten → Zusatzleistungen werden serverseitig bepreist + als `reservation_addons` angelegt |
+| `GET`   | `/api/v1/booking-engine/reservations/{id}/addons?email`     | Nach-Buchung-Sicht des Gasts: buchbare `guest_portal`-Zusatzleistungen (unter Beachtung der „wann anzeigen"-Regel) + bereits gekaufte. Verifikation über die Buchungs-E-Mail                                     |
+| `POST`  | `/api/v1/booking-engine/reservations/{id}/addons`           | Nachträglicher Add-on-Kauf durch den Gast (`email` + `addons`); serverseitig bepreist, Verkaufsfläche `guest_portal`                                                                                             |
 
 Gast-sichere Felder: `id, title, property_type, city, country, photos, max_guests,
 bedrooms, baths, amenities, price_from, currency` (+ Detail: `description, lat/lng
@@ -515,17 +528,17 @@ Katalog-CRUD + Medien sind `MANAGE_PROPERTIES`-geschützt; der Verkauf läuft pu
 über `booking_engine` (s. o.). Tabellen `property_addons` + `reservation_addons`
 (Migrationen 0074/0075).
 
-| Methode | Pfad | Zweck |
-|---|---|---|
-| `GET` | `/api/v1/addons/properties/{property_id}` | Katalog eines Objekts (inkl. inaktiver) |
-| `POST` | `/api/v1/addons/properties/{property_id}` | Zusatzleistung anlegen (Name/Beschreibung i18n, Preis, Basis, optional/pflicht, `appears_in`, `available_until`) |
-| `PATCH` | `/api/v1/addons/{addon_id}` | bearbeiten |
-| `DELETE` | `/api/v1/addons/{addon_id}` | löschen |
-| `POST` | `/api/v1/addons/{addon_id}/media` | ein Medium hochladen (multipart, JPEG/PNG/WebP, max. 5) |
-| `GET` | `/api/v1/addons/reservations/{reservation_id}` | gekaufte Extras einer Reservierung (Dashboard) |
-| `GET` | `/api/v1/addons/reservations/{reservation_id}/available` | aktive Katalog-Add-ons des Objekts dieser Reservierung (Schnell-Auswahl) |
-| `POST` | `/api/v1/addons/reservations/{reservation_id}/addons` | **Schnelltaste:** Zusatzleistung zu einer bestehenden Buchung hinzufügen — jeder Kanal, auch OTA (z. B. Booking), provisionsfrei am OTA vorbei |
-| `POST` | `/api/v1/addons/reservation-addons/{id}/mark-paid` | manuell als bezahlt markieren (ohne Payment-Provider: „zahlbar bei Anreise") |
+| Methode  | Pfad                                                     | Zweck                                                                                                                                          |
+| -------- | -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`    | `/api/v1/addons/properties/{property_id}`                | Katalog eines Objekts (inkl. inaktiver)                                                                                                        |
+| `POST`   | `/api/v1/addons/properties/{property_id}`                | Zusatzleistung anlegen (Name/Beschreibung i18n, Preis, Basis, optional/pflicht, `appears_in`, `available_until`)                               |
+| `PATCH`  | `/api/v1/addons/{addon_id}`                              | bearbeiten                                                                                                                                     |
+| `DELETE` | `/api/v1/addons/{addon_id}`                              | löschen                                                                                                                                        |
+| `POST`   | `/api/v1/addons/{addon_id}/media`                        | ein Medium hochladen (multipart, JPEG/PNG/WebP, max. 5)                                                                                        |
+| `GET`    | `/api/v1/addons/reservations/{reservation_id}`           | gekaufte Extras einer Reservierung (Dashboard)                                                                                                 |
+| `GET`    | `/api/v1/addons/reservations/{reservation_id}/available` | aktive Katalog-Add-ons des Objekts dieser Reservierung (Schnell-Auswahl)                                                                       |
+| `POST`   | `/api/v1/addons/reservations/{reservation_id}/addons`    | **Schnelltaste:** Zusatzleistung zu einer bestehenden Buchung hinzufügen — jeder Kanal, auch OTA (z. B. Booking), provisionsfrei am OTA vorbei |
+| `POST`   | `/api/v1/addons/reservation-addons/{id}/mark-paid`       | manuell als bezahlt markieren (ohne Payment-Provider: „zahlbar bei Anreise")                                                                   |
 
 Abrechnungsbasis: `per_stay` · `per_night` · `per_guest` · `per_unit`. Verkauf
 provisionsfrei am OTA vorbei; **Zahlstatus** `pending`/`paid`/`cancelled`. Beim
@@ -548,24 +561,24 @@ Vorname), Kontakt mit `view_guest_contact`, Beträge/Umsatz mit `pm_booking_tota
 & nicht `hide_prices`, **Ausweisnummern nur mit `view_guest_id_docs`** (sonst
 `••• 1234`). Admin = immer alles.
 
-| Methode | Pfad | Beschreibung |
-|---|---|---|
-| `GET` | `/api/v1/guests?q&vip&segment&blocked&limit&offset` | Liste + Suche (Name/E-Mail/Telefon/Firma) + Filter |
-| `POST` | `/api/v1/guests` | Gast anlegen (`name` aus first/last_name ableitbar) |
-| `GET` | `/api/v1/guests/{id}` | Detail (maskiert) |
-| `PATCH` | `/api/v1/guests/{id}` | Stammdaten ändern |
-| `DELETE` | `/api/v1/guests/{id}` | DSGVO: anonymisiert bei Reservierungsbezug, sonst Hard-Delete |
-| `GET/POST/DELETE` | `/api/v1/guests/{id}/addresses[/{aid}]` | Adressen (1:n) |
-| `GET/POST/DELETE` | `/api/v1/guests/{id}/contacts[/{cid}]` | Kontakte (1:n) |
-| `GET/POST/DELETE` | `/api/v1/guests/{id}/identity-documents[/{did}]` | Ausweise (DSGVO; Schreiben braucht `view_guest_id_docs`) |
-| `GET/PUT` | `/api/v1/guests/{id}/preferences` | Präferenzen (1:1, upsert) |
-| `GET/POST` | `/api/v1/guests/{id}/consents` | Einwilligungen (append-only Historie) |
-| `GET/POST/DELETE` | `/api/v1/guests/{id}/notes[/{nid}]` | interne Notizen |
-| `GET/POST/DELETE` | `/api/v1/guests/{id}/documents[/{did}]` | Dokumente (Storage-Referenz) |
-| `GET` | `/api/v1/guests/{id}/reservations` | Reservierungshistorie (Join) |
-| `GET` | `/api/v1/guests/{id}/threads` | verknüpfte Posteingang-Threads (Join) |
-| `GET` | `/api/v1/guests/{id}/invoices` | Rechnungen (Brücke guest.email → customers.email → invoices) |
-| `POST` | `/api/v1/guests/merge` | Dubletten zusammenführen: Sub-Ressourcen + Reservierungen/Buchungen/WhatsApp-Konvos source→target umhängen, Quell-Gast anonymisieren |
+| Methode           | Pfad                                                | Beschreibung                                                                                                                         |
+| ----------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET`             | `/api/v1/guests?q&vip&segment&blocked&limit&offset` | Liste + Suche (Name/E-Mail/Telefon/Firma) + Filter                                                                                   |
+| `POST`            | `/api/v1/guests`                                    | Gast anlegen (`name` aus first/last_name ableitbar)                                                                                  |
+| `GET`             | `/api/v1/guests/{id}`                               | Detail (maskiert)                                                                                                                    |
+| `PATCH`           | `/api/v1/guests/{id}`                               | Stammdaten ändern                                                                                                                    |
+| `DELETE`          | `/api/v1/guests/{id}`                               | DSGVO: anonymisiert bei Reservierungsbezug, sonst Hard-Delete                                                                        |
+| `GET/POST/DELETE` | `/api/v1/guests/{id}/addresses[/{aid}]`             | Adressen (1:n)                                                                                                                       |
+| `GET/POST/DELETE` | `/api/v1/guests/{id}/contacts[/{cid}]`              | Kontakte (1:n)                                                                                                                       |
+| `GET/POST/DELETE` | `/api/v1/guests/{id}/identity-documents[/{did}]`    | Ausweise (DSGVO; Schreiben braucht `view_guest_id_docs`)                                                                             |
+| `GET/PUT`         | `/api/v1/guests/{id}/preferences`                   | Präferenzen (1:1, upsert)                                                                                                            |
+| `GET/POST`        | `/api/v1/guests/{id}/consents`                      | Einwilligungen (append-only Historie)                                                                                                |
+| `GET/POST/DELETE` | `/api/v1/guests/{id}/notes[/{nid}]`                 | interne Notizen                                                                                                                      |
+| `GET/POST/DELETE` | `/api/v1/guests/{id}/documents[/{did}]`             | Dokumente (Storage-Referenz)                                                                                                         |
+| `GET`             | `/api/v1/guests/{id}/reservations`                  | Reservierungshistorie (Join)                                                                                                         |
+| `GET`             | `/api/v1/guests/{id}/threads`                       | verknüpfte Posteingang-Threads (Join)                                                                                                |
+| `GET`             | `/api/v1/guests/{id}/invoices`                      | Rechnungen (Brücke guest.email → customers.email → invoices)                                                                         |
+| `POST`            | `/api/v1/guests/merge`                              | Dubletten zusammenführen: Sub-Ressourcen + Reservierungen/Buchungen/WhatsApp-Konvos source→target umhängen, Quell-Gast anonymisieren |
 
 **Tabellen (Migration 0046):** `guests` erweitert (Stammdaten, VIP/Segment,
 `is_blocked`, Loyalty-Aggregate, `created_by/updated_by`, `anonymized_at`) +
@@ -603,21 +616,21 @@ Zuweisung ist gehärtet: Ziel-Nutzer muss `pm_chat` haben (sonst `422`); `list_t
 liefert nur Nutzer mit Posteingang-Zugriff; jede Zuweisung setzt `assigned_by`/
 `assigned_at` und schreibt einen `inbox_assignment_log`-Eintrag (Audit).
 
-| Methode | Pfad | Beschreibung |
-|---|---|---|
-| `GET` | `/api/v1/inbox?unassigned` | Threads des Tenants (Filter „nicht zugewiesen") |
-| `GET` | `/api/v1/inbox/team` | Team-Benutzer (mögliche Bearbeiter) |
-| `GET/POST` | `/api/v1/inbox/{id}/messages` | Verlauf lesen / Nachricht senden |
-| `GET` | `/api/v1/inbox/{id}/reservation` | Reservierungs-Kontext rechts |
-| `PUT` | `/api/v1/inbox/{id}/flags` | Favorit/Notiz/Lesen/Archiv/Erinnerung |
-| `PUT` | `/api/v1/inbox/{id}/assign` | Konversation einem Benutzer zuweisen (`user_id: null` hebt auf) |
-| `PUT` | `/api/v1/inbox/{id}/guest` | Korrektur: Thread einem Gast zuordnen (`guest_id`); `null` → Gast aus Thread anlegen (Resolver). Braucht `inbox_manage_config` |
-| `POST` | `/api/v1/inbox/{id}/notes` | Interne Notiz (gelb im Verlauf, `sender="note"`) |
-| `GET/POST` | `/api/v1/inbox/{id}/scheduled` | Geplante Nachrichten auflisten / planen (`send_at` ISO) |
-| `DELETE` | `/api/v1/inbox/scheduled/{sid}` | Geplante Nachricht abbrechen |
-| `POST` | `/api/v1/inbox/bulk-update` | Massenaktion: `{action: read\|archived, before: YYYY-MM-DD}` |
-| `POST` | `/api/v1/inbox/{id}/ai-reply` | KI-Antwortvorschlag (Groq) |
-| `…` | `/api/v1/inbox/templates\|ai-settings\|automations` | Vorlagen / KI-Einstellungen / Automatisierungen |
+| Methode    | Pfad                                                | Beschreibung                                                                                                                   |
+| ---------- | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `GET`      | `/api/v1/inbox?unassigned`                          | Threads des Tenants (Filter „nicht zugewiesen")                                                                                |
+| `GET`      | `/api/v1/inbox/team`                                | Team-Benutzer (mögliche Bearbeiter)                                                                                            |
+| `GET/POST` | `/api/v1/inbox/{id}/messages`                       | Verlauf lesen / Nachricht senden                                                                                               |
+| `GET`      | `/api/v1/inbox/{id}/reservation`                    | Reservierungs-Kontext rechts                                                                                                   |
+| `PUT`      | `/api/v1/inbox/{id}/flags`                          | Favorit/Notiz/Lesen/Archiv/Erinnerung                                                                                          |
+| `PUT`      | `/api/v1/inbox/{id}/assign`                         | Konversation einem Benutzer zuweisen (`user_id: null` hebt auf)                                                                |
+| `PUT`      | `/api/v1/inbox/{id}/guest`                          | Korrektur: Thread einem Gast zuordnen (`guest_id`); `null` → Gast aus Thread anlegen (Resolver). Braucht `inbox_manage_config` |
+| `POST`     | `/api/v1/inbox/{id}/notes`                          | Interne Notiz (gelb im Verlauf, `sender="note"`)                                                                               |
+| `GET/POST` | `/api/v1/inbox/{id}/scheduled`                      | Geplante Nachrichten auflisten / planen (`send_at` ISO)                                                                        |
+| `DELETE`   | `/api/v1/inbox/scheduled/{sid}`                     | Geplante Nachricht abbrechen                                                                                                   |
+| `POST`     | `/api/v1/inbox/bulk-update`                         | Massenaktion: `{action: read\|archived, before: YYYY-MM-DD}`                                                                   |
+| `POST`     | `/api/v1/inbox/{id}/ai-reply`                       | KI-Antwortvorschlag (Groq)                                                                                                     |
+| `…`        | `/api/v1/inbox/templates\|ai-settings\|automations` | Vorlagen / KI-Einstellungen / Automatisierungen                                                                                |
 
 **Interner Cron (kein JWT, Secret-Header `X-Internal-Cron-Secret` = `INTERNAL_CRON_SECRET`):**
 Eigenes Secret, bewusst getrennt vom `CHANNEX_WEBHOOK_SECRET` (das geht outbound
@@ -646,7 +659,7 @@ Per Coolify-Scheduled-Task / crontab regelmäßig aufrufen, analog zu
 **Migration 0045 (Audit):** `channex_booking.assigned_by`/`assigned_at` +
 `inbox_assignment_log` (from/to/by-User, Historie). RLS via `current_tenant_id()`.
 
-**Posteingang-Berechtigungen (Lodgify-Permissions, `users.permissions`):**
+**Posteingang-Berechtigungen (..-Permissions, `users.permissions`):**
 `pm_chat` (Zugriff), `inbox_view_all` (Scope), `inbox_reply`, `inbox_assign`,
 `inbox_manage_config`. Default: admin/co_admin alle; staff/owner/cleaner ohne
 (staff erhält `pm_chat`/`inbox_reply` nur, wenn im Benutzer-Wizard aktiviert).
@@ -661,12 +674,12 @@ die Cloud API (oder Sandbox-Mock bei `WHATSAPP_SANDBOX=true` — kein realer
 Versand). Eingehende Nachrichten + Zustellstatus kommen per Meta-Webhook.
 Geschützte Endpoints erfordern `view_guest_full`.
 
-| Methode | Pfad | Beschreibung |
-|---|---|---|
-| `GET` | `/api/v1/whatsapp/status` | Konfig-Status (white-label, kein Token): konfiguriert / Sandbox |
-| `GET` | `/api/v1/whatsapp/conversations` | Konversationen des Tenants |
-| `GET` | `/api/v1/whatsapp/conversations/{id}/messages` | Verlauf (markiert als gelesen) |
-| `POST` | `/api/v1/whatsapp/send` | Senden: `{conversation_id?\|to_phone?, body}` |
+| Methode | Pfad                                           | Beschreibung                                                    |
+| ------- | ---------------------------------------------- | --------------------------------------------------------------- |
+| `GET`   | `/api/v1/whatsapp/status`                      | Konfig-Status (white-label, kein Token): konfiguriert / Sandbox |
+| `GET`   | `/api/v1/whatsapp/conversations`               | Konversationen des Tenants                                      |
+| `GET`   | `/api/v1/whatsapp/conversations/{id}/messages` | Verlauf (markiert als gelesen)                                  |
+| `POST`  | `/api/v1/whatsapp/send`                        | Senden: `{conversation_id?\|to_phone?, body}`                   |
 
 **Webhook (kein JWT, von Meta aufgerufen):**
 
@@ -710,18 +723,18 @@ Channex importiert) kassiert die OTA selbst und zahlt den Vermieter direkt aus �
 `booking/.../intent` und `deposit/.../hold` antworten dafür mit **409** (keine
 doppelte Belastung). Add-ons/Upsells am OTA vorbei sind separat (addons-Slice).
 
-| Methode | Pfad | Zugriff |
-|---|---|---|
-| `POST` | `/api/v1/payments/connect/accounts` | MANAGE_BILLING — Custom-Account anlegen |
-| `GET` | `/api/v1/payments/connect/accounts/{id}` | MANAGE_BILLING — KYC-Status + Requirements |
-| `PATCH` | `/api/v1/payments/connect/accounts/{id}` | MANAGE_BILLING — Geschäfts-/Inhaberdaten (eigene UI) |
-| `PUT` | `/api/v1/payments/connect/accounts/{id}/bank` | MANAGE_BILLING — Auszahlungs-IBAN |
-| `POST` | `/api/v1/payments/booking/{reservation_id}/intent` | **public** (Gast) — PaymentIntent, `{client_secret}` |
-| `POST` | `/api/v1/payments/deposit/{reservation_id}/hold` | MANAGE_BILLING — Kaution vorautorisieren |
-| `POST` | `/api/v1/payments/deposit/{payment_id}/capture` | MANAGE_BILLING — Kaution einziehen (Schaden) |
-| `POST` | `/api/v1/payments/deposit/{payment_id}/release` | MANAGE_BILLING — Kaution freigeben |
-| `POST` | `/api/v1/payments/{payment_id}/refund` | MANAGE_BILLING — (Teil-)Erstattung |
-| `POST` | `/api/v1/payments/webhook` | Stripe-Signatur (kein JWT) |
+| Methode | Pfad                                               | Zugriff                                              |
+| ------- | -------------------------------------------------- | ---------------------------------------------------- |
+| `POST`  | `/api/v1/payments/connect/accounts`                | MANAGE_BILLING — Custom-Account anlegen              |
+| `GET`   | `/api/v1/payments/connect/accounts/{id}`           | MANAGE_BILLING — KYC-Status + Requirements           |
+| `PATCH` | `/api/v1/payments/connect/accounts/{id}`           | MANAGE_BILLING — Geschäfts-/Inhaberdaten (eigene UI) |
+| `PUT`   | `/api/v1/payments/connect/accounts/{id}/bank`      | MANAGE_BILLING — Auszahlungs-IBAN                    |
+| `POST`  | `/api/v1/payments/booking/{reservation_id}/intent` | **public** (Gast) — PaymentIntent, `{client_secret}` |
+| `POST`  | `/api/v1/payments/deposit/{reservation_id}/hold`   | MANAGE_BILLING — Kaution vorautorisieren             |
+| `POST`  | `/api/v1/payments/deposit/{payment_id}/capture`    | MANAGE_BILLING — Kaution einziehen (Schaden)         |
+| `POST`  | `/api/v1/payments/deposit/{payment_id}/release`    | MANAGE_BILLING — Kaution freigeben                   |
+| `POST`  | `/api/v1/payments/{payment_id}/refund`             | MANAGE_BILLING — (Teil-)Erstattung                   |
+| `POST`  | `/api/v1/payments/webhook`                         | Stripe-Signatur (kein JWT)                           |
 
 **Kaution** = manual-capture PaymentIntent über `properties.deposit_amount`.
 **Webhook** (idempotent über `stripe_webhook_event`): `account.updated` →
@@ -739,28 +752,28 @@ amount_capturable_updated` + `charge.refunded` → `payments.status` +
 
 Aus Taskilo übernommen, auf das NextDays-Mandantenkonzept vereinheitlicht
 (`tenant_id` statt `company_id`). Tenant-scoped; schreibende Endpoints erfordern
-die Lodgify-Berechtigung `owner_reporting`. Beträge werden serverseitig aus den
+die ..-Berechtigung `owner_reporting`. Beträge werden serverseitig aus den
 Positionen berechnet (Decimal, kaufmännisch gerundet) — der Client kann sie nicht
 fälschen. GoBD-gesperrte Rechnungen (`is_locked`) sind nicht mehr änderbar/löschbar.
 
-| Methode & Pfad | Zweck |
-| --- | --- |
-| `GET /api/v1/buchhaltung/customers` | Kunden/Lieferanten des Tenants |
-| `POST /api/v1/buchhaltung/customers` | Kunde anlegen → `201` |
-| `PATCH /api/v1/buchhaltung/customers/{id}` | Kunde ändern |
-| `DELETE /api/v1/buchhaltung/customers/{id}` | Kunde (soft) löschen → `204` |
-| `GET /api/v1/buchhaltung/invoices` | Rechnungen (schlanke Liste) |
-| `GET /api/v1/buchhaltung/invoices/company/{id}` | Rechnungen im `InvoiceData`-Format (für den übernommenen Bestand) |
-| `GET /api/v1/buchhaltung/invoices/{id}` | Einzelne Rechnung inkl. Positionen |
-| `POST /api/v1/buchhaltung/invoices` | Rechnung anlegen — nimmt das reiche camelCase-Payload der Erstellen-Seite, Beträge serverseitig → `201` |
-| `PATCH /api/v1/buchhaltung/invoices/{id}` | Rechnung ändern / E-Rechnung-XML nachtragen (`409` wenn GoBD-gesperrt) |
-| `DELETE /api/v1/buchhaltung/invoices/{id}` | Rechnung (soft) löschen (`409` wenn gesperrt) |
-| `GET /api/v1/buchhaltung/number-sequences/{company_id}` | Vorschau der nächsten Nummer (nicht-inkrementierend). Die echte GoBD-Nummer wird nur beim Speichern eines Belegs gezogen — es gibt bewusst keinen inkrementierenden Endpunkt, der eine Nummer ohne Beleg verbrennt. |
-| `GET /api/v1/buchhaltung/companies/{id}` | Firmen-/Rechnungsprofil des Tenants (`tenant_billing_profile`) |
-| `PATCH /api/v1/buchhaltung/companies/{id}` | Firmenprofil anlegen/ändern (Upsert) |
-| `GET /api/v1/buchhaltung/companies/{id}/transaction-links` | Beleg↔Bank-Verknüpfungen (Stub → leer, Bankabgleich folgt) |
-| `GET /api/v1/buchhaltung/booking-accounts/{id}` | Kontenplan (Stub → leer, Modul folgt) |
-| `POST /api/v1/buchhaltung/inline-invoice-services` | Service-Usage-Tracking (No-Op, Analytics folgt) |
+| Methode & Pfad                                             | Zweck                                                                                                                                                                                                               |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/v1/buchhaltung/customers`                        | Kunden/Lieferanten des Tenants                                                                                                                                                                                      |
+| `POST /api/v1/buchhaltung/customers`                       | Kunde anlegen → `201`                                                                                                                                                                                               |
+| `PATCH /api/v1/buchhaltung/customers/{id}`                 | Kunde ändern                                                                                                                                                                                                        |
+| `DELETE /api/v1/buchhaltung/customers/{id}`                | Kunde (soft) löschen → `204`                                                                                                                                                                                        |
+| `GET /api/v1/buchhaltung/invoices`                         | Rechnungen (schlanke Liste)                                                                                                                                                                                         |
+| `GET /api/v1/buchhaltung/invoices/company/{id}`            | Rechnungen im `InvoiceData`-Format (für den übernommenen Bestand)                                                                                                                                                   |
+| `GET /api/v1/buchhaltung/invoices/{id}`                    | Einzelne Rechnung inkl. Positionen                                                                                                                                                                                  |
+| `POST /api/v1/buchhaltung/invoices`                        | Rechnung anlegen — nimmt das reiche camelCase-Payload der Erstellen-Seite, Beträge serverseitig → `201`                                                                                                             |
+| `PATCH /api/v1/buchhaltung/invoices/{id}`                  | Rechnung ändern / E-Rechnung-XML nachtragen (`409` wenn GoBD-gesperrt)                                                                                                                                              |
+| `DELETE /api/v1/buchhaltung/invoices/{id}`                 | Rechnung (soft) löschen (`409` wenn gesperrt)                                                                                                                                                                       |
+| `GET /api/v1/buchhaltung/number-sequences/{company_id}`    | Vorschau der nächsten Nummer (nicht-inkrementierend). Die echte GoBD-Nummer wird nur beim Speichern eines Belegs gezogen — es gibt bewusst keinen inkrementierenden Endpunkt, der eine Nummer ohne Beleg verbrennt. |
+| `GET /api/v1/buchhaltung/companies/{id}`                   | Firmen-/Rechnungsprofil des Tenants (`tenant_billing_profile`)                                                                                                                                                      |
+| `PATCH /api/v1/buchhaltung/companies/{id}`                 | Firmenprofil anlegen/ändern (Upsert)                                                                                                                                                                                |
+| `GET /api/v1/buchhaltung/companies/{id}/transaction-links` | Beleg↔Bank-Verknüpfungen (Stub → leer, Bankabgleich folgt)                                                                                                                                                          |
+| `GET /api/v1/buchhaltung/booking-accounts/{id}`            | Kontenplan (Stub → leer, Modul folgt)                                                                                                                                                                               |
+| `POST /api/v1/buchhaltung/inline-invoice-services`         | Service-Usage-Tracking (No-Op, Analytics folgt)                                                                                                                                                                     |
 
 **Frontend-Anbindung (übernommener Bestand):** Die Bestands-Komponenten rufen
 `/api/v1/invoices…`, `/customers`, `/companies` etc. auf dem **eigenen Origin** auf.
@@ -771,10 +784,19 @@ die echte NextDays-Session.
 
 ```json
 // POST /buchhaltung/invoices
-{ "customer_id": null, "currency": "EUR", "notes": "…",
+{
+  "customer_id": null,
+  "currency": "EUR",
+  "notes": "…",
   "items": [
-    { "description": "Reinigung", "quantity": "2", "unit_price": "100", "tax_rate": "19" }
-  ] }
+    {
+      "description": "Reinigung",
+      "quantity": "2",
+      "unit_price": "100",
+      "tax_rate": "19"
+    }
+  ]
+}
 // Antwort 201: vollständige Rechnung mit berechnetem net_amount/tax_amount/gross_amount
 ```
 
@@ -799,26 +821,26 @@ Channel-Manager-Anbindung für OTA-Distribution (Booking.com, Airbnb, Expedia �
 über **Channex** (https://docs.channex.io). Channex ist der konkrete Provider
 hinter dem `channel_manager`-Slice; der HTTP-Client kapselt die Channex-API
 (`channex_client.py`, Auth-Header `user-api-key`, Body-Wrapping `{"<entity>": …}`,
-429-Backoff). Tenant-scoped; verwaltende Endpoints erfordern die Lodgify-
+429-Backoff). Tenant-scoped; verwaltende Endpoints erfordern die ..-
 Berechtigung `manage_property_settings`. Beträge laufen durchgängig in **Cent**
 (eindeutig, keine Rundungsfehler).
 
-| Methode & Pfad | Zweck |
-| --- | --- |
-| `GET /api/v1/channel-manager/health` | Slice-Status + `channex_configured` (API-Key gesetzt?) |
-| `GET /api/v1/channel-manager/properties` | Property-Mappings des Tenants |
-| `POST /api/v1/channel-manager/properties` | Property mit Channex verbinden (bestehende anbinden **oder** neu anlegen) → `201` |
-| `DELETE /api/v1/channel-manager/properties/{map_id}` | Mapping (soft) trennen → `204` |
-| `POST /api/v1/channel-manager/ari` | Verfügbarkeit + Preise/Restriktionen gebündelt pushen (Channex-ARI) |
-| `GET /api/v1/channel-manager/bookings` | Eingegangene OTA-Buchungen des Tenants |
-| `POST /api/v1/channel-manager/bookings/sync` | Buchungs-Revisions-Feed ziehen → speichern → bei Channex bestätigen (ack) |
-| `GET /api/v1/channel-manager/portals` | Verbindbare Buchungsportale + Eingabefelder (white-label; Felder live aus dem Provider-Katalog) |
-| `POST /api/v1/channel-manager/channels/prepare` | Schritt 1+2: Zugangsdaten prüfen + Portal-Zimmer/Raten holen (legt nichts an) |
-| `GET /api/v1/channel-manager/channels` | Verbundene Kanäle des Tenants (white-label) |
-| `POST /api/v1/channel-manager/channels` | Schritt 3+4: Kanal mit Zimmer/Raten-Zuordnung anlegen **und aktivieren** → `201` |
-| `DELETE /api/v1/channel-manager/channels/{channel_id}` | Kanal trennen (erst deaktivieren, dann löschen) → `204` |
-| `GET /api/v1/channel-manager/properties/{property_id}/connections` | Gespeicherte OTA-Verbindungen eines Objekts (Hotel-ID + Status pro Portal, white-label) |
-| `POST /api/v1/channel-manager/webhook` | Webhook-Empfang (ohne JWT, via geteiltem Secret-Header `X-Channex-Webhook-Secret`) |
+| Methode & Pfad                                                     | Zweck                                                                                           |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| `GET /api/v1/channel-manager/health`                               | Slice-Status + `channex_configured` (API-Key gesetzt?)                                          |
+| `GET /api/v1/channel-manager/properties`                           | Property-Mappings des Tenants                                                                   |
+| `POST /api/v1/channel-manager/properties`                          | Property mit Channex verbinden (bestehende anbinden **oder** neu anlegen) → `201`               |
+| `DELETE /api/v1/channel-manager/properties/{map_id}`               | Mapping (soft) trennen → `204`                                                                  |
+| `POST /api/v1/channel-manager/ari`                                 | Verfügbarkeit + Preise/Restriktionen gebündelt pushen (Channex-ARI)                             |
+| `GET /api/v1/channel-manager/bookings`                             | Eingegangene OTA-Buchungen des Tenants                                                          |
+| `POST /api/v1/channel-manager/bookings/sync`                       | Buchungs-Revisions-Feed ziehen → speichern → bei Channex bestätigen (ack)                       |
+| `GET /api/v1/channel-manager/portals`                              | Verbindbare Buchungsportale + Eingabefelder (white-label; Felder live aus dem Provider-Katalog) |
+| `POST /api/v1/channel-manager/channels/prepare`                    | Schritt 1+2: Zugangsdaten prüfen + Portal-Zimmer/Raten holen (legt nichts an)                   |
+| `GET /api/v1/channel-manager/channels`                             | Verbundene Kanäle des Tenants (white-label)                                                     |
+| `POST /api/v1/channel-manager/channels`                            | Schritt 3+4: Kanal mit Zimmer/Raten-Zuordnung anlegen **und aktivieren** → `201`                |
+| `DELETE /api/v1/channel-manager/channels/{channel_id}`             | Kanal trennen (erst deaktivieren, dann löschen) → `204`                                         |
+| `GET /api/v1/channel-manager/properties/{property_id}/connections` | Gespeicherte OTA-Verbindungen eines Objekts (Hotel-ID + Status pro Portal, white-label)         |
+| `POST /api/v1/channel-manager/webhook`                             | Webhook-Empfang (ohne JWT, via geteiltem Secret-Header `X-Channex-Webhook-Secret`)              |
 
 **ARI-Push (Best-Practice: batchen, nicht einzeln).** Availability und Preise
 werden getrennt zu Channex gesendet (Channex priorisiert die Availability-Queue).
@@ -829,11 +851,22 @@ fängt `429` mit Backoff ab.
 // POST /channel-manager/ari
 {
   "availability": [
-    { "room_type_map_id": "…", "date_from": "2026-07-01", "date_to": "2026-07-31", "availability": 5 }
+    {
+      "room_type_map_id": "…",
+      "date_from": "2026-07-01",
+      "date_to": "2026-07-31",
+      "availability": 5
+    }
   ],
   "rates": [
-    { "rate_plan_map_id": "…", "date_from": "2026-07-01", "date_to": "2026-07-31",
-      "rate_cents": 12000, "min_stay_arrival": 2, "stop_sell": false }
+    {
+      "rate_plan_map_id": "…",
+      "date_from": "2026-07-01",
+      "date_to": "2026-07-31",
+      "rate_cents": 12000,
+      "min_stay_arrival": 2,
+      "stop_sell": false
+    }
   ]
 }
 // Antwort: { "availability_tasks": 1, "rate_tasks": 1, "warnings": [] }
@@ -855,14 +888,14 @@ Anlage nie scheitern lassen):
    Steuernummer, oder „Kleinunternehmer"). Gespeichert via
    `PATCH /buchhaltung/companies/{id}` in `tenant_billing_profile`; Status-Flag
    `company_data_set` in `tenant_onboarding`. Länderneutral (DACH + EU, ISO-Land
-   + Währung). Pflicht, BEVOR Objekt/Anbindung möglich sind.
+   - Währung). Pflicht, BEVOR Objekt/Anbindung möglich sind.
 3. **Objekt anlegen** (`POST /properties`) → löst den **Content-Sync** aus: Provider-
    Property (in der Tenant-Group) + **ein synthetischer Room-Type** (`count_of_rooms=1`)
-   + je lokalem Preisplan **ein Rate-Plan** werden angelegt; alle Mapping-Tabellen
-   gefüllt. Idempotent (POST wenn kein Mapping, sonst PUT) → beliebig wiederholbar.
-   Die **Firmen-Adresse/Kontakt** (aus `tenant_billing_profile`) wird an die
-   Provider-Property mitgegeben (`address`, `zip_code`, `city`, `country`, `email`,
-   `phone`, `website`) — OTAs verlangen das zur Aktivierung.
+   - je lokalem Preisplan **ein Rate-Plan** werden angelegt; alle Mapping-Tabellen
+     gefüllt. Idempotent (POST wenn kein Mapping, sonst PUT) → beliebig wiederholbar.
+     Die **Firmen-Adresse/Kontakt** (aus `tenant_billing_profile`) wird an die
+     Provider-Property mitgegeben (`address`, `zip_code`, `city`, `country`, `email`,
+     `phone`, `website`) — OTAs verlangen das zur Aktivierung.
 
 NextDays modelliert **keine Zimmerkategorien** (eine `property` IST die buchbare
 Einheit, Ferienwohnungs-Modell). Channex verkauft aber Room-Types — daher der
@@ -931,9 +964,9 @@ Texte übersetzen (Mietvertrag, Raten-Info) über die Google Cloud Translation
 API. Der API-Key bleibt serverseitig (`GOOGLE_TRANSLATE_API_KEY`). Nur für
 eingeloggte Nutzer.
 
-| Methode | Pfad | Beschreibung |
-|---|---|---|
-| `POST` | `/api/v1/content/translate` | Text/HTML übersetzen (da/en/de) |
+| Methode | Pfad                        | Beschreibung                    |
+| ------- | --------------------------- | ------------------------------- |
+| `POST`  | `/api/v1/content/translate` | Text/HTML übersetzen (da/en/de) |
 
 ```json
 // POST /content/translate
@@ -950,35 +983,35 @@ eingeloggte Nutzer.
 ## tasks (Logik implementiert — Lastenheft §2.5/§4.3 + PM-Aufgaben-Modul)
 
 Aufgaben, Checklisten mit Foto-Nachweisen, Vertretung, Inventar sowie das
-PM-Aufgaben-Modul (Lodgify-Nachbau): Kalender-Timeline, Teamaufgaben,
+PM-Aufgaben-Modul (..-Nachbau): Kalender-Timeline, Teamaufgaben,
 Inspektions-Workflow und Regeln/Vorlagen (`task_rules` mit `kind` =
 `template|auto|recurring`). Auf dem bestehenden schlanken Datenmodell (0012/0019)
 aufgesetzt, ergänzt durch Migration 0123 (Inspektion + PM-Metadaten + Realtime).
 
-| Methode | Pfad | Capability | Beschreibung |
-|---|---|---|---|
-| `POST` | `/api/v1/tasks` | `manage_tasks` | Aufgabe anlegen |
-| `GET` | `/api/v1/tasks/mine` | `view_own_tasks` | eigene Aufgaben |
-| `GET` | `/api/v1/tasks/by-reservation/{id}` | `view_calendar` | Aufgaben zu einer Buchung (PM-Detailseite) |
-| `PATCH` | `/api/v1/tasks/{id}/status` | `manage_tasks` | Aufgaben-Status setzen (offen/in Arbeit/erledigt/abgebrochen) |
-| `POST` | `/api/v1/tasks/from-booking` | `manage_tasks` | aus Buchung: Anreise-Check + Endreinigung |
-| `POST` | `/api/v1/tasks/checklist/item` | `view_own_tasks` | Checklisten-Punkt |
-| `POST` | `/api/v1/tasks/checklist/photo` | `view_own_tasks` | Foto-Nachweis (unbegrenzt/Raum) |
-| `POST` | `/api/v1/tasks/substitution` | `request_substitute` | Vertretung anfragen (§4.3) |
-| `POST` | `/api/v1/tasks/inventory` | `manage_inventory` | Inventar (property_id null = zentraler Pool) |
-| `GET` | `/api/v1/tasks/team` | `manage_tasks` | Teamaufgaben (Assignee + Objekt-Namen; `status_bucket`-Filter). KEINE Gast-PII/Beträge (§4.3) |
-| `GET` | `/api/v1/tasks/calendar` | `manage_tasks` | Kalender-Timeline (`month_from`/`month_to`), nach Objekt gruppiert |
-| `GET` | `/api/v1/tasks/detail/{id}` | `view_own_tasks` | Aufgaben-Detail inkl. Checkliste + Foto-Status |
-| `POST` | `/api/v1/tasks/{id}/complete` | `view_own_tasks` | Abschließen — 422, wenn ein `requires_photo`-Punkt kein Foto hat; setzt bei `needs_inspection` → `inspection_state=to_review` |
-| `GET` | `/api/v1/tasks/inspection` | `manage_tasks` | Inspektions-Liste (`tab` = to_review\|upcoming\|reviewed) |
-| `POST` | `/api/v1/tasks/{id}/inspect` | `manage_tasks` | Freigeben (reviewed) / Zurückweisen (open + to_review) |
-| `GET` | `/api/v1/tasks/templates` | `manage_tasks` | Aufgabenvorlagen (task_rules kind=template) |
-| `GET` | `/api/v1/tasks/auto` | `manage_tasks` | Planmäßige Aufgaben (buchungs-getriggert) |
-| `GET` | `/api/v1/tasks/recurring` | `manage_tasks` | Regelmäßige Aufgaben (zeitplan-getriggert, menschenlesbares `schedule_label`) |
-| `GET` | `/api/v1/tasks/rules/{id}` | `manage_tasks` | Regel/Vorlage-Detail (Items + Objekt-Zuordnung) |
-| `POST` | `/api/v1/tasks/rules` | `manage_tasks` | Regel/Vorlage anlegen |
-| `PUT` | `/api/v1/tasks/rules/{id}` | `manage_tasks` | Regel/Vorlage ändern (Objekte + Items als Alt/Neu-Diff) |
-| `DELETE` | `/api/v1/tasks/rules/{id}` | `manage_tasks` | Regel/Vorlage löschen |
+| Methode  | Pfad                                | Capability           | Beschreibung                                                                                                                  |
+| -------- | ----------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `POST`   | `/api/v1/tasks`                     | `manage_tasks`       | Aufgabe anlegen                                                                                                               |
+| `GET`    | `/api/v1/tasks/mine`                | `view_own_tasks`     | eigene Aufgaben                                                                                                               |
+| `GET`    | `/api/v1/tasks/by-reservation/{id}` | `view_calendar`      | Aufgaben zu einer Buchung (PM-Detailseite)                                                                                    |
+| `PATCH`  | `/api/v1/tasks/{id}/status`         | `manage_tasks`       | Aufgaben-Status setzen (offen/in Arbeit/erledigt/abgebrochen)                                                                 |
+| `POST`   | `/api/v1/tasks/from-booking`        | `manage_tasks`       | aus Buchung: Anreise-Check + Endreinigung                                                                                     |
+| `POST`   | `/api/v1/tasks/checklist/item`      | `view_own_tasks`     | Checklisten-Punkt                                                                                                             |
+| `POST`   | `/api/v1/tasks/checklist/photo`     | `view_own_tasks`     | Foto-Nachweis (unbegrenzt/Raum)                                                                                               |
+| `POST`   | `/api/v1/tasks/substitution`        | `request_substitute` | Vertretung anfragen (§4.3)                                                                                                    |
+| `POST`   | `/api/v1/tasks/inventory`           | `manage_inventory`   | Inventar (property_id null = zentraler Pool)                                                                                  |
+| `GET`    | `/api/v1/tasks/team`                | `manage_tasks`       | Teamaufgaben (Assignee + Objekt-Namen; `status_bucket`-Filter). KEINE Gast-PII/Beträge (§4.3)                                 |
+| `GET`    | `/api/v1/tasks/calendar`            | `manage_tasks`       | Kalender-Timeline (`month_from`/`month_to`), nach Objekt gruppiert                                                            |
+| `GET`    | `/api/v1/tasks/detail/{id}`         | `view_own_tasks`     | Aufgaben-Detail inkl. Checkliste + Foto-Status                                                                                |
+| `POST`   | `/api/v1/tasks/{id}/complete`       | `view_own_tasks`     | Abschließen — 422, wenn ein `requires_photo`-Punkt kein Foto hat; setzt bei `needs_inspection` → `inspection_state=to_review` |
+| `GET`    | `/api/v1/tasks/inspection`          | `manage_tasks`       | Inspektions-Liste (`tab` = to_review\|upcoming\|reviewed)                                                                     |
+| `POST`   | `/api/v1/tasks/{id}/inspect`        | `manage_tasks`       | Freigeben (reviewed) / Zurückweisen (open + to_review)                                                                        |
+| `GET`    | `/api/v1/tasks/templates`           | `manage_tasks`       | Aufgabenvorlagen (task_rules kind=template)                                                                                   |
+| `GET`    | `/api/v1/tasks/auto`                | `manage_tasks`       | Planmäßige Aufgaben (buchungs-getriggert)                                                                                     |
+| `GET`    | `/api/v1/tasks/recurring`           | `manage_tasks`       | Regelmäßige Aufgaben (zeitplan-getriggert, menschenlesbares `schedule_label`)                                                 |
+| `GET`    | `/api/v1/tasks/rules/{id}`          | `manage_tasks`       | Regel/Vorlage-Detail (Items + Objekt-Zuordnung)                                                                               |
+| `POST`   | `/api/v1/tasks/rules`               | `manage_tasks`       | Regel/Vorlage anlegen                                                                                                         |
+| `PUT`    | `/api/v1/tasks/rules/{id}`          | `manage_tasks`       | Regel/Vorlage ändern (Objekte + Items als Alt/Neu-Diff)                                                                       |
+| `DELETE` | `/api/v1/tasks/rules/{id}`          | `manage_tasks`       | Regel/Vorlage löschen                                                                                                         |
 
 Frontend: `(dashboard)/reservierungen/aufgaben/*` — 7 Reiter (Kalender,
 Meine, Team, Inspektion, Vorlagen, Planmäßig, Regelmäßig), alle live über
@@ -996,10 +1029,10 @@ Zahlungsbilder existieren im Datenmodell NICHT und werden nicht erfunden
 (CLAUDE.md Wurzel 4). Bucket ist privat (fail-closed: ohne Backend-Signatur kein
 Zugriff); `checklist_photos` in Realtime (RLS via item→task→tenant, 0126).
 
-| Methode | Pfad | Capability | Beschreibung |
-|---|---|---|---|
-| `GET` | `/api/v1/media` | `view_calendar` | Bilder-Karten; Query `booking`/`property_` (Quellen-Toggle), `property_id` (Objektfilter). Signierte URLs für Buchungsfotos |
-| `DELETE` | `/api/v1/media/{kind}/{id}` | `manage_tasks` | Bild löschen (`kind` = booking\|property), IDOR-Guard über die Eltern-Kette |
+| Methode  | Pfad                        | Capability      | Beschreibung                                                                                                                |
+| -------- | --------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `GET`    | `/api/v1/media`             | `view_calendar` | Bilder-Karten; Query `booking`/`property_` (Quellen-Toggle), `property_id` (Objektfilter). Signierte URLs für Buchungsfotos |
+| `DELETE` | `/api/v1/media/{kind}/{id}` | `manage_tasks`  | Bild löschen (`kind` = booking\|property), IDOR-Guard über die Eltern-Kette                                                 |
 
 Frontend: `(dashboard)/reservierungen/bilder` — Karten (Objekt-Titel, Typ,
 Autor, Hochgeladen am, Buchungszeitraum, Unterkunft/Buchung ansehen, Löschen),
@@ -1016,15 +1049,15 @@ Eigentümer (Lead → Vermieter) + Objekt-Zuweisung mit Anteil und Provisions-
 Override je Objekt (Basis für den Eigentümer-Objekt-Scope, Lastenheft §4.2).
 Tenant-geschützt (`MANAGE_OWNERS`).
 
-| Methode | Pfad | Beschreibung |
-|---|---|---|
-| `GET` | `/api/v1/owners` | Eigentümer-Liste |
-| `POST` | `/api/v1/owners` | Eigentümer anlegen |
-| `GET` | `/api/v1/owners/{owner_id}` | Eigentümer-Detail |
-| `PATCH` | `/api/v1/owners/{owner_id}` | Eigentümer aktualisieren |
-| `DELETE` | `/api/v1/owners/{owner_id}` | Eigentümer löschen |
-| `POST` | `/api/v1/owners/{owner_id}/properties` | Objekt zuweisen (Anteil + Provisions-Override) |
-| `DELETE` | `/api/v1/owners/{owner_id}/properties/{property_id}` | Zuweisung aufheben |
+| Methode  | Pfad                                                 | Beschreibung                                   |
+| -------- | ---------------------------------------------------- | ---------------------------------------------- |
+| `GET`    | `/api/v1/owners`                                     | Eigentümer-Liste                               |
+| `POST`   | `/api/v1/owners`                                     | Eigentümer anlegen                             |
+| `GET`    | `/api/v1/owners/{owner_id}`                          | Eigentümer-Detail                              |
+| `PATCH`  | `/api/v1/owners/{owner_id}`                          | Eigentümer aktualisieren                       |
+| `DELETE` | `/api/v1/owners/{owner_id}`                          | Eigentümer löschen                             |
+| `POST`   | `/api/v1/owners/{owner_id}/properties`               | Objekt zuweisen (Anteil + Provisions-Override) |
+| `DELETE` | `/api/v1/owners/{owner_id}/properties/{property_id}` | Zuweisung aufheben                             |
 
 ---
 
@@ -1036,20 +1069,20 @@ des Objekts), EU-Steuer-Kategorien (S / AE Reverse-Charge / E Kleinunternehmer),
 GoBD-Nummernkreis, Stornorechnung statt Löschen, Mehrwährung via ECB-Tageskurs
 am Check-out (kein Fallback → 502). Reporting-/Billing-geschützt.
 
-| Methode | Pfad | Beschreibung |
-|---|---|---|
-| `GET` | `/api/v1/owner-statements` | Abrechnungen auflisten |
-| `POST` | `/api/v1/owner-statements` | Abrechnung erzeugen (Zeitraum) |
-| `POST` | `/api/v1/owner-statements/preview` | Vorschau ohne Persistenz |
-| `GET` | `/api/v1/owner-statements/{id}` | Detail (eingefrorene Summen) |
-| `PATCH` | `/api/v1/owner-statements/{id}` | Entwurf bearbeiten |
-| `POST` | `/api/v1/owner-statements/{id}/finalize` | Finalisieren (Nummernkreis) |
-| `POST` | `/api/v1/owner-statements/{id}/cancel` | Stornieren (Stornorechnung) |
-| `DELETE` | `/api/v1/owner-statements/{id}` | Entwurf löschen |
-| `POST` | `/api/v1/owner-statements/expenses` | Eigentümer-Ausgabe anlegen |
-| `PATCH` | `/api/v1/owner-statements/expenses/{id}` | Ausgabe ändern |
-| `DELETE` | `/api/v1/owner-statements/expenses/{id}` | Ausgabe löschen |
-| `POST` | `/api/v1/owner-statements/auto-run` | Periodische Auto-Abrechnung auslösen |
+| Methode  | Pfad                                     | Beschreibung                         |
+| -------- | ---------------------------------------- | ------------------------------------ |
+| `GET`    | `/api/v1/owner-statements`               | Abrechnungen auflisten               |
+| `POST`   | `/api/v1/owner-statements`               | Abrechnung erzeugen (Zeitraum)       |
+| `POST`   | `/api/v1/owner-statements/preview`       | Vorschau ohne Persistenz             |
+| `GET`    | `/api/v1/owner-statements/{id}`          | Detail (eingefrorene Summen)         |
+| `PATCH`  | `/api/v1/owner-statements/{id}`          | Entwurf bearbeiten                   |
+| `POST`   | `/api/v1/owner-statements/{id}/finalize` | Finalisieren (Nummernkreis)          |
+| `POST`   | `/api/v1/owner-statements/{id}/cancel`   | Stornieren (Stornorechnung)          |
+| `DELETE` | `/api/v1/owner-statements/{id}`          | Entwurf löschen                      |
+| `POST`   | `/api/v1/owner-statements/expenses`      | Eigentümer-Ausgabe anlegen           |
+| `PATCH`  | `/api/v1/owner-statements/expenses/{id}` | Ausgabe ändern                       |
+| `DELETE` | `/api/v1/owner-statements/expenses/{id}` | Ausgabe löschen                      |
+| `POST`   | `/api/v1/owner-statements/auto-run`      | Periodische Auto-Abrechnung auslösen |
 
 ---
 
@@ -1077,20 +1110,20 @@ Redis-Ausfall gilt fail-open, für sensible Pfade (Auth/Payments) fail-closed
 
 ## travel_agencies — Reisebüro-/Partner-Kartei
 
-Alle Endpunkte hinter der Lodgify-Permission `manage_partners`. Verträge sind
+Alle Endpunkte hinter der ..-Permission `manage_partners`. Verträge sind
 nach Jahren gruppierbar (Jahr = `valid_from`); Vertragsdateien liegen im
 privaten Bucket `agency-contracts` (Download nur als signierte URL).
 
-| Methode | Pfad | Zweck |
-|---|---|---|
-| `GET` | `/api/v1/travel-agencies?q&include_inactive` | Partner-Liste |
-| `POST` | `/api/v1/travel-agencies` | Partner anlegen |
-| `GET/PATCH/DELETE` | `/api/v1/travel-agencies/{id}` | Kartei lesen/ändern/löschen |
-| `GET/POST` | `/api/v1/travel-agencies/{id}/contacts` · `DELETE …/{cid}` | Kontaktpersonen |
-| `GET/POST` | `/api/v1/travel-agencies/{id}/contracts` · `PATCH/DELETE …/{cid}` | Verträge (Art, Gültigkeit, Währung, Kommission, Release) |
-| `POST` | `…/contracts/{cid}/file` | Vertragsdokument hochladen (multipart, PDF/JPG/PNG/DOCX/XLSX, 25 MB) |
-| `GET` | `…/contracts/{cid}/file-url` | signierte Download-URL (TTL 1 h) |
-| `GET/POST` | `…/contracts/{cid}/rates` · `DELETE …/{rid}` | Saison-Preiszeilen (Zeitraum × Objekt × Preis/Nacht, net/gross, min_stay) |
+| Methode            | Pfad                                                              | Zweck                                                                     |
+| ------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `GET`              | `/api/v1/travel-agencies?q&include_inactive`                      | Partner-Liste                                                             |
+| `POST`             | `/api/v1/travel-agencies`                                         | Partner anlegen                                                           |
+| `GET/PATCH/DELETE` | `/api/v1/travel-agencies/{id}`                                    | Kartei lesen/ändern/löschen                                               |
+| `GET/POST`         | `/api/v1/travel-agencies/{id}/contacts` · `DELETE …/{cid}`        | Kontaktpersonen                                                           |
+| `GET/POST`         | `/api/v1/travel-agencies/{id}/contracts` · `PATCH/DELETE …/{cid}` | Verträge (Art, Gültigkeit, Währung, Kommission, Release)                  |
+| `POST`             | `…/contracts/{cid}/file`                                          | Vertragsdokument hochladen (multipart, PDF/JPG/PNG/DOCX/XLSX, 25 MB)      |
+| `GET`              | `…/contracts/{cid}/file-url`                                      | signierte Download-URL (TTL 1 h)                                          |
+| `GET/POST`         | `…/contracts/{cid}/rates` · `DELETE …/{rid}`                      | Saison-Preiszeilen (Zeitraum × Objekt × Preis/Nacht, net/gross, min_stay) |
 
 Verknüpfung Verkaufsstopp: `POST /api/v1/calendar/stop-sell` akzeptiert
 `agency_id` (Adressat der Stop-Sale-Meldung) und `weekdays` (ISO 0=Mo…6=So);
@@ -1110,39 +1143,39 @@ den `builder/`-Renderer der myNextDays-Websites.
 
 ### Branding & Custom-Domains (`/api/v1/site-config`)
 
-| Methode | Pfad | Beschreibung |
-|---|---|---|
-| `GET` | `/api/v1/site-config/health` | Slice-Status |
-| `GET` | `/api/v1/site-config` | Branding lesen (`site_name`, `tagline`, `logo_url`, `hero_image_url`, `primary_color`/`secondary_color` (Hex `#rrggbb`), `font_family`, `about_text`/`contact_text`/`social_links` (i18n-/Key-Objekte), `booking_mode` `instant\|inquiry\|both`); leere Config → Defaults/None |
-| `PUT` | `/api/v1/site-config` | Branding setzen — Teil-Update, nur gesendete Felder werden geschrieben |
-| `GET` | `/api/v1/site-config/domains` | Custom-Domains des Tenants (`status` `pending\|active\|error`, `ssl_status`, `dns_records[]`; die interne Cloudflare-Hostname-ID wird bewusst nicht exponiert) |
-| `POST` | `/api/v1/site-config/domains` | Domain verbinden → `201`; legt den Cloudflare-Custom-Hostname an und liefert die zu setzenden DNS-Records (CNAME + TXT-Validierung). `409` Domain bereits vergeben (global unique); `503` Cloudflare nicht konfiguriert |
-| `POST` | `/api/v1/site-config/domains/{domain_id}/sync` | Status/SSL-Status frisch von Cloudflare spiegeln (`pending` → `active`). `409` wenn nicht mit Cloudflare verknüpft |
-| `DELETE` | `/api/v1/site-config/domains/{domain_id}` | Domain trennen → `204` (Cloudflare-`404` wird toleriert) |
+| Methode  | Pfad                                           | Beschreibung                                                                                                                                                                                                                                                                   |
+| -------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET`    | `/api/v1/site-config/health`                   | Slice-Status                                                                                                                                                                                                                                                                   |
+| `GET`    | `/api/v1/site-config`                          | Branding lesen (`site_name`, `tagline`, `logo_url`, `hero_image_url`, `primary_color`/`secondary_color` (Hex `#rrggbb`), `font_family`, `about_text`/`contact_text`/`social_links` (i18n-/Key-Objekte), `booking_mode` `instant\|inquiry\|both`); leere Config → Defaults/None |
+| `PUT`    | `/api/v1/site-config`                          | Branding setzen — Teil-Update, nur gesendete Felder werden geschrieben                                                                                                                                                                                                         |
+| `GET`    | `/api/v1/site-config/domains`                  | Custom-Domains des Tenants (`status` `pending\|active\|error`, `ssl_status`, `dns_records[]`; die interne Cloudflare-Hostname-ID wird bewusst nicht exponiert)                                                                                                                 |
+| `POST`   | `/api/v1/site-config/domains`                  | Domain verbinden → `201`; legt den Cloudflare-Custom-Hostname an und liefert die zu setzenden DNS-Records (CNAME + TXT-Validierung). `409` Domain bereits vergeben (global unique); `503` Cloudflare nicht konfiguriert                                                        |
+| `POST`   | `/api/v1/site-config/domains/{domain_id}/sync` | Status/SSL-Status frisch von Cloudflare spiegeln (`pending` → `active`). `409` wenn nicht mit Cloudflare verknüpft                                                                                                                                                             |
+| `DELETE` | `/api/v1/site-config/domains/{domain_id}`      | Domain trennen → `204` (Cloudflare-`404` wird toleriert)                                                                                                                                                                                                                       |
 
 ### Seiten (`/api/v1/site-config/pages`)
 
-| Methode | Pfad | Beschreibung |
-|---|---|---|
-| `GET` | `/api/v1/site-config/pages` | Seiten des Tenants (sortiert nach `nav_order`) |
-| `POST` | `/api/v1/site-config/pages` | Seite anlegen → `201`. Body `{title, slug?}`; `slug` nur `a-z 0-9 -`, leer = Home-Slug. Die **erste** Seite eines Tenants wird automatisch Home. `409` Slug bereits vergeben |
-| `PUT` | `/api/v1/site-config/pages/{page_id}` | Seite ändern (Teil-Update): `title`, `slug`, `seo_title`, `seo_description`, `og_image_url`, `nav_order`. `409` Slug-Kollision |
-| `POST` | `/api/v1/site-config/pages/{page_id}/home` | Seite zur Home-Seite machen (genau eine je Tenant, partieller Unique-Index) |
-| `POST` | `/api/v1/site-config/pages/{page_id}/publish` | veröffentlichen (`is_published=true`) |
-| `POST` | `/api/v1/site-config/pages/{page_id}/unpublish` | Veröffentlichung zurücknehmen |
-| `DELETE` | `/api/v1/site-config/pages/{page_id}` | Seite löschen → `204` (Blöcke per FK-Cascade) |
-| `POST` | `/api/v1/site-config/pages/{page_id}/draft-token` | Kurzlebigen Vorschau-Token erzeugen → `{token}` (s. u.) |
+| Methode  | Pfad                                              | Beschreibung                                                                                                                                                                 |
+| -------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`    | `/api/v1/site-config/pages`                       | Seiten des Tenants (sortiert nach `nav_order`)                                                                                                                               |
+| `POST`   | `/api/v1/site-config/pages`                       | Seite anlegen → `201`. Body `{title, slug?}`; `slug` nur `a-z 0-9 -`, leer = Home-Slug. Die **erste** Seite eines Tenants wird automatisch Home. `409` Slug bereits vergeben |
+| `PUT`    | `/api/v1/site-config/pages/{page_id}`             | Seite ändern (Teil-Update): `title`, `slug`, `seo_title`, `seo_description`, `og_image_url`, `nav_order`. `409` Slug-Kollision                                               |
+| `POST`   | `/api/v1/site-config/pages/{page_id}/home`        | Seite zur Home-Seite machen (genau eine je Tenant, partieller Unique-Index)                                                                                                  |
+| `POST`   | `/api/v1/site-config/pages/{page_id}/publish`     | veröffentlichen (`is_published=true`)                                                                                                                                        |
+| `POST`   | `/api/v1/site-config/pages/{page_id}/unpublish`   | Veröffentlichung zurücknehmen                                                                                                                                                |
+| `DELETE` | `/api/v1/site-config/pages/{page_id}`             | Seite löschen → `204` (Blöcke per FK-Cascade)                                                                                                                                |
+| `POST`   | `/api/v1/site-config/pages/{page_id}/draft-token` | Kurzlebigen Vorschau-Token erzeugen → `{token}` (s. u.)                                                                                                                      |
 
 ### Blöcke (`/api/v1/site-config/…/blocks`)
 
-| Methode | Pfad | Beschreibung |
-|---|---|---|
-| `GET` | `/api/v1/site-config/pages/{page_id}/blocks` | Blöcke einer Seite (nach `position` sortiert) |
-| `POST` | `/api/v1/site-config/pages/{page_id}/blocks` | Block anlegen → `201`. Body `{type, content?, settings?}`; wird ans Ende positioniert |
-| `PUT` | `/api/v1/site-config/blocks/{block_id}` | `content`/`settings` ändern (der `type` ist unveränderlich) |
-| `POST` | `/api/v1/site-config/pages/{page_id}/blocks/reorder` | Neu ordnen: `{ordered_ids}` muss **exakt** die Block-Menge der Seite sein, sonst `400` |
-| `DELETE` | `/api/v1/site-config/blocks/{block_id}` | Block löschen → `204` |
-| `POST` | `/api/v1/site-config/templates/apply` | Start-Template anwenden: `{template_id}` (`bergchalet`\|`kueste`\|`stadt`) → Seitenliste; `404` unbekanntes Template |
+| Methode  | Pfad                                                 | Beschreibung                                                                                                         |
+| -------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `GET`    | `/api/v1/site-config/pages/{page_id}/blocks`         | Blöcke einer Seite (nach `position` sortiert)                                                                        |
+| `POST`   | `/api/v1/site-config/pages/{page_id}/blocks`         | Block anlegen → `201`. Body `{type, content?, settings?}`; wird ans Ende positioniert                                |
+| `PUT`    | `/api/v1/site-config/blocks/{block_id}`              | `content`/`settings` ändern (der `type` ist unveränderlich)                                                          |
+| `POST`   | `/api/v1/site-config/pages/{page_id}/blocks/reorder` | Neu ordnen: `{ordered_ids}` muss **exakt** die Block-Menge der Seite sein, sonst `400`                               |
+| `DELETE` | `/api/v1/site-config/blocks/{block_id}`              | Block löschen → `204`                                                                                                |
+| `POST`   | `/api/v1/site-config/templates/apply`                | Start-Template anwenden: `{template_id}` (`bergchalet`\|`kueste`\|`stadt`) → Seitenliste; `404` unbekanntes Template |
 
 **Block-Typen (10) + Content-Validierung:** `hero` · `rich_text` · `image` ·
 `gallery` · `button` · `spacer` · `contact` · `search` · `properties_grid` ·
@@ -1159,11 +1192,11 @@ läuft **nicht** über FastAPI, sondern über die server-seitige Next.js-Route
 
 ### Öffentlicher Resolver (`/api/v1/site`, KEIN JWT)
 
-| Methode | Pfad | Beschreibung |
-|---|---|---|
-| `GET` | `/api/v1/site/by-domain?host=` | Host → Tenant + **öffentliches** Branding (`PublicSiteResponse`: `tenant_id`, Branding-Felder — keine Domain-/Cloudflare-Interna). Nur Domains mit `status=active`; `422` fehlender/zu kurzer Host (Query-Validierung `min_length=3`), `400` Whitespace-Host, `404` unbekannte Domain. Wird von der `builder/`-Middleware je Request aufgerufen |
-| `GET` | `/api/v1/site/page?host=&slug=` | Veröffentlichte Seite + Blöcke + Branding (`PublicPageResponse`) für den Renderer. Nur `is_published`; leerer `slug` → Home-Seite; unbekannt → `404` |
-| `GET` | `/api/v1/site/page/draft?page_id=&token=` | Entwurfs-Render für die Editor-Vorschau — liefert auch **unveröffentlichte** Seiten. `403` bei ungültigem/abgelaufenem Token |
+| Methode | Pfad                                      | Beschreibung                                                                                                                                                                                                                                                                                                                                    |
+| ------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`   | `/api/v1/site/by-domain?host=`            | Host → Tenant + **öffentliches** Branding (`PublicSiteResponse`: `tenant_id`, Branding-Felder — keine Domain-/Cloudflare-Interna). Nur Domains mit `status=active`; `422` fehlender/zu kurzer Host (Query-Validierung `min_length=3`), `400` Whitespace-Host, `404` unbekannte Domain. Wird von der `builder/`-Middleware je Request aufgerufen |
+| `GET`   | `/api/v1/site/page?host=&slug=`           | Veröffentlichte Seite + Blöcke + Branding (`PublicPageResponse`) für den Renderer. Nur `is_published`; leerer `slug` → Home-Seite; unbekannt → `404`                                                                                                                                                                                            |
+| `GET`   | `/api/v1/site/page/draft?page_id=&token=` | Entwurfs-Render für die Editor-Vorschau — liefert auch **unveröffentlichte** Seiten. `403` bei ungültigem/abgelaufenem Token                                                                                                                                                                                                                    |
 
 **Draft-Token-Mechanik:** `POST /site-config/pages/{id}/draft-token` signiert
 `tenant_id.page_id.exp` per **HMAC-SHA256** mit `SITE_DRAFT_SECRET`

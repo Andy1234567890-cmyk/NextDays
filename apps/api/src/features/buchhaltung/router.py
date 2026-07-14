@@ -1,7 +1,7 @@
 """Router für buchhaltung. Gemountet unter /api/v1/buchhaltung.
 
 Rechnungen + Kunden, tenant-scoped (tenant_id aus dem JWT). Schreibende
-Endpoints erfordern die Lodgify-Berechtigung OWNER_REPORTING (Buchhaltung).
+Endpoints erfordern die Berechtigung OWNER_REPORTING (Buchhaltung).
 """
 from typing import Annotated
 
@@ -15,8 +15,8 @@ from fastapi import (
 
 from src.core.security import AuthContext, CurrentUser
 from src.core.uploads import read_upload
-from src.features.auth.dependencies import require_lodgify_permission
-from src.features.auth.lodgify_permissions import Permission
+from src.features.auth.dependencies import require_granular_permission
+from src.features.auth.granular_permissions import Permission
 
 from .dependencies import BuchhaltungServiceDep
 from .schemas import (
@@ -38,7 +38,7 @@ router = APIRouter(prefix="/buchhaltung", tags=["buchhaltung"])
 
 def _require_agency_finance(
     ctx: Annotated[
-        AuthContext, Depends(require_lodgify_permission(Permission.OWNER_REPORTING))
+        AuthContext, Depends(require_granular_permission(Permission.OWNER_REPORTING))
     ],
 ) -> AuthContext:
     """Zugang zur AGENTUR-Debitorenbuchhaltung (Kunden/Rechnungen/Nummernkreise

@@ -1,6 +1,6 @@
 "use client";
 
-// Globales Kontrollzentrum (Lodgify-Startseite): dieselben KPI-Kacheln +
+// Globales Kontrollzentrum (..-Startseite): dieselben KPI-Kacheln +
 // Kanal-Donuts wie die Objekt-Statistiken (geteilte stats-cards.tsx), aber
 // zusammengefasst über ALLE (owner-sichtbaren) Objekte des Tenants. Oben rechts
 // Datumsbereich-Wähler + Objekt-Filter („Alle/Ausgewählte Unterkünfte" + „Alles

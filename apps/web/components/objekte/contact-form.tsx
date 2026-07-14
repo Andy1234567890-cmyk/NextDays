@@ -1,6 +1,6 @@
 "use client";
 
-// Kontakt-Seite eines Objekts (wie Lodgify „Contact page"):
+// Kontakt-Seite eines Objekts (Contact page):
 //  Wähle einen Hauptkontakt (Nutzer des eigenen Tenants), der Reservierungen
 //  und Anfragen bearbeitet. Suche + Auswahl per Klick; die Auswahl wird in
 //  type_attributes.contact.userId des Objekts gespeichert. „Bearbeiten" öffnet

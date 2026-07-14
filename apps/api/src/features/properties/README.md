@@ -1,6 +1,6 @@
 # Slice: properties
 
-Vertical Slice für die Objekt-Verwaltung (Lodgify-„Rentals"). Enthält:
+Vertical Slice für die Objekt-Verwaltung („Rentals"). Enthält:
 router.py, service.py, schemas.py, dependencies.py, tests/.
 Regeln: explizite Pydantic-Typisierung, kein direkter DB-Zugriff aus Routern,
 kein Exception-Swallowing. Siehe PROJECT.md.

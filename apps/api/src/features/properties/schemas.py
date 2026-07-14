@@ -1,12 +1,31 @@
 """Pydantic-Schemas für den properties-Slice (Objekt-Verwaltung).
 
-Bildet die Lodgify-„Rental"-Struktur ab: Stammdaten + strukturierte Adresse +
+Bildet die „Rental"-Struktur ab: Stammdaten + strukturierte Adresse +
 Ausstattung/Fotos. Sektionen ohne eigene Spalte (Rooms, Sleeping arrangements,
 Rental-Info-Detailfelder) liegen flexibel im jsonb-Feld `type_attributes`.
 """
 from enum import StrEnum
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from src.core.countries import normalize_country
+
+
+def _validate_country_iso2(value: str | None) -> str | None:
+    """Land IMMER als ISO-3166-1 alpha-2 speichern (eine Quelle der Wahrheit).
+
+    Nimmt ISO-2-Code ODER Landesname (der Places-Picker liefert je nach Sprache
+    „Germany"/„Deutschland") und normalisiert auf den Code. Leer bleibt leer;
+    unbekanntes Land ist ein Datenfehler → 422 (kein erfundener Ersatzwert)."""
+    if value is None or (isinstance(value, str) and not value.strip()):
+        return None
+    code = normalize_country(value)
+    if code is None:
+        raise ValueError(
+            f"Unbekanntes Land: {value!r}. Bitte ein gültiges Land wählen "
+            "(ISO-3166-1 alpha-2, z. B. DE)."
+        )
+    return code
 
 
 class PropertyType(StrEnum):
@@ -82,7 +101,7 @@ class PropertyBase(BaseModel):
     property_type: PropertyType = PropertyType.ferienhaus
     status: PropertyStatus = PropertyStatus.draft
 
-    # Rental info (Lodgify): Größe, Einheiten, Gäste.
+    # Rental info: Größe, Einheiten, Gäste.
     max_guests: int = Field(default=1, ge=1, le=99)
 
     # Strukturierte Adresse (Lastenheft §6).
@@ -106,8 +125,10 @@ class PropertyBase(BaseModel):
     photos: list[str] = Field(default_factory=list)
 
     # Flexible Sektionen (Rooms, Sleeping arrangements, m², Einheiten …).
-    # Frei strukturierbar, damit neue Lodgify-Sektionen ohne Migration passen.
+    # Frei strukturierbar, damit neue Sektionen ohne Migration passen.
     type_attributes: dict = Field(default_factory=dict)
+
+    _norm_country = field_validator("country")(_validate_country_iso2)
 
 
 class PropertyCreate(PropertyBase):
@@ -133,6 +154,8 @@ class PropertyUpdate(BaseModel):
     # Objektkartei (Lastenheft §6) — nur bfe_number, kein OTA-Sync (nicht in _CONTENT_FIELDS).
     bfe_number: str | None = None
     amenities: list[str] | None = None
+
+    _norm_country = field_validator("country")(_validate_country_iso2)
     photos: list[str] | None = None
     type_attributes: dict | None = None
 

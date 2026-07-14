@@ -47,7 +47,7 @@ class InviteRequest(BaseModel):
     password: SecretStr = Field(min_length=8)
     full_name: str = Field(min_length=1, max_length=200)
     role: UserRole
-    # Lodgify-Berechtigungen (IDs aus lodgify_permissions.Permission). Leer =
+    # Feingranulare Berechtigungen (IDs aus granular_permissions.Permission). Leer =
     # Rollen-Defaults werden angewendet; Admin erhält immer alle.
     permissions: list[str] | None = None
 
@@ -73,7 +73,7 @@ class MeResponse(BaseModel):
     tenant_id: str | None = None
     role: UserRole | None = None
     capabilities: list[str] = []  # Fähigkeiten der Rolle (Berechtigungs-Matrix)
-    permissions: list[str] = []   # Lodgify-Berechtigungen (für UI-Gating)
+    permissions: list[str] = []   # Feingranulare Berechtigungen (für UI-Gating)
     # Beherbergungsart des Mandanten (0090): steuert die Navigation
     # (Objekte vs. Zimmer, Eigentümer-Modul nur bei Ferienvermietung).
     accommodation_type: str | None = None
@@ -94,7 +94,7 @@ class AccountResponse(BaseModel):
     has_password: bool = True   # False bei reinen OAuth-Konten (z. B. Google)
     totp_enabled: bool = False
     role: UserRole | None = None
-    # Profilfelder (wie Lodgify „Contact information"): optional, da alt-Konten
+    # Profilfelder (Kontaktdaten): optional, da alt-Konten
     # sie noch nicht gepflegt haben.
     phone: str | None = None
     additional_phone: str | None = None
@@ -104,7 +104,7 @@ class AccountResponse(BaseModel):
     website: str | None = None
     description: str | None = None
     avatar_url: str | None = None
-    permissions: list[str] = []  # Lodgify-Berechtigungen (für UI-Gating)
+    permissions: list[str] = []  # Feingranulare Berechtigungen (für UI-Gating)
     # Land des Unternehmens (ISO-2, aus tenants.country) — Vorbelegung z. B.
     # der Telefon-Ländervorwahl im Frontend (kein Hardcode, Wurzel 4).
     tenant_country: str | None = None
@@ -170,10 +170,14 @@ class UpdateManagedUserRequest(BaseModel):
 
     full_name: str | None = Field(default=None, min_length=1, max_length=200)
     role: UserRole | None = None
+    # Feingranulare Berechtigungen nachträglich anpassen (Admin darf die Rechte
+    # jedes Nutzers erweitern/einschränken). None = unverändert; eine (auch
+    # leere) Liste ersetzt die gespeicherten Berechtigungen.
+    permissions: list[str] | None = None
 
 
 class UpdateProfileRequest(BaseModel):
-    """Profil-/Kontaktdaten bearbeiten (Lodgify „Edit contact information").
+    """Profil-/Kontaktdaten bearbeiten (Kontaktinformationen).
 
     Alle Felder optional: gesendete Felder werden gesetzt, weggelassene bleiben
     unverändert. ``full_name`` wird aus Vor-/Nachname im Frontend gebildet.

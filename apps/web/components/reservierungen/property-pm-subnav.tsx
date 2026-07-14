@@ -1,6 +1,6 @@
 "use client";
 
-// Linke Sub-Navigation der PM-Objektfläche (Lodgify „Unterkünfte" → Objekt):
+// Linke Sub-Navigation der PM-Objektfläche (.. „Unterkünfte" → Objekt):
 // Objektkopf oben + die sechs Reiter Kalender / Statistiken / Bilder / Warnungen
 // / Gastmodul / Gästemappe. Jeder Reiter führt per Klick auf die zugehörige
 // Objekt-Unterseite. Vorlage: components/objekte/property-subnav.tsx.
@@ -64,11 +64,10 @@ export function PropertyPmSubnav({
               key={it.slug}
               href={href}
               aria-current={active ? "page" : undefined}
-              className={`flex items-center gap-2.5 rounded-(--radius) px-3 py-2 text-sm ${
-                active
+              className={`flex items-center gap-2.5 rounded-(--radius) px-3 py-2 text-sm ${active
                   ? "bg-secondary font-medium text-foreground"
                   : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-              }`}
+                }`}
             >
               <Icon icon={it.icon} className="size-4 shrink-0" />
               <span className="truncate">{it.title}</span>

@@ -1,11 +1,11 @@
-// Richtlinien-Datenmodell (Lodgify „Policies"). Wird im flexiblen jsonb-Feld
+// Richtlinien-Datenmodell (Policies). Wird im flexiblen jsonb-Feld
 // `type_attributes.policies` eines Objekts gespeichert — keine Migration nötig.
 // Alle Werte sind optional/haben Defaults, damit Bestands-Objekte ohne
 // Richtlinien sauber laden.
 
 export type Bookability = "instant" | "request" | "inquiry";
 
-// Unterstützte Sprachen (wie Lodgify: Dänisch / Englisch / Deutsch).
+// Unterstützte Sprachen: Dänisch / Englisch / Deutsch.
 export type Lang = "da" | "en" | "de";
 export const LANGS: Lang[] = ["de", "en", "da"];
 export const LANG_LABELS: Record<Lang, string> = {
@@ -24,7 +24,7 @@ export type LocalizedText = Record<Lang, string>;
 
 export const EMPTY_LOCALIZED: LocalizedText = { de: "", en: "", da: "" };
 
-// Zahlungsplan (Lodgify „Payment schedule").
+// Zahlungsplan (Payment schedule).
 export type PaymentPlan = "one" | "split";
 export const PAYMENT_PLAN_OPTIONS: { value: PaymentPlan; label: string; info: string }[] = [
   {
@@ -39,7 +39,7 @@ export const PAYMENT_PLAN_OPTIONS: { value: PaymentPlan; label: string; info: st
   },
 ];
 
-// Stornotyp (Lodgify „Guest cancellation").
+// Stornotyp (Guest cancellation).
 export type CancellationType = "flexible" | "moderate" | "strict" | "non_refundable";
 export const CANCELLATION_OPTIONS: { value: CancellationType; label: string; info: string }[] = [
   { value: "flexible", label: "Flexibel", info: "Volle Erstattung bis kurz vor Anreise." },
@@ -52,10 +52,10 @@ export const CANCELLATION_OPTIONS: { value: CancellationType; label: string; inf
   },
 ];
 
-// Kaution (Lodgify „Security deposit").
+// Kaution (Security deposit).
 export type DepositMode = "none" | "amount";
 
-// Strukturierte Richtlinie (eine „Policy" wie Lodgify).
+// Strukturierte Richtlinie (eine „Policy").
 export type Policy = {
   internalName: string; // Pflicht: interner Name
   paymentPlan: PaymentPlan;
@@ -123,7 +123,7 @@ export const BOOKABILITY_LABELS: Record<Bookability, string> = {
   inquiry: "Nur Anfrage",
 };
 
-// Beschreibungen für die Auswahl-Karten (wie Lodgify „Bookability").
+// Beschreibungen für die Auswahl-Karten (Bookability).
 export const BOOKABILITY_OPTIONS: {
   value: Bookability;
   label: string;
@@ -151,7 +151,7 @@ export const BOOKABILITY_OPTIONS: {
   },
 ];
 
-// Volle Stunden als Check-in/out-Optionen (wie Lodgify). Wert = 24h "HH:00",
+// Volle Stunden als Check-in/out-Optionen. Wert = 24h "HH:00",
 // Anzeige im 12h-Format ("4pm", "10am") + 24h dahinter.
 export type HourOption = { value: string; label: string };
 

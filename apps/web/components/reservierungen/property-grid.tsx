@@ -1,6 +1,6 @@
 "use client";
 
-// Kachelliste der Unterkünfte (Lodgify „Unterkünfte"): Suchfeld + Karten mit
+// Kachelliste der Unterkünfte (.. „Unterkünfte"): Suchfeld + Karten mit
 // Titelbild, Objektname und Ort. Klick → Objektfläche mit den sechs Reitern.
 // Live über useRealtime auf properties (neue/geänderte Objekte ohne Reload).
 import { Icon } from "@iconify/react";

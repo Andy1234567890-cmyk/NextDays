@@ -1,6 +1,6 @@
 "use client";
 
-// Zeitleiste als EIGENE Seite/Tab (Lodgify „Buchung {ref} → Zeitleiste"). Zeigt
+// Zeitleiste als EIGENE Seite/Tab (.. „Buchung {ref} → Zeitleiste"). Zeigt
 // den kompletten Ereignis-Flow. Kopf (Breadcrumb + Titel + Tab-Umschalter) wie
 // auf der Übersichts-Detailseite; die Reservierung wird nur für Ref-Label +
 // Währung geladen (die Ereignisse holt BookingTimeline selbst, live).

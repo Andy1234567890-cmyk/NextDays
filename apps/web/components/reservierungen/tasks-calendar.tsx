@@ -1,6 +1,6 @@
 "use client";
 
-// Aufgaben-Kalender (Lodgify /tasks): Monats-Timeline als Gantt-Grid.
+// Aufgaben-Kalender (.. /tasks): Monats-Timeline als Gantt-Grid.
 // Sticky Objektspalte links, feste Tages-Spalten, rote Heute-Linie, je Objekt
 // Buchungs-Balken (aus reservations) + Aufgaben-Balken mit Status-Badge.
 // Filterleiste (Monat ← →, Nutzer, Objekt, Alles zurücksetzen). Live via
@@ -57,7 +57,7 @@ function monthBounds(year: number, month: number) {
   };
 }
 
-// Lodgify-Farbcodes für Aufgaben (aus dem Lernen-Text):
+// ..-Farbcodes für Aufgaben (aus dem Lernen-Text):
 //   ROT   = offen und niemandem zugewiesen (kann nicht erledigt werden)
 //   GELB  = heute fällig
 //   GRÜN  = abgeschlossen
@@ -114,7 +114,7 @@ function channelMeta(b: CalendarBooking) {
   return CHANNEL_META[key] ?? CHANNEL_META.direct;
 }
 
-// „13. Juli 2026 – 19. Juli 2026" (deutsch, wie Lodgify).
+// „13. Juli 2026 – 19. Juli 2026" (deutsch, wie ..).
 function bookingRange(b: CalendarBooking): string {
   const fmt = (iso: string) =>
     new Date(`${iso}T00:00:00`).toLocaleDateString("de-DE", {
@@ -146,7 +146,7 @@ function dayIndex(iso: string, firstDay: Date, days: number): number {
   const diff = Math.floor(
     (Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) -
       firstDay.getTime()) /
-      86_400_000,
+    86_400_000,
   );
   return Math.max(0, Math.min(days, diff));
 }

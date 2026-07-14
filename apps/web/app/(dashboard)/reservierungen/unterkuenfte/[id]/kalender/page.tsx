@@ -1,4 +1,4 @@
-// Objekt → Kalender (Lodgify „Kalender"): Monatsübersicht mit belegten Nächten
+// Objekt → Kalender: Monatsübersicht mit belegten Nächten
 // dieses Objekts. Speist sich aus listReservations(propertyId) (Client) — live.
 import { PropertyCalendar } from "@/components/reservierungen/property-calendar";
 

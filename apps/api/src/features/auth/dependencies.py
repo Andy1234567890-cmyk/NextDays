@@ -8,9 +8,9 @@ from src.core.security import AuthContext, get_current_user
 from src.core.supabase import get_anon_client, get_service_client
 
 from .account_service import AccountService
-from .lodgify_permissions import Permission, has_permission
+from .granular_permissions import Permission, has_permission, has_pm_access
 from .owner_assignment_service import OwnerAssignmentService
-from .permissions import Capability, has_capability
+from .permissions import Capability, has_capability, is_pm_capability
 from .schemas import UserRole
 from .service import AuthService
 from .staff_assignment_service import StaffAssignmentService
@@ -65,30 +65,57 @@ def require_role(*allowed: UserRole) -> Callable[[AuthContext], AuthContext]:
     return _guard
 
 
-def require_permission(cap: Capability) -> Callable[[AuthContext], AuthContext]:
+def require_permission(cap: Capability) -> Callable[..., AuthContext]:
     """Dependency-Factory: 403, wenn die Rolle die Fähigkeit nicht besitzt.
 
     Feingranularer als require_role — schützt Endpoints anhand der
     Berechtigungs-Matrix (Lastenheft §4).
+
+    Brücke zum feingranularen System (Wurzel): Ist ``cap`` eine PM-Capability,
+    muss der Nutzer ZUSÄTZLICH das PM-Dach (ACCESS_PM_FEATURES aus
+    users.permissions) haben. So wirkt der Entzug des PM-Zugriffs im
+    Rechte-Dialog auch auf Bereiche, die nur an der Rolle hängen (Kontrollzentrum,
+    Buchungen, Aufgaben). Nicht-PM-Capabilities bleiben rein rollenbasiert (kein
+    DB-Zugriff nötig).
     """
 
-    def _guard(
+    if not is_pm_capability(cap):
+        def _guard_role_only(
+            ctx: Annotated[AuthContext, Depends(get_current_user)],
+        ) -> AuthContext:
+            if not has_capability(ctx.role, cap):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Unzureichende Berechtigung.",
+                )
+            return ctx
+
+        return _guard_role_only
+
+    def _guard_pm(
         ctx: Annotated[AuthContext, Depends(get_current_user)],
+        service: AccountServiceDep,
     ) -> AuthContext:
         if not has_capability(ctx.role, cap):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Unzureichende Berechtigung.",
             )
+        role, stored = service.role_and_permissions(ctx)
+        if not has_pm_access(role, stored):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Kein Zugriff auf das PM-Modul.",
+            )
         return ctx
 
-    return _guard
+    return _guard_pm
 
 
-def require_lodgify_permission(
+def require_granular_permission(
     perm: Permission,
 ) -> Callable[[AuthContext], AuthContext]:
-    """Dependency-Factory für die feingranularen Lodgify-Berechtigungen.
+    """Dependency-Factory für die feingranularen Berechtigungen.
 
     Liest Rolle + permissions aus der DB (Quelle der Wahrheit, JWT kann veraltet
     sein) und gibt 403, wenn der Nutzer die Berechtigung nicht hat. Admin = immer.

@@ -1,6 +1,6 @@
 "use client";
 
-// Bilder-Modul (Lodgify /pictures): zentrale Foto-Nachweise. Karten je Bild
+// Bilder-Modul (.. /pictures): zentrale Foto-Nachweise. Karten je Bild
 // mit Objekt-Titel, Typ (Buchungsbild/Objektfoto), Autor, Hochgeladen am,
 // Buchungszeitraum. Toggles Buchungsbilder/Objektfotos + Objektfilter.
 // Live via useRealtime auf property_photos + checklist_photos.
@@ -51,9 +51,9 @@ export function MediaGallery() {
   const fmt = (iso: string | null) =>
     iso
       ? new Date(iso).toLocaleDateString("de-DE", {
-          day: "numeric",
-          month: "long",
-        })
+        day: "numeric",
+        month: "long",
+      })
       : "–";
 
   return (

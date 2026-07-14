@@ -37,13 +37,16 @@ class _FakeChannex:
         return {"data": {"id": "m1", "attributes": {"message": message, "sender": "property"}}}
 
 
-# Berechtigungssätze für die users-Mock-Row.
+# Berechtigungssätze für die users-Mock-Row. access_pm_features ist das PM-Dach:
+# ohne es fallen alle pm_*/inbox_*-Rechte weg (effective_permissions). In der
+# echten App kommt pm_chat nie ohne das Dach — die Fixtures bilden das ab.
 _PERMS_FULL = [
+    "access_pm_features",
     "pm_chat", "inbox_view_all", "inbox_reply", "inbox_assign",
     "inbox_manage_config", "view_guest_name", "view_guest_contact",
     "view_booking_source", "pm_booking_total",
 ]
-_PERMS_ASSIGNED_READONLY = ["pm_chat"]  # Zugriff, aber nur eigene + nur lesen
+_PERMS_ASSIGNED_READONLY = ["access_pm_features", "pm_chat"]  # Zugriff, nur eigene + lesen
 
 
 class _FakeDB:
@@ -193,7 +196,7 @@ def test_list_threads_owner_sees_only_first_name() -> None:
     # owner mit Zugriff + view_all (sieht Thread), aber ohne Gast-Berechtigungen.
     db = _FakeDB(
         [_booking_row()], [], user_role="owner",
-        user_perms=["pm_chat", "inbox_view_all"],
+        user_perms=["access_pm_features", "pm_chat", "inbox_view_all"],
     )
     svc = InboxService(service_client=db, channex=_FakeChannex())
     th = svc.list_threads(_CTX_OWNER).items[0]
@@ -206,7 +209,7 @@ def test_list_threads_unknown_role_fails_closed() -> None:
     ctx = AuthContext(user_id="u", tenant_id="t1", role=None)
     db = _FakeDB(
         [_booking_row()], [], user_role="staff",
-        user_perms=["pm_chat", "inbox_view_all"],
+        user_perms=["access_pm_features", "pm_chat", "inbox_view_all"],
     )
     svc = InboxService(service_client=db, channex=_FakeChannex())
     th = svc.list_threads(ctx).items[0]
@@ -320,7 +323,7 @@ def test_scope_assigned_only_filters_foreign_thread_to_404() -> None:
     # assigned-only-Nutzer: fremder (nicht zugewiesener) Thread → 404.
     db = _FakeDB(
         [_thread(assigned_to="someone-else")], [],
-        user_role="staff", user_perms=["pm_chat"],  # kein inbox_view_all → assigned
+        user_role="staff", user_perms=["access_pm_features", "pm_chat"],  # kein inbox_view_all → assigned
     )
     svc = InboxService(service_client=db, channex=_FakeChannex())
     with pytest.raises(InboxError) as exc:
@@ -332,7 +335,7 @@ def test_scope_assigned_only_sees_own_thread(monkeypatch) -> None:  # noqa: ANN0
     monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
     db = _FakeDB(
         [_thread(assigned_to="u")], [],
-        user_role="staff", user_perms=["pm_chat"],
+        user_role="staff", user_perms=["access_pm_features", "pm_chat"],
     )
     svc = InboxService(service_client=db, channex=_FakeChannex())
     out = svc.get_messages(_CTX, "th1")  # eigener Thread → kein 404
@@ -343,7 +346,7 @@ def test_action_reply_denied_without_permission(monkeypatch) -> None:  # noqa: A
     monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
     db = _FakeDB(
         [_thread(assigned_to="u")], [],
-        user_role="staff", user_perms=["pm_chat"],  # kein inbox_reply
+        user_role="staff", user_perms=["access_pm_features", "pm_chat"],  # kein inbox_reply
     )
     svc = InboxService(service_client=db, channex=_FakeChannex())
     with pytest.raises(InboxError) as exc:
@@ -355,7 +358,7 @@ def test_action_reply_allowed_with_permission(monkeypatch) -> None:  # noqa: ANN
     monkeypatch.setattr(InboxService, "_sandbox_enabled", staticmethod(lambda: False))
     db = _FakeDB(
         [_thread(assigned_to="u")], [],
-        user_role="staff", user_perms=["pm_chat", "inbox_reply"],
+        user_role="staff", user_perms=["access_pm_features", "pm_chat", "inbox_reply"],
     )
     fake = _FakeChannex()
     svc = InboxService(service_client=db, channex=fake)
@@ -367,7 +370,7 @@ def test_action_reply_allowed_with_permission(monkeypatch) -> None:  # noqa: ANN
 def test_action_assign_denied_without_permission() -> None:
     db = _FakeDB(
         [_thread()], [], user_role="staff",
-        user_perms=["pm_chat", "inbox_view_all"],  # kein inbox_assign
+        user_perms=["access_pm_features", "pm_chat", "inbox_view_all"],  # kein inbox_assign
     )
     svc = InboxService(service_client=db, channex=_FakeChannex())
     with pytest.raises(InboxError) as exc:
@@ -447,7 +450,7 @@ class _TeamQuery:
     def execute(self):  # noqa: ANN201
         return _Res([
             {"id": "with-chat", "full_name": "A", "email": "a@x.de",
-             "role": "staff", "permissions": ["pm_chat"]},
+             "role": "staff", "permissions": ["access_pm_features", "pm_chat"]},
             {"id": "no-chat", "full_name": "B", "email": "b@x.de",
              "role": "cleaner", "permissions": []},
         ])
@@ -580,7 +583,7 @@ def test_link_thread_guest_requires_config_permission() -> None:
     # Ohne INBOX_MANAGE_CONFIG → 403.
     db = _LinkDB(
         [_thread()], [{"id": "g1", "tenant_id": "t1"}],
-        user_role="owner", user_perms=["pm_chat", "inbox_view_all"],
+        user_role="owner", user_perms=["access_pm_features", "pm_chat", "inbox_view_all"],
     )
     svc = InboxService(service_client=db, channex=_FakeChannex())
     with pytest.raises(InboxError) as exc:

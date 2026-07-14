@@ -1,5 +1,5 @@
 // Hero — Vollbild-Hintergrund mit dunklem Overlay, zentrierter Headline,
-// CTAs und Channel-Logo-Leiste. Ähnlich Lodgify-Stil.
+// CTAs und Channel-Logo-Leiste. Ähnlich ..-Stil.
 // Hintergrundbild: ersetze /marketing/hero-bg.jpg durch ein echtes Foto.
 import Image from "next/image";
 import Link from "next/link";
@@ -9,10 +9,10 @@ import { Button } from "@/components/ui/button";
 
 const CHANNELS = [
   { src: "/marketing/channels/booking-com.svg", alt: "Booking.com" },
-  { src: "/marketing/channels/airbnb.png",      alt: "Airbnb" },
-  { src: "/marketing/channels/expedia.svg",     alt: "Expedia" },
-  { src: "/marketing/channels/google.svg",      alt: "Google" },
-  { src: "/marketing/channels/agoda.svg",       alt: "Agoda" },
+  { src: "/marketing/channels/airbnb.png", alt: "Airbnb" },
+  { src: "/marketing/channels/expedia.svg", alt: "Expedia" },
+  { src: "/marketing/channels/google.svg", alt: "Google" },
+  { src: "/marketing/channels/agoda.svg", alt: "Agoda" },
   { src: "/marketing/channels/tripadvisor.svg", alt: "Tripadvisor" },
 ];
 

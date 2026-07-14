@@ -1,6 +1,6 @@
 "use client";
 
-// Linke Modul-Navigation der PM-Fläche (Lodgify „PM-Module"-Look): zwei
+// Linke Modul-Navigation der PM-Fläche (.. „PM-Module"-Look): zwei
 // Gruppen „Startseite" und „Einstellungen", jeder Reiter führt per Klick auf
 // die verlinkte Seite. Der aktive Reiter wird über usePathname bestimmt.
 //

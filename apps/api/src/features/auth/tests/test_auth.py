@@ -213,51 +213,87 @@ def test_register_rolls_back_user_and_tenant_when_user_row_fails() -> None:
 
 # --- invite (Mitarbeiter/weitere Rollen) ---
 
-def _invite(role: UserRole) -> InviteRequest:
+def _invite(role: UserRole, permissions: list[str] | None = None) -> InviteRequest:
     return InviteRequest(
         email="staff@example.de",
         password="longenough",
         full_name="Mitarbeiter",
         role=role,
+        permissions=permissions,
     )
+
+
+def _mock_granter(service: MagicMock, row: dict) -> None:
+    """Granter-Row (der Einladende) für _effective_perms_of mocken."""
+    chain = service.table.return_value.select.return_value.eq.return_value
+    chain.limit.return_value.execute.return_value.data = [row]
+
+
+def _grant_admin(service: MagicMock) -> None:
+    """Einladender als Admin → alle Rechte, klemmt nichts weg."""
+    _mock_granter(service, {"role": "admin", "permissions": []})
 
 
 def test_invite_creates_user_with_role_in_existing_tenant() -> None:
     svc, _anon, service = _service_with_mocks()
+    _grant_admin(service)
     created = MagicMock()
     created.user.id = "user-789"
     service.auth.admin.create_user.return_value = created
 
-    res = svc.invite(_invite(UserRole.staff), tenant_id="tenant-abc")
+    res = svc.invite(_invite(UserRole.staff), tenant_id="tenant-abc", granter_id="admin-1")
 
     assert res.user_id == "user-789"
     assert res.role == UserRole.staff
     assert res.tenant_id == "tenant-abc"
+    # Staff-Defaults durch (Admin-Granter klemmt nichts weg).
+    assert "access_pm_features" in res.permissions
     # app_metadata enthält tenant + rolle des Eingeladenen
     meta = service.auth.admin.create_user.call_args.args[0]["app_metadata"]
     assert meta == {"tenant_id": "tenant-abc", "role": "staff"}
+
+
+def test_invite_clamps_permissions_to_granter_rights() -> None:
+    # Ein Co-Admin OHNE ein bestimmtes Recht kann es nicht weitergeben (Wurzel 3).
+    svc, _anon, service = _service_with_mocks()
+    _mock_granter(
+        service,
+        {"role": "co_admin", "permissions": ["pm_chat", "access_pm_features"]},
+    )
+    created = MagicMock()
+    created.user.id = "user-clamp"
+    service.auth.admin.create_user.return_value = created
+    res = svc.invite(
+        _invite(UserRole.staff, permissions=["pm_chat", "inbox_manage_config"]),
+        tenant_id="tenant-abc",
+        granter_id="coadmin-1",
+    )
+    # inbox_manage_config besitzt der Granter nicht → weggeklemmt; pm_chat bleibt.
+    assert res.permissions == ["pm_chat"]
 
 
 def test_invite_rejects_admin_role() -> None:
     # Admin entsteht nur bei register; per invite ablehnen.
     svc, _anon, _service = _service_with_mocks()
     with pytest.raises(AuthError) as exc:
-        svc.invite(_invite(UserRole.admin), tenant_id="tenant-abc")
+        svc.invite(_invite(UserRole.admin), tenant_id="tenant-abc", granter_id="admin-1")
     assert exc.value.status_code == 400
 
 
 def test_invite_allows_owner_role() -> None:
     # Hauseigentümer (owner) wird per invite angelegt (Daten-Split-Rolle).
     svc, _anon, service = _service_with_mocks()
+    _grant_admin(service)
     created = MagicMock()
     created.user.id = "user-owner"
     service.auth.admin.create_user.return_value = created
-    res = svc.invite(_invite(UserRole.owner), tenant_id="tenant-abc")
+    res = svc.invite(_invite(UserRole.owner), tenant_id="tenant-abc", granter_id="admin-1")
     assert res.role == UserRole.owner
 
 
 def test_invite_rolls_back_auth_user_when_row_fails() -> None:
     svc, _anon, service = _service_with_mocks()
+    _grant_admin(service)
     created = MagicMock()
     created.user.id = "user-789"
     service.auth.admin.create_user.return_value = created
@@ -265,7 +301,7 @@ def test_invite_rolls_back_auth_user_when_row_fails() -> None:
         "users insert failed"
     )
     with pytest.raises(RuntimeError):
-        svc.invite(_invite(UserRole.cleaner), tenant_id="tenant-abc")
+        svc.invite(_invite(UserRole.cleaner), tenant_id="tenant-abc", granter_id="admin-1")
     service.auth.admin.delete_user.assert_called_with("user-789")
 
 

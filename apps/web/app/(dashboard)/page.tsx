@@ -62,9 +62,14 @@ export default async function DashboardPage() {
   return (
     <>
       <RealtimeRefresh tables={["reservations", "properties", "availability"]} />
-      <Suspense fallback={null}>
-        <PaymentsStatusBanner />
-      </Suspense>
+      {/* Zahlungs-Status ist Sache der Konto-Führung (MANAGE_BILLING, wie der
+          Backend-Endpunkt). Angestellte ohne diese Fähigkeit dürfen den Banner
+          gar nicht sehen — sonst käme für sie nur ein 403-Fehler (Wurzel 3). */}
+      {me?.capabilities.includes("manage_billing") && (
+        <Suspense fallback={null}>
+          <PaymentsStatusBanner />
+        </Suspense>
+      )}
       <ReservationsDashboard data={dashboard.data} />
     </>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-// Gastmodul-Formular (Lodgify „Gastmodul") — bündelt ZWEI Datenquellen als eine
+// Gastmodul-Formular (.. „Gastmodul") — bündelt ZWEI Datenquellen als eine
 // Fläche (bewusst getrennt gehalten, siehe ANALYSE-Doku):
 //   • Portal-SCHALTER (property_guest_portal): aktiv, Self-Check-in, Türcode +
 //     Anzeige-Regeln, Kontaktperson, Wartungs-Telefon, Kopfbild.
@@ -44,7 +44,7 @@ const EMPTY_SETTINGS: GuestPortalSettings = {
   header_image_path: null,
 };
 
-// Uhrzeit-Auswahl für „Code sichtbar ab" (Viertelstunden-Raster, wie Lodgify).
+// Uhrzeit-Auswahl für „Code sichtbar ab" (Viertelstunden-Raster, wie ..).
 const TIME_OPTIONS = Array.from({ length: 24 * 4 }, (_, i) => {
   const h = String(Math.floor(i / 4)).padStart(2, "0");
   const m = String((i % 4) * 15).padStart(2, "0");
@@ -105,8 +105,8 @@ export function GuestModuleForm({ property: initial }: { property: Property }) {
     } else {
       toast.error(
         (!portalRes.ok && portalRes.error) ||
-          (!msgRes.ok && msgRes.error) ||
-          "Speichern fehlgeschlagen.",
+        (!msgRes.ok && msgRes.error) ||
+        "Speichern fehlgeschlagen.",
       );
     }
   };

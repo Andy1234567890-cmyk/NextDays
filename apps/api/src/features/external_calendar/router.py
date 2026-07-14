@@ -1,6 +1,6 @@
 """Router für externe iCal-Kalender. Gemountet unter /api/v1/external-calendar.
 
-Der Kunde abonniert pro Objekt externe .ics-Feeds (Lodgify/Airbnb/Booking/…),
+Der Kunde abonniert pro Objekt externe .ics-Feeds (Airbnb/Booking/…),
 der Belegungskalender bleibt synchron. Tenant-geschützt (MANAGE_CALENDAR).
 """
 from __future__ import annotations

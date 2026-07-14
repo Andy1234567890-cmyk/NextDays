@@ -90,7 +90,7 @@ class TaskListItem(Task):
 
 
 class CalendarBooking(BaseModel):
-    """Ein Buchungs-Balken der Kalender-Timeline (wie Lodgify progress-booking-bar).
+    """Ein Buchungs-Balken der Kalender-Timeline (progress-booking-bar).
     KEINE Beträge/Gast-PII — nur Kanal, Gästezahl und Zeitraum (§4.3)."""
 
     id: str

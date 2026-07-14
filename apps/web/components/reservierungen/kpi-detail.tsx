@@ -1,6 +1,6 @@
 "use client";
 
-// KPI-Detailseite (Lodgify: Klick auf eine Statistik-Kachel). Zeigt EINE Metrik
+// KPI-Detailseite (..: Klick auf eine Statistik-Kachel). Zeigt EINE Metrik
 // als großen Area-Chart über den Zeitraum, darüber Vergleichsperioden-Schalter,
 // darunter die Perioden-Kacheln (Wert + %-Vergleich) und die Breakout-Tabelle
 // (Tageswerte je Periode) plus „Exportieren". Daten aus getMetricDetail; live
@@ -65,7 +65,7 @@ export function KpiDetailView({
   const [subtitle, setSubtitle] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // Sichtbarkeit der Vergleichsperioden (Toggles oben, wie Lodgify).
+  // Sichtbarkeit der Vergleichsperioden (Toggles oben, wie ..).
   const [shown, setShown] = useState<Set<number>>(new Set());
 
   const load = useCallback(async () => {
@@ -194,7 +194,7 @@ export function KpiDetailView({
       ) : (
         <>
           <Card className="flex flex-col gap-4 p-5">
-            {/* Vergleichsperioden-Schalter (Lodgify „VERGLEICHEN"). */}
+            {/* Vergleichsperioden-Schalter (.. „VERGLEICHEN"). */}
             <div className="flex flex-wrap items-center gap-3">
               <span className="text-xs font-semibold uppercase text-muted-foreground">
                 Vergleichen:
@@ -417,9 +417,9 @@ export function PropertyKpiDetail({
       const res = await getMetricDetail(propertyId, metric, from, to);
       return res.ok
         ? {
-            ok: true as const,
-            data: { detail: res.data.detail, subtitle: res.data.property_title },
-          }
+          ok: true as const,
+          data: { detail: res.data.detail, subtitle: res.data.property_title },
+        }
         : { ok: false as const, error: res.error };
     },
     [propertyId, metric, from, to],

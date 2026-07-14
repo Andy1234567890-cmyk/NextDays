@@ -1,4 +1,4 @@
-// Objekt-Detail-Layout (wie Lodgify): Untermenü links (Rental details +
+// Objekt-Detail-Layout: Untermenü links (Rental details +
 // Reservation setup) mit Objekt-Wähler oben, Inhalt rechts. Server Component
 // lädt das Objekt für den Kopf; die Unterseiten rendern als {children}.
 import { notFound } from "next/navigation";

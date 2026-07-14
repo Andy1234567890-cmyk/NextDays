@@ -1,6 +1,6 @@
 "use client";
 
-// Login-Seite (zweispaltig wie Lodgify): Formular links, Hero-Bild rechts.
+// Login-Seite (zweispaltig): Formular links, Hero-Bild rechts.
 // Ruft die Server-Action login() (→ FastAPI /auth/login). Bei Erfolg ins Dashboard.
 import { Icon } from "@iconify/react";
 import Image from "next/image";

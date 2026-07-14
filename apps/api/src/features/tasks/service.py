@@ -539,7 +539,7 @@ class TasksService:
         month_to: str,
         assignee_id: str | None = None,
     ) -> TaskCalendarResponse:
-        """Kalender-Timeline (wie Lodgify): ALLE Objekte als Zeilen (auch leere)
+        """Kalender-Timeline: ALLE Objekte als Zeilen (auch leere)
         plus eine 'Verschiedene'-Zeile für objektlose Aufgaben. Je Zeile die
         Aufgaben- und Buchungs-Balken im Zeitraum."""
         tasks = self._calendar_tasks(tenant_id, month_from, month_to, assignee_id)
@@ -556,7 +556,7 @@ class TasksService:
         ).data or []
 
         rows: list[TaskCalendarRow] = []
-        # 'Verschiedene' (objektlose Aufgaben) immer zuerst, wie Lodgify.
+        # 'Verschiedene' (objektlose Aufgaben) immer zuerst.
         misc_tasks = [t for t in tasks if not t.property_id]
         rows.append(
             TaskCalendarRow(

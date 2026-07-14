@@ -1,8 +1,8 @@
 "use client";
 
-// „Aufgabe erstellen"-Popup (Lodgify): geöffnet über das „+" einer Kalender-
+// „Aufgabe erstellen"-Popup (..): geöffnet über das „+" einer Kalender-
 // Zelle ODER „Aufgabe erstellen" im Buchungs-Popup. Tag + Objekt sind
-// vorbelegt. Felder wie Lodgify: Was ist zu tun?, Beschreibung, Priorität,
+// vorbelegt. Felder wie ..: Was ist zu tun?, Beschreibung, Priorität,
 // Anfangs-/Enddatum + Uhrzeit, Empfänger, Abschluss erfordert Inspektion.
 import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
@@ -16,7 +16,7 @@ import { createTask } from "@/lib/tasks";
 
 const PRIO = ["Geringe", "Niedrig", "Mittel", "Hoch", "Dringend"];
 
-// Unterstrich-Feld wie Lodgify (keine Box, nur untere Linie).
+// Unterstrich-Feld wie .. (keine Box, nur untere Linie).
 const LINE =
   "w-full border-0 border-b border-border bg-transparent px-0 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-0";
 
@@ -227,7 +227,7 @@ export function TaskCreatePopup({
           </div>
         </div>
 
-        {/* Footer (Lodgify-Stil): eine Zeile — Vorlage links, Aktionen rechts. */}
+        {/* Footer (..-Stil): eine Zeile — Vorlage links, Aktionen rechts. */}
         <div className="flex items-center gap-3 border-t px-5 py-4">
           <span className="inline-flex h-10 min-w-0 shrink items-center truncate rounded-full bg-foreground px-4 text-sm text-background opacity-60">
             Vorlage hinzufügen (optional)

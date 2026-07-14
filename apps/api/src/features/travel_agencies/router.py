@@ -1,6 +1,6 @@
 """Router für die Reisebüro-/Partner-Kartei. Mount: /api/v1/travel-agencies.
 
-Alle Endpunkte erfordern die Lodgify-Permission MANAGE_PARTNERS (Kartei ist
+Alle Endpunkte erfordern die Berechtigung MANAGE_PARTNERS (Kartei ist
 eine Verwaltungs-Oberfläche für admin/co_admin). Vertragsdateien laufen über
 den privaten Bucket agency-contracts (Upload multipart, Download als
 signierte, zeitlich begrenzte URL).
@@ -12,8 +12,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from src.core.security import AuthContext
 from src.core.supabase import get_service_client
 from src.core.uploads import read_upload
-from src.features.auth.dependencies import require_lodgify_permission
-from src.features.auth.lodgify_permissions import Permission
+from src.features.auth.dependencies import require_granular_permission
+from src.features.auth.granular_permissions import Permission
 
 from .schemas import (
     AgencyCreate,
@@ -41,7 +41,7 @@ def get_travel_agencies_service() -> TravelAgenciesService:
 
 ServiceDep = Annotated[TravelAgenciesService, Depends(get_travel_agencies_service)]
 _partners = Annotated[
-    AuthContext, Depends(require_lodgify_permission(Permission.MANAGE_PARTNERS))
+    AuthContext, Depends(require_granular_permission(Permission.MANAGE_PARTNERS))
 ]
 
 router = APIRouter(prefix="/travel-agencies", tags=["travel-agencies"])

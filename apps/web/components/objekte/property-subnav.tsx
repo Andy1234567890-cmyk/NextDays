@@ -1,6 +1,6 @@
 "use client";
 
-// Untermenü der Objekt-Detailseite (wie Lodgify): Objekt-Wähler oben +
+// Untermenü der Objekt-Detailseite: Objekt-Wähler oben +
 // zwei Gruppen „Objektdetails" und „Reservierung". Aktiver Punkt hervorgehoben.
 import { Icon } from "@iconify/react";
 import Link from "next/link";
@@ -86,11 +86,10 @@ export function PropertySubnav({
               <Link
                 key={it.slug || "overview"}
                 href={href}
-                className={`flex items-center gap-2.5 rounded-(--radius) px-3 py-2 text-sm ${
-                  active
+                className={`flex items-center gap-2.5 rounded-(--radius) px-3 py-2 text-sm ${active
                     ? "bg-secondary font-medium text-foreground"
                     : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
-                }`}
+                  }`}
               >
                 <Icon icon={it.icon} className="size-4 shrink-0" />
                 <span className="truncate">{it.title}</span>

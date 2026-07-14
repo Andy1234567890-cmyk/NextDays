@@ -5,9 +5,9 @@ trennt die Rechenlogik vom DB-/Scope-Code). Die Funktionen hier sind reine
 Funktionen über bereits geladene Reservierungs-Zeilen — der Service besorgt
 tenant-/owner-scoped die Daten und die Maskierungs-Info und ruft sie.
 
-Zuordnung zur Periode: über das BUCHUNGSDATUM (`created_at`), wie Lodgify — die
-Einnahme zählt am Tag, an dem die Reservierung entstanden ist (nicht am
-Anreisetag). So entspricht die Zeitreihe der Lodgify-Kurve.
+Zuordnung zur Periode: über das BUCHUNGSDATUM (`created_at`) — die Einnahme
+zählt am Tag, an dem die Reservierung entstanden ist (nicht am Anreisetag). So
+folgt die Zeitreihe der Buchungs-Kurve.
 """
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ from .schemas import (
     StatSeries,
 )
 
-# Wie viele Vergleichsperioden die KPI-Detailseite zeigt (Lodgify: 4 davor).
+# Wie viele Vergleichsperioden die KPI-Detailseite zeigt (4 davor).
 _COMPARE_PERIODS = 4
 
 # Deutscher Kurz-Monat für Perioden-Label „10 Mai – 8 Jun".
@@ -63,7 +63,7 @@ def _kpi(cur_val: float, prev_val: float) -> DashboardKpi:
 
 
 def _label(lo: date, hi: date) -> str:
-    """Perioden-Label wie Lodgify: „10 Mai – 8 Jun"."""
+    """Perioden-Label: „10 Mai – 8 Jun"."""
     return f"{lo.day} {_MONTHS_DE[lo.month - 1]} – {hi.day} {_MONTHS_DE[hi.month - 1]}"
 
 
@@ -169,7 +169,7 @@ def compute_property_stats(
     `show_amounts` = Betrags-Sichtbarkeit (mask.amounts). Betrags-KPIs sind None,
     wenn keine Betrags-Sichtbarkeit ODER gemischte Währungen vorliegen (keine
     Mischsumme). Die Vorperiode ist gleich lang und liegt direkt davor. Periode +
-    Sparkline nutzen das Buchungsdatum (created_at) — wie Lodgify.
+    Sparkline nutzen das Buchungsdatum (created_at).
     """
     currencies = {r["currency"] for r in rows if r.get("currency")}
     currency = next(iter(currencies)) if len(currencies) == 1 else ""
@@ -274,7 +274,7 @@ def compute_metric_detail(
     date_to: date,
     show_amounts: bool,
 ) -> StatMetricDetail:
-    """KPI-Detailseite (Lodgify): Tagesreihe der aktuellen Periode + vier gleich
+    """KPI-Detailseite: Tagesreihe der aktuellen Periode + vier gleich
     lange Vergleichsperioden davor (mit %-Vergleich) + Breakout-Matrix.
 
     Geld-Metriken ohne Betrags-Sicht → visible=False, leere Reihen (keine

@@ -1,4 +1,4 @@
-// Objekt → Compliance (wie Lodgify „Compliance"): Registrierungsdetails für
+// Objekt → Compliance: Registrierungsdetails für
 // die eigene Website (Registrierungsnummer(n) zur Erfüllung lokaler
 // Vorschriften). Server Component lädt das Objekt, der Client-Teil rendert die
 // bearbeitbaren Blöcke.

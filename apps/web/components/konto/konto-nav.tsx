@@ -3,8 +3,8 @@
 // Unter-Navigation der Konto-Seite. Aktiver Punkt anhand des Pfads.
 // Rollen-/Capability-Gating (wie die Haupt-Sidebar): nur Tabs zeigen, die der
 // Nutzer wirklich bedienen kann — sonst landet er auf 403-/„Kein Zugriff"-
-// Seiten. „Tarif & Abo" und „Umzug" sind Admin/Co-Admin-Sachen; Profil,
-// Nutzer und Sicherheit richten sich nach eigenen Guards.
+// Seiten. „Tarif & Abo" ist Admin/Co-Admin-Sache; Profil, Nutzer und
+// Sicherheit richten sich nach eigenen Guards.
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -27,12 +27,6 @@ const ITEMS: readonly Item[] = [
     href: "/konto/tarif",
     icon: "ph:receipt",
     requireAny: ["manage_billing"],
-  },
-  {
-    title: "Umzug (Lodgify …)",
-    href: "/konto/umzug",
-    icon: "ph:arrows-left-right",
-    requireAny: ["manage_property_settings", "edit_property"],
   },
   {
     title: "Nutzer",

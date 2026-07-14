@@ -1,14 +1,13 @@
 # external_calendar — externe iCal-Kalender abonnieren (Belegungs-Sync)
 
-Der Kunde hinterlegt pro Objekt eine oder mehrere externe **iCal-URLs** (Lodgify,
-Airbnb, Booking, Vrbo, Google-Kalender …). Ein Worker liest die `.ics`-Feeds
+Der Kunde hinterlegt pro Objekt eine oder mehrere externe **iCal-URLs** (Airbnb,
+Booking, Vrbo, Google-Kalender …). Ein Worker liest die `.ics`-Feeds
 periodisch und trägt belegte Zeiträume als `availability` (`status='blocked'`,
 `source='ical'`) ein → verhindert Doppelbuchungen plattformübergreifend.
 
 **Das ist KEIN Datenimport.** Es werden keine Objekte, Preise oder Gästedaten
-kopiert — nur Verfügbarkeit synchronisiert (wie Lodgifys „Import Calendar").
-Für den Lodgify-Wechsel: der Kunde exportiert in Lodgify pro Objekt die iCal-URL
-und fügt sie hier ein.
+kopiert — nur Verfügbarkeit synchronisiert. Beim Anbieter-Wechsel exportiert der
+Kunde beim bestehenden System pro Objekt die iCal-URL und fügt sie hier ein.
 
 ## Datenmodell (Migration 0119)
 
@@ -24,8 +23,8 @@ und fügt sie hier ein.
 Schmaler, getesteter Parser (kein Fremdpaket). Liest VEVENT → DTSTART/DTEND/UID/
 SUMMARY. **DTEND ist EXKLUSIV** (Abreisetag frei = korrekte Nächte-Semantik).
 Defekte Events (fehlende Felder, start>=end) werden übersprungen (kein Raten),
-doppelte UIDs dedupliziert. Line-unfolding (RFC 5545). Gegen ECHTE Lodgify-Daten
-getestet.
+doppelte UIDs dedupliziert. Line-unfolding (RFC 5545). Gegen ECHTE externe
+iCal-Daten getestet.
 
 ## Sync (`service.py`)
 
@@ -43,7 +42,7 @@ getestet.
 ## Worker
 
 `_ical_tick` (worker.py): alle 30 min prüfen, Feeds > 2h synchronisieren
-(analog Lodgify „alle 2 Stunden"), max. `ICAL_BATCH` pro Tick. Kein Job-Queue-
+(alle 2 Stunden), max. `ICAL_BATCH` pro Tick. Kein Job-Queue-
 Umweg — direkter Sync im Thread.
 
 ## Endpunkte (`/api/v1/external-calendar`, MANAGE_CALENDAR)

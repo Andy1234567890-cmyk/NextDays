@@ -1,4 +1,4 @@
-"""iCalendar-Parser für externe Belegungs-Feeds (Lodgify/Airbnb/Booking/Vrbo/…).
+"""iCalendar-Parser für externe Belegungs-Feeds (Airbnb/Booking/Vrbo/…).
 
 Bewusst KEIN Fremdpaket: die Feeds sind simpel (VEVENT mit DTSTART/DTEND/UID/
 SUMMARY, VALUE=DATE). Ein schmaler, getesteter Parser ist robuster als eine

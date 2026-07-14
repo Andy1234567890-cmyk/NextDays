@@ -1,4 +1,4 @@
-// Objekt → Nachrichten-Platzhalter (wie Lodgify „Messaging placeholders"):
+// Objekt → Nachrichten-Platzhalter (Messaging placeholders):
 // mehrsprachige, wiederverwendbare Texte (Check-in/out, Anfahrt, Türzugang,
 // Hausordnung, WLAN, Reiseführer, Notfallkontakt) mit Shortcodes für
 // automatische Gästenachrichten. Server Component lädt das Objekt, der

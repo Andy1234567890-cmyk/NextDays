@@ -1,4 +1,4 @@
-// Objekt → Fotos (wie Lodgify „Photos"): Multi-Upload, Galerie mit Reorder,
+// Objekt → Fotos (Photos): Multi-Upload, Galerie mit Reorder,
 // Cover/Titelbild und mehrsprachige Bildunterschriften. Die Daten liegen in
 // property_photos; properties.photos wird als Spiegel weitergepflegt.
 import { PhotosManager } from "@/components/objekte/photos-manager";

@@ -1,6 +1,6 @@
 """Menschenlesbares Zeitplan-Label aus dem recurrence-jsonb einer Regel.
 
-Lodgify zeigt in der "Regelmäßige Aufgaben"-Tabelle ein Label wie
+Die "Regelmäßige Aufgaben"-Tabelle zeigt ein Label wie
 "Jeden 1. Montag im Monat" statt Rohdaten (UX-Verbesserung, Prompt-1 §7.7).
 Das recurrence-Objekt ist frei strukturiert (Bestand: task_rules.recurrence
 jsonb). Unbekannte/leere Strukturen ergeben ``None`` — kein Fantasie-Label

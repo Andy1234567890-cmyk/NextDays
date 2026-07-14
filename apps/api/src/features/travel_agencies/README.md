@@ -8,7 +8,7 @@ Gültigkeit von–bis, Kommission, Release-Frist, Dokument im privaten Bucket
 Preis/Nacht, Netto/Brutto, Min-Stay) je Vertrag.
 
 - Router: `/api/v1/travel-agencies` — alle Endpunkte hinter der
-  Lodgify-Permission `MANAGE_PARTNERS`.
+  Berechtigung `MANAGE_PARTNERS`.
 - Tabellen (Migration 0088, RLS + Realtime): `travel_agencies`,
   `travel_agency_contacts`, `travel_agency_contracts`, `travel_agency_rates`;
   zusätzlich `stop_sell.agency_id` (Adressat der Stop-Sale-Meldung, 0088/0089).

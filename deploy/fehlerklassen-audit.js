@@ -32,7 +32,7 @@ const FEHLERKLASSEN = [
   {
     key: 'tenant-owner-scope',
     title: 'Fehlender Tenant-/Owner-Scope (IDOR, RLS-Bypass)',
-    prompt: `Fehlender Tenant-/Owner-Scope bei Service-Role (RLS wird umgangen → Code MUSS explizit scopen). Jeder Endpunkt/jede Methode, die per Client-ID (reservation_id, invoice_id, payment_id, task_id, property_id, channex_*_id, customer_id, statement_id, account_id) auf eine Ressource zugreift, ohne zu prüfen dass sie dem tenant/owner gehört (§4.2 owner nur eigene Objekte, §4.3 staff/cleaner ohne Finanz-/Vertriebseinblick). Auch: fehlende require_permission/require_lodgify_permission, Client-Parameter der den Scope aufweitet, Fremd-FK ungeprüft weitergereicht. Bekannte Wurzel: Stripe-Connect-IDOR, /channel-manager/bookings, properties-DELETE, tasks-checklist, owner_expenses-FK, disconnect_channel. Suche ALLE per-ID-Zugriffe in JEDEM Slice + Router.`,
+    prompt: `Fehlender Tenant-/Owner-Scope bei Service-Role (RLS wird umgangen → Code MUSS explizit scopen). Jeder Endpunkt/jede Methode, die per Client-ID (reservation_id, invoice_id, payment_id, task_id, property_id, channex_*_id, customer_id, statement_id, account_id) auf eine Ressource zugreift, ohne zu prüfen dass sie dem tenant/owner gehört (§4.2 owner nur eigene Objekte, §4.3 staff/cleaner ohne Finanz-/Vertriebseinblick). Auch: fehlende require_permission/require_.._permission, Client-Parameter der den Scope aufweitet, Fremd-FK ungeprüft weitergereicht. Bekannte Wurzel: Stripe-Connect-IDOR, /channel-manager/bookings, properties-DELETE, tasks-checklist, owner_expenses-FK, disconnect_channel. Suche ALLE per-ID-Zugriffe in JEDEM Slice + Router.`,
   },
   {
     key: 'rls-vollstaendigkeit',

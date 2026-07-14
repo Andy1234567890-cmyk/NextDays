@@ -1,6 +1,6 @@
 "use client";
 
-// Benutzer-Wizard (wie Lodgify „Benutzer erstellen"): Sheet von rechts, 4 Schritte
+// Benutzer-Wizard („Benutzer erstellen"): Sheet von rechts, 4 Schritte
 // mit Fortschrittsanzeige. Schritt 1 Kontakt, 2 Zusatzinfos, 3 Rolle+Rechte,
 // 4 Objektzuweisung. Beim Erstellen wird der Nutzer mit Rolle + Berechtigungen
 // über /auth/invite angelegt; ein Sofort-Passwort wird generiert und angezeigt.
@@ -35,15 +35,12 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
+import { PermissionGroups } from "./permission-groups";
 import {
-  GENERAL_PERMISSIONS,
-  INBOX_PERMISSIONS,
   LANGUAGES,
-  PM_PERMISSIONS,
   ROLE_DEFAULT_PERMISSIONS,
   ROLES,
   WIZARD_STEPS,
-  type Permission,
 } from "./user-wizard-data";
 
 export function UserWizard({ trigger }: { trigger: React.ReactNode }) {
@@ -500,64 +497,7 @@ function StepRole(p: {
         </Select>
       </div>
 
-      {p.role && (
-        <>
-          <PermissionGroup
-            title="Allgemeine Berechtigungen"
-            items={GENERAL_PERMISSIONS}
-            perms={p.perms}
-            toggle={p.togglePerm}
-          />
-          <PermissionGroup
-            title="PM-Module-Berechtigungen"
-            items={PM_PERMISSIONS}
-            perms={p.perms}
-            toggle={p.togglePerm}
-          />
-          <PermissionGroup
-            title="Posteingang"
-            items={INBOX_PERMISSIONS}
-            perms={p.perms}
-            toggle={p.togglePerm}
-          />
-        </>
-      )}
-    </div>
-  );
-}
-
-function PermissionGroup({
-  title,
-  items,
-  perms,
-  toggle,
-}: {
-  title: string;
-  items: Permission[];
-  perms: Set<string>;
-  toggle: (id: string) => void;
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <h4 className="font-display text-sm font-extrabold">{title}</h4>
-      <div className="flex flex-col divide-y divide-border rounded-(--radius) border border-input">
-        {items.map((perm) => (
-          <label
-            key={perm.id}
-            className="flex cursor-pointer items-start justify-between gap-3 p-3 hover:bg-secondary/40"
-          >
-            <span className="flex flex-col gap-0.5">
-              <span className="text-sm font-medium">{perm.label}</span>
-              <span className="text-xs text-muted-foreground">{perm.hint}</span>
-            </span>
-            <Checkbox
-              className="mt-0.5 shrink-0"
-              checked={perms.has(perm.id)}
-              onCheckedChange={() => toggle(perm.id)}
-            />
-          </label>
-        ))}
-      </div>
+      {p.role && <PermissionGroups perms={p.perms} toggle={p.togglePerm} />}
     </div>
   );
 }

@@ -4,8 +4,9 @@
 > die Architektur mit Diagrammen und beschreibt den **tatsächlich umgesetzten** Stand.
 >
 > **Notation:** [C4-Modell](https://c4model.com) (System Context · Container · Component)
-> + ergänzende ER-, Sequenz-, State- und Deployment-Diagramme. Alle Diagramme sind als
-> Mermaid (Diagrams-as-Code) eingebettet und werden von GitHub nativ gerendert.
+>
+> - ergänzende ER-, Sequenz-, State- und Deployment-Diagramme. Alle Diagramme sind als
+>   Mermaid (Diagrams-as-Code) eingebettet und werden von GitHub nativ gerendert.
 
 ## Inhalt
 
@@ -28,7 +29,7 @@
 
 NextDays ist kein loses Bündel aus Tools, sondern **ein Datenkern**, an den alle
 Kanäle andocken. Der gemeinsame Nenner ist die **`availability`-Tabelle**: eine Zeile
-pro `(property_id, date)` mit `UNIQUE`-Constraint — die *eine Wahrheit* und der
+pro `(property_id, date)` mit `UNIQUE`-Constraint — die _eine Wahrheit_ und der
 strukturelle Schutz gegen Double-Bookings über alle Kanäle hinweg.
 
 ---
@@ -117,8 +118,8 @@ C4Container
     Rel(api, google, "Geocoding, Übersetzung", "API")
 ```
 
-> **Hinweis zur C4-Notation:** „Container" meint hier eine *separat ausführbare App
-> oder einen Datastore* (Next.js, FastAPI, Postgres, Redis) — nicht zwingend einen
+> **Hinweis zur C4-Notation:** „Container" meint hier eine _separat ausführbare App
+> oder einen Datastore_ (Next.js, FastAPI, Postgres, Redis) — nicht zwingend einen
 > Docker-Container. Die Marketing-Website ist bewusst entkoppelt (eigenes Deployment).
 
 ### Slice-Landkarte (Component-Ebene, API-Backend)
@@ -132,7 +133,7 @@ flowchart TB
             CFG["config · logging · supabase · security (JWT ES256/JWKS)"]
         end
         subgraph DONE["Slices mit Logik"]
-            AUTH["auth — Register/Login/Me/Invite, Rollen+Capability-Matrix + Lodgify-Berechtigungen (pro Nutzer)"]
+            AUTH["auth — Register/Login/Me/Invite, Rollen+Capability-Matrix + ..-Berechtigungen (pro Nutzer)"]
             CAL["calendar — Verfügbarkeit, Double-Booking, Preis-Override (liest Preis via pricing-Resolver)"]
             PRICE["pricing — Preis-Resolver (effective_price + quote) + Dynamic-Pricing-Engine (dynamic_prices; Regeln + gelernte Pickup-Kurve/Wetter/Autopilot)"]
             TASKS["tasks — Aufgaben, Checklisten+Foto, Vertretung, Inventar"]
@@ -172,7 +173,7 @@ flowchart TB
 
 Der `channel_manager`-Slice nutzt ein **Adapter-Pattern** (Anti-Corruption-Layer):
 ein einheitliches Interface zum PMS-Kern, dahinter austauschbare Adapter pro Kanal.
-So bleibt die Entscheidung *Direkt-Anbindung vs. Aggregator* reversibel
+So bleibt die Entscheidung _Direkt-Anbindung vs. Aggregator_ reversibel
 (siehe [ADR-0001](decisions/0001-channel-manager-architektur.md)).
 
 **Aktueller Stand: Aggregator-Pfad über Channex.** Statt N Direkt-Adapter je OTA
@@ -180,8 +181,9 @@ nutzen wir **Channex** als Aggregator (https://docs.channex.io) — eine API fü
 Kanäle (Booking.com, Airbnb, Expedia …). Der `ChannexClient` (`channex_client.py`)
 ist der konkrete Adapter hinter der Facade; ARI/Buchungen laufen über die Channex-
 API (Auth `user-api-key`, ARI gebündelt, Buchungen via `booking_revisions/feed`
-+ ack, Webhook als Trigger). Beträge in Cent. Mapping in `channex_*`-Tabellen
-(Migration `0027_channex.sql`).
+
+- ack, Webhook als Trigger). Beträge in Cent. Mapping in `channex_*`-Tabellen
+  (Migration `0027_channex.sql`).
 
 **PMS-Mapping (NextDays hat keine Zimmerkategorien).** Eine `property` ist die
 buchbare Einheit (Ferienwohnungs-Modell). Channex verkauft jedoch Room-Types mit
@@ -278,7 +280,7 @@ erDiagram
         string website
         text description
         string avatar_url
-        jsonb permissions "Lodgify-Berechtigungs-IDs (Admin=alle)"
+        jsonb permissions "..-Berechtigungs-IDs (Admin=alle)"
     }
     PROPERTY {
         uuid id PK
@@ -427,15 +429,15 @@ erweitert; `payments`: `stripe_ref` → `gateway_ref` + `gateway`-Enum
 (Adapter-Pattern ADR-0003; Primärwahl Stripe via ADR-0011).
 Marktplatz-Tabellen (`portal_guests`, `reviews`, `commissions`) wie oben.
 `users.permissions` (JSONB, Migration 0022) für feingranulare
-Lodgify-Berechtigungen pro Nutzer.
+..-Berechtigungen pro Nutzer.
 
 **Zweistufiges Berechtigungsmodell (Konto → Benutzer):**
 
 1. **Capability-Matrix** (`permissions.py`, rollenbasiert) — schützt interne
    Slice-Endpoints über `require_permission(Capability.…)` / `require_role(…)`.
-2. **Lodgify-Berechtigungen** (`lodgify_permissions.py`, pro Nutzer in
+2. **..-Berechtigungen** (`.._permissions.py`, pro Nutzer in
    `users.permissions`) — im Benutzer-Wizard zugewiesen (Default je Rolle,
-   überschreibbar), per `require_lodgify_permission(Permission.…)` an Endpoints
+   überschreibbar), per `require_.._permission(Permission.…)` an Endpoints
    durchgesetzt und im Frontend (`app-sidebar`, `getMe().permissions`) zum
    Aus-/Einblenden von Menüpunkten genutzt. **Admin = immer alle.** Die
    Nutzerverwaltung selbst sehen nur admin/owner/co_admin (sonst `403`); ein
@@ -460,7 +462,8 @@ Cloud / protel) mit Stammdaten + Sub-Tabellen `guest_addresses`, `guest_contacts
 Zugriff über `pm_guest_details`; DSGVO-Löschung anonymisiert bei Reservierungs-
 bezug (statt Hard-Delete). Quelle der Wahrheit für die Permissions ist immer die DB (nicht das
 evtl. veraltete JWT). Zuweisungen sind auditiert (`channex_booking.assigned_by/at`
-+ `inbox_assignment_log`, Migration `0045`).
+
+- `inbox_assignment_log`, Migration `0045`).
 
 **Reservierungs-Storno (Migration `0050`):** Stornieren erfordert eine
 Pflicht-Begründung und ist dokumentiert — `reservations.cancel_reason/cancelled_by/
@@ -471,7 +474,7 @@ hebt die OTA-Buchung NICHT beim Portal auf (das UI weist darauf hin). Guard:
 `MANAGE_CALENDAR` + `EDIT_CALENDAR_BOOKINGS` (wie Verschieben).
 
 **Buchungs-Zeitleiste (Migration `0122`):** Append-only Ereignis-Log je Buchung
-(Lodgify „Zeitleiste") — `reservation_events` (tenant-scoped RLS + Realtime). Die
+(.. „Zeitleiste") — `reservation_events` (tenant-scoped RLS + Realtime). Die
 Schreibpfade (`create/move/cancel/check_in/check_out`) protokollieren über den
 zentralen best-effort-Helfer `ReservationsBase._log_event` je ein Ereignis
 (`created/moved/repriced/checked_in/checked_out/cancelled`) — ein fehlgeschlagener
@@ -556,6 +559,7 @@ deaktiviert (503, kein stiller Erfolg). Setup/DNS/Betrieb: [`deploy/mail/`](../d
 liefen früher in vier unverbundenen Quellen auseinander — im Objekt bearbeitete
 Preise erschienen nicht im Kalender/Quote. Jetzt gibt es **einen** Resolver
 `pricing/resolver.py` als Single Source of Truth:
+
 - `effective_price(property_id, day)` → Effektivpreis pro Tag in fester Priorität
   **manueller `price_overrides`(Tag) > `dynamic_prices` (Regel-Engine) >
   Wochentagspreis > `rate_plans.base_price`**; ohne Preis `None` (kein erfundener
@@ -576,7 +580,7 @@ Backfill aus dem Blob) überführt; `properties.update` spiegelt jede Änderung 
 `rate_plans` + `property_pricing_config` sind jetzt in der Realtime-Publication (`0052`)
 — Preisänderungen erscheinen ohne Reload in allen Tabs (`calendar-board` abonniert sie).
 Das zweite Saison-Modell (`seasons`/`season_*` aus `0011`) wurde mit `0053` als
-deprecated für die *manuellen* Tagespreise markiert (die laufen über
+deprecated für die _manuellen_ Tagespreise markiert (die laufen über
 `price_overrides`); die Saison-/Event-**Perioden** werden aber von der Dynamic-
 Pricing-Engine als Aufschlag-Signal gelesen (s. u.).
 
@@ -606,43 +610,44 @@ market_key/comp_refs`). Die Engine persistiert je Tag die **Faktor-Aufschlüssel
 (`dynamic_prices.factors`), die der Kalender als „Warum dieser Preis?"-Tooltip zeigt
 (Saison/Wochenende/Markt/Auslastung … mit %-Beitrag). Verteilpfad unverändert. Ohne
 AirDNA-Konto läuft alles über den NullProvider — DP wie Phase 1, nur mit Markt-Schaltern
-+ Preis-Erklärung bereit. Optionale Alternative: ein PriceLabs-IAPI-Connector als
-umschaltbare Preis-Quelle (separat), der ebenfalls nach `dynamic_prices` schreibt.
-**Phase 3 (Migration `0057`)** bringt das zentrale Bedienmodell gängiger
-Channel-Manager (Hostaway) ins UI: ein eigener Hauptmenü-Bereich **`/dynamic-pricing`**
-mit einer **Objekt-Tabelle** (alle Objekte: Basispreis + Modus-Label, Min/Max,
-Aktiv-Toggle, Bearbeiten-Slider, 30-Tage-Vorschau `/dynamic-pricing/{id}`), gespeist
-aus `GET /pricing/overview` (`settings_service.overview`). Pro Objekt wählt der
-Vermieter den **Basispreis-Modus** (`dp_settings.base_mode`): `data_driven` (Anker aus
-`rate_plans.base_price`, Aggressivität `base_rate_mode` konservativ/empfohlen/aggressiv
-= ×0,5/×1,0/×1,5 auf Auslastung+Markt) oder `manual` (fester `manual_base_price`). Die
-Engine (`DpSettings.effective_base`/`aggressiveness`) ist der einzige Ort dieser Logik;
-Resolver-Priorität (manuell > dynamisch > Wochentag > Basis) und Verteilpfad bleiben
-unverändert. Rein additiv, Defaults bilden das bisherige Verhalten ab.
-**Phase 4 — KI-Lernen + RateBoard-Bausteine (Migration `0060`):** Drei Erweiterungen,
-alle opt-in und additiv. (a) **Pickup-Erfassung + gelernter Forecast**: ein täglicher
-Snapshot je (Objekt, Anreisetag) in **`dp_pickup_snapshots`** (booked/days_before) ist
-das Lern-Fundament. `pricing/forecast.py::PickupCurveModel` lernt daraus die erwartete
-Belegungs-Wahrscheinlichkeit je (Anreise-Monat × Vorlauf-Bucket) — die normale
-Buchungskurve des Objekts. Der heutige Ist-Stand vs. diese Erwartung ergibt eine
-**Forecast-Velocity** (Ist über Erwartung → schneller → Aufschlag, antizipativ); sie
-speist denselben `pickup`-Faktor und ersetzt das grobe Phase-2-Lookback-Signal, wo die
-Kurve trägt. **Cold-Start:** unter `_MIN_OBSERVATIONS` Beobachtungen je Zelle KEIN
-Signal (neutral, keine erfundenen Werte). (b) **Wetter** (`pricing/weather.py`): Tages-
-Score aus DWD/Bright Sky (amtlich, frei, kein Key) für Tage im Forecast-Horizont
-(~10 Tage); gutes Wetter → Aufschlag, gedeckelt `weather_max_adjust_pct`. Opt-in
-`dp_settings.weather_enabled` + Objekt-Koordinaten (`properties.lat/lng`); ferne Tage
-neutral. (c) **Rate Rules** (`dp_settings.rate_rules`): manuelle Regeln
-(weekday/month/Vorlauf-Fenster → adjust_pct), die als bewusster Vermieter-Override
-OBENDRAUF auf die kombinierten Auto-Faktoren wirken (nicht von der Anti-Über-
-Rabattierung erfasst). (d) **Autopilot** (`dp_settings.autopilot_enabled`): trennt
-Rechnen von Veröffentlichen — `enabled` rechnet immer (Vorschau/Kalender sichtbar), der
-Channex-OTA-Push läuft nur bei aktivem Autopilot, sonst bleibt der Preis reine
-Empfehlung. Anti-Über-Rabattierung (nur stärkster Rabatt zählt, Aufschläge stapeln) +
-asymmetrische Caps (−20 %/+15 %) + Vorlauf-Buckets sind ebenfalls in `0060`. Damit
-erreicht die Engine das Funktionsniveau von PriceLabs/Beyond/RateBoard mit eigenen
-Daten; die Booking-Market-Insights-Quelle dockt später über dieselbe
-`MarketSignalProvider`-Schnittstelle an.
+
+- Preis-Erklärung bereit. Optionale Alternative: ein PriceLabs-IAPI-Connector als
+  umschaltbare Preis-Quelle (separat), der ebenfalls nach `dynamic_prices` schreibt.
+  **Phase 3 (Migration `0057`)** bringt das zentrale Bedienmodell gängiger
+  Channel-Manager (Hostaway) ins UI: ein eigener Hauptmenü-Bereich **`/dynamic-pricing`**
+  mit einer **Objekt-Tabelle** (alle Objekte: Basispreis + Modus-Label, Min/Max,
+  Aktiv-Toggle, Bearbeiten-Slider, 30-Tage-Vorschau `/dynamic-pricing/{id}`), gespeist
+  aus `GET /pricing/overview` (`settings_service.overview`). Pro Objekt wählt der
+  Vermieter den **Basispreis-Modus** (`dp_settings.base_mode`): `data_driven` (Anker aus
+  `rate_plans.base_price`, Aggressivität `base_rate_mode` konservativ/empfohlen/aggressiv
+  = ×0,5/×1,0/×1,5 auf Auslastung+Markt) oder `manual` (fester `manual_base_price`). Die
+  Engine (`DpSettings.effective_base`/`aggressiveness`) ist der einzige Ort dieser Logik;
+  Resolver-Priorität (manuell > dynamisch > Wochentag > Basis) und Verteilpfad bleiben
+  unverändert. Rein additiv, Defaults bilden das bisherige Verhalten ab.
+  **Phase 4 — KI-Lernen + RateBoard-Bausteine (Migration `0060`):** Drei Erweiterungen,
+  alle opt-in und additiv. (a) **Pickup-Erfassung + gelernter Forecast**: ein täglicher
+  Snapshot je (Objekt, Anreisetag) in **`dp_pickup_snapshots`** (booked/days_before) ist
+  das Lern-Fundament. `pricing/forecast.py::PickupCurveModel` lernt daraus die erwartete
+  Belegungs-Wahrscheinlichkeit je (Anreise-Monat × Vorlauf-Bucket) — die normale
+  Buchungskurve des Objekts. Der heutige Ist-Stand vs. diese Erwartung ergibt eine
+  **Forecast-Velocity** (Ist über Erwartung → schneller → Aufschlag, antizipativ); sie
+  speist denselben `pickup`-Faktor und ersetzt das grobe Phase-2-Lookback-Signal, wo die
+  Kurve trägt. **Cold-Start:** unter `_MIN_OBSERVATIONS` Beobachtungen je Zelle KEIN
+  Signal (neutral, keine erfundenen Werte). (b) **Wetter** (`pricing/weather.py`): Tages-
+  Score aus DWD/Bright Sky (amtlich, frei, kein Key) für Tage im Forecast-Horizont
+  (~10 Tage); gutes Wetter → Aufschlag, gedeckelt `weather_max_adjust_pct`. Opt-in
+  `dp_settings.weather_enabled` + Objekt-Koordinaten (`properties.lat/lng`); ferne Tage
+  neutral. (c) **Rate Rules** (`dp_settings.rate_rules`): manuelle Regeln
+  (weekday/month/Vorlauf-Fenster → adjust_pct), die als bewusster Vermieter-Override
+  OBENDRAUF auf die kombinierten Auto-Faktoren wirken (nicht von der Anti-Über-
+  Rabattierung erfasst). (d) **Autopilot** (`dp_settings.autopilot_enabled`): trennt
+  Rechnen von Veröffentlichen — `enabled` rechnet immer (Vorschau/Kalender sichtbar), der
+  Channex-OTA-Push läuft nur bei aktivem Autopilot, sonst bleibt der Preis reine
+  Empfehlung. Anti-Über-Rabattierung (nur stärkster Rabatt zählt, Aufschläge stapeln) +
+  asymmetrische Caps (−20 %/+15 %) + Vorlauf-Buckets sind ebenfalls in `0060`. Damit
+  erreicht die Engine das Funktionsniveau von PriceLabs/Beyond/RateBoard mit eigenen
+  Daten; die Booking-Market-Insights-Quelle dockt später über dieselbe
+  `MarketSignalProvider`-Schnittstelle an.
 
 **Kanalübergreifende Nachricht→Gast-Zuordnung (Resolver, Migration 0047):** Jede
 eingehende Buchung/Nachricht — OTA via Channex, WhatsApp, manuelle Reservierung,
@@ -688,7 +693,7 @@ Stammdaten, Status (`draft`/`finalized`/`cancelled`) und eingefrorenen Summen.
   (`currencies.COUNTRY_CURRENCY`). NUR die Owner-Auszahlung wird umgerechnet — mit
   dem **ECB-Tageskurs am Check-out** je Reservierung. Kursquelle: **Frankfurter**
   (ECB, kostenlos, kein Key), gecacht in **`fx_rates`** (`rate_date,base,quote,rate,
-  source`; Tageskurs stabil/reproduzierbar, GoBD). **Kein Fallback** — fehlt ein
+source`; Tageskurs stabil/reproduzierbar, GoBD). **Kein Fallback** — fehlt ein
   Kurs, `FxError` → 502 (keine erfundenen Beträge). Verwaltungsanteil bleibt je
   Quellwährung getrennt (`pm_payout_by_currency`); Owner-Summe in `owner_currency`
   (`0070`). Beträge verschiedener Währungen werden nie addiert.
@@ -732,6 +737,7 @@ nach Stripes Empfehlungstext. Der „Zahlungen aktivieren"-Klick
 (`components/zahlungen/payments-activation.tsx`) verlinkt AGB + Stripe-Vertrag
 und dokumentiert die Annahme via `tos_acceptance` (date + echte Nutzer-IP).
 Gast-AGB für den Marktplatz: `plattform/app/agb` (`?sprache=<code>`).
+
 - **`0079` `properties.platform_description`** — abweichender Beschreibungstext
   nur für die eigene Buchungsstrecke (OTAs erhalten weiter den kanonischen Text).
 - **`0080` `availability` CTA/CTD** — Closed-to-Arrival/Departure je Tag.
@@ -752,7 +758,7 @@ Phase-2-Marktplatz (`commissions`).
   System-/globale Tabellen bekommen bewusst **keine** permissive Policy (nur
   `service_role`). Konsequenz-Regel: **jede neue public-Tabelle braucht RLS.**
 - **`0085` service_role statement_timeout** — DB-Backpressure: `statement_timeout
-  = 15s` + `lock_timeout = 8s` für die Rolle `service_role` (vorher unbegrenzt —
+= 15s` + `lock_timeout = 8s` für die Rolle `service_role` (vorher unbegrenzt —
   eine langsame Query konnte Connections aushungern). Teil des Rate-Limiting-/
   Backpressure-Konzepts, siehe [deploy/RATE-LIMITING.md](../deploy/RATE-LIMITING.md).
 - **`0086` tenant_site_config** — Fundament des Page-Builders:
@@ -798,17 +804,17 @@ Sicherheitsventil für falsch typisierte Bestandsobjekte).
 Über die oben im ER-Diagramm gezeigten Kern-Entitäten hinaus existieren diese
 Detail-/Hilfstabellen (mit RLS, tenant-scoped):
 
-| Bereich | Tabellen | Zweck |
-|---|---|---|
-| Buchhaltung | `quotes`, `quote_line_items` (`0024`), `number_sequences` (`0025`) | Angebote + GoBD-Nummernkreise |
-| Sicherheit | `user_mfa` (`0021`) | TOTP-2FA pro Nutzer |
-| Onboarding | `tenant_onboarding` (`0029`) | Onboarding-Fortschritt des Tenants |
-| Channex | `stop_sell` (`0032`), `ari_outbox` (`0033`), `channex_tax_map` (`0034`), `sandbox_message` (`0036`) | Stop-Sell, ARI-Outbox-Queue, Steuer-Mapping, Sandbox-Mock-OTA |
-| Posteingang | `inbox_ai_settings` (`0037`), `inbox_scheduled_message`, `inbox_thread_note` (`0040`) | KI-Settings, geplante Nachrichten, Thread-Notizen |
-| WhatsApp | `whatsapp_conversation`, `whatsapp_message` (`0041`) | WhatsApp Cloud API — im Posteingang integriert |
-| Objekte | `property_photos` (`0061`) | Objekt-Fotos (mehrsprachige Caption, Cover, Sortierung) |
-| Page-Builder | `tenant_site_config`, `tenant_custom_domains` (`0086`), `site_pages`, `site_blocks` (`0087`) | White-Label-Website je Tenant: Branding, Custom-Domains, Seiten + Blöcke (s. §12) |
-| Reisebüros | `travel_agencies`, `travel_agency_contacts`, `travel_agency_contracts`, `travel_agency_rates` (`0088`) | Partner-Kartei mit Verträgen + Saison-Preisen |
+| Bereich      | Tabellen                                                                                               | Zweck                                                                             |
+| ------------ | ------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------- |
+| Buchhaltung  | `quotes`, `quote_line_items` (`0024`), `number_sequences` (`0025`)                                     | Angebote + GoBD-Nummernkreise                                                     |
+| Sicherheit   | `user_mfa` (`0021`)                                                                                    | TOTP-2FA pro Nutzer                                                               |
+| Onboarding   | `tenant_onboarding` (`0029`)                                                                           | Onboarding-Fortschritt des Tenants                                                |
+| Channex      | `stop_sell` (`0032`), `ari_outbox` (`0033`), `channex_tax_map` (`0034`), `sandbox_message` (`0036`)    | Stop-Sell, ARI-Outbox-Queue, Steuer-Mapping, Sandbox-Mock-OTA                     |
+| Posteingang  | `inbox_ai_settings` (`0037`), `inbox_scheduled_message`, `inbox_thread_note` (`0040`)                  | KI-Settings, geplante Nachrichten, Thread-Notizen                                 |
+| WhatsApp     | `whatsapp_conversation`, `whatsapp_message` (`0041`)                                                   | WhatsApp Cloud API — im Posteingang integriert                                    |
+| Objekte      | `property_photos` (`0061`)                                                                             | Objekt-Fotos (mehrsprachige Caption, Cover, Sortierung)                           |
+| Page-Builder | `tenant_site_config`, `tenant_custom_domains` (`0086`), `site_pages`, `site_blocks` (`0087`)           | White-Label-Website je Tenant: Branding, Custom-Domains, Seiten + Blöcke (s. §12) |
+| Reisebüros   | `travel_agencies`, `travel_agency_contacts`, `travel_agency_contracts`, `travel_agency_rates` (`0088`) | Partner-Kartei mit Verträgen + Saison-Preisen                                     |
 
 ---
 
@@ -838,12 +844,13 @@ flowchart LR
 ```
 
 **Schlüsselpunkte:**
+
 - `tenant_id` steht im **JWT `app_metadata`**; `public.current_tenant_id()` liest sie.
 - Jede Policy filtert `tenant_id = current_tenant_id()`. Tabellen ohne eigene
   `tenant_id` (`rate_plans`, `availability`, `messages`, `payments`) leiten ihn über
   den Parent ab.
 - **Control Plane vs. Application Plane:** Der `auth`-Slice (Tenant-Anlage, Onboarding)
-  ist *global* — er läuft über den **Service-Role-Client**, der RLS bewusst umgeht
+  ist _global_ — er läuft über den **Service-Role-Client**, der RLS bewusst umgeht
   (beim Registrieren existiert noch kein `tenant_id` im JWT → Henne-Ei).
 
 ### 6.1 Eigentümer-Objekt-Scope (zweite RLS-Achse, Lastenheft §4.2)
@@ -1083,6 +1090,7 @@ flowchart TB
 > STARTTLS). Setup/DNS/Härtung: [`deploy/mail/`](../deploy/mail/README.md).
 
 **Prinzipien:**
+
 - FastAPI **zustandslos & containerisiert** → horizontale Skalierung (`x1..N` hinter LB).
 - Aller State (Postgres, Redis, Queue, Storage) **externalisiert** — alle Instanzen
   teilen ihn, keine lokalen Daten im Container.
@@ -1116,11 +1124,11 @@ features/auth/
 
 Gemeinsame Infrastruktur in `apps/api/src/core/`:
 
-| Modul | Inhalt |
-|---|---|
-| `config.py` | `Settings` mit `SecretStr` für alle Secrets |
-| `logging.py` | structlog (Console lokal, JSON in Produktion) |
-| `supabase.py` | Client-Factory — Anon (RLS) und Service-Role (System) getrennt |
+| Modul         | Inhalt                                                                |
+| ------------- | --------------------------------------------------------------------- |
+| `config.py`   | `Settings` mit `SecretStr` für alle Secrets                           |
+| `logging.py`  | structlog (Console lokal, JSON in Produktion)                         |
+| `supabase.py` | Client-Factory — Anon (RLS) und Service-Role (System) getrennt        |
 | `security.py` | Supabase-JWT-Verifikation (ES256/JWKS) → `AuthContext`, `CurrentUser` |
 
 **Slices (24):** `auth` · `properties` · `rates` · `pricing` · `calendar` ·
@@ -1147,7 +1155,7 @@ Alle Router unter dem gemeinsamen Prefix **`/api/v1`** (versioniert von Anfang a
 ## 11. Frontend & Design-System (apps/web)
 
 - **Next.js** (App Router, TS) mit **Bun**; UI im **shadcn-Stil** (CVA + Radix-Slot
-  + `cn`), Icons über **Iconify** (kein lucide-react, PROJECT.md §2).
+  - `cn`), Icons über **Iconify** (kein lucide-react, PROJECT.md §2).
 - **Tailwind v4** über `@theme` in `styles/globals.css` — **kein**
   `tailwind.config.ts`. Light/Dark via `next-themes` (`.dark`-Klasse).
 - **Design-Tokens** sind die einzige Quelle der Wahrheit für Farben/Radius
@@ -1488,18 +1496,18 @@ sequenceDiagram
 Vom FastAPI-Backend als Dienste aufgerufen, Datenhoheit bleibt bei uns. Jeder Dienst
 wird in **[docs/decisions/](decisions/)** mit Rechtsgrundlage dokumentiert.
 
-| Dienst | Zweck |
-|---|---|
-| Google Maps / Places | Adress-Autocomplete, Geocoding, Kartenansicht (Portal) |
-| Google Calendar | optionaler Sync persönlicher Sperrzeiten (nicht Kanal-Sync) |
-| Google Translate | mehrsprachige Inhalte (server-seitig gecacht) |
-| OCR (self-hosted) | Ausweis-/Pass-Scan (Meldepflicht) + Belege — bleibt auf Hetzner |
-| **Channex** | Channel-Manager-Aggregator: OTA-Distribution (Booking.com, Airbnb, Expedia …). ARI-Push + Buchungs-Pull über den `channel_manager`-Slice (`channex_client.py`). Secrets: `CHANNEX_API_KEY`, `CHANNEX_BASE_URL`, `CHANNEX_WEBHOOK_SECRET`. |
-| Frankfurter (ECB) | Tages-Wechselkurse (ECB-Referenz, kostenlos, kein Key) für die Eigentümer-Abrechnung (`owner_statements/fx.py`); gecacht in `fx_rates`. Kein Fallback bei Ausfall. |
-| DWD / Bright Sky | amtliche Wetterdaten (frei, kein Key) als Dynamic-Pricing-Signal (`pricing/weather.py`). |
-| **Google Fonts** | Font-Katalog des Website-Editors (Developer API `webfonts/v1`). Aufgerufen über die server-seitige Next-Route `apps/web/app/api/google-fonts/route.ts` (kein FastAPI-Endpunkt); Key `GOOGLE_FONTS_API_KEY` bleibt serverseitig — ohne Key antwortet die Route `503`. |
+| Dienst                  | Zweck                                                                                                                                                                                                                                                                        |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Google Maps / Places    | Adress-Autocomplete, Geocoding, Kartenansicht (Portal)                                                                                                                                                                                                                       |
+| Google Calendar         | optionaler Sync persönlicher Sperrzeiten (nicht Kanal-Sync)                                                                                                                                                                                                                  |
+| Google Translate        | mehrsprachige Inhalte (server-seitig gecacht)                                                                                                                                                                                                                                |
+| OCR (self-hosted)       | Ausweis-/Pass-Scan (Meldepflicht) + Belege — bleibt auf Hetzner                                                                                                                                                                                                              |
+| **Channex**             | Channel-Manager-Aggregator: OTA-Distribution (Booking.com, Airbnb, Expedia …). ARI-Push + Buchungs-Pull über den `channel_manager`-Slice (`channex_client.py`). Secrets: `CHANNEX_API_KEY`, `CHANNEX_BASE_URL`, `CHANNEX_WEBHOOK_SECRET`.                                    |
+| Frankfurter (ECB)       | Tages-Wechselkurse (ECB-Referenz, kostenlos, kein Key) für die Eigentümer-Abrechnung (`owner_statements/fx.py`); gecacht in `fx_rates`. Kein Fallback bei Ausfall.                                                                                                           |
+| DWD / Bright Sky        | amtliche Wetterdaten (frei, kein Key) als Dynamic-Pricing-Signal (`pricing/weather.py`).                                                                                                                                                                                     |
+| **Google Fonts**        | Font-Katalog des Website-Editors (Developer API `webfonts/v1`). Aufgerufen über die server-seitige Next-Route `apps/web/app/api/google-fonts/route.ts` (kein FastAPI-Endpunkt); Key `GOOGLE_FONTS_API_KEY` bleibt serverseitig — ohne Key antwortet die Route `503`.         |
 | **Cloudflare for SaaS** | Custom-Hostname-TLS für die Kunden-Domains des Page-Builders (`site_config/cloudflare_client.py`). Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ZONE_ID`, `CLOUDFLARE_FALLBACK_ORIGIN` (+ optional `CLOUDFLARE_BASE_URL`); fehlen sie, antworten die Domain-Endpunkte `503`. |
-| Unsplash | Stock-Bilder der Website-Start-Templates (`site_config/templates.py`) — nur referenzierte Bild-URLs, kein API-Key, kein Server-Aufruf. |
+| Unsplash                | Stock-Bilder der Website-Start-Templates (`site_config/templates.py`) — nur referenzierte Bild-URLs, kein API-Key, kein Server-Aufruf.                                                                                                                                       |
 
 ---
 
@@ -1517,6 +1525,7 @@ NextDays wird um den Geschäftsumfang von **Taskilo** erweitert. Maßgeblich:
 **[TASKILO-INVENTAR.md](TASKILO-INVENTAR.md)**.
 
 **Leitplanken (ADR-0009):**
+
 - **Ein Stack, ein Backend, ein Supabase, eine Auth.** Die neuen Bereiche werden
   als **Vertical Slices in `apps/api`** umgesetzt (wie die PMS-Slices),
   Mandant **`tenant_id`** (RLS via `current_tenant_id()`), `companies` → `tenants`
@@ -1528,7 +1537,7 @@ NextDays wird um den Geschäftsumfang von **Taskilo** erweitert. Maßgeblich:
   `/hr`, `/jobs` unter einer Domain. **Keine** Feature-Subdomains (bricht
   Auth/Session). Nur Marketing-Website ↔ App darf per Subdomain getrennt werden.
 - **Eine große Sidebar** mit aufklappbaren Gruppen je Domäne; Menü per
-  Lodgify-Berechtigung gegated.
+  ..-Berechtigung gegated.
 - **NICHT übernommen:** Chat, Admin-Dashboard, SEO/Marketing, WhatsApp,
   Advertising, Taskilos eigene Auth + Onboarding.
 

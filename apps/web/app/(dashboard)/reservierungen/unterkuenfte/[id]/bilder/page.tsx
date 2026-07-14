@@ -1,4 +1,4 @@
-// Objekt → Bilder (Lodgify „Bilder"): der bestehende Foto-Manager (property_photos),
+// Objekt → Bilder: der bestehende Foto-Manager (property_photos),
 // 1:1 wiederverwendet — Multi-Upload, Galerie, Cover, Bildunterschriften.
 import { PhotosManager } from "@/components/objekte/photos-manager";
 

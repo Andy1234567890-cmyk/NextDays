@@ -1,6 +1,6 @@
 "use client";
 
-// Mehrsprachiger Rich-Text-Editor (wie Lodgify „Rental agreement"):
+// Mehrsprachiger Rich-Text-Editor (Rental agreement):
 //  - Sprachwahl (Deutsch / English / Dansk) per Dropdown
 //  - Rich-Text-Editor (B/I/U/S/Link) je Sprache
 //  - „Übersetzen"-Button: übersetzt den aktuellen Text in andere Sprachen

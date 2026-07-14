@@ -1,6 +1,6 @@
 // Konto → Nutzer: echte Tenant-Nutzer (listTenantUsers) + Wizard zum Anlegen.
 // Zeigt den Account-Inhaber und alle Mitglieder; Leerzustand nur, wenn wirklich
-// keine Nutzer existieren (wie Lodgify „Benutzer").
+// keine Nutzer existieren („Benutzer").
 import { Icon } from "@iconify/react";
 
 import { UserWizard } from "@/components/konto/user-wizard";

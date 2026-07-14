@@ -2,7 +2,7 @@
 
 // Externe iCal-Kalender (Belegungs-Sync) — Server-Actions gegen den FastAPI-
 // external_calendar-Slice (/api/v1/external-calendar). Der Kunde abonniert pro
-// Objekt externe .ics-Feeds (Lodgify/Airbnb/Booking/Vrbo/Google), der
+// Objekt externe .ics-Feeds (Airbnb/Booking/Vrbo/Google), der
 // Belegungskalender bleibt synchron. Kein Datenimport. JWT + MANAGE_CALENDAR.
 import { ApiError, api } from "@/lib/api";
 import { currentToken } from "@/lib/session-token";

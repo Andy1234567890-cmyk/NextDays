@@ -1,6 +1,6 @@
 """Tests für externe iCal-Kalender (Belegungs-Sync).
 
-Parser gegen ECHTE Lodgify-iCal-Daten (kein erfundenes Format). Sync-Logik mit
+Parser gegen ECHTE externe iCal-Daten (kein erfundenes Format). Sync-Logik mit
 In-Memory-Fake-DB: Idempotenz (Wurzel 2), Gegenzustand (Wurzel 1), SSRF-Schutz
 (Wurzel 5).
 """
@@ -24,9 +24,9 @@ from src.main import create_app
 client = TestClient(create_app())
 _CTX = AuthContext(user_id="u", tenant_id="t1")
 
-# Echte Lodgify-iCal (aus availability.ics des Nutzers, gekürzt + 1 Closed Period).
+# Echte externe iCal (aus einer availability.ics, gekürzt + 1 Closed Period).
 REAL_ICAL = """BEGIN:VCALENDAR
-PRODID://Codebay Solutions//Lodgify.com//EN
+PRODID://Channel Manager//EN
 VERSION:2.0
 BEGIN:VEVENT
 DTEND;VALUE=DATE:20260103
@@ -51,7 +51,7 @@ END:VCALENDAR
 
 
 # --- Parser ---------------------------------------------------------------
-def test_parse_real_lodgify_ical() -> None:
+def test_parse_real_external_ical() -> None:
     events = parse_ical(REAL_ICAL)
     assert len(events) == 3
     by_uid = {e.uid[:8]: e for e in events}
@@ -295,7 +295,7 @@ def test_overview_groups_feeds_per_property() -> None:
         {"id": "p9", "tenant_id": "OTHER", "title": "Fremd", "status": "active"},
     ]
     db.store["external_calendar"] = [
-        {"id": "c1", "tenant_id": "t1", "property_id": "p1", "name": "Lodgify",
+        {"id": "c1", "tenant_id": "t1", "property_id": "p1", "name": "Externer Kalender",
          "ical_url": "https://x/a.ics", "is_active": True,
          "last_status": "ok", "last_event_count": 3},
         {"id": "c9", "tenant_id": "OTHER", "property_id": "p9", "name": "X",
