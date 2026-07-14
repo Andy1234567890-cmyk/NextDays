@@ -10,7 +10,6 @@ from typing import Annotated
 
 from fastapi import (
     APIRouter,
-    BackgroundTasks,
     Depends,
     Header,
     HTTPException,
@@ -25,6 +24,7 @@ from src.features.auth.dependencies import (
 )
 from src.features.auth.granular_permissions import Permission
 from src.features.auth.permissions import Capability
+from src.jobs.queue import try_enqueue_recompute
 
 from .recompute import DynamicPricingRecompute
 from .resolver import PricingError, PricingResolver
@@ -153,7 +153,6 @@ def put_dp_settings(
     property_id: str,
     req: DpSettingsUpdate,
     service: DpSettingsServiceDep,
-    background: BackgroundTasks,
     ctx: Annotated[
         AuthContext, Depends(require_permission(Capability.MANAGE_CALENDAR))
     ],
@@ -162,21 +161,16 @@ def put_dp_settings(
     try:
         result = service.update(ctx, property_id, req)
         # Bei aktiviertem DP einmal rechnen, damit der Kalender direkt dynamische
-        # Preise zeigt. Der Recompute rechnet 540 Tage und pusht an Channex —
-        # das läuft im Hintergrund, damit der Speichern-Request nicht blockiert
-        # (sonst hängt die Antwort am Channex-Push/Rate-Limit).
-        if result.enabled:
-            background.add_task(_recompute_in_background, property_id)
+        # Preise zeigt. NICHT synchron im Request (würde am Channex-Push/Rate-Limit
+        # hängen) und NICHT als budgetloser Background-Task: als Recompute-JOB
+        # einreihen, damit der Worker den Rate-Push mit Channex-Token-Budget fährt
+        # (kein Umgehen des kontoweiten 20/min-Limits, wenn mehrere Objekte
+        # gleichzeitig aktiviert werden — Wurzel 2/5, Channex-Zertifizierung Test 12).
+        if result.enabled and ctx.tenant_id:
+            try_enqueue_recompute(get_service_client(), ctx.tenant_id, property_id)
         return result
     except PricingError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
-
-
-def _recompute_in_background(property_id: str) -> None:
-    """DP-Recompute eines Objekts im Hintergrund (nach dem Speichern)."""
-    DynamicPricingRecompute(
-        service_client=get_service_client()
-    ).recompute_property(property_id)
 
 
 @router.get("/explain/{property_id}", response_model=PriceExplainResponse)

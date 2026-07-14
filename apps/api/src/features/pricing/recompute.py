@@ -648,6 +648,35 @@ class DynamicPricingRecompute:
         return bool(next1 and free_prev and prev2)
 
     # -- Verteilung ----------------------------------------------------------
+    def _apply_overrides(
+        self, property_id: str, rows: list[dict]
+    ) -> list[dict]:
+        """Rohe dynamic_prices-`rows` mit manuellen Tagespreisen überlagern, damit
+        der an Channex gesendete Preis der effektive ist (override > dynamic). Gibt
+        eine NEUE Liste zurück; die übergebenen (persistierten) Zeilen bleiben roh."""
+        span = [_as_date(r["date"]) for r in rows]
+        overrides = (
+            self._db()
+            .table("price_overrides")
+            .select("date, price")
+            .eq("property_id", property_id)
+            .gte("date", min(span).isoformat())
+            .lte("date", max(span).isoformat())
+            .not_.is_("price", "null")
+            .execute()
+        ).data or []
+        by_date = {
+            o["date"]: float(o["price"])
+            for o in overrides
+            if o.get("date") and o.get("price") is not None
+        }
+        if not by_date:
+            return rows
+        return [
+            {**r, "price": by_date[r["date"]]} if r["date"] in by_date else r
+            for r in rows
+        ]
+
     def _push_to_channex(
         self, tenant_id: str | None, property_id: str, rows: list[dict]
     ) -> None:
@@ -657,6 +686,13 @@ class DynamicPricingRecompute:
         Fehler dürfen das Schreiben nicht kippen (reconcile-Cron gleicht ab)."""
         if not tenant_id or self._client is None or not rows:
             return
+        # Manuelle Tagespreise (price_overrides, z. B. Saisonpreise) gewinnen IMMER —
+        # lokal über den Resolver (override > dynamic) UND nach außen: ohne diese
+        # Überlagerung pusht der Autopilot seinen rohen dynamic_prices-Wert an
+        # Channex und überschreibt bei den OTAs einen gesetzten Saisonpreis
+        # (Gegenzustand, Wurzel 1). Die persistierten dynamic_prices bleiben roh
+        # (reine Empfehlung/Vorschau) — nur der GESENDETE Preis wird effektiv.
+        rows = self._apply_overrides(property_id, rows)
         try:
             from src.features.channel_manager.channex_client import (
                 ChannexBudgetExhausted,

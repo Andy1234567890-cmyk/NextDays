@@ -403,6 +403,9 @@ class CalendarService:
         """Tagespreis im Kalenderblatt setzen/zurücknehmen (Lastenheft §2.2).
 
         price=None nimmt die Überschreibung zurück (Tag folgt wieder dem Rate-Plan).
+        In beiden Fällen wird der jetzt gültige Tagespreis an Channex gepusht: beim
+        Setzen der neue Wert, beim Zurücknehmen der wieder greifende Rate-Plan-Preis
+        (Gegenzustand, Wurzel 1) — sonst behielten die OTAs den alten Override.
         """
         self._require_tenant_property(tenant_id, req.property_id)
         self._db().table("price_overrides").upsert(
@@ -413,6 +416,20 @@ class CalendarService:
             },
             on_conflict="property_id,date",
         ).execute()
+        # Realtime an Channex: EIN Tag = [date, date+1). Beim Setzen der Override,
+        # beim Zurücknehmen der neu aufgelöste effektive Preis (dynamic/weekday/base).
+        end = req.date + timedelta(days=1)
+        if req.price is not None:
+            self._push_channex_rate(
+                req.property_id, req.date, end, round(req.price * 100)
+            )
+        else:
+            days = self._resolver().effective_prices(req.property_id, req.date, end)
+            eff = days[0].price if days and days[0].price is not None else None
+            if eff is not None:
+                self._push_channex_rate(
+                    req.property_id, req.date, end, round(eff * 100)
+                )
         log.info(
             "calendar_price_override",
             property_id=req.property_id,

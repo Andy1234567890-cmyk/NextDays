@@ -48,6 +48,12 @@ _CONTENT_FIELDS = frozenset({
     "lat", "lng", "amenities", "max_guests", "type_attributes",
 })
 
+# Beim Veröffentlichen abzudeckender Horizont (Tage). Deckt sich bewusst mit
+# Channex' state_length=500 und dem Full-Sync (_FULL_SYNC_DAYS): schon der
+# Publish-Push versorgt die vollen 500 Tage, statt Tage 366–500 dem Nacht-Cron
+# zu überlassen (Channex-Zertifizierung Test 1 = 500 Tage aller Zimmer/Raten).
+_PUBLISH_HORIZON_DAYS = 500
+
 
 def _max_stay_of(row: dict) -> int:
     """Maximalaufenthalt (Nächte) aus type_attributes.availability.maxStay lesen.
@@ -328,14 +334,14 @@ class PropertiesService:
     def _push_max_stay(self, tenant_id: str, property_id: str, max_stay: int) -> None:
         """Maximalaufenthalt als ARI-Push-Job einreihen (Phase 2). 0 wird ebenfalls
         gepusht, damit das Entfernen der Obergrenze synchronisiert wird. Deckt IMMER
-        den vollen 365-Tage-Horizont ab → coalesce=True sicher (letzter gewinnt)."""
+        den vollen 500-Tage-Horizont ab → coalesce=True sicher (letzter gewinnt)."""
         from datetime import date, timedelta
 
         today = date.today()
         try_enqueue_ari(
             self._db, tenant_id, property_id, "max_stay",
             {"date_from": today.isoformat(),
-             "date_to": (today + timedelta(days=364)).isoformat(),
+             "date_to": (today + timedelta(days=_PUBLISH_HORIZON_DAYS - 1)).isoformat(),
              "max_stay": max_stay},
             coalesce=True,
         )
@@ -766,7 +772,7 @@ class PropertiesService:
         except ChannelManagerError as exc:
             raise PropertyError(exc.message, status_code=exc.status_code) from exc
 
-        # 3) Verfügbarkeit initialisieren (kommende 365 Tage als 'open', sofern
+        # 3) Verfügbarkeit initialisieren (kommende 500 Tage als 'open', sofern
         #    noch keine Zeile existiert) — füllt den Kalender, Basis für den Push.
         today = datetime.now(UTC).date()
         existing_days = {
@@ -776,7 +782,7 @@ class PropertiesService:
                 .select("date")
                 .eq("property_id", property_id)
                 .gte("date", today.isoformat())
-                .lt("date", (today + timedelta(days=365)).isoformat())
+                .lt("date", (today + timedelta(days=_PUBLISH_HORIZON_DAYS)).isoformat())
                 .execute()
             ).data
             or []
@@ -788,7 +794,7 @@ class PropertiesService:
                 "status": "open",
                 "source": "manual",
             }
-            for i in range(365)
+            for i in range(_PUBLISH_HORIZON_DAYS)
             if (today + timedelta(days=i)).isoformat() not in existing_days
         ]
         if new_rows:
@@ -797,10 +803,10 @@ class PropertiesService:
             ).execute()
 
         # 4) Verfügbarkeit + Mindest-/Maximalaufenthalt als ARI-Jobs einreihen
-        #    (Phase 2: raus aus dem Request-Pfad). Alle decken den vollen 365-Tage-
+        #    (Phase 2: raus aus dem Request-Pfad). Alle decken den vollen 500-Tage-
         #    Horizont ab → coalesce=True sicher. Der Content-Sync oben (Schritt 3)
         #    blieb synchron, weil sein Ergebnis den HTTP-Status bestimmt.
-        horizon_to = (today + timedelta(days=364)).isoformat()
+        horizon_to = (today + timedelta(days=_PUBLISH_HORIZON_DAYS - 1)).isoformat()
         today_iso = today.isoformat()
         try_enqueue_ari(
             self._db, tenant_id, property_id, "availability",

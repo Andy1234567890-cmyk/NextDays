@@ -494,6 +494,12 @@ class AriPushMixin:
             set(_iso_days(date_from.isoformat(), date_to.isoformat())) - superseded
         )
 
+        # Trace-Kontext für den Client-Sink: der schnelle availability-Delta-Pfad
+        # (Buchung/Storno/Kalender-Block, Tests 9/10). Ohne diese Zeile erschiene die
+        # Task-ID erst beim Cron-Nachzug (process_ari_outbox), nicht beim Sofort-Push.
+        self._trace_step(
+            tenant_id=tenant_id, property_id=property_id, step="availability"
+        )
         try:
             for r_from, r_to in push_ranges:
                 self._channex.update_availability(
@@ -697,6 +703,13 @@ class AriPushMixin:
         values = _restriction_values(plans, fields, date_from, date_to)
         if not values:
             return 0
+        # Trace-Kontext für den Client-Sink: dieser Delta-Pfad (min_stay, max_stay,
+        # stop_sell, CTA/CTD, Zeitraum-Preis) ist der einzige Weg der Worker-getriebenen
+        # Sofort-Pushes zu update_restrictions — ohne diese Zeile erschiene die Channex-
+        # Task-ID der Tests 4–8 erst beim Cron-Nachzug in channex_debug_log.
+        self._trace_step(
+            tenant_id=tenant_id, property_id=property_id, step="restrictions"
+        )
         for i in range(0, len(values), self._RESTRICTIONS_CHUNK):
             self._channex.update_restrictions(values[i : i + self._RESTRICTIONS_CHUNK])
         return len(values)
@@ -951,6 +964,12 @@ class AriPushMixin:
             # ist erledigt (kein echter Wert offen).
             self._mark_restriction_outbox(outbox_id, "done")
             return False
+        # Trace-Kontext für den Client-Sink: eigener Push-Pfad (nicht über
+        # _push_restriction_values_all_plans), damit die stop_sell-Task-ID (Test 6)
+        # schon beim Sofort-Push in channex_debug_log erscheint, nicht erst per Cron.
+        self._trace_step(
+            tenant_id=tenant_id, property_id=property_id, step="restrictions"
+        )
         try:
             for i in range(0, len(values), self._RESTRICTIONS_CHUNK):
                 self._channex.update_restrictions(values[i : i + self._RESTRICTIONS_CHUNK])
