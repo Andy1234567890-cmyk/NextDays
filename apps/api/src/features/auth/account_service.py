@@ -56,22 +56,29 @@ class AccountService:
         mfa = self._get_mfa(ctx.user_id)
         auth_user = self._get_auth_user(ctx.user_id)
         has_password = self._has_password(auth_user)
+        # Eine Identität: der Registrierende IST der Super-Admin — sein Konto
+        # zeigt Name/Telefon aus den /konto-Kontaktdaten der Agentur.
+        agency = (
+            self._agency_person(row.get("tenant_id") or ctx.tenant_id)
+            if row.get("role") == UserRole.admin.value
+            else None
+        ) or {}
         return AccountResponse(
             tenant_country=self._tenant_country(
                 row.get("tenant_id") or ctx.tenant_id
             ),
             user_id=ctx.user_id,
             email=row.get("email") or self._auth_email(auth_user),
-            full_name=row.get("full_name"),
+            full_name=agency.get("full_name") or row.get("full_name"),
             has_password=has_password,
             totp_enabled=bool(mfa and mfa.get("totp_enabled")),
             role=row.get("role"),
-            phone=row.get("phone"),
+            phone=agency.get("phone") or row.get("phone"),
             additional_phone=row.get("additional_phone"),
             hide_phones=bool(row.get("hide_phones")),
             preferred_language=row.get("preferred_language"),
             spoken_languages=row.get("spoken_languages") or [],
-            website=row.get("website"),
+            website=agency.get("website") or row.get("website"),
             description=row.get("description"),
             avatar_url=row.get("avatar_url"),
             permissions=self._effective_perm_ids(row),
@@ -243,7 +250,7 @@ class AccountService:
             self._service.table("tenant_billing_profile")
             .select(
                 "managing_director_first_name, "
-                "managing_director_last_name, phone_number"
+                "managing_director_last_name, phone_number, website"
             )
             .eq("tenant_id", tenant_id)
             .limit(1)
@@ -267,9 +274,14 @@ class AccountService:
             if x
         )
         phone = _s("phone_number")
-        if not name and not phone:
+        website = _s("website")
+        if not name and not phone and not website:
             return None
-        return {"full_name": name or None, "phone": phone or None}
+        return {
+            "full_name": name or None,
+            "phone": phone or None,
+            "website": website or None,
+        }
 
     def _merge_agency_into_admin(
         self, users: list[TenantUser], tenant_id: str | None
@@ -506,12 +518,49 @@ class AccountService:
         nicht-bearbeitete Werte erhalten. E-Mail/Passwort laufen weiter über die
         eigenen, abgesicherten Endpunkte.
         """
-        self._ensure_user_row(ctx)
+        row = self._ensure_user_row(ctx)
         patch = req.model_dump(exclude_unset=True)
+        # Eine Identität, EIN Speicherort: beim Super-Admin gehören Name/
+        # Telefon/Website der Agentur (/konto, tenant_billing_profile) — dort
+        # zurückschreiben, users trägt nur den Anzeigenamen (keine Doppel-
+        # Spalten in users).
+        if patch and row.get("role") == UserRole.admin.value:
+            tenant_id = row.get("tenant_id") or ctx.tenant_id
+            self._mirror_admin_profile(tenant_id, patch)
+            patch = {k: v for k, v in patch.items() if k == "full_name"}
         if patch:
             self._service.table("users").update(patch).eq("id", ctx.user_id).execute()
         log.info("profile_updated", user_id=ctx.user_id, fields=sorted(patch.keys()))
         return self.get_account(ctx)
+
+    def _mirror_admin_profile(
+        self, tenant_id: str | None, patch: dict
+    ) -> None:
+        """Agentur-Kontaktdaten des Super-Admins nach /konto
+        (tenant_billing_profile) schreiben: Vor-/Nachname aus full_name,
+        Telefon, Website. Nur gesendete Felder."""
+        if not tenant_id:
+            return
+        profile_patch: dict = {}
+        full_name = (patch.get("full_name") or "").strip()
+        if full_name:
+            parts = full_name.split()
+            profile_patch["managing_director_first_name"] = (
+                " ".join(parts[:-1]) if len(parts) > 1 else parts[0]
+            )
+            profile_patch["managing_director_last_name"] = (
+                parts[-1] if len(parts) > 1 else ""
+            )
+        if "phone" in patch:
+            profile_patch["phone_number"] = patch["phone"]
+        if "website" in patch:
+            profile_patch["website"] = patch["website"]
+        if not profile_patch:
+            return
+        profile_patch["tenant_id"] = tenant_id
+        self._service.table("tenant_billing_profile").upsert(
+            profile_patch, on_conflict="tenant_id"
+        ).execute()
 
     def update_password(
         self, ctx: AuthContext, req: UpdatePasswordRequest

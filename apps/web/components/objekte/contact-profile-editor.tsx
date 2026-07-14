@@ -36,6 +36,11 @@ export function ContactProfileEditor({
   account: Account;
   onClose: () => void;
 }) {
+  // Super-Admin = Agentur: seine Kontaktdaten leben unter /konto (eine
+  // Quelle). Der Dialog zeigt dann nur die dort gespeicherten Felder —
+  // Zweitnummer/Sprachen/Beschreibung haben (noch) keinen Speicherort und
+  // würden sonst still verworfen.
+  const isAgency = account.role === "admin";
   // Name aus full_name in Vor-/Nachname zerlegen (best effort).
   const [first, last] = splitName(account.full_name);
   const [firstName, setFirstName] = useState(first);
@@ -112,11 +117,13 @@ export function ContactProfileEditor({
         </SheetHeader>
 
         <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto p-5">
-          {/* Avatar */}
-          <section className="flex flex-col gap-2">
-            <p className="font-semibold">Avatar</p>
-            <AvatarPicker value={avatarUrl} onChange={setAvatarUrl} />
-          </section>
+          {/* Avatar (nicht für die Agentur — dort zählt das Firmenlogo aus /konto) */}
+          {!isAgency && (
+            <section className="flex flex-col gap-2">
+              <p className="font-semibold">Avatar</p>
+              <AvatarPicker value={avatarUrl} onChange={setAvatarUrl} />
+            </section>
+          )}
 
           {/* Kontaktdaten */}
           <section className="flex flex-col gap-4">
@@ -152,49 +159,55 @@ export function ContactProfileEditor({
                 defaultCountry={account.tenant_country ?? undefined}
               />
             </Field>
-            <Field label="Zusätzliche Telefonnummer">
-              <PhoneInput
-                value={additionalPhone}
-                onChange={setAdditionalPhone}
-                defaultCountry={account.tenant_country ?? undefined}
-              />
-            </Field>
+            {!isAgency && (
+              <>
+                <Field label="Zusätzliche Telefonnummer">
+                  <PhoneInput
+                    value={additionalPhone}
+                    onChange={setAdditionalPhone}
+                    defaultCountry={account.tenant_country ?? undefined}
+                  />
+                </Field>
 
-            <label className="flex items-center gap-2.5 text-sm">
-              <Checkbox
-                checked={hidePhones}
-                onCheckedChange={(v) => setHidePhones(v === true)}
-              />
-              Alle Telefonnummern auf meiner Website ausblenden
-            </label>
+                <label className="flex items-center gap-2.5 text-sm">
+                  <Checkbox
+                    checked={hidePhones}
+                    onCheckedChange={(v) => setHidePhones(v === true)}
+                  />
+                  Alle Telefonnummern auf meiner Website ausblenden
+                </label>
+              </>
+            )}
           </section>
 
           {/* Weitere Angaben */}
           <section className="flex flex-col gap-4">
             <p className="font-semibold">Weitere Angaben</p>
 
-            <Field label="Gesprochene Sprache(n)">
-              <div className="flex flex-wrap gap-2">
-                {LANGUAGE_OPTIONS.map((o) => {
-                  const active = languages.includes(o.value);
-                  return (
-                    <button
-                      key={o.value}
-                      type="button"
-                      onClick={() => toggleLanguage(o.value)}
-                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
-                        active
-                          ? "border-foreground bg-foreground text-background"
-                          : "border-border hover:bg-muted/40"
-                      }`}
-                    >
-                      {active && <Icon icon="ph:check" className="size-3.5" />}
-                      {languageLabel(o.value)}
-                    </button>
-                  );
-                })}
-              </div>
-            </Field>
+            {!isAgency && (
+              <Field label="Gesprochene Sprache(n)">
+                <div className="flex flex-wrap gap-2">
+                  {LANGUAGE_OPTIONS.map((o) => {
+                    const active = languages.includes(o.value);
+                    return (
+                      <button
+                        key={o.value}
+                        type="button"
+                        onClick={() => toggleLanguage(o.value)}
+                        className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition-colors ${
+                          active
+                            ? "border-foreground bg-foreground text-background"
+                            : "border-border hover:bg-muted/40"
+                        }`}
+                      >
+                        {active && <Icon icon="ph:check" className="size-3.5" />}
+                        {languageLabel(o.value)}
+                      </button>
+                    );
+                  })}
+                </div>
+              </Field>
+            )}
 
             <Field label="Website">
               <Input
@@ -204,13 +217,15 @@ export function ContactProfileEditor({
               />
             </Field>
 
-            <Field label="Beschreibung">
-              <RichTextEditor
-                value={description}
-                onChange={setDescription}
-                placeholder="Schreibe etwas über dich …"
-              />
-            </Field>
+            {!isAgency && (
+              <Field label="Beschreibung">
+                <RichTextEditor
+                  value={description}
+                  onChange={setDescription}
+                  placeholder="Schreibe etwas über dich …"
+                />
+              </Field>
+            )}
           </section>
         </div>
 
