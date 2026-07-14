@@ -124,12 +124,33 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
   useEffect(() => {
     void reload();
   }, [reload]);
-  // Realtime-Pflicht: Uploads/Umsortierungen anderer Sessions live spiegeln
-  // (property_photos ist seit 0077 in der Realtime-Publication).
-  useRealtime({
+  // Realtime-Pflicht: Uploads/Umsortierungen anderer Sessions live spiegeln —
+  // INKREMENTELL aus payload.new/old (kein Vollreload: eine Umsortierung
+  // schreibt N Zeilen → N Events; ein reload() pro Event lud die Seite sichtbar
+  // neu). Die DB-Zeile entspricht 1:1 dem PropertyPhoto-Typ (url ist Spalte).
+  useRealtime<PropertyPhoto>({
     table: "property_photos",
     filter: `property_id=eq.${propertyId}`,
-    onChange: () => void reload(),
+    onEvent: (payload) => {
+      setPhotos((prev) => {
+        if (payload.eventType === "DELETE") {
+          const oldId = payload.old.id;
+          return oldId ? prev.filter((p) => p.id !== oldId) : prev;
+        }
+        if (!("id" in payload.new) || !payload.new.id) return prev;
+        const row = payload.new as PropertyPhoto;
+        const next = [...prev.filter((p) => p.id !== row.id), row];
+        // Anzeige-Ordnung wie der Server: Cover zuerst, dann sort_order;
+        // id als deterministischer Tiebreak (Übergangszustände, in denen zwei
+        // Zeilen kurz denselben sort_order tragen, dürfen nicht flackern).
+        return next.sort(
+          (a, b) =>
+            Number(b.is_cover) - Number(a.is_cover) ||
+            a.sort_order - b.sort_order ||
+            a.id.localeCompare(b.id),
+        );
+      });
+    },
   });
 
   // Größe erst nach evtl. Konvertierung prüfen. Der Typ-Check lässt portalfähige
@@ -236,13 +257,15 @@ export function PhotosManager({ propertyId }: { propertyId: string }) {
 
   async function persistOrder(next: PropertyPhoto[]) {
     const prev = photos;
-    setPhotos(next);
+    // sort_order sofort lokal neu durchnummerieren: die Realtime-Events der
+    // Server-Schreibvorgänge sortieren nach sort_order — behielten die Zeilen
+    // ihre alten Werte, würde jedes Event die neue Reihenfolge zurückdrehen.
+    setPhotos(next.map((p, i) => ({ ...p, sort_order: i })));
     const res = await reorderPropertyPhotos(
       propertyId,
       next.map((p) => p.id),
     );
-    if (res.ok) setPhotos(res.data.items);
-    else {
+    if (!res.ok) {
       setPhotos(prev);
       toast.error(res.error);
     }
