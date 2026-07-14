@@ -8,7 +8,7 @@ import { currentToken } from "@/lib/session-token";
 
 export type Result<T> =
   | { ok: true; data: T }
-  | { ok: false; error: string };
+  | { ok: false; error: string; status?: number };
 
 // Felder, die der Onboarding-Firmendaten-Schritt erfasst (camelCase wie vom
 // Backend akzeptiert). Adresse/Kontakt fließen zusätzlich in den Channex-Sync.
@@ -85,6 +85,7 @@ export async function getFirmenProfil(): Promise<Result<Record<string, unknown>>
     return {
       ok: false,
       error: exc instanceof ApiError ? exc.message : "Laden fehlgeschlagen.",
+      status: exc instanceof ApiError ? exc.status : undefined,
     };
   }
 }

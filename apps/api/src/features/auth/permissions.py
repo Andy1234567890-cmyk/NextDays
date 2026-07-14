@@ -65,6 +65,11 @@ _CO_ADMIN: frozenset[Capability] = frozenset({
     Capability.MANAGE_STAFF,
     Capability.MANAGE_OWNERS,
     Capability.MANAGE_TASKS,
+    # Wer Aufgaben VERWALTET, kann per Definition auch seine EIGENEN sehen und
+    # abschließen — Detail/Complete hängen an VIEW_OWN_TASKS; ohne diese
+    # Fähigkeit könnte co_admin den Aufgaben-Kalender öffnen, aber keine
+    # einzelne Aufgabe. Die Implikation manage⊇own gehört ins Rollen-Set.
+    Capability.VIEW_OWN_TASKS,
     Capability.MANAGE_CALENDAR,
     Capability.VIEW_CALENDAR,
     Capability.APPROVE_BLOCK,

@@ -3,6 +3,7 @@
 // Dashboard den Setup-Assistenten (ersetzt den Inhalt). Danach erscheint das
 // Reservierungs-Dashboard (echte Kennzahlen aus dem Backend).
 import { Icon } from "@iconify/react";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { ReservationsDashboard } from "@/components/dashboard/reservations-dashboard";
@@ -22,6 +23,14 @@ export default async function DashboardPage() {
     getMe(),
   ]);
   const loginEmail = me?.email ?? null;
+
+  // Rollen-Startseite (§4.2/§4.3): Das Reservierungs-Dashboard verlangt
+  // VIEW_CALENDAR. Rollen ohne diese Fähigkeit (staff/cleaner) bekämen hier nur
+  // eine 403-Fehlerkarte — deshalb auf ihre operative Startseite leiten, statt
+  // sie auf einer toten Seite landen zu lassen.
+  if (me && !me.capabilities.includes("view_calendar")) {
+    redirect("/reservierungen/aufgaben");
+  }
 
   // Onboarding noch offen → Assistent im Dashboard anzeigen.
   const status = onboarding.ok ? onboarding.data : null;

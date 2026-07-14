@@ -19,7 +19,7 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
-from .lodgify_permissions import effective_permissions
+from .lodgify_permissions import default_permissions_for, effective_permissions
 from .schemas import (
     AccountResponse,
     TenantUser,
@@ -399,7 +399,8 @@ class AccountService:
         patch: dict = {}
         if full_name is not None and full_name.strip():
             patch["full_name"] = full_name.strip()
-        if role is not None and role != target.get("role"):
+        role_changed = role is not None and role.value != target.get("role")
+        if role_changed:
             if target.get("role") == UserRole.admin.value:
                 raise AuthError(
                     "Der Kontoinhaber (Admin) kann nicht umgestuft werden.",
@@ -410,6 +411,11 @@ class AccountService:
                     "Die Rolle Admin kann nicht vergeben werden.", status_code=400
                 )
             patch["role"] = role.value
+            # Rechte MÜSSEN mit der Rolle wechseln: die Default-Berechtigungen
+            # der NEUEN Rolle setzen (sonst behielte der Nutzer die alten Rechte
+            # und die neue Rolle griffe nirgends). role/permissions in users sind
+            # die Quelle der Wahrheit für alle Guards.
+            patch["permissions"] = default_permissions_for(role)
         if not patch:
             return self._to_tenant_user(target)
         res = (
@@ -419,6 +425,22 @@ class AccountService:
             .eq("tenant_id", tenant_id)
             .execute()
         )
+        # Rollenwechsel auch ins JWT-app_metadata spiegeln (RLS-Quelle): sonst
+        # trüge das Token des Nutzers bis zum nächsten Login die alte Rolle und
+        # die rollenbasierten RLS-Policies (owner/staff-Scope) blieben falsch.
+        if role_changed:
+            try:
+                # tenant_id explizit mitgeben, damit sie beim Metadata-Update
+                # garantiert erhalten bleibt (kein Verlass auf Merge-Semantik).
+                self._service.auth.admin.update_user_by_id(
+                    user_id,
+                    {"app_metadata": {"role": role.value, "tenant_id": tenant_id}},
+                )
+            except Exception as exc:  # noqa: BLE001 — Spiegelung sichtbar loggen
+                log.warning(
+                    "managed_user_jwt_role_sync_failed",
+                    user_id=user_id, error=str(exc)[:200],
+                )
         updated = res.data[0] if res.data else {**target, **patch}
         log.info(
             "managed_user_updated",

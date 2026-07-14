@@ -65,6 +65,26 @@ _write = Annotated[AuthContext, Depends(_require_agency_finance)]
 _read = _write
 
 
+def _require_company_profile_read(ctx: CurrentUser) -> AuthContext:
+    """Firmen-/Kontaktprofil des Betriebs LESEN (/konto): das sind Konto-
+    Stammdaten, KEIN Debitoren-Finanzeinblick — deshalb eigener Guard statt
+    OWNER_REPORTING (sonst sah der co_admin ein leeres /konto). admin und
+    co_admin dürfen lesen; staff/cleaner (§4.3) und owner (§4.2) bleiben
+    draußen. Schreiben bleibt am Finanz-Guard (admin)."""
+    if ctx.role not in ("admin", "co_admin"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Kein Zugriff auf das Firmenprofil.",
+        )
+    return ctx
+
+
+# Lesen des Firmenprofils (admin+co_admin). Alias-Muster wie _read/_write.
+_profile_read = Annotated[  # pylint: disable=invalid-name
+    AuthContext, Depends(_require_company_profile_read)
+]
+
+
 @router.get("/health", response_model=SliceHealth)
 def health(service: BuchhaltungServiceDep) -> SliceHealth:
     return service.health()
@@ -234,7 +254,7 @@ def list_transaction_links(
 
 @router.get("/companies/{company_id}")
 def get_company_profile(
-    company_id: str, ctx: _read, service: BuchhaltungServiceDep
+    company_id: str, ctx: _profile_read, service: BuchhaltungServiceDep
 ) -> dict:
     """Firmen-/Rechnungsprofil des Tenants (tenant_billing_profile)."""
     try:

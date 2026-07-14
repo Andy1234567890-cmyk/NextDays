@@ -415,6 +415,9 @@ export function CalendarBoard({
   // Geöffnetes Buchungsdetail: nur die Reservierungs-ID (Slider lädt die Daten).
   const [detail, setDetail] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // Ladefehler des Belegungs-Boards (z. B. 403) sichtbar machen statt still
+  // leere Tage zu rendern (Wurzel 5).
+  const [boardError, setBoardError] = useState<string | null>(null);
   const [view, setView] = useState<ViewOptions>(DEFAULT_VIEW);
   // Horizontaler Scroll-Container des Rasters — Navigation (◀/▶/Heute/Sprung)
   // scrollt ihn, statt das Startdatum zu verschieben (durchgehende Timeline).
@@ -959,6 +962,9 @@ export function CalendarBoard({
         s,
         e,
       );
+      // Fehler NIE verschlucken: ohne diesen Zweig zeigte das Board bei 403 nur
+      // leere Tage und wirkte „kaputt".
+      setBoardError(board.ok ? null : board.error);
       const byPid = new Map(
         board.ok ? board.data.items.map((it) => [it.property_id, it]) : [],
       );
@@ -1300,6 +1306,12 @@ export function CalendarBoard({
         onCreate={onCreate}
         viewSwitcher={viewSwitcher}
       />
+
+      {boardError && (
+        <div className="rounded-(--radius) border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          {boardError}
+        </div>
+      )}
 
       {/* Filter & Suche (Objekt/Typ/Kanal/Status/Gastname) */}
       <div className="flex flex-wrap items-center gap-2">

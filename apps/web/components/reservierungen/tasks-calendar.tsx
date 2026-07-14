@@ -157,6 +157,9 @@ export function TasksCalendar() {
   const [month, setMonth] = useState(now.getMonth());
   const [rows, setRows] = useState<CalendarRow[]>([]);
   const [loading, setLoading] = useState(true);
+  // Ladefehler (z. B. 403) sichtbar machen statt still leeren Kalender zeigen
+  // (Wurzel 5).
+  const [loadError, setLoadError] = useState<string | null>(null);
   // Popovers: geklickte Aufgabe / Buchung (null = zu).
   const [taskPop, setTaskPop] = useState<TaskListItem | null>(null);
   const [bookingPop, setBookingPop] = useState<CalendarBooking | null>(null);
@@ -184,7 +187,14 @@ export function TasksCalendar() {
       to,
       userFilter.length === 1 ? userFilter[0] : undefined,
     );
-    if (res.ok) setRows(res.data.rows);
+    if (res.ok) {
+      setRows(res.data.rows);
+      setLoadError(null);
+    } else {
+      // Fehler NIE verschlucken: sonst wirkt der Aufgaben-Kalender „kaputt".
+      setLoadError(res.error);
+      setRows([]);
+    }
     setLoading(false);
   }, [from, to, userFilter]);
 
@@ -257,6 +267,12 @@ export function TasksCalendar() {
         <Icon icon="ph:caret-right" className="size-3.5" />
         <span className="text-foreground">Aufgaben</span>
       </nav>
+
+      {loadError && (
+        <div className="rounded-(--radius) border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+          {loadError}
+        </div>
+      )}
 
       {/* Titel + Lernen + Filterleiste */}
       <div className="flex flex-wrap items-start justify-between gap-4">

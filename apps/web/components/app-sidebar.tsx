@@ -53,7 +53,7 @@ type AccommodationType = "vacation_rental" | "hotel";
 // Täglich genutzte Kernbereiche (flach, wie Casona „Übersicht/Belegungsplan").
 const MAIN: readonly NavItem[] = [
   { key: "dashboard", href: "/", icon: "ph:squares-four" },
-  { key: "calendar", href: "/kalender", icon: "ph:calendar-blank" },
+  { key: "calendar", href: "/kalender", icon: "ph:calendar-blank", req: "view_calendar" },
   { key: "inbox", href: "/posteingang", icon: "ph:chat-circle", req: "view_guest_contact" },
 ];
 
@@ -136,10 +136,11 @@ function buildGroups(accommodationType: AccommodationType): readonly NavGroup[] 
       groupKey: "reservations",
       icon: "ph:bookmark-simple",
       items: [
-        { key: "overview", href: "/reservierungen/kontrollzentrum", icon: "ph:bookmark-simple" },
-        { key: "reservationGroups", href: "/reservierungen/gruppen", icon: "ph:users-three" },
-        { key: "stopSell", href: "/stop-sell", icon: "ph:hand-palm" },
-        { key: "settings", href: "/reservierungen/einstellungen", icon: "ph:gear" },
+        { key: "overview", href: "/reservierungen/kontrollzentrum", icon: "ph:bookmark-simple", req: "view_calendar" },
+        { key: "tasks", href: "/reservierungen/aufgaben", icon: "ph:check-square", req: "view_own_tasks" },
+        { key: "reservationGroups", href: "/reservierungen/gruppen", icon: "ph:users-three", req: "view_calendar" },
+        { key: "stopSell", href: "/stop-sell", icon: "ph:hand-palm", req: "manage_calendar" },
+        { key: "settings", href: "/reservierungen/einstellungen", icon: "ph:gear", req: "manage_calendar" },
       ],
     },
     {
@@ -221,8 +222,19 @@ const OWNER_ALLOWED_HREFS: readonly string[] = [
   "/", // Dashboard
   "/kalender",
   "/objekte",
-  "/dynamic-pricing",
-  "/buchhaltung", // Berichte/Abrechnung (zusätzlich per owner_reporting gegated)
+  "/meine-abrechnungen", // Eigene Auszahlungs-Abrechnungen (self-scoped)
+];
+
+// Mitarbeiter/Dienstleister-Portal (Lastenheft §4.3): rein operativ. Staff und
+// cleaner sehen NUR ihre freigegebenen Objekte und ihre Aufgaben — keine
+// Finanzen, keinen Vertrieb, keine Agentur-Verwaltung. Fail-CLOSED: alles, was
+// nicht auf dieser Liste steht, ist für staff/cleaner unsichtbar (§4.3). Ohne
+// diese Whitelist sahen sie fast die komplette Agentur-Navigation, die überall
+// 403/leer lieferte.
+const STAFF_ALLOWED_HREFS: readonly string[] = [
+  "/", // Dashboard
+  "/objekte", // read-only, per RLS 0136 auf zugewiesene Objekte begrenzt
+  "/reservierungen/aufgaben", // Meine Aufgaben (Kern-Fläche)
 ];
 
 export function AppSidebar({
@@ -254,7 +266,16 @@ export function AppSidebar({
   const canSee = (item: NavItem) => {
     if (role === "admin") return true;
     if (item.req && !grantSet.has(item.req)) return false;
+    // Eigentümer (§4.2) und Mitarbeiter/Dienstleister (§4.3) haben je ein
+    // reduziertes Portal — fail-closed über eine Href-Whitelist, damit sie nicht
+    // die volle Agentur-Navigation sehen (die überall 403/leer liefert).
     if (role === "owner" && !OWNER_ALLOWED_HREFS.includes(item.href)) {
+      return false;
+    }
+    if (
+      (role === "staff" || role === "cleaner") &&
+      !STAFF_ALLOWED_HREFS.includes(item.href)
+    ) {
       return false;
     }
     return true;

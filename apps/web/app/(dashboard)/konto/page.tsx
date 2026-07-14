@@ -95,13 +95,26 @@ export default function ProfilPage() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Ladefehler des Firmenprofils (z. B. 403) — sichtbar machen statt leeres
+  // Formular (Wurzel 5).
+  const [loadError, setLoadError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // Bestehendes Firmenprofil laden — alle Felder (kein Hardcode).
   useEffect(() => {
     let active = true;
     void getFirmenProfil().then((res) => {
-      if (!active || !res.ok) return;
+      if (!active) return;
+      if (!res.ok) {
+        // Fehler NIE verschlucken (Wurzel 5): sonst rendert ein 403 als
+        // scheinbar leeres, editierbares Formular („alle Daten weg").
+        setLoadError(
+          res.status === 403
+            ? "Kein Zugriff: Das Firmenprofil kann nur der Kontoinhaber (Admin) einsehen."
+            : res.error,
+        );
+        return;
+      }
       const d = res.data;
       const s = (k: string): string =>
         typeof d[k] === "string" ? (d[k] as string) : "";
@@ -241,6 +254,12 @@ export default function ProfilPage() {
           <KontoBetriebsartSection />
         </div>
       </div>
+
+      {loadError && (
+        <div className="mb-6 rounded-(--radius) border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
+          {loadError}
+        </div>
+      )}
 
       <form className="flex flex-col gap-8" onSubmit={onSave}>
         {/* Logo-Upload */}

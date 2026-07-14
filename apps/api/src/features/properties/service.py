@@ -13,6 +13,7 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.features.auth.owner_scope import is_owner, owner_property_ids
+from src.features.auth.staff_scope import is_staff, staff_property_ids
 from src.jobs.queue import (
     try_enqueue_ari,
     try_enqueue_content_sync,
@@ -123,6 +124,16 @@ class PropertiesService:
             if not owned:
                 return PropertyListResponse(items=[], total=0)
             query = query.in_("id", owned)
+        # Staff-Scope (§4.3): ein Mitarbeiter/Dienstleister sieht NUR die ihm
+        # freigegebenen Objekte (staff_property_assignments), nicht den ganzen
+        # Bestand des Mandanten. Fail-closed: keine Freigabe → keine Objekte.
+        # (Zusätzlich zur RLS-Policy 0136, damit der service-role-Pfad — RLS
+        #  umgangen — denselben Scope trägt; defense-in-depth.)
+        elif is_staff(ctx):
+            assigned = sorted(staff_property_ids(self._db, ctx))
+            if not assigned:
+                return PropertyListResponse(items=[], total=0)
+            query = query.in_("id", assigned)
         # Betriebsart-Scope: Hotel sieht nur Zimmertypen, Ferienvermietung nur
         # Ferienobjekt-Typen. get() per ID bleibt bewusst ungefiltert, damit
         # falsch typisierte Bestandsobjekte per Direktlink korrigierbar bleiben.
@@ -138,6 +149,10 @@ class PropertiesService:
         # Owner-Scope (§4.2): ein Eigentümer darf nur SEINE Objekte per ID lesen —
         # ein fremdes Objekt wirkt wie „nicht gefunden" (keine Stammdaten-Leaks).
         if is_owner(ctx) and property_id not in owner_property_ids(self._db, ctx):
+            raise PropertyError("Objekt nicht gefunden.", status_code=404)
+        # Staff-Scope (§4.3): ein Mitarbeiter/Dienstleister darf nur ein ihm
+        # freigegebenes Objekt per ID lesen (defense-in-depth zur RLS 0136).
+        if is_staff(ctx) and property_id not in staff_property_ids(self._db, ctx):
             raise PropertyError("Objekt nicht gefunden.", status_code=404)
         res = (
             self._db.table("properties")

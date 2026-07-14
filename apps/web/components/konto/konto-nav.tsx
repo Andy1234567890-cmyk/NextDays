@@ -1,30 +1,69 @@
 "use client";
 
-// Unter-Navigation der Konto-Seite (Profil / Tarif / Branding / Nutzer / Sicherheit).
-// Aktiver Punkt anhand des Pfads. Icons via Iconify (ph:*).
-// Zahlungen liegen als Abschnitt auf der Profil-Seite; Tarif & Abo (Buchungen/
-// Objekt-Staffel/Module/Provisionen) hat einen EIGENEN Tab.
+// Unter-Navigation der Konto-Seite. Aktiver Punkt anhand des Pfads.
+// Rollen-/Capability-Gating (wie die Haupt-Sidebar): nur Tabs zeigen, die der
+// Nutzer wirklich bedienen kann — sonst landet er auf 403-/„Kein Zugriff"-
+// Seiten. „Tarif & Abo" und „Umzug" sind Admin/Co-Admin-Sachen; Profil,
+// Nutzer und Sicherheit richten sich nach eigenen Guards.
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { cn } from "@/lib/utils";
 
-const ITEMS = [
-  { title: "Profil", href: "/konto", icon: "ph:user-circle" },
-  { title: "Tarif & Abo", href: "/konto/tarif", icon: "ph:receipt" },
-  { title: "Umzug (Lodgify …)", href: "/konto/umzug", icon: "ph:arrows-left-right" },
-  { title: "Branding & Domains", href: "/konto/branding", icon: "ph:paint-brush" },
-  { title: "Nutzer", href: "/konto/nutzer", icon: "ph:users" },
-  { title: "Sicherheit", href: "/konto/sicherheit", icon: "ph:shield-check" },
-] as const;
+type Item = {
+  title: string;
+  href: string;
+  icon: string;
+  // Sichtbar nur, wenn eine dieser Capabilities vorhanden ist (leer = immer).
+  requireAny?: string[];
+};
 
-export function KontoNav() {
+// „Branding & Domains" absichtlich entfernt: die Route existierte nicht (404).
+const ITEMS: readonly Item[] = [
+  { title: "Profil", href: "/konto", icon: "ph:user-circle" },
+  {
+    title: "Tarif & Abo",
+    href: "/konto/tarif",
+    icon: "ph:receipt",
+    requireAny: ["manage_billing"],
+  },
+  {
+    title: "Umzug (Lodgify …)",
+    href: "/konto/umzug",
+    icon: "ph:arrows-left-right",
+    requireAny: ["manage_property_settings", "edit_property"],
+  },
+  {
+    title: "Nutzer",
+    href: "/konto/nutzer",
+    icon: "ph:users",
+    requireAny: ["manage_staff"],
+  },
+  { title: "Sicherheit", href: "/konto/sicherheit", icon: "ph:shield-check" },
+];
+
+export function KontoNav({
+  role = null,
+  capabilities = [],
+  permissions = [],
+}: {
+  role?: string | null;
+  capabilities?: string[];
+  permissions?: string[];
+}) {
   const pathname = usePathname();
+  const grantSet = new Set([...capabilities, ...permissions]);
+
+  const items = ITEMS.filter((item) => {
+    if (role === "admin") return true;
+    if (!item.requireAny) return true;
+    return item.requireAny.some((c) => grantSet.has(c));
+  });
 
   return (
     <nav className="flex flex-col gap-1">
-      {ITEMS.map((item) => {
+      {items.map((item) => {
         const active =
           item.href === "/konto"
             ? pathname === "/konto"
