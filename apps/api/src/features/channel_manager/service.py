@@ -29,6 +29,7 @@ from .common import (
     log,
 )
 from .content_sync import ContentSyncMixin
+from .full_sync import FullSyncMixin
 from .oauth_channels import OAuthChannelsMixin
 from .ota_extras import OtaExtrasMixin
 from .property_mapping import PropertyMappingMixin
@@ -52,7 +53,8 @@ class ChannelManagerService(
     OAuthChannelsMixin,
     BookingsSyncMixin,
     OtaExtrasMixin,
-):
+    FullSyncMixin,
+):  # pylint: disable=too-many-ancestors  # bewusste Fassade über Domänen-Mixins
     slice_name = "channel_manager"
 
     def __init__(

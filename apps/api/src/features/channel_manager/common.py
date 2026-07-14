@@ -105,14 +105,16 @@ def _availability_settings(av: dict[str, Any]) -> dict[str, Any]:
     mst = av.get("minStayType")
     if isinstance(mst, str) and mst in _MIN_STAY_TYPES:
         out["min_stay_type"] = mst
-    for local_key, cx_key in (
-        ("autoUpdateOnConfirmation", "allow_availability_autoupdate_on_confirmation"),
-        ("autoUpdateOnModification", "allow_availability_autoupdate_on_modification"),
-        ("autoUpdateOnCancellation", "allow_availability_autoupdate_on_cancellation"),
-    ):
-        val = av.get(local_key)
-        if isinstance(val, bool):
-            out[cx_key] = val
+    # Availability-Autoupdate bei Channex FEST AUS (wir sind PMS = Availability-
+    # Master): unser Kalender pusht nach jeder Buchung/Storno den ABSOLUTEN Wert
+    # (0/1) an Channex. Ließe man Channex zusätzlich relativ nachziehen
+    # (+1 bei Storno / −1 bei Bestätigung), entstünde reihenfolgeabhängig ein
+    # Doppel-Dekrement (Einheit doppelt verkaufbar / phantom-belegt), weil
+    # Channex ARI asynchron verarbeitet. on_confirmation ist bei Channex
+    # read-only true; modification/cancellation pinnen wir hart auf false und
+    # ignorieren die alten UI-Toggles bewusst (sie waren die Overbooking-Quelle).
+    out["allow_availability_autoupdate_on_modification"] = False
+    out["allow_availability_autoupdate_on_cancellation"] = False
     return out
 
 

@@ -336,8 +336,18 @@ class ContentSyncMixin:
             return
         existing_id = pm[0].get("channex_hotel_policy_id")
         if existing_id:
-            self._channex.update_hotel_policy(existing_id, attrs)
-            return
+            try:
+                self._channex.update_hotel_policy(existing_id, attrs)
+                return
+            except ChannexError as exc:
+                if exc.channex_status != 404:
+                    raise
+                # Policy bei Channex weg (Retention/manuell gelöscht) → Pointer
+                # verwerfen und unten neu anlegen (Selbstheilung statt Dauerfehler).
+                log.info(
+                    "hotel_policy_stale_recreate",
+                    tenant_id=tenant_id, property_id=property_id,
+                )
         attrs["property_id"] = channex_property_id
         created = self._channex.create_hotel_policy(attrs)
         policy_id = (created.get("data") or {}).get("id")

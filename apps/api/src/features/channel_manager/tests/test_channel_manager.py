@@ -198,6 +198,21 @@ class _ReconcileQuery:
         self._filters.append(("in", field, values, False))
         return self
 
+    def gte(self, field, value):  # noqa: ANN001, ANN201
+        self._filters.append(("gte", field, value, False))
+        return self
+
+    def lte(self, field, value):  # noqa: ANN001, ANN201
+        self._filters.append(("lte", field, value, False))
+        return self
+
+    def lt(self, field, value):  # noqa: ANN001, ANN201
+        self._filters.append(("lt", field, value, False))
+        return self
+
+    def or_(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+        return self
+
     def is_(self, field, _value):  # noqa: ANN001, ANN201
         neg = self._not_next
         self._not_next = False
@@ -231,6 +246,12 @@ class _ReconcileQuery:
                 ok = row.get(field) is None
                 if neg:
                     ok = not ok
+            elif kind == "gte":
+                ok = row.get(field) is not None and row.get(field) >= value
+            elif kind == "lte":
+                ok = row.get(field) is not None and row.get(field) <= value
+            elif kind == "lt":
+                ok = row.get(field) is not None and row.get(field) < value
             else:
                 ok = True
             if not ok:
@@ -613,9 +634,11 @@ def test_availability_settings_maps_valid_channex_keys() -> None:
             "cutOffDays": 2,
             "maxDayAdvance": 400,
             "minStayType": "arrival",
-            "autoUpdateOnConfirmation": True,
+            # Autoupdate-Toggles werden BEWUSST ignoriert (PMS = Availability-
+            # Master): modification/cancellation sind hart auf false gepinnt,
+            # sonst entstünde ein Doppel-Dekrement gegen unseren absoluten Push.
             "autoUpdateOnModification": True,
-            "autoUpdateOnCancellation": False,
+            "autoUpdateOnCancellation": True,
         }
     )
     assert out == {
@@ -623,8 +646,7 @@ def test_availability_settings_maps_valid_channex_keys() -> None:
         "cut_off_days": 2,
         "max_day_advance": 400,
         "min_stay_type": "arrival",
-        "allow_availability_autoupdate_on_confirmation": True,
-        "allow_availability_autoupdate_on_modification": True,
+        "allow_availability_autoupdate_on_modification": False,
         "allow_availability_autoupdate_on_cancellation": False,
     }
 
@@ -632,8 +654,11 @@ def test_availability_settings_maps_valid_channex_keys() -> None:
 def test_availability_settings_drops_invalid_and_empty() -> None:
     from src.features.channel_manager.service import _availability_settings
 
-    # Leerer Block → keine Keys (kein erfundener Default).
-    assert _availability_settings({}) == {}
+    # Leerer Block → nur die fest gepinnten Autoupdate-Flags (PMS = Master).
+    assert _availability_settings({}) == {
+        "allow_availability_autoupdate_on_modification": False,
+        "allow_availability_autoupdate_on_cancellation": False,
+    }
     # Ungültige Cut-Off-Zeit / negative Zahlen / unbekannter Typ → weglassen.
     out = _availability_settings(
         {
@@ -643,11 +668,18 @@ def test_availability_settings_drops_invalid_and_empty() -> None:
             "minStayType": "raumschiff",
         }
     )
-    assert out == {}
+    assert out == {
+        "allow_availability_autoupdate_on_modification": False,
+        "allow_availability_autoupdate_on_cancellation": False,
+    }
     # cutOffTime="" (Nutzer schaltet aus) ist kein gültiges HH:MM → nicht senden.
     assert "cut_off_time" not in _availability_settings({"cutOffTime": ""})
     # bool ist kein gültiger int für cut_off_days (Python: True == 1) — abweisen.
-    assert _availability_settings({"cutOffDays": True}) == {}
+    # (Die fest gepinnten Autoupdate-Flags bleiben immer im Ergebnis.)
+    assert _availability_settings({"cutOffDays": True}) == {
+        "allow_availability_autoupdate_on_modification": False,
+        "allow_availability_autoupdate_on_cancellation": False,
+    }
 
 
 def test_property_attrs_includes_availability_settings() -> None:
@@ -1522,7 +1554,12 @@ def test_property_attrs_includes_settings() -> None:
 
 def test_property_attrs_settings_without_pricing() -> None:
     attrs = ChannelManagerService._property_attrs({"city": "Kiel"})
-    assert attrs["settings"] == {"state_length": 365}  # nur Inventartage, keine Preisgrenzen
+    # Inventartage + fest gepinnte Autoupdate-Flags (PMS = Master); keine Preisgrenzen.
+    assert attrs["settings"] == {
+        "state_length": 365,
+        "allow_availability_autoupdate_on_modification": False,
+        "allow_availability_autoupdate_on_cancellation": False,
+    }
 
 
 # --- Hotel-ID-Persistierung (channex_channel_connection) ---------------------

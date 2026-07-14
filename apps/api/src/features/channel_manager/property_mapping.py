@@ -503,8 +503,16 @@ class PropertyMappingMixin:
                         "hotel_policy_delete_failed",
                         policy_id=policy_id, error=exc.message,
                     )
+        # channex_hotel_policy_id mit-nullen: die Policy wurde oben (falls
+        # vorhanden) bei Channex gelöscht. Bliebe die ID stehen, würde ein
+        # Reconnect dieselbe Map-Zeile reanimieren und content_sync riefe
+        # update_hotel_policy(tote_id) → 404 → Content-Sync dauerhaft im Fehler.
         db.table("channex_property_map").update(
-            {"deleted_at": datetime.now(UTC).isoformat(), "sync_enabled": False}
+            {
+                "deleted_at": datetime.now(UTC).isoformat(),
+                "sync_enabled": False,
+                "channex_hotel_policy_id": None,
+            }
         ).eq("id", map_id).eq("tenant_id", tenant_id).execute()
 
     # -- Row → Schema ----------------------------------------------------------

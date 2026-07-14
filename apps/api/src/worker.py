@@ -622,14 +622,16 @@ class Worker:
         # desselben Tages würde sonst bei jedem weiteren 15-min-Tick im
         # Nachtfenster erneut eingereiht (4×N Voll-Pushes pro Nacht).
         done_today: set[str] = set()
-        if keys:
+        for i in range(0, len(keys), 100):  # URL-Länge: in-Filter chunken
             existing = (
                 self._db.table("jobs")
                 .select("dedup_key")
-                .in_("dedup_key", keys)
+                .in_("dedup_key", keys[i:i + 100])
                 .execute()
             ).data or []
-            done_today = {e["dedup_key"] for e in existing if e.get("dedup_key")}
+            done_today.update(
+                e["dedup_key"] for e in existing if e.get("dedup_key")
+            )
         for i, r in enumerate(rows):
             key = f"full_sync:{r['property_id']}:{day}"
             if key in done_today:
@@ -644,8 +646,13 @@ class Worker:
         # analog zur Channex-Retention-Doku nach 90 Tagen aufräumen.
         try:
             cutoff = (now - timedelta(days=90)).isoformat()
+            # Handlungspflichtige, noch offene Ereignisse (Airbnb-Anfragen)
+            # NICHT wegräumen — nur resolved ODER reine Info/Fehler-Events.
             self._db.table("channex_webhook_event").delete().lt(
                 "created_at", cutoff
+            ).or_(
+                "resolved.eq.true,"
+                "event.not.in.(reservation_request,alteration_request,inquiry)"
             ).execute()
         except Exception as exc:  # noqa: BLE001 — Aufräumen nie den Tick kippen
             log.warning("webhook_event_retention_failed", error=str(exc)[:200])

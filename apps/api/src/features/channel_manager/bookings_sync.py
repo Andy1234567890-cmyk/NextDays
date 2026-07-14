@@ -53,12 +53,49 @@ class BookingsSyncMixin:
         )
         return self._sync_feed(db, tenant_by_property)
 
+    # Advisory-Lock-Schlüssel für den kontoweiten Feed-Pull. Der Job-Dedup-Key
+    # koalesziert nur QUEUED-Jobs (Migration 0108) — er verhindert NICHT, dass
+    # ein Webhook-Job neben einem bereits LAUFENDEN Feed-Job geclaimt wird.
+    # Zwei parallele _sync_feed-Läufe auf demselben kontoweiten Feed würden sich
+    # gegenseitig die Seiten wegacken und in den reservations-Unique-Index
+    # laufen. Ein pg_try_advisory-Lock erzwingt echtes Single-Flight (konstante
+    # Zufallszahl, nur für diesen Zweck reserviert).
+    _FEED_LOCK_KEY = 792143008
+
     def sync_bookings_all(self) -> BookingSyncResponse:
         """Feed-Pull über ALLE Tenants (Worker-Job: Webhook-Trigger + Backstop-
         Tick). Ordnet jede Revision über channex_property_map ihrem Tenant zu;
         Revisionen ohne aktives Mapping werden übersprungen und NICHT ge-ackt
-        (Channex liefert sie erneut, bis das Mapping existiert)."""
+        (Channex liefert sie erneut, bis das Mapping existiert).
+
+        Single-Flight: läuft bereits ein Feed-Pull, kehrt dieser sofort ohne
+        Arbeit zurück (der laufende erledigt alles offene; der nächste Tick holt
+        etwaigen Rest)."""
         db = self._require_db()
+        got_lock = False
+        try:
+            got_lock = bool(
+                db.rpc(
+                    "try_channex_feed_lock", {"p_key": self._FEED_LOCK_KEY}
+                ).execute().data
+            )
+        except Exception as exc:  # noqa: BLE001 — Lock-RPC-Fehler nie fatal
+            log.warning("channex_feed_lock_rpc_failed", error=str(exc)[:200])
+            got_lock = True  # RPC kaputt → lieber laufen als Buchungen liegen lassen
+        if not got_lock:
+            log.info("channex_feed_lock_busy")
+            return BookingSyncResponse()
+        try:
+            return self._sync_all_locked(db)
+        finally:
+            try:
+                db.rpc(
+                    "release_channex_feed_lock", {"p_key": self._FEED_LOCK_KEY}
+                ).execute()
+            except Exception as exc:  # noqa: BLE001 — Unlock best effort
+                log.warning("channex_feed_unlock_failed", error=str(exc)[:200])
+
+    def _sync_all_locked(self, db: Client) -> BookingSyncResponse:
         rows = (
             db.table("channex_property_map")
             .select("tenant_id, channex_property_id")
@@ -382,6 +419,37 @@ class BookingsSyncMixin:
         ).data or []
         return rows[0].get("currency") if rows else None
 
+    @staticmethod
+    def _projection_precheck(
+        tenant_id: str, booking_id: str | None, attrs: dict[str, Any]
+    ) -> bool:
+        """Vorbedingungen für die Reservierungs-Projektion (Pflichtfelder +
+        Status-Whitelist). False → skip mit Log; hält die Projektionsmethode
+        flach."""
+        if not (
+            booking_id
+            and attrs.get("property_id")
+            and attrs.get("arrival_date")
+            and attrs.get("departure_date")
+        ):
+            log.warning(
+                "reservation_skip_incomplete",
+                tenant_id=tenant_id, booking_id=booking_id,
+            )
+            return False
+        # Status-Whitelist: nur echte Buchungs-Zustände projizieren. Ein
+        # unbekannter Status (sollte Channex je eine noch nicht akzeptierte
+        # Airbnb-Anfrage als Revision liefern) darf NICHT hart zu 'confirmed'
+        # werden und Nächte sperren/avail=0 pushen (Phantom-Belegung).
+        status = (attrs.get("status") or "new").strip().lower()
+        if status not in ("new", "modified", "cancelled"):
+            log.warning(
+                "reservation_skip_unknown_status",
+                tenant_id=tenant_id, booking_id=booking_id, status=status,
+            )
+            return False
+        return True
+
     def _project_booking_to_reservation(
         self,
         db: Client,
@@ -398,12 +466,7 @@ class BookingsSyncMixin:
         channex_property_id = attrs.get("property_id")
         arrival = attrs.get("arrival_date")
         departure = attrs.get("departure_date")
-        if not (booking_id and channex_property_id and arrival and departure):
-            log.warning(
-                "reservation_skip_incomplete",
-                tenant_id=tenant_id,
-                booking_id=booking_id,
-            )
+        if not self._projection_precheck(tenant_id, booking_id, attrs):
             return False
 
         property_id = self._resolve_local_property(db, tenant_id, channex_property_id)
@@ -804,6 +867,29 @@ class BookingsSyncMixin:
             return result
 
         start = today or datetime.now(UTC).date()
+        # Ping-Pong-Schutz (Wurzel 1): Tage, für die wir GERADE erst einen
+        # availability-Delta an Channex gepusht haben (ari_outbox der letzten
+        # 30 Min, pending ODER done), NICHT aus Channex zurückspiegeln. Channex
+        # verarbeitet ARI asynchron — ein Import kurz nach unserem Push läse noch
+        # den alten Wert und überschriebe die frische lokale Wahrheit (Host gibt
+        # Tag frei → Import macht ihn wieder 'blocked' → Full-Sync zementiert 0).
+        # DB ist Availability-Master; der Import gleicht nur EXTERN verursachte
+        # Änderungen ab.
+        recent_cutoff = (datetime.now(UTC) - timedelta(minutes=30)).isoformat()
+        recent_push_days: set[str] = set()
+        for r in (
+            db.table("ari_outbox")
+            .select("date_from, date_to")
+            .eq("property_id", property_id)
+            .gte("created_at", recent_cutoff)
+            .execute()
+        ).data or []:
+            if r.get("date_from") and r.get("date_to"):
+                cur = date.fromisoformat(r["date_from"])
+                last = date.fromisoformat(r["date_to"])
+                while cur <= last:
+                    recent_push_days.add(cur.isoformat())
+                    cur += timedelta(days=1)
         chunk = 90
         offset = 0
         while offset < days_ahead:
@@ -841,13 +927,18 @@ class BookingsSyncMixin:
                 or []
             }
             for d, qty in by_date.items():
+                # Frisch selbst gepushter Tag → Channex-Wert ignorieren (Ping-Pong).
+                if d in recent_push_days:
+                    continue
                 cur = existing_days.get(d)
                 # 'booked'-Tage (echte Buchung) NICHT überschreiben.
                 if cur and cur["status"] == "booked":
                     continue
                 new_status = "open" if qty > 0 else "blocked"
-                # Idempotent: identischer Status + Quelle → nichts schreiben.
-                if cur and cur["status"] == new_status and cur.get("source") == "portal":
+                # Idempotent: identischer Status → nichts schreiben (Quelle egal).
+                # Eine manuelle Sperre (source='manual') mit gleichem Status NICHT
+                # zu 'portal' umschreiben — die Herkunft steuert _free_ota_nights.
+                if cur and cur["status"] == new_status:
                     continue
                 db.table("availability").upsert(
                     {

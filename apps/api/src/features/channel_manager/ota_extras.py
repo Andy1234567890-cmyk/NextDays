@@ -121,6 +121,14 @@ class OtaExtrasMixin:
                 out.append({"id": row.get("id") or attrs.get("id"), **attrs})
             if len(out) >= needed or len(rows) < 100:
                 break
+        else:
+            # Deckel erreicht, ohne `needed` zu füllen: sichtbar machen (kein
+            # stilles Abschneiden) — Rest liegt jenseits des Blätter-Deckels.
+            if len(out) < needed:
+                log.warning(
+                    "channex_account_list_cap_reached",
+                    max_pages=self._ACCOUNT_LIST_MAX_PAGES, collected=len(out),
+                )
         start = (page - 1) * limit
         return out[start:start + limit]
 
@@ -215,12 +223,34 @@ class OtaExtrasMixin:
         }
         foreign_ch = [c for c in channels if c not in own_channels]
         foreign_rt = [r for r in room_types if r not in own_rooms]
+        # channex_channel_connection ist best-effort persistiert (der Connect
+        # loggt Persistenzfehler nur). Bei Miss die LIVE-Kanalliste der eigenen
+        # Objekte gegenprüfen, bevor eine legitime Regel fälschlich abgelehnt
+        # wird (Import-/Bestandskanäle ohne lokale Zeile).
+        if foreign_ch:
+            live = self._live_own_channel_ids(ctx)
+            foreign_ch = [c for c in foreign_ch if c not in live]
         if foreign_ch or foreign_rt:
             raise ChannelManagerError(
                 "Regel verweist auf Kanäle/Zimmertypen, die nicht zu diesem "
                 "Konto gehören.",
                 status_code=422,
             )
+
+    def _live_own_channel_ids(self, ctx: AuthContext) -> set[str]:
+        """Channex-Channel-IDs der eigenen Objekte LIVE von Channex (Fallback
+        zur best-effort persistierten channex_channel_connection)."""
+        own_props = self._own_channex_property_ids(ctx)
+        ids: set[str] = set()
+        for pid in own_props:
+            try:
+                for ch in _rows(self._channex.list_channels(property_id=pid)):
+                    cid = ch.get("id") or _attrs(ch).get("id")
+                    if cid:
+                        ids.add(str(cid))
+            except ChannexError:
+                continue  # ein Objekt ohne Kanäle/Fehler → überspringen
+        return ids
 
     def create_availability_rule(
         self, ctx: AuthContext, map_id: str, attributes: dict[str, Any]
@@ -341,6 +371,14 @@ class OtaExtrasMixin:
                 )
             if len(out) >= needed or len(rows) < 100:
                 break
+        else:
+            # Deckel erreicht, ohne `needed` zu füllen: sichtbar machen (kein
+            # stilles Abschneiden) — Rest liegt jenseits des Blätter-Deckels.
+            if len(out) < needed:
+                log.warning(
+                    "channex_account_list_cap_reached",
+                    max_pages=self._ACCOUNT_LIST_MAX_PAGES, collected=len(out),
+                )
         start = (page - 1) * limit
         return out[start:start + limit]
 

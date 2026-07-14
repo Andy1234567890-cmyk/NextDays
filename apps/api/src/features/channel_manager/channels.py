@@ -789,6 +789,12 @@ class ChannelsMixin:
          "sync_error", "rate_error", "deactivate_channel", "disconnect_channel",
          "disconnect_listing"}
     )
+    # Handlungspflichtige Ereignisse mit Frist (Airbnb-Anfragen: Auto-Decline
+    # nach ~24h). severity='action' → im UI hervorheben, von der Retention
+    # ausgenommen (worker.py), solange unresolved.
+    _ACTION_EVENTS = frozenset(
+        {"reservation_request", "alteration_request", "inquiry"}
+    )
     # Hochvolumige Events, die NICHT in die Ereignisliste persistiert werden
     # (ari feuert bei jeder Preis-/Verfügbarkeitsänderung; message läuft über
     # den Posteingang).
@@ -918,11 +924,16 @@ class ChannelsMixin:
         Tabelle ist tenant-scoped; kontolose Events stehen im Log)."""
         if self._db is None or tenant_id is None:
             return
-        severity = "error" if event in self._ERROR_EVENTS else "info"
-        if severity == "error":
-            log.error(
-                "channex_webhook_problem", webhook_event=event,
-                tenant_id=tenant_id, property_id=property_id,
+        if event in self._ERROR_EVENTS:
+            severity = "error"
+        elif event in self._ACTION_EVENTS:
+            severity = "action"
+        else:
+            severity = "info"
+        if severity in ("error", "action"):
+            log.warning(
+                "channex_webhook_actionable", webhook_event=event,
+                severity=severity, tenant_id=tenant_id, property_id=property_id,
             )
         # Payload-Deckel: rohe Webhook-Payloads (send_data) können groß sein
         # und enthalten Gast-PII. Über 32 KB nur einen Marker speichern — die
