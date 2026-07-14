@@ -317,9 +317,9 @@ class AccountService:
     def list_managed_users(self, ctx: AuthContext) -> list[TenantUser]:
         """Nutzerliste für die Verwaltung (Konto → Benutzer).
 
-        Admins sehen ALLE Nutzer plattformweit (über alle Tenants), Owner/Co-Admin
-        nur ihren eigenen Tenant. Normale Benutzer (staff/cleaner) haben keinen
-        Zugriff (403).
+        IMMER nur der eigene Tenant (Wurzel 3) — die Agentur verwaltet ihre
+        eigenen Nutzer, nie fremde Konten. Normale Benutzer (staff/cleaner)
+        haben keinen Zugriff (403).
         """
         row = self._ensure_user_row(ctx)
         role_raw = row.get("role") or ctx.role
@@ -330,19 +330,16 @@ class AccountService:
         if role not in self._USER_MGMT_ROLES:
             raise AuthError("Keine Berechtigung für die Nutzerverwaltung.", status_code=403)
 
-        query = (
+        tenant_id = row.get("tenant_id") or ctx.tenant_id
+        if not tenant_id:
+            return []
+        res = (
             self._service.table("users")
             .select("id, email, full_name, role, tenant_id, permissions")
+            .eq("tenant_id", tenant_id)
             .order("created_at")
+            .execute()
         )
-        # Nicht-Admins sehen nur den eigenen Tenant.
-        if role is not UserRole.admin:
-            tenant_id = row.get("tenant_id") or ctx.tenant_id
-            if not tenant_id:
-                return []
-            query = query.eq("tenant_id", tenant_id)
-
-        res = query.execute()
         users = [self._to_tenant_user(u) for u in (res.data or [])]
         rank = {UserRole.admin: 0, UserRole.owner: 1, UserRole.co_admin: 2}
         users.sort(key=lambda u: rank.get(u.role, 9))
