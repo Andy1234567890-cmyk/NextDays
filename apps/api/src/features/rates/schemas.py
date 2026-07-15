@@ -33,6 +33,9 @@ class RatePlanResponse(BaseModel):
     base_price: float
     currency: str
     min_stay: int
+    # Hotel: Zimmerkategorie des Plans (None = Ferienwohnung). Nötig, damit die UI
+    # die Rate-Plans je Kategorie gruppieren kann (BAR/B&B je Room-Type).
+    room_type_id: str | None = None
 
 
 class RatePlanListResponse(BaseModel):

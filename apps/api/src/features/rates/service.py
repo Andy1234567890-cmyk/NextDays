@@ -71,6 +71,7 @@ class RatesService:
             base_price=float(r.get("base_price") or 0),
             currency=r.get("currency") or "EUR",
             min_stay=int(r.get("min_stay") or 1),
+            room_type_id=r.get("room_type_id"),
         )
 
     def list(self, ctx: AuthContext, property_id: str) -> RatePlanListResponse:

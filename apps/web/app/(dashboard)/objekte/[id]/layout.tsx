@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 
 import { PropertyRealtime } from "@/components/objekte/property-realtime";
 import { PropertySubnav } from "@/components/objekte/property-subnav";
+import { getMe } from "@/lib/auth";
 import { getProperty } from "@/lib/properties";
 
 export default async function ObjektLayout({
@@ -15,7 +16,8 @@ export default async function ObjektLayout({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const res = await getProperty(id);
+  const [res, me] = await Promise.all([getProperty(id), getMe()]);
+  const isHotel = me?.accommodation_type === "hotel";
   if (!res.ok) {
     if (res.error.includes("nicht gefunden")) notFound();
     return (
@@ -35,6 +37,7 @@ export default async function ObjektLayout({
         title={res.data.title}
         photo={res.data.photos[0] ?? null}
         status={res.data.status}
+        isHotel={isHotel}
       />
       <div className="min-w-0">{children}</div>
     </div>

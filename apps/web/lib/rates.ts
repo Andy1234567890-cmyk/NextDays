@@ -13,6 +13,9 @@ export type RatePlan = {
   base_price: number;
   currency: string;
   min_stay: number;
+  // Hotel: Zimmerkategorie des Plans (null = Ferienwohnung). Erlaubt der UI, die
+  // Pläne je Kategorie zu gruppieren (BAR/B&B je Room-Type).
+  room_type_id: string | null;
 };
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -38,6 +41,51 @@ export async function listRatePlans(
   propertyId: string,
 ): Promise<Result<{ items: RatePlan[]; total: number }>> {
   return call(`/rates?property_id=${encodeURIComponent(propertyId)}`);
+}
+
+/** Einen Rate-Plan anlegen — Hotel: einer Zimmerkategorie zugeordnet (roomTypeId),
+ *  damit mehrere Pläne je Kategorie (BAR, B&B …) mit eigenem Preis entstehen. Die
+ *  Währung wird IMMER explizit übergeben (kein EUR-Default — Zert läuft auf USD). */
+export async function createRatePlan(input: {
+  propertyId: string;
+  name: string;
+  basePrice: number;
+  currency: string;
+  minStay?: number;
+  roomTypeId?: string;
+}): Promise<Result<RatePlan>> {
+  return call("/rates", {
+    method: "POST",
+    body: {
+      property_id: input.propertyId,
+      name: input.name,
+      base_price: input.basePrice,
+      currency: input.currency,
+      min_stay: input.minStay ?? 1,
+      ...(input.roomTypeId ? { room_type_id: input.roomTypeId } : {}),
+    },
+  });
+}
+
+/** Einen Rate-Plan aktualisieren (Name/Preis/Währung/Mindestaufenthalt). */
+export async function updateRatePlan(
+  id: string,
+  patch: { name?: string; basePrice?: number; currency?: string; minStay?: number },
+): Promise<Result<RatePlan>> {
+  return call(`/rates/${id}`, {
+    method: "PATCH",
+    body: {
+      ...(patch.name !== undefined ? { name: patch.name } : {}),
+      ...(patch.basePrice !== undefined ? { base_price: patch.basePrice } : {}),
+      ...(patch.currency !== undefined ? { currency: patch.currency } : {}),
+      ...(patch.minStay !== undefined ? { min_stay: patch.minStay } : {}),
+    },
+  });
+}
+
+/** Einen Rate-Plan löschen. */
+export async function deleteRatePlan(id: string): Promise<Result<null>> {
+  return call(`/rates/${id}`, { method: "DELETE" });
 }
 
 /** Basispreis eines Objekts setzen: Upsert im Backend (ersten rate_plan ändern

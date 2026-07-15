@@ -9,7 +9,9 @@ import { usePathname } from "next/navigation";
 import { STATUS_LABELS } from "@/lib/property-meta";
 import type { PropertyStatus } from "@/lib/properties";
 
-const GROUPS: { label: string; items: { slug: string; title: string; icon: string }[] }[] = [
+type SubnavItem = { slug: string; title: string; icon: string; hotelOnly?: boolean };
+
+const GROUPS: { label: string; items: SubnavItem[] }[] = [
   {
     label: "Objektdetails",
     items: [
@@ -25,7 +27,10 @@ const GROUPS: { label: string; items: { slug: string; title: string; icon: strin
   {
     label: "Reservierung",
     items: [
-      { slug: "preise", title: "Preise", icon: "ph:currency-eur" },
+      // Nur im Hotel-Modus: Zimmerkategorien (room_types) + je Kategorie eigene
+      // Rate-Plans. currency-neutrales Icon (kein €-Symbol — Hotel kann USD sein).
+      { slug: "zimmerkategorien", title: "Zimmerkategorien", icon: "ph:bed", hotelOnly: true },
+      { slug: "preise", title: "Preise", icon: "ph:tag" },
       { slug: "zusatzleistungen", title: "Zusatzleistungen", icon: "ph:plus-circle" },
       { slug: "verfuegbarkeit", title: "Verfügbarkeit", icon: "ph:calendar-blank" },
       { slug: "richtlinien", title: "Richtlinien", icon: "ph:file-text" },
@@ -39,11 +44,13 @@ export function PropertySubnav({
   title,
   photo,
   status,
+  isHotel = false,
 }: {
   id: string;
   title: string;
   photo: string | null;
   status: PropertyStatus;
+  isHotel?: boolean;
 }) {
   const pathname = usePathname();
   const base = `/objekte/${id}`;
@@ -79,7 +86,9 @@ export function PropertySubnav({
           <span className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {g.label}
           </span>
-          {g.items.map((it) => {
+          {g.items
+            .filter((it) => !it.hotelOnly || isHotel)
+            .map((it) => {
             const href = it.slug ? `${base}/${it.slug}` : base;
             const active = isActive(it.slug);
             return (
