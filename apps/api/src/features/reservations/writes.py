@@ -50,6 +50,28 @@ class WritesMixin(ReservationsBase):
         if not prop.data:
             raise ReservationError("Objekt nicht gefunden.", status_code=404)
 
+        # 1b) room_type_id serverseitig scopen (Wurzel 3: der Anfrage nicht
+        #     vertrauen). Eine übergebene Zimmerkategorie MUSS zu DIESER Property
+        #     gehören — sonst könnte ein Client den count-Zähler einer fremden
+        #     Kategorie hochtreiben (oder eine echte Hotel-Property durch Weglassen
+        #     der ID in den binären FeWo-Pfad rutschen). Der Service-Role-Key
+        #     umgeht RLS, deshalb hier explizit gegen property_id + tenant_id.
+        if req.room_type_id is not None:
+            rt = (
+                self._db()
+                .table("room_types")
+                .select("id")
+                .eq("id", req.room_type_id)
+                .eq("property_id", req.property_id)
+                .eq("tenant_id", tenant_id)
+                .limit(1)
+                .execute()
+            )
+            if not rt.data:
+                raise ReservationError(
+                    "Zimmerkategorie nicht gefunden.", status_code=404
+                )
+
         # 2) Double-Booking-Vorcheck (früher UX-Guard). NUR fürs Ferienwohnungs-
         #    Modell (binäre availability). Bei Hotels (room_type_id gesetzt) ist
         #    die binäre availability-Tabelle irrelevant — dort schützt der
@@ -175,17 +197,23 @@ class WritesMixin(ReservationsBase):
         if not row:
             raise ReservationError("Reservierung konnte nicht angelegt werden.", status_code=500)
 
-        # Realtime: belegte Tage sofort an Channex/OTAs sperren (availability=0),
-        # damit keine OTA-Doppelbuchung entsteht. Buchungskalender = Wahrheit.
-        # NUR Ferienwohnungen: der binäre 0-Push würde bei Hotels den GANZEN
-        # Zimmertyp sperren, obwohl nur ein Zimmer weg ist. Der count-basierte
-        # Room-Type-Availability-Push kommt aus dem Channex-Umbau (Teil 2, sobald
-        # die Zimmerkategorien als Channex-Room-Types existieren); bis dahin kein
-        # falscher Sperr-Push für Hotels.
+        # Realtime: belegte Tage sofort an Channex/OTAs melden, damit keine
+        # OTA-Doppelbuchung entsteht. Buchungskalender = Wahrheit.
+        #  - Ferienwohnung: binärer 0-Push (eine Einheit ist weg → gesperrt).
+        #  - Hotel: der freie Rest-Count je Nacht der Zimmerkategorie geht an
+        #    ihren Channex-Room-Type — NICHT 0 (nur EIN Zimmer ist weg). Die RPC
+        #    hat die Rest-Count-Outbox-Zeilen bereits atomar geschrieben (Cron-
+        #    Backstop); dieser Push ist die schnelle Bahn (tag-genaues Superseding
+        #    macht ihn idempotent zur RPC-Zeile).
         if req.room_type_id is None:
             self._push_channex_availability(
                 tenant_id, req.property_id, req.check_in, req.check_out, 0,
                 outbox_id=result.get("outbox_id"),
+            )
+        else:
+            self._push_hotel_room_type_availability(
+                tenant_id, req.property_id, req.room_type_id,
+                req.check_in, req.check_out,
             )
         # Dynamic Pricing der betroffenen Tage neu rechnen (Auslastung/Orphan).
         self._recompute_dynamic_pricing(tenant_id, req.property_id)
@@ -292,6 +320,18 @@ class WritesMixin(ReservationsBase):
             raise ReservationError(
                 "OTA-Buchungen (Booking, Airbnb & Co.) lassen sich nicht lokal "
                 "verschieben — bitte die Änderung im Portal vornehmen.",
+                status_code=409,
+            )
+        # Hotel-Reservierung (room_type_id gesetzt): der Move müsste den
+        # count-Zähler (booked_count) an Alt- UND Ziel-Tagen/-Kategorie atomar
+        # umbuchen. Der binäre Belegungs-Pfad unten kennt das count-Modell nicht
+        # und würde den Zähler NICHT pflegen (Überbuchung). Fail-closed, bis der
+        # count-basierte Move gebaut ist (Wurzel 1/5). Storno + Neubuchung sind
+        # der Ausweichweg (beide count-korrekt).
+        if current.get("room_type_id"):
+            raise ReservationError(
+                "Zimmerbuchungen lassen sich derzeit nicht verschieben — bitte "
+                "stornieren und neu buchen.",
                 status_code=409,
             )
 
@@ -608,7 +648,8 @@ class WritesMixin(ReservationsBase):
         property_id = current["property_id"]
         nights = _nights(_as_date(current["check_in"]), _as_date(current["check_out"]))
         self._release_nights(
-            tenant_id, property_id, [d.isoformat() for d in nights], reservation_id
+            tenant_id, property_id, [d.isoformat() for d in nights], reservation_id,
+            room_type_id=current.get("room_type_id"),
         )
 
         # Audit: append-only Storno-Historie (Best-Effort — Log-Fehler darf die

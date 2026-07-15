@@ -205,6 +205,9 @@ def _handle_push_ari(
             # Vom Request-Pfad bereits persistierte Outbox-Zeile (RPC 0104 bzw.
             # _write_ari_outbox) abarbeiten statt eine zweite anzulegen.
             outbox_id=payload.get("outbox_id"),
+            # Hotel: die Zimmerkategorie (Rest-Count an ihren Channex-Room-Type);
+            # None = Ferienwohnung (binärer synthetischer Room-Type).
+            room_type_id=payload.get("room_type_id"),
         )
     elif kind == "rate":
         failed = push.push_rate_for_property(

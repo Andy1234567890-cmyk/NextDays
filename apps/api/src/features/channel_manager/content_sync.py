@@ -234,27 +234,11 @@ class ContentSyncMixin:
                 db, tenant_id, property_id, prop_title, prop_currency, prop_row, photos
             )
             self._trace_step(tenant_id=tenant_id, property_id=property_id, step="room_type")
-            channex_room_type_id, room_type_map_id = self._upsert_channex_room_type(
-                db, tenant_id, channex_property_id, property_id, prop_title,
-                prop_row, photos,
-            )
-            channex_rate_plan_ids: list[str] = []
-            for rp in rate_plans:
-                self._trace_step(tenant_id=tenant_id, property_id=property_id, step="rate_plan")
-                crp = self._upsert_channex_rate_plan(
-                    db, tenant_id, room_type_map_id, channex_property_id,
-                    channex_room_type_id, rp, prop_currency, prop_row,
+            channex_room_type_id, channex_rate_plan_ids = (
+                self._sync_room_types_and_rate_plans(
+                    db, tenant_id, channex_property_id, property_id, prop_title,
+                    prop_row, photos, rate_plans, prop_currency,
                 )
-                channex_rate_plan_ids.append(crp)
-            # Löschkette (Doku „Automated Mapping": entfernte Raten MÜSSEN auch
-            # in Channex entfernt werden, sonst „break the chain"): Mappings,
-            # deren lokaler Rate-Plan nicht mehr existiert, in Channex löschen.
-            self._trace_step(
-                tenant_id=tenant_id, property_id=property_id, step="rate_plan_prune"
-            )
-            self._prune_orphan_rate_plans(
-                db, tenant_id, room_type_map_id,
-                local_ids={rp["id"] for rp in rate_plans if rp.get("id")},
             )
             # Steuern (USt./City-Tax) → Channex tax_sets + tax_set_id am Rate-Plan.
             self._trace_step(tenant_id=tenant_id, property_id=property_id, step="taxes")
@@ -555,6 +539,261 @@ class ContentSyncMixin:
             "occ_infants": max(0, int(occ.get("infants") or 0)),
             "default_occupancy": occ_adults,
         }
+
+    def _sync_room_types_and_rate_plans(
+        self, db: Client, tenant_id: str, channex_property_id: str,
+        property_id: str, prop_title: str,
+        prop_row: dict[str, Any], photos: list[dict[str, Any]],
+        rate_plans: list[dict[str, Any]], prop_currency: str,
+    ) -> tuple[str, list[str]]:
+        """Room-Types + Rate-Plans an Channex spiegeln — verzweigt über den
+        zentralen Schalter (room_inventory.is_hotel_property):
+
+          - Ferienvermietung (0 room_types): EIN synthetischer Room-Type je
+            Property (local_unit_ref = property_id), ALLE Rate-Plans daran. Der
+            heutige Pfad, byte-identisch — kein Verhalten ändert sich.
+          - Hotel (≥1 room_types): je Zimmerkategorie ein Channex-Room-Type
+            (local_unit_ref = room_type.id, Belegung/count aus den room_types-
+            Spalten), Rate-Plans nur an DIE Kategorie, der sie per
+            rate_plans.room_type_id zugeordnet sind. Verwaiste Room-Type-Maps
+            (gelöschte Kategorie) werden bei Channex entfernt (Wurzel 1).
+
+        Gibt (repräsentative channex_room_type_id, alle channex_rate_plan_ids)
+        zurück (die Room-Type-ID nur für Trace/Log; bei Hotels der erste)."""
+        # room_inventory ist der EINZIGE Ort, der Hotel vs. FeWo entscheidet
+        # (kein Typ-Flag). Lazy-Import: content_sync ist ein Mixin ohne core-Import.
+        from src.core.room_inventory import (  # noqa: PLC0415
+            hotel_room_types,
+        )
+
+        categories = hotel_room_types(db, property_id)
+        if not categories:
+            # === Ferienwohnungs-Pfad (unverändert) ===
+            channex_room_type_id, room_type_map_id = self._upsert_channex_room_type(
+                db, tenant_id, channex_property_id, property_id, prop_title,
+                prop_row, photos,
+            )
+            channex_rate_plan_ids: list[str] = []
+            for rp in rate_plans:
+                self._trace_step(
+                    tenant_id=tenant_id, property_id=property_id, step="rate_plan"
+                )
+                channex_rate_plan_ids.append(
+                    self._upsert_channex_rate_plan(
+                        db, tenant_id, room_type_map_id, channex_property_id,
+                        channex_room_type_id, rp, prop_currency, prop_row,
+                    )
+                )
+            self._trace_step(
+                tenant_id=tenant_id, property_id=property_id, step="rate_plan_prune"
+            )
+            self._prune_orphan_rate_plans(
+                db, tenant_id, room_type_map_id,
+                local_ids={rp["id"] for rp in rate_plans if rp.get("id")},
+            )
+            # Gegenzustand beim Rückweg Hotel → Ferienwohnung (Wurzel 1): wurden
+            # ALLE Zimmerkategorien gelöscht, landet die Property wieder hier im
+            # FeWo-Zweig. Die alten Hotel-Room-Type-Maps (local_unit_ref =
+            # room_type.id) blieben sonst als aktive Waisen bei Channex stehen —
+            # eine OTA verkaufte weiter nicht mehr existierende Kategorien. Aktiv
+            # ist jetzt NUR der synthetische Room-Type (local_unit_ref =
+            # property_id); alles andere prunen.
+            self._prune_orphan_room_types(
+                db, tenant_id, channex_property_id, {property_id},
+            )
+            return channex_room_type_id, channex_rate_plan_ids
+
+        # === Hotel-Pfad: n Zimmerkategorien ===
+        # Rate-Plans nach ihrer room_type_id gruppieren. Ein Plan OHNE
+        # room_type_id gehört zu keiner Kategorie und wird NICHT gepusht
+        # (fail-closed, Wurzel 4/5: kein Anhängen an einen willkürlichen Typ).
+        plans_by_rt: dict[str, list[dict[str, Any]]] = {}
+        for rp in rate_plans:
+            rt_id = rp.get("room_type_id")
+            if rt_id:
+                plans_by_rt.setdefault(rt_id, []).append(rp)
+            else:
+                # Verwaister Plan (keiner Kategorie zugeordnet) → nicht gepusht
+                # (fail-closed, Wurzel 4/5). Sichtbar loggen wie jeder andere Skip
+                # (sonst verschwindet ein Preisplan wortlos aus Channex).
+                log.warning(
+                    "channex_rate_plan_orphan_no_room_type",
+                    tenant_id=tenant_id, property_id=property_id,
+                    rate_plan_id=rp.get("id"),
+                )
+
+        all_rate_plan_ids: list[str] = []
+        first_room_type_id: str | None = None
+        active_local_refs: set[str] = set()
+        for cat in categories:
+            active_local_refs.add(cat["id"])
+            self._trace_step(
+                tenant_id=tenant_id, property_id=property_id, step="room_type"
+            )
+            crt_id, rtm_id = self._upsert_hotel_room_type(
+                db, tenant_id, channex_property_id, cat, prop_row, photos,
+            )
+            first_room_type_id = first_room_type_id or crt_id
+            cat_plans = plans_by_rt.get(cat["id"], [])
+            for rp in cat_plans:
+                self._trace_step(
+                    tenant_id=tenant_id, property_id=property_id, step="rate_plan"
+                )
+                all_rate_plan_ids.append(
+                    self._upsert_channex_rate_plan(
+                        db, tenant_id, rtm_id, channex_property_id,
+                        crt_id, rp, prop_currency, prop_row,
+                    )
+                )
+            self._trace_step(
+                tenant_id=tenant_id, property_id=property_id, step="rate_plan_prune"
+            )
+            self._prune_orphan_rate_plans(
+                db, tenant_id, rtm_id,
+                local_ids={rp["id"] for rp in cat_plans if rp.get("id")},
+            )
+        # Verwaiste Room-Type-Maps (Kategorie gelöscht) bei Channex entfernen —
+        # Gegenzustand pflegen (Wurzel 1), fail-closed wie beim Rate-Plan-Prune.
+        self._prune_orphan_room_types(
+            db, tenant_id, channex_property_id, active_local_refs,
+        )
+        if first_room_type_id is None:
+            raise ChannexError("Kein Room-Type angelegt.", status_code=502)
+        return first_room_type_id, all_rate_plan_ids
+
+    def _upsert_hotel_room_type(
+        self, db: Client, tenant_id: str, channex_property_id: str,
+        cat: dict[str, Any], prop_row: dict[str, Any],
+        photos: list[dict[str, Any]],
+    ) -> tuple[str, str]:
+        """Eine Zimmerkategorie (room_types-Zeile) als Channex-Room-Type anlegen/
+        aktualisieren. local_unit_ref = room_types.id (n je Property). Belegung/
+        count aus den room_types-Spalten — NICHT aus max_guests/type_attributes
+        (Wurzel 4: die Kategorie ist die Wahrheit). Gibt (channex_room_type_id,
+        room_type_map_id) zurück."""
+        property_map = (
+            db.table("channex_property_map")
+            .select("id")
+            .eq("channex_property_id", channex_property_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        )
+        if not property_map.data:
+            raise ChannexError("Property-Mapping fehlt.", status_code=500)
+        property_map_id = property_map.data[0]["id"]
+        local_ref = cat["id"]
+        title = cat.get("title") or "Zimmer"
+
+        existing = (
+            db.table("channex_room_type_map")
+            .select("id, channex_room_type_id")
+            .eq("property_map_id", property_map_id)
+            .eq("local_unit_ref", local_ref)
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        )
+        attrs: dict[str, Any] = {
+            "property_id": channex_property_id,
+            "title": title,
+            "count_of_rooms": int(cat["count_of_rooms"]),
+            "occ_adults": int(cat["occ_adults"]),
+            "occ_children": int(cat.get("occ_children") or 0),
+            "occ_infants": int(cat.get("occ_infants") or 0),
+            "default_occupancy": int(cat["default_occupancy"]),
+            "room_kind": "room",
+        }
+        # Room-Type-Content (Beschreibung + Fotos) teilt sich die Property-Inhalte;
+        # eine kategorie-eigene Beschreibung gibt es (noch) nicht — kein Erfinden.
+        locale_order = content_builder.locale_order_for_country(
+            prop_row.get("country")
+        )
+        rt_content = content_builder.build_room_type_content(
+            prop_row, photos or [], locale_order=locale_order
+        )
+        if rt_content:
+            attrs["content"] = rt_content
+
+        if existing.data:
+            channex_room_type_id = existing.data[0]["channex_room_type_id"]
+            self._channex.update_room_type(channex_room_type_id, attrs)
+            return channex_room_type_id, existing.data[0]["id"]
+
+        created = self._channex.create_room_type(attrs)
+        channex_room_type_id = (created.get("data") or {}).get("id")
+        if not channex_room_type_id:
+            raise ChannexError("Keine Room-Type-ID erhalten.", status_code=502)
+        saved = (
+            db.table("channex_room_type_map")
+            .upsert(
+                {
+                    "tenant_id": tenant_id,
+                    "property_map_id": property_map_id,
+                    "local_unit_ref": local_ref,
+                    "title": title,
+                    "channex_room_type_id": channex_room_type_id,
+                },
+                on_conflict="channex_room_type_id",
+            )
+            .execute()
+        )
+        return channex_room_type_id, saved.data[0]["id"]
+
+    def _prune_orphan_room_types(
+        self, db: Client, tenant_id: str, channex_property_id: str,
+        active_local_refs: set[str],
+    ) -> None:
+        """Channex-Room-Types löschen, deren lokale Zimmerkategorie entfernt wurde.
+
+        Gegenzustand pflegen (Wurzel 1): wird eine room_types-Zeile gelöscht,
+        MUSS auch der zugehörige Channex-Room-Type verschwinden, sonst verkauft
+        eine OTA weiter eine Kategorie, die es nicht mehr gibt. Fail-closed wie
+        _prune_orphan_rate_plans: ist der Room-Type noch an einen Kanal/Bookings
+        gebunden, lehnt Channex ab (422) → Mapping bleibt, Konflikt wird geloggt.
+        Erfolgreich gelöschte Room-Types werden im Mapping soft-deleted."""
+        pm = (
+            db.table("channex_property_map")
+            .select("id")
+            .eq("channex_property_id", channex_property_id)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not pm:
+            return
+        rows = (
+            db.table("channex_room_type_map")
+            .select("id, local_unit_ref, channex_room_type_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_map_id", pm[0]["id"])
+            .is_("deleted_at", "null")
+            .execute()
+        ).data or []
+        for row in rows:
+            if row.get("local_unit_ref") in active_local_refs:
+                continue  # Kategorie existiert noch → behalten
+            channex_id = row.get("channex_room_type_id")
+            try:
+                if channex_id:
+                    self._channex.delete_room_type(channex_id)
+            except ChannexError as exc:
+                # 404 = bei Channex schon weg → Mapping trotzdem schließen; alles
+                # andere (422 Kanal-/Booking-Bindung) → behalten und loggen.
+                if exc.channex_status != 404:
+                    log.warning(
+                        "channex_room_type_prune_blocked",
+                        channex_room_type_id=channex_id, error=exc.message,
+                    )
+                    continue
+            db.table("channex_room_type_map").update(
+                {"deleted_at": datetime.now(UTC).isoformat()}
+            ).eq("id", row["id"]).execute()
+            log.info(
+                "channex_room_type_pruned",
+                channex_room_type_id=channex_id,
+                local_unit_ref=row.get("local_unit_ref"),
+            )
 
     def _upsert_channex_room_type(
         self, db: Client, tenant_id: str, channex_property_id: str,

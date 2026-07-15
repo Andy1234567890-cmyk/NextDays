@@ -44,8 +44,23 @@ class FullSyncMixin:
         if not self._channex.is_configured or self._db is None:
             return {"availability_values": 0, "days": 0}
         db = self._db
+        if not self._is_channex_managed(db, tenant_id, property_id):
+            return {"availability_values": 0, "days": 0}
+
+        # Hotel (≥1 Zimmerkategorie): eigener count-basierter Voll-Push je
+        # Kategorie (room_type_availability). Der binäre Single-Unit-Pfad unten
+        # gilt ausschließlich für Ferienwohnungen (0 Kategorien) und bleibt
+        # unverändert. Der Schalter ist ausschließlich room_inventory.
+        from src.core.room_inventory import (  # noqa: PLC0415
+            hotel_room_types,
+        )
+
+        categories = hotel_room_types(db, property_id)
+        if categories:
+            return self._full_sync_hotel(tenant_id, property_id, categories)
+
         mapping = self._resolve_channex_room_type(db, tenant_id, property_id)
-        if mapping is None or not self._is_channex_managed(db, tenant_id, property_id):
+        if mapping is None:
             return {"availability_values": 0, "days": 0}
 
         # Trace-Kontext: jeder availability/restrictions-Push dieses Full-Syncs
@@ -244,6 +259,153 @@ class FullSyncMixin:
             values=len(values), days=self._FULL_SYNC_DAYS,
         )
         return {"availability_values": len(values), "days": self._FULL_SYNC_DAYS}
+
+    def _full_sync_hotel(
+        self, tenant_id: str, property_id: str,
+        categories: list[dict[str, Any]],
+    ) -> dict[str, int]:
+        """Count-basierter Voll-Push je Zimmerkategorie (Hotel).
+
+        Für jede Kategorie über den Horizont: freier Bestand = count_of_rooms −
+        booked_count (Tage OHNE room_type_availability-Zeile sind voll frei =
+        count_of_rooms — das ist Datenmodell, kein Fallback). RLE-Ranges an den
+        Channex-Room-Type DER Kategorie (local_unit_ref = room_type.id). Superseding
+        gegen frische ari_outbox-Zeilen DERSELBEN Kategorie (Wurzel 1/Nebenläufig-
+        keit: eine während des Full-Syncs entstandene Buchung darf nicht vom
+        veralteten Snapshot überschrieben werden). Fehlt der Channex-Room-Type einer
+        Kategorie (Content-Sync noch nicht gelaufen), wird sie übersprungen (kein
+        stiller 0-Push, Wurzel 5) — der nächste Sync holt sie nach."""
+        db = self._db
+        start = date.today()
+        end = start + timedelta(days=self._FULL_SYNC_DAYS - 1)
+        total_values = 0
+        for cat in categories:
+            mapping = self._resolve_channex_room_type(
+                db, tenant_id, property_id, cat["id"]
+            )
+            if mapping is None:
+                # Kategorie noch nicht als Channex-Room-Type angelegt → nichts
+                # pushen (fail-closed, kein 0-Push für den ganzen Zimmertyp).
+                continue
+            capacity = int(cat["count_of_rooms"])
+            read_started_at = datetime.now(UTC).isoformat()
+            # Gebuchte Zimmer je Tag (Tage ohne Zeile = 0 gebucht = voll frei).
+            booked_rows = (
+                db.table("room_type_availability")
+                .select("date, booked_count")
+                .eq("room_type_id", cat["id"])
+                .gte("date", start.isoformat())
+                .lte("date", end.isoformat())
+                .execute()
+            ).data or []
+            booked = {r["date"]: int(r["booked_count"]) for r in booked_rows}
+            # Superseding: Tage mit frischer ari_outbox-Zeile DIESER Kategorie
+            # (jüngere Delta-Absicht gewinnt).
+            superseded: set[str] = set()
+            for r in (
+                db.table("ari_outbox")
+                .select("date_from, date_to")
+                .eq("property_id", property_id)
+                .eq("room_type_id", cat["id"])
+                .gte("created_at", read_started_at)
+                .execute()
+            ).data or []:
+                if r.get("date_from") and r.get("date_to"):
+                    superseded.update(_iso_days(r["date_from"], r["date_to"]))
+            total_values += self._push_hotel_category_rle(
+                tenant_id, property_id, mapping, capacity, booked, superseded,
+                start, end,
+            )
+        # Recovery-Import (Feed-Lücken-Schutz) läuft property-weit, nicht je
+        # Kategorie — un-geackte OTA-Buchungen fallen bei Channex nach ~30 Min aus
+        # dem Feed (Retention). Für Hotels genauso Pflicht wie für FeWo: fiel der
+        # Worker aus, wären die Buchungen sonst verloren (Kalender bliebe offen →
+        # Überbuchung). channex_property_id aus dem ersten Mapping (property-weit).
+        first_mapping = self._resolve_channex_room_type(
+            self._db, tenant_id, property_id, categories[0]["id"]
+        )
+        if first_mapping is not None:
+            self._hotel_recovery_import(
+                tenant_id, property_id, first_mapping["channex_property_id"]
+            )
+        log.info(
+            "channex_full_sync_hotel_pushed",
+            tenant_id=tenant_id, property_id=property_id,
+            categories=len(categories), values=total_values,
+        )
+        return {"availability_values": total_values, "days": self._FULL_SYNC_DAYS}
+
+    def _hotel_recovery_import(
+        self, tenant_id: str, property_id: str, channex_property_id: str,
+    ) -> None:
+        """Nächtlicher Recovery-Import für Hotels (Feed-Lücken-Schutz). Isoliert,
+        best-effort — ein Fehler kippt den Full-Sync nie (wie im FeWo-Pfad)."""
+        try:
+            recovery_from = (
+                datetime.now(UTC) - timedelta(days=3)
+            ).strftime("%Y-%m-%dT%H:%M:%S")
+            rec = self.import_bookings_for_property(
+                tenant_id, channex_property_id, inserted_after=recovery_from,
+            )
+            if rec.get("saved"):
+                log.info(
+                    "channex_full_sync_hotel_recovery",
+                    tenant_id=tenant_id, property_id=property_id,
+                    recovered=rec["saved"],
+                )
+        except Exception as exc:  # noqa: BLE001 — Recovery nie den Full-Sync kippen
+            log.warning(
+                "channex_full_sync_hotel_recovery_failed",
+                property_id=property_id, error=str(exc)[:200],
+            )
+
+    def _push_hotel_category_rle(
+        self, tenant_id: str, property_id: str, mapping: dict[str, str],
+        capacity: int, booked: dict[str, int], superseded: set[str],
+        start: date, end: date,
+    ) -> int:
+        """Eine Kategorie über [start, end] als RLE-Ranges (freier Rest-Count)
+        an Channex pushen. Superseded-Tage unterbrechen den Run. Gibt die Zahl
+        gesendeter values zurück."""
+        self._trace_step(
+            tenant_id=tenant_id, property_id=property_id, step="full_sync"
+        )
+        values: list[dict[str, Any]] = []
+        run_start: date | None = None
+        run_value: int | None = None
+
+        def _close_run(last_day: date) -> None:
+            if run_start is None or run_value is None:
+                return
+            values.append(
+                {
+                    "property_id": mapping["channex_property_id"],
+                    "room_type_id": mapping["channex_room_type_id"],
+                    "date_from": run_start.isoformat(),
+                    "date_to": last_day.isoformat(),
+                    "availability": run_value,
+                }
+            )
+
+        cur = start
+        while cur <= end:
+            iso = cur.isoformat()
+            if iso in superseded:
+                _close_run(cur - timedelta(days=1))
+                run_start = run_value = None
+            else:
+                free = max(0, capacity - booked.get(iso, 0))
+                if run_value is None:
+                    run_start, run_value = cur, free
+                elif free != run_value:
+                    _close_run(cur - timedelta(days=1))
+                    run_start, run_value = cur, free
+            cur += timedelta(days=1)
+        _close_run(end)
+
+        for i in range(0, len(values), 500):
+            self._channex.update_availability(values[i:i + 500])
+        return len(values)
 
     def _full_sync_rate_segments(
         self, db: Client, property_id: str, start: date, end: date
