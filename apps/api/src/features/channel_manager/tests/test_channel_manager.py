@@ -412,6 +412,12 @@ class _ImportChannex:
         self.restrictions_pushed: list[dict] = []  # update_restrictions-Aufrufe
         self.activated: list[str] = []
         self.deactivated: list[str] = []
+        # Content-Sync-Aufzeichnung (create_*-Calls).
+        self.created_properties: list[dict] = []
+        self.created_room_types: list[dict] = []
+        self.created_rate_plans: list[dict] = []
+        self._rt_seq = 0
+        self._rp_seq = 0
 
     def update_availability(self, values):  # noqa: ANN001, ANN201
         if self._fail_availability:
@@ -456,6 +462,41 @@ class _ImportChannex:
     def get_rate_plans(self, property_id):  # noqa: ANN001, ANN201
         return {"data": self._rate_plans}
 
+    # -- Content-Sync-Stubs (create_*/update_*): jeden Call aufzeichnen, damit der
+    #    Hotel-Pfad-Test die Zuordnung Room-Type ↔ Rate-Plan prüfen kann. --
+    def create_group(self, title):  # noqa: ANN001, ANN201
+        return {"data": {"id": "cx-group"}}
+
+    def assign_property_to_group(self, group_id, channex_id):  # noqa: ANN001, ANN201
+        return {}
+
+    def create_property(self, attrs):  # noqa: ANN001, ANN201
+        self.created_properties.append(attrs)
+        return {"data": {"id": "cx-prop"}}
+
+    def update_property(self, channex_id, attrs):  # noqa: ANN001, ANN201
+        return {"data": {"id": channex_id}}
+
+    def create_room_type(self, attrs):  # noqa: ANN001, ANN201
+        self._rt_seq += 1
+        cx_id = f"cx-rt-{self._rt_seq}"
+        self.created_room_types.append({**attrs, "_cx_id": cx_id})
+        return {"data": {"id": cx_id}}
+
+    def update_room_type(self, channex_id, attrs):  # noqa: ANN001, ANN201
+        return {"data": {"id": channex_id}}
+
+    def create_rate_plan(self, attrs):  # noqa: ANN001, ANN201
+        self._rp_seq += 1
+        cx_id = f"cx-rp-{self._rp_seq}"
+        # attrs["room_type_id"] = der Channex-Room-Type, an dem der Plan hängt →
+        # so lässt sich die korrekte Zuordnung je Kategorie verifizieren.
+        self.created_rate_plans.append({**attrs, "_cx_id": cx_id})
+        return {"data": {"id": cx_id}}
+
+    def update_rate_plan(self, channex_id, attrs):  # noqa: ANN001, ANN201
+        return {"data": {"id": channex_id}}
+
 
 # on_conflict-Schlüssel je Tabelle (für das Fake-upsert).
 _CONFLICT_KEYS = {
@@ -493,6 +534,9 @@ class _ImportDB:
             "channex_tax_map": [],
             "channex_channel_connection": [],
             "channex_group_map": [],
+            "room_types": [],
+            "tenant_billing_profile": [],
+            "property_photos": [],
         }
         self._seq = 0
 
@@ -2233,3 +2277,84 @@ def test_push_rates_batch_failure_keeps_outbox_pending() -> None:
           "rate_cents": 15000}],
     )
     assert db.tables["ari_restriction_outbox"][0]["status"] == "pending"
+
+
+# --- Hotel-Content-Sync: n Room-Types + Rate-Plans je Kategorie (Teil 2) ---
+def _seed_hotel_property(db, tenant_id="t1", property_id="p1"):  # noqa: ANN001, ANN201
+    """Property mit 2 Zimmerkategorien + je 2 Rate-Plans (mit room_type_id)."""
+    db.tables["properties"].append({
+        "id": property_id, "tenant_id": tenant_id, "title": "Test Hotel",
+        "description": None, "property_type": "hotel", "street": None,
+        "house_number": None, "postal_code": None, "city": None, "country": None,
+        "lat": None, "lng": None, "max_guests": 2, "amenities": None,
+        "type_attributes": None,
+    })
+    db.tables["room_types"].extend([
+        {"id": "rt-double", "property_id": property_id, "title": "Double Room",
+         "count_of_rooms": 1, "occ_adults": 2, "occ_children": 0, "occ_infants": 0,
+         "default_occupancy": 2, "position": 0, "created_at": "2026-01-01"},
+        {"id": "rt-twin", "property_id": property_id, "title": "Twin Room",
+         "count_of_rooms": 1, "occ_adults": 2, "occ_children": 0, "occ_infants": 0,
+         "default_occupancy": 2, "position": 1, "created_at": "2026-01-02"},
+    ])
+    db.tables["rate_plans"].extend([
+        {"id": "rp-d-bar", "property_id": property_id, "room_type_id": "rt-double",
+         "name": "Best Available Rate", "base_price": 100, "currency": "USD",
+         "min_stay": 1, "created_at": "2026-01-01"},
+        {"id": "rp-d-bnb", "property_id": property_id, "room_type_id": "rt-double",
+         "name": "Bed & Breakfast", "base_price": 120, "currency": "USD",
+         "min_stay": 1, "created_at": "2026-01-02"},
+        {"id": "rp-t-bar", "property_id": property_id, "room_type_id": "rt-twin",
+         "name": "Best Available Rate", "base_price": 100, "currency": "USD",
+         "min_stay": 1, "created_at": "2026-01-03"},
+        {"id": "rp-t-bnb", "property_id": property_id, "room_type_id": "rt-twin",
+         "name": "Bed & Breakfast", "base_price": 120, "currency": "USD",
+         "min_stay": 1, "created_at": "2026-01-04"},
+    ])
+
+
+def test_hotel_content_sync_pushes_all_rate_plans_per_category() -> None:
+    # Regression: rate_plans.room_type_id MUSS geladen werden, sonst landen alle
+    # Pläne im Orphan-Zweig und NICHTS wird gepusht (Hotel-only-Bug).
+    db = _ImportDB()
+    _seed_hotel_property(db)
+    channex = _ImportChannex()
+    _import_svc(channex, db).sync_content("t1", property_id="p1")
+
+    # 2 Room-Types + 4 Rate-Plans bei Channex angelegt.
+    assert len(channex.created_room_types) == 2
+    assert len(channex.created_rate_plans) == 4
+    # 4 Rate-Plan-Maps in der DB, korrekt je Room-Type verteilt (2 + 2).
+    rp_maps = db.tables["channex_rate_plan_map"]
+    assert len(rp_maps) == 4
+    rt_maps = {m["local_unit_ref"]: m["id"] for m in db.tables["channex_room_type_map"]}
+    per_rt: dict[str, int] = {}
+    for m in rp_maps:
+        per_rt[m["room_type_map_id"]] = per_rt.get(m["room_type_map_id"], 0) + 1
+    assert per_rt[rt_maps["rt-double"]] == 2
+    assert per_rt[rt_maps["rt-twin"]] == 2
+
+
+def test_hotel_content_sync_fails_closed_when_all_plans_orphan() -> None:
+    # Fail-closed (Wurzel 5): sind Pläne vorhanden, aber keiner einer Kategorie
+    # zugeordnet (room_type_id fehlt/falsch), MUSS der Sync scheitern statt still
+    # "done" — sonst geht die Property ohne Preise an die Portale. sync_content
+    # fängt die ChannexError und re-raist sie als ChannelManagerError (markiert
+    # dabei last_sync_status=error) — beide zählen als "geworfen".
+    from src.features.channel_manager.channex_client import ChannexError
+    from src.features.channel_manager.common import ChannelManagerError as _CMErr
+
+    db = _ImportDB()
+    _seed_hotel_property(db)
+    for rp in db.tables["rate_plans"]:
+        rp["room_type_id"] = None  # alle verwaisen
+    channex = _ImportChannex()
+    raised = False
+    try:
+        _import_svc(channex, db).sync_content("t1", property_id="p1")
+    except (ChannexError, _CMErr):
+        raised = True
+    assert raised
+    # Kein Rate-Plan gepusht; keine verwaisten Maps entstanden.
+    assert channex.created_rate_plans == []
+    assert db.tables["channex_rate_plan_map"] == []

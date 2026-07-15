@@ -123,7 +123,15 @@ def _svc(db: Client, budget: ChannexBudget | None = None):  # noqa: ANN202
 def _handle_sync_property_content(
     db: Client, payload: dict[str, Any], budget: ChannexBudget | None = None
 ) -> None:
-    _svc(db, budget).sync_property_to_channex(
+    svc = _svc(db, budget)
+    # Im Worker DIREKT sync_content (nicht sync_property_to_channex): letzteres
+    # schluckt ChannexError/ChannelManagerError bewusst (best-effort bei der
+    # Objekt-Anlage, damit die Anlage nie scheitert). Im Job wollen wir das
+    # Gegenteil — ein Sync-Fehler MUSS den Job auf error/Retry kippen und darf
+    # nicht still als „done" durchgehen (Wurzel 5). Guard wie im best-effort-Pfad.
+    if not svc.is_channex_configured:
+        return
+    svc.sync_content(
         payload["tenant_id"],
         property_id=payload["property_id"],
         title=payload.get("title") or "Unbenannt",

@@ -92,6 +92,13 @@ class ContentSyncMixin:
         log.info("channex_group_created", tenant_id=tenant_id)
         return group_id
 
+    @property
+    def is_channex_configured(self) -> bool:
+        """Ob ein Channex-Sync überhaupt laufen kann (Credentials + DB vorhanden).
+        Worker-Handler guarden damit, statt still zu scheitern, ohne den privaten
+        Channex-Client anzufassen."""
+        return self._channex.is_configured and self._db is not None
+
     def sync_property_to_channex(
         self,
         tenant_id: str,
@@ -200,9 +207,13 @@ class ContentSyncMixin:
         ).data or []
 
         # Rate-Plans der Property laden (currency vom ersten Plan).
+        # room_type_id MUSS mit: der Hotel-Zweig gruppiert die Pläne je Kategorie
+        # darüber (channex_room_type_map.local_unit_ref = room_type.id). Fehlt die
+        # Spalte im Select, ist rp["room_type_id"] immer None → alle Pläne gelten
+        # als verwaist und werden nie zu Channex gepusht (Hotel-only-Bug).
         rate_plans = (
             db.table("rate_plans")
-            .select("id, name, base_price, currency, min_stay")
+            .select("id, name, room_type_id, base_price, currency, min_stay")
             .eq("property_id", property_id)
             .order("created_at")
             .execute()
@@ -621,6 +632,18 @@ class ContentSyncMixin:
                     tenant_id=tenant_id, property_id=property_id,
                     rate_plan_id=rp.get("id"),
                 )
+
+        # Fail-closed (Wurzel 5): Ein EINZELNER verwaister Plan ist ok (Warning
+        # oben). Sind aber Pläne vorhanden, aber KEINER einer Kategorie zugeordnet,
+        # ist das ein Daten-/Code-Fehler (z. B. room_type_id nicht geladen) — nicht
+        # still „done" markieren, sondern scheitern. MUSS vor den Prune-Aufrufen
+        # stehen, damit local_ids=∅ nicht bestehende Rate-Plan-Maps löscht (Wurzel 1).
+        if rate_plans and not plans_by_rt:
+            raise ChannexError(
+                "Kein Preisplan konnte einer Zimmerkategorie zugeordnet werden — "
+                "die Preise wurden NICHT an die Buchungsportale übermittelt.",
+                status_code=502,
+            )
 
         all_rate_plan_ids: list[str] = []
         first_room_type_id: str | None = None
