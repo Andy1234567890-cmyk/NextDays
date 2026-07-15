@@ -13,6 +13,10 @@ class RatePlanCreate(BaseModel):
     base_price: float = Field(ge=0)
     currency: str = "EUR"
     min_stay: int = Field(default=1, ge=1)
+    # Hotel: die Zimmerkategorie, zu der dieser Preisplan gehört (Ferienwohnung:
+    # None). Ein Hotel-Rate-Plan wird nur an DEN Channex-Room-Type dieser Kategorie
+    # gepusht — mehrere Pläne je Kategorie (BAR, B&B …) mit eigenem Preis.
+    room_type_id: str | None = None
 
 
 class RatePlanUpdate(BaseModel):

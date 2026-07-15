@@ -90,6 +90,22 @@ class RatesService:
     def create(self, ctx: AuthContext, req: RatePlanCreate) -> RatePlanResponse:
         tenant_id = self._require_tenant(ctx)
         prop = self._require_own_property(tenant_id, req.property_id)
+        # room_type_id serverseitig scopen (Wurzel 3): die Kategorie MUSS zu DIESER
+        # Property gehören — sonst könnte ein Client einen Preisplan an eine fremde
+        # Zimmerkategorie hängen (Service-Role umgeht RLS).
+        if req.room_type_id is not None:
+            rt = (
+                self._db()
+                .table("room_types")
+                .select("id")
+                .eq("id", req.room_type_id)
+                .eq("property_id", req.property_id)
+                .eq("tenant_id", tenant_id)
+                .limit(1)
+                .execute()
+            ).data
+            if not rt:
+                raise RateError("Zimmerkategorie nicht gefunden.", status_code=404)
         ins = (
             self._db()
             .table("rate_plans")
@@ -100,6 +116,7 @@ class RatesService:
                     "base_price": req.base_price,
                     "currency": req.currency,
                     "min_stay": req.min_stay,
+                    **({"room_type_id": req.room_type_id} if req.room_type_id else {}),
                 }
             )
             .execute()
