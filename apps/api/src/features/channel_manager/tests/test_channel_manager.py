@@ -597,6 +597,16 @@ def _seed_property(db, tenant_id="t1", channex_pid="cx-prop", property_id="p1"):
     )
 
 
+def _seed_push_history(db, tenant_id="t1", property_id="p1"):  # noqa: ANN001, ANN201
+    """Push-Historie (ari_outbox status=done) für IMPORT-Tests: der Warm-up-Guard
+    wertet Channex-qty=0/stop_sell nur als echt, wenn schon mal gepusht wurde.
+    Getrennt von _seed_property, damit PUSH-Tests eine leere Outbox behalten."""
+    db.tables["ari_outbox"].append(
+        {"id": "ob-seed", "tenant_id": tenant_id, "property_id": property_id,
+         "status": "done", "date_from": "2020-01-01", "date_to": "2020-01-01"}
+    )
+
+
 def test_ota_name_to_channel() -> None:
     f = ChannelManagerService._ota_name_to_channel
     assert f("Booking.com") == "booking"
@@ -911,9 +921,34 @@ def test_import_ari_runs_when_managed_without_channel() -> None:
     assert statuses["2026-07-01"] == "open"
 
 
+def test_import_ari_no_push_history_suppresses_default_block() -> None:
+    # Warm-up-Guard: ein gemapptes Objekt OHNE Push-Historie meldet bei Channex
+    # per Default qty=0 / stop_sell für alle Tage. Das ist Rauschen, kein echter
+    # OTA-Zustand → NICHT als 'blocked'/'channex'-stop_sell übernehmen (sonst
+    # flächige Sperre über alle 3 Plattformen). qty>0 → 'open' bleibt erlaubt.
+    db = _ImportDB()
+    _seed_property(db)  # KEIN _seed_push_history → nie gepusht
+    channex = _ImportChannex(
+        availability={"cx-rt": {"2026-07-01": 0, "2026-07-02": 5}},
+        restrictions={"cx-rp": {"2026-07-01": {"stop_sell": True}}},
+    )
+    res = _import_svc(channex, db).import_ari_for_property(
+        "t1", "cx-prop", days_ahead=3, today=date(2026, 7, 1)
+    )
+    statuses = {a["date"]: a["status"] for a in db.tables["availability"]}
+    # qty=0 ohne Push-Historie → KEIN blocked geschrieben.
+    assert "2026-07-01" not in statuses
+    # qty>0 → open läuft trotzdem ein (echte Freigabe).
+    assert statuses.get("2026-07-02") == "open"
+    # Channex-Default-stop_sell ohne Push-Historie → nicht importiert.
+    assert db.tables["stop_sell"] == []
+    assert res["stop_sell"] == 0
+
+
 def test_import_ari_prices_and_availability() -> None:
     db = _ImportDB()
     _seed_property(db)
+    _seed_push_history(db)
     # availability: 1 Tag 0 (blocked), 1 Tag >0 (open)
     channex = _ImportChannex(
         availability={"cx-rt": {"2026-07-01": 0, "2026-07-02": 3}},
@@ -941,6 +976,7 @@ def test_import_ari_stop_sell_skips_manual_day() -> None:
     # agency_id/reason NICHT auf NULL setzen.
     db = _ImportDB()
     _seed_property(db)
+    _seed_push_history(db)
     db.tables["stop_sell"].append(
         {"id": "s1", "tenant_id": "t1", "property_id": "p1",
          "date": "2026-07-01", "source": "manual",
@@ -964,6 +1000,7 @@ def test_import_ari_stop_sell_idempotent_channex() -> None:
     # keine Realtime-Event-Flut).
     db = _ImportDB()
     _seed_property(db)
+    _seed_push_history(db)
     db.tables["stop_sell"].append(
         {"id": "s1", "tenant_id": "t1", "property_id": "p1",
          "date": "2026-07-01", "source": "channex"}
@@ -982,6 +1019,7 @@ def test_import_ari_stop_sell_writes_new_channex_day() -> None:
     # Echter neuer OTA-Stop (kein bestehender Eintrag) → als channex importiert.
     db = _ImportDB()
     _seed_property(db)
+    _seed_push_history(db)
     channex = _ImportChannex(
         restrictions={"cx-rp": {"2026-07-01": {"stop_sell": True}}}
     )
@@ -998,6 +1036,7 @@ def test_import_ari_stop_sell_skips_booked_day() -> None:
     # verkauft; Stop-Sell darüber verfälscht die Verfügbarkeit).
     db = _ImportDB()
     _seed_property(db)
+    _seed_push_history(db)
     db.tables["availability"].append(
         {"id": "a1", "property_id": "p1", "date": "2026-07-01",
          "status": "booked", "source": "direct"}
@@ -1016,6 +1055,7 @@ def test_import_ari_stop_sell_dedupes_across_rate_plans() -> None:
     # Derselbe Tag in zwei Rate-Plänen → nur EIN Schreibvorgang (set-Dedup).
     db = _ImportDB()
     _seed_property(db)
+    _seed_push_history(db)
     channex = _ImportChannex(
         restrictions={
             "rp-a": {"2026-07-01": {"stop_sell": True}},

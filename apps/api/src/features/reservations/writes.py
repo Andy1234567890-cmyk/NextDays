@@ -10,6 +10,11 @@ from datetime import UTC, datetime
 
 from postgrest.exceptions import APIError
 
+from src.core.sales_channels import (
+    RECEPTION,
+    availability_block_hits_channel,
+    stop_sell_blocks_channel,
+)
 from src.core.security import AuthContext
 
 from ._base import (
@@ -84,22 +89,31 @@ class WritesMixin(ReservationsBase):
             avail = (
                 self._db()
                 .table("availability")
-                .select("date,status")
+                .select("date,status,source")
                 .eq("property_id", req.property_id)
                 .gte("date", req.check_in.isoformat())
                 .lt("date", req.check_out.isoformat())
                 .execute()
             )
-            taken = [r["date"] for r in (avail.data or []) if r["status"] != "open"]
+            # Kanal-Trennung: eine availability-Sperre mit source='portal' stammt
+            # aus dem Channex-Import und betrifft NUR OTAs — die Rezeption darf
+            # trotzdem buchen. Echte Belegung/manuelle Sperre (booked/manual/ical)
+            # blockt weiter (Überbuchungsschutz).
+            taken = [
+                r["date"]
+                for r in (avail.data or [])
+                if r["status"] != "open"
+                and availability_block_hits_channel(r.get("source"), RECEPTION)
+            ]
             if taken:
                 raise ReservationError(
                     "Zeitraum enthält bereits belegte/gesperrte Tage.",
                     status_code=409,
                 )
-        # Stop-Sell-Schutz: ein von Mitarbeitern gesetzter Stop-Sell sperrt den
-        # Tag auf ALLEN Kanälen — auch die interne Rezeptions-Buchung. Der Stopp
-        # muss erst aufgehoben werden, bevor hier gebucht werden kann.
-        stopped = (
+        # Stop-Sell-Schutz: ein Stop-Sell sperrt die Rezeptions-Buchung nur, wenn er
+        # den Rezeptions-Kanal betrifft (scope='all' oder 'reception' im channels-
+        # Set). Ein reiner OTA-Stop lässt die Rezeption durch.
+        stopped_rows = (
             self._db()
             .table("stop_sell")
             .select("date")
@@ -108,7 +122,7 @@ class WritesMixin(ReservationsBase):
             .lt("date", req.check_out.isoformat())
             .execute()
         ).data or []
-        if stopped:
+        if any(stop_sell_blocks_channel(r, RECEPTION) for r in stopped_rows):
             raise ReservationError(
                 "Zeitraum enthält Stop-Sell-Tage. Bitte zuerst den Stop-Sell "
                 "aufheben.", status_code=409
@@ -361,17 +375,20 @@ class WritesMixin(ReservationsBase):
         avail = (
             self._db()
             .table("availability")
-            .select("date,status")
+            .select("date,status,source")
             .eq("property_id", req.property_id)
             .gte("date", req.check_in.isoformat())
             .lt("date", req.check_out.isoformat())
             .execute()
         )
         same_property = req.property_id == old_property
+        # Kanal-Trennung wie in create(): eine 'portal'-Sperre (Channex-Import)
+        # betrifft nur OTAs, blockt den Rezeptions-Move nicht.
         taken = [
             r["date"]
             for r in (avail.data or [])
             if r["status"] != "open"
+            and availability_block_hits_channel(r.get("source"), RECEPTION)
             and not (same_property and r["date"] in old_nights)
         ]
         if taken:
@@ -379,11 +396,9 @@ class WritesMixin(ReservationsBase):
                 "Ziel-Zeitraum enthält bereits belegte/gesperrte Tage.",
                 status_code=409,
             )
-        # Stop-Sell-Schutz für die Ziel-Nächte — wie create()/create_public_booking.
-        # Ein Stop-Sell-Tag kann in availability noch als 'open' geführt sein
-        # (Sync-Verzug), deshalb explizit die stop_sell-Tabelle prüfen; sonst
-        # landet ein Move auf gesperrten Tagen, die auf OTAs weiter verkauft werden.
-        stopped = (
+        # Stop-Sell-Schutz für die Ziel-Nächte — wie create()/create_public_booking,
+        # kanal-bewusst: nur Stops, die den Rezeptions-Kanal betreffen, blocken.
+        stopped_rows = (
             self._db()
             .table("stop_sell")
             .select("date")
@@ -392,7 +407,7 @@ class WritesMixin(ReservationsBase):
             .lt("date", req.check_out.isoformat())
             .execute()
         ).data or []
-        if stopped:
+        if any(stop_sell_blocks_channel(r, RECEPTION) for r in stopped_rows):
             raise ReservationError(
                 "Ziel-Zeitraum enthält Stop-Sell-Tage. Bitte zuerst den "
                 "Stop-Sell aufheben.", status_code=409,

@@ -11,6 +11,11 @@ from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.core.sales_channels import (
+    PLATFORM,
+    availability_block_hits_channel,
+    stop_sell_blocks_channel,
+)
 from src.core.supabase import fetch_all_rows
 
 from .schemas import (
@@ -487,26 +492,34 @@ class BookingEngineService:
 
         nights = _nights(req.check_in, req.check_out)
 
-        # Double-Booking-Schutz: kein Tag darf belegt/gesperrt sein.
+        # Double-Booking-Schutz: kein Tag darf belegt/gesperrt sein. Kanal-Trennung:
+        # eine availability-Sperre mit source='portal' (Channex-Import) betrifft nur
+        # OTAs — die eigene Plattform darf trotzdem buchen. Echte Belegung/manuelle
+        # Sperre blockt weiter (Überbuchungsschutz).
         avail = (
             self._db()
             .table("availability")
-            .select("date,status")
+            .select("date,status,source")
             .eq("property_id", req.property_id)
             .gte("date", req.check_in.isoformat())
             .lt("date", req.check_out.isoformat())
             .execute()
         ).data or []
-        taken = [r["date"] for r in avail if r["status"] != "open"]
+        taken = [
+            r["date"]
+            for r in avail
+            if r["status"] != "open"
+            and availability_block_hits_channel(r.get("source"), PLATFORM)
+        ]
         if taken:
             raise BookingEngineError(
                 "Zeitraum ist nicht mehr verfügbar.", status_code=409
             )
-        # Stop-Sell-Schutz: ein Stop-Sell = auf ALLEN Kanälen gesperrt, auch der
-        # eigenen Plattform (sonst Doppelbuchung). Explizit gegen die stop_sell-
-        # Tabelle prüfen — nicht nur auf availability verlassen (ein Sync-Verzug
-        # könnte den Tag noch als 'open' führen, obwohl ein Stop-Sell existiert).
-        stopped = (
+        # Stop-Sell-Schutz: ein Stop-Sell sperrt die eigene Plattform nur, wenn er
+        # den Plattform-Kanal betrifft (scope='all' oder 'platform' im channels-Set).
+        # Ein reiner OTA-Stop lässt die eigene Plattform durch. Explizit gegen die
+        # stop_sell-Tabelle prüfen — availability kann durch Sync-Verzug divergieren.
+        stopped_rows = (
             self._db()
             .table("stop_sell")
             .select("date")
@@ -515,7 +528,7 @@ class BookingEngineService:
             .lt("date", req.check_out.isoformat())
             .execute()
         ).data or []
-        if stopped:
+        if any(stop_sell_blocks_channel(r, PLATFORM) for r in stopped_rows):
             raise BookingEngineError(
                 "Zeitraum ist nicht mehr verfügbar.", status_code=409
             )

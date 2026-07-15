@@ -127,6 +127,69 @@ def test_create_rejects_stop_sell_days() -> None:
     assert "Stop-Sell" in exc.value.message
 
 
+def test_create_allows_portal_blocked_days() -> None:
+    # Kanal-Trennung: eine availability-Sperre mit source='portal' (Channex-Import)
+    # betrifft nur OTAs — die Rezeptions-Buchung darf trotzdem durch (kein 409).
+    service = _service_for_create(
+        property_found=True,
+        taken_days=[{"date": "2026-05-01", "status": "blocked", "source": "portal"}],
+    )
+    req = ReservationCreate(
+        property_id="p1",
+        check_in=date(2026, 5, 1),
+        check_out=date(2026, 5, 3),
+    )
+    # Darf NICHT wegen der portal-Sperre den 409-„belegte/gesperrte"-Vorcheck
+    # auslösen. Der Ablauf läuft danach weiter (Quote/RPC) — eine dortige
+    # Mock-Exception ist ok; entscheidend ist: kein availability-409 mehr.
+    try:
+        service.create(AuthContext(user_id="u1", tenant_id="t1"), req)
+    except ReservationError as exc:  # noqa: BLE001 — nur der Vorcheck-409 zählt
+        assert not (
+            exc.status_code == 409 and "belegte/gesperrte" in exc.message
+        )
+    except Exception:  # noqa: BLE001,S110 — Quote/RPC-Mock unvollständig, irrelevant
+        pass
+
+
+def test_create_still_rejects_manual_blocked_days() -> None:
+    # Eine echte/manuelle Sperre (source != portal) blockt die Rezeption weiter.
+    service = _service_for_create(
+        property_found=True,
+        taken_days=[{"date": "2026-05-01", "status": "blocked", "source": "manual"}],
+    )
+    req = ReservationCreate(
+        property_id="p1",
+        check_in=date(2026, 5, 1),
+        check_out=date(2026, 5, 3),
+    )
+    with pytest.raises(ReservationError) as exc:
+        service.create(AuthContext(user_id="u1", tenant_id="t1"), req)
+    assert exc.value.status_code == 409
+
+
+def test_create_allows_ota_only_stop_sell() -> None:
+    # Ein Stop-Sell, der nur OTAs betrifft (scope='channels', channels=['ota:*']),
+    # lässt die Rezeption durch.
+    service = _service_for_create(
+        property_found=True,
+        taken_days=[],
+        stopped_days=[{"date": "2026-05-01", "scope": "channels",
+                       "channels": ["ota:*"]}],
+    )
+    req = ReservationCreate(
+        property_id="p1",
+        check_in=date(2026, 5, 1),
+        check_out=date(2026, 5, 3),
+    )
+    try:
+        service.create(AuthContext(user_id="u1", tenant_id="t1"), req)
+    except ReservationError as exc:  # noqa: BLE001 — nur der Stop-Sell-Guard zählt
+        assert "Stop-Sell" not in exc.message
+    except Exception:  # noqa: BLE001,S110 — Quote/RPC-Mock unvollständig, irrelevant
+        pass
+
+
 def test_create_rejects_unknown_property() -> None:
     service = _service_for_create(property_found=False, taken_days=[])
     req = ReservationCreate(

@@ -886,6 +886,30 @@ class BookingsSyncMixin:
             )
             return result
 
+        # Warm-up-Guard (Wurzel 4/5): Ein gemapptes, aber NIE gepushtes Objekt
+        # (kein aktiver Kanal / vor dem ersten Go-Live-Push) meldet bei Channex
+        # per Default availability=0 für ALLE Tage. Das ist KEIN echter OTA-Zustand,
+        # sondern der Channex-Default eines leeren Objekts — ihn als 'blocked' zu
+        # übernehmen sperrt die Property flächig auf ALLEN Plattformen. Solange keine
+        # Push-Historie existiert (keine ari_outbox-Zeile mit status='done'), darf
+        # qty=0 daher NICHT zu 'blocked' werden. qty>0 → 'open' bleibt immer erlaubt
+        # (echte Freigabe darf sofort einlaufen). Der einzige verlässliche „schon
+        # mal echt gepusht"-Nachweis ohne Schema-Feld.
+        has_pushed = bool(
+            db.table("ari_outbox")
+            .select("id")
+            .eq("property_id", property_id)
+            .eq("status", "done")
+            .limit(1)
+            .execute()
+            .data
+        )
+        if not has_pushed:
+            log.info(
+                "import_ari_no_push_history_block_suppressed",
+                tenant_id=tenant_id, property_id=property_id,
+            )
+
         start = today or datetime.now(UTC).date()
         # Ping-Pong-Schutz (Wurzel 1): Tage, für die wir GERADE erst einen
         # availability-Delta an Channex gepusht haben (ari_outbox der letzten
@@ -959,6 +983,12 @@ class BookingsSyncMixin:
                 # 'booked'-Tage (echte Buchung) NICHT überschreiben.
                 if cur and cur["status"] == "booked":
                     continue
+                # Warm-up-Guard: ohne Push-Historie ist qty=0 der Channex-Default
+                # eines leeren Objekts, kein echter OTA-Zustand → NICHT als 'blocked'
+                # übernehmen (sonst flächige Sperre über alle Plattformen). qty>0
+                # (echte Freigabe) läuft immer ein.
+                if qty <= 0 and not has_pushed:
+                    continue
                 new_status = "open" if qty > 0 else "blocked"
                 # Idempotent: identischer Status → nichts schreiben (Quelle egal).
                 # Eine manuelle Sperre (source='manual') mit gleichem Status NICHT
@@ -1014,6 +1044,17 @@ class BookingsSyncMixin:
                 for d, vals in (days or {}).items()
                 if (vals or {}).get("stop_sell")
             }
+            # Warm-up-Guard (Wurzel 4/5): ohne Push-Historie ist ein flächiger
+            # stop_sell der Channex-Default eines leeren Objekts, kein echter OTA-
+            # Stop → nicht importieren (sonst 365 anonyme channex-stop_sells, die
+            # alle Plattformen sperren). qty>0/echte Freigaben laufen darüber nicht.
+            if stopped and not has_pushed:
+                log.info(
+                    "import_ari_stop_sell_suppressed_no_push_history",
+                    tenant_id=tenant_id, property_id=property_id,
+                    days=len(stopped),
+                )
+                stopped = set()
             if stopped:
                 existing_stops = {
                     r["date"]
