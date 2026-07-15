@@ -79,6 +79,11 @@ export default function ProfilPage() {
     | { state: "error"; message: string }
   >(null);
   const [taxNumber, setTaxNumber] = useState("");
+  // Handelsregisternummer (HRB) + Amtsgericht — bei Gesellschaften (GmbH/UG/AG …)
+  // Stripe-Pflicht (company.registration_number). Ohne sie bleibt der Connected
+  // Account „Restricted" und kann keine Zahlungen empfangen.
+  const [companyRegister, setCompanyRegister] = useState("");
+  const [districtCourt, setDistrictCourt] = useState("");
   const [isSmallBusiness, setIsSmallBusiness] = useState(false);
   // USt-Satz Übernachtung (0092) als String (Input); "" = nicht konfiguriert.
   // Pflicht für die automatische Rechnung beim Check-out (kein Default).
@@ -139,6 +144,8 @@ export default function ProfilPage() {
       if (s("email")) setEmail(s("email"));
       if (s("vatId")) setVatId(s("vatId"));
       if (s("taxNumber")) setTaxNumber(s("taxNumber"));
+      if (s("companyRegister")) setCompanyRegister(s("companyRegister"));
+      if (s("districtCourt")) setDistrictCourt(s("districtCourt"));
       setIsSmallBusiness(Boolean(d.isSmallBusiness));
       if (d.lodgingTaxRate != null) setLodgingTaxRate(String(d.lodgingTaxRate));
       if (s("iban")) setIban(s("iban"));
@@ -207,6 +214,8 @@ export default function ProfilPage() {
       email: email || undefined,
       vatId: vatId || undefined,
       taxNumber: taxNumber || undefined,
+      companyRegister: companyRegister || undefined,
+      districtCourt: districtCourt || undefined,
       isSmallBusiness,
       lodgingTaxRate:
         lodgingTaxRate.trim() !== "" && Number.isFinite(Number(lodgingTaxRate))
@@ -594,6 +603,33 @@ export default function ProfilPage() {
                 onChange={(e) => setTaxNumber(e.target.value)}
               />
             </div>
+            {accountType === "company" && (
+              <>
+                <div className="flex flex-col gap-1.5">
+                  <LabelHint
+                    htmlFor="companyRegister"
+                    hint="Handelsregisternummer (z. B. HRB 12345). Für Gesellschaften Pflicht, damit das Zahlungskonto freigeschaltet wird."
+                  >
+                    Handelsregisternummer
+                  </LabelHint>
+                  <Input
+                    id="companyRegister"
+                    value={companyRegister}
+                    placeholder="HRB 12345"
+                    onChange={(e) => setCompanyRegister(e.target.value)}
+                  />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <Label htmlFor="districtCourt">Amtsgericht</Label>
+                  <Input
+                    id="districtCourt"
+                    value={districtCourt}
+                    placeholder="z. B. Berlin (Charlottenburg)"
+                    onChange={(e) => setDistrictCourt(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
             <div className="flex flex-col gap-1.5">
               <LabelHint
                 htmlFor="lodgingTaxRate"

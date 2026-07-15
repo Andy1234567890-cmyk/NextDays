@@ -34,6 +34,16 @@ const REQUIREMENT_HINTS: {
   label: string;
   fieldId: string;
 }[] = [
+  // Gesellschafts-spezifische Requirements ZUERST (die erste passende match
+  // gewinnt) — sonst schlucken die generischen address/name-Muster sie.
+  // Stripe DE führt die Handelsregisternummer im Feld company.tax_id (nicht die
+  // Steuernummer) — beide Muster verweisen daher auf das HRB-Feld.
+  { match: (r) => r.includes("registration_number") || r.includes("company.tax_id"), label: "Handelsregisternummer", fieldId: "companyRegister" },
+  { match: (r) => r.includes("company.name"), label: "Firmenname", fieldId: "companyName" },
+  { match: (r) => r.includes("verification.document"), label: "Ausweis-/Registerdokument (im Zahlungskonto hochladen)", fieldId: "" },
+  { match: (r) => r.includes("relationship.representative") || r.includes(".representative"), label: "Vertretungsberechtigte Person (Geschäftsführer)", fieldId: "firstName" },
+  { match: (r) => r.includes("relationship.director") || r.includes("directors"), label: "Geschäftsführer", fieldId: "firstName" },
+  { match: (r) => r.includes("relationship.owner") || r.includes("owners"), label: "Wirtschaftlich Berechtigte(r)", fieldId: "firstName" },
   { match: (r) => r.startsWith("individual.dob") || r.includes("dob"), label: "Geburtsdatum", fieldId: "ownerDob" },
   { match: (r) => r.includes("address"), label: "Adresse", fieldId: "street" },
   { match: (r) => r.includes("first_name") || r.includes("last_name"), label: "Name", fieldId: "firstName" },

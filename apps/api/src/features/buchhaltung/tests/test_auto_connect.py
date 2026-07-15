@@ -73,14 +73,15 @@ def test_connect_fields_einzelunternehmen_is_individual() -> None:
 
 
 def test_connect_fields_gmbh_is_company_with_structure() -> None:
-    # Echte GmbH → company + structure private_corporation + tax_id, keine Person
-    # im Account-Update (die kommt über die Persons-API).
+    # Echte GmbH → company + structure private_corporation, keine Person im
+    # Account-Update (die kommt über die Persons-API). company.tax_id ist bei
+    # Stripe DE die HANDELSREGISTERNUMMER, NICHT die Steuernummer (live verifiziert).
     fields = _connect_fields_from_profile(
         {
             "legal_form": "GmbH",
             "account_type": "company",
             "legal_name": "Muster GmbH",
-            "tax_number": "123/456/78910",
+            "company_register": "HRB 12345",
             "company_city": "Berlin",
             "company_country": "DE",
             "phone_number": "+49301234567",
@@ -88,9 +89,50 @@ def test_connect_fields_gmbh_is_company_with_structure() -> None:
     )
     assert fields["business_type"] == "company"
     assert fields["company"]["structure"] == "private_corporation"
-    assert fields["company"]["tax_id"] == "123/456/78910"
     assert fields["company"]["phone"] == "+49301234567"
     assert "individual" not in fields
+
+
+def test_connect_fields_gmbh_maps_handelsregister_to_tax_id() -> None:
+    # company_register (HRB) → Stripe company.tax_id. KRITISCH: Stripe DE führt die
+    # Handelsregisternummer im tax_id-Feld und validiert sie gegen das HR-Format
+    # („HRB 1234"). OHNE dieses Mapping bleibt eine GmbH dauerhaft „Restricted".
+    fields = _connect_fields_from_profile(
+        {
+            "legal_form": "GmbH", "account_type": "company",
+            "legal_name": "Muster GmbH", "company_country": "DE",
+            "company_register": "HRB 12345",
+        }
+    )
+    assert fields["company"]["tax_id"] == "HRB 12345"
+
+
+def test_connect_fields_gmbh_steuernummer_not_sent_as_tax_id() -> None:
+    # Die deutsche STEUERNUMMER gehört NICHT in company.tax_id (Stripe DE lehnt sie
+    # als tax_id_invalid ab — dort steht die Handelsregisternummer). Ohne HRB darf
+    # kein tax_id gesetzt werden (kein Fehlmapping der Steuernummer).
+    fields = _connect_fields_from_profile(
+        {
+            "legal_form": "GmbH", "account_type": "company",
+            "legal_name": "Muster GmbH", "company_country": "DE",
+            "tax_number": "123/456/78910",
+        }
+    )
+    assert "tax_id" not in fields.get("company", {})
+
+
+def test_connect_fields_normalizes_phone_to_e164() -> None:
+    # Das anzeige-freundliche „+49 30 1234567" (mit Leerzeichen) MUSS als striktes
+    # E.164 „+49301234567" an Stripe gehen — sonst lehnt Stripe die ganze Nummer
+    # ab und das Account-Update (mit HRB/representative) scheitert komplett.
+    fields = _connect_fields_from_profile(
+        {
+            "legal_form": "GmbH", "account_type": "company",
+            "legal_name": "Muster GmbH", "company_country": "DE",
+            "phone_number": "+49 30 1234567",
+        }
+    )
+    assert fields["company"]["phone"] == "+49301234567"
 
 
 def test_account_holder_auto_derived() -> None:

@@ -409,6 +409,18 @@ class PaymentsService:
             )
         return self.get_connect_account_status(tenant_id, stripe_account_id)
 
+    def has_external_account(self, tenant_id: str, stripe_account_id: str) -> bool:
+        """True, wenn am Connected Account bereits ein Auszahlungskonto (bank_account)
+        hinterlegt ist. Für den idempotenten Update-Pfad: die IBAN nur dann senden,
+        wenn noch KEINE existiert — sonst legt Stripe ein zweites externes Konto an
+        (Grund, warum der Update-Pfad die Bank früher pauschal übersprang)."""
+        self._require_own_connect_account(tenant_id, stripe_account_id)
+        with _stripe_errors():
+            account = self._stripe.v1.accounts.retrieve(stripe_account_id)
+        ext = getattr(account, "external_accounts", None)
+        data = getattr(ext, "data", None) if ext is not None else None
+        return bool(data)
+
     def set_external_account(
         self, tenant_id: str, stripe_account_id: str, *,
         iban: str, account_holder: str, country: str,

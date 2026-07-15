@@ -12,7 +12,9 @@ ROUND_HALF_UP, 2 Nachkommastellen) — der Client kann sie nicht fälschen.
 # Refactor geplant, nicht in einer Bugfix-Änderung — daher hier explizit erlaubt.
 # pylint: disable=too-many-lines
 import secrets
+from collections.abc import Callable
 from decimal import ROUND_HALF_UP, Decimal
+from typing import TYPE_CHECKING
 
 from postgrest.exceptions import APIError
 from supabase import Client
@@ -37,6 +39,9 @@ from .schemas import (
     SliceHealth,
 )
 from .stripe_legal_form import business_type_for
+
+if TYPE_CHECKING:
+    from src.features.payments.service import PaymentsService
 
 log = get_logger("nextdays.buchhaltung")
 
@@ -433,6 +438,9 @@ class BuchhaltungService:
             # gespeicherten Werte wieder anzeigt).
             "accountType": s("account_type"),
             "ownerDob": s("owner_dob"),
+            # Letzter Stripe-Sync-Fehler (Wurzel 5: sichtbar statt fail-open) —
+            # None = letzter Sync ok. Die Zahlungen-Karte zeigt ihn an.
+            "stripeSyncError": p.get("stripe_sync_error"),
             # Flags
             "isSmallBusiness": bool(p.get("is_kleinunternehmer")),
             "eInvoiceFormat": p.get("e_invoice_format"),
@@ -901,9 +909,24 @@ class BuchhaltungService:
             row, on_conflict="tenant_id"
         ).execute()
         # Plattform-Pflicht: ein Objektbesitzer braucht zum Auszahlen einen Stripe
-        # Connected Account. Er entsteht automatisch aus den gerade erfassten
-        # Firmendaten (Onboarding), nicht durch einen separaten manuellen Schritt.
-        self._ensure_connect_account(tenant_id, row)
+        # Connected Account. Er entsteht automatisch aus den erfassten Firmendaten
+        # (Onboarding), nicht durch einen separaten manuellen Schritt.
+        #
+        # WICHTIG: den GESAMTEN, jetzt persistierten Profil-Stand an Stripe syncen
+        # — NICHT nur `row` (die Felder DIESES Requests). Ein Teil-Save (z. B. nur
+        # das Logo) trüge sonst ein Stripe-Update ohne KYC-Felder und die zuvor
+        # erfassten Pflichtangaben (Handelsregister, Adresse, Geschäftsführer)
+        # kämen nie bei Stripe an → Account bliebe für immer Restricted.
+        full_profile = (
+            self._db.table("tenant_billing_profile")
+            .select("*")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        self._ensure_connect_account(
+            tenant_id, full_profile[0] if full_profile else row
+        )
         return self.get_company_profile(ctx)
 
     def _ensure_connect_account(self, tenant_id: str, profile: dict) -> None:
@@ -929,29 +952,13 @@ class BuchhaltungService:
             .execute()
         ).data
         if existing and existing[0].get("stripe_account_id"):
-            # Account besteht bereits: die AKTUALISIERTEN Firmendaten trotzdem
-            # an Stripe synchronisieren — sonst bleiben offene Requirements
-            # (z. B. business_profile.url „Provide a business website") für
-            # immer offen, obwohl der Nutzer die Daten längst nachgetragen hat.
-            # Bankverbindung wird hier bewusst NICHT erneut angefügt (Stripe
-            # würde ein zweites externes Konto anlegen).
-            try:
-                payments = PaymentsService(service_client=self._db)
-                acct_id = existing[0]["stripe_account_id"]
-                fields = _connect_fields_from_profile(profile)
-                if fields:
-                    payments.update_connect_account(tenant_id, acct_id, fields)
-                # company/non_profit: Vertreter über die Persons-API anlegen
-                # (bei individual gibt _company_representative_from_profile None).
-                rep = _company_representative_from_profile(profile)
-                if rep:
-                    payments.upsert_company_representative(tenant_id, acct_id, rep)
-            except PaymentsError as exc:
-                log.warning(
-                    "connect_account_sync_failed",
-                    tenant_id=tenant_id,
-                    error=exc.message,
-                )
+            # Account besteht bereits: die AKTUALISIERTEN Firmendaten trotzdem an
+            # Stripe synchronisieren — sonst bleiben offene Requirements (z. B.
+            # Handelsregister, business_profile.url) für immer offen, obwohl der
+            # Nutzer die Daten längst nachgetragen hat.
+            payments = PaymentsService(service_client=self._db)
+            acct_id = existing[0]["stripe_account_id"]
+            self._sync_existing_connect_account(tenant_id, acct_id, profile, payments)
             return
 
         email = profile.get("email")
@@ -1008,14 +1015,87 @@ class BuchhaltungService:
                 tenant_id=tenant_id,
                 stripe_account_id=account.stripe_account_id,
             )
+            self._set_stripe_sync_error(tenant_id, None)
         except PaymentsError as exc:
             # Stripe nicht konfiguriert/erreichbar → Profil bleibt gespeichert,
-            # Connect kann später (eigene UI) nachgeholt werden.
+            # Connect kann später (eigene UI) nachgeholt werden. Fehler SICHTBAR
+            # machen (Wurzel 5: kein stiller „gespeichert"-Erfolg).
             log.warning(
                 "connect_account_auto_create_failed",
                 tenant_id=tenant_id,
                 error=exc.message,
             )
+            self._set_stripe_sync_error(tenant_id, exc.message)
+
+    def _set_stripe_sync_error(self, tenant_id: str, error: str | None) -> None:
+        """Letzten Stripe-Sync-Fehler am Profil ablegen (oder bei Erfolg löschen),
+        damit die Zahlungen-Karte ihn anzeigt statt fail-open „gespeichert" zu
+        melden. Best-effort: das Schreiben des Fehler-Status darf den Profil-Save
+        selbst nicht kippen."""
+        try:
+            self._db.table("tenant_billing_profile").update(
+                {"stripe_sync_error": error}
+            ).eq("tenant_id", tenant_id).execute()
+        except Exception as exc:  # noqa: BLE001 — Status-Schreiben ist best-effort
+            log.warning(
+                "stripe_sync_error_write_failed",
+                tenant_id=tenant_id, error=str(exc)[:200],
+            )
+
+    def _sync_existing_connect_account(
+        self, tenant_id: str, acct_id: str, profile: dict,
+        payments: "PaymentsService",
+    ) -> None:
+        """Aktualisierte Firmendaten an einen BESTEHENDEN Connected Account syncen.
+
+        Drei getrennte Schritte mit EIGENEN Fehlergrenzen (Wurzel 5), damit ein
+        Fehler im Account-Update den Vertreter-Upsert bzw. die Bank NICHT
+        verhindert (früher hätte ein einziger except beide verschluckt). Der erste
+        auftretende Fehler wird gesammelt und am Profil sichtbar hinterlegt; bei
+        durchweg erfolgreichem Sync wird der Fehler-Status gelöscht."""
+        from src.features.payments.service import (  # noqa: PLC0415
+            PaymentsError,
+        )
+
+        first_error: str | None = None
+
+        def _step(what: str, fn: Callable[[], None]) -> None:
+            nonlocal first_error
+            try:
+                fn()
+            except PaymentsError as exc:
+                log.warning(
+                    "connect_account_sync_step_failed",
+                    tenant_id=tenant_id, step=what, error=exc.message,
+                )
+                if first_error is None:
+                    first_error = exc.message
+
+        fields = _connect_fields_from_profile(profile)
+        if fields:
+            _step("account_update",
+                  lambda: payments.update_connect_account(tenant_id, acct_id, fields))
+        # company/non_profit: Vertreter über die Persons-API (individual → None).
+        rep = _company_representative_from_profile(profile)
+        if rep:
+            _step("representative",
+                  lambda: payments.upsert_company_representative(tenant_id, acct_id, rep))
+        # IBAN idempotent nachziehen: nur, wenn noch KEIN externes Konto existiert
+        # (sonst legt Stripe ein zweites an — Grund für den früheren pauschalen
+        # Skip). So kommt eine erst nachträglich erfasste IBAN doch noch an.
+        iban = profile.get("iban")
+        holder = profile.get("account_holder") or _account_holder_from(profile)
+        country = profile.get("company_country")
+        if iban and holder and country:
+            def _sync_bank() -> None:
+                if not payments.has_external_account(tenant_id, acct_id):
+                    payments.set_external_account(
+                        tenant_id, acct_id,
+                        iban=iban, account_holder=holder, country=country,
+                    )
+            _step("external_account", _sync_bank)
+
+        self._set_stripe_sync_error(tenant_id, first_error)
 
     # Firmenlogo: erlaubte Typen → Dateiendung (analog properties.upload_image).
     LOGO_BUCKET = "company-logos"
@@ -1523,7 +1603,7 @@ def _company_representative_from_profile(profile: dict) -> dict | None:
         "first_name": profile.get("managing_director_first_name"),
         "last_name": profile.get("managing_director_last_name"),
         "email": profile.get("email"),
-        "phone": profile.get("phone_number"),
+        "phone": _e164_phone(profile.get("phone_number")),
     }
     if address:
         person["address"] = address
@@ -1568,7 +1648,7 @@ def _connect_fields_from_profile(profile: dict) -> dict:
         "first_name": profile.get("managing_director_first_name"),
         "last_name": profile.get("managing_director_last_name"),
         "email": profile.get("email"),
-        "phone": profile.get("phone_number"),
+        "phone": _e164_phone(profile.get("phone_number")),
     }
     if address:
         person["address"] = address
@@ -1592,16 +1672,26 @@ def _connect_fields_from_profile(profile: dict) -> dict:
         if person:
             fields["individual"] = person
     else:
-        # company / non_profit: Firmen-Ebene. name + address + phone + tax_id.
+        # company / non_profit: Firmen-Ebene. name + address + phone + tax_id +
+        # registration_number (Handelsregister).
         company: dict = {"name": profile.get("legal_name")}
         if structure:
             company["structure"] = structure
         if address:
             company["address"] = address
-        if profile.get("phone_number"):
-            company["phone"] = profile["phone_number"]
-        if profile.get("tax_number"):
-            company["tax_id"] = profile["tax_number"]
+        company_phone = _e164_phone(profile.get("phone_number"))
+        if company_phone:
+            company["phone"] = company_phone
+        # Handelsregisternummer → company.tax_id. KRITISCH für DE (live verifiziert):
+        # Stripe führt die Handelsregisternummer im Feld company.tax_id (NICHT in
+        # einem „registration_number") und validiert sie gegen das HR-Format
+        # („HRB 1234", „HRA 58343 FL", „PR 345"). OHNE company.tax_id bleibt der
+        # Account „Provide a Commercial Registry Number" und nie charges_enabled.
+        # Die deutsche STEUERNUMMER (tax_number) gehört NICHT hierher — Stripe DE
+        # lehnt sie als „tax_id_invalid" ab (sie ist kein Handelsregister-Eintrag).
+        # Nur senden, wenn erfasst (Wurzel 4: kein erfundener KYC-Wert).
+        if profile.get("company_register"):
+            company["tax_id"] = profile["company_register"]
         company = {k: v for k, v in company.items() if v not in (None, "")}
         if company:
             fields["company"] = company
@@ -1631,3 +1721,23 @@ def _dob_parts(value: object) -> dict | None:
         return {"day": day, "month": month, "year": year}
     except (ValueError, TypeError):
         return None
+
+
+def _e164_phone(value: object) -> str | None:
+    """Telefonnummer auf E.164 normalisieren (+ und Ziffern, KEINE Leerzeichen).
+
+    Das Telefon-Eingabefeld speichert die Nummer anzeige-freundlich mit Leerzeichen
+    zwischen Vorwahl und Rest (z. B. „+49 1234567890"). Stripe verlangt aber striktes
+    E.164 ohne Trennzeichen und lehnt „+49 1234567890" als „not a valid phone number"
+    ab — ein einziger solcher Wert ließ FRÜHER das gesamte Account-Update scheitern
+    (und mit ihm representative/Handelsregister). Darum hier, an der Stripe-Grenze,
+    robust normalisieren: führendes '+' erhalten, alle Nicht-Ziffern entfernen. Leere/
+    ziffernlose Eingabe → None (kein erfundener Wert, Wurzel 4)."""
+    if not value:
+        return None
+    raw = str(value).strip()
+    plus = raw.startswith("+")
+    digits = "".join(ch for ch in raw if ch.isdigit())
+    if not digits:
+        return None
+    return f"+{digits}" if plus else digits
