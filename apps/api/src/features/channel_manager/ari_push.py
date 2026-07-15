@@ -4,6 +4,9 @@ Mixin des ChannelManagerService (verbatim aus service.py extrahiert;
 siehe service.py-Fassade). State (_db/_channex) und Basis-Helper kommen
 von der Fassade; Patch-Ziel für Modul-Helfer ist channel_manager.common.
 """
+# pylint: disable=too-many-lines  # kohärente ARI-Push-Domäne (Availability/Rate/
+# Restrictions/Stop-Sell/Outbox + Cron-Retry) — ein Split zerrisse die eng
+# gekoppelte Push-/Outbox-/Superseding-Logik über mehrere Dateien.
 from __future__ import annotations
 
 from datetime import date, timedelta
@@ -1087,6 +1090,101 @@ class AriPushMixin:
             )
 
     @staticmethod
+    def _restriction_row_fields(row: dict[str, Any]) -> dict[str, Any]:
+        """Eine generische Restriktions-Zeile in Channex-Felder übersetzen. Nur
+        gesetzte Felder (None überspringen). min_stay → min_stay_arrival+through
+        (getrennte Werte wären ein eigenes Feld). Dieselbe Übersetzung wie
+        push_restrictions_for_property/push_rates_batch — hier für die generische
+        Zeilen-Liste (Zertifizierung Test 3-8: heterogene Restriktionen in 1 Call)."""
+        fields: dict[str, Any] = {}
+        rate_cents = row.get("rate_cents")
+        if rate_cents is not None:
+            fields["rate"] = rate_cents
+        min_stay = row.get("min_stay")
+        if min_stay is not None:
+            fields["min_stay_arrival"] = min_stay
+            fields["min_stay_through"] = min_stay
+        max_stay = row.get("max_stay")
+        if max_stay is not None:
+            fields["max_stay"] = max(0, int(max_stay))
+        if row.get("closed_to_arrival") is not None:
+            fields["closed_to_arrival"] = bool(row["closed_to_arrival"])
+        if row.get("closed_to_departure") is not None:
+            fields["closed_to_departure"] = bool(row["closed_to_departure"])
+        if row.get("stop_sell") is not None:
+            fields["stop_sell"] = bool(row["stop_sell"])
+        return fields
+
+    def push_restriction_rows_for_property(
+        self,
+        tenant_id: str,
+        property_id: str,
+        rows: list[dict[str, Any]],
+    ) -> None:
+        """Eine HETEROGENE Liste von Restriktions-Zeilen eines Objekts in EINEM
+        (bzw. wenigen gechunkten) Channex-Restrictions-Request pushen — jede Zeile
+        mit eigenem Zeitraum UND beliebiger Kombination aus rate/min_stay/max_stay/
+        CTA/CTD/stop_sell. Channex erlaubt gemischte value-Zeilen in einem
+        POST /restrictions, deshalb deckt EINE Aktion mehrere verschiedene Preise/
+        Restriktionen ab (Zertifizierung Test 3-8: „1 API call"). Das Mapping wird
+        EINMAL aufgelöst; die Absicht wird VOR dem Push in der Restriktions-Outbox
+        persistiert (Cron-Backstop). No-op ohne Verbindung/Zeilen.
+
+        Jede Zeile: {date_from, date_to (inkl.), rate_cents?, min_stay?, max_stay?,
+        closed_to_arrival?, closed_to_departure?, stop_sell?}."""
+        if not self._channex.is_configured or self._db is None or not rows:
+            return
+        if not self._is_channex_managed(self._db, tenant_id, property_id):
+            return  # nicht bei Channex angelegt → No-op
+        self._trace_step(
+            tenant_id=tenant_id, property_id=property_id, step="restrictions"
+        )
+        seg_from = min(_as_iso(r["date_from"]) for r in rows)
+        seg_to = max(_as_iso(r["date_to"]) for r in rows)
+        outbox_id = self._enqueue_restriction_outbox(
+            tenant_id, property_id, "restriction_rows",
+            {"rows": rows}, date.fromisoformat(seg_from), date.fromisoformat(seg_to),
+        )
+        plans = self._resolve_channex_rate_plans(self._db, tenant_id, property_id)
+        if not plans:
+            # managed, aber Rate-Plan-Mapping fehlt noch → 'pending', Cron zieht nach.
+            log.info(
+                "restriction_rows_deferred_no_rate_plan",
+                tenant_id=tenant_id, property_id=property_id,
+            )
+            return
+        values: list[dict[str, Any]] = []
+        for row in rows:
+            fields = self._restriction_row_fields(row)
+            if not fields:
+                continue
+            values.extend(
+                _restriction_values(
+                    plans, fields, _as_date(row["date_from"]), _as_date(row["date_to"])
+                )
+            )
+        if not values:
+            self._mark_restriction_outbox(outbox_id, "done")
+            return
+        pushed = 0
+        try:
+            for i in range(0, len(values), self._RESTRICTIONS_CHUNK):
+                chunk = values[i : i + self._RESTRICTIONS_CHUNK]
+                self._channex.update_restrictions(chunk)
+                pushed += len(chunk)
+            self._mark_restriction_outbox(outbox_id, "done")
+            log.info(
+                "restriction_rows_push_done",
+                tenant_id=tenant_id, property_id=property_id, values=pushed,
+            )
+        except ChannexError as exc:
+            # Outbox-Zeile bleibt 'pending' (Cron-Backstop).
+            log.warning(
+                "restriction_rows_push_failed",
+                tenant_id=tenant_id, property_id=property_id, error=exc.message,
+            )
+
+    @staticmethod
     def _superseding_days_by_row(rows: list[dict]) -> dict[str, set[str]]:
         """Je pending-Zeile die Tage, die von einer NEUEREN Zeile (späterer Index
         bei created_at-Sortierung) desselben Objekts abgedeckt sind. TAG-GENAU:
@@ -1240,6 +1338,21 @@ class AriPushMixin:
                     )
                 )
             return values
+        if kind == "restriction_rows" and payload.get("rows") is not None:
+            # push_restriction_rows_for_property-Ursprung: heterogene Zeilen
+            # (rate/min_stay/max_stay/CTA/CTD/stop_sell je Zeile eigen) in EINER
+            # Outbox-Zeile — beim Cron-Retry pro Zeile neu expandieren.
+            row_values: list[dict[str, Any]] = []
+            for r in payload["rows"]:
+                fields = self._restriction_row_fields(r)
+                if not fields:
+                    continue
+                row_values.extend(
+                    _restriction_values(
+                        plans, fields, _as_date(r["date_from"]), _as_date(r["date_to"])
+                    )
+                )
+            return row_values
         fields = _restriction_fields_from_payload(kind, payload)
         if not fields:
             return []
@@ -1344,6 +1457,10 @@ class AriPushMixin:
         if row["kind"] == "rate" and payload.get("segments") is not None:
             for seg in payload["segments"]:
                 days.update(_iso_days(str(seg["date_from"]), str(seg["date_to"])))
+            return days
+        if row["kind"] == "restriction_rows" and payload.get("rows") is not None:
+            for r in payload["rows"]:
+                days.update(_iso_days(str(r["date_from"]), str(r["date_to"])))
             return days
         return set(_iso_days(str(row["date_from"]), str(row["date_to"])))
 

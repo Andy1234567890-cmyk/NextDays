@@ -286,6 +286,35 @@ class BulkEditResult(BaseModel):
     applied: list[str]  # welche Aktionen ausgeführt wurden
 
 
+class RestrictionRow(BaseModel):
+    """Eine Restriktions-Zeile für einen Datumsbereich (end inklusiv über die
+    DateRange, hier als von/bis; end exklusiv). Beliebige Kombination gesetzter
+    Felder — nur gesetzte werden an Channex gesendet."""
+    range: DateRange
+    price: float | None = Field(default=None, ge=0)  # fester Nachtpreis
+    min_stay: int | None = Field(default=None, ge=1)
+    max_stay: int | None = Field(default=None, ge=0)
+    closed_to_arrival: bool | None = None
+    closed_to_departure: bool | None = None
+    stop_sell: bool | None = None
+
+    @model_validator(mode="after")
+    def _at_least_one_field(self) -> "RestrictionRow":
+        if all(v is None for v in (
+            self.price, self.min_stay, self.max_stay,
+            self.closed_to_arrival, self.closed_to_departure, self.stop_sell,
+        )):
+            raise ValueError("Jede Zeile braucht mindestens eine Restriktion")
+        return self
+
+
+class RestrictionRowsRequest(BaseModel):
+    """Mehrere heterogene Restriktions-Zeilen eines Objekts in EINEM Channex-Call
+    (Zertifizierung Test 3-8: verschiedene Preise/Restriktionen, 1 API-Call)."""
+    property_id: str
+    rows: list[RestrictionRow] = Field(min_length=1)
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"

@@ -234,6 +234,14 @@ def _handle_push_ari(
             stop_sell=bool(payload["stop_sell"]),
             days=payload.get("days"),
         )
+    elif kind == "restriction_rows":
+        # Heterogene Restriktions-Zeilen in EINEM Channex-Call (Test 3-8).
+        # push_restriction_rows_for_property ist best-effort (kein bool-Rückgabe);
+        # die Restriktions-Outbox ist der Backstop.
+        push.push_restriction_rows_for_property(
+            tenant_id, property_id, payload["rows"],
+        )
+        failed = False
     else:
         raise ValueError(f"unbekannter ARI-kind: {kind}")
 

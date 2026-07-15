@@ -305,3 +305,33 @@ export async function unassignSeason(
 ): Promise<Result<{ removed: boolean }>> {
   return call(`/calendar/seasons/assign/${assignmentId}`, { method: "DELETE" });
 }
+
+// -- Mehrere Restriktions-Zeilen in EINEM Call (Zertifizierung Test 3-8) -----
+export type RestrictionRow = {
+  start: string; // YYYY-MM-DD
+  end: string; // YYYY-MM-DD (exklusiv)
+  price?: number;
+  min_stay?: number;
+  max_stay?: number;
+  closed_to_arrival?: boolean;
+  closed_to_departure?: boolean;
+  stop_sell?: boolean;
+};
+
+/** Mehrere heterogene Restriktions-Zeilen (verschiedene Preise/min_stay/max_stay/
+ *  CTA/CTD/stop_sell je Zeitraum) eines Objekts in EINEM Channex-Call setzen. */
+export async function bulkRestrictions(
+  propertyId: string,
+  rows: RestrictionRow[],
+): Promise<Result<{ rows: number }>> {
+  return call("/calendar/bulk-restrictions", {
+    method: "POST",
+    body: {
+      property_id: propertyId,
+      rows: rows.map(({ start, end, ...rest }) => ({
+        range: { start, end },
+        ...rest,
+      })),
+    },
+  });
+}

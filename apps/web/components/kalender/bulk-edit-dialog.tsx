@@ -14,11 +14,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { Segmented } from "@/components/ui/segmented";
-import { bulkEdit } from "@/lib/calendar";
+import { type RestrictionRow, bulkEdit, bulkRestrictions } from "@/lib/calendar";
 
 type BlockMode = "none" | "block" | "unblock";
 type StopMode = "none" | "stop" | "clear";
 type RestrictMode = "none" | "on" | "off";
+type DialogMode = "simple" | "rows";
 
 export function BulkEditDialog({
   open,
@@ -39,6 +40,13 @@ export function BulkEditDialog({
   onClose: () => void;
   onApplied: () => void;
 }) {
+  // Modus: „simple" = ein Wert über die Objektauswahl (bestehend); „rows" =
+  // mehrere heterogene Zeilen (versch. Zeiträume/Preise/Restriktionen) für DIESES
+  // Objekt in EINEM Channex-Call (Zertifizierung Test 3-8).
+  const [mode, setMode] = useState<DialogMode>("simple");
+  const [rows, setRows] = useState<RestrictionRow[]>([
+    { start, end, price: undefined },
+  ]);
   // Objektauswahl: primäres Objekt ist vorausgewählt; der Nutzer kann gezielt
   // weitere Objekte dazunehmen oder abwählen (Mehrfachauswahl statt „alle/eins").
   const [selectedIds, setSelectedIds] = useState<string[]>([primaryProperty.id]);
@@ -70,6 +78,33 @@ export function BulkEditDialog({
     stopMode !== "none" ||
     ctaMode !== "none" ||
     ctdMode !== "none";
+
+  // Zeilen-Modus: mehrere Zeiträume mit eigenen Werten in EINEM Portale-Call.
+  async function applyRows() {
+    const clean = rows.filter(
+      (r) =>
+        r.price != null ||
+        r.min_stay != null ||
+        r.max_stay != null ||
+        r.closed_to_arrival != null ||
+        r.closed_to_departure != null ||
+        r.stop_sell != null,
+    );
+    if (clean.length === 0) {
+      toast.error("Mindestens eine Zeile mit einem Wert.");
+      return;
+    }
+    setSaving(true);
+    const res = await bulkRestrictions(primaryProperty.id, clean);
+    setSaving(false);
+    if (res.ok) {
+      toast.success(`${res.data.rows} Zeile(n) an die Portale gesendet.`);
+      onApplied();
+      onClose();
+    } else {
+      toast.error(res.error || "Senden fehlgeschlagen.");
+    }
+  }
 
   async function apply() {
     if (targetIds.length === 0) {
@@ -128,6 +163,26 @@ export function BulkEditDialog({
           </Button>
         </div>
 
+        {/* Modus: ein Wert über mehrere Objekte, ODER mehrere Zeitraum-Zeilen mit
+            eigenen Werten für DIESES Objekt (alles in EINEM Portale-Call). */}
+        <div className="border-b px-5 py-3">
+          <Segmented
+            value={mode}
+            options={[
+              { value: "simple", label: "Ein Wert" },
+              { value: "rows", label: "Mehrere Zeiträume" },
+            ]}
+            onChange={(v) => setMode(v as DialogMode)}
+          />
+        </div>
+
+        {mode === "rows" ? (
+          <RowsEditor
+            propertyTitle={primaryProperty.title}
+            rows={rows}
+            setRows={setRows}
+          />
+        ) : (
         <div className="flex-1 overflow-y-auto px-5 py-4">
           <div className="flex flex-col gap-5">
             {/* Geltungsbereich: welche Objekte bearbeitet werden (Mehrfachauswahl,
@@ -316,16 +371,185 @@ export function BulkEditDialog({
             </fieldset>
           </div>
         </div>
+        )}
 
         <div className="flex items-center justify-end gap-2 border-t px-5 py-4">
           <Button variant="outline" onClick={onClose} disabled={saving}>
             Abbrechen
           </Button>
-          <Button onClick={apply} disabled={saving || !hasChange}>
-            {saving ? "Anwenden…" : "Anwenden"}
-          </Button>
+          {mode === "rows" ? (
+            <Button onClick={applyRows} disabled={saving}>
+              {saving ? "Senden…" : "An Portale senden"}
+            </Button>
+          ) : (
+            <Button onClick={apply} disabled={saving || !hasChange}>
+              {saving ? "Anwenden…" : "Anwenden"}
+            </Button>
+          )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// Mehrere Zeitraum-Zeilen mit eigenen Werten (Preis/min/max/CTA/CTD/Stop-Sell) —
+// alles in EINEM Portale-Call. Für Häuser mit vielen Zimmern/Saisons (Hotel-Fall).
+function RowsEditor({
+  propertyTitle,
+  rows,
+  setRows,
+}: {
+  propertyTitle: string;
+  rows: RestrictionRow[];
+  setRows: (r: RestrictionRow[]) => void;
+}) {
+  function patch(i: number, next: Partial<RestrictionRow>) {
+    setRows(rows.map((r, idx) => (idx === i ? { ...r, ...next } : r)));
+  }
+  function addRow() {
+    const last = rows[rows.length - 1];
+    setRows([...rows, { start: last.start, end: last.end }]);
+  }
+  function removeRow(i: number) {
+    setRows(rows.filter((_, idx) => idx !== i));
+  }
+  // Optional-Boolean als 3-Wege (unverändert/an/aus) auf ein Segmented mappen.
+  const triState = (v: boolean | undefined): "none" | "on" | "off" =>
+    v == null ? "none" : v ? "on" : "off";
+  const fromTri = (s: string): boolean | undefined =>
+    s === "none" ? undefined : s === "on";
+
+  return (
+    <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-5 py-4">
+      <p className="text-xs text-muted-foreground">
+        Objekt: {propertyTitle}. Mehrere Zeiträume mit eigenen Werten — alles
+        zusammen in einem Zug an alle Buchungsportale.
+      </p>
+      {rows.map((r, i) => (
+        <div key={i} className="flex flex-col gap-2 rounded-(--radius) border border-border p-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">
+              Zeitraum {i + 1}
+            </span>
+            {rows.length > 1 && (
+              <button
+                type="button"
+                aria-label="Zeile entfernen"
+                className="text-muted-foreground hover:text-destructive"
+                onClick={() => removeRow(i)}
+              >
+                <Icon icon="ph:trash" className="size-4" />
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs">Von</Label>
+              <Input
+                type="date"
+                value={r.start}
+                onChange={(e) => patch(i, { start: e.target.value })}
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs">Bis (exkl.)</Label>
+              <Input
+                type="date"
+                value={r.end}
+                onChange={(e) => patch(i, { end: e.target.value })}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs">Preis</Label>
+              <Input
+                type="number"
+                min={0}
+                placeholder="—"
+                value={r.price ?? ""}
+                onChange={(e) =>
+                  patch(i, {
+                    price: e.target.value === "" ? undefined : Number(e.target.value),
+                  })
+                }
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs">Min-Stay</Label>
+              <Input
+                type="number"
+                min={1}
+                placeholder="—"
+                value={r.min_stay ?? ""}
+                onChange={(e) =>
+                  patch(i, {
+                    min_stay:
+                      e.target.value === "" ? undefined : Number(e.target.value),
+                  })
+                }
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs">Max-Stay</Label>
+              <Input
+                type="number"
+                min={0}
+                placeholder="—"
+                value={r.max_stay ?? ""}
+                onChange={(e) =>
+                  patch(i, {
+                    max_stay:
+                      e.target.value === "" ? undefined : Number(e.target.value),
+                  })
+                }
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-xs">Anreise gesperrt</Label>
+              <Segmented
+                value={triState(r.closed_to_arrival)}
+                options={[
+                  { value: "none", label: "—" },
+                  { value: "on", label: "An" },
+                  { value: "off", label: "Aus" },
+                ]}
+                onChange={(v) => patch(i, { closed_to_arrival: fromTri(v) })}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-xs">Abreise gesperrt</Label>
+              <Segmented
+                value={triState(r.closed_to_departure)}
+                options={[
+                  { value: "none", label: "—" },
+                  { value: "on", label: "An" },
+                  { value: "off", label: "Aus" },
+                ]}
+                onChange={(v) => patch(i, { closed_to_departure: fromTri(v) })}
+              />
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <Label className="text-xs">Verkaufsstopp</Label>
+              <Segmented
+                value={triState(r.stop_sell)}
+                options={[
+                  { value: "none", label: "—" },
+                  { value: "on", label: "An" },
+                  { value: "off", label: "Aus" },
+                ]}
+                onChange={(v) => patch(i, { stop_sell: fromTri(v) })}
+              />
+            </div>
+          </div>
+        </div>
+      ))}
+      <Button variant="outline" onClick={addRow} className="gap-2">
+        <Icon icon="ph:plus" className="size-4" />
+        Zeitraum hinzufügen
+      </Button>
     </div>
   );
 }

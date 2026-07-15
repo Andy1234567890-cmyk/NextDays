@@ -22,6 +22,7 @@ from .schemas import (
     DateRange,
     DayAvailability,
     PriceOverrideRequest,
+    RestrictionRowsRequest,
     SeasonAssignRequest,
     SeasonCreate,
     SeasonListResponse,
@@ -215,6 +216,23 @@ def bulk_edit(
     in einem Rutsch setzen (Hostaway-Bulk-Edit)."""
     try:
         return service.bulk_edit(ctx.tenant_id, req)
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/bulk-restrictions", dependencies=[
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
+def bulk_restrictions(
+    req: RestrictionRowsRequest,
+    service: CalendarServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))],
+) -> dict[str, int]:
+    """Mehrere heterogene Restriktions-Zeilen (verschiedene Preise/min_stay/
+    max_stay/CTA/CTD/stop_sell je Zeitraum) in EINEM Channex-Call setzen
+    (Zertifizierung Test 3-8)."""
+    try:
+        return {"rows": service.bulk_restrictions(ctx.tenant_id, req)}
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

@@ -28,6 +28,7 @@ from .schemas import (
     DateRange,
     DayAvailability,
     PriceOverrideRequest,
+    RestrictionRowsRequest,
     SliceHealth,
     StopSellDay,
 )
@@ -1223,6 +1224,53 @@ class CalendarService:
             days=len(req.range.nights()),
             applied=applied,
         )
+
+    def bulk_restrictions(self, tenant_id: str, req: RestrictionRowsRequest) -> int:
+        """Mehrere heterogene Restriktions-Zeilen eines Objekts in EINEM Channex-
+        Call setzen (Zertifizierung Test 3-8). Spiegelt lokal (Preis→price_overrides,
+        CTA/CTD→availability, stop_sell→stop_sell) und reiht EINEN restriction_rows-
+        ARI-Job ein, der alle Zeilen gebündelt an Channex pusht. Gibt die Anzahl
+        Zeilen zurück."""
+        self._require_tenant_property(tenant_id, req.property_id)
+        pid = req.property_id
+        rows_payload: list[dict[str, object]] = []
+        for row in req.rows:
+            start, end = row.range.start, row.range.end  # end exklusiv
+            # Lokale Spiegelung (Gegenzustand, Wurzel 1) — die Channex-Wahrheit
+            # kommt aus dem gebündelten Push, die lokalen Tabellen bleiben konsistent.
+            if row.price is not None:
+                self._db().table("price_overrides").upsert(
+                    [{"property_id": pid, "date": d.isoformat(), "price": row.price}
+                     for d in row.range.nights()],
+                    on_conflict="property_id,date",
+                ).execute()
+            if row.closed_to_arrival is not None or row.closed_to_departure is not None:
+                flags: dict[str, bool] = {}
+                if row.closed_to_arrival is not None:
+                    flags["closed_to_arrival"] = row.closed_to_arrival
+                if row.closed_to_departure is not None:
+                    flags["closed_to_departure"] = row.closed_to_departure
+                self._db().table("availability").upsert(
+                    [{"property_id": pid, "date": d.isoformat(), **flags}
+                     for d in row.range.nights()],
+                    on_conflict="property_id,date",
+                ).execute()
+            rows_payload.append({
+                "date_from": start.isoformat(),
+                "date_to": (end - timedelta(days=1)).isoformat(),  # inklusiv
+                "rate_cents": round(row.price * 100) if row.price is not None else None,
+                "min_stay": row.min_stay,
+                "max_stay": row.max_stay,
+                "closed_to_arrival": row.closed_to_arrival,
+                "closed_to_departure": row.closed_to_departure,
+                "stop_sell": row.stop_sell,
+            })
+        # EIN Job → EIN gebündelter Channex-Call für alle Zeilen (Test 3-8).
+        try_enqueue_ari(
+            self._db(), tenant_id, pid, "restriction_rows", {"rows": rows_payload},
+        )
+        log.info("calendar_bulk_restrictions", property_id=pid, rows=len(rows_payload))
+        return len(rows_payload)
 
     def unblock(self, tenant_id: str, property_id: str, rng: DateRange) -> int:
         """Manuelle Sperre im Zeitraum aufheben (öffentlicher, tenant-gescopter
