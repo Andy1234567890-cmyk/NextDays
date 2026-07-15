@@ -58,6 +58,10 @@ class ReservationCreate(BaseModel):
     # Optional: bestehenden Gast fest zuordnen (z. B. aus der Gästekarte). Wenn
     # gesetzt UND gültig, wird kein neuer Gast angelegt (keine Dublette).
     guest_id: str | None = None
+    # Hotel-Modus: gebuchte Zimmerkategorie (0140). None = Ferienwohnung (eine
+    # Einheit je Objekt, binäres availability-Modell). Gesetzt = der count-basierte
+    # Buchungs-Guard im RPC (0141) greift statt der binären availability.
+    room_type_id: str | None = None
 
     @model_validator(mode="after")
     def _check_order(self) -> "ReservationCreate":

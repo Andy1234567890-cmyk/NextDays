@@ -50,22 +50,30 @@ class WritesMixin(ReservationsBase):
         if not prop.data:
             raise ReservationError("Objekt nicht gefunden.", status_code=404)
 
-        # 2) Double-Booking-Schutz: kein Tag darf booked/blocked sein.
+        # 2) Double-Booking-Vorcheck (früher UX-Guard). NUR fürs Ferienwohnungs-
+        #    Modell (binäre availability). Bei Hotels (room_type_id gesetzt) ist
+        #    die binäre availability-Tabelle irrelevant — dort schützt der
+        #    count-basierte Guard IM RPC (0141, booked_count < count_of_rooms);
+        #    ein binärer Vorcheck würde das zweite freie Zimmer fälschlich
+        #    blockieren. Der RPC bleibt in BEIDEN Fällen der TOCTOU-sichere
+        #    Backstop.
         nights = _nights(req.check_in, req.check_out)
-        avail = (
-            self._db()
-            .table("availability")
-            .select("date,status")
-            .eq("property_id", req.property_id)
-            .gte("date", req.check_in.isoformat())
-            .lt("date", req.check_out.isoformat())
-            .execute()
-        )
-        taken = [r["date"] for r in (avail.data or []) if r["status"] != "open"]
-        if taken:
-            raise ReservationError(
-                "Zeitraum enthält bereits belegte/gesperrte Tage.", status_code=409
+        if req.room_type_id is None:
+            avail = (
+                self._db()
+                .table("availability")
+                .select("date,status")
+                .eq("property_id", req.property_id)
+                .gte("date", req.check_in.isoformat())
+                .lt("date", req.check_out.isoformat())
+                .execute()
             )
+            taken = [r["date"] for r in (avail.data or []) if r["status"] != "open"]
+            if taken:
+                raise ReservationError(
+                    "Zeitraum enthält bereits belegte/gesperrte Tage.",
+                    status_code=409,
+                )
         # Stop-Sell-Schutz: ein von Mitarbeitern gesetzter Stop-Sell sperrt den
         # Tag auf ALLEN Kanälen — auch die interne Rezeptions-Buchung. Der Stopp
         # muss erst aufgehoben werden, bevor hier gebucht werden kann.
@@ -122,6 +130,9 @@ class WritesMixin(ReservationsBase):
             "property_id": req.property_id,
             "guest_id": guest_id,
             "channel": req.channel.value,
+            # None bei Ferienwohnungen (Spalte bleibt leer, RPC nutzt binären
+            # Pfad); gesetzt bei Hotels → RPC führt den Zimmertyp-Zähler (0141).
+            **({"room_type_id": req.room_type_id} if req.room_type_id else {}),
             "check_in": req.check_in.isoformat(),
             "check_out": req.check_out.isoformat(),
             "status": req.status.value,
@@ -166,10 +177,16 @@ class WritesMixin(ReservationsBase):
 
         # Realtime: belegte Tage sofort an Channex/OTAs sperren (availability=0),
         # damit keine OTA-Doppelbuchung entsteht. Buchungskalender = Wahrheit.
-        self._push_channex_availability(
-            tenant_id, req.property_id, req.check_in, req.check_out, 0,
-            outbox_id=result.get("outbox_id"),
-        )
+        # NUR Ferienwohnungen: der binäre 0-Push würde bei Hotels den GANZEN
+        # Zimmertyp sperren, obwohl nur ein Zimmer weg ist. Der count-basierte
+        # Room-Type-Availability-Push kommt aus dem Channex-Umbau (Teil 2, sobald
+        # die Zimmerkategorien als Channex-Room-Types existieren); bis dahin kein
+        # falscher Sperr-Push für Hotels.
+        if req.room_type_id is None:
+            self._push_channex_availability(
+                tenant_id, req.property_id, req.check_in, req.check_out, 0,
+                outbox_id=result.get("outbox_id"),
+            )
         # Dynamic Pricing der betroffenen Tage neu rechnen (Auslastung/Orphan).
         self._recompute_dynamic_pricing(tenant_id, req.property_id)
 
