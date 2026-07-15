@@ -43,6 +43,9 @@ export type ViewOptions = {
   showId: boolean;
   showPrice: boolean;
   showMinStay: boolean;
+  // Debug: zeigt an jedem gesperrten/Stop-Sell-Tag die HERKUNFT (Quelle + Typ),
+  // damit sichtbar ist, welche Plattform die Sperre gesetzt hat.
+  showDebug: boolean;
   weekStart: "mon" | "sun";
   rangeDays: RangeDays;
 };
@@ -53,6 +56,7 @@ export const DEFAULT_VIEW: ViewOptions = {
   showId: false,
   showPrice: true,
   showMinStay: true,
+  showDebug: false,
   weekStart: "mon",
   rangeDays: 28,
 };
@@ -133,6 +137,23 @@ export function CalendarHeader({
           <Icon icon="ph:calendar-dot" className="size-4" />
         </Button>
 
+        {/* Debug-Herkunft direkt umschaltbar (nicht im Drawer versteckt): zeigt an
+            jedem Sperr-/Stop-Sell-Balken die Quelle. Aktiv = deutlich hervorgehoben. */}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => set("showDebug", !view.showDebug)}
+          aria-label="Debug: Herkunft der Sperren"
+          title="Debug: Herkunft der Sperren anzeigen"
+          className={
+            view.showDebug
+              ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              : ""
+          }
+        >
+          <Icon icon="ph:bug" className="size-4" />
+        </Button>
+
         {/* Ansicht anpassen (Drawer) */}
         <Sheet>
           <SheetTrigger asChild>
@@ -162,6 +183,7 @@ export function CalendarHeader({
                 <p className="text-sm font-semibold">Nacht-Details</p>
                 <ToggleRow label="Preis zeigen" checked={view.showPrice} onChange={(v) => set("showPrice", v)} />
                 <ToggleRow label="Mindestaufenthalt zeigen" checked={view.showMinStay} onChange={(v) => set("showMinStay", v)} />
+                <ToggleRow label="Debug: Herkunft der Sperren" checked={view.showDebug} onChange={(v) => set("showDebug", v)} />
               </section>
 
               <div className="h-px bg-border" />

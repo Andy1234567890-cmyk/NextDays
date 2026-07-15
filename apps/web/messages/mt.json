@@ -251,11 +251,22 @@
     "reasonOther": "Oħrajn",
     "apply": "Issettja waqfien tal-bejgħ",
     "clearRange": "Neħħi ({n})",
+    "clearPortalRange": "Remove portal stops ({n})",
     "channexInRange": "{n} waqfien tal-portal fil-perjodu — jistgħu jitneħħew biss mill-channel manager.",
+    "clearPortalHint": "Also removes the portal stops and reopens those days on the booking channels. Use only if the stops were set by mistake.",
     "bookedInRange": "{n} booked day(s) in the range — no stop-sell is set there (overlaps a booking).",
     "close": "Agħlaq",
     "agencyLabel": "Sieħeb tal-ivvjaġġar",
-    "agencyAll": "Is-sħab kollha tal-ivvjaġġar"
+    "agencyAll": "Is-sħab kollha tal-ivvjaġġar",
+    "resetAll": "Reset all",
+    "resetProperty": "Reset property",
+    "resetAllWarn": "Removes ALL stop-sells (including portal stops) for every property and reopens those days on the booking channels. This cannot be undone.",
+    "resetPropertyWarn": "Removes ALL stop-sells (including portal stops) for “{title}” and reopens those days on the booking channels. This cannot be undone.",
+    "resetConfirmAgain": "Please confirm once more to be safe.",
+    "resetContinue": "Continue",
+    "resetConfirm": "Yes, remove all",
+    "resetting": "Resetting …",
+    "cancel": "Cancel"
   },
   "inbox": {
     "title": "Inbox",

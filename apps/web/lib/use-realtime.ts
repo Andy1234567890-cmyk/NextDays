@@ -63,7 +63,17 @@ export type RealtimeSubState = {
 const _rtRegistry = new Map<number, RealtimeSubState>();
 const _rtListeners = new Set<() => void>();
 
+// Gecachter Snapshot: NUR bei _rtNotify neu bauen. getRealtimeDebugState dient
+// als getSnapshot für useSyncExternalStore — würde es jedes Mal ein neues Array
+// liefern, entstünde ein garantierter „Maximum update depth"-Loop.
+let _rtSnapshot: RealtimeSubState[] = [];
+
+function _rtRebuildSnapshot(): void {
+  _rtSnapshot = [..._rtRegistry.values()].sort((a, b) => a.uid - b.uid);
+}
+
 function _rtNotify(): void {
+  _rtRebuildSnapshot();
   for (const l of _rtListeners) l();
 }
 
@@ -74,9 +84,10 @@ export function _rtUpdate(uid: number, patch: Partial<RealtimeSubState>): void {
   _rtNotify();
 }
 
-/** Snapshot aller aktiven Subscriptions (für das Debug-Overlay). */
+/** Snapshot aller aktiven Subscriptions (für das Debug-Overlay). Referenzstabil
+ *  zwischen Änderungen — Pflicht für useSyncExternalStore. */
 export function getRealtimeDebugState(): RealtimeSubState[] {
-  return [..._rtRegistry.values()].sort((a, b) => a.uid - b.uid);
+  return _rtSnapshot;
 }
 
 /** Änderungen am Register abonnieren (Debug-Overlay). Gibt eine Unsub-Funktion. */

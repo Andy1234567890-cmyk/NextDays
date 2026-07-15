@@ -199,6 +199,32 @@ function sourceLabel(source: AvailabilitySource): string {
   return channelMeta(source).label;
 }
 
+// Debug: Herkunft einer Sperre/Buchung in Klartext — zeigt WELCHE Quelle den Tag
+// gesperrt hat (availability-Quelle + Typ; bei Stop-Sell zusätzlich scope/Kanäle),
+// damit sichtbar wird, welche Plattform die Sperre gesetzt hat.
+function debugOrigin(seg: Segment): string {
+  const typ =
+    seg.status === "blocked"
+      ? "SPERRE (availability.blocked)"
+      : seg.status === "stop_sell"
+        ? "STOP-SELL"
+        : seg.status === "booked"
+          ? "BUCHUNG"
+          : "FREI";
+  const parts = [typ, `Quelle: ${sourceLabel(seg.source)} (${seg.source})`];
+  if (seg.status === "stop_sell" && seg.stopSell) {
+    const st = seg.stopSell;
+    parts.push(`stop_sell.source: ${st.source}`);
+    parts.push(`scope: ${st.scope ?? "all"}`);
+    if (st.channels && st.channels.length > 0) {
+      parts.push(`channels: ${st.channels.join(", ")}`);
+    }
+    if (st.reason) parts.push(`Grund: ${st.reason}`);
+    if (st.agency_name) parts.push(`Adressat: ${st.agency_name}`);
+  }
+  return parts.join(" · ");
+}
+
 // Kanal-Logo eines Balkens (Iconify-Brand-Icon ODER lokales SVG).
 function ChannelLogo({
   source,
@@ -930,6 +956,12 @@ export function CalendarBoard({
   // Geladenes Index-Intervall [from, to) der Tagesdaten (chunked). Ref, weil der
   // Scroll-Handler es liest, ohne ein Neu-Rendern auszulösen.
   const loadedRange = useRef<{ from: number; to: number } | null>(null);
+  // In-Flight-Guard (Wurzel 2 — Idempotenz): welche [from,to)-Chunks gerade laden.
+  // loadedRange wird erst NACH der Server-Antwort fortgeschrieben; ohne diesen
+  // Ref feuert der Scroll-Effekt pro Animationsframe denselben Fetch erneut und
+  // stapelt Dutzende identische Requests → Update-Depth-Überlauf. Synchron VOR
+  // dem await setzen, im finally lösen.
+  const pendingRanges = useRef<Set<string>>(new Set());
 
   // Buchungen separat laden — EIN Call, günstig, sofort sichtbar (entkoppelt von
   // der schwereren chunked Tagesdaten-Last). Balken erscheinen also sofort.
@@ -956,13 +988,20 @@ export function CalendarBoard({
       const from = Math.max(0, fromIdx);
       const to = Math.min(totalDays, toIdx);
       if (to <= from) return;
+      // In-Flight-Guard: denselben [from,to)-Bereich nicht doppelt anfordern,
+      // solange ein Fetch läuft (replace bewusst getrennt gekennzeichnet, damit
+      // ein Realtime-Reload einen laufenden reinen Nachlade-Fetch nicht blockt).
+      const rangeKey = `${replace ? "r" : ""}${from}:${to}`;
+      if (pendingRanges.current.has(rangeKey)) return;
+      pendingRanges.current.add(rangeKey);
       setLoading(true);
       const s = key(addDays(start, from));
       const e = key(addDays(start, to)); // exklusiv
-      // EIN Batch-Call für ALLE Objekte (statt früher 2 Calls je Objekt = N+1).
-      // Der Board-Endpunkt liefert Verfügbarkeit + Preise + Min-Stay + Stop-Sell
-      // gebündelt; das Merge-Format [pid, days, stops] bleibt unverändert.
-      const board = await getBoard(
+      try {
+        // EIN Batch-Call für ALLE Objekte (statt früher 2 Calls je Objekt = N+1).
+        // Der Board-Endpunkt liefert Verfügbarkeit + Preise + Min-Stay + Stop-Sell
+        // gebündelt; das Merge-Format [pid, days, stops] bleibt unverändert.
+        const board = await getBoard(
         properties.map((p) => p.id),
         s,
         e,
@@ -1043,7 +1082,12 @@ export function CalendarBoard({
       loadedRange.current = cur
         ? { from: Math.min(cur.from, from), to: Math.max(cur.to, to) }
         : { from, to };
-      setLoading(false);
+      } finally {
+        // Guard IMMER lösen (auch bei Fehler/Abbruch) — sonst bliebe der Bereich
+        // dauerhaft „pending" und würde nie mehr nachgeladen.
+        pendingRanges.current.delete(rangeKey);
+        setLoading(false);
+      }
     },
     [start, properties, totalDays],
   );
@@ -1054,6 +1098,10 @@ export function CalendarBoard({
     (fromIdx: number, toIdx: number) => {
       const cur = loadedRange.current;
       if (cur && fromIdx >= cur.from && toIdx <= cur.to) return; // alles da
+      // Läuft schon ein Nachlade-Fetch, nicht erneut anstoßen: er schiebt
+      // loadedRange fort, der nächste Scroll-Tick greift dann. Ohne diesen Guard
+      // feuert der Scroll-Effekt pro Frame denselben Chunk-Fetch (Update-Depth).
+      if (pendingRanges.current.size > 0) return;
       if (!cur) {
         void loadDays(fromIdx, toIdx);
         return;
@@ -1702,8 +1750,9 @@ export function CalendarBoard({
                           : null;
                         const statusMeta = dispStatus ? STATUS_META[dispStatus] : null;
                         const nights = seg.span;
-                        const barTitle =
-                          seg.status === "booked"
+                        const barTitle = view.showDebug
+                          ? debugOrigin(seg)
+                          : seg.status === "booked"
                             ? [
                               segmentLabel(seg),
                               meta.label,
@@ -1781,7 +1830,17 @@ export function CalendarBoard({
                                 className={`size-1.5 shrink-0 rounded-full ring-1 ring-white/60 ${statusMeta.dotBg}`}
                               />
                             )}
-                            <span className="truncate">{segmentLabel(seg)}</span>
+                            <span className="truncate">
+                              {view.showDebug
+                                ? `⟨${seg.status}⟩ ${seg.source}${
+                                    seg.status === "stop_sell"
+                                      ? ` /ss:${seg.stopSell?.source ?? "?"}:${
+                                          seg.stopSell?.scope ?? "all"
+                                        }`
+                                      : ""
+                                  }`
+                                : segmentLabel(seg)}
+                            </span>
                             {/* Indikatoren rechts: Gästezahl + Nächte (sofern Platz). */}
                             {seg.status === "booked" && seg.reservation && (
                               <span className="ml-auto flex shrink-0 items-center gap-1 text-[0.65rem] opacity-90">

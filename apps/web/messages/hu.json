@@ -251,11 +251,22 @@
     "reasonOther": "Egyéb",
     "apply": "Értékesítési stop beállítása",
     "clearRange": "Feloldás ({n})",
+    "clearPortalRange": "Remove portal stops ({n})",
     "channexInRange": "{n} portál-stop az időszakban — csak a channel managerben oldható fel.",
+    "clearPortalHint": "Also removes the portal stops and reopens those days on the booking channels. Use only if the stops were set by mistake.",
     "bookedInRange": "{n} booked day(s) in the range — no stop-sell is set there (overlaps a booking).",
     "close": "Bezárás",
     "agencyLabel": "Utazási partner",
-    "agencyAll": "Minden utazási partner"
+    "agencyAll": "Minden utazási partner",
+    "resetAll": "Reset all",
+    "resetProperty": "Reset property",
+    "resetAllWarn": "Removes ALL stop-sells (including portal stops) for every property and reopens those days on the booking channels. This cannot be undone.",
+    "resetPropertyWarn": "Removes ALL stop-sells (including portal stops) for “{title}” and reopens those days on the booking channels. This cannot be undone.",
+    "resetConfirmAgain": "Please confirm once more to be safe.",
+    "resetContinue": "Continue",
+    "resetConfirm": "Yes, remove all",
+    "resetting": "Resetting …",
+    "cancel": "Cancel"
   },
   "inbox": {
     "title": "Inbox",
