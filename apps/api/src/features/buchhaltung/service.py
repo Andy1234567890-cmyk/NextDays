@@ -908,6 +908,16 @@ class BuchhaltungService:
         self._db.table("tenant_billing_profile").upsert(
             row, on_conflict="tenant_id"
         ).execute()
+        # Firmenname → interner Tenant-Name spiegeln: der tenants.name (bei der
+        # Registrierung gesetzt) und der legal_name des Firmenprofils drifteten
+        # sonst auseinander (Konto-Anzeige „Hotel Sonne" vs. Firmenname „Hotel
+        # One"). Der Firmenname ist die vom Nutzer gepflegte Wahrheit → tenants.name
+        # nachziehen, sobald ein legal_name vorliegt.
+        legal_name = row.get("legal_name")
+        if legal_name:
+            self._db.table("tenants").update({"name": legal_name}).eq(
+                "id", tenant_id
+            ).execute()
         # Plattform-Pflicht: ein Objektbesitzer braucht zum Auszahlen einen Stripe
         # Connected Account. Er entsteht automatisch aus den erfassten Firmendaten
         # (Onboarding), nicht durch einen separaten manuellen Schritt.
