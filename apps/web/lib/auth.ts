@@ -13,37 +13,80 @@ import { createClient } from "@/lib/supabase/server";
 const ACCESS = "nd_access";
 const REFRESH = "nd_refresh";
 
-/** Login: FastAPI prüft die Zugangsdaten, wir legen die Tokens als httpOnly ab. */
+// Antwort auf /auth/login und /auth/login/totp: entweder Session (2FA aus/erledigt)
+// oder mfa_required + mfa_token (2FA aktiv, Code steht noch aus).
+type LoginResponse = {
+  mfa_required: boolean;
+  session: SessionResponse | null;
+  mfa_token: string | null;
+};
+
+/** Session-Tokens als httpOnly-Cookies ablegen (nach echtem Login). */
+async function persistSession(session: SessionResponse): Promise<void> {
+  const jar = await cookies();
+  const secure = process.env.NODE_ENV === "production";
+  jar.set(ACCESS, session.access_token, {
+    httpOnly: true,
+    secure,
+    sameSite: "lax",
+    path: "/",
+    maxAge: session.expires_in,
+  });
+  jar.set(REFRESH, session.refresh_token, {
+    httpOnly: true,
+    secure,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30, // 30 Tage
+  });
+}
+
+type LoginResult =
+  | { ok: true }
+  | { ok: false; error: string }
+  | { ok: true; mfaRequired: true; mfaToken: string };
+
+/** Login-Schritt 1: E-Mail + Passwort. Bei aktivem 2FA kommt KEINE Session,
+ *  sondern mfaRequired + mfaToken — die UI fragt dann den Code ab. */
 export async function login(
   email: string,
   password: string,
-): Promise<{ ok: true } | { ok: false; error: string }> {
+): Promise<LoginResult> {
   try {
-    const session = await api<SessionResponse>("/auth/login", {
+    const res = await api<LoginResponse>("/auth/login", {
       method: "POST",
       body: { email, password },
     });
-
-    const jar = await cookies();
-    const secure = process.env.NODE_ENV === "production";
-    jar.set(ACCESS, session.access_token, {
-      httpOnly: true,
-      secure,
-      sameSite: "lax",
-      path: "/",
-      maxAge: session.expires_in,
-    });
-    jar.set(REFRESH, session.refresh_token, {
-      httpOnly: true,
-      secure,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30, // 30 Tage
-    });
+    if (res.mfa_required && res.mfa_token) {
+      return { ok: true, mfaRequired: true, mfaToken: res.mfa_token };
+    }
+    if (!res.session) return { ok: false, error: "Login fehlgeschlagen." };
+    await persistSession(res.session);
     return { ok: true };
   } catch (exc) {
     const error =
       exc instanceof ApiError ? exc.message : "Login fehlgeschlagen.";
+    return { ok: false, error };
+  }
+}
+
+/** Login-Schritt 2 (nur bei aktivem 2FA): mfaToken + TOTP-/Recovery-Code gegen
+ *  eine Session einlösen. */
+export async function loginTotp(
+  mfaToken: string,
+  code: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const res = await api<LoginResponse>("/auth/login/totp", {
+      method: "POST",
+      body: { mfa_token: mfaToken, code },
+    });
+    if (!res.session) return { ok: false, error: "Login fehlgeschlagen." };
+    await persistSession(res.session);
+    return { ok: true };
+  } catch (exc) {
+    const error =
+      exc instanceof ApiError ? exc.message : "Code ist ungültig.";
     return { ok: false, error };
   }
 }
@@ -74,23 +117,7 @@ export async function register(input: {
         business_type: input.businessType ?? "agency",
       },
     });
-
-    const jar = await cookies();
-    const secure = process.env.NODE_ENV === "production";
-    jar.set(ACCESS, session.access_token, {
-      httpOnly: true,
-      secure,
-      sameSite: "lax",
-      path: "/",
-      maxAge: session.expires_in,
-    });
-    jar.set(REFRESH, session.refresh_token, {
-      httpOnly: true,
-      secure,
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 30, // 30 Tage
-    });
+    await persistSession(session);
     return { ok: true };
   } catch (exc) {
     const error =

@@ -5,10 +5,16 @@ ins JWT app_metadata (Quelle der Wahrheit für RLS). Bricht ein Schritt ab,
 werden bereits angelegte Artefakte zurückgerollt — kein verwaister Tenant,
 kein stilles Schlucken von Fehlern (PROJECT.md).
 """
+from datetime import UTC, datetime, timedelta
+
+import jwt
+import pyotp
 from pydantic import SecretStr
 from supabase import Client
+from supabase_auth import AuthResponse
 from supabase_auth.errors import AuthError as GoTrueAuthError
 
+from src.core.config import get_settings
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
@@ -23,13 +29,23 @@ from .schemas import (
     InviteRequest,
     InviteResponse,
     LoginRequest,
+    LoginResponse,
     MeResponse,
     RefreshRequest,
     RegisterRequest,
     SessionResponse,
     SliceHealth,
+    TotpLoginRequest,
     UserRole,
 )
+
+# Kurzlebiges Pending-Token zwischen Passwort- und TOTP-Schritt. Signiert mit
+# demselben HS256-Secret wie die Supabase-Access-Tokens, aber mit eigenem
+# `typ`-Claim und OHNE `aud="authenticated"` — dadurch lehnt der API-Guard
+# (verlangt audience="authenticated") es als Access-Token ab. Es taugt damit
+# ausschließlich zum Einlösen des TOTP-Codes, nie für einen API-Zugriff.
+_MFA_PENDING_TYP = "mfa_pending"  # noqa: S105 — Claim-Wert, kein Secret
+_MFA_PENDING_TTL_SECONDS = 300
 
 log = get_logger("nextdays.auth")
 
@@ -88,7 +104,13 @@ class AuthService:
         # Channel-Manager: für den neuen Tenant eine Provider-Group anlegen
         # (non-blocking — Registrierung darf daran nie scheitern).
         self._ensure_channel_manager_group(tenant_id, title=req.tenant_name)
-        return self.login(LoginRequest(email=req.email, password=req.password))
+        # Frisch registriert → 2FA ist noch nie aktiv, login() liefert also immer
+        # eine Session (nie mfa_required). Die Session direkt zurückgeben, damit
+        # /register weiter SessionResponse ist (der Client meldet sofort an).
+        result = self.login(LoginRequest(email=req.email, password=req.password))
+        if result.session is None:
+            raise AuthError("Login nach Registrierung fehlgeschlagen.", status_code=500)
+        return result.session
 
     def _ensure_channel_manager_group(self, tenant_id: str, *, title: str) -> None:
         """Legt die Channel-Manager-Group des Tenants an. Lazy-Import gegen
@@ -177,25 +199,169 @@ class AuthService:
             permissions=permissions,
         )
 
-    def login(self, req: LoginRequest) -> SessionResponse:
+    def login(self, req: LoginRequest) -> LoginResponse:
+        """Erster Login-Schritt: E-Mail + Passwort.
+
+        Hat der Nutzer 2FA aktiv, wird KEINE Session ausgegeben (fail-closed),
+        sondern nur ein kurzlebiges Pending-Token (mfa_required=True). Die echte
+        Session entsteht erst nach erfolgreichem TOTP-Schritt (login_totp).
+        """
+        session = self._sign_in(req.email, req.password)
+        if self._totp_enabled(session.user.id):
+            return LoginResponse(
+                mfa_required=True,
+                mfa_token=self._issue_mfa_token(session.user.id),
+            )
+        return LoginResponse(session=self._to_session(session))
+
+    def login_totp(self, req: TotpLoginRequest) -> LoginResponse:
+        """Zweiter Login-Schritt: Pending-Token + TOTP-/Recovery-Code einlösen.
+
+        Der Pending-Token beweist, dass der Passwort-Schritt gerade bestanden
+        wurde (an genau diesen user_id gebunden, 5 Min gültig). Erst nach
+        erfolgreicher Code-Prüfung wird eine frische Session ausgestellt.
+        """
+        user_id = self._verify_mfa_token(req.mfa_token)
+        mfa = self._mfa_row(user_id)
+        if not mfa or not mfa.get("totp_enabled"):
+            # Kein aktives 2FA → der Pending-Token ist gegenstandslos.
+            raise AuthError("2FA ist für dieses Konto nicht aktiv.", status_code=400)
+
+        code = req.code.strip().replace(" ", "")
+        valid = pyotp.TOTP(mfa["totp_secret"]).verify(code, valid_window=1)
+        if not valid:
+            # Recovery-Code (einmalig): Treffer → verbrauchen (Gegenzustand).
+            valid = self._consume_recovery_code(user_id, mfa, code)
+        if not valid:
+            raise AuthError("Code ist ungültig.", status_code=401)
+
+        # Frische Session per Admin-Generate — kein zweiter Passwort-Roundtrip.
+        session = self._session_for_verified_user(user_id)
+        log.info("login_totp_ok", user_id=user_id)
+        return LoginResponse(session=session)
+
+    # --- Login-Bausteine ---------------------------------------------------
+
+    def _sign_in(self, email: str, password: SecretStr) -> AuthResponse:
         try:
             res = self._anon.auth.sign_in_with_password(
-                {
-                    "email": req.email,
-                    "password": req.password.get_secret_value(),
-                }
+                {"email": email, "password": password.get_secret_value()}
             )
         except Exception as exc:
-            log.warning("login_failed", email=req.email, error=str(exc))
+            log.warning("login_failed", email=email, error=str(exc))
             raise AuthError("Login fehlgeschlagen.", status_code=401) from exc
+        if res.session is None or res.user is None:
+            raise AuthError("Login fehlgeschlagen.", status_code=401)
+        return res
 
-        session = res.session
-        if session is None:
+    @staticmethod
+    def _to_session(res: AuthResponse) -> SessionResponse:
+        return SessionResponse(
+            access_token=res.session.access_token,
+            refresh_token=res.session.refresh_token,
+            expires_in=res.session.expires_in,
+        )
+
+    def _totp_enabled(self, user_id: str) -> bool:
+        row = self._mfa_row(user_id)
+        return bool(row and row.get("totp_enabled"))
+
+    def _mfa_row(self, user_id: str) -> dict | None:
+        res = (
+            self._service.table("user_mfa")
+            .select("totp_secret, totp_enabled, recovery_codes")
+            .eq("user_id", user_id)
+            .limit(1)
+            .execute()
+        )
+        return res.data[0] if res.data else None
+
+    def _consume_recovery_code(self, user_id: str, mfa: dict, code: str) -> bool:
+        """Recovery-Code prüfen und bei Treffer verbrauchen (Wurzel 1: der
+        eingelöste Code darf nicht ein zweites Mal gelten). Hashing MUSS dem
+        Enrollment-Pfad entsprechen (account_service._hash_code: strip+upper),
+        sonst matcht kein Code — daher dieselbe Funktion, keine zweite Kopie."""
+        from .account_service import _hash_code
+
+        hashed = _hash_code(code)
+        codes = list(mfa.get("recovery_codes") or [])
+        if hashed not in codes:
+            return False
+        codes.remove(hashed)
+        self._service.table("user_mfa").update(
+            {"recovery_codes": codes}
+        ).eq("user_id", user_id).execute()
+        log.info("recovery_code_used", user_id=user_id)
+        return True
+
+    def _issue_mfa_token(self, user_id: str) -> str:
+        secret = self._jwt_secret()
+        now = datetime.now(UTC)
+        return jwt.encode(
+            {
+                "sub": user_id,
+                "typ": _MFA_PENDING_TYP,
+                "iat": now,
+                "exp": now + timedelta(seconds=_MFA_PENDING_TTL_SECONDS),
+            },
+            secret,
+            algorithm="HS256",
+        )
+
+    def _verify_mfa_token(self, token: str) -> str:
+        secret = self._jwt_secret()
+        try:
+            claims = jwt.decode(token, secret, algorithms=["HS256"])
+        except jwt.PyJWTError as exc:
+            raise AuthError(
+                "2FA-Sitzung abgelaufen. Bitte erneut anmelden.", status_code=401
+            ) from exc
+        if claims.get("typ") != _MFA_PENDING_TYP:
+            raise AuthError("Ungültiges 2FA-Token.", status_code=401)
+        sub = claims.get("sub")
+        if not isinstance(sub, str) or not sub:
+            raise AuthError("Ungültiges 2FA-Token.", status_code=401)
+        return sub
+
+    @staticmethod
+    def _jwt_secret() -> str:
+        secret = get_settings().supabase_jwt_secret.get_secret_value()
+        if not secret:
+            raise AuthError("JWT-Secret nicht konfiguriert.", status_code=500)
+        return secret
+
+    def _session_for_verified_user(self, user_id: str) -> SessionResponse:
+        """Session für einen bereits (per TOTP) verifizierten User ausstellen.
+
+        GoTrue kennt keinen 'session for user_id'-Aufruf; wir nutzen den
+        Admin-Endpoint, der ein Refresh-Token generiert, und tauschen es sofort
+        gegen eine Access/Refresh-Session (anon-Client)."""
+        try:
+            auth_user = self._service.auth.admin.get_user_by_id(user_id)
+            email = getattr(auth_user.user, "email", None)
+        except Exception as exc:  # noqa: BLE001 — in AuthError übersetzen
+            log.warning("mfa_session_user_lookup_failed", user_id=user_id, error=str(exc))
+            raise AuthError("Login fehlgeschlagen.", status_code=401) from exc
+        if not email:
+            raise AuthError("Login fehlgeschlagen.", status_code=401)
+        try:
+            link = self._service.auth.admin.generate_link(
+                {"type": "magiclink", "email": email}
+            )
+            props = getattr(link, "properties", None)
+            token_hash = getattr(props, "hashed_token", None)
+            verified = self._anon.auth.verify_otp(
+                {"token_hash": token_hash, "type": "magiclink"}
+            )
+        except Exception as exc:  # noqa: BLE001 — in AuthError übersetzen
+            log.warning("mfa_session_issue_failed", user_id=user_id, error=str(exc))
+            raise AuthError("Login fehlgeschlagen.", status_code=401) from exc
+        if verified.session is None:
             raise AuthError("Login fehlgeschlagen.", status_code=401)
         return SessionResponse(
-            access_token=session.access_token,
-            refresh_token=session.refresh_token,
-            expires_in=session.expires_in,
+            access_token=verified.session.access_token,
+            refresh_token=verified.session.refresh_token,
+            expires_in=verified.session.expires_in,
         )
 
     def refresh(self, req: RefreshRequest) -> SessionResponse:

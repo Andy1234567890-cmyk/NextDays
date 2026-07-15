@@ -12,7 +12,7 @@ import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { login } from "@/lib/auth";
+import { login, loginTotp } from "@/lib/auth";
 import { signInWithProvider } from "@/lib/oauth-login";
 
 export default function LoginPage() {
@@ -23,6 +23,17 @@ export default function LoginPage() {
   const [stay, setStay] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  // 2FA-Schritt: sobald mfaToken gesetzt ist, fragt das Formular den Code ab
+  // statt E-Mail/Passwort. Der Token ist kurzlebig und nur zum Code-Einlösen.
+  const [mfaToken, setMfaToken] = useState<string | null>(null);
+  const [code, setCode] = useState("");
+
+  function goDashboard() {
+    // Andy begruesst im Dashboard selbst — dort liegt eine gueltige
+    // User-Geste (Consent-Klick) vor, ohne die der Browser Sprache verwirft.
+    router.replace("/");
+    router.refresh();
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,11 +41,28 @@ export default function LoginPage() {
     setError(null);
 
     const res = await login(email, password);
+    if ("mfaRequired" in res && res.mfaRequired) {
+      setMfaToken(res.mfaToken);
+      setLoading(false);
+      return;
+    }
     if (res.ok) {
-      // Andy begruesst im Dashboard selbst — dort liegt eine gueltige
-      // User-Geste (Consent-Klick) vor, ohne die der Browser Sprache verwirft.
-      router.replace("/");
-      router.refresh();
+      goDashboard();
+    } else {
+      setError(res.error);
+      setLoading(false);
+    }
+  }
+
+  async function onSubmitCode(e: React.FormEvent) {
+    e.preventDefault();
+    if (!mfaToken) return;
+    setLoading(true);
+    setError(null);
+
+    const res = await loginTotp(mfaToken, code.trim());
+    if (res.ok) {
+      goDashboard();
     } else {
       setError(res.error);
       setLoading(false);
@@ -48,6 +76,58 @@ export default function LoginPage() {
         <Logo heightRem={1.75} />
 
         <div className="flex flex-1 items-center justify-center">
+          {mfaToken ? (
+            <form
+              onSubmit={onSubmitCode}
+              className="flex w-full max-w-sm flex-col gap-5"
+            >
+              <h1 className="text-center font-display text-3xl font-extrabold">
+                Bestätigung
+              </h1>
+              <p className="text-center text-sm text-muted-foreground">
+                Gib den 6-stelligen Code aus deiner Authenticator-App ein.
+                Alternativ funktioniert ein Wiederherstellungscode.
+              </p>
+
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="code">
+                  Code <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="code"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  required
+                  autoFocus
+                  placeholder="123456"
+                />
+              </div>
+
+              {error && (
+                <p className="text-sm text-destructive" role="alert">
+                  {error}
+                </p>
+              )}
+
+              <Button type="submit" disabled={loading}>
+                {loading ? "Prüfe…" : "Bestätigen"}
+              </Button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMfaToken(null);
+                  setCode("");
+                  setError(null);
+                }}
+                className="text-center text-sm font-medium text-accent hover:underline"
+              >
+                Zurück zur Anmeldung
+              </button>
+            </form>
+          ) : (
           <form
             onSubmit={onSubmit}
             className="flex w-full max-w-sm flex-col gap-5"
@@ -145,15 +225,16 @@ export default function LoginPage() {
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
-              Noch kein NextDays-Kunde?{" "}
+              Noch kein myNextDays-Kunde?{" "}
               <Link
-                href="#"
+                href="/signup"
                 className="font-medium text-accent hover:underline"
               >
                 Jetzt kostenlos testen
               </Link>
             </p>
           </form>
+          )}
         </div>
       </div>
 

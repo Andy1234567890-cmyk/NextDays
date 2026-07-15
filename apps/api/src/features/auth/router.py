@@ -20,6 +20,7 @@ from .schemas import (
     InviteRequest,
     InviteResponse,
     LoginRequest,
+    LoginResponse,
     MeResponse,
     OwnerAssignmentResponse,
     OwnerAssignmentUpdate,
@@ -32,6 +33,7 @@ from .schemas import (
     TenantUser,
     TotpDisableRequest,
     TotpEnrollResponse,
+    TotpLoginRequest,
     TotpVerifyRequest,
     TotpVerifyResponse,
     UpdateEmailRequest,
@@ -63,10 +65,22 @@ def register(req: RegisterRequest, service: AuthServiceDep) -> SessionResponse:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
-@router.post("/login", response_model=SessionResponse)
-def login(req: LoginRequest, service: AuthServiceDep) -> SessionResponse:
+@router.post("/login", response_model=LoginResponse)
+def login(req: LoginRequest, service: AuthServiceDep) -> LoginResponse:
+    """Erster Login-Schritt. Bei aktivem 2FA kommt mfa_required=True + mfa_token
+    (KEINE Session) zurück; die Session gibt es erst nach /auth/login/totp."""
     try:
         return service.login(req)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/login/totp", response_model=LoginResponse)
+def login_totp(req: TotpLoginRequest, service: AuthServiceDep) -> LoginResponse:
+    """Zweiter Login-Schritt bei aktivem 2FA: mfa_token + TOTP-/Recovery-Code
+    gegen eine echte Session einlösen."""
+    try:
+        return service.login_totp(req)
     except AuthError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

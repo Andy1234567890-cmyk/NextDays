@@ -24,11 +24,17 @@ export function SignupForm({ onBack }: { onBack: () => void }) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [passwordConfirm, setPasswordConfirm] = useState("");
+  const [showPw, setShowPw] = useState(false);
   const [country, setCountry] = useState<string>("DE");
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    if (password !== passwordConfirm) {
+      setError("Die Passwörter stimmen nicht überein.");
+      return;
+    }
     const currency = currencyForCountry(country);
     // Wurzel 4: keine Registrierung mit erfundener Währung — fehlt sie für das
     // gewählte Land, klar melden statt EUR zu unterstellen.
@@ -119,16 +125,46 @@ export function SignupForm({ onBack }: { onBack: () => void }) {
         <label htmlFor="password" className="text-sm font-medium">
           Passwort
         </label>
-        <Input
-          id="password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Mindestens 8 Zeichen"
-          required
-          minLength={8}
-          autoComplete="new-password"
-        />
+        <div className="relative">
+          <Input
+            id="password"
+            type={showPw ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Mindestens 8 Zeichen"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            className="pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPw((v) => !v)}
+            aria-label={showPw ? "Passwort verbergen" : "Passwort anzeigen"}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            <Icon icon={showPw ? "ph:eye-slash" : "ph:eye"} className="size-5" />
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="passwordConfirm" className="text-sm font-medium">
+          Passwort bestätigen
+        </label>
+        <div className="relative">
+          <Input
+            id="passwordConfirm"
+            type={showPw ? "text" : "password"}
+            value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
+            placeholder="Passwort wiederholen"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            className="pr-10"
+          />
+        </div>
       </div>
 
       <div className="flex flex-col gap-1.5">
