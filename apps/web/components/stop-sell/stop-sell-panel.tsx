@@ -136,11 +136,11 @@ export function StopSellPanel({
     });
   }
 
-  function onClear() {
+  function onClear(includePortal = false) {
     setError(null);
     startTransition(async () => {
       const res = await clearStopSell(
-        selection.propertyId, from, isoPlus(to, 1), weekdayArg,
+        selection.propertyId, from, isoPlus(to, 1), weekdayArg, includePortal,
       );
       if (res.ok) onDone();
       else setError(res.error);
@@ -268,13 +268,36 @@ export function StopSellPanel({
           <Icon icon="ph:hand-palm" className="size-4" />
           {t("apply")}
         </Button>
-        {/* Aufheben: nur manuelle Stop-Sells im Zeitraum sind per Hand löschbar
-            (Portal-/Channex-Stops bleiben, siehe channexInRange-Hinweis). */}
+        {/* Aufheben (manuell): die selbst gesetzten Stops im Zeitraum löschen.
+            Portal-/Channex-Stops bleiben (dafür der zweite Button unten). */}
         {manualInRange.length > 0 && (
-          <Button variant="destructive" onClick={onClear} disabled={pending}>
+          <Button
+            variant="destructive"
+            onClick={() => onClear(false)}
+            disabled={pending}
+          >
             <Icon icon="ph:trash" className="size-4" />
             {t("clearRange", { n: manualInRange.length })}
           </Button>
+        )}
+        {/* Auch Portal-Stops aufheben: entfernt zusätzlich die Channex/Portal-
+            Stops und öffnet die Tage an den OTAs. Für versehentlich gesetzte
+            Stops — daher separater, klar benannter Button mit Warnung. */}
+        {channexInRange.length > 0 && (
+          <>
+            <Button
+              variant="outline"
+              onClick={() => onClear(true)}
+              disabled={pending}
+              className="border-destructive text-destructive hover:bg-destructive/10"
+            >
+              <Icon icon="ph:lock-simple-open" className="size-4" />
+              {t("clearPortalRange", { n: channexInRange.length })}
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              {t("clearPortalHint")}
+            </p>
+          </>
         )}
       </div>
     </aside>

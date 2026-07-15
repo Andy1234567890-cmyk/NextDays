@@ -108,12 +108,22 @@ class StopSellSource(StrEnum):
     channex = "channex"
 
 
+class StopSellScope(StrEnum):
+    # all: sperrt alle Vertriebskanäle (Default, wie bisher). channels: nur die
+    # in channels[] genannten Kanäle (z. B. ["ota:BookingCom"], ["platform"]).
+    all = "all"
+    channels = "channels"
+
+
 class StopSellDay(BaseModel):
     id: str
     property_id: str
     date: date
     reason: str | None = None
     source: StopSellSource
+    # Kanal-Dimension: all = alle Kanäle (Default), channels = nur channels[].
+    scope: StopSellScope = StopSellScope.all
+    channels: list[str] = []
     # Reisebüro/Veranstalter, an den sich der Stopp richtet (None = alle).
     agency_id: str | None = None
     # Name des Reisebüros (Join travel_agencies) — fürs Kalender-Balken-Label.
@@ -151,12 +161,21 @@ class StopSellClearRequest(BaseModel):
     range: DateRange
     # Wochentags-Maske wie bei StopSellRequest (nur passende Tage aufheben).
     weekdays: list[int] | None = None
+    # include_portal: auch Portal-/Channex-Stops aufheben (nicht nur manuelle).
+    # Für versehentlich/über einen Test gesetzte Stops. Öffnet die Tage dann auch
+    # an den OTAs (stop_sell=false-Push) — bewusst, daher opt-in.
+    include_portal: bool = False
 
     @model_validator(mode="after")
     def _check_weekdays(self) -> "StopSellClearRequest":
         if self.weekdays is not None and any(w < 0 or w > 6 for w in self.weekdays):
             raise ValueError("weekdays müssen zwischen 0 (Montag) und 6 (Sonntag) liegen")
         return self
+
+
+class StopSellResetRequest(BaseModel):
+    # property_id=None → alle Objekte des Tenants zurücksetzen.
+    property_id: str | None = None
 
 
 class SeasonPriceRequest(BaseModel):

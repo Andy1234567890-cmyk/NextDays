@@ -110,12 +110,18 @@ export async function unblockRange(
 
 export type StopSellSource = "manual" | "channex";
 
+export type StopSellScope = "all" | "channels";
+
 export type StopSellDay = {
   id: string;
   property_id: string;
   date: string; // YYYY-MM-DD
   reason: string | null;
   source: StopSellSource;
+  // Kanal-Dimension (Migration 0145): all = alle Kanäle (Default), channels =
+  // nur die in channels[] genannten (platform/reception/ota:<code>/ota:*).
+  scope?: StopSellScope;
+  channels?: string[];
   // Reisebüro/Veranstalter, an den sich der Stopp richtet (null = alle Kanäle).
   agency_id?: string | null;
   // Name des Reisebüros (Backend-Join) — fürs Balken-Label im Kalender.
@@ -157,12 +163,15 @@ export async function setStopSell(
   });
 }
 
-/** Manuellen Stop-Sell aufheben (Channex-Stops bleiben). end exklusiv. */
+/** Stop-Sell aufheben. end exklusiv. Standard: nur manuelle Stops (Portal-Stops
+ *  bleiben). includePortal=true hebt AUCH Portal-/Channex-Stops auf und öffnet die
+ *  Tage an den OTAs — für versehentlich gesetzte Stops. */
 export async function clearStopSell(
   propertyId: string,
   start: string,
   end: string,
   weekdays?: number[],
+  includePortal?: boolean,
 ): Promise<Result<{ status: string }>> {
   return call("/calendar/stop-sell/clear", {
     method: "POST",
@@ -170,7 +179,19 @@ export async function clearStopSell(
       property_id: propertyId,
       range: { start, end },
       weekdays: weekdays ?? null,
+      include_portal: includePortal ?? false,
     },
+  });
+}
+
+/** ALLE Stop-Sells (auch Portal) zurücksetzen. propertyId weglassen = alle
+ *  Objekte des Tenants. Öffnet die Tage auch an den OTAs. */
+export async function resetStopSell(
+  propertyId?: string,
+): Promise<Result<{ properties: number; days: number }>> {
+  return call("/calendar/stop-sell/reset", {
+    method: "POST",
+    body: { property_id: propertyId ?? null },
   });
 }
 

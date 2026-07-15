@@ -105,6 +105,11 @@ class _Query:
     def execute(self) -> _Res:
         if self._op == "delete":
             self._store.setdefault("_deletes", []).append(self._name)
+            # Delete-Filter (source) mitschreiben, damit Tests die Unterscheidung
+            # manuell vs. auch-Portal prüfen können.
+            self._store.setdefault("_delete_filters", []).append(
+                (self._name, dict(self._eq))
+            )
             return _Res([])
         rows = list(self._store.get(self._name, []))
         # in_-Filter unterstützen (properties-Tenant-Lookup im bulk_edit).
@@ -606,6 +611,65 @@ def test_clear_stop_sell_with_weekdays_runs_delete() -> None:
     rng = DateRange(start=date(2027, 6, 1), end=date(2027, 6, 15))
     svc.clear_stop_sell("t1", "p1", rng, [5, 6])
     assert "stop_sell" in store.get("_deletes", [])
+
+
+def test_clear_stop_sell_default_only_manual() -> None:
+    # Standard: nur manuelle Stops löschen → delete filtert auf source=manual,
+    # Portal-/Channex-Stops bleiben unangetastet.
+    svc, store = _service(properties=[{"id": "p1"}], stop_sell=[])
+    rng = DateRange(start=date(2027, 6, 1), end=date(2027, 6, 15))
+    svc.clear_stop_sell("t1", "p1", rng)
+    filters = [f for (n, f) in store.get("_delete_filters", []) if n == "stop_sell"]
+    assert filters and all(f.get("source") == "manual" for f in filters)
+
+
+def test_clear_stop_sell_include_portal_removes_channex() -> None:
+    # include_portal=True: KEIN source-Filter → auch Portal-/Channex-Stops werden
+    # gelöscht (für versehentlich gesetzte Stops).
+    svc, store = _service(properties=[{"id": "p1"}], stop_sell=[])
+    rng = DateRange(start=date(2027, 6, 1), end=date(2027, 6, 15))
+    svc.clear_stop_sell("t1", "p1", rng, include_portal=True)
+    filters = [f for (n, f) in store.get("_delete_filters", []) if n == "stop_sell"]
+    assert filters and all("source" not in f for f in filters)
+
+
+def test_reset_all_stop_sell_single_property_deletes_all_sources() -> None:
+    # Reset eines Objekts: löscht ALLE zukünftigen Stops (auch Portal). 2099er
+    # Datum, damit es sicher in der Zukunft liegt (date.today()-Filter).
+    svc, store = _service(
+        properties=[{"id": "p1", "tenant_id": "t1"}],
+        stop_sell=[
+            {"date": "2099-06-01", "property_id": "p1", "source": "channex"},
+            {"date": "2099-06-02", "property_id": "p1", "source": "manual"},
+        ],
+    )
+    res = svc.reset_all_stop_sell("t1", "p1")
+    assert res["properties"] == 1
+    assert res["days"] == 2
+    assert "stop_sell" in store.get("_deletes", [])
+    # KEIN source-Filter → auch der Channex-/Portal-Stop wird gelöscht.
+    filters = [f for (n, f) in store.get("_delete_filters", []) if n == "stop_sell"]
+    assert filters and all("source" not in f for f in filters)
+
+
+def test_reset_all_stop_sell_without_stops_is_noop() -> None:
+    # Objekt ohne (zukünftige) Stops → nichts löschen, days=0.
+    svc, store = _service(
+        properties=[{"id": "p1", "tenant_id": "t1"}],
+        stop_sell=[],
+    )
+    res = svc.reset_all_stop_sell("t1", "p1")
+    assert res["days"] == 0
+    assert "stop_sell" not in store.get("_deletes", [])
+
+
+def test_reset_all_stop_sell_rejects_missing_tenant() -> None:
+    svc, _ = _service(properties=[{"id": "p1", "tenant_id": "t1"}])
+    try:
+        svc.reset_all_stop_sell("", "p1")
+        raise AssertionError("expected CalendarError")
+    except CalendarError as exc:
+        assert exc.status_code == 400
 
 
 def test_date_spans_compresses_consecutive_days() -> None:

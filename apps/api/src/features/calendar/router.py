@@ -34,6 +34,7 @@ from .schemas import (
     StopSellClearRequest,
     StopSellListResponse,
     StopSellRequest,
+    StopSellResetRequest,
 )
 from .service import CalendarError, CalendarService
 
@@ -198,8 +199,30 @@ def clear_stop_sell(
     ],
 ) -> dict[str, str]:
     try:
-        service.clear_stop_sell(ctx.tenant_id, req.property_id, req.range, req.weekdays)
+        service.clear_stop_sell(
+            ctx.tenant_id, req.property_id, req.range, req.weekdays,
+            include_portal=req.include_portal,
+        )
         return {"status": "ok"}
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/stop-sell/reset", dependencies=[
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
+def reset_stop_sell(
+    req: StopSellResetRequest,
+    service: CalendarServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> dict[str, int]:
+    """ALLE Stop-Sells (auch Portal) eines Objekts oder aller Objekte des Tenants
+    zurücksetzen. Für versehentlich gesetzte Stops; öffnet die Tage auch an den
+    OTAs. Doppel-Bestätigung erfolgt im Frontend."""
+    try:
+        return service.reset_all_stop_sell(ctx.tenant_id, req.property_id)
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

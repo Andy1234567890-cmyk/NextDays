@@ -38,6 +38,21 @@ if TYPE_CHECKING:
 
 log = get_logger("nextdays.calendar")
 
+# Kanal-Dimension am Stop-Sell (Migration 0145). Solange die Spalten scope/channels
+# noch nicht live sind, NICHT selektieren (PostgREST wirft sonst „column does not
+# exist") und im Code auf all/[] defaulten. NACH dem Einspielen von 0145 auf
+# "scope,channels," setzen — dann liefern die Reads die echten Kanal-Werte. Der
+# einzige Umschalt-Ort.
+_STOP_SELL_SCOPE_COLS = ""
+
+
+def _default_stop_sell_scope(row: dict) -> None:
+    """scope/channels auf den Default (all/[]) setzen, wenn die Spalten (noch)
+    nicht mitgelesen wurden — hält StopSellDay valide und das Verhalten
+    rückwärtskompatibel (all = alle Kanäle, wie bisher)."""
+    row.setdefault("scope", "all")
+    row.setdefault("channels", [])
+
 
 def _contiguous_open_spans(
     rng: "DateRange", booked_iso: set[str]
@@ -336,7 +351,8 @@ class CalendarService:
             self._db()
             .table("stop_sell")
             .select(
-                "id,property_id,date,reason,source,agency_id,travel_agencies(name)"
+                f"id,property_id,date,reason,source,{_STOP_SELL_SCOPE_COLS}"
+                "agency_id,travel_agencies(name)"
             )
             .in_("property_id", property_ids)
             .gte("date", rng.start.isoformat())
@@ -348,6 +364,7 @@ class CalendarService:
         for row in rows:
             agency = row.pop("travel_agencies", None) or {}
             row["agency_name"] = agency.get("name") if isinstance(agency, dict) else None
+            _default_stop_sell_scope(row)
             out.setdefault(row["property_id"], []).append(StopSellDay(**row))
         return out
 
@@ -501,8 +518,8 @@ class CalendarService:
             # travel_agencies-Embed: der Kalender zeigt am Stop-Sale-Balken,
             # an WEN sich der Stopp richtet (z. B. TUI) — nicht nur „Gesperrt".
             .select(
-                "id,property_id,date,reason,source,agency_id,"
-                "travel_agencies(name)"
+                f"id,property_id,date,reason,source,{_STOP_SELL_SCOPE_COLS}"
+                "agency_id,travel_agencies(name)"
             )
             .eq("property_id", property_id)
             .gte("date", rng.start.isoformat())
@@ -516,6 +533,7 @@ class CalendarService:
             row["agency_name"] = (
                 agency.get("name") if isinstance(agency, dict) else None
             )
+            _default_stop_sell_scope(row)
         return rows
 
     # Channex-Wochentags-Codes (Index = date.weekday(): 0=Montag … 6=Sonntag).
@@ -620,11 +638,15 @@ class CalendarService:
         property_id: str,
         rng: DateRange,
         weekdays: list[int] | None = None,
+        *,
+        include_portal: bool = False,
     ) -> None:
-        """Manuellen Verkaufsstopp aufheben. Channex-Stops (source=channex) bleiben
-        unangetastet — die spiegeln den OTA-Stand und werden per Import gepflegt.
-        An Channex wird stop_sell=false NUR für Tage gepusht, die danach wirklich
-        keinen Stop mehr haben (sonst würden OTA-seitige Stops geöffnet)."""
+        """Verkaufsstopp aufheben. Standard: nur manuelle Stops — Channex-Stops
+        (source=channex) bleiben, die spiegeln den OTA-Stand und werden per Import
+        gepflegt. Mit include_portal=True werden AUCH Portal-Stops entfernt (für
+        versehentlich/über einen Test gesetzte Stops); die Tage werden dann auch an
+        den OTAs geöffnet. An Channex wird stop_sell=false NUR für Tage gepusht, die
+        danach wirklich keinen Stop mehr haben (sonst würden OTA-Stops geöffnet)."""
         self._require_tenant_property(tenant_id, property_id)
         wanted = [d for d in rng.nights() if not weekdays or d.weekday() in weekdays]
         if not wanted:
@@ -634,8 +656,10 @@ class CalendarService:
             .table("stop_sell")
             .delete()
             .eq("property_id", property_id)
-            .eq("source", "manual")
         )
+        # Standard: nur manuelle Stops löschen. include_portal: auch Channex/Portal.
+        if not include_portal:
+            query = query.eq("source", "manual")
         if weekdays:
             query = query.in_("date", [d.isoformat() for d in wanted])
         else:
@@ -671,6 +695,61 @@ class CalendarService:
                 property_id, self._date_spans(open_days), stop_sell=False
             )
         log.info("calendar_stop_sell_cleared", property_id=property_id)
+
+    def reset_all_stop_sell(
+        self, tenant_id: str, property_id: str | None = None
+    ) -> dict[str, int]:
+        """ALLE (auch Portal-/Channex-)Stop-Sells ab heute zurücksetzen — für
+        versehentlich/über einen Test gesetzte Stops. property_id=None → alle
+        Objekte des Tenants. Öffnet die betroffenen Tage auch an den OTAs
+        (stop_sell=false), begrenzt auf die WIRKLICH vorhandenen Stop-Tage (kein
+        erfundener Horizont, Wurzel 4). Gibt {properties, days} zurück."""
+        if not tenant_id:
+            raise CalendarError("Kein Tenant im Konto.", status_code=400)
+        if property_id is not None:
+            self._require_tenant_property(tenant_id, property_id)
+            property_ids = [property_id]
+        else:
+            rows = (
+                self._db()
+                .table("properties")
+                .select("id")
+                .eq("tenant_id", tenant_id)
+                .execute()
+            ).data or []
+            property_ids = [r["id"] for r in rows]
+        today = date.today()
+        total_days = 0
+        for pid in property_ids:
+            # Nur ZUKÜNFTIGE Stops (Channex nimmt keine Vergangenheit an); genau
+            # deren Tage öffnen.
+            existing = (
+                self._db()
+                .table("stop_sell")
+                .select("date")
+                .eq("property_id", pid)
+                .gte("date", today.isoformat())
+                .execute()
+            ).data or []
+            days = sorted(
+                {date.fromisoformat(r["date"]) for r in existing if r.get("date")}
+            )
+            if not days:
+                continue
+            self._db().table("stop_sell").delete().eq(
+                "property_id", pid
+            ).gte("date", today.isoformat()).execute()
+            self._push_channex_stop_sell(
+                pid, self._date_spans(days), stop_sell=False
+            )
+            total_days += len(days)
+        log.info(
+            "calendar_stop_sell_reset",
+            tenant_id=tenant_id,
+            properties=len(property_ids),
+            days=total_days,
+        )
+        return {"properties": len(property_ids), "days": total_days}
 
     @staticmethod
     def _date_spans(days: list[date]) -> list[tuple[date, date]]:

@@ -19,6 +19,7 @@ import { useLocale, useTranslations } from "next-intl";
 import {
   getAvailability,
   listStopSell,
+  resetStopSell,
   type DayAvailability,
   type StopSellDay,
 } from "@/lib/calendar";
@@ -94,6 +95,27 @@ export function StopSellCalendar({
   // Drag: Anker + aktueller Tag innerhalb EINER Objektzeile.
   const [drag, setDrag] = useState<{ pid: string; a: string; b: string } | null>(null);
   const [sel, setSel] = useState<StopSellSelection | null>(null);
+  // „Alles zurücksetzen": Ziel (ein Objekt oder alle) + Doppel-Bestätigung.
+  // reset.target = null → alle Objekte; sonst die Property. reset.confirmed =
+  // erste Bestätigung erfolgt, zweiter Klick löst wirklich aus.
+  const [reset, setReset] = useState<
+    { target: Property | null; confirmed: boolean } | null
+  >(null);
+  const [resetting, setResetting] = useState(false);
+
+  async function runReset() {
+    if (!reset) return;
+    setResetting(true);
+    setError(null);
+    const res = await resetStopSell(reset.target?.id);
+    setResetting(false);
+    if (!res.ok) {
+      setError(res.error);
+      return;
+    }
+    setReset(null);
+    // Realtime (stop_sell-Abo) pflegt die Zellen nach — kein manuelles Reload.
+  }
 
   const load = useCallback(async () => {
     const to = isoPlus(today, DAYS_AHEAD);
@@ -237,9 +259,20 @@ export function StopSellCalendar({
 
   return (
     <div className="flex w-full flex-col gap-4 p-6">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold">{t("title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("description")}</p>
+      <header className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-semibold">{t("title")}</h1>
+          <p className="text-sm text-muted-foreground">{t("description")}</p>
+        </div>
+        {/* Global: ALLE Stop-Sells aller Objekte zurücksetzen (Doppel-Bestätigung). */}
+        <button
+          type="button"
+          onClick={() => setReset({ target: null, confirmed: false })}
+          className="flex items-center gap-2 rounded-full border border-destructive px-4 py-2 text-sm font-medium text-destructive transition hover:bg-destructive/10"
+        >
+          <Icon icon="ph:arrow-counter-clockwise" className="size-4" />
+          {t("resetAll")}
+        </button>
       </header>
 
       {/* Legende */}
@@ -323,11 +356,23 @@ export function StopSellCalendar({
             {properties.map((p) => (
               <div key={p.id} className="flex border-b border-border last:border-b-0">
                 <div
-                  className="sticky left-0 z-10 flex shrink-0 items-center truncate border-r border-border bg-background px-3 text-sm font-medium"
+                  className="sticky left-0 z-10 flex shrink-0 items-center gap-1 border-r border-border bg-background px-3 text-sm font-medium"
                   style={{ width: `${LABEL}rem`, height: `${ROW}rem` }}
                   title={p.title}
                 >
-                  <span className="truncate">{p.title}</span>
+                  <span className="min-w-0 flex-1 truncate">{p.title}</span>
+                  {/* Objekt-Reset: nur zeigen, wenn dieses Objekt Stops hat. */}
+                  {Object.keys(stops[p.id] ?? {}).length > 0 && (
+                    <button
+                      type="button"
+                      aria-label={t("resetProperty")}
+                      title={t("resetProperty")}
+                      onClick={() => setReset({ target: p, confirmed: false })}
+                      className="flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Icon icon="ph:arrow-counter-clockwise" className="size-3.5" />
+                    </button>
+                  )}
                 </div>
                 {days.map((d) => {
                   const stop = stops[p.id]?.[d];
@@ -397,6 +442,72 @@ export function StopSellCalendar({
           />
         ) : null}
       </div>
+
+      {/* „Alles zurücksetzen" mit Doppel-Bestätigung: erst Warnung, dann ein
+          zweiter, expliziter Klick löst das Löschen (auch Portal-Stops) aus. */}
+      {reset ? (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => !resetting && setReset(null)}
+        >
+          <div
+            className="flex w-full max-w-md flex-col gap-4 rounded-(--radius) border border-border bg-card p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3">
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive">
+                <Icon icon="ph:warning" className="size-5" />
+              </span>
+              <div className="flex min-w-0 flex-col gap-1">
+                <h2 className="text-base font-semibold">
+                  {reset.target ? t("resetProperty") : t("resetAll")}
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  {reset.target
+                    ? t("resetPropertyWarn", { title: reset.target.title })
+                    : t("resetAllWarn")}
+                </p>
+              </div>
+            </div>
+
+            {reset.confirmed && (
+              <p className="rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm font-medium text-destructive">
+                {t("resetConfirmAgain")}
+              </p>
+            )}
+            {error && <p className="text-sm text-destructive">{error}</p>}
+
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                disabled={resetting}
+                onClick={() => setReset(null)}
+                className="rounded-full border border-border px-4 py-2 text-sm font-medium transition hover:bg-muted disabled:opacity-50"
+              >
+                {t("cancel")}
+              </button>
+              {!reset.confirmed ? (
+                <button
+                  type="button"
+                  onClick={() => setReset({ ...reset, confirmed: true })}
+                  className="rounded-full bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition hover:bg-destructive/90"
+                >
+                  {t("resetContinue")}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  disabled={resetting}
+                  onClick={runReset}
+                  className="rounded-full bg-destructive px-4 py-2 text-sm font-medium text-destructive-foreground transition hover:bg-destructive/90 disabled:opacity-50"
+                >
+                  {resetting ? t("resetting") : t("resetConfirm")}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
