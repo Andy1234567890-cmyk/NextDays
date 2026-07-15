@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
+from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.countries import normalize_country
@@ -55,15 +56,41 @@ class ContentSyncMixin:
             if not group_id:
                 log.error("channex_group_no_id", tenant_id=tenant_id)
                 return None
+        except ChannexError as exc:
+            log.error("channex_group_failed", tenant_id=tenant_id, error=exc.message)
+            return None
+        # Ab hier existiert die Group bei Channex. Schlägt der Mapping-Upsert fehl
+        # (postgrest APIError), entstünde eine WAISE (Group ohne Mapping → nächster
+        # Aufruf legt eine zweite an, Wurzel 1). Darum den Upsert SEPARAT fangen
+        # und die eben erzeugte Group kompensierend wieder löschen. Scheitert auch
+        # die Kompensation (Channex down), bleibt die Group — dann aber mit ihrer
+        # ID im Log ("Waise mit Adresse"), damit der Sweeper sie findet (Wurzel 5:
+        # spezifisch fangen, nicht still schlucken).
+        try:
             self._db.table("channex_group_map").upsert(
                 {"tenant_id": tenant_id, "channex_group_id": group_id, "title": title},
                 on_conflict="tenant_id",
             ).execute()
-            log.info("channex_group_created", tenant_id=tenant_id)
-            return group_id
-        except ChannexError as exc:
-            log.error("channex_group_failed", tenant_id=tenant_id, error=exc.message)
+        except APIError as exc:
+            log.error(
+                "channex_group_map_upsert_failed",
+                tenant_id=tenant_id, channex_group_id=group_id, error=str(exc),
+            )
+            try:
+                self._channex.delete_group(group_id)
+                log.info(
+                    "channex_group_compensated",
+                    tenant_id=tenant_id, channex_group_id=group_id,
+                )
+            except ChannexError as del_exc:
+                log.error(
+                    "channex_group_orphaned",
+                    tenant_id=tenant_id, channex_group_id=group_id,
+                    error=del_exc.message,
+                )
             return None
+        log.info("channex_group_created", tenant_id=tenant_id)
+        return group_id
 
     def sync_property_to_channex(
         self,

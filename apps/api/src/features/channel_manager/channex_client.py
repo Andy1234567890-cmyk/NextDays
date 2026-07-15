@@ -463,6 +463,20 @@ class ChannexClient:
             f"groups/{group_id}/properties/{channex_property_id}", json={}
         )
 
+    def delete_group(self, group_id: str) -> dict[str, Any]:
+        """Channex-Group löschen — idempotent: ein 404 (Group bereits weg) ist
+        KEIN Fehler, wir geben {} zurück. Gegenzustand zu `create_group`
+        (Wurzel 1): Test-Cleanup und der Waisen-Sweeper müssen eine angelegte
+        Group wieder abbauen können. Muster wie `_prune_orphan_rate_plans`
+        (404 = schon weg). Andere Fehler (z. B. Group hat noch Properties → 400)
+        werden durchgereicht, damit der Aufrufer nichts still verliert."""
+        try:
+            return self.delete(f"groups/{group_id}")
+        except ChannexError as exc:
+            if exc.channex_status == 404:
+                return {}
+            raise
+
     # ----- Properties ---------------------------------------------------------
     def create_property(self, attributes: dict[str, Any]) -> dict[str, Any]:
         return self.post("properties", json={"property": attributes})

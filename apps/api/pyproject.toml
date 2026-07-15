@@ -146,8 +146,12 @@ testpaths = ["tests", "src"]
 # rootdir (apps/api) auf den Import-Pfad, damit Tests unter tests/ `import src`
 # auflösen (src/-Tests finden es über die Paketstruktur, tests/-Tests nicht).
 pythonpath = ["."]
+# Integration-Tests standardmäßig DESELEKTIEREN (Positiv-Gate): ein nackter
+# `pytest` trifft nie ein externes System. Bewusst anfordern mit
+# `pytest -m integration` UND `ALLOW_INTEGRATION_TESTS=1` (siehe conftest).
+addopts = "-m 'not integration'"
 markers = [
-    "integration: benötigt laufenden Supabase-Stack (übersprungen wenn nicht erreichbar)",
+    "integration: registriert echte Tenants/Channex-Gruppen — nur mit ALLOW_INTEGRATION_TESTS=1 und explizit `-m integration`",
 ]
 
 [tool.setuptools.packages.find]

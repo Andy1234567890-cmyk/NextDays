@@ -3,8 +3,8 @@
 Unit/Contract (immer): Health, Schema-Validierung, require_role, register-Rollback.
 Integration (Marker): echter register->login->me-Durchlauf gegen Supabase.
 """
-import os
 from unittest.mock import MagicMock
+from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException
@@ -63,6 +63,33 @@ def test_register_request_rejects_bad_country_length() -> None:
             country="DEU",  # 3 statt 2
             currency="EUR",
         )
+
+
+def test_register_request_rejects_unsupported_country() -> None:
+    # 2 Zeichen, aber kein unterstütztes Land (EU27+CH/GB) → 422, kein Durchlass.
+    for bad in ("zz", "!!", "BR"):
+        with pytest.raises(ValidationError):
+            RegisterRequest(
+                email="a@b.de",
+                password="longenough",
+                full_name="A",
+                tenant_name="T",
+                country=bad,
+                currency="EUR",
+            )
+
+
+def test_register_request_rejects_unsupported_currency() -> None:
+    for bad in ("FOO", "BRL", "xxx"):
+        with pytest.raises(ValidationError):
+            RegisterRequest(
+                email="a@b.de",
+                password="longenough",
+                full_name="A",
+                tenant_name="T",
+                country="DE",
+                currency=bad,
+            )
 
 
 # --- require_role ---
@@ -307,14 +334,51 @@ def test_invite_rolls_back_auth_user_when_row_fails() -> None:
 
 # --- Integration (nur mit laufendem Supabase-Stack) ---
 
+def _cleanup_tenant(tenant_id: str) -> None:
+    """Räumt einen im Test registrierten Tenant restlos ab (Gegenzustand,
+    Wurzel 1): Channex-Gruppe löschen (sonst Waise), dann Auth-User + Tenant.
+
+    Direkt über den Service-Client/Channex-Client, NICHT über die API — das
+    vermeidet den geteilten 10/60-Auth-Bucket (sonst 429). Best-effort: jeder
+    Schritt wird einzeln versucht, damit ein Fehler die anderen nicht blockiert.
+    """
+    import contextlib
+
+    from src.core.supabase import get_service_client
+    from src.features.channel_manager.channex_client import ChannexClient
+
+    svc = get_service_client()
+    # Channex-Gruppe zuerst (idempotent, 404 = ok) — Mapping liefert die Group-ID.
+    grp = (
+        svc.table("channex_group_map")
+        .select("channex_group_id")
+        .eq("tenant_id", tenant_id)
+        .execute()
+    )
+    if grp.data:
+        with contextlib.suppress(Exception):  # Test-Teardown, best effort
+            ChannexClient().delete_group(grp.data[0]["channex_group_id"])
+    # Auth-User des Tenants entfernen.
+    with contextlib.suppress(Exception):  # Test-Teardown, best effort
+        users = svc.auth.admin.list_users()
+        for user in users:
+            meta = getattr(user, "app_metadata", None) or {}
+            if meta.get("tenant_id") == tenant_id:
+                svc.auth.admin.delete_user(user.id)
+    # Tenant löschen (channex_group_map + users kaskadieren).
+    with contextlib.suppress(Exception):  # Test-Teardown, best effort
+        svc.table("tenants").delete().eq("id", tenant_id).execute()
+
+
 @pytest.mark.integration
 def test_register_login_me_roundtrip() -> None:
-    email = f"it-{os.getpid()}@example.de"
+    marker = uuid4().hex[:8]
+    email = f"it-{marker}@example.de"
     body = {
         "email": email,
         "password": "supersecret123",
         "full_name": "IT Owner",
-        "tenant_name": "IT Tenant",
+        "tenant_name": f"IT-Test {marker}",
         "country": "DE",
         "currency": "EUR",
     }
@@ -322,13 +386,109 @@ def test_register_login_me_roundtrip() -> None:
     assert reg.status_code == 201, reg.text
     token = reg.json()["access_token"]
 
-    me = client.get(
-        "/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"}
+    tenant_id = None
+    try:
+        me = client.get(
+            "/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"}
+        )
+        assert me.status_code == 200, me.text
+        data = me.json()
+        assert data["role"] == "admin"  # Tenant-Gründer = admin
+        assert data["tenant_id"]
+        tenant_id = data["tenant_id"]
+    finally:
+        if tenant_id:
+            _cleanup_tenant(tenant_id)
+
+
+@pytest.mark.integration
+def test_login_totp_end_to_end() -> None:
+    """Voller 2FA-Login-Flow gegen echtes Supabase: 2FA aktivieren, dann
+    Login-Schritt 1 (Passwort → mfa_required) + Schritt 2 (TOTP → Session).
+
+    Prüft insbesondere _session_for_verified_user (Magiclink-Session-Trick) —
+    der einzige Weg zu beweisen, dass der zweite Login-Schritt echt eine
+    nutzbare Session liefert, statt es nur zu behaupten."""
+    import pyotp
+
+    marker = uuid4().hex[:8]
+    email = f"it-2fa-{marker}@example.de"
+    password = "supersecret123"  # noqa: S105 — Test-Passwort
+    reg = client.post(
+        "/api/v1/auth/register",
+        json={
+            "email": email,
+            "password": password,
+            "full_name": "IT 2FA",
+            "tenant_name": f"IT-Test {marker}",
+            "country": "DE",
+            "currency": "EUR",
+        },
     )
-    assert me.status_code == 200, me.text
-    data = me.json()
-    assert data["role"] == "admin"  # Tenant-Gründer = admin
-    assert data["tenant_id"]
+    assert reg.status_code == 201, reg.text
+    token = reg.json()["access_token"]
+    auth = {"Authorization": f"Bearer {token}"}
+
+    tenant_id = None
+    try:
+        me0 = client.get("/api/v1/auth/me", headers=auth)
+        assert me0.status_code == 200, me0.text
+        tenant_id = me0.json()["tenant_id"]
+
+        # 2FA aktivieren (enroll → verify mit echtem Code).
+        enroll = client.post("/api/v1/auth/totp/enroll", headers=auth)
+        assert enroll.status_code == 200, enroll.text
+        secret = enroll.json()["secret"]
+        verify = client.post(
+            "/api/v1/auth/totp/verify",
+            headers=auth,
+            json={"code": pyotp.TOTP(secret).now()},
+        )
+        assert verify.status_code == 200, verify.text
+
+        # Login-Schritt 1: Passwort → KEINE Session, nur mfa_required + mfa_token.
+        step1 = client.post(
+            "/api/v1/auth/login", json={"email": email, "password": password}
+        )
+        assert step1.status_code == 200, step1.text
+        body1 = step1.json()
+        assert body1["mfa_required"] is True
+        assert body1["session"] is None  # fail-closed: noch keine Session
+        assert body1["mfa_token"]
+
+        # Falscher Code → 401, weiterhin keine Session.
+        bad = client.post(
+            "/api/v1/auth/login/totp",
+            json={"mfa_token": body1["mfa_token"], "code": "000000"},
+        )
+        assert bad.status_code == 401, bad.text
+
+        # Login-Schritt 2: richtiger TOTP-Code → echte, nutzbare Session.
+        step2 = client.post(
+            "/api/v1/auth/login/totp",
+            json={"mfa_token": body1["mfa_token"], "code": pyotp.TOTP(secret).now()},
+        )
+        assert step2.status_code == 200, step2.text
+        session = step2.json()["session"]
+        assert session and session["access_token"]
+
+        # Die Session muss echt funktionieren (nicht nur „vorhanden").
+        me = client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {session['access_token']}"},
+        )
+        assert me.status_code == 200, me.text
+        assert me.json()["role"] == "admin"
+
+        # Der mfa_token darf KEIN Access-Token sein (fail-closed): API lehnt ihn ab.
+        reject = client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {body1['mfa_token']}"},
+        )
+        assert reject.status_code == 401, reject.text
+    finally:
+        if tenant_id:
+            _cleanup_tenant(tenant_id)
 
 
 # --- Betriebsart (accommodation_type, 0090) ---

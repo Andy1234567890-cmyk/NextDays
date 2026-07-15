@@ -40,12 +40,27 @@ def _supabase_configured() -> bool:
     return _supabase_reachable()
 
 
+def _integration_allowed() -> bool:
+    """Explizites Opt-in-Gate für Integration-Tests (Positiv-Gate).
+
+    Integration-Tests registrieren echte Tenants und legen echte Channex-Gruppen
+    an. Ein Nur-Erreichbarkeits-Check ist ein Negativ-Filter, der bei
+    Konfig-Drift/Tunnel versagt und still gegen Prod laufen kann. Darum laufen sie
+    NUR, wenn ALLOW_INTEGRATION_TESTS=1 gesetzt ist — in CI und Prod nie gesetzt,
+    also nie ausgeführt. Zusätzlich müssen Stack + Keys da sein."""
+    if os.environ.get("ALLOW_INTEGRATION_TESTS") != "1":
+        return False
+    return _supabase_configured()
+
+
 def pytest_collection_modifyitems(
     config: pytest.Config, items: list[pytest.Item]
 ) -> None:
-    if _supabase_configured():
+    if _integration_allowed():
         return
-    skip = pytest.mark.skip(reason="Supabase nicht konfiguriert (Keys/Stack)")
+    skip = pytest.mark.skip(
+        reason="Integration übersprungen (ALLOW_INTEGRATION_TESTS!=1 oder Stack/Keys fehlen)"
+    )
     for item in items:
         if "integration" in item.keywords:
             item.add_marker(skip)

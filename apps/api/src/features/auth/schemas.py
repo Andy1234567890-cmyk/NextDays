@@ -1,7 +1,16 @@
 """Pydantic-Schemas für den auth-Slice."""
 from enum import StrEnum
 
-from pydantic import BaseModel, EmailStr, Field, SecretStr
+from pydantic import BaseModel, EmailStr, Field, SecretStr, field_validator
+
+from src.core.countries import is_iso2_country
+from src.features.owner_statements.currencies import COUNTRY_CURRENCY
+
+# Unterstützte Währungen = die Werte der Land→Währung-Map (EU27+CH/GB), gleiche
+# Quelle wie das Frontend (apps/web/lib/laender.ts). KEINE volle ISO-4217-Liste:
+# das UI bietet nur diese Länder/Währungen an, ein Datensatz mit "FOO" (oder auch
+# "BRL") kann über kein UI entstehen und ist ein Datenfehler, kein legitimer Fall.
+_SUPPORTED_CURRENCIES = frozenset(COUNTRY_CURRENCY.values())
 
 
 class UserRole(StrEnum):
@@ -17,11 +26,27 @@ class RegisterRequest(BaseModel):
     password: SecretStr = Field(min_length=8)
     full_name: str = Field(min_length=1, max_length=200)
     tenant_name: str = Field(min_length=1, max_length=200)
+    # Gegen die unterstützte Länder-/Währungsliste geprüft (nicht nur Länge):
+    # "zz"/"!!"/"FOO" sind Datenfehler → 422, kein erfundener Ersatzwert (Wurzel 4).
     country: str = Field(min_length=2, max_length=2)   # ISO-3166-1 alpha-2
     currency: str = Field(min_length=3, max_length=3)  # ISO-4217
     # 'agency' = verwaltet fremde Objekte (Owner-Statements); 'self_managed' =
     # eigener Vermieter. Default agency (bisheriges Verhalten).
     business_type: str = Field(default="agency", pattern="^(agency|self_managed)$")
+
+    @field_validator("country")
+    @classmethod
+    def _country_supported(cls, v: str) -> str:
+        if not is_iso2_country(v):
+            raise ValueError("Land wird nicht unterstützt (EU27, CH, GB).")
+        return v.upper()
+
+    @field_validator("currency")
+    @classmethod
+    def _currency_supported(cls, v: str) -> str:
+        if v.upper() not in _SUPPORTED_CURRENCIES:
+            raise ValueError("Währung wird nicht unterstützt.")
+        return v.upper()
 
 
 class LoginRequest(BaseModel):
@@ -65,6 +90,31 @@ class SessionResponse(BaseModel):
     refresh_token: str
     token_type: str = "bearer"  # noqa: S105 — OAuth-Token-Typ, kein Secret
     expires_in: int
+
+
+class LoginResponse(BaseModel):
+    """Antwort auf /auth/login. Genau EINE der beiden Welten ist gesetzt:
+
+    - 2FA nicht aktiv → ``session`` gefüllt, ``mfa_required=False``. Der Client
+      benutzt die Session sofort (wie bisher SessionResponse).
+    - 2FA aktiv → ``mfa_required=True``, ``session=None``, ``mfa_token`` gesetzt.
+      Es gibt bewusst NOCH KEINE Session (fail-closed): der Client muss den
+      TOTP-Code über /auth/login/totp einlösen. Der mfa_token ist kurzlebig,
+      an genau diesen User gebunden und taugt NUR zum Code-Einlösen — er ist
+      KEIN Access-Token (eigener typ-Claim, wird vom API-Guard abgelehnt)."""
+
+    mfa_required: bool = False
+    session: SessionResponse | None = None
+    # Nur bei mfa_required=True: kurzlebiges Pending-Token (5 Min).
+    mfa_token: str | None = None
+
+
+class TotpLoginRequest(BaseModel):
+    """Zweiter Login-Schritt bei aktiver 2FA: mfa_token (aus /auth/login) plus
+    6-stelliger TOTP-Code oder ein Recovery-Code."""
+
+    mfa_token: str
+    code: str = Field(min_length=6, max_length=32)
 
 
 class MeResponse(BaseModel):
