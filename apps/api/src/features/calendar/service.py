@@ -1304,25 +1304,59 @@ class CalendarService:
             applied=applied,
         )
 
+    def _own_rate_plan_ids(self, property_id: str) -> set[str]:
+        """Die Rate-Plan-IDs GENAU dieses Objekts (Wurzel 3: der Request darf keinen
+        fremden Plan bestimmen — Service-Role umgeht RLS, der property_id-Filter ist
+        der einzige Backstop)."""
+        rows = (
+            self._db()
+            .table("rate_plans")
+            .select("id")
+            .eq("property_id", property_id)
+            .execute()
+        ).data or []
+        return {r["id"] for r in rows}
+
     def bulk_restrictions(self, tenant_id: str, req: RestrictionRowsRequest) -> int:
         """Mehrere heterogene Restriktions-Zeilen eines Objekts in EINEM Channex-
-        Call setzen (Zertifizierung Test 3-8). Spiegelt lokal (Preis→price_overrides,
-        CTA/CTD→availability, stop_sell→stop_sell) und reiht EINEN restriction_rows-
-        ARI-Job ein, der alle Zeilen gebündelt an Channex pusht. Gibt die Anzahl
-        Zeilen zurück."""
+        Call setzen (Zertifizierung Test 3-8). Spiegelt lokal (Preis→price_overrides
+        bzw. rate_plan_price_overrides, CTA/CTD→availability, stop_sell→stop_sell)
+        und reiht EINEN restriction_rows-ARI-Job ein, der alle Zeilen gebündelt an
+        Channex pusht. Zeilen mit `rate_plan_id` treffen NUR diesen Plan (Hotel).
+        Gibt die Anzahl Zeilen zurück."""
         self._require_tenant_property(tenant_id, req.property_id)
         pid = req.property_id
+        # Fremde/erfundene Rate-Plan-IDs hart abweisen, BEVOR gespiegelt oder
+        # gepusht wird — kein stiller Fallback auf „alle Pläne" (Wurzel 4).
+        requested_plans = {r.rate_plan_id for r in req.rows if r.rate_plan_id}
+        if requested_plans:
+            own = self._own_rate_plan_ids(pid)
+            unknown = requested_plans - own
+            if unknown:
+                raise CalendarError(
+                    "Preisplan gehört nicht zu diesem Objekt.", status_code=422
+                )
         rows_payload: list[dict[str, object]] = []
         for row in req.rows:
             start, end = row.range.start, row.range.end  # end exklusiv
             # Lokale Spiegelung (Gegenzustand, Wurzel 1) — die Channex-Wahrheit
             # kommt aus dem gebündelten Push, die lokalen Tabellen bleiben konsistent.
             if row.price is not None:
-                self._db().table("price_overrides").upsert(
-                    [{"property_id": pid, "date": d.isoformat(), "price": row.price}
-                     for d in row.range.nights()],
-                    on_conflict="property_id,date",
-                ).execute()
+                if row.rate_plan_id:
+                    # Hotel: der Preis gehört an den Plan, NICHT an das Objekt —
+                    # sonst überschriebe eine BAR-Zeile den Preis aller Pläne.
+                    self._db().table("rate_plan_price_overrides").upsert(
+                        [{"rate_plan_id": row.rate_plan_id, "date": d.isoformat(),
+                          "price": row.price}
+                         for d in row.range.nights()],
+                        on_conflict="rate_plan_id,date",
+                    ).execute()
+                else:
+                    self._db().table("price_overrides").upsert(
+                        [{"property_id": pid, "date": d.isoformat(), "price": row.price}
+                         for d in row.range.nights()],
+                        on_conflict="property_id,date",
+                    ).execute()
             if row.closed_to_arrival is not None or row.closed_to_departure is not None:
                 flags: dict[str, bool] = {}
                 if row.closed_to_arrival is not None:
@@ -1334,9 +1368,18 @@ class CalendarService:
                      for d in row.range.nights()],
                     on_conflict="property_id,date",
                 ).execute()
+            if row.min_stay is not None and row.rate_plan_id:
+                # Hotel: datumsgenauer Mindestaufenthalt gehört an den Plan.
+                self._db().table("rate_plan_min_stay_overrides").upsert(
+                    [{"rate_plan_id": row.rate_plan_id, "date": d.isoformat(),
+                      "min_stay": row.min_stay}
+                     for d in row.range.nights()],
+                    on_conflict="rate_plan_id,date",
+                ).execute()
             rows_payload.append({
                 "date_from": start.isoformat(),
                 "date_to": (end - timedelta(days=1)).isoformat(),  # inklusiv
+                "rate_plan_id": row.rate_plan_id,
                 "rate_cents": round(row.price * 100) if row.price is not None else None,
                 "min_stay": row.min_stay,
                 "max_stay": row.max_stay,

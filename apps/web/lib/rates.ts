@@ -42,6 +42,51 @@ async function call<T>(
   }
 }
 
+// --- Hotel-Rate-Grid (Kalender-Ansicht „Preise") --------------------------
+
+export type RateGridDay = {
+  date: string;
+  price: number | null;
+  // 'rate_plan' (Datumspreis) | 'override' | 'dynamic' | 'weekday' | 'base' | 'none'
+  source: string;
+};
+
+export type RateGridPlan = {
+  id: string;
+  name: string;
+  currency: string;
+  base_price: number;
+  min_stay: number;
+  sync_status: "synced" | "pending" | null;
+  days: RateGridDay[];
+};
+
+export type RateGridRoomType = {
+  id: string;
+  title: string;
+  plans: RateGridPlan[];
+};
+
+export type RateGridResponse = {
+  property_id: string;
+  room_types: RateGridRoomType[];
+};
+
+/** Tageskurven aller Rate-Pläne eines Hotels [from, to) — dieselbe Preis-Wahrheit
+ *  wie Quote und Portale (zentraler Resolver, kein zweiter Preis-Pfad). */
+export async function getRateGrid(
+  propertyId: string,
+  fromIso: string,
+  toIso: string,
+): Promise<Result<RateGridResponse>> {
+  const q = new URLSearchParams({
+    property_id: propertyId,
+    date_from: fromIso,
+    date_to: toIso,
+  });
+  return call(`/rates/grid?${q.toString()}`);
+}
+
 export async function listRatePlans(
   propertyId: string,
 ): Promise<Result<{ items: RatePlan[]; total: number }>> {

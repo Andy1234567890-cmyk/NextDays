@@ -3,6 +3,7 @@
 Preispläne (rate_plans) pro Objekt — tenant-gescoped, MANAGE_PROPERTY_SETTINGS.
 Anlegen/Ändern löst den Channex-Sync der Property aus.
 """
+from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -13,6 +14,7 @@ from src.features.auth.dependencies import require_granular_permission
 from src.features.auth.granular_permissions import Permission
 
 from .schemas import (
+    RateGridResponse,
     RatePlanCreate,
     RatePlanListResponse,
     RatePlanMinStayListResponse,
@@ -52,6 +54,21 @@ def list_rates(
 ) -> RatePlanListResponse:
     try:
         return service.list(ctx, property_id)
+    except RateError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/grid", response_model=RateGridResponse)
+def rate_grid(
+    service: RatesServiceDep,
+    ctx: _write,
+    property_id: Annotated[str, Query()],
+    date_from: Annotated[date, Query()],
+    date_to: Annotated[date, Query()],
+) -> RateGridResponse:
+    """Hotel-Rate-Grid des Belegungsplans: Tageskurven aller Pläne je Kategorie."""
+    try:
+        return service.rate_grid(ctx, property_id, date_from, date_to)
     except RateError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

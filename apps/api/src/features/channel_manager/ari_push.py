@@ -1167,9 +1167,10 @@ class AriPushMixin:
     def reconcile_rate_plan_prices(
         self, tenant_id: str, property_id: str, horizon_days: int = 365
     ) -> dict[str, int]:
-        """Desired-State-Reconciler: gleicht die datumsgenauen DB-Preise
-        (rate_plan_price_overrides = Soll) gegen den AUTORITATIVEN Channex-Zustand
-        (get_restrictions = Ist) ab und pusht NUR die Differenz — pro Rate-Plan.
+        """Desired-State-Reconciler: gleicht die volle Soll-Preiskurve je Plan
+        (Resolver: Datumspreis > Overrides > Dynamic > Wochentag > Plan-Basis)
+        gegen den AUTORITATIVEN Channex-Zustand (get_restrictions = Ist) ab und
+        pusht NUR die Differenz — pro Rate-Plan.
 
         Selbstheilend gegen jede Ursache (verlorener Push, Channex-Ablehnung, Race,
         Alt-'done (superseded)'-Zeilen): der Vergleich fragt nicht 'habe ich
@@ -1197,11 +1198,12 @@ class AriPushMixin:
         today = date.today()
         horizon = today + timedelta(days=horizon_days)
 
-        # SOLL: DB-Datumspreise je lokalem Rate-Plan {local_rate_plan_id: {iso: cents}}
+        # SOLL: volle Preiskurve je lokalem Rate-Plan {local_rate_plan_id:
+        # {iso: cents}} — Basispreis durchgehend + Datumspreise (Resolver).
         desired = self._load_desired_rate_plan_prices(
-            db, local_rate_plan_ids, today, horizon
+            db, property_id, local_rate_plan_ids, today, horizon
         )
-        if not desired:
+        if not any(desired.values()):
             return result
 
         # SOLL: datumsgenaue Mindestaufenthalte je lokalem Rate-Plan.
@@ -1330,32 +1332,46 @@ class AriPushMixin:
             log.warning("rate_plan_sync_state_write_failed", error=str(exc)[:200])
 
     def _load_desired_rate_plan_prices(
-        self, db: Client, local_rate_plan_ids: list[str], start: date, end: date
+        self, db: Client, property_id: str,
+        local_rate_plan_ids: list[str], start: date, end: date,
     ) -> dict[str, dict[str, int]]:
-        """Soll-Datumspreise aus rate_plan_price_overrides je lokalem Rate-Plan im
-        Horizont [start, end]: {local_rate_plan_id: {iso: cents}}. Vergangene Tage
-        fließen nicht ein (Channex lehnt sie ab)."""
-        rows = (
-            db.table("rate_plan_price_overrides")
-            .select("rate_plan_id, date, price")
-            .in_("rate_plan_id", local_rate_plan_ids)
-            .gte("date", start.isoformat())
-            .lte("date", end.isoformat())
-            .not_.is_("price", "null")
-            .execute()
-        ).data or []
+        """Soll-Preiskurve je lokalem Rate-Plan im Horizont [start, end]:
+        {local_rate_plan_id: {iso: cents}} — die VOLLE Kurve aus dem zentralen
+        Resolver (Datumspreis > Objekt-Override > Dynamic > Wochentag >
+        Plan-Basispreis), nicht nur die Datumspreise. Sonst heilt der Reconciler
+        den durchgehenden Plan-Grundpreis nie und ein property-weiter Push kann
+        B&B/BAR dauerhaft mit der falschen Kurve überschreiben. Tage ohne
+        auflösbaren Preis (kein Basispreis, kein Override) fließen nicht ins
+        Soll ein — kein erfundener Preis (Wurzel 4)."""
+        from src.features.pricing.resolver import (  # noqa: PLC0415
+            PricingError,
+            PricingResolver,
+        )
+
+        resolver = PricingResolver(service_client=db)
         out: dict[str, dict[str, int]] = {}
-        for r in rows:
-            rp = r.get("rate_plan_id")
-            iso = r.get("date")
-            price = r.get("price")
-            if rp is None or iso is None or price is None:
-                continue
+        for rp in local_rate_plan_ids:
             try:
-                cents = int(round(float(price) * 100))
-            except (TypeError, ValueError):
+                days = resolver.effective_prices(
+                    property_id, start, end + timedelta(days=1), rate_plan_id=rp
+                )
+            except PricingError:
+                # Mapping zeigt auf einen gelöschten/fremden Plan → diesen Plan
+                # überspringen, nicht den ganzen Reconcile kippen (Wurzel 5).
+                log.warning(
+                    "reconcile_rate_plan_missing",
+                    property_id=property_id, rate_plan_id=rp,
+                )
                 continue
-            out.setdefault(str(rp), {})[str(iso)] = cents
+            curve: dict[str, int] = {}
+            for entry in days:
+                if entry.price is None:
+                    continue
+                cents = int(round(float(entry.price) * 100))
+                if cents <= 0:
+                    continue
+                curve[entry.date.isoformat()] = cents
+            out[rp] = curve
         return out
 
     @staticmethod
@@ -1429,7 +1445,8 @@ class AriPushMixin:
                 continue
             values.extend(
                 _restriction_values(
-                    plans, fields, _as_date(row["date_from"]), _as_date(row["date_to"])
+                    plans, fields, _as_date(row["date_from"]), _as_date(row["date_to"]),
+                    rate_plan_id=row.get("rate_plan_id"),
                 )
             )
         if not values:
@@ -1642,7 +1659,8 @@ class AriPushMixin:
                     continue
                 row_values.extend(
                     _restriction_values(
-                        plans, fields, _as_date(r["date_from"]), _as_date(r["date_to"])
+                        plans, fields, _as_date(r["date_from"]), _as_date(r["date_to"]),
+                        rate_plan_id=r.get("rate_plan_id"),
                     )
                 )
             return row_values

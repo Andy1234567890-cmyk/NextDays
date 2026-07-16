@@ -6,6 +6,7 @@
 // Zeiträume als Balken. Scrollt INNERHALB des Containers (kein Seiten-Overflow).
 import { Icon } from "@iconify/react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ import {
 } from "@/lib/calendar-status";
 import type { PropertyType } from "@/lib/properties";
 import { typeOptionsFor } from "@/lib/property-meta";
+import { getRateGrid } from "@/lib/rates";
 import { Input } from "@/components/ui/input";
 import {
   type Reservation,
@@ -60,11 +62,19 @@ export type Prop = {
   dynamicEnabled?: boolean;
 };
 
-const WEEKDAYS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
-const MONTHS = [
-  "Januar", "Februar", "März", "April", "Mai", "Juni",
-  "Juli", "August", "September", "Oktober", "November", "Dezember",
-];
+// Wochentags-/Monatslabels aus t (Modul-Level-Konstanten können kein useTranslations
+// nutzen) — Funktionen erhalten t als Parameter, aufgerufen innerhalb der Komponente.
+const WEEKDAY_KEYS = ["so", "mo", "di", "mi", "do", "fr", "sa"] as const;
+const MONTH_KEYS = [
+  "januar", "februar", "maerz", "april", "mai", "juni",
+  "juli", "august", "september", "oktober", "november", "dezember",
+] as const;
+function weekdayLabels(t: (key: string) => string): string[] {
+  return WEEKDAY_KEYS.map((k) => t(`calendarBoard.weekdays.${k}`));
+}
+function monthLabels(t: (key: string) => string): string[] {
+  return MONTH_KEYS.map((k) => t(`calendarBoard.months.${k}`));
+}
 
 const COL = 5.5; // rem pro Tagesspalte (breit & lesbar, konstant)
 const LABEL = 17; // rem für die Objektspalte
@@ -114,12 +124,16 @@ const SEG_STYLE: Record<SegStatus, string> = {
   blocked: "bg-neutral-700 text-white",
   stop_sell: "bg-warning/90 text-white",
 };
-const STATUS_LABEL: Record<SegStatus, string> = {
-  open: "Frei",
-  booked: "Gebucht",
-  blocked: "Gesperrt",
-  stop_sell: "Stop-Sell",
-};
+// STATUS_LABEL aus t (Modul-Level-Konstante kann kein useTranslations nutzen) —
+// Funktion erhält t als Parameter, aufgerufen innerhalb der Komponente.
+function statusLabels(t: (key: string) => string): Record<SegStatus, string> {
+  return {
+    open: t("calendarBoard.status.open"),
+    booked: t("calendarBoard.status.booked"),
+    blocked: t("calendarBoard.status.blocked"),
+    stop_sell: t("calendarBoard.status.stopSell"),
+  };
+}
 
 function pad(n: number) {
   return n < 10 ? `0${n}` : `${n}`;
@@ -385,15 +399,19 @@ function applyReservation(state: ResByProp, r: Reservation): ResByProp {
 }
 
 // Menschliches Herkunfts-/Gastlabel für einen Buchungsbalken.
-function segmentLabel(seg: Segment): string {
+function segmentLabel(seg: Segment, t: (key: string) => string): string {
   if (seg.status === "stop_sell") {
     // Adressat sichtbar machen: Reisebüro-Name (z. B. TUI), sonst Herkunft.
     const who =
       seg.stopSell?.agency_name ||
-      (seg.stopSell?.source === "channex" ? "OTA" : "alle Kanäle");
-    return ["Stop-Sell", who, seg.stopSell?.reason].filter(Boolean).join(" · ");
+      (seg.stopSell?.source === "channex"
+        ? t("calendarBoard.stopSellOta")
+        : t("calendarBoard.stopSellAllChannels"));
+    return [t("calendarBoard.status.stopSell"), who, seg.stopSell?.reason]
+      .filter(Boolean)
+      .join(" · ");
   }
-  if (seg.status !== "booked") return STATUS_LABEL[seg.status];
+  if (seg.status !== "booked") return statusLabels(t)[seg.status];
   const guest = seg.reservation?.guest_name?.trim();
   return guest || seg.reservation?.ota_name || sourceLabel(seg.source);
 }
@@ -411,6 +429,7 @@ export function CalendarBoard({
   // Ferienobjekt-Typen).
   accommodationType?: "vacation_rental" | "hotel" | null;
 }) {
+  const t = useTranslations("calendar");
   // Startdatum (rollierend). null bis der Client das heutige Datum kennt.
   const [start, setStart] = useState<Date | null>(null);
   const [todayKey, setTodayKey] = useState("");
@@ -465,6 +484,34 @@ export function CalendarBoard({
   const [wizard, setWizard] = useState<{ pid: string; checkIn: string; checkOut: string } | null>(null);
   // Bulk-Edit-Dialog: Objekt + Zeitraum der aufgezogenen Selektion.
   const [bulk, setBulk] = useState<{ pid: string; checkIn: string; checkOut: string } | null>(null);
+  // Hotel: Preispläne des Objekts, für das der Bulk-Dialog offen ist — damit eine
+  // Restriktions-Zeile gezielt EINEN Plan treffen kann (Twin/BAR ≠ Double/B&B)
+  // statt an allen Plänen gespiegelt zu werden. FeWo: bleibt leer.
+  const [bulkPlans, setBulkPlans] = useState<{ id: string; label: string }[]>([]);
+  // Hotel: die Preispläne des Objekts laden, sobald der Bulk-Dialog aufgeht. Der
+  // Grid-Endpunkt liefert Kategorie + Pläne, daraus das Label „Twin — BAR".
+  // Ein leerer Zeitraum reicht (es geht nur um die Struktur, nicht um Tageskurven).
+  useEffect(() => {
+    if (!bulk || accommodationType !== "hotel") {
+      setBulkPlans([]);
+      return;
+    }
+    let cancelled = false;
+    const from = bulk.checkIn;
+    const to = key(addDays(new Date(`${bulk.checkIn}T00:00:00`), 1));
+    void getRateGrid(bulk.pid, from, to).then((res) => {
+      if (cancelled || !res.ok) return;
+      setBulkPlans(
+        res.data.room_types.flatMap((rt) =>
+          rt.plans.map((p) => ({ id: p.id, label: `${rt.title} — ${p.name}` })),
+        ),
+      );
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [bulk, accommodationType]);
+
   // Sperre-aufheben-Popup: geklickter Sperr-Balken (Objekt + Zeitraum, end exkl.).
   const [unblockAt, setUnblockAt] = useState<
     { pid: string; title: string; start: string; end: string } | null
@@ -1351,7 +1398,7 @@ export function CalendarBoard({
   // Fällt auf `start` zurück, solange das Fenster noch nicht steht.
   const visibleDay =
     dates[Math.min(dates.length - 1, visFrom + OVERSCAN)] ?? start ?? null;
-  const titleMonth = visibleDay ? MONTHS[visibleDay.getMonth()] : "";
+  const titleMonth = visibleDay ? monthLabels(t)[visibleDay.getMonth()] : "";
   const titleYear = visibleDay ? `${visibleDay.getFullYear()}` : "";
 
   // „Erstellen"-Menü im Kopf: Sperren geschieht im Raster per Ziehen;
@@ -1444,7 +1491,7 @@ export function CalendarBoard({
         {(["open", "blocked", "stop_sell"] as SegStatus[]).map((s) => (
           <span key={s} className="flex items-center gap-1.5">
             <span className={`inline-block size-3 rounded-sm border ${s === "open" ? "bg-background" : SEG_STYLE[s]}`} />
-            {STATUS_LABEL[s]}
+            {statusLabels(t)[s]}
           </span>
         ))}
         <span className="h-3 w-px bg-border" aria-hidden />
@@ -1596,7 +1643,7 @@ export function CalendarBoard({
                       className="flex shrink-0 flex-col items-center border-r py-2 text-sm"
                       style={{ width: `${COL}rem` }}
                     >
-                      <span className="text-xs text-muted-foreground">{WEEKDAYS[wd]}</span>
+                      <span className="text-xs text-muted-foreground">{weekdayLabels(t)[wd]}</span>
                       <span className={`mt-1 flex size-8 items-center justify-center rounded-full text-base font-semibold ${isToday ? "bg-accent text-white" : ""}`}>
                         {d.getDate()}
                       </span>
@@ -1671,8 +1718,11 @@ export function CalendarBoard({
                               <>
                                 {/* Personenzahl steht als Badge hinter dem Zimmernamen
                                     (konstant je Objekt) → in der Tageszelle nur Preis,
-                                    Mindestaufenthalt und An-/Abreise-Sperren. */}
-                                {view.showPrice && (
+                                    Mindestaufenthalt und An-/Abreise-Sperren.
+                                    Hotel: KEIN Objekt-Preis — es gäbe keinen einen
+                                    Preis (mehrere Pläne je Kategorie); die Preise
+                                    wohnen in der Ansicht „Preise" (Rate-Grid). */}
+                                {view.showPrice && accommodationType !== "hotel" && (
                                   <span className={`flex items-center gap-1 ${inSel ? "text-white" : "text-muted-foreground"}`}>
                                     {fmtPrice(priceMap[key(d)], propCurrency)}
                                     {priceSrcMap[key(d)] === "dynamic" && (
@@ -1761,14 +1811,14 @@ export function CalendarBoard({
                           ? debugOrigin(seg)
                           : seg.status === "booked"
                             ? [
-                              segmentLabel(seg),
+                              segmentLabel(seg, t),
                               meta.label,
                               statusMeta?.label,
-                              `${nights} Nacht${nights > 1 ? "e" : ""}`,
+                              t("calendarBoard.nightsCount", { count: nights }),
                             ]
                               .filter(Boolean)
                               .join(" · ")
-                            : `${segmentLabel(seg)} · ${seg.span} Tag(e)`;
+                            : `${segmentLabel(seg, t)} · ${t("calendarBoard.daysCount", { count: seg.span })}`;
                         // Kanal-/Status-Filter: nicht passende Balken dimmen
                         // (Belegung bleibt erkennbar, Treffer stechen hervor).
                         const dimmed = filtersActive && !segMatchesFilters(seg);
@@ -1846,7 +1896,7 @@ export function CalendarBoard({
                                         }`
                                       : ""
                                   }`
-                                : segmentLabel(seg)}
+                                : segmentLabel(seg, t)}
                             </span>
                             {/* Indikatoren rechts: Gästezahl + Nächte (sofern Platz). */}
                             {seg.status === "booked" && seg.reservation && (
@@ -2003,7 +2053,11 @@ export function CalendarBoard({
             title: properties.find((p) => p.id === bulk.pid)?.title ?? "Objekt",
           }}
           allProperties={properties.map((p) => ({ id: p.id, title: p.title }))}
-          onClose={() => setBulk(null)}
+          ratePlans={bulkPlans}
+          onClose={() => {
+            setBulk(null);
+            setBulkPlans([]);
+          }}
           onApplied={() => load()}
         />
       )}

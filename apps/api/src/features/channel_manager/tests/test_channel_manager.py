@@ -415,7 +415,10 @@ class _ImportChannex:
         self._fail_availability = fail_availability
         self._fail_restrictions = fail_restrictions
         self.pushed: list[dict] = []  # update_availability-Aufrufe
-        self.restrictions_pushed: list[dict] = []  # update_restrictions-Aufrufe
+        self.restrictions_pushed: list[dict] = []  # alle Werte, flach
+        # Je update_restrictions-Aufruf eine Liste — belegt die Zert-Forderung
+        # „1 API call" (die flache Liste allein zeigt Bündelung nicht).
+        self.restriction_calls: list[list[dict]] = []
         self.activated: list[str] = []
         self.deactivated: list[str] = []
         # Content-Sync-Aufzeichnung (create_*-Calls).
@@ -439,6 +442,7 @@ class _ImportChannex:
 
             raise ChannexError("Channex down", status_code=502)
         self.restrictions_pushed.extend(values)
+        self.restriction_calls.append(list(values))
         return {"data": values}
 
     def activate_channel(self, channel_id):  # noqa: ANN001, ANN201
@@ -1199,6 +1203,15 @@ def _seed_hotel_mapping(db, tenant_id="t1", channex_pid="cx-prop", property_id="
          "room_type_map_id": "hrt-b", "channex_rate_plan_id": "cx-rp-b",
          "local_rate_plan_id": "rp-b", "deleted_at": None},
     ])
+    # Lokale Pläne für den Reconciler (Soll-Kurve über den Resolver). Basispreis
+    # None = keine durchgehende Kurve, nur Datumspreise (Tests setzen ihn bei
+    # Bedarf, siehe test_reconcile_pushes_continuous_base_price).
+    db.tables["rate_plans"].extend([
+        {"id": "rp-a", "property_id": property_id, "base_price": None,
+         "currency": "USD", "created_at": "2026-01-01T00:00:00Z"},
+        {"id": "rp-b", "property_id": property_id, "base_price": None,
+         "currency": "USD", "created_at": "2026-01-02T00:00:00Z"},
+    ])
 
 
 def test_resolve_rate_plans_finds_hotel_room_type_plans() -> None:
@@ -1239,6 +1252,57 @@ def test_push_rates_batch_hotel_no_plan_id_hits_all() -> None:
           "min_stay": 3}],
     )
     assert {v["rate_plan_id"] for v in channex.restrictions_pushed} == {"cx-rp-a", "cx-rp-b"}
+
+
+def test_restriction_rows_hotel_stop_sell_targets_own_plans_one_call() -> None:
+    # Zertifizierung Test 6 (Stop Sell Update): drei Stop-Sells auf DREI
+    # verschiedene Rate-Plans an drei Daten — in EINEM Channex-Call. Jede Zeile
+    # darf nur ihren eigenen Plan treffen (BAR-Sperre darf B&B nicht mitsperren).
+    db = _ImportDB()
+    _seed_hotel_mapping(db)
+    channex = _ImportChannex()
+    _import_svc(channex, db).push_restriction_rows_for_property(
+        "t1", "p1",
+        [
+            {"date_from": "2099-11-14", "date_to": "2099-11-14",
+             "rate_plan_id": "rp-a", "stop_sell": True},
+            {"date_from": "2099-11-16", "date_to": "2099-11-16",
+             "rate_plan_id": "rp-b", "stop_sell": True},
+            {"date_from": "2099-11-20", "date_to": "2099-11-20",
+             "rate_plan_id": "rp-b", "stop_sell": True},
+        ],
+    )
+    # EIN gebündelter Request (Zert: „1 API call") mit genau 3 Werten.
+    assert len(channex.restriction_calls) == 1
+    assert [
+        (v["rate_plan_id"], v["date"], v["stop_sell"])
+        for v in channex.restrictions_pushed
+    ] == [
+        ("cx-rp-a", "2099-11-14", True),
+        ("cx-rp-b", "2099-11-16", True),
+        ("cx-rp-b", "2099-11-20", True),
+    ]
+    assert db.tables["ari_restriction_outbox"][0]["status"] == "done"
+
+
+def test_restriction_rows_cron_retry_keeps_rate_plan_targeting() -> None:
+    # Der Cron-Backstop baut die values aus dem persistierten payload NEU auf —
+    # ohne rate_plan_id im Payload spiegelte er die Sperre an ALLE Pläne zurück.
+    db = _ImportDB()
+    _seed_hotel_mapping(db)
+    db.tables["ari_restriction_outbox"].append({
+        "id": "r1", "tenant_id": "t1", "property_id": "p1",
+        "kind": "restriction_rows",
+        "payload": {"rows": [
+            {"date_from": "2099-11-14", "date_to": "2099-11-14",
+             "rate_plan_id": "rp-a", "stop_sell": True},
+        ]},
+        "date_from": "2099-11-14", "date_to": "2099-11-14",
+        "status": "pending", "attempts": 0,
+    })
+    channex = _ImportChannex()
+    _import_svc(channex, db).process_restriction_outbox()
+    assert [v["rate_plan_id"] for v in channex.restrictions_pushed] == ["cx-rp-a"]
 
 
 # --- Desired-State-Reconciler: DB-Soll ↔ Channex-Ist ------------------------
@@ -1294,6 +1358,44 @@ def test_reconcile_pushes_when_channex_missing_the_date() -> None:
     assert len(channex.restrictions_pushed) == 1
     assert channex.restrictions_pushed[0]["rate"] == 11100
     assert channex.restrictions_pushed[0]["rate_plan_id"] == "cx-rp-b"
+
+
+def test_full_sync_rate_segments_per_plan() -> None:
+    # Der Full-Sync baut die Kurve PRO Rate-Plan (getaggt mit rate_plan_id) —
+    # ein ungetaggtes Segment ginge in push_rates_batch an ALLE Pläne und würde
+    # B&B (120) flächig mit der BAR-Kurve (100) überschreiben.
+    db = _ImportDB()
+    _seed_hotel_mapping(db)
+    for rp in db.tables["rate_plans"]:
+        rp["base_price"] = 100.00 if rp["id"] == "rp-a" else 120.00
+    svc = _import_svc(_ImportChannex(), db)
+    start = date.today() + timedelta(days=1)
+    segs = svc._full_sync_rate_segments(db, "p1", start, start + timedelta(days=3))
+    assert len(segs) == 2  # je Plan EIN durchgehendes RLE-Segment
+    by_plan = {s["rate_plan_id"]: s for s in segs}
+    assert by_plan["rp-a"]["rate_cents"] == 10000
+    assert by_plan["rp-b"]["rate_cents"] == 12000
+
+
+def test_reconcile_pushes_continuous_base_price() -> None:
+    # Der DURCHGEHENDE Plan-Basispreis ist Teil des Solls (nicht nur die
+    # Datumspreise): Channex kennt gar keine Preise → JEDER Tag des Horizonts
+    # ist Drift und wird mit dem Basispreis dieses Plans nachgepusht — nie mit
+    # dem eines anderen Plans (B&B ≠ BAR).
+    db = _ImportDB()
+    _seed_hotel_mapping(db)
+    for rp in db.tables["rate_plans"]:
+        if rp["id"] == "rp-a":
+            rp["base_price"] = 120.00
+    channex = _ImportChannex(restrictions={"cx-rp-a": {}, "cx-rp-b": {}})
+    res = _import_svc(channex, db).reconcile_rate_plan_prices(
+        "t1", "p1", horizon_days=5
+    )
+    # 6 Tage (heute..+5) nur für rp-a — rp-b hat keinen Basispreis, kein Soll.
+    assert res["drift"] == 6
+    assert len(channex.restrictions_pushed) == 6
+    assert all(v["rate"] == 12000 for v in channex.restrictions_pushed)
+    assert {v["rate_plan_id"] for v in channex.restrictions_pushed} == {"cx-rp-a"}
 
 
 def test_reconcile_noop_when_all_in_sync() -> None:

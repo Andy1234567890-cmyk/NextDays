@@ -19,6 +19,10 @@ from src.jobs.queue import (
 )
 
 from .schemas import (
+    RateGridDay,
+    RateGridPlan,
+    RateGridResponse,
+    RateGridRoomType,
     RatePlanCreate,
     RatePlanListResponse,
     RatePlanMinStayDay,
@@ -82,9 +86,12 @@ class RatesService:
         return RatePlanResponse(
             id=r["id"],
             property_id=r["property_id"],
-            name=r.get("name") or "Standard",
+            # name/currency sind NOT NULL — kein erfundener Ersatz (Wurzel 4):
+            # fehlt die Währung je durch einen Datenfehler, rendert das Frontend
+            # symbollos (lib/currency) statt fälschlich EUR anzuzeigen.
+            name=r.get("name") or "",
             base_price=float(r.get("base_price") or 0),
-            currency=r.get("currency") or "EUR",
+            currency=r.get("currency") or "",
             min_stay=int(r.get("min_stay") or 1),
             room_type_id=r.get("room_type_id"),
             date_price_count=date_price_count,
@@ -174,6 +181,82 @@ class RatesService:
         ]
         return RatePlanListResponse(items=items, total=len(items))
 
+    _GRID_MAX_DAYS = 400  # Belegungsplan-Horizont; schützt vor Riesen-Ranges.
+
+    def rate_grid(
+        self, ctx: AuthContext, property_id: str, date_from: date, date_to: date
+    ) -> RateGridResponse:
+        """Hotel-Rate-Grid für den Belegungsplan: je Zimmerkategorie die Pläne mit
+        ihrer echten Tageskurve [date_from, date_to) aus dem zentralen Resolver —
+        dieselbe Wahrheit wie Quote und Channex-Push (kein zweiter Preis-Pfad)."""
+        from src.features.pricing.resolver import (  # noqa: PLC0415
+            PricingError,
+            PricingResolver,
+        )
+
+        tenant_id = self._require_tenant(ctx)
+        self._require_own_property(tenant_id, property_id)
+        if date_to <= date_from:
+            raise RateError("date_to muss nach date_from liegen.", status_code=422)
+        if (date_to - date_from).days > self._GRID_MAX_DAYS:
+            raise RateError("Zeitraum zu groß.", status_code=422)
+        room_types = (
+            self._db()
+            .table("room_types")
+            .select("id, title, position")
+            .eq("property_id", property_id)
+            .order("position")
+            .execute()
+        ).data or []
+        plans = (
+            self._db()
+            .table("rate_plans")
+            .select("*")
+            .eq("property_id", property_id)
+            .not_.is_("room_type_id", "null")
+            .order("created_at")
+            .execute()
+        ).data or []
+        ids = [p["id"] for p in plans if p.get("id")]
+        counts = self._date_price_counts(ids)
+        states = self._sync_states(ids)
+        resolver = PricingResolver(service_client=self._db())
+        by_room: dict[str, list[RateGridPlan]] = {}
+        for p in plans:
+            try:
+                days = resolver.effective_prices(
+                    property_id, date_from, date_to, rate_plan_id=p["id"]
+                )
+            except PricingError:
+                continue  # gelöschter/inkonsistenter Plan → Zeile weglassen
+            by_room.setdefault(str(p["room_type_id"]), []).append(
+                RateGridPlan(
+                    id=p["id"],
+                    name=p.get("name") or "",
+                    currency=p.get("currency") or "",
+                    base_price=float(p.get("base_price") or 0),
+                    min_stay=int(p.get("min_stay") or 1),
+                    sync_status=self._status_for(
+                        p["id"], counts.get(p["id"], 0), states
+                    ),
+                    days=[
+                        RateGridDay(date=d.date, price=d.price, source=d.source)
+                        for d in days
+                    ],
+                )
+            )
+        return RateGridResponse(
+            property_id=property_id,
+            room_types=[
+                RateGridRoomType(
+                    id=rt["id"], title=rt.get("title") or "",
+                    plans=by_room.get(str(rt["id"]), []),
+                )
+                for rt in room_types
+                if by_room.get(str(rt["id"]))
+            ],
+        )
+
     def create(self, ctx: AuthContext, req: RatePlanCreate) -> RatePlanResponse:
         tenant_id = self._require_tenant(ctx)
         prop = self._require_own_property(tenant_id, req.property_id)
@@ -217,28 +300,38 @@ class RatesService:
     def set_base_price(
         self, ctx: AuthContext, req: RatePlanCreate
     ) -> RatePlanResponse:
-        """Basispreis eines Objekts setzen: ersten Rate-Plan aktualisieren, sonst
-        anlegen (Upsert-Semantik in EINEM Server-Round-Trip). So landet der
-        Basispreis immer — auch beim ersten Speichern — ohne Race-Dublette aus
-        getrenntem List+POST/PATCH im Client."""
+        """Basispreis eines FeWo-Objekts setzen: den EINEN Plan aktualisieren,
+        sonst anlegen (Upsert-Semantik in EINEM Server-Round-Trip).
+
+        Nur für Objekte mit höchstens EINEM property-weiten Plan (FeWo). Ein
+        Hotel (mehrere Pläne / kategorie-gebundene Pläne) hat keinen einzelnen
+        „Objekt-Grundpreis" — dort MUSS pro Rate-Plan gepflegt werden; blindes
+        Upserten überschrieb früher Name/Preis/min_stay des zufällig ältesten
+        Plans (z. B. „BAR" → „Standard") und pushte das an die OTAs → 409.
+        Beim Update werden NUR base_price + currency angefasst: Name und
+        min_stay des bestehenden Plans sind fremde Pflege-Zustände (Wurzel 1).
+        """
         tenant_id = self._require_tenant(ctx)
         prop = self._require_own_property(tenant_id, req.property_id)
         existing = (
             self._db()
             .table("rate_plans")
-            .select("id")
+            .select("id, room_type_id")
             .eq("property_id", req.property_id)
             .order("created_at")
-            .limit(1)
+            .limit(2)
             .execute()
         ).data or []
-        patch = {
-            "name": req.name,
-            "base_price": req.base_price,
-            "currency": req.currency,
-            "min_stay": req.min_stay,
-        }
+        if len(existing) > 1 or (existing and existing[0].get("room_type_id")):
+            raise RateError(
+                "Dieses Objekt hat mehrere Preispläne — Preise werden pro "
+                "Zimmerkategorie/Rate-Plan gepflegt.", status_code=409,
+            )
         if existing:
+            patch: dict[str, object] = {
+                "base_price": req.base_price,
+                "currency": req.currency,
+            }
             row = (
                 self._db()
                 .table("rate_plans")
@@ -247,12 +340,19 @@ class RatesService:
                 .execute()
             ).data
             result = row[0] if row else {**patch, "id": existing[0]["id"],
+                                          "name": req.name, "min_stay": req.min_stay,
                                           "property_id": req.property_id}
         else:
             row = (
                 self._db()
                 .table("rate_plans")
-                .insert({"property_id": req.property_id, **patch})
+                .insert({
+                    "property_id": req.property_id,
+                    "name": req.name,
+                    "base_price": req.base_price,
+                    "currency": req.currency,
+                    "min_stay": req.min_stay,
+                })
                 .execute()
             ).data
             if not row:
@@ -261,6 +361,23 @@ class RatesService:
                 )
             result = row[0]
         self._sync_property(tenant_id, req.property_id, prop.get("title"), req.currency)
+        # Neuer Basispreis → Tageskurve bei Channex veraltet: Reconcile einreihen
+        # (coalesced; ohne Mapping zieht der 15-min-Tick nach dem Content-Sync nach).
+        try:
+            enqueue(
+                self._db(),
+                "reconcile_rate_plan_prices",
+                tenant_id=tenant_id,
+                payload={"tenant_id": tenant_id, "property_id": req.property_id},
+                dedup_key=dedup_key(
+                    tenant_id, req.property_id, "reconcile_rate_plan_prices"
+                ),
+            )
+        except Exception as exc:  # noqa: BLE001 — Einreihen kippt den Request nie
+            log.warning(
+                "rate_base_price_reconcile_enqueue_failed",
+                tenant_id=tenant_id, error=str(exc)[:200],
+            )
         log.info("rate_base_price_set", tenant_id=tenant_id, property_id=req.property_id)
         return self._row(result)
 
@@ -305,6 +422,28 @@ class RatesService:
             self._push_min_stay_restriction(
                 tenant_id, row["property_id"], patch["min_stay"]
             )
+        # Basispreis geändert → die durchgehende Tageskurve DIESES Plans bei
+        # Channex ist veraltet. Sofort einen Desired-State-Reconcile einreihen
+        # (coalesced je Objekt) statt auf den 15-min-Tick zu warten.
+        if "base_price" in patch:
+            try:
+                enqueue(
+                    self._db(),
+                    "reconcile_rate_plan_prices",
+                    tenant_id=tenant_id,
+                    payload={
+                        "tenant_id": tenant_id,
+                        "property_id": row["property_id"],
+                    },
+                    dedup_key=dedup_key(
+                        tenant_id, row["property_id"], "reconcile_rate_plan_prices"
+                    ),
+                )
+            except Exception as exc:  # noqa: BLE001 — Einreihen kippt den Request nie
+                log.warning(
+                    "rate_plan_reconcile_enqueue_failed",
+                    tenant_id=tenant_id, error=str(exc)[:200],
+                )
         log.info("rate_plan_updated", tenant_id=tenant_id, rate_plan_id=rate_plan_id)
         return self._row(row)
 

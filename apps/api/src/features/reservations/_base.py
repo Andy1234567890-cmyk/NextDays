@@ -494,8 +494,13 @@ class ReservationsBase:
         check_out: date,
         guests: int,
         channel: str,
+        rate_plan_id: str | None = None,
     ) -> QuoteResponse:
-        """Buchungs-Quote über den zentralen Resolver (eine Preis-Wahrheit)."""
+        """Buchungs-Quote über den zentralen Resolver (eine Preis-Wahrheit).
+
+        rate_plan_id (Hotel): der KONKRETE Plan der Buchung — ohne ihn bepreist
+        der Resolver property-weit (FeWo) und würde beim Hotel den falschen
+        (ältesten) Plan rechnen."""
         from src.features.pricing.resolver import PricingResolver
         from src.features.pricing.schemas import QuoteRequest
 
@@ -506,6 +511,7 @@ class ReservationsBase:
                 check_out=check_out,
                 guests=max(1, guests),
                 channel=channel,
+                rate_plan_id=rate_plan_id,
             )
         )
 

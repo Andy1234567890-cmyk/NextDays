@@ -8,7 +8,7 @@ from datetime import date
 
 from fastapi.testclient import TestClient
 
-from src.features.pricing.resolver import PricingResolver
+from src.features.pricing.resolver import PricingError, PricingResolver
 from src.features.pricing.schemas import QuoteRequest
 from src.main import create_app
 
@@ -247,6 +247,58 @@ def test_effective_base_when_config_table_missing() -> None:
 
 
 # --- Quote-Aufschlüsselung ---------------------------------------------------
+
+
+def test_quote_rate_plan_prices_and_currency_win() -> None:
+    # Hotel: mit rate_plan_id bepreist der Quote DIESEN Plan — Basispreis,
+    # dessen Datumspreise UND dessen Währung (sie ist die Verkaufs-Wahrheit,
+    # config.currency darf sie nicht verdrängen).
+    tables = {
+        "rate_plans": [{"base_price": 80, "currency": "USD"}],
+        "price_overrides": [],
+        "property_pricing_config": [{"currency": "EUR"}],
+        "dynamic_prices": [],
+        "property_addons": [],
+        "rate_plan_price_overrides": [{"date": "2026-07-02", "price": 150}],
+    }
+    r = PricingResolver(service_client=_DB(tables))
+    q = r.quote(
+        QuoteRequest(
+            property_id="p",
+            check_in=date(2026, 7, 1),
+            check_out=date(2026, 7, 3),
+            guests=2,
+            rate_plan_id="rp-1",
+        )
+    )
+    assert q.nightly_total == 230.0  # 80 (Basis) + 150 (Plan-Datumspreis)
+    assert q.currency == "USD"
+
+
+def test_quote_foreign_rate_plan_422() -> None:
+    # Fremder/nicht existenter Plan ist ein Datenfehler des Aufrufers — 422,
+    # NIE stiller Fallback auf den ältesten Plan (falscher Preis).
+    tables = {
+        "rate_plans": [],
+        "price_overrides": [],
+        "property_pricing_config": [],
+        "dynamic_prices": [],
+        "property_addons": [],
+        "rate_plan_price_overrides": [],
+    }
+    r = PricingResolver(service_client=_DB(tables))
+    try:
+        r.quote(
+            QuoteRequest(
+                property_id="p",
+                check_in=date(2026, 7, 1),
+                check_out=date(2026, 7, 3),
+                rate_plan_id="rp-fremd",
+            )
+        )
+        raise AssertionError("sollte 422 werfen")
+    except PricingError as exc:
+        assert exc.status_code == 422
 
 
 def test_quote_priceless_without_rate_plan() -> None:

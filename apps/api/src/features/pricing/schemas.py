@@ -38,6 +38,9 @@ class QuoteRequest(BaseModel):
     guests: int = Field(default=1, ge=1)
     # Kanal bestimmt den Markup-Aufschlag (direct = kein Markup).
     channel: str = "direct"
+    # Hotel: der KONKRETE Rate-Plan der Buchung (BAR vs. B&B kosten verschieden).
+    # Ohne ihn wird property-weit bepreist (FeWo: das eine Objekt-Rate-Plan).
+    rate_plan_id: str | None = None
     # Optionale Zusatzleistungen (Upsells); werden nach Basis + Steuer als eigene
     # Positionen in die Aufschlüsselung gerechnet.
     addons: list[AddonSelection] = Field(default_factory=list)

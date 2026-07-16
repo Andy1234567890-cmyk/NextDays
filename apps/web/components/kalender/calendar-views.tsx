@@ -5,6 +5,7 @@
 // Monatsgitter, Auslastung. Die aktive Ansicht wird in der URL (?view=)
 // persistiert, damit ein Reload/Teilen denselben Blick öffnet. Die Zusatzviews
 // werden lazy geladen, so dass der Standard-Timeline-Blick nicht verzögert wird.
+import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useRef } from "react";
@@ -27,14 +28,21 @@ const CalendarOccupancyView = dynamic(
   () => import("@/components/kalender/views/occupancy-view").then((m) => m.CalendarOccupancyView),
   { loading: () => <ViewSkeleton /> },
 );
+const CalendarRatesView = dynamic(
+  () => import("@/components/kalender/views/rates-view").then((m) => m.CalendarRatesView),
+  { loading: () => <ViewSkeleton /> },
+);
 
 // Nutzerverständliche Labels (kein Fachjargon wie „Timeline"). Der `key` bleibt
-// der technische Identifier (URL/Logik), nur das Label ist für den Nutzer.
+// der technische Identifier (URL/Logik), das Label wird über t() aufgelöst.
 const VIEWS = [
-  { key: "timeline", label: "Belegungsplan" },
-  { key: "bookings", label: "Buchungen" },
-  { key: "month", label: "Monatsgitter" },
-  { key: "occupancy", label: "Auslastung" },
+  { key: "timeline", labelKey: "timeline" },
+  { key: "bookings", labelKey: "bookings" },
+  { key: "month", labelKey: "month" },
+  { key: "occupancy", labelKey: "occupancy" },
+  // Hotel-Rate-Grid (Preise je Kategorie × Rate-Plan) — nur bei Hotel-Zugang
+  // sichtbar (FeWo pflegt Preise am Objekt, kein Plan-Grid nötig).
+  { key: "rates", labelKey: "rates", hotelOnly: true },
 ] as const;
 
 type ViewKey = (typeof VIEWS)[number]["key"];
@@ -58,6 +66,7 @@ export function CalendarViews({
   // Betriebsart (0090): steuert die Typ-Filter-Liste im Belegungsplan.
   accommodationType?: "vacation_rental" | "hotel" | null;
 }) {
+  const t = useTranslations("calendar");
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -100,15 +109,17 @@ export function CalendarViews({
     <NativeSelect
       value={active}
       onChange={(e) => setView(e.target.value as ViewKey)}
-      aria-label="Ansicht"
+      aria-label={t("calendarViews.viewLabel")}
       className="h-9 w-auto rounded-full font-medium"
     >
       <option value="" disabled>
-        Ansicht wählen…
+        {t("calendarViews.chooseView")}
       </option>
-      {VIEWS.map((v) => (
+      {VIEWS.filter(
+        (v) => !("hotelOnly" in v && v.hotelOnly) || accommodationType === "hotel",
+      ).map((v) => (
         <option key={v.key} value={v.key}>
-          {v.label}
+          {t(`calendarViews.views.${v.labelKey}`)}
         </option>
       ))}
     </NativeSelect>
@@ -135,6 +146,7 @@ export function CalendarViews({
           {active === "bookings" && <CalendarBookingsView properties={properties} />}
           {active === "month" && <CalendarMonthGridView properties={properties} />}
           {active === "occupancy" && <CalendarOccupancyView properties={properties} />}
+          {active === "rates" && <CalendarRatesView properties={properties} />}
         </>
       )}
     </div>
@@ -142,9 +154,10 @@ export function CalendarViews({
 }
 
 function ViewSkeleton() {
+  const t = useTranslations("calendar");
   return (
     <div className="flex items-center justify-center py-16 text-sm text-muted-foreground">
-      Lädt…
+      {t("calendarViews.loading")}
     </div>
   );
 }

@@ -80,6 +80,9 @@ class _Query:
             row.setdefault("id", "rp-new")
             self._db.inserted.setdefault(self._name, []).append(row)
             r.data = [row]
+        elif self._op == "update":
+            self._db.updated.setdefault(self._name, []).append(dict(self._payload))
+            r.data = self._db.canned.get(self._name, [])
         elif self._op == "upsert":
             self._db.upserted.setdefault(self._name, []).extend(self._payload)
             r.data = list(self._payload)
@@ -95,6 +98,7 @@ class _FakeDB:
     def __init__(self, canned) -> None:  # noqa: ANN001
         self.canned = canned
         self.inserted: dict = {}
+        self.updated: dict = {}
         self.upserted: dict = {}
         self.deleted: list = []
 
@@ -104,6 +108,60 @@ class _FakeDB:
 
 def _svc(canned) -> RatesService:  # noqa: ANN001
     return RatesService(service_client=_FakeDB(canned))
+
+
+def test_set_base_price_multi_plan_409() -> None:
+    # Hotel (mehrere Pläne): der Objekt-Grundpreis-Upsert darf NIE einen der
+    # Pläne überschreiben (früher: ältester Plan wurde auf „Standard" umbenannt).
+    svc = _svc({
+        "properties": [{"id": "p-1", "title": "Hotel"}],
+        "rate_plans": [
+            {"id": "rp-1", "room_type_id": "rt-1"},
+            {"id": "rp-2", "room_type_id": "rt-1"},
+        ],
+    })
+    try:
+        svc.set_base_price(
+            _ctx(), RatePlanCreate(property_id="p-1", base_price=50, currency="USD")
+        )
+        raise AssertionError("sollte 409 werfen")
+    except RateError as exc:
+        assert exc.status_code == 409
+
+
+def test_set_base_price_room_typed_plan_409() -> None:
+    # Auch EIN Plan, der an eine Zimmerkategorie gebunden ist, ist kein
+    # Objekt-Grundpreis — Pflege gehört in die Kategorie.
+    svc = _svc({
+        "properties": [{"id": "p-1", "title": "Hotel"}],
+        "rate_plans": [{"id": "rp-1", "room_type_id": "rt-1"}],
+    })
+    try:
+        svc.set_base_price(
+            _ctx(), RatePlanCreate(property_id="p-1", base_price=50, currency="USD")
+        )
+        raise AssertionError("sollte 409 werfen")
+    except RateError as exc:
+        assert exc.status_code == 409
+
+
+def test_set_base_price_updates_only_price_and_currency() -> None:
+    # FeWo (ein property-weiter Plan): Update fasst NUR base_price + currency an —
+    # Name und min_stay sind fremde Pflege-Zustände (Wurzel 1).
+    canned = {
+        "properties": [{"id": "p-1", "title": "Villa"}],
+        "rate_plans": [{
+            "id": "rp-1", "property_id": "p-1", "name": "Sommer",
+            "base_price": 80, "currency": "USD", "min_stay": 3,
+            "room_type_id": None,
+        }],
+    }
+    svc = _svc(canned)
+    svc.set_base_price(
+        _ctx(), RatePlanCreate(property_id="p-1", base_price=99, currency="USD")
+    )
+    db = svc._db()  # noqa: SLF001 — Test prüft den geschriebenen Patch
+    assert db.updated["rate_plans"] == [{"base_price": 99.0, "currency": "USD"}]
 
 
 def test_create_rate_plan_writes_row() -> None:
@@ -185,7 +243,7 @@ def test_resync_prices_foreign_plan_404() -> None:
 def test_create_rate_plan_foreign_property_404() -> None:
     svc = _svc({"properties": []})  # Property gehört nicht dem Tenant
     try:
-        svc.create(_ctx(), RatePlanCreate(property_id="p-x", base_price=100))
+        svc.create(_ctx(), RatePlanCreate(property_id="p-x", base_price=100, currency="USD"))
         raise AssertionError("sollte 404 werfen")
     except RateError as exc:
         assert exc.status_code == 404
@@ -194,7 +252,10 @@ def test_create_rate_plan_foreign_property_404() -> None:
 def test_create_rate_plan_requires_tenant() -> None:
     svc = _svc({"properties": [{"id": "p-1", "title": "Villa"}]})
     try:
-        svc.create(_ctx(tenant=None), RatePlanCreate(property_id="p-1", base_price=100))
+        svc.create(
+            _ctx(tenant=None),
+            RatePlanCreate(property_id="p-1", base_price=100, currency="USD"),
+        )
         raise AssertionError("sollte fehlschlagen")
     except RateError as exc:
         assert exc.status_code == 400

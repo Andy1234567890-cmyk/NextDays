@@ -411,15 +411,37 @@ class FullSyncMixin:
         self, db: Client, property_id: str, start: date, end: date
     ) -> list[dict[str, Any]]:
         """Effektivpreise des Horizonts (zentraler Resolver) → RLE-Segmente für
-        push_rates_batch. Tage ohne auflösbaren Preis werden übersprungen
-        (Wurzel 4: kein erfundener Preis, kein 0-€-Verkauf) und unterbrechen
-        den Run. min_stay bleibt hier None — Mindestaufenthalt wird property-
-        weit über den Rate-Plan (Content-Sync/rates-Events) gepflegt."""
+        push_rates_batch, PRO Rate-Plan. Jeder Plan hat seine eigene Kurve
+        (Datumspreis > Objekt-Override > Dynamic > Wochentag > Plan-Basispreis);
+        ein Segment ohne rate_plan_id ginge in push_rates_batch an ALLE Pläne
+        und würde B&B/BAR flächig mit derselben (falschen) Kurve überschreiben.
+        Tage ohne auflösbaren Preis werden übersprungen (Wurzel 4: kein
+        erfundener Preis, kein 0-€-Verkauf) und unterbrechen den Run. min_stay
+        bleibt hier None — Mindestaufenthalt läuft über die rates-Events."""
         from src.features.pricing.resolver import PricingResolver
 
-        days = PricingResolver(service_client=db).effective_prices(
-            property_id, start, end + timedelta(days=1)
-        )
+        plans = (
+            db.table("rate_plans")
+            .select("id")
+            .eq("property_id", property_id)
+            .order("created_at")
+            .execute()
+        ).data or []
+        resolver = PricingResolver(service_client=db)
+        segments: list[dict[str, Any]] = []
+        for plan in plans:
+            days = resolver.effective_prices(
+                property_id, start, end + timedelta(days=1),
+                rate_plan_id=plan["id"],
+            )
+            segments.extend(self._rle_rate_segments(days, plan["id"]))
+        return segments
+
+    @staticmethod
+    def _rle_rate_segments(
+        days: list[Any], rate_plan_id: str
+    ) -> list[dict[str, Any]]:
+        """Tagespreise eines Plans zu RLE-Segmenten (gleicher Preis → 1 Intervall)."""
         segments: list[dict[str, Any]] = []
         run_start: date | None = None
         run_price_cents: int | None = None
@@ -432,6 +454,7 @@ class FullSyncMixin:
                         "date_from": run_start,
                         "date_to": last_day,
                         "rate_cents": run_price_cents,
+                        "rate_plan_id": rate_plan_id,
                     }
                 )
 

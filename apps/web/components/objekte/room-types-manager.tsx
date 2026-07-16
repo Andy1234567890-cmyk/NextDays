@@ -39,8 +39,6 @@ import {
 } from "@/lib/room-types";
 import { useRealtime } from "@/lib/use-realtime";
 
-import { RatePlanMinStayCalendar } from "./rate-plan-minstay-calendar";
-import { RatePlanPriceCalendar } from "./rate-plan-price-calendar";
 
 type RoomDraft = {
   title: string;
@@ -996,30 +994,8 @@ export function RoomTypesManager({
                     onChange={(e) => setRateDraft({ ...rateDraft, minStay: e.target.value })}
                   />
                 </div>
-                {rateEditing && (
-                  <div className="flex flex-col gap-1.5">
-                    <Label>{t("pricesByDate")}</Label>
-                    <p className="text-sm text-muted-foreground">
-                      {t("pricesByDateHint")}
-                    </p>
-                    <RatePlanPriceCalendar
-                      ratePlanId={(rateEditing.plan as RatePlan).id}
-                      currency={rateDraft.currency}
-                      syncStatus={(rateEditing.plan as RatePlan).sync_status}
-                    />
-                  </div>
-                )}
-                {rateEditing && (
-                  <div className="flex flex-col gap-1.5">
-                    <Label>{t("minStayByDate")}</Label>
-                    <p className="text-sm text-muted-foreground">
-                      {t("minStayByDateHint")}
-                    </p>
-                    <RatePlanMinStayCalendar
-                      ratePlanId={(rateEditing.plan as RatePlan).id}
-                    />
-                  </div>
-                )}
+                {/* Datumspreise + datumsgenauer Min-Stay wohnen im Preise-Tab
+                    (HotelRateGrid) — hier bleibt die Struktur des Plans. */}
                 {error && <p className="text-sm text-destructive">{error}</p>}
               </div>
               <SheetFooter>

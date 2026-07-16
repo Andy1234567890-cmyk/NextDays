@@ -331,6 +331,9 @@ export async function unassignSeason(
 export type RestrictionRow = {
   start: string; // YYYY-MM-DD
   end: string; // YYYY-MM-DD (exklusiv)
+  // Hotel: Zeile gilt nur für diesen Preisplan (Twin/BAR ≠ Double/B&B am selben
+  // Tag). Weglassen = Objekt-Ebene (Ferienwohnung) → alle Pläne.
+  rate_plan_id?: string;
   price?: number;
   min_stay?: number;
   max_stay?: number;

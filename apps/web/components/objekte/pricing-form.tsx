@@ -7,7 +7,7 @@
 // Gespeichert per updateProperty() in type_attributes.pricing.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   ChannelLogo,
@@ -18,6 +18,7 @@ import {
   Pill,
   useSaver,
 } from "@/components/objekte/editor-primitives";
+import { HotelRateGrid } from "@/components/objekte/hotel-rate-grid";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -59,7 +60,8 @@ import {
   readPricing,
 } from "@/lib/pricing-meta";
 import { type Property, updateProperty } from "@/lib/properties";
-import { setBasePrice } from "@/lib/rates";
+import { listRatePlans, setBasePrice, type RatePlan } from "@/lib/rates";
+import { useRealtime } from "@/lib/use-realtime";
 
 type Section =
   | "base"
@@ -80,7 +82,30 @@ export function PricingForm({ initial }: { initial: Property }) {
   const [p, setP] = useState<Property>(initial);
   const [section, setSection] = useState<Section>(null);
   const pr = readPricing(p.type_attributes);
-  const cur = pr.currency;
+
+  // Grundpreis-Wahrheit ist rate_plans (Resolver/Channex lesen NUR dort) — die
+  // Anzeige spiegelt den Plan, nicht die type_attributes-Kopie. Hotel (mehrere
+  // Pläne / kategorie-gebundene Pläne): kein einzelner Objekt-Grundpreis, die
+  // Pflege liegt in den Zimmerkategorien (Backend erzwingt das mit 409).
+  const [plans, setPlans] = useState<RatePlan[]>([]);
+  const loadPlans = useCallback(async () => {
+    const res = await listRatePlans(p.id);
+    if (res.ok) setPlans(res.data.items);
+  }, [p.id]);
+  useEffect(() => {
+    void loadPlans();
+  }, [loadPlans]);
+  useRealtime({
+    table: "rate_plans",
+    filter: `property_id=eq.${p.id}`,
+    onChange: () => void loadPlans(),
+  });
+  const multiPlan = plans.length > 1 || plans.some((pl) => pl.room_type_id);
+  const basePlan = multiPlan ? null : (plans[0] ?? null);
+  // rate_plans.currency ist als text gespeichert; die UI kennt nur den
+  // Currency-Union — leere/unbekannte Werte rendern symbollos (lib/currency).
+  const cur = ((basePlan?.currency ?? pr.currency) || "") as Currency | "";
+  const shownBasePrice = basePlan ? basePlan.base_price : pr.basePrice;
 
   async function save(next: Pricing): Promise<true | string> {
     const res = await updateProperty(p.id, {
@@ -89,11 +114,14 @@ export function PricingForm({ initial }: { initial: Property }) {
     if (!res.ok) return res.error;
     setP(res.data);
     setSection(null);
-    // Basispreis zusätzlich als rate_plan persistieren — das ist die Channex-
-    // Wahrheit und schließt die Kette (Sync, Verbinden, Kalender).
-    if (next.basePrice > 0) {
+    // Basispreis in rate_plans persistieren — die eine Preis-Wahrheit (Resolver,
+    // Channex, Kalender). Auch 0 wird gespiegelt (Zurücksetzen muss wirken);
+    // ohne gewählte Währung kein Push (Backend lehnt leere Währung ab, 422).
+    // Hotels nie: dort pflegt der Zimmerkategorien-Editor die Pläne.
+    if (!multiPlan && next.currency) {
       const rp = await setBasePrice(p.id, next.basePrice, next.currency);
       if (!rp.ok) return rp.error;
+      void loadPlans();
     }
     return true;
   }
@@ -111,13 +139,21 @@ export function PricingForm({ initial }: { initial: Property }) {
           </p>
         </div>
 
-        <BlockCard
-          title={t("pricingForm.basePriceTitle")}
-          hint={t("pricingForm.basePriceHint")}
-          onEdit={() => setSection("base")}
-        >
-          <Pill>{fmtPrice(pr.basePrice, cur)}</Pill>
-        </BlockCard>
+        {multiPlan ? (
+          // Hotel: die Preispflege der Pläne wohnt HIER (Rate-Grid: Zeile pro
+          // Kategorie × Plan; Grundpreis, Datumspreise, Min-Stay, Sync-Status).
+          // Zimmerkategorien behält nur die Struktur; das Backend lehnt den
+          // Objekt-Grundpreis-Upsert mit 409 ab.
+          <HotelRateGrid propertyId={p.id} />
+        ) : (
+          <BlockCard
+            title={t("pricingForm.basePriceTitle")}
+            hint={t("pricingForm.basePriceHint")}
+            onEdit={() => setSection("base")}
+          >
+            <Pill>{fmtPrice(shownBasePrice, cur)}</Pill>
+          </BlockCard>
+        )}
 
         <BlockCard
           title={t("pricingForm.markupTitle")}
@@ -362,7 +398,15 @@ export function PricingForm({ initial }: { initial: Property }) {
       </section>
 
       {/* Editoren */}
-      {section === "base" && <BaseEditor pr={pr} onSave={save} onClose={() => setSection(null)} />}
+      {section === "base" && (
+        <BaseEditor
+          // Editor mit der Plan-Wahrheit vorbelegen (rate_plans), nicht mit der
+          // type_attributes-Kopie — sonst editiert man einen veralteten Wert.
+          pr={basePlan ? { ...pr, basePrice: basePlan.base_price, currency: (basePlan.currency || pr.currency) as Pricing["currency"] } : pr}
+          onSave={save}
+          onClose={() => setSection(null)}
+        />
+      )}
       {section === "markup" && <MarkupEditor pr={pr} onSave={save} onClose={() => setSection(null)} />}
       {section === "extraGuest" && <ExtraGuestEditor pr={pr} onSave={save} onClose={() => setSection(null)} />}
       {section === "shortStay" && <ShortStayEditor pr={pr} onSave={save} onClose={() => setSection(null)} />}

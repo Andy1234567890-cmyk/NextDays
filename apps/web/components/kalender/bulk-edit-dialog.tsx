@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MultiSelect } from "@/components/ui/multi-select";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Segmented } from "@/components/ui/segmented";
 import { type RestrictionRow, bulkEdit, bulkRestrictions } from "@/lib/calendar";
 
@@ -28,6 +29,7 @@ export function BulkEditDialog({
   end,
   primaryProperty,
   allProperties,
+  ratePlans,
   onClose,
   onApplied,
 }: {
@@ -37,6 +39,10 @@ export function BulkEditDialog({
   end: string; // YYYY-MM-DD (exklusiv)
   primaryProperty: { id: string; title: string };
   allProperties: { id: string; title: string }[];
+  // Hotel: Preispläne des primären Objekts — erlaubt im Zeilen-Modus, jede Zeile
+  // einem Plan zuzuordnen (Twin/BAR ≠ Double/B&B). Leer/undefined = Objekt-Ebene
+  // (Ferienwohnung), dann gilt jede Zeile für alle Pläne.
+  ratePlans?: { id: string; label: string }[];
   onClose: () => void;
   onApplied: () => void;
 }) {
@@ -179,6 +185,7 @@ export function BulkEditDialog({
         {mode === "rows" ? (
           <RowsEditor
             propertyTitle={primaryProperty.title}
+            ratePlans={ratePlans}
             rows={rows}
             setRows={setRows}
           />
@@ -396,19 +403,25 @@ export function BulkEditDialog({
 // alles in EINEM Portale-Call. Für Häuser mit vielen Zimmern/Saisons (Hotel-Fall).
 function RowsEditor({
   propertyTitle,
+  ratePlans,
   rows,
   setRows,
 }: {
   propertyTitle: string;
+  ratePlans?: { id: string; label: string }[];
   rows: RestrictionRow[];
   setRows: (r: RestrictionRow[]) => void;
 }) {
+  const hasPlans = (ratePlans?.length ?? 0) > 0;
   function patch(i: number, next: Partial<RestrictionRow>) {
     setRows(rows.map((r, idx) => (idx === i ? { ...r, ...next } : r)));
   }
   function addRow() {
     const last = rows[rows.length - 1];
-    setRows([...rows, { start: last.start, end: last.end }]);
+    // Den Plan der letzten Zeile übernehmen — beim Aufbau mehrerer Zeilen für
+    // dieselbe Kategorie spart das die erneute Auswahl.
+    setRows([...rows, { start: last.start, end: last.end,
+      ...(last.rate_plan_id ? { rate_plan_id: last.rate_plan_id } : {}) }]);
   }
   function removeRow(i: number) {
     setRows(rows.filter((_, idx) => idx !== i));
@@ -442,6 +455,24 @@ function RowsEditor({
               </button>
             )}
           </div>
+          {hasPlans && (
+            <div className="flex flex-col gap-1">
+              <Label className="text-xs">Zimmerkategorie / Preisplan</Label>
+              <NativeSelect
+                value={r.rate_plan_id ?? ""}
+                onChange={(e) =>
+                  patch(i, { rate_plan_id: e.target.value || undefined })
+                }
+              >
+                <option value="">Alle Preispläne</option>
+                {ratePlans?.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.label}
+                  </option>
+                ))}
+              </NativeSelect>
+            </div>
+          )}
           <div className="grid grid-cols-2 gap-2">
             <div className="flex flex-col gap-1">
               <Label className="text-xs">Von</Label>

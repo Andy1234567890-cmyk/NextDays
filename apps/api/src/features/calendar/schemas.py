@@ -310,6 +310,10 @@ class RestrictionRow(BaseModel):
     DateRange, hier als von/bis; end exklusiv). Beliebige Kombination gesetzter
     Felder — nur gesetzte werden an Channex gesendet."""
     range: DateRange
+    # Hotel: Zeile gilt für GENAU diesen Rate-Plan (Twin/BAR ≠ Double/B&B am
+    # selben Tag). None = Objekt-Ebene (Ferienwohnung) → alle Pläne. Der Plan
+    # wird serverseitig gegen das Objekt geprüft (Wurzel 3), nie geglaubt.
+    rate_plan_id: str | None = None
     price: float | None = Field(default=None, ge=0)  # fester Nachtpreis
     min_stay: int | None = Field(default=None, ge=1)
     max_stay: int | None = Field(default=None, ge=0)

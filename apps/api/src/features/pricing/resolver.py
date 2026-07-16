@@ -195,6 +195,31 @@ class PricingResolver:
             return None, None
         return _to_float(res[0].get("base_price")), res[0].get("currency") or None
 
+    def _load_rate_plan_by_id(
+        self, property_id: str, rate_plan_id: str
+    ) -> tuple[float | None, str | None]:
+        """Basispreis + Währung EINES konkreten Rate-Plans, an das Objekt gebunden.
+
+        Der property_id-Filter ist der Scope-Backstop (Service-Role umgeht RLS):
+        ein fremder/gelöschter Plan ist ein Datenfehler des Aufrufers → 422,
+        NIE stiller Fallback auf den ältesten Plan (der wäre der falsche Preis).
+        """
+        res = (
+            self._db()
+            .table("rate_plans")
+            .select("base_price, currency")
+            .eq("id", rate_plan_id)
+            .eq("property_id", property_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not res:
+            raise PricingError(
+                "Rate-Plan gehört nicht zu diesem Objekt oder existiert nicht.",
+                status_code=422,
+            )
+        return _to_float(res[0].get("base_price")), res[0].get("currency") or None
+
     def _load_overrides(
         self, property_id: str, check_in: date, check_out: date
     ) -> dict[str, float]:
@@ -288,12 +313,14 @@ class PricingResolver:
         overrides = self._load_overrides(property_id, day, nxt)
         dynamic = self._load_dynamic(property_id, day, nxt)
         config = self._load_config(property_id)
-        base, _currency = self._load_rate_plan(property_id)
-        rp_over = (
-            self._load_rate_plan_overrides(rate_plan_id, day, nxt)
-            if rate_plan_id
-            else {}
-        )
+        # Mit rate_plan_id ist DESSEN Basispreis die durchgehende Grundlinie —
+        # nie der zufällig älteste Plan des Objekts (B&B ≠ BAR).
+        if rate_plan_id:
+            base, _currency = self._load_rate_plan_by_id(property_id, rate_plan_id)
+            rp_over = self._load_rate_plan_overrides(rate_plan_id, day, nxt)
+        else:
+            base, _currency = self._load_rate_plan(property_id)
+            rp_over = {}
         return self._effective_for_day(day, overrides, dynamic, config, base, rp_over)
 
     @staticmethod
@@ -339,17 +366,20 @@ class PricingResolver:
     ) -> list[EffectivePriceDay]:
         """Effektivpreise für jeden Tag [check_in, check_out) in EINEM Lauf.
 
-        `rate_plan_id` optional (siehe effective_price): gesetzt → dessen
-        datumsgenaue Preise gewinnen; None → property-weit wie bisher."""
+        `rate_plan_id` optional (siehe effective_price): gesetzt → DESSEN
+        Basispreis ist die durchgehende Grundlinie und dessen datumsgenaue
+        Preise gewinnen; None → property-weit wie bisher."""
         overrides = self._load_overrides(property_id, check_in, check_out)
         dynamic = self._load_dynamic(property_id, check_in, check_out)
         config = self._load_config(property_id)
-        base, _currency = self._load_rate_plan(property_id)
-        rp_over = (
-            self._load_rate_plan_overrides(rate_plan_id, check_in, check_out)
-            if rate_plan_id
-            else {}
-        )
+        if rate_plan_id:
+            base, _currency = self._load_rate_plan_by_id(property_id, rate_plan_id)
+            rp_over = self._load_rate_plan_overrides(
+                rate_plan_id, check_in, check_out
+            )
+        else:
+            base, _currency = self._load_rate_plan(property_id)
+            rp_over = {}
         return [
             self._effective_for_day(day, overrides, dynamic, config, base, rp_over)
             for day in _nights(check_in, check_out)
@@ -480,14 +510,28 @@ class PricingResolver:
         nights = _nights(req.check_in, req.check_out)
         n = len(nights)
         config = self._load_config(req.property_id)
-        base, rp_currency = self._load_rate_plan(req.property_id)
+        # Hotel: der konkrete Plan der Buchung bestimmt Basispreis, Währung und
+        # die datumsgenauen Plan-Preise — nie der zufällig älteste Plan des
+        # Objekts. FeWo (ohne rate_plan_id): das eine Objekt-Rate-Plan wie bisher.
+        if req.rate_plan_id:
+            base, rp_currency = self._load_rate_plan_by_id(
+                req.property_id, req.rate_plan_id
+            )
+            rp_over = self._load_rate_plan_overrides(
+                req.rate_plan_id, req.check_in, req.check_out
+            )
+        else:
+            base, rp_currency = self._load_rate_plan(req.property_id)
+            rp_over = {}
         overrides = self._load_overrides(req.property_id, req.check_in, req.check_out)
         dynamic = self._load_dynamic(req.property_id, req.check_in, req.check_out)
-        currency = config.currency or rp_currency or ""
+        # Rate-Plan-Währung gewinnt: sie ist die Verkaufs-Wahrheit (Channex pusht
+        # in ihr). config.currency greift nur, wenn kein Plan existiert.
+        currency = rp_currency or config.currency or ""
 
         # 1) Übernachtungssumme aus Effektiv-Tagespreisen.
         per_day = [
-            self._effective_for_day(day, overrides, dynamic, config, base)
+            self._effective_for_day(day, overrides, dynamic, config, base, rp_over)
             for day in nights
         ]
         priced = [d.price for d in per_day if d.price is not None]

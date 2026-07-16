@@ -77,6 +77,16 @@ class WritesMixin(ReservationsBase):
                     "Zimmerkategorie nicht gefunden.", status_code=404
                 )
 
+        # 1c) Rate-Plan auflösen (0151). Übergeben → serverseitig scopen (muss zu
+        #     Property UND ggf. Kategorie gehören — Wurzel 3, kein Vertrauen in
+        #     die Anfrage). Nicht übergeben, aber Hotel-Kategorie gesetzt → der
+        #     älteste Plan der Kategorie als deterministischer Default; sonst
+        #     bepreiste der Quote den zufällig ältesten Plan des ganzen Objekts
+        #     (falscher Preis, falsche Währung).
+        rate_plan_id = self._resolve_rate_plan(
+            tenant_id, req.property_id, req.room_type_id, req.rate_plan_id
+        )
+
         # 2) Double-Booking-Vorcheck (früher UX-Guard). NUR fürs Ferienwohnungs-
         #    Modell (binäre availability). Bei Hotels (room_type_id gesetzt) ist
         #    die binäre availability-Tabelle irrelevant — dort schützt der
@@ -139,7 +149,8 @@ class WritesMixin(ReservationsBase):
             req.guests.adults + req.guests.children + req.guests.infants
         )
         quote = self._quote(
-            req.property_id, req.check_in, req.check_out, total_guests, req.channel.value
+            req.property_id, req.check_in, req.check_out, total_guests,
+            req.channel.value, rate_plan_id=rate_plan_id,
         )
         total_amount = req.total_amount if req.total_amount > 0 else quote.total
         currency = quote.currency
@@ -169,6 +180,9 @@ class WritesMixin(ReservationsBase):
             # None bei Ferienwohnungen (Spalte bleibt leer, RPC nutzt binären
             # Pfad); gesetzt bei Hotels → RPC führt den Zimmertyp-Zähler (0141).
             **({"room_type_id": req.room_type_id} if req.room_type_id else {}),
+            # Der bepreiste Rate-Plan (0151) — Preis-Wahrheit der Buchung, damit
+            # Reprice/Anzeige denselben Plan rechnen wie die Erstbepreisung.
+            **({"rate_plan_id": rate_plan_id} if rate_plan_id else {}),
             "check_in": req.check_in.isoformat(),
             "check_out": req.check_out.isoformat(),
             "status": req.status.value,
@@ -272,6 +286,53 @@ class WritesMixin(ReservationsBase):
             ota_name=mask.source_value(row.get("ota_name")),
             external_ref=row.get("external_ref"),
         )
+
+    def _resolve_rate_plan(
+        self,
+        tenant_id: str,
+        property_id: str,
+        room_type_id: str | None,
+        rate_plan_id: str | None,
+    ) -> str | None:
+        """Rate-Plan der Buchung bestimmen (0151).
+
+        Übergeben → MUSS zu Property (+ Kategorie, falls gesetzt) gehören, sonst
+        422 (Wurzel 3: Scope serverseitig, kein stiller Fallback auf einen
+        anderen Plan — das wäre der falsche Preis). Nicht übergeben → bei
+        Hotel-Kategorie der älteste Plan der Kategorie (deterministischer
+        Default), bei FeWo None (property-weites Bepreisen wie bisher).
+        """
+        db = self._db()
+        if rate_plan_id:
+            q = (
+                db.table("rate_plans")
+                .select("id, room_type_id, properties!inner(tenant_id)")
+                .eq("id", rate_plan_id)
+                .eq("property_id", property_id)
+                .eq("properties.tenant_id", tenant_id)
+                .limit(1)
+                .execute()
+            ).data or []
+            if not q or (
+                room_type_id and q[0].get("room_type_id") not in (None, room_type_id)
+            ):
+                raise ReservationError(
+                    "Rate-Plan gehört nicht zu diesem Objekt bzw. dieser "
+                    "Zimmerkategorie.", status_code=422,
+                )
+            return rate_plan_id
+        if room_type_id:
+            q = (
+                db.table("rate_plans")
+                .select("id")
+                .eq("property_id", property_id)
+                .eq("room_type_id", room_type_id)
+                .order("created_at")
+                .limit(1)
+                .execute()
+            ).data or []
+            return q[0]["id"] if q else None
+        return None
 
     def move(
         self, ctx: AuthContext, reservation_id: str, req: ReservationMove
@@ -432,6 +493,13 @@ class WritesMixin(ReservationsBase):
                 req.check_out,
                 guests_total,
                 current.get("channel") or "direct",
+                # Denselben Plan bepreisen wie die Erstbuchung — außer beim
+                # Objektwechsel: dort gehört der alte Plan nicht zum Ziel-Objekt.
+                rate_plan_id=(
+                    current.get("rate_plan_id")
+                    if req.property_id == current.get("property_id")
+                    else None
+                ),
             )
             update_fields["total_amount"] = quote.total
             update_fields["quote_items"] = [
