@@ -1046,6 +1046,9 @@
     "rpcHint": "Kirjoita hinta ja vedä sitten päivien yli. Kaksoisnapsautus peruuttaa päivähinnan.",
     "rpcPriceInvalid": "Anna kelvollinen hinta.",
     "rpcSelectedDays": "{count} päivä(ä) valittu",
-    "datePriceCount": "{count} päivähinta(a)"
+    "datePriceCount": "{count} päivähinta(a)",
+    "rpcClearAll": "Poista kaikki",
+    "rpcClearAllConfirm": "Poistetaanko kaikki päivähinnat?",
+    "rpcClearAllYes": "Kyllä, poista kaikki"
   }
 }

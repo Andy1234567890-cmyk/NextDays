@@ -1498,6 +1498,9 @@
     "rpcHint": "Preis eintippen, dann über die Tage ziehen. Doppelklick nimmt einen Tagespreis zurück.",
     "rpcPriceInvalid": "Bitte einen gültigen Preis eingeben.",
     "rpcSelectedDays": "{count} Tag(e) ausgewählt",
-    "datePriceCount": "{count} Datumspreis(e)"
+    "datePriceCount": "{count} Datumspreis(e)",
+    "rpcClearAll": "Alle löschen",
+    "rpcClearAllConfirm": "Wirklich alle Datumspreise löschen?",
+    "rpcClearAllYes": "Ja, alle löschen"
   }
 }

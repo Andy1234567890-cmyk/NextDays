@@ -1046,6 +1046,9 @@
     "rpcHint": "Въведете цена, след което плъзнете върху дните. Двойно щракване връща дневната цена.",
     "rpcPriceInvalid": "Моля, въведете валидна цена.",
     "rpcSelectedDays": "Избрани {count} ден/дни",
-    "datePriceCount": "{count} цена(и) по дата"
+    "datePriceCount": "{count} цена(и) по дата",
+    "rpcClearAll": "Изтрий всички",
+    "rpcClearAllConfirm": "Наистина ли да изтрия всички цени по дата?",
+    "rpcClearAllYes": "Да, изтрий всички"
   }
 }

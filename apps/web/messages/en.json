@@ -1498,6 +1498,9 @@
     "rpcHint": "Type a price, then drag across the days. Double-click reverts a daily price.",
     "rpcPriceInvalid": "Please enter a valid price.",
     "rpcSelectedDays": "{count} day(s) selected",
-    "datePriceCount": "{count} date price(s)"
+    "datePriceCount": "{count} date price(s)",
+    "rpcClearAll": "Delete all",
+    "rpcClearAllConfirm": "Really delete all date prices?",
+    "rpcClearAllYes": "Yes, delete all"
   }
 }

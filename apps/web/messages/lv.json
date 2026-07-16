@@ -1046,6 +1046,9 @@
     "rpcHint": "Ievadi cenu, tad velc pāri dienām. Dubultklikšķis atceļ dienas cenu.",
     "rpcPriceInvalid": "Lūdzu, ievadiet derīgu cenu.",
     "rpcSelectedDays": "Atlasīta(s) {count} diena(s)",
-    "datePriceCount": "{count} datuma cena(s)"
+    "datePriceCount": "{count} datuma cena(s)",
+    "rpcClearAll": "Dzēst visus",
+    "rpcClearAllConfirm": "Tiešām dzēst visas datuma cenas?",
+    "rpcClearAllYes": "Jā, dzēst visus"
   }
 }

@@ -1046,6 +1046,9 @@
     "rpcHint": "Tastează un preț, apoi trage peste zile. Un dublu clic anulează un preț zilnic.",
     "rpcPriceInvalid": "Introdu un preț valid.",
     "rpcSelectedDays": "{count} zi(le) selectate",
-    "datePriceCount": "{count} preț(uri) pe dată"
+    "datePriceCount": "{count} preț(uri) pe dată",
+    "rpcClearAll": "Șterge tot",
+    "rpcClearAllConfirm": "Ștergi toate prețurile pe dată?",
+    "rpcClearAllYes": "Da, șterge tot"
   }
 }

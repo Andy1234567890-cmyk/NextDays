@@ -366,6 +366,30 @@ class RatesService:
         )
         return self.list_prices(ctx, rate_plan_id)
 
+    def clear_all_prices(
+        self, ctx: AuthContext, rate_plan_id: str
+    ) -> RatePlanPriceListResponse:
+        """ALLE Datumspreise eines Rate-Plans zurücknehmen (Basispreis gilt wieder).
+        Tenant-gescoped. Idempotent (nichts da → nichts passiert). Der Content-Sync
+        setzt den Rate-Plan-Default an Channex zurück (kein „Preis weg"-Push)."""
+        tenant_id = self._require_tenant(ctx)
+        plan = self._require_own_rate_plan(tenant_id, rate_plan_id)
+        (
+            self._db()
+            .table("rate_plan_price_overrides")
+            .delete()
+            .eq("rate_plan_id", rate_plan_id)
+            .execute()
+        )
+        # Basispreis wieder an Channex spiegeln (Reconcile-Tick gleicht zusätzlich ab).
+        self._sync_property(tenant_id, plan["property_id"], None, None)
+        log.info(
+            "rate_plan_prices_cleared_all",
+            tenant_id=tenant_id,
+            rate_plan_id=rate_plan_id,
+        )
+        return self.list_prices(ctx, rate_plan_id)
+
     def _enqueue_rate_plan_push(
         self,
         tenant_id: str,

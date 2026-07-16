@@ -1046,6 +1046,9 @@
     "rpcHint": "Vnesi ceno, nato povleci čez dneve. Dvojni klik razveljavi dnevno ceno.",
     "rpcPriceInvalid": "Prosimo, vnesite veljavno ceno.",
     "rpcSelectedDays": "Izbrano {count} dan/dni",
-    "datePriceCount": "{count} cena za datum"
+    "datePriceCount": "{count} cena za datum",
+    "rpcClearAll": "Izbriši vse",
+    "rpcClearAllConfirm": "Res izbrisati vse cene za datum?",
+    "rpcClearAllYes": "Da, izbriši vse"
   }
 }

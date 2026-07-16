@@ -117,3 +117,14 @@ def set_rate_prices(
         return service.set_prices(ctx, rate_plan_id, req)
     except RateError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/{rate_plan_id}/prices", response_model=RatePlanPriceListResponse)
+def clear_rate_prices(
+    rate_plan_id: str, service: RatesServiceDep, ctx: _write
+) -> RatePlanPriceListResponse:
+    """ALLE Datumspreise eines Rate-Plans zurücknehmen (Basispreis gilt wieder)."""
+    try:
+        return service.clear_all_prices(ctx, rate_plan_id)
+    except RateError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

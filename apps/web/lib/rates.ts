@@ -116,6 +116,13 @@ export async function setRatePlanPrices(
   });
 }
 
+/** ALLE Datumspreise eines Rate-Plans zurücknehmen (Basispreis gilt wieder). */
+export async function clearAllRatePlanPrices(
+  ratePlanId: string,
+): Promise<Result<{ rate_plan_id: string; items: RatePlanPriceDay[] }>> {
+  return call(`/rates/${ratePlanId}/prices`, { method: "DELETE" });
+}
+
 /** Basispreis eines Objekts setzen: Upsert im Backend (ersten rate_plan ändern
  *  oder anlegen) in EINEM Round-Trip — der Basispreis landet immer, auch beim
  *  ersten Speichern, ohne Race-Dublette. Schließt die Kette zu Channex (Sync). */

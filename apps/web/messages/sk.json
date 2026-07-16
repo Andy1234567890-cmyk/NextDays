@@ -1046,6 +1046,9 @@
     "rpcHint": "Zadajte cenu, potom potiahnite cez dni. Dvojklik vráti dennú cenu späť.",
     "rpcPriceInvalid": "Zadajte platnú cenu.",
     "rpcSelectedDays": "Vybraných {count} deň/dní",
-    "datePriceCount": "{count} cena za dátum"
+    "datePriceCount": "{count} cena za dátum",
+    "rpcClearAll": "Zmazať všetko",
+    "rpcClearAllConfirm": "Naozaj zmazať všetky ceny za dátum?",
+    "rpcClearAllYes": "Áno, zmazať všetko"
   }
 }

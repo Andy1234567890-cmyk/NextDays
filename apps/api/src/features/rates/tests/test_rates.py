@@ -196,3 +196,28 @@ def test_clear_rate_plan_prices_deletes(monkeypatch) -> None:  # noqa: ANN001
     # Zurücknehmen löscht die Datumspreis-Zeilen (kein Upsert).
     assert "rate_plan_price_overrides" in db.deleted
     assert not db.upserted.get("rate_plan_price_overrides")
+
+
+def test_clear_all_rate_plan_prices(monkeypatch) -> None:  # noqa: ANN001
+    from src.features.rates import service as svc_mod
+
+    synced: list = []
+    monkeypatch.setattr(
+        svc_mod, "try_enqueue_content_sync",
+        lambda *a, **k: synced.append((a, k)),
+    )
+    db = _FakeDB(_OWN_PLAN)
+    svc = RatesService(service_client=db)
+    svc.clear_all_prices(_ctx(), "rp-1")
+    # Alle Zeilen des Plans gelöscht + Content-Sync (Basispreis zurück) eingereiht.
+    assert "rate_plan_price_overrides" in db.deleted
+    assert len(synced) == 1
+
+
+def test_clear_all_rate_plan_prices_foreign_404() -> None:
+    svc = _svc({"rate_plans": []})  # Plan gehört nicht dem Tenant
+    try:
+        svc.clear_all_prices(_ctx(), "rp-x")
+        raise AssertionError("sollte 404 werfen")
+    except RateError as exc:
+        assert exc.status_code == 404

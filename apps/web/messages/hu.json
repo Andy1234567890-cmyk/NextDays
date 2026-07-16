@@ -1046,6 +1046,9 @@
     "rpcHint": "Írd be az árat, majd húzd végig a napokon. Dupla kattintás visszavonja a napi árat.",
     "rpcPriceInvalid": "Adj meg egy érvényes árat.",
     "rpcSelectedDays": "{count} nap kiválasztva",
-    "datePriceCount": "{count} dátumár"
+    "datePriceCount": "{count} dátumár",
+    "rpcClearAll": "Összes törlése",
+    "rpcClearAllConfirm": "Biztosan törlöd az összes dátumárat?",
+    "rpcClearAllYes": "Igen, összes törlése"
   }
 }

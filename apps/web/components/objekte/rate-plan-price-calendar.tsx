@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/lib/currency";
 import {
+  clearAllRatePlanPrices,
   listRatePlanPrices,
   setRatePlanPrices,
   type RatePlanPriceDay,
@@ -140,7 +141,19 @@ export function RatePlanPriceCalendar({
     void applyPrice(isoDate, addDays(isoDate, 1), null);
   };
 
+  // Alle Datumspreise dieses Plans zurücknehmen (mit Bestätigung).
+  const [confirmClear, setConfirmClear] = useState(false);
+  const clearAll = useCallback(async () => {
+    setBusy(true);
+    const res = await clearAllRatePlanPrices(ratePlanId);
+    setBusy(false);
+    setConfirmClear(false);
+    if (!res.ok) toast.error(res.error);
+    // load() folgt über Realtime.
+  }, [ratePlanId]);
+
   const selectedCount = dragDays.size;
+  const hasPrices = prices.size > 0;
 
   const goMonth = (delta: number) =>
     setCursor((c) => {
@@ -165,7 +178,7 @@ export function RatePlanPriceCalendar({
               className="w-48"
             />
             {selectedCount > 0 && (
-              <span className="whitespace-nowrap rounded-full bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent-foreground">
+              <span className="whitespace-nowrap rounded-full bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent">
                 {t("rpcSelectedDays", { count: selectedCount })}
               </span>
             )}
@@ -194,7 +207,47 @@ export function RatePlanPriceCalendar({
             </Button>
           </div>
         </div>
-        <p className="text-sm text-muted-foreground">{t("rpcHint")}</p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="min-w-0 flex-1 text-sm text-muted-foreground">{t("rpcHint")}</p>
+          {hasPrices &&
+            (confirmClear ? (
+              <div className="flex shrink-0 items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {t("rpcClearAllConfirm")}
+                </span>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  onClick={clearAll}
+                  disabled={busy}
+                >
+                  {t("rpcClearAllYes")}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setConfirmClear(false)}
+                  disabled={busy}
+                >
+                  {t("cancel")}
+                </Button>
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="shrink-0 text-muted-foreground hover:text-destructive"
+                onClick={() => setConfirmClear(true)}
+                disabled={busy}
+              >
+                <Icon icon="ph:trash" className="size-4" />
+                {t("rpcClearAll")}
+              </Button>
+            ))}
+        </div>
       </div>
       <BigMonth
         weekdays={weekdays}

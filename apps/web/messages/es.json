@@ -1046,6 +1046,9 @@
     "rpcHint": "Escribe un precio y luego arrastra sobre los días. Un doble clic revierte un precio diario.",
     "rpcPriceInvalid": "Introduce un precio válido.",
     "rpcSelectedDays": "{count} día(s) seleccionado(s)",
-    "datePriceCount": "{count} precio(s) por fecha"
+    "datePriceCount": "{count} precio(s) por fecha",
+    "rpcClearAll": "Eliminar todo",
+    "rpcClearAllConfirm": "¿Eliminar todos los precios por fecha?",
+    "rpcClearAllYes": "Sí, eliminar todo"
   }
 }

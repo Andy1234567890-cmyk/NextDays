@@ -1046,6 +1046,9 @@
     "rpcHint": "Sisesta hind, seejärel lohista üle päevade. Topeltklõps võtab päevahinna tagasi.",
     "rpcPriceInvalid": "Palun sisestage kehtiv hind.",
     "rpcSelectedDays": "Valitud {count} päev(a)",
-    "datePriceCount": "{count} kuupäevahind(a)"
+    "datePriceCount": "{count} kuupäevahind(a)",
+    "rpcClearAll": "Kustuta kõik",
+    "rpcClearAllConfirm": "Kustutada kõik kuupäevahinnad?",
+    "rpcClearAllYes": "Jah, kustuta kõik"
   }
 }

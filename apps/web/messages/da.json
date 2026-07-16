@@ -1046,6 +1046,9 @@
     "rpcHint": "Indtast en pris, og træk derefter hen over dagene. Dobbeltklik fortryder en dagspris.",
     "rpcPriceInvalid": "Angiv venligst en gyldig pris.",
     "rpcSelectedDays": "{count} dag(e) valgt",
-    "datePriceCount": "{count} datopris(er)"
+    "datePriceCount": "{count} datopris(er)",
+    "rpcClearAll": "Slet alle",
+    "rpcClearAllConfirm": "Slet virkelig alle datopriser?",
+    "rpcClearAllYes": "Ja, slet alle"
   }
 }
