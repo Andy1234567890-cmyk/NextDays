@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 from fastapi.testclient import TestClient
 
@@ -543,6 +543,7 @@ class _ImportDB:
             "room_types": [],
             "tenant_billing_profile": [],
             "property_photos": [],
+            "rate_plan_price_overrides": [],
         }
         self._seq = 0
 
@@ -1238,6 +1239,75 @@ def test_push_rates_batch_hotel_no_plan_id_hits_all() -> None:
           "min_stay": 3}],
     )
     assert {v["rate_plan_id"] for v in channex.restrictions_pushed} == {"cx-rp-a", "cx-rp-b"}
+
+
+# --- Desired-State-Reconciler: DB-Soll ↔ Channex-Ist ------------------------
+
+def test_channex_rate_to_cents_normalizes_decimal_string() -> None:
+    # Channex-Asymmetrie: geschrieben Cent-Integer, zurück Dezimal-String.
+    svc = _import_svc(_ImportChannex(), _ImportDB())
+    assert svc._channex_rate_to_cents("138.00") == 13800
+    assert svc._channex_rate_to_cents("312.66") == 31266
+    assert svc._channex_rate_to_cents(None) is None
+    assert svc._channex_rate_to_cents("nonsense") is None
+
+
+def _future_iso(days_ahead=30):  # noqa: ANN001, ANN201
+    return (date.today() + timedelta(days=days_ahead)).isoformat()
+
+
+def test_reconcile_pushes_drift_and_skips_in_sync() -> None:
+    # Zwei Datumspreise in der DB. Channex hat einen korrekt (kein Push), beim
+    # anderen weicht die Rate ab (Drift → genau dieser eine wird gepusht).
+    db = _ImportDB()
+    _seed_hotel_mapping(db)
+    d1, d2 = _future_iso(10), _future_iso(11)
+    db.tables["rate_plan_price_overrides"].extend([
+        {"rate_plan_id": "rp-a", "date": d1, "price": 241.00},
+        {"rate_plan_id": "rp-a", "date": d2, "price": 241.00},
+    ])
+    # Channex-Ist: d1 stimmt (241.00), d2 falsch (200.00) → nur d2 ist Drift.
+    channex = _ImportChannex(restrictions={
+        "cx-rp-a": {d1: {"rate": "241.00"}, d2: {"rate": "200.00"}},
+    })
+    res = _import_svc(channex, db).reconcile_rate_plan_prices("t1", "p1")
+    assert res["checked"] == 2 and res["drift"] == 1
+    assert len(channex.restrictions_pushed) == 1
+    v = channex.restrictions_pushed[0]
+    assert v["rate_plan_id"] == "cx-rp-a" and v["rate"] == 24100
+    # gepusht wurde GENAU der driftende Tag d2.
+    assert v["date"] == d2
+
+
+def test_reconcile_pushes_when_channex_missing_the_date() -> None:
+    # Preis in DB, aber Channex kennt den Tag gar nicht (nie angekommen, z. B. der
+    # Alt-'superseded'-Fall) → Drift, wird nachgepusht.
+    db = _ImportDB()
+    _seed_hotel_mapping(db)
+    d = _future_iso(15)
+    db.tables["rate_plan_price_overrides"].append(
+        {"rate_plan_id": "rp-b", "date": d, "price": 111.00}
+    )
+    channex = _ImportChannex(restrictions={"cx-rp-b": {}})  # Channex leer
+    res = _import_svc(channex, db).reconcile_rate_plan_prices("t1", "p1")
+    assert res["drift"] == 1
+    assert len(channex.restrictions_pushed) == 1
+    assert channex.restrictions_pushed[0]["rate"] == 11100
+    assert channex.restrictions_pushed[0]["rate_plan_id"] == "cx-rp-b"
+
+
+def test_reconcile_noop_when_all_in_sync() -> None:
+    # DB und Channex identisch → kein Push (der teure Push wird vermieden).
+    db = _ImportDB()
+    _seed_hotel_mapping(db)
+    d = _future_iso(20)
+    db.tables["rate_plan_price_overrides"].append(
+        {"rate_plan_id": "rp-a", "date": d, "price": 312.66}
+    )
+    channex = _ImportChannex(restrictions={"cx-rp-a": {d: {"rate": "312.66"}}})
+    res = _import_svc(channex, db).reconcile_rate_plan_prices("t1", "p1")
+    assert res["drift"] == 0
+    assert channex.restrictions_pushed == []
 
 
 def test_push_restrictions_cta_ctd_sends_to_channex() -> None:

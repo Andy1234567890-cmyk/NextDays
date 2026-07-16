@@ -1049,6 +1049,10 @@
     "datePriceCount": "{count} preț(uri) pe dată",
     "rpcClearAll": "Șterge tot",
     "rpcClearAllConfirm": "Ștergi toate prețurile pe dată?",
-    "rpcClearAllYes": "Da, șterge tot"
+    "rpcClearAllYes": "Da, șterge tot",
+    "syncSynced": "Trimis către portaluri",
+    "syncPending": "Sincronizare în așteptare",
+    "syncResyncNow": "Trimite acum",
+    "syncQueued": "Sincronizare pornită"
   }
 }

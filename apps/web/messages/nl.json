@@ -1049,6 +1049,10 @@
     "datePriceCount": "{count} datumprijs(zen)",
     "rpcClearAll": "Alles verwijderen",
     "rpcClearAllConfirm": "Alle datumprijzen echt verwijderen?",
-    "rpcClearAllYes": "Ja, alles verwijderen"
+    "rpcClearAllYes": "Ja, alles verwijderen",
+    "syncSynced": "Naar portalen verzonden",
+    "syncPending": "Synchronisatie in behandeling",
+    "syncResyncNow": "Nu verzenden",
+    "syncQueued": "Synchronisatie gestart"
   }
 }

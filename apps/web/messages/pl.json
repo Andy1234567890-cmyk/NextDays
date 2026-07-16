@@ -1049,6 +1049,10 @@
     "datePriceCount": "{count} cena(y) dzienna",
     "rpcClearAll": "Usuń wszystkie",
     "rpcClearAllConfirm": "Na pewno usunąć wszystkie ceny dzienne?",
-    "rpcClearAllYes": "Tak, usuń wszystkie"
+    "rpcClearAllYes": "Tak, usuń wszystkie",
+    "syncSynced": "Wysłano do portali",
+    "syncPending": "Synchronizacja oczekująca",
+    "syncResyncNow": "Wyślij teraz",
+    "syncQueued": "Rozpoczęto synchronizację"
   }
 }

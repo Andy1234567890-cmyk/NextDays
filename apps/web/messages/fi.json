@@ -1049,6 +1049,10 @@
     "datePriceCount": "{count} päivähinta(a)",
     "rpcClearAll": "Poista kaikki",
     "rpcClearAllConfirm": "Poistetaanko kaikki päivähinnat?",
-    "rpcClearAllYes": "Kyllä, poista kaikki"
+    "rpcClearAllYes": "Kyllä, poista kaikki",
+    "syncSynced": "Lähetetty portaaleihin",
+    "syncPending": "Synkronointi odottaa",
+    "syncResyncNow": "Lähetä nyt",
+    "syncQueued": "Synkronointi aloitettu"
   }
 }

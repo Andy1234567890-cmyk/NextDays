@@ -32,6 +32,9 @@ class _Query:
     def eq(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
         return self
 
+    def in_(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+        return self
+
     def gte(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
         return self
 
@@ -110,6 +113,73 @@ def test_create_rate_plan_writes_row() -> None:
         RatePlanCreate(property_id="p-1", base_price=120, currency="EUR", min_stay=2),
     )
     assert res.base_price == 120 and res.currency == "EUR" and res.min_stay == 2
+
+
+def test_list_reports_sync_status_per_plan() -> None:
+    # Plan mit Datumspreisen + in_sync=True → 'synced'; ohne Preise → None.
+    svc = _svc({
+        "properties": [{"id": "p-1", "title": "Hotel"}],
+        "rate_plans": [
+            {"id": "rp-1", "property_id": "p-1", "name": "BAR", "base_price": 100,
+             "currency": "USD", "min_stay": 1, "room_type_id": "rt-1"},
+        ],
+        "rate_plan_price_overrides": [{"rate_plan_id": "rp-1"}],
+        "rate_plan_sync_state": [{"rate_plan_id": "rp-1", "in_sync": True}],
+    })
+    res = svc.list(_ctx(), "p-1")
+    assert res.items[0].date_price_count == 1
+    assert res.items[0].sync_status == "synced"
+
+
+def test_list_sync_status_pending_when_drift() -> None:
+    svc = _svc({
+        "properties": [{"id": "p-1", "title": "Hotel"}],
+        "rate_plans": [
+            {"id": "rp-1", "property_id": "p-1", "name": "BAR", "base_price": 100,
+             "currency": "USD", "min_stay": 1, "room_type_id": "rt-1"},
+        ],
+        "rate_plan_price_overrides": [{"rate_plan_id": "rp-1"}],
+        "rate_plan_sync_state": [{"rate_plan_id": "rp-1", "in_sync": False}],
+    })
+    res = svc.list(_ctx(), "p-1")
+    assert res.items[0].sync_status == "pending"
+
+
+def test_list_sync_status_none_without_date_prices() -> None:
+    svc = _svc({
+        "properties": [{"id": "p-1", "title": "Hotel"}],
+        "rate_plans": [
+            {"id": "rp-1", "property_id": "p-1", "name": "BAR", "base_price": 100,
+             "currency": "USD", "min_stay": 1, "room_type_id": "rt-1"},
+        ],
+        "rate_plan_price_overrides": [],
+        "rate_plan_sync_state": [],
+    })
+    res = svc.list(_ctx(), "p-1")
+    assert res.items[0].sync_status is None
+
+
+def test_resync_prices_enqueues_reconcile(monkeypatch) -> None:  # noqa: ANN001
+    from src.features.rates import service as svc_mod
+
+    calls: list = []
+    monkeypatch.setattr(svc_mod, "enqueue", lambda *a, **k: calls.append((a, k)))
+    monkeypatch.setattr(svc_mod, "dedup_key", lambda *a, **k: "dk")
+    svc = _svc(_OWN_PLAN)
+    svc.resync_prices(_ctx(), "rp-1")
+    assert len(calls) == 1
+    _args, kw = calls[0]
+    assert _args[1] == "reconcile_rate_plan_prices"
+    assert kw["payload"]["property_id"] == "p-1"
+
+
+def test_resync_prices_foreign_plan_404() -> None:
+    svc = _svc({"rate_plans": []})
+    try:
+        svc.resync_prices(_ctx(), "rp-x")
+        raise AssertionError("sollte 404 werfen")
+    except RateError as exc:
+        assert exc.status_code == 404
 
 
 def test_create_rate_plan_foreign_property_404() -> None:

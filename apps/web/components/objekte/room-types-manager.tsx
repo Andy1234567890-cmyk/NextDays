@@ -189,6 +189,17 @@ export function RoomTypesManager({
       });
     },
   });
+  // Sync-Status pro Rate-Plan (rate_plan_sync_state) — der Reconciler schreibt hier;
+  // kein property_id in der Tabelle (nur rate_plan_id), daher ohne Filter (RLS
+  // scopt auf den Tenant). Bei Änderung die Rate-Plans neu laden (Status im Badge).
+  useRealtime({
+    table: "rate_plan_sync_state",
+    onChange: () => {
+      void listRatePlans(propertyId).then((r) => {
+        if (r.ok) setRates(r.data.items);
+      });
+    },
+  });
 
   const propCurrency = propertyCurrency(rates);
   // formatCurrency rendert symbollos bei leerer/unbekannter Währung (Wurzel 4 —
@@ -523,6 +534,18 @@ export function RoomTypesManager({
                           <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
                             <Icon icon="ph:calendar-dots" className="size-3.5" />
                             {t("datePriceCount", { count: plan.date_price_count })}
+                          </span>
+                        )}
+                        {plan.sync_status === "synced" && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
+                            <Icon icon="ph:check-circle" className="size-3.5" />
+                            {t("syncSynced")}
+                          </span>
+                        )}
+                        {plan.sync_status === "pending" && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning">
+                            <Icon icon="ph:clock-countdown" className="size-3.5" />
+                            {t("syncPending")}
                           </span>
                         )}
                       </div>
@@ -981,6 +1004,7 @@ export function RoomTypesManager({
                     <RatePlanPriceCalendar
                       ratePlanId={(rateEditing.plan as RatePlan).id}
                       currency={rateDraft.currency}
+                      syncStatus={(rateEditing.plan as RatePlan).sync_status}
                     />
                   </div>
                 )}

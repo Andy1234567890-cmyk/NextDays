@@ -1049,6 +1049,10 @@
     "datePriceCount": "{count} praghas dáta",
     "rpcClearAll": "Scrios uile",
     "rpcClearAllConfirm": "An scriosfar gach praghas dáta?",
-    "rpcClearAllYes": "Tá, scrios uile"
+    "rpcClearAllYes": "Tá, scrios uile",
+    "syncSynced": "Seolta chuig tairseacha",
+    "syncPending": "Sioncronú ar feitheamh",
+    "syncResyncNow": "Seol anois",
+    "syncQueued": "Cuireadh tús le sioncronú"
   }
 }

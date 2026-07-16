@@ -1049,6 +1049,10 @@
     "datePriceCount": "{count} kuupäevahind(a)",
     "rpcClearAll": "Kustuta kõik",
     "rpcClearAllConfirm": "Kustutada kõik kuupäevahinnad?",
-    "rpcClearAllYes": "Jah, kustuta kõik"
+    "rpcClearAllYes": "Jah, kustuta kõik",
+    "syncSynced": "Saadetud portaalidesse",
+    "syncPending": "Sünkroonimine ootel",
+    "syncResyncNow": "Saada kohe",
+    "syncQueued": "Sünkroonimine alustatud"
   }
 }

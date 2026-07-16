@@ -1049,6 +1049,10 @@
     "datePriceCount": "{count} cijena po datumu",
     "rpcClearAll": "Obriši sve",
     "rpcClearAllConfirm": "Zaista obrisati sve cijene po datumu?",
-    "rpcClearAllYes": "Da, obriši sve"
+    "rpcClearAllYes": "Da, obriši sve",
+    "syncSynced": "Poslano na portale",
+    "syncPending": "Sinkronizacija na čekanju",
+    "syncResyncNow": "Pošalji sada",
+    "syncQueued": "Sinkronizacija pokrenuta"
   }
 }

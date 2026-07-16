@@ -1049,6 +1049,10 @@
     "datePriceCount": "{count} datopris(er)",
     "rpcClearAll": "Slet alle",
     "rpcClearAllConfirm": "Slet virkelig alle datopriser?",
-    "rpcClearAllYes": "Ja, slet alle"
+    "rpcClearAllYes": "Ja, slet alle",
+    "syncSynced": "Sendt til portaler",
+    "syncPending": "Synkronisering afventer",
+    "syncResyncNow": "Send nu",
+    "syncQueued": "Synkronisering startet"
   }
 }

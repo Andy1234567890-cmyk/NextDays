@@ -104,6 +104,19 @@ def list_rate_prices(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post("/{rate_plan_id}/prices/resync", status_code=status.HTTP_202_ACCEPTED)
+def resync_rate_prices(
+    rate_plan_id: str, service: RatesServiceDep, ctx: _write
+) -> dict[str, str]:
+    """'Jetzt übertragen': Desired-State-Reconcile (DB↔Channex) für das Objekt
+    anstoßen. Idempotent/coalesced; der 15-min-Tick macht dasselbe automatisch."""
+    try:
+        service.resync_prices(ctx, rate_plan_id)
+        return {"status": "queued"}
+    except RateError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.put("/{rate_plan_id}/prices", response_model=RatePlanPriceListResponse)
 def set_rate_prices(
     rate_plan_id: str,

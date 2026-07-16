@@ -1049,6 +1049,10 @@
     "datePriceCount": "{count} τιμή/ές ανά ημ/νία",
     "rpcClearAll": "Διαγραφή όλων",
     "rpcClearAllConfirm": "Διαγραφή όλων των τιμών ανά ημ/νία;",
-    "rpcClearAllYes": "Ναι, διαγραφή όλων"
+    "rpcClearAllYes": "Ναι, διαγραφή όλων",
+    "syncSynced": "Στάλθηκε στις πύλες",
+    "syncPending": "Εκκρεμεί συγχρονισμός",
+    "syncResyncNow": "Αποστολή τώρα",
+    "syncQueued": "Ο συγχρονισμός ξεκίνησε"
   }
 }

@@ -18,6 +18,9 @@ export type RatePlan = {
   room_type_id: string | null;
   // Anzahl gesetzter Datumspreise (rate_plan_price_overrides); 0 = nur Basispreis.
   date_price_count: number;
+  // Sync-Status DB↔Portale: 'synced' = Preise sind übertragen, 'pending' =
+  // Abweichung/noch nicht abgeglichen, null = kein Datumspreis (nichts zu tun).
+  sync_status: "synced" | "pending" | null;
 };
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -121,6 +124,15 @@ export async function clearAllRatePlanPrices(
   ratePlanId: string,
 ): Promise<Result<{ rate_plan_id: string; items: RatePlanPriceDay[] }>> {
   return call(`/rates/${ratePlanId}/prices`, { method: "DELETE" });
+}
+
+/** 'Jetzt übertragen': Desired-State-Reconcile (DB↔Portale) für das Objekt
+ *  anstoßen. Der Abgleich läuft asynchron; der Sync-Status aktualisiert sich
+ *  danach live über rate_plan_sync_state. */
+export async function resyncRatePlanPrices(
+  ratePlanId: string,
+): Promise<Result<{ status: string }>> {
+  return call(`/rates/${ratePlanId}/prices/resync`, { method: "POST" });
 }
 
 /** Basispreis eines Objekts setzen: Upsert im Backend (ersten rate_plan ändern

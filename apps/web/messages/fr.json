@@ -1049,6 +1049,10 @@
     "datePriceCount": "{count} prix par date",
     "rpcClearAll": "Tout supprimer",
     "rpcClearAllConfirm": "Vraiment supprimer tous les prix par date ?",
-    "rpcClearAllYes": "Oui, tout supprimer"
+    "rpcClearAllYes": "Oui, tout supprimer",
+    "syncSynced": "Transmis aux portails",
+    "syncPending": "Transmission en attente",
+    "syncResyncNow": "Transmettre maintenant",
+    "syncQueued": "Transmission lancée"
   }
 }

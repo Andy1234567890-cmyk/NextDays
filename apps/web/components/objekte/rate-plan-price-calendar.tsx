@@ -16,6 +16,7 @@ import { formatCurrency } from "@/lib/currency";
 import {
   clearAllRatePlanPrices,
   listRatePlanPrices,
+  resyncRatePlanPrices,
   setRatePlanPrices,
   type RatePlanPriceDay,
 } from "@/lib/rates";
@@ -37,9 +38,11 @@ function mondayIndex(d: Date): number {
 export function RatePlanPriceCalendar({
   ratePlanId,
   currency,
+  syncStatus,
 }: {
   ratePlanId: string;
   currency: string;
+  syncStatus: "synced" | "pending" | null;
 }) {
   const t = useTranslations("roomTypes");
   const months = t("months").split(",");
@@ -152,6 +155,15 @@ export function RatePlanPriceCalendar({
     // load() folgt über Realtime.
   }, [ratePlanId]);
 
+  // 'Jetzt übertragen': Reconcile anstoßen; Status aktualisiert sich live.
+  const resync = useCallback(async () => {
+    setBusy(true);
+    const res = await resyncRatePlanPrices(ratePlanId);
+    setBusy(false);
+    if (!res.ok) toast.error(res.error);
+    else toast.success(t("syncQueued"));
+  }, [ratePlanId, t]);
+
   const selectedCount = dragDays.size;
   const hasPrices = prices.size > 0;
 
@@ -207,8 +219,29 @@ export function RatePlanPriceCalendar({
             </Button>
           </div>
         </div>
-        <div className="flex items-center justify-between gap-3">
-          <p className="min-w-0 flex-1 text-sm text-muted-foreground">{t("rpcHint")}</p>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+            <p className="text-sm text-muted-foreground">{t("rpcHint")}</p>
+            {hasPrices && syncStatus === "synced" && (
+              <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-success/10 px-2 py-0.5 text-xs font-medium text-success">
+                <Icon icon="ph:check-circle" className="size-3.5" />
+                {t("syncSynced")}
+              </span>
+            )}
+            {hasPrices && syncStatus === "pending" && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="shrink-0 gap-1 text-warning"
+                onClick={resync}
+                disabled={busy}
+              >
+                <Icon icon="ph:arrows-clockwise" className="size-3.5" />
+                {t("syncResyncNow")}
+              </Button>
+            )}
+          </div>
           {hasPrices &&
             (confirmClear ? (
               <div className="flex shrink-0 items-center gap-2">

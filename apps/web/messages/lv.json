@@ -1049,6 +1049,10 @@
     "datePriceCount": "{count} datuma cena(s)",
     "rpcClearAll": "Dzēst visus",
     "rpcClearAllConfirm": "Tiešām dzēst visas datuma cenas?",
-    "rpcClearAllYes": "Jā, dzēst visus"
+    "rpcClearAllYes": "Jā, dzēst visus",
+    "syncSynced": "Nosūtīts portāliem",
+    "syncPending": "Sinhronizācija gaida",
+    "syncResyncNow": "Nosūtīt tagad",
+    "syncQueued": "Sinhronizācija sākta"
   }
 }

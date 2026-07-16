@@ -1501,6 +1501,10 @@
     "datePriceCount": "{count} Datumspreis(e)",
     "rpcClearAll": "Alle löschen",
     "rpcClearAllConfirm": "Wirklich alle Datumspreise löschen?",
-    "rpcClearAllYes": "Ja, alle löschen"
+    "rpcClearAllYes": "Ja, alle löschen",
+    "syncSynced": "An Portale übertragen",
+    "syncPending": "Übertragung ausstehend",
+    "syncResyncNow": "Jetzt übertragen",
+    "syncQueued": "Übertragung gestartet"
   }
 }

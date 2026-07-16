@@ -1049,6 +1049,10 @@
     "datePriceCount": "{count} prezz(ijiet) tad-data",
     "rpcClearAll": "Ħassar kollox",
     "rpcClearAllConfirm": "Tabqa'ħassar il-prezzijiet kollha tad-data?",
-    "rpcClearAllYes": "Iva, ħassar kollox"
+    "rpcClearAllYes": "Iva, ħassar kollox",
+    "syncSynced": "Mibgħut lill-portali",
+    "syncPending": "Sinkronizzazzjoni pendenti",
+    "syncResyncNow": "Ibgħat issa",
+    "syncQueued": "Sinkronizzazzjoni bdiet"
   }
 }

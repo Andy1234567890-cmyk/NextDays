@@ -1049,6 +1049,10 @@
     "datePriceCount": "{count} dátumár",
     "rpcClearAll": "Összes törlése",
     "rpcClearAllConfirm": "Biztosan törlöd az összes dátumárat?",
-    "rpcClearAllYes": "Igen, összes törlése"
+    "rpcClearAllYes": "Igen, összes törlése",
+    "syncSynced": "Elküldve a portálokra",
+    "syncPending": "Szinkronizálás függőben",
+    "syncResyncNow": "Küldés most",
+    "syncQueued": "Szinkronizálás elindítva"
   }
 }

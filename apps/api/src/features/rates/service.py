@@ -11,7 +11,12 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
-from src.jobs.queue import try_enqueue_ari, try_enqueue_content_sync
+from src.jobs.queue import (
+    dedup_key,
+    enqueue,
+    try_enqueue_ari,
+    try_enqueue_content_sync,
+)
 
 from .schemas import (
     RatePlanCreate,
@@ -68,7 +73,9 @@ class RatesService:
         return res[0]
 
     @staticmethod
-    def _row(r: dict, date_price_count: int = 0) -> RatePlanResponse:
+    def _row(
+        r: dict, date_price_count: int = 0, sync_status: str | None = None
+    ) -> RatePlanResponse:
         return RatePlanResponse(
             id=r["id"],
             property_id=r["property_id"],
@@ -78,7 +85,42 @@ class RatesService:
             min_stay=int(r.get("min_stay") or 1),
             room_type_id=r.get("room_type_id"),
             date_price_count=date_price_count,
+            sync_status=sync_status,
         )
+
+    def _sync_states(self, rate_plan_ids: list[str]) -> dict[str, bool]:
+        """in_sync-Flag je Rate-Plan aus rate_plan_sync_state (kein N+1). Leer, wenn
+        die Tabelle fehlt (Umgebung vor 0149) — dann kein Status-Badge (kein Crash)."""
+        if not rate_plan_ids:
+            return {}
+        try:
+            rows = (
+                self._db()
+                .table("rate_plan_sync_state")
+                .select("rate_plan_id, in_sync")
+                .in_("rate_plan_id", rate_plan_ids)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — fehlende Tabelle = kein Status
+            log.warning("rate_plan_sync_state_unavailable", error=str(exc))
+            return {}
+        return {
+            str(r["rate_plan_id"]): bool(r.get("in_sync"))
+            for r in rows
+            if r.get("rate_plan_id") is not None
+        }
+
+    @staticmethod
+    def _status_for(
+        rate_plan_id: str, count: int, states: dict[str, bool]
+    ) -> str | None:
+        """Sync-Status eines Plans für die UI. Ohne Datumspreis (count 0) gibt es
+        nichts zu übertragen → None (kein Badge). Mit Preisen: 'synced', wenn der
+        Reconciler in_sync gemeldet hat; sonst 'pending' (Abweichung ODER noch nie
+        abgeglichen — beides heißt: noch nicht bestätigt bei den Portalen)."""
+        if count <= 0:
+            return None
+        return "synced" if states.get(rate_plan_id) else "pending"
 
     def _date_price_counts(self, rate_plan_ids: list[str]) -> dict[str, int]:
         """Anzahl gesetzter Datumspreise je Rate-Plan in EINER Query (kein N+1).
@@ -116,8 +158,17 @@ class RatesService:
             .order("created_at")
             .execute()
         ).data or []
-        counts = self._date_price_counts([r["id"] for r in res if r.get("id")])
-        items = [self._row(r, counts.get(r["id"], 0)) for r in res]
+        ids = [r["id"] for r in res if r.get("id")]
+        counts = self._date_price_counts(ids)
+        states = self._sync_states(ids)
+        items = [
+            self._row(
+                r,
+                counts.get(r["id"], 0),
+                self._status_for(r["id"], counts.get(r["id"], 0), states),
+            )
+            for r in res
+        ]
         return RatePlanListResponse(items=items, total=len(items))
 
     def create(self, ctx: AuthContext, req: RatePlanCreate) -> RatePlanResponse:
@@ -365,6 +416,34 @@ class RatesService:
             cleared=req.price is None,
         )
         return self.list_prices(ctx, rate_plan_id)
+
+    def resync_prices(self, ctx: AuthContext, rate_plan_id: str) -> None:
+        """'Jetzt übertragen': einen Desired-State-Reconcile-Job für das Objekt
+        dieses Rate-Plans einreihen (DB-Preise ↔ Channex-Ist abgleichen, Differenz
+        pushen). Tenant-gescoped. Coalesced je Objekt (mehrfaches Klicken = EIN
+        Reconcile). Der 15-min-Tick macht dasselbe automatisch."""
+        tenant_id = self._require_tenant(ctx)
+        plan = self._require_own_rate_plan(tenant_id, rate_plan_id)
+        property_id = plan["property_id"]
+        try:
+            enqueue(
+                self._db(),
+                "reconcile_rate_plan_prices",
+                tenant_id=tenant_id,
+                payload={"tenant_id": tenant_id, "property_id": property_id},
+                dedup_key=dedup_key(
+                    tenant_id, property_id, "reconcile_rate_plan_prices"
+                ),
+            )
+        except Exception as exc:  # noqa: BLE001 — Einreihen darf den Request nie kippen
+            log.warning(
+                "resync_prices_enqueue_failed",
+                tenant_id=tenant_id, rate_plan_id=rate_plan_id, error=str(exc)[:200],
+            )
+        log.info(
+            "rate_plan_prices_resync_requested",
+            tenant_id=tenant_id, rate_plan_id=rate_plan_id,
+        )
 
     def clear_all_prices(
         self, ctx: AuthContext, rate_plan_id: str

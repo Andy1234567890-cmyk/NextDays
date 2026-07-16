@@ -9,7 +9,7 @@ von der Fassade; Patch-Ziel für Modul-Helfer ist channel_manager.common.
 # gekoppelte Push-/Outbox-/Superseding-Logik über mehrere Dateien.
 from __future__ import annotations
 
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from supabase import Client
@@ -1149,6 +1149,157 @@ class AriPushMixin:
                 property_id=property_id,
                 error=exc.message,
             )
+
+    # -- Desired-State-Reconciler für Rate-Plan-Datumspreise -------------------
+    @staticmethod
+    def _channex_rate_to_cents(value: str | float | None) -> int | None:
+        """Ein von Channex ZURÜCKGELESENES rate-Feld zu Cent normalisieren. Achtung
+        Asymmetrie (Channex-Doku): geschrieben wird `rate` als Cent-Integer (13800),
+        ZURÜCK kommt es als Dezimal-String in Haupteinheit ("138.00"). Ein naiver
+        Vergleich meldete sonst immer Drift. None bei fehlend/ungültig."""
+        if value is None:
+            return None
+        try:
+            return int(round(float(value) * 100))
+        except (TypeError, ValueError):
+            return None
+
+    def reconcile_rate_plan_prices(
+        self, tenant_id: str, property_id: str, horizon_days: int = 365
+    ) -> dict[str, int]:
+        """Desired-State-Reconciler: gleicht die datumsgenauen DB-Preise
+        (rate_plan_price_overrides = Soll) gegen den AUTORITATIVEN Channex-Zustand
+        (get_restrictions = Ist) ab und pusht NUR die Differenz — pro Rate-Plan.
+
+        Selbstheilend gegen jede Ursache (verlorener Push, Channex-Ablehnung, Race,
+        Alt-'done (superseded)'-Zeilen): der Vergleich fragt nicht 'habe ich
+        gepusht?', sondern 'ist der Preis WIRKLICH bei Channex?'. No-op, wenn nicht
+        verbunden. Rückgabe {checked, drift, pushed_segments}."""
+        result = {"checked": 0, "drift": 0, "pushed_segments": 0}
+        if not self._channex.is_configured or self._db is None:
+            return result
+        db = self._db
+        plans = (
+            self._resolve_channex_rate_plans(db, tenant_id, property_id)
+            if self._is_channex_managed(db, tenant_id, property_id)
+            else []
+        )
+        # channex_rate_plan_id → local_rate_plan_id (für den Ist-Vergleich).
+        channex_to_local = {
+            p["channex_rate_plan_id"]: p.get("local_rate_plan_id")
+            for p in plans
+            if p.get("local_rate_plan_id")
+        }
+        local_rate_plan_ids = list(channex_to_local.values())
+        if not local_rate_plan_ids:
+            return result
+        channex_property_id = plans[0]["channex_property_id"]
+        today = date.today()
+        horizon = today + timedelta(days=horizon_days)
+
+        # SOLL: DB-Datumspreise je lokalem Rate-Plan {local_rate_plan_id: {iso: cents}}
+        desired = self._load_desired_rate_plan_prices(
+            db, local_rate_plan_ids, today, horizon
+        )
+        if not desired:
+            return result
+
+        # IST: autoritativer Channex-Zustand (Rate zurück als Dezimal-String).
+        try:
+            restr = self._channex.get_restrictions(
+                channex_property_id,
+                date_from=today.isoformat(),
+                date_to=horizon.isoformat(),
+                restrictions="rate",
+            )
+        except ChannexError as exc:
+            # Channex nicht erreichbar → NICHTS annehmen/pushen (Wurzel 5).
+            log.warning(
+                "reconcile_rate_prices_readback_failed",
+                tenant_id=tenant_id, property_id=property_id, error=exc.message,
+            )
+            return result
+        actual_by_channex = restr.get("data") or {}
+
+        # Differenz je Rate-Plan sammeln und als rate-plan-genaue Segmente pushen.
+        segments: list[dict[str, Any]] = []
+        for channex_rp, local_rp in channex_to_local.items():
+            want = desired.get(local_rp) or {}
+            if not want:
+                continue
+            have_days = actual_by_channex.get(channex_rp) or {}
+            drift_days = {
+                iso: cents
+                for iso, cents in want.items()
+                if self._channex_rate_to_cents((have_days.get(iso) or {}).get("rate"))
+                != cents
+            }
+            result["checked"] += len(want)
+            result["drift"] += len(drift_days)
+            # Sichtbaren Sync-Status je Plan festhalten (Frontend liest ihn live).
+            self._write_rate_plan_sync_state(db, local_rp, len(drift_days))
+            for iso, cents in sorted(drift_days.items()):
+                segments.append({
+                    "date_from": iso, "date_to": iso,
+                    "rate_cents": cents, "rate_plan_id": local_rp,
+                })
+        if segments:
+            self.push_rates_batch(tenant_id, property_id, segments)
+            result["pushed_segments"] = len(segments)
+            log.info(
+                "reconcile_rate_prices_drift_pushed",
+                tenant_id=tenant_id, property_id=property_id,
+                checked=result["checked"], drift=result["drift"],
+            )
+        return result
+
+    def _write_rate_plan_sync_state(
+        self, db: Client, rate_plan_id: str, drift_count: int
+    ) -> None:
+        """Sync-Status eines Rate-Plans festhalten (in_sync = kein Drift). Best-
+        effort: ein Statuschreib-Fehler darf den Reconcile-Push nicht kippen
+        (Wurzel 5). checked_at markiert den Zeitpunkt des letzten Abgleichs."""
+        try:
+            db.table("rate_plan_sync_state").upsert(
+                {
+                    "rate_plan_id": rate_plan_id,
+                    "in_sync": drift_count == 0,
+                    "drift_count": drift_count,
+                    "checked_at": datetime.now(UTC).isoformat(),
+                },
+                on_conflict="rate_plan_id",
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 — Status nie den Hauptpfad kippen
+            log.warning("rate_plan_sync_state_write_failed", error=str(exc)[:200])
+
+    def _load_desired_rate_plan_prices(
+        self, db: Client, local_rate_plan_ids: list[str], start: date, end: date
+    ) -> dict[str, dict[str, int]]:
+        """Soll-Datumspreise aus rate_plan_price_overrides je lokalem Rate-Plan im
+        Horizont [start, end]: {local_rate_plan_id: {iso: cents}}. Vergangene Tage
+        fließen nicht ein (Channex lehnt sie ab)."""
+        rows = (
+            db.table("rate_plan_price_overrides")
+            .select("rate_plan_id, date, price")
+            .in_("rate_plan_id", local_rate_plan_ids)
+            .gte("date", start.isoformat())
+            .lte("date", end.isoformat())
+            .not_.is_("price", "null")
+            .execute()
+        ).data or []
+        out: dict[str, dict[str, int]] = {}
+        for r in rows:
+            rp = r.get("rate_plan_id")
+            iso = r.get("date")
+            price = r.get("price")
+            if rp is None or iso is None or price is None:
+                continue
+            try:
+                cents = int(round(float(price) * 100))
+            except (TypeError, ValueError):
+                continue
+            out.setdefault(str(rp), {})[str(iso)] = cents
+        return out
 
     @staticmethod
     def _restriction_row_fields(row: dict[str, Any]) -> dict[str, Any]:

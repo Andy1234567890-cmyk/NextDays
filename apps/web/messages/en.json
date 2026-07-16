@@ -1501,6 +1501,10 @@
     "datePriceCount": "{count} date price(s)",
     "rpcClearAll": "Delete all",
     "rpcClearAllConfirm": "Really delete all date prices?",
-    "rpcClearAllYes": "Yes, delete all"
+    "rpcClearAllYes": "Yes, delete all",
+    "syncSynced": "Sent to portals",
+    "syncPending": "Sync pending",
+    "syncResyncNow": "Send now",
+    "syncQueued": "Sync started"
   }
 }

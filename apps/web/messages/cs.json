@@ -1049,6 +1049,10 @@
     "datePriceCount": "{count} cena za datum",
     "rpcClearAll": "Smazat vše",
     "rpcClearAllConfirm": "Opravdu smazat všechny ceny za datum?",
-    "rpcClearAllYes": "Ano, smazat vše"
+    "rpcClearAllYes": "Ano, smazat vše",
+    "syncSynced": "Odesláno do portálů",
+    "syncPending": "Synchronizace čeká",
+    "syncResyncNow": "Odeslat nyní",
+    "syncQueued": "Synchronizace spuštěna"
   }
 }

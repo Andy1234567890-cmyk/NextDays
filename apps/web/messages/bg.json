@@ -1049,6 +1049,10 @@
     "datePriceCount": "{count} цена(и) по дата",
     "rpcClearAll": "Изтрий всички",
     "rpcClearAllConfirm": "Наистина ли да изтрия всички цени по дата?",
-    "rpcClearAllYes": "Да, изтрий всички"
+    "rpcClearAllYes": "Да, изтрий всички",
+    "syncSynced": "Изпратено към порталите",
+    "syncPending": "Синхронизацията предстои",
+    "syncResyncNow": "Изпрати сега",
+    "syncQueued": "Синхронизацията започна"
   }
 }

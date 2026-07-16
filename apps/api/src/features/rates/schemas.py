@@ -41,6 +41,11 @@ class RatePlanResponse(BaseModel):
     # Anzahl der datumsgenauen Preise dieses Plans (rate_plan_price_overrides).
     # Die Übersicht zeigt damit pro Plan, ob/wie viele Datumspreise gesetzt sind.
     date_price_count: int = 0
+    # Sync-Status DB↔Portale (rate_plan_sync_state): 'synced' = Preise sind bei den
+    # Portalen, 'pending' = Abweichung/noch nicht abgeglichen, None = kein
+    # Datumspreis gesetzt (nichts zu übertragen). Vom Desired-State-Reconciler
+    # gepflegt; die UI zeigt daraus ein Status-Badge + 'Jetzt übertragen'.
+    sync_status: str | None = None
 
 
 class RatePlanListResponse(BaseModel):

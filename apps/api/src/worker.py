@@ -53,7 +53,9 @@ _CHANNEX_JOB_TYPES = frozenset(
      "recompute_property",
      # Buchungs-Feed-Pull (Webhook-Trigger + Backstop-Tick), ARI-Import je
      # Property (ari-Webhook) und nächtlicher Full-Sync-Push — alle rufen Channex.
-     "sync_bookings_feed", "import_ari_property", "full_sync_property"}
+     "sync_bookings_feed", "import_ari_property", "full_sync_property",
+     # On-demand Rate-Plan-Preis-Reconcile ('Jetzt übertragen') — liest Channex.
+     "reconcile_rate_plan_prices"}
 )
 
 # Parallel verarbeitete Jobs je Worker-Instanz. Begrenzt lokale Thread-/DB-Last;
@@ -168,6 +170,17 @@ def _handle_process_restriction_outbox(
     frisch auf (Selbstheilung, sobald der Rate-Plan-Import gelaufen ist). Tenant-
     übergreifend, darum einmal je Tick als eigener Job statt pro Tenant."""
     _svc(db, budget).process_restriction_outbox()
+
+
+def _handle_reconcile_rate_plan_prices(
+    db: Client, payload: dict[str, Any], budget: ChannexBudget | None = None
+) -> None:
+    """On-demand Desired-State-Reconcile der Rate-Plan-Datumspreise EINES Objekts
+    ('Jetzt übertragen'). Der 15-min-Tick macht dasselbe für alle Objekte; hier
+    sofort auf Nutzer-Wunsch. Budget durchreichen (Channex-Read/-Push zieht Token)."""
+    _svc(db, budget).reconcile_rate_plan_prices(
+        payload["tenant_id"], payload["property_id"]
+    )
 
 
 def _handle_recompute_property(
@@ -333,6 +346,7 @@ HANDLERS: dict[
 ] = {
     "sync_property_content": _handle_sync_property_content,
     "reconcile_tenant": _handle_reconcile_tenant,
+    "reconcile_rate_plan_prices": _handle_reconcile_rate_plan_prices,
     "recompute_property": _handle_recompute_property,
     "push_ari": _handle_push_ari,
     "process_ari_outbox": _handle_process_ari_outbox,

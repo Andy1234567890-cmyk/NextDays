@@ -1049,6 +1049,10 @@
     "datePriceCount": "{count} datos kaina(-os)",
     "rpcClearAll": "Ištrinti viską",
     "rpcClearAllConfirm": "Tikrai ištrinti visas datos kainas?",
-    "rpcClearAllYes": "Taip, ištrinti viską"
+    "rpcClearAllYes": "Taip, ištrinti viską",
+    "syncSynced": "Išsiųsta į portalus",
+    "syncPending": "Laukiama sinchronizacijos",
+    "syncResyncNow": "Siųsti dabar",
+    "syncQueued": "Sinchronizacija pradėta"
   }
 }

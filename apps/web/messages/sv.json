@@ -1049,6 +1049,10 @@
     "datePriceCount": "{count} datumpris(er)",
     "rpcClearAll": "Radera alla",
     "rpcClearAllConfirm": "Radera verkligen alla datumpriser?",
-    "rpcClearAllYes": "Ja, radera alla"
+    "rpcClearAllYes": "Ja, radera alla",
+    "syncSynced": "Skickat till portaler",
+    "syncPending": "Synkronisering väntar",
+    "syncResyncNow": "Skicka nu",
+    "syncQueued": "Synkronisering startad"
   }
 }

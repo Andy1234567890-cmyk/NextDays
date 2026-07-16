@@ -1049,6 +1049,10 @@
     "datePriceCount": "{count} prezzo/i per data",
     "rpcClearAll": "Elimina tutto",
     "rpcClearAllConfirm": "Eliminare davvero tutti i prezzi per data?",
-    "rpcClearAllYes": "Sì, elimina tutto"
+    "rpcClearAllYes": "Sì, elimina tutto",
+    "syncSynced": "Inviato ai portali",
+    "syncPending": "Sincronizzazione in sospeso",
+    "syncResyncNow": "Invia ora",
+    "syncQueued": "Sincronizzazione avviata"
   }
 }

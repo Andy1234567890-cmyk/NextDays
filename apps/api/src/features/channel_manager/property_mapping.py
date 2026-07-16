@@ -288,6 +288,22 @@ class PropertyMappingMixin:
                 count=soft_deleted,
             )
 
+        # Desired-State-Abgleich der Rate-Plan-Datumspreise je noch aktivem Objekt:
+        # DB-Soll vs. autoritativer Channex-Ist → Differenz pushen (selbstheilend).
+        # Best-effort pro Objekt (ein Objekt-Fehler kippt nicht den Tenant-Reconcile).
+        for m in active:
+            if m["channex_property_id"] not in live_by_id:
+                continue  # gerade soft-gelöscht
+            try:
+                self.reconcile_rate_plan_prices(tenant_id, m["property_id"])
+            except Exception as exc:  # noqa: BLE001 — ein Objekt darf den Tick nicht kippen
+                log.warning(
+                    "reconcile_rate_prices_property_failed",
+                    tenant_id=tenant_id,
+                    property_id=m["property_id"],
+                    error=str(exc)[:200],
+                )
+
         return {
             "created": created,
             "updated": updated,
