@@ -267,18 +267,20 @@ function MonthGrid({
               onMouseEnter={() => onEnter(isoDate)}
               onDoubleClick={() => onDouble(isoDate)}
               title={price !== undefined ? formatCurrency(price, currency) : undefined}
-              className={`flex min-h-11 w-full select-none flex-col items-center justify-center gap-0.5 overflow-hidden rounded px-0.5 py-1 text-xs transition-[outline] ${
-                inDrag ? "outline outline-2 outline-accent" : ""
+              className={`flex min-h-12 w-full select-none flex-col items-center justify-center gap-0.5 overflow-hidden rounded px-0.5 py-1 text-xs transition-[outline] ${
+                inDrag ? "outline outline-2 outline-accent outline-offset-1" : ""
               } ${
                 price !== undefined
-                  ? "bg-accent/10 font-medium text-accent-foreground"
-                  : "hover:bg-secondary"
+                  ? "bg-accent font-medium text-accent-foreground"
+                  : "text-foreground hover:bg-secondary"
               }`}
             >
               <span className="leading-none">{day}</span>
               {price !== undefined && (
-                <span className="w-full truncate text-center text-[0.6rem] leading-none tabular-nums text-accent-foreground">
-                  {formatCurrency(price, currency)}
+                // Kompakt: reine Zahl ohne Symbol/Nachkomma (passt in die schmale
+                // Zelle); voller Betrag inkl. Währung steht im title-Tooltip.
+                <span className="w-full truncate text-center text-[0.6rem] leading-none tabular-nums">
+                  {formatCurrency(price, null, "de-DE", 0)}
                 </span>
               )}
             </button>
