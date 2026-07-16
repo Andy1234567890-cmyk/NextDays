@@ -109,6 +109,7 @@ def _resolver(
     config: dict | None = None,
     dynamic: list[dict] | None = None,
     addons: list[dict] | None = None,
+    rate_plan_overrides: list[dict] | None = None,
 ) -> PricingResolver:
     tables: dict[str, list[dict]] = {
         "rate_plans": [{"base_price": base, "currency": "EUR"}] if base is not None else [],
@@ -116,6 +117,7 @@ def _resolver(
         "property_pricing_config": [config] if config else [],
         "dynamic_prices": dynamic or [],
         "property_addons": addons or [],
+        "rate_plan_price_overrides": rate_plan_overrides or [],
     }
     return PricingResolver(service_client=_DB(tables))
 
@@ -177,6 +179,49 @@ def test_effective_none_without_price() -> None:
     r = _resolver()  # kein Rate-Plan, kein Override, keine Konfig
     days = r.effective_prices("p", date(2026, 7, 1), date(2026, 7, 2))
     assert days[0].price is None and days[0].source == "none"
+
+
+# --- Rate-Plan-genauer Datumspreis (Hotel: Twin/BAR ≠ Double/B&B) ------------
+
+
+def test_effective_rate_plan_price_beats_property_override() -> None:
+    """Mit rate_plan_id gewinnt der rate-plan-genaue Datumspreis über den
+    property-weiten Override (Hotel: der Plan hat seinen eigenen Preis)."""
+    r = _resolver(
+        base=100.0,
+        overrides=[{"date": "2026-07-01", "price": 180}],
+        rate_plan_overrides=[{"date": "2026-07-01", "price": 333}],
+    )
+    days = r.effective_prices(
+        "p", date(2026, 7, 1), date(2026, 7, 2), rate_plan_id="rp1"
+    )
+    assert days[0].price == 333.0 and days[0].source == "rate_plan"
+
+
+def test_effective_rate_plan_falls_back_to_property_when_unset() -> None:
+    """Für Tage ohne rate-plan-genauen Preis gilt weiter der Property-Override/Base
+    (der Plan erbt den property-weiten Preis)."""
+    r = _resolver(
+        base=100.0,
+        overrides=[{"date": "2026-07-02", "price": 180}],
+        rate_plan_overrides=[{"date": "2026-07-01", "price": 333}],
+    )
+    days = r.effective_prices(
+        "p", date(2026, 7, 1), date(2026, 7, 3), rate_plan_id="rp1"
+    )
+    assert days[0].price == 333.0 and days[0].source == "rate_plan"
+    assert days[1].price == 180.0 and days[1].source == "override"
+
+
+def test_effective_ignores_rate_plan_price_without_rate_plan_id() -> None:
+    """OHNE rate_plan_id (FeWo, Kalender-Board) bleibt das Verhalten property-weit —
+    der rate-plan-genaue Preistopf wird gar nicht gelesen (kein Verhaltensbruch)."""
+    r = _resolver(
+        base=100.0,
+        rate_plan_overrides=[{"date": "2026-07-01", "price": 333}],
+    )
+    days = r.effective_prices("p", date(2026, 7, 1), date(2026, 7, 2))
+    assert days[0].price == 100.0 and days[0].source == "base"
 
 
 def test_effective_base_when_config_table_missing() -> None:

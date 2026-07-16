@@ -2319,6 +2319,51 @@ def test_push_rates_batch_failure_keeps_outbox_pending() -> None:
     assert db.tables["ari_restriction_outbox"][0]["status"] == "pending"
 
 
+def _seed_two_rate_plan_maps(db, tenant_id="t1", property_id="p1"):  # noqa: ANN001, ANN201
+    """Kette mit ZWEI gemappten Rate-Plans (lokale IDs rp-a/rp-b), damit die
+    rate-plan-genaue Ziel-Selektion in push_rates_batch prüfbar ist."""
+    _seed_with_room_type(db, tenant_id, property_id=property_id)
+    db.tables["channex_rate_plan_map"].extend([
+        {"id": "rpm-a", "tenant_id": tenant_id, "property_id": property_id,
+         "room_type_map_id": "rt1", "channex_rate_plan_id": "cx-a",
+         "local_rate_plan_id": "rp-a", "deleted_at": None},
+        {"id": "rpm-b", "tenant_id": tenant_id, "property_id": property_id,
+         "room_type_map_id": "rt1", "channex_rate_plan_id": "cx-b",
+         "local_rate_plan_id": "rp-b", "deleted_at": None},
+    ])
+
+
+def test_push_rates_batch_targets_only_matching_rate_plan() -> None:
+    # Hotel-Kern: ein Segment mit rate_plan_id geht NUR an den passenden Channex-
+    # Rate-Plan (cx-b), nicht an beide. Genau ein value (ein Tag × ein Plan).
+    db = _ImportDB()
+    _seed_two_rate_plan_maps(db)
+    channex = _ImportChannex()
+    _import_svc(channex, db).push_rates_batch(
+        "t1", "p1",
+        [{"date_from": date(2099, 6, 23), "date_to": date(2099, 6, 23),
+          "rate_cents": 33300, "rate_plan_id": "rp-b"}],
+    )
+    assert len(channex.restrictions_pushed) == 1
+    v = channex.restrictions_pushed[0]
+    assert v["rate_plan_id"] == "cx-b" and v["rate"] == 33300
+
+
+def test_push_rates_batch_without_rate_plan_id_hits_all() -> None:
+    # Ohne rate_plan_id (FeWo/DP) bleibt das Spiegeln an ALLE Pläne — ein Tag ×
+    # zwei Pläne = zwei values (kein Verhaltensbruch).
+    db = _ImportDB()
+    _seed_two_rate_plan_maps(db)
+    channex = _ImportChannex()
+    _import_svc(channex, db).push_rates_batch(
+        "t1", "p1",
+        [{"date_from": date(2099, 6, 23), "date_to": date(2099, 6, 23),
+          "rate_cents": 20000}],
+    )
+    assert len(channex.restrictions_pushed) == 2
+    assert {v["rate_plan_id"] for v in channex.restrictions_pushed} == {"cx-a", "cx-b"}
+
+
 # --- Hotel-Content-Sync: n Room-Types + Rate-Plans je Kategorie (Teil 2) ---
 def _seed_hotel_property(db, tenant_id="t1", property_id="p1"):  # noqa: ANN001, ANN201
     """Property mit 2 Zimmerkategorien + je 2 Rate-Plans (mit room_type_id)."""

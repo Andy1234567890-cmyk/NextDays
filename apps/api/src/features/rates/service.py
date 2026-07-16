@@ -5,6 +5,8 @@ Preisplans löst den Channex-Sync der Property aus (non-blocking), damit ein
 bepreistes Objekt sofort übertragbar ist. rate_plans ist die Channex-Wahrheit
 für den Basispreis.
 """
+from datetime import date, timedelta
+
 from supabase import Client
 
 from src.core.logging import get_logger
@@ -14,6 +16,9 @@ from src.jobs.queue import try_enqueue_ari, try_enqueue_content_sync
 from .schemas import (
     RatePlanCreate,
     RatePlanListResponse,
+    RatePlanPriceDay,
+    RatePlanPriceListResponse,
+    RatePlanPriceSet,
     RatePlanResponse,
     RatePlanUpdate,
     SliceHealth,
@@ -243,6 +248,132 @@ class RatesService:
         )
         log.info("rate_plan_deleted", tenant_id=tenant_id, rate_plan_id=rate_plan_id)
 
+    def _require_own_rate_plan(self, tenant_id: str, rate_plan_id: str) -> dict:
+        """Einen Rate-Plan laden UND auf den Tenant scopen in EINEM Schritt (Wurzel 3:
+        Load und Scope nicht trennen). Service-Role umgeht RLS → der Join auf
+        properties.tenant_id ist der einzige Eigentums-Backstop."""
+        res = (
+            self._db()
+            .table("rate_plans")
+            .select("id, property_id, properties!inner(tenant_id)")
+            .eq("id", rate_plan_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not res or res[0]["properties"]["tenant_id"] != tenant_id:
+            raise RateError("Preisplan nicht gefunden.", status_code=404)
+        return res[0]
+
+    def list_prices(
+        self, ctx: AuthContext, rate_plan_id: str
+    ) -> RatePlanPriceListResponse:
+        """Datumsgenaue Preise eines Rate-Plans (Hotel). Tenant-gescoped."""
+        tenant_id = self._require_tenant(ctx)
+        self._require_own_rate_plan(tenant_id, rate_plan_id)
+        rows = (
+            self._db()
+            .table("rate_plan_price_overrides")
+            .select("date, price")
+            .eq("rate_plan_id", rate_plan_id)
+            .not_.is_("price", "null")
+            .order("date")
+            .execute()
+        ).data or []
+        items = [
+            RatePlanPriceDay(date=r["date"], price=float(r["price"]))
+            for r in rows
+            if r.get("date") is not None and r.get("price") is not None
+        ]
+        return RatePlanPriceListResponse(rate_plan_id=rate_plan_id, items=items)
+
+    def set_prices(
+        self, ctx: AuthContext, rate_plan_id: str, req: RatePlanPriceSet
+    ) -> RatePlanPriceListResponse:
+        """Datumsgenauen Preis eines Rate-Plans für [start, end) setzen oder (price=
+        None) zurücknehmen. Idempotent über unique(rate_plan_id, date) (Wurzel 2:
+        Doppelklick/Retry erzeugt keine Dubletten). Push an GENAU diesen Rate-Plan
+        (nicht an alle spiegeln) — gilt auf allen 3 Vertriebswegen gleich."""
+        tenant_id = self._require_tenant(ctx)
+        plan = self._require_own_rate_plan(tenant_id, rate_plan_id)
+        property_id = plan["property_id"]
+        days = [
+            req.start + timedelta(days=i)
+            for i in range((req.end - req.start).days)
+        ]
+        if req.price is None:
+            # Zurücknehmen: Zeilen im Zeitraum löschen → Basispreis gilt wieder.
+            (
+                self._db()
+                .table("rate_plan_price_overrides")
+                .delete()
+                .eq("rate_plan_id", rate_plan_id)
+                .gte("date", req.start.isoformat())
+                .lt("date", req.end.isoformat())
+                .execute()
+            )
+        else:
+            # Upsert pro Tag (unique-Backstop dedupliziert Retry/Doppelklick).
+            self._db().table("rate_plan_price_overrides").upsert(
+                [
+                    {
+                        "rate_plan_id": rate_plan_id,
+                        "date": d.isoformat(),
+                        "price": req.price,
+                    }
+                    for d in days
+                ],
+                on_conflict="rate_plan_id,date",
+            ).execute()
+        # Preis an Channex pushen — als Rate-Segment mit rate_plan_id (nur DIESER
+        # Plan). end ist exklusiv → date_to inklusiv = end − 1 Tag.
+        rate_cents = None if req.price is None else int(round(req.price * 100))
+        self._enqueue_rate_plan_push(
+            tenant_id, property_id, rate_plan_id, req.start, req.end, rate_cents
+        )
+        log.info(
+            "rate_plan_prices_set",
+            tenant_id=tenant_id,
+            rate_plan_id=rate_plan_id,
+            days=len(days),
+            cleared=req.price is None,
+        )
+        return self.list_prices(ctx, rate_plan_id)
+
+    def _enqueue_rate_plan_push(
+        self,
+        tenant_id: str,
+        property_id: str,
+        rate_plan_id: str,
+        start: date,
+        end: date,
+        rate_cents: int | None,
+    ) -> None:
+        """Einen rate-plan-genauen Preis-Push einreihen. Beim Zurücknehmen (rate_cents
+        None) kann kein negativer Wert gepusht werden — Channex kennt kein „Preis
+        weg". Der nachfolgende Content-/Reconcile-Sync setzt dann den Basispreis
+        wieder; hier nur das Enqueue bei gesetztem Preis (fail-nicht-leise: der
+        Reconcile-Tick gleicht Zurücknahmen ab)."""
+        if rate_cents is None:
+            self._sync_property(tenant_id, property_id, None, None)
+            return
+        try_enqueue_ari(
+            self._db(),
+            tenant_id,
+            property_id,
+            "rate",
+            {
+                "segments": [
+                    {
+                        "date_from": start.isoformat(),
+                        # date_to inklusiv (end ist exklusiv).
+                        "date_to": (end - timedelta(days=1)).isoformat(),
+                        "rate_cents": rate_cents,
+                        "rate_plan_id": rate_plan_id,
+                    }
+                ]
+            },
+        )
+
     def _sync_property(
         self, tenant_id: str, property_id: str, title: str | None, currency: str | None
     ) -> None:
@@ -267,8 +398,6 @@ class RatesService:
         Horizont ab → coalesce=True sicher; der Reconcile-Tick gleicht zusätzlich ab."""
         if min_stay < 1:
             return
-        from datetime import date, timedelta
-
         today = date.today()
         try_enqueue_ari(
             self._db(), tenant_id, property_id, "rate",

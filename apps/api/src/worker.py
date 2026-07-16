@@ -217,6 +217,12 @@ def _handle_push_ari(
             # None = Ferienwohnung (binärer synthetischer Room-Type).
             room_type_id=payload.get("room_type_id"),
         )
+    elif kind == "rate" and payload.get("segments") is not None:
+        # Rate-Plan-genaue Preise (Hotel) kommen als segments (je Segment optional
+        # ein rate_plan_id → nur DIESER Plan). push_rates_batch pflegt die
+        # Restriktions-Outbox selbst als Backstop (kein bool-Fehlersignal).
+        push.push_rates_batch(tenant_id, property_id, payload["segments"])
+        failed = False
     elif kind == "rate":
         failed = push.push_rate_for_property(
             tenant_id, property_id, _d("date_from"), _d("date_to"),

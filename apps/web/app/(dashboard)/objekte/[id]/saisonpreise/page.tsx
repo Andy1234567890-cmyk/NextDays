@@ -1,5 +1,7 @@
 // Objekt → Saisonpreise: benannte Saisons auf einem Jahres-Kalender (Drag&Drop).
 // Schreibt price_overrides und überträgt die Preise an alle Buchungsportale (Channex).
+import { getTranslations } from "next-intl/server";
+
 import { SeasonCalendar } from "@/components/objekte/season-calendar";
 import { getProperty } from "@/lib/properties";
 import { listRatePlans } from "@/lib/rates";
@@ -12,9 +14,10 @@ export default async function Page({
   const { id } = await params;
   const res = await getProperty(id);
   if (!res.ok) {
+    const t = await getTranslations("roomTypes");
     return (
       <div className="text-sm text-destructive">
-        Objekt konnte nicht geladen werden: {res.error}
+        {t("loadFailed", { error: res.error })}
       </div>
     );
   }

@@ -2,6 +2,8 @@
 // eigene Rate-Plans (BAR, B&B …). Nur im Hotel-Modus über die Subnav erreichbar.
 // Die Zimmerkategorien schalten die Property in das count-basierte Verfügbarkeits-
 // modell (n Room-Types → Channex); ohne Kategorie bleibt das Ferienwohnungs-Modell.
+import { getTranslations } from "next-intl/server";
+
 import { RoomTypesManager } from "@/components/objekte/room-types-manager";
 import { getProperty } from "@/lib/properties";
 import { listRatePlans } from "@/lib/rates";
@@ -19,9 +21,10 @@ export default async function Page({
     listRatePlans(id),
   ]);
   if (!prop.ok) {
+    const t = await getTranslations("roomTypes");
     return (
       <div className="text-sm text-destructive">
-        Objekt konnte nicht geladen werden: {prop.error}
+        {t("loadFailed", { error: prop.error })}
       </div>
     );
   }

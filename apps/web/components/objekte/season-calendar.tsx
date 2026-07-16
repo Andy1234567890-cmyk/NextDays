@@ -6,6 +6,7 @@
 // Preis (Basispreis ±% oder Fixpreis) nach price_overrides materialisiert +
 // an alle Buchungsportale (Channex) gepusht. Live via useRealtime.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -33,12 +34,6 @@ const PALETTE = [
   "#ef4444", "#f97316", "#eab308", "#22c55e",
   "#06b6d4", "#3b82f6", "#8b5cf6", "#ec4899",
 ];
-
-const MONTHS = [
-  "Januar", "Februar", "März", "April", "Mai", "Juni",
-  "Juli", "August", "September", "Oktober", "November", "Dezember",
-];
-const WEEKDAYS = ["M", "D", "M", "D", "F", "S", "S"];
 
 function iso(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -78,6 +73,9 @@ export function SeasonCalendar({
   initial: Property;
   currency: string | null;
 }) {
+  const t = useTranslations("roomTypes");
+  const months = t("months").split(",");
+  const weekdays = t("weekdays").split(",");
   const [year, setYear] = useState(() => new Date().getUTCFullYear());
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [activeSeasonId, setActiveSeasonId] = useState<string | null>(null);
@@ -142,7 +140,7 @@ export function SeasonCalendar({
   // -- Drag-and-Drop über die Tage eines Monats ---------------------------
   function onDayDown(isoDate: string) {
     if (!activeSeasonId) {
-      toast.error("Zuerst links eine Saison wählen oder anlegen.");
+      toast.error(t("seasonPickFirst"));
       return;
     }
     drag.current = { from: isoDate, to: isoDate };
@@ -169,7 +167,7 @@ export function SeasonCalendar({
     });
     setBusy(false);
     if (res.ok) {
-      toast.success(`${res.data.days} Tag(e) zugewiesen.`);
+      toast.success(t("seasonDaysAssigned", { count: res.data.days }));
       void load();
     } else {
       toast.error(res.error);
@@ -193,7 +191,7 @@ export function SeasonCalendar({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
-        <h1 className="font-display text-3xl font-extrabold">Saisonpreise</h1>
+        <h1 className="font-display text-3xl font-extrabold">{t("seasonPageTitle")}</h1>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" onClick={() => setYear((y) => y - 1)}>
             <Icon icon="ph:caret-left" className="size-4" />
@@ -207,11 +205,7 @@ export function SeasonCalendar({
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground">
-        Lege benannte Saisons an, wähle links eine aus und ziehe im Kalender über
-        die Tage — der Zeitraum bekommt den Saisonpreis und wird automatisch an
-        alle Buchungsportale übertragen.
-      </p>
+      <p className="text-sm text-muted-foreground">{t("seasonPageSubtitle")}</p>
 
       <div className="flex flex-col gap-6 lg:flex-row-reverse">
         {/* Legende + Saison-Verwaltung (rechts wie Lodgify) */}
@@ -227,7 +221,7 @@ export function SeasonCalendar({
           />
           {seasons.length === 0 ? (
             <p className="rounded-(--radius) border border-dashed border-border p-4 text-center text-sm text-muted-foreground">
-              Noch keine Saisons. Lege oben eine an.
+              {t("seasonEmpty")}
             </p>
           ) : (
             <ul className="flex flex-col gap-1.5">
@@ -256,7 +250,7 @@ export function SeasonCalendar({
                     </button>
                     <button
                       type="button"
-                      aria-label="Saison löschen"
+                      aria-label={t("seasonDelete")}
                       className="shrink-0 text-muted-foreground hover:text-destructive"
                       onClick={async () => {
                         const res = await deleteSeason(s.id);
@@ -273,19 +267,20 @@ export function SeasonCalendar({
           )}
           {activeSeason && (
             <p className="mt-1 rounded-(--radius) bg-secondary/50 p-2 text-center text-xs text-muted-foreground">
-              Ziehe im Kalender, um <b>{activeSeason.name}</b> zuzuweisen.
+              {t("seasonDragHintPrefix")}<b>{activeSeason.name}</b>{t("seasonDragHintSuffix")}
             </p>
           )}
         </aside>
 
         {/* 12-Monats-Gitter */}
         <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {MONTHS.map((label, m) => (
+          {months.map((label, m) => (
             <MonthGrid
               key={m}
               year={year}
               month={m}
               label={label}
+              weekdays={weekdays}
               dayMap={dayMap}
               inDragRange={inDragRange}
               onDayDown={onDayDown}
@@ -309,6 +304,7 @@ function MonthGrid({
   year,
   month,
   label,
+  weekdays,
   dayMap,
   inDragRange,
   onDayDown,
@@ -319,6 +315,7 @@ function MonthGrid({
   year: number;
   month: number;
   label: string;
+  weekdays: string[];
   dayMap: Map<string, DayInfo>;
   inDragRange: (isoDate: string) => boolean;
   onDayDown: (isoDate: string) => void;
@@ -326,6 +323,7 @@ function MonthGrid({
   onRemoveAssignment: (assignmentId: string) => void;
   disabled: boolean;
 }) {
+  const t = useTranslations("roomTypes");
   const first = new Date(Date.UTC(year, month, 1));
   const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
   const lead = mondayIndex(first); // Leerzellen vor dem 1.
@@ -340,7 +338,7 @@ function MonthGrid({
     <div className="rounded-lg border border-border p-2">
       <div className="mb-1 text-center text-sm font-semibold">{label}</div>
       <div className="grid grid-cols-7 gap-0.5 text-center text-[0.6rem] text-muted-foreground">
-        {WEEKDAYS.map((w, i) => (
+        {weekdays.map((w, i) => (
           <span key={i}>{w}</span>
         ))}
       </div>
@@ -362,7 +360,7 @@ function MonthGrid({
               }}
               title={
                 info
-                  ? `${info.season.name} — Doppelklick zum Entfernen`
+                  ? t("seasonRemoveTitle", { name: info.season.name })
                   : undefined
               }
               className={`flex aspect-square items-center justify-center rounded text-xs transition-[outline] ${
@@ -391,6 +389,7 @@ function SeasonEditor({
   basePrice: number | null;
   onCreated: (s: Season) => void;
 }) {
+  const t = useTranslations("roomTypes");
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [mode, setMode] = useState<SeasonMode>("percent");
@@ -401,11 +400,11 @@ function SeasonEditor({
   async function submit() {
     const amt = Number(amount);
     if (!name.trim()) {
-      toast.error("Bitte einen Namen angeben.");
+      toast.error(t("seasonNameRequired"));
       return;
     }
     if (Number.isNaN(amt) || (mode === "fixed" && amt < 0)) {
-      toast.error("Bitte einen gültigen Wert angeben.");
+      toast.error(t("seasonValueRequired"));
       return;
     }
     setSaving(true);
@@ -440,22 +439,22 @@ function SeasonEditor({
       <PopoverTrigger asChild>
         <Button className="w-full gap-2">
           <Icon icon="ph:plus" className="size-4" />
-          Saison hinzufügen
+          {t("seasonAdd")}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-72">
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="season-name">Name</Label>
+            <Label htmlFor="season-name">{t("name")}</Label>
             <Input
               id="season-name"
-              placeholder="z. B. Hochsaison"
+              placeholder={t("seasonNamePlaceholder")}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label>Preisregel</Label>
+            <Label>{t("seasonPriceRule")}</Label>
             <div className="flex gap-1 rounded-full border border-border p-0.5">
               {(["percent", "fixed"] as SeasonMode[]).map((mo) => (
                 <button
@@ -468,36 +467,40 @@ function SeasonEditor({
                       : "text-muted-foreground hover:bg-secondary"
                   }`}
                 >
-                  {mo === "percent" ? "Aufschlag %" : "Fixpreis"}
+                  {mo === "percent" ? t("seasonSurcharge") : t("seasonFixed")}
                 </button>
               ))}
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="season-amount">
-              {mode === "percent" ? "Aufschlag (± %)" : "Preis / Nacht"}
+              {mode === "percent" ? t("seasonSurchargeLabel") : t("seasonPriceLabel")}
             </Label>
             <Input
               id="season-amount"
               type="number"
-              placeholder={mode === "percent" ? "z. B. 30 oder -15" : "z. B. 240"}
+              placeholder={
+                mode === "percent"
+                  ? t("seasonSurchargePlaceholder")
+                  : t("seasonPricePlaceholder")
+              }
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
             />
             {preview && (
               <p className="text-xs text-muted-foreground">
-                Effektiv: {preview}
+                {t("seasonEffective")}{preview}
               </p>
             )}
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label>Farbe</Label>
+            <Label>{t("seasonColor")}</Label>
             <div className="flex flex-wrap gap-1.5">
               {PALETTE.map((c) => (
                 <button
                   key={c}
                   type="button"
-                  aria-label={`Farbe ${c}`}
+                  aria-label={t("seasonColorAria", { color: c })}
                   onClick={() => setColor(c)}
                   className={`size-6 rounded-full transition-transform ${
                     color === c ? "scale-110 ring-2 ring-foreground ring-offset-2" : ""
@@ -508,7 +511,7 @@ function SeasonEditor({
             </div>
           </div>
           <Button onClick={submit} disabled={saving} className="w-full">
-            {saving ? "Speichern…" : "Saison anlegen"}
+            {saving ? t("seasonSaving") : t("seasonCreate")}
           </Button>
         </div>
       </PopoverContent>

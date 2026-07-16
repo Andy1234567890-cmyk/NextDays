@@ -215,6 +215,35 @@ class PricingResolver:
                 out[day] = price
         return out
 
+    def _load_rate_plan_overrides(
+        self, rate_plan_id: str, check_in: date, check_out: date
+    ) -> dict[str, float]:
+        """Datumsgenaue Preise EINES Rate-Plans (Hotel: Twin/BAR ≠ Double/B&B).
+
+        Optional wie die anderen Zusatzquellen: fehlt die Tabelle (Umgebung noch
+        nicht auf 0146 migriert), gilt leer → der Resolver fällt sauber auf den
+        property-weiten Override/Base zurück (kein erfundener Preis, kein Crash)."""
+        try:
+            res = (
+                self._db()
+                .table("rate_plan_price_overrides")
+                .select("date, price")
+                .eq("rate_plan_id", rate_plan_id)
+                .gte("date", check_in.isoformat())
+                .lt("date", check_out.isoformat())
+                .not_.is_("price", "null")
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — fehlende Tabelle = keine RP-Preise
+            log.warning("rate_plan_price_overrides_unavailable", error=str(exc))
+            return {}
+        out: dict[str, float] = {}
+        for r in res:
+            day, price = r.get("date"), _to_float(r.get("price"))
+            if isinstance(day, str) and price is not None:
+                out[day] = price
+        return out
+
     def _load_dynamic(
         self, property_id: str, check_in: date, check_out: date
     ) -> dict[str, dict]:
@@ -247,14 +276,25 @@ class PricingResolver:
         return out
 
     # -- Effektivpreis pro Tag ------------------------------------------------
-    def effective_price(self, property_id: str, day: date) -> EffectivePriceDay:
-        """Effektivpreis EINES Tages: override > dynamic > weekday > base."""
+    def effective_price(
+        self, property_id: str, day: date, *, rate_plan_id: str | None = None
+    ) -> EffectivePriceDay:
+        """Effektivpreis EINES Tages: rate_plan > override > dynamic > weekday > base.
+
+        `rate_plan_id` optional — nur gesetzt, wenn ein KONKRETER Rate-Plan bepreist
+        wird (Channex-Push pro Rate-Plan, Hotel-Quote). Ohne ihn bleibt das Verhalten
+        property-weit wie bisher (FeWo, Kalender-Board)."""
         nxt = day + timedelta(days=1)
         overrides = self._load_overrides(property_id, day, nxt)
         dynamic = self._load_dynamic(property_id, day, nxt)
         config = self._load_config(property_id)
         base, _currency = self._load_rate_plan(property_id)
-        return self._effective_for_day(day, overrides, dynamic, config, base)
+        rp_over = (
+            self._load_rate_plan_overrides(rate_plan_id, day, nxt)
+            if rate_plan_id
+            else {}
+        )
+        return self._effective_for_day(day, overrides, dynamic, config, base, rp_over)
 
     @staticmethod
     def _effective_for_day(
@@ -263,9 +303,16 @@ class PricingResolver:
         dynamic: dict[str, dict],
         config: _PricingConfig,
         base: float | None,
+        rate_plan_overrides: dict[str, float] | None = None,
     ) -> EffectivePriceDay:
         key = day.isoformat()
-        # Manueller Override gewinnt IMMER (auch über Dynamic Pricing).
+        # Datumsgenauer Preis DIESES Rate-Plans gewinnt vor allem anderen (Hotel:
+        # Twin/BAR und Double/B&B können am selben Tag verschieden sein).
+        if rate_plan_overrides and key in rate_plan_overrides:
+            return EffectivePriceDay(
+                date=day, price=rate_plan_overrides[key], source="rate_plan"
+            )
+        # Manueller Property-Override gewinnt vor Dynamic Pricing.
         if key in overrides:
             return EffectivePriceDay(date=day, price=overrides[key], source="override")
         if key in dynamic:
@@ -283,15 +330,28 @@ class PricingResolver:
         return EffectivePriceDay(date=day, price=None, source="none")
 
     def effective_prices(
-        self, property_id: str, check_in: date, check_out: date
+        self,
+        property_id: str,
+        check_in: date,
+        check_out: date,
+        *,
+        rate_plan_id: str | None = None,
     ) -> list[EffectivePriceDay]:
-        """Effektivpreise für jeden Tag [check_in, check_out) in EINEM Lauf."""
+        """Effektivpreise für jeden Tag [check_in, check_out) in EINEM Lauf.
+
+        `rate_plan_id` optional (siehe effective_price): gesetzt → dessen
+        datumsgenaue Preise gewinnen; None → property-weit wie bisher."""
         overrides = self._load_overrides(property_id, check_in, check_out)
         dynamic = self._load_dynamic(property_id, check_in, check_out)
         config = self._load_config(property_id)
         base, _currency = self._load_rate_plan(property_id)
+        rp_over = (
+            self._load_rate_plan_overrides(rate_plan_id, check_in, check_out)
+            if rate_plan_id
+            else {}
+        )
         return [
-            self._effective_for_day(day, overrides, dynamic, config, base)
+            self._effective_for_day(day, overrides, dynamic, config, base, rp_over)
             for day in _nights(check_in, check_out)
         ]
 

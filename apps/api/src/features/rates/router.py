@@ -15,6 +15,8 @@ from src.features.auth.granular_permissions import Permission
 from .schemas import (
     RatePlanCreate,
     RatePlanListResponse,
+    RatePlanPriceListResponse,
+    RatePlanPriceSet,
     RatePlanResponse,
     RatePlanUpdate,
     SliceHealth,
@@ -87,5 +89,31 @@ def update_rate(
 def delete_rate(rate_plan_id: str, service: RatesServiceDep, ctx: _write) -> None:
     try:
         service.delete(ctx, rate_plan_id)
+    except RateError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/{rate_plan_id}/prices", response_model=RatePlanPriceListResponse)
+def list_rate_prices(
+    rate_plan_id: str, service: RatesServiceDep, ctx: _write
+) -> RatePlanPriceListResponse:
+    """Datumsgenaue Preise eines Rate-Plans (Hotel: Preis pro Kategorie×Rate×Datum)."""
+    try:
+        return service.list_prices(ctx, rate_plan_id)
+    except RateError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put("/{rate_plan_id}/prices", response_model=RatePlanPriceListResponse)
+def set_rate_prices(
+    rate_plan_id: str,
+    req: RatePlanPriceSet,
+    service: RatesServiceDep,
+    ctx: _write,
+) -> RatePlanPriceListResponse:
+    """Datumsgenauen Preis für [start, end) setzen (price=null nimmt ihn zurück).
+    Push an GENAU diesen Rate-Plan; gilt auf allen 3 Vertriebswegen gleich."""
+    try:
+        return service.set_prices(ctx, rate_plan_id, req)
     except RateError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

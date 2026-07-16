@@ -88,6 +88,32 @@ export async function deleteRatePlan(id: string): Promise<Result<null>> {
   return call(`/rates/${id}`, { method: "DELETE" });
 }
 
+// Datumsgenauer Preis EINES Rate-Plans (Hotel: Twin/BAR ≠ Double/B&B am selben
+// Tag). Gilt identisch auf allen 3 Vertriebswegen; kein Kanal-Split (nur Sperren
+// sind kanalgetrennt). Realtime-Tabelle: rate_plan_price_overrides.
+export type RatePlanPriceDay = { date: string; price: number };
+
+/** Datumsgenaue Preise eines Rate-Plans (nur gesetzte Tage). */
+export async function listRatePlanPrices(
+  ratePlanId: string,
+): Promise<Result<{ rate_plan_id: string; items: RatePlanPriceDay[] }>> {
+  return call(`/rates/${ratePlanId}/prices`);
+}
+
+/** Datumspreis für [start, end) setzen (end exklusiv). `price=null` nimmt den
+ *  Datumspreis zurück (Basispreis gilt wieder). Push an GENAU diesen Rate-Plan. */
+export async function setRatePlanPrices(
+  ratePlanId: string,
+  start: string,
+  end: string,
+  price: number | null,
+): Promise<Result<{ rate_plan_id: string; items: RatePlanPriceDay[] }>> {
+  return call(`/rates/${ratePlanId}/prices`, {
+    method: "PUT",
+    body: { start, end, price },
+  });
+}
+
 /** Basispreis eines Objekts setzen: Upsert im Backend (ersten rate_plan ändern
  *  oder anlegen) in EINEM Round-Trip — der Basispreis landet immer, auch beim
  *  ersten Speichern, ohne Race-Dublette. Schließt die Kette zu Channex (Sync). */

@@ -5,6 +5,7 @@
 // (kein manuelles Reload); Anlegen/Ändern/Löschen löst im Backend den Channex-
 // Sync aus (n Room-Types + Rate-Plans je Kategorie).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,8 @@ import {
   type RoomType,
 } from "@/lib/room-types";
 import { useRealtime } from "@/lib/use-realtime";
+
+import { RatePlanPriceCalendar } from "./rate-plan-price-calendar";
 
 type RoomDraft = {
   title: string;
@@ -71,10 +74,10 @@ function validateRateRow(
   const price = Number(d.basePrice);
   const cur = d.currency;
   const minStay = Math.max(1, parseInt(d.minStay, 10) || 1);
-  if (!name) return { ok: false, error: "Name fehlt." };
+  if (!name) return { ok: false, error: "errNameMissing" };
   if (!(price >= 0) || d.basePrice === "")
-    return { ok: false, error: "Preis ungültig." };
-  if (!cur) return { ok: false, error: "Währung fehlt." };
+    return { ok: false, error: "errPriceInvalid" };
+  if (!cur) return { ok: false, error: "errCurrencyMissing" };
   return { ok: true, value: { name, price, cur, minStay } };
 }
 
@@ -109,11 +112,11 @@ function validateRow(
   const children = parseInt(d.occChildren, 10) || 0;
   const infants = parseInt(d.occInfants, 10) || 0;
   const defOcc = parseInt(d.defaultOccupancy, 10);
-  if (!title) return { ok: false, error: "Name fehlt." };
-  if (!(count >= 1)) return { ok: false, error: "Zimmeranzahl ≥ 1." };
-  if (!(adults >= 1)) return { ok: false, error: "Erwachsene ≥ 1." };
+  if (!title) return { ok: false, error: "errNameMissing" };
+  if (!(count >= 1)) return { ok: false, error: "errRoomsMin" };
+  if (!(adults >= 1)) return { ok: false, error: "errAdultsMin" };
   if (defOcc > adults)
-    return { ok: false, error: "Standardbelegung > Erwachsene." };
+    return { ok: false, error: "errDefaultGtAdults" };
   return { ok: true, value: { title, count, adults, children, infants, defOcc } };
 }
 
@@ -143,6 +146,7 @@ export function RoomTypesManager({
   initialRoomTypes: RoomType[];
   initialRatePlans: RatePlan[];
 }) {
+  const t = useTranslations("roomTypes");
   const [rooms, setRooms] = useState<RoomType[]>(initialRoomTypes);
   const [rates, setRates] = useState<RatePlan[]>(initialRatePlans);
   const [error, setError] = useState<string | null>(null);
@@ -232,10 +236,10 @@ export function RoomTypesManager({
       setNewRows(
         validated.map((v) => ({
           ...v.row,
-          rowError: v.res.ok ? undefined : v.res.error,
+          rowError: v.res.ok ? undefined : t(v.res.error),
         })),
       );
-      setError("Bitte die markierten Zeilen korrigieren.");
+      setError(t("errFixRows"));
       return;
     }
     setBusy(true);
@@ -269,14 +273,14 @@ export function RoomTypesManager({
     setNewRows(remaining);
     setError(
       created > 0
-        ? `${created} Kategorie(n) angelegt, ${remaining.length} fehlgeschlagen — bitte prüfen.`
-        : "Anlegen fehlgeschlagen — bitte die Zeilen prüfen.",
+        ? t("categoriesCreatedPartial", { created, failed: remaining.length })
+        : t("createFailed"),
     );
   }
 
   async function saveRoom() {
     const res0 = validateRow(roomDraft);
-    if (!res0.ok) return setError(res0.error);
+    if (!res0.ok) return setError(t(res0.error));
     const { title, count, adults, children, infants, defOcc } = res0.value;
     setBusy(true);
     setError(null);
@@ -352,10 +356,10 @@ export function RoomTypesManager({
       setNewRateRows(
         validated.map((v) => ({
           ...v.row,
-          rowError: v.res.ok ? undefined : v.res.error,
+          rowError: v.res.ok ? undefined : t(v.res.error),
         })),
       );
-      setError("Bitte die markierten Zeilen korrigieren.");
+      setError(t("errFixRows"));
       return;
     }
     setBusy(true);
@@ -384,8 +388,8 @@ export function RoomTypesManager({
     setNewRateRows(remaining);
     setError(
       created > 0
-        ? `${created} Preisplan(e) angelegt, ${remaining.length} fehlgeschlagen — bitte prüfen.`
-        : "Anlegen fehlgeschlagen — bitte die Zeilen prüfen.",
+        ? t("ratePlansCreatedPartial", { created, failed: remaining.length })
+        : t("createFailed"),
     );
   }
 
@@ -393,7 +397,7 @@ export function RoomTypesManager({
   async function saveRate() {
     if (!rateEditing || rateEditing.plan === "new") return;
     const res0 = validateRateRow(rateDraft);
-    if (!res0.ok) return setError(res0.error);
+    if (!res0.ok) return setError(t(res0.error));
     const { name, price, cur, minStay } = res0.value;
     setBusy(true);
     setError(null);
@@ -425,15 +429,12 @@ export function RoomTypesManager({
     <div className="flex flex-col gap-6">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold">Zimmerkategorien</h1>
-          <p className="text-sm text-muted-foreground">
-            Lege Zimmertypen (z. B. Doppelzimmer, Suite) mit Belegung und Anzahl an
-            und pflege je Kategorie eigene Preispläne.
-          </p>
+          <h1 className="text-xl font-semibold">{t("pageTitle")}</h1>
+          <p className="text-sm text-muted-foreground">{t("pageSubtitle")}</p>
         </div>
         <Button onClick={startCreateRoom} disabled={busy}>
           <Icon icon="ph:plus" className="size-4" />
-          Neue Kategorie
+          {t("newCategory")}
         </Button>
       </div>
 
@@ -447,14 +448,12 @@ export function RoomTypesManager({
             <Icon icon="ph:bed" className="size-6 text-muted-foreground" />
           </span>
           <div>
-            <p className="font-semibold">Noch keine Zimmerkategorien</p>
-            <p className="text-sm text-muted-foreground">
-              Lege deine erste Kategorie an, um Zimmer nach Typ zu verwalten.
-            </p>
+            <p className="font-semibold">{t("emptyTitle")}</p>
+            <p className="text-sm text-muted-foreground">{t("emptyBody")}</p>
           </div>
           <Button onClick={startCreateRoom} disabled={busy}>
             <Icon icon="ph:plus" className="size-4" />
-            Neue Kategorie
+            {t("newCategory")}
           </Button>
         </Card>
       ) : (
@@ -465,11 +464,17 @@ export function RoomTypesManager({
                 <div className="min-w-0">
                   <p className="truncate font-semibold">{rt.title}</p>
                   <p className="text-sm text-muted-foreground">
-                    {rt.count_of_rooms} Zimmer · Belegung {rt.occ_adults} Erw.
-                    {rt.occ_children > 0 ? ` · ${rt.occ_children} Kinder` : ""}
-                    {rt.occ_infants > 0 ? ` · ${rt.occ_infants} Kleinkinder` : ""}
-                    {" · Standard "}
-                    {rt.default_occupancy}
+                    {t("roomsSummary", {
+                      count: rt.count_of_rooms,
+                      adults: rt.occ_adults,
+                    })}
+                    {rt.occ_children > 0
+                      ? t("childrenSuffix", { count: rt.occ_children })
+                      : ""}
+                    {rt.occ_infants > 0
+                      ? t("infantsSuffix", { count: rt.occ_infants })
+                      : ""}
+                    {t("defaultSuffix", { count: rt.default_occupancy })}
                   </p>
                 </div>
                 <div className="flex shrink-0 gap-1">
@@ -478,7 +483,7 @@ export function RoomTypesManager({
                     size="icon"
                     onClick={() => startEditRoom(rt)}
                     disabled={busy}
-                    aria-label="Kategorie bearbeiten"
+                    aria-label={t("editCategory")}
                   >
                     <Icon icon="ph:pencil-simple" className="size-4" />
                   </Button>
@@ -487,7 +492,7 @@ export function RoomTypesManager({
                     size="icon"
                     onClick={() => removeRoom(rt)}
                     disabled={busy}
-                    aria-label="Kategorie löschen"
+                    aria-label={t("deleteCategory")}
                   >
                     <Icon icon="ph:trash" className="size-4" />
                   </Button>
@@ -498,7 +503,7 @@ export function RoomTypesManager({
               <div className="flex flex-col gap-2 border-t pt-3">
                 {ratesFor(rt.id).length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    Noch kein Preisplan für diese Kategorie.
+                    {t("noRatePlan")}
                   </p>
                 ) : (
                   ratesFor(rt.id).map((plan) => (
@@ -510,7 +515,9 @@ export function RoomTypesManager({
                         <span className="truncate text-sm font-medium">{plan.name}</span>
                         <span className="ml-2 text-sm text-muted-foreground">
                           {money(plan.base_price, plan.currency)}
-                          {plan.min_stay > 1 ? ` · min. ${plan.min_stay} N.` : ""}
+                          {plan.min_stay > 1
+                            ? t("minNights", { count: plan.min_stay })
+                            : ""}
                         </span>
                       </div>
                       <div className="flex shrink-0 gap-1">
@@ -519,7 +526,7 @@ export function RoomTypesManager({
                           size="icon"
                           onClick={() => startEditRate(rt.id, plan)}
                           disabled={busy}
-                          aria-label="Preisplan bearbeiten"
+                          aria-label={t("editRatePlan")}
                         >
                           <Icon icon="ph:pencil-simple" className="size-4" />
                         </Button>
@@ -528,7 +535,7 @@ export function RoomTypesManager({
                           size="icon"
                           onClick={() => removeRate(plan)}
                           disabled={busy}
-                          aria-label="Preisplan löschen"
+                          aria-label={t("deleteRatePlan")}
                         >
                           <Icon icon="ph:trash" className="size-4" />
                         </Button>
@@ -544,7 +551,7 @@ export function RoomTypesManager({
                   disabled={busy}
                 >
                   <Icon icon="ph:plus" className="size-4" />
-                  Preisplan hinzufügen
+                  {t("addRatePlan")}
                 </Button>
               </div>
             </Card>
@@ -563,12 +570,11 @@ export function RoomTypesManager({
         >
           <SheetHeader>
             <SheetTitle>
-              {roomEditing === "new" ? "Neue Zimmerkategorien" : "Kategorie bearbeiten"}
+              {roomEditing === "new"
+                ? t("categoryDialogTitleNew")
+                : t("categoryDialogTitleEdit")}
             </SheetTitle>
-            <SheetDescription>
-              Belegung und Zimmeranzahl bestimmen Verfügbarkeit und Verkauf an die
-              Portale.
-            </SheetDescription>
+            <SheetDescription>{t("categoryDialogDesc")}</SheetDescription>
           </SheetHeader>
 
           {roomEditing === "new" ? (
@@ -581,30 +587,30 @@ export function RoomTypesManager({
                   >
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-sm font-medium text-muted-foreground">
-                        Kategorie {i + 1}
+                        {t("categoryRow", { index: i + 1 })}
                       </span>
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => removeRow(i)}
                         disabled={busy || newRows.length <= 1}
-                        aria-label="Zeile entfernen"
+                        aria-label={t("removeRow")}
                       >
                         <Icon icon="ph:trash" className="size-4" />
                       </Button>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <Label htmlFor={`nr-title-${i}`}>Name</Label>
+                      <Label htmlFor={`nr-title-${i}`}>{t("name")}</Label>
                       <Input
                         id={`nr-title-${i}`}
                         value={row.title}
-                        placeholder="z. B. Doppelzimmer"
+                        placeholder={t("namePlaceholderCategory")}
                         onChange={(e) => patchRow(i, { title: e.target.value })}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
                       <div className="flex flex-col gap-1.5">
-                        <Label htmlFor={`nr-count-${i}`}>Zimmer</Label>
+                        <Label htmlFor={`nr-count-${i}`}>{t("rooms")}</Label>
                         <Input
                           id={`nr-count-${i}`}
                           type="number"
@@ -614,7 +620,7 @@ export function RoomTypesManager({
                         />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <Label htmlFor={`nr-default-${i}`}>Standard</Label>
+                        <Label htmlFor={`nr-default-${i}`}>{t("standard")}</Label>
                         <Input
                           id={`nr-default-${i}`}
                           type="number"
@@ -626,7 +632,7 @@ export function RoomTypesManager({
                         />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <Label htmlFor={`nr-adults-${i}`}>Erw.</Label>
+                        <Label htmlFor={`nr-adults-${i}`}>{t("adultsShort")}</Label>
                         <Input
                           id={`nr-adults-${i}`}
                           type="number"
@@ -636,7 +642,7 @@ export function RoomTypesManager({
                         />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <Label htmlFor={`nr-children-${i}`}>Kinder</Label>
+                        <Label htmlFor={`nr-children-${i}`}>{t("children")}</Label>
                         <Input
                           id={`nr-children-${i}`}
                           type="number"
@@ -646,7 +652,7 @@ export function RoomTypesManager({
                         />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <Label htmlFor={`nr-infants-${i}`}>Klk.</Label>
+                        <Label htmlFor={`nr-infants-${i}`}>{t("infantsShort")}</Label>
                         <Input
                           id={`nr-infants-${i}`}
                           type="number"
@@ -669,7 +675,7 @@ export function RoomTypesManager({
                   disabled={busy}
                 >
                   <Icon icon="ph:plus" className="size-4" />
-                  Weitere Kategorie
+                  {t("anotherCategory")}
                 </Button>
                 {error && <p className="text-sm text-destructive">{error}</p>}
               </div>
@@ -679,12 +685,12 @@ export function RoomTypesManager({
                   onClick={() => setRoomEditing(null)}
                   disabled={busy}
                 >
-                  Abbrechen
+                  {t("cancel")}
                 </Button>
                 <Button onClick={saveNewRows} disabled={busy}>
                   {newRows.length > 1
-                    ? `${newRows.length} Kategorien speichern`
-                    : "Speichern"}
+                    ? t("saveCategories", { count: newRows.length })
+                    : t("save")}
                 </Button>
               </SheetFooter>
             </>
@@ -692,17 +698,17 @@ export function RoomTypesManager({
             <>
               <div className="flex min-w-0 flex-col gap-4 overflow-y-auto px-4">
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="rt-title">Name</Label>
+                  <Label htmlFor="rt-title">{t("name")}</Label>
                   <Input
                     id="rt-title"
                     value={roomDraft.title}
-                    placeholder="z. B. Doppelzimmer"
+                    placeholder={t("namePlaceholderCategory")}
                     onChange={(e) => setRoomDraft({ ...roomDraft, title: e.target.value })}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="rt-count">Anzahl Zimmer</Label>
+                    <Label htmlFor="rt-count">{t("roomCount")}</Label>
                     <Input
                       id="rt-count"
                       type="number"
@@ -714,7 +720,7 @@ export function RoomTypesManager({
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="rt-default">Standardbelegung</Label>
+                    <Label htmlFor="rt-default">{t("defaultOccupancy")}</Label>
                     <Input
                       id="rt-default"
                       type="number"
@@ -728,7 +734,7 @@ export function RoomTypesManager({
                 </div>
                 <div className="grid grid-cols-3 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="rt-adults">Erwachsene</Label>
+                    <Label htmlFor="rt-adults">{t("adults")}</Label>
                     <Input
                       id="rt-adults"
                       type="number"
@@ -740,7 +746,7 @@ export function RoomTypesManager({
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="rt-children">Kinder</Label>
+                    <Label htmlFor="rt-children">{t("children")}</Label>
                     <Input
                       id="rt-children"
                       type="number"
@@ -752,7 +758,7 @@ export function RoomTypesManager({
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="rt-infants">Kleinkinder</Label>
+                    <Label htmlFor="rt-infants">{t("infants")}</Label>
                     <Input
                       id="rt-infants"
                       type="number"
@@ -772,10 +778,10 @@ export function RoomTypesManager({
                   onClick={() => setRoomEditing(null)}
                   disabled={busy}
                 >
-                  Abbrechen
+                  {t("cancel")}
                 </Button>
                 <Button onClick={saveRoom} disabled={busy || !roomDraft.title.trim()}>
-                  Speichern
+                  {t("save")}
                 </Button>
               </SheetFooter>
             </>
@@ -794,12 +800,11 @@ export function RoomTypesManager({
         >
           <SheetHeader>
             <SheetTitle>
-              {rateEditing?.plan === "new" ? "Neue Preispläne" : "Preisplan bearbeiten"}
+              {rateEditing?.plan === "new"
+                ? t("ratePlanDialogTitleNew")
+                : t("ratePlanDialogTitleEdit")}
             </SheetTitle>
-            <SheetDescription>
-              Mehrere Pläne je Kategorie (z. B. Best Available Rate, Bed & Breakfast)
-              mit eigenem Preis.
-            </SheetDescription>
+            <SheetDescription>{t("ratePlanDialogDesc")}</SheetDescription>
           </SheetHeader>
 
           {rateEditing?.plan === "new" ? (
@@ -812,30 +817,30 @@ export function RoomTypesManager({
                   >
                     <div className="flex items-center justify-between gap-3">
                       <span className="text-sm font-medium text-muted-foreground">
-                        Preisplan {i + 1}
+                        {t("ratePlanRow", { index: i + 1 })}
                       </span>
                       <Button
                         variant="ghost"
                         size="icon"
                         onClick={() => removeRateRow(i)}
                         disabled={busy || newRateRows.length <= 1}
-                        aria-label="Zeile entfernen"
+                        aria-label={t("removeRow")}
                       >
                         <Icon icon="ph:trash" className="size-4" />
                       </Button>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <Label htmlFor={`nrp-name-${i}`}>Name</Label>
+                      <Label htmlFor={`nrp-name-${i}`}>{t("name")}</Label>
                       <Input
                         id={`nrp-name-${i}`}
                         value={row.name}
-                        placeholder="z. B. Best Available Rate"
+                        placeholder={t("namePlaceholderRate")}
                         onChange={(e) => patchRateRow(i, { name: e.target.value })}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                       <div className="flex flex-col gap-1.5">
-                        <Label htmlFor={`nrp-price-${i}`}>Preis</Label>
+                        <Label htmlFor={`nrp-price-${i}`}>{t("price")}</Label>
                         <Input
                           id={`nrp-price-${i}`}
                           type="number"
@@ -846,14 +851,14 @@ export function RoomTypesManager({
                         />
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <Label htmlFor={`nrp-currency-${i}`}>Währung</Label>
+                        <Label htmlFor={`nrp-currency-${i}`}>{t("currency")}</Label>
                         <NativeSelect
                           id={`nrp-currency-${i}`}
                           value={row.currency}
                           onChange={(e) => patchRateRow(i, { currency: e.target.value })}
                         >
                           <option value="" disabled>
-                            Wählen …
+                            {t("chooseOption")}
                           </option>
                           {CURRENCY_OPTIONS.map((o) => (
                             <option key={o.value} value={o.value}>
@@ -863,7 +868,7 @@ export function RoomTypesManager({
                         </NativeSelect>
                       </div>
                       <div className="flex flex-col gap-1.5">
-                        <Label htmlFor={`nrp-minstay-${i}`}>Min. Nächte</Label>
+                        <Label htmlFor={`nrp-minstay-${i}`}>{t("minNightsLabel")}</Label>
                         <Input
                           id={`nrp-minstay-${i}`}
                           type="number"
@@ -886,7 +891,7 @@ export function RoomTypesManager({
                   disabled={busy}
                 >
                   <Icon icon="ph:plus" className="size-4" />
-                  Weiterer Preisplan
+                  {t("anotherRatePlan")}
                 </Button>
                 {error && <p className="text-sm text-destructive">{error}</p>}
               </div>
@@ -896,12 +901,12 @@ export function RoomTypesManager({
                   onClick={() => setRateEditing(null)}
                   disabled={busy}
                 >
-                  Abbrechen
+                  {t("cancel")}
                 </Button>
                 <Button onClick={saveNewRates} disabled={busy}>
                   {newRateRows.length > 1
-                    ? `${newRateRows.length} Preispläne speichern`
-                    : "Speichern"}
+                    ? t("saveRatePlans", { count: newRateRows.length })
+                    : t("save")}
                 </Button>
               </SheetFooter>
             </>
@@ -909,17 +914,17 @@ export function RoomTypesManager({
             <>
               <div className="flex min-w-0 flex-col gap-4 overflow-y-auto px-4">
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="rp-name">Name</Label>
+                  <Label htmlFor="rp-name">{t("name")}</Label>
                   <Input
                     id="rp-name"
                     value={rateDraft.name}
-                    placeholder="z. B. Best Available Rate"
+                    placeholder={t("namePlaceholderRate")}
                     onChange={(e) => setRateDraft({ ...rateDraft, name: e.target.value })}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="rp-price">Preis</Label>
+                    <Label htmlFor="rp-price">{t("price")}</Label>
                     <Input
                       id="rp-price"
                       type="number"
@@ -932,7 +937,7 @@ export function RoomTypesManager({
                     />
                   </div>
                   <div className="flex flex-col gap-1.5">
-                    <Label htmlFor="rp-currency">Währung</Label>
+                    <Label htmlFor="rp-currency">{t("currency")}</Label>
                     <NativeSelect
                       id="rp-currency"
                       value={rateDraft.currency}
@@ -941,7 +946,7 @@ export function RoomTypesManager({
                       }
                     >
                       <option value="" disabled>
-                        Wählen …
+                        {t("chooseOption")}
                       </option>
                       {CURRENCY_OPTIONS.map((o) => (
                         <option key={o.value} value={o.value}>
@@ -952,7 +957,7 @@ export function RoomTypesManager({
                   </div>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <Label htmlFor="rp-minstay">Mindestaufenthalt (Nächte)</Label>
+                  <Label htmlFor="rp-minstay">{t("minStayLabel")}</Label>
                   <Input
                     id="rp-minstay"
                     type="number"
@@ -961,6 +966,18 @@ export function RoomTypesManager({
                     onChange={(e) => setRateDraft({ ...rateDraft, minStay: e.target.value })}
                   />
                 </div>
+                {rateEditing && (
+                  <div className="flex flex-col gap-1.5">
+                    <Label>{t("pricesByDate")}</Label>
+                    <p className="text-sm text-muted-foreground">
+                      {t("pricesByDateHint")}
+                    </p>
+                    <RatePlanPriceCalendar
+                      ratePlanId={(rateEditing.plan as RatePlan).id}
+                      currency={rateDraft.currency}
+                    />
+                  </div>
+                )}
                 {error && <p className="text-sm text-destructive">{error}</p>}
               </div>
               <SheetFooter>
@@ -969,10 +986,10 @@ export function RoomTypesManager({
                   onClick={() => setRateEditing(null)}
                   disabled={busy}
                 >
-                  Abbrechen
+                  {t("cancel")}
                 </Button>
                 <Button onClick={saveRate} disabled={busy || !rateDraft.name.trim()}>
-                  Speichern
+                  {t("save")}
                 </Button>
               </SheetFooter>
             </>

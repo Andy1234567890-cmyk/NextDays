@@ -59,6 +59,10 @@ def _segment_to_payload(seg: dict[str, Any]) -> dict[str, Any]:
         out["rate_cents"] = seg["rate_cents"]
     if seg.get("min_stay") is not None:
         out["min_stay"] = seg["min_stay"]
+    # Rate-Plan-genaues Segment (Hotel) muss den Cron-Retry überleben, sonst
+    # spiegelt der Backstop den Preis wieder an ALLE Pläne.
+    if seg.get("rate_plan_id") is not None:
+        out["rate_plan_id"] = seg["rate_plan_id"]
     return out
 
 
@@ -107,13 +111,20 @@ def _restriction_values(
     fields: dict[str, Any],
     date_from: date,
     date_to: date,
+    rate_plan_id: str | None = None,
 ) -> list[dict[str, Any]]:
-    """`fields` für ALLE Rate-Plans pro Datum expandieren (Channex ignoriert
-    date_from/date_to still — ein value je Tag). Leer, wenn keine fields."""
+    """`fields` pro Datum expandieren (Channex ignoriert date_from/date_to still —
+    ein value je Tag). Standard: ALLE Rate-Plans. Mit `rate_plan_id` NUR der lokal
+    passende Plan (Hotel: rate-plan-genauer Preis, kein Spiegeln). Leer ohne fields."""
     if not fields:
         return []
+    targets = (
+        [m for m in plans if m.get("local_rate_plan_id") == rate_plan_id]
+        if rate_plan_id
+        else plans
+    )
     values: list[dict[str, Any]] = []
-    for mapping in plans:
+    for mapping in targets:
         base = {
             "property_id": mapping["channex_property_id"],
             "rate_plan_id": mapping["channex_rate_plan_id"],
@@ -634,7 +645,7 @@ class AriPushMixin:
             return []
         rps = (
             db.table("channex_rate_plan_map")
-            .select("channex_rate_plan_id")
+            .select("channex_rate_plan_id, local_rate_plan_id")
             .eq("tenant_id", tenant_id)
             .eq("room_type_map_id", rtm[0]["id"])
             .is_("deleted_at", "null")
@@ -645,6 +656,10 @@ class AriPushMixin:
             {
                 "channex_property_id": rt["channex_property_id"],
                 "channex_rate_plan_id": rp["channex_rate_plan_id"],
+                # Lokaler Rate-Plan-Bezug: erlaubt push_rates_batch, ein Segment
+                # gezielt an GENAU diesen Plan zu schicken (Hotel: Twin/BAR ≠
+                # Double/B&B), statt an alle zu spiegeln. None = alt/ungemappt.
+                "local_rate_plan_id": rp.get("local_rate_plan_id"),
             }
             for rp in rps
             if rp.get("channex_rate_plan_id")
@@ -1081,7 +1096,16 @@ class AriPushMixin:
             min_stay = seg.get("min_stay")
             if rate_cents is None and min_stay is None:
                 continue
-            for mapping in plans:
+            # Rate-Plan-genaues Segment (Hotel): nur an GENAU diesen lokalen
+            # Rate-Plan pushen, nicht an alle spiegeln. Ohne rate_plan_id (FeWo,
+            # min_stay-Default, Dynamic Pricing) gilt weiter: an alle Pläne.
+            seg_plan = seg.get("rate_plan_id")
+            targets = (
+                [m for m in plans if m.get("local_rate_plan_id") == seg_plan]
+                if seg_plan
+                else plans
+            )
+            for mapping in targets:
                 base: dict[str, Any] = {
                     "property_id": mapping["channex_property_id"],
                     "rate_plan_id": mapping["channex_rate_plan_id"],
@@ -1391,7 +1415,7 @@ class AriPushMixin:
                 values.extend(
                     _restriction_values(
                         plans, fields, _as_date(seg["date_from"]),
-                        _as_date(seg["date_to"]),
+                        _as_date(seg["date_to"]), seg.get("rate_plan_id"),
                     )
                 )
             return values
