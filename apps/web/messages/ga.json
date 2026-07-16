@@ -4484,7 +4484,11 @@
         "weekday": "Praghas de réir lá na seachtaine",
         "base": "Bunphraghas an phlean praghais",
         "none": "Níl aon phraghas socraithe"
-      }
+      },
+      "modeRestrictions": "Srianta",
+      "on": "Tá",
+      "off": "Níl",
+      "maxStayLabel": "Fanacht uasta"
     }
   }
 }

@@ -4484,7 +4484,11 @@
         "weekday": "Weekdagprijs",
         "base": "Basisprijs van het tariefplan",
         "none": "Geen prijs ingesteld"
-      }
+      },
+      "modeRestrictions": "Restricties",
+      "on": "Aan",
+      "off": "Uit",
+      "maxStayLabel": "Max. verblijf"
     }
   }
 }

@@ -4484,7 +4484,11 @@
         "weekday": "Ugedagspris",
         "base": "Grundpris for prisplanen",
         "none": "Ingen pris angivet"
-      }
+      },
+      "modeRestrictions": "Restriktioner",
+      "on": "Til",
+      "off": "Fra",
+      "maxStayLabel": "Maks. ophold"
     }
   }
 }

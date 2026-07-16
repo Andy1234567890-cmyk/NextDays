@@ -4484,7 +4484,11 @@
         "weekday": "Savaitės dienos kaina",
         "base": "Kainų plano bazinė kaina",
         "none": "Kaina nenustatyta"
-      }
+      },
+      "modeRestrictions": "Apribojimai",
+      "on": "Taip",
+      "off": "Ne",
+      "maxStayLabel": "Maks. viešnagė"
     }
   }
 }

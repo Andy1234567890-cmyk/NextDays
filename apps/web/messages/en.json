@@ -1692,7 +1692,11 @@
         "weekday": "Weekday price",
         "base": "Base price of the rate plan",
         "none": "No price set"
-      }
+      },
+      "modeRestrictions": "Restrictions",
+      "on": "On",
+      "off": "Off",
+      "maxStayLabel": "Max stay"
     }
   }
 }

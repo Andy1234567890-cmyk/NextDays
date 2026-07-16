@@ -841,3 +841,25 @@ def test_bulk_restrictions_rejects_foreign_rate_plan() -> None:
         svc.bulk_restrictions("t1", _row_req(rate_plan_id="rp-x", stop_sell=True))
     assert exc.value.status_code == 422
     assert not store.get("_upserts")
+
+
+def test_bulk_restrictions_plan_cta_max_go_to_override_table() -> None:
+    # Hotel-Zeile mit CTA/CTD/Max-Stay landet plan-genau in
+    # rate_plan_restriction_overrides (0153), NICHT objekt-weit in availability.
+    svc, store = _service(
+        properties=[{"id": "p1", "tenant_id": "t1"}],
+        rate_plans=[{"id": "rp-a", "property_id": "p1"}],
+    )
+    from src.features.calendar.schemas import RestrictionRow, RestrictionRowsRequest
+    rng = DateRange(start=date(2026, 11, 1), end=date(2026, 11, 3))
+    svc.bulk_restrictions("t1", RestrictionRowsRequest(
+        property_id="p1",
+        rows=[RestrictionRow(range=rng, rate_plan_id="rp-a",
+                             closed_to_arrival=True, max_stay=4)],
+    ))
+    upserts = {t: p for t, p in store.get("_upserts", [])}
+    assert "rate_plan_restriction_overrides" in upserts
+    assert upserts["rate_plan_restriction_overrides"][0]["rate_plan_id"] == "rp-a"
+    assert upserts["rate_plan_restriction_overrides"][0]["max_stay"] == 4
+    # NICHT objekt-weit in availability gespiegelt.
+    assert "availability" not in upserts

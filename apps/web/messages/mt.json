@@ -4484,7 +4484,11 @@
         "weekday": "Prezz skont il-jum tal-ġimgħa",
         "base": "Prezz bażi tal-pjan tal-prezz",
         "none": "L-ebda prezz stabbilit"
-      }
+      },
+      "modeRestrictions": "Restrizzjonijiet",
+      "on": "Iva",
+      "off": "Le",
+      "maxStayLabel": "Soġġorn massimu"
     }
   }
 }

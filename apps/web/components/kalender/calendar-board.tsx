@@ -146,6 +146,22 @@ function addDays(d: Date, n: number) {
   x.setDate(x.getDate() + n);
   return x;
 }
+
+// Einen [checkIn, checkOut)-Zeitraum in Worten MIT Monatsnamen ausgeben
+// („1.–20. November 2026") — der Belegungsplan zeigt in den Spalten nur die
+// Tageszahl, deshalb muss der Bulk-Dialog den Monat unmissverständlich nennen.
+function spellDateRange(checkIn: string, checkOut: string): string {
+  const fmt = new Intl.DateTimeFormat(undefined, {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  const s = new Date(`${checkIn}T00:00:00Z`);
+  const lastNight = new Date(`${checkOut}T00:00:00Z`);
+  lastNight.setUTCDate(lastNight.getUTCDate() - 1); // checkOut ist exklusiv
+  return `${fmt.format(s)} – ${fmt.format(lastNight)}`;
+}
 // Aus einem laufenden Bar-Drag den Ziel-Zeitraum (YYYY-MM-DD, end exklusiv)
 // ableiten. Verschieben/Resize verändern check_in/out gemäß mode + dayOffset;
 // min. 1 Nacht bleibt erhalten.
@@ -487,10 +503,14 @@ export function CalendarBoard({
   // Hotel: Preispläne des Objekts, für das der Bulk-Dialog offen ist — damit eine
   // Restriktions-Zeile gezielt EINEN Plan treffen kann (Twin/BAR ≠ Double/B&B)
   // statt an allen Plänen gespiegelt zu werden. FeWo: bleibt leer.
-  const [bulkPlans, setBulkPlans] = useState<{ id: string; label: string }[]>([]);
+  const [bulkPlans, setBulkPlans] = useState<
+    { id: string; label: string; category: string; plan: string }[]
+  >([]);
   // Hotel: die Preispläne des Objekts laden, sobald der Bulk-Dialog aufgeht. Der
-  // Grid-Endpunkt liefert Kategorie + Pläne, daraus das Label „Twin — BAR".
-  // Ein leerer Zeitraum reicht (es geht nur um die Struktur, nicht um Tageskurven).
+  // Grid-Endpunkt liefert Kategorie + Pläne. `category` trägt die Zimmerkategorie
+  // separat, damit das Dropdown nach Kategorie gruppieren kann (zwei gleichnamige
+  // Pläne wie „Best Available Rate" sind sonst in einer flachen Liste kaum
+  // auseinanderzuhalten — genau die Verwechslungsquelle bei den Zert-Tests).
   useEffect(() => {
     if (!bulk || accommodationType !== "hotel") {
       setBulkPlans([]);
@@ -503,7 +523,12 @@ export function CalendarBoard({
       if (cancelled || !res.ok) return;
       setBulkPlans(
         res.data.room_types.flatMap((rt) =>
-          rt.plans.map((p) => ({ id: p.id, label: `${rt.title} — ${p.name}` })),
+          rt.plans.map((p) => ({
+            id: p.id,
+            label: `${rt.title} — ${p.name}`,
+            category: rt.title,
+            plan: p.name,
+          })),
         ),
       );
     });
@@ -851,13 +876,19 @@ export function CalendarBoard({
   // den heutigen Bereich korrigiert, sobald Breite + start feststehen).
   const [visFrom, setVisFrom] = useState(0);
   const [visTo, setVisTo] = useState(60 + OVERSCAN);
+  // Der linkeste WIRKLICH sichtbare Spaltenindex (ohne OVERSCAN-Puffer) — Quelle
+  // für Titelmonat und Date-Picker, direkt aus scrollLeft. Getrennt von visFrom,
+  // das den Overscan-Rand enthält.
+  const [leftIndex, setLeftIndex] = useState(0);
   const recomputeWindow = useCallback(() => {
     const el = scrollRef.current;
     if (!el) return;
     const colPx = COL * remPx();
-    const from = Math.max(0, Math.floor(el.scrollLeft / colPx) - OVERSCAN);
+    const leftmost = Math.round(el.scrollLeft / colPx);
+    const from = Math.max(0, leftmost - OVERSCAN);
     const visibleCols = Math.ceil(el.clientWidth / colPx);
     const to = Math.min(totalDays, from + visibleCols + OVERSCAN * 2);
+    setLeftIndex(Math.max(0, Math.min(totalDays - 1, leftmost)));
     setVisFrom(from);
     setVisTo(to);
   }, [remPx, totalDays]);
@@ -1355,9 +1386,21 @@ export function CalendarBoard({
     }
   }, [unblockAt, load]);
 
-  // ◀/▶: um den sichtbaren Granularitäts-Schritt weiterscrollen (statt `start`
-  // zu verschieben — die Timeline ist durchgehend).
+  // ◀/▶: im „Monat"-Fenster echte KALENDERMONATE springen (auf den 1. des Vor-/
+  // Folgemonats), sonst um den Granularitäts-Schritt. Der 28-Tage-Sprung ließ den
+  // Nutzer über die Monatsgrenze driften — er glaubte „November", war aber im
+  // Oktober (Ursache des Datumsversatzes). Alles relativ zum Anker `start`.
   function shift(deltaDays: number) {
+    if (view.rangeDays === 28 && start) {
+      const leftIdx = currentLeftIndex();
+      const cur = addDays(start, Math.max(0, leftIdx));
+      // Erster des Monats, dann ±1 Kalendermonat (Richtung aus deltaDays).
+      const target = new Date(cur.getFullYear(), cur.getMonth(), 1);
+      target.setMonth(target.getMonth() + (deltaDays < 0 ? -1 : 1));
+      const di = Math.round((target.getTime() - start.getTime()) / 86_400_000);
+      scrollToIndex(Math.min(totalDays - 1, Math.max(0, di)));
+      return;
+    }
     scrollToIndex(currentLeftIndex() + deltaDays);
   }
   function goToday() {
@@ -1393,13 +1436,34 @@ export function CalendarBoard({
   }
 
   // Titel + Datums-Sprung zeigen den AKTUELL SICHTBAREN Tag, NICHT den fixen
-  // Timeline-Anker `start` (immer 1. Januar). `visFrom` enthält den OVERSCAN-Puffer
-  // links → um ihn korrigieren, damit der erste WIRKLICH sichtbare Tag gemeint ist.
-  // Fällt auf `start` zurück, solange das Fenster noch nicht steht.
+  // Timeline-Anker `start` (immer 1. Januar). Der linkeste sichtbare Index wird
+  // DIREKT aus dem Scroll abgeleitet (nicht `visFrom + OVERSCAN`, das bei der
+  // 0-Klemmung driftete und den Titelmonat falsch anzeigte → Nutzer glaubte den
+  // falschen Monat). Fällt auf `start` zurück, solange das Fenster noch nicht steht.
   const visibleDay =
-    dates[Math.min(dates.length - 1, visFrom + OVERSCAN)] ?? start ?? null;
+    dates[Math.min(dates.length - 1, Math.max(0, leftIndex))] ?? start ?? null;
   const titleMonth = visibleDay ? monthLabels(t)[visibleDay.getMonth()] : "";
   const titleYear = visibleDay ? `${visibleDay.getFullYear()}` : "";
+
+  // Monatsbänder für den Spaltenkopf: zusammenhängende Segmente je Kalendermonat
+  // (Label + Spaltenanzahl), damit das Band die volle Monatsbreite überspannt.
+  const monthBands = useMemo(() => {
+    const out: { key: string; label: string; span: number }[] = [];
+    for (const d of dates) {
+      const k = `${d.getFullYear()}-${d.getMonth()}`;
+      const last = out[out.length - 1];
+      if (last && last.key === k) {
+        last.span += 1;
+      } else {
+        out.push({
+          key: k,
+          label: `${monthLabels(t)[d.getMonth()]} ${d.getFullYear()}`,
+          span: 1,
+        });
+      }
+    }
+    return out;
+  }, [dates, t]);
 
   // „Erstellen"-Menü im Kopf: Sperren geschieht im Raster per Ziehen;
   // „Reservierung" öffnet den Assistenten mit dem ersten Objekt ab morgen.
@@ -1623,6 +1687,24 @@ export function CalendarBoard({
           className={"overflow-x-auto " + (interacting ? "select-none" : "")}
         >
           <div style={{ width: `${LABEL + dates.length * COL}rem` }}>
+            {/* Monatsband — nennt über den Tagesspalten den Monat, damit ein
+                Drag-Ziel monats-eindeutig ist (die Tageskopfzeile zeigt nur die
+                Tageszahl; ohne dieses Band verwechselt man Okt/Nov an der Grenze). */}
+            <div className="flex border-b bg-secondary/40">
+              <div
+                className="sticky left-0 z-20 shrink-0 border-r bg-secondary/40"
+                style={{ width: `${LABEL}rem` }}
+              />
+              {monthBands.map((b) => (
+                <div
+                  key={b.key}
+                  className="shrink-0 truncate border-r px-3 py-1 text-xs font-semibold text-foreground"
+                  style={{ width: `${b.span * COL}rem` }}
+                >
+                  {b.label}
+                </div>
+              ))}
+            </div>
             {/* Tageskopf — virtualisiert: Spacer + nur sichtbare Spalten. */}
             <div className="flex border-b">
               <div
@@ -2045,7 +2127,7 @@ export function CalendarBoard({
       {bulk && start && (
         <BulkEditDialog
           open
-          rangeLabel={`${bulk.checkIn} – ${bulk.checkOut}`}
+          rangeLabel={spellDateRange(bulk.checkIn, bulk.checkOut)}
           start={bulk.checkIn}
           end={bulk.checkOut}
           primaryProperty={{

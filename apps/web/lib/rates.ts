@@ -212,6 +212,42 @@ export async function clearAllRatePlanMinStays(
   return call(`/rates/${ratePlanId}/min-stays`, { method: "DELETE" });
 }
 
+// Datumsgenaue Restriktionen (CTA/CTD/Max-Stay) EINES Rate-Plans (0153) —
+// plan-genau lokal gespeichert, damit die UI sie anzeigen und nachträglich
+// bearbeiten kann. Realtime-Tabelle: rate_plan_restriction_overrides.
+export type RatePlanRestrictionDay = {
+  date: string;
+  closed_to_arrival: boolean | null;
+  closed_to_departure: boolean | null;
+  max_stay: number | null;
+};
+
+/** Datumsgenaue Restriktionen eines Rate-Plans (nur gesetzte Tage). */
+export async function listRatePlanRestrictions(
+  ratePlanId: string,
+): Promise<Result<{ rate_plan_id: string; items: RatePlanRestrictionDay[] }>> {
+  return call(`/rates/${ratePlanId}/restrictions`);
+}
+
+/** Restriktionen für [start, end) auf den Endzustand setzen (end exklusiv).
+ *  Alle drei Werte null = Override zurücknehmen (Default offen/kein Limit gilt
+ *  wieder — auch an den Portalen). Push an GENAU diesen Rate-Plan. */
+export async function setRatePlanRestrictions(
+  ratePlanId: string,
+  start: string,
+  end: string,
+  values: {
+    closed_to_arrival: boolean | null;
+    closed_to_departure: boolean | null;
+    max_stay: number | null;
+  },
+): Promise<Result<{ rate_plan_id: string; items: RatePlanRestrictionDay[] }>> {
+  return call(`/rates/${ratePlanId}/restrictions`, {
+    method: "PUT",
+    body: { start, end, ...values },
+  });
+}
+
 /** Basispreis eines Objekts setzen: Upsert im Backend (ersten rate_plan ändern
  *  oder anlegen) in EINEM Round-Trip — der Basispreis landet immer, auch beim
  *  ersten Speichern, ohne Race-Dublette. Schließt die Kette zu Channex (Sync). */

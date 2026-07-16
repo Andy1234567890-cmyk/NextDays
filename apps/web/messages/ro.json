@@ -4484,7 +4484,11 @@
         "weekday": "Preț pe zi a săptămânii",
         "base": "Preț de bază al planului tarifar",
         "none": "Niciun preț definit"
-      }
+      },
+      "modeRestrictions": "Restricții",
+      "on": "Da",
+      "off": "Nu",
+      "maxStayLabel": "Sejur max."
     }
   }
 }

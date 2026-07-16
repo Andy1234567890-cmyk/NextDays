@@ -41,8 +41,9 @@ export function BulkEditDialog({
   allProperties: { id: string; title: string }[];
   // Hotel: Preispläne des primären Objekts — erlaubt im Zeilen-Modus, jede Zeile
   // einem Plan zuzuordnen (Twin/BAR ≠ Double/B&B). Leer/undefined = Objekt-Ebene
-  // (Ferienwohnung), dann gilt jede Zeile für alle Pläne.
-  ratePlans?: { id: string; label: string }[];
+  // (Ferienwohnung), dann gilt jede Zeile für alle Pläne. category/plan trennen
+  // die Zimmerkategorie vom Plannamen, damit das Dropdown nach Kategorie gruppiert.
+  ratePlans?: { id: string; label: string; category: string; plan: string }[];
   onClose: () => void;
   onApplied: () => void;
 }) {
@@ -87,17 +88,46 @@ export function BulkEditDialog({
 
   // Zeilen-Modus: mehrere Zeiträume mit eigenen Werten in EINEM Portale-Call.
   async function applyRows() {
-    const clean = rows.filter(
-      (r) =>
-        r.price != null ||
-        r.min_stay != null ||
-        r.max_stay != null ||
-        r.closed_to_arrival != null ||
-        r.closed_to_departure != null ||
-        r.stop_sell != null,
-    );
+    const hasValue = (r: RestrictionRow) =>
+      r.price != null ||
+      r.min_stay != null ||
+      r.max_stay != null ||
+      r.closed_to_arrival != null ||
+      r.closed_to_departure != null ||
+      r.stop_sell != null;
+    // Wertlose Zeilen NICHT still verschlucken (früher: Zeile fiel raus, der
+    // Nutzer glaubte sie sei gesendet). Konkret die erste melden.
+    const emptyIdx = rows.findIndex((r) => !hasValue(r));
+    if (emptyIdx >= 0 && rows.length > 1) {
+      toast.error(
+        `Zeile ${emptyIdx + 1} hat keinen Wert (Preis/Min/Max/CTA/CTD/Stop). Bitte ausfüllen oder die Zeile entfernen.`,
+      );
+      return;
+    }
+    const clean = rows.filter(hasValue);
     if (clean.length === 0) {
       toast.error("Mindestens eine Zeile mit einem Wert.");
+      return;
+    }
+    // Hotel: eine Zeile ohne Preisplan gilt objekt-weit und erscheint NICHT
+    // plan-genau im Rate-Grid — im Hotel-Fall bewusst blockieren, damit keine
+    // Restriktion „unsichtbar" wird (der wiederkehrende „4 gesetzt, 3 sichtbar").
+    if ((ratePlans?.length ?? 0) > 0) {
+      const noPlan = clean.findIndex((r) => !r.rate_plan_id);
+      if (noPlan >= 0) {
+        toast.error(
+          `Zeile ${noPlan + 1}: bitte eine Zimmerkategorie/Preisplan wählen — „Alle Preispläne" erscheint nicht plan-genau im Kalender.`,
+        );
+        return;
+      }
+    }
+    // Bis ist EXKLUSIV — der häufigste Fehler ist Bis = Von (gemeint: 1 Tag).
+    // Vor dem Senden klar melden statt serverseitigem 422.
+    const badRange = clean.findIndex((r) => !r.start || !r.end || r.end <= r.start);
+    if (badRange >= 0) {
+      toast.error(
+        `Zeile ${badRange + 1}: „Bis (exkl.)" muss NACH „Von" liegen — für einen einzelnen Tag den Folgetag wählen (z. B. 14.11. → 15.11.).`,
+      );
       return;
     }
     setSaving(true);
@@ -408,21 +438,34 @@ function RowsEditor({
   setRows,
 }: {
   propertyTitle: string;
-  ratePlans?: { id: string; label: string }[];
+  ratePlans?: { id: string; label: string; category: string; plan: string }[];
   rows: RestrictionRow[];
   setRows: (r: RestrictionRow[]) => void;
 }) {
   const hasPlans = (ratePlans?.length ?? 0) > 0;
+  // Pläne nach Zimmerkategorie gruppieren — als optgroup-Überschriften, damit
+  // gleichnamige Pläne (zwei „Best Available Rate") klar getrennt sind.
+  const plansByCategory = (ratePlans ?? []).reduce<
+    Record<string, { id: string; plan: string }[]>
+  >((acc, p) => {
+    (acc[p.category] ??= []).push({ id: p.id, plan: p.plan });
+    return acc;
+  }, {});
   function patch(i: number, next: Partial<RestrictionRow>) {
     setRows(rows.map((r, idx) => (idx === i ? { ...r, ...next } : r)));
   }
   function addRow() {
     const last = rows[rows.length - 1];
-    // Den Plan der letzten Zeile übernehmen — beim Aufbau mehrerer Zeilen für
-    // dieselbe Kategorie spart das die erneute Auswahl.
-    setRows([...rows, { start: last.start, end: last.end,
-      ...(last.rate_plan_id ? { rate_plan_id: last.rate_plan_id } : {}) }]);
+    // KEIN Plan-Übernehmen: jeder Plan darf nur einer Zeile gehören (siehe
+    // usedElsewhere), ein kopierter Plan wäre sofort „belegt".
+    setRows([...rows, { start: last.start, end: last.end }]);
   }
+  // Ein Plan, der schon in einer ANDEREN Zeile gewählt ist, wird in dieser Zeile
+  // ausgegraut — verhindert, dass zwei Zeilen denselben Plan treffen (die
+  // wiederkehrende Verwechslungsquelle bei den Zert-Tests). „Alle Preispläne"
+  // (Objekt-Ebene) bleibt immer wählbar.
+  const usedElsewhere = (rowIndex: number, planId: string): boolean =>
+    rows.some((r, idx) => idx !== rowIndex && r.rate_plan_id === planId);
   function removeRow(i: number) {
     setRows(rows.filter((_, idx) => idx !== i));
   }
@@ -431,6 +474,27 @@ function RowsEditor({
     v == null ? "none" : v ? "on" : "off";
   const fromTri = (s: string): boolean | undefined =>
     s === "none" ? undefined : s === "on";
+  // Zeitraum in WORTEN (mit Monatsnamen) + Nächte — macht einen falschen Monat
+  // sofort sichtbar (die Datumsfelder allein verstecken den Monat beim Tippen).
+  const fmt = new Intl.DateTimeFormat(undefined, {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  const spellRange = (start: string, end: string): string | null => {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(start) || !/^\d{4}-\d{2}-\d{2}$/.test(end)) {
+      return null;
+    }
+    const s = new Date(`${start}T00:00:00Z`);
+    const e = new Date(`${end}T00:00:00Z`);
+    const nights = Math.round((e.getTime() - s.getTime()) / 86_400_000);
+    if (nights < 1) return null;
+    const lastNight = new Date(e.getTime() - 86_400_000); // Bis exklusiv
+    return `${fmt.format(s)} – ${fmt.format(lastNight)} · ${nights} ${
+      nights === 1 ? "Nacht" : "Nächte"
+    }`;
+  };
 
   return (
     <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-5 py-4">
@@ -440,15 +504,27 @@ function RowsEditor({
       </p>
       {rows.map((r, i) => (
         <div key={i} className="flex flex-col gap-2 rounded-(--radius) border border-border p-3">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-medium text-muted-foreground">
-              Zeitraum {i + 1}
-            </span>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex min-w-0 flex-col">
+              <span className="text-xs font-medium text-muted-foreground">
+                Zeitraum {i + 1}
+              </span>
+              {/* Monat in Worten — der Anker gegen den „November-wird-Oktober"-Fehler. */}
+              {spellRange(r.start, r.end) ? (
+                <span className="truncate text-xs font-medium text-foreground">
+                  {spellRange(r.start, r.end)}
+                </span>
+              ) : (
+                <span className="text-xs text-destructive">
+                  Zeitraum unvollständig
+                </span>
+              )}
+            </div>
             {rows.length > 1 && (
               <button
                 type="button"
                 aria-label="Zeile entfernen"
-                className="text-muted-foreground hover:text-destructive"
+                className="shrink-0 text-muted-foreground hover:text-destructive"
                 onClick={() => removeRow(i)}
               >
                 <Icon icon="ph:trash" className="size-4" />
@@ -465,10 +541,18 @@ function RowsEditor({
                 }
               >
                 <option value="">Alle Preispläne</option>
-                {ratePlans?.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.label}
-                  </option>
+                {Object.entries(plansByCategory).map(([category, plans]) => (
+                  <optgroup key={category} label={category}>
+                    {plans.map((p) => {
+                      const taken = usedElsewhere(i, p.id);
+                      return (
+                        <option key={p.id} value={p.id} disabled={taken}>
+                          {p.plan}
+                          {taken ? " (bereits gewählt)" : ""}
+                        </option>
+                      );
+                    })}
+                  </optgroup>
                 ))}
               </NativeSelect>
             </div>

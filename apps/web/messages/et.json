@@ -4484,7 +4484,11 @@
         "weekday": "Nädalapäeva hind",
         "base": "Hinnaplaani baashind",
         "none": "Hinda pole määratud"
-      }
+      },
+      "modeRestrictions": "Piirangud",
+      "on": "Jah",
+      "off": "Ei",
+      "maxStayLabel": "Maks. peatumine"
     }
   }
 }

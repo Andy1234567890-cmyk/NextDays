@@ -4484,7 +4484,11 @@
         "weekday": "Nedēļas dienas cena",
         "base": "Cenu plāna bāzes cena",
         "none": "Cena nav iestatīta"
-      }
+      },
+      "modeRestrictions": "Ierobežojumi",
+      "on": "Jā",
+      "off": "Nē",
+      "maxStayLabel": "Maks. uzturēšanās"
     }
   }
 }

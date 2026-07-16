@@ -1430,7 +1430,30 @@ class CalendarService:
                          for d in row.range.nights()],
                         on_conflict="property_id,date",
                     ).execute()
-            if row.closed_to_arrival is not None or row.closed_to_departure is not None:
+            cta_ctd_set = (
+                row.closed_to_arrival is not None
+                or row.closed_to_departure is not None
+            )
+            if (cta_ctd_set or row.max_stay is not None) and row.rate_plan_id:
+                # Hotel: CTA/CTD/Max-Stay gehören plan-genau in die Override-Tabelle
+                # (0153) — NICHT objekt-weit in availability, sonst überschriebe eine
+                # BAR-Zeile die Restriktion aller Pläne, und die UI könnte sie nie
+                # plan-genau zurücklesen/bearbeiten.
+                fields: dict[str, object] = {}
+                if row.closed_to_arrival is not None:
+                    fields["closed_to_arrival"] = row.closed_to_arrival
+                if row.closed_to_departure is not None:
+                    fields["closed_to_departure"] = row.closed_to_departure
+                if row.max_stay is not None:
+                    fields["max_stay"] = row.max_stay
+                self._db().table("rate_plan_restriction_overrides").upsert(
+                    [{"rate_plan_id": row.rate_plan_id, "date": d.isoformat(), **fields}
+                     for d in row.range.nights()],
+                    on_conflict="rate_plan_id,date",
+                ).execute()
+            elif cta_ctd_set:
+                # Objekt-Ebene (Ferienwohnung, kein Plan): CTA/CTD wie bisher in
+                # availability (max_stay hat dort keine Spalte — nur Plan-Ebene).
                 flags: dict[str, bool] = {}
                 if row.closed_to_arrival is not None:
                     flags["closed_to_arrival"] = row.closed_to_arrival

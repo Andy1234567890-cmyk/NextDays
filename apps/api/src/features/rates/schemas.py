@@ -146,6 +146,38 @@ class RatePlanMinStayListResponse(BaseModel):
     items: list[RatePlanMinStayDay] = []
 
 
+class RatePlanRestrictionSet(BaseModel):
+    """Datumsgenaue Restriktionen (CTA/CTD/Max-Stay) eines Rate-Plans für
+    [start, end) setzen. end exklusiv. Die drei Felder sind der GEWÜNSCHTE
+    Endzustand der Tage: None = für diese Restriktion kein Override. Sind alle
+    drei None, wird der Override zurückgenommen (Zeilen löschen → Default offen/
+    kein Limit gilt wieder, auch an den Portalen). Alle 3 Vertriebswege gleich."""
+
+    start: date
+    end: date
+    closed_to_arrival: bool | None = None
+    closed_to_departure: bool | None = None
+    max_stay: int | None = Field(default=None, ge=0)
+
+    @model_validator(mode="after")
+    def _check_order(self) -> "RatePlanRestrictionSet":
+        if self.end <= self.start:
+            raise ValueError("end muss nach start liegen")
+        return self
+
+
+class RatePlanRestrictionDay(BaseModel):
+    date: date
+    closed_to_arrival: bool | None = None
+    closed_to_departure: bool | None = None
+    max_stay: int | None = None
+
+
+class RatePlanRestrictionListResponse(BaseModel):
+    rate_plan_id: str
+    items: list[RatePlanRestrictionDay] = []
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"

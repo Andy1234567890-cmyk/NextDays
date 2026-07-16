@@ -22,6 +22,8 @@ from .schemas import (
     RatePlanPriceListResponse,
     RatePlanPriceSet,
     RatePlanResponse,
+    RatePlanRestrictionListResponse,
+    RatePlanRestrictionSet,
     RatePlanUpdate,
     SliceHealth,
 )
@@ -158,6 +160,36 @@ def clear_rate_prices(
     """ALLE Datumspreise eines Rate-Plans zurücknehmen (Basispreis gilt wieder)."""
     try:
         return service.clear_all_prices(ctx, rate_plan_id)
+    except RateError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get(
+    "/{rate_plan_id}/restrictions", response_model=RatePlanRestrictionListResponse
+)
+def list_rate_restrictions(
+    rate_plan_id: str, service: RatesServiceDep, ctx: _write
+) -> RatePlanRestrictionListResponse:
+    """Datumsgenaue Restriktionen (CTA/CTD/Max-Stay) eines Rate-Plans (Hotel)."""
+    try:
+        return service.list_restrictions(ctx, rate_plan_id)
+    except RateError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put(
+    "/{rate_plan_id}/restrictions", response_model=RatePlanRestrictionListResponse
+)
+def set_rate_restrictions(
+    rate_plan_id: str,
+    req: RatePlanRestrictionSet,
+    service: RatesServiceDep,
+    ctx: _write,
+) -> RatePlanRestrictionListResponse:
+    """Restriktionen für [start, end) auf den Endzustand setzen (alle Felder None
+    = zurücknehmen). Push an GENAU diesen Rate-Plan; alle 3 Vertriebswege gleich."""
+    try:
+        return service.set_restrictions(ctx, rate_plan_id, req)
     except RateError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

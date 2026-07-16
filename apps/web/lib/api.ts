@@ -44,7 +44,19 @@ export async function api<T>(path: string, opts: ApiOptions = {}): Promise<T> {
     let detail = `Fehler ${res.status}`;
     try {
       const data = await res.json();
-      if (typeof data?.detail === "string") detail = data.detail;
+      if (typeof data?.detail === "string") {
+        detail = data.detail;
+      } else if (Array.isArray(data?.detail)) {
+        // Pydantic-Validierungsfehler: Array aus {loc, msg, …} — die msg-Texte
+        // sichtbar machen statt nur „Fehler 422" (der Nutzer muss den Grund sehen).
+        const msgs = data.detail
+          .map((e: { msg?: string; loc?: (string | number)[] }) => {
+            const field = e.loc?.slice(1).join(".") || "";
+            return field && e.msg ? `${field}: ${e.msg}` : e.msg || "";
+          })
+          .filter(Boolean);
+        if (msgs.length) detail = msgs.join(" · ");
+      }
     } catch {
       // kein JSON-Body — Standardmeldung behalten
     }

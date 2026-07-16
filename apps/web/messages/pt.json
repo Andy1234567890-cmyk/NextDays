@@ -4484,7 +4484,11 @@
         "weekday": "Preço por dia da semana",
         "base": "Preço base do plano tarifário",
         "none": "Sem preço definido"
-      }
+      },
+      "modeRestrictions": "Restrições",
+      "on": "Sim",
+      "off": "Não",
+      "maxStayLabel": "Estadia máx."
     }
   }
 }

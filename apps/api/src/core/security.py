@@ -18,6 +18,10 @@ from pydantic import BaseModel
 
 from .config import Settings, get_settings
 
+# Erlaubte Signatur-Algorithmen (fail-closed). ES256/RS256 = modernes Supabase via
+# JWKS, HS256 = Legacy-Shared-Secret. "none" ist bewusst NICHT enthalten.
+_ALLOWED_ALGS = frozenset({"HS256", "ES256", "RS256"})
+
 
 class AuthContext(BaseModel):
     user_id: str
@@ -44,6 +48,18 @@ def _decode_token(token: str, settings: Settings) -> dict[str, object]:
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Ungültiges oder abgelaufenes Token.",
         ) from exc
+
+    # Härtung (Security-Audit V2): Der Branch-Zweig unten wird durch den
+    # angreiferkontrollierten `alg`-Header ausgewählt. Ein aktiver Algorithm-
+    # Confusion-Angriff (Public Key als HMAC-Secret) ist bereits ausgeschlossen,
+    # weil HS256 ein SEPARATES Shared Secret nutzt (nicht den JWKS-Public-Key).
+    # Zusätzlich lehnen wir hier jeden nicht erwarteten Algorithmus (inkl. "none")
+    # explizit VOR dem Verzweigen ab (fail-closed, kein Rückgriff auf Defaults).
+    if alg not in _ALLOWED_ALGS:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Ungültiges oder abgelaufenes Token.",
+        )
 
     try:
         if alg == "HS256":

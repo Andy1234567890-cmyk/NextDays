@@ -4484,7 +4484,11 @@
         "weekday": "Cena podle dne v týdnu",
         "base": "Základní cena cenového plánu",
         "none": "Cena není nastavena"
-      }
+      },
+      "modeRestrictions": "Omezení",
+      "on": "Ano",
+      "off": "Ne",
+      "maxStayLabel": "Max. délka pobytu"
     }
   }
 }

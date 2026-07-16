@@ -4484,7 +4484,11 @@
         "weekday": "Veckodagspris",
         "base": "Grundpris för prisplanen",
         "none": "Inget pris angivet"
-      }
+      },
+      "modeRestrictions": "Restriktioner",
+      "on": "På",
+      "off": "Av",
+      "maxStayLabel": "Max vistelse"
     }
   }
 }

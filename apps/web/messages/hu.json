@@ -4484,7 +4484,11 @@
         "weekday": "Hét napja szerinti ár",
         "base": "Az árterv alapára",
         "none": "Nincs megadva ár"
-      }
+      },
+      "modeRestrictions": "Korlátozások",
+      "on": "Igen",
+      "off": "Nem",
+      "maxStayLabel": "Max. tartózkodás"
     }
   }
 }

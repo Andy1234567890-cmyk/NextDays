@@ -4484,7 +4484,11 @@
         "weekday": "Viikonpäivähinta",
         "base": "Hintasuunnitelman perushinta",
         "none": "Ei hintaa asetettu"
-      }
+      },
+      "modeRestrictions": "Rajoitukset",
+      "on": "Kyllä",
+      "off": "Ei",
+      "maxStayLabel": "Enimmäiskesto"
     }
   }
 }

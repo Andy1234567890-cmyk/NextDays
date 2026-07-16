@@ -4505,7 +4505,11 @@
         "weekday": "Wochentagspreis",
         "base": "Grundpreis des Rate-Plans",
         "none": "Kein Preis hinterlegt"
-      }
+      },
+      "modeRestrictions": "Restriktionen",
+      "on": "An",
+      "off": "Aus",
+      "maxStayLabel": "Max. Aufenthalt"
     }
   }
 }

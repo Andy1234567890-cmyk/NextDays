@@ -4484,7 +4484,11 @@
         "weekday": "Cena zależna od dnia tygodnia",
         "base": "Cena podstawowa planu cenowego",
         "none": "Nie ustawiono ceny"
-      }
+      },
+      "modeRestrictions": "Ograniczenia",
+      "on": "Tak",
+      "off": "Nie",
+      "maxStayLabel": "Maks. pobyt"
     }
   }
 }

@@ -32,6 +32,9 @@ from .schemas import (
     RatePlanPriceListResponse,
     RatePlanPriceSet,
     RatePlanResponse,
+    RatePlanRestrictionDay,
+    RatePlanRestrictionListResponse,
+    RatePlanRestrictionSet,
     RatePlanUpdate,
     SliceHealth,
 )
@@ -701,6 +704,103 @@ class RatesService:
             tenant_id=tenant_id, rate_plan_id=rate_plan_id,
         )
         return self.list_min_stays(ctx, rate_plan_id)
+
+    # -- Restriktionen (CTA/CTD/Max-Stay) pro Rate-Plan × Datum (0153) ---------
+    def list_restrictions(
+        self, ctx: AuthContext, rate_plan_id: str
+    ) -> RatePlanRestrictionListResponse:
+        """Datumsgenaue Restriktionen eines Rate-Plans (nur gesetzte Tage).
+        Tenant-gescoped."""
+        tenant_id = self._require_tenant(ctx)
+        self._require_own_rate_plan(tenant_id, rate_plan_id)
+        rows = (
+            self._db()
+            .table("rate_plan_restriction_overrides")
+            .select("date, closed_to_arrival, closed_to_departure, max_stay")
+            .eq("rate_plan_id", rate_plan_id)
+            .order("date")
+            .execute()
+        ).data or []
+        items = [
+            RatePlanRestrictionDay(
+                date=r["date"],
+                closed_to_arrival=r.get("closed_to_arrival"),
+                closed_to_departure=r.get("closed_to_departure"),
+                max_stay=r.get("max_stay"),
+            )
+            for r in rows
+            if r.get("date") is not None
+        ]
+        return RatePlanRestrictionListResponse(rate_plan_id=rate_plan_id, items=items)
+
+    def set_restrictions(
+        self, ctx: AuthContext, rate_plan_id: str, req: RatePlanRestrictionSet
+    ) -> RatePlanRestrictionListResponse:
+        """Restriktionen (CTA/CTD/Max-Stay) für [start, end) auf den GEWÜNSCHTEN
+        Endzustand setzen. Alle drei None = Override zurücknehmen. Idempotent über
+        unique(rate_plan_id, date) (Wurzel 2). Push an GENAU diesen Rate-Plan über
+        den restriction_rows-Weg; Zurücknehmen pusht explizit offen/kein Limit
+        (Wurzel 1: der Portal-Stand muss der Rücknahme folgen, nicht hängen
+        bleiben)."""
+        tenant_id = self._require_tenant(ctx)
+        plan = self._require_own_rate_plan(tenant_id, rate_plan_id)
+        property_id = plan["property_id"]
+        clearing = (
+            req.closed_to_arrival is None
+            and req.closed_to_departure is None
+            and req.max_stay is None
+        )
+        days = [
+            req.start + timedelta(days=i)
+            for i in range((req.end - req.start).days)
+        ]
+        if clearing:
+            (
+                self._db()
+                .table("rate_plan_restriction_overrides")
+                .delete()
+                .eq("rate_plan_id", rate_plan_id)
+                .gte("date", req.start.isoformat())
+                .lt("date", req.end.isoformat())
+                .execute()
+            )
+        else:
+            # Endzustand schreiben: ALLE drei Spalten (auch None) — die Zeile
+            # spiegelt danach exakt den Editor-Stand, keine Altwert-Reste.
+            self._db().table("rate_plan_restriction_overrides").upsert(
+                [
+                    {
+                        "rate_plan_id": rate_plan_id,
+                        "date": d.isoformat(),
+                        "closed_to_arrival": req.closed_to_arrival,
+                        "closed_to_departure": req.closed_to_departure,
+                        "max_stay": req.max_stay,
+                    }
+                    for d in days
+                ],
+                on_conflict="rate_plan_id,date",
+            ).execute()
+        # Portal-Push: explizite Endwerte — beim Zurücknehmen offen/kein Limit
+        # (false/false/0), sonst bliebe die OTA-Seite auf dem alten Stand.
+        try_enqueue_ari(
+            self._db(), tenant_id, property_id, "restriction_rows",
+            {"rows": [{
+                "date_from": req.start.isoformat(),
+                "date_to": (req.end - timedelta(days=1)).isoformat(),
+                "rate_plan_id": rate_plan_id,
+                "closed_to_arrival": bool(req.closed_to_arrival),
+                "closed_to_departure": bool(req.closed_to_departure),
+                "max_stay": req.max_stay if req.max_stay is not None else 0,
+            }]},
+        )
+        log.info(
+            "rate_plan_restrictions_set",
+            tenant_id=tenant_id,
+            rate_plan_id=rate_plan_id,
+            days=len(days),
+            cleared=clearing,
+        )
+        return self.list_restrictions(ctx, rate_plan_id)
 
     def _enqueue_rate_plan_min_stay_push(
         self,

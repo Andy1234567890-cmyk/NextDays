@@ -412,3 +412,81 @@ def test_clear_all_rate_plan_prices_foreign_404() -> None:
         raise AssertionError("sollte 404 werfen")
     except RateError as exc:
         assert exc.status_code == 404
+
+
+# --- Restriktionen (CTA/CTD/Max-Stay) pro Rate-Plan (0153) -------------------
+
+def test_set_rate_plan_restrictions_upserts_and_pushes(monkeypatch) -> None:  # noqa: ANN001
+    from src.features.rates import service as svc_mod
+    from src.features.rates.schemas import RatePlanRestrictionSet
+
+    enqueued: list = []
+    monkeypatch.setattr(
+        svc_mod, "try_enqueue_ari",
+        lambda *a, **k: enqueued.append((a, k)),
+    )
+    db = _FakeDB(_OWN_PLAN)
+    svc = RatesService(service_client=db)
+    svc.set_restrictions(
+        _ctx(), "rp-1",
+        RatePlanRestrictionSet(
+            start="2026-11-01", end="2026-11-03",
+            closed_to_arrival=True, closed_to_departure=False, max_stay=4,
+        ),
+    )
+    rows = db.upserted["rate_plan_restriction_overrides"]
+    assert len(rows) == 2  # 2 Nächte, end exklusiv
+    assert rows[0] == {
+        "rate_plan_id": "rp-1", "date": "2026-11-01",
+        "closed_to_arrival": True, "closed_to_departure": False, "max_stay": 4,
+    }
+    # Push: restriction_rows an GENAU diesen Plan mit expliziten Endwerten.
+    _args, _kw = enqueued[0]
+    assert _args[3] == "restriction_rows"
+    row = _args[4]["rows"][0]
+    assert row["rate_plan_id"] == "rp-1"
+    assert row["closed_to_arrival"] is True
+    assert row["closed_to_departure"] is False
+    assert row["max_stay"] == 4
+    assert row["date_from"] == "2026-11-01" and row["date_to"] == "2026-11-02"
+
+
+def test_clear_rate_plan_restrictions_deletes_and_opens(monkeypatch) -> None:  # noqa: ANN001
+    # Alle drei None = Override zurücknehmen: Zeilen löschen UND explizit
+    # offen/kein Limit pushen (der Portal-Stand folgt der Rücknahme, Wurzel 1).
+    from src.features.rates import service as svc_mod
+    from src.features.rates.schemas import RatePlanRestrictionSet
+
+    enqueued: list = []
+    monkeypatch.setattr(
+        svc_mod, "try_enqueue_ari",
+        lambda *a, **k: enqueued.append((a, k)),
+    )
+    db = _FakeDB(_OWN_PLAN)
+    svc = RatesService(service_client=db)
+    svc.set_restrictions(
+        _ctx(), "rp-1",
+        RatePlanRestrictionSet(start="2026-11-01", end="2026-11-03"),
+    )
+    assert "rate_plan_restriction_overrides" in db.deleted
+    assert not db.upserted.get("rate_plan_restriction_overrides")
+    row = enqueued[0][0][4]["rows"][0]
+    assert row["closed_to_arrival"] is False
+    assert row["closed_to_departure"] is False
+    assert row["max_stay"] == 0
+
+
+def test_set_rate_plan_restrictions_foreign_plan_404(monkeypatch) -> None:  # noqa: ANN001
+    from src.features.rates import service as svc_mod
+    from src.features.rates.schemas import RatePlanRestrictionSet
+
+    monkeypatch.setattr(svc_mod, "try_enqueue_ari", lambda *a, **k: None)
+    svc = _svc({"rate_plans": []})
+    try:
+        svc.set_restrictions(
+            _ctx(), "rp-x",
+            RatePlanRestrictionSet(start="2026-11-01", end="2026-11-02", max_stay=2),
+        )
+        raise AssertionError("sollte 404 werfen")
+    except RateError as exc:
+        assert exc.status_code == 404

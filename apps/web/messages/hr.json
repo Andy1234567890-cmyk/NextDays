@@ -4484,7 +4484,11 @@
         "weekday": "Cijena po danu u tjednu",
         "base": "Osnovna cijena cjenika",
         "none": "Cijena nije postavljena"
-      }
+      },
+      "modeRestrictions": "Ograničenja",
+      "on": "Da",
+      "off": "Ne",
+      "maxStayLabel": "Maks. boravak"
     }
   }
 }

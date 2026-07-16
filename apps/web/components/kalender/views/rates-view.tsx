@@ -20,11 +20,14 @@ import { formatCurrency } from "@/lib/currency";
 import {
   getRateGrid,
   listRatePlanMinStays,
+  listRatePlanRestrictions,
   resyncRatePlanPrices,
   setRatePlanMinStays,
   setRatePlanPrices,
+  setRatePlanRestrictions,
   type RateGridResponse,
   type RatePlanMinStayDay,
+  type RatePlanRestrictionDay,
 } from "@/lib/rates";
 import { useRealtime } from "@/lib/use-realtime";
 
@@ -43,7 +46,10 @@ function addDaysIso(isoDate: string, n: number): string {
   return iso(d);
 }
 
-type Mode = "prices" | "minstay";
+type Mode = "prices" | "minstay" | "restrictions";
+// Drei-Wege-Auswahl im Restriktions-Editor: unverändert lassen gibt es hier
+// nicht — "none" heißt „kein Override" (Default offen).
+type TriState = "none" | "on" | "off";
 
 export function CalendarRatesView({ properties }: { properties: Prop[] }) {
   const t = useTranslations("calendar");
@@ -57,6 +63,11 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
   const [minStays, setMinStays] = useState<Map<string, Map<string, number>>>(
     new Map(),
   );
+  // Gesetzte Restriktionen (CTA/CTD/Max-Stay) je Plan × Datum (0153) — die
+  // Anzeige-Wahrheit für den Restriktions-Modus, live per Realtime.
+  const [restr, setRestr] = useState<
+    Map<string, Map<string, RatePlanRestrictionDay>>
+  >(new Map());
   const [mode, setMode] = useState<Mode>("prices");
   const [busy, setBusy] = useState(false);
 
@@ -87,21 +98,30 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
       return;
     }
     setGrid(res.data);
-    // Min-Stay-Overrides je Plan (kleine Listen; Anzeige = Override ?? Default).
+    // Min-Stay- und Restriktions-Overrides je Plan (kleine Listen; Anzeige =
+    // Override ?? Default) — parallel geladen.
     const planIds = res.data.room_types.flatMap((rt) => rt.plans.map((p) => p.id));
     const loaded = await Promise.all(
       planIds.map(async (id) => {
-        const ms = await listRatePlanMinStays(id);
+        const [ms, rs] = await Promise.all([
+          listRatePlanMinStays(id),
+          listRatePlanRestrictions(id),
+        ]);
         const map = new Map<string, number>();
         if (ms.ok) {
           for (const d of ms.data.items as RatePlanMinStayDay[]) {
             map.set(d.date, d.min_stay);
           }
         }
-        return [id, map] as const;
+        const rmap = new Map<string, RatePlanRestrictionDay>();
+        if (rs.ok) {
+          for (const d of rs.data.items) rmap.set(d.date, d);
+        }
+        return [id, map, rmap] as const;
       }),
     );
-    setMinStays(new Map(loaded));
+    setMinStays(new Map(loaded.map(([id, ms]) => [id, ms])));
+    setRestr(new Map(loaded.map(([id, , rs]) => [id, rs])));
   }, [propertyId, first, firstNext]);
 
   useEffect(() => {
@@ -113,6 +133,7 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
   const reload = useCallback(() => void load(), [load]);
   useRealtime({ table: "rate_plan_price_overrides", onChange: reload });
   useRealtime({ table: "rate_plan_min_stay_overrides", onChange: reload });
+  useRealtime({ table: "rate_plan_restriction_overrides", onChange: reload });
   useRealtime({ table: "rate_plans", onChange: reload });
   useRealtime({ table: "rate_plan_sync_state", onChange: reload });
   useRealtime({ table: "room_types", onChange: reload });
@@ -134,6 +155,10 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
     to: string; // inklusiv
   } | null>(null);
   const [value, setValue] = useState("");
+  // Restriktions-Editor: CTA/CTD als Drei-Wege (kein Override / gesperrt / offen);
+  // `value` trägt in diesem Modus den Max-Stay.
+  const [ctaSel, setCtaSel] = useState<TriState>("none");
+  const [ctdSel, setCtdSel] = useState<TriState>("none");
 
   const onDown = (planId: string, day: string) => {
     drag.current = { planId, from: day, to: day };
@@ -162,21 +187,75 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
         from: lo,
         to: hi,
       });
-      setValue("");
+      // Restriktions-Modus: Editor mit den AKTUELLEN Werten des ersten Tags
+      // vorbefüllen — Nachträglich-Bearbeiten heißt sehen, was gesetzt ist.
+      if (mode === "restrictions") {
+        const cur = restr.get(plan.id)?.get(lo);
+        setCtaSel(
+          cur?.closed_to_arrival == null
+            ? "none"
+            : cur.closed_to_arrival
+              ? "on"
+              : "off",
+        );
+        setCtdSel(
+          cur?.closed_to_departure == null
+            ? "none"
+            : cur.closed_to_departure
+              ? "on"
+              : "off",
+        );
+        setValue(cur?.max_stay != null ? String(cur.max_stay) : "");
+      } else {
+        setValue("");
+      }
     };
     window.addEventListener("mouseup", onUp);
     return () => window.removeEventListener("mouseup", onUp);
-  }, [grid]);
+  }, [grid, mode, restr]);
 
   const closeEditor = () => {
     setEditor(null);
     setDragSel(null);
     setValue("");
+    setCtaSel("none");
+    setCtdSel("none");
   };
 
   const apply = async (reset: boolean) => {
     if (!editor) return;
     const endExclusive = addDaysIso(editor.to, 1);
+    if (mode === "restrictions") {
+      // Endzustand senden: reset = alle drei null (Override zurücknehmen).
+      let maxStay: number | null = null;
+      if (!reset && value.trim() !== "") {
+        const n = Number(value);
+        if (!Number.isInteger(n) || n < 0) {
+          toast.error(t("ratesView.invalidValue"));
+          return;
+        }
+        maxStay = n;
+      }
+      setBusy(true);
+      const res = await setRatePlanRestrictions(
+        editor.planId, editor.from, endExclusive,
+        reset
+          ? { closed_to_arrival: null, closed_to_departure: null, max_stay: null }
+          : {
+            closed_to_arrival: ctaSel === "none" ? null : ctaSel === "on",
+            closed_to_departure: ctdSel === "none" ? null : ctdSel === "on",
+            max_stay: maxStay,
+          },
+      );
+      setBusy(false);
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
+      closeEditor();
+      void load();
+      return;
+    }
     let num: number | null = null;
     if (!reset) {
       num = Number(value);
@@ -263,6 +342,7 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
           options={[
             { value: "prices", label: t("ratesView.modePrices") },
             { value: "minstay", label: t("ratesView.modeMinStay") },
+            { value: "restrictions", label: t("ratesView.modeRestrictions") },
           ]}
         />
       </div>
@@ -274,21 +354,65 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
           <span className="text-sm text-muted-foreground">
             {editor.from} – {editor.to}
           </span>
-          <Input
-            type="number"
-            min={mode === "minstay" ? 1 : 0}
-            step={mode === "minstay" ? 1 : "0.01"}
-            inputMode="decimal"
-            autoFocus
-            placeholder={
-              mode === "prices"
-                ? t("ratesView.pricePlaceholder", { currency: editor.currency })
-                : t("ratesView.minStayPlaceholder")
-            }
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            className="w-44"
-          />
+          {mode === "restrictions" ? (
+            <>
+              {/* CTA/CTD als Drei-Wege (— = kein Override, An = gesperrt, Aus =
+                  ausdrücklich offen) + Max-Stay. Vorbefüllt mit den aktuellen
+                  Werten — ändern überschreibt, „Zurücknehmen" löscht den Override. */}
+              <span className="flex items-center gap-1.5 text-sm">
+                <Icon icon="ph:sign-in" className="size-4 text-muted-foreground" />
+                {t("monthGridView.arrivalBlocked")}
+              </span>
+              <Segmented
+                value={ctaSel}
+                options={[
+                  { value: "none", label: "—" },
+                  { value: "on", label: t("ratesView.on") },
+                  { value: "off", label: t("ratesView.off") },
+                ]}
+                onChange={(v) => setCtaSel(v as TriState)}
+              />
+              <span className="flex items-center gap-1.5 text-sm">
+                <Icon icon="ph:sign-out" className="size-4 text-muted-foreground" />
+                {t("monthGridView.departureBlocked")}
+              </span>
+              <Segmented
+                value={ctdSel}
+                options={[
+                  { value: "none", label: "—" },
+                  { value: "on", label: t("ratesView.on") },
+                  { value: "off", label: t("ratesView.off") },
+                ]}
+                onChange={(v) => setCtdSel(v as TriState)}
+              />
+              <Input
+                type="number"
+                min={0}
+                step={1}
+                inputMode="numeric"
+                placeholder={t("ratesView.maxStayLabel")}
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                className="w-36"
+              />
+            </>
+          ) : (
+            <Input
+              type="number"
+              min={mode === "minstay" ? 1 : 0}
+              step={mode === "minstay" ? 1 : "0.01"}
+              inputMode="decimal"
+              autoFocus
+              placeholder={
+                mode === "prices"
+                  ? t("ratesView.pricePlaceholder", { currency: editor.currency })
+                  : t("ratesView.minStayPlaceholder")
+              }
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              className="w-44"
+            />
+          )}
           <Button size="sm" onClick={() => void apply(false)} disabled={busy}>
             {t("ratesView.apply")}
           </Button>
@@ -350,6 +474,7 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
               days={days}
               mode={mode}
               minStays={minStays}
+              restrictions={restr}
               inDrag={inDrag}
               onDown={onDown}
               onEnter={onEnter}
@@ -377,6 +502,7 @@ function RoomTypeRows({
   days,
   mode,
   minStays,
+  restrictions,
   inDrag,
   onDown,
   onEnter,
@@ -386,6 +512,7 @@ function RoomTypeRows({
   days: string[];
   mode: Mode;
   minStays: Map<string, Map<string, number>>;
+  restrictions: Map<string, Map<string, RatePlanRestrictionDay>>;
   inDrag: (planId: string, day: string) => boolean;
   onDown: (planId: string, day: string) => void;
   onEnter: (planId: string, day: string) => void;
@@ -414,6 +541,7 @@ function RoomTypeRows({
       {roomType.plans.map((plan) => {
         const byDate = new Map(plan.days.map((d) => [d.date, d]));
         const ms = minStays.get(plan.id);
+        const rs = restrictions.get(plan.id);
         return (
           <div key={plan.id} className="flex border-b last:border-b-0">
             <div
@@ -449,6 +577,12 @@ function RoomTypeRows({
               const isOverride = cell?.source === "rate_plan";
               const selected = inDrag(plan.id, day);
               const msOverride = ms?.get(day);
+              const rsDay = rs?.get(day);
+              const hasRestriction =
+                rsDay != null &&
+                (rsDay.closed_to_arrival != null ||
+                  rsDay.closed_to_departure != null ||
+                  rsDay.max_stay != null);
               // Gleiche Preisdarstellung wie der Belegungsplan: Währung + zwei
               // Nachkommastellen („100,00 $"), nie nackte Zahlen.
               const shown =
@@ -457,7 +591,25 @@ function RoomTypeRows({
                     ? formatCurrency(cell.price, plan.currency)
                     : "—"
                   : String(msOverride ?? plan.min_stay);
-              const overrideCell = mode === "prices" ? isOverride : msOverride != null;
+              const overrideCell =
+                mode === "prices"
+                  ? isOverride
+                  : mode === "minstay"
+                    ? msOverride != null
+                    : hasRestriction;
+              const restrTitle = hasRestriction
+                ? [
+                  rsDay?.closed_to_arrival
+                    ? t("monthGridView.arrivalBlocked")
+                    : null,
+                  rsDay?.closed_to_departure
+                    ? t("monthGridView.departureBlocked")
+                    : null,
+                  rsDay?.max_stay != null
+                    ? `${t("ratesView.maxStayLabel")}: ${rsDay.max_stay}`
+                    : null,
+                ].filter(Boolean).join(" · ")
+                : undefined;
               return (
                 <button
                   key={day}
@@ -470,9 +622,11 @@ function RoomTypeRows({
                   title={
                     mode === "prices" && cell
                       ? t(`ratesView.source.${cell.source}`)
-                      : undefined
+                      : mode === "restrictions"
+                        ? restrTitle
+                        : undefined
                   }
-                  className={`flex shrink-0 select-none items-center justify-center border-r py-2 text-sm tabular-nums transition-colors ${
+                  className={`flex shrink-0 select-none items-center justify-center gap-0.5 border-r py-2 text-sm tabular-nums transition-colors ${
                     selected
                       ? "outline outline-2 -outline-offset-2 outline-accent"
                       : ""
@@ -487,7 +641,27 @@ function RoomTypeRows({
                   }`}
                   style={{ width: `${COL}rem` }}
                 >
-                  {shown}
+                  {mode === "restrictions" ? (
+                    hasRestriction ? (
+                      <>
+                        {/* Sprachneutrale Kompaktdarstellung: ⇥ Anreise, ⇤ Abreise
+                            gesperrt, ≤n Max-Stay — Details im Tooltip. */}
+                        {rsDay?.closed_to_arrival ? (
+                          <Icon icon="ph:sign-in" className="size-4 text-destructive" />
+                        ) : null}
+                        {rsDay?.closed_to_departure ? (
+                          <Icon icon="ph:sign-out" className="size-4 text-destructive" />
+                        ) : null}
+                        {rsDay?.max_stay != null ? (
+                          <span className="text-xs">≤{rsDay.max_stay}</span>
+                        ) : null}
+                      </>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )
+                  ) : (
+                    shown
+                  )}
                 </button>
               );
             })}
