@@ -155,7 +155,7 @@ export function RatePlanPriceCalendar({
             className="w-44"
           />
           {selectedCount > 0 && (
-            <span className="rounded-full bg-primary/15 px-2.5 py-1 text-xs font-medium text-primary">
+            <span className="rounded-full bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent-foreground">
               {t("rpcSelectedDays", { count: selectedCount })}
             </span>
           )}
@@ -267,17 +267,17 @@ function MonthGrid({
               onMouseEnter={() => onEnter(isoDate)}
               onDoubleClick={() => onDouble(isoDate)}
               title={price !== undefined ? formatCurrency(price, currency) : undefined}
-              className={`flex aspect-square select-none flex-col items-center justify-center gap-0.5 rounded text-xs transition-[outline] ${
+              className={`flex min-h-11 w-full select-none flex-col items-center justify-center gap-0.5 overflow-hidden rounded px-0.5 py-1 text-xs transition-[outline] ${
                 inDrag ? "outline outline-2 outline-accent" : ""
               } ${
                 price !== undefined
-                  ? "bg-primary/15 font-medium"
+                  ? "bg-accent/10 font-medium text-accent-foreground"
                   : "hover:bg-secondary"
               }`}
             >
               <span className="leading-none">{day}</span>
               {price !== undefined && (
-                <span className="text-[0.6rem] leading-none text-primary">
+                <span className="w-full truncate text-center text-[0.6rem] leading-none tabular-nums text-accent-foreground">
                   {formatCurrency(price, currency)}
                 </span>
               )}
