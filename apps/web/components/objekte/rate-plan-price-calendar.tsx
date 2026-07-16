@@ -5,6 +5,7 @@
 // wählen, Preis eingeben, an genau diesen Rate-Plan gepusht (alle 3 Vertriebswege
 // gleich). Doppelklick auf einen Tag mit Preis nimmt ihn zurück (Basispreis gilt
 // wieder). Live via useRealtime auf rate_plan_price_overrides.
+import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -161,30 +162,32 @@ export function RatePlanPriceCalendar({
           <span className="min-w-0 flex-1 text-sm text-muted-foreground">
             {t("rpcHint")}
           </span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="outline"
-              size="sm"
+              size="icon"
               onClick={() => setYear((y) => y - 1)}
               disabled={busy}
             >
-              ‹ {year - 1}
+              <Icon icon="ph:caret-left" className="size-4" />
             </Button>
-            <span className="w-14 text-center text-base font-semibold">{year}</span>
+            <span className="min-w-16 text-center font-display text-xl font-bold">
+              {year}
+            </span>
             <Button
               type="button"
               variant="outline"
-              size="sm"
+              size="icon"
               onClick={() => setYear((y) => y + 1)}
               disabled={busy}
             >
-              {year + 1} ›
+              <Icon icon="ph:caret-right" className="size-4" />
             </Button>
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {months.map((label, m) => (
           <MonthGrid
             key={m}
@@ -195,6 +198,7 @@ export function RatePlanPriceCalendar({
             prices={prices}
             currency={currency}
             dragDays={dragDays}
+            busy={busy}
             onDown={onDayDown}
             onEnter={onDayEnter}
             onDouble={onDayDouble}
@@ -213,6 +217,7 @@ function MonthGrid({
   prices,
   currency,
   dragDays,
+  busy,
   onDown,
   onEnter,
   onDouble,
@@ -224,6 +229,7 @@ function MonthGrid({
   prices: Map<string, number>;
   currency: string;
   dragDays: Set<string>;
+  busy: boolean;
   onDown: (iso: string) => void;
   onEnter: (iso: string) => void;
   onDouble: (iso: string) => void;
@@ -253,6 +259,7 @@ function MonthGrid({
             <button
               key={isoDate}
               type="button"
+              disabled={busy}
               onMouseDown={(e) => {
                 e.preventDefault();
                 onDown(isoDate);
@@ -260,21 +267,17 @@ function MonthGrid({
               onMouseEnter={() => onEnter(isoDate)}
               onDoubleClick={() => onDouble(isoDate)}
               title={price !== undefined ? formatCurrency(price, currency) : undefined}
-              className={`flex aspect-square min-h-9 cursor-pointer select-none flex-col items-center justify-center gap-0.5 rounded-md text-sm transition-colors ${
-                inDrag
-                  ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-1"
-                  : price !== undefined
-                    ? "bg-primary/15 font-semibold hover:bg-primary/25"
-                    : "text-foreground hover:bg-muted"
+              className={`flex aspect-square select-none flex-col items-center justify-center gap-0.5 rounded text-xs transition-[outline] ${
+                inDrag ? "outline outline-2 outline-accent" : ""
+              } ${
+                price !== undefined
+                  ? "bg-primary/15 font-medium"
+                  : "hover:bg-secondary"
               }`}
             >
               <span className="leading-none">{day}</span>
               {price !== undefined && (
-                <span
-                  className={`text-[0.6rem] leading-none ${
-                    inDrag ? "text-primary-foreground/90" : "text-primary"
-                  }`}
-                >
+                <span className="text-[0.6rem] leading-none text-primary">
                   {formatCurrency(price, currency)}
                 </span>
               )}
