@@ -979,7 +979,9 @@ def _rpc_service(monkeypatch) -> tuple[ReservationsService, MagicMock]:  # noqa:
 
     service = _service_for_create(property_found=True, taken_days=[], stopped_days=[])
     db = service._client  # noqa: SLF001 — Test greift auf den Mock zu
-    monkeypatch.setattr(service, "_upsert_guest", lambda *_a, **_k: None)
+    # Jede Reservierung MUSS einen Gast tragen (Kontakt-Pflicht) — der RPC-Test
+    # fokussiert die atomare Buchung, daher liefert der Gast-Mock eine feste ID.
+    monkeypatch.setattr(service, "_upsert_guest", lambda *_a, **_k: "g-1")
     quote = SimpleNamespace(total=300.0, currency="CHF", lines=[])
     monkeypatch.setattr(service, "_quote", lambda *_a, **_k: quote)
     mask = MagicMock()
@@ -1046,6 +1048,22 @@ def test_create_maps_rpc_conflict_to_409(monkeypatch) -> None:  # noqa: ANN001
     with pytest.raises(ReservationError) as exc:
         service.create(AuthContext(user_id="u1", tenant_id="t1"), req)
     assert exc.value.status_code == 409
+
+
+def test_create_requires_guest_contact(monkeypatch) -> None:  # noqa: ANN001
+    """Eine Reservierung OHNE jeden Kontakt (kein Name/E-Mail/Telefon) wird mit
+    422 abgelehnt — jede Buchung MUSS einen Gast tragen (Branchenstandard). Zum
+    Sperren ohne Gast dient der Sperrzeitraum, nicht die Reservierung."""
+    service = _service_for_create(property_found=True, taken_days=[], stopped_days=[])
+    # Kontakt leer → der Resolver liefert None (kein Merkmal).
+    monkeypatch.setattr(service, "_upsert_guest", lambda *_a, **_k: None)
+    req = ReservationCreate(
+        property_id="p1", check_in=date(2026, 5, 1), check_out=date(2026, 5, 3),
+    )
+    with pytest.raises(ReservationError) as exc:
+        service.create(AuthContext(user_id="u1", tenant_id="t1"), req)
+    assert exc.value.status_code == 422
+    assert "Gast" in exc.value.message
 
 
 def test_map_booking_conflict_codes() -> None:

@@ -145,8 +145,19 @@ class WritesMixin(ReservationsBase):
                 "aufheben.", status_code=409
             )
 
-        # 3) Gast anlegen (oder bestehenden per E-Mail wiederverwenden).
+        # 3) Gast anlegen (oder bestehenden per E-Mail wiederverwenden). JEDE
+        #    Reservierung MUSS einen Gast tragen — Branchenstandard (Cloudbeds,
+        #    Mews, RoomRaccoon, Guesty verlangen alle mind. einen Namen; ein
+        #    Zimmer OHNE Gast sperrt man über den Sperrzeitraum, nicht als
+        #    Reservierung). Liefert der Resolver None (kein Name/E-Mail/Telefon),
+        #    ist die Buchung unvollständig → 422 statt guest-loser Reservierung.
         guest_id = self._upsert_guest(tenant_id, req)
+        if guest_id is None:
+            raise ReservationError(
+                "Bitte einen Gast angeben (mindestens Name, E-Mail oder Telefon). "
+                "Zum Sperren ohne Gast einen Sperrzeitraum anlegen.",
+                status_code=422,
+            )
 
         # 4) Preis aus dem zentralen Resolver (eine Preis-Wahrheit). Wird KEIN
         #    Betrag übergeben (total_amount=0), berechnet der Quote die Summe +
