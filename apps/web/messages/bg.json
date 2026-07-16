@@ -1045,6 +1045,7 @@
     "rpcPricePlaceholder": "Цена в {currency}",
     "rpcHint": "Въведете цена, след което плъзнете върху дните. Двойно щракване връща дневната цена.",
     "rpcPriceInvalid": "Моля, въведете валидна цена.",
-    "rpcSelectedDays": "Избрани {count} ден/дни"
+    "rpcSelectedDays": "Избрани {count} ден/дни",
+    "datePriceCount": "{count} цена(и) по дата"
   }
 }

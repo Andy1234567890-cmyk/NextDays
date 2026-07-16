@@ -1045,6 +1045,7 @@
     "rpcPricePlaceholder": "Cena v {currency}",
     "rpcHint": "Zadejte cenu, poté přetáhněte přes dny. Dvojklik vrátí denní cenu zpět.",
     "rpcPriceInvalid": "Zadejte platnou cenu.",
-    "rpcSelectedDays": "Vybráno {count} den/dnů"
+    "rpcSelectedDays": "Vybráno {count} den/dnů",
+    "datePriceCount": "{count} cena za datum"
   }
 }

@@ -1045,6 +1045,7 @@
     "rpcPricePlaceholder": "Praghas in {currency}",
     "rpcHint": "Clóscríobh praghas, ansin tarraing thar na laethanta. Cliceáil faoi dhó chun praghas laethúil a chur ar ceal.",
     "rpcPriceInvalid": "Cuir praghas bailí isteach le do thoil.",
-    "rpcSelectedDays": "{count} lá roghnaithe"
+    "rpcSelectedDays": "{count} lá roghnaithe",
+    "datePriceCount": "{count} praghas dáta"
   }
 }

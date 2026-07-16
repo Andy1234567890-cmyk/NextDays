@@ -1045,6 +1045,7 @@
     "rpcPricePlaceholder": "Cena valūtā {currency}",
     "rpcHint": "Ievadi cenu, tad velc pāri dienām. Dubultklikšķis atceļ dienas cenu.",
     "rpcPriceInvalid": "Lūdzu, ievadiet derīgu cenu.",
-    "rpcSelectedDays": "Atlasīta(s) {count} diena(s)"
+    "rpcSelectedDays": "Atlasīta(s) {count} diena(s)",
+    "datePriceCount": "{count} datuma cena(s)"
   }
 }

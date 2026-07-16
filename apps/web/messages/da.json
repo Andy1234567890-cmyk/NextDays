@@ -1045,6 +1045,7 @@
     "rpcPricePlaceholder": "Pris i {currency}",
     "rpcHint": "Indtast en pris, og træk derefter hen over dagene. Dobbeltklik fortryder en dagspris.",
     "rpcPriceInvalid": "Angiv venligst en gyldig pris.",
-    "rpcSelectedDays": "{count} dag(e) valgt"
+    "rpcSelectedDays": "{count} dag(e) valgt",
+    "datePriceCount": "{count} datopris(er)"
   }
 }

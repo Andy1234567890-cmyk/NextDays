@@ -1045,6 +1045,7 @@
     "rpcPricePlaceholder": "Prix en {currency}",
     "rpcHint": "Saisis un prix, puis fais glisser sur les jours. Un double-clic annule un prix journalier.",
     "rpcPriceInvalid": "Veuillez saisir un prix valide.",
-    "rpcSelectedDays": "{count} jour(s) sélectionné(s)"
+    "rpcSelectedDays": "{count} jour(s) sélectionné(s)",
+    "datePriceCount": "{count} prix par date"
   }
 }

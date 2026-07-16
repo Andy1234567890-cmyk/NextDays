@@ -511,14 +511,20 @@ export function RoomTypesManager({
                       key={plan.id}
                       className="flex items-center justify-between gap-3 rounded-(--radius) bg-muted/40 px-3 py-2"
                     >
-                      <div className="min-w-0">
+                      <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
                         <span className="truncate text-sm font-medium">{plan.name}</span>
-                        <span className="ml-2 text-sm text-muted-foreground">
+                        <span className="text-sm text-muted-foreground">
                           {money(plan.base_price, plan.currency)}
                           {plan.min_stay > 1
                             ? t("minNights", { count: plan.min_stay })
                             : ""}
                         </span>
+                        {plan.date_price_count > 0 && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2 py-0.5 text-xs font-medium text-accent">
+                            <Icon icon="ph:calendar-dots" className="size-3.5" />
+                            {t("datePriceCount", { count: plan.date_price_count })}
+                          </span>
+                        )}
                       </div>
                       <div className="flex shrink-0 gap-1">
                         <Button

@@ -1045,6 +1045,7 @@
     "rpcPricePlaceholder": "Cijena u {currency}",
     "rpcHint": "Upiši cijenu, zatim povuci preko dana. Dvostruki klik poništava dnevnu cijenu.",
     "rpcPriceInvalid": "Molimo unesite valjanu cijenu.",
-    "rpcSelectedDays": "Odabrano {count} dan(a)"
+    "rpcSelectedDays": "Odabrano {count} dan(a)",
+    "datePriceCount": "{count} cijena po datumu"
   }
 }

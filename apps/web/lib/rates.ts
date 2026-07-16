@@ -16,6 +16,8 @@ export type RatePlan = {
   // Hotel: Zimmerkategorie des Plans (null = Ferienwohnung). Erlaubt der UI, die
   // Pläne je Kategorie zu gruppieren (BAR/B&B je Room-Type).
   room_type_id: string | null;
+  // Anzahl gesetzter Datumspreise (rate_plan_price_overrides); 0 = nur Basispreis.
+  date_price_count: number;
 };
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };

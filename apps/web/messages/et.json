@@ -1045,6 +1045,7 @@
     "rpcPricePlaceholder": "Hind valuutas {currency}",
     "rpcHint": "Sisesta hind, seejärel lohista üle päevade. Topeltklõps võtab päevahinna tagasi.",
     "rpcPriceInvalid": "Palun sisestage kehtiv hind.",
-    "rpcSelectedDays": "Valitud {count} päev(a)"
+    "rpcSelectedDays": "Valitud {count} päev(a)",
+    "datePriceCount": "{count} kuupäevahind(a)"
   }
 }

@@ -38,6 +38,9 @@ class RatePlanResponse(BaseModel):
     # Hotel: Zimmerkategorie des Plans (None = Ferienwohnung). Nötig, damit die UI
     # die Rate-Plans je Kategorie gruppieren kann (BAR/B&B je Room-Type).
     room_type_id: str | None = None
+    # Anzahl der datumsgenauen Preise dieses Plans (rate_plan_price_overrides).
+    # Die Übersicht zeigt damit pro Plan, ob/wie viele Datumspreise gesetzt sind.
+    date_price_count: int = 0
 
 
 class RatePlanListResponse(BaseModel):

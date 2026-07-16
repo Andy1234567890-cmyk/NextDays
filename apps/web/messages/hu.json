@@ -1045,6 +1045,7 @@
     "rpcPricePlaceholder": "Ár {currency} pénznemben",
     "rpcHint": "Írd be az árat, majd húzd végig a napokon. Dupla kattintás visszavonja a napi árat.",
     "rpcPriceInvalid": "Adj meg egy érvényes árat.",
-    "rpcSelectedDays": "{count} nap kiválasztva"
+    "rpcSelectedDays": "{count} nap kiválasztva",
+    "datePriceCount": "{count} dátumár"
   }
 }

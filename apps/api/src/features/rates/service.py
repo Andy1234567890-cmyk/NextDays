@@ -68,7 +68,7 @@ class RatesService:
         return res[0]
 
     @staticmethod
-    def _row(r: dict) -> RatePlanResponse:
+    def _row(r: dict, date_price_count: int = 0) -> RatePlanResponse:
         return RatePlanResponse(
             id=r["id"],
             property_id=r["property_id"],
@@ -77,7 +77,33 @@ class RatesService:
             currency=r.get("currency") or "EUR",
             min_stay=int(r.get("min_stay") or 1),
             room_type_id=r.get("room_type_id"),
+            date_price_count=date_price_count,
         )
+
+    def _date_price_counts(self, rate_plan_ids: list[str]) -> dict[str, int]:
+        """Anzahl gesetzter Datumspreise je Rate-Plan in EINER Query (kein N+1).
+        Leer, wenn die Tabelle noch nicht existiert (Umgebung vor 0146) —
+        die Übersicht zeigt dann eben keine Datumspreis-Zähler (kein Crash)."""
+        if not rate_plan_ids:
+            return {}
+        try:
+            rows = (
+                self._db()
+                .table("rate_plan_price_overrides")
+                .select("rate_plan_id")
+                .in_("rate_plan_id", rate_plan_ids)
+                .not_.is_("price", "null")
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — fehlende Tabelle = keine Zähler
+            log.warning("rate_plan_price_counts_unavailable", error=str(exc))
+            return {}
+        counts: dict[str, int] = {}
+        for r in rows:
+            rid = r.get("rate_plan_id")
+            if isinstance(rid, str):
+                counts[rid] = counts.get(rid, 0) + 1
+        return counts
 
     def list(self, ctx: AuthContext, property_id: str) -> RatePlanListResponse:
         tenant_id = self._require_tenant(ctx)
@@ -90,7 +116,8 @@ class RatesService:
             .order("created_at")
             .execute()
         ).data or []
-        items = [self._row(r) for r in res]
+        counts = self._date_price_counts([r["id"] for r in res if r.get("id")])
+        items = [self._row(r, counts.get(r["id"], 0)) for r in res]
         return RatePlanListResponse(items=items, total=len(items))
 
     def create(self, ctx: AuthContext, req: RatePlanCreate) -> RatePlanResponse:

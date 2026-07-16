@@ -1045,6 +1045,7 @@
     "rpcPricePlaceholder": "Preço em {currency}",
     "rpcHint": "Digita um preço e depois arrasta sobre os dias. Um duplo clique reverte um preço diário.",
     "rpcPriceInvalid": "Introduz um preço válido.",
-    "rpcSelectedDays": "{count} dia(s) selecionado(s)"
+    "rpcSelectedDays": "{count} dia(s) selecionado(s)",
+    "datePriceCount": "{count} preço(s) por data"
   }
 }

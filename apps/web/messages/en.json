@@ -1497,6 +1497,7 @@
     "rpcPricePlaceholder": "Price in {currency}",
     "rpcHint": "Type a price, then drag across the days. Double-click reverts a daily price.",
     "rpcPriceInvalid": "Please enter a valid price.",
-    "rpcSelectedDays": "{count} day(s) selected"
+    "rpcSelectedDays": "{count} day(s) selected",
+    "datePriceCount": "{count} date price(s)"
   }
 }

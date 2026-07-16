@@ -1045,6 +1045,7 @@
     "rpcPricePlaceholder": "Hinta valuutassa {currency}",
     "rpcHint": "Kirjoita hinta ja vedä sitten päivien yli. Kaksoisnapsautus peruuttaa päivähinnan.",
     "rpcPriceInvalid": "Anna kelvollinen hinta.",
-    "rpcSelectedDays": "{count} päivä(ä) valittu"
+    "rpcSelectedDays": "{count} päivä(ä) valittu",
+    "datePriceCount": "{count} päivähinta(a)"
   }
 }

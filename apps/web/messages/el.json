@@ -1045,6 +1045,7 @@
     "rpcPricePlaceholder": "Τιμή σε {currency}",
     "rpcHint": "Πληκτρολογήστε τιμή και μετά σύρετε πάνω από τις ημέρες. Το διπλό κλικ αναιρεί μια ημερήσια τιμή.",
     "rpcPriceInvalid": "Εισαγάγετε μια έγκυρη τιμή.",
-    "rpcSelectedDays": "Επιλέχθηκαν {count} ημέρα/ες"
+    "rpcSelectedDays": "Επιλέχθηκαν {count} ημέρα/ες",
+    "datePriceCount": "{count} τιμή/ές ανά ημ/νία"
   }
 }

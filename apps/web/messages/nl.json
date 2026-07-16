@@ -1045,6 +1045,7 @@
     "rpcPricePlaceholder": "Prijs in {currency}",
     "rpcHint": "Typ een prijs en sleep dan over de dagen. Dubbelklik draait een dagprijs terug.",
     "rpcPriceInvalid": "Voer een geldige prijs in.",
-    "rpcSelectedDays": "{count} dag(en) geselecteerd"
+    "rpcSelectedDays": "{count} dag(en) geselecteerd",
+    "datePriceCount": "{count} datumprijs(zen)"
   }
 }

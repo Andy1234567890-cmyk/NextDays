@@ -1045,6 +1045,7 @@
     "rpcPricePlaceholder": "Kaina {currency}",
     "rpcHint": "Įvesk kainą, tada vilk per dienas. Dvigubu spustelėjimu atšaukiama dienos kaina.",
     "rpcPriceInvalid": "Prašome įvesti tinkamą kainą.",
-    "rpcSelectedDays": "Pasirinkta {count} diena(-os)"
+    "rpcSelectedDays": "Pasirinkta {count} diena(-os)",
+    "datePriceCount": "{count} datos kaina(-os)"
   }
 }
