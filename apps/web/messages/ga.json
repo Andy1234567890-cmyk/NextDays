@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Oíche lóistín",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Iarraimid ort méid an tsonraisc {'{'}[%GESAMTBETRAG%]{'}'} a aistriú, ag lua uimhir an tsonraisc [%RECHNUNGSNUMMER%], chuig an gcuntas thíos. Sprioc-íocaíochta: [%ZAHLUNGSZIEL%] Dáta an tsonraisc: [%RECHNUNGSDATUM%] Go raibh maith agat as do mhuinín agus as an gcomhoibriú taitneamhach!<br>Le meas,<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Iarraimid ort méid an tsonraisc {'{'}[%GESAMTBETRAG%]{'}'} a aistriú, ag lua uimhir an tsonraisc [%RECHNUNGSNUMMER%], chuig an gcuntas thíos. Sprioc-íocaíochta: [%ZAHLUNGSZIEL%] Dáta an tsonraisc: [%RECHNUNGSDATUM%] Go raibh maith agat as do mhuinín agus as an gcomhoibriú taitneamhach!'<br>'Le meas,'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Iníoctha laistigh de 14 lá gan asbhaint",
       "reservationApplied": "Áirithint glactha — míreanna ón bhfanacht agus ó sheirbhísí breise.",
       "accessDeniedTitle": "Rochtain diúltaithe",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} íoslódáilte go rathúil",
       "downloadFailedToast": "Theip ar an íoslódáil",
       "sendErrorToast": "Earráid agus an {documentLabelLower} á sheoladh",
-      "defaultFooterText": "Iarraimid ort méid an tsonraisc [%GESAMTBETRAG%] a aistriú, ag lua uimhir an tsonraisc [%RECHNUNGSNUMMER%], chuig an gcuntas thíos. Sprioc-íocaíochta: [%ZAHLUNGSZIEL%] Dáta an tsonraisc: [%RECHNUNGSDATUM%] Go raibh maith agat as do mhuinín agus as an gcomhoibriú taitneamhach!<br>Le meas,<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Iarraimid ort méid an tsonraisc [%GESAMTBETRAG%] a aistriú, ag lua uimhir an tsonraisc [%RECHNUNGSNUMMER%], chuig an gcuntas thíos. Sprioc-íocaíochta: [%ZAHLUNGSZIEL%] Dáta an tsonraisc: [%RECHNUNGSDATUM%] Go raibh maith agat as do mhuinín agus as an gcomhoibriú taitneamhach!'<br>'Le meas,'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Anaithnid"
     },
     "FooterTextEditor": {

@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Noćenje",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Molimo vas da iznos računa od [%GESAMTBETRAG%] uz navođenje broja računa [%RECHNUNGSNUMMER%] uplatite na dolje navedeni račun. Rok plaćanja: [%ZAHLUNGSZIEL%] Datum računa: [%RECHNUNGSDATUM%] Zahvaljujemo na povjerenju i ugodnoj suradnji!<br>Srdačan pozdrav<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Molimo vas da iznos računa od [%GESAMTBETRAG%] uz navođenje broja računa [%RECHNUNGSNUMMER%] uplatite na dolje navedeni račun. Rok plaćanja: [%ZAHLUNGSZIEL%] Datum računa: [%RECHNUNGSDATUM%] Zahvaljujemo na povjerenju i ugodnoj suradnji!'<br>'Srdačan pozdrav'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Plativo u roku od 14 dana bez odbitka",
       "reservationApplied": "Rezervacija preuzeta — stavke iz boravka i dodatnih usluga.",
       "accessDeniedTitle": "Pristup odbijen",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} uspješno preuzeto",
       "downloadFailedToast": "Preuzimanje nije uspjelo",
       "sendErrorToast": "Greška pri slanju: {documentLabelLower}",
-      "defaultFooterText": "Molimo vas da iznos računa od [%GESAMTBETRAG%] uz navođenje broja računa [%RECHNUNGSNUMMER%] uplatite na dolje navedeni račun. Rok plaćanja: [%ZAHLUNGSZIEL%] Datum računa: [%RECHNUNGSDATUM%] Zahvaljujemo na povjerenju i ugodnoj suradnji!<br>Srdačan pozdrav<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Molimo vas da iznos računa od [%GESAMTBETRAG%] uz navođenje broja računa [%RECHNUNGSNUMMER%] uplatite na dolje navedeni račun. Rok plaćanja: [%ZAHLUNGSZIEL%] Datum računa: [%RECHNUNGSDATUM%] Zahvaljujemo na povjerenju i ugodnoj suradnji!'<br>'Srdačan pozdrav'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Nepoznato"
     },
     "FooterTextEditor": {

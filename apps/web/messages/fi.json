@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Yöpyminen",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Pyydämme maksamaan laskun summan [%GESAMTBETRAG%] laskun numeroa [%RECHNUNGSNUMMER%] käyttäen alla olevalle tilille. Maksuehto: [%ZAHLUNGSZIEL%] Laskun päivämäärä: [%RECHNUNGSDATUM%] Kiitos luottamuksesta ja mukavasta yhteistyöstä!<br>Ystävällisin terveisin<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Pyydämme maksamaan laskun summan [%GESAMTBETRAG%] laskun numeroa [%RECHNUNGSNUMMER%] käyttäen alla olevalle tilille. Maksuehto: [%ZAHLUNGSZIEL%] Laskun päivämäärä: [%RECHNUNGSDATUM%] Kiitos luottamuksesta ja mukavasta yhteistyöstä!'<br>'Ystävällisin terveisin'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Maksettava 14 päivän kuluessa ilman vähennystä",
       "reservationApplied": "Varaus otettu käyttöön — rivit oleskelusta ja lisäpalveluista.",
       "accessDeniedTitle": "Pääsy evätty",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} ladattiin onnistuneesti",
       "downloadFailedToast": "Lataus epäonnistui",
       "sendErrorToast": "Virhe {documentLabelLower} lähetyksessä",
-      "defaultFooterText": "Pyydämme maksamaan laskun summan [%GESAMTBETRAG%] laskun numeroa [%RECHNUNGSNUMMER%] käyttäen alla olevalle tilille. Maksuehto: [%ZAHLUNGSZIEL%] Laskun päivämäärä: [%RECHNUNGSDATUM%] Kiitos luottamuksesta ja mukavasta yhteistyöstä!<br>Ystävällisin terveisin<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Pyydämme maksamaan laskun summan [%GESAMTBETRAG%] laskun numeroa [%RECHNUNGSNUMMER%] käyttäen alla olevalle tilille. Maksuehto: [%ZAHLUNGSZIEL%] Laskun päivämäärä: [%RECHNUNGSDATUM%] Kiitos luottamuksesta ja mukavasta yhteistyöstä!'<br>'Ystävällisin terveisin'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Tuntematon"
     },
     "FooterTextEditor": {

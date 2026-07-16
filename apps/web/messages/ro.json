@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Cazare",
       "defaultHeadTextHtml": "[%FORMULA_ADRESARE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Vă rugăm să transferați suma facturii de [%SUMA_TOTALA%], menționând numărul facturii [%NUMAR_FACTURA%], în contul indicat mai jos. Termen de plată: [%TERMEN_PLATA%] Data facturii: [%DATA_FACTURII%] Vă mulțumim pentru încredere și pentru colaborarea plăcută!<br>Cu stimă,<br>[%PERSOANA_CONTACT%]",
+      "defaultFooterText": "Vă rugăm să transferați suma facturii de [%SUMA_TOTALA%], menționând numărul facturii [%NUMAR_FACTURA%], în contul indicat mai jos. Termen de plată: [%TERMEN_PLATA%] Data facturii: [%DATA_FACTURII%] Vă mulțumim pentru încredere și pentru colaborarea plăcută!'<br>'Cu stimă,'<br>'[%PERSOANA_CONTACT%]",
       "defaultPaymentTerms": "Plătibil în termen de 14 zile fără deducere",
       "reservationApplied": "Rezervare preluată — poziții din sejur și servicii suplimentare.",
       "accessDeniedTitle": "Acces refuzat",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} descărcată cu succes",
       "downloadFailedToast": "Descărcarea a eșuat",
       "sendErrorToast": "Eroare la trimiterea {documentLabelLower}",
-      "defaultFooterText": "Vă rugăm să transferați suma facturii de [%SUMA_TOTALA%], menționând numărul facturii [%NUMAR_FACTURA%], în contul indicat mai jos. Termen de plată: [%TERMEN_PLATA%] Data facturii: [%DATA_FACTURII%] Vă mulțumim pentru încredere și pentru colaborarea plăcută!<br>Cu stimă,<br>[%PERSOANA_CONTACT%]",
+      "defaultFooterText": "Vă rugăm să transferați suma facturii de [%SUMA_TOTALA%], menționând numărul facturii [%NUMAR_FACTURA%], în contul indicat mai jos. Termen de plată: [%TERMEN_PLATA%] Data facturii: [%DATA_FACTURII%] Vă mulțumim pentru încredere și pentru colaborarea plăcută!'<br>'Cu stimă,'<br>'[%PERSOANA_CONTACT%]",
       "unknownValue": "Necunoscut"
     },
     "FooterTextEditor": {

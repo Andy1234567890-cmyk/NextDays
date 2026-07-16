@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Pernoctación",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Le rogamos abone el importe de la factura de [%GESAMTBETRAG%] indicando el número de factura [%RECHNUNGSNUMMER%] en la cuenta indicada más abajo. Plazo de pago: [%ZAHLUNGSZIEL%] Fecha de la factura: [%RECHNUNGSDATUM%] ¡Gracias por su confianza y por la agradable colaboración!<br>Atentamente,<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Le rogamos abone el importe de la factura de [%GESAMTBETRAG%] indicando el número de factura [%RECHNUNGSNUMMER%] en la cuenta indicada más abajo. Plazo de pago: [%ZAHLUNGSZIEL%] Fecha de la factura: [%RECHNUNGSDATUM%] ¡Gracias por su confianza y por la agradable colaboración!'<br>'Atentamente,'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Pagadero en 14 días sin descuento",
       "reservationApplied": "Reserva aplicada — posiciones generadas a partir de la estancia y los servicios adicionales.",
       "accessDeniedTitle": "Acceso denegado",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} descargado correctamente",
       "downloadFailedToast": "Error en la descarga",
       "sendErrorToast": "Error al enviar {documentLabelLower}",
-      "defaultFooterText": "Le rogamos abone el importe de la factura de [%GESAMTBETRAG%] indicando el número de factura [%RECHNUNGSNUMMER%] en la cuenta indicada más abajo. Plazo de pago: [%ZAHLUNGSZIEL%] Fecha de la factura: [%RECHNUNGSDATUM%] ¡Gracias por su confianza y por la agradable colaboración!<br>Atentamente,<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Le rogamos abone el importe de la factura de [%GESAMTBETRAG%] indicando el número de factura [%RECHNUNGSNUMMER%] en la cuenta indicada más abajo. Plazo de pago: [%ZAHLUNGSZIEL%] Fecha de la factura: [%RECHNUNGSDATUM%] ¡Gracias por su confianza y por la agradable colaboración!'<br>'Atentamente,'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Desconocido"
     },
     "FooterTextEditor": {

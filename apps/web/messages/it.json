@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Pernottamento",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "La preghiamo di versare l'importo della fattura di [%GESAMTBETRAG%] indicando il numero di fattura [%RECHNUNGSNUMMER%] sul conto sottostante. Scadenza di pagamento: [%ZAHLUNGSZIEL%] Data fattura: [%RECHNUNGSDATUM%] Grazie per la fiducia e la piacevole collaborazione!<br>Cordiali saluti<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "La preghiamo di versare l'importo della fattura di [%GESAMTBETRAG%] indicando il numero di fattura [%RECHNUNGSNUMMER%] sul conto sottostante. Scadenza di pagamento: [%ZAHLUNGSZIEL%] Data fattura: [%RECHNUNGSDATUM%] Grazie per la fiducia e la piacevole collaborazione!'<br>'Cordiali saluti'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Pagabile entro 14 giorni senza sconto",
       "reservationApplied": "Prenotazione applicata — posizioni dal soggiorno e dai servizi aggiuntivi.",
       "accessDeniedTitle": "Accesso negato",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} scaricata con successo",
       "downloadFailedToast": "Download non riuscito",
       "sendErrorToast": "Errore durante l'invio di {documentLabelLower}",
-      "defaultFooterText": "La preghiamo di versare l'importo della fattura di [%GESAMTBETRAG%] indicando il numero di fattura [%RECHNUNGSNUMMER%] sul conto sottostante. Scadenza di pagamento: [%ZAHLUNGSZIEL%] Data fattura: [%RECHNUNGSDATUM%] Grazie per la fiducia e la piacevole collaborazione!<br>Cordiali saluti<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "La preghiamo di versare l'importo della fattura di [%GESAMTBETRAG%] indicando il numero di fattura [%RECHNUNGSNUMMER%] sul conto sottostante. Scadenza di pagamento: [%ZAHLUNGSZIEL%] Data fattura: [%RECHNUNGSDATUM%] Grazie per la fiducia e la piacevole collaborazione!'<br>'Cordiali saluti'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Sconosciuto"
     },
     "FooterTextEditor": {

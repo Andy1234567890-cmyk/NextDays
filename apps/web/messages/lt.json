@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Nakvynė",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Prašome sumokėti sąskaitos sumą [%GESAMTBETRAG%], nurodant sąskaitos numerį [%RECHNUNGSNUMMER%], į žemiau nurodytą sąskaitą. Mokėjimo terminas: [%ZAHLUNGSZIEL%] Sąskaitos data: [%RECHNUNGSDATUM%] Dėkojame už pasitikėjimą ir malonų bendradarbiavimą!<br>Pagarbiai<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Prašome sumokėti sąskaitos sumą [%GESAMTBETRAG%], nurodant sąskaitos numerį [%RECHNUNGSNUMMER%], į žemiau nurodytą sąskaitą. Mokėjimo terminas: [%ZAHLUNGSZIEL%] Sąskaitos data: [%RECHNUNGSDATUM%] Dėkojame už pasitikėjimą ir malonų bendradarbiavimą!'<br>'Pagarbiai'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Apmokėti per 14 dienų be nuolaidos",
       "reservationApplied": "Užsakymas perkeltas — pozicijos iš apsigyvenimo ir papildomų paslaugų.",
       "accessDeniedTitle": "Prieiga uždrausta",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} sėkmingai atsisiųsta",
       "downloadFailedToast": "Atsisiuntimas nepavyko",
       "sendErrorToast": "Klaida siunčiant {documentLabelLower}",
-      "defaultFooterText": "Prašome sumokėti sąskaitos sumą [%GESAMTBETRAG%], nurodant sąskaitos numerį [%RECHNUNGSNUMMER%], į žemiau nurodytą sąskaitą. Mokėjimo terminas: [%ZAHLUNGSZIEL%] Sąskaitos data: [%RECHNUNGSDATUM%] Dėkojame už pasitikėjimą ir malonų bendradarbiavimą!<br>Pagarbiai<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Prašome sumokėti sąskaitos sumą [%GESAMTBETRAG%], nurodant sąskaitos numerį [%RECHNUNGSNUMMER%], į žemiau nurodytą sąskaitą. Mokėjimo terminas: [%ZAHLUNGSZIEL%] Sąskaitos data: [%RECHNUNGSDATUM%] Dėkojame už pasitikėjimą ir malonų bendradarbiavimą!'<br>'Pagarbiai'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Nežinoma"
     },
     "FooterTextEditor": {

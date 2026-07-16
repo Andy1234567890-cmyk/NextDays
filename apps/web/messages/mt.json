@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Lejl",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Nitolbuk tittrasferixxi l-ammont tal-fattura ta' [%GESAMTBETRAG%] filwaqt li ssemmi n-numru tal-fattura [%RECHNUNGSNUMMER%] fuq il-kont indikat hawn taħt. Skadenza tal-ħlas: [%ZAHLUNGSZIEL%] Data tal-fattura: [%RECHNUNGSDATUM%] Grazzi ħafna għall-fiduċja tiegħek u għall-kollaborazzjoni pjaċevoli!<br>B'rispett<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Nitolbuk tittrasferixxi l-ammont tal-fattura ta' [%GESAMTBETRAG%] filwaqt li ssemmi n-numru tal-fattura [%RECHNUNGSNUMMER%] fuq il-kont indikat hawn taħt. Skadenza tal-ħlas: [%ZAHLUNGSZIEL%] Data tal-fattura: [%RECHNUNGSDATUM%] Grazzi ħafna għall-fiduċja tiegħek u għall-kollaborazzjoni pjaċevoli!'<br>'B'rispett'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Pagabbli fi żmien 14-il jum mingħajr tnaqqis",
       "reservationApplied": "Riżervazzjoni applikata — pożizzjonijiet mis-soġġorn u minn servizzi addizzjonali.",
       "accessDeniedTitle": "Aċċess miċħud",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} tniżżel b'suċċess",
       "downloadFailedToast": "It-tniżżil falla",
       "sendErrorToast": "Żball waqt il-bgħatt tal-{documentLabelLower}",
-      "defaultFooterText": "Nitolbuk tittrasferixxi l-ammont tal-fattura ta' [%GESAMTBETRAG%] filwaqt li ssemmi n-numru tal-fattura [%RECHNUNGSNUMMER%] fuq il-kont indikat hawn taħt. Skadenza tal-ħlas: [%ZAHLUNGSZIEL%] Data tal-fattura: [%RECHNUNGSDATUM%] Grazzi ħafna għall-fiduċja tiegħek u għall-kollaborazzjoni pjaċevoli!<br>B'rispett<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Nitolbuk tittrasferixxi l-ammont tal-fattura ta' [%GESAMTBETRAG%] filwaqt li ssemmi n-numru tal-fattura [%RECHNUNGSNUMMER%] fuq il-kont indikat hawn taħt. Skadenza tal-ħlas: [%ZAHLUNGSZIEL%] Data tal-fattura: [%RECHNUNGSDATUM%] Grazzi ħafna għall-fiduċja tiegħek u għall-kollaborazzjoni pjaċevoli!'<br>'B'rispett'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Mhux magħruf"
     },
     "FooterTextEditor": {

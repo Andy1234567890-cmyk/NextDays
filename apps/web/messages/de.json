@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Übernachtung",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Wir bitten Sie, den Rechnungsbetrag von [%GESAMTBETRAG%] unter Angabe der Rechnungsnummer [%RECHNUNGSNUMMER%] auf das unten angegebene Konto zu überweisen. Zahlungsziel: [%ZAHLUNGSZIEL%] Rechnungsdatum: [%RECHNUNGSDATUM%] Vielen Dank für Ihr Vertrauen und die angenehme Zusammenarbeit!<br>Mit freundlichen Grüßen<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Wir bitten Sie, den Rechnungsbetrag von [%GESAMTBETRAG%] unter Angabe der Rechnungsnummer [%RECHNUNGSNUMMER%] auf das unten angegebene Konto zu überweisen. Zahlungsziel: [%ZAHLUNGSZIEL%] Rechnungsdatum: [%RECHNUNGSDATUM%] Vielen Dank für Ihr Vertrauen und die angenehme Zusammenarbeit!'<br>'Mit freundlichen Grüßen'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Zahlbar binnen 14 Tagen ohne Abzug",
       "reservationApplied": "Buchung übernommen — Positionen aus Aufenthalt und Zusatzleistungen.",
       "accessDeniedTitle": "Zugriff verweigert",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} erfolgreich heruntergeladen",
       "downloadFailedToast": "Download fehlgeschlagen",
       "sendErrorToast": "Fehler beim Versenden der {documentLabelLower}",
-      "defaultFooterText": "Wir bitten Sie, den Rechnungsbetrag von [%GESAMTBETRAG%] unter Angabe der Rechnungsnummer [%RECHNUNGSNUMMER%] auf das unten angegebene Konto zu überweisen. Zahlungsziel: [%ZAHLUNGSZIEL%] Rechnungsdatum: [%RECHNUNGSDATUM%] Vielen Dank für Ihr Vertrauen und die angenehme Zusammenarbeit!<br>Mit freundlichen Grüßen<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Wir bitten Sie, den Rechnungsbetrag von [%GESAMTBETRAG%] unter Angabe der Rechnungsnummer [%RECHNUNGSNUMMER%] auf das unten angegebene Konto zu überweisen. Zahlungsziel: [%ZAHLUNGSZIEL%] Rechnungsdatum: [%RECHNUNGSDATUM%] Vielen Dank für Ihr Vertrauen und die angenehme Zusammenarbeit!'<br>'Mit freundlichen Grüßen'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Unbekannt"
     },
     "FooterTextEditor": {

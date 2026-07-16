@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Övernattning",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Vi ber er betala fakturabeloppet [%GESAMTBETRAG%] med angivande av fakturanummer [%RECHNUNGSNUMMER%] till nedanstående konto. Betalningsvillkor: [%ZAHLUNGSZIEL%] Fakturadatum: [%RECHNUNGSDATUM%] Tack för ert förtroende och det trevliga samarbetet!<br>Med vänliga hälsningar<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Vi ber er betala fakturabeloppet [%GESAMTBETRAG%] med angivande av fakturanummer [%RECHNUNGSNUMMER%] till nedanstående konto. Betalningsvillkor: [%ZAHLUNGSZIEL%] Fakturadatum: [%RECHNUNGSDATUM%] Tack för ert förtroende och det trevliga samarbetet!'<br>'Med vänliga hälsningar'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Betalas inom 14 dagar utan avdrag",
       "reservationApplied": "Bokning importerad — poster från vistelse och tilläggstjänster.",
       "accessDeniedTitle": "Åtkomst nekad",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} laddades ner",
       "downloadFailedToast": "Nedladdningen misslyckades",
       "sendErrorToast": "Fel vid utskick av {documentLabelLower}",
-      "defaultFooterText": "Vi ber er betala fakturabeloppet [%GESAMTBETRAG%] med angivande av fakturanummer [%RECHNUNGSNUMMER%] till nedanstående konto. Betalningsvillkor: [%ZAHLUNGSZIEL%] Fakturadatum: [%RECHNUNGSDATUM%] Tack för ert förtroende och det trevliga samarbetet!<br>Med vänliga hälsningar<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Vi ber er betala fakturabeloppet [%GESAMTBETRAG%] med angivande av fakturanummer [%RECHNUNGSNUMMER%] till nedanstående konto. Betalningsvillkor: [%ZAHLUNGSZIEL%] Fakturadatum: [%RECHNUNGSDATUM%] Tack för ert förtroende och det trevliga samarbetet!'<br>'Med vänliga hälsningar'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Okänt"
     },
     "FooterTextEditor": {

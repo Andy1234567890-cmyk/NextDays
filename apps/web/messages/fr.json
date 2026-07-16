@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Nuitée",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Nous vous prions de virer le montant de la facture de [%GESAMTBETRAG%] en indiquant le numéro de facture [%RECHNUNGSNUMMER%] sur le compte indiqué ci-dessous. Délai de paiement : [%ZAHLUNGSZIEL%] Date de facture : [%RECHNUNGSDATUM%] Merci pour votre confiance et cette agréable collaboration !<br>Cordialement<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Nous vous prions de virer le montant de la facture de [%GESAMTBETRAG%] en indiquant le numéro de facture [%RECHNUNGSNUMMER%] sur le compte indiqué ci-dessous. Délai de paiement : [%ZAHLUNGSZIEL%] Date de facture : [%RECHNUNGSDATUM%] Merci pour votre confiance et cette agréable collaboration !'<br>'Cordialement'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Payable sous 14 jours sans escompte",
       "reservationApplied": "Réservation reprise — positions générées à partir du séjour et des prestations complémentaires.",
       "accessDeniedTitle": "Accès refusé",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} téléchargé(e) avec succès",
       "downloadFailedToast": "Échec du téléchargement",
       "sendErrorToast": "Erreur lors de l'envoi de {documentLabelLower}",
-      "defaultFooterText": "Nous vous prions de virer le montant de la facture de [%GESAMTBETRAG%] en indiquant le numéro de facture [%RECHNUNGSNUMMER%] sur le compte indiqué ci-dessous. Délai de paiement : [%ZAHLUNGSZIEL%] Date de facture : [%RECHNUNGSDATUM%] Merci pour votre confiance et cette agréable collaboration !<br>Cordialement<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Nous vous prions de virer le montant de la facture de [%GESAMTBETRAG%] en indiquant le numéro de facture [%RECHNUNGSNUMMER%] sur le compte indiqué ci-dessous. Délai de paiement : [%ZAHLUNGSZIEL%] Date de facture : [%RECHNUNGSDATUM%] Merci pour votre confiance et cette agréable collaboration !'<br>'Cordialement'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Inconnu"
     },
     "FooterTextEditor": {

@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Overnatning",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Vi beder dig overføre fakturabeløbet på [%GESAMTBETRAG%] med angivelse af fakturanummeret [%RECHNUNGSNUMMER%] til nedenstående konto. Betalingsfrist: [%ZAHLUNGSZIEL%] Fakturadato: [%RECHNUNGSDATUM%] Tak for din tillid og det gode samarbejde!<br>Med venlig hilsen<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Vi beder dig overføre fakturabeløbet på [%GESAMTBETRAG%] med angivelse af fakturanummeret [%RECHNUNGSNUMMER%] til nedenstående konto. Betalingsfrist: [%ZAHLUNGSZIEL%] Fakturadato: [%RECHNUNGSDATUM%] Tak for din tillid og det gode samarbejde!'<br>'Med venlig hilsen'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Betales inden 14 dage uden fradrag",
       "reservationApplied": "Reservation overtaget — positioner fra ophold og tillægsydelser.",
       "accessDeniedTitle": "Adgang nægtet",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} blev downloadet",
       "downloadFailedToast": "Download mislykkedes",
       "sendErrorToast": "Fejl ved afsendelse af {documentLabelLower}",
-      "defaultFooterText": "Vi beder dig overføre fakturabeløbet på [%GESAMTBETRAG%] med angivelse af fakturanummeret [%RECHNUNGSNUMMER%] til nedenstående konto. Betalingsfrist: [%ZAHLUNGSZIEL%] Fakturadato: [%RECHNUNGSDATUM%] Tak for din tillid og det gode samarbejde!<br>Med venlig hilsen<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Vi beder dig overføre fakturabeløbet på [%GESAMTBETRAG%] med angivelse af fakturanummeret [%RECHNUNGSNUMMER%] til nedenstående konto. Betalingsfrist: [%ZAHLUNGSZIEL%] Fakturadato: [%RECHNUNGSDATUM%] Tak for din tillid og det gode samarbejde!'<br>'Med venlig hilsen'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Ukendt"
     },
     "FooterTextEditor": {

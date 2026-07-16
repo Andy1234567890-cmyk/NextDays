@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Нощувка",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Молим Ви да преведете сумата от [%GESAMTBETRAG%] по посочената по-долу сметка, като посочите номера на фактурата [%RECHNUNGSNUMMER%]. Срок на плащане: [%ZAHLUNGSZIEL%] Дата на фактурата: [%RECHNUNGSDATUM%] Благодарим Ви за доверието и приятното сътрудничество!<br>С уважение<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Молим Ви да преведете сумата от [%GESAMTBETRAG%] по посочената по-долу сметка, като посочите номера на фактурата [%RECHNUNGSNUMMER%]. Срок на плащане: [%ZAHLUNGSZIEL%] Дата на фактурата: [%RECHNUNGSDATUM%] Благодарим Ви за доверието и приятното сътрудничество!'<br>'С уважение'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Платимо в рамките на 14 дни без приспадане",
       "reservationApplied": "Резервацията беше приложена — позиции от престоя и допълнителните услуги.",
       "accessDeniedTitle": "Достъпът е отказан",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} беше изтеглена успешно",
       "downloadFailedToast": "Изтеглянето беше неуспешно",
       "sendErrorToast": "Грешка при изпращането на {documentLabelLower}",
-      "defaultFooterText": "Молим Ви да преведете сумата от [%GESAMTBETRAG%] по посочената по-долу сметка, като посочите номера на фактурата [%RECHNUNGSNUMMER%]. Срок на плащане: [%ZAHLUNGSZIEL%] Дата на фактурата: [%RECHNUNGSDATUM%] Благодарим Ви за доверието и приятното сътрудничество!<br>С уважение<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Молим Ви да преведете сумата от [%GESAMTBETRAG%] по посочената по-долу сметка, като посочите номера на фактурата [%RECHNUNGSNUMMER%]. Срок на плащане: [%ZAHLUNGSZIEL%] Дата на фактурата: [%RECHNUNGSDATUM%] Благодарим Ви за доверието и приятното сътрудничество!'<br>'С уважение'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Неизвестно"
     },
     "FooterTextEditor": {

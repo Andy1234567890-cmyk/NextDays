@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Διανυκτέρευση",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Σας παρακαλούμε να καταθέσετε το ποσό του τιμολογίου [%GESAMTBETRAG%] αναφέροντας τον αριθμό τιμολογίου [%RECHNUNGSNUMMER%] στον παρακάτω λογαριασμό. Προθεσμία πληρωμής: [%ZAHLUNGSZIEL%] Ημερομηνία τιμολογίου: [%RECHNUNGSDATUM%] Σας ευχαριστούμε για την εμπιστοσύνη σας και την ευχάριστη συνεργασία!<br>Με εκτίμηση<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Σας παρακαλούμε να καταθέσετε το ποσό του τιμολογίου [%GESAMTBETRAG%] αναφέροντας τον αριθμό τιμολογίου [%RECHNUNGSNUMMER%] στον παρακάτω λογαριασμό. Προθεσμία πληρωμής: [%ZAHLUNGSZIEL%] Ημερομηνία τιμολογίου: [%RECHNUNGSDATUM%] Σας ευχαριστούμε για την εμπιστοσύνη σας και την ευχάριστη συνεργασία!'<br>'Με εκτίμηση'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Πληρωτέο εντός 14 ημερών χωρίς έκπτωση",
       "reservationApplied": "Η κράτηση ενσωματώθηκε — θέσεις από τη διαμονή και τις πρόσθετες υπηρεσίες.",
       "accessDeniedTitle": "Δεν επιτρέπεται η πρόσβαση",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} λήφθηκε με επιτυχία",
       "downloadFailedToast": "Η λήψη απέτυχε",
       "sendErrorToast": "Σφάλμα κατά την αποστολή {documentLabelLower}",
-      "defaultFooterText": "Σας παρακαλούμε να καταθέσετε το ποσό του τιμολογίου [%GESAMTBETRAG%] αναφέροντας τον αριθμό τιμολογίου [%RECHNUNGSNUMMER%] στον παρακάτω λογαριασμό. Προθεσμία πληρωμής: [%ZAHLUNGSZIEL%] Ημερομηνία τιμολογίου: [%RECHNUNGSDATUM%] Σας ευχαριστούμε για την εμπιστοσύνη σας και την ευχάριστη συνεργασία!<br>Με εκτίμηση<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Σας παρακαλούμε να καταθέσετε το ποσό του τιμολογίου [%GESAMTBETRAG%] αναφέροντας τον αριθμό τιμολογίου [%RECHNUNGSNUMMER%] στον παρακάτω λογαριασμό. Προθεσμία πληρωμής: [%ZAHLUNGSZIEL%] Ημερομηνία τιμολογίου: [%RECHNUNGSDATUM%] Σας ευχαριστούμε για την εμπιστοσύνη σας και την ευχάριστη συνεργασία!'<br>'Με εκτίμηση'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Άγνωστο"
     },
     "FooterTextEditor": {

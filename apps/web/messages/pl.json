@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Nocleg",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Prosimy o przelanie kwoty faktury w wysokości [%GESAMTBETRAG%] z podaniem numeru faktury [%RECHNUNGSNUMMER%] na konto podane poniżej. Termin płatności: [%ZAHLUNGSZIEL%] Data faktury: [%RECHNUNGSDATUM%] Dziękujemy za zaufanie i miłą współpracę!<br>Z poważaniem<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Prosimy o przelanie kwoty faktury w wysokości [%GESAMTBETRAG%] z podaniem numeru faktury [%RECHNUNGSNUMMER%] na konto podane poniżej. Termin płatności: [%ZAHLUNGSZIEL%] Data faktury: [%RECHNUNGSDATUM%] Dziękujemy za zaufanie i miłą współpracę!'<br>'Z poważaniem'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Płatne w ciągu 14 dni bez potrąceń",
       "reservationApplied": "Rezerwacja przejęta — pozycje z pobytu i usług dodatkowych.",
       "accessDeniedTitle": "Odmowa dostępu",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} pobrana pomyślnie",
       "downloadFailedToast": "Pobieranie nie powiodło się",
       "sendErrorToast": "Błąd podczas wysyłania {documentLabelLower}",
-      "defaultFooterText": "Prosimy o przelanie kwoty faktury w wysokości [%GESAMTBETRAG%] z podaniem numeru faktury [%RECHNUNGSNUMMER%] na konto podane poniżej. Termin płatności: [%ZAHLUNGSZIEL%] Data faktury: [%RECHNUNGSDATUM%] Dziękujemy za zaufanie i miłą współpracę!<br>Z poważaniem<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Prosimy o przelanie kwoty faktury w wysokości [%GESAMTBETRAG%] z podaniem numeru faktury [%RECHNUNGSNUMMER%] na konto podane poniżej. Termin płatności: [%ZAHLUNGSZIEL%] Data faktury: [%RECHNUNGSDATUM%] Dziękujemy za zaufanie i miłą współpracę!'<br>'Z poważaniem'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Nieznany"
     },
     "FooterTextEditor": {

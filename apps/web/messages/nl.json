@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Overnachting",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Wij verzoeken u het factuurbedrag van [%GESAMTBETRAG%] onder vermelding van het factuurnummer [%RECHNUNGSNUMMER%] over te maken op onderstaande rekening. Betaaltermijn: [%ZAHLUNGSZIEL%] Factuurdatum: [%RECHNUNGSDATUM%] Hartelijk dank voor uw vertrouwen en de prettige samenwerking!<br>Met vriendelijke groet<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Wij verzoeken u het factuurbedrag van [%GESAMTBETRAG%] onder vermelding van het factuurnummer [%RECHNUNGSNUMMER%] over te maken op onderstaande rekening. Betaaltermijn: [%ZAHLUNGSZIEL%] Factuurdatum: [%RECHNUNGSDATUM%] Hartelijk dank voor uw vertrouwen en de prettige samenwerking!'<br>'Met vriendelijke groet'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Betaalbaar binnen 14 dagen zonder korting",
       "reservationApplied": "Boeking overgenomen — posten uit verblijf en extra diensten.",
       "accessDeniedTitle": "Toegang geweigerd",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} succesvol gedownload",
       "downloadFailedToast": "Downloaden mislukt",
       "sendErrorToast": "Fout bij het versturen van de {documentLabelLower}",
-      "defaultFooterText": "Wij verzoeken u het factuurbedrag van [%GESAMTBETRAG%] onder vermelding van het factuurnummer [%RECHNUNGSNUMMER%] over te maken op onderstaande rekening. Betaaltermijn: [%ZAHLUNGSZIEL%] Factuurdatum: [%RECHNUNGSDATUM%] Hartelijk dank voor uw vertrouwen en de prettige samenwerking!<br>Met vriendelijke groet<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Wij verzoeken u het factuurbedrag van [%GESAMTBETRAG%] onder vermelding van het factuurnummer [%RECHNUNGSNUMMER%] over te maken op onderstaande rekening. Betaaltermijn: [%ZAHLUNGSZIEL%] Factuurdatum: [%RECHNUNGSDATUM%] Hartelijk dank voor uw vertrouwen en de prettige samenwerking!'<br>'Met vriendelijke groet'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Onbekend"
     },
     "FooterTextEditor": {

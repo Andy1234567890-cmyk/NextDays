@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Ubytování",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Žádáme vás o úhradu částky [%GESAMTBETRAG%] s uvedením čísla faktury [%RECHNUNGSNUMMER%] na níže uvedený účet. Splatnost: [%ZAHLUNGSZIEL%] Datum vystavení: [%RECHNUNGSDATUM%] Děkujeme za vaši důvěru a příjemnou spolupráci!<br>S pozdravem<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Žádáme vás o úhradu částky [%GESAMTBETRAG%] s uvedením čísla faktury [%RECHNUNGSNUMMER%] na níže uvedený účet. Splatnost: [%ZAHLUNGSZIEL%] Datum vystavení: [%RECHNUNGSDATUM%] Děkujeme za vaši důvěru a příjemnou spolupráci!'<br>'S pozdravem'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Splatné do 14 dnů bez srážky",
       "reservationApplied": "Rezervace převzata — položky z pobytu a doplňkových služeb.",
       "accessDeniedTitle": "Přístup odepřen",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} byla úspěšně stažena",
       "downloadFailedToast": "Stahování se nezdařilo",
       "sendErrorToast": "Chyba při odesílání {documentLabelLower}",
-      "defaultFooterText": "Žádáme vás o úhradu částky [%GESAMTBETRAG%] s uvedením čísla faktury [%RECHNUNGSNUMMER%] na níže uvedený účet. Splatnost: [%ZAHLUNGSZIEL%] Datum vystavení: [%RECHNUNGSDATUM%] Děkujeme za vaši důvěru a příjemnou spolupráci!<br>S pozdravem<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Žádáme vás o úhradu částky [%GESAMTBETRAG%] s uvedením čísla faktury [%RECHNUNGSNUMMER%] na níže uvedený účet. Splatnost: [%ZAHLUNGSZIEL%] Datum vystavení: [%RECHNUNGSDATUM%] Děkujeme za vaši důvěru a příjemnou spolupráci!'<br>'S pozdravem'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Neznámý"
     },
     "FooterTextEditor": {

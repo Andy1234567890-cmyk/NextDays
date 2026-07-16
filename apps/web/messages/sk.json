@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Ubytovanie",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Prosíme vás, aby ste sumu faktúry vo výške [%GESAMTBETRAG%] uhradili s uvedením čísla faktúry [%RECHNUNGSNUMMER%] na nižšie uvedený účet. Termín splatnosti: [%ZAHLUNGSZIEL%] Dátum faktúry: [%RECHNUNGSDATUM%] Ďakujeme za vašu dôveru a príjemnú spoluprácu!<br>S pozdravom<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Prosíme vás, aby ste sumu faktúry vo výške [%GESAMTBETRAG%] uhradili s uvedením čísla faktúry [%RECHNUNGSNUMMER%] na nižšie uvedený účet. Termín splatnosti: [%ZAHLUNGSZIEL%] Dátum faktúry: [%RECHNUNGSDATUM%] Ďakujeme za vašu dôveru a príjemnú spoluprácu!'<br>'S pozdravom'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Splatné do 14 dní bez zrážky",
       "reservationApplied": "Rezervácia prevzatá — položky z pobytu a doplnkových služieb.",
       "accessDeniedTitle": "Prístup odmietnutý",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} úspešne stiahnutá",
       "downloadFailedToast": "Stiahnutie zlyhalo",
       "sendErrorToast": "Chyba pri odosielaní {documentLabelLower}",
-      "defaultFooterText": "Prosíme vás, aby ste sumu faktúry vo výške [%GESAMTBETRAG%] uhradili s uvedením čísla faktúry [%RECHNUNGSNUMMER%] na nižšie uvedený účet. Termín splatnosti: [%ZAHLUNGSZIEL%] Dátum faktúry: [%RECHNUNGSDATUM%] Ďakujeme za vašu dôveru a príjemnú spoluprácu!<br>S pozdravom<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Prosíme vás, aby ste sumu faktúry vo výške [%GESAMTBETRAG%] uhradili s uvedením čísla faktúry [%RECHNUNGSNUMMER%] na nižšie uvedený účet. Termín splatnosti: [%ZAHLUNGSZIEL%] Dátum faktúry: [%RECHNUNGSDATUM%] Ďakujeme za vašu dôveru a príjemnú spoluprácu!'<br>'S pozdravom'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Neznáme"
     },
     "FooterTextEditor": {

@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Öömaks",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Palume tasuda arve summa [%GESAMTBETRAG%] arve numbrile [%RECHNUNGSNUMMER%] viidates alltoodud kontole. Maksetähtaeg: [%ZAHLUNGSZIEL%] Arve kuupäev: [%RECHNUNGSDATUM%] Täname usalduse ja meeldiva koostöö eest!<br>Lugupidamisega<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Palume tasuda arve summa [%GESAMTBETRAG%] arve numbrile [%RECHNUNGSNUMMER%] viidates alltoodud kontole. Maksetähtaeg: [%ZAHLUNGSZIEL%] Arve kuupäev: [%RECHNUNGSDATUM%] Täname usalduse ja meeldiva koostöö eest!'<br>'Lugupidamisega'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Tasumisele kuulub 14 päeva jooksul ilma mahaarvamiseta",
       "reservationApplied": "Broneering üle võetud — positsioonid viibimisest ja lisateenustest.",
       "accessDeniedTitle": "Juurdepääs keelatud",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} edukalt alla laaditud",
       "downloadFailedToast": "Allalaadimine ebaõnnestus",
       "sendErrorToast": "Viga {documentLabelLower} saatmisel",
-      "defaultFooterText": "Palume tasuda arve summa [%GESAMTBETRAG%] arve numbrile [%RECHNUNGSNUMMER%] viidates alltoodud kontole. Maksetähtaeg: [%ZAHLUNGSZIEL%] Arve kuupäev: [%RECHNUNGSDATUM%] Täname usalduse ja meeldiva koostöö eest!<br>Lugupidamisega<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Palume tasuda arve summa [%GESAMTBETRAG%] arve numbrile [%RECHNUNGSNUMMER%] viidates alltoodud kontole. Maksetähtaeg: [%ZAHLUNGSZIEL%] Arve kuupäev: [%RECHNUNGSDATUM%] Täname usalduse ja meeldiva koostöö eest!'<br>'Lugupidamisega'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Teadmata"
     },
     "FooterTextEditor": {

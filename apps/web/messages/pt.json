@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Estadia",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Pedimos que efetue o pagamento do valor de [%GESAMTBETRAG%], indicando o número da fatura [%RECHNUNGSNUMMER%], para a conta indicada abaixo. Prazo de pagamento: [%ZAHLUNGSZIEL%] Data da fatura: [%RECHNUNGSDATUM%] Obrigado pela sua confiança e pela agradável colaboração!<br>Com os melhores cumprimentos<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Pedimos que efetue o pagamento do valor de [%GESAMTBETRAG%], indicando o número da fatura [%RECHNUNGSNUMMER%], para a conta indicada abaixo. Prazo de pagamento: [%ZAHLUNGSZIEL%] Data da fatura: [%RECHNUNGSDATUM%] Obrigado pela sua confiança e pela agradável colaboração!'<br>'Com os melhores cumprimentos'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Pagável no prazo de 14 dias sem dedução",
       "reservationApplied": "Reserva aplicada — posições da estadia e serviços adicionais.",
       "accessDeniedTitle": "Acesso negado",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} transferido(a) com sucesso",
       "downloadFailedToast": "Falha na transferência",
       "sendErrorToast": "Erro ao enviar {documentLabelLower}",
-      "defaultFooterText": "Pedimos que efetue o pagamento do valor de [%GESAMTBETRAG%], indicando o número da fatura [%RECHNUNGSNUMMER%], para a conta indicada abaixo. Prazo de pagamento: [%ZAHLUNGSZIEL%] Data da fatura: [%RECHNUNGSDATUM%] Obrigado pela sua confiança e pela agradável colaboração!<br>Com os melhores cumprimentos<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Pedimos que efetue o pagamento do valor de [%GESAMTBETRAG%], indicando o número da fatura [%RECHNUNGSNUMMER%], para a conta indicada abaixo. Prazo de pagamento: [%ZAHLUNGSZIEL%] Data da fatura: [%RECHNUNGSDATUM%] Obrigado pela sua confiança e pela agradável colaboração!'<br>'Com os melhores cumprimentos'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Desconhecido"
     },
     "FooterTextEditor": {

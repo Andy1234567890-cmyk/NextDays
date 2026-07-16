@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Nakšņošana",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Lūdzam pārskaitīt rēķina summu [%GESAMTBETRAG%], norādot rēķina numuru [%RECHNUNGSNUMMER%], uz zemāk norādīto kontu. Apmaksas termiņš: [%ZAHLUNGSZIEL%] Rēķina datums: [%RECHNUNGSDATUM%] Paldies par uzticēšanos un patīkamo sadarbību!<br>Ar cieņu<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Lūdzam pārskaitīt rēķina summu [%GESAMTBETRAG%], norādot rēķina numuru [%RECHNUNGSNUMMER%], uz zemāk norādīto kontu. Apmaksas termiņš: [%ZAHLUNGSZIEL%] Rēķina datums: [%RECHNUNGSDATUM%] Paldies par uzticēšanos un patīkamo sadarbību!'<br>'Ar cieņu'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Apmaksājams 14 dienu laikā bez atlaides",
       "reservationApplied": "Rezervācija pārņemta — pozīcijas no uzturēšanās un papildpakalpojumiem.",
       "accessDeniedTitle": "Piekļuve liegta",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} veiksmīgi lejupielādēts",
       "downloadFailedToast": "Lejupielāde neizdevās",
       "sendErrorToast": "Kļūda nosūtot {documentLabelLower}",
-      "defaultFooterText": "Lūdzam pārskaitīt rēķina summu [%GESAMTBETRAG%], norādot rēķina numuru [%RECHNUNGSNUMMER%], uz zemāk norādīto kontu. Apmaksas termiņš: [%ZAHLUNGSZIEL%] Rēķina datums: [%RECHNUNGSDATUM%] Paldies par uzticēšanos un patīkamo sadarbību!<br>Ar cieņu<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Lūdzam pārskaitīt rēķina summu [%GESAMTBETRAG%], norādot rēķina numuru [%RECHNUNGSNUMMER%], uz zemāk norādīto kontu. Apmaksas termiņš: [%ZAHLUNGSZIEL%] Rēķina datums: [%RECHNUNGSDATUM%] Paldies par uzticēšanos un patīkamo sadarbību!'<br>'Ar cieņu'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Nezināms"
     },
     "FooterTextEditor": {

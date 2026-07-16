@@ -1790,7 +1790,7 @@
     "container": {
       "defaultItemDescription": "Éjszaka",
       "defaultHeadTextHtml": "[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]",
-      "defaultFooterText": "Kérjük, utalja át a(z) [%GESAMTBETRAG%] számlaösszeget a(z) [%RECHNUNGSNUMMER%] számlaszám megadásával az alább megadott számlára. Fizetési határidő: [%ZAHLUNGSZIEL%] Számla kelte: [%RECHNUNGSDATUM%] Köszönjük bizalmát és a kellemes együttműködést!<br>Üdvözlettel<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Kérjük, utalja át a(z) [%GESAMTBETRAG%] számlaösszeget a(z) [%RECHNUNGSNUMMER%] számlaszám megadásával az alább megadott számlára. Fizetési határidő: [%ZAHLUNGSZIEL%] Számla kelte: [%RECHNUNGSDATUM%] Köszönjük bizalmát és a kellemes együttműködést!'<br>'Üdvözlettel'<br>'[%KONTAKTPERSON%]",
       "defaultPaymentTerms": "Fizetendő 14 napon belül, levonás nélkül",
       "reservationApplied": "A foglalás átvéve — tételek a tartózkodásból és a kiegészítő szolgáltatásokból.",
       "accessDeniedTitle": "Hozzáférés megtagadva",
@@ -1979,7 +1979,7 @@
       "downloadedToast": "{documentLabel} sikeresen letöltve",
       "downloadFailedToast": "A letöltés sikertelen",
       "sendErrorToast": "Hiba történt a(z) {documentLabelLower} küldésekor",
-      "defaultFooterText": "Kérjük, utalja át a(z) [%GESAMTBETRAG%] számlaösszeget a(z) [%RECHNUNGSNUMMER%] számlaszám megadásával az alább megadott számlára. Fizetési határidő: [%ZAHLUNGSZIEL%] Számla kelte: [%RECHNUNGSDATUM%] Köszönjük bizalmát és a kellemes együttműködést!<br>Üdvözlettel<br>[%KONTAKTPERSON%]",
+      "defaultFooterText": "Kérjük, utalja át a(z) [%GESAMTBETRAG%] számlaösszeget a(z) [%RECHNUNGSNUMMER%] számlaszám megadásával az alább megadott számlára. Fizetési határidő: [%ZAHLUNGSZIEL%] Számla kelte: [%RECHNUNGSDATUM%] Köszönjük bizalmát és a kellemes együttműködést!'<br>'Üdvözlettel'<br>'[%KONTAKTPERSON%]",
       "unknownValue": "Ismeretlen"
     },
     "FooterTextEditor": {
