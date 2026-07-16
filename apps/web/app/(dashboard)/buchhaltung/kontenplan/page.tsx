@@ -1,10 +1,12 @@
+import { getTranslations } from "next-intl/server";
 import { ComingSoon } from "@/components/ui/coming-soon";
 
-export default function KontenplanPage() {
+export default async function KontenplanPage() {
+  const t = await getTranslations("finance");
   return (
     <ComingSoon
-      title="Kontenplan"
-      description="Sachkonten (SKR03/04) und Nummernkreise."
+      title={t("kontenplanPage.kontenplanTitle")}
+      description={t("kontenplanPage.kontenplanDescription")}
       icon="ph:tree-structure"
     />
   );

@@ -13,6 +13,7 @@ import {
   Input,
   Label,
 } from '@tasko/ui';
+import { useTranslations } from 'next-intl';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -111,6 +112,7 @@ function AddCustomerModal({
   nextCustomerNumber,
   nextSupplierNumber = 'LF-001',
 }: AddCustomerModalProps) {
+  const t = useTranslations('finance');
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [contactType, setContactType] = useState<'customer' | 'supplier'>('customer');
@@ -149,36 +151,46 @@ function AddCustomerModal({
 
   // Tab definitions
   const tabs = [
-    { id: 'overview', label: 'Übersicht', count: null, icon: 'lucide:file-text' },
-    { id: 'history', label: 'Verlauf', count: null, icon: 'lucide:history' },
-    { id: 'persons', label: 'Personen', count: contactPersons.length, icon: 'lucide:users' },
-    { id: 'orders', label: 'Aufträge', count: 0, icon: 'lucide:folder' },
-    { id: 'invoices', label: 'Rechnungen', count: 0, icon: 'lucide:receipt' },
-    { id: 'credits', label: 'Gutschriften', count: 0, icon: 'lucide:credit-card' },
-    { id: 'documents', label: 'Belege', count: 0, icon: 'lucide:file-text' },
-    { id: 'files', label: 'Dokumente', count: 0, icon: 'lucide:upload' },
+    { id: 'overview', label: t('AddCustomerModal.tabOverview'), count: null, icon: 'lucide:file-text' },
+    { id: 'history', label: t('AddCustomerModal.tabHistory'), count: null, icon: 'lucide:history' },
+    { id: 'persons', label: t('AddCustomerModal.tabPersons'), count: contactPersons.length, icon: 'lucide:users' },
+    { id: 'orders', label: t('AddCustomerModal.tabOrders'), count: 0, icon: 'lucide:folder' },
+    { id: 'invoices', label: t('AddCustomerModal.tabInvoices'), count: 0, icon: 'lucide:receipt' },
+    { id: 'credits', label: t('AddCustomerModal.tabCredits'), count: 0, icon: 'lucide:credit-card' },
+    { id: 'documents', label: t('AddCustomerModal.tabDocuments'), count: 0, icon: 'lucide:file-text' },
+    { id: 'files', label: t('AddCustomerModal.tabFiles'), count: 0, icon: 'lucide:upload' },
   ];
 
   // Action menu items
   const actionItems = [
-    { id: 'task', label: 'Aufgabe erstellen', icon: 'lucide:check', action: () => {} },
-    { id: 'print', label: 'PDF Download / Drucken', icon: 'lucide:printer', action: () => {} },
-    { id: 'export', label: 'Exportieren (CSV)', icon: 'lucide:download', action: () => {} },
-    { id: 'invoice', label: 'Rechnung erstellen', icon: 'lucide:file', action: () => {} },
-    { id: 'recurring', label: 'Wiederkehrende Rechnung', icon: 'lucide:file', action: () => {} },
-    { id: 'quote', label: 'Angebot erstellen', icon: 'lucide:folder', action: () => {} },
-    { id: 'order', label: 'Auftrag erstellen', icon: 'lucide:folder', action: () => {} },
-    { id: 'delivery', label: 'Lieferschein erstellen', icon: 'lucide:folder', action: () => {} },
-    { id: 'credit', label: 'Gutschrift erstellen', icon: 'lucide:book', action: () => {} },
-    { id: 'letter', label: 'Brief schreiben', icon: 'lucide:mail', action: () => {} },
-    { id: 'upload', label: 'Datei hochladen', icon: 'lucide:upload', action: () => {} },
+    { id: 'task', label: t('AddCustomerModal.actionCreateTask'), icon: 'lucide:check', action: () => {} },
+    { id: 'print', label: t('AddCustomerModal.actionPrint'), icon: 'lucide:printer', action: () => {} },
+    { id: 'export', label: t('AddCustomerModal.actionExport'), icon: 'lucide:download', action: () => {} },
+    { id: 'invoice', label: t('AddCustomerModal.actionCreateInvoice'), icon: 'lucide:file', action: () => {} },
+    {
+      id: 'recurring',
+      label: t('AddCustomerModal.actionRecurringInvoice'),
+      icon: 'lucide:file',
+      action: () => {},
+    },
+    { id: 'quote', label: t('AddCustomerModal.actionCreateQuote'), icon: 'lucide:folder', action: () => {} },
+    { id: 'order', label: t('AddCustomerModal.actionCreateOrder'), icon: 'lucide:folder', action: () => {} },
+    {
+      id: 'delivery',
+      label: t('AddCustomerModal.actionCreateDeliveryNote'),
+      icon: 'lucide:folder',
+      action: () => {},
+    },
+    { id: 'credit', label: t('AddCustomerModal.actionCreateCredit'), icon: 'lucide:book', action: () => {} },
+    { id: 'letter', label: t('AddCustomerModal.actionWriteLetter'), icon: 'lucide:mail', action: () => {} },
+    { id: 'upload', label: t('AddCustomerModal.actionUploadFile'), icon: 'lucide:upload', action: () => {} },
     {
       id: 'pricing',
-      label: 'Kundenpreis hinzufügen',
+      label: t('AddCustomerModal.actionAddCustomerPrice'),
       icon: 'lucide:dollar-sign',
       action: () => {},
     },
-    { id: 'delete', label: 'Löschen', icon: 'lucide:trash2', action: () => {} },
+    { id: 'delete', label: t('AddCustomerModal.actionDelete'), icon: 'lucide:trash2', action: () => {} },
   ];
 
   // Update customer number when prop changes
@@ -231,14 +243,14 @@ function AddCustomerModal({
       !formData.city.trim() ||
       !formData.postalCode.trim()
     ) {
-      toast.error('Bitte füllen Sie alle Pflichtfelder aus');
+      toast.error(t('AddCustomerModal.errorRequiredFields'));
       return;
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      toast.error('Bitte geben Sie eine gültige E-Mail-Adresse ein');
+      toast.error(t('AddCustomerModal.errorInvalidEmail'));
       return;
     }
 
@@ -248,14 +260,19 @@ function AddCustomerModal({
     );
 
     if (validContactPersons.length === 0) {
-      toast.error('Mindestens ein Ansprechpartner mit Name und E-Mail ist erforderlich');
+      toast.error(t('AddCustomerModal.errorAtLeastOneContact'));
       return;
     }
 
     // Validate contact person emails
     for (const cp of validContactPersons) {
       if (!emailRegex.test(cp.email)) {
-        toast.error(`Ungültige E-Mail-Adresse für ${cp.firstName} ${cp.lastName}`);
+        toast.error(
+          t('AddCustomerModal.errorInvalidContactEmail', {
+            firstName: cp.firstName,
+            lastName: cp.lastName,
+          }),
+        );
         return;
       }
     }
@@ -324,10 +341,12 @@ function AddCustomerModal({
       ]);
 
       setOpen(false);
-      toast.success('Kunde erfolgreich hinzugefügt');
+      toast.success(t('AddCustomerModal.successCustomerAdded'));
     } catch (error) {
       toast.error(
-        `Fehler beim Hinzufügen des Kunden: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`,
+        t('AddCustomerModal.errorAddingCustomer', {
+          message: error instanceof Error ? error.message : t('AddCustomerModal.errorUnknown'),
+        }),
       );
     } finally {
       setLoading(false);
@@ -381,7 +400,7 @@ function AddCustomerModal({
       <DialogTrigger asChild>
         <Button className="bg-accent hover:bg-[#0f9d84]">
           <Icon icon="lucide:plus" className="mr-2 h-4 w-4" />
-          Neuer Kunde
+          {t('AddCustomerModal.newCustomer')}
         </Button>
       </DialogTrigger>
 
@@ -389,16 +408,22 @@ function AddCustomerModal({
         {/* Header mit Titel */}
         <div className="p-6 pb-4">
           <DialogHeader>
-            <DialogTitle>Neuen Kontakt hinzufügen</DialogTitle>
+            <DialogTitle>{t('AddCustomerModal.dialogTitle')}</DialogTitle>
             <DialogDescription>
-              Erstellen Sie einen neuen {contactType === 'customer' ? 'Kunden' : 'Lieferanten'} mit
-              allen erforderlichen Informationen
+              {t('AddCustomerModal.dialogDescription', {
+                contactType:
+                  contactType === 'customer'
+                    ? t('AddCustomerModal.contactTypeAccusativeCustomer')
+                    : t('AddCustomerModal.contactTypeAccusativeSupplier'),
+              })}
             </DialogDescription>
           </DialogHeader>
 
           {/* Kontakttyp-Auswahl */}
           <div className="mt-4">
-            <Label className="font-medium text-gray-900 text-sm">Kontakttyp</Label>
+            <Label className="font-medium text-gray-900 text-sm">
+              {t('AddCustomerModal.contactTypeLabel')}
+            </Label>
             <div className="mt-2 flex gap-4">
               <label className="flex items-center">
                 <input
@@ -409,7 +434,9 @@ function AddCustomerModal({
                   onChange={() => setContactType('customer')}
                   className="h-4 w-4 border-gray-300 text-accent focus:ring-accent"
                 />
-                <span className="ml-2 text-gray-700 text-sm">Kunde</span>
+                <span className="ml-2 text-gray-700 text-sm">
+                  {t('AddCustomerModal.contactTypeCustomer')}
+                </span>
               </label>
               <label className="flex items-center">
                 <input
@@ -420,7 +447,9 @@ function AddCustomerModal({
                   onChange={() => setContactType('supplier')}
                   className="h-4 w-4 border-gray-300 text-accent focus:ring-accent"
                 />
-                <span className="ml-2 text-gray-700 text-sm">Lieferant</span>
+                <span className="ml-2 text-gray-700 text-sm">
+                  {t('AddCustomerModal.contactTypeSupplier')}
+                </span>
               </label>
             </div>
           </div>
@@ -460,7 +489,7 @@ function AddCustomerModal({
               <div className="group relative">
                 <button className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm transition-colors hover:bg-gray-50">
                   <Icon icon="lucide:user" className="h-4 w-4" />
-                  Person hinzufügen
+                  {t('AddCustomerModal.addPerson')}
                 </button>
                 {/* Dropdown Menu für Person hinzufügen */}
                 <div className="invisible absolute right-0 z-50 mt-1 w-64 rounded-md border border-gray-200 bg-white opacity-0 shadow-lg transition-all duration-200 group-hover:visible group-hover:opacity-100">
@@ -471,7 +500,7 @@ function AddCustomerModal({
                       }}
                       className="flex w-full items-center px-4 py-2 text-gray-700 text-sm hover:bg-gray-50"
                     >
-                      Bestehende Person auswählen
+                      {t('AddCustomerModal.selectExistingPerson')}
                     </button>
                     <button
                       onClick={() => {
@@ -479,7 +508,7 @@ function AddCustomerModal({
                       }}
                       className="flex w-full items-center px-4 py-2 text-gray-700 text-sm hover:bg-gray-50"
                     >
-                      Neue Person anlegen
+                      {t('AddCustomerModal.createNewPerson')}
                     </button>
                   </div>
                 </div>
@@ -493,13 +522,13 @@ function AddCustomerModal({
                 className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm transition-colors hover:bg-gray-50"
               >
                 <Icon icon="lucide:edit" className="h-4 w-4" />
-                Bearbeiten
+                {t('AddCustomerModal.edit')}
               </button>
 
               {/* Optionen Dropdown */}
               <div className="group relative">
                 <button className="flex items-center gap-2 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm transition-colors hover:bg-gray-50">
-                  Optionen
+                  {t('AddCustomerModal.options')}
                   <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
@@ -549,27 +578,29 @@ function AddCustomerModal({
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="customerNumber">
-                    {contactType === 'customer' ? 'Kundennummer' : 'Lieferantennummer'}
+                    {contactType === 'customer'
+                      ? t('AddCustomerModal.customerNumberLabel')
+                      : t('AddCustomerModal.supplierNumberLabel')}
                   </Label>
                   <Input
                     id="customerNumber"
                     name="customerNumber"
                     value={formData.customerNumber}
                     onChange={e => handleChange('customerNumber', e.target.value)}
-                    placeholder="Wird automatisch generiert"
+                    placeholder={t('AddCustomerModal.customerNumberPlaceholder')}
                     disabled
                     className="bg-gray-50"
                     autoComplete="off"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="name">Firmenname *</Label>
+                  <Label htmlFor="name">{t('AddCustomerModal.companyNameLabel')}</Label>
                   <Input
                     id="name"
                     name="company-name"
                     value={formData.name}
                     onChange={e => handleChange('name', e.target.value)}
-                    placeholder="z.B. Mustermann GmbH"
+                    placeholder={t('AddCustomerModal.companyNamePlaceholder')}
                     required
                     autoComplete="organization"
                   />
@@ -578,27 +609,27 @@ function AddCustomerModal({
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="email">E-Mail *</Label>
+                  <Label htmlFor="email">{t('AddCustomerModal.emailLabel')}</Label>
                   <Input
                     id="email"
                     name="company-email"
                     type="email"
                     value={formData.email}
                     onChange={e => handleChange('email', e.target.value)}
-                    placeholder="info@kunde.de"
+                    placeholder={t('AddCustomerModal.companyEmailPlaceholder')}
                     required
                     autoComplete="email"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="phone">Telefon</Label>
+                  <Label htmlFor="phone">{t('AddCustomerModal.phoneLabel')}</Label>
                   <Input
                     id="phone"
                     name="company-phone"
                     type="tel"
                     value={formData.phone}
                     onChange={e => handleChange('phone', e.target.value)}
-                    placeholder="+49 123 456789"
+                    placeholder={t('AddCustomerModal.phonePlaceholder')}
                     autoComplete="tel"
                   />
                 </div>
@@ -606,16 +637,18 @@ function AddCustomerModal({
 
               {/* Strukturierte Adresse */}
               <div className="space-y-4">
-                <Label className="font-semibold text-base">Adresse *</Label>
+                <Label className="font-semibold text-base">
+                  {t('AddCustomerModal.addressSectionLabel')}
+                </Label>
 
                 <div>
-                  <Label htmlFor="street">Straße & Hausnummer *</Label>
+                  <Label htmlFor="street">{t('AddCustomerModal.streetLabel')}</Label>
                   <Input
                     id="street"
                     name="street"
                     value={formData.street}
                     onChange={e => handleChange('street', e.target.value)}
-                    placeholder="Musterstraße 123"
+                    placeholder={t('AddCustomerModal.streetPlaceholder')}
                     required
                     autoComplete="street-address"
                   />
@@ -623,25 +656,25 @@ function AddCustomerModal({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="postalCode">PLZ *</Label>
+                    <Label htmlFor="postalCode">{t('AddCustomerModal.postalCodeLabel')}</Label>
                     <Input
                       id="postalCode"
                       name="postal-code"
                       value={formData.postalCode}
                       onChange={e => handleChange('postalCode', e.target.value)}
-                      placeholder="12345"
+                      placeholder={t('AddCustomerModal.postalCodePlaceholder')}
                       required
                       autoComplete="postal-code"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="city">Stadt *</Label>
+                    <Label htmlFor="city">{t('AddCustomerModal.cityLabel')}</Label>
                     <Input
                       id="city"
                       name="city"
                       value={formData.city}
                       onChange={e => handleChange('city', e.target.value)}
-                      placeholder="Musterstadt"
+                      placeholder={t('AddCustomerModal.cityPlaceholder')}
                       required
                       autoComplete="address-level2"
                     />
@@ -649,7 +682,7 @@ function AddCustomerModal({
                 </div>
 
                 <div>
-                  <Label htmlFor="country">Land *</Label>
+                  <Label htmlFor="country">{t('AddCustomerModal.countryLabel')}</Label>
                   <NativeSelect
                     id="country"
                     name="country"
@@ -678,7 +711,7 @@ function AddCustomerModal({
                 {formData.country === 'Deutschland' ? (
                   <>
                     <div>
-                      <Label htmlFor="taxNumber">Steuernummer</Label>
+                      <Label htmlFor="taxNumber">{t('AddCustomerModal.taxNumberLabel')}</Label>
                       <Input
                         id="taxNumber"
                         name="tax-number"
@@ -691,12 +724,12 @@ function AddCustomerModal({
 
                       <div className="mt-1 text-gray-500 text-xs">
                         {formData.vatId
-                          ? 'Deaktiviert - VAT-Nummer ist gesetzt'
-                          : 'Deutsche Steuernummer (Kleinunternehmer)'}
+                          ? t('AddCustomerModal.taxNumberDisabledVatSet')
+                          : t('AddCustomerModal.taxNumberHintSmallBusiness')}
                       </div>
                     </div>
                     <div>
-                      <Label htmlFor="vatId">USt-IdNr.</Label>
+                      <Label htmlFor="vatId">{t('AddCustomerModal.vatIdLabel')}</Label>
                       <div className="space-y-2">
                         <div className="relative">
                           <Input
@@ -731,8 +764,8 @@ function AddCustomerModal({
                         </div>
                         <div className="text-gray-500 text-xs">
                           {formData.taxNumber
-                            ? 'Deaktiviert - Steuernummer ist gesetzt'
-                            : 'Deutsche USt-IdNr. (Regelbesteuert)'}
+                            ? t('AddCustomerModal.vatIdDisabledTaxNumberSet')
+                            : t('AddCustomerModal.vatIdHintStandardTaxed')}
                         </div>
                       </div>
                     </div>
@@ -741,7 +774,7 @@ function AddCustomerModal({
                   /* Andere Länder: Hauptsächlich VAT, optional lokale Steuernummer */
                   <>
                     <div>
-                      <Label htmlFor="vatId">USt-IdNr. / VAT-Nummer</Label>
+                      <Label htmlFor="vatId">{t('AddCustomerModal.vatIdLabelInternational')}</Label>
                       <div className="space-y-2">
                         <div className="relative">
                           <Input
@@ -760,7 +793,7 @@ function AddCustomerModal({
                                       ? '12-3456789'
                                       : formData.country === 'Brasilien'
                                         ? '12.345.678/0001-90'
-                                        : 'Länderkürzel + Nummer'
+                                        : t('AddCustomerModal.vatIdPlaceholderGeneric')
                             }
                             autoComplete="off"
                             className={
@@ -787,24 +820,28 @@ function AddCustomerModal({
                         </div>
                         {formData.vatId && (
                           <div className="text-gray-500 text-xs">
-                            Format: {getVATFormat(formData.country)}
+                            {t('AddCustomerModal.vatIdFormatHint', {
+                              format: getVATFormat(formData.country),
+                            })}
                           </div>
                         )}
                       </div>
                     </div>
                     <div>
-                      <Label htmlFor="taxNumber">Lokale Steuernummer (optional)</Label>
+                      <Label htmlFor="taxNumber">
+                        {t('AddCustomerModal.localTaxNumberLabel')}
+                      </Label>
                       <Input
                         id="taxNumber"
                         name="tax-number"
                         value={formData.taxNumber}
                         onChange={e => handleTaxNumberChange(e.target.value)}
-                        placeholder="Lokale Steuernummer"
+                        placeholder={t('AddCustomerModal.localTaxNumberPlaceholder')}
                         autoComplete="off"
                       />
 
                       <div className="mt-1 text-gray-500 text-xs">
-                        Zusätzliche lokale Steuernummer
+                        {t('AddCustomerModal.localTaxNumberHint')}
                       </div>
                     </div>
                   </>
@@ -814,7 +851,9 @@ function AddCustomerModal({
               {/* Ansprechpartner Sektion */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label className="font-semibold text-base">Ansprechpartner *</Label>
+                  <Label className="font-semibold text-base">
+                    {t('AddCustomerModal.contactPersonsSectionLabel')}
+                  </Label>
                   <Button
                     type="button"
                     variant="outline"
@@ -823,7 +862,7 @@ function AddCustomerModal({
                     className="h-8"
                   >
                     <Icon icon="lucide:user-plus" className="mr-1 h-3 w-3" />
-                    Hinzufügen
+                    {t('AddCustomerModal.addContactPerson')}
                   </Button>
                 </div>
 
@@ -831,7 +870,7 @@ function AddCustomerModal({
                   <div key={index} className="space-y-3 rounded-lg border bg-gray-50 p-4">
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-gray-700 text-sm">
-                        Ansprechpartner {index + 1}
+                        {t('AddCustomerModal.contactPersonHeading', { number: index + 1 })}
                         {contact.isPrimary && (
                           <Icon
                             icon="lucide:star"
@@ -848,7 +887,7 @@ function AddCustomerModal({
                             onClick={() => setPrimaryContact(index)}
                             className="h-6 px-2 text-xs"
                           >
-                            Als Hauptkontakt
+                            {t('AddCustomerModal.setAsPrimaryContact')}
                           </Button>
                         )}
                         {contactPersons.length > 1 && (
@@ -867,7 +906,9 @@ function AddCustomerModal({
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <Label htmlFor={`firstName-${index}`}>Vorname *</Label>
+                        <Label htmlFor={`firstName-${index}`}>
+                          {t('AddCustomerModal.firstNameLabel')}
+                        </Label>
                         <Input
                           id={`firstName-${index}`}
                           name={`contact-firstName-${index}`}
@@ -881,7 +922,9 @@ function AddCustomerModal({
                         />
                       </div>
                       <div>
-                        <Label htmlFor={`lastName-${index}`}>Nachname *</Label>
+                        <Label htmlFor={`lastName-${index}`}>
+                          {t('AddCustomerModal.lastNameLabel')}
+                        </Label>
                         <Input
                           id={`lastName-${index}`}
                           name={`contact-lastName-${index}`}
@@ -898,7 +941,9 @@ function AddCustomerModal({
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <Label htmlFor={`contactEmail-${index}`}>E-Mail *</Label>
+                        <Label htmlFor={`contactEmail-${index}`}>
+                          {t('AddCustomerModal.contactEmailLabel')}
+                        </Label>
                         <Input
                           id={`contactEmail-${index}`}
                           name={`contact-email-${index}`}
@@ -911,7 +956,9 @@ function AddCustomerModal({
                         />
                       </div>
                       <div>
-                        <Label htmlFor={`contactPhone-${index}`}>Telefon</Label>
+                        <Label htmlFor={`contactPhone-${index}`}>
+                          {t('AddCustomerModal.phoneLabel')}
+                        </Label>
                         <Input
                           id={`contactPhone-${index}`}
                           name={`contact-phone-${index}`}
@@ -927,7 +974,9 @@ function AddCustomerModal({
 
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <Label htmlFor={`position-${index}`}>Position</Label>
+                        <Label htmlFor={`position-${index}`}>
+                          {t('AddCustomerModal.positionLabel')}
+                        </Label>
                         <Input
                           id={`position-${index}`}
                           name={`contact-position-${index}`}
@@ -935,13 +984,15 @@ function AddCustomerModal({
                           onChange={e =>
                             handleContactPersonChange(index, 'position', e.target.value)
                           }
-                          placeholder="Geschäftsführer"
+                          placeholder={t('AddCustomerModal.positionPlaceholder')}
                           className="text-sm"
                           autoComplete="organization-title"
                         />
                       </div>
                       <div>
-                        <Label htmlFor={`department-${index}`}>Abteilung</Label>
+                        <Label htmlFor={`department-${index}`}>
+                          {t('AddCustomerModal.departmentLabel')}
+                        </Label>
                         <Input
                           id={`department-${index}`}
                           name={`contact-department-${index}`}
@@ -949,7 +1000,7 @@ function AddCustomerModal({
                           onChange={e =>
                             handleContactPersonChange(index, 'department', e.target.value)
                           }
-                          placeholder="Einkauf"
+                          placeholder={t('AddCustomerModal.departmentPlaceholder')}
                           className="text-sm"
                           autoComplete="off"
                         />
@@ -966,7 +1017,7 @@ function AddCustomerModal({
                   onClick={() => setOpen(false)}
                   disabled={loading}
                 >
-                  Abbrechen
+                  {t('AddCustomerModal.cancel')}
                 </Button>
                 <Button
                   type="submit"
@@ -974,7 +1025,7 @@ function AddCustomerModal({
                   className="bg-accent hover:bg-[#0f9d84]"
                 >
                   {loading && <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />}
-                  Kunde hinzufügen
+                  {t('AddCustomerModal.submitAddCustomer')}
                 </Button>
               </DialogFooter>
             </form>
@@ -983,8 +1034,10 @@ function AddCustomerModal({
           {activeTab === 'history' && (
             <div className="py-12 text-center text-gray-500">
               <Icon icon="lucide:history" className="mx-auto mb-3 h-12 w-12 text-gray-300" />
-              <h3 className="mb-1 font-medium text-gray-900 text-lg">Verlauf</h3>
-              <p>Hier werden alle Aktivitäten und Änderungen angezeigt</p>
+              <h3 className="mb-1 font-medium text-gray-900 text-lg">
+                {t('AddCustomerModal.historyEmptyTitle')}
+              </h3>
+              <p>{t('AddCustomerModal.historyEmptyDescription')}</p>
             </div>
           )}
 
@@ -992,49 +1045,59 @@ function AddCustomerModal({
             <div className="py-12 text-center text-gray-500">
               <Icon icon="lucide:users" className="mx-auto mb-3 h-12 w-12 text-gray-300" />
               <h3 className="mb-1 font-medium text-gray-900 text-lg">
-                Personen ({contactPersons.length})
+                {t('AddCustomerModal.personsEmptyTitle', { count: contactPersons.length })}
               </h3>
-              <p>Verwalten Sie Ansprechpartner für diesen Kunden</p>
+              <p>{t('AddCustomerModal.personsEmptyDescription')}</p>
             </div>
           )}
 
           {activeTab === 'orders' && (
             <div className="py-12 text-center text-gray-500">
               <Icon icon="lucide:folder" className="mx-auto mb-3 h-12 w-12 text-gray-300" />
-              <h3 className="mb-1 font-medium text-gray-900 text-lg">Aufträge (0)</h3>
-              <p>Hier werden alle Aufträge für diesen Kunden angezeigt</p>
+              <h3 className="mb-1 font-medium text-gray-900 text-lg">
+                {t('AddCustomerModal.ordersEmptyTitle')}
+              </h3>
+              <p>{t('AddCustomerModal.ordersEmptyDescription')}</p>
             </div>
           )}
 
           {activeTab === 'invoices' && (
             <div className="py-12 text-center text-gray-500">
               <Icon icon="lucide:receipt" className="mx-auto mb-3 h-12 w-12 text-gray-300" />
-              <h3 className="mb-1 font-medium text-gray-900 text-lg">Rechnungen (0)</h3>
-              <p>Hier werden alle Rechnungen für diesen Kunden angezeigt</p>
+              <h3 className="mb-1 font-medium text-gray-900 text-lg">
+                {t('AddCustomerModal.invoicesEmptyTitle')}
+              </h3>
+              <p>{t('AddCustomerModal.invoicesEmptyDescription')}</p>
             </div>
           )}
 
           {activeTab === 'credits' && (
             <div className="py-12 text-center text-gray-500">
               <Icon icon="lucide:credit-card" className="mx-auto mb-3 h-12 w-12 text-gray-300" />
-              <h3 className="mb-1 font-medium text-gray-900 text-lg">Gutschriften (0)</h3>
-              <p>Hier werden alle Gutschriften für diesen Kunden angezeigt</p>
+              <h3 className="mb-1 font-medium text-gray-900 text-lg">
+                {t('AddCustomerModal.creditsEmptyTitle')}
+              </h3>
+              <p>{t('AddCustomerModal.creditsEmptyDescription')}</p>
             </div>
           )}
 
           {activeTab === 'documents' && (
             <div className="py-12 text-center text-gray-500">
               <Icon icon="lucide:file-text" className="mx-auto mb-3 h-12 w-12 text-gray-300" />
-              <h3 className="mb-1 font-medium text-gray-900 text-lg">Belege (0)</h3>
-              <p>Hier werden alle Belege für diesen Kunden angezeigt</p>
+              <h3 className="mb-1 font-medium text-gray-900 text-lg">
+                {t('AddCustomerModal.documentsEmptyTitle')}
+              </h3>
+              <p>{t('AddCustomerModal.documentsEmptyDescription')}</p>
             </div>
           )}
 
           {activeTab === 'files' && (
             <div className="py-12 text-center text-gray-500">
               <Icon icon="lucide:upload" className="mx-auto mb-3 h-12 w-12 text-gray-300" />
-              <h3 className="mb-1 font-medium text-gray-900 text-lg">Dokumente (0)</h3>
-              <p>Hier können Sie Dateien für diesen Kunden hochladen</p>
+              <h3 className="mb-1 font-medium text-gray-900 text-lg">
+                {t('AddCustomerModal.filesEmptyTitle')}
+              </h3>
+              <p>{t('AddCustomerModal.filesEmptyDescription')}</p>
             </div>
           )}
         </div>

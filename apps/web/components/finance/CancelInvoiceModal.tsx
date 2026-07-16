@@ -2,6 +2,7 @@
 
 import { Icon } from '@iconify/react';
 import { Button } from '@tasko/ui';
+import { useTranslations } from 'next-intl';
 import type React from 'react';
 import type { InvoiceData } from '@/types/invoiceTypes';
 import type { InvoiceApiResponse } from '@/types/types';
@@ -21,6 +22,7 @@ export const CancelInvoiceModal: React.FC<CancelInvoiceModalProps> = ({
   invoice: _invoice,
   isLoading = false,
 }) => {
+  const t = useTranslations('finance');
   if (!isOpen) return null;
 
   return (
@@ -29,7 +31,7 @@ export const CancelInvoiceModal: React.FC<CancelInvoiceModalProps> = ({
         {/* Modal Header */}
         <div className="flex items-center justify-between border-gray-200 border-b p-4">
           <div className="flex-1">
-            <h2 className="font-semibold text-gray-900 text-lg">Rechnung stornieren</h2>
+            <h2 className="font-semibold text-gray-900 text-lg">{t('cancelInvoice.title')}</h2>
           </div>
           <button
             onClick={onClose}
@@ -42,23 +44,20 @@ export const CancelInvoiceModal: React.FC<CancelInvoiceModalProps> = ({
 
         {/* Modal Body */}
         <div className="p-6">
-          <p className="text-gray-700 text-sm">
-            Durch diesen Vorgang wird direkt eine Stornorechnung erstellt. Die Bearbeitung der
-            stornierten Ausgangsrechnung ist dann nicht mehr möglich.
-          </p>
+          <p className="text-gray-700 text-sm">{t('cancelInvoice.body')}</p>
         </div>
 
         {/* Modal Footer */}
         <div className="flex items-center justify-end space-x-3 border-gray-200 border-t p-4">
           <Button variant="outline" onClick={onClose} disabled={isLoading} className="px-4 py-2">
-            Abbrechen
+            {t('cancelInvoice.cancel')}
           </Button>
           <Button
             onClick={onConfirm}
             disabled={isLoading}
             className="bg-accent px-4 py-2 text-white hover:bg-accent/90"
           >
-            {isLoading ? 'Storniere...' : 'Rechnung stornieren'}
+            {isLoading ? t('cancelInvoice.submitting') : t('cancelInvoice.submit')}
           </Button>
         </div>
       </div>

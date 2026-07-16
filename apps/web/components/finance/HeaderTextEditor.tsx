@@ -22,6 +22,7 @@ import { TextStyle } from '@tiptap/extension-text-style';
 import { Underline } from '@tiptap/extension-underline';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import TextTemplateModal from '@/components/settings/TextTemplateModal';
@@ -52,6 +53,7 @@ export default function HeaderTextEditor({
   textType = 'HEAD', // Default auf HEAD für Header-Text
   onTemplateSelect,
 }: HeaderTextEditorProps) {
+  const t = useTranslations('finance');
   const [mounted, setMounted] = useState(false);
   const [textTemplates, setTextTemplates] = useState<TextTemplate[]>([]);
   const [placeholderModalOpen, setPlaceholderModalOpen] = useState(false);
@@ -212,7 +214,7 @@ export default function HeaderTextEditor({
     return (
       <div className={className}>
         <div className="min-h-35 rounded-md border p-3 text-gray-400 text-sm">
-          Kopftext-Editor wird geladen…
+          {t('HeaderTextEditor.loading')}
         </div>
       </div>
     );
@@ -240,7 +242,9 @@ export default function HeaderTextEditor({
     templateData: Omit<TextTemplate, 'id' | 'createdAt' | 'updatedAt'>,
   ) => {
     if (!companyId || !userId) {
-      toast.error(`Fehler: ${!companyId ? 'companyId' : 'userId'} fehlt`);
+      toast.error(
+        t('HeaderTextEditor.missingField', { field: !companyId ? 'companyId' : 'userId' }),
+      );
       return;
     }
     // Ensure companyId and createdBy are in the template data
@@ -288,10 +292,10 @@ export default function HeaderTextEditor({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuLabel>Schriftgröße</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('HeaderTextEditor.fontSize')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => editor.chain().focus().run()}>
-              <span>Standard (12)</span>
+              <span>{t('HeaderTextEditor.fontSizeDefault')}</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             {[10, 11, 13, 14, 16, 18].map(size => (
@@ -311,7 +315,7 @@ export default function HeaderTextEditor({
           size="sm"
           className={`h-8 px-2 ${editor.isActive('bold') ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
           onClick={() => editor.chain().focus().toggleBold().run()}
-          title="Fett (Cmd + B)"
+          title={t('HeaderTextEditor.bold')}
         >
           <Icon icon="lucide:bold" className="h-4 w-4" />
         </Button>
@@ -321,7 +325,7 @@ export default function HeaderTextEditor({
           size="sm"
           className={`h-8 px-2 ${editor.isActive('italic') ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          title="Kursiv (Cmd + I)"
+          title={t('HeaderTextEditor.italic')}
         >
           <Icon icon="lucide:italic" className="h-4 w-4" />
         </Button>
@@ -331,7 +335,7 @@ export default function HeaderTextEditor({
           size="sm"
           className={`h-8 px-2 ${editor.isActive('underline') ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
           onClick={() => editor.chain().focus().toggleUnderline().run()}
-          title="Unterstreichen (Cmd + U)"
+          title={t('HeaderTextEditor.underline')}
         >
           <Icon icon="lucide:underline" className="h-4 w-4" />
         </Button>
@@ -345,7 +349,7 @@ export default function HeaderTextEditor({
           size="sm"
           className={`h-8 px-2 ${editor.isActive('strike') ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
           onClick={() => editor.chain().focus().toggleStrike().run()}
-          title="Durchgestrichen"
+          title={t('HeaderTextEditor.strikethrough')}
         >
           <Icon icon="lucide:strikethrough" className="h-4 w-4" />
         </Button>
@@ -353,7 +357,13 @@ export default function HeaderTextEditor({
         {/* Farbe */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button type="button" variant="ghost" size="sm" className="h-8 px-2" title="Farbe">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2"
+              title={t('HeaderTextEditor.color')}
+            >
               <Icon icon="lucide:palette" className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -399,7 +409,7 @@ export default function HeaderTextEditor({
           size="sm"
           className={`h-8 px-2 ${editor.isActive({ textAlign: 'left' }) ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
           onClick={() => editor.chain().focus().setTextAlign('left').run()}
-          title="Linksbündig"
+          title={t('HeaderTextEditor.alignLeft')}
         >
           <Icon icon="lucide:align-left" className="h-4 w-4" />
         </Button>
@@ -409,7 +419,7 @@ export default function HeaderTextEditor({
           size="sm"
           className={`h-8 px-2 ${editor.isActive({ textAlign: 'center' }) ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
           onClick={() => editor.chain().focus().setTextAlign('center').run()}
-          title="Zentriert"
+          title={t('HeaderTextEditor.alignCenter')}
         >
           <Icon icon="lucide:align-center" className="h-4 w-4" />
         </Button>
@@ -419,7 +429,7 @@ export default function HeaderTextEditor({
           size="sm"
           className={`h-8 px-2 ${editor.isActive({ textAlign: 'right' }) ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
           onClick={() => editor.chain().focus().setTextAlign('right').run()}
-          title="Rechtsbündig"
+          title={t('HeaderTextEditor.alignRight')}
         >
           <Icon icon="lucide:align-right" className="h-4 w-4" />
         </Button>
@@ -433,7 +443,7 @@ export default function HeaderTextEditor({
           size="sm"
           className={`h-8 px-2 ${editor.isActive('bulletList') ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          title="Aufzählung"
+          title={t('HeaderTextEditor.bulletList')}
         >
           <Icon icon="lucide:list" className="h-4 w-4" />
         </Button>
@@ -443,7 +453,7 @@ export default function HeaderTextEditor({
           size="sm"
           className={`h-8 px-2 ${editor.isActive('orderedList') ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          title="Nummerierte Liste"
+          title={t('HeaderTextEditor.orderedList')}
         >
           <Icon icon="lucide:list-ordered" className="h-4 w-4" />
         </Button>
@@ -455,7 +465,7 @@ export default function HeaderTextEditor({
           size="sm"
           className="h-8 px-2"
           onClick={() => editor.chain().focus().liftListItem('listItem').run()}
-          title="Einzug verringern"
+          title={t('HeaderTextEditor.indentDecrease')}
         >
           <Icon icon="lucide:outdent" className="h-4 w-4" />
         </Button>
@@ -465,7 +475,7 @@ export default function HeaderTextEditor({
           size="sm"
           className="h-8 px-2"
           onClick={() => editor.chain().focus().sinkListItem('listItem').run()}
-          title="Einzug vergrößern"
+          title={t('HeaderTextEditor.indentIncrease')}
         >
           <Icon icon="lucide:indent" className="h-4 w-4" />
         </Button>
@@ -480,16 +490,16 @@ export default function HeaderTextEditor({
               variant="ghost"
               size="sm"
               className={`h-8 px-3 ${selectedTemplate ? 'selected bg-accent text-white' : 'hover:bg-accent/10'}`}
-              title="Kopftext-Vorlage"
+              title={t('HeaderTextEditor.headerTemplate')}
             >
-              <span className="select-none">Kopftext-Vorlage</span>
+              <span className="select-none">{t('HeaderTextEditor.headerTemplate')}</span>
               <span className="caret ml-1" style={{ fontSize: '9pt' }}>
                 ▼
               </span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Kopftext-Vorlagen</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('HeaderTextEditor.headerTemplatesLabel')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {companyId && objectType && textTemplates.length > 0 ? (
               <>
@@ -500,7 +510,11 @@ export default function HeaderTextEditor({
                     className="flex items-center justify-between"
                   >
                     <span>{template.name}</span>
-                    {template.isDefault && <span className="text-accent text-xs">Standard</span>}
+                    {template.isDefault && (
+                      <span className="text-accent text-xs">
+                        {t('HeaderTextEditor.default')}
+                      </span>
+                    )}
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
@@ -509,12 +523,12 @@ export default function HeaderTextEditor({
                   onClick={() => setTemplateModalOpen(true)}
                 >
                   <Icon icon="lucide:plus" className="mr-2 h-4 w-4" />
-                  Kopftext-Vorlage erstellen
+                  {t('HeaderTextEditor.createHeaderTemplate')}
                 </DropdownMenuItem>
               </>
             ) : (
               <DropdownMenuItem disabled className="text-gray-500">
-                Keine Kopftext-Vorlagen verfügbar
+                {t('HeaderTextEditor.noHeaderTemplates')}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
@@ -527,9 +541,9 @@ export default function HeaderTextEditor({
           size="sm"
           className="h-8 px-3"
           onClick={() => setPlaceholderModalOpen(true)}
-          title="Platzhalter"
+          title={t('HeaderTextEditor.placeholder')}
         >
-          <span className="select-none">Platzhalter</span>
+          <span className="select-none">{t('HeaderTextEditor.placeholder')}</span>
           <span className="caret ml-1" style={{ fontSize: '9pt' }}>
             ▼
           </span>

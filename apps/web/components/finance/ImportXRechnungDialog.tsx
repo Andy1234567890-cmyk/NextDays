@@ -14,6 +14,7 @@ import {
   DialogTitle,
   Label,
 } from '@tasko/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import type React from 'react';
 import { useEffect, useState } from 'react';
@@ -38,6 +39,7 @@ export function ImportXRechnungDialog({
   onSuccess,
   defaultType,
 }: ImportXRechnungDialogProps) {
+  const t = useTranslations('finance');
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -75,7 +77,7 @@ export function ImportXRechnungDialog({
 
     // Validate file type
     if (!selectedFile.name.endsWith('.xml')) {
-      setError('Bitte wählen Sie eine XML-Datei aus');
+      setError(t('ImportXRechnungDialog.errorInvalidFileType'));
       return;
     }
 
@@ -91,14 +93,14 @@ export function ImportXRechnungDialog({
       );
       setPreviewData(parsedData);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Fehler beim Lesen der Datei');
+      setError(err instanceof Error ? err.message : t('ImportXRechnungDialog.errorReadingFile'));
       setPreviewData(null);
     }
   };
 
   const handleImport = async () => {
     if (!file || !previewData || !importType) {
-      toast.error('Bitte wählen Sie den Dokumenttyp (Einnahme oder Ausgabe)');
+      toast.error(t('ImportXRechnungDialog.errorSelectDocumentType'));
       return;
     }
 
@@ -120,10 +122,13 @@ export function ImportXRechnungDialog({
 
         if (matchedCustomer) {
           toast.success(
-            `Kunde "${matchedCustomer.name}" gefunden (${matchedCustomer.matchReason})`,
+            t('ImportXRechnungDialog.customerFound', {
+              name: matchedCustomer.name,
+              reason: matchedCustomer.matchReason,
+            }),
           );
         } else {
-          toast.info('Kein passender Kunde gefunden. Bitte Kunde nach Import anlegen.');
+          toast.info(t('ImportXRechnungDialog.noMatchingCustomer'));
         }
 
         // 🔧 STEP 2: Convert to InvoiceData
@@ -132,7 +137,7 @@ export function ImportXRechnungDialog({
         // 💾 STEP 3: Save invoice
         const invoiceId = await InvoiceService.saveInvoice(invoiceData as any);
 
-        toast.success('📈 Einnahme erfolgreich importiert!');
+        toast.success(t('ImportXRechnungDialog.incomeImportSuccess'));
 
         // Reset & Redirect
         setFile(null);
@@ -155,12 +160,12 @@ export function ImportXRechnungDialog({
         });
 
         if (!response.ok) {
-          throw new Error('Fehler beim Speichern der Ausgabe');
+          throw new Error(t('ImportXRechnungDialog.errorSavingExpense'));
         }
 
         const _result = await response.json();
 
-        toast.success('📉 Ausgabe erfolgreich importiert!');
+        toast.success(t('ImportXRechnungDialog.expenseImportSuccess'));
 
         // Reset & Redirect
         setFile(null);
@@ -178,8 +183,8 @@ export function ImportXRechnungDialog({
       }
     } catch (err) {
       console.error('Import Error:', err);
-      setError(err instanceof Error ? err.message : 'Fehler beim Importieren');
-      toast.error('Fehler beim Importieren der E-Rechnung');
+      setError(err instanceof Error ? err.message : t('ImportXRechnungDialog.errorImporting'));
+      toast.error(t('ImportXRechnungDialog.errorImportingInvoice'));
     } finally {
       setLoading(false);
     }
@@ -199,19 +204,19 @@ export function ImportXRechnungDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Icon icon="lucide:file-text" className="h-5 w-5 text-accent" />
-            E-Rechnung importieren
+            {t('ImportXRechnungDialog.title')}
           </DialogTitle>
           <DialogDescription>
             {defaultType === 'expense'
-              ? 'Laden Sie eine E-Rechnung hoch, um sie als Ausgabe (Lieferantenrechnung) zu importieren.'
-              : 'Laden Sie eine XRechnung oder ZUGFeRD XML-Datei hoch, um sie als Rechnung zu importieren.'}
+              ? t('ImportXRechnungDialog.descriptionExpense')
+              : t('ImportXRechnungDialog.descriptionInvoice')}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* File Upload */}
           <div className="space-y-2">
-            <Label htmlFor="xml-file">XML-Datei auswählen</Label>
+            <Label htmlFor="xml-file">{t('ImportXRechnungDialog.fileLabel')}</Label>
             <div className="flex items-center gap-2">
               <Button
                 type="button"
@@ -220,7 +225,7 @@ export function ImportXRechnungDialog({
                 onClick={() => document.getElementById('xml-file')?.click()}
               >
                 <Icon icon="lucide:upload" className="mr-2 h-4 w-4" />
-                {file ? file.name : 'XML-Datei hochladen'}
+                {file ? file.name : t('ImportXRechnungDialog.fileUploadButton')}
               </Button>
               {file && (
                 <Button
@@ -252,7 +257,9 @@ export function ImportXRechnungDialog({
             <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 p-3">
               <Icon icon="lucide:alert-circle" className="mt-0.5 h-5 w-5 text-red-600" />
               <div className="flex-1">
-                <p className="font-medium text-red-800 text-sm">Fehler</p>
+                <p className="font-medium text-red-800 text-sm">
+                  {t('ImportXRechnungDialog.errorLabel')}
+                </p>
                 <p className="text-red-600 text-sm">{error}</p>
               </div>
             </div>
@@ -263,7 +270,7 @@ export function ImportXRechnungDialog({
             <div className="space-y-4 rounded-lg border border-gray-200 bg-gray-50 p-4">
               <div className="flex items-center gap-2 text-green-600">
                 <Icon icon="lucide:check-circle" className="h-5 w-5" />
-                <span className="font-medium">E-Rechnung erfolgreich erkannt</span>
+                <span className="font-medium">{t('ImportXRechnungDialog.recognizedSuccess')}</span>
               </div>
 
               {/* 🎯 Type Selection: Einnahme oder Ausgabe */}
@@ -283,14 +290,18 @@ export function ImportXRechnungDialog({
                           <Badge
                             className={importType === 'income' ? 'bg-green-600' : 'bg-amber-600'}
                           >
-                            {importType === 'income' ? '📈 Einnahme' : '📉 Ausgabe'}
+                            {importType === 'income'
+                              ? t('ImportXRechnungDialog.badgeIncome')
+                              : t('ImportXRechnungDialog.badgeExpense')}
                           </Badge>
-                          <span className="text-gray-500 text-xs">Automatisch erkannt</span>
+                          <span className="text-gray-500 text-xs">
+                            {t('ImportXRechnungDialog.autoDetected')}
+                          </span>
                         </div>
                         <AlertDescription className="text-sm">
                           {importType === 'income'
-                            ? 'Eigene Rechnung erkannt (Sie sind der Verkäufer)'
-                            : 'Lieferantenrechnung erkannt (Sie sind der Käufer)'}
+                            ? t('ImportXRechnungDialog.detectedOwnInvoice')
+                            : t('ImportXRechnungDialog.detectedSupplierInvoice')}
                         </AlertDescription>
                       </div>
                     </div>
@@ -304,7 +315,7 @@ export function ImportXRechnungDialog({
                       className="flex items-center gap-2"
                     >
                       <Icon icon="lucide:refresh-cw" className="h-4 w-4" />
-                      Korrigieren
+                      {t('ImportXRechnungDialog.correctButton')}
                     </Button>
                   </div>
                 </Alert>
@@ -315,18 +326,22 @@ export function ImportXRechnungDialog({
                 {/* Basic Info */}
                 <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
                   <div>
-                    <p className="mb-1 text-gray-500">Rechnungsnummer</p>
+                    <p className="mb-1 text-gray-500">
+                      {t('ImportXRechnungDialog.invoiceNumberLabel')}
+                    </p>
                     <p className="break-all font-medium">{previewData.invoiceNumber}</p>
                   </div>
                   <div>
-                    <p className="mb-1 text-gray-500">Datum</p>
+                    <p className="mb-1 text-gray-500">{t('ImportXRechnungDialog.dateLabel')}</p>
                     <p className="font-medium">{previewData.issueDate}</p>
                   </div>
                 </div>
 
                 {/* Seller Info */}
                 <div className="rounded border border-gray-200 bg-white p-3">
-                  <p className="mb-2 font-medium text-gray-700 text-sm">Lieferant</p>
+                  <p className="mb-2 font-medium text-gray-700 text-sm">
+                    {t('ImportXRechnungDialog.supplierLabel')}
+                  </p>
                   <p className="font-medium">{previewData.sellerName}</p>
                   <p className="text-gray-600 text-sm">
                     {previewData.sellerAddress.street}
@@ -339,13 +354,17 @@ export function ImportXRechnungDialog({
                     <p className="mt-1 text-gray-600 text-sm">📧 {previewData.sellerEmail}</p>
                   )}
                   {previewData.sellerTaxId && (
-                    <p className="text-gray-600 text-sm">USt-IdNr.: {previewData.sellerTaxId}</p>
+                    <p className="text-gray-600 text-sm">
+                      {t('ImportXRechnungDialog.taxIdLabel')} {previewData.sellerTaxId}
+                    </p>
                   )}
                 </div>
 
                 {/* Buyer Info */}
                 <div className="rounded border border-gray-200 bg-white p-3">
-                  <p className="mb-2 font-medium text-gray-700 text-sm">Kunde</p>
+                  <p className="mb-2 font-medium text-gray-700 text-sm">
+                    {t('ImportXRechnungDialog.customerLabel')}
+                  </p>
                   <p className="font-medium">{previewData.buyerName}</p>
                   <p className="text-gray-600 text-sm">
                     {previewData.buyerAddress.street}
@@ -362,7 +381,9 @@ export function ImportXRechnungDialog({
                 {/* Payment Info */}
                 {previewData.iban && (
                   <div className="rounded border border-gray-200 bg-white p-3">
-                    <p className="mb-2 font-medium text-gray-700 text-sm">Zahlungsinformationen</p>
+                    <p className="mb-2 font-medium text-gray-700 text-sm">
+                      {t('ImportXRechnungDialog.paymentInfoLabel')}
+                    </p>
                     <p className="text-gray-600 text-sm">
                       <span className="font-medium">IBAN:</span> {previewData.iban}
                     </p>
@@ -373,7 +394,9 @@ export function ImportXRechnungDialog({
                     )}
                     {previewData.accountHolder && (
                       <p className="text-gray-600 text-sm">
-                        <span className="font-medium">Kontoinhaber:</span>{' '}
+                        <span className="font-medium">
+                          {t('ImportXRechnungDialog.accountHolderLabel')}
+                        </span>{' '}
                         {previewData.accountHolder}
                       </p>
                     )}
@@ -386,20 +409,20 @@ export function ImportXRechnungDialog({
                 {/* Amounts */}
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-gray-500">Netto</p>
+                    <p className="text-gray-500">{t('ImportXRechnungDialog.netAmountLabel')}</p>
                     <p className="font-medium">
                       {previewData.subtotal.toFixed(2)} {previewData.currency}
                     </p>
                   </div>
                   <div>
-                    <p className="text-gray-500">MwSt.</p>
+                    <p className="text-gray-500">{t('ImportXRechnungDialog.vatLabel')}</p>
                     <p className="font-medium">
                       {previewData.taxAmount.toFixed(2)} {previewData.currency} (
                       {previewData.taxRate}%)
                     </p>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-gray-500">Gesamt</p>
+                    <p className="text-gray-500">{t('ImportXRechnungDialog.totalLabel')}</p>
                     <p className="font-bold text-accent text-lg">
                       {previewData.total.toFixed(2)} {previewData.currency}
                     </p>
@@ -411,7 +434,9 @@ export function ImportXRechnungDialog({
               {previewData.lineItems && previewData.lineItems.length > 0 && (
                 <div>
                   <p className="mb-2 font-medium text-gray-700 text-sm">
-                    Positionen ({previewData.lineItems.length})
+                    {t('ImportXRechnungDialog.lineItemsLabel', {
+                      count: previewData.lineItems.length,
+                    })}
                   </p>
                   <div className="space-y-2">
                     {previewData.lineItems.map((item: any, index: number) => (
@@ -439,7 +464,7 @@ export function ImportXRechnungDialog({
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>
-            Abbrechen
+            {t('ImportXRechnungDialog.cancelButton')}
           </Button>
           <Button
             type="button"
@@ -452,8 +477,10 @@ export function ImportXRechnungDialog({
             } text-white`}
           >
             {loading
-              ? 'Wird importiert...'
-              : `Als ${importType === 'income' ? 'Einnahme' : 'Ausgabe'} importieren`}
+              ? t('ImportXRechnungDialog.importingButton')
+              : importType === 'income'
+                ? t('ImportXRechnungDialog.importAsIncomeButton')
+                : t('ImportXRechnungDialog.importAsExpenseButton')}
           </Button>
         </DialogFooter>
       </DialogContent>

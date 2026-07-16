@@ -1,4 +1,5 @@
 import { Icon } from '@iconify/react';
+import { useTranslations } from 'next-intl';
 import type React from 'react';
 import { useRef, useState } from 'react';
 import { NativeSelect } from '@/components/ui/native-select';
@@ -23,6 +24,7 @@ export const SimplePDFViewer: React.FC<SimplePDFViewerProps> = ({
   onPageModeChange,
   pageMode = 'multi',
 }) => {
+  const t = useTranslations('finance');
   const contentRef = useRef<HTMLDivElement>(null);
   const { totalPages, contentHeight: _contentHeight } = useSimplePagination(contentRef, a4Height);
   const [currentPage, setCurrentPage] = useState(1);
@@ -52,14 +54,14 @@ export const SimplePDFViewer: React.FC<SimplePDFViewerProps> = ({
           <button
             onClick={() => handlePageModeChange('single')}
             className={`rounded p-2 ${pageMode === 'single' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}
-            title="Einzelseite - Alles auf eine Seite zwingen"
+            title={t('SimplePDFViewer.singlePageTitle')}
           >
             <Icon icon="lucide:file-text" width={20} height={20} />
           </button>
           <button
             onClick={() => handlePageModeChange('multi')}
             className={`rounded p-2 ${pageMode === 'multi' ? 'bg-blue-100 text-blue-600' : 'hover:bg-gray-100'}`}
-            title="Mehrseitig - Automatischer Seitenumbruch"
+            title={t('SimplePDFViewer.multiPageTitle')}
           >
             <Icon icon="lucide:scroll-text" width={20} height={20} />
           </button>
@@ -67,7 +69,7 @@ export const SimplePDFViewer: React.FC<SimplePDFViewerProps> = ({
 
         {/* Page Navigation */}
         <div className="flex items-center gap-2 text-sm">
-          <span>Seite</span>
+          <span>{t('SimplePDFViewer.page')}</span>
           <input
             type="number"
             min={1}
@@ -78,7 +80,7 @@ export const SimplePDFViewer: React.FC<SimplePDFViewerProps> = ({
             }
             className="w-12 rounded border border-gray-300 px-2 py-1 text-center focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
           />
-          <span>von</span>
+          <span>{t('SimplePDFViewer.of')}</span>
           <span>{totalPages}</span>
 
           <div className="ml-2 flex">
@@ -86,7 +88,7 @@ export const SimplePDFViewer: React.FC<SimplePDFViewerProps> = ({
               onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
               disabled={currentPage <= 1}
               className="rounded-l border border-gray-300 p-1 hover:bg-gray-50 disabled:opacity-50"
-              title="Vorherige Seite"
+              title={t('SimplePDFViewer.previousPage')}
             >
               <Icon icon="lucide:chevron-up" width={16} height={16} />
             </button>
@@ -95,7 +97,7 @@ export const SimplePDFViewer: React.FC<SimplePDFViewerProps> = ({
               onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
               disabled={currentPage >= totalPages}
               className="rounded-r border border-gray-300 p-1 hover:bg-gray-50 disabled:opacity-50"
-              title="Nächste Seite"
+              title={t('SimplePDFViewer.nextPage')}
             >
               <Icon icon="lucide:chevron-down" width={16} height={16} />
             </button>
@@ -112,7 +114,7 @@ export const SimplePDFViewer: React.FC<SimplePDFViewerProps> = ({
             }}
             disabled={zoomLevel >= Math.max(...zoomOptions.map(o => o.value))}
             className="rounded p-2 hover:bg-gray-100 disabled:opacity-50"
-            title="Vergrößern"
+            title={t('SimplePDFViewer.zoomIn')}
           >
             <Icon icon="lucide:zoom-in" width={16} height={16} />
           </button>
@@ -125,7 +127,7 @@ export const SimplePDFViewer: React.FC<SimplePDFViewerProps> = ({
             }}
             disabled={zoomLevel <= Math.min(...zoomOptions.map(o => o.value))}
             className="rounded p-2 hover:bg-gray-100 disabled:opacity-50"
-            title="Verkleinern"
+            title={t('SimplePDFViewer.zoomOut')}
           >
             <Icon icon="lucide:zoom-out" width={16} height={16} />
           </button>
@@ -174,7 +176,7 @@ export const SimplePDFViewer: React.FC<SimplePDFViewerProps> = ({
           >
             {/* Seitennummer */}
             <div className="absolute top-2 right-2 rounded bg-black/75 px-2 py-1 text-white text-xs">
-              Seite {pageIndex + 1}
+              {t('SimplePDFViewer.pageNumber', { number: pageIndex + 1 })}
             </div>
 
             {/* Inhalt für diese Seite */}
@@ -193,8 +195,10 @@ export const SimplePDFViewer: React.FC<SimplePDFViewerProps> = ({
         {/* Seitenzusammenfassung */}
         {totalPages > 1 && (
           <div className="mt-4 rounded bg-blue-50 p-2 text-center text-gray-600 text-sm">
-            📄 {totalPages} A4-Seiten
-            {pageMode === 'single' ? ' - Einzelseitenmodus' : ' - Mehrseitenmodus'}
+            📄 {t('SimplePDFViewer.pageSummary', { count: totalPages })}
+            {pageMode === 'single'
+              ? ` - ${t('SimplePDFViewer.singlePageModeSuffix')}`
+              : ` - ${t('SimplePDFViewer.multiPageModeSuffix')}`}
           </div>
         )}
       </div>

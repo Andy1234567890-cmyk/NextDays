@@ -1,10 +1,14 @@
+import { getTranslations } from "next-intl/server";
+
 import { ComingSoon } from "@/components/ui/coming-soon";
 
-export default function UmsatzPage() {
+export default async function UmsatzPage() {
+  const t = await getTranslations("finance");
+
   return (
     <ComingSoon
-      title="Umsatz"
-      description="Umsatzentwicklung nach Zeitraum, Kategorie und Objekt."
+      title={t("umsatzPage.title")}
+      description={t("umsatzPage.description")}
       icon="ph:trend-up"
     />
   );

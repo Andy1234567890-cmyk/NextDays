@@ -2,6 +2,7 @@
 
 // „Neuer Kunde"-Button + Anlage-Sheet (Buchhaltung → Kunden). NextDays-Design.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -26,6 +27,7 @@ import {
 import { createCustomer } from "@/lib/buchhaltung";
 
 export function NewCustomerButton() {
+  const t = useTranslations("finance");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -44,7 +46,7 @@ export function NewCustomerButton() {
 
   async function save() {
     if (!name.trim()) {
-      setError("Name ist erforderlich.");
+      setError(t("newCustomerButton.nameRequired"));
       return;
     }
     setBusy(true);
@@ -71,7 +73,7 @@ export function NewCustomerButton() {
     <>
       <Button onClick={() => setOpen(true)} className="gap-2">
         <Icon icon="ph:plus" className="size-4" />
-        Neuer Kunde
+        {t("newCustomerButton.trigger")}
       </Button>
 
       <Sheet
@@ -84,41 +86,41 @@ export function NewCustomerButton() {
         <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-md">
           <SheetHeader className="border-b">
             <SheetTitle className="font-display text-lg font-extrabold">
-              Neuer Kunde
+              {t("newCustomerButton.sheetTitle")}
             </SheetTitle>
             <SheetDescription>
-              Lege einen Kunden oder Lieferanten an.
+              {t("newCustomerButton.sheetDescription")}
             </SheetDescription>
           </SheetHeader>
 
           <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="c-name">
-                Name <span className="text-destructive">*</span>
+                {t("newCustomerButton.nameLabel")} <span className="text-destructive">*</span>
               </Label>
               <Input
                 id="c-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Firma oder Person"
+                placeholder={t("newCustomerButton.namePlaceholder")}
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="c-type">Typ</Label>
+              <Label htmlFor="c-type">{t("newCustomerButton.typeLabel")}</Label>
               <Select value={type} onValueChange={setType}>
                 <SelectTrigger id="c-type">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="business">Geschäftlich</SelectItem>
-                  <SelectItem value="private">Privat</SelectItem>
+                  <SelectItem value="business">{t("newCustomerButton.typeBusiness")}</SelectItem>
+                  <SelectItem value="private">{t("newCustomerButton.typePrivate")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="c-email">E-Mail</Label>
+              <Label htmlFor="c-email">{t("newCustomerButton.emailLabel")}</Label>
               <Input
                 id="c-email"
                 type="email"
@@ -128,7 +130,7 @@ export function NewCustomerButton() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="c-phone">Telefon</Label>
+              <Label htmlFor="c-phone">{t("newCustomerButton.phoneLabel")}</Label>
               <Input
                 id="c-phone"
                 type="tel"
@@ -138,7 +140,7 @@ export function NewCustomerButton() {
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="c-vat">USt-IdNr.</Label>
+              <Label htmlFor="c-vat">{t("newCustomerButton.vatLabel")}</Label>
               <Input
                 id="c-vat"
                 value={vatId}
@@ -154,7 +156,7 @@ export function NewCustomerButton() {
                 onChange={(e) => setIsSupplier(e.target.checked)}
                 className="size-4 rounded border-input"
               />
-              Ist Lieferant (Kreditor)
+              {t("newCustomerButton.supplierCheckbox")}
             </label>
 
             {error && (
@@ -172,10 +174,10 @@ export function NewCustomerButton() {
               disabled={busy}
               onClick={() => setOpen(false)}
             >
-              Abbrechen
+              {t("newCustomerButton.cancel")}
             </Button>
             <Button type="button" className="flex-1" disabled={busy} onClick={save}>
-              {busy ? "Wird angelegt…" : "Kunde anlegen"}
+              {busy ? t("newCustomerButton.saving") : t("newCustomerButton.submit")}
             </Button>
           </SheetFooter>
         </SheetContent>

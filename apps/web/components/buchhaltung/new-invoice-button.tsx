@@ -5,6 +5,7 @@
 // die Vorschau hier dient nur der Orientierung. NextDays-Design (rounded-full,
 // rem, Tokens).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -40,6 +41,7 @@ export function NewInvoiceButton({
 }: {
   customers?: Customer[];
 }) {
+  const t = useTranslations("finance");
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const {
@@ -69,7 +71,7 @@ export function NewInvoiceButton({
   async function save() {
     const items = toLineItemInputs();
     if (items.length === 0) {
-      setError("Mindestens eine Position mit Beschreibung ist erforderlich.");
+      setError(t("newInvoiceButton.itemRequired"));
       return;
     }
     setBusy(true);
@@ -93,7 +95,7 @@ export function NewInvoiceButton({
     <>
       <Button onClick={() => setOpen(true)} className="gap-2">
         <Icon icon="ph:plus" className="size-4" />
-        Neue Rechnung
+        {t("newInvoiceButton.trigger")}
       </Button>
 
       <Sheet
@@ -106,23 +108,23 @@ export function NewInvoiceButton({
         <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-xl">
           <SheetHeader className="border-b">
             <SheetTitle className="font-display text-lg font-extrabold">
-              Neue Rechnung
+              {t("newInvoiceButton.sheetTitle")}
             </SheetTitle>
             <SheetDescription>
-              Erfasse die Positionen. Steuer und Summen berechnet das Backend.
+              {t("newInvoiceButton.sheetDescription")}
             </SheetDescription>
           </SheetHeader>
 
           <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4">
             {/* Kunde */}
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="inv-customer">Kunde</Label>
+              <Label htmlFor="inv-customer">{t("newInvoiceButton.customerLabel")}</Label>
               <Select value={customerId} onValueChange={setCustomerId}>
                 <SelectTrigger id="inv-customer">
-                  <SelectValue placeholder="Kein Kunde" />
+                  <SelectValue placeholder={t("newInvoiceButton.customerNone")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={NO_CUSTOMER}>Kein Kunde</SelectItem>
+                  <SelectItem value={NO_CUSTOMER}>{t("newInvoiceButton.customerNone")}</SelectItem>
                   {customers.map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.name}
@@ -142,27 +144,27 @@ export function NewInvoiceButton({
 
             {/* Notizen */}
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="inv-notes">Anmerkungen</Label>
+              <Label htmlFor="inv-notes">{t("newInvoiceButton.notesLabel")}</Label>
               <Input
                 id="inv-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Optional"
+                placeholder={t("newInvoiceButton.notesPlaceholder")}
               />
             </div>
 
             {/* Summen-Vorschau */}
             <div className="flex flex-col gap-1 rounded-(--radius) bg-secondary/40 p-3 text-sm">
               <div className="flex justify-between text-muted-foreground">
-                <span>Netto</span>
+                <span>{t("newInvoiceButton.netTotal")}</span>
                 <span>{formatEur(netTotal)}</span>
               </div>
               <div className="flex justify-between text-muted-foreground">
-                <span>MwSt.</span>
+                <span>{t("newInvoiceButton.taxTotal")}</span>
                 <span>{formatEur(taxTotal)}</span>
               </div>
               <div className="flex justify-between font-semibold">
-                <span>Gesamt</span>
+                <span>{t("newInvoiceButton.grossTotal")}</span>
                 <span>{formatEur(grossTotal)}</span>
               </div>
             </div>
@@ -182,10 +184,10 @@ export function NewInvoiceButton({
               disabled={busy}
               onClick={() => setOpen(false)}
             >
-              Abbrechen
+              {t("newInvoiceButton.cancel")}
             </Button>
             <Button type="button" className="flex-1" disabled={busy} onClick={save}>
-              {busy ? "Wird erstellt…" : "Rechnung erstellen"}
+              {busy ? t("newInvoiceButton.submitting") : t("newInvoiceButton.submit")}
             </Button>
           </SheetFooter>
         </SheetContent>

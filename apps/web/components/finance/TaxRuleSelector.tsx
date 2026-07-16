@@ -1,5 +1,6 @@
 import { Icon } from '@iconify/react';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@tasko/ui';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { TaxRuleType } from '@/types/taxRules';
 
@@ -10,6 +11,7 @@ interface TaxRuleSelectorProps {
 }
 
 export function TaxRuleSelector({ value, onChange, className }: TaxRuleSelectorProps) {
+  const t = useTranslations('finance');
   const [taxDEOpen, setTaxDEOpen] = useState(true);
   const [taxEUOpen, setTaxEUOpen] = useState(false);
   const [taxNonEUOpen, setTaxNonEUOpen] = useState(false);
@@ -24,7 +26,7 @@ export function TaxRuleSelector({ value, onChange, className }: TaxRuleSelectorP
             className="flex w-full items-center justify-between bg-muted/30 px-3 py-2 transition hover:bg-muted/50"
             onClick={() => setTaxDEOpen(v => !v)}
           >
-            <span className="font-medium text-sm">In Deutschland</span>
+            <span className="font-medium text-sm">{t('TaxRuleSelector.groupDe')}</span>
             <Icon
               icon="lucide:chevron-down"
               className={`h-4 w-4 transition-transform ${taxDEOpen ? 'rotate-180' : ''}`}
@@ -35,18 +37,18 @@ export function TaxRuleSelector({ value, onChange, className }: TaxRuleSelectorP
               {[
                 {
                   key: TaxRuleType.DE_TAXABLE,
-                  label: 'Umsatzsteuerpflichtige Umsätze',
-                  hint: 'Regelsteuersatz, i. d. R. 19% (oder 7% für bestimmte Leistungen).',
+                  label: t('TaxRuleSelector.deTaxableLabel'),
+                  hint: t('TaxRuleSelector.deTaxableHint'),
                 },
                 {
                   key: TaxRuleType.DE_EXEMPT_4_USTG,
-                  label: 'Steuerfreie Umsätze §4 UStG',
-                  hint: 'Umsätze, die nach §4 UStG von der Steuer befreit sind (z. B. bestimmte Versicherungen).',
+                  label: t('TaxRuleSelector.deExempt4UstgLabel'),
+                  hint: t('TaxRuleSelector.deExempt4UstgHint'),
                 },
                 {
                   key: TaxRuleType.DE_REVERSE_13B,
-                  label: 'Reverse Charge gem. §13b UStG',
-                  hint: 'Steuerschuld geht auf den Leistungsempfänger über (B2B, bestimmte Leistungen).',
+                  label: t('TaxRuleSelector.deReverse13bLabel'),
+                  hint: t('TaxRuleSelector.deReverse13bHint'),
                 },
               ].map(opt => (
                 <label
@@ -84,7 +86,7 @@ export function TaxRuleSelector({ value, onChange, className }: TaxRuleSelectorP
             className="flex w-full items-center justify-between bg-muted/30 px-3 py-2 transition hover:bg-muted/50"
             onClick={() => setTaxEUOpen(v => !v)}
           >
-            <span className="font-medium text-sm">EU</span>
+            <span className="font-medium text-sm">{t('TaxRuleSelector.groupEu')}</span>
             <Icon
               icon="lucide:chevron-down"
               className={`h-4 w-4 transition-transform ${taxEUOpen ? 'rotate-180' : ''}`}
@@ -95,18 +97,18 @@ export function TaxRuleSelector({ value, onChange, className }: TaxRuleSelectorP
               {[
                 {
                   key: TaxRuleType.EU_REVERSE_18B,
-                  label: 'Reverse Charge gem. §18b UStG',
-                  hint: 'B2B-Leistungen innerhalb der EU – Steuerschuld beim Leistungsempfänger.',
+                  label: t('TaxRuleSelector.euReverse18bLabel'),
+                  hint: t('TaxRuleSelector.euReverse18bHint'),
                 },
                 {
                   key: TaxRuleType.EU_INTRACOMMUNITY_SUPPLY,
-                  label: 'Innergemeinschaftliche Lieferungen',
-                  hint: 'Lieferung von Waren in anderes EU-Land an Unternehmer mit USt-IdNr., i. d. R. steuerfrei.',
+                  label: t('TaxRuleSelector.euIntracommunitySupplyLabel'),
+                  hint: t('TaxRuleSelector.euIntracommunitySupplyHint'),
                 },
                 {
                   key: TaxRuleType.EU_OSS,
-                  label: 'OSS – One-Stop-Shop',
-                  hint: 'Fernverkauf an Privatkunden in EU; Besteuerung im Bestimmungsland über OSS.',
+                  label: t('TaxRuleSelector.euOssLabel'),
+                  hint: t('TaxRuleSelector.euOssHint'),
                 },
               ].map(opt => (
                 <label
@@ -144,7 +146,7 @@ export function TaxRuleSelector({ value, onChange, className }: TaxRuleSelectorP
             className="flex w-full items-center justify-between bg-muted/30 px-3 py-2 transition hover:bg-muted/50"
             onClick={() => setTaxNonEUOpen(v => !v)}
           >
-            <span className="font-medium text-sm">Außerhalb der EU</span>
+            <span className="font-medium text-sm">{t('TaxRuleSelector.groupNonEu')}</span>
             <Icon
               icon="lucide:chevron-down"
               className={`h-4 w-4 transition-transform ${taxNonEUOpen ? 'rotate-180' : ''}`}
@@ -155,13 +157,13 @@ export function TaxRuleSelector({ value, onChange, className }: TaxRuleSelectorP
               {[
                 {
                   key: TaxRuleType.NON_EU_EXPORT,
-                  label: 'Ausfuhren',
-                  hint: 'Warenlieferungen in Drittländer (außerhalb EU) sind i. d. R. steuerfrei (Nachweis erforderlich).',
+                  label: t('TaxRuleSelector.nonEuExportLabel'),
+                  hint: t('TaxRuleSelector.nonEuExportHint'),
                 },
                 {
                   key: TaxRuleType.NON_EU_OUT_OF_SCOPE,
-                  label: 'Nicht im Inland steuerbare Leistung (außerhalb EU, z.B. Schweiz)',
-                  hint: 'Leistung gilt nicht im Inland als ausgeführt – keine deutsche USt.',
+                  label: t('TaxRuleSelector.nonEuOutOfScopeLabel'),
+                  hint: t('TaxRuleSelector.nonEuOutOfScopeHint'),
                 },
               ].map(opt => (
                 <label
@@ -192,10 +194,7 @@ export function TaxRuleSelector({ value, onChange, className }: TaxRuleSelectorP
           )}
         </div>
 
-        <div className="text-gray-500 text-xs">
-          Hinweis: Je nach Regelung setzen wir den USt.-Satz automatisch (DE steuerpflichtig → 19%,
-          andere Regeln → 0%).
-        </div>
+        <div className="text-gray-500 text-xs">{t('TaxRuleSelector.footnote')}</div>
       </div>
     </div>
   );

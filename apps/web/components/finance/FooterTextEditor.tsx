@@ -22,6 +22,7 @@ import { TextStyle } from '@tiptap/extension-text-style';
 import { Underline } from '@tiptap/extension-underline';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import TextTemplateModal from '@/components/settings/TextTemplateModal';
@@ -52,6 +53,7 @@ export default function FooterTextEditor({
   textType,
   onTemplateSelect,
 }: FooterTextEditorProps) {
+  const t = useTranslations('finance');
   const [mounted, setMounted] = useState(false);
   const [textTemplates, setTextTemplates] = useState<TextTemplate[]>([]);
   const [placeholderModalOpen, setPlaceholderModalOpen] = useState(false);
@@ -196,7 +198,7 @@ export default function FooterTextEditor({
     return (
       <div className={className}>
         <div className="min-h-35 rounded-md border p-3 text-gray-400 text-sm">
-          Editor wird geladen…
+          {t('FooterTextEditor.loading')}
         </div>
       </div>
     );
@@ -224,7 +226,11 @@ export default function FooterTextEditor({
     templateData: Omit<TextTemplate, 'id' | 'createdAt' | 'updatedAt'>,
   ) => {
     if (!companyId || !userId) {
-      toast.error(`Fehler: ${!companyId ? 'companyId' : 'userId'} fehlt`);
+      toast.error(
+        t('FooterTextEditor.missingFieldError', {
+          field: !companyId ? 'companyId' : 'userId',
+        }),
+      );
       return;
     }
     // Ensure companyId and createdBy are in the template data
@@ -271,10 +277,10 @@ export default function FooterTextEditor({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuLabel>Schriftgröße</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('FooterTextEditor.fontSize')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => editor.chain().focus().run()}>
-              <span>Standard (12)</span>
+              <span>{t('FooterTextEditor.fontSizeDefault')}</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             {[10, 11, 13, 14, 16, 18].map(size => (
@@ -294,7 +300,7 @@ export default function FooterTextEditor({
           size="sm"
           className={`h-8 px-2 ${editor.isActive('bold') ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
           onClick={() => editor.chain().focus().toggleBold().run()}
-          title="Fett (Cmd + B)"
+          title={t('FooterTextEditor.bold')}
         >
           <Icon icon="lucide:bold" className="h-4 w-4" />
         </Button>
@@ -304,7 +310,7 @@ export default function FooterTextEditor({
           size="sm"
           className={`h-8 px-2 ${editor.isActive('italic') ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
           onClick={() => editor.chain().focus().toggleItalic().run()}
-          title="Kursiv (Cmd + I)"
+          title={t('FooterTextEditor.italic')}
         >
           <Icon icon="lucide:italic" className="h-4 w-4" />
         </Button>
@@ -314,7 +320,7 @@ export default function FooterTextEditor({
           size="sm"
           className={`h-8 px-2 ${editor.isActive('underline') ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
           onClick={() => editor.chain().focus().toggleUnderline().run()}
-          title="Unterstreichen (Cmd + U)"
+          title={t('FooterTextEditor.underline')}
         >
           <Icon icon="lucide:underline" className="h-4 w-4" />
         </Button>
@@ -328,7 +334,7 @@ export default function FooterTextEditor({
           size="sm"
           className={`h-8 px-2 ${editor.isActive('strike') ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
           onClick={() => editor.chain().focus().toggleStrike().run()}
-          title="Durchgestrichen"
+          title={t('FooterTextEditor.strikethrough')}
         >
           <Icon icon="lucide:strikethrough" className="h-4 w-4" />
         </Button>
@@ -336,7 +342,13 @@ export default function FooterTextEditor({
         {/* Farbe */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button type="button" variant="ghost" size="sm" className="h-8 px-2" title="Farbe">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2"
+              title={t('FooterTextEditor.color')}
+            >
               <Icon icon="lucide:palette" className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -354,7 +366,7 @@ export default function FooterTextEditor({
               ].map(color => (
                 <button
                   key={color}
-                  aria-label={`Farbe ${color}`}
+                  aria-label={t('FooterTextEditor.colorSwatch', { color })}
                   className="h-6 w-6 rounded border border-gray-300"
                   style={{ backgroundColor: color }}
                   onClick={() => editor.chain().focus().setColor(color).run()}
@@ -371,7 +383,7 @@ export default function FooterTextEditor({
           size="sm"
           className={`h-8 px-2 ${editor.isActive('orderedList') ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          title="Nummerierte Liste (Cmd + /)"
+          title={t('FooterTextEditor.orderedList')}
         >
           <Icon icon="lucide:list-ordered" className="h-4 w-4" />
         </Button>
@@ -381,7 +393,7 @@ export default function FooterTextEditor({
           size="sm"
           className={`h-8 px-2 ${editor.isActive('bulletList') ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
-          title="Stichpunkte (Cmd + .)"
+          title={t('FooterTextEditor.bulletList')}
         >
           <Icon icon="lucide:list" className="h-4 w-4" />
         </Button>
@@ -389,7 +401,13 @@ export default function FooterTextEditor({
         {/* Tabelle */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button type="button" variant="ghost" size="sm" className="h-8 px-2" title="Tabelle">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2"
+              title={t('FooterTextEditor.table')}
+            >
               <Icon icon="lucide:table" className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -399,22 +417,22 @@ export default function FooterTextEditor({
                 editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
               }
             >
-              Tabelle einfügen (3x3)
+              {t('FooterTextEditor.insertTable')}
             </DropdownMenuItem>
             {editor.isActive('table') && (
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => editor.chain().focus().deleteTable().run()}>
-                  Tabelle entfernen
+                  {t('FooterTextEditor.removeTable')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => editor.chain().focus().addRowBefore().run()}>
-                  Zeile oberhalb einfügen
+                  {t('FooterTextEditor.insertRowAbove')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => editor.chain().focus().addRowAfter().run()}>
-                  Zeile unterhalb einfügen
+                  {t('FooterTextEditor.insertRowBelow')}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => editor.chain().focus().deleteRow().run()}>
-                  Zeile löschen
+                  {t('FooterTextEditor.deleteRow')}
                 </DropdownMenuItem>
               </>
             )}
@@ -428,10 +446,10 @@ export default function FooterTextEditor({
           size="sm"
           className="h-8 px-2"
           onClick={() => {
-            const url = window.prompt('Link URL:');
+            const url = window.prompt(t('FooterTextEditor.linkUrlPrompt'));
             if (url) editor.chain().focus().setLink({ href: url }).run();
           }}
-          title="Link"
+          title={t('FooterTextEditor.link')}
         >
           <Icon icon="lucide:link" className="h-4 w-4" />
         </Button>
@@ -443,7 +461,7 @@ export default function FooterTextEditor({
           size="sm"
           className="h-8 px-2"
           onClick={() => editor.chain().focus().setHorizontalRule().run()}
-          title="Trennlinie"
+          title={t('FooterTextEditor.horizontalRule')}
         >
           <Icon icon="lucide:minus" className="h-4 w-4" />
         </Button>
@@ -457,7 +475,7 @@ export default function FooterTextEditor({
           size="sm"
           className={`h-8 px-2 ${editor.isActive({ textAlign: 'left' }) ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
           onClick={() => editor.chain().focus().setTextAlign('left').run()}
-          title="Linksbündig"
+          title={t('FooterTextEditor.alignLeft')}
         >
           <Icon icon="lucide:align-left" className="h-4 w-4" />
         </Button>
@@ -467,7 +485,7 @@ export default function FooterTextEditor({
           size="sm"
           className={`h-8 px-2 ${editor.isActive({ textAlign: 'center' }) ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
           onClick={() => editor.chain().focus().setTextAlign('center').run()}
-          title="Zentriert"
+          title={t('FooterTextEditor.alignCenter')}
         >
           <Icon icon="lucide:align-center" className="h-4 w-4" />
         </Button>
@@ -477,7 +495,7 @@ export default function FooterTextEditor({
           size="sm"
           className={`h-8 px-2 ${editor.isActive({ textAlign: 'right' }) ? 'bg-accent text-white' : 'hover:bg-accent/10'}`}
           onClick={() => editor.chain().focus().setTextAlign('right').run()}
-          title="Rechtsbündig"
+          title={t('FooterTextEditor.alignRight')}
         >
           <Icon icon="lucide:align-right" className="h-4 w-4" />
         </Button>
@@ -489,7 +507,7 @@ export default function FooterTextEditor({
           size="sm"
           className="h-8 px-2"
           onClick={() => editor.chain().focus().liftListItem('listItem').run()}
-          title="Einzug verkleinern"
+          title={t('FooterTextEditor.outdent')}
         >
           <Icon icon="lucide:outdent" className="h-4 w-4" />
         </Button>
@@ -499,7 +517,7 @@ export default function FooterTextEditor({
           size="sm"
           className="h-8 px-2"
           onClick={() => editor.chain().focus().sinkListItem('listItem').run()}
-          title="Einzug vergrößern"
+          title={t('FooterTextEditor.indent')}
         >
           <Icon icon="lucide:indent" className="h-4 w-4" />
         </Button>
@@ -514,16 +532,16 @@ export default function FooterTextEditor({
               variant="ghost"
               size="sm"
               className={`h-8 px-3 ${selectedTemplate ? 'selected bg-accent text-white' : 'hover:bg-accent/10'}`}
-              title="Textvorlage"
+              title={t('FooterTextEditor.textTemplate')}
             >
-              <span className="select-none">Textvorlage</span>
+              <span className="select-none">{t('FooterTextEditor.textTemplate')}</span>
               <span className="caret ml-1" style={{ fontSize: '9pt' }}>
                 ▼
               </span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Textvorlagen</DropdownMenuLabel>
+            <DropdownMenuLabel>{t('FooterTextEditor.textTemplates')}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {companyId && objectType && textTemplates.length > 0 ? (
               <>
@@ -534,7 +552,11 @@ export default function FooterTextEditor({
                     className="flex items-center justify-between"
                   >
                     <span>{template.name}</span>
-                    {template.isDefault && <span className="text-accent text-xs">Standard</span>}
+                    {template.isDefault && (
+                      <span className="text-accent text-xs">
+                        {t('FooterTextEditor.defaultBadge')}
+                      </span>
+                    )}
                   </DropdownMenuItem>
                 ))}
                 <DropdownMenuSeparator />
@@ -543,12 +565,12 @@ export default function FooterTextEditor({
                   onClick={() => setTemplateModalOpen(true)}
                 >
                   <Icon icon="lucide:plus" className="mr-2 h-4 w-4" />
-                  Textvorlage erstellen
+                  {t('FooterTextEditor.createTextTemplate')}
                 </DropdownMenuItem>
               </>
             ) : (
               <DropdownMenuItem disabled className="text-gray-500">
-                Keine Textvorlagen verfügbar
+                {t('FooterTextEditor.noTextTemplates')}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
@@ -561,9 +583,9 @@ export default function FooterTextEditor({
           size="sm"
           className="h-8 px-3"
           onClick={() => setPlaceholderModalOpen(true)}
-          title="Platzhalter"
+          title={t('FooterTextEditor.placeholder')}
         >
-          <span className="select-none">Platzhalter</span>
+          <span className="select-none">{t('FooterTextEditor.placeholder')}</span>
           <span className="caret ml-1" style={{ fontSize: '9pt' }}>
             ▼
           </span>

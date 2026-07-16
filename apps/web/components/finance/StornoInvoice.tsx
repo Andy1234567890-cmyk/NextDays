@@ -28,6 +28,7 @@ import {
   Label,
   Textarea,
 } from '@tasko/ui';
+import { useTranslations } from 'next-intl';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -43,6 +44,7 @@ interface StornoInvoiceProps {
 }
 
 export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoiceProps) {
+  const t = useTranslations('finance');
   const [isCreatingStorno, setIsCreatingStorno] = useState(false);
   const [stornoReason, setStornoReason] = useState('');
   const [stornoInvoice, setStornoInvoice] = useState<InvoiceData | null>(null);
@@ -60,21 +62,21 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
 
   const getStatusBadge = (status: string) => {
     const statusConfig = {
-      draft: { label: 'Entwurf', variant: 'secondary' as const, icon: 'lucide:file-text' },
+      draft: { label: t('StornoInvoice.statusDraft'), variant: 'secondary' as const, icon: 'lucide:file-text' },
       finalized: {
-        label: 'Finalisiert',
+        label: t('StornoInvoice.statusFinalized'),
         variant: 'default' as const,
         icon: 'lucide:check-circle',
       },
-      sent: { label: 'Gesendet', variant: 'default' as const, icon: 'lucide:check-circle' },
-      paid: { label: 'Bezahlt', variant: 'default' as const, icon: 'lucide:check-circle' },
+      sent: { label: t('StornoInvoice.statusSent'), variant: 'default' as const, icon: 'lucide:check-circle' },
+      paid: { label: t('StornoInvoice.statusPaid'), variant: 'default' as const, icon: 'lucide:check-circle' },
       overdue: {
-        label: 'Überfällig',
+        label: t('StornoInvoice.statusOverdue'),
         variant: 'destructive' as const,
         icon: 'lucide:alert-triangle',
       },
-      cancelled: { label: 'Storniert', variant: 'secondary' as const, icon: 'lucide:x' },
-      storno: { label: 'Storno', variant: 'destructive' as const, icon: 'lucide:x' },
+      cancelled: { label: t('StornoInvoice.statusCancelled'), variant: 'secondary' as const, icon: 'lucide:x' },
+      storno: { label: t('StornoInvoice.statusStorno'), variant: 'destructive' as const, icon: 'lucide:x' },
     };
     const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
 
@@ -88,12 +90,12 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
 
   const handleCreateStorno = async () => {
     if (!stornoReason.trim()) {
-      toast.error('Bitte geben Sie einen Grund für die Stornorechnung an');
+      toast.error(t('StornoInvoice.reasonRequired'));
       return;
     }
 
     if (!user) {
-      toast.error('Sie müssen angemeldet sein');
+      toast.error(t('StornoInvoice.mustBeLoggedIn'));
       return;
     }
 
@@ -107,7 +109,7 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
       );
 
       setStornoInvoice(createdStornoInvoice);
-      toast.success('Storno-Rechnung erfolgreich erstellt');
+      toast.success(t('StornoInvoice.createSuccess'));
 
       if (onStornoCreated) {
         onStornoCreated(createdStornoInvoice);
@@ -117,7 +119,7 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
       setStornoReason('');
     } catch (error) {
       console.error('Storno creation error:', error);
-      toast.error('Fehler beim Erstellen der Storno-Rechnung');
+      toast.error(t('StornoInvoice.createError'));
     } finally {
       setIsCreatingStorno(false);
     }
@@ -125,17 +127,17 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
 
   const handleDownloadStornoPdf = async () => {
     if (!stornoInvoice) {
-      toast.error('Keine Storno-Rechnung verfügbar');
+      toast.error(t('StornoInvoice.noStornoAvailable'));
       return;
     }
     const el = stornoPreviewRef.current;
     if (!el) {
-      toast.error('Storno-Vorschau nicht bereit');
+      toast.error(t('StornoInvoice.previewNotReady'));
       return;
     }
 
     try {
-      toast.info('PDF wird erstellt...');
+      toast.info(t('StornoInvoice.pdfCreating'));
 
       // Styles der Seite einsammeln, damit das gerenderte Template im
       // headless-Renderer identisch aussieht (gleicher Weg wie SendDocumentModal).
@@ -185,11 +187,11 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
       });
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || 'PDF-Generierung fehlgeschlagen');
+        throw new Error(errorData.error || t('StornoInvoice.pdfGenerationFailed'));
       }
       const result = await response.json();
       if (!result.success || !result.pdfBase64) {
-        throw new Error('PDF-Generierung lieferte kein Dokument');
+        throw new Error(t('StornoInvoice.pdfNoDocument'));
       }
 
       // base64 → Blob → Download.
@@ -205,11 +207,13 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
       document.body.removeChild(link);
       window.URL.revokeObjectURL(pdfUrl);
 
-      toast.success('Storno-PDF erfolgreich heruntergeladen');
+      toast.success(t('StornoInvoice.pdfDownloadSuccess'));
     } catch (error) {
       console.error('PDF download error:', error);
       toast.error(
-        `PDF-Download fehlgeschlagen: ${error instanceof Error ? error.message : 'Unbekannter Fehler'}`,
+        t('StornoInvoice.pdfDownloadError', {
+          message: error instanceof Error ? error.message : t('StornoInvoice.unknownError'),
+        }),
       );
     }
   };
@@ -231,11 +235,10 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
         <CardContent className="pt-6">
           <div className="flex items-center gap-2 text-amber-600">
             <Icon icon="lucide:alert-triangle" className="h-5 w-5" />
-            <span className="font-medium">Diese Rechnung kann nicht storniert werden</span>
+            <span className="font-medium">{t('StornoInvoice.cannotBeStornedTitle')}</span>
           </div>
           <p className="mt-2 text-amber-600 text-sm">
-            Nur finalisierte, gesendete oder bezahlte Rechnungen können
-            storniert werden.
+            {t('StornoInvoice.cannotBeStornedDescription')}
           </p>
         </CardContent>
       </Card>
@@ -249,39 +252,39 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Icon icon="lucide:file-text" className="h-5 w-5" />
-            Original-Rechnung
+            {t('StornoInvoice.originalInvoiceTitle')}
           </CardTitle>
-          <CardDescription>Informationen zur zu stornierenden Rechnung</CardDescription>
+          <CardDescription>{t('StornoInvoice.originalInvoiceDescription')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Icon icon="lucide:hash" className="h-4 w-4 text-gray-500" />
-                <span className="font-medium">Rechnungsnummer:</span>
+                <span className="font-medium">{t('StornoInvoice.invoiceNumberLabel')}</span>
                 <span>{invoice.sequentialNumber}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Icon icon="lucide:calendar" className="h-4 w-4 text-gray-500" />
-                <span className="font-medium">Datum:</span>
+                <span className="font-medium">{t('StornoInvoice.dateLabel')}</span>
                 <span>{formatDate(invoice.issueDate)}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Icon icon="lucide:user" className="h-4 w-4 text-gray-500" />
-                <span className="font-medium">Kunde:</span>
+                <span className="font-medium">{t('StornoInvoice.customerLabel')}</span>
                 <span>{invoice.customerName}</span>
               </div>
             </div>
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <Icon icon="lucide:banknote" className="h-4 w-4 text-gray-500" />
-                <span className="font-medium">Betrag:</span>
+                <span className="font-medium">{t('StornoInvoice.amountLabel')}</span>
                 <span className="font-bold text-lg">
                   {formatCurrency(invoice.total, invoice.currency)}
                 </span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-medium">Status:</span>
+                <span className="font-medium">{t('StornoInvoice.statusLabel')}</span>
                 {getStatusBadge(invoice.status)}
               </div>
             </div>
@@ -294,25 +297,24 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-red-600">
             <Icon icon="lucide:x" className="h-5 w-5" />
-            Storno-Rechnung erstellen
+            {t('StornoInvoice.createCardTitle')}
           </CardTitle>
           <CardDescription>
-            Erstellen Sie eine Storno-Rechnung für die oben genannte Original-Rechnung
+            {t('StornoInvoice.createCardDescription')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="stornoReason">Grund für die Stornorechnung *</Label>
+            <Label htmlFor="stornoReason">{t('StornoInvoice.reasonFieldLabel')}</Label>
             <Textarea
               id="stornoReason"
-              placeholder="Geben Sie hier den Grund für die Stornorechnung ein..."
+              placeholder={t('StornoInvoice.reasonPlaceholder')}
               value={stornoReason}
               onChange={e => setStornoReason(e.target.value)}
               className="min-h-25"
             />
             <p className="text-gray-500 text-sm">
-              Der Stornogrund wird auf der Stornorechnung vermerkt und ist für die Buchhaltung
-              erforderlich.
+              {t('StornoInvoice.reasonHint')}
             </p>
           </div>
 
@@ -321,13 +323,13 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
               <Icon icon="lucide:alert-triangle" className="mt-0.5 h-5 w-5 shrink-0 text-red-600" />
               <div>
                 <h4 className="mb-1 font-medium text-red-800">
-                  Wichtige Hinweise zur Stornorechnung
+                  {t('StornoInvoice.importantNoticeTitle')}
                 </h4>
                 <ul className="space-y-1 text-red-700 text-sm">
-                  <li>• Die Storno-Rechnung erhält eine neue, fortlaufende Rechnungsnummer</li>
-                  <li>• Alle Beträge werden negativ ausgewiesen (Gutschrift)</li>
-                  <li>• Die Original-Rechnung wird als &quot;Storniert&quot; markiert</li>
-                  <li>• Der Vorgang kann nicht rückgängig gemacht werden</li>
+                  <li>• {t('StornoInvoice.noticeNewNumber')}</li>
+                  <li>• {t('StornoInvoice.noticeNegativeAmounts')}</li>
+                  <li>• {t('StornoInvoice.noticeOriginalMarked')}</li>
+                  <li>• {t('StornoInvoice.noticeIrreversible')}</li>
                 </ul>
               </div>
             </div>
@@ -342,34 +344,35 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
                   className="flex-1"
                 >
                   <Icon icon="lucide:x" className="mr-2 h-4 w-4" />
-                  {isCreatingStorno ? 'Erstelle Storno...' : 'Storno-Rechnung erstellen'}
+                  {isCreatingStorno ? t('StornoInvoice.creatingStorno') : t('StornoInvoice.createButton')}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle className="flex items-center gap-2 text-red-600">
                     <Icon icon="lucide:alert-triangle" className="h-5 w-5" />
-                    Stornorechnung erstellen
+                    {t('StornoInvoice.confirmDialogTitle')}
                   </AlertDialogTitle>
                   <AlertDialogDescription>
-                    Sind Sie sicher, dass Sie die Rechnung{' '}
-                    <strong>{invoice.sequentialNumber}</strong> stornieren möchten?
+                    {t('StornoInvoice.confirmDialogQuestionPrefix')}{' '}
+                    <strong>{invoice.sequentialNumber}</strong>{' '}
+                    {t('StornoInvoice.confirmDialogQuestionSuffix')}
                     <br />
                     <br />
-                    <strong>Grund:</strong> {stornoReason}
+                    <strong>{t('StornoInvoice.confirmDialogReasonLabel')}</strong> {stornoReason}
                     <br />
                     <br />
-                    Diese Aktion kann nicht rückgängig gemacht werden.
+                    {t('StornoInvoice.confirmDialogIrreversible')}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+                  <AlertDialogCancel>{t('StornoInvoice.cancelButton')}</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleCreateStorno}
                     className="bg-red-600 hover:bg-red-700"
                     disabled={isCreatingStorno}
                   >
-                    {isCreatingStorno ? 'Erstelle...' : 'Stornorechnung erstellen'}
+                    {isCreatingStorno ? t('StornoInvoice.creating') : t('StornoInvoice.confirmCreateButton')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
@@ -384,34 +387,34 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-green-700">
               <Icon icon="lucide:check-circle" className="h-5 w-5" />
-              Storno-Rechnung erfolgreich erstellt
+              {t('StornoInvoice.resultCardTitle')}
             </CardTitle>
-            <CardDescription>Die Storno-Rechnung wurde erstellt und gespeichert</CardDescription>
+            <CardDescription>{t('StornoInvoice.resultCardDescription')}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Icon icon="lucide:hash" className="h-4 w-4 text-gray-500" />
-                  <span className="font-medium">Storno-Nummer:</span>
+                  <span className="font-medium">{t('StornoInvoice.stornoNumberLabel')}</span>
                   <span className="font-bold">{stornoInvoice.sequentialNumber}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Icon icon="lucide:calendar" className="h-4 w-4 text-gray-500" />
-                  <span className="font-medium">Erstellt am:</span>
+                  <span className="font-medium">{t('StornoInvoice.createdAtLabel')}</span>
                   <span>{formatDate(stornoInvoice.issueDate)}</span>
                 </div>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Icon icon="lucide:banknote" className="h-4 w-4 text-gray-500" />
-                  <span className="font-medium">Storno-Betrag:</span>
+                  <span className="font-medium">{t('StornoInvoice.stornoAmountLabel')}</span>
                   <span className="font-bold text-red-600">
                     {formatCurrency(stornoInvoice.total, stornoInvoice.currency)}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium">Status:</span>
+                  <span className="font-medium">{t('StornoInvoice.statusLabel')}</span>
                   {getStatusBadge(stornoInvoice.status)}
                 </div>
               </div>
@@ -422,13 +425,15 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
                 <DialogTrigger asChild>
                   <Button variant="outline" className="flex-1">
                     <Icon icon="lucide:eye" className="mr-2 h-4 w-4" />
-                    Storno-Rechnung anzeigen
+                    {t('StornoInvoice.showStornoButton')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>Storno-Rechnung {stornoInvoice.sequentialNumber}</DialogTitle>
-                    <DialogDescription>Vorschau der erstellten Storno-Rechnung</DialogDescription>
+                    <DialogTitle>
+                      {t('StornoInvoice.previewDialogTitle', { number: stornoInvoice.sequentialNumber || '' })}
+                    </DialogTitle>
+                    <DialogDescription>{t('StornoInvoice.previewDialogDescription')}</DialogDescription>
                   </DialogHeader>
                   <div className="mt-4" ref={stornoPreviewRef}>
                     {/* documentType explizit als 'cancellation' setzen: das Storno-
@@ -442,14 +447,14 @@ export default function StornoInvoice({ invoice, onStornoCreated }: StornoInvoic
                   </div>
                   <DialogFooter>
                     <Button variant="outline" onClick={() => setShowStornoPreview(false)}>
-                      Schließen
+                      {t('StornoInvoice.closeButton')}
                     </Button>
                     <Button
                       className="bg-accent hover:bg-accent/90"
                       onClick={handleDownloadStornoPdf}
                     >
                       <Icon icon="lucide:download" className="mr-2 h-4 w-4" />
-                      PDF herunterladen
+                      {t('StornoInvoice.downloadPdfButton')}
                     </Button>
                   </DialogFooter>
                 </DialogContent>

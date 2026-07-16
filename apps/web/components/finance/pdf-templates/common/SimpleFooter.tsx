@@ -1,4 +1,7 @@
+'use client';
+
 import type React from 'react';
+import { useTranslations } from 'next-intl';
 import type { ProcessedPDFData } from '@/hooks/pdf/usePDFTemplateData';
 import { InvoiceFooter } from './InvoiceFooter';
 
@@ -17,6 +20,7 @@ export const SimpleFooter: React.FC<PageFooterProps> = ({
   currentPage = 1,
   totalPages = 1,
 }) => {
+  const t = useTranslations('finance');
   const d = data as any;
   const footerData = {
     companyName: d.companyName || ' ',
@@ -48,8 +52,9 @@ export const SimpleFooter: React.FC<PageFooterProps> = ({
       <InvoiceFooter data={footerData} color={color} />
       {showPageNumbers && (
         <div className="mt-1 text-center text-gray-500 text-xs">
-          Seite {currentPage}
-          {totalPages > 1 ? ` von ${totalPages}` : ''}
+          {totalPages > 1
+            ? t('SimpleFooter.pageOf', { currentPage, totalPages })
+            : t('SimpleFooter.page', { currentPage })}
         </div>
       )}
     </div>

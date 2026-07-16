@@ -1,10 +1,13 @@
+import { getTranslations } from "next-intl/server";
 import { ComingSoon } from "@/components/ui/coming-soon";
 
-export default function MahnwesenPage() {
+export default async function MahnwesenPage() {
+  const t = await getTranslations("finance");
+
   return (
     <ComingSoon
-      title="Mahnwesen"
-      description="Offene Posten und Mahnungen."
+      title={t("mahnwesenPage.mahnwesenTitle")}
+      description={t("mahnwesenPage.mahnwesenDescription")}
       icon="ph:warning-circle"
     />
   );

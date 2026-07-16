@@ -8,6 +8,7 @@
 
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Script from 'next/script';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import type { Customer as CustomerType } from '@/components/finance/AddCustomerModal';
@@ -48,6 +49,7 @@ import { useNextInvoiceNumber } from '@/hooks/useNextInvoiceNumber';
 import { InventoryService } from '@/services/inventoryService';
 
 export default function CreateQuotePage() {
+  const t = useTranslations('finance');
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -171,16 +173,15 @@ export default function CreateQuotePage() {
     invoiceDate: new Date().toISOString().split('T')[0],
     deliveryDate: new Date().toISOString().split('T')[0],
     servicePeriod: '', // Lieferzeitraum/Leistungszeitraum
-    headTextHtml: '[%VOLLEANREDE%],\n\n[%INVOICE_INTRO_TEXT%]',
-    footerText:
-      'Wir bitten Sie, den Rechnungsbetrag von [%GESAMTBETRAG%] unter Angabe der Rechnungsnummer [%RECHNUNGSNUMMER%] auf das unten angegebene Konto zu überweisen. Zahlungsziel: [%ZAHLUNGSZIEL%] Rechnungsdatum: [%RECHNUNGSDATUM%] Vielen Dank für Ihr Vertrauen und die angenehme Zusammenarbeit!<br>Mit freundlichen Grüßen<br>[%KONTAKTPERSON%]',
+    headTextHtml: t('container.defaultHeadTextHtml'),
+    footerText: t('container.defaultFooterText'),
     notes: '',
     // Leer = "noch nicht gesetzt" (Wurzel 4: kein EUR-Seed als Doppel-Sentinel).
     // use-invoice-loaders uebernimmt dann company.defaultCurrency.
     currency: '',
     internalContactPerson: '',
     deliveryTerms: '',
-    paymentTerms: 'Zahlbar binnen 14 Tagen ohne Abzug',
+    paymentTerms: t('container.defaultPaymentTerms'),
     taxRule: TaxRuleType.DE_TAXABLE,
     // Skonto-Felder
     skontoEnabled: false,
@@ -196,7 +197,7 @@ export default function CreateQuotePage() {
         typeof crypto !== 'undefined' && 'randomUUID' in crypto
           ? crypto.randomUUID()
           : Math.random().toString(36).slice(2),
-      description: 'Übernachtung',
+      description: t('container.defaultItemDescription'),
       quantity: 1,
       unitPrice: 0,
       total: 0,
@@ -263,7 +264,7 @@ export default function CreateQuotePage() {
     const res = await getInvoicePreview(rid);
     if (res.ok) {
       applyReservationPreview(res.data);
-      toast.success('Buchung übernommen — Positionen aus Aufenthalt und Zusatzleistungen.');
+      toast.success(t('container.reservationApplied'));
     } else {
       // Klartext vom Backend (z. B. „noch nicht eingecheckt", „Rechnung
       // existiert bereits", „Übernachtungs-Steuersatz fehlt").
@@ -451,8 +452,8 @@ export default function CreateQuotePage() {
     return (
       <div className="flex min-h-100 items-center justify-center">
         <div className="text-center">
-          <h2 className="mb-2 font-semibold text-gray-900 text-xl">Zugriff verweigert</h2>
-          <p className="text-gray-600">Sie sind nicht berechtigt, diese Seite zu sehen.</p>
+          <h2 className="mb-2 font-semibold text-gray-900 text-xl">{t('container.accessDeniedTitle')}</h2>
+          <p className="text-gray-600">{t('container.accessDeniedBody')}</p>
         </div>
       </div>
     );
@@ -632,11 +633,11 @@ export default function CreateQuotePage() {
               );
             }
 
-            toast.success('Produkt angelegt und Position verknüpft');
+            toast.success(t('container.productCreated'));
             setCreateProductOpen(false);
           } catch (err) {
             console.error(err);
-            toast.error('Produkt konnte nicht angelegt werden');
+            toast.error(t('container.productCreateFailed'));
           } finally {
             setCreatingProduct(false);
           }
@@ -679,7 +680,7 @@ export default function CreateQuotePage() {
                 companyId: uid,
               }));
             setCustomers(loadedCustomers);
-            toast.success('Kunde erfolgreich erstellt');
+            toast.success(t('container.customerCreated'));
           } catch (error) {
             console.error('Fehler beim Aktualisieren der Kundenliste:', error);
           }
@@ -704,17 +705,17 @@ export default function CreateQuotePage() {
 
             // Then handle the sending logic
             if (method === 'email') {
-              toast.success('Rechnung wurde gespeichert und E-Mail-Versand wird vorbereitet');
+              toast.success(t('container.sendEmailPrepared'));
             } else if (method === 'download') {
-              toast.success('PDF-Download wird vorbereitet');
+              toast.success(t('container.sendDownloadPrepared'));
             } else if (method === 'print') {
-              toast.success('Druckvorbereitung abgeschlossen');
+              toast.success(t('container.sendPrintPrepared'));
             } else if (method === 'save') {
               // Save action - already handled in SendDocumentModal
-              toast.success('Rechnung erfolgreich gespeichert');
+              toast.success(t('container.sendSaved'));
             } else if (method === 'post') {
               // Post action - already handled in SendDocumentModal
-              toast.success('Per Post versenden wurde bearbeitet');
+              toast.success(t('container.sendPostHandled'));
             }
 
             // Zur Rechnungsliste (die Alt-Route /dashboard/company/… existiert
@@ -722,7 +723,7 @@ export default function CreateQuotePage() {
             router.push('/buchhaltung');
           } catch (error) {
             console.error('Error sending document:', error);
-            toast.error('Fehler beim Versenden der Rechnung');
+            toast.error(t('container.sendFailed'));
           }
         }}
         showLivePreview={showLivePreview}

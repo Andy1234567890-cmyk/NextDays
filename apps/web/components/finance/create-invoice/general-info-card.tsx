@@ -33,6 +33,7 @@ import {
 } from '@tasko/ui';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
+import { useTranslations } from 'next-intl';
 import { type Dispatch, type SetStateAction, useState } from 'react';
 import { toast } from 'sonner';
 import type { Customer as CustomerType } from '@/components/finance/AddCustomerModal';
@@ -57,13 +58,16 @@ export function InvoiceHeaderBar({
   setShowLivePreview: Dispatch<SetStateAction<boolean>>;
   handleOpenSendModal: () => void;
 }) {
+  const t = useTranslations('finance');
   return (
     <header className="w-full" style={{ maxWidth: '1440px' }}>
       <div className="flex items-center justify-between border-gray-200 border-b py-4">
         {/* Left side - Title */}
         <div className="flex items-center">
           <div>
-            <h2 className="font-bold text-2xl text-gray-900">Neue Rechnung</h2>
+            <h2 className="font-bold text-2xl text-gray-900">
+              {t('generalInfoCard.newInvoiceTitle')}
+            </h2>
           </div>
         </div>
 
@@ -81,7 +85,9 @@ export function InvoiceHeaderBar({
                 className=""
               />
 
-              <span className="font-medium text-gray-700 text-sm">E-Rechnung</span>
+              <span className="font-medium text-gray-700 text-sm">
+                {t('generalInfoCard.eInvoice')}
+              </span>
             </div>
           </div>
 
@@ -101,7 +107,7 @@ export function InvoiceHeaderBar({
               ) : (
                 <Icon icon="lucide:save" className="mr-2 h-4 w-4" />
               )}
-              Als Entwurf speichern
+              {t('generalInfoCard.saveAsDraft')}
             </Button>
 
             <Button
@@ -111,7 +117,7 @@ export function InvoiceHeaderBar({
               className="border-accent text-accent hover:bg-accent hover:text-white"
             >
               <Icon icon="lucide:eye" className="mr-2 h-4 w-4" />
-              Live-Vorschau
+              {t('generalInfoCard.livePreview')}
             </Button>
 
             <Button
@@ -125,7 +131,7 @@ export function InvoiceHeaderBar({
               ) : (
                 <Icon icon="lucide:send" className="mr-2 h-4 w-4" />
               )}
-              Rechnung erstellen
+              {t('generalInfoCard.createInvoice')}
             </Button>
 
             {/* More Options Dropdown */}
@@ -138,7 +144,7 @@ export function InvoiceHeaderBar({
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem
                   onClick={() => {
-                    toast.success('Aufgabe erstellen - Feature wird implementiert');
+                    toast.success(t('generalInfoCard.createTaskComingSoon'));
                   }}
                   className="w-full"
                 >
@@ -148,13 +154,13 @@ export function InvoiceHeaderBar({
                       className="w-full justify-center bg-accent text-white hover:bg-accent/90"
                       size="sm"
                     >
-                      Aufgabe erstellen
+                      {t('generalInfoCard.createTask')}
                     </Button>
                   </div>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => {
-                    toast.success('Löschen - Feature wird implementiert');
+                    toast.success(t('generalInfoCard.deleteComingSoon'));
                   }}
                   className="w-full"
                 >
@@ -164,7 +170,7 @@ export function InvoiceHeaderBar({
                       className="w-full justify-center bg-gray-600 text-white hover:bg-gray-700"
                       size="sm"
                     >
-                      Löschen
+                      {t('generalInfoCard.delete')}
                     </Button>
                   </div>
                 </DropdownMenuItem>
@@ -232,6 +238,7 @@ export default function GeneralInfoCard({
   // Lokale UI-States (lebten vorher im selben JSX-Block)
   const [showAddressAddition, setShowAddressAddition] = useState(false);
   const [deliveryDatePopoverOpen, setDeliveryDatePopoverOpen] = useState(false);
+  const t = useTranslations('finance');
 
   return (
     <>
@@ -240,7 +247,7 @@ export default function GeneralInfoCard({
         <CardHeader>
           <CardTitle className="flex items-center">
             <Icon icon="lucide:user" className="mr-2 h-5 w-5 text-accent" />
-            Allgemeine Angaben
+            {t('generalInfoCard.title')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -249,11 +256,15 @@ export default function GeneralInfoCard({
             {/* Empfänger Sektion - Links */}
             <div className="space-y-4">
               <div>
-                <h3 className="mb-4 font-semibold text-gray-900 text-lg">Empfänger</h3>
+                <h3 className="mb-4 font-semibold text-gray-900 text-lg">
+                  {t('generalInfoCard.recipient')}
+                </h3>
 
                 {/* Kontakttyp Toggle */}
                 <div className="mb-4 flex items-center gap-2">
-                  <Label className="font-medium text-gray-700 text-sm">Kontakt</Label>
+                  <Label className="font-medium text-gray-700 text-sm">
+                    {t('generalInfoCard.contact')}
+                  </Label>
                   <span className="text-red-500">*</span>
                   <div className="ml-auto flex">
                     <Button
@@ -266,7 +277,7 @@ export default function GeneralInfoCard({
                         }`}
                       onClick={() => setContactType('organisation')}
                     >
-                      Organisation
+                      {t('generalInfoCard.organisation')}
                     </Button>
                     <Button
                       type="button"
@@ -278,7 +289,7 @@ export default function GeneralInfoCard({
                         }`}
                       onClick={() => setContactType('person')}
                     >
-                      Person
+                      {t('generalInfoCard.person')}
                     </Button>
                   </div>
                 </div>
@@ -305,7 +316,7 @@ export default function GeneralInfoCard({
                             setShowCustomerSearchPopup(false);
                           }
                         }}
-                        placeholder="Name der Organisation"
+                        placeholder={t('generalInfoCard.organisationNamePlaceholder')}
                         className={`flex-1 ${getFieldErrorClass('customerName')}`}
                         required
                       />
@@ -342,7 +353,7 @@ export default function GeneralInfoCard({
                               setShowCustomerSearchPopup(false);
                             }}
                           >
-                            + Neuen Kunden &quot;{formData.customerName}&quot; erstellen
+                            {t('generalInfoCard.createNewCustomer', { name: formData.customerName })}
                           </div>
                         </div>
                       )}
@@ -352,7 +363,9 @@ export default function GeneralInfoCard({
                     <div className="customer-search-container relative">
                       <div className="mb-3 grid grid-cols-2 gap-3">
                         <div>
-                          <Label className="font-medium text-gray-700 text-sm">Vorname</Label>
+                          <Label className="font-medium text-gray-700 text-sm">
+                            {t('generalInfoCard.firstName')}
+                          </Label>
                           <span className="text-red-500">*</span>
                           <Input
                             type="text"
@@ -375,13 +388,15 @@ export default function GeneralInfoCard({
                                 setShowCustomerSearchPopup(false);
                               }
                             }}
-                            placeholder="Vorname"
+                            placeholder={t('generalInfoCard.firstName')}
                             className={getFieldErrorClass('customerName')}
                             required
                           />
                         </div>
                         <div>
-                          <Label className="font-medium text-gray-700 text-sm">Nachname</Label>
+                          <Label className="font-medium text-gray-700 text-sm">
+                            {t('generalInfoCard.lastName')}
+                          </Label>
                           <span className="text-red-500">*</span>
                           <Input
                             type="text"
@@ -404,7 +419,7 @@ export default function GeneralInfoCard({
                                 setShowCustomerSearchPopup(false);
                               }
                             }}
-                            placeholder="Nachname"
+                            placeholder={t('generalInfoCard.lastName')}
                             className={getFieldErrorClass('customerName')}
                             required
                           />
@@ -462,7 +477,7 @@ export default function GeneralInfoCard({
                               setShowCustomerSearchPopup(false);
                             }}
                           >
-                            + Neuen Kunden &quot;{formData.customerName}&quot; erstellen
+                            {t('generalInfoCard.createNewCustomer', { name: formData.customerName })}
                           </div>
                         </div>
                       )}
@@ -474,7 +489,9 @@ export default function GeneralInfoCard({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
-                      <Label className="font-medium text-gray-700 text-sm">Anschrift</Label>
+                      <Label className="font-medium text-gray-700 text-sm">
+                        {t('generalInfoCard.address')}
+                      </Label>
                       <span className="text-red-500">*</span>
                     </div>
                     <button
@@ -482,13 +499,13 @@ export default function GeneralInfoCard({
                       className="font-medium text-accent text-sm hover:text-accent/90"
                       onClick={() => setShowAddressAddition(true)}
                     >
-                      Adresszusatz +
+                      {t('generalInfoCard.addressAddition')}
                     </button>
                   </div>
 
                   {/* Straße und Hausnummer */}
                   <Input
-                    placeholder="Straße und Hausnummer"
+                    placeholder={t('generalInfoCard.streetAndNumberPlaceholder')}
                     value={formData.customerAddress?.split('\n')[0] || ''}
                     onChange={e => {
                       const lines = formData.customerAddress?.split('\n') || ['', '', '', ''];
@@ -502,7 +519,7 @@ export default function GeneralInfoCard({
                   {showAddressAddition && (
                     <div className="relative">
                       <Input
-                        placeholder="Adresszusatz (z.B. c/o, Abteilung, etc.)"
+                        placeholder={t('generalInfoCard.addressAdditionPlaceholder')}
                         value={formData.customerAddress?.split('\n')[1] || ''}
                         onChange={e => {
                           const lines = formData.customerAddress?.split('\n') || ['', '', '', ''];
@@ -523,7 +540,7 @@ export default function GeneralInfoCard({
                           lines[1] = ''; // Leere den Adresszusatz
                           setFormData(prev => ({ ...prev, customerAddress: lines.join('\n') }));
                         }}
-                        title="Adresszusatz entfernen"
+                        title={t('generalInfoCard.removeAddressAddition')}
                       >
                         <svg
                           width="12"
@@ -543,7 +560,7 @@ export default function GeneralInfoCard({
                   {/* PLZ und Ort */}
                   <div className="grid grid-cols-2 gap-3">
                     <Input
-                      placeholder="Postleitzahl"
+                      placeholder={t('generalInfoCard.postalCodePlaceholder')}
                       value={
                         formData.customerAddress
                           ?.split('\n')
@@ -560,7 +577,7 @@ export default function GeneralInfoCard({
                     />
 
                     <Input
-                      placeholder="Ort"
+                      placeholder={t('generalInfoCard.cityPlaceholder')}
                       value={
                         formData.customerAddress
                           ?.split('\n')
@@ -593,7 +610,7 @@ export default function GeneralInfoCard({
                     }}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Bitte auswählen" />
+                      <SelectValue placeholder={t('generalInfoCard.pleaseSelect')} />
                     </SelectTrigger>
                     <SelectContent>
                       {COUNTRIES.map(country => (
@@ -611,7 +628,7 @@ export default function GeneralInfoCard({
             <div className="space-y-4">
               <div>
                 <h3 className="mb-4 font-semibold text-gray-900 text-lg">
-                  Rechnungsinformationen
+                  {t('generalInfoCard.invoiceInformation')}
                 </h3>
 
                 {/* 2x2 Grid für Rechnungsfelder */}
@@ -619,7 +636,9 @@ export default function GeneralInfoCard({
                   {/* Rechnungsdatum */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-1">
-                      <Label className="font-medium text-gray-700 text-sm">Rechnungsdatum</Label>
+                      <Label className="font-medium text-gray-700 text-sm">
+                        {t('generalInfoCard.invoiceDate')}
+                      </Label>
                       <span className="text-red-500">*</span>
                     </div>
                     <Input
@@ -648,7 +667,7 @@ export default function GeneralInfoCard({
                             setDeliveryDateRange({});
                           }}
                         >
-                          Leistungsdatum
+                          {t('generalInfoCard.serviceDate')}
                         </Label>
                         <span className="text-red-500">*</span>
                       </div>
@@ -662,7 +681,7 @@ export default function GeneralInfoCard({
                           setFormData(prev => ({ ...prev, deliveryDate: '' }));
                         }}
                       >
-                        Aufenthalt / Zeitraum
+                        {t('generalInfoCard.stayOrPeriod')}
                       </button>
                     </div>
 
@@ -701,7 +720,7 @@ export default function GeneralInfoCard({
                                 format(deliveryDateRange.from, 'dd.MM.yyyy', { locale: de })
                               )
                             ) : (
-                              'Zeitraum auswählen'
+                              t('generalInfoCard.selectPeriod')
                             )}
                           </Button>
                         </PopoverTrigger>
@@ -738,19 +757,21 @@ export default function GeneralInfoCard({
                   {/* Rechnungsnummer */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-1">
-                      <Label className="font-medium text-gray-700 text-sm">Rechnungsnummer</Label>
+                      <Label className="font-medium text-gray-700 text-sm">
+                        {t('generalInfoCard.invoiceNumber')}
+                      </Label>
                       <span className="text-red-500">*</span>
                     </div>
                     <div className="relative">
                       <Input
                         placeholder={
                           nextNumberLoading
-                            ? 'Lädt nächste Rechnungsnummer...'
+                            ? t('generalInfoCard.loadingNextInvoiceNumber')
                             : nextNumberError
-                              ? `Fehler beim Laden: ${nextNumberError}`
+                              ? t('generalInfoCard.loadingError', { error: nextNumberError })
                               : nextInvoiceNumber
                                 ? `${nextInvoiceNumber}`
-                                : 'Wird beim Speichern automatisch vergeben'
+                                : t('generalInfoCard.assignedAutomaticallyOnSave')
                         }
                         value={
                           formData.title ||
@@ -761,7 +782,7 @@ export default function GeneralInfoCard({
                         onChange={e => setFormData(prev => ({ ...prev, title: e.target.value }))}
                         className="bg-gray-50 pr-10 text-gray-600"
                         readOnly
-                        title="Die Rechnungsnummer wird beim Speichern automatisch vergeben, um doppelte Nummern zu verhindern."
+                        title={t('generalInfoCard.invoiceNumberAutoAssignHint')}
                       />
 
                       <Button
@@ -788,9 +809,11 @@ export default function GeneralInfoCard({
 
                   {/* Referenznummer */}
                   <div className="space-y-2">
-                    <Label className="font-medium text-gray-700 text-sm">Referenznummer</Label>
+                    <Label className="font-medium text-gray-700 text-sm">
+                      {t('generalInfoCard.referenceNumber')}
+                    </Label>
                     <Input
-                      placeholder="Optional"
+                      placeholder={t('generalInfoCard.optional')}
                       value={formData.customerOrderNumber}
                       onChange={e =>
                         setFormData(prev => ({ ...prev, customerOrderNumber: e.target.value }))
@@ -801,7 +824,9 @@ export default function GeneralInfoCard({
 
                 {/* Zahlungsziel - Ganze Zeile */}
                 <div className="space-y-2">
-                  <Label className="font-medium text-gray-700 text-sm">Zahlungsziel</Label>
+                  <Label className="font-medium text-gray-700 text-sm">
+                    {t('generalInfoCard.paymentTerm')}
+                  </Label>
                   <div className="flex items-center gap-2">
                     <Input
                       type="date"
@@ -810,7 +835,7 @@ export default function GeneralInfoCard({
                       className="flex-1"
                     />
 
-                    <span className="text-gray-500 text-sm">in</span>
+                    <span className="text-gray-500 text-sm">{t('generalInfoCard.in')}</span>
                     <Input
                       type="number"
                       placeholder="14"
@@ -819,7 +844,7 @@ export default function GeneralInfoCard({
                       className="w-16 text-center"
                     />
 
-                    <span className="text-gray-500 text-sm">Tagen</span>
+                    <span className="text-gray-500 text-sm">{t('generalInfoCard.days')}</span>
                   </div>
                 </div>
               </div>

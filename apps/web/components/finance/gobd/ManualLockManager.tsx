@@ -18,6 +18,7 @@ import {
 } from '@tasko/ui';
 import { format } from 'date-fns';
 import { de } from 'date-fns/locale';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -31,6 +32,7 @@ interface ManualLockManagerProps {
 }
 
 export function ManualLockManager({ companyId, onLockComplete }: ManualLockManagerProps) {
+  const t = useTranslations('finance');
   const { user } = useNewAuth();
   const [selectedPeriod, setSelectedPeriod] = useState(() => {
     const now = new Date();
@@ -79,7 +81,7 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
       setDocuments(mockDocuments);
     } catch (error) {
       console.error('Failed to load documents:', error);
-      toast.error('Dokumente konnten nicht geladen werden');
+      toast.error(t('ManualLockManager.loadError'));
     } finally {
       setLoading(false);
     }
@@ -91,7 +93,7 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
 
   const lockPeriod = async () => {
     if (!user) {
-      toast.error('Benutzer nicht authentifiziert');
+      toast.error(t('ManualLockManager.notAuthenticated'));
       return;
     }
 
@@ -101,7 +103,9 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
         companyId,
         selectedPeriod,
         user.uid,
-        `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || 'Unbekannt',
+        `${user.first_name || ''} ${user.last_name || ''}`.trim() ||
+          user.email ||
+          t('ManualLockManager.unknownUser'),
       );
 
       if (periodLock) {
@@ -125,8 +129,8 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
           companyId,
           docId,
           user?.uid || 'unknown',
-          `${user?.first_name} ${user?.last_name}` || 'Unknown User',
-          'Manuell festgeschrieben',
+          `${user?.first_name} ${user?.last_name}` || t('ManualLockManager.unknownUser'),
+          t('ManualLockManager.manualLockReason'),
         ),
       );
 
@@ -179,13 +183,13 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Icon icon="lucide:calendar" className="h-5 w-5 text-accent" />
-            Zeitraum-Festschreibung
+            {t('ManualLockManager.periodLockTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
-              <Label htmlFor="period">Monat auswählen</Label>
+              <Label htmlFor="period">{t('ManualLockManager.selectMonth')}</Label>
               <Input
                 id="period"
                 type="month"
@@ -203,12 +207,12 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
                 {lockingPeriod ? (
                   <>
                     <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />
-                    Schreibe fest...
+                    {t('ManualLockManager.locking')}
                   </>
                 ) : (
                   <>
                     <Icon icon="lucide:lock" className="mr-2 h-4 w-4" />
-                    Monat festschreiben
+                    {t('ManualLockManager.lockMonth')}
                   </>
                 )}
               </Button>
@@ -219,17 +223,17 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-center">
               <div className="font-bold text-2xl text-blue-600">{documents.length}</div>
-              <p className="text-blue-700 text-sm">Gesamt-Dokumente</p>
+              <p className="text-blue-700 text-sm">{t('ManualLockManager.totalDocuments')}</p>
             </div>
             <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 text-center">
               <div className="font-bold text-2xl text-orange-600">{unlockedCount}</div>
-              <p className="text-orange-700 text-sm">Noch nicht festgeschrieben</p>
+              <p className="text-orange-700 text-sm">{t('ManualLockManager.notYetLocked')}</p>
             </div>
             <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-center">
               <div className="font-bold text-2xl text-green-600">
                 {formatCurrency(totalAmount)}
               </div>
-              <p className="text-green-700 text-sm">Offener Betrag</p>
+              <p className="text-green-700 text-sm">{t('ManualLockManager.openAmount')}</p>
             </div>
           </div>
 
@@ -237,9 +241,9 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
             <Alert className="border-green-200 bg-green-50">
               <Icon icon="lucide:check-circle" className="h-4 w-4 text-green-600" />
               <AlertDescription className="text-green-800">
-                Alle Dokumente für{' '}
-                {format(new Date(`${selectedPeriod}-01`), 'MMMM yyyy', { locale: de })}
-                sind bereits festgeschrieben.
+                {t('ManualLockManager.allLockedForPeriod', {
+                  period: format(new Date(`${selectedPeriod}-01`), 'MMMM yyyy', { locale: de }),
+                })}
               </AlertDescription>
             </Alert>
           )}
@@ -252,7 +256,7 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Icon icon="lucide:file-text" className="h-5 w-5 text-accent" />
-              Dokumente verwalten
+              {t('ManualLockManager.manageDocuments')}
             </div>
             <div className="flex gap-2">
               {selectedDocuments.size > 0 && (
@@ -265,12 +269,12 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
                   {lockingIndividual ? (
                     <>
                       <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />
-                      Schreibe fest...
+                      {t('ManualLockManager.locking')}
                     </>
                   ) : (
                     <>
                       <Icon icon="lucide:lock" className="mr-2 h-4 w-4" />
-                      Auswahl festschreiben ({selectedDocuments.size})
+                      {t('ManualLockManager.lockSelection', { count: selectedDocuments.size })}
                     </>
                   )}
                 </Button>
@@ -288,7 +292,7 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
                   className="absolute top-3 left-3 h-4 w-4 text-gray-400"
                 />
                 <Input
-                  placeholder="Dokumentnummer suchen..."
+                  placeholder={t('ManualLockManager.searchPlaceholder')}
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -301,21 +305,21 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
                 size="sm"
                 onClick={() => setFilterStatus('all')}
               >
-                Alle
+                {t('ManualLockManager.filterAll')}
               </Button>
               <Button
                 variant={filterStatus === 'unlocked' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setFilterStatus('unlocked')}
               >
-                Offen
+                {t('ManualLockManager.filterOpen')}
               </Button>
               <Button
                 variant={filterStatus === 'locked' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setFilterStatus('locked')}
               >
-                Festgeschrieben
+                {t('ManualLockManager.filterLocked')}
               </Button>
             </div>
           </div>
@@ -325,10 +329,13 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
             filteredDocuments.some(doc => !doc.gobdStatus.isLocked) && (
               <div className="flex items-center justify-between rounded-lg bg-gray-50 p-3">
                 <Button variant="outline" size="sm" onClick={selectAllUnlocked}>
-                  Alle offenen auswählen
+                  {t('ManualLockManager.selectAllOpen')}
                 </Button>
                 <span className="text-gray-600 text-sm">
-                  {selectedDocuments.size} von {unlockedCount} ausgewählt
+                  {t('ManualLockManager.selectedCount', {
+                    selected: selectedDocuments.size,
+                    total: unlockedCount,
+                  })}
                 </span>
               </div>
             )}
@@ -353,7 +360,7 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
             ) : filteredDocuments.length === 0 ? (
               <div className="py-8 text-center text-gray-500">
                 <Icon icon="lucide:file-text" className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-                <p>Keine Dokumente gefunden</p>
+                <p>{t('ManualLockManager.noDocumentsFound')}</p>
               </div>
             ) : (
               filteredDocuments.map(doc => (
@@ -381,12 +388,12 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
                       {doc.gobdStatus.isLocked ? (
                         <Badge className="border-green-200 bg-green-100 text-green-700">
                           <Icon icon="lucide:lock" className="mr-1 h-3 w-3" />
-                          Festgeschrieben
+                          {t('ManualLockManager.statusLocked')}
                         </Badge>
                       ) : (
                         <Badge className="border-orange-200 bg-orange-100 text-orange-700">
                           <Icon icon="lucide:alert-triangle" className="mr-1 h-3 w-3" />
-                          Offen
+                          {t('ManualLockManager.statusOpen')}
                         </Badge>
                       )}
                     </div>
@@ -397,7 +404,9 @@ export function ManualLockManager({ companyId, onLockComplete }: ManualLockManag
                       </span>
                       {doc.gobdStatus.isLocked && doc.gobdStatus.lockedAt && (
                         <span>
-                          Festgeschrieben: {format(doc.gobdStatus.lockedAt, 'dd.MM.yyyy HH:mm')}
+                          {t('ManualLockManager.lockedAt', {
+                            date: format(doc.gobdStatus.lockedAt, 'dd.MM.yyyy HH:mm'),
+                          })}
                         </span>
                       )}
                     </div>

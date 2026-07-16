@@ -2,6 +2,7 @@
 
 import { Icon } from '@iconify/react';
 import { Badge, Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input } from '@tasko/ui';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 import { formatCurrency } from '@/lib/currency';
@@ -27,6 +28,7 @@ export default function BookingAccountSelectionModal({
   onClose,
   onSelect,
 }: BookingAccountSelectionModalProps) {
+  const t = useTranslations('finance');
   const [bookingAccounts, setBookingAccounts] = useState<BookingAccount[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -88,7 +90,7 @@ export default function BookingAccountSelectionModal({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Icon icon="lucide:book-open" className="h-5 w-5 text-accent" />
-            Buchungskonto auswählen
+            {t('BookingAccountSelectionModal.title')}
           </DialogTitle>
         </DialogHeader>
 
@@ -96,7 +98,7 @@ export default function BookingAccountSelectionModal({
           {/* Transaction Summary */}
           <div className="rounded-lg border bg-gray-50 p-4">
             <div className="mb-2 flex items-center justify-between">
-              <h3 className="font-medium text-gray-900">Transaktion</h3>
+              <h3 className="font-medium text-gray-900">{t('BookingAccountSelectionModal.transactionHeading')}</h3>
               {documentType === 'INVOICE' ? (
                 <Icon icon="lucide:trending-up" className="h-5 w-5 text-green-600" />
               ) : (
@@ -105,11 +107,11 @@ export default function BookingAccountSelectionModal({
             </div>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <span className="text-gray-600">Name:</span>
+                <span className="text-gray-600">{t('BookingAccountSelectionModal.nameLabel')}</span>
                 <span className="ml-2 font-medium">{transaction.name}</span>
               </div>
               <div>
-                <span className="text-gray-600">Betrag:</span>
+                <span className="text-gray-600">{t('BookingAccountSelectionModal.amountLabel')}</span>
                 <span
                   className={`ml-2 font-medium ${transaction.betrag > 0 ? 'text-green-600' : 'text-red-600'}`}
                 >
@@ -117,12 +119,12 @@ export default function BookingAccountSelectionModal({
                 </span>
               </div>
               <div className="col-span-2">
-                <span className="text-gray-600">Verwendungszweck:</span>
+                <span className="text-gray-600">{t('BookingAccountSelectionModal.purposeLabel')}</span>
                 <span className="ml-2">{transaction.verwendungszweck}</span>
               </div>
               {documentNumber && (
                 <div className="col-span-2">
-                  <span className="text-gray-600">Dokument:</span>
+                  <span className="text-gray-600">{t('BookingAccountSelectionModal.documentLabel')}</span>
                   <Badge variant="outline" className="ml-2">
                     {documentNumber}
                   </Badge>
@@ -135,7 +137,7 @@ export default function BookingAccountSelectionModal({
           <div className="relative">
             <Icon icon="lucide:search" className="absolute top-3 left-3 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Buchungskonto suchen (Nummer oder Name)..."
+              placeholder={t('BookingAccountSelectionModal.searchPlaceholder')}
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className="pl-9"
@@ -153,10 +155,14 @@ export default function BookingAccountSelectionModal({
               }
             >
               {documentType === 'INVOICE'
-                ? '💰 Erlös-Konten (4000-4999)'
-                : '💸 Aufwand-Konten (5000-7999)'}
+                ? t('BookingAccountSelectionModal.incomeAccountsBadge')
+                : t('BookingAccountSelectionModal.expenseAccountsBadge')}
             </Badge>
-            <Badge variant="outline">{filteredAccounts.length} verfügbare Konten</Badge>
+            <Badge variant="outline">
+              {t('BookingAccountSelectionModal.availableAccountsCount', {
+                count: filteredAccounts.length,
+              })}
+            </Badge>
           </div>
 
           {/* Accounts List */}
@@ -167,7 +173,7 @@ export default function BookingAccountSelectionModal({
               </div>
             ) : filteredAccounts.length === 0 ? (
               <div className="flex h-32 items-center justify-center text-gray-500">
-                Keine passenden Buchungskonten gefunden
+                {t('BookingAccountSelectionModal.noAccountsFound')}
               </div>
             ) : (
               <div className="divide-y divide-gray-200">
@@ -198,7 +204,9 @@ export default function BookingAccountSelectionModal({
                                 : 'bg-red-100 text-red-800'
                             }
                           >
-                            {account.type === 'INCOME' ? 'Erlös' : 'Aufwand'}
+                            {account.type === 'INCOME'
+                              ? t('BookingAccountSelectionModal.incomeBadge')
+                              : t('BookingAccountSelectionModal.expenseBadge')}
                           </Badge>
                         </div>
                         <div className="mt-1">
@@ -206,7 +214,7 @@ export default function BookingAccountSelectionModal({
                         </div>
                         {account.automaticBooking && (
                           <Badge variant="outline" className="mt-2 text-xs">
-                            Automatische Buchung
+                            {t('BookingAccountSelectionModal.automaticBookingBadge')}
                           </Badge>
                         )}
                       </div>
@@ -229,25 +237,25 @@ export default function BookingAccountSelectionModal({
             <div className="text-gray-500 text-sm">
               {selectedAccount ? (
                 <>
-                  Gewählt:{' '}
+                  {t('BookingAccountSelectionModal.selectedLabel')}{' '}
                   <span className="font-medium">
                     {selectedAccount.number} - {selectedAccount.name}
                   </span>
                 </>
               ) : (
-                'Wählen Sie ein Buchungskonto aus'
+                t('BookingAccountSelectionModal.noAccountSelectedHint')
               )}
             </div>
             <div className="flex gap-2">
               <Button variant="outline" onClick={onClose}>
-                Abbrechen
+                {t('BookingAccountSelectionModal.cancel')}
               </Button>
               <Button
                 onClick={handleSelectAccount}
                 disabled={!selectedAccount}
                 className="bg-accent text-white hover:bg-accent/90"
               >
-                Verknüpfen
+                {t('BookingAccountSelectionModal.link')}
               </Button>
             </div>
           </div>

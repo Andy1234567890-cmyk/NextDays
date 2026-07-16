@@ -18,6 +18,7 @@ import {
   Label,
   Textarea,
 } from '@tasko/ui';
+import { useTranslations } from 'next-intl';
 import type React from 'react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -137,6 +138,7 @@ export function EmailSendModal({
   enableGoBDLocking = true,
   onDocumentLocked,
 }: EmailSendModalProps) {
+  const t = useTranslations('finance');
   const [sending, setSending] = useState(false);
   const initializedRef = useRef<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -167,27 +169,27 @@ export function EmailSendModal({
   // Memoized document values to prevent infinite loops
   const documentLabels = useMemo(
     () => ({
-      invoice: 'Rechnung',
-      quote: 'Angebot',
-      reminder: 'Erinnerung',
-      delivery: 'Lieferschein',
-      order: 'Auftrag',
-      'credit-note': 'Gutschrift',
-      cancellation: 'Storno',
-      contract: 'Vertrag',
-      receipt: 'Quittung',
+      invoice: t('EmailSendModal.documentLabels.invoice'),
+      quote: t('EmailSendModal.documentLabels.quote'),
+      reminder: t('EmailSendModal.documentLabels.reminder'),
+      delivery: t('EmailSendModal.documentLabels.delivery'),
+      order: t('EmailSendModal.documentLabels.order'),
+      'credit-note': t('EmailSendModal.documentLabels.creditNote'),
+      cancellation: t('EmailSendModal.documentLabels.cancellation'),
+      contract: t('EmailSendModal.documentLabels.contract'),
+      receipt: t('EmailSendModal.documentLabels.receipt'),
     }),
-    [],
+    [t],
   );
 
   const documentLabel = useMemo(
-    () => documentLabels[documentType as keyof typeof documentLabels] || 'Dokument',
-    [documentLabels, documentType],
+    () => documentLabels[documentType as keyof typeof documentLabels] || t('EmailSendModal.documentLabels.generic'),
+    [documentLabels, documentType, t],
   );
 
   const documentNumber = useMemo(
-    () => document?.invoiceNumber || document?.number || document?.id || 'Unbekannt',
-    [document?.invoiceNumber, document?.number, document?.id],
+    () => document?.invoiceNumber || document?.number || document?.id || t('EmailSendModal.unknown'),
+    [document?.invoiceNumber, document?.number, document?.id, t],
   );
 
   // Initialize default values - Optimized to prevent infinite loops
@@ -195,9 +197,10 @@ export function EmailSendModal({
     if (isOpen && document) {
       // Calculate values inside useEffect to avoid dependency issues
       const currentDocumentNumber =
-        document.invoiceNumber || document.number || document.id || 'Unbekannt';
+        document.invoiceNumber || document.number || document.id || t('EmailSendModal.unknown');
       const currentDocumentLabel =
-        documentLabels[documentType as keyof typeof documentLabels] || 'Dokument';
+        documentLabels[documentType as keyof typeof documentLabels] ||
+        t('EmailSendModal.documentLabels.generic');
 
       // Prevent multiple initializations for the same document
       const documentKey = `${document.id}-${documentType}`;
@@ -241,17 +244,29 @@ export function EmailSendModal({
       // Set dynamic subject based on document type. Kein Brand-Fallback: fehlt
       // der Firmenname, entfällt der „von …"-Zusatz (statt einen Fremdbrand wie
       // „NextDays" zu erfinden — Projektregel: keine Fallback-Ersatzwerte).
-      const fromCompany = companyData?.name ? ` von ${companyData.name}` : '';
+      const fromCompany = companyData?.name
+        ? t('EmailSendModal.subjectTemplates.fromCompanySuffix', { company: companyData.name })
+        : '';
       const subjectTemplates = {
-        invoice: `Rechnung ${currentDocumentNumber}${fromCompany}`,
-        quote: `Angebot ${currentDocumentNumber}${fromCompany}`,
-        reminder: `Zahlungserinnerung - Rechnung ${currentDocumentNumber}`,
-        delivery: `Lieferschein ${currentDocumentNumber}`,
-        order: `Auftragsbestätigung ${currentDocumentNumber}`,
-        'credit-note': `Gutschrift ${currentDocumentNumber}`,
-        cancellation: `Storno - Rechnung ${currentDocumentNumber}`,
-        contract: `Vertrag ${currentDocumentNumber}`,
-        receipt: `Quittung ${currentDocumentNumber}`,
+        invoice: t('EmailSendModal.subjectTemplates.invoice', {
+          number: currentDocumentNumber,
+          fromCompany,
+        }),
+        quote: t('EmailSendModal.subjectTemplates.quote', {
+          number: currentDocumentNumber,
+          fromCompany,
+        }),
+        reminder: t('EmailSendModal.subjectTemplates.reminder', { number: currentDocumentNumber }),
+        delivery: t('EmailSendModal.subjectTemplates.delivery', { number: currentDocumentNumber }),
+        order: t('EmailSendModal.subjectTemplates.order', { number: currentDocumentNumber }),
+        'credit-note': t('EmailSendModal.subjectTemplates.creditNote', {
+          number: currentDocumentNumber,
+        }),
+        cancellation: t('EmailSendModal.subjectTemplates.cancellation', {
+          number: currentDocumentNumber,
+        }),
+        contract: t('EmailSendModal.subjectTemplates.contract', { number: currentDocumentNumber }),
+        receipt: t('EmailSendModal.subjectTemplates.receipt', { number: currentDocumentNumber }),
       };
 
       setSubject(
@@ -261,15 +276,15 @@ export function EmailSendModal({
 
       // Set dynamic message based on document type
       const messageTemplates = {
-        invoice: `Sehr geehrte Damen und Herren,\n\nhiermit erhalten Sie unsere Rechnung ${currentDocumentNumber}.\n\nWir bitten um Begleichung innerhalb der angegebenen Zahlungsfrist.\n\nVielen Dank für Ihr Vertrauen.\n\nMit freundlichen Grüßen`,
-        quote: `Sehr geehrte Damen und Herren,\n\nanbei erhalten Sie unser Angebot ${currentDocumentNumber}.\n\nWir freuen uns auf Ihre Rückmeldung und stehen für Rückfragen gerne zur Verfügung.\n\nMit freundlichen Grüßen`,
-        reminder: `Sehr geehrte Damen und Herren,\n\nwir möchten Sie freundlich an die Begleichung der Rechnung ${currentDocumentNumber} erinnern.\n\nSollten Sie diese bereits beglichen haben, betrachten Sie diese Nachricht als gegenstandslos.\n\nMit freundlichen Grüßen`,
-        delivery: `Sehr geehrte Damen und Herren,\n\nanbei erhalten Sie den Lieferschein ${currentDocumentNumber} zu Ihrer Bestellung.\n\nMit freundlichen Grüßen`,
+        invoice: t('EmailSendModal.messageTemplates.invoice', { number: currentDocumentNumber }),
+        quote: t('EmailSendModal.messageTemplates.quote', { number: currentDocumentNumber }),
+        reminder: t('EmailSendModal.messageTemplates.reminder', { number: currentDocumentNumber }),
+        delivery: t('EmailSendModal.messageTemplates.delivery', { number: currentDocumentNumber }),
       };
 
       const defaultMessage =
         messageTemplates[documentType as keyof typeof messageTemplates] ||
-        `Sehr geehrte Damen und Herren,\n\nanbei erhalten Sie das gewünschte Dokument.\n\nMit freundlichen Grüßen`;
+        t('EmailSendModal.messageTemplates.generic');
 
       setMessage(defaultMessage);
 
@@ -294,6 +309,7 @@ export function EmailSendModal({
     document.customerName,
     document.invoiceNumber,
     document,
+    t,
   ]);
 
   // Email validation
@@ -375,7 +391,7 @@ export function EmailSendModal({
       for (const file of Array.from(files)) {
         // Check file size (max 10MB)
         if (file.size > 10 * 1024 * 1024) {
-          toast.error(`Datei "${file.name}" ist zu groß (max. 10MB)`);
+          toast.error(t('EmailSendModal.toasts.fileTooLarge', { fileName: file.name }));
           continue;
         }
 
@@ -393,7 +409,7 @@ export function EmailSendModal({
         ];
 
         if (!allowedTypes.includes(file.type)) {
-          toast.error(`Dateityp "${file.type}" wird nicht unterstützt`);
+          toast.error(t('EmailSendModal.toasts.fileTypeUnsupported', { fileType: file.type }));
           continue;
         }
 
@@ -423,11 +439,13 @@ export function EmailSendModal({
       setAdditionalAttachments(prev => [...prev, ...newAttachments]);
 
       if (newAttachments.length > 0) {
-        toast.success(`${newAttachments.length} Datei(en) hinzugefügt`);
+        toast.success(
+          t('EmailSendModal.toasts.filesAdded', { count: newAttachments.length }),
+        );
       }
     } catch (error) {
       console.error('File upload error:', error);
-      toast.error('Fehler beim Hochladen der Datei(en)');
+      toast.error(t('EmailSendModal.toasts.fileUploadError'));
     } finally {
       setUploadingFile(false);
       // Reset input
@@ -438,7 +456,7 @@ export function EmailSendModal({
   // Remove attachment
   const removeAttachment = (attachmentId: string) => {
     setAdditionalAttachments(prev => prev.filter(att => att.id !== attachmentId));
-    toast.success('Anhang entfernt');
+    toast.success(t('EmailSendModal.toasts.attachmentRemoved'));
   };
 
   // Format file size
@@ -465,9 +483,7 @@ export function EmailSendModal({
       // ✅ Prüfung ob Template bereit ist
       if (!isTemplateReady) {
         console.error('Template not ready - cannot generate PDF');
-        throw new Error(
-          'Template is not ready yet. Please wait for the document preview to load completely.',
-        );
+        throw new Error(t('EmailSendModal.errors.templateNotReady'));
       }
 
       // ✅ Get HTML Content direkt
@@ -475,9 +491,7 @@ export function EmailSendModal({
 
       if (!htmlContent || htmlContent.trim().length === 0) {
         console.error('No HTML content received from template');
-        throw new Error(
-          'Template could not be rendered. Please make sure the document preview is visible and try again.',
-        );
+        throw new Error(t('EmailSendModal.errors.templateNotRendered'));
       }
 
       // Es gibt genau EINEN PDF-Render-Endpunkt: /api/v1/generate-pdf-single
@@ -503,16 +517,21 @@ export function EmailSendModal({
         try {
           errorData = JSON.parse(errorText);
         } catch {
-          throw new Error(`PDF generation failed (${response.status}): ${errorText}`);
+          throw new Error(
+            t('EmailSendModal.errors.pdfGenerationFailedWithStatus', {
+              status: response.status,
+              errorText,
+            }),
+          );
         }
-        throw new Error(errorData.error || 'PDF generation failed');
+        throw new Error(errorData.error || t('EmailSendModal.errors.pdfGenerationFailed'));
       }
 
       const result = await response.json();
 
       if (!result.pdfBase64 || result.pdfBase64.trim().length === 0) {
         console.error('PDF API returned empty base64');
-        throw new Error('PDF generation returned empty result');
+        throw new Error(t('EmailSendModal.errors.pdfGenerationEmpty'));
       }
 
       return result.pdfBase64;
@@ -569,12 +588,12 @@ export function EmailSendModal({
   // Handle send with GoBD confirmation
   const handleSend = async () => {
     if (recipients.length === 0) {
-      toast.error('Bitte geben Sie mindestens einen Empfänger ein');
+      toast.error(t('EmailSendModal.toasts.recipientRequired'));
       return;
     }
 
     if (!subject.trim()) {
-      toast.error('Bitte geben Sie einen Betreff ein');
+      toast.error(t('EmailSendModal.toasts.subjectRequired'));
       return;
     }
 
@@ -582,7 +601,7 @@ export function EmailSendModal({
     if (enableGoBDLocking && documentType === 'invoice') {
       showWarning({
         actionType: 'email',
-        documentType: 'Rechnung',
+        documentType: t('EmailSendModal.invoiceDocumentType'),
         documentNumber: document.documentNumber,
         companyId: companyId || 'unknown',
         documentId: document.id,
@@ -601,12 +620,12 @@ export function EmailSendModal({
     setSending(true);
 
     try {
-      toast.message('PDF wird erstellt...');
+      toast.message(t('EmailSendModal.toasts.creatingPdf'));
 
       // Generate PDF - will throw error if it fails
       const pdfBase64 = await generatePdfBase64();
 
-      toast.message('E-Mail wird versendet...');
+      toast.message(t('EmailSendModal.toasts.sendingEmail'));
 
       // Absender-Slug aus dem echten Firmennamen \u2014 KEIN 'nextdays'-Fallback
       // (erfundener Fremdbrand als Absenderidentit\u00e4t; Projektregel: keine
@@ -617,7 +636,7 @@ export function EmailSendModal({
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '');
       if (!companySlug) {
-        toast.error('Bitte zuerst den Firmennamen im Firmenprofil hinterlegen \u2014 er ist die Absenderidentit\u00e4t.');
+        toast.error(t('EmailSendModal.toasts.companyNameRequired'));
         return;
       }
 
@@ -660,7 +679,7 @@ export function EmailSendModal({
       const result = await response.json();
 
       if (response.ok && result.success) {
-        toast.success('E-Mail wurde erfolgreich versendet');
+        toast.success(t('EmailSendModal.toasts.emailSent'));
 
         // 🔒 GoBD-Festschreibung nach erfolgreichem Versand (nur für Rechnungen)
         if (enableGoBDLocking && user && documentType === 'invoice') {
@@ -677,7 +696,7 @@ export function EmailSendModal({
             }
           } catch {
             // Nicht kritisch - E-Mail wurde bereits versendet
-            toast.warning('E-Mail versendet, aber automatische Festschreibung fehlgeschlagen');
+            toast.warning(t('EmailSendModal.toasts.lockFailed'));
           }
         }
 
@@ -763,11 +782,11 @@ export function EmailSendModal({
 
         onClose();
       } else {
-        throw new Error(result.error || 'E-Mail konnte nicht versendet werden');
+        throw new Error(result.error || t('EmailSendModal.errors.sendFailed'));
       }
     } catch (error) {
       console.error('Email send error:', error);
-      toast.error(error instanceof Error ? error.message : 'Fehler beim Versenden der E-Mail');
+      toast.error(error instanceof Error ? error.message : t('EmailSendModal.errors.sendFailedGeneric'));
     } finally {
       setSending(false);
     }
@@ -790,10 +809,10 @@ export function EmailSendModal({
               </div>
               <div>
                 <DialogTitle className="font-semibold text-white text-xl">
-                  E-Mail versenden
+                  {t('EmailSendModal.header.title')}
                 </DialogTitle>
                 <p className="mt-1 text-sm text-white/80">
-                  {documentLabel} {documentNumber} per E-Mail verschicken
+                  {t('EmailSendModal.header.subtitle', { documentLabel, documentNumber })}
                 </p>
               </div>
             </div>
@@ -816,8 +835,7 @@ export function EmailSendModal({
               <Alert className="border-orange-200 bg-orange-50">
                 <Icon icon="lucide:alert-triangle" className="h-4 w-4 text-orange-600" />
                 <AlertDescription className="text-orange-800">
-                  Das Dokument wird noch geladen. Bitte warten Sie, bis die Vorschau vollständig
-                  angezeigt wird.
+                  {t('EmailSendModal.templateLoading')}
                 </AlertDescription>
               </Alert>
             )}
@@ -828,7 +846,7 @@ export function EmailSendModal({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Icon icon="lucide:user" className="h-4 w-4 text-accent" />
-                    <CardTitle className="text-base">Empfänger</CardTitle>
+                    <CardTitle className="text-base">{t('EmailSendModal.recipients.title')}</CardTitle>
                   </div>
                   <div className="flex gap-2">
                     {!showCC && (
@@ -839,7 +857,7 @@ export function EmailSendModal({
                         onClick={() => setShowCC(true)}
                         className="h-7 px-2 text-accent hover:text-accent/90"
                       >
-                        + CC
+                        {t('EmailSendModal.recipients.addCc')}
                       </Button>
                     )}
                     {!showBCC && (
@@ -850,7 +868,7 @@ export function EmailSendModal({
                         onClick={() => setShowBCC(true)}
                         className="h-7 px-2 text-accent hover:text-accent/90"
                       >
-                        + BCC
+                        {t('EmailSendModal.recipients.addBcc')}
                       </Button>
                     )}
                   </div>
@@ -860,7 +878,7 @@ export function EmailSendModal({
                 {/* To Field */}
                 <div className="space-y-2">
                   <Label className="font-medium text-sm">
-                    An <span className="text-red-500">*</span>
+                    {t('EmailSendModal.recipients.toLabel')} <span className="text-red-500">*</span>
                   </Label>
 
                   <div className="flex min-h-12.5 flex-wrap items-center gap-2 rounded-lg border bg-gray-50/50 p-3 focus-within:ring-2 focus-within:ring-accent">
@@ -888,7 +906,7 @@ export function EmailSendModal({
                       onChange={e => setCurrentRecipient(e.target.value)}
                       onKeyDown={e => handleRecipientKeyPress(e, 'to')}
                       onBlur={() => handleRecipientBlur('to')}
-                      placeholder="empfaenger@beispiel.de"
+                      placeholder={t('EmailSendModal.recipients.toPlaceholder')}
                       className="min-w-50 flex-1 border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
                     />
                   </div>
@@ -898,7 +916,7 @@ export function EmailSendModal({
                 {showCC && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label className="font-medium text-sm">CC</Label>
+                      <Label className="font-medium text-sm">{t('EmailSendModal.recipients.ccLabel')}</Label>
                       <Button
                         type="button"
                         variant="ghost"
@@ -938,7 +956,7 @@ export function EmailSendModal({
                         onChange={e => setCurrentCC(e.target.value)}
                         onKeyDown={e => handleRecipientKeyPress(e, 'cc')}
                         onBlur={() => handleRecipientBlur('cc')}
-                        placeholder="cc@beispiel.de"
+                        placeholder={t('EmailSendModal.recipients.ccPlaceholder')}
                         className="min-w-50 flex-1 border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
                       />
                     </div>
@@ -949,7 +967,7 @@ export function EmailSendModal({
                 {showBCC && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label className="font-medium text-sm">BCC</Label>
+                      <Label className="font-medium text-sm">{t('EmailSendModal.recipients.bccLabel')}</Label>
                       <Button
                         type="button"
                         variant="ghost"
@@ -989,7 +1007,7 @@ export function EmailSendModal({
                         onChange={e => setCurrentBCC(e.target.value)}
                         onKeyDown={e => handleRecipientKeyPress(e, 'bcc')}
                         onBlur={() => handleRecipientBlur('bcc')}
-                        placeholder="bcc@beispiel.de"
+                        placeholder={t('EmailSendModal.recipients.bccPlaceholder')}
                         className="min-w-50 flex-1 border-0 bg-transparent p-0 shadow-none focus-visible:ring-0"
                       />
                     </div>
@@ -1003,7 +1021,7 @@ export function EmailSendModal({
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <Icon icon="lucide:message-square" className="h-4 w-4 text-accent" />
-                  <CardTitle className="text-base">Betreff</CardTitle>
+                  <CardTitle className="text-base">{t('EmailSendModal.subject.title')}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
@@ -1011,12 +1029,12 @@ export function EmailSendModal({
                   id="subject"
                   value={subject}
                   onChange={e => setSubject(e.target.value)}
-                  placeholder="Betreff eingeben"
+                  placeholder={t('EmailSendModal.subject.placeholder')}
                   required
                   className="focus:border-accent focus:ring-accent"
                 />
                 {!subject.trim() && (
-                  <p className="mt-1 text-red-500 text-xs">Betreff ist erforderlich</p>
+                  <p className="mt-1 text-red-500 text-xs">{t('EmailSendModal.subject.required')}</p>
                 )}
               </CardContent>
             </Card>
@@ -1026,7 +1044,7 @@ export function EmailSendModal({
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <Icon icon="lucide:file-text" className="h-4 w-4 text-accent" />
-                  <CardTitle className="text-base">Nachricht</CardTitle>
+                  <CardTitle className="text-base">{t('EmailSendModal.message.title')}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
@@ -1034,13 +1052,13 @@ export function EmailSendModal({
                   id="message"
                   value={message}
                   onChange={e => setMessage(e.target.value)}
-                  placeholder="Nachricht eingeben..."
+                  placeholder={t('EmailSendModal.message.placeholder')}
                   rows={8}
                   className="min-h-50 resize-none focus:border-accent focus:ring-accent"
                 />
                 <div className="mt-2 flex items-center justify-between text-gray-500 text-xs">
-                  <span>{message.length} Zeichen</span>
-                  <span>Tipp: Verwenden Sie eine professionelle Anrede</span>
+                  <span>{t('EmailSendModal.message.charCount', { count: message.length })}</span>
+                  <span>{t('EmailSendModal.message.tip')}</span>
                 </div>
               </CardContent>
             </Card>
@@ -1050,7 +1068,7 @@ export function EmailSendModal({
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
                   <Icon icon="lucide:user" className="h-4 w-4 text-accent" />
-                  <CardTitle className="text-base">Signatur</CardTitle>
+                  <CardTitle className="text-base">{t('EmailSendModal.signature.title')}</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
@@ -1058,7 +1076,7 @@ export function EmailSendModal({
                   id="signature"
                   value={signature}
                   onChange={e => setSignature(e.target.value)}
-                  placeholder="Signatur eingeben (optional)..."
+                  placeholder={t('EmailSendModal.signature.placeholder')}
                   rows={4}
                   className="resize-none focus:border-accent focus:ring-accent"
                 />
@@ -1071,10 +1089,12 @@ export function EmailSendModal({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Icon icon="lucide:paperclip" className="h-4 w-4 text-accent" />
-                    <CardTitle className="text-base">Anhänge</CardTitle>
+                    <CardTitle className="text-base">{t('EmailSendModal.attachments.title')}</CardTitle>
                   </div>
                   <Badge variant="secondary" className="text-xs">
-                    {1 + additionalAttachments.length} Datei(en)
+                    {t('EmailSendModal.attachments.fileCount', {
+                      count: 1 + additionalAttachments.length,
+                    })}
                   </Badge>
                 </div>
               </CardHeader>
@@ -1092,7 +1112,7 @@ export function EmailSendModal({
                       </div>
                     </div>
                     <Badge className="border-green-200 bg-green-100 text-green-700">
-                      Hauptdokument
+                      {t('EmailSendModal.attachments.mainDocument')}
                     </Badge>
                   </div>
 
@@ -1119,7 +1139,7 @@ export function EmailSendModal({
                         size="sm"
                         onClick={() => removeAttachment(attachment.id)}
                         className="h-8 w-8 p-0 text-red-500 hover:bg-red-50 hover:text-red-700"
-                        title="Anhang entfernen"
+                        title={t('EmailSendModal.attachments.removeTitle')}
                       >
                         <Icon icon="lucide:trash2" className="h-4 w-4" />
                       </Button>
@@ -1147,17 +1167,17 @@ export function EmailSendModal({
                       {uploadingFile ? (
                         <>
                           <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />
-                          Lade hoch...
+                          {t('EmailSendModal.attachments.uploading')}
                         </>
                       ) : (
                         <>
                           <Icon icon="lucide:upload" className="mr-2 h-4 w-4" />
-                          Weitere Anhänge hinzufügen
+                          {t('EmailSendModal.attachments.addMore')}
                         </>
                       )}
                     </Button>
                     <p className="text-center text-gray-500 text-xs">
-                      PDF, Bilder, Word, Excel • Max. 10MB pro Datei
+                      {t('EmailSendModal.attachments.hint')}
                     </p>
                   </div>
                 </div>
@@ -1180,7 +1200,7 @@ export function EmailSendModal({
                     className="data-[state=checked]:border-accent data-[state=checked]:bg-accent"
                   />
                   <Label htmlFor="send-copy" className="font-medium text-sm">
-                    Kopie an mich selbst
+                    {t('EmailSendModal.footer.sendCopy')}
                   </Label>
                 </div>
               </div>
@@ -1189,12 +1209,15 @@ export function EmailSendModal({
               <div className="flex items-center gap-4 text-gray-500 text-xs">
                 <span className="flex items-center gap-1">
                   <Icon icon="lucide:user" className="h-3 w-3" />
-                  {recipients.length + ccRecipients.length + bccRecipients.length} Empfänger
+                  {t('EmailSendModal.footer.recipientCount', {
+                    count: recipients.length + ccRecipients.length + bccRecipients.length,
+                  })}
                 </span>
                 <span className="flex items-center gap-1">
                   <Icon icon="lucide:paperclip" className="h-3 w-3" />
-                  {1 + additionalAttachments.length} Anhang
-                  {1 + additionalAttachments.length !== 1 ? 'e' : ''}
+                  {t('EmailSendModal.footer.attachmentCount', {
+                    count: 1 + additionalAttachments.length,
+                  })}
                 </span>
               </div>
             </div>
@@ -1202,7 +1225,7 @@ export function EmailSendModal({
             {/* Action buttons */}
             <div className="flex justify-end gap-3">
               <Button variant="outline" onClick={handleCancel} disabled={sending} className="px-6">
-                Abbrechen
+                {t('EmailSendModal.footer.cancel')}
               </Button>
               <Button
                 onClick={handleSend}
@@ -1212,12 +1235,12 @@ export function EmailSendModal({
                 {sending ? (
                   <>
                     <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />
-                    Wird versendet...
+                    {t('EmailSendModal.footer.sending')}
                   </>
                 ) : (
                   <>
                     <Icon icon="lucide:send" className="mr-2 h-4 w-4" />
-                    E-Mail versenden
+                    {t('EmailSendModal.footer.send')}
                   </>
                 )}
               </Button>
@@ -1226,9 +1249,9 @@ export function EmailSendModal({
             {/* Help text */}
             {(!isTemplateReady || recipients.length === 0 || !subject.trim()) && (
               <div className="mt-3 text-gray-500 text-xs">
-                {!isTemplateReady && '• Warten Sie, bis das Dokument vollständig geladen ist'}
-                {recipients.length === 0 && '• Fügen Sie mindestens einen Empfänger hinzu'}
-                {!subject.trim() && '• Geben Sie einen Betreff ein'}
+                {!isTemplateReady && t('EmailSendModal.footer.helpTemplateLoading')}
+                {recipients.length === 0 && t('EmailSendModal.footer.helpRecipientRequired')}
+                {!subject.trim() && t('EmailSendModal.footer.helpSubjectRequired')}
               </div>
             )}
           </div>

@@ -33,6 +33,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@tasko/ui';
+import { useTranslations } from 'next-intl';
 import { type Dispatch, type SetStateAction, useState } from 'react';
 import { toast } from 'sonner';
 import {
@@ -104,6 +105,7 @@ export default function ItemsCard({
   setCreateProductForIndex,
   setCreateProductOpen,
 }: ItemsCardProps) {
+  const t = useTranslations('finance');
   // Lokale UI-States (lebten vorher im selben JSX-Block)
   const [showPopover, setShowPopover] = useState(false);
   const [newServiceName, setNewServiceName] = useState<string>('');
@@ -113,13 +115,13 @@ export default function ItemsCard({
       <CardHeader>
         <CardTitle className="flex items-center">
           <Icon icon="lucide:calculator" className="mr-2 h-5 w-5 text-accent" />
-          Positionen
+          {t('itemsCard.title')}
         </CardTitle>
       </CardHeader>
       <CardContent>
         {/* Brutto/Netto Schalter */}
         <div className="mb-3 flex items-center justify-between">
-          <div className="text-gray-600 text-sm">Preisanzeige</div>
+          <div className="text-gray-600 text-sm">{t('itemsCard.priceDisplay')}</div>
           <div className="flex gap-2">
             <Button
               type="button"
@@ -128,7 +130,7 @@ export default function ItemsCard({
               onClick={() => setShowNet(true)}
               size="sm"
             >
-              Netto
+              {t('itemsCard.net')}
             </Button>
             <Button
               type="button"
@@ -137,7 +139,7 @@ export default function ItemsCard({
               onClick={() => setShowNet(false)}
               size="sm"
             >
-              Brutto
+              {t('itemsCard.gross')}
             </Button>
           </div>
         </div>
@@ -163,7 +165,7 @@ export default function ItemsCard({
             }}
             className="px-0 text-accent"
           >
-            + Position hinzufügen
+            {t('itemsCard.addItem')}
           </Button>
           <InventorySelector
             companyId={uid}
@@ -199,7 +201,7 @@ export default function ItemsCard({
                   typeof crypto !== 'undefined' && 'randomUUID' in crypto
                     ? crypto.randomUUID()
                     : Math.random().toString(36).slice(2),
-                description: 'Gesamtrabatt',
+                description: t('itemsCard.totalDiscount'),
                 quantity: 1,
                 unitPrice: 0,
                 total: 0,
@@ -213,7 +215,7 @@ export default function ItemsCard({
             }}
             className="px-0 text-accent"
           >
-            + Gesamtrabatt hinzufügen
+            {t('itemsCard.addTotalDiscount')}
           </Button>
 
           {/* Dienstleistung anlegen */}
@@ -232,7 +234,7 @@ export default function ItemsCard({
                     setShowPopover(false);
                   }
                 }}
-                placeholder="Leistung suchen oder neu erstellen (Frühstück, Wellness, Parkplatz …)"
+                placeholder={t('itemsCard.searchServicePlaceholder')}
                 className="w-full"
               />
 
@@ -243,7 +245,7 @@ export default function ItemsCard({
                     {loadingSavedServices ? (
                       <div className="flex items-center gap-2 p-2">
                         <Icon icon="lucide:loader2" className="h-4 w-4 animate-spin" />
-                        <span>Lade Leistungen...</span>
+                        <span>{t('itemsCard.loadingServices')}</span>
                       </div>
                     ) : (
                       <>
@@ -271,13 +273,13 @@ export default function ItemsCard({
                                     quantity: 1,
                                     unitPrice: price,
                                     total: price,
-                                    unit: service.unit || 'Stk',
+                                    unit: service.unit || t('itemsCard.unitPiece'),
                                     taxRate: taxRate, // Verwende globalen Steuersatz als Standard
                                   },
                                 ]);
                                 setNewServiceName('');
                                 setShowPopover(false);
-                                toast.success('Leistung zur Rechnung hinzugefügt');
+                                toast.success(t('itemsCard.serviceAdded'));
                               }}
                             >
                               <div>
@@ -314,7 +316,7 @@ export default function ItemsCard({
                                   name: newServiceName,
                                   description: '',
                                   price: '',
-                                  unit: 'Stk',
+                                  unit: t('itemsCard.unitPiece'),
                                 });
                                 setServiceModalOpen(true);
                                 setNewServiceName('');
@@ -324,7 +326,7 @@ export default function ItemsCard({
                               <div className="flex items-center gap-2 text-gray-600 text-sm">
                                 <Icon icon="lucide:plus" className="h-4 w-4" />
                                 <span>
-                                  Neue Leistung &quot;{newServiceName}&quot; erstellen
+                                  {t('itemsCard.createNewServiceNamed', { name: newServiceName })}
                                 </span>
                               </div>
                             </div>
@@ -341,14 +343,16 @@ export default function ItemsCard({
           <Dialog open={serviceModalOpen} onOpenChange={setServiceModalOpen}>
             <DialogContent className="max-w-md" aria-describedby="service-dialog-description">
               <DialogHeader>
-                <DialogTitle>Neue Leistung anlegen</DialogTitle>
+                <DialogTitle>{t('itemsCard.newServiceDialogTitle')}</DialogTitle>
                 <div id="service-dialog-description" className="sr-only">
-                  Dialog zum Anlegen einer neuen Leistung mit Name und weiteren Details
+                  {t('itemsCard.newServiceDialogDescription')}
                 </div>
               </DialogHeader>
               <div className="space-y-4">
                 <div>
-                  <label className="mb-1 block font-medium text-sm">Name *</label>
+                  <label className="mb-1 block font-medium text-sm">
+                    {t('itemsCard.nameLabel')}
+                  </label>
                   <input
                     type="text"
                     className="w-full rounded border px-2 py-1"
@@ -358,7 +362,9 @@ export default function ItemsCard({
                   />
                 </div>
                 <div>
-                  <label className="mb-1 block font-medium text-sm">Beschreibung</label>
+                  <label className="mb-1 block font-medium text-sm">
+                    {t('itemsCard.descriptionLabel')}
+                  </label>
                   <textarea
                     className="w-full rounded border px-2 py-1"
                     value={serviceDraft.description}
@@ -370,7 +376,9 @@ export default function ItemsCard({
                 </div>
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <label className="mb-1 block font-medium text-sm">Preis *</label>
+                    <label className="mb-1 block font-medium text-sm">
+                      {t('itemsCard.priceLabel')}
+                    </label>
                     <input
                       type="number"
                       className="w-full rounded border px-2 py-1"
@@ -381,16 +389,18 @@ export default function ItemsCard({
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block font-medium text-sm">Einheit</label>
+                    <label className="mb-1 block font-medium text-sm">
+                      {t('itemsCard.unitLabel')}
+                    </label>
                     <NativeSelect
                       value={serviceDraft.unit}
                       onChange={e => setServiceDraft(d => ({ ...d, unit: e.target.value }))}
                     >
-                      <option value="Stk">Stk</option>
-                      <option value="Std">Std</option>
-                      <option value="Pauschale">Pauschale</option>
+                      <option value="Stk">{t('itemsCard.unitPiece')}</option>
+                      <option value="Std">{t('itemsCard.unitHour')}</option>
+                      <option value="Pauschale">{t('itemsCard.unitFlatRate')}</option>
                       <option value="%">%</option>
-                      <option value="Tag(e)">Tag(e)</option>
+                      <option value="Tag(e)">{t('itemsCard.unitDays')}</option>
                     </NativeSelect>
                   </div>
                 </div>
@@ -425,16 +435,21 @@ export default function ItemsCard({
 
                     // 3. Dialog schließen und Form zurücksetzen
                     setServiceModalOpen(false);
-                    setServiceDraft({ name: '', description: '', price: '', unit: 'Stk' });
-                    toast.success('Leistung zur Rechnung hinzugefügt');
+                    setServiceDraft({
+                      name: '',
+                      description: '',
+                      price: '',
+                      unit: t('itemsCard.unitPiece'),
+                    });
+                    toast.success(t('itemsCard.serviceAdded'));
                   }}
                   disabled={!serviceDraft.name.trim() || !serviceDraft.price}
                 >
-                  Speichern & hinzufügen
+                  {t('itemsCard.saveAndAdd')}
                 </Button>
                 <DialogClose asChild>
                   <Button variant="outline" type="button">
-                    Abbrechen
+                    {t('itemsCard.cancel')}
                   </Button>
                 </DialogClose>
               </DialogFooter>
@@ -446,27 +461,28 @@ export default function ItemsCard({
         {items.length > 0 && (
           <div className="flex gap-3 rounded-lg bg-gray-50 px-4 py-2 font-medium text-gray-700 text-sm">
             <div style={{ flex: 1 }}>
-              <label className="block">Leistung / Position</label>
+              <label className="block">{t('itemsCard.columnServiceItem')}</label>
             </div>
             <div style={{ width: '80px' }}>
-              <label className="block">Menge</label>
+              <label className="block">{t('itemsCard.columnQuantity')}</label>
             </div>
             <div style={{ width: '100px' }}>
-              <label className="block">Einheit</label>
+              <label className="block">{t('itemsCard.columnUnit')}</label>
             </div>
             <div style={{ width: '120px' }}>
               <label className="block">
-                Preis <small>({showNet ? 'Netto' : 'Brutto'})</small>
+                {t('itemsCard.columnPrice')}{' '}
+                <small>({showNet ? t('itemsCard.net') : t('itemsCard.gross')})</small>
               </label>
             </div>
             <div style={{ width: '80px' }}>
-              <label className="block">USt.</label>
+              <label className="block">{t('itemsCard.columnVat')}</label>
             </div>
             <div style={{ width: '80px' }}>
-              <label className="block">Rabatt</label>
+              <label className="block">{t('itemsCard.columnDiscount')}</label>
             </div>
             <div style={{ width: '100px', textAlign: 'right' }}>
-              <label className="block">Betrag</label>
+              <label className="block">{t('itemsCard.columnAmount')}</label>
             </div>
             <div style={{ width: '36px' }}></div>
           </div>
@@ -495,22 +511,18 @@ export default function ItemsCard({
                 <div className="flex items-end gap-3 p-4 hover:bg-gray-50">
                   <div style={{ flex: 1 }}>
                     <div className="sr-only">
-                      <Label>Beschreibung</Label>
+                      <Label>{t('itemsCard.descriptionLabel')}</Label>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <span
-                            aria-label="Hinweis zur Beschreibung"
+                            aria-label={t('itemsCard.descriptionHintAriaLabel')}
                             className="inline-flex cursor-help"
                           >
                             <Icon icon="lucide:info" className="h-4 w-4 text-accent" />
                           </span>
                         </TooltipTrigger>
                         <TooltipContent side="top" align="start" className="max-w-xs text-sm">
-                          <p>
-                            Hinweis: Die Beschreibung ist für den Kunden sichtbar. Du kannst
-                            auch die SKU oder den exakten Produktnamen eingeben, um Werte
-                            automatisch aus dem Inventar zu übernehmen.
-                          </p>
+                          <p>{t('itemsCard.descriptionHint')}</p>
                         </TooltipContent>
                       </Tooltip>
                     </div>
@@ -530,8 +542,8 @@ export default function ItemsCard({
                           }
                           placeholder={
                             item.category === 'discount'
-                              ? 'Rabatt / Nachlass'
-                              : 'Leistungsbeschreibung'
+                              ? t('itemsCard.discountPlaceholder')
+                              : t('itemsCard.serviceDescriptionPlaceholder')
                           }
                         />
 
@@ -539,7 +551,7 @@ export default function ItemsCard({
                       </div>
                       <PopoverContent side="bottom" align="start">
                         <div className="text-sm">
-                          <div className="mb-2 font-medium">Als Produkt speichern?</div>
+                          <div className="mb-2 font-medium">{t('itemsCard.saveAsProductQuestion')}</div>
                           <div className="flex gap-2">
                             <Button
                               size="sm"
@@ -573,7 +585,7 @@ export default function ItemsCard({
                                 setDismissedCreatePromptIds(prev => new Set(prev).add(item.id));
                               }}
                             >
-                              Produkt erstellen
+                              {t('itemsCard.createProduct')}
                             </Button>
                             <Button
                               size="sm"
@@ -582,7 +594,7 @@ export default function ItemsCard({
                                 setDismissedCreatePromptIds(prev => new Set(prev).add(item.id))
                               }
                             >
-                              Später
+                              {t('itemsCard.later')}
                             </Button>
                           </div>
                         </div>
@@ -591,7 +603,7 @@ export default function ItemsCard({
                   </div>
                   <div style={{ width: '80px' }}>
                     <div className="sr-only">
-                      <Label>Menge</Label>
+                      <Label>{t('itemsCard.columnQuantity')}</Label>
                     </div>
                     <Input
                       type="number"
@@ -605,7 +617,7 @@ export default function ItemsCard({
                   </div>
                   <div style={{ width: '100px' }}>
                     <div className="sr-only">
-                      <Label>Einheit</Label>
+                      <Label>{t('itemsCard.columnUnit')}</Label>
                     </div>
                     <Select
                       value={(item.unit as string) ?? 'Stk'}
@@ -618,7 +630,7 @@ export default function ItemsCard({
                       disabled={item.category === 'discount'}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Einheit" />
+                        <SelectValue placeholder={t('itemsCard.columnUnit')} />
                       </SelectTrigger>
                       <SelectContent className="max-h-72">
                         {UNIT_OPTIONS.map(u => (
@@ -632,10 +644,10 @@ export default function ItemsCard({
                   <div style={{ width: '120px' }}>
                     <div className="sr-only">
                       <Label>
-                        Preis
+                        {t('itemsCard.columnPrice')}
                         <small className="font-normal text-gray-500">
                           {' '}
-                          ({showNet ? 'Netto' : 'Brutto'})
+                          ({showNet ? t('itemsCard.net') : t('itemsCard.gross')})
                         </small>
                       </Label>
                     </div>
@@ -656,7 +668,7 @@ export default function ItemsCard({
                   </div>
                   <div style={{ width: '80px' }}>
                     <div className="sr-only">
-                      <Label>USt. %</Label>
+                      <Label>{t('itemsCard.vatPercent')}</Label>
                     </div>
                     <Select
                       value={(item.taxRate ?? taxRate).toString()}
@@ -682,7 +694,7 @@ export default function ItemsCard({
                   </div>
                   <div style={{ width: '80px' }}>
                     <div className="sr-only">
-                      <Label>Rabatt %</Label>
+                      <Label>{t('itemsCard.discountPercent')}</Label>
                     </div>
                     <Input
                       type="number"
@@ -710,7 +722,7 @@ export default function ItemsCard({
                   </div>
                   <div style={{ width: '100px', textAlign: 'right' }}>
                     <div className="sr-only">
-                      <Label>Betrag</Label>
+                      <Label>{t('itemsCard.columnAmount')}</Label>
                     </div>
                     <div
                       className={`flex h-10 items-center justify-end font-medium text-sm ${item.category === 'discount' ? 'text-red-600' : ''}`}
@@ -736,7 +748,7 @@ export default function ItemsCard({
                 {item.description && item.description.trim().length > 0 && (
                   <div className="px-4 pb-4">
                     <textarea
-                      placeholder="Erweiterte Beschreibung (optional) - wird auf der Rechnung unter der Position angezeigt"
+                      placeholder={t('itemsCard.extendedDescriptionPlaceholder')}
                       value={item.extendedDescription || ''}
                       onChange={e => {
                         setItems(prev =>

@@ -19,6 +19,7 @@ import {
 } from '@tasko/ui';
 import { format, subMonths } from 'date-fns';
 import { de } from 'date-fns/locale';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -31,6 +32,7 @@ interface ComplianceDashboardProps {
 }
 
 export function ComplianceDashboard({ companyId, userRole = 'user' }: ComplianceDashboardProps) {
+  const t = useTranslations('finance');
   const [selectedPeriod, setSelectedPeriod] = useState(() => {
     const now = new Date();
     return format(now, 'yyyy-MM');
@@ -50,7 +52,7 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
       setReport(complianceReport);
     } catch (error) {
       console.error('Failed to load compliance report:', error);
-      toast.error('Compliance-Report konnte nicht geladen werden');
+      toast.error(t('ComplianceDashboard.loadError'));
     } finally {
       setLoading(false);
     }
@@ -64,10 +66,10 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
     try {
       setGenerating(true);
       await loadReport();
-      toast.success('Compliance-Report aktualisiert');
+      toast.success(t('ComplianceDashboard.reportUpdated'));
     } catch (error) {
       console.error('Report generation failed:', error);
-      toast.error('Report-Generierung fehlgeschlagen');
+      toast.error(t('ComplianceDashboard.generationError'));
     } finally {
       setGenerating(false);
     }
@@ -92,7 +94,7 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    toast.success('Compliance-Report exportiert');
+    toast.success(t('ComplianceDashboard.exportSuccess'));
   };
 
   const getStatusColor = (status: string) => {
@@ -118,6 +120,34 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
         return <Icon icon="lucide:alert-triangle" className="h-4 w-4" />;
       default:
         return <Icon icon="lucide:clock" className="h-4 w-4" />;
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'compliant':
+        return t('ComplianceDashboard.statusCompliant');
+      case 'warning':
+        return t('ComplianceDashboard.statusWarning');
+      case 'non-compliant':
+        return t('ComplianceDashboard.statusNonCompliant');
+      default:
+        return status;
+    }
+  };
+
+  const getIssueLabel = (severity: string) => {
+    switch (severity) {
+      case 'critical':
+        return t('ComplianceDashboard.severityCritical');
+      case 'high':
+        return t('ComplianceDashboard.severityHigh');
+      case 'medium':
+        return t('ComplianceDashboard.severityMedium');
+      case 'low':
+        return t('ComplianceDashboard.severityLow');
+      default:
+        return severity;
     }
   };
 
@@ -150,7 +180,7 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Icon icon="lucide:shield" className="h-5 w-5 text-accent" />
-            GoBD-Compliance Dashboard
+            {t('ComplianceDashboard.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -173,16 +203,18 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Icon icon="lucide:shield" className="h-5 w-5 text-accent" />
-                GoBD-Compliance Dashboard
+                {t('ComplianceDashboard.title')}
                 {userRole === 'steuerberater' && (
                   <Badge className="border-blue-200 bg-blue-100 text-blue-700">
-                    Steuerberater-Ansicht
+                    {t('ComplianceDashboard.taxAdvisorView')}
                   </Badge>
                 )}
               </CardTitle>
               {report && (
                 <p className="mt-1 text-gray-600 text-sm">
-                  Letzter Report: {format(report.generatedAt, 'dd.MM.yyyy HH:mm')}
+                  {t('ComplianceDashboard.lastReport', {
+                    date: format(report.generatedAt, 'dd.MM.yyyy HH:mm'),
+                  })}
                 </p>
               )}
             </div>
@@ -206,12 +238,12 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
                   {generating ? (
                     <>
                       <Icon icon="lucide:clock" className="mr-2 h-4 w-4 animate-spin" />
-                      Generiere...
+                      {t('ComplianceDashboard.generating')}
                     </>
                   ) : (
                     <>
                       <Icon icon="lucide:bar-chart3" className="mr-2 h-4 w-4" />
-                      Aktualisieren
+                      {t('ComplianceDashboard.refresh')}
                     </>
                   )}
                 </Button>
@@ -219,7 +251,7 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
                 {report && (
                   <Button variant="outline" onClick={exportReport}>
                     <Icon icon="lucide:download" className="mr-2 h-4 w-4" />
-                    Export
+                    {t('ComplianceDashboard.export')}
                   </Button>
                 )}
               </div>
@@ -235,10 +267,10 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Icon icon="lucide:trending-up" className="h-5 w-5 text-accent" />
-                Compliance-Status
+                {t('ComplianceDashboard.complianceStatus')}
                 <Badge className={getStatusColor(report.status)}>
                   {getStatusIcon(report.status)}
-                  <span className="ml-1 capitalize">{report.status}</span>
+                  <span className="ml-1 capitalize">{getStatusLabel(report.status)}</span>
                 </Badge>
               </CardTitle>
             </CardHeader>
@@ -250,7 +282,7 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
                   </div>
                   <p className="flex items-center justify-center gap-1 text-blue-700 text-sm">
                     <Icon icon="lucide:file-text" className="h-4 w-4" />
-                    Gesamt-Dokumente
+                    {t('ComplianceDashboard.totalDocuments')}
                   </p>
                 </div>
 
@@ -260,7 +292,7 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
                   </div>
                   <p className="flex items-center justify-center gap-1 text-green-700 text-sm">
                     <Icon icon="lucide:check-circle" className="h-4 w-4" />
-                    Festgeschrieben
+                    {t('ComplianceDashboard.lockedDocuments')}
                   </p>
                 </div>
 
@@ -270,7 +302,7 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
                   </div>
                   <p className="flex items-center justify-center gap-1 text-orange-700 text-sm">
                     <Icon icon="lucide:clock" className="h-4 w-4" />
-                    Noch offen
+                    {t('ComplianceDashboard.unlockedDocuments')}
                   </p>
                 </div>
 
@@ -280,7 +312,7 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
                   </div>
                   <p className="flex items-center justify-center gap-1 text-red-700 text-sm">
                     <Icon icon="lucide:alert-triangle" className="h-4 w-4" />
-                    Überfällig
+                    {t('ComplianceDashboard.overdueDocuments')}
                   </p>
                 </div>
               </div>
@@ -288,7 +320,7 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
               {/* Fortschrittsbalken */}
               <div className="mt-6">
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="font-medium text-sm">Festschreibungs-Fortschritt</span>
+                  <span className="font-medium text-sm">{t('ComplianceDashboard.lockProgress')}</span>
                   <span className="text-gray-600 text-sm">
                     {Math.round(
                       (report.summary.lockedDocuments / report.summary.totalDocuments) * 100,
@@ -310,9 +342,9 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Icon icon="lucide:alert-triangle" className="h-5 w-5 text-orange-500" />
-                  Compliance-Probleme
+                  {t('ComplianceDashboard.complianceIssues')}
                   <Badge className="border-orange-200 bg-orange-100 text-orange-700">
-                    {report.issues.length} Problem{report.issues.length !== 1 ? 'e' : ''}
+                    {t('ComplianceDashboard.issueCount', { count: report.issues.length })}
                   </Badge>
                 </CardTitle>
               </CardHeader>
@@ -321,15 +353,20 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
                   {report.issues.map((issue, index) => (
                     <div key={index} className="rounded-lg border p-4">
                       <div className="flex items-start gap-3">
-                        <Badge className={getIssueColor(issue.severity)}>{issue.severity}</Badge>
+                        <Badge className={getIssueColor(issue.severity)}>
+                          {getIssueLabel(issue.severity)}
+                        </Badge>
                         <div className="flex-1">
                           <h4 className="font-medium">{issue.message}</h4>
                           <p className="mt-1 text-gray-600 text-sm">
-                            Betroffene Dokumente: {issue.documentIds.length}
+                            {t('ComplianceDashboard.affectedDocuments', {
+                              count: issue.documentIds.length,
+                            })}
                           </p>
                           {issue.resolution && (
                             <div className="mt-2 rounded bg-blue-50 p-2 text-blue-800 text-sm">
-                              <strong>Lösung:</strong> {issue.resolution}
+                              <strong>{t('ComplianceDashboard.resolution')}</strong>{' '}
+                              {issue.resolution}
                             </div>
                           )}
                         </div>
@@ -347,7 +384,7 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Icon icon="lucide:check-circle" className="h-5 w-5 text-green-500" />
-                  Empfehlungen
+                  {t('ComplianceDashboard.recommendations')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -372,24 +409,24 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Icon icon="lucide:users" className="h-5 w-5 text-accent" />
-                  Steuerberater-Informationen
+                  {t('ComplianceDashboard.taxAdvisorInfo')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <div>
-                    <h4 className="mb-3 font-medium">DATEV-Export bereit</h4>
+                    <h4 className="mb-3 font-medium">{t('ComplianceDashboard.datevExportReady')}</h4>
                     <div className="space-y-2">
                       <div className="flex justify-between">
-                        <span className="text-sm">Rechnungen:</span>
+                        <span className="text-sm">{t('ComplianceDashboard.invoices')}</span>
                         <span className="font-medium">{report.summary.lockedDocuments}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm">Stornos:</span>
+                        <span className="text-sm">{t('ComplianceDashboard.cancellations')}</span>
                         <span className="font-medium">{report.summary.stornoDocuments}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-sm">Status:</span>
+                        <span className="text-sm">{t('ComplianceDashboard.status')}</span>
                         <Badge
                           className={
                             report.summary.unlockedDocuments === 0
@@ -398,23 +435,23 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
                           }
                         >
                           {report.summary.unlockedDocuments === 0
-                            ? 'Export möglich'
-                            : 'Unvollständig'}
+                            ? t('ComplianceDashboard.exportPossible')
+                            : t('ComplianceDashboard.incomplete')}
                         </Badge>
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <h4 className="mb-3 font-medium">Prüfungshinweise</h4>
+                    <h4 className="mb-3 font-medium">{t('ComplianceDashboard.auditNotes')}</h4>
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center gap-2">
                         <Icon icon="lucide:check-circle" className="h-4 w-4 text-green-600" />
-                        <span>Fortlaufende Nummerierung</span>
+                        <span>{t('ComplianceDashboard.consecutiveNumbering')}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <Icon icon="lucide:check-circle" className="h-4 w-4 text-green-600" />
-                        <span>Unveränderbarkeit</span>
+                        <span>{t('ComplianceDashboard.immutability')}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         {report.summary.overdueDocuments === 0 ? (
@@ -422,7 +459,7 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
                         ) : (
                           <Icon icon="lucide:alert-triangle" className="h-4 w-4 text-red-600" />
                         )}
-                        <span>Zeitnahe Festschreibung</span>
+                        <span>{t('ComplianceDashboard.timelyLocking')}</span>
                       </div>
                     </div>
                   </div>
@@ -436,8 +473,8 @@ export function ComplianceDashboard({ companyId, userRole = 'user' }: Compliance
             <Alert className="border-green-200 bg-green-50">
               <Icon icon="lucide:check-circle" className="h-4 w-4 text-green-600" />
               <AlertDescription className="text-green-800">
-                <strong>Glückwunsch!</strong> Ihre Buchhaltung ist vollständig GoBD-konform. Alle
-                Dokumente sind ordnungsgemäß festgeschrieben.
+                <strong>{t('ComplianceDashboard.congratulations')}</strong>{' '}
+                {t('ComplianceDashboard.fullyCompliant')}
               </AlertDescription>
             </Alert>
           )}

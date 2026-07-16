@@ -23,6 +23,7 @@ import {
   Textarea,
 } from '@tasko/ui';
 import { format } from 'date-fns';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -43,6 +44,7 @@ export function StornoManager({
   onStornoCreated,
   onCreditNoteCreated,
 }: StornoManagerProps) {
+  const t = useTranslations('finance');
   const { user } = useNewAuth();
   const [stornoDialogOpen, setStornoDialogOpen] = useState(false);
   const [creditDialogOpen, setCreditDialogOpen] = useState(false);
@@ -58,7 +60,7 @@ export function StornoManager({
 
   const handleStorno = async () => {
     if (!user || !stornoReason.trim()) {
-      toast.error('Bitte geben Sie einen Storno-Grund an');
+      toast.error(t('StornoManager.stornoReasonRequired'));
       return;
     }
 
@@ -82,11 +84,11 @@ export function StornoManager({
         setStornoDialogOpen(false);
         setStornoReason('');
         onStornoCreated?.(stornoId);
-        toast.success('Stornorechnung wurde erfolgreich erstellt');
+        toast.success(t('StornoManager.stornoCreatedSuccess'));
       }
     } catch (error) {
       console.error('Storno creation failed:', error);
-      toast.error('Fehler beim Erstellen der Stornorechnung');
+      toast.error(t('StornoManager.stornoCreatedError'));
     } finally {
       setProcessing(false);
     }
@@ -94,13 +96,13 @@ export function StornoManager({
 
   const handleCreditNote = async () => {
     if (!user || !creditReason.trim()) {
-      toast.error('Bitte geben Sie einen Grund für die Gutschrift an');
+      toast.error(t('StornoManager.creditReasonRequired'));
       return;
     }
 
     const amount = parseFloat(creditAmount);
     if (Number.isNaN(amount) || amount <= 0 || amount > document.amount) {
-      toast.error('Ungültiger Gutschriftbetrag');
+      toast.error(t('StornoManager.creditAmountInvalid'));
       return;
     }
 
@@ -122,12 +124,12 @@ export function StornoManager({
         setCreditReason('');
         setCreditAmount(document.amount.toString());
         onCreditNoteCreated?.(`credit-${Date.now()}`);
-        toast.success('Gutschrift wurde erfolgreich erstellt');
+        toast.success(t('StornoManager.creditCreatedSuccess'));
         setProcessing(false);
       }, 1000);
     } catch (error) {
       console.error('Credit note creation failed:', error);
-      toast.error('Fehler beim Erstellen der Gutschrift');
+      toast.error(t('StornoManager.creditCreatedError'));
       setProcessing(false);
     }
   };
@@ -139,7 +141,7 @@ export function StornoManager({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Icon icon="lucide:file-text" className="h-5 w-5 text-accent" />
-            Dokument-Status
+            {t('StornoManager.documentStatus')}
             <Badge className="border-blue-200 bg-blue-100 text-blue-700">
               {document.documentNumber}
             </Badge>
@@ -150,7 +152,7 @@ export function StornoManager({
             <div>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 text-sm">Status:</span>
+                  <span className="text-gray-600 text-sm">{t('StornoManager.statusLabel')}</span>
                   <Badge
                     className={
                       document.gobdStatus.isLocked
@@ -158,22 +160,26 @@ export function StornoManager({
                         : 'border-orange-200 bg-orange-100 text-orange-700'
                     }
                   >
-                    {document.gobdStatus.isLocked ? 'Festgeschrieben' : 'Offen'}
+                    {document.gobdStatus.isLocked
+                      ? t('StornoManager.statusLocked')
+                      : t('StornoManager.statusOpen')}
                   </Badge>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 text-sm">Betrag:</span>
+                  <span className="text-gray-600 text-sm">{t('StornoManager.amountLabel')}</span>
                   <span className="font-medium">
                     {formatCurrency(document.amount, document.currency)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 text-sm">Erstellt:</span>
+                  <span className="text-gray-600 text-sm">{t('StornoManager.createdLabel')}</span>
                   <span>{format(document.createdAt, 'dd.MM.yyyy')}</span>
                 </div>
                 {document.gobdStatus.lockedAt && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600 text-sm">Festgeschrieben:</span>
+                    <span className="text-gray-600 text-sm">
+                      {t('StornoManager.lockedAtLabel')}
+                    </span>
                     <span>{format(document.gobdStatus.lockedAt, 'dd.MM.yyyy HH:mm')}</span>
                   </div>
                 )}
@@ -183,26 +189,36 @@ export function StornoManager({
             <div>
               <div className="space-y-2">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 text-sm">Storniert:</span>
+                  <span className="text-gray-600 text-sm">
+                    {t('StornoManager.stornoedLabel')}
+                  </span>
                   <Badge variant={document.stornoDocumentId ? 'destructive' : 'secondary'}>
-                    {document.stornoDocumentId ? 'Ja' : 'Nein'}
+                    {document.stornoDocumentId ? t('StornoManager.yes') : t('StornoManager.no')}
                   </Badge>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 text-sm">Gutschrift:</span>
+                  <span className="text-gray-600 text-sm">
+                    {t('StornoManager.creditNoteLabel')}
+                  </span>
                   <Badge variant={document.creditNoteId ? 'default' : 'secondary'}>
-                    {document.creditNoteId ? 'Erstellt' : 'Keine'}
+                    {document.creditNoteId
+                      ? t('StornoManager.creditNoteCreated')
+                      : t('StornoManager.creditNoteNone')}
                   </Badge>
                 </div>
                 {document.stornoDocumentId && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600 text-sm">Storno-Nr.:</span>
+                    <span className="text-gray-600 text-sm">
+                      {t('StornoManager.stornoNumberLabel')}
+                    </span>
                     <span className="font-mono text-sm">{document.stornoDocumentId}</span>
                   </div>
                 )}
                 {document.creditNoteId && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600 text-sm">Gutschrift-Nr.:</span>
+                    <span className="text-gray-600 text-sm">
+                      {t('StornoManager.creditNumberLabel')}
+                    </span>
                     <span className="font-mono text-sm">{document.creditNoteId}</span>
                   </div>
                 )}
@@ -219,28 +235,26 @@ export function StornoManager({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Icon icon="lucide:file-x" className="h-5 w-5 text-red-500" />
-              Stornorechnung
+              {t('StornoManager.stornoCardTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="mb-4 text-gray-600 text-sm">
-              Erstellen Sie eine Stornorechnung mit negativen Beträgen zur vollständigen Korrektur
-              der ursprünglichen Rechnung.
-            </p>
+            <p className="mb-4 text-gray-600 text-sm">{t('StornoManager.stornoCardDescription')}</p>
 
             {!document.gobdStatus.isLocked ? (
               <Alert className="border-orange-200 bg-orange-50">
                 <Icon icon="lucide:alert-triangle" className="h-4 w-4 text-orange-600" />
                 <AlertDescription className="text-orange-800">
-                  Das Dokument muss zuerst festgeschrieben werden, bevor ein Storno erstellt werden
-                  kann.
+                  {t('StornoManager.stornoRequiresLockedHint')}
                 </AlertDescription>
               </Alert>
             ) : document.stornoDocumentId ? (
               <Alert className="border-green-200 bg-green-50">
                 <Icon icon="lucide:check-circle" className="h-4 w-4 text-green-600" />
                 <AlertDescription className="text-green-800">
-                  Stornorechnung bereits erstellt: {document.stornoDocumentId}
+                  {t('StornoManager.stornoAlreadyCreated', {
+                    stornoId: document.stornoDocumentId,
+                  })}
                 </AlertDescription>
               </Alert>
             ) : (
@@ -251,21 +265,20 @@ export function StornoManager({
                     disabled={!canCreateStorno}
                   >
                     <Icon icon="lucide:file-x" className="mr-2 h-4 w-4" />
-                    Stornorechnung erstellen
+                    {t('StornoManager.createStornoButton')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Stornorechnung erstellen</DialogTitle>
+                    <DialogTitle>{t('StornoManager.createStornoButton')}</DialogTitle>
                     <DialogDescription>
-                      Eine Stornorechnung macht das Original-Dokument ungültig durch negative
-                      Beträge.
+                      {t('StornoManager.stornoDialogDescription')}
                     </DialogDescription>
                   </DialogHeader>
 
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="storno-date">Storno-Datum</Label>
+                      <Label htmlFor="storno-date">{t('StornoManager.stornoDateLabel')}</Label>
                       <Input
                         id="storno-date"
                         type="date"
@@ -275,10 +288,12 @@ export function StornoManager({
                     </div>
 
                     <div>
-                      <Label htmlFor="storno-reason">Storno-Grund *</Label>
+                      <Label htmlFor="storno-reason">
+                        {t('StornoManager.stornoReasonLabel')}
+                      </Label>
                       <Textarea
                         id="storno-reason"
-                        placeholder="Grund für die Stornorechnung eingeben..."
+                        placeholder={t('StornoManager.stornoReasonPlaceholder')}
                         value={stornoReason}
                         onChange={e => setStornoReason(e.target.value)}
                         rows={3}
@@ -288,8 +303,8 @@ export function StornoManager({
                     <Alert className="border-red-200 bg-red-50">
                       <Icon icon="lucide:alert-triangle" className="h-4 w-4 text-red-600" />
                       <AlertDescription className="text-red-800">
-                        <strong>Achtung:</strong> Die Stornorechnung wird automatisch
-                        festgeschrieben und kann nicht mehr geändert werden.
+                        <strong>{t('StornoManager.attentionLabel')}</strong>{' '}
+                        {t('StornoManager.stornoLockedHint')}
                       </AlertDescription>
                     </Alert>
 
@@ -300,7 +315,7 @@ export function StornoManager({
                         onClick={() => setStornoDialogOpen(false)}
                         disabled={processing}
                       >
-                        Abbrechen
+                        {t('StornoManager.cancel')}
                       </Button>
                       <Button
                         className="flex-1 bg-red-500 text-white hover:bg-red-600"
@@ -310,12 +325,12 @@ export function StornoManager({
                         {processing ? (
                           <>
                             <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />
-                            Erstelle...
+                            {t('StornoManager.creating')}
                           </>
                         ) : (
                           <>
                             <Icon icon="lucide:file-x" className="mr-2 h-4 w-4" />
-                            Storno erstellen
+                            {t('StornoManager.createStornoSubmit')}
                           </>
                         )}
                       </Button>
@@ -332,27 +347,26 @@ export function StornoManager({
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Icon icon="lucide:credit-card" className="h-5 w-5 text-blue-500" />
-              Gutschrift
+              {t('StornoManager.creditCardTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="mb-4 text-gray-600 text-sm">
-              Erstellen Sie eine Gutschrift für Teilbeträge oder als Alternative zum Storno.
-            </p>
+            <p className="mb-4 text-gray-600 text-sm">{t('StornoManager.creditCardDescription')}</p>
 
             {!document.gobdStatus.isLocked ? (
               <Alert className="border-orange-200 bg-orange-50">
                 <Icon icon="lucide:alert-triangle" className="h-4 w-4 text-orange-600" />
                 <AlertDescription className="text-orange-800">
-                  Das Dokument muss zuerst festgeschrieben werden, bevor eine Gutschrift erstellt
-                  werden kann.
+                  {t('StornoManager.creditRequiresLockedHint')}
                 </AlertDescription>
               </Alert>
             ) : document.creditNoteId ? (
               <Alert className="border-green-200 bg-green-50">
                 <Icon icon="lucide:check-circle" className="h-4 w-4 text-green-600" />
                 <AlertDescription className="text-green-800">
-                  Gutschrift bereits erstellt: {document.creditNoteId}
+                  {t('StornoManager.creditAlreadyCreated', {
+                    creditId: document.creditNoteId,
+                  })}
                 </AlertDescription>
               </Alert>
             ) : (
@@ -363,21 +377,20 @@ export function StornoManager({
                     disabled={!canCreateCredit}
                   >
                     <Icon icon="lucide:credit-card" className="mr-2 h-4 w-4" />
-                    Gutschrift erstellen
+                    {t('StornoManager.createCreditButton')}
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Gutschrift erstellen</DialogTitle>
+                    <DialogTitle>{t('StornoManager.createCreditButton')}</DialogTitle>
                     <DialogDescription>
-                      Eine Gutschrift reduziert die Forderung, ohne das Original-Dokument zu
-                      stornieren.
+                      {t('StornoManager.creditDialogDescription')}
                     </DialogDescription>
                   </DialogHeader>
 
                   <div className="space-y-4">
                     <div>
-                      <Label htmlFor="credit-date">Gutschrift-Datum</Label>
+                      <Label htmlFor="credit-date">{t('StornoManager.creditDateLabel')}</Label>
                       <Input
                         id="credit-date"
                         type="date"
@@ -387,7 +400,9 @@ export function StornoManager({
                     </div>
 
                     <div>
-                      <Label htmlFor="credit-amount">Gutschrift-Betrag *</Label>
+                      <Label htmlFor="credit-amount">
+                        {t('StornoManager.creditAmountLabel')}
+                      </Label>
                       <div className="relative">
                         <Icon
                           icon="lucide:euro"
@@ -405,16 +420,19 @@ export function StornoManager({
                         />
                       </div>
                       <p className="mt-1 text-gray-500 text-xs">
-                        Maximum:{' '}
-                        {formatCurrency(document.amount, document.currency)}
+                        {t('StornoManager.creditMaximum', {
+                          amount: formatCurrency(document.amount, document.currency),
+                        })}
                       </p>
                     </div>
 
                     <div>
-                      <Label htmlFor="credit-reason">Gutschrift-Grund *</Label>
+                      <Label htmlFor="credit-reason">
+                        {t('StornoManager.creditReasonLabel')}
+                      </Label>
                       <Textarea
                         id="credit-reason"
-                        placeholder="Grund für die Gutschrift eingeben..."
+                        placeholder={t('StornoManager.creditReasonPlaceholder')}
                         value={creditReason}
                         onChange={e => setCreditReason(e.target.value)}
                         rows={3}
@@ -424,8 +442,7 @@ export function StornoManager({
                     <Alert className="border-blue-200 bg-blue-50">
                       <Icon icon="lucide:check-circle" className="h-4 w-4 text-blue-600" />
                       <AlertDescription className="text-blue-800">
-                        Die Gutschrift wird als separates Dokument erstellt und automatisch
-                        festgeschrieben.
+                        {t('StornoManager.creditLockedHint')}
                       </AlertDescription>
                     </Alert>
 
@@ -436,7 +453,7 @@ export function StornoManager({
                         onClick={() => setCreditDialogOpen(false)}
                         disabled={processing}
                       >
-                        Abbrechen
+                        {t('StornoManager.cancel')}
                       </Button>
                       <Button
                         className="flex-1 bg-blue-500 text-white hover:bg-blue-600"
@@ -446,12 +463,12 @@ export function StornoManager({
                         {processing ? (
                           <>
                             <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />
-                            Erstelle...
+                            {t('StornoManager.creating')}
                           </>
                         ) : (
                           <>
                             <Icon icon="lucide:credit-card" className="mr-2 h-4 w-4" />
-                            Gutschrift erstellen
+                            {t('StornoManager.createCreditSubmit')}
                           </>
                         )}
                       </Button>

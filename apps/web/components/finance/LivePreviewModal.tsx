@@ -14,6 +14,7 @@ import {
   Input,
   Label,
 } from '@tasko/ui';
+import { useTranslations } from 'next-intl';
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -72,6 +73,7 @@ export function LivePreviewModal({
     [key: string]: unknown;
   };
 
+  const t = useTranslations('finance');
   const { user } = useNewAuth(); // User-Daten aus Auth Context
   const [sending, setSending] = useState(false);
   const [showCompanySettings, setShowCompanySettings] = useState(false);
@@ -148,15 +150,15 @@ export function LivePreviewModal({
 
   // Document type labels
   const documentLabels: Record<DocumentType, string> = {
-    invoice: 'Rechnung',
-    quote: 'Angebot',
-    reminder: 'Erinnerung',
-    'credit-note': 'Gutschrift',
-    cancellation: 'Stornorechnung',
-    'delivery-note': 'Lieferschein',
-    deliveryNote: 'Lieferschein',
-    'order-confirmation': 'Auftragsbestaetigung',
-    orderConfirmation: 'Auftragsbestaetigung',
+    invoice: t('LivePreviewModal.docType.invoice'),
+    quote: t('LivePreviewModal.docType.quote'),
+    reminder: t('LivePreviewModal.docType.reminder'),
+    'credit-note': t('LivePreviewModal.docType.creditNote'),
+    cancellation: t('LivePreviewModal.docType.cancellation'),
+    'delivery-note': t('LivePreviewModal.docType.deliveryNote'),
+    deliveryNote: t('LivePreviewModal.docType.deliveryNote'),
+    'order-confirmation': t('LivePreviewModal.docType.orderConfirmation'),
+    orderConfirmation: t('LivePreviewModal.docType.orderConfirmation'),
   };
 
   // Funktion zum Anreichern der Dokumentdaten mit Kundennummer und Kontaktperson
@@ -329,7 +331,11 @@ export function LivePreviewModal({
       } catch (error) {
         console.error('❌ Error loading real invoice data:', error);
         setRealDocumentData(document as LiveDocument); // Fallback to provided document
-        toast.error(`Fehler beim Laden der ${documentLabels[documentType] || 'Dokument'}-Daten`);
+        toast.error(
+          t('LivePreviewModal.toast.loadError', {
+            docType: documentLabels[documentType] || t('LivePreviewModal.docType.generic'),
+          }),
+        );
       } finally {
         setLoadingEInvoiceData(false);
       }
@@ -391,7 +397,7 @@ export function LivePreviewModal({
     standard: [
       {
         value: 'TEMPLATE_STANDARD',
-        name: 'Standard',
+        name: t('LivePreviewModal.layout.standard'),
         svg: (
           <svg
             viewBox="0 0 72 102"
@@ -420,7 +426,7 @@ export function LivePreviewModal({
       },
       {
         value: 'TEMPLATE_NEUTRAL',
-        name: 'Neutral',
+        name: t('LivePreviewModal.layout.neutral'),
         svg: (
           <svg
             viewBox="0 0 72 102"
@@ -480,7 +486,7 @@ export function LivePreviewModal({
       },
       {
         value: 'TEMPLATE_ELEGANT',
-        name: 'Elegant',
+        name: t('LivePreviewModal.layout.elegant'),
         svg: (
           <svg
             viewBox="0 0 72 102"
@@ -508,7 +514,7 @@ export function LivePreviewModal({
       },
       {
         value: 'TEMPLATE_TECHNICAL',
-        name: 'Technisch',
+        name: t('LivePreviewModal.layout.technical'),
         svg: (
           <svg
             viewBox="0 0 72 102"
@@ -533,7 +539,7 @@ export function LivePreviewModal({
       },
       {
         value: 'TEMPLATE_GEOMETRIC',
-        name: 'Geometrisch',
+        name: t('LivePreviewModal.layout.geometric'),
         svg: (
           <svg
             viewBox="0 0 72 102"
@@ -561,7 +567,7 @@ export function LivePreviewModal({
       },
       {
         value: 'TEMPLATE_DYNAMIC',
-        name: 'Dynamisch',
+        name: t('LivePreviewModal.layout.dynamic'),
         svg: (
           <svg
             viewBox="0 0 72 102"
@@ -684,11 +690,13 @@ export function LivePreviewModal({
         await onSend(method, {});
       }
 
-      toast.success(`${documentLabel} erfolgreich versendet`);
+      toast.success(t('LivePreviewModal.toast.sendSuccess', { docType: documentLabel }));
       onClose();
     } catch (error) {
       console.error('Error sending document:', error);
-      toast.error(`Fehler beim Versenden der ${documentLabel.toLowerCase()}`);
+      toast.error(
+        t('LivePreviewModal.toast.sendError', { docType: documentLabel.toLowerCase() }),
+      );
     } finally {
       setSending(false);
     }
@@ -709,7 +717,7 @@ export function LivePreviewModal({
             ✕
           </button>
           <DialogTitle className="font-semibold text-white text-xl">
-            {documentLabel} Vorschau
+            {t('LivePreviewModal.dialogTitle', { docType: documentLabel })}
           </DialogTitle>
         </DialogHeader>
         <div className="flex h-full min-h-0 flex-1">
@@ -722,10 +730,11 @@ export function LivePreviewModal({
                   <Icon icon="lucide:alert-triangle" className="h-4 w-4" />
                   <AlertDescription>
                     <div className="space-y-2">
-                      <p className="font-medium">Angaben zu deinem Unternehmen</p>
+                      <p className="font-medium">{t('LivePreviewModal.companySettings.title')}</p>
                       <p className="text-sm">
-                        Damit deine {documentLabel.toLowerCase()} rechtssicher und GoBD-konform
-                        sind, ergänze noch Angaben zu dir und deinem Unternehmen.
+                        {t('LivePreviewModal.companySettings.description', {
+                          docType: documentLabel.toLowerCase(),
+                        })}
                       </p>
                       <Button
                         size="sm"
@@ -733,7 +742,7 @@ export function LivePreviewModal({
                         className="mt-2"
                         onClick={() => setShowCompanySettings(false)}
                       >
-                        Angaben vervollständigen
+                        {t('LivePreviewModal.companySettings.action')}
                       </Button>
                     </div>
                   </AlertDescription>
@@ -746,7 +755,9 @@ export function LivePreviewModal({
               {/* Main Actions Section */}
               <div className="border-b">
                 <div className="border-b bg-gray-50 px-4 py-3">
-                  <h3 className="font-medium text-gray-700 text-sm">Aktionen</h3>
+                  <h3 className="font-medium text-gray-700 text-sm">
+                    {t('LivePreviewModal.section.actions')}
+                  </h3>
                 </div>
 
                 {/* Preview Mode: Nur "Als Entwurf speichern" */}
@@ -759,7 +770,9 @@ export function LivePreviewModal({
                     >
                       <div className="flex items-center gap-3">
                         <Icon icon="lucide:check-circle" className="h-5 w-5 text-gray-600" />
-                        <span className="font-medium">Als Entwurf speichern</span>
+                        <span className="font-medium">
+                          {t('LivePreviewModal.action.saveDraft')}
+                        </span>
                       </div>
                       {isExpanded('save') ? (
                         <Icon icon="lucide:chevron-down" className="h-4 w-4 text-gray-400" />
@@ -770,8 +783,9 @@ export function LivePreviewModal({
                     {isExpanded('save') && (
                       <div className="bg-gray-50 px-4 pb-4">
                         <div className="mb-3 text-gray-600 text-sm">
-                          {documentLabel} als Entwurf speichern. Sie können das Dokument später
-                          bearbeiten und finalisieren.
+                          {t('LivePreviewModal.action.saveDraftDescription', {
+                            docType: documentLabel,
+                          })}
                         </div>
                         <Button
                           className="w-full bg-accent hover:bg-teal-700"
@@ -779,13 +793,15 @@ export function LivePreviewModal({
                             if (onSaveAsDraft) {
                               onSaveAsDraft();
                             } else {
-                              toast.success(`${documentLabel} als Entwurf gespeichert`);
+                              toast.success(
+                                t('LivePreviewModal.toast.draftSaved', { docType: documentLabel }),
+                              );
                               onClose();
                             }
                           }}
                         >
                           <Icon icon="lucide:check-circle" className="mr-2 h-4 w-4" />
-                          Als Entwurf speichern
+                          {t('LivePreviewModal.action.saveDraft')}
                         </Button>
                       </div>
                     )}
@@ -804,7 +820,9 @@ export function LivePreviewModal({
                       >
                         <div className="flex items-center gap-3">
                           <Icon icon="lucide:download" className="h-5 w-5 text-gray-600" />
-                          <span className="font-medium">Herunterladen</span>
+                          <span className="font-medium">
+                            {t('LivePreviewModal.action.download')}
+                          </span>
                         </div>
                         {isExpanded('download') ? (
                           <Icon icon="lucide:chevron-down" className="h-4 w-4 text-gray-400" />
@@ -824,7 +842,7 @@ export function LivePreviewModal({
                             ) : (
                               <Icon icon="lucide:download" className="mr-2 h-4 w-4" />
                             )}
-                            PDF herunterladen
+                            {t('LivePreviewModal.action.downloadPdf')}
                           </Button>
                         </div>
                       )}
@@ -839,7 +857,7 @@ export function LivePreviewModal({
                       >
                         <div className="flex items-center gap-3">
                           <Icon icon="lucide:printer" className="h-5 w-5 text-gray-600" />
-                          <span className="font-medium">Drucken</span>
+                          <span className="font-medium">{t('LivePreviewModal.action.print')}</span>
                         </div>
                         {isExpanded('print') ? (
                           <Icon icon="lucide:chevron-down" className="h-4 w-4 text-gray-400" />
@@ -856,7 +874,7 @@ export function LivePreviewModal({
                             className="w-full"
                           >
                             <Icon icon="lucide:printer" className="mr-2 h-4 w-4" />
-                            Drucken
+                            {t('LivePreviewModal.action.print')}
                           </Button>
                         </div>
                       )}
@@ -868,7 +886,9 @@ export function LivePreviewModal({
               {/* Layout Section - Always visible */}
               <div>
                 <div className="border-b bg-gray-50 px-4 py-3">
-                  <h3 className="font-medium text-gray-700 text-sm">Layout</h3>
+                  <h3 className="font-medium text-gray-700 text-sm">
+                    {t('LivePreviewModal.section.layout')}
+                  </h3>
                 </div>
 
                 {/* Layout Option */}
@@ -880,7 +900,9 @@ export function LivePreviewModal({
                   >
                     <div className="flex items-center gap-3">
                       <Icon icon="lucide:layout" className="h-5 w-5 text-gray-600" />
-                      <span className="font-medium">Template auswählen</span>
+                      <span className="font-medium">
+                        {t('LivePreviewModal.action.selectTemplate')}
+                      </span>
                     </div>
                     {isExpanded('layout') ? (
                       <Icon icon="lucide:chevron-down" className="h-4 w-4 text-gray-400" />
@@ -931,7 +953,7 @@ export function LivePreviewModal({
                 >
                   <div className="flex items-center gap-3">
                     <Icon icon="lucide:palette" className="h-5 w-5 text-gray-600" />
-                    <span className="font-medium">Farbe</span>
+                    <span className="font-medium">{t('LivePreviewModal.section.color')}</span>
                   </div>
                   {isExpanded('color') ? (
                     <Icon icon="lucide:chevron-down" className="h-4 w-4 text-gray-400" />
@@ -944,18 +966,46 @@ export function LivePreviewModal({
                     <div className="color-palette">
                       <div className="mb-3 grid grid-cols-6 gap-2">
                         {[
-                          { name: 'Grau', color: '#313131', label: 'Grey' },
-                          { name: 'Hellgrau', color: '#848484', label: 'Light Grey' },
-                          { name: 'Türkis', color: '#0d8375', label: 'Teal' },
-                          { name: 'Blau', color: '#1d65b3', label: 'Blue' },
-                          { name: 'Lila', color: '#a964d9', label: 'Purple' },
-                          { name: 'Rot', color: '#c31919', label: 'Red' },
-                          { name: 'Orange', color: '#f46e32', label: 'Orange' },
-                          { name: 'Gelb', color: '#ffcf00', label: 'Yellow' },
-                          { name: 'Rosa', color: '#fd88ab', label: 'Pink' },
-                          { name: 'Beige', color: '#c0ab60', label: 'Beige' },
-                          { name: 'Braun', color: '#7e4528', label: 'Brown' },
-                          { name: 'Akzent', color: 'var(--accent)', label: 'Accent' },
+                          { name: t('LivePreviewModal.color.grey'), color: '#313131', label: 'Grey' },
+                          {
+                            name: t('LivePreviewModal.color.lightGrey'),
+                            color: '#848484',
+                            label: 'Light Grey',
+                          },
+                          { name: t('LivePreviewModal.color.teal'), color: '#0d8375', label: 'Teal' },
+                          { name: t('LivePreviewModal.color.blue'), color: '#1d65b3', label: 'Blue' },
+                          {
+                            name: t('LivePreviewModal.color.purple'),
+                            color: '#a964d9',
+                            label: 'Purple',
+                          },
+                          { name: t('LivePreviewModal.color.red'), color: '#c31919', label: 'Red' },
+                          {
+                            name: t('LivePreviewModal.color.orange'),
+                            color: '#f46e32',
+                            label: 'Orange',
+                          },
+                          {
+                            name: t('LivePreviewModal.color.yellow'),
+                            color: '#ffcf00',
+                            label: 'Yellow',
+                          },
+                          { name: t('LivePreviewModal.color.pink'), color: '#fd88ab', label: 'Pink' },
+                          {
+                            name: t('LivePreviewModal.color.beige'),
+                            color: '#c0ab60',
+                            label: 'Beige',
+                          },
+                          {
+                            name: t('LivePreviewModal.color.brown'),
+                            color: '#7e4528',
+                            label: 'Brown',
+                          },
+                          {
+                            name: t('LivePreviewModal.color.accent'),
+                            color: 'var(--accent)',
+                            label: 'Accent',
+                          },
                         ].map(colorOption => (
                           <button
                             key={colorOption.color}
@@ -974,14 +1024,16 @@ export function LivePreviewModal({
 
                       {/* Custom Color Input */}
                       <div className="space-y-2">
-                        <Label className="font-medium text-sm">Benutzerdefinierte Farbe</Label>
+                        <Label className="font-medium text-sm">
+                          {t('LivePreviewModal.color.customColor')}
+                        </Label>
                         <div className="flex gap-2">
                           <input
                             type="color"
                             value={selectedColor}
                             onChange={e => setSelectedColor(e.target.value)}
                             className="h-8 w-12 cursor-pointer rounded border border-gray-300"
-                            title="Benutzerdefinierte Farbe auswählen"
+                            title={t('LivePreviewModal.color.customColorSelect')}
                           />
 
                           <Input
@@ -1013,9 +1065,11 @@ export function LivePreviewModal({
                   >
                     <div className="flex items-center gap-3">
                       <Icon icon="lucide:file-text" className="h-5 w-5 text-green-600" />
-                      <span className="font-medium">E-Rechnung</span>
+                      <span className="font-medium">{t('LivePreviewModal.eInvoice.title')}</span>
                       <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">
-                        {eInvoiceData.validationStatus === 'valid' ? 'Gültig' : 'Fehlerhaft'}
+                        {eInvoiceData.validationStatus === 'valid'
+                          ? t('LivePreviewModal.eInvoice.valid')
+                          : t('LivePreviewModal.eInvoice.invalid')}
                       </Badge>
                     </div>
                     {isExpanded('einvoice') ? (
@@ -1030,7 +1084,9 @@ export function LivePreviewModal({
                         {/* E-Invoice Status */}
                         <div className="rounded-lg border bg-white p-3">
                           <div className="mb-2 flex items-center justify-between">
-                            <span className="font-medium text-sm">Status</span>
+                            <span className="font-medium text-sm">
+                              {t('LivePreviewModal.eInvoice.status')}
+                            </span>
                             <Badge
                               variant={
                                 eInvoiceData.validationStatus === 'valid'
@@ -1039,19 +1095,21 @@ export function LivePreviewModal({
                               }
                               className="text-xs"
                             >
-                              {eInvoiceData.validationStatus === 'valid' ? 'Gültig' : 'Fehlerhaft'}
+                              {eInvoiceData.validationStatus === 'valid'
+                                ? t('LivePreviewModal.eInvoice.valid')
+                                : t('LivePreviewModal.eInvoice.invalid')}
                             </Badge>
                           </div>
                           <div className="space-y-1 text-gray-600 text-xs">
                             <div>
-                              Format:{' '}
+                              {t('LivePreviewModal.eInvoice.format')}:{' '}
                               {typeof eInvoiceData.format === 'string'
                                 ? eInvoiceData.format.toUpperCase()
                                 : 'ZUGFeRD'}
                             </div>
                             <div>GUID: {eInvoiceData.guid}</div>
                             <div>
-                              Erstellt:{' '}
+                              {t('LivePreviewModal.eInvoice.created')}:{' '}
                               {formatDate(
                                 typeof eInvoiceData.createdAt === 'string'
                                   ? eInvoiceData.createdAt
@@ -1064,7 +1122,9 @@ export function LivePreviewModal({
                         {/* QR Code */}
                         {qrCodeUrl && (
                           <div className="rounded-lg border bg-white p-3 text-center">
-                            <div className="mb-2 font-medium text-sm">QR-Code</div>
+                            <div className="mb-2 font-medium text-sm">
+                              {t('LivePreviewModal.eInvoice.qrCode')}
+                            </div>
                             <img
                               src={qrCodeUrl}
                               alt="E-Invoice QR Code"
@@ -1072,7 +1132,7 @@ export function LivePreviewModal({
                             />
 
                             <div className="mt-2 text-gray-500 text-xs">
-                              Für E-Invoice-Validierung
+                              {t('LivePreviewModal.eInvoice.qrCodeHint')}
                             </div>
                           </div>
                         )}
@@ -1086,30 +1146,30 @@ export function LivePreviewModal({
                               try {
                                 if (typeof eInvoiceData.xmlUrl === 'string') {
                                   window.open(eInvoiceData.xmlUrl, '_blank');
-                                  toast.success('XML-Datei wird heruntergeladen');
+                                  toast.success(t('LivePreviewModal.toast.xmlDownloading'));
                                 } else {
-                                  toast.error('XML-URL nicht verfügbar');
+                                  toast.error(t('LivePreviewModal.toast.xmlUrlUnavailable'));
                                 }
                               } catch (error) {
                                 console.error('XML download error:', error);
-                                toast.error('Fehler beim XML-Download');
+                                toast.error(t('LivePreviewModal.toast.xmlDownloadError'));
                               }
                             }}
                           >
                             <Icon icon="lucide:download" className="mr-2 h-4 w-4" />
-                            XML herunterladen
+                            {t('LivePreviewModal.eInvoice.downloadXml')}
                           </Button>
 
                           <Button
                             variant="outline"
                             className="w-full text-sm"
                             onClick={() => {
-                              toast.info('ZUGFeRD-PDF wird generiert...');
+                              toast.info(t('LivePreviewModal.toast.zugferdGenerating'));
                               // Hier würde die ZUGFeRD-PDF-Generierung stattfinden
                             }}
                           >
                             <Icon icon="lucide:download" className="mr-2 h-4 w-4" />
-                            ZUGFeRD-PDF
+                            {t('LivePreviewModal.eInvoice.zugferdPdf')}
                           </Button>
                         </div>
                       </div>
@@ -1127,7 +1187,9 @@ export function LivePreviewModal({
                 >
                   <div className="flex items-center gap-3">
                     <Icon icon="lucide:settings" className="h-5 w-5 text-gray-600" />
-                    <span className="font-medium">Weitere Einstellungen</span>
+                    <span className="font-medium">
+                      {t('LivePreviewModal.section.moreSettings')}
+                    </span>
                   </div>
                   {isExpanded('settings') ? (
                     <Icon icon="lucide:chevron-down" className="h-4 w-4 text-gray-400" />
@@ -1140,7 +1202,9 @@ export function LivePreviewModal({
                     <div className="space-y-4">
                       {/* Sprache */}
                       <div className="space-y-2">
-                        <Label className="font-medium text-sm">Sprache</Label>
+                        <Label className="font-medium text-sm">
+                          {t('LivePreviewModal.settings.language')}
+                        </Label>
                         <NativeSelect
                           value={documentSettings.language}
                           onChange={e =>
@@ -1156,7 +1220,9 @@ export function LivePreviewModal({
 
                       {/* QR-Code Optionen */}
                       <div className="flex items-center justify-between">
-                        <Label className="font-medium text-sm">QR-Code anzeigen</Label>
+                        <Label className="font-medium text-sm">
+                          {t('LivePreviewModal.settings.showQRCode')}
+                        </Label>
                         <Checkbox
                           checked={documentSettings.showQRCode}
                           onCheckedChange={checked =>
@@ -1169,7 +1235,9 @@ export function LivePreviewModal({
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <Label className="font-medium text-sm">EPC-QR-Code (GiroCode)</Label>
+                        <Label className="font-medium text-sm">
+                          {t('LivePreviewModal.settings.showEPCQRCode')}
+                        </Label>
                         <Checkbox
                           checked={documentSettings.showEPCQRCode}
                           onCheckedChange={checked =>
@@ -1183,7 +1251,9 @@ export function LivePreviewModal({
 
                       {/* Weitere Display-Optionen */}
                       <div className="flex items-center justify-between">
-                        <Label className="font-medium text-sm">Kundennummer</Label>
+                        <Label className="font-medium text-sm">
+                          {t('LivePreviewModal.settings.customerNumber')}
+                        </Label>
                         <Checkbox
                           checked={documentSettings.showCustomerNumber}
                           onCheckedChange={checked =>
@@ -1196,7 +1266,9 @@ export function LivePreviewModal({
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <Label className="font-medium text-sm">Kontaktperson</Label>
+                        <Label className="font-medium text-sm">
+                          {t('LivePreviewModal.settings.contactPerson')}
+                        </Label>
                         <Checkbox
                           checked={documentSettings.showContactPerson}
                           onCheckedChange={checked =>
@@ -1209,7 +1281,9 @@ export function LivePreviewModal({
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <Label className="font-medium text-sm">USt. pro Position</Label>
+                        <Label className="font-medium text-sm">
+                          {t('LivePreviewModal.settings.vatPerPosition')}
+                        </Label>
                         <Checkbox
                           checked={documentSettings.showVATPerPosition}
                           onCheckedChange={checked =>
@@ -1222,7 +1296,9 @@ export function LivePreviewModal({
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <Label className="font-medium text-sm">Artikelnummer</Label>
+                        <Label className="font-medium text-sm">
+                          {t('LivePreviewModal.settings.articleNumber')}
+                        </Label>
                         <Checkbox
                           checked={documentSettings.showArticleNumber}
                           onCheckedChange={checked =>
@@ -1235,7 +1311,9 @@ export function LivePreviewModal({
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <Label className="font-medium text-sm">Falz- und Lochmarken</Label>
+                        <Label className="font-medium text-sm">
+                          {t('LivePreviewModal.settings.foldLines')}
+                        </Label>
                         <Checkbox
                           checked={documentSettings.showFoldLines}
                           onCheckedChange={checked =>
@@ -1249,7 +1327,9 @@ export function LivePreviewModal({
 
                       {/* Standard-Optionen */}
                       <div className="flex items-center justify-between">
-                        <Label className="font-medium text-sm">Seitenzahlen anzeigen</Label>
+                        <Label className="font-medium text-sm">
+                          {t('LivePreviewModal.settings.pageNumbers')}
+                        </Label>
                         <Checkbox
                           checked={documentSettings.showPageNumbers}
                           onCheckedChange={checked =>
@@ -1262,7 +1342,9 @@ export function LivePreviewModal({
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <Label className="font-medium text-sm">Fußzeile einblenden</Label>
+                        <Label className="font-medium text-sm">
+                          {t('LivePreviewModal.settings.footer')}
+                        </Label>
                         <Checkbox
                           checked={documentSettings.showFooter}
                           onCheckedChange={checked =>
@@ -1275,7 +1357,9 @@ export function LivePreviewModal({
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <Label className="font-medium text-sm">Wasserzeichen</Label>
+                        <Label className="font-medium text-sm">
+                          {t('LivePreviewModal.settings.watermark')}
+                        </Label>
                         <Checkbox
                           checked={documentSettings.showWatermark}
                           onCheckedChange={checked =>
@@ -1300,7 +1384,9 @@ export function LivePreviewModal({
                 <div className="flex items-center gap-3 text-gray-500">
                   <Icon icon="lucide:loader2" className="h-6 w-6 animate-spin" />
                   <span>
-                    Lade {documentLabels[documentType] || 'Dokument'}-Daten aus der Datenbank...
+                    {t('LivePreviewModal.loading', {
+                      docType: documentLabels[documentType] || t('LivePreviewModal.docType.generic'),
+                    })}
                   </span>
                 </div>
               </div>

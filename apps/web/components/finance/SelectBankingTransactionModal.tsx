@@ -2,6 +2,7 @@
 
 import { Icon } from '@iconify/react';
 import { Badge, Button, Dialog, DialogContent, DialogHeader, DialogTitle, Input } from '@tasko/ui';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 import { useNewAuth } from '@/contexts/NewAuthContext';
@@ -72,6 +73,7 @@ export default function SelectBankingTransactionModal({
   onClose,
   onSelect,
 }: SelectBankingTransactionModalProps) {
+  const t = useTranslations('finance');
   const { user } = useNewAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(false);
@@ -108,6 +110,7 @@ export default function SelectBankingTransactionModal({
   const convertFinAPITransaction = (
     finapiTx: FinAPITransaction,
     accountName: string,
+    t: ReturnType<typeof useTranslations>,
   ): Transaction => {
     // Konvertiere FinAPI-Datum zu korrektem Format
     const convertFinAPIDate = (dateString: string): string => {
@@ -155,14 +158,14 @@ export default function SelectBankingTransactionModal({
       if (tx.typeCodeZka) return `ZKA: ${tx.typeCodeZka}`;
       if (tx.typeCodeSwift) return `SWIFT: ${tx.typeCodeSwift}`;
       if (tx.sepaPurposeCode) return `SEPA: ${tx.sepaPurposeCode}`;
-      return 'Standard';
+      return t('SelectBankingTransactionModal.transactionTypeStandard');
     };
 
     return {
       id: finapiTx.id ? String(finapiTx.id) : `tx-${Date.now()}-${Math.random()}`,
       status: getTransactionStatus(finapiTx),
-      name: finapiTx.counterpartName || 'Unbekannt',
-      verwendungszweck: finapiTx.purpose || 'Keine Beschreibung',
+      name: finapiTx.counterpartName || t('SelectBankingTransactionModal.unknown'),
+      verwendungszweck: finapiTx.purpose || t('SelectBankingTransactionModal.noDescription'),
       buchungstag: convertFinAPIDate(finapiTx.bookingDate),
       betrag: finapiTx.amount,
       // Währung aus der Bank-Transaktion mitführen (nie €-Hardcode); ohne Angabe
@@ -252,10 +255,13 @@ export default function SelectBankingTransactionModal({
               );
             }
 
-            const accountName = account?.accountName || account?.bankName || 'Unbekanntes Konto';
+            const accountName =
+              account?.accountName ||
+              account?.bankName ||
+              t('SelectBankingTransactionModal.unknownAccount');
             const accountId = account?.id || finapiTx.accountId.toString();
 
-            const convertedTx = convertFinAPITransaction(finapiTx, accountName);
+            const convertedTx = convertFinAPITransaction(finapiTx, accountName, t);
             return {
               ...convertedTx,
               accountId: accountId,
@@ -308,7 +314,7 @@ export default function SelectBankingTransactionModal({
       }
     } catch (err: any) {
       console.error('Modal: Error loading transactions:', err);
-      setError(err.message || 'Fehler beim Laden der Transaktionen');
+      setError(err.message || t('SelectBankingTransactionModal.loadError'));
       setTransactions([]);
     } finally {
       setLoading(false);
@@ -375,7 +381,7 @@ export default function SelectBankingTransactionModal({
 
   const formatDate = (dateString: string) => {
     if (!dateString || dateString === 'null' || dateString === 'undefined') {
-      return 'Kein Datum';
+      return t('SelectBankingTransactionModal.noDate');
     }
 
     let date: Date;
@@ -396,7 +402,7 @@ export default function SelectBankingTransactionModal({
     }
 
     if (Number.isNaN(date.getTime())) {
-      return 'Ungültiges Datum';
+      return t('SelectBankingTransactionModal.invalidDate');
     }
 
     return date.toLocaleDateString('de-DE', {
@@ -527,10 +533,10 @@ export default function SelectBankingTransactionModal({
         <DialogHeader>
           <DialogTitle>
             {documentType === 'INVOICE'
-              ? 'Eingang für Rechnung auswählen'
+              ? t('SelectBankingTransactionModal.titleInvoice')
               : documentType === 'EXPENSE'
-                ? 'Ausgang für Beleg auswählen'
-                : 'Banking-Transaktion auswählen'}
+                ? t('SelectBankingTransactionModal.titleExpense')
+                : t('SelectBankingTransactionModal.titleDefault')}
           </DialogTitle>
         </DialogHeader>
 
@@ -539,19 +545,26 @@ export default function SelectBankingTransactionModal({
             <div className="relative flex-1">
               <Icon icon="lucide:search" className="absolute top-3 left-3 h-4 w-4 text-gray-400" />
               <Input
-                placeholder="Nach Verwendungszweck, Name oder Betrag suchen..."
+                placeholder={t('SelectBankingTransactionModal.searchPlaceholder')}
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
                 className="pl-9"
               />
             </div>
             <Badge variant="outline">
-              {documentType === 'INVOICE' ? 'Rechnungsbetrag' : 'Belegbetrag'}:{' '}
-              {formatCurrency(invoiceAmount, invoiceCurrency)}
+              {documentType === 'INVOICE'
+                ? t('SelectBankingTransactionModal.invoiceAmountLabel')
+                : t('SelectBankingTransactionModal.expenseAmountLabel')}
+              : {formatCurrency(invoiceAmount, invoiceCurrency)}
             </Badge>
             <Badge variant="default" className="bg-blue-100 text-blue-800">
-              {availableTransactions.length} verfügbare{' '}
-              {documentType === 'INVOICE' ? 'Eingänge' : 'Ausgänge'}
+              {documentType === 'INVOICE'
+                ? t('SelectBankingTransactionModal.availableIncoming', {
+                    count: availableTransactions.length,
+                  })
+                : t('SelectBankingTransactionModal.availableOutgoing', {
+                    count: availableTransactions.length,
+                  })}
             </Badge>
             {documentNumber && <Badge variant="secondary">{documentNumber}</Badge>}
             <Badge
@@ -562,7 +575,9 @@ export default function SelectBankingTransactionModal({
                   : 'bg-red-100 text-red-800'
               }
             >
-              {documentType === 'INVOICE' ? '💰 Einnahmen-Rechnung' : '💸 Ausgaben-Beleg'}
+              {documentType === 'INVOICE'
+                ? t('SelectBankingTransactionModal.incomeInvoiceBadge')
+                : t('SelectBankingTransactionModal.expenseReceiptBadge')}
             </Badge>
           </div>
 
@@ -576,11 +591,13 @@ export default function SelectBankingTransactionModal({
             {loading ? (
               <div className="flex h-full items-center justify-center">
                 <Icon icon="lucide:loader2" className="h-8 w-8 animate-spin" />
-                <span className="ml-2">Lade Transaktionen...</span>
+                <span className="ml-2">{t('SelectBankingTransactionModal.loadingTransactions')}</span>
               </div>
             ) : filteredTransactions.length === 0 ? (
               <div className="flex h-full items-center justify-center text-gray-500">
-                {error ? 'Fehler beim Laden der Transaktionen' : 'Keine Transaktionen gefunden'}
+                {error
+                  ? t('SelectBankingTransactionModal.loadErrorShort')
+                  : t('SelectBankingTransactionModal.noTransactionsFound')}
               </div>
             ) : (
               <div style={{ height: '500px', overflow: 'auto' }}>
@@ -588,22 +605,22 @@ export default function SelectBankingTransactionModal({
                   <thead className="sticky top-0 z-10 bg-gray-50">
                     <tr className="border-b">
                       <th className="px-4 py-3 text-left font-medium text-gray-500 text-xs uppercase">
-                        Typ
+                        {t('SelectBankingTransactionModal.columnType')}
                       </th>
                       <th className="px-4 py-3 text-left font-medium text-gray-500 text-xs uppercase">
-                        Datum
+                        {t('SelectBankingTransactionModal.columnDate')}
                       </th>
                       <th className="px-4 py-3 text-left font-medium text-gray-500 text-xs uppercase">
-                        Name
+                        {t('SelectBankingTransactionModal.columnName')}
                       </th>
                       <th className="px-4 py-3 text-left font-medium text-gray-500 text-xs uppercase">
-                        Verwendungszweck
+                        {t('SelectBankingTransactionModal.columnPurpose')}
                       </th>
                       <th className="px-4 py-3 text-right font-medium text-gray-500 text-xs uppercase">
-                        Betrag
+                        {t('SelectBankingTransactionModal.columnAmount')}
                       </th>
                       <th className="px-4 py-3 text-center font-medium text-gray-500 text-xs uppercase">
-                        Aktion
+                        {t('SelectBankingTransactionModal.columnAction')}
                       </th>
                     </tr>
                   </thead>
@@ -636,7 +653,7 @@ export default function SelectBankingTransactionModal({
                         <td className="px-4 py-3">
                           <div>
                             <div className="font-medium text-sm">
-                              {transaction.name || 'Unbekannt'}
+                              {transaction.name || t('SelectBankingTransactionModal.unknown')}
                             </div>
                             <div className="text-gray-500 text-xs">{transaction.accountName}</div>
                           </div>
@@ -660,14 +677,14 @@ export default function SelectBankingTransactionModal({
                           {isAmountMatch(transaction.betrag, invoiceAmount) && (
                             <div className="mt-1">
                               <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 font-medium text-green-800 text-xs">
-                                Betrag stimmt überein
+                                {t('SelectBankingTransactionModal.amountMatches')}
                               </span>
                             </div>
                           )}
                           {hasLargeDifference(transaction.betrag, invoiceAmount) && (
                             <div className="mt-1">
                               <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 font-medium text-xs text-yellow-800">
-                                ⚠️ Große Differenz:{' '}
+                                ⚠️ {t('SelectBankingTransactionModal.largeDifference')}{' '}
                                 {formatCurrency(
                                   Math.abs(Math.abs(transaction.betrag) - invoiceAmount),
                                   invoiceCurrency,
@@ -685,7 +702,7 @@ export default function SelectBankingTransactionModal({
                               handleSelectTransaction(transaction);
                             }}
                           >
-                            Auswählen
+                            {t('SelectBankingTransactionModal.select')}
                           </Button>
                         </td>
                       </tr>
@@ -698,7 +715,7 @@ export default function SelectBankingTransactionModal({
 
           <div className="flex justify-end gap-2 border-t pt-4">
             <Button variant="outline" onClick={onClose}>
-              Abbrechen
+              {t('SelectBankingTransactionModal.cancel')}
             </Button>
           </div>
         </div>
@@ -715,8 +732,8 @@ export default function SelectBankingTransactionModal({
               <div>
                 <DialogTitle className="text-red-900">
                   {warningModal.difference === 0
-                    ? 'Falsche Transaktionsrichtung!'
-                    : 'Verknüpfung nicht möglich'}
+                    ? t('SelectBankingTransactionModal.wrongDirectionTitle')
+                    : t('SelectBankingTransactionModal.linkingNotPossibleTitle')}
                 </DialogTitle>
               </div>
             </div>
@@ -728,27 +745,35 @@ export default function SelectBankingTransactionModal({
               <div className="rounded-lg border border-red-200 bg-red-50 p-4">
                 <h4 className="mb-2 font-medium text-red-900">
                   {documentType === 'INVOICE'
-                    ? 'Einnahmen-Rechnungen können nur mit Eingängen verknüpft werden!'
-                    : 'Ausgaben-Belege können nur mit Ausgängen verknüpft werden!'}
+                    ? t('SelectBankingTransactionModal.invoiceOnlyIncoming')
+                    : t('SelectBankingTransactionModal.expenseOnlyOutgoing')}
                 </h4>
 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Dokument-Typ:</span>
+                    <span className="text-gray-600">
+                      {t('SelectBankingTransactionModal.documentTypeLabel')}
+                    </span>
                     <span className="font-medium">
-                      {documentType === 'INVOICE' ? '💰 Einnahmen-Rechnung' : '💸 Ausgaben-Beleg'}
+                      {documentType === 'INVOICE'
+                        ? t('SelectBankingTransactionModal.incomeInvoiceBadge')
+                        : t('SelectBankingTransactionModal.expenseReceiptBadge')}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Transaktionsrichtung:</span>
+                    <span className="text-gray-600">
+                      {t('SelectBankingTransactionModal.transactionDirectionLabel')}
+                    </span>
                     <span className="font-medium">
                       {warningModal.transaction?.betrag && warningModal.transaction.betrag > 0
-                        ? '💰 Eingang'
-                        : '💸 Ausgang'}
+                        ? t('SelectBankingTransactionModal.incoming')
+                        : t('SelectBankingTransactionModal.outgoing')}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Transaktionsbetrag:</span>
+                    <span className="text-gray-600">
+                      {t('SelectBankingTransactionModal.transactionAmountLabel')}
+                    </span>
                     <span className="font-medium">
                       {warningModal.transaction
                         ? formatCurrency(
@@ -764,20 +789,25 @@ export default function SelectBankingTransactionModal({
               // Amount Difference Warning (existing)
               <div className="rounded-lg border border-red-200 bg-red-50 p-4">
                 <h4 className="mb-2 font-medium text-red-900">
-                  Die Beträge weichen zu stark voneinander ab:
+                  {t('SelectBankingTransactionModal.amountsDeviateTooMuch')}
                 </h4>
 
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-600">
-                      {documentType === 'INVOICE' ? 'Rechnungsbetrag' : 'Belegbetrag'}:
+                      {documentType === 'INVOICE'
+                        ? t('SelectBankingTransactionModal.invoiceAmountLabel')
+                        : t('SelectBankingTransactionModal.expenseAmountLabel')}
+                      :
                     </span>
                     <span className="font-medium">
                       {formatCurrency(invoiceAmount, invoiceCurrency)}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Transaktionsbetrag:</span>
+                    <span className="text-gray-600">
+                      {t('SelectBankingTransactionModal.transactionAmountLabel')}
+                    </span>
                     <span className="font-medium">
                       {warningModal.transaction
                         ? formatCurrency(
@@ -789,13 +819,17 @@ export default function SelectBankingTransactionModal({
                   </div>
                   <div className="mt-2 border-t pt-2">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Differenz:</span>
+                      <span className="text-gray-600">
+                        {t('SelectBankingTransactionModal.differenceLabel')}
+                      </span>
                       <span className="font-medium text-red-600">
                         {formatCurrency(warningModal.difference, invoiceCurrency)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Maximal erlaubt:</span>
+                      <span className="text-gray-600">
+                        {t('SelectBankingTransactionModal.maxAllowedLabel')}
+                      </span>
                       <span className="font-medium text-gray-500">
                         {formatCurrency(warningModal.tolerance, invoiceCurrency)}
                       </span>
@@ -809,18 +843,17 @@ export default function SelectBankingTransactionModal({
               <p className="text-blue-800 text-sm">
                 {warningModal.difference === 0 ? (
                   <>
-                    <strong>Wählen Sie eine Transaktion in der richtigen Richtung:</strong>
+                    <strong>{t('SelectBankingTransactionModal.chooseCorrectDirection')}</strong>
                     <br />
                     {documentType === 'INVOICE'
-                      ? '• Einnahmen-Rechnungen (RE-) → nur Eingänge (positive Beträge)'
-                      : '• Ausgaben-Belege (BE-) → nur Ausgänge (negative Beträge)'}
+                      ? t('SelectBankingTransactionModal.invoiceDirectionHint')
+                      : t('SelectBankingTransactionModal.expenseDirectionHint')}
                   </>
                 ) : (
                   <>
-                    <strong>Bitte wählen Sie eine Transaktion mit passendem Betrag.</strong>
+                    <strong>{t('SelectBankingTransactionModal.chooseMatchingAmount')}</strong>
                     <br />
-                    Nur Transaktionen mit einer Differenz von maximal 5% oder 1€ können verknüpft
-                    werden.
+                    {t('SelectBankingTransactionModal.toleranceHint')}
                   </>
                 )}
               </p>
@@ -831,7 +864,7 @@ export default function SelectBankingTransactionModal({
                 onClick={handleCloseWarningModal}
                 className="bg-accent text-white hover:bg-accent/90"
               >
-                Verstanden
+                {t('SelectBankingTransactionModal.understood')}
               </Button>
             </div>
           </div>

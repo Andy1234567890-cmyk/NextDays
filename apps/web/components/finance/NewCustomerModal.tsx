@@ -17,6 +17,7 @@ import {
   SelectValue,
   Textarea,
 } from '@tasko/ui';
+import { useTranslations } from 'next-intl';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -314,6 +315,7 @@ export default function NewCustomerModal({
   companyId,
   onSaved,
 }: NewCustomerModalProps) {
+  const t = useTranslations('finance');
   // State Management
   const [loading, setLoading] = useState(false);
   const [customerType, setCustomerType] = useState<CustomerType>(
@@ -340,10 +342,20 @@ export default function NewCustomerModal({
 
   // Tab Definitionen - nur relevante Tabs für neue Kunden
   const tabs: TabDefinition[] = [
-    { id: 'overview', label: 'Grunddaten', icon: 'lucide:file-text', count: null },
-    { id: 'contacts', label: 'Kontakte', icon: 'lucide:users', count: contacts.length },
-    { id: 'payment', label: 'Zahlungsinformationen', icon: 'lucide:credit-card', count: null },
-    { id: 'skonto', label: 'Skonto & Konditionen', icon: 'lucide:calculator', count: null },
+    { id: 'overview', label: t('NewCustomerModal.tabOverview'), icon: 'lucide:file-text', count: null },
+    { id: 'contacts', label: t('NewCustomerModal.tabContacts'), icon: 'lucide:users', count: contacts.length },
+    {
+      id: 'payment',
+      label: t('NewCustomerModal.tabPayment'),
+      icon: 'lucide:credit-card',
+      count: null,
+    },
+    {
+      id: 'skonto',
+      label: t('NewCustomerModal.tabSkonto'),
+      icon: 'lucide:calculator',
+      count: null,
+    },
   ];
 
   // Generate next customer number using NumberSequenceService
@@ -519,7 +531,7 @@ export default function NewCustomerModal({
           ...prev,
           customerNumber: fallbackNumber,
         }));
-        toast.info(`${type}-Nummernkreis wird beim Speichern automatisch erstellt`);
+        toast.info(t('NewCustomerModal.numberSequenceAutoCreate', { type }));
         return;
       }
 
@@ -530,7 +542,7 @@ export default function NewCustomerModal({
       }));
     } catch (error) {
       console.error(`❌ Fehler beim Generieren der ${type}-Nummer:`, error);
-      toast.error(`Fehler beim Generieren der ${type}-Nummer`);
+      toast.error(t('NewCustomerModal.numberGenerationError', { type }));
     }
   }
 
@@ -561,13 +573,13 @@ export default function NewCustomerModal({
       }));
 
       if (isValid) {
-        toast.success('USt-IdNr. erfolgreich validiert');
+        toast.success(t('NewCustomerModal.vatValidatedSuccess'));
       } else {
-        toast.error('USt-IdNr. konnte nicht validiert werden');
+        toast.error(t('NewCustomerModal.vatValidatedFailure'));
       }
     } catch (error) {
       console.error('VAT validation error:', error);
-      toast.error('Fehler bei der USt-IdNr. Validierung');
+      toast.error(t('NewCustomerModal.vatValidationError'));
       // Set to false on error
       setFormData(prev => ({
         ...prev,
@@ -684,18 +696,22 @@ export default function NewCustomerModal({
       <DialogContent className="max-h-[95vh] w-full max-w-6xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-semibold text-gray-900 text-xl">
-            {customerType === 'person' ? 'Person erstellen' : 'Organisation erstellen'}
+            {customerType === 'person'
+              ? t('NewCustomerModal.titlePerson')
+              : t('NewCustomerModal.titleOrganisation')}
           </DialogTitle>
           <DialogDescription>
-            Erstellen Sie einen neuen{' '}
-            {customerType === 'person' ? 'Personenkontakt' : 'Organisationskontakt'} mit
-            automatischer Nummerngenerierung
+            {customerType === 'person'
+              ? t('NewCustomerModal.descriptionPerson')
+              : t('NewCustomerModal.descriptionOrganisation')}
           </DialogDescription>
         </DialogHeader>
 
         {/* Customer Type Toggle */}
         <div className="flex items-center gap-4 rounded-lg bg-gray-50 p-4">
-          <Label className="font-medium text-gray-700 text-sm">Typ:</Label>
+          <Label className="font-medium text-gray-700 text-sm">
+            {t('NewCustomerModal.typeLabel')}
+          </Label>
           <div className="flex items-center gap-3">
             <button
               type="button"
@@ -707,7 +723,7 @@ export default function NewCustomerModal({
               }`}
             >
               <Icon icon="lucide:user" className="h-4 w-4" />
-              Person
+              {t('NewCustomerModal.typePerson')}
             </button>
             <button
               type="button"
@@ -719,7 +735,7 @@ export default function NewCustomerModal({
               }`}
             >
               <Icon icon="lucide:building2" className="h-4 w-4" />
-              Organisation
+              {t('NewCustomerModal.typeOrganisation')}
             </button>
           </div>
         </div>
@@ -763,65 +779,65 @@ export default function NewCustomerModal({
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <Label>Anrede</Label>
+                          <Label>{t('NewCustomerModal.salutationLabel')}</Label>
                           <Select
                             value={formData.title}
                             onValueChange={val => handleInputChange('title', val)}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Anrede wählen" />
+                              <SelectValue placeholder={t('NewCustomerModal.salutationPlaceholder')} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="Herr">Herr</SelectItem>
-                              <SelectItem value="Frau">Frau</SelectItem>
-                              <SelectItem value="Divers">Divers</SelectItem>
+                              <SelectItem value="Herr">{t('NewCustomerModal.salutationMr')}</SelectItem>
+                              <SelectItem value="Frau">{t('NewCustomerModal.salutationMs')}</SelectItem>
+                              <SelectItem value="Divers">{t('NewCustomerModal.salutationDiverse')}</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label>Akademischer Titel</Label>
+                          <Label>{t('NewCustomerModal.academicTitleLabel')}</Label>
                           <Input
                             value={formData.academicTitle}
                             onChange={e => handleInputChange('academicTitle', e.target.value)}
-                            placeholder="Dr., Prof., etc."
+                            placeholder={t('NewCustomerModal.academicTitlePlaceholder')}
                           />
                         </div>
                       </div>
 
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <Label>Vorname *</Label>
+                          <Label>{t('NewCustomerModal.firstNameLabel')}</Label>
                           <Input
                             value={formData.firstName}
                             onChange={e => handleInputChange('firstName', e.target.value)}
-                            placeholder="Max"
+                            placeholder={t('NewCustomerModal.firstNamePlaceholder')}
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>Nachname *</Label>
+                          <Label>{t('NewCustomerModal.lastNameLabel')}</Label>
                           <Input
                             value={formData.lastName}
                             onChange={e => handleInputChange('lastName', e.target.value)}
-                            placeholder="Mustermann"
+                            placeholder={t('NewCustomerModal.lastNamePlaceholder')}
                           />
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Namenszusatz</Label>
+                        <Label>{t('NewCustomerModal.nameSuffixLabel')}</Label>
                         <Input
                           value={formData.nameSuffix}
                           onChange={e => handleInputChange('nameSuffix', e.target.value)}
-                          placeholder="jun., sen., MBA"
+                          placeholder={t('NewCustomerModal.nameSuffixPlaceholder')}
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Position</Label>
+                        <Label>{t('NewCustomerModal.positionLabel')}</Label>
                         <Input
                           value={formData.position}
                           onChange={e => handleInputChange('position', e.target.value)}
-                          placeholder="Geschäftsführer"
+                          placeholder={t('NewCustomerModal.positionPlaceholder')}
                         />
                       </div>
                     </div>
@@ -831,9 +847,9 @@ export default function NewCustomerModal({
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <Label>E-Mail</Label>
+                            <Label>{t('NewCustomerModal.emailLabel')}</Label>
                             <TooltipIcon
-                              text="Haupt-E-Mail-Adresse für Rechnungen und Kommunikation. Diese wird auch für Rechnungsversand verwendet."
+                              text={t('NewCustomerModal.emailTooltip')}
                               icon={'lucide:mail'}
                             />
                           </div>
@@ -841,30 +857,30 @@ export default function NewCustomerModal({
                             type="email"
                             value={formData.email}
                             onChange={e => handleInputChange('email', e.target.value)}
-                            placeholder="max@beispiel.de"
+                            placeholder={t('NewCustomerModal.emailPersonPlaceholder')}
                           />
                         </div>
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <Label>Telefon</Label>
+                            <Label>{t('NewCustomerModal.phoneLabel')}</Label>
                             <TooltipIcon
-                              text="Haupttelefonnummer für Rückfragen und Support. Im Format +49 123 456789 eingeben."
+                              text={t('NewCustomerModal.phoneTooltip')}
                               icon={'lucide:phone'}
                             />
                           </div>
                           <Input
                             value={formData.phone}
                             onChange={e => handleInputChange('phone', e.target.value)}
-                            placeholder="+49 123 456789"
+                            placeholder={t('NewCustomerModal.phonePlaceholder')}
                           />
                         </div>
                       </div>
 
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <Label>Website</Label>
+                          <Label>{t('NewCustomerModal.websiteLabel')}</Label>
                           <TooltipIcon
-                            text="Offizielle Website des Unternehmens. Wird in Rechnungen und Dokumenten angezeigt."
+                            text={t('NewCustomerModal.websiteTooltip')}
                             icon={'lucide:globe'}
                           />
                         </div>
@@ -872,7 +888,7 @@ export default function NewCustomerModal({
                           type="url"
                           value={formData.website}
                           onChange={e => handleInputChange('website', e.target.value)}
-                          placeholder="https://www.beispiel.de"
+                          placeholder={t('NewCustomerModal.websitePersonPlaceholder')}
                         />
                       </div>
                     </div>
@@ -880,11 +896,11 @@ export default function NewCustomerModal({
 
                   {/* Notizen - außerhalb des Grids für volle Breite */}
                   <div className="space-y-2">
-                    <Label>Notizen</Label>
+                    <Label>{t('NewCustomerModal.notesLabel')}</Label>
                     <Textarea
                       value={formData.notes}
                       onChange={e => handleInputChange('notes', e.target.value)}
-                      placeholder="Weitere Informationen zur Person"
+                      placeholder={t('NewCustomerModal.notesPersonPlaceholder')}
                       rows={3}
                     />
                   </div>
@@ -897,49 +913,57 @@ export default function NewCustomerModal({
                     {/* Left Column */}
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label>Firmenname *</Label>
+                        <Label>{t('NewCustomerModal.companyNameLabel')}</Label>
                         <Input
                           value={formData.companyName}
                           onChange={e => handleInputChange('companyName', e.target.value)}
-                          placeholder="Musterfirma GmbH"
+                          placeholder={t('NewCustomerModal.companyNamePlaceholder')}
                         />
                       </div>
 
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <Label>Firmengröße</Label>
+                          <Label>{t('NewCustomerModal.companySizeLabel')}</Label>
                           <Select
                             value={formData.companySize}
                             onValueChange={val => handleInputChange('companySize', val)}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Größe wählen" />
+                              <SelectValue placeholder={t('NewCustomerModal.companySizePlaceholder')} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="Klein (1-10)">Klein (1-10 MA)</SelectItem>
-                              <SelectItem value="Mittel (11-50)">Mittel (11-50 MA)</SelectItem>
-                              <SelectItem value="Groß (51-250)">Groß (51-250 MA)</SelectItem>
-                              <SelectItem value="Konzern (250+)">Konzern (250+ MA)</SelectItem>
+                              <SelectItem value="Klein (1-10)">
+                                {t('NewCustomerModal.companySizeSmall')}
+                              </SelectItem>
+                              <SelectItem value="Mittel (11-50)">
+                                {t('NewCustomerModal.companySizeMedium')}
+                              </SelectItem>
+                              <SelectItem value="Groß (51-250)">
+                                {t('NewCustomerModal.companySizeLarge')}
+                              </SelectItem>
+                              <SelectItem value="Konzern (250+)">
+                                {t('NewCustomerModal.companySizeEnterprise')}
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label>Branche</Label>
+                          <Label>{t('NewCustomerModal.industryLabel')}</Label>
                           <Input
                             value={formData.industry}
                             onChange={e => handleInputChange('industry', e.target.value)}
-                            placeholder="IT, Handel, etc."
+                            placeholder={t('NewCustomerModal.industryPlaceholder')}
                           />
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Website</Label>
+                        <Label>{t('NewCustomerModal.websiteLabel')}</Label>
                         <Input
                           type="url"
                           value={formData.website}
                           onChange={e => handleInputChange('website', e.target.value)}
-                          placeholder="https://www.musterfirma.de"
+                          placeholder={t('NewCustomerModal.websiteOrgPlaceholder')}
                         />
                       </div>
                     </div>
@@ -948,26 +972,30 @@ export default function NewCustomerModal({
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <Label>E-Mail</Label>
+                          <Label>{t('NewCustomerModal.emailLabel')}</Label>
                           <Input
                             type="email"
                             value={formData.email}
                             onChange={e => handleInputChange('email', e.target.value)}
-                            placeholder="info@musterfirma.de"
+                            placeholder={t('NewCustomerModal.emailOrgPlaceholder')}
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>Telefon</Label>
+                          <Label>{t('NewCustomerModal.phoneLabel')}</Label>
                           <Input
                             value={formData.phone}
                             onChange={e => handleInputChange('phone', e.target.value)}
-                            placeholder="+49 123 456789"
+                            placeholder={t('NewCustomerModal.phonePlaceholder')}
                           />
                         </div>
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Kreditlimit ({currencySymbol(formData.currency)})</Label>
+                        <Label>
+                          {t('NewCustomerModal.creditLimitLabel', {
+                            symbol: currencySymbol(formData.currency),
+                          })}
+                        </Label>
                         <Input
                           type="number"
                           value={formData.creditLimit}
@@ -978,19 +1006,19 @@ export default function NewCustomerModal({
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Kommunikationssprache</Label>
+                        <Label>{t('NewCustomerModal.languageLabel')}</Label>
                         <Select
                           value={formData.language}
                           onValueChange={val => handleInputChange('language', val)}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Sprache wählen" />
+                            <SelectValue placeholder={t('NewCustomerModal.languagePlaceholder')} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="de">Deutsch</SelectItem>
-                            <SelectItem value="en">English</SelectItem>
-                            <SelectItem value="fr">Français</SelectItem>
-                            <SelectItem value="es">Español</SelectItem>
+                            <SelectItem value="de">{t('NewCustomerModal.languageDe')}</SelectItem>
+                            <SelectItem value="en">{t('NewCustomerModal.languageEn')}</SelectItem>
+                            <SelectItem value="fr">{t('NewCustomerModal.languageFr')}</SelectItem>
+                            <SelectItem value="es">{t('NewCustomerModal.languageEs')}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -999,11 +1027,11 @@ export default function NewCustomerModal({
 
                   {/* Notizen - außerhalb des Grids für volle Breite */}
                   <div className="space-y-2">
-                    <Label>Notizen</Label>
+                    <Label>{t('NewCustomerModal.notesLabel')}</Label>
                     <Textarea
                       value={formData.notes}
                       onChange={e => handleInputChange('notes', e.target.value)}
-                      placeholder="Weitere Informationen zur Organisation"
+                      placeholder={t('NewCustomerModal.notesOrgPlaceholder')}
                       rows={3}
                     />
                   </div>
@@ -1017,7 +1045,7 @@ export default function NewCustomerModal({
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div className="space-y-2">
-                        <Label>Kundennummer *</Label>
+                        <Label>{t('NewCustomerModal.customerNumberLabel')}</Label>
                         <Input
                           value={formData.customerNumber}
                           onChange={e => handleInputChange('customerNumber', e.target.value)}
@@ -1025,7 +1053,7 @@ export default function NewCustomerModal({
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label>Typ</Label>
+                        <Label>{t('NewCustomerModal.contactTypeLabel')}</Label>
                         <div className="relative" ref={typeDropdownRef}>
                           <Select
                             value={formData.organizationType}
@@ -1038,13 +1066,13 @@ export default function NewCustomerModal({
                             }}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Typ wählen" />
+                              <SelectValue placeholder={t('NewCustomerModal.contactTypePlaceholder')} />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="Kunde">Kunde</SelectItem>
-                              <SelectItem value="Lieferant">Lieferant</SelectItem>
-                              <SelectItem value="Partner">Partner</SelectItem>
-                              <SelectItem value="Interessenten">Interessenten</SelectItem>
+                              <SelectItem value="Kunde">{t('NewCustomerModal.contactTypeCustomer')}</SelectItem>
+                              <SelectItem value="Lieferant">{t('NewCustomerModal.contactTypeSupplier')}</SelectItem>
+                              <SelectItem value="Partner">{t('NewCustomerModal.contactTypePartner')}</SelectItem>
+                              <SelectItem value="Interessenten">{t('NewCustomerModal.contactTypeProspect')}</SelectItem>
                               {customCategories.map(category => (
                                 <SelectItem key={category.id} value={category.categoryType}>
                                   {category.name} ({category.categoryType})
@@ -1054,7 +1082,7 @@ export default function NewCustomerModal({
                                 value="create-category"
                                 className="border-t font-medium text-accent"
                               >
-                                + Kategorie erstellen
+                                {t('NewCustomerModal.createCategoryOption')}
                               </SelectItem>
                             </SelectContent>
                           </Select>
@@ -1066,9 +1094,9 @@ export default function NewCustomerModal({
                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <Label>Debitorennummer</Label>
+                          <Label>{t('NewCustomerModal.debitorNumberLabel')}</Label>
                           <TooltipIcon
-                            text="Debitorennummer für die Buchhaltung (Kundenkonto). Eindeutige Kennzeichnung des Kunden in der Finanzbuchhaltung."
+                            text={t('NewCustomerModal.debitorNumberTooltip')}
                             icon={'lucide:calculator'}
                           />
                         </div>
@@ -1080,9 +1108,9 @@ export default function NewCustomerModal({
                       </div>
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <Label>Kreditorennummer</Label>
+                          <Label>{t('NewCustomerModal.creditorNumberLabel')}</Label>
                           <TooltipIcon
-                            text="Kreditorennummer für die Buchhaltung (Lieferantenkonto). Wird verwendet wenn dieser Kontakt auch als Lieferant auftritt."
+                            text={t('NewCustomerModal.creditorNumberTooltip')}
                             icon={'lucide:building2'}
                           />
                         </div>
@@ -1097,13 +1125,15 @@ export default function NewCustomerModal({
 
                   {/* Adresse */}
                   <div className="space-y-4">
-                    <h3 className="font-medium text-gray-900 text-lg">Adresse</h3>
+                    <h3 className="font-medium text-gray-900 text-lg">
+                      {t('NewCustomerModal.addressHeading')}
+                    </h3>
                     <div className="space-y-4">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <Label>Straße</Label>
+                          <Label>{t('NewCustomerModal.streetLabel')}</Label>
                           <TooltipIcon
-                            text="Vollständige Adresse mit Straße und Hausnummer. Wird für Rechnungen und Lieferungen verwendet."
+                            text={t('NewCustomerModal.streetTooltip')}
                             icon={'lucide:map-pin'}
                           />
                         </div>
@@ -1115,7 +1145,7 @@ export default function NewCustomerModal({
                       </div>
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div className="space-y-2">
-                          <Label>PLZ</Label>
+                          <Label>{t('NewCustomerModal.postalCodeLabel')}</Label>
                           <Input
                             value={formData.postalCode}
                             onChange={e => handleInputChange('postalCode', e.target.value)}
@@ -1123,7 +1153,7 @@ export default function NewCustomerModal({
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>Stadt</Label>
+                          <Label>{t('NewCustomerModal.cityLabel')}</Label>
                           <Input
                             value={formData.city}
                             onChange={e => handleInputChange('city', e.target.value)}
@@ -1131,7 +1161,7 @@ export default function NewCustomerModal({
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>Land</Label>
+                          <Label>{t('NewCustomerModal.countryLabel')}</Label>
                           <Select
                             value={formData.country}
                             onValueChange={val => handleInputChange('country', val)}
@@ -1155,13 +1185,15 @@ export default function NewCustomerModal({
 
                 {/* Steuerliche Informationen */}
                 <div className="space-y-4 border-t pt-6">
-                  <h3 className="font-medium text-gray-900 text-lg">Steuerliche Informationen</h3>
+                  <h3 className="font-medium text-gray-900 text-lg">
+                    {t('NewCustomerModal.taxInfoHeading')}
+                  </h3>
                   <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     <div className="space-y-2">
                       <div className="flex min-h-8 items-center gap-2">
-                        <Label>Steuernummer</Label>
+                        <Label>{t('NewCustomerModal.taxNumberLabel')}</Label>
                         <TooltipIcon
-                          text="Deutsche Steuernummer des Unternehmens. Format: 12345/67890. Wird für steuerliche Dokumentation benötigt."
+                          text={t('NewCustomerModal.taxNumberTooltip')}
                           icon={'lucide:receipt'}
                         />
                       </div>
@@ -1173,9 +1205,9 @@ export default function NewCustomerModal({
                     </div>
                     <div className="space-y-2">
                       <div className="flex min-h-8 items-center gap-2">
-                        <Label>USt-IdNr.</Label>
+                        <Label>{t('NewCustomerModal.vatIdLabel')}</Label>
                         <TooltipIcon
-                          text="Umsatzsteuer-Identifikationsnummer für EU-Geschäfte. Format: DE123456789. Klicken Sie auf 'Prüfen' zur Validierung."
+                          text={t('NewCustomerModal.vatIdTooltip')}
                           icon={'lucide:calculator'}
                         />
                         <Button
@@ -1185,7 +1217,7 @@ export default function NewCustomerModal({
                           onClick={validateVAT}
                           className="h-6 px-2 text-xs"
                         >
-                          Prüfen
+                          {t('NewCustomerModal.vatCheckButton')}
                         </Button>
                         {formData.vatValidated && (
                           <Icon icon="lucide:check" className="h-4 w-4 text-green-500" />
@@ -1204,8 +1236,8 @@ export default function NewCustomerModal({
                 <div className="space-y-4 border-t pt-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <Label>E-Rechnung Standard</Label>
-                      <TooltipIcon text="Aktiviert elektronische Rechnungsstellung für B2B-Kunden gemäß EU-Standard. Unterstützt XRechnung und ZUGFeRD-Format." />
+                      <Label>{t('NewCustomerModal.eInvoiceLabel')}</Label>
+                      <TooltipIcon text={t('NewCustomerModal.eInvoiceTooltip')} />
                       <button
                         type="button"
                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ${
@@ -1230,13 +1262,13 @@ export default function NewCustomerModal({
                         <div className="flex items-center space-x-3">
                           <Label className="flex items-center gap-2">
                             {referenceFieldType === 'customerReference'
-                              ? 'Kundenreferenz'
-                              : 'Leitweg-ID'}
+                              ? t('NewCustomerModal.customerReferenceLabel')
+                              : t('NewCustomerModal.leitwegIdLabel')}
                             <TooltipIcon
                               text={
                                 referenceFieldType === 'customerReference'
-                                  ? 'Ihre interne Referenznummer für diesen Kunden (z.B. K-001). Erscheint auf Rechnungen und Angeboten.'
-                                  : 'Leitweg-ID für öffentliche Auftraggeber nach XRechnung Standard (Format: 991-12345-12). Pflichtfeld für B2G-Rechnungen.'
+                                  ? t('NewCustomerModal.customerReferenceTooltip')
+                                  : t('NewCustomerModal.leitwegIdTooltip')
                               }
                             />
                           </Label>
@@ -1252,8 +1284,8 @@ export default function NewCustomerModal({
                             }
                           >
                             {referenceFieldType === 'customerReference'
-                              ? 'Zu Leitweg-ID wechseln'
-                              : 'Zu Kundenreferenz wechseln'}
+                              ? t('NewCustomerModal.switchToLeitwegId')
+                              : t('NewCustomerModal.switchToCustomerReference')}
                           </button>
                         </div>
                         <Input
@@ -1281,7 +1313,7 @@ export default function NewCustomerModal({
 
                 {/* Tags */}
                 <div className="space-y-4 border-t pt-6">
-                  <Label>Tags</Label>
+                  <Label>{t('NewCustomerModal.tagsLabel')}</Label>
                   <div className="space-y-2">
                     {formData.tags.length > 0 && (
                       <div className="flex flex-wrap gap-2">
@@ -1306,7 +1338,7 @@ export default function NewCustomerModal({
                       <Input
                         value={newTag}
                         onChange={e => setNewTag(e.target.value)}
-                        placeholder="Neues Tag eingeben"
+                        placeholder={t('NewCustomerModal.newTagPlaceholder')}
                         onKeyPress={e => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
@@ -1334,7 +1366,9 @@ export default function NewCustomerModal({
           {activeSubTab === 'contacts' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="font-medium text-gray-900 text-lg">Kontaktpersonen</h3>
+                <h3 className="font-medium text-gray-900 text-lg">
+                  {t('NewCustomerModal.contactPersonsHeading')}
+                </h3>
                 <Button
                   type="button"
                   variant="outline"
@@ -1343,14 +1377,14 @@ export default function NewCustomerModal({
                   className="flex items-center gap-2"
                 >
                   <Icon icon="lucide:plus" className="h-4 w-4" />
-                  Kontakt hinzufügen
+                  {t('NewCustomerModal.addContactButton')}
                 </Button>
               </div>
 
               {contacts.length === 0 ? (
                 <div className="rounded-lg bg-gray-50 py-12 text-center">
                   <Icon icon="lucide:users" className="mx-auto mb-4 h-12 w-12 text-gray-400" />
-                  <p className="text-gray-500">Noch keine Kontaktpersonen hinzugefügt</p>
+                  <p className="text-gray-500">{t('NewCustomerModal.noContactsYet')}</p>
                   <Button
                     type="button"
                     variant="outline"
@@ -1358,7 +1392,7 @@ export default function NewCustomerModal({
                     onClick={addContact}
                     className="mt-4"
                   >
-                    Ersten Kontakt hinzufügen
+                    {t('NewCustomerModal.addFirstContactButton')}
                   </Button>
                 </div>
               ) : (
@@ -1367,10 +1401,10 @@ export default function NewCustomerModal({
                     <div key={contact.id} className="space-y-4 rounded-lg border p-4">
                       <div className="flex items-center justify-between">
                         <h4 className="flex items-center gap-2 font-medium">
-                          Kontakt {index + 1}
+                          {t('NewCustomerModal.contactIndex', { index: index + 1 })}
                           {contact.isPrimary && (
                             <span className="rounded-full bg-accent px-2 py-1 text-white text-xs">
-                              Hauptkontakt
+                              {t('NewCustomerModal.primaryContactBadge')}
                             </span>
                           )}
                         </h4>
@@ -1386,7 +1420,7 @@ export default function NewCustomerModal({
                                 );
                               }}
                             >
-                              Als Hauptkontakt
+                              {t('NewCustomerModal.setAsPrimaryButton')}
                             </Button>
                           )}
                           <Button
@@ -1403,52 +1437,52 @@ export default function NewCustomerModal({
 
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <Label>Vorname</Label>
+                          <Label>{t('NewCustomerModal.firstNameLabel')}</Label>
                           <Input
                             value={contact.firstName}
                             onChange={e => updateContact(contact.id, 'firstName', e.target.value)}
-                            placeholder="Max"
+                            placeholder={t('NewCustomerModal.firstNamePlaceholder')}
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>Nachname</Label>
+                          <Label>{t('NewCustomerModal.lastNameLabel')}</Label>
                           <Input
                             value={contact.lastName}
                             onChange={e => updateContact(contact.id, 'lastName', e.target.value)}
-                            placeholder="Mustermann"
+                            placeholder={t('NewCustomerModal.lastNamePlaceholder')}
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>E-Mail</Label>
+                          <Label>{t('NewCustomerModal.emailLabel')}</Label>
                           <Input
                             type="email"
                             value={contact.email}
                             onChange={e => updateContact(contact.id, 'email', e.target.value)}
-                            placeholder="max@beispiel.de"
+                            placeholder={t('NewCustomerModal.emailPersonPlaceholder')}
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>Telefon</Label>
+                          <Label>{t('NewCustomerModal.phoneLabel')}</Label>
                           <Input
                             value={contact.phone || ''}
                             onChange={e => updateContact(contact.id, 'phone', e.target.value)}
-                            placeholder="+49 123 456789"
+                            placeholder={t('NewCustomerModal.phonePlaceholder')}
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>Position</Label>
+                          <Label>{t('NewCustomerModal.positionLabel')}</Label>
                           <Input
                             value={contact.position || ''}
                             onChange={e => updateContact(contact.id, 'position', e.target.value)}
-                            placeholder="Geschäftsführer"
+                            placeholder={t('NewCustomerModal.positionPlaceholder')}
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>Abteilung</Label>
+                          <Label>{t('NewCustomerModal.departmentLabel')}</Label>
                           <Input
                             value={contact.department || ''}
                             onChange={e => updateContact(contact.id, 'department', e.target.value)}
-                            placeholder="Einkauf"
+                            placeholder={t('NewCustomerModal.departmentPlaceholder')}
                           />
                         </div>
                       </div>
@@ -1462,16 +1496,18 @@ export default function NewCustomerModal({
           {/* Payment Tab */}
           {activeSubTab === 'payment' && (
             <div className="space-y-6">
-              <h3 className="font-medium text-gray-900 text-lg">Zahlungsinformationen</h3>
+              <h3 className="font-medium text-gray-900 text-lg">
+                {t('NewCustomerModal.paymentInfoHeading')}
+              </h3>
 
               {/* Zahlungsbedingungen */}
               <div className="space-y-4">
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label>Zahlungsbedingungen</Label>
+                      <Label>{t('NewCustomerModal.paymentTermsLabel')}</Label>
                       <TooltipIcon
-                        text="Zeitraum bis zur Fälligkeit der Rechnung. Standard ist '30 Tage netto', also Zahlung innerhalb von 30 Tagen ohne Abzug."
+                        text={t('NewCustomerModal.paymentTermsTooltip')}
                         icon={'lucide:clock'}
                       />
                     </div>
@@ -1480,22 +1516,30 @@ export default function NewCustomerModal({
                       onValueChange={val => handleInputChange('paymentTerms', val)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Zahlungsbedingungen wählen" />
+                        <SelectValue placeholder={t('NewCustomerModal.paymentTermsPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Sofort">Sofort</SelectItem>
-                        <SelectItem value="7 Tage netto">7 Tage netto</SelectItem>
-                        <SelectItem value="14 Tage netto">14 Tage netto</SelectItem>
-                        <SelectItem value="30 Tage netto">30 Tage netto</SelectItem>
-                        <SelectItem value="60 Tage netto">60 Tage netto</SelectItem>
+                        <SelectItem value="Sofort">{t('NewCustomerModal.paymentTermsImmediate')}</SelectItem>
+                        <SelectItem value="7 Tage netto">
+                          {t('NewCustomerModal.paymentTerms7Days')}
+                        </SelectItem>
+                        <SelectItem value="14 Tage netto">
+                          {t('NewCustomerModal.paymentTerms14Days')}
+                        </SelectItem>
+                        <SelectItem value="30 Tage netto">
+                          {t('NewCustomerModal.paymentTerms30Days')}
+                        </SelectItem>
+                        <SelectItem value="60 Tage netto">
+                          {t('NewCustomerModal.paymentTerms60Days')}
+                        </SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label>Bevorzugte Zahlungsart</Label>
+                      <Label>{t('NewCustomerModal.preferredPaymentMethodLabel')}</Label>
                       <TooltipIcon
-                        text="Die bevorzugte Art der Zahlung für diesen Kunden. Wird als Standard für neue Rechnungen verwendet."
+                        text={t('NewCustomerModal.preferredPaymentMethodTooltip')}
                         icon={'lucide:banknote'}
                       />
                     </div>
@@ -1504,19 +1548,27 @@ export default function NewCustomerModal({
                       onValueChange={val => handleInputChange('preferredPaymentMethod', val)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Zahlungsart wählen" />
+                        <SelectValue placeholder={t('NewCustomerModal.paymentMethodPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Überweisung">Überweisung</SelectItem>
-                        <SelectItem value="Lastschrift">Lastschrift</SelectItem>
-                        <SelectItem value="Vorkasse">Vorkasse</SelectItem>
-                        <SelectItem value="Kreditkarte">Kreditkarte</SelectItem>
+                        <SelectItem value="Überweisung">
+                          {t('NewCustomerModal.paymentMethodTransfer')}
+                        </SelectItem>
+                        <SelectItem value="Lastschrift">
+                          {t('NewCustomerModal.paymentMethodDirectDebit')}
+                        </SelectItem>
+                        <SelectItem value="Vorkasse">
+                          {t('NewCustomerModal.paymentMethodPrepayment')}
+                        </SelectItem>
+                        <SelectItem value="Kreditkarte">
+                          {t('NewCustomerModal.paymentMethodCreditCard')}
+                        </SelectItem>
                         <SelectItem value="PayPal">PayPal</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Zahlungsziel (Tage)</Label>
+                    <Label>{t('NewCustomerModal.invoiceDueDateLabel')}</Label>
                     <Input
                       type="number"
                       value={formData.defaultInvoiceDueDate}
@@ -1529,7 +1581,7 @@ export default function NewCustomerModal({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Standardrabatt (%)</Label>
+                    <Label>{t('NewCustomerModal.defaultDiscountLabel')}</Label>
                     <Input
                       type="number"
                       value={formData.discount}
@@ -1541,13 +1593,13 @@ export default function NewCustomerModal({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Währung</Label>
+                    <Label>{t('NewCustomerModal.currencyLabel')}</Label>
                     <Select
                       value={formData.currency}
                       onValueChange={val => handleInputChange('currency', val)}
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Währung wählen" />
+                        <SelectValue placeholder={t('NewCustomerModal.currencyPlaceholder')} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="EUR">EUR (€)</SelectItem>
@@ -1562,10 +1614,12 @@ export default function NewCustomerModal({
 
               {/* Bankdaten */}
               <div className="space-y-4">
-                <h4 className="font-medium text-gray-800 text-md">Bankverbindung</h4>
+                <h4 className="font-medium text-gray-800 text-md">
+                  {t('NewCustomerModal.bankDetailsHeading')}
+                </h4>
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>Bank</Label>
+                    <Label>{t('NewCustomerModal.bankLabel')}</Label>
                     <Input
                       value={formData.bankName}
                       onChange={e => handleInputChange('bankName', e.target.value)}
@@ -1573,7 +1627,7 @@ export default function NewCustomerModal({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Kontoinhaber</Label>
+                    <Label>{t('NewCustomerModal.accountHolderLabel')}</Label>
                     <Input
                       value={formData.accountHolder}
                       onChange={e => handleInputChange('accountHolder', e.target.value)}
@@ -1584,7 +1638,7 @@ export default function NewCustomerModal({
                     <div className="flex items-center gap-2">
                       <Label>IBAN</Label>
                       <TooltipIcon
-                        text="Internationale Bankkontonummer für SEPA-Überweisungen. Format: DE89 3704 0044 0532 0130 00"
+                        text={t('NewCustomerModal.ibanTooltip')}
                         icon={'lucide:credit-card'}
                       />
                     </div>
@@ -1598,7 +1652,7 @@ export default function NewCustomerModal({
                     <div className="flex items-center gap-2">
                       <Label>BIC</Label>
                       <TooltipIcon
-                        text="Bank Identifier Code (SWIFT-Code). Beispiel: DEUTDEFF für Deutsche Bank Frankfurt"
+                        text={t('NewCustomerModal.bicTooltip')}
                         icon={'lucide:building2'}
                       />
                     </div>
@@ -1613,10 +1667,16 @@ export default function NewCustomerModal({
 
               {/* Mahnwesen */}
               <div className="space-y-4">
-                <h4 className="font-medium text-gray-800 text-md">Mahnwesen</h4>
+                <h4 className="font-medium text-gray-800 text-md">
+                  {t('NewCustomerModal.dunningHeading')}
+                </h4>
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>Mahngebühr ({currencySymbol(formData.currency)})</Label>
+                    <Label>
+                      {t('NewCustomerModal.reminderFeeLabel', {
+                        symbol: currencySymbol(formData.currency),
+                      })}
+                    </Label>
                     <Input
                       type="number"
                       value={formData.reminderFee}
@@ -1627,7 +1687,7 @@ export default function NewCustomerModal({
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Verzugszinsen (% p.a.)</Label>
+                    <Label>{t('NewCustomerModal.lateFeeLabel')}</Label>
                     <Input
                       type="number"
                       value={formData.lateFee}
@@ -1638,7 +1698,7 @@ export default function NewCustomerModal({
                     />
                   </div>
                   <div className="col-span-1 flex items-center gap-3 space-y-2 lg:col-span-2">
-                    <Label>Automatische Mahnungen</Label>
+                    <Label>{t('NewCustomerModal.automaticRemindersLabel')}</Label>
                     <button
                       type="button"
                       className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 ${
@@ -1663,32 +1723,37 @@ export default function NewCustomerModal({
           {/* Skonto Tab */}
           {activeSubTab === 'skonto' && (
             <div className="space-y-6">
-              <h3 className="font-medium text-gray-900 text-lg">Skonto & Konditionen</h3>
+              <h3 className="font-medium text-gray-900 text-lg">
+                {t('NewCustomerModal.skontoHeading')}
+              </h3>
 
               {/* Einführungstext */}
               <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                 <div className="flex items-start gap-3">
                   <Icon icon="lucide:calculator" className="mt-0.5 h-5 w-5 text-accent" />
                   <div>
-                    <h4 className="mb-1 font-medium text-gray-900">Was ist Skonto?</h4>
-                    <p className="text-gray-700 text-sm">
-                      Skonto ist ein Preisnachlass, den Sie Ihren Kunden bei frühzeitiger Zahlung
-                      gewähren. Dies verbessert Ihre Liquidität und reduziert das Ausfallrisiko.
-                      Übliche Konditionen sind &quot;2% bei Zahlung innerhalb 14 Tagen&quot;.
-                    </p>
+                    <h4 className="mb-1 font-medium text-gray-900">
+                      {t('NewCustomerModal.skontoIntroHeading')}
+                    </h4>
+                    <p className="text-gray-700 text-sm">{t('NewCustomerModal.skontoIntroText')}</p>
                   </div>
                 </div>
               </div>
 
               {/* Skonto-Grundeinstellungen */}
               <div className="space-y-4">
-                <h4 className="font-medium text-gray-800 text-md">Skonto-Grundeinstellungen</h4>
+                <h4 className="font-medium text-gray-800 text-md">
+                  {t('NewCustomerModal.skontoBasicSettingsHeading')}
+                </h4>
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label>Skonto (%)</Label>
+                      <Label>{t('NewCustomerModal.skontoPercentLabel')}</Label>
                       <TooltipIcon
-                        text={`Preisnachlass in Prozent bei Zahlung innerhalb der Skontofrist. Üblich sind 2-3%. Beispiel: 2% Skonto bedeutet bei ${formatCurrency(1000, formData.currency)} Rechnung nur ${formatCurrency(980, formData.currency)} bei frühzeitiger Zahlung.`}
+                        text={t('NewCustomerModal.skontoPercentTooltip', {
+                          fullAmount: formatCurrency(1000, formData.currency),
+                          discountedAmount: formatCurrency(980, formData.currency),
+                        })}
                       />
 
                     </div>
@@ -1707,8 +1772,8 @@ export default function NewCustomerModal({
 
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label>Skontofrist (Tage)</Label>
-                      <TooltipIcon text="Zeitraum in Tagen, in dem der Kunde den Skonto nutzen kann. Standard sind 8-14 Tage. Häufige Formulierung: '14 Tage 2% Skonto, 30 Tage netto'." />
+                      <Label>{t('NewCustomerModal.skontoDaysLabel')}</Label>
+                      <TooltipIcon text={t('NewCustomerModal.skontoDaysTooltip')} />
                     </div>
                     <Input
                       type="number"
@@ -1723,12 +1788,14 @@ export default function NewCustomerModal({
 
               {/* Erweiterte Skonto-Optionen */}
               <div className="space-y-4">
-                <h4 className="font-medium text-gray-800 text-md">Erweiterte Konditionen</h4>
+                <h4 className="font-medium text-gray-800 text-md">
+                  {t('NewCustomerModal.extendedConditionsHeading')}
+                </h4>
                 <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label>Standardrabatt (%)</Label>
-                      <TooltipIcon text="Genereller Rabatt für diesen Kunden, unabhängig vom Skonto. Wird automatisch auf alle Rechnungen angewendet." />
+                      <Label>{t('NewCustomerModal.defaultDiscountLabel')}</Label>
+                      <TooltipIcon text={t('NewCustomerModal.defaultDiscountTooltip')} />
                     </div>
                     <Input
                       type="number"
@@ -1743,8 +1810,12 @@ export default function NewCustomerModal({
 
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <Label>Kreditlimit ({currencySymbol(formData.currency)})</Label>
-                      <TooltipIcon text="Maximaler Kreditbetrag für diesen Kunden. Bei Überschreitung werden keine weiteren Lieferungen ohne Vorauszahlung getätigt." />
+                      <Label>
+                        {t('NewCustomerModal.creditLimitLabel', {
+                          symbol: currencySymbol(formData.currency),
+                        })}
+                      </Label>
+                      <TooltipIcon text={t('NewCustomerModal.creditLimitTooltip')} />
                     </div>
                     <Input
                       type="number"
@@ -1762,14 +1833,20 @@ export default function NewCustomerModal({
                 <div className="flex items-start gap-3">
                   <Icon icon="lucide:euro" className="mt-0.5 h-5 w-5 text-accent" />
                   <div className="flex-1">
-                    <h4 className="mb-2 font-medium text-gray-900">Berechnungsbeispiel</h4>
+                    <h4 className="mb-2 font-medium text-gray-900">
+                      {t('NewCustomerModal.calculationExampleHeading')}
+                    </h4>
                     <div className="space-y-1 text-gray-700 text-sm">
                       <div className="flex justify-between">
-                        <span>Rechnungsbetrag:</span>
+                        <span>{t('NewCustomerModal.invoiceAmountLabel')}</span>
                         <span>{formatCurrency(1000, formData.currency)}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span>Skonto ({formData.earlyPaymentDiscount || 2}%):</span>
+                        <span>
+                          {t('NewCustomerModal.skontoAmountLabel', {
+                            percent: formData.earlyPaymentDiscount || 2,
+                          })}
+                        </span>
                         <span>
                           -
                           {formatCurrency(
@@ -1780,7 +1857,7 @@ export default function NewCustomerModal({
                       </div>
                       <hr className="border-gray-300" />
                       <div className="flex justify-between font-medium">
-                        <span>Zu zahlen bei Skonto:</span>
+                        <span>{t('NewCustomerModal.payableWithSkontoLabel')}</span>
                         <span>
                           {formatCurrency(
                             1000 - (1000 * (formData.earlyPaymentDiscount || 2)) / 100,
@@ -1789,7 +1866,9 @@ export default function NewCustomerModal({
                         </span>
                       </div>
                       <div className="mt-2 text-gray-600 text-xs">
-                        Gültig bei Zahlung innerhalb von {formData.earlyPaymentDays || 14} Tagen
+                        {t('NewCustomerModal.validWithinDays', {
+                          days: formData.earlyPaymentDays || 14,
+                        })}
                       </div>
                     </div>
                   </div>
@@ -1801,16 +1880,18 @@ export default function NewCustomerModal({
                 <div className="flex items-start gap-3">
                   <Icon icon="lucide:alert-circle" className="mt-0.5 h-5 w-5 text-accent" />
                   <div>
-                    <h4 className="mb-1 font-medium text-gray-900">Wirtschaftliche Bedeutung</h4>
+                    <h4 className="mb-1 font-medium text-gray-900">
+                      {t('NewCustomerModal.economicSignificanceHeading')}
+                    </h4>
                     <p className="text-gray-700 text-sm">
-                      Ein {formData.earlyPaymentDiscount || 2}% Skonto bei{' '}
-                      {formData.earlyPaymentDays || 14} Tagen entspricht einem Effektivzins von ca.{' '}
-                      {(
-                        ((formData.earlyPaymentDiscount || 2) * 360) /
-                        (30 - (formData.earlyPaymentDays || 14))
-                      ).toFixed(1)}
-                      % p.a. Dies ist meist günstiger als Bankkredite und verbessert Ihre Liquidität
-                      erheblich.
+                      {t('NewCustomerModal.economicSignificanceText', {
+                        percent: formData.earlyPaymentDiscount || 2,
+                        days: formData.earlyPaymentDays || 14,
+                        effectiveRate: (
+                          ((formData.earlyPaymentDiscount || 2) * 360) /
+                          (30 - (formData.earlyPaymentDays || 14))
+                        ).toFixed(1),
+                      })}
                     </p>
                   </div>
                 </div>
@@ -1820,7 +1901,7 @@ export default function NewCustomerModal({
 
           <div className="flex justify-end gap-3 border-t pt-6">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Abbrechen
+              {t('NewCustomerModal.cancelButton')}
             </Button>
             <Button
               className="bg-accent text-white hover:bg-accent/90"
@@ -1950,7 +2031,9 @@ export default function NewCustomerModal({
                       const response = await createCustomer(companyId, customerData);
 
                       if (response.success && response.customerId) {
-                        toast.success(`${displayName} wurde erfolgreich erstellt`);
+                        toast.success(
+                          t('NewCustomerModal.customerCreatedSuccess', { name: displayName }),
+                        );
 
                         if (onSaved) onSaved(response.customerId);
                         onOpenChange(false);
@@ -1960,7 +2043,7 @@ export default function NewCustomerModal({
                       }
                     } catch (error) {
                       console.error('Fehler beim Speichern des Kunden:', error);
-                      toast.error('Fehler beim Speichern des Kunden');
+                      toast.error(t('NewCustomerModal.customerSaveError'));
                       return;
                     }
                   }
@@ -1971,7 +2054,7 @@ export default function NewCustomerModal({
                   }
                 } catch (error) {
                   console.error('Fehler beim Erstellen des Kunden:', error);
-                  toast.error('Fehler beim Erstellen des Kunden');
+                  toast.error(t('NewCustomerModal.customerCreateError'));
                 } finally {
                   setLoading(false);
                 }
@@ -1980,7 +2063,7 @@ export default function NewCustomerModal({
               {saving || loading ? (
                 <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />
               ) : null}
-              {loading ? 'Wird erstellt...' : 'Speichern'}
+              {loading ? t('NewCustomerModal.savingButton') : t('NewCustomerModal.saveButton')}
             </Button>
           </div>
         </div>

@@ -25,6 +25,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@tasko/ui';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -77,6 +78,7 @@ export function InvoiceListView({
   const [sortField, setSortField] = useState<'dueDate' | 'number' | 'date' | 'amount'>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
   const router = useRouter();
+  const t = useTranslations('finance');
 
   // Lade verknüpfte Rechnungen beim Initialisieren
   useEffect(() => {
@@ -123,37 +125,37 @@ export function InvoiceListView({
 
     const statusConfig = {
       draft: {
-        label: 'Entwurf',
+        label: t('InvoiceListView.statusDraft'),
         variant: 'secondary' as const,
         className: 'bg-gray-100 text-gray-800',
       },
       finalized: {
-        label: isOverdueStatus ? 'Fällig' : 'Offen',
+        label: isOverdueStatus ? t('InvoiceListView.statusOverdue') : t('InvoiceListView.statusOpen'),
         variant: isOverdueStatus ? ('destructive' as const) : ('default' as const),
         className: isOverdueStatus ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800',
       },
       sent: {
-        label: isOverdueStatus ? 'Fällig' : 'Offen',
+        label: isOverdueStatus ? t('InvoiceListView.statusOverdue') : t('InvoiceListView.statusOpen'),
         variant: isOverdueStatus ? ('destructive' as const) : ('default' as const),
         className: isOverdueStatus ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800',
       },
       paid: {
-        label: 'Bezahlt',
+        label: t('InvoiceListView.statusPaid'),
         variant: 'default' as const,
         className: 'bg-green-100 text-green-800',
       },
       overdue: {
-        label: 'Fällig',
+        label: t('InvoiceListView.statusOverdue'),
         variant: 'destructive' as const,
         className: 'bg-red-100 text-red-800',
       },
       cancelled: {
-        label: 'Storno',
+        label: t('InvoiceListView.statusCancelled'),
         variant: 'secondary' as const,
         className: 'bg-gray-100 text-gray-800',
       },
       storno: {
-        label: 'Storno',
+        label: t('InvoiceListView.statusCancelled'),
         variant: 'destructive' as const,
         className: 'bg-red-100 text-red-800',
       },
@@ -167,7 +169,7 @@ export function InvoiceListView({
   };
 
   const getDueDateText = (dueDate: string, status: string) => {
-    if (status === 'paid') return 'Bezahlt';
+    if (status === 'paid') return t('InvoiceListView.statusPaid');
 
     const today = new Date();
     today.setHours(0, 0, 0, 0); // Set to start of day
@@ -177,10 +179,10 @@ export function InvoiceListView({
     const diffTime = due.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    if (diffDays < 0) return 'Fällig';
-    if (diffDays === 0) return 'Heute';
-    if (diffDays === 1) return 'Morgen';
-    return `In ${diffDays} Tagen`;
+    if (diffDays < 0) return t('InvoiceListView.statusOverdue');
+    if (diffDays === 0) return t('InvoiceListView.dueToday');
+    if (diffDays === 1) return t('InvoiceListView.dueTomorrow');
+    return t('InvoiceListView.dueInDays', { days: diffDays });
   };
 
   const handleViewInvoice = (invoiceId: string) => {
@@ -211,7 +213,7 @@ export function InvoiceListView({
     // Finde die Rechnung
     const invoice = invoices.find(inv => inv.id === invoiceId);
     if (!invoice) {
-      toast.error('Rechnung nicht gefunden');
+      toast.error(t('InvoiceListView.invoiceNotFound'));
       return;
     }
 
@@ -226,7 +228,7 @@ export function InvoiceListView({
   ) => {
     try {
       if (!selectedInvoiceForLink) {
-        toast.error('Rechnung nicht gefunden');
+        toast.error(t('InvoiceListView.invoiceNotFound'));
         return;
       }
 
@@ -279,7 +281,7 @@ export function InvoiceListView({
       );
 
       if (!result.success) {
-        throw new Error(result.error || 'Fehler beim Erstellen der Verknüpfung');
+        throw new Error(result.error || t('InvoiceListView.linkCreationError'));
       }
 
       // Rechnung als bezahlt markieren mit realem transactionId
@@ -340,7 +342,7 @@ export function InvoiceListView({
         // WhatsApp-Fehler nicht kritisch
       }
 
-      toast.success('Rechnung wurde als bezahlt markiert und verknüpft');
+      toast.success(t('InvoiceListView.markedAsPaidSuccess'));
 
       // Modal schließen und Liste aktualisieren
       setShowLinkTransactionModal(false);
@@ -351,7 +353,7 @@ export function InvoiceListView({
       }
     } catch (error: any) {
       console.error('Fehler beim Verknüpfen:', error);
-      toast.error(`Fehler beim Verknüpfen: ${error.message}`);
+      toast.error(t('InvoiceListView.linkError', { message: error.message }));
     }
   };
 
@@ -450,39 +452,43 @@ export function InvoiceListView({
     });
 
   const tabs = [
-    { id: 'all', label: 'Alle', count: invoices.length },
-    { id: 'draft', label: 'Entwurf', count: invoices.filter(i => i.status === 'draft').length },
+    { id: 'all', label: t('InvoiceListView.tabAll'), count: invoices.length },
+    {
+      id: 'draft',
+      label: t('InvoiceListView.statusDraft'),
+      count: invoices.filter(i => i.status === 'draft').length,
+    },
     {
       id: 'open',
-      label: 'Offen',
+      label: t('InvoiceListView.statusOpen'),
       count: invoices.filter(
         i => ['sent', 'finalized'].includes(i.status) && !isOverdue(i) && i.status !== 'paid',
       ).length,
     },
     {
       id: 'overdue',
-      label: 'Fällig',
+      label: t('InvoiceListView.statusOverdue'),
       count: invoices.filter(i => ['sent', 'finalized'].includes(i.status) && isOverdue(i)).length,
     },
     {
       id: 'finalized',
-      label: 'Festgeschrieben',
+      label: t('InvoiceListView.tabFinalized'),
       count: invoices.filter(i => i.status === 'finalized').length,
     },
     {
       id: 'paid',
-      label: 'Bezahlt',
+      label: t('InvoiceListView.statusPaid'),
       count: invoices.filter(i => i.status === 'paid').length,
       locked: true,
     },
-    { id: 'partial', label: 'Teilbezahlt', count: 0, locked: true },
+    { id: 'partial', label: t('InvoiceListView.tabPartial'), count: 0, locked: true },
     {
       id: 'cancelled',
-      label: 'Storno',
+      label: t('InvoiceListView.statusCancelled'),
       count: invoices.filter(i => ['cancelled', 'storno'].includes(i.status)).length,
       locked: true,
     },
-    { id: 'recurring', label: 'Wiederkehrend', count: 0, locked: true },
+    { id: 'recurring', label: t('InvoiceListView.tabRecurring'), count: 0, locked: true },
   ];
 
   return (
@@ -517,11 +523,11 @@ export function InvoiceListView({
                 className="flex items-center gap-2"
               >
                 <Icon icon="lucide:filter" className="h-4 w-4" />
-                Filter
+                {t('InvoiceListView.filterButton')}
               </Button>
               <Button variant="outline" className="flex items-center gap-2">
                 <Icon icon="lucide:download" className="h-4 w-4" />
-                Exportieren
+                {t('InvoiceListView.exportButton')}
               </Button>
             </div>
           </div>
@@ -531,14 +537,14 @@ export function InvoiceListView({
             <div className="space-y-4 rounded-lg bg-gray-50 p-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <div className="space-y-2">
-                  <label className="font-medium text-sm">Suche</label>
+                  <label className="font-medium text-sm">{t('InvoiceListView.filterSearchLabel')}</label>
                   <div className="relative">
                     <Icon
                       icon="lucide:search"
                       className="absolute top-3 left-3 h-4 w-4 text-gray-400"
                     />
                     <Input
-                      placeholder="Rechnungsnr. oder Kontakt"
+                      placeholder={t('InvoiceListView.filterSearchPlaceholder')}
                       value={searchTerm}
                       onChange={e => setSearchTerm(e.target.value)}
                       className="pl-9"
@@ -547,29 +553,29 @@ export function InvoiceListView({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="font-medium text-sm">Kontakt</label>
+                  <label className="font-medium text-sm">{t('InvoiceListView.filterContactLabel')}</label>
                   <Select value={selectedContact} onValueChange={setSelectedContact}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Alle Kontakte" />
+                      <SelectValue placeholder={t('InvoiceListView.filterAllContacts')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Alle Kontakte</SelectItem>
+                      <SelectItem value="all">{t('InvoiceListView.filterAllContacts')}</SelectItem>
                       {/* Would need to populate with actual contacts */}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="font-medium text-sm">Betrag (Netto)</label>
+                  <label className="font-medium text-sm">{t('InvoiceListView.filterAmountLabel')}</label>
                   <div className="flex gap-2">
                     <Input
-                      placeholder="Min"
+                      placeholder={t('InvoiceListView.filterMin')}
                       type="number"
                       value={minAmount}
                       onChange={e => setMinAmount(e.target.value)}
                     />
                     <Input
-                      placeholder="Max"
+                      placeholder={t('InvoiceListView.filterMax')}
                       type="number"
                       value={maxAmount}
                       onChange={e => setMaxAmount(e.target.value)}
@@ -578,7 +584,7 @@ export function InvoiceListView({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="font-medium text-sm">Startdatum</label>
+                  <label className="font-medium text-sm">{t('InvoiceListView.filterStartDateLabel')}</label>
                   <Input
                     type="date"
                     value={startDate}
@@ -587,21 +593,21 @@ export function InvoiceListView({
                 </div>
 
                 <div className="space-y-2">
-                  <label className="font-medium text-sm">Enddatum</label>
+                  <label className="font-medium text-sm">{t('InvoiceListView.filterEndDateLabel')}</label>
                   <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="font-medium text-sm">Zahlungsmethode</label>
+                  <label className="font-medium text-sm">{t('InvoiceListView.filterPaymentMethodLabel')}</label>
                   <Select value={paymentMethod} onValueChange={setPaymentMethod}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Alle" />
+                      <SelectValue placeholder={t('InvoiceListView.filterAll')} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Alle</SelectItem>
-                      <SelectItem value="sepa">SEPA Überweisung</SelectItem>
-                      <SelectItem value="cash">Bargeld</SelectItem>
-                      <SelectItem value="card">Kreditkarte</SelectItem>
+                      <SelectItem value="all">{t('InvoiceListView.filterAll')}</SelectItem>
+                      <SelectItem value="sepa">{t('InvoiceListView.paymentMethodSepa')}</SelectItem>
+                      <SelectItem value="cash">{t('InvoiceListView.paymentMethodCash')}</SelectItem>
+                      <SelectItem value="card">{t('InvoiceListView.paymentMethodCard')}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -620,13 +626,13 @@ export function InvoiceListView({
                     setPaymentMethod('');
                   }}
                 >
-                  Zurücksetzen
+                  {t('InvoiceListView.filterReset')}
                 </Button>
                 <Button
                   className="bg-accent text-white hover:bg-accent/90"
                   onClick={() => setShowFilters(false)}
                 >
-                  Übernehmen
+                  {t('InvoiceListView.filterApply')}
                 </Button>
               </div>
             </div>
@@ -637,33 +643,33 @@ export function InvoiceListView({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t('InvoiceListView.columnStatus')}</TableHead>
                   <TableHead
                     className="cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort('dueDate')}
                   >
-                    Fälligkeit {sortField === 'dueDate' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    {t('InvoiceListView.columnDueDate')} {sortField === 'dueDate' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </TableHead>
                   <TableHead
                     className="cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort('number')}
                   >
-                    Rechnungsnr. {sortField === 'number' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    {t('InvoiceListView.columnNumber')} {sortField === 'number' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </TableHead>
-                  <TableHead>Kunde</TableHead>
+                  <TableHead>{t('InvoiceListView.columnCustomer')}</TableHead>
                   <TableHead
                     className="cursor-pointer hover:bg-gray-100"
                     onClick={() => handleSort('date')}
                   >
-                    Datum {sortField === 'date' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    {t('InvoiceListView.columnDate')} {sortField === 'date' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </TableHead>
                   <TableHead
                     className="cursor-pointer text-right hover:bg-gray-100"
                     onClick={() => handleSort('amount')}
                   >
-                    Betrag (netto) {sortField === 'amount' && (sortDirection === 'asc' ? '↑' : '↓')}
+                    {t('InvoiceListView.columnAmountNet')} {sortField === 'amount' && (sortDirection === 'asc' ? '↑' : '↓')}
                   </TableHead>
-                  <TableHead className="text-right">Offen (brutto)</TableHead>
+                  <TableHead className="text-right">{t('InvoiceListView.columnOpenGross')}</TableHead>
                   <TableHead></TableHead>
                 </TableRow>
               </TableHeader>
@@ -671,7 +677,7 @@ export function InvoiceListView({
                 {filteredInvoices.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
-                      Keine Rechnungen gefunden
+                      {t('InvoiceListView.noInvoicesFound')}
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -687,7 +693,7 @@ export function InvoiceListView({
                         {invoice.number ||
                           invoice.invoiceNumber ||
                           (invoice.status === 'draft'
-                            ? 'Entwurf'
+                            ? t('InvoiceListView.statusDraft')
                             : `DOK-${invoice.id.substring(0, 8)}`)}{' '}
                         {/* NumberSequenceService manages numbering */}
                       </TableCell>
@@ -716,7 +722,7 @@ export function InvoiceListView({
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                title="Als bezahlt markieren"
+                                title={t('InvoiceListView.markAsPaidTitle')}
                                 onClick={() => handleMarkAsPaid(invoice.id)}
                               >
                                 <Icon icon="lucide:dollar-sign" className="h-4 w-4" />
@@ -731,30 +737,30 @@ export function InvoiceListView({
                               <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => handleViewInvoice(invoice.id)}>
                                   <Icon icon="lucide:eye" className="mr-2 h-4 w-4" />
-                                  Anzeigen
+                                  {t('InvoiceListView.actionView')}
                                 </DropdownMenuItem>
                                 {invoice.status === 'draft' && (
                                   <DropdownMenuItem onClick={() => handleEditInvoice(invoice.id)}>
                                     <Icon icon="lucide:edit" className="mr-2 h-4 w-4" />
-                                    Bearbeiten
+                                    {t('InvoiceListView.actionEdit')}
                                   </DropdownMenuItem>
                                 )}
                                 {['sent', 'paid'].includes(invoice.status) && !invoice.isStorno && (
                                   <DropdownMenuItem onClick={() => handleCreateStorno(invoice.id)}>
                                     <Icon icon="lucide:x" className="mr-2 h-4 w-4" />
-                                    Stornieren
+                                    {t('InvoiceListView.actionCancel')}
                                   </DropdownMenuItem>
                                 )}
                                 {['sent', 'paid', 'finalized'].includes(invoice.status) && (
                                   <DropdownMenuItem onClick={() => handleSendEmail(invoice.id)}>
                                     <Icon icon="lucide:mail" className="mr-2 h-4 w-4" />
-                                    E-Mail senden
+                                    {t('InvoiceListView.actionSendEmail')}
                                   </DropdownMenuItem>
                                 )}
                                 {invoice.status === 'draft' && (
                                   <DropdownMenuItem className="text-red-600">
                                     <Icon icon="lucide:trash2" className="mr-2 h-4 w-4" />
-                                    Löschen
+                                    {t('InvoiceListView.actionDelete')}
                                   </DropdownMenuItem>
                                 )}
                               </DropdownMenuContent>
@@ -763,7 +769,7 @@ export function InvoiceListView({
                         ) : (
                           <div className="flex items-center justify-center">
                             <span className="rounded bg-gray-100 px-2 py-1 text-gray-500 text-xs">
-                              Verknüpft
+                              {t('InvoiceListView.linked')}
                             </span>
                           </div>
                         )}

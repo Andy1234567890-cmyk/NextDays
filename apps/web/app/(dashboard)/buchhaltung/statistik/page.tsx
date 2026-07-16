@@ -1,10 +1,13 @@
+import { getTranslations } from "next-intl/server";
 import { ComingSoon } from "@/components/ui/coming-soon";
 
-export default function StatistikPage() {
+export default async function StatistikPage() {
+  const t = await getTranslations("finance");
+
   return (
     <ComingSoon
-      title="Statistik"
-      description="Auslastung, ADR und Kennzahlen des Betriebs."
+      title={t("statistikPage.statistikTitle")}
+      description={t("statistikPage.statistikDescription")}
       icon="ph:chart-bar"
     />
   );

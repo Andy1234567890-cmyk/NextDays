@@ -24,6 +24,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from '@tasko/ui';
+import { useTranslations } from 'next-intl';
 import {
   type ComponentProps,
   type Dispatch,
@@ -51,6 +52,7 @@ export function CompanySettingsBanner({
   setShowCompanySettingsBanner: Dispatch<SetStateAction<boolean>>;
   setShowCompanySettingsModal: Dispatch<SetStateAction<boolean>>;
 }) {
+  const t = useTranslations('finance');
   if (!showCompanySettingsBanner) return null;
   return (
     <div className="mb-6 rounded-lg border border-orange-200 bg-orange-50 p-4">
@@ -61,18 +63,17 @@ export function CompanySettingsBanner({
         />
         <div className="flex-1">
           <div className="mb-1 font-medium text-orange-800">
-            Angaben zu deinem Unternehmen
+            {t('invoiceModals.companyBanner.title')}
           </div>
           <div className="mb-3 text-orange-700 text-sm">
-            Damit deine Rechnungen rechtssicher und GoBD-konform sind, ergänze noch Angaben zu
-            dir und deinem Unternehmen.
+            {t('invoiceModals.companyBanner.description')}
           </div>
           <Button
             onClick={() => setShowCompanySettingsModal(true)}
             className="bg-accent text-white hover:bg-accent/90"
             size="sm"
           >
-            Angaben vervollständigen
+            {t('invoiceModals.companyBanner.completeButton')}
           </Button>
         </div>
         <Button
@@ -100,6 +101,7 @@ export function ComplianceSheetInline({
   setShowCompliancePanel: Dispatch<SetStateAction<boolean>>;
   complianceErrors: string[];
 }) {
+  const t = useTranslations('finance');
   if (!showCompliancePanel) return null;
   return (
     <Sheet open={showCompliancePanel} onOpenChange={setShowCompliancePanel}>
@@ -107,10 +109,10 @@ export function ComplianceSheetInline({
         <SheetHeader className="border-accent/10 border-b pb-4">
           <SheetTitle className="flex items-center gap-2 text-accent">
             <Icon icon="lucide:alert-triangle" className="h-5 w-5 text-accent" />
-            E-Rechnung Compliance Prüfung
+            {t('invoiceModals.compliance.title')}
           </SheetTitle>
           <SheetDescription className="font-medium text-gray-600">
-            Folgende Probleme verhindern die Aktivierung der E-Rechnung:
+            {t('invoiceModals.compliance.description')}
           </SheetDescription>
         </SheetHeader>
 
@@ -122,7 +124,7 @@ export function ComplianceSheetInline({
                   !
                 </div>
                 <h4 className="font-semibold text-accent text-sm">
-                  Erforderliche Angaben
+                  {t('invoiceModals.compliance.requiredFields')}
                 </h4>
                 <span className="rounded bg-accent/10 px-1.5 py-0.5 text-accent text-xs">
                   {complianceErrors.length}
@@ -143,11 +145,10 @@ export function ComplianceSheetInline({
         <div className="mt-4 rounded-lg border border-accent/20 bg-accent/5 p-3">
           <h4 className="mb-1 flex items-center gap-2 font-medium text-accent text-sm">
             <Icon icon="lucide:info" className="h-3 w-3" />
-            E-Rechnung Mindestanforderungen
+            {t('invoiceModals.compliance.minRequirementsTitle')}
           </h4>
           <div className="text-gray-700 text-xs leading-tight">
-            Vollständige Firmen- und Kundendaten, Steuer-ID, Bankverbindung, gültige
-            E-Mail-Adressen
+            {t('invoiceModals.compliance.minimumRequirements')}
           </div>
         </div>
 
@@ -169,7 +170,7 @@ export function ComplianceSheetInline({
               e.currentTarget.style.backgroundColor = 'var(--accent)';
             }}
           >
-            Schließen
+            {t('invoiceModals.close')}
           </Button>
         </SheetFooter>
       </SheetContent>
@@ -262,6 +263,7 @@ export default function InvoiceModals({
   buildInvoiceDataForPreview,
   handleSubmit,
 }: InvoiceModalsProps) {
+  const t = useTranslations('finance');
   // Lokaler UI-State: Dialog lebte vorher im selben JSX-Block (kein Trigger von außen)
   const [showTemplateModal, setShowTemplateModal] = useState(false);
 
@@ -280,16 +282,16 @@ export default function InvoiceModals({
       <Dialog open={showCompanySettingsModal} onOpenChange={setShowCompanySettingsModal}>
         <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Deine Angaben</DialogTitle>
-            <DialogDescription>Bearbeite deine Firmendaten und Einstellungen</DialogDescription>
+            <DialogTitle>{t('invoiceModals.companySettings.title')}</DialogTitle>
+            <DialogDescription>{t('invoiceModals.companySettings.description')}</DialogDescription>
           </DialogHeader>
           <div className="space-y-6">
             {/* Pflichtangaben */}
             <div>
-              <h3 className="mb-4 font-medium text-lg">Pflichtangaben</h3>
+              <h3 className="mb-4 font-medium text-lg">{t('invoiceModals.companySettings.requiredSection')}</h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Inhaber</Label>
+                  <Label>{t('invoiceModals.companySettings.owner')}</Label>
                   <Input
                     value={companySettingsFormData.companyOwner}
                     onChange={e =>
@@ -298,30 +300,30 @@ export default function InvoiceModals({
                         companyOwner: e.target.value,
                       }))
                     }
-                    placeholder="Inhaber"
+                    placeholder={t('invoiceModals.companySettings.owner')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Firma</Label>
+                  <Label>{t('invoiceModals.companySettings.company')}</Label>
                   <Input
                     value={companySettingsFormData.companyName}
                     onChange={e =>
                       setCompanySettingsFormData(prev => ({ ...prev, companyName: e.target.value }))
                     }
-                    placeholder="Firma"
+                    placeholder={t('invoiceModals.companySettings.company')}
                   />
                 </div>
               </div>
 
               <div className="mt-4 space-y-4">
                 <div className="space-y-2">
-                  <Label>Anschrift</Label>
+                  <Label>{t('invoiceModals.companySettings.address')}</Label>
                   <Input
                     value={companySettingsFormData.street}
                     onChange={e =>
                       setCompanySettingsFormData(prev => ({ ...prev, street: e.target.value }))
                     }
-                    placeholder="Straße und Hausnummer"
+                    placeholder={t('invoiceModals.companySettings.streetPlaceholder')}
                   />
                 </div>
                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -331,7 +333,7 @@ export default function InvoiceModals({
                       onChange={e =>
                         setCompanySettingsFormData(prev => ({ ...prev, zip: e.target.value }))
                       }
-                      placeholder="PLZ"
+                      placeholder={t('invoiceModals.companySettings.zipPlaceholder')}
                     />
                   </div>
                   <div className="space-y-2">
@@ -340,7 +342,7 @@ export default function InvoiceModals({
                       onChange={e =>
                         setCompanySettingsFormData(prev => ({ ...prev, city: e.target.value }))
                       }
-                      placeholder="Ort"
+                      placeholder={t('invoiceModals.companySettings.cityPlaceholder')}
                     />
                   </div>
                 </div>
@@ -348,23 +350,23 @@ export default function InvoiceModals({
 
               <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Steuernummer</Label>
+                  <Label>{t('invoiceModals.companySettings.taxNumber')}</Label>
                   <Input
                     value={companySettingsFormData.taxNumber}
                     onChange={e =>
                       setCompanySettingsFormData(prev => ({ ...prev, taxNumber: e.target.value }))
                     }
-                    placeholder="Steuernummer"
+                    placeholder={t('invoiceModals.companySettings.taxNumber')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Umsatzsteuer-ID</Label>
+                  <Label>{t('invoiceModals.companySettings.vatNumber')}</Label>
                   <Input
                     value={companySettingsFormData.vatNumber}
                     onChange={e =>
                       setCompanySettingsFormData(prev => ({ ...prev, vatNumber: e.target.value }))
                     }
-                    placeholder="Umsatzsteuer-ID"
+                    placeholder={t('invoiceModals.companySettings.vatNumber')}
                   />
                 </div>
               </div>
@@ -374,7 +376,7 @@ export default function InvoiceModals({
                   Meldung fehl (kein stiller Standardsatz, 27 EU-Länder). */}
               <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>USt-Satz Übernachtung (%)</Label>
+                  <Label>{t('invoiceModals.companySettings.lodgingTaxRate')}</Label>
                   <Input
                     type="number"
                     min={0}
@@ -387,12 +389,10 @@ export default function InvoiceModals({
                         lodgingTaxRate: e.target.value,
                       }))
                     }
-                    placeholder="z. B. 7"
+                    placeholder={t('invoiceModals.companySettings.lodgingTaxRatePlaceholder')}
                   />
                   <p className="text-gray-500 text-xs">
-                    Steuersatz für Übernachtungs-Positionen bei Rechnungen aus
-                    Buchungen (z. B. 7 % in Deutschland). Ohne Angabe kann beim
-                    Check-out keine automatische Rechnung erstellt werden.
+                    {t('invoiceModals.companySettings.lodgingTaxRateHint')}
                   </p>
                 </div>
               </div>
@@ -400,10 +400,10 @@ export default function InvoiceModals({
 
             {/* Optionale Angaben */}
             <div>
-              <h3 className="mb-4 font-medium text-lg">Optionale Angaben</h3>
+              <h3 className="mb-4 font-medium text-lg">{t('invoiceModals.companySettings.optionalSection')}</h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>E-Mail</Label>
+                  <Label>{t('invoiceModals.companySettings.email')}</Label>
                   <Input
                     type="email"
                     value={companySettingsFormData.email}
@@ -414,7 +414,7 @@ export default function InvoiceModals({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Telefon</Label>
+                  <Label>{t('invoiceModals.companySettings.phone')}</Label>
                   <Input
                     value={companySettingsFormData.phone}
                     onChange={e =>
@@ -427,7 +427,7 @@ export default function InvoiceModals({
 
               <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>IBAN</Label>
+                  <Label>{t('invoiceModals.companySettings.iban')}</Label>
                   <Input
                     value={companySettingsFormData.iban}
                     onChange={e =>
@@ -437,7 +437,7 @@ export default function InvoiceModals({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>BIC</Label>
+                  <Label>{t('invoiceModals.companySettings.bic')}</Label>
                   <Input
                     value={companySettingsFormData.bic}
                     onChange={e =>
@@ -452,13 +452,13 @@ export default function InvoiceModals({
 
           <div className="flex items-center justify-between border-t pt-4">
             <Button variant="outline" onClick={() => setShowCompanySettingsModal(false)}>
-              Abbrechen
+              {t('invoiceModals.cancel')}
             </Button>
             <Button
               onClick={handleCompanySettingsSave}
               className="bg-accent text-white hover:bg-accent/90"
             >
-              Speichern
+              {t('invoiceModals.save')}
             </Button>
           </div>
         </DialogContent>
@@ -484,21 +484,21 @@ export default function InvoiceModals({
       <Dialog open={showTemplateModal} onOpenChange={setShowTemplateModal}>
         <DialogContent className="w-full max-w-200">
           <DialogHeader>
-            <DialogTitle>Textvorlagen verwalten</DialogTitle>
+            <DialogTitle>{t('invoiceModals.templates.title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-gray-600 text-sm">
-              Hier können Sie neue Textvorlagen für Kopf- und Fußtexte erstellen und verwalten.
+              {t('invoiceModals.templates.description')}
             </p>
             <div className="py-8 text-center text-gray-500">
               <Icon icon="lucide:file-text" className="mx-auto mb-2 h-12 w-12 opacity-50" />
-              <p>Textvorlagen-Verwaltung wird in Kürze verfügbar sein.</p>
+              <p>{t('invoiceModals.templates.comingSoon')}</p>
               <p className="mt-1 text-xs">
-                Navigieren Sie zu Finance → Textvorlagen für die vollständige Verwaltung.
+                {t('invoiceModals.templates.navigateHint')}
               </p>
             </div>
             <div className="flex justify-end">
-              <Button onClick={() => setShowTemplateModal(false)}>Schließen</Button>
+              <Button onClick={() => setShowTemplateModal(false)}>{t('invoiceModals.close')}</Button>
             </div>
           </div>
         </DialogContent>
@@ -508,12 +508,12 @@ export default function InvoiceModals({
       <Dialog open={showNumberingModal} onOpenChange={setShowNumberingModal}>
         <DialogContent className="w-80 max-w-none sm:w-80">
           <DialogHeader>
-            <DialogTitle>Nummernkreis bearbeiten</DialogTitle>
+            <DialogTitle>{t('invoiceModals.numbering.title')}</DialogTitle>
           </DialogHeader>
           <div className="space-y-6">
             {/* Format */}
             <div className="space-y-2">
-              <Label className="font-medium text-gray-700 text-sm">Format</Label>
+              <Label className="font-medium text-gray-700 text-sm">{t('invoiceModals.numbering.format')}</Label>
               <Input
                 value={numberingFormat}
                 onChange={e => setNumberingFormat(e.target.value)}
@@ -523,7 +523,7 @@ export default function InvoiceModals({
 
             {/* Nächste Zahl */}
             <div className="space-y-2">
-              <Label className="font-medium text-gray-700 text-sm">Nächste Zahl</Label>
+              <Label className="font-medium text-gray-700 text-sm">{t('invoiceModals.numbering.nextNumber')}</Label>
               <Input
                 type="number"
                 value={nextNumber}
@@ -534,7 +534,7 @@ export default function InvoiceModals({
 
             {/* Vorschau */}
             <div className="space-y-2">
-              <Label className="font-medium text-gray-700 text-sm">Vorschau</Label>
+              <Label className="font-medium text-gray-700 text-sm">{t('invoiceModals.numbering.preview')}</Label>
               <div className="rounded-md border bg-gray-50 p-3">
                 <code className="font-mono text-gray-800 text-sm">
                   {generateNumberPreview(numberingFormat, nextNumber)}
@@ -545,30 +545,30 @@ export default function InvoiceModals({
             {/* Verfügbare Variablen */}
             <div className="space-y-2">
               <Label className="font-medium text-gray-700 text-sm">
-                Folgende Variablen stehen für das Format zur Verfügung:
+                {t('invoiceModals.numbering.variablesLabel')}
               </Label>
               <div className="space-y-1 text-gray-600 text-xs">
                 <div>
-                  <code className="rounded bg-gray-100 px-1">%NUMBER</code> - Nächste Zahl{' '}
-                  <span className="text-red-500">Obligatorisch</span>
+                  <code className="rounded bg-gray-100 px-1">%NUMBER</code> - {t('invoiceModals.numbering.varNumber')}{' '}
+                  <span className="text-red-500">{t('invoiceModals.numbering.mandatory')}</span>
                 </div>
                 <div>
-                  <code className="rounded bg-gray-100 px-1">%YYYY</code> - Aktuelles Jahr (2025)
+                  <code className="rounded bg-gray-100 px-1">%YYYY</code> - {t('invoiceModals.numbering.varYearLong')}
                 </div>
                 <div>
-                  <code className="rounded bg-gray-100 px-1">%YY</code> - Aktuelles Jahr (25)
+                  <code className="rounded bg-gray-100 px-1">%YY</code> - {t('invoiceModals.numbering.varYearShort')}
                 </div>
                 <div>
-                  <code className="rounded bg-gray-100 px-1">%MM</code> - Aktueller Monat (09)
+                  <code className="rounded bg-gray-100 px-1">%MM</code> - {t('invoiceModals.numbering.varMonthLong')}
                 </div>
                 <div>
-                  <code className="rounded bg-gray-100 px-1">%M</code> - Aktueller Monat (9)
+                  <code className="rounded bg-gray-100 px-1">%M</code> - {t('invoiceModals.numbering.varMonthShort')}
                 </div>
                 <div>
-                  <code className="rounded bg-gray-100 px-1">%DD</code> - Aktueller Tag (15)
+                  <code className="rounded bg-gray-100 px-1">%DD</code> - {t('invoiceModals.numbering.varDayLong')}
                 </div>
                 <div>
-                  <code className="rounded bg-gray-100 px-1">%D</code> - Aktueller Tag (15)
+                  <code className="rounded bg-gray-100 px-1">%D</code> - {t('invoiceModals.numbering.varDayShort')}
                 </div>
               </div>
             </div>
@@ -576,7 +576,7 @@ export default function InvoiceModals({
             {/* Buttons */}
             <div className="flex justify-end gap-3 pt-4">
               <Button variant="outline" onClick={() => setShowNumberingModal(false)}>
-                Abbrechen
+                {t('invoiceModals.cancel')}
               </Button>
               <Button
                 className="bg-accent text-white hover:bg-accent/90"
@@ -592,14 +592,14 @@ export default function InvoiceModals({
                     }));
 
                     setShowNumberingModal(false);
-                    toast.success('Nummernkreis-Einstellungen gespeichert');
+                    toast.success(t('invoiceModals.numbering.saveSuccess'));
                   } catch (error) {
                     console.error('Fehler beim Speichern der Nummernkreis-Einstellungen:', error);
-                    toast.error('Fehler beim Speichern der Einstellungen');
+                    toast.error(t('invoiceModals.numbering.saveError'));
                   }
                 }}
               >
-                Übernehmen
+                {t('invoiceModals.numbering.apply')}
               </Button>
             </div>
           </div>
@@ -613,10 +613,10 @@ export default function InvoiceModals({
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
               <Icon icon="lucide:alert-triangle" className="h-5 w-5 text-red-500" />
-              E-Rechnung Compliance Prüfung
+              {t('invoiceModals.compliance.title')}
             </SheetTitle>
             <SheetDescription>
-              Folgende Probleme verhindern die Aktivierung der E-Rechnung:
+              {t('invoiceModals.compliance.description')}
             </SheetDescription>
           </SheetHeader>
 
@@ -653,7 +653,7 @@ export default function InvoiceModals({
                           !
                         </div>
                         <h4 className="font-semibold text-red-800 text-sm">
-                          Erforderliche Angaben
+                          {t('invoiceModals.compliance.requiredFields')}
                         </h4>
                         <span className="rounded bg-red-100 px-1.5 py-0.5 text-red-700 text-xs">
                           {criticalErrors.length}
@@ -668,7 +668,7 @@ export default function InvoiceModals({
                         ))}
                         {criticalErrors.length > 5 && (
                           <div className="mt-1 font-medium text-red-600 text-xs">
-                            ... und {criticalErrors.length - 5} weitere
+                            {t('invoiceModals.compliance.moreErrors', { count: criticalErrors.length - 5 })}
                           </div>
                         )}
                       </div>
@@ -682,7 +682,7 @@ export default function InvoiceModals({
                         <div className="flex h-4 w-4 items-center justify-center rounded-full bg-yellow-500 text-white text-xs">
                           i
                         </div>
-                        <h4 className="font-semibold text-sm text-yellow-800">Empfehlungen</h4>
+                        <h4 className="font-semibold text-sm text-yellow-800">{t('invoiceModals.compliance.recommendations')}</h4>
                         <span className="rounded bg-yellow-100 px-1.5 py-0.5 text-xs text-yellow-700">
                           {recommendedErrors.length}
                         </span>
@@ -691,7 +691,7 @@ export default function InvoiceModals({
                         <div className="leading-tight">
                           {recommendedErrors.slice(0, 2).join(', ')}
                           {recommendedErrors.length > 2 &&
-                            ` und ${recommendedErrors.length - 2} weitere Verbesserungen`}
+                            ` ${t('invoiceModals.compliance.moreRecommendations', { count: recommendedErrors.length - 2 })}`}
                         </div>
                       </div>
                     </div>
@@ -705,11 +705,10 @@ export default function InvoiceModals({
           <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3">
             <h4 className="mb-1 flex items-center gap-2 font-medium text-blue-800 text-sm">
               <Icon icon="lucide:info" className="h-3 w-3" />
-              E-Rechnung Mindestanforderungen
+              {t('invoiceModals.compliance.minRequirementsTitle')}
             </h4>
             <div className="text-blue-700 text-xs leading-tight">
-              Vollständige Firmen- und Kundendaten, Steuer-ID, Bankverbindung, gültige
-              E-Mail-Adressen
+              {t('invoiceModals.compliance.minimumRequirements')}
             </div>
           </div>
 
@@ -719,7 +718,7 @@ export default function InvoiceModals({
               onClick={() => setShowCompliancePanel(false)}
               className="h-8 w-full text-sm"
             >
-              Schließen
+              {t('invoiceModals.close')}
             </Button>
           </SheetFooter>
         </SheetContent>

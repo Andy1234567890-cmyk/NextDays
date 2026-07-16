@@ -2,6 +2,7 @@
 
 import { Icon } from '@iconify/react';
 import { Badge, Card, Tabs, TabsContent, TabsList, TabsTrigger } from '@tasko/ui';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 // Import der modularen Komponenten
@@ -35,30 +36,31 @@ interface GoBDSystemProps {
 }
 
 export function GoBDSystem({ companyId, userRole = 'user', className }: GoBDSystemProps) {
+  const t = useTranslations('finance');
   const [activeTab, setActiveTab] = useState('dashboard');
 
   const tabs = [
     {
       id: 'dashboard',
-      label: 'Compliance-Übersicht',
+      label: t('GoBDSystem.tabDashboard'),
       icon: <Icon icon="lucide:bar-chart3" className="h-4 w-4" />,
       component: <ComplianceDashboard companyId={companyId} userRole={userRole} />,
     },
     {
       id: 'settings',
-      label: 'Auto-Festschreibung',
+      label: t('GoBDSystem.tabSettings'),
       icon: <Icon icon="lucide:settings" className="h-4 w-4" />,
       component: <AutoLockSettings companyId={companyId} />,
     },
     {
       id: 'manual',
-      label: 'Manuelle Festschreibung',
+      label: t('GoBDSystem.tabManual'),
       icon: <Icon icon="lucide:lock" className="h-4 w-4" />,
       component: <SevDeskLockManager companyId={companyId} />,
     },
     {
       id: 'storno',
-      label: 'Storno & Gutschrift',
+      label: t('GoBDSystem.tabStorno'),
       icon: <Icon icon="lucide:file-x" className="h-4 w-4" />,
       component: <StornoManager companyId={companyId} document={mockDocument} />,
     },
@@ -74,19 +76,17 @@ export function GoBDSystem({ companyId, userRole = 'user', className }: GoBDSyst
               <Icon icon="lucide:shield" className="h-6 w-6 text-accent" />
             </div>
             <div>
-              <h1 className="font-bold text-2xl text-gray-900">GoBD-Festschreibungssystem</h1>
-              <p className="text-gray-600">
-                Grundsätze zur ordnungsmäßigen Führung und Aufbewahrung von Büchern
-              </p>
+              <h1 className="font-bold text-2xl text-gray-900">{t('GoBDSystem.title')}</h1>
+              <p className="text-gray-600">{t('GoBDSystem.subtitle')}</p>
             </div>
           </div>
 
           <div className="text-right">
             <Badge className="border-green-200 bg-green-100 text-green-700">
               <Icon icon="lucide:shield" className="mr-1 h-3 w-3" />
-              GoBD-konform
+              {t('GoBDSystem.compliantBadge')}
             </Badge>
-            <p className="mt-1 text-gray-500 text-sm">Automatische Compliance-Sicherung</p>
+            <p className="mt-1 text-gray-500 text-sm">{t('GoBDSystem.autoComplianceHint')}</p>
           </div>
         </div>
       </Card>
@@ -96,25 +96,21 @@ export function GoBDSystem({ companyId, userRole = 'user', className }: GoBDSyst
         <div className="flex items-start gap-3">
           <Icon icon="lucide:book-open" className="mt-0.5 h-5 w-5 text-blue-600" />
           <div className="flex-1">
-            <h3 className="mb-1 font-medium text-blue-900">Was ist GoBD-Festschreibung?</h3>
-            <p className="mb-3 text-blue-800 text-sm">
-              Die GoBD (Grundsätze zur ordnungsmäßigen Führung und Aufbewahrung von Büchern)
-              schreibt vor, dass Buchungsdaten unveränderbar gemacht werden müssen. NextDays
-              automatisiert diesen Prozess für Sie.
-            </p>
+            <h3 className="mb-1 font-medium text-blue-900">{t('GoBDSystem.infoTitle')}</h3>
+            <p className="mb-3 text-blue-800 text-sm">{t('GoBDSystem.infoBody')}</p>
 
             <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-blue-600"></div>
-                <span>Automatische Festschreibung bei Versand</span>
+                <span>{t('GoBDSystem.infoBulletAutoLock')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-blue-600"></div>
-                <span>30-Tage-Regel wird automatisch eingehalten</span>
+                <span>{t('GoBDSystem.infoBullet30DayRule')}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-blue-600"></div>
-                <span>Vollständige Audit-Trail Dokumentation</span>
+                <span>{t('GoBDSystem.infoBulletAuditTrail')}</span>
               </div>
             </div>
           </div>
@@ -144,9 +140,7 @@ export function GoBDSystem({ companyId, userRole = 'user', className }: GoBDSyst
         <div className="flex items-center gap-2 text-gray-600 text-sm">
           <Icon icon="lucide:alert-triangle" className="h-4 w-4" />
           <span>
-            <strong>Wichtiger Hinweis:</strong> Festgeschriebene Dokumente können nicht mehr
-            verändert oder gelöscht werden. Für Korrekturen nutzen Sie die Storno- oder
-            Gutschrift-Funktionen.
+            <strong>{t('GoBDSystem.footerNoticeLabel')}</strong> {t('GoBDSystem.footerNoticeBody')}
           </span>
         </div>
       </Card>

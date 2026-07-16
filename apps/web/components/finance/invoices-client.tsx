@@ -6,6 +6,7 @@
 // aus der NextDays-Session (tenant_id) statt aus einem URL-Parameter.
 import { Icon } from "@iconify/react";
 import { Button } from "@tasko/ui";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -17,6 +18,7 @@ import { useRealtime } from "@/lib/use-realtime";
 import type { InvoiceData } from "@/types/invoiceTypes";
 
 export function InvoicesClient({ companyId }: { companyId: string }) {
+  const t = useTranslations("finance");
   // Fokus-Rechnung (?invoice=<id>): Ziel des Redirects nach dem Check-out im
   // Kalender („Rechnung ansehen & versenden") — wird oben hervorgehoben.
   const searchParams = useSearchParams();
@@ -38,11 +40,11 @@ export function InvoicesClient({ companyId }: { companyId: string }) {
       setInvoices(companyInvoices);
     } catch (err) {
       console.error("Error loading invoices:", err);
-      setError("Fehler beim Laden der Rechnungen");
+      setError(t("invoicesClient.loadError"));
     } finally {
       setLoading(false);
     }
-  }, [companyId]);
+  }, [companyId, t]);
 
   useEffect(() => {
     if (companyId) loadInvoices();
@@ -53,7 +55,7 @@ export function InvoicesClient({ companyId }: { companyId: string }) {
 
   const header = (
     <header className="flex items-center justify-between">
-      <h1 className="font-bold text-2xl">Rechnungen</h1>
+      <h1 className="font-bold text-2xl">{t("invoicesClient.title")}</h1>
       <div className="flex gap-2">
         <Button
           variant="outline"
@@ -61,12 +63,12 @@ export function InvoicesClient({ companyId }: { companyId: string }) {
           onClick={() => setShowImportDialog(true)}
         >
           <Icon icon="lucide:file-text" className="h-4 w-4" />
-          E-Rechnung lesen
+          {t("invoicesClient.readEInvoice")}
         </Button>
         <Link href="/buchhaltung/rechnungen/neu">
           <Button className="flex items-center gap-2">
             <Icon icon="lucide:plus" className="h-4 w-4" />
-            Rechnung schreiben
+            {t("invoicesClient.createInvoice")}
           </Button>
         </Link>
       </div>
@@ -89,20 +91,21 @@ export function InvoicesClient({ companyId }: { companyId: string }) {
             <Icon icon="ph:check-circle" className="size-5 text-success" />
             <div>
               <p className="text-sm font-semibold">
-                Rechnung {focused.invoiceNumber || focused.number} zur Buchung
+                {t("invoicesClient.invoiceForBooking", {
+                  number: focused.invoiceNumber || focused.number,
+                })}
               </p>
               <p className="text-xs text-muted-foreground">
                 {focused.customerName}
                 {focused.total != null && focused.currency
                   ? ` · ${focused.total.toLocaleString("de-DE", { style: "currency", currency: focused.currency })}`
                   : ""}
-                {` · Status: ${focused.status}`}
+                {` · ${t("invoicesClient.statusLabel", { status: focused.status })}`}
               </p>
             </div>
           </div>
           <p className="text-xs text-muted-foreground">
-            In der Liste unten öffnen, um sie anzusehen, zu drucken oder zu
-            versenden.
+            {t("invoicesClient.focusHint")}
           </p>
         </div>
       )}
@@ -119,15 +122,15 @@ export function InvoicesClient({ companyId }: { companyId: string }) {
         <div className="flex min-h-100 items-center justify-center">
           <div className="text-center">
             <div className="inline-block h-8 w-8 animate-spin rounded-full border-primary border-b-2" />
-            <p className="mt-2 text-muted-foreground">Rechnungen werden geladen…</p>
+            <p className="mt-2 text-muted-foreground">{t("invoicesClient.loading")}</p>
           </div>
         </div>
       ) : error ? (
         <div className="flex min-h-100 items-center justify-center">
           <div className="text-center">
-            <h2 className="mb-2 font-semibold text-destructive text-xl">Fehler</h2>
+            <h2 className="mb-2 font-semibold text-destructive text-xl">{t("invoicesClient.errorTitle")}</h2>
             <p className="mb-4 text-muted-foreground">{error}</p>
-            <Button onClick={loadInvoices}>Erneut versuchen</Button>
+            <Button onClick={loadInvoices}>{t("invoicesClient.retry")}</Button>
           </div>
         </div>
       ) : (

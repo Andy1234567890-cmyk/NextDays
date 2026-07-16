@@ -15,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@tasko/ui';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 interface CategoryValues {
@@ -52,6 +53,7 @@ export default function NewCategoryModal({
   companyId: _companyId,
   onSaved,
 }: NewCategoryModalProps) {
+  const t = useTranslations('finance');
   const [values, setValues] = useState<CategoryValues>(DEFAULT_VALUES);
 
   useEffect(() => {
@@ -91,40 +93,40 @@ export default function NewCategoryModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full max-w-lg">
         <DialogHeader>
-          <DialogTitle>Kategorie erstellen</DialogTitle>
+          <DialogTitle>{t('NewCategoryModal.title')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Name *</Label>
+            <Label>{t('NewCategoryModal.nameLabel')}</Label>
             <Input
               value={values.name}
               onChange={e => setValues(p => ({ ...p, name: e.target.value }))}
-              placeholder="Kategoriename eingeben"
+              placeholder={t('NewCategoryModal.namePlaceholder')}
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Kategorieart *</Label>
+            <Label>{t('NewCategoryModal.categoryTypeLabel')}</Label>
             <Input
               value={values.categoryType}
               onChange={e => setValues(p => ({ ...p, categoryType: e.target.value }))}
-              placeholder="z.B. VIP-Kunde, Neukunde, etc."
+              placeholder={t('NewCategoryModal.categoryTypePlaceholder')}
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Kontakt</Label>
+            <Label>{t('NewCategoryModal.contactLabel')}</Label>
             <Input
               value={values.contact}
               onChange={e => setValues(p => ({ ...p, contact: e.target.value }))}
-              placeholder="Kontaktperson oder Beschreibung"
+              placeholder={t('NewCategoryModal.contactPlaceholder')}
             />
           </div>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Farbe</Label>
+              <Label>{t('NewCategoryModal.colorLabel')}</Label>
               <div className="flex items-center gap-2">
                 <Input
                   type="color"
@@ -143,37 +145,37 @@ export default function NewCategoryModal({
             </div>
 
             <div className="space-y-2">
-              <Label>Abkürzung</Label>
+              <Label>{t('NewCategoryModal.abbreviationLabel')}</Label>
               <Input
                 value={values.abbreviation}
                 onChange={e => setValues(p => ({ ...p, abbreviation: e.target.value }))}
-                placeholder="z.B. VIP, NK"
+                placeholder={t('NewCategoryModal.abbreviationPlaceholder')}
                 maxLength={5}
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label>Kategorieart</Label>
+            <Label>{t('NewCategoryModal.categoryKindLabel')}</Label>
             <Select
               value={values.categoryKind}
               onValueChange={val => setValues(p => ({ ...p, categoryKind: val }))}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Kategorieart wählen" />
+                <SelectValue placeholder={t('NewCategoryModal.categoryKindPlaceholder')} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Verkauf">Verkauf (z.B. Kunde, Interessent)</SelectItem>
-                <SelectItem value="Einkauf">Einkauf (z.B. Lieferant, Partner)</SelectItem>
-                <SelectItem value="Service">Service (z.B. Support, Wartung)</SelectItem>
-                <SelectItem value="Intern">Intern (z.B. Mitarbeiter, Abteilung)</SelectItem>
+                <SelectItem value="Verkauf">{t('NewCategoryModal.categoryKindSales')}</SelectItem>
+                <SelectItem value="Einkauf">{t('NewCategoryModal.categoryKindPurchasing')}</SelectItem>
+                <SelectItem value="Service">{t('NewCategoryModal.categoryKindService')}</SelectItem>
+                <SelectItem value="Intern">{t('NewCategoryModal.categoryKindInternal')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           <div className="flex justify-end gap-3 border-t pt-4">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Abbrechen
+              {t('NewCategoryModal.cancel')}
             </Button>
             <Button
               className="bg-accent text-white hover:bg-accent/90"
@@ -181,7 +183,7 @@ export default function NewCategoryModal({
               onClick={handleSave}
             >
               {saving ? <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Kategorie erstellen
+              {t('NewCategoryModal.submit')}
             </Button>
           </div>
         </div>

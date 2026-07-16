@@ -1,10 +1,12 @@
+import { getTranslations } from "next-intl/server";
 import { ComingSoon } from "@/components/ui/coming-soon";
 
-export default function ZahlungenPage() {
+export default async function ZahlungenPage() {
+  const t = await getTranslations("finance");
   return (
     <ComingSoon
-      title="Zahlungen"
-      description="Zahlungseingänge und offene Posten im Überblick."
+      title={t("zahlungenPage.title")}
+      description={t("zahlungenPage.description")}
       icon="ph:credit-card"
     />
   );

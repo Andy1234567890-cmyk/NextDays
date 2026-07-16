@@ -1,6 +1,7 @@
 // Buchhaltung → Kunden: Liste aller Kunden/Lieferanten des Tenants.
 // Server Component — lädt über die Server-Action, rendert Liste + Anlegen.
 import { Icon } from "@iconify/react";
+import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { NewCustomerButton } from "@/components/buchhaltung/new-customer-button";
@@ -16,17 +17,15 @@ function initials(c: Customer): string {
 }
 
 export default async function KundenPage() {
-  const res = await listCustomers();
+  const [res, t] = await Promise.all([listCustomers(), getTranslations("finance")]);
 
   return (
     <div className="flex flex-col gap-6">
       <RealtimeRefresh tables={["customers"]} />
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display text-2xl font-extrabold">Kunden</h2>
-          <p className="text-sm text-muted-foreground">
-            Verwalte Kunden und Lieferanten.
-          </p>
+          <h2 className="font-display text-2xl font-extrabold">{t("kundenPage.title")}</h2>
+          <p className="text-sm text-muted-foreground">{t("kundenPage.subtitle")}</p>
         </div>
         <NewCustomerButton />
       </div>
@@ -37,12 +36,10 @@ export default async function KundenPage() {
         res.status === 403 ? (
           notFound()
         ) : (
-          <Card className="p-5 text-sm text-destructive">
-            Kunden konnten nicht geladen werden. Ist das Backend erreichbar?
-          </Card>
+          <Card className="p-5 text-sm text-destructive">{t("kundenPage.loadError")}</Card>
         )
       ) : res.data.items.length === 0 ? (
-        <EmptyState />
+        <EmptyState t={t} />
       ) : (
         <Card className="overflow-hidden p-0">
           <ul className="divide-y divide-border">
@@ -61,11 +58,11 @@ export default async function KundenPage() {
                 </div>
                 {c.is_supplier && (
                   <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
-                    Lieferant
+                    {t("kundenPage.supplier")}
                   </span>
                 )}
                 <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                  {c.customer_type === "private" ? "Privat" : "Geschäftlich"}
+                  {c.customer_type === "private" ? t("kundenPage.typePrivate") : t("kundenPage.typeBusiness")}
                 </span>
               </li>
             ))}
@@ -76,17 +73,15 @@ export default async function KundenPage() {
   );
 }
 
-function EmptyState() {
+function EmptyState({ t }: { t: Awaited<ReturnType<typeof getTranslations>> }) {
   return (
     <Card className="flex flex-col items-center justify-center gap-3 p-12 text-center">
       <span className="flex size-14 items-center justify-center rounded-full bg-secondary">
         <Icon icon="ph:address-book" className="size-7 text-muted-foreground" />
       </span>
       <div>
-        <p className="font-display text-lg font-extrabold">Noch keine Kunden</p>
-        <p className="text-sm text-muted-foreground">
-          Lege deinen ersten Kunden an, um loszulegen.
-        </p>
+        <p className="font-display text-lg font-extrabold">{t("kundenPage.emptyTitle")}</p>
+        <p className="text-sm text-muted-foreground">{t("kundenPage.emptyDescription")}</p>
       </div>
       <NewCustomerButton />
     </Card>

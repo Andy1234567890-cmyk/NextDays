@@ -13,6 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@tasko/ui';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -33,37 +34,12 @@ interface GoBDActionWarningProps {
   onConsentSaved?: () => void; // Callback wenn Zustimmung gespeichert wurde
 }
 
-const actionConfig = {
-  download: {
-    icon: 'lucide:download',
-    title: 'PDF herunterladen',
-    description: 'Das Dokument als PDF-Datei herunterladen',
-    lockMessage: 'Nach dem Download wird das Dokument automatisch festgeschrieben',
-  },
-  email: {
-    icon: 'lucide:mail',
-    title: 'Als E-Mail versenden',
-    description: 'Das Dokument per E-Mail verschicken',
-    lockMessage: 'Nach dem Versand wird das Dokument automatisch festgeschrieben',
-  },
-  post: {
-    icon: 'lucide:send',
-    title: 'Per Post verschicken',
-    description: 'Das Dokument per Post versenden',
-    lockMessage: 'Nach der Postversendung wird das Dokument automatisch festgeschrieben',
-  },
-  print: {
-    icon: 'lucide:printer',
-    title: 'Drucken',
-    description: 'Das Dokument ausdrucken',
-    lockMessage: 'Nach dem Drucken wird das Dokument automatisch festgeschrieben',
-  },
-  save: {
-    icon: 'lucide:save',
-    title: 'Speichern',
-    description: 'Das Dokument dauerhaft speichern',
-    lockMessage: 'Nach dem Speichern wird das Dokument automatisch festgeschrieben',
-  },
+const actionIcons = {
+  download: 'lucide:download',
+  email: 'lucide:mail',
+  post: 'lucide:send',
+  print: 'lucide:printer',
+  save: 'lucide:save',
 };
 
 export function GoBDActionWarning({
@@ -71,24 +47,28 @@ export function GoBDActionWarning({
   onClose,
   onConfirm,
   actionType,
-  documentType = 'Dokument',
+  documentType,
   documentNumber,
   companyId,
   documentId,
   isAlreadyLocked = false,
   onConsentSaved,
 }: GoBDActionWarningProps) {
+  const t = useTranslations('finance');
   const { user } = useNewAuth();
   const [confirmed, setConfirmed] = useState(false);
   const [rememberChoice, setRememberChoice] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const config = actionConfig[actionType];
-  const iconName = config.icon;
+  const resolvedDocumentType = documentType ?? t('GoBDActionWarning.defaultDocumentType');
+  const iconName = actionIcons[actionType];
+  const actionTitle = t(`GoBDActionWarning.actions.${actionType}.title`);
+  const actionDescription = t(`GoBDActionWarning.actions.${actionType}.description`);
+  const actionLockMessage = t(`GoBDActionWarning.actions.${actionType}.lockMessage`);
 
   const handleConfirm = async () => {
     if (!user) {
-      toast.error('Benutzer nicht authentifiziert');
+      toast.error(t('GoBDActionWarning.notAuthenticated'));
       return;
     }
 
@@ -117,7 +97,9 @@ export function GoBDActionWarning({
       // 3. GoBD-Festschreibung nur wenn noch nicht gesperrt
       if (!isAlreadyLocked) {
         const userName =
-          `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.email || 'Unbekannt';
+          `${user.first_name || ''} ${user.last_name || ''}`.trim() ||
+          user.email ||
+          t('GoBDActionWarning.unknownUser');
 
         const lockSuccess = await GoBDService.autoLockOnSend(
           companyId,
@@ -127,16 +109,21 @@ export function GoBDActionWarning({
         );
 
         if (lockSuccess) {
-          toast.success(`${config.title} erfolgreich - Dokument wurde festgeschrieben`);
+          toast.success(t('GoBDActionWarning.successLocked', { action: actionTitle }));
         }
       } else {
-        toast.success(`${config.title} erfolgreich abgeschlossen`);
+        toast.success(t('GoBDActionWarning.successCompleted', { action: actionTitle }));
       }
 
       onClose();
     } catch (error) {
       console.error(`${actionType} action failed:`, error);
-      toast.error(`Fehler beim ${config.title.toLowerCase()}: ${(error as Error).message}`);
+      toast.error(
+        t('GoBDActionWarning.actionFailed', {
+          action: actionTitle.toLowerCase(),
+          message: (error as Error).message,
+        }),
+      );
     } finally {
       setIsProcessing(false);
       setConfirmed(false);
@@ -155,28 +142,27 @@ export function GoBDActionWarning({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Icon icon={iconName} className="h-5 w-5 text-accent" />
-            {config.title}
+            {actionTitle}
           </DialogTitle>
           <DialogDescription>
             {documentNumber && (
               <span className="font-medium">
-                {documentType} {documentNumber}
+                {resolvedDocumentType} {documentNumber}
               </span>
             )}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          <p className="text-gray-700 text-sm">{config.description}</p>
+          <p className="text-gray-700 text-sm">{actionDescription}</p>
 
           {!isAlreadyLocked && (
             <Alert className="border-amber-200 bg-amber-50">
               <Icon icon="lucide:alert-triangle" className="h-4 w-4 text-amber-600" />
               <AlertDescription className="text-amber-800">
-                <strong>GoBD-Hinweis:</strong>
+                <strong>{t('GoBDActionWarning.gobdNoticeLabel')}</strong>
                 <br />
-                {config.lockMessage}. Das Dokument kann danach nicht mehr bearbeitet oder gelöscht
-                werden.
+                {t('GoBDActionWarning.lockMessageSuffix', { lockMessage: actionLockMessage })}
               </AlertDescription>
             </Alert>
           )}
@@ -185,7 +171,7 @@ export function GoBDActionWarning({
             <Alert className="border-blue-200 bg-blue-50">
               <Icon icon="lucide:lock" className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-blue-800">
-                Dieses Dokument ist bereits festgeschrieben und kann nicht mehr verändert werden.
+                {t('GoBDActionWarning.alreadyLockedNotice')}
               </AlertDescription>
             </Alert>
           )}
@@ -203,8 +189,10 @@ export function GoBDActionWarning({
                 className="font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
                 {isAlreadyLocked
-                  ? `Ich möchte das Dokument ${config.title.toLowerCase()}`
-                  : `Ich verstehe die GoBD-Konsequenzen und möchte fortfahren`}
+                  ? t('GoBDActionWarning.confirmLabelLocked', {
+                      action: actionTitle.toLowerCase(),
+                    })
+                  : t('GoBDActionWarning.confirmLabelDefault')}
               </label>
             </div>
 
@@ -221,7 +209,7 @@ export function GoBDActionWarning({
                   htmlFor="remember"
                   className="text-gray-600 text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
-                  Entscheidung speichern und nicht mehr nachfragen
+                  {t('GoBDActionWarning.rememberChoiceLabel')}
                 </label>
               </div>
             )}
@@ -230,7 +218,7 @@ export function GoBDActionWarning({
 
         <DialogFooter className="flex gap-2">
           <Button variant="outline" onClick={handleCancel} disabled={isProcessing}>
-            Abbrechen
+            {t('GoBDActionWarning.cancel')}
           </Button>
           <Button
             onClick={handleConfirm}
@@ -240,12 +228,12 @@ export function GoBDActionWarning({
             {isProcessing ? (
               <>
                 <div className="mr-2 h-4 w-4 animate-spin rounded-full border-white border-b-2"></div>
-                Wird verarbeitet...
+                {t('GoBDActionWarning.processing')}
               </>
             ) : (
               <>
                 <Icon icon={iconName} className="mr-2 h-4 w-4" />
-                {config.title}
+                {actionTitle}
               </>
             )}
           </Button>

@@ -21,6 +21,7 @@ import {
   Switch,
   Textarea,
 } from '@tasko/ui';
+import { useTranslations } from 'next-intl';
 import { type Dispatch, type SetStateAction, useState } from 'react';
 import FooterTextEditor from '@/components/finance/FooterTextEditor';
 import { TaxRuleSelector } from '@/components/finance/TaxRuleSelector';
@@ -73,16 +74,17 @@ export default function SecondaryCards({
 }: SecondaryCardsProps) {
   // Lokaler UI-State: Ein-/Ausblenden der weiteren Optionen
   const [showDetailedOptions, setShowDetailedOptions] = useState(false);
+  const t = useTranslations('finance');
 
   return (
     <>
       {/* Fuß-Text (unter Positionen) */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">Fuß-Text</CardTitle>
+          <CardTitle className="flex items-center">{t('secondaryCards.footerText.title')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <Label htmlFor="footerText">Fuß-Text mit Platzhaltern</Label>
+          <Label htmlFor="footerText">{t('secondaryCards.footerText.label')}</Label>
           <FooterTextEditor
             value={formData.footerText}
             onChange={(html: string) => setFormData(prev => ({ ...prev, footerText: html }))}
@@ -97,7 +99,7 @@ export default function SecondaryCards({
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Mehr Optionen</CardTitle>
+            <CardTitle>{t('secondaryCards.moreOptions.title')}</CardTitle>
             <Button
               type="button"
               variant="link"
@@ -105,8 +107,8 @@ export default function SecondaryCards({
               onClick={() => setShowDetailedOptions(v => !v)}
             >
               {!showDetailedOptions
-                ? 'Weitere Optionen einblenden'
-                : 'Weitere Optionen ausblenden'}
+                ? t('secondaryCards.moreOptions.show')
+                : t('secondaryCards.moreOptions.hide')}
             </Button>
           </div>
         </CardHeader>
@@ -115,13 +117,13 @@ export default function SecondaryCards({
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Währung</Label>
+                  <Label>{t('secondaryCards.moreOptions.currency')}</Label>
                   <Select
                     value={formData.currency}
                     onValueChange={val => setFormData(prev => ({ ...prev, currency: val }))}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Bitte auswählen" />
+                      <SelectValue placeholder={t('secondaryCards.moreOptions.pleaseSelect')} />
                     </SelectTrigger>
                     <SelectContent
                       className="max-h-96 overflow-y-auto"
@@ -137,47 +139,47 @@ export default function SecondaryCards({
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Interne Kontaktperson</Label>
+                  <Label>{t('secondaryCards.moreOptions.internalContactPerson')}</Label>
                   <Input
                     value={formData.internalContactPerson}
                     onChange={e =>
                       setFormData(p => ({ ...p, internalContactPerson: e.target.value }))
                     }
-                    placeholder="Name der Kontaktperson"
+                    placeholder={t('secondaryCards.moreOptions.internalContactPersonPlaceholder')}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Lieferbedingungen</Label>
+                  <Label>{t('secondaryCards.moreOptions.deliveryTerms')}</Label>
                   <Input
                     value={formData.deliveryTerms}
                     onChange={e => setFormData(p => ({ ...p, deliveryTerms: e.target.value }))}
-                    placeholder="z.B. Lieferung innerhalb von 14 Tagen"
+                    placeholder={t('secondaryCards.moreOptions.deliveryTermsPlaceholder')}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Zahlungsbedingungen</Label>
+                  <Label>{t('secondaryCards.moreOptions.paymentTerms')}</Label>
                   <Input
                     value={formData.paymentTerms}
                     onChange={e => setFormData(p => ({ ...p, paymentTerms: e.target.value }))}
-                    placeholder="z.B. 14 Tage netto"
+                    placeholder={t('secondaryCards.moreOptions.paymentTermsPlaceholder')}
                   />
                 </div>
 
                 {/* Skonto-Einstellungen */}
                 <div className="space-y-2 border-t pt-4">
                   <div className="flex items-center justify-between">
-                    <Label className="font-medium">Skonto</Label>
+                    <Label className="font-medium">{t('secondaryCards.skonto.title')}</Label>
                     <div className="flex items-center gap-2">
-                      <span className="text-gray-600 text-xs">aktivieren</span>
+                      <span className="text-gray-600 text-xs">{t('secondaryCards.skonto.enable')}</span>
                       <Switch checked={skontoEnabled} onCheckedChange={setSkontoEnabled} />
                     </div>
                   </div>
                   {skontoEnabled && (
                     <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                       <div className="space-y-1">
-                        <Label>Skontotage</Label>
+                        <Label>{t('secondaryCards.skonto.days')}</Label>
                         <Input
                           type="number"
                           min={1}
@@ -186,11 +188,11 @@ export default function SecondaryCards({
                             const v = parseInt(e.target.value, 10);
                             setSkontoDays(Number.isFinite(v) ? Math.max(1, v) : undefined);
                           }}
-                          placeholder="z.B. 10"
+                          placeholder={t('secondaryCards.skonto.daysPlaceholder')}
                         />
                       </div>
                       <div className="space-y-1">
-                        <Label>Skonto %</Label>
+                        <Label>{t('secondaryCards.skonto.percentage')}</Label>
                         <Input
                           type="number"
                           min={0}
@@ -200,25 +202,28 @@ export default function SecondaryCards({
                             const v = parseFloat(e.target.value);
                             setSkontoPercentage(Number.isFinite(v) ? Math.max(0, v) : undefined);
                           }}
-                          placeholder="z.B. 2"
+                          placeholder={t('secondaryCards.skonto.percentagePlaceholder')}
                         />
                       </div>
                       <div className="space-y-1 md:col-span-1">
-                        <Label>Text (optional)</Label>
+                        <Label>{t('secondaryCards.skonto.textLabel')}</Label>
                         <Input
                           value={skontoText}
                           onChange={e => setSkontoText(e.target.value)}
-                          placeholder="Bei Zahlung binnen X Tagen Y% Skonto"
+                          placeholder={t('secondaryCards.skonto.textPlaceholder')}
                         />
                       </div>
                     </div>
                   )}
                   {skontoEnabled && (
                     <div className="text-gray-500 text-xs">
-                      Vorschau:{' '}
+                      {t('secondaryCards.skonto.previewLabel')}{' '}
                       {skontoText?.trim() ||
                         (skontoDays && skontoPercentage
-                          ? `Bei Zahlung binnen ${skontoDays} Tagen ${skontoPercentage}% Skonto`
+                          ? t('secondaryCards.skonto.previewText', {
+                              days: skontoDays,
+                              percentage: skontoPercentage,
+                            })
                           : '—')}
                     </div>
                   )}
@@ -227,7 +232,7 @@ export default function SecondaryCards({
 
               {/* Umsatzsteuerregelung */}
               <div className="space-y-3">
-                <Label className="font-semibold">Umsatzsteuerregelung</Label>
+                <Label className="font-semibold">{t('secondaryCards.taxRule.title')}</Label>
 
                 <TaxRuleSelector
                   value={formData.taxRule}
@@ -242,12 +247,12 @@ export default function SecondaryCards({
       {/* Summen */}
       <Card>
         <CardHeader>
-          <CardTitle>Summen</CardTitle>
+          <CardTitle>{t('secondaryCards.totals.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <ul className="text-sm">
             <li className="flex justify-between border-b py-2">
-              <span>Gesamtsumme Netto (inkl. Rabatte / Aufschläge)</span>
+              <span>{t('secondaryCards.totals.netTotal')}</span>
               <span>{formatCurrency(subtotal)}</span>
             </li>
             {!showNet && taxGrouped.length > 0
@@ -256,7 +261,7 @@ export default function SecondaryCards({
                 .filter(tax => tax.taxAmount > 0)
                 .map((tax, index) => (
                   <li key={index} className="flex justify-between border-b py-2">
-                    <span>Umsatzsteuer {tax.rate}%</span>
+                    <span>{t('secondaryCards.totals.vat', { rate: tax.rate })}</span>
                     <span>{formatCurrency(tax.taxAmount)}</span>
                   </li>
                 ))
@@ -264,13 +269,15 @@ export default function SecondaryCards({
               !showNet &&
               taxRate > 0 && (
                 <li className="flex justify-between border-b py-2">
-                  <span>Umsatzsteuer {taxRate}%</span>
+                  <span>{t('secondaryCards.totals.vat', { rate: taxRate })}</span>
                   <span>{formatCurrency(vat)}</span>
                 </li>
               )}
             <li className="flex justify-between py-2">
               <span className="font-semibold text-lg">
-                {showNet ? 'Gesamt (Netto)' : 'Gesamt (Brutto)'}
+                {showNet
+                  ? t('secondaryCards.totals.grandTotalNet')
+                  : t('secondaryCards.totals.grandTotalGross')}
               </span>
               <span className="font-semibold text-lg">
                 {formatCurrency(showNet ? subtotal : grandTotal)}
@@ -283,13 +290,13 @@ export default function SecondaryCards({
       {/* Interne Notizen */}
       <Card>
         <CardHeader>
-          <CardTitle>Interne Notizen</CardTitle>
+          <CardTitle>{t('secondaryCards.internalNotes.title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <Textarea
             value={formData.notes}
             onChange={e => setFormData(prev => ({ ...prev, notes: e.target.value }))}
-            placeholder="Interne Notizen (werden nicht im Angebot angezeigt)..."
+            placeholder={t('secondaryCards.internalNotes.placeholder')}
             rows={3}
           />
         </CardContent>

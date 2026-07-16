@@ -1,10 +1,12 @@
+import { getTranslations } from "next-intl/server";
 import { ComingSoon } from "@/components/ui/coming-soon";
 
-export default function ERechnungPage() {
+export default async function ERechnungPage() {
+  const t = await getTranslations("finance");
   return (
     <ComingSoon
-      title="E-Rechnung"
-      description="ZUGFeRD und XRechnung."
+      title={t("eRechnungPage.eRechnungTitle")}
+      description={t("eRechnungPage.eRechnungDescription")}
       icon="ph:file-code"
     />
   );

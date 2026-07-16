@@ -1,4 +1,7 @@
+'use client';
+
 import type React from 'react';
+import { useTranslations } from 'next-intl';
 import type { DocumentSettings, ProcessedPDFData } from '@/hooks/pdf/usePDFTemplateData';
 import type { DocumentType } from '@/lib/document-utils';
 import { detectDocumentType, getDocumentTypeConfig } from '@/lib/document-utils';
@@ -26,6 +29,7 @@ export const TechnicalTemplate: React.FC<TechnicalTemplateProps> = ({
   documentType,
   documentSettings,
 }) => {
+  const t = useTranslations('finance');
   // Dokumenttyp-Konfiguration
   const detectedType = documentType || detectDocumentType(data) || 'invoice';
   const config = getDocumentTypeConfig(detectedType, color);
@@ -82,7 +86,7 @@ export const TechnicalTemplate: React.FC<TechnicalTemplateProps> = ({
           <div className="flex items-start justify-between">
             <div>
               <div className="font-bold text-lg">{data.companyName}</div>
-              <div className="text-sm opacity-75">Professional Services</div>
+              <div className="text-sm opacity-75">{t('TechnicalTemplate.professionalServices')}</div>
             </div>
 
             {companyLogo && (
@@ -112,46 +116,51 @@ export const TechnicalTemplate: React.FC<TechnicalTemplateProps> = ({
           <div className="mb-2 grid grid-cols-2 gap-4 border" style={{ borderColor: color }}>
             <div className="p-2">
               <div className="mb-1 border-b pb-1 font-bold text-xs" style={{ borderColor: color }}>
-                CLIENT_INFO:
+                {t('TechnicalTemplate.clientInfo')}
               </div>
               <div className="space-y-1">
-                <div>NAME: {data.customerName}</div>
+                <div>{t('TechnicalTemplate.name', { value: data.customerName })}</div>
                 {data.customerAddressParsed.street && (
-                  <div>ADDR1: {data.customerAddressParsed.street}</div>
+                  <div>{t('TechnicalTemplate.addr1', { value: data.customerAddressParsed.street })}</div>
                 )}
                 {(data.customerAddressParsed.postalCode || data.customerAddressParsed.city) && (
                   <div>
-                    ADDR2: {data.customerAddressParsed.postalCode} {data.customerAddressParsed.city}
+                    {t('TechnicalTemplate.addr2', {
+                      postalCode: data.customerAddressParsed.postalCode || '',
+                      city: data.customerAddressParsed.city || '',
+                    })}
                   </div>
                 )}
                 {data.customerAddressParsed.country && (
-                  <div>COUNTRY: {data.customerAddressParsed.country}</div>
+                  <div>{t('TechnicalTemplate.country', { value: data.customerAddressParsed.country })}</div>
                 )}
-                {data.customerVatId && <div>VAT_ID: {data.customerVatId}</div>}
+                {data.customerVatId && <div>{t('TechnicalTemplate.vatId', { value: data.customerVatId })}</div>}
               </div>
             </div>
 
             <div className="p-2">
               <div className="mb-1 border-b pb-1 font-bold text-xs" style={{ borderColor: color }}>
-                DOC_META:
+                {t('TechnicalTemplate.docMeta')}
               </div>
               <div className="space-y-1">
-                <div>DOC_NUM: {data.invoiceNumber}</div>
-                <div>ISSUED: {formatDate(data.invoiceDate)}</div>
-                <div>DUE_DATE: {formatDate(data.dueDate)}</div>
-                <div>TERMS: {data.paymentTerms}</div>
-                {data.customerOrderNumber && <div>REF: {data.customerOrderNumber}</div>}
+                <div>{t('TechnicalTemplate.docNum', { value: data.invoiceNumber })}</div>
+                <div>{t('TechnicalTemplate.issued', { value: formatDate(data.invoiceDate) })}</div>
+                <div>{t('TechnicalTemplate.dueDate', { value: formatDate(data.dueDate) })}</div>
+                <div>{t('TechnicalTemplate.terms', { value: data.paymentTerms || '' })}</div>
+                {data.customerOrderNumber && (
+                  <div>{t('TechnicalTemplate.ref', { value: data.customerOrderNumber })}</div>
+                )}
               </div>
 
               {/* QR-Code unter Dokumentdetails */}
               {documentSettings?.showQRCode && documentSettings?.qrCodeUrl && (
                 <div className="mt-3">
                   <div className="mb-1 font-bold text-xs" style={{ color }}>
-                    QR_CODE:
+                    {t('TechnicalTemplate.qrCode')}
                   </div>
                   <img
                     src={documentSettings.qrCodeUrl}
-                    alt="QR Code"
+                    alt={t('TechnicalTemplate.qrCodeAlt')}
                     className="h-12 w-12 border border-gray-300"
                   />
                 </div>
@@ -164,7 +173,7 @@ export const TechnicalTemplate: React.FC<TechnicalTemplateProps> = ({
         {detectedType === 'cancellation' && data.title && (
           <div className="mx-3 mb-1 border p-1" style={{ borderColor: color }}>
             <div className="mb-1 border-b pb-1 font-bold text-xs" style={{ borderColor: color }}>
-              SUBJECT:
+              {t('TechnicalTemplate.subject')}
             </div>
             <div className="font-medium text-xs">{data.title}</div>
           </div>
@@ -186,7 +195,7 @@ export const TechnicalTemplate: React.FC<TechnicalTemplateProps> = ({
         <div className="flex-1 px-3">
           <div className="mb-2 border" style={{ borderColor: color }}>
             <div className="border-b bg-gray-100 p-1" style={{ borderColor: color }}>
-              <div className="font-bold text-xs">SERVICES_LIST:</div>
+              <div className="font-bold text-xs">{t('TechnicalTemplate.servicesList')}</div>
             </div>
             <div className="p-1">
               <ItemsTable
@@ -211,7 +220,7 @@ export const TechnicalTemplate: React.FC<TechnicalTemplateProps> = ({
                       className="mb-1 border-b pb-1 font-bold text-xs"
                       style={{ borderColor: color }}
                     >
-                      TAX_INFO:
+                      {t('TechnicalTemplate.taxInfo')}
                     </div>
                     <TaxRulesInfo
                       data={data}
@@ -222,7 +231,7 @@ export const TechnicalTemplate: React.FC<TechnicalTemplateProps> = ({
                 </div>
                 <div className="border" style={{ borderColor: color }}>
                   <div className="border-b bg-gray-100 p-1" style={{ borderColor: color }}>
-                    <div className="font-bold text-xs">TOTALS:</div>
+                    <div className="font-bold text-xs">{t('TechnicalTemplate.totals')}</div>
                   </div>
                   <div className="p-2">
                     <TotalsDisplay
@@ -241,7 +250,7 @@ export const TechnicalTemplate: React.FC<TechnicalTemplateProps> = ({
                   className="mb-1 border-b pb-1 font-bold text-xs"
                   style={{ borderColor: color }}
                 >
-                  FOOTER_INFO:
+                  {t('TechnicalTemplate.footerInfo')}
                 </div>
                 <FooterText data={data} language={data.language || 'de'} variant="standard" />
 
@@ -300,7 +309,7 @@ export const TechnicalTemplate: React.FC<TechnicalTemplateProps> = ({
               <div className="flex items-start justify-between">
                 <div>
                   <div className="font-bold text-lg">{data.companyName}</div>
-                  <div className="text-sm opacity-75">Professional Services</div>
+                  <div className="text-sm opacity-75">{t('TechnicalTemplate.professionalServices')}</div>
                 </div>
 
                 {companyLogo && (
@@ -331,35 +340,39 @@ export const TechnicalTemplate: React.FC<TechnicalTemplateProps> = ({
               <div className="mb-8 grid grid-cols-2 gap-8 border" style={{ borderColor: color }}>
                 <div className="p-4">
                   <div className="mb-2 border-b pb-1 font-bold" style={{ borderColor: color }}>
-                    CLIENT_INFO:
+                    {t('TechnicalTemplate.clientInfo')}
                   </div>
                   <div className="space-y-1">
-                    <div>NAME: {data.customerName}</div>
+                    <div>{t('TechnicalTemplate.name', { value: data.customerName })}</div>
                     {data.customerAddressParsed.street && (
-                      <div>ADDR1: {data.customerAddressParsed.street}</div>
+                      <div>{t('TechnicalTemplate.addr1', { value: data.customerAddressParsed.street })}</div>
                     )}
                     {(data.customerAddressParsed.postalCode || data.customerAddressParsed.city) && (
                       <div>
-                        ADDR2: {data.customerAddressParsed.postalCode}{' '}
-                        {data.customerAddressParsed.city}
+                        {t('TechnicalTemplate.addr2', {
+                          postalCode: data.customerAddressParsed.postalCode || '',
+                          city: data.customerAddressParsed.city || '',
+                        })}
                       </div>
                     )}
                     {data.customerAddressParsed.country && (
-                      <div>COUNTRY: {data.customerAddressParsed.country}</div>
+                      <div>{t('TechnicalTemplate.country', { value: data.customerAddressParsed.country })}</div>
                     )}
-                    {data.customerVatId && <div>VAT_ID: {data.customerVatId}</div>}
+                    {data.customerVatId && (
+                      <div>{t('TechnicalTemplate.vatId', { value: data.customerVatId })}</div>
+                    )}
                   </div>
                 </div>
 
                 <div className="p-4">
                   <div className="mb-2 border-b pb-1 font-bold" style={{ borderColor: color }}>
-                    DOC_META:
+                    {t('TechnicalTemplate.docMeta')}
                   </div>
                   <div className="space-y-1">
-                    <div>DOC_NUM: {data.invoiceNumber}</div>
-                    <div>ISSUED: {formatDate(data.invoiceDate)}</div>
-                    <div>DUE_DATE: {formatDate(data.dueDate)}</div>
-                    <div>TERMS: {data.paymentTerms}</div>
+                    <div>{t('TechnicalTemplate.docNum', { value: data.invoiceNumber })}</div>
+                    <div>{t('TechnicalTemplate.issued', { value: formatDate(data.invoiceDate) })}</div>
+                    <div>{t('TechnicalTemplate.dueDate', { value: formatDate(data.dueDate) })}</div>
+                    <div>{t('TechnicalTemplate.terms', { value: data.paymentTerms || '' })}</div>
                   </div>
                 </div>
               </div>
@@ -371,7 +384,7 @@ export const TechnicalTemplate: React.FC<TechnicalTemplateProps> = ({
               {detectedType === 'cancellation' && data.title && (
                 <div className="mb-4 border p-2" style={{ borderColor: color }}>
                   <div className="mb-1 border-b pb-1 font-bold" style={{ borderColor: color }}>
-                    SUBJECT:
+                    {t('TechnicalTemplate.subject')}
                   </div>
                   <div className="font-medium text-sm">{data.title}</div>
                 </div>
@@ -379,13 +392,13 @@ export const TechnicalTemplate: React.FC<TechnicalTemplateProps> = ({
 
               <div className="mb-8 border" style={{ borderColor: color }}>
                 <div className="border-b bg-gray-100 p-2" style={{ borderColor: color }}>
-                  <div className="font-bold">SUMMARY_DATA:</div>
+                  <div className="font-bold">{t('TechnicalTemplate.summaryData')}</div>
                 </div>
                 <div className="p-4">
                   <div className="flex items-start justify-between gap-8">
                     <div className="flex-1">
                       <div className="border p-4" style={{ borderColor: color }}>
-                        <div className="mb-2 font-bold">TAX_RULES:</div>
+                        <div className="mb-2 font-bold">{t('TechnicalTemplate.taxRules')}</div>
                         <TaxRulesInfo
                           data={data}
                           color={color}

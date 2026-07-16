@@ -4,6 +4,7 @@
 // Summen-Vorschau (final rechnet das Backend) + Positionszeilen-JSX.
 // Eine Quelle statt Kopien pro Anlage-Button.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -87,7 +88,10 @@ export function LineItemsEditor({
   // currencySymbol leer → Label bleibt „Einzelpreis" ohne erfundenes Symbol.
   currency?: string;
 }) {
-  const priceLabel = `Einzelpreis ${currencySymbol(currency)}`.trim();
+  const t = useTranslations("finance");
+  const priceLabel = t("lineItemsEditor.unitPriceLabel", {
+    symbol: currencySymbol(currency),
+  }).trim();
   return (
     <div className="flex flex-col gap-3">
       {rows.map((r, i) => (
@@ -97,27 +101,29 @@ export function LineItemsEditor({
         >
           <div className="flex items-center justify-between">
             <Label className="text-xs text-muted-foreground">
-              Position {i + 1}
+              {t("lineItemsEditor.positionLabel", { number: i + 1 })}
             </Label>
             {rows.length > 1 && (
               <button
                 type="button"
                 onClick={() => onRemove(i)}
                 className="text-muted-foreground hover:text-destructive"
-                aria-label="Position entfernen"
+                aria-label={t("lineItemsEditor.removePosition")}
               >
                 <Icon icon="ph:trash" className="size-4" />
               </button>
             )}
           </div>
           <Input
-            placeholder="Beschreibung"
+            placeholder={t("lineItemsEditor.descriptionPlaceholder")}
             value={r.description}
             onChange={(e) => onRowChange(i, { description: e.target.value })}
           />
           <div className="grid grid-cols-3 gap-2">
             <div className="flex flex-col gap-1">
-              <Label className="text-xs text-muted-foreground">Menge</Label>
+              <Label className="text-xs text-muted-foreground">
+                {t("lineItemsEditor.quantityLabel")}
+              </Label>
               <Input
                 type="number"
                 inputMode="decimal"
@@ -135,7 +141,9 @@ export function LineItemsEditor({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <Label className="text-xs text-muted-foreground">MwSt. %</Label>
+              <Label className="text-xs text-muted-foreground">
+                {t("lineItemsEditor.taxRateLabel")}
+              </Label>
               <Input
                 type="number"
                 inputMode="decimal"
@@ -145,13 +153,13 @@ export function LineItemsEditor({
             </div>
           </div>
           <p className="text-right text-xs text-muted-foreground">
-            Netto: {formatEur(lineNet(r))}
+            {t("lineItemsEditor.netAmount", { amount: formatEur(lineNet(r)) })}
           </p>
         </div>
       ))}
       <Button type="button" variant="outline" className="gap-2" onClick={onAdd}>
         <Icon icon="ph:plus" className="size-4" />
-        Position hinzufügen
+        {t("lineItemsEditor.addPosition")}
       </Button>
     </div>
   );

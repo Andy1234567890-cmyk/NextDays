@@ -12,6 +12,7 @@ import {
   Label,
   Switch,
 } from '@tasko/ui';
+import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -24,6 +25,7 @@ interface AutoLockSettingsProps {
 }
 
 export function AutoLockSettings({ companyId, onSettingsChange }: AutoLockSettingsProps) {
+  const t = useTranslations('finance');
   const [settings, setSettings] = useState<GoBDSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -35,11 +37,11 @@ export function AutoLockSettings({ companyId, onSettingsChange }: AutoLockSettin
       setSettings(gobdSettings);
     } catch (error) {
       console.error('Failed to load settings:', error);
-      toast.error('Einstellungen konnten nicht geladen werden');
+      toast.error(t('AutoLockSettings.loadError'));
     } finally {
       setLoading(false);
     }
-  }, [companyId]);
+  }, [companyId, t]);
 
   useEffect(() => {
     loadSettings();
@@ -98,7 +100,7 @@ export function AutoLockSettings({ companyId, onSettingsChange }: AutoLockSettin
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Icon icon="lucide:lock" className="h-5 w-5 text-accent" />
-            Automatische Festschreibung
+            {t('AutoLockSettings.title')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -119,8 +121,7 @@ export function AutoLockSettings({ companyId, onSettingsChange }: AutoLockSettin
       <Alert className="border-blue-200 bg-blue-50">
         <Icon icon="lucide:info" className="h-4 w-4 text-blue-600" />
         <AlertDescription className="text-blue-800">
-          <strong>GoBD-Konformität:</strong> Die automatische Festschreibung gewährleistet die
-          Einhaltung der Grundsätze zur ordnungsmäßigen Führung und Aufbewahrung von Büchern.
+          <strong>{t('AutoLockSettings.complianceLabel')}</strong> {t('AutoLockSettings.complianceInfo')}
         </AlertDescription>
       </Alert>
 
@@ -129,9 +130,11 @@ export function AutoLockSettings({ companyId, onSettingsChange }: AutoLockSettin
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Icon icon="lucide:lock" className="h-5 w-5 text-accent" />
-            Automatische Festschreibung
+            {t('AutoLockSettings.title')}
             {settings.autoLockOnSend && (
-              <Badge className="border-green-200 bg-green-100 text-green-700">Aktiv</Badge>
+              <Badge className="border-green-200 bg-green-100 text-green-700">
+                {t('AutoLockSettings.active')}
+              </Badge>
             )}
           </CardTitle>
         </CardHeader>
@@ -139,9 +142,9 @@ export function AutoLockSettings({ companyId, onSettingsChange }: AutoLockSettin
           {/* Auto-Lock bei Versand */}
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label className="font-medium text-base">Bei E-Mail-Versand festschreiben</Label>
+              <Label className="font-medium text-base">{t('AutoLockSettings.lockOnSendLabel')}</Label>
               <p className="text-gray-600 text-sm">
-                Dokumente werden automatisch beim Versenden per E-Mail festgeschrieben
+                {t('AutoLockSettings.lockOnSendDescription')}
               </p>
             </div>
             <Switch
@@ -154,9 +157,9 @@ export function AutoLockSettings({ companyId, onSettingsChange }: AutoLockSettin
           {/* Auto-Lock bei DATEV-Export */}
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label className="font-medium text-base">Bei DATEV-Export festschreiben</Label>
+              <Label className="font-medium text-base">{t('AutoLockSettings.lockOnExportLabel')}</Label>
               <p className="text-gray-600 text-sm">
-                Dokumente werden beim Export zum Steuerberater automatisch festgeschrieben
+                {t('AutoLockSettings.lockOnExportDescription')}
               </p>
             </div>
             <Switch
@@ -169,9 +172,9 @@ export function AutoLockSettings({ companyId, onSettingsChange }: AutoLockSettin
           {/* Storno nach Festschreibung */}
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label className="font-medium text-base">Storno nach Festschreibung erlauben</Label>
+              <Label className="font-medium text-base">{t('AutoLockSettings.allowStornoLabel')}</Label>
               <p className="text-gray-600 text-sm">
-                Ermöglicht das Erstellen von Stornorechnungen für festgeschriebene Dokumente
+                {t('AutoLockSettings.allowStornoDescription')}
               </p>
             </div>
             <Switch
@@ -184,9 +187,9 @@ export function AutoLockSettings({ companyId, onSettingsChange }: AutoLockSettin
           {/* Freigabe für Entsperrung */}
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label className="font-medium text-base">Freigabe für Entsperrung erforderlich</Label>
+              <Label className="font-medium text-base">{t('AutoLockSettings.requireApprovalLabel')}</Label>
               <p className="text-gray-600 text-sm">
-                Administratorfreigabe vor manueller Entsperrung von Dokumenten
+                {t('AutoLockSettings.requireApprovalDescription')}
               </p>
             </div>
             <Switch
@@ -203,17 +206,17 @@ export function AutoLockSettings({ companyId, onSettingsChange }: AutoLockSettin
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Icon icon="lucide:mail" className="h-5 w-5 text-accent" />
-            Benachrichtigungen
+            {t('AutoLockSettings.notificationsTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
               <Label className="font-medium text-base">
-                Erinnerung vor Festschreibungs-Deadline
+                {t('AutoLockSettings.deadlineReminderLabel')}
               </Label>
               <p className="text-gray-600 text-sm">
-                E-Mail-Erinnerung 5 Tage vor Ablauf der 30-Tage-Frist
+                {t('AutoLockSettings.deadlineReminderDescription')}
               </p>
             </div>
             <Switch
@@ -227,9 +230,9 @@ export function AutoLockSettings({ companyId, onSettingsChange }: AutoLockSettin
 
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label className="font-medium text-base">Bestätigung bei Festschreibung</Label>
+              <Label className="font-medium text-base">{t('AutoLockSettings.lockConfirmationLabel')}</Label>
               <p className="text-gray-600 text-sm">
-                Benachrichtigung wenn Dokumente festgeschrieben wurden
+                {t('AutoLockSettings.lockConfirmationDescription')}
               </p>
             </div>
             <Switch
@@ -241,9 +244,9 @@ export function AutoLockSettings({ companyId, onSettingsChange }: AutoLockSettin
 
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <Label className="font-medium text-base">Storno-Benachrichtigungen</Label>
+              <Label className="font-medium text-base">{t('AutoLockSettings.stornoNotificationLabel')}</Label>
               <p className="text-gray-600 text-sm">
-                Information bei Erstellung von Stornorechnungen
+                {t('AutoLockSettings.stornoNotificationDescription')}
               </p>
             </div>
             <Switch
@@ -260,7 +263,7 @@ export function AutoLockSettings({ companyId, onSettingsChange }: AutoLockSettin
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Icon icon="lucide:check-circle" className="h-5 w-5 text-accent" />
-            GoBD-Status
+            {t('AutoLockSettings.statusTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -269,19 +272,19 @@ export function AutoLockSettings({ companyId, onSettingsChange }: AutoLockSettin
               <div className="font-bold text-2xl text-green-600">
                 {settings.autoLockOnSend ? '✓' : '✗'}
               </div>
-              <p className="font-medium text-sm">Auto-Lock Versand</p>
+              <p className="font-medium text-sm">{t('AutoLockSettings.statusLockSend')}</p>
             </div>
             <div className="rounded-lg border p-4 text-center">
               <div className="font-bold text-2xl text-green-600">
                 {settings.autoLockOnExport ? '✓' : '✗'}
               </div>
-              <p className="font-medium text-sm">Auto-Lock Export</p>
+              <p className="font-medium text-sm">{t('AutoLockSettings.statusLockExport')}</p>
             </div>
             <div className="rounded-lg border p-4 text-center">
               <div className="font-bold text-2xl text-green-600">
                 {settings.allowStornoAfterLock ? '✓' : '✗'}
               </div>
-              <p className="font-medium text-sm">Storno-Funktion</p>
+              <p className="font-medium text-sm">{t('AutoLockSettings.statusStorno')}</p>
             </div>
           </div>
         </CardContent>
@@ -292,8 +295,8 @@ export function AutoLockSettings({ companyId, onSettingsChange }: AutoLockSettin
         <Alert className="border-orange-200 bg-orange-50">
           <Icon icon="lucide:alert-triangle" className="h-4 w-4 text-orange-600" />
           <AlertDescription className="text-orange-800">
-            <strong>Empfehlung:</strong> Aktivieren Sie die automatische Festschreibung bei
-            E-Mail-Versand, um GoBD-Konformität sicherzustellen.
+            <strong>{t('AutoLockSettings.recommendationLabel')}</strong>{' '}
+            {t('AutoLockSettings.recommendationText')}
           </AlertDescription>
         </Alert>
       )}

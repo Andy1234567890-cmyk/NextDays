@@ -1,6 +1,7 @@
 // Buchhaltung → Angebote: Liste aller Angebote des Tenants.
 // Server Component — lädt über die Server-Action, rendert Tabelle + Anlegen.
 import { Icon } from "@iconify/react";
+import { getTranslations } from "next-intl/server";
 import { notFound } from "next/navigation";
 
 import { NewQuoteButton } from "@/components/buchhaltung/new-quote-button";
@@ -10,14 +11,16 @@ import { listCustomers, listQuotes } from "@/lib/buchhaltung";
 import type { Customer, QuoteStatus } from "@/lib/buchhaltung";
 import { formatCurrency } from "@/lib/currency";
 
-const STATUS_LABELS: Record<QuoteStatus, string> = {
-  draft: "Entwurf",
-  sent: "Versendet",
-  accepted: "Angenommen",
-  rejected: "Abgelehnt",
-  expired: "Abgelaufen",
-  converted: "Umgewandelt",
-};
+function getStatusLabels(t: Awaited<ReturnType<typeof getTranslations>>): Record<QuoteStatus, string> {
+  return {
+    draft: t("angebotePage.statusDraft"),
+    sent: t("angebotePage.statusSent"),
+    accepted: t("angebotePage.statusAccepted"),
+    rejected: t("angebotePage.statusRejected"),
+    expired: t("angebotePage.statusExpired"),
+    converted: t("angebotePage.statusConverted"),
+  };
+}
 
 const STATUS_CLASSES: Record<QuoteStatus, string> = {
   draft: "bg-secondary text-secondary-foreground",
@@ -41,6 +44,8 @@ function formatDate(iso: string | null): string {
 }
 
 export default async function AngebotePage() {
+  const t = await getTranslations("finance");
+  const statusLabels = getStatusLabels(t);
   const [res, customersRes] = await Promise.all([listQuotes(), listCustomers()]);
   const customers: Customer[] = customersRes.ok ? customersRes.data.items : [];
   const customerName = new Map(customers.map((c) => [c.id, c.name]));
@@ -50,10 +55,8 @@ export default async function AngebotePage() {
       <RealtimeRefresh tables={["quotes", "customers"]} />
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="font-display text-2xl font-extrabold">Angebote</h2>
-          <p className="text-sm text-muted-foreground">
-            Erstelle Angebote und wandle sie in Rechnungen um.
-          </p>
+          <h2 className="font-display text-2xl font-extrabold">{t("angebotePage.title")}</h2>
+          <p className="text-sm text-muted-foreground">{t("angebotePage.subtitle")}</p>
         </div>
         <NewQuoteButton customers={customers} />
       </div>
@@ -65,23 +68,21 @@ export default async function AngebotePage() {
         res.status === 403 ? (
           notFound()
         ) : (
-          <Card className="p-5 text-sm text-destructive">
-            Angebote konnten nicht geladen werden. Ist das Backend erreichbar?
-          </Card>
+          <Card className="p-5 text-sm text-destructive">{t("angebotePage.loadError")}</Card>
         )
       ) : res.data.items.length === 0 ? (
-        <EmptyState customers={customers} />
+        <EmptyState customers={customers} t={t} />
       ) : (
         <Card className="overflow-hidden p-0">
           <table className="w-full text-sm">
             <thead className="border-b bg-secondary/40 text-left text-xs text-muted-foreground">
               <tr>
-                <th className="px-4 py-3 font-medium">Nummer</th>
-                <th className="px-4 py-3 font-medium">Kunde</th>
-                <th className="px-4 py-3 font-medium">Datum</th>
-                <th className="px-4 py-3 font-medium">Gültig bis</th>
-                <th className="px-4 py-3 text-right font-medium">Betrag</th>
-                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">{t("angebotePage.columnNumber")}</th>
+                <th className="px-4 py-3 font-medium">{t("angebotePage.columnCustomer")}</th>
+                <th className="px-4 py-3 font-medium">{t("angebotePage.columnDate")}</th>
+                <th className="px-4 py-3 font-medium">{t("angebotePage.columnValidUntil")}</th>
+                <th className="px-4 py-3 text-right font-medium">{t("angebotePage.columnAmount")}</th>
+                <th className="px-4 py-3 font-medium">{t("angebotePage.columnStatus")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -89,7 +90,7 @@ export default async function AngebotePage() {
                 <tr key={q.id} className="transition-colors hover:bg-secondary/30">
                   <td className="px-4 py-3 font-medium">
                     {q.quote_number || (
-                      <span className="text-muted-foreground">Entwurf</span>
+                      <span className="text-muted-foreground">{t("angebotePage.draftLabel")}</span>
                     )}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
@@ -108,7 +109,7 @@ export default async function AngebotePage() {
                     <span
                       className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${STATUS_CLASSES[q.status]}`}
                     >
-                      {STATUS_LABELS[q.status]}
+                      {statusLabels[q.status]}
                     </span>
                   </td>
                 </tr>
@@ -121,17 +122,21 @@ export default async function AngebotePage() {
   );
 }
 
-function EmptyState({ customers }: { customers: Customer[] }) {
+function EmptyState({
+  customers,
+  t,
+}: {
+  customers: Customer[];
+  t: Awaited<ReturnType<typeof getTranslations>>;
+}) {
   return (
     <Card className="flex flex-col items-center justify-center gap-3 p-12 text-center">
       <span className="flex size-14 items-center justify-center rounded-full bg-secondary">
         <Icon icon="ph:file-text" className="size-7 text-muted-foreground" />
       </span>
       <div>
-        <p className="font-display text-lg font-extrabold">Noch keine Angebote</p>
-        <p className="text-sm text-muted-foreground">
-          Erstelle dein erstes Angebot, um loszulegen.
-        </p>
+        <p className="font-display text-lg font-extrabold">{t("angebotePage.emptyTitle")}</p>
+        <p className="text-sm text-muted-foreground">{t("angebotePage.emptySubtitle")}</p>
       </div>
       <NewQuoteButton customers={customers} />
     </Card>

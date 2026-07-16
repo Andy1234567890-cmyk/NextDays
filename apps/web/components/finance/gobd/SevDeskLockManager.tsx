@@ -14,6 +14,7 @@ import {
   Switch,
 } from '@tasko/ui';
 import { format } from 'date-fns';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -27,6 +28,7 @@ interface SevDeskLockManagerProps {
 
 export function SevDeskLockManager({ companyId, onLockComplete }: SevDeskLockManagerProps) {
   const { user } = useNewAuth();
+  const t = useTranslations('finance');
 
   // Datumsbereiche
   const [startDate, setStartDate] = useState('');
@@ -43,12 +45,12 @@ export function SevDeskLockManager({ companyId, onLockComplete }: SevDeskLockMan
 
   const handleSubmit = async () => {
     if (!user) {
-      toast.error('Benutzer nicht authentifiziert');
+      toast.error(t('SevDeskLockManager.notAuthenticated'));
       return;
     }
 
     if (!startDate && !endDate) {
-      toast.error('Bitte wählen Sie mindestens ein Datum aus');
+      toast.error(t('SevDeskLockManager.selectAtLeastOneDate'));
       return;
     }
 
@@ -68,18 +70,18 @@ export function SevDeskLockManager({ companyId, onLockComplete }: SevDeskLockMan
       const periodLock = await GoBDService.lockPeriod(companyId, period, user.uid, userName);
 
       if (periodLock) {
-        toast.success(`Festschreibung für Periode ${period} erfolgreich abgeschlossen`);
+        toast.success(t('SevDeskLockManager.lockSuccess', { period }));
         onLockComplete?.();
 
         // Formular zurücksetzen
         setStartDate('');
         setEndDate('');
       } else {
-        toast.error('Festschreibung fehlgeschlagen');
+        toast.error(t('SevDeskLockManager.lockFailed'));
       }
     } catch (error) {
       console.error('Lock period error:', error);
-      toast.error(`Fehler bei der Festschreibung: ${(error as Error).message}`);
+      toast.error(t('SevDeskLockManager.lockError', { message: (error as Error).message }));
     } finally {
       setIsLocking(false);
     }
@@ -91,18 +93,20 @@ export function SevDeskLockManager({ companyId, onLockComplete }: SevDeskLockMan
     <div className="space-y-6">
       {/* Haupttitel */}
       <div>
-        <h3 className="mb-4 font-semibold text-2xl text-gray-900">Festschreibungseinstellungen</h3>
+        <h3 className="mb-4 font-semibold text-2xl text-gray-900">
+          {t('SevDeskLockManager.title')}
+        </h3>
 
         {/* Info-Box (wie SevDesk) */}
         <Alert className="mb-6 border-blue-200 bg-blue-50">
           <Icon icon="lucide:info" className="h-4 w-4 text-blue-600" />
           <AlertDescription className="text-blue-800">
-            Bitte gib an, welche Dokumente festgeschrieben werden sollen. Nach der
+            {t('SevDeskLockManager.infoLine1')}
             <br />
-            Festschreibung sind diese Dokumente nicht mehr löschbar oder bearbeitbar.
+            {t('SevDeskLockManager.infoLine2')}
             <br />
             <br />
-            Benötigst du weitere Informationen?
+            {t('SevDeskLockManager.infoQuestion')}
             <br />
             <a
               href="https://docs.nextdays.de/gobd-festschreibung"
@@ -110,7 +114,7 @@ export function SevDeskLockManager({ companyId, onLockComplete }: SevDeskLockMan
               className="mt-1 inline-flex items-center gap-1 text-blue-600 underline hover:text-blue-800"
               rel="noopener"
             >
-              Weitere Informationen <Icon icon="lucide:external-link" className="h-3 w-3" />
+              {t('SevDeskLockManager.moreInfo')} <Icon icon="lucide:external-link" className="h-3 w-3" />
             </a>
           </AlertDescription>
         </Alert>
@@ -120,13 +124,13 @@ export function SevDeskLockManager({ companyId, onLockComplete }: SevDeskLockMan
         {/* Linke Spalte: Datumsbereiche */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Zeitraum</CardTitle>
+            <CardTitle className="text-lg">{t('SevDeskLockManager.period')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <Label htmlFor="startDate" className="font-medium text-gray-700 text-sm">
-                  Startdatum
+                  {t('SevDeskLockManager.startDate')}
                 </Label>
                 <div className="relative mt-1">
                   <Input
@@ -134,7 +138,7 @@ export function SevDeskLockManager({ companyId, onLockComplete }: SevDeskLockMan
                     type="date"
                     value={startDate}
                     onChange={e => setStartDate(e.target.value)}
-                    placeholder="Optional"
+                    placeholder={t('SevDeskLockManager.optional')}
                     className="pr-10"
                   />
                   <Icon
@@ -146,7 +150,7 @@ export function SevDeskLockManager({ companyId, onLockComplete }: SevDeskLockMan
 
               <div>
                 <Label htmlFor="endDate" className="font-medium text-gray-700 text-sm">
-                  Enddatum
+                  {t('SevDeskLockManager.endDate')}
                 </Label>
                 <div className="relative mt-1">
                   <Input
@@ -154,7 +158,7 @@ export function SevDeskLockManager({ companyId, onLockComplete }: SevDeskLockMan
                     type="date"
                     value={endDate}
                     onChange={e => setEndDate(e.target.value)}
-                    placeholder="Optional"
+                    placeholder={t('SevDeskLockManager.optional')}
                     className="pr-10"
                   />
                   <Icon
@@ -170,14 +174,14 @@ export function SevDeskLockManager({ companyId, onLockComplete }: SevDeskLockMan
         {/* Rechte Spalte: Dokumenttypen & Festschreiben-Button */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Dokumenttypen</CardTitle>
+            <CardTitle className="text-lg">{t('SevDeskLockManager.documentTypes')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             {/* Toggle-Switches (wie in SevDesk) */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <Label htmlFor="invoices" className="font-medium text-gray-700 text-sm">
-                  Rechnungen
+                  {t('SevDeskLockManager.invoices')}
                 </Label>
                 <Switch
                   id="invoices"
@@ -188,7 +192,7 @@ export function SevDeskLockManager({ companyId, onLockComplete }: SevDeskLockMan
 
               <div className="flex items-center justify-between">
                 <Label htmlFor="vouchers" className="font-medium text-gray-700 text-sm">
-                  Belege
+                  {t('SevDeskLockManager.vouchers')}
                 </Label>
                 <Switch
                   id="vouchers"
@@ -199,7 +203,7 @@ export function SevDeskLockManager({ companyId, onLockComplete }: SevDeskLockMan
 
               <div className="flex items-center justify-between">
                 <Label htmlFor="payments" className="font-medium text-gray-700 text-sm">
-                  Zahlungen
+                  {t('SevDeskLockManager.payments')}
                 </Label>
                 <Switch
                   id="payments"
@@ -210,7 +214,7 @@ export function SevDeskLockManager({ companyId, onLockComplete }: SevDeskLockMan
 
               <div className="flex items-center justify-between">
                 <Label htmlFor="creditNotes" className="font-medium text-gray-700 text-sm">
-                  Gutschriften
+                  {t('SevDeskLockManager.creditNotes')}
                 </Label>
                 <Switch
                   id="creditNotes"
@@ -231,19 +235,19 @@ export function SevDeskLockManager({ companyId, onLockComplete }: SevDeskLockMan
                 {isLocking ? (
                   <>
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-white border-b-2"></div>
-                    Wird festgeschrieben...
+                    {t('SevDeskLockManager.locking')}
                   </>
                 ) : (
                   <>
                     <Icon icon="lucide:lock" className="mr-2 h-4 w-4" />
-                    Festschreiben
+                    {t('SevDeskLockManager.lockButton')}
                   </>
                 )}
               </Button>
 
               {!isFormValid && (
                 <p className="mt-2 text-red-600 text-xs">
-                  Bitte wählen Sie mindestens einen Dokumenttyp aus.
+                  {t('SevDeskLockManager.selectAtLeastOneDocumentType')}
                 </p>
               )}
             </div>

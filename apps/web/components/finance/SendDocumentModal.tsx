@@ -16,6 +16,7 @@ import {
   Label,
 } from '@tasko/ui';
 import Image from 'next/image';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -228,14 +229,6 @@ type _TemplateAction =
   | { type: 'TOGGLE_SECTION'; payload: SendOption }
   | { type: 'RESET' };
 
-const DOCUMENT_TYPE_LABELS = {
-  invoice: 'Rechnung',
-  quote: 'Angebot',
-  reminder: 'Erinnerung',
-  'credit-note': 'Gutschrift',
-  cancellation: 'Storno',
-} as const;
-
 export function SendDocumentModal({
   isOpen,
   onClose,
@@ -245,6 +238,7 @@ export function SendDocumentModal({
   onSend,
   redirectAfterAction,
 }: SendDocumentModalProps) {
+  const t = useTranslations('finance');
   const router = useRouter();
   const [sending, setSending] = useState(false);
   const [showCompanySettings, setShowCompanySettings] = useState(false);
@@ -463,7 +457,13 @@ export function SendDocumentModal({
   }, []);
 
   // Document type labels
-  const documentLabels = DOCUMENT_TYPE_LABELS;
+  const documentLabels: Record<SendDocumentModalProps['documentType'], string> = {
+    invoice: t('SendDocumentModal.documentTypeInvoice'),
+    quote: t('SendDocumentModal.documentTypeQuote'),
+    reminder: t('SendDocumentModal.documentTypeReminder'),
+    'credit-note': t('SendDocumentModal.documentTypeCreditNote'),
+    cancellation: t('SendDocumentModal.documentTypeCancellation'),
+  };
 
   // Load real invoice data from database when modal opens
   useEffect(() => {
@@ -543,7 +543,7 @@ export function SendDocumentModal({
       } catch (error) {
         console.error('❌ Error loading real document data:', error);
         setRealDocumentData(document as InvoiceData); // Fallback to provided document
-        toast.error(`Fehler beim Laden der ${documentLabels[documentType] || 'Dokument'}-Daten`);
+        toast.error(t('SendDocumentModal.loadErrorToast', { documentLabel: documentLabels[documentType] }));
       } finally {
         setLoadingEInvoiceData(false);
       }
@@ -727,7 +727,7 @@ export function SendDocumentModal({
     standard: [
       {
         value: 'TEMPLATE_STANDARD',
-        name: 'Standard',
+        name: t('SendDocumentModal.layoutStandard'),
         svg: (
           <svg
             viewBox="0 0 72 102"
@@ -758,7 +758,7 @@ export function SendDocumentModal({
       },
       {
         value: 'TEMPLATE_NEUTRAL',
-        name: 'Neutral',
+        name: t('SendDocumentModal.layoutNeutral'),
         svg: (
           <svg
             viewBox="0 0 72 102"
@@ -820,7 +820,7 @@ export function SendDocumentModal({
       },
       {
         value: 'TEMPLATE_ELEGANT',
-        name: 'Elegant',
+        name: t('SendDocumentModal.layoutElegant'),
         svg: (
           <svg
             viewBox="0 0 72 102"
@@ -850,7 +850,7 @@ export function SendDocumentModal({
       },
       {
         value: 'TEMPLATE_TECHNICAL',
-        name: 'Technisch',
+        name: t('SendDocumentModal.layoutTechnical'),
         svg: (
           <svg
             viewBox="0 0 72 102"
@@ -877,7 +877,7 @@ export function SendDocumentModal({
       },
       {
         value: 'TEMPLATE_GEOMETRIC',
-        name: 'Geometrisch',
+        name: t('SendDocumentModal.layoutGeometric'),
         svg: (
           <svg
             viewBox="0 0 72 102"
@@ -907,7 +907,7 @@ export function SendDocumentModal({
       },
       {
         value: 'TEMPLATE_DYNAMIC',
-        name: 'Dynamisch',
+        name: t('SendDocumentModal.layoutDynamic'),
         svg: (
           <svg
             viewBox="0 0 72 102"
@@ -978,7 +978,8 @@ export function SendDocumentModal({
     ],
   };
 
-  const documentLabel = documentLabels[documentType] || 'Dokument';
+  const documentLabel = documentLabels[documentType];
+  const documentLabelLower = documentLabel.toLowerCase();
 
   // Zoom levels matching SevDesk
   const zoomLevels = [2, 1.75, 1.5, 1.25, 1, 0.75, 0.5];
@@ -1155,7 +1156,10 @@ export function SendDocumentModal({
   useEffect(() => {
     if (isOpen && document) {
       // Set default email subject and message
-      const subject = `${documentLabel} ${document.invoiceNumber || document.number}`;
+      const subject = t('SendDocumentModal.emailSubject', {
+        documentLabel,
+        documentNumber: document.invoiceNumber || document.number,
+      });
       setEmailSubject(subject);
 
       // Convert date to string if it's a Date object
@@ -1163,16 +1167,20 @@ export function SendDocumentModal({
         typeof document.date === 'string' ? document.date : document.date?.toISOString?.() || '';
       const dueDateStr = document.dueDate || dateStr;
 
-      const message = `Sehr geehrte Damen und Herren,
+      const message = `${t('SendDocumentModal.emailGreeting')}
 
-anbei erhalten Sie Ihre ${documentLabel.toLowerCase()} ${document.invoiceNumber || document.number} vom ${formatDate(dateStr)}.
+${t('SendDocumentModal.emailBodyIntro', {
+        documentLabelLower,
+        documentNumber: document.invoiceNumber || document.number,
+        date: formatDate(dateStr),
+      })}
 
-${documentType === 'invoice' ? `Die ${documentLabel.toLowerCase()} ist bis zum ${formatDate(dueDateStr)} zu begleichen.` : ''}
+${documentType === 'invoice' ? t('SendDocumentModal.emailBodyDueDate', { documentLabelLower, dueDate: formatDate(dueDateStr) }) : ''}
 
-Bei Fragen stehen wir Ihnen gerne zur Verfügung.
+${t('SendDocumentModal.emailBodyQuestions')}
 
-Mit freundlichen Grüßen
-${document.companyName || 'Ihr Unternehmen'}`;
+${t('SendDocumentModal.emailClosing')}
+${document.companyName || t('SendDocumentModal.emailFallbackCompanyName')}`;
 
       setEmailMessage(message);
 
@@ -1192,7 +1200,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
       setLogoUrl(null);
       setLogoSize(50);
     }
-  }, [isOpen, document, documentType, documentLabel, logoUrl]);
+  }, [isOpen, document, documentType, documentLabel, documentLabelLower, logoUrl, t]);
 
   // ✅ Extract rendered HTML from the current template with ALL EXISTING STYLES
   // Check if template is ready - simplified version
@@ -1261,8 +1269,8 @@ ${document.companyName || 'Ihr Unternehmen'}`;
       const docWithGoBD = document as DocumentWithGoBD;
       showWarning({
         actionType: actionTypeMap[method],
-        documentType: 'Rechnung',
-        documentNumber: docWithGoBD.documentNumber || 'Unbekannt',
+        documentType: documentLabels.invoice,
+        documentNumber: docWithGoBD.documentNumber || t('SendDocumentModal.unknownValue'),
         companyId: companyId || 'unknown',
         documentId: document.id,
         isAlreadyLocked: docWithGoBD.gobdStatus?.isLocked || false,
@@ -1344,13 +1352,13 @@ ${document.companyName || 'Ihr Unternehmen'}`;
 
       if (!templateRef.current) {
         console.error('❌ templateRef.current ist null - kann kein PDF generieren!');
-        toast.error('Keine Vorlage zum Generieren verfügbar');
+        toast.error(t('SendDocumentModal.noTemplateToast'));
         return;
       }
 
       // Sicherstellen, dass wir im Browser sind
       if (typeof window === 'undefined' || !window.document) {
-        toast.error('PDF-Generierung ist nur im Browser möglich');
+        toast.error(t('SendDocumentModal.pdfBrowserOnlyToast'));
         return;
       }
 
@@ -1463,7 +1471,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
         pdfBlob = new Blob([byteArray], { type: 'application/pdf' });
       } catch (pdfError) {
         console.error('❌ Fehler bei PDF-API:', pdfError);
-        toast.error('PDF-Generierung fehlgeschlagen');
+        toast.error(t('SendDocumentModal.pdfGenerationFailedToast'));
         return;
       }
     }
@@ -1611,10 +1619,10 @@ ${document.companyName || 'Ihr Unternehmen'}`;
             document.id = invoiceId;
           }
 
-          toast.success('Dokument wurde automatisch gespeichert');
+          toast.success(t('SendDocumentModal.autoSavedToast'));
         } catch (saveError) {
           console.error('❌ Fehler beim Speichern des Dokuments:', saveError);
-          toast.error('Fehler beim Speichern des Dokuments');
+          toast.error(t('SendDocumentModal.saveFailedToast'));
           setSending(false);
           return;
         }
@@ -1625,11 +1633,11 @@ ${document.companyName || 'Ihr Unternehmen'}`;
       // 5. Spezielle Aktionen ausführen
       if (method === 'email') {
         if (!recipientEmail.trim()) {
-          toast.error('Bitte geben Sie eine Empfänger-E-Mail-Adresse ein');
+          toast.error(t('SendDocumentModal.recipientEmailRequiredToast'));
           return;
         }
         if (!emailSubject.trim()) {
-          toast.error('Bitte geben Sie einen Betreff ein');
+          toast.error(t('SendDocumentModal.subjectRequiredToast'));
           return;
         }
       }
@@ -1642,7 +1650,8 @@ ${document.companyName || 'Ihr Unternehmen'}`;
 
             const userId = user?.uid || 'unknown';
             const userName =
-              `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'Unbekannt';
+              `${user?.first_name || ''} ${user?.last_name || ''}`.trim() ||
+              t('SendDocumentModal.unknownValue');
 
             await GoBDService.autoLockOnSend(companyId, invoiceId, userId, userName);
           } catch (gobdError) {
@@ -1670,7 +1679,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
           }
         }
 
-        toast.success(`${documentLabel} gespeichert`);
+        toast.success(t('SendDocumentModal.savedToast', { documentLabel }));
 
         // 🔥 CRITICAL: onSend aufrufen für Navigation zur Detailseite
         if (onSend) {
@@ -1701,7 +1710,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
           }
         }
 
-        toast.error('Per Post versenden ist noch nicht verfügbar');
+        toast.error(t('SendDocumentModal.postNotAvailableToast'));
 
         // 🔥 CRITICAL: onSend aufrufen für Navigation zur Detailseite
         if (onSend) {
@@ -1752,14 +1761,14 @@ ${document.companyName || 'Ihr Unternehmen'}`;
             }
           } catch (saveError) {
             console.error('❌ Fehler beim Speichern:', saveError);
-            toast.error('Dokument konnte nicht gespeichert werden');
+            toast.error(t('SendDocumentModal.saveBeforePrintFailedToast'));
             setSending(false);
             return;
           }
         }
 
         if (!invoiceId) {
-          toast.error('Dokument muss zuerst gespeichert werden');
+          toast.error(t('SendDocumentModal.mustSaveFirstToast'));
           setSending(false);
           return;
         }
@@ -1783,8 +1792,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
           let cleanFooterText = document?.footerText || '';
           if (cleanFooterText && !cleanFooterText.includes('[%GESAMTBETRAG%]')) {
             // Wenn kein Platzhalter vorhanden, setze Standard-Footer-Text mit Platzhaltern
-            cleanFooterText =
-              'Wir bitten Sie, den Rechnungsbetrag von [%GESAMTBETRAG%] unter Angabe der Rechnungsnummer [%RECHNUNGSNUMMER%] auf das unten angegebene Konto zu überweisen. Zahlungsziel: [%ZAHLUNGSZIEL%] Rechnungsdatum: [%RECHNUNGSDATUM%] Vielen Dank für Ihr Vertrauen und die angenehme Zusammenarbeit!<br>Mit freundlichen Grüßen<br>[%KONTAKTPERSON%]';
+            cleanFooterText = t('SendDocumentModal.defaultFooterText');
           }
 
           const docWithTaxRule = document as DocumentWithGoBD;
@@ -1824,10 +1832,10 @@ ${document.companyName || 'Ihr Unternehmen'}`;
         const printWindow = window.open(printUrl, '_blank');
 
         if (printWindow) {
-          toast.success(`${documentLabel} wird gedruckt`);
+          toast.success(t('SendDocumentModal.printingToast', { documentLabel }));
         } else {
           // Popup wurde blockiert
-          toast.info('Bitte erlauben Sie Pop-ups, um das Dokument zu drucken');
+          toast.info(t('SendDocumentModal.popupBlockedToast'));
         }
 
         // 🔥 CRITICAL: GoBD-System nach erfolgreichem Drucken aktivieren
@@ -1876,7 +1884,8 @@ ${document.companyName || 'Ihr Unternehmen'}`;
             // Note: useAuth hook is already imported and used in this component
             const userId = user?.uid || 'unknown';
             const userName =
-              `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || 'Unbekannt';
+              `${user?.first_name || ''} ${user?.last_name || ''}`.trim() ||
+              t('SendDocumentModal.unknownValue');
 
             await GoBDService.autoLockOnSend(companyId, invoiceId, userId, userName);
 
@@ -1892,7 +1901,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
           }
         }
 
-        toast.success(`${documentLabel} erfolgreich versendet`);
+        toast.success(t('SendDocumentModal.sentToast', { documentLabel }));
         // 🔀 Dynamic redirect after action
         handleRedirectAfterAction(invoiceId);
         onClose();
@@ -1902,13 +1911,13 @@ ${document.companyName || 'Ihr Unternehmen'}`;
       // 🔥 CRITICAL: Download-Logik mit PDF-API implementieren
       if (method === 'download') {
         if (!pdfBlob) {
-          toast.error('PDF konnte nicht generiert werden');
+          toast.error(t('SendDocumentModal.pdfGenerationEmptyToast'));
           return;
         }
 
         // Sicherstellen, dass wir im Browser sind
         if (typeof window === 'undefined' || !window.document) {
-          toast.error('Download ist nur im Browser möglich');
+          toast.error(t('SendDocumentModal.downloadBrowserOnlyToast'));
           return;
         }
 
@@ -1940,7 +1949,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
             }
           }
 
-          toast.success(`${documentLabel} erfolgreich heruntergeladen`);
+          toast.success(t('SendDocumentModal.downloadedToast', { documentLabel }));
 
           // 🔥 CRITICAL: onSend aufrufen für Navigation zur Detailseite
           if (onSend) {
@@ -1953,13 +1962,13 @@ ${document.companyName || 'Ihr Unternehmen'}`;
           return;
         } catch (downloadError) {
           console.error('❌ Download fehlgeschlagen:', downloadError);
-          toast.error('Download fehlgeschlagen');
+          toast.error(t('SendDocumentModal.downloadFailedToast'));
           return;
         }
       }
     } catch (error) {
       console.error('Error sending document:', error);
-      toast.error(`Fehler beim Versenden der ${documentLabel.toLowerCase()}`);
+      toast.error(t('SendDocumentModal.sendErrorToast', { documentLabelLower }));
     } finally {
       setSending(false);
     }
@@ -1981,10 +1990,10 @@ ${document.companyName || 'Ihr Unternehmen'}`;
             ✕
           </button>
           <DialogTitle className="font-semibold text-white text-xl">
-            {documentLabel} versenden
+            {t('SendDocumentModal.dialogTitle', { documentLabel })}
           </DialogTitle>
           <DialogDescription className="sr-only">
-            {documentLabel} versenden, drucken oder herunterladen
+            {t('SendDocumentModal.dialogDescription', { documentLabel })}
           </DialogDescription>
         </DialogHeader>
         <div className="flex h-full min-h-0 flex-1">
@@ -1997,10 +2006,9 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                   <Icon icon="lucide:alert-triangle" className="h-4 w-4" />
                   <AlertDescription>
                     <div className="space-y-2">
-                      <p className="font-medium">Angaben zu deinem Unternehmen</p>
+                      <p className="font-medium">{t('SendDocumentModal.companyInfoTitle')}</p>
                       <p className="text-sm">
-                        Damit deine {documentLabel.toLowerCase()} rechtssicher und GoBD-konform
-                        sind, ergänze noch Angaben zu dir und deinem Unternehmen.
+                        {t('SendDocumentModal.companyInfoBody', { documentLabelLower })}
                       </p>
                       <Button
                         size="sm"
@@ -2008,7 +2016,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                         className="mt-2"
                         onClick={() => setShowCompanySettings(false)}
                       >
-                        Angaben vervollständigen
+                        {t('SendDocumentModal.companyInfoCompleteButton')}
                       </Button>
                     </div>
                   </AlertDescription>
@@ -2021,7 +2029,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
               {/* Main Actions Section */}
               <div className="border-b">
                 <div className="border-b bg-gray-50 px-4 py-3">
-                  <h3 className="font-medium text-gray-700 text-sm">Aktionen</h3>
+                  <h3 className="font-medium text-gray-700 text-sm">{t('SendDocumentModal.actionsSectionTitle')}</h3>
                 </div>
 
                 {/* Download Option - Default active like SevDesk */}
@@ -2035,7 +2043,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                   >
                     <div className="flex items-center gap-3">
                       <Icon icon="lucide:download" className="h-5 w-5 text-gray-600" />
-                      <span className="font-medium">Herunterladen</span>
+                      <span className="font-medium">{t('SendDocumentModal.downloadOptionLabel')}</span>
                     </div>
                     {isExpanded('download') ? (
                       <Icon icon="lucide:chevron-down" className="h-4 w-4 text-gray-400" />
@@ -2053,12 +2061,12 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                         {sending ? (
                           <>
                             <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />
-                            PDF herunterladen
+                            {t('SendDocumentModal.downloadPdfButton')}
                           </>
                         ) : (
                           <>
                             <Icon icon="lucide:download" className="mr-2 h-4 w-4" />
-                            PDF herunterladen
+                            {t('SendDocumentModal.downloadPdfButton')}
                           </>
                         )}
                       </Button>
@@ -2085,7 +2093,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                   >
                     <div className="flex items-center gap-3">
                       <Icon icon="lucide:mail" className="h-5 w-5 text-gray-600" />
-                      <span className="font-medium">Als E-Mail versenden</span>
+                      <span className="font-medium">{t('SendDocumentModal.emailOptionLabel')}</span>
                     </div>
                     <Icon icon="lucide:chevron-right" className="h-4 w-4 text-gray-400" />
                   </button>
@@ -2102,7 +2110,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                   >
                     <div className="flex items-center gap-3">
                       <Icon icon="lucide:mail" className="h-5 w-5 text-gray-600" />
-                      <span className="font-medium">Per Post verschicken</span>
+                      <span className="font-medium">{t('SendDocumentModal.mailOptionLabel')}</span>
                     </div>
                     {isExpanded('mail') ? (
                       <Icon icon="lucide:chevron-down" className="h-4 w-4 text-gray-400" />
@@ -2113,7 +2121,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                   {isExpanded('mail') && (
                     <div className="bg-gray-50 px-4 pb-4">
                       <div className="mb-3 text-gray-600 text-sm">
-                        Versende deine {documentLabel.toLowerCase()} automatisch per Post.
+                        {t('SendDocumentModal.mailOptionDescription', { documentLabelLower })}
                       </div>
                       <Button
                         variant="outline"
@@ -2122,7 +2130,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                         disabled={sending || true} // Deaktiviert bis implementiert
                       >
                         <Icon icon="lucide:mail" className="mr-2 h-4 w-4" />
-                        Per Post senden (Beta)
+                        {t('SendDocumentModal.mailSendBetaButton')}
                       </Button>
                     </div>
                   )}
@@ -2139,7 +2147,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                   >
                     <div className="flex items-center gap-3">
                       <Icon icon="lucide:printer" className="h-5 w-5 text-gray-600" />
-                      <span className="font-medium">Drucken</span>
+                      <span className="font-medium">{t('SendDocumentModal.printOptionLabel')}</span>
                     </div>
                     {isExpanded('print') ? (
                       <Icon icon="lucide:chevron-down" className="h-4 w-4 text-gray-400" />
@@ -2158,12 +2166,12 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                         {sending ? (
                           <>
                             <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />
-                            Wird gedruckt...
+                            {t('SendDocumentModal.printingInProgress')}
                           </>
                         ) : (
                           <>
                             <Icon icon="lucide:printer" className="mr-2 h-4 w-4" />
-                            Drucken
+                            {t('SendDocumentModal.printOptionLabel')}
                           </>
                         )}
                       </Button>
@@ -2182,7 +2190,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                   >
                     <div className="flex items-center gap-3">
                       <Icon icon="lucide:check-circle" className="h-5 w-5 text-gray-600" />
-                      <span className="font-medium">Speichern</span>
+                      <span className="font-medium">{t('SendDocumentModal.saveOptionLabel')}</span>
                     </div>
                     {isExpanded('save') ? (
                       <Icon icon="lucide:chevron-down" className="h-4 w-4 text-gray-400" />
@@ -2193,7 +2201,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                   {isExpanded('save') && (
                     <div className="bg-gray-50 px-4 pb-4">
                       <div className="mb-3 text-gray-600 text-sm">
-                        {documentLabel} als finalisiertes Dokument speichern.
+                        {t('SendDocumentModal.saveOptionDescription', { documentLabel })}
                       </div>
                       <Button
                         variant="outline"
@@ -2202,7 +2210,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                         disabled={sending}
                       >
                         <Icon icon="lucide:check-circle" className="mr-2 h-4 w-4" />
-                        Speichern
+                        {t('SendDocumentModal.saveOptionLabel')}
                       </Button>
                     </div>
                   )}
@@ -2212,7 +2220,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
               {/* Settings Section */}
               <div>
                 <div className="border-b bg-gray-50 px-4 py-3">
-                  <h3 className="font-medium text-gray-700 text-sm">Anpassungen</h3>
+                  <h3 className="font-medium text-gray-700 text-sm">{t('SendDocumentModal.customizationsSectionTitle')}</h3>
                 </div>
 
                 {/* Logo Option */}
@@ -2226,7 +2234,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                   >
                     <div className="flex items-center gap-3">
                       <Icon icon="lucide:image" className="h-5 w-5 text-gray-600" />
-                      <span className="font-medium">Dein Firmenlogo</span>
+                      <span className="font-medium">{t('SendDocumentModal.logoOptionLabel')}</span>
                     </div>
                     {isExpanded('logo') ? (
                       <Icon icon="lucide:chevron-down" className="h-4 w-4 text-gray-400" />
@@ -2256,7 +2264,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                                 const newUrl = URL.createObjectURL(file);
                                 setLogoFile(file);
                                 setLogoUrl(newUrl);
-                                toast.success('Logo erfolgreich hochgeladen');
+                                toast.success(t('SendDocumentModal.logoUploadSuccessToast'));
                               }
                             }}
                           />
@@ -2275,22 +2283,22 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                                 fileInputRef.current?.click();
                               }}
                             >
-                              Logo hochladen
+                              {t('SendDocumentModal.logoUploadButton')}
                             </Button>
-                            <p className="text-gray-500 text-sm">oder hier hineinziehen</p>
-                            <p className="text-gray-400 text-xs">.jpg, .jpeg, .png (max. 10 MB)</p>
+                            <p className="text-gray-500 text-sm">{t('SendDocumentModal.logoUploadDragHint')}</p>
+                            <p className="text-gray-400 text-xs">{t('SendDocumentModal.logoUploadFileHint')}</p>
                           </div>
                         </div>
 
                         {logoFile && logoUrl && (
                           <div className="space-y-2">
                             <div className="text-center text-green-600 text-sm">
-                              ✓ Logo hochgeladen: {logoFile.name}
+                              {t('SendDocumentModal.logoUploadedLabel', { fileName: logoFile.name })}
                             </div>
                             <div className="flex justify-center">
                               <Image
                                 src={logoUrl}
-                                alt="Logo Vorschau"
+                                alt={t('SendDocumentModal.logoPreviewAlt')}
                                 width={96}
                                 height={48}
                                 unoptimized
@@ -2307,7 +2315,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
 
                       {/* Logo Size Control */}
                       <div className="space-y-2">
-                        <Label className="font-medium text-sm">Größe</Label>
+                        <Label className="font-medium text-sm">{t('SendDocumentModal.logoSizeLabel')}</Label>
                         <div className="flex items-center gap-3">
                           <Button
                             variant="outline"
@@ -2347,7 +2355,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                   >
                     <div className="flex items-center gap-3">
                       <Icon icon="lucide:palette" className="h-5 w-5 text-gray-600" />
-                      <span className="font-medium">Farbe</span>
+                      <span className="font-medium">{t('SendDocumentModal.colorOptionLabel')}</span>
                     </div>
                     {isExpanded('color') ? (
                       <Icon icon="lucide:chevron-down" className="h-4 w-4 text-gray-400" />
@@ -2360,18 +2368,18 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                       <div className="color-palette">
                         <div className="mb-3 grid grid-cols-6 gap-2">
                           {[
-                            { name: 'Grau', color: '#313131', label: 'Grey' },
-                            { name: 'Hellgrau', color: '#848484', label: 'Light Grey' },
-                            { name: 'Türkis', color: '#0d8375', label: 'Teal' },
-                            { name: 'Blau', color: '#1d65b3', label: 'Blue' },
-                            { name: 'Lila', color: '#a964d9', label: 'Purple' },
-                            { name: 'Rot', color: '#c31919', label: 'Red' },
-                            { name: 'Orange', color: '#f46e32', label: 'Orange' },
-                            { name: 'Gelb', color: '#ffcf00', label: 'Yellow' },
-                            { name: 'Rosa', color: '#fd88ab', label: 'Pink' },
-                            { name: 'Beige', color: '#c0ab60', label: 'Beige' },
-                            { name: 'Braun', color: '#7e4528', label: 'Brown' },
-                            { name: 'Akzent', color: 'var(--accent)', label: 'Accent' },
+                            { name: t('SendDocumentModal.colorGray'), color: '#313131', label: 'Grey' },
+                            { name: t('SendDocumentModal.colorLightGray'), color: '#848484', label: 'Light Grey' },
+                            { name: t('SendDocumentModal.colorTeal'), color: '#0d8375', label: 'Teal' },
+                            { name: t('SendDocumentModal.colorBlue'), color: '#1d65b3', label: 'Blue' },
+                            { name: t('SendDocumentModal.colorPurple'), color: '#a964d9', label: 'Purple' },
+                            { name: t('SendDocumentModal.colorRed'), color: '#c31919', label: 'Red' },
+                            { name: t('SendDocumentModal.colorOrange'), color: '#f46e32', label: 'Orange' },
+                            { name: t('SendDocumentModal.colorYellow'), color: '#ffcf00', label: 'Yellow' },
+                            { name: t('SendDocumentModal.colorPink'), color: '#fd88ab', label: 'Pink' },
+                            { name: t('SendDocumentModal.colorBeige'), color: '#c0ab60', label: 'Beige' },
+                            { name: t('SendDocumentModal.colorBrown'), color: '#7e4528', label: 'Brown' },
+                            { name: t('SendDocumentModal.colorAccent'), color: 'var(--accent)', label: 'Accent' },
                           ].map(colorOption => (
                             <button
                               key={colorOption.color}
@@ -2391,14 +2399,14 @@ ${document.companyName || 'Ihr Unternehmen'}`;
 
                         {/* Custom Color Input */}
                         <div className="space-y-2">
-                          <Label className="font-medium text-sm">Benutzerdefinierte Farbe</Label>
+                          <Label className="font-medium text-sm">{t('SendDocumentModal.customColorLabel')}</Label>
                           <div className="flex gap-2">
                             <input
                               type="color"
                               value={selectedColor}
                               onChange={e => setSelectedColor(e.target.value)}
                               className="h-8 w-12 cursor-pointer rounded border border-gray-300"
-                              title="Benutzerdefinierte Farbe auswählen"
+                              title={t('SendDocumentModal.customColorPickerTitle')}
                             />
 
                             <Input
@@ -2431,7 +2439,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                   >
                     <div className="flex items-center gap-3">
                       <Icon icon="lucide:layout" className="h-5 w-5 text-gray-600" />
-                      <span className="font-medium">Layout auswählen</span>
+                      <span className="font-medium">{t('SendDocumentModal.layoutOptionLabel')}</span>
                     </div>
                     {isExpanded('layout') ? (
                       <Icon icon="lucide:chevron-down" className="h-4 w-4 text-gray-400" />
@@ -2486,9 +2494,11 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                     >
                       <div className="flex items-center gap-3">
                         <Icon icon="lucide:file-text" className="h-5 w-5 text-green-600" />
-                        <span className="font-medium">E-Rechnung</span>
+                        <span className="font-medium">{t('SendDocumentModal.eInvoiceSectionTitle')}</span>
                         <Badge variant="secondary" className="bg-green-100 text-green-700 text-xs">
-                          {eInvoiceData.validationStatus === 'valid' ? 'Gültig' : 'Fehlerhaft'}
+                          {eInvoiceData.validationStatus === 'valid'
+                            ? t('SendDocumentModal.eInvoiceStatusValid')
+                            : t('SendDocumentModal.eInvoiceStatusInvalid')}
                         </Badge>
                       </div>
                       {isExpanded('einvoice') ? (
@@ -2503,7 +2513,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                           {/* E-Invoice Status */}
                           <div className="rounded-lg border bg-white p-3">
                             <div className="mb-2 flex items-center justify-between">
-                              <span className="font-medium text-sm">Status</span>
+                              <span className="font-medium text-sm">{t('SendDocumentModal.eInvoiceStatusLabel')}</span>
                               <Badge
                                 variant={
                                   eInvoiceData.validationStatus === 'valid'
@@ -2513,24 +2523,24 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                                 className="text-xs"
                               >
                                 {eInvoiceData.validationStatus === 'valid'
-                                  ? 'Gültig'
-                                  : 'Fehlerhaft'}
+                                  ? t('SendDocumentModal.eInvoiceStatusValid')
+                                  : t('SendDocumentModal.eInvoiceStatusInvalid')}
                               </Badge>
                             </div>
                             <div className="space-y-1 text-gray-600 text-xs">
-                              <div>Format: {eInvoiceData.format?.toUpperCase() || 'ZUGFeRD'}</div>
-                              <div>GUID: {eInvoiceData.guid}</div>
-                              <div>Erstellt: {formatDate(eInvoiceData.createdAt)}</div>
+                              <div>{t('SendDocumentModal.eInvoiceFormatLine', { format: eInvoiceData.format?.toUpperCase() || 'ZUGFeRD' })}</div>
+                              <div>{t('SendDocumentModal.eInvoiceGuidLine', { guid: eInvoiceData.guid })}</div>
+                              <div>{t('SendDocumentModal.eInvoiceCreatedLine', { date: formatDate(eInvoiceData.createdAt) })}</div>
                             </div>
                           </div>
 
                           {/* QR Code */}
                           {qrCodeUrl && (
                             <div className="rounded-lg border bg-white p-3 text-center">
-                              <div className="mb-2 font-medium text-sm">QR-Code</div>
+                              <div className="mb-2 font-medium text-sm">{t('SendDocumentModal.qrCodeLabel')}</div>
                               <Image
                                 src={qrCodeUrl}
-                                alt="E-Invoice QR Code"
+                                alt={t('SendDocumentModal.eInvoiceQrCodeAlt')}
                                 width={96}
                                 height={96}
                                 unoptimized
@@ -2538,7 +2548,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                               />
 
                               <div className="mt-2 text-gray-500 text-xs">
-                                Für E-Invoice-Validierung
+                                {t('SendDocumentModal.eInvoiceQrCodeHint')}
                               </div>
                             </div>
                           )}
@@ -2552,30 +2562,30 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                                 try {
                                   if (eInvoiceData.xmlUrl) {
                                     window.open(eInvoiceData.xmlUrl, '_blank');
-                                    toast.success('XML-Datei wird heruntergeladen');
+                                    toast.success(t('SendDocumentModal.xmlDownloadingToast'));
                                   } else {
-                                    toast.error('XML-URL nicht verfügbar');
+                                    toast.error(t('SendDocumentModal.xmlUrlMissingToast'));
                                   }
                                 } catch (error) {
                                   console.error('XML download error:', error);
-                                  toast.error('Fehler beim XML-Download');
+                                  toast.error(t('SendDocumentModal.xmlDownloadErrorToast'));
                                 }
                               }}
                             >
                               <Icon icon="lucide:download" className="mr-2 h-4 w-4" />
-                              XML herunterladen
+                              {t('SendDocumentModal.xmlDownloadButton')}
                             </Button>
 
                             <Button
                               variant="outline"
                               className="w-full text-sm"
                               onClick={() => {
-                                toast.info('ZUGFeRD-PDF wird generiert...');
+                                toast.info(t('SendDocumentModal.zugferdGeneratingToast'));
                                 // Hier würde die ZUGFeRD-PDF-Generierung stattfinden
                               }}
                             >
                               <Icon icon="lucide:download" className="mr-2 h-4 w-4" />
-                              ZUGFeRD-PDF
+                              {t('SendDocumentModal.zugferdPdfButton')}
                             </Button>
                           </div>
                         </div>
@@ -2595,7 +2605,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                   >
                     <div className="flex items-center gap-3">
                       <Icon icon="lucide:settings" className="h-5 w-5 text-gray-600" />
-                      <span className="font-medium">Weitere Einstellungen</span>
+                      <span className="font-medium">{t('SendDocumentModal.moreSettingsSectionTitle')}</span>
                     </div>
                     {isExpanded('settings') ? (
                       <Icon icon="lucide:chevron-down" className="h-4 w-4 text-gray-400" />
@@ -2608,7 +2618,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                       <div className="space-y-4">
                         {/* Sprache */}
                         <div className="space-y-2">
-                          <Label className="font-medium text-sm">Sprache</Label>
+                          <Label className="font-medium text-sm">{t('SendDocumentModal.languageLabel')}</Label>
                           <NativeSelect
                             value={documentSettings.language}
                             onChange={e =>
@@ -2626,7 +2636,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
 
                         {/* QR-Code Optionen */}
                         <div className="flex items-center justify-between">
-                          <Label className="font-medium text-sm">QR-Code anzeigen</Label>
+                          <Label className="font-medium text-sm">{t('SendDocumentModal.showQrCodeLabel')}</Label>
                           <Checkbox
                             checked={documentSettings.showQRCode}
                             onCheckedChange={checked =>
@@ -2639,7 +2649,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <Label className="font-medium text-sm">EPC-QR-Code (GiroCode)</Label>
+                          <Label className="font-medium text-sm">{t('SendDocumentModal.showEpcQrCodeLabel')}</Label>
                           <Checkbox
                             checked={documentSettings.showEPCQRCode}
                             onCheckedChange={checked =>
@@ -2653,7 +2663,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
 
                         {/* Weitere Display-Optionen */}
                         <div className="flex items-center justify-between">
-                          <Label className="font-medium text-sm">Kundennummer</Label>
+                          <Label className="font-medium text-sm">{t('SendDocumentModal.customerNumberLabel')}</Label>
                           <Checkbox
                             checked={documentSettings.showCustomerNumber}
                             onCheckedChange={checked =>
@@ -2666,7 +2676,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <Label className="font-medium text-sm">Kontaktperson</Label>
+                          <Label className="font-medium text-sm">{t('SendDocumentModal.contactPersonLabel')}</Label>
                           <Checkbox
                             checked={documentSettings.showContactPerson}
                             onCheckedChange={checked =>
@@ -2679,7 +2689,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <Label className="font-medium text-sm">USt. pro Position</Label>
+                          <Label className="font-medium text-sm">{t('SendDocumentModal.vatPerPositionLabel')}</Label>
                           <Checkbox
                             checked={documentSettings.showVATPerPosition}
                             onCheckedChange={checked =>
@@ -2692,7 +2702,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <Label className="font-medium text-sm">Artikelnummer</Label>
+                          <Label className="font-medium text-sm">{t('SendDocumentModal.articleNumberLabel')}</Label>
                           <Checkbox
                             checked={documentSettings.showArticleNumber}
                             onCheckedChange={checked =>
@@ -2705,7 +2715,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <Label className="font-medium text-sm">Falz- und Lochmarken</Label>
+                          <Label className="font-medium text-sm">{t('SendDocumentModal.foldLinesLabel')}</Label>
                           <Checkbox
                             checked={documentSettings.showFoldLines}
                             onCheckedChange={checked =>
@@ -2719,7 +2729,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
 
                         {/* Standard-Optionen */}
                         <div className="flex items-center justify-between">
-                          <Label className="font-medium text-sm">Seitenzahlen anzeigen</Label>
+                          <Label className="font-medium text-sm">{t('SendDocumentModal.showPageNumbersLabel')}</Label>
                           <Checkbox
                             checked={documentSettings.showPageNumbers}
                             onCheckedChange={checked =>
@@ -2732,7 +2742,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <Label className="font-medium text-sm">Fußzeile einblenden</Label>
+                          <Label className="font-medium text-sm">{t('SendDocumentModal.showFooterLabel')}</Label>
                           <Checkbox
                             checked={documentSettings.showFooter}
                             onCheckedChange={checked =>
@@ -2745,7 +2755,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <Label className="font-medium text-sm">Wasserzeichen</Label>
+                          <Label className="font-medium text-sm">{t('SendDocumentModal.showWatermarkLabel')}</Label>
                           <Checkbox
                             checked={documentSettings.showWatermark}
                             onCheckedChange={checked =>
@@ -2771,7 +2781,7 @@ ${document.companyName || 'Ihr Unternehmen'}`;
                 <div className="flex items-center gap-3 text-gray-500">
                   <Icon icon="lucide:loader2" className="h-6 w-6 animate-spin" />
                   <span>
-                    Lade {documentLabels[documentType] || 'Dokument'}-Daten aus der Datenbank...
+                    {t('SendDocumentModal.loadingDataMessage', { documentLabel: documentLabels[documentType] })}
                   </span>
                 </div>
               </div>

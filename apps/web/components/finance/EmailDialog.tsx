@@ -11,6 +11,7 @@ import {
   Label,
   Textarea,
 } from '@tasko/ui';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
 
 import { formatCurrency } from '@/lib/currency';
@@ -24,6 +25,7 @@ interface EmailDialogProps {
 }
 
 export function EmailDialog({ isOpen, onClose, invoice, companyId }: EmailDialogProps) {
+  const t = useTranslations('finance');
   const [emailTo, setEmailTo] = useState('');
   const [emailSubject, setEmailSubject] = useState('');
   const [emailBody, setEmailBody] = useState('');
@@ -32,23 +34,23 @@ export function EmailDialog({ isOpen, onClose, invoice, companyId }: EmailDialog
   useEffect(() => {
     if (isOpen && invoice) {
       // Vorbefüllen mit Kundendaten
+      const invoiceNumber = invoice.number || invoice.invoiceNumber || 'RE-XXXX';
       setEmailTo(invoice.customerEmail || '');
-      setEmailSubject(`Rechnung ${invoice.number || invoice.invoiceNumber || 'RE-XXXX'}`);
+      setEmailSubject(t('EmailDialog.subjectPrefill', { invoiceNumber }));
       setEmailBody(
-        `Sehr geehrte Damen und Herren,\n\n` +
-          `anbei erhalten Sie unsere Rechnung ${invoice.number || invoice.invoiceNumber || 'RE-XXXX'}.\n\n` +
-          `Rechnungsbetrag: ${formatCurrency(invoice.total, invoice.currency)}\n` +
-          `Fällig bis: ${new Date(invoice.dueDate).toLocaleDateString('de-DE')}\n\n` +
-          `Bei Fragen stehen wir Ihnen gerne zur Verfügung.\n\n` +
-          `Mit freundlichen Grüßen\n` +
-          `${invoice.companyName || 'Ihr Unternehmen'}`,
+        t('EmailDialog.bodyPrefill', {
+          invoiceNumber,
+          amount: formatCurrency(invoice.total, invoice.currency),
+          dueDate: new Date(invoice.dueDate).toLocaleDateString('de-DE'),
+          companyName: invoice.companyName || t('EmailDialog.yourCompanyFallback'),
+        }),
       );
     }
-  }, [isOpen, invoice]);
+  }, [isOpen, invoice, t]);
 
   const handleSendEmail = async () => {
     if (!emailTo || !emailSubject || !emailBody) {
-      alert('Bitte füllen Sie alle Felder aus.');
+      alert(t('EmailDialog.fillAllFields'));
       return;
     }
 
@@ -63,10 +65,10 @@ export function EmailDialog({ isOpen, onClose, invoice, companyId }: EmailDialog
           invoiceId: invoice.id,
           companyId: companyId,
           recipientEmail: emailTo,
-          recipientName: invoice.customerName || 'Kunde',
+          recipientName: invoice.customerName || t('EmailDialog.customerFallback'),
           subject: emailSubject,
           message: emailBody,
-          senderName: invoice.companyName || 'Ihr Unternehmen',
+          senderName: invoice.companyName || t('EmailDialog.yourCompanyFallback'),
         }),
       });
 
@@ -74,15 +76,20 @@ export function EmailDialog({ isOpen, onClose, invoice, companyId }: EmailDialog
 
       if (response.ok) {
         alert(
-          `✅ E-Mail erfolgreich versendet!\n\nPDF-Anhang: ${result.pdfAttached ? '✅ Inklusive' : '❌ Nicht verfügbar'}\nDateiname: ${result.attachmentFilename || 'N/A'}`,
+          t('EmailDialog.sendSuccess', {
+            pdfStatus: result.pdfAttached
+              ? t('EmailDialog.pdfIncluded')
+              : t('EmailDialog.pdfUnavailable'),
+            filename: result.attachmentFilename || t('EmailDialog.filenameNotAvailable'),
+          }),
         );
         onClose();
       } else {
-        throw new Error(result.error || 'Unbekannter Fehler');
+        throw new Error(result.error || t('EmailDialog.unknownError'));
       }
     } catch (error: any) {
       console.error('Fehler beim E-Mail-Versand:', error);
-      alert(`❌ Fehler beim Versand der E-Mail:\n${error.message}`);
+      alert(t('EmailDialog.sendError', { message: error.message }));
     } finally {
       setSending(false);
     }
@@ -96,50 +103,52 @@ export function EmailDialog({ isOpen, onClose, invoice, companyId }: EmailDialog
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Icon icon="lucide:mail" className="h-5 w-5" />
-            Rechnung per E-Mail versenden
+            {t('EmailDialog.title')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="emailTo">Empfänger</Label>
+            <Label htmlFor="emailTo">{t('EmailDialog.recipient')}</Label>
             <Input
               id="emailTo"
               type="email"
               value={emailTo}
               onChange={e => setEmailTo(e.target.value)}
-              placeholder="kunde@example.com"
+              placeholder={t('EmailDialog.recipientPlaceholder')}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="emailSubject">Betreff</Label>
+            <Label htmlFor="emailSubject">{t('EmailDialog.subject')}</Label>
             <Input
               id="emailSubject"
               value={emailSubject}
               onChange={e => setEmailSubject(e.target.value)}
-              placeholder="Rechnung RE-XXXX"
+              placeholder={t('EmailDialog.subjectPlaceholder')}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="emailBody">Nachricht</Label>
+            <Label htmlFor="emailBody">{t('EmailDialog.message')}</Label>
             <Textarea
               id="emailBody"
               rows={8}
               value={emailBody}
               onChange={e => setEmailBody(e.target.value)}
-              placeholder="Ihre Nachricht..."
+              placeholder={t('EmailDialog.messagePlaceholder')}
             />
           </div>
 
           <div className="rounded border border-green-200 bg-green-50 p-3 text-gray-600 text-sm">
             <div className="flex items-center gap-2">
               <Icon icon="lucide:mail" className="h-4 w-4 text-green-600" />
-              <strong className="text-green-800">PDF-Anhang:</strong>
-              <span>Rechnung wird automatisch als PDF angehängt</span>
+              <strong className="text-green-800">{t('EmailDialog.pdfAttachmentLabel')}</strong>
+              <span>{t('EmailDialog.pdfAttachmentHint')}</span>
             </div>
             <div className="mt-1 text-green-700 text-xs">
-              Dateiname: Rechnung_{invoice.number || invoice.invoiceNumber || 'RE-XXXX'}.pdf
+              {t('EmailDialog.filenamePreview', {
+                invoiceNumber: invoice.number || invoice.invoiceNumber || 'RE-XXXX',
+              })}
             </div>
           </div>
 
@@ -152,17 +161,17 @@ export function EmailDialog({ isOpen, onClose, invoice, companyId }: EmailDialog
               {sending ? (
                 <>
                   <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />
-                  Wird gesendet...
+                  {t('EmailDialog.sending')}
                 </>
               ) : (
                 <>
                   <Icon icon="lucide:mail" className="mr-2 h-4 w-4" />
-                  E-Mail senden
+                  {t('EmailDialog.send')}
                 </>
               )}
             </Button>
             <Button variant="outline" onClick={onClose}>
-              Abbrechen
+              {t('EmailDialog.cancel')}
             </Button>
           </div>
         </CardContent>
