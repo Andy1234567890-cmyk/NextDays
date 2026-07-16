@@ -7,7 +7,7 @@
 // werden lazy geladen, so dass der Standard-Timeline-Blick nicht verzögert wird.
 import dynamic from "next/dynamic";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 
 import { useRealtime } from "@/lib/use-realtime";
 
@@ -63,11 +63,22 @@ export function CalendarViews({
   const params = useSearchParams();
 
   // Objektzeilen werden serverseitig geladen (KalenderPage). Ändert sich ein
-  // Objekt (Titel/Foto/Adresse/Status/Neuanlage/Löschung), die Server-Component
-  // neu laden, damit die Kalender-Ansichten nicht auf veralteten Objektzeilen
-  // stehen bleiben (Realtime-Pflicht — die einzelnen Ansichten abonnieren nur
-  // availability/preise, nicht die properties-Tabelle selbst).
-  useRealtime({ table: "properties", onChange: () => router.refresh() });
+  // Objekt (Titel/Foto/Adresse/Status/Neuanlage/Löschung), holt router.refresh()
+  // die frischen Zeilen. WICHTIG: router.refresh() erzeugt bei jedem Lauf ein neues
+  // `properties`-Array-Prop → CalendarBoard baut abgeleitete Callbacks (loadDays…)
+  // neu → ohne Bremse eine Render-Kaskade ("Maximum update depth exceeded").
+  // Darum HART entkoppeln: das Event stößt EINEN verzögerten, einmaligen refresh
+  // an (kein Re-Feuern innerhalb des Fensters), gesteuert über refs statt State,
+  // damit dieser Hook selbst nie zusätzliche Renders erzeugt.
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onPropsChange = useCallback(() => {
+    if (refreshTimer.current) return; // schon ein refresh geplant → nicht stapeln
+    refreshTimer.current = setTimeout(() => {
+      refreshTimer.current = null;
+      router.refresh();
+    }, 1500);
+  }, [router]);
+  useRealtime({ table: "properties", onChange: onPropsChange });
 
   const active: ViewKey = normalizeView(params.get("view"));
 

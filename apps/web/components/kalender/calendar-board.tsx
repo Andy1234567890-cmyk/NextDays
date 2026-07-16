@@ -1177,9 +1177,16 @@ export function CalendarBoard({
   }, [start, properties]);
 
   // Beim Scrollen: fehlende Blöcke um das sichtbare Fenster nachladen.
+  // ensureLoaded über eine ref, NICHT in den Deps: es hängt (via loadDays) an
+  // `properties`, das bei jedem router.refresh() eine neue Array-Referenz bekommt.
+  // Stünde ensureLoaded in den Deps, feuerte der Effect bei jedem Render neu
+  // (Maximum update depth exceeded). Der Effect soll NUR auf das sichtbare Fenster
+  // reagieren; die stets aktuelle ensureLoaded-Funktion kommt aus der ref.
+  const ensureLoadedRef = useRef(ensureLoaded);
+  ensureLoadedRef.current = ensureLoaded;
   useEffect(() => {
-    ensureLoaded(visFrom, visTo);
-  }, [visFrom, visTo, ensureLoaded]);
+    ensureLoadedRef.current(visFrom, visTo);
+  }, [visFrom, visTo]);
 
   // Beim ersten gerenderten Raster sofort (ohne Animation) auf „heute" scrollen,
   // damit der Nutzer nicht im Vergangenheits-Puffer landet. Nur einmal.
