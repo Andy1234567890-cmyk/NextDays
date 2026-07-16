@@ -284,7 +284,7 @@ class PaymentsService:
     # --- Stripe Connect (Custom, voll white-label) --------------------------
 
     def create_connect_account(
-        self, req: ConnectAccountCreate
+        self, tenant_id: str, req: ConnectAccountCreate
     ) -> ConnectAccountResponse:
         """Legt einen Stripe **Custom** Account für den Gastgeber an (kein Express,
         kein Stripe-Branding). Die KYC-Erfassung läuft anschließend über die eigene
@@ -310,7 +310,7 @@ class PaymentsService:
                         "transfers": {"requested": True},
                     },
                     "tos_acceptance": {"service_agreement": "full"},
-                    "metadata": {"tenant_id": req.tenant_id},
+                    "metadata": {"tenant_id": tenant_id},
                 }
             )
         return ConnectAccountResponse(stripe_account_id=account.id)
@@ -681,9 +681,16 @@ class PaymentsService:
                 status_code=422,
             )
         amount_cents = _to_cents(refund_amount) if amount is not None else None
+        # Deterministischer Idempotenz-Key (Wurzel 2): zwei nebenläufige Refunds
+        # (Doppelklick/Retry) passieren beide den Status-Guard oben, bevor einer
+        # den Status setzt — nur Stripes idempotency_key verhindert das zweite
+        # Geldereignis. Betrag im Key, damit eine legitime spätere Teilerstattung
+        # anderer Höhe nicht fälschlich denselben Key trifft.
+        idem_key = f"refund:{payment_id}:{amount_cents if amount_cents else 'full'}"
         with _stripe_errors():
             result = sc.refund(
-                payment["gateway_ref"], amount_cents, client=self._stripe
+                payment["gateway_ref"], amount_cents,
+                client=self._stripe, idempotency_key=idem_key,
             )
         self._insert_payment(
             db,

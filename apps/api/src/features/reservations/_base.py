@@ -254,74 +254,6 @@ class ReservationsBase:
             self._client, tenant_id, property_id, "availability", fields,
         )
 
-    def _push_hotel_room_type_availability(
-        self,
-        tenant_id: str,
-        property_id: str,
-        room_type_id: str,
-        check_in: date,
-        check_out: date,
-    ) -> None:
-        """Hotel: den AKTUELLEN freien Rest-Count je Nacht einer Zimmerkategorie
-        an Channex pushen (Rest = count_of_rooms − booked_count). Ein Weg für
-        BEIDE Richtungen — Buchung (Rest sinkt) und Freigabe/Storno (Rest steigt).
-        Anders als der binäre Ferienwohnungs-Push (fester 0/1-Wert) liest dieser
-        den tatsächlichen Bestand frisch aus room_type_availability, weil der
-        Rest-Count über den Zeitraum variiert (andere Buchungen überlappen
-        unterschiedlich). Zusammenhängende Nächte mit gleichem Rest werden zu
-        einem Enqueue-Range gebündelt (weniger Jobs). check_out exklusiv."""
-        if self._client is None:
-            return
-        capacity_row = (
-            self._db().table("room_types")
-            .select("count_of_rooms")
-            .eq("id", room_type_id)
-            .limit(1)
-            .execute()
-        ).data
-        if not capacity_row:
-            return
-        capacity = int(capacity_row[0]["count_of_rooms"])
-        booked_rows = (
-            self._db().table("room_type_availability")
-            .select("date, booked_count")
-            .eq("room_type_id", room_type_id)
-            .gte("date", check_in.isoformat())
-            .lt("date", check_out.isoformat())
-            .execute()
-        ).data or []
-        booked = {r["date"]: int(r["booked_count"]) for r in booked_rows}
-
-        # RLE über die Nächte: zusammenhängende Tage mit gleichem Rest-Count zu
-        # einem Enqueue bündeln. Tage ohne Zeile = 0 gebucht = voll frei.
-        run_start: date | None = None
-        run_value: int | None = None
-        cur = check_in
-
-        def _enqueue_run(last_day_incl: date) -> None:
-            if run_start is None or run_value is None:
-                return
-            try_enqueue_ari(
-                self._client, tenant_id, property_id, "availability",
-                {
-                    "date_from": run_start.isoformat(),
-                    "date_to": last_day_incl.isoformat(),
-                    "availability": run_value,
-                    "room_type_id": room_type_id,
-                },
-            )
-
-        while cur < check_out:
-            iso = cur.isoformat()
-            free = max(0, capacity - booked.get(iso, 0))
-            if run_value is None:
-                run_start, run_value = cur, free
-            elif free != run_value:
-                _enqueue_run(cur - timedelta(days=1))
-                run_start, run_value = cur, free
-            cur += timedelta(days=1)
-        _enqueue_run(check_out - timedelta(days=1))
-
     def _recompute_dynamic_pricing(self, tenant_id: str, property_id: str) -> None:
         """Dynamic-Pricing-Recompute als Job einreihen (Phase 2) — eine Buchung/
         Storno ändert Auslastung + Orphan-Lücken. Der Worker rechnet den Horizont
@@ -394,7 +326,6 @@ class ReservationsBase:
         reservation_id: str,
         *,
         recompute: bool = True,
-        room_type_id: str | None = None,
     ) -> None:
         """Gibt geräumte Nächte einer Reservierung frei — die EINE Stelle, an der
         eine Reservierung Kalendertage zurückgibt (move-Resize, cancel, künftig
@@ -402,26 +333,11 @@ class ReservationsBase:
         move()/cancel(), damit der Alt-/Neu-Diff nie an einer neuen Stelle
         vergessen werden kann (Wurzel: „Vorwärts-Schritt ohne Gegenzustand").
 
-        Verzweigt über die Zimmerkategorie der Reservierung (kein Typ-Flag):
-          - Ferienwohnung (room_type_id None): binäre availability-Freigabe
-            (status='open' + Channex availability=1), NUR für Tage, die keine
-            andere aktive Buchung noch belegt (sonst Überbuchung). Unverändert.
-          - Hotel (room_type_id gesetzt): den count-Zähler (booked_count) der
-            Kategorie je Nacht dekrementieren und den erhöhten Rest-Count an
-            Channex pushen. Es gibt KEINE binäre availability-Zeile für Hotels;
-            der Gegenzustand ist der Zähler (Wurzel 1).
-
-        Rechnet danach Dynamic Pricing neu (Auslastung/Orphan ändern sich),
-        sofern gewünscht.
+        1 Objekt = 1 Einheit: binäre availability-Freigabe (status='open' +
+        Channex availability=1), NUR für Tage, die keine andere aktive Buchung
+        noch belegt (sonst Überbuchung). Rechnet danach Dynamic Pricing neu.
         """
         if not nights:
-            return
-        if room_type_id is not None:
-            self._release_hotel_nights(
-                tenant_id, property_id, room_type_id, nights
-            )
-            if recompute:
-                self._recompute_dynamic_pricing(tenant_id, property_id)
             return
         still = self._days_still_booked_by_others(property_id, nights, reservation_id)
         release = [d for d in nights if d not in still]
@@ -438,30 +354,6 @@ class ReservationsBase:
         self._release_channex(tenant_id, property_id, release)
         if recompute:
             self._recompute_dynamic_pricing(tenant_id, property_id)
-
-    def _release_hotel_nights(
-        self, tenant_id: str, property_id: str, room_type_id: str,
-        nights: list[str],
-    ) -> None:
-        """Hotel-Gegenzustand: booked_count der Zimmerkategorie je freigegebener
-        Nacht um 1 senken (nie unter 0) und den erhöhten Rest-Count an Channex
-        pushen. Atomar je Tag über die RPC decrement_room_type_booked (Guard
-        booked_count > 0), damit nebenläufige Buchungen/Stornos den Zähler nicht
-        verfälschen (Wurzel 2). Der Push liest den frischen Rest-Count."""
-        if not nights:
-            return
-        # Exakte Tages-Liste (nicht [min,max]-Range) — eine Reservierung ist zwar
-        # zusammenhängend, aber die RPC soll nur die übergebenen Tage senken.
-        self._db().rpc(
-            "decrement_room_type_booked",
-            {"p_room_type_id": room_type_id, "p_dates": sorted(nights)},
-        ).execute()
-        lo, hi = min(nights), max(nights)
-        # check_out ist bei _push_hotel_room_type_availability exklusiv → hi + 1 Tag.
-        self._push_hotel_room_type_availability(
-            tenant_id, property_id, room_type_id,
-            date.fromisoformat(lo), date.fromisoformat(hi) + timedelta(days=1),
-        )
 
     def _release_channex(
         self, tenant_id: str, property_id: str, days: list[str]

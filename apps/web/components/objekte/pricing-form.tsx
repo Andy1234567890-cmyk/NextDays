@@ -18,7 +18,6 @@ import {
   Pill,
   useSaver,
 } from "@/components/objekte/editor-primitives";
-import { HotelRateGrid } from "@/components/objekte/hotel-rate-grid";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -84,9 +83,9 @@ export function PricingForm({ initial }: { initial: Property }) {
   const pr = readPricing(p.type_attributes);
 
   // Grundpreis-Wahrheit ist rate_plans (Resolver/Channex lesen NUR dort) — die
-  // Anzeige spiegelt den Plan, nicht die type_attributes-Kopie. Hotel (mehrere
-  // Pläne / kategorie-gebundene Pläne): kein einzelner Objekt-Grundpreis, die
-  // Pflege liegt in den Zimmerkategorien (Backend erzwingt das mit 409).
+  // Anzeige spiegelt den Plan, nicht die type_attributes-Kopie. Ein Objekt = eine
+  // Einheit; es kann mehrere Rate-Pläne haben (z. B. BAR/B&B) — dann gibt es keinen
+  // EINEN Objekt-Grundpreis, die Pläne werden im Kalender („Preise") gepflegt.
   const [plans, setPlans] = useState<RatePlan[]>([]);
   const loadPlans = useCallback(async () => {
     const res = await listRatePlans(p.id);
@@ -100,7 +99,7 @@ export function PricingForm({ initial }: { initial: Property }) {
     filter: `property_id=eq.${p.id}`,
     onChange: () => void loadPlans(),
   });
-  const multiPlan = plans.length > 1 || plans.some((pl) => pl.room_type_id);
+  const multiPlan = plans.length > 1;
   const basePlan = multiPlan ? null : (plans[0] ?? null);
   // rate_plans.currency ist als text gespeichert; die UI kennt nur den
   // Currency-Union — leere/unbekannte Werte rendern symbollos (lib/currency).
@@ -117,7 +116,7 @@ export function PricingForm({ initial }: { initial: Property }) {
     // Basispreis in rate_plans persistieren — die eine Preis-Wahrheit (Resolver,
     // Channex, Kalender). Auch 0 wird gespiegelt (Zurücksetzen muss wirken);
     // ohne gewählte Währung kein Push (Backend lehnt leere Währung ab, 422).
-    // Hotels nie: dort pflegt der Zimmerkategorien-Editor die Pläne.
+    // Bei mehreren Plänen am Objekt gibt es keinen einen Grundpreis — dann kein Upsert.
     if (!multiPlan && next.currency) {
       const rp = await setBasePrice(p.id, next.basePrice, next.currency);
       if (!rp.ok) return rp.error;
@@ -140,11 +139,12 @@ export function PricingForm({ initial }: { initial: Property }) {
         </div>
 
         {multiPlan ? (
-          // Hotel: die Preispflege der Pläne wohnt HIER (Rate-Grid: Zeile pro
-          // Kategorie × Plan; Grundpreis, Datumspreise, Min-Stay, Sync-Status).
-          // Zimmerkategorien behält nur die Struktur; das Backend lehnt den
-          // Objekt-Grundpreis-Upsert mit 409 ab.
-          <HotelRateGrid propertyId={p.id} />
+          // Mehrere Rate-Pläne am Objekt (z. B. BAR/B&B): kein EINER Objekt-
+          // Grundpreis. Die Pläne werden in der Kalender-Ansicht „Preise"
+          // datumsgenau gepflegt (Grundpreis, Datumspreise, Min-Stay).
+          <Card className="p-5 text-sm text-muted-foreground">
+            {t("pricingForm.multiPlanHint")}
+          </Card>
         ) : (
           <BlockCard
             title={t("pricingForm.basePriceTitle")}

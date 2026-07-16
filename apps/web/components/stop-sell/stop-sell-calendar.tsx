@@ -39,11 +39,10 @@ const COL = 5.5; // rem pro Tagesspalte
 const LABEL = 17; // rem für die Objekt-/Plan-Spalte
 const ROW_H = 3.5; // rem Zeilenhöhe
 
-// Zeilenmodell: FeWo = Objektzeile; Hotel = Kategorie-Band + Plan-Zeilen.
+// Zeilenmodell: eine Objektzeile ODER (Objekt mit mehreren Rate-Plänen) je Plan
+// eine Zeile. KEINE Zimmerkategorie-Ebene mehr.
 type PlanRow = { planId: string; label: string };
-type HotelStructure = {
-  categories: { id: string; title: string; plans: PlanRow[] }[];
-};
+type PropertyPlans = { plans: PlanRow[] };
 
 /** Verfügbarkeit blockweise laden — Fehler PROPAGIEREN (ein stilles [] würde
  *  gebuchte Tage als frei zeigen, Keine-Fallbacks-Regel). */
@@ -67,13 +66,10 @@ function monthWindow(year: number, month: number): { first: string; count: numbe
 
 export function StopSellCalendar({
   properties,
-  accommodationType,
   agencies,
   agenciesError = null,
 }: {
   properties: Property[];
-  // Betriebsart (wie CalendarViews): hotel → Kategorie×Plan-Zeilen.
-  accommodationType?: "vacation_rental" | "hotel" | null;
   agencies: AgencyOption[];
   /** Ladefehler der Partner-Liste — sichtbar machen statt leeres Select. */
   agenciesError?: string | null;
@@ -81,7 +77,6 @@ export function StopSellCalendar({
   const t = useTranslations("stopSell");
   const locale = useLocale();
   const today = useMemo(todayIso, []);
-  const isHotel = accommodationType === "hotel";
 
   // Monats-Navigation wie im Belegungsplan (Start: aktueller Monat).
   const [cursor, setCursor] = useState(() => ({
@@ -106,8 +101,9 @@ export function StopSellCalendar({
 
   const [avail, setAvail] = useState<Record<string, Record<string, DayAvailability>>>({});
   const [stops, setStops] = useState<Record<string, StopSellDay[]>>({});
-  // Hotel: Kategorie×Plan-Struktur je Objekt (aus dem Rate-Grid, nur Struktur).
-  const [structure, setStructure] = useState<Record<string, HotelStructure>>({});
+  // Rate-Pläne je Objekt (aus dem Rate-Grid, nur die Plan-Struktur). Objekt mit
+  // >1 Plan → je Plan eine Zeile; sonst nur die Objektzeile.
+  const [structure, setStructure] = useState<Record<string, PropertyPlans>>({});
   // Buchungen je Objekt × Nacht (Gastname im Tooltip — gleiche Wahrheit wie
   // der Belegungsplan). Nur für die Objekt-Ebene (FeWo) relevant.
   const [resByDay, setResByDay] = useState<Record<string, Record<string, Reservation>>>({});
@@ -175,34 +171,31 @@ export function StopSellCalendar({
     load();
   }, [load]);
 
-  // Hotel: Kategorie×Plan-Struktur laden (Rate-Grid, 1-Tages-Fenster reicht —
-  // es geht nur um die Struktur, nicht um Tageskurven).
+  // Rate-Pläne je Objekt laden (Rate-Grid, 1-Tages-Fenster reicht — nur Struktur).
+  // Ein Objekt mit mehreren Plänen (BAR/B&B) bekommt Plan-Zeilen, unabhängig von
+  // der Betriebsart.
   const loadStructure = useCallback(async () => {
-    if (!isHotel) return;
     const entries = await Promise.all(
       properties.map(async (p) => {
         const res = await getRateGrid(p.id, today, isoPlus(today, 1));
         if (!res.ok) {
           setError(res.error);
-          return [p.id, { categories: [] }] as const;
+          return [p.id, { plans: [] }] as const;
         }
         return [
           p.id,
           {
-            categories: res.data.room_types.map((rt) => ({
-              id: rt.id,
-              title: rt.title,
-              plans: rt.plans.map((pl) => ({
-                planId: pl.id,
-                label: pl.name,
-              })),
-            })),
+            // Nur bei >1 Plan Plan-Zeilen zeigen; ein Plan = reine Objektzeile.
+            plans:
+              res.data.plans.length > 1
+                ? res.data.plans.map((pl) => ({ planId: pl.id, label: pl.name }))
+                : [],
           },
         ] as const;
       }),
     );
     setStructure(Object.fromEntries(entries));
-  }, [isHotel, properties, today]);
+  }, [properties, today]);
 
   useEffect(() => {
     loadStructure();
@@ -215,7 +208,6 @@ export function StopSellCalendar({
   useRealtime({ table: "availability", onChange: load, enabled: !drag });
   useRealtime({ table: "reservations", onChange: load, enabled: !drag });
   useRealtime({ table: "rate_plans", onChange: loadStructure, enabled: !drag });
-  useRealtime({ table: "room_types", onChange: loadStructure, enabled: !drag });
 
   // Drag endet mit globalem mouseup → Auswahl normalisieren, Panel öffnen.
   useEffect(() => {
@@ -227,13 +219,10 @@ export function StopSellCalendar({
       if (!prop) return;
       let ratePlan: { id: string; label: string } | undefined;
       if (drag.planId) {
-        for (const cat of structure[drag.pid]?.categories ?? []) {
-          const plan = cat.plans.find((pl) => pl.planId === drag.planId);
-          if (plan) {
-            ratePlan = { id: plan.planId, label: `${cat.title} — ${plan.label}` };
-            break;
-          }
-        }
+        const plan = (structure[drag.pid]?.plans ?? []).find(
+          (pl) => pl.planId === drag.planId,
+        );
+        if (plan) ratePlan = { id: plan.planId, label: plan.label };
       }
       setSel({ propertyId: prop.id, propertyTitle: prop.title, start, end, ratePlan });
     };
@@ -490,62 +479,14 @@ export function StopSellCalendar({
               })}
             </div>
 
-            {/* Zeilen: FeWo = Objekt; Hotel = Objekt-Band + Kategorie-Band +
-                Plan-Zeilen (Zimmerkategorie × Rate-Plan). */}
-            {properties.map((p) => (
-              <div key={p.id}>
-                {isHotel ? (
-                  <>
-                    {/* Objekt-Band (nicht interaktiv; Reset am Band). */}
-                    <div className="flex border-b bg-secondary/60">
-                      <div
-                        className="sticky left-0 z-10 flex shrink-0 items-center gap-1 border-r bg-secondary/60 px-4 py-1.5 text-sm font-semibold backdrop-blur"
-                        style={{ width: `${LABEL}rem` }}
-                        title={p.title}
-                      >
-                        <span className="min-w-0 flex-1 truncate">{p.title}</span>
-                        {(stops[p.id]?.length ?? 0) > 0 && (
-                          <ResetRowButton
-                            label={t("resetProperty")}
-                            onClick={() => setReset({ target: p, confirmed: false })}
-                          />
-                        )}
-                      </div>
-                      {days.map((d) => (
-                        <div key={d} className="shrink-0 border-r" style={{ width: `${COL}rem` }} />
-                      ))}
-                    </div>
-                    {(structure[p.id]?.categories ?? []).map((cat) => (
-                      <div key={cat.id}>
-                        {/* Kategorie-Band — Spaltenlinien laufen durch. */}
-                        <div className="flex border-b bg-secondary/40">
-                          <div
-                            className="sticky left-0 z-10 shrink-0 border-r bg-secondary/40 px-4 py-1 text-xs font-semibold text-muted-foreground backdrop-blur"
-                            style={{ width: `${LABEL}rem` }}
-                          >
-                            {cat.title}
-                          </div>
-                          {days.map((d) => (
-                            <div key={d} className="shrink-0 border-r" style={{ width: `${COL}rem` }} />
-                          ))}
-                        </div>
-                        {cat.plans.map((plan) => (
-                          <div key={plan.planId} className="flex border-b last:border-b-0">
-                            <div
-                              className="sticky left-0 z-10 flex shrink-0 items-center border-r bg-card pl-7 pr-4 text-sm font-medium"
-                              style={{ width: `${LABEL}rem`, height: `${ROW_H}rem` }}
-                              title={`${cat.title} — ${plan.label}`}
-                            >
-                              <span className="min-w-0 flex-1 truncate">{plan.label}</span>
-                            </div>
-                            {renderCells(p, plan.planId, `${cat.title} — ${plan.label}`)}
-                          </div>
-                        ))}
-                      </div>
-                    ))}
-                  </>
-                ) : (
-                  <div className="flex border-b last:border-b-0">
+            {/* Zeilen: eine Objektzeile ODER (Objekt mit mehreren Rate-Plänen)
+                je Plan eine Zeile unter einem Objekt-Band. KEINE Kategorie-Ebene. */}
+            {properties.map((p) => {
+              const planRows = structure[p.id]?.plans ?? [];
+              if (planRows.length === 0) {
+                // Objektzeile (eine Einheit, ein oder kein Plan).
+                return (
+                  <div key={p.id} className="flex border-b last:border-b-0">
                     <div
                       className="sticky left-0 z-10 flex shrink-0 items-center gap-1 border-r bg-card px-4 text-sm font-medium"
                       style={{ width: `${LABEL}rem`, height: `${ROW_H}rem` }}
@@ -561,9 +502,44 @@ export function StopSellCalendar({
                     </div>
                     {renderCells(p, null, null)}
                   </div>
-                )}
-              </div>
-            ))}
+                );
+              }
+              // Objekt-Band + je Rate-Plan eine Zeile.
+              return (
+                <div key={p.id}>
+                  <div className="flex border-b bg-secondary/60">
+                    <div
+                      className="sticky left-0 z-10 flex shrink-0 items-center gap-1 border-r bg-secondary/60 px-4 py-1.5 text-sm font-semibold backdrop-blur"
+                      style={{ width: `${LABEL}rem` }}
+                      title={p.title}
+                    >
+                      <span className="min-w-0 flex-1 truncate">{p.title}</span>
+                      {(stops[p.id]?.length ?? 0) > 0 && (
+                        <ResetRowButton
+                          label={t("resetProperty")}
+                          onClick={() => setReset({ target: p, confirmed: false })}
+                        />
+                      )}
+                    </div>
+                    {days.map((d) => (
+                      <div key={d} className="shrink-0 border-r" style={{ width: `${COL}rem` }} />
+                    ))}
+                  </div>
+                  {planRows.map((plan) => (
+                    <div key={plan.planId} className="flex border-b last:border-b-0">
+                      <div
+                        className="sticky left-0 z-10 flex shrink-0 items-center border-r bg-card pl-7 pr-4 text-sm font-medium"
+                        style={{ width: `${LABEL}rem`, height: `${ROW_H}rem` }}
+                        title={plan.label}
+                      >
+                        <span className="min-w-0 flex-1 truncate">{plan.label}</span>
+                      </div>
+                      {renderCells(p, plan.planId, plan.label)}
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
           </div>
         </div>
 

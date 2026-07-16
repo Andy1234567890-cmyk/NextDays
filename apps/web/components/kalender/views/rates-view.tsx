@@ -1,11 +1,12 @@
 "use client";
 
-// Kalender-Ansicht „Preise" (Hotel-Rate-Grid): pro Zimmerkategorie eine Zeile je
-// Rate-Plan mit den ECHTEN Tagespreisen (Datumspreis > Objekt-Override > Dynamic
-// > Wochentag > Plan-Grundpreis) — dieselbe Wahrheit wie Buchungs-Quote und
-// Portale (/rates/grid, zentraler Resolver). Branchenmuster (Booking-Extranet,
-// SiteMinder): Kategorie-Kopf → Plan-Zeilen, Ziehen über Tage → kleiner
-// Bulk-Editor (Preis setzen / auf Grundpreis zurück), Umschalter Preise|Min-Stay.
+// Kalender-Ansicht „Preise": eine Zeile je Rate-Plan des Objekts mit den ECHTEN
+// Tagespreisen (Datumspreis > Objekt-Override > Dynamic > Wochentag >
+// Plan-Grundpreis) — dieselbe Wahrheit wie Buchungs-Quote und Portale
+// (/rates/grid, zentraler Resolver). Ziehen über Tage → kleiner Bulk-Editor
+// (Preis setzen / auf Grundpreis zurück), Umschalter Preise|Min-Stay|Restriktionen.
+// Ein Objekt = eine Einheit; mehrere Rate-Pläne (BAR/B&B) je Objekt möglich, KEINE
+// Zimmerkategorie-Ebene.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -100,7 +101,7 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
     setGrid(res.data);
     // Min-Stay- und Restriktions-Overrides je Plan (kleine Listen; Anzeige =
     // Override ?? Default) — parallel geladen.
-    const planIds = res.data.room_types.flatMap((rt) => rt.plans.map((p) => p.id));
+    const planIds = res.data.plans.map((p) => p.id);
     const loaded = await Promise.all(
       planIds.map(async (id) => {
         const [ms, rs] = await Promise.all([
@@ -136,7 +137,6 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
   useRealtime({ table: "rate_plan_restriction_overrides", onChange: reload });
   useRealtime({ table: "rate_plans", onChange: reload });
   useRealtime({ table: "rate_plan_sync_state", onChange: reload });
-  useRealtime({ table: "room_types", onChange: reload });
   useRealtime({ table: "price_overrides", onChange: reload });
   useRealtime({ table: "dynamic_prices", onChange: reload });
 
@@ -176,9 +176,7 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
       drag.current = null;
       if (!cur || !grid) return;
       const [lo, hi] = cur.from <= cur.to ? [cur.from, cur.to] : [cur.to, cur.from];
-      const plan = grid.room_types
-        .flatMap((rt) => rt.plans)
-        .find((p) => p.id === cur.planId);
+      const plan = grid.plans.find((p) => p.id === cur.planId);
       if (!plan) return;
       setEditor({
         planId: plan.id,
@@ -467,10 +465,10 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
             })}
           </div>
 
-          {grid?.room_types.map((rt) => (
-            <RoomTypeRows
-              key={rt.id}
-              roomType={rt}
+          {grid?.plans.map((plan) => (
+            <PlanRow
+              key={plan.id}
+              plan={plan}
               days={days}
               mode={mode}
               minStays={minStays}
@@ -482,7 +480,7 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
             />
           ))}
         </div>
-        {grid && grid.room_types.length === 0 && (
+        {grid && grid.plans.length === 0 && (
           <p className="p-6 text-center text-sm text-muted-foreground">
             {t("ratesView.empty")}
           </p>
@@ -497,8 +495,8 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
   );
 }
 
-function RoomTypeRows({
-  roomType,
+function PlanRow({
+  plan,
   days,
   mode,
   minStays,
@@ -508,7 +506,7 @@ function RoomTypeRows({
   onEnter,
   onResync,
 }: {
-  roomType: { id: string; title: string; plans: RateGridResponse["room_types"][number]["plans"] };
+  plan: RateGridResponse["plans"][number];
   days: string[];
   mode: Mode;
   minStays: Map<string, Map<string, number>>;
@@ -519,31 +517,11 @@ function RoomTypeRows({
   onResync: (planId: string) => void;
 }) {
   const t = useTranslations("calendar");
+  const byDate = new Map(plan.days.map((d) => [d.date, d]));
+  const ms = minStays.get(plan.id);
+  const rs = restrictions.get(plan.id);
   return (
-    <>
-      {/* Kategorie-Kopf (Branchenmuster: diese Ebene zeigt KEINEN Preis) —
-          durchgehendes Band, Spaltenlinien laufen weiter. */}
-      <div className="flex border-b bg-secondary/40">
-        <div
-          className="sticky left-0 z-20 shrink-0 border-r bg-secondary/40 px-4 py-1.5 text-sm font-semibold backdrop-blur"
-          style={{ width: `${LABEL}rem` }}
-        >
-          {roomType.title}
-        </div>
-        {days.map((d) => (
-          <div
-            key={d}
-            className="shrink-0 border-r"
-            style={{ width: `${COL}rem` }}
-          />
-        ))}
-      </div>
-      {roomType.plans.map((plan) => {
-        const byDate = new Map(plan.days.map((d) => [d.date, d]));
-        const ms = minStays.get(plan.id);
-        const rs = restrictions.get(plan.id);
-        return (
-          <div key={plan.id} className="flex border-b last:border-b-0">
+    <div className="flex border-b last:border-b-0">
             <div
               className="sticky left-0 z-20 flex shrink-0 items-center gap-2 border-r bg-card px-4 py-2"
               style={{ width: `${LABEL}rem` }}
@@ -665,9 +643,6 @@ function RoomTypeRows({
                 </button>
               );
             })}
-          </div>
-        );
-      })}
-    </>
+    </div>
   );
 }

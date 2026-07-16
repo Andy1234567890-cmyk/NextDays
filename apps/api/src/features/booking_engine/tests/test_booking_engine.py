@@ -500,3 +500,29 @@ def test_public_booking_rejects_past_check_in(monkeypatch) -> None:
         svc.create_public_booking(req)
     assert exc.value.status_code == 422
     db.rpc.assert_not_called()
+
+
+# --- Q-1: Max-Span-Guard gegen unauth DoS -------------------------------------
+def test_availability_rejects_huge_span() -> None:
+    from datetime import date
+
+    from src.features.booking_engine.service import (
+        BookingEngineError,
+        _assert_span,
+    )
+
+    # >730 Tage → 422.
+    try:
+        _assert_span(date(2026, 1, 1), date(9999, 12, 31))
+        raise AssertionError("huge span nicht abgelehnt")
+    except BookingEngineError as exc:
+        assert exc.status_code == 422
+    # Genau im Limit ok, None/None ok.
+    _assert_span(date(2026, 1, 1), date(2027, 1, 1))
+    _assert_span(None, None)
+    # Einzelnes Datum unvollständig → 422.
+    try:
+        _assert_span(date(2026, 1, 1), None)
+        raise AssertionError("halber Span nicht abgelehnt")
+    except BookingEngineError as exc:
+        assert exc.status_code == 422

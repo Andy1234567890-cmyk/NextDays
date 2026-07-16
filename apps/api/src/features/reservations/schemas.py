@@ -58,14 +58,9 @@ class ReservationCreate(BaseModel):
     # Optional: bestehenden Gast fest zuordnen (z. B. aus der Gästekarte). Wenn
     # gesetzt UND gültig, wird kein neuer Gast angelegt (keine Dublette).
     guest_id: str | None = None
-    # Hotel-Modus: gebuchte Zimmerkategorie (0140). None = Ferienwohnung (eine
-    # Einheit je Objekt, binäres availability-Modell). Gesetzt = der count-basierte
-    # Buchungs-Guard im RPC (0141) greift statt der binären availability.
-    room_type_id: str | None = None
-    # Hotel-Modus: der gebuchte Rate-Plan (0151). BAR und B&B derselben Kategorie
-    # kosten verschieden — der Quote MUSS den gewählten Plan bepreisen. None bei
-    # FeWo (ein Plan je Objekt) oder wenn der Aufrufer keinen wählt (dann gilt
-    # der älteste Plan der Kategorie als deterministischer Default).
+    # Der gebuchte Rate-Plan (0151). Ein Objekt kann mehrere Pläne haben (BAR/B&B)
+    # mit verschiedenen Preisen — der Quote MUSS den gewählten Plan bepreisen.
+    # None → der älteste Plan des Objekts als deterministischer Default.
     rate_plan_id: str | None = None
 
     @model_validator(mode="after")

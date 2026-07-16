@@ -316,17 +316,10 @@ class AriPushMixin:
     # mehr/wieder verkaufen. Persistiert in ari_outbox (Retry bei Ausfall).
     def _resolve_channex_room_type(
         self, db: Client, tenant_id: str, property_id: str,
-        room_type_id: str | None = None,
     ) -> dict[str, str] | None:
-        """property_id (+ optional room_type_id) → (channex_property_id,
-        channex_room_type_id). None, wenn nicht mit Channex verbunden.
-
-        Der local_unit_ref des Channex-Room-Type-Mappings ist die EINE Stelle, die
-        Ferienwohnung von Hotel trennt (kein Typ-Flag, spiegelt content_sync):
-          - room_type_id None → synthetischer Room-Type je Property
-            (local_unit_ref = property_id). Ferienwohnungs-Pfad, unverändert.
-          - room_type_id gesetzt → der Channex-Room-Type DIESER Zimmerkategorie
-            (local_unit_ref = room_type_id). Hotel-Pfad."""
+        """property_id → (channex_property_id, channex_room_type_id). None, wenn
+        nicht mit Channex verbunden. 1 Objekt = 1 Einheit: je Objekt EIN
+        synthetischer Channex-Room-Type (local_unit_ref = property_id)."""
         pm = (
             db.table("channex_property_map")
             .select("id, channex_property_id")
@@ -343,7 +336,7 @@ class AriPushMixin:
             .select("channex_room_type_id")
             .eq("tenant_id", tenant_id)
             .eq("property_map_id", pm[0]["id"])
-            .eq("local_unit_ref", room_type_id or property_id)
+            .eq("local_unit_ref", property_id)
             .is_("deleted_at", "null")
             .limit(1)
             .execute()
@@ -406,17 +399,11 @@ class AriPushMixin:
 
     def _newer_covered_days(
         self, db: Client, property_id: str, created_at: str, outbox_id: str | None,
-        room_type_id: str | None = None,
     ) -> set[str]:
         """ISO-Tage, die von einer NEUEREN ari_outbox-Zeile desselben Objekts
-        (UND derselben Zimmerkategorie) abgedeckt sind (created_at strikt später).
-        Diese Tage trägt die aktuelle Zeile NICHT mehr an Channex — die jüngste
-        Absicht je Tag gewinnt.
-
-        room_type_id trennt die Superseding-Domänen bei Hotels: eine neuere Zeile
-        von Kategorie A darf eine ältere Zeile von Kategorie B NICHT unterdrücken
-        (sonst würde ein Rest-Count für den falschen Zimmertyp verschluckt). None
-        (Ferienwohnung) matcht nur andere None-Zeilen desselben Objekts.
+        abgedeckt sind (created_at strikt später). Diese Tage trägt die aktuelle
+        Zeile NICHT mehr an Channex — die jüngste Absicht je Tag gewinnt (1 Objekt
+        = 1 Einheit, eine Superseding-Domäne je Objekt).
 
         Deckt beide Superseding-Lücken ab: (1) der schnelle Job-Pfad nutzt es
         (nicht nur der Cron), (2) es arbeitet TAG-GENAU (eine ältere Zeile wird
@@ -440,11 +427,6 @@ class AriPushMixin:
             .gt("created_at", created_at)
             .in_("status", ["pending", "done"])
         )
-        # Zimmerkategorie-Domäne trennen: gesetzt → nur Zeilen derselben Kategorie;
-        # None (Ferienwohnung) → nur die synthetischen Zeilen ohne room_type_id.
-        q = q.eq("room_type_id", room_type_id) if room_type_id else q.is_(
-            "room_type_id", "null"
-        )
         if outbox_id is not None:
             q = q.neq("id", outbox_id)
         rows = q.execute().data or []
@@ -461,7 +443,6 @@ class AriPushMixin:
         date_to: date,
         availability: int,
         outbox_id: str | None = None,
-        room_type_id: str | None = None,
     ) -> bool:
         """Verfügbarkeit (absolute Menge je Tag) für einen Zeitraum an Channex
         pushen. date_to inklusiv. Persistiert in ari_outbox und versucht den
@@ -474,12 +455,10 @@ class AriPushMixin:
         `outbox_id`: bereits vom Aufrufer persistierte ari_outbox-Zeile (z. B.
         atomar mit der Buchung über die RPC 0104). Dann wird DIESE Zeile
         abgearbeitet statt eine zweite anzulegen; ist sie nicht mehr 'pending'
-        (Cron war schneller), ist nichts zu tun. Ihre gespeicherte room_type_id
-        ist dann maßgeblich (überschreibt den Parameter).
+        (Cron war schneller), ist nichts zu tun.
 
-        `room_type_id`: bei Hotels die Zimmerkategorie — der Push geht an den
-        Channex-Room-Type DIESER Kategorie (Rest-Count), das Superseding trennt
-        nach Kategorie. None = Ferienwohnung (synthetischer Room-Type, binär)."""
+        1 Objekt = 1 Einheit: der Push geht an den synthetischen Channex-Room-Type
+        des Objekts (binär)."""
         if not self._channex.is_configured or self._db is None:
             return False
         db = self._db
@@ -489,7 +468,7 @@ class AriPushMixin:
         if outbox_id is not None:
             existing = (
                 db.table("ari_outbox")
-                .select("id,status,attempts,created_at,room_type_id")
+                .select("id,status,attempts,created_at")
                 .eq("id", outbox_id)
                 .limit(1)
                 .execute()
@@ -498,13 +477,8 @@ class AriPushMixin:
                 return False  # bereits abgearbeitet (Cron/Doppel) → fertig
             prior_attempts = existing[0]["attempts"] or 0
             created_at = str(existing[0].get("created_at") or "")
-            # Die persistierte Kategorie der Zeile gewinnt (der Aufrufer könnte den
-            # Parameter falsch/gar nicht setzen; die Zeile ist die Wahrheit).
-            room_type_id = existing[0].get("room_type_id")
 
-        mapping = self._resolve_channex_room_type(
-            db, tenant_id, property_id, room_type_id
-        )
+        mapping = self._resolve_channex_room_type(db, tenant_id, property_id)
         if mapping is None:
             return False  # nicht mit Channex verbunden → nichts zu pushen
         if not self._is_channex_managed(db, tenant_id, property_id):
@@ -517,7 +491,6 @@ class AriPushMixin:
                     {
                         "tenant_id": tenant_id,
                         "property_id": property_id,
-                        "room_type_id": room_type_id,
                         "date_from": date_from.isoformat(),
                         "date_to": date_to.isoformat(),
                         "availability": availability,
@@ -535,7 +508,7 @@ class AriPushMixin:
         # Freigabe) einen inzwischen live gegangenen neueren Wert (neue Buchung)
         # überschreibt — auch wenn die Jobs nebenläufig/umsortiert laufen.
         superseded = self._newer_covered_days(
-            db, property_id, created_at, outbox_id, room_type_id
+            db, property_id, created_at, outbox_id
         )
         push_ranges = _group_iso_days_to_ranges(
             set(_iso_days(date_from.isoformat(), date_to.isoformat())) - superseded
@@ -1473,14 +1446,10 @@ class AriPushMixin:
     @staticmethod
     def _superseding_days_by_row(rows: list[dict]) -> dict[str, set[str]]:
         """Je pending-Zeile die Tage, die von einer NEUEREN Zeile (späterer Index
-        bei created_at-Sortierung) desselben Objekts UND derselben Zimmerkategorie
-        abgedeckt sind. TAG-GENAU: eine ältere Zeile wird nur für die überlappenden
-        Tage übersprungen, ihre übrigen Tage gehen weiterhin an Channex (Teil-
-        Überlappung verliert keine Tage).
-
-        Die Kategorie-Trennung (room_type_id) verhindert, dass eine neuere Zeile
-        von Zimmertyp A den Rest-Count von Zimmertyp B verschluckt; None
-        (Ferienwohnung) supersediert nur andere None-Zeilen."""
+        bei created_at-Sortierung) desselben Objekts abgedeckt sind. TAG-GENAU:
+        eine ältere Zeile wird nur für die überlappenden Tage übersprungen, ihre
+        übrigen Tage gehen weiterhin an Channex (Teil-Überlappung verliert keine
+        Tage). 1 Objekt = 1 Einheit → eine Superseding-Domäne je Objekt."""
         by_row: dict[str, set[str]] = {}
         day_lists = [
             _iso_days(str(r["date_from"]), str(r["date_to"])) for r in rows
@@ -1490,8 +1459,6 @@ class AriPushMixin:
             older_days = set(day_lists[i])
             for j in range(i + 1, len(rows)):
                 if rows[j]["property_id"] != older["property_id"]:
-                    continue
-                if rows[j].get("room_type_id") != older.get("room_type_id"):
                     continue
                 covered |= older_days & set(day_lists[j])
             by_row[older["id"]] = covered
@@ -1518,30 +1485,13 @@ class AriPushMixin:
         for r in rows:
             result["processed"] += 1
             mapping = self._resolve_channex_room_type(
-                db, r["tenant_id"], r["property_id"], r.get("room_type_id")
+                db, r["tenant_id"], r["property_id"]
             )
             if mapping is None:
-                if r.get("room_type_id") is not None:
-                    # HOTEL: „kein Mapping" ist TRANSIENT — der Content-Sync für
-                    # diese Zimmerkategorie ist evtl. noch nicht gelaufen. Die Zeile
-                    # NICHT auf 'done' abhaken (das verwürfe den Rest-Count für
-                    # immer → Channex bliebe auf zu hohem Bestand, Überbuchung,
-                    # Wurzel 5). Stattdessen wie der Fehlerpfad: attempts erhöhen,
-                    # 'pending' lassen, bis das Mapping existiert; erst nach 10
-                    # Versuchen aufgeben (dauerhaft kaputte Zeile nicht ewig).
-                    attempts = (r["attempts"] or 0) + 1
-                    new_status = "failed" if attempts >= 10 else "pending"
-                    db.table("ari_outbox").update(
-                        {"status": new_status, "attempts": attempts,
-                         "last_error": "Room-Type-Mapping fehlt noch (Content-Sync ausstehend)"}
-                    ).eq("id", r["id"]).eq("status", "pending").execute()
-                    if new_status == "failed":
-                        result["failed"] += 1
-                    continue
-                # FeWo: „kein Mapping" ist PERMANENT (nie angelegt oder soft-
-                # deleted) → nichts zu pushen. Als done abhaken (übersprungen),
-                # damit der Cron nicht endlos retryt. _resolve_channex_room_type
-                # prüft bereits deleted_at IS NULL (deckt _is_channex_managed ab).
+                # „kein Mapping" ist PERMANENT (nie angelegt oder soft-deleted) →
+                # nichts zu pushen. Als done abhaken (übersprungen), damit der Cron
+                # nicht endlos retryt. _resolve_channex_room_type prüft bereits
+                # deleted_at IS NULL (deckt _is_channex_managed ab).
                 db.table("ari_outbox").update(
                     {"status": "done",
                      "last_error": "nicht bei Channex angelegt (übersprungen)"}
@@ -1558,7 +1508,6 @@ class AriPushMixin:
             # bei den OTAs. Symmetrisch zum schnellen push_availability-Pfad.
             superseded_days = superseding.get(r["id"], set()) | self._newer_covered_days(
                 db, r["property_id"], str(r.get("created_at") or ""), r["id"],
-                r.get("room_type_id"),
             )
             days = set(_iso_days(str(r["date_from"]), str(r["date_to"])))
             push_ranges = _group_iso_days_to_ranges(days - superseded_days)

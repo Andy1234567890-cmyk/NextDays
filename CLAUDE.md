@@ -1,8 +1,10 @@
 # NextDays — verbindliche Entwicklungsregeln
 
-Diese Regeln sind aus 156 real gefundenen Bugs (10 Bug-Jagd-Runden) destilliert.
-Es waren nicht 156 Ursachen, sondern **5 wiederkehrende Denkfehler**. Jede neue
-Änderung MUSS gegen diese 5 Wurzeln geprüft werden, BEVOR sie als fertig gilt.
+Diese Regeln sind aus 156 real gefundenen Bugs (10 Bug-Jagd-Runden) und einem
+mehrstufigen Security-/Red-Team-Audit destilliert. Es sind **9 wiederkehrende
+Denkfehler**: Wurzel 1–5 aus der Bug-Jagd, Wurzel 6–9 aus dem Security-Audit.
+Jede neue Änderung MUSS gegen diese 9 Wurzeln geprüft werden, BEVOR sie als fertig
+gilt. Hintergrund/Belege: `docs/SECURITY-REDTEAM.md`, `docs/SECURITY-AUDIT-STARTUP.md`.
 
 ## Wurzel 1 — Jede Aktion hat einen Gegenzustand, der mitgepflegt werden muss
 Wer Nächte/Sperren/Restriktionen/availability NEU setzt, MUSS die durch die
@@ -41,6 +43,77 @@ Vergleich über `core.security.secrets_match`, byteweise). Secret/Signatur fehlt
 fail-CLOSED (401/403), nie fail-open. Best-effort-`except` (Logging/Audit) ist ok,
 solange es den Hauptpfad nicht kippt (`# noqa: BLE001` markieren).
 
+## Datenmodell (UNVERHANDELBAR) — 1 property = 1 buchbare Einheit
+myNextDays ist EINE Plattform für Ferienobjekte UND Hotels, dasselbe Modell für
+beide. Jede `properties`-Zeile ist GENAU EINE buchbare Einheit: ein einzelnes
+**Zimmer** (Hotel) ODER ein **Ferienobjekt** (FeWo). NIE ein Objekt als
+„Hotelgebäude mit Zimmerkategorien darunter" deuten. Ein Hotel mit 8 Twin- und
+4 Double-Zimmern hat entsprechend viele Objekte — NICHT ein Objekt mit
+`count_of_rooms=8`. Konto/Tenant = der Betrieb (`/konto`); darunter die Objekte
+(= Zimmer/Ferienobjekte, `/objekte`). Vor JEDER Aussage/Änderung zu Zimmern/
+Verfügbarkeit/Kapazität dieses Modell zugrunde legen; im Zweifel den Nutzer
+fragen statt eine Container-/Kategorie-Ebene zu erfinden. Dieser Fehler ist
+mehrfach passiert und hat falsche Kapazitäten/Buchungen erzeugt.
+
+## Wurzel 6 — RLS erzwingt nur den MANDANTEN, nicht Rolle/Spalte/Schreibrichtung
+Ein Client mit gültigem JWT + öffentlichem anon-Key spricht PostgREST/Realtime
+DIREKT an — der FastAPI-Layer wird dabei komplett umgangen. Service-Layer-Checks
+(Rollen-Datensplit §4.3, Gast-Masking, Owner-read-only) sind daher WIRKUNGSLOS
+gegen einen Angreifer, der `curl /rest/v1/<tabelle>` macht. Schutz MUSS auf DB-Ebene:
+- `enable rls` + tenant-`for all`-Policy reicht NICHT für sensible Daten. Zusätzlich:
+  (a) `revoke insert,update,delete[,select] on public.<tabelle> from anon, authenticated`
+  für alles, was nur der Server (service_role) schreiben/lesen darf — Finanzen
+  (payments, commissions, owner_statements), `users.role`/`permissions`, Secrets,
+  Türcodes/Dossier; (b) restriktive Rollen-Policies `as restrictive for all` —
+  NICHT nur `for select`, sonst ist der SCHREIB-Pfad tenant-weit offen.
+- Spalten-`revoke select (spalte)` greift NICHT, solange das pauschale Tabellen-GRANT
+  besteht → erst das Tabellen-GRANT entziehen, dann gezielt gewähren.
+- Einmaliger Backstop: `revoke create on schema public from anon, authenticated`.
+- Scope-Helper (`owner_can_see_property`, `staff_can_see_property`) fail-CLOSED:
+  nur admin/co_admin explizit `true`, sonst Assignment prüfen — nie fail-open bei
+  unbekannter/fehlender Rolle.
+- SECURITY DEFINER-Funktionen IMMER `set search_path = ''` + schema-qualifiziert +
+  `revoke execute ... from anon, authenticated`.
+- Prüffrage vor „fertig": *Was kann ein eingeloggter cleaner mit dem anon-Key per
+  `curl` gegen `/rest/v1/<neue_tabelle>` lesen UND schreiben?* Das ist der reale
+  Schutz. (`scripts/security/redteam-verify.sh`)
+
+## Wurzel 7 — Auth-Kontrolle muss dort sitzen, wo der Angreifer wirklich einloggt
+Der direkte GoTrue-Login (`/auth/v1/token`, anon-Key) umgeht ALLE App-`/auth/*`-Flows.
+- MFA serverseitig erzwingen (Supabase-native, `aal2`-Claim prüfen) — nie nur im
+  eigenen `/auth/login`. Eine „App-2FA", die man durch Direkt-Login umgeht, schützt nichts.
+- Sicherheitskritische Selbst-Änderungen (E-Mail, Passwort, TOTP-Enroll/-Disable)
+  verlangen Re-Auth (aktuelles Passwort/TOTP). E-Mail-Wechsel NIE `email_confirm=True`
+  auto-bestätigen → Doppel-Opt-in an die NEUE Adresse.
+- Rechtevergebende/-prüfende Guards lesen die Rolle aus der DB (Quelle der Wahrheit),
+  nicht nur aus `ctx.role` im JWT (sonst gilt eine entzogene Rolle bis Token-Ablauf).
+- App-Ratelimit (10/60/IP) schützt nur die FastAPI-Route. Brute-Force/Stuffing am
+  GoTrue braucht Supabase Attack Protection (Captcha + Leaked-Password) — als
+  Betriebs-/Config-Anforderung behandeln, nicht als „im Code erledigt".
+
+## Wurzel 8 — Client-Input, der serverseitig gerendert/geholt/expandiert wird, ist ein Angriff
+- HTML NIE per Regex „säubern" → serverseitig mit Allowlist-Parser (`nh3`/DOMPurify)
+  beim SPEICHERN. `href`/`src`/URL-Felder: Schema-Whitelist (nur http(s)/mailto/tel/
+  relativ), sonst 422. Gilt auch für Daten aus OTA-/Webhook-Payloads (zweiter Ordnung).
+- Ausgehende Fetches auf nutzergelieferte URLs (iCal, Callbacks): IP auflösen, prüfen,
+  auf die GEPRÜFTE IP pinnen (Host-Header+SNI), nie per Hostname neu auflösen
+  (DNS-Rebinding); interne/CGNAT `100.64/10`/IPv4-mapped blocken; streamen mit Byte-Cap.
+- Kein serverseitiges Rendern von rohem Client-HTML ohne Auth (z. B. PDF-Render) +
+  Sub-Resource/interne-IP-Sperre.
+- Jeder unbegrenzte Bereich (Datums-Span, Nächte-Loop, Liste) bekommt eine harte
+  Obergrenze → 422. Teure/AI-/Report-Endpunkte bekommen einen EIGENEN strengen
+  Rate-Limit-Bucket, nicht den default.
+- Uploads: Magic-Byte-Prüfung (nicht nur Client-`content_type`), SVG sanitisieren,
+  sensible Buckets privat + signierte URLs, Bucket-Config in versionierter Migration.
+
+## Wurzel 9 — Item-Level-Autorisierung muss denselben Scope prüfen wie die Liste
+Wenn der List-Endpunkt nach assignee/owner filtert, MÜSSEN `detail`/`update`/
+`complete`/`{id}`-Endpunkte denselben Scope re-prüfen (assignee_id/owner_id), nicht
+nur den Tenant — sonst IDOR-in-role (fremde Aufgaben lesen/abschließen). State-changing
+oder daten-ausgebende Routen mit nur `get_current_user` (Authentifizierung) statt
+`require_permission` (Autorisierung) sind ein Fehler. Kein `email`/`permissions` an
+Rollen ausliefern, die es nicht brauchen (Recon für Priv-Esc).
+
 ---
 
 ## Mobile (apps/mobile) — gleiche Plattform, gleiche Regeln
@@ -70,9 +143,21 @@ Status in NOTES.md). Zusätzlich verbindlich:
 - DB-Änderung? Migration schreiben und via `supabase/apply-migrations.sh` live
   einspielen (nie automatisch), JEDE neue public-Tabelle bekommt RLS.
 - Realtime: jede neue Liste/Detail-UI abonniert alle speisenden Tabellen.
+- **Security-Gate (Wurzel 6–9):** neue/geänderte sensible Tabelle → `revoke` +
+  restriktive Rollen-Policy gesetzt und gedanklich per anon-Key-`curl` gegengeprüft
+  (lesen UND schreiben). Neuer serverseitiger Fetch/Render/HTML-Sink → sanitisiert/
+  IP-gepinnt/gecappt. Neuer `{id}`-Endpunkt → gleicher Scope wie der List-Pfad.
+- `uv pip-audit` (apps/api) und `npm/pnpm audit` (Frontend/Mobile) ohne offene CVE.
+- CI/Workflows berührt? third-party Actions per Commit-SHA gepinnt, `permissions:`
+  minimal (`contents: read`). Basis-Images per Digest gepinnt.
 
 ## Nicht tun
 - Keine Bug-Jagd-Loops „bis 0 Bugs" — das behandelt Symptome, nicht Wurzeln, und
   bläht Kosten/Volumen auf. Wiederkehrende Klassen an der Wurzel schließen.
 - Nichts committen/pushen/deployen ohne ausdrückliche Ansage.
 - Keine Tool-/KI-Attribution in Repo/Commits/PRs/Doku.
+- NIE echte Credentials/Secrets/Tokens in Repo-Dateien — auch nicht in
+  `.env.example`, Doku oder Kommentaren. Nur Platzhalter (`<DEIN_WERT>`). Rutscht doch
+  eins rein: rotieren + aus der Git-History entfernen (`git filter-repo`/BFG).
+- Sensible Tabellen NIE allein mit `enable rls` + tenant-Policy „absichern" — ohne
+  `revoke`/restriktive Rollen-Policy ist der DB-Direktpfad offen (Wurzel 6).

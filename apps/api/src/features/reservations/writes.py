@@ -55,71 +55,40 @@ class WritesMixin(ReservationsBase):
         if not prop.data:
             raise ReservationError("Objekt nicht gefunden.", status_code=404)
 
-        # 1b) room_type_id serverseitig scopen (Wurzel 3: der Anfrage nicht
-        #     vertrauen). Eine übergebene Zimmerkategorie MUSS zu DIESER Property
-        #     gehören — sonst könnte ein Client den count-Zähler einer fremden
-        #     Kategorie hochtreiben (oder eine echte Hotel-Property durch Weglassen
-        #     der ID in den binären FeWo-Pfad rutschen). Der Service-Role-Key
-        #     umgeht RLS, deshalb hier explizit gegen property_id + tenant_id.
-        if req.room_type_id is not None:
-            rt = (
-                self._db()
-                .table("room_types")
-                .select("id")
-                .eq("id", req.room_type_id)
-                .eq("property_id", req.property_id)
-                .eq("tenant_id", tenant_id)
-                .limit(1)
-                .execute()
-            )
-            if not rt.data:
-                raise ReservationError(
-                    "Zimmerkategorie nicht gefunden.", status_code=404
-                )
-
-        # 1c) Rate-Plan auflösen (0151). Übergeben → serverseitig scopen (muss zu
-        #     Property UND ggf. Kategorie gehören — Wurzel 3, kein Vertrauen in
-        #     die Anfrage). Nicht übergeben, aber Hotel-Kategorie gesetzt → der
-        #     älteste Plan der Kategorie als deterministischer Default; sonst
-        #     bepreiste der Quote den zufällig ältesten Plan des ganzen Objekts
-        #     (falscher Preis, falsche Währung).
+        # 1c) Rate-Plan auflösen (0151). Übergeben → serverseitig scopen (muss zum
+        #     Objekt gehören — Wurzel 3, kein Vertrauen in die Anfrage). Nicht
+        #     übergeben → der älteste Plan des Objekts als deterministischer Default.
         rate_plan_id = self._resolve_rate_plan(
-            tenant_id, req.property_id, req.room_type_id, req.rate_plan_id
+            tenant_id, req.property_id, req.rate_plan_id
         )
 
-        # 2) Double-Booking-Vorcheck (früher UX-Guard). NUR fürs Ferienwohnungs-
-        #    Modell (binäre availability). Bei Hotels (room_type_id gesetzt) ist
-        #    die binäre availability-Tabelle irrelevant — dort schützt der
-        #    count-basierte Guard IM RPC (0141, booked_count < count_of_rooms);
-        #    ein binärer Vorcheck würde das zweite freie Zimmer fälschlich
-        #    blockieren. Der RPC bleibt in BEIDEN Fällen der TOCTOU-sichere
-        #    Backstop.
+        # 2) Double-Booking-Vorcheck (früher UX-Guard): binäre availability
+        #    (1 Objekt = 1 Einheit). Der RPC bleibt der TOCTOU-sichere Backstop.
         nights = _nights(req.check_in, req.check_out)
-        if req.room_type_id is None:
-            avail = (
-                self._db()
-                .table("availability")
-                .select("date,status,source")
-                .eq("property_id", req.property_id)
-                .gte("date", req.check_in.isoformat())
-                .lt("date", req.check_out.isoformat())
-                .execute()
+        avail = (
+            self._db()
+            .table("availability")
+            .select("date,status,source")
+            .eq("property_id", req.property_id)
+            .gte("date", req.check_in.isoformat())
+            .lt("date", req.check_out.isoformat())
+            .execute()
+        )
+        # Kanal-Trennung: eine availability-Sperre mit source='portal' stammt
+        # aus dem Channex-Import und betrifft NUR OTAs — die Rezeption darf
+        # trotzdem buchen. Echte Belegung/manuelle Sperre (booked/manual/ical)
+        # blockt weiter (Überbuchungsschutz).
+        taken = [
+            r["date"]
+            for r in (avail.data or [])
+            if r["status"] != "open"
+            and availability_block_hits_channel(r.get("source"), RECEPTION)
+        ]
+        if taken:
+            raise ReservationError(
+                "Zeitraum enthält bereits belegte/gesperrte Tage.",
+                status_code=409,
             )
-            # Kanal-Trennung: eine availability-Sperre mit source='portal' stammt
-            # aus dem Channex-Import und betrifft NUR OTAs — die Rezeption darf
-            # trotzdem buchen. Echte Belegung/manuelle Sperre (booked/manual/ical)
-            # blockt weiter (Überbuchungsschutz).
-            taken = [
-                r["date"]
-                for r in (avail.data or [])
-                if r["status"] != "open"
-                and availability_block_hits_channel(r.get("source"), RECEPTION)
-            ]
-            if taken:
-                raise ReservationError(
-                    "Zeitraum enthält bereits belegte/gesperrte Tage.",
-                    status_code=409,
-                )
         # Stop-Sell-Schutz: ein Stop-Sell sperrt die Rezeptions-Buchung nur, wenn er
         # den Rezeptions-Kanal betrifft (scope='all' oder 'reception' im channels-
         # Set) UND die gebuchte Ebene trifft: Objekt-Stopp (rate_plan_id null)
@@ -195,9 +164,6 @@ class WritesMixin(ReservationsBase):
             "property_id": req.property_id,
             "guest_id": guest_id,
             "channel": req.channel.value,
-            # None bei Ferienwohnungen (Spalte bleibt leer, RPC nutzt binären
-            # Pfad); gesetzt bei Hotels → RPC führt den Zimmertyp-Zähler (0141).
-            **({"room_type_id": req.room_type_id} if req.room_type_id else {}),
             # Der bepreiste Rate-Plan (0151) — Preis-Wahrheit der Buchung, damit
             # Reprice/Anzeige denselben Plan rechnen wie die Erstbepreisung.
             **({"rate_plan_id": rate_plan_id} if rate_plan_id else {}),
@@ -251,16 +217,10 @@ class WritesMixin(ReservationsBase):
         #    hat die Rest-Count-Outbox-Zeilen bereits atomar geschrieben (Cron-
         #    Backstop); dieser Push ist die schnelle Bahn (tag-genaues Superseding
         #    macht ihn idempotent zur RPC-Zeile).
-        if req.room_type_id is None:
-            self._push_channex_availability(
-                tenant_id, req.property_id, req.check_in, req.check_out, 0,
-                outbox_id=result.get("outbox_id"),
-            )
-        else:
-            self._push_hotel_room_type_availability(
-                tenant_id, req.property_id, req.room_type_id,
-                req.check_in, req.check_out,
-            )
+        self._push_channex_availability(
+            tenant_id, req.property_id, req.check_in, req.check_out, 0,
+            outbox_id=result.get("outbox_id"),
+        )
         # Dynamic Pricing der betroffenen Tage neu rechnen (Auslastung/Orphan).
         self._recompute_dynamic_pricing(tenant_id, req.property_id)
 
@@ -309,48 +269,40 @@ class WritesMixin(ReservationsBase):
         self,
         tenant_id: str,
         property_id: str,
-        room_type_id: str | None,
         rate_plan_id: str | None,
     ) -> str | None:
         """Rate-Plan der Buchung bestimmen (0151).
 
-        Übergeben → MUSS zu Property (+ Kategorie, falls gesetzt) gehören, sonst
-        422 (Wurzel 3: Scope serverseitig, kein stiller Fallback auf einen
-        anderen Plan — das wäre der falsche Preis). Nicht übergeben → bei
-        Hotel-Kategorie der älteste Plan der Kategorie (deterministischer
-        Default), bei FeWo None (property-weites Bepreisen wie bisher).
+        Übergeben → MUSS zum Objekt gehören, sonst 422 (Wurzel 3: Scope
+        serverseitig, kein stiller Fallback auf einen anderen Plan — das wäre
+        der falsche Preis). Nicht übergeben → der älteste Plan des Objekts als
+        deterministischer Default (None, wenn das Objekt keinen Plan hat).
         """
         db = self._db()
         if rate_plan_id:
             q = (
                 db.table("rate_plans")
-                .select("id, room_type_id, properties!inner(tenant_id)")
+                .select("id, properties!inner(tenant_id)")
                 .eq("id", rate_plan_id)
                 .eq("property_id", property_id)
                 .eq("properties.tenant_id", tenant_id)
                 .limit(1)
                 .execute()
             ).data or []
-            if not q or (
-                room_type_id and q[0].get("room_type_id") not in (None, room_type_id)
-            ):
+            if not q:
                 raise ReservationError(
-                    "Rate-Plan gehört nicht zu diesem Objekt bzw. dieser "
-                    "Zimmerkategorie.", status_code=422,
+                    "Rate-Plan gehört nicht zu diesem Objekt.", status_code=422,
                 )
             return rate_plan_id
-        if room_type_id:
-            q = (
-                db.table("rate_plans")
-                .select("id")
-                .eq("property_id", property_id)
-                .eq("room_type_id", room_type_id)
-                .order("created_at")
-                .limit(1)
-                .execute()
-            ).data or []
-            return q[0]["id"] if q else None
-        return None
+        q = (
+            db.table("rate_plans")
+            .select("id")
+            .eq("property_id", property_id)
+            .order("created_at")
+            .limit(1)
+            .execute()
+        ).data or []
+        return q[0]["id"] if q else None
 
     def move(
         self, ctx: AuthContext, reservation_id: str, req: ReservationMove
@@ -415,19 +367,6 @@ class WritesMixin(ReservationsBase):
                 "verschieben — bitte die Änderung im Portal vornehmen.",
                 status_code=409,
             )
-        # Hotel-Reservierung (room_type_id gesetzt): der Move müsste den
-        # count-Zähler (booked_count) an Alt- UND Ziel-Tagen/-Kategorie atomar
-        # umbuchen. Der binäre Belegungs-Pfad unten kennt das count-Modell nicht
-        # und würde den Zähler NICHT pflegen (Überbuchung). Fail-closed, bis der
-        # count-basierte Move gebaut ist (Wurzel 1/5). Storno + Neubuchung sind
-        # der Ausweichweg (beide count-korrekt).
-        if current.get("room_type_id"):
-            raise ReservationError(
-                "Zimmerbuchungen lassen sich derzeit nicht verschieben — bitte "
-                "stornieren und neu buchen.",
-                status_code=409,
-            )
-
         old_property = current["property_id"]
         old_nights = {
             d.isoformat()
@@ -755,7 +694,6 @@ class WritesMixin(ReservationsBase):
         nights = _nights(_as_date(current["check_in"]), _as_date(current["check_out"]))
         self._release_nights(
             tenant_id, property_id, [d.isoformat() for d in nights], reservation_id,
-            room_type_id=current.get("room_type_id"),
         )
 
         # Audit: append-only Storno-Historie (Best-Effort — Log-Fehler darf die

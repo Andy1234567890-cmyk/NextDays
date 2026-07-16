@@ -16,6 +16,7 @@ from collections.abc import Callable
 from decimal import ROUND_HALF_UP, Decimal
 from typing import TYPE_CHECKING
 
+import nh3
 from postgrest.exceptions import APIError
 from supabase import Client
 
@@ -44,6 +45,36 @@ if TYPE_CHECKING:
     from src.features.payments.service import PaymentsService
 
 log = get_logger("nextdays.buchhaltung")
+
+# SVG-Allowlist für gast-sichtbare Firmenlogos (U-1, Stored XSS im public Bucket).
+# Nur reine Vektor-Grafik-Tags; script/foreignObject/on*-Handler/externe Referenzen
+# werden entfernt, sonst führt ein Direktaufruf des Logos Skript im Gast-Browser aus.
+_SVG_TAGS = {
+    "svg", "g", "path", "rect", "circle", "ellipse", "line", "polyline",
+    "polygon", "text", "tspan", "defs", "lineargradient", "radialgradient",
+    "stop", "clippath", "mask", "use", "title", "desc",
+}
+_SVG_ATTRS = {
+    "*": {
+        "d", "fill", "stroke", "stroke-width", "stroke-linecap",
+        "stroke-linejoin", "cx", "cy", "r", "rx", "ry", "x", "y", "x1", "y1",
+        "x2", "y2", "width", "height", "points", "transform", "viewbox",
+        "xmlns", "offset", "stop-color", "stop-opacity", "opacity", "fill-rule",
+        "clip-rule", "gradientunits", "gradienttransform", "id", "class",
+        "font-family", "font-size", "text-anchor",
+    },
+}
+
+
+def _sanitize_svg(content: bytes) -> bytes:
+    """SVG-Logo serverseitig auf reine Vektor-Grafik säubern (U-1). Entfernt
+    script/foreignObject/Event-Handler; behält nur Zeichen-Tags. Fail-closed:
+    parst nh3 den Inhalt nicht, bleibt nur harmloses Markup übrig."""
+    text = content.decode("utf-8", errors="replace")
+    cleaned = nh3.clean(
+        text, tags=_SVG_TAGS, attributes=_SVG_ATTRS, url_schemes=set(),
+    )
+    return cleaned.encode("utf-8")
 
 _CENT = Decimal("0.01")
 
@@ -988,12 +1019,12 @@ class BuchhaltungService:
         try:
             payments = PaymentsService(service_client=self._db)
             account = payments.create_connect_account(
+                tenant_id,
                 ConnectAccountCreate(
                     email=email,
                     country=country,
-                    tenant_id=tenant_id,
                     business_type=derived_business_type,
-                )
+                ),
             )
             self._db.table("tenant_billing_profile").update(
                 {"stripe_account_id": account.stripe_account_id}
@@ -1136,6 +1167,11 @@ class BuchhaltungService:
             )
         if len(content) > self.LOGO_MAX_BYTES:
             raise BuchhaltungError("Logo ist zu groß (max. 5 MB).", status_code=413)
+
+        # SVG landet im PUBLIC Bucket und wird Gästen gezeigt → vor dem Speichern
+        # sanitisieren (U-1, Stored XSS). Bitmaps sind unkritisch.
+        if ext == "svg":
+            content = _sanitize_svg(content)
 
         path = f"{tenant_id}/logo.{ext}"
         storage = self._db.storage.from_(self.LOGO_BUCKET)

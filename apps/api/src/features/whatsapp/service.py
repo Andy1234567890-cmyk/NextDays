@@ -13,7 +13,7 @@ from datetime import UTC, datetime, timedelta
 from supabase import Client
 
 from src.core.config import get_settings
-from src.core.logging import get_logger
+from src.core.logging import get_logger, mask_phone
 from src.core.security import AuthContext
 from src.features.guests.identity import (
     GuestContact as ResolverContact,
@@ -423,7 +423,7 @@ class WhatsAppService:
         wa_message_id = msg.get("id")
         tenant_id = self._resolve_tenant(db, wa_phone)
         if not tenant_id:
-            log.warning("whatsapp_no_tenant", wa_phone=wa_phone)
+            log.warning("whatsapp_no_tenant", wa_phone=mask_phone(wa_phone))
             return False
         conv = self._upsert_conversation(
             db, tenant_id, wa_phone, guest_name=contacts.get(wa_phone)

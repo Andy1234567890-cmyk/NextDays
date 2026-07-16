@@ -52,6 +52,26 @@ from .schemas import (
 log = get_logger("nextdays.guests")
 
 
+def _or_ilike_term(q: str) -> str:
+    """Suchbegriff für die PostgREST-``or``-Grammatik entschärfen (I-1).
+
+    Roh eingesetzt könnte ``q`` mit ``,`` ``.`` ``(`` ``)`` die Filter-Struktur
+    injizieren (Spalten-/Operator-Injection innerhalb des Tenants). Der Wert wird
+    in Doppelquotes gesetzt — darin behandelt PostgREST die Grammatik-Trenner als
+    Literale. Rohe ``"`` und ``\\`` würden den Quote-Kontext brechen und werden
+    daher entfernt; LIKE-Wildcards ``%``/``_`` bleiben als Literale erhalten (der
+    Nutzer sucht einen Teilstring, keine Wildcard-Semantik) — dazu werden sie
+    entfernt, statt sie zu escapen, weil der Quote-Kontext keinen ESCAPE-Zusatz
+    trägt. Fail-closed: der Begriff kann nur enger, nie breiter matchen."""
+    safe = (
+        q.replace("\\", "")
+        .replace('"', "")
+        .replace("%", "")
+        .replace("_", " ")
+    )
+    return f'"%{safe}%"'
+
+
 class GuestsError(Exception):
     """Fachlicher Fehler; vom Router auf HTTP-Status gemappt."""
 
@@ -124,11 +144,12 @@ class GuestsService:
         if blocked is not None:
             query = query.eq("is_blocked", blocked)
         if q:
-            # Suche über Name/E-Mail/Telefon/Firma (case-insensitive).
-            pattern = f"%{q}%"
+            # Suche über Name/E-Mail/Telefon/Firma (case-insensitive). Der Term
+            # wird für die or-Grammatik entschärft (I-1, Filter-Injection).
+            term = _or_ilike_term(q)
             query = query.or_(
-                f"name.ilike.{pattern},email.ilike.{pattern},"
-                f"phone.ilike.{pattern},company.ilike.{pattern}"
+                f"name.ilike.{term},email.ilike.{term},"
+                f"phone.ilike.{term},company.ilike.{term}"
             )
         res = (
             query.order("name").range(offset, offset + limit - 1).execute()

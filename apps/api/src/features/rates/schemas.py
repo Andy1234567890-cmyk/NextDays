@@ -17,10 +17,6 @@ class RatePlanCreate(BaseModel):
     # 27 EU-Länder) — fehlt sie, ist die Anfrage ein Datenfehler (422).
     currency: str = Field(min_length=1)
     min_stay: int = Field(default=1, ge=1)
-    # Hotel: die Zimmerkategorie, zu der dieser Preisplan gehört (Ferienwohnung:
-    # None). Ein Hotel-Rate-Plan wird nur an DEN Channex-Room-Type dieser Kategorie
-    # gepusht — mehrere Pläne je Kategorie (BAR, B&B …) mit eigenem Preis.
-    room_type_id: str | None = None
 
 
 class RatePlanUpdate(BaseModel):
@@ -37,9 +33,6 @@ class RatePlanResponse(BaseModel):
     base_price: float
     currency: str
     min_stay: int
-    # Hotel: Zimmerkategorie des Plans (None = Ferienwohnung). Nötig, damit die UI
-    # die Rate-Plans je Kategorie gruppieren kann (BAR/B&B je Room-Type).
-    room_type_id: str | None = None
     # Anzahl der datumsgenauen Preise dieses Plans (rate_plan_price_overrides).
     # Die Übersicht zeigt damit pro Plan, ob/wie viele Datumspreise gesetzt sind.
     date_price_count: int = 0
@@ -76,19 +69,14 @@ class RateGridPlan(BaseModel):
     days: list[RateGridDay] = []
 
 
-class RateGridRoomType(BaseModel):
-    id: str
-    title: str
-    plans: list[RateGridPlan] = []
-
-
 class RateGridResponse(BaseModel):
-    """Hotel-Rate-Grid für den Belegungsplan: je Zimmerkategorie die Pläne mit
-    ihren echten Tageskurven (Datumspreis > Override > Dynamic > Wochentag >
-    Plan-Basis) — dieselbe Wahrheit wie Quote und Channex-Push."""
+    """Rate-Grid für den Belegungsplan: alle Rate-Pläne des OBJEKTS mit ihren
+    echten Tageskurven (Datumspreis > Override > Dynamic > Wochentag >
+    Plan-Basis) — dieselbe Wahrheit wie Quote und Channex-Push. Ein Objekt =
+    eine Einheit; KEINE Zimmerkategorie-Ebene."""
 
     property_id: str
-    room_types: list[RateGridRoomType] = []
+    plans: list[RateGridPlan] = []
 
 
 class RatePlanPriceSet(BaseModel):

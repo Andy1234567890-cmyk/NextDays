@@ -9,9 +9,64 @@ from __future__ import annotations
 
 from enum import StrEnum
 
+import nh3
 from pydantic import BaseModel, Field, field_validator
 
 _HEX_RE = r"^#[0-9a-fA-F]{6}$"
+
+# Erlaubte Link-Schemata für gast-sichtbare hrefs (W-2, Stored-XSS-Schutz):
+# nur http(s)/mailto/tel + relative Pfade. `javascript:`/`data:`/`vbscript:`
+# u. a. werden abgelehnt. Fail-closed (Wurzel 5).
+_SAFE_HREF_SCHEMES = ("http://", "https://", "mailto:", "tel:")
+
+
+# Allowlist für gast-sichtbares Rich-Text (TipTap-Ausgabe). Nur Formatierung,
+# keine Skript-/Einbettungs-Vektoren. nh3 (ammonia) parst echtes HTML statt
+# Regex → entfernt <script>/<svg>/onerror/unquotierte javascript:-hrefs zuverlässig.
+_RICH_TEXT_TAGS = {
+    "p", "br", "strong", "b", "em", "i", "u", "s", "strike",
+    "ul", "ol", "li", "blockquote", "code", "pre",
+    "h1", "h2", "h3", "h4", "h5", "h6", "a", "span",
+}
+# `rel` NICHT hier — nh3 setzt es selbst via link_rel (sonst ValueError).
+_RICH_TEXT_ATTRS = {"a": {"href", "title", "target"}, "span": {"style"}}
+
+
+def _sanitize_rich_html(value: dict[str, str]) -> dict[str, str]:
+    """TipTap-HTML je Locale serverseitig mit echtem Allowlist-Parser säubern
+    (W-1, Stored-XSS). Ersetzt den umgehbaren Regex-Sanitizer im Renderer als
+    verbindlichen Backstop beim Speichern (Wurzel 5, fail-closed)."""
+    return {
+        locale: nh3.clean(
+            html or "",
+            tags=_RICH_TEXT_TAGS,
+            attributes=_RICH_TEXT_ATTRS,
+            url_schemes={"http", "https", "mailto", "tel"},
+            link_rel="noopener noreferrer nofollow",
+        )
+        for locale, html in (value or {}).items()
+    }
+
+
+def _validate_href(value: str | None) -> str | None:
+    """href/cta_href darf beim Gast-Klick kein Skript auslösen. Ein absoluter
+    Link muss ein erlaubtes Schema tragen; relative Pfade (beginnen mit / oder #
+    oder enthalten vor dem ersten / kein ':') sind erlaubt."""
+    if value is None:
+        return None
+    v = value.strip()
+    if not v:
+        return None
+    lower = v.lower()
+    if lower.startswith(_SAFE_HREF_SCHEMES):
+        return v
+    # Relativ/anchor: erlaubt, solange KEIN Schema (kein ':' vor dem ersten '/').
+    scheme_sep = v.find(":")
+    slash = v.find("/")
+    is_relative = scheme_sep == -1 or (slash != -1 and slash < scheme_sep)
+    if v.startswith(("/", "#", "?")) or is_relative:
+        return v
+    raise ValueError("Nicht erlaubtes Link-Schema (nur http(s)/mailto/tel/relativ).")
 
 
 class BookingMode(StrEnum):
@@ -146,11 +201,15 @@ class HeroContent(BaseModel):
     # Optionale Schrift-Familie (Schlüssel aus dem Font-Katalog); None = Marke.
     font_family: str | None = None
 
+    _v_cta_href = field_validator("cta_href")(_validate_href)
+
 
 class RichTextContent(BaseModel):
     html: dict[str, str] = Field(default_factory=dict)  # TipTap-HTML je Locale
     align: str = "left"  # "left" | "center"
     font_family: str | None = None
+
+    _v_html = field_validator("html")(_sanitize_rich_html)
 
 
 class ImageContent(BaseModel):
@@ -172,6 +231,8 @@ class ButtonContent(BaseModel):
     label: dict[str, str] = Field(default_factory=dict)
     href: str | None = None
     variant: str = "primary"  # "primary" | "secondary"
+
+    _v_href = field_validator("href")(_validate_href)
 
 
 class SpacerContent(BaseModel):

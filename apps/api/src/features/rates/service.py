@@ -22,7 +22,6 @@ from .schemas import (
     RateGridDay,
     RateGridPlan,
     RateGridResponse,
-    RateGridRoomType,
     RatePlanCreate,
     RatePlanListResponse,
     RatePlanMinStayDay,
@@ -96,7 +95,6 @@ class RatesService:
             base_price=float(r.get("base_price") or 0),
             currency=r.get("currency") or "",
             min_stay=int(r.get("min_stay") or 1),
-            room_type_id=r.get("room_type_id"),
             date_price_count=date_price_count,
             sync_status=sync_status,
         )
@@ -189,9 +187,11 @@ class RatesService:
     def rate_grid(
         self, ctx: AuthContext, property_id: str, date_from: date, date_to: date
     ) -> RateGridResponse:
-        """Hotel-Rate-Grid für den Belegungsplan: je Zimmerkategorie die Pläne mit
-        ihrer echten Tageskurve [date_from, date_to) aus dem zentralen Resolver —
-        dieselbe Wahrheit wie Quote und Channex-Push (kein zweiter Preis-Pfad)."""
+        """Rate-Grid für den Belegungsplan: alle Rate-Pläne des OBJEKTS mit ihrer
+        echten Tageskurve [date_from, date_to) aus dem zentralen Resolver —
+        dieselbe Wahrheit wie Quote und Channex-Push (kein zweiter Preis-Pfad).
+        Ein Objekt = eine Einheit; mehrere Pläne (BAR/B&B) je Objekt möglich,
+        KEINE Zimmerkategorie-Ebene."""
         from src.features.pricing.resolver import (  # noqa: PLC0415
             PricingError,
             PricingResolver,
@@ -203,20 +203,11 @@ class RatesService:
             raise RateError("date_to muss nach date_from liegen.", status_code=422)
         if (date_to - date_from).days > self._GRID_MAX_DAYS:
             raise RateError("Zeitraum zu groß.", status_code=422)
-        room_types = (
-            self._db()
-            .table("room_types")
-            .select("id, title, position")
-            .eq("property_id", property_id)
-            .order("position")
-            .execute()
-        ).data or []
         plans = (
             self._db()
             .table("rate_plans")
             .select("*")
             .eq("property_id", property_id)
-            .not_.is_("room_type_id", "null")
             .order("created_at")
             .execute()
         ).data or []
@@ -224,7 +215,7 @@ class RatesService:
         counts = self._date_price_counts(ids)
         states = self._sync_states(ids)
         resolver = PricingResolver(service_client=self._db())
-        by_room: dict[str, list[RateGridPlan]] = {}
+        grid_plans: list[RateGridPlan] = []
         for p in plans:
             try:
                 days = resolver.effective_prices(
@@ -232,7 +223,7 @@ class RatesService:
                 )
             except PricingError:
                 continue  # gelöschter/inkonsistenter Plan → Zeile weglassen
-            by_room.setdefault(str(p["room_type_id"]), []).append(
+            grid_plans.append(
                 RateGridPlan(
                     id=p["id"],
                     name=p.get("name") or "",
@@ -248,37 +239,12 @@ class RatesService:
                     ],
                 )
             )
-        return RateGridResponse(
-            property_id=property_id,
-            room_types=[
-                RateGridRoomType(
-                    id=rt["id"], title=rt.get("title") or "",
-                    plans=by_room.get(str(rt["id"]), []),
-                )
-                for rt in room_types
-                if by_room.get(str(rt["id"]))
-            ],
-        )
+        return RateGridResponse(property_id=property_id, plans=grid_plans)
 
     def create(self, ctx: AuthContext, req: RatePlanCreate) -> RatePlanResponse:
         tenant_id = self._require_tenant(ctx)
         prop = self._require_own_property(tenant_id, req.property_id)
-        # room_type_id serverseitig scopen (Wurzel 3): die Kategorie MUSS zu DIESER
-        # Property gehören — sonst könnte ein Client einen Preisplan an eine fremde
-        # Zimmerkategorie hängen (Service-Role umgeht RLS).
-        if req.room_type_id is not None:
-            rt = (
-                self._db()
-                .table("room_types")
-                .select("id")
-                .eq("id", req.room_type_id)
-                .eq("property_id", req.property_id)
-                .eq("tenant_id", tenant_id)
-                .limit(1)
-                .execute()
-            ).data
-            if not rt:
-                raise RateError("Zimmerkategorie nicht gefunden.", status_code=404)
+        # Rate-Pläne hängen am OBJEKT (mehrere je Objekt möglich, z. B. BAR/B&B).
         ins = (
             self._db()
             .table("rate_plans")
@@ -289,7 +255,6 @@ class RatesService:
                     "base_price": req.base_price,
                     "currency": req.currency,
                     "min_stay": req.min_stay,
-                    **({"room_type_id": req.room_type_id} if req.room_type_id else {}),
                 }
             )
             .execute()
@@ -319,16 +284,16 @@ class RatesService:
         existing = (
             self._db()
             .table("rate_plans")
-            .select("id, room_type_id")
+            .select("id")
             .eq("property_id", req.property_id)
             .order("created_at")
             .limit(2)
             .execute()
         ).data or []
-        if len(existing) > 1 or (existing and existing[0].get("room_type_id")):
+        if len(existing) > 1:
             raise RateError(
-                "Dieses Objekt hat mehrere Preispläne — Preise werden pro "
-                "Zimmerkategorie/Rate-Plan gepflegt.", status_code=409,
+                "Dieses Objekt hat mehrere Preispläne — die Preise werden in der "
+                "Kalender-Ansicht „Preise“ je Rate-Plan gepflegt.", status_code=409,
             )
         if existing:
             patch: dict[str, object] = {

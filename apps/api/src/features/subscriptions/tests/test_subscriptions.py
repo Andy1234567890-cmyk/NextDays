@@ -439,7 +439,11 @@ def test_bill_commissions_creates_stripe_invoice_item() -> None:
          "commission_amount": 3.5, "status": "pending"},
     ]
     svc = SubscriptionsService(service_client=db, stripe=stripe)
-    n = svc.bill_pending_commissions("t1", period="2026-07")
+    # period pro Lauf eindeutig (aus der frischen Customer-ID abgeleitet): der
+    # deterministische Stripe-idempotency_key comm:t1:<period> darf nicht über
+    # Testläufe hinweg mit anderen Parametern (neuer Customer) kollidieren.
+    period = f"2026-07-{customer['id'][-8:]}"
+    n = svc.bill_pending_commissions("t1", period=period)
     assert n == 2
     # Beide Zeilen jetzt invoiced + Item-ID gesetzt.
     assert all(r["status"] == "invoiced" for r in db.store["commission_ledger"])
@@ -448,4 +452,4 @@ def test_bill_commissions_creates_stripe_invoice_item() -> None:
     # 2,00 + 3,50 = 5,50 € = 550 Cent, aus Stripe gegengelesen.
     assert item["amount"] == 550
     # Idempotenz: zweiter Lauf findet keine pending mehr → 0.
-    assert svc.bill_pending_commissions("t1", period="2026-07") == 0
+    assert svc.bill_pending_commissions("t1", period=period) == 0

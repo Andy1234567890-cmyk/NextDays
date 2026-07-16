@@ -129,22 +129,6 @@ def test_set_base_price_multi_plan_409() -> None:
         assert exc.status_code == 409
 
 
-def test_set_base_price_room_typed_plan_409() -> None:
-    # Auch EIN Plan, der an eine Zimmerkategorie gebunden ist, ist kein
-    # Objekt-Grundpreis — Pflege gehört in die Kategorie.
-    svc = _svc({
-        "properties": [{"id": "p-1", "title": "Hotel"}],
-        "rate_plans": [{"id": "rp-1", "room_type_id": "rt-1"}],
-    })
-    try:
-        svc.set_base_price(
-            _ctx(), RatePlanCreate(property_id="p-1", base_price=50, currency="USD")
-        )
-        raise AssertionError("sollte 409 werfen")
-    except RateError as exc:
-        assert exc.status_code == 409
-
-
 def test_set_base_price_updates_only_price_and_currency() -> None:
     # FeWo (ein property-weiter Plan): Update fasst NUR base_price + currency an —
     # Name und min_stay sind fremde Pflege-Zustände (Wurzel 1).

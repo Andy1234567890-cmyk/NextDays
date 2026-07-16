@@ -104,7 +104,10 @@ class _Query:
             ok = False
             for t in self._or.split(","):
                 col, _op, pat = t.split(".", 2)
-                needle = pat.strip("%").lower()
+                # PostgREST-Grammatik: der Wert kann in Doppelquotes stehen
+                # (Trenner-Escaping). Quotes + Wildcards für den Literal-Vergleich
+                # entfernen (Muster wie im echten _or_ilike_term).
+                needle = pat.strip('"').strip("%").lower()
                 if needle in str(r.get(col) or "").lower():
                     ok = True
             if not ok:

@@ -606,6 +606,13 @@ class SubscriptionsService:
                 "Kein Stripe-Kunde/Abo — Provision nicht abrechenbar.",
                 status_code=409,
             )
+        # Idempotenz (Wurzel 2): Worker und manueller Endpoint können parallel
+        # laufen; beide lesen dieselben pending-Zeilen. Ein deterministischer
+        # idempotency_key aus tenant+period sorgt dafür, dass Stripe bei einem
+        # zweiten Lauf DASSELBE Invoice-Item zurückgibt statt ein zweites zu
+        # erzeugen (keine Doppel-Belastung). Der anschließende Ledger-Update ist
+        # ohnehin idempotent (Status pending→invoiced einmalig wirksam).
+        idem_key = f"comm:{tenant_id}:{period}"
         try:
             item = self._stripe.v1.invoice_items.create(
                 params={
@@ -614,7 +621,8 @@ class SubscriptionsService:
                     "currency": currency.lower(),
                     "description": f"OTA-Provision {period}",
                     "metadata": {"tenant_id": tenant_id, "period": period},
-                }
+                },
+                options={"idempotency_key": idem_key},
             )
         except _StripeError as exc:
             raise self._stripe_err(exc) from exc

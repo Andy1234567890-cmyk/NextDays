@@ -15,7 +15,7 @@ from supabase_auth import AuthResponse
 from supabase_auth.errors import AuthError as GoTrueAuthError
 
 from src.core.config import get_settings
-from src.core.logging import get_logger
+from src.core.logging import get_logger, mask_email
 from src.core.security import AuthContext
 
 from .granular_permissions import (
@@ -248,7 +248,7 @@ class AuthService:
                 {"email": email, "password": password.get_secret_value()}
             )
         except Exception as exc:
-            log.warning("login_failed", email=email, error=str(exc))
+            log.warning("login_failed", email=mask_email(email), error=str(exc))
             raise AuthError("Login fehlgeschlagen.", status_code=401) from exc
         if res.session is None or res.user is None:
             raise AuthError("Login fehlgeschlagen.", status_code=401)
@@ -490,7 +490,7 @@ class AuthService:
                 }
             )
         except Exception as exc:
-            log.warning("create_user_failed", email=email, error=str(exc))
+            log.warning("create_user_failed", email=mask_email(email), error=str(exc))
             raise AuthError(
                 "Benutzer konnte nicht angelegt werden (E-Mail evtl. vergeben).",
                 status_code=409,

@@ -5,17 +5,15 @@
 import { StopSellCalendar } from "@/components/stop-sell/stop-sell-calendar";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card } from "@/components/ui/card";
-import { getMe } from "@/lib/auth";
 import { listProperties } from "@/lib/properties";
 import { listAgencies } from "@/lib/travel-agencies";
 
 export const dynamic = "force-dynamic";
 
 export default async function StopSellPage() {
-  const [res, agencies, me] = await Promise.all([
+  const [res, agencies] = await Promise.all([
     listProperties(),
     listAgencies(),
-    getMe(),
   ]);
   if (!res.ok) {
     return (
@@ -33,7 +31,6 @@ export default async function StopSellPage() {
       <RealtimeRefresh tables={["travel_agencies", "properties"]} />
       <StopSellCalendar
         properties={res.data.items.map((p) => ({ id: p.id, title: p.title }))}
-        accommodationType={me?.accommodation_type ?? null}
         agencies={
           agencies.ok
             ? agencies.data.items.map((a) => ({ id: a.id, name: a.name }))

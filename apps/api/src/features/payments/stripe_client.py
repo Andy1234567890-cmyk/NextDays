@@ -122,11 +122,18 @@ def refund(
     amount_cents: int | None = None,
     *,
     client: StripeClient | None = None,
+    idempotency_key: str | None = None,
 ) -> dict[str, Any]:
-    """Rückerstattung zu einem PaymentIntent — voll oder Teilbetrag."""
+    """Rückerstattung zu einem PaymentIntent — voll oder Teilbetrag.
+
+    Mit ``idempotency_key`` fängt Stripe selbst eine Doppel-Erstattung durch
+    Doppelklick/Retry ab (Wurzel 2): identischer Key → identische Response, kein
+    zweites Geldereignis. Der Aufrufer bildet den Key deterministisch aus
+    payment_id + Betrag."""
     stripe = client or get_stripe()
     params: dict[str, Any] = {"payment_intent": payment_intent_id}
     if amount_cents is not None:
         params["amount"] = amount_cents
-    ref = stripe.v1.refunds.create(params=params)
+    options = {"idempotency_key": idempotency_key} if idempotency_key else None
+    ref = stripe.v1.refunds.create(params=params, options=options)
     return {"id": ref.id, "status": ref.status}

@@ -71,8 +71,8 @@ class ConnectAccountCreate(BaseModel):
     """Request: Stripe Custom Account für einen Gastgeber anlegen."""
     email: str
     country: str = "DE"          # ISO-3166-1 Alpha-2 (Standard: Deutschland)
-    tenant_id: str                # interner Tenant → wird als Metadata gespeichert
-    # "individual" (Einzelperson) oder "company" (Firma) — bestimmt die Stripe-
+    # tenant_id kommt NICHT aus dem Body (Wurzel 3) — der Service setzt sie aus
+    # dem Token. "individual" (Einzelperson) oder "company" (Firma) — bestimmt die Stripe-
     # Pflichtfelder. Default individual (häufigster Fall bei Vermietern).
     business_type: str = "individual"
 

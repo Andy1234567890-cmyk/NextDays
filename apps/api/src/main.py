@@ -38,7 +38,6 @@ from .features.property_portal.router import router as property_portal_router
 from .features.public_portal.router import router as public_portal_router
 from .features.rates.router import router as rates_router
 from .features.reservations.router import router as reservations_router
-from .features.room_types.router import router as room_types_router
 from .features.site_config.router import manage_router as site_config_manage_router
 from .features.site_config.router import public_router as site_config_public_router
 from .features.subscriptions.router import router as subscriptions_router
@@ -56,7 +55,6 @@ _SLICE_ROUTERS = [
     owner_statements_router,
     addons_router,
     rates_router,
-    room_types_router,
     pricing_router,
     calendar_router,
     reservations_router,
@@ -101,7 +99,15 @@ def create_app() -> FastAPI:
     configure_logging(settings.log_level, json_logs=not settings.is_local)
     log = get_logger("nextdays.api")
 
-    app = FastAPI(title="NextDays API", version="0.1.0", lifespan=_lifespan)
+    # Schema-Disclosure (OWASP A8): /docs, /redoc, /openapi.json nur lokal. In
+    # Prod exponiert das sonst die gesamte API-Struktur (kein Datenleck, aber
+    # Angreifer-Aufklärung) — die Endpunkte selbst bleiben ohnehin auth-geschützt.
+    _docs = {} if settings.is_local else {
+        "docs_url": None, "redoc_url": None, "openapi_url": None,
+    }
+    app = FastAPI(
+        title="NextDays API", version="0.1.0", lifespan=_lifespan, **_docs
+    )
 
     # CORS default-deny: mit allow_credentials=True würde Starlettes allow_methods=["*"]
     # die Request-Methode reflektieren und damit JEDE Methode (inkl. neuer wie QUERY,

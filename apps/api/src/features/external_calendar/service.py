@@ -29,6 +29,7 @@ log = get_logger("nextdays.external_calendar")
 
 _SYNC_TIMEOUT = 20.0
 _MAX_ICAL_BYTES = 5_000_000  # 5 MB Deckel — ein Belegungsfeed ist winzig
+_MAX_REDIRECTS = 5
 
 
 class ExternalCalendarError(Exception):
@@ -38,10 +39,32 @@ class ExternalCalendarError(Exception):
         self.status_code = status_code
 
 
-def _assert_public_url(url: str) -> None:
-    """SSRF-Schutz: nur http(s), und der aufgeloeste Host darf KEINE private/
-    lokale/Link-local-Adresse sein (sonst koennte ein Kunde uns interne Dienste
-    abrufen lassen). Fail-closed (Wurzel 5): im Zweifel ablehnen."""
+# CGNAT (RFC 6598) — von is_private NICHT erfasst, aber intern erreichbar.
+_CGNAT = ipaddress.ip_network("100.64.0.0/10")
+
+
+def _assert_public_ip(raw_ip: str) -> None:
+    ip = ipaddress.ip_address(raw_ip)
+    # IPv4-mapped IPv6 (::ffff:169.254.169.254) entpacken, sonst umgeht ein
+    # Angreifer die v4-Checks über die v6-Schreibweise.
+    if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped is not None:
+        ip = ip.ipv4_mapped
+    non_public = any((
+        ip.is_private, ip.is_loopback, ip.is_link_local,
+        ip.is_reserved, ip.is_multicast, ip.is_unspecified,
+        ip.version == 4 and ip in _CGNAT,
+    ))
+    if non_public:
+        raise ExternalCalendarError(
+            "URL zeigt auf eine nicht-öffentliche Adresse.", status_code=422
+        )
+
+
+def _resolve_public(url: str) -> list[str]:
+    """SSRF-Schutz: nur http(s), Host auflösen und JEDE aufgelöste IP prüfen —
+    keine private/lokale/link-local/CGNAT/mapped-Adresse. Fail-closed (Wurzel 5):
+    im Zweifel ablehnen. Gibt die geprüften IPs zurück, damit `_fetch` sich auf
+    genau EINE davon pinnt und den Host nicht erneut auflöst (DNS-Rebinding)."""
     parsed = urlparse(url)
     if parsed.scheme not in ("http", "https"):
         raise ExternalCalendarError("Nur http/https-URLs erlaubt.", status_code=422)
@@ -54,16 +77,37 @@ def _assert_public_url(url: str) -> None:
         raise ExternalCalendarError(
             "URL-Host nicht auflösbar.", status_code=422
         ) from exc
+    ips = []
     for info in infos:
-        ip = ipaddress.ip_address(info[4][0])
-        non_public = any((
-            ip.is_private, ip.is_loopback, ip.is_link_local,
-            ip.is_reserved, ip.is_multicast, ip.is_unspecified,
-        ))
-        if non_public:
-            raise ExternalCalendarError(
-                "URL zeigt auf eine nicht-öffentliche Adresse.", status_code=422
-            )
+        raw_ip = info[4][0]
+        _assert_public_ip(raw_ip)
+        ips.append(raw_ip)
+    if not ips:
+        raise ExternalCalendarError("URL-Host nicht auflösbar.", status_code=422)
+    return ips
+
+
+def _assert_public_url(url: str) -> None:
+    """Eingangs-Validierung (Anlegen): URL muss auf eine öffentliche Adresse
+    zeigen. Der eigentliche Fetch pinnt sich zusätzlich auf die IP (`_fetch`)."""
+    _resolve_public(url)
+
+
+def _swap_host(netloc: str, ip: str) -> str:
+    """Host im netloc durch die gepinnte IP ersetzen, Port/Userinfo erhalten.
+    IPv6-Adressen werden in eckige Klammern gesetzt."""
+    literal = f"[{ip}]" if ":" in ip else ip
+    # netloc kann userinfo@host:port enthalten; nur den Host-Teil tauschen.
+    at = netloc.rfind("@")
+    prefix = netloc[: at + 1] if at != -1 else ""
+    hostport = netloc[at + 1 :]
+    port = ""
+    if hostport.startswith("["):
+        end = hostport.find("]")
+        port = hostport[end + 1 :]
+    elif ":" in hostport:
+        port = ":" + hostport.rsplit(":", 1)[1]
+    return f"{prefix}{literal}{port}"
 
 
 class ExternalCalendarService:
@@ -216,12 +260,59 @@ class ExternalCalendarService:
         return res[0] if res else {**cal, **update}
 
     def _fetch(self, url: str) -> str:
-        """iCal laden (Redirects folgen — manche Anbieter 301). Größe deckeln."""
-        with httpx.Client(timeout=_SYNC_TIMEOUT, follow_redirects=True) as client:
-            resp = client.get(url, headers={"User-Agent": "myNextDays-Calendar/1.0"})
-            resp.raise_for_status()
-            content = resp.content[:_MAX_ICAL_BYTES]
-            return content.decode("utf-8", errors="replace")
+        """iCal laden. SSRF-hart:
+        - Redirects manuell (kein `follow_redirects`), JEDER Hop wird revalidiert.
+        - Pro Hop wird der Host aufgelöst, jede IP geprüft UND die Verbindung auf
+          genau die geprüfte IP gepinnt — so kann DNS zwischen Prüfung und Connect
+          nicht auf eine interne Adresse umbiegen (DNS-Rebinding/TOCTOU). TLS-Cert
+          und SNI validieren weiterhin gegen den echten Hostnamen.
+        - Body wird gestreamt und bei _MAX_ICAL_BYTES abgebrochen (kein
+          Multi-GB-Download → Memory-DoS).
+        Fail-closed (Wurzel 5)."""
+        base_headers = {"User-Agent": "myNextDays-Calendar/1.0"}
+        current = url
+        with httpx.Client(timeout=_SYNC_TIMEOUT, follow_redirects=False) as client:
+            for _ in range(_MAX_REDIRECTS + 1):
+                ips = _resolve_public(current)
+                parsed = urlparse(current)
+                host = parsed.hostname or ""
+                # Host-Header = Host(+Port), OHNE userinfo — die Ziel-Site erwartet
+                # ihren Namen, nicht user:pass@host.
+                host_header = host if parsed.port is None else f"{host}:{parsed.port}"
+                # Auf die geprüfte IP verbinden (Rebinding-Schutz), aber Host-Header
+                # und SNI/Cert-Prüfung gegen den echten Hostnamen halten.
+                pinned = parsed._replace(
+                    netloc=_swap_host(parsed.netloc, ips[0])
+                ).geturl()
+                request = client.build_request(
+                    "GET", pinned,
+                    headers={**base_headers, "Host": host_header},
+                    extensions={"sni_hostname": host},
+                )
+                resp = client.send(request, stream=True)
+                try:
+                    if resp.is_redirect:
+                        location = resp.headers.get("location")
+                        if not location:
+                            raise ExternalCalendarError(
+                                "Redirect ohne Ziel.", status_code=422
+                            )
+                        current = str(httpx.URL(current).join(location))
+                        continue
+                    resp.raise_for_status()
+                    return self._read_capped(resp)
+                finally:
+                    resp.close()
+        raise ExternalCalendarError("Zu viele Redirects.", status_code=422)
+
+    @staticmethod
+    def _read_capped(resp: httpx.Response) -> str:
+        buf = bytearray()
+        for chunk in resp.iter_bytes():
+            buf.extend(chunk)
+            if len(buf) > _MAX_ICAL_BYTES:
+                raise ExternalCalendarError("Feed zu groß.", status_code=422)
+        return bytes(buf).decode("utf-8", errors="replace")
 
     def _apply_nights(
         self, db: Client, property_id: str, calendar_id: str, booked: set[date]

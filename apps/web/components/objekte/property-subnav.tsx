@@ -28,9 +28,6 @@ const GROUPS: { labelKey: string; items: SubnavItem[] }[] = [
   {
     labelKey: "groupReservation",
     items: [
-      // Nur im Hotel-Modus: Zimmerkategorien (room_types) + je Kategorie eigene
-      // Rate-Plans. currency-neutrales Icon (kein €-Symbol — Hotel kann USD sein).
-      { slug: "zimmerkategorien", titleKey: "itemRoomCategories", icon: "ph:bed", hotelOnly: true },
       { slug: "preise", titleKey: "itemPrices", icon: "ph:tag" },
       { slug: "zusatzleistungen", titleKey: "itemAddons", icon: "ph:plus-circle" },
       { slug: "verfuegbarkeit", titleKey: "itemAvailability", icon: "ph:calendar-blank" },

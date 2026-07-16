@@ -13,9 +13,6 @@ export type RatePlan = {
   base_price: number;
   currency: string;
   min_stay: number;
-  // Hotel: Zimmerkategorie des Plans (null = Ferienwohnung). Erlaubt der UI, die
-  // Pläne je Kategorie zu gruppieren (BAR/B&B je Room-Type).
-  room_type_id: string | null;
   // Anzahl gesetzter Datumspreise (rate_plan_price_overrides); 0 = nur Basispreis.
   date_price_count: number;
   // Sync-Status DB↔Portale: 'synced' = Preise sind übertragen, 'pending' =
@@ -42,7 +39,9 @@ async function call<T>(
   }
 }
 
-// --- Hotel-Rate-Grid (Kalender-Ansicht „Preise") --------------------------
+// --- Rate-Grid (Kalender-Ansicht „Preise") --------------------------------
+// Ein Objekt = eine Einheit; es kann mehrere Rate-Pläne haben (BAR/B&B). Das
+// Grid liefert eine FLACHE Plan-Liste je Objekt — KEINE Zimmerkategorie-Ebene.
 
 export type RateGridDay = {
   date: string;
@@ -61,18 +60,12 @@ export type RateGridPlan = {
   days: RateGridDay[];
 };
 
-export type RateGridRoomType = {
-  id: string;
-  title: string;
+export type RateGridResponse = {
+  property_id: string;
   plans: RateGridPlan[];
 };
 
-export type RateGridResponse = {
-  property_id: string;
-  room_types: RateGridRoomType[];
-};
-
-/** Tageskurven aller Rate-Pläne eines Hotels [from, to) — dieselbe Preis-Wahrheit
+/** Tageskurven aller Rate-Pläne eines Objekts [from, to) — dieselbe Preis-Wahrheit
  *  wie Quote und Portale (zentraler Resolver, kein zweiter Preis-Pfad). */
 export async function getRateGrid(
   propertyId: string,
@@ -93,16 +86,14 @@ export async function listRatePlans(
   return call(`/rates?property_id=${encodeURIComponent(propertyId)}`);
 }
 
-/** Einen Rate-Plan anlegen — Hotel: einer Zimmerkategorie zugeordnet (roomTypeId),
- *  damit mehrere Pläne je Kategorie (BAR, B&B …) mit eigenem Preis entstehen. Die
- *  Währung wird IMMER explizit übergeben (kein EUR-Default — Zert läuft auf USD). */
+/** Einen Rate-Plan am OBJEKT anlegen (mehrere Pläne je Objekt möglich, z. B.
+ *  BAR/B&B). Die Währung wird IMMER explizit übergeben (kein EUR-Default). */
 export async function createRatePlan(input: {
   propertyId: string;
   name: string;
   basePrice: number;
   currency: string;
   minStay?: number;
-  roomTypeId?: string;
 }): Promise<Result<RatePlan>> {
   return call("/rates", {
     method: "POST",
@@ -112,7 +103,6 @@ export async function createRatePlan(input: {
       base_price: input.basePrice,
       currency: input.currency,
       min_stay: input.minStay ?? 1,
-      ...(input.roomTypeId ? { room_type_id: input.roomTypeId } : {}),
     },
   });
 }

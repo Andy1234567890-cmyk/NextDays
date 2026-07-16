@@ -44,7 +44,7 @@ export function BulkEditDialog({
   // einem Plan zuzuordnen (Twin/BAR ≠ Double/B&B). Leer/undefined = Objekt-Ebene
   // (Ferienwohnung), dann gilt jede Zeile für alle Pläne. category/plan trennen
   // die Zimmerkategorie vom Plannamen, damit das Dropdown nach Kategorie gruppiert.
-  ratePlans?: { id: string; label: string; category: string; plan: string }[];
+  ratePlans?: { id: string; label: string }[];
   onClose: () => void;
   onApplied: () => void;
 }) {
@@ -440,19 +440,11 @@ function RowsEditor({
   setRows,
 }: {
   propertyTitle: string;
-  ratePlans?: { id: string; label: string; category: string; plan: string }[];
+  ratePlans?: { id: string; label: string }[];
   rows: RestrictionRow[];
   setRows: (r: RestrictionRow[]) => void;
 }) {
   const hasPlans = (ratePlans?.length ?? 0) > 0;
-  // Pläne nach Zimmerkategorie gruppieren — als optgroup-Überschriften, damit
-  // gleichnamige Pläne (zwei „Best Available Rate") klar getrennt sind.
-  const plansByCategory = (ratePlans ?? []).reduce<
-    Record<string, { id: string; plan: string }[]>
-  >((acc, p) => {
-    (acc[p.category] ??= []).push({ id: p.id, plan: p.plan });
-    return acc;
-  }, {});
   function patch(i: number, next: Partial<RestrictionRow>) {
     setRows(rows.map((r, idx) => (idx === i ? { ...r, ...next } : r)));
   }
@@ -535,7 +527,7 @@ function RowsEditor({
           </div>
           {hasPlans && (
             <div className="flex flex-col gap-1">
-              <Label className="text-xs">Zimmerkategorie / Preisplan</Label>
+              <Label className="text-xs">Preisplan</Label>
               <NativeSelect
                 value={r.rate_plan_id ?? ""}
                 onChange={(e) =>
@@ -543,19 +535,15 @@ function RowsEditor({
                 }
               >
                 <option value="">Alle Preispläne</option>
-                {Object.entries(plansByCategory).map(([category, plans]) => (
-                  <optgroup key={category} label={category}>
-                    {plans.map((p) => {
-                      const taken = usedElsewhere(i, p.id);
-                      return (
-                        <option key={p.id} value={p.id} disabled={taken}>
-                          {p.plan}
-                          {taken ? " (bereits gewählt)" : ""}
-                        </option>
-                      );
-                    })}
-                  </optgroup>
-                ))}
+                {(ratePlans ?? []).map((p) => {
+                  const taken = usedElsewhere(i, p.id);
+                  return (
+                    <option key={p.id} value={p.id} disabled={taken}>
+                      {p.label}
+                      {taken ? " (bereits gewählt)" : ""}
+                    </option>
+                  );
+                })}
               </NativeSelect>
             </div>
           )}

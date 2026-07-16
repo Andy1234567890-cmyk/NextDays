@@ -9,7 +9,7 @@ dependencies = [
     "fastapi>=0.115",
     "uvicorn[standard]>=0.32",
     "pydantic>=2.9",
-    "pydantic-settings>=2.6",   # Config-Laden mit SecretStr
+    "pydantic-settings>=2.14.2", # Config-Laden mit SecretStr (>=2.14.2: GHSA-4xgf-cpjx-pc3j)
     "supabase>=2.9",            # Supabase-Client (Postgres/Auth/Storage)
     "redis>=5.2",               # Caching + Background-Queue
     "structlog>=24.4",          # strukturiertes Logging
@@ -19,6 +19,8 @@ dependencies = [
     "pyotp>=2.9",               # TOTP-2FA (Authenticator-App, kein SMS-Dienst)
     "qrcode[pil]>=8.0",         # QR-Code (otpauth-URI) für die App-Einrichtung
     "stripe>=15.3.0",            # Stripe Connect (Marketplace-Zahlungen)
+    "pillow>=12.3.0",           # transitiv via qrcode[pil]; >=12.3.0 schließt 8 CVEs (PYSEC-2026-*)
+    "nh3>=0.2.18",              # HTML-Sanitizer (Rust/ammonia) für gast-sichtbares Rich-Text
 ]
 
 [project.optional-dependencies]
@@ -59,7 +61,9 @@ ignore-paths = ["^.*/tests/.*$"]
 # ist real installiert (redis>=5.2) und importiert zur Laufzeit sauber — nur die
 # statische Analyse stolpert. Gezielt ignorieren, damit kein Falsch-Positiv die
 # 10.00 drückt (sync-Client im Worker-Budget, async-Client im HTTP-Limiter).
-ignored-modules = ["redis", "redis.asyncio"]
+# nh3 ist ein Rust-Extension-Modul (ammonia-Binding); astroid kann `nh3.clean`
+# statisch nicht auflösen (falscher E1101). Real installiert (nh3>=0.2.18).
+ignored-modules = ["redis", "redis.asyncio", "nh3"]
 
 [tool.pylint.format]
 max-line-length = 100

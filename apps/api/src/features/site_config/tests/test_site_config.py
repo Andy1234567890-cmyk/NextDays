@@ -564,3 +564,33 @@ def test_draft_invalid_page_id_404_not_500() -> None:
     with pytest.raises(SiteConfigError) as exc:
         svc.resolve_page_draft("nope", "x.y")
     assert exc.value.status_code == 404
+
+
+# --- W-1 / W-2: Stored-XSS-Schutz (Rich-Text-Sanitizer + href-Allowlist) ------
+def test_rich_text_html_sanitized_on_save() -> None:
+    from src.features.site_config.schemas import RichTextContent
+
+    rt = RichTextContent(html={"de": (
+        "<p>ok</p><script>alert(1)</script>"
+        "<img src=x onerror=alert(2)>"
+        "<a href=javascript:alert(3)>x</a><svg/onload=alert(4)>"
+    )})
+    cleaned = rt.html["de"]
+    for bad in ("script", "onerror", "javascript", "svg", "onload"):
+        assert bad not in cleaned
+    assert "<p>ok</p>" in cleaned
+
+
+def test_button_href_rejects_javascript() -> None:
+    import pytest as _pytest
+
+    from src.features.site_config.schemas import ButtonContent, HeroContent
+
+    for scheme in ("javascript:alert(1)", "vbscript:x", "data:text/html,x"):
+        with _pytest.raises(Exception):  # noqa: B017, PT011
+            ButtonContent(href=scheme)
+        with _pytest.raises(Exception):  # noqa: B017, PT011
+            HeroContent(cta_href=scheme)
+    # Erlaubt: http(s), mailto, tel, relativ, anchor.
+    for good in ("https://x.de", "mailto:a@b.de", "tel:+49", "/kontakt", "#top"):
+        assert ButtonContent(href=good).href == good

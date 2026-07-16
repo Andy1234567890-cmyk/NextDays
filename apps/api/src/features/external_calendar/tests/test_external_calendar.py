@@ -113,6 +113,38 @@ def test_ssrf_blocks_non_public(bad: str) -> None:
         _assert_public_url(bad)
 
 
+def test_fetch_revalidates_redirect_target(monkeypatch: pytest.MonkeyPatch) -> None:
+    """DNS-Rebinding/Redirect-SSRF: ein harmloser Feed leitet per 302 auf eine
+    interne Adresse um → der Fetch MUSS die Zwischenstation erneut auflösen,
+    prüfen und ablehnen (Wurzel 5, fail-closed)."""
+    import httpx
+
+    def _handler(_req: httpx.Request) -> httpx.Response:
+        # Erster Hop (auf die gepinnte öffentliche IP) → 302 auf internen Host.
+        return httpx.Response(302, headers={"location": "http://internal.test/i"})
+
+    orig_client_init = httpx.Client.__init__
+
+    def _init(self: httpx.Client, **kwargs: Any) -> None:  # noqa: ANN401
+        kwargs["transport"] = httpx.MockTransport(_handler)
+        orig_client_init(self, **kwargs)
+
+    monkeypatch.setattr(httpx.Client, "__init__", _init)
+    # feed.example.com → öffentlich (Fetch erreicht Redirect-Logik),
+    # internal.test → intern (muss abgelehnt werden).
+    monkeypatch.setattr(
+        "src.features.external_calendar.service.socket.getaddrinfo",
+        lambda host, *_a, **_k: (
+            [(2, 1, 6, "", ("93.184.216.34", 0))]
+            if host == "feed.example.com"
+            else [(2, 1, 6, "", ("127.0.0.1", 0))]
+        ),
+    )
+    svc = ExternalCalendarService()
+    with pytest.raises(ExternalCalendarError):
+        svc._fetch("http://feed.example.com/cal.ics")  # noqa: SLF001
+
+
 # --- Fake-DB für Sync-Tests -----------------------------------------------
 class _Tbl:
     def __init__(self, store: dict, name: str) -> None:
@@ -317,3 +349,17 @@ def test_health() -> None:
     r = client.get("/api/v1/external-calendar/health")
     assert r.status_code == 200
     assert r.json()["status"] == "ok"
+
+
+def test_docs_disabled_in_prod(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A8: /docs, /redoc, /openapi.json dürfen in Prod (app_env != local) NICHT
+    erreichbar sein — nur lokal."""
+    from src.core.config import get_settings
+
+    get_settings.cache_clear()
+    monkeypatch.setenv("APP_ENV", "production")
+    prod_app = create_app()
+    prod_client = TestClient(prod_app)
+    assert prod_client.get("/openapi.json").status_code == 404
+    assert prod_client.get("/docs").status_code == 404
+    get_settings.cache_clear()

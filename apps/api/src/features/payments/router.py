@@ -74,7 +74,8 @@ def create_connect_account(
     """Custom-Account für den Gastgeber anlegen (kein Stripe-Branding). Die KYC-
     Erfassung läuft danach über die eigene UI (update/external-account)."""
     try:
-        return service.create_connect_account(req)
+        # tenant_id AUSSCHLIESSLICH aus dem Token (Wurzel 3), nie aus dem Body.
+        return service.create_connect_account(ctx.tenant_id, req)
     except PaymentsError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

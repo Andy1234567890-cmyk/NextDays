@@ -503,16 +503,13 @@ export function CalendarBoard({
   // Hotel: Preispläne des Objekts, für das der Bulk-Dialog offen ist — damit eine
   // Restriktions-Zeile gezielt EINEN Plan treffen kann (Twin/BAR ≠ Double/B&B)
   // statt an allen Plänen gespiegelt zu werden. FeWo: bleibt leer.
-  const [bulkPlans, setBulkPlans] = useState<
-    { id: string; label: string; category: string; plan: string }[]
-  >([]);
-  // Hotel: die Preispläne des Objekts laden, sobald der Bulk-Dialog aufgeht. Der
-  // Grid-Endpunkt liefert Kategorie + Pläne. `category` trägt die Zimmerkategorie
-  // separat, damit das Dropdown nach Kategorie gruppieren kann (zwei gleichnamige
-  // Pläne wie „Best Available Rate" sind sonst in einer flachen Liste kaum
-  // auseinanderzuhalten — genau die Verwechslungsquelle bei den Zert-Tests).
+  const [bulkPlans, setBulkPlans] = useState<{ id: string; label: string }[]>([]);
+  // Die Preispläne des Objekts laden, sobald der Bulk-Dialog aufgeht — ein Objekt
+  // kann mehrere Rate-Pläne haben (z. B. BAR/B&B). Eine Restriktions-Zeile kann so
+  // gezielt EINEN Plan treffen statt an allen gespiegelt zu werden. Nur bei mehr
+  // als einem Plan sinnvoll (ein Plan = keine Auswahl nötig).
   useEffect(() => {
-    if (!bulk || accommodationType !== "hotel") {
+    if (!bulk) {
       setBulkPlans([]);
       return;
     }
@@ -521,15 +518,11 @@ export function CalendarBoard({
     const to = key(addDays(new Date(`${bulk.checkIn}T00:00:00`), 1));
     void getRateGrid(bulk.pid, from, to).then((res) => {
       if (cancelled || !res.ok) return;
+      const plans = res.data.plans;
       setBulkPlans(
-        res.data.room_types.flatMap((rt) =>
-          rt.plans.map((p) => ({
-            id: p.id,
-            label: `${rt.title} — ${p.name}`,
-            category: rt.title,
-            plan: p.name,
-          })),
-        ),
+        plans.length > 1
+          ? plans.map((p) => ({ id: p.id, label: p.name }))
+          : [],
       );
     });
     return () => {
@@ -1800,11 +1793,11 @@ export function CalendarBoard({
                               <>
                                 {/* Personenzahl steht als Badge hinter dem Zimmernamen
                                     (konstant je Objekt) → in der Tageszelle nur Preis,
-                                    Mindestaufenthalt und An-/Abreise-Sperren.
-                                    Hotel: KEIN Objekt-Preis — es gäbe keinen einen
-                                    Preis (mehrere Pläne je Kategorie); die Preise
-                                    wohnen in der Ansicht „Preise" (Rate-Grid). */}
-                                {view.showPrice && accommodationType !== "hotel" && (
+                                    Mindestaufenthalt und An-/Abreise-Sperren. Der
+                                    Tagespreis kommt aus dem Board-Endpunkt (effektiver
+                                    Objektpreis); bei mehreren Plänen werden Details in
+                                    der Ansicht „Preise" gepflegt. */}
+                                {view.showPrice && (
                                   <span className={`flex items-center gap-1 ${inSel ? "text-white" : "text-muted-foreground"}`}>
                                     {fmtPrice(priceMap[key(d)], propCurrency)}
                                     {priceSrcMap[key(d)] === "dynamic" && (
