@@ -43,7 +43,11 @@ export function RatePlanPriceCalendar({
   const t = useTranslations("roomTypes");
   const months = t("months").split(",");
   const weekdays = t("weekdays").split(",");
-  const [year, setYear] = useState(() => new Date().getUTCFullYear());
+  // Ein-Monats-Großansicht: aktueller Monat/Jahr, per Pfeil navigierbar.
+  const [cursor, setCursor] = useState(() => {
+    const now = new Date();
+    return { year: now.getUTCFullYear(), month: now.getUTCMonth() };
+  });
   const [prices, setPrices] = useState<Map<string, number>>(new Map());
   const [priceInput, setPriceInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -138,79 +142,78 @@ export function RatePlanPriceCalendar({
 
   const selectedCount = dragDays.size;
 
+  const goMonth = (delta: number) =>
+    setCursor((c) => {
+      const d = new Date(Date.UTC(c.year, c.month + delta, 1));
+      return { year: d.getUTCFullYear(), month: d.getUTCMonth() };
+    });
+
   return (
-    <div className="flex flex-col gap-3">
-      {/* Sticky Steuerleiste: Preis-Eingabe + Jahres-Navigation bleiben beim
-          Scrollen durch die 12 Monate immer sichtbar. */}
-      <div className="sticky top-0 z-10 flex flex-col gap-2 rounded-lg border bg-background/95 p-3 backdrop-blur">
-        <div className="flex flex-wrap items-center gap-2">
-          <Input
-            type="number"
-            min={0}
-            step="0.01"
-            inputMode="decimal"
-            placeholder={t("rpcPricePlaceholder", { currency: currency || "—" })}
-            value={priceInput}
-            onChange={(e) => setPriceInput(e.target.value)}
-            className="w-44"
-          />
-          {selectedCount > 0 && (
-            <span className="rounded-full bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent-foreground">
-              {t("rpcSelectedDays", { count: selectedCount })}
-            </span>
-          )}
-          <span className="min-w-0 flex-1 text-sm text-muted-foreground">
-            {t("rpcHint")}
-          </span>
+    <div className="flex flex-col gap-4">
+      {/* Steuerleiste: Preis-Eingabe + Monats-Navigation. */}
+      <div className="flex flex-col gap-3 rounded-lg border bg-card p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Input
+              type="number"
+              min={0}
+              step="0.01"
+              inputMode="decimal"
+              placeholder={t("rpcPricePlaceholder", { currency: currency || "—" })}
+              value={priceInput}
+              onChange={(e) => setPriceInput(e.target.value)}
+              className="w-48"
+            />
+            {selectedCount > 0 && (
+              <span className="whitespace-nowrap rounded-full bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent-foreground">
+                {t("rpcSelectedDays", { count: selectedCount })}
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <Button
               type="button"
               variant="outline"
               size="icon"
-              onClick={() => setYear((y) => y - 1)}
+              onClick={() => goMonth(-1)}
               disabled={busy}
             >
               <Icon icon="ph:caret-left" className="size-4" />
             </Button>
-            <span className="min-w-16 text-center font-display text-xl font-bold">
-              {year}
+            <span className="min-w-40 text-center font-display text-xl font-bold">
+              {months[cursor.month]} {cursor.year}
             </span>
             <Button
               type="button"
               variant="outline"
               size="icon"
-              onClick={() => setYear((y) => y + 1)}
+              onClick={() => goMonth(1)}
               disabled={busy}
             >
               <Icon icon="ph:caret-right" className="size-4" />
             </Button>
           </div>
         </div>
+        <p className="text-sm text-muted-foreground">{t("rpcHint")}</p>
       </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-        {months.map((label, m) => (
-          <MonthGrid
-            key={m}
-            label={label}
-            weekdays={weekdays}
-            year={year}
-            month={m}
-            prices={prices}
-            currency={currency}
-            dragDays={dragDays}
-            busy={busy}
-            onDown={onDayDown}
-            onEnter={onDayEnter}
-            onDouble={onDayDouble}
-          />
-        ))}
-      </div>
+      <BigMonth
+        weekdays={weekdays}
+        year={cursor.year}
+        month={cursor.month}
+        prices={prices}
+        currency={currency}
+        dragDays={dragDays}
+        busy={busy}
+        onDown={onDayDown}
+        onEnter={onDayEnter}
+        onDouble={onDayDouble}
+      />
     </div>
   );
 }
 
-function MonthGrid({
-  label,
+// Ein großer Monat: Zellen breit genug für den vollen Preis inkl. Währung.
+function BigMonth({
   weekdays,
   year,
   month,
@@ -222,7 +225,6 @@ function MonthGrid({
   onEnter,
   onDouble,
 }: {
-  label: string;
   weekdays: string[];
   year: number;
   month: number;
@@ -242,14 +244,13 @@ function MonthGrid({
   for (let d = 1; d <= daysInMonth; d++) cells.push(iso(new Date(Date.UTC(year, month, d))));
 
   return (
-    <div className="rounded-lg border p-2">
-      <div className="mb-1.5 text-center text-sm font-semibold">{label}</div>
-      <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[0.65rem] font-medium text-muted-foreground">
+    <div className="rounded-lg border p-3">
+      <div className="mb-2 grid grid-cols-7 gap-1.5 text-center text-xs font-medium text-muted-foreground">
         {weekdays.map((w, i) => (
           <div key={i}>{w}</div>
         ))}
       </div>
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-1.5">
         {cells.map((isoDate, i) => {
           if (isoDate === null) return <div key={`e${i}`} />;
           const price = prices.get(isoDate);
@@ -267,20 +268,20 @@ function MonthGrid({
               onMouseEnter={() => onEnter(isoDate)}
               onDoubleClick={() => onDouble(isoDate)}
               title={price !== undefined ? formatCurrency(price, currency) : undefined}
-              className={`flex min-h-12 w-full select-none flex-col items-center justify-center gap-0.5 overflow-hidden rounded px-0.5 py-1 text-xs transition-[outline] ${
-                inDrag ? "outline outline-2 outline-accent outline-offset-1" : ""
+              className={`flex min-h-16 w-full select-none flex-col items-start justify-start gap-1 rounded-md border p-1.5 text-sm transition-[outline] ${
+                inDrag
+                  ? "outline outline-2 outline-accent outline-offset-1"
+                  : "border-border"
               } ${
                 price !== undefined
-                  ? "bg-accent font-medium text-accent-foreground"
-                  : "text-foreground hover:bg-secondary"
+                  ? "bg-accent/10"
+                  : "hover:bg-secondary"
               }`}
             >
-              <span className="leading-none">{day}</span>
+              <span className="leading-none text-foreground">{day}</span>
               {price !== undefined && (
-                // Kompakt: reine Zahl ohne Symbol/Nachkomma (passt in die schmale
-                // Zelle); voller Betrag inkl. Währung steht im title-Tooltip.
-                <span className="w-full truncate text-center text-[0.6rem] leading-none tabular-nums">
-                  {formatCurrency(price, null, "de-DE", 0)}
+                <span className="mt-auto w-full truncate text-xs font-semibold tabular-nums text-accent">
+                  {formatCurrency(price, currency)}
                 </span>
               )}
             </button>
