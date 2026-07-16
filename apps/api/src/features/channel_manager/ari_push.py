@@ -1204,13 +1204,18 @@ class AriPushMixin:
         if not desired:
             return result
 
-        # IST: autoritativer Channex-Zustand (Rate zurück als Dezimal-String).
+        # SOLL: datumsgenaue Mindestaufenthalte je lokalem Rate-Plan.
+        desired_min = self._load_desired_rate_plan_min_stays(
+            db, local_rate_plan_ids, today, horizon
+        )
+
+        # IST: autoritativer Channex-Zustand (Rate als Dezimal-String, min_stay int).
         try:
             restr = self._channex.get_restrictions(
                 channex_property_id,
                 date_from=today.isoformat(),
                 date_to=horizon.isoformat(),
-                restrictions="rate",
+                restrictions="rate,min_stay_arrival",
             )
         except ChannexError as exc:
             # Channex nicht erreichbar → NICHTS annehmen/pushen (Wurzel 5).
@@ -1224,24 +1229,36 @@ class AriPushMixin:
         # Differenz je Rate-Plan sammeln und als rate-plan-genaue Segmente pushen.
         segments: list[dict[str, Any]] = []
         for channex_rp, local_rp in channex_to_local.items():
-            want = desired.get(local_rp) or {}
-            if not want:
-                continue
             have_days = actual_by_channex.get(channex_rp) or {}
-            drift_days = {
+            want = desired.get(local_rp) or {}
+            price_drift = {
                 iso: cents
                 for iso, cents in want.items()
                 if self._channex_rate_to_cents((have_days.get(iso) or {}).get("rate"))
                 != cents
             }
-            result["checked"] += len(want)
-            result["drift"] += len(drift_days)
+            want_min = desired_min.get(local_rp) or {}
+            min_drift = {
+                iso: ms
+                for iso, ms in want_min.items()
+                if self._to_int((have_days.get(iso) or {}).get("min_stay_arrival"))
+                != ms
+            }
+            checked = len(want) + len(want_min)
+            drift = len(price_drift) + len(min_drift)
+            result["checked"] += checked
+            result["drift"] += drift
             # Sichtbaren Sync-Status je Plan festhalten (Frontend liest ihn live).
-            self._write_rate_plan_sync_state(db, local_rp, len(drift_days))
-            for iso, cents in sorted(drift_days.items()):
+            self._write_rate_plan_sync_state(db, local_rp, drift)
+            for iso, cents in sorted(price_drift.items()):
                 segments.append({
                     "date_from": iso, "date_to": iso,
                     "rate_cents": cents, "rate_plan_id": local_rp,
+                })
+            for iso, ms in sorted(min_drift.items()):
+                segments.append({
+                    "date_from": iso, "date_to": iso,
+                    "min_stay": ms, "rate_plan_id": local_rp,
                 })
         if segments:
             self.push_rates_batch(tenant_id, property_id, segments)
@@ -1252,6 +1269,46 @@ class AriPushMixin:
                 checked=result["checked"], drift=result["drift"],
             )
         return result
+
+    @staticmethod
+    def _to_int(value: str | int | None) -> int | None:
+        """Ein Channex-min_stay-Feld zu int normalisieren (kommt als int oder str).
+        None bei fehlend/ungültig."""
+        if value is None:
+            return None
+        try:
+            return int(value)
+        except (TypeError, ValueError):
+            return None
+
+    def _load_desired_rate_plan_min_stays(
+        self, db: Client, local_rate_plan_ids: list[str], start: date, end: date
+    ) -> dict[str, dict[str, int]]:
+        """Soll-Mindestaufenthalte aus rate_plan_min_stay_overrides je lokalem Rate-
+        Plan im Horizont: {local_rate_plan_id: {iso: min_stay}}. Fehlt die Tabelle
+        (Umgebung vor 0150), leer → kein Min-Stay-Abgleich (kein Crash)."""
+        try:
+            rows = (
+                db.table("rate_plan_min_stay_overrides")
+                .select("rate_plan_id, date, min_stay")
+                .in_("rate_plan_id", local_rate_plan_ids)
+                .gte("date", start.isoformat())
+                .lte("date", end.isoformat())
+                .not_.is_("min_stay", "null")
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — fehlende Tabelle = kein Min-Stay
+            log.warning("rate_plan_min_stay_overrides_unavailable", error=str(exc))
+            return {}
+        out: dict[str, dict[str, int]] = {}
+        for r in rows:
+            rp = r.get("rate_plan_id")
+            iso = r.get("date")
+            ms = self._to_int(r.get("min_stay"))
+            if rp is None or iso is None or ms is None:
+                continue
+            out.setdefault(str(rp), {})[str(iso)] = ms
+        return out
 
     def _write_rate_plan_sync_state(
         self, db: Client, rate_plan_id: str, drift_count: int

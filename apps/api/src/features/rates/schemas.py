@@ -81,6 +81,33 @@ class RatePlanPriceListResponse(BaseModel):
     items: list[RatePlanPriceDay] = []
 
 
+class RatePlanMinStaySet(BaseModel):
+    """Datumsgenauen Mindestaufenthalt eines Rate-Plans für [start, end) setzen.
+
+    end exklusiv. `min_stay=None` nimmt den Datums-Mindestaufenthalt zurück (Zeile
+    löschen → Rate-Plan-Default gilt wieder). Gilt auf allen 3 Vertriebswegen."""
+
+    start: date
+    end: date
+    min_stay: int | None = Field(default=None, ge=1)
+
+    @model_validator(mode="after")
+    def _check_order(self) -> "RatePlanMinStaySet":
+        if self.end <= self.start:
+            raise ValueError("end muss nach start liegen")
+        return self
+
+
+class RatePlanMinStayDay(BaseModel):
+    date: date
+    min_stay: int
+
+
+class RatePlanMinStayListResponse(BaseModel):
+    rate_plan_id: str
+    items: list[RatePlanMinStayDay] = []
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"

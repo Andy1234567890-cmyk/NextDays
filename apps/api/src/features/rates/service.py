@@ -21,6 +21,9 @@ from src.jobs.queue import (
 from .schemas import (
     RatePlanCreate,
     RatePlanListResponse,
+    RatePlanMinStayDay,
+    RatePlanMinStayListResponse,
+    RatePlanMinStaySet,
     RatePlanPriceDay,
     RatePlanPriceListResponse,
     RatePlanPriceSet,
@@ -468,6 +471,129 @@ class RatesService:
             rate_plan_id=rate_plan_id,
         )
         return self.list_prices(ctx, rate_plan_id)
+
+    # -- Datumsgenauer Mindestaufenthalt pro Rate-Plan (Hotel) ----------------
+    def list_min_stays(
+        self, ctx: AuthContext, rate_plan_id: str
+    ) -> RatePlanMinStayListResponse:
+        """Datumsgenaue Mindestaufenthalte eines Rate-Plans. Tenant-gescoped."""
+        tenant_id = self._require_tenant(ctx)
+        self._require_own_rate_plan(tenant_id, rate_plan_id)
+        rows = (
+            self._db()
+            .table("rate_plan_min_stay_overrides")
+            .select("date, min_stay")
+            .eq("rate_plan_id", rate_plan_id)
+            .not_.is_("min_stay", "null")
+            .order("date")
+            .execute()
+        ).data or []
+        items = [
+            RatePlanMinStayDay(date=r["date"], min_stay=int(r["min_stay"]))
+            for r in rows
+            if r.get("date") is not None and r.get("min_stay") is not None
+        ]
+        return RatePlanMinStayListResponse(rate_plan_id=rate_plan_id, items=items)
+
+    def set_min_stays(
+        self, ctx: AuthContext, rate_plan_id: str, req: RatePlanMinStaySet
+    ) -> RatePlanMinStayListResponse:
+        """Datumsgenauen Mindestaufenthalt für [start, end) setzen oder (min_stay=
+        None) zurücknehmen. Idempotent über unique(rate_plan_id, date) (Wurzel 2).
+        Push an GENAU diesen Rate-Plan (min_stay_arrival/through), alle 3 Wege gleich."""
+        tenant_id = self._require_tenant(ctx)
+        plan = self._require_own_rate_plan(tenant_id, rate_plan_id)
+        property_id = plan["property_id"]
+        days = [
+            req.start + timedelta(days=i)
+            for i in range((req.end - req.start).days)
+        ]
+        if req.min_stay is None:
+            (
+                self._db()
+                .table("rate_plan_min_stay_overrides")
+                .delete()
+                .eq("rate_plan_id", rate_plan_id)
+                .gte("date", req.start.isoformat())
+                .lt("date", req.end.isoformat())
+                .execute()
+            )
+        else:
+            self._db().table("rate_plan_min_stay_overrides").upsert(
+                [
+                    {
+                        "rate_plan_id": rate_plan_id,
+                        "date": d.isoformat(),
+                        "min_stay": req.min_stay,
+                    }
+                    for d in days
+                ],
+                on_conflict="rate_plan_id,date",
+            ).execute()
+        self._enqueue_rate_plan_min_stay_push(
+            tenant_id, property_id, rate_plan_id, req.start, req.end, req.min_stay
+        )
+        log.info(
+            "rate_plan_min_stays_set",
+            tenant_id=tenant_id,
+            rate_plan_id=rate_plan_id,
+            days=len(days),
+            cleared=req.min_stay is None,
+        )
+        return self.list_min_stays(ctx, rate_plan_id)
+
+    def clear_all_min_stays(
+        self, ctx: AuthContext, rate_plan_id: str
+    ) -> RatePlanMinStayListResponse:
+        """ALLE datumsgenauen Mindestaufenthalte eines Rate-Plans zurücknehmen
+        (Rate-Plan-Default gilt wieder). Tenant-gescoped, idempotent."""
+        tenant_id = self._require_tenant(ctx)
+        plan = self._require_own_rate_plan(tenant_id, rate_plan_id)
+        (
+            self._db()
+            .table("rate_plan_min_stay_overrides")
+            .delete()
+            .eq("rate_plan_id", rate_plan_id)
+            .execute()
+        )
+        self._sync_property(tenant_id, plan["property_id"], None, None)
+        log.info(
+            "rate_plan_min_stays_cleared_all",
+            tenant_id=tenant_id, rate_plan_id=rate_plan_id,
+        )
+        return self.list_min_stays(ctx, rate_plan_id)
+
+    def _enqueue_rate_plan_min_stay_push(
+        self,
+        tenant_id: str,
+        property_id: str,
+        rate_plan_id: str,
+        start: date,
+        end: date,
+        min_stay: int | None,
+    ) -> None:
+        """Einen rate-plan-genauen Min-Stay-Push einreihen (min_stay_arrival/through).
+        Beim Zurücknehmen (min_stay None) kein Push — der Content-/Reconcile-Sync
+        setzt den Rate-Plan-Default wieder; der Reconcile-Tick gleicht ab."""
+        if min_stay is None:
+            self._sync_property(tenant_id, property_id, None, None)
+            return
+        try_enqueue_ari(
+            self._db(),
+            tenant_id,
+            property_id,
+            "rate",
+            {
+                "segments": [
+                    {
+                        "date_from": start.isoformat(),
+                        "date_to": (end - timedelta(days=1)).isoformat(),
+                        "min_stay": min_stay,
+                        "rate_plan_id": rate_plan_id,
+                    }
+                ]
+            },
+        )
 
     def _enqueue_rate_plan_push(
         self,

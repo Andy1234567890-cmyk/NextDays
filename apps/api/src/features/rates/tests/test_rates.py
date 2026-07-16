@@ -251,6 +251,66 @@ def test_set_rate_plan_prices_foreign_plan_404(monkeypatch) -> None:  # noqa: AN
         assert exc.status_code == 404
 
 
+# --- Datumsgenauer Mindestaufenthalt pro Rate-Plan (Zert #5) -----------------
+
+def test_set_rate_plan_min_stays_upserts_and_enqueues(monkeypatch) -> None:  # noqa: ANN001
+    from src.features.rates import service as svc_mod
+    from src.features.rates.schemas import RatePlanMinStaySet
+
+    enqueued: list = []
+    monkeypatch.setattr(
+        svc_mod, "try_enqueue_ari",
+        lambda *a, **k: enqueued.append((a, k)),
+    )
+    svc = _svc(_OWN_PLAN)
+    svc.set_min_stays(
+        _ctx(), "rp-1",
+        RatePlanMinStaySet(start="2026-11-23", end="2026-11-24", min_stay=3),
+    )
+    assert len(enqueued) == 1
+    _args, _kw = enqueued[0]
+    kind = _args[3]
+    fields = _args[4]
+    assert kind == "rate"
+    seg = fields["segments"][0]
+    assert seg["rate_plan_id"] == "rp-1"
+    assert seg["min_stay"] == 3
+    assert seg["date_from"] == "2026-11-23" and seg["date_to"] == "2026-11-23"
+    assert "rate_cents" not in seg  # reiner Min-Stay-Push, kein Preis
+
+
+def test_clear_rate_plan_min_stays_deletes(monkeypatch) -> None:  # noqa: ANN001
+    from src.features.rates import service as svc_mod
+    from src.features.rates.schemas import RatePlanMinStaySet
+
+    monkeypatch.setattr(svc_mod, "try_enqueue_ari", lambda *a, **k: None)
+    monkeypatch.setattr(svc_mod, "try_enqueue_content_sync", lambda *a, **k: None)
+    db = _FakeDB(_OWN_PLAN)
+    svc = RatesService(service_client=db)
+    svc.set_min_stays(
+        _ctx(), "rp-1",
+        RatePlanMinStaySet(start="2026-11-23", end="2026-11-25", min_stay=None),
+    )
+    assert "rate_plan_min_stay_overrides" in db.deleted
+    assert not db.upserted.get("rate_plan_min_stay_overrides")
+
+
+def test_set_rate_plan_min_stays_foreign_plan_404(monkeypatch) -> None:  # noqa: ANN001
+    from src.features.rates import service as svc_mod
+    from src.features.rates.schemas import RatePlanMinStaySet
+
+    monkeypatch.setattr(svc_mod, "try_enqueue_ari", lambda *a, **k: None)
+    svc = _svc({"rate_plans": []})
+    try:
+        svc.set_min_stays(
+            _ctx(), "rp-x",
+            RatePlanMinStaySet(start="2026-11-23", end="2026-11-24", min_stay=3),
+        )
+        raise AssertionError("sollte 404 werfen")
+    except RateError as exc:
+        assert exc.status_code == 404
+
+
 def test_clear_rate_plan_prices_deletes(monkeypatch) -> None:  # noqa: ANN001
     from src.features.rates import service as svc_mod
     from src.features.rates.schemas import RatePlanPriceSet

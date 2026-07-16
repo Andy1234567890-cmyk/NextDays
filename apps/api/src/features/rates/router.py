@@ -15,6 +15,8 @@ from src.features.auth.granular_permissions import Permission
 from .schemas import (
     RatePlanCreate,
     RatePlanListResponse,
+    RatePlanMinStayListResponse,
+    RatePlanMinStaySet,
     RatePlanPriceListResponse,
     RatePlanPriceSet,
     RatePlanResponse,
@@ -139,5 +141,42 @@ def clear_rate_prices(
     """ALLE Datumspreise eines Rate-Plans zurücknehmen (Basispreis gilt wieder)."""
     try:
         return service.clear_all_prices(ctx, rate_plan_id)
+    except RateError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/{rate_plan_id}/min-stays", response_model=RatePlanMinStayListResponse)
+def list_rate_min_stays(
+    rate_plan_id: str, service: RatesServiceDep, ctx: _write
+) -> RatePlanMinStayListResponse:
+    """Datumsgenaue Mindestaufenthalte eines Rate-Plans (Hotel)."""
+    try:
+        return service.list_min_stays(ctx, rate_plan_id)
+    except RateError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put("/{rate_plan_id}/min-stays", response_model=RatePlanMinStayListResponse)
+def set_rate_min_stays(
+    rate_plan_id: str,
+    req: RatePlanMinStaySet,
+    service: RatesServiceDep,
+    ctx: _write,
+) -> RatePlanMinStayListResponse:
+    """Datumsgenauen Mindestaufenthalt für [start, end) setzen (min_stay=null nimmt
+    ihn zurück). Push an GENAU diesen Rate-Plan; gilt auf allen 3 Vertriebswegen."""
+    try:
+        return service.set_min_stays(ctx, rate_plan_id, req)
+    except RateError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/{rate_plan_id}/min-stays", response_model=RatePlanMinStayListResponse)
+def clear_rate_min_stays(
+    rate_plan_id: str, service: RatesServiceDep, ctx: _write
+) -> RatePlanMinStayListResponse:
+    """ALLE datumsgenauen Mindestaufenthalte zurücknehmen (Rate-Plan-Default gilt)."""
+    try:
+        return service.clear_all_min_stays(ctx, rate_plan_id)
     except RateError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

@@ -135,6 +135,38 @@ export async function resyncRatePlanPrices(
   return call(`/rates/${ratePlanId}/prices/resync`, { method: "POST" });
 }
 
+// Datumsgenauer Mindestaufenthalt EINES Rate-Plans (Hotel). Analog zu den
+// Datumspreisen; Realtime-Tabelle: rate_plan_min_stay_overrides.
+export type RatePlanMinStayDay = { date: string; min_stay: number };
+
+/** Datumsgenaue Mindestaufenthalte eines Rate-Plans (nur gesetzte Tage). */
+export async function listRatePlanMinStays(
+  ratePlanId: string,
+): Promise<Result<{ rate_plan_id: string; items: RatePlanMinStayDay[] }>> {
+  return call(`/rates/${ratePlanId}/min-stays`);
+}
+
+/** Datumsgenauen Mindestaufenthalt für [start, end) setzen (end exklusiv).
+ *  `min_stay=null` nimmt ihn zurück (Rate-Plan-Default gilt wieder). */
+export async function setRatePlanMinStays(
+  ratePlanId: string,
+  start: string,
+  end: string,
+  minStay: number | null,
+): Promise<Result<{ rate_plan_id: string; items: RatePlanMinStayDay[] }>> {
+  return call(`/rates/${ratePlanId}/min-stays`, {
+    method: "PUT",
+    body: { start, end, min_stay: minStay },
+  });
+}
+
+/** ALLE datumsgenauen Mindestaufenthalte eines Rate-Plans zurücknehmen. */
+export async function clearAllRatePlanMinStays(
+  ratePlanId: string,
+): Promise<Result<{ rate_plan_id: string; items: RatePlanMinStayDay[] }>> {
+  return call(`/rates/${ratePlanId}/min-stays`, { method: "DELETE" });
+}
+
 /** Basispreis eines Objekts setzen: Upsert im Backend (ersten rate_plan ändern
  *  oder anlegen) in EINEM Round-Trip — der Basispreis landet immer, auch beim
  *  ersten Speichern, ohne Race-Dublette. Schließt die Kette zu Channex (Sync). */
