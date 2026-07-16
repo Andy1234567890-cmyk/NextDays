@@ -49,12 +49,37 @@ _PUBLIC_PROPERTY_COLUMNS = (
 # getruncated + geloggt (keine stille Begrenzung).
 _MAX_LISTING_RESULTS = 200
 
+# Max. Datums-Span für öffentliche, JWT-lose Endpunkte. Ohne Obergrenze baut der
+# Tag-für-Tag-Loop (_nights) + die datierte Preisauflösung bei z. B. end=9999
+# Millionen Objekte pro Request → ein einziger unauth Request kippt den Worker
+# (DoS). 730 Tage (2 Jahre) deckt jeden realen Buchungshorizont ab. Fail-closed
+# (Wurzel 5): darüber 422 statt stiller Deckelung.
+_MAX_SPAN_DAYS = 730
+
 
 class BookingEngineError(Exception):
     def __init__(self, message: str, *, status_code: int = 400) -> None:
         super().__init__(message)
         self.message = message
         self.status_code = status_code
+
+
+def _assert_span(start: date | None, end: date | None) -> None:
+    """[start, end) muss valide und ≤ _MAX_SPAN_DAYS sein. None/None ist erlaubt
+    (Endpunkte ohne Datumsfilter). Ein einzelnes gesetztes Datum ohne das andere
+    ist unvollständig → 422."""
+    if start is None and end is None:
+        return
+    if start is None or end is None:
+        raise BookingEngineError(
+            "start und end müssen gemeinsam angegeben werden.", status_code=422
+        )
+    if end <= start:
+        raise BookingEngineError("end muss nach start liegen.", status_code=422)
+    if (end - start).days > _MAX_SPAN_DAYS:
+        raise BookingEngineError(
+            f"Zeitraum zu groß (max. {_MAX_SPAN_DAYS} Tage).", status_code=422
+        )
 
 
 def _nights(check_in: date, check_out: date) -> list[date]:
@@ -130,6 +155,7 @@ class BookingEngineService:
         fallen raus) und `price_from` ist der Effektivpreis des Zeitraums. `q`
         filtert über Titel/Ort, `guests` über die Kapazität.
         """
+        _assert_span(start, end)
         # Leere property_ids-Liste = bewusst „keine Objekte" (nicht „alle"): der
         # Featured-Block ohne Auswahl darf nicht versehentlich alles rendern.
         if property_ids is not None and not property_ids:
@@ -276,6 +302,7 @@ class BookingEngineService:
     ) -> PublicListingDetail:
         """Detail eines active Objekts (404, wenn nicht active). Ungefähre Lage
         (gerundete lat/lng), Effektivpreis für den Zeitraum (falls start/end)."""
+        _assert_span(start, end)
         rows = (
             self._db()
             .table("properties")
@@ -445,6 +472,7 @@ class BookingEngineService:
     ) -> PublicAvailabilityResponse:
         """Öffentliche Tagesverfügbarkeit [start, end). Nur buchbar/nicht — keine
         Tenant-/Buchungsdaten. Fehlende Tage gelten als frei."""
+        _assert_span(start, end)
         if self._property_tenant(property_id) is None:
             raise BookingEngineError("Objekt nicht gefunden.", status_code=404)
         rows = (
@@ -606,6 +634,13 @@ class BookingEngineService:
                             "tenant_id": tenant_id,
                             "property_id": req.property_id,
                             "guest_id": guest_id,
+                            # E-Mail/Telefon denormalisiert MITSCHREIBEN (wie der
+                            # interne Pfad): _verified_reservation prüft den Post-
+                            # Booking-Upsell über reservations.guest_email — ohne
+                            # diese Felder schlägt die Verifikation immer mit 404
+                            # fehl und der Upsell der eigenen Plattform ist tot.
+                            "guest_email": req.contact.email or None,
+                            "guest_phone": req.contact.phone or None,
                             "channel": "direct",      # eigene Plattform = Direktbuchung
                             "ota_name": "myNextDays",  # Herkunft für Kalender/Posteingang
                             "check_in": req.check_in.isoformat(),

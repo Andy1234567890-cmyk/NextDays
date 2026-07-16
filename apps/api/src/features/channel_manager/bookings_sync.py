@@ -17,6 +17,7 @@ from src.core.security import AuthContext
 from src.features.auth.guest_masking import GuestMask
 from src.features.guests.identity import (
     contact_from_ota_customer,
+    create_placeholder_guest,
     resolve_or_create_guest,
 )
 
@@ -272,14 +273,20 @@ class BookingsSyncMixin:
             raise ChannelManagerError("Buchung ohne ID übersprungen.", status_code=422)
 
         # Zentraler Resolver: ein Pfad für alle Kanäle (E-Mail→Telefon→OTA-ID).
-        guest_id = resolve_or_create_guest(
-            db,
-            tenant_id,
-            contact_from_ota_customer(
-                attrs.get("customer") or {},
-                external_ref=attrs.get("ota_reservation_code"),
-            ),
+        ota_contact = contact_from_ota_customer(
+            attrs.get("customer") or {},
+            external_ref=attrs.get("ota_reservation_code"),
         )
+        guest_id = resolve_or_create_guest(db, tenant_id, ota_contact)
+        # Regel: eine OTA-Buchung MUSS einen Gast tragen. Liefert der Resolver
+        # None (Buchung ganz ohne Kontakt/Kanal-ID — bei Channex praktisch nie),
+        # trotzdem einen Platzhaltergast mit needs_review anlegen, statt eine
+        # guest-lose Reservierung entstehen zu lassen (Wurzel 1: kein halber Zustand).
+        if guest_id is None:
+            guest_id = create_placeholder_guest(
+                db, tenant_id, channel="ota",
+                external_ref=attrs.get("ota_reservation_code"),
+            )
 
         amount = attrs.get("amount")
         amount_cents = self._to_cents(amount)
@@ -568,6 +575,13 @@ class BookingsSyncMixin:
                     external_ref=attrs.get("ota_reservation_code"),
                 ),
             )
+            # Regel: die projizierte Reservierung MUSS einen Gast tragen —
+            # Platzhalter, falls der Resolver (kontaktlose Buchung) None gab.
+            if guest_id is None:
+                guest_id = create_placeholder_guest(
+                    db, tenant_id, channel="ota",
+                    external_ref=attrs.get("ota_reservation_code"),
+                )
         total = attrs.get("amount")
         try:
             total_amount = float(total) if total is not None else 0

@@ -33,6 +33,12 @@ from src.core.logging import get_logger
 
 log = get_logger("nextdays.guests.identity")
 
+
+class GuestCreateError(Exception):
+    """Ein Gast konnte nicht angelegt werden (fail-closed) — statt eine
+    guest-lose Buchung durchzulassen (Wurzel 1/5)."""
+
+
 # Partielle Unique-Indizes aus Migration 0113 (tenant_id, lower(email) / phone).
 # Verliert ein paralleler Insert das Race, meldet PostgREST diese Namen — dann
 # wird der vom Gewinner angelegte Gast geladen statt ein Duplikat zu erzeugen.
@@ -94,6 +100,11 @@ class GuestContact:
     phone: str | None = None
     channel: str | None = None
     external_ref: str | None = None
+    # Zweite, STABILE externe ID: die Gast-ID des Kanals (OTA customer.id), die
+    # über MEHRERE Buchungen desselben Gastes gleich bleibt — anders als
+    # external_ref (Reservierungscode = pro Buchung). Wird zusätzlich verknüpft,
+    # damit ein wiederkehrender OTA-Gast ohne E-Mail/Telefon nicht dupliziert.
+    stable_external_ref: str | None = None
     # Gästemappen-Stammdaten (0046), sofern der Kanal sie liefert — werden
     # beim Anlegen strukturiert gespeichert (nicht nur der zusammengesetzte
     # `name`), damit die Gästekartei Vorname/Nachname/Sprache/Nationalität hat.
@@ -119,9 +130,12 @@ def contact_from_ota_customer(
         channel="ota",
         language=customer.get("language"),
         country=customer.get("country"),
-        external_ref=external_ref
-        or customer.get("id")
-        or customer.get("guest_id"),
+        # external_ref = Reservierungscode (pro Buchung), stable_external_ref =
+        # OTA-Guest-ID (pro Gast, buchungsübergreifend). Beide werden verknüpft;
+        # der Resolver matcht auch über die stabile ID, sodass ein wiederkehrender
+        # Gast ohne E-Mail/Telefon wiedergefunden statt dupliziert wird.
+        external_ref=external_ref,
+        stable_external_ref=customer.get("id") or customer.get("guest_id"),
     )
 
 
@@ -259,6 +273,7 @@ def resolve_or_create_guest(
     phone = normalize_phone(contact.phone)
     channel = (contact.channel or "").strip() or None
     external_id = (contact.external_ref or "").strip() or None
+    stable_id = (contact.stable_external_ref or "").strip() or None
     name = contact.full_name()
 
     # 1) + 2) E-Mail / Telefon — getrennt auflösen, um Mehrdeutigkeit zu erkennen.
@@ -288,7 +303,12 @@ def resolve_or_create_guest(
 
     matched = by_email or by_phone
 
-    # 3) Kanal-spezifische externe ID.
+    # 3) Kanal-spezifische externe IDs — erst die STABILE Gast-ID (buchungs-
+    #    übergreifend), dann der Reservierungscode. Die stabile ID zuerst, damit
+    #    ein wiederkehrender Gast ohne E-Mail/Telefon zuverlässig wiedergefunden
+    #    wird statt bei jeder Buchung neu angelegt zu werden.
+    if not matched and channel and stable_id:
+        matched = _find_by_external_id(db, tenant_id, channel, stable_id)
     if not matched and channel and external_id:
         matched = _find_by_external_id(db, tenant_id, channel, external_id)
 
@@ -296,14 +316,19 @@ def resolve_or_create_guest(
         _backfill_missing(
             db, tenant_id, matched, email=email, phone=phone, contact=contact
         )
+        # BEIDE IDs verknüpfen (idempotent) — die stabile Gast-ID und der
+        # Reservierungscode zeigen künftig auf denselben Gast.
+        if channel and stable_id:
+            _link_external_id(db, tenant_id, matched, channel, stable_id)
         if channel and external_id:
             _link_external_id(db, tenant_id, matched, channel, external_id)
         return matched
 
-    # 4) Nichts gefunden — nur anlegen, wenn ein Merkmal existiert.
-    if not (name or email or phone or external_id):
+    # 4) Nichts gefunden — nur anlegen, wenn ein Merkmal existiert (auch die
+    #    stabile Gast-ID zählt als Merkmal).
+    if not (name or email or phone or external_id or stable_id):
         return None
-    return _create_guest(
+    new_id = _create_guest(
         db,
         tenant_id,
         name=name,
@@ -314,6 +339,40 @@ def resolve_or_create_guest(
         needs_review=False,
         contact=contact,
     )
+    # Die stabile Gast-ID zusätzlich zum (beim Anlegen verknüpften) external_id
+    # anhängen, damit die nächste Buchung desselben Gastes matcht.
+    if new_id and channel and stable_id:
+        _link_external_id(db, tenant_id, new_id, channel, stable_id)
+    return new_id
+
+
+def create_placeholder_guest(
+    db: Client,
+    tenant_id: str,
+    *,
+    channel: str,
+    external_ref: str | None = None,
+) -> str:
+    """Platzhaltergast (Name „—", needs_review) für eine externe Buchung OHNE
+    jedes Kontaktmerkmal anlegen. Erzwingt die Regel „jede externe Buchung hat
+    einen Gast" (Wurzel 1), wenn resolve_or_create_guest None lieferte. Gibt IMMER
+    eine guest_id zurück — nie None. Über external_ref (falls vorhanden)
+    idempotent verknüpft, sodass eine Redelivery denselben Platzhalter trifft."""
+    ext = (external_ref or "").strip() or None
+    if ext:
+        existing = _find_by_external_id(db, tenant_id, channel, ext)
+        if existing:
+            return existing
+    guest_id = _create_guest(
+        db, tenant_id, name="—", email=None, phone=None,
+        channel=channel, external_id=ext, needs_review=True,
+    )
+    if guest_id is None:
+        # _create_guest gibt None nur bei leerer Insert-Response zurück — das ist
+        # ein DB-/Konfigurationsfehler, kein Normalpfad. Fail-closed statt eine
+        # guest-lose Buchung durchzulassen (Wurzel 5).
+        raise GuestCreateError("Platzhaltergast konnte nicht angelegt werden.")
+    return guest_id
 
 
 def _ensure_country_address(

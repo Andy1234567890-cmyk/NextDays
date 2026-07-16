@@ -108,6 +108,18 @@ class _FakeDB:
                     return _R()
 
             return _Upsert()
+        if name == "guests":
+            # Kontaktlose Feed-Buchung → Platzhaltergast wird angelegt (Härtung):
+            # insert liefert eine id, alle Lookups sind leer.
+            class _Guests(_FakeQuery):
+                def __init__(self) -> None:
+                    super().__init__([])
+
+                def insert(self, _payload, **_k):  # noqa: ANN001, ANN002, ANN003, ANN201
+                    self._rows = [{"id": "placeholder-guest"}]
+                    return self
+
+            return _Guests()
         return _FakeQuery([])
 
 

@@ -294,11 +294,45 @@ def test_create_guest_reraises_unrelated_api_error():
 
 def test_contact_from_ota_customer():
     c = contact_from_ota_customer(
-        {"name": "Max", "surname": "Mustermann", "mail": "m@x.de", "phone": "+49170"},
+        {"name": "Max", "surname": "Mustermann", "mail": "m@x.de", "phone": "+49170",
+         "id": "guest-42"},
         external_ref="R123",
     )
     assert c.first_name == "Max"
     assert c.last_name == "Mustermann"
     assert c.email == "m@x.de"
     assert c.channel == "ota"
+    # external_ref = Reservierungscode (pro Buchung), stable_external_ref =
+    # OTA-Guest-ID (pro Gast).
     assert c.external_ref == "R123"
+    assert c.stable_external_ref == "guest-42"
+
+
+def test_ota_stable_id_reuses_guest_across_bookings():
+    # Zwei Buchungen desselben Gastes OHNE E-Mail/Telefon, aber mit derselben
+    # OTA-Guest-ID (customer.id) → EIN Gast, nicht zwei (Härtung).
+    db = _DB()
+    c1 = contact_from_ota_customer(
+        {"name": "Ada", "id": "guest-7"}, external_ref="RES-1"
+    )
+    c2 = contact_from_ota_customer(
+        {"name": "Ada", "id": "guest-7"}, external_ref="RES-2"
+    )
+    g1 = resolve_or_create_guest(db, "t1", c1)
+    g2 = resolve_or_create_guest(db, "t1", c2)
+    assert g1 is not None and g1 == g2
+    assert len(db.store["guests"]) == 1
+
+
+def test_create_placeholder_guest_never_none():
+    from src.features.guests.identity import create_placeholder_guest
+
+    db = _DB()
+    gid = create_placeholder_guest(db, "t1", channel="ota", external_ref="RES-X")
+    assert gid is not None
+    assert db.store["guests"][0]["name"] == "—"
+    assert db.store["guests"][0]["needs_review"] is True
+    # Redelivery mit demselben Reservierungscode → derselbe Platzhalter.
+    gid2 = create_placeholder_guest(db, "t1", channel="ota", external_ref="RES-X")
+    assert gid2 == gid
+    assert len(db.store["guests"]) == 1
