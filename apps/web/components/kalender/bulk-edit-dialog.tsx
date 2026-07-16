@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import { MultiSelect } from "@/components/ui/multi-select";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Segmented } from "@/components/ui/segmented";
+import { isoPlus } from "@/lib/dates";
 import { type RestrictionRow, bulkEdit, bulkRestrictions } from "@/lib/calendar";
 
 type BlockMode = "none" | "block" | "unblock";
@@ -121,12 +122,13 @@ export function BulkEditDialog({
         return;
       }
     }
-    // Bis ist EXKLUSIV — der häufigste Fehler ist Bis = Von (gemeint: 1 Tag).
+    // r.end ist INTERN exklusiv; das UI-Feld ist inklusiv (letzter Tag). Ungültig
+    // ist eine Zeile nur, wenn „Bis (einschl.)" VOR „Von" liegt (dann r.end<=start).
     // Vor dem Senden klar melden statt serverseitigem 422.
     const badRange = clean.findIndex((r) => !r.start || !r.end || r.end <= r.start);
     if (badRange >= 0) {
       toast.error(
-        `Zeile ${badRange + 1}: „Bis (exkl.)" muss NACH „Von" liegen — für einen einzelnen Tag den Folgetag wählen (z. B. 14.11. → 15.11.).`,
+        `Zeile ${badRange + 1}: „Bis (einschl.)" darf nicht vor „Von" liegen — für einen einzelnen Tag denselben Tag wählen.`,
       );
       return;
     }
@@ -567,11 +569,19 @@ function RowsEditor({
               />
             </div>
             <div className="flex flex-col gap-1">
-              <Label className="text-xs">Bis (exkl.)</Label>
+              {/* INKLUSIVES Enddatum: der Nutzer sieht/tippt den LETZTEN Tag
+                  (so wie man „bis einschließlich" denkt), intern wird +1 Tag als
+                  exklusives `end` gespeichert. Das schließt den Off-by-one-Fehler
+                  („bis 01.05." vergisst den 01.05.) an der Wurzel aus. */}
+              <Label className="text-xs">Bis (einschl.)</Label>
               <Input
                 type="date"
-                value={r.end}
-                onChange={(e) => patch(i, { end: e.target.value })}
+                value={r.end ? isoPlus(r.end, -1) : ""}
+                onChange={(e) =>
+                  patch(i, {
+                    end: e.target.value ? isoPlus(e.target.value, 1) : "",
+                  })
+                }
               />
             </div>
           </div>
