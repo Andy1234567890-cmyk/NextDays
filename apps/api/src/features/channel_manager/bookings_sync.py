@@ -1056,12 +1056,16 @@ class BookingsSyncMixin:
                 )
                 stopped = set()
             if stopped:
+                # Nur die OBJEKT-Ebene zählt als „schon gestoppt" — ein plan-
+                # genauer Hotel-Stopp (rate_plan_id gesetzt, 0152) darf den
+                # objekt-weiten Portal-Import nicht unterdrücken.
                 existing_stops = {
                     r["date"]
                     for r in (
                         db.table("stop_sell")
                         .select("date")
                         .eq("property_id", property_id)
+                        .is_("rate_plan_id", "null")
                         .in_("date", list(stopped))
                         .execute()
                     ).data
@@ -1093,7 +1097,7 @@ class BookingsSyncMixin:
                             "date": d,
                             "source": "channex",
                         },
-                        on_conflict="property_id,date",
+                        on_conflict="property_id,date,rate_plan_id",
                     ).execute()
                     result["stop_sell"] += 1
         log.info("import_ari_done", tenant_id=tenant_id, **result)

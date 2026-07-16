@@ -1,21 +1,19 @@
 "use client";
 
-// Stop-Sell-Kalender (Konvergenzmuster der PMS-Multikalender, verifiziert
-// gegen Hostaway/Guesty/Smoobu/../Airbnb/Booking): Zeilen = Objekte
-// (sticky links), Spalten = Tage (180-Tage-Fenster ab heute), Drag über die
-// Tage einer Objektzeile wählt einen Zeitraum → rechtes Seiten-Panel setzt/
-// hebt den Stop-Sell auf (mit Wochentags-Maske, Grund + Notiz).
-//
-// Ebenen je Tageszelle: Belegungs-Status (frei/gebucht/gesperrt aus
-// availability — nur Anzeige, die Wahrheit bleibt im /kalender) + der
-// Stop-Sell als EIGENE Ebene darüber (manuell = Hand, Portal = Schloss,
-// read-only). Preise gehören bewusst NICHT hierher — dafür gibt es den
-// Belegungsplan; diese Seite ist der fokussierte Stop-Sell-Kanal.
-// Live per Supabase-Realtime (stop_sell/availability/reservations).
+// Stop-Sell-Kalender in der Design-Sprache des Belegungsplans (Board-Geometrie:
+// breite Tagesspalten, sticky Objektspalte, Monats-Navigation, Heute im
+// Akzent-Kreis). Zwei Betriebsarten wie der Belegungsplan:
+//   Ferienwohnung → eine Zeile pro Objekt (Stopp = Objekt-Ebene).
+//   Hotel         → Zeilen pro Zimmerkategorie × Rate-Plan (Twin — BAR …);
+//                   ein Stopp trifft GENAU diesen Plan (0152), ein Objekt-Stopp
+//                   (Altdaten/FeWo-Pfad) wird auf allen Plan-Zeilen angezeigt.
+// Drag über die Tage einer Zeile wählt einen Zeitraum → rechtes Seiten-Panel
+// setzt/hebt den Stop-Sell (Portal-Stops read-only). Live per Realtime.
 import { Icon } from "@iconify/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
+import { Button } from "@/components/ui/button";
 import {
   getAvailability,
   listStopSell,
@@ -24,6 +22,7 @@ import {
   type StopSellDay,
 } from "@/lib/calendar";
 import { isoPlus, isoWeekday, todayIso } from "@/lib/dates";
+import { getRateGrid } from "@/lib/rates";
 import { listReservations, type Reservation } from "@/lib/reservations";
 import { useRealtime } from "@/lib/use-realtime";
 
@@ -35,39 +34,46 @@ import {
 
 type Property = { id: string; title: string };
 
-const DAYS_AHEAD = 180; // Fenster ab heute (Channex nimmt nur Zukunft an)
-const CHUNK = 90; // Backend-freundliche Ladeblöcke (wie der Belegungsplan)
-const COL = 2.5; // rem — Spaltenbreite pro Tag
-const ROW = 3; // rem — Zeilenhöhe pro Objekt
-const LABEL = 12; // rem — sticky Objektspalte
+// Board-Geometrie des Belegungsplans — gleiche Maße, gleicher Look.
+const COL = 5.5; // rem pro Tagesspalte
+const LABEL = 17; // rem für die Objekt-/Plan-Spalte
+const ROW_H = 3.5; // rem Zeilenhöhe
 
-/** Verfügbarkeit in CHUNK-Blöcken laden (langer Range in einem Call vermeiden).
- *  Fehler werden PROPAGIERT — ein stilles [] würde gebuchte Tage als frei
- *  zeigen (Keine-Fallbacks-Regel). */
-async function loadAvailabilityChunked(
+// Zeilenmodell: FeWo = Objektzeile; Hotel = Kategorie-Band + Plan-Zeilen.
+type PlanRow = { planId: string; label: string };
+type HotelStructure = {
+  categories: { id: string; title: string; plans: PlanRow[] }[];
+};
+
+/** Verfügbarkeit blockweise laden — Fehler PROPAGIEREN (ein stilles [] würde
+ *  gebuchte Tage als frei zeigen, Keine-Fallbacks-Regel). */
+async function loadAvailability(
   propertyId: string,
   from: string,
   to: string,
 ): Promise<{ days: DayAvailability[]; error: string | null }> {
-  const calls: Promise<Awaited<ReturnType<typeof getAvailability>>>[] = [];
-  for (let s = from; s < to; s = isoPlus(s, CHUNK)) {
-    const e = isoPlus(s, CHUNK) < to ? isoPlus(s, CHUNK) : to;
-    calls.push(getAvailability(propertyId, s, e));
-  }
-  const results = await Promise.all(calls);
-  const failed = results.find((r) => !r.ok);
-  return {
-    days: results.flatMap((r) => (r.ok ? r.data : [])),
-    error: failed && !failed.ok ? failed.error : null,
-  };
+  const res = await getAvailability(propertyId, from, to);
+  return res.ok
+    ? { days: res.data, error: null }
+    : { days: [], error: res.error };
+}
+
+/** ISO-Erster des Monats von `cursor` + Anzahl Tage des Monats. */
+function monthWindow(year: number, month: number): { first: string; count: number } {
+  const first = `${year}-${String(month + 1).padStart(2, "0")}-01`;
+  const count = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+  return { first, count };
 }
 
 export function StopSellCalendar({
   properties,
+  accommodationType,
   agencies,
   agenciesError = null,
 }: {
   properties: Property[];
+  // Betriebsart (wie CalendarViews): hotel → Kategorie×Plan-Zeilen.
+  accommodationType?: "vacation_rental" | "hotel" | null;
   agencies: AgencyOption[];
   /** Ladefehler der Partner-Liste — sichtbar machen statt leeres Select. */
   agenciesError?: string | null;
@@ -75,29 +81,47 @@ export function StopSellCalendar({
   const t = useTranslations("stopSell");
   const locale = useLocale();
   const today = useMemo(todayIso, []);
+  const isHotel = accommodationType === "hotel";
+
+  // Monats-Navigation wie im Belegungsplan (Start: aktueller Monat).
+  const [cursor, setCursor] = useState(() => ({
+    year: Number(today.slice(0, 4)),
+    month: Number(today.slice(5, 7)) - 1,
+  }));
+  const { first, count } = monthWindow(cursor.year, cursor.month);
   const days = useMemo(
-    () => Array.from({ length: DAYS_AHEAD }, (_, i) => isoPlus(today, i)),
-    [today],
+    () => Array.from({ length: count }, (_, i) => isoPlus(first, i)),
+    [first, count],
   );
+  const windowEnd = isoPlus(first, count); // exklusiv
+
+  const goMonth = (delta: number) =>
+    setCursor((c) => {
+      const m = c.month + delta;
+      return {
+        year: c.year + Math.floor(m / 12),
+        month: ((m % 12) + 12) % 12,
+      };
+    });
 
   const [avail, setAvail] = useState<Record<string, Record<string, DayAvailability>>>({});
-  const [stops, setStops] = useState<Record<string, Record<string, StopSellDay>>>({});
-  // Buchungen je Objekt × Nacht: gebuchte Tage werden als Buchung (Gastname)
-  // gezeigt, nicht als anonymes Stop-Sell-Schloss — Stop-Sell und Kalender
-  // müssen dieselbe Belegungs-Wahrheit zeigen.
+  const [stops, setStops] = useState<Record<string, StopSellDay[]>>({});
+  // Hotel: Kategorie×Plan-Struktur je Objekt (aus dem Rate-Grid, nur Struktur).
+  const [structure, setStructure] = useState<Record<string, HotelStructure>>({});
+  // Buchungen je Objekt × Nacht (Gastname im Tooltip — gleiche Wahrheit wie
+  // der Belegungsplan). Nur für die Objekt-Ebene (FeWo) relevant.
   const [resByDay, setResByDay] = useState<Record<string, Record<string, Reservation>>>({});
   const [error, setError] = useState<string | null>(agenciesError);
-  // Fehler-Prop nach Realtime-Refresh übernehmen — sonst bliebe ein alter
-  // Banner stehen (oder ein neuer Ladefehler unsichtbar).
   useEffect(() => {
     setError(agenciesError);
   }, [agenciesError]);
-  // Drag: Anker + aktueller Tag innerhalb EINER Objektzeile.
-  const [drag, setDrag] = useState<{ pid: string; a: string; b: string } | null>(null);
+
+  // Drag: Anker + aktueller Tag innerhalb EINER Zeile (Objekt ODER Plan).
+  const [drag, setDrag] = useState<
+    { pid: string; planId: string | null; a: string; b: string } | null
+  >(null);
   const [sel, setSel] = useState<StopSellSelection | null>(null);
   // „Alles zurücksetzen": Ziel (ein Objekt oder alle) + Doppel-Bestätigung.
-  // reset.target = null → alle Objekte; sonst die Property. reset.confirmed =
-  // erste Bestätigung erfolgt, zweiter Klick löst wirklich aus.
   const [reset, setReset] = useState<
     { target: Property | null; confirmed: boolean } | null
   >(null);
@@ -118,9 +142,7 @@ export function StopSellCalendar({
   }
 
   const load = useCallback(async () => {
-    const to = isoPlus(today, DAYS_AHEAD);
-    // Buchungen tenant-weit EINMAL laden (dieselbe Action wie der Belegungsplan,
-    // liefert Gastname per GuestMask) und je Objekt nach Nacht zuordnen.
+    // Buchungen tenant-weit EINMAL laden und je Objekt nach Nacht zuordnen.
     const resAll = await listReservations();
     if (!resAll.ok) setError(resAll.error);
     const resByProp: Record<string, Record<string, Reservation>> = {};
@@ -128,39 +150,72 @@ export function StopSellCalendar({
       for (const r of resAll.data.items) {
         if (r.status === "cancelled") continue; // stornierte belegen nicht
         const map = (resByProp[r.property_id] ??= {});
-        // Nächte: check_in (inkl.) bis check_out (exkl.).
         for (let d = r.check_in; d < r.check_out; d = isoPlus(d, 1)) map[d] = r;
       }
     }
     const perProperty = await Promise.all(
       properties.map(async (p) => {
         const [availRes, stopRes] = await Promise.all([
-          loadAvailabilityChunked(p.id, today, to),
-          listStopSell(p.id, today, to),
+          loadAvailability(p.id, first, windowEnd),
+          listStopSell(p.id, first, windowEnd),
         ]);
         if (availRes.error) setError(availRes.error);
         if (!stopRes.ok) setError(stopRes.error);
         const availMap: Record<string, DayAvailability> = {};
         for (const d of availRes.days) availMap[d.date] = d;
-        const stopMap: Record<string, StopSellDay> = {};
-        if (stopRes.ok) for (const s of stopRes.data.items) stopMap[s.date] = s;
-        return [p.id, availMap, stopMap] as const;
+        return [p.id, availMap, stopRes.ok ? stopRes.data.items : []] as const;
       }),
     );
     setAvail(Object.fromEntries(perProperty.map(([id, a]) => [id, a])));
     setStops(Object.fromEntries(perProperty.map(([id, , s]) => [id, s])));
     setResByDay(resByProp);
-  }, [properties, today]);
+  }, [properties, first, windowEnd]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  // Live: Stopps (auch Channex-Importe), Belegung und Buchungen ohne Reload.
-  // Während eines Drags pausieren, damit die Auswahl nicht springt.
+  // Hotel: Kategorie×Plan-Struktur laden (Rate-Grid, 1-Tages-Fenster reicht —
+  // es geht nur um die Struktur, nicht um Tageskurven).
+  const loadStructure = useCallback(async () => {
+    if (!isHotel) return;
+    const entries = await Promise.all(
+      properties.map(async (p) => {
+        const res = await getRateGrid(p.id, today, isoPlus(today, 1));
+        if (!res.ok) {
+          setError(res.error);
+          return [p.id, { categories: [] }] as const;
+        }
+        return [
+          p.id,
+          {
+            categories: res.data.room_types.map((rt) => ({
+              id: rt.id,
+              title: rt.title,
+              plans: rt.plans.map((pl) => ({
+                planId: pl.id,
+                label: pl.name,
+              })),
+            })),
+          },
+        ] as const;
+      }),
+    );
+    setStructure(Object.fromEntries(entries));
+  }, [isHotel, properties, today]);
+
+  useEffect(() => {
+    loadStructure();
+  }, [loadStructure]);
+
+  // Live: Stopps (auch Channex-Importe), Belegung, Buchungen und die Hotel-
+  // Struktur (neue Kategorie/neuer Plan) ohne Reload. Drag pausiert die Abos,
+  // damit die Auswahl nicht springt.
   useRealtime({ table: "stop_sell", onChange: load, enabled: !drag });
   useRealtime({ table: "availability", onChange: load, enabled: !drag });
   useRealtime({ table: "reservations", onChange: load, enabled: !drag });
+  useRealtime({ table: "rate_plans", onChange: loadStructure, enabled: !drag });
+  useRealtime({ table: "room_types", onChange: loadStructure, enabled: !drag });
 
   // Drag endet mit globalem mouseup → Auswahl normalisieren, Panel öffnen.
   useEffect(() => {
@@ -169,93 +224,173 @@ export function StopSellCalendar({
       setDrag(null);
       const [start, end] = drag.a <= drag.b ? [drag.a, drag.b] : [drag.b, drag.a];
       const prop = properties.find((p) => p.id === drag.pid);
-      if (prop) {
-        setSel({ propertyId: prop.id, propertyTitle: prop.title, start, end });
+      if (!prop) return;
+      let ratePlan: { id: string; label: string } | undefined;
+      if (drag.planId) {
+        for (const cat of structure[drag.pid]?.categories ?? []) {
+          const plan = cat.plans.find((pl) => pl.planId === drag.planId);
+          if (plan) {
+            ratePlan = { id: plan.planId, label: `${cat.title} — ${plan.label}` };
+            break;
+          }
+        }
       }
+      setSel({ propertyId: prop.id, propertyTitle: prop.title, start, end, ratePlan });
     };
     window.addEventListener("mouseup", up);
     return () => window.removeEventListener("mouseup", up);
-  }, [drag, properties]);
+  }, [drag, properties, structure]);
 
-  // Kopfzeilen: Monatsblöcke + Tageszeile, lokalisiert über Intl.
+  // Kopf: Monats-Label + Wochentagskürzel, lokalisiert über Intl.
   const monthFmt = useMemo(
     () => new Intl.DateTimeFormat(locale, { month: "long", year: "numeric", timeZone: "UTC" }),
     [locale],
   );
   const weekdayFmt = useMemo(
-    () => new Intl.DateTimeFormat(locale, { weekday: "narrow", timeZone: "UTC" }),
+    () => new Intl.DateTimeFormat(locale, { weekday: "short", timeZone: "UTC" }),
     [locale],
   );
-  const months = useMemo(() => {
-    const out: { key: string; label: string; span: number }[] = [];
-    for (const d of days) {
-      const key = d.slice(0, 7);
-      const last = out[out.length - 1];
-      if (last && last.key === key) last.span += 1;
-      else out.push({ key, label: monthFmt.format(new Date(d + "T00:00:00Z")), span: 1 });
-    }
-    return out;
-  }, [days, monthFmt]);
+  const monthLabel = monthFmt.format(new Date(`${first}T00:00:00Z`));
 
   const active = drag
     ? {
       pid: drag.pid,
+      planId: drag.planId,
       start: drag.a <= drag.b ? drag.a : drag.b,
       end: drag.a <= drag.b ? drag.b : drag.a,
     }
     : sel
-      ? { pid: sel.propertyId, start: sel.start, end: sel.end }
+      ? {
+        pid: sel.propertyId,
+        planId: sel.ratePlan?.id ?? null,
+        start: sel.start,
+        end: sel.end,
+      }
       : null;
 
-  // Ein Tag gilt als gebucht, wenn availability=booked ODER eine (nicht
-  // stornierte) Reservierung darauf liegt — beide Quellen zusammen, damit ein
-  // Sync-Verzug nie eine Buchung verschwinden lässt.
+  // Ein Tag gilt als gebucht (Objekt-Ebene), wenn availability=booked ODER eine
+  // nicht stornierte Reservierung darauf liegt — beide Quellen zusammen.
   const isBooked = (pid: string, d: string): boolean =>
     avail[pid]?.[d]?.status === "booked" || !!resByDay[pid]?.[d];
 
-  function cellClasses(pid: string, d: string): string {
-    const inSelection =
-      !!active && active.pid === pid && d >= active.start && d <= active.end;
-    if (inSelection) return "bg-foreground/80";
-    // Buchung sticht Stop-Sell (der Tag ist verkauft) — wie im Belegungsplan.
-    if (isBooked(pid, d)) return "bg-accent/70";
-    const day = avail[pid]?.[d];
-    const stop = stops[pid]?.[d];
+  // Stopp einer Zeile am Tag: Plan-Zeile sieht ihren Plan UND Objekt-Stops
+  // (rate_plan_id null gilt für alle Pläne); Objekt-Zeile nur Objekt-Stops.
+  const stopAt = (pid: string, planId: string | null, d: string): StopSellDay | undefined =>
+    (stops[pid] ?? []).find(
+      (s) =>
+        s.date === d &&
+        (planId
+          ? !s.rate_plan_id || s.rate_plan_id === planId
+          : !s.rate_plan_id),
+    );
+
+  const inSelection = (pid: string, planId: string | null, d: string): boolean =>
+    !!active &&
+    active.pid === pid &&
+    active.planId === planId &&
+    d >= active.start &&
+    d <= active.end;
+
+  function cellClasses(pid: string, planId: string | null, d: string): string {
+    if (inSelection(pid, planId, d)) return "bg-foreground/80";
+    if (d < today) return "bg-muted/30"; // Vergangenheit: nur Anzeige
+    // Objekt-Ebene: Buchung sticht Stop-Sell (der Tag ist verkauft).
+    if (!planId && isBooked(pid, d)) return "bg-accent/70";
+    const stop = stopAt(pid, planId, d);
     if (stop) return stop.source === "channex" ? "bg-destructive/10" : "bg-destructive/20";
-    if (day?.status === "blocked") return "bg-muted-foreground/40";
-    const wd = isoWeekday(d);
-    return wd >= 5 ? "bg-muted/60" : "bg-background";
+    if (!planId && avail[pid]?.[d]?.status === "blocked") {
+      return "bg-muted-foreground/40";
+    }
+    return isoWeekday(d) >= 5 ? "bg-muted/60" : "bg-background";
   }
 
-  function cellTitle(p: Property, d: string): string {
-    const day = avail[p.id]?.[d];
-    const stop = stops[p.id]?.[d];
+  function cellTitle(p: Property, planId: string | null, planLabel: string | null, d: string): string {
+    const stop = stopAt(p.id, planId, d);
     const res = resByDay[p.id]?.[d];
-    const parts = [p.title, d];
-    if (isBooked(p.id, d)) {
-      // Gastname sichtbar machen (Stop-Sell muss die Buchung zeigen).
+    const parts = [planLabel ? `${p.title} · ${planLabel}` : p.title, d];
+    if (!planId && isBooked(p.id, d)) {
       parts.push(res?.guest_name ? `${t("legendBooked")}: ${res.guest_name}` : t("legendBooked"));
-    } else if (day?.status === "blocked") parts.push(t("legendBlocked"));
-    else parts.push(t("legendOpen"));
-    // Stop-Sell nur ergänzen, wenn der Tag NICHT gebucht ist (sonst irreführend).
-    if (stop && !isBooked(p.id, d)) {
+    } else if (!planId && avail[p.id]?.[d]?.status === "blocked") {
+      parts.push(t("legendBlocked"));
+    } else if (!stop) {
+      parts.push(t("legendOpen"));
+    }
+    if (stop && !(planId === null && isBooked(p.id, d))) {
       parts.push(stop.source === "channex" ? t("legendStopChannel") : t("legendStopManual"));
       if (stop.reason) parts.push(stop.reason);
     }
     return parts.join(" · ");
   }
 
-  const stopsFor = (pid: string): StopSellDay[] => Object.values(stops[pid] ?? {});
+  // Panel-Daten: Stops der gewählten Ebene (Plan-Zeile → Plan + Objekt-Ebene).
+  const stopsForSelection = (s: StopSellSelection): StopSellDay[] =>
+    (stops[s.propertyId] ?? []).filter((row) =>
+      s.ratePlan
+        ? !row.rate_plan_id || row.rate_plan_id === s.ratePlan.id
+        : !row.rate_plan_id,
+    );
 
-  // Gebuchte Tage eines Objekts (availability=booked ∪ Reservierungsnächte) —
-  // fürs Panel, damit gebuchte Tage aus der wirksamen Auswahl fallen.
-  const bookedDatesFor = (pid: string): Set<string> => {
-    const set = new Set<string>(Object.keys(resByDay[pid] ?? {}));
-    for (const [d, day] of Object.entries(avail[pid] ?? {})) {
+  // Gebuchte Tage (Objekt-Ebene) — fürs Panel; Plan-Zeilen haben keine binäre
+  // Belegung (Kategorie zählt Zimmer), dort keine Buchungs-Sperre.
+  const bookedDatesFor = (s: StopSellSelection): Set<string> => {
+    if (s.ratePlan) return new Set();
+    const set = new Set<string>(Object.keys(resByDay[s.propertyId] ?? {}));
+    for (const [d, day] of Object.entries(avail[s.propertyId] ?? {})) {
       if (day.status === "booked") set.add(d);
     }
     return set;
   };
+
+  // Eine Zeile Tageszellen (Objekt- oder Plan-Zeile) — identische Interaktion.
+  const renderCells = (p: Property, planId: string | null, planLabel: string | null) =>
+    days.map((d) => {
+      const stop = stopAt(p.id, planId, d);
+      const booked = !planId && isBooked(p.id, d);
+      const past = d < today;
+      const disabled = booked || past;
+      return (
+        <button
+          key={d}
+          type="button"
+          title={cellTitle(p, planId, planLabel, d)}
+          disabled={disabled}
+          onMouseDown={(e) => {
+            if (e.button !== 0 || disabled) return;
+            e.preventDefault();
+            setSel(null);
+            setDrag({ pid: p.id, planId, a: d, b: d });
+          }}
+          onMouseEnter={() => {
+            if (disabled) return;
+            setDrag((prev) =>
+              prev && prev.pid === p.id && prev.planId === planId
+                ? { ...prev, b: d }
+                : prev,
+            );
+          }}
+          className={
+            "flex shrink-0 items-center justify-center border-r transition-colors " +
+            (disabled ? "cursor-not-allowed " : "") +
+            cellClasses(p.id, planId, d)
+          }
+          style={{ width: `${COL}rem`, height: `${ROW_H}rem` }}
+        >
+          {stop && !booked ? (
+            <Icon
+              icon={stop.source === "channex" ? "ph:lock-simple" : "ph:hand-palm"}
+              className={
+                "size-4 " +
+                (inSelection(p.id, planId, d)
+                  ? "text-background"
+                  : stop.source === "channex"
+                    ? "text-destructive/70"
+                    : "text-destructive")
+              }
+            />
+          ) : null}
+        </button>
+      );
+    });
 
   return (
     <div className="flex w-full flex-col gap-4 p-6">
@@ -274,6 +409,19 @@ export function StopSellCalendar({
           {t("resetAll")}
         </button>
       </header>
+
+      {/* Monats-Navigation (Board-Muster: Caret · Monatslabel · Caret). */}
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="icon" onClick={() => goMonth(-1)}>
+          <Icon icon="ph:caret-left" className="size-4" />
+        </Button>
+        <span className="min-w-36 text-center font-display text-lg font-bold">
+          {monthLabel}
+        </span>
+        <Button variant="outline" size="icon" onClick={() => goMonth(1)}>
+          <Icon icon="ph:caret-right" className="size-4" />
+        </Button>
+      </div>
 
       {/* Legende */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -305,123 +453,115 @@ export function StopSellCalendar({
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-        {/* Kalender-Raster */}
-        <div className="min-w-0 flex-1 overflow-auto rounded-(--radius) border border-border bg-background select-none">
+        {/* Kalender-Raster in Board-Geometrie */}
+        <div className="min-w-0 flex-1 overflow-x-auto rounded-(--radius) border bg-card select-none">
           <div style={{ width: `${LABEL + days.length * COL}rem` }}>
-            {/* Kopf 1: Monate */}
-            <div className="sticky top-0 z-20 flex border-b border-border bg-background">
+            {/* Kopf: Wochentag + Tag, Heute im Akzent-Kreis (Board-Muster). */}
+            <div className="flex border-b">
               <div
-                className="sticky left-0 z-30 shrink-0 border-r border-border bg-background"
-                style={{ width: `${LABEL}rem` }}
-              />
-              {months.map((m) => (
-                <div
-                  key={m.key}
-                  className="border-r border-border px-2 py-1 text-xs font-semibold"
-                  style={{ width: `${m.span * COL}rem` }}
-                >
-                  {m.label}
-                </div>
-              ))}
-            </div>
-            {/* Kopf 2: Tage */}
-            <div className="sticky top-6 z-20 flex border-b border-border bg-background">
-              <div
-                className="sticky left-0 z-30 flex shrink-0 items-center border-r border-border bg-background px-3 text-xs font-medium text-muted-foreground"
+                className="sticky left-0 z-20 flex shrink-0 items-center border-r bg-card px-4 py-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
                 style={{ width: `${LABEL}rem` }}
               >
                 {t("property")}
               </div>
-              {days.map((d) => (
-                <div
-                  key={d}
-                  className={
-                    "flex shrink-0 flex-col items-center justify-center py-1 text-[0.625rem] leading-tight " +
-                    (d === today
-                      ? "rounded-t-sm bg-accent text-accent-foreground"
-                      : isoWeekday(d) >= 5
-                        ? "bg-muted/60 text-muted-foreground"
-                        : "text-muted-foreground")
-                  }
-                  style={{ width: `${COL}rem` }}
-                >
-                  <span>{weekdayFmt.format(new Date(d + "T00:00:00Z"))}</span>
-                  <span className="font-semibold text-foreground">
-                    {parseInt(d.slice(8), 10)}
-                  </span>
-                </div>
-              ))}
+              {days.map((d) => {
+                const dt = new Date(`${d}T00:00:00Z`);
+                return (
+                  <div
+                    key={d}
+                    className={
+                      "flex shrink-0 flex-col items-center border-r py-2 text-sm" +
+                      (isoWeekday(d) >= 5 ? " bg-muted/40" : "")
+                    }
+                    style={{ width: `${COL}rem` }}
+                  >
+                    <span className="text-xs text-muted-foreground">
+                      {weekdayFmt.format(dt)}
+                    </span>
+                    <span
+                      className={`mt-1 flex size-8 items-center justify-center rounded-full text-base font-semibold ${
+                        d === today ? "bg-accent text-white" : ""
+                      }`}
+                    >
+                      {dt.getUTCDate()}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
-            {/* Objektzeilen */}
+
+            {/* Zeilen: FeWo = Objekt; Hotel = Objekt-Band + Kategorie-Band +
+                Plan-Zeilen (Zimmerkategorie × Rate-Plan). */}
             {properties.map((p) => (
-              <div key={p.id} className="flex border-b border-border last:border-b-0">
-                <div
-                  className="sticky left-0 z-10 flex shrink-0 items-center gap-1 border-r border-border bg-background px-3 text-sm font-medium"
-                  style={{ width: `${LABEL}rem`, height: `${ROW}rem` }}
-                  title={p.title}
-                >
-                  <span className="min-w-0 flex-1 truncate">{p.title}</span>
-                  {/* Objekt-Reset: nur zeigen, wenn dieses Objekt Stops hat. */}
-                  {Object.keys(stops[p.id] ?? {}).length > 0 && (
-                    <button
-                      type="button"
-                      aria-label={t("resetProperty")}
-                      title={t("resetProperty")}
-                      onClick={() => setReset({ target: p, confirmed: false })}
-                      className="flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+              <div key={p.id}>
+                {isHotel ? (
+                  <>
+                    {/* Objekt-Band (nicht interaktiv; Reset am Band). */}
+                    <div className="flex border-b bg-secondary/60">
+                      <div
+                        className="sticky left-0 z-10 flex shrink-0 items-center gap-1 border-r bg-secondary/60 px-4 py-1.5 text-sm font-semibold backdrop-blur"
+                        style={{ width: `${LABEL}rem` }}
+                        title={p.title}
+                      >
+                        <span className="min-w-0 flex-1 truncate">{p.title}</span>
+                        {(stops[p.id]?.length ?? 0) > 0 && (
+                          <ResetRowButton
+                            label={t("resetProperty")}
+                            onClick={() => setReset({ target: p, confirmed: false })}
+                          />
+                        )}
+                      </div>
+                      {days.map((d) => (
+                        <div key={d} className="shrink-0 border-r" style={{ width: `${COL}rem` }} />
+                      ))}
+                    </div>
+                    {(structure[p.id]?.categories ?? []).map((cat) => (
+                      <div key={cat.id}>
+                        {/* Kategorie-Band — Spaltenlinien laufen durch. */}
+                        <div className="flex border-b bg-secondary/40">
+                          <div
+                            className="sticky left-0 z-10 shrink-0 border-r bg-secondary/40 px-4 py-1 text-xs font-semibold text-muted-foreground backdrop-blur"
+                            style={{ width: `${LABEL}rem` }}
+                          >
+                            {cat.title}
+                          </div>
+                          {days.map((d) => (
+                            <div key={d} className="shrink-0 border-r" style={{ width: `${COL}rem` }} />
+                          ))}
+                        </div>
+                        {cat.plans.map((plan) => (
+                          <div key={plan.planId} className="flex border-b last:border-b-0">
+                            <div
+                              className="sticky left-0 z-10 flex shrink-0 items-center border-r bg-card pl-7 pr-4 text-sm font-medium"
+                              style={{ width: `${LABEL}rem`, height: `${ROW_H}rem` }}
+                              title={`${cat.title} — ${plan.label}`}
+                            >
+                              <span className="min-w-0 flex-1 truncate">{plan.label}</span>
+                            </div>
+                            {renderCells(p, plan.planId, `${cat.title} — ${plan.label}`)}
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </>
+                ) : (
+                  <div className="flex border-b last:border-b-0">
+                    <div
+                      className="sticky left-0 z-10 flex shrink-0 items-center gap-1 border-r bg-card px-4 text-sm font-medium"
+                      style={{ width: `${LABEL}rem`, height: `${ROW_H}rem` }}
+                      title={p.title}
                     >
-                      <Icon icon="ph:arrow-counter-clockwise" className="size-3.5" />
-                    </button>
-                  )}
-                </div>
-                {days.map((d) => {
-                  const stop = stops[p.id]?.[d];
-                  const booked = isBooked(p.id, d);
-                  const inSel =
-                    !!active && active.pid === p.id && d >= active.start && d <= active.end;
-                  return (
-                    <button
-                      key={d}
-                      type="button"
-                      title={cellTitle(p, d)}
-                      // Gebuchte Tage sind für Stop-Sell tabu → nicht auswählbar.
-                      disabled={booked}
-                      onMouseDown={(e) => {
-                        if (e.button !== 0 || booked) return;
-                        e.preventDefault();
-                        setSel(null);
-                        setDrag({ pid: p.id, a: d, b: d });
-                      }}
-                      onMouseEnter={() => {
-                        if (booked) return;
-                        setDrag((prev) =>
-                          prev && prev.pid === p.id ? { ...prev, b: d } : prev,
-                        );
-                      }}
-                      className={
-                        "flex shrink-0 items-center justify-center border-r border-border/50 transition-colors " +
-                        (booked ? "cursor-not-allowed " : "") +
-                        cellClasses(p.id, d)
-                      }
-                      style={{ width: `${COL}rem`, height: `${ROW}rem` }}
-                    >
-                      {/* Stop-Sell-Schloss nur auf NICHT gebuchten Tagen zeigen. */}
-                      {stop && !booked ? (
-                        <Icon
-                          icon={stop.source === "channex" ? "ph:lock-simple" : "ph:hand-palm"}
-                          className={
-                            "size-3.5 " +
-                            (inSel
-                              ? "text-background"
-                              : stop.source === "channex"
-                                ? "text-destructive/70"
-                                : "text-destructive")
-                          }
+                      <span className="min-w-0 flex-1 truncate">{p.title}</span>
+                      {(stops[p.id]?.length ?? 0) > 0 && (
+                        <ResetRowButton
+                          label={t("resetProperty")}
+                          onClick={() => setReset({ target: p, confirmed: false })}
                         />
-                      ) : null}
-                    </button>
-                  );
-                })}
+                      )}
+                    </div>
+                    {renderCells(p, null, null)}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -431,8 +571,8 @@ export function StopSellCalendar({
         {sel ? (
           <StopSellPanel
             selection={sel}
-            stops={stopsFor(sel.propertyId)}
-            bookedDates={bookedDatesFor(sel.propertyId)}
+            stops={stopsForSelection(sel)}
+            bookedDates={bookedDatesFor(sel)}
             agencies={agencies}
             onClose={() => setSel(null)}
             onDone={() => {
@@ -509,5 +649,19 @@ export function StopSellCalendar({
         </div>
       ) : null}
     </div>
+  );
+}
+
+function ResetRowButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      className="flex size-6 shrink-0 items-center justify-center rounded-full text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
+    >
+      <Icon icon="ph:arrow-counter-clockwise" className="size-3.5" />
+    </button>
   );
 }

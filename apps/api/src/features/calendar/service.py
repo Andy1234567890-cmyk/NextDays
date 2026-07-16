@@ -6,6 +6,9 @@ Verfügbarkeitslogik + Double-Booking-Schutz über die availability-Tabelle
 Der Supabase-Client wird injiziert → im Test mockbar; echte DB-Calls beim
 laufenden Stack. Kein stilles Exception-Swallowing (PROJECT.md).
 """
+# pylint: disable=too-many-lines  # kohärente Kalender-Domäne (Verfügbarkeit/
+# Preis/Stop-Sell/Saisons/Bulk) — ein Split zerrisse die eng gekoppelte
+# Spiegelungs- und Push-Logik (gleiches Muster wie ari_push.py).
 from datetime import date, timedelta
 from typing import TYPE_CHECKING
 
@@ -28,6 +31,7 @@ from .schemas import (
     DateRange,
     DayAvailability,
     PriceOverrideRequest,
+    RestrictionRow,
     RestrictionRowsRequest,
     SliceHealth,
     StopSellDay,
@@ -38,12 +42,11 @@ if TYPE_CHECKING:
 
 log = get_logger("nextdays.calendar")
 
-# Kanal-Dimension am Stop-Sell (Migration 0145). Solange die Spalten scope/channels
-# noch nicht live sind, NICHT selektieren (PostgREST wirft sonst „column does not
-# exist") und im Code auf all/[] defaulten. NACH dem Einspielen von 0145 auf
-# "scope,channels," setzen — dann liefern die Reads die echten Kanal-Werte. Der
-# einzige Umschalt-Ort.
-_STOP_SELL_SCOPE_COLS = ""
+# Kanal- und Plan-Dimension am Stop-Sell (Migrationen 0145 + 0152, beide live
+# verifiziert). scope/channels = Kanal-Scope; rate_plan_id = plan-genauer Stopp
+# (Hotel, null = Objekt-Ebene). Deploy-Reihenfolge: 0152 MUSS vor diesem Code
+# eingespielt sein (PostgREST wirft sonst „column does not exist").
+_STOP_SELL_SCOPE_COLS = "scope,channels,rate_plan_id,"
 
 
 def _default_stop_sell_scope(row: dict) -> None:
@@ -584,7 +587,8 @@ class CalendarService:
         skipped_booked = before - len(days)
         # Channex-seitige Stops (source=channex) nie überschreiben — der Upsert
         # würde sonst ihre source auf manual kippen und ein späteres Aufheben
-        # würde OTA-Stops öffnen. Diese Tage sind ohnehin bereits gestoppt.
+        # würde OTA-Stops öffnen. Nur die OBJEKT-Ebene (rate_plan_id null) zählt:
+        # ein plan-genauer OTA-Stop kollidiert nicht mit dem Objekt-Upsert.
         channex_days = {
             row["date"]
             for row in (
@@ -593,6 +597,7 @@ class CalendarService:
                 .select("date")
                 .eq("property_id", property_id)
                 .eq("source", "channex")
+                .is_("rate_plan_id", "null")
                 .gte("date", rng.start.isoformat())
                 .lt("date", rng.end.isoformat())
                 .execute()
@@ -613,8 +618,10 @@ class CalendarService:
             }
             for day in days
         ]
+        # Konfliktziel = unique nulls not distinct (0152): rate_plan_id fehlt im
+        # Payload → null → trifft die bestehende Objekt-Zeile des Tages.
         self._db().table("stop_sell").upsert(
-            payload, on_conflict="property_id,date"
+            payload, on_conflict="property_id,date,rate_plan_id"
         ).execute()
         # Push NUR die tatsächlich gesetzten Tage (gebuchte/channex-Tage sind
         # raus) — als komprimierte Spannen. Kein roher Range-Push mehr, sonst
@@ -1317,6 +1324,72 @@ class CalendarService:
         ).data or []
         return {r["id"] for r in rows}
 
+    def _mirror_stop_sell_row(
+        self, tenant_id: str, property_id: str, row: RestrictionRow
+    ) -> None:
+        """Lokalen stop_sell-Gegenzustand einer Restriktions-Zeile pflegen
+        (Wurzel 1: der Channex-Push allein ließe eigene Plattform und Rezeption
+        offen). row.rate_plan_id gesetzt → Stopp NUR für diesen Plan (Hotel);
+        None → Objekt-Ebene wie set_stop_sell. Channex-importierte Stops
+        derselben Ebene werden nie überschrieben/gelöscht."""
+        start_iso = row.range.start.isoformat()
+        end_iso = row.range.end.isoformat()
+
+        def _plan_scoped(query):  # noqa: ANN001, ANN202 — postgrest-Builder
+            return (
+                query.eq("rate_plan_id", row.rate_plan_id)
+                if row.rate_plan_id
+                else query.is_("rate_plan_id", "null")
+            )
+
+        if row.stop_sell:
+            # source=channex derselben Ebene nie zu manual kippen (sonst würde
+            # ein Aufheben später OTA-Stops öffnen) — diese Tage auslassen.
+            channex_days = {
+                r["date"]
+                for r in (
+                    _plan_scoped(
+                        self._db()
+                        .table("stop_sell")
+                        .select("date")
+                        .eq("property_id", property_id)
+                        .eq("source", "channex")
+                    )
+                    .gte("date", start_iso)
+                    .lt("date", end_iso)
+                    .execute()
+                ).data
+                or []
+            }
+            payload = [
+                {
+                    "tenant_id": tenant_id,
+                    "property_id": property_id,
+                    "date": d.isoformat(),
+                    "reason": row.reason,
+                    "source": "manual",
+                    **(
+                        {"rate_plan_id": row.rate_plan_id}
+                        if row.rate_plan_id
+                        else {}
+                    ),
+                }
+                for d in row.range.nights()
+                if d.isoformat() not in channex_days
+            ]
+            if payload:
+                self._db().table("stop_sell").upsert(
+                    payload, on_conflict="property_id,date,rate_plan_id"
+                ).execute()
+        else:
+            _plan_scoped(
+                self._db()
+                .table("stop_sell")
+                .delete()
+                .eq("property_id", property_id)
+                .eq("source", "manual")
+            ).gte("date", start_iso).lt("date", end_iso).execute()
+
     def bulk_restrictions(self, tenant_id: str, req: RestrictionRowsRequest) -> int:
         """Mehrere heterogene Restriktions-Zeilen eines Objekts in EINEM Channex-
         Call setzen (Zertifizierung Test 3-8). Spiegelt lokal (Preis→price_overrides
@@ -1376,6 +1449,8 @@ class CalendarService:
                      for d in row.range.nights()],
                     on_conflict="rate_plan_id,date",
                 ).execute()
+            if row.stop_sell is not None:
+                self._mirror_stop_sell_row(tenant_id, pid, row)
             rows_payload.append({
                 "date_from": start.isoformat(),
                 "date_to": (end - timedelta(days=1)).isoformat(),  # inklusiv

@@ -519,10 +519,14 @@ class BookingEngineService:
         # den Plattform-Kanal betrifft (scope='all' oder 'platform' im channels-Set).
         # Ein reiner OTA-Stop lässt die eigene Plattform durch. Explizit gegen die
         # stop_sell-Tabelle prüfen — availability kann durch Sync-Verzug divergieren.
+        # scope/channels MITLESEN, sonst greift der Kanal-Filter nie. Plan-genaue
+        # Hotel-Stops (rate_plan_id gesetzt) blocken hier MIT: die öffentliche
+        # Buchung wählt (noch) keinen Rate-Plan — im Zweifel fail-closed sperren
+        # (Wurzel 5: lieber zu viel gesperrt als eine gestoppte Rate verkauft).
         stopped_rows = (
             self._db()
             .table("stop_sell")
-            .select("date")
+            .select("date,scope,channels")
             .eq("property_id", req.property_id)
             .gte("date", req.check_in.isoformat())
             .lt("date", req.check_out.isoformat())

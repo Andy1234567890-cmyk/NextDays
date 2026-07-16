@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import {
+  bulkRestrictions,
   clearStopSell,
   setStopSell,
   type StopSellDay,
@@ -26,6 +27,10 @@ export type StopSellSelection = {
   propertyTitle: string;
   start: string; // YYYY-MM-DD, inklusiv
   end: string; // YYYY-MM-DD, inklusiv
+  // Hotel: die gewählte Zeile ist ein Rate-Plan (Kategorie — Plan). Der Stopp
+  // trifft dann GENAU diesen Plan (bulk-restrictions, ein Portale-Call) statt
+  // der Objekt-Ebene. Undefined = Objekt-Zeile (Ferienwohnung).
+  ratePlan?: { id: string; label: string };
 };
 
 // Grund-Auswahl wie Guesty (Owner block / Maintenance / Do not sell / Other);
@@ -102,12 +107,30 @@ export function StopSellPanel({
     [rangeDays, bookedDates],
   );
   const affectedSet = useMemo(() => new Set(affected), [affected]);
+  const ratePlan = selection.ratePlan;
+  // Plan-Zeile: für „Aufheben" zählen nur die Stops GENAU dieses Plans — ein
+  // Objekt-Stopp (gilt allen Plänen) lässt sich hier nicht plan-genau lösen.
   const manualInRange = stops.filter(
-    (s) => s.source === "manual" && affectedSet.has(s.date),
+    (s) =>
+      s.source === "manual" &&
+      affectedSet.has(s.date) &&
+      (!ratePlan || s.rate_plan_id === ratePlan.id),
   );
   const channexInRange = stops.filter(
     (s) => s.source === "channex" && affectedSet.has(s.date),
   );
+
+  // Zusammenhängende [von, bis]-Bereiche (beide inkl.) der wirksamen Tage —
+  // eine Wochentags-Maske wird so zu mehreren Zeilen im EINEN Portale-Call.
+  const affectedRanges = useMemo(() => {
+    const out: [string, string][] = [];
+    for (const d of affected) {
+      const last = out[out.length - 1];
+      if (last && isoPlus(last[1], 1) === d) last[1] = d;
+      else out.push([d, d]);
+    }
+    return out;
+  }, [affected]);
 
   const weekdayArg =
     weekdays.size === 7 ? undefined : Array.from(weekdays).sort((a, b) => a - b);
@@ -127,10 +150,23 @@ export function StopSellPanel({
       const reason = reasonKey
         ? t(reasonKey) + (note.trim() ? ` — ${note.trim()}` : "")
         : note.trim() || undefined;
-      const res = await setStopSell(
-        selection.propertyId, from, isoPlus(to, 1), reason, weekdayArg,
-        agencyId || undefined,
-      );
+      // Plan-Zeile (Hotel): Stopp GENAU für diesen Rate-Plan über den
+      // gebündelten Restriktions-Weg — alle Bereiche in EINEM Portale-Call.
+      const res = ratePlan
+        ? await bulkRestrictions(
+          selection.propertyId,
+          affectedRanges.map(([s, e]) => ({
+            start: s,
+            end: isoPlus(e, 1), // exklusiv
+            rate_plan_id: ratePlan.id,
+            stop_sell: true,
+            ...(reason ? { reason } : {}),
+          })),
+        )
+        : await setStopSell(
+          selection.propertyId, from, isoPlus(to, 1), reason, weekdayArg,
+          agencyId || undefined,
+        );
       if (res.ok) onDone();
       else setError(res.error);
     });
@@ -139,9 +175,19 @@ export function StopSellPanel({
   function onClear(includePortal = false) {
     setError(null);
     startTransition(async () => {
-      const res = await clearStopSell(
-        selection.propertyId, from, isoPlus(to, 1), weekdayArg, includePortal,
-      );
+      const res = ratePlan
+        ? await bulkRestrictions(
+          selection.propertyId,
+          affectedRanges.map(([s, e]) => ({
+            start: s,
+            end: isoPlus(e, 1),
+            rate_plan_id: ratePlan.id,
+            stop_sell: false,
+          })),
+        )
+        : await clearStopSell(
+          selection.propertyId, from, isoPlus(to, 1), weekdayArg, includePortal,
+        );
       if (res.ok) onDone();
       else setError(res.error);
     });
@@ -153,7 +199,9 @@ export function StopSellPanel({
         <div className="flex min-w-0 flex-col">
           <span className="text-sm font-semibold">{t("selection")}</span>
           <span className="truncate text-xs text-muted-foreground">
-            {selection.propertyTitle}
+            {ratePlan
+              ? `${selection.propertyTitle} · ${ratePlan.label}`
+              : selection.propertyTitle}
           </span>
         </div>
         <button
@@ -203,8 +251,9 @@ export function StopSellPanel({
       </div>
 
       {/* Adressat: Reisebüro/Veranstalter (Touristik: Stop-Sell-Meldung an
-          den Partner); leer = gilt allen Kanälen. */}
-      {agencies.length > 0 && (
+          den Partner); leer = gilt allen Kanälen. Objekt-Ebene only — ein
+          plan-genauer Hotel-Stopp kennt keinen Partner-Adressaten. */}
+      {!ratePlan && agencies.length > 0 && (
         <label className="flex flex-col gap-1.5">
           <span className="text-xs font-medium text-muted-foreground">
             {t("agencyLabel")}
@@ -283,7 +332,9 @@ export function StopSellPanel({
         {/* Auch Portal-Stops aufheben: entfernt zusätzlich die Channex/Portal-
             Stops und öffnet die Tage an den OTAs. Für versehentlich gesetzte
             Stops — daher separater, klar benannter Button mit Warnung. */}
-        {channexInRange.length > 0 && (
+        {/* Portal-Stops mit aufheben: nur Objekt-Ebene — der include_portal-Weg
+            löscht objekt-weit; für Plan-Zeilen wäre das zu grob. */}
+        {!ratePlan && channexInRange.length > 0 && (
           <>
             <Button
               variant="outline"

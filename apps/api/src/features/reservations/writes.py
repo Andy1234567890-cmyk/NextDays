@@ -122,17 +122,24 @@ class WritesMixin(ReservationsBase):
                 )
         # Stop-Sell-Schutz: ein Stop-Sell sperrt die Rezeptions-Buchung nur, wenn er
         # den Rezeptions-Kanal betrifft (scope='all' oder 'reception' im channels-
-        # Set). Ein reiner OTA-Stop lässt die Rezeption durch.
+        # Set) UND die gebuchte Ebene trifft: Objekt-Stopp (rate_plan_id null)
+        # sperrt immer, ein plan-genauer Hotel-Stopp nur SEINEN Plan (Twin/BAR-
+        # Sperre lässt Double/B&B durch). scope/channels MITLESEN — ohne sie
+        # defaultet der Kanal-Filter auf 'all' und blockt auch reine OTA-Stops.
         stopped_rows = (
             self._db()
             .table("stop_sell")
-            .select("date")
+            .select("date,scope,channels,rate_plan_id")
             .eq("property_id", req.property_id)
             .gte("date", req.check_in.isoformat())
             .lt("date", req.check_out.isoformat())
             .execute()
         ).data or []
-        if any(stop_sell_blocks_channel(r, RECEPTION) for r in stopped_rows):
+        if any(
+            stop_sell_blocks_channel(r, RECEPTION)
+            and r.get("rate_plan_id") in (None, rate_plan_id)
+            for r in stopped_rows
+        ):
             raise ReservationError(
                 "Zeitraum enthält Stop-Sell-Tage. Bitte zuerst den Stop-Sell "
                 "aufheben.", status_code=409
@@ -457,18 +464,23 @@ class WritesMixin(ReservationsBase):
                 "Ziel-Zeitraum enthält bereits belegte/gesperrte Tage.",
                 status_code=409,
             )
-        # Stop-Sell-Schutz für die Ziel-Nächte — wie create()/create_public_booking,
-        # kanal-bewusst: nur Stops, die den Rezeptions-Kanal betreffen, blocken.
+        # Stop-Sell-Schutz für die Ziel-Nächte — wie create(), kanal- UND plan-
+        # bewusst: nur Stops, die den Rezeptions-Kanal betreffen und die Ebene
+        # der Reservierung treffen (Objekt-Stopp oder DEREN Rate-Plan), blocken.
         stopped_rows = (
             self._db()
             .table("stop_sell")
-            .select("date")
+            .select("date,scope,channels,rate_plan_id")
             .eq("property_id", req.property_id)
             .gte("date", req.check_in.isoformat())
             .lt("date", req.check_out.isoformat())
             .execute()
         ).data or []
-        if any(stop_sell_blocks_channel(r, RECEPTION) for r in stopped_rows):
+        if any(
+            stop_sell_blocks_channel(r, RECEPTION)
+            and r.get("rate_plan_id") in (None, current.get("rate_plan_id"))
+            for r in stopped_rows
+        ):
             raise ReservationError(
                 "Ziel-Zeitraum enthält Stop-Sell-Tage. Bitte zuerst den "
                 "Stop-Sell aufheben.", status_code=409,

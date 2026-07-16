@@ -126,6 +126,9 @@ export type StopSellDay = {
   agency_id?: string | null;
   // Name des Reisebüros (Backend-Join) — fürs Balken-Label im Kalender.
   agency_name?: string | null;
+  // Hotel (0152): Stopp gilt NUR für diesen Rate-Plan; null = Objekt-Ebene
+  // (Ferienwohnung/Altdaten), gilt für alle Pläne.
+  rate_plan_id?: string | null;
 };
 
 /** Stop-Sell-Tage eines Objekts im Zeitraum [start, end). */
@@ -340,6 +343,8 @@ export type RestrictionRow = {
   closed_to_arrival?: boolean;
   closed_to_departure?: boolean;
   stop_sell?: boolean;
+  // Grund für den lokalen stop_sell-Spiegel (geht nicht an die Portale).
+  reason?: string;
 };
 
 /** Mehrere heterogene Restriktions-Zeilen (verschiedene Preise/min_stay/max_stay/

@@ -121,6 +121,9 @@ class StopSellDay(BaseModel):
     date: date
     reason: str | None = None
     source: StopSellSource
+    # Hotel: Stopp gilt NUR für diesen Rate-Plan (Zeile im Stop-Sell-Kalender).
+    # None = Objekt-Ebene (Ferienwohnung/Altdaten) → gilt für alle Pläne.
+    rate_plan_id: str | None = None
     # Kanal-Dimension: all = alle Kanäle (Default), channels = nur channels[].
     scope: StopSellScope = StopSellScope.all
     channels: list[str] = []
@@ -320,6 +323,9 @@ class RestrictionRow(BaseModel):
     closed_to_arrival: bool | None = None
     closed_to_departure: bool | None = None
     stop_sell: bool | None = None
+    # Grund für den lokalen stop_sell-Spiegel (Guesty-Muster: „Wartung — Notiz").
+    # Geht NICHT an Channex (kennt kein reason-Feld), nur in die eigene Tabelle.
+    reason: str | None = Field(default=None, max_length=500)
 
     @model_validator(mode="after")
     def _at_least_one_field(self) -> "RestrictionRow":

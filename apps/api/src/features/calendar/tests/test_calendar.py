@@ -10,6 +10,8 @@ from src.features.calendar.schemas import (
     BlockRequest,
     DateRange,
     PriceOverrideRequest,
+    RestrictionRow,
+    RestrictionRowsRequest,
     StopSellListResponse,
 )
 from src.features.calendar.service import CalendarError, CalendarService
@@ -785,3 +787,57 @@ def test_owner_board_filters_and_strips() -> None:
     # Nur das zugeordnete p1, ohne Preise.
     assert [i.property_id for i in board.items] == ["p1"]
     assert all(d.price is None for d in board.items[0].days)
+
+
+# --- bulk_restrictions: lokaler stop_sell-Spiegel (Wurzel 1) -----------------
+
+def _row_req(**kw) -> RestrictionRowsRequest:
+    rng = DateRange(start=date(2026, 11, 14), end=date(2026, 11, 15))
+    return RestrictionRowsRequest(
+        property_id="p1", rows=[RestrictionRow(range=rng, **kw)]
+    )
+
+
+def test_bulk_restrictions_plan_stop_sell_mirrors_locally() -> None:
+    # Hotel-Stopp (Zert Test 6): die Zeile spiegelt in stop_sell MIT
+    # rate_plan_id — sonst blieben eigene Plattform/Rezeption offen.
+    svc, store = _service(
+        properties=[{"id": "p1", "tenant_id": "t1"}],
+        rate_plans=[{"id": "rp-a", "property_id": "p1"}],
+        stop_sell=[],
+    )
+    n = svc.bulk_restrictions("t1", _row_req(rate_plan_id="rp-a", stop_sell=True))
+    assert n == 1
+    mirrored = [p for t, p in store.get("_upserts", []) if t == "stop_sell"]
+    assert mirrored and mirrored[0][0]["rate_plan_id"] == "rp-a"
+    assert mirrored[0][0]["source"] == "manual"
+    assert mirrored[0][0]["date"] == "2026-11-14"
+
+
+def test_bulk_restrictions_plan_stop_sell_false_deletes_plan_rows() -> None:
+    # Aufheben trifft NUR den Plan (eq rate_plan_id) und nur manuelle Stops.
+    svc, store = _service(
+        properties=[{"id": "p1", "tenant_id": "t1"}],
+        rate_plans=[{"id": "rp-a", "property_id": "p1"}],
+        stop_sell=[],
+    )
+    svc.bulk_restrictions("t1", _row_req(rate_plan_id="rp-a", stop_sell=False))
+    filters = [
+        f for t, f in store.get("_delete_filters", []) if t == "stop_sell"
+    ]
+    assert filters == [
+        {"property_id": "p1", "source": "manual", "rate_plan_id": "rp-a"}
+    ]
+
+
+def test_bulk_restrictions_rejects_foreign_rate_plan() -> None:
+    # Fremde/erfundene Plan-ID → 422, KEIN stiller Fallback auf alle Pläne.
+    svc, store = _service(
+        properties=[{"id": "p1", "tenant_id": "t1"}],
+        rate_plans=[],  # kein eigener Plan
+        stop_sell=[],
+    )
+    with pytest.raises(CalendarError) as exc:
+        svc.bulk_restrictions("t1", _row_req(rate_plan_id="rp-x", stop_sell=True))
+    assert exc.value.status_code == 422
+    assert not store.get("_upserts")
