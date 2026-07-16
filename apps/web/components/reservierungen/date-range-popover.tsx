@@ -8,6 +8,7 @@
 import { Icon } from "@iconify/react";
 import { addDays, differenceInCalendarDays, format, parse } from "date-fns";
 import { de } from "date-fns/locale";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { DateRange } from "react-day-picker";
 
@@ -26,11 +27,12 @@ function toIso(d: Date): string {
 }
 
 // Presets: liefern einen ISO-Bereich relativ zu heute (kein Fantasie-Default —
-// alle aus dem echten Kalender berechnet).
-const PRESETS: { key: string; label: string; range: () => IsoRange }[] = [
+// alle aus dem echten Kalender berechnet). Labels werden per Übersetzungs-Key
+// aufgelöst (labelKey), damit diese Liste außerhalb der Komponente bleiben kann.
+const PRESETS: { key: string; labelKey: string; range: () => IsoRange }[] = [
   {
     key: "this_week",
-    label: "Diese Woche",
+    labelKey: "presetThisWeek",
     range: () => {
       const now = new Date();
       const day = (now.getDay() + 6) % 7; // Montag = 0
@@ -40,7 +42,7 @@ const PRESETS: { key: string; label: string; range: () => IsoRange }[] = [
   },
   {
     key: "last_7",
-    label: "Letzte 7 Tage",
+    labelKey: "presetLast7Days",
     range: () => {
       const now = new Date();
       return { from: toIso(addDays(now, -6)), to: toIso(now) };
@@ -48,7 +50,7 @@ const PRESETS: { key: string; label: string; range: () => IsoRange }[] = [
   },
   {
     key: "last_30",
-    label: "Letzte 30 Tage",
+    labelKey: "presetLast30Days",
     range: () => {
       const now = new Date();
       return { from: toIso(addDays(now, -29)), to: toIso(now) };
@@ -56,7 +58,7 @@ const PRESETS: { key: string; label: string; range: () => IsoRange }[] = [
   },
   {
     key: "this_month",
-    label: "Dieser Monat",
+    labelKey: "presetThisMonth",
     range: () => {
       const now = new Date();
       const start = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -66,7 +68,7 @@ const PRESETS: { key: string; label: string; range: () => IsoRange }[] = [
   },
   {
     key: "this_quarter",
-    label: "Dieses Quartal",
+    labelKey: "presetThisQuarter",
     range: () => {
       const now = new Date();
       const q = Math.floor(now.getMonth() / 3);
@@ -77,7 +79,7 @@ const PRESETS: { key: string; label: string; range: () => IsoRange }[] = [
   },
   {
     key: "this_year",
-    label: "Dieses Jahr",
+    labelKey: "presetThisYear",
     range: () => {
       const now = new Date();
       return {
@@ -111,6 +113,7 @@ export function DateRangePopover({
   value: IsoRange;
   onChange: (range: IsoRange) => void;
 }) {
+  const t = useTranslations("reservations");
   const [open, setOpen] = useState(false);
   const selected: DateRange = { from: toDate(value.from), to: toDate(value.to) };
 
@@ -125,7 +128,7 @@ export function DateRangePopover({
         type="button"
         variant="outline"
         size="icon"
-        aria-label="Vorherige Periode"
+        aria-label={t("dateRangePopover.previousPeriod")}
         onClick={() => onChange(shiftRange(value, -1))}
       >
         <Icon icon="ph:arrow-left" className="size-4" />
@@ -134,7 +137,7 @@ export function DateRangePopover({
         type="button"
         variant="outline"
         size="icon"
-        aria-label="Nächste Periode"
+        aria-label={t("dateRangePopover.nextPeriod")}
         onClick={() => onChange(shiftRange(value, 1))}
       >
         <Icon icon="ph:arrow-right" className="size-4" />
@@ -161,7 +164,7 @@ export function DateRangePopover({
                     "hover:bg-secondary/60",
                   )}
                 >
-                  {p.label}
+                  {t(`dateRangePopover.${p.labelKey}`)}
                 </button>
               ))}
             </div>

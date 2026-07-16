@@ -6,6 +6,7 @@
 // der Objekt-Reiter „Nachrichten". Der Gästemappe-Reiter ist bewusst eine zweite
 // Ansicht auf dieselben Daten (kein neues Datenmodell) und verwendet daher die
 // bestehende MessagingForm 1:1 — eine Wahrheit, keine Doppelpflege.
+import { getTranslations } from "next-intl/server";
 import { MessagingForm } from "@/components/objekte/messaging-form";
 import { getProperty } from "@/lib/properties";
 
@@ -17,9 +18,10 @@ export default async function GaestemappePage({
   const { id } = await params;
   const res = await getProperty(id);
   if (!res.ok) {
+    const t = await getTranslations("reservations");
     return (
       <div className="text-sm text-destructive">
-        Objekt konnte nicht geladen werden: {res.error}
+        {t("gaestemappePage.loadError", { error: res.error })}
       </div>
     );
   }

@@ -5,6 +5,7 @@
 // Pflicht, schwebender Speichern-Button unten rechts. Neu ODER Bearbeiten
 // (ruleId gesetzt). Nur kind=template.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -23,6 +24,7 @@ import {
 const LIST = "/reservierungen/aufgaben/vorlagen";
 
 export function TemplateEditorPage({ ruleId }: { ruleId: string | null }) {
+  const t = useTranslations("reservations");
   const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -61,7 +63,7 @@ export function TemplateEditorPage({ ruleId }: { ruleId: string | null }) {
 
   const save = async () => {
     if (!name.trim()) {
-      toast.error("Bitte einen Aufgabennamen angeben.");
+      toast.error(t("templateEditorPage.nameRequired"));
       return;
     }
     setSaving(true);
@@ -85,40 +87,45 @@ export function TemplateEditorPage({ ruleId }: { ruleId: string | null }) {
       toast.error(res.error);
       return;
     }
-    toast.success("Gespeichert.");
+    toast.success(t("templateEditorPage.saved"));
     router.push(LIST);
   };
 
   if (loading) {
-    return <p className="p-6 text-sm text-muted-foreground">Lädt…</p>;
+    return (
+      <p className="p-6 text-sm text-muted-foreground">
+        {t("templateEditorPage.loading")}
+      </p>
+    );
   }
 
   return (
     <div className="flex flex-col gap-4">
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
-        <span>Startseite</span>
+        <span>{t("templateEditorPage.breadcrumbHome")}</span>
         <Icon icon="ph:caret-right" className="size-3.5" />
-        <span>Aufgaben</span>
+        <span>{t("templateEditorPage.breadcrumbTasks")}</span>
         <Icon icon="ph:caret-right" className="size-3.5" />
         <a href={LIST} className="hover:text-foreground">
-          Aufgabenvorlagen
+          {t("templateEditorPage.breadcrumbTemplates")}
         </a>
         <Icon icon="ph:caret-right" className="size-3.5" />
         <span className="text-foreground">
-          {ruleId ? "Bearbeiten" : "Erstellen"}
+          {ruleId
+            ? t("templateEditorPage.modeEdit")
+            : t("templateEditorPage.modeCreate")}
         </span>
       </nav>
 
       <div className="flex items-center gap-3">
         <h1 className="font-display text-2xl font-extrabold">
-          {ruleId ? "Bearbeiten" : "Erstellen"}
+          {ruleId
+            ? t("templateEditorPage.modeEdit")
+            : t("templateEditorPage.modeCreate")}
         </h1>
-        <LearnButton title="Aufgabenvorlagen">
+        <LearnButton title={t("templateEditorPage.learnTitle")}>
           <p className="text-sm text-muted-foreground">
-            Aufgabenvorlagen sind die tatsächlichen Aufgaben, die von Ihrem
-            Personal ausgeführt werden sollen. Vorlagen können zu einer geplanten
-            Aufgabe oder einer manuell erstellten Aufgabe hinzugefügt werden. So
-            müssen Sie nicht jedes Mal eingeben, was getan werden muss.
+            {t("templateEditorPage.learnBody")}
           </p>
         </LearnButton>
       </div>
@@ -126,12 +133,16 @@ export function TemplateEditorPage({ ruleId }: { ruleId: string | null }) {
       <div className="rounded-(--radius) border bg-card p-6">
         <div className="flex flex-col gap-5">
           <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-semibold">Aufgabenname</span>
+            <span className="text-sm font-semibold">
+              {t("templateEditorPage.taskNameLabel")}
+            </span>
             <Input value={name} onChange={(e) => setName(e.target.value)} />
           </label>
 
           <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-semibold">Aufgabenbeschreibung</span>
+            <span className="text-sm font-semibold">
+              {t("templateEditorPage.taskDescriptionLabel")}
+            </span>
             <textarea
               className="min-h-24 w-full rounded-(--radius) border px-3 py-2 text-sm"
               value={description}
@@ -140,7 +151,9 @@ export function TemplateEditorPage({ ruleId }: { ruleId: string | null }) {
           </label>
 
           <div className="flex flex-col gap-3">
-            <span className="text-sm font-semibold">Aufgaben</span>
+            <span className="text-sm font-semibold">
+              {t("templateEditorPage.itemsLabel")}
+            </span>
             {items.map((it, idx) => (
               <div
                 key={idx}
@@ -150,7 +163,9 @@ export function TemplateEditorPage({ ruleId }: { ruleId: string | null }) {
                   {/* Titel + Foto-Toggle */}
                   <div className="flex flex-col gap-3">
                     <label className="flex flex-col gap-1.5">
-                      <span className="text-sm font-semibold">Titel</span>
+                      <span className="text-sm font-semibold">
+                        {t("templateEditorPage.itemTitleLabel")}
+                      </span>
                       <Input
                         value={it.label}
                         onChange={(e) =>
@@ -160,7 +175,7 @@ export function TemplateEditorPage({ ruleId }: { ruleId: string | null }) {
                     </label>
                     <div className="flex items-center gap-3">
                       <span className="text-sm font-medium">
-                        Bild erforderlich, um die Aufgabe abzuschließen?
+                        {t("templateEditorPage.itemPhotoRequiredLabel")}
                       </span>
                       <Switch
                         checked={it.requires_photo}
@@ -173,7 +188,9 @@ export function TemplateEditorPage({ ruleId }: { ruleId: string | null }) {
 
                   {/* Beschreibung */}
                   <label className="flex flex-col gap-1.5">
-                    <span className="text-sm font-semibold">Beschreibung</span>
+                    <span className="text-sm font-semibold">
+                      {t("templateEditorPage.itemDescriptionLabel")}
+                    </span>
                     <textarea
                       className="min-h-24 w-full rounded-(--radius) border px-3 py-2 text-sm"
                       value={it.description ?? ""}
@@ -190,7 +207,7 @@ export function TemplateEditorPage({ ruleId }: { ruleId: string | null }) {
                     onClick={() => removeItem(idx)}
                     className="rounded-full bg-destructive px-4 py-1.5 text-sm font-medium text-destructive-foreground hover:opacity-90"
                   >
-                    Entfernen
+                    {t("templateEditorPage.removeItem")}
                   </button>
                 </div>
               </div>
@@ -201,7 +218,7 @@ export function TemplateEditorPage({ ruleId }: { ruleId: string | null }) {
               onClick={addItem}
               type="button"
             >
-              Artikel hinzufügen
+              {t("templateEditorPage.addItem")}
             </Button>
           </div>
         </div>
@@ -213,7 +230,7 @@ export function TemplateEditorPage({ ruleId }: { ruleId: string | null }) {
         onClick={save}
         disabled={saving}
         className="fixed bottom-24 right-6 z-40 flex size-14 items-center justify-center rounded-full bg-foreground text-background shadow-lg transition hover:scale-105 disabled:opacity-50"
-        aria-label="Speichern"
+        aria-label={t("templateEditorPage.saveAriaLabel")}
       >
         <Icon icon={saving ? "ph:spinner" : "ph:floppy-disk"} className="size-6" />
       </button>

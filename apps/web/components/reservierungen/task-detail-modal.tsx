@@ -5,6 +5,7 @@
 // serverseitig 422). Für cleaner: Kopf zeigt nur Objekt + Zeitfenster, KEINE
 // Gast-PII/Beträge (Housekeeping-Masking, §4.3).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -26,6 +27,7 @@ export function TaskDetailModal({
   onClose: () => void;
   onChanged?: () => void;
 }) {
+  const t = useTranslations("reservations");
   const [detail, setDetail] = useState<TaskDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -56,7 +58,7 @@ export function TaskDetailModal({
       toast.error(res.error);
       return;
     }
-    toast.success("Aufgabe abgeschlossen.");
+    toast.success(t("taskDetailModal.taskCompleted"));
     onChanged?.();
     onClose();
   };
@@ -70,7 +72,7 @@ export function TaskDetailModal({
       toast.error(res.error);
       return;
     }
-    toast.success("Foto hochgeladen.");
+    toast.success(t("taskDetailModal.photoUploaded"));
     load();
     onChanged?.();
   };
@@ -85,7 +87,7 @@ export function TaskDetailModal({
       toast.error(res.error);
       return;
     }
-    toast.success("Foto hochgeladen.");
+    toast.success(t("taskDetailModal.photoUploaded"));
     load();
     onChanged?.();
   };
@@ -113,7 +115,9 @@ export function TaskDetailModal({
         aria-modal="true"
       >
         {loading || !detail ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">Lädt…</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">
+            {t("taskDetailModal.loading")}
+          </p>
         ) : (
           <div className="flex flex-col gap-4">
             <div className="flex items-start justify-between gap-3">
@@ -137,7 +141,7 @@ export function TaskDetailModal({
                 type="button"
                 onClick={onClose}
                 className="flex size-8 shrink-0 items-center justify-center rounded-full hover:bg-secondary"
-                aria-label="Schließen"
+                aria-label={t("taskDetailModal.close")}
               >
                 <Icon icon="ph:x" className="size-4" />
               </button>
@@ -186,10 +190,12 @@ export function TaskDetailModal({
                             className="size-4"
                           />
                           {uploadingItem === item.id
-                            ? "Lädt…"
+                            ? t("taskDetailModal.loading")
                             : item.photos.length > 0
-                              ? `${item.photos.length} Foto${item.photos.length > 1 ? "s" : ""}`
-                              : "Foto aufnehmen"}
+                              ? t("taskDetailModal.photoCount", {
+                                  count: item.photos.length,
+                                })
+                              : t("taskDetailModal.takePhoto")}
                           <input
                             type="file"
                             accept="image/jpeg,image/png,image/webp"
@@ -210,8 +216,9 @@ export function TaskDetailModal({
 
             {missingPhotos.length > 0 && (
               <p className="rounded-(--radius) bg-amber-500/10 p-2.5 text-xs text-amber-700 dark:text-amber-400">
-                Für {missingPhotos.length} Punkt(e) ist noch ein Foto-Nachweis
-                nötig, bevor die Aufgabe abgeschlossen werden kann.
+                {t("taskDetailModal.missingPhotosNotice", {
+                  count: missingPhotos.length,
+                })}
               </p>
             )}
 
@@ -221,7 +228,9 @@ export function TaskDetailModal({
                 icon={uploadingItem === "_task" ? "ph:spinner" : "ph:camera"}
                 className="size-4"
               />
-              {uploadingItem === "_task" ? "Lädt…" : "Foto hinzufügen"}
+              {uploadingItem === "_task"
+                ? t("taskDetailModal.loading")
+                : t("taskDetailModal.addPhoto")}
               <input
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
@@ -236,11 +245,13 @@ export function TaskDetailModal({
               {detail.status === "done" ? (
                 <span className="flex items-center gap-1.5 text-sm text-emerald-600">
                   <Icon icon="ph:check-circle-fill" className="size-4" />
-                  Erledigt
+                  {t("taskDetailModal.done")}
                 </span>
               ) : (
                 <Button onClick={complete} disabled={!canComplete || saving}>
-                  {saving ? "Speichert…" : "Abschließen"}
+                  {saving
+                    ? t("taskDetailModal.saving")
+                    : t("taskDetailModal.completeButton")}
                 </Button>
               )}
             </div>

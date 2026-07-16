@@ -6,6 +6,7 @@
 // zurücksetzen" leert die Auswahl. Kein Fantasie-Zustand — die Liste kommt aus
 // listProperties.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -22,13 +23,14 @@ export function PropertyFilter({
   selected: string[];
   onChange: (ids: string[]) => void;
 }) {
+  const t = useTranslations("reservations");
   const [open, setOpen] = useState(false);
   const label =
     selected.length === 0
-      ? "Alle Unterkünfte"
+      ? t("propertyFilter.allProperties")
       : selected.length === 1
-        ? (properties.find((p) => p.id === selected[0])?.title ?? "1 Unterkunft")
-        : `${selected.length} Unterkünfte`;
+        ? (properties.find((p) => p.id === selected[0])?.title ?? t("propertyFilter.oneProperty"))
+        : t("propertyFilter.multipleProperties", { count: selected.length });
 
   const toggle = (id: string) => {
     onChange(
@@ -52,7 +54,7 @@ export function PropertyFilter({
           <div className="max-h-72 overflow-y-auto p-1">
             {properties.length === 0 ? (
               <p className="px-3 py-2 text-sm text-muted-foreground">
-                Keine Objekte vorhanden.
+                {t("propertyFilter.noProperties")}
               </p>
             ) : (
               properties.map((p) => (
@@ -88,7 +90,7 @@ export function PropertyFilter({
           className="gap-1 text-muted-foreground"
         >
           <Icon icon="ph:x" className="size-3.5" />
-          Alles zurücksetzen
+          {t("propertyFilter.resetAll")}
         </Button>
       )}
     </div>

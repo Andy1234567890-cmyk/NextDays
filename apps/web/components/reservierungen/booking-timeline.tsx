@@ -12,6 +12,7 @@
 // ([[realtime-kein-manuelles-reload]] / [[realtime-websocket-pflicht]]).
 import { Icon } from "@iconify/react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
 import { LearnButton } from "@/components/reservierungen/learn-dialog";
@@ -26,49 +27,57 @@ import { useRealtime } from "@/lib/use-realtime";
 // Icon (auf der Achse) + Beschriftung + Filter-Kategorie je Ereignis-Art. Der
 // Kunde sieht nie „Channex"/Fachjargon ([[ui-nie-channex-nennen]]).
 type Category = "booking" | "message" | "task" | "payment";
-// icon = Achsen-Symbol (groß, kräftig, wie ..: Häkchen/$/…). tone = Icon-
-// Farbe. label = fette Titelzeile über der Karte.
+type T = ReturnType<typeof useTranslations>;
+// icon = Achsen-Symbol (groß, kräftig, wie ..: Häkchen/$/…). labelKey = Key
+// für die fette Titelzeile über der Karte.
 const KIND_META: Record<
   string,
-  { icon: string; label: string; tone: string; cat: Category }
+  { icon: string; labelKey: string; tone: string; cat: Category }
 > = {
-  created: { icon: "ph:currency-circle-dollar-fill", label: "Buchung erstellt", tone: "text-success", cat: "booking" },
-  moved: { icon: "ph:arrows-left-right", label: "Verschoben", tone: "text-foreground", cat: "booking" },
-  repriced: { icon: "ph:currency-eur", label: "Preis neu berechnet", tone: "text-foreground", cat: "booking" },
-  checked_in: { icon: "ph:door-open", label: "Eingecheckt", tone: "text-success", cat: "booking" },
-  checked_out: { icon: "ph:flag-checkered-fill", label: "Ausgecheckt", tone: "text-foreground", cat: "booking" },
-  cancelled: { icon: "ph:x-circle-fill", label: "Storniert", tone: "text-destructive", cat: "booking" },
-  task_created: { icon: "ph:check-circle-fill", label: "Aufgabe erstellt", tone: "text-foreground", cat: "task" },
-  message: { icon: "ph:chat-circle-text-fill", label: "Nachricht", tone: "text-foreground", cat: "message" },
-  payment: { icon: "ph:currency-circle-dollar-fill", label: "Zahlung", tone: "text-success", cat: "payment" },
-  addon: { icon: "ph:sparkle-fill", label: "Zusatzleistung", tone: "text-foreground", cat: "payment" },
+  created: { icon: "ph:currency-circle-dollar-fill", labelKey: "kind.created", tone: "text-success", cat: "booking" },
+  moved: { icon: "ph:arrows-left-right", labelKey: "kind.moved", tone: "text-foreground", cat: "booking" },
+  repriced: { icon: "ph:currency-eur", labelKey: "kind.repriced", tone: "text-foreground", cat: "booking" },
+  checked_in: { icon: "ph:door-open", labelKey: "kind.checkedIn", tone: "text-success", cat: "booking" },
+  checked_out: { icon: "ph:flag-checkered-fill", labelKey: "kind.checkedOut", tone: "text-foreground", cat: "booking" },
+  cancelled: { icon: "ph:x-circle-fill", labelKey: "kind.cancelled", tone: "text-destructive", cat: "booking" },
+  task_created: { icon: "ph:check-circle-fill", labelKey: "kind.taskCreated", tone: "text-foreground", cat: "task" },
+  message: { icon: "ph:chat-circle-text-fill", labelKey: "kind.message", tone: "text-foreground", cat: "message" },
+  payment: { icon: "ph:currency-circle-dollar-fill", labelKey: "kind.payment", tone: "text-success", cat: "payment" },
+  addon: { icon: "ph:sparkle-fill", labelKey: "kind.addon", tone: "text-foreground", cat: "payment" },
 };
 
-const FILTERS: { key: Category; label: string }[] = [
-  { key: "booking", label: "Buchung" },
-  { key: "message", label: "Nachrichten" },
-  { key: "task", label: "Aufgaben" },
-  { key: "payment", label: "Zahlungen" },
-];
+function useFilters(t: T): { key: Category; label: string }[] {
+  return [
+    { key: "booking", label: t("bookingTimeline.filters.booking") },
+    { key: "message", label: t("bookingTimeline.filters.message") },
+    { key: "task", label: t("bookingTimeline.filters.task") },
+    { key: "payment", label: t("bookingTimeline.filters.payment") },
+  ];
+}
 
 // Kanal-Klartext (nie „direct" roh zeigen; eigene Plattform ist ein Kanal).
-const CHANNEL_LABEL: Record<string, string> = {
-  direct: "Direkt",
-  portal: "myNextDays",
-  booking: "Booking.com",
-  airbnb: "Airbnb",
-  vrbo: "Vrbo",
-};
+function channelLabel(t: T, channel: string): string {
+  const map: Record<string, string> = {
+    direct: t("bookingTimeline.channel.direct"),
+    portal: "myNextDays",
+    booking: "Booking.com",
+    airbnb: "Airbnb",
+    vrbo: "Vrbo",
+  };
+  return map[channel] ?? channel;
+}
 
-function metaFor(kind: string) {
-  return (
-    KIND_META[kind] ?? {
+function metaFor(t: T, kind: string) {
+  const meta = KIND_META[kind];
+  if (!meta) {
+    return {
       icon: "ph:dot-outline",
       label: kind,
       tone: "text-muted-foreground",
       cat: "booking" as Category,
-    }
-  );
+    };
+  }
+  return { ...meta, label: t(`bookingTimeline.${meta.labelKey}`) };
 }
 
 const s = (v: unknown): string | null => (typeof v === "string" && v ? v : null);
@@ -110,31 +119,33 @@ function pickName(name: unknown): string | null {
 }
 
 // Titelzeile der Karte (fett, oben) — je Ereignis kontextbezogen.
-function cardTitle(ev: TimelineEvent, propertyTitle: string): string {
+function cardTitle(t: T, ev: TimelineEvent, propertyTitle: string): string {
   const d = ev.detail || {};
-  const on = propertyTitle ? ` auf ${propertyTitle}` : "";
+  const on = propertyTitle ? t("bookingTimeline.title.onProperty", { property: propertyTitle }) : "";
   switch (ev.kind) {
     case "created": {
       const ota = s(d.ota_name);
       const ch = s(d.channel);
-      const src = ota ?? (ch ? CHANNEL_LABEL[ch] ?? ch : null);
+      const src = ota ?? (ch ? channelLabel(t, ch) : null);
       return src
-        ? `Neue Buchung erhalten von ${src}${on}`
-        : `Buchung erstellt${on}`;
+        ? t("bookingTimeline.title.newBookingFrom", { source: src, on })
+        : t("bookingTimeline.title.bookingCreated", { on });
     }
     case "task_created":
-      return `${s(d.title) ?? "Aufgabe"}${on}`;
+      return `${s(d.title) ?? t("bookingTimeline.title.task")}${on}`;
     case "message": {
       const sender = s(d.sender);
-      return sender ? `Nachricht von ${sender}` : "Neue Nachricht";
+      return sender
+        ? t("bookingTimeline.title.messageFrom", { sender })
+        : t("bookingTimeline.title.newMessage");
     }
     default:
-      return metaFor(ev.kind).label + on;
+      return metaFor(t, ev.kind).label + on;
   }
 }
 
 // Detailzeilen (Label: Wert) je Ereignis — nur vorhandene Felder (Wurzel 4).
-function cardRows(ev: TimelineEvent, currency: string): [string, string][] {
+function cardRows(t: T, ev: TimelineEvent, currency: string): [string, string][] {
   const d = ev.detail || {};
   const cur = s(d.currency) ?? currency;
   const money = (v: unknown) =>
@@ -145,51 +156,51 @@ function cardRows(ev: TimelineEvent, currency: string): [string, string][] {
   };
   switch (ev.kind) {
     case "created":
-      push("Anreise", s(d.check_in) ? fmtDate(s(d.check_in) as string) : null);
-      push("Abreise", s(d.check_out) ? fmtDate(s(d.check_out) as string) : null);
-      push("Gäste", n(d.num_guests) != null ? String(n(d.num_guests)) : null);
-      push("Preis", money(d.total_amount));
+      push(t("bookingTimeline.row.checkIn"), s(d.check_in) ? fmtDate(s(d.check_in) as string) : null);
+      push(t("bookingTimeline.row.checkOut"), s(d.check_out) ? fmtDate(s(d.check_out) as string) : null);
+      push(t("bookingTimeline.row.guests"), n(d.num_guests) != null ? String(n(d.num_guests)) : null);
+      push(t("bookingTimeline.row.price"), money(d.total_amount));
       break;
     case "task_created":
-      push("Status", s(d.status));
-      push("Zuständig", s(d.assignee));
+      push(t("bookingTimeline.row.status"), s(d.status));
+      push(t("bookingTimeline.row.assignee"), s(d.assignee));
       push(
-        "Fällig bis",
+        t("bookingTimeline.row.dueAt"),
         s(d.due_at) ? fmtDate(s(d.due_at) as string, true) : null,
       );
       break;
     case "moved":
       push(
-        "Änderung",
+        t("bookingTimeline.row.change"),
         d.same_property === true
-          ? "Zeitraum geändert"
-          : "In anderes Objekt verschoben",
+          ? t("bookingTimeline.row.periodChanged")
+          : t("bookingTimeline.row.movedToOtherProperty"),
       );
-      push("Anreise", s(d.check_in) ? fmtDate(s(d.check_in) as string) : null);
-      push("Abreise", s(d.check_out) ? fmtDate(s(d.check_out) as string) : null);
+      push(t("bookingTimeline.row.checkIn"), s(d.check_in) ? fmtDate(s(d.check_in) as string) : null);
+      push(t("bookingTimeline.row.checkOut"), s(d.check_out) ? fmtDate(s(d.check_out) as string) : null);
       break;
     case "repriced":
-      push("Neuer Preis", money(d.total_amount) ?? "neu berechnet");
+      push(t("bookingTimeline.row.newPrice"), money(d.total_amount) ?? t("bookingTimeline.row.recalculated"));
       break;
     case "checked_out":
-      push("Rechnung", s(d.invoice_number));
+      push(t("bookingTimeline.row.invoice"), s(d.invoice_number));
       break;
     case "cancelled":
-      push("Grund", s(d.reason));
+      push(t("bookingTimeline.row.reason"), s(d.reason));
       break;
     case "message":
-      push("Kanal", s(d.channel) ? CHANNEL_LABEL[s(d.channel) as string] ?? s(d.channel) : null);
-      push("Text", s(d.preview));
+      push(t("bookingTimeline.row.channel"), s(d.channel) ? channelLabel(t, s(d.channel) as string) : null);
+      push(t("bookingTimeline.row.text"), s(d.preview));
       break;
     case "payment":
-      push("Betrag", money(d.amount));
-      push("Art", s(d.type));
-      push("Status", s(d.status));
+      push(t("bookingTimeline.row.amount"), money(d.amount));
+      push(t("bookingTimeline.row.type"), s(d.type));
+      push(t("bookingTimeline.row.status"), s(d.status));
       break;
     case "addon":
-      push("Leistung", pickName(d.name));
-      push("Preis", money(d.price));
-      push("Status", s(d.status));
+      push(t("bookingTimeline.row.service"), pickName(d.name));
+      push(t("bookingTimeline.row.price"), money(d.price));
+      push(t("bookingTimeline.row.status"), s(d.status));
       break;
     default:
       break;
@@ -206,6 +217,8 @@ export function BookingTimeline({
   currency: string;
   variant?: "tab" | "compact";
 }) {
+  const t = useTranslations("reservations");
+  const FILTERS = useFilters(t);
   const [tl, setTl] = useState<Timeline | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [active, setActive] = useState<Set<Category>>(new Set());
@@ -267,8 +280,8 @@ export function BookingTimeline({
   const shown = useMemo(() => {
     if (!events) return events;
     if (active.size === 0) return events;
-    return events.filter((e) => active.has(metaFor(e.kind).cat));
-  }, [events, active]);
+    return events.filter((e) => active.has(metaFor(t, e.kind).cat));
+  }, [events, active, t]);
 
   const toggle = (c: Category) =>
     setActive((prev) => {
@@ -294,14 +307,12 @@ export function BookingTimeline({
                 : "font-display text-lg font-bold"
             }
           >
-            Zeitleiste
+            {t("bookingTimeline.heading")}
           </h2>
           {/* „Lernen"-Button (wie ..) mit dem Zeitleiste-Erklärtext. */}
-          <LearnButton title="Zeitleiste">
+          <LearnButton title={t("bookingTimeline.heading")}>
             <p className="text-sm text-muted-foreground">
-              Dies ist die Zeitleiste der Ereignisse, die wir für Ihr Team
-              aufgezeichnet haben. Sie haben nur Zugriff auf die Ereignisse, die
-              sich auf Ihre Objektberechtigungen beziehen.
+              {t("bookingTimeline.learnText")}
             </p>
           </LearnButton>
         </div>
@@ -330,7 +341,7 @@ export function BookingTimeline({
                 onClick={() => setActive(new Set())}
                 className="text-xs text-muted-foreground hover:text-foreground hover:underline"
               >
-                Alles zurücksetzen
+                {t("bookingTimeline.resetAll")}
               </button>
             )}
           </div>
@@ -340,22 +351,22 @@ export function BookingTimeline({
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       {!error && events === null && (
-        <p className="text-sm text-muted-foreground">Lädt…</p>
+        <p className="text-sm text-muted-foreground">{t("bookingTimeline.loading")}</p>
       )}
 
       {!error && shown && shown.length === 0 && (
         <p className="text-sm text-muted-foreground">
           {events && events.length > 0
-            ? "Keine Ereignisse für diesen Filter."
-            : "Noch keine Ereignisse zu dieser Buchung."}
+            ? t("bookingTimeline.emptyFiltered")
+            : t("bookingTimeline.emptyNone")}
         </p>
       )}
 
       {shown && shown.length > 0 && (
         <ol className="flex flex-col">
           {shown.map((ev, i) => {
-            const m = metaFor(ev.kind);
-            const rows = cardRows(ev, currency);
+            const m = metaFor(t, ev.kind);
+            const rows = cardRows(t, ev, currency);
             const last = i === shown.length - 1;
             return (
               <li key={ev.id} className="flex gap-5">
@@ -385,7 +396,7 @@ export function BookingTimeline({
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-semibold text-foreground">
-                        {cardTitle(ev, propTitle)}
+                        {cardTitle(t, ev, propTitle)}
                       </p>
                       {rows.length > 0 && (
                         <dl className="mt-1.5 flex flex-col gap-1 text-sm">
@@ -421,7 +432,7 @@ export function BookingTimeline({
                           href={`/reservierungen/${reservationId}`}
                           className="rounded-(--radius) border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:border-accent hover:text-accent"
                         >
-                          Buchung
+                          {t("bookingTimeline.bookingLink")}
                         </Link>
                       </div>
 

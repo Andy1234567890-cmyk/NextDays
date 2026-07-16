@@ -9,6 +9,7 @@
 //     Nachrichten-Reiter (keine Doppelpflege).
 // Speichern schreibt beide Quellen. Live über useRealtime auf beiden Tabellen.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -52,6 +53,7 @@ const TIME_OPTIONS = Array.from({ length: 24 * 4 }, (_, i) => {
 });
 
 export function GuestModuleForm({ property: initial }: { property: Property }) {
+  const t = useTranslations("reservations");
   // property als lokaler State: nach dem messaging-Save halten wir den
   // zurückgegebenen Server-Stand, damit ein zweites Speichern nicht auf
   // veraltetem type_attributes aufsetzt (stale-read vermeiden).
@@ -101,27 +103,27 @@ export function GuestModuleForm({ property: initial }: { property: Property }) {
     // baut ein zweites Speichern auf dem veralteten Lade-Stand auf.
     if (msgRes.ok) setProperty(msgRes.data);
     if (portalRes.ok && msgRes.ok) {
-      toast.success("Gastmodul gespeichert.");
+      toast.success(t("guestModuleForm.saved"));
     } else {
       toast.error(
         (!portalRes.ok && portalRes.error) ||
         (!msgRes.ok && msgRes.error) ||
-        "Speichern fehlgeschlagen.",
+        t("guestModuleForm.saveFailed"),
       );
     }
   };
 
   if (loading) {
-    return <Card className="p-8 text-center text-sm text-muted-foreground">Lädt…</Card>;
+    return <Card className="p-8 text-center text-sm text-muted-foreground">{t("guestModuleForm.loading")}</Card>;
   }
 
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-extrabold">Gastmodul</h1>
+          <h1 className="font-display text-2xl font-extrabold">{t("guestModuleForm.title")}</h1>
           <p className="text-sm text-muted-foreground">
-            Gästeportal-Einstellungen für {property.title}
+            {t("guestModuleForm.subtitle", { propertyTitle: property.title })}
           </p>
         </div>
         <Button type="button" onClick={save} disabled={saving}>
@@ -129,16 +131,16 @@ export function GuestModuleForm({ property: initial }: { property: Property }) {
             icon={saving ? "ph:spinner" : "ph:floppy-disk"}
             className={"size-4 " + (saving ? "animate-spin" : "")}
           />
-          {saving ? "Speichert…" : "Speichern"}
+          {saving ? t("guestModuleForm.saving") : t("guestModuleForm.save")}
         </Button>
       </div>
 
       {/* Aktiv-Schalter */}
       <Card className="flex items-center justify-between gap-4 p-5">
         <div>
-          <p className="font-semibold">Gastmodul aktivieren</p>
+          <p className="font-semibold">{t("guestModuleForm.enableTitle")}</p>
           <p className="text-sm text-muted-foreground">
-            Erst wenn aktiv, sehen Gäste das Portal für dieses Objekt.
+            {t("guestModuleForm.enableDescription")}
           </p>
         </div>
         <Switch
@@ -149,41 +151,40 @@ export function GuestModuleForm({ property: initial }: { property: Property }) {
 
       {/* Kontakt */}
       <Card className="flex flex-col gap-4 p-5">
-        <h2 className="font-display text-lg font-bold">Kontakt</h2>
-        <Field label="Name der Kontaktperson">
+        <h2 className="font-display text-lg font-bold">{t("guestModuleForm.contactTitle")}</h2>
+        <Field label={t("guestModuleForm.contactNameLabel")}>
           <Input
             value={settings.contact_name ?? ""}
             onChange={(e) => set("contact_name", e.target.value || null)}
-            placeholder="z. B. Empfang / Gastgeber"
+            placeholder={t("guestModuleForm.contactNamePlaceholder")}
           />
         </Field>
-        <Field label="Telefonnummer der Kontaktperson">
+        <Field label={t("guestModuleForm.contactPhoneLabel")}>
           <Input
             value={settings.contact_phone ?? ""}
             onChange={(e) => set("contact_phone", e.target.value || null)}
-            placeholder="+49 …"
+            placeholder={t("guestModuleForm.contactPhonePlaceholder")}
           />
         </Field>
-        <Field label="Wartungs-Telefon (optional)">
+        <Field label={t("guestModuleForm.maintenancePhoneLabel")}>
           <Input
             value={settings.maintenance_phone ?? ""}
             onChange={(e) => set("maintenance_phone", e.target.value || null)}
-            placeholder="Für technische Notfälle"
+            placeholder={t("guestModuleForm.maintenancePhonePlaceholder")}
           />
         </Field>
       </Card>
 
       {/* WLAN — Text lebt in messaging.wifi (eine Wahrheit mit Nachrichten) */}
       <Card className="flex flex-col gap-3 p-5">
-        <h2 className="font-display text-lg font-bold">WLAN</h2>
+        <h2 className="font-display text-lg font-bold">{t("guestModuleForm.wifiTitle")}</h2>
         <p className="text-sm text-muted-foreground">
-          Netzwerkname, Passwort und Verbindungshinweis — erscheint auch als
-          Baustein {"{{WifiInformation}}"} in automatischen Nachrichten.
+          {t("guestModuleForm.wifiDescription", { placeholder: "{{WifiInformation}}" })}
         </p>
         <LocalizedTextEditor
           value={messaging.wifi}
           onChange={(v) => setText("wifi", v)}
-          placeholder="WLAN-Name & -Passwort eingeben …"
+          placeholder={t("guestModuleForm.wifiFieldPlaceholder")}
         />
       </Card>
 
@@ -191,9 +192,9 @@ export function GuestModuleForm({ property: initial }: { property: Property }) {
       <Card className="flex flex-col gap-4 p-5">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <h2 className="font-display text-lg font-bold">Self-Check-in</h2>
+            <h2 className="font-display text-lg font-bold">{t("guestModuleForm.selfCheckinTitle")}</h2>
             <p className="text-sm text-muted-foreground">
-              Gäste checken selbstständig ein (Türcode/Schlüsselbox).
+              {t("guestModuleForm.selfCheckinDescription")}
             </p>
           </div>
           <Switch
@@ -204,36 +205,36 @@ export function GuestModuleForm({ property: initial }: { property: Property }) {
 
         {settings.self_checkin && (
           <div className="flex flex-col gap-4 border-t pt-4">
-            <Field label="Anleitung für Türzugang">
+            <Field label={t("guestModuleForm.doorInstructionsLabel")}>
               <LocalizedTextEditor
                 value={messaging.doorInstructions}
                 onChange={(v) => setText("doorInstructions", v)}
-                placeholder="Die Tür befindet sich bei …"
+                placeholder={t("guestModuleForm.doorInstructionsPlaceholder")}
               />
             </Field>
-            <Field label="Türcode">
+            <Field label={t("guestModuleForm.doorCodeLabel")}>
               <Input
                 value={settings.door_code ?? ""}
                 onChange={(e) => set("door_code", e.target.value || null)}
-                placeholder="z. B. 9999"
+                placeholder={t("guestModuleForm.doorCodePlaceholder")}
               />
             </Field>
 
             <label className="flex items-center justify-between gap-4 text-sm">
-              <span>Tür-Code nur anzeigen, wenn der Aufenthalt bezahlt ist</span>
+              <span>{t("guestModuleForm.showCodeOnlyIfPaid")}</span>
               <Switch
                 checked={settings.show_code_only_if_paid}
                 onCheckedChange={(v) => set("show_code_only_if_paid", v)}
               />
             </label>
             <label className="flex items-center justify-between gap-4 text-sm">
-              <span>Tür-Code bis zum Einchecken verbergen</span>
+              <span>{t("guestModuleForm.hideCodeUntilCheckin")}</span>
               <Switch
                 checked={settings.hide_code_until_checkin}
                 onCheckedChange={(v) => set("hide_code_until_checkin", v)}
               />
             </label>
-            <Field label="Der Tür-Code wird ab dem Check-in-Tag um … angezeigt">
+            <Field label={t("guestModuleForm.codeVisibleFromLabel")}>
               <NativeSelect
                 value={settings.code_visible_from ?? ""}
                 onChange={(e) =>
@@ -241,10 +242,10 @@ export function GuestModuleForm({ property: initial }: { property: Property }) {
                 }
                 className="w-40"
               >
-                <option value="">— nicht festgelegt —</option>
-                {TIME_OPTIONS.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
+                <option value="">{t("guestModuleForm.codeVisibleFromUnset")}</option>
+                {TIME_OPTIONS.map((time) => (
+                  <option key={time} value={time}>
+                    {time}
                   </option>
                 ))}
               </NativeSelect>

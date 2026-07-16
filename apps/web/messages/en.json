@@ -1505,6 +1505,13 @@
     "syncSynced": "Sent to portals",
     "syncPending": "Sync pending",
     "syncResyncNow": "Send now",
-    "syncQueued": "Sync started"
+    "syncQueued": "Sync started",
+    "minStayByDate": "Minimum stay by date",
+    "minStayByDateHint": "If the minimum stay differs on certain days, set it here per period — applies only to this rate plan and equally on all channels.",
+    "msPlaceholder": "Nights (e.g. 3)",
+    "msHint": "Type nights, then drag over the days. Double-click removes a day.",
+    "msInvalid": "Please enter a whole number ≥ 1.",
+    "msNights": "nights",
+    "msClearAllConfirm": "Really delete all minimum stays?"
   }
 }

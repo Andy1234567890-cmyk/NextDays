@@ -7,6 +7,8 @@
 //
 // Fehlen lat/lng, wird KEIN Punkt erfunden (Wurzel 4) — dann nur die Adresse als
 // Text + „In Karte öffnen"-Link (öffnet die Standard-Karten-App per geo:/OSM).
+import { useTranslations } from "next-intl";
+
 import { Icon } from "@iconify/react";
 
 import { Card } from "@/components/ui/card";
@@ -32,6 +34,7 @@ function addressLine(p: LocationProps): string {
 }
 
 export function PropertyLocation(p: LocationProps) {
+  const t = useTranslations("reservations");
   const address = addressLine(p);
   const hasCoords =
     typeof p.lat === "number" &&
@@ -53,11 +56,13 @@ export function PropertyLocation(p: LocationProps) {
     ? `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`
     : `https://www.openstreetmap.org/search?query=${encodeURIComponent(address)}`;
 
+  const propertyTitle = p.title || t("propertyLocation.defaultTitle");
+
   return (
     <Card className="flex flex-col gap-3 overflow-hidden p-0">
       {hasCoords && (
         <iframe
-          title={`Standort von ${p.title || "Objekt"}`}
+          title={t("propertyLocation.mapTitle", { title: propertyTitle })}
           src={embedSrc}
           loading="lazy"
           referrerPolicy="no-referrer"
@@ -66,14 +71,12 @@ export function PropertyLocation(p: LocationProps) {
       )}
       <div className="flex items-start justify-between gap-3 p-4 pt-0">
         <div className="min-w-0">
-          <p className="font-display text-sm font-bold">
-            {p.title || "Objekt"}
-          </p>
+          <p className="font-display text-sm font-bold">{propertyTitle}</p>
           {address ? (
             <p className="text-sm text-muted-foreground">{address}</p>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Keine Adresse hinterlegt.
+              {t("propertyLocation.noAddress")}
             </p>
           )}
         </div>
@@ -84,7 +87,7 @@ export function PropertyLocation(p: LocationProps) {
           className="inline-flex shrink-0 items-center gap-1.5 text-sm font-medium text-accent hover:underline"
         >
           <Icon icon="ph:map-pin" className="size-4" />
-          In Karte öffnen
+          {t("propertyLocation.openInMap")}
         </a>
       </div>
     </Card>

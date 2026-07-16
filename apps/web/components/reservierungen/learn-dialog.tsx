@@ -5,6 +5,7 @@
 // Dialog. Schließt per Escape, Klick aufs Overlay oder „Schließen". Der Inhalt
 // wird als Kinder übergeben (Kontrollzentrum-Text vs. Objekt-Text).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ export function LearnButton({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const t = useTranslations("reservations");
 
   // Escape schließt (nur wenn offen — kein globaler Listener sonst).
   useEffect(() => {
@@ -38,7 +40,7 @@ export function LearnButton({
         onClick={() => setOpen(true)}
       >
         <Icon icon="ph:info" className="size-4" />
-        Lernen
+        {t("learnDialog.learnButton")}
       </Button>
 
       {open && (
@@ -58,7 +60,7 @@ export function LearnButton({
               <h2 className="font-display text-lg font-bold">{title}</h2>
               <button
                 type="button"
-                aria-label="Schließen"
+                aria-label={t("learnDialog.close")}
                 onClick={() => setOpen(false)}
                 className="flex size-8 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary"
               >
@@ -70,7 +72,7 @@ export function LearnButton({
             </div>
             <div className="flex justify-end border-t px-6 py-4">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-                Schließen
+                {t("learnDialog.close")}
               </Button>
             </div>
           </div>
@@ -83,37 +85,27 @@ export function LearnButton({
 // Der Kontrollzentrum-Erklärtext (..-Wortlaut, an unsere Begriffe angepasst:
 // „Unterkünfte" statt „Vermietungen").
 export function ControlCenterLearn() {
+  const t = useTranslations("reservations");
+
   return (
-    <LearnButton title="Kontrollzentrum">
+    <LearnButton title={t("learnDialog.controlCenterTitle")}>
+      <p>{t("learnDialog.controlCenterIntro")}</p>
       <p>
-        Willkommen im Kontrollzentrum. Es gibt Ihnen einen Überblick darüber, wie
-        sich Ihr Unternehmen im Laufe der Zeit entwickelt. Wir haben es speziell so
-        gestaltet, dass es so flexibel wie möglich ist. Sie können jeden beliebigen
-        Zeitraum auswählen und auch nach den von Ihnen gewünschten Unterkünften
-        filtern. Benutzen Sie die Auswahl der Unterkünfte oben rechts:
+        <span className="font-semibold text-foreground">
+          {t("learnDialog.tipLabel")}
+        </span>{" "}
+        {t("learnDialog.controlCenterTip")}
       </p>
-      <p>
-        <span className="font-semibold text-foreground">Tipp:</span> Wählen Sie
-        einzelne Unterkünfte an oder ab. Mit „Alles zurücksetzen" sehen Sie wieder
-        alle Objekte zusammengefasst.
+      <p>{t("learnDialog.controlCenterPercentages")}</p>
+      <p className="font-semibold text-foreground">
+        {t("learnDialog.expandedChartsLabel")}
       </p>
+      <p>{t("learnDialog.expandedChartsBody")}</p>
       <p>
-        Die hier angezeigten Prozentsätze vergleichen die aktuelle Periode mit der
-        unmittelbar vorhergehenden Periode. Stornierte Buchungen werden in der
-        Stornierungsstatistik nicht doppelt gezählt. Informationen von gelöschten
-        Unterkünften werden in keiner Grafik oder Tabelle angezeigt.
-      </p>
-      <p className="font-semibold text-foreground">Erweiterte Diagramme:</p>
-      <p>
-        Klicken Sie auf eine beliebige Kachel, um sie zu erweitern: Dort können Sie
-        der Grafik bis zu vier vorangegangene Zeiträume hinzufügen und den Verlauf
-        vergleichen. Die unter der Grafik angezeigten Prozentsätze beziehen sich auf
-        den ausgewählten Zeitraum. Die darunter liegende Breakout-Tabelle zeigt die
-        genauen Tageswerte jeder Periode.
-      </p>
-      <p>
-        <span className="font-semibold text-foreground">Hinweis:</span> Änderungen
-        an Buchungen erscheinen hier live über die Echtzeit-Aktualisierung.
+        <span className="font-semibold text-foreground">
+          {t("learnDialog.noteLabel")}
+        </span>{" "}
+        {t("learnDialog.realtimeNote")}
       </p>
     </LearnButton>
   );

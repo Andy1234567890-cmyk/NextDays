@@ -7,6 +7,7 @@
 //   • Bereits abgereist: Check-out-Tag vorbei, aber nicht ausgecheckt/abgeschlossen
 // Filter-Umschalter wie im Screenshot. Live über useRealtime auf reservations.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -26,6 +27,7 @@ type Warning = {
 };
 
 export function PropertyWarnings({ propertyId }: { propertyId: string }) {
+  const t = useTranslations("reservations");
   const router = useRouter();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,8 +68,10 @@ export function PropertyWarnings({ propertyId }: { propertyId: string }) {
         out.push({
           reservation: r,
           kind: "missing_payment",
-          label: "Fehlende Zahlung",
-          detail: `${formatCurrency(open, r.currency)} offen`,
+          label: t("propertyWarnings.missingPaymentLabel"),
+          detail: t("propertyWarnings.missingPaymentDetail", {
+            amount: formatCurrency(open, r.currency),
+          }),
         });
       }
 
@@ -80,13 +84,15 @@ export function PropertyWarnings({ propertyId }: { propertyId: string }) {
         out.push({
           reservation: r,
           kind: "already_departed",
-          label: "Bereits abgereist",
-          detail: `Abreise war am ${new Date(`${r.check_out}T00:00:00`).toLocaleDateString("de-DE")}`,
+          label: t("propertyWarnings.alreadyDepartedLabel"),
+          detail: t("propertyWarnings.alreadyDepartedDetail", {
+            date: new Date(`${r.check_out}T00:00:00`).toLocaleDateString("de-DE"),
+          }),
         });
       }
     }
     return out;
-  }, [reservations, todayKey]);
+  }, [reservations, todayKey, t]);
 
   const filtered = warnings.filter(
     (w) =>
@@ -97,15 +103,15 @@ export function PropertyWarnings({ propertyId }: { propertyId: string }) {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-extrabold">Warnungen</h1>
+        <h1 className="font-display text-2xl font-extrabold">{t("propertyWarnings.title")}</h1>
         <div className="flex flex-wrap items-center gap-4">
           <Toggle
-            label="Fehlende Zahlung"
+            label={t("propertyWarnings.missingPaymentLabel")}
             on={showMissingPayment}
             onToggle={() => setShowMissingPayment((v) => !v)}
           />
           <Toggle
-            label="Bereits abgereist"
+            label={t("propertyWarnings.alreadyDepartedLabel")}
             on={showDeparted}
             onToggle={() => setShowDeparted((v) => !v)}
           />
@@ -113,15 +119,16 @@ export function PropertyWarnings({ propertyId }: { propertyId: string }) {
       </div>
 
       {loading ? (
-        <Card className="p-8 text-center text-sm text-muted-foreground">Lädt…</Card>
+        <Card className="p-8 text-center text-sm text-muted-foreground">
+          {t("propertyWarnings.loading")}
+        </Card>
       ) : filtered.length === 0 ? (
         <Card className="flex flex-col items-center gap-3 p-10 text-center">
           <span className="flex size-12 items-center justify-center rounded-full bg-success/15 text-success">
             <Icon icon="ph:check-circle" className="size-6" />
           </span>
           <p className="max-w-md text-sm text-muted-foreground">
-            Gute Arbeit! Für diese Unterkunft und den aktuellen Filter wurden keine
-            Warnungen gefunden.
+            {t("propertyWarnings.emptyState")}
           </p>
         </Card>
       ) : (
@@ -149,7 +156,7 @@ export function PropertyWarnings({ propertyId }: { propertyId: string }) {
               <div className="min-w-0 flex-1">
                 <p className="font-medium">{w.label}</p>
                 <p className="truncate text-sm text-muted-foreground">
-                  {w.reservation.guest_name || "Gast"} · {w.detail}
+                  {w.reservation.guest_name || t("propertyWarnings.guestFallback")} · {w.detail}
                 </p>
               </div>
               <Icon icon="ph:caret-right" className="size-4 shrink-0 text-muted-foreground" />

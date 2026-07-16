@@ -10,6 +10,7 @@ import { Icon } from "@iconify/react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { ReservationAddonsSection } from "@/components/kalender/reservation-addons-section";
@@ -35,6 +36,7 @@ const SendDocumentModal = dynamic(
 );
 
 export function BookingDetail({ reservationId }: { reservationId: string }) {
+  const t = useTranslations("reservations");
   const router = useRouter();
   const d = useReservationDetail(reservationId);
   const [paymentOpen, setPaymentOpen] = useState(false);
@@ -66,7 +68,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
   if (error) {
     return (
       <div className="flex flex-col gap-4">
-        <Breadcrumb refLabel={reservationId.slice(0, 8)} />
+        <Breadcrumb refLabel={reservationId.slice(0, 8)} t={t} />
         <Card className="p-5 text-sm text-destructive">{error}</Card>
       </div>
     );
@@ -75,8 +77,10 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
   if (!data) {
     return (
       <div className="flex flex-col gap-4">
-        <Breadcrumb refLabel="…" />
-        <Card className="p-8 text-center text-sm text-muted-foreground">Lädt…</Card>
+        <Breadcrumb refLabel="…" t={t} />
+        <Card className="p-8 text-center text-sm text-muted-foreground">
+          {t("bookingDetail.loading")}
+        </Card>
       </div>
     );
   }
@@ -113,12 +117,12 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <Breadcrumb refLabel={refLabel} />
+      <Breadcrumb refLabel={refLabel} t={t} />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <h1 className="font-display text-2xl font-extrabold">
-            Buchung {refLabel}
+            {t("bookingDetail.bookingHeading", { ref: refLabel })}
           </h1>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium">
@@ -143,7 +147,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
               className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
             >
               <Icon icon="ph:arrow-square-out" className="size-4" />
-              Im Portal öffnen
+              {t("bookingDetail.openInPortal")}
             </a>
           )}
           <BookingDetailTabs reservationId={reservationId} />
@@ -158,16 +162,20 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <p className="font-display text-lg font-extrabold">
-                  {data.property_title || "Objekt"}
+                  {data.property_title || t("bookingDetail.propertyFallback")}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {data.num_guests} Gäste
+                  {t("bookingDetail.guestsCount", { count: data.num_guests })}
                   {data.adults || data.children || data.infants || data.pets
                     ? ` (${[
-                      data.adults && `${data.adults} Erw.`,
-                      data.children && `${data.children} Ki.`,
-                      data.infants && `${data.infants} Kleink.`,
-                      data.pets && `${data.pets} Haustier`,
+                      data.adults &&
+                        t("bookingDetail.guestsAdults", { count: data.adults }),
+                      data.children &&
+                        t("bookingDetail.guestsChildren", { count: data.children }),
+                      data.infants &&
+                        t("bookingDetail.guestsInfants", { count: data.infants }),
+                      data.pets &&
+                        t("bookingDetail.guestsPets", { count: data.pets }),
                     ]
                       .filter(Boolean)
                       .join(", ")})`
@@ -177,7 +185,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
               {data.created_at && (
                 <div className="rounded-(--radius) border bg-secondary/40 px-3 py-1.5 text-right">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Erstellt am
+                    {t("bookingDetail.createdOn")}
                   </p>
                   <p className="text-sm font-bold">
                     {fmtDate(data.created_at.slice(0, 10))}
@@ -190,24 +198,24 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
               <div className="flex items-center gap-2">
                 <div className="rounded-(--radius) bg-card px-3 py-1.5 shadow-sm">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Anreise
+                    {t("bookingDetail.arrival")}
                   </p>
                   <p className="text-sm font-bold">{fmtDate(data.check_in)}</p>
                   {data.checkin_time && (
                     <p className="text-xs text-muted-foreground">
-                      ab {data.checkin_time}
+                      {t("bookingDetail.fromTime", { time: data.checkin_time })}
                     </p>
                   )}
                 </div>
                 <Icon icon="ph:arrow-right" className="size-4 text-muted-foreground" />
                 <div className="rounded-(--radius) bg-card px-3 py-1.5 shadow-sm">
                   <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    Abreise
+                    {t("bookingDetail.departure")}
                   </p>
                   <p className="text-sm font-bold">{fmtDate(data.check_out)}</p>
                   {data.checkout_time && (
                     <p className="text-xs text-muted-foreground">
-                      bis {data.checkout_time}
+                      {t("bookingDetail.untilTime", { time: data.checkout_time })}
                     </p>
                   )}
                 </div>
@@ -216,16 +224,22 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                 <p className="font-display text-2xl font-extrabold">
                   {money(data.total_amount, data.currency)}
                 </p>
-                <p className="text-xs text-muted-foreground">{data.nights} Nächte</p>
+                <p className="text-xs text-muted-foreground">
+                  {t("bookingDetail.nightsCount", { count: data.nights })}
+                </p>
               </div>
             </div>
 
             {(data.checked_in_at || data.checked_out_at) && (
               <p className="text-xs text-muted-foreground">
                 {data.checked_in_at &&
-                  `Eingecheckt seit ${fmtDateTime(data.checked_in_at)}`}
+                  t("bookingDetail.checkedInSince", {
+                    time: fmtDateTime(data.checked_in_at),
+                  })}
                 {data.checked_out_at &&
-                  ` · Ausgecheckt am ${fmtDateTime(data.checked_out_at)}`}
+                  ` · ${t("bookingDetail.checkedOutOn", {
+                    time: fmtDateTime(data.checked_out_at),
+                  })}`}
               </p>
             )}
 
@@ -245,13 +259,16 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                         }
                       >
                         <Icon icon="ph:door-open" className="size-4" />
-                        {d.actionBusy ? "Checke ein…" : "Gast einchecken"}
+                        {d.actionBusy
+                          ? t("bookingDetail.checkingIn")
+                          : t("bookingDetail.checkInGuest")}
                       </Button>
                     ) : (
                       <div className="flex flex-col gap-2 rounded-(--radius) border border-warning/40 bg-warning/10 p-3 text-sm">
                         <p>
-                          Anreise ist erst am {fmtDate(data.check_in)} — Gast
-                          trotzdem jetzt einchecken (Early Check-in)?
+                          {t("bookingDetail.earlyCheckInPrompt", {
+                            date: fmtDate(data.check_in),
+                          })}
                         </p>
                         <div className="flex justify-end gap-2">
                           <Button
@@ -261,7 +278,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                             onClick={() => setEarlyConfirm(false)}
                             disabled={d.actionBusy}
                           >
-                            Abbrechen
+                            {t("bookingDetail.cancel")}
                           </Button>
                           <Button
                             type="button"
@@ -269,7 +286,9 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                             onClick={d.doCheckIn}
                             disabled={d.actionBusy}
                           >
-                            {d.actionBusy ? "Checke ein…" : "Ja, einchecken"}
+                            {d.actionBusy
+                              ? t("bookingDetail.checkingIn")
+                              : t("bookingDetail.confirmCheckIn")}
                           </Button>
                         </div>
                       </div>
@@ -285,7 +304,9 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                       onClick={() => setPaymentOpen(true)}
                     >
                       <Icon icon="ph:flag-checkered" className="size-4" />
-                      {d.actionBusy ? "Checke aus…" : "Check-out + finale Rechnung"}
+                      {d.actionBusy
+                        ? t("bookingDetail.checkingOut")
+                        : t("bookingDetail.checkOutFinalInvoice")}
                     </Button>
                   ) : (
                     <p className="rounded-(--radius) border bg-secondary/40 p-3 text-sm text-muted-foreground">
@@ -293,9 +314,9 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                         icon="ph:flag-checkered"
                         className="mr-1.5 inline size-4 align-text-bottom"
                       />
-                      Check-out + finale Rechnung ab dem Abreisetag (
-                      {fmtDate(data.check_out)}). Reist der Gast früher ab, zuerst
-                      den Aufenthalt verkürzen.
+                      {t("bookingDetail.checkOutAvailableFrom", {
+                        date: fmtDate(data.check_out),
+                      })}
                     </p>
                   ))}
                 {d.actionError && (
@@ -312,8 +333,12 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                 <p className="font-semibold">
                   <Icon icon="ph:check-circle" className="mr-1 inline size-4" />
                   {d.checkoutResult.invoice_already_existed
-                    ? `Check-out abgeschlossen — Rechnung ${d.checkoutResult.invoice_number ?? ""} verwendet.`
-                    : `Finale Rechnung ${d.checkoutResult.invoice_number ?? ""} erstellt.`}
+                    ? t("bookingDetail.checkoutInvoiceReused", {
+                      number: d.checkoutResult.invoice_number ?? "",
+                    })
+                    : t("bookingDetail.checkoutInvoiceCreated", {
+                      number: d.checkoutResult.invoice_number ?? "",
+                    })}
                 </p>
                 <Button
                   type="button"
@@ -325,7 +350,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                     icon={d.invoiceDocBusy ? "ph:spinner" : "ph:paper-plane-tilt"}
                     className={"size-4 " + (d.invoiceDocBusy ? "animate-spin" : "")}
                   />
-                  Rechnung ansehen &amp; versenden
+                  {t("bookingDetail.viewAndSendInvoice")}
                 </Button>
               </div>
             )}
@@ -333,16 +358,18 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
 
           {/* Zahlungen (..-Fortschrittsbalken) */}
           <Card className="flex flex-col gap-3 p-5">
-            <h2 className="font-display text-lg font-bold">Zahlungen</h2>
+            <h2 className="font-display text-lg font-bold">
+              {t("bookingDetail.payments")}
+            </h2>
             {total == null ? (
               <p className="text-sm text-muted-foreground">
-                Keine Betragsfreigabe für dieses Konto.
+                {t("bookingDetail.noAmountAccess")}
               </p>
             ) : (
               <>
                 <div className="flex flex-wrap items-baseline justify-between gap-2 text-sm">
                   <span>
-                    Buchung{" "}
+                    {t("bookingDetail.booking")}{" "}
                     <span className="font-semibold">
                       {money(total, data.currency)}
                     </span>
@@ -351,8 +378,13 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                     )}
                   </span>
                   <span className="text-muted-foreground">
-                    {money(data.due_amount, data.currency)} noch offen ·{" "}
-                    {money(paid, data.currency)} bezahlt
+                    {t("bookingDetail.stillDue", {
+                      amount: money(data.due_amount, data.currency),
+                    })}{" "}
+                    ·{" "}
+                    {t("bookingDetail.paidAmount", {
+                      amount: money(paid, data.currency),
+                    })}
                   </span>
                 </div>
                 <div className="h-2.5 overflow-hidden rounded-full bg-secondary">
@@ -377,14 +409,16 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
 
           {/* Anmerkungen / Notiz */}
           <Card className="flex flex-col gap-2 p-5">
-            <h2 className="font-display text-lg font-bold">Anmerkungen</h2>
+            <h2 className="font-display text-lg font-bold">
+              {t("bookingDetail.notes")}
+            </h2>
             {data.note ? (
               <p className="whitespace-pre-wrap text-sm text-muted-foreground">
                 {data.note}
               </p>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Keine Anmerkungen zu dieser Buchung.
+                {t("bookingDetail.noNotes")}
               </p>
             )}
           </Card>
@@ -392,15 +426,17 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
           {/* Storno-Aktion / -Hinweis */}
           {isCancelled ? (
             <Card className="border-destructive/30 bg-destructive/5 p-5 text-sm text-destructive">
-              <p className="font-semibold">Storniert</p>
+              <p className="font-semibold">{t("bookingDetail.cancelled")}</p>
               {data.cancel_reason && (
-                <p className="mt-0.5">Grund: {data.cancel_reason}</p>
+                <p className="mt-0.5">
+                  {t("bookingDetail.cancelReason", { reason: data.cancel_reason })}
+                </p>
               )}
               {data.invoice && (
                 <p className="mt-1.5">
-                  Zur stornierten Buchung existiert Rechnung{" "}
-                  {data.invoice.invoice_number ?? data.invoice.id} — ggf.
-                  Stornorechnung in der Buchhaltung erstellen.
+                  {t("bookingDetail.cancelledInvoiceHint", {
+                    number: data.invoice.invoice_number ?? data.invoice.id,
+                  })}
                 </p>
               )}
             </Card>
@@ -414,19 +450,19 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                   onClick={() => setCancelOpen(true)}
                 >
                   <Icon icon="ph:x-circle" className="size-4" />
-                  Reservierung stornieren
+                  {t("bookingDetail.cancelReservation")}
                 </Button>
               ) : (
                 <div className="flex flex-col gap-3">
                   <p className="text-sm font-semibold text-destructive">
-                    Stornierung – Begründung erforderlich
+                    {t("bookingDetail.cancelReasonRequired")}
                   </p>
                   {isOta && (
                     <p className="rounded-(--radius) bg-amber-100 px-2.5 py-2 text-xs text-amber-800">
                       <Icon icon="ph:warning" className="mr-1 inline size-3.5" />
-                      Dies storniert die Buchung nur lokal. Bitte storniere sie
-                      zusätzlich direkt im Portal
-                      {data.ota_name ? ` (${data.ota_name})` : ""}.
+                      {t("bookingDetail.cancelOtaHint", {
+                        otaName: data.ota_name ? ` (${data.ota_name})` : "",
+                      })}
                     </p>
                   )}
                   <textarea
@@ -434,7 +470,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                     onChange={(e) => setReason(e.target.value)}
                     rows={3}
                     autoFocus
-                    placeholder="Grund der Stornierung (wird dokumentiert) …"
+                    placeholder={t("bookingDetail.cancelReasonPlaceholder")}
                     className="w-full rounded-(--radius) border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-destructive/40"
                   />
                   {d.actionError && (
@@ -451,7 +487,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                       }}
                       disabled={d.cancelling}
                     >
-                      Abbrechen
+                      {t("bookingDetail.cancel")}
                     </Button>
                     <Button
                       type="button"
@@ -460,7 +496,9 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                       onClick={submitCancel}
                       disabled={d.cancelling || !reason.trim()}
                     >
-                      {d.cancelling ? "Storniere…" : "Stornieren"}
+                      {d.cancelling
+                        ? t("bookingDetail.cancelling")
+                        : t("bookingDetail.confirmCancel")}
                     </Button>
                   </div>
                 </div>
@@ -473,7 +511,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
         <div className="flex flex-col gap-5">
           {/* Objekt-Standort (Karte + Adresse), wie .. rechts oben. */}
           <PropertyLocation
-            title={data.property_title || "Objekt"}
+            title={data.property_title || t("bookingDetail.propertyFallback")}
             street={data.property_street}
             postalCode={data.property_postal_code}
             city={data.property_city}
@@ -485,11 +523,11 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
           {/* Kostenaufteilungsdetails */}
           <Card className="flex flex-col gap-3 p-5">
             <h2 className="font-display text-lg font-bold">
-              Kostenaufteilungsdetails
+              {t("bookingDetail.costBreakdownDetails")}
             </h2>
             {data.quote_items.length === 0 && total == null ? (
               <p className="text-sm text-muted-foreground">
-                Keine Betragsfreigabe für dieses Konto.
+                {t("bookingDetail.noAmountAccess")}
               </p>
             ) : (
               <dl className="flex flex-col gap-1.5 text-sm">
@@ -500,7 +538,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                   </div>
                 ))}
                 <div className="mt-1 flex justify-between border-t pt-2 font-semibold">
-                  <dt>Endpreis</dt>
+                  <dt>{t("bookingDetail.finalPrice")}</dt>
                   <dd className="font-display font-extrabold">
                     {money(total, data.currency)}
                   </dd>
@@ -509,7 +547,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                   <div className="mt-2 flex items-center justify-between gap-3 border-t pt-2">
                     <div className="min-w-0">
                       <p className="truncate text-xs font-medium">
-                        {data.invoice.invoice_number ?? "Rechnung"}
+                        {data.invoice.invoice_number ?? t("bookingDetail.invoice")}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {data.invoice.status}
@@ -526,7 +564,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                         icon={d.invoiceDocBusy ? "ph:spinner" : "ph:receipt"}
                         className={"size-4 " + (d.invoiceDocBusy ? "animate-spin" : "")}
                       />
-                      Ansehen
+                      {t("bookingDetail.view")}
                     </Button>
                   </div>
                 )}
@@ -536,13 +574,15 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
 
           {/* Kundendaten (maskiert) */}
           <Card className="flex flex-col gap-3 p-5">
-            <h2 className="font-display text-lg font-bold">Kundendaten</h2>
+            <h2 className="font-display text-lg font-bold">
+              {t("bookingDetail.guestData")}
+            </h2>
             <dl className="flex flex-col gap-1.5 text-sm">
-              <Row label="Name" value={data.guest_name} />
-              <Row label="E-Mail" value={data.guest_email} />
-              <Row label="Telefon" value={data.guest_phone} />
-              <Row label="Sprache" value={data.guest_language} />
-              <Row label="Land" value={data.guest_country} />
+              <Row label={t("bookingDetail.name")} value={data.guest_name} />
+              <Row label={t("bookingDetail.email")} value={data.guest_email} />
+              <Row label={t("bookingDetail.phone")} value={data.guest_phone} />
+              <Row label={t("bookingDetail.language")} value={data.guest_language} />
+              <Row label={t("bookingDetail.country")} value={data.guest_country} />
             </dl>
             {data.guest_id && (
               <Link
@@ -550,7 +590,7 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
               >
                 <Icon icon="ph:identification-card" className="size-4" />
-                Gästekarte öffnen
+                {t("bookingDetail.openGuestCard")}
               </Link>
             )}
           </Card>
@@ -567,9 +607,11 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
 
           {/* Fotos — echter Leerzustand */}
           <Card className="flex flex-col gap-2 p-5">
-            <h2 className="font-display text-lg font-bold">Fotos</h2>
+            <h2 className="font-display text-lg font-bold">
+              {t("bookingDetail.photos")}
+            </h2>
             <p className="text-sm text-muted-foreground">
-              Für diese Buchung wurden keine Bilder gefunden.
+              {t("bookingDetail.noPhotosFound")}
             </p>
           </Card>
         </div>
@@ -599,14 +641,22 @@ export function BookingDetail({ reservationId }: { reservationId: string }) {
   );
 }
 
-function Breadcrumb({ refLabel }: { refLabel: string }) {
+function Breadcrumb({
+  refLabel,
+  t,
+}: {
+  refLabel: string;
+  t: ReturnType<typeof useTranslations>;
+}) {
   return (
     <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
       <Link href="/reservierungen" className="hover:text-foreground hover:underline">
-        Buchungen
+        {t("bookingDetail.bookingsBreadcrumb")}
       </Link>
       <Icon icon="ph:caret-right" className="size-3.5" />
-      <span className="text-foreground">Buchung {refLabel}</span>
+      <span className="text-foreground">
+        {t("bookingDetail.bookingHeading", { ref: refLabel })}
+      </span>
     </nav>
   );
 }

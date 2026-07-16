@@ -7,6 +7,7 @@
 // und Kanal-Donuts — eine Quelle, keine Doppelpflege. Beträge maskiert (null →
 // „No Data Found"), Währung/Position über formatCurrency (kein hartes €).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { Pie, PieChart } from "recharts";
 
@@ -50,6 +51,7 @@ export function Kpi({
   points?: StatPoint[];
   onClick?: () => void;
 }) {
+  const t = useTranslations("reservations");
   const clickable = onClick != null;
   return (
     <Card
@@ -74,7 +76,7 @@ export function Kpi({
       <p className="text-sm font-semibold text-muted-foreground">{title}</p>
       {kpi == null ? (
         <p className="py-2 text-center text-sm font-medium text-muted-foreground">
-          No Data Found
+          {t("statsCards.noData")}
         </p>
       ) : (
         <>
@@ -119,32 +121,33 @@ export function StatsKpiGrid({
   seriesFor: (metric: string) => StatPoint[];
   onOpen: (metric: StatMetric) => void;
 }) {
+  const t = useTranslations("reservations");
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-      <Kpi title="Einnahmen" kpi={stats.revenue} fmt={money}
+      <Kpi title={t("statsCards.revenue")} kpi={stats.revenue} fmt={money}
         points={seriesFor("revenue")} onClick={() => onOpen("revenue")} />
-      <Kpi title="Erhaltene Zahlungen" kpi={stats.payments_received} fmt={money}
+      <Kpi title={t("statsCards.paymentsReceived")} kpi={stats.payments_received} fmt={money}
         points={seriesFor("payments_received")}
         onClick={() => onOpen("payments_received")} />
-      <Kpi title="Gehostete Gäste" kpi={stats.hosted_guests} fmt={intFmt}
+      <Kpi title={t("statsCards.hostedGuests")} kpi={stats.hosted_guests} fmt={intFmt}
         points={seriesFor("hosted_guests")}
         onClick={() => onOpen("hosted_guests")} />
-      <Kpi title="Ausgebuchte Nächte" kpi={stats.booked_nights} fmt={intFmt}
+      <Kpi title={t("statsCards.bookedNights")} kpi={stats.booked_nights} fmt={intFmt}
         points={seriesFor("booked_nights")}
         onClick={() => onOpen("booked_nights")} />
-      <Kpi title="Belegungsrate" kpi={stats.occupancy_rate}
+      <Kpi title={t("statsCards.occupancyRate")} kpi={stats.occupancy_rate}
         fmt={(v) => `${Math.round(v)}%`} />
-      <Kpi title="Tage im Voraus gebucht" kpi={stats.days_booked_ahead} fmt={intFmt} />
-      <Kpi title="Durchschnittliche Buchungssumme" kpi={stats.avg_booking_value} fmt={money} />
-      <Kpi title="Durchschnittliche Aufenthaltsdauer" kpi={stats.avg_stay_length} fmt={intFmt} />
-      <Kpi title="Durchschnittspreis pro Nacht" kpi={stats.avg_price_per_night} fmt={money} />
-      <Kpi title="Erstellte Reservierungen" kpi={stats.created_reservations} fmt={intFmt}
+      <Kpi title={t("statsCards.daysBookedAhead")} kpi={stats.days_booked_ahead} fmt={intFmt} />
+      <Kpi title={t("statsCards.avgBookingValue")} kpi={stats.avg_booking_value} fmt={money} />
+      <Kpi title={t("statsCards.avgStayLength")} kpi={stats.avg_stay_length} fmt={intFmt} />
+      <Kpi title={t("statsCards.avgPricePerNight")} kpi={stats.avg_price_per_night} fmt={money} />
+      <Kpi title={t("statsCards.createdReservations")} kpi={stats.created_reservations} fmt={intFmt}
         points={seriesFor("created_reservations")}
         onClick={() => onOpen("created_reservations")} />
-      <Kpi title="Stornierte Reservierungen" kpi={stats.cancelled_reservations} fmt={intFmt}
+      <Kpi title={t("statsCards.cancelledReservations")} kpi={stats.cancelled_reservations} fmt={intFmt}
         points={seriesFor("cancelled_reservations")}
         onClick={() => onOpen("cancelled_reservations")} />
-      <Kpi title="Stornierte Nächte" kpi={stats.cancelled_nights} fmt={intFmt}
+      <Kpi title={t("statsCards.cancelledNights")} kpi={stats.cancelled_nights} fmt={intFmt}
         points={seriesFor("cancelled_nights")}
         onClick={() => onOpen("cancelled_nights")} />
     </div>
@@ -159,11 +162,12 @@ export function ChannelDonuts({
   stats: PropertyStats;
   money: (v: number) => string;
 }) {
+  const t = useTranslations("reservations");
   return (
     <div className="grid gap-4 lg:grid-cols-2">
-      <ChannelDonut title="Einnahmen pro Kanal" stats={stats} metric="amount"
+      <ChannelDonut title={t("statsCards.revenuePerChannel")} stats={stats} metric="amount"
         fmt={money} available={stats.revenue != null} />
-      <ChannelDonut title="Nächte pro Kanal" stats={stats} metric="nights"
+      <ChannelDonut title={t("statsCards.nightsPerChannel")} stats={stats} metric="nights"
         fmt={intFmt} available />
     </div>
   );
@@ -185,6 +189,7 @@ function ChannelDonut({
   fmt: (v: number) => string;
   available: boolean;
 }) {
+  const t = useTranslations("reservations");
   const data = useMemo(() => {
     return stats.by_channel
       .map((c, i) => ({
@@ -209,10 +214,10 @@ function ChannelDonut({
       <p className="font-display text-lg font-bold">{title}</p>
       {!available ? (
         <p className="py-6 text-center text-sm text-muted-foreground">
-          Keine Betragsfreigabe für dieses Konto.
+          {t("statsCards.noAmountAccess")}
         </p>
       ) : data.length === 0 ? (
-        <p className="py-6 text-center text-sm text-muted-foreground">No Data Found</p>
+        <p className="py-6 text-center text-sm text-muted-foreground">{t("statsCards.noData")}</p>
       ) : (
         <div className="flex flex-col items-center gap-4 sm:flex-row">
           {/* Wert je Kanal als Text (..) — links neben dem Donut. */}

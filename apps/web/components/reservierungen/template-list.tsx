@@ -5,6 +5,7 @@
 // Lernen-Dialog, Breadcrumb. Editor ist eine eigene Seite (/vorlagen/[id]).
 // Live via useRealtime auf task_rules.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
@@ -15,6 +16,7 @@ import { useRealtime } from "@/lib/use-realtime";
 const BASE = "/reservierungen/aufgaben/vorlagen";
 
 export function TemplateList() {
+  const t = useTranslations("reservations");
   const [rows, setRows] = useState<RuleListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,41 +45,37 @@ export function TemplateList() {
   return (
     <div className="flex flex-col gap-4">
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
-        <span>Startseite</span>
+        <span>{t("templateList.breadcrumbHome")}</span>
         <Icon icon="ph:caret-right" className="size-3.5" />
-        <span>Aufgaben</span>
+        <span>{t("templateList.breadcrumbTasks")}</span>
         <Icon icon="ph:caret-right" className="size-3.5" />
-        <span className="text-foreground">Aufgabenvorlagen</span>
+        <span className="text-foreground">{t("templateList.breadcrumbTemplates")}</span>
       </nav>
 
       <div className="flex items-center gap-3">
-        <h1 className="font-display text-2xl font-extrabold">Aufgabenvorlagen</h1>
-        <LearnButton title="Aufgabenvorlagen">
+        <h1 className="font-display text-2xl font-extrabold">{t("templateList.heading")}</h1>
+        <LearnButton title={t("templateList.heading")}>
           <p className="text-sm text-muted-foreground">
-            Aufgabenvorlagen sind die tatsächlichen Aufgaben, die von Ihrem
-            Personal ausgeführt werden sollen. Vorlagen können zu einer geplanten
-            Aufgabe oder einer manuell erstellten Aufgabe hinzugefügt werden. Auf
-            diese Weise müssen Sie nicht jedes Mal, wenn Sie eine Aufgabe
-            erstellen, eingeben, was getan werden muss.
+            {t("templateList.learnBody")}
           </p>
         </LearnButton>
       </div>
 
       <div className="overflow-x-auto rounded-(--radius) border">
         {loading ? (
-          <p className="p-6 text-sm text-muted-foreground">Lädt…</p>
+          <p className="p-6 text-sm text-muted-foreground">{t("templateList.loading")}</p>
         ) : rows.length === 0 ? (
           <p className="p-8 text-center text-sm text-muted-foreground">
-            Noch keine Aufgabenvorlagen angelegt.
+            {t("templateList.empty")}
           </p>
         ) : (
           <table className="w-full min-w-[40rem] border-collapse text-sm">
             <thead>
               <tr className="bg-secondary text-left text-xs uppercase text-muted-foreground">
-                <th className="px-4 py-3 font-semibold">Titel</th>
-                <th className="px-4 py-3 font-semibold">Anzahl Der Aufgaben</th>
-                <th className="px-4 py-3 font-semibold">Aktualisiert am</th>
-                <th className="px-4 py-3 text-right font-semibold">Details</th>
+                <th className="px-4 py-3 font-semibold">{t("templateList.columnTitle")}</th>
+                <th className="px-4 py-3 font-semibold">{t("templateList.columnTaskCount")}</th>
+                <th className="px-4 py-3 font-semibold">{t("templateList.columnUpdatedAt")}</th>
+                <th className="px-4 py-3 text-right font-semibold">{t("templateList.columnDetails")}</th>
               </tr>
             </thead>
             <tbody>
@@ -85,7 +83,7 @@ export function TemplateList() {
                 <tr key={r.id} className="border-b last:border-b-0">
                   <td className="px-4 py-3 font-semibold">{r.name}</td>
                   <td className="px-4 py-3 font-medium">
-                    {r.item_count} Aufgaben
+                    {t("templateList.taskCount", { count: r.item_count })}
                   </td>
                   <td className="px-4 py-3 font-medium">{fmt(r.updated_at)}</td>
                   <td className="px-4 py-3 text-right">
@@ -93,7 +91,7 @@ export function TemplateList() {
                       href={`${BASE}/${r.id}`}
                       className="inline-flex items-center rounded-(--radius) bg-emerald-400 px-4 py-1.5 text-sm font-medium text-emerald-950 hover:bg-emerald-500"
                     >
-                      Details
+                      {t("templateList.columnDetails")}
                     </Link>
                   </td>
                 </tr>
@@ -107,7 +105,7 @@ export function TemplateList() {
       <Link
         href={`${BASE}/neu`}
         className="fixed bottom-24 right-6 z-40 flex size-14 items-center justify-center rounded-full bg-foreground text-background shadow-lg transition hover:scale-105"
-        aria-label="Neue Aufgabenvorlage"
+        aria-label={t("templateList.newTemplateAriaLabel")}
       >
         <Icon icon="ph:plus" className="size-6" />
       </Link>

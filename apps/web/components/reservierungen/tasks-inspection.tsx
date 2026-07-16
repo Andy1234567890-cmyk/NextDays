@@ -4,6 +4,7 @@
 // Aufgaben mit needs_inspection. Tabs ZU ÜBERPRÜFEN/KOMMEND/ÜBERPRÜFT.
 // Foto-Nachweise ansehen, Freigeben/Zurückweisen. Live via useRealtime.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -16,13 +17,13 @@ import {
 } from "@/lib/tasks";
 import { useRealtime } from "@/lib/use-realtime";
 
-const TABS: { tab: string; label: string }[] = [
-  { tab: "to_review", label: "ZU ÜBERPRÜFEN" },
-  { tab: "upcoming", label: "KOMMEND" },
-  { tab: "reviewed", label: "ÜBERPRÜFT" },
-];
-
 export function TasksInspection() {
+  const t = useTranslations("reservations");
+  const TABS: { tab: string; label: string }[] = [
+    { tab: "to_review", label: t("tasksInspection.tabToReview") },
+    { tab: "upcoming", label: t("tasksInspection.tabUpcoming") },
+    { tab: "reviewed", label: t("tasksInspection.tabReviewed") },
+  ];
   const [tab, setTab] = useState("to_review");
   const [rows, setRows] = useState<InspectionItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,66 +45,74 @@ export function TasksInspection() {
     const res = await inspectTask(id, approved);
     if (!res.ok) toast.error(res.error);
     else {
-      toast.success(approved ? "Freigegeben." : "Zurückgewiesen.");
+      toast.success(
+        approved
+          ? t("tasksInspection.toastApproved")
+          : t("tasksInspection.toastRejected"),
+      );
       load();
     }
   };
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="font-display text-2xl font-extrabold">Inspektion</h1>
+      <h1 className="font-display text-2xl font-extrabold">
+        {t("tasksInspection.title")}
+      </h1>
 
       <div className="flex gap-1 border-b">
-        {TABS.map((t) => (
+        {TABS.map((tabItem) => (
           <button
-            key={t.tab}
+            key={tabItem.tab}
             type="button"
-            onClick={() => setTab(t.tab)}
-            className={`flex-1 border-b-2 px-3 py-2 text-sm font-medium uppercase tracking-wide transition-colors ${tab === t.tab
+            onClick={() => setTab(tabItem.tab)}
+            className={`flex-1 border-b-2 px-3 py-2 text-sm font-medium uppercase tracking-wide transition-colors ${tab === tabItem.tab
                 ? "border-primary text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground"
               }`}
           >
-            {t.label}
+            {tabItem.label}
           </button>
         ))}
       </div>
 
       {loading ? (
-        <p className="p-6 text-sm text-muted-foreground">Lädt…</p>
+        <p className="p-6 text-sm text-muted-foreground">
+          {t("tasksInspection.loading")}
+        </p>
       ) : rows.length === 0 ? (
         <Card className="p-8 text-center text-sm text-muted-foreground">
-          Keine Aufgaben mehr übrig.
+          {t("tasksInspection.emptyState")}
         </Card>
       ) : (
         <div className="flex flex-col gap-3">
-          {rows.map((t) => (
-            <Card key={t.id} className="flex flex-col gap-3 p-4">
+          {rows.map((item) => (
+            <Card key={item.id} className="flex flex-col gap-3 p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate font-medium">{t.title}</p>
+                  <p className="truncate font-medium">{item.title}</p>
                   <p className="text-sm text-muted-foreground">
-                    {t.property_title ?? "–"}
-                    {t.assignee_name ? ` · ${t.assignee_name}` : ""}
+                    {item.property_title ?? "–"}
+                    {item.assignee_name ? ` · ${item.assignee_name}` : ""}
                   </p>
                 </div>
                 {tab === "reviewed" && (
                   <span className="flex items-center gap-1 text-sm text-emerald-600">
                     <Icon icon="ph:check-circle-fill" className="size-4" />
-                    Geprüft
+                    {t("tasksInspection.reviewedBadge")}
                   </span>
                 )}
               </div>
 
-              {t.photos.length > 0 && (
+              {item.photos.length > 0 && (
                 <div className="flex flex-wrap gap-2">
-                  {t.photos.map((p) => (
+                  {item.photos.map((p) => (
                     <span
                       key={p}
                       className="flex items-center gap-1 rounded-(--radius) bg-secondary px-2 py-1 text-xs text-muted-foreground"
                     >
                       <Icon icon="ph:image" className="size-3.5" />
-                      Nachweis
+                      {t("tasksInspection.photoProof")}
                     </span>
                   ))}
                 </div>
@@ -111,10 +120,15 @@ export function TasksInspection() {
 
               {tab === "to_review" && (
                 <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={() => decide(t.id, false)}>
-                    Zurückweisen
+                  <Button
+                    variant="outline"
+                    onClick={() => decide(item.id, false)}
+                  >
+                    {t("tasksInspection.reject")}
                   </Button>
-                  <Button onClick={() => decide(t.id, true)}>Freigeben</Button>
+                  <Button onClick={() => decide(item.id, true)}>
+                    {t("tasksInspection.approve")}
+                  </Button>
                 </div>
               )}
             </Card>

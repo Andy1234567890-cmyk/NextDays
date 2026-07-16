@@ -5,17 +5,26 @@
 // (öffnet das Detail-Modal mit Checkliste) + „Löschen".
 import { Icon } from "@iconify/react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { deleteTask, type TaskListItem } from "@/lib/tasks";
 
-const STATUS_LABEL: Record<string, string> = {
-  open: "Unvollständig",
-  in_progress: "In Arbeit",
-  done: "Abgeschlossen",
-  cancelled: "Abgebrochen",
-};
+function statusLabel(t: ReturnType<typeof useTranslations>, status: string) {
+  switch (status) {
+    case "open":
+      return t("taskPopover.statusOpen");
+    case "in_progress":
+      return t("taskPopover.statusInProgress");
+    case "done":
+      return t("taskPopover.statusDone");
+    case "cancelled":
+      return t("taskPopover.statusCancelled");
+    default:
+      return status;
+  }
+}
 
 export function TaskPopover({
   task,
@@ -28,6 +37,7 @@ export function TaskPopover({
   onDeleted: () => void;
   onPhotos: () => void;
 }) {
+  const t = useTranslations("reservations");
   // „Ansehen" führt zum Objekt. Bei Zusatzleistungs-Aufgaben direkt zum
   // Zusatzleistungen-Reiter, sonst zur Objektübersicht. Ohne Objekt kein Link.
   const viewHref = task.property_id
@@ -44,7 +54,7 @@ export function TaskPopover({
           hour: "2-digit",
           minute: "2-digit",
         })
-      : "–";
+      : t("taskPopover.noValue");
 
   const remove = async () => {
     const res = await deleteTask(task.id);
@@ -52,7 +62,7 @@ export function TaskPopover({
       toast.error(res.error);
       return;
     }
-    toast.success("Aufgabe gelöscht.");
+    toast.success(t("taskPopover.deleteSuccess"));
     onDeleted();
   };
 
@@ -73,21 +83,22 @@ export function TaskPopover({
             <p className="font-semibold">{task.assignee_name}</p>
           )}
           <p>
-            <span className="font-medium">Von:</span>{" "}
+            <span className="font-medium">{t("taskPopover.fromLabel")}</span>{" "}
             {fmt(task.start_at ?? task.due_at)}
           </p>
           {task.end_at && (
             <p>
-              <span className="font-medium">Bis:</span> {fmt(task.end_at)}
+              <span className="font-medium">{t("taskPopover.toLabel")}</span>{" "}
+              {fmt(task.end_at)}
             </p>
           )}
           <p className="flex items-center gap-1.5">
-            {STATUS_LABEL[task.status] ?? task.status}
+            {statusLabel(t, task.status)}
             {task.needs_inspection && (
               <Icon
                 icon="ph:magnifying-glass"
                 className="size-3.5 text-amber-500"
-                aria-label="Inspektion nötig"
+                aria-label={t("taskPopover.inspectionNeeded")}
               />
             )}
           </p>
@@ -96,15 +107,15 @@ export function TaskPopover({
         <div className="mt-4 flex flex-wrap justify-end gap-2">
           <Button variant="outline" size="sm" onClick={onPhotos}>
             <Icon icon="ph:camera" className="size-4" />
-            Fotos
+            {t("taskPopover.photos")}
           </Button>
           {viewHref && (
             <Button variant="outline" size="sm" asChild>
-              <Link href={viewHref}>Ansehen</Link>
+              <Link href={viewHref}>{t("taskPopover.view")}</Link>
             </Button>
           )}
           <Button variant="destructive" size="sm" onClick={remove}>
-            Löschen
+            {t("taskPopover.delete")}
           </Button>
         </div>
       </div>

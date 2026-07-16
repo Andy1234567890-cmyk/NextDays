@@ -1,15 +1,18 @@
 // Warnungen-Reiter der PM-Fläche. Eigene Warnungs-Auswertung folgt; bis dahin
 // führt der Reiter auf die Buchungsübersicht (dort sind fehlende Zahlungen /
 // offene Aufgaben je Buchung sichtbar). Kein erfundener Zähler.
+import { getTranslations } from "next-intl/server";
 import { ModulePlaceholder } from "@/components/reservierungen/module-placeholder";
 
-export default function WarnungenPage() {
+export default async function WarnungenPage() {
+  const t = await getTranslations("reservations");
+
   return (
     <ModulePlaceholder
-      title="Warnungen"
+      title={t("warnungenPage.title")}
       icon="ph:warning"
-      description="Hier bündeln wir künftig Hinweise zu Buchungen (offene Zahlungen, fehlende Gästedaten, anstehende Aufgaben). Bis dahin finden Sie diese Angaben direkt in der jeweiligen Buchung."
-      link={{ href: "/reservierungen", label: "Zur Buchungsübersicht" }}
+      description={t("warnungenPage.description")}
+      link={{ href: "/reservierungen", label: t("warnungenPage.linkLabel") }}
     />
   );
 }

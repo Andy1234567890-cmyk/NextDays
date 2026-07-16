@@ -7,21 +7,33 @@
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 const BASE = "/reservierungen/aufgaben";
 
-const TABS: { slug: string; title: string }[] = [
-  { slug: "", title: "Kalender" },
-  { slug: "meine", title: "Meine Aufgaben" },
-  { slug: "team", title: "Teamaufgaben" },
-  { slug: "inspektion", title: "Inspektion" },
-  { slug: "vorlagen", title: "Aufgabenvorlagen" },
-  { slug: "planmaessig", title: "Planmäßige Aufgaben" },
-  { slug: "regelmaessig", title: "Regelmäßige Aufgaben" },
-];
+const TAB_SLUGS = [
+  "",
+  "meine",
+  "team",
+  "inspektion",
+  "vorlagen",
+  "planmaessig",
+  "regelmaessig",
+] as const;
+
+const TAB_KEYS: Record<(typeof TAB_SLUGS)[number], string> = {
+  "": "tabs.kalender",
+  meine: "tabs.meine",
+  team: "tabs.team",
+  inspektion: "tabs.inspektion",
+  vorlagen: "tabs.vorlagen",
+  planmaessig: "tabs.planmaessig",
+  regelmaessig: "tabs.regelmaessig",
+};
 
 export function TasksSubnav() {
   const pathname = usePathname();
+  const t = useTranslations("reservations");
 
   const isActive = (slug: string) => {
     const href = slug ? `${BASE}/${slug}` : BASE;
@@ -35,23 +47,23 @@ export function TasksSubnav() {
         className="mb-1 flex items-center gap-1.5 px-2 text-xs text-muted-foreground hover:text-foreground"
       >
         <Icon icon="ph:arrow-left" className="size-3.5" />
-        PM-Modul
+        {t("tasksSubnav.pmModul")}
       </Link>
       <span className="px-2 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Aufgaben
+        {t("tasksSubnav.heading")}
       </span>
-      {TABS.map((tab) => {
-        const active = isActive(tab.slug);
+      {TAB_SLUGS.map((slug) => {
+        const active = isActive(slug);
         return (
           <Link
-            key={tab.slug || "kalender"}
-            href={tab.slug ? `${BASE}/${tab.slug}` : BASE}
+            key={slug || "kalender"}
+            href={slug ? `${BASE}/${slug}` : BASE}
             className={`rounded-(--radius) px-3 py-2 text-sm transition-colors ${active
                 ? "bg-secondary font-medium text-foreground"
                 : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
               }`}
           >
-            {tab.title}
+            {t(`tasksSubnav.${TAB_KEYS[slug]}`)}
           </Link>
         );
       })}

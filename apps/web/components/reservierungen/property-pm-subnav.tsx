@@ -5,19 +5,20 @@
 // / Gastmodul / Gästemappe. Jeder Reiter führt per Klick auf die zugehörige
 // Objekt-Unterseite. Vorlage: components/objekte/property-subnav.tsx.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { STATUS_LABELS } from "@/lib/property-meta";
 import type { PropertyStatus } from "@/lib/properties";
 
-const ITEMS: { slug: string; title: string; icon: string }[] = [
-  { slug: "kalender", title: "Kalender", icon: "ph:calendar-blank" },
-  { slug: "statistiken", title: "Statistiken", icon: "ph:chart-bar" },
-  { slug: "bilder", title: "Bilder", icon: "ph:image" },
-  { slug: "warnungen", title: "Warnungen", icon: "ph:warning" },
-  { slug: "gastmodul", title: "Gastmodul", icon: "ph:identification-card" },
-  { slug: "gaestemappe", title: "Gästemappe", icon: "ph:book-open" },
+const ITEMS: { slug: string; titleKey: string; icon: string }[] = [
+  { slug: "kalender", titleKey: "tabs.calendar", icon: "ph:calendar-blank" },
+  { slug: "statistiken", titleKey: "tabs.statistics", icon: "ph:chart-bar" },
+  { slug: "bilder", titleKey: "tabs.photos", icon: "ph:image" },
+  { slug: "warnungen", titleKey: "tabs.warnings", icon: "ph:warning" },
+  { slug: "gastmodul", titleKey: "tabs.guestModule", icon: "ph:identification-card" },
+  { slug: "gaestemappe", titleKey: "tabs.guestGuide", icon: "ph:book-open" },
 ];
 
 export function PropertyPmSubnav({
@@ -31,6 +32,7 @@ export function PropertyPmSubnav({
   photo: string | null;
   status: PropertyStatus;
 }) {
+  const t = useTranslations("reservations");
   const pathname = usePathname();
   const base = `/reservierungen/unterkuenfte/${id}`;
 
@@ -70,7 +72,7 @@ export function PropertyPmSubnav({
                 }`}
             >
               <Icon icon={it.icon} className="size-4 shrink-0" />
-              <span className="truncate">{it.title}</span>
+              <span className="truncate">{t(`propertyPmSubnav.${it.titleKey}`)}</span>
             </Link>
           );
         })}
@@ -82,7 +84,7 @@ export function PropertyPmSubnav({
         className="flex items-center gap-1.5 px-3 text-xs text-muted-foreground hover:text-foreground hover:underline"
       >
         <Icon icon="ph:arrow-left" className="size-3.5" />
-        Alle Unterkünfte
+        {t("propertyPmSubnav.allProperties")}
       </Link>
     </aside>
   );

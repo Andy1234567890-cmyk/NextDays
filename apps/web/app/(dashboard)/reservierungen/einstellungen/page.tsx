@@ -1,15 +1,18 @@
 // Reservierungs-Einstellungen-Reiter. Buchungsbezogene Einstellungen (Check-in-/
 // Check-out-Zeiten, Richtlinien) liegen heute an den Objekten; dieser Reiter
 // führt dorthin, damit der Sidebar-Link nicht auf die [id]-Route fällt.
+import { getTranslations } from "next-intl/server";
 import { ModulePlaceholder } from "@/components/reservierungen/module-placeholder";
 
-export default function ReservierungsEinstellungenPage() {
+export default async function ReservierungsEinstellungenPage() {
+  const t = await getTranslations("reservations");
+
   return (
     <ModulePlaceholder
-      title="Reservierungs-Einstellungen"
+      title={t("einstellungenPage.title")}
       icon="ph:gear"
-      description="Buchungsbezogene Einstellungen (Check-in-/Check-out-Zeiten, Stornoregeln, Richtlinien) pflegen Sie derzeit direkt am jeweiligen Objekt."
-      link={{ href: "/objekte", label: "Zu den Objekten" }}
+      description={t("einstellungenPage.description")}
+      link={{ href: "/objekte", label: t("einstellungenPage.linkLabel") }}
     />
   );
 }

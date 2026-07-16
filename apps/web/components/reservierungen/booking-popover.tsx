@@ -5,6 +5,7 @@
 // „Ansehen" (zur Buchungsdetailseite) + „Aufgabe erstellen" (verknüpft mit
 // dieser Buchung). Keine Beträge/Gast-PII (§4.3).
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { CHANNEL_META } from "@/lib/calendar-channels";
@@ -24,6 +25,7 @@ export function BookingPopover({
   onClose: () => void;
   onCreateTask: () => void;
 }) {
+  const t = useTranslations("reservations");
   const meta =
     CHANNEL_META[booking.channel as AvailabilitySource] ?? CHANNEL_META.direct;
   const fmt = (iso: string) =>
@@ -46,37 +48,39 @@ export function BookingPopover({
         aria-modal="true"
       >
         <p className="mb-3 text-sm text-muted-foreground">
-          Buchung {booking.id.slice(0, 8)}
+          {t("bookingPopover.title", { id: booking.id.slice(0, 8) })}
         </p>
         <dl className="flex flex-col gap-1 text-sm">
           <div className="flex justify-between">
-            <dt className="font-medium">Von:</dt>
+            <dt className="font-medium">{t("bookingPopover.from")}</dt>
             <dd>{fmt(booking.check_in)}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="font-medium">Bis:</dt>
+            <dt className="font-medium">{t("bookingPopover.to")}</dt>
             <dd>{fmt(booking.check_out)}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="font-medium">Erwachsene:</dt>
+            <dt className="font-medium">{t("bookingPopover.adults")}</dt>
             <dd>{adults}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="font-medium">Kinder:</dt>
+            <dt className="font-medium">{t("bookingPopover.children")}</dt>
             <dd>{children}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="font-medium">Buchungsquelle:</dt>
+            <dt className="font-medium">{t("bookingPopover.source")}</dt>
             <dd>{booking.ota_name ?? meta.label}</dd>
           </div>
         </dl>
 
         <div className="mt-4 flex justify-end gap-2">
           <Button variant="outline" size="sm" asChild>
-            <Link href={`/reservierungen/${booking.id}`}>Ansehen</Link>
+            <Link href={`/reservierungen/${booking.id}`}>
+              {t("bookingPopover.view")}
+            </Link>
           </Button>
           <Button size="sm" onClick={onCreateTask}>
-            Aufgabe erstellen
+            {t("bookingPopover.createTask")}
           </Button>
         </div>
       </div>

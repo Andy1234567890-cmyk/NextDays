@@ -5,16 +5,34 @@
 // Rechnung aus. Aus dem Kalender-Slider herausgezogen, damit Slider UND PM-
 // Detail-Vollseite denselben Dialog nutzen (kein Doppelcode).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import type { CheckOutPayment } from "@/lib/reservations";
 
-const METHODS = [
-  { value: "cash", label: "Bar", hint: "Barzahlung am Empfang", icon: "ph:money" },
-  { value: "card", label: "Kreditkarte", hint: "Kartenzahlung am Empfang", icon: "ph:credit-card" },
-  { value: "invoice", label: "Auf Rechnung", hint: "Überweisung mit Zahlungsziel", icon: "ph:receipt" },
-] as const;
+function buildMethods(t: ReturnType<typeof useTranslations>) {
+  return [
+    {
+      value: "cash",
+      label: t("checkoutPaymentDialog.methodCashLabel"),
+      hint: t("checkoutPaymentDialog.methodCashHint"),
+      icon: "ph:money",
+    },
+    {
+      value: "card",
+      label: t("checkoutPaymentDialog.methodCardLabel"),
+      hint: t("checkoutPaymentDialog.methodCardHint"),
+      icon: "ph:credit-card",
+    },
+    {
+      value: "invoice",
+      label: t("checkoutPaymentDialog.methodInvoiceLabel"),
+      hint: t("checkoutPaymentDialog.methodInvoiceHint"),
+      icon: "ph:receipt",
+    },
+  ] as const;
+}
 
 const CARD_BRANDS = [
   "Visa",
@@ -37,9 +55,11 @@ export function CheckoutPaymentDialog({
   onClose: () => void;
   onConfirm: (payment: CheckOutPayment) => void;
 }) {
+  const t = useTranslations("reservations");
   const [payMethod, setPayMethod] =
     useState<CheckOutPayment["payment_method"]>("card");
   const [cardBrand, setCardBrand] = useState("Visa");
+  const methods = buildMethods(t);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -51,7 +71,7 @@ export function CheckoutPaymentDialog({
       <div className="relative z-10 flex w-full max-w-md flex-col rounded-2xl bg-card shadow-xl">
         <div className="flex items-center justify-between gap-4 border-b px-5 py-4">
           <h2 className="font-display text-lg font-extrabold">
-            Wie bezahlt der Gast?
+            {t("checkoutPaymentDialog.title")}
           </h2>
           <Button
             type="button"
@@ -59,13 +79,13 @@ export function CheckoutPaymentDialog({
             size="icon"
             onClick={onClose}
             disabled={busy}
-            aria-label="Schließen"
+            aria-label={t("checkoutPaymentDialog.closeAriaLabel")}
           >
             <Icon icon="ph:x" className="size-4" />
           </Button>
         </div>
         <div className="flex flex-col gap-2 px-5 py-4">
-          {METHODS.map((opt) => (
+          {methods.map((opt) => (
             <button
               key={opt.value}
               type="button"
@@ -124,7 +144,7 @@ export function CheckoutPaymentDialog({
         </div>
         <div className="flex items-center justify-end gap-2 border-t px-5 py-4">
           <Button type="button" variant="outline" onClick={onClose} disabled={busy}>
-            Abbrechen
+            {t("checkoutPaymentDialog.cancel")}
           </Button>
           <Button
             type="button"
@@ -140,7 +160,9 @@ export function CheckoutPaymentDialog({
               icon={busy ? "ph:spinner" : "ph:flag-checkered"}
               className={"size-4 " + (busy ? "animate-spin" : "")}
             />
-            {busy ? "Checke aus…" : "Check-out abschließen"}
+            {busy
+              ? t("checkoutPaymentDialog.checkingOut")
+              : t("checkoutPaymentDialog.confirm")}
           </Button>
         </div>
       </div>

@@ -12,6 +12,7 @@
 // CLAUDE.md) hält sie live. Beträge kommen bereits maskiert aus dem Backend
 // (null → „—", kein 0-Fallback); Bezahlt-% nur wenn ein Betrag sichtbar ist.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
@@ -36,12 +37,12 @@ type Prop = { id: string; title: string; property_type: PropertyType };
 
 type TabKey = "occupied" | "arrivals" | "departures" | "future" | "past";
 
-const TABS: { key: TabKey; label: string }[] = [
-  { key: "occupied", label: "Belegt" },
-  { key: "arrivals", label: "Ankünfte" },
-  { key: "departures", label: "Abfahrten" },
-  { key: "future", label: "Zukunft" },
-  { key: "past", label: "Vergangen" },
+const TAB_KEYS: TabKey[] = [
+  "occupied",
+  "arrivals",
+  "departures",
+  "future",
+  "past",
 ];
 
 // Ein Reiter = ein Prädikat auf eine (nicht-stornierte, außer „Vergangen")
@@ -71,6 +72,7 @@ function matchesTab(r: Reservation, tab: TabKey, todayKey: string): boolean {
 }
 
 export function BookingsBoard({ properties }: { properties: Prop[] }) {
+  const t = useTranslations("reservations");
   const router = useRouter();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,7 +119,7 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
       past: 0,
     };
     for (const r of reservations) {
-      for (const t of TABS) if (matchesTab(r, t.key, todayKey)) c[t.key] += 1;
+      for (const key of TAB_KEYS) if (matchesTab(r, key, todayKey)) c[key] += 1;
     }
     return c;
   }, [reservations, todayKey]);
@@ -153,24 +155,25 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-extrabold">Buchungen</h1>
+        <h1 className="font-display text-2xl font-extrabold">
+          {t("bookingsBoard.title")}
+        </h1>
         <span className="text-sm text-muted-foreground">
-          {reservations.length}{" "}
-          {reservations.length === 1 ? "Buchung" : "Buchungen"} gesamt
+          {t("bookingsBoard.totalCount", { count: reservations.length })}
         </span>
       </div>
 
       {/* Reiter (..-Tabs): GROß, zentriert, gleichmäßig über die Breite
           verteilt; Zähler dezent als Suffix. */}
       <div className="flex border-b">
-        {TABS.map((t) => {
-          const active = tab === t.key;
+        {TAB_KEYS.map((key) => {
+          const active = tab === key;
           return (
             <button
-              key={t.key}
+              key={key}
               type="button"
               aria-current={active ? "true" : undefined}
-              onClick={() => setTab(t.key)}
+              onClick={() => setTab(key)}
               className={
                 "-mb-px flex flex-1 items-center justify-center gap-2 border-b-2 px-3 py-3 text-sm font-bold uppercase tracking-wide transition-colors " +
                 (active
@@ -178,14 +181,14 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
                   : "border-transparent text-muted-foreground hover:text-foreground")
               }
             >
-              {t.label}
+              {t(`bookingsBoard.tabs.${key}`)}
               <span
                 className={
                   "text-xs font-semibold " +
                   (active ? "text-accent/70" : "text-muted-foreground/70")
                 }
               >
-                {counts[t.key]}
+                {counts[key]}
               </span>
             </button>
           );
@@ -202,7 +205,7 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Gast, Objekt, Referenz…"
+            placeholder={t("bookingsBoard.searchPlaceholder")}
             className="w-64 pl-9"
           />
         </div>
@@ -214,7 +217,7 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
           onTypes={setTypeFilter}
         />
         <span className="ml-auto text-sm text-muted-foreground">
-          {rows.length} {rows.length === 1 ? "Eintrag" : "Einträge"}
+          {t("bookingsBoard.entriesCount", { count: rows.length })}
         </span>
       </div>
 
@@ -224,13 +227,27 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
           <table className="w-full min-w-[60rem] text-sm">
             <thead>
               <tr className="border-b bg-secondary/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                <th className="px-4 py-2.5 font-semibold">Status</th>
-                <th className="px-4 py-2.5 font-semibold">Unterkunft</th>
-                <th className="px-4 py-2.5 font-semibold">Daten</th>
-                <th className="px-4 py-2.5 font-semibold">Quelle</th>
-                <th className="px-4 py-2.5 text-right font-semibold">Gäste</th>
-                <th className="px-4 py-2.5 text-right font-semibold">Bezahlt</th>
-                <th className="px-4 py-2.5 font-semibold">Referenz</th>
+                <th className="px-4 py-2.5 font-semibold">
+                  {t("bookingsBoard.columns.status")}
+                </th>
+                <th className="px-4 py-2.5 font-semibold">
+                  {t("bookingsBoard.columns.accommodation")}
+                </th>
+                <th className="px-4 py-2.5 font-semibold">
+                  {t("bookingsBoard.columns.dates")}
+                </th>
+                <th className="px-4 py-2.5 font-semibold">
+                  {t("bookingsBoard.columns.source")}
+                </th>
+                <th className="px-4 py-2.5 text-right font-semibold">
+                  {t("bookingsBoard.columns.guests")}
+                </th>
+                <th className="px-4 py-2.5 text-right font-semibold">
+                  {t("bookingsBoard.columns.paid")}
+                </th>
+                <th className="px-4 py-2.5 font-semibold">
+                  {t("bookingsBoard.columns.reference")}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -241,6 +258,7 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
                   title={titleOf[r.property_id] ?? "—"}
                   todayKey={todayKey}
                   onOpen={() => router.push(`/reservierungen/${r.id}`)}
+                  t={t}
                 />
               ))}
               {!loading && rows.length === 0 && (
@@ -249,7 +267,7 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
                     colSpan={7}
                     className="px-4 py-10 text-center text-muted-foreground"
                   >
-                    Keine Buchungen in diesem Reiter.
+                    {t("bookingsBoard.emptyState")}
                   </td>
                 </tr>
               )}
@@ -259,7 +277,7 @@ export function BookingsBoard({ properties }: { properties: Prop[] }) {
                     colSpan={7}
                     className="px-4 py-10 text-center text-muted-foreground"
                   >
-                    Lädt…
+                    {t("bookingsBoard.loading")}
                   </td>
                 </tr>
               )}
@@ -276,11 +294,13 @@ function BookingRow({
   title,
   todayKey,
   onOpen,
+  t,
 }: {
   r: Reservation;
   title: string;
   todayKey: string;
   onOpen: () => void;
+  t: ReturnType<typeof useTranslations>;
 }) {
   const ds = displayStatusOf(r, todayKey);
   const sm = STATUS_META[ds];
@@ -313,8 +333,7 @@ function BookingRow({
       <td className="whitespace-nowrap px-4 py-3 text-muted-foreground">
         {fmtDayShort(r.check_in)} – {fmtDayShort(r.check_out)}
         <span className="ml-2 text-xs">
-          ({nights(r.check_in, r.check_out)}{" "}
-          {nights(r.check_in, r.check_out) === 1 ? "Nacht" : "Nächte"})
+          ({t("bookingsBoard.nights", { count: nights(r.check_in, r.check_out) })})
         </span>
       </td>
       <td className="px-4 py-3">
@@ -340,8 +359,8 @@ function BookingRow({
           {r.children > 0 && (
             <span
               className="inline-flex items-center gap-0.5 text-muted-foreground"
-              title={`${r.children} ${r.children === 1 ? "Kind" : "Kinder"}`}
-              aria-label={`${r.children} ${r.children === 1 ? "Kind" : "Kinder"}`}
+              title={t("bookingsBoard.children", { count: r.children })}
+              aria-label={t("bookingsBoard.children", { count: r.children })}
             >
               <Icon icon="ph:baby" className="size-4" />
               {r.children}

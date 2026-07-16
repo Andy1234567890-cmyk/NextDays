@@ -6,6 +6,7 @@
 // zurücksetzen". Leere Auswahl = alles. Werte kommen aus den Daten (kein
 // erfundener Ressourcen-Typ).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -22,12 +23,14 @@ function MultiSelect({
   options,
   selected,
   onChange,
+  t,
 }: {
   icon: string;
   allLabel: string;
   options: { value: string; label: string }[];
   selected: string[];
   onChange: (ids: string[]) => void;
+  t: ReturnType<typeof useTranslations>;
 }) {
   const [open, setOpen] = useState(false);
   const label =
@@ -35,7 +38,7 @@ function MultiSelect({
       ? allLabel
       : selected.length === 1
         ? (options.find((o) => o.value === selected[0])?.label ?? "1")
-        : `${selected.length} ausgewählt`;
+        : t("bookingsFilter.selectedCount", { count: selected.length });
 
   const toggle = (value: string) =>
     onChange(
@@ -57,7 +60,7 @@ function MultiSelect({
         <div className="max-h-72 overflow-y-auto p-1">
           {options.length === 0 ? (
             <p className="px-3 py-2 text-sm text-muted-foreground">
-              Keine Einträge.
+              {t("bookingsFilter.noEntries")}
             </p>
           ) : (
             options.map((o) => (
@@ -98,26 +101,29 @@ export function BookingsFilter({
   // Objekten abgeleitet, keine feste Liste — nur was es real gibt).
   const typeOptions = useMemo(() => {
     const present = Array.from(new Set(properties.map((p) => p.property_type)));
-    return present.map((t) => ({ value: t, label: TYPE_LABELS[t] ?? t }));
+    return present.map((pt) => ({ value: pt, label: TYPE_LABELS[pt] ?? pt }));
   }, [properties]);
 
   const hasFilter = selectedProps.length > 0 || selectedTypes.length > 0;
+  const t = useTranslations("reservations");
 
   return (
     <div className="flex flex-wrap items-center gap-2">
       <MultiSelect
         icon="ph:house-line"
-        allLabel="Alle Unterkünfte"
+        allLabel={t("bookingsFilter.allProperties")}
         options={properties.map((p) => ({ value: p.id, label: p.title }))}
         selected={selectedProps}
         onChange={onProps}
+        t={t}
       />
       <MultiSelect
         icon="ph:stack"
-        allLabel="Alle Ressourcen"
+        allLabel={t("bookingsFilter.allResources")}
         options={typeOptions}
         selected={selectedTypes}
         onChange={onTypes}
+        t={t}
       />
       {hasFilter && (
         <Button
@@ -131,7 +137,7 @@ export function BookingsFilter({
           className="gap-1 text-muted-foreground"
         >
           <Icon icon="ph:x" className="size-3.5" />
-          Alles zurücksetzen
+          {t("bookingsFilter.resetAll")}
         </Button>
       )}
     </div>

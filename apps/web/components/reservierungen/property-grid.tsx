@@ -5,6 +5,7 @@
 // Live über useRealtime auf properties (neue/geänderte Objekte ohne Reload).
 import { Icon } from "@iconify/react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -20,6 +21,7 @@ type PropertyCard = {
 };
 
 export function PropertyGrid({ items }: { items: PropertyCard[] }) {
+  const t = useTranslations("reservations");
   const router = useRouter();
   const [query, setQuery] = useState("");
 
@@ -40,7 +42,7 @@ export function PropertyGrid({ items }: { items: PropertyCard[] }) {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-extrabold">Unterkünfte</h1>
+        <h1 className="font-display text-2xl font-extrabold">{t("propertyGrid.title")}</h1>
         <div className="relative w-full max-w-md">
           <Icon
             icon="ph:magnifying-glass"
@@ -49,7 +51,7 @@ export function PropertyGrid({ items }: { items: PropertyCard[] }) {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Unterkünfte suchen …"
+            placeholder={t("propertyGrid.searchPlaceholder")}
             className="pl-9"
           />
         </div>
@@ -58,8 +60,8 @@ export function PropertyGrid({ items }: { items: PropertyCard[] }) {
       {rows.length === 0 ? (
         <Card className="p-10 text-center text-sm text-muted-foreground">
           {items.length === 0
-            ? "Noch keine Unterkünfte angelegt."
-            : "Keine Unterkunft passt zur Suche."}
+            ? t("propertyGrid.emptyNoProperties")
+            : t("propertyGrid.emptyNoMatch")}
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -89,10 +91,15 @@ export function PropertyGrid({ items }: { items: PropertyCard[] }) {
               <div className="p-3">
                 {p.city ? (
                   <p className="text-sm text-muted-foreground">
-                    Gelegen in <span className="font-semibold text-foreground">{p.city}</span>
+                    {t.rich("propertyGrid.locatedIn", {
+                      city: p.city,
+                      strong: (chunks) => (
+                        <span className="font-semibold text-foreground">{chunks}</span>
+                      ),
+                    })}
                   </p>
                 ) : (
-                  <p className="text-sm text-muted-foreground">Kein Ort hinterlegt</p>
+                  <p className="text-sm text-muted-foreground">{t("propertyGrid.noCity")}</p>
                 )}
               </div>
             </Link>

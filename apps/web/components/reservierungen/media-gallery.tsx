@@ -6,6 +6,7 @@
 // Live via useRealtime auf property_photos + checklist_photos.
 import { Icon } from "@iconify/react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -14,12 +15,12 @@ import { Switch } from "@/components/ui/switch";
 import { type MediaItem, deleteMedia, listMedia } from "@/lib/media";
 import { useRealtime } from "@/lib/use-realtime";
 
-const KIND_LABEL: Record<string, string> = {
-  booking: "Buchungsbild",
-  property: "Foto der Unterkunft",
-};
-
 export function MediaGallery() {
+  const t = useTranslations("reservations");
+  const KIND_LABEL: Record<string, string> = {
+    booking: t("mediaGallery.kindBooking"),
+    property: t("mediaGallery.kindProperty"),
+  };
   const [items, setItems] = useState<MediaItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBooking, setShowBooking] = useState(true);
@@ -43,7 +44,7 @@ export function MediaGallery() {
     const res = await deleteMedia(m.kind, m.id);
     if (!res.ok) toast.error(res.error);
     else {
-      toast.success("Bild gelöscht.");
+      toast.success(t("mediaGallery.deleteSuccess"));
       load();
     }
   };
@@ -59,41 +60,38 @@ export function MediaGallery() {
   return (
     <div className="flex flex-col gap-4">
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
-        <span>Startseite</span>
+        <span>{t("mediaGallery.breadcrumbHome")}</span>
         <Icon icon="ph:caret-right" className="size-3.5" />
-        <span className="text-foreground">Bilder</span>
+        <span className="text-foreground">{t("mediaGallery.breadcrumbImages")}</span>
       </nav>
 
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <h1 className="font-display text-2xl font-extrabold">Bilder</h1>
-          <LearnButton title="Bilder">
+          <h1 className="font-display text-2xl font-extrabold">{t("mediaGallery.title")}</h1>
+          <LearnButton title={t("mediaGallery.title")}>
             <p className="text-sm text-muted-foreground">
-              Hier sammeln sich die Foto-Nachweise: Buchungsbilder aus den
-              Aufgaben (Housekeeping-Dokumentation, mit der Buchung verknüpft)
-              und die Objektfotos. Filtere über die Schalter, öffne die Unterkunft
-              oder die zugehörige Buchung, oder lösche ein Bild.
+              {t("mediaGallery.learnText")}
             </p>
           </LearnButton>
         </div>
 
         <div className="flex flex-wrap items-center gap-5">
           <label className="flex items-center gap-2 text-sm font-medium">
-            Buchungsbilder
+            {t("mediaGallery.toggleBooking")}
             <Switch checked={showBooking} onCheckedChange={setShowBooking} />
           </label>
           <label className="flex items-center gap-2 text-sm font-medium">
-            Objektfotos
+            {t("mediaGallery.toggleProperty")}
             <Switch checked={showProperty} onCheckedChange={setShowProperty} />
           </label>
         </div>
       </div>
 
       {loading ? (
-        <p className="p-6 text-sm text-muted-foreground">Lädt…</p>
+        <p className="p-6 text-sm text-muted-foreground">{t("mediaGallery.loading")}</p>
       ) : items.length === 0 ? (
         <div className="rounded-(--radius) border p-10 text-center text-sm text-muted-foreground">
-          Keine Bilder für die aktuelle Auswahl.
+          {t("mediaGallery.emptyState")}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -111,7 +109,7 @@ export function MediaGallery() {
                   className="size-full object-cover"
                 />
                 <span className="absolute inset-x-0 top-0 truncate bg-black/55 px-3 py-2 text-sm font-semibold text-white">
-                  {m.property_title ?? "Ohne Objekt"}
+                  {m.property_title ?? t("mediaGallery.noProperty")}
                 </span>
                 <span className="absolute inset-x-0 bottom-0 bg-black/55 px-3 py-1.5 text-xs text-white">
                   {KIND_LABEL[m.kind] ?? m.kind}
@@ -120,7 +118,7 @@ export function MediaGallery() {
                   type="button"
                   onClick={() => remove(m)}
                   className="absolute bottom-9 right-2 flex size-7 items-center justify-center rounded-full bg-destructive text-destructive-foreground hover:opacity-90"
-                  aria-label="Bild löschen"
+                  aria-label={t("mediaGallery.deleteImageAriaLabel")}
                 >
                   <Icon icon="ph:trash" className="size-4" />
                 </button>
@@ -130,16 +128,20 @@ export function MediaGallery() {
               <div className="flex flex-col gap-0.5 p-3 text-sm">
                 {m.author && (
                   <p className="text-muted-foreground">
-                    Autor: <span className="text-foreground">{m.author}</span>
+                    {t("mediaGallery.authorLabel")}{" "}
+                    <span className="text-foreground">{m.author}</span>
                   </p>
                 )}
                 <p className="text-muted-foreground">
-                  Hochgeladen am:{" "}
+                  {t("mediaGallery.uploadedAtLabel")}{" "}
                   <span className="text-foreground">{fmt(m.uploaded_at)}</span>
                 </p>
                 {m.check_in && m.check_out && (
                   <p className="text-muted-foreground">
-                    Buchung {fmt(m.check_in)} – {fmt(m.check_out)}
+                    {t("mediaGallery.bookingRange", {
+                      from: fmt(m.check_in),
+                      to: fmt(m.check_out),
+                    })}
                   </p>
                 )}
               </div>
@@ -151,7 +153,7 @@ export function MediaGallery() {
                     href={`/objekte/${m.property_id}`}
                     className="text-accent hover:underline"
                   >
-                    Unterkunft ansehen
+                    {t("mediaGallery.viewProperty")}
                   </Link>
                 )}
                 {m.reservation_id && (
@@ -159,7 +161,7 @@ export function MediaGallery() {
                     href={`/reservierungen/${m.reservation_id}`}
                     className="text-accent hover:underline"
                   >
-                    Buchung ansehen
+                    {t("mediaGallery.viewBooking")}
                   </Link>
                 )}
               </div>

@@ -5,6 +5,7 @@
 // Bausteine aus stats-cards.tsx — dieselben wie das globale Kontrollzentrum).
 // Oben der Datumsbereich-Wähler; Klick auf eine Kachel öffnet die KPI-Detailseite
 // dieses Objekts. Daten aus getPropertyStats; live über useRealtime.
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -32,6 +33,7 @@ function defaultRange(): IsoRange {
 }
 
 export function PropertyStatsView({ propertyId }: { propertyId: string }) {
+  const t = useTranslations("reservations");
   const router = useRouter();
   const [stats, setStats] = useState<PropertyStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,10 +76,18 @@ export function PropertyStatsView({ propertyId }: { propertyId: string }) {
   );
 
   if (loading) {
-    return <Card className="p-8 text-center text-sm text-muted-foreground">Lädt…</Card>;
+    return (
+      <Card className="p-8 text-center text-sm text-muted-foreground">
+        {t("propertyStats.loading")}
+      </Card>
+    );
   }
   if (error || !stats) {
-    return <Card className="p-5 text-sm text-destructive">{error ?? "Keine Daten."}</Card>;
+    return (
+      <Card className="p-5 text-sm text-destructive">
+        {error ?? t("propertyStats.noData")}
+      </Card>
+    );
   }
 
   const money = (v: number) => formatCurrency(v, stats.currency);
@@ -87,7 +97,7 @@ export function PropertyStatsView({ propertyId }: { propertyId: string }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <h1 className="font-display text-2xl font-extrabold">
-            Kontrollzentrum an {stats.property_title}
+            {t("propertyStats.title", { propertyTitle: stats.property_title })}
           </h1>
           <ControlCenterLearn />
         </div>

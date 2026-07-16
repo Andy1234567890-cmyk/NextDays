@@ -6,6 +6,7 @@
 //   recurring  — Regelmäßige Aufgabe (Zeitplan: Häufigkeit/Intervall/Muster)
 // Foto-Pflicht NUR pro Item (requires_photo). Zeitplan → recurrence-jsonb.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -27,10 +28,10 @@ import {
 
 type Opt = { value: string; label: string };
 
-const WEEKDAYS = [
-  "Montag", "Dienstag", "Mittwoch", "Donnerstag",
-  "Freitag", "Samstag", "Sonntag",
-];
+const WEEKDAY_KEYS = [
+  "weekdayMon", "weekdayTue", "weekdayWed", "weekdayThu",
+  "weekdayFri", "weekdaySat", "weekdaySun",
+] as const;
 
 const EMPTY: RuleInput = {
   kind: "template",
@@ -57,6 +58,7 @@ export function RuleEditor({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const t = useTranslations("reservations");
   const [form, setForm] = useState<RuleInput>({ ...EMPTY, kind });
   const [properties, setProperties] = useState<Opt[]>([]);
   const [users, setUsers] = useState<Opt[]>([]);
@@ -132,7 +134,7 @@ export function RuleEditor({
 
   const save = async () => {
     if (!form.name.trim()) {
-      toast.error("Bitte einen Titel angeben.");
+      toast.error(t("ruleEditor.titleRequired"));
       return;
     }
     setSaving(true);
@@ -144,7 +146,7 @@ export function RuleEditor({
       toast.error(res.error);
       return;
     }
-    toast.success("Gespeichert.");
+    toast.success(t("ruleEditor.saved"));
     onSaved();
   };
 
@@ -163,34 +165,34 @@ export function RuleEditor({
         aria-modal="true"
       >
         {loading ? (
-          <p className="py-8 text-center text-sm text-muted-foreground">Lädt…</p>
+          <p className="py-8 text-center text-sm text-muted-foreground">{t("ruleEditor.loading")}</p>
         ) : (
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-lg font-bold">
-                {ruleId ? "Bearbeiten" : "Neu anlegen"}
+                {ruleId ? t("ruleEditor.editTitle") : t("ruleEditor.createTitle")}
               </h2>
               <button
                 type="button"
                 onClick={onClose}
                 className="flex size-8 items-center justify-center rounded-full hover:bg-secondary"
-                aria-label="Schließen"
+                aria-label={t("ruleEditor.close")}
               >
                 <Icon icon="ph:x" className="size-4" />
               </button>
             </div>
 
             <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium">Titel</span>
+              <span className="font-medium">{t("ruleEditor.titleLabel")}</span>
               <Input
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
-                placeholder="z. B. Endreinigung"
+                placeholder={t("ruleEditor.titlePlaceholder")}
               />
             </label>
 
             <label className="flex flex-col gap-1 text-sm">
-              <span className="font-medium">Beschreibung</span>
+              <span className="font-medium">{t("ruleEditor.descriptionLabel")}</span>
               <Input
                 value={form.description ?? ""}
                 onChange={(e) => set("description", e.target.value)}
@@ -200,7 +202,7 @@ export function RuleEditor({
             {kind !== "template" && (
               <>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm font-medium">Aktiv</span>
+                  <span className="text-sm font-medium">{t("ruleEditor.active")}</span>
                   <Switch
                     checked={form.active}
                     onCheckedChange={(v) => set("active", v)}
@@ -208,24 +210,24 @@ export function RuleEditor({
                 </div>
 
                 <label className="flex flex-col gap-1 text-sm">
-                  <span className="font-medium">Objekte</span>
+                  <span className="font-medium">{t("ruleEditor.propertiesLabel")}</span>
                   <MultiSelect
                     options={properties}
                     selected={form.property_ids}
                     onChange={(v) => set("property_ids", v)}
-                    placeholder="Objekte wählen…"
+                    placeholder={t("ruleEditor.propertiesPlaceholder")}
                   />
                 </label>
 
                 <label className="flex flex-col gap-1 text-sm">
-                  <span className="font-medium">Zugewiesen an</span>
+                  <span className="font-medium">{t("ruleEditor.assigneeLabel")}</span>
                   <NativeSelect
                     value={form.assignee_id ?? ""}
                     onChange={(e) =>
                       set("assignee_id", e.target.value || null)
                     }
                   >
-                    <option value="">Nicht zugewiesen</option>
+                    <option value="">{t("ruleEditor.unassigned")}</option>
                     {users.map((u) => (
                       <option key={u.value} value={u.value}>
                         {u.label}
@@ -239,7 +241,7 @@ export function RuleEditor({
             {kind === "auto" && (
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">
-                  Bei Buchungsstornierung entfernen
+                  {t("ruleEditor.removeOnCancellation")}
                 </span>
                 <Switch
                   checked={form.remove_on_cancellation}
@@ -250,22 +252,22 @@ export function RuleEditor({
 
             {kind === "recurring" && (
               <div className="flex flex-col gap-3 rounded-(--radius) border p-3">
-                <span className="text-sm font-medium">Zeitplan</span>
+                <span className="text-sm font-medium">{t("ruleEditor.schedule")}</span>
                 <label className="flex flex-col gap-1 text-sm">
-                  <span>Häufigkeit</span>
+                  <span>{t("ruleEditor.frequency")}</span>
                   <NativeSelect
                     value={freq}
                     onChange={(e) => setRec("frequency", e.target.value)}
                   >
-                    <option value="">Wählen…</option>
-                    <option value="daily">Täglich</option>
-                    <option value="weekly">Wöchentlich</option>
-                    <option value="monthly">Monatlich</option>
+                    <option value="">{t("ruleEditor.choose")}</option>
+                    <option value="daily">{t("ruleEditor.daily")}</option>
+                    <option value="weekly">{t("ruleEditor.weekly")}</option>
+                    <option value="monthly">{t("ruleEditor.monthly")}</option>
                   </NativeSelect>
                 </label>
 
                 <label className="flex flex-col gap-1 text-sm">
-                  <span>Intervall (alle N)</span>
+                  <span>{t("ruleEditor.interval")}</span>
                   <Input
                     type="number"
                     min={1}
@@ -278,12 +280,12 @@ export function RuleEditor({
 
                 {freq === "weekly" && (
                   <fieldset className="flex flex-wrap gap-1.5">
-                    {WEEKDAYS.map((d, i) => {
+                    {WEEKDAY_KEYS.map((wk, i) => {
                       const mask = Number(form.recurrence.weekday_mask ?? 0);
                       const on = (mask & (1 << i)) !== 0;
                       return (
                         <button
-                          key={d}
+                          key={wk}
                           type="button"
                           onClick={() =>
                             setRec(
@@ -297,7 +299,7 @@ export function RuleEditor({
                               : "text-muted-foreground"
                           }`}
                         >
-                          {d.slice(0, 2)}
+                          {t(`ruleEditor.${wk}Short`)}
                         </button>
                       );
                     })}
@@ -307,7 +309,7 @@ export function RuleEditor({
                 {freq === "monthly" && (
                   <div className="flex flex-col gap-2">
                     <label className="flex flex-col gap-1 text-sm">
-                      <span>Tag des Monats (1–31, optional)</span>
+                      <span>{t("ruleEditor.dayOfMonth")}</span>
                       <Input
                         type="number"
                         min={1}
@@ -323,7 +325,7 @@ export function RuleEditor({
                     </label>
                     <div className="grid grid-cols-2 gap-2">
                       <label className="flex flex-col gap-1 text-sm">
-                        <span>Position</span>
+                        <span>{t("ruleEditor.position")}</span>
                         <NativeSelect
                           value={
                             (form.recurrence.weekday_pattern_position as string) ??
@@ -336,16 +338,16 @@ export function RuleEditor({
                             )
                           }
                         >
-                          <option value="">–</option>
-                          <option value="first">Erste</option>
-                          <option value="second">Zweite</option>
-                          <option value="third">Dritte</option>
-                          <option value="fourth">Vierte</option>
-                          <option value="last">Letzte</option>
+                          <option value="">{t("ruleEditor.dash")}</option>
+                          <option value="first">{t("ruleEditor.positionFirst")}</option>
+                          <option value="second">{t("ruleEditor.positionSecond")}</option>
+                          <option value="third">{t("ruleEditor.positionThird")}</option>
+                          <option value="fourth">{t("ruleEditor.positionFourth")}</option>
+                          <option value="last">{t("ruleEditor.positionLast")}</option>
                         </NativeSelect>
                       </label>
                       <label className="flex flex-col gap-1 text-sm">
-                        <span>Wochentag</span>
+                        <span>{t("ruleEditor.weekday")}</span>
                         <NativeSelect
                           value={String(
                             form.recurrence.weekday_pattern_weekday ?? "",
@@ -357,10 +359,10 @@ export function RuleEditor({
                             )
                           }
                         >
-                          <option value="">–</option>
-                          {WEEKDAYS.map((d, i) => (
-                            <option key={d} value={i}>
-                              {d}
+                          <option value="">{t("ruleEditor.dash")}</option>
+                          {WEEKDAY_KEYS.map((wk, i) => (
+                            <option key={wk} value={i}>
+                              {t(`ruleEditor.${wk}`)}
                             </option>
                           ))}
                         </NativeSelect>
@@ -374,7 +376,7 @@ export function RuleEditor({
             {kind !== "template" && (
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">
-                  Abschluss erfordert Inspektion
+                  {t("ruleEditor.needsInspection")}
                 </span>
                 <Switch
                   checked={form.needs_inspection}
@@ -386,10 +388,10 @@ export function RuleEditor({
             {/* Checklisten-Items (Vorlage/Regel) */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Checkliste</span>
+                <span className="text-sm font-medium">{t("ruleEditor.checklist")}</span>
                 <Button variant="outline" size="sm" onClick={addItem}>
                   <Icon icon="ph:plus" className="size-4" />
-                  Punkt
+                  {t("ruleEditor.addItem")}
                 </Button>
               </div>
               {form.items.map((it, idx) => (
@@ -400,7 +402,7 @@ export function RuleEditor({
                   <Input
                     value={it.label}
                     onChange={(e) => updateItem(idx, { label: e.target.value })}
-                    placeholder="Punkt"
+                    placeholder={t("ruleEditor.itemPlaceholder")}
                     className="flex-1"
                   />
                   <button
@@ -413,8 +415,8 @@ export function RuleEditor({
                         ? "bg-primary/10 text-primary"
                         : "text-muted-foreground hover:bg-secondary"
                     }`}
-                    aria-label="Foto erforderlich"
-                    title="Foto erforderlich, um abzuschließen"
+                    aria-label={t("ruleEditor.photoRequired")}
+                    title={t("ruleEditor.photoRequiredTitle")}
                   >
                     <Icon icon="ph:camera" className="size-4" />
                   </button>
@@ -422,7 +424,7 @@ export function RuleEditor({
                     type="button"
                     onClick={() => removeItem(idx)}
                     className="flex size-8 items-center justify-center rounded-full text-destructive hover:bg-destructive/10"
-                    aria-label="Entfernen"
+                    aria-label={t("ruleEditor.remove")}
                   >
                     <Icon icon="ph:trash" className="size-4" />
                   </button>
@@ -432,10 +434,10 @@ export function RuleEditor({
 
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={onClose}>
-                Abbrechen
+                {t("ruleEditor.cancel")}
               </Button>
               <Button onClick={save} disabled={saving}>
-                {saving ? "Speichert…" : "Speichern"}
+                {saving ? t("ruleEditor.saving") : t("ruleEditor.save")}
               </Button>
             </div>
           </div>

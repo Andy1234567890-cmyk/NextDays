@@ -6,6 +6,7 @@
 // (Tageswerte je Periode) plus „Exportieren". Daten aus getMetricDetail; live
 // über useRealtime. Geldmetrik ohne Sicht → maskiert (kein erfundener Wert).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
@@ -28,15 +29,18 @@ import {
 } from "@/lib/reservations";
 import { useRealtime } from "@/lib/use-realtime";
 
-const METRIC_LABEL: Record<StatMetric, string> = {
-  revenue: "Einnahmen",
-  payments_received: "Erhaltene Zahlungen",
-  hosted_guests: "Gehostete Gäste",
-  booked_nights: "Gebuchte Übernachtungen",
-  created_reservations: "Erstellte Reservierungen",
-  cancelled_reservations: "Stornierte Reservierungen",
-  cancelled_nights: "Stornierte Nächte",
-};
+function useMetricLabel(): Record<StatMetric, string> {
+  const t = useTranslations("reservations");
+  return {
+    revenue: t("kpiDetail.metric.revenue"),
+    payments_received: t("kpiDetail.metric.paymentsReceived"),
+    hosted_guests: t("kpiDetail.metric.hostedGuests"),
+    booked_nights: t("kpiDetail.metric.bookedNights"),
+    created_reservations: t("kpiDetail.metric.createdReservations"),
+    cancelled_reservations: t("kpiDetail.metric.cancelledReservations"),
+    cancelled_nights: t("kpiDetail.metric.cancelledNights"),
+  };
+}
 
 function dayLabel(iso: string): string {
   const d = new Date(iso);
@@ -60,6 +64,8 @@ export function KpiDetailView({
   // Optionaler Realtime-Filter (Objekt: property_id=eq.…; Tenant: kein Filter).
   realtimeFilter?: string;
 }) {
+  const t = useTranslations("reservations");
+  const METRIC_LABEL = useMetricLabel();
   const router = useRouter();
   const [detail, setDetail] = useState<StatMetricDetail | null>(null);
   const [subtitle, setSubtitle] = useState("");
@@ -115,13 +121,13 @@ export function KpiDetailView({
 
   const config = useMemo<ChartConfig>(() => {
     const c: ChartConfig = {
-      current: { label: "Aktuell", color: "var(--chart-1)" },
+      current: { label: t("kpiDetail.chartCurrent"), color: "var(--chart-1)" },
     };
     detail?.periods.forEach((p, i) => {
       c[`p${i}`] = { label: p.label, color: CHART_VARS[i % CHART_VARS.length] };
     });
     return c;
-  }, [detail]);
+  }, [detail, t]);
 
   const toggle = (idx: number) =>
     setShown((s) => {
@@ -134,12 +140,12 @@ export function KpiDetailView({
   const exportCsv = useCallback(() => {
     if (!detail) return;
     const rows: string[] = [];
-    const header = ["Periode", ...detail.series.map((p) => p.date)];
+    const header = [t("kpiDetail.csvPeriodColumn"), ...detail.series.map((p) => p.date)];
     rows.push(header.join(","));
     const label = (i: number) =>
       i === 0
         ? `${detail.date_from} – ${detail.date_to}`
-        : (detail.periods[i - 1]?.label ?? `Periode ${i}`);
+        : (detail.periods[i - 1]?.label ?? t("kpiDetail.periodFallback", { number: i }));
     detail.breakout.forEach((vals, i) => {
       rows.push([label(i), ...vals.map((v) => String(v))].join(","));
     });
@@ -150,13 +156,21 @@ export function KpiDetailView({
     a.download = `${metric}_${detail.date_from}_${detail.date_to}.csv`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [detail, metric]);
+  }, [detail, metric, t]);
 
   if (loading) {
-    return <Card className="p-8 text-center text-sm text-muted-foreground">Lädt…</Card>;
+    return (
+      <Card className="p-8 text-center text-sm text-muted-foreground">
+        {t("kpiDetail.loading")}
+      </Card>
+    );
   }
   if (error || !detail) {
-    return <Card className="p-5 text-sm text-destructive">{error ?? "Keine Daten."}</Card>;
+    return (
+      <Card className="p-5 text-sm text-destructive">
+        {error ?? t("kpiDetail.noData")}
+      </Card>
+    );
   }
 
   const total = detail.series.reduce((s, p) => s + p.value, 0);
@@ -169,7 +183,7 @@ export function KpiDetailView({
             type="button"
             variant="outline"
             size="icon"
-            aria-label="Zurück"
+            aria-label={t("kpiDetail.back")}
             onClick={() => router.back()}
           >
             <Icon icon="ph:arrow-left" className="size-4" />
@@ -183,13 +197,13 @@ export function KpiDetailView({
         </div>
         <Button type="button" variant="outline" onClick={exportCsv} className="gap-1.5">
           <Icon icon="ph:download-simple" className="size-4" />
-          Exportieren
+          {t("kpiDetail.export")}
         </Button>
       </div>
 
       {!detail.visible ? (
         <Card className="p-8 text-center text-sm text-muted-foreground">
-          Keine Betragsfreigabe für dieses Konto.
+          {t("kpiDetail.noAmountAccess")}
         </Card>
       ) : (
         <>
@@ -197,7 +211,7 @@ export function KpiDetailView({
             {/* Vergleichsperioden-Schalter (.. „VERGLEICHEN"). */}
             <div className="flex flex-wrap items-center gap-3">
               <span className="text-xs font-semibold uppercase text-muted-foreground">
-                Vergleichen:
+                {t("kpiDetail.compare")}
               </span>
               {detail.periods.map((p, i) => (
                 <label
@@ -351,11 +365,12 @@ function BreakoutTable({
   detail: StatMetricDetail;
   fmt: (v: number) => string;
 }) {
+  const t = useTranslations("reservations");
   const cols = detail.series.length;
   const rowLabel = (i: number) =>
     i === 0
       ? `${dayLabel(detail.date_from)} – ${dayLabel(detail.date_to)}`
-      : (detail.periods[i - 1]?.label ?? `Periode ${i}`);
+      : (detail.periods[i - 1]?.label ?? t("kpiDetail.periodFallback", { number: i }));
 
   return (
     <Card className="p-0">
@@ -364,7 +379,7 @@ function BreakoutTable({
           <thead>
             <tr className="border-b text-muted-foreground">
               <th className="sticky left-0 bg-card px-4 py-2 text-left font-semibold">
-                Breakout
+                {t("kpiDetail.breakout")}
               </th>
               {detail.series.map((p) => (
                 <th key={p.date} className="whitespace-nowrap px-3 py-2 text-right font-medium">
@@ -446,10 +461,11 @@ export function TenantKpiDetail({
   to?: string;
   propertyIds?: string[];
 }) {
+  const t = useTranslations("reservations");
   const subtitle =
     propertyIds && propertyIds.length
-      ? `${propertyIds.length} ausgewählte Unterkünfte`
-      : "Alle Unterkünfte";
+      ? t("kpiDetail.selectedProperties", { count: propertyIds.length })
+      : t("kpiDetail.allProperties");
   const loader = useCallback(
     async () => {
       const res = await getTenantMetricDetail(metric, from, to, propertyIds);

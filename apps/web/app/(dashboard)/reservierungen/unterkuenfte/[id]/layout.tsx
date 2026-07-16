@@ -3,6 +3,7 @@
 // Kopf (notFound bei ungültiger/fremder ID — getProperty ist tenant-scoped).
 // Die globale PM-Nav wird für diesen Zweig vom PmModuleShell ausgeblendet.
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 
 import { PropertyRealtime } from "@/components/objekte/property-realtime";
 import { PropertyPmSubnav } from "@/components/reservierungen/property-pm-subnav";
@@ -19,9 +20,10 @@ export default async function PmPropertyLayout({
   const res = await getProperty(id);
   if (!res.ok) {
     if (res.error.includes("nicht gefunden")) notFound();
+    const t = await getTranslations("reservations");
     return (
       <div className="p-2 text-sm text-destructive">
-        Objekt konnte nicht geladen werden: {res.error}
+        {t("IdLayout.loadError", { error: res.error })}
       </div>
     );
   }

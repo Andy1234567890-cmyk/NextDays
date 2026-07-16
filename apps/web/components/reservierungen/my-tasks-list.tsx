@@ -4,6 +4,7 @@
 // zugewiesenen Aufgaben (echte Daten, live über useRealtime auf tasks).
 // Status umschaltbar; ehrlicher Leerzustand statt Fake.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -16,14 +17,14 @@ import {
 } from "@/lib/tasks";
 import { useRealtime } from "@/lib/use-realtime";
 
-const STATUS_LABEL: Record<TaskStatus, string> = {
-  open: "Offen",
-  in_progress: "In Arbeit",
-  done: "Erledigt",
-  cancelled: "Abgebrochen",
-};
-
 export function MyTasksList() {
+  const t = useTranslations("reservations");
+  const STATUS_LABEL: Record<TaskStatus, string> = {
+    open: t("myTasksList.statusOpen"),
+    in_progress: t("myTasksList.statusInProgress"),
+    done: t("myTasksList.statusDone"),
+    cancelled: t("myTasksList.statusCancelled"),
+  };
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,9 +40,9 @@ export function MyTasksList() {
 
   useRealtime({ table: "tasks", onChange: load });
 
-  const toggle = async (t: Task) => {
-    const next: TaskStatus = t.status === "done" ? "open" : "done";
-    const res = await setTaskStatus(t.id, next);
+  const toggle = async (task: Task) => {
+    const next: TaskStatus = task.status === "done" ? "open" : "done";
+    const res = await setTaskStatus(task.id, next);
     if (!res.ok) toast.error(res.error);
     else load();
   };
@@ -58,31 +59,34 @@ export function MyTasksList() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-extrabold">Aufgaben</h1>
+        <h1 className="font-display text-2xl font-extrabold">{t("myTasksList.title")}</h1>
         {tasks.length > 0 && (
           <span className="text-sm text-muted-foreground">
-            {tasks.filter((t) => t.status === "done").length}/{tasks.length} erledigt
+            {t("myTasksList.doneCount", {
+              done: tasks.filter((task) => task.status === "done").length,
+              total: tasks.length,
+            })}
           </span>
         )}
       </div>
 
       <Card className="p-5">
         {loading ? (
-          <p className="text-sm text-muted-foreground">Lädt…</p>
+          <p className="text-sm text-muted-foreground">{t("myTasksList.loading")}</p>
         ) : tasks.length === 0 ? (
           <p className="py-6 text-center text-sm text-muted-foreground">
-            Ihnen sind aktuell keine Aufgaben zugewiesen.
+            {t("myTasksList.emptyState")}
           </p>
         ) : (
           <ul className="flex flex-col gap-1.5">
-            {tasks.map((t) => {
-              const done = t.status === "done";
-              const due = fmtDue(t.due_at);
+            {tasks.map((task) => {
+              const done = task.status === "done";
+              const due = fmtDue(task.due_at);
               return (
-                <li key={t.id}>
+                <li key={task.id}>
                   <button
                     type="button"
-                    onClick={() => toggle(t)}
+                    onClick={() => toggle(task)}
                     className="flex w-full items-center gap-2.5 rounded-(--radius) border px-3 py-2.5 text-left text-sm transition-colors hover:bg-secondary/40"
                   >
                     <Icon
@@ -90,15 +94,15 @@ export function MyTasksList() {
                       className={"size-5 shrink-0 " + (done ? "text-success" : "text-muted-foreground")}
                     />
                     <span className={"min-w-0 flex-1 truncate " + (done ? "text-muted-foreground line-through" : "")}>
-                      {t.title}
+                      {task.title}
                     </span>
                     {due && (
                       <span className="shrink-0 text-xs text-muted-foreground">
-                        fällig {due}
+                        {t("myTasksList.dueOn", { date: due })}
                       </span>
                     )}
                     <span className="shrink-0 rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground">
-                      {STATUS_LABEL[t.status]}
+                      {STATUS_LABEL[task.status]}
                     </span>
                   </button>
                 </li>

@@ -6,6 +6,7 @@
 // Filterleiste (Monat ← →, Nutzer, Objekt, Alles zurücksetzen). Live via
 // useRealtime auf tasks + reservations.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { BookingPopover } from "@/components/reservierungen/booking-popover";
@@ -25,14 +26,9 @@ import {
 } from "@/lib/tasks";
 import { useRealtime } from "@/lib/use-realtime";
 
-const MONTHS = [
-  "Januar", "Februar", "März", "April", "Mai", "Juni",
-  "Juli", "August", "September", "Oktober", "November", "Dezember",
-];
-const WEEKDAYS = [
-  "Sonntag", "Montag", "Dienstag", "Mittwoch",
-  "Donnerstag", "Freitag", "Samstag",
-];
+// MONTHS/WEEKDAYS werden pro Komponente aus t('tasksCalendar.months'/'weekdays')
+// gebaut (ICU-Objekte lassen sich hier nicht modulweit mit useTranslations
+// laden, da dies keine Komponente ist).
 
 const COL = 6.5; // rem pro Tag-Spalte (Platz für volles Datum im Header)
 const LABEL = 11; // rem der sticky Objektspalte
@@ -152,6 +148,9 @@ function dayIndex(iso: string, firstDay: Date, days: number): number {
 }
 
 export function TasksCalendar() {
+  const t = useTranslations("reservations");
+  const MONTHS = t.raw("tasksCalendar.months") as string[];
+  const WEEKDAYS = t.raw("tasksCalendar.weekdays") as string[];
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth());
@@ -263,9 +262,9 @@ export function TasksCalendar() {
     <div className="flex flex-col gap-4">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-1.5 text-sm text-muted-foreground">
-        <span>Startseite</span>
+        <span>{t("tasksCalendar.breadcrumbHome")}</span>
         <Icon icon="ph:caret-right" className="size-3.5" />
-        <span className="text-foreground">Aufgaben</span>
+        <span className="text-foreground">{t("tasksCalendar.breadcrumbTasks")}</span>
       </nav>
 
       {loadError && (
@@ -277,60 +276,54 @@ export function TasksCalendar() {
       {/* Titel + Lernen + Filterleiste */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <h1 className="font-display text-2xl font-extrabold">Aufgaben</h1>
-          <LearnButton title="Aufgaben">
+          <h1 className="font-display text-2xl font-extrabold">
+            {t("tasksCalendar.title")}
+          </h1>
+          <LearnButton title={t("tasksCalendar.title")}>
             <div className="flex flex-col gap-3 text-sm text-muted-foreground">
-              <p>
-                Dies ist eine allgemeine Ansicht der Aufgabenplanung Ihres Teams.
-                Oben auf jeder Buchung sehen Sie die Aufgaben, die zur Buchung
-                gehören. Wenn Sie mit dem Cursor über eine Buchung oder eine
-                Aufgabe fahren, sehen Sie die zugehörigen Buchungen / Aufgaben
-                hervorgehoben.
-              </p>
+              <p>{t("tasksCalendar.learn.intro")}</p>
               <div>
                 <p className="mb-1 font-medium text-foreground">
-                  Farbcodes für Aufgaben:
+                  {t("tasksCalendar.learn.colorCodesTitle")}
                 </p>
                 <ul className="flex flex-col gap-1">
                   <li>
-                    <b className="text-rose-600">ROT:</b> Die Aufgabe ist nicht
-                    erledigt oder kann niemandem zugewiesen werden.
+                    <b className="text-rose-600">
+                      {t("tasksCalendar.learn.colorRedLabel")}
+                    </b>{" "}
+                    {t("tasksCalendar.learn.colorRedText")}
                   </li>
                   <li>
-                    <b className="text-amber-600">GELB:</b> Die Aufgabe ist für
-                    heute fällig.
+                    <b className="text-amber-600">
+                      {t("tasksCalendar.learn.colorYellowLabel")}
+                    </b>{" "}
+                    {t("tasksCalendar.learn.colorYellowText")}
                   </li>
                   <li>
-                    <b className="text-sky-600">HELLBLAU:</b> Die Aufgabe ist
-                    einer Rolle zugewiesen und muss einem bestimmten
-                    Verantwortlichen zugewiesen werden.
+                    <b className="text-sky-600">
+                      {t("tasksCalendar.learn.colorBlueLabel")}
+                    </b>{" "}
+                    {t("tasksCalendar.learn.colorBlueText")}
                   </li>
                   <li>
-                    <b className="text-emerald-600">GRÜN:</b> Die Aufgabe wurde
-                    bereits abgeschlossen.
+                    <b className="text-emerald-600">
+                      {t("tasksCalendar.learn.colorGreenLabel")}
+                    </b>{" "}
+                    {t("tasksCalendar.learn.colorGreenText")}
                   </li>
                   <li>
-                    <b>WEISS:</b> Keine Warnungen für diese Aufgabe.
+                    <b>{t("tasksCalendar.learn.colorWhiteLabel")}</b>{" "}
+                    {t("tasksCalendar.learn.colorWhiteText")}
                   </li>
                 </ul>
               </div>
+              <p>{t("tasksCalendar.learn.manualCreate")}</p>
               <p>
-                Aufgaben können manuell zu einer Buchung hinzugefügt werden, indem
-                Sie erst auf die Buchung und dann auf „Aufgabe erstellen" klicken.
-                Diese Aufgabe ist dann mit dieser Buchung verknüpft und kann
-                relativ zur Buchung eingeplant werden.
+                {t.rich("tasksCalendar.learn.cellCreate", {
+                  plus: () => <b>+</b>,
+                })}
               </p>
-              <p>
-                Sie können auch Aufgaben an beliebigen Daten erstellen, indem Sie
-                auf das <b>+</b> klicken, das erscheint, wenn Sie Ihren Cursor auf
-                ein Datum setzen. Nachdem die Aufgabe erstellt wurde, können Sie
-                sie weiter bearbeiten und Unteraufgaben oder einen Prüfer
-                hinzufügen.
-              </p>
-              <p>
-                Geplante Aufgaben werden automatisch vom System erstellt und bei
-                Bedarf zusammen mit ihrer zugehörigen Buchung verschoben.
-              </p>
+              <p>{t("tasksCalendar.learn.scheduledInfo")}</p>
             </div>
           </LearnButton>
         </div>
@@ -338,13 +331,15 @@ export function TasksCalendar() {
         <div className="flex flex-wrap items-start gap-4">
           {/* Navigation (Monat) */}
           <div className="flex flex-col items-center gap-1">
-            <span className="text-xs text-muted-foreground">Navigation</span>
+            <span className="text-xs text-muted-foreground">
+              {t("tasksCalendar.navigationLabel")}
+            </span>
             <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={() => shift(-1)}
                 className="flex size-9 items-center justify-center rounded-full bg-secondary hover:bg-muted"
-                aria-label="Vorheriger Monat"
+                aria-label={t("tasksCalendar.previousMonth")}
               >
                 <Icon icon="ph:arrow-left" className="size-4" />
               </button>
@@ -355,7 +350,7 @@ export function TasksCalendar() {
                 type="button"
                 onClick={() => shift(1)}
                 className="flex size-9 items-center justify-center rounded-full bg-secondary hover:bg-muted"
-                aria-label="Nächster Monat"
+                aria-label={t("tasksCalendar.nextMonth")}
               >
                 <Icon icon="ph:arrow-right" className="size-4" />
               </button>
@@ -364,36 +359,42 @@ export function TasksCalendar() {
 
           {/* Benutzer-Filter */}
           <div className="flex flex-col items-center gap-1">
-            <span className="text-xs text-muted-foreground">Ausgewählte Benutzer</span>
+            <span className="text-xs text-muted-foreground">
+              {t("tasksCalendar.selectedUsersLabel")}
+            </span>
             <MultiSelect
               options={users}
               selected={userFilter}
               onChange={setUserFilter}
-              placeholder="Alle Nutzer"
+              placeholder={t("tasksCalendar.allUsersPlaceholder")}
               className="rounded-full bg-secondary"
             />
           </div>
 
           {/* Unterkunfts-Filter */}
           <div className="flex flex-col items-center gap-1">
-            <span className="text-xs text-muted-foreground">Ausgewählte Unterkünfte</span>
+            <span className="text-xs text-muted-foreground">
+              {t("tasksCalendar.selectedPropertiesLabel")}
+            </span>
             <MultiSelect
               options={propOptions}
               selected={propFilter}
               onChange={setPropFilter}
-              placeholder="Alle Unterkünfte"
+              placeholder={t("tasksCalendar.allPropertiesPlaceholder")}
               className="rounded-full bg-secondary"
             />
           </div>
 
           {/* Zurücksetzen */}
           <div className="flex flex-col items-center gap-1">
-            <span className="text-xs text-muted-foreground">Alles zurücksetzen</span>
+            <span className="text-xs text-muted-foreground">
+              {t("tasksCalendar.resetAllLabel")}
+            </span>
             <button
               type="button"
               onClick={reset}
               className="flex size-9 items-center justify-center rounded-full bg-secondary hover:bg-muted"
-              aria-label="Alles zurücksetzen"
+              aria-label={t("tasksCalendar.resetAllLabel")}
             >
               <Icon icon="ph:x" className="size-4" />
             </button>
@@ -404,7 +405,9 @@ export function TasksCalendar() {
       {/* Grid */}
       <div className="overflow-x-auto rounded-(--radius) border">
         {loading ? (
-          <p className="p-6 text-sm text-muted-foreground">Lädt…</p>
+          <p className="p-6 text-sm text-muted-foreground">
+            {t("tasksCalendar.loading")}
+          </p>
         ) : (
           <div style={{ width: gridWidth }} className="relative">
             {/* Tag-Header */}
@@ -512,7 +515,7 @@ export function TasksCalendar() {
                               })
                             }
                             className="absolute bottom-1 left-1 flex size-6 items-center justify-center rounded-full bg-foreground text-background opacity-0 shadow transition-opacity group-hover:opacity-100"
-                            aria-label="Aufgabe an diesem Tag anlegen"
+                            aria-label={t("tasksCalendar.createTaskOnDay")}
                           >
                             <Icon icon="ph:plus" className="size-3.5" />
                           </button>
@@ -549,11 +552,18 @@ export function TasksCalendar() {
                               top: `${laneTop(true, laneIdx)}rem`,
                               height: `${BOOKING_H}rem`,
                             }}
-                            title={`${b.guests} · ${meta.label} · ${bookingRange(b)}`}
+                            title={t("tasksCalendar.bookingBarTitle", {
+                              guests: b.guests,
+                              channel: meta.label,
+                              range: bookingRange(b),
+                            })}
                           >
                             <span className="flex items-center gap-1 truncate font-medium leading-tight">
                               <Icon icon="ph:users" className="size-3.5 shrink-0" />
-                              {b.guests} {meta.label} - Buchung
+                              {t("tasksCalendar.bookingBarLabel", {
+                                guests: b.guests,
+                                channel: meta.label,
+                              })}
                             </span>
                             <span className="truncate text-[0.7rem] leading-tight opacity-90">
                               {bookingRange(b)}

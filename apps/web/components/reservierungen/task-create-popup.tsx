@@ -5,6 +5,7 @@
 // vorbelegt. Felder wie ..: Was ist zu tun?, Beschreibung, Priorität,
 // Anfangs-/Enddatum + Uhrzeit, Empfänger, Abschluss erfordert Inspektion.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -14,7 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { listTenantUsers } from "@/lib/account";
 import { createTask } from "@/lib/tasks";
 
-const PRIO = ["Geringe", "Niedrig", "Mittel", "Hoch", "Dringend"];
+const PRIO_KEYS = ["low", "minor", "medium", "high", "urgent"] as const;
 
 // Unterstrich-Feld wie .. (keine Box, nur untere Linie).
 const LINE =
@@ -33,6 +34,8 @@ export function TaskCreatePopup({
   onClose: () => void;
   onCreated: () => void;
 }) {
+  const t = useTranslations("reservations");
+  const PRIO = PRIO_KEYS.map((key) => t(`taskCreatePopup.priorityLevels.${key}`));
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState(0);
@@ -60,7 +63,7 @@ export function TaskCreatePopup({
 
   const save = async () => {
     if (!title.trim()) {
-      toast.error("Bitte eine Aufgabe angeben.");
+      toast.error(t("taskCreatePopup.titleRequired"));
       return;
     }
     setSaving(true);
@@ -81,7 +84,7 @@ export function TaskCreatePopup({
       toast.error(res.error);
       return;
     }
-    toast.success("Aufgabe angelegt.");
+    toast.success(t("taskCreatePopup.taskCreated"));
     onCreated();
   };
 
@@ -99,12 +102,14 @@ export function TaskCreatePopup({
       >
         {/* Kopf */}
         <div className="flex items-center justify-between border-b px-5 py-4">
-          <h2 className="font-display text-lg font-bold">Aufgabe erstellen</h2>
+          <h2 className="font-display text-lg font-bold">
+            {t("taskCreatePopup.title")}
+          </h2>
           <button
             type="button"
             onClick={onClose}
             className="flex size-8 items-center justify-center rounded-full text-muted-foreground hover:bg-secondary"
-            aria-label="Schließen"
+            aria-label={t("taskCreatePopup.close")}
           >
             <Icon icon="ph:x" className="size-4" />
           </button>
@@ -112,36 +117,42 @@ export function TaskCreatePopup({
 
         <div className="flex flex-col gap-5 px-5 py-4">
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-semibold">Was ist zu tun?</span>
+            <span className="text-sm font-semibold">
+              {t("taskCreatePopup.whatToDoLabel")}
+            </span>
             <input
               className={LINE}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Was muss fertiggestellt werden …?"
+              placeholder={t("taskCreatePopup.whatToDoPlaceholder")}
               autoFocus
             />
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-sm font-semibold">Beschreibung</span>
+            <span className="text-sm font-semibold">
+              {t("taskCreatePopup.descriptionLabel")}
+            </span>
             <textarea
               className={`${LINE} resize-none`}
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Geben Sie eine Beschreibung ein, um zu erklären, worum es bei dieser Aufgabe geht."
+              placeholder={t("taskCreatePopup.descriptionPlaceholder")}
             />
           </label>
 
           {/* Priorität */}
           <div className="flex items-center gap-4">
-            <span className="text-sm font-semibold">Priorität der Aufgabe</span>
+            <span className="text-sm font-semibold">
+              {t("taskCreatePopup.priorityLabel")}
+            </span>
             <div className="ml-auto flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => setPriority((p) => Math.max(0, p - 1))}
                 className="flex size-8 items-center justify-center rounded-full bg-foreground text-background"
-                aria-label="Weniger"
+                aria-label={t("taskCreatePopup.less")}
               >
                 <Icon icon="ph:minus" className="size-4" />
               </button>
@@ -154,7 +165,7 @@ export function TaskCreatePopup({
                   setPriority((p) => Math.min(PRIO.length - 1, p + 1))
                 }
                 className="flex size-8 items-center justify-center rounded-full bg-foreground text-background"
-                aria-label="Mehr"
+                aria-label={t("taskCreatePopup.more")}
               >
                 <Icon icon="ph:plus" className="size-4" />
               </button>
@@ -163,7 +174,9 @@ export function TaskCreatePopup({
 
           {/* Anfangsdatum */}
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-semibold">Anfangsdatum</span>
+            <span className="text-sm font-semibold">
+              {t("taskCreatePopup.startDateLabel")}
+            </span>
             <div className="flex gap-2">
               <input
                 type="date"
@@ -182,7 +195,9 @@ export function TaskCreatePopup({
 
           {/* Enddatum */}
           <div className="flex flex-col gap-1">
-            <span className="text-sm font-semibold">Enddatum</span>
+            <span className="text-sm font-semibold">
+              {t("taskCreatePopup.endDateLabel")}
+            </span>
             <div className="flex gap-2">
               <input
                 type="date"
@@ -201,13 +216,13 @@ export function TaskCreatePopup({
 
           <label className="flex flex-col gap-1">
             <span className="text-sm font-semibold">
-              Empfänger der Aufgabe auswählen
+              {t("taskCreatePopup.assigneeLabel")}
             </span>
             <NativeSelect
               value={assignee}
               onChange={(e) => setAssignee(e.target.value)}
             >
-              <option value="">Wählen…</option>
+              <option value="">{t("taskCreatePopup.assigneePlaceholder")}</option>
               {users.map((u) => (
                 <option key={u.value} value={u.value}>
                   {u.label}
@@ -218,7 +233,7 @@ export function TaskCreatePopup({
 
           <div className="flex items-center justify-between">
             <span className="text-sm font-semibold">
-              Abschluss erfordert Inspektion
+              {t("taskCreatePopup.needsInspectionLabel")}
             </span>
             <Switch
               checked={needsInspection}
@@ -230,18 +245,18 @@ export function TaskCreatePopup({
         {/* Footer (..-Stil): eine Zeile — Vorlage links, Aktionen rechts. */}
         <div className="flex items-center gap-3 border-t px-5 py-4">
           <span className="inline-flex h-10 min-w-0 shrink items-center truncate rounded-full bg-foreground px-4 text-sm text-background opacity-60">
-            Vorlage hinzufügen (optional)
+            {t("taskCreatePopup.addTemplate")}
           </span>
           <div className="ml-auto flex shrink-0 items-center gap-3">
             <Button onClick={save} disabled={saving}>
-              {saving ? "Speichert…" : "Speichern"}
+              {saving ? t("taskCreatePopup.saving") : t("taskCreatePopup.save")}
             </Button>
             <button
               type="button"
               onClick={onClose}
               className="inline-flex h-10 items-center text-sm font-medium hover:underline"
             >
-              Schließen
+              {t("taskCreatePopup.close")}
             </button>
           </div>
         </div>
