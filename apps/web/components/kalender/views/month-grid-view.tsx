@@ -6,6 +6,7 @@
 // Icons. Objektauswahl + Monats-Navigation oben. Realtime auf den relevanten
 // Tabellen (availability/reservations/price_overrides), kein Polling.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { Prop } from "@/components/kalender/calendar-board";
@@ -20,12 +21,6 @@ import { dateKey } from "@/lib/calendar-views";
 import { formatCurrency } from "@/lib/utils";
 import { getBoard } from "@/lib/calendar";
 import { useRealtime } from "@/lib/use-realtime";
-
-const WEEKDAYS = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
-const MONTHS = [
-  "Januar", "Februar", "März", "April", "Mai", "Juni",
-  "Juli", "August", "September", "Oktober", "November", "Dezember",
-];
 
 // Erster Gittertag (Montag der Woche, in der der Monatserste liegt) und Anzahl
 // der 7er-Wochen für den Monat. Mo=0 … So=6.
@@ -45,12 +40,6 @@ function weeksInMonth(year: number, month: number): number {
   return Math.ceil((diff + 1) / 7);
 }
 
-const STATUS_CELL: Record<DayAvailability["status"], { cls: string; label: string }> = {
-  open: { cls: "bg-card", label: "Frei" },
-  booked: { cls: "bg-accent/15", label: "Gebucht" },
-  blocked: { cls: "bg-neutral-200 dark:bg-neutral-800", label: "Gesperrt" },
-};
-
 export function CalendarMonthGridView({
   properties,
   initialPropertyId,
@@ -58,6 +47,7 @@ export function CalendarMonthGridView({
   properties: Prop[];
   initialPropertyId?: string | null;
 }) {
+  const t = useTranslations("calendar");
   const today = useMemo(() => new Date(), []);
   const [propertyId, setPropertyId] = useState<string>(
     initialPropertyId || properties[0]?.id || "",
@@ -72,6 +62,47 @@ export function CalendarMonthGridView({
   const todayKey = useMemo(() => dateKey(today), [today]);
   const start = useMemo(() => gridStart(year, month), [year, month]);
   const weeks = useMemo(() => weeksInMonth(year, month), [year, month]);
+
+  const weekdays = useMemo(
+    () => [
+      t("monthGridView.weekdayMon"),
+      t("monthGridView.weekdayTue"),
+      t("monthGridView.weekdayWed"),
+      t("monthGridView.weekdayThu"),
+      t("monthGridView.weekdayFri"),
+      t("monthGridView.weekdaySat"),
+      t("monthGridView.weekdaySun"),
+    ],
+    [t],
+  );
+  const months = useMemo(
+    () => [
+      t("monthGridView.monthJanuary"),
+      t("monthGridView.monthFebruary"),
+      t("monthGridView.monthMarch"),
+      t("monthGridView.monthApril"),
+      t("monthGridView.monthMay"),
+      t("monthGridView.monthJune"),
+      t("monthGridView.monthJuly"),
+      t("monthGridView.monthAugust"),
+      t("monthGridView.monthSeptember"),
+      t("monthGridView.monthOctober"),
+      t("monthGridView.monthNovember"),
+      t("monthGridView.monthDecember"),
+    ],
+    [t],
+  );
+  const statusCell = useMemo(
+    (): Record<DayAvailability["status"], { cls: string; label: string }> => ({
+      open: { cls: "bg-card", label: t("monthGridView.statusOpen") },
+      booked: { cls: "bg-accent/15", label: t("monthGridView.statusBooked") },
+      blocked: {
+        cls: "bg-neutral-200 dark:bg-neutral-800",
+        label: t("monthGridView.statusBlocked"),
+      },
+    }),
+    [t],
+  );
 
   const load = useCallback(async () => {
     if (!propertyId) {
@@ -173,17 +204,17 @@ export function CalendarMonthGridView({
           ))}
         </NativeSelect>
         <div className="ml-auto flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={prevMonth} aria-label="Vorheriger Monat">
+          <Button variant="outline" size="icon" onClick={prevMonth} aria-label={t("monthGridView.previousMonth")}>
             <Icon icon="ph:caret-left" className="size-4" />
           </Button>
           <span className="min-w-[9rem] text-center font-display text-lg font-bold">
-            {MONTHS[month]} {year}
+            {months[month]} {year}
           </span>
-          <Button variant="outline" size="icon" onClick={nextMonth} aria-label="Nächster Monat">
+          <Button variant="outline" size="icon" onClick={nextMonth} aria-label={t("monthGridView.nextMonth")}>
             <Icon icon="ph:caret-right" className="size-4" />
           </Button>
           <Button variant="outline" onClick={goToday}>
-            Heute
+            {t("monthGridView.today")}
           </Button>
         </div>
       </div>
@@ -191,7 +222,7 @@ export function CalendarMonthGridView({
       <Card className="p-3">
         {/* Wochentagszeile */}
         <div className="grid grid-cols-7">
-          {WEEKDAYS.map((w) => (
+          {weekdays.map((w) => (
             <div
               key={w}
               className="px-2 py-1.5 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground"
@@ -207,7 +238,7 @@ export function CalendarMonthGridView({
             const inMonth = d.getMonth() === month;
             const da = days[k];
             const status = da?.status ?? "open";
-            const meta = STATUS_CELL[status];
+            const meta = statusCell[status];
             const isToday = k === todayKey;
             return (
               <div
@@ -225,12 +256,12 @@ export function CalendarMonthGridView({
                   <span className="flex items-center gap-0.5">
                     {/* CTA = Anreise gesperrt, CTD = Abreise gesperrt. */}
                     {da?.closed_to_arrival && (
-                      <span title="Anreise gesperrt" className="flex">
+                      <span title={t("monthGridView.arrivalBlocked")} className="flex">
                         <Icon icon="ph:sign-in" className="size-3.5 text-destructive" />
                       </span>
                     )}
                     {da?.closed_to_departure && (
-                      <span title="Abreise gesperrt" className="flex">
+                      <span title={t("monthGridView.departureBlocked")} className="flex">
                         <Icon icon="ph:sign-out" className="size-3.5 text-destructive" />
                       </span>
                     )}
@@ -244,7 +275,9 @@ export function CalendarMonthGridView({
                     <div className="flex items-center justify-between text-[0.625rem] text-muted-foreground">
                       <span>{meta.label}</span>
                       {da.min_stay != null && da.min_stay > 1 && (
-                        <span title={`Mindestaufenthalt ${da.min_stay} Nächte`}>
+                        <span
+                          title={t("monthGridView.minStayTitle", { count: da.min_stay })}
+                        >
                           ≥{da.min_stay}
                         </span>
                       )}
@@ -256,26 +289,31 @@ export function CalendarMonthGridView({
           })}
         </div>
         {loading && (
-          <p className="py-3 text-center text-sm text-muted-foreground">Lädt…</p>
+          <p className="py-3 text-center text-sm text-muted-foreground">
+            {t("monthGridView.loading")}
+          </p>
         )}
       </Card>
 
       {/* Legende */}
       <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <span className="size-3 rounded-sm border bg-card" /> Frei
+          <span className="size-3 rounded-sm border bg-card" /> {t("monthGridView.statusOpen")}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="size-3 rounded-sm bg-accent/15" /> Gebucht
+          <span className="size-3 rounded-sm bg-accent/15" /> {t("monthGridView.statusBooked")}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="size-3 rounded-sm bg-neutral-200 dark:bg-neutral-800" /> Gesperrt
+          <span className="size-3 rounded-sm bg-neutral-200 dark:bg-neutral-800" />{" "}
+          {t("monthGridView.statusBlocked")}
         </span>
         <span className="flex items-center gap-1.5">
-          <Icon icon="ph:sign-in" className="size-3.5 text-destructive" /> Anreise gesperrt
+          <Icon icon="ph:sign-in" className="size-3.5 text-destructive" />{" "}
+          {t("monthGridView.arrivalBlocked")}
         </span>
         <span className="flex items-center gap-1.5">
-          <Icon icon="ph:sign-out" className="size-3.5 text-destructive" /> Abreise gesperrt
+          <Icon icon="ph:sign-out" className="size-3.5 text-destructive" />{" "}
+          {t("monthGridView.departureBlocked")}
         </span>
       </div>
     </div>

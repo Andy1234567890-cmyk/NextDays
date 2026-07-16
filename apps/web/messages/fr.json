@@ -1512,7 +1512,9 @@
     "msHint": "Saisissez les nuits, puis glissez sur les jours. Double-clic retire un jour.",
     "msInvalid": "Veuillez saisir un entier ≥ 1.",
     "msNights": "nuits",
-    "msClearAllConfirm": "Vraiment supprimer tous les séjours minimums ?"
+    "msClearAllConfirm": "Vraiment supprimer tous les séjours minimums ?",
+    "ratesTitle": "Tarifs des chambres",
+    "ratesHint": "Prix de base, tarifs par date et séjour minimum par catégorie de chambre et plan tarifaire — s'applique à tous les canaux de vente (plateforme propre, réception, portails)."
   },
   "finance": {
     "cancelInvoice": {
@@ -4304,6 +4306,185 @@
       "paymentSummarySplit": "{percent} % à la réservation, solde {days} jours avant l'arrivée.",
       "localizedEditorSubtitle": "Rédigez le texte et traduisez-le si nécessaire pour vos clients.",
       "localizedEditorPlaceholder": "Saisir {title} …"
+    }
+  },
+  "calendar": {
+    "calendarBoard": {
+      "weekdays": {
+        "so": "Dim",
+        "mo": "Lun",
+        "di": "Mar",
+        "mi": "Mer",
+        "do": "Jeu",
+        "fr": "Ven",
+        "sa": "Sam"
+      },
+      "months": {
+        "januar": "Janvier",
+        "februar": "Février",
+        "maerz": "Mars",
+        "april": "Avril",
+        "mai": "Mai",
+        "juni": "Juin",
+        "juli": "Juillet",
+        "august": "Août",
+        "september": "Septembre",
+        "oktober": "Octobre",
+        "november": "Novembre",
+        "dezember": "Décembre"
+      },
+      "status": {
+        "open": "Libre",
+        "booked": "Réservé",
+        "blocked": "Bloqué",
+        "stopSell": "Stop-Sell"
+      },
+      "stopSellOta": "OTA",
+      "stopSellAllChannels": "tous les canaux",
+      "nightsCount": "{count, plural, one {# nuit} other {# nuits}}",
+      "daysCount": "{count, plural, one {# jour} other {# jours}}"
+    },
+    "calendarViews": {
+      "viewLabel": "Vue",
+      "chooseView": "Choisir une vue …",
+      "loading": "Chargement…",
+      "views": {
+        "timeline": "Planning",
+        "bookings": "Réservations",
+        "month": "Grille mensuelle",
+        "occupancy": "Taux d'occupation",
+        "rates": "Tarifs"
+      }
+    },
+    "calendarActionMenu": {
+      "reservationWithQuote": "Réservation avec devis",
+      "reservationWithoutQuote": "Réservation sans devis",
+      "blocking": "Blocage…",
+      "createBlockedPeriod": "Créer une période bloquée",
+      "priceMinStayBlock": "Prix / Séjour minimum / Blocage …"
+    },
+    "propertyLabel": {
+      "maxGuestsTitle": "Nombre de personnes configuré pour ce bien",
+      "dynamicPricingTitle": "Dynamic Pricing actif — les tarifs journaliers sont calculés automatiquement.",
+      "dynamicBadge": "Dynamic",
+      "idPrefix": "ID {id}"
+    },
+    "bookingsView": {
+      "arrivalsDepartures": "Arrivées & Départs",
+      "today": "Aujourd'hui",
+      "previousDay": "Jour précédent",
+      "nextDay": "Jour suivant",
+      "arrivals": "Arrivées",
+      "departures": "Départs",
+      "inHouse": "Sur place",
+      "noArrivals": "Aucune arrivée ce jour-là.",
+      "noDepartures": "Aucun départ ce jour-là.",
+      "noInHouse": "Personne ne reste ce jour-là.",
+      "guestsCount": "{count, plural, one {# client} other {# clients}}",
+      "allBookings": "Toutes les réservations",
+      "searchPlaceholder": "Client, bien, code OTA…",
+      "allProperties": "Tous les biens",
+      "allChannels": "Tous les canaux",
+      "bookingsCount": "{count, plural, one {# réservation} other {# réservations}}",
+      "statusAll": "Tous les statuts",
+      "statusPending": "Optionnelle",
+      "statusConfirmed": "Confirmée",
+      "statusInHouse": "Enregistré",
+      "statusCompleted": "Parti",
+      "statusCancelled": "Annulée",
+      "colProperty": "Bien",
+      "colGuest": "Client",
+      "colPeriod": "Période",
+      "colNights": "Nuits",
+      "colStatus": "Statut",
+      "colChannel": "Canal",
+      "colAmount": "Montant"
+    },
+    "monthGridView": {
+      "weekdayMon": "Lun",
+      "weekdayTue": "Mar",
+      "weekdayWed": "Mer",
+      "weekdayThu": "Jeu",
+      "weekdayFri": "Ven",
+      "weekdaySat": "Sam",
+      "weekdaySun": "Dim",
+      "monthJanuary": "Janvier",
+      "monthFebruary": "Février",
+      "monthMarch": "Mars",
+      "monthApril": "Avril",
+      "monthMay": "Mai",
+      "monthJune": "Juin",
+      "monthJuly": "Juillet",
+      "monthAugust": "Août",
+      "monthSeptember": "Septembre",
+      "monthOctober": "Octobre",
+      "monthNovember": "Novembre",
+      "monthDecember": "Décembre",
+      "statusOpen": "Libre",
+      "statusBooked": "Réservé",
+      "statusBlocked": "Bloqué",
+      "previousMonth": "Mois précédent",
+      "nextMonth": "Mois suivant",
+      "today": "Aujourd'hui",
+      "arrivalBlocked": "Arrivée bloquée",
+      "departureBlocked": "Départ bloqué",
+      "minStayTitle": "{count, plural, one {Séjour minimum de # nuit} other {Séjour minimum de # nuits}}",
+      "loading": "Chargement…"
+    },
+    "occupancyView": {
+      "window": "{count} jours",
+      "avgOccupancyPrefix": "Taux moyen",
+      "overDays": "{count, plural, one {sur # jour} other {sur # jours}}",
+      "propertyColumn": "Bien",
+      "noProperties": "Aucun bien disponible.",
+      "dayHeaderTooltip": "{date} · {booked}/{total} occupés",
+      "cellTooltip": "{property} · {date} · {status}",
+      "statusBooked": "occupé",
+      "statusFree": "libre",
+      "legendDayTotal": "Occupation journalière",
+      "legendBookedProperty": "Bien occupé"
+    },
+    "reservationAddonsSection": {
+      "title": "Services supplémentaires",
+      "statusPending": "Ouvert",
+      "statusPaid": "Payé",
+      "statusCancelled": "Annulé",
+      "fallbackAddonName": "Service supplémentaire",
+      "markPaidAction": "Marquer comme payé",
+      "markPaidSuccess": "Marqué comme payé.",
+      "addSuccess": "Service supplémentaire ajouté.",
+      "totalLabel": "Total services supplémentaires",
+      "emptyPurchased": "Aucun service supplémentaire réservé pour le moment.",
+      "emptyCatalog": "Aucun catalogue pour ce bien.",
+      "pickPlaceholder": "Choisir un service supplémentaire …",
+      "addAction": "Ajouter",
+      "addBusy": "…"
+    },
+    "ratesView": {
+      "propertyLabel": "Bien",
+      "modePrices": "Tarifs",
+      "modeMinStay": "Séjour minimum",
+      "planColumn": "Catégorie de chambre / Plan tarifaire",
+      "empty": "Aucune catégorie de chambre avec plan tarifaire — créez-les sous Biens → Catégories de chambre.",
+      "pricePlaceholder": "Prix en {currency}",
+      "minStayPlaceholder": "Nuits (min. 1)",
+      "apply": "Appliquer",
+      "resetToBase": "Réinitialiser au prix de base",
+      "resetToDefault": "Réinitialiser par défaut",
+      "cancel": "Annuler",
+      "invalidValue": "Valeur invalide.",
+      "resyncQueued": "Transmission lancée — le statut se met à jour sous peu.",
+      "resyncTitle": "Transmettre aux portails maintenant",
+      "syncPending": "En attente",
+      "syncSynced": "Transmis",
+      "source": {
+        "rate_plan": "Prix par date de ce plan tarifaire",
+        "override": "Prix par date manuel du bien",
+        "dynamic": "Prix dynamique",
+        "weekday": "Prix par jour de semaine",
+        "base": "Prix de base du plan tarifaire",
+        "none": "Aucun prix défini"
+      }
     }
   }
 }

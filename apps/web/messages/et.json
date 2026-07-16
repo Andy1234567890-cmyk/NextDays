@@ -1512,7 +1512,9 @@
     "msHint": "Sisesta ööd ja lohista päevade peale. Topeltklõps eemaldab päeva.",
     "msInvalid": "Sisesta täisarv ≥ 1.",
     "msNights": "ööd",
-    "msClearAllConfirm": "Kustutada kõik minimaalsed viibimised?"
+    "msClearAllConfirm": "Kustutada kõik minimaalsed viibimised?",
+    "ratesTitle": "Toahinnad",
+    "ratesHint": "Baashind, kuupäevapõhised hinnad ja minimaalne peatumisaeg toakategooria ja hinnaplaani kohta — kehtib kõigi müügikanalite kohta (oma platvorm, vastuvõtt, portaalid)."
   },
   "finance": {
     "cancelInvoice": {
@@ -4304,6 +4306,185 @@
       "paymentSummarySplit": "{percent} % broneerimisel, jääksumma {days} päeva enne saabumist.",
       "localizedEditorSubtitle": "Loo tekst ja tõlgi see vajaduse korral oma külaliste jaoks.",
       "localizedEditorPlaceholder": "Sisesta {title} …"
+    }
+  },
+  "calendar": {
+    "calendarBoard": {
+      "weekdays": {
+        "so": "P",
+        "mo": "E",
+        "di": "T",
+        "mi": "K",
+        "do": "N",
+        "fr": "R",
+        "sa": "L"
+      },
+      "months": {
+        "januar": "Jaanuar",
+        "februar": "Veebruar",
+        "maerz": "Märts",
+        "april": "Aprill",
+        "mai": "Mai",
+        "juni": "Juuni",
+        "juli": "Juuli",
+        "august": "August",
+        "september": "September",
+        "oktober": "Oktoober",
+        "november": "November",
+        "dezember": "Detsember"
+      },
+      "status": {
+        "open": "Vaba",
+        "booked": "Broneeritud",
+        "blocked": "Suletud",
+        "stopSell": "Stop-Sell"
+      },
+      "stopSellOta": "OTA",
+      "stopSellAllChannels": "kõik kanalid",
+      "nightsCount": "{count, plural, one {# öö} other {# ööd}}",
+      "daysCount": "{count, plural, one {# päev} other {# päeva}}"
+    },
+    "calendarViews": {
+      "viewLabel": "Vaade",
+      "chooseView": "Vali vaade …",
+      "loading": "Laadimine…",
+      "views": {
+        "timeline": "Ajajoon",
+        "bookings": "Broneeringud",
+        "month": "Kuuvaade",
+        "occupancy": "Täituvus",
+        "rates": "Hinnad"
+      }
+    },
+    "calendarActionMenu": {
+      "reservationWithQuote": "Broneering pakkumisega",
+      "reservationWithoutQuote": "Broneering ilma pakkumiseta",
+      "blocking": "Suletakse…",
+      "createBlockedPeriod": "Loo suletud periood",
+      "priceMinStayBlock": "Hind / minimaalne viibimine / sulgemine …"
+    },
+    "propertyLabel": {
+      "maxGuestsTitle": "Selle majutuse jaoks määratud külaliste arv",
+      "dynamicPricingTitle": "Dynamic Pricing aktiivne — päevahinnad arvutatakse automaatselt.",
+      "dynamicBadge": "Dynamic",
+      "idPrefix": "ID {id}"
+    },
+    "bookingsView": {
+      "arrivalsDepartures": "Saabumised & lahkumised",
+      "today": "Täna",
+      "previousDay": "Eelmine päev",
+      "nextDay": "Järgmine päev",
+      "arrivals": "Saabumised",
+      "departures": "Lahkumised",
+      "inHouse": "Kohapeal",
+      "noArrivals": "Sel päeval saabumisi ei ole.",
+      "noDepartures": "Sel päeval lahkumisi ei ole.",
+      "noInHouse": "Sel päeval keegi ei jää.",
+      "guestsCount": "{count, plural, one {# külaline} other {# külalist}}",
+      "allBookings": "Kõik broneeringud",
+      "searchPlaceholder": "Külaline, majutus, OTA-kood…",
+      "allProperties": "Kõik majutused",
+      "allChannels": "Kõik kanalid",
+      "bookingsCount": "{count, plural, one {# broneering} other {# broneeringut}}",
+      "statusAll": "Kõik olekud",
+      "statusPending": "Esialgne",
+      "statusConfirmed": "Kinnitatud",
+      "statusInHouse": "Sisse registreeritud",
+      "statusCompleted": "Välja registreeritud",
+      "statusCancelled": "Tühistatud",
+      "colProperty": "Majutus",
+      "colGuest": "Külaline",
+      "colPeriod": "Periood",
+      "colNights": "Ööd",
+      "colStatus": "Olek",
+      "colChannel": "Kanal",
+      "colAmount": "Summa"
+    },
+    "monthGridView": {
+      "weekdayMon": "E",
+      "weekdayTue": "T",
+      "weekdayWed": "K",
+      "weekdayThu": "N",
+      "weekdayFri": "R",
+      "weekdaySat": "L",
+      "weekdaySun": "P",
+      "monthJanuary": "Jaanuar",
+      "monthFebruary": "Veebruar",
+      "monthMarch": "Märts",
+      "monthApril": "Aprill",
+      "monthMay": "Mai",
+      "monthJune": "Juuni",
+      "monthJuly": "Juuli",
+      "monthAugust": "August",
+      "monthSeptember": "September",
+      "monthOctober": "Oktoober",
+      "monthNovember": "November",
+      "monthDecember": "Detsember",
+      "statusOpen": "Vaba",
+      "statusBooked": "Broneeritud",
+      "statusBlocked": "Suletud",
+      "previousMonth": "Eelmine kuu",
+      "nextMonth": "Järgmine kuu",
+      "today": "Täna",
+      "arrivalBlocked": "Saabumine suletud",
+      "departureBlocked": "Lahkumine suletud",
+      "minStayTitle": "{count, plural, one {Minimaalne viibimine # öö} other {Minimaalne viibimine # ööd}}",
+      "loading": "Laadimine…"
+    },
+    "occupancyView": {
+      "window": "{count} päeva",
+      "avgOccupancyPrefix": "Ø täituvus",
+      "overDays": "{count, plural, one {# päeva jooksul} other {# päeva jooksul}}",
+      "propertyColumn": "Majutus",
+      "noProperties": "Majutusi ei leitud.",
+      "dayHeaderTooltip": "{date} · {booked}/{total} täidetud",
+      "cellTooltip": "{property} · {date} · {status}",
+      "statusBooked": "täidetud",
+      "statusFree": "vaba",
+      "legendDayTotal": "Päeva täituvus",
+      "legendBookedProperty": "Majutus täidetud"
+    },
+    "reservationAddonsSection": {
+      "title": "Lisateenused",
+      "statusPending": "Avatud",
+      "statusPaid": "Makstud",
+      "statusCancelled": "Tühistatud",
+      "fallbackAddonName": "Lisateenus",
+      "markPaidAction": "Märgi makstuks",
+      "markPaidSuccess": "Märgitud makstuks.",
+      "addSuccess": "Lisateenus lisatud.",
+      "totalLabel": "Lisateenuste summa",
+      "emptyPurchased": "Lisateenuseid pole veel broneeritud.",
+      "emptyCatalog": "Selle majutuse jaoks pole kataloogi.",
+      "pickPlaceholder": "Vali lisateenus …",
+      "addAction": "Lisa",
+      "addBusy": "…"
+    },
+    "ratesView": {
+      "propertyLabel": "Objekt",
+      "modePrices": "Hinnad",
+      "modeMinStay": "Minimaalne peatumisaeg",
+      "planColumn": "Toakategooria / Hinnaplaan",
+      "empty": "Hinnaplaanidega toakategooriaid pole veel — loo need alt Objektid → Toakategooriad.",
+      "pricePlaceholder": "Hind valuutas {currency}",
+      "minStayPlaceholder": "Ööd (min. 1)",
+      "apply": "Rakenda",
+      "resetToBase": "Lähtesta baashinnale",
+      "resetToDefault": "Lähtesta vaikeväärtusele",
+      "cancel": "Tühista",
+      "invalidValue": "Kehtetu väärtus.",
+      "resyncQueued": "Edastus käivitatud — olek uueneb kohe.",
+      "resyncTitle": "Edasta kohe portaalidesse",
+      "syncPending": "Ootel",
+      "syncSynced": "Edastatud",
+      "source": {
+        "rate_plan": "Selle hinnaplaani kuupäevapõhine hind",
+        "override": "Käsitsi määratud objekti kuupäevahind",
+        "dynamic": "Dünaamiline hind",
+        "weekday": "Nädalapäeva hind",
+        "base": "Hinnaplaani baashind",
+        "none": "Hinda pole määratud"
+      }
     }
   }
 }

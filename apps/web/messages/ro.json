@@ -1512,7 +1512,9 @@
     "msHint": "Introdu nopțile, apoi trage peste zile. Dublu-clic elimină o zi.",
     "msInvalid": "Introdu un număr întreg ≥ 1.",
     "msNights": "nopți",
-    "msClearAllConfirm": "Ștergi toate șederile minime?"
+    "msClearAllConfirm": "Ștergi toate șederile minime?",
+    "ratesTitle": "Tarife camere",
+    "ratesHint": "Preț de bază, prețuri pe date și sejur minim pentru fiecare categorie de cameră și plan tarifar — se aplică pe toate canalele de vânzare (platformă proprie, recepție, portaluri)."
   },
   "finance": {
     "cancelInvoice": {
@@ -4304,6 +4306,185 @@
       "paymentSummarySplit": "{percent} % la rezervare, restul de plată cu {days} zile înainte de sosire.",
       "localizedEditorSubtitle": "Creează textul și tradu-l dacă este necesar pentru oaspeții tăi.",
       "localizedEditorPlaceholder": "Introdu {title} …"
+    }
+  },
+  "calendar": {
+    "calendarBoard": {
+      "weekdays": {
+        "so": "Du",
+        "mo": "Lu",
+        "di": "Ma",
+        "mi": "Mi",
+        "do": "Jo",
+        "fr": "Vi",
+        "sa": "Sâ"
+      },
+      "months": {
+        "januar": "Ianuarie",
+        "februar": "Februarie",
+        "maerz": "Martie",
+        "april": "Aprilie",
+        "mai": "Mai",
+        "juni": "Iunie",
+        "juli": "Iulie",
+        "august": "August",
+        "september": "Septembrie",
+        "oktober": "Octombrie",
+        "november": "Noiembrie",
+        "dezember": "Decembrie"
+      },
+      "status": {
+        "open": "Liber",
+        "booked": "Rezervat",
+        "blocked": "Blocat",
+        "stopSell": "Stop-Sell"
+      },
+      "stopSellOta": "OTA",
+      "stopSellAllChannels": "toate canalele",
+      "nightsCount": "{count, plural, one {# noapte} few {# nopți} other {# de nopți}}",
+      "daysCount": "{count, plural, one {# zi} few {# zile} other {# de zile}}"
+    },
+    "calendarViews": {
+      "viewLabel": "Vizualizare",
+      "chooseView": "Alege o vizualizare …",
+      "loading": "Se încarcă…",
+      "views": {
+        "timeline": "Cronologie",
+        "bookings": "Rezervări",
+        "month": "Grilă lunară",
+        "occupancy": "Grad de ocupare",
+        "rates": "Tarife"
+      }
+    },
+    "calendarActionMenu": {
+      "reservationWithQuote": "Rezervare cu ofertă",
+      "reservationWithoutQuote": "Rezervare fără ofertă",
+      "blocking": "Blocare…",
+      "createBlockedPeriod": "Creează perioadă blocată",
+      "priceMinStayBlock": "Preț / Min-Stay / Blocare …"
+    },
+    "propertyLabel": {
+      "maxGuestsTitle": "Numărul de persoane setat pentru această proprietate",
+      "dynamicPricingTitle": "Dynamic Pricing activ — prețurile zilnice sunt calculate automat.",
+      "dynamicBadge": "Dynamic",
+      "idPrefix": "ID {id}"
+    },
+    "bookingsView": {
+      "arrivalsDepartures": "Sosiri & plecări",
+      "today": "Astăzi",
+      "previousDay": "Ziua anterioară",
+      "nextDay": "Ziua următoare",
+      "arrivals": "Sosiri",
+      "departures": "Plecări",
+      "inHouse": "În proprietate",
+      "noArrivals": "Nicio sosire în această zi.",
+      "noDepartures": "Nicio plecare în această zi.",
+      "noInHouse": "Nimeni nu rămâne în această zi.",
+      "guestsCount": "{count, plural, one {# oaspete} few {# oaspeți} other {# de oaspeți}}",
+      "allBookings": "Toate rezervările",
+      "searchPlaceholder": "Oaspete, proprietate, cod OTA…",
+      "allProperties": "Toate proprietățile",
+      "allChannels": "Toate canalele",
+      "bookingsCount": "{count, plural, one {# rezervare} few {# rezervări} other {# de rezervări}}",
+      "statusAll": "Toate statusurile",
+      "statusPending": "Provizorie",
+      "statusConfirmed": "Confirmată",
+      "statusInHouse": "Check-in efectuat",
+      "statusCompleted": "Check-out efectuat",
+      "statusCancelled": "Anulată",
+      "colProperty": "Proprietate",
+      "colGuest": "Oaspete",
+      "colPeriod": "Perioadă",
+      "colNights": "Nopți",
+      "colStatus": "Status",
+      "colChannel": "Canal",
+      "colAmount": "Sumă"
+    },
+    "monthGridView": {
+      "weekdayMon": "Lu",
+      "weekdayTue": "Ma",
+      "weekdayWed": "Mi",
+      "weekdayThu": "Jo",
+      "weekdayFri": "Vi",
+      "weekdaySat": "Sâ",
+      "weekdaySun": "Du",
+      "monthJanuary": "Ianuarie",
+      "monthFebruary": "Februarie",
+      "monthMarch": "Martie",
+      "monthApril": "Aprilie",
+      "monthMay": "Mai",
+      "monthJune": "Iunie",
+      "monthJuly": "Iulie",
+      "monthAugust": "August",
+      "monthSeptember": "Septembrie",
+      "monthOctober": "Octombrie",
+      "monthNovember": "Noiembrie",
+      "monthDecember": "Decembrie",
+      "statusOpen": "Liber",
+      "statusBooked": "Rezervat",
+      "statusBlocked": "Blocat",
+      "previousMonth": "Luna anterioară",
+      "nextMonth": "Luna următoare",
+      "today": "Astăzi",
+      "arrivalBlocked": "Sosire blocată",
+      "departureBlocked": "Plecare blocată",
+      "minStayTitle": "{count, plural, one {Ședere minimă # noapte} few {Ședere minimă # nopți} other {Ședere minimă # de nopți}}",
+      "loading": "Se încarcă…"
+    },
+    "occupancyView": {
+      "window": "{count} zile",
+      "avgOccupancyPrefix": "Ø grad de ocupare",
+      "overDays": "{count, plural, one {în # zi} few {în # zile} other {în # de zile}}",
+      "propertyColumn": "Proprietate",
+      "noProperties": "Nu există proprietăți.",
+      "dayHeaderTooltip": "{date} · {booked}/{total} ocupate",
+      "cellTooltip": "{property} · {date} · {status}",
+      "statusBooked": "ocupat",
+      "statusFree": "liber",
+      "legendDayTotal": "Grad de ocupare zilnic",
+      "legendBookedProperty": "Proprietate ocupată"
+    },
+    "reservationAddonsSection": {
+      "title": "Servicii suplimentare",
+      "statusPending": "Deschis",
+      "statusPaid": "Plătit",
+      "statusCancelled": "Anulat",
+      "fallbackAddonName": "Serviciu suplimentar",
+      "markPaidAction": "Marchează ca plătit",
+      "markPaidSuccess": "Marcat ca plătit.",
+      "addSuccess": "Serviciul suplimentar a fost adăugat.",
+      "totalLabel": "Total servicii suplimentare",
+      "emptyPurchased": "Niciun serviciu suplimentar rezervat încă.",
+      "emptyCatalog": "Niciun catalog pentru această proprietate.",
+      "pickPlaceholder": "Alege un serviciu suplimentar …",
+      "addAction": "Adaugă",
+      "addBusy": "…"
+    },
+    "ratesView": {
+      "propertyLabel": "Proprietate",
+      "modePrices": "Tarife",
+      "modeMinStay": "Sejur minim",
+      "planColumn": "Categorie de cameră / Plan tarifar",
+      "empty": "Încă nicio categorie de cameră cu planuri tarifare — creați-le în Proprietăți → Categorii de cameră.",
+      "pricePlaceholder": "Preț în {currency}",
+      "minStayPlaceholder": "Nopți (min. 1)",
+      "apply": "Aplică",
+      "resetToBase": "Resetează la prețul de bază",
+      "resetToDefault": "Resetează la implicit",
+      "cancel": "Anulează",
+      "invalidValue": "Valoare nevalidă.",
+      "resyncQueued": "Transmiterea a fost inițiată — starea se actualizează în curând.",
+      "resyncTitle": "Transmite acum către portaluri",
+      "syncPending": "În așteptare",
+      "syncSynced": "Transmis",
+      "source": {
+        "rate_plan": "Preț pe dată al acestui plan tarifar",
+        "override": "Preț pe dată manual al proprietății",
+        "dynamic": "Preț dinamic",
+        "weekday": "Preț pe zi a săptămânii",
+        "base": "Preț de bază al planului tarifar",
+        "none": "Niciun preț definit"
+      }
     }
   }
 }

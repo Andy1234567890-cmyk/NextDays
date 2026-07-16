@@ -5,6 +5,7 @@
 // zeigt die Tages-Gesamtauslastung (Anteil belegter Objekte) als Farbstufe. So
 // sieht man auf einen Blick volle und schwache Tage. Aggregat rein im Frontend
 // aus listReservations() (kein neuer Endpunkt). Realtime auf reservations.
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { Prop } from "@/components/kalender/calendar-board";
@@ -21,13 +22,17 @@ import {
 import { type Reservation, listReservations } from "@/lib/reservations";
 import { useRealtime } from "@/lib/use-realtime";
 
-const WINDOWS = [
-  { value: 30, label: "30 Tage" },
-  { value: 60, label: "60 Tage" },
-  { value: 90, label: "90 Tage" },
-] as const;
-
 export function CalendarOccupancyView({ properties }: { properties: Prop[] }) {
+  const t = useTranslations("calendar");
+  const WINDOWS = useMemo(
+    () =>
+      [
+        { value: 30, label: t("occupancyView.window", { count: 30 }) },
+        { value: 60, label: t("occupancyView.window", { count: 60 }) },
+        { value: 90, label: t("occupancyView.window", { count: 90 }) },
+      ] as const,
+    [t],
+  );
   const [reservations, setReservations] = useState<Reservation[]>([]);
   // Belegte/gesperrte Tage je Objekt aus dem Board (availability=0: Block,
   // Stop-Sell, OTA-Import) — sie erscheinen NICHT in reservations.
@@ -90,11 +95,11 @@ export function CalendarOccupancyView({ properties }: { properties: Prop[] }) {
       <div className="flex flex-wrap items-center gap-2">
         <Segmented value={days} onChange={setDays} options={WINDOWS} />
         <span className="ml-auto text-sm text-muted-foreground">
-          Ø Auslastung{" "}
+          {t("occupancyView.avgOccupancyPrefix")}{" "}
           <span className="font-semibold text-foreground">
             {Math.round(avgRatio * 100)}%
           </span>{" "}
-          über {days} Tage
+          {t("occupancyView.overDays", { count: days })}
         </span>
       </div>
 
@@ -104,7 +109,7 @@ export function CalendarOccupancyView({ properties }: { properties: Prop[] }) {
             <thead>
               <tr>
                 <th className="sticky left-0 z-10 bg-card px-3 py-2 text-left font-semibold">
-                  Objekt
+                  {t("occupancyView.propertyColumn")}
                 </th>
                 {matrix.dayKeys.map((k) => {
                   const d = parseKey(k);
@@ -112,8 +117,11 @@ export function CalendarOccupancyView({ properties }: { properties: Prop[] }) {
                   return (
                     <th
                       key={k}
-                      title={`${d.toLocaleDateString("de-DE")} · ${cell.booked}/${propertyIds.length
-                        } belegt`}
+                      title={t("occupancyView.dayHeaderTooltip", {
+                        date: d.toLocaleDateString("de-DE"),
+                        booked: cell.booked,
+                        total: propertyIds.length,
+                      })}
                       className={`h-12 w-7 border-b border-l px-0 text-center align-bottom font-medium ${occupancyClass(
                         cell.ratio,
                       )}`}
@@ -137,9 +145,13 @@ export function CalendarOccupancyView({ properties }: { properties: Prop[] }) {
                     return (
                       <td
                         key={k}
-                        title={`${p.title} · ${parseKey(k).toLocaleDateString(
-                          "de-DE",
-                        )} · ${booked ? "belegt" : "frei"}`}
+                        title={t("occupancyView.cellTooltip", {
+                          property: p.title,
+                          date: parseKey(k).toLocaleDateString("de-DE"),
+                          status: booked
+                            ? t("occupancyView.statusBooked")
+                            : t("occupancyView.statusFree"),
+                        })}
                         className={`h-6 w-7 border-b border-l ${booked ? "bg-accent/80" : "bg-card"
                           }`}
                       />
@@ -153,7 +165,7 @@ export function CalendarOccupancyView({ properties }: { properties: Prop[] }) {
                     colSpan={matrix.dayKeys.length + 1}
                     className="px-4 py-10 text-center text-muted-foreground"
                   >
-                    Keine Objekte vorhanden.
+                    {t("occupancyView.noProperties")}
                   </td>
                 </tr>
               )}
@@ -165,12 +177,14 @@ export function CalendarOccupancyView({ properties }: { properties: Prop[] }) {
       {/* Legende */}
       <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
         <span className="flex items-center gap-1.5">
-          <span className="size-3 rounded-sm bg-accent/80" /> belegt (Objekt)
+          <span className="size-3 rounded-sm bg-accent/80" />{" "}
+          {t("occupancyView.legendBookedProperty")}
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="size-3 rounded-sm border bg-card" /> frei
+          <span className="size-3 rounded-sm border bg-card" />{" "}
+          {t("occupancyView.statusFree")}
         </span>
-        <span className="ml-2">Kopfzeile = Tages-Gesamtauslastung:</span>
+        <span className="ml-2">{t("occupancyView.legendDayTotal")}</span>
         {[0, 0.3, 0.6, 0.9, 1].map((r) => (
           <span
             key={r}

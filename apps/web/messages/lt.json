@@ -1512,7 +1512,9 @@
     "msHint": "Įveskite naktis ir vilkite per dienas. Dvigubu spustelėjimu pašalinsite dieną.",
     "msInvalid": "Įveskite sveikąjį skaičių ≥ 1.",
     "msNights": "naktys",
-    "msClearAllConfirm": "Tikrai ištrinti visus minimalius buvimus?"
+    "msClearAllConfirm": "Tikrai ištrinti visus minimalius buvimus?",
+    "ratesTitle": "Kambarių kainos",
+    "ratesHint": "Bazinė kaina, kainos pagal datas ir minimali apsistojimo trukmė pagal kambario kategoriją ir kainų planą — taikoma visiems pardavimo kanalams (savo platforma, registratūra, portalai)."
   },
   "finance": {
     "cancelInvoice": {
@@ -4304,6 +4306,185 @@
       "paymentSummarySplit": "{percent} % rezervuojant, likutis – {days} d. prieš atvykimą.",
       "localizedEditorSubtitle": "Sukurkite tekstą ir prireikus išverskite jį savo svečiams.",
       "localizedEditorPlaceholder": "Įveskite {title} …"
+    }
+  },
+  "calendar": {
+    "calendarBoard": {
+      "weekdays": {
+        "so": "Sk",
+        "mo": "Pr",
+        "di": "An",
+        "mi": "Tr",
+        "do": "Kt",
+        "fr": "Pn",
+        "sa": "Št"
+      },
+      "months": {
+        "januar": "Sausis",
+        "februar": "Vasaris",
+        "maerz": "Kovas",
+        "april": "Balandis",
+        "mai": "Gegužė",
+        "juni": "Birželis",
+        "juli": "Liepa",
+        "august": "Rugpjūtis",
+        "september": "Rugsėjis",
+        "oktober": "Spalis",
+        "november": "Lapkritis",
+        "dezember": "Gruodis"
+      },
+      "status": {
+        "open": "Laisva",
+        "booked": "Užsakyta",
+        "blocked": "Užblokuota",
+        "stopSell": "Stop-Sell"
+      },
+      "stopSellOta": "OTA",
+      "stopSellAllChannels": "visi kanalai",
+      "nightsCount": "{count, plural, one {# naktis} few {# naktys} many {# nakties} other {# naktų}}",
+      "daysCount": "{count, plural, one {# diena} few {# dienos} many {# dienos} other {# dienų}}"
+    },
+    "calendarViews": {
+      "viewLabel": "Rodinys",
+      "chooseView": "Pasirinkite rodinį …",
+      "loading": "Kraunama…",
+      "views": {
+        "timeline": "Laiko juosta",
+        "bookings": "Rezervacijos",
+        "month": "Mėnesio tinklelis",
+        "occupancy": "Užimtumas",
+        "rates": "Kainos"
+      }
+    },
+    "calendarActionMenu": {
+      "reservationWithQuote": "Rezervacija su pasiūlymu",
+      "reservationWithoutQuote": "Rezervacija be pasiūlymo",
+      "blocking": "Blokuoti…",
+      "createBlockedPeriod": "Sukurti blokavimo laikotarpį",
+      "priceMinStayBlock": "Kaina / Min-Stay / Blokavimas …"
+    },
+    "propertyLabel": {
+      "maxGuestsTitle": "Šiam objektui nustatytas svečių skaičius",
+      "dynamicPricingTitle": "Aktyvuotas Dynamic Pricing — dienos kainos apskaičiuojamos automatiškai.",
+      "dynamicBadge": "Dynamic",
+      "idPrefix": "ID {id}"
+    },
+    "bookingsView": {
+      "arrivalsDepartures": "Atvykimai ir išvykimai",
+      "today": "Šiandien",
+      "previousDay": "Ankstesnė diena",
+      "nextDay": "Kita diena",
+      "arrivals": "Atvykimai",
+      "departures": "Išvykimai",
+      "inHouse": "Viešbutyje",
+      "noArrivals": "Šią dieną atvykimų nėra.",
+      "noDepartures": "Šią dieną išvykimų nėra.",
+      "noInHouse": "Šią dieną niekas nelieka.",
+      "guestsCount": "{count, plural, one {# svečias} few {# svečiai} many {# svečio} other {# svečių}}",
+      "allBookings": "Visos rezervacijos",
+      "searchPlaceholder": "Svečias, objektas, OTA kodas…",
+      "allProperties": "Visi objektai",
+      "allChannels": "Visi kanalai",
+      "bookingsCount": "{count, plural, one {# rezervacija} few {# rezervacijos} many {# rezervacijos} other {# rezervacijų}}",
+      "statusAll": "Visi statusai",
+      "statusPending": "Preliminari",
+      "statusConfirmed": "Patvirtinta",
+      "statusInHouse": "Įregistruota",
+      "statusCompleted": "Išregistruota",
+      "statusCancelled": "Atšaukta",
+      "colProperty": "Objektas",
+      "colGuest": "Svečias",
+      "colPeriod": "Laikotarpis",
+      "colNights": "Naktys",
+      "colStatus": "Statusas",
+      "colChannel": "Kanalas",
+      "colAmount": "Suma"
+    },
+    "monthGridView": {
+      "weekdayMon": "Pr",
+      "weekdayTue": "An",
+      "weekdayWed": "Tr",
+      "weekdayThu": "Kt",
+      "weekdayFri": "Pn",
+      "weekdaySat": "Št",
+      "weekdaySun": "Sk",
+      "monthJanuary": "Sausis",
+      "monthFebruary": "Vasaris",
+      "monthMarch": "Kovas",
+      "monthApril": "Balandis",
+      "monthMay": "Gegužė",
+      "monthJune": "Birželis",
+      "monthJuly": "Liepa",
+      "monthAugust": "Rugpjūtis",
+      "monthSeptember": "Rugsėjis",
+      "monthOctober": "Spalis",
+      "monthNovember": "Lapkritis",
+      "monthDecember": "Gruodis",
+      "statusOpen": "Laisva",
+      "statusBooked": "Užsakyta",
+      "statusBlocked": "Užblokuota",
+      "previousMonth": "Ankstesnis mėnuo",
+      "nextMonth": "Kitas mėnuo",
+      "today": "Šiandien",
+      "arrivalBlocked": "Atvykimas užblokuotas",
+      "departureBlocked": "Išvykimas užblokuotas",
+      "minStayTitle": "{count, plural, one {Minimalus apsistojimas # naktis} few {Minimalus apsistojimas # naktys} many {Minimalus apsistojimas # nakties} other {Minimalus apsistojimas # naktų}}",
+      "loading": "Kraunama…"
+    },
+    "occupancyView": {
+      "window": "{count} d.",
+      "avgOccupancyPrefix": "Ø užimtumas",
+      "overDays": "{count, plural, one {per # dieną} few {per # dienas} many {per # dienos} other {per # dienų}}",
+      "propertyColumn": "Objektas",
+      "noProperties": "Objektų nėra.",
+      "dayHeaderTooltip": "{date} · {booked}/{total} užimta",
+      "cellTooltip": "{property} · {date} · {status}",
+      "statusBooked": "užimta",
+      "statusFree": "laisva",
+      "legendDayTotal": "Dienos užimtumas",
+      "legendBookedProperty": "Objektas užimtas"
+    },
+    "reservationAddonsSection": {
+      "title": "Papildomos paslaugos",
+      "statusPending": "Neapmokėta",
+      "statusPaid": "Apmokėta",
+      "statusCancelled": "Atšaukta",
+      "fallbackAddonName": "Papildoma paslauga",
+      "markPaidAction": "Pažymėti kaip apmokėtą",
+      "markPaidSuccess": "Pažymėta kaip apmokėta.",
+      "addSuccess": "Papildoma paslauga pridėta.",
+      "totalLabel": "Papildomų paslaugų suma",
+      "emptyPurchased": "Papildomų paslaugų dar neužsakyta.",
+      "emptyCatalog": "Šiam objektui katalogo nėra.",
+      "pickPlaceholder": "Pasirinkite papildomą paslaugą …",
+      "addAction": "Pridėti",
+      "addBusy": "…"
+    },
+    "ratesView": {
+      "propertyLabel": "Objektas",
+      "modePrices": "Kainos",
+      "modeMinStay": "Minimali apsistojimo trukmė",
+      "planColumn": "Kambario kategorija / Kainų planas",
+      "empty": "Kambarių kategorijų su kainų planais dar nėra — sukurkite jas skiltyje Objektai → Kambarių kategorijos.",
+      "pricePlaceholder": "Kaina valiuta {currency}",
+      "minStayPlaceholder": "Naktys (min. 1)",
+      "apply": "Taikyti",
+      "resetToBase": "Atstatyti į bazinę kainą",
+      "resetToDefault": "Atstatyti į numatytąją",
+      "cancel": "Atšaukti",
+      "invalidValue": "Neteisinga reikšmė.",
+      "resyncQueued": "Perdavimas pradėtas — būsena netrukus atsinaujins.",
+      "resyncTitle": "Perduoti į portalus dabar",
+      "syncPending": "Laukiama",
+      "syncSynced": "Perduota",
+      "source": {
+        "rate_plan": "Šio kainų plano kaina pagal datą",
+        "override": "Rankiniu būdu nustatyta objekto kaina pagal datą",
+        "dynamic": "Dinaminė kaina",
+        "weekday": "Savaitės dienos kaina",
+        "base": "Kainų plano bazinė kaina",
+        "none": "Kaina nenustatyta"
+      }
     }
   }
 }

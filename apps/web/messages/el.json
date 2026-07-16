@@ -1512,7 +1512,9 @@
     "msHint": "Πληκτρολογήστε νύχτες και σύρετε στις ημέρες. Διπλό κλικ αφαιρεί μια ημέρα.",
     "msInvalid": "Εισαγάγετε ακέραιο ≥ 1.",
     "msNights": "νύχτες",
-    "msClearAllConfirm": "Διαγραφή όλων των ελάχιστων διαμονών;"
+    "msClearAllConfirm": "Διαγραφή όλων των ελάχιστων διαμονών;",
+    "ratesTitle": "Τιμές δωματίων",
+    "ratesHint": "Βασική τιμή, τιμές ανά ημερομηνία και ελάχιστη διαμονή ανά κατηγορία δωματίου και τιμολογιακό πλάνο — ισχύει σε όλα τα κανάλια πωλήσεων (δική σας πλατφόρμα, ρεσεψιόν, πόρταλ)."
   },
   "finance": {
     "cancelInvoice": {
@@ -4304,6 +4306,185 @@
       "paymentSummarySplit": "{percent} % κατά την κράτηση, το υπόλοιπο {days} ημέρες πριν την άφιξη.",
       "localizedEditorSubtitle": "Δημιουργήστε το κείμενο και μεταφράστε το αν χρειάζεται για τους επισκέπτες σας.",
       "localizedEditorPlaceholder": "Καταχωρίστε {title} …"
+    }
+  },
+  "calendar": {
+    "calendarBoard": {
+      "weekdays": {
+        "so": "Κυ",
+        "mo": "Δε",
+        "di": "Τρ",
+        "mi": "Τε",
+        "do": "Πε",
+        "fr": "Πα",
+        "sa": "Σα"
+      },
+      "months": {
+        "januar": "Ιανουάριος",
+        "februar": "Φεβρουάριος",
+        "maerz": "Μάρτιος",
+        "april": "Απρίλιος",
+        "mai": "Μάιος",
+        "juni": "Ιούνιος",
+        "juli": "Ιούλιος",
+        "august": "Αύγουστος",
+        "september": "Σεπτέμβριος",
+        "oktober": "Οκτώβριος",
+        "november": "Νοέμβριος",
+        "dezember": "Δεκέμβριος"
+      },
+      "status": {
+        "open": "Ελεύθερο",
+        "booked": "Κλεισμένο",
+        "blocked": "Μπλοκαρισμένο",
+        "stopSell": "Stop-Sell"
+      },
+      "stopSellOta": "OTA",
+      "stopSellAllChannels": "όλα τα κανάλια",
+      "nightsCount": "{count, plural, one {# διανυκτέρευση} other {# διανυκτερεύσεις}}",
+      "daysCount": "{count, plural, one {# ημέρα} other {# ημέρες}}"
+    },
+    "calendarViews": {
+      "viewLabel": "Προβολή",
+      "chooseView": "Επιλέξτε προβολή …",
+      "loading": "Φόρτωση…",
+      "views": {
+        "timeline": "Χρονοδιάγραμμα",
+        "bookings": "Κρατήσεις",
+        "month": "Μηνιαίο πλέγμα",
+        "occupancy": "Πληρότητα",
+        "rates": "Τιμές"
+      }
+    },
+    "calendarActionMenu": {
+      "reservationWithQuote": "Κράτηση με προσφορά",
+      "reservationWithoutQuote": "Κράτηση χωρίς προσφορά",
+      "blocking": "Μπλοκάρισμα…",
+      "createBlockedPeriod": "Δημιουργία μπλοκαρισμένης περιόδου",
+      "priceMinStayBlock": "Τιμή / ελάχιστη διαμονή / μπλοκάρισμα …"
+    },
+    "propertyLabel": {
+      "maxGuestsTitle": "Αριθμός ατόμων που έχει οριστεί για αυτό το κατάλυμα",
+      "dynamicPricingTitle": "Το Dynamic Pricing είναι ενεργό — οι ημερήσιες τιμές υπολογίζονται αυτόματα.",
+      "dynamicBadge": "Dynamic",
+      "idPrefix": "ID {id}"
+    },
+    "bookingsView": {
+      "arrivalsDepartures": "Αφίξεις & αναχωρήσεις",
+      "today": "Σήμερα",
+      "previousDay": "Προηγούμενη ημέρα",
+      "nextDay": "Επόμενη ημέρα",
+      "arrivals": "Αφίξεις",
+      "departures": "Αναχωρήσεις",
+      "inHouse": "Στο κατάλυμα",
+      "noArrivals": "Καμία άφιξη αυτή την ημέρα.",
+      "noDepartures": "Καμία αναχώρηση αυτή την ημέρα.",
+      "noInHouse": "Κανείς δεν παραμένει αυτή την ημέρα.",
+      "guestsCount": "{count, plural, one {# επισκέπτης} other {# επισκέπτες}}",
+      "allBookings": "Όλες οι κρατήσεις",
+      "searchPlaceholder": "Επισκέπτης, κατάλυμα, κωδικός OTA…",
+      "allProperties": "Όλα τα καταλύματα",
+      "allChannels": "Όλα τα κανάλια",
+      "bookingsCount": "{count, plural, one {# κράτηση} other {# κρατήσεις}}",
+      "statusAll": "Όλες οι καταστάσεις",
+      "statusPending": "Προσωρινή",
+      "statusConfirmed": "Επιβεβαιωμένη",
+      "statusInHouse": "Check-in",
+      "statusCompleted": "Check-out",
+      "statusCancelled": "Ακυρωμένη",
+      "colProperty": "Κατάλυμα",
+      "colGuest": "Επισκέπτης",
+      "colPeriod": "Περίοδος",
+      "colNights": "Διανυκτερεύσεις",
+      "colStatus": "Κατάσταση",
+      "colChannel": "Κανάλι",
+      "colAmount": "Ποσό"
+    },
+    "monthGridView": {
+      "weekdayMon": "Δε",
+      "weekdayTue": "Τρ",
+      "weekdayWed": "Τε",
+      "weekdayThu": "Πε",
+      "weekdayFri": "Πα",
+      "weekdaySat": "Σα",
+      "weekdaySun": "Κυ",
+      "monthJanuary": "Ιανουάριος",
+      "monthFebruary": "Φεβρουάριος",
+      "monthMarch": "Μάρτιος",
+      "monthApril": "Απρίλιος",
+      "monthMay": "Μάιος",
+      "monthJune": "Ιούνιος",
+      "monthJuly": "Ιούλιος",
+      "monthAugust": "Αύγουστος",
+      "monthSeptember": "Σεπτέμβριος",
+      "monthOctober": "Οκτώβριος",
+      "monthNovember": "Νοέμβριος",
+      "monthDecember": "Δεκέμβριος",
+      "statusOpen": "Ελεύθερο",
+      "statusBooked": "Κλεισμένο",
+      "statusBlocked": "Μπλοκαρισμένο",
+      "previousMonth": "Προηγούμενος μήνας",
+      "nextMonth": "Επόμενος μήνας",
+      "today": "Σήμερα",
+      "arrivalBlocked": "Άφιξη μπλοκαρισμένη",
+      "departureBlocked": "Αναχώρηση μπλοκαρισμένη",
+      "minStayTitle": "{count, plural, one {Ελάχιστη διαμονή # διανυκτέρευση} other {Ελάχιστη διαμονή # διανυκτερεύσεις}}",
+      "loading": "Φόρτωση…"
+    },
+    "occupancyView": {
+      "window": "{count} ημέρες",
+      "avgOccupancyPrefix": "Ø πληρότητα",
+      "overDays": "{count, plural, one {σε # ημέρα} other {σε # ημέρες}}",
+      "propertyColumn": "Κατάλυμα",
+      "noProperties": "Δεν βρέθηκαν καταλύματα.",
+      "dayHeaderTooltip": "{date} · {booked}/{total} κλεισμένα",
+      "cellTooltip": "{property} · {date} · {status}",
+      "statusBooked": "κλεισμένο",
+      "statusFree": "ελεύθερο",
+      "legendDayTotal": "Πληρότητα ημέρας",
+      "legendBookedProperty": "Κατάλυμα κλεισμένο"
+    },
+    "reservationAddonsSection": {
+      "title": "Πρόσθετες υπηρεσίες",
+      "statusPending": "Εκκρεμεί",
+      "statusPaid": "Πληρωμένο",
+      "statusCancelled": "Ακυρωμένο",
+      "fallbackAddonName": "Πρόσθετη υπηρεσία",
+      "markPaidAction": "Σήμανση ως πληρωμένο",
+      "markPaidSuccess": "Σημάνθηκε ως πληρωμένο.",
+      "addSuccess": "Η πρόσθετη υπηρεσία προστέθηκε.",
+      "totalLabel": "Σύνολο πρόσθετων υπηρεσιών",
+      "emptyPurchased": "Δεν έχουν κρατηθεί ακόμα πρόσθετες υπηρεσίες.",
+      "emptyCatalog": "Δεν υπάρχει κατάλογος για αυτό το κατάλυμα.",
+      "pickPlaceholder": "Επιλέξτε πρόσθετη υπηρεσία …",
+      "addAction": "Προσθήκη",
+      "addBusy": "…"
+    },
+    "ratesView": {
+      "propertyLabel": "Κατάλυμα",
+      "modePrices": "Τιμές",
+      "modeMinStay": "Ελάχιστη διαμονή",
+      "planColumn": "Κατηγορία δωματίου / Τιμολογιακό πλάνο",
+      "empty": "Δεν υπάρχουν ακόμη κατηγορίες δωματίων με τιμολογιακά πλάνα — δημιουργήστε τις στο Καταλύματα → Κατηγορίες δωματίων.",
+      "pricePlaceholder": "Τιμή σε {currency}",
+      "minStayPlaceholder": "Διανυκτερεύσεις (ελάχ. 1)",
+      "apply": "Εφαρμογή",
+      "resetToBase": "Επαναφορά στη βασική τιμή",
+      "resetToDefault": "Επαναφορά στην προεπιλογή",
+      "cancel": "Ακύρωση",
+      "invalidValue": "Μη έγκυρη τιμή.",
+      "resyncQueued": "Η μετάδοση ξεκίνησε — η κατάσταση θα ενημερωθεί σύντομα.",
+      "resyncTitle": "Μετάδοση στα πόρταλ τώρα",
+      "syncPending": "Σε εκκρεμότητα",
+      "syncSynced": "Μεταδόθηκε",
+      "source": {
+        "rate_plan": "Τιμή ανά ημερομηνία αυτού του τιμολογιακού πλάνου",
+        "override": "Χειροκίνητη τιμή ανά ημερομηνία καταλύματος",
+        "dynamic": "Δυναμική τιμή",
+        "weekday": "Τιμή ανά ημέρα εβδομάδας",
+        "base": "Βασική τιμή του τιμολογιακού πλάνου",
+        "none": "Δεν έχει οριστεί τιμή"
+      }
     }
   }
 }

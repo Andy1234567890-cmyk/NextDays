@@ -1512,7 +1512,9 @@
     "msHint": "Ikteb l-iljieli u iġbed fuq il-jiem. Klikkja darbtejn biex tneħħi jum.",
     "msInvalid": "Daħħal numru sħiħ ≥ 1.",
     "msNights": "iljieli",
-    "msClearAllConfirm": "Tabqa'ħassar il-minimu ta' soġġorn kollha?"
+    "msClearAllConfirm": "Tabqa'ħassar il-minimu ta' soġġorn kollha?",
+    "ratesTitle": "Prezzijiet tal-kmamar",
+    "ratesHint": "Prezz bażi, prezzijiet skont id-data u soġġorn minimu għal kull kategorija ta' kamra u pjan tal-prezz — japplika għall-kanali kollha tal-bejgħ (pjattaforma proprja, front desk, portali)."
   },
   "finance": {
     "cancelInvoice": {
@@ -4304,6 +4306,185 @@
       "paymentSummarySplit": "{percent} % mal-prenotazzjoni, il-bilanċ li fadal {days} jum(ijiem) qabel il-wasla.",
       "localizedEditorSubtitle": "Oħloq it-test u traduċih jekk ikun hemm bżonn għall-mistednin tiegħek.",
       "localizedEditorPlaceholder": "Daħħal {title} …"
+    }
+  },
+  "calendar": {
+    "calendarBoard": {
+      "weekdays": {
+        "so": "Ħa",
+        "mo": "Tn",
+        "di": "Tl",
+        "mi": "Er",
+        "do": "Ħm",
+        "fr": "Ġi",
+        "sa": "Si"
+      },
+      "months": {
+        "januar": "Jannar",
+        "februar": "Frar",
+        "maerz": "Marzu",
+        "april": "April",
+        "mai": "Mejju",
+        "juni": "Ġunju",
+        "juli": "Lulju",
+        "august": "Awwissu",
+        "september": "Settembru",
+        "oktober": "Ottubru",
+        "november": "Novembru",
+        "dezember": "Diċembru"
+      },
+      "status": {
+        "open": "Ħieles",
+        "booked": "Ibbukkjat",
+        "blocked": "Imblukkat",
+        "stopSell": "Stop-Sell"
+      },
+      "stopSellOta": "OTA",
+      "stopSellAllChannels": "il-kanali kollha",
+      "nightsCount": "{count, plural, one {# lejl} two {# lejl} few {# iljieli} many {# lejl} other {# lejl}}",
+      "daysCount": "{count, plural, one {# jum} two {# jumejn} few {# ijiem} many {# jum} other {# jum}}"
+    },
+    "calendarViews": {
+      "viewLabel": "Veduta",
+      "chooseView": "Agħżel veduta …",
+      "loading": "Qed jgħabbi…",
+      "views": {
+        "timeline": "Skeda ta’ żmien",
+        "bookings": "Riżervazzjonijiet",
+        "month": "Xahar",
+        "occupancy": "Okkupazzjoni",
+        "rates": "Prezzijiet"
+      }
+    },
+    "calendarActionMenu": {
+      "reservationWithQuote": "Riżervazzjoni b'kwotazzjoni",
+      "reservationWithoutQuote": "Riżervazzjoni mingħajr kwotazzjoni",
+      "blocking": "Qed jimblokka…",
+      "createBlockedPeriod": "Oħloq perjodu mblukkat",
+      "priceMinStayBlock": "Prezz / Soġġorn Minimu / Imblukkar …"
+    },
+    "propertyLabel": {
+      "maxGuestsTitle": "Numru ta' mistednin issettjat għal din il-proprjetà",
+      "dynamicPricingTitle": "Dynamic Pricing attiv — il-prezzijiet ta' kuljum jiġu kkalkulati awtomatikament.",
+      "dynamicBadge": "Dynamic",
+      "idPrefix": "ID {id}"
+    },
+    "bookingsView": {
+      "arrivalsDepartures": "Wasliet u tluq",
+      "today": "Illum",
+      "previousDay": "Jum ta' qabel",
+      "nextDay": "Jum li jmiss",
+      "arrivals": "Wasliet",
+      "departures": "Tluq",
+      "inHouse": "Fil-post",
+      "noArrivals": "Ma hemm l-ebda wasla dan il-jum.",
+      "noDepartures": "Ma hemm l-ebda tluq dan il-jum.",
+      "noInHouse": "Ħadd ma jibqa' matul dan il-jum.",
+      "guestsCount": "{count, plural, one {# mistieden} two {# mistednin} few {# mistednin} many {# mistieden} other {# mistieden}}",
+      "allBookings": "Il-Bookings kollha",
+      "searchPlaceholder": "Mistieden, proprjetà, kodiċi OTA…",
+      "allProperties": "Il-proprjetajiet kollha",
+      "allChannels": "Il-kanali kollha",
+      "bookingsCount": "{count, plural, one {# riżervazzjoni} two {# riżervazzjonijiet} few {# riżervazzjonijiet} many {# riżervazzjoni} other {# riżervazzjoni}}",
+      "statusAll": "L-istatus kollha",
+      "statusPending": "Proviżorja",
+      "statusConfirmed": "Ikkonfermata",
+      "statusInHouse": "Iċċekkjat il-ġewwa",
+      "statusCompleted": "Iċċekkjat il-barra",
+      "statusCancelled": "Ikkanċellata",
+      "colProperty": "Proprjetà",
+      "colGuest": "Mistieden",
+      "colPeriod": "Perjodu",
+      "colNights": "Iljieli",
+      "colStatus": "Status",
+      "colChannel": "Kanal",
+      "colAmount": "Ammont"
+    },
+    "monthGridView": {
+      "weekdayMon": "Tn",
+      "weekdayTue": "Tl",
+      "weekdayWed": "Er",
+      "weekdayThu": "Ħm",
+      "weekdayFri": "Ġi",
+      "weekdaySat": "Si",
+      "weekdaySun": "Ħa",
+      "monthJanuary": "Jannar",
+      "monthFebruary": "Frar",
+      "monthMarch": "Marzu",
+      "monthApril": "April",
+      "monthMay": "Mejju",
+      "monthJune": "Ġunju",
+      "monthJuly": "Lulju",
+      "monthAugust": "Awwissu",
+      "monthSeptember": "Settembru",
+      "monthOctober": "Ottubru",
+      "monthNovember": "Novembru",
+      "monthDecember": "Diċembru",
+      "statusOpen": "Ħieles",
+      "statusBooked": "Ibbukkjat",
+      "statusBlocked": "Imblukkat",
+      "previousMonth": "Xahar ta' qabel",
+      "nextMonth": "Xahar li jmiss",
+      "today": "Illum",
+      "arrivalBlocked": "Wasla mblukkata",
+      "departureBlocked": "Tluq imblukkat",
+      "minStayTitle": "{count, plural, one {Soġġorn Minimu # lejl} two {Soġġorn Minimu # lejl} few {Soġġorn Minimu # iljieli} many {Soġġorn Minimu # lejl} other {Soġġorn Minimu # lejl}}",
+      "loading": "Qed jgħabbi…"
+    },
+    "occupancyView": {
+      "window": "{count} jum",
+      "avgOccupancyPrefix": "Ø Okkupazzjoni",
+      "overDays": "{count, plural, one {fuq # jum} two {fuq # jumejn} few {fuq # ijiem} many {fuq # jum} other {fuq # jum}}",
+      "propertyColumn": "Proprjetà",
+      "noProperties": "Ma hemm l-ebda proprjetà.",
+      "dayHeaderTooltip": "{date} · {booked}/{total} okkupati",
+      "cellTooltip": "{property} · {date} · {status}",
+      "statusBooked": "okkupat",
+      "statusFree": "ħieles",
+      "legendDayTotal": "Okkupazzjoni ta' kuljum",
+      "legendBookedProperty": "Proprjetà okkupata"
+    },
+    "reservationAddonsSection": {
+      "title": "Servizzi addizzjonali",
+      "statusPending": "Pendenti",
+      "statusPaid": "Imħallas",
+      "statusCancelled": "Ikkanċellat",
+      "fallbackAddonName": "Servizz addizzjonali",
+      "markPaidAction": "Immarka bħala mħallas",
+      "markPaidSuccess": "Immarkat bħala mħallas.",
+      "addSuccess": "Servizz addizzjonali miżjud.",
+      "totalLabel": "Total tas-servizzi addizzjonali",
+      "emptyPurchased": "Għad m'hemm l-ebda servizz addizzjonali mibjug.",
+      "emptyCatalog": "M'hemm l-ebda katalgu għal din il-proprjetà.",
+      "pickPlaceholder": "Agħżel servizz addizzjonali …",
+      "addAction": "Żid",
+      "addBusy": "…"
+    },
+    "ratesView": {
+      "propertyLabel": "Proprjetà",
+      "modePrices": "Prezzijiet",
+      "modeMinStay": "Soġġorn minimu",
+      "planColumn": "Kategorija tal-kamra / Pjan tal-prezz",
+      "empty": "Għad m'hemmx kategoriji ta' kmamar b'pjanijiet tal-prezz — oħloqhom taħt Proprjetajiet → Kategoriji ta' kmamar.",
+      "pricePlaceholder": "Prezz f'{currency}",
+      "minStayPlaceholder": "Iljieli (min. 1)",
+      "apply": "Applika",
+      "resetToBase": "Irrisettja għall-prezz bażi",
+      "resetToDefault": "Irrisettja għad-default",
+      "cancel": "Ikkanċella",
+      "invalidValue": "Valur mhux validu.",
+      "resyncQueued": "It-trażmissjoni nbdiet — l-istatus se jiġi aġġornat dalwaqt.",
+      "resyncTitle": "Ittrażmetti issa lill-portali",
+      "syncPending": "Pendenti",
+      "syncSynced": "Trażmess",
+      "source": {
+        "rate_plan": "Prezz skont id-data ta' dan il-pjan tal-prezz",
+        "override": "Prezz skont id-data stabbilit manwalment għall-proprjetà",
+        "dynamic": "Prezz dinamiku",
+        "weekday": "Prezz skont il-jum tal-ġimgħa",
+        "base": "Prezz bażi tal-pjan tal-prezz",
+        "none": "L-ebda prezz stabbilit"
+      }
     }
   }
 }

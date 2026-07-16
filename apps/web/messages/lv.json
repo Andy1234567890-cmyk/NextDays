@@ -1512,7 +1512,9 @@
     "msHint": "Ievadiet naktis un velciet pāri dienām. Dubultklikšķis noņem dienu.",
     "msInvalid": "Ievadiet veselu skaitli ≥ 1.",
     "msNights": "naktis",
-    "msClearAllConfirm": "Tiešām dzēst visas minimālās uzturēšanās?"
+    "msClearAllConfirm": "Tiešām dzēst visas minimālās uzturēšanās?",
+    "ratesTitle": "Numuru cenas",
+    "ratesHint": "Bāzes cena, cenas pēc datuma un minimālais uzturēšanās ilgums katrai numura kategorijai un cenu plānam — attiecas uz visiem pārdošanas kanāliem (savu platformu, reģistratūru, portāliem)."
   },
   "finance": {
     "cancelInvoice": {
@@ -4304,6 +4306,185 @@
       "paymentSummarySplit": "{percent} % rezervējot, atlikums {days} dienas pirms ierašanās.",
       "localizedEditorSubtitle": "Izveido tekstu un pēc vajadzības iztulko to saviem viesiem.",
       "localizedEditorPlaceholder": "Ievadi {title} …"
+    }
+  },
+  "calendar": {
+    "calendarBoard": {
+      "weekdays": {
+        "so": "Sv",
+        "mo": "Pr",
+        "di": "Ot",
+        "mi": "Tr",
+        "do": "Ce",
+        "fr": "Pk",
+        "sa": "Se"
+      },
+      "months": {
+        "januar": "Janvāris",
+        "februar": "Februāris",
+        "maerz": "Marts",
+        "april": "Aprīlis",
+        "mai": "Maijs",
+        "juni": "Jūnijs",
+        "juli": "Jūlijs",
+        "august": "Augusts",
+        "september": "Septembris",
+        "oktober": "Oktobris",
+        "november": "Novembris",
+        "dezember": "Decembris"
+      },
+      "status": {
+        "open": "Brīvs",
+        "booked": "Rezervēts",
+        "blocked": "Bloķēts",
+        "stopSell": "Stop-Sell"
+      },
+      "stopSellOta": "OTA",
+      "stopSellAllChannels": "visi kanāli",
+      "nightsCount": "{count, plural, zero {# nakšu} one {# nakts} other {# naktis}}",
+      "daysCount": "{count, plural, zero {# dienu} one {# diena} other {# dienas}}"
+    },
+    "calendarViews": {
+      "viewLabel": "Skats",
+      "chooseView": "Izvēlieties skatu …",
+      "loading": "Notiek ielāde…",
+      "views": {
+        "timeline": "Laika skala",
+        "bookings": "Rezervācijas",
+        "month": "Mēneša režģis",
+        "occupancy": "Noslogojums",
+        "rates": "Cenas"
+      }
+    },
+    "calendarActionMenu": {
+      "reservationWithQuote": "Rezervācija ar piedāvājumu",
+      "reservationWithoutQuote": "Rezervācija bez piedāvājuma",
+      "blocking": "Bloķēt…",
+      "createBlockedPeriod": "Izveidot bloķēšanas periodu",
+      "priceMinStayBlock": "Cena / minimālā uzturēšanās / bloķēšana …"
+    },
+    "propertyLabel": {
+      "maxGuestsTitle": "Šim objektam iestatītais viesu skaits",
+      "dynamicPricingTitle": "Dynamic Pricing ir aktīvs — dienas cenas tiek aprēķinātas automātiski.",
+      "dynamicBadge": "Dynamic",
+      "idPrefix": "ID {id}"
+    },
+    "bookingsView": {
+      "arrivalsDepartures": "Ierašanās un izbraukšana",
+      "today": "Šodien",
+      "previousDay": "Iepriekšējā diena",
+      "nextDay": "Nākamā diena",
+      "arrivals": "Ierašanās",
+      "departures": "Izbraukšana",
+      "inHouse": "Viesnīcā",
+      "noArrivals": "Šajā dienā ierašanās nav.",
+      "noDepartures": "Šajā dienā izbraukšanas nav.",
+      "noInHouse": "Šajā dienā neviens nepaliek.",
+      "guestsCount": "{count, plural, zero {# viesu} one {# viesis} other {# viesi}}",
+      "allBookings": "Visas rezervācijas",
+      "searchPlaceholder": "Viesis, objekts, OTA kods…",
+      "allProperties": "Visi objekti",
+      "allChannels": "Visi kanāli",
+      "bookingsCount": "{count, plural, zero {# rezervāciju} one {# rezervācija} other {# rezervācijas}}",
+      "statusAll": "Visi statusi",
+      "statusPending": "Provizoriska",
+      "statusConfirmed": "Apstiprināta",
+      "statusInHouse": "Iereģistrēts",
+      "statusCompleted": "Izrakstīts",
+      "statusCancelled": "Atcelta",
+      "colProperty": "Objekts",
+      "colGuest": "Viesis",
+      "colPeriod": "Periods",
+      "colNights": "Naktis",
+      "colStatus": "Statuss",
+      "colChannel": "Kanāls",
+      "colAmount": "Summa"
+    },
+    "monthGridView": {
+      "weekdayMon": "Pr",
+      "weekdayTue": "Ot",
+      "weekdayWed": "Tr",
+      "weekdayThu": "Ce",
+      "weekdayFri": "Pk",
+      "weekdaySat": "Se",
+      "weekdaySun": "Sv",
+      "monthJanuary": "Janvāris",
+      "monthFebruary": "Februāris",
+      "monthMarch": "Marts",
+      "monthApril": "Aprīlis",
+      "monthMay": "Maijs",
+      "monthJune": "Jūnijs",
+      "monthJuly": "Jūlijs",
+      "monthAugust": "Augusts",
+      "monthSeptember": "Septembris",
+      "monthOctober": "Oktobris",
+      "monthNovember": "Novembris",
+      "monthDecember": "Decembris",
+      "statusOpen": "Brīvs",
+      "statusBooked": "Rezervēts",
+      "statusBlocked": "Bloķēts",
+      "previousMonth": "Iepriekšējais mēnesis",
+      "nextMonth": "Nākamais mēnesis",
+      "today": "Šodien",
+      "arrivalBlocked": "Ierašanās bloķēta",
+      "departureBlocked": "Izbraukšana bloķēta",
+      "minStayTitle": "{count, plural, zero {Minimālā uzturēšanās # nakšu} one {Minimālā uzturēšanās # nakts} other {Minimālā uzturēšanās # naktis}}",
+      "loading": "Notiek ielāde…"
+    },
+    "occupancyView": {
+      "window": "{count} dienas",
+      "avgOccupancyPrefix": "Ø noslogojums",
+      "overDays": "{count, plural, zero {# dienu laikā} one {# dienas laikā} other {# dienu laikā}}",
+      "propertyColumn": "Objekts",
+      "noProperties": "Objektu nav.",
+      "dayHeaderTooltip": "{date} · {booked}/{total} aizņemts",
+      "cellTooltip": "{property} · {date} · {status}",
+      "statusBooked": "aizņemts",
+      "statusFree": "brīvs",
+      "legendDayTotal": "Dienas noslogojums",
+      "legendBookedProperty": "Objekts aizņemts"
+    },
+    "reservationAddonsSection": {
+      "title": "Papildpakalpojumi",
+      "statusPending": "Neapmaksāts",
+      "statusPaid": "Apmaksāts",
+      "statusCancelled": "Atcelts",
+      "fallbackAddonName": "Papildpakalpojums",
+      "markPaidAction": "Atzīmēt kā apmaksātu",
+      "markPaidSuccess": "Atzīmēts kā apmaksāts.",
+      "addSuccess": "Papildpakalpojums pievienots.",
+      "totalLabel": "Papildpakalpojumu summa",
+      "emptyPurchased": "Papildpakalpojumi vēl nav rezervēti.",
+      "emptyCatalog": "Šim objektam kataloga nav.",
+      "pickPlaceholder": "Izvēlieties papildpakalpojumu …",
+      "addAction": "Pievienot",
+      "addBusy": "…"
+    },
+    "ratesView": {
+      "propertyLabel": "Objekts",
+      "modePrices": "Cenas",
+      "modeMinStay": "Minimālais uzturēšanās ilgums",
+      "planColumn": "Numura kategorija / Cenu plāns",
+      "empty": "Vēl nav numuru kategoriju ar cenu plāniem — izveidojiet tās sadaļā Objekti → Numuru kategorijas.",
+      "pricePlaceholder": "Cena {currency}",
+      "minStayPlaceholder": "Naktis (min. 1)",
+      "apply": "Piemērot",
+      "resetToBase": "Atiestatīt uz bāzes cenu",
+      "resetToDefault": "Atiestatīt uz noklusējumu",
+      "cancel": "Atcelt",
+      "invalidValue": "Nederīga vērtība.",
+      "resyncQueued": "Pārraide sākta — statuss drīz atjaunināsies.",
+      "resyncTitle": "Pārraidīt tagad uz portāliem",
+      "syncPending": "Gaida",
+      "syncSynced": "Pārraidīts",
+      "source": {
+        "rate_plan": "Šī cenu plāna cena pēc datuma",
+        "override": "Manuāli iestatīta objekta cena pēc datuma",
+        "dynamic": "Dinamiskā cena",
+        "weekday": "Nedēļas dienas cena",
+        "base": "Cenu plāna bāzes cena",
+        "none": "Cena nav iestatīta"
+      }
     }
   }
 }

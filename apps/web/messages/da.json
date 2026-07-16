@@ -1512,7 +1512,9 @@
     "msHint": "Skriv nætter, træk over dagene. Dobbeltklik fjerner en dag.",
     "msInvalid": "Indtast et helt tal ≥ 1.",
     "msNights": "nætter",
-    "msClearAllConfirm": "Slet virkelig alle minimumsophold?"
+    "msClearAllConfirm": "Slet virkelig alle minimumsophold?",
+    "ratesTitle": "Værelsespriser",
+    "ratesHint": "Grundpris, datopriser og minimumsophold pr. værelseskategori og prisplan — gælder for alle salgskanaler (egen platform, reception, portaler)."
   },
   "finance": {
     "cancelInvoice": {
@@ -4304,6 +4306,185 @@
       "paymentSummarySplit": "{percent} % ved booking, restbeløb {days} dage før ankomst.",
       "localizedEditorSubtitle": "Opret teksten, og oversæt den efter behov til dine gæster.",
       "localizedEditorPlaceholder": "Indtast {title} …"
+    }
+  },
+  "calendar": {
+    "calendarBoard": {
+      "weekdays": {
+        "so": "Sø",
+        "mo": "Ma",
+        "di": "Ti",
+        "mi": "On",
+        "do": "To",
+        "fr": "Fr",
+        "sa": "Lø"
+      },
+      "months": {
+        "januar": "Januar",
+        "februar": "Februar",
+        "maerz": "Marts",
+        "april": "April",
+        "mai": "Maj",
+        "juni": "Juni",
+        "juli": "Juli",
+        "august": "August",
+        "september": "September",
+        "oktober": "Oktober",
+        "november": "November",
+        "dezember": "December"
+      },
+      "status": {
+        "open": "Ledig",
+        "booked": "Booket",
+        "blocked": "Spærret",
+        "stopSell": "Stop-Sell"
+      },
+      "stopSellOta": "OTA",
+      "stopSellAllChannels": "alle kanaler",
+      "nightsCount": "{count, plural, one {# nat} other {# nætter}}",
+      "daysCount": "{count, plural, one {# dag} other {# dage}}"
+    },
+    "calendarViews": {
+      "viewLabel": "Visning",
+      "chooseView": "Vælg visning …",
+      "loading": "Indlæser…",
+      "views": {
+        "timeline": "Tidslinje",
+        "bookings": "Bookinger",
+        "month": "Månedsvisning",
+        "occupancy": "Belægning",
+        "rates": "Priser"
+      }
+    },
+    "calendarActionMenu": {
+      "reservationWithQuote": "Reservation med tilbud",
+      "reservationWithoutQuote": "Reservation uden tilbud",
+      "blocking": "Spærrer…",
+      "createBlockedPeriod": "Opret spærret periode",
+      "priceMinStayBlock": "Pris / min. ophold / spærring …"
+    },
+    "propertyLabel": {
+      "maxGuestsTitle": "Antal personer indstillet for denne bolig",
+      "dynamicPricingTitle": "Dynamic Pricing aktiv — dagspriserne beregnes automatisk.",
+      "dynamicBadge": "Dynamic",
+      "idPrefix": "ID {id}"
+    },
+    "bookingsView": {
+      "arrivalsDepartures": "Ankomster & afrejser",
+      "today": "I dag",
+      "previousDay": "Forrige dag",
+      "nextDay": "Næste dag",
+      "arrivals": "Ankomster",
+      "departures": "Afrejser",
+      "inHouse": "På stedet",
+      "noArrivals": "Ingen ankomster denne dag.",
+      "noDepartures": "Ingen afrejser denne dag.",
+      "noInHouse": "Ingen bliver denne dag.",
+      "guestsCount": "{count, plural, one {# gæst} other {# gæster}}",
+      "allBookings": "Alle bookinger",
+      "searchPlaceholder": "Gæst, bolig, OTA-kode…",
+      "allProperties": "Alle boliger",
+      "allChannels": "Alle kanaler",
+      "bookingsCount": "{count, plural, one {# booking} other {# bookinger}}",
+      "statusAll": "Alle status",
+      "statusPending": "Foreløbig",
+      "statusConfirmed": "Bekræftet",
+      "statusInHouse": "Indtjekket",
+      "statusCompleted": "Udtjekket",
+      "statusCancelled": "Annulleret",
+      "colProperty": "Bolig",
+      "colGuest": "Gæst",
+      "colPeriod": "Periode",
+      "colNights": "Nætter",
+      "colStatus": "Status",
+      "colChannel": "Kanal",
+      "colAmount": "Beløb"
+    },
+    "monthGridView": {
+      "weekdayMon": "Ma",
+      "weekdayTue": "Ti",
+      "weekdayWed": "On",
+      "weekdayThu": "To",
+      "weekdayFri": "Fr",
+      "weekdaySat": "Lø",
+      "weekdaySun": "Sø",
+      "monthJanuary": "Januar",
+      "monthFebruary": "Februar",
+      "monthMarch": "Marts",
+      "monthApril": "April",
+      "monthMay": "Maj",
+      "monthJune": "Juni",
+      "monthJuly": "Juli",
+      "monthAugust": "August",
+      "monthSeptember": "September",
+      "monthOctober": "Oktober",
+      "monthNovember": "November",
+      "monthDecember": "December",
+      "statusOpen": "Ledig",
+      "statusBooked": "Booket",
+      "statusBlocked": "Spærret",
+      "previousMonth": "Forrige måned",
+      "nextMonth": "Næste måned",
+      "today": "I dag",
+      "arrivalBlocked": "Ankomst spærret",
+      "departureBlocked": "Afrejse spærret",
+      "minStayTitle": "{count, plural, one {Minimumsophold # nat} other {Minimumsophold # nætter}}",
+      "loading": "Indlæser…"
+    },
+    "occupancyView": {
+      "window": "{count} dage",
+      "avgOccupancyPrefix": "Ø belægning",
+      "overDays": "{count, plural, one {over # dag} other {over # dage}}",
+      "propertyColumn": "Bolig",
+      "noProperties": "Ingen boliger fundet.",
+      "dayHeaderTooltip": "{date} · {booked}/{total} belagt",
+      "cellTooltip": "{property} · {date} · {status}",
+      "statusBooked": "belagt",
+      "statusFree": "ledig",
+      "legendDayTotal": "Dagens belægning",
+      "legendBookedProperty": "Bolig belagt"
+    },
+    "reservationAddonsSection": {
+      "title": "Tillægsydelser",
+      "statusPending": "Åben",
+      "statusPaid": "Betalt",
+      "statusCancelled": "Annulleret",
+      "fallbackAddonName": "Tillægsydelse",
+      "markPaidAction": "Marker som betalt",
+      "markPaidSuccess": "Markeret som betalt.",
+      "addSuccess": "Tillægsydelse tilføjet.",
+      "totalLabel": "Sum af tillægsydelser",
+      "emptyPurchased": "Endnu ingen tillægsydelser booket.",
+      "emptyCatalog": "Intet katalog for denne bolig.",
+      "pickPlaceholder": "Vælg tillægsydelse …",
+      "addAction": "Tilføj",
+      "addBusy": "…"
+    },
+    "ratesView": {
+      "propertyLabel": "Objekt",
+      "modePrices": "Priser",
+      "modeMinStay": "Minimumsophold",
+      "planColumn": "Værelseskategori / Prisplan",
+      "empty": "Ingen værelseskategorier med prisplaner endnu — opret dem under Objekter → Værelseskategorier.",
+      "pricePlaceholder": "Pris i {currency}",
+      "minStayPlaceholder": "Nætter (min. 1)",
+      "apply": "Anvend",
+      "resetToBase": "Nulstil til grundpris",
+      "resetToDefault": "Nulstil til standard",
+      "cancel": "Annuller",
+      "invalidValue": "Ugyldig værdi.",
+      "resyncQueued": "Overførsel igangsat — status opdateres snart.",
+      "resyncTitle": "Overfør nu til portalerne",
+      "syncPending": "Afventer",
+      "syncSynced": "Overført",
+      "source": {
+        "rate_plan": "Datopris for denne prisplan",
+        "override": "Manuel objektdatopris",
+        "dynamic": "Dynamisk pris",
+        "weekday": "Ugedagspris",
+        "base": "Grundpris for prisplanen",
+        "none": "Ingen pris angivet"
+      }
     }
   }
 }

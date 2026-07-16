@@ -5,6 +5,7 @@
 // Angebot) sowie Sperrzeitraum. Eigenständiges Element; schließt bei Klick
 // daneben oder Esc.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 
 type Action = "reservation_quote" | "reservation_simple" | "closed" | "bulk";
@@ -22,6 +23,8 @@ export function CalendarActionMenu({
   onAction: (action: Action) => void;
   onClose: () => void;
 }) {
+  const t = useTranslations("calendar");
+
   // Esc schließt das Menü.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -49,26 +52,26 @@ export function CalendarActionMenu({
 
         <MenuItem
           icon="ph:invoice"
-          label="Reservierung mit Angebot"
+          label={t("calendarActionMenu.reservationWithQuote")}
           disabled={saving}
           onClick={() => onAction("reservation_quote")}
         />
         <MenuItem
           icon="ph:note-pencil"
-          label="Reservierung ohne Angebot"
+          label={t("calendarActionMenu.reservationWithoutQuote")}
           disabled={saving}
           onClick={() => onAction("reservation_simple")}
         />
         <MenuItem
           icon="ph:calendar-x"
-          label={saving ? "Sperren…" : "Sperrzeitraum anlegen"}
+          label={saving ? t("calendarActionMenu.blocking") : t("calendarActionMenu.createBlockedPeriod")}
           disabled={saving}
           onClick={() => onAction("closed")}
         />
         <div className="my-1 h-px bg-border" />
         <MenuItem
           icon="ph:sliders-horizontal"
-          label="Preis / Min-Stay / Sperre …"
+          label={t("calendarActionMenu.priceMinStayBlock")}
           disabled={saving}
           onClick={() => onAction("bulk")}
         />

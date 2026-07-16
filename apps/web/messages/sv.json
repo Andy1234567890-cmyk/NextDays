@@ -1512,7 +1512,9 @@
     "msHint": "Ange nätter och dra över dagarna. Dubbelklick tar bort en dag.",
     "msInvalid": "Ange ett heltal ≥ 1.",
     "msNights": "nätter",
-    "msClearAllConfirm": "Radera verkligen alla minsta vistelser?"
+    "msClearAllConfirm": "Radera verkligen alla minsta vistelser?",
+    "ratesTitle": "Rumspriser",
+    "ratesHint": "Grundpris, datumpriser och minsta vistelse per rumskategori och prisplan — gäller för alla försäljningskanaler (egen plattform, reception, portaler)."
   },
   "finance": {
     "cancelInvoice": {
@@ -4304,6 +4306,185 @@
       "paymentSummarySplit": "{percent} % vid bokning, restbelopp {days} dagar före ankomst.",
       "localizedEditorSubtitle": "Skapa texten och översätt den vid behov för dina gäster.",
       "localizedEditorPlaceholder": "Ange {title} …"
+    }
+  },
+  "calendar": {
+    "calendarBoard": {
+      "weekdays": {
+        "so": "Sö",
+        "mo": "Må",
+        "di": "Ti",
+        "mi": "On",
+        "do": "To",
+        "fr": "Fr",
+        "sa": "Lö"
+      },
+      "months": {
+        "januar": "Januari",
+        "februar": "Februari",
+        "maerz": "Mars",
+        "april": "April",
+        "mai": "Maj",
+        "juni": "Juni",
+        "juli": "Juli",
+        "august": "Augusti",
+        "september": "September",
+        "oktober": "Oktober",
+        "november": "November",
+        "dezember": "December"
+      },
+      "status": {
+        "open": "Ledig",
+        "booked": "Bokad",
+        "blocked": "Blockerad",
+        "stopSell": "Stop-Sell"
+      },
+      "stopSellOta": "OTA",
+      "stopSellAllChannels": "alla kanaler",
+      "nightsCount": "{count, plural, one {# natt} other {# nätter}}",
+      "daysCount": "{count, plural, one {# dag} other {# dagar}}"
+    },
+    "calendarViews": {
+      "viewLabel": "Vy",
+      "chooseView": "Välj vy …",
+      "loading": "Laddar…",
+      "views": {
+        "timeline": "Tidslinje",
+        "bookings": "Bokningar",
+        "month": "Månadsvy",
+        "occupancy": "Beläggning",
+        "rates": "Priser"
+      }
+    },
+    "calendarActionMenu": {
+      "reservationWithQuote": "Bokning med offert",
+      "reservationWithoutQuote": "Bokning utan offert",
+      "blocking": "Blockerar…",
+      "createBlockedPeriod": "Skapa blockerad period",
+      "priceMinStayBlock": "Pris / Minsta vistelse / Blockering …"
+    },
+    "propertyLabel": {
+      "maxGuestsTitle": "Antal gäster inställt för detta objekt",
+      "dynamicPricingTitle": "Dynamic Pricing aktivt — dagspriserna beräknas automatiskt.",
+      "dynamicBadge": "Dynamic",
+      "idPrefix": "ID {id}"
+    },
+    "bookingsView": {
+      "arrivalsDepartures": "Ankomster & avresor",
+      "today": "Idag",
+      "previousDay": "Föregående dag",
+      "nextDay": "Nästa dag",
+      "arrivals": "Ankomster",
+      "departures": "Avresor",
+      "inHouse": "På plats",
+      "noArrivals": "Inga ankomster denna dag.",
+      "noDepartures": "Inga avresor denna dag.",
+      "noInHouse": "Ingen stannar kvar denna dag.",
+      "guestsCount": "{count, plural, one {# gäst} other {# gäster}}",
+      "allBookings": "Alla bokningar",
+      "searchPlaceholder": "Gäst, objekt, OTA-kod…",
+      "allProperties": "Alla objekt",
+      "allChannels": "Alla kanaler",
+      "bookingsCount": "{count, plural, one {# bokning} other {# bokningar}}",
+      "statusAll": "Alla statusar",
+      "statusPending": "Preliminär",
+      "statusConfirmed": "Bekräftad",
+      "statusInHouse": "Incheckad",
+      "statusCompleted": "Utcheckad",
+      "statusCancelled": "Avbokad",
+      "colProperty": "Objekt",
+      "colGuest": "Gäst",
+      "colPeriod": "Period",
+      "colNights": "Nätter",
+      "colStatus": "Status",
+      "colChannel": "Kanal",
+      "colAmount": "Belopp"
+    },
+    "monthGridView": {
+      "weekdayMon": "Må",
+      "weekdayTue": "Ti",
+      "weekdayWed": "On",
+      "weekdayThu": "To",
+      "weekdayFri": "Fr",
+      "weekdaySat": "Lö",
+      "weekdaySun": "Sö",
+      "monthJanuary": "Januari",
+      "monthFebruary": "Februari",
+      "monthMarch": "Mars",
+      "monthApril": "April",
+      "monthMay": "Maj",
+      "monthJune": "Juni",
+      "monthJuly": "Juli",
+      "monthAugust": "Augusti",
+      "monthSeptember": "September",
+      "monthOctober": "Oktober",
+      "monthNovember": "November",
+      "monthDecember": "December",
+      "statusOpen": "Ledig",
+      "statusBooked": "Bokad",
+      "statusBlocked": "Blockerad",
+      "previousMonth": "Föregående månad",
+      "nextMonth": "Nästa månad",
+      "today": "Idag",
+      "arrivalBlocked": "Ankomst blockerad",
+      "departureBlocked": "Avresa blockerad",
+      "minStayTitle": "{count, plural, one {Minsta vistelse # natt} other {Minsta vistelse # nätter}}",
+      "loading": "Laddar…"
+    },
+    "occupancyView": {
+      "window": "{count} dagar",
+      "avgOccupancyPrefix": "Genomsnittlig beläggning",
+      "overDays": "{count, plural, one {över # dag} other {över # dagar}}",
+      "propertyColumn": "Objekt",
+      "noProperties": "Inga objekt tillgängliga.",
+      "dayHeaderTooltip": "{date} · {booked}/{total} belagda",
+      "cellTooltip": "{property} · {date} · {status}",
+      "statusBooked": "belagd",
+      "statusFree": "ledig",
+      "legendDayTotal": "Daglig beläggning",
+      "legendBookedProperty": "Objekt belagt"
+    },
+    "reservationAddonsSection": {
+      "title": "Tilläggstjänster",
+      "statusPending": "Öppen",
+      "statusPaid": "Betald",
+      "statusCancelled": "Avbokad",
+      "fallbackAddonName": "Tilläggstjänst",
+      "markPaidAction": "Markera som betald",
+      "markPaidSuccess": "Markerad som betald.",
+      "addSuccess": "Tilläggstjänst tillagd.",
+      "totalLabel": "Summa tilläggstjänster",
+      "emptyPurchased": "Inga tilläggstjänster bokade än.",
+      "emptyCatalog": "Ingen katalog för detta objekt.",
+      "pickPlaceholder": "Välj tilläggstjänst …",
+      "addAction": "Lägg till",
+      "addBusy": "…"
+    },
+    "ratesView": {
+      "propertyLabel": "Objekt",
+      "modePrices": "Priser",
+      "modeMinStay": "Minsta vistelse",
+      "planColumn": "Rumskategori / Prisplan",
+      "empty": "Inga rumskategorier med prisplaner ännu — skapa dem under Objekt → Rumskategorier.",
+      "pricePlaceholder": "Pris i {currency}",
+      "minStayPlaceholder": "Nätter (min. 1)",
+      "apply": "Tillämpa",
+      "resetToBase": "Återställ till grundpris",
+      "resetToDefault": "Återställ till standard",
+      "cancel": "Avbryt",
+      "invalidValue": "Ogiltigt värde.",
+      "resyncQueued": "Överföring startad — status uppdateras strax.",
+      "resyncTitle": "Överför nu till portalerna",
+      "syncPending": "Väntande",
+      "syncSynced": "Överförd",
+      "source": {
+        "rate_plan": "Datumpris för denna prisplan",
+        "override": "Manuellt objektdatumpris",
+        "dynamic": "Dynamiskt pris",
+        "weekday": "Veckodagspris",
+        "base": "Grundpris för prisplanen",
+        "none": "Inget pris angivet"
+      }
     }
   }
 }

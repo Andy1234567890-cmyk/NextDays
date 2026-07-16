@@ -1512,7 +1512,9 @@
     "msHint": "Vnesite noči in povlecite čez dneve. Dvojni klik odstrani dan.",
     "msInvalid": "Vnesite celo število ≥ 1.",
     "msNights": "noči",
-    "msClearAllConfirm": "Res izbrisati vsa najmanjša bivanja?"
+    "msClearAllConfirm": "Res izbrisati vsa najmanjša bivanja?",
+    "ratesTitle": "Cene sob",
+    "ratesHint": "Osnovna cena, cene po datumih in najmanjše število nočitev za posamezno kategorijo sobe in cenik — velja za vse prodajne kanale (lastna platforma, recepcija, portali)."
   },
   "finance": {
     "cancelInvoice": {
@@ -4304,6 +4306,185 @@
       "paymentSummarySplit": "{percent} % ob rezervaciji, preostanek {days} dni pred prihodom.",
       "localizedEditorSubtitle": "Ustvari besedilo in ga po potrebi prevedi za svoje goste.",
       "localizedEditorPlaceholder": "Vnesi {title} …"
+    }
+  },
+  "calendar": {
+    "calendarBoard": {
+      "weekdays": {
+        "so": "Ne",
+        "mo": "Po",
+        "di": "To",
+        "mi": "Sr",
+        "do": "Če",
+        "fr": "Pe",
+        "sa": "So"
+      },
+      "months": {
+        "januar": "Januar",
+        "februar": "Februar",
+        "maerz": "Marec",
+        "april": "April",
+        "mai": "Maj",
+        "juni": "Junij",
+        "juli": "Julij",
+        "august": "Avgust",
+        "september": "September",
+        "oktober": "Oktober",
+        "november": "November",
+        "dezember": "December"
+      },
+      "status": {
+        "open": "Prosto",
+        "booked": "Zasedeno",
+        "blocked": "Blokirano",
+        "stopSell": "Stop-Sell"
+      },
+      "stopSellOta": "OTA",
+      "stopSellAllChannels": "vsi kanali",
+      "nightsCount": "{count, plural, one {# noč} two {# noči} few {# noči} other {# noči}}",
+      "daysCount": "{count, plural, one {# dan} two {# dneva} few {# dni} other {# dni}}"
+    },
+    "calendarViews": {
+      "viewLabel": "Pogled",
+      "chooseView": "Izberi pogled …",
+      "loading": "Nalaganje…",
+      "views": {
+        "timeline": "Časovnica",
+        "bookings": "Rezervacije",
+        "month": "Mesečni pogled",
+        "occupancy": "Zasedenost",
+        "rates": "Cene"
+      }
+    },
+    "calendarActionMenu": {
+      "reservationWithQuote": "Rezervacija s ponudbo",
+      "reservationWithoutQuote": "Rezervacija brez ponudbe",
+      "blocking": "Blokiranje…",
+      "createBlockedPeriod": "Ustvari blokirano obdobje",
+      "priceMinStayBlock": "Cena / minimalno bivanje / blokada …"
+    },
+    "propertyLabel": {
+      "maxGuestsTitle": "Število oseb, nastavljeno za to nastanitev",
+      "dynamicPricingTitle": "Dynamic Pricing aktiven — dnevne cene se izračunajo samodejno.",
+      "dynamicBadge": "Dynamic",
+      "idPrefix": "ID {id}"
+    },
+    "bookingsView": {
+      "arrivalsDepartures": "Prihodi in odhodi",
+      "today": "Danes",
+      "previousDay": "Prejšnji dan",
+      "nextDay": "Naslednji dan",
+      "arrivals": "Prihodi",
+      "departures": "Odhodi",
+      "inHouse": "V nastanitvi",
+      "noArrivals": "Ta dan ni prihodov.",
+      "noDepartures": "Ta dan ni odhodov.",
+      "noInHouse": "Ta dan nihče ne ostane.",
+      "guestsCount": "{count, plural, one {# gost} two {# gosta} few {# gostje} other {# gostov}}",
+      "allBookings": "Vse rezervacije",
+      "searchPlaceholder": "Gost, nastanitev, koda OTA…",
+      "allProperties": "Vse nastanitve",
+      "allChannels": "Vsi kanali",
+      "bookingsCount": "{count, plural, one {# rezervacija} two {# rezervaciji} few {# rezervacije} other {# rezervacij}}",
+      "statusAll": "Vsi statusi",
+      "statusPending": "Začasna",
+      "statusConfirmed": "Potrjeno",
+      "statusInHouse": "Prijavljen",
+      "statusCompleted": "Odjavljen",
+      "statusCancelled": "Preklicano",
+      "colProperty": "Nastanitev",
+      "colGuest": "Gost",
+      "colPeriod": "Obdobje",
+      "colNights": "Noči",
+      "colStatus": "Status",
+      "colChannel": "Kanal",
+      "colAmount": "Znesek"
+    },
+    "monthGridView": {
+      "weekdayMon": "Po",
+      "weekdayTue": "To",
+      "weekdayWed": "Sr",
+      "weekdayThu": "Če",
+      "weekdayFri": "Pe",
+      "weekdaySat": "So",
+      "weekdaySun": "Ne",
+      "monthJanuary": "Januar",
+      "monthFebruary": "Februar",
+      "monthMarch": "Marec",
+      "monthApril": "April",
+      "monthMay": "Maj",
+      "monthJune": "Junij",
+      "monthJuly": "Julij",
+      "monthAugust": "Avgust",
+      "monthSeptember": "September",
+      "monthOctober": "Oktober",
+      "monthNovember": "November",
+      "monthDecember": "December",
+      "statusOpen": "Prosto",
+      "statusBooked": "Zasedeno",
+      "statusBlocked": "Blokirano",
+      "previousMonth": "Prejšnji mesec",
+      "nextMonth": "Naslednji mesec",
+      "today": "Danes",
+      "arrivalBlocked": "Prihod blokiran",
+      "departureBlocked": "Odhod blokiran",
+      "minStayTitle": "{count, plural, one {Minimalno bivanje # noč} two {Minimalno bivanje # noči} few {Minimalno bivanje # noči} other {Minimalno bivanje # noči}}",
+      "loading": "Nalaganje…"
+    },
+    "occupancyView": {
+      "window": "{count} dni",
+      "avgOccupancyPrefix": "Povp. zasedenost",
+      "overDays": "{count, plural, one {čez # dan} two {čez # dneva} few {čez # dni} other {čez # dni}}",
+      "propertyColumn": "Nastanitev",
+      "noProperties": "Ni nastanitev.",
+      "dayHeaderTooltip": "{date} · {booked}/{total} zasedeno",
+      "cellTooltip": "{property} · {date} · {status}",
+      "statusBooked": "zasedeno",
+      "statusFree": "prosto",
+      "legendDayTotal": "Dnevna zasedenost",
+      "legendBookedProperty": "Nastanitev zasedena"
+    },
+    "reservationAddonsSection": {
+      "title": "Dodatne storitve",
+      "statusPending": "Odprto",
+      "statusPaid": "Plačano",
+      "statusCancelled": "Preklicano",
+      "fallbackAddonName": "Dodatna storitev",
+      "markPaidAction": "Označi kot plačano",
+      "markPaidSuccess": "Označeno kot plačano.",
+      "addSuccess": "Dodatna storitev dodana.",
+      "totalLabel": "Skupaj dodatne storitve",
+      "emptyPurchased": "Še ni rezerviranih dodatnih storitev.",
+      "emptyCatalog": "Za to nastanitev ni kataloga.",
+      "pickPlaceholder": "Izberi dodatno storitev …",
+      "addAction": "Dodaj",
+      "addBusy": "…"
+    },
+    "ratesView": {
+      "propertyLabel": "Objekt",
+      "modePrices": "Cene",
+      "modeMinStay": "Najmanjše število nočitev",
+      "planColumn": "Kategorija sobe / Cenik",
+      "empty": "Še ni kategorij sob s ceniki — ustvarite jih pod Objekti → Kategorije sob.",
+      "pricePlaceholder": "Cena v {currency}",
+      "minStayPlaceholder": "Noči (min. 1)",
+      "apply": "Uveljavi",
+      "resetToBase": "Ponastavi na osnovno ceno",
+      "resetToDefault": "Ponastavi na privzeto",
+      "cancel": "Prekliči",
+      "invalidValue": "Neveljavna vrednost.",
+      "resyncQueued": "Prenos sprožen — stanje se bo kmalu posodobilo.",
+      "resyncTitle": "Prenesi zdaj na portale",
+      "syncPending": "V čakanju",
+      "syncSynced": "Preneseno",
+      "source": {
+        "rate_plan": "Cena po datumu za ta cenik",
+        "override": "Ročno določena cena objekta po datumu",
+        "dynamic": "Dinamična cena",
+        "weekday": "Cena po dnevu v tednu",
+        "base": "Osnovna cena cenika",
+        "none": "Cena ni določena"
+      }
     }
   }
 }

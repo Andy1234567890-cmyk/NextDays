@@ -6,6 +6,7 @@
 // und denselben Detail-Slider — kein doppeltes Laden. Ersetzt die zwei vorher
 // getrennten Ansichten „Liste" und „An-/Abreisen".
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { Prop } from "@/components/kalender/calendar-board";
@@ -31,16 +32,21 @@ import { formatCurrency } from "@/lib/utils";
 import { type Reservation, listReservations } from "@/lib/reservations";
 import { useRealtime } from "@/lib/use-realtime";
 
-const STATUS_FILTERS: { value: DisplayStatus | "all"; label: string }[] = [
-  { value: "all", label: "Alle Status" },
-  { value: "pending", label: "Option" },
-  { value: "confirmed", label: "Bestätigt" },
-  { value: "in_house", label: "Eingecheckt" },
-  { value: "completed", label: "Ausgecheckt" },
-  { value: "cancelled", label: "Storniert" },
-];
+function statusFilters(
+  t: ReturnType<typeof useTranslations>,
+): { value: DisplayStatus | "all"; label: string }[] {
+  return [
+    { value: "all", label: t("bookingsView.statusAll") },
+    { value: "pending", label: t("bookingsView.statusPending") },
+    { value: "confirmed", label: t("bookingsView.statusConfirmed") },
+    { value: "in_house", label: t("bookingsView.statusInHouse") },
+    { value: "completed", label: t("bookingsView.statusCompleted") },
+    { value: "cancelled", label: t("bookingsView.statusCancelled") },
+  ];
+}
 
 export function CalendarBookingsView({ properties }: { properties: Prop[] }) {
+  const t = useTranslations("calendar");
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<string | null>(null);
@@ -115,24 +121,24 @@ export function CalendarBookingsView({ properties }: { properties: Prop[] }) {
       {/* ===== Oben: An-/Abreisen ===== */}
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <h3 className="font-display text-lg font-bold">An- &amp; Abreisen</h3>
+          <h3 className="font-display text-lg font-bold">{t("bookingsView.arrivalsDepartures")}</h3>
           <div className="ml-2 flex items-center gap-2">
             <Button
               variant="outline"
               size="icon"
               onClick={() => setDay(dateKey(addDays(parseKey(day), -1)))}
-              aria-label="Vorheriger Tag"
+              aria-label={t("bookingsView.previousDay")}
             >
               <Icon icon="ph:caret-left" className="size-4" />
             </Button>
             <Button variant="outline" onClick={() => setDay(todayKey)}>
-              Heute
+              {t("bookingsView.today")}
             </Button>
             <Button
               variant="outline"
               size="icon"
               onClick={() => setDay(dateKey(addDays(parseKey(day), 1)))}
-              aria-label="Nächster Tag"
+              aria-label={t("bookingsView.nextDay")}
             >
               <Icon icon="ph:caret-right" className="size-4" />
             </Button>
@@ -148,31 +154,34 @@ export function CalendarBookingsView({ properties }: { properties: Prop[] }) {
 
         <div className="grid gap-4 lg:grid-cols-3">
           <DayColumn
-            title="Anreisen"
+            title={t("bookingsView.arrivals")}
             icon="ph:sign-in"
             accent="text-success"
             rows={arrivals}
             titleOf={titleOf}
             onOpen={setDetail}
-            empty="Keine Anreisen an diesem Tag."
+            empty={t("bookingsView.noArrivals")}
+            guestsLabel={(count) => t("bookingsView.guestsCount", { count })}
           />
           <DayColumn
-            title="Abreisen"
+            title={t("bookingsView.departures")}
             icon="ph:sign-out"
             accent="text-warning"
             rows={departures}
             titleOf={titleOf}
             onOpen={setDetail}
-            empty="Keine Abreisen an diesem Tag."
+            empty={t("bookingsView.noDepartures")}
+            guestsLabel={(count) => t("bookingsView.guestsCount", { count })}
           />
           <DayColumn
-            title="Im Haus"
+            title={t("bookingsView.inHouse")}
             icon="ph:door-open"
             accent="text-channel-vrbo"
             rows={inHouse}
             titleOf={titleOf}
             onOpen={setDetail}
-            empty="Niemand verbleibt über diesen Tag."
+            empty={t("bookingsView.noInHouse")}
+            guestsLabel={(count) => t("bookingsView.guestsCount", { count })}
           />
         </div>
       </section>
@@ -180,7 +189,7 @@ export function CalendarBookingsView({ properties }: { properties: Prop[] }) {
       {/* ===== Unten: Buchungsliste ===== */}
       <section className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <h3 className="font-display text-lg font-bold">Alle Buchungen</h3>
+          <h3 className="font-display text-lg font-bold">{t("bookingsView.allBookings")}</h3>
           <div className="relative ml-2">
             <Icon
               icon="ph:magnifying-glass"
@@ -189,7 +198,7 @@ export function CalendarBookingsView({ properties }: { properties: Prop[] }) {
             <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Gast, Objekt, OTA-Code…"
+              placeholder={t("bookingsView.searchPlaceholder")}
               className="w-64 pl-9"
             />
           </div>
@@ -197,25 +206,25 @@ export function CalendarBookingsView({ properties }: { properties: Prop[] }) {
             value={propFilter}
             onChange={setPropFilter}
             options={[
-              { value: "all", label: "Alle Objekte" },
+              { value: "all", label: t("bookingsView.allProperties") },
               ...properties.map((p) => ({ value: p.id, label: p.title })),
             ]}
           />
           <Select
             value={statusFilter}
             onChange={(v) => setStatusFilter(v as DisplayStatus | "all")}
-            options={STATUS_FILTERS}
+            options={statusFilters(t)}
           />
           <Select
             value={channelFilter}
             onChange={(v) => setChannelFilter(v as AvailabilitySource | "all")}
             options={[
-              { value: "all", label: "Alle Kanäle" },
+              { value: "all", label: t("bookingsView.allChannels") },
               ...CHANNEL_SOURCES.map((s) => ({ value: s, label: channelMeta(s).label })),
             ]}
           />
           <span className="ml-auto text-sm text-muted-foreground">
-            {rows.length} {rows.length === 1 ? "Buchung" : "Buchungen"}
+            {t("bookingsView.bookingsCount", { count: rows.length })}
           </span>
         </div>
 
@@ -224,13 +233,13 @@ export function CalendarBookingsView({ properties }: { properties: Prop[] }) {
             <table className="w-full min-w-[56rem] text-sm">
               <thead>
                 <tr className="border-b bg-secondary/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
-                  <th className="px-4 py-2.5 font-semibold">Objekt</th>
-                  <th className="px-4 py-2.5 font-semibold">Gast</th>
-                  <th className="px-4 py-2.5 font-semibold">Zeitraum</th>
-                  <th className="px-4 py-2.5 text-right font-semibold">Nächte</th>
-                  <th className="px-4 py-2.5 font-semibold">Status</th>
-                  <th className="px-4 py-2.5 font-semibold">Kanal</th>
-                  <th className="px-4 py-2.5 text-right font-semibold">Betrag</th>
+                  <th className="px-4 py-2.5 font-semibold">{t("bookingsView.colProperty")}</th>
+                  <th className="px-4 py-2.5 font-semibold">{t("bookingsView.colGuest")}</th>
+                  <th className="px-4 py-2.5 font-semibold">{t("bookingsView.colPeriod")}</th>
+                  <th className="px-4 py-2.5 text-right font-semibold">{t("bookingsView.colNights")}</th>
+                  <th className="px-4 py-2.5 font-semibold">{t("bookingsView.colStatus")}</th>
+                  <th className="px-4 py-2.5 font-semibold">{t("bookingsView.colChannel")}</th>
+                  <th className="px-4 py-2.5 text-right font-semibold">{t("bookingsView.colAmount")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -319,6 +328,7 @@ function DayColumn({
   titleOf,
   onOpen,
   empty,
+  guestsLabel,
 }: {
   title: string;
   icon: string;
@@ -327,6 +337,7 @@ function DayColumn({
   titleOf: Record<string, string>;
   onOpen: (id: string) => void;
   empty: string;
+  guestsLabel: (count: number) => string;
 }) {
   return (
     <Card className="flex flex-col gap-3 p-4">
@@ -353,7 +364,7 @@ function DayColumn({
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{r.guest_name}</p>
                     <p className="truncate text-xs text-muted-foreground">
-                      {titleOf[r.property_id] ?? "—"} · {r.num_guests} Gäste
+                      {titleOf[r.property_id] ?? "—"} · {guestsLabel(r.num_guests)}
                     </p>
                   </div>
                   <span className="flex items-center gap-1.5 text-xs text-muted-foreground">

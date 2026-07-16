@@ -6,6 +6,7 @@
 // auch OTA (z. B. Booking): die Hausverwaltung bucht ein Extra-Angebot
 // (z. B. Erstausstattung/Einkauf) provisionsfrei am OTA vorbei dazu.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -22,14 +23,11 @@ import {
 import { formatCurrency } from "@/lib/currency";
 import { useRealtime } from "@/lib/use-realtime";
 
-const STATUS_LABEL: Record<ReservationAddon["status"], string> = {
-  pending: "Offen",
-  paid: "Bezahlt",
-  cancelled: "Storniert",
-};
-
-function localized(name: Record<string, string>): string {
-  return name.de || name.en || Object.values(name)[0] || "Zusatzleistung";
+function localized(
+  name: Record<string, string>,
+  fallback: string,
+): string {
+  return name.de || name.en || Object.values(name)[0] || fallback;
 }
 
 export function ReservationAddonsSection({
@@ -42,6 +40,12 @@ export function ReservationAddonsSection({
   currency: string | null;
   onChanged?: () => void;
 }) {
+  const t = useTranslations("calendar");
+  const STATUS_LABEL: Record<ReservationAddon["status"], string> = {
+    pending: t("reservationAddonsSection.statusPending"),
+    paid: t("reservationAddonsSection.statusPaid"),
+    cancelled: t("reservationAddonsSection.statusCancelled"),
+  };
   const [purchased, setPurchased] = useState<ReservationAddon[]>([]);
   const [catalog, setCatalog] = useState<Addon[]>([]);
   // Währung: bevorzugt die der Reservierung, sonst die vom Backend gelieferte
@@ -89,7 +93,7 @@ export function ReservationAddonsSection({
     if (res.ok) {
       setPurchased(res.data.items);
       setPick("");
-      toast.success("Zusatzleistung hinzugefügt.");
+      toast.success(t("reservationAddonsSection.addSuccess"));
       onChanged?.();
     } else {
       toast.error(res.error);
@@ -100,7 +104,7 @@ export function ReservationAddonsSection({
     const res = await markReservationAddonPaid(id);
     if (res.ok) {
       await reload();
-      toast.success("Als bezahlt markiert.");
+      toast.success(t("reservationAddonsSection.markPaidSuccess"));
     } else {
       toast.error(res.error);
     }
@@ -113,7 +117,7 @@ export function ReservationAddonsSection({
   return (
     <div className="rounded-(--radius) border p-3">
       <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-        Zusatzleistungen
+        {t("reservationAddonsSection.title")}
       </p>
 
       {purchased.length > 0 ? (
@@ -121,7 +125,9 @@ export function ReservationAddonsSection({
           {purchased.map((p) => (
             <div key={p.id} className="flex items-center justify-between gap-2 text-sm">
               <span className="flex min-w-0 items-center gap-2">
-                <span className="truncate">{localized(p.name)}</span>
+                <span className="truncate">
+                  {localized(p.name, t("reservationAddonsSection.fallbackAddonName"))}
+                </span>
                 {p.qty > 1 && (
                   <span className="text-muted-foreground">×{p.qty}</span>
                 )}
@@ -145,20 +151,20 @@ export function ReservationAddonsSection({
                     onClick={() => void markPaid(p.id)}
                     className="text-xs font-medium text-accent hover:underline"
                   >
-                    bezahlt
+                    {t("reservationAddonsSection.markPaidAction")}
                   </button>
                 )}
               </span>
             </div>
           ))}
           <div className="mt-1 flex justify-between border-t pt-1.5 text-sm font-semibold">
-            <span>Summe Zusatzleistungen</span>
+            <span>{t("reservationAddonsSection.totalLabel")}</span>
             <span>{money(total)}</span>
           </div>
         </div>
       ) : (
         <p className="mb-3 text-sm text-muted-foreground">
-          Noch keine Zusatzleistungen gebucht.
+          {t("reservationAddonsSection.emptyPurchased")}
         </p>
       )}
 
@@ -170,21 +176,22 @@ export function ReservationAddonsSection({
             onChange={(e) => setPick(e.target.value)}
             className="flex-1"
           >
-            <option value="">Zusatzleistung wählen …</option>
+            <option value="">{t("reservationAddonsSection.pickPlaceholder")}</option>
             {catalog.map((a) => (
               <option key={a.id} value={a.id}>
-                {localized(a.name)} · {money(a.price)}
+                {localized(a.name, t("reservationAddonsSection.fallbackAddonName"))} ·{" "}
+                {money(a.price)}
               </option>
             ))}
           </NativeSelect>
           <Button type="button" size="sm" onClick={() => void add()} disabled={!pick || busy}>
             <Icon icon="ph:plus" className="size-4" />
-            {busy ? "…" : "Hinzufügen"}
+            {busy ? t("reservationAddonsSection.addBusy") : t("reservationAddonsSection.addAction")}
           </Button>
         </div>
       ) : (
         <p className="text-xs text-muted-foreground">
-          Für dieses Objekt sind keine Zusatzleistungen angelegt.
+          {t("reservationAddonsSection.emptyCatalog")}
         </p>
       )}
     </div>

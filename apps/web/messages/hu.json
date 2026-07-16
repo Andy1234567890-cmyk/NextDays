@@ -1512,7 +1512,9 @@
     "msHint": "Írd be az éjszakákat, húzd a napokra. Dupla kattintás töröl egy napot.",
     "msInvalid": "Adj meg egész számot ≥ 1.",
     "msNights": "éj",
-    "msClearAllConfirm": "Biztosan törlöd az összes minimum tartózkodást?"
+    "msClearAllConfirm": "Biztosan törlöd az összes minimum tartózkodást?",
+    "ratesTitle": "Szobaárak",
+    "ratesHint": "Alapár, dátum szerinti árak és minimum tartózkodás szobakategóriánként és ártervenként — minden értékesítési csatornára érvényes (saját platform, recepció, portálok)."
   },
   "finance": {
     "cancelInvoice": {
@@ -4304,6 +4306,185 @@
       "paymentSummarySplit": "{percent}% foglaláskor, a fennmaradó összeg {days} nappal érkezés előtt.",
       "localizedEditorSubtitle": "Hozd létre a szöveget, és szükség esetén fordítsd le a vendégeidnek.",
       "localizedEditorPlaceholder": "{title} megadása …"
+    }
+  },
+  "calendar": {
+    "calendarBoard": {
+      "weekdays": {
+        "so": "V",
+        "mo": "H",
+        "di": "K",
+        "mi": "Sze",
+        "do": "Cs",
+        "fr": "P",
+        "sa": "Szo"
+      },
+      "months": {
+        "januar": "Január",
+        "februar": "Február",
+        "maerz": "Március",
+        "april": "Április",
+        "mai": "Május",
+        "juni": "Június",
+        "juli": "Július",
+        "august": "Augusztus",
+        "september": "Szeptember",
+        "oktober": "Október",
+        "november": "November",
+        "dezember": "December"
+      },
+      "status": {
+        "open": "Szabad",
+        "booked": "Foglalt",
+        "blocked": "Zárolt",
+        "stopSell": "Stop-Sell"
+      },
+      "stopSellOta": "OTA",
+      "stopSellAllChannels": "minden csatorna",
+      "nightsCount": "{count, plural, one {# éjszaka} other {# éjszaka}}",
+      "daysCount": "{count, plural, one {# nap} other {# nap}}"
+    },
+    "calendarViews": {
+      "viewLabel": "Nézet",
+      "chooseView": "Nézet kiválasztása …",
+      "loading": "Betöltés…",
+      "views": {
+        "timeline": "Idővonal",
+        "bookings": "Foglalások",
+        "month": "Havi rácsnézet",
+        "occupancy": "Kihasználtság",
+        "rates": "Árak"
+      }
+    },
+    "calendarActionMenu": {
+      "reservationWithQuote": "Foglalás ajánlattal",
+      "reservationWithoutQuote": "Foglalás ajánlat nélkül",
+      "blocking": "Zárolás…",
+      "createBlockedPeriod": "Zárolt időszak létrehozása",
+      "priceMinStayBlock": "Ár / Min-Stay / Zárolás …"
+    },
+    "propertyLabel": {
+      "maxGuestsTitle": "Ehhez a szálláshelyhez beállított létszám",
+      "dynamicPricingTitle": "Dynamic Pricing aktív — a napi árak automatikusan kerülnek kiszámításra.",
+      "dynamicBadge": "Dynamic",
+      "idPrefix": "ID {id}"
+    },
+    "bookingsView": {
+      "arrivalsDepartures": "Érkezések és távozások",
+      "today": "Ma",
+      "previousDay": "Előző nap",
+      "nextDay": "Következő nap",
+      "arrivals": "Érkezések",
+      "departures": "Távozások",
+      "inHouse": "A szálláshelyen",
+      "noArrivals": "Ezen a napon nincs érkezés.",
+      "noDepartures": "Ezen a napon nincs távozás.",
+      "noInHouse": "Ezen a napon senki sem marad.",
+      "guestsCount": "{count, plural, one {# vendég} other {# vendég}}",
+      "allBookings": "Összes foglalás",
+      "searchPlaceholder": "Vendég, szálláshely, OTA-kód…",
+      "allProperties": "Összes szálláshely",
+      "allChannels": "Összes csatorna",
+      "bookingsCount": "{count, plural, one {# foglalás} other {# foglalás}}",
+      "statusAll": "Összes státusz",
+      "statusPending": "Előfoglalás",
+      "statusConfirmed": "Visszaigazolva",
+      "statusInHouse": "Bejelentkezve",
+      "statusCompleted": "Kijelentkezve",
+      "statusCancelled": "Lemondva",
+      "colProperty": "Szálláshely",
+      "colGuest": "Vendég",
+      "colPeriod": "Időszak",
+      "colNights": "Éjszakák",
+      "colStatus": "Státusz",
+      "colChannel": "Csatorna",
+      "colAmount": "Összeg"
+    },
+    "monthGridView": {
+      "weekdayMon": "H",
+      "weekdayTue": "K",
+      "weekdayWed": "Sze",
+      "weekdayThu": "Cs",
+      "weekdayFri": "P",
+      "weekdaySat": "Szo",
+      "weekdaySun": "V",
+      "monthJanuary": "Január",
+      "monthFebruary": "Február",
+      "monthMarch": "Március",
+      "monthApril": "Április",
+      "monthMay": "Május",
+      "monthJune": "Június",
+      "monthJuly": "Július",
+      "monthAugust": "Augusztus",
+      "monthSeptember": "Szeptember",
+      "monthOctober": "Október",
+      "monthNovember": "November",
+      "monthDecember": "December",
+      "statusOpen": "Szabad",
+      "statusBooked": "Foglalt",
+      "statusBlocked": "Zárolt",
+      "previousMonth": "Előző hónap",
+      "nextMonth": "Következő hónap",
+      "today": "Ma",
+      "arrivalBlocked": "Érkezés zárolva",
+      "departureBlocked": "Távozás zárolva",
+      "minStayTitle": "{count, plural, one {Minimum tartózkodás # éjszaka} other {Minimum tartózkodás # éjszaka}}",
+      "loading": "Betöltés…"
+    },
+    "occupancyView": {
+      "window": "{count} nap",
+      "avgOccupancyPrefix": "Ø kihasználtság",
+      "overDays": "{count, plural, one {# napon át} other {# napon át}}",
+      "propertyColumn": "Szálláshely",
+      "noProperties": "Nincs elérhető szálláshely.",
+      "dayHeaderTooltip": "{date} · {booked}/{total} foglalt",
+      "cellTooltip": "{property} · {date} · {status}",
+      "statusBooked": "foglalt",
+      "statusFree": "szabad",
+      "legendDayTotal": "Napi kihasználtság",
+      "legendBookedProperty": "Szálláshely foglalt"
+    },
+    "reservationAddonsSection": {
+      "title": "Extra szolgáltatások",
+      "statusPending": "Nyitott",
+      "statusPaid": "Fizetve",
+      "statusCancelled": "Lemondva",
+      "fallbackAddonName": "Extra szolgáltatás",
+      "markPaidAction": "Megjelölés fizetettként",
+      "markPaidSuccess": "Fizetettként megjelölve.",
+      "addSuccess": "Extra szolgáltatás hozzáadva.",
+      "totalLabel": "Extra szolgáltatások összesen",
+      "emptyPurchased": "Még nincs foglalt extra szolgáltatás.",
+      "emptyCatalog": "Nincs katalógus ehhez a szálláshelyhez.",
+      "pickPlaceholder": "Válasszon extra szolgáltatást …",
+      "addAction": "Hozzáadás",
+      "addBusy": "…"
+    },
+    "ratesView": {
+      "propertyLabel": "Ingatlan",
+      "modePrices": "Árak",
+      "modeMinStay": "Minimum tartózkodás",
+      "planColumn": "Szobakategória / Árterv",
+      "empty": "Még nincsenek ártervekkel rendelkező szobakategóriák — hozd létre őket az Ingatlanok → Szobakategóriák alatt.",
+      "pricePlaceholder": "Ár {currency} pénznemben",
+      "minStayPlaceholder": "Éjszakák (min. 1)",
+      "apply": "Alkalmaz",
+      "resetToBase": "Visszaállítás alapárra",
+      "resetToDefault": "Visszaállítás alapértelmezettre",
+      "cancel": "Mégse",
+      "invalidValue": "Érvénytelen érték.",
+      "resyncQueued": "Az átvitel elindult — az állapot hamarosan frissül.",
+      "resyncTitle": "Átvitel a portálokra most",
+      "syncPending": "Függőben",
+      "syncSynced": "Átvitve",
+      "source": {
+        "rate_plan": "Ennek az ártervnek a dátum szerinti ára",
+        "override": "Manuálisan megadott ingatlan dátumár",
+        "dynamic": "Dinamikus ár",
+        "weekday": "Hét napja szerinti ár",
+        "base": "Az árterv alapára",
+        "none": "Nincs megadva ár"
+      }
     }
   }
 }

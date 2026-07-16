@@ -4,6 +4,7 @@
 // FIXIERT vorne sichtbar (sticky left-0). Zeigt je nach Ansicht-Optionen
 // Foto, internen Namen, Adresse, Stadt und ID. Eigenständiges Element.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { TYPE_LABELS } from "@/lib/property-meta";
@@ -40,6 +41,7 @@ export function PropertyLabel({
   // ihren Ort auffindbar, Hotelzimmer stehen alle am selben Ort → redundant).
   isHotel: boolean;
 }) {
+  const t = useTranslations("calendar");
   return (
     <Link
       href={`/objekte/${p.id}`}
@@ -62,7 +64,7 @@ export function PropertyLabel({
             <span className="truncate text-sm font-semibold">{p.title}</span>
             {/* Am Objekt eingestellte Personenkapazität (nicht die Belegung). */}
             <span
-              title="Für dieses Objekt eingestellte Personenzahl"
+              title={t("propertyLabel.maxGuestsTitle")}
               className="flex shrink-0 items-center gap-0.5 rounded-full bg-secondary px-1.5 py-0.5 text-[0.65rem] font-semibold text-muted-foreground tabular-nums"
             >
               <Icon icon="ph:user" className="size-2.5" />
@@ -70,11 +72,11 @@ export function PropertyLabel({
             </span>
             {p.dynamicEnabled && (
               <span
-                title="Dynamic Pricing aktiv — die Tagespreise werden automatisch berechnet."
+                title={t("propertyLabel.dynamicPricingTitle")}
                 className="flex shrink-0 items-center gap-0.5 rounded-full bg-accent/15 px-1.5 py-0.5 text-[0.6rem] font-semibold text-accent"
               >
                 <Icon icon="ph:lightning-fill" className="size-2.5" />
-                Dynamic
+                {t("propertyLabel.dynamicBadge")}
               </span>
             )}
           </span>
@@ -87,7 +89,7 @@ export function PropertyLabel({
         )}
         {showId && (
           <span className="truncate text-[0.65rem] text-muted-foreground/70">
-            ID {p.id.slice(0, 8)}
+            {t("propertyLabel.idPrefix", { id: p.id.slice(0, 8) })}
           </span>
         )}
       </div>

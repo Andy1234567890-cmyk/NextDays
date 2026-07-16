@@ -1512,7 +1512,9 @@
     "msHint": "Clóscríobh oícheanta, tarraing thar na laethanta. Cliceáil faoi dhó chun lá a bhaint.",
     "msInvalid": "Cuir isteach slánuimhir ≥ 1.",
     "msNights": "oíche",
-    "msClearAllConfirm": "An scriosfar gach íosfhanacht?"
+    "msClearAllConfirm": "An scriosfar gach íosfhanacht?",
+    "ratesTitle": "Rátaí seomraí",
+    "ratesHint": "Bunphraghas, praghsanna dar dáta agus fanacht íosta in aghaidh catagóir seomra agus plean praghais — baineann sé le gach cainéal díolacháin (ardán féin, deasc fáilte, tairseacha)."
   },
   "finance": {
     "cancelInvoice": {
@@ -4304,6 +4306,185 @@
       "paymentSummarySplit": "{percent} % ag am na háirithinte, iarmhéid {days} lá roimh theacht.",
       "localizedEditorSubtitle": "Cruthaigh an téacs agus aistrigh é más gá do d'aíonna.",
       "localizedEditorPlaceholder": "Cuir isteach {title} …"
+    }
+  },
+  "calendar": {
+    "calendarBoard": {
+      "weekdays": {
+        "so": "Do",
+        "mo": "Lu",
+        "di": "Má",
+        "mi": "Cé",
+        "do": "Dé",
+        "fr": "Ao",
+        "sa": "Sa"
+      },
+      "months": {
+        "januar": "Eanáir",
+        "februar": "Feabhra",
+        "maerz": "Márta",
+        "april": "Aibreán",
+        "mai": "Bealtaine",
+        "juni": "Meitheamh",
+        "juli": "Iúil",
+        "august": "Lúnasa",
+        "september": "Meán Fómhair",
+        "oktober": "Deireadh Fómhair",
+        "november": "Samhain",
+        "dezember": "Nollaig"
+      },
+      "status": {
+        "open": "Saor",
+        "booked": "Curtha in áirithe",
+        "blocked": "Blocáilte",
+        "stopSell": "Stop-Sell"
+      },
+      "stopSellOta": "OTA",
+      "stopSellAllChannels": "gach cainéal",
+      "nightsCount": "{count, plural, one {# oíche} two {# oíche} few {# oíche} many {# n-oíche} other {# oíche}}",
+      "daysCount": "{count, plural, one {# lá} two {# lá} few {# lá} many {# lá} other {# lá}}"
+    },
+    "calendarViews": {
+      "viewLabel": "Amharc",
+      "chooseView": "Roghnaigh amharc …",
+      "loading": "Á lódáil…",
+      "views": {
+        "timeline": "Amlíne",
+        "bookings": "Áirithintí",
+        "month": "Greille míosúil",
+        "occupancy": "Áitíocht",
+        "rates": "Rátaí"
+      }
+    },
+    "calendarActionMenu": {
+      "reservationWithQuote": "Áirithint le luachan",
+      "reservationWithoutQuote": "Áirithint gan luachan",
+      "blocking": "Ag blocáil…",
+      "createBlockedPeriod": "Cruthaigh tréimhse bhlocáilte",
+      "priceMinStayBlock": "Praghas / Fanacht Íosta / Blocáil …"
+    },
+    "propertyLabel": {
+      "maxGuestsTitle": "Líon na n-aíonna socraithe don áit seo",
+      "dynamicPricingTitle": "Tá Dynamic Pricing gníomhach — ríomhtar na praghsanna laethúla go huathoibríoch.",
+      "dynamicBadge": "Dynamic",
+      "idPrefix": "ID {id}"
+    },
+    "bookingsView": {
+      "arrivalsDepartures": "Teachtaí agus imeachtaí",
+      "today": "Inniu",
+      "previousDay": "An lá roimhe seo",
+      "nextDay": "An chéad lá eile",
+      "arrivals": "Teachtaí",
+      "departures": "Imeachtaí",
+      "inHouse": "Sa teach",
+      "noArrivals": "Níl aon teacht ann an lá seo.",
+      "noDepartures": "Níl aon imeacht ann an lá seo.",
+      "noInHouse": "Ní fhanann éinne thar an lá seo.",
+      "guestsCount": "{count, plural, one {# aoi} two {# aoi} few {# aoi} many {# n-aoi} other {# aoi}}",
+      "allBookings": "Gach áirithint",
+      "searchPlaceholder": "Aoi, áit, cód OTA…",
+      "allProperties": "Gach áit",
+      "allChannels": "Gach cainéal",
+      "bookingsCount": "{count, plural, one {# áirithint} two {# áirithint} few {# áirithint} many {# n-áirithint} other {# áirithint}}",
+      "statusAll": "Gach stádas",
+      "statusPending": "Sealadach",
+      "statusConfirmed": "Deimhnithe",
+      "statusInHouse": "Seiceáilte isteach",
+      "statusCompleted": "Seiceáilte amach",
+      "statusCancelled": "Cealaithe",
+      "colProperty": "Áit",
+      "colGuest": "Aoi",
+      "colPeriod": "Tréimhse",
+      "colNights": "Oícheanta",
+      "colStatus": "Stádas",
+      "colChannel": "Cainéal",
+      "colAmount": "Méid"
+    },
+    "monthGridView": {
+      "weekdayMon": "Lu",
+      "weekdayTue": "Má",
+      "weekdayWed": "Cé",
+      "weekdayThu": "Dé",
+      "weekdayFri": "Ao",
+      "weekdaySat": "Sa",
+      "weekdaySun": "Do",
+      "monthJanuary": "Eanáir",
+      "monthFebruary": "Feabhra",
+      "monthMarch": "Márta",
+      "monthApril": "Aibreán",
+      "monthMay": "Bealtaine",
+      "monthJune": "Meitheamh",
+      "monthJuly": "Iúil",
+      "monthAugust": "Lúnasa",
+      "monthSeptember": "Meán Fómhair",
+      "monthOctober": "Deireadh Fómhair",
+      "monthNovember": "Samhain",
+      "monthDecember": "Nollaig",
+      "statusOpen": "Saor",
+      "statusBooked": "Curtha in áirithe",
+      "statusBlocked": "Blocáilte",
+      "previousMonth": "An mhí roimhe seo",
+      "nextMonth": "An chéad mhí eile",
+      "today": "Inniu",
+      "arrivalBlocked": "Teacht blocáilte",
+      "departureBlocked": "Imeacht blocáilte",
+      "minStayTitle": "{count, plural, one {Fanacht Íosta # oíche} two {Fanacht Íosta # oíche} few {Fanacht Íosta # oíche} many {Fanacht Íosta # n-oíche} other {Fanacht Íosta # oíche}}",
+      "loading": "Á lódáil…"
+    },
+    "occupancyView": {
+      "window": "{count} lá",
+      "avgOccupancyPrefix": "Ø Áitiú",
+      "overDays": "{count, plural, one {thar # lá} two {thar # lá} few {thar # lá} many {thar # lá} other {thar # lá}}",
+      "propertyColumn": "Áit",
+      "noProperties": "Níl aon áit ann.",
+      "dayHeaderTooltip": "{date} · {booked}/{total} áitithe",
+      "cellTooltip": "{property} · {date} · {status}",
+      "statusBooked": "áitithe",
+      "statusFree": "saor",
+      "legendDayTotal": "Áitiú laethúil",
+      "legendBookedProperty": "Áit áitithe"
+    },
+    "reservationAddonsSection": {
+      "title": "Seirbhísí breise",
+      "statusPending": "Ar feitheamh",
+      "statusPaid": "Íoctha",
+      "statusCancelled": "Cealaithe",
+      "fallbackAddonName": "Seirbhís bhreise",
+      "markPaidAction": "Marcáil mar íoctha",
+      "markPaidSuccess": "Marcáilte mar íoctha.",
+      "addSuccess": "Seirbhís bhreise curtha leis.",
+      "totalLabel": "Iomlán na seirbhísí breise",
+      "emptyPurchased": "Níor ceannaíodh aon seirbhís bhreise fós.",
+      "emptyCatalog": "Níl aon chatalóg ann don áit seo.",
+      "pickPlaceholder": "Roghnaigh seirbhís bhreise …",
+      "addAction": "Cuir leis",
+      "addBusy": "…"
+    },
+    "ratesView": {
+      "propertyLabel": "Maoin",
+      "modePrices": "Rátaí",
+      "modeMinStay": "Fanacht íosta",
+      "planColumn": "Catagóir seomra / Plean praghais",
+      "empty": "Níl aon chatagóirí seomra le pleananna praghais fós — cruthaigh iad faoi Maoine → Catagóirí seomra.",
+      "pricePlaceholder": "Praghas in {currency}",
+      "minStayPlaceholder": "Oícheanta (íos. 1)",
+      "apply": "Cuir i bhfeidhm",
+      "resetToBase": "Athshocraigh go dtí an bunphraghas",
+      "resetToDefault": "Athshocraigh go dtí an réamhshocrú",
+      "cancel": "Cealaigh",
+      "invalidValue": "Luach neamhbhailí.",
+      "resyncQueued": "Tarchur seolta — nuashonrófar an stádas gan mhoill.",
+      "resyncTitle": "Tarchuir chuig na tairseacha anois",
+      "syncPending": "Ar feitheamh",
+      "syncSynced": "Tarchurtha",
+      "source": {
+        "rate_plan": "Praghas de réir dáta don phlean praghais seo",
+        "override": "Praghas de réir dáta a socraíodh de láimh don mhaoin",
+        "dynamic": "Praghas dinimiciúil",
+        "weekday": "Praghas de réir lá na seachtaine",
+        "base": "Bunphraghas an phlean praghais",
+        "none": "Níl aon phraghas socraithe"
+      }
     }
   }
 }

@@ -1512,7 +1512,9 @@
     "msHint": "Въведете нощувки и плъзнете по дните. Двойно щракване премахва ден.",
     "msInvalid": "Въведете цяло число ≥ 1.",
     "msNights": "нощ.",
-    "msClearAllConfirm": "Наистина ли да изтрия всички минимални престои?"
+    "msClearAllConfirm": "Наистина ли да изтрия всички минимални престои?",
+    "ratesTitle": "Цени на стаите",
+    "ratesHint": "Базова цена, цени по дати и минимален престой за всяка категория стая и ценови план — важи за всички канали за продажба (собствена платформа, рецепция, портали)."
   },
   "finance": {
     "cancelInvoice": {
@@ -4304,6 +4306,185 @@
       "paymentSummarySplit": "{percent} % при резервация, остатъкът {days} дни преди пристигане.",
       "localizedEditorSubtitle": "Създайте текста и го преведете при необходимост за вашите гости.",
       "localizedEditorPlaceholder": "Въведете {title} …"
+    }
+  },
+  "calendar": {
+    "calendarBoard": {
+      "weekdays": {
+        "so": "Нд",
+        "mo": "Пн",
+        "di": "Вт",
+        "mi": "Ср",
+        "do": "Чт",
+        "fr": "Пт",
+        "sa": "Сб"
+      },
+      "months": {
+        "januar": "Януари",
+        "februar": "Февруари",
+        "maerz": "Март",
+        "april": "Април",
+        "mai": "Май",
+        "juni": "Юни",
+        "juli": "Юли",
+        "august": "Август",
+        "september": "Септември",
+        "oktober": "Октомври",
+        "november": "Ноември",
+        "dezember": "Декември"
+      },
+      "status": {
+        "open": "Свободно",
+        "booked": "Резервирано",
+        "blocked": "Блокирано",
+        "stopSell": "Stop-Sell"
+      },
+      "stopSellOta": "OTA",
+      "stopSellAllChannels": "всички канали",
+      "nightsCount": "{count, plural, one {# нощ} other {# нощи}}",
+      "daysCount": "{count, plural, one {# ден} other {# дни}}"
+    },
+    "calendarViews": {
+      "viewLabel": "Изглед",
+      "chooseView": "Изберете изглед …",
+      "loading": "Зареждане…",
+      "views": {
+        "timeline": "Времева линия",
+        "bookings": "Резервации",
+        "month": "Месечен изглед",
+        "occupancy": "Заетост",
+        "rates": "Цени"
+      }
+    },
+    "calendarActionMenu": {
+      "reservationWithQuote": "Резервация с оферта",
+      "reservationWithoutQuote": "Резервация без оферта",
+      "blocking": "Блокиране…",
+      "createBlockedPeriod": "Създай период на блокиране",
+      "priceMinStayBlock": "Цена / Min-Stay / Блокиране …"
+    },
+    "propertyLabel": {
+      "maxGuestsTitle": "Брой гости, зададен за този обект",
+      "dynamicPricingTitle": "Dynamic Pricing активен — дневните цени се изчисляват автоматично.",
+      "dynamicBadge": "Dynamic",
+      "idPrefix": "ID {id}"
+    },
+    "bookingsView": {
+      "arrivalsDepartures": "Пристигания и заминавания",
+      "today": "Днес",
+      "previousDay": "Предишен ден",
+      "nextDay": "Следващ ден",
+      "arrivals": "Пристигания",
+      "departures": "Заминавания",
+      "inHouse": "В обекта",
+      "noArrivals": "Няма пристигания на този ден.",
+      "noDepartures": "Няма заминавания на този ден.",
+      "noInHouse": "Никой не остава през този ден.",
+      "guestsCount": "{count, plural, one {# гост} other {# гости}}",
+      "allBookings": "Всички резервации",
+      "searchPlaceholder": "Гост, обект, OTA код…",
+      "allProperties": "Всички обекти",
+      "allChannels": "Всички канали",
+      "bookingsCount": "{count, plural, one {# резервация} other {# резервации}}",
+      "statusAll": "Всички статуси",
+      "statusPending": "Предварителна",
+      "statusConfirmed": "Потвърдена",
+      "statusInHouse": "Настанен",
+      "statusCompleted": "Отписан",
+      "statusCancelled": "Анулирана",
+      "colProperty": "Обект",
+      "colGuest": "Гост",
+      "colPeriod": "Период",
+      "colNights": "Нощувки",
+      "colStatus": "Статус",
+      "colChannel": "Канал",
+      "colAmount": "Сума"
+    },
+    "monthGridView": {
+      "weekdayMon": "Пн",
+      "weekdayTue": "Вт",
+      "weekdayWed": "Ср",
+      "weekdayThu": "Чт",
+      "weekdayFri": "Пт",
+      "weekdaySat": "Сб",
+      "weekdaySun": "Нд",
+      "monthJanuary": "Януари",
+      "monthFebruary": "Февруари",
+      "monthMarch": "Март",
+      "monthApril": "Април",
+      "monthMay": "Май",
+      "monthJune": "Юни",
+      "monthJuly": "Юли",
+      "monthAugust": "Август",
+      "monthSeptember": "Септември",
+      "monthOctober": "Октомври",
+      "monthNovember": "Ноември",
+      "monthDecember": "Декември",
+      "statusOpen": "Свободно",
+      "statusBooked": "Резервирано",
+      "statusBlocked": "Блокирано",
+      "previousMonth": "Предишен месец",
+      "nextMonth": "Следващ месец",
+      "today": "Днес",
+      "arrivalBlocked": "Пристигането е блокирано",
+      "departureBlocked": "Заминаването е блокирано",
+      "minStayTitle": "{count, plural, one {Минимален престой # нощ} other {Минимален престой # нощи}}",
+      "loading": "Зареждане…"
+    },
+    "occupancyView": {
+      "window": "{count} дни",
+      "avgOccupancyPrefix": "Ø заетост",
+      "overDays": "{count, plural, one {за # ден} other {за # дни}}",
+      "propertyColumn": "Обект",
+      "noProperties": "Няма налични обекти.",
+      "dayHeaderTooltip": "{date} · {booked}/{total} заети",
+      "cellTooltip": "{property} · {date} · {status}",
+      "statusBooked": "заето",
+      "statusFree": "свободно",
+      "legendDayTotal": "Дневна заетост",
+      "legendBookedProperty": "Обект зает"
+    },
+    "reservationAddonsSection": {
+      "title": "Допълнителни услуги",
+      "statusPending": "Отворено",
+      "statusPaid": "Платено",
+      "statusCancelled": "Анулирано",
+      "fallbackAddonName": "Допълнителна услуга",
+      "markPaidAction": "Маркирай като платено",
+      "markPaidSuccess": "Маркирано като платено.",
+      "addSuccess": "Допълнителната услуга е добавена.",
+      "totalLabel": "Общо допълнителни услуги",
+      "emptyPurchased": "Все още няма поръчани допълнителни услуги.",
+      "emptyCatalog": "Няма каталог за този обект.",
+      "pickPlaceholder": "Изберете допълнителна услуга …",
+      "addAction": "Добави",
+      "addBusy": "…"
+    },
+    "ratesView": {
+      "propertyLabel": "Обект",
+      "modePrices": "Цени",
+      "modeMinStay": "Минимален престой",
+      "planColumn": "Категория стая / Ценови план",
+      "empty": "Все още няма категории стаи с ценови планове — създайте ги в Обекти → Категории стаи.",
+      "pricePlaceholder": "Цена в {currency}",
+      "minStayPlaceholder": "Нощувки (мин. 1)",
+      "apply": "Приложи",
+      "resetToBase": "Нулиране до базовата цена",
+      "resetToDefault": "Нулиране до стандартна стойност",
+      "cancel": "Отказ",
+      "invalidValue": "Невалидна стойност.",
+      "resyncQueued": "Предаването е стартирано — статусът ще се обнови скоро.",
+      "resyncTitle": "Предай сега към порталите",
+      "syncPending": "Изчаква се",
+      "syncSynced": "Предадено",
+      "source": {
+        "rate_plan": "Цена по дата за този ценови план",
+        "override": "Ръчно зададена цена по дата за обекта",
+        "dynamic": "Динамична цена",
+        "weekday": "Цена по ден от седмицата",
+        "base": "Базова цена на ценовия план",
+        "none": "Няма зададена цена"
+      }
     }
   }
 }

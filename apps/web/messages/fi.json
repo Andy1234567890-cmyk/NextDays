@@ -1512,7 +1512,9 @@
     "msHint": "Kirjoita yöt ja vedä päivien yli. Kaksoisnapsautus poistaa päivän.",
     "msInvalid": "Anna kokonaisluku ≥ 1.",
     "msNights": "yötä",
-    "msClearAllConfirm": "Poistetaanko kaikki vähimmäisoleskelut?"
+    "msClearAllConfirm": "Poistetaanko kaikki vähimmäisoleskelut?",
+    "ratesTitle": "Huonehinnat",
+    "ratesHint": "Perushinta, päiväkohtaiset hinnat ja vähimmäisyöpymisaika huonekategorian ja hintasuunnitelman mukaan — koskee kaikkia myyntikanavia (oma alusta, vastaanotto, portaalit)."
   },
   "finance": {
     "cancelInvoice": {
@@ -4304,6 +4306,185 @@
       "paymentSummarySplit": "{percent} % varauksen yhteydessä, loppusumma {days} päivää ennen saapumista.",
       "localizedEditorSubtitle": "Luo teksti ja käännä se tarvittaessa vieraillesi.",
       "localizedEditorPlaceholder": "Kirjoita: {title} …"
+    }
+  },
+  "calendar": {
+    "calendarBoard": {
+      "weekdays": {
+        "so": "Su",
+        "mo": "Ma",
+        "di": "Ti",
+        "mi": "Ke",
+        "do": "To",
+        "fr": "Pe",
+        "sa": "La"
+      },
+      "months": {
+        "januar": "Tammikuu",
+        "februar": "Helmikuu",
+        "maerz": "Maaliskuu",
+        "april": "Huhtikuu",
+        "mai": "Toukokuu",
+        "juni": "Kesäkuu",
+        "juli": "Heinäkuu",
+        "august": "Elokuu",
+        "september": "Syyskuu",
+        "oktober": "Lokakuu",
+        "november": "Marraskuu",
+        "dezember": "Joulukuu"
+      },
+      "status": {
+        "open": "Vapaa",
+        "booked": "Varattu",
+        "blocked": "Suljettu",
+        "stopSell": "Stop-Sell"
+      },
+      "stopSellOta": "OTA",
+      "stopSellAllChannels": "kaikki kanavat",
+      "nightsCount": "{count, plural, one {# yö} other {# yötä}}",
+      "daysCount": "{count, plural, one {# päivä} other {# päivää}}"
+    },
+    "calendarViews": {
+      "viewLabel": "Näkymä",
+      "chooseView": "Valitse näkymä …",
+      "loading": "Ladataan…",
+      "views": {
+        "timeline": "Aikajana",
+        "bookings": "Varaukset",
+        "month": "Kuukausinäkymä",
+        "occupancy": "Käyttöaste",
+        "rates": "Hinnat"
+      }
+    },
+    "calendarActionMenu": {
+      "reservationWithQuote": "Varaus tarjouksella",
+      "reservationWithoutQuote": "Varaus ilman tarjousta",
+      "blocking": "Suljetaan…",
+      "createBlockedPeriod": "Luo suljettu ajanjakso",
+      "priceMinStayBlock": "Hinta / vähimmäisoleskelu / sulku …"
+    },
+    "propertyLabel": {
+      "maxGuestsTitle": "Tälle kohteelle asetettu henkilömäärä",
+      "dynamicPricingTitle": "Dynamic Pricing käytössä — päivähinnat lasketaan automaattisesti.",
+      "dynamicBadge": "Dynamic",
+      "idPrefix": "ID {id}"
+    },
+    "bookingsView": {
+      "arrivalsDepartures": "Saapumiset & lähdöt",
+      "today": "Tänään",
+      "previousDay": "Edellinen päivä",
+      "nextDay": "Seuraava päivä",
+      "arrivals": "Saapumiset",
+      "departures": "Lähdöt",
+      "inHouse": "Paikalla",
+      "noArrivals": "Ei saapumisia tänä päivänä.",
+      "noDepartures": "Ei lähtöjä tänä päivänä.",
+      "noInHouse": "Kukaan ei jää tänä päivänä.",
+      "guestsCount": "{count, plural, one {# vieras} other {# vierasta}}",
+      "allBookings": "Kaikki varaukset",
+      "searchPlaceholder": "Vieras, kohde, OTA-koodi…",
+      "allProperties": "Kaikki kohteet",
+      "allChannels": "Kaikki kanavat",
+      "bookingsCount": "{count, plural, one {# varaus} other {# varausta}}",
+      "statusAll": "Kaikki tilat",
+      "statusPending": "Alustava",
+      "statusConfirmed": "Vahvistettu",
+      "statusInHouse": "Sisäänkirjattu",
+      "statusCompleted": "Uloskirjattu",
+      "statusCancelled": "Peruttu",
+      "colProperty": "Kohde",
+      "colGuest": "Vieras",
+      "colPeriod": "Ajanjakso",
+      "colNights": "Yöt",
+      "colStatus": "Tila",
+      "colChannel": "Kanava",
+      "colAmount": "Summa"
+    },
+    "monthGridView": {
+      "weekdayMon": "Ma",
+      "weekdayTue": "Ti",
+      "weekdayWed": "Ke",
+      "weekdayThu": "To",
+      "weekdayFri": "Pe",
+      "weekdaySat": "La",
+      "weekdaySun": "Su",
+      "monthJanuary": "Tammikuu",
+      "monthFebruary": "Helmikuu",
+      "monthMarch": "Maaliskuu",
+      "monthApril": "Huhtikuu",
+      "monthMay": "Toukokuu",
+      "monthJune": "Kesäkuu",
+      "monthJuly": "Heinäkuu",
+      "monthAugust": "Elokuu",
+      "monthSeptember": "Syyskuu",
+      "monthOctober": "Lokakuu",
+      "monthNovember": "Marraskuu",
+      "monthDecember": "Joulukuu",
+      "statusOpen": "Vapaa",
+      "statusBooked": "Varattu",
+      "statusBlocked": "Suljettu",
+      "previousMonth": "Edellinen kuukausi",
+      "nextMonth": "Seuraava kuukausi",
+      "today": "Tänään",
+      "arrivalBlocked": "Saapuminen suljettu",
+      "departureBlocked": "Lähtö suljettu",
+      "minStayTitle": "{count, plural, one {Vähimmäisoleskelu # yö} other {Vähimmäisoleskelu # yötä}}",
+      "loading": "Ladataan…"
+    },
+    "occupancyView": {
+      "window": "{count} päivää",
+      "avgOccupancyPrefix": "Ø käyttöaste",
+      "overDays": "{count, plural, one {# päivän aikana} other {# päivän aikana}}",
+      "propertyColumn": "Kohde",
+      "noProperties": "Kohteita ei löytynyt.",
+      "dayHeaderTooltip": "{date} · {booked}/{total} varattu",
+      "cellTooltip": "{property} · {date} · {status}",
+      "statusBooked": "varattu",
+      "statusFree": "vapaa",
+      "legendDayTotal": "Päivän käyttöaste",
+      "legendBookedProperty": "Kohde varattu"
+    },
+    "reservationAddonsSection": {
+      "title": "Lisäpalvelut",
+      "statusPending": "Avoinna",
+      "statusPaid": "Maksettu",
+      "statusCancelled": "Peruttu",
+      "fallbackAddonName": "Lisäpalvelu",
+      "markPaidAction": "Merkitse maksetuksi",
+      "markPaidSuccess": "Merkitty maksetuksi.",
+      "addSuccess": "Lisäpalvelu lisätty.",
+      "totalLabel": "Lisäpalveluiden summa",
+      "emptyPurchased": "Ei vielä varattuja lisäpalveluita.",
+      "emptyCatalog": "Ei katalogia tälle kohteelle.",
+      "pickPlaceholder": "Valitse lisäpalvelu …",
+      "addAction": "Lisää",
+      "addBusy": "…"
+    },
+    "ratesView": {
+      "propertyLabel": "Kohde",
+      "modePrices": "Hinnat",
+      "modeMinStay": "Vähimmäisyöpymisaika",
+      "planColumn": "Huonekategoria / Hintasuunnitelma",
+      "empty": "Ei vielä huonekategorioita, joilla on hintasuunnitelmia — luo ne kohdassa Kohteet → Huonekategoriat.",
+      "pricePlaceholder": "Hinta valuutassa {currency}",
+      "minStayPlaceholder": "Öitä (väh. 1)",
+      "apply": "Käytä",
+      "resetToBase": "Palauta perushintaan",
+      "resetToDefault": "Palauta oletukseen",
+      "cancel": "Peruuta",
+      "invalidValue": "Virheellinen arvo.",
+      "resyncQueued": "Siirto käynnistetty — tila päivittyy hetken kuluttua.",
+      "resyncTitle": "Siirrä nyt portaaleihin",
+      "syncPending": "Odottaa",
+      "syncSynced": "Siirretty",
+      "source": {
+        "rate_plan": "Tämän hintasuunnitelman päiväkohtainen hinta",
+        "override": "Manuaalinen kohteen päiväkohtainen hinta",
+        "dynamic": "Dynaaminen hinta",
+        "weekday": "Viikonpäivähinta",
+        "base": "Hintasuunnitelman perushinta",
+        "none": "Ei hintaa asetettu"
+      }
     }
   }
 }

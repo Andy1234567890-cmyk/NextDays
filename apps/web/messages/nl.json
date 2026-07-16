@@ -1512,7 +1512,9 @@
     "msHint": "Voer nachten in en sleep over de dagen. Dubbelklik verwijdert een dag.",
     "msInvalid": "Voer een geheel getal ≥ 1 in.",
     "msNights": "nachten",
-    "msClearAllConfirm": "Alle minimumverblijven echt verwijderen?"
+    "msClearAllConfirm": "Alle minimumverblijven echt verwijderen?",
+    "ratesTitle": "Kamerprijzen",
+    "ratesHint": "Basisprijs, datumprijzen en minimumverblijf per kamercategorie en tariefplan — geldt voor alle verkoopkanalen (eigen platform, receptie, portalen)."
   },
   "finance": {
     "cancelInvoice": {
@@ -4304,6 +4306,185 @@
       "paymentSummarySplit": "{percent} % bij boeking, restbedrag {days} dagen vóór aankomst.",
       "localizedEditorSubtitle": "Maak de tekst en vertaal deze indien nodig voor je gasten.",
       "localizedEditorPlaceholder": "{title} invoeren …"
+    }
+  },
+  "calendar": {
+    "calendarBoard": {
+      "weekdays": {
+        "so": "Zo",
+        "mo": "Ma",
+        "di": "Di",
+        "mi": "Wo",
+        "do": "Do",
+        "fr": "Vr",
+        "sa": "Za"
+      },
+      "months": {
+        "januar": "Januari",
+        "februar": "Februari",
+        "maerz": "Maart",
+        "april": "April",
+        "mai": "Mei",
+        "juni": "Juni",
+        "juli": "Juli",
+        "august": "Augustus",
+        "september": "September",
+        "oktober": "Oktober",
+        "november": "November",
+        "dezember": "December"
+      },
+      "status": {
+        "open": "Vrij",
+        "booked": "Geboekt",
+        "blocked": "Geblokkeerd",
+        "stopSell": "Stop-Sell"
+      },
+      "stopSellOta": "OTA",
+      "stopSellAllChannels": "alle kanalen",
+      "nightsCount": "{count, plural, one {# nacht} other {# nachten}}",
+      "daysCount": "{count, plural, one {# dag} other {# dagen}}"
+    },
+    "calendarViews": {
+      "viewLabel": "Weergave",
+      "chooseView": "Weergave kiezen …",
+      "loading": "Laden…",
+      "views": {
+        "timeline": "Planning",
+        "bookings": "Boekingen",
+        "month": "Maandraster",
+        "occupancy": "Bezetting",
+        "rates": "Tarieven"
+      }
+    },
+    "calendarActionMenu": {
+      "reservationWithQuote": "Reservering met offerte",
+      "reservationWithoutQuote": "Reservering zonder offerte",
+      "blocking": "Blokkeren…",
+      "createBlockedPeriod": "Geblokkeerde periode aanmaken",
+      "priceMinStayBlock": "Prijs / Minimumverblijf / Blokkering …"
+    },
+    "propertyLabel": {
+      "maxGuestsTitle": "Voor dit object ingesteld aantal personen",
+      "dynamicPricingTitle": "Dynamic Pricing actief — de dagprijzen worden automatisch berekend.",
+      "dynamicBadge": "Dynamic",
+      "idPrefix": "ID {id}"
+    },
+    "bookingsView": {
+      "arrivalsDepartures": "Aankomsten & vertrekken",
+      "today": "Vandaag",
+      "previousDay": "Vorige dag",
+      "nextDay": "Volgende dag",
+      "arrivals": "Aankomsten",
+      "departures": "Vertrekken",
+      "inHouse": "Aanwezig",
+      "noArrivals": "Geen aankomsten op deze dag.",
+      "noDepartures": "Geen vertrekken op deze dag.",
+      "noInHouse": "Niemand blijft op deze dag.",
+      "guestsCount": "{count, plural, one {# gast} other {# gasten}}",
+      "allBookings": "Alle boekingen",
+      "searchPlaceholder": "Gast, object, OTA-code…",
+      "allProperties": "Alle objecten",
+      "allChannels": "Alle kanalen",
+      "bookingsCount": "{count, plural, one {# boeking} other {# boekingen}}",
+      "statusAll": "Alle statussen",
+      "statusPending": "Optie",
+      "statusConfirmed": "Bevestigd",
+      "statusInHouse": "Ingecheckt",
+      "statusCompleted": "Uitgecheckt",
+      "statusCancelled": "Geannuleerd",
+      "colProperty": "Object",
+      "colGuest": "Gast",
+      "colPeriod": "Periode",
+      "colNights": "Nachten",
+      "colStatus": "Status",
+      "colChannel": "Kanaal",
+      "colAmount": "Bedrag"
+    },
+    "monthGridView": {
+      "weekdayMon": "Ma",
+      "weekdayTue": "Di",
+      "weekdayWed": "Wo",
+      "weekdayThu": "Do",
+      "weekdayFri": "Vr",
+      "weekdaySat": "Za",
+      "weekdaySun": "Zo",
+      "monthJanuary": "Januari",
+      "monthFebruary": "Februari",
+      "monthMarch": "Maart",
+      "monthApril": "April",
+      "monthMay": "Mei",
+      "monthJune": "Juni",
+      "monthJuly": "Juli",
+      "monthAugust": "Augustus",
+      "monthSeptember": "September",
+      "monthOctober": "Oktober",
+      "monthNovember": "November",
+      "monthDecember": "December",
+      "statusOpen": "Vrij",
+      "statusBooked": "Geboekt",
+      "statusBlocked": "Geblokkeerd",
+      "previousMonth": "Vorige maand",
+      "nextMonth": "Volgende maand",
+      "today": "Vandaag",
+      "arrivalBlocked": "Aankomst geblokkeerd",
+      "departureBlocked": "Vertrek geblokkeerd",
+      "minStayTitle": "{count, plural, one {Minimumverblijf # nacht} other {Minimumverblijf # nachten}}",
+      "loading": "Laden…"
+    },
+    "occupancyView": {
+      "window": "{count} dagen",
+      "avgOccupancyPrefix": "Gem. bezetting",
+      "overDays": "{count, plural, one {over # dag} other {over # dagen}}",
+      "propertyColumn": "Object",
+      "noProperties": "Geen objecten beschikbaar.",
+      "dayHeaderTooltip": "{date} · {booked}/{total} bezet",
+      "cellTooltip": "{property} · {date} · {status}",
+      "statusBooked": "bezet",
+      "statusFree": "vrij",
+      "legendDayTotal": "Bezetting per dag",
+      "legendBookedProperty": "Object bezet"
+    },
+    "reservationAddonsSection": {
+      "title": "Extra services",
+      "statusPending": "Open",
+      "statusPaid": "Betaald",
+      "statusCancelled": "Geannuleerd",
+      "fallbackAddonName": "Extra service",
+      "markPaidAction": "Als betaald markeren",
+      "markPaidSuccess": "Als betaald gemarkeerd.",
+      "addSuccess": "Extra service toegevoegd.",
+      "totalLabel": "Totaal extra services",
+      "emptyPurchased": "Nog geen extra services geboekt.",
+      "emptyCatalog": "Geen catalogus voor dit object.",
+      "pickPlaceholder": "Extra service kiezen …",
+      "addAction": "Toevoegen",
+      "addBusy": "…"
+    },
+    "ratesView": {
+      "propertyLabel": "Object",
+      "modePrices": "Tarieven",
+      "modeMinStay": "Minimumverblijf",
+      "planColumn": "Kamercategorie / Tariefplan",
+      "empty": "Nog geen kamercategorieën met tariefplannen — maak ze aan onder Objecten → Kamercategorieën.",
+      "pricePlaceholder": "Prijs in {currency}",
+      "minStayPlaceholder": "Nachten (min. 1)",
+      "apply": "Toepassen",
+      "resetToBase": "Terugzetten naar basisprijs",
+      "resetToDefault": "Terugzetten naar standaard",
+      "cancel": "Annuleren",
+      "invalidValue": "Ongeldige waarde.",
+      "resyncQueued": "Verzending gestart — status wordt zo bijgewerkt.",
+      "resyncTitle": "Nu naar portalen verzenden",
+      "syncPending": "In behandeling",
+      "syncSynced": "Verzonden",
+      "source": {
+        "rate_plan": "Datumprijs van dit tariefplan",
+        "override": "Handmatige objectdatumprijs",
+        "dynamic": "Dynamische prijs",
+        "weekday": "Weekdagprijs",
+        "base": "Basisprijs van het tariefplan",
+        "none": "Geen prijs ingesteld"
+      }
     }
   }
 }

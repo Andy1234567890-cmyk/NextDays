@@ -1512,7 +1512,9 @@
     "msHint": "Zadajte noci a ťahajte cez dni. Dvojklik deň odstráni.",
     "msInvalid": "Zadajte celé číslo ≥ 1.",
     "msNights": "nocí",
-    "msClearAllConfirm": "Naozaj zmazať všetky minimálne pobyty?"
+    "msClearAllConfirm": "Naozaj zmazať všetky minimálne pobyty?",
+    "ratesTitle": "Ceny izieb",
+    "ratesHint": "Základná cena, ceny podľa dátumu a minimálny pobyt pre každú kategóriu izby a cenový plán — platí pre všetky predajné kanály (vlastná platforma, recepcia, portály)."
   },
   "finance": {
     "cancelInvoice": {
@@ -4304,6 +4306,185 @@
       "paymentSummarySplit": "{percent} % pri rezervácii, zostatok {days} dní pred príchodom.",
       "localizedEditorSubtitle": "Vytvorte text a v prípade potreby ho preložte pre svojich hostí.",
       "localizedEditorPlaceholder": "Zadajte {title} …"
+    }
+  },
+  "calendar": {
+    "calendarBoard": {
+      "weekdays": {
+        "so": "Ne",
+        "mo": "Po",
+        "di": "Ut",
+        "mi": "St",
+        "do": "Št",
+        "fr": "Pi",
+        "sa": "So"
+      },
+      "months": {
+        "januar": "Január",
+        "februar": "Február",
+        "maerz": "Marec",
+        "april": "Apríl",
+        "mai": "Máj",
+        "juni": "Jún",
+        "juli": "Júl",
+        "august": "August",
+        "september": "September",
+        "oktober": "Október",
+        "november": "November",
+        "dezember": "December"
+      },
+      "status": {
+        "open": "Voľné",
+        "booked": "Obsadené",
+        "blocked": "Blokované",
+        "stopSell": "Stop-Sell"
+      },
+      "stopSellOta": "OTA",
+      "stopSellAllChannels": "všetky kanály",
+      "nightsCount": "{count, plural, one {# noc} few {# noci} many {# noci} other {# nocí}}",
+      "daysCount": "{count, plural, one {# deň} few {# dni} many {# dňa} other {# dní}}"
+    },
+    "calendarViews": {
+      "viewLabel": "Zobrazenie",
+      "chooseView": "Vybrať zobrazenie …",
+      "loading": "Načítava sa…",
+      "views": {
+        "timeline": "Časová os",
+        "bookings": "Rezervácie",
+        "month": "Mesačná mriežka",
+        "occupancy": "Obsadenosť",
+        "rates": "Ceny"
+      }
+    },
+    "calendarActionMenu": {
+      "reservationWithQuote": "Rezervácia s ponukou",
+      "reservationWithoutQuote": "Rezervácia bez ponuky",
+      "blocking": "Blokovanie…",
+      "createBlockedPeriod": "Vytvoriť blokované obdobie",
+      "priceMinStayBlock": "Cena / min. pobyt / blokácia …"
+    },
+    "propertyLabel": {
+      "maxGuestsTitle": "Počet osôb nastavený pre tento objekt",
+      "dynamicPricingTitle": "Dynamic Pricing aktívny — denné ceny sa počítajú automaticky.",
+      "dynamicBadge": "Dynamic",
+      "idPrefix": "ID {id}"
+    },
+    "bookingsView": {
+      "arrivalsDepartures": "Príchody a odchody",
+      "today": "Dnes",
+      "previousDay": "Predchádzajúci deň",
+      "nextDay": "Ďalší deň",
+      "arrivals": "Príchody",
+      "departures": "Odchody",
+      "inHouse": "V objekte",
+      "noArrivals": "V tento deň nie sú žiadne príchody.",
+      "noDepartures": "V tento deň nie sú žiadne odchody.",
+      "noInHouse": "V tento deň nikto nezostáva.",
+      "guestsCount": "{count, plural, one {# hosť} few {# hostia} many {# hosťa} other {# hostí}}",
+      "allBookings": "Všetky rezervácie",
+      "searchPlaceholder": "Hosť, objekt, kód OTA…",
+      "allProperties": "Všetky objekty",
+      "allChannels": "Všetky kanály",
+      "bookingsCount": "{count, plural, one {# rezervácia} few {# rezervácie} many {# rezervácie} other {# rezervácií}}",
+      "statusAll": "Všetky stavy",
+      "statusPending": "Predbežná",
+      "statusConfirmed": "Potvrdená",
+      "statusInHouse": "Ubytovaný",
+      "statusCompleted": "Odhlásený",
+      "statusCancelled": "Zrušená",
+      "colProperty": "Objekt",
+      "colGuest": "Hosť",
+      "colPeriod": "Obdobie",
+      "colNights": "Noci",
+      "colStatus": "Stav",
+      "colChannel": "Kanál",
+      "colAmount": "Suma"
+    },
+    "monthGridView": {
+      "weekdayMon": "Po",
+      "weekdayTue": "Ut",
+      "weekdayWed": "St",
+      "weekdayThu": "Št",
+      "weekdayFri": "Pi",
+      "weekdaySat": "So",
+      "weekdaySun": "Ne",
+      "monthJanuary": "Január",
+      "monthFebruary": "Február",
+      "monthMarch": "Marec",
+      "monthApril": "Apríl",
+      "monthMay": "Máj",
+      "monthJune": "Jún",
+      "monthJuly": "Júl",
+      "monthAugust": "August",
+      "monthSeptember": "September",
+      "monthOctober": "Október",
+      "monthNovember": "November",
+      "monthDecember": "December",
+      "statusOpen": "Voľné",
+      "statusBooked": "Obsadené",
+      "statusBlocked": "Blokované",
+      "previousMonth": "Predchádzajúci mesiac",
+      "nextMonth": "Ďalší mesiac",
+      "today": "Dnes",
+      "arrivalBlocked": "Príchod blokovaný",
+      "departureBlocked": "Odchod blokovaný",
+      "minStayTitle": "{count, plural, one {Minimálny pobyt # noc} few {Minimálny pobyt # noci} many {Minimálny pobyt # noci} other {Minimálny pobyt # nocí}}",
+      "loading": "Načítava sa…"
+    },
+    "occupancyView": {
+      "window": "{count} dní",
+      "avgOccupancyPrefix": "Priem. obsadenosť",
+      "overDays": "{count, plural, one {za # deň} few {za # dni} many {za # dňa} other {za # dní}}",
+      "propertyColumn": "Objekt",
+      "noProperties": "Žiadne objekty.",
+      "dayHeaderTooltip": "{date} · {booked}/{total} obsadené",
+      "cellTooltip": "{property} · {date} · {status}",
+      "statusBooked": "obsadené",
+      "statusFree": "voľné",
+      "legendDayTotal": "Obsadenosť dňa",
+      "legendBookedProperty": "Objekt obsadený"
+    },
+    "reservationAddonsSection": {
+      "title": "Doplnkové služby",
+      "statusPending": "Otvorené",
+      "statusPaid": "Zaplatené",
+      "statusCancelled": "Zrušené",
+      "fallbackAddonName": "Doplnková služba",
+      "markPaidAction": "Označiť ako zaplatené",
+      "markPaidSuccess": "Označené ako zaplatené.",
+      "addSuccess": "Doplnková služba pridaná.",
+      "totalLabel": "Súčet doplnkových služieb",
+      "emptyPurchased": "Zatiaľ nie sú rezervované žiadne doplnkové služby.",
+      "emptyCatalog": "Pre tento objekt neexistuje žiadny katalóg.",
+      "pickPlaceholder": "Vybrať doplnkovú službu …",
+      "addAction": "Pridať",
+      "addBusy": "…"
+    },
+    "ratesView": {
+      "propertyLabel": "Objekt",
+      "modePrices": "Ceny",
+      "modeMinStay": "Minimálny pobyt",
+      "planColumn": "Kategória izby / Cenový plán",
+      "empty": "Zatiaľ žiadne kategórie izieb s cenovými plánmi — vytvorte ich v Objekty → Kategórie izieb.",
+      "pricePlaceholder": "Cena v {currency}",
+      "minStayPlaceholder": "Noci (min. 1)",
+      "apply": "Použiť",
+      "resetToBase": "Obnoviť na základnú cenu",
+      "resetToDefault": "Obnoviť predvolené",
+      "cancel": "Zrušiť",
+      "invalidValue": "Neplatná hodnota.",
+      "resyncQueued": "Prenos spustený — stav sa čoskoro aktualizuje.",
+      "resyncTitle": "Preniesť teraz na portály",
+      "syncPending": "Čaká sa",
+      "syncSynced": "Prenesené",
+      "source": {
+        "rate_plan": "Cena podľa dátumu tohto cenového plánu",
+        "override": "Ručná cena objektu podľa dátumu",
+        "dynamic": "Dynamická cena",
+        "weekday": "Cena podľa dňa v týždni",
+        "base": "Základná cena cenového plánu",
+        "none": "Cena nie je nastavená"
+      }
     }
   }
 }
