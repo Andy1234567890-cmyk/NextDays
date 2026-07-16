@@ -202,10 +202,19 @@ class PropertyMappingMixin:
 
             existing = active_by_channex.get(channex_id)
             if existing:
-                # Inhalte spiegeln (nur die von Channex gelieferten Felder).
-                db.table("properties").update(row).eq(
-                    "id", existing["property_id"]
-                ).eq("tenant_id", tenant_id).execute()
+                # Inhalte spiegeln, ABER nur Felder, die CHANNEX führt. title und
+                # description führt der NUTZER lokal (Wurzel 1) — Channex ist dafür
+                # NICHT die Wahrheit. Sie hier zu überschreiben zementierte jeden an
+                # Channex geleakten Falschwert dauerhaft in die DB (der „Unbenannt"-
+                # Bug). Ein BESTEHENDES Objekt behält daher seinen lokalen Namen/Text.
+                mirror = {
+                    k: v for k, v in row.items()
+                    if k not in ("title", "description")
+                }
+                if mirror:
+                    db.table("properties").update(mirror).eq(
+                        "id", existing["property_id"]
+                    ).eq("tenant_id", tenant_id).execute()
                 db.table("channex_property_map").update(
                     {"last_sync_at": now, "last_sync_status": "ok"}
                 ).eq("id", existing["id"]).execute()

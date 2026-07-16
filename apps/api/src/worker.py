@@ -133,12 +133,13 @@ def _handle_sync_property_content(
     # nicht still als „done" durchgehen (Wurzel 5). Guard wie im best-effort-Pfad.
     if not svc.is_channex_configured:
         return
+    # Titel wird NIE übergeben — sync_content lädt ihn aus der DB (Wurzel 1/4).
+    # Ein Literal hier hätte den Namen an Channex geleakt, und der Reconcile
+    # schriebe ihn zurück in die DB → der Objektname verschwände bei jedem
+    # Rate-„Zurücknehmen". None-Währung → echte Objektwährung aus dem Rate-Plan.
     svc.sync_content(
         payload["tenant_id"],
         property_id=payload["property_id"],
-        title=payload.get("title") or "Unbenannt",
-        # None → sync_content lädt die echte Objektwährung aus dem Rate-Plan (kein
-        # EUR-Default, der CHF/DKK-Objekte an den OTAs verfälscht, Wurzel 4).
         currency=payload.get("currency") or None,
     )
 

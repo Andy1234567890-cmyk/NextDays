@@ -764,10 +764,11 @@ class PropertiesService:
 
         cm = ChannelManagerService(service_client=self._db)
         try:
+            # Titel lädt sync_content aus der DB (Wurzel 1/4) — kein
+            # durchgereichter Wert, kein "Unbenannt"-Fallback.
             cm.sync_content(
                 tenant_id,
                 property_id=property_id,
-                title=row.get("title") or "Unbenannt",
                 currency=currency,
             )
         except ChannelManagerError as exc:

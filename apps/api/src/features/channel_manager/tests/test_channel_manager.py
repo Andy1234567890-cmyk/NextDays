@@ -345,7 +345,10 @@ def test_reconcile_soft_deletes_orphan_map() -> None:
     assert db.maps[0]["deleted_at"] is not None
 
 
-def test_reconcile_updates_existing_content() -> None:
+def test_reconcile_keeps_local_title_mirrors_other_fields() -> None:
+    # title/description führt der NUTZER lokal (Wurzel 1) — der Reverse-Reconcile
+    # darf sie NIE mit dem Channex-Wert überschreiben (der „Unbenannt"-Bug), spiegelt
+    # aber die von Channex geführten Felder (z. B. city) weiter.
     db = _ReconcileDB("t1", "grp-1")
     db.properties.append({"id": "p1", "tenant_id": "t1", "title": "Alter Titel"})
     db.maps.append(
@@ -357,7 +360,8 @@ def test_reconcile_updates_existing_content() -> None:
     )
     res = _reconcile_svc(channex, db).reconcile_properties_for_tenant("t1")
     assert res["updated"] == 1 and res["created"] == 0
-    assert db.properties[0]["title"] == "Neuer Titel"
+    # Titel bleibt lokal, city wird gespiegelt.
+    assert db.properties[0]["title"] == "Alter Titel"
     assert db.properties[0]["city"] == "Hamburg"
 
 

@@ -104,20 +104,20 @@ class ContentSyncMixin:
         tenant_id: str,
         *,
         property_id: str,
-        title: str,
         currency: str | None = None,
     ) -> None:
         """Non-blocking Auto-Sync beim Anlegen/Ändern eines Objekts.
 
-        currency=None (Default): sync_content lädt die echte Objektwährung aus dem
-        Rate-Plan — kein EUR-Default, der CHF/DKK-Objekte verfälscht (Wurzel 4).
-        Delegiert an den vollständigen, idempotenten Content-Sync und schluckt
-        Fehler (loggt sie), damit die Objekt-Anlage nie an Channex scheitert."""
+        Titel/Währung werden NIE übergeben — sync_content lädt beide aus der DB
+        (die einzige Wahrheit, Wurzel 1/4): ein hier durchgereichter Titel könnte
+        einen falschen Namen an Channex leaken. Delegiert an den vollständigen,
+        idempotenten Content-Sync und schluckt Fehler (loggt sie), damit die
+        Objekt-Anlage nie an Channex scheitert."""
         if not self._channex.is_configured or self._db is None:
             return
         try:
             self.sync_content(
-                tenant_id, property_id=property_id, title=title, currency=currency
+                tenant_id, property_id=property_id, currency=currency
             )
         except (ChannexError, ChannelManagerError) as exc:
             msg = getattr(exc, "message", str(exc))
@@ -145,19 +145,14 @@ class ContentSyncMixin:
         keine currency-Spalte (die liegt im rate_plan) → sync_content lädt sie selbst."""
         db = self._require_db()
         props = (
-            db.table("properties").select("id, title").eq("tenant_id", tenant_id)
+            db.table("properties").select("id").eq("tenant_id", tenant_id)
             .execute()
         ).data or []
         for p in props:
             try:
-                # currency=None: sync_content lädt die ECHTE Objektwährung aus dem
-                # Rate-Plan (Docstring oben). Ein hartes "EUR" hier (truthy) würde
-                # das Nachladen per `currency or rate_plans[0]...` kurzschließen und
-                # CHF/DKK-Objekte fälschlich als EUR an die OTAs pushen (Wurzel 4).
-                self.sync_content(
-                    tenant_id, property_id=p["id"],
-                    title=p.get("title") or "Unbenannt", currency=None,
-                )
+                # Titel/Währung lädt sync_content selbst aus der DB (Wurzel 1/4) —
+                # kein durchgereichter Titel, kein "EUR"-Default.
+                self.sync_content(tenant_id, property_id=p["id"], currency=None)
             except Exception as exc:  # noqa: BLE001 — pro Objekt best-effort
                 log.warning(
                     "resync_all_content_property_failed",
@@ -169,7 +164,6 @@ class ContentSyncMixin:
         tenant_id: str,
         *,
         property_id: str,
-        title: str | None = None,
         currency: str | None = None,
     ) -> dict[str, str]:
         """Legt/aktualisiert Property, synthetischen Room-Type und Rate-Plans in
@@ -193,7 +187,17 @@ class ContentSyncMixin:
         if not prop.data:
             raise ChannelManagerError("Objekt nicht gefunden.", status_code=404)
         prop_row = prop.data[0]
-        prop_title = title or prop_row.get("title") or "Unbenannt"
+        # Der Objektname ist ein Zustand, den WIR führen (Wurzel 1) — die DB ist die
+        # EINZIGE Wahrheit. Kein übergebener Fallback, kein erfundenes „Unbenannt"
+        # (Wurzel 4): fehlt der Titel wirklich, ist das ein Datenfehler → klar
+        # fehlschlagen, statt einen Ersatz an Channex zu leaken.
+        prop_title = prop_row.get("title")
+        if not prop_title or not str(prop_title).strip():
+            raise ChannelManagerError(
+                "Objekt hat keinen Titel — Content-Sync abgebrochen.",
+                status_code=422,
+            )
+        prop_title = str(prop_title).strip()
 
         # Fotos für den Content-Push laden. property_photos ist via Property-FK
         # tenant-scoped; die Property wurde direkt darüber als tenant-eigen
