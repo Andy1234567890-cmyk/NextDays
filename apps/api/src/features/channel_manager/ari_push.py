@@ -615,14 +615,17 @@ class AriPushMixin:
         """property_id → ALLE (channex_property_id, channex_rate_plan_id) der
         Property über die Room-Type/Rate-Plan-Kette. Leere Liste, wenn nicht
         verbunden. Channex-Restrictions (stop_sell/CTA/CTD/min_stay/rate) wirken
-        PRO Rate-Plan — hat ein Objekt mehrere (je OTA-Zimmer/Raten-Kombination),
-        muss jeder Plan bespielt werden, sonst verkauft ein OTA weiter."""
-        rt = self._resolve_channex_room_type(db, tenant_id, property_id)
-        if rt is None:
-            return []
+        PRO Rate-Plan — hat ein Objekt mehrere, muss jeder Plan bespielt werden.
+
+        Sammelt ALLE nicht-gelöschten Room-Type-Maps der Property ein, nicht nur
+        den synthetischen Ferienwohnungs-Room-Type (local_unit_ref = property_id):
+        ein Hotel legt je Zimmerkategorie einen eigenen Channex-Room-Type an
+        (local_unit_ref = room_type.id, s. content_sync). Der frühere Filter auf
+        NUR local_unit_ref = property_id fand für Hotels NIE einen Rate-Plan → jeder
+        Restriktions-/Preis-Push blieb ewig 'pending' ('Rate-Plan-Mapping fehlt')."""
         pm = (
             db.table("channex_property_map")
-            .select("id")
+            .select("id, channex_property_id")
             .eq("tenant_id", tenant_id)
             .eq("property_id", property_id)
             .is_("deleted_at", "null")
@@ -631,30 +634,31 @@ class AriPushMixin:
         ).data
         if not pm:
             return []
-        rtm = (
+        # ALLE Room-Type-Maps der Property (synthetischer FeWo-Room-Type UND je
+        # Hotel-Kategorie einer) — nicht auf local_unit_ref = property_id einengen.
+        rtms = (
             db.table("channex_room_type_map")
             .select("id")
             .eq("tenant_id", tenant_id)
             .eq("property_map_id", pm[0]["id"])
-            .eq("local_unit_ref", property_id)
             .is_("deleted_at", "null")
-            .limit(1)
             .execute()
-        ).data
-        if not rtm:
+        ).data or []
+        if not rtms:
             return []
         rps = (
             db.table("channex_rate_plan_map")
             .select("channex_rate_plan_id, local_rate_plan_id")
             .eq("tenant_id", tenant_id)
-            .eq("room_type_map_id", rtm[0]["id"])
+            .in_("room_type_map_id", [r["id"] for r in rtms])
             .is_("deleted_at", "null")
             .order("created_at")
             .execute()
         ).data or []
+        channex_property_id = pm[0]["channex_property_id"]
         return [
             {
-                "channex_property_id": rt["channex_property_id"],
+                "channex_property_id": channex_property_id,
                 "channex_rate_plan_id": rp["channex_rate_plan_id"],
                 # Lokaler Rate-Plan-Bezug: erlaubt push_rates_batch, ein Segment
                 # gezielt an GENAU diesen Plan zu schicken (Hotel: Twin/BAR ≠

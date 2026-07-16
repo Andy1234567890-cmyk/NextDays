@@ -1171,6 +1171,69 @@ def _seed_with_rate_plan(db, tenant_id="t1", property_id="p1"):  # noqa: ANN001,
     )
 
 
+def _seed_hotel_mapping(db, tenant_id="t1", channex_pid="cx-prop", property_id="p1"):  # noqa: ANN001, ANN201
+    """HOTEL-Kette: je Zimmerkategorie ein eigener Channex-Room-Type mit
+    local_unit_ref = room_type.id (NICHT property_id) — genau die Konstellation, die
+    der frühere _resolve_channex_rate_plans nie fand. Zwei Kategorien, je 1 Plan."""
+    _seed_property(db, tenant_id, channex_pid, property_id)
+    db.tables["channex_room_type_map"].extend([
+        {"id": "hrt-a", "tenant_id": tenant_id, "property_map_id": "m1",
+         "local_unit_ref": "room-a", "channex_room_type_id": "cx-rt-a",
+         "deleted_at": None},
+        {"id": "hrt-b", "tenant_id": tenant_id, "property_map_id": "m1",
+         "local_unit_ref": "room-b", "channex_room_type_id": "cx-rt-b",
+         "deleted_at": None},
+    ])
+    db.tables["channex_rate_plan_map"].extend([
+        {"id": "hrpm-a", "tenant_id": tenant_id, "property_id": property_id,
+         "room_type_map_id": "hrt-a", "channex_rate_plan_id": "cx-rp-a",
+         "local_rate_plan_id": "rp-a", "deleted_at": None},
+        {"id": "hrpm-b", "tenant_id": tenant_id, "property_id": property_id,
+         "room_type_map_id": "hrt-b", "channex_rate_plan_id": "cx-rp-b",
+         "local_rate_plan_id": "rp-b", "deleted_at": None},
+    ])
+
+
+def test_resolve_rate_plans_finds_hotel_room_type_plans() -> None:
+    # Regression: Hotel-Mappings hängen an local_unit_ref = room_type.id, nicht
+    # property_id. Der Resolver muss ALLE Room-Type-Maps einsammeln, sonst bleibt
+    # jeder Hotel-Push ewig 'pending' ('Rate-Plan-Mapping fehlt noch').
+    db = _ImportDB()
+    _seed_hotel_mapping(db)
+    svc = _import_svc(_ImportChannex(), db)
+    plans = svc._resolve_channex_rate_plans(db, "t1", "p1")
+    assert {p["channex_rate_plan_id"] for p in plans} == {"cx-rp-a", "cx-rp-b"}
+    assert {p["local_rate_plan_id"] for p in plans} == {"rp-a", "rp-b"}
+    assert all(p["channex_property_id"] == "cx-prop" for p in plans)
+
+
+def test_push_rates_batch_hotel_targets_matching_plan() -> None:
+    # Ein rate-plan-genaues Segment (Hotel) geht NUR an den passenden Channex-Plan.
+    db = _ImportDB()
+    _seed_hotel_mapping(db)
+    channex = _ImportChannex()
+    _import_svc(channex, db).push_rates_batch(
+        "t1", "p1",
+        [{"date_from": date(2099, 6, 23), "date_to": date(2099, 6, 23),
+          "rate_cents": 24100, "rate_plan_id": "rp-a"}],
+    )
+    assert len(channex.restrictions_pushed) == 1
+    assert channex.restrictions_pushed[0]["rate_plan_id"] == "cx-rp-a"
+
+
+def test_push_rates_batch_hotel_no_plan_id_hits_all() -> None:
+    # min_stay-Default (kein rate_plan_id): an ALLE Hotel-Rate-Plans (property-weit).
+    db = _ImportDB()
+    _seed_hotel_mapping(db)
+    channex = _ImportChannex()
+    _import_svc(channex, db).push_rates_batch(
+        "t1", "p1",
+        [{"date_from": date(2099, 6, 23), "date_to": date(2099, 6, 23),
+          "min_stay": 3}],
+    )
+    assert {v["rate_plan_id"] for v in channex.restrictions_pushed} == {"cx-rp-a", "cx-rp-b"}
+
+
 def test_push_restrictions_cta_ctd_sends_to_channex() -> None:
     db = _ImportDB()
     _seed_with_rate_plan(db)
