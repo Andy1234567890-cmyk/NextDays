@@ -210,6 +210,10 @@ class _ReconcileQuery:
         self._filters.append(("lt", field, value, False))
         return self
 
+    def gt(self, field, value):  # noqa: ANN001, ANN201
+        self._filters.append(("gt", field, value, False))
+        return self
+
     def or_(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
         return self
 
@@ -252,6 +256,8 @@ class _ReconcileQuery:
                 ok = row.get(field) is not None and row.get(field) <= value
             elif kind == "lt":
                 ok = row.get(field) is not None and row.get(field) < value
+            elif kind == "gt":
+                ok = row.get(field) is not None and row.get(field) > value
             else:
                 ok = True
             if not ok:
@@ -2347,6 +2353,54 @@ def test_process_restriction_outbox_gives_up_after_max_attempts() -> None:
     res = _import_svc(channex, db).process_restriction_outbox()
     assert res["failed"] == 1
     assert db.tables["ari_restriction_outbox"][0]["status"] == "failed"
+
+
+def _rate_outbox_row(rid, rp_id, cents, created_at, status="pending"):  # noqa: ANN001, ANN201
+    return {
+        "id": rid, "tenant_id": "t1", "property_id": "p1", "kind": "rate",
+        "payload": {"segments": [{
+            "date_from": "2026-11-01", "date_to": "2026-11-20",
+            "rate_cents": cents, "rate_plan_id": rp_id,
+        }]},
+        "date_from": "2026-11-01", "date_to": "2026-11-20",
+        "status": status, "attempts": 0, "created_at": created_at,
+    }
+
+
+def test_superseded_separates_by_rate_plan() -> None:
+    # Ein neuerer Datumspreis für Rate-Plan A darf einen älteren Preis für Rate-Plan
+    # B NICHT verdrängen (Hotel: rate-plan-genau). Sonst wird B nie gepusht.
+    db = _ImportDB()
+    older_b = _rate_outbox_row("b", "rp-b", 11100, "2026-07-16T05:00:00Z")
+    newer_a = _rate_outbox_row("a", "rp-a", 24100, "2026-07-16T05:30:00Z")
+    db.tables["ari_restriction_outbox"].extend([older_b, newer_a])
+    svc = _import_svc(_ImportChannex(), db)
+    # B (rp-b) darf durch A (rp-a) NICHT superseded werden → keine überdeckten Tage.
+    assert svc._superseded_restriction_days(db, older_b) == set()
+
+
+def test_superseded_same_rate_plan_still_covers() -> None:
+    # Gleicher Rate-Plan: die neuere Zeile supersediert die überlappenden Tage der
+    # älteren weiterhin (unveränderte Tag-genau-Logik, kein doppelter Stale-Push).
+    db = _ImportDB()
+    older = _rate_outbox_row("o", "rp-a", 20000, "2026-07-16T05:00:00Z")
+    newer = _rate_outbox_row("n", "rp-a", 24100, "2026-07-16T05:30:00Z")
+    db.tables["ari_restriction_outbox"].extend([older, newer])
+    svc = _import_svc(_ImportChannex(), db)
+    covered = svc._superseded_restriction_days(db, older)
+    assert len(covered) == 20  # 01.–20.11. voll überdeckt
+
+
+def test_superseded_property_wide_covers_all_plans() -> None:
+    # Ein property-weites Segment (rate_plan_id None, z. B. min_stay) supersediert
+    # plan-übergreifend — es gilt für alle Rate-Plans.
+    db = _ImportDB()
+    older_plan = _rate_outbox_row("p", "rp-a", 20000, "2026-07-16T05:00:00Z")
+    newer_wide = _rate_outbox_row("w", None, None, "2026-07-16T05:30:00Z")
+    newer_wide["payload"]["segments"][0]["min_stay"] = 3
+    db.tables["ari_restriction_outbox"].extend([older_plan, newer_wide])
+    svc = _import_svc(_ImportChannex(), db)
+    assert len(svc._superseded_restriction_days(db, older_plan)) == 20
 
 
 def test_process_restriction_outbox_retries_rate_batch() -> None:

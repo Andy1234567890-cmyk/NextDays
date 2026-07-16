@@ -1549,6 +1549,16 @@ class AriPushMixin:
             return days
         return set(_iso_days(str(row["date_from"]), str(row["date_to"])))
 
+    @staticmethod
+    def _rate_row_plan_ids(row: dict[str, Any]) -> set[str | None]:
+        """Die von einer rate-Zeile betroffenen lokalen Rate-Plans. Ein Segment mit
+        rate_plan_id zielt auf GENAU diesen Plan (Hotel-Datumspreis); None = property-
+        weit (min_stay-Default u. ä., gilt für alle Pläne). Andere kinds: {None}."""
+        payload = row.get("payload") or {}
+        if row.get("kind") == "rate" and payload.get("segments") is not None:
+            return {seg.get("rate_plan_id") for seg in payload["segments"]}
+        return {None}
+
     def _superseded_restriction_days(
         self, db: Client, row: dict[str, Any]
     ) -> set[str]:
@@ -1558,11 +1568,17 @@ class AriPushMixin:
         übersprungen, die restlichen Tage der Zeile gehen weiter an Channex — sonst
         unterdrückt eine schmale neuere Zeile (z. B. Preis für 15.–16.) den weiten
         älteren Wert (1.–31.) für dessen GESAMTEN Zeitraum (stale Falschpreis/-Sperre
-        an OTAs). Nur pending/done zählen als gültiger Supersessor (failed nie)."""
+        an OTAs). Nur pending/done zählen als gültiger Supersessor (failed nie).
+
+        Bei rate-Zeilen zusätzlich PRO RATE-PLAN getrennt: ein Datumspreis für
+        Twin/BAR darf einen gleichzeitigen Double/B&B-Preis NICHT verdrängen (Hotel,
+        rate-plan-genau). Ein property-weites Segment (rate_plan_id None, z. B.
+        min_stay) supersediert/wird supersediert plan-übergreifend."""
         created_at = str(row.get("created_at") or "")
         if not created_at:
             return set()
         own_days = self._restriction_row_days(row)
+        own_plans = self._rate_row_plan_ids(row)
         newer_rows = (
             db.table("ari_restriction_outbox")
             .select("kind, payload, date_from, date_to")
@@ -1577,7 +1593,12 @@ class AriPushMixin:
         ).data or []
         covered: set[str] = set()
         for nr in newer_rows:
-            covered |= self._restriction_row_days(nr)
+            newer_plans = self._rate_row_plan_ids(nr)
+            # Nur superseden, wenn die neuere Zeile denselben Rate-Plan trifft — oder
+            # eine der beiden property-weit (None) ist. Sonst kollidieren Datumspreise
+            # verschiedener Rate-Plans desselben Objekts fälschlich.
+            if own_plans & newer_plans or None in own_plans or None in newer_plans:
+                covered |= self._restriction_row_days(nr)
         return own_days & covered
 
     def _bump_restriction_attempts(
