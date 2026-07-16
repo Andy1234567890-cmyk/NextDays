@@ -1044,6 +1044,7 @@
     "seasonValueRequired": "Voer een geldige waarde in.",
     "rpcPricePlaceholder": "Prijs in {currency}",
     "rpcHint": "Typ een prijs en sleep dan over de dagen. Dubbelklik draait een dagprijs terug.",
-    "rpcPriceInvalid": "Voer een geldige prijs in."
+    "rpcPriceInvalid": "Voer een geldige prijs in.",
+    "rpcSelectedDays": "{count} dag(en) geselecteerd"
   }
 }

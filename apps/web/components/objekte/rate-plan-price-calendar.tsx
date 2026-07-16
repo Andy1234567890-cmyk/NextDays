@@ -135,43 +135,56 @@ export function RatePlanPriceCalendar({
     void applyPrice(isoDate, addDays(isoDate, 1), null);
   };
 
+  const selectedCount = dragDays.size;
+
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-2">
-        <Input
-          type="number"
-          min={0}
-          step="0.01"
-          inputMode="decimal"
-          placeholder={t("rpcPricePlaceholder", { currency: currency || "—" })}
-          value={priceInput}
-          onChange={(e) => setPriceInput(e.target.value)}
-          className="w-40"
-        />
-        <span className="text-sm text-muted-foreground">{t("rpcHint")}</span>
+      {/* Sticky Steuerleiste: Preis-Eingabe + Jahres-Navigation bleiben beim
+          Scrollen durch die 12 Monate immer sichtbar. */}
+      <div className="sticky top-0 z-10 flex flex-col gap-2 rounded-lg border bg-background/95 p-3 backdrop-blur">
+        <div className="flex flex-wrap items-center gap-2">
+          <Input
+            type="number"
+            min={0}
+            step="0.01"
+            inputMode="decimal"
+            placeholder={t("rpcPricePlaceholder", { currency: currency || "—" })}
+            value={priceInput}
+            onChange={(e) => setPriceInput(e.target.value)}
+            className="w-44"
+          />
+          {selectedCount > 0 && (
+            <span className="rounded-full bg-primary/15 px-2.5 py-1 text-xs font-medium text-primary">
+              {t("rpcSelectedDays", { count: selectedCount })}
+            </span>
+          )}
+          <span className="min-w-0 flex-1 text-sm text-muted-foreground">
+            {t("rpcHint")}
+          </span>
+          <div className="flex items-center gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setYear((y) => y - 1)}
+              disabled={busy}
+            >
+              ‹ {year - 1}
+            </Button>
+            <span className="w-14 text-center text-base font-semibold">{year}</span>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setYear((y) => y + 1)}
+              disabled={busy}
+            >
+              {year + 1} ›
+            </Button>
+          </div>
+        </div>
       </div>
-      <div className="flex items-center justify-between">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setYear((y) => y - 1)}
-          disabled={busy}
-        >
-          ‹ {year - 1}
-        </Button>
-        <span className="text-lg font-semibold">{year}</span>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => setYear((y) => y + 1)}
-          disabled={busy}
-        >
-          {year + 1} ›
-        </Button>
-      </div>
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {months.map((label, m) => (
           <MonthGrid
             key={m}
@@ -224,13 +237,13 @@ function MonthGrid({
 
   return (
     <div className="rounded-lg border p-2">
-      <div className="mb-1 text-center text-sm font-medium">{label}</div>
-      <div className="grid grid-cols-7 gap-0.5 text-center text-xs text-muted-foreground">
+      <div className="mb-1.5 text-center text-sm font-semibold">{label}</div>
+      <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[0.65rem] font-medium text-muted-foreground">
         {weekdays.map((w, i) => (
           <div key={i}>{w}</div>
         ))}
       </div>
-      <div className="grid grid-cols-7 gap-0.5">
+      <div className="grid grid-cols-7 gap-1">
         {cells.map((isoDate, i) => {
           if (isoDate === null) return <div key={`e${i}`} />;
           const price = prices.get(isoDate);
@@ -240,21 +253,28 @@ function MonthGrid({
             <button
               key={isoDate}
               type="button"
-              onMouseDown={() => onDown(isoDate)}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                onDown(isoDate);
+              }}
               onMouseEnter={() => onEnter(isoDate)}
               onDoubleClick={() => onDouble(isoDate)}
               title={price !== undefined ? formatCurrency(price, currency) : undefined}
-              className={`flex aspect-square select-none flex-col items-center justify-center rounded text-xs ${
+              className={`flex aspect-square min-h-9 cursor-pointer select-none flex-col items-center justify-center gap-0.5 rounded-md text-sm transition-colors ${
                 inDrag
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-primary text-primary-foreground ring-2 ring-primary ring-offset-1"
                   : price !== undefined
-                    ? "bg-primary/15 font-medium"
-                    : "hover:bg-muted"
+                    ? "bg-primary/15 font-semibold hover:bg-primary/25"
+                    : "text-foreground hover:bg-muted"
               }`}
             >
-              <span>{day}</span>
-              {price !== undefined && !inDrag && (
-                <span className="text-[0.6rem] leading-none">
+              <span className="leading-none">{day}</span>
+              {price !== undefined && (
+                <span
+                  className={`text-[0.6rem] leading-none ${
+                    inDrag ? "text-primary-foreground/90" : "text-primary"
+                  }`}
+                >
                   {formatCurrency(price, currency)}
                 </span>
               )}

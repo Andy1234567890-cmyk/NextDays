@@ -1044,6 +1044,7 @@
     "seasonValueRequired": "Prašome nurodyti tinkamą reikšmę.",
     "rpcPricePlaceholder": "Kaina {currency}",
     "rpcHint": "Įvesk kainą, tada vilk per dienas. Dvigubu spustelėjimu atšaukiama dienos kaina.",
-    "rpcPriceInvalid": "Prašome įvesti tinkamą kainą."
+    "rpcPriceInvalid": "Prašome įvesti tinkamą kainą.",
+    "rpcSelectedDays": "Pasirinkta {count} diena(-os)"
   }
 }

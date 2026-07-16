@@ -1044,6 +1044,7 @@
     "seasonValueRequired": "Indica un valore valido.",
     "rpcPricePlaceholder": "Prezzo in {currency}",
     "rpcHint": "Digita un prezzo, poi trascina sui giorni. Un doppio clic annulla un prezzo giornaliero.",
-    "rpcPriceInvalid": "Inserisci un prezzo valido."
+    "rpcPriceInvalid": "Inserisci un prezzo valido.",
+    "rpcSelectedDays": "{count} giorno/i selezionato/i"
   }
 }

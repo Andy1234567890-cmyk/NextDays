@@ -795,7 +795,7 @@ export function RoomTypesManager({
           className={
             rateEditing?.plan === "new"
               ? "flex flex-col gap-5 sm:max-w-2xl"
-              : "flex flex-col gap-5 sm:max-w-md"
+              : "flex w-full flex-col gap-5 sm:max-w-3xl lg:max-w-4xl"
           }
         >
           <SheetHeader>

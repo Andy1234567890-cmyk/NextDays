@@ -1044,6 +1044,7 @@
     "seasonValueRequired": "Indică o valoare validă.",
     "rpcPricePlaceholder": "Preț în {currency}",
     "rpcHint": "Tastează un preț, apoi trage peste zile. Un dublu clic anulează un preț zilnic.",
-    "rpcPriceInvalid": "Introdu un preț valid."
+    "rpcPriceInvalid": "Introdu un preț valid.",
+    "rpcSelectedDays": "{count} zi(le) selectate"
   }
 }

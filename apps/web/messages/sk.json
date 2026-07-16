@@ -1044,6 +1044,7 @@
     "seasonValueRequired": "Zadajte platnú hodnotu.",
     "rpcPricePlaceholder": "Cena v {currency}",
     "rpcHint": "Zadajte cenu, potom potiahnite cez dni. Dvojklik vráti dennú cenu späť.",
-    "rpcPriceInvalid": "Zadajte platnú cenu."
+    "rpcPriceInvalid": "Zadajte platnú cenu.",
+    "rpcSelectedDays": "Vybraných {count} deň/dní"
   }
 }

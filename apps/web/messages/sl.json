@@ -1044,6 +1044,7 @@
     "seasonValueRequired": "Prosimo, vnesite veljavno vrednost.",
     "rpcPricePlaceholder": "Cena v {currency}",
     "rpcHint": "Vnesi ceno, nato povleci čez dneve. Dvojni klik razveljavi dnevno ceno.",
-    "rpcPriceInvalid": "Prosimo, vnesite veljavno ceno."
+    "rpcPriceInvalid": "Prosimo, vnesite veljavno ceno.",
+    "rpcSelectedDays": "Izbrano {count} dan/dni"
   }
 }

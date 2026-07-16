@@ -1044,6 +1044,7 @@
     "seasonValueRequired": "Podaj prawidłową wartość.",
     "rpcPricePlaceholder": "Cena w {currency}",
     "rpcHint": "Wpisz cenę, następnie przeciągnij po dniach. Dwukrotne kliknięcie cofa cenę dzienną.",
-    "rpcPriceInvalid": "Podaj prawidłową cenę."
+    "rpcPriceInvalid": "Podaj prawidłową cenę.",
+    "rpcSelectedDays": "Wybrano {count} dzień/dni"
   }
 }

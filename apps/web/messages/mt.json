@@ -1044,6 +1044,7 @@
     "seasonValueRequired": "Jekk jogħġbok daħħal valur validu.",
     "rpcPricePlaceholder": "Prezz f'{currency}",
     "rpcHint": "Ittajpja prezz, imbagħad iġbed fuq il-jiem. Klikkja darbtejn biex tirtira prezz ta' kuljum.",
-    "rpcPriceInvalid": "Jekk jogħġbok daħħal prezz validu."
+    "rpcPriceInvalid": "Jekk jogħġbok daħħal prezz validu.",
+    "rpcSelectedDays": "{count} jum/jiem magħżul(a)"
   }
 }

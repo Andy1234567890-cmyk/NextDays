@@ -1044,6 +1044,7 @@
     "seasonValueRequired": "Anna kelvollinen arvo.",
     "rpcPricePlaceholder": "Hinta valuutassa {currency}",
     "rpcHint": "Kirjoita hinta ja vedä sitten päivien yli. Kaksoisnapsautus peruuttaa päivähinnan.",
-    "rpcPriceInvalid": "Anna kelvollinen hinta."
+    "rpcPriceInvalid": "Anna kelvollinen hinta.",
+    "rpcSelectedDays": "{count} päivä(ä) valittu"
   }
 }
