@@ -6,6 +6,7 @@
 //  Length of stay: Wochen-/Monats-/eigene Längenpreise.
 // Gespeichert per updateProperty() in type_attributes.pricing.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import {
@@ -75,6 +76,7 @@ type Section =
   | null;
 
 export function PricingForm({ initial }: { initial: Property }) {
+  const t = useTranslations("objects");
   const [p, setP] = useState<Property>(initial);
   const [section, setSection] = useState<Section>(null);
   const pr = readPricing(p.type_attributes);
@@ -98,28 +100,28 @@ export function PricingForm({ initial }: { initial: Property }) {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="font-display text-3xl font-extrabold">Preise</h1>
+      <h1 className="font-display text-3xl font-extrabold">{t("pricingForm.pageTitle")}</h1>
 
       {/* Nightly price */}
       <section className="flex flex-col gap-4">
         <div>
-          <h2 className="font-display text-xl font-extrabold">Preis pro Nacht</h2>
+          <h2 className="font-display text-xl font-extrabold">{t("pricingForm.nightlyPriceTitle")}</h2>
           <p className="text-sm text-muted-foreground">
-            Lege deinen Nachtpreis mit Grundpreis und Aufschlag fest.
+            {t("pricingForm.nightlyPriceHint")}
           </p>
         </div>
 
         <BlockCard
-          title="Grundpreis"
-          hint="Grundpreis pro Nacht und Währung. Optional pro Wochentag anpassen."
+          title={t("pricingForm.basePriceTitle")}
+          hint={t("pricingForm.basePriceHint")}
           onEdit={() => setSection("base")}
         >
           <Pill>{fmtPrice(pr.basePrice, cur)}</Pill>
         </BlockCard>
 
         <BlockCard
-          title="Aufschlag (Mark-up)"
-          hint="Passe den an externe Kanäle gesendeten Grundpreis an."
+          title={t("pricingForm.markupTitle")}
+          hint={t("pricingForm.markupHint")}
           onEdit={() => setSection("markup")}
           localOnly
         >
@@ -134,25 +136,25 @@ export function PricingForm({ initial }: { initial: Property }) {
         </BlockCard>
 
         <BlockCard
-          title="Aufschlag pro Gast"
-          hint="Aktiviere einen Nacht-Aufschlag für jeden weiteren Gast."
-          actionLabel={pr.extraGuestCharge > 0 ? "Bearbeiten" : "Hinzufügen"}
+          title={t("pricingForm.extraGuestTitle")}
+          hint={t("pricingForm.extraGuestHint")}
+          actionLabel={pr.extraGuestCharge > 0 ? t("pricingForm.edit") : t("pricingForm.add")}
           onEdit={() => setSection("extraGuest")}
         >
           {pr.extraGuestCharge > 0 ? (
-            <Pill>{fmtPrice(pr.extraGuestCharge, cur)} ab Gast {pr.extraGuestFrom + 1}</Pill>
+            <Pill>{t("pricingForm.extraGuestPill", { price: fmtPrice(pr.extraGuestCharge, cur), guest: pr.extraGuestFrom + 1 })}</Pill>
           ) : null}
         </BlockCard>
 
         <BlockCard
-          title="Kurzaufenthalts-Aufschlag"
-          hint="Erhöhe den Nachtpreis, wenn ein Gast nur kurz bleibt."
-          actionLabel={pr.shortStayMaxNights > 0 ? "Bearbeiten" : "Hinzufügen"}
+          title={t("pricingForm.shortStayTitle")}
+          hint={t("pricingForm.shortStayHint")}
+          actionLabel={pr.shortStayMaxNights > 0 ? t("pricingForm.edit") : t("pricingForm.add")}
           onEdit={() => setSection("shortStay")}
           localOnly
         >
           {pr.shortStayMaxNights > 0 ? (
-            <Pill>+{fmtPrice(pr.shortStaySurcharge, cur)} bis {pr.shortStayMaxNights} Nächte</Pill>
+            <Pill>{t("pricingForm.shortStayPill", { price: fmtPrice(pr.shortStaySurcharge, cur), nights: pr.shortStayMaxNights })}</Pill>
           ) : null}
         </BlockCard>
       </section>
@@ -162,39 +164,39 @@ export function PricingForm({ initial }: { initial: Property }) {
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="flex items-center gap-2 font-display text-xl font-extrabold">
-              Längenabhängige Preise
+              {t("pricingForm.lengthPricesTitle")}
               <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                nur Direktbuchungen
+                {t("pricingForm.directBookingsOnly")}
               </span>
             </h2>
             <p className="text-sm text-muted-foreground">
-              Reduziere Preise für längere Aufenthalte — ab einer Woche bis zu beliebiger Länge.
+              {t("pricingForm.lengthPricesHint")}
             </p>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="gap-1.5">
                 <Icon icon="ph:plus" className="size-4" />
-                Hinzufügen
+                {t("pricingForm.add")}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setSection({ length: "weekly" })}>
                 <div className="flex flex-col">
-                  <span className="font-medium">Wochenpreis</span>
-                  <span className="text-xs text-muted-foreground">7 Nächte oder mehr</span>
+                  <span className="font-medium">{t("pricingForm.weeklyPriceLabel")}</span>
+                  <span className="text-xs text-muted-foreground">{t("pricingForm.weeklyPriceDesc")}</span>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setSection({ length: "monthly" })}>
                 <div className="flex flex-col">
-                  <span className="font-medium">Monatspreis</span>
-                  <span className="text-xs text-muted-foreground">30 Nächte oder mehr</span>
+                  <span className="font-medium">{t("pricingForm.monthlyPriceLabel")}</span>
+                  <span className="text-xs text-muted-foreground">{t("pricingForm.monthlyPriceDesc")}</span>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setSection({ length: "custom" })}>
                 <div className="flex flex-col">
-                  <span className="font-medium">Eigener Längenpreis</span>
-                  <span className="text-xs text-muted-foreground">Ab beliebiger Nächtezahl</span>
+                  <span className="font-medium">{t("pricingForm.customLengthPriceLabel")}</span>
+                  <span className="text-xs text-muted-foreground">{t("pricingForm.customLengthPriceDesc")}</span>
                 </div>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -203,26 +205,26 @@ export function PricingForm({ initial }: { initial: Property }) {
 
         {pr.lengthPrices.length === 0 ? (
           <Card className="p-5 text-sm text-muted-foreground">
-            Noch keine längenabhängigen Preise. Füge oben einen hinzu.
+            {t("pricingForm.lengthPricesEmpty")}
           </Card>
         ) : (
           pr.lengthPrices.map((lp) => (
             <Card key={lp.id} className="flex items-center justify-between gap-4 p-5">
               <div className="leading-tight">
                 <p className="font-semibold">{STAY_KIND_LABELS[lp.kind]}</p>
-                <p className="text-sm text-muted-foreground">{lp.minNights} Nächte oder mehr</p>
+                <p className="text-sm text-muted-foreground">{t("pricingForm.minNightsOrMore", { nights: lp.minNights })}</p>
                 <span className="mt-2 inline-flex w-fit items-center rounded-full bg-muted/60 px-3 py-1.5 text-sm">
-                  {fmtPrice(lp.pricePerNight, cur)} / Nacht
+                  {t("pricingForm.pricePerNight", { price: fmtPrice(lp.pricePerNight, cur) })}
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => setSection({ length: lp.kind, id: lp.id })}>
-                  Bearbeiten
+                  {t("pricingForm.edit")}
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
-                  aria-label="Entfernen"
+                  aria-label={t("pricingForm.remove")}
                   onClick={() => save({ ...pr, lengthPrices: pr.lengthPrices.filter((x) => x.id !== lp.id) })}
                 >
                   <Icon icon="ph:trash" className="size-4 text-muted-foreground" />
@@ -235,17 +237,17 @@ export function PricingForm({ initial }: { initial: Property }) {
 
       {/* Fees */}
       <ListSection
-        title="Gebühren"
-        hint="Lege Gebühren für zusätzliche Leistungen fest, die nicht im Grundpreis enthalten sind."
+        title={t("pricingForm.feesTitle")}
+        hint={t("pricingForm.feesHint")}
         onAdd={() => setSection({ fee: "new" })}
-        empty="Noch keine Gebühren."
+        empty={t("pricingForm.feesEmpty")}
         items={pr.fees}
         render={(f) => (
           <ListRow
             key={f.id}
             title={f.name}
-            pill={`${fmtPrice(f.amount, cur)} · ${FEE_BASIS_LABELS[f.basis]}${f.taxRate != null ? ` · ${f.taxRate} % USt` : ""
-              }${f.optional ? " · optional" : ""}`}
+            pill={`${fmtPrice(f.amount, cur)} · ${FEE_BASIS_LABELS[f.basis]}${f.taxRate != null ? ` · ${t("pricingForm.taxRateSuffix", { rate: f.taxRate })}` : ""
+              }${f.optional ? ` · ${t("pricingForm.optionalSuffix")}` : ""}`}
             onEdit={() => setSection({ fee: f.id })}
             onDelete={() => save({ ...pr, fees: pr.fees.filter((x) => x.id !== f.id) })}
           />
@@ -256,43 +258,43 @@ export function PricingForm({ initial }: { initial: Property }) {
       <section className="flex flex-col gap-4">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="font-display text-xl font-extrabold">Steuern</h2>
+            <h2 className="font-display text-xl font-extrabold">{t("pricingForm.taxesTitle")}</h2>
             <p className="text-sm text-muted-foreground">
-              USt./Mehrwertsteuer auf Preise anwenden und weitere Steuern konfigurieren.
+              {t("pricingForm.taxesHint")}
             </p>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="gap-1.5">
-                <Icon icon="ph:plus" className="size-4" /> Hinzufügen
+                <Icon icon="ph:plus" className="size-4" /> {t("pricingForm.add")}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={() => setSection({ tax: "vat" })}>
                 <div className="flex flex-col">
-                  <span className="font-medium">USt. / Mehrwertsteuer</span>
-                  <span className="text-xs text-muted-foreground">Im Preis enthalten oder nicht.</span>
+                  <span className="font-medium">{t("pricingForm.vatLabel")}</span>
+                  <span className="text-xs text-muted-foreground">{t("pricingForm.vatDesc")}</span>
                 </div>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setSection({ tax: "local" })}>
                 <div className="flex flex-col">
-                  <span className="font-medium">Lokale Steuer</span>
-                  <span className="text-xs text-muted-foreground">Weitere Steuern einrichten.</span>
+                  <span className="font-medium">{t("pricingForm.localTaxLabel")}</span>
+                  <span className="text-xs text-muted-foreground">{t("pricingForm.localTaxDesc")}</span>
                 </div>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
         {pr.taxes.length === 0 ? (
-          <Card className="p-5 text-sm text-muted-foreground">Noch keine Steuern.</Card>
+          <Card className="p-5 text-sm text-muted-foreground">{t("pricingForm.taxesEmpty")}</Card>
         ) : (
-          pr.taxes.map((t) => (
+          pr.taxes.map((tx) => (
             <ListRow
-              key={t.id}
-              title={t.name || TAX_KIND_LABELS[t.kind]}
-              pill={`${t.mode === "percent" ? `${t.value}%` : fmtPrice(t.value, cur)}${t.includedInPrice ? " · im Preis" : ""}`}
-              onEdit={() => setSection({ tax: t.kind, id: t.id })}
-              onDelete={() => save({ ...pr, taxes: pr.taxes.filter((x) => x.id !== t.id) })}
+              key={tx.id}
+              title={tx.name || TAX_KIND_LABELS[tx.kind]}
+              pill={`${tx.mode === "percent" ? `${tx.value}%` : fmtPrice(tx.value, cur)}${tx.includedInPrice ? ` · ${t("pricingForm.includedInPriceSuffix")}` : ""}`}
+              onEdit={() => setSection({ tax: tx.kind, id: tx.id })}
+              onDelete={() => save({ ...pr, taxes: pr.taxes.filter((x) => x.id !== tx.id) })}
             />
           ))
         )}
@@ -300,17 +302,17 @@ export function PricingForm({ initial }: { initial: Property }) {
 
       {/* Promotions */}
       <ListSection
-        title="Aktionen"
-        hint="Erstelle Sonderaktionen für bestimmte Zeiträume oder Rabatte für einzelne Gäste."
+        title={t("pricingForm.promotionsTitle")}
+        hint={t("pricingForm.promotionsHint")}
         localOnly
         onAdd={() => setSection({ promo: "new" })}
-        empty="Noch keine Aktionen."
+        empty={t("pricingForm.promotionsEmpty")}
         items={pr.promotions}
         render={(p2) => (
           <ListRow
             key={p2.id}
             title={p2.name}
-            pill={`${p2.percent}%${p2.conditions ? " · mit Bedingungen" : ""}`}
+            pill={`${p2.percent}%${p2.conditions ? ` · ${t("pricingForm.withConditionsSuffix")}` : ""}`}
             onEdit={() => setSection({ promo: p2.id })}
             onDelete={() => save({ ...pr, promotions: pr.promotions.filter((x) => x.id !== p2.id) })}
           />
@@ -319,17 +321,17 @@ export function PricingForm({ initial }: { initial: Property }) {
 
       {/* Add-ons */}
       <ListSection
-        title="Add-ons"
-        hint="Biete Extras für die Reservierung an (z. B. Frühstück). Verfügbar bei NextDays-Direktbuchungen."
+        title={t("pricingForm.addOnsTitle")}
+        hint={t("pricingForm.addOnsHint")}
         localOnly
         onAdd={() => setSection({ addon: "new" })}
-        empty="Noch keine Add-ons."
+        empty={t("pricingForm.addOnsEmpty")}
         items={pr.addOns}
         render={(a) => (
           <ListRow
             key={a.id}
             title={a.name}
-            badge={a.active ? "Aktiviert" : undefined}
+            badge={a.active ? t("pricingForm.activated") : undefined}
             pill={`${fmtPrice(a.amount, cur)} · ${FEE_BASIS_LABELS[a.basis]}`}
             onEdit={() => setSection({ addon: a.id })}
             onDelete={() => save({ ...pr, addOns: pr.addOns.filter((x) => x.id !== a.id) })}
@@ -339,10 +341,10 @@ export function PricingForm({ initial }: { initial: Property }) {
 
       {/* Other information */}
       <section className="flex flex-col gap-4">
-        <h2 className="font-display text-xl font-extrabold">Weitere Informationen</h2>
+        <h2 className="font-display text-xl font-extrabold">{t("pricingForm.otherInfoTitle")}</h2>
         <BlockCard
-          title="Steuer-Informationen"
-          hint="Wird nur für mit Airbnb verbundene Inserate zur Steuererhebung/-meldung genutzt."
+          title={t("pricingForm.taxInfoTitle")}
+          hint={t("pricingForm.taxInfoHint")}
           onEdit={() => setSection("taxInfo")}
         >
           {(pr.businessTaxId || pr.totRegistrationId) && (
@@ -350,9 +352,9 @@ export function PricingForm({ initial }: { initial: Property }) {
           )}
         </BlockCard>
         <BlockCard
-          title="Bezeichnung für den Grundpreis (Website)"
-          hint="Lege einen Namen fest, unter dem dein Grundpreis auf der Website erscheint."
-          actionLabel={pr.basePriceLabel ? "Bearbeiten" : "Hinzufügen"}
+          title={t("pricingForm.baseLabelTitle")}
+          hint={t("pricingForm.baseLabelHint")}
+          actionLabel={pr.basePriceLabel ? t("pricingForm.edit") : t("pricingForm.add")}
           onEdit={() => setSection("baseLabel")}
         >
           {pr.basePriceLabel && <Pill>{pr.basePriceLabel}</Pill>}
@@ -409,6 +411,7 @@ function ListSection<T>({
   render: (item: T) => React.ReactNode;
   localOnly?: boolean;
 }) {
+  const t = useTranslations("objects");
   return (
     <section className="flex flex-col gap-4">
       <div className="flex items-start justify-between gap-4">
@@ -417,14 +420,14 @@ function ListSection<T>({
             {title}
             {localOnly && (
               <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                nur Direktbuchungen
+                {t("pricingForm.directBookingsOnly")}
               </span>
             )}
           </h2>
           <p className="text-sm text-muted-foreground">{hint}</p>
         </div>
         <Button variant="outline" size="sm" className="gap-1.5" onClick={onAdd}>
-          <Icon icon="ph:plus" className="size-4" /> Hinzufügen
+          <Icon icon="ph:plus" className="size-4" /> {t("pricingForm.add")}
         </Button>
       </div>
       {items.length === 0 ? (
@@ -450,6 +453,7 @@ function ListRow({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const t = useTranslations("objects");
   return (
     <Card className="flex items-center justify-between gap-4 p-5">
       <div className="leading-tight">
@@ -466,8 +470,8 @@ function ListRow({
         </span>
       </div>
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" onClick={onEdit}>Bearbeiten</Button>
-        <Button variant="ghost" size="icon" aria-label="Entfernen" onClick={onDelete}>
+        <Button variant="outline" size="sm" onClick={onEdit}>{t("pricingForm.edit")}</Button>
+        <Button variant="ghost" size="icon" aria-label={t("pricingForm.remove")} onClick={onDelete}>
           <Icon icon="ph:trash" className="size-4 text-muted-foreground" />
         </Button>
       </div>
@@ -480,7 +484,7 @@ function ListRow({
 function BlockCard({
   title,
   hint,
-  actionLabel = "Bearbeiten",
+  actionLabel,
   onEdit,
   localOnly,
   children,
@@ -492,6 +496,7 @@ function BlockCard({
   localOnly?: boolean;
   children?: React.ReactNode;
 }) {
+  const t = useTranslations("objects");
   return (
     <Card className="flex flex-col gap-3 p-5">
       <div className="flex items-start justify-between gap-4">
@@ -500,14 +505,14 @@ function BlockCard({
             {title}
             {localOnly && (
               <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                nur Direktbuchungen
+                {t("pricingForm.directBookingsOnly")}
               </span>
             )}
           </p>
           <p className="mt-0.5 text-sm text-muted-foreground">{hint}</p>
         </div>
         <Button variant="outline" size="sm" onClick={onEdit}>
-          {actionLabel}
+          {actionLabel ?? t("pricingForm.edit")}
         </Button>
       </div>
       {children}
@@ -545,16 +550,17 @@ function BaseEditor({
   onSave: (next: Pricing) => Promise<true | string>;
   onClose: () => void;
 }) {
+  const t = useTranslations("objects");
   const [v, setV] = useState(pr);
   const { busy, error, run } = useSaver(onSave);
   return (
     <EditorShell
-      title="Grundpreis"
-      subtitle="Lege Grundpreis und Währung pro Nacht fest. Optional pro Wochentag anpassen."
+      title={t("pricingForm.basePriceTitle")}
+      subtitle={t("pricingForm.baseEditorSubtitle")}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
     >
-      <Field label="Währung">
+      <Field label={t("pricingForm.currencyLabel")}>
         <Select value={v.currency} onValueChange={(val) => setV({ ...v, currency: val as Currency })}>
           <SelectTrigger>
             <SelectValue />
@@ -570,22 +576,22 @@ function BaseEditor({
       <div className="flex items-start gap-2 rounded-(--radius) bg-accent/10 p-3 text-sm">
         <Icon icon="ph:lightning" className="mt-0.5 size-4 shrink-0 text-accent" />
         <span>
-          Dynamische Preise (automatisch nach Saison, Wochenende, Auslastung,
-          Markt …) richtest du zentral unter{" "}
-          <a href="/dynamic-pricing" className="font-semibold text-accent underline">
-            Dynamic Pricing
-          </a>{" "}
-          im Hauptmenü ein. Ein hier gesetzter Grundpreis bleibt die Basis; ein
-          manueller Tagespreis im Kalender hat immer Vorrang.
+          {t.rich("pricingForm.dynamicPricingHint", {
+            link: (chunks) => (
+              <a href="/dynamic-pricing" className="font-semibold text-accent underline">
+                {chunks}
+              </a>
+            ),
+          })}
         </span>
       </div>
 
-      <Field label="Grundpreis pro Nacht">
+      <Field label={t("pricingForm.basePricePerNightLabel")}>
         <MoneyInput value={v.basePrice} currency={v.currency} onChange={(n) => setV({ ...v, basePrice: n })} />
       </Field>
 
       <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
-        <span className="font-medium">Pro Wochentag anpassen</span>
+        <span className="font-medium">{t("pricingForm.customByWeekdayLabel")}</span>
         <Switch checked={v.customByWeekday} onCheckedChange={(c) => setV({ ...v, customByWeekday: c })} />
       </label>
 
@@ -616,12 +622,13 @@ function MarkupEditor({
   onSave: (next: Pricing) => Promise<true | string>;
   onClose: () => void;
 }) {
+  const t = useTranslations("objects");
   const [v, setV] = useState(pr);
   const { busy, error, run } = useSaver(onSave);
   return (
     <EditorShell
-      title="Aufschlag für externe Kanäle"
-      subtitle="Positiver % erhöht, negativer % senkt den Grundpreis für externe Kanäle."
+      title={t("pricingForm.markupEditorTitle")}
+      subtitle={t("pricingForm.markupEditorSubtitle")}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
     >
@@ -645,7 +652,7 @@ function MarkupEditor({
           </div>
         </Field>
       ))}
-      <Hint>Der Aufschlag gilt nicht für NextDays-Direktbuchungen.</Hint>
+      <Hint>{t("pricingForm.markupHintNote")}</Hint>
     </EditorShell>
   );
 }
@@ -659,26 +666,27 @@ function ExtraGuestEditor({
   onSave: (next: Pricing) => Promise<true | string>;
   onClose: () => void;
 }) {
+  const t = useTranslations("objects");
   const [v, setV] = useState(pr);
   const { busy, error, run } = useSaver(onSave);
   return (
     <EditorShell
-      title="Aufschlag pro Gast"
-      subtitle="Aktiviere einen nächtlichen Aufschlag für jeden weiteren Gast."
+      title={t("pricingForm.extraGuestTitle")}
+      subtitle={t("pricingForm.extraGuestEditorSubtitle")}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
     >
-      <Field label="Aufschlag pro Gast">
+      <Field label={t("pricingForm.extraGuestTitle")}>
         <MoneyInput value={v.extraGuestCharge} currency={v.currency} onChange={(n) => setV({ ...v, extraGuestCharge: n })} />
       </Field>
-      <Field label="Gilt für jeden Gast ab">
+      <Field label={t("pricingForm.extraGuestFromLabel")}>
         <Select value={String(v.extraGuestFrom)} onValueChange={(val) => setV({ ...v, extraGuestFrom: Number(val) })}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-              <SelectItem key={n} value={String(n)}>{n} Gast{n > 1 ? "äste" : ""}</SelectItem>
+              <SelectItem key={n} value={String(n)}>{t("pricingForm.guestCount", { count: n })}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -696,16 +704,17 @@ function ShortStayEditor({
   onSave: (next: Pricing) => Promise<true | string>;
   onClose: () => void;
 }) {
+  const t = useTranslations("objects");
   const [v, setV] = useState(pr);
   const { busy, error, run } = useSaver(onSave);
   return (
     <EditorShell
-      title="Kurzaufenthalts-Aufschlag"
-      subtitle="Erhöhe den Nachtpreis, wenn ein Gast nur kurz bleibt."
+      title={t("pricingForm.shortStayTitle")}
+      subtitle={t("pricingForm.shortStayHint")}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
     >
-      <Field label="Ein Kurzaufenthalt hat höchstens">
+      <Field label={t("pricingForm.shortStayMaxLabel")}>
         <div className="flex items-center gap-2">
           <Input
             type="number"
@@ -713,10 +722,10 @@ function ShortStayEditor({
             value={v.shortStayMaxNights}
             onChange={(e) => setV({ ...v, shortStayMaxNights: Number(e.target.value) || 0 })}
           />
-          <span className="text-sm text-muted-foreground">Nächte</span>
+          <span className="text-sm text-muted-foreground">{t("pricingForm.nightsUnit")}</span>
         </div>
       </Field>
-      <Field label="Aufschlag pro Nacht">
+      <Field label={t("pricingForm.surchargePerNightLabel")}>
         <MoneyInput value={v.shortStaySurcharge} currency={v.currency} onChange={(n) => setV({ ...v, shortStaySurcharge: n })} />
       </Field>
     </EditorShell>
@@ -736,6 +745,7 @@ function LengthEditor({
   onSave: (next: Pricing) => Promise<true | string>;
   onClose: () => void;
 }) {
+  const t = useTranslations("objects");
   const existing = editId ? pr.lengthPrices.find((x) => x.id === editId) : undefined;
   const defaultMin = kind === "weekly" ? 7 : kind === "monthly" ? 30 : 14;
   const [minNights, setMinNights] = useState(existing?.minNights ?? defaultMin);
@@ -758,11 +768,11 @@ function LengthEditor({
   return (
     <EditorShell
       title={STAY_KIND_LABELS[kind]}
-      subtitle="Reduziere den Nachtpreis für längere Aufenthalte."
+      subtitle={t("pricingForm.lengthEditorSubtitle")}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={commit} disabled={price <= 0} />}
     >
-      <Field label="Gilt ab (Nächte)">
+      <Field label={t("pricingForm.minNightsLabel")}>
         <Input
           type="number"
           min={1}
@@ -771,7 +781,7 @@ function LengthEditor({
           disabled={kind !== "custom"}
         />
       </Field>
-      <Field label="Reduzierter Preis pro Nacht">
+      <Field label={t("pricingForm.reducedPricePerNightLabel")}>
         <MoneyInput value={price} currency={pr.currency} onChange={setPrice} />
       </Field>
     </EditorShell>
@@ -791,6 +801,7 @@ function FeeEditor({
   onSave: (next: Pricing) => Promise<true | string>;
   onClose: () => void;
 }) {
+  const t = useTranslations("objects");
   const ex = editId ? pr.fees.find((x) => x.id === editId) : undefined;
   const [v, setV] = useState<Fee>(
     ex ?? { id: "", name: "", amount: 0, basis: "per_stay", optional: false },
@@ -805,21 +816,21 @@ function FeeEditor({
 
   return (
     <EditorShell
-      title={ex ? "Gebühr bearbeiten" : "Gebühr hinzufügen"}
-      subtitle="Zusätzliche Leistung, die nicht im Grundpreis enthalten ist."
+      title={ex ? t("pricingForm.feeEditTitle") : t("pricingForm.feeAddTitle")}
+      subtitle={t("pricingForm.feeEditorSubtitle")}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={commit} disabled={!v.name.trim()} />}
     >
-      <Field label="Name">
-        <Input value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder="z. B. Reinigungsgebühr" />
+      <Field label={t("pricingForm.nameLabel")}>
+        <Input value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder={t("pricingForm.feeNamePlaceholder")} />
       </Field>
-      <Field label="Betrag">
+      <Field label={t("pricingForm.amountLabel")}>
         <MoneyInput value={v.amount} currency={pr.currency} onChange={(n) => setV({ ...v, amount: n })} />
       </Field>
-      <Field label="Berechnung">
+      <Field label={t("pricingForm.calculationLabel")}>
         <BasisSelect value={v.basis} onChange={(b) => setV({ ...v, basis: b })} />
       </Field>
-      <Field label="USt-Satz (%) — leer = Standardsatz der Übernachtung">
+      <Field label={t("pricingForm.taxRateFieldLabel")}>
         <div className="flex items-center gap-2">
           <Input
             type="number"
@@ -827,7 +838,7 @@ function FeeEditor({
             max={100}
             step={0.1}
             value={v.taxRate ?? ""}
-            placeholder="z. B. 19 für Frühstück"
+            placeholder={t("pricingForm.taxRatePlaceholder")}
             onChange={(e) => {
               if (e.target.value === "") {
                 setV({ ...v, taxRate: null });
@@ -845,7 +856,7 @@ function FeeEditor({
         </div>
       </Field>
       <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
-        <span className="font-medium">Optional (Gast kann ab-/zuwählen)</span>
+        <span className="font-medium">{t("pricingForm.feeOptionalLabel")}</span>
         <Switch checked={v.optional} onCheckedChange={(c) => setV({ ...v, optional: c })} />
       </label>
     </EditorShell>
@@ -865,6 +876,7 @@ function TaxEditor({
   onSave: (next: Pricing) => Promise<true | string>;
   onClose: () => void;
 }) {
+  const t = useTranslations("objects");
   const ex = editId ? pr.taxes.find((x) => x.id === editId) : undefined;
   const [v, setV] = useState<Tax>(
     ex ?? { id: "", kind, name: "", mode: "percent", value: 0, includedInPrice: false },
@@ -879,24 +891,24 @@ function TaxEditor({
 
   return (
     <EditorShell
-      title={kind === "vat" ? "USt. / Mehrwertsteuer" : "Lokale Steuer"}
-      subtitle="Steuersatz oder -betrag festlegen."
+      title={kind === "vat" ? t("pricingForm.vatLabel") : t("pricingForm.localTaxLabel")}
+      subtitle={t("pricingForm.taxEditorSubtitle")}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={commit} />}
     >
-      <Field label="Bezeichnung">
-        <Input value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder={kind === "vat" ? "MwSt." : "Kurtaxe"} />
+      <Field label={t("pricingForm.designationLabel")}>
+        <Input value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder={kind === "vat" ? t("pricingForm.vatPlaceholder") : t("pricingForm.localTaxPlaceholder")} />
       </Field>
-      <Field label="Art">
+      <Field label={t("pricingForm.taxModeLabel")}>
         <Select value={v.mode} onValueChange={(val) => setV({ ...v, mode: val as TaxMode })}>
           <SelectTrigger><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="percent">Prozent (%)</SelectItem>
-            <SelectItem value="amount">Fester Betrag</SelectItem>
+            <SelectItem value="percent">{t("pricingForm.taxModePercent")}</SelectItem>
+            <SelectItem value="amount">{t("pricingForm.taxModeAmount")}</SelectItem>
           </SelectContent>
         </Select>
       </Field>
-      <Field label={v.mode === "percent" ? "Satz (%)" : "Betrag"}>
+      <Field label={v.mode === "percent" ? t("pricingForm.rateLabel") : t("pricingForm.amountLabel")}>
         {v.mode === "percent" ? (
           <div className="flex items-center gap-2">
             <Input type="number" min={0} value={v.value} onChange={(e) => setV({ ...v, value: Number(e.target.value) || 0 })} />
@@ -907,7 +919,7 @@ function TaxEditor({
         )}
       </Field>
       <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
-        <span className="font-medium">Im Preis enthalten</span>
+        <span className="font-medium">{t("pricingForm.includedInPriceLabel")}</span>
         <Switch checked={v.includedInPrice} onCheckedChange={(c) => setV({ ...v, includedInPrice: c })} />
       </label>
     </EditorShell>
@@ -925,6 +937,7 @@ function PromoEditor({
   onSave: (next: Pricing) => Promise<true | string>;
   onClose: () => void;
 }) {
+  const t = useTranslations("objects");
   const ex = editId ? pr.promotions.find((x) => x.id === editId) : undefined;
   const [v, setV] = useState<Promotion>(ex ?? { id: "", name: "", percent: 10, conditions: "" });
   const { busy, error, run } = useSaver(onSave);
@@ -937,22 +950,22 @@ function PromoEditor({
 
   return (
     <EditorShell
-      title={ex ? "Aktion bearbeiten" : "Aktion hinzufügen"}
-      subtitle="Prozentualer Rabatt mit optionalen Bedingungen."
+      title={ex ? t("pricingForm.promoEditTitle") : t("pricingForm.promoAddTitle")}
+      subtitle={t("pricingForm.promoEditorSubtitle")}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={commit} disabled={!v.name.trim()} />}
     >
-      <Field label="Name">
-        <Input value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder="z. B. Frühbucher" />
+      <Field label={t("pricingForm.nameLabel")}>
+        <Input value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder={t("pricingForm.promoNamePlaceholder")} />
       </Field>
-      <Field label="Rabatt (%)">
+      <Field label={t("pricingForm.discountPercentLabel")}>
         <div className="flex items-center gap-2">
           <Input type="number" min={0} max={100} value={v.percent} onChange={(e) => setV({ ...v, percent: Number(e.target.value) || 0 })} />
           <span className="text-sm text-muted-foreground">%</span>
         </div>
       </Field>
-      <Field label="Bedingungen (optional)">
-        <Input value={v.conditions} onChange={(e) => setV({ ...v, conditions: e.target.value })} placeholder="z. B. nur Juni 2026, ab 7 Nächten" />
+      <Field label={t("pricingForm.conditionsLabel")}>
+        <Input value={v.conditions} onChange={(e) => setV({ ...v, conditions: e.target.value })} placeholder={t("pricingForm.conditionsPlaceholder")} />
       </Field>
     </EditorShell>
   );
@@ -969,6 +982,7 @@ function AddOnEditor({
   onSave: (next: Pricing) => Promise<true | string>;
   onClose: () => void;
 }) {
+  const t = useTranslations("objects");
   const ex = editId ? pr.addOns.find((x) => x.id === editId) : undefined;
   const [v, setV] = useState<AddOn>(
     ex ?? { id: "", name: "", amount: 0, basis: "per_stay", active: true },
@@ -983,22 +997,22 @@ function AddOnEditor({
 
   return (
     <EditorShell
-      title={ex ? "Add-on bearbeiten" : "Add-on hinzufügen"}
-      subtitle="Extra für die Reservierung (z. B. Frühstück). Verfügbar bei Direktbuchungen."
+      title={ex ? t("pricingForm.addonEditTitle") : t("pricingForm.addonAddTitle")}
+      subtitle={t("pricingForm.addonEditorSubtitle")}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={commit} disabled={!v.name.trim()} />}
     >
-      <Field label="Name">
-        <Input value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder="z. B. Wäschepaket" />
+      <Field label={t("pricingForm.nameLabel")}>
+        <Input value={v.name} onChange={(e) => setV({ ...v, name: e.target.value })} placeholder={t("pricingForm.addonNamePlaceholder")} />
       </Field>
-      <Field label="Preis">
+      <Field label={t("pricingForm.priceLabel")}>
         <MoneyInput value={v.amount} currency={pr.currency} onChange={(n) => setV({ ...v, amount: n })} />
       </Field>
-      <Field label="Berechnung">
+      <Field label={t("pricingForm.calculationLabel")}>
         <BasisSelect value={v.basis} onChange={(b) => setV({ ...v, basis: b })} />
       </Field>
       <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
-        <span className="font-medium">Aktiviert</span>
+        <span className="font-medium">{t("pricingForm.activated")}</span>
         <Switch checked={v.active} onCheckedChange={(c) => setV({ ...v, active: c })} />
       </label>
     </EditorShell>
@@ -1014,20 +1028,21 @@ function TaxInfoEditor({
   onSave: (next: Pricing) => Promise<true | string>;
   onClose: () => void;
 }) {
+  const t = useTranslations("objects");
   const [v, setV] = useState(pr);
   const { busy, error, run } = useSaver(onSave);
   return (
     <EditorShell
-      title="Steuer-Informationen"
-      subtitle="Wird nur für mit Airbnb verbundene Inserate genutzt."
+      title={t("pricingForm.taxInfoTitle")}
+      subtitle={t("pricingForm.taxInfoEditorSubtitle")}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
     >
-      <Field label="Business Tax ID">
-        <Input value={v.businessTaxId} onChange={(e) => setV({ ...v, businessTaxId: e.target.value })} placeholder="z. B. Dgy678" />
+      <Field label={t("pricingForm.businessTaxIdLabel")}>
+        <Input value={v.businessTaxId} onChange={(e) => setV({ ...v, businessTaxId: e.target.value })} placeholder={t("pricingForm.taxIdPlaceholder")} />
       </Field>
-      <Field label="TOT Registration ID">
-        <Input value={v.totRegistrationId} onChange={(e) => setV({ ...v, totRegistrationId: e.target.value })} placeholder="z. B. Dgy678" />
+      <Field label={t("pricingForm.totRegistrationIdLabel")}>
+        <Input value={v.totRegistrationId} onChange={(e) => setV({ ...v, totRegistrationId: e.target.value })} placeholder={t("pricingForm.taxIdPlaceholder")} />
       </Field>
     </EditorShell>
   );
@@ -1042,21 +1057,22 @@ function BaseLabelEditor({
   onSave: (next: Pricing) => Promise<true | string>;
   onClose: () => void;
 }) {
+  const t = useTranslations("objects");
   const [v, setV] = useState(pr);
   const { busy, error, run } = useSaver(onSave);
   return (
     <EditorShell
-      title="Bezeichnung für den Grundpreis"
-      subtitle="Name, unter dem dein Grundpreis auf der Website erscheint."
+      title={t("pricingForm.baseLabelEditorTitle")}
+      subtitle={t("pricingForm.baseLabelEditorSubtitle")}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
     >
-      <Field label="Name">
+      <Field label={t("pricingForm.nameLabel")}>
         <Input
           value={v.basePriceLabel}
           maxLength={100}
           onChange={(e) => setV({ ...v, basePriceLabel: e.target.value })}
-          placeholder="z. B. Standardpreis"
+          placeholder={t("pricingForm.baseLabelPlaceholder")}
         />
       </Field>
     </EditorShell>

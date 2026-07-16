@@ -13,6 +13,7 @@ import {
   useMapsLibrary,
 } from "@vis.gl/react-google-maps";
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
 import {
@@ -47,6 +48,7 @@ const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 type Section = "address" | "distances" | "map" | "directions" | null;
 
 export function LocationForm({ initial }: { initial: Property }) {
+  const t = useTranslations("objects");
   const [p, setP] = useState<Property>(initial);
   const [section, setSection] = useState<Section>(null);
   const ex = readLocationExtras(p.type_attributes);
@@ -85,55 +87,55 @@ export function LocationForm({ initial }: { initial: Property }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="font-display text-3xl font-extrabold">Standort</h1>
+      <h1 className="font-display text-3xl font-extrabold">{t("locationForm.title")}</h1>
 
       <div className="flex flex-col gap-4">
         <SectionCard
-          title="Adresse"
-          hint="Bearbeite die Standortdaten deines Objekts."
+          title={t("locationForm.addressCardTitle")}
+          hint={t("locationForm.addressCardHint")}
           icon="ph:pencil-simple"
           onOpen={() => setSection("address")}
         >
           {addressLine ? (
             <p className="text-sm">{addressLine}</p>
           ) : (
-            <Empty>Noch keine Adresse hinterlegt.</Empty>
+            <Empty>{t("locationForm.noAddress")}</Empty>
           )}
         </SectionCard>
 
         <SectionCard
-          title="Entfernungen"
-          hint="Entfernungen zu nahen Verkehrsmitteln bearbeiten."
+          title={t("locationForm.distancesCardTitle")}
+          hint={t("locationForm.distancesCardHint")}
           onOpen={() => setSection("distances")}
         >
           {hasAnyDistance(ex.distances) ? (
             <DistancesPreview ex={ex} />
           ) : (
-            <Empty>Keine Entfernungen angegeben.</Empty>
+            <Empty>{t("locationForm.noDistances")}</Empty>
           )}
         </SectionCard>
 
         <SectionCard
-          title="Eigene Karte"
-          hint="Nutze ein Bild oder eine eigene Karte, um den Standort zu illustrieren."
+          title={t("locationForm.customMapCardTitle")}
+          hint={t("locationForm.customMapCardHint")}
           onOpen={() => setSection("map")}
         >
           {ex.customMapUrl ? (
-            <Empty>Eigenes Kartenbild hinterlegt.</Empty>
+            <Empty>{t("locationForm.customMapPresent")}</Empty>
           ) : (
-            <Empty>Kein eigenes Kartenbild.</Empty>
+            <Empty>{t("locationForm.customMapAbsent")}</Empty>
           )}
         </SectionCard>
 
         <SectionCard
-          title="Wegbeschreibung"
-          hint="Erkläre, wie Gäste dein Objekt erreichen."
+          title={t("locationForm.directionsCardTitle")}
+          hint={t("locationForm.directionsCardHint")}
           onOpen={() => setSection("directions")}
         >
           {hasAnyText(ex.directions) ? (
-            <Empty>Wegbeschreibung hinterlegt.</Empty>
+            <Empty>{t("locationForm.directionsPresent")}</Empty>
           ) : (
-            <Empty>Noch keine Wegbeschreibung.</Empty>
+            <Empty>{t("locationForm.directionsAbsent")}</Empty>
           )}
         </SectionCard>
       </div>
@@ -174,6 +176,7 @@ function SectionCard({
   onOpen: () => void;
   children: React.ReactNode;
 }) {
+  const t = useTranslations("objects");
   return (
     <Card className="flex flex-col gap-3 p-5">
       <div className="flex items-start justify-between gap-4">
@@ -184,7 +187,7 @@ function SectionCard({
         <Button
           variant="outline"
           size="icon"
-          aria-label={`${title} bearbeiten`}
+          aria-label={t("locationForm.editAriaLabel", { title })}
           onClick={onOpen}
         >
           <Icon icon={icon} className="size-4" />
@@ -256,6 +259,7 @@ function AddressEditor({
   const [customCity, setCustomCity] = useState(ex.customCity);
   const [showPrecise, setShowPrecise] = useState(ex.showPreciseLocation);
   const { busy, error, run } = useSaver(onSave);
+  const t = useTranslations("objects");
 
   function commit() {
     void run(
@@ -280,26 +284,26 @@ function AddressEditor({
 
   return (
     <EditorShell
-      title="Adresse"
-      subtitle="Bearbeite die Standortdaten deines Objekts."
+      title={t("locationForm.addressCardTitle")}
+      subtitle={t("locationForm.addressCardHint")}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={commit} />}
     >
       {!API_KEY ? (
         <p className="text-sm text-destructive">
-          Kein Google-Maps-Key gesetzt (NEXT_PUBLIC_GOOGLE_MAPS_API_KEY).
+          {t("locationForm.missingMapsKey")}
         </p>
       ) : (
         <APIProvider apiKey={API_KEY}>
-          <Field label="Land" required>
+          <Field label={t("locationForm.countryLabel")} required>
             <Input
               value={a.country}
               onChange={(e) => setA({ ...a, country: e.target.value })}
-              placeholder="z. B. Dänemark"
+              placeholder={t("locationForm.countryPlaceholder")}
             />
           </Field>
           <div className="grid grid-cols-[1fr_6rem] gap-3">
-            <Field label="Straße" required>
+            <Field label={t("locationForm.streetLabel")} required>
               <PlacesSearch
                 value={a.street}
                 onPick={(picked) => {
@@ -309,21 +313,21 @@ function AddressEditor({
                 }}
               />
             </Field>
-            <Field label="Nr.">
+            <Field label={t("locationForm.houseNumberLabel")}>
               <Input value={a.house_number} onChange={(e) => setA({ ...a, house_number: e.target.value })} />
             </Field>
           </div>
-          <Field label="PLZ" required>
+          <Field label={t("locationForm.postalCodeLabel")} required>
             <Input value={a.postal_code} onChange={(e) => setA({ ...a, postal_code: e.target.value })} />
           </Field>
-          <Field label="Stadt" required>
+          <Field label={t("locationForm.cityLabel")} required>
             <Input value={a.city} onChange={(e) => setA({ ...a, city: e.target.value })} />
           </Field>
-          <Field label="Bundesland / Region" required>
+          <Field label={t("locationForm.stateProvinceLabel")} required>
             <Input
               value={stateProvince}
               onChange={(e) => setStateProvince(e.target.value)}
-              placeholder="z. B. Region Nordjütland"
+              placeholder={t("locationForm.stateProvincePlaceholder")}
             />
           </Field>
 
@@ -332,10 +336,10 @@ function AddressEditor({
               checked={useCustomCity}
               onCheckedChange={(v) => setUseCustomCity(v === true)}
             />
-            Eigenen Stadtnamen verwenden
+            {t("locationForm.useCustomCityLabel")}
           </label>
           {useCustomCity && (
-            <Field label="Eigener Stadtname">
+            <Field label={t("locationForm.customCityLabel")}>
               <Input value={customCity} onChange={(e) => setCustomCity(e.target.value)} />
             </Field>
           )}
@@ -358,14 +362,14 @@ function AddressEditor({
               </Map>
             </div>
           </div>
-          <Hint>Bearbeite die Adresse oben, um Karte und Koordinaten zu aktualisieren.</Hint>
+          <Hint>{t("locationForm.mapHint")}</Hint>
 
           {/* Standortgenauigkeit */}
           <div className="flex items-start justify-between gap-4 rounded-(--radius) border p-4">
             <div className="leading-tight">
-              <p className="font-medium">Genauen Standort anzeigen</p>
+              <p className="font-medium">{t("locationForm.showPreciseLocationLabel")}</p>
               <p className="mt-0.5 text-sm text-muted-foreground">
-                Lass Gäste vor der Buchung den genauen Standort auf der Karte sehen.
+                {t("locationForm.showPreciseLocationHint")}
               </p>
             </div>
             <Checkbox
@@ -397,6 +401,7 @@ function PlacesSearch({
   value: string;
   onPick: (p: Partial<Addr>) => void;
 }) {
+  const t = useTranslations("objects");
   const places = useMapsLibrary("places");
   const inputRef = useRef<HTMLInputElement>(null);
   const [ready, setReady] = useState(false);
@@ -443,7 +448,7 @@ function PlacesSearch({
     <Input
       ref={inputRef}
       defaultValue={value}
-      placeholder={ready ? "Adresse eingeben und Vorschlag wählen …" : "Lädt …"}
+      placeholder={ready ? t("locationForm.placesSearchPlaceholder") : t("locationForm.loading")}
       disabled={!ready}
     />
   );
@@ -465,6 +470,7 @@ function DistancesEditor({
 }) {
   const [d, setD] = useState<Distances>(ex.distances);
   const { busy, error, run } = useSaver(onSave);
+  const t = useTranslations("objects");
 
   function setValue(key: string, raw: string) {
     const num = raw === "" ? null : Number(raw);
@@ -476,8 +482,8 @@ function DistancesEditor({
 
   return (
     <EditorShell
-      title="Entfernungen"
-      subtitle="Entfernungen zu nahen Verkehrsmitteln bearbeiten."
+      title={t("locationForm.distancesCardTitle")}
+      subtitle={t("locationForm.distancesCardHint")}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run({}, { distances: d })} />}
     >
@@ -492,7 +498,7 @@ function DistancesEditor({
               d.unit === u ? "bg-foreground text-background" : "text-muted-foreground"
             }`}
           >
-            {u === "km" ? "Kilometer" : "Meilen"}
+            {u === "km" ? t("locationForm.unitKilometers") : t("locationForm.unitMiles")}
           </button>
         ))}
       </div>
@@ -518,8 +524,7 @@ function DistancesEditor({
         ))}
       </div>
       <p className="text-sm text-muted-foreground">
-        Ist die Entfernung kleiner als 1 {d.unit} (z. B. 200 m), gib sie als
-        Dezimalzahl ein – das wäre dann 0,2.
+        {t("locationForm.distancesDecimalHint", { unit: d.unit })}
       </p>
     </EditorShell>
   );
@@ -547,11 +552,12 @@ function CustomMapEditor({
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const { busy, error, run } = useSaver(onSave);
+  const t = useTranslations("objects");
 
   async function upload(file: File) {
     setUploadErr(null);
     if (!file.type.startsWith("image/")) {
-      setUploadErr("Bitte eine Bilddatei wählen.");
+      setUploadErr(t("locationForm.imageFileRequired"));
       return;
     }
     setUploadBusy(true);
@@ -563,21 +569,21 @@ function CustomMapEditor({
 
   return (
     <EditorShell
-      title="Eigene Karte"
-      subtitle="Nutze ein Bild oder eine eigene Karte, um den Standort zu illustrieren."
+      title={t("locationForm.customMapCardTitle")}
+      subtitle={t("locationForm.customMapCardHint")}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run({}, { customMapUrl: url })} />}
     >
       {url ? (
         <div className="flex flex-col gap-3">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={url} alt="Eigene Karte" className="w-full rounded-(--radius) border object-cover" />
+          <img src={url} alt={t("locationForm.customMapImageAlt")} className="w-full rounded-(--radius) border object-cover" />
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={() => inputRef.current?.click()} disabled={uploadBusy}>
-              {uploadBusy ? "Lädt…" : "Bild ersetzen"}
+              {uploadBusy ? t("locationForm.loading") : t("locationForm.replaceImage")}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setUrl("")} disabled={uploadBusy}>
-              Entfernen
+              {t("locationForm.removeImage")}
             </Button>
           </div>
         </div>
@@ -605,7 +611,7 @@ function CustomMapEditor({
             icon={uploadBusy ? "ph:spinner" : "ph:upload-simple"}
             className={`size-6 ${uploadBusy ? "animate-spin" : ""}`}
           />
-          <span>{uploadBusy ? "Lädt …" : "Bild hochladen oder hierher ziehen"}</span>
+          <span>{uploadBusy ? t("locationForm.loading") : t("locationForm.uploadOrDrop")}</span>
         </button>
       )}
       <input
@@ -640,17 +646,18 @@ function DirectionsEditor({
 }) {
   const [v, setV] = useState(ex.directions);
   const { busy, error, run } = useSaver(onSave);
+  const t = useTranslations("objects");
   return (
     <EditorShell
-      title="Wegbeschreibung"
-      subtitle="Erkläre, wie Gäste dein Objekt erreichen."
+      title={t("locationForm.directionsCardTitle")}
+      subtitle={t("locationForm.directionsCardHint")}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run({}, { directions: v })} />}
     >
       <LocalizedTextEditor
         value={v}
         onChange={setV}
-        placeholder="Wegbeschreibung eingeben …"
+        placeholder={t("locationForm.directionsInputPlaceholder")}
       />
     </EditorShell>
   );

@@ -6,6 +6,7 @@
 // Speichert das EIGENE Profil des eingeloggten Nutzers über updateProfile()
 // (E-Mail separat über updateEmail, da abgesichert).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ export function ContactProfileEditor({
   account: Account;
   onClose: () => void;
 }) {
+  const t = useTranslations("objects");
   // Super-Admin = Agentur: seine Kontaktdaten leben unter /konto (eine
   // Quelle). Der Dialog zeigt dann nur die dort gespeicherten Felder —
   // Zweitnummer/Sprachen/Beschreibung haben (noch) keinen Speicherort und
@@ -109,10 +111,10 @@ export function ContactProfileEditor({
       <SheetContent className="flex h-full w-full flex-col gap-0 p-0 sm:max-w-lg">
         <SheetHeader className="border-b">
           <SheetTitle className="font-display text-xl font-extrabold">
-            Kontaktdaten bearbeiten
+            {t("contactProfileEditor.title")}
           </SheetTitle>
           <SheetDescription className="sr-only">
-            Bearbeite die Kontakt- und Profildaten dieses Nutzers.
+            {t("contactProfileEditor.description")}
           </SheetDescription>
         </SheetHeader>
 
@@ -120,39 +122,39 @@ export function ContactProfileEditor({
           {/* Avatar (nicht für die Agentur — dort zählt das Firmenlogo aus /konto) */}
           {!isAgency && (
             <section className="flex flex-col gap-2">
-              <p className="font-semibold">Avatar</p>
-              <AvatarPicker value={avatarUrl} onChange={setAvatarUrl} />
+              <p className="font-semibold">{t("contactProfileEditor.avatar")}</p>
+              <AvatarPicker value={avatarUrl} onChange={setAvatarUrl} t={t} />
             </section>
           )}
 
           {/* Kontaktdaten */}
           <section className="flex flex-col gap-4">
-            <p className="font-semibold">Kontaktdaten</p>
+            <p className="font-semibold">{t("contactProfileEditor.contactData")}</p>
 
-            <Field label="Vorname" required>
+            <Field label={t("contactProfileEditor.firstName")} required>
               <Input
                 value={firstName}
                 onChange={(e) => setFirstName(e.target.value)}
-                placeholder="Jane"
+                placeholder={t("contactProfileEditor.firstNamePlaceholder")}
               />
             </Field>
-            <Field label="Nachname" required>
+            <Field label={t("contactProfileEditor.lastName")} required>
               <Input
                 value={lastName}
                 onChange={(e) => setLastName(e.target.value)}
-                placeholder="Doe"
+                placeholder={t("contactProfileEditor.lastNamePlaceholder")}
               />
             </Field>
-            <Field label="E-Mail" required>
+            <Field label={t("contactProfileEditor.email")} required>
               <Input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="jane.doe@gmail.com"
+                placeholder={t("contactProfileEditor.emailPlaceholder")}
               />
             </Field>
 
-            <Field label="Telefonnummer" required>
+            <Field label={t("contactProfileEditor.phoneNumber")} required>
               <PhoneInput
                 value={phone}
                 onChange={setPhone}
@@ -161,7 +163,7 @@ export function ContactProfileEditor({
             </Field>
             {!isAgency && (
               <>
-                <Field label="Zusätzliche Telefonnummer">
+                <Field label={t("contactProfileEditor.additionalPhoneNumber")}>
                   <PhoneInput
                     value={additionalPhone}
                     onChange={setAdditionalPhone}
@@ -174,7 +176,7 @@ export function ContactProfileEditor({
                     checked={hidePhones}
                     onCheckedChange={(v) => setHidePhones(v === true)}
                   />
-                  Alle Telefonnummern auf meiner Website ausblenden
+                  {t("contactProfileEditor.hidePhonesLabel")}
                 </label>
               </>
             )}
@@ -182,10 +184,10 @@ export function ContactProfileEditor({
 
           {/* Weitere Angaben */}
           <section className="flex flex-col gap-4">
-            <p className="font-semibold">Weitere Angaben</p>
+            <p className="font-semibold">{t("contactProfileEditor.furtherDetails")}</p>
 
             {!isAgency && (
-              <Field label="Gesprochene Sprache(n)">
+              <Field label={t("contactProfileEditor.spokenLanguages")}>
                 <div className="flex flex-wrap gap-2">
                   {LANGUAGE_OPTIONS.map((o) => {
                     const active = languages.includes(o.value);
@@ -208,20 +210,20 @@ export function ContactProfileEditor({
               </Field>
             )}
 
-            <Field label="Website">
+            <Field label={t("contactProfileEditor.website")}>
               <Input
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
-                placeholder="https://janedoe.com"
+                placeholder={t("contactProfileEditor.websitePlaceholder")}
               />
             </Field>
 
             {!isAgency && (
-              <Field label="Beschreibung">
+              <Field label={t("contactProfileEditor.descriptionLabel")}>
                 <RichTextEditor
                   value={description}
                   onChange={setDescription}
-                  placeholder="Schreibe etwas über dich …"
+                  placeholder={t("contactProfileEditor.descriptionPlaceholder")}
                 />
               </Field>
             )}
@@ -232,10 +234,10 @@ export function ContactProfileEditor({
         <div className="flex items-center justify-end gap-3 border-t p-4">
           {error && <p className="mr-auto text-sm text-destructive">{error}</p>}
           <Button variant="ghost" onClick={onClose} disabled={busy}>
-            Abbrechen
+            {t("contactProfileEditor.cancel")}
           </Button>
           <Button onClick={handleSave} disabled={busy || !canSave}>
-            {busy ? "Speichern…" : "Speichern"}
+            {busy ? t("contactProfileEditor.saving") : t("contactProfileEditor.save")}
           </Button>
         </div>
       </SheetContent>
@@ -249,9 +251,11 @@ export function ContactProfileEditor({
 function AvatarPicker({
   value,
   onChange,
+  t,
 }: {
   value: string;
   onChange: (url: string) => void;
+  t: ReturnType<typeof useTranslations>;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -261,11 +265,11 @@ function AvatarPicker({
   async function upload(file: File) {
     setError(null);
     if (!file.type.startsWith("image/")) {
-      setError("Bitte eine Bilddatei wählen.");
+      setError(t("contactProfileEditor.pleaseSelectImage"));
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setError("Bild ist zu groß (max. 5 MB).");
+      setError(t("contactProfileEditor.imageTooLarge"));
       return;
     }
     setBusy(true);
@@ -292,7 +296,7 @@ function AvatarPicker({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={value}
-          alt="Avatar"
+          alt={t("contactProfileEditor.avatarAlt")}
           className="size-24 rounded-(--radius) object-cover"
         />
         <div className="flex flex-col gap-2">
@@ -302,7 +306,7 @@ function AvatarPicker({
             onClick={() => inputRef.current?.click()}
             disabled={busy}
           >
-            {busy ? "Lädt…" : "Ändern"}
+            {busy ? t("contactProfileEditor.loading") : t("contactProfileEditor.change")}
           </Button>
           <Button
             variant="ghost"
@@ -310,7 +314,7 @@ function AvatarPicker({
             onClick={() => onChange("")}
             disabled={busy}
           >
-            Entfernen
+            {t("contactProfileEditor.remove")}
           </Button>
         </div>
         <input
@@ -352,12 +356,12 @@ function AvatarPicker({
         />
         <span>
           {busy ? (
-            "Lädt …"
+            t("contactProfileEditor.loadingEllipsis")
           ) : (
             <>
-              Foto hinzufügen
+              {t("contactProfileEditor.addPhoto")}
               <br />
-              oder hierher ziehen
+              {t("contactProfileEditor.orDragHere")}
             </>
           )}
         </span>

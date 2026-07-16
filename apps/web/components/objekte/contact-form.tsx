@@ -6,6 +6,7 @@
 //  type_attributes.contact.userId des Objekts gespeichert. „Bearbeiten" öffnet
 //  das Profil des Kontakts (Slide-over „Kontaktdaten bearbeiten").
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -14,13 +15,16 @@ import { type Account, type TenantUser } from "@/lib/account";
 import { type Property, updateProperty } from "@/lib/properties";
 import { ContactProfileEditor } from "@/components/objekte/contact-profile-editor";
 
-const ROLE_LABELS: Record<string, string> = {
-  admin: "Administrator",
-  co_admin: "Co-Administrator",
-  owner: "Kontoinhaber",
-  staff: "Mitarbeiter",
-  cleaner: "Reinigungskraft",
-};
+function useRoleLabels(): Record<string, string> {
+  const t = useTranslations("objects");
+  return {
+    admin: t("contactForm.roleAdmin"),
+    co_admin: t("contactForm.roleCoAdmin"),
+    owner: t("contactForm.roleOwner"),
+    staff: t("contactForm.roleStaff"),
+    cleaner: t("contactForm.roleCleaner"),
+  };
+}
 
 export function ContactForm({
   initial,
@@ -33,6 +37,8 @@ export function ContactForm({
   usersError?: string | null;
   account: Account;
 }) {
+  const t = useTranslations("objects");
+  const ROLE_LABELS = useRoleLabels();
   const [p, setP] = useState<Property>(initial);
   const [query, setQuery] = useState("");
   const [editing, setEditing] = useState(false);
@@ -64,10 +70,11 @@ export function ContactForm({
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-2">
-        <h1 className="font-display text-3xl font-extrabold">Kontakt</h1>
+        <h1 className="font-display text-3xl font-extrabold">
+          {t("contactForm.title")}
+        </h1>
         <p className="max-w-3xl text-sm text-muted-foreground">
-          Lege einen Hauptkontakt für dieses Objekt fest, der Reservierungen und
-          Anfragen bearbeitet. Wähle einen bestehenden Nutzer aus.
+          {t("contactForm.description")}
         </p>
       </header>
 
@@ -81,7 +88,7 @@ export function ContactForm({
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Nach Name, E-Mail oder Telefonnummer suchen"
+            placeholder={t("contactForm.searchPlaceholder")}
             className="pl-9"
           />
         </div>
@@ -90,13 +97,13 @@ export function ContactForm({
         <div className="flex flex-col divide-y rounded-(--radius) border">
           {usersError ? (
             <p className="p-5 text-sm text-destructive">
-              Nutzer konnten nicht geladen werden: {usersError}
+              {t("contactForm.loadError", { error: usersError })}
             </p>
           ) : filtered.length === 0 ? (
             <p className="p-5 text-sm text-muted-foreground/70">
               {users.length === 0
-                ? "Keine berechtigten Nutzer für dieses Objekt gefunden."
-                : "Keine Treffer für die Suche."}
+                ? t("contactForm.noEligibleUsers")
+                : t("contactForm.noSearchResults")}
             </p>
           ) : (
             filtered.map((u) => {
@@ -107,14 +114,14 @@ export function ContactForm({
                   key={u.user_id}
                   className="flex items-center gap-4 p-4 transition-colors hover:bg-muted/40"
                 >
-                  <Avatar name={u.full_name} url={u.avatar_url} />
+                  <Avatar name={u.full_name} url={u.avatar_url} t={t} />
                   <button
                     type="button"
                     onClick={() => selectContact(u.user_id)}
                     className="flex flex-1 flex-col items-start text-left leading-tight"
                   >
                     <span className="font-semibold">
-                      {u.full_name ?? "Unbenannter Nutzer"}
+                      {u.full_name ?? t("contactForm.unnamedUser")}
                     </span>
                     <span className="text-sm text-muted-foreground">
                       {[u.email, u.phone].filter(Boolean).join(" · ")}
@@ -127,7 +134,7 @@ export function ContactForm({
                   {selected && (
                     <span className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2.5 py-1 text-xs font-medium text-accent">
                       <Icon icon="ph:check-circle" className="size-3.5" />
-                      Hauptkontakt
+                      {t("contactForm.mainContact")}
                     </span>
                   )}
 
@@ -138,7 +145,7 @@ export function ContactForm({
                       size="sm"
                       onClick={() => setEditing(true)}
                     >
-                      Bearbeiten
+                      {t("contactForm.edit")}
                     </Button>
                   )}
                 </div>
@@ -158,13 +165,21 @@ export function ContactForm({
   );
 }
 
-function Avatar({ name, url }: { name: string | null; url: string | null }) {
+function Avatar({
+  name,
+  url,
+  t,
+}: {
+  name: string | null;
+  url: string | null;
+  t: ReturnType<typeof useTranslations>;
+}) {
   if (url) {
     // eslint-disable-next-line @next/next/no-img-element
     return (
       <img
         src={url}
-        alt={name ?? "Avatar"}
+        alt={name ?? t("contactForm.avatarAlt")}
         className="size-10 shrink-0 rounded-full object-cover"
       />
     );

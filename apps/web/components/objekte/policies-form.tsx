@@ -6,6 +6,7 @@
 // Bearbeitung je Block über einen Sheet-Editor; gespeichert wird per
 // updateProperty() in das flexible Feld type_attributes.policies.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import {
@@ -74,6 +75,7 @@ export function PoliciesForm({
   initial: Property;
   currency: string | null;
 }) {
+  const t = useTranslations("objects");
   const [p, setP] = useState<Property>(initial);
   const [section, setSection] = useState<Section>(null);
   const pol = readPolicies(p.type_attributes);
@@ -92,86 +94,90 @@ export function PoliciesForm({
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="font-display text-3xl font-extrabold">Richtlinien</h1>
+      <h1 className="font-display text-3xl font-extrabold">{t("policiesForm.title")}</h1>
 
       {/* Reservation policies */}
       <section className="flex flex-col gap-4">
-        <h2 className="font-display text-xl font-extrabold">Reservierungs-Richtlinien</h2>
+        <h2 className="font-display text-xl font-extrabold">{t("policiesForm.reservationPoliciesHeading")}</h2>
 
         <BlockCard
-          title="Richtlinie"
-          hint="Weise diesem Objekt eine Richtlinie zu (Storno, Zahlung, Kaution)."
+          title={t("policiesForm.policyCardTitle")}
+          hint={t("policiesForm.policyCardHint")}
+          actionLabel={t("policiesForm.editAction")}
           onEdit={() => setSection("policy")}
         >
           {pol.policy.internalName.trim() ? (
             <div className="flex flex-col gap-2.5 rounded-(--radius) bg-muted/40 p-4 text-sm">
               <p className="font-medium">{pol.policy.internalName}</p>
-              <Summary title="Zahlungsplan" text={paymentSummary(pol.policy)} />
-              <Summary title="Stornierung" text={CANCELLATION_OPTIONS.find((o) => o.value === pol.policy.cancellationType)?.info ?? ""} />
+              <Summary title={t("policiesForm.paymentPlanLabel")} text={paymentSummary(pol.policy, t)} />
+              <Summary title={t("policiesForm.cancellationLabel")} text={CANCELLATION_OPTIONS.find((o) => o.value === pol.policy.cancellationType)?.info ?? ""} />
               {pol.policy.depositMode === "amount" && (
-                <Summary title="Kaution" text={`Eine Kaution von ${money(pol.policy.depositAmount, currency)} wird einbehalten.`} />
+                <Summary title={t("policiesForm.depositLabel")} text={t("policiesForm.depositWithheldText", { amount: money(pol.policy.depositAmount, currency) })} />
               )}
             </div>
           ) : (
-            <Empty>Noch keine Richtlinie hinterlegt.</Empty>
+            <Empty>{t("policiesForm.noPolicyYet")}</Empty>
           )}
         </BlockCard>
 
         <BlockCard
-          title="Buchbarkeit"
-          hint="Wie Reservierungen angenommen werden."
+          title={t("policiesForm.bookabilityCardTitle")}
+          hint={t("policiesForm.bookabilityCardHint")}
+          actionLabel={t("policiesForm.editAction")}
           onEdit={() => setSection("bookability")}
         >
           <Pill>{BOOKABILITY_LABELS[pol.bookability]}</Pill>
         </BlockCard>
 
         <BlockCard
-          title="Check-in/Check-out-Zeiten"
-          hint="Lege die Check-in- und Check-out-Zeiten fest."
+          title={t("policiesForm.timesCardTitle")}
+          hint={t("policiesForm.timesCardHint")}
+          actionLabel={t("policiesForm.editAction")}
           onEdit={() => setSection("times")}
         >
           <Pill>
-            Check-in: {formatHour(pol.checkInTime)} · Check-out: {formatHour(pol.checkOutTime)}
+            {t("policiesForm.checkInOutPill", { checkIn: formatHour(pol.checkInTime), checkOut: formatHour(pol.checkOutTime) })}
           </Pill>
         </BlockCard>
       </section>
 
       {/* Website legal info */}
       <section className="flex flex-col gap-4">
-        <h2 className="font-display text-xl font-extrabold">Rechtliche Angaben (Website)</h2>
+        <h2 className="font-display text-xl font-extrabold">{t("policiesForm.legalInfoHeading")}</h2>
 
         <BlockCard
-          title="Raten-Info"
-          hint="Zusätzliche Information auf der Raten-Seite deiner Website."
-          actionLabel={hasAnyText(pol.ratesInfo) ? "Bearbeiten" : "Hinzufügen"}
+          title={t("policiesForm.ratesInfoCardTitle")}
+          hint={t("policiesForm.ratesInfoCardHint")}
+          actionLabel={hasAnyText(pol.ratesInfo) ? t("policiesForm.editAction") : t("policiesForm.addAction")}
           onEdit={() => setSection("rates")}
         >
           {hasAnyText(pol.ratesInfo) ? (
             <LocalizedPreview value={pol.ratesInfo} />
           ) : (
-            <Empty>Keine Zusatzinfo.</Empty>
+            <Empty>{t("policiesForm.noAdditionalInfo")}</Empty>
           )}
         </BlockCard>
 
         <BlockCard
-          title="Mietvertrag"
-          hint="Erstelle den Mietvertrag oder verlinke ihn für deine Gäste."
+          title={t("policiesForm.rentalAgreementCardTitle")}
+          hint={t("policiesForm.rentalAgreementCardHint")}
+          actionLabel={t("policiesForm.editAction")}
           onEdit={() => setSection("agreement")}
         >
           {hasAnyText(pol.rentalAgreement) ? (
             <LocalizedPreview value={pol.rentalAgreement} clamp />
           ) : (
-            <Empty>Noch kein Mietvertrag.</Empty>
+            <Empty>{t("policiesForm.noRentalAgreementYet")}</Empty>
           )}
         </BlockCard>
       </section>
 
       {/* Editoren */}
-      {section === "policy" && <PolicyEditor pol={pol} onSave={save} onClose={() => setSection(null)} currency={currency} />}
-      {section === "bookability" && <BookabilityEditor pol={pol} onSave={save} onClose={() => setSection(null)} />}
-      {section === "times" && <TimesEditor pol={pol} onSave={save} onClose={() => setSection(null)} />}
-      {section === "rates" && <LocalizedEditor title="Raten-Info" field="ratesInfo" pol={pol} onSave={save} onClose={() => setSection(null)} />}
-      {section === "agreement" && <LocalizedEditor title="Mietvertrag" field="rentalAgreement" pol={pol} onSave={save} onClose={() => setSection(null)} />}
+      {section === "policy" && <PolicyEditor pol={pol} onSave={save} onClose={() => setSection(null)} currency={currency} t={t} />}
+      {section === "bookability" && <BookabilityEditor pol={pol} onSave={save} onClose={() => setSection(null)} t={t} />}
+      {section === "times" && <TimesEditor pol={pol} onSave={save} onClose={() => setSection(null)} t={t} />}
+      {section === "rates" && <LocalizedEditor title={t("policiesForm.ratesInfoCardTitle")} field="ratesInfo" pol={pol} onSave={save} onClose={() => setSection(null)} t={t} />}
+      {section === "agreement" && <LocalizedEditor title={t("policiesForm.rentalAgreementCardTitle")} field="rentalAgreement" pol={pol} onSave={save} onClose={() => setSection(null)} t={t} />}
     </div>
   );
 }
@@ -181,7 +187,7 @@ export function PoliciesForm({
 function BlockCard({
   title,
   hint,
-  actionLabel = "Bearbeiten",
+  actionLabel,
   onEdit,
   children,
 }: {
@@ -217,11 +223,13 @@ function PolicyEditor({
   onSave,
   onClose,
   currency,
+  t,
 }: {
   pol: Policies;
   onSave: (next: Policies) => Promise<true | string>;
   onClose: () => void;
   currency: string | null;
+  t: ReturnType<typeof useTranslations>;
 }) {
   const [creating, setCreating] = useState(false);
   const [v, setV] = useState<Policy>(pol.policy);
@@ -230,8 +238,8 @@ function PolicyEditor({
   if (creating) {
     return (
       <EditorShell
-        title="Richtlinie hinzufügen"
-        subtitle="Lege die Details für diese neue Richtlinie fest."
+        title={t("policiesForm.addPolicyTitle")}
+        subtitle={t("policiesForm.addPolicySubtitle")}
         onClose={onClose}
         footer={
           <Footer
@@ -243,16 +251,16 @@ function PolicyEditor({
           />
         }
       >
-        <Field label="Interner Name *">
+        <Field label={t("policiesForm.internalNameLabel")}>
           <Input
             value={v.internalName}
             onChange={(e) => setV({ ...v, internalName: e.target.value })}
-            placeholder="z. B. Teil-Anzahlung – nicht erstattbar"
+            placeholder={t("policiesForm.internalNamePlaceholder")}
           />
         </Field>
 
-        <Group title="Zahlungsplan">
-          <Field label="Anzahl der Zahlungen">
+        <Group title={t("policiesForm.paymentPlanGroupTitle")}>
+          <Field label={t("policiesForm.paymentCountLabel")}>
             <Select value={v.paymentPlan} onValueChange={(val) => setV({ ...v, paymentPlan: val as PaymentPlan })}>
               <SelectTrigger>
                 <SelectValue />
@@ -266,10 +274,10 @@ function PolicyEditor({
           </Field>
           {v.paymentPlan === "split" && (
             <div className="grid grid-cols-2 gap-3">
-              <Field label="Anzahlung (%)">
+              <Field label={t("policiesForm.depositPercentLabel")}>
                 <Input type="number" min={0} max={100} value={v.depositPercent} onChange={(e) => setV({ ...v, depositPercent: Number(e.target.value) || 0 })} />
               </Field>
-              <Field label="Restbetrag (Tage vor Anreise)">
+              <Field label={t("policiesForm.remainingDaysBeforeLabel")}>
                 <Input type="number" min={0} value={v.remainingDaysBefore} onChange={(e) => setV({ ...v, remainingDaysBefore: Number(e.target.value) || 0 })} />
               </Field>
             </div>
@@ -277,8 +285,8 @@ function PolicyEditor({
           <Hint>{PAYMENT_PLAN_OPTIONS.find((o) => o.value === v.paymentPlan)?.info}</Hint>
         </Group>
 
-        <Group title="Stornierung durch Gast">
-          <Field label="Stornoart">
+        <Group title={t("policiesForm.guestCancellationGroupTitle")}>
+          <Field label={t("policiesForm.cancellationTypeLabel")}>
             <Select value={v.cancellationType} onValueChange={(val) => setV({ ...v, cancellationType: val as CancellationType })}>
               <SelectTrigger>
                 <SelectValue />
@@ -293,30 +301,29 @@ function PolicyEditor({
           <Hint>{CANCELLATION_OPTIONS.find((o) => o.value === v.cancellationType)?.info}</Hint>
         </Group>
 
-        <Group title="Kaution">
+        <Group title={t("policiesForm.depositGroupTitle")}>
           <Select value={v.depositMode} onValueChange={(val) => setV({ ...v, depositMode: val as DepositMode })}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Keine Kaution erforderlich</SelectItem>
-              <SelectItem value="amount">Kaution als Betrag</SelectItem>
+              <SelectItem value="none">{t("policiesForm.depositModeNone")}</SelectItem>
+              <SelectItem value="amount">{t("policiesForm.depositModeAmount")}</SelectItem>
             </SelectContent>
           </Select>
           {v.depositMode === "amount" && (
-            <Field label={`Kautionsbetrag${currency ? ` (${currency})` : ""}`}>
+            <Field label={currency ? t("policiesForm.depositAmountLabelWithCurrency", { currency }) : t("policiesForm.depositAmountLabel")}>
               <Input type="number" min={0} value={v.depositAmount} onChange={(e) => setV({ ...v, depositAmount: Number(e.target.value) || 0 })} />
             </Field>
           )}
         </Group>
 
-        <Group title="Angebots-Gültigkeit">
-          <Field label="Gültigkeitsdauer (Stunden) *">
+        <Group title={t("policiesForm.quoteValidityGroupTitle")}>
+          <Field label={t("policiesForm.quoteValidityHoursLabel")}>
             <Input type="number" min={1} value={v.quoteValidityHours} onChange={(e) => setV({ ...v, quoteValidityHours: Number(e.target.value) || 0 })} />
           </Field>
           <Hint>
-            Das Angebot ist max. {v.quoteValidityHours} Stunden gültig, solange der
-            Status „Wartet auf Gast" oder „Wartet auf Zahlung" ist.
+            {t("policiesForm.quoteValidityHint", { hours: v.quoteValidityHours })}
           </Hint>
         </Group>
       </EditorShell>
@@ -328,15 +335,15 @@ function PolicyEditor({
   const hasPolicy = !!p.internalName.trim();
   return (
     <EditorShell
-      title="Richtlinie zuweisen"
-      subtitle="Weise diesem Objekt eine Richtlinie zu oder lege eine neue an."
+      title={t("policiesForm.assignPolicyTitle")}
+      subtitle={t("policiesForm.assignPolicySubtitle")}
       onClose={onClose}
       footer={
         <Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(pol)} />
       }
     >
       <Button className="w-full" onClick={() => { setV(hasPolicy ? p : { ...DEFAULT_POLICY }); setCreating(true); }}>
-        Neue Richtlinie
+        {t("policiesForm.newPolicyButton")}
       </Button>
 
       {hasPolicy ? (
@@ -344,15 +351,15 @@ function PolicyEditor({
           <Icon icon="ph:radio-button-fill" className="mt-0.5 size-5 shrink-0 text-accent" />
           <div className="flex flex-col gap-3">
             <p className="font-semibold">{p.internalName}</p>
-            <Summary title="Zahlungsplan" text={paymentSummary(p)} />
-            <Summary title="Stornierung" text={CANCELLATION_OPTIONS.find((o) => o.value === p.cancellationType)?.info ?? ""} />
+            <Summary title={t("policiesForm.paymentPlanLabel")} text={paymentSummary(p, t)} />
+            <Summary title={t("policiesForm.cancellationLabel")} text={CANCELLATION_OPTIONS.find((o) => o.value === p.cancellationType)?.info ?? ""} />
             {p.depositMode === "amount" && (
-              <Summary title="Kaution" text={`Eine Kaution von ${money(p.depositAmount, currency)} wird einbehalten.`} />
+              <Summary title={t("policiesForm.depositLabel")} text={t("policiesForm.depositWithheldText", { amount: money(p.depositAmount, currency) })} />
             )}
           </div>
         </div>
       ) : (
-        <Empty>Noch keine Richtlinie. Lege oben eine neue an.</Empty>
+        <Empty>{t("policiesForm.noPolicyAddOneAbove")}</Empty>
       )}
     </EditorShell>
   );
@@ -362,17 +369,19 @@ function BookabilityEditor({
   pol,
   onSave,
   onClose,
+  t,
 }: {
   pol: Policies;
   onSave: (next: Policies) => Promise<true | string>;
   onClose: () => void;
+  t: ReturnType<typeof useTranslations>;
 }) {
   const [v, setV] = useState(pol);
   const { busy, error, run } = useSaver(onSave);
   return (
     <EditorShell
-      title="Buchbarkeit"
-      subtitle="Wähle, wie Reservierungen für dieses Objekt angenommen werden."
+      title={t("policiesForm.bookabilityCardTitle")}
+      subtitle={t("policiesForm.bookabilityEditorSubtitle")}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
     >
@@ -395,7 +404,7 @@ function BookabilityEditor({
               <span className="text-sm text-muted-foreground">{o.description}</span>
               {o.recommended && (
                 <span className="w-fit rounded bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700">
-                  Empfohlen
+                  {t("policiesForm.recommendedBadge")}
                 </span>
               )}
             </div>
@@ -410,21 +419,23 @@ function TimesEditor({
   pol,
   onSave,
   onClose,
+  t,
 }: {
   pol: Policies;
   onSave: (next: Policies) => Promise<true | string>;
   onClose: () => void;
+  t: ReturnType<typeof useTranslations>;
 }) {
   const [v, setV] = useState(pol);
   const { busy, error, run } = useSaver(onSave);
   return (
     <EditorShell
-      title="Check-in/Check-out-Zeiten"
-      subtitle="Lege die Check-in- und Check-out-Zeiten fest."
+      title={t("policiesForm.timesCardTitle")}
+      subtitle={t("policiesForm.timesCardHint")}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
     >
-      <Field label="Check-in-Zeit">
+      <Field label={t("policiesForm.checkInTimeLabel")}>
         <Select value={v.checkInTime} onValueChange={(val) => setV({ ...v, checkInTime: val })}>
           <SelectTrigger>
             <SelectValue />
@@ -436,7 +447,7 @@ function TimesEditor({
           </SelectContent>
         </Select>
       </Field>
-      <Field label="Check-out-Zeit">
+      <Field label={t("policiesForm.checkOutTimeLabel")}>
         <Select value={v.checkOutTime} onValueChange={(val) => setV({ ...v, checkOutTime: val })}>
           <SelectTrigger>
             <SelectValue />
@@ -470,11 +481,14 @@ function Summary({ title, text }: { title: string; text: string }) {
   );
 }
 
-function paymentSummary(p: Policy): string {
+function paymentSummary(p: Policy, t: ReturnType<typeof useTranslations>): string {
   if (p.paymentPlan === "one") {
-    return "100 % bei der Reservierung fällig.";
+    return t("policiesForm.paymentSummaryFull");
   }
-  return `${p.depositPercent} % bei Buchung, Restbetrag ${p.remainingDaysBefore} Tage vor Anreise.`;
+  return t("policiesForm.paymentSummarySplit", {
+    percent: p.depositPercent,
+    days: p.remainingDaysBefore,
+  });
 }
 
 // Mehrsprachiger Editor (Mietvertrag / Raten-Info): Sprachwahl + Rich-Text +
@@ -485,23 +499,25 @@ function LocalizedEditor({
   pol,
   onSave,
   onClose,
+  t,
 }: {
   title: string;
   field: "ratesInfo" | "rentalAgreement";
   pol: Policies;
   onSave: (next: Policies) => Promise<true | string>;
   onClose: () => void;
+  t: ReturnType<typeof useTranslations>;
 }) {
   const [v, setV] = useState<LocalizedText>(pol[field]);
   const { busy, error, run } = useSaver(onSave);
   return (
     <EditorShell
       title={title}
-      subtitle="Erstelle den Text und übersetze ihn bei Bedarf für deine Gäste."
+      subtitle={t("policiesForm.localizedEditorSubtitle")}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run({ ...pol, [field]: v })} />}
     >
-      <LocalizedTextEditor value={v} onChange={setV} placeholder={`${title} eingeben …`} />
+      <LocalizedTextEditor value={v} onChange={setV} placeholder={t("policiesForm.localizedEditorPlaceholder", { title })} />
     </EditorShell>
   );
 }

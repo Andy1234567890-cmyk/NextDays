@@ -2,6 +2,7 @@
 // wählen (Nutzer des eigenen Tenants); „Bearbeiten" öffnet das Profil
 // („Kontaktdaten bearbeiten"). Server Component lädt Objekt, Nutzerliste und
 // das eigene Konto; der Client-Teil rendert Liste, Suche und Editor.
+import { getTranslations } from "next-intl/server";
 import { ContactForm } from "@/components/objekte/contact-form";
 import { getAccount, listPropertyContacts } from "@/lib/account";
 import { getProperty } from "@/lib/properties";
@@ -12,6 +13,7 @@ export default async function Page({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  const t = await getTranslations("objects");
   const [propertyRes, usersRes, accountRes] = await Promise.all([
     getProperty(id),
     listPropertyContacts(id),
@@ -21,14 +23,14 @@ export default async function Page({
   if (!propertyRes.ok) {
     return (
       <div className="text-sm text-destructive">
-        Objekt konnte nicht geladen werden: {propertyRes.error}
+        {t("kontaktPage.propertyLoadError", { error: propertyRes.error })}
       </div>
     );
   }
   if (!accountRes.ok) {
     return (
       <div className="text-sm text-destructive">
-        Konto konnte nicht geladen werden: {accountRes.error}
+        {t("kontaktPage.accountLoadError", { error: accountRes.error })}
       </div>
     );
   }

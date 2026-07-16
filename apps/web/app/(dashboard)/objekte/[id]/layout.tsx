@@ -1,6 +1,8 @@
 // Objekt-Detail-Layout: Untermenü links (Rental details +
 // Reservation setup) mit Objekt-Wähler oben, Inhalt rechts. Server Component
 // lädt das Objekt für den Kopf; die Unterseiten rendern als {children}.
+import { getTranslations } from "next-intl/server";
+
 import { notFound } from "next/navigation";
 
 import { PropertyRealtime } from "@/components/objekte/property-realtime";
@@ -17,12 +19,13 @@ export default async function ObjektLayout({
 }) {
   const { id } = await params;
   const [res, me] = await Promise.all([getProperty(id), getMe()]);
+  const t = await getTranslations("objects");
   const isHotel = me?.accommodation_type === "hotel";
   if (!res.ok) {
     if (res.error.includes("nicht gefunden")) notFound();
     return (
       <div className="p-2 text-sm text-destructive">
-        Objekt konnte nicht geladen werden: {res.error}
+        {t("IdLayout.loadError", { error: res.error })}
       </div>
     );
   }

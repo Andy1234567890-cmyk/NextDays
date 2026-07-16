@@ -5,6 +5,7 @@
 //  Vorlaufzeit, gesperrte Check-in/out-Wochentage. Mehrere Blöcke erlauben
 //  „Custom setup per channel" (NextDays / Airbnb / Booking.com / Google).
 // Gespeichert per updateProperty() in type_attributes.availability.
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import {
@@ -61,6 +62,7 @@ type Section =
   | null;
 
 export function AvailabilityForm({ initial }: { initial: Property }) {
+  const t = useTranslations("objects");
   const [p, setP] = useState<Property>(initial);
   const [section, setSection] = useState<Section>(null);
   const av = readAvailability(p.type_attributes);
@@ -85,81 +87,95 @@ export function AvailabilityForm({ initial }: { initial: Property }) {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="font-display text-3xl font-extrabold">Verfügbarkeit</h1>
+      <h1 className="font-display text-3xl font-extrabold">{t("availabilityForm.title")}</h1>
 
       <BlockCard
-        title="Mindestaufenthalt"
-        hint="Lege einen Standard-Mindestaufenthalt fest. Optional Regeln nach Wochentagen."
+        title={t("availabilityForm.minStay.title")}
+        hint={t("availabilityForm.minStay.hint")}
         channels={["direct", "airbnb", "booking", "google"]}
+        actionLabel={t("availabilityForm.actionEdit")}
         onEdit={() => setSection("min")}
       >
-        <Pill>{av.minStay} Nächte</Pill>
+        <Pill>{t("availabilityForm.nightsCount", { count: av.minStay })}</Pill>
       </BlockCard>
 
       <BlockCard
-        title="Maximalaufenthalt"
-        hint="Maximale Anzahl Nächte, die dein Objekt gebucht werden kann."
+        title={t("availabilityForm.maxStay.title")}
+        hint={t("availabilityForm.maxStay.hint")}
         channels={["direct", "airbnb", "booking"]}
+        actionLabel={t("availabilityForm.actionEdit")}
         onEdit={() => setSection("max")}
       >
-        <Pill>{av.maxStay} Nächte</Pill>
+        <Pill>{t("availabilityForm.nightsCount", { count: av.maxStay })}</Pill>
       </BlockCard>
 
       <BlockCard
-        title="Vorbereitungszeit"
-        hint="Zeit zwischen Buchungen, in der keine Reservierungen möglich sind."
+        title={t("availabilityForm.preparation.title")}
+        hint={t("availabilityForm.preparation.hint")}
         channels={["direct", "airbnb"]}
-        actionLabel={av.preparationDays.global || av.preparationDays.custom ? "Bearbeiten" : "Hinzufügen"}
+        actionLabel={
+          av.preparationDays.global || av.preparationDays.custom
+            ? t("availabilityForm.actionEdit")
+            : t("availabilityForm.actionAdd")
+        }
         onEdit={() => setSection("prep")}
       >
         <PerChannelPills pc={av.preparationDays} options={PREPARATION_OPTIONS} />
       </BlockCard>
 
       <BlockCard
-        title="Buchungsfenster"
-        hint="Begrenze, wie viele Tage im Voraus Gäste buchen können."
+        title={t("availabilityForm.bookingWindow.title")}
+        hint={t("availabilityForm.bookingWindow.hint")}
         channels={ALL}
+        actionLabel={t("availabilityForm.actionEdit")}
         onEdit={() => setSection("window")}
       >
         <PerChannelPills pc={av.bookingWindowDays} options={BOOKING_WINDOW_OPTIONS} />
       </BlockCard>
 
       <BlockCard
-        title="Vorlaufzeit"
-        hint="Lege die späteste Zeit fest, zu der eine Reservierung möglich ist."
+        title={t("availabilityForm.advanceNotice.title")}
+        hint={t("availabilityForm.advanceNotice.hint")}
         channels={ALL}
+        actionLabel={t("availabilityForm.actionEdit")}
         onEdit={() => setSection("notice")}
       >
         <PerChannelPills pc={av.advanceNotice} options={ADVANCE_NOTICE_OPTIONS} />
       </BlockCard>
 
       <BlockCard
-        title="Gesperrte Check-in/out-Tage"
-        hint="Lege fest, an welchen Wochentagen Check-in und Check-out nicht möglich sind."
+        title={t("availabilityForm.blockedDays.title")}
+        hint={t("availabilityForm.blockedDays.hint")}
         channels={["direct", "airbnb", "booking", "google"]}
+        actionLabel={t("availabilityForm.actionEdit")}
         onEdit={() => setSection("days")}
       >
         <Pill>
-          Check-in: {dayLabel(av.unavailableCheckIn)} · Check-out: {dayLabel(av.unavailableCheckOut)}
+          {t("availabilityForm.blockedDays.summary", {
+            checkIn: dayLabel(av.unavailableCheckIn, t),
+            checkOut: dayLabel(av.unavailableCheckOut, t),
+          })}
         </Pill>
       </BlockCard>
 
       <BlockCard
-        title="Verkaufssteuerung"
-        hint="Verkaufsstopp am selben Tag ab einer Uhrzeit, Vorlauf in Tagen und wie weit in die Zukunft buchbar ist. Gilt für alle Portale."
+        title={t("availabilityForm.sales.title")}
+        hint={t("availabilityForm.sales.hint")}
         channels={["direct", "airbnb", "booking", "google"]}
+        actionLabel={t("availabilityForm.actionEdit")}
         onEdit={() => setSection("sales")}
       >
-        <Pill>{salesLabel(av)}</Pill>
+        <Pill>{salesLabel(av, t)}</Pill>
       </BlockCard>
 
       <BlockCard
-        title="Automatische Verfügbarkeit"
-        hint="Was bei neuer, geänderter oder stornierter Buchung mit der Verfügbarkeit passieren soll."
+        title={t("availabilityForm.autoUpdate.title")}
+        hint={t("availabilityForm.autoUpdate.hint")}
         channels={["direct", "airbnb", "booking", "google"]}
+        actionLabel={t("availabilityForm.actionEdit")}
         onEdit={() => setSection("autoupdate")}
       >
-        <Pill>{autoUpdateLabel(av)}</Pill>
+        <Pill>{autoUpdateLabel(av, t)}</Pill>
       </BlockCard>
 
       {/* Editoren */}
@@ -167,8 +183,8 @@ export function AvailabilityForm({ initial }: { initial: Property }) {
       {section === "max" && <MaxStayEditor av={av} onSave={save} onClose={() => setSection(null)} />}
       {section === "prep" && (
         <PerChannelEditor
-          title="Vorbereitungszeit"
-          subtitle="Zeit zwischen Buchungen, in der keine Reservierungen möglich sind."
+          title={t("availabilityForm.preparation.title")}
+          subtitle={t("availabilityForm.preparation.hint")}
           field="preparationDays"
           options={PREPARATION_OPTIONS}
           av={av}
@@ -178,8 +194,8 @@ export function AvailabilityForm({ initial }: { initial: Property }) {
       )}
       {section === "window" && (
         <PerChannelEditor
-          title="Buchungsfenster"
-          subtitle="Wie viele Tage im Voraus Gäste buchen können."
+          title={t("availabilityForm.bookingWindow.title")}
+          subtitle={t("availabilityForm.bookingWindow.editorSubtitle")}
           field="bookingWindowDays"
           options={BOOKING_WINDOW_OPTIONS}
           av={av}
@@ -189,8 +205,8 @@ export function AvailabilityForm({ initial }: { initial: Property }) {
       )}
       {section === "notice" && (
         <PerChannelEditor
-          title="Vorlaufzeit"
-          subtitle="Späteste Zeit, zu der eine Reservierung möglich ist."
+          title={t("availabilityForm.advanceNotice.title")}
+          subtitle={t("availabilityForm.advanceNotice.editorSubtitle")}
           field="advanceNotice"
           options={ADVANCE_NOTICE_OPTIONS}
           av={av}
@@ -208,22 +224,32 @@ export function AvailabilityForm({ initial }: { initial: Property }) {
 }
 
 // Kurzbeschreibung der Verkaufssteuerung für die Karte.
-function salesLabel(av: Availability): string {
+function salesLabel(av: Availability, t: ReturnType<typeof useTranslations>): string {
   const parts: string[] = [];
-  parts.push(av.cutOffTime ? `Stopp ${av.cutOffTime} Uhr` : "kein Tagesstopp");
-  if (av.cutOffDays > 0) parts.push(`${av.cutOffDays} Tag(e) Vorlauf`);
-  if (av.maxDayAdvance > 0) parts.push(`max. ${av.maxDayAdvance} Tage im Voraus`);
+  parts.push(
+    av.cutOffTime
+      ? t("availabilityForm.sales.summaryStopAt", { time: av.cutOffTime })
+      : t("availabilityForm.sales.summaryNoStop"),
+  );
+  if (av.cutOffDays > 0) {
+    parts.push(t("availabilityForm.sales.summaryLeadDays", { count: av.cutOffDays }));
+  }
+  if (av.maxDayAdvance > 0) {
+    parts.push(t("availabilityForm.sales.summaryMaxAdvance", { count: av.maxDayAdvance }));
+  }
   return parts.join(" · ");
 }
 
 // Kurzbeschreibung der Auto-Aktualisierung für die Karte.
-function autoUpdateLabel(av: Availability): string {
+function autoUpdateLabel(av: Availability, t: ReturnType<typeof useTranslations>): string {
   const on: string[] = [];
-  if (av.autoUpdateOnModification) on.push("Änderung");
-  if (av.autoUpdateOnCancellation) on.push("Storno");
+  if (av.autoUpdateOnModification) on.push(t("availabilityForm.autoUpdate.eventModification"));
+  if (av.autoUpdateOnCancellation) on.push(t("availabilityForm.autoUpdate.eventCancellation"));
   // Neue Buchung senkt immer (Channex erzwingt das) — daher separat nennen.
-  const base = "Neue Buchung senkt automatisch";
-  return on.length ? `${base} · auch bei ${on.join(" + ")}` : base;
+  const base = t("availabilityForm.autoUpdate.summaryBase");
+  return on.length
+    ? t("availabilityForm.autoUpdate.summaryWithEvents", { base, events: on.join(" + ") })
+    : base;
 }
 
 // --- Karten/Bausteine ------------------------------------------------------
@@ -232,14 +258,14 @@ function BlockCard({
   title,
   hint,
   channels,
-  actionLabel = "Bearbeiten",
+  actionLabel,
   onEdit,
   children,
 }: {
   title: string;
   hint: string;
   channels: Channel[];
-  actionLabel?: string;
+  actionLabel: string;
   onEdit: () => void;
   children: React.ReactNode;
 }) {
@@ -285,9 +311,11 @@ function PerChannelPills<T extends string | number>({
   );
 }
 
-function dayLabel(f: WeekdayFlags): string {
+function dayLabel(f: WeekdayFlags, t: ReturnType<typeof useTranslations>): string {
   const n = countDays(f);
-  return n === 0 ? "alle Tage verfügbar" : `${n} Tag(e) gesperrt`;
+  return n === 0
+    ? t("availabilityForm.blockedDays.allAvailable")
+    : t("availabilityForm.blockedDays.blockedCount", { count: n });
 }
 
 // --- Editoren ---------------------------------------------------------------
@@ -301,17 +329,18 @@ function MinStayEditor({
   onSave: (next: Availability) => Promise<true | string>;
   onClose: () => void;
 }) {
+  const t = useTranslations("objects");
   const [v, setV] = useState(av);
   const { busy, error, run } = useSaver(onSave);
   return (
     <EditorShell
-      title="Mindestaufenthalt"
-      subtitle="Lege einen Standard-Mindestaufenthalt fest. Optional Regeln nach Wochentagen."
+      title={t("availabilityForm.minStay.title")}
+      subtitle={t("availabilityForm.minStay.hint")}
       channels={["direct", "airbnb", "booking"]}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} disabled={v.minStay < 1} />}
     >
-      <Field label="Mindestaufenthalt *">
+      <Field label={t("availabilityForm.minStay.fieldLabel")}>
         <div className="flex items-center gap-2">
           <Input
             type="number"
@@ -319,14 +348,14 @@ function MinStayEditor({
             value={v.minStay}
             onChange={(e) => setV({ ...v, minStay: Number(e.target.value) || 1 })}
           />
-          <span className="text-sm text-muted-foreground">Nächte</span>
+          <span className="text-sm text-muted-foreground">{t("availabilityForm.nights")}</span>
         </div>
       </Field>
       <label className="flex cursor-pointer items-start justify-between gap-3 text-sm">
         <span>
-          <span className="font-medium">Regeln nach Buchungstagen</span>
+          <span className="font-medium">{t("availabilityForm.minStay.byDaysTitle")}</span>
           <span className="mt-0.5 block text-muted-foreground">
-            Umfasst eine Reservierung mehrere Tage, gilt der längste Mindestaufenthalt.
+            {t("availabilityForm.minStay.byDaysHint")}
           </span>
         </span>
         <Switch checked={v.minStayByDays} onCheckedChange={(c) => setV({ ...v, minStayByDays: c })} />
@@ -344,17 +373,18 @@ function MaxStayEditor({
   onSave: (next: Availability) => Promise<true | string>;
   onClose: () => void;
 }) {
+  const t = useTranslations("objects");
   const [v, setV] = useState(av);
   const { busy, error, run } = useSaver(onSave);
   return (
     <EditorShell
-      title="Maximalaufenthalt"
-      subtitle="Maximale Anzahl Nächte, die dein Objekt gebucht werden kann."
+      title={t("availabilityForm.maxStay.title")}
+      subtitle={t("availabilityForm.maxStay.hint")}
       channels={["direct", "airbnb", "booking"]}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
     >
-      <Field label="Maximalaufenthalt *">
+      <Field label={t("availabilityForm.maxStay.fieldLabel")}>
         <div className="flex items-center gap-2">
           <Input
             type="number"
@@ -362,13 +392,10 @@ function MaxStayEditor({
             value={v.maxStay}
             onChange={(e) => setV({ ...v, maxStay: Number(e.target.value) || 1 })}
           />
-          <span className="text-sm text-muted-foreground">Nächte</span>
+          <span className="text-sm text-muted-foreground">{t("availabilityForm.nights")}</span>
         </div>
       </Field>
-      <Hint>
-        Der maximal zulässige Aufenthalt bei Booking.com beträgt 90 Nächte. Bei einem
-        höheren Wert wird automatisch dieses Limit angewendet.
-      </Hint>
+      <Hint>{t("availabilityForm.maxStay.limitHint")}</Hint>
     </EditorShell>
   );
 }
@@ -391,6 +418,7 @@ function PerChannelEditor<T extends string | number>({
   onSave: (next: Availability) => Promise<true | string>;
   onClose: () => void;
 }) {
+  const t = useTranslations("objects");
   const [pc, setPc] = useState<PerChannel<T>>(av[field] as PerChannel<T>);
   const { busy, error, run } = useSaver(onSave);
 
@@ -407,7 +435,7 @@ function PerChannelEditor<T extends string | number>({
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={commit} />}
     >
       {/* Globaler Wert (deaktiviert, wenn pro Kanal) */}
-      <Field label="Für alle Kanäle">
+      <Field label={t("availabilityForm.perChannel.forAllChannels")}>
         <Select
           value={String(pc.global)}
           onValueChange={(val) => setPc({ ...pc, global: cast(options, val) })}
@@ -426,7 +454,7 @@ function PerChannelEditor<T extends string | number>({
       <div className="h-px bg-border" />
 
       <label className="flex cursor-pointer items-center justify-between gap-3 text-sm">
-        <span className="font-medium">Eigene Einstellung pro Kanal</span>
+        <span className="font-medium">{t("availabilityForm.perChannel.customPerChannel")}</span>
         <Switch checked={pc.custom} onCheckedChange={(c) => setPc({ ...pc, custom: c })} />
       </label>
 
@@ -483,20 +511,21 @@ function DaysEditor({
   onSave: (next: Availability) => Promise<true | string>;
   onClose: () => void;
 }) {
+  const t = useTranslations("objects");
   const [v, setV] = useState(av);
   const { busy, error, run } = useSaver(onSave);
   return (
     <EditorShell
-      title="Gesperrte Check-in/out-Tage"
-      subtitle="Lege fest, an welchen Wochentagen Check-in und Check-out nicht möglich sind."
+      title={t("availabilityForm.blockedDays.title")}
+      subtitle={t("availabilityForm.blockedDays.hint")}
       channels={["direct", "airbnb", "booking"]}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
     >
       <div className="flex flex-col gap-3">
-        <p className="font-medium">Gesperrte Tage für Check-in</p>
+        <p className="font-medium">{t("availabilityForm.blockedDays.checkInTitle")}</p>
         <p className="text-sm text-muted-foreground">
-          An den ausgewählten Tagen ist kein Check-in möglich.
+          {t("availabilityForm.blockedDays.checkInHint")}
         </p>
         <DayChecks
           value={v.unavailableCheckIn}
@@ -507,9 +536,9 @@ function DaysEditor({
       <div className="h-px bg-border" />
 
       <div className="flex flex-col gap-3">
-        <p className="font-medium">Gesperrte Tage für Check-out</p>
+        <p className="font-medium">{t("availabilityForm.blockedDays.checkOutTitle")}</p>
         <p className="text-sm text-muted-foreground">
-          An den ausgewählten Tagen ist kein Check-out möglich.
+          {t("availabilityForm.blockedDays.checkOutHint")}
         </p>
         <DayChecks
           value={v.unavailableCheckOut}
@@ -531,17 +560,18 @@ function SalesEditor({
   onSave: (next: Availability) => Promise<true | string>;
   onClose: () => void;
 }) {
+  const t = useTranslations("objects");
   const [v, setV] = useState(av);
   const { busy, error, run } = useSaver(onSave);
   return (
     <EditorShell
-      title="Verkaufssteuerung"
-      subtitle="Steuere, bis wann und wie weit im Voraus dein Objekt buchbar ist. Diese Regeln gelten für alle Portale."
+      title={t("availabilityForm.sales.title")}
+      subtitle={t("availabilityForm.sales.editorSubtitle")}
       channels={["direct", "airbnb", "booking", "google"]}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
     >
-      <Field label="Verkaufsstopp am selben Tag ab">
+      <Field label={t("availabilityForm.sales.cutOffTimeLabel")}>
         <Select
           value={v.cutOffTime}
           onValueChange={(val) => setV({ ...v, cutOffTime: val })}
@@ -556,12 +586,9 @@ function SalesEditor({
           </SelectContent>
         </Select>
       </Field>
-      <Hint>
-        Ist die Uhrzeit (Zeitzone des Objekts) erreicht, wird der aktuelle Tag für
-        Buchungen geschlossen — verhindert Last-Minute-Buchungen ohne Vorlauf.
-      </Hint>
+      <Hint>{t("availabilityForm.sales.cutOffTimeHint")}</Hint>
 
-      <Field label="Vorlauf vor Anreise">
+      <Field label={t("availabilityForm.sales.cutOffDaysLabel")}>
         <div className="flex items-center gap-2">
           <Input
             type="number"
@@ -569,11 +596,11 @@ function SalesEditor({
             value={v.cutOffDays}
             onChange={(e) => setV({ ...v, cutOffDays: Math.max(0, Number(e.target.value) || 0) })}
           />
-          <span className="text-sm text-muted-foreground">Tage (0 = aus)</span>
+          <span className="text-sm text-muted-foreground">{t("availabilityForm.daysOffWhenZero")}</span>
         </div>
       </Field>
 
-      <Field label="Maximal buchbar im Voraus">
+      <Field label={t("availabilityForm.sales.maxDayAdvanceLabel")}>
         <div className="flex items-center gap-2">
           <Input
             type="number"
@@ -581,17 +608,14 @@ function SalesEditor({
             value={v.maxDayAdvance}
             onChange={(e) => setV({ ...v, maxDayAdvance: Math.max(0, Number(e.target.value) || 0) })}
           />
-          <span className="text-sm text-muted-foreground">Tage (0 = aus)</span>
+          <span className="text-sm text-muted-foreground">{t("availabilityForm.daysOffWhenZero")}</span>
         </div>
       </Field>
-      <Hint>
-        Schließt Daten, die weiter in der Zukunft liegen. Achtung: Diese Tage werden
-        nicht automatisch wieder geöffnet.
-      </Hint>
+      <Hint>{t("availabilityForm.sales.maxDayAdvanceHint")}</Hint>
 
       <div className="h-px bg-border" />
 
-      <Field label="Mindestaufenthalt-Regel">
+      <Field label={t("availabilityForm.sales.minStayTypeLabel")}>
         <Select
           value={v.minStayType}
           onValueChange={(val) => setV({ ...v, minStayType: val as MinStayType })}
@@ -606,10 +630,7 @@ function SalesEditor({
           </SelectContent>
         </Select>
       </Field>
-      <Hint>
-        „Nur bei Anreise" prüft den Mindestaufenthalt am Anreisetag, „durchgehend"
-        an jedem Tag des Zeitraums. „Beide" ist der sicherste Standard.
-      </Hint>
+      <Hint>{t("availabilityForm.sales.minStayTypeHint")}</Hint>
     </EditorShell>
   );
 }
@@ -624,22 +645,22 @@ function AutoUpdateEditor({
   onSave: (next: Availability) => Promise<true | string>;
   onClose: () => void;
 }) {
+  const t = useTranslations("objects");
   const [v, setV] = useState(av);
   const { busy, error, run } = useSaver(onSave);
   return (
     <EditorShell
-      title="Automatische Verfügbarkeit"
-      subtitle="Entscheide, was mit der Verfügbarkeit passiert, wenn eine Buchung eingeht, geändert oder storniert wird."
+      title={t("availabilityForm.autoUpdate.title")}
+      subtitle={t("availabilityForm.autoUpdate.editorSubtitle")}
       channels={["direct", "airbnb", "booking", "google"]}
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
     >
       <label className="flex items-start justify-between gap-3 text-sm opacity-70">
         <span>
-          <span className="font-medium">Neue Buchung</span>
+          <span className="font-medium">{t("availabilityForm.autoUpdate.newBookingTitle")}</span>
           <span className="mt-0.5 block text-muted-foreground">
-            Bei jeder neuen Buchung wird die Verfügbarkeit automatisch gesenkt.
-            Aus Sicherheitsgründen nicht abschaltbar.
+            {t("availabilityForm.autoUpdate.newBookingHint")}
           </span>
         </span>
         <Switch checked disabled />
@@ -647,9 +668,9 @@ function AutoUpdateEditor({
 
       <label className="flex cursor-pointer items-start justify-between gap-3 text-sm">
         <span>
-          <span className="font-medium">Geänderte Buchung</span>
+          <span className="font-medium">{t("availabilityForm.autoUpdate.modificationTitle")}</span>
           <span className="mt-0.5 block text-muted-foreground">
-            Bei Änderung einer Buchung wird die Verfügbarkeit automatisch angepasst.
+            {t("availabilityForm.autoUpdate.modificationHint")}
           </span>
         </span>
         <Switch
@@ -660,9 +681,9 @@ function AutoUpdateEditor({
 
       <label className="flex cursor-pointer items-start justify-between gap-3 text-sm">
         <span>
-          <span className="font-medium">Stornierte Buchung</span>
+          <span className="font-medium">{t("availabilityForm.autoUpdate.cancellationTitle")}</span>
           <span className="mt-0.5 block text-muted-foreground">
-            Bei Stornierung wird die Verfügbarkeit automatisch wieder freigegeben.
+            {t("availabilityForm.autoUpdate.cancellationHint")}
           </span>
         </span>
         <Switch

@@ -6,6 +6,7 @@
 //  - „Übersetzen"-Button: übersetzt den aktuellen Text in andere Sprachen
 //    (Google Cloud Translation über das Backend; Key bleibt serverseitig).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ export function LocalizedTextEditor({
   onChange: (next: LocalizedText) => void;
   placeholder?: string;
 }) {
+  const t = useTranslations("objects");
   const [lang, setLang] = useState<Lang>("de");
   const [busy, setBusy] = useState<Lang | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +51,7 @@ export function LocalizedTextEditor({
   async function translateTo(target: Lang) {
     const sourceHtml = value[lang];
     if (!stripHtml(sourceHtml).trim()) {
-      setError("Kein Text zum Übersetzen in der aktuellen Sprache.");
+      setError(t("localizedTextEditor.noTextToTranslate"));
       return;
     }
     setBusy(target);
@@ -95,16 +97,18 @@ export function LocalizedTextEditor({
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="gap-2" disabled={busy !== null}>
               <Icon icon="ph:translate" className="size-4" />
-              {busy ? "Übersetzt…" : "Übersetzen"}
+              {busy ? t("localizedTextEditor.translating") : t("localizedTextEditor.translate")}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuLabel>Aus {LANG_LABELS[lang]} nach …</DropdownMenuLabel>
+            <DropdownMenuLabel>
+              {t("localizedTextEditor.fromLangTo", { lang: LANG_LABELS[lang] })}
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            {targets.map((t) => (
-              <DropdownMenuItem key={t} onClick={() => translateTo(t)}>
-                <Icon icon={LANG_FLAGS[t]} className="size-4" />
-                {LANG_LABELS[t]}
+            {targets.map((target) => (
+              <DropdownMenuItem key={target} onClick={() => translateTo(target)}>
+                <Icon icon={LANG_FLAGS[target]} className="size-4" />
+                {LANG_LABELS[target]}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>

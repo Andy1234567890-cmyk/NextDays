@@ -5,6 +5,7 @@
 //  Website). Bearbeitung über einen Sheet-Editor; gespeichert per
 //  updateProperty() in das flexible Feld type_attributes.compliance.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,7 @@ import {
 import { type Property, updateProperty } from "@/lib/properties";
 
 export function ComplianceForm({ initial }: { initial: Property }) {
+  const t = useTranslations("objects");
   const [p, setP] = useState<Property>(initial);
   const [editing, setEditing] = useState(false);
   const comp = readCompliance(p.type_attributes);
@@ -46,18 +48,23 @@ export function ComplianceForm({ initial }: { initial: Property }) {
 
   return (
     <div className="flex flex-col gap-8">
-      <h1 className="font-display text-3xl font-extrabold">Compliance</h1>
+      <h1 className="font-display text-3xl font-extrabold">
+        {t("complianceForm.title")}
+      </h1>
 
       <section className="flex flex-col gap-4">
-        <h2 className="font-display text-xl font-extrabold">Website</h2>
+        <h2 className="font-display text-xl font-extrabold">
+          {t("complianceForm.websiteSection")}
+        </h2>
 
         <Card className="flex items-start justify-between gap-4 p-5">
           <div className="flex flex-col gap-3">
             <div className="leading-tight">
-              <p className="font-semibold">Registrierungsdetails</p>
+              <p className="font-semibold">
+                {t("complianceForm.registrationDetails")}
+              </p>
               <p className="mt-0.5 text-sm text-muted-foreground">
-                Hinterlege die Registrierungsdaten deines Objekts, um lokale
-                Vorschriften zu erfüllen.
+                {t("complianceForm.registrationDetailsHint")}
               </p>
             </div>
             {numbers.length > 0 ? (
@@ -73,7 +80,7 @@ export function ComplianceForm({ initial }: { initial: Property }) {
               </div>
             ) : (
               <p className="text-sm text-muted-foreground/70">
-                Noch keine Registrierungsnummer hinterlegt.
+                {t("complianceForm.noRegistrationNumber")}
               </p>
             )}
           </div>
@@ -81,7 +88,7 @@ export function ComplianceForm({ initial }: { initial: Property }) {
           <Button
             variant="outline"
             size="icon"
-            aria-label="Registrierungsdetails bearbeiten"
+            aria-label={t("complianceForm.editRegistrationDetailsAriaLabel")}
             onClick={() => setEditing(true)}
           >
             <Icon icon="ph:pencil-simple" className="size-4" />
@@ -94,6 +101,7 @@ export function ComplianceForm({ initial }: { initial: Property }) {
           comp={comp}
           onSave={save}
           onClose={() => setEditing(false)}
+          t={t}
         />
       )}
     </div>
@@ -104,10 +112,12 @@ function RegistrationEditor({
   comp,
   onSave,
   onClose,
+  t,
 }: {
   comp: Compliance;
   onSave: (next: Compliance) => Promise<true | string>;
   onClose: () => void;
+  t: ReturnType<typeof useTranslations<"objects">>;
 }) {
   const [value, setValue] = useState(comp.registrationNumbers);
   const [busy, setBusy] = useState(false);
@@ -126,24 +136,23 @@ function RegistrationEditor({
       <SheetContent className="flex h-full w-full flex-col gap-0 p-0 sm:max-w-lg">
         <SheetHeader className="border-b">
           <SheetTitle className="font-display text-xl font-extrabold">
-            Registrierungsdetails
+            {t("complianceForm.registrationDetails")}
           </SheetTitle>
           <SheetDescription>
-            Füge die Registrierungsnummer dieses Objekts für deine
-            NextDays-Website hinzu. Für Airbnb und Booking.com trägst du sie
-            direkt in deren Plattform ein.
+            {t("complianceForm.editorDescription")}
           </SheetDescription>
         </SheetHeader>
 
         <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-5">
           <p className="text-sm text-muted-foreground">
-            Hast du mehr als eine Nummer, trage sie alle in das Feld unten ein –
-            durch Kommas getrennt.
+            {t("complianceForm.multipleNumbersHint")}
           </p>
 
           <div className="flex flex-col gap-1.5">
             <div className="flex items-center justify-between">
-              <Label htmlFor="registration-number">Registrierungsnummer</Label>
+              <Label htmlFor="registration-number">
+                {t("complianceForm.registrationNumberLabel")}
+              </Label>
               <span className="text-sm text-muted-foreground">
                 {value.length}/{REGISTRATION_MAX_LENGTH}
               </span>
@@ -153,28 +162,24 @@ function RegistrationEditor({
               value={value}
               maxLength={REGISTRATION_MAX_LENGTH}
               onChange={(e) => setValue(e.target.value)}
-              placeholder="Registrierungsnummern durch Komma getrennt eingeben"
+              placeholder={t("complianceForm.registrationNumberPlaceholder")}
             />
           </div>
 
           {/* Hinweis nach dem Speichern (orange Box). */}
           <div className="flex items-start gap-2 rounded-(--radius) bg-amber-50 p-3 text-sm text-amber-900">
             <Icon icon="ph:warning" className="mt-0.5 size-4 shrink-0" />
-            <span>
-              Noch ein Schritt nach dem Speichern: Gehe danach zu
-              Website-Builder &gt; Veröffentlichen, um deine Website mit den
-              Änderungen zu aktualisieren.
-            </span>
+            <span>{t("complianceForm.publishReminder")}</span>
           </div>
         </div>
 
         <div className="flex items-center justify-end gap-3 border-t p-4">
           {error && <p className="mr-auto text-sm text-destructive">{error}</p>}
           <Button variant="ghost" onClick={onClose} disabled={busy}>
-            Abbrechen
+            {t("complianceForm.cancel")}
           </Button>
           <Button onClick={handleSave} disabled={busy}>
-            {busy ? "Speichern…" : "Speichern"}
+            {busy ? t("complianceForm.saving") : t("complianceForm.save")}
           </Button>
         </div>
       </SheetContent>

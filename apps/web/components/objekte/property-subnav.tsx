@@ -3,38 +3,39 @@
 // Untermenü der Objekt-Detailseite: Objekt-Wähler oben +
 // zwei Gruppen „Objektdetails" und „Reservierung". Aktiver Punkt hervorgehoben.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { STATUS_LABELS } from "@/lib/property-meta";
 import type { PropertyStatus } from "@/lib/properties";
 
-type SubnavItem = { slug: string; title: string; icon: string; hotelOnly?: boolean };
+type SubnavItem = { slug: string; titleKey: string; icon: string; hotelOnly?: boolean };
 
-const GROUPS: { label: string; items: SubnavItem[] }[] = [
+const GROUPS: { labelKey: string; items: SubnavItem[] }[] = [
   {
-    label: "Objektdetails",
+    labelKey: "groupObjectDetails",
     items: [
-      { slug: "", title: "Übersicht", icon: "ph:house" },
-      { slug: "fotos", title: "Fotos", icon: "ph:image" },
-      { slug: "standort", title: "Standort", icon: "ph:map-pin" },
-      { slug: "kontakt", title: "Kontakt", icon: "ph:address-book" },
-      { slug: "kartei", title: "Kartei", icon: "ph:clipboard-text" },
-      { slug: "nachrichten", title: "Nachrichten-Platzhalter", icon: "ph:chat-text" },
-      { slug: "compliance", title: "Compliance", icon: "ph:seal-check" },
+      { slug: "", titleKey: "itemOverview", icon: "ph:house" },
+      { slug: "fotos", titleKey: "itemPhotos", icon: "ph:image" },
+      { slug: "standort", titleKey: "itemLocation", icon: "ph:map-pin" },
+      { slug: "kontakt", titleKey: "itemContact", icon: "ph:address-book" },
+      { slug: "kartei", titleKey: "itemFile", icon: "ph:clipboard-text" },
+      { slug: "nachrichten", titleKey: "itemMessagesPlaceholder", icon: "ph:chat-text" },
+      { slug: "compliance", titleKey: "itemCompliance", icon: "ph:seal-check" },
     ],
   },
   {
-    label: "Reservierung",
+    labelKey: "groupReservation",
     items: [
       // Nur im Hotel-Modus: Zimmerkategorien (room_types) + je Kategorie eigene
       // Rate-Plans. currency-neutrales Icon (kein €-Symbol — Hotel kann USD sein).
-      { slug: "zimmerkategorien", title: "Zimmerkategorien", icon: "ph:bed", hotelOnly: true },
-      { slug: "preise", title: "Preise", icon: "ph:tag" },
-      { slug: "zusatzleistungen", title: "Zusatzleistungen", icon: "ph:plus-circle" },
-      { slug: "verfuegbarkeit", title: "Verfügbarkeit", icon: "ph:calendar-blank" },
-      { slug: "richtlinien", title: "Richtlinien", icon: "ph:file-text" },
-      { slug: "saisonpreise", title: "Saisonpreise", icon: "ph:sun" },
+      { slug: "zimmerkategorien", titleKey: "itemRoomCategories", icon: "ph:bed", hotelOnly: true },
+      { slug: "preise", titleKey: "itemPrices", icon: "ph:tag" },
+      { slug: "zusatzleistungen", titleKey: "itemAddons", icon: "ph:plus-circle" },
+      { slug: "verfuegbarkeit", titleKey: "itemAvailability", icon: "ph:calendar-blank" },
+      { slug: "richtlinien", titleKey: "itemPolicies", icon: "ph:file-text" },
+      { slug: "saisonpreise", titleKey: "itemSeasonalPrices", icon: "ph:sun" },
     ],
   },
 ];
@@ -52,6 +53,7 @@ export function PropertySubnav({
   status: PropertyStatus;
   isHotel?: boolean;
 }) {
+  const t = useTranslations("objects");
   const pathname = usePathname();
   const base = `/objekte/${id}`;
 
@@ -82,9 +84,9 @@ export function PropertySubnav({
 
       {/* Gruppen */}
       {GROUPS.map((g) => (
-        <div key={g.label} className="flex flex-col gap-1">
+        <div key={g.labelKey} className="flex flex-col gap-1">
           <span className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {g.label}
+            {t(`propertySubnav.${g.labelKey}`)}
           </span>
           {g.items
             .filter((it) => !it.hotelOnly || isHotel)
@@ -101,7 +103,7 @@ export function PropertySubnav({
                   }`}
               >
                 <Icon icon={it.icon} className="size-4 shrink-0" />
-                <span className="truncate">{it.title}</span>
+                <span className="truncate">{t(`propertySubnav.${it.titleKey}`)}</span>
               </Link>
             );
           })}

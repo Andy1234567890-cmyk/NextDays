@@ -6,6 +6,7 @@
 // „wann anzeigen", aktiv, Reihenfolge. Echtes Realtime (Supabase WebSocket,
 // kein Polling) auf property_addons.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -28,21 +29,31 @@ import {
 import { formatCurrency } from "@/lib/currency";
 import { useRealtime } from "@/lib/use-realtime";
 
-const BASIS_OPTIONS: { value: Addon["basis"]; label: string }[] = [
-  { value: "per_stay", label: "Pro Aufenthalt" },
-  { value: "per_night", label: "Pro Nacht" },
-  { value: "per_guest", label: "Pro Gast" },
-  { value: "per_unit", label: "Pro Einheit" },
-];
-const SURFACES: { value: AddonSurface; label: string }[] = [
-  { value: "booking_engine", label: "Buchungsseite" },
-  { value: "guest_portal", label: "Gäste-Portal" },
-  { value: "checkin", label: "Check-in" },
-];
-const AVAILABILITY: { value: Addon["available_until"]; label: string }[] = [
-  { value: "anytime", label: "Jederzeit" },
-  { value: "before_checkin", label: "Nur vor Anreise" },
-];
+type TFunc = ReturnType<typeof useTranslations>;
+
+function getBasisOptions(t: TFunc): { value: Addon["basis"]; label: string }[] {
+  return [
+    { value: "per_stay", label: t("addonsManager.basisPerStay") },
+    { value: "per_night", label: t("addonsManager.basisPerNight") },
+    { value: "per_guest", label: t("addonsManager.basisPerGuest") },
+    { value: "per_unit", label: t("addonsManager.basisPerUnit") },
+  ];
+}
+function getSurfaces(t: TFunc): { value: AddonSurface; label: string }[] {
+  return [
+    { value: "booking_engine", label: t("addonsManager.surfaceBookingEngine") },
+    { value: "guest_portal", label: t("addonsManager.surfaceGuestPortal") },
+    { value: "checkin", label: t("addonsManager.surfaceCheckin") },
+  ];
+}
+function getAvailability(
+  t: TFunc,
+): { value: Addon["available_until"]; label: string }[] {
+  return [
+    { value: "anytime", label: t("addonsManager.availabilityAnytime") },
+    { value: "before_checkin", label: t("addonsManager.availabilityBeforeCheckin") },
+  ];
+}
 
 function emptyDraft(sortOrder: number): AddonInput {
   return {
@@ -70,11 +81,14 @@ export function AddonsManager({
   // Objekt-Währung (aus dem Rate-Plan); null = keine hinterlegt → kein €-Fallback.
   currency: string | null;
 }) {
+  const t = useTranslations("objects");
   const router = useRouter();
   const [items, setItems] = useState<Addon[]>(initial);
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState<AddonInput | null>(null);
   const [busy, setBusy] = useState(false);
+  const basisOptions = getBasisOptions(t);
+  const surfaces = getSurfaces(t);
 
   // Betrag in Objekt-Währung; ohne hinterlegte Währung nur der nackte Wert
   // (nie € erfinden — Mehrwährung über 27 EU-Länder).
@@ -142,7 +156,7 @@ export function AddonsManager({
         : await updateAddon(editing as string, draft);
     setBusy(false);
     if (res.ok) {
-      toast.success("Gespeichert.");
+      toast.success(t("addonsManager.toastSaved"));
       cancel();
       router.refresh();
     } else {
@@ -151,11 +165,11 @@ export function AddonsManager({
   }
 
   async function remove(id: string) {
-    if (!window.confirm("Zusatzleistung wirklich löschen?")) return;
+    if (!window.confirm(t("addonsManager.confirmDelete"))) return;
     const res = await deleteAddon(id);
     if (res.ok) {
       setItems((xs) => xs.filter((x) => x.id !== id));
-      toast.success("Gelöscht.");
+      toast.success(t("addonsManager.toastDeleted"));
       router.refresh();
     } else {
       toast.error(res.error);
@@ -167,7 +181,7 @@ export function AddonsManager({
     const res = await uploadAddonMedia(addonId, file);
     if (res.ok) {
       patch("media", res.data.media);
-      toast.success("Medium hochgeladen.");
+      toast.success(t("addonsManager.toastMediaUploaded"));
     } else {
       toast.error(res.error);
     }
@@ -177,16 +191,17 @@ export function AddonsManager({
     <div className="flex flex-col gap-6">
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
-          <h1 className="font-display text-2xl font-extrabold">Zusatzleistungen</h1>
+          <h1 className="font-display text-2xl font-extrabold">
+            {t("addonsManager.title")}
+          </h1>
           <p className="text-sm text-muted-foreground">
-            Optionale Extras, die Gäste auf der Buchungsseite oder im Gäste-Portal
-            dazubuchen — z. B. Früh-Check-in, Reinigung, Frühstück, Transfer.
+            {t("addonsManager.subtitle")}
           </p>
         </div>
         {editing === null && (
           <Button onClick={startCreate}>
             <Icon icon="ph:plus" className="size-4" />
-            Neu
+            {t("addonsManager.new")}
           </Button>
         )}
       </div>
@@ -207,7 +222,7 @@ export function AddonsManager({
 
       {items.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Noch keine Zusatzleistungen angelegt.
+          {t("addonsManager.emptyState")}
         </p>
       ) : (
         <div className="flex flex-col gap-3">
@@ -226,37 +241,37 @@ export function AddonsManager({
               </span>
               <div className="flex min-w-40 flex-1 flex-col">
                 <span className="font-medium">
-                  {a.name.de || a.name.en || "(ohne Namen)"}
+                  {a.name.de || a.name.en || t("addonsManager.unnamed")}
                   {a.mandatory && (
                     <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 text-xs">
-                      Pflicht
+                      {t("addonsManager.mandatoryBadge")}
                     </span>
                   )}
                   {!a.active && (
                     <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                      Inaktiv
+                      {t("addonsManager.inactiveBadge")}
                     </span>
                   )}
                 </span>
                 <span className="text-sm text-muted-foreground">
                   {money(a.price)}{" "}
-                  {BASIS_OPTIONS.find((b) => b.value === a.basis)?.label}
+                  {basisOptions.find((b) => b.value === a.basis)?.label}
                   {" · "}
                   {a.appears_in
-                    .map((s) => SURFACES.find((x) => x.value === s)?.label)
+                    .map((s) => surfaces.find((x) => x.value === s)?.label)
                     .filter(Boolean)
                     .join(", ")}
                 </span>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" size="sm" onClick={() => startEdit(a)}>
-                  Bearbeiten
+                  {t("addonsManager.edit")}
                 </Button>
                 <Button
                   variant="ghost"
                   size="icon"
                   onClick={() => void remove(a.id)}
-                  aria-label="Löschen"
+                  aria-label={t("addonsManager.delete")}
                 >
                   <Icon icon="ph:trash" className="size-4" />
                 </Button>
@@ -290,10 +305,14 @@ function AddonForm({
   onSave: () => void;
   onCancel: () => void;
 }) {
+  const t = useTranslations("objects");
+  const basisOptions = getBasisOptions(t);
+  const surfaces = getSurfaces(t);
+  const availability = getAvailability(t);
   return (
     <Card className="flex flex-col gap-4 p-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label="Name (Deutsch)">
+        <Field label={t("addonsManager.nameDe")}>
           <Input
             value={draft.name?.de ?? ""}
             onChange={(e) =>
@@ -301,7 +320,7 @@ function AddonForm({
             }
           />
         </Field>
-        <Field label="Name (Englisch)">
+        <Field label={t("addonsManager.nameEn")}>
           <Input
             value={draft.name?.en ?? ""}
             onChange={(e) =>
@@ -312,7 +331,7 @@ function AddonForm({
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label="Beschreibung (Deutsch)">
+        <Field label={t("addonsManager.descriptionDe")}>
           <Textarea
             value={draft.description?.de ?? ""}
             onChange={(e) =>
@@ -320,7 +339,7 @@ function AddonForm({
             }
           />
         </Field>
-        <Field label="Beschreibung (Englisch)">
+        <Field label={t("addonsManager.descriptionEn")}>
           <Textarea
             value={draft.description?.en ?? ""}
             onChange={(e) =>
@@ -331,7 +350,13 @@ function AddonForm({
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Field label={currency ? `Preis (${currency})` : "Preis"}>
+        <Field
+          label={
+            currency
+              ? t("addonsManager.priceWithCurrency", { currency })
+              : t("addonsManager.price")
+          }
+        >
           <Input
             type="number"
             min={0}
@@ -340,19 +365,19 @@ function AddonForm({
             onChange={(e) => onPatch("price", Number(e.target.value))}
           />
         </Field>
-        <Field label="Abrechnungsbasis">
+        <Field label={t("addonsManager.basisLabel")}>
           <NativeSelect
             value={draft.basis}
             onChange={(e) => onPatch("basis", e.target.value as Addon["basis"])}
           >
-            {BASIS_OPTIONS.map((b) => (
+            {basisOptions.map((b) => (
               <option key={b.value} value={b.value}>
                 {b.label}
               </option>
             ))}
           </NativeSelect>
         </Field>
-        <Field label="Steuersatz (%)">
+        <Field label={t("addonsManager.taxRateLabel")}>
           <Input
             type="number"
             min={0}
@@ -367,9 +392,11 @@ function AddonForm({
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-sm font-medium text-muted-foreground">Erscheint in</span>
+        <span className="text-sm font-medium text-muted-foreground">
+          {t("addonsManager.appearsIn")}
+        </span>
         <div className="flex flex-wrap gap-4">
-          {SURFACES.map((s) => (
+          {surfaces.map((s) => (
             <label key={s.value} className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
@@ -384,21 +411,21 @@ function AddonForm({
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <Field label="Wann anzeigen">
+        <Field label={t("addonsManager.availableUntilLabel")}>
           <NativeSelect
             value={draft.available_until}
             onChange={(e) =>
               onPatch("available_until", e.target.value as Addon["available_until"])
             }
           >
-            {AVAILABILITY.map((a) => (
+            {availability.map((a) => (
               <option key={a.value} value={a.value}>
                 {a.label}
               </option>
             ))}
           </NativeSelect>
         </Field>
-        <Field label="Reihenfolge">
+        <Field label={t("addonsManager.sortOrderLabel")}>
           <Input
             type="number"
             min={0}
@@ -414,7 +441,7 @@ function AddonForm({
               checked={draft.mandatory ?? false}
               onChange={(e) => onPatch("mandatory", e.target.checked)}
             />
-            Pflicht (immer dazu)
+            {t("addonsManager.mandatoryCheckbox")}
           </label>
           <label className="flex items-center gap-2 text-sm">
             <input
@@ -423,7 +450,7 @@ function AddonForm({
               checked={draft.active ?? true}
               onChange={(e) => onPatch("active", e.target.checked)}
             />
-            Aktiv
+            {t("addonsManager.activeCheckbox")}
           </label>
         </div>
       </div>
@@ -431,7 +458,7 @@ function AddonForm({
       {/* Medien: Upload nur möglich, wenn das Add-on schon existiert (braucht ID). */}
       <div className="flex flex-col gap-2">
         <span className="text-sm font-medium text-muted-foreground">
-          Medien ({(draft.media ?? []).length}/5)
+          {t("addonsManager.mediaCount", { count: (draft.media ?? []).length })}
         </span>
         <div className="flex flex-wrap items-center gap-2">
           {(draft.media ?? []).map((url) => (
@@ -455,7 +482,7 @@ function AddonForm({
             </label>
           ) : (
             <span className="text-xs text-muted-foreground">
-              Medien nach dem ersten Speichern hochladbar.
+              {t("addonsManager.mediaUploadHint")}
             </span>
           )}
         </div>
@@ -463,10 +490,10 @@ function AddonForm({
 
       <div className="flex justify-end gap-2">
         <Button variant="outline" onClick={onCancel}>
-          Abbrechen
+          {t("addonsManager.cancel")}
         </Button>
         <Button onClick={onSave} disabled={busy}>
-          {busy ? "Speichert…" : "Speichern"}
+          {busy ? t("addonsManager.saving") : t("addonsManager.save")}
         </Button>
       </div>
     </Card>

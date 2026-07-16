@@ -3,6 +3,7 @@
 // „Neues Objekt"-Button + Anlage-Sheet. Erfragt die Kernfelder (Name, Typ,
 // Gäste); alle weiteren Sektionen werden danach auf der Detailseite gepflegt.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -33,6 +34,7 @@ export function NewPropertyButton({
   // Ferienobjekte — Liste und Wortlaut passen sich an.
   accommodationType?: "vacation_rental" | "hotel" | null;
 }) {
+  const t = useTranslations("objects");
   const router = useRouter();
   const isHotel = accommodationType === "hotel";
   const typeOptions = typeOptionsFor(accommodationType);
@@ -72,33 +74,37 @@ export function NewPropertyButton({
     <>
       <Button onClick={() => setOpen(true)} className="gap-2">
         <Icon icon="ph:plus" className="size-4" />
-        {isHotel ? "Neues Zimmer" : "Neues Objekt"}
+        {isHotel ? t("newPropertyButton.newRoom") : t("newPropertyButton.newProperty")}
       </Button>
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent className="w-full sm:max-w-md">
           <SheetHeader>
             <SheetTitle className="font-display text-xl font-extrabold">
-              {isHotel ? "Neues Zimmer" : "Neues Objekt"}
+              {isHotel ? t("newPropertyButton.newRoom") : t("newPropertyButton.newProperty")}
             </SheetTitle>
             <SheetDescription>
-              Lege die Basisdaten an — Details folgen danach.
+              {t("newPropertyButton.sheetDescription")}
             </SheetDescription>
           </SheetHeader>
 
           <div className="flex flex-col gap-4 p-4">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="title">Name</Label>
+              <Label htmlFor="title">{t("newPropertyButton.nameLabel")}</Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder={isHotel ? "z. B. Zimmer 101" : "z. B. Villa Sonnenschein"}
+                placeholder={
+                  isHotel
+                    ? t("newPropertyButton.namePlaceholderHotel")
+                    : t("newPropertyButton.namePlaceholderVacationRental")
+                }
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label>Typ</Label>
+              <Label>{t("newPropertyButton.typeLabel")}</Label>
               <Select
                 value={type}
                 onValueChange={(v) => setType(v as PropertyType)}
@@ -117,7 +123,7 @@ export function NewPropertyButton({
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="guests">Max. Gäste</Label>
+              <Label htmlFor="guests">{t("newPropertyButton.maxGuestsLabel")}</Label>
               <Input
                 id="guests"
                 type="number"
@@ -147,12 +153,16 @@ export function NewPropertyButton({
                   }}
                 >
                   <Icon icon="ph:credit-card" className="size-4" />
-                  Zahlungen einrichten
+                  {t("newPropertyButton.setUpPayments")}
                 </Button>
               </div>
             ) : (
               <Button onClick={save} disabled={busy || !title.trim()}>
-                {busy ? "Anlegen…" : isHotel ? "Zimmer anlegen" : "Objekt anlegen"}
+                {busy
+                  ? t("newPropertyButton.creating")
+                  : isHotel
+                    ? t("newPropertyButton.createRoom")
+                    : t("newPropertyButton.createProperty")}
               </Button>
             )}
           </div>

@@ -4,6 +4,7 @@
 // Preise, Standort): Sheet-Hülle, Speichern-Hook, Fußzeile, Hinweis-Box, Pill,
 // Feld, Leer-Zustand, Kanal-Logos. Eine Quelle statt Kopien pro Formular.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -62,6 +63,7 @@ export function EditorShell({
   footer: React.ReactNode;
   children: React.ReactNode;
 }) {
+  const t = useTranslations("objects");
   return (
     <Sheet open onOpenChange={(o) => !o && onClose()}>
       <SheetContent
@@ -87,7 +89,7 @@ export function EditorShell({
           </SheetDescription>
           {channels && (
             <p className="flex items-center text-sm text-muted-foreground">
-              Gilt für <ChannelIcons channels={channels} />
+              {t("editorPrimitives.appliesTo")} <ChannelIcons channels={channels} />
             </p>
           )}
         </SheetHeader>
@@ -121,7 +123,7 @@ export function Footer({
   error,
   onCancel,
   onSave,
-  saveLabel = "Speichern",
+  saveLabel,
   disabled,
 }: {
   busy: boolean;
@@ -131,14 +133,15 @@ export function Footer({
   saveLabel?: string;
   disabled?: boolean;
 }) {
+  const t = useTranslations("objects");
   return (
     <div className="flex w-full items-center gap-3">
       {error && <p className="mr-auto text-sm text-destructive">{error}</p>}
       <Button variant="ghost" onClick={onCancel} disabled={busy} className={error ? "" : "ml-auto"}>
-        Abbrechen
+        {t("editorPrimitives.cancel")}
       </Button>
       <Button onClick={onSave} disabled={busy || disabled}>
-        {busy ? "Speichern…" : saveLabel}
+        {busy ? t("editorPrimitives.saving") : (saveLabel ?? t("editorPrimitives.save"))}
       </Button>
     </div>
   );

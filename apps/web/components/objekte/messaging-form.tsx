@@ -7,6 +7,7 @@
 //  Alle Felder werden zusammen über updateProperty() in
 //  type_attributes.messaging gespeichert.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import { type LocalizedText } from "@/lib/policy-meta";
 import { type Property, updateProperty } from "@/lib/properties";
 
 export function MessagingForm({ initial }: { initial: Property }) {
+  const t = useTranslations("objects");
   const [p, setP] = useState<Property>(initial);
   const [v, setV] = useState<Messaging>(() => readMessaging(initial.type_attributes));
   const [busy, setBusy] = useState(false);
@@ -55,14 +57,12 @@ export function MessagingForm({ initial }: { initial: Property }) {
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-3">
-        <h1 className="font-display text-3xl font-extrabold">Nachrichten-Platzhalter</h1>
+        <h1 className="font-display text-3xl font-extrabold">{t("messagingForm.title")}</h1>
         <p className="max-w-3xl text-sm text-muted-foreground">
-          Hier erstellst du die Inhalte deiner Nachrichten-Platzhalter für die
-          Objekt-Anweisungen. Diese automatisch eingesetzten Texte sind in jeder
-          Benachrichtigung wiederverwendbar, die du deinen Gästen schickst – per
-          Shortcode (z. B. <code className="rounded bg-muted px-1 py-0.5 text-xs">{`{{CheckinInstructions}}`}</code>).
+          {t("messagingForm.description")}{" "}
+          (<code className="rounded bg-muted px-1 py-0.5 text-xs">{`{{CheckinInstructions}}`}</code>).
         </p>
-        <TipsPopover />
+        <TipsPopover t={t} />
       </header>
 
       <div className="flex flex-col gap-8">
@@ -92,11 +92,11 @@ export function MessagingForm({ initial }: { initial: Property }) {
         {saved && !error && (
           <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
             <Icon icon="ph:check-circle" className="size-4 text-accent" />
-            Gespeichert.
+            {t("messagingForm.saved")}
           </p>
         )}
         <Button className="ml-auto" onClick={save} disabled={busy}>
-          {busy ? "Speichern…" : "Speichern"}
+          {busy ? t("messagingForm.saving") : t("messagingForm.save")}
         </Button>
       </div>
     </div>
@@ -105,23 +105,22 @@ export function MessagingForm({ initial }: { initial: Property }) {
 
 // „Tipps"-Popover (Tips): erklärt, wie Platzhalter in
 // Nachrichten-Vorlagen eingesetzt werden, inkl. Beispiel-Shortcodes.
-function TipsPopover() {
+function TipsPopover({ t }: { t: ReturnType<typeof useTranslations> }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="outline" size="sm" className="w-fit gap-2">
           <Icon icon="ph:lightbulb" className="size-4" />
-          Tipps
+          {t("messagingForm.tips")}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="flex flex-col gap-3">
-        <p className="font-semibold">Platzhalter in Benachrichtigungen</p>
+        <p className="font-semibold">{t("messagingForm.tipsHeading")}</p>
         <p className="text-muted-foreground">
-          Platzhalter sind praktisch beim Schreiben von Nachrichten – du kannst
-          sie in deine Nachrichten-Vorlagen einfügen.
+          {t("messagingForm.tipsBody")}
         </p>
         <p className="text-muted-foreground">
-          In der Vorlage erscheinen sie zwischen Klammern, zum Beispiel:
+          {t("messagingForm.tipsExampleIntro")}
         </p>
         <div className="flex flex-col items-start gap-1.5">
           <Shortcode>{`{{CheckinInstructions}}`}</Shortcode>

@@ -1,6 +1,7 @@
 // Objekte-Übersicht (Rentals): Liste aller Objekte des Tenants.
 // Server Component — lädt über die Server-Action, rendert Karten + Anlage-Button.
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 
 import { NewPropertyButton } from "@/components/objekte/new-property-button";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
@@ -13,7 +14,11 @@ import { listProperties } from "@/lib/properties";
 export default async function ObjektePage() {
   // Betriebsart mitladen: Hotel spricht von „Zimmern" und bekommt die
   // Zimmertypen-Liste in der Anlage (0090/0098).
-  const [res, me] = await Promise.all([listProperties(), getMe()]);
+  const [res, me, t] = await Promise.all([
+    listProperties(),
+    getMe(),
+    getTranslations("objects"),
+  ]);
   const accommodationType = me?.accommodation_type ?? null;
   const isHotel = accommodationType === "hotel";
 
@@ -23,10 +28,12 @@ export default async function ObjektePage() {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="font-display text-2xl font-extrabold">
-            {isHotel ? "Zimmer" : "Objekte"}
+            {isHotel ? t("objektePage.titleHotel") : t("objektePage.titleDefault")}
           </h2>
           <p className="text-sm text-muted-foreground">
-            {isHotel ? "Verwalte deine Zimmer." : "Verwalte deine Unterkünfte."}
+            {isHotel
+              ? t("objektePage.subtitleHotel")
+              : t("objektePage.subtitleDefault")}
           </p>
         </div>
         <NewPropertyButton accommodationType={accommodationType} />
@@ -34,10 +41,10 @@ export default async function ObjektePage() {
 
       {!res.ok ? (
         <Card className="p-5 text-sm text-destructive">
-          Objekte konnten nicht geladen werden. Ist das Backend erreichbar?
+          {t("objektePage.loadError")}
         </Card>
       ) : res.data.items.length === 0 ? (
-        <EmptyState accommodationType={accommodationType} />
+        <EmptyState accommodationType={accommodationType} t={t} />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {res.data.items.map((p) => (
@@ -65,7 +72,8 @@ export default async function ObjektePage() {
                 <div className="flex flex-col gap-1 p-4">
                   <span className="truncate font-semibold">{p.title}</span>
                   <span className="text-sm text-muted-foreground">
-                    {TYPE_LABELS[p.property_type]} · {p.max_guests} Gäste
+                    {TYPE_LABELS[p.property_type]} ·{" "}
+                    {t("objektePage.guestsCount", { count: p.max_guests })}
                   </span>
                   <span className="truncate text-xs text-muted-foreground">
                     {[p.postal_code, p.city].filter(Boolean).join(" ") || "—"}
@@ -82,8 +90,10 @@ export default async function ObjektePage() {
 
 function EmptyState({
   accommodationType,
+  t,
 }: {
   accommodationType: "vacation_rental" | "hotel" | null;
+  t: Awaited<ReturnType<typeof getTranslations<"objects">>>;
 }) {
   const isHotel = accommodationType === "hotel";
   return (
@@ -96,12 +106,14 @@ function EmptyState({
       </span>
       <div>
         <p className="font-display text-lg font-extrabold">
-          {isHotel ? "Noch keine Zimmer" : "Noch keine Objekte"}
+          {isHotel
+            ? t("objektePage.emptyTitleHotel")
+            : t("objektePage.emptyTitleDefault")}
         </p>
         <p className="text-sm text-muted-foreground">
           {isHotel
-            ? "Lege dein erstes Zimmer an, um loszulegen."
-            : "Lege dein erstes Objekt an, um loszulegen."}
+            ? t("objektePage.emptyBodyHotel")
+            : t("objektePage.emptyBodyDefault")}
         </p>
       </div>
       <NewPropertyButton accommodationType={accommodationType} />

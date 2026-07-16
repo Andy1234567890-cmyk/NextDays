@@ -6,6 +6,7 @@
 //  updateProperty(). Flexible Sektionen (rooms/beds/size/units) liegen in
 //  type_attributes.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -68,6 +69,7 @@ function attrNum(p: Property, key: string): number | "" {
 }
 
 export function PropertyOverview({ initial }: { initial: Property }) {
+  const t = useTranslations("objects");
   const router = useRouter();
   const [p, setP] = useState<Property>(initial);
   const [section, setSection] = useState<Section>(null);
@@ -103,7 +105,7 @@ export function PropertyOverview({ initial }: { initial: Property }) {
     setPublishing(false);
     if (res.ok) {
       setP(res.data);
-      setPublishMsg("Veröffentlicht — mit den Buchungsportalen verbunden.");
+      setPublishMsg(t("propertyOverview.publishSuccess"));
       // Layout-Karte (status „Entwurf"→„Aktiv") ist eine separate Server-
       // Component → ohne refresh bliebe sie auf „Entwurf" stehen.
       router.refresh();
@@ -120,7 +122,9 @@ export function PropertyOverview({ initial }: { initial: Property }) {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-3xl font-extrabold">Übersicht</h1>
+        <h1 className="font-display text-3xl font-extrabold">
+          {t("propertyOverview.title")}
+        </h1>
         <div className="flex items-center gap-3">
           <span
             className={
@@ -130,11 +134,15 @@ export function PropertyOverview({ initial }: { initial: Property }) {
                 : "bg-muted text-muted-foreground")
             }
           >
-            {p.status === "active" ? "Aktiv" : "Entwurf"}
+            {p.status === "active"
+              ? t("propertyOverview.statusActive")
+              : t("propertyOverview.statusDraft")}
           </span>
           {p.status !== "active" && (
             <Button onClick={onPublish} disabled={publishing}>
-              {publishing ? "Veröffentliche…" : "Veröffentlichen"}
+              {publishing
+                ? t("propertyOverview.publishing")
+                : t("propertyOverview.publish")}
             </Button>
           )}
         </div>
@@ -152,35 +160,36 @@ export function PropertyOverview({ initial }: { initial: Property }) {
 
       {/* Name & Beschreibung */}
       <SectionCard
-        title="Name und Beschreibung"
-        hint="Name, Typ und Beschreibung für dein Objekt."
+        title={t("propertyOverview.nameCardTitle")}
+        hint={t("propertyOverview.nameCardHint")}
         onEdit={() => setSection("name")}
       >
         <p className="font-medium">{p.title}</p>
         <p className="whitespace-pre-line text-sm text-muted-foreground">
-          {p.description || "Noch keine Beschreibung."}
+          {p.description || t("propertyOverview.noDescription")}
         </p>
       </SectionCard>
 
       {/* Rental info */}
       <SectionCard
-        title="Objekt-Infos"
-        hint="Die wichtigsten Eckdaten."
+        title={t("propertyOverview.infoCardTitle")}
+        hint={t("propertyOverview.infoCardHint")}
         onEdit={() => setSection("info")}
       >
         <ul className="text-sm text-muted-foreground">
           <li>{TYPE_LABELS[p.property_type]}</li>
           <li>
-            {sizeM2 ? `${sizeM2} m² · ` : ""}
-            {p.max_guests} Gäste{units ? ` · ${units} Einheit(en)` : ""}
+            {sizeM2 ? t("propertyOverview.sizeM2Prefix", { size: sizeM2 }) : ""}
+            {t("propertyOverview.guestsCount", { count: p.max_guests })}
+            {units ? t("propertyOverview.unitsSuffix", { count: units }) : ""}
           </li>
         </ul>
       </SectionCard>
 
       {/* Rooms */}
       <SectionCard
-        title="Räume"
-        hint="Welche Räume gibt es?"
+        title={t("propertyOverview.roomsCardTitle")}
+        hint={t("propertyOverview.roomsCardHint")}
         channel="local"
         onEdit={() => setSection("rooms")}
       >
@@ -191,14 +200,16 @@ export function PropertyOverview({ initial }: { initial: Property }) {
             ))}
           </ul>
         ) : (
-          <p className="text-sm text-muted-foreground">Noch keine Räume.</p>
+          <p className="text-sm text-muted-foreground">
+            {t("propertyOverview.noRooms")}
+          </p>
         )}
       </SectionCard>
 
       {/* Sleeping arrangements */}
       <SectionCard
-        title="Schlafmöglichkeiten"
-        hint="Welche Betten gibt es?"
+        title={t("propertyOverview.bedsCardTitle")}
+        hint={t("propertyOverview.bedsCardHint")}
         channel="local"
         onEdit={() => setSection("beds")}
       >
@@ -210,15 +221,15 @@ export function PropertyOverview({ initial }: { initial: Property }) {
           </ul>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Noch keine Schlafmöglichkeiten.
+            {t("propertyOverview.noBeds")}
           </p>
         )}
       </SectionCard>
 
       {/* Amenities */}
       <SectionCard
-        title="Ausstattung"
-        hint="Was bietet dein Objekt?"
+        title={t("propertyOverview.amenitiesCardTitle")}
+        hint={t("propertyOverview.amenitiesCardHint")}
         channel="ota"
         onEdit={() => setSection("amenities")}
       >
@@ -235,7 +246,7 @@ export function PropertyOverview({ initial }: { initial: Property }) {
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
-            Noch keine Ausstattung.
+            {t("propertyOverview.noAmenities")}
           </p>
         )}
       </SectionCard>
@@ -255,7 +266,7 @@ export function PropertyOverview({ initial }: { initial: Property }) {
       />
       <ListEditor
         open={section === "rooms"}
-        title="Räume bearbeiten"
+        title={t("propertyOverview.roomsEditorTitle")}
         options={ROOM_OPTIONS}
         selected={rooms}
         onClose={() => setSection(null)}
@@ -265,7 +276,7 @@ export function PropertyOverview({ initial }: { initial: Property }) {
       />
       <ListEditor
         open={section === "beds"}
-        title="Schlafmöglichkeiten bearbeiten"
+        title={t("propertyOverview.bedsEditorTitle")}
         options={BED_OPTIONS}
         selected={beds}
         onClose={() => setSection(null)}
@@ -316,6 +327,7 @@ function SectionCard({
   channel?: "ota" | "local";
   children: React.ReactNode;
 }) {
+  const t = useTranslations("objects");
   return (
     <Card className="flex flex-col gap-3 p-5">
       <div className="flex items-start justify-between">
@@ -329,7 +341,7 @@ function SectionCard({
         <Button
           variant="ghost"
           size="icon"
-          aria-label={`${title} bearbeiten`}
+          aria-label={t("propertyOverview.editCardAriaLabel", { title })}
           onClick={onEdit}
           className="shrink-0 text-muted-foreground"
         >
@@ -378,11 +390,12 @@ function SaveBar({
   onSave: () => void;
   disabled?: boolean;
 }) {
+  const t = useTranslations("objects");
   return (
     <>
       {error && <p className="text-sm text-destructive">{error}</p>}
       <Button onClick={onSave} disabled={busy || disabled}>
-        {busy ? "Speichern…" : "Speichern"}
+        {busy ? t("propertyOverview.saving") : t("propertyOverview.save")}
       </Button>
     </>
   );
@@ -401,6 +414,7 @@ function NameEditor({
   onClose: () => void;
   onSave: SaveFn;
 }) {
+  const t = useTranslations("objects");
   const [title, setTitle] = useState(p.title);
   const [desc, setDesc] = useState(p.description ?? "");
   const [platformDesc, setPlatformDesc] = useState(p.platform_description ?? "");
@@ -414,10 +428,14 @@ function NameEditor({
   );
 
   return (
-    <EditorShell open={open} onClose={onClose} title="Name und Beschreibung">
+    <EditorShell
+      open={open}
+      onClose={onClose}
+      title={t("propertyOverview.nameCardTitle")}
+    >
       <div className="flex flex-col gap-1.5">
         <FieldLabel htmlFor="e-title" channel="ota">
-          Name
+          {t("propertyOverview.nameFieldLabel")}
         </FieldLabel>
         <Input
           id="e-title"
@@ -426,7 +444,9 @@ function NameEditor({
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <FieldLabel channel="ota">Typ</FieldLabel>
+        <FieldLabel channel="ota">
+          {t("propertyOverview.typeFieldLabel")}
+        </FieldLabel>
         <Select value={type} onValueChange={(v) => setType(v as PropertyType)}>
           <SelectTrigger>
             <SelectValue />
@@ -442,7 +462,7 @@ function NameEditor({
       </div>
       <div className="flex flex-col gap-1.5">
         <FieldLabel htmlFor="e-desc" channel="ota">
-          Beschreibung
+          {t("propertyOverview.descriptionFieldLabel")}
         </FieldLabel>
         <Textarea
           id="e-desc"
@@ -451,12 +471,12 @@ function NameEditor({
           onChange={(e) => setDesc(e.target.value)}
         />
         <p className="text-xs text-muted-foreground">
-          Dieser Text wird an Booking.com, Airbnb &amp; Co. übertragen.
+          {t("propertyOverview.descriptionOtaHint")}
         </p>
       </div>
       <div className="flex flex-col gap-1.5">
         <FieldLabel htmlFor="e-platform-desc" channel="local">
-          Beschreibung für die eigene Buchungsseite (optional)
+          {t("propertyOverview.platformDescriptionFieldLabel")}
         </FieldLabel>
         <Textarea
           id="e-platform-desc"
@@ -465,7 +485,7 @@ function NameEditor({
           onChange={(e) => setPlatformDesc(e.target.value)}
         />
         <p className="text-xs text-muted-foreground">
-          Leer lassen, um den OTA-Text auch auf der eigenen Seite zu zeigen.
+          {t("propertyOverview.platformDescriptionHint")}
         </p>
       </div>
       <SaveBar
@@ -509,12 +529,17 @@ function InfoEditor({
   const [units, setUnits] = useState<number | "">(attrNum(p, "units"));
   const [status, setStatus] = useState<PropertyStatus>(p.status);
   const { busy, error, run } = useSaver(onSave);
+  const t = useTranslations("objects");
 
   return (
-    <EditorShell open={open} onClose={onClose} title="Objekt-Infos">
+    <EditorShell
+      open={open}
+      onClose={onClose}
+      title={t("propertyOverview.infoCardTitle")}
+    >
       <div className="flex flex-col gap-1.5">
         <FieldLabel htmlFor="e-guests" channel="ota">
-          Max. Gäste
+          {t("propertyOverview.maxGuestsFieldLabel")}
         </FieldLabel>
         <Input
           id="e-guests"
@@ -530,17 +555,19 @@ function InfoEditor({
           Belegung: Erwachsene/Kinder/Kleinkinder + Anzahl Zimmer). */}
       <div className="flex flex-col gap-2 rounded-2xl border p-4">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="font-semibold">Belegung</span>
+          <span className="font-semibold">
+            {t("propertyOverview.occupancyTitle")}
+          </span>
           <ChannelBadge channel="ota" />
         </div>
         <p className="text-xs text-muted-foreground">
-          Erwachsenenplätze bieten Platz für Erwachsene und Kinder,
-          Kinderplätze nur für Kinder. „Max. Gäste" (oben) sind die
-          Erwachsenenplätze.
+          {t("propertyOverview.occupancyHint")}
         </p>
         <div className="grid grid-cols-3 gap-2">
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="e-children">Kinderplätze</Label>
+            <Label htmlFor="e-children">
+              {t("propertyOverview.childrenSlotsFieldLabel")}
+            </Label>
             <Input
               id="e-children"
               type="number"
@@ -551,7 +578,9 @@ function InfoEditor({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="e-infants">Kleinkindplätze</Label>
+            <Label htmlFor="e-infants">
+              {t("propertyOverview.infantSlotsFieldLabel")}
+            </Label>
             <Input
               id="e-infants"
               type="number"
@@ -562,7 +591,9 @@ function InfoEditor({
             />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label htmlFor="e-rooms">Anzahl Zimmer</Label>
+            <Label htmlFor="e-rooms">
+              {t("propertyOverview.roomsCountFieldLabel")}
+            </Label>
             <Input
               id="e-rooms"
               type="number"
@@ -577,7 +608,7 @@ function InfoEditor({
 
       <div className="flex flex-col gap-1.5">
         <FieldLabel htmlFor="e-size" channel="local">
-          Größe (m²)
+          {t("propertyOverview.sizeFieldLabel")}
         </FieldLabel>
         <Input
           id="e-size"
@@ -591,7 +622,7 @@ function InfoEditor({
       </div>
       <div className="flex flex-col gap-1.5">
         <FieldLabel htmlFor="e-units" channel="local">
-          Einheiten
+          {t("propertyOverview.unitsFieldLabel")}
         </FieldLabel>
         <Input
           id="e-units"
@@ -604,7 +635,9 @@ function InfoEditor({
         />
       </div>
       <div className="flex flex-col gap-1.5">
-        <FieldLabel channel="local">Status</FieldLabel>
+        <FieldLabel channel="local">
+          {t("propertyOverview.statusFieldLabel")}
+        </FieldLabel>
         <Select
           value={status}
           onValueChange={(v) => setStatus(v as PropertyStatus)}
@@ -697,6 +730,7 @@ function AmenitiesEditor({
   onClose: () => void;
   onSave: (vals: string[]) => Promise<true | string>;
 }) {
+  const t = useTranslations("objects");
   const [vals, setVals] = useState<string[]>(selected);
   const [query, setQuery] = useState("");
   const { busy, error, run } = useSaver(onSave);
@@ -719,10 +753,13 @@ function AmenitiesEditor({
     : [];
 
   return (
-    <EditorShell open={open} onClose={onClose} title="Ausstattung bearbeiten">
+    <EditorShell
+      open={open}
+      onClose={onClose}
+      title={t("propertyOverview.amenitiesEditorTitle")}
+    >
       <p className="text-xs text-muted-foreground">
-        Alle Ausstattungsmerkmale werden automatisch an die Buchungsportale
-        (Booking.com, Airbnb &amp; Co.) übertragen.
+        {t("propertyOverview.amenitiesOtaHint")}
       </p>
 
       {/* Gewählte Ausstattung — kompakt oben, mit ✕ zum Entfernen */}
@@ -740,7 +777,9 @@ function AmenitiesEditor({
               <button
                 type="button"
                 onClick={() => remove(slug)}
-                aria-label={`${amenityLabel(slug)} entfernen`}
+                aria-label={t("propertyOverview.removeAmenityAriaLabel", {
+                  amenity: amenityLabel(slug),
+                })}
                 className="text-accent-foreground/70 hover:text-accent-foreground"
               >
                 <Icon icon="ph:x" className="size-3" />
@@ -753,7 +792,7 @@ function AmenitiesEditor({
       {/* Suchleiste + Vorschlagsliste (Zeilen, keine Chip-Wolke) */}
       <div className="flex flex-col gap-0">
         <Input
-          placeholder="Ausstattung suchen …"
+          placeholder={t("propertyOverview.amenitiesSearchPlaceholder")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -761,7 +800,7 @@ function AmenitiesEditor({
           <div className="mt-1 max-h-64 overflow-y-auto rounded-2xl border">
             {suggestions.length === 0 ? (
               <p className="px-3 py-2 text-sm text-muted-foreground">
-                Keine Treffer.
+                {t("propertyOverview.noSearchResults")}
               </p>
             ) : (
               suggestions.map((slug) => (
