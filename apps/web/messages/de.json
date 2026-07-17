@@ -4398,7 +4398,10 @@
       "modeRestrictions": "Restriktionen",
       "on": "An",
       "off": "Aus",
-      "maxStayLabel": "Max. Aufenthalt"
+      "maxStayLabel": "Max. Aufenthalt",
+      "derivedFrom": "Abgeleitet von {parent} · {offset}",
+      "derivedReadOnly": "Abgeleiteter Preis — folgt dem Basis-Plan",
+      "weekdaysLabel": "Wochentage"
     }
   },
   "seasons": {

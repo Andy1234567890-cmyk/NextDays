@@ -477,3 +477,152 @@ def test_quote_addon_with_tax() -> None:
     )
     assert any(line.amount == 59.5 for line in q.lines)
     assert q.total == 259.5
+
+
+# --- Abgeleitete Rate-Pläne (derived): Formel + Kaskade-Auflösung ------------
+
+from src.features.pricing.resolver import _apply_offset  # noqa: E402
+
+
+def test_apply_offset_amount_then_percent() -> None:
+    # SiteMinder-Reihenfolge: erst Betrag, dann Prozent. (100+25)*0,85 = 106,25.
+    assert _apply_offset(100.0, 25.0, -15.0) == 106.25
+
+
+def test_apply_offset_mirror_when_both_none() -> None:
+    assert _apply_offset(120.0, None, None) == 120.0
+
+
+def test_apply_offset_le_zero_is_none() -> None:
+    # Ergebnis <= 0 → kein Preis (fail-closed, kein Clamp).
+    assert _apply_offset(10.0, -20.0, None) is None
+    assert _apply_offset(100.0, None, -100.0) is None
+
+
+def test_apply_offset_parent_none_is_none() -> None:
+    assert _apply_offset(None, 25.0, None) is None
+
+
+def test_apply_offset_rounds_half_up() -> None:
+    # 100 * 1,155 = 115,5 → kaufmännisch 115,50 (deterministisch).
+    assert _apply_offset(100.0, None, 15.5) == 115.5
+    # 33,33 + 0 → 33,33; * 1,105 = 36,829... → 36,83.
+    assert _apply_offset(33.33, None, 10.5) == 36.83
+
+
+class _FilterQ:
+    """Query-Stub, der nach eq('id', …)/eq('property_id', …) filtert — nötig,
+    damit _load_rate_plan_meta Kind vs. Parent unterscheidet."""
+
+    def __init__(self, rows: list[dict]) -> None:
+        self._rows = rows
+        self._filters: dict[str, object] = {}
+
+    def select(self, *_a: object, **_k: object) -> "_FilterQ":
+        return self
+
+    def eq(self, field: str, value: object) -> "_FilterQ":
+        self._filters[field] = value
+        return self
+
+    def gte(self, *_a: object, **_k: object) -> "_FilterQ":
+        return self
+
+    def lt(self, *_a: object, **_k: object) -> "_FilterQ":
+        return self
+
+    def in_(self, *_a: object, **_k: object) -> "_FilterQ":
+        return self
+
+    def order(self, *_a: object, **_k: object) -> "_FilterQ":
+        return self
+
+    def limit(self, *_a: object, **_k: object) -> "_FilterQ":
+        return self
+
+    @property
+    def not_(self) -> "_FilterQ":
+        return self
+
+    def is_(self, *_a: object, **_k: object) -> "_FilterQ":
+        return self
+
+    def execute(self) -> object:
+        rows = [
+            r for r in self._rows
+            if all(r.get(k) == v for k, v in self._filters.items())
+        ]
+
+        class _R:
+            pass
+
+        res = _R()
+        res.data = rows  # type: ignore[attr-defined]
+        return res
+
+
+class _FilterDB:
+    def __init__(self, tables: dict[str, list[dict]]) -> None:
+        self._tables = tables
+
+    def table(self, name: str) -> _FilterQ:
+        return _FilterQ(self._tables.get(name, []))
+
+
+def _derived_resolver(plans: list[dict], rp_overrides=None) -> PricingResolver:
+    return PricingResolver(service_client=_FilterDB({
+        "rate_plans": plans,
+        "price_overrides": [],
+        "property_pricing_config": [],
+        "dynamic_prices": [],
+        "rate_plan_price_overrides": rp_overrides or [],
+    }))
+
+
+def test_derived_plan_follows_parent_base() -> None:
+    plans = [
+        {"id": "bar", "property_id": "p", "base_price": 100, "currency": "EUR",
+         "rate_mode": "manual"},
+        {"id": "bnb", "property_id": "p", "base_price": 0, "currency": "EUR",
+         "rate_mode": "derived", "derived_from_rate_plan_id": "bar",
+         "offset_amount": 25, "offset_percent": None},
+    ]
+    r = _derived_resolver(plans)
+    days = r.effective_prices("p", date(2026, 7, 1), date(2026, 7, 3),
+                              rate_plan_id="bnb")
+    assert [d.price for d in days] == [125.0, 125.0]
+    assert all(d.source == "derived" for d in days)
+
+
+def test_derived_plan_follows_parent_date_price() -> None:
+    # Datumspreis am Parent → das abgeleitete Kind zieht mit.
+    plans = [
+        {"id": "bar", "property_id": "p", "base_price": 100, "currency": "EUR",
+         "rate_mode": "manual"},
+        {"id": "nr", "property_id": "p", "base_price": 0, "currency": "EUR",
+         "rate_mode": "derived", "derived_from_rate_plan_id": "bar",
+         "offset_amount": None, "offset_percent": -10},
+    ]
+    r = _derived_resolver(
+        plans, rp_overrides=[{"rate_plan_id": "bar", "date": "2026-07-01",
+                              "price": 200}],
+    )
+    days = r.effective_prices("p", date(2026, 7, 1), date(2026, 7, 3),
+                              rate_plan_id="nr")
+    # 200 -10% = 180 am Datumspreis-Tag, 100 -10% = 90 sonst.
+    assert days[0].price == 180.0
+    assert days[1].price == 90.0
+
+
+def test_derived_plan_no_price_when_parent_none() -> None:
+    plans = [
+        {"id": "bar", "property_id": "p", "base_price": None, "currency": "EUR",
+         "rate_mode": "manual"},
+        {"id": "bnb", "property_id": "p", "base_price": 0, "currency": "EUR",
+         "rate_mode": "derived", "derived_from_rate_plan_id": "bar",
+         "offset_amount": 25, "offset_percent": None},
+    ]
+    r = _derived_resolver(plans)
+    days = r.effective_prices("p", date(2026, 7, 1), date(2026, 7, 2),
+                              rate_plan_id="bnb")
+    assert days[0].price is None

@@ -6,6 +6,10 @@
 import { ApiError, api } from "@/lib/api";
 import { currentToken } from "@/lib/session-token";
 
+// Ableitungs-Modus: 'manual' = eigener Preis; 'derived' = Preis folgt einem
+// Basis-Plan desselben Objekts (erst Betrag, dann Prozent — SiteMinder-Modell).
+export type RateMode = "manual" | "derived";
+
 export type RatePlan = {
   id: string;
   property_id: string;
@@ -18,6 +22,11 @@ export type RatePlan = {
   // Sync-Status DB↔Portale: 'synced' = Preise sind übertragen, 'pending' =
   // Abweichung/noch nicht abgeglichen, null = kein Datumspreis (nichts zu tun).
   sync_status: "synced" | "pending" | null;
+  rate_mode: RateMode;
+  derived_from_rate_plan_id: string | null;
+  derived_from_name: string | null;
+  offset_amount: number | null;
+  offset_percent: number | null;
 };
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -57,6 +66,13 @@ export type RateGridPlan = {
   base_price: number;
   min_stay: number;
   sync_status: "synced" | "pending" | null;
+  rate_mode: RateMode;
+  derived_from_rate_plan_id: string | null;
+  derived_from_name: string | null;
+  offset_amount: number | null;
+  offset_percent: number | null;
+  // Abgeleitete Pläne: Preiszellen sind read-only (Grid grau, Ketten-Badge).
+  price_read_only: boolean;
   days: RateGridDay[];
 };
 
@@ -94,6 +110,12 @@ export async function createRatePlan(input: {
   basePrice: number;
   currency: string;
   minStay?: number;
+  // Ableitung (SiteMinder-Modell). Bei "derived" erbt das Kind Währung + Basis
+  // vom Parent (Backend erzwingt); base_price/currency oben sind dann irrelevant.
+  rateMode?: RateMode;
+  derivedFromRatePlanId?: string;
+  offsetAmount?: number | null;
+  offsetPercent?: number | null;
 }): Promise<Result<RatePlan>> {
   return call("/rates", {
     method: "POST",
@@ -103,14 +125,29 @@ export async function createRatePlan(input: {
       base_price: input.basePrice,
       currency: input.currency,
       min_stay: input.minStay ?? 1,
+      rate_mode: input.rateMode ?? "manual",
+      ...(input.derivedFromRatePlanId
+        ? { derived_from_rate_plan_id: input.derivedFromRatePlanId }
+        : {}),
+      ...(input.offsetAmount != null ? { offset_amount: input.offsetAmount } : {}),
+      ...(input.offsetPercent != null ? { offset_percent: input.offsetPercent } : {}),
     },
   });
 }
 
-/** Einen Rate-Plan aktualisieren (Name/Preis/Währung/Mindestaufenthalt). */
+/** Einen Rate-Plan aktualisieren (Name/Preis/Währung/Mindestaufenthalt/Ableitung). */
 export async function updateRatePlan(
   id: string,
-  patch: { name?: string; basePrice?: number; currency?: string; minStay?: number },
+  patch: {
+    name?: string;
+    basePrice?: number;
+    currency?: string;
+    minStay?: number;
+    rateMode?: RateMode;
+    derivedFromRatePlanId?: string | null;
+    offsetAmount?: number | null;
+    offsetPercent?: number | null;
+  },
 ): Promise<Result<RatePlan>> {
   return call(`/rates/${id}`, {
     method: "PATCH",
@@ -119,6 +156,14 @@ export async function updateRatePlan(
       ...(patch.basePrice !== undefined ? { base_price: patch.basePrice } : {}),
       ...(patch.currency !== undefined ? { currency: patch.currency } : {}),
       ...(patch.minStay !== undefined ? { min_stay: patch.minStay } : {}),
+      ...(patch.rateMode !== undefined ? { rate_mode: patch.rateMode } : {}),
+      ...(patch.derivedFromRatePlanId !== undefined
+        ? { derived_from_rate_plan_id: patch.derivedFromRatePlanId }
+        : {}),
+      ...(patch.offsetAmount !== undefined ? { offset_amount: patch.offsetAmount } : {}),
+      ...(patch.offsetPercent !== undefined
+        ? { offset_percent: patch.offsetPercent }
+        : {}),
     },
   });
 }
@@ -147,10 +192,11 @@ export async function setRatePlanPrices(
   start: string,
   end: string,
   price: number | null,
+  weekdays?: number[],
 ): Promise<Result<{ rate_plan_id: string; items: RatePlanPriceDay[] }>> {
   return call(`/rates/${ratePlanId}/prices`, {
     method: "PUT",
-    body: { start, end, price },
+    body: { start, end, price, ...(weekdays?.length ? { weekdays } : {}) },
   });
 }
 
@@ -188,10 +234,11 @@ export async function setRatePlanMinStays(
   start: string,
   end: string,
   minStay: number | null,
+  weekdays?: number[],
 ): Promise<Result<{ rate_plan_id: string; items: RatePlanMinStayDay[] }>> {
   return call(`/rates/${ratePlanId}/min-stays`, {
     method: "PUT",
-    body: { start, end, min_stay: minStay },
+    body: { start, end, min_stay: minStay, ...(weekdays?.length ? { weekdays } : {}) },
   });
 }
 
@@ -231,10 +278,11 @@ export async function setRatePlanRestrictions(
     closed_to_departure: boolean | null;
     max_stay: number | null;
   },
+  weekdays?: number[],
 ): Promise<Result<{ rate_plan_id: string; items: RatePlanRestrictionDay[] }>> {
   return call(`/rates/${ratePlanId}/restrictions`, {
     method: "PUT",
-    body: { start, end, ...values },
+    body: { start, end, ...values, ...(weekdays?.length ? { weekdays } : {}) },
   });
 }
 

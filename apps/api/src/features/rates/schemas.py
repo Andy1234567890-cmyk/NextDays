@@ -9,6 +9,14 @@ from datetime import date
 from pydantic import BaseModel, Field, model_validator
 
 
+def _validate_weekdays(weekdays: list[int] | None) -> None:
+    """Wochentagsmaske prüfen: nur 0–6, keine Duplikate. Leer/None erlaubt."""
+    if weekdays is None:
+        return
+    if any(d < 0 or d > 6 for d in weekdays) or len(set(weekdays)) != len(weekdays):
+        raise ValueError("weekdays müssen 0–6 ohne Duplikate sein")
+
+
 class RatePlanCreate(BaseModel):
     property_id: str
     name: str = "Standard"
@@ -17,6 +25,14 @@ class RatePlanCreate(BaseModel):
     # 27 EU-Länder) — fehlt sie, ist die Anfrage ein Datenfehler (422).
     currency: str = Field(min_length=1)
     min_stay: int = Field(default=1, ge=1)
+    # Ableitung (SiteMinder-Modell): 'manual' = eigener Preis; 'derived' = Preis
+    # aus einem Basis-Plan desselben Objekts (erst Betrag, dann Prozent). Bei
+    # derived ist derived_from_rate_plan_id Pflicht; base_price/currency erbt das
+    # Kind vom Parent (Service erzwingt). Offsets signiert, beide optional.
+    rate_mode: str = Field(default="manual", pattern="^(manual|derived)$")
+    derived_from_rate_plan_id: str | None = None
+    offset_amount: float | None = None
+    offset_percent: float | None = None
 
 
 class RatePlanUpdate(BaseModel):
@@ -24,6 +40,10 @@ class RatePlanUpdate(BaseModel):
     base_price: float | None = Field(default=None, ge=0)
     currency: str | None = None
     min_stay: int | None = Field(default=None, ge=1)
+    rate_mode: str | None = Field(default=None, pattern="^(manual|derived)$")
+    derived_from_rate_plan_id: str | None = None
+    offset_amount: float | None = None
+    offset_percent: float | None = None
 
 
 class RatePlanResponse(BaseModel):
@@ -41,6 +61,14 @@ class RatePlanResponse(BaseModel):
     # Datumspreis gesetzt (nichts zu übertragen). Vom Desired-State-Reconciler
     # gepflegt; die UI zeigt daraus ein Status-Badge + 'Jetzt übertragen'.
     sync_status: str | None = None
+    # Ableitung: 'manual' | 'derived'. Bei derived Parent-Name + Offsets für die
+    # UI (Badge „Abgeleitet von {parent} · +25 € · −15 %"), base_price ist dann der
+    # berechnete Grundpreis-Referenzwert (Parent-Basis + Offset).
+    rate_mode: str = "manual"
+    derived_from_rate_plan_id: str | None = None
+    derived_from_name: str | None = None
+    offset_amount: float | None = None
+    offset_percent: float | None = None
 
 
 class RatePlanListResponse(BaseModel):
@@ -66,6 +94,14 @@ class RateGridPlan(BaseModel):
     base_price: float
     min_stay: int
     sync_status: str | None = None
+    # Abgeleitete Pläne: Preiszellen sind read-only (Grid grau, Ketten-Badge).
+    # Min-Stay/Restriktionen bleiben editierbar (nur Preise werden abgeleitet).
+    rate_mode: str = "manual"
+    derived_from_rate_plan_id: str | None = None
+    derived_from_name: str | None = None
+    offset_amount: float | None = None
+    offset_percent: float | None = None
+    price_read_only: bool = False
     days: list[RateGridDay] = []
 
 
@@ -89,11 +125,15 @@ class RatePlanPriceSet(BaseModel):
     start: date
     end: date
     price: float | None = Field(default=None, ge=0)
+    # Optionale Wochentagsmaske (0=Mo … 6=So). Leer/None → alle Tage im Bereich.
+    # Nur diese Wochentage im [start, end) werden gesetzt (Quick-Bulk-Update).
+    weekdays: list[int] | None = Field(default=None)
 
     @model_validator(mode="after")
     def _check_order(self) -> "RatePlanPriceSet":
         if self.end <= self.start:
             raise ValueError("end muss nach start liegen")
+        _validate_weekdays(self.weekdays)
         return self
 
 
@@ -116,11 +156,13 @@ class RatePlanMinStaySet(BaseModel):
     start: date
     end: date
     min_stay: int | None = Field(default=None, ge=1)
+    weekdays: list[int] | None = Field(default=None)
 
     @model_validator(mode="after")
     def _check_order(self) -> "RatePlanMinStaySet":
         if self.end <= self.start:
             raise ValueError("end muss nach start liegen")
+        _validate_weekdays(self.weekdays)
         return self
 
 
@@ -146,11 +188,13 @@ class RatePlanRestrictionSet(BaseModel):
     closed_to_arrival: bool | None = None
     closed_to_departure: bool | None = None
     max_stay: int | None = Field(default=None, ge=0)
+    weekdays: list[int] | None = Field(default=None)
 
     @model_validator(mode="after")
     def _check_order(self) -> "RatePlanRestrictionSet":
         if self.end <= self.start:
             raise ValueError("end muss nach start liegen")
+        _validate_weekdays(self.weekdays)
         return self
 
 

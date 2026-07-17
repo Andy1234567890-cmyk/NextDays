@@ -1,9 +1,16 @@
 """Tests für den rates-Slice (rate_plan CRUD + Channex-Sync-Trigger)."""
+from datetime import date
+
 from fastapi.testclient import TestClient
 
 from src.core.security import AuthContext
-from src.features.rates.schemas import RatePlanCreate
-from src.features.rates.service import RateError, RatesService
+from src.features.rates.schemas import RatePlanCreate, RatePlanPriceSet
+from src.features.rates.service import (
+    RateError,
+    RatesService,
+    _contiguous_ranges,
+    _weekday_filtered,
+)
 from src.main import create_app
 
 client = TestClient(create_app())
@@ -473,3 +480,107 @@ def test_set_rate_plan_restrictions_foreign_plan_404(monkeypatch) -> None:  # no
         raise AssertionError("sollte 404 werfen")
     except RateError as exc:
         assert exc.status_code == 404
+
+
+# --- Abgeleitete Rate-Pläne: Service-Guards ---------------------------------
+
+def test_create_derived_without_parent_422() -> None:
+    svc = _svc({"properties": [{"id": "p-1", "title": "Objekt"}]})
+    try:
+        svc.create(_ctx(), RatePlanCreate(
+            property_id="p-1", base_price=0, currency="EUR",
+            rate_mode="derived",
+        ))
+        raise AssertionError("sollte 422 werfen")
+    except RateError as exc:
+        assert exc.status_code == 422
+
+
+def test_create_derived_parent_missing_422() -> None:
+    # Parent-Lookup liefert leer (rate_plans leer) → 422.
+    svc = _svc({"properties": [{"id": "p-1", "title": "Objekt"}], "rate_plans": []})
+    try:
+        svc.create(_ctx(), RatePlanCreate(
+            property_id="p-1", base_price=0, currency="EUR",
+            rate_mode="derived", derived_from_rate_plan_id="rp-x",
+        ))
+        raise AssertionError("sollte 422 werfen")
+    except RateError as exc:
+        assert exc.status_code == 422
+
+
+def test_create_derived_parent_is_derived_422() -> None:
+    # Kaskade verboten: Parent selbst derived → 422.
+    svc = _svc({
+        "properties": [{"id": "p-1", "title": "Objekt"}],
+        "rate_plans": [{"id": "rp-parent", "property_id": "p-1",
+                        "currency": "EUR", "base_price": 100,
+                        "rate_mode": "derived"}],
+    })
+    try:
+        svc.create(_ctx(), RatePlanCreate(
+            property_id="p-1", base_price=0, currency="EUR",
+            rate_mode="derived", derived_from_rate_plan_id="rp-parent",
+            offset_amount=25,
+        ))
+        raise AssertionError("sollte 422 werfen")
+    except RateError as exc:
+        assert exc.status_code == 422
+
+
+def test_create_derived_inherits_parent_currency() -> None:
+    # Kind erbt Parent-Währung + Basis (kein zweiter Währungs-Wert).
+    svc = _svc({
+        "properties": [{"id": "p-1", "title": "Objekt"}],
+        "rate_plans": [{"id": "rp-bar", "property_id": "p-1",
+                        "currency": "GBP", "base_price": 100,
+                        "rate_mode": "manual"}],
+    })
+    svc.create(_ctx(), RatePlanCreate(
+        property_id="p-1", base_price=0, currency="EUR",  # EUR wird ignoriert
+        rate_mode="derived", derived_from_rate_plan_id="rp-bar",
+        offset_amount=25,
+    ))
+    written = svc._db().inserted["rate_plans"][0]  # noqa: SLF001
+    assert written["currency"] == "GBP"
+    assert written["rate_mode"] == "derived"
+    assert written["derived_from_rate_plan_id"] == "rp-bar"
+
+
+def test_set_prices_on_derived_plan_422() -> None:
+    svc = _svc({
+        "properties": [{"id": "p-1", "title": "Objekt"}],
+        "rate_plans": [{"id": "rp-d", "property_id": "p-1",
+                        "rate_mode": "derived",
+                        "properties": {"tenant_id": "t-1"}}],
+    })
+    try:
+        svc.set_prices(_ctx(), "rp-d", RatePlanPriceSet(
+            start=date(2026, 7, 1), end=date(2026, 7, 3), price=100,
+        ))
+        raise AssertionError("sollte 422 werfen")
+    except RateError as exc:
+        assert exc.status_code == 422
+
+
+def test_delete_parent_with_children_409() -> None:
+    svc = _svc({
+        "rate_plans": [{"id": "rp-child", "property_id": "p-1",
+                        "properties": {"tenant_id": "t-1"}}],
+    })
+    try:
+        svc.delete(_ctx(), "rp-parent")
+        raise AssertionError("sollte 409 werfen")
+    except RateError as exc:
+        assert exc.status_code == 409
+
+
+def test_weekday_filtered_and_ranges() -> None:
+    # Mo(13) Di(14) Mi(15) … So(19): nur Mo+Mi.
+    days = _weekday_filtered(date(2026, 7, 13), date(2026, 7, 20), [0, 2])
+    assert [d.day for d in days] == [13, 15]
+    # Zusammenhängende Bereiche bündeln.
+    ranges = _contiguous_ranges([date(2026, 7, 1), date(2026, 7, 2),
+                                 date(2026, 7, 5)])
+    assert ranges == [(date(2026, 7, 1), date(2026, 7, 2)),
+                      (date(2026, 7, 5), date(2026, 7, 5))]

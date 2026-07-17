@@ -47,6 +47,22 @@ function addDaysIso(isoDate: string, n: number): string {
   return iso(d);
 }
 
+// Kompakt-Label der Ableitung: „+25 · −15 %" (Betrag sprachneutral ohne Symbol,
+// Prozent mit %). Beide leer → „1:1" (Spiegel). Vorzeichen explizit.
+function derivedOffsetLabel(plan: {
+  offset_amount: number | null;
+  offset_percent: number | null;
+}): string {
+  const parts: string[] = [];
+  if (plan.offset_amount != null && plan.offset_amount !== 0) {
+    parts.push(`${plan.offset_amount > 0 ? "+" : ""}${plan.offset_amount}`);
+  }
+  if (plan.offset_percent != null && plan.offset_percent !== 0) {
+    parts.push(`${plan.offset_percent > 0 ? "+" : ""}${plan.offset_percent} %`);
+  }
+  return parts.length ? parts.join(" · ") : "1:1";
+}
+
 type Mode = "prices" | "minstay" | "restrictions";
 // Drei-Wege-Auswahl im Restriktions-Editor: unverändert lassen gibt es hier
 // nicht — "none" heißt „kein Override" (Default offen).
@@ -159,6 +175,9 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
   // `value` trägt in diesem Modus den Max-Stay.
   const [ctaSel, setCtaSel] = useState<TriState>("none");
   const [ctdSel, setCtdSel] = useState<TriState>("none");
+  // Optionale Wochentagsmaske im Bulk-Editor (Mo=0 … So=6). Leer = alle Tage im
+  // gezogenen Bereich. Wird an prices/minstay/restrictions durchgereicht.
+  const [weekdaySel, setWeekdaySel] = useState<number[]>([]);
 
   const onDown = (planId: string, day: string) => {
     drag.current = { planId, from: day, to: day };
@@ -218,6 +237,7 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
     setValue("");
     setCtaSel("none");
     setCtdSel("none");
+    setWeekdaySel([]);
   };
 
   const apply = async (reset: boolean) => {
@@ -244,6 +264,7 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
             closed_to_departure: ctdSel === "none" ? null : ctdSel === "on",
             max_stay: maxStay,
           },
+        weekdaySel,
       );
       setBusy(false);
       if (!res.ok) {
@@ -270,8 +291,12 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
     setBusy(true);
     const res =
       mode === "prices"
-        ? await setRatePlanPrices(editor.planId, editor.from, endExclusive, num)
-        : await setRatePlanMinStays(editor.planId, editor.from, endExclusive, num);
+        ? await setRatePlanPrices(
+            editor.planId, editor.from, endExclusive, num, weekdaySel,
+          )
+        : await setRatePlanMinStays(
+            editor.planId, editor.from, endExclusive, num, weekdaySel,
+          );
     setBusy(false);
     if (!res.ok) {
       toast.error(res.error);
@@ -352,6 +377,30 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
           <span className="text-sm text-muted-foreground">
             {editor.from} – {editor.to}
           </span>
+          {/* Wochentagsmaske (SiteMinder Quick-Bulk): leer = alle Tage im Bereich. */}
+          <div className="flex items-center gap-1" role="group" aria-label={t("ratesView.weekdaysLabel")}>
+            {[0, 1, 2, 3, 4, 5, 6].map((wd) => {
+              const active = weekdaySel.includes(wd);
+              return (
+                <button
+                  key={wd}
+                  type="button"
+                  onClick={() =>
+                    setWeekdaySel((s) =>
+                      s.includes(wd) ? s.filter((x) => x !== wd) : [...s, wd],
+                    )
+                  }
+                  className={`size-7 rounded-full text-xs font-medium transition-colors ${
+                    active
+                      ? "bg-accent text-white"
+                      : "bg-secondary text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {t(`calendarBoard.weekdays.${WD_KEYS[(wd + 1) % 7]}`)}
+                </button>
+              );
+            })}
+          </div>
           {mode === "restrictions" ? (
             <>
               {/* CTA/CTD als Drei-Wege (— = kein Override, An = gesperrt, Aus =
@@ -520,6 +569,10 @@ function PlanRow({
   const byDate = new Map(plan.days.map((d) => [d.date, d]));
   const ms = minStays.get(plan.id);
   const rs = restrictions.get(plan.id);
+  // Abgeleiteter Plan: im Preise-Modus sind die Zellen read-only (Preis folgt
+  // dem Basis-Plan). Min-Stay/Restriktionen bleiben editierbar.
+  const priceLocked = plan.price_read_only && mode === "prices";
+  const offsetLabel = derivedOffsetLabel(plan);
   return (
     <div className="flex border-b last:border-b-0">
             <div
@@ -527,9 +580,22 @@ function PlanRow({
               style={{ width: `${LABEL}rem` }}
             >
               <span className="truncate text-sm font-medium">{plan.name}</span>
-              <span className="shrink-0 text-xs text-muted-foreground">
-                {formatCurrency(plan.base_price, plan.currency)}
-              </span>
+              {plan.rate_mode === "derived" ? (
+                <span
+                  title={t("ratesView.derivedFrom", {
+                    parent: plan.derived_from_name ?? "",
+                    offset: offsetLabel,
+                  })}
+                  className="inline-flex shrink-0 items-center gap-1 rounded-full bg-secondary px-2 py-0.5 text-xs text-muted-foreground"
+                >
+                  <Icon icon="ph:link" className="size-3" />
+                  {offsetLabel}
+                </span>
+              ) : (
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  {formatCurrency(plan.base_price, plan.currency)}
+                </span>
+              )}
               {plan.sync_status === "pending" && (
                 <button
                   type="button"
@@ -592,26 +658,37 @@ function PlanRow({
                 <button
                   key={day}
                   type="button"
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    onDown(plan.id, day);
-                  }}
-                  onMouseEnter={() => onEnter(plan.id, day)}
+                  disabled={priceLocked}
+                  onMouseDown={
+                    priceLocked
+                      ? undefined
+                      : (e) => {
+                          e.preventDefault();
+                          onDown(plan.id, day);
+                        }
+                  }
+                  onMouseEnter={
+                    priceLocked ? undefined : () => onEnter(plan.id, day)
+                  }
                   title={
-                    mode === "prices" && cell
-                      ? t(`ratesView.source.${cell.source}`)
-                      : mode === "restrictions"
-                        ? restrTitle
-                        : undefined
+                    priceLocked
+                      ? t("ratesView.derivedReadOnly")
+                      : mode === "prices" && cell
+                        ? t(`ratesView.source.${cell.source}`)
+                        : mode === "restrictions"
+                          ? restrTitle
+                          : undefined
                   }
                   className={`flex shrink-0 select-none items-center justify-center gap-0.5 border-r py-2 text-sm tabular-nums transition-colors ${
                     selected
                       ? "outline outline-2 -outline-offset-2 outline-accent"
                       : ""
                   } ${
-                    overrideCell
-                      ? "bg-accent/10 font-semibold text-accent"
-                      : "hover:bg-secondary/60"
+                    priceLocked
+                      ? "cursor-not-allowed bg-muted/40 text-muted-foreground"
+                      : overrideCell
+                        ? "bg-accent/10 font-semibold text-accent"
+                        : "hover:bg-secondary/60"
                   } ${
                     mode === "minstay" && msOverride == null
                       ? "text-muted-foreground"

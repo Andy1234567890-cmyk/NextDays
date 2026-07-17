@@ -5,6 +5,8 @@ Preisplans löst den Channex-Sync der Property aus (non-blocking), damit ein
 bepreistes Objekt sofort übertragbar ist. rate_plans ist die Channex-Wahrheit
 für den Basispreis.
 """
+from __future__ import annotations
+
 from datetime import date, timedelta
 
 from supabase import Client
@@ -48,6 +50,38 @@ class RateError(Exception):
         self.status_code = status_code
 
 
+def _weekday_filtered(
+    start: date, end: date, weekdays: list[int] | None
+) -> list[date]:
+    """Tage in [start, end) (end exklusiv), optional auf eine Wochentagsmaske
+    (0=Mo … 6=So) gefiltert. Leer/None → alle Tage."""
+    mask = set(weekdays) if weekdays else None
+    out: list[date] = []
+    for i in range((end - start).days):
+        d = start + timedelta(days=i)
+        if mask is None or d.weekday() in mask:
+            out.append(d)
+    return out
+
+
+def _contiguous_ranges(days: list[date]) -> list[tuple[date, date]]:
+    """Sortierte Tagesliste in zusammenhängende [von, bis]-Bereiche (bis inklusiv)
+    bündeln — für tag-genaue Wochentagsmasken werden daraus mehrere Push-Segmente."""
+    if not days:
+        return []
+    ordered = sorted(days)
+    ranges: list[tuple[date, date]] = []
+    run_start = prev = ordered[0]
+    for d in ordered[1:]:
+        if d == prev + timedelta(days=1):
+            prev = d
+            continue
+        ranges.append((run_start, prev))
+        run_start = prev = d
+    ranges.append((run_start, prev))
+    return ranges
+
+
 class RatesService:
     slice_name = "rates"
 
@@ -83,7 +117,8 @@ class RatesService:
 
     @staticmethod
     def _row(
-        r: dict, date_price_count: int = 0, sync_status: str | None = None
+        r: dict, date_price_count: int = 0, sync_status: str | None = None,
+        derived_from_name: str | None = None,
     ) -> RatePlanResponse:
         return RatePlanResponse(
             id=r["id"],
@@ -97,6 +132,17 @@ class RatesService:
             min_stay=int(r.get("min_stay") or 1),
             date_price_count=date_price_count,
             sync_status=sync_status,
+            rate_mode=r.get("rate_mode") or "manual",
+            derived_from_rate_plan_id=r.get("derived_from_rate_plan_id"),
+            derived_from_name=derived_from_name,
+            offset_amount=(
+                float(r["offset_amount"])
+                if r.get("offset_amount") is not None else None
+            ),
+            offset_percent=(
+                float(r["offset_percent"])
+                if r.get("offset_percent") is not None else None
+            ),
         )
 
     def _sync_states(self, rate_plan_ids: list[str]) -> dict[str, bool]:
@@ -214,6 +260,7 @@ class RatesService:
         ids = [p["id"] for p in plans if p.get("id")]
         counts = self._date_price_counts(ids)
         states = self._sync_states(ids)
+        names = {p["id"]: (p.get("name") or "") for p in plans if p.get("id")}
         resolver = PricingResolver(service_client=self._db())
         grid_plans: list[RateGridPlan] = []
         for p in plans:
@@ -223,6 +270,7 @@ class RatesService:
                 )
             except PricingError:
                 continue  # gelöschter/inkonsistenter Plan → Zeile weglassen
+            is_derived = p.get("rate_mode") == "derived"
             grid_plans.append(
                 RateGridPlan(
                     id=p["id"],
@@ -233,6 +281,18 @@ class RatesService:
                     sync_status=self._status_for(
                         p["id"], counts.get(p["id"], 0), states
                     ),
+                    rate_mode=p.get("rate_mode") or "manual",
+                    derived_from_rate_plan_id=p.get("derived_from_rate_plan_id"),
+                    derived_from_name=names.get(p.get("derived_from_rate_plan_id")),
+                    offset_amount=(
+                        float(p["offset_amount"])
+                        if p.get("offset_amount") is not None else None
+                    ),
+                    offset_percent=(
+                        float(p["offset_percent"])
+                        if p.get("offset_percent") is not None else None
+                    ),
+                    price_read_only=is_derived,
                     days=[
                         RateGridDay(date=d.date, price=d.price, source=d.source)
                         for d in days
@@ -245,23 +305,22 @@ class RatesService:
         tenant_id = self._require_tenant(ctx)
         prop = self._require_own_property(tenant_id, req.property_id)
         # Rate-Pläne hängen am OBJEKT (mehrere je Objekt möglich, z. B. BAR/B&B).
+        derived = self._resolve_derived_fields(req.property_id, req)
+        payload: dict[str, object] = {
+            "property_id": req.property_id,
+            "name": req.name,
+            "base_price": req.base_price,
+            "currency": req.currency,
+            "min_stay": req.min_stay,
+            **derived,  # rate_mode + (bei derived) Parent-Währung/-Basis
+        }
         ins = (
-            self._db()
-            .table("rate_plans")
-            .insert(
-                {
-                    "property_id": req.property_id,
-                    "name": req.name,
-                    "base_price": req.base_price,
-                    "currency": req.currency,
-                    "min_stay": req.min_stay,
-                }
-            )
-            .execute()
+            self._db().table("rate_plans").insert(payload).execute()
         ).data
         if not ins:
             raise RateError("Preisplan konnte nicht angelegt werden.", status_code=500)
-        self._sync_property(tenant_id, req.property_id, prop.get("title"), req.currency)
+        sync_currency = str(payload["currency"])
+        self._sync_property(tenant_id, req.property_id, prop.get("title"), sync_currency)
         log.info("rate_plan_created", tenant_id=tenant_id, property_id=req.property_id)
         return self._row(ins[0])
 
@@ -365,6 +424,29 @@ class RatesService:
         if not existing or existing[0]["properties"]["tenant_id"] != tenant_id:
             raise RateError("Preisplan nicht gefunden.", status_code=404)
         patch = req.model_dump(exclude_none=True)
+        # rate_mode berührt? Ableitungs-Felder validieren + normalisieren. Ohne
+        # rate_mode im Request bleiben die derived-Spalten unverändert (Teil-Update).
+        if req.rate_mode is not None:
+            # exclude_none verwirft offset=None → für den Wechsel derived→manual
+            # müssen die Spalten aber explizit genullt werden. _resolve_derived_fields
+            # liefert die vollständigen Zielwerte (inkl. None).
+            derived = self._resolve_derived_fields(
+                existing[0]["property_id"],
+                RatePlanCreate(
+                    property_id=existing[0]["property_id"],
+                    base_price=0, currency=existing[0].get("currency") or "x",
+                    rate_mode=req.rate_mode,
+                    derived_from_rate_plan_id=req.derived_from_rate_plan_id,
+                    offset_amount=req.offset_amount,
+                    offset_percent=req.offset_percent,
+                ),
+            )
+            # base_price/currency aus derived nur bei rate_mode=derived übernehmen
+            # (Kind erbt Parent); bei manual die vom Nutzer gesetzten behalten.
+            if req.rate_mode == "manual":
+                derived.pop("base_price", None)
+                derived.pop("currency", None)
+            patch.update(derived)
         if patch:
             upd = (
                 self._db()
@@ -427,6 +509,17 @@ class RatesService:
         ).data
         if not existing or existing[0]["properties"]["tenant_id"] != tenant_id:
             raise RateError("Preisplan nicht gefunden.", status_code=404)
+        # Gegenzustand (Wurzel 1): ein Parent mit abgeleiteten Kindern darf nicht
+        # gelöscht werden — sonst verlören die Kinder ihre Preisgrundlage. Klar
+        # fehlschlagen (409), nicht kaskadierend löschen. DB-FK (on delete restrict)
+        # ist der zusätzliche Backstop.
+        children = self._derived_children(rate_plan_id)
+        if children:
+            raise RateError(
+                "Dieser Plan ist Basis für abgeleitete Pläne — zuerst diese "
+                "löschen oder auf einen anderen Basis-Plan umstellen.",
+                status_code=409,
+            )
         self._db().table("rate_plans").delete().eq("id", rate_plan_id).execute()
         # Löschkette (Channex-Doku „break the chain"): Content-Sync einreihen —
         # dessen Prune entfernt den verwaisten Channex-Rate-Plan (fail-closed,
@@ -436,6 +529,72 @@ class RatesService:
         )
         log.info("rate_plan_deleted", tenant_id=tenant_id, rate_plan_id=rate_plan_id)
 
+    def _resolve_derived_fields(
+        self, property_id: str, req: RatePlanCreate | RatePlanUpdate,
+    ) -> dict[str, object]:
+        """Ableitungs-Felder validieren + normalisieren (Wurzel 3/4).
+
+        manual → alle derived-Felder auf None. derived → Parent MUSS existieren,
+        demselben OBJEKT gehören und selbst manual sein (keine Kaskade); das Kind
+        erbt Währung + Grundpreis (Referenz) des Parents. Gibt den DB-Patch der
+        rate_mode/derived-Spalten zurück (currency/base_price für derived
+        mit-gesetzt). Bei manual: nur rate_mode + Null-Felder."""
+        if req.rate_mode != "derived":
+            return {
+                "rate_mode": "manual",
+                "derived_from_rate_plan_id": None,
+                "offset_amount": None,
+                "offset_percent": None,
+            }
+        parent_id = req.derived_from_rate_plan_id
+        if not parent_id:
+            raise RateError(
+                "Für einen abgeleiteten Plan ist ein Basis-Plan nötig.",
+                status_code=422,
+            )
+        parent = (
+            self._db()
+            .table("rate_plans")
+            .select("id, property_id, currency, base_price, rate_mode")
+            .eq("id", parent_id)
+            .eq("property_id", property_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not parent:
+            raise RateError(
+                "Der Basis-Plan gehört nicht zu diesem Objekt.", status_code=422
+            )
+        if parent[0].get("rate_mode") == "derived":
+            raise RateError(
+                "Ein abgeleiteter Plan kann nicht selbst als Basis dienen "
+                "(keine Ketten-Ableitung).", status_code=422,
+            )
+        if req.offset_amount is None and req.offset_percent is None:
+            # 1:1-Spiegel ist zulässig (SiteMinder „Keep rates the same"), aber
+            # dann müssen beide Offsets explizit None bleiben — kein Ratewert.
+            pass
+        return {
+            "rate_mode": "derived",
+            "derived_from_rate_plan_id": parent_id,
+            "offset_amount": req.offset_amount,
+            "offset_percent": req.offset_percent,
+            # Kind erbt Parent-Währung (Wurzel 4: keine zweite Währungs-Wahrheit).
+            "currency": parent[0].get("currency"),
+            "base_price": float(parent[0].get("base_price") or 0),
+        }
+
+    def _derived_children(self, rate_plan_id: str) -> list[str]:
+        """IDs aller Pläne, die von rate_plan_id ableiten (Propagation/Lösch-Guard)."""
+        rows = (
+            self._db()
+            .table("rate_plans")
+            .select("id")
+            .eq("derived_from_rate_plan_id", rate_plan_id)
+            .execute()
+        ).data or []
+        return [r["id"] for r in rows if r.get("id")]
+
     def _require_own_rate_plan(self, tenant_id: str, rate_plan_id: str) -> dict:
         """Einen Rate-Plan laden UND auf den Tenant scopen in EINEM Schritt (Wurzel 3:
         Load und Scope nicht trennen). Service-Role umgeht RLS → der Join auf
@@ -443,7 +602,7 @@ class RatesService:
         res = (
             self._db()
             .table("rate_plans")
-            .select("id, property_id, properties!inner(tenant_id)")
+            .select("id, property_id, rate_mode, properties!inner(tenant_id)")
             .eq("id", rate_plan_id)
             .limit(1)
             .execute()
@@ -484,21 +643,33 @@ class RatesService:
         tenant_id = self._require_tenant(ctx)
         plan = self._require_own_rate_plan(tenant_id, rate_plan_id)
         property_id = plan["property_id"]
-        days = [
-            req.start + timedelta(days=i)
-            for i in range((req.end - req.start).days)
-        ]
+        # Abgeleitete Pläne haben keinen eigenen Preis — er folgt dem Basis-Plan
+        # (erst Betrag, dann Prozent). Datumspreise darauf zu setzen, wäre eine
+        # zweite Preis-Wahrheit (Wurzel 4) → klar fehlschlagen.
+        if plan.get("rate_mode") == "derived":
+            raise RateError(
+                "Bei einem abgeleiteten Plan werden Preise nicht direkt gesetzt — "
+                "sie folgen dem Basis-Plan.", status_code=422,
+            )
+        days = _weekday_filtered(req.start, req.end, req.weekdays)
         if req.price is None:
-            # Zurücknehmen: Zeilen im Zeitraum löschen → Basispreis gilt wieder.
-            (
+            # Zurücknehmen: betroffene Tage löschen → Basispreis gilt wieder.
+            # Ohne Maske ein Bereichs-Delete; mit Maske tag-genau (nur die
+            # ausgewählten Wochentage), damit die anderen Tage unangetastet bleiben.
+            delete_q = (
                 self._db()
                 .table("rate_plan_price_overrides")
                 .delete()
                 .eq("rate_plan_id", rate_plan_id)
-                .gte("date", req.start.isoformat())
-                .lt("date", req.end.isoformat())
-                .execute()
             )
+            if req.weekdays:
+                delete_q.in_("date", [d.isoformat() for d in days]).execute()
+            else:
+                (
+                    delete_q.gte("date", req.start.isoformat())
+                    .lt("date", req.end.isoformat())
+                    .execute()
+                )
         else:
             # Upsert pro Tag (unique-Backstop dedupliziert Retry/Doppelklick).
             self._db().table("rate_plan_price_overrides").upsert(
@@ -512,12 +683,15 @@ class RatesService:
                 ],
                 on_conflict="rate_plan_id,date",
             ).execute()
-        # Preis an Channex pushen — als Rate-Segment mit rate_plan_id (nur DIESER
-        # Plan). end ist exklusiv → date_to inklusiv = end − 1 Tag.
+        # Preis an Channex pushen — als Rate-Segmente mit rate_plan_id (nur DIESER
+        # Plan). Aus den betroffenen Tagen zusammenhängende Bereiche bilden
+        # (Wochentagsmaske → mehrere Segmente).
         rate_cents = None if req.price is None else int(round(req.price * 100))
-        self._enqueue_rate_plan_push(
-            tenant_id, property_id, rate_plan_id, req.start, req.end, rate_cents
-        )
+        for seg_from, seg_to in _contiguous_ranges(days):
+            self._enqueue_rate_plan_push(
+                tenant_id, property_id, rate_plan_id,
+                seg_from, seg_to + timedelta(days=1), rate_cents,
+            )
         log.info(
             "rate_plan_prices_set",
             tenant_id=tenant_id,
@@ -611,20 +785,24 @@ class RatesService:
         tenant_id = self._require_tenant(ctx)
         plan = self._require_own_rate_plan(tenant_id, rate_plan_id)
         property_id = plan["property_id"]
-        days = [
-            req.start + timedelta(days=i)
-            for i in range((req.end - req.start).days)
-        ]
+        # Min-Stay bleibt auch für abgeleitete Pläne editierbar — nur PREISE folgen
+        # dem Basis-Plan, Restriktionen sind pro Plan eigenständig.
+        days = _weekday_filtered(req.start, req.end, req.weekdays)
         if req.min_stay is None:
-            (
+            delete_q = (
                 self._db()
                 .table("rate_plan_min_stay_overrides")
                 .delete()
                 .eq("rate_plan_id", rate_plan_id)
-                .gte("date", req.start.isoformat())
-                .lt("date", req.end.isoformat())
-                .execute()
             )
+            if req.weekdays:
+                delete_q.in_("date", [d.isoformat() for d in days]).execute()
+            else:
+                (
+                    delete_q.gte("date", req.start.isoformat())
+                    .lt("date", req.end.isoformat())
+                    .execute()
+                )
         else:
             self._db().table("rate_plan_min_stay_overrides").upsert(
                 [
@@ -637,9 +815,11 @@ class RatesService:
                 ],
                 on_conflict="rate_plan_id,date",
             ).execute()
-        self._enqueue_rate_plan_min_stay_push(
-            tenant_id, property_id, rate_plan_id, req.start, req.end, req.min_stay
-        )
+        for seg_from, seg_to in _contiguous_ranges(days):
+            self._enqueue_rate_plan_min_stay_push(
+                tenant_id, property_id, rate_plan_id,
+                seg_from, seg_to + timedelta(days=1), req.min_stay,
+            )
         log.info(
             "rate_plan_min_stays_set",
             tenant_id=tenant_id,
@@ -715,20 +895,23 @@ class RatesService:
             and req.closed_to_departure is None
             and req.max_stay is None
         )
-        days = [
-            req.start + timedelta(days=i)
-            for i in range((req.end - req.start).days)
-        ]
+        # Restriktionen bleiben auch für abgeleitete Pläne editierbar.
+        days = _weekday_filtered(req.start, req.end, req.weekdays)
         if clearing:
-            (
+            delete_q = (
                 self._db()
                 .table("rate_plan_restriction_overrides")
                 .delete()
                 .eq("rate_plan_id", rate_plan_id)
-                .gte("date", req.start.isoformat())
-                .lt("date", req.end.isoformat())
-                .execute()
             )
+            if req.weekdays:
+                delete_q.in_("date", [d.isoformat() for d in days]).execute()
+            else:
+                (
+                    delete_q.gte("date", req.start.isoformat())
+                    .lt("date", req.end.isoformat())
+                    .execute()
+                )
         else:
             # Endzustand schreiben: ALLE drei Spalten (auch None) — die Zeile
             # spiegelt danach exakt den Editor-Stand, keine Altwert-Reste.
@@ -746,18 +929,20 @@ class RatesService:
                 on_conflict="rate_plan_id,date",
             ).execute()
         # Portal-Push: explizite Endwerte — beim Zurücknehmen offen/kein Limit
-        # (false/false/0), sonst bliebe die OTA-Seite auf dem alten Stand.
-        try_enqueue_ari(
-            self._db(), tenant_id, property_id, "restriction_rows",
-            {"rows": [{
-                "date_from": req.start.isoformat(),
-                "date_to": (req.end - timedelta(days=1)).isoformat(),
-                "rate_plan_id": rate_plan_id,
-                "closed_to_arrival": bool(req.closed_to_arrival),
-                "closed_to_departure": bool(req.closed_to_departure),
-                "max_stay": req.max_stay if req.max_stay is not None else 0,
-            }]},
-        )
+        # (false/false/0), sonst bliebe die OTA-Seite auf dem alten Stand. Bei
+        # Wochentagsmaske je zusammenhängendem Bereich eine Zeile.
+        for seg_from, seg_to in _contiguous_ranges(days):
+            try_enqueue_ari(
+                self._db(), tenant_id, property_id, "restriction_rows",
+                {"rows": [{
+                    "date_from": seg_from.isoformat(),
+                    "date_to": seg_to.isoformat(),
+                    "rate_plan_id": rate_plan_id,
+                    "closed_to_arrival": bool(req.closed_to_arrival),
+                    "closed_to_departure": bool(req.closed_to_departure),
+                    "max_stay": req.max_stay if req.max_stay is not None else 0,
+                }]},
+            )
         log.info(
             "rate_plan_restrictions_set",
             tenant_id=tenant_id,

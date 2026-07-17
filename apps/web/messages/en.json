@@ -1585,7 +1585,10 @@
       "modeRestrictions": "Restrictions",
       "on": "On",
       "off": "Off",
-      "maxStayLabel": "Max stay"
+      "maxStayLabel": "Max stay",
+      "derivedFrom": "Derived from {parent} · {offset}",
+      "derivedReadOnly": "Derived price — follows the base plan",
+      "weekdaysLabel": "Weekdays"
     }
   },
   "seasons": {

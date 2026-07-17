@@ -18,7 +18,9 @@ ausschließlich über diesen Resolver — kein direktes Preis-Tabellenlesen mehr
 """
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date, timedelta
+from decimal import ROUND_HALF_UP, Decimal
 
 from supabase import Client
 
@@ -45,6 +47,44 @@ class PricingError(Exception):
         super().__init__(message)
         self.message = message
         self.status_code = status_code
+
+
+# Max. Ableitungstiefe: Kaskade ist verboten (Parent muss manual sein), diese
+# Grenze ist nur der Zyklen-/Fehldaten-Backstop im Resolver (fail-closed).
+_MAX_DERIVE_DEPTH = 4
+
+
+@dataclass(frozen=True)
+class _RatePlanMeta:
+    """Preis-relevante Metadaten eines Rate-Plans (aus rate_plans)."""
+
+    base: float | None
+    currency: str | None
+    rate_mode: str
+    parent_id: str | None
+    offset_amount: float | None
+    offset_percent: float | None
+
+
+def _apply_offset(
+    parent_price: float | None,
+    offset_amount: float | None,
+    offset_percent: float | None,
+) -> float | None:
+    """Abgeleiteten Preis rechnen: erst Betrag, dann Prozent (SiteMinder-
+    Reihenfolge). Kaufmännisch auf 2 Nachkommastellen. Ergebnis ≤ 0 oder Parent
+    ohne Preis → None (fail-closed, kein 0-€-Verkauf, kein Clamp — Wurzel 4/5)."""
+    if parent_price is None:
+        return None
+    val = Decimal(str(parent_price))
+    if offset_amount is not None:
+        val += Decimal(str(offset_amount))
+    if offset_percent is not None:
+        val *= Decimal(1) + Decimal(str(offset_percent)) / Decimal(100)
+    val = val.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    if val <= 0:
+        return None
+    return float(val)
 
 
 def _to_float(value: object) -> float | None:
@@ -195,10 +235,11 @@ class PricingResolver:
             return None, None
         return _to_float(res[0].get("base_price")), res[0].get("currency") or None
 
-    def _load_rate_plan_by_id(
+    def _load_rate_plan_meta(
         self, property_id: str, rate_plan_id: str
-    ) -> tuple[float | None, str | None]:
-        """Basispreis + Währung EINES konkreten Rate-Plans, an das Objekt gebunden.
+    ) -> _RatePlanMeta:
+        """Metadaten EINES konkreten Rate-Plans (Basispreis, Währung, rate_mode,
+        Ableitung), an das Objekt gebunden.
 
         Der property_id-Filter ist der Scope-Backstop (Service-Role umgeht RLS):
         ein fremder/gelöschter Plan ist ein Datenfehler des Aufrufers → 422,
@@ -207,7 +248,10 @@ class PricingResolver:
         res = (
             self._db()
             .table("rate_plans")
-            .select("base_price, currency")
+            .select(
+                "id, base_price, currency, rate_mode, "
+                "derived_from_rate_plan_id, offset_amount, offset_percent"
+            )
             .eq("id", rate_plan_id)
             .eq("property_id", property_id)
             .limit(1)
@@ -218,7 +262,22 @@ class PricingResolver:
                 "Rate-Plan gehört nicht zu diesem Objekt oder existiert nicht.",
                 status_code=422,
             )
-        return _to_float(res[0].get("base_price")), res[0].get("currency") or None
+        row = res[0]
+        return _RatePlanMeta(
+            base=_to_float(row.get("base_price")),
+            currency=row.get("currency") or None,
+            rate_mode=row.get("rate_mode") or "manual",
+            parent_id=row.get("derived_from_rate_plan_id"),
+            offset_amount=_to_float(row.get("offset_amount")),
+            offset_percent=_to_float(row.get("offset_percent")),
+        )
+
+    def _load_rate_plan_by_id(
+        self, property_id: str, rate_plan_id: str
+    ) -> tuple[float | None, str | None]:
+        """Basispreis + Währung (Kompat-Wrapper um _load_rate_plan_meta)."""
+        meta = self._load_rate_plan_meta(property_id, rate_plan_id)
+        return meta.base, meta.currency
 
     def _load_overrides(
         self, property_id: str, check_in: date, check_out: date
@@ -310,18 +369,9 @@ class PricingResolver:
         wird (Channex-Push pro Rate-Plan, Hotel-Quote). Ohne ihn bleibt das Verhalten
         property-weit wie bisher (FeWo, Kalender-Board)."""
         nxt = day + timedelta(days=1)
-        overrides = self._load_overrides(property_id, day, nxt)
-        dynamic = self._load_dynamic(property_id, day, nxt)
-        config = self._load_config(property_id)
-        # Mit rate_plan_id ist DESSEN Basispreis die durchgehende Grundlinie —
-        # nie der zufällig älteste Plan des Objekts (B&B ≠ BAR).
-        if rate_plan_id:
-            base, _currency = self._load_rate_plan_by_id(property_id, rate_plan_id)
-            rp_over = self._load_rate_plan_overrides(rate_plan_id, day, nxt)
-        else:
-            base, _currency = self._load_rate_plan(property_id)
-            rp_over = {}
-        return self._effective_for_day(day, overrides, dynamic, config, base, rp_over)
+        return self.effective_prices(
+            property_id, day, nxt, rate_plan_id=rate_plan_id
+        )[0]
 
     @staticmethod
     def _effective_for_day(
@@ -372,17 +422,64 @@ class PricingResolver:
         overrides = self._load_overrides(property_id, check_in, check_out)
         dynamic = self._load_dynamic(property_id, check_in, check_out)
         config = self._load_config(property_id)
+        days = _nights(check_in, check_out)
         if rate_plan_id:
-            base, _currency = self._load_rate_plan_by_id(property_id, rate_plan_id)
-            rp_over = self._load_rate_plan_overrides(
-                rate_plan_id, check_in, check_out
+            return self._rate_plan_curve(
+                property_id, rate_plan_id, days, check_in, check_out,
+                overrides, dynamic, config,
             )
-        else:
-            base, _currency = self._load_rate_plan(property_id)
-            rp_over = {}
+        base, _currency = self._load_rate_plan(property_id)
         return [
-            self._effective_for_day(day, overrides, dynamic, config, base, rp_over)
-            for day in _nights(check_in, check_out)
+            self._effective_for_day(day, overrides, dynamic, config, base, {})
+            for day in days
+        ]
+
+    def _rate_plan_curve(
+        self,
+        property_id: str,
+        rate_plan_id: str,
+        days: list[date],
+        check_in: date,
+        check_out: date,
+        overrides: dict[str, float],
+        dynamic: dict[str, dict],
+        config: _PricingConfig,
+        _depth: int = 0,
+    ) -> list[EffectivePriceDay]:
+        """Tages-Preiskurve EINES Rate-Plans über [check_in, check_out).
+
+        manual: base + eigene Datumspreise > override > dynamic > weekday > base.
+        derived: Parent-Kurve rekursiv auflösen, dann pro Tag den Offset anwenden
+        (erst Betrag, dann Prozent; ≤ 0 → kein Preis). Property-weite override/
+        dynamic/weekday gelten NUR für manual — ein abgeleiteter Preis folgt
+        ausschließlich seinem Parent (sonst zwei konkurrierende Quellen, Wurzel 4)."""
+        meta = self._load_rate_plan_meta(property_id, rate_plan_id)
+        if meta.rate_mode == "derived" and meta.parent_id:
+            if _depth >= _MAX_DERIVE_DEPTH:
+                # Kaskade ist per Service verboten; hier nur der Zyklen-Backstop.
+                raise PricingError(
+                    "Ableitungskette zu tief oder zyklisch.", status_code=422
+                )
+            parent = self._rate_plan_curve(
+                property_id, meta.parent_id, days, check_in, check_out,
+                overrides, dynamic, config, _depth + 1,
+            )
+            return [
+                EffectivePriceDay(
+                    date=p.date,
+                    price=_apply_offset(
+                        p.price, meta.offset_amount, meta.offset_percent
+                    ),
+                    source="derived",
+                )
+                for p in parent
+            ]
+        rp_over = self._load_rate_plan_overrides(rate_plan_id, check_in, check_out)
+        return [
+            self._effective_for_day(
+                day, overrides, dynamic, config, meta.base, rp_over
+            )
+            for day in days
         ]
 
     # -- Batch: viele Objekte in EINEM Lauf (Board-Endpunkt) ------------------
@@ -513,27 +610,27 @@ class PricingResolver:
         # Hotel: der konkrete Plan der Buchung bestimmt Basispreis, Währung und
         # die datumsgenauen Plan-Preise — nie der zufällig älteste Plan des
         # Objekts. FeWo (ohne rate_plan_id): das eine Objekt-Rate-Plan wie bisher.
+        overrides = self._load_overrides(req.property_id, req.check_in, req.check_out)
+        dynamic = self._load_dynamic(req.property_id, req.check_in, req.check_out)
+        # 1) Übernachtungssumme aus Effektiv-Tagespreisen. Mit rate_plan_id nutzt
+        # der Quote dieselbe Kurve wie Channex-Push/Portal (inkl. Ableitung).
         if req.rate_plan_id:
-            base, rp_currency = self._load_rate_plan_by_id(
+            rp_currency = self._load_rate_plan_meta(
                 req.property_id, req.rate_plan_id
-            )
-            rp_over = self._load_rate_plan_overrides(
-                req.rate_plan_id, req.check_in, req.check_out
+            ).currency
+            per_day = self._rate_plan_curve(
+                req.property_id, req.rate_plan_id, nights,
+                req.check_in, req.check_out, overrides, dynamic, config,
             )
         else:
             base, rp_currency = self._load_rate_plan(req.property_id)
-            rp_over = {}
-        overrides = self._load_overrides(req.property_id, req.check_in, req.check_out)
-        dynamic = self._load_dynamic(req.property_id, req.check_in, req.check_out)
+            per_day = [
+                self._effective_for_day(day, overrides, dynamic, config, base, {})
+                for day in nights
+            ]
         # Rate-Plan-Währung gewinnt: sie ist die Verkaufs-Wahrheit (Channex pusht
         # in ihr). config.currency greift nur, wenn kein Plan existiert.
         currency = rp_currency or config.currency or ""
-
-        # 1) Übernachtungssumme aus Effektiv-Tagespreisen.
-        per_day = [
-            self._effective_for_day(day, overrides, dynamic, config, base, rp_over)
-            for day in nights
-        ]
         priced = [d.price for d in per_day if d.price is not None]
         priceless = len(priced) == 0
         # Längenpreis verdrängt nur den Basispreis-Anteil (nicht Overrides/Weekday).
