@@ -4139,7 +4139,7 @@
       "baseLabelEditorTitle": "Ainm don bhunphraghas",
       "baseLabelEditorSubtitle": "Ainm faoina bhfeicfear do bhunphraghas ar an suíomh gréasáin.",
       "baseLabelPlaceholder": "m.sh. Caighdeánach",
-      "multiPlanHint": "Mehrere Preispläne (z. B. BAR/B&B) — die Preise werden in der Kalender-Ansicht „Preise“ datumsgenau gepflegt."
+      "multiPlanHint": "Pleananna praghsála iolracha (m.sh. BAR/B&B) — bainistítear na praghsanna de réir dáta san amharc féilire „Praghsanna“."
     },
     "policiesForm": {
       "title": "Polasaithe",
@@ -4353,8 +4353,8 @@
       "propertyLabel": "Maoin",
       "modePrices": "Rátaí",
       "modeMinStay": "Fanacht íosta",
-      "planColumn": "Preisplan",
-      "empty": "Noch kein Preisplan — lege unter Objekte → Preise einen an.",
+      "planColumn": "Plean praghsála",
+      "empty": "Níl aon phlean praghsála ann fós — cruthaigh ceann in Réada → Praghsanna.",
       "pricePlaceholder": "Praghas in {currency}",
       "minStayPlaceholder": "Oícheanta (íos. 1)",
       "apply": "Cuir i bhfeidhm",

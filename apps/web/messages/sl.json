@@ -4139,7 +4139,7 @@
       "baseLabelEditorTitle": "Oznaka za osnovno ceno",
       "baseLabelEditorSubtitle": "Ime, pod katerim se tvoja osnovna cena prikaže na spletni strani.",
       "baseLabelPlaceholder": "npr. Standardna cena",
-      "multiPlanHint": "Mehrere Preispläne (z. B. BAR/B&B) — die Preise werden in der Kalender-Ansicht „Preise“ datumsgenau gepflegt."
+      "multiPlanHint": "Več cenovnih načrtov (npr. BAR/B&B) — cene se urejajo po datumih v koledarskem pogledu »Cene«."
     },
     "policiesForm": {
       "title": "Pravilniki",
@@ -4353,8 +4353,8 @@
       "propertyLabel": "Objekt",
       "modePrices": "Cene",
       "modeMinStay": "Najmanjše število nočitev",
-      "planColumn": "Preisplan",
-      "empty": "Noch kein Preisplan — lege unter Objekte → Preise einen an.",
+      "planColumn": "Cenovni načrt",
+      "empty": "Cenovnega načrta še ni — ustvarite ga v Objekti → Cene.",
       "pricePlaceholder": "Cena v {currency}",
       "minStayPlaceholder": "Noči (min. 1)",
       "apply": "Uveljavi",

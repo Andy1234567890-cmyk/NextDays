@@ -4139,7 +4139,7 @@
       "baseLabelEditorTitle": "Denumire pentru prețul de bază",
       "baseLabelEditorSubtitle": "Numele sub care apare prețul de bază pe website.",
       "baseLabelPlaceholder": "de ex. Preț standard",
-      "multiPlanHint": "Mehrere Preispläne (z. B. BAR/B&B) — die Preise werden in der Kalender-Ansicht „Preise“ datumsgenau gepflegt."
+      "multiPlanHint": "Mai multe planuri de prețuri (de ex. BAR/B&B) — prețurile se gestionează pe date în vizualizarea de calendar „Prețuri”."
     },
     "policiesForm": {
       "title": "Politici",
@@ -4353,8 +4353,8 @@
       "propertyLabel": "Proprietate",
       "modePrices": "Tarife",
       "modeMinStay": "Sejur minim",
-      "planColumn": "Preisplan",
-      "empty": "Noch kein Preisplan — lege unter Objekte → Preise einen an.",
+      "planColumn": "Plan de prețuri",
+      "empty": "Încă niciun plan de prețuri — creează unul în Obiecte → Prețuri.",
       "pricePlaceholder": "Preț în {currency}",
       "minStayPlaceholder": "Nopți (min. 1)",
       "apply": "Aplică",

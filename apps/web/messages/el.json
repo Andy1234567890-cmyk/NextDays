@@ -4139,7 +4139,7 @@
       "baseLabelEditorTitle": "Ονομασία για τη βασική τιμή",
       "baseLabelEditorSubtitle": "Όνομα με το οποίο εμφανίζεται η βασική τιμή σας στον ιστότοπο.",
       "baseLabelPlaceholder": "π.χ. Τυπική τιμή",
-      "multiPlanHint": "Mehrere Preispläne (z. B. BAR/B&B) — die Preise werden in der Kalender-Ansicht „Preise“ datumsgenau gepflegt."
+      "multiPlanHint": "Πολλαπλά πλάνα τιμών (π.χ. BAR/B&B) — οι τιμές διαχειρίζονται ανά ημερομηνία στην προβολή ημερολογίου «Τιμές»."
     },
     "policiesForm": {
       "title": "Πολιτικές",
@@ -4353,8 +4353,8 @@
       "propertyLabel": "Κατάλυμα",
       "modePrices": "Τιμές",
       "modeMinStay": "Ελάχιστη διαμονή",
-      "planColumn": "Preisplan",
-      "empty": "Noch kein Preisplan — lege unter Objekte → Preise einen an.",
+      "planColumn": "Πλάνο τιμών",
+      "empty": "Δεν υπάρχει ακόμη πλάνο τιμών — δημιουργήστε ένα στα Αντικείμενα → Τιμές.",
       "pricePlaceholder": "Τιμή σε {currency}",
       "minStayPlaceholder": "Διανυκτερεύσεις (ελάχ. 1)",
       "apply": "Εφαρμογή",

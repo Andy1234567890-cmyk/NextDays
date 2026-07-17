@@ -4139,7 +4139,7 @@
       "baseLabelEditorTitle": "Perushinnan nimike",
       "baseLabelEditorSubtitle": "Nimi, jolla perushintasi näkyy verkkosivustolla.",
       "baseLabelPlaceholder": "esim. Vakiohinta",
-      "multiPlanHint": "Mehrere Preispläne (z. B. BAR/B&B) — die Preise werden in der Kalender-Ansicht „Preise“ datumsgenau gepflegt."
+      "multiPlanHint": "Useita hintasuunnitelmia (esim. BAR/B&B) — hintoja hallitaan päiväkohtaisesti kalenterinäkymässä ”Hinnat”."
     },
     "policiesForm": {
       "title": "Käytännöt",
@@ -4353,8 +4353,8 @@
       "propertyLabel": "Kohde",
       "modePrices": "Hinnat",
       "modeMinStay": "Vähimmäisyöpymisaika",
-      "planColumn": "Preisplan",
-      "empty": "Noch kein Preisplan — lege unter Objekte → Preise einen an.",
+      "planColumn": "Hintasuunnitelma",
+      "empty": "Ei vielä hintasuunnitelmaa — luo sellainen kohdassa Kohteet → Hinnat.",
       "pricePlaceholder": "Hinta valuutassa {currency}",
       "minStayPlaceholder": "Öitä (väh. 1)",
       "apply": "Käytä",

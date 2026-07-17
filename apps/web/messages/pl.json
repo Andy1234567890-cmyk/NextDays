@@ -4139,7 +4139,7 @@
       "baseLabelEditorTitle": "Nazwa ceny podstawowej",
       "baseLabelEditorSubtitle": "Nazwa, pod jaką Twoja cena podstawowa pojawia się na stronie internetowej.",
       "baseLabelPlaceholder": "np. Cena standardowa",
-      "multiPlanHint": "Mehrere Preispläne (z. B. BAR/B&B) — die Preise werden in der Kalender-Ansicht „Preise“ datumsgenau gepflegt."
+      "multiPlanHint": "Wiele planów cenowych (np. BAR/B&B) — ceny są zarządzane według dat w widoku kalendarza „Ceny”."
     },
     "policiesForm": {
       "title": "Zasady",
@@ -4353,8 +4353,8 @@
       "propertyLabel": "Obiekt",
       "modePrices": "Ceny",
       "modeMinStay": "Minimalny pobyt",
-      "planColumn": "Preisplan",
-      "empty": "Noch kein Preisplan — lege unter Objekte → Preise einen an.",
+      "planColumn": "Plan cenowy",
+      "empty": "Brak planu cenowego — utwórz go w Obiekty → Ceny.",
       "pricePlaceholder": "Cena w {currency}",
       "minStayPlaceholder": "Noce (min. 1)",
       "apply": "Zastosuj",

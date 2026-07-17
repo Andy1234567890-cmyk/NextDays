@@ -4139,7 +4139,7 @@
       "baseLabelEditorTitle": "Bazinės kainos pavadinimas",
       "baseLabelEditorSubtitle": "Pavadinimas, kuriuo jūsų bazinė kaina rodoma svetainėje.",
       "baseLabelPlaceholder": "pvz., Standartinė kaina",
-      "multiPlanHint": "Mehrere Preispläne (z. B. BAR/B&B) — die Preise werden in der Kalender-Ansicht „Preise“ datumsgenau gepflegt."
+      "multiPlanHint": "Keli kainų planai (pvz., BAR/B&B) — kainos tvarkomos pagal datą kalendoriaus rodinyje „Kainos“."
     },
     "policiesForm": {
       "title": "Taisyklės",
@@ -4353,8 +4353,8 @@
       "propertyLabel": "Objektas",
       "modePrices": "Kainos",
       "modeMinStay": "Minimali apsistojimo trukmė",
-      "planColumn": "Preisplan",
-      "empty": "Noch kein Preisplan — lege unter Objekte → Preise einen an.",
+      "planColumn": "Kainų planas",
+      "empty": "Kainų plano dar nėra — sukurkite jį skiltyje Objektai → Kainos.",
       "pricePlaceholder": "Kaina valiuta {currency}",
       "minStayPlaceholder": "Naktys (min. 1)",
       "apply": "Taikyti",

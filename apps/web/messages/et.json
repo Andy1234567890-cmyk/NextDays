@@ -4139,7 +4139,7 @@
       "baseLabelEditorTitle": "Põhihinna nimetus",
       "baseLabelEditorSubtitle": "Nimi, mille all sinu põhihind veebisaidil kuvatakse.",
       "baseLabelPlaceholder": "nt Standardhind",
-      "multiPlanHint": "Mehrere Preispläne (z. B. BAR/B&B) — die Preise werden in der Kalender-Ansicht „Preise“ datumsgenau gepflegt."
+      "multiPlanHint": "Mitu hinnaplaani (nt BAR/B&B) — hindu hallatakse kuupäevapõhiselt kalendrivaates „Hinnad“."
     },
     "policiesForm": {
       "title": "Reeglid",
@@ -4353,8 +4353,8 @@
       "propertyLabel": "Objekt",
       "modePrices": "Hinnad",
       "modeMinStay": "Minimaalne peatumisaeg",
-      "planColumn": "Preisplan",
-      "empty": "Noch kein Preisplan — lege unter Objekte → Preise einen an.",
+      "planColumn": "Hinnaplaan",
+      "empty": "Hinnaplaani veel pole — loo see menüüs Objektid → Hinnad.",
       "pricePlaceholder": "Hind valuutas {currency}",
       "minStayPlaceholder": "Ööd (min. 1)",
       "apply": "Rakenda",

@@ -4139,7 +4139,7 @@
       "baseLabelEditorTitle": "Nombre para el precio base",
       "baseLabelEditorSubtitle": "Nombre con el que tu precio base aparecerá en el sitio web.",
       "baseLabelPlaceholder": "p. ej., precio estándar",
-      "multiPlanHint": "Mehrere Preispläne (z. B. BAR/B&B) — die Preise werden in der Kalender-Ansicht „Preise“ datumsgenau gepflegt."
+      "multiPlanHint": "Varios planes de precios (p. ej. BAR/B&B): los precios se gestionan por fecha en la vista de calendario «Precios»."
     },
     "policiesForm": {
       "title": "Políticas",
@@ -4353,8 +4353,8 @@
       "propertyLabel": "Propiedad",
       "modePrices": "Tarifas",
       "modeMinStay": "Estancia mínima",
-      "planColumn": "Preisplan",
-      "empty": "Noch kein Preisplan — lege unter Objekte → Preise einen an.",
+      "planColumn": "Plan de precios",
+      "empty": "Aún no hay ningún plan de precios: crea uno en Objetos → Precios.",
       "pricePlaceholder": "Precio en {currency}",
       "minStayPlaceholder": "Noches (mín. 1)",
       "apply": "Aplicar",

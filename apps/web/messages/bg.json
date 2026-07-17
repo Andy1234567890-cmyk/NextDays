@@ -4139,7 +4139,7 @@
       "baseLabelEditorTitle": "Наименование за основната цена",
       "baseLabelEditorSubtitle": "Име, под което основната ви цена се показва на уебсайта.",
       "baseLabelPlaceholder": "напр. Стандартна цена",
-      "multiPlanHint": "Mehrere Preispläne (z. B. BAR/B&B) — die Preise werden in der Kalender-Ansicht „Preise“ datumsgenau gepflegt."
+      "multiPlanHint": "Няколко ценови плана (напр. BAR/B&B) — цените се поддържат по дати в изгледа „Цени“ на календара."
     },
     "policiesForm": {
       "title": "Правила",
@@ -4353,8 +4353,8 @@
       "propertyLabel": "Обект",
       "modePrices": "Цени",
       "modeMinStay": "Минимален престой",
-      "planColumn": "Preisplan",
-      "empty": "Noch kein Preisplan — lege unter Objekte → Preise einen an.",
+      "planColumn": "Ценови план",
+      "empty": "Все още няма ценови план — създайте такъв в Обекти → Цени.",
       "pricePlaceholder": "Цена в {currency}",
       "minStayPlaceholder": "Нощувки (мин. 1)",
       "apply": "Приложи",

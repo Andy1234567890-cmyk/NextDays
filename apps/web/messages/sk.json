@@ -4139,7 +4139,7 @@
       "baseLabelEditorTitle": "Označenie základnej ceny",
       "baseLabelEditorSubtitle": "Názov, pod ktorým sa vaša základná cena zobrazí na webstránke.",
       "baseLabelPlaceholder": "napr. Štandardná cena",
-      "multiPlanHint": "Mehrere Preispläne (z. B. BAR/B&B) — die Preise werden in der Kalender-Ansicht „Preise“ datumsgenau gepflegt."
+      "multiPlanHint": "Viacero cenových plánov (napr. BAR/B&B) — ceny sa spravujú podľa dátumu v zobrazení kalendára „Ceny“."
     },
     "policiesForm": {
       "title": "Zásady",
@@ -4353,8 +4353,8 @@
       "propertyLabel": "Objekt",
       "modePrices": "Ceny",
       "modeMinStay": "Minimálny pobyt",
-      "planColumn": "Preisplan",
-      "empty": "Noch kein Preisplan — lege unter Objekte → Preise einen an.",
+      "planColumn": "Cenový plán",
+      "empty": "Zatiaľ žiadny cenový plán — vytvorte ho v Objekty → Ceny.",
       "pricePlaceholder": "Cena v {currency}",
       "minStayPlaceholder": "Noci (min. 1)",
       "apply": "Použiť",

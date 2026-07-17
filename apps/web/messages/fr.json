@@ -4139,7 +4139,7 @@
       "baseLabelEditorTitle": "Libellé du prix de base",
       "baseLabelEditorSubtitle": "Nom sous lequel votre prix de base apparaît sur le site web.",
       "baseLabelPlaceholder": "p. ex. Prix standard",
-      "multiPlanHint": "Mehrere Preispläne (z. B. BAR/B&B) — die Preise werden in der Kalender-Ansicht „Preise“ datumsgenau gepflegt."
+      "multiPlanHint": "Plusieurs plans tarifaires (p. ex. BAR/B&B) — les tarifs sont gérés par date dans la vue calendrier « Tarifs »."
     },
     "policiesForm": {
       "title": "Règlements",
@@ -4353,8 +4353,8 @@
       "propertyLabel": "Bien",
       "modePrices": "Tarifs",
       "modeMinStay": "Séjour minimum",
-      "planColumn": "Preisplan",
-      "empty": "Noch kein Preisplan — lege unter Objekte → Preise einen an.",
+      "planColumn": "Plan tarifaire",
+      "empty": "Aucun plan tarifaire pour l’instant — créez-en un dans Objets → Tarifs.",
       "pricePlaceholder": "Prix en {currency}",
       "minStayPlaceholder": "Nuits (min. 1)",
       "apply": "Appliquer",

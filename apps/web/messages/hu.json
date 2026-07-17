@@ -4139,7 +4139,7 @@
       "baseLabelEditorTitle": "Az alapár megnevezése",
       "baseLabelEditorSubtitle": "Név, amely alatt az alapárad megjelenik a weboldalon.",
       "baseLabelPlaceholder": "pl. standard ár",
-      "multiPlanHint": "Mehrere Preispläne (z. B. BAR/B&B) — die Preise werden in der Kalender-Ansicht „Preise“ datumsgenau gepflegt."
+      "multiPlanHint": "Több árterv (pl. BAR/B&B) — az árakat dátum szerint a naptár „Árak“ nézetében kezeljük."
     },
     "policiesForm": {
       "title": "Irányelvek",
@@ -4353,8 +4353,8 @@
       "propertyLabel": "Ingatlan",
       "modePrices": "Árak",
       "modeMinStay": "Minimum tartózkodás",
-      "planColumn": "Preisplan",
-      "empty": "Noch kein Preisplan — lege unter Objekte → Preise einen an.",
+      "planColumn": "Árterv",
+      "empty": "Még nincs árterv — hozzon létre egyet az Objektumok → Árak menüpontban.",
       "pricePlaceholder": "Ár {currency} pénznemben",
       "minStayPlaceholder": "Éjszakák (min. 1)",
       "apply": "Alkalmaz",

@@ -4139,7 +4139,7 @@
       "baseLabelEditorTitle": "Pamatcenas nosaukums",
       "baseLabelEditorSubtitle": "Nosaukums, ar kādu tava pamatcena parādās vietnē.",
       "baseLabelPlaceholder": "piem., standarta cena",
-      "multiPlanHint": "Mehrere Preispläne (z. B. BAR/B&B) — die Preise werden in der Kalender-Ansicht „Preise“ datumsgenau gepflegt."
+      "multiPlanHint": "Vairāki cenu plāni (piem., BAR/B&B) — cenas tiek pārvaldītas pa datumiem kalendāra skatā “Cenas”."
     },
     "policiesForm": {
       "title": "Noteikumi",
@@ -4353,8 +4353,8 @@
       "propertyLabel": "Objekts",
       "modePrices": "Cenas",
       "modeMinStay": "Minimālais uzturēšanās ilgums",
-      "planColumn": "Preisplan",
-      "empty": "Noch kein Preisplan — lege unter Objekte → Preise einen an.",
+      "planColumn": "Cenu plāns",
+      "empty": "Vēl nav neviena cenu plāna — izveidojiet to sadaļā Objekti → Cenas.",
       "pricePlaceholder": "Cena {currency}",
       "minStayPlaceholder": "Naktis (min. 1)",
       "apply": "Piemērot",

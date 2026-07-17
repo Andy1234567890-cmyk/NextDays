@@ -4139,7 +4139,7 @@
       "baseLabelEditorTitle": "Isem għall-prezz bażiku",
       "baseLabelEditorSubtitle": "Isem li bih il-prezz bażiku tiegħek jidher fuq il-website.",
       "baseLabelPlaceholder": "eż. Prezz standard",
-      "multiPlanHint": "Mehrere Preispläne (z. B. BAR/B&B) — die Preise werden in der Kalender-Ansicht „Preise“ datumsgenau gepflegt."
+      "multiPlanHint": "Bosta pjani tal-prezzijiet (eż. BAR/B&B) — il-prezzijiet jiġu mmaniġġjati skont id-data fil-vista tal-kalendarju „Prezzijiet“."
     },
     "policiesForm": {
       "title": "Politiki",
@@ -4353,8 +4353,8 @@
       "propertyLabel": "Proprjetà",
       "modePrices": "Prezzijiet",
       "modeMinStay": "Soġġorn minimu",
-      "planColumn": "Preisplan",
-      "empty": "Noch kein Preisplan — lege unter Objekte → Preise einen an.",
+      "planColumn": "Pjan tal-prezzijiet",
+      "empty": "Għad m'hemm ebda pjan tal-prezzijiet — oħloq wieħed f'Oġġetti → Prezzijiet.",
       "pricePlaceholder": "Prezz f'{currency}",
       "minStayPlaceholder": "Iljieli (min. 1)",
       "apply": "Applika",
