@@ -1940,6 +1940,9 @@ def test_prune_orphan_room_type_deletes_and_softdeletes_children() -> None:
     channex = _ImportChannex()
     svc = _import_svc(channex, db)
     svc._prune_orphan_room_types(db, "t1", "cx-prop", {"p1"})
+    # Kind-Rate-Plan ZUERST explizit bei Channex gelöscht (delete_room_type
+    # entwaist ihn nur — er würde sonst per Titel das Neuanlegen blockieren).
+    assert "cx-rp-old" in channex.deleted_rate_plans
     # Alter Kategorie-Room-Type geprunt (Channex-Delete + Map + Kind soft-deleted).
     assert "cx-rt-old" in channex.deleted_room_types
     old_rt = next(r for r in db.tables["channex_room_type_map"] if r["id"] == "rt-old")

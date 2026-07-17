@@ -644,6 +644,20 @@ class ContentSyncMixin:
                 .is_("deleted_at", "null")
                 .execute()
             ).data or []
+            # Gegenzustand (Wurzel 1): delete_room_type ENTWAIST die Rate-Plans nur
+            # (room_type_id → null), löscht sie NICHT mit (live verifiziert). Die
+            # verwaisten Pläne behalten aber ihren Titel und blockieren das
+            # Neuanlegen gleichnamiger Pläne (title unique per property). Darum die
+            # Kind-Rate-Plans ZUERST explizit löschen, DANN den Room-Type. Beides
+            # fail-closed (kein force): scheitert ein Delete (Kanal-Bindung), bleibt
+            # der Room-Type stehen und der Konflikt wird geloggt.
+            if not self._delete_channex_rate_plans(db, child_rp):
+                log.warning(
+                    "channex_room_type_prune_blocked",
+                    channex_room_type_id=row.get("channex_room_type_id"),
+                    error="rate_plan_delete_blocked",
+                )
+                continue
             channex_id = row.get("channex_room_type_id")
             try:
                 if channex_id:
@@ -657,13 +671,6 @@ class ContentSyncMixin:
                         channex_room_type_id=channex_id, error=exc.message,
                     )
                     continue
-            # Gegenzustand (Wurzel 1): mit dem Room-Type verschwinden bei Channex
-            # auch seine Rate-Plans → deren Map-Zeilen mit soft-deleten, sonst
-            # sprechen ARI-Pushes tote channex_rate_plan_ids an.
-            for child in child_rp:
-                db.table("channex_rate_plan_map").update(
-                    {"deleted_at": datetime.now(UTC).isoformat()}
-                ).eq("id", child["id"]).execute()
             db.table("channex_room_type_map").update(
                 {"deleted_at": datetime.now(UTC).isoformat()}
             ).eq("id", row["id"]).execute()
@@ -672,6 +679,32 @@ class ContentSyncMixin:
                 channex_room_type_id=channex_id,
                 local_unit_ref=row.get("local_unit_ref"),
             )
+
+    def _delete_channex_rate_plans(
+        self, db: Client, child_rp: list[dict[str, Any]],
+    ) -> bool:
+        """Verwaiste Kind-Rate-Plans bei Channex löschen + Map-Zeile soft-deleten.
+        Gibt False zurück, wenn ein Delete fail-closed blockiert wurde (Kanal-
+        Bindung, 422) — dann darf der Room-Type nicht gelöscht werden. 404 =
+        bei Channex schon weg → Map trotzdem schließen (Gegenzustand, Wurzel 1)."""
+        ok = True
+        for child in child_rp:
+            cx_id = child.get("channex_rate_plan_id")
+            try:
+                if cx_id:
+                    self._channex.delete_rate_plan(cx_id)
+            except ChannexError as exc:
+                if exc.channex_status != 404:
+                    log.warning(
+                        "channex_rate_plan_prune_blocked",
+                        channex_rate_plan_id=cx_id, error=exc.message,
+                    )
+                    ok = False
+                    continue
+            db.table("channex_rate_plan_map").update(
+                {"deleted_at": datetime.now(UTC).isoformat()}
+            ).eq("id", child["id"]).execute()
+        return ok
 
     def _upsert_channex_room_type(
         self, db: Client, tenant_id: str, channex_property_id: str,
@@ -806,9 +839,10 @@ class ContentSyncMixin:
         # Rate-Plan gehört unveränderlich zu EINEM room_type_id (PUT mit fremdem
         # room_type_id → 422 „can't be changed"). Ein Plan, der noch an einer
         # ALTEN Kategorie-Map hängt, wird daher NICHT umgehängt, sondern über
-        # _prune_orphan_room_types samt Room-Type gelöscht (Channex kaskadiert die
-        # Rate-Plans) und hier am synthetischen Room-Type NEU angelegt. Dadurch
-        # ist auch der Titel wieder frei (title unique per property).
+        # _prune_orphan_room_types explizit gelöscht (delete_room_type entwaist die
+        # Rate-Plans nur, darum werden sie dort vorher per delete_rate_plan
+        # gelöscht) und hier am synthetischen Room-Type NEU angelegt. Dadurch ist
+        # auch der Titel wieder frei (title unique per property).
         existing_row: dict[str, Any] | None = None
         if local_rate_plan_id:
             hit = (
@@ -850,37 +884,7 @@ class ContentSyncMixin:
             self._channex.update_rate_plan(channex_rate_plan_id, attrs)
             return channex_rate_plan_id
 
-        try:
-            created = self._channex.create_rate_plan(attrs)
-        except ChannexError as exc:
-            # Defensiver Idempotenz-Fallback (Wurzel 2): Map-Miss, aber bei Channex
-            # existiert der Plan schon (Titel-Duplikat, z. B. Alt-Map verloren).
-            # Per Titel wiederfinden und per PUT übernehmen — die Map bleibt die
-            # Wahrheit, der Titel ist nur der Wiederfund-Schlüssel (Wurzel 4). Nur
-            # ein Treffer AM synthetischen Room-Type ist brauchbar: ein Plan an
-            # einem fremden room_type_id ließe sich nicht per PUT übernehmen
-            # (room_type_id immutable → erneuter 422).
-            match = self._find_channex_rate_plan_by_title(
-                channex_property_id, title, channex_room_type_id,
-            ) if exc.channex_status == 422 else None
-            if match is None:
-                raise
-            self._channex.update_rate_plan(match, attrs)
-            db.table("channex_rate_plan_map").upsert(
-                {
-                    "tenant_id": tenant_id,
-                    "room_type_map_id": room_type_map_id,
-                    "local_rate_plan_id": local_rate_plan_id,
-                    "title": title,
-                    "channex_rate_plan_id": match,
-                },
-                on_conflict="channex_rate_plan_id",
-            ).execute()
-            log.info(
-                "channex_rate_plan_recovered_by_title",
-                channex_rate_plan_id=match, title=title,
-            )
-            return match
+        created = self._channex.create_rate_plan(attrs)
         channex_rate_plan_id = (created.get("data") or {}).get("id")
         if not channex_rate_plan_id:
             raise ChannexError("Keine Rate-Plan-ID erhalten.", status_code=502)
@@ -895,25 +899,6 @@ class ContentSyncMixin:
             on_conflict="channex_rate_plan_id",
         ).execute()
         return channex_rate_plan_id
-
-    def _find_channex_rate_plan_by_title(
-        self, channex_property_id: str, title: str, channex_room_type_id: str,
-    ) -> str | None:
-        """Channex-Rate-Plan-ID per exaktem Titel UND passendem room_type_id
-        finden. Nur der defensive Wiederfund-Pfad bei Titel-Duplikat (Wurzel 2)
-        nutzt das — primär ist die Map die Wahrheit. Der Room-Type-Filter ist
-        Pflicht: ein Treffer an einem fremden Room-Type ließe sich nicht per PUT
-        übernehmen (room_type_id immutable)."""
-        try:
-            resp = self._channex.get_rate_plans(channex_property_id)
-        except ChannexError:
-            return None
-        for item in resp.get("data") or []:
-            attrs = item.get("attributes") or {}
-            if (attrs.get("title") == title
-                    and attrs.get("room_type_id") == channex_room_type_id):
-                return item.get("id")
-        return None
 
     def _prune_orphan_rate_plans(
         self, db: Client, tenant_id: str, room_type_map_id: str,
