@@ -21,6 +21,7 @@ from src.features.guests.identity import (
     resolve_or_create_guest,
 )
 
+from .ari_push import _group_iso_days_to_ranges
 from .channex_client import ChannexError
 from .common import ChannelManagerError, log
 from .schemas import (
@@ -459,9 +460,8 @@ class BookingsSyncMixin:
         ein Tag, der lokal noch belegt ist (überlappende Direkt-/Fremdbelegung,
         manueller Block), darf NICHT als buchbar an Channex gemeldet werden
         (Überbuchung)."""
-        freed: list[str] = []
         for d in nights:
-            upd = (
+            (
                 db.table("availability")
                 .update({"status": "open", "source": "manual"})
                 .eq("property_id", property_id)
@@ -469,12 +469,32 @@ class BookingsSyncMixin:
                 .eq("status", "booked")
                 .eq("source", channel)
                 .execute()
+            )
+        # Für den Channex-Push zählt der ECHTE Kalenderstand NACH der Freigabe —
+        # nicht nur die Zeilen, die DIESE Funktion eben gedreht hat: der kanonische
+        # Release-Pfad (ReservationsService._release_nights) kann Nächte desselben
+        # Stornos bereits geöffnet haben; würden die hier übersprungen, blieben sie
+        # bei den OTAs dauerhaft gesperrt (live passiert: Storno gab 3 Nächte
+        # lokal frei, an Channex ging nur eine). Tage mit verbleibender Belegung
+        # (Fremd-Quelle, manueller Block) bleiben draußen — kein Überbuchen.
+        still_closed = {
+            r["date"]
+            for r in (
+                db.table("availability")
+                .select("date")
+                .eq("property_id", property_id)
+                .in_("date", nights)
+                .neq("status", "open")
+                .execute()
             ).data or []
-            if upd:
-                freed.append(d)
-        for d in freed:
-            day = date.fromisoformat(d)
-            self.push_availability_for_property(tenant_id, property_id, day, day, 1)
+        }
+        open_days = {d for d in nights if d not in still_closed}
+        # Zusammenhängende Tage als EIN Range-Push (statt N Einzeltag-Calls).
+        for span_start, span_end in _group_iso_days_to_ranges(open_days):
+            self.push_availability_for_property(
+                tenant_id, property_id,
+                date.fromisoformat(span_start), date.fromisoformat(span_end), 1,
+            )
 
     def _property_currency(self, db: Client, property_id: str) -> str | None:
         """Objekt-Währung aus dem (ältesten) Rate-Plan — die lokale Wahrheit für

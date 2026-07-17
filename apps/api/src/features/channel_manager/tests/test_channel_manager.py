@@ -1556,6 +1556,54 @@ def test_full_sync_shared_property_is_two_calls() -> None:
             assert key in v
 
 
+def test_free_ota_nights_pushes_days_already_freed_by_release_path() -> None:
+    # Live-Bug (Cert Test 11): _release_nights hatte 2 von 3 Storno-Nächten schon
+    # geöffnet → _free_ota_nights pushte nur die verbliebene 'booked'-Nacht, die
+    # OTAs behielten die übrigen Tage dauerhaft gesperrt. Jetzt zählt der ECHTE
+    # Kalenderstand NACH der Freigabe: EIN Range-Push über alle offenen Nächte.
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    db.tables["availability"].extend([
+        {"property_id": "p1", "date": "2026-12-03", "status": "booked",
+         "source": "portal"},
+        {"property_id": "p1", "date": "2026-12-04", "status": "open",
+         "source": "manual"},
+        {"property_id": "p1", "date": "2026-12-05", "status": "open",
+         "source": "manual"},
+    ])
+    channex = _ImportChannex()
+    svc = _import_svc(channex, db)
+    svc._free_ota_nights(
+        db, "t1", "p1", "portal", ["2026-12-03", "2026-12-04", "2026-12-05"]
+    )
+    assert [
+        (v["date_from"], v["date_to"], v["availability"]) for v in channex.pushed
+    ] == [("2026-12-03", "2026-12-05", 1)]
+
+
+def test_free_ota_nights_keeps_foreign_blocked_day_closed() -> None:
+    # Ein Tag mit Fremd-Belegung (anderer Kanal/manueller Block) darf NICHT als
+    # frei an Channex gehen — der Range wird um ihn herum zerschnitten.
+    db = _ImportDB()
+    _seed_with_room_type(db)
+    db.tables["availability"].extend([
+        {"property_id": "p1", "date": "2026-12-03", "status": "booked",
+         "source": "portal"},
+        {"property_id": "p1", "date": "2026-12-04", "status": "booked",
+         "source": "direct"},
+        {"property_id": "p1", "date": "2026-12-05", "status": "booked",
+         "source": "portal"},
+    ])
+    channex = _ImportChannex()
+    svc = _import_svc(channex, db)
+    svc._free_ota_nights(
+        db, "t1", "p1", "portal", ["2026-12-03", "2026-12-04", "2026-12-05"]
+    )
+    assert [
+        (v["date_from"], v["date_to"], v["availability"]) for v in channex.pushed
+    ] == [("2026-12-03", "2026-12-03", 1), ("2026-12-05", "2026-12-05", 1)]
+
+
 def test_exclude_superseded_days_splits_ranges() -> None:
     # Range-values werden um superseded Tage ZERSCHNITTEN — ein reiner
     # `date`-Filter ließe den Tag im Range und überschriebe den neueren Wert.
