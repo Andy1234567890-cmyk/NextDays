@@ -73,7 +73,7 @@ export function SeasonCalendar({
   initial: Property;
   currency: string | null;
 }) {
-  const t = useTranslations("roomTypes");
+  const t = useTranslations("seasons");
   const months = t("months").split(",");
   const weekdays = t("weekdays").split(",");
   const [year, setYear] = useState(() => new Date().getUTCFullYear());
@@ -323,7 +323,7 @@ function MonthGrid({
   onRemoveAssignment: (assignmentId: string) => void;
   disabled: boolean;
 }) {
-  const t = useTranslations("roomTypes");
+  const t = useTranslations("seasons");
   const first = new Date(Date.UTC(year, month, 1));
   const daysInMonth = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
   const lead = mondayIndex(first); // Leerzellen vor dem 1.
@@ -389,7 +389,7 @@ function SeasonEditor({
   basePrice: number | null;
   onCreated: (s: Season) => void;
 }) {
-  const t = useTranslations("roomTypes");
+  const t = useTranslations("seasons");
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [mode, setMode] = useState<SeasonMode>("percent");

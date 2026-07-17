@@ -1587,5 +1587,36 @@
       "off": "Off",
       "maxStayLabel": "Max stay"
     }
+  },
+  "seasons": {
+    "loadFailed": "Property could not be loaded: {error}",
+    "months": "January,February,March,April,May,June,July,August,September,October,November,December",
+    "name": "Name",
+    "seasonAdd": "Add season",
+    "seasonColor": "Color",
+    "seasonColorAria": "Color {color}",
+    "seasonCreate": "Create season",
+    "seasonDaysAssigned": "{count} day(s) assigned.",
+    "seasonDelete": "Delete season",
+    "seasonDragHintPrefix": "Drag in the calendar to assign ",
+    "seasonDragHintSuffix": ".",
+    "seasonEffective": "Effective: ",
+    "seasonEmpty": "No seasons yet. Create one above.",
+    "seasonFixed": "Fixed price",
+    "seasonNamePlaceholder": "e.g. high season",
+    "seasonNameRequired": "Please enter a name.",
+    "seasonPageSubtitle": "Create named seasons, select one on the left and drag across the days in the calendar — the period gets the season price and is automatically transmitted to all booking portals.",
+    "seasonPageTitle": "Season prices",
+    "seasonPickFirst": "First select or create a season on the left.",
+    "seasonPriceLabel": "Price / night",
+    "seasonPricePlaceholder": "e.g. 240",
+    "seasonPriceRule": "Price rule",
+    "seasonRemoveTitle": "{name} — double-click to remove",
+    "seasonSaving": "Saving…",
+    "seasonSurcharge": "Surcharge %",
+    "seasonSurchargeLabel": "Surcharge (± %)",
+    "seasonSurchargePlaceholder": "e.g. 30 or -15",
+    "seasonValueRequired": "Please enter a valid value.",
+    "weekdays": "M,T,W,T,F,S,S"
   }
 }

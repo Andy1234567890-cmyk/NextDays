@@ -4379,5 +4379,36 @@
       "off": "Ei",
       "maxStayLabel": "Enimmäiskesto"
     }
+  },
+  "seasons": {
+    "loadFailed": "Kohdetta ei voitu ladata: {error}",
+    "months": "tammikuu,helmikuu,maaliskuu,huhtikuu,toukokuu,kesäkuu,heinäkuu,elokuu,syyskuu,lokakuu,marraskuu,joulukuu",
+    "name": "Nimi",
+    "seasonAdd": "Lisää sesonki",
+    "seasonColor": "Väri",
+    "seasonColorAria": "Väri {color}",
+    "seasonCreate": "Luo sesonki",
+    "seasonDaysAssigned": "{count} päivä(ä) määritetty.",
+    "seasonDelete": "Poista sesonki",
+    "seasonDragHintPrefix": "Vedä kalenterissa määrittääksesi ",
+    "seasonDragHintSuffix": ".",
+    "seasonEffective": "Efektiivinen: ",
+    "seasonEmpty": "Ei vielä sesonkeja. Luo yksi yllä.",
+    "seasonFixed": "Kiinteä hinta",
+    "seasonNamePlaceholder": "esim. sesonkihuippu",
+    "seasonNameRequired": "Anna nimi.",
+    "seasonPageSubtitle": "Luo nimettyjä sesonkeja, valitse yksi vasemmalta ja vedä kalenterissa päivien yli — jaksolle tulee sesonkihinta ja se välitetään automaattisesti kaikkiin varausportaaleihin.",
+    "seasonPageTitle": "Sesonkihinnat",
+    "seasonPickFirst": "Valitse tai luo ensin sesonki vasemmalta.",
+    "seasonPriceLabel": "Hinta / yö",
+    "seasonPricePlaceholder": "esim. 240",
+    "seasonPriceRule": "Hintasääntö",
+    "seasonRemoveTitle": "{name} — poista kaksoisnapsautuksella",
+    "seasonSaving": "Tallennetaan…",
+    "seasonSurcharge": "Lisä %",
+    "seasonSurchargeLabel": "Lisä (± %)",
+    "seasonSurchargePlaceholder": "esim. 30 tai -15",
+    "seasonValueRequired": "Anna kelvollinen arvo.",
+    "weekdays": "M,T,K,T,P,L,S"
   }
 }

@@ -4379,5 +4379,36 @@
       "off": "Не",
       "maxStayLabel": "Макс. престой"
     }
+  },
+  "seasons": {
+    "loadFailed": "Обектът не можа да бъде зареден: {error}",
+    "months": "Януари,Февруари,Март,Април,Май,Юни,Юли,Август,Септември,Октомври,Ноември,Декември",
+    "name": "Име",
+    "seasonAdd": "Добавяне на сезон",
+    "seasonColor": "Цвят",
+    "seasonColorAria": "Цвят {color}",
+    "seasonCreate": "Създаване на сезон",
+    "seasonDaysAssigned": "Присвоени {count} дни.",
+    "seasonDelete": "Изтриване на сезон",
+    "seasonDragHintPrefix": "Плъзнете в календара, за да ",
+    "seasonDragHintSuffix": " присвоите.",
+    "seasonEffective": "Ефективно: ",
+    "seasonEmpty": "Все още няма сезони. Създайте един по-горе.",
+    "seasonFixed": "Фиксирана цена",
+    "seasonNamePlaceholder": "напр. висок сезон",
+    "seasonNameRequired": "Моля, въведете име.",
+    "seasonPageSubtitle": "Създайте наименувани сезони, изберете един отляво и плъзнете върху дните в календара — периодът получава сезонната цена и се прехвърля автоматично към всички портали за резервации.",
+    "seasonPageTitle": "Сезонни цени",
+    "seasonPickFirst": "Първо изберете или създайте сезон отляво.",
+    "seasonPriceLabel": "Цена / нощ",
+    "seasonPricePlaceholder": "напр. 240",
+    "seasonPriceRule": "Ценово правило",
+    "seasonRemoveTitle": "{name} — двойно щракване за премахване",
+    "seasonSaving": "Запазване…",
+    "seasonSurcharge": "Надбавка %",
+    "seasonSurchargeLabel": "Надбавка (± %)",
+    "seasonSurchargePlaceholder": "напр. 30 или -15",
+    "seasonValueRequired": "Моля, въведете валидна стойност.",
+    "weekdays": "П,В,С,Ч,П,С,Н"
   }
 }

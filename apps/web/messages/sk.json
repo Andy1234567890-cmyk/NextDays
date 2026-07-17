@@ -4379,5 +4379,36 @@
       "off": "Nie",
       "maxStayLabel": "Max. pobyt"
     }
+  },
+  "seasons": {
+    "loadFailed": "Objekt sa nepodarilo načítať: {error}",
+    "months": "Január,Február,Marec,Apríl,Máj,Jún,Júl,August,September,Október,November,December",
+    "name": "Názov",
+    "seasonAdd": "Pridať sezónu",
+    "seasonColor": "Farba",
+    "seasonColorAria": "Farba {color}",
+    "seasonCreate": "Vytvoriť sezónu",
+    "seasonDaysAssigned": "Priradených {count} dní.",
+    "seasonDelete": "Odstrániť sezónu",
+    "seasonDragHintPrefix": "Potiahnite v kalendári pre ",
+    "seasonDragHintSuffix": " priradenie.",
+    "seasonEffective": "Efektívne: ",
+    "seasonEmpty": "Zatiaľ žiadne sezóny. Vytvorte jednu vyššie.",
+    "seasonFixed": "Pevná cena",
+    "seasonNamePlaceholder": "napr. hlavná sezóna",
+    "seasonNameRequired": "Zadajte názov.",
+    "seasonPageSubtitle": "Vytvorte pomenované sezóny, vyberte jednu vľavo a potiahnite cez dni v kalendári — obdobie získa sezónnu cenu a bude automaticky prenesené na všetky rezervačné portály.",
+    "seasonPageTitle": "Sezónne ceny",
+    "seasonPickFirst": "Najprv vyberte alebo vytvorte sezónu vľavo.",
+    "seasonPriceLabel": "Cena / noc",
+    "seasonPricePlaceholder": "napr. 240",
+    "seasonPriceRule": "Cenové pravidlo",
+    "seasonRemoveTitle": "{name} — dvojklik na odstránenie",
+    "seasonSaving": "Ukladanie…",
+    "seasonSurcharge": "Príplatok %",
+    "seasonSurchargeLabel": "Príplatok (± %)",
+    "seasonSurchargePlaceholder": "napr. 30 alebo -15",
+    "seasonValueRequired": "Zadajte platnú hodnotu.",
+    "weekdays": "P,U,S,Š,P,S,N"
   }
 }

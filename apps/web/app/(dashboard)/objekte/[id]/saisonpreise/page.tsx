@@ -14,7 +14,7 @@ export default async function Page({
   const { id } = await params;
   const res = await getProperty(id);
   if (!res.ok) {
-    const t = await getTranslations("roomTypes");
+    const t = await getTranslations("seasons");
     return (
       <div className="text-sm text-destructive">
         {t("loadFailed", { error: res.error })}

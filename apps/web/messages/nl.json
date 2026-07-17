@@ -4379,5 +4379,36 @@
       "off": "Uit",
       "maxStayLabel": "Max. verblijf"
     }
+  },
+  "seasons": {
+    "loadFailed": "Object kon niet worden geladen: {error}",
+    "months": "januari,februari,maart,april,mei,juni,juli,augustus,september,oktober,november,december",
+    "name": "Naam",
+    "seasonAdd": "Seizoen toevoegen",
+    "seasonColor": "Kleur",
+    "seasonColorAria": "Kleur {color}",
+    "seasonCreate": "Seizoen aanmaken",
+    "seasonDaysAssigned": "{count} dag(en) toegewezen.",
+    "seasonDelete": "Seizoen verwijderen",
+    "seasonDragHintPrefix": "Sleep in de kalender om ",
+    "seasonDragHintSuffix": " toe te wijzen.",
+    "seasonEffective": "Effectief: ",
+    "seasonEmpty": "Nog geen seizoenen. Maak er hierboven een aan.",
+    "seasonFixed": "Vaste prijs",
+    "seasonNamePlaceholder": "bijv. hoogseizoen",
+    "seasonNameRequired": "Voer een naam in.",
+    "seasonPageSubtitle": "Maak benoemde seizoenen aan, kies er links een en sleep in de kalender over de dagen — de periode krijgt de seizoensprijs en wordt automatisch naar alle boekingsportalen doorgestuurd.",
+    "seasonPageTitle": "Seizoensprijzen",
+    "seasonPickFirst": "Kies of maak eerst links een seizoen aan.",
+    "seasonPriceLabel": "Prijs / nacht",
+    "seasonPricePlaceholder": "bijv. 240",
+    "seasonPriceRule": "Prijsregel",
+    "seasonRemoveTitle": "{name} — dubbelklik om te verwijderen",
+    "seasonSaving": "Opslaan…",
+    "seasonSurcharge": "Toeslag %",
+    "seasonSurchargeLabel": "Toeslag (± %)",
+    "seasonSurchargePlaceholder": "bijv. 30 of -15",
+    "seasonValueRequired": "Voer een geldige waarde in.",
+    "weekdays": "M,D,W,D,V,Z,Z"
   }
 }

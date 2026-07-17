@@ -4379,5 +4379,36 @@
       "off": "Non",
       "maxStayLabel": "Séjour max."
     }
+  },
+  "seasons": {
+    "loadFailed": "Impossible de charger l'objet : {error}",
+    "months": "janvier,février,mars,avril,mai,juin,juillet,août,septembre,octobre,novembre,décembre",
+    "name": "Nom",
+    "seasonAdd": "Ajouter une saison",
+    "seasonColor": "Couleur",
+    "seasonColorAria": "Couleur {color}",
+    "seasonCreate": "Créer la saison",
+    "seasonDaysAssigned": "{count} jour(s) attribué(s).",
+    "seasonDelete": "Supprimer la saison",
+    "seasonDragHintPrefix": "Fais glisser dans le calendrier pour attribuer ",
+    "seasonDragHintSuffix": ".",
+    "seasonEffective": "Effectif : ",
+    "seasonEmpty": "Aucune saison pour l'instant. Crées-en une ci-dessus.",
+    "seasonFixed": "Prix fixe",
+    "seasonNamePlaceholder": "p. ex. haute saison",
+    "seasonNameRequired": "Veuillez indiquer un nom.",
+    "seasonPageSubtitle": "Crée des saisons nommées, sélectionnes-en une à gauche et fais glisser sur les jours du calendrier — la période reçoit le prix saisonnier et est automatiquement transmise à tous les portails de réservation.",
+    "seasonPageTitle": "Prix saisonniers",
+    "seasonPickFirst": "Sélectionne ou crée d'abord une saison à gauche.",
+    "seasonPriceLabel": "Prix / nuit",
+    "seasonPricePlaceholder": "p. ex. 240",
+    "seasonPriceRule": "Règle de prix",
+    "seasonRemoveTitle": "{name} — double-clic pour supprimer",
+    "seasonSaving": "Enregistrement…",
+    "seasonSurcharge": "Supplément %",
+    "seasonSurchargeLabel": "Supplément (± %)",
+    "seasonSurchargePlaceholder": "p. ex. 30 ou -15",
+    "seasonValueRequired": "Veuillez indiquer une valeur valide.",
+    "weekdays": "L,M,M,J,V,S,D"
   }
 }

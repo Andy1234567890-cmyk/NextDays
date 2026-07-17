@@ -4379,5 +4379,36 @@
       "off": "Ne",
       "maxStayLabel": "Maks. boravak"
     }
+  },
+  "seasons": {
+    "loadFailed": "Objekt nije moguće učitati: {error}",
+    "months": "Siječanj,Veljača,Ožujak,Travanj,Svibanj,Lipanj,Srpanj,Kolovoz,Rujan,Listopad,Studeni,Prosinac",
+    "name": "Naziv",
+    "seasonAdd": "Dodaj sezonu",
+    "seasonColor": "Boja",
+    "seasonColorAria": "Boja {color}",
+    "seasonCreate": "Kreiraj sezonu",
+    "seasonDaysAssigned": "{count} dana dodijeljeno.",
+    "seasonDelete": "Izbriši sezonu",
+    "seasonDragHintPrefix": "Povuci u kalendaru kako bi dodijelio ",
+    "seasonDragHintSuffix": ".",
+    "seasonEffective": "Efektivno: ",
+    "seasonEmpty": "Još nema sezona. Kreiraj jednu gore.",
+    "seasonFixed": "Fiksna cijena",
+    "seasonNamePlaceholder": "npr. glavna sezona",
+    "seasonNameRequired": "Molimo unesite naziv.",
+    "seasonPageSubtitle": "Kreiraj imenovane sezone, odaberi jednu lijevo i povuci preko dana u kalendaru — razdoblje dobiva sezonsku cijenu i automatski se prenosi na sve portale za rezervacije.",
+    "seasonPageTitle": "Sezonske cijene",
+    "seasonPickFirst": "Prvo odaberi ili kreiraj sezonu lijevo.",
+    "seasonPriceLabel": "Cijena / noć",
+    "seasonPricePlaceholder": "npr. 240",
+    "seasonPriceRule": "Pravilo cijene",
+    "seasonRemoveTitle": "{name} — dvostruki klik za uklanjanje",
+    "seasonSaving": "Spremanje…",
+    "seasonSurcharge": "Doplata %",
+    "seasonSurchargeLabel": "Doplata (± %)",
+    "seasonSurchargePlaceholder": "npr. 30 ili -15",
+    "seasonValueRequired": "Molimo unesite valjanu vrijednost.",
+    "weekdays": "P,U,S,Č,P,S,N"
   }
 }

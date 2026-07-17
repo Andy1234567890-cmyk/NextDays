@@ -4379,5 +4379,36 @@
       "off": "Όχι",
       "maxStayLabel": "Μέγ. διαμονή"
     }
+  },
+  "seasons": {
+    "loadFailed": "Δεν ήταν δυνατή η φόρτωση του αντικειμένου: {error}",
+    "months": "Ιανουάριος,Φεβρουάριος,Μάρτιος,Απρίλιος,Μάιος,Ιούνιος,Ιούλιος,Αύγουστος,Σεπτέμβριος,Οκτώβριος,Νοέμβριος,Δεκέμβριος",
+    "name": "Όνομα",
+    "seasonAdd": "Προσθήκη εποχής",
+    "seasonColor": "Χρώμα",
+    "seasonColorAria": "Χρώμα {color}",
+    "seasonCreate": "Δημιουργία εποχής",
+    "seasonDaysAssigned": "Ανατέθηκαν {count} ημέρες.",
+    "seasonDelete": "Διαγραφή εποχής",
+    "seasonDragHintPrefix": "Σύρετε στο ημερολόγιο για να ",
+    "seasonDragHintSuffix": " αναθέσετε.",
+    "seasonEffective": "Πραγματική: ",
+    "seasonEmpty": "Δεν υπάρχουν ακόμη εποχές. Δημιουργήστε μία παραπάνω.",
+    "seasonFixed": "Σταθερή τιμή",
+    "seasonNamePlaceholder": "π.χ. υψηλή περίοδος",
+    "seasonNameRequired": "Εισαγάγετε ένα όνομα.",
+    "seasonPageSubtitle": "Δημιουργήστε επώνυμες εποχές, επιλέξτε μία στα αριστερά και σύρετε πάνω από τις ημέρες στο ημερολόγιο — η περίοδος λαμβάνει την εποχιακή τιμή και μεταφέρεται αυτόματα σε όλα τα πόρταλ κρατήσεων.",
+    "seasonPageTitle": "Εποχιακές τιμές",
+    "seasonPickFirst": "Επιλέξτε ή δημιουργήστε πρώτα μια εποχή στα αριστερά.",
+    "seasonPriceLabel": "Τιμή / διανυκτέρευση",
+    "seasonPricePlaceholder": "π.χ. 240",
+    "seasonPriceRule": "Κανόνας τιμής",
+    "seasonRemoveTitle": "{name} — διπλό κλικ για αφαίρεση",
+    "seasonSaving": "Αποθήκευση…",
+    "seasonSurcharge": "Προσαύξηση %",
+    "seasonSurchargeLabel": "Προσαύξηση (± %)",
+    "seasonSurchargePlaceholder": "π.χ. 30 ή -15",
+    "seasonValueRequired": "Εισαγάγετε μια έγκυρη τιμή.",
+    "weekdays": "Δ,Τ,Τ,Π,Π,Σ,Κ"
   }
 }

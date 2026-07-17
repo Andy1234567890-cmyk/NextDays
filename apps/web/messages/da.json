@@ -4379,5 +4379,36 @@
       "off": "Fra",
       "maxStayLabel": "Maks. ophold"
     }
+  },
+  "seasons": {
+    "loadFailed": "Objektet kunne ikke indlæses: {error}",
+    "months": "januar,februar,marts,april,maj,juni,juli,august,september,oktober,november,december",
+    "name": "Navn",
+    "seasonAdd": "Tilføj sæson",
+    "seasonColor": "Farve",
+    "seasonColorAria": "Farve {color}",
+    "seasonCreate": "Opret sæson",
+    "seasonDaysAssigned": "{count} dag(e) tildelt.",
+    "seasonDelete": "Slet sæson",
+    "seasonDragHintPrefix": "Træk i kalenderen for at tildele ",
+    "seasonDragHintSuffix": ".",
+    "seasonEffective": "Effektiv: ",
+    "seasonEmpty": "Ingen sæsoner endnu. Opret en ovenfor.",
+    "seasonFixed": "Fast pris",
+    "seasonNamePlaceholder": "f.eks. højsæson",
+    "seasonNameRequired": "Angiv venligst et navn.",
+    "seasonPageSubtitle": "Opret navngivne sæsoner, vælg en til venstre og træk hen over dagene i kalenderen — perioden får sæsonprisen og overføres automatisk til alle bookingportaler.",
+    "seasonPageTitle": "Sæsonpriser",
+    "seasonPickFirst": "Vælg eller opret først en sæson til venstre.",
+    "seasonPriceLabel": "Pris / nat",
+    "seasonPricePlaceholder": "f.eks. 240",
+    "seasonPriceRule": "Prisregel",
+    "seasonRemoveTitle": "{name} — dobbeltklik for at fjerne",
+    "seasonSaving": "Gemmer…",
+    "seasonSurcharge": "Tillæg %",
+    "seasonSurchargeLabel": "Tillæg (± %)",
+    "seasonSurchargePlaceholder": "f.eks. 30 eller -15",
+    "seasonValueRequired": "Angiv venligst en gyldig værdi.",
+    "weekdays": "M,T,O,T,F,L,S"
   }
 }

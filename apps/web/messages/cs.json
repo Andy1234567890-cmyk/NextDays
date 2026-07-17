@@ -4379,5 +4379,36 @@
       "off": "Ne",
       "maxStayLabel": "Max. délka pobytu"
     }
+  },
+  "seasons": {
+    "loadFailed": "Objekt se nepodařilo načíst: {error}",
+    "months": "Leden,Únor,Březen,Duben,Květen,Červen,Červenec,Srpen,Září,Říjen,Listopad,Prosinec",
+    "name": "Název",
+    "seasonAdd": "Přidat sezónu",
+    "seasonColor": "Barva",
+    "seasonColorAria": "Barva {color}",
+    "seasonCreate": "Vytvořit sezónu",
+    "seasonDaysAssigned": "Přiřazeno {count} dní.",
+    "seasonDelete": "Smazat sezónu",
+    "seasonDragHintPrefix": "Přetáhněte v kalendáři pro ",
+    "seasonDragHintSuffix": " přiřazení.",
+    "seasonEffective": "Efektivně: ",
+    "seasonEmpty": "Zatím žádné sezóny. Vytvořte jednu výše.",
+    "seasonFixed": "Pevná cena",
+    "seasonNamePlaceholder": "např. hlavní sezóna",
+    "seasonNameRequired": "Zadejte název.",
+    "seasonPageSubtitle": "Vytvořte pojmenované sezóny, vyberte jednu vlevo a přetáhněte přes dny v kalendáři — období získá sezónní cenu a bude automaticky přeneseno na všechny rezervační portály.",
+    "seasonPageTitle": "Sezónní ceny",
+    "seasonPickFirst": "Nejprve vyberte nebo vytvořte sezónu vlevo.",
+    "seasonPriceLabel": "Cena / noc",
+    "seasonPricePlaceholder": "např. 240",
+    "seasonPriceRule": "Cenové pravidlo",
+    "seasonRemoveTitle": "{name} — dvojklik pro odebrání",
+    "seasonSaving": "Ukládání…",
+    "seasonSurcharge": "Příplatek %",
+    "seasonSurchargeLabel": "Příplatek (± %)",
+    "seasonSurchargePlaceholder": "např. 30 nebo -15",
+    "seasonValueRequired": "Zadejte platnou hodnotu.",
+    "weekdays": "P,Ú,S,Č,P,S,N"
   }
 }

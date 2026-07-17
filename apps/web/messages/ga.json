@@ -4379,5 +4379,36 @@
       "off": "Níl",
       "maxStayLabel": "Fanacht uasta"
     }
+  },
+  "seasons": {
+    "loadFailed": "Níorbh fhéidir an mhaoin a lódáil: {error}",
+    "months": "Eanáir,Feabhra,Márta,Aibreán,Bealtaine,Meitheamh,Iúil,Lúnasa,Meán Fómhair,Deireadh Fómhair,Samhain,Nollaig",
+    "name": "Ainm",
+    "seasonAdd": "Cuir séasúr leis",
+    "seasonColor": "Dath",
+    "seasonColorAria": "Dath {color}",
+    "seasonCreate": "Cruthaigh séasúr",
+    "seasonDaysAssigned": "{count} lá sannta.",
+    "seasonDelete": "Scrios séasúr",
+    "seasonDragHintPrefix": "Tarraing san fhéilire chun ",
+    "seasonDragHintSuffix": " a shannadh.",
+    "seasonEffective": "Éifeachtach: ",
+    "seasonEmpty": "Níl aon séasúr ann fós. Cruthaigh ceann thuas.",
+    "seasonFixed": "Praghas seasta",
+    "seasonNamePlaceholder": "m.sh. ardséasúr",
+    "seasonNameRequired": "Cuir ainm ar fáil le do thoil.",
+    "seasonPageSubtitle": "Cruthaigh séasúir ainmnithe, roghnaigh ceann ar chlé agus tarraing thar na laethanta san fhéilire — faigheann an tréimhse an praghas séasúrach agus cuirtear go huathoibríoch chuig gach tairseach áirithinte é.",
+    "seasonPageTitle": "Praghsanna séasúracha",
+    "seasonPickFirst": "Roghnaigh nó cruthaigh séasúr ar chlé ar dtús.",
+    "seasonPriceLabel": "Praghas / oíche",
+    "seasonPricePlaceholder": "m.sh. 240",
+    "seasonPriceRule": "Riail phraghais",
+    "seasonRemoveTitle": "{name} — cliceáil faoi dhó chun é a bhaint",
+    "seasonSaving": "Á shábháil…",
+    "seasonSurcharge": "Formhuirear %",
+    "seasonSurchargeLabel": "Formhuirear (± %)",
+    "seasonSurchargePlaceholder": "m.sh. 30 nó -15",
+    "seasonValueRequired": "Cuir luach bailí ar fáil le do thoil.",
+    "weekdays": "L,M,C,D,A,S,D"
   }
 }

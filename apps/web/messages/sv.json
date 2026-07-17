@@ -4379,5 +4379,36 @@
       "off": "Av",
       "maxStayLabel": "Max vistelse"
     }
+  },
+  "seasons": {
+    "loadFailed": "Objektet kunde inte laddas: {error}",
+    "months": "januari,februari,mars,april,maj,juni,juli,augusti,september,oktober,november,december",
+    "name": "Namn",
+    "seasonAdd": "Lägg till säsong",
+    "seasonColor": "Färg",
+    "seasonColorAria": "Färg {color}",
+    "seasonCreate": "Skapa säsong",
+    "seasonDaysAssigned": "{count} dag(ar) tilldelade.",
+    "seasonDelete": "Ta bort säsong",
+    "seasonDragHintPrefix": "Dra i kalendern för att tilldela ",
+    "seasonDragHintSuffix": ".",
+    "seasonEffective": "Effektivt: ",
+    "seasonEmpty": "Inga säsonger ännu. Skapa en ovan.",
+    "seasonFixed": "Fast pris",
+    "seasonNamePlaceholder": "t.ex. högsäsong",
+    "seasonNameRequired": "Ange ett namn.",
+    "seasonPageSubtitle": "Skapa namngivna säsonger, välj en till vänster och dra över dagarna i kalendern — perioden får säsongspriset och överförs automatiskt till alla bokningsportaler.",
+    "seasonPageTitle": "Säsongspriser",
+    "seasonPickFirst": "Välj eller skapa först en säsong till vänster.",
+    "seasonPriceLabel": "Pris / natt",
+    "seasonPricePlaceholder": "t.ex. 240",
+    "seasonPriceRule": "Prisregel",
+    "seasonRemoveTitle": "{name} — dubbelklicka för att ta bort",
+    "seasonSaving": "Sparar…",
+    "seasonSurcharge": "Tillägg %",
+    "seasonSurchargeLabel": "Tillägg (± %)",
+    "seasonSurchargePlaceholder": "t.ex. 30 eller -15",
+    "seasonValueRequired": "Ange ett giltigt värde.",
+    "weekdays": "M,T,O,T,F,L,S"
   }
 }

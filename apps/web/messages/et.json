@@ -4379,5 +4379,36 @@
       "off": "Ei",
       "maxStayLabel": "Maks. peatumine"
     }
+  },
+  "seasons": {
+    "loadFailed": "Objekti ei õnnestunud laadida: {error}",
+    "months": "Jaanuar,Veebruar,Märts,Aprill,Mai,Juuni,Juuli,August,September,Oktoober,November,Detsember",
+    "name": "Nimi",
+    "seasonAdd": "Lisa hooaeg",
+    "seasonColor": "Värv",
+    "seasonColorAria": "Värv {color}",
+    "seasonCreate": "Loo hooaeg",
+    "seasonDaysAssigned": "{count} päeva määratud.",
+    "seasonDelete": "Kustuta hooaeg",
+    "seasonDragHintPrefix": "Lohista kalendris, et määrata ",
+    "seasonDragHintSuffix": ".",
+    "seasonEffective": "Efektiivne: ",
+    "seasonEmpty": "Hooaegu pole veel. Loo üks üleval.",
+    "seasonFixed": "Fikseeritud hind",
+    "seasonNamePlaceholder": "nt kõrghooaeg",
+    "seasonNameRequired": "Palun sisestage nimi.",
+    "seasonPageSubtitle": "Loo nimega hooajad, vali vasakult üks ja lohista kalendris üle päevade — periood saab hooajahinna ja edastatakse automaatselt kõikidele broneerimisportaalidele.",
+    "seasonPageTitle": "Hooajahinnad",
+    "seasonPickFirst": "Vali või loo esmalt vasakult hooaeg.",
+    "seasonPriceLabel": "Hind / öö",
+    "seasonPricePlaceholder": "nt 240",
+    "seasonPriceRule": "Hinnareegel",
+    "seasonRemoveTitle": "{name} — topeltklõps eemaldamiseks",
+    "seasonSaving": "Salvestamine…",
+    "seasonSurcharge": "Lisatasu %",
+    "seasonSurchargeLabel": "Lisatasu (± %)",
+    "seasonSurchargePlaceholder": "nt 30 või -15",
+    "seasonValueRequired": "Palun sisestage kehtiv väärtus.",
+    "weekdays": "E,T,K,N,R,L,P"
   }
 }

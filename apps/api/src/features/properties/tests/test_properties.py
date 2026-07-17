@@ -553,7 +553,7 @@ def _accommodation_db(accommodation: str | None) -> _PhotoDB:
     return db
 
 
-def test_list_hotel_shows_only_room_types() -> None:
+def test_list_hotel_shows_only_room_property_types() -> None:
     svc = PropertiesService(service_client=_accommodation_db("hotel"))
     res = svc.list(_ctx())
     assert [i.title for i in res.items] == ["Zimmer 101"]

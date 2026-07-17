@@ -111,13 +111,13 @@ def _svc(canned) -> RatesService:  # noqa: ANN001
 
 
 def test_set_base_price_multi_plan_409() -> None:
-    # Hotel (mehrere Pläne): der Objekt-Grundpreis-Upsert darf NIE einen der
+    # Objekt mit mehreren Plänen: der Objekt-Grundpreis-Upsert darf NIE einen der
     # Pläne überschreiben (früher: ältester Plan wurde auf „Standard" umbenannt).
     svc = _svc({
-        "properties": [{"id": "p-1", "title": "Hotel"}],
+        "properties": [{"id": "p-1", "title": "Objekt"}],
         "rate_plans": [
-            {"id": "rp-1", "room_type_id": "rt-1"},
-            {"id": "rp-2", "room_type_id": "rt-1"},
+            {"id": "rp-1"},
+            {"id": "rp-2"},
         ],
     })
     try:
@@ -130,14 +130,13 @@ def test_set_base_price_multi_plan_409() -> None:
 
 
 def test_set_base_price_updates_only_price_and_currency() -> None:
-    # FeWo (ein property-weiter Plan): Update fasst NUR base_price + currency an —
+    # Ein property-weiter Plan: Update fasst NUR base_price + currency an —
     # Name und min_stay sind fremde Pflege-Zustände (Wurzel 1).
     canned = {
         "properties": [{"id": "p-1", "title": "Villa"}],
         "rate_plans": [{
             "id": "rp-1", "property_id": "p-1", "name": "Sommer",
             "base_price": 80, "currency": "USD", "min_stay": 3,
-            "room_type_id": None,
         }],
     }
     svc = _svc(canned)
@@ -160,10 +159,10 @@ def test_create_rate_plan_writes_row() -> None:
 def test_list_reports_sync_status_per_plan() -> None:
     # Plan mit Datumspreisen + in_sync=True → 'synced'; ohne Preise → None.
     svc = _svc({
-        "properties": [{"id": "p-1", "title": "Hotel"}],
+        "properties": [{"id": "p-1", "title": "Objekt"}],
         "rate_plans": [
             {"id": "rp-1", "property_id": "p-1", "name": "BAR", "base_price": 100,
-             "currency": "USD", "min_stay": 1, "room_type_id": "rt-1"},
+             "currency": "USD", "min_stay": 1},
         ],
         "rate_plan_price_overrides": [{"rate_plan_id": "rp-1"}],
         "rate_plan_sync_state": [{"rate_plan_id": "rp-1", "in_sync": True}],
@@ -175,10 +174,10 @@ def test_list_reports_sync_status_per_plan() -> None:
 
 def test_list_sync_status_pending_when_drift() -> None:
     svc = _svc({
-        "properties": [{"id": "p-1", "title": "Hotel"}],
+        "properties": [{"id": "p-1", "title": "Objekt"}],
         "rate_plans": [
             {"id": "rp-1", "property_id": "p-1", "name": "BAR", "base_price": 100,
-             "currency": "USD", "min_stay": 1, "room_type_id": "rt-1"},
+             "currency": "USD", "min_stay": 1},
         ],
         "rate_plan_price_overrides": [{"rate_plan_id": "rp-1"}],
         "rate_plan_sync_state": [{"rate_plan_id": "rp-1", "in_sync": False}],
@@ -189,10 +188,10 @@ def test_list_sync_status_pending_when_drift() -> None:
 
 def test_list_sync_status_none_without_date_prices() -> None:
     svc = _svc({
-        "properties": [{"id": "p-1", "title": "Hotel"}],
+        "properties": [{"id": "p-1", "title": "Objekt"}],
         "rate_plans": [
             {"id": "rp-1", "property_id": "p-1", "name": "BAR", "base_price": 100,
-             "currency": "USD", "min_stay": 1, "room_type_id": "rt-1"},
+             "currency": "USD", "min_stay": 1},
         ],
         "rate_plan_price_overrides": [],
         "rate_plan_sync_state": [],

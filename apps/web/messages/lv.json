@@ -4379,5 +4379,36 @@
       "off": "Nē",
       "maxStayLabel": "Maks. uzturēšanās"
     }
+  },
+  "seasons": {
+    "loadFailed": "Objektu neizdevās ielādēt: {error}",
+    "months": "Janvāris,Februāris,Marts,Aprīlis,Maijs,Jūnijs,Jūlijs,Augusts,Septembris,Oktobris,Novembris,Decembris",
+    "name": "Nosaukums",
+    "seasonAdd": "Pievienot sezonu",
+    "seasonColor": "Krāsa",
+    "seasonColorAria": "Krāsa {color}",
+    "seasonCreate": "Izveidot sezonu",
+    "seasonDaysAssigned": "{count} dienas piešķirtas.",
+    "seasonDelete": "Dzēst sezonu",
+    "seasonDragHintPrefix": "Velc kalendārā, lai piešķirtu ",
+    "seasonDragHintSuffix": ".",
+    "seasonEffective": "Efektīvi: ",
+    "seasonEmpty": "Vēl nav sezonu. Izveido vienu augšpusē.",
+    "seasonFixed": "Fiksēta cena",
+    "seasonNamePlaceholder": "piem., augstā sezona",
+    "seasonNameRequired": "Lūdzu, norādiet nosaukumu.",
+    "seasonPageSubtitle": "Izveido nosauktas sezonas, izvēlies vienu kreisajā pusē un velc pāri dienām kalendārā — periods iegūst sezonas cenu un tiek automātiski nosūtīts uz visiem rezervāciju portāliem.",
+    "seasonPageTitle": "Sezonas cenas",
+    "seasonPickFirst": "Vispirms kreisajā pusē izvēlies vai izveido sezonu.",
+    "seasonPriceLabel": "Cena / nakts",
+    "seasonPricePlaceholder": "piem., 240",
+    "seasonPriceRule": "Cenas noteikums",
+    "seasonRemoveTitle": "{name} — dubultklikšķis noņemšanai",
+    "seasonSaving": "Saglabā…",
+    "seasonSurcharge": "Piemaksa %",
+    "seasonSurchargeLabel": "Piemaksa (± %)",
+    "seasonSurchargePlaceholder": "piem., 30 vai -15",
+    "seasonValueRequired": "Lūdzu, norādiet derīgu vērtību.",
+    "weekdays": "P,O,T,C,P,S,S"
   }
 }

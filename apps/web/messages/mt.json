@@ -4379,5 +4379,36 @@
       "off": "Le",
       "maxStayLabel": "Soġġorn massimu"
     }
+  },
+  "seasons": {
+    "loadFailed": "Il-proprjetà ma setgħetx tiġi mgħobbija: {error}",
+    "months": "Jannar,Frar,Marzu,April,Mejju,Ġunju,Lulju,Awwissu,Settembru,Ottubru,Novembru,Diċembru",
+    "name": "Isem",
+    "seasonAdd": "Żid staġun",
+    "seasonColor": "Kulur",
+    "seasonColorAria": "Kulur {color}",
+    "seasonCreate": "Oħloq staġun",
+    "seasonDaysAssigned": "{count} jiem assenjati.",
+    "seasonDelete": "Ħassar staġun",
+    "seasonDragHintPrefix": "Iġbed fil-kalendarju biex tassenja ",
+    "seasonDragHintSuffix": ".",
+    "seasonEffective": "Effettiv: ",
+    "seasonEmpty": "Għad m'hemmx staġuni. Oħloq wieħed fuq.",
+    "seasonFixed": "Prezz fiss",
+    "seasonNamePlaceholder": "eż. staġun għoli",
+    "seasonNameRequired": "Jekk jogħġbok daħħal isem.",
+    "seasonPageSubtitle": "Oħloq staġuni bl-isem, agħżel wieħed fuq ix-xellug u iġbed fuq il-jiem fil-kalendarju — il-perjodu jieħu l-prezz staġjonali u jintbagħat awtomatikament lill-portali tal-ibbukkjar kollha.",
+    "seasonPageTitle": "Prezzijiet staġjonali",
+    "seasonPickFirst": "L-ewwel agħżel jew oħloq staġun fuq ix-xellug.",
+    "seasonPriceLabel": "Prezz / lejl",
+    "seasonPricePlaceholder": "eż. 240",
+    "seasonPriceRule": "Regola tal-prezz",
+    "seasonRemoveTitle": "{name} — ikklikkja darbtejn biex tneħħi",
+    "seasonSaving": "Qed jiġi ssejvjat…",
+    "seasonSurcharge": "Sovrataxxa %",
+    "seasonSurchargeLabel": "Sovrataxxa (± %)",
+    "seasonSurchargePlaceholder": "eż. 30 jew -15",
+    "seasonValueRequired": "Jekk jogħġbok daħħal valur validu.",
+    "weekdays": "T,T,E,Ħ,Ġ,S,Ħ"
   }
 }

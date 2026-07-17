@@ -4379,5 +4379,36 @@
       "off": "Nu",
       "maxStayLabel": "Sejur max."
     }
+  },
+  "seasons": {
+    "loadFailed": "Obiectul nu a putut fi încărcat: {error}",
+    "months": "ianuarie,februarie,martie,aprilie,mai,iunie,iulie,august,septembrie,octombrie,noiembrie,decembrie",
+    "name": "Nume",
+    "seasonAdd": "Adaugă sezon",
+    "seasonColor": "Culoare",
+    "seasonColorAria": "Culoare {color}",
+    "seasonCreate": "Creează sezon",
+    "seasonDaysAssigned": "{count} zi(le) atribuită/atribuite.",
+    "seasonDelete": "Șterge sezonul",
+    "seasonDragHintPrefix": "Trage în calendar pentru a atribui ",
+    "seasonDragHintSuffix": ".",
+    "seasonEffective": "Efectiv: ",
+    "seasonEmpty": "Încă niciun sezon. Creează unul mai sus.",
+    "seasonFixed": "Preț fix",
+    "seasonNamePlaceholder": "ex. sezon de vârf",
+    "seasonNameRequired": "Indică un nume.",
+    "seasonPageSubtitle": "Creează sezoane denumite, selectează unul în stânga și trage peste zilele din calendar — perioada primește prețul sezonier și este transmisă automat către toate portalurile de rezervare.",
+    "seasonPageTitle": "Prețuri sezoniere",
+    "seasonPickFirst": "Selectează sau creează mai întâi un sezon în stânga.",
+    "seasonPriceLabel": "Preț / noapte",
+    "seasonPricePlaceholder": "ex. 240",
+    "seasonPriceRule": "Regulă de preț",
+    "seasonRemoveTitle": "{name} — dublu clic pentru a elimina",
+    "seasonSaving": "Se salvează…",
+    "seasonSurcharge": "Supliment %",
+    "seasonSurchargeLabel": "Supliment (± %)",
+    "seasonSurchargePlaceholder": "ex. 30 sau -15",
+    "seasonValueRequired": "Indică o valoare validă.",
+    "weekdays": "L,M,M,J,V,S,D"
   }
 }

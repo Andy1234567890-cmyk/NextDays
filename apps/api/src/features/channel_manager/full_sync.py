@@ -68,15 +68,10 @@ class FullSyncMixin:
         # sonst wäre ein frisch gebuchter Tag bei den OTAs wieder verkaufbar.
         read_started_at = datetime.now(UTC).isoformat()
 
-        # Basis-Verfügbarkeit = 1 EINHEIT — gilt für das FERIENWOHNUNGS-Modell
-        # (eine Einheit je Objekt, Tabelle availability binär, alle Delta-Pfade
-        # pushen 0/1). Hotels (Property mit room_types-Zeilen, 0140) führen den
-        # Bestand als Zahl je Zimmerkategorie (room_type_availability.booked_count,
-        # Guard im RPC 0141) — deren count-basierter Availability-Push je
-        # Channex-Room-Type kommt mit dem Channex-Umbau (Teil 2), sobald die
-        # Zimmerkategorien als Channex-Room-Types existieren. Bis dahin pusht der
-        # Full-Sync nur die Single-Unit-Objekte (die synthetische Room-Type-Map
-        # oben löst ohnehin nur eine Einheit auf).
+        # Basis-Verfügbarkeit = 1 EINHEIT. 1 Objekt = 1 buchbare Einheit
+        # (Zimmer ODER Ferienobjekt), Tabelle availability binär, alle Delta-Pfade
+        # pushen 0/1. Die synthetische Room-Type-Map löst je Objekt genau eine
+        # Einheit auf.
         base = 1
 
         # Belegte/gesperrte Tage: availability-Zeilen mit status != 'open';

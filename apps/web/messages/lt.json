@@ -4379,5 +4379,36 @@
       "off": "Ne",
       "maxStayLabel": "Maks. viešnagė"
     }
+  },
+  "seasons": {
+    "loadFailed": "Nepavyko įkelti objekto: {error}",
+    "months": "Sausis,Vasaris,Kovas,Balandis,Gegužė,Birželis,Liepa,Rugpjūtis,Rugsėjis,Spalis,Lapkritis,Gruodis",
+    "name": "Pavadinimas",
+    "seasonAdd": "Pridėti sezoną",
+    "seasonColor": "Spalva",
+    "seasonColorAria": "Spalva {color}",
+    "seasonCreate": "Sukurti sezoną",
+    "seasonDaysAssigned": "{count} dienų priskirta.",
+    "seasonDelete": "Ištrinti sezoną",
+    "seasonDragHintPrefix": "Vilk kalendoriuje, kad priskirtum ",
+    "seasonDragHintSuffix": ".",
+    "seasonEffective": "Efektyvi: ",
+    "seasonEmpty": "Sezonų dar nėra. Sukurk vieną viršuje.",
+    "seasonFixed": "Fiksuota kaina",
+    "seasonNamePlaceholder": "pvz., aukštasis sezonas",
+    "seasonNameRequired": "Prašome nurodyti pavadinimą.",
+    "seasonPageSubtitle": "Sukurk pavadintus sezonus, kairėje pasirink vieną ir vilk per dienas kalendoriuje — laikotarpis gauna sezoninę kainą ir automatiškai perduodamas į visus rezervavimo portalus.",
+    "seasonPageTitle": "Sezoninės kainos",
+    "seasonPickFirst": "Pirmiausia kairėje pasirink arba sukurk sezoną.",
+    "seasonPriceLabel": "Kaina / naktis",
+    "seasonPricePlaceholder": "pvz., 240",
+    "seasonPriceRule": "Kainos taisyklė",
+    "seasonRemoveTitle": "{name} — dvigubu spustelėjimu pašalinti",
+    "seasonSaving": "Išsaugoma…",
+    "seasonSurcharge": "Priemoka %",
+    "seasonSurchargeLabel": "Priemoka (± %)",
+    "seasonSurchargePlaceholder": "pvz., 30 arba -15",
+    "seasonValueRequired": "Prašome nurodyti tinkamą reikšmę.",
+    "weekdays": "P,A,T,K,P,Š,S"
   }
 }

@@ -210,13 +210,11 @@ class WritesMixin(ReservationsBase):
             raise ReservationError("Reservierung konnte nicht angelegt werden.", status_code=500)
 
         # Realtime: belegte Tage sofort an Channex/OTAs melden, damit keine
-        # OTA-Doppelbuchung entsteht. Buchungskalender = Wahrheit.
-        #  - Ferienwohnung: binärer 0-Push (eine Einheit ist weg → gesperrt).
-        #  - Hotel: der freie Rest-Count je Nacht der Zimmerkategorie geht an
-        #    ihren Channex-Room-Type — NICHT 0 (nur EIN Zimmer ist weg). Die RPC
-        #    hat die Rest-Count-Outbox-Zeilen bereits atomar geschrieben (Cron-
-        #    Backstop); dieser Push ist die schnelle Bahn (tag-genaues Superseding
-        #    macht ihn idempotent zur RPC-Zeile).
+        # OTA-Doppelbuchung entsteht. Buchungskalender = Wahrheit. 1 Objekt =
+        # 1 buchbare Einheit → binärer 0-Push (die Einheit ist weg → gesperrt).
+        # Die RPC hat die Outbox-Zeile bereits atomar geschrieben (Cron-Backstop);
+        # dieser Push ist die schnelle Bahn (tag-genaues Superseding macht ihn
+        # idempotent zur RPC-Zeile).
         self._push_channex_availability(
             tenant_id, req.property_id, req.check_in, req.check_out, 0,
             outbox_id=result.get("outbox_id"),

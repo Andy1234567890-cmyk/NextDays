@@ -4379,5 +4379,36 @@
       "off": "Nem",
       "maxStayLabel": "Max. tartózkodás"
     }
+  },
+  "seasons": {
+    "loadFailed": "Az objektumot nem sikerült betölteni: {error}",
+    "months": "Január,Február,Március,Április,Május,Június,Július,Augusztus,Szeptember,Október,November,December",
+    "name": "Név",
+    "seasonAdd": "Szezon hozzáadása",
+    "seasonColor": "Szín",
+    "seasonColorAria": "Szín {color}",
+    "seasonCreate": "Szezon létrehozása",
+    "seasonDaysAssigned": "{count} nap hozzárendelve.",
+    "seasonDelete": "Szezon törlése",
+    "seasonDragHintPrefix": "Húzd a naptárban a(z) ",
+    "seasonDragHintSuffix": " hozzárendeléséhez.",
+    "seasonEffective": "Tényleges: ",
+    "seasonEmpty": "Még nincsenek szezonok. Hozz létre egyet fent.",
+    "seasonFixed": "Fix ár",
+    "seasonNamePlaceholder": "pl. főszezon",
+    "seasonNameRequired": "Adj meg egy nevet.",
+    "seasonPageSubtitle": "Hozz létre elnevezett szezonokat, válassz egyet a bal oldalon, és húzd végig a napokon a naptárban — az időszak megkapja a szezonális árat, és automatikusan átküldésre kerül minden foglalási portálra.",
+    "seasonPageTitle": "Szezonális árak",
+    "seasonPickFirst": "Először válassz vagy hozz létre egy szezont a bal oldalon.",
+    "seasonPriceLabel": "Ár / éjszaka",
+    "seasonPricePlaceholder": "pl. 240",
+    "seasonPriceRule": "Árszabály",
+    "seasonRemoveTitle": "{name} — dupla kattintás az eltávolításhoz",
+    "seasonSaving": "Mentés…",
+    "seasonSurcharge": "Felár %",
+    "seasonSurchargeLabel": "Felár (± %)",
+    "seasonSurchargePlaceholder": "pl. 30 vagy -15",
+    "seasonValueRequired": "Adj meg egy érvényes értéket.",
+    "weekdays": "H,K,Sz,Cs,P,Szo,V"
   }
 }

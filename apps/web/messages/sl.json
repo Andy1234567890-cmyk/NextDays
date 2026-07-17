@@ -4379,5 +4379,36 @@
       "off": "Ne",
       "maxStayLabel": "Najdaljše bivanje"
     }
+  },
+  "seasons": {
+    "loadFailed": "Nepremičnine ni mogoče naložiti: {error}",
+    "months": "Januar,Februar,Marec,April,Maj,Junij,Julij,Avgust,September,Oktober,November,December",
+    "name": "Ime",
+    "seasonAdd": "Dodaj sezono",
+    "seasonColor": "Barva",
+    "seasonColorAria": "Barva {color}",
+    "seasonCreate": "Ustvari sezono",
+    "seasonDaysAssigned": "{count} dni dodeljenih.",
+    "seasonDelete": "Izbriši sezono",
+    "seasonDragHintPrefix": "Povleci v koledarju za dodelitev ",
+    "seasonDragHintSuffix": ".",
+    "seasonEffective": "Efektivno: ",
+    "seasonEmpty": "Še ni sezon. Ustvari eno zgoraj.",
+    "seasonFixed": "Fiksna cena",
+    "seasonNamePlaceholder": "npr. visoka sezona",
+    "seasonNameRequired": "Prosimo, vnesite ime.",
+    "seasonPageSubtitle": "Ustvari poimenovane sezone, izberi eno na levi in povleci čez dneve v koledarju — obdobje dobi sezonsko ceno in se samodejno prenese na vse rezervacijske portale.",
+    "seasonPageTitle": "Sezonske cene",
+    "seasonPickFirst": "Najprej na levi izberi ali ustvari sezono.",
+    "seasonPriceLabel": "Cena / noč",
+    "seasonPricePlaceholder": "npr. 240",
+    "seasonPriceRule": "Pravilo cene",
+    "seasonRemoveTitle": "{name} — dvojni klik za odstranitev",
+    "seasonSaving": "Shranjevanje…",
+    "seasonSurcharge": "Doplačilo %",
+    "seasonSurchargeLabel": "Doplačilo (± %)",
+    "seasonSurchargePlaceholder": "npr. 30 ali -15",
+    "seasonValueRequired": "Prosimo, vnesite veljavno vrednost.",
+    "weekdays": "P,T,S,Č,P,S,N"
   }
 }

@@ -33,10 +33,11 @@ with ranked as (
     select id,
            row_number() over (
                partition by property_id, daterange(check_in, check_out, '[)')
-               order by created_at
+               order by created_at, id
            ) as rn
       from public.reservations
      where status <> 'cancelled'
+       and source_channex_booking_id is null  -- OTA-Buchungen nie stornieren
 )
 update public.reservations r
    set status = 'cancelled',
@@ -55,9 +56,15 @@ with pairs as (
         on a.property_id = b.property_id
        and a.id <> b.id
        and a.status <> 'cancelled' and b.status <> 'cancelled'
+       -- OTA-Buchungen NIE stornieren (existieren beim Portal verbindlich,
+       -- Überbuchung wird sichtbar gemacht, nicht verworfen — Constraint-Design).
+       and a.source_channex_booking_id is null
+       and b.source_channex_booking_id is null
        and daterange(a.check_in, a.check_out, '[)')
            && daterange(b.check_in, b.check_out, '[)')
-       and a.created_at > b.created_at
+       -- Tiebreaker (created_at, id): auch bei gleichem created_at deterministisch
+       -- die jüngere/größere id stornieren (sonst verfehlt strikt-> ein Paar).
+       and (a.created_at, a.id) > (b.created_at, b.id)
 )
 update public.reservations r
    set status = 'cancelled',
@@ -199,6 +206,18 @@ alter table public.reservations
 -- ============================================================================
 -- 6) rate_plans / reservations / ari_outbox von room_type_id lösen
 -- ============================================================================
+-- KRITISCH vor dem ari_outbox-Drop: pending Hotel-Outbox-Zeilen (mit room_type_id)
+-- neutralisieren. Der alte Hotel-RPC schrieb Rest-Count-Zeilen (availability = z. B.
+-- 7, eine je Nacht). Nach dem Spalten-Drop verlören sie ihre Kategorie-Dimension
+-- und würden zu Objekt-Level-Absichten: process_ari_outbox pushte availability=7
+-- an den synthetischen Room-Type UND unterdrückte tag-genau ein echtes
+-- availability=0 („neuere Absicht") → gebuchte Tage wieder bei OTAs verkaufbar.
+-- Als 'done' abhaken (nicht mehr pushen); der Post-Migrations-Full-Sync stellt
+-- den korrekten binären Bestand her.
+update public.ari_outbox
+   set status = 'done', last_error = 'Modell-Rückbau: Hotel-Outbox neutralisiert'
+ where status = 'pending' and room_type_id is not null;
+
 update public.rate_plans set room_type_id = null where room_type_id is not null;
 
 alter table public.rate_plans   drop column if exists room_type_id;

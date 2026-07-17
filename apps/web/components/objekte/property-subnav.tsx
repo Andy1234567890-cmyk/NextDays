@@ -10,7 +10,7 @@ import { usePathname } from "next/navigation";
 import { STATUS_LABELS } from "@/lib/property-meta";
 import type { PropertyStatus } from "@/lib/properties";
 
-type SubnavItem = { slug: string; titleKey: string; icon: string; hotelOnly?: boolean };
+type SubnavItem = { slug: string; titleKey: string; icon: string };
 
 const GROUPS: { labelKey: string; items: SubnavItem[] }[] = [
   {
@@ -42,13 +42,11 @@ export function PropertySubnav({
   title,
   photo,
   status,
-  isHotel = false,
 }: {
   id: string;
   title: string;
   photo: string | null;
   status: PropertyStatus;
-  isHotel?: boolean;
 }) {
   const t = useTranslations("objects");
   const pathname = usePathname();
@@ -85,9 +83,7 @@ export function PropertySubnav({
           <span className="px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
             {t(`propertySubnav.${g.labelKey}`)}
           </span>
-          {g.items
-            .filter((it) => !it.hotelOnly || isHotel)
-            .map((it) => {
+          {g.items.map((it) => {
             const href = it.slug ? `${base}/${it.slug}` : base;
             const active = isActive(it.slug);
             return (
