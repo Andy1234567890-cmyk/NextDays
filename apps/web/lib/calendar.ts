@@ -364,3 +364,24 @@ export async function bulkRestrictions(
     },
   });
 }
+
+export type MultiRestrictionRow = RestrictionRow & {
+  // Zimmer, zu dem die Zeile gehört — Hotel: Zeilen über MEHRERE Zimmer werden
+  // als EIN Portale-Call gesendet (die Zimmer teilen sich eine Channex-Property).
+  property_id: string;
+};
+
+/** Zimmer-übergreifende Restriktions-Zeilen (Hotel) in EINEM Portale-Call. */
+export async function bulkRestrictionsMulti(
+  rows: MultiRestrictionRow[],
+): Promise<Result<{ rows: number }>> {
+  return call("/calendar/bulk-restrictions-multi", {
+    method: "POST",
+    body: {
+      rows: rows.map(({ start, end, ...rest }) => ({
+        range: { start, end },
+        ...rest,
+      })),
+    },
+  });
+}

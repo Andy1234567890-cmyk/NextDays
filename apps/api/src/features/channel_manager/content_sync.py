@@ -348,6 +348,16 @@ class ContentSyncMixin:
                 tenant_id=tenant_id, property_id=property_id,
             )
             return
+        # Geteilte Channex-Property (0158): die Policy gehört zum BETRIEB, nicht
+        # zum einzelnen Zimmer — zwei Zimmer-Syncs würden sonst abwechselnd je
+        # eine eigene Policy anlegen/überschreiben. Bis eine tenant-weite Policy-
+        # Quelle existiert: überspringen (fail-closed, kein Flackern).
+        if self._is_shared_channex_property(db, tenant_id, channex_property_id):
+            log.info(
+                "hotel_policy_skipped_shared_property",
+                tenant_id=tenant_id, property_id=property_id,
+            )
+            return
         pm = (
             db.table("channex_property_map")
             .select("id, channex_hotel_policy_id")
@@ -382,6 +392,37 @@ class ContentSyncMixin:
             {"channex_hotel_policy_id": policy_id}
         ).eq("id", pm[0]["id"]).execute()
 
+    def _shared_sibling_count(
+        self, db: Client, tenant_id: str, channex_property_id: str
+    ) -> int:
+        """Anzahl aktiver lokaler Objekte, die DIESELBE Channex-Property teilen
+        (Hotel: mehrere Zimmer → eine Channex-Property, Migration 0158)."""
+        rows = (
+            db.table("channex_property_map")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("channex_property_id", channex_property_id)
+            .is_("deleted_at", "null")
+            .execute()
+        ).data or []
+        return len(rows)
+
+    def _is_shared_channex_property(
+        self, db: Client, tenant_id: str, channex_property_id: str
+    ) -> bool:
+        """True, wenn mehrere lokale Objekte diese Channex-Property teilen."""
+        return self._shared_sibling_count(db, tenant_id, channex_property_id) > 1
+
+    def _tenant_title(self, db: Client, tenant_id: str) -> str | None:
+        """Betriebsname des Tenants (für den Titel einer GETEILTEN Channex-
+        Property — der Zimmertitel wäre dort falsch). None, wenn ungepflegt."""
+        row = (
+            db.table("tenants").select("name").eq("id", tenant_id)
+            .limit(1).execute()
+        ).data
+        name = (row[0].get("name") or "").strip() if row else ""
+        return name or None
+
     def _upsert_channex_property(
         self, db: Client, tenant_id: str, property_id: str, title: str,
         currency: str, prop_row: dict[str, Any] | None = None,
@@ -406,6 +447,18 @@ class ContentSyncMixin:
         attrs.update(self._property_attrs(prop_row, photos or []))
         if existing.data:
             channex_id = existing.data[0]["channex_property_id"]
+            # GETEILTE Property (Hotel, n Zimmer → 1 Channex-Property): der
+            # Property-Titel ist der Betriebsname — sonst benennt jeder Zimmer-
+            # Sync die Property auf den jeweils zuletzt gesyncten Zimmertitel um.
+            if self._shared_sibling_count(db, tenant_id, channex_id) > 1:
+                tenant_title = self._tenant_title(db, tenant_id)
+                if tenant_title:
+                    attrs["title"] = tenant_title
+                else:
+                    log.warning(
+                        "channex_shared_property_no_tenant_title",
+                        tenant_id=tenant_id, property_id=property_id,
+                    )
             self._channex.update_property(channex_id, attrs)
             return channex_id
 
@@ -421,7 +474,12 @@ class ContentSyncMixin:
             except ChannexError as exc:
                 log.warning("channex_group_assign_failed",
                             property_id=property_id, error=exc.message)
-        db.table("channex_property_map").upsert(
+        # Insert statt Upsert: channex_property_id ist seit 0158 NICHT mehr unique
+        # (geteilte Property) — ein on_conflict darauf würde die Map-Zeile eines
+        # ANDEREN Zimmers überschreiben. Die frisch erzeugte Channex-Property kann
+        # nicht kollidieren; Doppel-Anlage je Objekt verhindert der partielle
+        # Unique-Index auf property_id (deleted_at is null).
+        db.table("channex_property_map").insert(
             {
                 "tenant_id": tenant_id,
                 "property_id": property_id,
@@ -429,8 +487,7 @@ class ContentSyncMixin:
                 "sync_enabled": True,
                 "last_sync_status": "ok",
                 "last_sync_error": None,
-            },
-            on_conflict="channex_property_id",
+            }
         ).execute()
         return channex_id
 
@@ -562,9 +619,24 @@ class ContentSyncMixin:
         synthetischer Channex-Room-Type je Objekt (local_unit_ref = property_id),
         ALLE Rate-Plans des Objekts daran. Gibt (channex_room_type_id, alle
         channex_rate_plan_ids) zurück."""
+        # Map-Zeile des LOKALEN Objekts auflösen (nicht per channex_property_id:
+        # bei einer GETEILTEN Channex-Property gehören mehrere Map-Zeilen dazu —
+        # ein limit-1-Lookup darüber träfe ggf. das Nachbar-Zimmer, Wurzel 3-artig).
+        property_map = (
+            db.table("channex_property_map")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        )
+        if not property_map.data:
+            raise ChannexError("Property-Mapping fehlt.", status_code=500)
+        property_map_id = property_map.data[0]["id"]
         channex_room_type_id, room_type_map_id = self._upsert_channex_room_type(
-            db, tenant_id, channex_property_id, property_id, prop_title,
-            prop_row, photos,
+            db, tenant_id, property_map_id, channex_property_id, property_id,
+            prop_title, prop_row, photos,
         )
         # Alte Kategorie-Room-Types (Container-Ära) VOR der Rate-Plan-Upsert-
         # Schleife prunen (Gegenzustand, Wurzel 1). delete_room_type kaskadiert
@@ -572,12 +644,14 @@ class ContentSyncMixin:
         # Titel frei, sodass der anschließende Create am synthetischen Room-Type
         # nicht mehr am „Duplication in Rate Plan title" scheitert. Umhängen geht
         # nicht (room_type_id immutable), darum Löschen+Neuanlegen. Nur der
-        # synthetische Room-Type (local_unit_ref = property_id) bleibt.
+        # synthetische Room-Type (local_unit_ref = property_id) bleibt. Scope =
+        # die Map-Zeile DIESES Objekts — die Room-Types der Geschwister-Zimmer
+        # einer geteilten Channex-Property bleiben unberührt.
         self._trace_step(
             tenant_id=tenant_id, property_id=property_id, step="room_type_prune"
         )
         self._prune_orphan_room_types(
-            db, tenant_id, channex_property_id, {property_id},
+            db, tenant_id, property_map_id, {property_id},
         )
         channex_rate_plan_ids: list[str] = []
         for rp in rate_plans:
@@ -600,7 +674,7 @@ class ContentSyncMixin:
         return channex_room_type_id, channex_rate_plan_ids
 
     def _prune_orphan_room_types(
-        self, db: Client, tenant_id: str, channex_property_id: str,
+        self, db: Client, tenant_id: str, property_map_id: str,
         active_local_refs: set[str],
     ) -> None:
         """Channex-Room-Types löschen, deren lokale Zimmerkategorie entfernt wurde.
@@ -614,22 +688,14 @@ class ContentSyncMixin:
         gebunden, lehnt Channex ab (422) → Mapping bleibt, Konflikt wird geloggt
         (dann muss der Operator erst die Kanal-Zuordnung lösen; KEIN force=True,
         das risse die OTA-Bindung ab). Erfolgreich gelöschte Room-Types werden
-        soft-deleted."""
-        pm = (
-            db.table("channex_property_map")
-            .select("id")
-            .eq("channex_property_id", channex_property_id)
-            .eq("tenant_id", tenant_id)
-            .limit(1)
-            .execute()
-        ).data
-        if not pm:
-            return
+        soft-deleted. Scope ist die ÜBERGEBENE Map-Zeile (property_map_id) — bei
+        einer geteilten Channex-Property (0158) hängen daran mehrere Map-Zeilen,
+        und die Room-Types der Geschwister-Zimmer dürfen NIE mitgeprunt werden."""
         rows = (
             db.table("channex_room_type_map")
             .select("id, local_unit_ref, channex_room_type_id")
             .eq("tenant_id", tenant_id)
-            .eq("property_map_id", pm[0]["id"])
+            .eq("property_map_id", property_map_id)
             .is_("deleted_at", "null")
             .execute()
         ).data or []
@@ -707,25 +773,15 @@ class ContentSyncMixin:
         return ok
 
     def _upsert_channex_room_type(
-        self, db: Client, tenant_id: str, channex_property_id: str,
-        property_id: str, title: str,
+        self, db: Client, tenant_id: str, property_map_id: str,
+        channex_property_id: str, property_id: str, title: str,
         prop_row: dict[str, Any] | None = None,
         photos: list[dict[str, Any]] | None = None,
     ) -> tuple[str, str]:
-        """Synthetischer Room-Type (1 pro Property). local_unit_ref = property_id.
-        Gibt (channex_room_type_id, room_type_map_id) zurück."""
-        property_map = (
-            db.table("channex_property_map")
-            .select("id")
-            .eq("channex_property_id", channex_property_id)
-            .eq("tenant_id", tenant_id)
-            .limit(1)
-            .execute()
-        )
-        if not property_map.data:
-            raise ChannexError("Property-Mapping fehlt.", status_code=500)
-        property_map_id = property_map.data[0]["id"]
-
+        """Synthetischer Room-Type (1 pro Objekt/Zimmer). local_unit_ref =
+        property_id; hängt an der ÜBERGEBENEN Map-Zeile (geteilte Channex-
+        Property: mehrere Map-Zeilen je channex_property_id, 0158). Gibt
+        (channex_room_type_id, room_type_map_id) zurück."""
         existing = (
             db.table("channex_room_type_map")
             .select("id, channex_room_type_id")

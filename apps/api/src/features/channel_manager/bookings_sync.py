@@ -352,15 +352,60 @@ class BookingsSyncMixin:
         return cls._OTA_CHANNEL_MAP.get(ota_name.strip().lower(), "portal")
 
     def _resolve_local_property(
-        self, db: Client, tenant_id: str, channex_property_id: str
+        self, db: Client, tenant_id: str, channex_property_id: str,
+        rooms: list[dict[str, Any]] | None = None,
     ) -> str | None:
-        """channex_property_id → lokale property_id (aktives Mapping, tenant-scoped)."""
+        """channex_property_id (+ room_type der Buchung) → lokale property_id.
+
+        Geteilte Channex-Property (Hotel, 0158): das ZIMMER ergibt sich aus dem
+        room_type_id der Buchung (Room-Type-Map, local_unit_ref = property_id) —
+        ein limit-1 über die Property-Map träfe sonst irgendein Geschwister-
+        Zimmer (Double-Buchung landet im Twin). Fallback: 1:1-Property-Map
+        (Ferienobjekt/Buchung ohne rooms-Payload)."""
+        room_types = sorted({
+            str(r.get("room_type_id"))
+            for r in (rooms or [])
+            if isinstance(r, dict) and r.get("room_type_id")
+        })
+        if len(room_types) > 1:
+            # Mehr-Zimmer-Buchung: die Projektion kennt genau EINE Reservierung
+            # je Buchung. Bewusst NICHT verwerfen (eine OTA-Buchung darf nie
+            # verloren gehen — sonst blieben ALLE Zimmer offen → Überbuchung):
+            # deterministisch das erste gemappte Zimmer belegen und laut warnen;
+            # die übrigen Zimmer brauchen manuelle Nacharbeit (Modellgrenze,
+            # Multi-Room-Split existiert noch nicht).
+            log.warning(
+                "booking_multiple_room_types",
+                tenant_id=tenant_id, channex_property_id=channex_property_id,
+                room_types=room_types,
+            )
+        if room_types:
+            rt_rows = (
+                db.table("channex_room_type_map")
+                .select("channex_room_type_id, local_unit_ref")
+                .eq("tenant_id", tenant_id)
+                .in_("channex_room_type_id", room_types)
+                .is_("deleted_at", "null")
+                .execute()
+            ).data or []
+            by_channex_id = {
+                r["channex_room_type_id"]: r.get("local_unit_ref") for r in rt_rows
+            }
+            # Auswahl in SORTIERTER room_type-Reihenfolge → reproduzierbar
+            # (channex_room_type_id ist unique gemappt, je ID max. eine Zeile).
+            for rt_id in room_types:
+                if by_channex_id.get(rt_id):
+                    return by_channex_id[rt_id]
+        # Fallback 1:1 (Ferienobjekt / Buchung ohne rooms-Payload). Älteste aktive
+        # Map = primär — seit 0158 kann eine geteilte Channex-Property MEHRERE
+        # Zeilen haben; ohne Sortierung wäre limit(1) nicht deterministisch.
         pm = (
             db.table("channex_property_map")
             .select("property_id")
             .eq("tenant_id", tenant_id)
             .eq("channex_property_id", channex_property_id)
             .is_("deleted_at", "null")
+            .order("created_at")
             .limit(1)
             .execute()
         )
@@ -496,7 +541,9 @@ class BookingsSyncMixin:
         if not self._projection_precheck(tenant_id, booking_id, attrs):
             return False
 
-        property_id = self._resolve_local_property(db, tenant_id, channex_property_id)
+        property_id = self._resolve_local_property(
+            db, tenant_id, channex_property_id, rooms=attrs.get("rooms"),
+        )
         if not property_id:
             log.warning(
                 "reservation_skip_no_property",
@@ -876,14 +923,77 @@ class BookingsSyncMixin:
         """Preise + Verfügbarkeit aus Channex importieren. availability 0/stop_sell
         → blocked, >0 → open (NIE 'booked' überschreiben). rate → price_overrides;
         stop_sell → stop_sell-Tabelle. Gechunkt (90 Tage). Mapping über die
-        channex_*_map-Tabellen; unbekannte UUIDs werden übersprungen."""
+        channex_*_map-Tabellen; unbekannte UUIDs werden übersprungen.
+
+        Geteilte Channex-Property (Hotel, 0158): jedes Zimmer wird GETRENNT
+        importiert — Verfügbarkeit nur aus dem EIGENEN Room-Type, Stop-Sell nur
+        aus den EIGENEN Rate-Plans. Ein Aggregat über alle Room-Types wäre bei
+        Geschwister-Zimmern falsch (Twin-Wert überschriebe den Double-Kalender)."""
         result = {"prices": 0, "availability": 0, "stop_sell": 0}
         if not self._channex.is_configured or self._db is None:
             return result
         db = self._db
-        property_id = self._resolve_local_property(db, tenant_id, channex_property_id)
-        if not property_id:
-            return result
+        pms = (
+            db.table("channex_property_map")
+            .select("id, property_id")
+            .eq("tenant_id", tenant_id)
+            .eq("channex_property_id", channex_property_id)
+            .is_("deleted_at", "null")
+            .order("created_at")
+            .execute()
+        ).data or []
+        for pm in pms:
+            rt_rows = (
+                db.table("channex_room_type_map")
+                .select("id, channex_room_type_id")
+                .eq("tenant_id", tenant_id)
+                .eq("property_map_id", pm["id"])
+                .is_("deleted_at", "null")
+                .execute()
+            ).data or []
+            rt_filter = {
+                r["channex_room_type_id"] for r in rt_rows
+                if r.get("channex_room_type_id")
+            }
+            rp_filter: set[str] = set()
+            if rt_rows:
+                rp_filter = {
+                    r["channex_rate_plan_id"]
+                    for r in (
+                        db.table("channex_rate_plan_map")
+                        .select("channex_rate_plan_id")
+                        .eq("tenant_id", tenant_id)
+                        .in_("room_type_map_id", [r["id"] for r in rt_rows])
+                        .is_("deleted_at", "null")
+                        .execute()
+                    ).data or []
+                    if r.get("channex_rate_plan_id")
+                }
+            part = self._import_ari_single(
+                db, tenant_id, channex_property_id, pm["property_id"],
+                rt_filter, rp_filter, days_ahead=days_ahead, today=today,
+            )
+            for key in result:
+                result[key] += part[key]
+        log.info("import_ari_done", tenant_id=tenant_id, **result)
+        return result
+
+    def _import_ari_single(
+        self,
+        db: Client,
+        tenant_id: str,
+        channex_property_id: str,
+        property_id: str,
+        rt_filter: set[str],
+        rp_filter: set[str],
+        *,
+        days_ahead: int,
+        today: date | None,
+    ) -> dict[str, int]:
+        """ARI-Import für EIN lokales Zimmer/Objekt einer (ggf. geteilten)
+        Channex-Property. rt_filter/rp_filter = die Channex-IDs DIESES Objekts;
+        fremde Room-Types/Rate-Plans der Geschwister werden übersprungen."""
+        result = {"prices": 0, "availability": 0, "stop_sell": 0}
 
         # Nicht bei Channex gemanaged (kein aktives property_map) → Channex ist
         # NICHT die Verfügbarkeits-Wahrheit für dieses Objekt. Für ein gemanagtes
@@ -971,7 +1081,11 @@ class BookingsSyncMixin:
                 log.warning("import_ari_availability_failed", error=exc.message)
                 avail = {"data": {}}
             by_date: dict[str, int] = {}
-            for _room_type, days in (avail.get("data") or {}).items():
+            for room_type, days in (avail.get("data") or {}).items():
+                # Nur der EIGENE Room-Type dieses Zimmers zählt — Geschwister-
+                # Room-Types derselben Channex-Property gehören anderen Objekten.
+                if rt_filter and room_type not in rt_filter:
+                    continue
                 for d, qty in (days or {}).items():
                     by_date[d] = max(by_date.get(d, 0), int(qty or 0))
             # Bestehende Tage EINMAL laden (statt pro Tag einzeln) — und nur
@@ -1054,7 +1168,9 @@ class BookingsSyncMixin:
             # Availability-Block oben.
             stopped = {
                 d
-                for _rate_plan, days in (restr.get("data") or {}).items()
+                for rate_plan, days in (restr.get("data") or {}).items()
+                # Nur die EIGENEN Rate-Plans dieses Zimmers (geteilte Property).
+                if not rp_filter or rate_plan in rp_filter
                 for d, vals in (days or {}).items()
                 if (vals or {}).get("stop_sell")
             }
@@ -1114,7 +1230,6 @@ class BookingsSyncMixin:
                         on_conflict="property_id,date,rate_plan_id",
                     ).execute()
                     result["stop_sell"] += 1
-        log.info("import_ari_done", tenant_id=tenant_id, **result)
         return result
 
     def import_rooms_rates_for_property(

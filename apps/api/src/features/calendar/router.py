@@ -21,6 +21,7 @@ from .schemas import (
     BulkEditResult,
     DateRange,
     DayAvailability,
+    MultiRestrictionRowsRequest,
     PriceOverrideRequest,
     RestrictionRowsRequest,
     SeasonAssignRequest,
@@ -256,6 +257,23 @@ def bulk_restrictions(
     (Zertifizierung Test 3-8)."""
     try:
         return {"rows": service.bulk_restrictions(ctx.tenant_id, req)}
+    except CalendarError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/bulk-restrictions-multi", dependencies=[
+    Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+])
+def bulk_restrictions_multi(
+    req: MultiRestrictionRowsRequest,
+    service: CalendarServiceDep,
+    ctx: Annotated[CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))],
+) -> dict[str, int]:
+    """Zimmer-ÜBERGREIFENDE Bulk-Restriktionen (Hotel): eine Aktion über mehrere
+    Zimmer × Rate-Plans → EIN gebündelter Channex-Call je Channex-Property
+    (Zertifizierung Tests 3-8 über Room-Types hinweg)."""
+    try:
+        return {"rows": service.bulk_restrictions_multi(ctx.tenant_id, req)}
     except CalendarError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

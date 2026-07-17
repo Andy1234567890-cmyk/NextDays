@@ -16,7 +16,12 @@ import { MultiSelect } from "@/components/ui/multi-select";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Segmented } from "@/components/ui/segmented";
 import { isoPlus } from "@/lib/dates";
-import { type RestrictionRow, bulkEdit, bulkRestrictions } from "@/lib/calendar";
+import {
+  type RestrictionRow,
+  bulkEdit,
+  bulkRestrictions,
+  bulkRestrictionsMulti,
+} from "@/lib/calendar";
 
 type BlockMode = "none" | "block" | "unblock";
 type StopMode = "none" | "stop" | "clear";
@@ -40,11 +45,12 @@ export function BulkEditDialog({
   end: string; // YYYY-MM-DD (exklusiv)
   primaryProperty: { id: string; title: string };
   allProperties: { id: string; title: string }[];
-  // Hotel: Preispläne des primären Objekts — erlaubt im Zeilen-Modus, jede Zeile
-  // einem Plan zuzuordnen (Twin/BAR ≠ Double/B&B). Leer/undefined = Objekt-Ebene
-  // (Ferienwohnung), dann gilt jede Zeile für alle Pläne. category/plan trennen
-  // die Zimmerkategorie vom Plannamen, damit das Dropdown nach Kategorie gruppiert.
-  ratePlans?: { id: string; label: string }[];
+  // Hotel: Preispläne — erlaubt im Zeilen-Modus, jede Zeile einem Plan zuzuordnen
+  // (Twin/BAR ≠ Double/B&B). Trägt ein Plan eine propertyId, gehört er zu einem
+  // (ggf. anderen) Zimmer: die Zeilen gehen dann zimmerübergreifend als EIN
+  // Portale-Call raus (Zert-Tests 3-8). Leer/undefined = Objekt-Ebene
+  // (Ferienwohnung), dann gilt jede Zeile für alle Pläne.
+  ratePlans?: { id: string; label: string; propertyId?: string }[];
   onClose: () => void;
   onApplied: () => void;
 }) {
@@ -133,7 +139,24 @@ export function BulkEditDialog({
       return;
     }
     setSaving(true);
-    const res = await bulkRestrictions(primaryProperty.id, clean);
+    // Zimmer-übergreifend (Hotel): Pläne tragen ihre propertyId → jede Zeile dem
+    // Zimmer ihres Plans zuordnen und alles als EINEN gebündelten Portale-Call
+    // senden. Ohne propertyId (FeWo/Objekt-Ebene) bleibt der Objekt-Pfad.
+    const planProperty = new Map(
+      (ratePlans ?? [])
+        .filter((p) => p.propertyId)
+        .map((p) => [p.id, p.propertyId as string]),
+    );
+    const res = planProperty.size > 0
+      ? await bulkRestrictionsMulti(
+          clean.map((r) => ({
+            ...r,
+            property_id:
+              (r.rate_plan_id && planProperty.get(r.rate_plan_id)) ||
+              primaryProperty.id,
+          })),
+        )
+      : await bulkRestrictions(primaryProperty.id, clean);
     setSaving(false);
     if (res.ok) {
       toast.success(`${res.data.rows} Zeile(n) an die Portale gesendet.`);

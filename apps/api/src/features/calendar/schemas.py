@@ -344,6 +344,20 @@ class RestrictionRowsRequest(BaseModel):
     rows: list[RestrictionRow] = Field(min_length=1)
 
 
+class MultiRestrictionRow(RestrictionRow):
+    """Restriktions-Zeile MIT Objekt-Bezug — für die zimmerübergreifende
+    Bulk-Aktion (Hotel: eine Aktion über mehrere Zimmer × Rate-Plans).
+    property_id wird serverseitig gegen den Tenant geprüft (Wurzel 3)."""
+    property_id: str
+
+
+class MultiRestrictionRowsRequest(BaseModel):
+    """Zimmer-übergreifende Bulk-Restriktionen: eine UI-Aktion über mehrere
+    Zimmer × Rate-Plans → EIN gebündelter Channex-Call je Channex-Property
+    (Zertifizierung Tests 3-8 über Room-Types hinweg)."""
+    rows: list[MultiRestrictionRow] = Field(min_length=1)
+
+
 class SliceHealth(BaseModel):
     slice: str
     status: str = "ok"

@@ -430,7 +430,10 @@ class _ImportChannex:
         self._rate_plans = rate_plans or []
         self._fail_availability = fail_availability
         self._fail_restrictions = fail_restrictions
-        self.pushed: list[dict] = []  # update_availability-Aufrufe
+        self.pushed: list[dict] = []  # update_availability-Werte, flach
+        # Je update_availability-Aufruf eine Liste — belegt die Zert-Forderung
+        # „1 API call" für den gebündelten Full Sync (Test 1).
+        self.availability_calls: list[list[dict]] = []
         self.restrictions_pushed: list[dict] = []  # alle Werte, flach
         # Je update_restrictions-Aufruf eine Liste — belegt die Zert-Forderung
         # „1 API call" (die flache Liste allein zeigt Bündelung nicht).
@@ -453,6 +456,7 @@ class _ImportChannex:
 
             raise ChannexError("Channex down", status_code=502)
         self.pushed.extend(values)
+        self.availability_calls.append(list(values))
         return {"data": values}
 
     def update_restrictions(self, values):  # noqa: ANN001, ANN201
@@ -576,6 +580,8 @@ class _ImportDB:
             "tenant_billing_profile": [],
             "property_photos": [],
             "rate_plan_price_overrides": [],
+            "rate_plan_min_stay_overrides": [],
+            "rate_plan_restriction_overrides": [],
         }
         self._seq = 0
 
@@ -1388,21 +1394,186 @@ def test_reconcile_pushes_when_channex_missing_the_date() -> None:
     assert channex.restrictions_pushed[0]["rate_plan_id"] == "cx-rp-b"
 
 
-def test_full_sync_rate_segments_per_plan() -> None:
-    # Der Full-Sync baut die Kurve PRO Rate-Plan (getaggt mit rate_plan_id) —
-    # ein ungetaggtes Segment ginge in push_rates_batch an ALLE Pläne und würde
-    # B&B (120) flächig mit der BAR-Kurve (100) überschreiben.
+def test_full_sync_restriction_rows_carry_all_declared_restrictions() -> None:
+    # Zertifizierung Test 1 (Full Sync): JEDER Restriktions-Wert trägt ALLE
+    # deklarierten Restriktionen (min_stay arrival+through über min_stay,
+    # max_stay, CTA, CTD, stop_sell) UND den Preis — pro Rate-Plan, RLE-gebündelt
+    # (uniformer Horizont = EIN Range je Plan).
     db = _ImportDB()
     _seed_hotel_mapping(db)
     for rp in db.tables["rate_plans"]:
         rp["base_price"] = 100.00 if rp["id"] == "rp-a" else 120.00
+        rp["min_stay"] = 2
     svc = _import_svc(_ImportChannex(), db)
     start = date.today() + timedelta(days=1)
-    segs = svc._full_sync_rate_segments(db, "p1", start, start + timedelta(days=3))
-    assert len(segs) == 2  # je Plan EIN durchgehendes RLE-Segment
-    by_plan = {s["rate_plan_id"]: s for s in segs}
+    rows = svc._full_sync_restriction_rows(db, "p1", start, start + timedelta(days=3))
+    assert len(rows) == 2  # je Plan EIN durchgehendes RLE-Segment
+    by_plan = {r["rate_plan_id"]: r for r in rows}
     assert by_plan["rp-a"]["rate_cents"] == 10000
     assert by_plan["rp-b"]["rate_cents"] == 12000
+    for r in rows:
+        assert r["min_stay"] == 2
+        assert r["max_stay"] == 0  # keine Obergrenze (Channex-Semantik)
+        assert r["closed_to_arrival"] is False
+        assert r["closed_to_departure"] is False
+        assert r["stop_sell"] is False
+        assert r["date_from"] == start.isoformat()
+        assert r["date_to"] == (start + timedelta(days=3)).isoformat()
+
+
+def test_full_sync_restriction_rows_pick_up_overrides_and_stop_sell() -> None:
+    # Overrides zerschneiden den Run: min_stay-Override, plan-genauer CTA-Override
+    # und ein Objekt-Stop-Sell-Tag erscheinen mit ihren echten Werten (Wurzel 4:
+    # Wahrheit aus den Quelltabellen, keine erfundenen Defaults).
+    db = _ImportDB()
+    _seed_hotel_mapping(db)
+    for rp in db.tables["rate_plans"]:
+        rp["base_price"] = 100.00
+    start = date.today() + timedelta(days=1)
+    d1 = (start + timedelta(days=1)).isoformat()
+    db.tables["rate_plan_min_stay_overrides"].append(
+        {"rate_plan_id": "rp-a", "date": d1, "min_stay": 5}
+    )
+    db.tables["rate_plan_restriction_overrides"].append(
+        {"rate_plan_id": "rp-a", "date": d1, "closed_to_arrival": True,
+         "closed_to_departure": None, "max_stay": 7}
+    )
+    db.tables["stop_sell"].append(
+        {"property_id": "p1", "date": d1, "rate_plan_id": None, "scope": "all"}
+    )
+    svc = _import_svc(_ImportChannex(), db)
+    rows = svc._full_sync_restriction_rows(db, "p1", start, start + timedelta(days=2))
+    over = [r for r in rows if r["rate_plan_id"] == "rp-a" and r["date_from"] == d1]
+    assert len(over) == 1
+    assert over[0]["min_stay"] == 5
+    assert over[0]["max_stay"] == 7
+    assert over[0]["closed_to_arrival"] is True
+    assert over[0]["closed_to_departure"] is False
+    assert over[0]["stop_sell"] is True
+    # Objekt-Stop (rate_plan_id null) trifft AUCH den zweiten Plan.
+    over_b = [r for r in rows if r["rate_plan_id"] == "rp-b" and r["date_from"] == d1]
+    assert over_b and over_b[0]["stop_sell"] is True
+    assert over_b[0]["min_stay"] == 1  # kein Override für rp-b
+
+
+def test_stop_sell_weekday_mask_uses_native_days_field() -> None:
+    # Wochentags-Stop über einen Range: EIN Range-value mit nativem Channex-
+    # `days`-Feld (ARI-Doku), NICHT mehr ein value pro Tag.
+    db = _ImportDB()
+    _seed_with_rate_plan(db)
+    channex = _ImportChannex()
+    _import_svc(channex, db).push_stop_sell_for_property(
+        "t1", "p1", [(date(2099, 6, 22), date(2099, 6, 28))],
+        stop_sell=True, days=["sa", "su"],
+    )
+    assert len(channex.restrictions_pushed) == 1
+    v = channex.restrictions_pushed[0]
+    assert v["date_from"] == "2099-06-22" and v["date_to"] == "2099-06-28"
+    assert v["days"] == ["sa", "su"]
+    assert v["stop_sell"] is True
+
+
+def _seed_shared_hotel(db):  # noqa: ANN001, ANN201
+    """ZWEI Zimmer (p-twin/p-double) teilen sich EINE Channex-Property (0158):
+    je Zimmer eine eigene Map-Zeile auf cx-prop, ein eigener Room-Type und ein
+    gemappter Rate-Plan — das Zertifizierungs-Setup (Twin/Double unter einer
+    Property)."""
+    rooms = (
+        ("p-twin", "m-twin", "rtm-twin", "cx-rt-twin",
+         "rpm-twin", "cx-rp-twin", "rp-twin", "2026-01-01T00:00:00Z"),
+        ("p-double", "m-double", "rtm-double", "cx-rt-double",
+         "rpm-double", "cx-rp-double", "rp-double", "2026-01-02T00:00:00Z"),
+    )
+    for pid, mid, rtm, cx_rt, rpm, cx_rp, rp_local, created in rooms:
+        db.tables["properties"].append(
+            {"id": pid, "tenant_id": "t1", "title": pid}
+        )
+        db.tables["channex_property_map"].append(
+            {"id": mid, "tenant_id": "t1", "property_id": pid,
+             "channex_property_id": "cx-prop", "deleted_at": None,
+             "created_at": created}
+        )
+        db.tables["channex_room_type_map"].append(
+            {"id": rtm, "tenant_id": "t1", "property_map_id": mid,
+             "local_unit_ref": pid, "channex_room_type_id": cx_rt,
+             "deleted_at": None}
+        )
+        db.tables["channex_rate_plan_map"].append(
+            {"id": rpm, "tenant_id": "t1", "room_type_map_id": rtm,
+             "channex_rate_plan_id": cx_rp, "local_rate_plan_id": rp_local,
+             "deleted_at": None}
+        )
+        db.tables["rate_plans"].append(
+            {"id": rp_local, "property_id": pid, "base_price": 100.00,
+             "currency": "USD", "created_at": "2026-01-01T00:00:00Z"}
+        )
+
+
+def test_restriction_rows_multi_one_call_across_shared_property() -> None:
+    # Zertifizierung Tests 3-8: eine Aktion über MEHRERE Zimmer (Twin+Double,
+    # geteilte Channex-Property) → EIN POST /restrictions, plan-genaues Targeting,
+    # Outbox je Objekt abgeschlossen.
+    db = _ImportDB()
+    _seed_shared_hotel(db)
+    channex = _ImportChannex()
+    _import_svc(channex, db).push_restriction_rows_multi("t1", {
+        "p-twin": [{"date_from": "2099-11-23", "date_to": "2099-11-23",
+                    "rate_plan_id": "rp-twin", "min_stay": 3}],
+        "p-double": [{"date_from": "2099-11-25", "date_to": "2099-11-25",
+                      "rate_plan_id": "rp-double", "min_stay": 2}],
+    })
+    assert len(channex.restriction_calls) == 1
+    assert {
+        (v["rate_plan_id"], v["date"], v["min_stay_arrival"])
+        for v in channex.restrictions_pushed
+    } == {("cx-rp-twin", "2099-11-23", 3), ("cx-rp-double", "2099-11-25", 2)}
+    outbox = db.tables["ari_restriction_outbox"]
+    assert len(outbox) == 2
+    assert all(r["status"] == "done" for r in outbox)
+
+
+def test_full_sync_shared_property_is_two_calls() -> None:
+    # Zertifizierung Test 1: geteilte Channex-Property → EIN Availability-Call
+    # (beide Room-Types) + EIN Restrictions-Call (alle Rate-Plans), und JEDER
+    # Restriktions-Wert trägt alle deklarierten Restrictions.
+    db = _ImportDB()
+    _seed_shared_hotel(db)
+    channex = _ImportChannex()
+    res = _import_svc(channex, db).full_sync_property("t1", "p-twin")
+    assert len(channex.availability_calls) == 1
+    assert {v["room_type_id"] for v in channex.pushed} == {
+        "cx-rt-twin", "cx-rt-double"
+    }
+    assert res["availability_values"] == 2  # je Zimmer EIN durchgehender Range
+    assert len(channex.restriction_calls) == 1
+    assert {v["rate_plan_id"] for v in channex.restrictions_pushed} == {
+        "cx-rp-twin", "cx-rp-double"
+    }
+    declared = ("rate", "min_stay_arrival", "min_stay_through", "max_stay",
+                "closed_to_arrival", "closed_to_departure", "stop_sell")
+    for v in channex.restrictions_pushed:
+        for key in declared:
+            assert key in v
+
+
+def test_exclude_superseded_days_splits_ranges() -> None:
+    # Range-values werden um superseded Tage ZERSCHNITTEN — ein reiner
+    # `date`-Filter ließe den Tag im Range und überschriebe den neueren Wert.
+    from src.features.channel_manager.ari_push import _exclude_superseded_days
+
+    values = [{"property_id": "cx", "rate_plan_id": "rp", "rate": 100,
+               "date_from": "2099-06-20", "date_to": "2099-06-26"}]
+    out = _exclude_superseded_days(values, {"2099-06-23"})
+    assert [(v.get("date"), v.get("date_from"), v.get("date_to")) for v in out] == [
+        (None, "2099-06-20", "2099-06-22"),
+        (None, "2099-06-24", "2099-06-26"),
+    ]
+    # Einzeltag-Kollaps prüft die Wochentags-Maske lokal (kein days-Feld am date).
+    masked = [{"rate": 1, "days": ["mo", "tu", "we", "th", "fr", "sa", "su"],
+               "date_from": "2099-06-22", "date_to": "2099-06-24"}]
+    out2 = _exclude_superseded_days(masked, {"2099-06-23"})
+    assert [v["date"] for v in out2] == ["2099-06-22", "2099-06-24"]
+    assert all("days" not in v for v in out2)
 
 
 def test_reconcile_pushes_continuous_base_price() -> None:
@@ -1448,15 +1619,14 @@ def test_push_restrictions_cta_ctd_sends_to_channex() -> None:
         "t1", "p1", date(2026, 6, 23), date(2026, 6, 25),
         closed_to_arrival=True, closed_to_departure=False,
     )
-    # restrictions muss PRO DATUM gesendet werden (date_from/date_to wird von
-    # Channex still ignoriert, live verifiziert) → 23.–25. Juni = 3 values.
-    assert len(channex.restrictions_pushed) == 3
-    dates = {v["date"] for v in channex.restrictions_pushed}
-    assert dates == {"2026-06-23", "2026-06-24", "2026-06-25"}
+    # Range-Syntax: 23.–25. Juni = EIN value mit date_from/date_to (Zertifizierung:
+    # merged date_range statt Einzeltag-Objekten; live per PUT+Readback verifiziert).
+    assert len(channex.restrictions_pushed) == 1
     val = channex.restrictions_pushed[0]
+    assert val["date_from"] == "2026-06-23" and val["date_to"] == "2026-06-25"
+    assert "date" not in val
     assert val["property_id"] == "cx-prop"
     assert val["rate_plan_id"] == "cx-rate"
-    assert "date_from" not in val  # kein Bereich mehr
     assert val["closed_to_arrival"] is True
     assert val["closed_to_departure"] is False
 
@@ -1505,31 +1675,47 @@ def test_push_max_stay_sends_to_channex() -> None:
     _import_svc(channex, db).push_max_stay_for_property(
         "t1", "p1", date(2026, 6, 23), date(2026, 6, 25), 14
     )
-    # Pro Datum (date_from/date_to wird still ignoriert): 23.–25. Juni = 3 values.
-    assert len(channex.restrictions_pushed) == 3
+    # Range-Syntax: 23.–25. Juni = EIN value mit date_from/date_to.
+    assert len(channex.restrictions_pushed) == 1
     val = channex.restrictions_pushed[0]
     assert val["property_id"] == "cx-prop"
     assert val["rate_plan_id"] == "cx-rate"
     assert val["max_stay"] == 14
-    assert "date" in val and "date_from" not in val
+    assert val["date_from"] == "2026-06-23" and val["date_to"] == "2026-06-25"
+    assert "date" not in val
     assert "max_stay_arrival" not in val
 
 
-def test_push_rate_min_stay_expands_per_date() -> None:
-    # Regression (der Bug, den der Nutzer sah): min_stay per date_from/date_to
-    # wurde von Channex still ignoriert -> Kalender blieb auf 1. Jetzt: ein value
-    # PRO Datum mit `date`, min_stay_arrival UND min_stay_through gesetzt.
+def test_push_rate_min_stay_sends_merged_range() -> None:
+    # Zertifizierungsvorgabe („use date_range syntax with merged sequences"):
+    # EIN Range-value für den Zeitraum, min_stay_arrival UND min_stay_through
+    # gesetzt. Range-Schreibweise ist live per PUT+Readback verifiziert.
     db = _ImportDB()
     _seed_with_rate_plan(db)
     channex = _ImportChannex()
     _import_svc(channex, db).push_rate_for_property(
         "t1", "p1", date(2026, 6, 23), date(2026, 6, 25), min_stay=3
     )
-    assert len(channex.restrictions_pushed) == 3
-    for v in channex.restrictions_pushed:
-        assert "date" in v and "date_from" not in v
-        assert v["min_stay_arrival"] == 3
-        assert v["min_stay_through"] == 3
+    assert len(channex.restrictions_pushed) == 1
+    v = channex.restrictions_pushed[0]
+    assert v["date_from"] == "2026-06-23" and v["date_to"] == "2026-06-25"
+    assert "date" not in v
+    assert v["min_stay_arrival"] == 3
+    assert v["min_stay_through"] == 3
+
+
+def test_push_rate_single_day_uses_date_key() -> None:
+    # Einzeltag bleibt ein `date`-value (Single-Date-Update-Format der Tests 2/3).
+    db = _ImportDB()
+    _seed_with_rate_plan(db)
+    channex = _ImportChannex()
+    _import_svc(channex, db).push_rate_for_property(
+        "t1", "p1", date(2026, 6, 23), date(2026, 6, 23), rate_cents=13800
+    )
+    assert len(channex.restrictions_pushed) == 1
+    v = channex.restrictions_pushed[0]
+    assert v["date"] == "2026-06-23"
+    assert "date_from" not in v and "date_to" not in v
 
 
 def test_push_max_stay_skipped_when_not_managed() -> None:
@@ -1939,7 +2125,9 @@ def test_prune_orphan_room_type_deletes_and_softdeletes_children() -> None:
     )
     channex = _ImportChannex()
     svc = _import_svc(channex, db)
-    svc._prune_orphan_room_types(db, "t1", "cx-prop", {"p1"})
+    # Scope = die Map-Zeile des Objekts (m1) — bei geteilter Channex-Property
+    # (0158) darf der Prune die Room-Types der Geschwister-Zimmer nicht anfassen.
+    svc._prune_orphan_room_types(db, "t1", "m1", {"p1"})
     # Kind-Rate-Plan ZUERST explizit bei Channex gelöscht (delete_room_type
     # entwaist ihn nur — er würde sonst per Titel das Neuanlegen blockieren).
     assert "cx-rp-old" in channex.deleted_rate_plans
@@ -2572,9 +2760,11 @@ def test_process_restriction_outbox_retries_stop_sell() -> None:
     res = _import_svc(channex, db).process_restriction_outbox()
     assert res["done"] == 1
     assert db.tables["ari_restriction_outbox"][0]["status"] == "done"
-    # Pro Datum expandiert (23.–25. = 3 values), stop_sell gesetzt.
-    assert len(channex.restrictions_pushed) == 3
-    assert all(v["stop_sell"] is True for v in channex.restrictions_pushed)
+    # Range-komprimiert: 23.–25. = EIN value, stop_sell gesetzt.
+    assert len(channex.restrictions_pushed) == 1
+    v = channex.restrictions_pushed[0]
+    assert v["stop_sell"] is True
+    assert v["date_from"] == "2099-06-23" and v["date_to"] == "2099-06-25"
 
 
 def test_process_restriction_outbox_self_heals_when_rate_plan_appears() -> None:
@@ -2708,8 +2898,10 @@ def test_process_restriction_outbox_retries_rate_batch() -> None:
     channex = _ImportChannex()
     res = _import_svc(channex, db).process_restriction_outbox()
     assert res["done"] == 1
-    assert len(channex.restrictions_pushed) == 2  # 23.+24. = 2 values
-    assert all(v["rate"] == 15000 for v in channex.restrictions_pushed)
+    assert len(channex.restrictions_pushed) == 1  # 23.–24. = EIN Range-value
+    v = channex.restrictions_pushed[0]
+    assert v["rate"] == 15000
+    assert v["date_from"] == "2099-06-23" and v["date_to"] == "2099-06-24"
 
 
 def test_push_rates_batch_failure_keeps_outbox_pending() -> None:

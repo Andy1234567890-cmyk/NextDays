@@ -270,6 +270,12 @@ def _handle_push_ari(
             tenant_id, property_id, payload["rows"],
         )
         failed = False
+    elif kind == "restriction_rows_multi":
+        # Zimmer-übergreifende Bulk-Restriktionen (Hotel, geteilte Channex-
+        # Property): EIN Channex-Call für alle Zimmer (Tests 3-8). Best-effort;
+        # die Restriktions-Outbox (je Objekt) ist der Backstop.
+        push.push_restriction_rows_multi(tenant_id, payload["rows_by_property"])
+        failed = False
     else:
         raise ValueError(f"unbekannter ARI-kind: {kind}")
 
@@ -650,14 +656,23 @@ class Worker:
         now = datetime.now(UTC)
         if now.hour != FULL_SYNC_HOUR_UTC:
             return
-        rows = (
+        all_rows = (
             self._db.table("channex_property_map")
-            .select("tenant_id, property_id")
+            .select("tenant_id, property_id, channex_property_id, created_at")
             .is_("deleted_at", "null")
+            .order("created_at")
             .execute()
         ).data or []
+        # Geteilte Channex-Property (Hotel, 0158): EIN Full-Sync-Job je
+        # CHANNEX-Property, nicht je Zimmer — der Handler synct alle Zimmer der
+        # Property gebündelt (sonst liefe der Voll-Push n-fach pro Nacht).
+        # Primär = älteste Map-Zeile (stabil).
+        by_channex: dict[str, dict] = {}
+        for r in all_rows:
+            by_channex.setdefault(r["channex_property_id"], r)
+        rows = list(by_channex.values())
         day = now.date().isoformat()
-        keys = [f"full_sync:{r['property_id']}:{day}" for r in rows]
+        keys = [f"full_sync:{r['channex_property_id']}:{day}" for r in rows]
         # Tages-Dedup über ALLE Status: der partielle queued-Unique-Index
         # dedupliziert nur offene Jobs — ein bereits erledigter Full-Sync
         # desselben Tages würde sonst bei jedem weiteren 15-min-Tick im
@@ -674,7 +689,7 @@ class Worker:
                 e["dedup_key"] for e in existing if e.get("dedup_key")
             )
         for i, r in enumerate(rows):
-            key = f"full_sync:{r['property_id']}:{day}"
+            key = f"full_sync:{r['channex_property_id']}:{day}"
             if key in done_today:
                 continue
             enqueue(

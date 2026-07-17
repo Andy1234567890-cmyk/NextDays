@@ -30,6 +30,7 @@ from .schemas import (
     BulkEditResult,
     DateRange,
     DayAvailability,
+    MultiRestrictionRowsRequest,
     PriceOverrideRequest,
     RestrictionRow,
     RestrictionRowsRequest,
@@ -1409,88 +1410,131 @@ class CalendarService:
                 raise CalendarError(
                     "Preisplan gehört nicht zu diesem Objekt.", status_code=422
                 )
-        rows_payload: list[dict[str, object]] = []
-        for row in req.rows:
-            start, end = row.range.start, row.range.end  # end exklusiv
-            # Lokale Spiegelung (Gegenzustand, Wurzel 1) — die Channex-Wahrheit
-            # kommt aus dem gebündelten Push, die lokalen Tabellen bleiben konsistent.
-            if row.price is not None:
-                if row.rate_plan_id:
-                    # Hotel: der Preis gehört an den Plan, NICHT an das Objekt —
-                    # sonst überschriebe eine BAR-Zeile den Preis aller Pläne.
-                    self._db().table("rate_plan_price_overrides").upsert(
-                        [{"rate_plan_id": row.rate_plan_id, "date": d.isoformat(),
-                          "price": row.price}
-                         for d in row.range.nights()],
-                        on_conflict="rate_plan_id,date",
-                    ).execute()
-                else:
-                    self._db().table("price_overrides").upsert(
-                        [{"property_id": pid, "date": d.isoformat(), "price": row.price}
-                         for d in row.range.nights()],
-                        on_conflict="property_id,date",
-                    ).execute()
-            cta_ctd_set = (
-                row.closed_to_arrival is not None
-                or row.closed_to_departure is not None
-            )
-            if (cta_ctd_set or row.max_stay is not None) and row.rate_plan_id:
-                # Hotel: CTA/CTD/Max-Stay gehören plan-genau in die Override-Tabelle
-                # (0153) — NICHT objekt-weit in availability, sonst überschriebe eine
-                # BAR-Zeile die Restriktion aller Pläne, und die UI könnte sie nie
-                # plan-genau zurücklesen/bearbeiten.
-                fields: dict[str, object] = {}
-                if row.closed_to_arrival is not None:
-                    fields["closed_to_arrival"] = row.closed_to_arrival
-                if row.closed_to_departure is not None:
-                    fields["closed_to_departure"] = row.closed_to_departure
-                if row.max_stay is not None:
-                    fields["max_stay"] = row.max_stay
-                self._db().table("rate_plan_restriction_overrides").upsert(
-                    [{"rate_plan_id": row.rate_plan_id, "date": d.isoformat(), **fields}
-                     for d in row.range.nights()],
-                    on_conflict="rate_plan_id,date",
-                ).execute()
-            elif cta_ctd_set:
-                # Objekt-Ebene (Ferienwohnung, kein Plan): CTA/CTD wie bisher in
-                # availability (max_stay hat dort keine Spalte — nur Plan-Ebene).
-                flags: dict[str, bool] = {}
-                if row.closed_to_arrival is not None:
-                    flags["closed_to_arrival"] = row.closed_to_arrival
-                if row.closed_to_departure is not None:
-                    flags["closed_to_departure"] = row.closed_to_departure
-                self._db().table("availability").upsert(
-                    [{"property_id": pid, "date": d.isoformat(), **flags}
-                     for d in row.range.nights()],
-                    on_conflict="property_id,date",
-                ).execute()
-            if row.min_stay is not None and row.rate_plan_id:
-                # Hotel: datumsgenauer Mindestaufenthalt gehört an den Plan.
-                self._db().table("rate_plan_min_stay_overrides").upsert(
-                    [{"rate_plan_id": row.rate_plan_id, "date": d.isoformat(),
-                      "min_stay": row.min_stay}
-                     for d in row.range.nights()],
-                    on_conflict="rate_plan_id,date",
-                ).execute()
-            if row.stop_sell is not None:
-                self._mirror_stop_sell_row(tenant_id, pid, row)
-            rows_payload.append({
-                "date_from": start.isoformat(),
-                "date_to": (end - timedelta(days=1)).isoformat(),  # inklusiv
-                "rate_plan_id": row.rate_plan_id,
-                "rate_cents": round(row.price * 100) if row.price is not None else None,
-                "min_stay": row.min_stay,
-                "max_stay": row.max_stay,
-                "closed_to_arrival": row.closed_to_arrival,
-                "closed_to_departure": row.closed_to_departure,
-                "stop_sell": row.stop_sell,
-            })
+        rows_payload = [
+            self._mirror_restriction_row(tenant_id, pid, row) for row in req.rows
+        ]
         # EIN Job → EIN gebündelter Channex-Call für alle Zeilen (Test 3-8).
         try_enqueue_ari(
             self._db(), tenant_id, pid, "restriction_rows", {"rows": rows_payload},
         )
         log.info("calendar_bulk_restrictions", property_id=pid, rows=len(rows_payload))
         return len(rows_payload)
+
+    def bulk_restrictions_multi(
+        self, tenant_id: str, req: MultiRestrictionRowsRequest
+    ) -> int:
+        """Zimmer-ÜBERGREIFENDE Bulk-Restriktionen (Hotel): eine UI-Aktion über
+        mehrere Zimmer × Rate-Plans wird lokal je Zeile gespiegelt und als EIN
+        Job eingereiht, der alle values je Channex-Property in EINEM Call pusht
+        (Zertifizierung Tests 3-8: „1 API call" über Room-Types hinweg — die
+        Zimmer eines Hotels teilen sich EINE Channex-Property, 0158). Jede Zeile
+        wird auf Tenant-Objekt UND Plan-Zugehörigkeit geprüft (Wurzel 3/9).
+        Gibt die Anzahl Zeilen zurück."""
+        groups: dict[str, list[RestrictionRow]] = {}
+        for row in req.rows:
+            groups.setdefault(row.property_id, []).append(row)
+        # ERST alle Objekte/Pläne prüfen (fail-closed, bevor irgendetwas
+        # gespiegelt wird), DANN spiegeln + einreihen.
+        for pid, rows in groups.items():
+            self._require_tenant_property(tenant_id, pid)
+            requested_plans = {r.rate_plan_id for r in rows if r.rate_plan_id}
+            if requested_plans and (requested_plans - self._own_rate_plan_ids(pid)):
+                raise CalendarError(
+                    "Preisplan gehört nicht zu diesem Objekt.", status_code=422
+                )
+        rows_by_property = {
+            pid: [self._mirror_restriction_row(tenant_id, pid, row) for row in rows]
+            for pid, rows in groups.items()
+        }
+        first_pid = next(iter(rows_by_property))
+        try_enqueue_ari(
+            self._db(), tenant_id, first_pid, "restriction_rows_multi",
+            {"rows_by_property": rows_by_property},
+        )
+        log.info(
+            "calendar_bulk_restrictions_multi",
+            properties=len(rows_by_property), rows=len(req.rows),
+        )
+        return len(req.rows)
+
+    def _mirror_restriction_row(
+        self, tenant_id: str, pid: str, row: RestrictionRow
+    ) -> dict[str, object]:
+        """Eine Restriktions-Zeile lokal spiegeln (Gegenzustand, Wurzel 1) und
+        als Channex-Payload-Zeile zurückgeben — die Channex-Wahrheit kommt aus
+        dem gebündelten Push, die lokalen Tabellen bleiben konsistent."""
+        start, end = row.range.start, row.range.end  # end exklusiv
+        if row.price is not None:
+            if row.rate_plan_id:
+                # Hotel: der Preis gehört an den Plan, NICHT an das Objekt —
+                # sonst überschriebe eine BAR-Zeile den Preis aller Pläne.
+                self._db().table("rate_plan_price_overrides").upsert(
+                    [{"rate_plan_id": row.rate_plan_id, "date": d.isoformat(),
+                      "price": row.price}
+                     for d in row.range.nights()],
+                    on_conflict="rate_plan_id,date",
+                ).execute()
+            else:
+                self._db().table("price_overrides").upsert(
+                    [{"property_id": pid, "date": d.isoformat(), "price": row.price}
+                     for d in row.range.nights()],
+                    on_conflict="property_id,date",
+                ).execute()
+        cta_ctd_set = (
+            row.closed_to_arrival is not None
+            or row.closed_to_departure is not None
+        )
+        if (cta_ctd_set or row.max_stay is not None) and row.rate_plan_id:
+            # Hotel: CTA/CTD/Max-Stay gehören plan-genau in die Override-Tabelle
+            # (0153) — NICHT objekt-weit in availability, sonst überschriebe eine
+            # BAR-Zeile die Restriktion aller Pläne, und die UI könnte sie nie
+            # plan-genau zurücklesen/bearbeiten.
+            fields: dict[str, object] = {}
+            if row.closed_to_arrival is not None:
+                fields["closed_to_arrival"] = row.closed_to_arrival
+            if row.closed_to_departure is not None:
+                fields["closed_to_departure"] = row.closed_to_departure
+            if row.max_stay is not None:
+                fields["max_stay"] = row.max_stay
+            self._db().table("rate_plan_restriction_overrides").upsert(
+                [{"rate_plan_id": row.rate_plan_id, "date": d.isoformat(), **fields}
+                 for d in row.range.nights()],
+                on_conflict="rate_plan_id,date",
+            ).execute()
+        elif cta_ctd_set:
+            # Objekt-Ebene (Ferienwohnung, kein Plan): CTA/CTD wie bisher in
+            # availability (max_stay hat dort keine Spalte — nur Plan-Ebene).
+            flags: dict[str, bool] = {}
+            if row.closed_to_arrival is not None:
+                flags["closed_to_arrival"] = row.closed_to_arrival
+            if row.closed_to_departure is not None:
+                flags["closed_to_departure"] = row.closed_to_departure
+            self._db().table("availability").upsert(
+                [{"property_id": pid, "date": d.isoformat(), **flags}
+                 for d in row.range.nights()],
+                on_conflict="property_id,date",
+            ).execute()
+        if row.min_stay is not None and row.rate_plan_id:
+            # Hotel: datumsgenauer Mindestaufenthalt gehört an den Plan.
+            self._db().table("rate_plan_min_stay_overrides").upsert(
+                [{"rate_plan_id": row.rate_plan_id, "date": d.isoformat(),
+                  "min_stay": row.min_stay}
+                 for d in row.range.nights()],
+                on_conflict="rate_plan_id,date",
+            ).execute()
+        if row.stop_sell is not None:
+            self._mirror_stop_sell_row(tenant_id, pid, row)
+        return {
+            "date_from": start.isoformat(),
+            "date_to": (end - timedelta(days=1)).isoformat(),  # inklusiv
+            "rate_plan_id": row.rate_plan_id,
+            "rate_cents": round(row.price * 100) if row.price is not None else None,
+            "min_stay": row.min_stay,
+            "max_stay": row.max_stay,
+            "closed_to_arrival": row.closed_to_arrival,
+            "closed_to_departure": row.closed_to_departure,
+            "stop_sell": row.stop_sell,
+        }
 
     def unblock(self, tenant_id: str, property_id: str, rng: DateRange) -> int:
         """Manuelle Sperre im Zeitraum aufheben (öffentlicher, tenant-gescopter

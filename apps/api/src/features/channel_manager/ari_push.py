@@ -113,9 +113,10 @@ def _restriction_values(
     date_to: date,
     rate_plan_id: str | None = None,
 ) -> list[dict[str, Any]]:
-    """`fields` pro Datum expandieren (Channex ignoriert date_from/date_to still —
-    ein value je Tag). Standard: ALLE Rate-Plans. Mit `rate_plan_id` NUR der lokal
-    passende Plan (Hotel: rate-plan-genauer Preis, kein Spiegeln). Leer ohne fields."""
+    """`fields` als Range-value(s) je Rate-Plan ausgeben (date_from/date_to,
+    Einzeltag als `date`). Standard: ALLE Rate-Plans. Mit `rate_plan_id` NUR der
+    lokal passende Plan (Hotel: rate-plan-genauer Preis, kein Spiegeln). Leer ohne
+    fields."""
     if not fields:
         return []
     targets = (
@@ -168,25 +169,82 @@ def _group_iso_days_to_ranges(days: set[str]) -> list[tuple[str, str]]:
 def _expand_restriction_values(
     base: dict[str, Any], date_from: date, date_to: date
 ) -> list[dict[str, Any]]:
-    """Einen Restriction-Wert mit Datumsbereich in per-DATUM-Werte expandieren.
+    """Einen Restriction-Wert als EINEN Range-Wert (date_from/date_to) ausgeben.
 
-    KRITISCH (live verifiziert): der Channex-`restrictions`-Endpoint erwartet PRO
-    Wert ein einzelnes `date`-Feld. `date_from`/`date_to` (bzw. ein `dates`-Array)
-    wird zwar mit HTTP 200 angenommen, aber STILL IGNORIERT — die Werte
-    persistieren nicht (das ist der Grund, warum min_stay/rate/CTA im Channex-
-    Kalender auf dem Default blieben, obwohl der Push „erfolgreich" war). Also:
-    ein value je Tag [date_from … date_to] inklusiv. Der Availability-Endpoint
-    ist NICHT betroffen (der akzeptiert Bereiche) — nur `restrictions`.
+    Der Channex-`restrictions`-Endpoint akzeptiert je Wert entweder ein einzelnes
+    `date` ODER das Paar `date_from`/`date_to` — seine eigene Validierung sagt:
+    "Should be included field date or fields pair date_from/date_to". Live gegen
+    staging verifiziert (PUT + Readback): ein Range-Wert setzt jeden Tag des
+    Bereichs, die Ränder bleiben unberührt.
+
+    Ein Wert je Tag zu senden ist zwar wirkungsgleich, bläht den Request aber um
+    den Faktor der Bereichslänge und verletzt die Zertifizierungsvorgabe
+    ("use date_range syntax with merged sequences instead of single-date objects",
+    Tests 3/4/7/8). Ein Einzeltag wird als `date` gesendet — Channex erwartet für
+    Single-Date-Updates genau das.
 
     `base` enthält property_id/rate_plan_id + die Restriction-Felder (rate,
     min_stay_*, stop_sell, closed_to_*, max_stay, days). date_from/date_to werden
     NICHT aus base gelesen — der Aufrufer übergibt sie explizit.
     """
+    if date_from == date_to:
+        return [{**base, "date": date_from.isoformat()}]
+    return [
+        {**base, "date_from": date_from.isoformat(), "date_to": date_to.isoformat()}
+    ]
+
+
+_WEEKDAY_NAMES = ["mo", "tu", "we", "th", "fr", "sa", "su"]  # Channex-Format, Mo=0
+
+
+def _apply_weekday_mask(
+    value: dict[str, Any], weekday_allow: set[int] | None
+) -> dict[str, Any] | None:
+    """Wochentags-Maske auf ein restriction-value anwenden. Range-values bekommen
+    das NATIVE Channex-`days`-Feld; ein Einzeltag-value (`date`) trägt kein
+    days-Feld und wird lokal geprüft (None = Tag fällt aus der Maske)."""
+    if weekday_allow is None:
+        return value
+    if "date" in value:
+        wd = date.fromisoformat(value["date"]).weekday()
+        return value if wd in weekday_allow else None
+    value["days"] = [n for i, n in enumerate(_WEEKDAY_NAMES) if i in weekday_allow]
+    return value
+
+
+def _exclude_superseded_days(
+    values: list[dict[str, Any]], superseded: set[str]
+) -> list[dict[str, Any]]:
+    """Von einer neueren Outbox-Zeile abgedeckte Tage TAG-GENAU aus restriction-
+    values entfernen. Einzeltag-values (`date`) werden gefiltert; Range-values
+    (`date_from`/`date_to`) werden um die abgedeckten Tage ZERSCHNITTEN und als
+    Teil-Ranges neu emittiert — ein reiner `date`-Filter griffe bei Ranges nicht
+    mehr (der superseded Tag bliebe im Range und überschriebe den neueren Wert).
+    Ein Wochentags-Feld (`days`) bleibt an Teil-Ranges erhalten; kollabiert ein
+    Range auf einen Einzeltag, wird der Wochentag lokal geprüft (ein `date`-value
+    trägt kein days-Feld)."""
+    if not superseded:
+        return values
     out: list[dict[str, Any]] = []
-    day = date_from
-    while day <= date_to:
-        out.append({**base, "date": day.isoformat()})
-        day += timedelta(days=1)
+    for v in values:
+        if "date" in v:
+            if v["date"] not in superseded:
+                out.append(v)
+            continue
+        keep = set(_iso_days(v["date_from"], v["date_to"])) - superseded
+        base = {k: x for k, x in v.items() if k not in ("date_from", "date_to")}
+        day_mask = base.pop("days", None)
+        for lo, hi in _group_iso_days_to_ranges(keep):
+            if lo == hi:
+                wd = date.fromisoformat(lo).weekday()
+                if day_mask is not None and _WEEKDAY_NAMES[wd] not in day_mask:
+                    continue
+                out.append({**base, "date": lo})
+                continue
+            sub = {**base, "date_from": lo, "date_to": hi}
+            if day_mask is not None:
+                sub["days"] = day_mask
+            out.append(sub)
     return out
 
 
@@ -250,8 +308,9 @@ class AriPushMixin:
                 base["min_stay_arrival"] = upd.min_stay_arrival
             if upd.stop_sell is not None:
                 base["stop_sell"] = 1 if upd.stop_sell else 0
-            # restrictions erfordert ein value je Datum — date_from/date_to wird
-            # von Channex still ignoriert (live verifiziert).
+            # Range-Syntax (date_from/date_to, Einzeltag als `date`) — von Channex
+            # dokumentiert und live per PUT+Readback verifiziert; Zertifizierungs-
+            # vorgabe: merged date_range statt Einzeltag-Objekten.
             rate_values.extend(
                 _expand_restriction_values(base, upd.date_from, upd.date_to)
             )
@@ -907,15 +966,17 @@ class AriPushMixin:
         stop_sell: bool,
         days: list[str] | None,
     ) -> list[dict[str, Any]]:
-        """Aus Rate-Plans + Spannen die per-Datum-Stop-Sell-values bauen.
-        Vergangene Tage werden auf heute geklemmt (Channex weist sie sonst ab);
-        `days` filtert optional auf Wochentage (mo…su → Python-weekday, Mo=0).
-        Statisch/pur, damit Direktpfad und Cron dieselbe Aufbaulogik teilen."""
+        """Aus Rate-Plans + Spannen die Stop-Sell-values bauen (Range-Syntax).
+        Vergangene Tage werden auf heute geklemmt (Channex weist sie sonst ab).
+        `days` filtert optional auf Wochentage (mo…su): an Range-values als
+        NATIVES Channex-`days`-Feld (laut ARI-Doku unterstützt — "List of days
+        which should be affected by update"); ein Einzeltag-value (`date`) trägt
+        kein days-Feld und wird lokal geprüft. Statisch/pur, damit Direktpfad und
+        Cron dieselbe Aufbaulogik teilen."""
         today = date.today()
-        weekday_allow = None
-        if days:
-            names = ["mo", "tu", "we", "th", "fr", "sa", "su"]
-            weekday_allow = {i for i, n in enumerate(names) if n in days}
+        weekday_allow = (
+            {i for i, n in enumerate(_WEEKDAY_NAMES) if n in days} if days else None
+        )
         values: list[dict[str, Any]] = []
         for mapping in plans:
             base: dict[str, Any] = {
@@ -926,17 +987,12 @@ class AriPushMixin:
             for span_start, span_end in spans:
                 if span_end < today:
                     continue
-                # Pro Datum expandieren (restrictions ignoriert Bereiche still) und
-                # den optionalen Wochentag-Filter direkt hier anwenden — `days` am
-                # value wirkt beim per-Datum-Format nicht mehr.
                 for v in _expand_restriction_values(
                     base, max(span_start, today), span_end
                 ):
-                    if weekday_allow is not None:
-                        wd = date.fromisoformat(v["date"]).weekday()
-                        if wd not in weekday_allow:
-                            continue
-                    values.append(v)
+                    masked = _apply_weekday_mask(v, weekday_allow)
+                    if masked is not None:
+                        values.append(masked)
         return values
 
     def push_stop_sell_for_property(
@@ -1016,11 +1072,11 @@ class AriPushMixin:
             )
             return True
 
-    # Channex akzeptiert viele Werte je Restrictions-Request; da restrictions
-    # pro-DATUM gesendet werden müssen (date_from/date_to wird still ignoriert),
-    # sammeln wir alle Tage in wenige Batch-Requests je ≤500 values — statt
-    # hunderter Einzel-Requests (sonst 429-Flut, Channex-Skill: „batch, hundreds
-    # of small requests per minute is abuse-shaped"). 365 Tage = 1 Request.
+    # Channex akzeptiert viele Werte je Restrictions-Request; values sind Range-
+    # komprimiert (date_from/date_to), der Chunk ist nur der Backstop gegen
+    # pathologisch viele Segmente — statt hunderter Einzel-Requests (429-Flut,
+    # Channex-Skill: „batch, hundreds of small requests per minute is
+    # abuse-shaped"). Regelfall: EIN Request.
     _RESTRICTIONS_CHUNK = 500
 
     def push_rates_batch(
@@ -1092,7 +1148,7 @@ class AriPushMixin:
                 if min_stay is not None:
                     base["min_stay_arrival"] = min_stay
                     base["min_stay_through"] = min_stay
-                # Pro Datum expandieren — restrictions ignoriert date_from/date_to.
+                # Range-Syntax (Einzeltag als `date`).
                 values.extend(
                     _expand_restriction_values(
                         base, _as_date(seg["date_from"]), _as_date(seg["date_to"])
@@ -1379,68 +1435,100 @@ class AriPushMixin:
         property_id: str,
         rows: list[dict[str, Any]],
     ) -> None:
-        """Eine HETEROGENE Liste von Restriktions-Zeilen eines Objekts in EINEM
-        (bzw. wenigen gechunkten) Channex-Restrictions-Request pushen — jede Zeile
-        mit eigenem Zeitraum UND beliebiger Kombination aus rate/min_stay/max_stay/
-        CTA/CTD/stop_sell. Channex erlaubt gemischte value-Zeilen in einem
-        POST /restrictions, deshalb deckt EINE Aktion mehrere verschiedene Preise/
-        Restriktionen ab (Zertifizierung Test 3-8: „1 API call"). Das Mapping wird
-        EINMAL aufgelöst; die Absicht wird VOR dem Push in der Restriktions-Outbox
-        persistiert (Cron-Backstop). No-op ohne Verbindung/Zeilen.
+        """Eine HETEROGENE Liste von Restriktions-Zeilen EINES Objekts in einem
+        Channex-Request pushen — dünner Wrapper um push_restriction_rows_multi
+        (ein Objekt = eine Gruppe). Jede Zeile: {date_from, date_to (inkl.),
+        rate_cents?, min_stay?, max_stay?, closed_to_arrival?,
+        closed_to_departure?, stop_sell?, rate_plan_id?}."""
+        self.push_restriction_rows_multi(tenant_id, {property_id: rows})
 
-        Jede Zeile: {date_from, date_to (inkl.), rate_cents?, min_stay?, max_stay?,
-        closed_to_arrival?, closed_to_departure?, stop_sell?}."""
-        if not self._channex.is_configured or self._db is None or not rows:
+    def push_restriction_rows_multi(
+        self,
+        tenant_id: str,
+        rows_by_property: dict[str, list[dict[str, Any]]],
+    ) -> None:
+        """Heterogene Restriktions-Zeilen MEHRERER Objekte (Hotel: Zimmer) in so
+        wenigen Channex-Calls wie möglich pushen: die values werden je
+        channex_property_id gebündelt — teilen sich die Zimmer EINE Channex-
+        Property (0158), ist die gesamte Aktion EIN POST /restrictions
+        (Zertifizierung Tests 3-8: „1 API call" über Room-Types hinweg). Channex
+        erlaubt nur EINE property_id je Request („Only one ID per request"),
+        daher je Channex-Property genau ein Call. Die Absicht wird je Objekt VOR
+        dem Push in der Restriktions-Outbox persistiert (Cron-Backstop; der
+        Retry läuft dann ggf. je Objekt einzeln — Korrektheit vor Call-Zahl)."""
+        if not self._channex.is_configured or self._db is None or not rows_by_property:
             return
-        if not self._is_channex_managed(self._db, tenant_id, property_id):
-            return  # nicht bei Channex angelegt → No-op
-        self._trace_step(
-            tenant_id=tenant_id, property_id=property_id, step="restrictions"
-        )
-        seg_from = min(_as_iso(r["date_from"]) for r in rows)
-        seg_to = max(_as_iso(r["date_to"]) for r in rows)
-        outbox_id = self._enqueue_restriction_outbox(
-            tenant_id, property_id, "restriction_rows",
-            {"rows": rows}, date.fromisoformat(seg_from), date.fromisoformat(seg_to),
-        )
-        plans = self._resolve_channex_rate_plans(self._db, tenant_id, property_id)
-        if not plans:
-            # managed, aber Rate-Plan-Mapping fehlt noch → 'pending', Cron zieht nach.
-            log.info(
-                "restriction_rows_deferred_no_rate_plan",
-                tenant_id=tenant_id, property_id=property_id,
-            )
-            return
-        values: list[dict[str, Any]] = []
-        for row in rows:
-            fields = self._restriction_row_fields(row)
-            if not fields:
+        db = self._db
+        grouped: dict[str, dict[str, list[Any]]] = {}
+        for property_id, rows in rows_by_property.items():
+            if not rows or not self._is_channex_managed(db, tenant_id, property_id):
                 continue
-            values.extend(
-                _restriction_values(
-                    plans, fields, _as_date(row["date_from"]), _as_date(row["date_to"]),
-                    rate_plan_id=row.get("rate_plan_id"),
-                )
+            outbox_id = self._enqueue_restriction_outbox(
+                tenant_id, property_id, "restriction_rows", {"rows": rows},
+                min(_as_date(r["date_from"]) for r in rows),
+                max(_as_date(r["date_to"]) for r in rows),
             )
-        if not values:
-            self._mark_restriction_outbox(outbox_id, "done")
+            plans = self._resolve_channex_rate_plans(db, tenant_id, property_id)
+            if not plans:
+                # BUG 9: managed, aber Rate-Plan-Mapping fehlt noch → Zeile bleibt
+                # 'pending', der Cron zieht sie nach.
+                log.info(
+                    "restriction_rows_deferred_no_rate_plan",
+                    tenant_id=tenant_id, property_id=property_id,
+                )
+                continue
+            values: list[dict[str, Any]] = []
+            for row in rows:
+                fields = self._restriction_row_fields(row)
+                if not fields:
+                    continue
+                values.extend(
+                    _restriction_values(
+                        plans, fields, _as_date(row["date_from"]),
+                        _as_date(row["date_to"]),
+                        rate_plan_id=row.get("rate_plan_id"),
+                    )
+                )
+            bucket = grouped.setdefault(
+                plans[0]["channex_property_id"],
+                {"values": [], "outbox": [], "pids": []},
+            )
+            bucket["values"].extend(values)
+            bucket["outbox"].append(outbox_id)
+            bucket["pids"].append(property_id)
+        for bucket in grouped.values():
+            self._push_restriction_bucket(tenant_id, bucket)
+
+    def _push_restriction_bucket(
+        self, tenant_id: str, bucket: dict[str, list[Any]]
+    ) -> None:
+        """Die gebündelten values EINER Channex-Property senden und die
+        zugehörigen Outbox-Zeilen abschließen. Bei Channex-Fehler bleiben ALLE
+        Zeilen des Buckets 'pending' (Cron-Backstop je Objekt)."""
+        if not bucket["values"]:
+            for oid in bucket["outbox"]:
+                self._mark_restriction_outbox(oid, "done")
             return
-        pushed = 0
+        self._trace_step(
+            tenant_id=tenant_id, property_id=bucket["pids"][0], step="restrictions"
+        )
         try:
-            for i in range(0, len(values), self._RESTRICTIONS_CHUNK):
-                chunk = values[i : i + self._RESTRICTIONS_CHUNK]
-                self._channex.update_restrictions(chunk)
-                pushed += len(chunk)
-            self._mark_restriction_outbox(outbox_id, "done")
+            for i in range(0, len(bucket["values"]), self._RESTRICTIONS_CHUNK):
+                self._channex.update_restrictions(
+                    bucket["values"][i : i + self._RESTRICTIONS_CHUNK]
+                )
+            for oid in bucket["outbox"]:
+                self._mark_restriction_outbox(oid, "done")
             log.info(
                 "restriction_rows_push_done",
-                tenant_id=tenant_id, property_id=property_id, values=pushed,
+                tenant_id=tenant_id, properties=len(bucket["pids"]),
+                values=len(bucket["values"]),
             )
         except ChannexError as exc:
-            # Outbox-Zeile bleibt 'pending' (Cron-Backstop).
+            # Outbox-Zeilen bleiben 'pending' (Cron-Backstop).
             log.warning(
                 "restriction_rows_push_failed",
-                tenant_id=tenant_id, property_id=property_id, error=exc.message,
+                tenant_id=tenant_id, error=exc.message,
             )
 
     @staticmethod
@@ -1682,11 +1770,9 @@ class AriPushMixin:
             )
             try:
                 values = self._restriction_values_from_row(r, plans)
-                # Von einer neueren Zeile abgedeckte Tage herausfiltern (tag-genau).
-                if superseded_days:
-                    values = [
-                        v for v in values if v.get("date") not in superseded_days
-                    ]
+                # Von einer neueren Zeile abgedeckte Tage herausfiltern (tag-genau,
+                # Range-values werden dafür zerschnitten).
+                values = _exclude_superseded_days(values, superseded_days)
                 for i in range(0, len(values), self._RESTRICTIONS_CHUNK):
                     self._channex.update_restrictions(
                         values[i : i + self._RESTRICTIONS_CHUNK]

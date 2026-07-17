@@ -503,11 +503,14 @@ export function CalendarBoard({
   // Hotel: Preispläne des Objekts, für das der Bulk-Dialog offen ist — damit eine
   // Restriktions-Zeile gezielt EINEN Plan treffen kann (Twin/BAR ≠ Double/B&B)
   // statt an allen Plänen gespiegelt zu werden. FeWo: bleibt leer.
-  const [bulkPlans, setBulkPlans] = useState<{ id: string; label: string }[]>([]);
-  // Die Preispläne des Objekts laden, sobald der Bulk-Dialog aufgeht — ein Objekt
-  // kann mehrere Rate-Pläne haben (z. B. BAR/B&B). Eine Restriktions-Zeile kann so
-  // gezielt EINEN Plan treffen statt an allen gespiegelt zu werden. Nur bei mehr
-  // als einem Plan sinnvoll (ein Plan = keine Auswahl nötig).
+  const [bulkPlans, setBulkPlans] = useState<
+    { id: string; label: string; propertyId?: string }[]
+  >([]);
+  // Die Preispläne laden, sobald der Bulk-Dialog aufgeht. Hotel: die Pläne ALLER
+  // Zimmer (mit Zimmer-Präfix + propertyId) — eine Bulk-Aktion kann Zeilen über
+  // mehrere Zimmer haben, die als EIN Portale-Call gesendet werden (Zert-Tests
+  // 3-8; die Zimmer teilen sich eine Channex-Property). FeWo: nur das eine
+  // Objekt. Nur bei mehr als einem Plan sinnvoll (ein Plan = keine Auswahl).
   useEffect(() => {
     if (!bulk) {
       setBulkPlans([]);
@@ -516,19 +519,29 @@ export function CalendarBoard({
     let cancelled = false;
     const from = bulk.checkIn;
     const to = key(addDays(new Date(`${bulk.checkIn}T00:00:00`), 1));
-    void getRateGrid(bulk.pid, from, to).then((res) => {
-      if (cancelled || !res.ok) return;
-      const plans = res.data.plans;
-      setBulkPlans(
-        plans.length > 1
-          ? plans.map((p) => ({ id: p.id, label: p.name }))
-          : [],
-      );
+    const targets =
+      accommodationType === "hotel"
+        ? properties.map((p) => ({ id: p.id, title: p.title }))
+        : [{ id: bulk.pid, title: "" }];
+    void Promise.all(
+      targets.map(async (t) => {
+        const res = await getRateGrid(t.id, from, to);
+        if (!res.ok) return [];
+        return res.data.plans.map((p) => ({
+          id: p.id,
+          label: targets.length > 1 ? `${t.title} · ${p.name}` : p.name,
+          propertyId: t.id,
+        }));
+      }),
+    ).then((lists) => {
+      if (cancelled) return;
+      const plans = lists.flat();
+      setBulkPlans(plans.length > 1 ? plans : []);
     });
     return () => {
       cancelled = true;
     };
-  }, [bulk, accommodationType]);
+  }, [bulk, accommodationType, properties]);
 
   // Sperre-aufheben-Popup: geklickter Sperr-Balken (Objekt + Zeitraum, end exkl.).
   const [unblockAt, setUnblockAt] = useState<
