@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Segmented } from "@/components/ui/segmented";
+import { getBoard } from "@/lib/calendar";
 import { formatCurrency } from "@/lib/currency";
 import {
   getRateGrid,
@@ -64,6 +65,10 @@ function derivedOffsetLabel(plan: {
 }
 
 type Mode = "prices" | "minstay" | "restrictions";
+// Verfügbarkeits-Zustand eines Tages in der Kopfzeile. "stop" (Stop-Sell) ist
+// bewusst ein EIGENER Zustand: der Tag ist frei, wird aber auf allen Kanälen
+// nicht verkauft — das ist etwas anderes als belegt oder manuell gesperrt.
+type AvailKind = "open" | "booked" | "blocked" | "stop";
 // Drei-Wege-Auswahl im Restriktions-Editor: unverändert lassen gibt es hier
 // nicht — "none" heißt „kein Override" (Default offen).
 type TriState = "none" | "on" | "off";
@@ -87,6 +92,11 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
   >(new Map());
   const [mode, setMode] = useState<Mode>("prices");
   const [busy, setBusy] = useState(false);
+  // Verfügbarkeit des Objekts je Tag (frei/belegt/gesperrt) — read-only Kopfzeile
+  // über den Plan-Zeilen. Belegung wird im Belegungsplan gepflegt, NICHT hier;
+  // umgekehrt werden Preise NUR hier gepflegt.
+  const [avail, setAvail] = useState<Map<string, AvailKind>>(new Map());
+  const [availOpen, setAvailOpen] = useState(true);
 
   // Monatsfenster [first, firstNext) — /rates/grid ist range-begrenzt.
   const first = useMemo(
@@ -139,6 +149,20 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
     );
     setMinStays(new Map(loaded.map(([id, ms]) => [id, ms])));
     setRestr(new Map(loaded.map(([id, , rs]) => [id, rs])));
+
+    // Verfügbarkeit derselben Spanne (ein Objekt) für die read-only Kopfzeile.
+    // Stop-Sell gewinnt über "frei": der Tag ist buchbar, wird aber nicht
+    // verkauft — das muss man beim Preise-Pflegen sehen.
+    const board = await getBoard([propertyId], first, firstNext);
+    if (board.ok) {
+      const item = board.data.items.find((i) => i.property_id === propertyId);
+      const next = new Map<string, AvailKind>();
+      for (const d of item?.days ?? []) next.set(d.date, d.status);
+      for (const s of item?.stop_sell ?? []) {
+        if (next.get(s.date) === "open") next.set(s.date, "stop");
+      }
+      setAvail(next);
+    }
   }, [propertyId, first, firstNext]);
 
   useEffect(() => {
@@ -155,6 +179,10 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
   useRealtime({ table: "rate_plan_sync_state", onChange: reload });
   useRealtime({ table: "price_overrides", onChange: reload });
   useRealtime({ table: "dynamic_prices", onChange: reload });
+  // Speisen die Verfügbarkeits-Kopfzeile (Belegung/Sperren/Stop-Sell).
+  useRealtime({ table: "availability", onChange: reload });
+  useRealtime({ table: "reservations", onChange: reload });
+  useRealtime({ table: "stop_sell", onChange: reload });
 
   // Drag-Auswahl innerhalb EINER Plan-Zeile → Editor öffnen.
   const drag = useRef<{ planId: string; from: string; to: string } | null>(null);
@@ -231,14 +259,24 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
     return () => window.removeEventListener("mouseup", onUp);
   }, [grid, mode, restr]);
 
-  const closeEditor = () => {
+  const closeEditor = useCallback(() => {
     setEditor(null);
     setDragSel(null);
     setValue("");
     setCtaSel("none");
     setCtdSel("none");
     setWeekdaySel([]);
-  };
+  }, []);
+
+  // Escape schließt das Popup (Modal-Standard) — nur solange nicht gespeichert wird.
+  useEffect(() => {
+    if (!editor) return undefined;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !busy) closeEditor();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [editor, busy, closeEditor]);
 
   const apply = async (reset: boolean) => {
     if (!editor) return;
@@ -370,79 +408,135 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
         />
       </div>
 
-      {/* Bulk-Editor der aufgezogenen Auswahl (Booking-Muster: Zeitraum + Wert). */}
+      {/* Bulk-Editor der aufgezogenen Auswahl als Popup (SiteMinder-Quick-Update):
+          als flache Leiste brach der Restriktions-Modus zweizeilig um und die
+          Auswahl im Grid geriet aus dem Blick. Modal, zentriert, Icon je Modus. */}
       {editor && (
-        <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-3">
-          <span className="text-sm font-medium">{editor.planName}</span>
-          <span className="text-sm text-muted-foreground">
-            {editor.from} – {editor.to}
-          </span>
-          {/* Wochentagsmaske (SiteMinder Quick-Bulk): leer = alle Tage im Bereich. */}
-          <div className="flex items-center gap-1" role="group" aria-label={t("ratesView.weekdaysLabel")}>
-            {[0, 1, 2, 3, 4, 5, 6].map((wd) => {
-              const active = weekdaySel.includes(wd);
-              return (
-                <button
-                  key={wd}
-                  type="button"
-                  onClick={() =>
-                    setWeekdaySel((s) =>
-                      s.includes(wd) ? s.filter((x) => x !== wd) : [...s, wd],
-                    )
-                  }
-                  className={`size-7 rounded-full text-xs font-medium transition-colors ${
-                    active
-                      ? "bg-accent text-white"
-                      : "bg-secondary text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  {t(`calendarBoard.weekdays.${WD_KEYS[(wd + 1) % 7]}`)}
-                </button>
-              );
-            })}
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          onMouseDown={(e) => {
+            // Klick auf den Schleier schließt; Klicks im Dialog nicht.
+            if (e.target === e.currentTarget && !busy) closeEditor();
+          }}
+        >
+        <div className="flex w-full max-w-xl flex-col gap-4 rounded-2xl border border-border bg-card p-6 shadow-2xl">
+          <div className="flex items-start gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+              <Icon
+                icon={
+                  mode === "prices"
+                    ? "ph:tag"
+                    : mode === "minstay"
+                      ? "ph:moon-stars"
+                      : "ph:lock-key"
+                }
+                className="size-5"
+              />
+            </span>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-display text-lg font-extrabold">
+                {mode === "prices"
+                  ? t("ratesView.modePrices")
+                  : mode === "minstay"
+                    ? t("ratesView.modeMinStay")
+                    : t("ratesView.modeRestrictions")}
+              </h3>
+              <p className="truncate text-sm text-muted-foreground">
+                {editor.planName} · {editor.from} – {editor.to}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={closeEditor}
+              disabled={busy}
+              className="shrink-0 text-muted-foreground hover:text-foreground"
+              aria-label={t("ratesView.cancel")}
+            >
+              <Icon icon="ph:x" className="size-5" />
+            </button>
           </div>
+
+          {/* Wochentagsmaske (SiteMinder Quick-Bulk): leer = alle Tage im Bereich. */}
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium">
+              {t("ratesView.weekdaysLabel")}
+            </span>
+            <div className="flex items-center gap-1" role="group" aria-label={t("ratesView.weekdaysLabel")}>
+              {[0, 1, 2, 3, 4, 5, 6].map((wd) => {
+                const active = weekdaySel.includes(wd);
+                return (
+                  <button
+                    key={wd}
+                    type="button"
+                    onClick={() =>
+                      setWeekdaySel((s) =>
+                        s.includes(wd) ? s.filter((x) => x !== wd) : [...s, wd],
+                      )
+                    }
+                    className={`size-8 rounded-full text-xs font-medium transition-colors ${
+                      active
+                        ? "bg-accent text-white"
+                        : "bg-secondary text-muted-foreground hover:bg-muted"
+                    }`}
+                  >
+                    {t(`calendarBoard.weekdays.${WD_KEYS[(wd + 1) % 7]}`)}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {mode === "restrictions" ? (
-            <>
+            <div className="flex flex-col gap-3">
               {/* CTA/CTD als Drei-Wege (— = kein Override, An = gesperrt, Aus =
                   ausdrücklich offen) + Max-Stay. Vorbefüllt mit den aktuellen
                   Werten — ändern überschreibt, „Zurücknehmen" löscht den Override. */}
-              <span className="flex items-center gap-1.5 text-sm">
-                <Icon icon="ph:sign-in" className="size-4 text-muted-foreground" />
-                {t("monthGridView.arrivalBlocked")}
-              </span>
-              <Segmented
-                value={ctaSel}
-                options={[
-                  { value: "none", label: "—" },
-                  { value: "on", label: t("ratesView.on") },
-                  { value: "off", label: t("ratesView.off") },
-                ]}
-                onChange={(v) => setCtaSel(v as TriState)}
-              />
-              <span className="flex items-center gap-1.5 text-sm">
-                <Icon icon="ph:sign-out" className="size-4 text-muted-foreground" />
-                {t("monthGridView.departureBlocked")}
-              </span>
-              <Segmented
-                value={ctdSel}
-                options={[
-                  { value: "none", label: "—" },
-                  { value: "on", label: t("ratesView.on") },
-                  { value: "off", label: t("ratesView.off") },
-                ]}
-                onChange={(v) => setCtdSel(v as TriState)}
-              />
-              <Input
-                type="number"
-                min={0}
-                step={1}
-                inputMode="numeric"
-                placeholder={t("ratesView.maxStayLabel")}
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                className="w-36"
-              />
-            </>
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex items-center gap-1.5 text-sm">
+                  <Icon icon="ph:sign-in" className="size-4 text-muted-foreground" />
+                  {t("monthGridView.arrivalBlocked")}
+                </span>
+                <Segmented
+                  value={ctaSel}
+                  options={[
+                    { value: "none", label: "—" },
+                    { value: "on", label: t("ratesView.on") },
+                    { value: "off", label: t("ratesView.off") },
+                  ]}
+                  onChange={(v) => setCtaSel(v as TriState)}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="flex items-center gap-1.5 text-sm">
+                  <Icon icon="ph:sign-out" className="size-4 text-muted-foreground" />
+                  {t("monthGridView.departureBlocked")}
+                </span>
+                <Segmented
+                  value={ctdSel}
+                  options={[
+                    { value: "none", label: "—" },
+                    { value: "on", label: t("ratesView.on") },
+                    { value: "off", label: t("ratesView.off") },
+                  ]}
+                  onChange={(v) => setCtdSel(v as TriState)}
+                />
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-sm">{t("ratesView.maxStayLabel")}</span>
+                <Input
+                  type="number"
+                  min={0}
+                  step={1}
+                  inputMode="numeric"
+                  placeholder={t("ratesView.maxStayLabel")}
+                  value={value}
+                  onChange={(e) => setValue(e.target.value)}
+                  className="w-36"
+                />
+              </div>
+            </div>
           ) : (
             <Input
               type="number"
@@ -457,25 +551,32 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
               }
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              className="w-44"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !busy) void apply(false);
+              }}
             />
           )}
-          <Button size="sm" onClick={() => void apply(false)} disabled={busy}>
-            {t("ratesView.apply")}
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => void apply(true)}
-            disabled={busy}
-          >
-            {mode === "prices"
-              ? t("ratesView.resetToBase")
-              : t("ratesView.resetToDefault")}
-          </Button>
-          <Button size="sm" variant="ghost" onClick={closeEditor} disabled={busy}>
-            {t("ratesView.cancel")}
-          </Button>
+
+          <div className="flex items-center justify-between gap-2 border-t pt-4">
+            <Button
+              variant="ghost"
+              onClick={() => void apply(true)}
+              disabled={busy}
+            >
+              {mode === "prices"
+                ? t("ratesView.resetToBase")
+                : t("ratesView.resetToDefault")}
+            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={closeEditor} disabled={busy}>
+                {t("ratesView.cancel")}
+              </Button>
+              <Button onClick={() => void apply(false)} disabled={busy}>
+                {t("ratesView.apply")}
+              </Button>
+            </div>
+          </div>
+        </div>
         </div>
       )}
 
@@ -514,20 +615,35 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
             })}
           </div>
 
-          {grid?.plans.map((plan) => (
-            <PlanRow
-              key={plan.id}
-              plan={plan}
-              days={days}
-              mode={mode}
-              minStays={minStays}
-              restrictions={restr}
-              inDrag={inDrag}
-              onDown={onDown}
-              onEnter={onEnter}
-              onResync={(id) => void resync(id)}
-            />
-          ))}
+          {/* Objekt-Kopfzeile (Plan 5.1): Objekt-Titel + read-only
+              Verfügbarkeits-Punkte, darunter die Plan-Zeilen. Der Titel klappt
+              den Objekt-Block auf/zu; die Belegung selbst wird im Belegungsplan
+              gepflegt, hier ist sie nur Kontext beim Preise-Setzen. */}
+          <AvailabilityRow
+            title={
+              properties.find((pr) => pr.id === propertyId)?.title ?? ""
+            }
+            days={days}
+            avail={avail}
+            open={availOpen}
+            onToggle={() => setAvailOpen((o) => !o)}
+          />
+
+          {availOpen &&
+            grid?.plans.map((plan) => (
+              <PlanRow
+                key={plan.id}
+                plan={plan}
+                days={days}
+                mode={mode}
+                minStays={minStays}
+                restrictions={restr}
+                inDrag={inDrag}
+                onDown={onDown}
+                onEnter={onEnter}
+                onResync={(id) => void resync(id)}
+              />
+            ))}
         </div>
         {grid && grid.plans.length === 0 && (
           <p className="p-6 text-center text-sm text-muted-foreground">
@@ -540,6 +656,78 @@ export function CalendarRatesView({ properties }: { properties: Prop[] }) {
           </p>
         )}
       </div>
+    </div>
+  );
+}
+
+// Farben wie im Belegungsplan (SEG_STYLE) — dieselbe Wahrheit soll überall
+// gleich aussehen. Stop-Sell = warning, belegt = accent, gesperrt = neutral.
+const AVAIL_DOT: Record<AvailKind, string> = {
+  open: "bg-success",
+  booked: "bg-accent",
+  blocked: "bg-neutral-700",
+  stop: "bg-warning",
+};
+
+/** Objekt-Kopfzeile: Titel (klappt die Plan-Zeilen auf/zu) + read-only
+ *  Verfügbarkeits-Punkte je Tag. Belegung/Sperren werden im Belegungsplan
+ *  gepflegt — hier nur sichtbar, nie editierbar. */
+function AvailabilityRow({
+  title,
+  days,
+  avail,
+  open,
+  onToggle,
+}: {
+  title: string;
+  days: string[];
+  avail: Map<string, AvailKind>;
+  open: boolean;
+  onToggle: () => void;
+}) {
+  const t = useTranslations("calendar");
+  const label: Record<AvailKind, string> = {
+    open: t("calendarBoard.status.open"),
+    booked: t("calendarBoard.status.booked"),
+    blocked: t("calendarBoard.status.blocked"),
+    stop: t("calendarBoard.status.stopSell"),
+  };
+  return (
+    <div className="flex border-b bg-secondary/30">
+      {/* Die sticky Spalte MUSS deckend sein (bg-card wie die Plan-Zeilen):
+          mit einem halbtransparenten Hintergrund scheinen die wegscrollenden
+          Tagesspalten durch das Label hindurch. */}
+      <div
+        className="sticky left-0 z-20 flex shrink-0 items-center gap-2 border-r bg-card px-4 py-2"
+        style={{ width: `${LABEL}rem` }}
+      >
+        <button
+          type="button"
+          onClick={onToggle}
+          title={t("ratesView.availabilityLabel")}
+          className="flex min-w-0 items-center gap-1.5 text-sm font-medium hover:text-accent"
+          aria-expanded={open}
+        >
+          <Icon
+            icon={open ? "ph:caret-down" : "ph:caret-right"}
+            className="size-4 shrink-0"
+          />
+          <span className="truncate">{title}</span>
+        </button>
+      </div>
+      {days.map((day) => {
+        const kind = avail.get(day) ?? "open";
+        return (
+          <div
+            key={day}
+            title={label[kind]}
+            className="flex shrink-0 items-center justify-center border-r py-2"
+            style={{ width: `${COL}rem` }}
+          >
+            <span className={`size-2.5 rounded-full ${AVAIL_DOT[kind]}`} />
+          </div>
+        );
+      })}
     </div>
   );
 }

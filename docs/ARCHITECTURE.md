@@ -249,6 +249,7 @@ erDiagram
     TENANT ||--o{ GUEST : has
     TENANT ||--o{ RESERVATION : has
     PROPERTY ||--o{ RATE_PLAN : has
+    RATE_PLAN ||--o{ RATE_PLAN : "Basis-Plan (derived, keine Kaskade)"
     PROPERTY ||--|{ AVAILABILITY : tracks
     PROPERTY ||--o{ RESERVATION : "is booked in"
     GUEST ||--o{ RESERVATION : makes
@@ -295,8 +296,13 @@ erDiagram
         uuid id PK
         uuid property_id FK
         numeric base_price
+        text currency
         int min_stay
         jsonb season_rules
+        enum rate_mode "manual|derived (0157)"
+        uuid derived_from_rate_plan_id FK "Basis-Plan, on delete restrict"
+        numeric offset_amount "signiert; erst Betrag …"
+        numeric offset_percent "… dann Prozent"
     }
     AVAILABILITY {
         uuid property_id FK
@@ -564,6 +570,18 @@ Preise erschienen nicht im Kalender/Quote. Jetzt gibt es **einen** Resolver
   **manueller `price_overrides`(Tag) > `dynamic_prices` (Regel-Engine) >
   Wochentagspreis > `rate_plans.base_price`**; ohne Preis `None` (kein erfundener
   Fallback).
+- **Abgeleitete Rate-Pläne (`0157`, SiteMinder-Modell):** ein Plan ist entweder
+  `rate_mode='manual'` (obige Priorität) oder `rate_mode='derived'` — dann folgt
+  sein Preis AUSSCHLIESSLICH dem Basis-Plan desselben Objekts:
+  `preis(d) = round2((parent_effektiv(d) + offset_amount) × (1 + offset_percent/100))`
+  — erst Betrag, dann Prozent (SiteMinder-Reihenfolge), kaufmännisch auf 2
+  Nachkommastellen. Property-weite override/dynamic/weekday gelten NUR für
+  `manual` (sonst zwei konkurrierende Quellen). Ergebnis ≤ 0 oder Parent-Tag ohne
+  Preis → kein Preis (fail-closed, kein Clamp). Keine Kaskade: der Parent MUSS
+  `manual` sein (Service 422); das Kind erbt die Parent-Währung; Datumspreise auf
+  derived Plänen sind verboten (422). Die Ableitung rechnet LOKAL — die
+  Channex-Rate-Plans bleiben ALLE `rate_mode: manual` (SiteMinder-PMS-Regel: nie
+  in zwei Systemen ableiten). Plan/Belege: `docs/rate-plan-derived-plan.md`.
 - `quote(property_id, range, guests, channel)` → vollständige Aufschlüsselung:
   Effektiv-Tagespreise + Längenpreis (verdrängt Basispreis), Kurzaufenthalts- und
   Extra-Gast-Aufschlag, Kanal-Markup (direct = 0), Gebühren, Aktionen (Rabatt),

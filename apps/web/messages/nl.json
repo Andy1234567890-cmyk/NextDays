@@ -4139,7 +4139,19 @@
       "baseLabelEditorTitle": "Benaming voor de basisprijs",
       "baseLabelEditorSubtitle": "Naam waaronder je basisprijs op de website verschijnt.",
       "baseLabelPlaceholder": "bijv. Standaardprijs",
-      "multiPlanHint": "Meerdere prijsplannen (bijv. BAR/B&B) — de prijzen worden per datum beheerd in de kalenderweergave ‘Prijzen’."
+      "multiPlanHint": "Meerdere prijsplannen (bijv. BAR/B&B) — de prijzen worden per datum beheerd in de kalenderweergave ‘Prijzen’.",
+      "plansTitle": "Prijsplannen",
+      "plansHint": "Prijzen worden per datum beheerd in de kalender.",
+      "planCreate": "Prijsplan aanmaken",
+      "planModeManual": "Handmatig",
+      "planModeDerived": "Afgeleid van {parent} · {offset}",
+      "planDerivedPrice": "berekend",
+      "planMinStay": "Min. {nights} nachten",
+      "planDelete": "Verwijderen",
+      "planDeleted": "Prijsplan verwijderd.",
+      "planCreated": "Prijsplan aangemaakt.",
+      "openCalendar": "Prijzen beheren",
+      "planConfirmDelete": "Dit prijsplan echt verwijderen? De datumprijzen van het plan worden mee verwijderd."
     },
     "policiesForm": {
       "title": "Beleid",
@@ -4195,6 +4207,35 @@
       "paymentSummarySplit": "{percent} % bij boeking, restbedrag {days} dagen vóór aankomst.",
       "localizedEditorSubtitle": "Maak de tekst en vertaal deze indien nodig voor je gasten.",
       "localizedEditorPlaceholder": "{title} invoeren …"
+    },
+    "ratePlanWizard": {
+      "title": "Prijsplan aanmaken",
+      "close": "Sluiten",
+      "nameLabel": "Naam",
+      "namePlaceholder": "bijv. Bed & Breakfast",
+      "nameHint": "De naam verschijnt ook bij de portalen en moet per object uniek zijn.",
+      "nameTaken": "Deze naam bestaat al bij dit object.",
+      "minStayLabel": "Minimumverblijf (nachten)",
+      "minStayHint": "Standaard voor alle dagen — afzonderlijke dagen beheer je later in de kalender.",
+      "pricingTitle": "Prijsopbouw",
+      "currencyFixed": "Valuta: {currency} (overgenomen van het object)",
+      "modeManual": "Prijzen handmatig beheren",
+      "modeDerived": "Afleiden van een basisplan",
+      "noParentAvailable": "Om af te leiden is eerst een handmatig beheerd plan nodig.",
+      "basePriceLabel": "Basisprijs",
+      "parentLabel": "Basisplan",
+      "amountLabel": "Bedrag",
+      "percentLabel": "Percentage",
+      "increase": "Verhogen",
+      "decrease": "Verlagen",
+      "orderHint": "Volgorde: eerst het bedrag, dan het percentage.",
+      "previewLine": "Voorbeeld: basisplan {base} → dit plan {result}",
+      "reviewDerived": "Afgeleid van {parent} · {base} → {result}",
+      "back": "Terug",
+      "next": "Verder",
+      "cancel": "Annuleren",
+      "save": "Aanmaken",
+      "saving": "Wordt aangemaakt …"
     }
   },
   "calendar": {
@@ -4372,12 +4413,17 @@
         "dynamic": "Dynamische prijs",
         "weekday": "Weekdagprijs",
         "base": "Basisprijs van het tariefplan",
+        "derived": "Afgeleid van het basisplan",
         "none": "Geen prijs ingesteld"
       },
       "modeRestrictions": "Restricties",
       "on": "Aan",
       "off": "Uit",
-      "maxStayLabel": "Max. verblijf"
+      "maxStayLabel": "Max. verblijf",
+      "derivedFrom": "Afgeleid van {parent} · {offset}",
+      "derivedReadOnly": "Afgeleide prijs — volgt het basisplan",
+      "weekdaysLabel": "Weekdagen",
+      "availabilityLabel": "Beschikbaarheid"
     }
   },
   "seasons": {

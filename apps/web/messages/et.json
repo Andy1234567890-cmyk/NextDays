@@ -4139,7 +4139,19 @@
       "baseLabelEditorTitle": "Põhihinna nimetus",
       "baseLabelEditorSubtitle": "Nimi, mille all sinu põhihind veebisaidil kuvatakse.",
       "baseLabelPlaceholder": "nt Standardhind",
-      "multiPlanHint": "Mitu hinnaplaani (nt BAR/B&B) — hindu hallatakse kuupäevapõhiselt kalendrivaates „Hinnad“."
+      "multiPlanHint": "Mitu hinnaplaani (nt BAR/B&B) — hindu hallatakse kuupäevapõhiselt kalendrivaates „Hinnad“.",
+      "plansTitle": "Hinnaplaanid",
+      "plansHint": "Hindu hallatakse kuupäevapõhiselt kalendris.",
+      "planCreate": "Loo hinnaplaan",
+      "planModeManual": "Käsitsi",
+      "planModeDerived": "Tuletatud plaanist {parent} · {offset}",
+      "planDerivedPrice": "arvutatud",
+      "planMinStay": "Min. {nights} ööd",
+      "planDelete": "Kustuta",
+      "planDeleted": "Hinnaplaan kustutatud.",
+      "planCreated": "Hinnaplaan loodud.",
+      "openCalendar": "Halda hindu",
+      "planConfirmDelete": "Kas kustutada see hinnaplaan? Koos sellega kustutatakse ka plaani kuupäevapõhised hinnad."
     },
     "policiesForm": {
       "title": "Reeglid",
@@ -4195,6 +4207,35 @@
       "paymentSummarySplit": "{percent} % broneerimisel, jääksumma {days} päeva enne saabumist.",
       "localizedEditorSubtitle": "Loo tekst ja tõlgi see vajaduse korral oma külaliste jaoks.",
       "localizedEditorPlaceholder": "Sisesta {title} …"
+    },
+    "ratePlanWizard": {
+      "title": "Loo hinnaplaan",
+      "close": "Sulge",
+      "nameLabel": "Nimi",
+      "namePlaceholder": "nt Bed & Breakfast",
+      "nameHint": "Nimi kuvatakse ka portaalides ja peab olema objekti kohta unikaalne.",
+      "nameTaken": "See nimi on sellel objektil juba olemas.",
+      "minStayLabel": "Minimaalne peatumisaeg (ööd)",
+      "minStayHint": "Vaikeväärtus kõigi päevade jaoks — üksikuid päevi haldad hiljem kalendris.",
+      "pricingTitle": "Hinnakujundus",
+      "currencyFixed": "Valuuta: {currency} (võetud objektilt)",
+      "modeManual": "Halda hindu käsitsi",
+      "modeDerived": "Tuleta baasplaanist",
+      "noParentAvailable": "Tuletamiseks on esmalt vaja käsitsi hallatavat plaani.",
+      "basePriceLabel": "Põhihind",
+      "parentLabel": "Baasplaan",
+      "amountLabel": "Summa",
+      "percentLabel": "Protsent",
+      "increase": "Tõsta",
+      "decrease": "Vähenda",
+      "orderHint": "Järjekord: esmalt summa, seejärel protsent.",
+      "previewLine": "Näide: baasplaan {base} → see plaan {result}",
+      "reviewDerived": "Tuletatud plaanist {parent} · {base} → {result}",
+      "back": "Tagasi",
+      "next": "Edasi",
+      "cancel": "Tühista",
+      "save": "Loo",
+      "saving": "Luuakse …"
     }
   },
   "calendar": {
@@ -4372,12 +4413,17 @@
         "dynamic": "Dünaamiline hind",
         "weekday": "Nädalapäeva hind",
         "base": "Hinnaplaani baashind",
+        "derived": "Tuletatud baasplaanist",
         "none": "Hinda pole määratud"
       },
       "modeRestrictions": "Piirangud",
       "on": "Jah",
       "off": "Ei",
-      "maxStayLabel": "Maks. peatumine"
+      "maxStayLabel": "Maks. peatumine",
+      "derivedFrom": "Tuletatud plaanist {parent} · {offset}",
+      "derivedReadOnly": "Tuletatud hind — järgib baasplaani",
+      "weekdaysLabel": "Nädalapäevad",
+      "availabilityLabel": "Saadavus"
     }
   },
   "seasons": {

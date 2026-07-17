@@ -4139,7 +4139,19 @@
       "baseLabelEditorTitle": "Označenie základnej ceny",
       "baseLabelEditorSubtitle": "Názov, pod ktorým sa vaša základná cena zobrazí na webstránke.",
       "baseLabelPlaceholder": "napr. Štandardná cena",
-      "multiPlanHint": "Viacero cenových plánov (napr. BAR/B&B) — ceny sa spravujú podľa dátumu v zobrazení kalendára „Ceny“."
+      "multiPlanHint": "Viacero cenových plánov (napr. BAR/B&B) — ceny sa spravujú podľa dátumu v zobrazení kalendára „Ceny“.",
+      "plansTitle": "Cenové plány",
+      "plansHint": "Ceny sa spravujú podľa dátumu v kalendári.",
+      "planCreate": "Vytvoriť cenový plán",
+      "planModeManual": "Ručne",
+      "planModeDerived": "Odvodené od plánu {parent} · {offset}",
+      "planDerivedPrice": "vypočítané",
+      "planMinStay": "Min. {nights} nocí",
+      "planDelete": "Odstrániť",
+      "planDeleted": "Cenový plán odstránený.",
+      "planCreated": "Cenový plán vytvorený.",
+      "openCalendar": "Spravovať ceny",
+      "planConfirmDelete": "Naozaj odstrániť tento cenový plán? Ceny plánu podľa dátumu sa odstránia spolu s ním."
     },
     "policiesForm": {
       "title": "Zásady",
@@ -4195,6 +4207,35 @@
       "paymentSummarySplit": "{percent} % pri rezervácii, zostatok {days} dní pred príchodom.",
       "localizedEditorSubtitle": "Vytvorte text a v prípade potreby ho preložte pre svojich hostí.",
       "localizedEditorPlaceholder": "Zadajte {title} …"
+    },
+    "ratePlanWizard": {
+      "title": "Vytvoriť cenový plán",
+      "close": "Zavrieť",
+      "nameLabel": "Názov",
+      "namePlaceholder": "napr. Bed & Breakfast",
+      "nameHint": "Názov sa zobrazuje aj na portáloch a musí byť pri každom objekte jedinečný.",
+      "nameTaken": "Tento názov pri tomto objekte už existuje.",
+      "minStayLabel": "Minimálny pobyt (nocí)",
+      "minStayHint": "Predvolená hodnota pre všetky dni — jednotlivé dni nastavíš neskôr v kalendári.",
+      "pricingTitle": "Tvorba cien",
+      "currencyFixed": "Mena: {currency} (prevzaté z objektu)",
+      "modeManual": "Spravovať ceny ručne",
+      "modeDerived": "Odvodiť zo základného plánu",
+      "noParentAvailable": "Na odvodenie je najprv potrebný ručne spravovaný plán.",
+      "basePriceLabel": "Základná cena",
+      "parentLabel": "Základný plán",
+      "amountLabel": "Suma",
+      "percentLabel": "Percento",
+      "increase": "Zvýšiť",
+      "decrease": "Znížiť",
+      "orderHint": "Poradie: najprv suma, potom percentuálna sadzba.",
+      "previewLine": "Príklad: základný plán {base} → tento plán {result}",
+      "reviewDerived": "Odvodené od plánu {parent} · {base} → {result}",
+      "back": "Späť",
+      "next": "Ďalej",
+      "cancel": "Zrušiť",
+      "save": "Vytvoriť",
+      "saving": "Vytvára sa …"
     }
   },
   "calendar": {
@@ -4372,12 +4413,17 @@
         "dynamic": "Dynamická cena",
         "weekday": "Cena podľa dňa v týždni",
         "base": "Základná cena cenového plánu",
+        "derived": "Odvodené od základného plánu",
         "none": "Cena nie je nastavená"
       },
       "modeRestrictions": "Obmedzenia",
       "on": "Áno",
       "off": "Nie",
-      "maxStayLabel": "Max. pobyt"
+      "maxStayLabel": "Max. pobyt",
+      "derivedFrom": "Odvodené od plánu {parent} · {offset}",
+      "derivedReadOnly": "Odvodená cena — riadi sa základným plánom",
+      "weekdaysLabel": "Dni v týždni",
+      "availabilityLabel": "Dostupnosť"
     }
   },
   "seasons": {

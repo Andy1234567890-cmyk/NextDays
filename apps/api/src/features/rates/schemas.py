@@ -8,9 +8,23 @@ from datetime import date
 
 from pydantic import BaseModel, Field, model_validator
 
+# Harte Obergrenze für JEDEN Datums-Bereich eines Bulk-Schreibzugriffs (Wurzel 8):
+# ohne sie expandiert ein einziger Request (z. B. 100 Jahre × Wochentagsmaske) zu
+# zehntausenden Upsert-Zeilen UND ebenso vielen ARI-Push-Jobs — die Wochentags-
+# maske verhindert dabei sogar das Bündeln benachbarter Tage. Zwei Jahre decken
+# jede reale Preispflege ab (der Grid-Horizont liegt bei 400 Tagen).
+_MAX_SET_DAYS = 730
 
-def _validate_weekdays(weekdays: list[int] | None) -> None:
-    """Wochentagsmaske prüfen: nur 0–6, keine Duplikate. Leer/None erlaubt."""
+
+def _validate_range(start: date, end: date, weekdays: list[int] | None) -> None:
+    """Gemeinsame Prüfung der Bulk-Set-Schemas: Reihenfolge, Span-Obergrenze,
+    Wochentagsmaske (nur 0–6, keine Duplikate; leer/None = alle Tage)."""
+    if end <= start:
+        raise ValueError("end muss nach start liegen")
+    if (end - start).days > _MAX_SET_DAYS:
+        raise ValueError(
+            f"Zeitraum zu groß: höchstens {_MAX_SET_DAYS} Tage pro Anfrage"
+        )
     if weekdays is None:
         return
     if any(d < 0 or d > 6 for d in weekdays) or len(set(weekdays)) != len(weekdays):
@@ -131,9 +145,7 @@ class RatePlanPriceSet(BaseModel):
 
     @model_validator(mode="after")
     def _check_order(self) -> "RatePlanPriceSet":
-        if self.end <= self.start:
-            raise ValueError("end muss nach start liegen")
-        _validate_weekdays(self.weekdays)
+        _validate_range(self.start, self.end, self.weekdays)
         return self
 
 
@@ -160,9 +172,7 @@ class RatePlanMinStaySet(BaseModel):
 
     @model_validator(mode="after")
     def _check_order(self) -> "RatePlanMinStaySet":
-        if self.end <= self.start:
-            raise ValueError("end muss nach start liegen")
-        _validate_weekdays(self.weekdays)
+        _validate_range(self.start, self.end, self.weekdays)
         return self
 
 
@@ -192,9 +202,7 @@ class RatePlanRestrictionSet(BaseModel):
 
     @model_validator(mode="after")
     def _check_order(self) -> "RatePlanRestrictionSet":
-        if self.end <= self.start:
-            raise ValueError("end muss nach start liegen")
-        _validate_weekdays(self.weekdays)
+        _validate_range(self.start, self.end, self.weekdays)
         return self
 
 

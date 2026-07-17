@@ -2,6 +2,7 @@
 from datetime import date
 
 from fastapi.testclient import TestClient
+from pydantic import ValidationError
 
 from src.core.security import AuthContext
 from src.features.rates.schemas import RatePlanCreate, RatePlanPriceSet
@@ -584,3 +585,157 @@ def test_weekday_filtered_and_ranges() -> None:
                                  date(2026, 7, 5)])
     assert ranges == [(date(2026, 7, 1), date(2026, 7, 2)),
                       (date(2026, 7, 5), date(2026, 7, 5))]
+
+
+# -- Regressionstests zu den Review-Befunden (Wurzel 1/4/8) -------------------
+
+
+def test_bulk_set_span_over_limit_422() -> None:
+    # Wurzel 8: ohne Obergrenze expandiert 100 Jahre × Wochentagsmaske zu
+    # zehntausenden Zeilen UND ebenso vielen ARI-Jobs (ein Request flutet die
+    # Queue). Alle drei Bulk-Schemas müssen den Bereich hart begrenzen.
+    from src.features.rates.schemas import (
+        RatePlanMinStaySet,
+        RatePlanPriceSet,
+        RatePlanRestrictionSet,
+    )
+
+    for model, extra in (
+        (RatePlanPriceSet, {"price": 100}),
+        (RatePlanMinStaySet, {"min_stay": 2}),
+        (RatePlanRestrictionSet, {"max_stay": 5}),
+    ):
+        try:
+            model(start=date(2026, 1, 1), end=date(2126, 1, 1),
+                  weekdays=[0, 2, 4], **extra)
+            raise AssertionError(f"{model.__name__} sollte den Bereich ablehnen")
+        except ValidationError:
+            pass
+    # Knapp innerhalb der Grenze bleibt erlaubt.
+    ok = RatePlanPriceSet(start=date(2026, 1, 1), end=date(2027, 1, 1), price=100)
+    assert (ok.end - ok.start).days == 365
+
+
+def test_set_prices_on_parent_propagates_to_children(monkeypatch) -> None:  # noqa: ANN001
+    # Wurzel 1: Preis am Basis-Plan ändern verschiebt die Kurve der Kinder sofort
+    # → es MUSS ein Reconcile für das Objekt eingereiht werden, sonst behalten die
+    # OTAs den alten Kind-Preis bis zum nächsten 15-min-Tick.
+    from src.features.rates import service as svc_mod
+    from src.features.rates.schemas import RatePlanPriceSet
+
+    jobs: list = []
+    monkeypatch.setattr(svc_mod, "try_enqueue_ari", lambda *a, **k: None)
+    monkeypatch.setattr(svc_mod, "enqueue", lambda *a, **k: jobs.append((a, k)))
+    svc = _svc({
+        "properties": [{"id": "p-1", "title": "Objekt"}],
+        "rate_plans": [
+            {"id": "rp-1", "property_id": "p-1",
+             "properties": {"tenant_id": "t-1"}},
+            # Kind, das von rp-1 ableitet (Query .eq(derived_from_rate_plan_id)).
+            {"id": "rp-kid", "property_id": "p-1"},
+        ],
+    })
+    svc.set_prices(
+        _ctx(), "rp-1",
+        RatePlanPriceSet(start="2026-11-21", end="2026-11-22", price=333),
+    )
+    assert any(a[1] == "reconcile_rate_plan_prices" for a, _k in jobs), (
+        "Kind-Propagation fehlt: kein Reconcile für das Objekt eingereiht"
+    )
+
+
+def test_update_derived_rejects_own_currency() -> None:
+    # Wurzel 4: ein abgeleiteter Plan hat keine eigene Währung — ein PATCH ohne
+    # rate_mode lief sonst an der Ableitungs-Prüfung vorbei und entkoppelte das
+    # Kind von seinem Parent (Kind USD, Parent EUR).
+    from src.features.rates.schemas import RatePlanUpdate
+
+    svc = _svc({
+        "rate_plans": [{"id": "rp-d", "property_id": "p-1",
+                        "rate_mode": "derived", "currency": "EUR",
+                        "properties": {"tenant_id": "t-1", "title": "Objekt"}}],
+    })
+    try:
+        svc.update(_ctx(), "rp-d", RatePlanUpdate(currency="USD"))
+        raise AssertionError("sollte 422 werfen")
+    except RateError as exc:
+        assert exc.status_code == 422
+
+
+def test_resolver_derived_cycle_fails_closed() -> None:
+    # Fehldaten A→B→A (der DB-CHECK verbietet nur die Selbstreferenz): der
+    # Resolver muss den Zyklus erkennen und fail-closed 422 werfen, statt endlos
+    # zu rekursieren.
+    from src.features.pricing.resolver import PricingError, PricingResolver
+
+    class _CycleDb:
+        def table(self, name):  # noqa: ANN001, ANN202
+            return self
+
+        def select(self, *_a, **_k):  # noqa: ANN202
+            return self
+
+        def eq(self, *_a, **_k):  # noqa: ANN202
+            return self
+
+        def lt(self, *_a, **_k):  # noqa: ANN202
+            return self
+
+        def gte(self, *_a, **_k):  # noqa: ANN202
+            return self
+
+        def not_(self):  # noqa: ANN202
+            return self
+
+        def limit(self, *_a, **_k):  # noqa: ANN202
+            return self
+
+        def order(self, *_a, **_k):  # noqa: ANN202
+            return self
+
+        def execute(self):  # noqa: ANN202
+            raise AssertionError("nicht erreicht")
+
+    # Direkt die Kurven-Rekursion prüfen: Meta-Lookup gibt einen Zyklus zurück.
+    resolver = PricingResolver(service_client=_CycleDb())
+    metas = {
+        "a": ("derived", "b"),
+        "b": ("derived", "a"),
+    }
+
+    def _fake_meta(_prop, plan_id):  # noqa: ANN001, ANN202
+        from src.features.pricing.resolver import _RatePlanMeta
+
+        mode, parent = metas[plan_id]
+        return _RatePlanMeta(base=100.0, currency="EUR", rate_mode=mode,
+                             parent_id=parent, offset_amount=10.0,
+                             offset_percent=None)
+
+    resolver._load_rate_plan_meta = _fake_meta  # noqa: SLF001
+    try:
+        resolver._rate_plan_curve(  # noqa: SLF001
+            "p-1", "a", [date(2026, 7, 1)], date(2026, 7, 1), date(2026, 7, 2),
+            {}, {}, None,
+        )
+        raise AssertionError("sollte PricingError werfen")
+    except PricingError as exc:
+        assert exc.status_code == 422
+
+
+def test_update_derived_to_manual_with_own_price_allowed() -> None:
+    # Gegenprobe zum stays_derived-Guard: derived → manual MIT eigenem Grundpreis
+    # ist der normale Rückweg („Plan soll wieder eigene Preise haben") und MUSS
+    # erlaubt bleiben. Nur ein Plan, der derived BLEIBT, darf keine eigene
+    # Währung/Basis bekommen.
+    from src.features.rates.schemas import RatePlanUpdate
+
+    svc = _svc({
+        "rate_plans": [{"id": "rp-d", "property_id": "p-1",
+                        "rate_mode": "derived", "currency": "EUR",
+                        "base_price": 100,
+                        "properties": {"tenant_id": "t-1", "title": "Objekt"}}],
+    })
+    out = svc.update(_ctx(), "rp-d", RatePlanUpdate(
+        rate_mode="manual", base_price=99, currency="EUR",
+    ))
+    assert out is not None

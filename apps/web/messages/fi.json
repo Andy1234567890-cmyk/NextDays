@@ -4139,7 +4139,19 @@
       "baseLabelEditorTitle": "Perushinnan nimike",
       "baseLabelEditorSubtitle": "Nimi, jolla perushintasi näkyy verkkosivustolla.",
       "baseLabelPlaceholder": "esim. Vakiohinta",
-      "multiPlanHint": "Useita hintasuunnitelmia (esim. BAR/B&B) — hintoja hallitaan päiväkohtaisesti kalenterinäkymässä ”Hinnat”."
+      "multiPlanHint": "Useita hintasuunnitelmia (esim. BAR/B&B) — hintoja hallitaan päiväkohtaisesti kalenterinäkymässä ”Hinnat”.",
+      "plansTitle": "Hintasuunnitelmat",
+      "plansHint": "Hintoja hallitaan päiväkohtaisesti kalenterissa.",
+      "planCreate": "Luo hintasuunnitelma",
+      "planModeManual": "Manuaalinen",
+      "planModeDerived": "Johdettu suunnitelmasta {parent} · {offset}",
+      "planDerivedPrice": "laskettu",
+      "planMinStay": "Väh. {nights} yötä",
+      "planDelete": "Poista",
+      "planDeleted": "Hintasuunnitelma poistettu.",
+      "planCreated": "Hintasuunnitelma luotu.",
+      "openCalendar": "Hallitse hintoja",
+      "planConfirmDelete": "Poistetaanko tämä hintasuunnitelma? Myös suunnitelman päiväkohtaiset hinnat poistetaan."
     },
     "policiesForm": {
       "title": "Käytännöt",
@@ -4195,6 +4207,35 @@
       "paymentSummarySplit": "{percent} % varauksen yhteydessä, loppusumma {days} päivää ennen saapumista.",
       "localizedEditorSubtitle": "Luo teksti ja käännä se tarvittaessa vieraillesi.",
       "localizedEditorPlaceholder": "Kirjoita: {title} …"
+    },
+    "ratePlanWizard": {
+      "title": "Luo hintasuunnitelma",
+      "close": "Sulje",
+      "nameLabel": "Nimi",
+      "namePlaceholder": "esim. Bed & Breakfast",
+      "nameHint": "Nimi näkyy myös portaaleissa, ja sen on oltava kohdekohtaisesti yksilöllinen.",
+      "nameTaken": "Tämä nimi on jo käytössä tässä kohteessa.",
+      "minStayLabel": "Vähimmäisyöpymisaika (yötä)",
+      "minStayHint": "Oletus kaikille päiville — yksittäiset päivät hallitset myöhemmin kalenterissa.",
+      "pricingTitle": "Hinnoittelu",
+      "currencyFixed": "Valuutta: {currency} (peritty kohteesta)",
+      "modeManual": "Hallitse hintoja manuaalisesti",
+      "modeDerived": "Johda perussuunnitelmasta",
+      "noParentAvailable": "Johtaminen edellyttää ensin manuaalisesti hallittua suunnitelmaa.",
+      "basePriceLabel": "Perushinta",
+      "parentLabel": "Perussuunnitelma",
+      "amountLabel": "Summa",
+      "percentLabel": "Prosentti",
+      "increase": "Korota",
+      "decrease": "Alenna",
+      "orderHint": "Järjestys: ensin summa, sitten prosenttiosuus.",
+      "previewLine": "Esimerkki: perussuunnitelma {base} → tämä suunnitelma {result}",
+      "reviewDerived": "Johdettu suunnitelmasta {parent} · {base} → {result}",
+      "back": "Takaisin",
+      "next": "Seuraava",
+      "cancel": "Peruuta",
+      "save": "Luo",
+      "saving": "Luodaan …"
     }
   },
   "calendar": {
@@ -4372,12 +4413,17 @@
         "dynamic": "Dynaaminen hinta",
         "weekday": "Viikonpäivähinta",
         "base": "Hintasuunnitelman perushinta",
+        "derived": "Johdettu perussuunnitelmasta",
         "none": "Ei hintaa asetettu"
       },
       "modeRestrictions": "Rajoitukset",
       "on": "Kyllä",
       "off": "Ei",
-      "maxStayLabel": "Enimmäiskesto"
+      "maxStayLabel": "Enimmäiskesto",
+      "derivedFrom": "Johdettu suunnitelmasta {parent} · {offset}",
+      "derivedReadOnly": "Johdettu hinta — seuraa perussuunnitelmaa",
+      "weekdaysLabel": "Viikonpäivät",
+      "availabilityLabel": "Saatavuus"
     }
   },
   "seasons": {

@@ -4139,7 +4139,19 @@
       "baseLabelEditorTitle": "Ainm don bhunphraghas",
       "baseLabelEditorSubtitle": "Ainm faoina bhfeicfear do bhunphraghas ar an suíomh gréasáin.",
       "baseLabelPlaceholder": "m.sh. Caighdeánach",
-      "multiPlanHint": "Pleananna praghsála iolracha (m.sh. BAR/B&B) — bainistítear na praghsanna de réir dáta san amharc féilire „Praghsanna“."
+      "multiPlanHint": "Pleananna praghsála iolracha (m.sh. BAR/B&B) — bainistítear na praghsanna de réir dáta san amharc féilire „Praghsanna“.",
+      "plansTitle": "Pleananna praghsála",
+      "plansHint": "Bainistítear na praghsanna de réir dáta san fhéilire.",
+      "planCreate": "Cruthaigh plean praghsála",
+      "planModeManual": "De láimh",
+      "planModeDerived": "Díorthaithe ó {parent} · {offset}",
+      "planDerivedPrice": "ríofa",
+      "planMinStay": "Íos. {nights} oíche",
+      "planDelete": "Scrios",
+      "planDeleted": "Scriosadh an plean praghsála.",
+      "planCreated": "Cruthaíodh an plean praghsála.",
+      "openCalendar": "Bainistigh na praghsanna",
+      "planConfirmDelete": "An bhfuil tú cinnte gur mian leat an plean praghsála seo a scriosadh? Scriosfar praghsanna dáta an phlean chomh maith."
     },
     "policiesForm": {
       "title": "Polasaithe",
@@ -4195,6 +4207,35 @@
       "paymentSummarySplit": "{percent} % ag am na háirithinte, iarmhéid {days} lá roimh theacht.",
       "localizedEditorSubtitle": "Cruthaigh an téacs agus aistrigh é más gá do d'aíonna.",
       "localizedEditorPlaceholder": "Cuir isteach {title} …"
+    },
+    "ratePlanWizard": {
+      "title": "Cruthaigh plean praghsála",
+      "close": "Dún",
+      "nameLabel": "Ainm",
+      "namePlaceholder": "m.sh. Bed & Breakfast",
+      "nameHint": "Taispeántar an t-ainm ar na tairseacha freisin agus caithfidh sé a bheith uathúil do gach maoin.",
+      "nameTaken": "Tá an t-ainm sin ann cheana féin ag an maoin seo.",
+      "minStayLabel": "Fanacht íosta (oícheanta)",
+      "minStayHint": "Réamhshocrú do gach lá — bainistíonn tú laethanta ar leith níos déanaí san fhéilire.",
+      "pricingTitle": "Praghsáil",
+      "currencyFixed": "Airgeadra: {currency} (tógtha ón maoin)",
+      "modeManual": "Bainistigh na praghsanna de láimh",
+      "modeDerived": "Díorthaigh ó bhunphlean",
+      "noParentAvailable": "Chun díorthú, teastaíonn plean a bhainistítear de láimh ar dtús.",
+      "basePriceLabel": "Bunphraghas",
+      "parentLabel": "Bunphlean",
+      "amountLabel": "Méid",
+      "percentLabel": "Céatadán",
+      "increase": "Ardaigh",
+      "decrease": "Laghdaigh",
+      "orderHint": "Ord: an méid ar dtús, ansin an céatadán.",
+      "previewLine": "Sampla: bunphlean {base} → an plean seo {result}",
+      "reviewDerived": "Díorthaithe ó {parent} · {base} → {result}",
+      "back": "Ar ais",
+      "next": "Ar aghaidh",
+      "cancel": "Cealaigh",
+      "save": "Cruthaigh",
+      "saving": "Á chruthú …"
     }
   },
   "calendar": {
@@ -4372,12 +4413,17 @@
         "dynamic": "Praghas dinimiciúil",
         "weekday": "Praghas de réir lá na seachtaine",
         "base": "Bunphraghas an phlean praghais",
+        "derived": "Díorthaithe ón mbunphlean",
         "none": "Níl aon phraghas socraithe"
       },
       "modeRestrictions": "Srianta",
       "on": "Tá",
       "off": "Níl",
-      "maxStayLabel": "Fanacht uasta"
+      "maxStayLabel": "Fanacht uasta",
+      "derivedFrom": "Díorthaithe ó {parent} · {offset}",
+      "derivedReadOnly": "Praghas díorthaithe — leanann sé an bunphlean",
+      "weekdaysLabel": "Laethanta na seachtaine",
+      "availabilityLabel": "Infhaighteacht"
     }
   },
   "seasons": {

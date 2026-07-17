@@ -8,6 +8,7 @@
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 import {
   ChannelLogo,
@@ -18,6 +19,7 @@ import {
   Pill,
   useSaver,
 } from "@/components/objekte/editor-primitives";
+import { RatePlanWizard } from "@/components/objekte/rate-plan-wizard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -59,7 +61,12 @@ import {
   readPricing,
 } from "@/lib/pricing-meta";
 import { type Property, updateProperty } from "@/lib/properties";
-import { listRatePlans, setBasePrice, type RatePlan } from "@/lib/rates";
+import {
+  deleteRatePlan,
+  listRatePlans,
+  setBasePrice,
+  type RatePlan,
+} from "@/lib/rates";
 import { useRealtime } from "@/lib/use-realtime";
 
 type Section =
@@ -80,6 +87,7 @@ export function PricingForm({ initial }: { initial: Property }) {
   const t = useTranslations("objects");
   const [p, setP] = useState<Property>(initial);
   const [section, setSection] = useState<Section>(null);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const pr = readPricing(p.type_attributes);
 
   // Grundpreis-Wahrheit ist rate_plans (Resolver/Channex lesen NUR dort) — die
@@ -138,14 +146,10 @@ export function PricingForm({ initial }: { initial: Property }) {
           </p>
         </div>
 
-        {multiPlan ? (
-          // Mehrere Rate-Pläne am Objekt (z. B. BAR/B&B): kein EINER Objekt-
-          // Grundpreis. Die Pläne werden in der Kalender-Ansicht „Preise"
-          // datumsgenau gepflegt (Grundpreis, Datumspreise, Min-Stay).
-          <Card className="p-5 text-sm text-muted-foreground">
-            {t("pricingForm.multiPlanHint")}
-          </Card>
-        ) : (
+        {/* Ein Plan → Objekt-Grundpreis direkt pflegbar. Mehrere Pläne (BAR/B&B,
+            abgeleitet) → kein EINER Objekt-Grundpreis; die Pläne werden
+            datumsgenau im Kalender gepflegt. Die Liste steht in beiden Fällen. */}
+        {!multiPlan && (
           <BlockCard
             title={t("pricingForm.basePriceTitle")}
             hint={t("pricingForm.basePriceHint")}
@@ -154,6 +158,13 @@ export function PricingForm({ initial }: { initial: Property }) {
             <Pill>{fmtPrice(shownBasePrice, cur)}</Pill>
           </BlockCard>
         )}
+
+        <RatePlanList
+          plans={plans}
+          currency={cur}
+          onCreate={() => setWizardOpen(true)}
+          onDeleted={() => void loadPlans()}
+        />
 
         <BlockCard
           title={t("pricingForm.markupTitle")}
@@ -433,6 +444,20 @@ export function PricingForm({ initial }: { initial: Property }) {
       )}
       {section === "taxInfo" && <TaxInfoEditor pr={pr} onSave={save} onClose={() => setSection(null)} />}
       {section === "baseLabel" && <BaseLabelEditor pr={pr} onSave={save} onClose={() => setSection(null)} />}
+
+      {wizardOpen && (
+        <RatePlanWizard
+          propertyId={p.id}
+          plans={plans}
+          currency={cur}
+          onDone={() => {
+            setWizardOpen(false);
+            toast.success(t("pricingForm.planCreated"));
+            void loadPlans();
+          }}
+          onClose={() => setWizardOpen(false)}
+        />
+      )}
     </div>
   );
 }
@@ -1134,5 +1159,114 @@ function BasisSelect({ value, onChange }: { value: FeeBasis; onChange: (b: FeeBa
         ))}
       </SelectContent>
     </Select>
+  );
+}
+
+// Preisplan-Liste (SiteMinder „Rate plans"): eine Zeile je Plan mit Modus,
+// Grundpreis bzw. „berechnet" (abgeleitet), Mindestaufenthalt und Aktionen.
+// Preise selbst werden datumsgenau im Kalender gepflegt — von hier führt nur
+// der Deep-Link dorthin.
+function RatePlanList({
+  plans,
+  currency,
+  onCreate,
+  onDeleted,
+}: {
+  plans: RatePlan[];
+  currency: Currency | "";
+  onCreate: () => void;
+  onDeleted: () => void;
+}) {
+  const t = useTranslations("objects");
+  const [busy, setBusy] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const offsetLabel = (p: RatePlan): string => {
+    const parts: string[] = [];
+    if (p.offset_amount != null && p.offset_amount !== 0) {
+      parts.push(`${p.offset_amount > 0 ? "+" : ""}${fmtPrice(p.offset_amount, currency)}`);
+    }
+    if (p.offset_percent != null && p.offset_percent !== 0) {
+      parts.push(`${p.offset_percent > 0 ? "+" : ""}${p.offset_percent} %`);
+    }
+    return parts.length ? parts.join(" · ") : "1:1";
+  };
+
+  const remove = async (id: string) => {
+    // Löschen nimmt auch die Datumspreise des Plans mit — Fehlklick auf das
+    // Trash-Icon darf das nicht still tun (Projekt-Muster: window.confirm).
+    if (!window.confirm(t("pricingForm.planConfirmDelete"))) return;
+    setBusy(id);
+    setErr(null);
+    const res = await deleteRatePlan(id);
+    setBusy(null);
+    // 409 = Basis-Plan hat abgeleitete Kinder (Server-Guard) — Meldung zeigen.
+    if (!res.ok) {
+      setErr(res.error);
+      return;
+    }
+    toast.success(t("pricingForm.planDeleted"));
+    onDeleted();
+  };
+
+  return (
+    <Card className="flex flex-col gap-3 p-5">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h3 className="font-display text-lg font-extrabold">
+            {t("pricingForm.plansTitle")}
+          </h3>
+          <p className="text-sm text-muted-foreground">
+            {t("pricingForm.plansHint")}
+          </p>
+        </div>
+        <div className="flex shrink-0 gap-2">
+          <Button type="button" variant="outline" asChild>
+            <a href="/kalender?view=rates">{t("pricingForm.openCalendar")}</a>
+          </Button>
+          <Button type="button" onClick={onCreate}>
+            <Icon icon="ph:plus" className="size-4" />
+            {t("pricingForm.planCreate")}
+          </Button>
+        </div>
+      </div>
+
+      {err && <p className="text-sm text-destructive">{err}</p>}
+
+      <ul className="flex flex-col divide-y">
+        {plans.map((p) => (
+          <li key={p.id} className="flex items-center gap-3 py-3">
+            <span className="min-w-0 flex-1 truncate text-sm font-medium">
+              {p.name}
+            </span>
+            <span className="shrink-0 rounded-full bg-secondary px-3 py-1 text-xs text-muted-foreground">
+              {p.rate_mode === "derived"
+                ? t("pricingForm.planModeDerived", {
+                    parent: p.derived_from_name ?? "",
+                    offset: offsetLabel(p),
+                  })
+                : t("pricingForm.planModeManual")}
+            </span>
+            <span className="w-24 shrink-0 text-right text-sm tabular-nums">
+              {p.rate_mode === "derived"
+                ? t("pricingForm.planDerivedPrice")
+                : fmtPrice(p.base_price, (p.currency || "") as Currency | "")}
+            </span>
+            <span className="w-28 shrink-0 text-right text-xs text-muted-foreground">
+              {t("pricingForm.planMinStay", { nights: p.min_stay })}
+            </span>
+            <button
+              type="button"
+              onClick={() => void remove(p.id)}
+              disabled={busy === p.id}
+              title={t("pricingForm.planDelete")}
+              className="shrink-0 text-muted-foreground hover:text-destructive disabled:opacity-50"
+            >
+              <Icon icon="ph:trash" className="size-4" />
+            </button>
+          </li>
+        ))}
+      </ul>
+    </Card>
   );
 }

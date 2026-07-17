@@ -385,6 +385,30 @@ längenabhängige Preise, Gebühren, Steuern, Aktionen, Add-ons) liegt strukturi
 erscheinen live im Kalender. Basispreis setzen: `PUT /api/v1/rates/base-price`
 (Upsert — ersten Rate-Plan ändern oder anlegen, in einem Round-Trip).
 
+### Abgeleitete Preispläne (Migration `0157`, SiteMinder-Modell)
+
+Ein Objekt kann mehrere Preispläne haben (BAR/B&B). Jeder Plan ist `manual`
+(eigener Preis) oder `derived` (Preis folgt einem Basis-Plan **desselben**
+Objekts): `preis = round2((parent + offset_amount) × (1 + offset_percent/100))`
+— erst Betrag, dann Prozent. Beide Offsets `null` = 1:1-Spiegel.
+
+`POST /api/v1/rates` und `PATCH /api/v1/rates/{id}` akzeptieren `rate_mode`
+(`manual|derived`), `derived_from_rate_plan_id`, `offset_amount`,
+`offset_percent`. Guards: Basis-Plan fremdes Objekt → 422; Basis-Plan selbst
+`derived` → 422 (keine Kaskade); Basis-Plan mit Kindern löschen → 409; das Kind
+erbt Währung + Basis vom Parent (keine zweite Währungs-Wahrheit). Datumspreise
+auf `derived` (`PUT /rates/{id}/prices`) → 422 — Min-Stay/Restriktionen bleiben
+je Plan pflegbar. `GET /api/v1/rates/grid` liefert je Plan `rate_mode`,
+`derived_from_name`, die Offsets und `price_read_only` (Grid-Zellen gesperrt).
+
+`PUT /rates/{id}/prices|min-stays|restrictions` akzeptieren optional
+`weekdays: [0..6]` (Mo=0) — der Server expandiert Bereich × Wochentagsmaske
+(harte Obergrenze bleibt).
+
+Ableitung rechnet **lokal**; an Channex gehen alle Pläne als `rate_mode: manual`
+mit ihrer fertigen Tageskurve (nie in zwei Systemen ableiten). Live verifiziert:
+Basis 100 USD, +25 dann −15 % → 106,25 bei Channex gegengelesen.
+
 ---
 
 ## calendar (Kern-Logik implementiert)

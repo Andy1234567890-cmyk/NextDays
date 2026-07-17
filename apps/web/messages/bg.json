@@ -4139,7 +4139,19 @@
       "baseLabelEditorTitle": "Наименование за основната цена",
       "baseLabelEditorSubtitle": "Име, под което основната ви цена се показва на уебсайта.",
       "baseLabelPlaceholder": "напр. Стандартна цена",
-      "multiPlanHint": "Няколко ценови плана (напр. BAR/B&B) — цените се поддържат по дати в изгледа „Цени“ на календара."
+      "multiPlanHint": "Няколко ценови плана (напр. BAR/B&B) — цените се поддържат по дати в изгледа „Цени“ на календара.",
+      "plansTitle": "Ценови планове",
+      "plansHint": "Цените се поддържат по дати в календара.",
+      "planCreate": "Създаване на ценови план",
+      "planModeManual": "Ръчно",
+      "planModeDerived": "Производна от {parent} · {offset}",
+      "planDerivedPrice": "изчислена",
+      "planMinStay": "Мин. {nights} нощувки",
+      "planDelete": "Изтрий",
+      "planDeleted": "Ценовият план е изтрит.",
+      "planCreated": "Ценовият план е създаден.",
+      "openCalendar": "Поддържане на цените",
+      "planConfirmDelete": "Наистина ли да се изтрие този ценови план? Цените по дати на плана ще бъдат изтрити заедно с него."
     },
     "policiesForm": {
       "title": "Правила",
@@ -4195,6 +4207,35 @@
       "paymentSummarySplit": "{percent} % при резервация, остатъкът {days} дни преди пристигане.",
       "localizedEditorSubtitle": "Създайте текста и го преведете при необходимост за вашите гости.",
       "localizedEditorPlaceholder": "Въведете {title} …"
+    },
+    "ratePlanWizard": {
+      "title": "Създаване на ценови план",
+      "close": "Затвори",
+      "nameLabel": "Име",
+      "namePlaceholder": "напр. Bed & Breakfast",
+      "nameHint": "Името се показва и в порталите и трябва да е уникално за всеки обект.",
+      "nameTaken": "Такова име вече съществува за този обект.",
+      "minStayLabel": "Минимален престой (нощувки)",
+      "minStayHint": "Стойност по подразбиране за всички дни — отделните дни се поддържат по-късно в календара.",
+      "pricingTitle": "Ценообразуване",
+      "currencyFixed": "Валута: {currency} (взета от обекта)",
+      "modeManual": "Ръчно поддържане на цените",
+      "modeDerived": "Извеждане от базов план",
+      "noParentAvailable": "За извеждане е нужен първо план с ръчно поддържани цени.",
+      "basePriceLabel": "Основна цена",
+      "parentLabel": "Базов план",
+      "amountLabel": "Сума",
+      "percentLabel": "Процент",
+      "increase": "Увеличаване",
+      "decrease": "Намаляване",
+      "orderHint": "Ред: първо сумата, след това процентът.",
+      "previewLine": "Пример: базов план {base} → този план {result}",
+      "reviewDerived": "Производна от {parent} · {base} → {result}",
+      "back": "Назад",
+      "next": "Напред",
+      "cancel": "Отказ",
+      "save": "Създай",
+      "saving": "Създава се …"
     }
   },
   "calendar": {
@@ -4372,12 +4413,17 @@
         "dynamic": "Динамична цена",
         "weekday": "Цена по ден от седмицата",
         "base": "Базова цена на ценовия план",
+        "derived": "Производна от базовия план",
         "none": "Няма зададена цена"
       },
       "modeRestrictions": "Ограничения",
       "on": "Да",
       "off": "Не",
-      "maxStayLabel": "Макс. престой"
+      "maxStayLabel": "Макс. престой",
+      "derivedFrom": "Производна от {parent} · {offset}",
+      "derivedReadOnly": "Производна цена — следва базовия план",
+      "weekdaysLabel": "Дни от седмицата",
+      "availabilityLabel": "Наличност"
     }
   },
   "seasons": {

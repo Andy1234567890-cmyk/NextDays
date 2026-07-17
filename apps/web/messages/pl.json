@@ -4139,7 +4139,19 @@
       "baseLabelEditorTitle": "Nazwa ceny podstawowej",
       "baseLabelEditorSubtitle": "Nazwa, pod jaką Twoja cena podstawowa pojawia się na stronie internetowej.",
       "baseLabelPlaceholder": "np. Cena standardowa",
-      "multiPlanHint": "Wiele planów cenowych (np. BAR/B&B) — ceny są zarządzane według dat w widoku kalendarza „Ceny”."
+      "multiPlanHint": "Wiele planów cenowych (np. BAR/B&B) — ceny są zarządzane według dat w widoku kalendarza „Ceny”.",
+      "plansTitle": "Plany cenowe",
+      "plansHint": "Ceny są zarządzane według dat w kalendarzu.",
+      "planCreate": "Utwórz plan cenowy",
+      "planModeManual": "Ręcznie",
+      "planModeDerived": "Pochodna planu {parent} · {offset}",
+      "planDerivedPrice": "obliczana",
+      "planMinStay": "Min. {nights} nocy",
+      "planDelete": "Usuń",
+      "planDeleted": "Plan cenowy usunięty.",
+      "planCreated": "Plan cenowy utworzony.",
+      "openCalendar": "Zarządzaj cenami",
+      "planConfirmDelete": "Czy na pewno usunąć ten plan cenowy? Ceny planu według dat zostaną usunięte razem z nim."
     },
     "policiesForm": {
       "title": "Zasady",
@@ -4195,6 +4207,35 @@
       "paymentSummarySplit": "{percent}% przy rezerwacji, pozostała kwota {days} dni przed przyjazdem.",
       "localizedEditorSubtitle": "Utwórz tekst i w razie potrzeby przetłumacz go dla swoich gości.",
       "localizedEditorPlaceholder": "Wpisz {title} …"
+    },
+    "ratePlanWizard": {
+      "title": "Utwórz plan cenowy",
+      "close": "Zamknij",
+      "nameLabel": "Nazwa",
+      "namePlaceholder": "np. Bed & Breakfast",
+      "nameHint": "Nazwa pojawia się także w portalach i musi być unikalna w obrębie obiektu.",
+      "nameTaken": "Ta nazwa już istnieje w tym obiekcie.",
+      "minStayLabel": "Minimalny pobyt (noce)",
+      "minStayHint": "Wartość domyślna dla wszystkich dni — poszczególne dni ustawisz później w kalendarzu.",
+      "pricingTitle": "Ustalanie cen",
+      "currencyFixed": "Waluta: {currency} (przejęta z obiektu)",
+      "modeManual": "Zarządzaj cenami ręcznie",
+      "modeDerived": "Wyprowadź z planu bazowego",
+      "noParentAvailable": "Do wyprowadzenia potrzebny jest najpierw plan zarządzany ręcznie.",
+      "basePriceLabel": "Cena podstawowa",
+      "parentLabel": "Plan bazowy",
+      "amountLabel": "Kwota",
+      "percentLabel": "Procent",
+      "increase": "Zwiększ",
+      "decrease": "Zmniejsz",
+      "orderHint": "Kolejność: najpierw kwota, potem wartość procentowa.",
+      "previewLine": "Przykład: plan bazowy {base} → ten plan {result}",
+      "reviewDerived": "Pochodna planu {parent} · {base} → {result}",
+      "back": "Wstecz",
+      "next": "Dalej",
+      "cancel": "Anuluj",
+      "save": "Utwórz",
+      "saving": "Tworzenie …"
     }
   },
   "calendar": {
@@ -4372,12 +4413,17 @@
         "dynamic": "Cena dynamiczna",
         "weekday": "Cena zależna od dnia tygodnia",
         "base": "Cena podstawowa planu cenowego",
+        "derived": "Pochodna planu bazowego",
         "none": "Nie ustawiono ceny"
       },
       "modeRestrictions": "Ograniczenia",
       "on": "Tak",
       "off": "Nie",
-      "maxStayLabel": "Maks. pobyt"
+      "maxStayLabel": "Maks. pobyt",
+      "derivedFrom": "Pochodna planu {parent} · {offset}",
+      "derivedReadOnly": "Cena pochodna — podąża za planem bazowym",
+      "weekdaysLabel": "Dni tygodnia",
+      "availabilityLabel": "Dostępność"
     }
   },
   "seasons": {

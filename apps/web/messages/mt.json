@@ -4139,7 +4139,19 @@
       "baseLabelEditorTitle": "Isem għall-prezz bażiku",
       "baseLabelEditorSubtitle": "Isem li bih il-prezz bażiku tiegħek jidher fuq il-website.",
       "baseLabelPlaceholder": "eż. Prezz standard",
-      "multiPlanHint": "Bosta pjani tal-prezzijiet (eż. BAR/B&B) — il-prezzijiet jiġu mmaniġġjati skont id-data fil-vista tal-kalendarju „Prezzijiet“."
+      "multiPlanHint": "Bosta pjani tal-prezzijiet (eż. BAR/B&B) — il-prezzijiet jiġu mmaniġġjati skont id-data fil-vista tal-kalendarju „Prezzijiet“.",
+      "plansTitle": "Pjani tal-prezzijiet",
+      "plansHint": "Il-prezzijiet jiġu mmaniġġjati skont id-data fil-kalendarju.",
+      "planCreate": "Oħloq pjan tal-prezzijiet",
+      "planModeManual": "Manwali",
+      "planModeDerived": "Derivat minn {parent} · {offset}",
+      "planDerivedPrice": "ikkalkulat",
+      "planMinStay": "Min. {nights} iljieli",
+      "planDelete": "Ħassar",
+      "planDeleted": "Il-pjan tal-prezzijiet tħassar.",
+      "planCreated": "Il-pjan tal-prezzijiet inħoloq.",
+      "openCalendar": "Immaniġġja l-prezzijiet",
+      "planConfirmDelete": "Żgur li trid tħassar dan il-pjan tal-prezzijiet? Il-prezzijiet skont id-data tal-pjan jitħassru wkoll."
     },
     "policiesForm": {
       "title": "Politiki",
@@ -4195,6 +4207,35 @@
       "paymentSummarySplit": "{percent} % mal-prenotazzjoni, il-bilanċ li fadal {days} jum(ijiem) qabel il-wasla.",
       "localizedEditorSubtitle": "Oħloq it-test u traduċih jekk ikun hemm bżonn għall-mistednin tiegħek.",
       "localizedEditorPlaceholder": "Daħħal {title} …"
+    },
+    "ratePlanWizard": {
+      "title": "Oħloq pjan tal-prezzijiet",
+      "close": "Agħlaq",
+      "nameLabel": "Isem",
+      "namePlaceholder": "eż. Bed & Breakfast",
+      "nameHint": "L-isem jidher ukoll fuq il-portali u għandu jkun uniku għal kull proprjetà.",
+      "nameTaken": "Dan l-isem diġà jeżisti f'din il-proprjetà.",
+      "minStayLabel": "Soġġorn minimu (iljieli)",
+      "minStayHint": "Valur awtomatiku għall-jiem kollha — il-jiem individwali timmaniġġjahom wara fil-kalendarju.",
+      "pricingTitle": "Ipprezzar",
+      "currencyFixed": "Munita: {currency} (meħuda mill-proprjetà)",
+      "modeManual": "Immaniġġja l-prezzijiet manwalment",
+      "modeDerived": "Idderiva minn pjan bażi",
+      "noParentAvailable": "Biex tidderiva, l-ewwel hemm bżonn pjan immaniġġjat manwalment.",
+      "basePriceLabel": "Prezz bażiku",
+      "parentLabel": "Pjan bażi",
+      "amountLabel": "Ammont",
+      "percentLabel": "Perċentwal",
+      "increase": "Għolli",
+      "decrease": "Naqqas",
+      "orderHint": "Ordni: l-ewwel l-ammont, imbagħad il-perċentwal.",
+      "previewLine": "Eżempju: pjan bażi {base} → dan il-pjan {result}",
+      "reviewDerived": "Derivat minn {parent} · {base} → {result}",
+      "back": "Lura",
+      "next": "Li jmiss",
+      "cancel": "Ikkanċella",
+      "save": "Oħloq",
+      "saving": "Qed jinħoloq …"
     }
   },
   "calendar": {
@@ -4372,12 +4413,17 @@
         "dynamic": "Prezz dinamiku",
         "weekday": "Prezz skont il-jum tal-ġimgħa",
         "base": "Prezz bażi tal-pjan tal-prezz",
+        "derived": "Derivat mill-pjan bażi",
         "none": "L-ebda prezz stabbilit"
       },
       "modeRestrictions": "Restrizzjonijiet",
       "on": "Iva",
       "off": "Le",
-      "maxStayLabel": "Soġġorn massimu"
+      "maxStayLabel": "Soġġorn massimu",
+      "derivedFrom": "Derivat minn {parent} · {offset}",
+      "derivedReadOnly": "Prezz derivat — isegwi l-pjan bażi",
+      "weekdaysLabel": "Jiem tal-ġimgħa",
+      "availabilityLabel": "Disponibbiltà"
     }
   },
   "seasons": {

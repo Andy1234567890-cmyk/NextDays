@@ -4139,7 +4139,19 @@
       "baseLabelEditorTitle": "Designação do preço base",
       "baseLabelEditorSubtitle": "Nome sob o qual o teu preço base aparece no website.",
       "baseLabelPlaceholder": "p. ex. Preço padrão",
-      "multiPlanHint": "Vários planos de preços (p. ex. BAR/B&B) — os preços são geridos por data na vista de calendário «Preços»."
+      "multiPlanHint": "Vários planos de preços (p. ex. BAR/B&B) — os preços são geridos por data na vista de calendário «Preços».",
+      "plansTitle": "Planos de preços",
+      "plansHint": "Os preços são geridos por data no calendário.",
+      "planCreate": "Criar plano de preços",
+      "planModeManual": "Manual",
+      "planModeDerived": "Derivado de {parent} · {offset}",
+      "planDerivedPrice": "calculado",
+      "planMinStay": "Mín. {nights} noites",
+      "planDelete": "Eliminar",
+      "planDeleted": "Plano de preços eliminado.",
+      "planCreated": "Plano de preços criado.",
+      "openCalendar": "Gerir preços",
+      "planConfirmDelete": "Eliminar mesmo este plano de preços? Os preços por data do plano serão eliminados também."
     },
     "policiesForm": {
       "title": "Políticas",
@@ -4195,6 +4207,35 @@
       "paymentSummarySplit": "{percent} % na reserva, valor restante {days} dias antes da chegada.",
       "localizedEditorSubtitle": "Cria o texto e traduz-o, se necessário, para os teus hóspedes.",
       "localizedEditorPlaceholder": "Introduzir {title} …"
+    },
+    "ratePlanWizard": {
+      "title": "Criar plano de preços",
+      "close": "Fechar",
+      "nameLabel": "Nome",
+      "namePlaceholder": "p. ex. Bed & Breakfast",
+      "nameHint": "O nome aparece também nos portais e tem de ser único por propriedade.",
+      "nameTaken": "Já existe um plano com este nome nesta propriedade.",
+      "minStayLabel": "Estadia mínima (noites)",
+      "minStayHint": "Padrão para todos os dias — os dias individuais são geridos depois no calendário.",
+      "pricingTitle": "Definição de preços",
+      "currencyFixed": "Moeda: {currency} (herdada da propriedade)",
+      "modeManual": "Gerir preços manualmente",
+      "modeDerived": "Derivar de um plano base",
+      "noParentAvailable": "Para derivar é preciso primeiro um plano gerido manualmente.",
+      "basePriceLabel": "Preço base",
+      "parentLabel": "Plano base",
+      "amountLabel": "Valor",
+      "percentLabel": "Percentagem",
+      "increase": "Aumentar",
+      "decrease": "Reduzir",
+      "orderHint": "Ordem: primeiro o valor, depois a percentagem.",
+      "previewLine": "Exemplo: plano base {base} → este plano {result}",
+      "reviewDerived": "Derivado de {parent} · {base} → {result}",
+      "back": "Voltar",
+      "next": "Seguinte",
+      "cancel": "Cancelar",
+      "save": "Criar",
+      "saving": "A criar …"
     }
   },
   "calendar": {
@@ -4372,12 +4413,17 @@
         "dynamic": "Preço dinâmico",
         "weekday": "Preço por dia da semana",
         "base": "Preço base do plano tarifário",
+        "derived": "Derivado do plano base",
         "none": "Sem preço definido"
       },
       "modeRestrictions": "Restrições",
       "on": "Sim",
       "off": "Não",
-      "maxStayLabel": "Estadia máx."
+      "maxStayLabel": "Estadia máx.",
+      "derivedFrom": "Derivado de {parent} · {offset}",
+      "derivedReadOnly": "Preço derivado — segue o plano base",
+      "weekdaysLabel": "Dias da semana",
+      "availabilityLabel": "Disponibilidade"
     }
   },
   "seasons": {

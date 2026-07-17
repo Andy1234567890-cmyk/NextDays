@@ -4139,7 +4139,19 @@
       "baseLabelEditorTitle": "Oznaka za osnovno ceno",
       "baseLabelEditorSubtitle": "Ime, pod katerim se tvoja osnovna cena prikaže na spletni strani.",
       "baseLabelPlaceholder": "npr. Standardna cena",
-      "multiPlanHint": "Več cenovnih načrtov (npr. BAR/B&B) — cene se urejajo po datumih v koledarskem pogledu »Cene«."
+      "multiPlanHint": "Več cenovnih načrtov (npr. BAR/B&B) — cene se urejajo po datumih v koledarskem pogledu »Cene«.",
+      "plansTitle": "Ceniki",
+      "plansHint": "Cene se urejajo po datumih v koledarju.",
+      "planCreate": "Ustvari cenik",
+      "planModeManual": "Ročno",
+      "planModeDerived": "Izpeljano iz cenika {parent} · {offset}",
+      "planDerivedPrice": "izračunano",
+      "planMinStay": "Najmanj {nights} noči",
+      "planDelete": "Izbriši",
+      "planDeleted": "Cenik izbrisan.",
+      "planCreated": "Cenik ustvarjen.",
+      "openCalendar": "Uredi cene",
+      "planConfirmDelete": "Ali res želiš izbrisati ta cenik? Cene cenika po datumih bodo izbrisane skupaj z njim."
     },
     "policiesForm": {
       "title": "Pravilniki",
@@ -4195,6 +4207,35 @@
       "paymentSummarySplit": "{percent} % ob rezervaciji, preostanek {days} dni pred prihodom.",
       "localizedEditorSubtitle": "Ustvari besedilo in ga po potrebi prevedi za svoje goste.",
       "localizedEditorPlaceholder": "Vnesi {title} …"
+    },
+    "ratePlanWizard": {
+      "title": "Ustvari cenik",
+      "close": "Zapri",
+      "nameLabel": "Ime",
+      "namePlaceholder": "npr. Bed & Breakfast",
+      "nameHint": "Ime se prikaže tudi na portalih in mora biti pri vsakem objektu enolično.",
+      "nameTaken": "To ime pri tem objektu že obstaja.",
+      "minStayLabel": "Najmanjše število nočitev",
+      "minStayHint": "Privzeto za vse dneve — posamezne dneve urediš pozneje v koledarju.",
+      "pricingTitle": "Oblikovanje cen",
+      "currencyFixed": "Valuta: {currency} (prevzeto iz objekta)",
+      "modeManual": "Cene urejaj ročno",
+      "modeDerived": "Izpelji iz osnovnega cenika",
+      "noParentAvailable": "Za izpeljavo je najprej potreben ročno urejen cenik.",
+      "basePriceLabel": "Osnovna cena",
+      "parentLabel": "Osnovni cenik",
+      "amountLabel": "Znesek",
+      "percentLabel": "Odstotek",
+      "increase": "Zvišaj",
+      "decrease": "Znižaj",
+      "orderHint": "Vrstni red: najprej znesek, nato odstotek.",
+      "previewLine": "Primer: osnovni cenik {base} → ta cenik {result}",
+      "reviewDerived": "Izpeljano iz cenika {parent} · {base} → {result}",
+      "back": "Nazaj",
+      "next": "Naprej",
+      "cancel": "Prekliči",
+      "save": "Ustvari",
+      "saving": "Ustvarjanje …"
     }
   },
   "calendar": {
@@ -4353,8 +4394,8 @@
       "propertyLabel": "Objekt",
       "modePrices": "Cene",
       "modeMinStay": "Najmanjše število nočitev",
-      "planColumn": "Cenovni načrt",
-      "empty": "Cenovnega načrta še ni — ustvarite ga v Objekti → Cene.",
+      "planColumn": "Cenik",
+      "empty": "Cenika še ni — ustvarite ga v Objekti → Cene.",
       "pricePlaceholder": "Cena v {currency}",
       "minStayPlaceholder": "Noči (min. 1)",
       "apply": "Uveljavi",
@@ -4372,12 +4413,17 @@
         "dynamic": "Dinamična cena",
         "weekday": "Cena po dnevu v tednu",
         "base": "Osnovna cena cenika",
+        "derived": "Izpeljano iz osnovnega cenika",
         "none": "Cena ni določena"
       },
       "modeRestrictions": "Omejitve",
       "on": "Da",
       "off": "Ne",
-      "maxStayLabel": "Najdaljše bivanje"
+      "maxStayLabel": "Najdaljše bivanje",
+      "derivedFrom": "Izpeljano iz cenika {parent} · {offset}",
+      "derivedReadOnly": "Izpeljana cena — sledi osnovnemu ceniku",
+      "weekdaysLabel": "Dnevi v tednu",
+      "availabilityLabel": "Razpoložljivost"
     }
   },
   "seasons": {

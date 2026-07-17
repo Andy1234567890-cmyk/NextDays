@@ -179,13 +179,96 @@ DANACH die 22 Sprachen (Memory-Workflow). Nie „Channex" im UI („Portale").
 
 ## 6. Phasen (strikt sequenziell, jede Phase mit Gates + Freigabe)
 
-| Phase | Inhalt | Gates |
-|---|---|---|
-| P1 | Migration 0157 + Resolver-derived + rates-Slice (Guards, Propagation-Enqueue) + Tests | pytest, ruff, pylint 10; Migration NICHT eingespielt |
-| P2 | Deploy P1 + Migration einspielen + **Live-Verifikation** am Objekt 956747c8: derived Plan anlegen, Kurve bei Channex gegenlesen (PUT+GET, relationships!) | Live-Beweis |
-| P3 | Grid-Umbau rates-view (Verfügbarkeitszeile, derived read-only, Bulk-Popover + weekdays-API) | tsc web, Realtime-Check |
-| P4 | Wizard + Preisplan-Liste im Objekt-Tab | tsc, Screenshots |
-| P5 | i18n DE/EN→22 · 2 Review-Loops · Doku (Architektur/ER) · Deploy | alle Gates |
+| Phase | Inhalt | Gates | Status |
+|---|---|---|---|
+| P1 | Migration 0157 + Resolver-derived + rates-Slice (Guards, Propagation-Enqueue) + Tests | pytest, ruff, pylint 10; Migration NICHT eingespielt | **fertig** (`1881b34`) |
+| P2 | Deploy P1 + Migration einspielen + **Live-Verifikation** am Objekt 956747c8: derived Plan anlegen, Kurve bei Channex gegenlesen (PUT+GET, relationships!) | Live-Beweis | **fertig** — s. u. |
+| P3 | Grid-Umbau rates-view (Verfügbarkeitszeile, derived read-only, Bulk-Popover + weekdays-API) | tsc web, Realtime-Check | **fertig** |
+| P4 | Wizard + Preisplan-Liste im Objekt-Tab | tsc, Screenshots | **fertig** |
+| P5 | i18n DE/EN→22 · 2 Review-Loops · Doku (Architektur/ER) · Deploy | alle Gates | **fertig** (Deploy offen) |
+
+**i18n:** 44 neue Keys (5 × `calendar.ratesView` inkl. `source.derived`, 27 ×
+`objects.ratePlanWizard`, 12 × `objects.pricingForm`) in allen 22 Zielsprachen,
+Key-Parität + ICU-Platzhalter maschinell gegen `de.json` verifiziert.
+`planMinStay` ist bewusst KEIN ICU-Plural („Min. {nights} Nächte") — die
+CLDR-Sonderfälle (pl/cs/sk/sl/lt/hr/ro/mt) entfallen damit.
+
+**Doku:** ARCHITECTURE.md (Resolver-Priorität + derived-Semantik, ER-Diagramm mit
+den 4 neuen Spalten + Selbstreferenz), API.md (Endpunkt-Verhalten, Guards,
+`weekdays`, Live-Beweis).
+
+### P5 — Review-Loops: gefundene und behobene Fehler (2026-07-17)
+
+Zwei Runden gegen den fertigen Code. Runde 1 fand drei echte Fehler, die in P1–P4
+durchgerutscht waren; Runde 2 hat die Fixes bestätigt (kein Blocker).
+
+1. **Wurzel 8 — keine Obergrenze auf den Bulk-Endpunkten** (kritisch).
+   `set_prices`/`set_min_stays`/`set_restrictions` prüften nur `end > start`. Live
+   nachgestellt: ein Request mit 100-Jahres-Span × Wochentagsmaske expandiert zu
+   **15.653 Tagen → 15.653 Upserts + 15.653 ARI-Jobs** (die Maske verhindert das
+   Bündeln benachbarter Tage). Fix: gemeinsame `_validate_range()` mit
+   `_MAX_SET_DAYS = 730` für alle drei Schemas.
+2. **Wurzel 1 — Kind-Propagation fehlte komplett.** `_derived_children()` wurde nur
+   vom Lösch-Guard genutzt; kein Push-Pfad enqueuete Kind-Pushes. Real: Preis am
+   Basis-Plan ändern → OTAs behalten den alten Kind-Preis bis zum 15-min-Tick.
+   Fix: `_propagate_to_children()` in `set_prices`, `clear_all_prices`, `update`.
+   Bewusst der objektweite `reconcile_rate_plan_prices` (rechnet über den
+   Resolver) statt eigener Kurven-Rechnung — die Formel bleibt an EINER Stelle.
+   `set_base_price` brauchte nichts: es enqueued den Reconcile bereits.
+3. **`update()` — Reconcile-Trigger zu eng + Währungs-Leck.** Der Trigger hing nur
+   an `base_price`; eine reine Offset-Änderung („+25 €" → „+30 €") verschob die
+   Kurve, ohne etwas einzureihen. Und ein `PATCH {currency}` OHNE `rate_mode` lief
+   an `_resolve_derived_fields` vorbei → Kind USD, Parent EUR. Fix: Trigger auf
+   alle preisrelevanten Felder erweitert; `stays_derived`-Guard (422). Der
+   Rückweg `derived → manual` MIT eigenem Preis bleibt erlaubt (Gegenprobe-Test).
+4. **Erfundener Dummy `currency="x"`** (Wurzel 4) entfernt → 422 bei kaputter Zeile.
+5. **Zyklen-Backstop** im Resolver von Tiefenzähler auf `frozenset`-`_seen`:
+   erkennt A→B→A sofort statt nach 4 Ebenen.
+6. **Frontend:** `source.derived` fehlte in DE+EN, obwohl der Resolver die Quelle
+   liefert (next-intl hätte geworfen). Objekt-Kopfzeile: der Toggle hieß
+   „Verfügbarkeit", klappte aber die Preis-Zeilen weg — jetzt trägt er den
+   Objekt-Titel (Plan 5.1). Bulk-Editor von der umbrechenden Leiste zum
+   zentrierten Popup (Icon je Modus, Escape/Schleier-Klick, `rounded-2xl`).
+   Plan löschen: `window.confirm` + `toast.success` (Projekt-Muster).
+
+Alle drei Backend-Fixes sind durch Regressionstests abgesichert, die **gegen den
+ungefixten Stand nachweislich fehlschlagen** (kein Test, der sich selbst prüft).
+
+**Abgelehnter Befund:** `max-h-[90vh]` sei ein verbotenes Arbitrary. Die Regel
+zielt auf Hex-/Opacity-Arbitraries (Tailwind-v4-Kompilierung); Viewport-Einheiten
+haben keinen Token und vier bestehende Modals nutzen exakt diesen Wert.
+
+**Bestands-Lücke (nicht von hier):** `en.json` hat **keinen** `objects`-Block —
+als einzige der 23 Sprachen. Da der next-intl-Merge nur auf Top-Level greift,
+fällt EN im Objekte-Bereich sauber auf DE zurück; ein `objects`-Block mit NUR den
+neuen Keys würde dagegen den ganzen Bereich werfen. Darum bleibt EN hier
+unangetastet — das gehört in den bereichsweisen i18n-Lauf.
+
+### P2 — Live-Beweis (2026-07-17, Channex Staging, Objekt 956747c8)
+
+Migration 0157 eingespielt (4 Spalten, 2 CHECKs, FK `on delete restrict`,
+Partial-Index — live gegen die Server-DB verifiziert). Gegen die **deployte** API
+geprüft, alles bestanden:
+
+| Prüfung | Ergebnis |
+|---|---|
+| Kurve `(100+25)×0,85`, Quelle `derived` | 106,25 |
+| Kind erbt Parent-Währung (EUR-Wunsch auf USD-Parent) | USD |
+| Kaskade (Basis-Plan ist `derived`) | 422 |
+| Basis-Plan fremd/unbekannt | 422 |
+| `PUT /prices` auf derived | 422 |
+| `PUT /min-stays` auf derived | 200 (bleibt erlaubt) |
+| Basis-Plan mit Kind löschen | 409 |
+| Grid: `price_read_only`, `derived_from_name` | gesetzt |
+| **Channex gegengelesen** (`GET /restrictions`) | **106,25** = lokale Kurve |
+| Channex-Rate-Plan des Kindes | `rate_mode: manual` (Ableitung rechnet lokal) |
+
+Gelernt: `full_sync` läuft ASYNCHRON im Worker — der Channex-Rate-Plan existiert
+Sekunden VOR seiner Preis-Kurve. Zu früh gegenlesen misst den Alt-Stand (erster
+Lauf las 100,00 und sah nach einem Bug aus; es war ein Messfehler). Immer bis zur
+fertigen Kurve pollen, erst danach aufräumen. Nebenbefund: der Rate-Plan-Rückbau
+arbeitet korrekt — ein lokal gelöschter Plan wird bei Channex automatisch
+entfernt und das Mapping gepruned.
 
 ## 7. Bewusste v1-Grenzen (v2-Kandidaten)
 - Datums-Offset-Overrides auf derived Plänen (SiteMinder „+Add rate override").

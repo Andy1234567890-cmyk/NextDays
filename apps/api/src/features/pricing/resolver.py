@@ -49,8 +49,10 @@ class PricingError(Exception):
         self.status_code = status_code
 
 
-# Max. Ableitungstiefe: Kaskade ist verboten (Parent muss manual sein), diese
-# Grenze ist nur der Zyklen-/Fehldaten-Backstop im Resolver (fail-closed).
+# Kaskade ist per Service verboten (Parent MUSS manual sein) — der Resolver
+# braucht trotzdem einen Backstop gegen Fehldaten in der DB (A→B→A; der CHECK
+# verbietet nur die Selbstreferenz). Ein besuchter Plan darf in einer Kette nie
+# zweimal vorkommen: erkennt den Zyklus SOFORT statt nach n Ebenen (fail-closed).
 _MAX_DERIVE_DEPTH = 4
 
 
@@ -444,7 +446,7 @@ class PricingResolver:
         overrides: dict[str, float],
         dynamic: dict[str, dict],
         config: _PricingConfig,
-        _depth: int = 0,
+        _seen: frozenset[str] = frozenset(),
     ) -> list[EffectivePriceDay]:
         """Tages-Preiskurve EINES Rate-Plans über [check_in, check_out).
 
@@ -452,17 +454,20 @@ class PricingResolver:
         derived: Parent-Kurve rekursiv auflösen, dann pro Tag den Offset anwenden
         (erst Betrag, dann Prozent; ≤ 0 → kein Preis). Property-weite override/
         dynamic/weekday gelten NUR für manual — ein abgeleiteter Preis folgt
-        ausschließlich seinem Parent (sonst zwei konkurrierende Quellen, Wurzel 4)."""
+        ausschließlich seinem Parent (sonst zwei konkurrierende Quellen, Wurzel 4).
+
+        `_seen` trägt die bereits besuchten Pläne der Kette (Zyklen-Backstop)."""
         meta = self._load_rate_plan_meta(property_id, rate_plan_id)
         if meta.rate_mode == "derived" and meta.parent_id:
-            if _depth >= _MAX_DERIVE_DEPTH:
-                # Kaskade ist per Service verboten; hier nur der Zyklen-Backstop.
+            # Zyklus (A→B→A) oder zu tiefe Kette: beides sind Fehldaten, die der
+            # Service nicht zulässt — hier fail-closed statt Endlos-Rekursion.
+            if meta.parent_id in _seen or len(_seen) >= _MAX_DERIVE_DEPTH:
                 raise PricingError(
                     "Ableitungskette zu tief oder zyklisch.", status_code=422
                 )
             parent = self._rate_plan_curve(
                 property_id, meta.parent_id, days, check_in, check_out,
-                overrides, dynamic, config, _depth + 1,
+                overrides, dynamic, config, _seen | {rate_plan_id},
             )
             return [
                 EffectivePriceDay(

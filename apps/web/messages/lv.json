@@ -4139,7 +4139,19 @@
       "baseLabelEditorTitle": "Pamatcenas nosaukums",
       "baseLabelEditorSubtitle": "Nosaukums, ar kādu tava pamatcena parādās vietnē.",
       "baseLabelPlaceholder": "piem., standarta cena",
-      "multiPlanHint": "Vairāki cenu plāni (piem., BAR/B&B) — cenas tiek pārvaldītas pa datumiem kalendāra skatā “Cenas”."
+      "multiPlanHint": "Vairāki cenu plāni (piem., BAR/B&B) — cenas tiek pārvaldītas pa datumiem kalendāra skatā “Cenas”.",
+      "plansTitle": "Cenu plāni",
+      "plansHint": "Cenas tiek pārvaldītas pa datumiem kalendārā.",
+      "planCreate": "Izveidot cenu plānu",
+      "planModeManual": "Manuāli",
+      "planModeDerived": "Atvasināts no plāna {parent} · {offset}",
+      "planDerivedPrice": "aprēķināta",
+      "planMinStay": "Vismaz {nights} naktis",
+      "planDelete": "Dzēst",
+      "planDeleted": "Cenu plāns dzēsts.",
+      "planCreated": "Cenu plāns izveidots.",
+      "openCalendar": "Pārvaldīt cenas",
+      "planConfirmDelete": "Vai tiešām dzēst šo cenu plānu? Plāna cenas pa datumiem tiks dzēstas kopā ar to."
     },
     "policiesForm": {
       "title": "Noteikumi",
@@ -4195,6 +4207,35 @@
       "paymentSummarySplit": "{percent} % rezervējot, atlikums {days} dienas pirms ierašanās.",
       "localizedEditorSubtitle": "Izveido tekstu un pēc vajadzības iztulko to saviem viesiem.",
       "localizedEditorPlaceholder": "Ievadi {title} …"
+    },
+    "ratePlanWizard": {
+      "title": "Izveidot cenu plānu",
+      "close": "Aizvērt",
+      "nameLabel": "Nosaukums",
+      "namePlaceholder": "piem., Bed & Breakfast",
+      "nameHint": "Nosaukums parādās arī portālos, un tam jābūt unikālam katrā objektā.",
+      "nameTaken": "Šāds nosaukums šajā objektā jau pastāv.",
+      "minStayLabel": "Minimālais uzturēšanās ilgums (naktis)",
+      "minStayHint": "Noklusējums visām dienām — atsevišķas dienas pārvaldīsi vēlāk kalendārā.",
+      "pricingTitle": "Cenu veidošana",
+      "currencyFixed": "Valūta: {currency} (pārņemta no objekta)",
+      "modeManual": "Pārvaldīt cenas manuāli",
+      "modeDerived": "Atvasināt no bāzes plāna",
+      "noParentAvailable": "Lai atvasinātu, vispirms nepieciešams manuāli pārvaldīts plāns.",
+      "basePriceLabel": "Pamatcena",
+      "parentLabel": "Bāzes plāns",
+      "amountLabel": "Summa",
+      "percentLabel": "Procenti",
+      "increase": "Palielināt",
+      "decrease": "Samazināt",
+      "orderHint": "Secība: vispirms summa, pēc tam procentu likme.",
+      "previewLine": "Piemērs: bāzes plāns {base} → šis plāns {result}",
+      "reviewDerived": "Atvasināts no plāna {parent} · {base} → {result}",
+      "back": "Atpakaļ",
+      "next": "Tālāk",
+      "cancel": "Atcelt",
+      "save": "Izveidot",
+      "saving": "Notiek izveide …"
     }
   },
   "calendar": {
@@ -4372,12 +4413,17 @@
         "dynamic": "Dinamiskā cena",
         "weekday": "Nedēļas dienas cena",
         "base": "Cenu plāna bāzes cena",
+        "derived": "Atvasināts no bāzes plāna",
         "none": "Cena nav iestatīta"
       },
       "modeRestrictions": "Ierobežojumi",
       "on": "Jā",
       "off": "Nē",
-      "maxStayLabel": "Maks. uzturēšanās"
+      "maxStayLabel": "Maks. uzturēšanās",
+      "derivedFrom": "Atvasināts no plāna {parent} · {offset}",
+      "derivedReadOnly": "Atvasināta cena — seko bāzes plānam",
+      "weekdaysLabel": "Nedēļas dienas",
+      "availabilityLabel": "Pieejamība"
     }
   },
   "seasons": {

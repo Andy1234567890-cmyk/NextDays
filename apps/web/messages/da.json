@@ -4139,7 +4139,19 @@
       "baseLabelEditorTitle": "Betegnelse for grundprisen",
       "baseLabelEditorSubtitle": "Navn, som din grundpris vises under på websitet.",
       "baseLabelPlaceholder": "f.eks. Standardpris",
-      "multiPlanHint": "Flere prisplaner (f.eks. BAR/B&B) — priserne vedligeholdes datospecifikt i kalendervisningen „Priser“."
+      "multiPlanHint": "Flere prisplaner (f.eks. BAR/B&B) — priserne vedligeholdes datospecifikt i kalendervisningen „Priser“.",
+      "plansTitle": "Prisplaner",
+      "plansHint": "Priserne vedligeholdes datospecifikt i kalenderen.",
+      "planCreate": "Opret prisplan",
+      "planModeManual": "Manuel",
+      "planModeDerived": "Afledt af {parent} · {offset}",
+      "planDerivedPrice": "beregnet",
+      "planMinStay": "Min. {nights} nætter",
+      "planDelete": "Slet",
+      "planDeleted": "Prisplan slettet.",
+      "planCreated": "Prisplan oprettet.",
+      "openCalendar": "Vedligehold priser",
+      "planConfirmDelete": "Vil du virkelig slette denne prisplan? Planens datopriser slettes med."
     },
     "policiesForm": {
       "title": "Retningslinjer",
@@ -4195,6 +4207,35 @@
       "paymentSummarySplit": "{percent} % ved booking, restbeløb {days} dage før ankomst.",
       "localizedEditorSubtitle": "Opret teksten, og oversæt den efter behov til dine gæster.",
       "localizedEditorPlaceholder": "Indtast {title} …"
+    },
+    "ratePlanWizard": {
+      "title": "Opret prisplan",
+      "close": "Luk",
+      "nameLabel": "Navn",
+      "namePlaceholder": "f.eks. Bed & Breakfast",
+      "nameHint": "Navnet vises også hos portalerne og skal være entydigt pr. objekt.",
+      "nameTaken": "Dette navn findes allerede på dette objekt.",
+      "minStayLabel": "Minimumsophold (nætter)",
+      "minStayHint": "Standard for alle dage — enkelte dage tilpasser du senere i kalenderen.",
+      "pricingTitle": "Prisfastsættelse",
+      "currencyFixed": "Valuta: {currency} (overtaget fra objektet)",
+      "modeManual": "Vedligehold priser manuelt",
+      "modeDerived": "Afled fra en basisplan",
+      "noParentAvailable": "For at aflede kræves der først en manuelt vedligeholdt plan.",
+      "basePriceLabel": "Grundpris",
+      "parentLabel": "Basisplan",
+      "amountLabel": "Beløb",
+      "percentLabel": "Procent",
+      "increase": "Forhøj",
+      "decrease": "Reducer",
+      "orderHint": "Rækkefølge: først beløbet, derefter procentsatsen.",
+      "previewLine": "Eksempel: basisplan {base} → denne plan {result}",
+      "reviewDerived": "Afledt af {parent} · {base} → {result}",
+      "back": "Tilbage",
+      "next": "Videre",
+      "cancel": "Annuller",
+      "save": "Opret",
+      "saving": "Opretter …"
     }
   },
   "calendar": {
@@ -4372,12 +4413,17 @@
         "dynamic": "Dynamisk pris",
         "weekday": "Ugedagspris",
         "base": "Grundpris for prisplanen",
+        "derived": "Afledt af basisplanen",
         "none": "Ingen pris angivet"
       },
       "modeRestrictions": "Restriktioner",
       "on": "Til",
       "off": "Fra",
-      "maxStayLabel": "Maks. ophold"
+      "maxStayLabel": "Maks. ophold",
+      "derivedFrom": "Afledt af {parent} · {offset}",
+      "derivedReadOnly": "Afledt pris — følger basisplanen",
+      "weekdaysLabel": "Ugedage",
+      "availabilityLabel": "Tilgængelighed"
     }
   },
   "seasons": {

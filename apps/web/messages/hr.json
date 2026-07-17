@@ -4139,7 +4139,19 @@
       "baseLabelEditorTitle": "Naziv za osnovnu cijenu",
       "baseLabelEditorSubtitle": "Naziv pod kojim se osnovna cijena prikazuje na web-stranici.",
       "baseLabelPlaceholder": "npr. Standardna cijena",
-      "multiPlanHint": "Više cjenovnih planova (npr. BAR/B&B) — cijene se održavaju po datumu u prikazu kalendara „Cijene“."
+      "multiPlanHint": "Više cjenovnih planova (npr. BAR/B&B) — cijene se održavaju po datumu u prikazu kalendara „Cijene“.",
+      "plansTitle": "Cjenici",
+      "plansHint": "Cijene se održavaju po datumu u kalendaru.",
+      "planCreate": "Izradi cjenik",
+      "planModeManual": "Ručno",
+      "planModeDerived": "Izvedeno iz cjenika {parent} · {offset}",
+      "planDerivedPrice": "izračunato",
+      "planMinStay": "Min. {nights} noćenja",
+      "planDelete": "Izbriši",
+      "planDeleted": "Cjenik izbrisan.",
+      "planCreated": "Cjenik izrađen.",
+      "openCalendar": "Održavaj cijene",
+      "planConfirmDelete": "Stvarno izbrisati ovaj cjenik? Cijene cjenika po datumu bit će izbrisane zajedno s njim."
     },
     "policiesForm": {
       "title": "Pravila",
@@ -4195,6 +4207,35 @@
       "paymentSummarySplit": "{percent} % pri rezervaciji, preostali iznos {days} dana prije dolaska.",
       "localizedEditorSubtitle": "Izradi tekst i po potrebi ga prevedi za svoje goste.",
       "localizedEditorPlaceholder": "Unesi {title} …"
+    },
+    "ratePlanWizard": {
+      "title": "Izradi cjenik",
+      "close": "Zatvori",
+      "nameLabel": "Naziv",
+      "namePlaceholder": "npr. Bed & Breakfast",
+      "nameHint": "Naziv se prikazuje i na portalima i mora biti jedinstven po objektu.",
+      "nameTaken": "Taj naziv već postoji na ovom objektu.",
+      "minStayLabel": "Minimalni boravak (noćenja)",
+      "minStayHint": "Zadano za sve dane — pojedine dane uređuješ kasnije u kalendaru.",
+      "pricingTitle": "Oblikovanje cijena",
+      "currencyFixed": "Valuta: {currency} (preuzeto iz objekta)",
+      "modeManual": "Ručno održavaj cijene",
+      "modeDerived": "Izvedi iz osnovnog cjenika",
+      "noParentAvailable": "Za izvođenje je najprije potreban ručno održavan cjenik.",
+      "basePriceLabel": "Osnovna cijena",
+      "parentLabel": "Osnovni cjenik",
+      "amountLabel": "Iznos",
+      "percentLabel": "Postotak",
+      "increase": "Povećaj",
+      "decrease": "Smanji",
+      "orderHint": "Redoslijed: najprije iznos, zatim postotak.",
+      "previewLine": "Primjer: osnovni cjenik {base} → ovaj cjenik {result}",
+      "reviewDerived": "Izvedeno iz cjenika {parent} · {base} → {result}",
+      "back": "Natrag",
+      "next": "Dalje",
+      "cancel": "Odustani",
+      "save": "Izradi",
+      "saving": "Izrađuje se …"
     }
   },
   "calendar": {
@@ -4372,12 +4413,17 @@
         "dynamic": "Dinamička cijena",
         "weekday": "Cijena po danu u tjednu",
         "base": "Osnovna cijena cjenika",
+        "derived": "Izvedeno iz osnovnog cjenika",
         "none": "Cijena nije postavljena"
       },
       "modeRestrictions": "Ograničenja",
       "on": "Da",
       "off": "Ne",
-      "maxStayLabel": "Maks. boravak"
+      "maxStayLabel": "Maks. boravak",
+      "derivedFrom": "Izvedeno iz cjenika {parent} · {offset}",
+      "derivedReadOnly": "Izvedena cijena — prati osnovni cjenik",
+      "weekdaysLabel": "Dani u tjednu",
+      "availabilityLabel": "Dostupnost"
     }
   },
   "seasons": {

@@ -424,17 +424,41 @@ class RatesService:
         if not existing or existing[0]["properties"]["tenant_id"] != tenant_id:
             raise RateError("Preisplan nicht gefunden.", status_code=404)
         patch = req.model_dump(exclude_none=True)
+        # Ein abgeleiteter Plan hat KEINE eigene Währung/Basis — beides gehört dem
+        # Parent (Wurzel 4: keine zweite Währungs-Wahrheit). Ohne diesen Guard
+        # könnte ein PATCH {currency: "USD"} OHNE rate_mode an
+        # _resolve_derived_fields vorbeilaufen und das Kind von seinem Parent
+        # entkoppeln (Kind USD, Parent EUR).
+        stays_derived = (
+            req.rate_mode == "derived"
+            or (req.rate_mode is None and existing[0].get("rate_mode") == "derived")
+        )
+        if stays_derived and (req.currency is not None or req.base_price is not None):
+            raise RateError(
+                "Ein abgeleiteter Plan übernimmt Währung und Grundpreis vom "
+                "Basis-Plan — beides kann hier nicht gesetzt werden.",
+                status_code=422,
+            )
         # rate_mode berührt? Ableitungs-Felder validieren + normalisieren. Ohne
         # rate_mode im Request bleiben die derived-Spalten unverändert (Teil-Update).
         if req.rate_mode is not None:
             # exclude_none verwirft offset=None → für den Wechsel derived→manual
             # müssen die Spalten aber explizit genullt werden. _resolve_derived_fields
             # liefert die vollständigen Zielwerte (inkl. None).
+            # Die Währung des BESTEHENDEN Plans ist Pflichtdatum; fehlt sie, ist
+            # die Zeile kaputt → klar fehlschlagen statt einen Wert zu erfinden
+            # (Wurzel 4). _resolve_derived_fields liest sie ohnehin nur formal.
+            existing_currency = existing[0].get("currency")
+            if not existing_currency:
+                raise RateError(
+                    "Dem Preisplan fehlt die Währung — bitte Support kontaktieren.",
+                    status_code=422,
+                )
             derived = self._resolve_derived_fields(
                 existing[0]["property_id"],
                 RatePlanCreate(
                     property_id=existing[0]["property_id"],
-                    base_price=0, currency=existing[0].get("currency") or "x",
+                    base_price=0, currency=existing_currency,
                     rate_mode=req.rate_mode,
                     derived_from_rate_plan_id=req.derived_from_rate_plan_id,
                     offset_amount=req.offset_amount,
@@ -472,10 +496,16 @@ class RatesService:
             self._push_min_stay_restriction(
                 tenant_id, row["property_id"], patch["min_stay"]
             )
-        # Basispreis geändert → die durchgehende Tageskurve DIESES Plans bei
-        # Channex ist veraltet. Sofort einen Desired-State-Reconcile einreihen
-        # (coalesced je Objekt) statt auf den 15-min-Tick zu warten.
-        if "base_price" in patch:
+        # Tageskurve bei Channex veraltet → Desired-State-Reconcile einreihen
+        # (coalesced je Objekt) statt auf den 15-min-Tick zu warten. Auslöser:
+        # Basispreis ODER jede Änderung an der Ableitung (Modus/Basis-Plan/Offsets)
+        # — ein geänderter Offset verschiebt die Kurve des Plans sofort, ohne dass
+        # base_price im Patch steht (Wurzel 1: Gegenzustand mitpflegen).
+        price_relevant = {
+            "base_price", "rate_mode", "derived_from_rate_plan_id",
+            "offset_amount", "offset_percent",
+        }
+        if price_relevant & set(patch):
             try:
                 enqueue(
                     self._db(),
@@ -494,6 +524,11 @@ class RatesService:
                     "rate_plan_reconcile_enqueue_failed",
                     tenant_id=tenant_id, error=str(exc)[:200],
                 )
+        else:
+            # Sonst: hängen Kinder an diesem Plan, kann eine sonstige Änderung sie
+            # trotzdem betreffen (der Reconcile oben deckt das Objekt bereits ab,
+            # darum nur im else-Zweig — sonst zwei Jobs für denselben Effekt).
+            self._propagate_to_children(tenant_id, row["property_id"], rate_plan_id)
         log.info("rate_plan_updated", tenant_id=tenant_id, rate_plan_id=rate_plan_id)
         return self._row(row)
 
@@ -595,6 +630,41 @@ class RatesService:
         ).data or []
         return [r["id"] for r in rows if r.get("id")]
 
+    def _propagate_to_children(
+        self, tenant_id: str, property_id: str, rate_plan_id: str
+    ) -> None:
+        """Preisänderung eines Plans an seine abgeleiteten Kinder weitergeben
+        (Wurzel 1: der Gegenzustand muss mitgepflegt werden).
+
+        Hat der Plan Kinder, ändert sich deren Kurve fachlich SOFORT mit — ohne
+        das hier behielten die OTAs den alten Kind-Preis bis zum nächsten
+        Reconcile-Tick (bis zu 15 min falscher Verkaufspreis).
+
+        Bewusst der objektweite `reconcile_rate_plan_prices` statt eines direkten
+        Segment-Pushes: der Reconcile rechnet jede Kurve über den zentralen
+        Resolver (ari_push.reconcile_rate_plan_prices) — die Ableitungsformel
+        bleibt damit an EINER Stelle. Würde der Service den Kindpreis selbst
+        rechnen, gäbe es eine zweite Preis-Wahrheit (Wurzel 4). Coalesced je
+        Objekt: mehrere Kinder = EIN Job."""
+        if not self._derived_children(rate_plan_id):
+            return
+        try:
+            enqueue(
+                self._db(),
+                "reconcile_rate_plan_prices",
+                tenant_id=tenant_id,
+                payload={"tenant_id": tenant_id, "property_id": property_id},
+                dedup_key=dedup_key(
+                    tenant_id, property_id, "reconcile_rate_plan_prices"
+                ),
+            )
+        except Exception as exc:  # noqa: BLE001 — Einreihen darf den Request nie kippen
+            log.warning(
+                "rate_plan_child_propagation_enqueue_failed",
+                tenant_id=tenant_id, rate_plan_id=rate_plan_id,
+                error=str(exc)[:200],
+            )
+
     def _require_own_rate_plan(self, tenant_id: str, rate_plan_id: str) -> dict:
         """Einen Rate-Plan laden UND auf den Tenant scopen in EINEM Schritt (Wurzel 3:
         Load und Scope nicht trennen). Service-Role umgeht RLS → der Join auf
@@ -692,6 +762,7 @@ class RatesService:
                 tenant_id, property_id, rate_plan_id,
                 seg_from, seg_to + timedelta(days=1), rate_cents,
             )
+        self._propagate_to_children(tenant_id, property_id, rate_plan_id)
         log.info(
             "rate_plan_prices_set",
             tenant_id=tenant_id,
@@ -746,6 +817,7 @@ class RatesService:
         )
         # Basispreis wieder an Channex spiegeln (Reconcile-Tick gleicht zusätzlich ab).
         self._sync_property(tenant_id, plan["property_id"], None, None)
+        self._propagate_to_children(tenant_id, plan["property_id"], rate_plan_id)
         log.info(
             "rate_plan_prices_cleared_all",
             tenant_id=tenant_id,

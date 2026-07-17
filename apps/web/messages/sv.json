@@ -4139,7 +4139,19 @@
       "baseLabelEditorTitle": "Beteckning för grundpriset",
       "baseLabelEditorSubtitle": "Namn som ditt grundpris visas under på webbplatsen.",
       "baseLabelPlaceholder": "t.ex. Standardpris",
-      "multiPlanHint": "Flera prisplaner (t.ex. BAR/B&B) — priserna hanteras datumspecifikt i kalendervyn ”Priser”."
+      "multiPlanHint": "Flera prisplaner (t.ex. BAR/B&B) — priserna hanteras datumspecifikt i kalendervyn ”Priser”.",
+      "plansTitle": "Prisplaner",
+      "plansHint": "Priserna hanteras datumspecifikt i kalendern.",
+      "planCreate": "Skapa prisplan",
+      "planModeManual": "Manuell",
+      "planModeDerived": "Härledd från {parent} · {offset}",
+      "planDerivedPrice": "beräknat",
+      "planMinStay": "Min. {nights} nätter",
+      "planDelete": "Ta bort",
+      "planDeleted": "Prisplanen har tagits bort.",
+      "planCreated": "Prisplanen har skapats.",
+      "openCalendar": "Hantera priser",
+      "planConfirmDelete": "Vill du verkligen ta bort den här prisplanen? Planens datumpriser tas bort samtidigt."
     },
     "policiesForm": {
       "title": "Villkor",
@@ -4195,6 +4207,35 @@
       "paymentSummarySplit": "{percent} % vid bokning, restbelopp {days} dagar före ankomst.",
       "localizedEditorSubtitle": "Skapa texten och översätt den vid behov för dina gäster.",
       "localizedEditorPlaceholder": "Ange {title} …"
+    },
+    "ratePlanWizard": {
+      "title": "Skapa prisplan",
+      "close": "Stäng",
+      "nameLabel": "Namn",
+      "namePlaceholder": "t.ex. Bed & Breakfast",
+      "nameHint": "Namnet visas även hos portalerna och måste vara unikt per objekt.",
+      "nameTaken": "Det här namnet finns redan på det här objektet.",
+      "minStayLabel": "Minsta vistelse (nätter)",
+      "minStayHint": "Standard för alla dagar — enskilda dagar hanterar du senare i kalendern.",
+      "pricingTitle": "Prissättning",
+      "currencyFixed": "Valuta: {currency} (hämtad från objektet)",
+      "modeManual": "Hantera priser manuellt",
+      "modeDerived": "Härled från en basplan",
+      "noParentAvailable": "För att härleda krävs först en manuellt hanterad plan.",
+      "basePriceLabel": "Grundpris",
+      "parentLabel": "Basplan",
+      "amountLabel": "Belopp",
+      "percentLabel": "Procent",
+      "increase": "Höj",
+      "decrease": "Sänk",
+      "orderHint": "Ordning: först beloppet, sedan procentsatsen.",
+      "previewLine": "Exempel: basplan {base} → denna plan {result}",
+      "reviewDerived": "Härledd från {parent} · {base} → {result}",
+      "back": "Tillbaka",
+      "next": "Nästa",
+      "cancel": "Avbryt",
+      "save": "Skapa",
+      "saving": "Skapas …"
     }
   },
   "calendar": {
@@ -4372,12 +4413,17 @@
         "dynamic": "Dynamiskt pris",
         "weekday": "Veckodagspris",
         "base": "Grundpris för prisplanen",
+        "derived": "Härledd från basplanen",
         "none": "Inget pris angivet"
       },
       "modeRestrictions": "Restriktioner",
       "on": "På",
       "off": "Av",
-      "maxStayLabel": "Max vistelse"
+      "maxStayLabel": "Max vistelse",
+      "derivedFrom": "Härledd från {parent} · {offset}",
+      "derivedReadOnly": "Härlett pris — följer basplanen",
+      "weekdaysLabel": "Veckodagar",
+      "availabilityLabel": "Tillgänglighet"
     }
   },
   "seasons": {

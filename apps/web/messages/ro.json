@@ -4139,7 +4139,19 @@
       "baseLabelEditorTitle": "Denumire pentru prețul de bază",
       "baseLabelEditorSubtitle": "Numele sub care apare prețul de bază pe website.",
       "baseLabelPlaceholder": "de ex. Preț standard",
-      "multiPlanHint": "Mai multe planuri de prețuri (de ex. BAR/B&B) — prețurile se gestionează pe date în vizualizarea de calendar „Prețuri”."
+      "multiPlanHint": "Mai multe planuri de prețuri (de ex. BAR/B&B) — prețurile se gestionează pe date în vizualizarea de calendar „Prețuri”.",
+      "plansTitle": "Planuri de prețuri",
+      "plansHint": "Prețurile se gestionează pe date în calendar.",
+      "planCreate": "Creează plan de prețuri",
+      "planModeManual": "Manual",
+      "planModeDerived": "Derivat din {parent} · {offset}",
+      "planDerivedPrice": "calculat",
+      "planMinStay": "Min. {nights} nopți",
+      "planDelete": "Șterge",
+      "planDeleted": "Plan de prețuri șters.",
+      "planCreated": "Plan de prețuri creat.",
+      "openCalendar": "Gestionează prețurile",
+      "planConfirmDelete": "Ștergi într-adevăr acest plan de prețuri? Prețurile pe date ale planului vor fi șterse și ele."
     },
     "policiesForm": {
       "title": "Politici",
@@ -4195,6 +4207,35 @@
       "paymentSummarySplit": "{percent} % la rezervare, restul de plată cu {days} zile înainte de sosire.",
       "localizedEditorSubtitle": "Creează textul și tradu-l dacă este necesar pentru oaspeții tăi.",
       "localizedEditorPlaceholder": "Introdu {title} …"
+    },
+    "ratePlanWizard": {
+      "title": "Creează plan de prețuri",
+      "close": "Închide",
+      "nameLabel": "Nume",
+      "namePlaceholder": "de ex. Bed & Breakfast",
+      "nameHint": "Numele apare și pe portaluri și trebuie să fie unic pentru fiecare proprietate.",
+      "nameTaken": "Acest nume există deja la această proprietate.",
+      "minStayLabel": "Sejur minim (nopți)",
+      "minStayHint": "Valoare implicită pentru toate zilele — zilele individuale se gestionează ulterior în calendar.",
+      "pricingTitle": "Stabilirea prețurilor",
+      "currencyFixed": "Monedă: {currency} (preluată din proprietate)",
+      "modeManual": "Gestionează prețurile manual",
+      "modeDerived": "Derivă dintr-un plan de bază",
+      "noParentAvailable": "Pentru derivare este nevoie mai întâi de un plan gestionat manual.",
+      "basePriceLabel": "Preț de bază",
+      "parentLabel": "Plan de bază",
+      "amountLabel": "Sumă",
+      "percentLabel": "Procent",
+      "increase": "Mărește",
+      "decrease": "Micșorează",
+      "orderHint": "Ordine: mai întâi suma, apoi procentul.",
+      "previewLine": "Exemplu: plan de bază {base} → acest plan {result}",
+      "reviewDerived": "Derivat din {parent} · {base} → {result}",
+      "back": "Înapoi",
+      "next": "Continuă",
+      "cancel": "Anulează",
+      "save": "Creează",
+      "saving": "Se creează …"
     }
   },
   "calendar": {
@@ -4372,12 +4413,17 @@
         "dynamic": "Preț dinamic",
         "weekday": "Preț pe zi a săptămânii",
         "base": "Preț de bază al planului tarifar",
+        "derived": "Derivat din planul de bază",
         "none": "Niciun preț definit"
       },
       "modeRestrictions": "Restricții",
       "on": "Da",
       "off": "Nu",
-      "maxStayLabel": "Sejur max."
+      "maxStayLabel": "Sejur max.",
+      "derivedFrom": "Derivat din {parent} · {offset}",
+      "derivedReadOnly": "Preț derivat — urmează planul de bază",
+      "weekdaysLabel": "Zilele săptămânii",
+      "availabilityLabel": "Disponibilitate"
     }
   },
   "seasons": {

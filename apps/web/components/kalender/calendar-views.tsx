@@ -40,9 +40,10 @@ const VIEWS = [
   { key: "bookings", labelKey: "bookings" },
   { key: "month", labelKey: "month" },
   { key: "occupancy", labelKey: "occupancy" },
-  // Hotel-Rate-Grid (Preise je Kategorie × Rate-Plan) — nur bei Hotel-Zugang
-  // sichtbar (FeWo pflegt Preise am Objekt, kein Plan-Grid nötig).
-  { key: "rates", labelKey: "rates", hotelOnly: true },
+  // Preise & Bestand: Tageskurve je Rate-Plan des Objekts. Für Hotel UND FeWo —
+  // Preise werden AUSSCHLIESSLICH hier gepflegt (nicht im Belegungsplan), und
+  // auch ein Ferienobjekt kann mehrere Pläne (BAR/B&B, abgeleitet) haben.
+  { key: "rates", labelKey: "rates" },
 ] as const;
 
 type ViewKey = (typeof VIEWS)[number]["key"];
@@ -115,9 +116,7 @@ export function CalendarViews({
       <option value="" disabled>
         {t("calendarViews.chooseView")}
       </option>
-      {VIEWS.filter(
-        (v) => !("hotelOnly" in v && v.hotelOnly) || accommodationType === "hotel",
-      ).map((v) => (
+      {VIEWS.map((v) => (
         <option key={v.key} value={v.key}>
           {t(`calendarViews.views.${v.labelKey}`)}
         </option>

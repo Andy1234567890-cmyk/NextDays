@@ -4139,7 +4139,19 @@
       "baseLabelEditorTitle": "Az alapár megnevezése",
       "baseLabelEditorSubtitle": "Név, amely alatt az alapárad megjelenik a weboldalon.",
       "baseLabelPlaceholder": "pl. standard ár",
-      "multiPlanHint": "Több árterv (pl. BAR/B&B) — az árakat dátum szerint a naptár „Árak“ nézetében kezeljük."
+      "multiPlanHint": "Több árterv (pl. BAR/B&B) — az árakat dátum szerint a naptár „Árak“ nézetében kezeljük.",
+      "plansTitle": "Ártervek",
+      "plansHint": "Az árakat dátum szerint a naptárban kezeljük.",
+      "planCreate": "Árterv létrehozása",
+      "planModeManual": "Manuális",
+      "planModeDerived": "Származtatva ebből: {parent} · {offset}",
+      "planDerivedPrice": "számított",
+      "planMinStay": "Min. {nights} éjszaka",
+      "planDelete": "Törlés",
+      "planDeleted": "Árterv törölve.",
+      "planCreated": "Árterv létrehozva.",
+      "openCalendar": "Árak kezelése",
+      "planConfirmDelete": "Biztosan törlöd ezt az ártervet? A terv dátum szerinti árai is törlődnek."
     },
     "policiesForm": {
       "title": "Irányelvek",
@@ -4195,6 +4207,35 @@
       "paymentSummarySplit": "{percent}% foglaláskor, a fennmaradó összeg {days} nappal érkezés előtt.",
       "localizedEditorSubtitle": "Hozd létre a szöveget, és szükség esetén fordítsd le a vendégeidnek.",
       "localizedEditorPlaceholder": "{title} megadása …"
+    },
+    "ratePlanWizard": {
+      "title": "Árterv létrehozása",
+      "close": "Bezárás",
+      "nameLabel": "Név",
+      "namePlaceholder": "pl. Bed & Breakfast",
+      "nameHint": "A név a portálokon is megjelenik, és ingatlanonként egyedinek kell lennie.",
+      "nameTaken": "Ez a név ennél az ingatlannál már létezik.",
+      "minStayLabel": "Minimum tartózkodás (éjszaka)",
+      "minStayHint": "Alapértelmezés minden napra — az egyes napokat később a naptárban kezelheted.",
+      "pricingTitle": "Árképzés",
+      "currencyFixed": "Pénznem: {currency} (az ingatlanból átvéve)",
+      "modeManual": "Árak kezelése manuálisan",
+      "modeDerived": "Származtatás alaptervből",
+      "noParentAvailable": "A származtatáshoz először egy manuálisan kezelt tervre van szükség.",
+      "basePriceLabel": "Alapár",
+      "parentLabel": "Alapterv",
+      "amountLabel": "Összeg",
+      "percentLabel": "Százalék",
+      "increase": "Növelés",
+      "decrease": "Csökkentés",
+      "orderHint": "Sorrend: előbb az összeg, majd a százalék.",
+      "previewLine": "Példa: alapterv {base} → ez a terv {result}",
+      "reviewDerived": "Származtatva ebből: {parent} · {base} → {result}",
+      "back": "Vissza",
+      "next": "Tovább",
+      "cancel": "Mégse",
+      "save": "Létrehozás",
+      "saving": "Létrehozás folyamatban …"
     }
   },
   "calendar": {
@@ -4372,12 +4413,17 @@
         "dynamic": "Dinamikus ár",
         "weekday": "Hét napja szerinti ár",
         "base": "Az árterv alapára",
+        "derived": "Az alaptervből származtatva",
         "none": "Nincs megadva ár"
       },
       "modeRestrictions": "Korlátozások",
       "on": "Igen",
       "off": "Nem",
-      "maxStayLabel": "Max. tartózkodás"
+      "maxStayLabel": "Max. tartózkodás",
+      "derivedFrom": "Származtatva ebből: {parent} · {offset}",
+      "derivedReadOnly": "Származtatott ár — az alaptervet követi",
+      "weekdaysLabel": "A hét napjai",
+      "availabilityLabel": "Elérhetőség"
     }
   },
   "seasons": {

@@ -4139,7 +4139,19 @@
       "baseLabelEditorTitle": "Bazinės kainos pavadinimas",
       "baseLabelEditorSubtitle": "Pavadinimas, kuriuo jūsų bazinė kaina rodoma svetainėje.",
       "baseLabelPlaceholder": "pvz., Standartinė kaina",
-      "multiPlanHint": "Keli kainų planai (pvz., BAR/B&B) — kainos tvarkomos pagal datą kalendoriaus rodinyje „Kainos“."
+      "multiPlanHint": "Keli kainų planai (pvz., BAR/B&B) — kainos tvarkomos pagal datą kalendoriaus rodinyje „Kainos“.",
+      "plansTitle": "Kainų planai",
+      "plansHint": "Kainos tvarkomos pagal datą kalendoriuje.",
+      "planCreate": "Sukurti kainų planą",
+      "planModeManual": "Rankiniu būdu",
+      "planModeDerived": "Išvestinė iš plano {parent} · {offset}",
+      "planDerivedPrice": "apskaičiuojama",
+      "planMinStay": "Min. {nights} naktų",
+      "planDelete": "Ištrinti",
+      "planDeleted": "Kainų planas ištrintas.",
+      "planCreated": "Kainų planas sukurtas.",
+      "openCalendar": "Tvarkyti kainas",
+      "planConfirmDelete": "Tikrai ištrinti šį kainų planą? Plano kainos pagal datą bus ištrintos kartu su juo."
     },
     "policiesForm": {
       "title": "Taisyklės",
@@ -4195,6 +4207,35 @@
       "paymentSummarySplit": "{percent} % rezervuojant, likutis – {days} d. prieš atvykimą.",
       "localizedEditorSubtitle": "Sukurkite tekstą ir prireikus išverskite jį savo svečiams.",
       "localizedEditorPlaceholder": "Įveskite {title} …"
+    },
+    "ratePlanWizard": {
+      "title": "Sukurti kainų planą",
+      "close": "Uždaryti",
+      "nameLabel": "Pavadinimas",
+      "namePlaceholder": "pvz., Bed & Breakfast",
+      "nameHint": "Pavadinimas rodomas ir portaluose bei turi būti unikalus kiekviename objekte.",
+      "nameTaken": "Toks pavadinimas šiame objekte jau yra.",
+      "minStayLabel": "Minimali apsistojimo trukmė (naktys)",
+      "minStayHint": "Numatytoji reikšmė visoms dienoms — atskiras dienas tvarkysi vėliau kalendoriuje.",
+      "pricingTitle": "Kainodara",
+      "currencyFixed": "Valiuta: {currency} (perimta iš objekto)",
+      "modeManual": "Tvarkyti kainas rankiniu būdu",
+      "modeDerived": "Išvesti iš bazinio plano",
+      "noParentAvailable": "Norint išvesti, pirmiausia reikia rankiniu būdu tvarkomo plano.",
+      "basePriceLabel": "Bazinė kaina",
+      "parentLabel": "Bazinis planas",
+      "amountLabel": "Suma",
+      "percentLabel": "Procentai",
+      "increase": "Padidinti",
+      "decrease": "Sumažinti",
+      "orderHint": "Eiliškumas: pirmiausia suma, tada procentai.",
+      "previewLine": "Pavyzdys: bazinis planas {base} → šis planas {result}",
+      "reviewDerived": "Išvestinė iš plano {parent} · {base} → {result}",
+      "back": "Atgal",
+      "next": "Toliau",
+      "cancel": "Atšaukti",
+      "save": "Sukurti",
+      "saving": "Kuriama …"
     }
   },
   "calendar": {
@@ -4372,12 +4413,17 @@
         "dynamic": "Dinaminė kaina",
         "weekday": "Savaitės dienos kaina",
         "base": "Kainų plano bazinė kaina",
+        "derived": "Išvestinė iš bazinio plano",
         "none": "Kaina nenustatyta"
       },
       "modeRestrictions": "Apribojimai",
       "on": "Taip",
       "off": "Ne",
-      "maxStayLabel": "Maks. viešnagė"
+      "maxStayLabel": "Maks. viešnagė",
+      "derivedFrom": "Išvestinė iš plano {parent} · {offset}",
+      "derivedReadOnly": "Išvestinė kaina — seka bazinį planą",
+      "weekdaysLabel": "Savaitės dienos",
+      "availabilityLabel": "Pasiekiamumas"
     }
   },
   "seasons": {
