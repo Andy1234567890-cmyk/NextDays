@@ -441,6 +441,9 @@ class _ImportChannex:
         self.created_properties: list[dict] = []
         self.created_room_types: list[dict] = []
         self.created_rate_plans: list[dict] = []
+        self.updated_rate_plans: list[tuple[str, dict]] = []
+        self.deleted_room_types: list[str] = []
+        self.deleted_rate_plans: list[str] = []
         self._rt_seq = 0
         self._rp_seq = 0
 
@@ -521,7 +524,16 @@ class _ImportChannex:
         return {"data": {"id": cx_id}}
 
     def update_rate_plan(self, channex_id, attrs):  # noqa: ANN001, ANN201
+        self.updated_rate_plans.append((channex_id, attrs))
         return {"data": {"id": channex_id}}
+
+    def delete_room_type(self, channex_id, **_k):  # noqa: ANN001, ANN003, ANN201
+        self.deleted_room_types.append(channex_id)
+        return {}
+
+    def delete_rate_plan(self, channex_id, **_k):  # noqa: ANN001, ANN003, ANN201
+        self.deleted_rate_plans.append(channex_id)
+        return {}
 
 
 # on_conflict-Schlüssel je Tabelle (für das Fake-upsert).
@@ -1851,6 +1863,81 @@ def test_rate_plan_sync_omits_min_stay_when_unset() -> None:
     )
     sent = channex.created[0]
     assert "min_stay_arrival" not in sent
+
+
+def test_rate_plan_reused_across_room_type_map_after_container_rollback() -> None:
+    # Container-Rückbau: der lokale Rate-Plan rp1 ist bei Channex schon angelegt,
+    # aber seine Map hängt noch an der ALTEN Kategorie-room_type_map (rt-old).
+    # Der Sync am synthetischen Room-Type (rt1) MUSS den bestehenden Channex-Plan
+    # per PUT umhängen — kein create (sonst 422 „Duplication in title").
+    db = _ImportDB()
+    _seed_with_room_type(db)  # synthetischer Room-Type rt1 (local_unit_ref=p1)
+    db.tables["channex_room_type_map"].append(
+        {"id": "rt-old", "tenant_id": "t1", "property_map_id": "m1",
+         "local_unit_ref": "old-cat", "channex_room_type_id": "cx-rt-old",
+         "deleted_at": None}
+    )
+    db.tables["channex_rate_plan_map"].append(
+        {"id": "rpm-old", "tenant_id": "t1", "room_type_map_id": "rt-old",
+         "local_rate_plan_id": "rp1", "title": "Standard",
+         "channex_rate_plan_id": "cx-rp-existing", "deleted_at": None}
+    )
+    channex = _ImportChannex()
+    svc = _import_svc(channex, db)
+    result = svc._upsert_channex_rate_plan(
+        db, "t1", "rt1", "cx-prop", "cx-rt",
+        {"id": "rp1", "name": "Standard", "base_price": 129},
+        "EUR",
+    )
+    # PUT auf den bestehenden Channex-Plan, KEIN create.
+    assert result == "cx-rp-existing"
+    assert channex.updated_rate_plans, "update_rate_plan wurde nicht aufgerufen"
+    assert not channex.created_rate_plans, "create_rate_plan hätte 422 provoziert"
+    # Der PUT hängt an den synthetischen Room-Type um.
+    _cx_id, sent = channex.updated_rate_plans[0]
+    assert sent["room_type_id"] == "cx-rt"
+    # Map-Zeile ist auf die neue room_type_map_id umgeschrieben (Gegenzustand).
+    assert db.tables["channex_rate_plan_map"][0]["room_type_map_id"] == "rt1"
+
+
+def test_prune_orphan_room_type_keeps_active_rate_plan_and_softdeletes_children() -> None:
+    # Eine ALTE Kategorie-room_type_map (rt-old) ohne aktiven lokalen Plan wird
+    # geprunt: der Channex-Room-Type wird gelöscht UND die untergeordnete
+    # channex_rate_plan_map-Zeile soft-deleted (Gegenzustand, Wurzel 1). Eine
+    # zweite Alt-Map (rt-keep), an der ein lokal noch aktiver Plan hängt, bleibt.
+    db = _ImportDB()
+    _seed_property(db)
+    db.tables["channex_room_type_map"].extend([
+        {"id": "rt-old", "tenant_id": "t1", "property_map_id": "m1",
+         "local_unit_ref": "cat-a", "channex_room_type_id": "cx-rt-old",
+         "deleted_at": None},
+        {"id": "rt-keep", "tenant_id": "t1", "property_map_id": "m1",
+         "local_unit_ref": "cat-b", "channex_room_type_id": "cx-rt-keep",
+         "deleted_at": None},
+    ])
+    db.tables["channex_rate_plan_map"].extend([
+        {"id": "rpm-orphan", "tenant_id": "t1", "room_type_map_id": "rt-old",
+         "local_rate_plan_id": "rp-gone", "channex_rate_plan_id": "cx-rp-gone",
+         "deleted_at": None},
+        {"id": "rpm-active", "tenant_id": "t1", "room_type_map_id": "rt-keep",
+         "local_rate_plan_id": "rp-live", "channex_rate_plan_id": "cx-rp-live",
+         "deleted_at": None},
+    ])
+    channex = _ImportChannex()
+    svc = _import_svc(channex, db)
+    svc._prune_orphan_room_types(
+        db, "t1", "cx-prop", {"p1"}, keep_local_rate_plan_ids={"rp-live"},
+    )
+    # rt-old geprunt (Channex-Delete + Map + Kind-Rate-Plan-Map soft-deleted).
+    assert "cx-rt-old" in channex.deleted_room_types
+    old_rt = next(r for r in db.tables["channex_room_type_map"] if r["id"] == "rt-old")
+    assert old_rt["deleted_at"] is not None
+    orphan = next(r for r in db.tables["channex_rate_plan_map"] if r["id"] == "rpm-orphan")
+    assert orphan["deleted_at"] is not None
+    # rt-keep bleibt (aktiver lokaler Plan rp-live hängt dran → wird umgehängt).
+    assert "cx-rt-keep" not in channex.deleted_room_types
+    keep_rt = next(r for r in db.tables["channex_room_type_map"] if r["id"] == "rt-keep")
+    assert keep_rt["deleted_at"] is None
 
 
 # --- Room-Type-Belegung aus echten Objektdaten (occ_*, count_of_rooms) --------
