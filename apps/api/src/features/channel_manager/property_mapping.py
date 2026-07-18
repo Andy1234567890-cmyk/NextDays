@@ -137,6 +137,24 @@ class PropertyMappingMixin:
         return out
 
     @staticmethod
+    def _sync_stamp_stale(existing: dict[str, Any], now_iso: str) -> bool:
+        """True, wenn der ok-Stempel der Map aufgefrischt werden darf: Status war
+        nicht 'ok' ODER der letzte Stempel ist älter als das 15-min-Dedup-Fenster.
+        Häufigeres Stempeln triggerte über Realtime-Refresh der Kanäle-Seite eine
+        Reconcile-Endlosschleife."""
+        if existing.get("last_sync_status") != "ok":
+            return True
+        last = existing.get("last_sync_at")
+        if not last:
+            return True
+        try:
+            last_dt = datetime.fromisoformat(str(last).replace("Z", "+00:00"))
+            now_dt = datetime.fromisoformat(now_iso)
+        except ValueError:
+            return True
+        return (now_dt - last_dt).total_seconds() >= 900
+
+    @staticmethod
     def _channex_attrs_to_property_row(
         attrs: dict[str, Any],
     ) -> dict[str, Any] | None:
@@ -190,10 +208,12 @@ class PropertyMappingMixin:
             p["id"]: (p.get("attributes") or {}) for p in live if p.get("id")
         }
 
-        # Aktive Maps des Tenants.
+        # Aktive Maps des Tenants (inkl. Sync-Stempel für den Nur-bei-Änderung-
+        # Schreibpfad unten).
         active = (
             db.table("channex_property_map")
-            .select("id, property_id, channex_property_id")
+            .select("id, property_id, channex_property_id, last_sync_at,"
+                    " last_sync_status")
             .eq("tenant_id", tenant_id)
             .is_("deleted_at", "null")
             .execute()
@@ -225,13 +245,32 @@ class PropertyMappingMixin:
                     k: v for k, v in row.items()
                     if k not in ("title", "description")
                 }
+                # NUR bei echter Abweichung schreiben: Die Seite /channels lauscht
+                # per Realtime auf channex_property_map/properties und lädt bei
+                # jedem Write die Server-Components neu — deren GET reiht wieder
+                # einen Reconcile ein. Ein bedingungsloser Stempel je Lauf machte
+                # daraus eine Endlosschleife (Job alle ~2 s). No-op-Läufe müssen
+                # deshalb schreibfrei bleiben; der ok-Stempel wird höchstens alle
+                # 15 min aufgefrischt (Job-Dedup-Fenster).
                 if mirror:
-                    db.table("properties").update(mirror).eq(
-                        "id", existing["property_id"]
-                    ).eq("tenant_id", tenant_id).execute()
-                db.table("channex_property_map").update(
-                    {"last_sync_at": now, "last_sync_status": "ok"}
-                ).eq("id", existing["id"]).execute()
+                    cur = (
+                        db.table("properties")
+                        .select(", ".join(mirror))
+                        .eq("id", existing["property_id"])
+                        .eq("tenant_id", tenant_id)
+                        .limit(1)
+                        .execute()
+                    ).data
+                    if not cur or any(
+                        cur[0].get(k) != v for k, v in mirror.items()
+                    ):
+                        db.table("properties").update(mirror).eq(
+                            "id", existing["property_id"]
+                        ).eq("tenant_id", tenant_id).execute()
+                if self._sync_stamp_stale(existing, now):
+                    db.table("channex_property_map").update(
+                        {"last_sync_at": now, "last_sync_status": "ok"}
+                    ).eq("id", existing["id"]).execute()
                 updated += 1
                 continue
 

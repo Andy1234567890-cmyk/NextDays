@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from fastapi.testclient import TestClient
 
@@ -375,6 +375,52 @@ def test_reconcile_keeps_local_title_mirrors_other_fields() -> None:
     # Titel bleibt lokal, city wird gespiegelt.
     assert db.properties[0]["title"] == "Alter Titel"
     assert db.properties[0]["city"] == "Hamburg"
+
+
+def test_reconcile_noop_run_writes_nothing() -> None:
+    # Realtime-Loop-Regression: /channels lauscht per RealtimeRefresh auf
+    # channex_property_map — jeder Write lädt die Seite neu, deren GET reiht
+    # wieder einen Reconcile ein. Ein Lauf OHNE echte Änderung (Spiegel gleich,
+    # ok-Stempel frisch) muss deshalb komplett schreibfrei bleiben.
+    db = _ReconcileDB("t1", "grp-1")
+    fresh = datetime.now(UTC).isoformat()
+    db.properties.append(
+        {"id": "p1", "tenant_id": "t1", "title": "Haus", "city": "Kiel"}
+    )
+    db.maps.append(
+        {"id": "m1", "tenant_id": "t1", "property_id": "p1",
+         "channex_property_id": "cx-1", "deleted_at": None,
+         "last_sync_at": fresh, "last_sync_status": "ok"}
+    )
+    channex = _ReconcileChannex(
+        [{"id": "cx-1", "attributes": {"title": "Haus", "city": "Kiel"}}]
+    )
+    res = _reconcile_svc(channex, db).reconcile_properties_for_tenant("t1")
+    assert res["updated"] == 1
+    assert db.maps[0]["last_sync_at"] == fresh  # KEIN neuer Stempel
+    assert db.properties[0]["city"] == "Kiel"
+
+
+def test_reconcile_stale_ok_stamp_is_refreshed() -> None:
+    # Der ok-Stempel darf sich auffrischen, wenn er älter als das 15-min-
+    # Dedup-Fenster ist (UI zeigt „zuletzt synchronisiert") — nur nicht bei
+    # jedem Lauf (sonst Realtime-Endlosschleife, siehe Test oben).
+    db = _ReconcileDB("t1", "grp-1")
+    old = "2020-01-01T00:00:00+00:00"
+    db.properties.append(
+        {"id": "p1", "tenant_id": "t1", "title": "Haus", "city": "Kiel"}
+    )
+    db.maps.append(
+        {"id": "m1", "tenant_id": "t1", "property_id": "p1",
+         "channex_property_id": "cx-1", "deleted_at": None,
+         "last_sync_at": old, "last_sync_status": "ok"}
+    )
+    channex = _ReconcileChannex(
+        [{"id": "cx-1", "attributes": {"title": "Haus", "city": "Kiel"}}]
+    )
+    _reconcile_svc(channex, db).reconcile_properties_for_tenant("t1")
+    assert db.maps[0]["last_sync_at"] != old
+    assert db.maps[0]["last_sync_status"] == "ok"
 
 
 def test_booking_feed_isolates_tenants() -> None:

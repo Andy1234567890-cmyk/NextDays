@@ -21,6 +21,11 @@ _STALE_CONNECTION_ERRORS = (
     httpx.RemoteProtocolError,  # "Server disconnected without sending a response"
     httpx.ConnectError,
     httpx.ReadError,
+    # h2-Zustandsmaschine verweigert den Reuse einer bereits geschlossenen
+    # HTTP/2-Verbindung ("Invalid input ConnectionInputs.RECV_* in state
+    # ConnectionState.CLOSED") — gleiche Ursache (Kong schließt idle), gleicher
+    # sicherer Ausweg: tote Verbindung verwerfen, frisch verbinden.
+    httpx.LocalProtocolError,
 )
 # Bei den obigen Fehlern wurde garantiert nichts gesendet → auch nicht-idempotente
 # Methoden (POST) sicher wiederholbar. Ein Versuch reicht: httpx wirft die tote
