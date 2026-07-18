@@ -1262,19 +1262,25 @@ class BookingsSyncMixin:
         if not self._channex.is_configured or self._db is None:
             return result
         db = self._db
-        pm = (
+        pms = (
             db.table("channex_property_map")
-            .select("id, property_id")
+            .select("id, property_id, created_at")
             .eq("tenant_id", tenant_id)
             .eq("channex_property_id", channex_property_id)
             .is_("deleted_at", "null")
-            .limit(1)
+            .order("created_at")
             .execute()
-        ).data
-        if not pm:
+        ).data or []
+        if not pms:
             return result
-        property_map_id = pm[0]["id"]
-        property_id = pm[0]["property_id"]
+        # Geteilte Channex-Property (0158): mehrere lokale Zimmer teilen sich die
+        # channex_property_id. Ein unbekannter Room-Type lässt sich dann keinem
+        # Zimmer zuordnen — nichts raten (Wurzel 4), bestehende Maps NIE umhängen
+        # (Wurzel 1: genau dieser Upsert hat eine Double-Map aufs Twin-Zimmer
+        # gedreht, wonach ARI-Pushes das Zimmer still übersprangen).
+        shared = len(pms) > 1
+        property_map_id = pms[0]["id"]
+        property_id = pms[0]["property_id"]
 
         try:
             rts = self._channex.get_room_types(channex_property_id).get("data") or []
@@ -1285,6 +1291,24 @@ class BookingsSyncMixin:
             cx_rt_id = rt.get("id")
             attrs = rt.get("attributes") or {}
             if not cx_rt_id:
+                continue
+            existing_rt = (
+                db.table("channex_room_type_map")
+                .select("id")
+                .eq("tenant_id", tenant_id)
+                .eq("channex_room_type_id", cx_rt_id)
+                .is_("deleted_at", "null")
+                .limit(1)
+                .execute()
+            ).data
+            if existing_rt:
+                result["room_types"] += 1
+                continue
+            if shared:
+                log.warning(
+                    "import_room_type_unmapped_shared",
+                    channex_room_type_id=cx_rt_id, title=attrs.get("title"),
+                )
                 continue
             db.table("channex_room_type_map").upsert(
                 {
@@ -1312,7 +1336,7 @@ class BookingsSyncMixin:
             cx_rt_id = attrs.get("room_type_id")
             rt_map = (
                 db.table("channex_room_type_map")
-                .select("id")
+                .select("id, local_unit_ref")
                 .eq("tenant_id", tenant_id)
                 .eq("channex_room_type_id", cx_rt_id)
                 .is_("deleted_at", "null")
@@ -1322,7 +1346,9 @@ class BookingsSyncMixin:
             if not rt_map:
                 log.warning("import_rate_plan_no_room_type", channex_rate_plan_id=cx_rp_id)
                 continue
-            # Bereits gemappt?
+            # Bereits gemappt? Dann NICHTS anfassen — der Upsert würde die Map
+            # sonst auf die aktuelle rt_map-Zeile umhängen (Gegenstück zum
+            # Room-Type-Schutz oben).
             existing_map = (
                 db.table("channex_rate_plan_map")
                 .select("id, local_rate_plan_id")
@@ -1332,44 +1358,46 @@ class BookingsSyncMixin:
                 .limit(1)
                 .execute()
             ).data
-            local_rate_plan_id = (
-                existing_map[0]["local_rate_plan_id"] if existing_map else None
+            if existing_map:
+                result["rate_plans"] += 1
+                continue
+            # Neuer lokaler Rate-Plan gehört zum Zimmer des Room-Type-Mappings,
+            # nicht zur ersten Map-Zeile der (ggf. geteilten) Channex-Property.
+            plan_property_id = rt_map[0].get("local_unit_ref") or property_id
+            # Basispreis aus Primär-Option (per_person: nur Primär, Rest loggen).
+            options = attrs.get("options") or []
+            primary = next(
+                (o for o in options if o.get("is_primary")), options[0] if options else {}
             )
-            if not local_rate_plan_id:
-                # Basispreis aus Primär-Option (per_person: nur Primär, Rest loggen).
-                options = attrs.get("options") or []
-                primary = next(
-                    (o for o in options if o.get("is_primary")), options[0] if options else {}
+            try:
+                base_price = float(primary.get("rate")) if primary.get("rate") else 0
+            except (TypeError, ValueError):
+                base_price = 0
+            if attrs.get("sell_mode") == "per_person" and len(options) > 1:
+                log.info(
+                    "import_rate_plan_per_person_truncated",
+                    channex_rate_plan_id=cx_rp_id,
+                    options=len(options),
                 )
-                try:
-                    base_price = float(primary.get("rate")) if primary.get("rate") else 0
-                except (TypeError, ValueError):
-                    base_price = 0
-                if attrs.get("sell_mode") == "per_person" and len(options) > 1:
-                    log.info(
-                        "import_rate_plan_per_person_truncated",
-                        channex_rate_plan_id=cx_rp_id,
-                        options=len(options),
-                    )
-                ins = (
-                    db.table("rate_plans")
-                    .insert(
-                        {
-                            "property_id": property_id,
-                            "name": attrs.get("title") or "Rate",
-                            "base_price": base_price,
-                            # Währung aus dem Channex-Rate-Plan; fehlt sie, aus
-                            # einem vorhandenen Objekt-Rate-Plan — nie EUR raten.
-                            "currency": (
-                                attrs.get("currency")
-                                or self._property_currency(db, property_id)
-                            ),
-                            "min_stay": 1,
-                        }
-                    )
-                    .execute()
+            ins = (
+                db.table("rate_plans")
+                .insert(
+                    {
+                        "property_id": plan_property_id,
+                        "name": attrs.get("title") or "Rate",
+                        "base_price": base_price,
+                        # Währung aus dem Channex-Rate-Plan; fehlt sie, aus
+                        # einem vorhandenen Objekt-Rate-Plan — nie EUR raten.
+                        "currency": (
+                            attrs.get("currency")
+                            or self._property_currency(db, plan_property_id)
+                        ),
+                        "min_stay": 1,
+                    }
                 )
-                local_rate_plan_id = ins.data[0]["id"] if ins.data else None
+                .execute()
+            )
+            local_rate_plan_id = ins.data[0]["id"] if ins.data else None
             db.table("channex_rate_plan_map").upsert(
                 {
                     "tenant_id": tenant_id,

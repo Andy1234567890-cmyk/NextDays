@@ -1556,6 +1556,48 @@ def test_full_sync_shared_property_is_two_calls() -> None:
             assert key in v
 
 
+def test_import_rooms_rates_never_rehomes_shared_maps() -> None:
+    # Live-Bug (Booking.com-Connect, 17.07.): import_rooms_rates_for_property
+    # löste die property_map per limit(1) auf und hängte per Upsert die
+    # Double-Room-Map aufs Twin-Zimmer um (local_unit_ref+property_map_id) —
+    # Full Sync und Delta-Pushes übersprangen Double danach still. Bestehende
+    # Maps dürfen NIE umgehängt werden; unbekannte Room-Types einer GETEILTEN
+    # Channex-Property lassen sich keinem Zimmer zuordnen → überspringen.
+    db = _ImportDB()
+    _seed_shared_hotel(db)
+    channex = _ImportChannex(
+        room_types=[
+            {"id": "cx-rt-twin", "attributes": {"title": "Twin Room"}},
+            {"id": "cx-rt-double", "attributes": {"title": "Double Room"}},
+            {"id": "cx-rt-fremd", "attributes": {"title": "Unbekannt"}},
+        ],
+        rate_plans=[
+            {"id": "cx-rp-twin",
+             "attributes": {"room_type_id": "cx-rt-twin", "title": "Twin BAR"}},
+            {"id": "cx-rp-double",
+             "attributes": {"room_type_id": "cx-rt-double",
+                            "title": "Double BAR"}},
+        ],
+    )
+    _import_svc(channex, db).import_rooms_rates_for_property("t1", "cx-prop")
+    by_cx = {
+        r["channex_room_type_id"]: r
+        for r in db.tables["channex_room_type_map"]
+    }
+    assert by_cx["cx-rt-twin"]["local_unit_ref"] == "p-twin"
+    assert by_cx["cx-rt-twin"]["property_map_id"] == "m-twin"
+    assert by_cx["cx-rt-double"]["local_unit_ref"] == "p-double"
+    assert by_cx["cx-rt-double"]["property_map_id"] == "m-double"
+    # Unbekannter Room-Type: bei geteilter Property KEINE geratene Zuordnung.
+    assert "cx-rt-fremd" not in by_cx
+    # Rate-Plan-Maps unangetastet, keine neuen lokalen Pläne erfunden.
+    assert {
+        r["channex_rate_plan_id"]: r["room_type_map_id"]
+        for r in db.tables["channex_rate_plan_map"]
+    } == {"cx-rp-twin": "rtm-twin", "cx-rp-double": "rtm-double"}
+    assert len(db.tables["rate_plans"]) == 2
+
+
 def test_free_ota_nights_pushes_days_already_freed_by_release_path() -> None:
     # Live-Bug (Cert Test 11): _release_nights hatte 2 von 3 Storno-Nächten schon
     # geöffnet → _free_ota_nights pushte nur die verbliebene 'booked'-Nacht, die
