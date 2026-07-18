@@ -32,14 +32,28 @@ class PropertyMappingMixin:
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
 
-        # Vor dem Lesen Channex→DB spiegeln (Channex = Quelle der Wahrheit).
-        # Non-blocking: ein Channex-Ausfall darf die Seite NIE scheitern lassen
-        # — dann zeigen wir den letzten DB-Stand.
+        # Channex→DB-Abgleich NICHT inline im Request: der volle Tenant-Reconcile
+        # (Channex-Liste + Preis-Reconcile je Objekt inkl. Channex-Reads) lief
+        # früher bei JEDEM Seitenaufbau und nach jeder Server-Action erneut —
+        # sichtbare Request-Flut und er fraß das Channex-API-Budget der echten
+        # Pushes leer. Stattdessen koalesziert als Job einreihen (Dedup je
+        # 15-min-Fenster, wie der Worker-Tick); die Seite zeigt den DB-Stand,
+        # Änderungen kommen per Realtime nach.
         try:
-            self.reconcile_properties_for_tenant(tenant_id)
-        except Exception as exc:  # noqa: BLE001
+            import time
+
+            from src.jobs.queue import enqueue
+
+            bucket = int(time.time() // 900)
+            enqueue(
+                db, "reconcile_tenant", tenant_id=tenant_id,
+                payload={"tenant_id": tenant_id},
+                dedup_key=f"reconcile_tick:{tenant_id}:{bucket}",
+            )
+        except Exception as exc:  # noqa: BLE001 — Einreihen kippt die Seite nie
             log.warning(
-                "reconcile_on_pageview_failed", tenant_id=tenant_id, error=str(exc)
+                "reconcile_enqueue_on_pageview_failed",
+                tenant_id=tenant_id, error=str(exc)[:200],
             )
 
         res = (
