@@ -28,18 +28,21 @@ _PROPERTIES = [
         "lat": 54.123456, "lng": 8.654321, "max_guests": 6,
         "amenities": ["wifi"], "photos": ["a.jpg"],
         "type_attributes": {"bedrooms": 3, "baths": 2}, "status": "active",
+        "listed_on_marketplace": True,
     },
     {
         "id": "p-active2", "tenant_id": "t2", "title": "City Loft",
         "description": None, "property_type": "appartement", "city": "Berlin",
         "country": "DE", "lat": None, "lng": None, "max_guests": 2,
         "amenities": [], "photos": [], "type_attributes": {}, "status": "active",
+        "listed_on_marketplace": True,
     },
     {
         "id": "p-draft", "tenant_id": "t1", "title": "Entwurf", "description": None,
         "property_type": "ferienhaus", "city": "X", "country": "DE", "lat": None,
         "lng": None, "max_guests": 4, "amenities": [], "photos": [],
         "type_attributes": {}, "status": "draft",
+        "listed_on_marketplace": True,
     },
 ]
 
@@ -141,6 +144,26 @@ def test_listings_only_active() -> None:
     ids = {item.id for item in res.items}
     assert ids == {"p-active", "p-active2"}  # p-draft NICHT enthalten
     assert res.total == 2
+
+
+def test_listings_marketplace_flag_hides_from_central_only() -> None:
+    # Marktplatz-Sichtbarkeit ist ein eigener Kanal (0159): ein aktives Objekt
+    # mit listed_on_marketplace=false verschwindet aus dem zentralen Marktplatz
+    # (tenant=None), bleibt aber über White-Label (tenant) und den Featured-Block
+    # (property_ids) erreichbar — dort kuratiert der Betreiber selbst.
+    props = [
+        {**_PROPERTIES[0], "listed_on_marketplace": False},  # p-active, unlisted
+        _PROPERTIES[1],  # p-active2, gelistet
+    ]
+    svc = _service(properties=props)
+    # Zentraler Marktplatz: nur das gelistete Objekt.
+    assert {i.id for i in svc.list_listings().items} == {"p-active2"}
+    # White-Label-Seite des Tenants: das unlistete Objekt bleibt sichtbar.
+    assert {i.id for i in svc.list_listings(tenant="t1").items} == {"p-active"}
+    # Featured-Block per ID: ebenfalls sichtbar (explizite Kuratierung).
+    assert {
+        i.id for i in svc.list_listings(property_ids=["p-active"]).items
+    } == {"p-active"}
 
 
 def test_listings_no_owner_or_tenant_fields() -> None:

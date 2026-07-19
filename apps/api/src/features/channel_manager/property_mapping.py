@@ -305,6 +305,13 @@ class PropertyMappingMixin:
                 property_id = reuse_property_id
             else:
                 row["tenant_id"] = tenant_id
+                # Aus Channex reingespiegeltes Objekt gehört NICHT automatisch auf
+                # den eigenen Marktplatz (0159): status bleibt DB-Default 'draft'
+                # UND der Marktplatz-Kanal bleibt aus. Sonst würde ein späterer
+                # manueller status='active' das Objekt sofort listen, obwohl der
+                # Betreiber die Marktplatz-Listung nie bewusst gewählt hat. Die
+                # OTA-Seite (Channex) ist über das Mapping ohnehin schon aktiv.
+                row["listed_on_marketplace"] = False
                 ins = db.table("properties").insert(row).execute()
                 if not ins.data:
                     log.error(

@@ -166,6 +166,15 @@ class BookingEngineService:
             .select(_PUBLIC_PROPERTY_COLUMNS)
             .eq("status", "active")
         )
+        # Marktplatz-Sichtbarkeit ist ein eigener Kanal (0159): der zentrale
+        # myNextDays-Marktplatz (tenant=None) zeigt NUR Objekte mit
+        # listed_on_marketplace=true — getrennt von der OTA-Distribution
+        # (status='active' allein reicht nicht mehr). White-Label-Agentur-Seiten
+        # (tenant gesetzt) und der explizite Featured-Block (property_ids) sind
+        # EIGENE Flächen; sie kuratieren über tenant/property_ids und werden vom
+        # Marktplatz-Flag NICHT gefiltert.
+        if tenant is None and property_ids is None:
+            query = query.eq("listed_on_marketplace", True)
         if tenant:
             query = query.eq("tenant_id", tenant)
         if property_ids:

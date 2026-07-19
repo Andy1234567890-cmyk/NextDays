@@ -100,6 +100,11 @@ class PropertyBase(BaseModel):
     platform_description: str | None = None
     property_type: PropertyType = PropertyType.ferienhaus
     status: PropertyStatus = PropertyStatus.draft
+    # Sichtbarkeit auf dem eigenen myNextDays-Marktplatz (/plattform) als eigener
+    # Buchungskanal — getrennt von status (Lebenszyklus) und OTA-Distribution
+    # (channex_property_map.sync_enabled). Marktplatz-Listung = status='active'
+    # UND listed_on_marketplace (Migration 0159). Default an (Publish listet).
+    listed_on_marketplace: bool = True
 
     # Rental info: Größe, Einheiten, Gäste.
     max_guests: int = Field(default=1, ge=1, le=99)
@@ -143,6 +148,9 @@ class PropertyUpdate(BaseModel):
     platform_description: str | None = None
     property_type: PropertyType | None = None
     status: PropertyStatus | None = None
+    # Marktplatz-Kanal an/aus (0159) — pro-Kanal-Sichtbarkeit, unabhängig von
+    # status und OTA. Toggle für „auf dem eigenen Marktplatz zeigen/verstecken".
+    listed_on_marketplace: bool | None = None
     max_guests: int | None = Field(default=None, ge=1, le=99)
     street: str | None = None
     house_number: str | None = None

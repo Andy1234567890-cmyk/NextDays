@@ -745,10 +745,13 @@ class PropertiesService:
             )
         currency = rates[0].get("currency") or "EUR"
 
-        # 1) Status aktiv setzen.
+        # 1) Status aktiv setzen UND den eigenen Marktplatz-Kanal listen (0159).
+        #    Veröffentlichen = im Normalfall überall live (1 Klick → OTAs +
+        #    eigener Marktplatz). Die Marktplatz-Sichtbarkeit bleibt danach ein
+        #    eigener, separat schaltbarer Kanal (getrennt von der OTA-Distribution).
         upd = (
             self._db.table("properties")
-            .update({"status": "active"})
+            .update({"status": "active", "listed_on_marketplace": True})
             .eq("id", property_id)
             .eq("tenant_id", tenant_id)
             .execute()

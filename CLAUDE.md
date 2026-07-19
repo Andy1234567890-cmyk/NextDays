@@ -55,6 +55,25 @@ Verfügbarkeit/Kapazität dieses Modell zugrunde legen; im Zweifel den Nutzer
 fragen statt eine Container-/Kategorie-Ebene zu erfinden. Dieser Fehler ist
 mehrfach passiert und hat falsche Kapazitäten/Buchungen erzeugt.
 
+## Vertriebskanäle & Frontends (UNVERHANDELBAR) — drei Wege, drei Oberflächen
+Jedes Objekt wird über MEHRERE Kanäle verkauft; Kanal-Sichtbarkeit ist PRO KANAL
+schaltbar, NICHT ein globales „veröffentlicht"-Flag (Industrie-Standard, belegt:
+Channex/SiteMinder/Cloudbeds/Shopify). Die drei Vertriebskanäle:
+- **Channex → OTAs**: Booking.com, Airbnb, Expedia & Co. (Channel-Aggregator
+  Channex, `apps/api/.../channel_manager`; Distribution = `channex_property_map`
+  `sync_enabled` + verbundener Kanal). Im Kundentext nie „Channex" — „Portale".
+- **Plattform**: unser EIGENER globaler Marktplatz (`/plattform`), ein
+  gleichrangiger Buchungskanal wie Booking/Airbnb, NICHT „Direkt". Sichtbarkeit =
+  eigene Achse `properties.listed_on_marketplace` (0159), getrennt von OTA.
+- **App**: die mobile Plattform (`apps/mobile`, React Native) — gleichwertiges
+  Frontend derselben FastAPI (Gast · Agentur · Owner · Mitarbeiter), siehe
+  „Mobile"-Abschnitt unten.
+Regel: auf einem Kanal sichtbar = Objekt-Status erlaubt Verkauf (`status='active'`)
+UND Kanal-Sichtbarkeit dieses Kanals an UND Verfügbarkeit vorhanden. `publish()`
+schaltet im Normalfall alle an (1 Klick = OTA + Marktplatz), aber jeder Kanal ist
+einzeln steuerbar. availability/stop_sell wirken kanalübergreifend (Stop-Sell
+sperrt überall), die reine Kanal-Sichtbarkeit ist pro Kanal.
+
 ## Wurzel 6 — RLS erzwingt nur den MANDANTEN, nicht Rolle/Spalte/Schreibrichtung
 Ein Client mit gültigem JWT + öffentlichem anon-Key spricht PostgREST/Realtime
 DIREKT an — der FastAPI-Layer wird dabei komplett umgangen. Service-Layer-Checks
