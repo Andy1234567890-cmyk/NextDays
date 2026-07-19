@@ -1602,6 +1602,53 @@ def test_full_sync_shared_property_is_two_calls() -> None:
             assert key in v
 
 
+def test_sync_content_single_vacation_object_creates_full_mapping() -> None:
+    # Ferienobjekt = der NICHT-geteilte Normalfall (1 property = 1 Channex-
+    # Property = 1 synthetischer Room-Type = Rate-Plans daran). Der geteilte-
+    # Property-Umbau (0158) ist überall nur eine Verzweigung ab sibling_count > 1;
+    # dieser End-to-End-Test der Erstanlage sichert ab, dass der Einzelfall
+    # dabei nicht kaputtgeht: Property/Room-Type/Rate-Plan werden angelegt, der
+    # Property-Titel bleibt der OBJEKTname (nicht der Tenant-Name), und alle drei
+    # Map-Ebenen zeigen aufs eine Objekt.
+    db = _ImportDB()
+    db.tables["properties"].append({
+        "id": "p1", "tenant_id": "t1", "title": "Ferienhaus am See",
+        "property_type": "ferienhaus", "country": "DE", "city": "Kiel",
+        "max_guests": 4,
+    })
+    db.tables["rate_plans"].append({
+        "id": "rp1", "property_id": "p1", "name": "Standardpreis",
+        "base_price": 120.00, "currency": "EUR", "min_stay": 1,
+        "created_at": "2026-01-01T00:00:00Z",
+    })
+    channex = _ImportChannex()
+    out = _import_svc(channex, db).sync_content("t1", property_id="p1")
+
+    assert out == {
+        "channex_property_id": "cx-prop", "channex_room_type_id": "cx-rt-1"
+    }
+    # Property: Objektname als Titel (kein Tenant-Name-Override beim Einzelobjekt),
+    # Ferientyp korrekt gemappt.
+    assert len(channex.created_properties) == 1
+    assert channex.created_properties[0]["title"] == "Ferienhaus am See"
+    assert channex.created_properties[0]["property_type"] == "holiday_home"
+    # Genau EIN synthetischer Room-Type am Objekt (local_unit_ref = property_id).
+    assert [rt["title"] for rt in channex.created_room_types] == ["Ferienhaus am See"]
+    rt_maps = [r for r in db.tables["channex_room_type_map"] if not r.get("deleted_at")]
+    assert len(rt_maps) == 1 and rt_maps[0]["local_unit_ref"] == "p1"
+    # Rate-Plan hängt am synthetischen Room-Type.
+    assert [(rp["title"], rp["room_type_id"]) for rp in channex.created_rate_plans] == [
+        ("Standardpreis", "cx-rt-1")
+    ]
+    # Alle drei Map-Ebenen zeigen aufs eine Objekt.
+    prop_maps = [r for r in db.tables["channex_property_map"] if not r.get("deleted_at")]
+    assert len(prop_maps) == 1
+    assert prop_maps[0]["property_id"] == "p1"
+    assert prop_maps[0]["channex_property_id"] == "cx-prop"
+    rp_maps = [r for r in db.tables["channex_rate_plan_map"] if not r.get("deleted_at")]
+    assert len(rp_maps) == 1 and rp_maps[0]["local_rate_plan_id"] == "rp1"
+
+
 def test_import_rooms_rates_never_rehomes_shared_maps() -> None:
     # Live-Bug (Booking.com-Connect, 17.07.): import_rooms_rates_for_property
     # löste die property_map per limit(1) auf und hängte per Upsert die
