@@ -114,8 +114,8 @@ Die ausführbaren Bausteine und Datastores des Systems mit Technologie und Proto
         Container(mobile, "Mobile-App", "React Native 0.86 (bare CLI, kein Expo)", "Gäste (Buchen/Aufenthalt) + Gastgeber (Verwaltung), iOS/Android")
         Container(storybook, "Storybook", "react-vite (eigenes Package apps/storybook)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
         Container(builder, "Website-Renderer", "Next.js (builder/)", "White-Label-Agentur-Sites pro Custom-Domain (Page-Builder)")
-        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 24 Vertical Slices unter /api/v1")
-        ContainerDb(db, "Datenbank", "Supabase / Postgres", "101 Tabellen, Multi-Tenant, RLS, tenant_id")
+        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 30 Vertical Slices unter /api/v1")
+        ContainerDb(db, "Datenbank", "Supabase / Postgres", "128 Tabellen, Multi-Tenant, RLS, tenant_id")
         ContainerDb(cache, "Cache", "Redis", "Caching + Rate-Limiting")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel-Sync, OCR, Messaging-Trigger, wiederkehrende Aufgaben")
     }
@@ -167,8 +167,8 @@ The executable building blocks and data stores of the system with technology and
         Container(mobile, "Mobile app", "React Native 0.86 (bare CLI, no Expo)", "Guests (booking/stay) + hosts (management), iOS/Android")
         Container(storybook, "Storybook", "react-vite (own package apps/storybook)", "Design system & component workshop (ADR-0008); finished components move to Web")
         Container(builder, "Website renderer", "Next.js (builder/)", "White-label agency sites per custom domain (website builder)")
-        Container(api, "API Backend", "FastAPI, Python", "Business logic, 24 vertical slices under /api/v1")
-        ContainerDb(db, "Database", "Supabase / Postgres", "101 tables, multi-tenant, RLS, tenant_id")
+        Container(api, "API Backend", "FastAPI, Python", "Business logic, 30 vertical slices under /api/v1")
+        ContainerDb(db, "Database", "Supabase / Postgres", "128 tables, multi-tenant, RLS, tenant_id")
         ContainerDb(cache, "Cache", "Redis", "Caching + rate limiting")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel sync, OCR, messaging triggers, recurring tasks")
     }
@@ -204,7 +204,7 @@ The executable building blocks and data stores of the system with technology and
 
 ## Slice-Landkarte (Component-Ebene, API-Backend)
 
-Die 24 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslogik: Querschnitt im Core, Slices mit fertiger Logik (Großteil) sowie wenige Gerüst-Slices (ocr, crm), die laut Roadmap folgen.
+Die 30 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslogik: Querschnitt im Core, Slices mit fertiger Logik (Großteil) sowie wenige Gerüst-Slices (ocr, crm), die laut Roadmap folgen.
 
 <Mermaid
   title="Slice-Landkarte (Component-Ebene, API-Backend)"
@@ -217,11 +217,16 @@ Die 24 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslog
             AUTH["auth — Register/Login/Me/Invite, Rollen+Capability-Matrix"]
             CAL["calendar — Verfügbarkeit, Double-Booking, Preis-Override"]
             TASKS["tasks — Aufgaben, Checklisten+Foto, Vertretung, Inventar"]
-            PROP["properties"]; RATES["rates"]; RES["reservations"]
-            GUE["guests"]; INBOX["inbox"]; PRICE["pricing"]
+            PROP["properties — 1 Objekt = 1 buchbare Einheit (Zimmer ODER Ferienobjekt)"]
+            RATES["rates — Rate-Plans (manual/derived), Datumspreise, plan-genaue Restriktionen"]
+            RES["reservations — Gast-Pflicht je Buchung (kein Sperren als Fantasie-Gast)"]
+            GUE["guests"]; INBOX["inbox"]; PRICE["pricing — Resolver: override > dynamic > weekday > base"]
             PAY["payments — Stripe Connect Custom (primär), Destination Charge, Webhooks; Revolut sekundär"]
-            CM["channel_manager"]; BOOK["booking_engine"]
-            PORTAL["public_portal"]
+            CM["channel_manager — Channex-Aggregator, geteilte Property (n Zimmer → 1 Channex-Property), PMS-zertifiziert"]
+            BOOK["booking_engine"]
+            PORTAL["public_portal"]; PPORTAL["property_portal"]; DOSSIER["property_dossier"]
+            EXTCAL["external_calendar — iCal-Import/-Export"]; MEDIA["media"]
+            SUBS["subscriptions — unit-basiertes Abo"]
             OWN["owners — Eigentümer-Stammdaten + Objekt-Zuweisung (Anteil/Provision je Objekt)"]
             OWNST["owner_statements — Auszahlungs-Abrechnung (Provision, EU-Steuer/Reverse-Charge, Storno, Mehrwährung ECB)"]
             WA["whatsapp — WhatsApp Cloud API, im Posteingang integriert"]
@@ -234,7 +239,7 @@ Die 24 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslog
             OCR["ocr"]; CRM["crm"]; DASH["dashboard (min.)"]; CONT["content (min.)"]
         end
     end
-    DB[("Postgres — 101 Tabellen, RLS")]
+    DB[("Postgres — 128 Tabellen, RLS")]
     DONE --> DB
     SCAFFOLD --> DB
     CORE --> DONE
@@ -247,7 +252,7 @@ Die 24 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslog
 
 ## Slice map (component level, API backend)
 
-The 24 vertical slices and their data areas show the state of the business logic: cross-cutting concerns in the core, slices with finished logic (the majority) plus a few scaffold slices (ocr, crm) that follow per the roadmap.
+The 30 vertical slices and their data areas show the state of the business logic: cross-cutting concerns in the core, slices with finished logic (the majority) plus a few scaffold slices (ocr, crm) that follow per the roadmap.
 
 <Mermaid
   title="Slice map (component level, API backend)"
@@ -260,11 +265,16 @@ The 24 vertical slices and their data areas show the state of the business logic
             AUTH["auth — Register/Login/Me/Invite, roles+capability matrix"]
             CAL["calendar — availability, double-booking, price override"]
             TASKS["tasks — tasks, checklists+photo, substitution, inventory"]
-            PROP["properties"]; RATES["rates"]; RES["reservations"]
-            GUE["guests"]; INBOX["inbox"]; PRICE["pricing"]
+            PROP["properties — 1 property = 1 bookable unit (room OR vacation rental)"]
+            RATES["rates — rate plans (manual/derived), date prices, plan-level restrictions"]
+            RES["reservations — guest required per booking (no blocking as a fake guest)"]
+            GUE["guests"]; INBOX["inbox"]; PRICE["pricing — resolver: override > dynamic > weekday > base"]
             PAY["payments — Stripe Connect Custom (primary), Destination Charge, webhooks; Revolut secondary"]
-            CM["channel_manager"]; BOOK["booking_engine"]
-            PORTAL["public_portal"]
+            CM["channel_manager — Channex aggregator, shared property (n rooms → 1 Channex property), PMS-certified"]
+            BOOK["booking_engine"]
+            PORTAL["public_portal"]; PPORTAL["property_portal"]; DOSSIER["property_dossier"]
+            EXTCAL["external_calendar — iCal import/export"]; MEDIA["media"]
+            SUBS["subscriptions — unit-based plan"]
             OWN["owners — owner master data + property assignment (share/commission per property)"]
             OWNST["owner_statements — payout statement (commission, EU tax/reverse charge, cancellation, multi-currency ECB)"]
             WA["whatsapp — WhatsApp Cloud API, integrated in the inbox"]
@@ -277,7 +287,7 @@ The 24 vertical slices and their data areas show the state of the business logic
             OCR["ocr"]; CRM["crm"]; DASH["dashboard (min.)"]; CONT["content (min.)"]
         end
     end
-    DB[("Postgres — 101 tables, RLS")]
+    DB[("Postgres — 128 tables, RLS")]
     DONE --> DB
     SCAFFOLD --> DB
     CORE --> DONE
@@ -290,31 +300,36 @@ The 24 vertical slices and their data areas show the state of the business logic
 
 ## Component: Channel Manager (C4 Level 3)
 
-Der `channel_manager`-Slice nutzt ein Adapter-Pattern (Anti-Corruption-Layer): ein einheitliches Interface zum PMS-Kern, dahinter austauschbare Adapter pro Kanal. So bleibt die Entscheidung Direkt-Anbindung vs. Aggregator reversibel.
+Der `channel_manager`-Slice bindet **Channex als Channel-Aggregator** an (kein Eigenbau je OTA): Das PMS pusht Verfügbarkeit/Preise/Restriktionen (ARI) an Channex, Channex verteilt an Booking.com, Airbnb, Expedia & Co.; OTA-Buchungen kommen über den Revisions-Feed zurück. Ausgehende Pushes laufen über eine **Outbox** (idempotent, Retry) und den Worker; eingehende Buchungen werden gepullt und ge-ackt. Für Hotels teilen sich **mehrere lokale Zimmer EINE Channex-Property** (n Zimmer → 1 Property, Room-Type je Zimmer) — Channex verlangt genau eine `property_id` je ARI-Request. Die Integration ist **PMS-zertifiziert** (11 Tests).
 
 <Mermaid
-  title="Component — Channel Manager Slice (Adapter-Pattern)"
+  title="Component — Channel Manager Slice (Channex-Aggregator)"
   chart={`C4Container
-    title Component — Channel Manager Slice (Adapter-Pattern)
+    title Component — Channel Manager Slice (Channex-Aggregator)
 
     Container_Boundary(cm, "channel_manager") {
         Container(facade, "Channel Facade", "Python", "Einheitliches Interface zum PMS-Kern")
-        Container(booking_ad, "Booking.com Adapter", "Python", "Adapter+Translator: OTA-XML / Poll")
-        Container(airbnb_ad, "Airbnb Adapter", "Python", "Adapter+Translator: Webhooks")
-        Container(ical_ad, "iCal Adapter", "Python", "Fallback: nur Sperrzeiten")
-        Container(worker, "Sync Worker", "Redis Queue", "Retry, Backoff, DLQ, Idempotenz")
+        Container(ari, "ARI-Push + Outbox", "Python", "Availability/Rates/Restrictions, RLE-Ranges, idempotent")
+        Container(fullsync, "Full-Sync", "Python", "500-Tage-Voll-Push (UI-Button + nächtlich)")
+        Container(inbound, "Booking-Import", "Python", "Revisions-Feed pullen, anlegen/stornieren, ack")
+        Container(client, "Channex-Client", "Python", "HTTP, user-api-key, Budget/Rate-Limit")
+        Container(worker, "Sync Worker", "Redis Queue", "Retry, Backoff, Idempotenz, Dedup")
     }
 
-    ContainerDb(cal, "availability (Kalender)", "Postgres", "Single Source of Truth")
-    System_Ext(booking, "Booking.com", "OTA")
-    System_Ext(airbnb, "Airbnb", "OTA")
+    ContainerDb(cal, "availability + rate_plans", "Postgres", "Single Source of Truth")
+    ContainerDb(map, "channex_*_map", "Postgres", "property/room_type/rate_plan-Mapping, geteilte Property")
+    System_Ext(channex, "Channex", "Channel-Aggregator")
+    System_Ext(otas, "Booking.com · Airbnb · Expedia", "OTA-Kanäle")
 
     Rel(facade, cal, "Sperrt/aktualisiert Tage atomar", "SQL FOR UPDATE")
-    Rel(facade, worker, "Fan-out-Push einreihen")
-    Rel(worker, booking_ad, "Ruft auf")
-    Rel(worker, airbnb_ad, "Ruft auf")
-    Rel(booking_ad, booking, "ARI-Push / Poll", "OTA-XML")
-    Rel(airbnb, airbnb_ad, "Webhook: Buchung/Storno", "HTTPS")`}
+    Rel(facade, ari, "Delta einreihen (nur geänderte Tage)")
+    Rel(ari, worker, "Outbox-Push einreihen")
+    Rel(fullsync, worker, "Voll-Push einreihen")
+    Rel(worker, client, "ruft auf")
+    Rel(client, map, "IDs auflösen")
+    Rel(client, channex, "ARI-Push / GET Readback", "HTTPS user-api-key")
+    Rel(channex, otas, "verteilt ARI, empfängt Buchungen")
+    Rel(inbound, channex, "GET booking_revisions/feed + ack", "HTTPS")`}
 />
 
 </De>
@@ -323,31 +338,36 @@ Der `channel_manager`-Slice nutzt ein Adapter-Pattern (Anti-Corruption-Layer): e
 
 ## Component: Channel Manager (C4 Level 3)
 
-The `channel_manager` slice uses an adapter pattern (anti-corruption layer): a uniform interface to the PMS core, with interchangeable adapters per channel behind it. This keeps the decision between direct connection vs. aggregator reversible.
+The `channel_manager` slice integrates **Channex as a channel aggregator** (no per-OTA in-house adapters): the PMS pushes availability/rates/restrictions (ARI) to Channex, Channex distributes to Booking.com, Airbnb, Expedia etc.; OTA bookings come back via the revisions feed. Outbound pushes go through an **outbox** (idempotent, retry) and the worker; inbound bookings are pulled and acked. For hotels, **several local rooms share ONE Channex property** (n rooms → 1 property, one room type per room) — Channex requires exactly one `property_id` per ARI request. The integration is **PMS-certified** (11 tests).
 
 <Mermaid
-  title="Component — Channel Manager Slice (adapter pattern)"
+  title="Component — Channel Manager Slice (Channex aggregator)"
   chart={`C4Container
-    title Component — Channel Manager Slice (adapter pattern)
+    title Component — Channel Manager Slice (Channex aggregator)
 
     Container_Boundary(cm, "channel_manager") {
         Container(facade, "Channel Facade", "Python", "Uniform interface to the PMS core")
-        Container(booking_ad, "Booking.com Adapter", "Python", "Adapter+Translator: OTA-XML / poll")
-        Container(airbnb_ad, "Airbnb Adapter", "Python", "Adapter+Translator: webhooks")
-        Container(ical_ad, "iCal Adapter", "Python", "Fallback: blocked periods only")
-        Container(worker, "Sync Worker", "Redis Queue", "Retry, backoff, DLQ, idempotency")
+        Container(ari, "ARI push + outbox", "Python", "Availability/rates/restrictions, RLE ranges, idempotent")
+        Container(fullsync, "Full sync", "Python", "500-day full push (UI button + nightly)")
+        Container(inbound, "Booking import", "Python", "Pull revisions feed, create/cancel, ack")
+        Container(client, "Channex client", "Python", "HTTP, user-api-key, budget/rate limit")
+        Container(worker, "Sync Worker", "Redis Queue", "Retry, backoff, idempotency, dedup")
     }
 
-    ContainerDb(cal, "availability (calendar)", "Postgres", "Single Source of Truth")
-    System_Ext(booking, "Booking.com", "OTA")
-    System_Ext(airbnb, "Airbnb", "OTA")
+    ContainerDb(cal, "availability + rate_plans", "Postgres", "Single Source of Truth")
+    ContainerDb(map, "channex_*_map", "Postgres", "property/room_type/rate_plan mapping, shared property")
+    System_Ext(channex, "Channex", "Channel aggregator")
+    System_Ext(otas, "Booking.com · Airbnb · Expedia", "OTA channels")
 
     Rel(facade, cal, "Locks/updates days atomically", "SQL FOR UPDATE")
-    Rel(facade, worker, "Enqueue fan-out push")
-    Rel(worker, booking_ad, "Calls")
-    Rel(worker, airbnb_ad, "Calls")
-    Rel(booking_ad, booking, "ARI push / poll", "OTA-XML")
-    Rel(airbnb, airbnb_ad, "Webhook: booking/cancellation", "HTTPS")`}
+    Rel(facade, ari, "Enqueue delta (changed days only)")
+    Rel(ari, worker, "Enqueue outbox push")
+    Rel(fullsync, worker, "Enqueue full push")
+    Rel(worker, client, "calls")
+    Rel(client, map, "resolve IDs")
+    Rel(client, channex, "ARI push / GET readback", "HTTPS user-api-key")
+    Rel(channex, otas, "distributes ARI, receives bookings")
+    Rel(inbound, channex, "GET booking_revisions/feed + ack", "HTTPS")`}
 />
 
 </En>
@@ -356,19 +376,20 @@ The `channel_manager` slice uses an adapter pattern (anti-corruption layer): a u
 
 ## Datenmodell (ER-Diagramm)
 
-Das tatsächliche Schema aus den Supabase-Migrationen (Phase 1). Im Zentrum steht der Mandant (Tenant), an dem Objekte, Nutzer, Gäste und Reservierungen hängen; die Verfügbarkeit (availability) ist die eine Wahrheit gegen Double-Bookings.
+Das tatsächliche Schema aus den Supabase-Migrationen. Im Zentrum steht der Mandant (Tenant), an dem Objekte, Nutzer, Gäste und Reservierungen hängen; die Verfügbarkeit (availability) ist die eine Wahrheit gegen Double-Bookings. **Kernregel des Datenmodells: 1 `property` = GENAU EINE buchbare Einheit** — ein einzelnes Hotelzimmer ODER ein Ferienobjekt. Ein Hotel mit 8 Zimmern hat also 8 `property`-Zeilen, KEIN Gebäude-Objekt mit Zimmern darunter (Hotel-Container-Modell wurde mit Migration 0156 zurückgebaut).
 
 <Mermaid
-  title="Datenmodell — Kern-Entitäten (Phase 1)"
+  title="Datenmodell — Kern-Entitäten"
   chart={`erDiagram
     TENANT ||--o{ PROPERTY : owns
     TENANT ||--o{ USER : employs
     TENANT ||--o{ GUEST : has
     TENANT ||--o{ RESERVATION : has
     PROPERTY ||--o{ RATE_PLAN : has
+    RATE_PLAN ||--o{ RATE_PLAN : "derived from"
     PROPERTY ||--|{ AVAILABILITY : tracks
     PROPERTY ||--o{ RESERVATION : "is booked in"
-    GUEST ||--o{ RESERVATION : makes
+    GUEST ||--|{ RESERVATION : makes
     RESERVATION ||--o{ PAYMENT : "settled by"
     RESERVATION ||--o{ MESSAGE : contains
 
@@ -385,7 +406,7 @@ Das tatsächliche Schema aus den Supabase-Migrationen (Phase 1). Im Zentrum steh
         string email
     }
     PROPERTY {
-        uuid id PK
+        uuid id PK "1 property = 1 buchbare Einheit"
         uuid tenant_id FK
         string title
         float lat
@@ -396,15 +417,20 @@ Das tatsächliche Schema aus den Supabase-Migrationen (Phase 1). Im Zentrum steh
     RATE_PLAN {
         uuid id PK
         uuid property_id FK
+        string name
         numeric base_price
+        string currency
         int min_stay
-        jsonb season_rules
+        enum rate_mode "manual|derived"
+        uuid derived_from_rate_plan_id FK "nur bei derived"
+        numeric offset_amount "derived: +/- Betrag"
+        numeric offset_percent "derived: +/- %"
     }
     AVAILABILITY {
         uuid property_id FK
         date day "UNIQUE(property_id, day)"
         enum status "open|booked|blocked"
-        enum source "direct|portal|booking|airbnb|vrbo|manual"
+        enum source "direct|portal|booking|airbnb|vrbo|manual|channex"
     }
     GUEST {
         uuid id PK
@@ -416,7 +442,7 @@ Das tatsächliche Schema aus den Supabase-Migrationen (Phase 1). Im Zentrum steh
         uuid id PK
         uuid tenant_id FK
         uuid property_id FK
-        uuid guest_id FK
+        uuid guest_id FK "PFLICHT — jede Buchung braucht einen Gast"
         enum channel "direct|portal|booking|airbnb|vrbo"
         date check_in
         date check_out
@@ -439,7 +465,7 @@ Das tatsächliche Schema aus den Supabase-Migrationen (Phase 1). Im Zentrum steh
     }`}
 />
 
-Das Modell ist auf 101 Tabellen (alle mit RLS) gewachsen — inzwischen bei Migration 0090. Die folgende, nach Bereich gruppierte Übersicht zeigt die Kern-Erweiterungen aus dem Lastenheft (Migrationen 0009–0019): Saison-/Preislogik, Aufgaben & Checklisten, CRM/Partner, Messaging/Content sowie Eigentümer- und Abrechnungsstrukturen. Jüngere Bereiche: Page-Builder (0086/0087, siehe eigene Seite „Architektur/Page-Builder“), Reisebüros (0088), Betriebsart Hotel/Ferienunterkunft am Mandanten (0090).
+Das Modell ist auf 128 Tabellen (alle mit RLS) gewachsen — inzwischen bei Migration 0158. Die folgende, nach Bereich gruppierte Übersicht zeigt Kern-Erweiterungen: Saison-/Preislogik, Aufgaben & Checklisten, CRM/Partner, Messaging/Content sowie Eigentümer- und Abrechnungsstrukturen. Jüngere Bereiche: Page-Builder (0086/0087, siehe eigene Seite „Architektur/Page-Builder“), Reisebüros (0088), **Rate-Plan-Preise & Restriktionen** (0146–0153: datumsgenaue Preise, Min-Stay, CTA/CTD/Max-Stay, Stop-Sell je Plan), **Rückbau des Hotel-Container-Modells** (0156), **abgeleitete Rate-Plans** (0157) und **geteilte Channex-Property** (0158, n Zimmer → 1 Channex-Property).
 
 <Mermaid
   title="Datenmodell — Erweiterungen aus dem Lastenheft (Migrationen 0009–0019)"
@@ -467,18 +493,29 @@ Das Modell ist auf 101 Tabellen (alle mit RLS) gewachsen — inzwischen bei Migr
 
     TENANT ||--o{ MESSAGE_TEMPLATE : has
     MESSAGE_TEMPLATE ||--o{ MESSAGE_TRIGGER : "Timing/Kanal"
-    TENANT ||--o{ CONTENT_BLOCK : "dreisprachig"
+    TENANT ||--o{ CONTENT_BLOCK : "Objekt-Texte"
     CONTENT_BLOCK ||--o{ CONTENT_ASSIGNMENT : "zugewiesen"
+
+    RATE_PLAN ||--o{ RATE_PLAN_PRICE_OVERRIDE : "Datumspreis je Plan"
+    RATE_PLAN ||--o{ RATE_PLAN_MIN_STAY_OVERRIDE : "Min-Stay je Tag"
+    RATE_PLAN ||--o{ RATE_PLAN_RESTRICTION_OVERRIDE : "CTA/CTD/Max-Stay"
+    RATE_PLAN ||--o{ STOP_SELL : "Verkaufsstopp je Tag"
+
+    PROPERTY ||--o| CHANNEX_PROPERTY_MAP : "→ Channex-Property (geteilt bei Hotel)"
+    CHANNEX_PROPERTY_MAP ||--o{ CHANNEX_ROOM_TYPE_MAP : "Room-Type je Zimmer"
+    CHANNEX_ROOM_TYPE_MAP ||--o{ CHANNEX_RATE_PLAN_MAP : "Rate-Plan-Mapping"
 
     TENANT ||--o{ BLOCK_REQUEST : "Sperrung beantragt"
     PROPERTY ||--o{ METER_READING : "Zählerstand (append-only)"
     PROPERTY ||--o{ CO_OWNER : "Miteigentümer"
-    PROPERTY ||--o{ PRICE_OVERRIDE : "Tagespreis"
+    PROPERTY ||--o{ PRICE_OVERRIDE : "Tagespreis (Objekt)"
     USER ||--|| DASHBOARD_LAYOUT : personalisiert
 
     PLAN ||--o{ SUBSCRIPTION : "unit-basiert"
     TENANT ||--|| SUBSCRIPTION : abonniert`}
 />
+
+> **Hinweis Mehrsprachigkeit:** Die Oberfläche (apps/web) ist seit der next-intl-Umstellung in **24 EU-Sprachen** lokalisiert (bg, cs, da, de, el, en, es, et, fi, fr, ga, hr, hu, it, lt, lv, mt, nl, pl, pt, ro, sk, sl, sv). Übersetzt wird die UI, nicht die vom Nutzer gepflegten Objekt-Texte.
 
 </De>
 
@@ -486,19 +523,20 @@ Das Modell ist auf 101 Tabellen (alle mit RLS) gewachsen — inzwischen bei Migr
 
 ## Data model (ER diagram)
 
-The actual schema from the Supabase migrations (phase 1). At the center is the tenant, to which properties, users, guests and reservations are attached; availability is the single source of truth against double-bookings.
+The actual schema from the Supabase migrations. At the center is the tenant, to which properties, users, guests and reservations are attached; availability is the single source of truth against double-bookings. **Core rule of the data model: 1 `property` = EXACTLY ONE bookable unit** — a single hotel room OR a vacation rental. A hotel with 8 rooms therefore has 8 `property` rows, NOT a building object with rooms below it (the hotel-container model was removed in migration 0156).
 
 <Mermaid
-  title="Data model — core entities (phase 1)"
+  title="Data model — core entities"
   chart={`erDiagram
     TENANT ||--o{ PROPERTY : owns
     TENANT ||--o{ USER : employs
     TENANT ||--o{ GUEST : has
     TENANT ||--o{ RESERVATION : has
     PROPERTY ||--o{ RATE_PLAN : has
+    RATE_PLAN ||--o{ RATE_PLAN : "derived from"
     PROPERTY ||--|{ AVAILABILITY : tracks
     PROPERTY ||--o{ RESERVATION : "is booked in"
-    GUEST ||--o{ RESERVATION : makes
+    GUEST ||--|{ RESERVATION : makes
     RESERVATION ||--o{ PAYMENT : "settled by"
     RESERVATION ||--o{ MESSAGE : contains
 
@@ -515,7 +553,7 @@ The actual schema from the Supabase migrations (phase 1). At the center is the t
         string email
     }
     PROPERTY {
-        uuid id PK
+        uuid id PK "1 property = 1 bookable unit"
         uuid tenant_id FK
         string title
         float lat
@@ -526,15 +564,20 @@ The actual schema from the Supabase migrations (phase 1). At the center is the t
     RATE_PLAN {
         uuid id PK
         uuid property_id FK
+        string name
         numeric base_price
+        string currency
         int min_stay
-        jsonb season_rules
+        enum rate_mode "manual|derived"
+        uuid derived_from_rate_plan_id FK "derived only"
+        numeric offset_amount "derived: +/- amount"
+        numeric offset_percent "derived: +/- %"
     }
     AVAILABILITY {
         uuid property_id FK
         date day "UNIQUE(property_id, day)"
         enum status "open|booked|blocked"
-        enum source "direct|portal|booking|airbnb|vrbo|manual"
+        enum source "direct|portal|booking|airbnb|vrbo|manual|channex"
     }
     GUEST {
         uuid id PK
@@ -546,7 +589,7 @@ The actual schema from the Supabase migrations (phase 1). At the center is the t
         uuid id PK
         uuid tenant_id FK
         uuid property_id FK
-        uuid guest_id FK
+        uuid guest_id FK "REQUIRED — every booking needs a guest"
         enum channel "direct|portal|booking|airbnb|vrbo"
         date check_in
         date check_out
@@ -569,7 +612,7 @@ The actual schema from the Supabase migrations (phase 1). At the center is the t
     }`}
 />
 
-The model has grown to 101 tables (all with RLS) — currently at migration 0090. The following overview, grouped by area, shows the core extensions from the requirements specification (migrations 0009–0019): season/pricing logic, tasks & checklists, CRM/partners, messaging/content as well as owner and billing structures. More recent areas: website builder (0086/0087, see the dedicated page "Architektur/Page-Builder"), travel agencies (0088), tenant accommodation type hotel/vacation rental (0090).
+The model has grown to 128 tables (all with RLS) — currently at migration 0158. The following overview, grouped by area, shows core extensions: season/pricing logic, tasks & checklists, CRM/partners, messaging/content as well as owner and billing structures. More recent areas: website builder (0086/0087, see the dedicated page "Architektur/Page-Builder"), travel agencies (0088), **rate-plan prices & restrictions** (0146–0153: date-level prices, min-stay, CTA/CTD/max-stay, stop-sell per plan), **removal of the hotel-container model** (0156), **derived rate plans** (0157) and **shared Channex property** (0158, n rooms → 1 Channex property).
 
 <Mermaid
   title="Data model — extensions from the requirements spec (migrations 0009–0019)"
@@ -597,18 +640,29 @@ The model has grown to 101 tables (all with RLS) — currently at migration 0090
 
     TENANT ||--o{ MESSAGE_TEMPLATE : has
     MESSAGE_TEMPLATE ||--o{ MESSAGE_TRIGGER : "timing/channel"
-    TENANT ||--o{ CONTENT_BLOCK : "trilingual"
+    TENANT ||--o{ CONTENT_BLOCK : "property texts"
     CONTENT_BLOCK ||--o{ CONTENT_ASSIGNMENT : "assigned"
+
+    RATE_PLAN ||--o{ RATE_PLAN_PRICE_OVERRIDE : "date price per plan"
+    RATE_PLAN ||--o{ RATE_PLAN_MIN_STAY_OVERRIDE : "min-stay per day"
+    RATE_PLAN ||--o{ RATE_PLAN_RESTRICTION_OVERRIDE : "CTA/CTD/max-stay"
+    RATE_PLAN ||--o{ STOP_SELL : "sell stop per day"
+
+    PROPERTY ||--o| CHANNEX_PROPERTY_MAP : "→ Channex property (shared for hotels)"
+    CHANNEX_PROPERTY_MAP ||--o{ CHANNEX_ROOM_TYPE_MAP : "room type per room"
+    CHANNEX_ROOM_TYPE_MAP ||--o{ CHANNEX_RATE_PLAN_MAP : "rate-plan mapping"
 
     TENANT ||--o{ BLOCK_REQUEST : "block requested"
     PROPERTY ||--o{ METER_READING : "meter reading (append-only)"
     PROPERTY ||--o{ CO_OWNER : "co-owner"
-    PROPERTY ||--o{ PRICE_OVERRIDE : "daily price"
+    PROPERTY ||--o{ PRICE_OVERRIDE : "daily price (property)"
     USER ||--|| DASHBOARD_LAYOUT : personalized
 
     PLAN ||--o{ SUBSCRIPTION : "unit-based"
     TENANT ||--|| SUBSCRIPTION : subscribes`}
 />
+
+> **Note on multilingual support:** Since the next-intl migration, the UI (apps/web) is localized into **24 EU languages** (bg, cs, da, de, el, en, es, et, fi, fr, ga, hr, hu, it, lt, lv, mt, nl, pl, pt, ro, sk, sl, sv). The UI is translated, not the property texts maintained by the user.
 
 </En>
 
@@ -878,7 +932,7 @@ On a booking, the tasks slice automatically creates an arrival check and final c
 
 ## Reservierungs-Lifecycle (State)
 
-Der `reservation.status` ist eine echte State-Machine: von Pending über Confirmed (mit Unter-Zuständen vom Check-in bis Completed) bis Cancelled. Bereits ab Pending sind die Kalendertage gegen Double-Booking gesperrt.
+Der `reservation.status` ist eine echte State-Machine: von Pending über Confirmed (mit Unter-Zuständen vom Check-in bis Completed) bis Cancelled. Bereits ab Pending sind die Kalendertage gegen Double-Booking gesperrt. **Jede Reservierung braucht einen Gast** (Kontakt-Pflicht über alle drei Wege — intern 422 ohne Gast, OTA-Import erzeugt einen Platzhaltergast, eigene Plattform verlangt den Kontakt im Schema); ein Tag OHNE Gast wird als Sperrzeitraum (block) angelegt, nicht als Reservierung mit Fantasienamen.
 
 <Mermaid
   title="Reservierungs-Lifecycle (State)"
@@ -909,7 +963,7 @@ Der `reservation.status` ist eine echte State-Machine: von Pending über Confirm
 
 ## Reservation lifecycle (state)
 
-The `reservation.status` is a real state machine: from Pending through Confirmed (with sub-states from check-in to Completed) to Cancelled. From Pending onwards, the calendar days are already locked against double-booking.
+The `reservation.status` is a real state machine: from Pending through Confirmed (with sub-states from check-in to Completed) to Cancelled. From Pending onwards, the calendar days are already locked against double-booking. **Every reservation needs a guest** (contact required across all three paths — internal 422 without a guest, OTA import creates a placeholder guest, the own platform requires the contact in the schema); a day WITHOUT a guest is created as a blocked period (block), not as a reservation with a made-up name.
 
 <Mermaid
   title="Reservation lifecycle (state)"

@@ -186,6 +186,30 @@ Stripe is used for **all payments on our own platform** (myNextDays/`booking_eng
 
 <De>
 
+## Einzelunternehmen vs. Gesellschaft (business_type)
+
+Das KYC-Formular passt sich der Rechtsform an: **`individual`** (Einzelunternehmer/Einzelperson) oder **`company`** (Gesellschaft, z. B. GmbH). Danach richtet sich, welche Felder Stripe verlangt — die Pflichtfeld-Liste kommt aus Stripes `country_specs` (kein Hardcode), getrennt nach `business_type`.
+
+- Bei **Gesellschaften** wird u. a. die **Handelsregisternummer** (`company.registration_number`) mitgeschickt — sie fehlte früher, wodurch der Sync eines GmbH-Accounts scheiterte.
+- Telefonnummern werden ins **E.164-Format** normalisiert (führendes `+`, keine Leerzeichen); ein einziges falsch formatiertes Feld hatte zuvor den kompletten Account-Sync abgebrochen.
+- Schlägt ein Feld-Update fehl, wird der Fehler **fail-closed** behandelt (kein stilles „fertig") — der Gastgeber sieht, was noch fehlt.
+
+</De>
+
+<En>
+
+## Sole proprietor vs. company (business_type)
+
+The KYC form adapts to the legal form: **`individual`** (sole proprietor/person) or **`company`** (e.g. a limited company). This determines which fields Stripe requires — the required-field list comes from Stripe's `country_specs` (no hardcode), split by `business_type`.
+
+- For **companies**, the **commercial register number** (`company.registration_number`) is sent along — it used to be missing, which made syncing a company account fail.
+- Phone numbers are normalized to **E.164 format** (leading `+`, no spaces); a single wrongly formatted field previously aborted the entire account sync.
+- If a field update fails, the error is handled **fail-closed** (no silent "done") — the host sees what's still missing.
+
+</En>
+
+<De>
+
 ## AGB & Stripe Connected Account Agreement (Custom-Pflicht)
 
 Stripe verlangt für **Custom Accounts**, dass die Plattform die Zustimmung zum

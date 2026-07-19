@@ -1,0 +1,201 @@
+import { Meta } from '@storybook/blocks';
+import { Mermaid } from '@/components/docs/mermaid';
+import { De, En } from "@/components/docs/lang";
+
+<Meta title="Architektur/Channel-Manager (Channex)" />
+
+<De>
+
+# Channel-Manager & Channex
+
+myNextDays verteilt Verfügbarkeit, Preise und Restriktionen (ARI = Availability, Rates, Inventory) nicht selbst an jedes Portal, sondern über **Channex** als Channel-Aggregator. Das PMS spricht genau eine API (Channex); Channex fächert an Booking.com, Airbnb, Expedia & Co. auf und liefert OTA-Buchungen zurück. Die Integration ist **PMS-zertifiziert** (11 Testfälle bestanden).
+
+Im Kundentext taucht „Channex" nie auf — dort heißt es „Booking, Airbnb & Co." bzw. „Portale". „Channex" ist ein rein interner Begriff (Code/Doku).
+
+</De>
+
+<En>
+
+# Channel manager & Channex
+
+myNextDays doesn't distribute availability, rates and restrictions (ARI = availability, rates, inventory) to each portal itself, but via **Channex** as a channel aggregator. The PMS talks to exactly one API (Channex); Channex fans out to Booking.com, Airbnb, Expedia etc. and returns OTA bookings. The integration is **PMS-certified** (11 test cases passed).
+
+"Channex" never appears in customer-facing text — there it's "Booking, Airbnb & Co." or "portals". "Channex" is a purely internal term (code/docs).
+
+</En>
+
+<De>
+
+## Ausgehend: Delta-Push über die Outbox
+
+Ändert sich lokal etwas (neue Buchung, Preis, Restriktion), wird **nur die Differenz** gepusht — nicht der ganze Kalender. Zusammenhängende Tage mit gleichem Wert werden zu Bereichen zusammengefasst (Run-Length-Encoding). Der Push läuft über eine **Outbox** (idempotent, mit Retry), damit ein Doppelklick oder ein Webhook-Redelivery nie doppelt wirkt. Nach dem Schreiben wird gegengelesen (`GET`), statt dem `200` zu vertrauen.
+
+<Mermaid
+  title="Ausgehender ARI-Push (Delta über Outbox)"
+  chart={`sequenceDiagram
+    actor U as Nutzer/Buchung
+    participant API as FastAPI (channel_manager)
+    participant OB as ari_outbox / restriction_outbox
+    participant W as Worker
+    participant CX as Channex
+    participant OTA as Booking / Airbnb
+
+    U->>API: Preis/Verfügbarkeit/Restriktion ändern
+    API->>OB: nur geänderte Tage (idempotent) einreihen
+    API->>W: Push-Job einreihen
+    W->>CX: POST availability / restrictions (RLE-Ranges)
+    W->>CX: GET Readback (Ist == Soll?)
+    CX->>OTA: verteilt ARI
+    Note over W,CX: Fehler → Outbox bleibt offen, Retry`}
+/>
+
+</De>
+
+<En>
+
+## Outbound: delta push via the outbox
+
+When something changes locally (new booking, price, restriction), **only the difference** is pushed — not the whole calendar. Consecutive days with the same value are merged into ranges (run-length encoding). The push goes through an **outbox** (idempotent, with retry), so a double click or a webhook redelivery never takes effect twice. After writing, we read back (`GET`) instead of trusting the `200`.
+
+<Mermaid
+  title="Outbound ARI push (delta via outbox)"
+  chart={`sequenceDiagram
+    actor U as User/booking
+    participant API as FastAPI (channel_manager)
+    participant OB as ari_outbox / restriction_outbox
+    participant W as Worker
+    participant CX as Channex
+    participant OTA as Booking / Airbnb
+
+    U->>API: Change price/availability/restriction
+    API->>OB: enqueue changed days only (idempotent)
+    API->>W: enqueue push job
+    W->>CX: POST availability / restrictions (RLE ranges)
+    W->>CX: GET readback (actual == desired?)
+    CX->>OTA: distributes ARI
+    Note over W,CX: Error → outbox stays open, retry`}
+/>
+
+</En>
+
+<De>
+
+## Eingehend: OTA-Buchungen über den Revisions-Feed
+
+OTA-Buchungen kommen als **Revisionen** zurück. myNextDays pollt den kontoweiten Feed (`GET booking_revisions/feed`), legt jede Buchung an bzw. storniert sie und **bestätigt (ackt) erst nach erfolgreichem Speichern**. Wichtig: Eine un-geackte Revision fällt bei Channex nach ~30 Minuten dauerhaft aus dem Feed — deshalb wird zügig ge-ackt und der Feed bis leer abgearbeitet. Ein nächtlicher Recovery-Import (`GET bookings`) schließt eventuelle Lücken.
+
+<Mermaid
+  title="Eingehende Buchung (Revisions-Feed)"
+  chart={`flowchart LR
+    CX["Channex Revisions-Feed<br/>(kontoweit)"] --> P["Worker pollt"]
+    P --> M{Property im Mapping?}
+    M -- nein --> SKIP["überspringen, NICHT acken"]
+    M -- ja --> A["Reservierung anlegen/stornieren<br/>(Platzhaltergast bei fehlendem Namen)"]
+    A --> ACK["ack (erst nach Erfolg)"]
+    ACK --> CAL["Kalender sperrt Tage"]`}
+/>
+
+</De>
+
+<En>
+
+## Inbound: OTA bookings via the revisions feed
+
+OTA bookings come back as **revisions**. myNextDays polls the account-wide feed (`GET booking_revisions/feed`), creates or cancels each booking and **acks only after a successful save**. Important: an un-acked revision permanently drops out of the Channex feed after ~30 minutes — so acking happens promptly and the feed is drained until empty. A nightly recovery import (`GET bookings`) closes any gaps.
+
+<Mermaid
+  title="Inbound booking (revisions feed)"
+  chart={`flowchart LR
+    CX["Channex revisions feed<br/>(account-wide)"] --> P["Worker polls"]
+    P --> M{Property in mapping?}
+    M -- no --> SKIP["skip, do NOT ack"]
+    M -- yes --> A["Create/cancel reservation<br/>(placeholder guest if name missing)"]
+    A --> ACK["ack (only after success)"]
+    ACK --> CAL["Calendar blocks days"]`}
+/>
+
+</En>
+
+<De>
+
+## Geteilte Channex-Property (Hotels)
+
+Channex verlangt **genau eine `property_id` je ARI-Request**. Das kollidiert mit unserem Datenmodell (1 `property` = 1 Zimmer), wenn ein Hotel mehrere Zimmer hat. Lösung (Migration 0158): Mehrere lokale Zimmer teilen sich auf der Mapping-Ebene **eine** Channex-Property; jedes Zimmer ist dort ein eigener **Room-Type**, jede Rate ein eigener **Rate-Plan**. Das lokale Modell bleibt unangetastet — die Zusammenfassung passiert ausschließlich im Mapping.
+
+Der Full-Sync über eine solche geteilte Property bündelt daher **alle Zimmer in genau zwei API-Calls**: einen Availability-Call (alle Room-Types) und einen Restrictions-Call (alle Rate-Plans über 500 Tage), wie es die Zertifizierung verlangt.
+
+<Mermaid
+  title="Geteilte Channex-Property — Mapping"
+  chart={`flowchart TB
+    subgraph LOCAL["Lokal (1 property = 1 Zimmer)"]
+        R1["Zimmer Twin<br/>(property)"]
+        R2["Zimmer Double<br/>(property)"]
+    end
+    subgraph CX["Channex (geteilte Property)"]
+        P["1 Channex-Property"]
+        RT1["Room-Type Twin"]
+        RT2["Room-Type Double"]
+        RP1["Rate-Plans Twin<br/>(BAR, B&B)"]
+        RP2["Rate-Plans Double<br/>(BAR, B&B)"]
+        P --> RT1 --> RP1
+        P --> RT2 --> RP2
+    end
+    R1 -->|"room_type_map"| RT1
+    R2 -->|"room_type_map"| RT2`}
+/>
+
+</De>
+
+<En>
+
+## Shared Channex property (hotels)
+
+Channex requires **exactly one `property_id` per ARI request**. That clashes with our data model (1 `property` = 1 room) when a hotel has multiple rooms. Solution (migration 0158): several local rooms share **one** Channex property at the mapping layer; each room is a separate **room type** there, each rate a separate **rate plan**. The local model stays untouched — the aggregation happens purely in the mapping.
+
+A full sync over such a shared property therefore bundles **all rooms into exactly two API calls**: one availability call (all room types) and one restrictions call (all rate plans across 500 days), as the certification requires.
+
+<Mermaid
+  title="Shared Channex property — mapping"
+  chart={`flowchart TB
+    subgraph LOCAL["Local (1 property = 1 room)"]
+        R1["Room Twin<br/>(property)"]
+        R2["Room Double<br/>(property)"]
+    end
+    subgraph CX["Channex (shared property)"]
+        P["1 Channex property"]
+        RT1["Room type Twin"]
+        RT2["Room type Double"]
+        RP1["Rate plans Twin<br/>(BAR, B&B)"]
+        RP2["Rate plans Double<br/>(BAR, B&B)"]
+        P --> RT1 --> RP1
+        P --> RT2 --> RP2
+    end
+    R1 -->|"room_type_map"| RT1
+    R2 -->|"room_type_map"| RT2`}
+/>
+
+</En>
+
+<De>
+
+## Full-Sync auf Knopfdruck
+
+Neben dem nächtlichen Voll-Push gibt es auf der Kanäle-Seite den Button **„Voll-Abgleich"**: Er überträgt Verfügbarkeit, Preise und Restriktionen für die nächsten 500 Tage komplett neu und heilt so eventuellen Drift aus verlorenen Delta-Pushes. Für eine geteilte Property deckt ein Klick automatisch alle zugehörigen Zimmer ab.
+
+## Was die Zertifizierung prüft
+
+Channex zertifiziert die Anbindung mit 11 Tests — u. a. Voll-Sync, Einzel-/Mehrtages-Updates einzelner und mehrerer Raten, Mindestaufenthalt, Verkaufsstopp, kombinierte Restriktionen, Halbjahres-Update, Verfügbarkeits-Updates und den Buchungsempfang. Alle 11 sind bestanden.
+
+</De>
+
+<En>
+
+## Full sync at the push of a button
+
+Besides the nightly full push, the channels page has a **"Full sync"** button: it re-transmits availability, prices and restrictions for the next 500 days completely, healing any drift from lost delta pushes. For a shared property, one click automatically covers all associated rooms.
+
+## What the certification checks
+
+Channex certifies the integration with 11 tests — including full sync, single-/multi-day updates of single and multiple rates, minimum stay, sell stop, combined restrictions, half-year update, availability updates and booking receiving. All 11 are passed.
+
+</En>
