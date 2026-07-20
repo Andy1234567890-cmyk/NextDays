@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { AgbSprachwahl } from "@/components/plattform/agb-sprachwahl";
 
 /**
- * Sprachauswahl der AGB-Seite (Marktplatz).
+ * Sprachauswahl der AGB-Seite (Plattform).
  *
  * Dropdown über alle 24 EU-Amtssprachen (Anzeigename in der jeweiligen Sprache
  * selbst). In der App navigiert die Auswahl per `?sprache=…` und die Seite
@@ -11,7 +11,7 @@ import { AgbSprachwahl } from "@/components/plattform/agb-sprachwahl";
  * Auswahl nur lokal gehalten.
  */
 const meta = {
-  title: "Plattform (Marktplatz)/AGB-Sprachwahl",
+  title: "Plattform/AGB-Sprachwahl",
   component: AgbSprachwahl,
   tags: ["autodocs"],
 } satisfies Meta<typeof AgbSprachwahl>;

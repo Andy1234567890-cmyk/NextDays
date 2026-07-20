@@ -3,14 +3,14 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { SiteFooter } from "@/components/plattform/site-footer";
 
 /**
- * Fußzeile des Marktplatzes.
+ * Fußzeile der Plattform.
  *
  * Reise-Inspirationen oben, darunter Link-Spalten (Unterstützung / Gastgeben /
  * myNextDays) und unten die Rechts-/Sprachleiste. Rechtslinks ohne echtes Ziel
  * bleiben bewusst nicht verlinkt (keine toten „#"-Links vortäuschen).
  */
 const meta = {
-  title: "Plattform (Marktplatz)/Fußzeile",
+  title: "Plattform/Fußzeile",
   component: SiteFooter,
   tags: ["autodocs"],
   parameters: { layout: "fullscreen" },

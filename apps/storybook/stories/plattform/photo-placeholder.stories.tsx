@@ -3,14 +3,14 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { PhotoPlaceholder } from "@/components/plattform/photo-placeholder";
 
 /**
- * Bild-Platzhalter des Marktplatzes.
+ * Bild-Platzhalter der Plattform.
  *
  * Erzeugt aus dem Listing-Farbton (hue, deterministisch aus der Objekt-ID) einen
  * ruhigen Farbverlauf mit dezentem Foto-Symbol — überall dort, wo ein Objekt
  * (noch) keine echten Fotos hat. Optionales Label unten links.
  */
 const meta = {
-  title: "Plattform (Marktplatz)/Foto-Platzhalter",
+  title: "Plattform/Foto-Platzhalter",
   component: PhotoPlaceholder,
   tags: ["autodocs"],
   argTypes: {

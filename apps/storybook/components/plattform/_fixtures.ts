@@ -1,4 +1,4 @@
-// Lokale Typ- und Format-Kopie der Plattform (Marktplatz) für die Storybook-
+// Lokale Typ- und Format-Kopie der Plattform (unser eigener Buchungskanal) für die Storybook-
 // Werkstatt. Spiegelt plattform/lib/listings.ts — bewusst OHNE Netz-/Server-
 // Aufrufe (booking_engine, Stripe): Storybook ist reine UI-Vorschau.
 export type Listing = {

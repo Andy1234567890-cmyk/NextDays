@@ -4,7 +4,7 @@ import { BuchungsWidget } from "@/components/plattform/buchungs-widget";
 import { DEMO_LISTINGS } from "@/components/plattform/_fixtures";
 
 /**
- * Buchungs-Widget der Inserat-Seite (Marktplatz).
+ * Buchungs-Widget der Inserat-Seite (Plattform).
  *
  * Datumswahl + Kontaktdaten + Preisaufstellung in der Objekt-Währung. „Reservieren
  * & bezahlen" führt zum Bezahlschritt (Stripe Payment Element). In der App prüft
@@ -12,7 +12,7 @@ import { DEMO_LISTINGS } from "@/components/plattform/_fixtures";
  * und legt die Reservierung an; in der Werkstatt ist Backend/Stripe attrappiert.
  */
 const meta = {
-  title: "Plattform (Marktplatz)/Buchungs-Widget",
+  title: "Plattform/Buchungs-Widget",
   component: BuchungsWidget,
   tags: ["autodocs"],
   decorators: [

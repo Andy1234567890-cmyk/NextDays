@@ -4,7 +4,7 @@ import { ListingCard } from "@/components/plattform/listing-card";
 import { DEMO_LISTINGS } from "@/components/plattform/_fixtures";
 
 /**
- * Inserat-Karte des Marktplatzes (Vertriebskanal „Plattform").
+ * Inserat-Karte der Plattform (unser eigener Buchungskanal, wie Booking/Airbnb).
  *
  * Eine Karte im Suche-Grid: Foto (oder Farb-Platzhalter, wenn ein Objekt noch
  * keine Fotos hat), Titel, Ort (gast-sicher „Stadt, Land"), „ab"-Preis in der
@@ -13,7 +13,7 @@ import { DEMO_LISTINGS } from "@/components/plattform/_fixtures";
  * Die Währung kommt immer aus dem Listing (kein €-Hardcode).
  */
 const meta = {
-  title: "Plattform (Marktplatz)/Inserat-Karte",
+  title: "Plattform/Inserat-Karte",
   component: ListingCard,
   tags: ["autodocs"],
   decorators: [

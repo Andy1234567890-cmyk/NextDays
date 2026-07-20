@@ -3,14 +3,14 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { SiteHeader } from "@/components/plattform/site-header";
 
 /**
- * Kopfzeile des Marktplatzes.
+ * Kopfzeile der Plattform.
  *
  * Schlanke Sticky-Leiste mit Logo, Such-Pille (ausblendbar via `compact`) und
  * Konto-Aktion. Wird auf Unterseiten (Inserat, Checkout) verwendet; die Startseite
  * nutzt die reichere `PlattformNav`.
  */
 const meta = {
-  title: "Plattform (Marktplatz)/Kopfzeile",
+  title: "Plattform/Kopfzeile",
   component: SiteHeader,
   tags: ["autodocs"],
   parameters: { layout: "fullscreen" },

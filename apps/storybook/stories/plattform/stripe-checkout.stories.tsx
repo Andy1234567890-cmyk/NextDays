@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { StripeCheckout } from "@/components/plattform/stripe-checkout";
 
 /**
- * Bezahlschritt des Marktplatzes (Stripe Payment Element im myNextDays-Branding).
+ * Bezahlschritt der Plattform (Stripe Payment Element im myNextDays-Branding).
  *
  * In der App lädt die Komponente für eine angelegte Reservierung den PaymentIntent
  * (Destination Charge) und rendert das echte Stripe Payment Element (Karten +
@@ -12,7 +12,7 @@ import { StripeCheckout } from "@/components/plattform/stripe-checkout";
  * Erfolgszustand.
  */
 const meta = {
-  title: "Plattform (Marktplatz)/Bezahlschritt",
+  title: "Plattform/Bezahlschritt",
   component: StripeCheckout,
   tags: ["autodocs"],
   decorators: [

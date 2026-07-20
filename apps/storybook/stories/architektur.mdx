@@ -36,6 +36,7 @@ Wer nutzt myNextDays, und mit welchen externen Systemen spricht es? Vermieter un
 
     System_Boundary(nd, "myNextDays Platform") {
         System(pms, "PMS Core", "Zentraler Datenkern: Kalender, Buchungen, Mandanten, Zahlungen")
+        System(plattform, "Plattform", "Eigener globaler Buchungskanal (wie Booking/Airbnb): Gäste-Marktplatz")
     }
 
     System_Ext(booking, "Booking.com", "OTA-Kanal")
@@ -46,7 +47,8 @@ Wer nutzt myNextDays, und mit welchen externen Systemen spricht es? Vermieter un
     System_Ext(google, "Google APIs", "Maps/Places, Translate")
 
     Rel(landlord, pms, "Verwaltet Listings, Raten, Kalender")
-    Rel(guest, pms, "Bucht direkt (Portal/Widget)")
+    Rel(guest, plattform, "Sucht & bucht auf der Plattform")
+    Rel(plattform, pms, "Listings/Verfügbarkeit/Buchung", "booking_engine")
     Rel(pms, booking, "Zwei-Wege-Sync", "Connectivity API")
     Rel(pms, airbnb, "Zwei-Wege-Sync", "Partner API / Webhooks")
     Rel(pms, vrbo, "Zwei-Wege-Sync", "API")
@@ -73,6 +75,7 @@ Who uses myNextDays, and which external systems does it talk to? Hosts and guest
 
     System_Boundary(nd, "myNextDays Platform") {
         System(pms, "PMS Core", "Central data core: calendar, bookings, tenants, payments")
+        System(plattform, "Platform", "Own global booking channel (like Booking/Airbnb): guest marketplace")
     }
 
     System_Ext(booking, "Booking.com", "OTA channel")
@@ -83,7 +86,8 @@ Who uses myNextDays, and which external systems does it talk to? Hosts and guest
     System_Ext(google, "Google APIs", "Maps/Places, Translate")
 
     Rel(landlord, pms, "Manages listings, rates, calendar")
-    Rel(guest, pms, "Books directly (portal/widget)")
+    Rel(guest, plattform, "Searches & books on the platform")
+    Rel(plattform, pms, "Listings/availability/booking", "booking_engine")
     Rel(pms, booking, "Two-way sync", "Connectivity API")
     Rel(pms, airbnb, "Two-way sync", "Partner API / Webhooks")
     Rel(pms, vrbo, "Two-way sync", "API")
@@ -111,6 +115,7 @@ Die ausführbaren Bausteine und Datastores des Systems mit Technologie und Proto
     Container_Boundary(nd, "myNextDays") {
         Container(marketing, "Marketing-Website", "Next.js (entkoppelt)", "Landing/Pricing/Blog — KEINE PMS/Auth-Kopplung (ADR-0002)")
         Container(web, "Web Dashboard", "Next.js, TypeScript", "Vermieter-PMS-UI + Portale (Coolify-App)")
+        Container(plattform, "Plattform", "Next.js (plattform/)", "Eigener globaler Buchungskanal (wie Booking/Airbnb): Gäste-Marktplatz, Such-/Inserat-/Checkout-Flow, Stripe-Bezahlung")
         Container(mobile, "Mobile-App", "React Native 0.86 (bare CLI, kein Expo)", "Gäste (Buchen/Aufenthalt) + Gastgeber (Verwaltung), iOS/Android")
         Container(storybook, "Storybook", "react-vite (eigenes Package apps/storybook)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
         Container(builder, "Website-Renderer", "Next.js (builder/)", "White-Label-Agentur-Sites pro Custom-Domain (Page-Builder)")
@@ -127,12 +132,14 @@ Die ausführbaren Bausteine und Datastores des Systems mit Technologie und Proto
     System_Ext(cloudflare, "Cloudflare for SaaS", "Custom-Domain-TLS")
 
     Rel(landlord, web, "Nutzt", "HTTPS")
+    Rel(guest, plattform, "Bucht auf der Plattform", "HTTPS")
     Rel(guest, web, "Bucht", "HTTPS")
     Rel(guest, builder, "Bucht auf Agentur-Site", "HTTPS (Custom-Domain)")
     Rel(guest, mobile, "Bucht & reist", "HTTPS")
     Rel(landlord, mobile, "Verwaltet unterwegs", "HTTPS")
     Rel(storybook, web, "fertige Komponenten übernehmen", "manuell/Build-Zeit")
     Rel(web, api, "Ruft auf", "JSON/HTTPS")
+    Rel(plattform, api, "Listings/Verfügbarkeit/Buchung", "JSON/HTTPS (/api/v1/booking-engine)")
     Rel(builder, api, "by-domain-Resolver + Seiten", "JSON/HTTPS (/api/v1/site)")
     Rel(mobile, api, "Ruft auf", "JSON/HTTPS (/api/v1)")
     Rel(api, db, "Liest/schreibt", "SQL (RLS)")
@@ -164,6 +171,7 @@ The executable building blocks and data stores of the system with technology and
     Container_Boundary(nd, "myNextDays") {
         Container(marketing, "Marketing website", "Next.js (decoupled)", "Landing/Pricing/Blog — NO PMS/Auth coupling (ADR-0002)")
         Container(web, "Web Dashboard", "Next.js, TypeScript", "Host PMS UI + portals (Coolify app)")
+        Container(plattform, "Platform", "Next.js (plattform/)", "Own global booking channel (like Booking/Airbnb): guest marketplace, search/listing/checkout flow, Stripe payment")
         Container(mobile, "Mobile app", "React Native 0.86 (bare CLI, no Expo)", "Guests (booking/stay) + hosts (management), iOS/Android")
         Container(storybook, "Storybook", "react-vite (own package apps/storybook)", "Design system & component workshop (ADR-0008); finished components move to Web")
         Container(builder, "Website renderer", "Next.js (builder/)", "White-label agency sites per custom domain (website builder)")
@@ -180,12 +188,14 @@ The executable building blocks and data stores of the system with technology and
     System_Ext(cloudflare, "Cloudflare for SaaS", "Custom-domain TLS")
 
     Rel(landlord, web, "Uses", "HTTPS")
+    Rel(guest, plattform, "Books on the platform", "HTTPS")
     Rel(guest, web, "Books", "HTTPS")
     Rel(guest, builder, "Books on agency site", "HTTPS (custom domain)")
     Rel(guest, mobile, "Books & travels", "HTTPS")
     Rel(landlord, mobile, "Manages on the go", "HTTPS")
     Rel(storybook, web, "adopt finished components", "manual/build-time")
     Rel(web, api, "Calls", "JSON/HTTPS")
+    Rel(plattform, api, "Listings/availability/booking", "JSON/HTTPS (/api/v1/booking-engine)")
     Rel(builder, api, "by-domain resolver + pages", "JSON/HTTPS (/api/v1/site)")
     Rel(mobile, api, "Calls", "JSON/HTTPS (/api/v1)")
     Rel(api, db, "Reads/writes", "SQL (RLS)")
@@ -368,6 +378,92 @@ The `channel_manager` slice integrates **Channex as a channel aggregator** (no p
     Rel(client, channex, "ARI push / GET readback", "HTTPS user-api-key")
     Rel(channex, otas, "distributes ARI, receives bookings")
     Rel(inbound, channex, "GET booking_revisions/feed + ack", "HTTPS")`}
+/>
+
+</En>
+
+<De>
+
+## Component: Plattform (C4 Level 3)
+
+Die **Plattform** (`plattform/`, eigenes Next.js) ist unser **eigener globaler Buchungskanal — gleichrangig zu Booking.com oder Airbnb**, NICHT „Direkt". Gäste suchen, sehen Inserate und buchen dort; der Kanal spricht dasselbe FastAPI wie alle anderen Frontends über den `booking_engine`-Slice. Verkauft wird ein Objekt hier, wenn `status='active'` UND die Plattform-Sichtbarkeit an ist (eigene Achse `properties.listed_on_marketplace`, Migration 0159) UND Verfügbarkeit besteht — getrennt schaltbar von den Portalen (Channex/OTA) und der Website (`listed_on_website`). Verfügbarkeit/Stop-Sell wirken kanalübergreifend: eine Plattform-Buchung sperrt die Tage sofort auf allen Kanälen (Double-Booking-Schutz). Bezahlt wird über **Stripe** (Destination Charge), nicht beim OTA.
+
+<Mermaid
+  title="Component — Plattform (eigener Buchungskanal)"
+  chart={`C4Container
+    title Component — Plattform (eigener Buchungskanal)
+
+    Person(guest, "Gast", "Sucht & bucht")
+
+    Container_Boundary(pf, "plattform/ (Next.js)") {
+        Container(such, "Such-/Startseite", "React", "Listings-Grid, Themen-Reihen, Such-Leiste")
+        Container(inserat, "Inserat-Seite", "React", "Detail + Buchungs-Widget (Datum/Gäste)")
+        Container(checkout, "Checkout", "React", "Kontaktdaten + Stripe Payment Element")
+    }
+
+    Container_Boundary(be, "booking_engine (FastAPI-Slice)") {
+        Container(listings, "Listings/Verfügbarkeit", "Python", "gast-sichere Objektdaten, freie Tage")
+        Container(booking, "Gast-Buchung", "Python", "Reservierung anlegen, Kontakt-Pflicht, Tage sperren")
+        Container(pay, "Zahlung", "Python", "Stripe PaymentIntent (Destination Charge)")
+    }
+
+    ContainerDb(props, "properties", "Postgres", "status='active' + listed_on_marketplace (0159)")
+    ContainerDb(avail, "availability", "Postgres", "eine Wahrheit gegen Double-Booking")
+    System_Ext(stripe, "Stripe", "Zahlungen")
+
+    Rel(guest, such, "sucht", "HTTPS")
+    Rel(such, inserat, "öffnet Inserat")
+    Rel(inserat, checkout, "reserviert & bezahlt")
+    Rel(such, listings, "GET Listings (nur listed_on_marketplace)", "JSON")
+    Rel(inserat, listings, "GET Verfügbarkeit", "JSON")
+    Rel(checkout, booking, "POST Buchung", "JSON")
+    Rel(checkout, pay, "PaymentIntent", "JSON")
+    Rel(listings, props, "filtert aktive + gelistete Objekte", "SQL RLS")
+    Rel(booking, avail, "sperrt Tage atomar (alle Kanäle)", "SQL FOR UPDATE")
+    Rel(pay, stripe, "Charge/Deposit", "HTTPS/API")`}
+/>
+
+</De>
+
+<En>
+
+## Component: Platform (C4 Level 3)
+
+The **platform** (`plattform/`, its own Next.js) is our **own global booking channel — on par with Booking.com or Airbnb**, NOT "direct". Guests search, browse listings and book there; the channel talks to the same FastAPI as every other frontend via the `booking_engine` slice. A property sells here when `status='active'` AND platform visibility is on (its own axis `properties.listed_on_marketplace`, migration 0159) AND availability exists — toggled independently from the portals (Channex/OTA) and the website (`listed_on_website`). Availability/stop-sell act across channels: a platform booking immediately blocks those days on all channels (double-booking protection). Payment goes through **Stripe** (destination charge), not at the OTA.
+
+<Mermaid
+  title="Component — Platform (own booking channel)"
+  chart={`C4Container
+    title Component — Platform (own booking channel)
+
+    Person(guest, "Guest", "Searches & books")
+
+    Container_Boundary(pf, "plattform/ (Next.js)") {
+        Container(such, "Search/home page", "React", "Listings grid, themed rows, search bar")
+        Container(inserat, "Listing page", "React", "Detail + booking widget (dates/guests)")
+        Container(checkout, "Checkout", "React", "Contact details + Stripe Payment Element")
+    }
+
+    Container_Boundary(be, "booking_engine (FastAPI slice)") {
+        Container(listings, "Listings/availability", "Python", "guest-safe property data, free days")
+        Container(booking, "Guest booking", "Python", "create reservation, contact required, block days")
+        Container(pay, "Payment", "Python", "Stripe PaymentIntent (destination charge)")
+    }
+
+    ContainerDb(props, "properties", "Postgres", "status='active' + listed_on_marketplace (0159)")
+    ContainerDb(avail, "availability", "Postgres", "single source of truth vs double-booking")
+    System_Ext(stripe, "Stripe", "Payments")
+
+    Rel(guest, such, "searches", "HTTPS")
+    Rel(such, inserat, "opens listing")
+    Rel(inserat, checkout, "reserves & pays")
+    Rel(such, listings, "GET listings (only listed_on_marketplace)", "JSON")
+    Rel(inserat, listings, "GET availability", "JSON")
+    Rel(checkout, booking, "POST booking", "JSON")
+    Rel(checkout, pay, "PaymentIntent", "JSON")
+    Rel(listings, props, "filters active + listed properties", "SQL RLS")
+    Rel(booking, avail, "blocks days atomically (all channels)", "SQL FOR UPDATE")
+    Rel(pay, stripe, "charge/deposit", "HTTPS/API")`}
 />
 
 </En>

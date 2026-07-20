@@ -4,7 +4,7 @@ import { LegalDocument } from "@/components/plattform/legal-document";
 import { DEMO_LEGAL_DOC } from "@/components/plattform/legal";
 
 /**
- * Rechtstext-Renderer des Marktplatzes (Gast-AGB usw.).
+ * Rechtstext-Renderer der Plattform (Gast-AGB usw.).
  *
  * Rendert Titel, Stand, Intro-Absätze und nummerierte Abschnitte mit optionalen
  * Aufzählungen. Inline-Links werden aus der Schreibweise `[Text](https://…)`
@@ -12,7 +12,7 @@ import { DEMO_LEGAL_DOC } from "@/components/plattform/legal";
  * setzt die Dokumentsprache für Screenreader/SEO (die AGB gibt es in 24 Sprachen).
  */
 const meta = {
-  title: "Plattform (Marktplatz)/Rechtstext",
+  title: "Plattform/Rechtstext",
   component: LegalDocument,
   tags: ["autodocs"],
   parameters: { layout: "fullscreen" },

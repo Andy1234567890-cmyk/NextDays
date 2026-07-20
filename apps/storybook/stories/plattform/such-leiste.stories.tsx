@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { SuchLeiste } from "@/components/plattform/such-leiste";
 
 /**
- * Such-Leiste des Marktplatzes.
+ * Such-Leiste der Plattform.
  *
  * Drei Felder (Wohin / Wann / Wer) in einer Pille + runder Such-Button. Klick
  * auf „Wohin" öffnet ein Dropdown mit vorgeschlagenen Reisezielen; „In der Nähe"
@@ -11,7 +11,7 @@ import { SuchLeiste } from "@/components/plattform/such-leiste";
  * (kein App-Router).
  */
 const meta = {
-  title: "Plattform (Marktplatz)/Such-Leiste",
+  title: "Plattform/Such-Leiste",
   component: SuchLeiste,
   tags: ["autodocs"],
   parameters: { layout: "fullscreen" },

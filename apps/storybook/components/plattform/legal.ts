@@ -35,7 +35,7 @@ export const DEMO_LEGAL_DOC: LegalDoc = {
   title: "Allgemeine Geschäftsbedingungen für Gäste",
   stand: "Stand: 3. Juli 2026",
   intro: [
-    "Diese Bedingungen regeln die Nutzung des myNextDays-Marktplatzes durch Gäste.",
+    "Diese Bedingungen regeln die Nutzung der myNextDays-Plattform durch Gäste.",
     "Mit einer Buchung akzeptierst du diese Bedingungen sowie die " +
       "[Datenschutzhinweise](https://mynextdays.com/datenschutz).",
   ],

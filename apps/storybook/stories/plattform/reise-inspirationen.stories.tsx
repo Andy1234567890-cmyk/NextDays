@@ -10,7 +10,7 @@ import { ReiseInspirationen } from "@/components/plattform/reise-inspirationen";
  * Backend-Anbindung.
  */
 const meta = {
-  title: "Plattform (Marktplatz)/Reise-Inspirationen",
+  title: "Plattform/Reise-Inspirationen",
   component: ReiseInspirationen,
   tags: ["autodocs"],
   parameters: { layout: "fullscreen" },

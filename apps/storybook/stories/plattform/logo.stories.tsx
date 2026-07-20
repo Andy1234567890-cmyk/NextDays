@@ -3,14 +3,14 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { Logo } from "@/components/plattform/logo";
 
 /**
- * Marktplatz-Logo (myNextDays-Wortmarke).
+ * Plattform-Logo (myNextDays-Wortmarke).
  *
  * Rendert die transparente Original-PNG und croppt die sichtbare BBox, damit die
  * Wortmarke nicht winzig wirkt. `heightRem` steuert die Höhe (Breite folgt dem
  * festen Seitenverhältnis).
  */
 const meta = {
-  title: "Plattform (Marktplatz)/Logo",
+  title: "Plattform/Logo",
   component: Logo,
   tags: ["autodocs"],
   argTypes: {

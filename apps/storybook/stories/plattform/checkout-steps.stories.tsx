@@ -10,7 +10,7 @@ import { CheckoutSteps } from "@/components/plattform/checkout-steps";
  * der bereits formatierte Gesamtbetrag-String (Währung kommt aus dem Aufrufer).
  */
 const meta = {
-  title: "Plattform (Marktplatz)/Checkout-Schritte",
+  title: "Plattform/Checkout-Schritte",
   component: CheckoutSteps,
   tags: ["autodocs"],
   decorators: [

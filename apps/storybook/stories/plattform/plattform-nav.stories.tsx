@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { PlattformNav } from "@/components/plattform/plattform-nav";
 
 /**
- * Haupt-Navigation der Marktplatz-Startseite.
+ * Haupt-Navigation der Plattform-Startseite.
  *
  * Kopfzeile (Logo + Konto) + Tab-Zeile (Unterkünfte / Erlebnisse / Services) +
  * große Such-Leiste + Kategorie-Leiste als ein Block. In der App kollabiert die
@@ -11,7 +11,7 @@ import { PlattformNav } from "@/components/plattform/plattform-nav";
  * Werkstatt sind die Zustände ohne Animation gerendert (motion nicht verfügbar).
  */
 const meta = {
-  title: "Plattform (Marktplatz)/Navigation",
+  title: "Plattform/Navigation",
   component: PlattformNav,
   tags: ["autodocs"],
   parameters: { layout: "fullscreen" },
