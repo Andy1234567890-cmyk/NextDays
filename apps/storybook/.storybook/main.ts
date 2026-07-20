@@ -34,7 +34,39 @@ const config: StorybookConfig = {
     cfg.resolve.alias = {
       ...(cfg.resolve.alias ?? {}),
       "@": storybookRoot.replace(/\/$/, ""),
+      // Mobile-Komponenten (apps/mobile → hier portiert nach components/mobile)
+      // rendern über react-native-web. `react-native` MUSS auf die Web-Variante
+      // zeigen, damit die RN-Primitives (View/Text/Pressable) im Browser laufen —
+      // ohne `$`, damit auch Subpath-Importe aus RN-Abhängigkeiten (z. B.
+      // react-native-svg) nicht das Flow-getippte bare `react-native` ziehen.
+      "react-native": "react-native-web",
     };
+    // react-native-web liefert plattform-spezifische Dateien (.web.js zuerst).
+    cfg.resolve.extensions = [
+      ".web.tsx",
+      ".web.ts",
+      ".web.jsx",
+      ".web.js",
+      ...(cfg.resolve.extensions ?? [
+        ".mjs",
+        ".js",
+        ".mts",
+        ".ts",
+        ".jsx",
+        ".tsx",
+        ".json",
+      ]),
+    ];
+    // bare React Native nutzt das globale `__DEV__`; im Vite-Build definieren.
+    cfg.define = { ...(cfg.define ?? {}), __DEV__: JSON.stringify(true) };
+    // react-native-web + react-native-svg werden vorgebündelt (CJS/Flow-freie
+    // Web-Builds), sonst bricht die Optimierung an RN-Interna.
+    cfg.optimizeDeps = cfg.optimizeDeps ?? {};
+    cfg.optimizeDeps.include = [
+      ...(cfg.optimizeDeps.include ?? []),
+      "react-native-web",
+      "react-native-svg",
+    ];
     // Automatischer JSX-Runtime: JSX wird zu jsx()-Aufrufen, kein globales
     // `React` nötig. Verhindert "React is not defined" im Production-Build,
     // da tsconfig.json bewusst "jsx": "preserve" für Next.js nutzt.

@@ -1,0 +1,223 @@
+import { Meta } from '@storybook/blocks';
+import { Mermaid } from '@/components/docs/mermaid';
+import { De, En } from "@/components/docs/lang";
+
+<Meta title="Architektur/Mobile-App" />
+
+<De>
+
+# Mobile-App — gleiche Plattform, gleiche Regeln
+
+Die **Mobile-App** (`apps/mobile`, bare React Native 0.86, kein Expo) ist ein **gleichwertiges Frontend derselben FastAPI** (`/api/v1`) wie Web und Plattform — die All-in-One-App mit **vier Erlebnissen**: Gast · Agentur · Owner · Mitarbeiter. Das aktive Erlebnis kommt aus dem Konto (Rolle), nicht aus einer Client-Entscheidung. Es gibt **zwei strikt getrennte Auth-Welten**: Tenant-Nutzer (Agentur/Owner/Mitarbeiter) vs. `portal_guests` (Gäste).
+
+Anzeigename auf dem Gerät: **My Next Day**. Alle Daten laufen NUR über `apps/mobile/lib/api.ts` (Bearer aus Keychain) — kein direkter Supabase-Zugriff außer Realtime.
+
+</De>
+
+<En>
+
+# Mobile app — same platform, same rules
+
+The **mobile app** (`apps/mobile`, bare React Native 0.86, no Expo) is an **equal frontend of the same FastAPI** (`/api/v1`) as web and platform — the all-in-one app with **four experiences**: guest · agency · owner · staff. The active experience comes from the account (role), not a client decision. There are **two strictly separated auth worlds**: tenant users (agency/owner/staff) vs. `portal_guests` (guests).
+
+Display name on device: **My Next Day**. All data goes ONLY through `apps/mobile/lib/api.ts` (bearer from keychain) — no direct Supabase access except realtime.
+
+</En>
+
+<De>
+
+## Container (C4 Level 2)
+
+Das RN-App-Frontend gliedert sich in vier Tab-Bereiche + modale Detail-Screens; dahinter der geteilte API-Client und der dedizierte Realtime-Client. State lebt in Keychain (Tokens) und im Auth-Context.
+
+<Mermaid
+  title="Container — Mobile-App"
+  chart={`C4Container
+    title Container — Mobile-App (apps/mobile)
+
+    Person(guest, "Gast", "Sucht, bucht, reist")
+    Person(staff, "Agentur/Owner/Mitarbeiter", "Verwaltet je nach Rolle")
+
+    Container_Boundary(app, "apps/mobile (React Native 0.86)") {
+        Container(nav, "Root-Stack + Rollen-Tabs", "React Navigation 7", "GuestTabs · HostTabs · OwnerTabs · StaffTabs")
+        Container(screens, "Screens (25)", "React Native", "Gast/Host/Owner/Staff + Detail-Modals")
+        Container(kit, "UI-Kit + Theme", "RN + Tokens", "kit.tsx, Icon, ListingCard, Light/Dark")
+        Container(api, "API-Client", "lib/api.ts", "Bearer aus Keychain, 401 → 1 Refresh")
+        Container(rt, "Realtime-Client", "supabase-js", "persistSession:false, setAuth vor subscribe")
+        Container(store, "Token-Store", "react-native-keychain", "access + refresh, nie AsyncStorage/Log")
+    }
+
+    System(fastapi, "FastAPI /api/v1", "Dasselbe Backend wie Web/Plattform")
+    ContainerDb(kong, "Supabase Realtime", "Kong / WebSocket", "RLS-gefiltert, anon-Key")
+
+    Rel(guest, nav, "nutzt", "Touch")
+    Rel(staff, nav, "nutzt (rollenabhängig)", "Touch")
+    Rel(nav, screens, "rendert")
+    Rel(screens, kit, "nutzt Bausteine")
+    Rel(screens, api, "GET/POST", "JSON/HTTPS")
+    Rel(api, store, "liest Bearer")
+    Rel(api, fastapi, "Ruft auf", "JSON/HTTPS Bearer")
+    Rel(screens, rt, "abonniert Listen/Detail")
+    Rel(rt, kong, "WebSocket", "anon-Key + setAuth")`}
+/>
+
+</De>
+
+<En>
+
+## Container (C4 Level 2)
+
+The RN app frontend is split into four tab areas + modal detail screens; behind it the shared API client and the dedicated realtime client. State lives in keychain (tokens) and the auth context.
+
+<Mermaid
+  title="Container — Mobile app"
+  chart={`C4Container
+    title Container — Mobile app (apps/mobile)
+
+    Person(guest, "Guest", "Searches, books, travels")
+    Person(staff, "Agency/Owner/Staff", "Manages depending on role")
+
+    Container_Boundary(app, "apps/mobile (React Native 0.86)") {
+        Container(nav, "Root stack + role tabs", "React Navigation 7", "GuestTabs · HostTabs · OwnerTabs · StaffTabs")
+        Container(screens, "Screens (25)", "React Native", "Guest/Host/Owner/Staff + detail modals")
+        Container(kit, "UI kit + theme", "RN + tokens", "kit.tsx, Icon, ListingCard, light/dark")
+        Container(api, "API client", "lib/api.ts", "Bearer from keychain, 401 → 1 refresh")
+        Container(rt, "Realtime client", "supabase-js", "persistSession:false, setAuth before subscribe")
+        Container(store, "Token store", "react-native-keychain", "access + refresh, never AsyncStorage/log")
+    }
+
+    System(fastapi, "FastAPI /api/v1", "Same backend as web/platform")
+    ContainerDb(kong, "Supabase Realtime", "Kong / WebSocket", "RLS-filtered, anon key")
+
+    Rel(guest, nav, "uses", "Touch")
+    Rel(staff, nav, "uses (role-based)", "Touch")
+    Rel(nav, screens, "renders")
+    Rel(screens, kit, "uses building blocks")
+    Rel(screens, api, "GET/POST", "JSON/HTTPS")
+    Rel(api, store, "reads bearer")
+    Rel(api, fastapi, "Calls", "JSON/HTTPS bearer")
+    Rel(screens, rt, "subscribes to lists/detail")
+    Rel(rt, kong, "WebSocket", "anon key + setAuth")`}
+/>
+
+</En>
+
+<De>
+
+## Die vier Erlebnisse (Rollen-Routing)
+
+Aus dem Konto (`GET /auth/me`) ergibt sich das Erlebnis. Die Trennung ist echt (getrennte Navigatoren), nicht nur „versteckt": Mitarbeiter haben KEIN `VIEW_CALENDAR` und keinen Finanz-/Vertriebseinblick (§4.3); Owner leben in einem hermetischen `/public-portal`-Erlebnis ohne Agentur-Screens. Capability-Gating kommt vom Server, nie clientseitig „aufgemacht".
+
+<Mermaid
+  title="Vier Erlebnisse aus dem Konto"
+  chart={`flowchart TB
+    ME["GET /auth/me — Rolle & Capabilities"] --> R{"Welt?"}
+
+    R -->|"portal_guests"| GUEST["Gast-Tabs<br/>Erkunden · Suche · Merkliste · Reisen · Profil"]
+    R -->|"admin/co_admin/staff mit VIEW_CALENDAR"| HOST["Agentur-Tabs<br/>Dashboard · Kalender · Posteingang · Inserate · Aufgaben"]
+    R -->|"owner"| OWNER["Owner-Tabs<br/>Objekte · Kalender · Erlöse · Anfragen (read-only §4.2)"]
+    R -->|"staff/cleaner ohne Kalender"| STAFF["Mitarbeiter-Tabs<br/>NUR Aufgaben · Profil (kein Finanz-/Vertriebseinblick §4.3)"]`}
+/>
+
+</De>
+
+<En>
+
+## The four experiences (role routing)
+
+The experience derives from the account (`GET /auth/me`). Separation is real (separate navigators), not merely "hidden": staff have NO `VIEW_CALENDAR` and no finance/sales insight (§4.3); owners live in a hermetic `/public-portal` experience without agency screens. Capability gating comes from the server, never "opened" client-side.
+
+<Mermaid
+  title="Four experiences from the account"
+  chart={`flowchart TB
+    ME["GET /auth/me — role & capabilities"] --> R{"World?"}
+
+    R -->|"portal_guests"| GUEST["Guest tabs<br/>Explore · Search · Wishlist · Trips · Profile"]
+    R -->|"admin/co_admin/staff with VIEW_CALENDAR"| HOST["Agency tabs<br/>Dashboard · Calendar · Inbox · Listings · Tasks"]
+    R -->|"owner"| OWNER["Owner tabs<br/>Properties · Calendar · Earnings · Requests (read-only §4.2)"]
+    R -->|"staff/cleaner without calendar"| STAFF["Staff tabs<br/>ONLY Tasks · Profile (no finance/sales insight §4.3)"]`}
+/>
+
+</En>
+
+<De>
+
+## Zwei Auth-Welten & Token-Handling
+
+Tenant-Login (Agentur/Owner/Mitarbeiter) und Gast-Login (`portal_guests`) sind strikt getrennt. Tokens (access + refresh) liegen NUR in react-native-keychain — nie AsyncStorage, nie geloggt. Auf 401 folgt **genau EIN** Refresh-Versuch (single-flight), sonst Logout; das Auth-Rate-Limit ist 10/60/IP (Wurzel 2, Doppelanfragen).
+
+<Mermaid
+  title="Login, Token-Refresh & Realtime"
+  chart={`sequenceDiagram
+    actor U as Nutzer/Gast
+    participant APP as App (lib/auth.ts)
+    participant KC as Keychain
+    participant API as FastAPI /api/v1
+    participant RT as Realtime (Kong)
+
+    U->>APP: Login (Tenant ODER portal_guest)
+    APP->>API: POST /auth/login (10/60/IP)
+    API-->>APP: access + refresh
+    APP->>KC: Tokens speichern (nie AsyncStorage/Log)
+    APP->>API: GET /auth/me (Rolle/Capabilities)
+    Note over APP: Erlebnis wählen (Gast/Agentur/Owner/Mitarbeiter)
+    APP->>RT: setAuth(access) VOR subscribe()
+    API-->>APP: 401 (Token abgelaufen)
+    APP->>API: genau 1 Refresh (single-flight)
+    alt Refresh ok
+        API-->>APP: neues access-Token
+    else Refresh fehlgeschlagen
+        APP->>KC: Tokens löschen → Logout
+    end`}
+/>
+
+</De>
+
+<En>
+
+## Two auth worlds & token handling
+
+Tenant login (agency/owner/staff) and guest login (`portal_guests`) are strictly separated. Tokens (access + refresh) live ONLY in react-native-keychain — never AsyncStorage, never logged. A 401 triggers **exactly ONE** refresh attempt (single-flight), otherwise logout; the auth rate limit is 10/60/IP (root 2, duplicate requests).
+
+<Mermaid
+  title="Login, token refresh & realtime"
+  chart={`sequenceDiagram
+    actor U as User/Guest
+    participant APP as App (lib/auth.ts)
+    participant KC as Keychain
+    participant API as FastAPI /api/v1
+    participant RT as Realtime (Kong)
+
+    U->>APP: Login (tenant OR portal_guest)
+    APP->>API: POST /auth/login (10/60/IP)
+    API-->>APP: access + refresh
+    APP->>KC: store tokens (never AsyncStorage/log)
+    APP->>API: GET /auth/me (role/capabilities)
+    Note over APP: choose experience (guest/agency/owner/staff)
+    APP->>RT: setAuth(access) BEFORE subscribe()
+    API-->>APP: 401 (token expired)
+    APP->>API: exactly 1 refresh (single-flight)
+    alt Refresh ok
+        API-->>APP: new access token
+    else Refresh failed
+        APP->>KC: clear tokens → logout
+    end`}
+/>
+
+</En>
+
+<De>
+
+## UI-Kit & Theme
+
+Die App teilt ein eigenes UI-Kit (`components/ui/kit.tsx`) auf Basis von Design-Tokens (`theme/tokens.ts`, Light/Dark, Akzent, Dichte). Die Bausteine — Txt, Btn, Chip, Card, Badge, Segmented, Toggle, Progress, Photo, Avatar, ListingCard … — sind einzeln im Storybook-Bereich **Mobile-App/UI** dokumentiert. URLs/Umgebung stehen ausschließlich in `lib/config.ts` (`__DEV__`-Switch), Währung kommt aus den Daten (`lib/currency.ts`, kein Hardcode).
+
+</De>
+
+<En>
+
+## UI kit & theme
+
+The app shares its own UI kit (`components/ui/kit.tsx`) built on design tokens (`theme/tokens.ts`, light/dark, accent, density). The building blocks — Txt, Btn, Chip, Card, Badge, Segmented, Toggle, Progress, Photo, Avatar, ListingCard … — are documented individually in the Storybook **Mobile-App/UI** section. URLs/environment live exclusively in `lib/config.ts` (`__DEV__` switch), currency comes from the data (`lib/currency.ts`, no hardcode).
+
+</En>
