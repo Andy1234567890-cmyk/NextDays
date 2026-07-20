@@ -1,0 +1,217 @@
+import { Meta } from '@storybook/blocks';
+import { Mermaid } from '@/components/docs/mermaid';
+import { De, En } from "@/components/docs/lang";
+
+<Meta title="Architektur/Plattform" />
+
+<De>
+
+# Plattform — unser eigener Buchungskanal
+
+Die **Plattform** (`plattform/`, eigenes Next.js) ist ein **eigener globaler Buchungskanal — gleichrangig zu Booking.com oder Airbnb**, NICHT „Direkt". Gäste suchen dort, sehen Inserate und buchen; der Kanal spricht dasselbe FastAPI wie alle anderen Frontends über den `booking_engine`-Slice und bezahlt über **Stripe** (Destination Charge).
+
+Jedes Objekt wird über **mehrere Kanäle** verkauft, PRO KANAL schaltbar (kein globales „veröffentlicht"-Flag). Die Plattform-Sichtbarkeit ist eine **eigene Achse** `properties.listed_on_marketplace` (Migration 0159) — getrennt von den Portalen (Channex/OTA, `sync_enabled`) und der Website (`listed_on_website`, 0162). `publish()` schaltet im Normalfall alle an (1 Klick = OTA + Plattform), aber jeder Kanal ist einzeln steuerbar.
+
+</De>
+
+<En>
+
+# Platform — our own booking channel
+
+The **platform** (`plattform/`, its own Next.js) is an **own global booking channel — on par with Booking.com or Airbnb**, NOT "direct". Guests search, browse listings and book there; the channel talks to the same FastAPI as every other frontend via the `booking_engine` slice and pays through **Stripe** (destination charge).
+
+Every property is sold across **multiple channels**, toggled PER CHANNEL (no global "published" flag). Platform visibility is its **own axis** `properties.listed_on_marketplace` (migration 0159) — separate from the portals (Channex/OTA, `sync_enabled`) and the website (`listed_on_website`, 0162). `publish()` normally turns all on (1 click = OTA + platform), but each channel is controllable individually.
+
+</En>
+
+<De>
+
+## Die drei Vertriebskanäle
+
+Ein Objekt geht über drei gleichrangige Wege raus. Verfügbarkeit/Stop-Sell wirken **kanalübergreifend** (eine Buchung oder ein Stop-Sell sperrt die Tage überall), die reine Kanal-Sichtbarkeit ist **pro Kanal**.
+
+<Mermaid
+  title="Drei Vertriebskanäle je Objekt"
+  chart={`flowchart TB
+    P["Objekt (properties)<br/>status='active' + availability"]
+
+    P -->|"listed_on_marketplace (0159)"| PF["Plattform<br/>plattform/ — eigener Kanal<br/>(wie Booking/Airbnb)"]
+    P -->|"channex sync_enabled"| OTA["Portale<br/>Channex → Booking, Airbnb & Co."]
+    P -->|"listed_on_website (0162)"| WEB["Website<br/>White-Label-Agentur-Sites (builder/)"]
+
+    PF --> G["Gast bucht"]
+    OTA --> G
+    WEB --> G
+    G --> AV["availability sperren<br/>(kanalübergreifend, Double-Booking-Schutz)"]`}
+/>
+
+</De>
+
+<En>
+
+## The three sales channels
+
+A property goes out through three equal-ranking paths. Availability/stop-sell act **across channels** (a booking or a stop-sell blocks the days everywhere), plain channel visibility is **per channel**.
+
+<Mermaid
+  title="Three sales channels per property"
+  chart={`flowchart TB
+    P["Property (properties)<br/>status='active' + availability"]
+
+    P -->|"listed_on_marketplace (0159)"| PF["Platform<br/>plattform/ — own channel<br/>(like Booking/Airbnb)"]
+    P -->|"channex sync_enabled"| OTA["Portals<br/>Channex → Booking, Airbnb & Co."]
+    P -->|"listed_on_website (0162)"| WEB["Website<br/>White-label agency sites (builder/)"]
+
+    PF --> G["Guest books"]
+    OTA --> G
+    WEB --> G
+    G --> AV["block availability<br/>(across channels, double-booking protection)"]`}
+/>
+
+</En>
+
+<De>
+
+## Buchungs-Flow auf der Plattform
+
+Der Gast sucht, öffnet ein Inserat, reserviert und bezahlt. Der Buchungskalender ist die **oberste Wahrheit**: ein belegter Zeitraum wird mit 409 abgelehnt, eine erfolgreiche Buchung sperrt die Tage **sofort auf allen Kanälen**. Bezahlt wird über Stripe; der finale „bezahlt"-Status kommt serverseitig per Webhook.
+
+<Mermaid
+  title="Gast-Buchung über die Plattform"
+  chart={`sequenceDiagram
+    actor G as Gast
+    participant PF as Plattform (plattform/)
+    participant BE as booking_engine (FastAPI)
+    participant DB as availability / reservations
+    participant ST as Stripe
+
+    G->>PF: sucht & öffnet Inserat
+    PF->>BE: GET Listings/Verfügbarkeit (nur listed_on_marketplace)
+    BE->>DB: freie Tage lesen
+    G->>PF: Zeitraum + Kontaktdaten
+    PF->>BE: POST Buchung
+    BE->>DB: Verfügbarkeit prüfen (409 bei Belegung)
+    BE->>DB: Reservierung anlegen, Tage sperren (alle Kanäle)
+    BE->>ST: PaymentIntent (Destination Charge)
+    ST-->>PF: client_secret
+    G->>ST: bezahlt (Payment Element, 3DS)
+    ST-->>BE: Webhook „bezahlt" → Buchung bestätigt`}
+/>
+
+</De>
+
+<En>
+
+## Booking flow on the platform
+
+The guest searches, opens a listing, reserves and pays. The booking calendar is the **single source of truth**: an occupied range is rejected with 409, a successful booking blocks the days **immediately on all channels**. Payment goes through Stripe; the final "paid" status arrives server-side via webhook.
+
+<Mermaid
+  title="Guest booking via the platform"
+  chart={`sequenceDiagram
+    actor G as Guest
+    participant PF as Platform (plattform/)
+    participant BE as booking_engine (FastAPI)
+    participant DB as availability / reservations
+    participant ST as Stripe
+
+    G->>PF: searches & opens listing
+    PF->>BE: GET listings/availability (only listed_on_marketplace)
+    BE->>DB: read free days
+    G->>PF: date range + contact details
+    PF->>BE: POST booking
+    BE->>DB: check availability (409 if occupied)
+    BE->>DB: create reservation, block days (all channels)
+    BE->>ST: PaymentIntent (destination charge)
+    ST-->>PF: client_secret
+    G->>ST: pays (Payment Element, 3DS)
+    ST-->>BE: webhook "paid" → booking confirmed`}
+/>
+
+</En>
+
+<De>
+
+## Komponenten (C4 Level 3)
+
+Das `plattform/`-Frontend gliedert sich in Such-/Startseite, Inserat-Seite und Checkout; dahinter der `booking_engine`-Slice mit Listings/Verfügbarkeit, Gast-Buchung und Zahlung. Die UI-Bausteine (Inserat-Karte, Such-Leiste, Buchungs-Widget, Bezahlschritt …) sind einzeln im Storybook-Bereich **Plattform** dokumentiert.
+
+<Mermaid
+  title="Component — Plattform (eigener Buchungskanal)"
+  chart={`C4Container
+    title Component — Plattform (eigener Buchungskanal)
+
+    Person(guest, "Gast", "Sucht & bucht")
+
+    Container_Boundary(pf, "plattform/ (Next.js)") {
+        Container(such, "Such-/Startseite", "React", "Listings-Grid, Themen-Reihen, Such-Leiste")
+        Container(inserat, "Inserat-Seite", "React", "Detail + Buchungs-Widget (Datum/Gäste)")
+        Container(checkout, "Checkout", "React", "Kontaktdaten + Stripe Payment Element")
+    }
+
+    Container_Boundary(be, "booking_engine (FastAPI-Slice)") {
+        Container(listings, "Listings/Verfügbarkeit", "Python", "gast-sichere Objektdaten, freie Tage")
+        Container(booking, "Gast-Buchung", "Python", "Reservierung anlegen, Kontakt-Pflicht, Tage sperren")
+        Container(pay, "Zahlung", "Python", "Stripe PaymentIntent (Destination Charge)")
+    }
+
+    ContainerDb(props, "properties", "Postgres", "status='active' + listed_on_marketplace (0159)")
+    ContainerDb(avail, "availability", "Postgres", "eine Wahrheit gegen Double-Booking")
+    System_Ext(stripe, "Stripe", "Zahlungen")
+
+    Rel(guest, such, "sucht", "HTTPS")
+    Rel(such, inserat, "öffnet Inserat")
+    Rel(inserat, checkout, "reserviert & bezahlt")
+    Rel(such, listings, "GET Listings (nur listed_on_marketplace)", "JSON")
+    Rel(inserat, listings, "GET Verfügbarkeit", "JSON")
+    Rel(checkout, booking, "POST Buchung", "JSON")
+    Rel(checkout, pay, "PaymentIntent", "JSON")
+    Rel(listings, props, "filtert aktive + gelistete Objekte", "SQL RLS")
+    Rel(booking, avail, "sperrt Tage atomar (alle Kanäle)", "SQL FOR UPDATE")
+    Rel(pay, stripe, "Charge/Deposit", "HTTPS/API")`}
+/>
+
+</De>
+
+<En>
+
+## Components (C4 Level 3)
+
+The `plattform/` frontend is split into search/home page, listing page and checkout; behind it the `booking_engine` slice with listings/availability, guest booking and payment. The UI building blocks (listing card, search bar, booking widget, payment step …) are documented individually in the Storybook **Plattform** section.
+
+<Mermaid
+  title="Component — Platform (own booking channel)"
+  chart={`C4Container
+    title Component — Platform (own booking channel)
+
+    Person(guest, "Guest", "Searches & books")
+
+    Container_Boundary(pf, "plattform/ (Next.js)") {
+        Container(such, "Search/home page", "React", "Listings grid, themed rows, search bar")
+        Container(inserat, "Listing page", "React", "Detail + booking widget (dates/guests)")
+        Container(checkout, "Checkout", "React", "Contact details + Stripe Payment Element")
+    }
+
+    Container_Boundary(be, "booking_engine (FastAPI slice)") {
+        Container(listings, "Listings/availability", "Python", "guest-safe property data, free days")
+        Container(booking, "Guest booking", "Python", "create reservation, contact required, block days")
+        Container(pay, "Payment", "Python", "Stripe PaymentIntent (destination charge)")
+    }
+
+    ContainerDb(props, "properties", "Postgres", "status='active' + listed_on_marketplace (0159)")
+    ContainerDb(avail, "availability", "Postgres", "single source of truth vs double-booking")
+    System_Ext(stripe, "Stripe", "Payments")
+
+    Rel(guest, such, "searches", "HTTPS")
+    Rel(such, inserat, "opens listing")
+    Rel(inserat, checkout, "reserves & pays")
+    Rel(such, listings, "GET listings (only listed_on_marketplace)", "JSON")
+    Rel(inserat, listings, "GET availability", "JSON")
+    Rel(checkout, booking, "POST booking", "JSON")
+    Rel(checkout, pay, "PaymentIntent", "JSON")
+    Rel(listings, props, "filters active + listed properties", "SQL RLS")
+    Rel(booking, avail, "blocks days atomically (all channels)", "SQL FOR UPDATE")
+    Rel(pay, stripe, "charge/deposit", "HTTPS/API")`}
+/>
+
+</En>
