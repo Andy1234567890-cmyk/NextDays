@@ -128,9 +128,14 @@ class _ReconcileChannex:
     """Channex-Stub für den Property-Reconcile. list_properties liefert je Group
     eine konfigurierte Property-Liste; raises=True simuliert einen Ausfall."""
 
-    def __init__(self, properties: list[dict], *, raises: bool = False) -> None:
+    def __init__(
+        self, properties: list[dict], *, raises: bool = False,
+        channels: list[dict] | None = None, channels_raises: bool = False,
+    ) -> None:
         self._properties = properties
         self._raises = raises
+        self._channels = channels or []
+        self._channels_raises = channels_raises
         self.is_configured = True
 
     def list_properties(self, *, page=1, limit=100, group_id=None):  # noqa: ANN001, ANN201
@@ -143,6 +148,15 @@ class _ReconcileChannex:
             "meta": {"total": len(self._properties), "limit": limit, "page": page},
         }
 
+    def list_channels(self, *, property_id=None):  # noqa: ANN001, ANN201
+        # Kanal-Reconcile: liefert die bei Channex existierenden Kanäle. Ausfall
+        # (channels_raises) → fail-closed, es darf nichts geschlossen werden.
+        if self._channels_raises:
+            from src.features.channel_manager.channex_client import ChannexError
+
+            raise ChannexError("Channex down", status_code=502)
+        return {"data": self._channels}
+
 
 class _ReconcileDB:
     """In-Memory-DB für properties + channex_property_map + channex_group_map.
@@ -154,6 +168,7 @@ class _ReconcileDB:
         self.groups: list[dict] = [
             {"tenant_id": tenant_id, "channex_group_id": group_id}
         ]
+        self.connections: list[dict] = []
         self._seq = 0
 
     def _next_id(self) -> str:
@@ -165,6 +180,7 @@ class _ReconcileDB:
             "properties": self.properties,
             "channex_property_map": self.maps,
             "channex_group_map": self.groups,
+            "channex_channel_connection": self.connections,
         }[name]
         return _ReconcileQuery(self, name, store)
 
@@ -248,6 +264,10 @@ class _ReconcileQuery:
         self._op, self._payload = "upsert", payload
         return self
 
+    def delete(self):  # noqa: ANN201
+        self._op = "delete"
+        return self
+
     def _match(self, row) -> bool:  # noqa: ANN001
         for kind, field, value, neg in self._filters:
             if kind == "eq":
@@ -286,6 +306,10 @@ class _ReconcileQuery:
         if self._op == "update":
             for r in rows:
                 r.update(self._payload)
+            return _Result(rows)
+        if self._op == "delete":
+            for r in rows:
+                self._store.remove(r)
             return _Result(rows)
         if self._op == "upsert":
             key = "channex_property_id"
@@ -423,6 +447,76 @@ def test_reconcile_stale_ok_stamp_is_refreshed() -> None:
     assert db.maps[0]["last_sync_status"] == "ok"
 
 
+def test_reconcile_closes_orphan_channel_connection() -> None:
+    # Gegenzustand (Wurzel 1): ein bei Channex verschwundener OTA-Kanal (z. B.
+    # aufgeräumter Test-Kanal) MUSS die lokale Verbindung schließen — sonst zeigt
+    # der Channel-Manager „verbunden" für einen Kanal, den es nicht mehr gibt
+    # (der reale „Sie haben noch keine Portale"-Fall nach der Zertifizierung).
+    db = _ReconcileDB("t1", "grp-1")
+    db.properties.append({"id": "p1", "tenant_id": "t1", "title": "Haus"})
+    db.maps.append(
+        {"id": "m1", "tenant_id": "t1", "property_id": "p1",
+         "channex_property_id": "cx-1", "deleted_at": None}
+    )
+    db.connections.append(
+        {"id": "conn-1", "tenant_id": "t1", "property_id": "p1",
+         "ota_portal_code": "BookingCom", "channex_channel_id": "cx-chan-gone",
+         "is_active": True}
+    )
+    # Channex kennt die Property (kein Property-Orphan), aber KEINEN Kanal mehr.
+    channex = _ReconcileChannex(
+        [{"id": "cx-1", "attributes": {"title": "Haus"}}], channels=[]
+    )
+    _reconcile_svc(channex, db).reconcile_properties_for_tenant("t1")
+    assert db.connections[0]["is_active"] is False
+    assert db.connections[0]["channex_channel_id"] is None
+
+
+def test_reconcile_keeps_channel_connection_when_still_live() -> None:
+    # Der Kanal existiert bei Channex weiter → lokale Verbindung bleibt unberührt.
+    db = _ReconcileDB("t1", "grp-1")
+    db.properties.append({"id": "p1", "tenant_id": "t1", "title": "Haus"})
+    db.maps.append(
+        {"id": "m1", "tenant_id": "t1", "property_id": "p1",
+         "channex_property_id": "cx-1", "deleted_at": None}
+    )
+    db.connections.append(
+        {"id": "conn-1", "tenant_id": "t1", "property_id": "p1",
+         "ota_portal_code": "BookingCom", "channex_channel_id": "cx-chan-live",
+         "is_active": True}
+    )
+    channex = _ReconcileChannex(
+        [{"id": "cx-1", "attributes": {"title": "Haus"}}],
+        channels=[{"id": "cx-chan-live", "attributes": {"is_active": True}}],
+    )
+    _reconcile_svc(channex, db).reconcile_properties_for_tenant("t1")
+    assert db.connections[0]["is_active"] is True
+    assert db.connections[0]["channex_channel_id"] == "cx-chan-live"
+
+
+def test_reconcile_channel_connection_fail_closed_on_channex_down() -> None:
+    # FAIL-CLOSED (Wurzel 5): kann die Channex-Kanalliste NICHT gelesen werden,
+    # darf die lokale Verbindung NIE geschlossen werden (ein Netzfehler würde
+    # sonst alle Kanäle kappen). Nichts anfassen.
+    db = _ReconcileDB("t1", "grp-1")
+    db.properties.append({"id": "p1", "tenant_id": "t1", "title": "Haus"})
+    db.maps.append(
+        {"id": "m1", "tenant_id": "t1", "property_id": "p1",
+         "channex_property_id": "cx-1", "deleted_at": None}
+    )
+    db.connections.append(
+        {"id": "conn-1", "tenant_id": "t1", "property_id": "p1",
+         "ota_portal_code": "BookingCom", "channex_channel_id": "cx-chan",
+         "is_active": True}
+    )
+    channex = _ReconcileChannex(
+        [{"id": "cx-1", "attributes": {"title": "Haus"}}], channels_raises=True
+    )
+    _reconcile_svc(channex, db).reconcile_properties_for_tenant("t1")
+    assert db.connections[0]["is_active"] is True  # NICHT geschlossen
+    assert db.connections[0]["channex_channel_id"] == "cx-chan"
+
+
 def test_booking_feed_isolates_tenants() -> None:
     """Andys Sync zieht den kontoweiten Feed (Andy + Steffen). Steffens Buchung
     darf NICHT unter Andys tenant_id landen und NICHT ge-ackt werden."""
@@ -495,6 +589,21 @@ class _ImportChannex:
         self.deleted_rate_plans: list[str] = []
         self._rt_seq = 0
         self._rp_seq = 0
+
+    def list_channel_catalog(self):  # noqa: ANN201
+        # Live-Portal-Katalog (channels/list): die real verbindbaren Kern-OTAs.
+        # _portal_catalog() leitet daraus die angebotenen Kanäle ab.
+        return {"data": [
+            {"code": "BookingCom", "params": {
+                "hotel_id": {"type": "string", "title": "Hotel ID", "position": 0},
+            }},
+            {"code": "AirBNB", "params": {
+                "code": {"type": "hidden", "title": "Token Code", "position": 0},
+            }},
+            {"code": "Expedia", "params": {
+                "hotel_id": {"type": "string", "title": "Hotel ID", "position": 0},
+            }},
+        ]}
 
     def update_availability(self, values):  # noqa: ANN001, ANN201
         if self._fail_availability:
@@ -597,6 +706,7 @@ _CONFLICT_KEYS = {
     "stop_sell": ("property_id", "date"),
     "channex_tax_map": ("property_id", "local_tax_id"),
     "guest_external_ids": ("tenant_id", "channel", "external_id"),
+    "tenant_pinned_channel": ("tenant_id", "portal_code"),
 }
 
 
@@ -628,6 +738,8 @@ class _ImportDB:
             "rate_plan_price_overrides": [],
             "rate_plan_min_stay_overrides": [],
             "rate_plan_restriction_overrides": [],
+            "external_calendar": [],
+            "tenant_pinned_channel": [],
         }
         self._seq = 0
 
@@ -652,6 +764,10 @@ class _ImportQuery(_ReconcileQuery):
         if self._op == "update":
             for r in rows:
                 r.update(self._payload)
+            return _Result(rows)
+        if self._op == "delete":
+            for r in rows:
+                self._store.remove(r)
             return _Result(rows)
         if self._op == "upsert":
             keys = _CONFLICT_KEYS.get(self._name, ("id",))
@@ -1649,6 +1765,175 @@ def test_sync_content_single_vacation_object_creates_full_mapping() -> None:
     assert len(rp_maps) == 1 and rp_maps[0]["local_rate_plan_id"] == "rp1"
 
 
+def test_channel_overview_aggregates_ota_marketplace_ical() -> None:
+    # Kanal-Übersicht für die Channel-Manager-Seite: je OTA-Portal die Zahl der
+    # AKTIV verbundenen Objekte, der Marktplatz-Count (status=active AND
+    # listed_on_marketplace) und die iCal-Objekte (aktiver externer Kalender).
+    # Alles tenant-lokal aus der DB — keine erfundenen Zahlen.
+    db = _ImportDB()
+    # Zwei Objekte: p1 aktiv+gelistet, p2 aktiv aber NICHT gelistet.
+    db.tables["properties"].append(
+        {"id": "p1", "tenant_id": "t1", "title": "A", "status": "active",
+         "listed_on_marketplace": True}
+    )
+    db.tables["properties"].append(
+        {"id": "p2", "tenant_id": "t1", "title": "B", "status": "active",
+         "listed_on_marketplace": False}
+    )
+    # OTA-Verbindungen: Booking an p1 aktiv + p2 aktiv (=2), Airbnb an p1 inaktiv (=0).
+    db.tables["channex_channel_connection"].extend([
+        {"tenant_id": "t1", "property_id": "p1",
+         "ota_portal_code": "BookingCom", "is_active": True},
+        {"tenant_id": "t1", "property_id": "p2",
+         "ota_portal_code": "BookingCom", "is_active": True},
+        {"tenant_id": "t1", "property_id": "p1",
+         "ota_portal_code": "AirBNB", "is_active": False},
+    ])
+    # iCal: p1 hat einen aktiven externen Kalender.
+    db.tables["external_calendar"].append(
+        {"tenant_id": "t1", "property_id": "p1", "is_active": True}
+    )
+
+    ov = _import_svc(_ImportChannex(), db).channel_overview(
+        AuthContext(user_id="u", tenant_id="t1")
+    )
+
+    by_code = {c["code"]: c for c in ov["ota"]}
+    assert by_code["BookingCom"]["connected_count"] == 2
+    assert by_code["AirBNB"]["connected_count"] == 0  # inaktive Verbindung zählt nicht
+    assert by_code["AirBNB"]["connection_type"] == "oauth"
+    assert by_code["BookingCom"]["connection_type"] == "credential"
+    # Marktplatz: nur p1 (aktiv + gelistet), p2 nicht (unlisted).
+    assert ov["marketplace"]["listed_count"] == 1
+    # iCal: ein Objekt mit aktivem Kalender.
+    assert ov["ical"]["synced_count"] == 1
+
+
+def test_channel_detail_lists_all_objects_connected_and_unconnected() -> None:
+    # Kanal-Detailfläche (SiteMinder/Hostaway-Muster): eine Zeile JE aktivem
+    # Objekt — verbundene mit Status, nicht verbundene mit connected=False (im UI
+    # der „Verbinden"-Button). Fremde Portale/Objekte bleiben außen vor.
+    db = _ImportDB()
+    db.tables["properties"].extend([
+        {"id": "p1", "tenant_id": "t1", "title": "Twin Room", "status": "active"},
+        {"id": "p2", "tenant_id": "t1", "title": "Double Room", "status": "active"},
+        # p3 ist aktiv, aber noch NICHT mit Booking verbunden → Zeile ohne Hotel-ID.
+        {"id": "p3", "tenant_id": "t1", "title": "Suite", "status": "active"},
+        # p4 ist inaktiv (nicht buchbar) → keine Zeile.
+        {"id": "p4", "tenant_id": "t1", "title": "Archiv", "status": "inactive"},
+    ])
+    db.tables["channex_property_map"].extend([
+        {"id": "m1", "tenant_id": "t1", "property_id": "p1", "deleted_at": None,
+         "sync_enabled": True, "last_sync_status": "ok", "last_sync_error": None},
+        {"id": "m2", "tenant_id": "t1", "property_id": "p2", "deleted_at": None,
+         "sync_enabled": True, "last_sync_status": "error",
+         "last_sync_error": "boom"},
+    ])
+    db.tables["channex_channel_connection"].extend([
+        {"tenant_id": "t1", "property_id": "p1", "ota_portal_code": "BookingCom",
+         "ota_hotel_id": "10485037", "is_active": True, "last_error": None},
+        {"tenant_id": "t1", "property_id": "p2", "ota_portal_code": "BookingCom",
+         "ota_hotel_id": "10485038", "is_active": False, "last_error": None},
+        # Anderes Portal (Airbnb) darf die Booking-Zeile NICHT beeinflussen.
+        {"tenant_id": "t1", "property_id": "p1", "ota_portal_code": "AirBNB",
+         "ota_hotel_id": "999", "is_active": True, "last_error": None},
+    ])
+
+    detail = _import_svc(_ImportChannex(), db).channel_detail(
+        AuthContext(user_id="u", tenant_id="t1"), "BookingCom"
+    )
+
+    assert detail["portal"] == "Booking.com"
+    assert detail["connected"] is True
+    assert detail["connected_count"] == 1  # nur p1 aktiv verbunden
+    assert detail["total_count"] == 3      # p1, p2, p3 (p4 inaktiv fällt raus)
+    rows = {m["property_id"]: m for m in detail["mappings"]}
+    assert set(rows) == {"p1", "p2", "p3"}
+    # p1: verbunden + aktiv.
+    assert rows["p1"]["ota_hotel_id"] == "10485037"
+    assert rows["p1"]["connected"] is True
+    assert rows["p1"]["is_active"] is True
+    # p2: Verbindung existiert, aber pausiert.
+    assert rows["p2"]["connected"] is True
+    assert rows["p2"]["is_active"] is False
+    assert rows["p2"]["last_sync_error"] == "boom"
+    # p3: KEINE Booking-Verbindung → „Verbinden"-Zeile.
+    assert rows["p3"]["connected"] is False
+    assert rows["p3"]["ota_hotel_id"] is None
+
+
+def test_channel_detail_scopes_to_tenant() -> None:
+    # Wurzel 3: Verbindungen eines FREMDEN Tenants dürfen nicht durchsickern.
+    db = _ImportDB()
+    db.tables["properties"].append(
+        {"id": "p1", "tenant_id": "t2", "title": "Fremd", "status": "active"}
+    )
+    db.tables["channex_channel_connection"].append(
+        {"tenant_id": "t2", "property_id": "p1", "ota_portal_code": "BookingCom",
+         "ota_hotel_id": "x", "is_active": True, "last_error": None}
+    )
+
+    detail = _import_svc(_ImportChannex(), db).channel_detail(
+        AuthContext(user_id="u", tenant_id="t1"), "BookingCom"
+    )
+
+    assert detail["mappings"] == []
+    assert detail["connected"] is False
+
+
+def test_pin_and_unpin_channel_roundtrip() -> None:
+    # Kanal in die Sidebar holen (Dropdown „Kanal hinzufügen") und wieder
+    # entfernen. Idempotent: doppeltes Pinnen bleibt eine Zeile.
+    db = _ImportDB()
+    svc = _import_svc(_OAuthChannex(), db)
+    ctx = AuthContext(user_id="u", tenant_id="t1")
+
+    svc.pin_channel(ctx, "BookingCom")
+    svc.pin_channel(ctx, "BookingCom")  # idempotent
+    assert svc.list_pinned_channels(ctx) == ["BookingCom"]
+    assert len(db.tables["tenant_pinned_channel"]) == 1
+
+    svc.unpin_channel(ctx, "BookingCom")
+    assert svc.list_pinned_channels(ctx) == []
+
+
+def test_pin_channel_rejects_unknown_portal() -> None:
+    # Nur real verbindbare Kanäle (Live-Katalog) dürfen gepinnt werden.
+    db = _ImportDB()
+    ctx = AuthContext(user_id="u", tenant_id="t1")
+    try:
+        _import_svc(_OAuthChannex(), db).pin_channel(ctx, "TotalErfunden")
+        raise AssertionError("erwartete ChannelManagerError")
+    except ChannelManagerError as exc:
+        assert exc.status_code == 400
+
+
+def test_pinned_channels_are_tenant_scoped() -> None:
+    # Wurzel 3: fremde Pins dürfen nicht durchsickern.
+    db = _ImportDB()
+    db.tables["tenant_pinned_channel"].append(
+        {"tenant_id": "t2", "portal_code": "Expedia"}
+    )
+    got = _import_svc(_OAuthChannex(), db).list_pinned_channels(
+        AuthContext(user_id="u", tenant_id="t1")
+    )
+    assert got == []
+
+
+def test_channel_overview_marks_pinned() -> None:
+    # overview.ota[].pinned spiegelt tenant_pinned_channel (Sidebar-Zusatzzeilen).
+    db = _ImportDB()
+    db.tables["tenant_pinned_channel"].append(
+        {"tenant_id": "t1", "portal_code": "Expedia"}
+    )
+    ov = _import_svc(_ImportChannex(), db).channel_overview(
+        AuthContext(user_id="u", tenant_id="t1")
+    )
+    by_code = {c["code"]: c for c in ov["ota"]}
+    assert by_code["Expedia"]["pinned"] is True
+    assert by_code["BookingCom"]["pinned"] is False
+
+
 def test_import_rooms_rates_never_rehomes_shared_maps() -> None:
     # Live-Bug (Booking.com-Connect, 17.07.): import_rooms_rates_for_property
     # löste die property_map per limit(1) auf und hängte per Upsert die
@@ -2535,14 +2820,27 @@ class _OAuthChannex(_ImportChannex):
         return "https://www.airbnb.com/oauth2/auth?state=x&client_id=y"
 
     def list_channel_catalog(self):  # noqa: ANN201
-        # Echter Katalog-Shape (verifiziert): Airbnb-`code` ist hidden (kein
-        # Credential), Booking.com hat ein sichtbares hotel_id-Feld.
+        # Echter Katalog-Shape (live verifiziert): Airbnb hat nur `email` als
+        # sichtbares String-Feld (→ OAuth); Booking.com hat hotel_id UND email
+        # (beide Pflicht); ein fiktiver Mehrfeld-Kanal (zwei IDs, wie die
+        # Autovermieter) prüft, dass ALLE Credential-Felder abgefragt werden.
         return {"data": [
             {"code": "AirBNB", "params": {
                 "code": {"type": "hidden", "title": "Token Code", "position": 0},
+                "email": {"type": "string", "title": "Property Email",
+                          "rules": True, "position": 3},
             }},
             {"code": "BookingCom", "params": {
                 "hotel_id": {"type": "string", "title": "Hotel ID", "position": 0},
+                "email": {"type": "string", "title": "Property Email",
+                          "rules": True, "position": 3},
+                "machine_account": {"type": "hidden", "title": "Machine Account",
+                                    "position": 1},
+            }},
+            {"code": "Avis", "params": {
+                "agent_id": {"type": "string", "title": "Agent ID", "position": 0},
+                "station_code": {"type": "string", "title": "Station Code",
+                                 "position": 1},
             }},
         ]}
 
@@ -2570,12 +2868,47 @@ def test_supported_portals_marks_airbnb_oauth() -> None:
     db = _ImportDB()
     svc = _import_svc(_OAuthChannex(), db)
     portals = {p["code"]: p for p in svc.list_supported_portals()}
-    # Airbnb: OAuth, KEIN Credential-Feld.
+    # Airbnb: OAuth — hat nur `email` (kein Credential-Login) → keine Felder.
     assert portals["AirBNB"]["connection_type"] == "oauth"
     assert portals["AirBNB"]["fields"] == []
-    # Booking.com bleibt credential-basiert mit Hotel-ID-Feld.
+    # Booking.com: credential-basiert. ALLE sichtbaren Pflichtfelder werden
+    # abgefragt — hotel_id UND Property-E-Mail (früher fiel email raus).
     assert portals["BookingCom"]["connection_type"] == "credential"
-    assert len(portals["BookingCom"]["fields"]) == 1
+    keys = [f["key"] for f in portals["BookingCom"]["fields"]]
+    assert keys == ["hotel_id", "email"]  # nach Position sortiert
+    email_field = next(f for f in portals["BookingCom"]["fields"] if f["key"] == "email")
+    assert email_field["type"] == "email"
+    # `machine_account` ist hidden → nie abgefragt.
+    assert "machine_account" not in keys
+
+
+def test_supported_portals_asks_all_credential_fields() -> None:
+    # Mehrfeld-Kanal (wie Autovermieter Avis: Agent-ID + Station-Code): ALLE
+    # sichtbaren String-Felder müssen abgefragt werden, nicht nur das erste.
+    db = _ImportDB()
+    portals = {p["code"]: p for p in _import_svc(_OAuthChannex(), db).list_supported_portals()}
+    assert portals["Avis"]["connection_type"] == "credential"
+    assert [f["key"] for f in portals["Avis"]["fields"]] == ["agent_id", "station_code"]
+
+
+def test_supported_portals_is_catalog_driven_no_hardcoded_vrbo() -> None:
+    # Die Portal-LISTE kommt live aus dem Channex-Katalog. Vrbo ist NICHT im
+    # (Test-)Katalog → darf nicht als tote Karte erscheinen. Nur echte Codes.
+    db = _ImportDB()
+    codes = {p["code"] for p in _import_svc(_OAuthChannex(), db).list_supported_portals()}
+    assert codes == {"AirBNB", "BookingCom", "Avis"}
+    assert "VRBO" not in codes
+
+
+def test_supported_portals_carries_setup_hint() -> None:
+    # Bekannte OTAs bekommen die kuratierte Vorab-Anleitung; ohne Provider-Name.
+    db = _ImportDB()
+    portals = {p["code"]: p for p in _import_svc(_OAuthChannex(), db).list_supported_portals()}
+    assert portals["BookingCom"]["setup_hint"]
+    assert "myNextDays" in portals["BookingCom"]["setup_hint"]
+    assert "Channex" not in portals["BookingCom"]["setup_hint"]
+    # Unbekannter Kanal (Avis) hat KEINEN erfundenen Hint.
+    assert portals["Avis"]["setup_hint"] is None
 
 
 def test_begin_channel_oauth_creates_inactive_channel_and_returns_url() -> None:

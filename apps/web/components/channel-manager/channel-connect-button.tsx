@@ -6,7 +6,7 @@
 //   2) Zimmer/Raten des Portals den eigenen Preisplänen zuordnen
 //   3) Verbinden — Backend legt an + aktiviert (Schritt prepare→connect)
 import { Icon } from "@iconify/react";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,9 +70,20 @@ function buildMappingRows(
 export function ChannelConnectButton({
   label = "Kanäle verbinden",
   variant = "default",
+  presetPortalCode,
+  presetPropertyId,
+  onDone,
 }: {
   label?: string;
   variant?: "default" | "outline" | "accent";
+  // Wenn gesetzt: der Assistent springt beim Öffnen direkt zu diesem Portal
+  // (Kanal-Detailseite → „verbinden"), statt die Portal-Auswahl zu zeigen.
+  presetPortalCode?: string;
+  // Wenn gesetzt: GENAU dieses Objekt verbinden (Mapping-Tabelle → „Verbinden"
+  // je Zeile), statt automatisch das erste Objekt zu nehmen.
+  presetPropertyId?: string;
+  // Callback nach erfolgreicher Verbindung (z.B. Route refreshen).
+  onDone?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -105,10 +116,44 @@ export function ChannelConnectButton({
       const [p, props] = await Promise.all([listPortals(), listProperties()]);
       if (p.ok) setPortals(p.data);
       if (props.ok && props.data.items.length > 0) {
-        setPropertyId(props.data.items[0].id);
+        // Vorgewähltes Objekt (Mapping-Tabelle „Verbinden") nutzen, sonst das
+        // erste — aber nur, wenn das Preset wirklich zum Tenant gehört.
+        const preset = presetPropertyId
+          ? props.data.items.find((it) => it.id === presetPropertyId)
+          : undefined;
+        setPropertyId(preset?.id ?? props.data.items[0].id);
       }
     });
   }, [open]);
+
+  // Kanal-Detailseite: direkt auf das gewählte Portal springen, sobald Portale
+  // UND (falls Credential-Portal) die gespeicherten Verbindungen geladen sind —
+  // sonst wäre die Hotel-ID-Vorbefüllung leer.
+  //
+  // Wurzel 2 (real kommt alles doppelt): OAuth-Portale legen beim Vorwählen
+  // sofort einen inaktiven Kanal an (beginChannelOAuth → POST /channels). Der
+  // Effekt darf daher pro Öffnen NUR EINMAL feuern — ein reiner State-Guard
+  // (`selected`) hat eine Renderlücke (StrictMode-Doppelmount, Batching), die
+  // einen POST-Flood erzeugt. Deshalb ein harter Ref-Riegel, der erst beim
+  // Schließen zurückgesetzt wird.
+  const presetFired = useRef(false);
+  useEffect(() => {
+    if (!open) {
+      presetFired.current = false;
+      return;
+    }
+    if (presetFired.current || !presetPortalCode || step !== "portal" || selected) {
+      return;
+    }
+    const target = portals.find((p) => p.code === presetPortalCode);
+    if (!target) return;
+    if (target.connection_type !== "oauth" && !propertyId) return;
+    presetFired.current = true;
+    choosePortal(target);
+    // choosePortal ist stabil (nur setState); Abhängigkeit bewusst auf die
+    // Lade-Signale beschränkt.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, presetPortalCode, portals, propertyId, connections, step, selected]);
 
   // Gespeicherte Verbindungen des aktuell gewählten Objekts laden (Vorbefüllung
   // der Hotel-ID + Status-Hinweise je Portal).
@@ -316,6 +361,7 @@ export function ChannelConnectButton({
       if (res.ok) {
         setDone(`${selected.label} verbunden und aktiviert.`);
         setStep("done");
+        onDone?.();
       } else {
         setError(res.error);
       }
@@ -470,6 +516,17 @@ export function ChannelConnectButton({
               <div className="flex flex-col gap-4">
                 <StepBack onClick={() => setStep("portal")} text="Anderes Portal" />
                 <PortalHead portal={selected} />
+                {/* Vorab-Anleitung: was ZUERST im Portal-Extranet zu tun ist,
+                    sonst schlägt die Verbindung ohne erkennbaren Grund fehl. */}
+                {selected.setup_hint && (
+                  <div className="flex gap-2 rounded-(--radius) border border-border bg-secondary/50 p-3 text-sm">
+                    <Icon
+                      icon="ph:info"
+                      className="mt-0.5 size-4 shrink-0 text-accent"
+                    />
+                    <p>{selected.setup_hint}</p>
+                  </div>
+                )}
                 {selected.fields.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     Für dieses Portal sind keine weiteren Angaben nötig.
@@ -482,6 +539,7 @@ export function ChannelConnectButton({
                       </label>
                       <Input
                         id={f.key}
+                        type={f.type === "email" ? "email" : "text"}
                         value={values[f.key] ?? ""}
                         onChange={(e) =>
                           setValues((v) => ({ ...v, [f.key]: e.target.value }))

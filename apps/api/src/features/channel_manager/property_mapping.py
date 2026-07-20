@@ -357,6 +357,18 @@ class PropertyMappingMixin:
                 count=soft_deleted,
             )
 
+        # Kanal-Verbindungen abgleichen (Gegenzustand, Wurzel 1): ein bei Channex
+        # gelöschter/verschwundener OTA-Kanal (z. B. aufgeräumter Test-Kanal) MUSS
+        # lokal geschlossen werden, sonst zeigt der Channel-Manager „verbunden" für
+        # einen Kanal, den es nicht mehr gibt. Best-effort, fail-closed.
+        try:
+            self._reconcile_channel_connections(db, tenant_id)
+        except Exception as exc:  # noqa: BLE001 — kippt den Reconcile nicht
+            log.warning(
+                "reconcile_channel_connections_failed",
+                tenant_id=tenant_id, error=str(exc)[:200],
+            )
+
         # Desired-State-Abgleich der Rate-Plan-Datumspreise je noch aktivem Objekt:
         # DB-Soll vs. autoritativer Channex-Ist → Differenz pushen (selbstheilend).
         # Best-effort pro Objekt (ein Objekt-Fehler kippt nicht den Tenant-Reconcile).
@@ -379,6 +391,58 @@ class PropertyMappingMixin:
             "soft_deleted": soft_deleted,
             "skipped": skipped,
         }
+
+    def _reconcile_channel_connections(self, db: Client, tenant_id: str) -> None:
+        """Lokale OTA-Kanal-Verbindungen gegen die AUTORITATIVE Channex-Liste
+        abgleichen. Ein Kanal, den Channex nicht (mehr) kennt, wird lokal
+        geschlossen (channex_channel_id genullt, deaktiviert) — Gegenzustand zu
+        „Kanal existiert" (Wurzel 1). Ein aufgeräumter Zertifizierungs-/Test-Kanal
+        oder ein im Channex-UI entfernter Kanal darf im PMS nicht als „verbunden"
+        stehenbleiben.
+
+        FAIL-CLOSED gegen Datenverlust: die lokale Zeile wird NUR geschlossen, wenn
+        wir die Channex-Kanalliste sicher (erreichbar) gelesen haben. Ein Channex-
+        Ausfall/Netzfehler darf NIE alle Verbindungen kappen (Wurzel 5) — bei
+        Fehler wird nichts angefasst."""
+        local = (
+            db.table("channex_channel_connection")
+            .select("id, channex_channel_id")
+            .eq("tenant_id", tenant_id)
+            .eq("is_active", True)
+            .not_.is_("channex_channel_id", "null")
+            .execute()
+        ).data or []
+        if not local:
+            return
+
+        # Channex ist die Quelle der Wahrheit. Bei Ausfall NICHT schließen.
+        try:
+            data = self._channex.list_channels().get("data") or []
+        except ChannexError as exc:
+            log.warning(
+                "reconcile_channels_list_unreachable",
+                tenant_id=tenant_id, error=exc.message,
+            )
+            return
+        live_channel_ids = {
+            ch.get("id") or (ch.get("attributes") or {}).get("id")
+            for ch in data
+        }
+
+        orphan_ids = [
+            row["id"]
+            for row in local
+            if row["channex_channel_id"] not in live_channel_ids
+        ]
+        if not orphan_ids:
+            return
+        db.table("channex_channel_connection").update(
+            {"is_active": False, "channex_channel_id": None}
+        ).in_("id", orphan_ids).eq("tenant_id", tenant_id).execute()
+        log.info(
+            "reconcile_channel_connections_closed",
+            tenant_id=tenant_id, count=len(orphan_ids),
+        )
 
     def reconcile_all_tenants(self) -> dict[str, Any]:
         """Iteriert ALLE Tenants aus channex_group_map und spiegelt jeden einzeln.

@@ -1,0 +1,107 @@
+// Kanal-Detailseite — /channels/[code] (z.B. /channels/BookingCom). Eigene
+// Route je Kanal (Branchen-Muster: Hostaway/Guesty/Cloudbeds/SiteMinder/Lodgify
+// öffnen den Kanal als eigene Fläche, nicht als Modal). Zweispaltig wie Lodgify:
+// links die kategorisierte Kanalnavigation (mit Verbunden-Status), rechts der
+// gewählte Kanal mit Mapping-Tabelle (Objekt ↔ OTA-Listing ↔ Sync-Status),
+// Buchungen + Verlauf. Daten server-seitig laden; white-label.
+import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
+
+import {
+  type ChannelMeta,
+  ChannelDetail,
+} from "@/components/channel-manager/channel-detail";
+import { ChannelSidebar } from "@/components/channel-manager/channel-sidebar";
+import { RealtimeRefresh } from "@/components/realtime-refresh";
+import {
+  channelDetail,
+  channelOverview,
+  getChannexHealth,
+  listChannexBookings,
+  listPropertyMaps,
+} from "@/lib/channex";
+
+export const dynamic = "force-dynamic";
+
+// Kanäle mit echtem Original-Logo (public/channels/*.svg). Alle anderen Kanäle
+// (52 im Channex-Katalog) leiten Label + Icon aus dem Overview ab — kein
+// Hardcode je Kanal. Code = stabiler Schlüssel wie im Backend-Portal-Katalog.
+const CHANNEL_LOGO: Record<string, string> = {
+  BookingCom: "/channels/booking.svg",
+  AirBNB: "/channels/airbnb.svg",
+  Expedia: "/channels/expedia.svg",
+};
+
+export default async function ChannelDetailPage({
+  params,
+}: {
+  params: Promise<{ code: string }>;
+}) {
+  const { code } = await params;
+
+  const t = await getTranslations("channels");
+  const [health, overview, detail, maps, bookings] = await Promise.all([
+    getChannexHealth(),
+    channelOverview(),
+    channelDetail(code),
+    listPropertyMaps(),
+    listChannexBookings(),
+  ]);
+
+  // meta aus dem Live-Katalog (Overview) ableiten: existiert der Kanal nicht,
+  // ist die Route ungültig (echter Fake-Code) → 404. Bekannte bekommen ihr
+  // SVG-Logo, der Rest Label + Icon aus dem Backend-Katalog.
+  const otaEntry = overview.ok
+    ? overview.data.ota.find((c) => c.code === code)
+    : undefined;
+  if (!otaEntry) notFound();
+  const meta: ChannelMeta = {
+    code,
+    label: otaEntry.label,
+    logo: CHANNEL_LOGO[code],
+    icon: otaEntry.icon,
+  };
+
+  return (
+    <div className="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
+      <RealtimeRefresh
+        tables={[
+          "channex_property_map",
+          "channex_booking",
+          "channex_channel_connection",
+        ]}
+      />
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[16rem_1fr]">
+        {/* Links: kategorisierte Kanalnavigation (Lodgify) */}
+        <aside className="lg:sticky lg:top-6 lg:self-start">
+          {overview.ok ? (
+            <ChannelSidebar
+              overview={overview.data}
+              activeCode={code}
+              labels={{
+                allChannels: t("allChannels"),
+                categoryOta: t("categoryOta"),
+                categoryMarketplace: t("categoryMarketplace"),
+                categoryIcal: t("categoryIcal"),
+                connected: t("connectedStatus"),
+                notConnected: t("notConnectedStatus"),
+                addChannel: t("addChannel"),
+                searchChannel: t("searchChannel"),
+                noResults: t("noResults"),
+              }}
+            />
+          ) : null}
+        </aside>
+
+        {/* Rechts: gewählter Kanal + Mapping-Tabelle */}
+        <ChannelDetail
+          meta={meta}
+          configured={health.ok ? health.data.channel_manager_ready : false}
+          detail={detail.ok ? detail.data : null}
+          propertyMaps={maps.ok ? maps.data.items : []}
+          bookings={bookings.ok ? bookings.data.items : []}
+        />
+      </div>
+    </div>
+  );
+}

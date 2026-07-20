@@ -62,7 +62,7 @@ class OAuthChannelsMixin:
         )
 
         group_id = self._require_group(db, tenant_id, channex_property_id)
-        channel_title = title or self._portal_labels.get(portal_code, "Airbnb")
+        channel_title = title or self._portal_label(portal_code)
 
         if existing_channel_id:
             channel_id = existing_channel_id
@@ -128,7 +128,7 @@ class OAuthChannelsMixin:
         return {
             "channel_id": channel_id,
             "oauth_url": oauth_url,
-            "portal": self._portal_labels.get(portal_code, "Airbnb"),
+            "portal": self._portal_label(portal_code),
             "status": "pending",
         }
 
@@ -178,7 +178,7 @@ class OAuthChannelsMixin:
         return {
             "connected": connected,
             "host_id": host_id,
-            "portal": self._portal_labels.get(portal_code, "Airbnb"),
+            "portal": self._portal_label(portal_code),
         }
 
     def finalize_oauth_channel(
@@ -243,8 +243,8 @@ class OAuthChannelsMixin:
         )
         return {
             "id": channel_id,
-            "portal": self._portal_labels.get(portal_code, "Airbnb"),
-            "title": self._portal_labels.get(portal_code, "Airbnb"),
+            "portal": self._portal_label(portal_code),
+            "title": self._portal_label(portal_code),
             "is_active": True,
         }
 

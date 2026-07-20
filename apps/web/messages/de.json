@@ -4477,5 +4477,24 @@
     "seasonSurchargePlaceholder": "z. B. 30 oder -15",
     "seasonValueRequired": "Bitte einen gültigen Wert angeben.",
     "weekdays": "M,D,M,D,F,S,S"
+  },
+  "channels": {
+    "title": "Channel Manager",
+    "subtitle": "Verbinde deine Buchungsportale und verteile Verfügbarkeit & Preise automatisch über alle Kanäle.",
+    "categoryOta": "Buchungsportale",
+    "categoryMarketplace": "Eigener Marktplatz",
+    "categorySearch": "Suchmaschinen",
+    "categoryIcal": "Kalender-Synchronisierung (iCal)",
+    "connect": "Verbinden",
+    "syncedCount": "{count, plural, =0 {Nicht verbunden} one {# Objekt synchronisiert} other {# Objekte synchronisiert}}",
+    "listedCount": "{count, plural, =0 {Kein Objekt gelistet} one {# Objekt gelistet} other {# Objekte gelistet}}",
+    "icalSynced": "{count, plural, =0 {Kein Kalender aktiv} one {# Kalender aktiv} other {# Kalender aktiv}}",
+    "loadError": "Kanalübersicht konnte nicht geladen werden.",
+    "allChannels": "Alle Kanäle",
+    "connectedStatus": "Verbunden",
+    "notConnectedStatus": "Nicht verbunden",
+    "addChannel": "Kanal hinzufügen",
+    "searchChannel": "Kanal suchen …",
+    "noResults": "Kein Kanal gefunden."
   }
 }

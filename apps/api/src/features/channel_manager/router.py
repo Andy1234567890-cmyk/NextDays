@@ -37,7 +37,9 @@ from .schemas import (
     BookingSyncResponse,
     ChannelConnectionListResponse,
     ChannelConnectionResponse,
+    ChannelDetailResponse,
     ChannelListResponse,
+    ChannelOverviewResponse,
     ChannelResponse,
     ChannexDebugResponse,
     ConnectChannelRequest,
@@ -49,6 +51,8 @@ from .schemas import (
     OAuthBeginResponse,
     OAuthFinalizeRequest,
     OAuthStatusResponse,
+    PinChannelRequest,
+    PinnedChannelsResponse,
     PrepareChannelRequest,
     PrepareChannelResponse,
     PropertyConnectRequest,
@@ -185,6 +189,63 @@ def list_channels(
         return ChannelListResponse(
             items=[ChannelResponse(**c) for c in items], total=len(items)
         )
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/overview", response_model=ChannelOverviewResponse)
+def channel_overview(
+    ctx: _read, service: ChannelManagerServiceDep
+) -> ChannelOverviewResponse:
+    """Kanal-zentrierte Übersicht (Karten je Kanal mit Status + Objektzahl):
+    OTA-Portale, eigener Marktplatz, iCal — tenant-lokal aus der DB aggregiert."""
+    try:
+        return ChannelOverviewResponse(**service.channel_overview(ctx))
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/channels/pinned", response_model=PinnedChannelsResponse)
+def list_pinned_channels(
+    ctx: _read, service: ChannelManagerServiceDep
+) -> PinnedChannelsResponse:
+    """Die vom Tenant in die Sidebar geholten Kanäle (Dropdown „Kanal hinzufügen")."""
+    try:
+        return PinnedChannelsResponse(codes=service.list_pinned_channels(ctx))
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/channels/pinned", status_code=status.HTTP_204_NO_CONTENT)
+def pin_channel(
+    req: PinChannelRequest, ctx: _write, service: ChannelManagerServiceDep
+) -> None:
+    """Kanal in die Sidebar holen (idempotent)."""
+    try:
+        service.pin_channel(ctx, req.portal_code)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete("/channels/pinned/{portal_code}", status_code=status.HTTP_204_NO_CONTENT)
+def unpin_channel(
+    portal_code: str, ctx: _write, service: ChannelManagerServiceDep
+) -> None:
+    """Kanal aus der Sidebar entfernen."""
+    try:
+        service.unpin_channel(ctx, portal_code)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/channels/{portal_code}/detail", response_model=ChannelDetailResponse)
+def channel_detail(
+    portal_code: str, ctx: _read, service: ChannelManagerServiceDep
+) -> ChannelDetailResponse:
+    """Detailfläche eines Kanals: je verbundenem Objekt eine Zuordnungszeile
+    (Objekt ↔ OTA-Hotel-ID ↔ Sync-Status) — tenant-lokal aus der DB."""
+    try:
+        return ChannelDetailResponse(**service.channel_detail(ctx, portal_code))
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

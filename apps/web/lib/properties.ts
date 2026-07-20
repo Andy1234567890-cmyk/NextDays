@@ -31,6 +31,9 @@ export type Property = {
   platform_description: string | null;
   property_type: PropertyType;
   status: PropertyStatus;
+  // Sichtbarkeit auf dem eigenen myNextDays-Marktplatz (/plattform) als eigener
+  // Buchungskanal — getrennt von status und der OTA-Distribution (Migration 0159).
+  listed_on_marketplace: boolean;
   max_guests: number;
   street: string | null;
   house_number: string | null;

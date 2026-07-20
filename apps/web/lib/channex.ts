@@ -168,6 +168,8 @@ export type PortalField = {
   label: string;
   placeholder: string;
   required: boolean;
+  // UI-Hinweis für das Frontend: "text" (Standard) oder "email".
+  type: "text" | "email";
 };
 
 export type SupportedPortal = {
@@ -178,6 +180,9 @@ export type SupportedPortal = {
   // "credential" = Hotel-ID/Zugangsdaten eingeben; "oauth" = Verbindung über
   // OAuth-URL (Airbnb, kein eingebbares Credential).
   connection_type: "credential" | "oauth";
+  // Kuratierte Vorab-Anleitung (was zuerst im OTA-Extranet zu tun ist), oder
+  // null, wenn wir für diesen Kanal keinen belegten Prozess kennen.
+  setup_hint: string | null;
 };
 
 export type ChannelConnection = {
@@ -218,6 +223,95 @@ export type ChannelMapping = {
 
 export async function listPortals(): Promise<Result<SupportedPortal[]>> {
   return call<SupportedPortal[]>("/portals");
+}
+
+// Kanal-zentrierte Übersicht für die Channel-Manager-Seite (Karten je Kanal mit
+// Status + Objektzahl). Alle Zahlen tenant-lokal aus der DB aggregiert.
+export type OtaChannelOverview = {
+  kind: "ota";
+  code: string;
+  label: string;
+  icon: string;
+  connection_type: "oauth" | "credential";
+  connected_count: number;
+  // Vom Tenant in die Sidebar geholt (Dropdown „Kanal hinzufügen")?
+  pinned: boolean;
+};
+export type MarketplaceChannelOverview = {
+  kind: "marketplace";
+  code: string;
+  label: string;
+  listed_count: number;
+};
+export type IcalChannelOverview = {
+  kind: "ical";
+  code: string;
+  label: string;
+  synced_count: number;
+};
+export type ChannelOverview = {
+  ota: OtaChannelOverview[];
+  marketplace: MarketplaceChannelOverview;
+  ical: IcalChannelOverview;
+};
+
+export async function channelOverview(): Promise<Result<ChannelOverview>> {
+  return call<ChannelOverview>("/overview");
+}
+
+// Detailfläche eines Kanals: je verbundenem Objekt eine Zuordnungszeile
+// (Objekt ↔ OTA-Hotel-ID ↔ Sync-Status) — die Mapping-Tabelle der Kanal-
+// Detailseite. Nur echte, tenant-eigene Verbindungen dieses Portals.
+export type ChannelMappingRow = {
+  property_id: string;
+  property_title: string | null;
+  ota_hotel_id: string | null;
+  is_active: boolean;
+  // Existiert eine Verbindung dieses Portals (verbunden vs. „Verbinden"-Button)?
+  connected: boolean;
+  sync_enabled: boolean;
+  last_sync_status: string | null;
+  last_sync_error: string | null;
+  updated_at: string | null;
+};
+export type ChannelDetail = {
+  portal_code: string;
+  portal: string;
+  connected: boolean;
+  connected_count: number;
+  total_count: number;
+  mappings: ChannelMappingRow[];
+};
+
+export async function channelDetail(
+  portalCode: string,
+): Promise<Result<ChannelDetail>> {
+  return call<ChannelDetail>(
+    `/channels/${encodeURIComponent(portalCode)}/detail`,
+  );
+}
+
+// --- Gepinnte Kanäle (Sidebar „Kanal hinzufügen") ---------------------------
+export async function listPinnedChannels(): Promise<Result<{ codes: string[] }>> {
+  return call<{ codes: string[] }>("/channels/pinned");
+}
+
+export async function pinChannel(portalCode: string): Promise<Result<void>> {
+  const res = await call<void>("/channels/pinned", {
+    method: "POST",
+    body: { portal_code: portalCode },
+  });
+  if (res.ok) revalidatePath("/channels");
+  return res;
+}
+
+export async function unpinChannel(portalCode: string): Promise<Result<void>> {
+  const res = await call<void>(
+    `/channels/pinned/${encodeURIComponent(portalCode)}`,
+    { method: "DELETE" },
+  );
+  if (res.ok) revalidatePath("/channels");
+  return res;
 }
 
 export async function listChannels(): Promise<

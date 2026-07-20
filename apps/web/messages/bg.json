@@ -4456,5 +4456,24 @@
     "seasonSurchargePlaceholder": "напр. 30 или -15",
     "seasonValueRequired": "Моля, въведете валидна стойност.",
     "weekdays": "П,В,С,Ч,П,С,Н"
+  },
+  "channels": {
+    "title": "Channel Manager",
+    "subtitle": "Connect your booking portals and distribute availability & prices automatically across all channels.",
+    "categoryOta": "Booking portals",
+    "categoryMarketplace": "Own marketplace",
+    "categorySearch": "Search engines",
+    "categoryIcal": "Calendar sync (iCal)",
+    "connect": "Connect",
+    "syncedCount": "{count, plural, =0 {Not connected} one {# listing synced} other {# listings synced}}",
+    "listedCount": "{count, plural, =0 {No listing published} one {# listing published} other {# listings published}}",
+    "icalSynced": "{count, plural, =0 {No calendar active} one {# calendar active} other {# calendars active}}",
+    "loadError": "Could not load channel overview.",
+    "allChannels": "All channels",
+    "connectedStatus": "Connected",
+    "notConnectedStatus": "Not connected",
+    "addChannel": "Add channel",
+    "searchChannel": "Search channel …",
+    "noResults": "No channel found."
   }
 }

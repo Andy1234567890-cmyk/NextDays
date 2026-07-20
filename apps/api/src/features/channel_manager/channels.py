@@ -24,13 +24,20 @@ class ChannelsMixin:
     # White-label: der interne Channel-Code (z.B. "BookingCom") wird dem Kunden
     # nie erklärt; angezeigt wird nur der menschliche Name (label). Die Portal-
     # Felder kommen LIVE aus /channels/list (params, nicht-`hidden`) — nicht raten.
-    # Welche Portale wir anbieten (kuratiert; menschliche Labels + Icons):
-    _PORTAL_CATALOG: list[dict[str, str]] = [
-        {"code": "BookingCom", "label": "Booking.com", "icon": "simple-icons:bookingdotcom"},
-        {"code": "AirBNB", "label": "Airbnb", "icon": "simple-icons:airbnb"},
-        {"code": "Expedia", "label": "Expedia", "icon": "simple-icons:expedia"},
-        {"code": "VRBO", "label": "Vrbo", "icon": "ph:house"},
-    ]
+    # Kuratierte Anzeige-Metadaten (Label + Icon) NUR für Kanäle, für die wir ein
+    # schöneres Label/Logo wollen. Die Portal-LISTE selbst kommt live aus dem
+    # Channex-Katalog (channels/list) — nichts hardcoden/erfinden (Wurzel 4), so
+    # erscheinen genau die Kanäle, die der Account wirklich verbinden kann.
+    _CURATED_META: dict[str, dict[str, str]] = {
+        "BookingCom": {"label": "Booking.com", "icon": "simple-icons:bookingdotcom"},
+        "AirBNB": {"label": "Airbnb", "icon": "simple-icons:airbnb"},
+        "Expedia": {"label": "Expedia", "icon": "simple-icons:expedia"},
+        "Agoda": {"label": "Agoda", "icon": "simple-icons:agoda"},
+        "Hostelworld": {"label": "Hostelworld", "icon": "ph:bed"},
+        "GoogleHotelARI": {"label": "Google", "icon": "simple-icons:google"},
+        "CTrip": {"label": "Trip.com", "icon": "ph:airplane-tilt"},
+        "Ostrovok": {"label": "Ostrovok", "icon": "ph:buildings"},
+    }
     # Sandbox-Testkanal (NUR wenn channex_sandbox_portals=True): OpenChannel ruft
     # UNSEREN Mock-OTA-Endpoint (sandbox_ota.py) auf → kompletter Connect-Flow
     # ohne echtes OTA-Konto. endpoint/hotel_code/api_key setzt der Service selbst.
@@ -44,22 +51,99 @@ class ChannelsMixin:
     _OAUTH_PORTALS: frozenset[str] = frozenset({"AirBNB"})
 
     def _portal_catalog(self) -> list[dict[str, str]]:
-        """Sichtbare Portale — im Sandbox-Modus inkl. Test-Kanäle."""
+        """Verbindbare Portale — LIVE aus dem Channex-Katalog (channels/list),
+        nicht hardcoded. Label/Icon aus _CURATED_META, sonst aus dem Katalog-
+        Titel + generisches Icon. Der Sandbox-Testkanal (OpenChannel) erscheint
+        nur, wenn channex_sandbox_portals=True. Ist der Katalog nicht erreichbar,
+        fallen wir auf die kuratierten Kern-OTAs zurück (keine leere Liste, aber
+        auch nichts Erfundenes — nur bekannte, real existierende Codes)."""
         from src.core.config import get_settings
 
-        catalog = list(self._PORTAL_CATALOG)
-        if get_settings().channex_sandbox_portals:
-            catalog = catalog + self._SANDBOX_CATALOG
+        sandbox_on = get_settings().channex_sandbox_portals
+        try:
+            raw = self._channex.list_channel_catalog().get("data") or []
+        except ChannexError:
+            raw = []
+
+        catalog: list[dict[str, str]] = []
+        for entry in raw:
+            code = entry.get("code")
+            if not code:
+                continue
+            # Testkanal nur im Sandbox-Modus zeigen.
+            if code == self._SANDBOX_CODE and not sandbox_on:
+                continue
+            meta = self._CURATED_META.get(code, {})
+            catalog.append(
+                {
+                    "code": code,
+                    "label": meta.get("label") or entry.get("title") or code,
+                    "icon": meta.get("icon", "ph:broadcast"),
+                }
+            )
+
+        if not catalog:
+            # Katalog nicht erreichbar → kuratierte Kern-OTAs (bekannte Codes).
+            catalog = [
+                {"code": code, "label": m["label"], "icon": m["icon"]}
+                for code, m in self._CURATED_META.items()
+                if code in ("BookingCom", "AirBNB", "Expedia")
+            ]
+            if sandbox_on:
+                catalog.extend(self._SANDBOX_CATALOG)
         return catalog
 
-    @property
-    def _portal_labels(self) -> dict[str, str]:
-        return {p["code"]: p["label"] for p in self._portal_catalog()}
+    def _portal_label(self, code: str | None) -> str:
+        """Menschliches Label für einen Kanal-Code — OHNE Channex-Call (wird auf
+        heißen Pfaden wie Connections/Detail genutzt). Kuratiert, sonst der Code
+        selbst als lesbarer Fallback. Kein Provider-Interna nach außen."""
+        if not code:
+            return "Kanal"
+        meta = self._CURATED_META.get(code)
+        return meta["label"] if meta else code
+
+    def _is_known_portal(self, code: str) -> bool:
+        """Ist `code` ein real verbindbarer Kanal? Gegen den LIVE-Katalog geprüft
+        (alle vom Account unterstützten Kanäle, nicht nur die kuratierten). Bei
+        Katalog-Ausfall fallen wir auf die kuratierten Codes zurück (fail-closed
+        für Unbekanntes, aber die Kern-OTAs bleiben nutzbar)."""
+        try:
+            raw = self._channex.list_channel_catalog().get("data") or []
+        except ChannexError:
+            return code in self._CURATED_META
+        codes = {c.get("code") for c in raw}
+        return code in codes
+
+    # Kuratierte Vorab-Anleitung je Kanal (white-label): was der Kunde ZUERST im
+    # OTA-Extranet tun muss, sonst schlägt test_connection still fehl. Nur für
+    # Kanäle, deren Prozess wir belegt kennen (Channex-Doku, live geprüft); der
+    # Rest bekommt keinen Hint (kein erfundener Text, Wurzel 4). Kein Provider-
+    # Name „Channex" im Kundentext — der Connectivity-Provider heißt „myNextDays".
+    _SETUP_HINTS: dict[str, str] = {
+        "BookingCom": (
+            "Wähle im Booking.com-Extranet unter „Konto → Connectivity-Anbieter“ "
+            "myNextDays als Anbieter und bestätige die XML-Vereinbarung. Trage "
+            "danach hier deine Booking.com-Hotel-ID ein."
+        ),
+        "Expedia": (
+            "Aktiviere im Expedia-Extranet unter „Zimmer & Preise → "
+            "Connectivity-Einstellungen“ myNextDays für Connectivity UND "
+            "Buchungen (inkl. 2-Faktor-Bestätigung). Trage dann deine Expedia-"
+            "Hotel-ID ein."
+        ),
+        "AirBNB": (
+            "Verbinde dein Airbnb-Konto über den Button „Verbinden“. Dein Konto "
+            "muss E-Mail-verifiziert sein und darf noch mit keinem anderen "
+            "Channel-Manager verbunden sein."
+        ),
+    }
 
     def list_supported_portals(self) -> list[dict[str, Any]]:
         """Verbindbare Portale + die Eingabefelder, die der Kunde ausfüllt.
         Felder werden aus dem Channex-Channel-Katalog (`params`, ohne `hidden`)
-        abgeleitet — so raten wir nichts und bleiben aktuell."""
+        abgeleitet — so raten wir nichts und bleiben aktuell. ALLE sichtbaren
+        String-Pflichtfelder werden abgefragt (z.B. Hotel-ID UND Property-E-Mail;
+        Autovermieter mehrere IDs), nicht nur ein Hauptfeld."""
         try:
             catalog = self._channex.list_channel_catalog().get("data") or []
         except ChannexError:
@@ -71,35 +155,42 @@ class ChannelsMixin:
             # Sandbox-Testkanal: keine Eingaben — Service setzt alles selbst
             # (credential-Flow, Service injiziert endpoint/hotel_code/api_key).
             if portal["code"] == self._SANDBOX_CODE:
-                out.append({**portal, "fields": [], "connection_type": "credential"})
+                out.append(
+                    {**portal, "fields": [], "connection_type": "credential",
+                     "setup_hint": None}
+                )
                 continue
             spec = by_code.get(portal["code"]) or {}
             params = spec.get("params") or {}
-            # Nur das EINE Haupt-Auth-Feld abfragen (z.B. Hotel-ID). Optionale/
-            # versteckte Felder (email, notifications, payout …) lassen wir weg —
-            # der Kunde soll nichts Unnötiges sehen. Heuristik: sichtbares
-            # String-Feld ohne `default`/`rules`, mit der kleinsten `position`.
-            essential = [
-                (key, meta)
-                for key, meta in params.items()
-                if meta.get("type") == "string"
-                and "default" not in meta
-                and not meta.get("rules")
-            ]
-            essential.sort(key=lambda kv: kv[1].get("position", 99))
+            # ALLE sichtbaren String-Pflichtfelder (ohne `default`), nach Position
+            # sortiert. `rules` (Validierungsregeln, z.B. bei E-Mail) schließt ein
+            # Feld NICHT mehr aus — es ist trotzdem Pflicht und muss abgefragt
+            # werden, sonst lehnt Channex die Verbindung ab.
+            essential = sorted(
+                (
+                    (key, meta)
+                    for key, meta in params.items()
+                    if meta.get("type") == "string" and "default" not in meta
+                ),
+                key=lambda kv: kv[1].get("position", 99),
+            )
             fields = [
                 {
                     "key": key,
                     "label": self._humanize_field(meta.get("title"), portal["label"]),
                     "placeholder": "",
                     "required": True,
+                    # E-Mail-Felder als solche kennzeichnen (Frontend: type=email);
+                    # sonst normales Textfeld. Der Katalog liefert nur "string".
+                    "type": "email" if "email" in key.lower() else "text",
                 }
-                for key, meta in essential[:1]  # nur das Hauptfeld
+                for key, meta in essential
             ]
-            # OAuth ⇔ kein abfragbares Credential-Hauptfeld (z.B. Airbnb) ODER
-            # explizit in der Allowlist. OAuth-Portale zeigen keine Credential-
-            # Eingabe — der Connect läuft über die OAuth-URL (begin_channel_oauth).
-            is_oauth = portal["code"] in self._OAUTH_PORTALS or not fields
+            # OAuth ⇔ kein abfragbares Credential-Feld außer der Property-E-Mail
+            # (z.B. Airbnb) ODER explizit in der Allowlist. E-Mail allein ist kein
+            # Credential-Login → solche Kanäle laufen über die OAuth-URL.
+            credential_fields = [f for f in fields if "email" not in f["key"].lower()]
+            is_oauth = portal["code"] in self._OAUTH_PORTALS or not credential_fields
             out.append(
                 {
                     "code": portal["code"],
@@ -107,6 +198,7 @@ class ChannelsMixin:
                     "icon": portal["icon"],
                     "fields": [] if is_oauth else fields,
                     "connection_type": "oauth" if is_oauth else "credential",
+                    "setup_hint": self._SETUP_HINTS.get(portal["code"]),
                 }
             )
         return out
@@ -116,8 +208,11 @@ class ChannelsMixin:
         """Channex-Feldtitel ggf. white-label machen (z.B. 'Hotel ID' →
         'Booking.com Hotel-ID'). Kein Provider-Name durchsickern lassen."""
         t = (title or "").strip() or "Wert"
-        if t.lower() in ("hotel id", "hotel_id", "hotel code"):
+        low = t.lower()
+        if low in ("hotel id", "hotel_id", "hotel code"):
             return f"{portal_label} Hotel-ID"
+        if low in ("property email", "email"):
+            return "Objekt-E-Mail (für Benachrichtigungen)"
         return t
 
     def list_channels(self, ctx: AuthContext) -> list[dict[str, Any]]:
@@ -139,7 +234,7 @@ class ChannelsMixin:
             out.append(
                 {
                     "id": ch.get("id") or a.get("id"),
-                    "portal": self._portal_labels.get(a.get("channel"), "Kanal"),
+                    "portal": self._portal_label(a.get("channel")),
                     "title": a.get("title"),
                     "is_active": bool(a.get("is_active")),
                 }
@@ -156,7 +251,7 @@ class ChannelsMixin:
         Legt NOCH NICHTS an."""
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
-        if portal_code not in self._portal_labels:
+        if not self._is_known_portal(portal_code):
             raise ChannelManagerError("Unbekanntes Portal.", status_code=400)
 
         channex_property_id = self._require_property_mapping(db, tenant_id, property_id)
@@ -197,7 +292,7 @@ class ChannelsMixin:
             db, tenant_id, channex_property_id
         )
         return {
-            "portal": self._portal_labels[portal_code],
+            "portal": self._portal_label(portal_code),
             "ota_rooms": rooms,            # [{id, title, rates:[{id, title, …}]}]
             "rate_plans": local_rate_plans,  # [{rate_plan_map_id, title}]
         }
@@ -261,7 +356,7 @@ class ChannelsMixin:
         rate_plan_code(int), occupancy, pricing_type, primary_occ}]."""
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
-        if portal_code not in self._portal_labels:
+        if not self._is_known_portal(portal_code):
             raise ChannelManagerError("Unbekanntes Portal.", status_code=400)
         if not mappings:
             raise ChannelManagerError(
@@ -287,8 +382,8 @@ class ChannelsMixin:
         if existing and existing[0].get("channex_channel_id"):
             return {
                 "id": existing[0]["channex_channel_id"],
-                "portal": self._portal_labels[portal_code],
-                "title": title or self._portal_labels[portal_code],
+                "portal": self._portal_label(portal_code),
+                "title": title or self._portal_label(portal_code),
                 "is_active": bool(existing[0].get("is_active")),
             }
 
@@ -303,7 +398,7 @@ class ChannelsMixin:
             "channel": portal_code,
             "group_id": group_id,                 # Pflicht
             "is_active": False,                    # wird inaktiv erstellt
-            "title": title or self._portal_labels[portal_code],
+            "title": title or self._portal_label(portal_code),
             "properties": [channex_property_id],
             "settings": settings or {},
             "rate_plans": rate_plans,
@@ -378,8 +473,8 @@ class ChannelsMixin:
 
         return {
             "id": channel_id,
-            "portal": self._portal_labels[portal_code],
-            "title": a.get("title") or title or self._portal_labels[portal_code],
+            "portal": self._portal_label(portal_code),
+            "title": a.get("title") or title or self._portal_label(portal_code),
             "is_active": is_active,
         }
 
@@ -540,7 +635,7 @@ class ChannelsMixin:
         )
         return {
             "portal_code": portal_code,
-            "portal": self._portal_labels.get(portal_code, "Kanal"),
+            "portal": self._portal_label(portal_code),
             "hotel_id": row[0].get("ota_hotel_id"),
             "channel_id": channel_id,
             "is_active": is_active,
@@ -630,6 +725,210 @@ class ChannelsMixin:
                 property_id=property_id, portal_code=portal_code, error=str(exc),
             )
 
+    def channel_overview(self, ctx: AuthContext) -> dict[str, Any]:
+        """Kanal-zentrierte Übersicht für die Channel-Manager-Seite (Karten je
+        Kanal mit Status + Objektzahl). Aggregiert AUS DER DB (tenant-lokal, kein
+        Channex-Call → günstig und realtime-fähig):
+
+        - OTA-Portale (Katalog): je Portal, an wie vielen Objekten es verbunden
+          und aktiv ist. `connected` = mind. eine aktive Verbindung.
+        - Eigener Marktplatz (/plattform): Zahl der aktiv gelisteten Objekte
+          (status='active' AND listed_on_marketplace).
+        - iCal: Zahl der Objekte mit mindestens einem aktiven externen Kalender.
+
+        Keine erfundenen Zahlen — fehlt eine Quelle, ist der Count 0."""
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+
+        # OTA-Verbindungen je Portal zählen (aktive Objekte je ota_portal_code).
+        conns = (
+            db.table("channex_channel_connection")
+            .select("property_id, ota_portal_code, is_active")
+            .eq("tenant_id", tenant_id)
+            .execute()
+        ).data or []
+        active_props_by_portal: dict[str, set[str]] = {}
+        for r in conns:
+            if not r.get("is_active"):
+                continue
+            active_props_by_portal.setdefault(
+                r.get("ota_portal_code") or "", set()
+            ).add(r.get("property_id"))
+
+        # Vom Tenant in die Sidebar geholte Kanäle (Dropdown „Kanal hinzufügen").
+        pinned_codes = self._pinned_codes(db, tenant_id)
+
+        ota_channels = [
+            {
+                "kind": "ota",
+                "code": p["code"],
+                "label": p["label"],
+                "icon": p["icon"],
+                "connection_type": (
+                    "oauth" if p["code"] in self._OAUTH_PORTALS else "credential"
+                ),
+                "connected_count": len(active_props_by_portal.get(p["code"], set())),
+                "pinned": p["code"] in pinned_codes,
+            }
+            for p in self._portal_catalog()
+        ]
+
+        # Eigener Marktplatz: aktiv gelistete Objekte (0159).
+        marketplace_count = len(
+            (
+                db.table("properties")
+                .select("id")
+                .eq("tenant_id", tenant_id)
+                .eq("status", "active")
+                .eq("listed_on_marketplace", True)
+                .execute()
+            ).data or []
+        )
+
+        # iCal: Objekte mit mind. einem aktiven externen Kalender.
+        ical_props = {
+            r.get("property_id")
+            for r in (
+                db.table("external_calendar")
+                .select("property_id, is_active")
+                .eq("tenant_id", tenant_id)
+                .eq("is_active", True)
+                .execute()
+            ).data or []
+        }
+
+        return {
+            "ota": ota_channels,
+            "marketplace": {
+                "kind": "marketplace",
+                "code": "myNextDays",
+                "label": "myNextDays Marktplatz",
+                "listed_count": marketplace_count,
+            },
+            "ical": {
+                "kind": "ical",
+                "code": "iCal",
+                "label": "Kalender-Sync (iCal)",
+                "synced_count": len(ical_props),
+            },
+        }
+
+    def _pinned_codes(self, db: Client, tenant_id: str) -> set[str]:
+        """Kanal-Codes, die der Tenant in die Sidebar geholt hat (tenant-scoped)."""
+        rows = (
+            db.table("tenant_pinned_channel")
+            .select("portal_code")
+            .eq("tenant_id", tenant_id)
+            .execute()
+        ).data or []
+        return {r["portal_code"] for r in rows if r.get("portal_code")}
+
+    def list_pinned_channels(self, ctx: AuthContext) -> list[str]:
+        """Die vom Tenant gepinnten Kanal-Codes (Sidebar-Zusatzzeilen)."""
+        tenant_id = self._require_tenant(ctx)
+        return sorted(self._pinned_codes(self._require_db(), tenant_id))
+
+    def pin_channel(self, ctx: AuthContext, portal_code: str) -> None:
+        """Kanal in die Sidebar holen. Idempotent (unique tenant+code): ein
+        erneutes Pinnen ist ein No-op. Nur real verbindbare Kanäle (Katalog)."""
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        if not self._is_known_portal(portal_code):
+            raise ChannelManagerError("Unbekanntes Portal.", status_code=400)
+        db.table("tenant_pinned_channel").upsert(
+            {"tenant_id": tenant_id, "portal_code": portal_code},
+            on_conflict="tenant_id,portal_code",
+        ).execute()
+
+    def unpin_channel(self, ctx: AuthContext, portal_code: str) -> None:
+        """Kanal aus der Sidebar entfernen (tenant-scoped)."""
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        db.table("tenant_pinned_channel").delete().eq(
+            "tenant_id", tenant_id
+        ).eq("portal_code", portal_code).execute()
+
+    def channel_detail(self, ctx: AuthContext, portal_code: str) -> dict[str, Any]:
+        """Detailfläche EINES Kanals: eine Zuordnungszeile JE OBJEKT des Tenants
+        (Objekt-Titel ↔ OTA-Hotel-ID ↔ Sync-Status) — die Mapping-Tabelle der
+        Kanal-Detailseite (SiteMinder/Hostaway-Muster, belegt: alle Objekte, nicht
+        nur verbundene; nicht verbundene bekommen im UI einen „Verbinden"-Button).
+
+        Aggregiert tenant-lokal aus der DB:
+        - properties (aktiv): die Basis-Zeilen (jedes Objekt = eine buchbare Einheit).
+        - channex_channel_connection (dieses Portal): OTA-Hotel-ID + is_active.
+        - channex_property_map: Sync-Status (nur nicht-gelöschte).
+
+        Kein erfundener Zustand (Wurzel 4): ohne Verbindung ist ein Objekt
+        „nicht verbunden" (ota_hotel_id=None, is_active=False). Scope streng auf
+        tenant_id (Wurzel 3)."""
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+
+        # Basis: alle aktiven Objekte des Tenants (jede Zeile = ein Objekt).
+        props = (
+            db.table("properties")
+            .select("id, title")
+            .eq("tenant_id", tenant_id)
+            .eq("status", "active")
+            .order("title")
+            .execute()
+        ).data or []
+        property_ids = [p["id"] for p in props]
+
+        # Verbindung dieses Portals je Objekt (falls vorhanden).
+        conn_by_property: dict[str, dict[str, Any]] = {}
+        for c in (
+            db.table("channex_channel_connection")
+            .select("property_id, ota_hotel_id, is_active, last_error, updated_at")
+            .eq("tenant_id", tenant_id)
+            .eq("ota_portal_code", portal_code)
+            .execute()
+        ).data or []:
+            if c.get("property_id"):
+                conn_by_property[c["property_id"]] = c
+
+        # Sync-Status je Objekt aus der Property-Map (nur nicht-gelöschte).
+        sync_by_property: dict[str, dict[str, Any]] = {}
+        if property_ids:
+            for m in (
+                db.table("channex_property_map")
+                .select("property_id, sync_enabled, last_sync_status, last_sync_error")
+                .eq("tenant_id", tenant_id)
+                .in_("property_id", property_ids)
+                .is_("deleted_at", "null")
+                .execute()
+            ).data or []:
+                sync_by_property[m["property_id"]] = m
+
+        mappings: list[dict[str, Any]] = []
+        for p in props:
+            pid = p["id"]
+            c = conn_by_property.get(pid, {})
+            m = sync_by_property.get(pid, {})
+            mappings.append(
+                {
+                    "property_id": pid,
+                    "property_title": p.get("title"),
+                    "ota_hotel_id": c.get("ota_hotel_id"),
+                    "is_active": bool(c.get("is_active")),
+                    "connected": bool(c),  # existiert eine Verbindung dieses Portals?
+                    "sync_enabled": bool(m.get("sync_enabled")),
+                    "last_sync_status": m.get("last_sync_status"),
+                    "last_sync_error": m.get("last_sync_error") or c.get("last_error"),
+                    "updated_at": c.get("updated_at"),
+                }
+            )
+
+        return {
+            "portal_code": portal_code,
+            "portal": self._portal_label(portal_code),
+            "connected": any(m["is_active"] for m in mappings),
+            "connected_count": sum(1 for m in mappings if m["is_active"]),
+            "total_count": len(mappings),
+            "mappings": mappings,
+        }
+
     def list_channel_connections(
         self, ctx: AuthContext, property_id: str
     ) -> list[dict[str, Any]]:
@@ -656,7 +955,7 @@ class ChannelsMixin:
             out.append(
                 {
                     "portal_code": code,
-                    "portal": self._portal_labels.get(code, "Kanal"),
+                    "portal": self._portal_label(code),
                     "hotel_id": r.get("ota_hotel_id"),
                     "channel_id": r.get("channex_channel_id"),
                     "is_active": bool(r.get("is_active")),

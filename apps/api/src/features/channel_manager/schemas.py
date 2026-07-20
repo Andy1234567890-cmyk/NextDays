@@ -119,6 +119,8 @@ class PortalField(BaseModel):
     label: str
     placeholder: str = ""
     required: bool = True
+    # UI-Hinweis für das Frontend: "text" (Standard) oder "email".
+    type: str = "text"
 
 
 class SupportedPortal(BaseModel):
@@ -132,6 +134,9 @@ class SupportedPortal(BaseModel):
     # "credential" = Hotel-ID/Zugangsdaten eingeben; "oauth" = Verbindung über
     # OAuth-URL (Airbnb, kein eingebbares Credential).
     connection_type: str = "credential"
+    # Kuratierte Vorab-Anleitung (was zuerst im OTA-Extranet zu tun ist), oder
+    # None, wenn wir für diesen Kanal keinen belegten Prozess kennen.
+    setup_hint: str | None = None
 
 
 class ChannelResponse(BaseModel):
@@ -360,3 +365,86 @@ class WebhookEventEntry(BaseModel):
     severity: str = "info"
     resolved: bool = False
     created_at: str | None = None
+
+
+class OtaChannelOverview(BaseModel):
+    """Ein OTA-Kanal in der Kanal-Übersicht (Karte): Katalog-Metadaten + wie viele
+    Objekte aktiv damit verbunden sind."""
+
+    kind: str = "ota"
+    code: str
+    label: str
+    icon: str
+    connection_type: str  # "oauth" | "credential"
+    connected_count: int
+    # Vom Tenant in die Sidebar geholt (Dropdown „Kanal hinzufügen")?
+    pinned: bool = False
+
+
+class MarketplaceChannelOverview(BaseModel):
+    """Eigener myNextDays-Marktplatz als Kanal (gleichrangig zu OTAs)."""
+
+    kind: str = "marketplace"
+    code: str = "myNextDays"
+    label: str
+    listed_count: int
+
+
+class IcalChannelOverview(BaseModel):
+    """iCal-Kalender-Sync als Kanal (nur Import)."""
+
+    kind: str = "ical"
+    code: str = "iCal"
+    label: str
+    synced_count: int
+
+
+class ChannelOverviewResponse(BaseModel):
+    """Kanal-zentrierte Übersicht für die Channel-Manager-Seite (Karten je Kanal
+    mit Status/Objektzahl). Alle Zahlen aus der DB aggregiert (tenant-lokal)."""
+
+    ota: list[OtaChannelOverview]
+    marketplace: MarketplaceChannelOverview
+    ical: IcalChannelOverview
+
+
+class PinnedChannelsResponse(BaseModel):
+    """Die vom Tenant in die Sidebar geholten Kanal-Codes."""
+
+    codes: list[str]
+
+
+class PinChannelRequest(BaseModel):
+    """Ein Kanal in die Sidebar holen (Dropdown „Kanal hinzufügen")."""
+
+    portal_code: str
+
+
+class ChannelMappingRow(BaseModel):
+    """Eine Zeile der Kanal-Mapping-Tabelle: unser Objekt ↔ OTA-Hotel-ID ↔
+    Sync-Status (Lodgify-Muster). Nur echte, tenant-eigene Verbindungen."""
+
+    property_id: str
+    property_title: str | None = None
+    ota_hotel_id: str | None = None
+    is_active: bool
+    # Existiert eine Verbindung dieses Portals für das Objekt (verbunden vs.
+    # „Verbinden"-Button in der Tabelle)?
+    connected: bool = False
+    sync_enabled: bool
+    last_sync_status: str | None = None
+    last_sync_error: str | None = None
+    updated_at: str | None = None
+
+
+class ChannelDetailResponse(BaseModel):
+    """Detailfläche eines Kanals: Portal-Metadaten + je OBJEKT des Tenants eine
+    Zuordnungszeile (Objekt ↔ OTA-Listing ↔ Sync-Status). connected_count/
+    total_count für den „X von Y verbunden"-Zähler."""
+
+    portal_code: str
+    portal: str
+    connected: bool
+    connected_count: int = 0
+    total_count: int = 0
+    mappings: list[ChannelMappingRow]
