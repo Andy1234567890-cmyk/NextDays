@@ -27,12 +27,14 @@ export const MitTag: Story = {
     rating: "4,8",
     reviews: 21,
     price: 245,
+    currency: "EUR",
     tag: "Gäste-Favorit",
     fav: true,
   },
 };
 
-export const OhneTag: Story = {
+// Fremdwährung aus den Daten (CHF) — kein €-Hardcode.
+export const Fremdwaehrung: Story = {
   args: {
     grad: "grad2",
     place: "Zermatt, Schweiz",
@@ -40,5 +42,19 @@ export const OhneTag: Story = {
     rating: "4,9",
     reviews: 63,
     price: 390,
+    currency: "CHF",
+  },
+};
+
+// Fehlende Währung → reine Zahl ohne erfundenes Symbol.
+export const OhneWaehrung: Story = {
+  args: {
+    grad: "grad3",
+    place: "Silkeborg, Dänemark",
+    title: "Hytte ved Skoven",
+    rating: "4,89",
+    reviews: 74,
+    price: 132,
+    currency: null,
   },
 };

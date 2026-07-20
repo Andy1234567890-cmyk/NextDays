@@ -4,6 +4,7 @@ import { View } from "react-native";
 
 import { Icon } from "./Icon";
 import { Chip, Col, Photo, Row, Star, Txt } from "./kit";
+import { formatCurrency } from "./currency";
 import { useTheme } from "./ThemeProvider";
 
 export function ListingCard({
@@ -14,6 +15,7 @@ export function ListingCard({
   rating,
   reviews,
   price,
+  currency,
   tag,
   fav,
 }: {
@@ -24,6 +26,9 @@ export function ListingCard({
   rating: string;
   reviews: number;
   price: number;
+  // Währung MUSS aus den Daten kommen (property.currency) — kein €-Hardcode
+  // (Wurzel 4). Fehlt sie, rendert formatCurrency die reine Zahl ohne Symbol.
+  currency: string | null | undefined;
   tag?: string;
   fav?: boolean;
 }) {
@@ -67,7 +72,7 @@ export function ListingCard({
           {place}
         </Txt>
         <Row gap={5} style={{ marginTop: 3 }}>
-          <Txt v="title">€{price}</Txt>
+          <Txt v="title">{formatCurrency(price, currency)}</Txt>
           <Txt v="sm" soft>
             / Nacht · {reviews} Bew.
           </Txt>

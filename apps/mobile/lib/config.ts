@@ -6,6 +6,12 @@
 //          dann NUR diese Datei anfassen).
 import { Platform } from "react-native";
 
+// Öffentlicher anon-Key aus der gitignorierten config.secrets.ts (im Repo nur
+// der Platzhalter config.secrets.example.ts). Erststart: einmal kopieren
+//   cp lib/config.secrets.example.ts lib/config.secrets.ts
+// und den echten Wert eintragen. Kein echter Token im Repo (CLAUDE.md).
+import { SUPABASE_ANON_KEY } from "./config.secrets";
+
 // Android-Emulator erreicht den Host über 10.0.2.2 statt localhost — nur
 // relevant, wenn unten bewusst auf lokales Backend umgeschaltet wird.
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -34,16 +40,16 @@ const DEV: AppConfig = {
   supabaseUrl: "https://supabase-kong.65.21.144.136.sslip.io",
   // Öffentlicher anon-Key des self-hosted Kong (nur für Realtime-WebSocket;
   // RLS schützt die Daten). REST/Auth laufen über die API mit Bearer-Token.
-  supabaseAnonKey:
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzUwMDAwMDAwLCJleHAiOjIwNjUzNjAwMDB9.j0vFr_Wttmw3kTluPio9ctHchDrgN0cjLwmhzkxk-hI",
+  // Wert aus der gitignorierten config.secrets.ts (kein echter Token im Repo).
+  supabaseAnonKey: SUPABASE_ANON_KEY,
 };
 
 const PROD: AppConfig = {
   apiUrl: "https://nextdays-api.65.21.144.136.sslip.io",
   supabaseUrl: "https://supabase-kong.65.21.144.136.sslip.io",
   // Öffentlicher anon-Key (derselbe Kong wie Dev). RLS schützt die Daten.
-  supabaseAnonKey:
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNzUwMDAwMDAwLCJleHAiOjIwNjUzNjAwMDB9.j0vFr_Wttmw3kTluPio9ctHchDrgN0cjLwmhzkxk-hI",
+  // Wert aus der gitignorierten config.secrets.ts (kein echter Token im Repo).
+  supabaseAnonKey: SUPABASE_ANON_KEY,
 };
 
 export const CONFIG: AppConfig = __DEV__ ? DEV : PROD;

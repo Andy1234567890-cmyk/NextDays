@@ -93,6 +93,7 @@ export default function GuestDiscover() {
           rating="4,97"
           reviews={128}
           price={189}
+          currency="DKK"
         />
       </Pressable>
       <Pressable onPress={() => navigation.navigate("ListingDetail", { id: "cabin" })}>
@@ -104,6 +105,7 @@ export default function GuestDiscover() {
           rating="4,89"
           reviews={74}
           price={132}
+          currency="DKK"
         />
       </Pressable>
     </Screen>
