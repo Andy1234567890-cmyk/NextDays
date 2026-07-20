@@ -472,6 +472,30 @@ def test_reconcile_closes_orphan_channel_connection() -> None:
     assert db.connections[0]["channex_channel_id"] is None
 
 
+def test_reconcile_closes_orphan_channel_even_without_live_properties() -> None:
+    # Realer Staging-Fall (Deploy-Verify): Channex kennt WEDER Properties NOCH
+    # Kanäle mehr („Sie haben noch keine Portale"), aber die lokale Verbindung
+    # blieb aktiv. Die Kanal-Bereinigung MUSS laufen, auch wenn der Property-
+    # Reconcile nichts zu tun hat / am Budget hängt — sie darf nicht hinter dem
+    # teuren Property-/ARI-Teil eingeklemmt sein (der eigentliche Bug).
+    db = _ReconcileDB("t1", "grp-1")
+    db.properties.append({"id": "p1", "tenant_id": "t1", "title": "Haus"})
+    db.maps.append(
+        {"id": "m1", "tenant_id": "t1", "property_id": "p1",
+         "channex_property_id": "cx-1", "deleted_at": None}
+    )
+    db.connections.append(
+        {"id": "conn-1", "tenant_id": "t1", "property_id": "p1",
+         "ota_portal_code": "BookingCom", "channex_channel_id": "cx-chan-gone",
+         "is_active": True}
+    )
+    # Channex liefert KEINE Property und KEINEN Kanal (leerer Account).
+    channex = _ReconcileChannex([], channels=[])
+    _reconcile_svc(channex, db).reconcile_properties_for_tenant("t1")
+    assert db.connections[0]["is_active"] is False
+    assert db.connections[0]["channex_channel_id"] is None
+
+
 def test_reconcile_keeps_channel_connection_when_still_live() -> None:
     # Der Kanal existiert bei Channex weiter → lokale Verbindung bleibt unberührt.
     db = _ReconcileDB("t1", "grp-1")

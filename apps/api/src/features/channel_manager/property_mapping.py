@@ -201,6 +201,21 @@ class PropertyMappingMixin:
         if not group_id:
             return zero
 
+        # Kanal-Verbindungen ZUERST abgleichen (Gegenzustand, Wurzel 1): ein bei
+        # Channex gelöschter/aufgeräumter OTA-Kanal MUSS lokal geschlossen werden,
+        # sonst zeigt der Channel-Manager „verbunden" für einen Kanal, den es nicht
+        # mehr gibt. Bewusst VOR dem budget-intensiven Property-/ARI-Reconcile: ein
+        # einzelner GET /channels ist billig und darf nicht daran scheitern, dass
+        # das Channex-Budget später von ARI-Pushes aufgebraucht wird. Best-effort,
+        # fail-closed (bei Channex-Ausfall wird nichts geschlossen).
+        try:
+            self._reconcile_channel_connections(db, tenant_id)
+        except Exception as exc:  # noqa: BLE001 — kippt den Reconcile nicht
+            log.warning(
+                "reconcile_channel_connections_failed",
+                tenant_id=tenant_id, error=str(exc)[:200],
+            )
+
         live = self._live_channex_properties_for_group(group_id)
         if live is None:
             return zero  # Channex nicht erreichbar → NICHTS anlegen/löschen.
@@ -355,18 +370,6 @@ class PropertyMappingMixin:
                 "reconcile_maps_soft_deleted",
                 tenant_id=tenant_id,
                 count=soft_deleted,
-            )
-
-        # Kanal-Verbindungen abgleichen (Gegenzustand, Wurzel 1): ein bei Channex
-        # gelöschter/verschwundener OTA-Kanal (z. B. aufgeräumter Test-Kanal) MUSS
-        # lokal geschlossen werden, sonst zeigt der Channel-Manager „verbunden" für
-        # einen Kanal, den es nicht mehr gibt. Best-effort, fail-closed.
-        try:
-            self._reconcile_channel_connections(db, tenant_id)
-        except Exception as exc:  # noqa: BLE001 — kippt den Reconcile nicht
-            log.warning(
-                "reconcile_channel_connections_failed",
-                tenant_id=tenant_id, error=str(exc)[:200],
             )
 
         # Desired-State-Abgleich der Rate-Plan-Datumspreise je noch aktivem Objekt:
