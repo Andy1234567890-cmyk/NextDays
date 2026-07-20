@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 
+import { channelLogo } from "@/lib/channel-logos";
 import { Input } from "@/components/ui/input";
 import {
   Popover,
@@ -22,46 +23,30 @@ import {
 import type { ChannelOverview, OtaChannelOverview } from "@/lib/channex";
 import { pinChannel } from "@/lib/channex";
 
-// Echte Original-Logos (public/channels/*.svg), sonst Iconify-Fallback.
-const OTA_LOGO: Record<string, { src?: string; icon?: string }> = {
-  BookingCom: { src: "/channels/booking.svg" },
-  AirBNB: { src: "/channels/airbnb.svg" },
-  Expedia: { src: "/channels/expedia.svg" },
-  Agoda: { src: "/channels/agoda.svg" },
-  CTrip: { src: "/channels/tripcom.svg" },
-  GoogleHotelARI: { src: "/channels/google.svg" },
-  OpenChannel: { icon: "ph:flask" },
-};
-
-// Die drei prominenten Kanäle, die immer fix in der Sidebar stehen.
+// Die prominenten Kanäle, die immer fix in der Sidebar stehen.
 const PROMINENT_OTA = new Set(["BookingCom", "AirBNB"]);
 
-function logoFor(c: OtaChannelOverview): { src?: string; icon?: string } {
-  return OTA_LOGO[c.code] ?? { icon: c.icon || "ph:broadcast" };
+function logoFor(c: OtaChannelOverview): { src?: string } {
+  const src = channelLogo(c.code);
+  return src ? { src } : {};
 }
 
+// Echtes Original-Logo ODER nichts (kein generisches Ersatz-Icon, Nutzer-Vorgabe).
 function SmallLogo({
   logo,
   alt,
 }: {
-  logo: { src?: string; icon?: string };
+  logo: { src?: string };
   alt: string;
 }) {
-  if (logo.src) {
-    return (
-      <Image
-        src={logo.src}
-        alt={alt}
-        width={28}
-        height={28}
-        className="size-7 shrink-0 object-contain"
-      />
-    );
-  }
+  if (!logo.src) return null;
   return (
-    <Icon
-      icon={logo.icon ?? "ph:broadcast"}
-      className="size-7 shrink-0 text-foreground"
+    <Image
+      src={logo.src}
+      alt={alt}
+      width={28}
+      height={28}
+      className="size-7 shrink-0 object-contain"
     />
   );
 }

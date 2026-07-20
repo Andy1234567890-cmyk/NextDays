@@ -66,6 +66,7 @@ export default function ProfilPage() {
   const [houseNumber, setHouseNumber] = useState("");
   const [postalCode, setPostalCode] = useState("");
   const [city, setCity] = useState("");
+  const [companyState, setCompanyState] = useState(""); // Bundesland/Region (0163)
   const [country, setCountry] = useState("DE");
   const [email, setEmail] = useState("");
   const [vatId, setVatId] = useState("");
@@ -140,6 +141,7 @@ export default function ProfilPage() {
       if (s("companyHouseNumber")) setHouseNumber(s("companyHouseNumber"));
       if (s("companyPostalCode")) setPostalCode(s("companyPostalCode"));
       if (s("companyCity")) setCity(s("companyCity"));
+      if (s("companyState")) setCompanyState(s("companyState"));
       if (s("companyCountry")) setCountry(s("companyCountry"));
       if (s("email")) setEmail(s("email"));
       if (s("vatId")) setVatId(s("vatId"));
@@ -210,6 +212,7 @@ export default function ProfilPage() {
       companyHouseNumber: houseNumber || undefined,
       companyPostalCode: postalCode || undefined,
       companyCity: city || undefined,
+      companyState: companyState || undefined,
       companyCountry: country || undefined,
       email: email || undefined,
       vatId: vatId || undefined,
@@ -473,6 +476,16 @@ export default function ProfilPage() {
                 onChange={(e) => setCity(e.target.value)}
               />
             </div>
+          </div>
+
+          <div className="flex flex-col gap-1.5 sm:max-w-sm">
+            <Label htmlFor="companyState">Bundesland / Region</Label>
+            <Input
+              id="companyState"
+              value={companyState}
+              onChange={(e) => setCompanyState(e.target.value)}
+              placeholder="z. B. Bayern"
+            />
           </div>
 
           <div className="flex flex-col gap-1.5 sm:max-w-sm">

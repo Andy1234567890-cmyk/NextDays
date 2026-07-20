@@ -105,7 +105,7 @@ class RatesService:
         res = (
             self._db()
             .table("properties")
-            .select("id, title")
+            .select("id, title, currency")
             .eq("id", property_id)
             .eq("tenant_id", tenant_id)
             .limit(1)
@@ -114,6 +114,48 @@ class RatesService:
         if not res:
             raise RateError("Objekt nicht gefunden.", status_code=404)
         return res[0]
+
+    def _set_property_currency(self, property_id: str, currency: str) -> None:
+        """Zentrale Objektwährung setzen (0161), wenn sie noch fehlt. Der Aufrufer
+        hat das Objekt bereits tenant-gescopt geladen; hier nur die eine Spalte
+        füllen. Best-effort im Sinne von Wurzel 5 — schlägt es fehl, bleibt die
+        Rate-Plan-Währung dennoch korrekt und ein späteres Speichern greift."""
+        try:
+            self._db().table("properties").update({"currency": currency}).eq(
+                "id", property_id
+            ).execute()
+        except Exception:  # noqa: BLE001 — best-effort, kippt den Preis-Pfad nicht
+            log.warning("property_currency_set_failed", property_id=property_id)
+
+    @staticmethod
+    def _effective_currency(prop: dict, req_currency: str | None) -> str:
+        """Wirksame Währung eines Rate-Plans = die Objektwährung, falls gesetzt
+        (properties.currency, Migration 0161 — die zentrale Wahrheit). Ein
+        abweichender Wert aus dem Request wird als Fehler abgewiesen (422), NIE
+        still übernommen: Channex verlangt 1 Objekt = 1 Währung, und die zentrale
+        Einstellung darf nicht per Preisplan-PATCH ausgehebelt werden (Wurzel 1).
+
+        Hat das Objekt (noch) keine zentrale Währung, gilt die Request-Währung
+        (Bestand/Erstanlage vor dem Setzen der Objektwährung); fehlt auch die,
+        ist das ein Datenfehler → 422 (kein EUR-Fallback, Wurzel 4)."""
+        obj_cur = (prop.get("currency") or "").upper()
+        req_cur = (req_currency or "").upper()
+        if obj_cur:
+            if req_cur and req_cur != obj_cur:
+                raise RateError(
+                    "Die Währung wird zentral am Objekt eingestellt "
+                    f"({obj_cur}) und gilt für alle Preispläne. Bitte die "
+                    "Objektwährung ändern, nicht den einzelnen Preisplan.",
+                    status_code=422,
+                )
+            return obj_cur
+        if req_cur:
+            return req_cur
+        raise RateError(
+            "Objektwährung fehlt — bitte zuerst die Währung des Objekts "
+            "einstellen.",
+            status_code=422,
+        )
 
     @staticmethod
     def _row(
@@ -305,12 +347,14 @@ class RatesService:
         tenant_id = self._require_tenant(ctx)
         prop = self._require_own_property(tenant_id, req.property_id)
         # Rate-Pläne hängen am OBJEKT (mehrere je Objekt möglich, z. B. BAR/B&B).
+        # Währung kommt zentral vom Objekt (0161); ein abweichender Request → 422.
+        eff_currency = self._effective_currency(prop, req.currency)
         derived = self._resolve_derived_fields(req.property_id, req)
         payload: dict[str, object] = {
             "property_id": req.property_id,
             "name": req.name,
             "base_price": req.base_price,
-            "currency": req.currency,
+            "currency": eff_currency,
             "min_stay": req.min_stay,
             **derived,  # rate_mode + (bei derived) Parent-Währung/-Basis
         }
@@ -340,6 +384,12 @@ class RatesService:
         """
         tenant_id = self._require_tenant(ctx)
         prop = self._require_own_property(tenant_id, req.property_id)
+        # Zentrale Objektwährung erzwingen (0161). Hat das Objekt noch keine, gilt
+        # die Request-Währung UND wird zentral am Objekt festgeschrieben — so wird
+        # die eine Wahrheit befüllt, statt zwei Quellen auseinanderlaufen zu lassen.
+        eff_currency = self._effective_currency(prop, req.currency)
+        if not (prop.get("currency") or "").strip():
+            self._set_property_currency(req.property_id, eff_currency)
         existing = (
             self._db()
             .table("rate_plans")
@@ -357,7 +407,7 @@ class RatesService:
         if existing:
             patch: dict[str, object] = {
                 "base_price": req.base_price,
-                "currency": req.currency,
+                "currency": eff_currency,
             }
             row = (
                 self._db()
@@ -377,7 +427,7 @@ class RatesService:
                     "property_id": req.property_id,
                     "name": req.name,
                     "base_price": req.base_price,
-                    "currency": req.currency,
+                    "currency": eff_currency,
                     "min_stay": req.min_stay,
                 })
                 .execute()
@@ -387,7 +437,7 @@ class RatesService:
                     "Preisplan konnte nicht angelegt werden.", status_code=500
                 )
             result = row[0]
-        self._sync_property(tenant_id, req.property_id, prop.get("title"), req.currency)
+        self._sync_property(tenant_id, req.property_id, prop.get("title"), eff_currency)
         # Neuer Basispreis → Tageskurve bei Channex veraltet: Reconcile einreihen
         # (coalesced; ohne Mapping zieht der 15-min-Tick nach dem Content-Sync nach).
         try:
@@ -424,6 +474,26 @@ class RatesService:
         if not existing or existing[0]["properties"]["tenant_id"] != tenant_id:
             raise RateError("Preisplan nicht gefunden.", status_code=404)
         patch = req.model_dump(exclude_none=True)
+        # Zentrale Objektwährung erzwingen (0161): eine per PATCH gesetzte
+        # abweichende Währung wird abgewiesen, damit ein einzelner Plan die
+        # Objektwährung nicht aushebelt (Channex: 1 Objekt = 1 Währung). Nur
+        # prüfen, wenn das Objekt eine zentrale Währung hat und der Request eine
+        # Währung mitschickt.
+        if req.currency is not None:
+            obj_currency = (
+                (self._db()
+                 .table("properties")
+                 .select("currency")
+                 .eq("id", existing[0]["property_id"])
+                 .limit(1)
+                 .execute()).data or [{}]
+            )[0].get("currency")
+            if obj_currency and req.currency.upper() != obj_currency.upper():
+                raise RateError(
+                    "Die Währung wird zentral am Objekt eingestellt "
+                    f"({obj_currency.upper()}) und gilt für alle Preispläne.",
+                    status_code=422,
+                )
         # Ein abgeleiteter Plan hat KEINE eigene Währung/Basis — beides gehört dem
         # Parent (Wurzel 4: keine zweite Währungs-Wahrheit). Ohne diesen Guard
         # könnte ein PATCH {currency: "USD"} OHNE rate_mode an

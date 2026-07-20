@@ -29,7 +29,9 @@ from .common import (
     log,
 )
 from .content_sync import ContentSyncMixin
+from .csv_import import CsvImportMixin
 from .full_sync import FullSyncMixin
+from .lodgify_import import LodgifyImportMixin
 from .oauth_channels import OAuthChannelsMixin
 from .ota_extras import OtaExtrasMixin
 from .property_mapping import PropertyMappingMixin
@@ -54,6 +56,8 @@ class ChannelManagerService(
     BookingsSyncMixin,
     OtaExtrasMixin,
     FullSyncMixin,
+    CsvImportMixin,
+    LodgifyImportMixin,
 ):  # pylint: disable=too-many-ancestors  # bewusste Fassade über Domänen-Mixins
     slice_name = "channel_manager"
 
@@ -103,6 +107,40 @@ class ChannelManagerService(
         if not ctx.tenant_id:
             raise ChannelManagerError("Kein Tenant im Konto.", status_code=400)
         return ctx.tenant_id
+
+    def ensure_channex_account(self, ctx: AuthContext) -> str:
+        """Stellt den Channex-Account (Group) des Tenants VERIFIZIERT sicher und
+        gibt die channex_group_id zurück. Fail-CLOSED: Kommt keine Group zustande
+        (Channex nicht erreichbar/nicht konfiguriert), wirft diese Methode — das
+        Onboarding darf DANN NICHT als „completed" gelten (Regel „vollständig oder
+        nichts"). Anders als das best-effort ensure_group bei der Registrierung
+        wird hier NICHTS verschluckt: ohne Channex-Account kein fertiges Onboarding.
+        Idempotent (existiert die Group, wird sie nur gelesen)."""
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        # Group-Titel = Betriebsname (tenants.name); Fallback „Konto" nur, wenn
+        # der Name wirklich fehlt (kein erfundener Wert, nur ein neutrales Label).
+        trow = (
+            db.table("tenants").select("name").eq("id", tenant_id).limit(1).execute()
+        ).data
+        title = (trow[0].get("name") if trow else None) or "Konto"
+        if not self._channex.is_configured:
+            raise ChannelManagerError(
+                "Die Portal-Anbindung ist derzeit nicht verfügbar. Bitte später "
+                "erneut versuchen — dein Konto ist noch nicht vollständig "
+                "eingerichtet.",
+                status_code=503,
+            )
+        group_id = self.ensure_group(tenant_id, title=title or "Konto")
+        if not group_id:
+            # ensure_group schluckt Channex-/DB-Fehler zu None — hier wird daraus
+            # ein harter Fehler, damit das Onboarding nicht fälschlich abschließt.
+            raise ChannelManagerError(
+                "Der Portal-Account konnte nicht angelegt werden. Dein Konto ist "
+                "noch nicht vollständig eingerichtet — bitte erneut versuchen.",
+                status_code=502,
+            )
+        return group_id
 
     @staticmethod
     def _wrap_channex(exc: ChannexError) -> ChannelManagerError:

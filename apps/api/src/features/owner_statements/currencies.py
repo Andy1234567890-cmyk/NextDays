@@ -51,3 +51,31 @@ def currency_for_country(country: str | None) -> str | None:
     if not country:
         return None
     return COUNTRY_CURRENCY.get(country.strip().upper())
+
+
+# Kanon der wählbaren Objekt-/Preiswährungen. Die EU27+CH/GB-Landeswährungen
+# (COUNTRY_CURRENCY) plus die beiden international gängigen (USD/GBP) — exakte
+# Spiegelung von apps/web/lib/pricing-meta.ts (CURRENCY_OPTIONS), damit Frontend-
+# Auswahl und Backend-Validierung EINE Quelle teilen. Kein voller ISO-4217-Satz:
+# ein Code außerhalb dieser Liste kann über kein UI entstehen und ist ein
+# Datenfehler → 422 (Wurzel 4/5), kein erfundener Ersatzwert.
+SUPPORTED_CURRENCIES: frozenset[str] = frozenset(COUNTRY_CURRENCY.values()) | {
+    "USD",
+    "GBP",
+}
+
+
+def normalize_currency(value: str | None) -> str | None:
+    """Objekt-/Preiswährung normalisieren: leer bleibt leer (None), sonst
+    Großschreibung. Wirft ValueError bei einem nicht unterstützten Code — ein
+    solcher Wert ist ein Datenfehler, kein legitimer Fall (kein stiller
+    Fallback, Wurzel 4)."""
+    if value is None or not value.strip():
+        return None
+    code = value.strip().upper()
+    if code not in SUPPORTED_CURRENCIES:
+        raise ValueError(
+            f"Währung wird nicht unterstützt: {value!r}. Erlaubt sind "
+            "EU27-Währungen, CHF, GBP und USD."
+        )
+    return code

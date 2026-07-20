@@ -70,6 +70,7 @@ import {
 import { useRealtime } from "@/lib/use-realtime";
 
 type Section =
+  | "currency"
   | "base"
   | "markup"
   | "extraGuest"
@@ -109,10 +110,25 @@ export function PricingForm({ initial }: { initial: Property }) {
   });
   const multiPlan = plans.length > 1;
   const basePlan = multiPlan ? null : (plans[0] ?? null);
-  // rate_plans.currency ist als text gespeichert; die UI kennt nur den
-  // Currency-Union — leere/unbekannte Werte rendern symbollos (lib/currency).
-  const cur = ((basePlan?.currency ?? pr.currency) || "") as Currency | "";
+  // Währung ist zentral am OBJEKT eingestellt (properties.currency, 0161) und
+  // gilt für alle Rate-Plans. Anzeige-Priorität: Objektwährung → (Bestand) Plan-
+  // /pricing-Währung. Leer/unbekannt rendert symbollos (lib/currency), nie ein
+  // erfundenes € (Wurzel 4).
+  const cur = ((p.currency ?? basePlan?.currency ?? pr.currency) || "") as
+    | Currency
+    | "";
   const shownBasePrice = basePlan ? basePlan.base_price : pr.basePrice;
+
+  // Zentrale Objektwährung setzen: schreibt properties.currency; das Backend
+  // zieht alle Rate-Plans dieses Objekts mit (Wurzel 1) und resynct die Portale.
+  async function saveCurrency(next: Currency): Promise<true | string> {
+    const res = await updateProperty(p.id, { currency: next });
+    if (!res.ok) return res.error;
+    setP(res.data);
+    setSection(null);
+    void loadPlans();
+    return true;
+  }
 
   async function save(next: Pricing): Promise<true | string> {
     const res = await updateProperty(p.id, {
@@ -136,6 +152,24 @@ export function PricingForm({ initial }: { initial: Property }) {
   return (
     <div className="flex flex-col gap-8">
       <h1 className="font-display text-3xl font-extrabold">{t("pricingForm.pageTitle")}</h1>
+
+      {/* Zentrale Objektwährung — gilt für ALLE Preispläne dieses Objekts
+          (FeWo wie Hotel). Eine Stelle, kein Setzen je Rate-Plan (Channex:
+          1 Objekt = 1 Währung, Migration 0161). */}
+      <section className="flex flex-col gap-4">
+        <BlockCard
+          title={t("pricingForm.currencyTitle")}
+          hint={t("pricingForm.currencyHint")}
+          actionLabel={cur ? t("pricingForm.edit") : t("pricingForm.add")}
+          onEdit={() => setSection("currency")}
+        >
+          {cur ? (
+            <Pill>
+              {CURRENCY_OPTIONS.find((o) => o.value === cur)?.label ?? cur}
+            </Pill>
+          ) : null}
+        </BlockCard>
+      </section>
 
       {/* Nightly price */}
       <section className="flex flex-col gap-4">
@@ -409,6 +443,9 @@ export function PricingForm({ initial }: { initial: Property }) {
       </section>
 
       {/* Editoren */}
+      {section === "currency" && (
+        <CurrencyEditor current={cur} onSave={saveCurrency} onClose={() => setSection(null)} />
+      )}
       {section === "base" && (
         <BaseEditor
           // Editor mit der Plan-Wahrheit vorbelegen (rate_plans), nicht mit der
@@ -610,6 +647,52 @@ function MoneyInput({
 
 // --- Editoren ---------------------------------------------------------------
 
+function CurrencyEditor({
+  current,
+  onSave,
+  onClose,
+}: {
+  current: Currency | "";
+  onSave: (next: Currency) => Promise<true | string>;
+  onClose: () => void;
+}) {
+  const t = useTranslations("objects");
+  // Vorbelegung nur mit einem gültigen Code; leer bleibt leer (kein erfundenes
+  // Default-€, Wurzel 4) — Speichern ist dann deaktiviert.
+  const [v, setV] = useState<Currency | "">(current);
+  const { busy, error, run } = useSaver(onSave);
+  return (
+    <EditorShell
+      title={t("pricingForm.currencyTitle")}
+      subtitle={t("pricingForm.currencyEditorSubtitle")}
+      onClose={onClose}
+      footer={
+        <Footer
+          busy={busy}
+          error={error}
+          onCancel={onClose}
+          onSave={() => v && run(v)}
+          disabled={!v}
+        />
+      }
+    >
+      <Field label={t("pricingForm.currencyLabel")}>
+        <Select value={v || undefined} onValueChange={(val) => setV(val as Currency)}>
+          <SelectTrigger>
+            <SelectValue placeholder={t("pricingForm.currencyNotSet")} />
+          </SelectTrigger>
+          <SelectContent>
+            {CURRENCY_OPTIONS.map((o) => (
+              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Field>
+      <Hint>{t("pricingForm.currencyEditorHint")}</Hint>
+    </EditorShell>
+  );
+}
+
 function BaseEditor({
   pr,
   onSave,
@@ -629,17 +712,14 @@ function BaseEditor({
       onClose={onClose}
       footer={<Footer busy={busy} error={error} onCancel={onClose} onSave={() => run(v)} />}
     >
+      {/* Währung wird zentral am Objekt gepflegt (Sektion „Währung" oben) und
+          gilt für alle Preispläne — hier nur read-only, kein zweites Select. */}
       <Field label={t("pricingForm.currencyLabel")}>
-        <Select value={v.currency} onValueChange={(val) => setV({ ...v, currency: val as Currency })}>
-          <SelectTrigger>
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {CURRENCY_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="rounded-(--radius) border border-input bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+          {v.currency
+            ? (CURRENCY_OPTIONS.find((o) => o.value === v.currency)?.label ?? v.currency)
+            : t("pricingForm.currencyNotSet")}
+        </div>
       </Field>
 
       <div className="flex items-start gap-2 rounded-(--radius) bg-accent/10 p-3 text-sm">

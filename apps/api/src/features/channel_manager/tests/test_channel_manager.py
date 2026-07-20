@@ -346,6 +346,20 @@ def test_reconcile_creates_local_property() -> None:
     assert db.maps[0]["property_id"] == db.properties[0]["id"]
 
 
+def test_reconcile_own_tenant_uses_ctx_tenant() -> None:
+    # Onboarding-Import-Route: Tenant kommt aus dem JWT-Kontext, nicht aus dem
+    # Request-Body — reconcile_own_tenant delegiert an den ctx-Tenant.
+    db = _ReconcileDB("t1", "grp-1")
+    channex = _ReconcileChannex(
+        [{"id": "cx-1", "attributes": {"title": "Strandhaus"}}]
+    )
+    res = _reconcile_svc(channex, db).reconcile_own_tenant(
+        AuthContext(user_id="u", tenant_id="t1")
+    )
+    assert res["created"] == 1
+    assert db.maps[0]["channex_property_id"] == "cx-1"
+
+
 def test_reconcile_skips_property_without_title() -> None:
     db = _ReconcileDB("t1", "grp-1")
     channex = _ReconcileChannex([{"id": "cx-1", "attributes": {"city": "Kiel"}}])
@@ -655,8 +669,13 @@ class _ImportChannex:
         self.deactivated.append(channel_id)
         return {}
 
-    def list_bookings_for_property(self, property_id, *, page=1, limit=100, inserted_after=None):  # noqa: ANN001, ANN201
-        # Eine Seite (Tests klein halten).
+    def list_bookings_for_property(  # noqa: ANN001, ANN201
+        self, property_id, *, page=1, limit=100, inserted_after=None, arrival_from=None
+    ):
+        # Eine Seite (Tests klein halten). Merkt sich den arrival_from-Filter,
+        # damit der Bestandsimport-Test „nur zukünftige vs. auch Vergangenheit"
+        # belegen kann.
+        self.last_arrival_from = arrival_from
         return {
             "data": self._bookings,
             "meta": {"total": len(self._bookings), "limit": limit, "page": page},
@@ -756,6 +775,7 @@ class _ImportDB:
             "channex_tax_map": [],
             "channex_channel_connection": [],
             "channex_group_map": [],
+            "tenants": [{"id": "t1", "name": "Test-Betrieb"}],
             "room_types": [],
             "tenant_billing_profile": [],
             "property_photos": [],
@@ -998,6 +1018,145 @@ def test_import_booking_creates_reservation_and_blocks_calendar() -> None:
     assert {a["date"] for a in booked} == {"2026-07-01", "2026-07-02"}
     # Gast angelegt.
     assert db.tables["guests"][0]["email"] == "m@x.de"
+
+
+def test_csv_import_creates_reservation_and_blocks_calendar() -> None:
+    db = _ImportDB()
+    _seed_property(db)  # properties: id=p1, title="Haus"
+    csv_text = (
+        "property,guest_first_name,guest_last_name,arrival,departure,"
+        "total_amount,currency,source,external_id\n"
+        "Haus,Max,Mustermann,2026-09-01,2026-09-03,200.00,EUR,Direkt,ABC1\n"
+    )
+    svc = _import_svc(_ImportChannex(), db)
+    res = svc.import_bookings_csv(
+        AuthContext(user_id="u", tenant_id="t1"), content=csv_text
+    )
+    assert res.total_rows == 1 and res.imported == 1 and res.failed == 0
+    r = db.tables["reservations"][0]
+    assert r["property_id"] == "p1" and r["status"] == "confirmed"
+    assert r["source_channex_booking_id"] == "csv:ABC1"
+    booked = {a["date"] for a in db.tables["availability"] if a["status"] == "booked"}
+    assert booked == {"2026-09-01", "2026-09-02"}
+
+
+def test_csv_import_dedup_and_bad_rows() -> None:
+    db = _ImportDB()
+    _seed_property(db)
+    header = (
+        "property,guest_first_name,guest_last_name,arrival,departure,external_id\n"
+    )
+    svc = _import_svc(_ImportChannex(), db)
+    # Erst-Import: eine gute Zeile.
+    svc.import_bookings_csv(
+        AuthContext(user_id="u", tenant_id="t1"),
+        content=header + "Haus,A,B,2026-09-10,2026-09-12,X1\n",
+    )
+    first = len(db.tables["reservations"])
+    # Zweiter Lauf: dieselbe Zeile (Dedup) + Fehlerzeilen (Objekt fehlt,
+    # kaputtes Datum, Abreise vor Anreise).
+    res = svc.import_bookings_csv(
+        AuthContext(user_id="u", tenant_id="t1"),
+        content=header
+        + "Haus,A,B,2026-09-10,2026-09-12,X1\n"       # Duplikat → update, kein Neu
+        + "Unbekannt,C,D,2026-09-10,2026-09-12,X2\n"   # Objekt fehlt → failed
+        + "Haus,E,F,2026-13-01,2026-09-12,X3\n"        # kaputtes Datum → failed
+        + "Haus,G,H,2026-09-12,2026-09-10,X4\n",       # Abreise<Anreise → failed
+    )
+    assert res.total_rows == 4
+    assert res.failed == 3 and len(res.errors) == 3
+    # Kein neuer Datensatz durch das Duplikat (Dedup über csv:X1).
+    assert len(db.tables["reservations"]) == first
+
+
+def test_import_cancelled_booking_creates_record_without_block() -> None:
+    # Bestandsimport: eine bereits stornierte, unbekannte Buchung wird als
+    # cancelled angelegt (Historie), blockiert aber KEINE Kalendernächte.
+    db = _ImportDB()
+    _seed_property(db)  # property p1
+    attrs = {
+        "booking_id": "lodgify:77",
+        "property_id": "p1",
+        "arrival_date": "2026-10-01",
+        "departure_date": "2026-10-03",
+        "status": "cancelled",
+        "ota_name": "Airbnb",
+        "ota_reservation_code": "77",
+        "amount": "150.00",
+        "currency": "EUR",
+        "customer": {"name": "Lea", "surname": "K", "mail": "l@k.de"},
+    }
+    svc = _import_svc(_ImportChannex(), db)
+    ok = svc._project_booking_to_reservation(
+        db, "t1", attrs, local_property_id="p1"
+    )
+    assert ok is True
+    r = db.tables["reservations"][0]
+    assert r["status"] == "cancelled" and r["source_channex_booking_id"] == "lodgify:77"
+    # KEINE gebuchten Nächte durch eine stornierte Buchung.
+    assert not [a for a in db.tables["availability"] if a["status"] == "booked"]
+
+
+def test_lodgify_booking_to_attrs_maps_core_fields() -> None:
+    # Belegte Roh-Feldnamen (köpferl): id/arrival/departure/total_amount/guest.name.
+    attrs = ChannelManagerService._lodgify_booking_to_attrs({
+        "id": 5512,
+        "arrival": "2026-08-01",
+        "departure": "2026-08-04",
+        "total_amount": 420.0,
+        "currency_code": "CHF",
+        "source": "Booking.com",
+        "status": "Booked",
+        "property_id": 991,
+        "guest": {"name": "Anna Meier", "email": "a@m.ch"},
+        "rooms": [{"people": 3}],
+    })
+    assert attrs is not None
+    assert attrs["booking_id"] == "lodgify:5512"
+    assert attrs["currency"] == "CHF"  # kein EUR-Fallback (Wurzel 4)
+    assert attrs["customer"]["name"] == "Anna" and attrs["customer"]["surname"] == "Meier"
+    assert attrs["_lodgify_status"] == "booked"
+
+
+def test_lodgify_booking_to_attrs_skips_incomplete() -> None:
+    # Fehlt arrival → None (kein erfundener Zeitraum).
+    assert ChannelManagerService._lodgify_booking_to_attrs(
+        {"id": 1, "departure": "2026-08-04"}
+    ) is None
+
+
+def _switch_booking(cx_id="cx-prop"):  # noqa: ANN001, ANN201
+    return {"attributes": {
+        "booking_id": "BK9", "property_id": cx_id, "status": "new",
+        "ota_name": "Booking.com", "ota_reservation_code": "R9",
+        "arrival_date": "2026-08-01", "departure_date": "2026-08-02",
+        "amount": "100.00", "currency": "EUR",
+        "customer": {"name": "Eva", "surname": "T", "mail": "e@t.de"}}}
+
+
+def test_import_existing_bookings_future_only_uses_arrival_filter() -> None:
+    # Onboarding-Bestandsimport (Standard): filtert auf Anreise ab HEUTE.
+    db = _ImportDB()
+    _seed_property(db)
+    channex = _ImportChannex(bookings=[_switch_booking()])
+    res = _import_svc(channex, db).import_existing_bookings(
+        AuthContext(user_id="u", tenant_id="t1"), include_past=False
+    )
+    assert res.saved == 1
+    # arrival_from gesetzt (nicht None) → nur künftige Buchungen.
+    assert channex.last_arrival_from is not None
+
+
+def test_import_existing_bookings_include_past_no_arrival_filter() -> None:
+    # „Auch Vergangenheit": kein Anreise-Filter → alles, was Channex kennt.
+    db = _ImportDB()
+    _seed_property(db)
+    channex = _ImportChannex(bookings=[_switch_booking()])
+    res = _import_svc(channex, db).import_existing_bookings(
+        AuthContext(user_id="u", tenant_id="t1"), include_past=True
+    )
+    assert res.saved == 1
+    assert channex.last_arrival_from is None
 
 
 def test_import_booking_idempotent() -> None:
@@ -2925,12 +3084,15 @@ def test_supported_portals_is_catalog_driven_no_hardcoded_vrbo() -> None:
 
 
 def test_supported_portals_carries_setup_hint() -> None:
-    # Bekannte OTAs bekommen die kuratierte Vorab-Anleitung; ohne Provider-Name.
+    # Bekannte OTAs bekommen die VERIFIZIERTE Vorab-Anleitung. Belegte Ausnahme:
+    # der Booking-Extranet-Provider heißt real „Channex" und MUSS im Hint stehen
+    # (sonst findet der Hotelier den Eintrag nicht) — freigegebene Ausnahme zur
+    # „nie Channex im Kundentext"-Regel.
     db = _ImportDB()
     portals = {p["code"]: p for p in _import_svc(_OAuthChannex(), db).list_supported_portals()}
     assert portals["BookingCom"]["setup_hint"]
-    assert "myNextDays" in portals["BookingCom"]["setup_hint"]
-    assert "Channex" not in portals["BookingCom"]["setup_hint"]
+    assert "Channex" in portals["BookingCom"]["setup_hint"]
+    assert "XML Service Agreement" in portals["BookingCom"]["setup_hint"]
     # Unbekannter Kanal (Avis) hat KEINEN erfundenen Hint.
     assert portals["Avis"]["setup_hint"] is None
 
@@ -3507,3 +3669,26 @@ def test_push_rates_batch_without_rate_plan_id_hits_all() -> None:
 # Hotel-Kategorie-Content-Sync entfernt (1 Objekt = 1 Einheit): ein Objekt mit
 # mehreren Rate-Plänen wird über EINEN synthetischen Channex-Room-Type gepusht;
 # das deckt der FeWo-Content-Sync-Test ab.
+
+
+# --- Onboarding-Gate: Channex-Account fail-CLOSED ----------------------------
+def test_ensure_channex_account_returns_group_id() -> None:
+    # Erfolgsfall: Group wird angelegt, group_id zurückgegeben.
+    db = _ImportDB()
+    svc = _import_svc(_ImportChannex(), db)
+    ctx = AuthContext(user_id="u", tenant_id="t1")
+    assert svc.ensure_channex_account(ctx) == "cx-group"
+
+
+def test_ensure_channex_account_fail_closed_when_not_configured() -> None:
+    # Channex nicht konfiguriert → HARTER Fehler (503), NIE stilles Weitermachen.
+    # So bleibt das Onboarding unvollständig statt fälschlich „completed".
+    channex = _ImportChannex()
+    channex.is_configured = False
+    svc = _import_svc(channex, _ImportDB())
+    ctx = AuthContext(user_id="u", tenant_id="t1")
+    try:
+        svc.ensure_channex_account(ctx)
+        raise AssertionError("sollte fail-closed werfen")
+    except ChannelManagerError as exc:
+        assert exc.status_code == 503

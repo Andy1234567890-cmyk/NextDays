@@ -18,7 +18,13 @@ export default async function OnboardingPage() {
 
   return (
     <div className="mx-auto w-full max-w-3xl p-6">
-      <OnboardingWizard loginEmail={loginEmail} />
+      {/* Betriebsart vorbelegen, falls der Betrieb sie schon gewählt hat
+          (tenants.accommodation_type) — Onboarding und Konto teilen dieselbe
+          Wahrheit, keine erneute Auswahl. */}
+      <OnboardingWizard
+        loginEmail={loginEmail}
+        initialAccommodationType={me.accommodation_type ?? null}
+      />
     </div>
   );
 }

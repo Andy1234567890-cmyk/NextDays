@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useMemo, useState, useTransition } from "react";
 
+import { channelLogo } from "@/lib/channel-logos";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import {
@@ -26,37 +27,26 @@ import type {
 } from "@/lib/channex";
 import { pinChannel } from "@/lib/channex";
 
-// Echte Original-Logos (public/channels/*.svg). Portale ohne freies Logo fallen
-// auf ein Iconify-Icon zurück (kein selbst gezeichnetes Markenlogo).
-const OTA_LOGO: Record<string, { src?: string; icon?: string }> = {
-  BookingCom: { src: "/channels/booking.svg" },
-  AirBNB: { src: "/channels/airbnb.svg" },
-  Expedia: { src: "/channels/expedia.svg" },
-  Agoda: { src: "/channels/agoda.svg" },
-  CTrip: { src: "/channels/tripcom.svg" },
-  GoogleHotelARI: { src: "/channels/google.svg" },
-  OpenChannel: { icon: "ph:flask" },
-};
-
 // Die zwei prominenten OTAs, die immer als Karte stehen (Marktplatz kommt als
 // eigene Sektion). Der Rest erscheint nur, wenn verbunden/gepinnt — sonst im
 // „Kanal hinzufügen"-Dropdown.
 const PROMINENT_OTA = new Set(["BookingCom", "AirBNB"]);
 
+// Echtes Original-Logo aus der zentralen Map (lib/channel-logos) ODER kein Icon
+// (kein generisches Ersatz-Symbol — ausdrückliche Nutzer-Vorgabe).
 function otaLogo(c: OtaChannelOverview): { src?: string; icon?: string } {
-  return OTA_LOGO[c.code] ?? { icon: c.icon || "ph:broadcast" };
+  const src = channelLogo(c.code);
+  return src ? { src } : {};
 }
 
 function ChannelLogo({
   src,
   srcDark,
-  icon,
   alt,
 }: {
   src?: string;
   // Optionales Dark-Mode-Logo (z.B. helle Wortmarke auf dunklem Grund).
   srcDark?: string;
-  icon?: string;
   alt: string;
 }) {
   if (src) {
@@ -67,6 +57,7 @@ function ChannelLogo({
           alt={alt}
           width={200}
           height={54}
+          style={{ height: "auto", width: "auto" }}
           className={
             "h-[2.75rem] w-auto max-w-[70%] object-contain " +
             (srcDark ? "dark:hidden" : "")
@@ -78,13 +69,15 @@ function ChannelLogo({
             alt={alt}
             width={200}
             height={54}
+            style={{ height: "auto", width: "auto" }}
             className="hidden h-[2.75rem] w-auto max-w-[70%] object-contain dark:block"
           />
         )}
       </>
     );
   }
-  return <Icon icon={icon ?? "ph:broadcast"} className="size-11 text-foreground" />;
+  // Kein echtes Logo → nur der Name (kein generisches Ersatz-Icon, Nutzer-Vorgabe).
+  return <span className="font-display text-lg font-bold">{alt}</span>;
 }
 
 // Eine Kanal-Karte: Status-Punkt oben, Logo mittig, Badge unten.
@@ -116,12 +109,7 @@ function ChannelCard({
           aria-hidden
         />
         <div className="flex flex-1 items-center justify-center">
-          <ChannelLogo
-            src={logo.src}
-            srcDark={logo.srcDark}
-            icon={logo.icon}
-            alt={alt}
-          />
+          <ChannelLogo src={logo.src} srcDark={logo.srcDark} alt={alt} />
         </div>
         {connected ? (
           <span className="rounded-lg bg-emerald-50 py-2 text-center text-sm font-medium text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
@@ -212,18 +200,13 @@ function AddChannelCard({
                   disabled={pending}
                   className="flex w-full items-center gap-3 rounded-(--radius) p-2 text-left text-sm transition-colors hover:bg-secondary disabled:opacity-50"
                 >
-                  {otaLogo(c).src ? (
+                  {otaLogo(c).src && (
                     <Image
                       src={otaLogo(c).src as string}
                       alt={c.label}
                       width={24}
                       height={24}
                       className="size-6 shrink-0 object-contain"
-                    />
-                  ) : (
-                    <Icon
-                      icon={otaLogo(c).icon ?? "ph:broadcast"}
-                      className="size-6 shrink-0"
                     />
                   )}
                   <span className="truncate">{c.label}</span>

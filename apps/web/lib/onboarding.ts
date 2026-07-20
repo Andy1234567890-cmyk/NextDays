@@ -7,9 +7,13 @@ import { ApiError, api } from "@/lib/api";
 import { currentToken } from "@/lib/session-token";
 
 export type OnboardingStatus = {
+  // "new" = Neukunde (legt Objekte neu an), "switch" = Wechselkunde (importiert
+  // Bestands-Listings via Portale). null = Weiche noch offen.
+  customer_type: "new" | "switch" | null;
   has_ota: boolean | null;
   selected_portals: string[];
   company_data_set: boolean;
+  imported_from_ota: boolean;
   object_created: boolean;
   price_set: boolean;
   channels_done: boolean;

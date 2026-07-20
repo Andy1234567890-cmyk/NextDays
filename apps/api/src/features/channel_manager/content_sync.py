@@ -177,7 +177,7 @@ class ContentSyncMixin:
             .select(
                 "id, title, description, property_type, street, house_number, "
                 "postal_code, city, country, lat, lng, max_guests, amenities, "
-                "type_attributes"
+                "type_attributes, currency"
             )
             .eq("id", property_id)
             .eq("tenant_id", tenant_id)
@@ -227,10 +227,13 @@ class ContentSyncMixin:
                 "an die Buchungsportale übermittelt werden.",
                 status_code=422,
             )
-        # Währung: übergebene (falls gesetzt), sonst die ECHTE Rate-Plan-Währung
-        # (rate_plans.currency ist NOT NULL, Migration 0003) — kein EUR-Fallback.
+        # Währung (Priorität, alles ECHTE Werte — kein EUR-Fallback, Wurzel 4):
+        # 1) übergebene, 2) zentrale Objektwährung (properties.currency, 0161 —
+        # die Wahrheit), 3) älteste Rate-Plan-Währung (Bestand ohne gesetzte
+        # Objektwährung, rate_plans.currency ist NOT NULL seit 0003).
+        obj_currency = prop_row.get("currency")
         rate_currency = rate_plans[0].get("currency")
-        prop_currency = (currency or rate_currency or "").upper()
+        prop_currency = (currency or obj_currency or rate_currency or "").upper()
         if not prop_currency:
             raise ChannelManagerError(
                 "Objektwährung fehlt im Preisplan — kann nicht an die "
@@ -423,6 +426,37 @@ class ContentSyncMixin:
         name = (row[0].get("name") or "").strip() if row else ""
         return name or None
 
+    def _is_hotel_tenant(self, db: Client, tenant_id: str) -> bool:
+        """True, wenn der Betrieb ein HOTEL ist (accommodation_type='hotel').
+        Beim Hotel gehören ALLE Zimmer-Objekte unter EINE Channex-Property (eine
+        Booking-Hotel-ID) als je eigener Room-Type — Booking.com-Modell (belegt:
+        1 Hotel = 1 Property-ID, Zimmer = room_types mit je eigener Rate). Bei
+        'vacation_rental' (Agentur/FeWo) bleibt 1 Objekt = 1 eigene Property mit
+        eigener Booking-ID."""
+        row = (
+            db.table("tenants").select("accommodation_type")
+            .eq("id", tenant_id).limit(1).execute()
+        ).data
+        return bool(row) and row[0].get("accommodation_type") == "hotel"
+
+    def _existing_tenant_channex_property(
+        self, db: Client, tenant_id: str
+    ) -> str | None:
+        """channex_property_id einer bereits angelegten Property DIESES Tenants
+        (für Hotels: alle Zimmer teilen sie). None, wenn noch keine existiert.
+        Nimmt die älteste aktive Map-Zeile — deterministisch, damit alle Zimmer
+        auf dieselbe Property zeigen."""
+        rows = (
+            db.table("channex_property_map")
+            .select("channex_property_id, created_at")
+            .eq("tenant_id", tenant_id)
+            .is_("deleted_at", "null")
+            .order("created_at")
+            .limit(1)
+            .execute()
+        ).data or []
+        return rows[0]["channex_property_id"] if rows else None
+
     def _upsert_channex_property(
         self, db: Client, tenant_id: str, property_id: str, title: str,
         currency: str, prop_row: dict[str, Any] | None = None,
@@ -461,6 +495,34 @@ class ContentSyncMixin:
                     )
             self._channex.update_property(channex_id, attrs)
             return channex_id
+
+        # HOTEL: alle Zimmer-Objekte teilen EINE Channex-Property (eine Booking-
+        # Hotel-ID). Existiert für diesen Tenant schon eine Property, die
+        # BESTEHENDE wiederverwenden und nur eine Map-Zeile für dieses Zimmer
+        # anlegen — statt eine zweite Property zu erzeugen. Der Room-Type/Rate-Plan
+        # dieses Zimmers entsteht danach als eigener Eintrag darunter (eigene
+        # Rate, keine Vermischung). Bei vacation_rental (FeWo) NICHT wiederverwenden
+        # → jede FeWo bekommt ihre eigene Property/Booking-ID.
+        if self._is_hotel_tenant(db, tenant_id):
+            shared = self._existing_tenant_channex_property(db, tenant_id)
+            if shared:
+                # Property-Titel auf den Betriebsnamen halten (nicht diesen
+                # Zimmertitel) — sonst benennt das Zimmer die Hotel-Property um.
+                tenant_title = self._tenant_title(db, tenant_id)
+                self._channex.update_property(
+                    shared, {**attrs, "title": tenant_title or attrs["title"]}
+                )
+                db.table("channex_property_map").insert(
+                    {
+                        "tenant_id": tenant_id,
+                        "property_id": property_id,
+                        "channex_property_id": shared,
+                        "sync_enabled": True,
+                        "last_sync_status": "ok",
+                        "last_sync_error": None,
+                    }
+                ).execute()
+                return shared
 
         # Neu anlegen + (falls vorhanden) der Tenant-Group zuordnen.
         group_id = self.ensure_group(tenant_id, title=title)

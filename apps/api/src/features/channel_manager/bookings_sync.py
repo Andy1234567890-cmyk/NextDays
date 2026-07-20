@@ -4,6 +4,8 @@ Mixin des ChannelManagerService (verbatim aus service.py extrahiert;
 siehe service.py-Fassade). State (_db/_channex) und Basis-Helper kommen
 von der Fassade; Patch-Ziel für Modul-Helfer ist channel_manager.common.
 """
+# pylint: disable=too-many-lines  # kohärente Inbound-Domäne (Feed/Staging/
+# Reservierungs-Projektion/Bestandsimport) — bewusst EIN Mixin, kein Split.
 from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta
@@ -55,6 +57,68 @@ class BookingsSyncMixin:
             self._tenant_channex_property_ids(db, tenant_id), tenant_id
         )
         return self._sync_feed(db, tenant_by_property)
+
+    def import_existing_bookings(
+        self, ctx: AuthContext, *, include_past: bool = False
+    ) -> BookingSyncResponse:
+        """EINMALIGER Bestandsimport der OTA-Buchungen aller verbundenen Objekte
+        DIESES Tenants (Onboarding-Wechselkunde). Über GET /bookings (Channex-
+        Doku: gültiger Weg für den initialen Pull), pro Objekt paginiert.
+
+        ``include_past=False`` (Standard) → nur Buchungen mit Anreise ab HEUTE
+        (filter[arrival_date][gte]=heute). ``include_past=True`` → auch
+        vergangene: KEIN Anreise-Filter, es kommt alles, was Channex kennt.
+
+        EHRLICHE GRENZE (belegt, Channex-Doku booking.com): Channex liefert nur
+        Buchungen, die es selbst als Revision gesehen hat. Bei Booking.com holt
+        die „Pull Future Reservations"-Aktion NUR ZUKÜNFTIGE aus dem Extranet;
+        bereits ausgecheckte Alt-Buchungen von VOR dem Connect sind über Channex
+        praktisch nicht rückholbar. include_past holt daher, was Channex hat —
+        nicht garantiert die komplette Historie. Kein ack (nur der Feed ackt);
+        KEINE Verfügbarkeits-/Preisauswirkung (Doku)."""
+        tenant_id = self._require_tenant(ctx)
+        db = self._require_db()
+        arrival_from = None if include_past else date.today().isoformat()
+
+        maps = (
+            db.table("channex_property_map")
+            .select("channex_property_id")
+            .eq("tenant_id", tenant_id)
+            .is_("deleted_at", "null")
+            .execute()
+        ).data or []
+
+        total = BookingSyncResponse()
+        for m in maps:
+            cx_id = m.get("channex_property_id")
+            if not cx_id:
+                continue
+            try:
+                res = self.import_bookings_for_property(
+                    tenant_id, cx_id, arrival_from=arrival_from
+                )
+                total.fetched += res["fetched"]
+                total.saved += res["saved"]
+            except ChannexError as exc:
+                total.errors.append(f"{cx_id}: {exc.message}")
+                log.warning(
+                    "import_existing_bookings_property_failed",
+                    tenant_id=tenant_id, channex_property_id=cx_id,
+                    error=exc.message,
+                )
+            except Exception as exc:  # noqa: BLE001 — ein Objekt kippt nicht alle
+                total.errors.append(f"{cx_id}: {exc}")
+                log.error(
+                    "import_existing_bookings_property_error",
+                    tenant_id=tenant_id, channex_property_id=cx_id,
+                    error=str(exc),
+                )
+        log.info(
+            "import_existing_bookings_done",
+            tenant_id=tenant_id, include_past=include_past,
+            fetched=total.fetched, saved=total.saved,
+        )
+        return total
 
     # Single-Flight über eine LEASE (sync_lease-Tabelle, RPC 0135): der Job-
     # Dedup-Key koalesziert nur QUEUED-Jobs (0108) — er verhindert NICHT, dass
@@ -497,10 +561,21 @@ class BookingsSyncMixin:
             )
 
     def _property_currency(self, db: Client, property_id: str) -> str | None:
-        """Objekt-Währung aus dem (ältesten) Rate-Plan — die lokale Wahrheit für
-        die Währung dieses Objekts. Dient als Rückfall, wenn die OTA-Payload
-        keine currency trägt. KEIN EUR-Hardcode (27 EU-Länder): fehlt auch der
-        Rate-Plan, bleibt es None und der Aufrufer entscheidet."""
+        """Objekt-Währung: zentrale properties.currency (0161, die Wahrheit),
+        sonst der älteste Rate-Plan (Bestand ohne gesetzte Objektwährung). Beides
+        sind ECHTE gespeicherte Werte — keine erfundene EUR (Wurzel 4). Dient als
+        Rückfall, wenn die OTA-Payload keine currency trägt. Fehlen beide, bleibt
+        es None und der Aufrufer entscheidet (kein Hardcode)."""
+        prop = (
+            db.table("properties")
+            .select("currency")
+            .eq("id", property_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        obj_cur = (prop[0].get("currency") if prop else None) or None
+        if obj_cur:
+            return obj_cur
         rows = (
             db.table("rate_plans")
             .select("currency, created_at")
@@ -542,18 +617,77 @@ class BookingsSyncMixin:
             return False
         return True
 
+    def _insert_cancelled_reservation(
+        self,
+        db: Client,
+        tenant_id: str,
+        attrs: dict[str, Any],
+        property_id: str,
+    ) -> None:
+        """Bestandsimport: eine bereits stornierte, uns unbekannte Buchung als
+        status='cancelled' anlegen (Historie), OHNE Kalender-Block. Idempotent
+        über source_channex_booking_id (Unique). Best-effort — ein Fehler kippt
+        den Import nicht (Wurzel 5)."""
+        booking_id = attrs.get("booking_id") or attrs.get("id")
+        customer = attrs.get("customer") or {}
+        guest_id = resolve_or_create_guest(
+            db, tenant_id,
+            contact_from_ota_customer(
+                customer, external_ref=attrs.get("ota_reservation_code")
+            ),
+        ) or create_placeholder_guest(
+            db, tenant_id, channel="ota",
+            external_ref=attrs.get("ota_reservation_code"),
+        )
+        try:
+            total = float(attrs["amount"]) if attrs.get("amount") is not None else 0
+        except (TypeError, ValueError):
+            total = 0
+        row = {
+            "tenant_id": tenant_id,
+            "property_id": property_id,
+            "guest_id": guest_id,
+            "channel": self._ota_name_to_channel(attrs.get("ota_name")),
+            "ota_name": attrs.get("ota_name"),
+            "external_ref": attrs.get("ota_reservation_code"),
+            "check_in": attrs.get("arrival_date"),
+            "check_out": attrs.get("departure_date"),
+            "status": "cancelled",
+            "total_amount": total,
+            "currency": attrs.get("currency")
+            or self._property_currency(db, property_id),
+            "source_channex_booking_id": booking_id,
+            "guest_email": customer.get("mail") or customer.get("email"),
+            "guest_phone": customer.get("phone"),
+        }
+        try:
+            db.table("reservations").upsert(
+                row, on_conflict="source_channex_booking_id"
+            ).execute()
+        except Exception as exc:  # noqa: BLE001 — Import darf nicht kippen
+            log.warning(
+                "import_cancelled_reservation_failed",
+                tenant_id=tenant_id, booking_id=booking_id, error=str(exc)[:200],
+            )
+
     def _project_booking_to_reservation(
         self,
         db: Client,
         tenant_id: str,
         attrs: dict[str, Any],
         guest_id: str | None = None,
+        *,
+        local_property_id: str | None = None,
     ) -> bool:
         """OTA-Buchung → zentrale reservations + Kalender-Block. Idempotent über
         source_channex_booking_id. Gibt True bei Erfolg, False bei skip zurück.
 
         `guest_id` stammt aus `_upsert_booking` (zentraler Resolver); ist er nicht
-        gesetzt (Aufruf ohne vorheriges Staging), wird hier resolved."""
+        gesetzt (Aufruf ohne vorheriges Staging), wird hier resolved.
+
+        `local_property_id`: beim CSV-Bestandsimport mappt der Nutzer die Zeile
+        direkt auf ein lokales Objekt — dann wird die Channex-Auflösung über
+        property_id übersprungen (die CSV trägt keine channex_property_id)."""
         booking_id = attrs.get("booking_id") or attrs.get("id")
         channex_property_id = attrs.get("property_id")
         arrival = attrs.get("arrival_date")
@@ -561,7 +695,7 @@ class BookingsSyncMixin:
         if not self._projection_precheck(tenant_id, booking_id, attrs):
             return False
 
-        property_id = self._resolve_local_property(
+        property_id = local_property_id or self._resolve_local_property(
             db, tenant_id, channex_property_id, rooms=attrs.get("rooms"),
         )
         if not property_id:
@@ -608,6 +742,12 @@ class BookingsSyncMixin:
                 db.table("reservations").update({"status": "cancelled"}).eq(
                     "id", existing[0]["id"]
                 ).execute()
+            elif local_property_id is not None:
+                # Bestandsimport (CSV/Lodgify): eine bereits stornierte Buchung,
+                # die wir noch nicht kennen, TROTZDEM als storniert anlegen —
+                # sonst fehlte sie in Historie/Zeitleiste/Gastprofil. Ohne
+                # Kalender-Block (Status cancelled) und ohne Nächte zu belegen.
+                self._insert_cancelled_reservation(db, tenant_id, attrs, property_id)
             # Alle Nächte dieser Buchung quellengenau freigeben (lokal + Channex).
             # Wurzel 1: den LOKAL gebuchten Alt-Zeitraum auf dem LOKAL gebuchten
             # Alt-Objekt freigeben — NICHT den Zeitraum/das Objekt aus dem Storno-
@@ -888,11 +1028,13 @@ class BookingsSyncMixin:
         channex_property_id: str,
         *,
         inserted_after: str | None = None,
+        arrival_from: str | None = None,
     ) -> dict[str, int]:
         """EINMALIGER Initial-/Recovery-Import via GET /bookings (paginiert).
         Pro Buchung: Staging (_upsert_booking) + Projektion in reservations.
         KEIN ack (das macht nur der Feed). Pro Buchung isoliert (eine kaputte
-        blockiert den Rest nicht)."""
+        blockiert den Rest nicht). ``arrival_from`` grenzt auf Anreisedatum ab
+        (Bestandsimport „alle künftigen Buchungen ab heute")."""
         result = {"fetched": 0, "saved": 0, "skipped": 0}
         if not self._channex.is_configured or self._db is None:
             return result
@@ -900,7 +1042,11 @@ class BookingsSyncMixin:
         page = 1
         while page <= 200:  # Sicherung gegen Endlosschleife
             resp = self._channex.list_bookings_for_property(
-                channex_property_id, page=page, limit=100, inserted_after=inserted_after
+                channex_property_id,
+                page=page,
+                limit=100,
+                inserted_after=inserted_after,
+                arrival_from=arrival_from,
             )
             data = resp.get("data") or []
             result["fetched"] += len(data)

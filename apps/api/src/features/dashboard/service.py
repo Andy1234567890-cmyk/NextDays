@@ -63,8 +63,8 @@ class DashboardService:
         )
         if not res.data:
             # Noch kein Eintrag → frischer Tenant, Onboarding offen.
-            return OnboardingStatus()
-        return self._to_status(res.data[0])
+            return self._to_status({}, tenant_id)
+        return self._to_status(res.data[0], tenant_id)
 
     def update_onboarding(
         self, ctx: AuthContext, req: OnboardingUpdate
@@ -85,7 +85,7 @@ class DashboardService:
         )
         if not saved.data:
             raise DashboardError("Onboarding konnte nicht gespeichert werden.", status_code=500)
-        return self._to_status(saved.data[0])
+        return self._to_status(saved.data[0], tenant_id)
 
     def voice_assistant(
         self, ctx: AuthContext, req: DashboardVoiceRequest
@@ -191,14 +191,61 @@ class DashboardService:
         )
         return "\n".join(sections)
 
-    @staticmethod
-    def _to_status(row: dict[str, Any]) -> OnboardingStatus:
+    def _to_status(self, row: dict[str, Any], tenant_id: str) -> OnboardingStatus:
+        # object_created / price_set / channels_done werden NICHT (mehr) allein aus
+        # den client-gesetzten Flags abgeleitet — die logen den echten Zustand und
+        # erzeugten falsch-positive "fertig"-Anzeigen (grüner Haken, obwohl kein
+        # Objekt existiert / nichts bei den Portalen registriert ist). Der wahre
+        # Fortschritt wird aus der DB gemessen; das Flag zählt nur als ODER-Zusatz
+        # (der Nutzer kann einen Schritt bewusst als erledigt markiert haben, ohne
+        # dass er DB-sichtbar ist — z. B. "keine OTA gewünscht").
+        counts = self._real_progress(tenant_id)
         return OnboardingStatus(
+            customer_type=row.get("customer_type"),
             has_ota=row.get("has_ota"),
             selected_portals=row.get("selected_portals") or [],
             company_data_set=row.get("company_data_set", False),
-            object_created=row.get("object_created", False),
-            price_set=row.get("price_set", False),
-            channels_done=row.get("channels_done", False),
+            imported_from_ota=row.get("imported_from_ota", False),
+            object_created=row.get("object_created", False) or counts["has_property"],
+            price_set=row.get("price_set", False) or counts["has_rate_plan"],
+            channels_done=row.get("channels_done", False) or counts["has_registered"],
             completed=row.get("completed", False),
         )
+
+    def _real_progress(self, tenant_id: str) -> dict[str, bool]:
+        """Echten Onboarding-Fortschritt aus der DB messen (keine client-Flags):
+        existiert ein Objekt? hat ein Objekt einen Preisplan? ist mindestens ein
+        Objekt bei den Portalen registriert (channex_property_map)? Damit spiegelt
+        der Status die Realität, statt nur das, was der Client gemeldet hat."""
+        db = self._require_db()
+        props = (
+            db.table("properties").select("id").eq("tenant_id", tenant_id)
+            .limit(1).execute()
+        ).data or []
+        has_rate_plan = False
+        has_registered = False
+        if props:
+            has_rate_plan = bool(
+                (
+                    db.table("rate_plans")
+                    .select("id, properties!inner(tenant_id)")
+                    .eq("properties.tenant_id", tenant_id)
+                    .limit(1)
+                    .execute()
+                ).data
+            )
+            has_registered = bool(
+                (
+                    db.table("channex_property_map")
+                    .select("channex_property_id")
+                    .eq("tenant_id", tenant_id)
+                    .is_("deleted_at", "null")
+                    .limit(1)
+                    .execute()
+                ).data
+            )
+        return {
+            "has_property": bool(props),
+            "has_rate_plan": has_rate_plan,
+            "has_registered": has_registered,
+        }

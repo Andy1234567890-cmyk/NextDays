@@ -11,14 +11,21 @@
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
+import { AddressPlacesSearch } from "@/components/address-places-search";
+import { SwitcherImport } from "@/components/onboarding/switcher-import";
+import { ensureChannexAccount } from "@/lib/channex";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import type { AccommodationType } from "@/lib/api";
 import { setAccommodationType } from "@/lib/auth";
-import { type FirmenProfil, saveFirmenProfil } from "@/lib/firmenprofil";
+import {
+  type FirmenProfil,
+  getFirmenProfil,
+  saveFirmenProfil,
+} from "@/lib/firmenprofil";
 import {
   LAENDER,
   befreiungFuerLand,
@@ -31,14 +38,23 @@ import type { OnboardingStatus } from "@/lib/onboarding";
 import { updateOnboarding } from "@/lib/onboarding";
 import { cn } from "@/lib/utils";
 
-type Step = "welcome" | "type" | "company" | "tax" | "done";
+// Nach Firma+Steuer+Channex-Gate teilt sich das Onboarding: „branch" fragt, ob
+// der Betrieb schon auf Portalen verkauft (Wechselkunde) oder neu ist. „switch"
+// = geführter Bestandsimport, „done" = Neukunden-Abschluss.
+type Step = "welcome" | "type" | "company" | "tax" | "branch" | "switch" | "done";
+
+type CustomerType = "new" | "switch";
 
 export function OnboardingWizard({
   initialStatus,
   loginEmail,
+  initialAccommodationType,
 }: {
   initialStatus?: OnboardingStatus;
   loginEmail?: string | null;
+  // Bereits am Betrieb gewählte Betriebsart (tenants.accommodation_type) — belegt
+  // die Auswahl in Schritt 2 vor, statt eine erneute Wahl zu erzwingen.
+  initialAccommodationType?: AccommodationType | null;
 }) {
   const router = useRouter();
   const t = useTranslations("onboarding");
@@ -57,16 +73,24 @@ export function OnboardingWizard({
   function firstOpenStep(s?: OnboardingStatus): Step {
     if (!s) return "welcome";
     if (!s.company_data_set) return "welcome";
-    return "done";
+    // Firma steht → Weiche. Bereits gewählter Zweig wird wiederaufgenommen.
+    if (s.customer_type === "switch") return "switch";
+    if (s.customer_type === "new") return "done";
+    return "branch";
   }
 
   const [step, setStep] = useState<Step>(firstOpenStep(initialStatus));
+  const [customerType, setCustomerType] = useState<CustomerType | null>(
+    initialStatus?.customer_type ?? null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   // Betriebsart (Ferienunterkunft/Hotel): bewusst OHNE Vorauswahl — der Kunde
   // entscheidet explizit (vollständig oder nichts); wird beim Weiter sofort am
   // Mandanten gespeichert und steuert die Dashboard-Navigation.
-  const [accommodationType, setAccType] = useState<AccommodationType | null>(null);
+  const [accommodationType, setAccType] = useState<AccommodationType | null>(
+    initialAccommodationType ?? null,
+  );
 
   function saveType() {
     if (!accommodationType) return;
@@ -91,6 +115,44 @@ export function OnboardingWizard({
     accountType: "individual",
   });
   const [smallBusiness, setSmallBusiness] = useState(false);
+
+  // Bereits gespeicherte Firmendaten vorbefüllen (dieselbe Quelle wie /konto:
+  // tenant_billing_profile via getFirmenProfil). Onboarding und Konto arbeiten so
+  // bidirektional auf EINEM Datentopf — kein doppeltes Ausfüllen. Nur gesetzte
+  // Werte übernehmen (leere DB-Felder überschreiben die Onboarding-Defaults wie
+  // Land/Rechtsform nicht).
+  useEffect(() => {
+    let active = true;
+    void getFirmenProfil().then((res) => {
+      if (!active || !res.ok) return;
+      const d = res.data;
+      const s = (k: string): string | undefined =>
+        typeof d[k] === "string" && d[k] ? (d[k] as string) : undefined;
+      // Nur die string-wertigen Firmen-/Adress-/Steuer-Felder vorbefüllen
+      // (lodgingTaxRate/isSmallBusiness sind nicht-string und werden separat
+      // behandelt). Typsicher über einen string-Record.
+      const stringKeys = [
+        "companyName", "legalForm", "companyStreet", "companyHouseNumber",
+        "companyPostalCode", "companyCity", "companyState", "companyCountry",
+        "email", "phoneNumber", "website", "vatId", "taxNumber",
+        "companyRegister", "districtCourt", "firstName", "lastName", "ownerDob",
+        // Bankdaten (unter /konto gepflegt) mitnehmen — Zahlungsfreischaltung.
+        "iban", "bic", "accountHolder",
+      ] as const;
+      const patch: Record<string, string> = {};
+      for (const k of stringKeys) {
+        const v = s(k);
+        if (v !== undefined) patch[k] = v;
+      }
+      const at = s("accountType");
+      if (at === "individual" || at === "company") patch.accountType = at;
+      setFirma((prev) => ({ ...prev, ...(patch as Partial<FirmenProfil>) }));
+      if (typeof d.isSmallBusiness === "boolean") setSmallBusiness(d.isSmallBusiness);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function setF<K extends keyof FirmenProfil>(key: K, value: FirmenProfil[K]) {
     setFirma((prev) => ({ ...prev, [key]: value }));
@@ -123,6 +185,32 @@ export function OnboardingWizard({
           ? prev.legalForm
           : formen[0];
       return { ...prev, companyCountry: code, legalForm };
+    });
+  }
+
+  // Adresse aus dem Places-Picker STRUKTURIERT übernehmen (Straße/Nr./PLZ/Stadt/
+  // Bundesland getrennt) — kein Freitext-Raten. Land nur setzen, wenn Places es
+  // liefert (setLand zieht die Rechtsform-Liste nach); leere Felder überschreiben
+  // Bestehendes nicht.
+  function applyPlace(a: {
+    street: string; houseNumber: string; postalCode: string;
+    city: string; state: string; country: string;
+  }) {
+    setFirma((prev) => {
+      const next = { ...prev };
+      if (a.street) next.companyStreet = a.street;
+      if (a.houseNumber) next.companyHouseNumber = a.houseNumber;
+      if (a.postalCode) next.companyPostalCode = a.postalCode;
+      if (a.city) next.companyCity = a.city;
+      if (a.state) next.companyState = a.state;
+      if (a.country) {
+        const formen = rechtsformenFuerLand(a.country);
+        next.companyCountry = a.country;
+        if (!next.legalForm || !formen.includes(next.legalForm)) {
+          next.legalForm = formen[0];
+        }
+      }
+      return next;
     });
   }
 
@@ -168,19 +256,39 @@ export function OnboardingWizard({
         // Geburtsdatum nur senden, wenn ausgefüllt — kein leerer/erfundener Wert.
         ownerDob: firma.ownerDob?.trim() ? firma.ownerDob : undefined,
       });
-      if (res.ok) {
-        persist({ company_data_set: true });
-        setStep("done");
-      } else {
+      if (!res.ok) {
         setError(res.error);
+        return;
       }
+      // GATE (Regel „vollständig oder nichts"): Der Channex-Account (Portal-
+      // Group) MUSS existieren, bevor das Onboarding fertig ist — er ist die
+      // Basis für spätere Objekte/OTA-Anbindung. Fail-CLOSED: schlägt das
+      // Anlegen fehl, bleibt das Onboarding offen (kein company_data_set, kein
+      // „done"), mit klarer Meldung. Idempotent, daher bei Erneut-Versuch sicher.
+      const acct = await ensureChannexAccount();
+      if (!acct.ok) {
+        setError(acct.error);
+        return;
+      }
+      persist({ company_data_set: true });
+      // Weiche: Neukunde vs. Wechselkunde (Bestandsimport).
+      setStep("branch");
     });
   }
+
+  // Weiche beantworten: Zweig merken (DB + State) und dorthin springen.
+  function chooseCustomerType(kind: CustomerType) {
+    setCustomerType(kind);
+    persist({ customer_type: kind });
+    setStep(kind === "switch" ? "switch" : "done");
+  }
+
+  const isHotel = accommodationType === "hotel";
 
   function finish() {
     // Onboarding abschließen → Dashboard zeigt danach die normale Übersicht.
     startTransition(async () => {
-      await updateOnboarding({ completed: true });
+      await updateOnboarding({ customer_type: "new", completed: true });
       router.replace("/");
       router.refresh();
     });
@@ -298,11 +406,14 @@ export function OnboardingWizard({
               </NativeSelect>
             </Field>
 
-            {/* Adresse */}
+            {/* Straße = Places-Autocomplete: manuell tippbar UND befüllt bei
+                Auswahl Nr./PLZ/Stadt/Bundesland/Land strukturiert (kein Raten,
+                kein Extra-Suchfeld). */}
             <Field className="sm:col-span-8" label={t("company.street")}>
-              <Input
+              <AddressPlacesSearch
                 value={firma.companyStreet ?? ""}
-                onChange={(e) => setF("companyStreet", e.target.value)}
+                onChange={(v) => setF("companyStreet", v)}
+                onPick={applyPlace}
               />
             </Field>
             <Field className="sm:col-span-4" label={t("company.houseNumber")}>
@@ -500,6 +611,72 @@ export function OnboardingWizard({
         </Card>
       )}
 
+      {step === "branch" && (
+        <Card>
+          <h1 className="font-display text-2xl font-extrabold">
+            {t("branch.title")}
+          </h1>
+          <p className="text-muted-foreground">{t("branch.text")}</p>
+          <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+            {(
+              [
+                { value: "switch", icon: "ph:arrows-left-right" },
+                { value: "new", icon: "ph:sparkle" },
+              ] as const
+            ).map((opt) => {
+              const active = customerType === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => chooseCustomerType(opt.value)}
+                  className={cn(
+                    "flex items-start gap-3 rounded-(--radius) border p-4 text-left transition",
+                    active
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:bg-secondary/50",
+                  )}
+                >
+                  <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-secondary text-muted-foreground">
+                    <Icon icon={opt.icon} className="size-5" />
+                  </span>
+                  <span className="flex min-w-0 flex-col">
+                    <span className="text-sm font-medium">
+                      {t(`branch.${opt.value}Title`)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      {t(`branch.${opt.value}Text`)}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <Button variant="outline" onClick={() => setStep("tax")}>
+            {tc("back")}
+          </Button>
+        </Card>
+      )}
+
+      {step === "switch" && (
+        <Card>
+          <h1 className="font-display text-2xl font-extrabold">
+            {t("switch.title")}
+          </h1>
+          <p className="text-muted-foreground">{t("switch.intro")}</p>
+          <SwitcherImport accommodationType={accommodationType} />
+          <Button
+            variant="ghost"
+            onClick={() => setStep("branch")}
+            className="self-start"
+          >
+            <Icon icon="ph:arrow-left" className="mr-1 size-4" />
+            {tc("back")}
+          </Button>
+        </Card>
+      )}
+
       {step === "done" && (
         <Card>
           <span className="flex size-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
@@ -509,9 +686,53 @@ export function OnboardingWizard({
             {t("done.title")}
           </h1>
           <p className="text-muted-foreground">{t("done.text")}</p>
-          <Button onClick={finish} className="self-start">
-            {t("done.toDashboard")}
-          </Button>
+
+          {/* Reihenfolge belegt (Channex-Account steht bereits als Gate): jetzt
+              Objekt anlegen → Preise → Portale verbinden. Der vollwertige
+              Objekte-/Kanäle-Bereich hat ALLE Pflichtfelder — hier nur der Weg
+              dorthin, kein halber Push. */}
+          <ol className="flex w-full flex-col gap-3">
+            <NextStep
+              n={1}
+              icon={isHotel ? "ph:bed" : "ph:house-line"}
+              title={t(isHotel ? "done.step1TitleHotel" : "done.step1Title")}
+              text={t(isHotel ? "done.step1TextHotel" : "done.step1Text")}
+            />
+            <NextStep
+              n={2}
+              icon="ph:tag"
+              title={t("done.step2Title")}
+              text={t("done.step2Text")}
+            />
+            <NextStep
+              n={3}
+              icon="ph:broadcast"
+              title={t("done.step3Title")}
+              text={t("done.step3Text")}
+            />
+          </ol>
+
+          <div className="flex flex-wrap gap-3">
+            <Button
+              onClick={() => {
+                startTransition(async () => {
+                  await updateOnboarding({
+                    customer_type: "new",
+                    completed: true,
+                  });
+                  router.replace("/objekte");
+                  router.refresh();
+                });
+              }}
+              disabled={pending}
+            >
+              <Icon icon="ph:plus" className="mr-1.5 size-4" />
+              {t(isHotel ? "done.ctaCreateRoom" : "done.ctaCreateObject")}
+            </Button>
+            <Button variant="outline" onClick={finish} disabled={pending}>
+              {t("done.toDashboard")}
+            </Button>
+          </div>
         </Card>
       )}
     </div>
@@ -519,6 +740,32 @@ export function OnboardingWizard({
 }
 
 // --- Hilfskomponenten -------------------------------------------------------
+// Ein nummerierter „nächster Schritt" im geführten Fertig-Bildschirm.
+function NextStep({
+  n,
+  icon,
+  title,
+  text,
+}: {
+  n: number;
+  icon: string;
+  title: string;
+  text: string;
+}) {
+  return (
+    <li className="flex items-start gap-3 rounded-(--radius) border border-border p-3">
+      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-secondary text-sm font-semibold">
+        {n}
+      </span>
+      <Icon icon={icon} className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+      <span className="flex flex-col">
+        <span className="font-medium">{title}</span>
+        <span className="text-sm text-muted-foreground">{text}</span>
+      </span>
+    </li>
+  );
+}
+
 function Card({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col items-start gap-4 rounded-2xl border border-border bg-card p-8 shadow-sm">
@@ -554,8 +801,11 @@ function Field({
 
 function ProgressBar({ step }: { step: Step }) {
   const tc = useTranslations("common");
-  const order: Step[] = ["welcome", "type", "company", "tax", "done"];
-  const idx = order.indexOf(step);
+  // branch/switch/done sind alternative Endzustände nach der Weiche → als letzter
+  // Schritt gezählt (Firmendaten stehen, nur noch Zweig-Aktion).
+  const order: Step[] = ["welcome", "type", "company", "tax", "branch"];
+  const endStates: Step[] = ["branch", "switch", "done"];
+  const idx = endStates.includes(step) ? order.length - 1 : order.indexOf(step);
   const pct = Math.round((idx / (order.length - 1)) * 100);
   return (
     <div className="w-full">

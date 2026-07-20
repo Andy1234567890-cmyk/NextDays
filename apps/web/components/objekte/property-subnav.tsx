@@ -31,6 +31,7 @@ const GROUPS: { labelKey: string; items: SubnavItem[] }[] = [
       { slug: "preise", titleKey: "itemPrices", icon: "ph:tag" },
       { slug: "zusatzleistungen", titleKey: "itemAddons", icon: "ph:plus-circle" },
       { slug: "verfuegbarkeit", titleKey: "itemAvailability", icon: "ph:calendar-blank" },
+      { slug: "kanaele", titleKey: "itemChannels", icon: "ph:broadcast" },
       { slug: "richtlinien", titleKey: "itemPolicies", icon: "ph:file-text" },
       { slug: "saisonpreise", titleKey: "itemSeasonalPrices", icon: "ph:sun" },
     ],

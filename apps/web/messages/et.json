@@ -62,7 +62,9 @@
         "vatOrTax": "KMKR või maksukohustuslase number"
       },
       "state": "Liidumaa / piirkond",
-      "statePlaceholder": "nt Baieri"
+      "statePlaceholder": "nt Baieri",
+      "addressSearch": "Adresse suchen",
+      "addressSearchPlaceholder": "Adresse eingeben und aus der Liste wählen …"
     },
     "accommodation": {
       "title": "Sinu esimene majutus",
@@ -81,9 +83,19 @@
       }
     },
     "done": {
-      "title": "Valmis — sinu ettevõte on loodud!",
-      "text": "Seejärel loo majutused Majutuste alas, määra hinnad ja ühenda broneerimiskanalid.",
-      "toDashboard": "Juhtpaneelile"
+      "title": "Firmendaten gespeichert!",
+      "text": "Dein Konto ist eingerichtet. Jetzt fehlen noch drei Schritte, bis du Buchungen erhältst:",
+      "toDashboard": "Juhtpaneelile",
+      "step1Title": "Objekt anlegen",
+      "step1Text": "Lege dein erstes Ferienobjekt mit Fotos, Ausstattung und Adresse an.",
+      "step1TitleHotel": "Zimmer anlegen",
+      "step1TextHotel": "Lege dein erstes Zimmer mit Fotos, Ausstattung und Adresse an.",
+      "step2Title": "Preise & Verfügbarkeit",
+      "step2Text": "Hinterlege Grundpreis, Währung und Verfügbarkeit.",
+      "step3Title": "Portale verbinden",
+      "step3Text": "Verbinde Booking, Airbnb & Co. sowie deinen Marktplatz im Kanäle-Tab.",
+      "ctaCreateObject": "Erstes Objekt anlegen",
+      "ctaCreateRoom": "Erstes Zimmer anlegen"
     },
     "type": {
       "title": "Mida sa välja üürid?",
@@ -92,6 +104,73 @@
     "tax": {
       "title": "Maksud ja maksed",
       "text": "Maksuandmed ja makseaktiveerimise andmed."
+    },
+    "branch": {
+      "title": "Verkaufst du schon auf Buchungsportalen?",
+      "text": "Booking.com, Airbnb & Co. — hast du dort schon Objekte, oder fängst du neu an?",
+      "switchTitle": "Ja, ich wechsle",
+      "switchText": "Ich habe schon Objekte auf Booking, Airbnb & Co. und möchte sie importieren.",
+      "newTitle": "Nein, ich fange neu an",
+      "newText": "Ich lege meine Objekte neu an und verbinde die Portale danach."
+    },
+    "switch": {
+      "title": "Bestehende Objekte importieren",
+      "intro": "So holst du deine bestehenden Booking-/Airbnb-Objekte zu myNextDays — ohne Doppelbuchungen.",
+      "cutover": {
+        "title": "Wichtig vor dem Verbinden",
+        "a": "Trenne jedes Portal von deinem bisherigen System, bevor du es hier verbindest — pro Kanal darf immer nur EIN System pushen.",
+        "b": "Vergangene Buchungen und manuelle Sperren kommen NICHT automatisch mit. Trage sie nach dem Import selbst nach.",
+        "c": "Lass dein altes System als Backup laufen und beobachte die ersten Tage genau.",
+        "ack": "Ich habe das verstanden."
+      },
+      "step1": {
+        "title": "Objekt anlegen",
+        "text": "Lege für jedes bestehende Listing ein Objekt an — Name, Art und Grundpreis genügen zum Zuordnen.",
+        "count": "{count, plural, =0 {Noch keine Objekte} one {# Objekt} other {# Objekte}}"
+      },
+      "step2": {
+        "title": "Portal verbinden & zuordnen",
+        "text": "Verbinde Booking, Airbnb & Co. und ordne die Portal-Zimmer 1:1 deinen Objekten zu. Buchungen und Verfügbarkeit kommen danach automatisch.",
+        "connect": "Portal verbinden"
+      },
+      "pull": {
+        "button": "Objekte aus Portal holen",
+        "result": "{count, plural, =0 {Keine neuen Objekte gefunden} one {# Objekt übernommen} other {# Objekte übernommen}}"
+      },
+      "finishCta": "Import abschließen",
+      "finishHint": "Bitte bestätige zuerst den Hinweis oben und lege mindestens ein Objekt an.",
+      "bookings": {
+        "title": "Bestehende Buchungen einlesen",
+        "text": "Hol dir die Reservierungen deiner verbundenen Portale in deinen Kalender.",
+        "includePast": "Auch vergangene Buchungen einlesen",
+        "pastHint": "Hinweis: Portale liefern in der Regel nur Buchungen ab dem Zeitpunkt der Verbindung. Bereits abgereiste Gäste von davor sind oft nicht mehr abrufbar.",
+        "button": "Buchungen einlesen",
+        "result": "{count, plural, =0 {Keine Buchungen gefunden} one {# Buchung eingelesen} other {# Buchungen eingelesen}}"
+      },
+      "csv": {
+        "title": "Alte & direkte Buchungen per Datei importieren",
+        "text": "Für Buchungen, die nicht über die Portale kommen (Direktbuchungen, vergangene Reservierungen aus deinem alten System).",
+        "downloadTemplate": "Vorlage herunterladen",
+        "upload": "CSV hochladen",
+        "hint": "Lade die Vorlage, fülle sie aus (Datum als JJJJ-MM-TT) und lade sie wieder hoch. Pflicht: Objekt, Gastname, Anreise, Abreise. Doppelte Zeilen werden übersprungen.",
+        "result": "{imported} von {total} Buchungen importiert.",
+        "skipped": "{count, plural, one {# Zeile übersprungen (Duplikat/Objekt fehlt)} other {# Zeilen übersprungen (Duplikat/Objekt fehlt)}}",
+        "failed": "{count, plural, one {# Zeile mit Fehler} other {# Zeilen mit Fehlern}}:"
+      },
+      "lodgify": {
+        "title": "Buchungen aus Lodgify holen",
+        "text": "Wenn du von Lodgify wechselst: importiere deine Buchungen direkt per API-Schlüssel (nur lesend, es wird nichts in Lodgify geändert).",
+        "keyLabel": "Lodgify-API-Schlüssel",
+        "keyPlaceholder": "Aus Lodgify: Einstellungen → Public API",
+        "keyHint": "Der Schlüssel wird nur für diesen Import genutzt und nicht gespeichert. Wir lesen ausschließlich – wir ändern nichts in Lodgify.",
+        "preview": "Vorschau laden",
+        "import": "{count, plural, one {# Buchung importieren} other {# Buchungen importieren}}",
+        "previewResult": "{importable} von {total} Buchungen können importiert werden.",
+        "result": "{imported} von {total} Buchungen importiert."
+      },
+      "finish": {
+        "notRegistered": "Mindestens ein Objekt muss an die Buchungsportale übermittelt sein, bevor du das Onboarding abschließt. Verbinde in Schritt 2 ein Portal — dabei wird das Objekt automatisch übertragen."
+      }
     }
   },
   "nav": {
@@ -3672,6 +3751,29 @@
     }
   },
   "objects": {
+    "channelChips": {
+      "website": "Website",
+      "platform": "Plattform",
+      "portals": "Portale",
+      "state": {
+        "active": "Aktiv",
+        "paused": "Pausiert",
+        "not_connected": "Nicht eingerichtet",
+        "error": "Fehler"
+      }
+    },
+    "channelsTab": {
+      "title": "Kanäle",
+      "subtitle": "Steuere pro Kanal, wo dieses Objekt verkauft wird.",
+      "publishAll": "Überall veröffentlichen",
+      "publishedAll": "Objekt auf allen Kanälen veröffentlicht.",
+      "draftHint": "Dieses Objekt ist ein Entwurf und wird auf keinem Kanal verkauft. Setze es auf „Aktiv“, um zu veröffentlichen.",
+      "groupWebsite": "Website",
+      "groupPlatform": "Plattform",
+      "groupPortals": "Portale",
+      "connectPortal": "Portal verbinden",
+      "noPortals": "Noch kein Portal (Booking, Airbnb & Co.) für dieses Objekt verbunden."
+    },
     "IdLayout": {
       "loadError": "Objekti ei õnnestunud laadida: {error}"
     },
@@ -3761,6 +3863,7 @@
       "itemPrices": "Hinnad",
       "itemAddons": "Lisateenused",
       "itemAvailability": "Saadavus",
+      "itemChannels": "Kanäle",
       "itemPolicies": "Reeglid",
       "itemSeasonalPrices": "Hooajahinnad"
     },
@@ -4151,7 +4254,12 @@
       "planDeleted": "Hinnaplaan kustutatud.",
       "planCreated": "Hinnaplaan loodud.",
       "openCalendar": "Halda hindu",
-      "planConfirmDelete": "Kas kustutada see hinnaplaan? Koos sellega kustutatakse ka plaani kuupäevapõhised hinnad."
+      "planConfirmDelete": "Kas kustutada see hinnaplaan? Koos sellega kustutatakse ka plaani kuupäevapõhised hinnad.",
+      "currencyTitle": "Währung des Objekts",
+      "currencyHint": "Gilt für alle Preispläne dieses Objekts und für die Buchungsportale.",
+      "currencyNotSet": "Noch nicht festgelegt",
+      "currencyEditorSubtitle": "Die Währung gilt zentral für alle Preispläne dieses Objekts.",
+      "currencyEditorHint": "Wird die Währung geändert, übernehmen alle Preispläne die neue Währung. Die Zahlen bleiben unverändert."
     },
     "policiesForm": {
       "title": "Reeglid",

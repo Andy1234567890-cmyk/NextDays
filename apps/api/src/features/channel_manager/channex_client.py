@@ -647,11 +647,19 @@ class ChannexClient:
         page: int = 1,
         limit: int = 100,
         inserted_after: str | None = None,
+        arrival_from: str | None = None,
     ) -> dict[str, Any]:
         """GET /bookings für GENAU EINE Property (Initial-/Recovery-Import).
         Channex-Doku WARNT: NICHT periodisch nutzen — laufend läuft über den
         Revisions-Feed. Antwort: data[], meta{total,limit,page}, order
-        inserted_at desc."""
+        inserted_at desc.
+
+        Zwei Datumsfilter (Channex-Doku, bookings-collection):
+        - ``inserted_after`` → filter[inserted_at][gte]: wann Channex die
+          Buchung SAH (Recovery nach Ausfall ab Zeitpunkt X).
+        - ``arrival_from``   → filter[arrival_date][gte]: Anreisedatum (YYYY-MM-DD).
+          Für den Onboarding-Bestandsimport („alle künftigen Buchungen ab
+          heute") ist DAS der richtige Filter, nicht inserted_at."""
         params: dict[str, Any] = {
             "filter[property_id]": property_id,
             "pagination[page]": page,
@@ -659,6 +667,8 @@ class ChannexClient:
         }
         if inserted_after:
             params["filter[inserted_at][gte]"] = inserted_after
+        if arrival_from:
+            params["filter[arrival_date][gte]"] = arrival_from
         return self.get("bookings", params=params)
 
     # ----- Booking CRS (Buchungen in Channex anlegen/ändern; Beta) ------------

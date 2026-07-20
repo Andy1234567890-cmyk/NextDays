@@ -1,8 +1,9 @@
 """Pydantic-Schemas für den dashboard-Slice."""
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from typing import Literal
 
+from pydantic import BaseModel, Field
 
 
 class DashboardEntrySnapshot(BaseModel):
@@ -60,9 +61,16 @@ class OnboardingStatus(BaseModel):
     """Onboarding-Fortschritt des Tenants. Das Dashboard zeigt den Assistenten,
     bis `completed` true ist."""
 
+    # customer_type: "new" (Neukunde, legt Objekte neu an) vs. "switch"
+    # (Wechselkunde, importiert Bestands-Listings via Channex). None = Weiche
+    # noch offen.
+    customer_type: Literal["new", "switch"] | None = None
     has_ota: bool | None = None
     selected_portals: list[str] = Field(default_factory=list)
     company_data_set: bool = False
+    # imported_from_ota: mindestens ein Bestands-Listing wurde importiert
+    # (Fortschritt des Import-Schritts beim Wechselkunden, nicht nur Absicht).
+    imported_from_ota: bool = False
     object_created: bool = False
     price_set: bool = False
     channels_done: bool = False
@@ -72,9 +80,11 @@ class OnboardingStatus(BaseModel):
 class OnboardingUpdate(BaseModel):
     """Teil-Update des Onboarding-Status (nur gesetzte Felder werden geschrieben)."""
 
+    customer_type: Literal["new", "switch"] | None = None
     has_ota: bool | None = None
     selected_portals: list[str] | None = None
     company_data_set: bool | None = None
+    imported_from_ota: bool | None = None
     object_created: bool | None = None
     price_set: bool | None = None
     channels_done: bool | None = None

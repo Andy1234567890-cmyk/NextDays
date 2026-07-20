@@ -3,6 +3,28 @@
 Härtung des Mailcow-Hosts (`mail.mynextdays.dk`, `62.238.4.193`). Ein Mailserver ist
 ein permanentes Angriffsziel (Spam-Relay, Brute-Force auf SMTP/IMAP, offene Ports).
 
+## 0. Open-Relay-Schutz (Port 25/465) — verifiziert 2026-07-19
+
+Der wichtigste Mailserver-Schutz: der Server darf NIEMALS Mail von fremd nach fremd
+relayen (sonst Spam-Missbrauch → Blacklist in Stunden). Live gegengeprüft von einer
+ECHTEN externen IP (Relay-Versuch `attacker@evil.com` → `victim@gmail.com`):
+
+```
+454 4.7.1 <victim@gmail.com>: Relay access denied      ← korrekt abgelehnt
+```
+
+Postfix-Konfiguration (Mailcow-Default, bestätigt):
+- `smtpd_relay_restrictions = permit_mynetworks, permit_sasl_authenticated, defer_unauth_destination`
+- `smtpd_recipient_restrictions = … reject_invalid_helo_hostname, reject_unauth_destination`
+- `mynetworks = 127.0.0.0/8 172.22.1.0/24 [::1]/128 …` — NUR localhost + Docker-
+  internes Netz, KEINE öffentlichen IPs. Versand nach außen daher nur für
+  SASL-authentifizierte Nutzer (App über Port 587) oder interne Dienste.
+
+> Wichtig beim Testen: ein Relay-Test von localhost/vom Server SELBST wird
+> „angenommen", weil er aus dem vertrauten `172.22.1.0/24`-Docker-Netz kommt — das
+> ist KEIN offenes Relay. Der aussagekräftige Test läuft von einer fremden
+> öffentlichen IP (z. B. dem Coolify-Server) → muss `Relay access denied` liefern.
+
 ## 1. Firewall (UFW) — nur die nötigen Ports
 
 Mailcow braucht diese **eingehenden** Ports offen; alles andere wird geblockt.
@@ -99,6 +121,27 @@ per Cron gegen die großen DNSBL (Spamhaus, Spamcop, Barracuda, SORBS, CBL, PSBL
   steigern. Ein frischer Mailserver, der sofort viel versendet, wirkt verdächtig.
 - **Nach Freischaltung** (Port 25) extern testen: <https://www.mail-tester.com>
   (Ziel 10/10) prüft SPF/DKIM/DMARC/PTR/Reputation in einem Rutsch.
+
+## 10. Stand Live-Test (2026-07-19)
+
+Port 25/465 ausgehend bei Hetzner freigeschaltet (Limits-Formular), PTR/Reverse-DNS
+für IPv4 **und** IPv6 → `mail.mynextdays.dk` gesetzt (Hetzner-API, öffentlich
+propagiert). Ergebnis der End-to-End-Zustelltests:
+
+- **mail-tester.com: 10/10** — SPF pass, DKIM signiert+gültig (2048-bit), DMARC,
+  PTR, TLS 1.3 alle grün.
+- **Gmail:** zugestellt (`250 2.0.0 OK … gsmtp`).
+- **Microsoft/Outlook** (`*.mail.protection.outlook.com`): zugestellt (`250 2.6.0`).
+- **Apple/iCloud:** präventiv geblockt — `554 5.7.0 Blocked` via **Proofpoint
+  Dynamic Reputation (PDR)**. KEIN echtes DNSBL-Listing (Spamhaus ZEN/Barracuda/
+  SpamCop/SORBS/PSBL alle sauber; Spamhaus-`127.255.255.254` = Resolver-Rate-Limit,
+  kein Listing). Ursache: junge IP-Reputation (Server 13 Tage alt).
+
+**Maßnahmen gegen den iCloud/Proofpoint-Block:**
+1. Proofpoint-Delisting beantragt (2026-07-19, Ticket offen, Rückmeldung an
+   `developer@mynextdays.dk`): <https://support.proofpoint.com/dnsbl-lookup.cgi?ip=62.238.4.193>
+2. **Warmup läuft** — die ersten Tage nur wenige, echte Mails; Reputation baut sich
+   mit legitimem Zustellverlauf auf, Apple lockert dann automatisch.
 
 ## Verifikation (nach Umsetzung)
 ```bash

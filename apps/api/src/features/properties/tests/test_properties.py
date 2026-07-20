@@ -11,6 +11,7 @@ from pydantic import ValidationError
 
 from src.core.security import AuthContext
 from src.features.properties.schemas import (
+    ChannelState,
     PhotoUpdateRequest,
     PropertyCreate,
     PropertyType,
@@ -19,6 +20,7 @@ from src.features.properties.schemas import (
 from src.features.properties.service import (
     PropertiesService,
     PropertyError,
+    _derive_channels,
     _max_stay_of,
 )
 from src.main import create_app
@@ -653,3 +655,34 @@ def test_max_stay_of_defaults_zero_when_missing_or_invalid() -> None:
     assert _max_stay_of({"type_attributes": {}}) == 0
     assert _max_stay_of({"type_attributes": {"availability": {"maxStay": None}}}) == 0
     assert _max_stay_of({"type_attributes": {"availability": {"maxStay": "x"}}}) == 0
+
+
+# --- Kanal-Zustands-Ableitung (Ebene B, 0162) ---------------------------------
+def test_derive_channels_active_object_all_flags_on() -> None:
+    row = {"status": "active", "listed_on_website": True,
+           "listed_on_marketplace": True}
+    ch = _derive_channels(row, ChannelState.active)
+    assert ch.website == ChannelState.active
+    assert ch.marketplace == ChannelState.active
+    assert ch.portals == ChannelState.active
+
+
+def test_derive_channels_flag_off_is_paused_not_error() -> None:
+    # Kanal-Flag aus → paused (Nutzer-Wille), NIE error.
+    row = {"status": "active", "listed_on_website": False,
+           "listed_on_marketplace": True}
+    ch = _derive_channels(row, None)
+    assert ch.website == ChannelState.paused
+    assert ch.marketplace == ChannelState.active
+    # Keine Channex-Map → Portale nicht eingerichtet (kein erfundener Wert).
+    assert ch.portals == ChannelState.not_connected
+
+
+def test_derive_channels_draft_object_paused_local_channels() -> None:
+    # Nicht-aktives Objekt: lokale Kanäle können nicht verkaufen → paused
+    # (die UI dimmt zusätzlich anhand status).
+    row = {"status": "draft", "listed_on_website": True,
+           "listed_on_marketplace": True}
+    ch = _derive_channels(row, None)
+    assert ch.website == ChannelState.paused
+    assert ch.marketplace == ChannelState.paused

@@ -111,6 +111,50 @@ class BookingSyncResponse(BaseModel):
     errors: list[str] = Field(default_factory=list)
 
 
+class CsvBookingImportResponse(BaseModel):
+    """Ergebnis eines CSV-Bestandsimports (Alt-/Direkt-/vergangene Buchungen).
+    ``imported`` = neu angelegte + aktualisierte Reservierungen, ``skipped`` =
+    Zeilen ohne Wirkung (Duplikat/Objekt fehlt), ``failed`` = Fehlerzeilen mit
+    Meldung (1-basiert, inkl. Kopfzeile)."""
+
+    total_rows: int = 0
+    imported: int = 0
+    skipped: int = 0
+    failed: int = 0
+    errors: list[str] = Field(default_factory=list)
+
+
+class LodgifyBookingPreview(BaseModel):
+    """Eine Buchung aus der Lodgify-Vorschau (nur Anzeige, nichts geschrieben)."""
+
+    external_id: str
+    guest_name: str
+    arrival: str
+    departure: str
+    total: float | None = None
+    currency: str | None = None
+    source: str | None = None
+    status: str
+    # importable=False → wird beim echten Import übersprungen (Anfrage/Storno).
+    importable: bool = True
+
+
+class LodgifyPreviewResponse(BaseModel):
+    """Vorschau des Lodgify-Imports: was ankommt, bevor geschrieben wird."""
+
+    total: int = 0
+    importable: int = 0
+    items: list[LodgifyBookingPreview] = Field(default_factory=list)
+
+
+class LodgifyImportRequest(BaseModel):
+    """Anfrage für Vorschau/Import aus Lodgify. Der API-Key ist der EIGENE Key
+    des Kunden (nur lesend); er wird NICHT persistent gespeichert."""
+
+    api_key: str
+    include_past: bool = False
+
+
 # --- Kanäle (OTA-Verbindungen, inhouse) -------------------------------------
 class PortalField(BaseModel):
     """Ein Eingabefeld für die Verbinden-Maske eines Portals."""

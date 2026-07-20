@@ -10,6 +10,7 @@ from typing import Annotated
 from fastapi import (
     APIRouter,
     BackgroundTasks,
+    Body,
     Depends,
     Header,
     HTTPException,
@@ -17,6 +18,7 @@ from fastapi import (
     Request,
     status,
 )
+from fastapi.responses import PlainTextResponse
 
 from src.core.config import get_settings
 from src.core.security import (
@@ -45,7 +47,10 @@ from .schemas import (
     ConnectChannelRequest,
     ConnectionToggleRequest,
     CrsBookingRequest,
+    CsvBookingImportResponse,
     GuestReviewRequest,
+    LodgifyImportRequest,
+    LodgifyPreviewResponse,
     NoShowReportRequest,
     OAuthBeginRequest,
     OAuthBeginResponse,
@@ -82,6 +87,21 @@ _read = _write
 @router.get("/health", response_model=SliceHealth)
 def health(service: ChannelManagerServiceDep) -> SliceHealth:
     return service.health()
+
+
+@router.post("/ensure-account")
+def ensure_channex_account(
+    ctx: _write, service: ChannelManagerServiceDep
+) -> dict[str, str]:
+    """Channex-Account (Group) des Tenants VERIFIZIERT sicherstellen — vom
+    Onboarding vor dem Abschluss aufgerufen. Fail-CLOSED: Wirft (502/503), wenn
+    der Account nicht angelegt werden kann → das Onboarding bleibt unvollständig
+    (Regel „vollständig oder nichts"). Idempotent."""
+    try:
+        group_id = service.ensure_channex_account(ctx)
+        return {"channex_group_id": group_id}
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 # --- Property-Mapping --------------------------------------------------------
@@ -167,6 +187,77 @@ def sync_bookings(
     """Eingehende Kanal-Buchungen abrufen, speichern und bestätigen."""
     try:
         return service.sync_bookings(ctx)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/bookings/import", response_model=BookingSyncResponse)
+def import_existing_bookings(
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+    include_past: bool = False,
+) -> BookingSyncResponse:
+    """EINMALIGER Bestandsimport der OTA-Buchungen aller verbundenen Objekte
+    (Onboarding-Wechselkunde). include_past=false → nur Anreise ab heute;
+    include_past=true → auch vergangene (was Channex kennt)."""
+    try:
+        return service.import_existing_bookings(ctx, include_past=include_past)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/bookings/csv-template", response_class=PlainTextResponse)
+def booking_csv_template(
+    service: ChannelManagerServiceDep, ctx: _read
+) -> PlainTextResponse:
+    """Leere CSV-Vorlage (nur Kopfzeile) für den Bestandsimport herunterladen."""
+    return PlainTextResponse(
+        service.csv_booking_template(),
+        headers={
+            "Content-Disposition": 'attachment; filename="buchungen-vorlage.csv"'
+        },
+        media_type="text/csv",
+    )
+
+
+@router.post("/bookings/csv-import", response_model=CsvBookingImportResponse)
+def import_bookings_csv(
+    service: ChannelManagerServiceDep,
+    ctx: _write,
+    content: Annotated[str, Body(embed=True)],
+) -> CsvBookingImportResponse:
+    """CSV-Bestandsimport (Alt-/Direkt-/vergangene Buchungen). Jede Zeile isoliert;
+    Teil-Import: gültige Zeilen werden angelegt, Fehlerzeilen mit Meldung gemeldet."""
+    try:
+        return service.import_bookings_csv(ctx, content=content)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/bookings/lodgify/preview", response_model=LodgifyPreviewResponse)
+def preview_lodgify_import(
+    req: LodgifyImportRequest, service: ChannelManagerServiceDep, ctx: _write
+) -> LodgifyPreviewResponse:
+    """Vorschau des Lodgify-Imports (NUR LESEN, schreibt nichts). Der Nutzer
+    verifiziert damit gegen sein echtes Konto, bevor er importiert."""
+    try:
+        return service.preview_lodgify_import(
+            ctx, api_key=req.api_key, include_past=req.include_past
+        )
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/bookings/lodgify/import", response_model=CsvBookingImportResponse)
+def import_lodgify_bookings(
+    req: LodgifyImportRequest, service: ChannelManagerServiceDep, ctx: _write
+) -> CsvBookingImportResponse:
+    """Buchungen aus Lodgify (nur lesend) übernehmen. Dedup über lodgify:<id>;
+    Key wird NICHT gespeichert."""
+    try:
+        return service.import_lodgify_bookings(
+            ctx, api_key=req.api_key, include_past=req.include_past
+        )
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -766,6 +857,21 @@ def trigger_full_sync(
     """Voll-Abgleich DB→Channex einreihen (zusätzlich zum nächtlichen Lauf)."""
     try:
         return service.trigger_full_sync(ctx, map_id)
+    except ChannelManagerError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/reconcile", status_code=status.HTTP_202_ACCEPTED)
+def reconcile_tenant(
+    service: ChannelManagerServiceDep, ctx: _write
+) -> dict:
+    """Channex→DB-Spiegelung für DEN eigenen Tenant sofort ausführen (Onboarding-
+    Import: nach dem Verbinden eines Bestands-Kanals — v.a. Airbnb-OAuth, wo
+    Listings automatisch bei Channex erscheinen — die Objekte in die eigene DB
+    holen, ohne auf den 15-min-Pageview-Tick zu warten). Idempotent; Channex-
+    Ausfall ändert nichts. Gibt die Reconcile-Zähler zurück."""
+    try:
+        return service.reconcile_own_tenant(ctx)
     except ChannelManagerError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

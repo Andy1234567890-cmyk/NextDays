@@ -114,27 +114,43 @@ class ChannelsMixin:
         codes = {c.get("code") for c in raw}
         return code in codes
 
-    # Kuratierte Vorab-Anleitung je Kanal (white-label): was der Kunde ZUERST im
-    # OTA-Extranet tun muss, sonst schlägt test_connection still fehl. Nur für
-    # Kanäle, deren Prozess wir belegt kennen (Channex-Doku, live geprüft); der
-    # Rest bekommt keinen Hint (kein erfundener Text, Wurzel 4). Kein Provider-
-    # Name „Channex" im Kundentext — der Connectivity-Provider heißt „myNextDays".
+    # Vorab-Anleitung je Kanal (white-label): was der Kunde ZUERST im OTA-Extranet
+    # tun muss. ACHTUNG: der genaue Extranet-Pfad, der Provider-Anzeigename
+    # (Channex vs. myNextDays) und der Schrittname („XML-Vereinbarung") sind
+    # NOCH ZU VERIFIZIEREN (Recherche/Live-Prüfung offen) — bis dahin nur als
+    # vorläufig behandeln, nicht als belegte Wahrheit. Kein Hint = besser als ein
+    # falscher (Wurzel 4/keine erfundenen Aussagen). Kein „Channex" im Kundentext.
     _SETUP_HINTS: dict[str, str] = {
+        # Belegt (help.channex.io „Connect with Booking.com" + Booking-Partner-
+        # Doku): der Provider heißt im Extranet real „Channex" und MUSS so
+        # ausgewählt werden — White-Label endet an der OTA-Extranet-Grenze, der
+        # Hotelier findet den Eintrag sonst nicht. Ausdrücklich freigegebene
+        # Ausnahme zur „nie Channex im Kundentext"-Regel. Schritt heißt „XML
+        # Service Agreement" (Zustimmen), danach Waiting-Status bis zur Annahme.
         "BookingCom": (
-            "Wähle im Booking.com-Extranet unter „Konto → Connectivity-Anbieter“ "
-            "myNextDays als Anbieter und bestätige die XML-Vereinbarung. Trage "
-            "danach hier deine Booking.com-Hotel-ID ein."
+            "Gib im Booking.com-Extranet unter „Konto → Connectivity-Anbieter“ "
+            "im Suchfeld „Channex“ ein, wähle den Eintrag aus und stimme dem "
+            "„XML Service Agreement“ zu („Yes, I accept“). Kopiere oben im "
+            "Extranet deine Booking.com-Hotel-ID und trage sie hier ein — die "
+            "Verbindung wird danach automatisch freigeschaltet."
         ),
+        # Belegt (docs.channex.io Expedia-Guide + Expedia Partner Central):
+        # Provider heißt „Channex" und wird für BEIDE Optionen gewählt (Rates &
+        # Availability + Reservations). 2FA ist NUR Login-Schutz der Seite, keine
+        # „Provider-Bestätigung". Ausnahme zur „nie Channex im Kundentext"-Regel
+        # (freigegeben, sonst findet der Hotelier den Eintrag nicht).
         "Expedia": (
-            "Aktiviere im Expedia-Extranet unter „Zimmer & Preise → "
-            "Connectivity-Einstellungen“ myNextDays für Connectivity UND "
-            "Buchungen (inkl. 2-Faktor-Bestätigung). Trage dann deine Expedia-"
-            "Hotel-ID ein."
+            "Wähle im Expedia Partner Central unter „Zimmer & Preise → "
+            "Connectivity-Einstellungen“ (ggf. mit 2-Faktor-Login) „Channex“ als "
+            "Anbieter für BEIDE Optionen — Verfügbarkeit & Preise sowie "
+            "Reservierungen — und bestätige. Trage dann hier deine Expedia-"
+            "Property-ID ein."
         ),
+        # Airbnb läuft über OAuth (Button „Verbinden"), keine Extranet-ID-Eingabe.
         "AirBNB": (
-            "Verbinde dein Airbnb-Konto über den Button „Verbinden“. Dein Konto "
-            "muss E-Mail-verifiziert sein und darf noch mit keinem anderen "
-            "Channel-Manager verbunden sein."
+            "Verbinde dein Airbnb-Konto über den Button „Verbinden“ und bestätige "
+            "den Zugriff im Airbnb-Login. Das Inserat darf noch mit keinem "
+            "anderen Channel-Manager verbunden sein."
         ),
     }
 
@@ -254,7 +270,18 @@ class ChannelsMixin:
         if not self._is_known_portal(portal_code):
             raise ChannelManagerError("Unbekanntes Portal.", status_code=400)
 
-        channex_property_id = self._require_property_mapping(db, tenant_id, property_id)
+        # Objekt bei Channex registrieren, falls noch nicht geschehen. Ein Objekt
+        # kann aktiv sein, ohne dass der (best-effort/asynchrone) Content-Sync je
+        # durchlief (z. B. beim Anlegen fehlte noch ein Preis) → dann existiert
+        # keine channex_property_map-Zeile und prepare/test_connection wäre nicht
+        # möglich. Statt hier mit 409 in eine Sackgasse zu laufen, holen wir die
+        # Registrierung nach: sync_content ist idempotent und legt Property +
+        # Room-Type + Rate-Plans an. Fehlt ein Preis, wirft sync_content ein
+        # klares 422 („Kein Preisplan vorhanden …") — die präzise, umsetzbare
+        # Meldung statt des irreführenden „noch nicht verbunden".
+        channex_property_id = self._ensure_property_registered(
+            db, tenant_id, property_id
+        )
         settings = self._inject_sandbox_settings(portal_code, property_id, settings)
 
         # 1) Zugangsdaten prüfen. ACHTUNG (live verifiziert): Channex liefert
@@ -965,9 +992,10 @@ class ChannelsMixin:
             )
         return out
 
-    def _require_property_mapping(
+    def _lookup_property_mapping(
         self, db: Client, tenant_id: str, property_id: str
-    ) -> str:
+    ) -> str | None:
+        """Channex-Property-UUID der Registrierung lesen — None, wenn keine."""
         pm = (
             db.table("channex_property_map")
             .select("channex_property_id")
@@ -977,12 +1005,78 @@ class ChannelsMixin:
             .limit(1)
             .execute()
         )
-        if not pm.data:
+        return pm.data[0]["channex_property_id"] if pm.data else None
+
+    def _require_property_mapping(
+        self, db: Client, tenant_id: str, property_id: str
+    ) -> str:
+        channex_property_id = self._lookup_property_mapping(db, tenant_id, property_id)
+        if channex_property_id is None:
             raise ChannelManagerError(
                 "Objekt ist noch nicht mit dem Channel-Manager verbunden.",
                 status_code=409,
             )
-        return pm.data[0]["channex_property_id"]
+        return channex_property_id
+
+    def _ensure_property_registered(
+        self, db: Client, tenant_id: str, property_id: str
+    ) -> str:
+        """Registrierung sicherstellen: existiert die Map-Zeile, sie zurückgeben;
+        sonst den (idempotenten) Content-Sync nachholen, der Property + Room-Type
+        + Rate-Plans anlegt und die Map schreibt. sync_content wirft ein präzises
+        422, wenn Voraussetzungen fehlen (kein Preis/Titel/Währung) — das ist die
+        umsetzbare Meldung, die die UI dem Nutzer zeigen soll (statt 409)."""
+        # HOTEL: alle aktiven Zimmer des Betriebs registrieren, nicht nur das
+        # aufgerufene — sonst wäre die Mapping-Liste (welches Booking-Zimmer ist
+        # welches Objekt) unvollständig. Die Zimmer landen als Room-Types unter
+        # DERSELBEN Property (eine Booking-Hotel-ID), jedes mit eigener Rate. Bei
+        # vacation_rental nur das eine Objekt (eigene Property/ID pro FeWo).
+        if self._is_hotel_tenant(db, tenant_id):
+            self._register_all_hotel_rooms(db, tenant_id)
+
+        existing = self._lookup_property_mapping(db, tenant_id, property_id)
+        if existing is not None:
+            return existing
+        # Nachregistrieren. Währung lädt sync_content selbst aus der DB (Wurzel 4).
+        self.sync_content(tenant_id, property_id=property_id, currency=None)
+        registered = self._lookup_property_mapping(db, tenant_id, property_id)
+        if registered is None:
+            # sync_content lief ohne Fehler durch, schrieb aber keine Map — echter
+            # Datenfehler, nicht verschlucken (Wurzel 5).
+            raise ChannelManagerError(
+                "Objekt konnte nicht mit dem Channel-Manager verbunden werden.",
+                status_code=409,
+            )
+        return registered
+
+    def _register_all_hotel_rooms(self, db: Client, tenant_id: str) -> None:
+        """HOTEL: jedes aktive Zimmer-Objekt bei Channex registrieren (idempotent),
+        damit alle als Room-Types unter DERSELBEN Property (eine Booking-Hotel-ID)
+        landen. Best-effort je Zimmer — ein Zimmer ohne Preis (sync_content 422)
+        stoppt die übrigen nicht; es fehlt dann nur in der Mapping-Liste, bis ein
+        Preis hinterlegt ist. Der Hauptpfad (das aufgerufene Objekt) prüft danach
+        selbst, ob seine Registrierung wirklich entstand."""
+        rooms = (
+            db.table("properties")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("status", "active")
+            .execute()
+        ).data or []
+        for room in rooms:
+            rid = room["id"]
+            if self._lookup_property_mapping(db, tenant_id, rid) is not None:
+                continue
+            try:
+                self.sync_content(tenant_id, property_id=rid, currency=None)
+            except ChannelManagerError as exc:
+                # z. B. „Kein Preisplan vorhanden" (422) — dieses Zimmer erst nach
+                # Preis-Anlage registrierbar. Andere Zimmer laufen weiter.
+                log.warning(
+                    "hotel_room_register_skipped",
+                    tenant_id=tenant_id, property_id=rid,
+                    error=getattr(exc, "message", str(exc)),
+                )
 
     def _require_group(
         self, db: Client, tenant_id: str, channex_property_id: str
@@ -1014,38 +1108,63 @@ class ChannelsMixin:
     def _local_rate_plan_options(
         self, db: Client, tenant_id: str, channex_property_id: str
     ) -> list[dict[str, Any]]:
-        """Gemappte Rate-Plans dieser Property (für die Zuordnungs-Auswahl)."""
+        """Gemappte Rate-Plans dieser Property (für die Zuordnungs-Auswahl).
+
+        WICHTIG (Hotel): eine geteilte Channex-Property hat MEHRERE property_map-
+        Zeilen — eine je Zimmer-Objekt. Alle einbeziehen (nicht limit(1)), sonst
+        fehlen im Zuordnungs-Dropdown alle Zimmer bis auf eines."""
         pm = (
             db.table("channex_property_map")
             .select("id")
             .eq("tenant_id", tenant_id)
             .eq("channex_property_id", channex_property_id)
-            .limit(1)
+            .is_("deleted_at", "null")
             .execute()
         )
         if not pm.data:
             return []
+        pm_ids = [row["id"] for row in pm.data]
         rts = (
             db.table("channex_room_type_map")
-            .select("id")
-            .eq("property_map_id", pm.data[0]["id"])
+            .select("id, local_unit_ref")
+            .in_("property_map_id", pm_ids)
             .is_("deleted_at", "null")
             .execute()
-        )
-        rt_ids = [r["id"] for r in (rts.data or [])]
+        ).data or []
+        rt_ids = [r["id"] for r in rts]
         if not rt_ids:
             return []
+        # Zimmernamen je Room-Type (local_unit_ref = property_id). Bei einer
+        # geteilten Hotel-Property gehören mehrere Zimmer zu EINER Property → der
+        # Rate-Plan-Titel allein ("Best Available Rate") ist doppeldeutig. Den
+        # Zimmernamen voranstellen, damit die Zuordnung eindeutig ist
+        # ("Twin Room · Best Available Rate").
+        unit_refs = [r["local_unit_ref"] for r in rts if r.get("local_unit_ref")]
+        titles: dict[str, str] = {}
+        if unit_refs:
+            props = (
+                db.table("properties")
+                .select("id, title")
+                .eq("tenant_id", tenant_id)
+                .in_("id", unit_refs)
+                .execute()
+            ).data or []
+            titles = {p["id"]: (p.get("title") or "") for p in props}
+        room_by_rt = {r["id"]: titles.get(r.get("local_unit_ref"), "") for r in rts}
         rps = (
             db.table("channex_rate_plan_map")
-            .select("id, title")
+            .select("id, title, room_type_map_id")
             .in_("room_type_map_id", rt_ids)
             .is_("deleted_at", "null")
             .execute()
         )
-        return [
-            {"rate_plan_map_id": r["id"], "title": r.get("title") or "Preisplan"}
-            for r in (rps.data or [])
-        ]
+        out = []
+        for r in rps.data or []:
+            rate_title = r.get("title") or "Preisplan"
+            room = room_by_rt.get(r.get("room_type_map_id"), "")
+            label = f"{room} · {rate_title}" if room else rate_title
+            out.append({"rate_plan_map_id": r["id"], "title": label})
+        return out
 
     def _channex_rate_plan_id_for_map(
         self, db: Client, tenant_id: str, rate_plan_map_id: str | None

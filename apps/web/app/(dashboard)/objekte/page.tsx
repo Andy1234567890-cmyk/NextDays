@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 
+import { ChannelChips } from "@/components/objekte/channel-chips";
 import { NewPropertyButton } from "@/components/objekte/new-property-button";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
 import { Card } from "@/components/ui/card";
@@ -78,6 +79,13 @@ export default async function ObjektePage() {
                   <span className="truncate text-xs text-muted-foreground">
                     {[p.postal_code, p.city].filter(Boolean).join(" ") || "—"}
                   </span>
+                  {/* Ebene B — pro-Kanal-Sichtbarkeit (getrennt vom Status-Badge
+                      oben). Website · Plattform · Portale mit Ampelpunkt. */}
+                  {p.channels && (
+                    <div className="mt-2">
+                      <ChannelChips channels={p.channels} status={p.status} />
+                    </div>
+                  )}
                 </div>
               </Card>
             </Link>

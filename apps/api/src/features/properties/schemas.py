@@ -9,6 +9,16 @@ from enum import StrEnum
 from pydantic import BaseModel, Field, field_validator
 
 from src.core.countries import normalize_country
+from src.features.owner_statements.currencies import normalize_currency
+
+
+def _validate_currency(value: str | None) -> str | None:
+    """Objektwährung auf einen unterstützten ISO-4217-Code normalisieren.
+
+    Leer bleibt leer (das Objekt hat dann noch keine bewusst gesetzte Währung →
+    symbollose Anzeige, kein erfundenes €, Wurzel 4). Ein nicht unterstützter
+    Code ist ein Datenfehler → 422."""
+    return normalize_currency(value)
 
 
 def _validate_country_iso2(value: str | None) -> str | None:
@@ -105,6 +115,16 @@ class PropertyBase(BaseModel):
     # (channex_property_map.sync_enabled). Marktplatz-Listung = status='active'
     # UND listed_on_marketplace (Migration 0159). Default an (Publish listet).
     listed_on_marketplace: bool = True
+    # Sichtbarkeit auf der eigenen Kunden-Website (Page-Builder) als eigener
+    # Vertriebskanal (Migration 0162) — pro-Kanal-Achse, getrennt von status,
+    # Marktplatz und OTA. Website-Sichtbarkeit = status='active' UND dieses Flag.
+    listed_on_website: bool = True
+
+    # Zentrale Währung DES OBJEKTS (Migration 0161). Gilt für ALLE Rate-Plans
+    # dieses Objekts (Channex verlangt 1 Objekt = 1 Währung). Nullable, kein
+    # Default — fehlt sie, rendert die Anzeige symbollos statt ein € zu erfinden
+    # (Wurzel 4). Ein nicht unterstützter Code → 422.
+    currency: str | None = None
 
     # Rental info: Größe, Einheiten, Gäste.
     max_guests: int = Field(default=1, ge=1, le=99)
@@ -134,6 +154,7 @@ class PropertyBase(BaseModel):
     type_attributes: dict = Field(default_factory=dict)
 
     _norm_country = field_validator("country")(_validate_country_iso2)
+    _norm_currency = field_validator("currency")(_validate_currency)
 
 
 class PropertyCreate(PropertyBase):
@@ -151,6 +172,12 @@ class PropertyUpdate(BaseModel):
     # Marktplatz-Kanal an/aus (0159) — pro-Kanal-Sichtbarkeit, unabhängig von
     # status und OTA. Toggle für „auf dem eigenen Marktplatz zeigen/verstecken".
     listed_on_marketplace: bool | None = None
+    # Website-Kanal an/aus (0162) — pro-Kanal-Sichtbarkeit, unabhängig von
+    # status, Marktplatz und OTA. Toggle für „auf der eigenen Website zeigen".
+    listed_on_website: bool | None = None
+    # Zentrale Objektwährung (0161) — beim Setzen ziehen alle Rate-Plans mit
+    # (service.update, Wurzel 1). Nicht unterstützter Code → 422.
+    currency: str | None = None
     max_guests: int | None = Field(default=None, ge=1, le=99)
     street: str | None = None
     house_number: str | None = None
@@ -164,8 +191,32 @@ class PropertyUpdate(BaseModel):
     amenities: list[str] | None = None
 
     _norm_country = field_validator("country")(_validate_country_iso2)
+    _norm_currency = field_validator("currency")(_validate_currency)
     photos: list[str] | None = None
     type_attributes: dict | None = None
+
+
+class ChannelState(StrEnum):
+    """Sichtbarkeits-Zustand eines Objekts PRO Vertriebskanal (Ebene B, getrennt
+    vom Lebenszyklus properties.status). Branchen-Standard-Zustandsmodell
+    (Guesty/Cloudbeds/SiteMinder): aktiv, pausiert (Nutzer-Wille, kein Alarm),
+    nicht eingerichtet, Fehler (Handlungsbedarf) — bewusst getrennte Zustände,
+    nicht „alles Nicht-Grüne = rot"."""
+
+    active = "active"          # Kanal-Flag an UND status='active' → sichtbar
+    paused = "paused"          # verbunden/aktivierbar, aber Kanal-Flag aus
+    not_connected = "not_connected"  # Kanal nicht eingerichtet (Portale ohne Map)
+    error = "error"            # Sync-/Verbindungsfehler (nur Portale möglich)
+
+
+class PropertyChannels(BaseModel):
+    """Abgeleiteter Kanal-Sichtbarkeitszustand je Objekt (nicht persistiert).
+    Speist die drei Kanal-Chips (Website · Plattform · Portale) auf der
+    Objektkarte. Portale ist ein Aggregat des Channex/OTA-Zustands."""
+
+    website: ChannelState
+    marketplace: ChannelState
+    portals: ChannelState
 
 
 class PropertyResponse(PropertyBase):
@@ -173,6 +224,9 @@ class PropertyResponse(PropertyBase):
     tenant_id: str
     created_at: str | None = None
     updated_at: str | None = None
+    # Abgeleiteter Kanal-Zustand (Ebene B) für die Kanal-Chips. Optional, weil
+    # nur die Listen-/Detail-Wege ihn befüllen; None = nicht berechnet.
+    channels: PropertyChannels | None = None
 
 
 class PropertyListResponse(BaseModel):

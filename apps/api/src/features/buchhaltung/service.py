@@ -444,6 +444,7 @@ class BuchhaltungService:
             "companyHouseNumber": s("company_house_number"),
             "companyPostalCode": s("company_postal_code"),
             "companyCity": s("company_city"),
+            "companyState": s("company_state"),
             "companyCountry": s("company_country"),
             # Kontakt
             "email": s("email"),
@@ -903,6 +904,7 @@ class BuchhaltungService:
             "company_house_number": g("companyHouseNumber") or g("company_house_number"),
             "company_postal_code": g("companyPostalCode") or g("zip") or g("company_postal_code"),
             "company_city": g("companyCity") or g("city") or g("company_city"),
+            "company_state": g("companyState") or g("company_state"),
             "company_country": g("companyCountry") or g("country") or g("company_country"),
             # Kontakt
             "email": g("email"),
@@ -1641,6 +1643,7 @@ def _company_representative_from_profile(profile: dict) -> dict | None:
     address = {
         "line1": line1,
         "city": profile.get("company_city"),
+        "state": profile.get("company_state"),
         "postal_code": profile.get("company_postal_code"),
         "country": profile.get("company_country"),
     }
@@ -1683,6 +1686,7 @@ def _connect_fields_from_profile(profile: dict) -> dict:
     address = {
         "line1": line1,
         "city": profile.get("company_city"),
+        "state": profile.get("company_state"),
         "postal_code": profile.get("company_postal_code"),
         "country": profile.get("company_country"),
     }

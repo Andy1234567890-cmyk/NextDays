@@ -187,6 +187,12 @@ class PropertyMappingMixin:
             row["description"] = content["description"]
         return row
 
+    def reconcile_own_tenant(self, ctx: AuthContext) -> dict[str, int]:
+        """Channex→DB-Spiegelung für den Tenant aus dem JWT sofort ausführen
+        (On-Demand aus dem Onboarding-Import). Tenant-Scope aus dem Kontext, dann
+        an reconcile_properties_for_tenant delegieren."""
+        return self.reconcile_properties_for_tenant(self._require_tenant(ctx))
+
     def reconcile_properties_for_tenant(self, tenant_id: str) -> dict[str, int]:
         """Spiegelt Channex→DB für EINEN Tenant (Channex = Wahrheit). Idempotent
         über channex_property_id. Channex-Ausfall → keine Änderung. Spiegelt

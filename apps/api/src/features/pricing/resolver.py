@@ -198,6 +198,25 @@ class PricingResolver:
             return _PricingConfig(None)
         return _PricingConfig(res[0] if res else None)
 
+    def _property_currency(self, property_id: str) -> str | None:
+        """Zentrale Objektwährung (properties.currency, Migration 0161) — die
+        Wahrheit, wenn kein Rate-Plan die Währung liefert. ECHTER gespeicherter
+        Wert, kein Fallback-Ersatz (Wurzel 4): fehlt sie, bleibt es None und die
+        Anzeige rendert symbollos, nie ein erfundenes €."""
+        try:
+            res = (
+                self._db()
+                .table("properties")
+                .select("currency")
+                .eq("id", property_id)
+                .limit(1)
+                .execute()
+            ).data or []
+        except Exception as exc:  # noqa: BLE001 — kein Kippen des Quotes
+            log.warning("property_currency_unavailable", error=str(exc))
+            return None
+        return (res[0].get("currency") if res else None) or None
+
     def _load_addons(
         self, property_id: str, addon_ids: list[str]
     ) -> dict[str, dict]:
@@ -633,9 +652,17 @@ class PricingResolver:
                 self._effective_for_day(day, overrides, dynamic, config, base, {})
                 for day in nights
             ]
-        # Rate-Plan-Währung gewinnt: sie ist die Verkaufs-Wahrheit (Channex pusht
-        # in ihr). config.currency greift nur, wenn kein Plan existiert.
-        currency = rp_currency or config.currency or ""
+        # Währung (Priorität, alles ECHTE Werte — kein EUR-Fallback, Wurzel 4):
+        # 1) Rate-Plan (Verkaufs-Wahrheit, in ihr pusht Channex; wird beim Setzen
+        #    der Objektwährung ohnehin auf diese gezogen — 0161), 2) zentrale
+        #    Objektwährung (properties.currency, greift auch ohne Rate-Plan),
+        #    3) property_pricing_config, sonst leer → symbollose Anzeige.
+        currency = (
+            rp_currency
+            or self._property_currency(req.property_id)
+            or config.currency
+            or ""
+        )
         priced = [d.price for d in per_day if d.price is not None]
         priceless = len(priced) == 0
         # Längenpreis verdrängt nur den Basispreis-Anteil (nicht Overrides/Weekday).

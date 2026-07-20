@@ -142,7 +142,7 @@ flowchart TB
             OWNST["owner_statements — Auszahlungs-Abrechnung (Provision je Objekt, EU-Steuer/Reverse-Charge, Storno, Mehrwährung via ECB-Tageskurs)"]
             INBOXL["inbox — Threads (OTA + eigene Plattform), Versand, Vorlagen/KI, geplante Nachrichten + planbare Automails (Zeit + Zuweisung Haus/Kanal)"]
             ADDON["addons — Zusatzleistungen/Upsells je Objekt (Medien, Basis, appears_in, wann-anzeigen); Verkauf via booking_engine + Gäste-Portal, Extra-Umsatz in Owner-Statement, Task-Trigger addon_purchased, Payment-gegatet"]
-            PROP["properties — Objekt-Stammdaten, Fotos, Typ-Attribute, Adress-Split, Owner-Scope (RLS)"]
+            PROP["properties — Objekt-Stammdaten, Fotos, Typ-Attribute, Adress-Split, Owner-Scope (RLS); zentrale Objektwährung (currency, 0161); pro-Kanal-Sichtbarkeit als eigene Achsen: Website (listed_on_website, 0162) + Plattform/Marktplatz (listed_on_marketplace, 0159), getrennt vom Lebenszyklus status; Portale-Zustand aus channex_property_map. PropertyResponse.channels = abgeleitete 3-Kanal-Chips (Website·Plattform·Portale, je active/paused/not_connected/error). Kanal-Steuerung auf ZWEI Ebenen (Lodgify-Muster): zentral /channels + pro Objekt /objekte/[id]/kanaele (property-channels.tsx: Website/Plattform-Toggles via PATCH, Portale-Zeilen togglen die OTA-Verbindung, Connect-Wizard mit presetPropertyId; Markup = Phase 2)"]
             PPORTAL["property_portal — Gastmodul je Objekt (Portal-Schalter, Türcode maskiert); Info-Texte in messaging"]
             RATES["rates — Saison-/Event-Preise, Rate-Plans, Aufschläge"]
             RES["reservations — Buchungen, Lifecycle, Gast-Maskierung (Daten-Split); nach Domäne geteilt (_base/reads/writes/service-Fassade), Objekt-Statistiken (KPIs + Tages-Sparklines + KPI-Detail) in property_stats.py"]
@@ -527,7 +527,12 @@ Brutto-Summe bleibt exakt der Gastpreis. Gast→Debitor-Brücke:
 `next_document_number`). `invoices.reservation_id` + partieller Unique-Index
 verhindern Doppelrechnungen (nach Storno ist eine neue möglich); Währung kommt
 aus dem Buchungs-Snapshot, sonst deterministisch aus
-`property_pricing_config.currency`/`rate_plans.currency`. Channex-Resync fasst
+`property_pricing_config.currency`/`rate_plans.currency`. **Zentrale
+Objektwährung (`0161`, ADR-0014):** `properties.currency` (nullable, kein
+Default) ist die eine Wahrheit je Objekt und gilt für ALLE Rate-Plans (Channex:
+1 Objekt = 1 Währung). Rate-Plan-Anlage/-Update erbt sie, ein abweichender Wert
+→ 422; Ändern zieht alle Pläne mit (Wurzel 1). Lese-Priorität überall:
+Objektwährung → `rate_plans.currency` → leer (kein `\|\| "EUR"`). Channex-Resync fasst
 Buchungen mit `checked_out_at` nicht mehr an (kein Status-Rollback);
 `invoices`/`invoice_line_items` sind in der Realtime-Publication.
 

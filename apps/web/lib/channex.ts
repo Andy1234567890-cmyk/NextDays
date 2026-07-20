@@ -98,6 +98,33 @@ export async function getChannexHealth(): Promise<Result<ChannexHealth>> {
   return call<ChannexHealth>("/health");
 }
 
+// Channex-Account (Portal-Group) des Tenants VERIFIZIERT sicherstellen. Vom
+// Onboarding VOR dem Abschluss aufgerufen — schlägt der Aufruf fehl, darf das
+// Onboarding NICHT als „fertig" gelten (Regel „vollständig oder nichts").
+export async function ensureChannexAccount(): Promise<
+  Result<{ channex_group_id: string }>
+> {
+  return call<{ channex_group_id: string }>("/ensure-account", {
+    method: "POST",
+  });
+}
+
+// Channex→DB-Spiegelung für den eigenen Tenant SOFORT ausführen (Onboarding-
+// Import: nach Verbinden eines Bestands-Kanals die Objekte in die DB holen,
+// ohne auf den 15-min-Tick zu warten). Idempotent.
+export async function reconcileTenant(): Promise<
+  Result<{ created: number; updated: number; soft_deleted: number; skipped: number }>
+> {
+  const res = await call<{
+    created: number;
+    updated: number;
+    soft_deleted: number;
+    skipped: number;
+  }>("/reconcile", { method: "POST" });
+  if (res.ok) revalidatePath("/objekte");
+  return res;
+}
+
 // --- Flow-Debugging (Portale-Sync-Verlauf) ----------------------------------
 export async function listChannexDebugTrace(
   propertyId?: string,
@@ -463,5 +490,109 @@ export async function syncChannexBookings(): Promise<
     errors: string[];
   }>("/bookings/sync", { method: "POST" });
   if (res.ok) revalidatePath("/marktplatz");
+  return res;
+}
+
+// CSV-Bestandsimport: Alt-/Direkt-/vergangene Buchungen, die NICHT über die
+// OTA-API kommen. Vorlage-Download + Upload des Datei-Inhalts (Text). Teil-
+// Import: gültige Zeilen werden angelegt, Fehlerzeilen einzeln gemeldet.
+export type CsvImportResult = {
+  total_rows: number;
+  imported: number;
+  skipped: number;
+  failed: number;
+  errors: string[];
+};
+
+export async function importBookingsCsv(
+  content: string,
+): Promise<Result<CsvImportResult>> {
+  const res = await call<CsvImportResult>("/bookings/csv-import", {
+    method: "POST",
+    body: { content },
+  });
+  if (res.ok) revalidatePath("/reservierungen");
+  return res;
+}
+
+// Leere CSV-Vorlage (nur Kopfzeile) als Text laden. Eigener fetch statt `api`
+// (der Endpunkt liefert text/csv, nicht JSON). Der Client baut daraus den
+// Datei-Download.
+export async function getCsvTemplate(): Promise<Result<string>> {
+  const token = await currentToken();
+  if (!token) return { ok: false, error: "Nicht angemeldet." };
+  try {
+    const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+    const res = await fetch(
+      `${base}/api/v1/channel-manager/bookings/csv-template`,
+      { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" },
+    );
+    if (!res.ok) return { ok: false, error: `Fehler ${res.status}`, status: res.status };
+    return { ok: true, data: await res.text() };
+  } catch {
+    return { ok: false, error: "Backend nicht erreichbar." };
+  }
+}
+
+// --- Lodgify-Import (nur lesend, aus dem alten PMS) -------------------------
+export type LodgifyPreviewItem = {
+  external_id: string;
+  guest_name: string;
+  arrival: string;
+  departure: string;
+  total: number | null;
+  currency: string | null;
+  source: string | null;
+  status: string;
+  importable: boolean;
+};
+export type LodgifyPreview = {
+  total: number;
+  importable: number;
+  items: LodgifyPreviewItem[];
+};
+
+// Vorschau: Buchungen aus Lodgify lesen und ANZEIGEN (schreibt nichts). Der
+// api_key ist der eigene Lodgify-Key des Kunden — nur im Request, nie gespeichert.
+export async function previewLodgifyImport(input: {
+  apiKey: string;
+  includePast: boolean;
+}): Promise<Result<LodgifyPreview>> {
+  return call<LodgifyPreview>("/bookings/lodgify/preview", {
+    method: "POST",
+    body: { api_key: input.apiKey, include_past: input.includePast },
+  });
+}
+
+export async function importLodgifyBookings(input: {
+  apiKey: string;
+  includePast: boolean;
+}): Promise<Result<CsvImportResult>> {
+  const res = await call<CsvImportResult>("/bookings/lodgify/import", {
+    method: "POST",
+    body: { api_key: input.apiKey, include_past: input.includePast },
+  });
+  if (res.ok) revalidatePath("/reservierungen");
+  return res;
+}
+
+// EINMALIGER Bestandsimport der OTA-Buchungen aller verbundenen Objekte
+// (Onboarding-Wechselkunde). includePast=false → nur Anreise ab heute;
+// includePast=true → auch vergangene (was Channex kennt — echte Alt-Buchungen
+// vor dem Connect sind über Channex ggf. nicht mehr abrufbar).
+export async function importExistingBookings(
+  includePast = false,
+): Promise<
+  Result<{ fetched: number; saved: number; acknowledged: number; errors: string[] }>
+> {
+  const res = await call<{
+    fetched: number;
+    saved: number;
+    acknowledged: number;
+    errors: string[];
+  }>(`/bookings/import?include_past=${includePast ? "true" : "false"}`, {
+    method: "POST",
+  });
+  if (res.ok) revalidatePath("/reservierungen");
   return res;
 }

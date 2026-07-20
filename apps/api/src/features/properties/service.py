@@ -22,12 +22,15 @@ from src.jobs.queue import (
 )
 
 from .schemas import (
+    ChannelState,
     PhotoUpdateRequest,
+    PropertyChannels,
     PropertyCreate,
     PropertyListResponse,
     PropertyPhoto,
     PropertyPhotoListResponse,
     PropertyResponse,
+    PropertyStatus,
     PropertyType,
     PropertyUpdate,
     SliceHealth,
@@ -148,8 +151,65 @@ class PropertiesService:
         if allowed is not None:
             query = query.in_("property_type", sorted(t.value for t in allowed))
         res = query.order("created_at", desc=True).execute()
-        items = [PropertyResponse(**_row(r)) for r in (res.data or [])]
+        rows = res.data or []
+        # Kanal-Zustände (Ebene B) für ALLE Objekte in EINEM Batch-Query holen
+        # (kein N+1). Portale = Channex/OTA-Aggregat je Objekt.
+        portals = self._portals_state_by_property(
+            tenant_id, [str(r["id"]) for r in rows]
+        )
+        items = [
+            PropertyResponse(
+                **_row(r), channels=_derive_channels(r, portals.get(str(r["id"])))
+            )
+            for r in rows
+        ]
         return PropertyListResponse(items=items, total=len(items))
+
+    def _portals_state_by_property(
+        self, tenant_id: str, property_ids: list[str]
+    ) -> dict[str, ChannelState]:
+        """Portale-Kanalzustand (OTA) je Objekt in EINEM Query ableiten.
+
+        WICHTIG: „Portale" meint die Verbindung zu einem BUCHUNGSPORTAL (Booking,
+        Airbnb …) — das lebt in channex_channel_connection. Die channex_property_map
+        bedeutet nur, dass das Objekt bei Channex REGISTRIERT ist (Voraussetzung,
+        aber KEIN verbundenes Portal). Grün nur bei echter, aktiver Portal-
+        Verbindung — sonst zeigte der Chip „verbunden", obwohl kein OTA dranhängt.
+          keine Portal-Verbindung          → not_connected
+          Verbindung mit last_error        → error (Handlungsbedarf)
+          aktive Verbindung (is_active)    → active
+          Verbindung vorhanden, pausiert   → paused
+        Kein erfundener Wert (Wurzel 4)."""
+        if not property_ids:
+            return {}
+        try:
+            # Die OTA-Verbindungen sind die Wahrheit für „Portale" — nicht die
+            # Registrierungs-Map. Ein Objekt kann bei Channex registriert sein
+            # (Map-Zeile) und trotzdem KEIN Portal verbunden haben.
+            conns = (
+                self._db.table("channex_channel_connection")
+                .select("property_id, is_active, last_error")
+                .eq("tenant_id", tenant_id)
+                .in_("property_id", property_ids)
+                .execute()
+            ).data or []
+        except Exception:  # noqa: BLE001 — Kanal-Info ist optional, kippt die Liste nie
+            log.warning("portals_state_query_failed", tenant_id=tenant_id)
+            return {}
+        # Je Objekt über alle seine Portal-Verbindungen aggregieren: ein Fehler
+        # dominiert, sonst genügt EINE aktive Verbindung für „active", sonst
+        # „paused" (verbunden, aber überall aus).
+        out: dict[str, ChannelState] = {}
+        for c in conns:
+            pid = str(c.get("property_id"))
+            if c.get("last_error"):
+                out[pid] = ChannelState.error
+            elif c.get("is_active"):
+                if out.get(pid) != ChannelState.error:
+                    out[pid] = ChannelState.active
+            elif pid not in out:
+                out[pid] = ChannelState.paused
+        return out
 
     def get(self, ctx: AuthContext, property_id: str) -> PropertyResponse:
         tenant_id = self._require_tenant(ctx)
@@ -170,7 +230,11 @@ class PropertiesService:
         )
         if not res.data:
             raise PropertyError("Objekt nicht gefunden.", status_code=404)
-        return PropertyResponse(**_row(res.data[0]))
+        row = res.data[0]
+        portals = self._portals_state_by_property(
+            tenant_id, [str(row["id"])]
+        ).get(str(row["id"]))
+        return PropertyResponse(**_row(row), channels=_derive_channels(row, portals))
 
     def _require_payments_ready(self, tenant_id: str) -> None:
         """Wirft, wenn der Tenant keinen von Stripe bestätigten Connected Account
@@ -202,6 +266,14 @@ class PropertiesService:
         self._require_type_matches_accommodation(tenant_id, req.property_type)
         payload = req.model_dump(mode="json")
         payload["tenant_id"] = tenant_id
+        # Ein neu angelegtes Objekt ist IMMER ein Entwurf. "Aktiv" (= verkaufbar)
+        # wird man ausschließlich über publish(), den einzigen Pfad, der die
+        # Portal-Registrierung (channex_property_map) blockierend erzwingt. Ein
+        # client-gesetztes status="active" hier würde ein Objekt "aktiv" machen,
+        # ohne dass es je bei den Portalen registriert ist — genau die Divergenz,
+        # die zu grauen Portale-Chips und 409 beim Verbinden führt. Serverseitig
+        # klemmen (der Anfrage nicht vertrauen, Wurzel 3).
+        payload["status"] = PropertyStatus.draft.value
         res = self._db.table("properties").insert(payload).execute()
         if not res.data:
             raise PropertyError("Objekt konnte nicht angelegt werden.", status_code=500)
@@ -240,6 +312,27 @@ class PropertiesService:
             ).sync_quantity_for_tenant(tenant_id)
         except Exception:  # noqa: BLE001 — best-effort, kein Kippen des Hauptpfads
             log.warning("subscription_quantity_sync_failed", tenant_id=tenant_id)
+
+    def _require_property_registered(self, tenant_id: str, property_id: str) -> None:
+        """Vorbedingung für "active": das Objekt MUSS bei den Portalen registriert
+        sein (channex_property_map-Zeile). Fehlt sie, ist ein direkter Wechsel auf
+        aktiv nicht erlaubt — der Nutzer muss über publish() (der die Registrierung
+        blockierend anlegt). Fail-closed mit umsetzbarer Meldung (Wurzel 3/5)."""
+        pm = (
+            self._db.table("channex_property_map")
+            .select("channex_property_id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        )
+        if not pm.data:
+            raise PropertyError(
+                "Objekt ist noch nicht an die Buchungsportale übermittelt — "
+                "bitte zuerst veröffentlichen.",
+                status_code=422,
+            )
 
     def _sync_to_channel_manager(
         self, tenant_id: str, *, property_id: str, title: str, currency: str | None
@@ -293,6 +386,14 @@ class PropertiesService:
             self._require_type_matches_accommodation(
                 tenant_id, PropertyType(changes["property_type"])
             )
+        # Wechsel auf "active" nur zulassen, wenn das Objekt bereits bei den
+        # Portalen registriert ist (channex_property_map). Sonst würde ein Objekt
+        # "aktiv" (= verkaufbar, in Kanal-Listen, abrechenbar), ohne dass es
+        # tatsächlich übermittelt wurde — der publish()-Pfad ist der einzige, der
+        # die Registrierung blockierend erzwingt. Der Anfrage nicht vertrauen,
+        # Scope/Vorbedingung serverseitig erzwingen (Wurzel 3), fail-closed.
+        if changes.get("status") == PropertyStatus.active.value:
+            self._require_property_registered(tenant_id, property_id)
         res = (
             self._db.table("properties")
             .update(changes)
@@ -313,7 +414,19 @@ class PropertiesService:
         # OTA-Content veraltet (z. B. Beschreibung nie an Booking/Airbnb). Nur bei
         # content-relevanten Änderungen (reine Preis-Updates synct der rates-Slice).
         row = res.data[0]
-        if _CONTENT_FIELDS & changes.keys():
+        # Objektwährung geändert → ALLE Rate-Plans dieses Objekts mitziehen
+        # (Wurzel 1: die Objektwährung ist die Wahrheit, kein Rate-Plan darf
+        # abweichen — Channex verlangt 1 Objekt = 1 Währung). Leeren-Setzen wird
+        # NICHT durchgereicht (rate_plans.currency ist NOT NULL): dann bleiben die
+        # Pläne unverändert. Danach Content-Resync, damit die Portale die neue
+        # Währung erhalten.
+        if "currency" in changes and changes.get("currency"):
+            self._apply_currency_to_rate_plans(
+                tenant_id, property_id, changes["currency"]
+            )
+        if (_CONTENT_FIELDS & changes.keys()) or (
+            "currency" in changes and changes.get("currency")
+        ):
             self._sync_to_channel_manager(
                 tenant_id,
                 property_id=property_id,
@@ -331,6 +444,28 @@ class PropertiesService:
             self._sync_subscription_quantity(tenant_id)
         log.info("property_updated", tenant_id=tenant_id, property_id=property_id)
         return PropertyResponse(**_row(row))
+
+    def _apply_currency_to_rate_plans(
+        self, tenant_id: str, property_id: str, currency: str
+    ) -> None:
+        """Objektwährung auf alle Rate-Plans des Objekts durchschreiben (Wurzel 1).
+
+        Die Objektwährung (properties.currency) ist die Wahrheit; ein Rate-Plan
+        darf keine abweichende Währung tragen. Scope über property_id +
+        tenant-eigenes Objekt (der Aufrufer hat das Objekt bereits tenant-gescopt
+        aktualisiert). Best-effort im Sinne von Wurzel 5: schlägt das Nachziehen
+        fehl, bleibt die Objektwährung gesetzt und ein erneutes Speichern greift
+        wieder — es darf den Objekt-Update-Hauptpfad nicht kippen."""
+        try:
+            self._db.table("rate_plans").update({"currency": currency}).eq(
+                "property_id", property_id
+            ).neq("currency", currency).execute()
+        except Exception:  # noqa: BLE001 — best-effort, kippt das Speichern nicht
+            log.warning(
+                "rate_plan_currency_sync_failed",
+                tenant_id=tenant_id,
+                property_id=property_id,
+            )
 
     def _push_max_stay(self, tenant_id: str, property_id: str, max_stay: int) -> None:
         """Maximalaufenthalt als ARI-Push-Job einreihen (Phase 2). 0 wird ebenfalls
@@ -743,7 +878,11 @@ class PropertiesService:
                 "veröffentlicht und an die Buchungsportale übertragen werden.",
                 status_code=422,
             )
-        currency = rates[0].get("currency") or "EUR"
+        # Währung NICHT hier auflösen und schon gar nicht auf "EUR" defaulten
+        # (Wurzel 4). None durchreichen — sync_content bestimmt die Objektwährung
+        # selbst (zentrale properties.currency → Rate-Plan) und schlägt fail-closed
+        # mit 422 fehl, wenn keine echte Währung existiert.
+        currency = row.get("currency") or None
 
         # 1) Status aktiv setzen UND den eigenen Marktplatz-Kanal listen (0159).
         #    Veröffentlichen = im Normalfall überall live (1 Klick → OTAs +
@@ -884,6 +1023,31 @@ class PropertiesService:
             self._sync_subscription_quantity(tenant_id)
 
         log.info("property_deleted", tenant_id=tenant_id, property_id=property_id)
+
+
+def _local_channel_state(status: str | None, flag: bool | None) -> ChannelState:
+    """Zustand eines LOKALEN Kanals (Website/Plattform) ableiten. Diese Kanäle
+    können keinen Sync-Fehler haben (kein externer Push) → nur active/paused.
+    Sichtbar (active) nur, wenn status='active' UND das Kanal-Flag an ist; sonst
+    paused. Der Lebenszyklus (status) wird auf der Karte separat als Badge oben
+    gezeigt; hier zählt nur die pro-Kanal-Sichtbarkeit."""
+    if status == "active" and bool(flag):
+        return ChannelState.active
+    return ChannelState.paused
+
+
+def _derive_channels(
+    r: dict, portals: ChannelState | None
+) -> PropertyChannels:
+    """Kanal-Zustände (Ebene B) für die drei Chips ableiten. Website/Plattform
+    aus den lokalen Flags, Portale aus dem vorberechneten Channex/OTA-Aggregat
+    (None → not_connected: kein Kanal eingerichtet, kein erfundener Wert)."""
+    status = r.get("status")
+    return PropertyChannels(
+        website=_local_channel_state(status, r.get("listed_on_website")),
+        marketplace=_local_channel_state(status, r.get("listed_on_marketplace")),
+        portals=portals or ChannelState.not_connected,
+    )
 
 
 def _row(r: dict) -> dict:

@@ -6,8 +6,10 @@
 //   2) Zimmer/Raten des Portals den eigenen Preisplänen zuordnen
 //   3) Verbinden — Backend legt an + aktiviert (Schritt prepare→connect)
 import { Icon } from "@iconify/react";
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
+import { channelLogo } from "@/lib/channel-logos";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
@@ -49,7 +51,14 @@ function buildMappingRows(
   otaRooms: OtaRoom[],
   ratePlans: LocalRatePlanOption[],
 ): MappingRow[] {
-  const defaultPlan = ratePlans[0]?.rate_plan_map_id ?? "";
+  // WICHTIG: KEINE Vorbelegung auf den ersten Preisplan. Ein OTA-Hotel kann viele
+  // Zimmer/Raten liefern (das Booking-Testhotel hat ein Dutzend); ein NextDays-
+  // Objekt ist aber GENAU EINE Einheit (1 Zimmer / 1 Ferienobjekt). Würde jede
+  // OTA-Zeile automatisch auf denselben ersten Plan gemappt, entstünde eine
+  // sinnlose 12:1-Zuordnung, und Channex lehnt sie ab ("channel with the same
+  // settings already exists" / doppelte Zuordnung). Der Nutzer ordnet bewusst
+  // NUR die eine Zeile zu, die seiner Einheit entspricht — alle anderen bleiben
+  // "— nicht zuordnen —" (leer). Beim Connect filtern wir leere Zeilen raus.
   const rows: MappingRow[] = [];
   for (const room of otaRooms) {
     for (const rate of room.rates ?? []) {
@@ -60,7 +69,7 @@ function buildMappingRows(
         rateLabel: rate.title ?? `Rate ${rate.id}`,
         pricing_type: rate.pricing === "OBP" ? "OBP" : "Standard",
         occupancy: rate.max_persons ?? 2,
-        rate_plan_map_id: defaultPlan,
+        rate_plan_map_id: "",
       });
     }
   }
@@ -343,6 +352,18 @@ export function ChannelConnectButton({
       setError("Bitte mindestens eine Zuordnung treffen.");
       return;
     }
+    // Ein Preisplan darf höchstens EINEM OTA-Zimmer+Rate zugeordnet sein (Channex-
+    // Regel: keine doppelten Mappings). Sonst wirft Channex einen kryptischen 422
+    // ("channel with the same settings already exists"). Hier vorab abfangen mit
+    // klarer Meldung, statt den Nutzer in den Provider-Fehler laufen zu lassen.
+    const usedPlans = mappings.map((m) => m.rate_plan_map_id);
+    if (new Set(usedPlans).size !== usedPlans.length) {
+      setError(
+        "Jeder Preisplan darf nur einem Portal-Zimmer zugeordnet werden. " +
+          "Bitte doppelte Zuordnungen auflösen.",
+      );
+      return;
+    }
     setError(null);
     const isOAuth = selected.connection_type === "oauth";
     startTransition(async () => {
@@ -426,7 +447,11 @@ export function ChannelConnectButton({
                         onClick={() => choosePortal(p)}
                         className="flex items-center gap-3 rounded-(--radius) border border-border p-3 text-left transition-colors hover:bg-secondary"
                       >
-                        <Icon icon={p.icon} className="size-6" />
+                        {/* Feste Logo-Spalte, damit ALLE Namen bündig starten —
+                            egal ob das Portal ein Logo hat oder nicht. */}
+                        <span className="flex w-[3.75rem] shrink-0 justify-center">
+                          <PortalLogo code={p.code} size={22} />
+                        </span>
                         <span className="font-medium">{p.label}</span>
                         {conn &&
                           (conn.is_active ? (
@@ -524,7 +549,7 @@ export function ChannelConnectButton({
                       icon="ph:info"
                       className="mt-0.5 size-4 shrink-0 text-accent"
                     />
-                    <p>{selected.setup_hint}</p>
+                    <p className="whitespace-pre-line">{selected.setup_hint}</p>
                   </div>
                 )}
                 {selected.fields.length === 0 ? (
@@ -550,7 +575,24 @@ export function ChannelConnectButton({
                     </div>
                   ))
                 )}
-                {error && <ErrorBox text={error} />}
+                {error && (
+                  <ErrorBox
+                    text={error}
+                    // Fehlt der Preis, ist das der einzige Grund, warum das Objekt
+                    // nicht an die Portale übermittelt werden konnte (das Backend
+                    // registriert es sonst automatisch beim Verbinden). Direkt den
+                    // Weg zum Preise-Schritt anbieten, statt den Nutzer raten zu
+                    // lassen.
+                    action={
+                      /preis/i.test(error) && propertyId
+                        ? {
+                            href: `/objekte/${propertyId}/preise`,
+                            label: "Preis anlegen",
+                          }
+                        : undefined
+                    }
+                  />
+                )}
                 <Button onClick={loadMapping} disabled={pending}>
                   {pending ? <Spinner text="Prüfe Zugang …" /> : "Weiter"}
                 </Button>
@@ -570,8 +612,8 @@ export function ChannelConnectButton({
                 ) : (
                   <>
                     <p className="text-sm text-muted-foreground">
-                      Ordne die Zimmer &amp; Raten des Portals deinen Preisplänen
-                      zu:
+                      Ordne jedes Zimmer des Portals deinem passenden Objekt zu
+                      (jedes behält seinen eigenen Preis):
                     </p>
                     <div className="flex flex-col gap-2">
                       {rows.map((r, i) => (
@@ -647,20 +689,56 @@ function StepBack({ onClick, text }: { onClick: () => void; text: string }) {
   );
 }
 
+// Echtes Original-Logo eines Portals in einer EINHEITLICHEN Box (gleiche Höhe +
+// Breite, zentriert, object-contain) — so sitzt jede Wortmarke/jedes Icon
+// unabhängig vom Seitenverhältnis sauber im selben Rahmen (sonst „kreuz und
+// quer"). Kein Logo → nichts rendern (kein Ersatz-Icon, Nutzer-Vorgabe); der
+// Aufrufer reserviert die Box-Breite selbst, damit die Namen bündig bleiben.
+function PortalLogo({ code, size }: { code: string; size: number }) {
+  const src = channelLogo(code);
+  if (!src) return null;
+  return (
+    <span
+      className="flex shrink-0 items-center justify-center"
+      style={{ height: size, width: size * 2.5 }}
+    >
+      <Image
+        src={src}
+        alt=""
+        width={size * 2.5}
+        height={size}
+        style={{ height: "auto", width: "auto" }}
+        className="max-h-full max-w-full object-contain"
+      />
+    </span>
+  );
+}
+
 function PortalHead({ portal }: { portal: SupportedPortal }) {
   return (
     <div className="flex items-center gap-3">
-      <Icon icon={portal.icon} className="size-7" />
+      <PortalLogo code={portal.code} size={28} />
       <span className="font-display text-lg font-bold">{portal.label}</span>
     </div>
   );
 }
 
-function ErrorBox({ text }: { text: string }) {
+function ErrorBox({
+  text,
+  action,
+}: {
+  text: string;
+  action?: { href: string; label: string };
+}) {
   return (
-    <p className="rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm text-destructive">
-      {text}
-    </p>
+    <div className="flex flex-col gap-2 rounded-(--radius) bg-destructive/10 px-3 py-2 text-sm text-destructive">
+      <p>{text}</p>
+      {action && (
+        <a href={action.href} className="font-medium underline">
+          {action.label}
+        </a>
+      )}
+    </div>
   );
 }
 

@@ -164,6 +164,61 @@ def test_create_rate_plan_writes_row() -> None:
     assert res.base_price == 120 and res.currency == "EUR" and res.min_stay == 2
 
 
+def test_create_rate_plan_inherits_object_currency() -> None:
+    # Objekt hat eine zentrale Währung (0161) → der neue Plan übernimmt sie,
+    # auch wenn der Request eine (gleiche) mitschickt.
+    svc = _svc({"properties": [{"id": "p-1", "title": "Villa", "currency": "EUR"}]})
+    res = svc.create(
+        _ctx(),
+        RatePlanCreate(property_id="p-1", base_price=100, currency="EUR"),
+    )
+    assert res.currency == "EUR"
+
+
+def test_create_rate_plan_rejects_mismatched_currency_422() -> None:
+    # Zentrale Objektwährung EUR, Request will USD → 422 (kein stilles Übernehmen).
+    svc = _svc({"properties": [{"id": "p-1", "title": "Villa", "currency": "EUR"}]})
+    try:
+        svc.create(
+            _ctx(),
+            RatePlanCreate(property_id="p-1", base_price=100, currency="USD"),
+        )
+        raise AssertionError("sollte 422 werfen")
+    except RateError as exc:
+        assert exc.status_code == 422
+
+
+def test_set_base_price_backfills_object_currency() -> None:
+    # Objekt ohne zentrale Währung: set_base_price setzt sie aus dem Request am
+    # Objekt (properties.currency wird befüllt — die eine Wahrheit).
+    canned = {
+        "properties": [{"id": "p-1", "title": "Villa"}],
+        "rate_plans": [],
+    }
+    svc = _svc(canned)
+    svc.set_base_price(
+        _ctx(), RatePlanCreate(property_id="p-1", base_price=99, currency="EUR")
+    )
+    db = svc._db()  # noqa: SLF001 — Test prüft den geschriebenen Patch
+    assert {"currency": "EUR"} in db.updated.get("properties", [])
+
+
+def test_set_base_price_enforces_object_currency_422() -> None:
+    # Objekt hat zentrale Währung EUR, Preis-Request will USD → 422.
+    canned = {
+        "properties": [{"id": "p-1", "title": "Villa", "currency": "EUR"}],
+        "rate_plans": [{"id": "rp-1", "property_id": "p-1"}],
+    }
+    svc = _svc(canned)
+    try:
+        svc.set_base_price(
+            _ctx(), RatePlanCreate(property_id="p-1", base_price=50, currency="USD")
+        )
+        raise AssertionError("sollte 422 werfen")
+    except RateError as exc:
+        assert exc.status_code == 422
+
+
 def test_list_reports_sync_status_per_plan() -> None:
     # Plan mit Datumspreisen + in_sync=True → 'synced'; ohne Preise → None.
     svc = _svc({

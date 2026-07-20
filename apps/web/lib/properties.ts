@@ -34,6 +34,13 @@ export type Property = {
   // Sichtbarkeit auf dem eigenen myNextDays-Marktplatz (/plattform) als eigener
   // Buchungskanal — getrennt von status und der OTA-Distribution (Migration 0159).
   listed_on_marketplace: boolean;
+  // Sichtbarkeit auf der eigenen Kunden-Website (Page-Builder) als eigener
+  // Vertriebskanal (Migration 0162) — getrennt von status, Marktplatz und OTA.
+  listed_on_website: boolean;
+  // Zentrale Währung DES OBJEKTS (Migration 0161). Gilt für alle Rate-Plans des
+  // Objekts (Channex: 1 Objekt = 1 Währung). Leer/null = noch nicht gesetzt →
+  // symbollose Anzeige (lib/currency), nie ein erfundenes € (Wurzel 4).
+  currency: string | null;
   max_guests: number;
   street: string | null;
   house_number: string | null;
@@ -52,6 +59,20 @@ export type Property = {
   type_attributes: Record<string, unknown>;
   created_at: string | null;
   updated_at: string | null;
+  // Abgeleiteter Kanal-Sichtbarkeitszustand (Ebene B) für die Kanal-Chips —
+  // vom Backend berechnet, nicht persistiert (0162). Optional, weil nur Listen-/
+  // Detail-Wege ihn liefern.
+  channels?: PropertyChannels;
+};
+
+// Zustand eines Objekts PRO Vertriebskanal (Guesty/Cloudbeds/SiteMinder-Modell):
+// aktiv, pausiert (Nutzer-Wille, kein Alarm), nicht eingerichtet, Fehler.
+export type ChannelState = "active" | "paused" | "not_connected" | "error";
+
+export type PropertyChannels = {
+  website: ChannelState;
+  marketplace: ChannelState;
+  portals: ChannelState;
 };
 
 export type PropertyInput = Partial<
