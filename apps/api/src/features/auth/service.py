@@ -103,7 +103,7 @@ class AuthService:
             raise
         # Channel-Manager: für den neuen Tenant eine Provider-Group anlegen
         # (non-blocking — Registrierung darf daran nie scheitern).
-        self._ensure_channel_manager_group(tenant_id, title=req.tenant_name)
+        self._ensure_channel_manager_group(tenant_id)
         # Frisch registriert → 2FA ist noch nie aktiv, login() liefert also immer
         # eine Session (nie mfa_required). Die Session direkt zurückgeben, damit
         # /register weiter SessionResponse ist (der Client meldet sofort an).
@@ -112,14 +112,15 @@ class AuthService:
             raise AuthError("Login nach Registrierung fehlgeschlagen.", status_code=500)
         return result.session
 
-    def _ensure_channel_manager_group(self, tenant_id: str, *, title: str) -> None:
-        """Legt die Channel-Manager-Group des Tenants an. Lazy-Import gegen
-        Zyklen; jeder Fehler wird verschluckt (rein additiv)."""
+    def _ensure_channel_manager_group(self, tenant_id: str) -> None:
+        """Legt die Channel-Manager-Group des Tenants an. Der Group-Name ist der
+        Betriebsname (tenants.name) — ensure_group lädt ihn selbst. Lazy-Import
+        gegen Zyklen; jeder Fehler wird verschluckt (rein additiv)."""
         try:
             from src.features.channel_manager.service import ChannelManagerService
 
             ChannelManagerService(service_client=self._service).ensure_group(
-                tenant_id, title=title or "Hotel"
+                tenant_id
             )
         except Exception as exc:  # noqa: BLE001 — darf Registrierung nie blockieren
             log.warning("channel_manager_group_failed", tenant_id=tenant_id, error=str(exc))

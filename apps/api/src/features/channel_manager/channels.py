@@ -4,6 +4,7 @@ Mixin des ChannelManagerService (verbatim aus service.py extrahiert;
 siehe service.py-Fassade). State (_db/_channex) und Basis-Helper kommen
 von der Fassade; Patch-Ziel für Modul-Helfer ist channel_manager.common.
 """
+# pylint: disable=too-many-lines
 from __future__ import annotations
 
 from typing import Any
@@ -314,14 +315,15 @@ class ChannelsMixin:
             raise self._wrap_channex(exc) from exc
         rooms = self._normalize_mapping_rooms(details)
 
-        # Unsere lokalen (gemappten) Rate-Plans dieser Property anbieten.
-        local_rate_plans = self._local_rate_plan_options(
-            db, tenant_id, channex_property_id
-        )
+        # Zuordnung auf ZIMMER-Ebene (Cloudbeds/SiteMinder-Standard: Zimmer→Zimmer,
+        # die Raten des Zimmers verbindet der Server automatisch). Wir bieten die
+        # ZIMMER (Objekte) dieser Property an — bei einer geteilten Hotel-Property
+        # alle Zimmer des Hotels, bei einer FeWo das eine Objekt.
+        local_rooms = self._local_room_options(db, tenant_id, channex_property_id)
         return {
             "portal": self._portal_label(portal_code),
-            "ota_rooms": rooms,            # [{id, title, rates:[{id, title, …}]}]
-            "rate_plans": local_rate_plans,  # [{rate_plan_map_id, title}]
+            "ota_rooms": rooms,        # [{id, title, rates:[{id, title, …}]}]
+            "rooms": local_rooms,      # [{local_property_id, title}]
         }
 
     @staticmethod
@@ -378,9 +380,9 @@ class ChannelsMixin:
         title: str | None, settings: dict[str, Any],
         mappings: list[dict[str, Any]],
     ) -> dict[str, Any]:
-        """Skill-Schritte 3+4: Kanal mit Zimmer/Raten-Zuordnung anlegen und
-        aktivieren. `mappings` = [{rate_plan_map_id, room_type_code(int),
-        rate_plan_code(int), occupancy, pricing_type, primary_occ}]."""
+        """Skill-Schritte 3+4: Kanal mit Zimmer-Zuordnung anlegen und aktivieren.
+        `mappings` = [{local_property_id, room_type_code, occupancy, pricing_type}]
+        — Zuordnung Zimmer→Zimmer; die Raten werden serverseitig expandiert."""
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
         if not self._is_known_portal(portal_code):
@@ -417,9 +419,23 @@ class ChannelsMixin:
         group_id = self._require_group(db, tenant_id, channex_property_id)
         settings = self._inject_sandbox_settings(portal_code, property_id, settings)
 
-        # rate_plans-Array bauen (gemeinsamer Helfer; echte OTAs INTEGER-Codes,
-        # OpenChannel/Sandbox String-Codes — Helfer unterscheidet das).
-        rate_plans = self._build_rate_plans(db, tenant_id, portal_code, mappings)
+        # OTA-Zimmer/Raten erneut holen: der Nutzer hat auf ZIMMER-Ebene zugeordnet
+        # (Booking-Zimmer → mein Zimmer). Für Channex muss jede Rate des OTA-Zimmers
+        # gemappt werden — die Raten expandiert _build_rate_plans aus diesen Details.
+        try:
+            details = self._channex.get_channel_mapping_details(
+                channel=portal_code, settings=settings
+            )
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+        ota_rooms = self._normalize_mapping_rooms(details)
+
+        # rate_plans-Array bauen: je zugeordnetem Zimmer werden die OTA-Raten des
+        # zugewiesenen OTA-Zimmers auf die Rate-Plans des Objekts gemappt (Primary
+        # zuerst). Echte OTAs INTEGER-Codes, Sandbox String-Codes — Helfer trennt das.
+        rate_plans = self._build_rate_plans(
+            db, tenant_id, portal_code, mappings, ota_rooms
+        )
 
         attrs: dict[str, Any] = {
             "channel": portal_code,
@@ -433,6 +449,18 @@ class ChannelsMixin:
         try:
             created = self._channex.create_channel(attrs)
         except ChannexError as exc:
+            # „channel with the same settings already exists": diese Booking-Hotel-ID
+            # ist bei Channex bereits mit einem Kanal verbunden — entweder in einem
+            # anderen Konto (bei den geteilten Booking-TEST-Hotel-IDs der Normalfall)
+            # oder das Objekt wurde bereits verbunden. Klare, umsetzbare Meldung
+            # statt des rohen „Validation Error" (Wurzel 5: präzise behandeln).
+            if "already exists" in (exc.message or "").lower():
+                raise ChannelManagerError(
+                    "Diese Hotel-ID ist bei den Buchungsportalen bereits mit einer "
+                    "Verbindung belegt. Prüfe, ob das Objekt schon verbunden ist — "
+                    "oder verwende die korrekte Hotel-ID deines Portal-Kontos.",
+                    status_code=409,
+                ) from exc
             raise self._wrap_channex(exc) from exc
 
         channel_id = (created.get("data") or {}).get("id")
@@ -507,50 +535,104 @@ class ChannelsMixin:
 
     def _build_rate_plans(
         self, db: Client, tenant_id: str, portal_code: str,
-        mappings: list[dict[str, Any]],
+        mappings: list[dict[str, Any]], ota_rooms: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
-        """rate_plans-Array aus Mapping-Zeilen (gemeinsam von connect_channel und
-        finalize_oauth_channel). Wirft bei unbekanntem Preisplan/Duplikat."""
+        """rate_plans-Array aus ZIMMER-Zuordnungen bauen (gemeinsam von
+        connect_channel und finalize_oauth_channel).
+
+        Der Nutzer ordnet Zimmer→Zimmer zu (Booking-Zimmer → mein Objekt). Booking/
+        Channex verlangen aber, dass JEDE Rate des OTA-Zimmers gemappt ist. Wir
+        expandieren deshalb je Zuordnung: die Raten des OTA-Zimmers werden auf die
+        Rate-Plans des Objekts gepaart — der erste Rate-Plan ist die Primary/
+        Standard-Rate; hat das OTA-Zimmer mehr Raten als das Objekt Rate-Plans,
+        laufen die überzähligen ebenfalls auf die Primary (Standard-Verhalten, s.
+        Booking „derived rate plan"). Wirft, wenn ein zugeordnetes Objekt keinen
+        Rate-Plan hat oder ein OTA-Zimmer keine Rate liefert."""
         is_sandbox = portal_code == self._SANDBOX_CODE
-        seen_pairs: set[tuple[Any, Any]] = set()
+        rooms_by_code = {str(r.get("id")): r for r in ota_rooms}
+        seen_local: set[str] = set()
         rate_plans: list[dict[str, Any]] = []
         for m in mappings:
-            channex_rate_plan_id = self._channex_rate_plan_id_for_map(
-                db, tenant_id, m.get("rate_plan_map_id")
+            local_property_id = m.get("local_property_id")
+            if not local_property_id:
+                continue
+            if local_property_id in seen_local:
+                raise ChannelManagerError(
+                    "Jedes Zimmer darf nur einem Portal-Zimmer zugeordnet werden.",
+                    status_code=422,
+                )
+            seen_local.add(local_property_id)
+
+            ota_room = rooms_by_code.get(str(m.get("room_type_code")))
+            if not ota_room:
+                raise ChannelManagerError(
+                    "Zugeordnetes Portal-Zimmer nicht gefunden.", status_code=422
+                )
+            ota_rates = ota_room.get("rates") or []
+            if not ota_rates:
+                raise ChannelManagerError(
+                    "Das Portal-Zimmer liefert keine Rate.", status_code=422
+                )
+
+            local_rate_maps = self._rate_plan_maps_for_property(
+                db, tenant_id, local_property_id
             )
-            if not channex_rate_plan_id:
+            if not local_rate_maps:
                 raise ChannelManagerError(
-                    "Unbekannter Preisplan in der Zuordnung.", status_code=422
+                    "Das zugeordnete Zimmer hat keinen Preisplan.", status_code=422
                 )
-            if is_sandbox:
-                room_code = m.get("room_type_code")
-                rate_code = m.get("rate_plan_code")
-            else:
-                room_code = self._as_int(m.get("room_type_code"))
-                rate_code = self._as_int(m.get("rate_plan_code"))
-            if room_code is None or rate_code is None:
+            channex_rate_plan_ids = [
+                self._channex_rate_plan_id_for_map(db, tenant_id, mid)
+                for mid in local_rate_maps
+            ]
+            channex_rate_plan_ids = [c for c in channex_rate_plan_ids if c]
+            if not channex_rate_plan_ids:
                 raise ChannelManagerError(
-                    "Zimmer-/Raten-Code fehlt oder ist ungültig.", status_code=422
+                    "Preisplan des Zimmers nicht bei den Portalen registriert.",
+                    status_code=422,
                 )
-            pair = (room_code, rate_code)
-            if pair in seen_pairs:
-                raise ChannelManagerError(
-                    "Eine OTA-Zimmer/Raten-Kombination darf nur einmal zugeordnet "
-                    "werden.", status_code=422,
+
+            room_code = (
+                m.get("room_type_code") if is_sandbox
+                else self._as_int(m.get("room_type_code"))
+            )
+            occupancy = self._as_int(m.get("occupancy")) or 2
+            pricing_type = m.get("pricing_type") or "Standard"
+            # 1:1 — jeder Rate-Plan wird GENAU EINMAL gemappt (Channex-Regel: keine
+            # doppelten Mappings, ein Rate-Plan darf nicht zweimal im Array stehen,
+            # sonst 422 „same settings already exists"). Es werden so viele Paare
+            # gebildet wie das Minimum aus OTA-Raten und lokalen Rate-Plans; hat das
+            # Objekt weniger Rate-Plans als das OTA-Zimmer Raten, bleiben die
+            # überzähligen OTA-Raten ungemappt (NIE ein Rate-Plan doppelt).
+            # strict=False: bewusst am kürzeren stoppen (überzählige OTA-Raten
+            # bleiben ungemappt, statt einen Rate-Plan doppelt zu verwenden).
+            for rate, channex_rate_plan_id in zip(
+                ota_rates, channex_rate_plan_ids, strict=False
+            ):
+                rate_code = (
+                    rate.get("id") if is_sandbox else self._as_int(rate.get("id"))
                 )
-            seen_pairs.add(pair)
-            rate_plans.append(
-                {
-                    "rate_plan_id": channex_rate_plan_id,
-                    "settings": {
-                        "room_type_code": room_code,
-                        "rate_plan_code": rate_code,
-                        "occupancy": self._as_int(m.get("occupancy")) or 2,
-                        "pricing_type": m.get("pricing_type") or "Standard",
-                        "primary_occ": bool(m.get("primary_occ", True)),
-                        "readonly": bool(m.get("readonly", False)),
-                    },
-                }
+                if room_code is None or rate_code is None:
+                    raise ChannelManagerError(
+                        "Zimmer-/Raten-Code fehlt oder ist ungültig.",
+                        status_code=422,
+                    )
+                rate_plans.append(
+                    {
+                        "rate_plan_id": channex_rate_plan_id,
+                        "settings": {
+                            "room_type_code": room_code,
+                            "rate_plan_code": rate_code,
+                            "occupancy": occupancy,
+                            "pricing_type": pricing_type,
+                            "primary_occ": True,
+                            "readonly": False,
+                        },
+                    }
+                )
+        if not rate_plans:
+            raise ChannelManagerError(
+                "Bitte mindestens ein Zimmer zuordnen.", status_code=422
             )
         return rate_plans
 
@@ -1105,66 +1187,73 @@ class ChannelsMixin:
             "Keine Channex-Gruppe für dieses Konto gefunden.", status_code=409
         )
 
-    def _local_rate_plan_options(
+    def _local_room_options(
         self, db: Client, tenant_id: str, channex_property_id: str
     ) -> list[dict[str, Any]]:
-        """Gemappte Rate-Plans dieser Property (für die Zuordnungs-Auswahl).
-
-        WICHTIG (Hotel): eine geteilte Channex-Property hat MEHRERE property_map-
-        Zeilen — eine je Zimmer-Objekt. Alle einbeziehen (nicht limit(1)), sonst
-        fehlen im Zuordnungs-Dropdown alle Zimmer bis auf eines."""
+        """Zimmer (Objekte) dieser Channex-Property für die Zuordnungs-Auswahl —
+        je Zimmer EIN Eintrag. Bei einer geteilten Hotel-Property alle Zimmer des
+        Hotels (mehrere property_map-Zeilen, alle einbeziehen), bei einer FeWo das
+        eine Objekt. Der Nutzer ordnet Booking-Zimmer → Zimmer zu; die Raten des
+        Zimmers verbindet der Server automatisch."""
         pm = (
             db.table("channex_property_map")
-            .select("id")
+            .select("property_id")
             .eq("tenant_id", tenant_id)
             .eq("channex_property_id", channex_property_id)
             .is_("deleted_at", "null")
             .execute()
-        )
-        if not pm.data:
+        ).data or []
+        prop_ids = [row["property_id"] for row in pm]
+        if not prop_ids:
             return []
-        pm_ids = [row["id"] for row in pm.data]
+        props = (
+            db.table("properties")
+            .select("id, title")
+            .eq("tenant_id", tenant_id)
+            .in_("id", prop_ids)
+            .execute()
+        ).data or []
+        return [
+            {"local_property_id": p["id"], "title": p.get("title") or "Zimmer"}
+            for p in props
+        ]
+
+    def _rate_plan_maps_for_property(
+        self, db: Client, tenant_id: str, property_id: str
+    ) -> list[str]:
+        """Alle rate_plan_map-IDs eines Zimmers (Objekts), Primary zuerst (älteste
+        Map = Standard-Rate). Für die automatische Raten-Verbindung: Booking
+        verlangt jede Rate gemappt, wir expandieren das Zimmer auf seine Raten."""
+        pm = (
+            db.table("channex_property_map")
+            .select("id")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .is_("deleted_at", "null")
+            .limit(1)
+            .execute()
+        ).data
+        if not pm:
+            return []
         rts = (
             db.table("channex_room_type_map")
-            .select("id, local_unit_ref")
-            .in_("property_map_id", pm_ids)
+            .select("id")
+            .eq("property_map_id", pm[0]["id"])
             .is_("deleted_at", "null")
             .execute()
         ).data or []
         rt_ids = [r["id"] for r in rts]
         if not rt_ids:
             return []
-        # Zimmernamen je Room-Type (local_unit_ref = property_id). Bei einer
-        # geteilten Hotel-Property gehören mehrere Zimmer zu EINER Property → der
-        # Rate-Plan-Titel allein ("Best Available Rate") ist doppeldeutig. Den
-        # Zimmernamen voranstellen, damit die Zuordnung eindeutig ist
-        # ("Twin Room · Best Available Rate").
-        unit_refs = [r["local_unit_ref"] for r in rts if r.get("local_unit_ref")]
-        titles: dict[str, str] = {}
-        if unit_refs:
-            props = (
-                db.table("properties")
-                .select("id, title")
-                .eq("tenant_id", tenant_id)
-                .in_("id", unit_refs)
-                .execute()
-            ).data or []
-            titles = {p["id"]: (p.get("title") or "") for p in props}
-        room_by_rt = {r["id"]: titles.get(r.get("local_unit_ref"), "") for r in rts}
         rps = (
             db.table("channex_rate_plan_map")
-            .select("id, title, room_type_map_id")
+            .select("id, created_at")
             .in_("room_type_map_id", rt_ids)
             .is_("deleted_at", "null")
+            .order("created_at")
             .execute()
-        )
-        out = []
-        for r in rps.data or []:
-            rate_title = r.get("title") or "Preisplan"
-            room = room_by_rt.get(r.get("room_type_map_id"), "")
-            label = f"{room} · {rate_title}" if room else rate_title
-            out.append({"rate_plan_map_id": r["id"], "title": label})
-        return out
+        ).data or []
+        return [r["id"] for r in rps]
 
     def _channex_rate_plan_id_for_map(
         self, db: Client, tenant_id: str, rate_plan_map_id: str | None

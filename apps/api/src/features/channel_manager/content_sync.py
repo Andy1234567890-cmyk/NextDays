@@ -36,9 +36,15 @@ class ContentSyncMixin:
     # Objekt-Anlage NICHT scheitern — wir loggen, merken den Fehler und können
     # später erneut synchronisieren. tenant_id kommt vom vertrauenswürdigen
     # Aufrufer (nicht aus User-Input).
-    def ensure_group(self, tenant_id: str, *, title: str) -> str | None:
+    def ensure_group(self, tenant_id: str) -> str | None:
         """Stellt sicher, dass für den Tenant eine Channex-Group existiert.
-        Gibt die channex_group_id zurück (oder None, wenn nicht konfiguriert/Fehler)."""
+        Gibt die channex_group_id zurück (oder None, wenn nicht konfiguriert/Fehler).
+
+        Die Group ist der BETRIEB (Tenant/Konto), NICHT ein Objekt/Zimmer. Ihr
+        Name ist deshalb IMMER der Tenant-Name (tenants.name) — die DB ist die
+        Wahrheit (Wurzel 1/4). Ein durchgereichter Objekt-Titel würde die Group
+        nach einem einzelnen Zimmer benennen (bei einem Hotel mit mehreren Zimmern
+        nach einem zufälligen), was Betrieb und Gebäude verwechselt."""
         if not self._channex.is_configured or self._db is None:
             return None
         existing = (
@@ -50,6 +56,12 @@ class ContentSyncMixin:
         )
         if existing.data:
             return existing.data[0]["channex_group_id"]
+        # Group-Name = Betriebsname des Tenants (nie ein Objekt-Titel). Fehlt er,
+        # ist das ein Datenfehler → kein erfundener Ersatz, klar abbrechen.
+        title = self._tenant_title(self._db, tenant_id)
+        if not title:
+            log.error("channex_group_no_tenant_title", tenant_id=tenant_id)
+            return None
         try:
             created = self._channex.create_group(title)
             group_id = (created.get("data") or {}).get("id")
@@ -524,8 +536,10 @@ class ContentSyncMixin:
                 ).execute()
                 return shared
 
-        # Neu anlegen + (falls vorhanden) der Tenant-Group zuordnen.
-        group_id = self.ensure_group(tenant_id, title=title)
+        # Neu anlegen + (falls vorhanden) der Tenant-Group zuordnen. Der Group-Name
+        # ist der Betriebsname (tenant), nicht dieser Objekttitel — ensure_group
+        # lädt ihn selbst aus der DB.
+        group_id = self.ensure_group(tenant_id)
         created = self._channex.create_property(attrs)
         channex_id = (created.get("data") or {}).get("id")
         if not channex_id:

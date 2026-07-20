@@ -117,13 +117,7 @@ class ChannelManagerService(
         wird hier NICHTS verschluckt: ohne Channex-Account kein fertiges Onboarding.
         Idempotent (existiert die Group, wird sie nur gelesen)."""
         tenant_id = self._require_tenant(ctx)
-        db = self._require_db()
-        # Group-Titel = Betriebsname (tenants.name); Fallback „Konto" nur, wenn
-        # der Name wirklich fehlt (kein erfundener Wert, nur ein neutrales Label).
-        trow = (
-            db.table("tenants").select("name").eq("id", tenant_id).limit(1).execute()
-        ).data
-        title = (trow[0].get("name") if trow else None) or "Konto"
+        self._require_db()
         if not self._channex.is_configured:
             raise ChannelManagerError(
                 "Die Portal-Anbindung ist derzeit nicht verfügbar. Bitte später "
@@ -131,7 +125,8 @@ class ChannelManagerService(
                 "eingerichtet.",
                 status_code=503,
             )
-        group_id = self.ensure_group(tenant_id, title=title or "Konto")
+        # Group-Name = Betriebsname (tenants.name); ensure_group lädt ihn selbst.
+        group_id = self.ensure_group(tenant_id)
         if not group_id:
             # ensure_group schluckt Channex-/DB-Fehler zu None — hier wird daraus
             # ein harter Fehler, damit das Onboarding nicht fälschlich abschließt.

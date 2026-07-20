@@ -245,29 +245,28 @@ class OtaRoom(BaseModel):
     rates: list[OtaRate] = Field(default_factory=list)
 
 
-class LocalRatePlanOption(BaseModel):
-    rate_plan_map_id: str
+class LocalRoomOption(BaseModel):
+    local_property_id: str
     title: str
 
 
 class PrepareChannelResponse(BaseModel):
-    """OTA-Zimmer/Raten + unsere lokalen Preispläne zum Zuordnen in der UI."""
+    """OTA-Zimmer + unsere Zimmer (Objekte) zum Zuordnen in der UI. Zuordnung auf
+    Zimmer-Ebene; die Raten des Zimmers verbindet der Server automatisch."""
 
     portal: str                          # menschlicher Name
     ota_rooms: list[OtaRoom] = Field(default_factory=list)
-    rate_plans: list[LocalRatePlanOption] = Field(default_factory=list)
+    rooms: list[LocalRoomOption] = Field(default_factory=list)
 
 
 class ChannelMapping(BaseModel):
-    """Eine Zuordnung: unser Preisplan ↔ OTA-Zimmer+Rate (Codes als Integer)."""
+    """Eine Zuordnung: unser Zimmer (Objekt) ↔ OTA-Zimmer. Die Raten des OTA-
+    Zimmers werden serverseitig auf die Rate-Plans des Objekts expandiert."""
 
-    rate_plan_map_id: str
-    room_type_code: int
-    rate_plan_code: int
+    local_property_id: str
+    room_type_code: int | str            # OTA-Zimmer-Code (Sandbox: String)
     occupancy: int = 2
     pricing_type: str = "Standard"
-    primary_occ: bool = True
-    readonly: bool = False
 
 
 class ConnectChannelRequest(BaseModel):

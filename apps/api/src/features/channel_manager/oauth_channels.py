@@ -210,7 +210,22 @@ class OAuthChannelsMixin:
             )
         channel_id = row[0]["channex_channel_id"]
 
-        rate_plans = self._build_rate_plans(db, tenant_id, portal_code, mappings)
+        # OTA-Zimmer/Raten holen: die Zuordnung erfolgt auf Zimmer-Ebene, jede Rate
+        # des OTA-Zimmers muss gemappt werden — _build_rate_plans expandiert das.
+        settings = self._inject_sandbox_settings(
+            portal_code, property_id, {"hotel_id": row[0].get("ota_hotel_id")}
+        )
+        try:
+            details = self._channex.get_channel_mapping_details(
+                channel=portal_code, settings=settings
+            )
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+        ota_rooms = self._normalize_mapping_rooms(details)
+
+        rate_plans = self._build_rate_plans(
+            db, tenant_id, portal_code, mappings, ota_rooms
+        )
 
         # Mapping auf den bestehenden Channel setzen + aktivieren.
         try:

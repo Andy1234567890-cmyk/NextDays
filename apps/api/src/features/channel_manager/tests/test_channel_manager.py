@@ -2987,6 +2987,15 @@ class _OAuthChannex(_ImportChannex):
     def get_channel(self, channel_id):  # noqa: ANN001, ANN201
         return {"data": {"attributes": {"settings": self._channel_settings or {}}}}
 
+    def get_channel_mapping_details(self, *, channel, settings):  # noqa: ANN001, ANN201
+        # OTA-Zimmer mit je einer Rate — die Zuordnung ist zimmer-basiert, die
+        # Rate wird serverseitig expandiert.
+        return {"data": {"rooms": [
+            {"id": 11, "title": "OTA Zimmer", "rates": [
+                {"id": 22, "title": "Standard", "max_persons": 2},
+            ]},
+        ]}}
+
     def create_one_time_token(self, *, property_id, group_id, username):  # noqa: ANN001, ANN201
         self.one_time_args.append(
             {"property_id": property_id, "group_id": group_id, "username": username}
@@ -3041,9 +3050,15 @@ def _seed_oauth(db, tenant_id="t1"):  # noqa: ANN001, ANN201
     db.tables["channex_group_map"].append(
         {"id": "g1", "tenant_id": tenant_id, "channex_group_id": "cx-group"}
     )
+    db.tables["channex_room_type_map"].append(
+        {"id": "rtm1", "tenant_id": tenant_id, "property_map_id": "m1",
+         "channex_room_type_id": "cx-rt", "local_unit_ref": "p1",
+         "deleted_at": None}
+    )
     db.tables["channex_rate_plan_map"].append(
         {"id": "rpm1", "tenant_id": tenant_id, "property_id": "p1",
-         "channex_rate_plan_id": "cx-rate", "deleted_at": None}
+         "room_type_map_id": "rtm1", "channex_rate_plan_id": "cx-rate",
+         "created_at": "2026-01-01T00:00:00Z", "deleted_at": None}
     )
 
 
@@ -3188,8 +3203,7 @@ def test_finalize_oauth_channel_maps_and_activates() -> None:
     res = _import_svc(channex, db).finalize_oauth_channel(
         ctx, property_id="p1", portal_code="AirBNB",
         mappings=[{
-            "rate_plan_map_id": "rpm1", "room_type_code": 11,
-            "rate_plan_code": 22, "occupancy": 2,
+            "local_property_id": "p1", "room_type_code": 11, "occupancy": 2,
         }],
     )
     assert res["is_active"] is True

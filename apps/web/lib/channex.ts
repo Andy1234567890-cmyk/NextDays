@@ -232,20 +232,21 @@ export type OtaRoom = {
   title: string | null;
   rates: OtaRate[];
 };
-export type LocalRatePlanOption = { rate_plan_map_id: string; title: string };
+// Zuordnung auf ZIMMER-Ebene (Cloudbeds/SiteMinder-Standard): der Nutzer ordnet
+// ein OTA-Zimmer einem eigenen Zimmer (Objekt) zu. Die Raten des Zimmers verbindet
+// der Server automatisch (Primary-Rate) — keine Rate-Auswahl im UI.
+export type LocalRoomOption = { local_property_id: string; title: string };
 export type PrepareResult = {
   portal: string;
   ota_rooms: OtaRoom[];
-  rate_plans: LocalRatePlanOption[];
+  rooms: LocalRoomOption[];
 };
 export type ChannelMapping = {
-  rate_plan_map_id: string;
+  // Das eigene Zimmer (Objekt), dem dieses OTA-Zimmer zugeordnet wird.
+  local_property_id: string;
   room_type_code: number;
-  rate_plan_code: number;
   occupancy?: number;
   pricing_type?: string;
-  primary_occ?: boolean;
-  readonly?: boolean;
 };
 
 export async function listPortals(): Promise<Result<SupportedPortal[]>> {

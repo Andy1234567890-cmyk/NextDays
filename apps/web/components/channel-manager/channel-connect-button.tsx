@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import {
   type ChannelMapping,
-  type LocalRatePlanOption,
+  type LocalRoomOption,
   type OtaRoom,
   type StoredChannelConnection,
   type SupportedPortal,
@@ -34,46 +34,35 @@ import { useRealtime } from "@/lib/use-realtime";
 // an den Eigentümer kopieren, dann auf Verbindung warten und Mapping setzen.
 type Step = "portal" | "credentials" | "oauth" | "mapping" | "done";
 
-// Eine Zeile in der Zuordnungs-Tabelle: ein OTA-Zimmer+Rate → ein Preisplan.
+// Eine Zeile in der Zuordnungs-Tabelle: ein OTA-ZIMMER → ein eigenes Zimmer.
+// Zuordnung auf Zimmer-Ebene (Cloudbeds/SiteMinder-Standard); die Raten des
+// Zimmers verbindet der Server automatisch. Kein Rate-Feld im UI.
 type MappingRow = {
   room_type_code: number;
-  rate_plan_code: number;
   roomLabel: string;
-  rateLabel: string;
+  rateSummary: string; // die Raten des OTA-Zimmers, nur zur Anzeige
   pricing_type: string;
   occupancy: number;
-  rate_plan_map_id: string; // gewählter lokaler Preisplan
+  local_property_id: string; // gewähltes eigenes Zimmer (Objekt)
 };
 
-// Vorbelegung der Zuordnungs-Tabelle (Credential- UND OAuth-Pfad): jede
-// OTA-Zimmer/Rate-Kombination eine Zeile, Preisplan = erster lokaler.
-function buildMappingRows(
-  otaRooms: OtaRoom[],
-  ratePlans: LocalRatePlanOption[],
-): MappingRow[] {
-  // WICHTIG: KEINE Vorbelegung auf den ersten Preisplan. Ein OTA-Hotel kann viele
-  // Zimmer/Raten liefern (das Booking-Testhotel hat ein Dutzend); ein NextDays-
-  // Objekt ist aber GENAU EINE Einheit (1 Zimmer / 1 Ferienobjekt). Würde jede
-  // OTA-Zeile automatisch auf denselben ersten Plan gemappt, entstünde eine
-  // sinnlose 12:1-Zuordnung, und Channex lehnt sie ab ("channel with the same
-  // settings already exists" / doppelte Zuordnung). Der Nutzer ordnet bewusst
-  // NUR die eine Zeile zu, die seiner Einheit entspricht — alle anderen bleiben
-  // "— nicht zuordnen —" (leer). Beim Connect filtern wir leere Zeilen raus.
-  const rows: MappingRow[] = [];
-  for (const room of otaRooms) {
-    for (const rate of room.rates ?? []) {
-      rows.push({
-        room_type_code: Number(room.id),
-        rate_plan_code: Number(rate.id),
-        roomLabel: room.title ?? `Zimmer ${room.id}`,
-        rateLabel: rate.title ?? `Rate ${rate.id}`,
-        pricing_type: rate.pricing === "OBP" ? "OBP" : "Standard",
-        occupancy: rate.max_persons ?? 2,
-        rate_plan_map_id: "",
-      });
-    }
-  }
-  return rows;
+// Vorbelegung: EINE Zeile je OTA-Zimmer (nicht je Rate). Standard steht auf
+// "nicht zuordnen" — der Nutzer wählt bewusst sein Zimmer. Das OTA-Hotel kann
+// viele Zimmer liefern (Booking-Testhotel: ein Dutzend); zugeordnet werden nur
+// die, die zu einem eigenen Zimmer gehören.
+function buildMappingRows(otaRooms: OtaRoom[]): MappingRow[] {
+  return otaRooms.map((room) => {
+    const rates = room.rates ?? [];
+    const first = rates[0];
+    return {
+      room_type_code: Number(room.id),
+      roomLabel: room.title ?? `Zimmer ${room.id}`,
+      rateSummary: rates.map((r) => r.title ?? `Rate ${r.id}`).join(" · "),
+      pricing_type: first?.pricing === "OBP" ? "OBP" : "Standard",
+      occupancy: first?.max_persons ?? 2,
+      local_property_id: "",
+    };
+  });
 }
 
 export function ChannelConnectButton({
@@ -107,7 +96,7 @@ export function ChannelConnectButton({
   const [connections, setConnections] = useState<StoredChannelConnection[]>([]);
 
   const [otaRooms, setOtaRooms] = useState<OtaRoom[]>([]);
-  const [ratePlans, setRatePlans] = useState<LocalRatePlanOption[]>([]);
+  const [localRooms, setLocalRooms] = useState<LocalRoomOption[]>([]);
   const [rows, setRows] = useState<MappingRow[]>([]);
 
   const [error, setError] = useState<string | null>(null);
@@ -182,7 +171,7 @@ export function ChannelConnectButton({
     setSelected(null);
     setValues({});
     setOtaRooms([]);
-    setRatePlans([]);
+    setLocalRooms([]);
     setRows([]);
     setError(null);
     setOauthUrl(null);
@@ -281,8 +270,8 @@ export function ChannelConnectButton({
         return;
       }
       setOtaRooms(res.data.ota_rooms);
-      setRatePlans(res.data.rate_plans);
-      setRows(buildMappingRows(res.data.ota_rooms, res.data.rate_plans));
+      setLocalRooms(res.data.rooms);
+      setRows(buildMappingRows(res.data.ota_rooms));
       setStep("mapping");
     });
   }
@@ -329,8 +318,8 @@ export function ChannelConnectButton({
         return;
       }
       setOtaRooms(res.data.ota_rooms);
-      setRatePlans(res.data.rate_plans);
-      setRows(buildMappingRows(res.data.ota_rooms, res.data.rate_plans));
+      setLocalRooms(res.data.rooms);
+      setRows(buildMappingRows(res.data.ota_rooms));
       setStep("mapping");
     });
   }
@@ -339,27 +328,24 @@ export function ChannelConnectButton({
   function connect() {
     if (!selected || !propertyId) return;
     const mappings: ChannelMapping[] = rows
-      .filter((r) => r.rate_plan_map_id)
+      .filter((r) => r.local_property_id)
       .map((r) => ({
-        rate_plan_map_id: r.rate_plan_map_id,
+        local_property_id: r.local_property_id,
         room_type_code: r.room_type_code,
-        rate_plan_code: r.rate_plan_code,
         occupancy: r.occupancy,
         pricing_type: r.pricing_type,
-        primary_occ: true,
       }));
     if (mappings.length === 0) {
-      setError("Bitte mindestens eine Zuordnung treffen.");
+      setError("Bitte mindestens ein Zimmer zuordnen.");
       return;
     }
-    // Ein Preisplan darf höchstens EINEM OTA-Zimmer+Rate zugeordnet sein (Channex-
-    // Regel: keine doppelten Mappings). Sonst wirft Channex einen kryptischen 422
-    // ("channel with the same settings already exists"). Hier vorab abfangen mit
-    // klarer Meldung, statt den Nutzer in den Provider-Fehler laufen zu lassen.
-    const usedPlans = mappings.map((m) => m.rate_plan_map_id);
-    if (new Set(usedPlans).size !== usedPlans.length) {
+    // Ein eigenes Zimmer darf höchstens EINEM OTA-Zimmer zugeordnet werden (1:1,
+    // Cloudbeds-Regel: n:1 erzeugt Überbuchungen). Doppelte Zuordnung vorab
+    // abfangen, statt den Nutzer in den Provider-Fehler laufen zu lassen.
+    const usedRooms = mappings.map((m) => m.local_property_id);
+    if (new Set(usedRooms).size !== usedRooms.length) {
       setError(
-        "Jeder Preisplan darf nur einem Portal-Zimmer zugeordnet werden. " +
+        "Jedes Zimmer darf nur einem Portal-Zimmer zugeordnet werden. " +
           "Bitte doppelte Zuordnungen auflösen.",
       );
       return;
@@ -605,39 +591,41 @@ export function ChannelConnectButton({
                   text="Zugangsdaten"
                 />
                 <PortalHead portal={selected} />
-                {ratePlans.length === 0 ? (
-                  <ErrorBox text="Für dieses Objekt sind noch keine Preispläne hinterlegt. Lege zuerst einen Preis im Kalender an." />
+                {localRooms.length === 0 ? (
+                  <ErrorBox text="Für dieses Konto sind noch keine Zimmer mit Preis angelegt. Lege zuerst ein Zimmer mit Grundpreis an." />
                 ) : rows.length === 0 ? (
-                  <ErrorBox text="Das Portal liefert keine Zimmer/Raten. Prüfe die Zugangsdaten." />
+                  <ErrorBox text="Das Portal liefert keine Zimmer. Prüfe die Zugangsdaten." />
                 ) : (
                   <>
                     <p className="text-sm text-muted-foreground">
-                      Ordne jedes Zimmer des Portals deinem passenden Objekt zu
+                      Ordne jedes Zimmer des Portals deinem passenden Zimmer zu
                       (jedes behält seinen eigenen Preis):
                     </p>
                     <div className="flex flex-col gap-2">
                       {rows.map((r, i) => (
                         <div
-                          key={`${r.room_type_code}-${r.rate_plan_code}`}
+                          key={r.room_type_code}
                           className="flex flex-col gap-2 rounded-(--radius) border border-border p-3 sm:flex-row sm:items-center"
                         >
                           <div className="min-w-0 flex-1">
                             <p className="truncate font-medium">{r.roomLabel}</p>
-                            <p className="truncate text-sm text-muted-foreground">
-                              {r.rateLabel}
-                            </p>
+                            {r.rateSummary && (
+                              <p className="truncate text-sm text-muted-foreground">
+                                {r.rateSummary}
+                              </p>
+                            )}
                           </div>
                           <Icon
                             icon="ph:arrow-right"
                             className="hidden size-4 shrink-0 text-muted-foreground sm:block"
                           />
                           <NativeSelect
-                            value={r.rate_plan_map_id}
+                            value={r.local_property_id}
                             onChange={(e) =>
                               setRows((prev) =>
                                 prev.map((row, j) =>
                                   j === i
-                                    ? { ...row, rate_plan_map_id: e.target.value }
+                                    ? { ...row, local_property_id: e.target.value }
                                     : row,
                                 ),
                               )
@@ -645,12 +633,12 @@ export function ChannelConnectButton({
                             className="sm:w-56"
                           >
                             <option value="">— nicht zuordnen —</option>
-                            {ratePlans.map((rp) => (
+                            {localRooms.map((room) => (
                               <option
-                                key={rp.rate_plan_map_id}
-                                value={rp.rate_plan_map_id}
+                                key={room.local_property_id}
+                                value={room.local_property_id}
                               >
-                                {rp.title}
+                                {room.title}
                               </option>
                             ))}
                           </NativeSelect>
