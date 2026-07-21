@@ -11,13 +11,19 @@
   <header class="topbar">
     <div class="brand">my<span>NextDays</span></div>
     <nav class="topnav">
-      <a href="#" class="active">API-Referenz</a>
+      <a href="#" class="ver">Version 1.0</a>
+      <a href="#">Leitfäden</a>
+      <a href="#" class="active">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 6l-6 6 6 6M16 6l6 6-6 6"/></svg>
+        API-Referenz
+      </a>
     </nav>
     <label class="search">
-      <span>Suchen</span>
-      <input id="search" type="search" aria-label="Endpunkte durchsuchen" />
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg>
+      <input id="search" type="search" placeholder="Suchen" aria-label="Suchen" />
       <span class="kbd">⌘K</span>
     </label>
+    <a href="#" class="login">Einloggen</a>
   </header>
 
   <div class="layout">
@@ -26,8 +32,9 @@
     <aside class="example" id="example"></aside>
   </div>
 
-  <footer class="powered">myNextDays · REST-API v1 · Auto-Deploy aktiv</footer>
+  <footer class="powered">myNextDays · REST-API v1</footer>
 
+  <script src="./lang-icons.js"></script>
   <script src="./spec.js"></script>
   <script src="./app.js"></script>
 </body>
