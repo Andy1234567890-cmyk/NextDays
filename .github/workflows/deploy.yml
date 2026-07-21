@@ -45,6 +45,7 @@ jobs:
             "kilcrxob5u434k3vsyf54ble|nextdays-api|apps/api/ deploy/api-standalone/"
             "ly4w6vw4ffxk2987nyg5z5kt|nextdays-worker|apps/api/ deploy/worker/"
             "bln3q0n1l1se2hna8utkuag9|nextdays-web|apps/web/"
+            "zcjrx4czu338zghc58d41yp7|nextdays-docs|deploy/docs/"
           )
 
           # Geänderte Dateien dieses Pushes ermitteln (Fallback: alles).
