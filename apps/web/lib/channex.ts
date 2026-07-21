@@ -197,6 +197,8 @@ export type PortalField = {
   required: boolean;
   // UI-Hinweis für das Frontend: "text" (Standard) oder "email".
   type: "text" | "email";
+  // Vorbelegung des Felds (z.B. Betriebs-E-Mail); null = leer.
+  default: string | null;
 };
 
 export type SupportedPortal = {
@@ -235,7 +237,14 @@ export type OtaRoom = {
 // Zuordnung auf ZIMMER-Ebene (Cloudbeds/SiteMinder-Standard): der Nutzer ordnet
 // ein OTA-Zimmer einem eigenen Zimmer (Objekt) zu. Die Raten des Zimmers verbindet
 // der Server automatisch (Primary-Rate) — keine Rate-Auswahl im UI.
-export type LocalRoomOption = { local_property_id: string; title: string };
+export type LocalRoomOption = {
+  local_property_id: string;
+  title: string;
+  // Vorgeschlagener Booking-Zimmertyp (BCRT) aus dem lokalen property_type — für
+  // die Vorauswahl des passenden OTA-Zimmers. null = keine Entsprechung.
+  suggested_bcrt_code: number | null;
+  suggested_bcrt_name: string | null;
+};
 export type PrepareResult = {
   portal: string;
   ota_rooms: OtaRoom[];
@@ -294,6 +303,10 @@ export type ChannelMappingRow = {
   property_id: string;
   property_title: string | null;
   ota_hotel_id: string | null;
+  // OTA-Zimmertyp, auf den dieses Objekt gemappt ist (Code + Klarname) — die
+  // Anzeige nutzt Titel/Code, nicht die Hotel-ID (für alle Zimmer gleich).
+  ota_room_type_code: string | null;
+  ota_room_title: string | null;
   is_active: boolean;
   // Existiert eine Verbindung dieses Portals (verbunden vs. „Verbinden"-Button)?
   connected: boolean;
@@ -308,6 +321,9 @@ export type ChannelDetail = {
   connected: boolean;
   connected_count: number;
   total_count: number;
+  // Channex-Kanal-ID des Portals (Hotels: alle Zimmer teilen einen Kanal); für
+  // „Verbindung trennen". null = nicht verbunden.
+  channel_id: string | null;
   mappings: ChannelMappingRow[];
 };
 

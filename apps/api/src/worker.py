@@ -82,6 +82,10 @@ ICAL_BATCH = 25                      # pro Tick höchstens so viele Feeds (Fairn
 # (booking_* → sync_bookings_feed-Job); dieser Tick fängt verlorene Webhooks ab
 # (Channex wiederholt max. ~24h, danach wäre die Buchung ohne Backstop weg).
 BOOKINGS_TICK_SECONDS = 5 * 60
+# Restzahlungen (Split-Payment): stündlich die fälligen 'balance'-Zeilen
+# off-session belasten. Stündlich reicht (Fälligkeit ist tagesgenau), hält aber
+# die Stripe-Last niedrig.
+BALANCE_TICK_SECONDS = 60 * 60
 # Nächtlicher Full-Sync-Push (Channex-Doku: "daily full update each night per
 # property"): im UTC-Stundenfenster [FULL_SYNC_HOUR_UTC, +1) je aktiver Property
 # EIN full_sync_property-Job pro Tag (dedup je Property+Tag), gestaffelt.
@@ -377,6 +381,7 @@ class Worker:
         self._last_reconcile_tick = 0.0
         self._last_ical_tick = 0.0
         self._last_bookings_tick = 0.0
+        self._last_balance_tick = 0.0
         # Kontoweites Channex-Token-Budget (Phase 1b): vor jedem Channex-Push wird
         # ein Token verbraucht, sonst wird der Job verzögert statt Channex überfahren.
         self._budget = budget or ChannexBudget(get_settings())
@@ -626,6 +631,40 @@ class Worker:
         if seen:
             log.info("ical_sync_tick", synced=len(seen))
 
+    async def _balance_tick(self, loop_time: float) -> None:
+        """Stündlich fällige Restzahlungen (Split-Payment) off-session belasten.
+        Netzwerk-/DB-Arbeit im Thread; ein fehlgeschlagener Charge kippt weder den
+        Tick noch die anderen Zeilen (charge_due_balance schreibt den Zustand
+        selbst: needs_action/failed, nie still 'bezahlt')."""
+        if loop_time - self._last_balance_tick < BALANCE_TICK_SECONDS:
+            return
+        self._last_balance_tick = loop_time
+        try:
+            await asyncio.to_thread(self._charge_due_balances)
+        except Exception as exc:  # noqa: BLE001
+            log.warning("balance_tick_failed", error=str(exc)[:200])
+
+    def _charge_due_balances(self) -> None:
+        """Fällige, noch offene Restzahlungen laden und je Zeile belasten. Jeder
+        Charge ist idempotent (claim auf 'charging' + Stripe-idempotency_key);
+        ein Fehler einer Zeile stoppt die übrigen nicht (best-effort je Zeile)."""
+        from src.features.payments.service import PaymentsError, PaymentsService
+
+        svc = PaymentsService(service_client=self._db)
+        ids = svc.due_balance_payment_ids()
+        charged = 0
+        for pid in ids:
+            try:
+                svc.charge_due_balance(payment_id=pid)
+                charged += 1
+            except PaymentsError as exc:
+                # needs_action/failed hat charge_due_balance bereits persistiert.
+                log.warning(
+                    "balance_charge_failed", payment_id=pid, error=exc.message
+                )
+        if ids:
+            log.info("balance_tick", due=len(ids), charged=charged)
+
     async def _bookings_tick(self, loop_time: float) -> None:
         """Alle 5 min einen kontoweiten Booking-Feed-Pull einreihen (Backstop —
         der primäre Trigger ist der booking_*-Webhook). Coalescing über den
@@ -760,6 +799,7 @@ class Worker:
             await self._reconcile_tick(loop_time)
             await self._ical_tick(loop_time)
             await self._bookings_tick(loop_time)
+            await self._balance_tick(loop_time)
             free = CONCURRENCY - len(self._inflight)
             jobs = await asyncio.to_thread(self._claim, free) if free > 0 else []
             for job in jobs:

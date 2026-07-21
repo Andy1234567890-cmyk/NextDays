@@ -49,8 +49,78 @@ sekundär, NotImplemented). Enthält: `router.py`, `service.py`, `schemas.py`,
 Gegen die echte Stripe-Test-API (Sandbox, `sk_test_…`) — kein Mock; ohne Key
 werden netzabhängige Tests übersprungen. DB als In-Memory-Fake.
 
+## PayPal (Complete Payments Platform / Multiparty)
+
+Zweites Gateway neben Stripe — dasselbe Muster (verbundene Verkäufer + Plattform-
+Provision), aber PayPals Multiparty-API. Dateien: `paypal_client.py`,
+`paypal_webhook.py` + PayPal-Methoden in `service.py`/`router.py`.
+
+- **Onboarding (Partner Referrals / „Connected Path")** — jeder Betrieb verbindet
+  sein EIGENES PayPal-Geschäftskonto. `start_paypal_onboarding` erzeugt eine
+  `action_url`, zu der der Betrieb umgeleitet wird; nach Rückkehr lädt der
+  Return-Handler den echten Status (`sync_paypal_status`). Sellbar NUR wenn
+  `payments_receivable && primary_email_confirmed` (fail-closed).
+- **Gast-Zahlung (Order + Provision)** — `create_paypal_order` legt eine Order mit
+  `payee.merchant_id` (Verkäufer) + `platform_fees` (Plattform-Provision, gleicher
+  Satz wie Stripe: `stripe_platform_fee_pct`) an; `capture_paypal_order` zieht sie
+  ein. Beträge als Major-Unit-Strings (Zero-Decimal: HUF/JPY/TWD). „Im Namen des
+  Verkäufers": PayPal-Auth-Assertion-JWT + BN-Code-Header auf create/capture/refund.
+- **Refund** — `refund_capture` über die `paypal_capture_id`; die Provision wird
+  anteilig zurückgegeben (bei PayPal NICHT automatisch — explizit `platform_fees`).
+  Der Storno-Refund-Pfad (`refund_payment`) verzweigt nach `gateway`.
+- **Webhook** (`paypal_webhook.py`) — Signatur über die PayPal-API verifiziert
+  (kein Fetch auf die angreiferkontrollierte `cert_url` → SSRF-frei), idempotent
+  über `transmission_id` (`paypal_webhook_event`). Behandelt
+  `MERCHANT.ONBOARDING.COMPLETED`/`MERCHANT.PARTNER-CONSENT.REVOKED` (Onboarding-
+  Spiegel) + `PAYMENT.CAPTURE.COMPLETED|DENIED|DECLINED|REFUNDED` (Zahlstatus).
+
+### PayPal-Endpoints
+
+| Methode | Pfad | Zugriff |
+|---|---|---|
+| POST | `/paypal/onboarding` | MANAGE_BILLING |
+| POST | `/paypal/status` | MANAGE_BILLING |
+| GET | `/paypal/onboarding/return` | public (PayPal-Redirect) |
+| POST | `/paypal/booking/{reservation_id}/order` | public (Gast) |
+| POST | `/paypal/order/{order_id}/capture` | public (Gast) |
+| POST | `/paypal/webhook` | PayPal-Signatur (kein JWT) |
+
+### PayPal-Konfiguration
+
+`paypal_client_id`, `paypal_secret`, `paypal_bn_code`,
+`paypal_platform_merchant_id`, `paypal_webhook_id`, `paypal_base_url`
+(Sandbox/Live), `paypal_publishable_client_id` (NEXT_PUBLIC_). Secrets nur über
+Env. Fehlt die Config → fail-closed (503 bzw. Webhook nicht verarbeitet).
+
+### Go-Live-Checkliste (außerhalb des Codes zu besorgen)
+
+PayPal Multiparty verlangt eine Partner-Freischaltung — das kann NICHT im Code
+gelöst werden. Für LIVE (Sandbox testet ohne Approval):
+
+1. PayPal-Developer-App Typ **Platform** anlegen → `client_id`/`secret` (Partner).
+2. **Partner-Approval** beantragen (Formular; PayPal-Rep evaluiert). Ohne Approval
+   → Live-Calls geben 401.
+3. **BN-Code** (`PayPal-Partner-Attribution-Id`): App-Einstellungen → Reports.
+4. **platform_fee-Feature (`PARTNER_FEE`)** durch PayPal freischalten lassen — sonst
+   schlagen Provisions-Orders fehl.
+5. **Webhook** registrieren (`POST /v1/notifications/webhooks`) → `webhook_id` in
+   die Env. Events: PAYMENT.CAPTURE.COMPLETED/DENIED/REFUNDED,
+   MERCHANT.ONBOARDING.COMPLETED, MERCHANT.PARTNER-CONSENT.REVOKED.
+6. `paypal_base_url` auf `https://api-m.paypal.com` (Live) umstellen.
+
+### Sicherheit (Wurzel 6)
+
+`payments` und `tenant_billing_profile` sind gegen den anon-Direktpfad gehärtet
+(`revoke` + restriktive tenant-Policy, Migrationen 0169/0172) — die neuen PayPal-
+Felder (capture_id/order_id, merchant_id) erben das. `paypal_webhook_event` ist
+server-only (revoke, 0174).
+
 ## Bewusst offen
 
+- Gast-Checkout-UI (PayPal-Buttons/Stripe-PaymentElement) ist im Web noch nicht
+  gebaut — es gibt aktuell keine Gast-Checkout-Seite in `apps/web`. Die Backend-
+  Endpunkte (`create_paypal_order`/`capture`) sind fertig und docken an, sobald
+  die Gast-Buchungsstrecke gebaut wird.
 - Owner→Owner-Auszahlung über Stripe (Owner sind im Datenmodell keine Stripe-
   Accounts).
 - Revolut-Adapter (`gateways.py`) bleibt NotImplemented.

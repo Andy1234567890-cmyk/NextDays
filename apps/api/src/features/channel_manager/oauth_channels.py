@@ -227,9 +227,14 @@ class OAuthChannelsMixin:
             db, tenant_id, portal_code, mappings, ota_rooms
         )
 
-        # Mapping auf den bestehenden Channel setzen + aktivieren.
+        # Mapping auf den bestehenden Channel setzen + aktivieren. PUT ERSETZT das
+        # rate_plans-Array (verifiziert, kein Merge) → bestehende Einträge per GET
+        # lesen und die neuen anhängen, damit weitere Zimmer unter derselben
+        # Verbindung nicht verloren gehen (Wurzel 1). Idempotent: schon vorhandene
+        # rate_plan_ids werden nicht dupliziert (Wurzel 2).
+        merged = self._merge_channel_rate_plans(channel_id, rate_plans)
         try:
-            self._channex.update_channel(channel_id, {"rate_plans": rate_plans})
+            self._channex.update_channel(channel_id, {"rate_plans": merged})
             self._channex.activate_channel(channel_id)
         except ChannexError as exc:
             raise self._wrap_channex(exc) from exc

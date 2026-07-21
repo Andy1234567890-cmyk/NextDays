@@ -5,7 +5,6 @@
 // sammelt die Geschäfts-/Inhaberdaten und gibt sie hier ans Backend, das sie an
 // Stripe weiterreicht (KEIN Stripe-hosted Onboarding). Business-Logik bleibt im
 // Backend (PROJECT.md §2). Alle Calls brauchen JWT + Capability MANAGE_BILLING.
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { revalidatePath } from "next/cache";
 
 import { ApiError, api } from "@/lib/api";
@@ -82,31 +81,17 @@ export type BankAccountInput = {
 
 // --- Gespeicherter Account (aus tenant_billing_profile) ---------------------
 
-// Liest die bereits angelegte stripe_account_id des Tenants direkt aus
-// tenant_billing_profile (vom account.updated-Webhook gespiegelt — dieselbe
-// Quelle, die das Realtime-Abo beobachtet). RLS-scoped: der Supabase-Client wird
-// mit dem echten App-Token authentifiziert (wie in use-realtime.ts), sonst liefe
-// die Query als anon und RLS gäbe nichts zurück. null, wenn noch keiner existiert
-// — kein Fallback-/Fantasiewert (Projektregel).
+// Liest die bereits angelegte stripe_account_id des Tenants ÜBER DIE API (nicht
+// mehr per anon-Key direkt aus tenant_billing_profile): die Tabelle ist am anon-/
+// authenticated-Direktpfad gesperrt (Wurzel 6, Migration 0169). Der Endpunkt
+// läuft über den Server (service_role) und erzwingt den Tenant-Scope. null, wenn
+// noch keiner existiert — kein Fallback-/Fantasiewert (Projektregel).
 export async function getStoredConnectAccountId(): Promise<string | null> {
-  const token = await currentToken();
-  if (!token) return null;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) return null;
-  const supabase = createSupabaseClient(url, key, {
-    global: { headers: { Authorization: `Bearer ${token}` } },
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-  const { data, error } = await supabase
-    .from("tenant_billing_profile")
-    .select("stripe_account_id")
-    .not("stripe_account_id", "is", null)
-    .limit(1)
-    .maybeSingle();
-  if (error || !data) return null;
-  const id = (data as { stripe_account_id: string | null }).stripe_account_id;
-  return id ?? null;
+  const res = await call<{ stripe_account_id: string | null }>(
+    "/connect/account",
+  );
+  if (!res.ok) return null;
+  return res.data.stripe_account_id ?? null;
 }
 
 // --- Connect-Account --------------------------------------------------------

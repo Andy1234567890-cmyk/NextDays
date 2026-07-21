@@ -21,6 +21,7 @@ from .common import (
     _availability_settings,
     _channex_facility_ids,
     _channex_property_type,
+    _channex_type_from_pct,
     _timezone_for_country,
     log,
 )
@@ -187,7 +188,8 @@ class ContentSyncMixin:
         prop = (
             db.table("properties")
             .select(
-                "id, title, description, property_type, street, house_number, "
+                "id, title, description, property_type, booking_property_type, "
+                "street, house_number, "
                 "postal_code, city, country, lat, lng, max_guests, amenities, "
                 "type_attributes, currency"
             )
@@ -623,7 +625,13 @@ class ContentSyncMixin:
             "zip_code": prop_row.get("postal_code"),
             "city": prop_row.get("city"),
             "country": country,
-            "property_type": _channex_property_type(prop_row.get("property_type")),
+            # Unterkunftsart: explizit gewählte Booking-PCT hat Vorrang (feiner:
+            # Hotel/Guesthouse/Riad/…); sonst der aus dem internen property_type
+            # abgeleitete grobe Channex-Typ (bisheriges Verhalten).
+            "property_type": (
+                _channex_type_from_pct(prop_row.get("booking_property_type"))
+                or _channex_property_type(prop_row.get("property_type"))
+            ),
             "latitude": prop_row.get("lat"),
             "longitude": prop_row.get("lng"),
             "timezone": _timezone_for_country(country) if country else None,

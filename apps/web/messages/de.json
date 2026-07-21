@@ -4346,6 +4346,8 @@
       "nameTaken": "Diesen Namen gibt es an diesem Objekt bereits.",
       "minStayLabel": "Mindestaufenthalt (Nächte)",
       "minStayHint": "Standard für alle Tage — einzelne Tage pflegst du später im Kalender.",
+      "sendToPortalsLabel": "Diesen Preis an die Buchungsportale senden",
+      "sendToPortalsHint": "Der Grundpreis geht ohnehin an die Portale. Dieser zusätzliche Preis wird nur gesendet, wenn du das hier einschaltest.",
       "pricingTitle": "Preisgestaltung",
       "currencyFixed": "Währung: {currency} (aus dem Objekt übernommen)",
       "modeManual": "Preise manuell pflegen",

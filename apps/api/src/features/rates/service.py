@@ -185,6 +185,7 @@ class RatesService:
                 float(r["offset_percent"])
                 if r.get("offset_percent") is not None else None
             ),
+            send_to_portals=bool(r.get("send_to_portals")),
         )
 
     def _sync_states(self, rate_plan_ids: list[str]) -> dict[str, bool]:
@@ -356,6 +357,7 @@ class RatesService:
             "base_price": req.base_price,
             "currency": eff_currency,
             "min_stay": req.min_stay,
+            "send_to_portals": req.send_to_portals,
             **derived,  # rate_mode + (bei derived) Parent-Währung/-Basis
         }
         ins = (

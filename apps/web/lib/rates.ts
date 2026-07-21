@@ -27,6 +27,9 @@ export type RatePlan = {
   derived_from_name: string | null;
   offset_amount: number | null;
   offset_percent: number | null;
+  // An die Buchungsportale senden. Nur für ZUSÄTZLICHE Preise relevant — der
+  // Grundpreis (Standard-Preis des Objekts) geht immer an die Portale.
+  send_to_portals: boolean;
 };
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
@@ -116,6 +119,8 @@ export async function createRatePlan(input: {
   derivedFromRatePlanId?: string;
   offsetAmount?: number | null;
   offsetPercent?: number | null;
+  // An die Buchungsportale senden (nur zusätzliche Preise; Grundpreis geht immer).
+  sendToPortals?: boolean;
 }): Promise<Result<RatePlan>> {
   return call("/rates", {
     method: "POST",
@@ -126,6 +131,7 @@ export async function createRatePlan(input: {
       currency: input.currency,
       min_stay: input.minStay ?? 1,
       rate_mode: input.rateMode ?? "manual",
+      send_to_portals: input.sendToPortals ?? false,
       ...(input.derivedFromRatePlanId
         ? { derived_from_rate_plan_id: input.derivedFromRatePlanId }
         : {}),
@@ -147,6 +153,7 @@ export async function updateRatePlan(
     derivedFromRatePlanId?: string | null;
     offsetAmount?: number | null;
     offsetPercent?: number | null;
+    sendToPortals?: boolean;
   },
 ): Promise<Result<RatePlan>> {
   return call(`/rates/${id}`, {
@@ -157,6 +164,9 @@ export async function updateRatePlan(
       ...(patch.currency !== undefined ? { currency: patch.currency } : {}),
       ...(patch.minStay !== undefined ? { min_stay: patch.minStay } : {}),
       ...(patch.rateMode !== undefined ? { rate_mode: patch.rateMode } : {}),
+      ...(patch.sendToPortals !== undefined
+        ? { send_to_portals: patch.sendToPortals }
+        : {}),
       ...(patch.derivedFromRatePlanId !== undefined
         ? { derived_from_rate_plan_id: patch.derivedFromRatePlanId }
         : {}),

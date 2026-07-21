@@ -23,7 +23,6 @@ import {
   getConnectStatus,
   type ConnectStatus,
 } from "@/lib/payments";
-import { useRealtime } from "@/lib/use-realtime";
 
 // Offene Requirements lesbar machen (statt roher Stripe-Pfade wie
 // „individual.dob.day") UND direkt auf das passende Formularfeld auf /konto
@@ -181,12 +180,17 @@ export function PaymentsActivation({
     if (!status && !statusError) void reloadStatus();
   }, [status, statusError, reloadStatus]);
 
-  // account.updated-Webhook schreibt tenant_billing_profile → live nachladen.
-  useRealtime({
-    table: "tenant_billing_profile",
-    onChange: () => void reloadStatus(),
-    enabled: true,
-  });
+  // account.updated-Webhook schreibt tenant_billing_profile → Status nachladen.
+  // KEIN Realtime-Abo mehr: tenant_billing_profile ist am anon-/authenticated-
+  // Direktpfad gesperrt (Wurzel 6, Migration 0169) → der Client bekäme ohnehin
+  // keine Events. Stattdessen kurzes Polling, SOLANGE noch nicht freigeschaltet
+  // (der Status kommt aus dem live-Stripe-Call über die API). Sobald aktiv:
+  // Poll stoppt (kein Dauer-Poll).
+  useEffect(() => {
+    if (status?.charges_enabled) return;
+    const id = setInterval(() => void reloadStatus(), 8000);
+    return () => clearInterval(id);
+  }, [status?.charges_enabled, reloadStatus]);
 
   function handleAcceptTos() {
     startAccept(async () => {

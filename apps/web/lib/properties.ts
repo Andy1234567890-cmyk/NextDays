@@ -30,6 +30,9 @@ export type Property = {
   // Abweichende Beschreibung nur für die eigene Buchungsseite (nicht an OTAs).
   platform_description: string | null;
   property_type: PropertyType;
+  // Booking.com Unterkunftsart (PCT-Code, siehe lib/booking-property-types.ts).
+  // Getrennt vom internen property_type; null = nicht gesetzt.
+  booking_property_type: number | null;
   status: PropertyStatus;
   // Sichtbarkeit auf dem eigenen myNextDays-Marktplatz (/plattform) als eigener
   // Buchungskanal — getrennt von status und der OTA-Distribution (Migration 0159).

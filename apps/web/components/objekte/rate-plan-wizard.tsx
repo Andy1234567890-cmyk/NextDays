@@ -56,6 +56,9 @@ export function RatePlanWizard({
 
   const [name, setName] = useState("");
   const [minStay, setMinStay] = useState("1");
+  // An die Buchungsportale senden. Der Grundpreis geht immer; dieser zusätzliche
+  // Preis nur, wenn der Kunde es hier einschaltet.
+  const [sendToPortals, setSendToPortals] = useState(false);
   const [derive, setDerive] = useState(false);
   const [basePrice, setBasePrice] = useState("");
   // Nur MANUELLE Pläne können Basis sein — keine Kaskade (Server: 422).
@@ -107,6 +110,7 @@ export function RatePlanWizard({
             derivedFromRatePlanId: parentId,
             offsetAmount: amount === "" ? null : signedAmount,
             offsetPercent: percent === "" ? null : signedPercent,
+            sendToPortals,
           }
         : {
             propertyId,
@@ -115,6 +119,7 @@ export function RatePlanWizard({
             currency,
             minStay: Number(minStay),
             rateMode: "manual",
+            sendToPortals,
           },
     );
     setBusy(false);
@@ -193,6 +198,25 @@ export function RatePlanWizard({
             <p className="text-sm text-muted-foreground">
               {t("ratePlanWizard.minStayHint")}
             </p>
+
+            {/* An die Buchungsportale senden. Der Grundpreis geht immer; dieser
+                zusätzliche Preis nur, wenn hier eingeschaltet. */}
+            <label className="mt-2 flex items-start gap-3 rounded-(--radius) border border-border p-3">
+              <input
+                type="checkbox"
+                className="mt-1 size-4"
+                checked={sendToPortals}
+                onChange={(e) => setSendToPortals(e.target.checked)}
+              />
+              <span className="flex flex-col gap-0.5">
+                <span className="text-sm font-medium">
+                  {t("ratePlanWizard.sendToPortalsLabel")}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {t("ratePlanWizard.sendToPortalsHint")}
+                </span>
+              </span>
+            </label>
           </div>
         )}
 

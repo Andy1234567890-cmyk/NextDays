@@ -47,6 +47,26 @@ def get_stripe() -> StripeClient:
     )
 
 
+def get_or_create_customer(
+    *,
+    email: str | None,
+    metadata: dict[str, str] | None = None,
+    client: StripeClient | None = None,
+) -> str:
+    """Stripe-Customer für einen Gast anlegen (für gespeicherte Karten / spätere
+    off-session-Restzahlung). Ohne Customer speichert Stripe die PaymentMethod
+    nicht dauerhaft. Wir legen pro Buchung/Gast einen Customer an (kein globales
+    Gast-Konto) — simpel und ausreichend für Split-Payment."""
+    stripe = client or get_stripe()
+    params: dict[str, Any] = {}
+    if email:
+        params["email"] = email
+    if metadata:
+        params["metadata"] = metadata
+    cust = stripe.v1.customers.create(params=params)
+    return cust.id
+
+
 def create_payment_intent(
     *,
     amount_cents: int,
@@ -55,6 +75,12 @@ def create_payment_intent(
     application_fee_cents: int,
     capture_method: str = "automatic",
     metadata: dict[str, str] | None = None,
+    customer: str | None = None,
+    save_payment_method: bool = False,
+    payment_method: str | None = None,
+    off_session: bool = False,
+    statement_descriptor: str | None = None,
+    idempotency_key: str | None = None,
     client: StripeClient | None = None,
 ) -> dict[str, Any]:
     """Destination-Charge-PaymentIntent: Gast zahlt über den Plattform-Account,
@@ -62,6 +88,14 @@ def create_payment_intent(
     Tenants. application_fee_cents = Plattform-Provision (0 = keine).
 
     capture_method='manual' für Kautionen (Vorautorisierung, späteres capture).
+
+    Split-Payment:
+      * save_payment_method=True + customer → Karte wird für die spätere
+        off-session-Restzahlung gespeichert (setup_future_usage='off_session').
+      * off_session=True + payment_method + customer → sofortiger, vom Server
+        ausgelöster Charge der gespeicherten Karte (Restzahlung). Verlangt
+        confirm=True; Stripe kann 'authentication_required' werfen (3DS) → der
+        Aufrufer holt den Gast dann on-session zurück (fail-closed, Wurzel 5).
     """
     stripe = client or get_stripe()
     params: dict[str, Any] = {
@@ -70,15 +104,43 @@ def create_payment_intent(
         "capture_method": capture_method,
         "on_behalf_of": destination_acct,
         "transfer_data": {"destination": destination_acct},
-        # Payment Element (Karten + lokale Methoden), 3DS automatisch.
-        "automatic_payment_methods": {"enabled": True},
     }
+    if off_session:
+        # Server-initiierter Charge der gespeicherten Karte (kein Payment Element).
+        params["off_session"] = True
+        params["confirm"] = True
+        if payment_method:
+            params["payment_method"] = payment_method
+    else:
+        # Gast zahlt interaktiv über das Payment Element (Karten + 3DS automatisch).
+        params["automatic_payment_methods"] = {"enabled": True}
+        if save_payment_method:
+            params["setup_future_usage"] = "off_session"
+    if customer:
+        params["customer"] = customer
     if application_fee_cents > 0:
         params["application_fee_amount"] = application_fee_cents
+    if statement_descriptor:
+        # Name des Händlers auf der Kartenabrechnung des Gastes. Stripe erlaubt
+        # max. 22 Zeichen und einige verbotene Zeichen (< > \ ' " *) — kappen und
+        # säubern, sonst wirft der Charge (angreifer-/nutzergelieferter Text,
+        # Wurzel 8). Leerer Rest → weglassen.
+        clean = "".join(
+            c for c in statement_descriptor if c not in "<>\\'\"*"
+        ).strip()[:22]
+        if clean:
+            params["statement_descriptor"] = clean
     if metadata:
         params["metadata"] = metadata
-    pi = stripe.v1.payment_intents.create(params=params)
-    return {"id": pi.id, "client_secret": pi.client_secret, "status": pi.status}
+    options = {"idempotency_key": idempotency_key} if idempotency_key else None
+    pi = stripe.v1.payment_intents.create(params=params, options=options)
+    return {
+        "id": pi.id,
+        "client_secret": pi.client_secret,
+        "status": pi.status,
+        # payment_method-ID nach Bestätigung (für die spätere Restzahlung merken).
+        "payment_method": getattr(pi, "payment_method", None),
+    }
 
 
 def retrieve_payment_intent(

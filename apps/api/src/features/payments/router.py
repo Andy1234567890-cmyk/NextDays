@@ -12,7 +12,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, status
 
 from src.core.config import get_settings
 from src.core.logging import get_logger
@@ -21,6 +21,7 @@ from src.core.supabase import get_service_client
 from src.features.auth.dependencies import require_permission
 from src.features.auth.permissions import Capability
 
+from .paypal_webhook import handle_paypal_event
 from .schemas import (
     BookingPaymentResult,
     ConnectAccountCreate,
@@ -30,6 +31,11 @@ from .schemas import (
     DepositCaptureRequest,
     ExternalAccountRequest,
     PaymentsDiagnostics,
+    PaymentSettings,
+    PaymentSettingsResponse,
+    PayPalOnboardingRequest,
+    PayPalOnboardingResponse,
+    PayPalOrderResponse,
     RefundRequest,
     SliceHealth,
 )
@@ -65,7 +71,43 @@ def diagnostics(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+# --- Zahlungs-Einstellungen (Tab „Zahlungen") --------------------------------
+
+@router.get("/settings", response_model=PaymentSettingsResponse)
+def get_payment_settings(
+    service: PaymentsServiceDep, ctx: _billing
+) -> PaymentSettingsResponse:
+    """Zahlungs-Einstellungen des Tenants + abgeleiteter Stripe-Status."""
+    try:
+        return service.get_payment_settings(ctx)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.put("/settings", response_model=PaymentSettingsResponse)
+def update_payment_settings(
+    req: PaymentSettings, service: PaymentsServiceDep, ctx: _billing
+) -> PaymentSettingsResponse:
+    """Zahlungs-Einstellungen speichern (nur die Zahlungs-Spalten, Whitelist)."""
+    try:
+        return service.update_payment_settings(ctx, req)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 # --- Stripe Connect (Custom, white-label) -------------------------------------
+
+@router.get("/connect/account")
+def get_own_connect_account(
+    service: PaymentsServiceDep, ctx: _billing
+) -> dict:
+    """Die stripe_account_id des eigenen Tenants (Dashboard-Banner). Über den
+    Server, da tenant_billing_profile am anon-Direktpfad gesperrt ist (0169)."""
+    try:
+        return {"stripe_account_id": service.get_own_connect_account_id(ctx)}
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
 
 @router.post("/connect/accounts", response_model=ConnectAccountResponse)
 def create_connect_account(
@@ -257,4 +299,94 @@ async def stripe_webhook(
 
     db = get_service_client()
     handle_stripe_event(db, event, now_iso=datetime.now(UTC).isoformat())
+    return {"received": "ok"}
+
+
+# --- PayPal (Multiparty) ------------------------------------------------------
+
+@router.post("/paypal/onboarding", response_model=PayPalOnboardingResponse)
+def paypal_onboarding(
+    req: PayPalOnboardingRequest, service: PaymentsServiceDep, ctx: _billing
+) -> PayPalOnboardingResponse:
+    """PayPal-Onboarding starten → action_url, zu der der Betrieb umgeleitet wird,
+    um sein eigenes PayPal-Geschäftskonto zu verbinden."""
+    try:
+        result = service.start_paypal_onboarding(ctx, return_url=req.return_url)
+        return PayPalOnboardingResponse(action_url=result["action_url"])
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/paypal/status")
+def paypal_status_sync(service: PaymentsServiceDep, ctx: _billing) -> dict:
+    """Onboarding-Status des eigenen Tenants bei PayPal nachladen (nach Rückkehr
+    vom Onboarding). Synct receivable/email_confirmed."""
+    try:
+        return service.sync_own_paypal_status(ctx)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/paypal/onboarding/return", include_in_schema=False)
+def paypal_onboarding_return(
+    service: PaymentsServiceDep,
+    # PayPal hängt diese Query-Namen an (kein snake_case) → über alias abbilden.
+    merchant_id: str | None = Query(default=None, alias="merchantIdInPayPal"),
+    tracking_id: str | None = None,
+) -> dict:
+    """Return-Ziel nach dem PayPal-Onboarding. PayPal hängt merchantIdInPayPal +
+    tracking_id an. Die Return-Parameter sind NICHT vertrauenswürdig (Wurzel 3) →
+    wir laden den echten Status frisch von PayPal (sync über tracking_id→tenant)."""
+    if not tracking_id or not merchant_id:
+        raise HTTPException(status_code=400, detail="Unvollständige PayPal-Rückkehr.")
+    try:
+        service.sync_paypal_status(tenant_id=tracking_id, merchant_id=merchant_id)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    return {"status": "ok"}
+
+
+@router.post("/paypal/booking/{reservation_id}/order", response_model=PayPalOrderResponse)
+def create_paypal_order(
+    reservation_id: str, service: PaymentsServiceDep
+) -> PayPalOrderResponse:
+    """PayPal-Order für eine Gastbuchung anlegen (public — Gäste zahlen ohne Login).
+    merchant_id/Tenant kommen aus der Reservierung."""
+    try:
+        result = service.create_paypal_order(reservation_id=reservation_id)
+        return PayPalOrderResponse(
+            order_id=result["order_id"], payment_id=result["payment_id"]
+        )
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/paypal/order/{order_id}/capture")
+def capture_paypal_order(order_id: str, service: PaymentsServiceDep) -> dict:
+    """Approved PayPal-Order capturen (public — nach onApprove im Gast-Checkout)."""
+    try:
+        return service.capture_paypal_order(order_id=order_id)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/paypal/webhook", include_in_schema=False)
+async def paypal_webhook(request: Request) -> dict[str, str]:
+    """PayPal-Webhook (kein JWT — über die Signatur gesichert). Fail-closed:
+    fehlt die Webhook-Config oder ist die Signatur ungültig → nicht verarbeiten.
+    Idempotent über die transmission_id."""
+    from .paypal_client import PayPalClient  # noqa: PLC0415
+
+    raw = (await request.body()).decode()
+    headers = {k.lower(): v for k, v in request.headers.items()}
+    client = PayPalClient()
+    if not client.verify_webhook(headers=headers, raw_body=raw):
+        # Signatur nicht verifizierbar/ungültig → fail-closed (Wurzel 5).
+        raise HTTPException(status_code=400, detail="Ungültige PayPal-Signatur.")
+    import json  # noqa: PLC0415
+
+    event = json.loads(raw)
+    event["_transmission_id"] = headers.get("paypal-transmission-id")
+    db = get_service_client()
+    handle_paypal_event(db, event, now_iso=datetime.now(UTC).isoformat())
     return {"received": "ok"}

@@ -14,7 +14,7 @@ from supabase import Client
 from src.core.security import AuthContext
 
 from .channex_client import ChannexError
-from .common import ChannelManagerError, log
+from .common import ChannelManagerError, _booking_room_type, log
 
 
 class ChannelsMixin:
@@ -155,17 +155,24 @@ class ChannelsMixin:
         ),
     }
 
-    def list_supported_portals(self) -> list[dict[str, Any]]:
+    def list_supported_portals(
+        self, ctx: AuthContext | None = None
+    ) -> list[dict[str, Any]]:
         """Verbindbare Portale + die Eingabefelder, die der Kunde ausfüllt.
         Felder werden aus dem Channex-Channel-Katalog (`params`, ohne `hidden`)
         abgeleitet — so raten wir nichts und bleiben aktuell. ALLE sichtbaren
         String-Pflichtfelder werden abgefragt (z.B. Hotel-ID UND Property-E-Mail;
-        Autovermieter mehrere IDs), nicht nur ein Hauptfeld."""
+        Autovermieter mehrere IDs), nicht nur ein Hauptfeld.
+
+        Mit ctx wird das E-Mail-Feld mit der hinterlegten Betriebs-E-Mail
+        vorbefüllt (`default`), damit der Kunde sie nicht abtippen muss. Fehlt
+        sie, bleibt das Feld leer (kein erfundener Wert, Wurzel 4)."""
         try:
             catalog = self._channex.list_channel_catalog().get("data") or []
         except ChannexError:
             catalog = []
         by_code = {c.get("code"): c for c in catalog}
+        default_email = self._tenant_company_email(ctx) if ctx else None
 
         out: list[dict[str, Any]] = []
         for portal in self._portal_catalog():
@@ -200,6 +207,12 @@ class ChannelsMixin:
                     # E-Mail-Felder als solche kennzeichnen (Frontend: type=email);
                     # sonst normales Textfeld. Der Katalog liefert nur "string".
                     "type": "email" if "email" in key.lower() else "text",
+                    # E-Mail-Felder mit der Betriebs-E-Mail vorbefüllen (sonst
+                    # leer). Kein Default für Hotel-ID o.ä. — die ist kundenspezifisch.
+                    "default": (
+                        default_email if "email" in key.lower() and default_email
+                        else None
+                    ),
                 }
                 for key, meta in essential
             ]
@@ -219,6 +232,25 @@ class ChannelsMixin:
                 }
             )
         return out
+
+    def _tenant_company_email(self, ctx: AuthContext) -> str | None:
+        """Hinterlegte Betriebs-E-Mail des Tenants (tenant_billing_profile.email)
+        zum Vorbefüllen des Portal-E-Mail-Felds. Über den Server (service_role),
+        weil die Tabelle am anon-/authenticated-Direktpfad gesperrt ist (Wurzel 6).
+        None, wenn keine hinterlegt ist — kein erfundener Wert (Wurzel 4)."""
+        try:
+            tenant_id = self._require_tenant(ctx)
+            db = self._require_db()
+        except ChannelManagerError:
+            return None
+        row = (
+            db.table("tenant_billing_profile")
+            .select("email")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        return (row[0].get("email") if row else None) or None
 
     @staticmethod
     def _humanize_field(title: str | None, portal_label: str) -> str:
@@ -320,6 +352,11 @@ class ChannelsMixin:
         # ZIMMER (Objekte) dieser Property an — bei einer geteilten Hotel-Property
         # alle Zimmer des Hotels, bei einer FeWo das eine Objekt.
         local_rooms = self._local_room_options(db, tenant_id, channex_property_id)
+        log.info("prepare_debug", portal_code=portal_code,
+                 channex_property_id=channex_property_id,
+                 ota_rooms=[{"id": r.get("id"), "title": r.get("title")}
+                            for r in rooms],
+                 local_rooms=local_rooms)
         return {
             "portal": self._portal_label(portal_code),
             "ota_rooms": rooms,        # [{id, title, rates:[{id, title, …}]}]
@@ -385,6 +422,9 @@ class ChannelsMixin:
         — Zuordnung Zimmer→Zimmer; die Raten werden serverseitig expandiert."""
         tenant_id = self._require_tenant(ctx)
         db = self._require_db()
+        log.info("connect_debug_start", tenant_id=tenant_id,
+                 property_id=property_id, portal_code=portal_code,
+                 mappings=mappings, settings_keys=list((settings or {}).keys()))
         if not self._is_known_portal(portal_code):
             raise ChannelManagerError("Unbekanntes Portal.", status_code=400)
         if not mappings:
@@ -393,6 +433,8 @@ class ChannelsMixin:
             )
 
         channex_property_id = self._require_property_mapping(db, tenant_id, property_id)
+        log.info("connect_debug_property_mapping",
+                 property_id=property_id, channex_property_id=channex_property_id)
 
         # Idempotenz (Wurzel 2): existiert für (property_id, portal_code) bereits
         # eine Verbindung mit einem Channex-Kanal, den bestehenden zurückgeben statt
@@ -408,7 +450,11 @@ class ChannelsMixin:
             .limit(1)
             .execute()
         ).data
+        log.info("connect_debug_existing_db_row", found=bool(existing),
+                 row=existing[0] if existing else None)
         if existing and existing[0].get("channex_channel_id"):
+            log.info("connect_debug_reuse_db_channel",
+                     channel_id=existing[0]["channex_channel_id"])
             return {
                 "id": existing[0]["channex_channel_id"],
                 "portal": self._portal_label(portal_code),
@@ -418,6 +464,8 @@ class ChannelsMixin:
 
         group_id = self._require_group(db, tenant_id, channex_property_id)
         settings = self._inject_sandbox_settings(portal_code, property_id, settings)
+        log.info("connect_debug_group_and_settings", group_id=group_id,
+                 settings=settings)
 
         # OTA-Zimmer/Raten erneut holen: der Nutzer hat auf ZIMMER-Ebene zugeordnet
         # (Booking-Zimmer → mein Zimmer). Für Channex muss jede Rate des OTA-Zimmers
@@ -428,7 +476,9 @@ class ChannelsMixin:
             )
         except ChannexError as exc:
             raise self._wrap_channex(exc) from exc
+        log.info("connect_debug_mapping_details_RAW", raw=details)
         ota_rooms = self._normalize_mapping_rooms(details)
+        log.info("connect_debug_ota_rooms_normalized", ota_rooms=ota_rooms)
 
         # rate_plans-Array bauen: je zugeordnetem Zimmer werden die OTA-Raten des
         # zugewiesenen OTA-Zimmers auf die Rate-Plans des Objekts gemappt (Primary
@@ -436,6 +486,35 @@ class ChannelsMixin:
         rate_plans = self._build_rate_plans(
             db, tenant_id, portal_code, mappings, ota_rooms
         )
+
+        # Mehrere Zimmer, EINE Hotel-ID = EIN Channex-Kanal (live+Doku verifiziert:
+        # Booking lehnt einen zweiten POST /channels mit derselben hotel_id mit 422
+        # „already exists" ab). Existiert für dieses Portal beim Tenant schon ein
+        # lebender Kanal MIT DERSELBEN Hotel-ID, wird dieses Zimmer nicht per POST
+        # (neuer Kanal) angehängt, sondern additiv per PUT in den bestehenden Kanal
+        # aufgenommen. PUT ERSETZT das rate_plans-Array (kein Merge) → die
+        # bestehenden Einträge MÜSSEN mitgesendet werden (Wurzel 1: Gegenzustand
+        # mitpflegen), sonst gehen die anderen Zimmer verloren.
+        hotel_id = self._extract_hotel_id(settings)
+        existing_channel_id = self._existing_channel_for_hotel(
+            db, tenant_id, portal_code, hotel_id, channex_property_id
+        )
+        log.info("connect_debug_existing_channel_for_hotel",
+                 hotel_id=hotel_id, existing_channel_id=existing_channel_id,
+                 rate_plans=rate_plans)
+        if existing_channel_id:
+            return self._attach_room_to_channel(
+                db, tenant_id,
+                property_id=property_id,
+                channex_property_id=channex_property_id,
+                portal_code=portal_code,
+                settings=settings,
+                channel_id=existing_channel_id,
+                new_rate_plans=rate_plans,
+                mappings=mappings,
+                ota_rooms=ota_rooms,
+                title=title,
+            )
 
         attrs: dict[str, Any] = {
             "channel": portal_code,
@@ -446,9 +525,15 @@ class ChannelsMixin:
             "settings": settings or {},
             "rate_plans": rate_plans,
         }
+        log.info("connect_debug_create_channel_payload", attrs=attrs)
         try:
             created = self._channex.create_channel(attrs)
         except ChannexError as exc:
+            log.error("connect_debug_create_channel_failed",
+                      error=exc.message,
+                      channex_status=getattr(exc, "channex_status", None),
+                      channex_payload=getattr(exc, "payload", None),
+                      attrs=attrs)
             # „channel with the same settings already exists": diese Booking-Hotel-ID
             # ist bei Channex bereits mit einem Kanal verbunden — entweder in einem
             # anderen Konto (bei den geteilten Booking-TEST-Hotel-IDs der Normalfall)
@@ -483,6 +568,12 @@ class ChannelsMixin:
         # So bleibt die Verbindung sichtbar/verwaltbar (Status, Trennen, Re-Connect)
         # und nach Reload nachvollziehbar. Persistenz-Fehler dürfen den erfolgreichen
         # Connect nicht scheitern lassen.
+        # OTA-Zimmertyp dieses Objekts (Code + Klarname) für die Anzeige festhalten:
+        # 1 Objekt = 1 OTA-Zimmertyp unter der Hotel-ID. Aus dem Mapping dieses
+        # Objekts + den OTA-Zimmerdetails auflösen (nicht raten).
+        room_code, room_title = self._mapped_room_for_property(
+            property_id, mappings, ota_rooms
+        )
         self._save_channel_connection(
             db, tenant_id,
             property_id=property_id,
@@ -492,6 +583,8 @@ class ChannelsMixin:
             channel_id=channel_id,
             is_active=is_active,
             last_error=activate_error,
+            ota_room_type_code=room_code,
+            ota_room_title=room_title,
         )
 
         # Initial-Vollimport (best effort): bestehende Buchungen, ARI/Preise,
@@ -551,6 +644,16 @@ class ChannelsMixin:
         is_sandbox = portal_code == self._SANDBOX_CODE
         rooms_by_code = {str(r.get("id")): r for r in ota_rooms}
         seen_local: set[str] = set()
+        # Channex/Booking-Eindeutigkeit gilt auf dem OTA-Paar (room_type_code,
+        # rate_plan_code): dasselbe Paar darf im Array NUR EINMAL stehen (Doku:
+        # „One OTA room+rate pair should map to at most one local rate plan").
+        # Dedup deshalb auf DIESEM Paar (nicht auf der Channex-rate_plan_id) —
+        # sonst landet dieselbe OTA-Rate doppelt und der Kanal ist inkonsistent.
+        seen_pairs: set[tuple[Any, Any]] = set()
+        # Genau EINE Rate trägt die Restriktionen (min_stay/stop_sell), weil Booking
+        # pro Zimmer nur EINEN Restriktions-Träger kennt (Doku). Der erste erzeugte
+        # Eintrag ist primary_occ=True, alle weiteren False.
+        primary_used = False
         rate_plans: list[dict[str, Any]] = []
         for m in mappings:
             local_property_id = m.get("local_property_id")
@@ -591,6 +694,15 @@ class ChannelsMixin:
                     "Preisplan des Zimmers nicht bei den Portalen registriert.",
                     status_code=422,
                 )
+            log.info(
+                "build_rate_plans_debug_row",
+                local_property_id=local_property_id,
+                mapping_room_type_code=m.get("room_type_code"),
+                ota_room_title=ota_room.get("title"),
+                ota_rate_ids=[r.get("id") for r in ota_rates],
+                local_rate_map_ids=local_rate_maps,
+                channex_rate_plan_ids=channex_rate_plan_ids,
+            )
 
             room_code = (
                 m.get("room_type_code") if is_sandbox
@@ -598,17 +710,25 @@ class ChannelsMixin:
             )
             occupancy = self._as_int(m.get("occupancy")) or 2
             pricing_type = m.get("pricing_type") or "Standard"
-            # 1:1 — jeder Rate-Plan wird GENAU EINMAL gemappt (Channex-Regel: keine
-            # doppelten Mappings, ein Rate-Plan darf nicht zweimal im Array stehen,
-            # sonst 422 „same settings already exists"). Es werden so viele Paare
-            # gebildet wie das Minimum aus OTA-Raten und lokalen Rate-Plans; hat das
-            # Objekt weniger Rate-Plans als das OTA-Zimmer Raten, bleiben die
-            # überzähligen OTA-Raten ungemappt (NIE ein Rate-Plan doppelt).
-            # strict=False: bewusst am kürzeren stoppen (überzählige OTA-Raten
-            # bleiben ungemappt, statt einen Rate-Plan doppelt zu verwenden).
-            for rate, channex_rate_plan_id in zip(
-                ota_rates, channex_rate_plan_ids, strict=False
-            ):
+
+            # Standard ist der GRUNDPREIS: der erste (Standard-)Preis des Zimmers
+            # geht immer an die Portale — pro Zimmer GENAU EIN Eintrag auf die
+            # Standard-Rate (erste OTA-Rate). Zusätzliche Preise gehen NUR mit, wenn
+            # der Kunde sie je Preis freigeschaltet hat (rate_plans.send_to_portals,
+            # 0177). channex_rate_plan_ids ist bereits nach Alter sortiert (der erste
+            # = Grundpreis); der Filter behält den ersten IMMER und von den weiteren
+            # nur die freigeschalteten.
+            portal_ids = self._portal_enabled_rate_plan_ids(
+                db, tenant_id, local_property_id
+            )
+            selected = [
+                cid for i, cid in enumerate(channex_rate_plan_ids)
+                if i == 0 or cid in portal_ids
+            ]
+            # Jede gewählte Rate auf eine eigene OTA-Rate paaren (Standard zuerst).
+            pairs = list(zip(ota_rates, selected, strict=False))
+
+            for rate, channex_rate_plan_id in pairs:
                 rate_code = (
                     rate.get("id") if is_sandbox else self._as_int(rate.get("id"))
                 )
@@ -617,6 +737,11 @@ class ChannelsMixin:
                         "Zimmer-/Raten-Code fehlt oder ist ungültig.",
                         status_code=422,
                     )
+                # Dasselbe OTA-Paar nie zweimal ins Array.
+                pair = (room_code, rate_code)
+                if pair in seen_pairs:
+                    continue
+                seen_pairs.add(pair)
                 rate_plans.append(
                     {
                         "rate_plan_id": channex_rate_plan_id,
@@ -625,16 +750,49 @@ class ChannelsMixin:
                             "rate_plan_code": rate_code,
                             "occupancy": occupancy,
                             "pricing_type": pricing_type,
-                            "primary_occ": True,
+                            # Nur der erste Eintrag trägt die Restriktionen.
+                            "primary_occ": not primary_used,
                             "readonly": False,
                         },
                     }
                 )
+                primary_used = True
         if not rate_plans:
             raise ChannelManagerError(
                 "Bitte mindestens ein Zimmer zuordnen.", status_code=422
             )
         return rate_plans
+
+    def _portal_enabled_rate_plan_ids(
+        self, db: Client, tenant_id: str, property_id: str
+    ) -> set[str]:
+        """Channex-Rate-Plan-IDs der Preise eines Objekts, die der Kunde
+        ausdrücklich an die Portale schickt (rate_plans.send_to_portals=true, 0177).
+
+        Der Grundpreis (Standard-Preis) geht ohnehin immer — dieses Set steuert nur
+        die ZUSÄTZLICHEN Preise. Auflösung lokaler Preis → Channex-Rate-Plan-ID über
+        die rate_plan_map (wie _rate_plan_maps_for_property). Leeres Set, wenn keiner
+        freigeschaltet ist (dann geht nur der Grundpreis)."""
+        enabled = (
+            db.table("rate_plans")
+            .select("id")
+            .eq("property_id", property_id)
+            .eq("send_to_portals", True)
+            .execute()
+        ).data or []
+        local_ids = [r["id"] for r in enabled if r.get("id")]
+        if not local_ids:
+            return set()
+        # local_rate_plan_id → channex_rate_plan_id direkt über die Map-Tabelle.
+        maps = (
+            db.table("channex_rate_plan_map")
+            .select("channex_rate_plan_id")
+            .eq("tenant_id", tenant_id)
+            .in_("local_rate_plan_id", local_ids)
+            .is_("deleted_at", "null")
+            .execute()
+        ).data or []
+        return {m["channex_rate_plan_id"] for m in maps if m.get("channex_rate_plan_id")}
 
     def _inject_sandbox_settings(
         self, portal_code: str, property_id: str, settings: dict[str, Any]
@@ -799,10 +957,219 @@ class ChannelsMixin:
                 return str(val)
         return None
 
+    @staticmethod
+    def _mapped_room_for_property(
+        property_id: str,
+        mappings: list[dict[str, Any]],
+        ota_rooms: list[dict[str, Any]],
+    ) -> tuple[str | None, str | None]:
+        """OTA-Zimmertyp (Code + Klarname), auf den dieses Objekt gemappt ist.
+        Aus dem Mapping dieses Objekts (room_type_code) + den OTA-Zimmerdetails
+        (Titel per Code). None/None, wenn kein Mapping für das Objekt existiert
+        (kein Raten, Wurzel 4)."""
+        entry = next(
+            (m for m in mappings if m.get("local_property_id") == property_id), None
+        )
+        if not entry:
+            return None, None
+        code = entry.get("room_type_code")
+        if code is None:
+            return None, None
+        code_str = str(code)
+        title = next(
+            (r.get("title") for r in ota_rooms if str(r.get("id")) == code_str), None
+        )
+        return code_str, title
+
+    def _merge_channel_rate_plans(
+        self, channel_id: str, new_rate_plans: list[dict[str, Any]]
+    ) -> list[dict[str, Any]]:
+        """Bestehendes rate_plans-Array eines Kanals per GET lesen und die neuen
+        Einträge anhängen (PUT ersetzt das Array, kein Merge → Wurzel 1). Je
+        rate_plan_id genau EIN Eintrag (Channex-Regel, sonst 422); bereits
+        vorhandene werden nicht dupliziert (Wurzel 2, idempotent)."""
+        try:
+            current = self._channex.get_channel(channel_id)
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+        attrs = (current.get("data") or {}).get("attributes") or {}
+        existing_plans = attrs.get("rate_plans") or []
+        merged: list[dict[str, Any]] = [
+            {"rate_plan_id": p.get("rate_plan_id"), "settings": p.get("settings") or {}}
+            for p in existing_plans
+            if p.get("rate_plan_id")
+        ]
+        seen = {p["rate_plan_id"] for p in merged}
+        for plan in new_rate_plans:
+            if plan.get("rate_plan_id") in seen:
+                continue
+            merged.append(plan)
+            seen.add(plan.get("rate_plan_id"))
+        return merged
+
+    def _existing_channel_for_hotel(
+        self, db: Client, tenant_id: str, portal_code: str, hotel_id: str | None,
+        channex_property_id: str | None = None,
+    ) -> str | None:
+        """Channex-Channel-ID eines bereits bestehenden Kanals DERSELBEN Hotel-ID.
+        None, wenn keiner existiert.
+
+        Ein Hotel = eine Hotel-ID = ein Channex-Kanal; weitere Zimmer hängen sich
+        additiv daran. Es wird in ZWEI Quellen gesucht, weil die eine allein den
+        Kanal verfehlen kann (genau der 422-„already exists"-Bug):
+        1) lokale DB (channex_channel_connection) mit Existenz-Gegenprüfung bei
+           Channex (tote Referenz → überspringen);
+        2) Channex selbst — ALLE Kanäle des Tenants (Property gefiltert) mit
+           passender settings.hotel_id. Nötig, weil ein Kanal bei Channex
+           existieren kann, ohne dass die lokale DB ihn (noch) kennt (Zeile
+           gelöscht, andere Session, Reconcile-Lücke). Ohne diese zweite Quelle
+           läuft der Connect in POST /channels → 422, obwohl der Kanal da ist."""
+        if not hotel_id:
+            return None
+        # DEBUG: ALLE Kanäle, die dieser Channex-Key überhaupt sieht (konto-weit,
+        # ohne Property-Filter) — mit ihrer hotel_id. Zeigt schwarz auf weiß, ob
+        # 6519420 irgendwo im Konto hängt oder ob das Konto wirklich leer ist.
+        try:
+            all_ch = self._channex.list_channels().get("data") or []
+            log.info(
+                "existing_channel_debug_ALL_channels_in_account",
+                count=len(all_ch),
+                channels=[
+                    {"id": c.get("id"),
+                     "channel": (c.get("attributes") or c).get("channel"),
+                     "hotel_id": ((c.get("attributes") or c).get("settings")
+                                  or {}).get("hotel_id"),
+                     "properties": (c.get("attributes") or c).get("properties")}
+                    for c in all_ch
+                ],
+            )
+        except ChannexError as exc:
+            log.warning("existing_channel_debug_all_failed", error=exc.message)
+        # 1) Lokale DB.
+        rows = (
+            db.table("channex_channel_connection")
+            .select("channex_channel_id, ota_hotel_id")
+            .eq("tenant_id", tenant_id)
+            .eq("ota_portal_code", portal_code)
+            .eq("ota_hotel_id", hotel_id)
+            .execute()
+        ).data or []
+        log.info("existing_channel_debug_db_rows", hotel_id=hotel_id, rows=rows)
+        for row in rows:
+            channel_id = row.get("channex_channel_id")
+            if not channel_id:
+                continue
+            try:
+                self._channex.get_channel(channel_id)
+            except ChannexError:
+                continue  # Kanal existiert bei Channex nicht mehr — überspringen
+            return channel_id
+
+        # 2) Channex-seitig: die Kanäle dieser Property durchsuchen (der geteilte
+        #    Account-Key sieht nur Kanäle dieses Tenants, wenn auf die eigene
+        #    channex_property_id gefiltert wird → kein fremder Kanal). Passt die
+        #    settings.hotel_id, diesen Kanal wiederverwenden statt neu anzulegen.
+        if not channex_property_id:
+            return None
+        try:
+            listed = self._channex.list_channels(
+                property_id=channex_property_id
+            ).get("data") or []
+        except ChannexError as exc:
+            log.warning("existing_channel_debug_list_failed", error=exc.message)
+            return None
+        log.info("existing_channel_debug_channex_list",
+                 channex_property_id=channex_property_id, count=len(listed),
+                 channels=[
+                     {"id": c.get("id"),
+                      "channel": (c.get("attributes") or c).get("channel"),
+                      "hotel_id": ((c.get("attributes") or c).get("settings")
+                                   or {}).get("hotel_id")}
+                     for c in listed
+                 ])
+        for ch in listed:
+            a = ch.get("attributes") or ch
+            if a.get("channel") != portal_code:
+                continue
+            ch_settings = a.get("settings") or {}
+            if str(ch_settings.get("hotel_id") or "") == str(hotel_id):
+                return ch.get("id") or a.get("id")
+        return None
+
+    def _attach_room_to_channel(
+        self, db: Client, tenant_id: str, *, property_id: str,
+        channex_property_id: str, portal_code: str, settings: dict[str, Any],
+        channel_id: str, new_rate_plans: list[dict[str, Any]],
+        mappings: list[dict[str, Any]], ota_rooms: list[dict[str, Any]],
+        title: str | None,
+    ) -> dict[str, Any]:
+        """Ein weiteres Zimmer additiv in einen bestehenden Channex-Kanal aufnehmen
+        (statt einen zweiten Kanal für dieselbe Hotel-ID anzulegen).
+
+        PUT /channels/:id ersetzt das rate_plans-Array (verifiziert, kein Merge) →
+        die bestehenden Einträge werden per GET gelesen und die neuen ANGEHÄNGT.
+        Idempotent (Wurzel 2): bereits vorhandene rate_plan_ids werden nicht
+        dupliziert — ein erneuter Connect desselben Zimmers ändert das Array nicht."""
+        merged = self._merge_channel_rate_plans(channel_id, new_rate_plans)
+        try:
+            self._channex.update_channel(channel_id, {"rate_plans": merged})
+        except ChannexError as exc:
+            raise self._wrap_channex(exc) from exc
+
+        # Der Kanal war (bei einem verbundenen ersten Zimmer) bereits aktiv; sicher
+        # gehen, dass er nach dem PUT aktiv bleibt. Best effort — ein Aktivierungs-
+        # fehler kippt das erfolgreiche Anhängen nicht.
+        is_active = True
+        try:
+            self._channex.activate_channel(channel_id)
+        except ChannexError as exc:
+            log.warning("channex_channel_activate_failed",
+                        channel_id=channel_id, error=exc.message)
+
+        room_code, room_title = self._mapped_room_for_property(
+            property_id, mappings, ota_rooms
+        )
+        self._save_channel_connection(
+            db, tenant_id,
+            property_id=property_id,
+            channex_property_id=channex_property_id,
+            portal_code=portal_code,
+            settings=settings,
+            channel_id=channel_id,
+            is_active=is_active,
+            last_error=None,
+            ota_room_type_code=room_code,
+            ota_room_title=room_title,
+        )
+
+        # Go-Live-Push für das neu angehängte Zimmer (Verfügbarkeit + Preise), wie
+        # beim regulären Connect — der neue Room-Type darf nie mit leerem ARI starten.
+        try:
+            from src.jobs.queue import dedup_key, enqueue
+
+            enqueue(
+                db, "full_sync_property", tenant_id=tenant_id,
+                payload={"tenant_id": tenant_id, "property_id": property_id},
+                dedup_key=dedup_key(tenant_id, property_id, "full_sync_property"),
+            )
+        except Exception as exc:  # noqa: BLE001 — Connect nie am Enqueue kippen
+            log.warning(
+                "channel_golive_full_sync_enqueue_failed",
+                property_id=property_id, error=str(exc)[:200],
+            )
+
+        return {
+            "id": channel_id,
+            "portal": self._portal_label(portal_code),
+            "title": title or self._portal_label(portal_code),
+            "is_active": is_active,
+        }
+
     def _save_channel_connection(
         self, db: Client, tenant_id: str, *, property_id: str,
         channex_property_id: str, portal_code: str, settings: dict[str, Any],
         channel_id: str | None, is_active: bool, last_error: str | None,
+        ota_room_type_code: str | None = None, ota_room_title: str | None = None,
     ) -> None:
         """Upsert der OTA-Verbindung pro (Objekt, Portal). Best-effort: ein
         Persistenz-Fehler darf den erfolgreichen Connect nicht scheitern lassen."""
@@ -820,6 +1187,8 @@ class ChannelsMixin:
             "channex_property_id": channex_property_id,
             "ota_portal_code": portal_code,
             "ota_hotel_id": hotel_id,
+            "ota_room_type_code": ota_room_type_code,
+            "ota_room_title": ota_room_title,
             "channex_channel_id": channel_id,
             "is_active": is_active,
             "last_error": last_error,
@@ -989,7 +1358,10 @@ class ChannelsMixin:
         conn_by_property: dict[str, dict[str, Any]] = {}
         for c in (
             db.table("channex_channel_connection")
-            .select("property_id, ota_hotel_id, is_active, last_error, updated_at")
+            .select(
+                "property_id, ota_hotel_id, ota_room_type_code, ota_room_title, "
+                "channex_channel_id, is_active, last_error, updated_at"
+            )
             .eq("tenant_id", tenant_id)
             .eq("ota_portal_code", portal_code)
             .execute()
@@ -1020,6 +1392,8 @@ class ChannelsMixin:
                     "property_id": pid,
                     "property_title": p.get("title"),
                     "ota_hotel_id": c.get("ota_hotel_id"),
+                    "ota_room_type_code": c.get("ota_room_type_code"),
+                    "ota_room_title": c.get("ota_room_title"),
                     "is_active": bool(c.get("is_active")),
                     "connected": bool(c),  # existiert eine Verbindung dieses Portals?
                     "sync_enabled": bool(m.get("sync_enabled")),
@@ -1029,12 +1403,24 @@ class ChannelsMixin:
                 }
             )
 
+        # Bei Hotels teilen sich alle Zimmer EINEN Channex-Kanal (eine Hotel-ID) —
+        # die channel_id einer beliebigen bestehenden Verbindung reicht zum
+        # Trennen des ganzen Portals („alles lösen").
+        channel_id = next(
+            (
+                c.get("channex_channel_id")
+                for c in conn_by_property.values()
+                if c.get("channex_channel_id")
+            ),
+            None,
+        )
         return {
             "portal_code": portal_code,
             "portal": self._portal_label(portal_code),
             "connected": any(m["is_active"] for m in mappings),
             "connected_count": sum(1 for m in mappings if m["is_active"]),
             "total_count": len(mappings),
+            "channel_id": channel_id,
             "mappings": mappings,
         }
 
@@ -1208,15 +1594,26 @@ class ChannelsMixin:
             return []
         props = (
             db.table("properties")
-            .select("id, title")
+            .select("id, title, property_type")
             .eq("tenant_id", tenant_id)
             .in_("id", prop_ids)
             .execute()
         ).data or []
-        return [
-            {"local_property_id": p["id"], "title": p.get("title") or "Zimmer"}
-            for p in props
-        ]
+        out: list[dict[str, Any]] = []
+        for p in props:
+            # Passenden Booking-Zimmertyp (BCRT) aus dem lokalen property_type
+            # vorschlagen, damit die UI das richtige OTA-Zimmer vorwählt (der Kunde
+            # kennt keine Booking-Zimmer-IDs). Ohne Entsprechung → None (kein Raten).
+            suggestion = _booking_room_type(p.get("property_type"))
+            out.append(
+                {
+                    "local_property_id": p["id"],
+                    "title": p.get("title") or "Zimmer",
+                    "suggested_bcrt_code": suggestion[0] if suggestion else None,
+                    "suggested_bcrt_name": suggestion[1] if suggestion else None,
+                }
+            )
+        return out
 
     def _rate_plan_maps_for_property(
         self, db: Client, tenant_id: str, property_id: str

@@ -76,6 +76,25 @@ class Settings(BaseSettings):
     # Plattform-Provision auf Gast-Zahlungen (Destination Charge), in Prozent des
     # Buchungsbetrags. 0 = keine Fee (Default). Wird zu application_fee_amount.
     stripe_platform_fee_pct: float = 0.0
+
+    # --- PayPal (Complete Payments Platform / Multiparty) ---
+    # Partner-Credentials (client_credentials-OAuth). Alles Secrets → nie ins
+    # Repo, nur Env. Leer = PayPal deaktiviert (Onboarding/Order fail-closed 503).
+    paypal_client_id: SecretStr = SecretStr("")
+    paypal_secret: SecretStr = SecretStr("")
+    # BN-Code (PayPal-Partner-Attribution-Id) — Revenue-Attribution, Pflicht-Header
+    # bei Multiparty-Calls. Kommt aus der Partner-Freischaltung (App → Reports).
+    paypal_bn_code: str = ""
+    # Merchant-ID der Plattform selbst (Empfänger der platform_fees). Aus dem
+    # Partner-Konto. Leer → Fee geht default an den API-Caller (die Plattform).
+    paypal_platform_merchant_id: str = ""
+    # Webhook-ID aus der Webhook-Registrierung (POST /v1/notifications/webhooks);
+    # für die Signaturprüfung. Leer = Webhook fail-closed (503).
+    paypal_webhook_id: str = ""
+    # Basis-URL: Sandbox (Default, testbar ohne Live-Approval) vs. Live.
+    paypal_base_url: str = "https://api-m.sandbox.paypal.com"
+    # client-id für das Frontend-JS-SDK (öffentlich, NEXT_PUBLIC_).
+    paypal_publishable_client_id: str = ""
     # Groq (KI-Antwortvorschläge im Posteingang). Pydantic liest case-insensitiv,
     # daher passt auch der Env-Name `Groq_API_Key`.
     groq_api_key: SecretStr = SecretStr("")

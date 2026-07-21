@@ -710,6 +710,39 @@ class WritesMixin(ReservationsBase):
         except Exception as exc:  # noqa: BLE001 — Audit ist best-effort
             log.warning("reservation_cancellation_log_failed", error=str(exc))
 
+        # Policy-Refund (Buchungs-Kondition): den erstattbaren Anteil der bereits
+        # gezahlten Beträge nach der Storno-Frist erstatten. Best-effort — ein
+        # Refund-Fehler darf den bereits vollzogenen Storno NICHT zurückdrehen
+        # (der Storno ist persistiert; das Refund-Problem wird geloggt und ist
+        # über die Zahlungsansicht sichtbar/nachholbar). Nur für eigene Kanäle
+        # (bei OTA wird hier ohnehin nicht storniert, s. Guard oben).
+        try:
+            from src.features.payments.service import (  # noqa: PLC0415
+                PaymentsError,
+                PaymentsService,
+            )
+
+            days_before = max(
+                0, (_as_date(current["check_in"]) - datetime.now(UTC).date()).days
+            )
+            PaymentsService(service_client=self._db()).refund_for_cancellation(
+                ctx,
+                reservation_id=reservation_id,
+                days_before_arrival=days_before,
+            )
+        except PaymentsError as exc:
+            log.warning(
+                "cancellation_refund_failed",
+                reservation_id=reservation_id,
+                error=exc.message,
+            )
+        except Exception as exc:  # noqa: BLE001 — Refund darf Storno nie kippen
+            log.warning(
+                "cancellation_refund_error",
+                reservation_id=reservation_id,
+                error=str(exc)[:200],
+            )
+
         # Loyalty-Aggregate des Gastes neu berechnen (Storno reduziert Umsatz).
         if current.get("guest_id"):
             from src.features.guests.service import (  # noqa: PLC0415

@@ -4346,6 +4346,8 @@
       "nameTaken": "This name already exists for this property.",
       "minStayLabel": "Minimum stay (nights)",
       "minStayHint": "Default for all days — you maintain individual days later in the calendar.",
+      "sendToPortalsLabel": "Send this price to the booking portals",
+      "sendToPortalsHint": "The base price goes to the portals anyway. This additional price is only sent if you enable it here.",
       "pricingTitle": "Pricing",
       "currencyFixed": "Currency: {currency} (taken from the property)",
       "modeManual": "Maintain prices manually",

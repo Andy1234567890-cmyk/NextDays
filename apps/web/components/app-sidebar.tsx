@@ -99,7 +99,11 @@ const VR_FINANCE: readonly NavItem[] = [
 const HOTEL_GROUP: NavGroup = {
   groupKey: "hotel",
   icon: "ph:buildings",
-  items: [...HOTEL_FINANCE, { key: "settings", href: "/einstellungen", icon: "ph:gear" }],
+  items: [
+    ...HOTEL_FINANCE,
+    // Konditionen = Finanzbedingungen → wie der Backend-Endpunkt gegatet.
+    { key: "settings", href: "/einstellungen", icon: "ph:gear", req: "manage_property_conditions" },
+  ],
 };
 
 // Betriebs-Gruppe „Ferienwohnungen" (NextDays-Finanzsatz + Eigentümer).
@@ -109,7 +113,7 @@ const VR_GROUP: NavGroup = {
   items: [
     { key: "owners", href: "/eigentuemer", icon: "ph:user-circle-gear", req: "manage_owners" },
     ...VR_FINANCE,
-    { key: "settings", href: "/einstellungen", icon: "ph:gear" },
+    { key: "settings", href: "/einstellungen", icon: "ph:gear", req: "manage_property_conditions" },
   ],
 };
 

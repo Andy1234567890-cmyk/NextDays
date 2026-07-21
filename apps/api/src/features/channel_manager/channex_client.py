@@ -400,6 +400,29 @@ class ChannexClient:
         if resp.is_success:
             return body
 
+        # DEBUG: den KOMPLETTEN rohen Fehler protokollieren — nicht nur das
+        # geparste `errors`-Feld. So sehen wir jedes Zusatzfeld, das Channex im
+        # 422-Body mitschickt (welcher bestehende Kanal, welche property/Konto den
+        # Konflikt hält), inkl. Response-Header und rohem Text vor jeder Umwandlung.
+        try:
+            raw_text = resp.text
+        except (UnicodeDecodeError, httpx.HTTPError):
+            raw_text = "<nicht lesbar>"
+        log.error(
+            "channex_api_error_RAW",
+            url=url,
+            status=resp.status_code,
+            full_body=body,
+            raw_text=raw_text[:4000],
+            headers=dict(resp.headers),
+            request_method=resp.request.method,
+            request_url=str(resp.request.url),
+            request_body=(
+                resp.request.content.decode("utf-8", "replace")[:4000]
+                if resp.request.content else None
+            ),
+        )
+
         # Fehler: Channex liefert {"errors": {...}} oder {"error": {...}}.
         detail = body.get("errors") or body.get("error") or body
         message = self._extract_message(detail) or f"Channex-Fehler {resp.status_code}."

@@ -11,11 +11,14 @@ Branding — die KYC-Daten kommen über die eigene Dashboard-UI und werden per
 ``Account.update`` / ``external_account`` an Stripe gegeben.
 
 Tenant-scoping: ``_require(ctx)`` erzwingt tenant_id + DB. Beträge gehen in Cent
-an Stripe (``int(round(amount * 100))``).
+an Stripe (``int(round(amount * 100))``). PayPal (Multiparty) läuft parallel über
+``paypal_client`` (Major-Unit-Strings, eigener Onboarding-/Order-/Refund-Pfad).
 """
+# pylint: disable=too-many-lines
 from __future__ import annotations
 
 from contextlib import contextmanager
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from stripe import StripeClient
@@ -27,6 +30,7 @@ from src.core.logging import get_logger
 from src.core.security import AuthContext
 
 from . import stripe_client as sc
+from .paypal_client import PayPalClient, PayPalError, PayPalNotConfiguredError
 from .schemas import (
     BookingPaymentResult,
     ConnectAccountCreate,
@@ -35,6 +39,8 @@ from .schemas import (
     CountryRequirements,
     DiagnosticCheck,
     PaymentsDiagnostics,
+    PaymentSettings,
+    PaymentSettingsResponse,
     SliceHealth,
     StripeAccountDiagnostics,
 )
@@ -259,6 +265,20 @@ class PaymentsService:
             raise PaymentsError("Payments-DB nicht verfügbar.", status_code=500)
         return self._db
 
+    def get_own_connect_account_id(self, ctx: AuthContext) -> str | None:
+        """Die stripe_account_id DES EIGENEN Tenants (für den Dashboard-Banner).
+        Über den Server (service_role), weil tenant_billing_profile am anon-/
+        authenticated-Direktpfad gesperrt ist (Wurzel 6, Migration 0169)."""
+        db, tenant_id = self._require(ctx)
+        row = (
+            db.table("tenant_billing_profile")
+            .select("stripe_account_id")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        return (row[0].get("stripe_account_id") if row else None) or None
+
     def _require_own_connect_account(
         self, tenant_id: str, stripe_account_id: str
     ) -> None:
@@ -280,6 +300,92 @@ class PaymentsService:
         if not own or own != stripe_account_id:
             # 404 (nicht 403) — die Existenz eines fremden Accounts nicht bestätigen.
             raise PaymentsError("Konto nicht gefunden.", status_code=404)
+
+    # --- Zahlungs-Einstellungen (Tab „Zahlungen") ---------------------------
+
+    # Spalten, die das Zahlungen-Tab lesen/schreiben darf. Steuer/Legal-Felder
+    # sind bewusst NICHT dabei — die pflegt das Buchhaltungs-Profil.
+    _SETTINGS_COLUMNS = (
+        "active_card_gateway",
+        "paypal_email",
+        "manual_payments_enabled",
+        "merchant_name",
+        "auto_charge_first_deposit",
+        "auto_charge_scheduled",
+        "auto_refund_on_cancel",
+        "auto_preauth_deposits",
+        "verify_card_before_booking",
+        "iban",
+        "bic",
+        "bank_name",
+        "account_holder",
+    )
+
+    def get_payment_settings(self, ctx: AuthContext) -> PaymentSettingsResponse:
+        """Zahlungs-Einstellungen des Tenants + abgeleiteter Stripe-Status."""
+        db, tenant_id = self._require(ctx)
+        cols = (
+            ",".join(self._SETTINGS_COLUMNS)
+            + ",stripe_account_id,stripe_charges_enabled"
+            + ",paypal_onboarding_status,paypal_payments_receivable"
+            + ",paypal_email_confirmed"
+        )
+        row = (
+            db.table("tenant_billing_profile")
+            .select(cols)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        data = row[0] if row else {}
+        paypal_connected = bool(
+            data.get("paypal_payments_receivable")
+            and data.get("paypal_email_confirmed")
+        )
+        return PaymentSettingsResponse(
+            **{k: data.get(k) for k in self._SETTINGS_COLUMNS if data.get(k) is not None},
+            stripe_connected=bool(data.get("stripe_account_id")),
+            stripe_charges_enabled=bool(data.get("stripe_charges_enabled")),
+            paypal_onboarding_status=data.get("paypal_onboarding_status")
+            or "not_started",
+            paypal_connected=paypal_connected,
+        )
+
+    def update_payment_settings(
+        self, ctx: AuthContext, req: PaymentSettings
+    ) -> PaymentSettingsResponse:
+        """Zahlungs-Einstellungen speichern. Es werden AUSSCHLIESSLICH die
+        Zahlungs-Spalten geschrieben (Whitelist), nie Steuer-/Legal-Felder.
+        Stripe als aktives Kartengateway verlangt einen verbundenen, abrechnungs-
+        fähigen Account — sonst fail-closed (kein toter Schalter, Wurzel 5)."""
+        db, tenant_id = self._require(ctx)
+        if req.active_card_gateway == "stripe":
+            row = (
+                db.table("tenant_billing_profile")
+                .select("stripe_account_id,stripe_charges_enabled")
+                .eq("tenant_id", tenant_id)
+                .limit(1)
+                .execute()
+            ).data
+            acct = row[0] if row else {}
+            if not acct.get("stripe_account_id") or not acct.get(
+                "stripe_charges_enabled"
+            ):
+                raise PaymentsError(
+                    "Stripe ist noch nicht abrechnungsfähig verbunden.",
+                    status_code=409,
+                )
+        payload = req.model_dump(include=set(self._SETTINGS_COLUMNS))
+        # Leere PayPal-Adresse als NULL (Kanal aus), nicht als Leerstring.
+        if not payload.get("paypal_email"):
+            payload["paypal_email"] = None
+        (
+            db.table("tenant_billing_profile")
+            .update(payload)
+            .eq("tenant_id", tenant_id)
+            .execute()
+        )
+        return self.get_payment_settings(ctx)
 
     # --- Stripe Connect (Custom, voll white-label) --------------------------
 
@@ -449,7 +555,8 @@ class PaymentsService:
             db.table("reservations")
             .select(
                 "id, tenant_id, total_amount, currency, payment_status, "
-                "channel, ota_name, source_channex_booking_id"
+                "channel, ota_name, source_channex_booking_id, "
+                "rate_plan_id, check_in, guest_email"
             )
             .eq("id", reservation_id)
             .limit(1)
@@ -500,6 +607,34 @@ class PaymentsService:
                 status_code=409,
             )
         return acct
+
+    def _merchant_descriptor(self, db: Client, tenant_id: str) -> str | None:
+        """Name des Händlers für die Kartenabrechnung (Stripe statement descriptor).
+        Bevorzugt das explizit gesetzte merchant_name, sonst den Firmennamen
+        (legal_name). None, wenn beides fehlt — dann kein Descriptor (kein
+        erfundener Wert, Wurzel 4). stripe_client kappt/säubert selbst."""
+        row = (
+            db.table("tenant_billing_profile")
+            .select("merchant_name, legal_name")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not row:
+            return None
+        return row[0].get("merchant_name") or row[0].get("legal_name") or None
+
+    def _settings_flag(self, db: Client, tenant_id: str, column: str) -> bool:
+        """Einen booleschen Zahlungs-Toggle des Tenants lesen (Default False, wenn
+        kein Profil existiert). Nur für die whitelisted Toggle-Spalten gedacht."""
+        row = (
+            db.table("tenant_billing_profile")
+            .select(column)
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        return bool(row[0].get(column)) if row else False
 
     def _fee_cents(self, amount_cents: int) -> int:
         pct = get_settings().stripe_platform_fee_pct
@@ -553,6 +688,7 @@ class PaymentsService:
                 currency=currency,
                 destination_acct=acct,
                 application_fee_cents=self._fee_cents(amount_cents),
+                statement_descriptor=self._merchant_descriptor(db, tenant_id),
                 metadata={"reservation_id": reservation_id, "tenant_id": tenant_id},
                 client=self._stripe,
             )
@@ -571,6 +707,295 @@ class PaymentsService:
             payment_id=payment["id"],
             publishable_key=get_settings().stripe_publishable_key,
         )
+
+    # --- Buchungs-Konditionen: Anzahlung + automatische Restzahlung ----------
+
+    def _resolve_condition(self, db: Client, res: dict) -> dict | None:
+        """Die für eine Reservierung geltende Kondition ermitteln: zuerst über den
+        Rate-Plan (rate_plans.booking_condition_id), sonst die Standard-Kondition
+        des Tenants (is_default). None, wenn keine existiert → dann gilt die volle
+        Zahlung sofort (bestehendes Verhalten)."""
+        tenant_id = res["tenant_id"]
+        rate_plan_id = res.get("rate_plan_id")
+        condition_id: str | None = None
+        if rate_plan_id:
+            rp = (
+                db.table("rate_plans")
+                .select("booking_condition_id")
+                .eq("id", rate_plan_id)
+                .limit(1)
+                .execute()
+            ).data
+            if rp:
+                condition_id = rp[0].get("booking_condition_id")
+        query = (
+            db.table("booking_conditions")
+            .select("*")
+            .eq("tenant_id", tenant_id)
+        )
+        if condition_id:
+            rows = query.eq("id", condition_id).limit(1).execute().data
+        else:
+            rows = query.eq("is_default", True).limit(1).execute().data
+        return rows[0] if rows else None
+
+    @staticmethod
+    def _first_payment_amount(condition: dict, total: float) -> float:
+        """Höhe der ersten Zahlung (Anzahlung) aus der Kondition. Ohne Split
+        (installments=1) ODER ohne gesetzten Prozentsatz = voller Betrag."""
+        if int(condition.get("installments") or 1) <= 1:
+            return total
+        pct = condition.get("first_payment_percent")
+        if pct is None:
+            return total
+        return round(total * float(pct) / 100.0, 2)
+
+    @staticmethod
+    def _balance_due_at(condition: dict, check_in: date) -> datetime | None:
+        """Fälligkeit der Restzahlung: X Tage vor Anreise (aus der Kondition).
+        None, wenn keine Restzahlung geplant ist."""
+        days = condition.get("balance_days_before_arrival")
+        if days is None:
+            return None
+        due_date = check_in - timedelta(days=int(days))
+        return datetime(due_date.year, due_date.month, due_date.day, tzinfo=UTC)
+
+    def create_booking_payment_scheduled(
+        self, *, reservation_id: str
+    ) -> BookingPaymentResult:
+        """Wie create_booking_payment, aber konditionsgesteuert: gilt für die
+        Buchung ein Zahlungsplan mit Anzahlung, wird NUR die Anzahlung kassiert,
+        die Karte für die spätere Restzahlung gespeichert und eine 'balance'-Zeile
+        mit Fälligkeit geplant. Ohne Kondition/Split → volle Zahlung (Delegation
+        an den bestehenden Pfad, unverändertes Verhalten)."""
+        db = self._db_or_fail()
+        res = self._load_reservation(db, reservation_id)
+        self._require_own_channel(res)
+        condition = self._resolve_condition(db, res)
+        total = float(res["total_amount"] or 0)
+        if condition is None or self._first_payment_amount(condition, total) >= total:
+            # Keine Anzahlung → voller Betrag sofort (bestehender Pfad).
+            return self.create_booking_payment(reservation_id=reservation_id)
+
+        if total <= 0:
+            raise PaymentsError("Buchungsbetrag fehlt.", status_code=422)
+        currency = res["currency"]
+        if not currency:
+            raise PaymentsError("Währung der Buchung fehlt.", status_code=422)
+
+        # Idempotenz: offene Anzahlung wiederverwenden (Doppelklick/Reload/Retry).
+        reuse = self._reuse_pending_intent(db, reservation_id, "down_payment")
+        if reuse:
+            return BookingPaymentResult(
+                client_secret=reuse["client_secret"],
+                payment_id=reuse["payment_id"],
+                publishable_key=get_settings().stripe_publishable_key,
+            )
+
+        tenant_id = res["tenant_id"]
+        acct = self._connected_account(db, tenant_id)
+        down = self._first_payment_amount(condition, total)
+        down_cents = _to_cents(down)
+        # Customer anlegen, damit die Karte für die Restzahlung gespeichert werden
+        # kann (off-session-Charge braucht einen Customer + gespeicherte PM).
+        with _stripe_errors():
+            customer = sc.get_or_create_customer(
+                email=res.get("guest_email"),
+                metadata={"reservation_id": reservation_id, "tenant_id": tenant_id},
+                client=self._stripe,
+            )
+            intent = sc.create_payment_intent(
+                amount_cents=down_cents,
+                currency=currency,
+                destination_acct=acct,
+                application_fee_cents=self._fee_cents(down_cents),
+                customer=customer,
+                save_payment_method=True,  # Karte für die Restzahlung merken
+                statement_descriptor=self._merchant_descriptor(db, tenant_id),
+                metadata={
+                    "reservation_id": reservation_id,
+                    "tenant_id": tenant_id,
+                    "type": "down_payment",
+                },
+                client=self._stripe,
+            )
+        payment = self._insert_payment(
+            db,
+            reservation_id=reservation_id,
+            amount=down,
+            currency=currency,
+            ptype="down_payment",
+            gateway_ref=intent["id"],
+            status="pending",
+        )
+        # Customer schon jetzt an der Anzahlung vermerken; die payment_method-ID
+        # kommt erst nach Bestätigung (Webhook/Confirm) und wird dann nachgetragen.
+        self._update_payment(db, payment["id"], {"stripe_customer_id": customer})
+        # Restzahlung planen (eine 'balance'-Zeile mit Fälligkeit) — der Worker
+        # chargt sie off-session, sobald sie fällig ist.
+        self._schedule_balance(
+            db,
+            reservation_id=reservation_id,
+            amount=round(total - down, 2),
+            currency=currency,
+            condition=condition,
+            check_in=res.get("check_in"),
+            customer=customer,
+        )
+        self._set_reservation_payment_status(db, reservation_id, "pending")
+        return BookingPaymentResult(
+            client_secret=intent["client_secret"],
+            payment_id=payment["id"],
+            publishable_key=get_settings().stripe_publishable_key,
+        )
+
+    def _schedule_balance(
+        self,
+        db: Client,
+        *,
+        reservation_id: str,
+        amount: float,
+        currency: str,
+        condition: dict,
+        check_in: str | date | None,
+        customer: str,
+    ) -> None:
+        """Eine geplante Restzahlung ('balance', scheduled) mit Fälligkeit anlegen.
+        Ohne gültiges Fälligkeitsdatum wird nichts geplant (dann bleibt es bei der
+        Anzahlung; der Rest wäre manuell zu kassieren)."""
+        if amount <= 0 or not check_in:
+            return
+        check_in_date = (
+            check_in if isinstance(check_in, date)
+            else date.fromisoformat(str(check_in))
+        )
+        due_at = self._balance_due_at(condition, check_in_date)
+        if due_at is None:
+            return
+        # Idempotenz: nur EINE geplante Restzahlung je Buchung.
+        existing = (
+            db.table("payments")
+            .select("id")
+            .eq("reservation_id", reservation_id)
+            .eq("type", "balance")
+            .limit(1)
+            .execute()
+        ).data
+        if existing:
+            return
+        db.table("payments").insert(
+            {
+                "reservation_id": reservation_id,
+                "amount": amount,
+                "currency": currency,
+                "type": "balance",
+                "gateway": "stripe",
+                # gateway_ref wird erst beim Charge gesetzt; Platzhalter leer.
+                "gateway_ref": "",
+                "status": "pending",
+                "stripe_customer_id": customer,
+                "due_at": due_at.isoformat(),
+                "scheduled_status": "scheduled",
+            }
+        ).execute()
+
+    def charge_due_balance(self, *, payment_id: str) -> dict:
+        """Eine fällige, geplante Restzahlung off-session belasten (vom Worker
+        aufgerufen). Fail-closed (Wurzel 5): bei authentication_required (3DS)
+        wird die Zeile auf 'needs_action' gesetzt (Gast muss on-session bestätigen),
+        bei Ablehnung auf 'failed' — NIE still als bezahlt markieren."""
+        db = self._db_or_fail()
+        rows = (
+            db.table("payments")
+            .select("*")
+            .eq("id", payment_id)
+            .eq("type", "balance")
+            .limit(1)
+            .execute()
+        ).data
+        if not rows:
+            raise PaymentsError("Restzahlung nicht gefunden.", status_code=404)
+        bal = rows[0]
+        if bal.get("scheduled_status") != "scheduled":
+            # Schon in Bearbeitung/erledigt → Idempotenz-Guard (Wurzel 2).
+            return {"payment_id": payment_id, "status": bal.get("scheduled_status")}
+        pm = bal.get("stripe_payment_method_id")
+        customer = bal.get("stripe_customer_id")
+        if not pm or not customer:
+            self._update_payment(
+                db, payment_id, {"scheduled_status": "failed"}
+            )
+            raise PaymentsError(
+                "Keine gespeicherte Karte für die Restzahlung.", status_code=409
+            )
+        res = self._load_reservation(db, bal["reservation_id"])
+        # Gate: nur wenn der Betrieb den automatischen Einzug geplanter Zahlungen
+        # aktiviert hat. Sonst bleibt die Zeile 'scheduled' (Gast zahlt per Link/
+        # Erinnerung) — kein automatischer off-session-Charge (Wurzel 5).
+        if not self._settings_flag(db, res["tenant_id"], "auto_charge_scheduled"):
+            return {"payment_id": payment_id, "status": "scheduled", "skipped": True}
+        acct = self._connected_account(db, res["tenant_id"])
+        amount_cents = _to_cents(float(bal["amount"]))
+        # Claim: erst auf 'charging' setzen, damit ein zweiter Worker-Lauf dieselbe
+        # Zeile nicht parallel chargt (Wurzel 2). Der Stripe-idempotency_key ist
+        # der zweite Backstop.
+        self._update_payment(db, payment_id, {"scheduled_status": "charging"})
+        idem_key = f"balance:{payment_id}"
+        try:
+            with _stripe_errors():
+                intent = sc.create_payment_intent(
+                    amount_cents=amount_cents,
+                    currency=bal["currency"],
+                    destination_acct=acct,
+                    application_fee_cents=self._fee_cents(amount_cents),
+                    customer=customer,
+                    payment_method=pm,
+                    off_session=True,
+                    statement_descriptor=self._merchant_descriptor(
+                        db, res["tenant_id"]
+                    ),
+                    idempotency_key=idem_key,
+                    metadata={
+                        "reservation_id": bal["reservation_id"],
+                        "type": "balance",
+                    },
+                    client=self._stripe,
+                )
+        except PaymentsError as exc:
+            # authentication_required (3DS) vs. echte Ablehnung unterscheiden.
+            needs_action = "authentication" in (exc.message or "").lower()
+            self._update_payment(
+                db,
+                payment_id,
+                {"scheduled_status": "needs_action" if needs_action else "failed"},
+            )
+            raise
+        self._update_payment(
+            db,
+            payment_id,
+            {
+                "gateway_ref": intent["id"],
+                "status": "succeeded",
+                "scheduled_status": "done",
+            },
+        )
+        self._set_reservation_payment_status(db, bal["reservation_id"], "paid")
+        return {"payment_id": payment_id, "status": "done"}
+
+    def due_balance_payment_ids(self, *, now: datetime | None = None) -> list[str]:
+        """IDs aller fälligen, noch offenen Restzahlungen (für den Worker). Global
+        über alle Tenants — der Worker ruft je ID charge_due_balance auf."""
+        db = self._db_or_fail()
+        cutoff = (now or datetime.now(UTC)).isoformat()
+        rows = (
+            db.table("payments")
+            .select("id")
+            .eq("type", "balance")
+            .eq("scheduled_status", "scheduled")
+            .lte("due_at", cutoff)
+            .execute()
+        ).data or []
+        return [r["id"] for r in rows]
 
     # --- Kaution (Stufe B) ---------------------------------------------------
 
@@ -606,6 +1031,7 @@ class PaymentsService:
                 destination_acct=acct,
                 application_fee_cents=0,  # auf Kautionen keine Plattform-Fee
                 capture_method="manual",
+                statement_descriptor=self._merchant_descriptor(db, tenant_id),
                 metadata={"reservation_id": reservation_id, "type": "deposit"},
                 client=self._stripe,
             )
@@ -680,26 +1106,36 @@ class PaymentsService:
                 "Erstattungsbetrag übersteigt den noch nicht erstatteten Betrag.",
                 status_code=422,
             )
-        amount_cents = _to_cents(refund_amount) if amount is not None else None
-        # Deterministischer Idempotenz-Key (Wurzel 2): zwei nebenläufige Refunds
-        # (Doppelklick/Retry) passieren beide den Status-Guard oben, bevor einer
-        # den Status setzt — nur Stripes idempotency_key verhindert das zweite
-        # Geldereignis. Betrag im Key, damit eine legitime spätere Teilerstattung
-        # anderer Höhe nicht fälschlich denselben Key trifft.
-        idem_key = f"refund:{payment_id}:{amount_cents if amount_cents else 'full'}"
-        with _stripe_errors():
-            result = sc.refund(
-                payment["gateway_ref"], amount_cents,
-                client=self._stripe, idempotency_key=idem_key,
+        # Gateway-spezifisch erstatten. Stripe: refund über gateway_ref (Cent).
+        # PayPal: refund über die capture_id (Major-Unit-String) im Namen des
+        # Verkäufers, inkl. anteiliger Provisions-Rückgabe.
+        if payment.get("gateway") == "paypal":
+            refund_id = self._refund_paypal(
+                db, payment, refund_amount, is_partial=amount is not None
             )
+        else:
+            amount_cents = _to_cents(refund_amount) if amount is not None else None
+            # Deterministischer Idempotenz-Key (Wurzel 2): zwei nebenläufige Refunds
+            # (Doppelklick/Retry) passieren beide den Status-Guard oben, bevor einer
+            # den Status setzt — nur Stripes idempotency_key verhindert das zweite
+            # Geldereignis. Betrag im Key, damit eine legitime spätere Teilerstattung
+            # anderer Höhe nicht fälschlich denselben Key trifft.
+            idem_key = f"refund:{payment_id}:{amount_cents if amount_cents else 'full'}"
+            with _stripe_errors():
+                result = sc.refund(
+                    payment["gateway_ref"], amount_cents,
+                    client=self._stripe, idempotency_key=idem_key,
+                )
+            refund_id = result["id"]
         self._insert_payment(
             db,
             reservation_id=payment["reservation_id"],
             amount=refund_amount,
             currency=payment.get("currency"),
             ptype="refund",
-            gateway_ref=result["id"],
+            gateway_ref=refund_id,
             status="succeeded",
+            gateway=payment.get("gateway", "stripe"),
         )
         # Voll erstattet, sobald die Summe aller Erstattungen den Ursprungsbetrag
         # erreicht (nicht nur wenn EINE Erstattung >= voller Betrag ist).
@@ -709,9 +1145,340 @@ class PaymentsService:
         self._set_reservation_payment_status(
             db, payment["reservation_id"], status_val
         )
-        return {"payment_id": payment_id, "refund_id": result["id"]}
+        return {"payment_id": payment_id, "refund_id": refund_id}
+
+    def _refund_paypal(
+        self, db: Client, payment: dict, refund_amount: float, *, is_partial: bool
+    ) -> str:
+        """PayPal-Refund über die capture_id im Namen des Verkäufers. Gibt die
+        Provision anteilig zurück (NICHT automatisch bei PayPal — muss explizit
+        gesetzt werden). Fee-Anteil = gleicher Prozentsatz wie beim Charge, auf den
+        erstatteten Betrag angewandt; Währung == Transaktionswährung (Wurzel 4)."""
+        capture_id = payment.get("paypal_capture_id")
+        if not capture_id:
+            raise PaymentsError(
+                "Keine PayPal-Capture-ID zur Zahlung (noch nicht abgeschlossen?).",
+                status_code=409,
+            )
+        currency = payment.get("currency")
+        res = self._load_reservation(db, payment["reservation_id"])
+        seller = self._paypal_seller(db, res["tenant_id"])
+        fee_refund = self._fee_amount(refund_amount) if currency else None
+        try:
+            result = self._paypal().refund_capture(
+                capture_id=capture_id,
+                seller_merchant_id=seller,
+                amount=refund_amount if is_partial else None,
+                currency=currency,
+                platform_fee_refund=fee_refund,
+                request_id=f"refund:{payment['id']}:{refund_amount}",
+            )
+        except PayPalError as exc:
+            raise PaymentsError(exc.message, status_code=exc.status_code) from exc
+        return result.get("id") or capture_id
+
+    # --- Storno-Refund (policy-gesteuert) ------------------------------------
+
+    @staticmethod
+    def _refund_percent_for(condition: dict, days_before_arrival: int) -> float:
+        """Erstattungs-Prozentsatz aus der Kondition für einen Storno-Zeitpunkt.
+
+          * non_refundable → 0 %
+          * refundable     → 100 %
+          * partial        → höchste passende Staffel-Regel (Regel greift, wenn
+            mindestens `days_before_arrival` Tage vor Anreise storniert wird).
+            Keine passende Regel → 0 %.
+        """
+        mode = condition.get("cancellation_mode")
+        if mode == "refundable":
+            return 100.0
+        if mode != "partial":
+            return 0.0
+        best = 0.0
+        for rule in condition.get("refund_rules") or []:
+            if days_before_arrival >= int(rule.get("days_before_arrival", 0)):
+                best = max(best, float(rule.get("refund_percent", 0)))
+        return best
+
+    def refund_for_cancellation(
+        self, ctx: AuthContext, *, reservation_id: str, days_before_arrival: int
+    ) -> dict | None:
+        """Bei Storno: die geltende Kondition auswerten und den policy-konformen
+        Refund auslösen. Erstattet den Prozentsatz der bereits GEZAHLTEN Beträge
+        (full + down_payment; NICHT Kaution/Refund). None, wenn nichts zu erstatten
+        ist (0 %, keine Zahlung, keine Kondition). Fehler werden hochgereicht — der
+        Aufrufer (cancel) behandelt sie best-effort, damit ein Refund-Problem den
+        bereits vollzogenen Storno nicht zurückdreht."""
+        db, tenant_id = self._require(ctx)
+        # Gate: nur wenn der Betrieb die automatische Storno-Rückerstattung
+        # aktiviert hat. Sonst wird der policy-Betrag nur berechnet/angezeigt und
+        # manuell ausgelöst (kein automatischer Geldabfluss, Wurzel 5).
+        if not self._settings_flag(db, tenant_id, "auto_refund_on_cancel"):
+            return None
+        res = self._load_reservation(db, reservation_id)
+        if res["tenant_id"] != tenant_id:
+            raise PaymentsError("Buchung nicht gefunden.", status_code=404)
+        condition = self._resolve_condition(db, res)
+        if condition is None:
+            return None
+        pct = self._refund_percent_for(condition, days_before_arrival)
+        if pct <= 0:
+            return None
+        # Erstattbare Zahlungen: erfolgreiche Gastzahlungen (voll + Anzahlung).
+        pays = (
+            db.table("payments")
+            .select("id, amount, status, type")
+            .eq("reservation_id", reservation_id)
+            .in_("type", ["full", "down_payment"])
+            .in_("status", ["succeeded", "partially_refunded"])
+            .execute()
+        ).data or []
+        results = []
+        for p in pays:
+            refund_amount = round(float(p["amount"]) * pct / 100.0, 2)
+            if refund_amount <= 0:
+                continue
+            # refund_payment prüft selbst gegen bereits Erstattetes (Idempotenz).
+            results.append(
+                self.refund_payment(ctx, p["id"], amount=refund_amount)
+            )
+        return {"refund_percent": pct, "refunds": results} if results else None
 
     # --- Helfer (DB) ---------------------------------------------------------
+
+    # =========================================================================
+    # PayPal (Complete Payments Platform / Multiparty)
+    # =========================================================================
+
+    @staticmethod
+    def _paypal() -> PayPalClient:
+        return PayPalClient()
+
+    def _fee_amount(self, amount: float) -> float:
+        """Plattform-Provision als Betrag (nicht Cent) — gleicher Satz wie Stripe
+        (stripe_platform_fee_pct). >100 % = Konfigfehler → klar fehlschlagen."""
+        pct = get_settings().stripe_platform_fee_pct
+        if pct <= 0:
+            return 0.0
+        if pct > 100:
+            raise PaymentsError(
+                "Provisions-Satz (STRIPE_PLATFORM_FEE_PCT) ist ungültig (>100 %).",
+                status_code=500,
+            )
+        return round(amount * pct / 100.0, 2)
+
+    def _paypal_seller(self, db: Client, tenant_id: str) -> str:
+        """Verkäufer-Merchant-ID des Tenants — NUR wenn abrechnungsfähig verbunden
+        (payments_receivable UND email_confirmed). Sonst fail-closed (Wurzel 5).
+        Nie aus Client-Input (Wurzel 3): merchant_id kommt aus dem Profil."""
+        prof = (
+            db.table("tenant_billing_profile")
+            .select(
+                "paypal_merchant_id, paypal_payments_receivable, "
+                "paypal_email_confirmed"
+            )
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        row = prof[0] if prof else {}
+        merchant = row.get("paypal_merchant_id")
+        if not merchant or not row.get("paypal_payments_receivable") or not row.get(
+            "paypal_email_confirmed"
+        ):
+            raise PaymentsError(
+                "PayPal ist für diesen Betrieb nicht abrechnungsfähig verbunden.",
+                status_code=409,
+            )
+        return merchant
+
+    def start_paypal_onboarding(self, ctx: AuthContext, *, return_url: str) -> dict:
+        """Partner-Referral erstellen → action_url, zu der der Betrieb zum Verbinden
+        seines PayPal-Kontos umgeleitet wird. tracking_id = tenant_id (Rückkanal).
+        Setzt den Status auf 'pending'."""
+        db, tenant_id = self._require(ctx)
+        try:
+            result = self._paypal().create_partner_referral(
+                tracking_id=tenant_id, return_url=return_url
+            )
+        except PayPalNotConfiguredError as exc:
+            raise PaymentsError(str(exc), status_code=503) from exc
+        except PayPalError as exc:
+            raise PaymentsError(exc.message, status_code=exc.status_code) from exc
+        db.table("tenant_billing_profile").update(
+            {
+                "paypal_tracking_id": tenant_id,
+                "paypal_onboarding_status": "pending",
+            }
+        ).eq("tenant_id", tenant_id).execute()
+        return {"action_url": result["action_url"]}
+
+    def sync_own_paypal_status(self, ctx: AuthContext) -> dict:
+        """Onboarding-Status des eigenen Tenants nachladen (nach Rückkehr vom
+        Onboarding). Liest die merchant_id aus dem eigenen Profil (Wurzel 3) und
+        synct receivable/email_confirmed."""
+        db, tenant_id = self._require(ctx)
+        prof = (
+            db.table("tenant_billing_profile")
+            .select("paypal_merchant_id")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        merchant_id = prof[0].get("paypal_merchant_id") if prof else None
+        if not merchant_id:
+            return {"receivable": False, "email_confirmed": False}
+        return self.sync_paypal_status(tenant_id=tenant_id, merchant_id=merchant_id)
+
+    def sync_paypal_status(
+        self, *, tenant_id: str, merchant_id: str
+    ) -> dict:
+        """Onboarding-Status eines Verkäufers bei PayPal nachladen und ins Profil
+        spiegeln. Aufgerufen vom Return-Handler UND vom Webhook — der Return liefert
+        die merchant_id NUR als Hinweis; die Wahrheit kommt aus dem Status-Call
+        (Wurzel 3). Sellbar = receivable && email_confirmed (fail-closed)."""
+        db = self._db_or_fail()
+        try:
+            status = self._paypal().get_merchant_status(seller_merchant_id=merchant_id)
+        except PayPalNotConfiguredError as exc:
+            raise PaymentsError(str(exc), status_code=503) from exc
+        except PayPalError as exc:
+            raise PaymentsError(exc.message, status_code=exc.status_code) from exc
+        receivable = status["payments_receivable"]
+        confirmed = status["primary_email_confirmed"]
+        db.table("tenant_billing_profile").update(
+            {
+                "paypal_merchant_id": status["merchant_id"],
+                "paypal_payments_receivable": receivable,
+                "paypal_email_confirmed": confirmed,
+                "paypal_onboarding_status": (
+                    "completed" if receivable and confirmed else "pending"
+                ),
+            }
+        ).eq("tenant_id", tenant_id).execute()
+        return {"receivable": receivable, "email_confirmed": confirmed}
+
+    def revoke_paypal(self, *, merchant_id: str) -> None:
+        """Verkäufer hat die Plattform-Freigabe entzogen (MERCHANT.PARTNER-CONSENT.
+        REVOKED): PayPal deaktivieren (Gegenzustand, Wurzel 1) — künftige Orders
+        schlagen dann fail-closed fehl."""
+        db = self._db_or_fail()
+        db.table("tenant_billing_profile").update(
+            {
+                "paypal_payments_receivable": False,
+                "paypal_email_confirmed": False,
+                "paypal_onboarding_status": "revoked",
+            }
+        ).eq("paypal_merchant_id", merchant_id).execute()
+
+    def create_paypal_order(self, *, reservation_id: str) -> dict:
+        """PayPal-Order (mit Plattform-Provision) für eine Gastbuchung anlegen.
+        Public-Pfad wie der Stripe-Intent: Tenant/merchant aus der Reservierung,
+        nie aus dem Client. Idempotent: offene Order wiederverwenden."""
+        db = self._db_or_fail()
+        res = self._load_reservation(db, reservation_id)
+        self._require_own_channel(res)  # kein PayPal für OTA-Buchungen
+        tenant_id = res["tenant_id"]
+        amount = float(res["total_amount"] or 0)
+        if amount <= 0:
+            raise PaymentsError("Buchungsbetrag fehlt.", status_code=422)
+        currency = res["currency"]
+        if not currency:
+            raise PaymentsError("Währung der Buchung fehlt.", status_code=422)
+        seller = self._paypal_seller(db, tenant_id)
+
+        # Idempotenz (Wurzel 2): offene PayPal-Order dieser Buchung wiederverwenden.
+        existing = (
+            db.table("payments")
+            .select("id, paypal_order_id")
+            .eq("reservation_id", reservation_id)
+            .eq("gateway", "paypal")
+            .eq("status", "pending")
+            .order("created_at", desc=True)
+            .limit(1)
+            .execute()
+        ).data
+        if existing and existing[0].get("paypal_order_id"):
+            order_id = existing[0]["paypal_order_id"]
+            try:
+                order = self._paypal().get_order(
+                    order_id=order_id, seller_merchant_id=seller
+                )
+            except PayPalError:
+                order = {"status": None}
+            # Nur wiederverwenden, solange noch nicht abgeschlossen/verfallen.
+            if order.get("status") in {"CREATED", "APPROVED", "PAYER_ACTION_REQUIRED"}:
+                return {"order_id": order_id, "payment_id": existing[0]["id"]}
+
+        fee = self._fee_amount(amount)
+        try:
+            order = self._paypal().create_order(
+                seller_merchant_id=seller,
+                amount=amount,
+                currency=currency,
+                platform_fee=fee,
+                reference=reservation_id,
+                request_id=f"order:{reservation_id}",
+            )
+        except PayPalNotConfiguredError as exc:
+            raise PaymentsError(str(exc), status_code=503) from exc
+        except PayPalError as exc:
+            raise PaymentsError(exc.message, status_code=exc.status_code) from exc
+        payment = self._insert_payment(
+            db,
+            reservation_id=reservation_id,
+            amount=amount,
+            currency=currency,
+            ptype="full",
+            gateway_ref=order["id"] or "",
+            status="pending",
+            gateway="paypal",
+            extra={"paypal_order_id": order["id"]},
+        )
+        self._set_reservation_payment_status(db, reservation_id, "pending")
+        return {"order_id": order["id"], "payment_id": payment["id"]}
+
+    def capture_paypal_order(self, *, order_id: str) -> dict:
+        """Eine approved PayPal-Order capturen (nach onApprove im Frontend). Trägt
+        die capture_id nach (Refund-Referenz) und spiegelt den Zahlstatus.
+        Idempotent: eine schon gecapturete Order wird nicht doppelt eingezogen."""
+        db = self._db_or_fail()
+        rows = (
+            db.table("payments")
+            .select("id, reservation_id, status, paypal_capture_id")
+            .eq("paypal_order_id", order_id)
+            .eq("gateway", "paypal")
+            .limit(1)
+            .execute()
+        ).data
+        if not rows:
+            raise PaymentsError("PayPal-Zahlung nicht gefunden.", status_code=404)
+        pay = rows[0]
+        if pay.get("status") == "succeeded" or pay.get("paypal_capture_id"):
+            return {"payment_id": pay["id"], "status": "succeeded"}
+        res = self._load_reservation(db, pay["reservation_id"])
+        seller = self._paypal_seller(db, res["tenant_id"])
+        try:
+            cap = self._paypal().capture_order(
+                order_id=order_id,
+                seller_merchant_id=seller,
+                request_id=f"capture:{order_id}",
+            )
+        except PayPalError as exc:
+            self._update_payment(db, pay["id"], {"status": "failed"})
+            raise PaymentsError(exc.message, status_code=exc.status_code) from exc
+        succeeded = cap.get("status") == "COMPLETED"
+        self._update_payment(
+            db,
+            pay["id"],
+            {
+                "status": "succeeded" if succeeded else "failed",
+                "paypal_capture_id": cap.get("capture_id"),
+            },
+        )
+        if succeeded:
+            self._set_reservation_payment_status(db, pay["reservation_id"], "paid")
+        return {"payment_id": pay["id"], "status": cap.get("status")}
 
     def _insert_payment(
         self,
@@ -723,17 +1490,21 @@ class PaymentsService:
         ptype: str,
         gateway_ref: str,
         status: str,
+        gateway: str = "stripe",
+        extra: dict[str, Any] | None = None,
     ) -> dict:
         row: dict[str, Any] = {
             "reservation_id": reservation_id,
             "amount": amount,
             "type": ptype,
-            "gateway": "stripe",
+            "gateway": gateway,
             "gateway_ref": gateway_ref,
             "status": status,
         }
         if currency:
             row["currency"] = currency
+        if extra:
+            row.update(extra)
         ins = db.table("payments").insert(row).execute().data
         return ins[0] if ins else row
 
@@ -797,7 +1568,10 @@ class PaymentsService:
         """Zahlung tenant-sicher laden (Tenant über die Reservierung)."""
         rows = (
             db.table("payments")
-            .select("id, reservation_id, amount, currency, type, status, gateway_ref")
+            .select(
+                "id, reservation_id, amount, currency, type, status, gateway_ref, "
+                "gateway, paypal_capture_id"
+            )
             .eq("id", payment_id)
             .limit(1)
             .execute()
@@ -816,16 +1590,29 @@ class PaymentsService:
         return payment
 
     def _deposit_amount(self, db: Client, reservation_id: str) -> float:
-        """Kautionsbetrag aus dem Objekt der Reservierung (keine Erfindung)."""
+        """Kautionsbetrag — Priorität: die für die Buchung geltende Kondition
+        (deposit_required + deposit_amount), sonst der Objekt-Default
+        (properties.deposit_amount). Keine Erfindung (Wurzel 4): fehlt beides,
+        klar fehlschlagen."""
         res = (
             db.table("reservations")
-            .select("property_id")
+            .select("property_id, tenant_id, rate_plan_id")
             .eq("id", reservation_id)
             .limit(1)
             .execute()
         ).data
         if not res:
             raise PaymentsError("Buchung nicht gefunden.", status_code=404)
+        # 1) Kondition der Buchung (Rate-Plan → Standard).
+        condition = self._resolve_condition(db, res[0])
+        if (
+            condition
+            and condition.get("deposit_required")
+            and condition.get("deposit_amount")
+            and float(condition["deposit_amount"]) > 0
+        ):
+            return float(condition["deposit_amount"])
+        # 2) Fallback: Objekt-Default.
         prop = (
             db.table("properties")
             .select("deposit_amount")

@@ -18,11 +18,13 @@ import type {
   PropertyMap,
 } from "@/lib/channex";
 import {
+  disconnectChannel,
   setConnectionActive,
   syncChannexBookings,
   triggerFullSync,
 } from "@/lib/channex";
 import { formatCurrency } from "@/lib/currency";
+import { toast } from "sonner";
 
 // Portal-Metadaten für die Detailseite (Code = stabiler Schlüssel wie im
 // Backend-Katalog). Logo aus public/channels/*.svg, sonst Iconify-Fallback.
@@ -64,8 +66,36 @@ export function ChannelDetail({
   propertyMaps,
   bookings,
 }: Props) {
+  const router = useRouter();
+  const [disconnecting, startDisconnect] = useTransition();
   const portalBookings = bookingsForPortal(bookings, meta.label);
   const mappings = detail?.mappings ?? [];
+  // Ist das Portal verbunden? (mind. eine Verbindung + Channex-Kanal vorhanden)
+  const channelId = detail?.channel_id ?? null;
+  const isConnected = mappings.some((m) => m.connected) && !!channelId;
+
+  // „Alles lösen": den einen Channex-Kanal des Portals trennen (bei Hotels teilen
+  // sich alle Zimmer diesen Kanal → alle Zimmer-Verbindungen sind danach weg).
+  const disconnectAll = () => {
+    if (!channelId) return;
+    if (
+      !window.confirm(
+        `${meta.label} komplett trennen? Alle verbundenen Objekte dieses Portals ` +
+          "werden getrennt.",
+      )
+    ) {
+      return;
+    }
+    startDisconnect(async () => {
+      const res = await disconnectChannel(channelId);
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
+      toast.success(`${meta.label} getrennt.`);
+      router.refresh();
+    });
+  };
 
   return (
     <div className="flex flex-col gap-8">
@@ -86,13 +116,35 @@ export function ChannelDetail({
             />
           )}
         </div>
-        {configured && (
-          <ChannelConnectButton
-            label={`${meta.label} verbinden`}
-            variant="accent"
-            presetPortalCode={meta.code}
-          />
-        )}
+        {/* Verbinden-Button im Kopf: EIN Hotel = EINE Booking-Hotel-ID = EIN
+            Verbinden fürs ganze Hotel. Der Assistent fragt die Hotel-ID EINMAL ab,
+            danach werden alle Zimmer (Objekte) im Mapping-Schritt den Booking-
+            Zimmertypen zugeordnet. Nicht pro Zimmer verbinden (das ist EIN Hotel,
+            keine drei getrennten Betriebe). Ist das Portal schon verbunden, steht
+            hier stattdessen „Verbindung trennen" (löst den gemeinsamen Kanal). */}
+        {configured &&
+          (isConnected ? (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={disconnectAll}
+              disabled={disconnecting}
+              className="text-destructive hover:bg-destructive/10"
+            >
+              <Icon
+                icon={disconnecting ? "ph:spinner" : "ph:plugs"}
+                className={"size-4 " + (disconnecting ? "animate-spin" : "")}
+              />
+              Verbindung trennen
+            </Button>
+          ) : (
+            <ChannelConnectButton
+              label={`${meta.label} verbinden`}
+              variant="accent"
+              presetPortalCode={meta.code}
+              onDone={() => router.refresh()}
+            />
+          ))}
       </header>
 
       {!configured ? (
@@ -147,6 +199,11 @@ function MappingTable({
   totalCount: number;
 }) {
   const router = useRouter();
+  // Hotel-ID einer BEREITS verbundenen Zeile: bei Hotels teilen alle Zimmer eine
+  // Hotel-ID. Weitere Zimmer müssen sie NICHT erneut eingeben — der Assistent
+  // überspringt dann den Hotel-ID-Schritt und geht direkt ins Zimmer-Mapping.
+  const connectedHotelId =
+    mappings.find((m) => m.connected && m.ota_hotel_id)?.ota_hotel_id ?? null;
 
   if (mappings.length === 0) {
     return (
@@ -185,6 +242,7 @@ function MappingTable({
                 row={row}
                 portalCode={portalCode}
                 mapId={mapIdFor(maps, row.property_id)}
+                connectedHotelId={connectedHotelId}
                 onConnected={() => router.refresh()}
               />
             ))}
@@ -199,11 +257,13 @@ function MappingRow({
   row,
   portalCode,
   mapId,
+  connectedHotelId,
   onConnected,
 }: {
   row: ChannelMappingRow;
   portalCode: string;
   mapId: string | null;
+  connectedHotelId: string | null;
   onConnected: () => void;
 }) {
   const [pending, startTransition] = useTransition();
@@ -245,8 +305,17 @@ function MappingRow({
         <span className="font-medium">{row.property_title ?? "Objekt"}</span>
       </td>
       <td className="p-3 text-muted-foreground">
-        {row.ota_hotel_id ? (
-          <span className="font-mono text-xs">{row.ota_hotel_id}</span>
+        {/* Der OTA-Zimmertyp, auf den dieses Objekt gemappt ist (Name + Code),
+            NICHT die Hotel-ID — die ist für alle Zimmer eines Hotels gleich. */}
+        {row.connected ? (
+          <div className="flex flex-col">
+            <span className="font-medium text-foreground">
+              {row.ota_room_title ?? row.property_title ?? "Zimmer"}
+            </span>
+            {row.ota_room_type_code && (
+              <span className="font-mono text-xs">{row.ota_room_type_code}</span>
+            )}
+          </div>
         ) : (
           "—"
         )}
@@ -303,6 +372,7 @@ function MappingRow({
               variant="accent"
               presetPortalCode={portalCode}
               presetPropertyId={row.property_id}
+              presetHotelId={connectedHotelId}
               onDone={onConnected}
             />
           )}

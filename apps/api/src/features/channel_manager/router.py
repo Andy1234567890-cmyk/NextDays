@@ -268,7 +268,7 @@ def list_portals(
     ctx: CurrentUser, service: ChannelManagerServiceDep
 ) -> list[SupportedPortal]:
     """Unterstützte Portale + Felder für die eigene Verbinden-Maske."""
-    return [SupportedPortal(**p) for p in service.list_supported_portals()]
+    return [SupportedPortal(**p) for p in service.list_supported_portals(ctx)]
 
 
 @router.get("/channels", response_model=ChannelListResponse)

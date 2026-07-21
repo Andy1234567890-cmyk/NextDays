@@ -68,6 +68,83 @@ def _channex_property_type(local: str | None) -> str | None:
     return _CHANNEX_PROPERTY_TYPE.get(local.lower())
 
 
+# Lokaler property_type-Enum → Booking.com BCRT-Zimmertyp (Code + Kürzel).
+# Das obige _CHANNEX_PROPERTY_TYPE bildet die UNTERKUNFTSART ab (Channex-property-
+# type: holiday_home/apartment/hotel/…). Der ZIMMERTYP (BCRT) ist eine andere
+# Ebene: welche buchbare Einheit das Objekt bei Booking IST (Single/Double/Twin/
+# Suite/…). Recherche-belegt (developers.booking.com/connectivity/docs/codes-bcrt,
+# 3-fach verifiziert). Werte OHNE sinnvollen Zimmertyp (Stellplatz/Hausboot sind
+# Unterkunftsarten, kein Zimmertyp) → None (kein Raten, [[keine-fallbacks]]).
+_BOOKING_ROOM_TYPE: dict[str, tuple[int, str]] = {
+    # Hotel-Zimmertypen
+    "einzelzimmer": (10, "Single"),
+    "doppelzimmer": (9, "Double"),
+    "zweibettzimmer": (8, "Twin"),
+    "familienzimmer": (13, "Family"),
+    "junior_suite": (5, "Suite"),
+    "suite": (5, "Suite"),
+    # Ganze Einheiten (FeWo)
+    "ferienhaus": (29, "Holiday home"),
+    "appartement": (1, "Apartment"),
+    "glamping": (33, "Tent"),
+    "tiny_house": (28, "Chalet"),
+    # hausboot/stellplatz: Unterkunftsart, KEIN BCRT-Zimmertyp → bewusst None.
+}
+
+
+def _booking_room_type(local: str | None) -> tuple[int, str] | None:
+    """Lokalen property_type auf den Booking-BCRT-Zimmertyp (Code, Name) abbilden.
+    Unbekannt/ohne Entsprechung → None (kein erfundener Zimmertyp)."""
+    if not local:
+        return None
+    return _BOOKING_ROOM_TYPE.get(local.lower())
+
+
+# Booking.com Unterkunftsart (PCT-Code) → gültiger Channex-property_type-Code.
+# Booking hat 26 aktive PCT-Codes (developers.booking.com/…/codes-pct), Channex
+# 22 property_type-Codes (docs.channex.io/…/hotels-collection). Die meisten
+# entsprechen 1:1; wo Channex keinen eigenen Code hat, auf den nächstpassenden
+# abbilden (belegt gegengeprüft). Kein Code ohne sinnvolle Entsprechung → None
+# (Feld weglassen, kein 422; Wurzel 4/5). Channex-Codes 3-fach verifiziert.
+_PCT_TO_CHANNEX: dict[int, str] = {
+    20: "hotel",            # Hotel
+    19: "hostel",           # Hostel
+    3: "apartment",         # Apartment
+    4: "guest_house",       # Bed and Breakfast → guest_house (kein B&B-Code)
+    40: "guest_house",      # Pension/Guest House
+    6: "camping",           # Campground/Camping
+    7: "chalet",            # Chalet
+    12: "boat",             # Cruise/Boat
+    15: "farm_stay",        # Guest farm/Farm stay
+    21: "inn",              # Inn
+    22: "lodge",            # Lodge
+    27: "motel",            # Motel
+    30: "resort",           # Resort
+    33: "tent",             # Tent/Tented
+    35: "villa",            # Villa
+    5000: "apart_hotel",    # ApartHotel
+    5001: "riad",           # Riad
+    5002: "ryokan",         # Ryokan
+    5003: "hotel",          # Love Hotel → hotel (kein eigener Channex-Code)
+    5004: "homestay",       # Homestay
+    5005: "hotel",          # Japanese-style Business Hotel → hotel
+    5006: "holiday_home",   # Holiday Home
+    5007: "country_house",  # Country house
+    5008: "capsule_hotel",  # Capsule Hotel
+    5009: "holiday_park",   # Holiday Park
+    5010: "boat",           # Cruise Ship → boat
+    # 5011 Student Accommodation: kein sinnvoller Channex-Typ → bewusst None.
+}
+
+
+def _channex_type_from_pct(pct_code: int | None) -> str | None:
+    """Booking-PCT-Code auf einen gültigen Channex-property_type abbilden.
+    Unbekannt/ohne Entsprechung → None (kein ungültiger Wert an Channex)."""
+    if pct_code is None:
+        return None
+    return _PCT_TO_CHANNEX.get(int(pct_code))
+
+
 # Gültige Werte für den Mindestaufenthalt-Typ (Channex-settings.min_stay_type,
 # live verifiziert): "both" (Standard), "arrival" (nur bei Anreise) oder
 # "through" (durchgehend). Alles andere wird ignoriert (kein 422 riskieren).

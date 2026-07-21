@@ -1,5 +1,6 @@
 """Pydantic-Schemas für den payments-Slice."""
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel
 
@@ -102,6 +103,68 @@ class ExternalAccountRequest(BaseModel):
     iban: str
     account_holder: str
     country: str = "DE"
+
+
+# --- Zahlungs-Einstellungen (Tab „Zahlungen") ------------------------------
+
+class PaymentSettings(BaseModel):
+    """Zahlungs-Einstellungen des Tenants (aus tenant_billing_profile), wie sie
+    das Einstellungen-Tab „Zahlungen" bearbeitet. NUR die Zahlungs-relevanten
+    Felder — Steuer/Legal-Felder bleiben dem Buchhaltungs-Profil vorbehalten."""
+
+    # Genau ein aktiver Karten-Acquirer ('none' oder 'stripe').
+    active_card_gateway: Literal["none", "stripe"] = "none"
+    # PayPal-Kanal (parallel). Leer/None = aus.
+    paypal_email: str | None = None
+    # Manuelle Zahlungen (Überweisung/Bar/POS) aktiv.
+    manual_payments_enabled: bool = False
+
+    # Name des Händlers auf der Kartenabrechnung (Stripe statement descriptor).
+    merchant_name: str | None = None
+
+    # Verhaltens-Toggles der Kartenzahlung (Gates über die Split-Payment/
+    # Kautions/Storno-Logik).
+    auto_charge_first_deposit: bool = True      # erste (Sofort-)Anzahlung belasten
+    auto_charge_scheduled: bool = True          # alle folgenden geplanten Zahlungen
+    auto_refund_on_cancel: bool = True
+    auto_preauth_deposits: bool = False
+    verify_card_before_booking: bool = False
+
+    # Bankdaten für manuelle Zahlungen (liegen ebenfalls im billing_profile).
+    iban: str | None = None
+    bic: str | None = None
+    bank_name: str | None = None
+    account_holder: str | None = None
+
+
+class PaymentSettingsResponse(PaymentSettings):
+    """Wie PaymentSettings, plus abgeleiteter Stripe-Verbindungsstatus (read-only)
+    — damit das Tab die Stripe-Karte („Aktiviert"/„Verbinden") ohne zweiten Call
+    rendern kann."""
+
+    stripe_connected: bool = False        # Account vorhanden
+    stripe_charges_enabled: bool = False  # kann wirklich Zahlungen empfangen
+    # PayPal-Multiparty-Status (abgeleitet, read-only).
+    paypal_onboarding_status: str = "not_started"
+    paypal_connected: bool = False        # abrechnungsfähig (receivable&&confirmed)
+
+
+# --- PayPal (Multiparty) ---------------------------------------------------
+
+class PayPalOnboardingRequest(BaseModel):
+    """Start des PayPal-Onboardings. return_url = wohin PayPal den Betrieb nach
+    dem Verbinden zurückschickt (unsere Dashboard-Seite)."""
+
+    return_url: str
+
+
+class PayPalOnboardingResponse(BaseModel):
+    action_url: str          # dorthin wird der Betrieb umgeleitet
+
+
+class PayPalOrderResponse(BaseModel):
+    order_id: str
+    payment_id: str
 
 
 class SliceHealth(BaseModel):

@@ -165,6 +165,8 @@ class PortalField(BaseModel):
     required: bool = True
     # UI-Hinweis für das Frontend: "text" (Standard) oder "email".
     type: str = "text"
+    # Vorbelegung des Felds (z.B. Betriebs-E-Mail); None = leer lassen.
+    default: str | None = None
 
 
 class SupportedPortal(BaseModel):
@@ -248,6 +250,11 @@ class OtaRoom(BaseModel):
 class LocalRoomOption(BaseModel):
     local_property_id: str
     title: str
+    # Vorgeschlagener Booking-Zimmertyp (BCRT) aus dem lokalen property_type —
+    # damit die UI beim Verbinden das passende OTA-Zimmer vorwählt. None = keine
+    # Entsprechung (kein Vorschlag, der Nutzer wählt selbst).
+    suggested_bcrt_code: int | None = None
+    suggested_bcrt_name: str | None = None
 
 
 class PrepareChannelResponse(BaseModel):
@@ -470,6 +477,11 @@ class ChannelMappingRow(BaseModel):
     property_id: str
     property_title: str | None = None
     ota_hotel_id: str | None = None
+    # OTA-Zimmertyp, auf den DIESES Objekt gemappt ist (unter der Hotel-ID):
+    # Code (z. B. Booking room_type_code 651942003) + Klarname (z. B. „Double Room").
+    # Die Anzeige nutzt Titel/Code, NICHT die Hotel-ID (die ist für alle Zimmer gleich).
+    ota_room_type_code: str | None = None
+    ota_room_title: str | None = None
     is_active: bool
     # Existiert eine Verbindung dieses Portals für das Objekt (verbunden vs.
     # „Verbinden"-Button in der Tabelle)?
@@ -490,4 +502,7 @@ class ChannelDetailResponse(BaseModel):
     connected: bool
     connected_count: int = 0
     total_count: int = 0
+    # Channex-Kanal-ID des Portals (bei Hotels teilen sich alle Zimmer einen Kanal
+    # = eine Hotel-ID). Für „Verbindung trennen" auf Portal-Ebene. None = nicht verbunden.
+    channel_id: str | None = None
     mappings: list[ChannelMappingRow]

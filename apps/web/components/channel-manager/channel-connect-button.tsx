@@ -46,21 +46,38 @@ type MappingRow = {
   local_property_id: string; // gewähltes eigenes Zimmer (Objekt)
 };
 
-// Vorbelegung: EINE Zeile je OTA-Zimmer (nicht je Rate). Standard steht auf
-// "nicht zuordnen" — der Nutzer wählt bewusst sein Zimmer. Das OTA-Hotel kann
-// viele Zimmer liefern (Booking-Testhotel: ein Dutzend); zugeordnet werden nur
-// die, die zu einem eigenen Zimmer gehören.
-function buildMappingRows(otaRooms: OtaRoom[]): MappingRow[] {
+// Vorbelegung: EINE Zeile je OTA-Zimmer (nicht je Rate). Wo möglich wird das
+// passende eigene Zimmer VORGEWÄHLT — anhand des aus property_type abgeleiteten
+// Booking-Zimmertyps (suggested_bcrt_name, z.B. „Double") gegen den OTA-Zimmer-
+// namen. So muss der Kunde keine Booking-Zimmer-IDs kennen. Ohne eindeutigen
+// Treffer bleibt „nicht zuordnen" (kein falsches Raten). Das OTA-Hotel kann viele
+// Zimmer liefern; zugeordnet werden nur die, die zu einem eigenen Zimmer gehören.
+function buildMappingRows(
+  otaRooms: OtaRoom[],
+  localRooms: LocalRoomOption[],
+): MappingRow[] {
+  // Schon vorgewählte Objekte nicht doppelt zuordnen (1:1, sonst Überbuchung).
+  const used = new Set<string>();
+  const norm = (s: string) => s.toLowerCase().trim();
   return otaRooms.map((room) => {
     const rates = room.rates ?? [];
     const first = rates[0];
+    const otaName = norm(room.title ?? "");
+    // Passt der Booking-Zimmername zum Vorschlag eines noch freien Objekts?
+    const match = localRooms.find(
+      (lr) =>
+        !used.has(lr.local_property_id) &&
+        lr.suggested_bcrt_name &&
+        otaName.includes(norm(lr.suggested_bcrt_name)),
+    );
+    if (match) used.add(match.local_property_id);
     return {
       room_type_code: Number(room.id),
       roomLabel: room.title ?? `Zimmer ${room.id}`,
       rateSummary: rates.map((r) => r.title ?? `Rate ${r.id}`).join(" · "),
       pricing_type: first?.pricing === "OBP" ? "OBP" : "Standard",
       occupancy: first?.max_persons ?? 2,
-      local_property_id: "",
+      local_property_id: match?.local_property_id ?? "",
     };
   });
 }
@@ -70,6 +87,7 @@ export function ChannelConnectButton({
   variant = "default",
   presetPortalCode,
   presetPropertyId,
+  presetHotelId,
   onDone,
 }: {
   label?: string;
@@ -80,6 +98,10 @@ export function ChannelConnectButton({
   // Wenn gesetzt: GENAU dieses Objekt verbinden (Mapping-Tabelle → „Verbinden"
   // je Zeile), statt automatisch das erste Objekt zu nehmen.
   presetPropertyId?: string;
+  // Wenn gesetzt: die Hotel-ID ist bereits bekannt (das Hotel ist über ein
+  // anderes Zimmer schon verbunden). Der Assistent überspringt dann den Hotel-ID-
+  // Schritt und geht für dieses weitere Zimmer DIREKT ins Zimmer-Mapping.
+  presetHotelId?: string | null;
   // Callback nach erfolgreicher Verbindung (z.B. Route refreshen).
   onDone?: () => void;
 }) {
@@ -186,6 +208,17 @@ export function ChannelConnectButton({
     reset();
   }
 
+  // Feld-Defaults aus dem Portal-Katalog (z.B. Betriebs-E-Mail, vom Backend
+  // vorbefüllt), damit E-Mail & Co. nicht leer sind und der Kunde sie nicht
+  // abtippen muss. Nur nicht-leere Defaults übernehmen (kein leerer Wert).
+  function fieldDefaults(portal: SupportedPortal): Record<string, string> {
+    const out: Record<string, string> = {};
+    for (const f of portal.fields) {
+      if (f.default) out[f.key] = f.default;
+    }
+    return out;
+  }
+
   function choosePortal(portal: SupportedPortal) {
     setSelected(portal);
     setError(null);
@@ -199,8 +232,22 @@ export function ChannelConnectButton({
     // Vermieter sie beim Re-Connect nicht erneut eingeben muss.
     const stored = connections.find((c) => c.portal_code === portal.code);
     const firstField = portal.fields[0]?.key;
+    const defaults = fieldDefaults(portal);
+    // Ist das Hotel über ein anderes Zimmer schon verbunden (presetHotelId), MUSS
+    // der Kunde die Hotel-ID nicht erneut eingeben — für dieses WEITERE Zimmer
+    // direkt ins Zimmer-Mapping springen (1 Hotel-ID, Zimmer darunter). Der
+    // Kunde kennt keine „Zimmer-ID" — die Zuordnung wählt er im Mapping-Schritt.
+    const knownHotelId = presetHotelId || stored?.hotel_id || null;
+    if (knownHotelId && firstField) {
+      const prefilled = { ...defaults, [firstField]: knownHotelId };
+      setValues(prefilled);
+      loadMapping(portal, prefilled);
+      return;
+    }
     setValues(
-      stored && firstField ? { [firstField]: stored.hotel_id } : {},
+      stored && firstField
+        ? { ...defaults, [firstField]: stored.hotel_id }
+        : defaults,
     );
     setStep("credentials");
   }
@@ -271,7 +318,7 @@ export function ChannelConnectButton({
       }
       setOtaRooms(res.data.ota_rooms);
       setLocalRooms(res.data.rooms);
-      setRows(buildMappingRows(res.data.ota_rooms));
+      setRows(buildMappingRows(res.data.ota_rooms, res.data.rooms));
       setStep("mapping");
     });
   }
@@ -300,9 +347,16 @@ export function ChannelConnectButton({
     return connections.find((c) => c.portal_code === code);
   }
 
-  // Schritt 1→2: Zugangsdaten prüfen + Zimmer/Raten laden.
-  function loadMapping() {
-    if (!selected || !propertyId) {
+  // Schritt 1→2: Zugangsdaten prüfen + Zimmer/Raten laden. portalOverride/
+  // valuesOverride erlauben den Direkteinstieg aus choosePortal (State ist dort
+  // noch nicht gesetzt, weil setState asynchron ist).
+  function loadMapping(
+    portalOverride?: SupportedPortal,
+    valuesOverride?: Record<string, string>,
+  ) {
+    const portal = portalOverride ?? selected;
+    const settings = valuesOverride ?? values;
+    if (!portal || !propertyId) {
       setError("Bitte zuerst ein Objekt anlegen.");
       return;
     }
@@ -310,8 +364,8 @@ export function ChannelConnectButton({
     startTransition(async () => {
       const res = await prepareChannel({
         property_id: propertyId,
-        portal_code: selected.code,
-        settings: values,
+        portal_code: portal.code,
+        settings,
       });
       if (!res.ok) {
         setError(res.error);
@@ -319,7 +373,7 @@ export function ChannelConnectButton({
       }
       setOtaRooms(res.data.ota_rooms);
       setLocalRooms(res.data.rooms);
-      setRows(buildMappingRows(res.data.ota_rooms));
+      setRows(buildMappingRows(res.data.ota_rooms, res.data.rooms));
       setStep("mapping");
     });
   }
@@ -579,7 +633,7 @@ export function ChannelConnectButton({
                     }
                   />
                 )}
-                <Button onClick={loadMapping} disabled={pending}>
+                <Button onClick={() => loadMapping()} disabled={pending}>
                   {pending ? <Spinner text="Prüfe Zugang …" /> : "Weiter"}
                 </Button>
               </div>

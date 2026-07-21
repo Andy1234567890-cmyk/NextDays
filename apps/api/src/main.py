@@ -14,6 +14,7 @@ from .core.logging import configure_logging, get_logger
 from .core.ratelimit_middleware import RateLimitMiddleware
 from .features.addons.router import router as addons_router
 from .features.auth.router import router as auth_router
+from .features.booking_conditions.router import router as booking_conditions_router
 from .features.booking_engine.router import router as booking_engine_router
 from .features.buchhaltung.router import router as buchhaltung_router
 from .features.calendar.router import router as calendar_router
@@ -66,6 +67,7 @@ _SLICE_ROUTERS = [
     channel_manager_router,
     sandbox_ota_router,
     booking_engine_router,
+    booking_conditions_router,
     site_config_manage_router,
     site_config_public_router,
     ocr_router,

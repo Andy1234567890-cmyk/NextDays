@@ -47,6 +47,9 @@ class RatePlanCreate(BaseModel):
     derived_from_rate_plan_id: str | None = None
     offset_amount: float | None = None
     offset_percent: float | None = None
+    # Nur zusätzliche Preise: an die Buchungsportale senden? Der Grundpreis geht
+    # ohnehin immer; dieser Preis geht nur an die Portale, wenn true (Default aus).
+    send_to_portals: bool = False
 
 
 class RatePlanUpdate(BaseModel):
@@ -58,6 +61,7 @@ class RatePlanUpdate(BaseModel):
     derived_from_rate_plan_id: str | None = None
     offset_amount: float | None = None
     offset_percent: float | None = None
+    send_to_portals: bool | None = None
 
 
 class RatePlanResponse(BaseModel):
@@ -83,6 +87,8 @@ class RatePlanResponse(BaseModel):
     derived_from_name: str | None = None
     offset_amount: float | None = None
     offset_percent: float | None = None
+    # An die Buchungsportale senden (nur zusätzliche Preise; Grundpreis geht immer).
+    send_to_portals: bool = False
 
 
 class RatePlanListResponse(BaseModel):
