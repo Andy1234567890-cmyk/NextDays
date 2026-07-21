@@ -12,5 +12,7 @@ COPY deploy/docs/site/ /usr/share/nginx/html/
 
 EXPOSE 8080
 
+# 127.0.0.1 statt localhost: im Container löst localhost auf ::1 (IPv6) auf,
+# nginx lauscht aber nur auf IPv4 → sonst „connection refused" im Healthcheck.
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
-  CMD wget -qO- http://localhost:8080/healthz || exit 1
+  CMD wget -qO- http://127.0.0.1:8080/healthz || exit 1
