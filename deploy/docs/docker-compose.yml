@@ -1,0 +1,49 @@
+# ──────────────────────────────────────────────────────────────────────────
+# myNextDays API-Referenz — EIGENSTÄNDIGE Coolify-App (docs.mynextdays.com).
+#
+# Bewusst KOMPLETT entkoppelt vom App-/DB-Stack: eine rein statische Doku-Site
+# (nginx). Sie braucht KEINE Datenbank, KEINE Secrets, KEIN supabase-internal —
+# nur das coolify-Ingress-Netz, damit Traefik die Subdomain routet. Ein Deploy
+# dieser App fasst nichts anderes an (kein DB-Risiko, Muster wie api-standalone).
+#
+# Coolify-Setup (neues Projekt/Resource):
+#   • Repository = dieses Monorepo, Base Directory = / (Repo-Root)
+#   • Build Pack = Dockerfile, Dockerfile Location = deploy/docs/Dockerfile
+#   • Domain (docker_compose_domains) = https://docs.mynextdays.com:8080
+#   • watch_paths (ZEILEN-getrennt): deploy/docs/**
+# ──────────────────────────────────────────────────────────────────────────
+services:
+  docs:
+    build:
+      # Kontext = Repo-Root (Coolify base_directory), damit COPY deploy/docs/…
+      # greift. Dockerfile liegt unter deploy/docs/.
+      context: .
+      dockerfile: deploy/docs/Dockerfile
+    image: nextdays-docs:prod
+    restart: unless-stopped
+    networks:
+      # coolify-Ingress-Netz explizit (sonst routet Traefik die App nicht → 504).
+      coolify:
+      default:
+    labels:
+      # Traefik spricht die App über das coolify-Netz an (dort lauscht der Proxy).
+      # Fest "coolify" (Coolify expandiert ${VARS} in Labels NICHT).
+      - traefik.docker.network=coolify
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+
+networks:
+  coolify:
+    external: true
+    name: coolify
+  default:
