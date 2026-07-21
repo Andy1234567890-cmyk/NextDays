@@ -33,3 +33,9 @@ class PropertyCalendars(BaseModel):
     title: str
     status: str | None = None
     calendars: list[ExternalCalendar] = []
+
+
+class ExportToken(BaseModel):
+    """Export-Token eines Objekts (für die öffentliche .ics-Feed-URL)."""
+    property_id: str
+    token: str

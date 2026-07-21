@@ -27,6 +27,13 @@ class Settings(BaseSettings):
     supabase_service_role_key: SecretStr = SecretStr("")
     supabase_jwt_secret: SecretStr = SecretStr("")
 
+    # --- Entwickler-API (Developer-API-Zugang, Booking-Machine-Account-Modell) ---
+    # EIGENES Secret zum Signieren der kurzlebigen API-Access-Tokens — bewusst
+    # NICHT das supabase_jwt_secret: ein API-Token (Client-Credentials) darf nie
+    # mit einem Supabase-Login-Token verwechselbar sein (getrennte Audience,
+    # Wurzel 7). Fehlt es, ist der Token-Endpunkt fail-closed deaktiviert.
+    api_token_secret: SecretStr = SecretStr("")
+
     # --- Redis ---
     redis_url: str = "redis://localhost:6379/0"
 

@@ -1024,6 +1024,97 @@ class PropertiesService:
 
         log.info("property_deleted", tenant_id=tenant_id, property_id=property_id)
 
+    def duplicate(self, ctx: AuthContext, property_id: str) -> PropertyResponse:
+        """Objekt duplizieren (Lodgify „Kopieren"): legt eine EIGENSTÄNDIGE
+        Kopie als Entwurf an. Kopiert werden nur Inhaltsdaten (Titel, Typ,
+        Beschreibung, Ausstattung, Belegung, Adresse …); Identität, Zeitstempel,
+        physisch eindeutige Kennungen (BFE-/Katasternummer) und jede Kanal-/
+        Sync-Verknüpfung werden NICHT übernommen. Die Kopie ist immer draft und
+        auf keinem Kanal sichtbar — verkaufbar wird sie erst über publish()."""
+        tenant_id = self._require_tenant(ctx)
+        src = (
+            self._db.table("properties")
+            .select("*")
+            .eq("tenant_id", tenant_id)
+            .eq("id", property_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not src:
+            raise PropertyError("Objekt nicht gefunden.", status_code=404)
+        row = src[0]
+
+        # Nur echte Inhaltsdaten übernehmen. Identität/Zeitstempel und alles, was
+        # eine externe Verknüpfung oder eine physisch eindeutige Kennung trägt,
+        # bleibt draußen — die Kopie ist eine frische, unverbundene Einheit.
+        drop = {
+            "id",
+            "created_at",
+            "updated_at",
+            "tenant_id",
+            "status",
+            "listed_on_website",
+            "listed_on_marketplace",
+            "bfe_number",
+        }
+        payload = {k: v for k, v in row.items() if k not in drop}
+        payload["tenant_id"] = tenant_id
+        payload["status"] = PropertyStatus.draft.value
+        payload["listed_on_website"] = False
+        payload["listed_on_marketplace"] = False
+        title = (row.get("title") or "Unbenannt").strip()
+        payload["title"] = f"{title} (Kopie)"
+
+        res = self._db.table("properties").insert(payload).execute()
+        if not res.data:
+            raise PropertyError(
+                "Objekt konnte nicht dupliziert werden.", status_code=500
+            )
+        new_row = res.data[0]
+        log.info(
+            "property_duplicated",
+            tenant_id=tenant_id,
+            source_property_id=property_id,
+            property_id=new_row["id"],
+        )
+        # Wie bei create(): das neue Objekt beim Channel-Manager anlegen (non-
+        # blocking). currency=None → der Sync lädt die echte Objektwährung selbst
+        # und schlägt fail-closed fehl, falls keine existiert (Wurzel 4).
+        self._sync_to_channel_manager(
+            tenant_id,
+            property_id=new_row["id"],
+            title=new_row.get("title") or "Unbenannt",
+            currency=None,
+        )
+        return PropertyResponse(**_row(new_row))
+
+    def unlist_website(self, ctx: AuthContext, property_id: str) -> PropertyResponse:
+        """Website-Verbindung aufheben (Lodgify „Verbindung mit Webseite
+        aufheben"): schaltet NUR die Website-Sichtbarkeit ab
+        (``listed_on_website=False``) — ein eigener Vertriebskanal, getrennt von
+        Status, Marktplatz und OTA (0162). Portale/Marktplatz bleiben unberührt.
+        Idempotent: ist das Flag schon aus, bleibt es aus."""
+        tenant_id = self._require_tenant(ctx)
+        res = (
+            self._db.table("properties")
+            .update({"listed_on_website": False})
+            .eq("tenant_id", tenant_id)
+            .eq("id", property_id)
+            .execute()
+        )
+        if not res.data:
+            raise PropertyError("Objekt nicht gefunden.", status_code=404)
+        row = res.data[0]
+        portals = self._portals_state_by_property(
+            tenant_id, [str(row["id"])]
+        ).get(str(row["id"]))
+        log.info(
+            "property_website_unlisted",
+            tenant_id=tenant_id,
+            property_id=property_id,
+        )
+        return PropertyResponse(**_row(row), channels=_derive_channels(row, portals))
+
 
 def _local_channel_state(status: str | None, flag: bool | None) -> ChannelState:
     """Zustand eines LOKALEN Kanals (Website/Plattform) ableiten. Diese Kanäle

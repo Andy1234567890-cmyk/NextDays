@@ -140,6 +140,40 @@ def resync_property(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post("/{property_id}/duplicate", response_model=PropertyResponse)
+def duplicate_property(
+    property_id: str,
+    service: PropertiesServiceDep,
+    ctx: Annotated[
+        AuthContext,
+        Depends(require_granular_permission(Permission.MANAGE_PROPERTY_SETTINGS)),
+    ],
+) -> PropertyResponse:
+    """Objekt duplizieren („Kopieren"): eigenständige Kopie als Entwurf, auf
+    keinem Kanal sichtbar. Wie das Anlegen ist es Objektverwaltung und verlangt
+    MANAGE_PROPERTY_SETTINGS."""
+    try:
+        return service.duplicate(ctx, property_id)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/{property_id}/unlist-website", response_model=PropertyResponse)
+def unlist_property_website(
+    property_id: str,
+    service: PropertiesServiceDep,
+    ctx: Annotated[
+        AuthContext, Depends(require_granular_permission(Permission.EDIT_PROPERTY))
+    ],
+) -> PropertyResponse:
+    """Website-Verbindung aufheben: schaltet nur die Website-Sichtbarkeit ab.
+    Wie andere Sichtbarkeits-/Inhaltsänderungen verlangt es EDIT_PROPERTY."""
+    try:
+        return service.unlist_website(ctx, property_id)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.post("/{property_id}/image", response_model=ImageUploadResponse)
 async def upload_property_image(
     property_id: str,

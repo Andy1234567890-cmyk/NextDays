@@ -13,11 +13,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 from src.core.security import AuthContext
-from src.features.external_calendar.ical import parse_ical
+from src.features.external_calendar.ical import ExportEvent, build_ical, parse_ical
 from src.features.external_calendar.service import (
     ExternalCalendarError,
     ExternalCalendarService,
     _assert_public_url,
+    _merge_ranges,
 )
 from src.main import create_app
 
@@ -296,6 +297,40 @@ def test_ical_does_not_overwrite_real_booking_on_same_day() -> None:
     assert row["status"] == "booked" and row["source"] == "direct"
     # Und keine zweite Zeile für denselben Tag.
     assert sum(1 for a in db.store["availability"] if a["date"] == "2026-01-01") == 1
+
+
+def test_merge_ranges_groups_consecutive_days() -> None:
+    days = [
+        date(2026, 1, 1), date(2026, 1, 2), date(2026, 1, 3),
+        date(2026, 1, 5),
+    ]
+    # 1.–3. zusammenhängend (DTEND exklusiv = 4.), 5. einzeln (DTEND = 6.).
+    assert _merge_ranges(days) == [
+        (date(2026, 1, 1), date(2026, 1, 4)),
+        (date(2026, 1, 5), date(2026, 1, 6)),
+    ]
+    assert _merge_ranges([]) == []
+
+
+def test_build_ical_roundtrips_through_parser() -> None:
+    events = [
+        ExportEvent(
+            uid="u1@x", start=date(2026, 6, 1), end=date(2026, 6, 4),
+            summary="Nicht verfügbar",
+        ),
+    ]
+    text = build_ical(
+        prod_id="myNextDays", cal_name="Objekt",
+        events=events, dtstamp="20260101T000000Z",
+    )
+    assert text.startswith("BEGIN:VCALENDAR")
+    assert "END:VCALENDAR" in text
+    # Der eigene Parser liest den erzeugten Feed korrekt zurück (Nächte 1.–3.).
+    parsed = parse_ical(text)
+    assert len(parsed) == 1
+    assert parsed[0].start == date(2026, 6, 1)
+    assert parsed[0].end == date(2026, 6, 4)
+    assert parsed[0].nights() == [date(2026, 6, 1), date(2026, 6, 2), date(2026, 6, 3)]
 
 
 def test_add_calendar_rejects_private_url() -> None:

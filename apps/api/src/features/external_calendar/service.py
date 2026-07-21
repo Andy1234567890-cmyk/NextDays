@@ -13,8 +13,9 @@ die NICHT mehr im Feed sind, werden aus den ical-Sperren dieses Feeds entfernt.
 from __future__ import annotations
 
 import ipaddress
+import secrets
 import socket
-from datetime import date
+from datetime import date, timedelta
 from urllib.parse import urlparse
 
 import httpx
@@ -23,7 +24,7 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
-from .ical import parse_ical
+from .ical import ExportEvent, build_ical, parse_ical
 
 log = get_logger("nextdays.external_calendar")
 
@@ -173,6 +174,99 @@ class ExternalCalendarService:
             }
             for p in props
         ]
+
+    # -- Export (öffentlicher .ics-Feed pro Objekt) -------------------------
+    def ensure_export_token(self, ctx: AuthContext, property_id: str) -> dict:
+        """Export-Token des Objekts sicherstellen (anlegen, falls noch keins) und
+        {property_id, token} zurückgeben. Idempotent (Wurzel 2): ein bereits
+        vorhandenes Token wird wiederverwendet, nicht überschrieben — sonst würde
+        jeder Aufruf abonnierte Feeds ungültig machen."""
+        db, tenant_id = self._require(ctx)
+        rows = (
+            db.table("properties").select("ical_export_token")
+            .eq("id", property_id).eq("tenant_id", tenant_id)
+            .limit(1).execute()
+        ).data
+        if not rows:
+            raise ExternalCalendarError("Objekt nicht gefunden.", status_code=404)
+        token = rows[0].get("ical_export_token")
+        if not token:
+            token = self._set_token(db, tenant_id, property_id)
+        return {"property_id": property_id, "token": token}
+
+    def rotate_export_token(self, ctx: AuthContext, property_id: str) -> dict:
+        """Export-Token neu vergeben: macht die ALTE Feed-URL sofort ungültig
+        (für den Fall, dass sie ungewollt geteilt wurde). Tenant-Scope (Wurzel 3)."""
+        db, tenant_id = self._require(ctx)
+        self._own_property(db, tenant_id, property_id)
+        token = self._set_token(db, tenant_id, property_id)
+        return {"property_id": property_id, "token": token}
+
+    def _set_token(self, db: Client, tenant_id: str, property_id: str) -> str:
+        token = secrets.token_urlsafe(32)
+        res = (
+            db.table("properties").update({"ical_export_token": token})
+            .eq("id", property_id).eq("tenant_id", tenant_id)
+            .execute()
+        ).data
+        if not res:
+            raise ExternalCalendarError("Objekt nicht gefunden.", status_code=404)
+        return token
+
+    def export_feed(
+        self, token: str, *, dtstamp: str, today: date, upcoming_only: bool = False
+    ) -> str:
+        """Öffentlichen iCal-Feed zu einem Token rendern (KEIN Auth — das Token
+        IST der Zugang). Enthält NUR belegte Nächte (Buchungen + eigene Sperren),
+        keine Gast-/Preis-/Stammdaten. Reimportierte iCal-Sperren (source='ical')
+        werden BEWUSST ausgelassen, sonst würde ein Zwei-Wege-Feed die Belegung
+        der Gegenseite an sie zurückspiegeln (Echo-Schleife). `upcoming_only`
+        blendet Vergangenes aus (Lodgify „nur zukünftige Reservierungen"); `today`
+        wird übergeben (kein Date.now im Modul → testbar)."""
+        if self._db is None:
+            raise ExternalCalendarError("DB nicht verfügbar.", status_code=500)
+        if not token:
+            raise ExternalCalendarError("Feed nicht gefunden.", status_code=404)
+        prop = (
+            self._db.table("properties")
+            .select("id, title")
+            .eq("ical_export_token", token)
+            .limit(1).execute()
+        ).data
+        if not prop:
+            raise ExternalCalendarError("Feed nicht gefunden.", status_code=404)
+        property_id = prop[0]["id"]
+        title = prop[0].get("title") or "Belegung"
+        rows = (
+            self._db.table("availability")
+            .select("date, status, source")
+            .eq("property_id", property_id)
+            .in_("status", ["booked", "blocked"])
+            .neq("source", "ical")
+            .order("date")
+            .execute()
+        ).data
+        booked = sorted(
+            d
+            for r in rows
+            if r.get("date") and (d := date.fromisoformat(r["date"]))
+            and (not upcoming_only or d >= today)
+        )
+        events = [
+            ExportEvent(
+                uid=f"{start.isoformat()}-{property_id}@mynextdays",
+                start=start,
+                end=end,  # exklusiv
+                summary="Nicht verfügbar",
+            )
+            for start, end in _merge_ranges(booked)
+        ]
+        return build_ical(
+            prod_id="myNextDays",
+            cal_name=title,
+            events=events,
+            dtstamp=dtstamp,
+        )
 
     def add_calendar(
         self, ctx: AuthContext, *, property_id: str, name: str, ical_url: str
@@ -377,3 +471,22 @@ class ExternalCalendarService:
 def _now_iso() -> str:
     from datetime import UTC, datetime
     return datetime.now(UTC).isoformat()
+
+
+def _merge_ranges(days: list[date]) -> list[tuple[date, date]]:
+    """Aufeinanderfolgende belegte Tage zu Zeiträumen zusammenfassen. Rückgabe je
+    Zeitraum (start_inklusiv, end_EXKLUSIV) — passend zur iCal-DATE-Semantik
+    (Abreisetag = DTEND, nicht belegt). `days` muss sortiert und dedupliziert
+    sein (kommt so aus der Query)."""
+    if not days:
+        return []
+    ranges: list[tuple[date, date]] = []
+    start = prev = days[0]
+    for d in days[1:]:
+        if d == prev + timedelta(days=1):
+            prev = d
+            continue
+        ranges.append((start, prev + timedelta(days=1)))
+        start = prev = d
+    ranges.append((start, prev + timedelta(days=1)))
+    return ranges

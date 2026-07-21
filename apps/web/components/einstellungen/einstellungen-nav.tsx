@@ -30,6 +30,12 @@ function buildGroups(canBilling: boolean): NavGroup[] {
       icon: "ph:file-text",
       exact: true,
     },
+    {
+      key: "calendar-sync",
+      label: "Kalender importieren/exportieren",
+      href: "/einstellungen/kalender",
+      icon: "ph:calendar-dots",
+    },
   ];
   if (canBilling) {
     items.push({

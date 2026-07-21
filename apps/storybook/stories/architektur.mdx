@@ -119,7 +119,7 @@ Die ausführbaren Bausteine und Datastores des Systems mit Technologie und Proto
         Container(mobile, "Mobile-App", "React Native 0.86 (bare CLI, kein Expo)", "Gäste (Buchen/Aufenthalt) + Gastgeber (Verwaltung), iOS/Android")
         Container(storybook, "Storybook", "react-vite (eigenes Package apps/storybook)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
         Container(builder, "Website-Renderer", "Next.js (builder/)", "White-Label-Agentur-Sites pro Custom-Domain (Page-Builder)")
-        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 30 Vertical Slices unter /api/v1")
+        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 31 Vertical Slices unter /api/v1")
         ContainerDb(db, "Datenbank", "Supabase / Postgres", "128 Tabellen, Multi-Tenant, RLS, tenant_id")
         ContainerDb(cache, "Cache", "Redis", "Caching + Rate-Limiting")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel-Sync, OCR, Messaging-Trigger, wiederkehrende Aufgaben")
@@ -175,7 +175,7 @@ The executable building blocks and data stores of the system with technology and
         Container(mobile, "Mobile app", "React Native 0.86 (bare CLI, no Expo)", "Guests (booking/stay) + hosts (management), iOS/Android")
         Container(storybook, "Storybook", "react-vite (own package apps/storybook)", "Design system & component workshop (ADR-0008); finished components move to Web")
         Container(builder, "Website renderer", "Next.js (builder/)", "White-label agency sites per custom domain (website builder)")
-        Container(api, "API Backend", "FastAPI, Python", "Business logic, 30 vertical slices under /api/v1")
+        Container(api, "API Backend", "FastAPI, Python", "Business logic, 31 vertical slices under /api/v1")
         ContainerDb(db, "Database", "Supabase / Postgres", "128 tables, multi-tenant, RLS, tenant_id")
         ContainerDb(cache, "Cache", "Redis", "Caching + rate limiting")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel sync, OCR, messaging triggers, recurring tasks")
@@ -214,7 +214,7 @@ The executable building blocks and data stores of the system with technology and
 
 ## Slice-Landkarte (Component-Ebene, API-Backend)
 
-Die 30 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslogik: Querschnitt im Core, Slices mit fertiger Logik (Großteil) sowie wenige Gerüst-Slices (ocr, crm), die laut Roadmap folgen.
+Die 31 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslogik: Querschnitt im Core, Slices mit fertiger Logik (Großteil) sowie wenige Gerüst-Slices (ocr, crm), die laut Roadmap folgen.
 
 <Mermaid
   title="Slice-Landkarte (Component-Ebene, API-Backend)"
@@ -236,6 +236,7 @@ Die 30 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslog
             BOOK["booking_engine"]
             PORTAL["public_portal"]; PPORTAL["property_portal"]; DOSSIER["property_dossier"]
             EXTCAL["external_calendar — iCal-Import/-Export"]; MEDIA["media"]
+            APICLI["api_clients — Entwickler-API-Zugang (Booking-Machine-Account-Modell): Client-ID/Secret, Scopes, Objekt-Scope, Test/Live"]
             SUBS["subscriptions — unit-basiertes Abo"]
             OWN["owners — Eigentümer-Stammdaten + Objekt-Zuweisung (Anteil/Provision je Objekt)"]
             OWNST["owner_statements — Auszahlungs-Abrechnung (Provision, EU-Steuer/Reverse-Charge, Storno, Mehrwährung ECB)"]
@@ -262,7 +263,7 @@ Die 30 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslog
 
 ## Slice map (component level, API backend)
 
-The 30 vertical slices and their data areas show the state of the business logic: cross-cutting concerns in the core, slices with finished logic (the majority) plus a few scaffold slices (ocr, crm) that follow per the roadmap.
+The 31 vertical slices and their data areas show the state of the business logic: cross-cutting concerns in the core, slices with finished logic (the majority) plus a few scaffold slices (ocr, crm) that follow per the roadmap.
 
 <Mermaid
   title="Slice map (component level, API backend)"
@@ -284,6 +285,7 @@ The 30 vertical slices and their data areas show the state of the business logic
             BOOK["booking_engine"]
             PORTAL["public_portal"]; PPORTAL["property_portal"]; DOSSIER["property_dossier"]
             EXTCAL["external_calendar — iCal import/export"]; MEDIA["media"]
+            APICLI["api_clients — developer API access (Booking machine-account model): client-id/secret, scopes, object scope, test/live"]
             SUBS["subscriptions — unit-based plan"]
             OWN["owners — owner master data + property assignment (share/commission per property)"]
             OWNST["owner_statements — payout statement (commission, EU tax/reverse charge, cancellation, multi-currency ECB)"]
@@ -702,6 +704,8 @@ Jeder Vermieter ist ein Tenant. Die Isolation läuft über Row-Level-Security (R
     AUTH -.->|"Service-Role (umgeht RLS)"| DB`}
 />
 
+**Zweiter Auth-Weg — Entwickler-API-Zugang (`api_clients`).** Neben dem menschlichen Login gibt es einen Maschinen-Zugang nach dem Booking.com-„Machine Account"-Modell (3-Agenten-verifiziert): Der Betrieb (= Tenant, entspricht Booking-„Provider") erzeugt im Konto unter *API-Zugang* API-Clients mit **Client-ID + Client-Secret**, beschränkt auf **funktionsgebundene Ressourcen-Scopes** (`reservations:read`, `rates:write`, …) und optional eine **Teilmenge der Objekte** — getrennt als **Test-** oder **Live**-Client. Der Entwickler tauscht die Zugangsdaten am öffentlichen `POST /oauth/token` (Client-Credentials, eigener strenger Rate-Limit-Bucket) gegen ein **kurzlebiges JWT (1 h)** mit eigener Audience (`mynextdays-api`, strikt getrennt von Supabase-Login-Tokens, Wurzel 7) und ruft die REST-API mit `Authorization: Bearer …`. Die `require_api_scope`-Dependency erzwingt Ressourcen-Scope **und** Objekt-Scope pro Request (Wurzel 3/9). Sicherheit der Secret-Tabelle: nur **SHA-256-Hash** in der DB (Klartext show-once), RLS + harter `revoke` gegen anon/authenticated (Wurzel 6), zeitkonstanter fail-closed Vergleich (Wurzel 5). Die öffentliche API-Referenz liegt als eigenständige Doku-Site (`docs.…`, entkoppelte Coolify-App).
+
 </De>
 
 <En>
@@ -729,6 +733,8 @@ Every host is a tenant. The isolation runs via row-level security (RLS) in Postg
     SLICES -->|"SQL with JWT claim"| DB
     AUTH -.->|"Service role (bypasses RLS)"| DB`}
 />
+
+**Second auth path — developer API access (`api_clients`).** Alongside the human login there is a machine access path modelled on Booking.com's "machine account" (verified by 3 agents): the business (= tenant, akin to Booking's "provider") creates API clients under *API access* in its account, with a **client ID + client secret**, restricted to **function-bound resource scopes** (`reservations:read`, `rates:write`, …) and optionally a **subset of objects** — separated as **test** or **live** clients. The developer exchanges the credentials at the public `POST /oauth/token` (client credentials, its own strict rate-limit bucket) for a **short-lived JWT (1 h)** with a dedicated audience (`mynextdays-api`, strictly separated from Supabase login tokens, root 7) and calls the REST API with `Authorization: Bearer …`. The `require_api_scope` dependency enforces resource scope **and** object scope per request (roots 3/9). Secret-table security: only the **SHA-256 hash** in the DB (plaintext shown once), RLS + hard `revoke` against anon/authenticated (root 6), constant-time fail-closed comparison (root 5). The public API reference lives as a standalone docs site (`docs.…`, decoupled Coolify app).
 
 </En>
 

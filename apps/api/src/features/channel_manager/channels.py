@@ -1279,8 +1279,8 @@ class ChannelsMixin:
             "ota": ota_channels,
             "marketplace": {
                 "kind": "marketplace",
-                "code": "myNextDays",
-                "label": "myNextDays Marktplatz",
+                "code": "mybestdays",
+                "label": "myBestDays Marktplatz",
                 "listed_count": marketplace_count,
             },
             "ical": {

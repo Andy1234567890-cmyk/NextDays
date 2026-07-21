@@ -81,3 +81,33 @@ export async function removeExternalCalendar(
 ): Promise<Result<null>> {
   return call<null>(`/${calendarId}`, { method: "DELETE" });
 }
+
+// --- Export (eigener .ics-Feed pro Objekt) ---------------------------------
+
+export type ExportToken = { property_id: string; token: string };
+
+/** Export-Token des Objekts sicherstellen (idempotent) — für die Feed-URL. */
+export async function ensureExportToken(
+  propertyId: string,
+): Promise<Result<ExportToken>> {
+  return call<ExportToken>(`/export/${propertyId}/token`, { method: "POST" });
+}
+
+/** Export-Token neu vergeben — macht die alte Feed-URL sofort ungültig. */
+export async function rotateExportToken(
+  propertyId: string,
+): Promise<Result<ExportToken>> {
+  return call<ExportToken>(`/export/${propertyId}/rotate`, { method: "POST" });
+}
+
+/** Öffentliche .ics-Feed-URL aus einem Export-Token bauen. Der Kunde trägt sie
+ *  in externe Kalender (Airbnb/Booking/Google) ein. `scope="upcoming"` blendet
+ *  Vergangenes aus (Lodgify „nur zukünftige Reservierungen"). */
+export async function exportFeedUrl(
+  token: string,
+  scope: "all" | "upcoming" = "all",
+): Promise<string> {
+  const base = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+  const q = scope === "upcoming" ? "?scope=upcoming" : "";
+  return `${base}/api/v1/external-calendar/export/${token}.ics${q}`;
+}

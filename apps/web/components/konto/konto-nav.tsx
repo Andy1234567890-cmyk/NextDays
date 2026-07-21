@@ -34,6 +34,12 @@ const ITEMS: readonly Item[] = [
     icon: "ph:users",
     requireAny: ["manage_staff"],
   },
+  {
+    title: "API-Zugang",
+    href: "/konto/api-zugang",
+    icon: "ph:code",
+    requireAny: ["manage_tenant"],
+  },
   { title: "Sicherheit", href: "/konto/sicherheit", icon: "ph:shield-check" },
 ];
 

@@ -61,6 +61,72 @@ def _parse_ical_date(value: str) -> date | None:
         return None
 
 
+def _fold(line: str) -> str:
+    """RFC 5545 line-folding: Zeilen >75 Oktetts an Zeichengrenzen umbrechen,
+    Fortsetzungszeilen mit einem Leerzeichen einleiten. Wir falten grob nach
+    Zeichen (unsere Werte sind ASCII-nah) — konservativ bei 73, um mit UTF-8
+    Mehrbyte nicht über 75 Oktetts zu geraten."""
+    if len(line) <= 75:
+        return line
+    out = [line[:73]]
+    rest = line[73:]
+    while rest:
+        out.append(" " + rest[:72])
+        rest = rest[72:]
+    return "\r\n".join(out)
+
+
+def _escape_text(value: str) -> str:
+    """TEXT-Wert nach RFC 5545 escapen (Backslash, Komma, Semikolon, Zeilenumbruch)."""
+    return (
+        value.replace("\\", "\\\\")
+        .replace(",", "\\,")
+        .replace(";", "\\;")
+        .replace("\r\n", "\\n")
+        .replace("\n", "\\n")
+    )
+
+
+@dataclass(frozen=True)
+class ExportEvent:
+    """Ein belegter Zeitraum für den Export-Feed. `end` ist EXKLUSIV (Abreisetag,
+    nicht belegt) — passend zur iCal-DATE-Semantik."""
+    uid: str
+    start: date
+    end: date
+    summary: str
+
+
+def build_ical(
+    *, prod_id: str, cal_name: str, events: list[ExportEvent], dtstamp: str
+) -> str:
+    """Belegungs-Events als iCal-Text (VALUE=DATE, ganztägig) rendern. Enthält
+    NUR Zeitraum + neutralen Titel — keine Gast-/Preis-/Stammdaten. `dtstamp`
+    wird übergeben (kein Date.now() im Modul), damit die Ausgabe testbar und
+    deterministisch bleibt."""
+    lines = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        f"PRODID:-//{_escape_text(prod_id)}//iCal Export//DE",
+        "CALSCALE:GREGORIAN",
+        "METHOD:PUBLISH",
+        f"X-WR-CALNAME:{_escape_text(cal_name)}",
+    ]
+    for ev in events:
+        lines.extend([
+            "BEGIN:VEVENT",
+            f"UID:{_escape_text(ev.uid)}",
+            f"DTSTAMP:{dtstamp}",
+            f"DTSTART;VALUE=DATE:{ev.start.strftime('%Y%m%d')}",
+            f"DTEND;VALUE=DATE:{ev.end.strftime('%Y%m%d')}",
+            f"SUMMARY:{_escape_text(ev.summary)}",
+            "TRANSP:OPAQUE",
+            "END:VEVENT",
+        ])
+    lines.append("END:VCALENDAR")
+    return "\r\n".join(_fold(line) for line in lines) + "\r\n"
+
+
 def parse_ical(text: str) -> list[IcalEvent]:
     """Parst einen iCal-Text zu Belegungs-Events. Defekte/unvollständige VEVENTs
     (fehlendes DTSTART/DTEND/UID, ungültige Daten, start>=end) werden übersprungen

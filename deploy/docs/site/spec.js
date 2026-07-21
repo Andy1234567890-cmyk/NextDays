@@ -6,6 +6,28 @@ window.SPEC = {
   baseUrl: "https://api.mynextdays.com/api/v1",
   groups: [
     {
+      title: "Authentifizierung",
+      endpoints: [
+        {
+          method: "POST",
+          path: "/oauth/token",
+          title: "Access-Token holen",
+          desc: "Tausche Client-ID + Client-Secret gegen ein kurzlebiges Access-Token (1 Stunde). Die Zugangsdaten erzeugst du in deinem Konto unter „API-Zugang“. Schicke den erhaltenen Token danach bei jedem Aufruf als Header: Authorization: Bearer {access_token}.",
+          body: [
+            { name: "grant_type", type: "string", required: true, desc: "Immer client_credentials.", enum: ["client_credentials"] },
+            { name: "client_id", type: "string", required: true, desc: "Client-ID (mnd_live_… / mnd_test_…)." },
+            { name: "client_secret", type: "string", required: true, desc: "Client-Secret (wird nur einmal beim Erstellen angezeigt)." },
+          ],
+          response: [
+            { name: "access_token", type: "string", desc: "JWT, 1 Stunde gültig." },
+            { name: "token_type", type: "string", desc: "Bearer" },
+            { name: "expires_in", type: "int", desc: "Gültigkeit in Sekunden (3600)." },
+            { name: "scope", type: "string", desc: "Gewährte Berechtigungen (space-separiert)." },
+          ],
+        },
+      ],
+    },
+    {
       title: "Reservierungen",
       endpoints: [
         {

@@ -65,12 +65,19 @@ def _is_exempt(path: str) -> bool:
 
 def _select_bucket(path: str, buckets: _Buckets) -> tuple[str, Limit, bool]:
     """Pfad → (Bucket-Name, Limit, sensibel?). Sensibel = Kandidat für fail-closed."""
-    if "/auth/login" in path or "/auth/register" in path or "/auth/refresh" in path:
+    if "/auth/login" in path or "/auth/register" in path or "/auth/refresh" in path \
+            or "/oauth/token" in path:
+        # /oauth/token ist der Client-Credentials-Tausch (Entwickler-API): ein
+        # Credential-Endpunkt wie Login → strenger Auth-Bucket, Brute-Force-Schutz.
         return "auth", buckets.auth, True
     if "/payments/" in path:
         return "payments", buckets.payments, True
     if "/booking-engine/listings" in path or "/booking-engine/availability" in path \
-            or "/calendar" in path:
+            or "/calendar" in path \
+            or "/external-calendar/export/" in path:
+        # Der öffentliche iCal-Export-Feed ist nicht eingeloggt (ein Kalender-
+        # Client schickt kein JWT) → Scraper-Schutz PRO IP, wie andere öffentliche
+        # Listings/Kalender-Endpunkte (Wurzel 8: eigener, strenger Bucket).
         return "listings", buckets.listings, False
     return "default", buckets.default, False
 

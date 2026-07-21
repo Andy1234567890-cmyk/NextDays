@@ -142,6 +142,22 @@ export async function deleteProperty(id: string): Promise<Result<null>> {
   return call(`/properties/${id}`, { method: "DELETE" });
 }
 
+/** Objekt duplizieren („Kopieren"): eigenständige Kopie als Entwurf, auf keinem
+ *  Kanal sichtbar. Gibt das neu angelegte Objekt zurück. */
+export async function duplicateProperty(
+  id: string,
+): Promise<Result<Property>> {
+  return call(`/properties/${id}/duplicate`, { method: "POST" });
+}
+
+/** Website-Verbindung aufheben: schaltet nur die Website-Sichtbarkeit ab
+ *  (Portale/Marktplatz bleiben unberührt). */
+export async function unlistPropertyWebsite(
+  id: string,
+): Promise<Result<Property>> {
+  return call(`/properties/${id}/unlist-website`, { method: "POST" });
+}
+
 // Bild für ein Objekt hochladen (multipart) → öffentliche URL. `slot` benennt
 // die Verwendung (z. B. „custom-map"), feste Namen überschreiben das Vorbild.
 export async function uploadPropertyImage(

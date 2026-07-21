@@ -27,6 +27,13 @@ class AuthContext(BaseModel):
     user_id: str
     tenant_id: str | None = None
     role: str | None = None
+    # Nur gesetzt, wenn der Request über einen Entwickler-API-Token kommt
+    # (Client-Credentials), nicht über ein Supabase-Login-Token. Erlaubt den
+    # Endpunkten, Scope + Objekt-Beschränkung des API-Clients durchzusetzen
+    # (Wurzel 3/9). Bei normalem Login bleiben diese Felder None.
+    api_scopes: list[str] | None = None
+    api_property_ids: list[str] | None = None
+    api_is_test: bool | None = None
 
 
 @lru_cache
