@@ -258,11 +258,10 @@ class PropertiesService:
 
     def create(self, ctx: AuthContext, req: PropertyCreate) -> PropertyResponse:
         tenant_id = self._require_tenant(ctx)
-        # Plattform-Regel: ein Objekt darf erst angelegt werden, wenn der Stripe
-        # Connected Account des Tenants von Stripe BESTÄTIGT ist (charges_enabled).
-        # Sonst könnte ein Gast buchen/zahlen, ohne dass eine Auszahlung möglich
-        # wäre. Onboarding/KYC muss also vorher abgeschlossen sein.
-        self._require_payments_ready(tenant_id)
+        # Ein Objekt darf als ENTWURF (draft) ohne Zahlungsfreigabe angelegt werden
+        # — der Onboarding-Wizard läuft komplett durch (Airbnb-Muster). Die Stripe-
+        # Gate (_require_payments_ready) greift erst bei publish(): erst wenn ein
+        # Gast tatsächlich buchen/zahlen kann, muss eine Auszahlung möglich sein.
         self._require_type_matches_accommodation(tenant_id, req.property_type)
         payload = req.model_dump(mode="json")
         payload["tenant_id"] = tenant_id
@@ -853,6 +852,10 @@ class PropertiesService:
         from datetime import UTC, datetime, timedelta
 
         tenant_id = self._require_tenant(ctx)
+        # Veröffentlichen erfordert die abgeschlossene Zahlungs-Einrichtung (Stripe
+        # charges_enabled) — erst ab jetzt kann ein Gast buchen/zahlen, also muss
+        # eine Auszahlung möglich sein. Entwürfe (create) sind davon frei.
+        self._require_payments_ready(tenant_id)
         prop = (
             self._db.table("properties")
             .select("*")

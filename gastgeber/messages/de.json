@@ -74,6 +74,124 @@
     "naechsteSchritte": "Nächste Schritte",
     "naechsteSchritteText": "Lege Fotos, Preise und Verfügbarkeit an, um dein Objekt zu veröffentlichen. Diese Bereiche folgen hier."
   },
+  "wizard": {
+    "hilfe": "Fragen?",
+    "speichernBeenden": "Speichern & beenden",
+    "zurueck": "Zurück",
+    "weiter": "Weiter",
+    "speichert": "Speichert …",
+    "veroeffentlichen": "Veröffentlichen",
+    "fehler": "Konnte nicht gespeichert werden.",
+    "typ": {
+      "titel": "Was beschreibt dein Objekt am besten?",
+      "ferienhaus": "Ferienhaus",
+      "appartement": "Appartement",
+      "glamping": "Glamping",
+      "tiny_house": "Tiny House",
+      "stellplatz": "Stellplatz",
+      "hausboot": "Hausboot",
+      "einzelzimmer": "Einzelzimmer",
+      "doppelzimmer": "Doppelzimmer",
+      "zweibettzimmer": "Zweibettzimmer",
+      "familienzimmer": "Familienzimmer",
+      "junior_suite": "Junior-Suite",
+      "suite": "Suite"
+    },
+    "privacy": {
+      "titel": "Welche Art von Unterkunft bekommen Gäste?",
+      "entire": "Ganze Unterkunft",
+      "entireHint": "Gäste haben die gesamte Unterkunft für sich.",
+      "room": "Ein Zimmer",
+      "roomHint": "Eigenes Zimmer, dazu Zugang zu Gemeinschaftsräumen.",
+      "shared": "Gemeinschaftszimmer",
+      "sharedHint": "Gäste teilen das Zimmer mit anderen."
+    },
+    "adresse": {
+      "titel": "Wo befindet sich dein Objekt?",
+      "untertitel": "Die genaue Adresse sehen Gäste erst nach der Buchung.",
+      "land": "Land",
+      "strasse": "Straße",
+      "hausnummer": "Nr.",
+      "plz": "PLZ",
+      "stadt": "Stadt"
+    },
+    "pin": {
+      "titel": "Stimmt die Position auf der Karte?",
+      "untertitel": "Verschiebe die Karte, um den Pin genau zu setzen.",
+      "hinweis": "Karten-Feinjustierung folgt — die Adresse ist bereits gespeichert."
+    },
+    "kapazitaet": {
+      "titel": "Fangen wir mit den Basics an",
+      "frage": "Wie viele Personen können hier übernachten?",
+      "gaeste": "Gäste",
+      "schlafzimmer": "Schlafzimmer",
+      "betten": "Betten"
+    },
+    "baeder": {
+      "titel": "Welche Bäder gibt es für Gäste?",
+      "privat": "Privat & eigen",
+      "privatHint": "Direkt am Zimmer, nur für die Gäste.",
+      "gemeinsam": "Gemeinsam",
+      "gemeinsamHint": "Wird mit anderen geteilt."
+    },
+    "belegung": {
+      "titel": "Wer könnte noch da sein?",
+      "untertitel": "Gäste möchten wissen, ob sie auf andere treffen.",
+      "ich": "Ich",
+      "familie": "Meine Familie",
+      "andere": "Andere Gäste",
+      "mitbewohner": "Mitbewohner"
+    },
+    "ausstattung": {
+      "titel": "Welche Ausstattung bietest du?",
+      "untertitel": "Weitere kannst du später ergänzen."
+    },
+    "fotos": {
+      "titel": "Füge Fotos deines Objekts hinzu",
+      "untertitel": "Du brauchst mindestens 5 Fotos. Weitere kannst du später hinzufügen.",
+      "hinzufuegen": "Fotos hinzufügen",
+      "hochladen": "Wird hochgeladen …",
+      "cover": "Titelbild",
+      "anzahl": "{n} von {min} Fotos"
+    },
+    "titel_step": {
+      "titel": "Jetzt gib deinem Objekt einen Titel",
+      "untertitel": "Kurze Titel funktionieren am besten. Du kannst ihn jederzeit ändern."
+    },
+    "beschreibung": {
+      "titel": "Beschreibe dein Objekt",
+      "untertitel": "Was macht deine Unterkunft besonders?",
+      "platzhalter": "Erzähl deinen Gästen, was sie erwartet …"
+    },
+    "buchungsmodus": {
+      "titel": "Wähle deine Buchungseinstellungen",
+      "request": "Erst die ersten Buchungen prüfen",
+      "requestHint": "Du bestätigst Anfragen zuerst manuell.",
+      "requestEmpf": "Empfohlen",
+      "instant": "Sofortbuchung",
+      "instantHint": "Gäste buchen direkt, ohne Bestätigung."
+    },
+    "preis": {
+      "titel": "Lege deinen Preis fest",
+      "untertitel": "Du kannst den Preis jederzeit anpassen.",
+      "basispreis": "Grundpreis pro Nacht",
+      "waehrung": "Währung"
+    },
+    "rabatte": {
+      "titel": "Rabatte hinzufügen",
+      "untertitel": "Damit wird dein Objekt schneller gebucht.",
+      "wochen": "Wochenrabatt",
+      "wochenHint": "Ab 7 Nächten",
+      "monat": "Monatsrabatt",
+      "monatHint": "Ab 28 Nächten",
+      "hinweis": "Pro Aufenthalt gilt nur ein Rabatt."
+    },
+    "abschluss": {
+      "titel": "Fast fertig!",
+      "untertitel": "Dein Objekt ist als Entwurf gespeichert. Veröffentlichen kannst du es, sobald deine Firmen-Registrierung abgeschlossen ist.",
+      "zumObjekt": "Zum Objekt"
+    }
+  },
   "gemeinsam": {
     "laden": "Lädt …",
     "speichern": "Speichern",

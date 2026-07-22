@@ -32,7 +32,7 @@ export function ObjekteListe({ items }: { items: Property[] }) {
       <Card className="p-10 text-center">
         <p className="text-sm text-muted-foreground">{t("leer")}</p>
         <Link
-          href="/objekte/neu"
+          href="/objekt-einstellen"
           className="mt-4 inline-flex rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background"
         >
           {t("neu")}

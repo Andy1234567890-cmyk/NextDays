@@ -48,7 +48,7 @@ export default async function DashboardPage() {
             {t("keineObjekte")}
           </p>
           <Link
-            href="/objekte/neu"
+            href="/objekt-einstellen"
             className="inline-flex rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background"
           >
             {t("objektAnlegen")}

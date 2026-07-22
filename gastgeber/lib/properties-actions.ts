@@ -45,6 +45,28 @@ export async function createProperty(
   }
 }
 
+/** Teil-Update eines Draft-Objekts (jeder Wizard-Schritt patcht seine Felder).
+ *  type_attributes wird server-seitig gemerged? Nein — wir senden das ganze
+ *  Objekt-Attribut mit, der Aufrufer führt den Merge. */
+export async function updateProperty(
+  id: string,
+  fields: Record<string, unknown>,
+): Promise<Result<Property>> {
+  try {
+    const data = await api<Property>(`/properties/${id}`, {
+      method: "PATCH",
+      body: fields,
+    });
+    return { ok: true, data };
+  } catch (exc) {
+    return {
+      ok: false,
+      error:
+        exc instanceof ApiError ? exc.message : "Konnte nicht gespeichert werden.",
+    };
+  }
+}
+
 /** Objekt veröffentlichen (draft→active). Backend verlangt einen hinterlegten
  *  Preis — ohne Preis gibt es einen sprechenden Fehler zurück. */
 export async function publishProperty(id: string): Promise<Result<Property>> {

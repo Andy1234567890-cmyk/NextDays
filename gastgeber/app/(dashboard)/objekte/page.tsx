@@ -18,7 +18,7 @@ export default async function ObjektePage() {
         <h1 className="font-display text-2xl font-semibold">{t("titel")}</h1>
         {items.length > 0 && (
           <Link
-            href="/objekte/neu"
+            href="/objekt-einstellen"
             className="inline-flex rounded-full bg-foreground px-5 py-2 text-sm font-medium text-background"
           >
             {t("neu")}

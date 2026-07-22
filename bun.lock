@@ -31,6 +31,7 @@
       "name": "nextdays-gastgeber",
       "version": "0.1.0",
       "dependencies": {
+        "@iconify/react": "6.0.2",
         "@nextdays/auth": "workspace:*",
         "@nextdays/currency": "workspace:*",
         "@nextdays/laender": "workspace:*",
