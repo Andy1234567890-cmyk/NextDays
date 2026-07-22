@@ -1,0 +1,41 @@
+{
+  "nav": {
+    "dashboard": "Übersicht",
+    "objekte": "Objekte",
+    "kalender": "Kalender",
+    "buchungen": "Buchungen",
+    "nachrichten": "Nachrichten",
+    "bewertungen": "Bewertungen",
+    "finanzen": "Finanzen",
+    "statistiken": "Statistiken",
+    "konto": "Konto",
+    "abmelden": "Abmelden"
+  },
+  "dashboard": {
+    "titel": "Übersicht",
+    "begruessung": "Willkommen zurück",
+    "kpiUmsatz": "Umsatz (30 Tage)",
+    "kpiBuchungen": "Buchungen",
+    "kpiAuslastung": "Auslastung",
+    "kpiBewertung": "Ø Bewertung",
+    "keineObjekte": "Du hast noch kein Objekt eingestellt.",
+    "objektAnlegen": "Objekt einstellen"
+  },
+  "objekte": {
+    "titel": "Meine Objekte",
+    "neu": "Objekt einstellen",
+    "leer": "Noch keine Objekte — stelle dein erstes Ferienobjekt ein.",
+    "status": {
+      "active": "Aktiv",
+      "draft": "Entwurf",
+      "inactive": "Pausiert"
+    }
+  },
+  "gemeinsam": {
+    "laden": "Lädt …",
+    "speichern": "Speichern",
+    "abbrechen": "Abbrechen",
+    "fehler": "Etwas ist schiefgelaufen.",
+    "leerWert": "—"
+  }
+}

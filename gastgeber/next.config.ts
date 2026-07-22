@@ -1,6 +1,9 @@
 import path from "node:path";
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 import { securityHeaders } from "@nextdays/security-headers";
+
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 // Gastgeber-Dashboard — eigenständiges Projekt auf eigener Subdomain (host.),
 // getrennt von der Gast-App plattform/ (ADR-0015). Eingeloggter Bereich → nie
@@ -18,6 +21,7 @@ const nextConfig: NextConfig = {
     "@nextdays/laender",
     "@nextdays/currency",
     "@nextdays/auth",
+    "@nextdays/ui",
     "@nextdays/security-headers",
   ],
   // CSP + X-Frame-Options (pro App). HSTS/nosniff/Referrer setzt Traefik global.
@@ -31,4 +35,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);
