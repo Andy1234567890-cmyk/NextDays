@@ -28,12 +28,12 @@ The workshop replicas of the editor UI live in the **Page-Builder** section (edi
 
 ## Drei getrennte Ebenen
 
-Der Page-Builder besteht aus drei physisch getrennten Teilen: dem **Editor** im Dashboard (`apps/web`, craft.js-Canvas), dem **Backend-Slice** `site_config` (FastAPI) und der eigenständigen **Renderer-App** `builder/` (Next.js), die veröffentlichte Seiten pro Custom-Domain ausliefert.
+Der Page-Builder besteht aus drei physisch getrennten Teilen: dem **Editor** im Dashboard (`web`, craft.js-Canvas), dem **Backend-Slice** `site_config` (FastAPI) und der eigenständigen **Renderer-App** `builder/` (Next.js), die veröffentlichte Seiten pro Custom-Domain ausliefert.
 
 <Mermaid
   title="Datenfluss Editor → Datenbank → Renderer"
   chart={`flowchart LR
-    subgraph web["apps/web — Dashboard"]
+    subgraph web["web — Dashboard"]
         editor["Canvas-Editor (craft.js)\nFrames · Ebenen · Inspektor"]
         actions["Server-Actions\nlib/site-pages.ts (syncBlocks-Diff)"]
     end
@@ -116,7 +116,7 @@ Vier Tabellen (Migrationen `0086` + `0087`), alle mit Tenant-RLS (default-deny) 
   title="Seite bearbeiten → veröffentlichen → öffentlicher Abruf"
   chart={`sequenceDiagram
     participant A as Agentur (Editor)
-    participant W as apps/web (Server-Actions)
+    participant W as web (Server-Actions)
     participant API as FastAPI site_config
     participant DB as Postgres
     participant B as builder/ (Renderer)
@@ -154,7 +154,7 @@ Beim Speichern übersetzt `serialize.ts` den Baum in die flache Blockliste; Layo
 
 | Dienst | Zweck | Konfiguration |
 | --- | --- | --- |
-| Google Fonts API | voller Schriftkatalog im Font-Picker | `GOOGLE_FONTS_API_KEY` (apps/web, server-seitig) |
+| Google Fonts API | voller Schriftkatalog im Font-Picker | `GOOGLE_FONTS_API_KEY` (web, server-seitig) |
 | Cloudflare for SaaS | Custom-Domain-TLS (Custom Hostnames) | `cloudflare_*`-Variablen (apps/api) |
 | Unsplash | Bilder der Start-Templates | keine (statische URLs) |
 | Draft-Token | Entwurfs-Vorschau ohne JWT | `SITE_DRAFT_SECRET` (apps/api) |
@@ -165,12 +165,12 @@ Beim Speichern übersetzt `serialize.ts` den Baum in die flache Blockliste; Layo
 
 ## Three separate layers
 
-The page builder consists of three physically separate parts: the **editor** in the dashboard (`apps/web`, craft.js canvas), the **backend slice** `site_config` (FastAPI), and the standalone **renderer app** `builder/` (Next.js) that serves published pages per custom domain.
+The page builder consists of three physically separate parts: the **editor** in the dashboard (`web`, craft.js canvas), the **backend slice** `site_config` (FastAPI), and the standalone **renderer app** `builder/` (Next.js) that serves published pages per custom domain.
 
 <Mermaid
   title="Data flow editor → database → renderer"
   chart={`flowchart LR
-    subgraph web["apps/web — dashboard"]
+    subgraph web["web — dashboard"]
         editor["Canvas editor (craft.js)\nframes · layers · inspector"]
         actions["Server actions\nlib/site-pages.ts (syncBlocks diff)"]
     end
@@ -253,7 +253,7 @@ Four tables (migrations `0086` + `0087`), all with tenant RLS (default deny) and
   title="Edit page → publish → public request"
   chart={`sequenceDiagram
     participant A as Agency (editor)
-    participant W as apps/web (server actions)
+    participant W as web (server actions)
     participant API as FastAPI site_config
     participant DB as Postgres
     participant B as builder/ (renderer)
@@ -291,7 +291,7 @@ On save, `serialize.ts` flattens the tree into the block list; layout containers
 
 | Service | Purpose | Configuration |
 | --- | --- | --- |
-| Google Fonts API | full font catalog in the font picker | `GOOGLE_FONTS_API_KEY` (apps/web, server-side) |
+| Google Fonts API | full font catalog in the font picker | `GOOGLE_FONTS_API_KEY` (web, server-side) |
 | Cloudflare for SaaS | custom-domain TLS (custom hostnames) | `cloudflare_*` variables (apps/api) |
 | Unsplash | imagery for the starter templates | none (static URLs) |
 | Draft token | draft preview without a JWT | `SITE_DRAFT_SECRET` (apps/api) |
