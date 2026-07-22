@@ -1,0 +1,10 @@
+{
+  "name": "@nextdays/security-headers",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Geteilte HTTP-Security-Header/CSP für alle Next-Frontends. Single Source — keine 6 Kopien der Policy (Wurzel 4). Nur die inhaltsabhängigen Header (CSP, X-Frame-Options); generische (HSTS/nosniff/Referrer) setzt Traefik global.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

@@ -15,7 +15,7 @@
     "@stripe/react-stripe-js": "^6.6.0",
     "@stripe/stripe-js": "^9.8.0",
     "motion": "^12.40.0",
-    "next": "^15.1.0",
+    "next": "^15.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "stripe": "^22.3.0"

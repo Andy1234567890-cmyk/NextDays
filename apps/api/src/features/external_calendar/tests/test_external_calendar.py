@@ -393,8 +393,39 @@ def test_docs_disabled_in_prod(monkeypatch: pytest.MonkeyPatch) -> None:
 
     get_settings.cache_clear()
     monkeypatch.setenv("APP_ENV", "production")
+    # In Prod bindet die TrustedHostMiddleware — der TestClient sendet Host
+    # "testserver", der sonst mit 400 abgewiesen würde. Explizit erlauben, damit
+    # dieser Test die docs-Deaktivierung (404) prüft, nicht den Host-Check.
+    monkeypatch.setenv("TRUSTED_HOSTS", "testserver")
     prod_app = create_app()
     prod_client = TestClient(prod_app)
     assert prod_client.get("/openapi.json").status_code == 404
     assert prod_client.get("/docs").status_code == 404
+    get_settings.cache_clear()
+
+
+def test_security_headers_present(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Jede Antwort trägt die API-Security-Header (nosniff, DENY, CSP)."""
+    from src.core.config import get_settings
+
+    get_settings.cache_clear()
+    client = TestClient(create_app())
+    resp = client.get("/health")
+    assert resp.headers["X-Content-Type-Options"] == "nosniff"
+    assert resp.headers["X-Frame-Options"] == "DENY"
+    assert "default-src 'none'" in resp.headers["Content-Security-Policy"]
+    get_settings.cache_clear()
+
+
+def test_trusted_host_rejects_foreign_host(monkeypatch: pytest.MonkeyPatch) -> None:
+    """In Prod weist die TrustedHostMiddleware einen fremden Host-Header ab (400)."""
+    from src.core.config import get_settings
+
+    get_settings.cache_clear()
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("TRUSTED_HOSTS", "api.mynextdays.com")
+    client = TestClient(create_app())
+    # Erlaubter Host → 200, fremder Host → 400 (vor jeder Route).
+    assert client.get("/health", headers={"host": "api.mynextdays.com"}).status_code == 200
+    assert client.get("/health", headers={"host": "evil.example.com"}).status_code == 400
     get_settings.cache_clear()

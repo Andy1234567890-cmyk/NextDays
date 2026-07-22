@@ -1,0 +1,37 @@
+# Traefik-Dynamic-Config: globale Security-Header-Middleware (Wurzel 8, ADR-0016).
+# Ablageort auf dem Server: /data/coolify/proxy/dynamic/security-headers.yaml
+# (File-Provider mit watch=true → Hot-Reload; wirkt NUR für Router, die die
+#  Middleware referenzieren — reines Ablegen ändert nichts).
+#
+# AUFTEILUNG (Doppelung vermeiden): hier NUR die generischen, für ALLE Apps
+# wertgleichen Header (HSTS, X-Content-Type-Options, Referrer-Policy,
+# Permissions-Policy) + Server-Header-Leak-Entfernung. Die inhaltsabhängigen
+# Header (CSP, X-Frame-Options) setzt jede Next-App selbst in next.config
+# (@nextdays/security-headers) — NICHT hier, sonst Duplikate.
+#
+# ANWENDUNG: an einen Router hängen via Label an der App:
+#   traefik.http.routers.<app>.middlewares=nd-sec-headers@file
+# Erst an EINE Test-App, curl-verifizieren, dann app-für-app ausrollen.
+#
+# HSTS: startet mit stsSeconds=300 (5 min) OHNE preload — irreversibel per
+# Browser-Cache. Erst hochziehen (includeSubDomains, dann 1 Jahr), preload NUR
+# wenn JEDE Subdomain nachweislich sauberes HTTPS liefert.
+
+http:
+  middlewares:
+    nd-sec-headers:
+      headers:
+        # HSTS — konservativ starten (siehe Kommentar oben).
+        stsSeconds: 300
+        stsIncludeSubdomains: false
+        stsPreload: false
+        # Generische Header (app-unabhängig, ein Wert für alle).
+        contentTypeNosniff: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        permissionsPolicy: "camera=(), microphone=(), geolocation=()"
+        # Version-Leak entfernen: leerer Wert = Header wird entfernt. Erschlägt
+        # auch den durchschlagenden kong/OpenResty-Server-Header (Traefik ist der
+        # äußere Proxy → greift auf alle Backend-Antworten).
+        customResponseHeaders:
+          Server: ""
+          X-Powered-By: ""

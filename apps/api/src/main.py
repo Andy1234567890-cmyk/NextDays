@@ -6,8 +6,10 @@ Startet keinen Server beim Import (PROJECT.md). Lokaler Start via uvicorn:
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from .core.config import get_settings
 from .core.logging import configure_logging, get_logger
@@ -142,6 +144,38 @@ def create_app() -> FastAPI:
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
         allow_headers=["*"],
     )
+
+    # Host-Header-Injection (Cache-Poisoning, Password-Reset-Poisoning): nur die
+    # deklarierten Hosts akzeptieren. Lokal offen (localhost/127.0.0.1 wechseln).
+    if not settings.is_local and settings.trusted_host_list:
+        app.add_middleware(
+            TrustedHostMiddleware, allowed_hosts=settings.trusted_host_list
+        )
+
+    # Security-Header auf JEDE Antwort. Die API rendert kein HTML (reines JSON),
+    # deshalb default-src 'none' + frame-ancestors 'none' (nie einbettbar). HSTS
+    # setzt der TLS-terminierende Proxy (Traefik), NICHT hier — sonst Duplikat.
+    @app.middleware("http")
+    async def _security_headers(request: Request, call_next):  # noqa: ANN001,ANN202
+        resp = await call_next(request)
+        resp.headers.setdefault("X-Content-Type-Options", "nosniff")
+        resp.headers.setdefault("X-Frame-Options", "DENY")
+        resp.headers.setdefault("Referrer-Policy", "no-referrer")
+        resp.headers.setdefault(
+            "Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'"
+        )
+        return resp
+
+    # Fail-closed & kein Stacktrace-Leak (Wurzel 5): unerwartete Exceptions werden
+    # serverseitig geloggt (der Handler-Stack im Log), der Client bekommt nur einen
+    # generischen 500 ohne interne Details. HTTPException/Validation bleiben davon
+    # unberührt (FastAPI behandelt sie eigenständig mit klaren Statuscodes).
+    @app.exception_handler(Exception)
+    async def _unhandled(request: Request, exc: Exception):  # noqa: ANN202
+        log.exception(
+            "unhandled_error", path=request.url.path, error=type(exc).__name__
+        )
+        return JSONResponse(status_code=500, content={"detail": "internal_error"})
 
     # Redis-backed Rate-Limiting (Infra-Runbook Punkt 8): schützt vor Brute-Force
     # (Login), Scrapern und Lastspitzen, sodass ein einzelner missbrauchter/teurer

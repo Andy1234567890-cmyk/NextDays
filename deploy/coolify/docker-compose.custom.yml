@@ -1,0 +1,12 @@
+# Security-Härtung (K2): Coolify-Dashboard/Realtime/Terminal NICHT mehr extern
+# auf 0.0.0.0 publizieren, sondern nur auf 127.0.0.1. Zugriff künftig per
+# SSH-Tunnel (ssh -L 8000:localhost:8000 root@host). Traefik (80/443) erreicht
+# Coolify weiter über das interne Docker-Netz; SSH (22) bleibt der Rückweg.
+services:
+  coolify:
+    ports: !override
+      - "127.0.0.1:${APP_PORT:-8000}:8080"
+  soketi:
+    ports: !override
+      - "127.0.0.1:${SOKETI_PORT:-6001}:6001"
+      - "127.0.0.1:6002:6002"

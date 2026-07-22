@@ -50,7 +50,10 @@ AUTH=(-H "apikey: $ANON_KEY" -H "Authorization: Bearer $JWT")
 # 1) SB-1 (READ-ONLY): sensible Tabellen direkt über PostgREST lesen
 # ---------------------------------------------------------------------------
 hr "1) SB-1 READ: Finanz-/Gastdaten direkt via PostgREST (Rollen-Split nur im API?)"
-for T in payments commissions guests owner_statements; do
+# 0187-gehärtete Finanz-/Secret-Tabellen mit abdecken: alle müssen für den
+# anon-Key leer/geschützt sein (revoke + RESTRICTIVE-Policy, Wurzel 6).
+for T in payments commissions commission_ledger invoices invoice_line_items \
+         owner_statements channex_tax_map stripe_webhook_event guests; do
   CODE=$(curl -s -o /tmp/rt_$T.json -w '%{http_code}' "${AUTH[@]}" \
     "$SUPABASE_URL/rest/v1/$T?select=*&limit=3")
   N=$(grep -o '{' /tmp/rt_$T.json 2>/dev/null | wc -l | tr -d ' ')

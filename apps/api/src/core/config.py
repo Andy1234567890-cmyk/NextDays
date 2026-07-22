@@ -21,6 +21,11 @@ class Settings(BaseSettings):
     # Frontend-Origin für CORS (Komma-getrennt möglich)
     cors_origins: str = "http://localhost:3000"
 
+    # Erlaubte Host-Header (TrustedHostMiddleware, gegen Host-Header-Injection).
+    # Komma-getrennt; leer = aus cors_origins abgeleitet. Wildcard-Subdomains
+    # als "*.mynextdays.com" möglich. Lokal offen (get_trusted_hosts).
+    trusted_hosts: str = ""
+
     # --- Supabase ---
     supabase_url: str = "http://localhost:54321"
     supabase_anon_key: SecretStr = SecretStr("")
@@ -221,6 +226,23 @@ class Settings(BaseSettings):
     @property
     def cors_origin_list(self) -> list[str]:
         return [o.strip() for o in self.cors_origins.split(",") if o.strip()]
+
+    @property
+    def trusted_host_list(self) -> list[str]:
+        """Erlaubte Host-Header. Explizit gesetzt > aus CORS-Origins abgeleitet.
+
+        Lokal (is_local) wird die TrustedHostMiddleware nicht gebunden — hier gibt
+        die Ableitung nur die Prod-Hosts zurück, die main.py im Prod-Zweig nutzt.
+        """
+        if self.trusted_hosts.strip():
+            return [h.strip() for h in self.trusted_hosts.split(",") if h.strip()]
+        # Aus den CORS-Origins die reinen Hostnamen ziehen (ohne Schema/Port).
+        hosts: list[str] = []
+        for origin in self.cors_origin_list:
+            host = origin.split("://", 1)[-1].split("/", 1)[0].split(":", 1)[0]
+            if host and host not in hosts:
+                hosts.append(host)
+        return hosts
 
 
 @lru_cache

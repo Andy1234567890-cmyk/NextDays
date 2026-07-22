@@ -5,6 +5,8 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Schlankes Runtime-Image für den Dockerfile-Build (node server.js).
   output: "standalone",
+  // Kein x-powered-by:Next.js — verrät die Technologie (Version-Leak/Recon).
+  poweredByHeader: false,
 
   // Security-Header (W-3, Defense-in-Depth). Die Sites zeigen gast-erstelltes
   // Rich-Text; die serverseitige Sanitisierung (nh3, site_config) ist die erste
@@ -32,6 +34,14 @@ const nextConfig: NextConfig = {
           { key: "X-Frame-Options", value: "DENY" },
           { key: "X-Content-Type-Options", value: "nosniff" },
           { key: "Referrer-Policy", value: "same-origin" },
+          ...(process.env.NODE_ENV === "production"
+            ? [
+                {
+                  key: "Strict-Transport-Security",
+                  value: "max-age=31536000; includeSubDomains",
+                },
+              ]
+            : []),
         ],
       },
     ];
