@@ -1,7 +1,7 @@
 // Data-Layer Objekte (properties) fürs Gastgeber-Dashboard. Über den DAL
 // api-server.ts (Host-Cookie-Bearer) gegen dieselben FastAPI-Endpunkte wie web,
-// aber Gastgeber-Auth. Server-Read für Server Components; Mutationen als Server
-// Actions in properties-actions.ts (Cookie-schreiben/revalidate nur dort).
+// aber Gastgeber-Auth. Read-only Server-Read für Server Components; Schreib-
+// Actions kommen mit dem Onboarding-Bereich (01) als eigene "use server"-Datei.
 import { api } from "./api-server";
 
 // Objekt-Status (Lebenszyklus, getrennt von Kanal-Sichtbarkeit).
