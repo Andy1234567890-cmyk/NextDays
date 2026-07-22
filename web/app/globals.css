@@ -7,6 +7,9 @@
    portierten Finance-Komponenten mitscannen (sonst kein CSS für deren Klassen). */
 @source "../vendor/tasko-ui";
 @source "../components";
+/* Die shadcn-Basis liegt seit ADR-0016 im @nextdays/ui-Package (außerhalb web/)
+   → explizit mitscannen, sonst fehlen ihre Klassen (Sidebar etc.). */
+@source "../../packages/ui/src";
 
 /* Tailwind v4 — Theme-Tokens als CSS-Variablen. KEIN tailwind.config.ts (PROJECT.md §6).
  *

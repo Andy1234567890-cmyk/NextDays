@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Tailwind v4 scannt per Default nur das eigene Projekt. Die geteilten
+   @nextdays/ui-Komponenten liegen außerhalb → explizit als Content-Quelle
+   einbinden, sonst fehlen ihre Klassen (Sidebar etc. rendern unstyled). */
+@source "../components";
+@source "../../packages/ui/src";
+
 /* myNextDays-Design-Tokens — übernommen aus apps/web (eine Markenfarbwelt über
    alle Apps: Schwarz #0a0a0a primär, Rot #b82028 Akzent). Bewusst entkoppelte
    Kopie, keine Laufzeit-Abhängigkeit zu apps/web. */
