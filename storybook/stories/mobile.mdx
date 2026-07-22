@@ -8,9 +8,9 @@ import { De, En } from "@/components/docs/lang";
 
 # Mobile-App — gleiche Plattform, gleiche Regeln
 
-Die **Mobile-App** (`apps/mobile`, bare React Native 0.86, kein Expo) ist ein **gleichwertiges Frontend derselben FastAPI** (`/api/v1`) wie Web und Plattform — die All-in-One-App mit **vier Erlebnissen**: Gast · Agentur · Owner · Mitarbeiter. Das aktive Erlebnis kommt aus dem Konto (Rolle), nicht aus einer Client-Entscheidung. Es gibt **zwei strikt getrennte Auth-Welten**: Tenant-Nutzer (Agentur/Owner/Mitarbeiter) vs. `portal_guests` (Gäste).
+Die **Mobile-App** (`mobile`, bare React Native 0.86, kein Expo) ist ein **gleichwertiges Frontend derselben FastAPI** (`/api/v1`) wie Web und Plattform — die All-in-One-App mit **vier Erlebnissen**: Gast · Agentur · Owner · Mitarbeiter. Das aktive Erlebnis kommt aus dem Konto (Rolle), nicht aus einer Client-Entscheidung. Es gibt **zwei strikt getrennte Auth-Welten**: Tenant-Nutzer (Agentur/Owner/Mitarbeiter) vs. `portal_guests` (Gäste).
 
-Anzeigename auf dem Gerät: **My Next Day**. Alle Daten laufen NUR über `apps/mobile/lib/api.ts` (Bearer aus Keychain) — kein direkter Supabase-Zugriff außer Realtime.
+Anzeigename auf dem Gerät: **My Next Day**. Alle Daten laufen NUR über `mobile/lib/api.ts` (Bearer aus Keychain) — kein direkter Supabase-Zugriff außer Realtime.
 
 </De>
 
@@ -18,9 +18,9 @@ Anzeigename auf dem Gerät: **My Next Day**. Alle Daten laufen NUR über `apps/m
 
 # Mobile app — same platform, same rules
 
-The **mobile app** (`apps/mobile`, bare React Native 0.86, no Expo) is an **equal frontend of the same FastAPI** (`/api/v1`) as web and platform — the all-in-one app with **four experiences**: guest · agency · owner · staff. The active experience comes from the account (role), not a client decision. There are **two strictly separated auth worlds**: tenant users (agency/owner/staff) vs. `portal_guests` (guests).
+The **mobile app** (`mobile`, bare React Native 0.86, no Expo) is an **equal frontend of the same FastAPI** (`/api/v1`) as web and platform — the all-in-one app with **four experiences**: guest · agency · owner · staff. The active experience comes from the account (role), not a client decision. There are **two strictly separated auth worlds**: tenant users (agency/owner/staff) vs. `portal_guests` (guests).
 
-Display name on device: **My Next Day**. All data goes ONLY through `apps/mobile/lib/api.ts` (bearer from keychain) — no direct Supabase access except realtime.
+Display name on device: **My Next Day**. All data goes ONLY through `mobile/lib/api.ts` (bearer from keychain) — no direct Supabase access except realtime.
 
 </En>
 
@@ -33,12 +33,12 @@ Das RN-App-Frontend gliedert sich in vier Tab-Bereiche + modale Detail-Screens; 
 <Mermaid
   title="Container — Mobile-App"
   chart={`C4Container
-    title Container — Mobile-App (apps/mobile)
+    title Container — Mobile-App (mobile)
 
     Person(guest, "Gast", "Sucht, bucht, reist")
     Person(staff, "Agentur/Owner/Mitarbeiter", "Verwaltet je nach Rolle")
 
-    Container_Boundary(app, "apps/mobile (React Native 0.86)") {
+    Container_Boundary(app, "mobile (React Native 0.86)") {
         Container(nav, "Root-Stack + Rollen-Tabs", "React Navigation 7", "GuestTabs · HostTabs · OwnerTabs · StaffTabs")
         Container(screens, "Screens (25)", "React Native", "Gast/Host/Owner/Staff + Detail-Modals")
         Container(kit, "UI-Kit + Theme", "RN + Tokens", "kit.tsx, Icon, ListingCard, Light/Dark")
@@ -72,12 +72,12 @@ The RN app frontend is split into four tab areas + modal detail screens; behind 
 <Mermaid
   title="Container — Mobile app"
   chart={`C4Container
-    title Container — Mobile app (apps/mobile)
+    title Container — Mobile app (mobile)
 
     Person(guest, "Guest", "Searches, books, travels")
     Person(staff, "Agency/Owner/Staff", "Manages depending on role")
 
-    Container_Boundary(app, "apps/mobile (React Native 0.86)") {
+    Container_Boundary(app, "mobile (React Native 0.86)") {
         Container(nav, "Root stack + role tabs", "React Navigation 7", "GuestTabs · HostTabs · OwnerTabs · StaffTabs")
         Container(screens, "Screens (25)", "React Native", "Guest/Host/Owner/Staff + detail modals")
         Container(kit, "UI kit + theme", "RN + tokens", "kit.tsx, Icon, ListingCard, light/dark")

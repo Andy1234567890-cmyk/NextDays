@@ -117,10 +117,11 @@ Die ausführbaren Bausteine und Datastores des Systems mit Technologie und Proto
         Container(web, "Web Dashboard", "Next.js, TypeScript", "Vermieter-PMS-UI + Portale (Coolify-App)")
         Container(plattform, "Plattform", "Next.js (plattform/)", "Eigener globaler Buchungskanal (wie Booking/Airbnb): Gäste-Marktplatz, Such-/Inserat-/Checkout-Flow, Stripe-Bezahlung")
         Container(mobile, "Mobile-App", "React Native 0.86 (bare CLI, kein Expo)", "Gäste (Buchen/Aufenthalt) + Gastgeber (Verwaltung), iOS/Android")
-        Container(storybook, "Storybook", "react-vite (eigenes Package apps/storybook)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
+        Container(gastgeber, "Gastgeber-Dashboard", "Next.js (gastgeber/)", "Marktplatz-Gastgeber (8%-Fee statt Abo), eigene Subdomain host., getrennte Auth (ADR-0015)")
+        Container(storybook, "Storybook", "react-vite (Top-Level storybook/)", "Design-System & Komponenten-Werkstatt (ADR-0008); fertige Komponenten wandern nach Web")
         Container(builder, "Website-Renderer", "Next.js (builder/)", "White-Label-Agentur-Sites pro Custom-Domain (Page-Builder)")
-        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 31 Vertical Slices unter /api/v1")
-        ContainerDb(db, "Datenbank", "Supabase / Postgres", "128 Tabellen, Multi-Tenant, RLS, tenant_id")
+        Container(api, "API Backend", "FastAPI, Python", "Business-Logik, 39 Vertical Slices unter /api/v1")
+        ContainerDb(db, "Datenbank", "Supabase / Postgres", "140 Tabellen, Multi-Tenant, RLS, tenant_id")
         ContainerDb(cache, "Cache", "Redis", "Caching + Rate-Limiting")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel-Sync, OCR, Messaging-Trigger, wiederkehrende Aufgaben")
     }
@@ -173,10 +174,11 @@ The executable building blocks and data stores of the system with technology and
         Container(web, "Web Dashboard", "Next.js, TypeScript", "Host PMS UI + portals (Coolify app)")
         Container(plattform, "Platform", "Next.js (plattform/)", "Own global booking channel (like Booking/Airbnb): guest marketplace, search/listing/checkout flow, Stripe payment")
         Container(mobile, "Mobile app", "React Native 0.86 (bare CLI, no Expo)", "Guests (booking/stay) + hosts (management), iOS/Android")
-        Container(storybook, "Storybook", "react-vite (own package apps/storybook)", "Design system & component workshop (ADR-0008); finished components move to Web")
+        Container(gastgeber, "Host dashboard", "Next.js (gastgeber/)", "Marketplace hosts (8% fee instead of subscription), own subdomain host., separate auth (ADR-0015)")
+        Container(storybook, "Storybook", "react-vite (top-level storybook/)", "Design system & component workshop (ADR-0008); finished components move to Web")
         Container(builder, "Website renderer", "Next.js (builder/)", "White-label agency sites per custom domain (website builder)")
-        Container(api, "API Backend", "FastAPI, Python", "Business logic, 31 vertical slices under /api/v1")
-        ContainerDb(db, "Database", "Supabase / Postgres", "128 tables, multi-tenant, RLS, tenant_id")
+        Container(api, "API Backend", "FastAPI, Python", "Business logic, 39 vertical slices under /api/v1")
+        ContainerDb(db, "Database", "Supabase / Postgres", "140 tables, multi-tenant, RLS, tenant_id")
         ContainerDb(cache, "Cache", "Redis", "Caching + rate limiting")
         ContainerQueue(queue, "Background Queue", "Redis / Worker", "Channel sync, OCR, messaging triggers, recurring tasks")
     }
@@ -214,7 +216,7 @@ The executable building blocks and data stores of the system with technology and
 
 ## Slice-Landkarte (Component-Ebene, API-Backend)
 
-Die 31 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslogik: Querschnitt im Core, Slices mit fertiger Logik (Großteil) sowie wenige Gerüst-Slices (ocr, crm), die laut Roadmap folgen.
+Die 39 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslogik: Querschnitt im Core, Slices mit fertiger Logik (Großteil) sowie wenige Gerüst-Slices (ocr, crm), die laut Roadmap folgen.
 
 <Mermaid
   title="Slice-Landkarte (Component-Ebene, API-Backend)"
@@ -250,7 +252,7 @@ Die 31 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslog
             OCR["ocr"]; CRM["crm"]; DASH["dashboard (min.)"]; CONT["content (min.)"]
         end
     end
-    DB[("Postgres — 128 Tabellen, RLS")]
+    DB[("Postgres — 140 Tabellen, RLS")]
     DONE --> DB
     SCAFFOLD --> DB
     CORE --> DONE
@@ -263,7 +265,7 @@ Die 31 Vertical Slices und ihre Datenbereiche zeigen den Stand der Geschäftslog
 
 ## Slice map (component level, API backend)
 
-The 31 vertical slices and their data areas show the state of the business logic: cross-cutting concerns in the core, slices with finished logic (the majority) plus a few scaffold slices (ocr, crm) that follow per the roadmap.
+The 39 vertical slices and their data areas show the state of the business logic: cross-cutting concerns in the core, slices with finished logic (the majority) plus a few scaffold slices (ocr, crm) that follow per the roadmap.
 
 <Mermaid
   title="Slice map (component level, API backend)"
@@ -299,7 +301,7 @@ The 31 vertical slices and their data areas show the state of the business logic
             OCR["ocr"]; CRM["crm"]; DASH["dashboard (min.)"]; CONT["content (min.)"]
         end
     end
-    DB[("Postgres — 128 tables, RLS")]
+    DB[("Postgres — 140 tables, RLS")]
     DONE --> DB
     SCAFFOLD --> DB
     CORE --> DONE
@@ -477,7 +479,7 @@ Das tatsächliche Schema aus den Supabase-Migrationen. Im Zentrum steht der Mand
     }`}
 />
 
-Das Modell ist auf 128 Tabellen (alle mit RLS) gewachsen — inzwischen bei Migration 0158. Die folgende, nach Bereich gruppierte Übersicht zeigt Kern-Erweiterungen: Saison-/Preislogik, Aufgaben & Checklisten, CRM/Partner, Messaging/Content sowie Eigentümer- und Abrechnungsstrukturen. Jüngere Bereiche: Page-Builder (0086/0087, siehe eigene Seite „Architektur/Page-Builder“), Reisebüros (0088), **Rate-Plan-Preise & Restriktionen** (0146–0153: datumsgenaue Preise, Min-Stay, CTA/CTD/Max-Stay, Stop-Sell je Plan), **Rückbau des Hotel-Container-Modells** (0156), **abgeleitete Rate-Plans** (0157) und **geteilte Channex-Property** (0158, n Zimmer → 1 Channex-Property).
+Das Modell ist auf 140 Tabellen (alle mit RLS) gewachsen — inzwischen bei Migration 0187. Die folgende, nach Bereich gruppierte Übersicht zeigt Kern-Erweiterungen: Saison-/Preislogik, Aufgaben & Checklisten, CRM/Partner, Messaging/Content sowie Eigentümer- und Abrechnungsstrukturen. Jüngere Bereiche: Page-Builder (0086/0087, siehe eigene Seite „Architektur/Page-Builder“), Reisebüros (0088), **Rate-Plan-Preise & Restriktionen** (0146–0153: datumsgenaue Preise, Min-Stay, CTA/CTD/Max-Stay, Stop-Sell je Plan), **Rückbau des Hotel-Container-Modells** (0156), **abgeleitete Rate-Plans** (0157), **geteilte Channex-Property** (0158, n Zimmer → 1 Channex-Property), **Marktplatz-Gastgeber** (0180–0186: portal_guests, guest_bookings/messages/reviews/wishlist, property_discounts, platform_fees — der 8%-Fee-Kanal statt PMS-Abo) und die **Sicherheits-Härtung** (0182/0187: RLS + harter `revoke` + restriktive Policies auf allen Finanz-/PII-Tabellen, siehe „Sicherheitsarchitektur“ unten).
 
 <Mermaid
   title="Datenmodell — Erweiterungen aus dem Lastenheft (Migrationen 0009–0019)"
@@ -624,7 +626,7 @@ The actual schema from the Supabase migrations. At the center is the tenant, to 
     }`}
 />
 
-The model has grown to 128 tables (all with RLS) — currently at migration 0158. The following overview, grouped by area, shows core extensions: season/pricing logic, tasks & checklists, CRM/partners, messaging/content as well as owner and billing structures. More recent areas: website builder (0086/0087, see the dedicated page "Architektur/Page-Builder"), travel agencies (0088), **rate-plan prices & restrictions** (0146–0153: date-level prices, min-stay, CTA/CTD/max-stay, stop-sell per plan), **removal of the hotel-container model** (0156), **derived rate plans** (0157) and **shared Channex property** (0158, n rooms → 1 Channex property).
+The model has grown to 140 tables (all with RLS) — currently at migration 0187. The following overview, grouped by area, shows core extensions: season/pricing logic, tasks & checklists, CRM/partners, messaging/content as well as owner and billing structures. More recent areas: website builder (0086/0087, see the dedicated page "Architektur/Page-Builder"), travel agencies (0088), **rate-plan prices & restrictions** (0146–0153: date-level prices, min-stay, CTA/CTD/max-stay, stop-sell per plan), **removal of the hotel-container model** (0156), **derived rate plans** (0157), **shared Channex property** (0158, n rooms → 1 Channex property), **marketplace hosts** (0180–0186: portal_guests, guest_bookings/messages/reviews/wishlist, property_discounts, platform_fees — the 8% fee channel instead of a PMS subscription) and the **security hardening** (0182/0187: RLS + hard `revoke` + restrictive policies on all finance/PII tables, see "Security architecture" below).
 
 <Mermaid
   title="Data model — extensions from the requirements spec (migrations 0009–0019)"
@@ -1075,5 +1077,97 @@ GDPR-compliant and self-hosted preferred, with EU data residency as a hard bound
     A1 -.->|"Transfer: SCC/DPF"| STRIPE
     A1 -.->|"Transfer: DPF"| GOOG`}
 />
+
+</En>
+
+<De>
+
+## Monorepo-Struktur & geteilter Code
+
+Das Repository ist ein **Monorepo mit bun-Workspaces** (ADR-0016). **Alle Frontends sind Top-Level-Projekte** — `apps/` enthält bewusst NUR das Backend (`api`). Geteilter fachlicher Code lebt in `packages/@nextdays/*` (Single Source, gegen Duplikation): `currency` (Währungsformatierung, kein €-Hardcode), `laender` (EU-Länder + Währungen) und `security-headers` (zentrale CSP + Security-Header für alle Next-Apps). Jede Next-App zieht diese als `workspace:*`-Dependency und listet sie in `transpilePackages`.
+
+**Wichtige Ausnahme:** `marketing/`, `storybook/` und `builder/` bauen mit **isoliertem** Dockerfile (kein Root-Build-Kontext) und nutzen daher KEINE `@nextdays/*`-Packages — dort stehen kleine Inline-Kopien (z. B. die CSP direkt in `next.config`). Das ist die dokumentierte Ausnahme, kein Duplikations-Verstoß. `web/`, `plattform/` und `gastgeber/` bauen mit Root-Kontext (`base_directory=/`) und importieren die Packages.
+
+<Mermaid
+  title="Monorepo-Struktur (bun-Workspaces, ADR-0016)"
+  chart={`flowchart TB
+    subgraph ROOT["Repo-Root (bun-Workspace)"]
+        subgraph FE["Frontends (Top-Level)"]
+            WEB["web/ — PMS-Dashboard"]
+            PLAT["plattform/ — Gäste-Marktplatz"]
+            GAST["gastgeber/ — Marktplatz-Gastgeber (host.)"]
+            MARK["marketing/ — Landing (isoliert)"]
+            BUILD["builder/ — White-Label (isoliert)"]
+            SB["storybook/ — Design-System (isoliert)"]
+        end
+        subgraph APPS["apps/ (NUR Backend)"]
+            API2["api/ — FastAPI"]
+        end
+        subgraph PKG["packages/@nextdays/*"]
+            CUR["currency"]
+            LAE["laender"]
+            SEC["security-headers"]
+        end
+        MOB["mobile/ — React Native (eigenständig, pnpm)"]
+    end
+    WEB --> CUR & SEC
+    PLAT --> CUR & LAE & SEC
+    GAST --> CUR & LAE & SEC
+    MARK -.->|Inline-Kopie| SEC
+    BUILD -.->|Inline-Kopie| SEC
+    SB -.->|Inline-Kopie| SEC`}
+/>
+
+## Sicherheitsarchitektur (Wurzeln 6–9)
+
+Der größte reale Angriffsvektor ist **nicht** der FastAPI-Layer, sondern der **Direktpfad an PostgREST/Realtime vorbei am Backend**: Ein eingeloggter Nutzer (auch niedrig-privilegiert, z. B. `cleaner`) kann mit gültigem JWT + öffentlichem anon-Key `curl /rest/v1/<tabelle>` machen und umgeht damit ALLE App-Layer-Checks. Reale CVE-Klasse: CVE-2025-48757. Deshalb sitzt der Schutz auf **DB-Ebene**, nicht in der Anwendung.
+
+**Verbindliche DB-Härtung** für jede sensible Tabelle (Finanzen, `users.role`/`permissions`, Secrets, Türcodes): `enable rls` allein reicht NICHT (anon hat pauschale Table-Grants). Zusätzlich (a) harter `revoke select,insert,update,delete … from anon, authenticated`, (b) restriktive Rollen-Policy `as restrictive for all` (nicht nur `for select` — sonst ist der Schreibpfad tenant-weit offen), (c) `alter default privileges` als Backstop für neue Tabellen. `users` ist auf **Selbst-Lesen** beschränkt (nur die eigene Zeile) und schreibgeschützt (Priv-Esc-Schutz). Migration `0187` setzt das für alle Finanz-Tabellen um; live verifiziert per anon-`curl` → 401.
+
+**Auth-Härtung:** Der direkte GoTrue-Login (`/auth/v1/token`, anon-Key) umgeht die App-`/auth/*`-Flows — daher wird der Direkt-Signup deaktiviert (`GOTRUE_DISABLE_SIGNUP=true`; Nutzer entstehen nur server-seitig über `admin.create_user`) und ein GoTrue-Rate-Limiter erzwungen (`GOTRUE_RATE_LIMIT_HEADER=X-Forwarded-For` — ohne diesen Header macht GoTrue GAR KEIN Rate-Limiting!). App-seitig setzt jede Next-App eine CSP + Security-Header (`@nextdays/security-headers`), FastAPI liefert TrustedHost-Middleware, Security-Header und einen generischen 500-Handler ohne Stacktrace-Leak.
+
+<Mermaid
+  title="Direktpfad-Bedrohung & DB-Ebene-Schutz (Wurzel 6)"
+  chart={`flowchart LR
+    ATT["Eingeloggter Nutzer<br/>(cleaner, anon-Key + JWT)"]
+    subgraph BYPASS["umgeht FastAPI"]
+        REST["PostgREST /rest/v1/"]
+        RT["Realtime"]
+    end
+    API["FastAPI (App-Checks)"]
+    DB[("Postgres")]
+    ATT -->|"curl /rest/v1/&lt;t&gt;"| REST
+    ATT -.->|normaler Weg| API
+    API --> DB
+    REST --> DB
+    RT --> DB
+    DB -->|"RLS + revoke + restrictive Policy<br/>= EINZIGER echter Schutz"| REST`}
+/>
+
+## Zugang & Deployment (Betriebsstand)
+
+Der Server (Hetzner, Coolify, Traefik, Docker) ist gehärtet: Die **Coolify-Dashboard-Ports 8000/6001/6002 sind extern geschlossen** (nur 127.0.0.1). Zugang zum Dashboard nur per SSH-Tunnel (`ssh coolify-tunnel` → `http://localhost:8010`). **Deployments** laufen über die Traefik-HTTPS-Route `coolify.<host>.sslip.io` (Let's-Encrypt), per **POST** (seit Coolify 4.2.0; GET liefert 405). Der GitHub-Actions-Workflow bildet die Coolify-watch_paths nach und deployt nur Apps, deren Pfade sich geändert haben. Traefik terminiert TLS und ist der äußere Reverse-Proxy vor allen Frontends und dem Kong/Supabase-Gateway.
+
+</De>
+
+<En>
+
+## Monorepo structure & shared code
+
+The repository is a **monorepo with bun workspaces** (ADR-0016). **All frontends are top-level projects** — `apps/` deliberately contains ONLY the backend (`api`). Shared domain code lives in `packages/@nextdays/*` (single source, against duplication): `currency` (currency formatting, no €-hardcode), `laender` (EU countries + currencies) and `security-headers` (central CSP + security headers for all Next apps). Each Next app pulls these as a `workspace:*` dependency and lists them in `transpilePackages`.
+
+**Important exception:** `marketing/`, `storybook/` and `builder/` build with an **isolated** Dockerfile (no root build context) and therefore do NOT use `@nextdays/*` packages — they keep small inline copies (e.g. the CSP directly in `next.config`). This is the documented exception, not a duplication violation. `web/`, `plattform/` and `gastgeber/` build with root context (`base_directory=/`) and import the packages.
+
+## Security architecture (roots 6–9)
+
+The biggest real attack vector is **not** the FastAPI layer but the **direct path to PostgREST/Realtime bypassing the backend**: a logged-in user (even low-privilege, e.g. `cleaner`) can, with a valid JWT + public anon key, run `curl /rest/v1/<table>` and thereby bypass ALL application-layer checks. Real CVE class: CVE-2025-48757. That is why protection sits at the **DB level**, not in the application.
+
+**Mandatory DB hardening** for every sensitive table (finance, `users.role`/`permissions`, secrets, door codes): `enable rls` alone is NOT enough (anon has blanket table grants). Additionally (a) hard `revoke select,insert,update,delete … from anon, authenticated`, (b) restrictive role policy `as restrictive for all` (not just `for select` — otherwise the write path is tenant-wide open), (c) `alter default privileges` as a backstop for new tables. `users` is restricted to **self-read** (own row only) and write-protected (priv-esc protection). Migration `0187` implements this for all finance tables; verified live via anon `curl` → 401.
+
+**Auth hardening:** the direct GoTrue login (`/auth/v1/token`, anon key) bypasses the app `/auth/*` flows — so direct signup is disabled (`GOTRUE_DISABLE_SIGNUP=true`; users are created only server-side via `admin.create_user`) and a GoTrue rate limiter is enforced (`GOTRUE_RATE_LIMIT_HEADER=X-Forwarded-For` — without this header GoTrue does NO rate limiting at all!). On the app side, every Next app sets a CSP + security headers (`@nextdays/security-headers`), FastAPI ships TrustedHost middleware, security headers and a generic 500 handler without stack-trace leak.
+
+## Access & deployment (operational state)
+
+The server (Hetzner, Coolify, Traefik, Docker) is hardened: the **Coolify dashboard ports 8000/6001/6002 are closed externally** (127.0.0.1 only). Dashboard access only via SSH tunnel (`ssh coolify-tunnel` → `http://localhost:8010`). **Deployments** run over the Traefik HTTPS route `coolify.<host>.sslip.io` (Let's Encrypt), via **POST** (since Coolify 4.2.0; GET returns 405). The GitHub Actions workflow mirrors the Coolify watch_paths and only deploys apps whose paths changed. Traefik terminates TLS and is the outer reverse proxy in front of all frontends and the Kong/Supabase gateway.
 
 </En>
