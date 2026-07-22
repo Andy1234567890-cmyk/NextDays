@@ -20,6 +20,7 @@
     "@nextdays/auth": "workspace:*",
     "@nextdays/ui": "workspace:*",
     "@nextdays/security-headers": "workspace:*",
+    "@iconify/react": "6.0.2",
     "next-intl": "4.13.0",
     "sonner": "2.0.7"
   },
