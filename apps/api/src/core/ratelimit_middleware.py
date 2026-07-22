@@ -66,7 +66,12 @@ def _is_exempt(path: str) -> bool:
 def _select_bucket(path: str, buckets: _Buckets) -> tuple[str, Limit, bool]:
     """Pfad → (Bucket-Name, Limit, sensibel?). Sensibel = Kandidat für fail-closed."""
     if "/auth/login" in path or "/auth/register" in path or "/auth/refresh" in path \
-            or "/oauth/token" in path:
+            or "/oauth/token" in path \
+            or "/guest-auth/login" in path or "/guest-auth/register" in path \
+            or "/guest-auth/refresh" in path or "/guest-auth/password-reset" in path:
+        # Gast-Auth (Demand-Seite /plattform) ist genauso ein Credential-Endpunkt
+        # wie der Vermieter-Login → gleicher strenger auth-Bucket (Brute-Force-/
+        # Stuffing-Schutz, Wurzel 2/7). password-reset zusätzlich gegen E-Mail-Enum.
         # /oauth/token ist der Client-Credentials-Tausch (Entwickler-API): ein
         # Credential-Endpunkt wie Login → strenger Auth-Bucket, Brute-Force-Schutz.
         return "auth", buckets.auth, True

@@ -122,6 +122,12 @@ class PublicBookingResponse(BaseModel):
     check_in: date
     check_out: date
     status: str
+    # Airbnb-Modell: True = Anfrage (status='requested'), der Gast wartet auf die
+    # Host-Zusage; False = Sofortbuchung (status='confirmed'). Steuert das Gast-UI
+    # („Anfrage gesendet" vs. „Gebucht").
+    is_request: bool = False
+    # Ablauf der Anfrage (ISO, 24 h). None bei Sofortbuchung.
+    request_expires_at: str | None = None
 
 
 class PurchasedAddon(BaseModel):

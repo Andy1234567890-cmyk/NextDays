@@ -7,6 +7,8 @@
 // Session-Token via currentToken() als Bearer injiziert.
 import { type NextRequest, NextResponse } from "next/server";
 
+import { currentToken } from "@/lib/session-token";
+
 const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 async function forward(req: NextRequest, path: string[]): Promise<NextResponse> {
@@ -16,8 +18,16 @@ async function forward(req: NextRequest, path: string[]): Promise<NextResponse> 
   const headers: Record<string, string> = {};
   const contentType = req.headers.get("content-type");
   if (contentType) headers["Content-Type"] = contentType;
-  // TODO Auth: const token = await currentToken();
-  //            if (token) headers.Authorization = `Bearer ${token}`;
+  // Auf /plattform ist der Inhaber des nd_access-Cookies der PORTAL-GAST (die
+  // Plattform ist die Demand-Seite; Gastgeber sitzen auf apps/web). Sein
+  // Access-Token wird hier als Bearer mitgeschickt, damit die gast-gescopeten
+  // Endpunkte (guest-auth/me, guest-bookings, guest-stay, guest-messages,
+  // guest-wishlist, guest-reviews) greifen. Public Gast-Pfade (booking-engine,
+  // guest-auth/login|register|password-reset, öffentliche Objekt-Bewertungen)
+  // haben kein Cookie → kein Token, bleiben public. Die zwei Auth-Welten
+  // (Portal-Gast hier vs. Gastgeber auf apps/web) bleiben strikt getrennt.
+  const token = await currentToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
 
   const method = req.method.toUpperCase();
   const body =

@@ -36,6 +36,7 @@ from .schemas import (
     PayPalOnboardingRequest,
     PayPalOnboardingResponse,
     PayPalOrderResponse,
+    PlatformFeeSummary,
     RefundRequest,
     SliceHealth,
 )
@@ -80,6 +81,18 @@ def get_payment_settings(
     """Zahlungs-Einstellungen des Tenants + abgeleiteter Stripe-Status."""
     try:
         return service.get_payment_settings(ctx)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/platform-fees", response_model=PlatformFeeSummary)
+def platform_fees(
+    service: PaymentsServiceDep, ctx: _billing
+) -> PlatformFeeSummary:
+    """Plattform-Provisionen (8 %, 0182) des Marktplatz-Gastgebers: fällige/
+    eingezogene/zurückgegebene Fees je Buchung. Nur eigener Tenant (Wurzel 3/9)."""
+    try:
+        return service.platform_fee_summary(ctx)
     except PaymentsError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

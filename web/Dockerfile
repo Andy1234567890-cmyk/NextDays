@@ -1,45 +1,34 @@
-# Multi-Stage-Build für die myNextDays-Web-App (Next.js 15, App Router).
-# Eigenes Dockerfile statt Nixpacks, weil Nixpacks die Node-Version nur per Major
-# pinnen kann und für "22" nur 22.11 liefert — zu alt für pnpm 11.1.1 (>=22.13).
-# Wir nutzen das offizielle, sicherheitsgepatchte node:22.16-slim und pnpm via
-# corepack. Build-Context ist apps/web (Coolify base_directory).
+# Multi-Stage-Build für die myNextDays-Web-App (PMS-Dashboard, Next.js 15).
+# ROOT-BUILD-KONTEXT (ADR-0016): Coolify base_directory = / (Repo-Root), damit
+# die geteilten Workspace-Packages (packages/*) im Build sichtbar sind.
+# Paketmanager: bun (Workspace). Runtime: node:22.16-slim + Chromium-Libs für
+# PDF-Rendering. Muster server-verifiziert an gastgeber (ADR-0016 P6).
 
 # ---------------------------------------------------------------------------
-# 1) Dependencies — reproduzierbar aus dem Lockfile (frozen).
+# 1) Build — Workspace installieren + Next.js standalone-Output (install+build
+#    in EINEM Stage, s. ADR-0016: bun legt App-.bin unter web/node_modules/.bin
+#    ab, nicht hoisted).
 # ---------------------------------------------------------------------------
-FROM node:22.16-slim AS deps
-WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@11.1.1 --activate
-COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
-RUN pnpm install --frozen-lockfile
-
-# ---------------------------------------------------------------------------
-# 2) Build — Next.js produziert den standalone-Output.
-# ---------------------------------------------------------------------------
-FROM node:22.16-slim AS build
-WORKDIR /app
-RUN corepack enable && corepack prepare pnpm@11.1.1 --activate
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-# devDependencies werden für den Build gebraucht (typescript, tailwind …).
+FROM oven/bun:1 AS build
+WORKDIR /repo
+RUN echo '{"name":"build","private":true,"workspaces":["web","packages/*"]}' > package.json
+COPY web/package.json ./web/
+COPY packages ./packages
+RUN bun install
+COPY web ./web
 ENV NODE_ENV=production
-RUN pnpm build
+WORKDIR /repo/web
+RUN bun run build
 
 # ---------------------------------------------------------------------------
-# 3) Runtime — schlank: nur der standalone-Server + statische Assets.
-#    KEIN Chromium-Download im Build: das 177-MB-Browser-Paket vom Playwright-CDN
-#    riss den Build mit exit 255 ab (lief parallel zu `next build`). Stattdessen
-#    nur die stabilen Chromium-System-Libs aus dem Debian-Mirror; der Browser
-#    selbst liegt im persistenten Volume PLAYWRIGHT_BROWSERS_PATH (von Coolify
-#    gemountet, einmal befüllt, übersteht Deploys).
+# 2) Runtime — schlank: standalone-Server unter Node + Chromium-System-Libs.
+#    KEIN Chromium-Download im Build (riss den Build mit exit 255 ab); der
+#    Browser liegt im persistenten Volume PLAYWRIGHT_BROWSERS_PATH (Coolify).
 # ---------------------------------------------------------------------------
 FROM node:22.16-slim AS run
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
-# Next.js-standalone-server.js bindet ohne HOSTNAME an den Container-Hostnamen
-# → Traefik/Healthcheck erreichen den Socket nicht → 502 nach jedem Deploy.
-# 0.0.0.0 = alle Interfaces (identisch zu apps/storybook/Dockerfile).
 ENV HOSTNAME=0.0.0.0
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -47,17 +36,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
       libgbm1 libasound2 libpango-1.0-0 libcairo2 libatspi2.0-0 \
   && rm -rf /var/lib/apt/lists/*
-# Nicht als root laufen.
 RUN groupadd --system --gid 1001 nodejs \
   && useradd --system --uid 1001 --gid nodejs nextjs
-COPY --from=build --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=build --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=build --chown=nextjs:nodejs /app/public ./public
+# Workspace-standalone: standalone/web/server.js + standalone/node_modules +
+# standalone/package.json → den KOMPLETTEN standalone-Ordner kopieren.
+COPY --from=build --chown=nextjs:nodejs /repo/web/.next/standalone ./
+COPY --from=build --chown=nextjs:nodejs /repo/web/.next/static ./web/.next/static
+COPY --from=build --chown=nextjs:nodejs /repo/web/public ./web/public
 USER nextjs
 EXPOSE 3000
-# Readiness-Signal für Coolify/Traefik: erst nach „healthy" wird der Traffic
-# umgeschaltet → kein 502-Fenster beim Deploy. Node 22 hat globales fetch
-# (kein curl nötig). /healthz ist auth-/DB-frei und liefert 200.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD node -e "fetch('http://localhost:3000/healthz').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-CMD ["node", "server.js"]
+CMD ["node", "web/server.js"]

@@ -33,6 +33,10 @@ class RegisterRequest(BaseModel):
     # 'agency' = verwaltet fremde Objekte (Owner-Statements); 'self_managed' =
     # eigener Vermieter. Default agency (bisheriges Verhalten).
     business_type: str = Field(default="agency", pattern="^(agency|self_managed)$")
+    # Betriebsmodell: 'pms' = Channel-Manager/Dashboard-Abo (apps/web, Default —
+    # bisheriges Verhalten); 'marketplace' = Plattform-Gastgeber ohne Abo, zahlt
+    # eine Provision je Buchung (plattform/-Registrierung setzt dies).
+    account_type: str = Field(default="pms", pattern="^(pms|marketplace)$")
 
     @field_validator("country")
     @classmethod
@@ -127,6 +131,9 @@ class MeResponse(BaseModel):
     # Beherbergungsart des Mandanten (0090): steuert die Navigation
     # (Objekte vs. Zimmer, Eigentümer-Modul nur bei Ferienvermietung).
     accommodation_type: str | None = None
+    # Betriebsmodell (0180): 'pms' (Abo, apps/web) oder 'marketplace' (8%-Fee,
+    # plattform/). Steuert, welche Oberfläche/welches Billing gilt.
+    account_type: str | None = None
 
 
 class AccommodationTypeUpdate(BaseModel):

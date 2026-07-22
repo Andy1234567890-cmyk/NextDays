@@ -1,5 +1,6 @@
 // Suche / Startseite — Inserate-Übersicht (Karten-Grid). Eigenes myNextDays-
 // Design; Daten kommen aus dem Backend (booking_engine, nur active Objekte).
+import { KontoMenu } from "@/components/konto-menu";
 import { ListingReihe } from "@/components/listing-reihe";
 import { PlattformNav } from "@/components/plattform-nav";
 import { SiteFooter } from "@/components/site-footer";
@@ -18,7 +19,7 @@ export default async function SuchePage({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <PlattformNav />
+      <PlattformNav kontoSlot={<KontoMenu />} />
 
       <main className="flex-1">
         <div className="mx-auto max-w-7xl px-6 py-4">

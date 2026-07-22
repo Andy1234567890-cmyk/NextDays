@@ -9,7 +9,17 @@ const GASTGEBER_URL =
   process.env.NEXT_PUBLIC_GASTGEBER_URL ??
   "https://y13cm245vlmvq3yv38gdbtat.65.21.144.136.sslip.io";
 
-export function SiteHeader({ compact = false }: { compact?: boolean }) {
+// kontoSlot: der Konto-Button wird serverseitig gerendert (liest die HttpOnly-
+// Session) und als Slot übergeben. So bleibt SiteHeader synchron und lässt sich
+// auch aus Client-Seiten (z. B. Checkout-Rückkehr) verwenden. Ohne Slot fällt
+// die Kopfzeile auf einen einfachen „Anmelden"-Link zurück.
+export function SiteHeader({
+  compact = false,
+  kontoSlot,
+}: {
+  compact?: boolean;
+  kontoSlot?: React.ReactNode;
+}) {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-6">
@@ -40,15 +50,19 @@ export function SiteHeader({ compact = false }: { compact?: boolean }) {
           >
             myNextDays für Gastgeber
           </Link>
-          <button
-            type="button"
-            className="flex items-center gap-2 rounded-full border border-border py-1.5 pl-3 pr-1.5 hover:shadow-sm"
-          >
-            <Icon icon="ph:list" className="size-4" />
-            <span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
-              <Icon icon="ph:user" className="size-4" />
-            </span>
-          </button>
+          {kontoSlot ?? (
+            <Link
+              href="/anmelden"
+              className="flex items-center gap-2 rounded-full border border-border py-1.5 pl-3 pr-1.5 hover:shadow-sm"
+            >
+              <span className="hidden text-sm font-medium sm:block">
+                Anmelden
+              </span>
+              <span className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                <Icon icon="ph:user" className="size-4" />
+              </span>
+            </Link>
+          )}
         </div>
       </div>
     </header>

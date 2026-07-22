@@ -2,9 +2,9 @@
 from datetime import date, timedelta
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, Header, HTTPException, Query
 
-from src.core.security import CurrentUser
+from src.core.security import CurrentUser, require_internal_cron_secret
 from src.core.supabase import get_service_client
 from src.features.auth.dependencies import (
     require_granular_permission,
@@ -18,6 +18,7 @@ from .schemas import (
     CheckOutResponse,
     DashboardResponse,
     PropertyStats,
+    RequestDecline,
     ReservationCancel,
     ReservationCreate,
     ReservationDetail,
@@ -247,6 +248,62 @@ def cancel_reservation(
         return service.cancel(ctx, reservation_id, req.reason)
     except ReservationError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Anfrage-Modell (Airbnb Request to Book): accept / decline / expire ------
+
+@router.post(
+    "/{reservation_id}/accept",
+    response_model=ReservationResponse,
+    dependencies=[
+        Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    ],
+)
+def accept_request(
+    reservation_id: str,
+    service: ReservationsServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> ReservationResponse:
+    """Eine Gast-Anfrage annehmen → confirmed (sperrt die Nächte an den OTAs)."""
+    try:
+        return service.accept_request(ctx, reservation_id)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/{reservation_id}/decline",
+    response_model=ReservationResponse,
+    dependencies=[
+        Depends(require_granular_permission(Permission.EDIT_CALENDAR_BOOKINGS)),
+    ],
+)
+def decline_request(
+    reservation_id: str,
+    req: RequestDecline,
+    service: ReservationsServiceDep,
+    ctx: Annotated[
+        CurrentUser, Depends(require_permission(Capability.MANAGE_CALENDAR))
+    ],
+) -> ReservationResponse:
+    """Eine Gast-Anfrage ablehnen → declined (gibt die belegten Nächte frei)."""
+    try:
+        return service.decline_request(ctx, reservation_id, req.reason)
+    except ReservationError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/expire-requests")
+def expire_requests(
+    service: ReservationsServiceDep,
+    x_internal_cron_secret: Annotated[str | None, Header()] = None,
+) -> dict[str, int]:
+    """Cron: abgelaufene Anfragen (24-h-Frist verstrichen) auf expired setzen und
+    die Nächte freigeben. Nur mit gültigem internen Cron-Secret (fail-closed)."""
+    require_internal_cron_secret(x_internal_cron_secret)
+    return {"expired": service.expire_stale_requests()}
 
 
 @router.post(

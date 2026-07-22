@@ -9,7 +9,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { Icon } from "@iconify/react";
 import { ladeInserat } from "@/lib/inserate";
-import { formatEuro } from "@/lib/listings";
+import { formatCurrency } from "@/lib/listings";
 
 const NAECHTE = 2;
 
@@ -46,7 +46,7 @@ export default async function CheckoutPage({
 
         <div className="grid gap-12 lg:grid-cols-[1fr_24rem]">
           {/* Linke Spalte: Schritte */}
-          <CheckoutSteps gesamt={formatEuro(gesamt)} />
+          <CheckoutSteps gesamt={formatCurrency(gesamt, cur)} />
 
           {/* Rechte Spalte: Buchungs-Zusammenfassung */}
           <div className="lg:relative">
@@ -110,13 +110,13 @@ export default async function CheckoutPage({
                       <>
                         <div className="flex justify-between">
                           <span>
-                            {formatEuro(listing.preisProNacht, cur)} × {NAECHTE} Nächte
+                            {formatCurrency(listing.preisProNacht, cur)} × {NAECHTE} Nächte
                           </span>
-                          <span>{formatEuro(zwischensumme, cur)}</span>
+                          <span>{formatCurrency(zwischensumme, cur)}</span>
                         </div>
                         <div className="mt-2 flex justify-between border-t border-border pt-3 font-semibold">
                           <span>Gesamt ({cur})</span>
-                          <span>{formatEuro(gesamt, cur)}</span>
+                          <span>{formatCurrency(gesamt, cur)}</span>
                         </div>
                       </>
                     ) : (

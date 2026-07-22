@@ -198,7 +198,13 @@ class _DB:
         return _Q(self.store, name)
 
 
-def _db_with_booking(*, charges_enabled: bool, tenant: str = "t1") -> _DB:
+def _db_with_booking(
+    *,
+    charges_enabled: bool,
+    tenant: str = "t1",
+    account_type: str = "marketplace",
+    platform_fee_bps: int | None = 800,
+) -> _DB:
     db = _DB()
     db.store["reservations"] = [
         {
@@ -215,6 +221,15 @@ def _db_with_booking(*, charges_enabled: bool, tenant: str = "t1") -> _DB:
             "tenant_id": tenant,
             "stripe_account_id": "acct_test" if charges_enabled else None,
             "stripe_charges_enabled": charges_enabled,
+        }
+    ]
+    # Fee-Quelle (0180/0182): nur account_type='marketplace' zahlt die Provision,
+    # Satz aus tenants.platform_fee_bps. PMS-Tenant → keine Fee.
+    db.store["tenants"] = [
+        {
+            "id": tenant,
+            "account_type": account_type,
+            "platform_fee_bps": platform_fee_bps,
         }
     ]
     db.store["properties"] = [{"id": "prop-1", "deposit_amount": 50.0}]
@@ -345,12 +360,11 @@ def test_booking_payment_creates_intent_and_row() -> None:
 
 
 @_needs_stripe
-def test_portal_booking_charges_8pct_fee(monkeypatch) -> None:  # noqa: ANN001
-    """E2E gegen echte Stripe-Test-API: eine Portal-Buchung (eigener Kanal) muss
-    application_fee_amount = 8 % des Buchungsbetrags tragen. Betrag 120,00 € →
-    Fee 9,60 € (960 Cent). Gegengelesen aus dem echten PaymentIntent (nicht nur
-    Config). Das ist der Portal-Provisions-Beweis (Preisliste: 8 % all-in)."""
-    monkeypatch.setattr(get_settings(), "stripe_platform_fee_pct", 8.0)
+def test_portal_booking_charges_8pct_fee() -> None:
+    """E2E gegen echte Stripe-Test-API: eine Marktplatz-Portal-Buchung (eigener
+    Kanal) muss application_fee_amount = 8 % des Buchungsbetrags tragen. Betrag
+    120,00 € → Fee 9,60 € (960 Cent). Gegengelesen aus dem echten PaymentIntent.
+    Fee-Satz kommt aus tenants.platform_fee_bps=800 (Marktplatz-Konto)."""
     stripe = _stripe()
     db = _db_with_booking(charges_enabled=True)
     res = db.store["reservations"][0]
@@ -368,28 +382,39 @@ def test_portal_booking_charges_8pct_fee(monkeypatch) -> None:  # noqa: ANN001
     assert result.client_secret.startswith("pi_")
 
 
-def test_fee_cents_math_and_guards(monkeypatch) -> None:  # noqa: ANN001
-    """_fee_cents: 8 % korrekt gerundet, 0/negativ → 0, >100 % → klarer Fehler
-    (kein Charge über dem Betrag). Braucht keine Stripe-Verbindung."""
-    svc = PaymentsService(service_client=_db_with_booking(charges_enabled=True))
-    monkeypatch.setattr(get_settings(), "stripe_platform_fee_pct", 8.0)
-    assert svc._fee_cents(12000) == 960  # 8 % von 120 €  # noqa: SLF001
-    assert svc._fee_cents(12345) == 988  # Rundung  # noqa: SLF001
-    monkeypatch.setattr(get_settings(), "stripe_platform_fee_pct", 0.0)
-    assert svc._fee_cents(12000) == 0  # noqa: SLF001
-    monkeypatch.setattr(get_settings(), "stripe_platform_fee_pct", -5.0)
-    assert svc._fee_cents(12000) == 0  # noqa: SLF001
-    monkeypatch.setattr(get_settings(), "stripe_platform_fee_pct", 800.0)
+def test_fee_cents_math_and_guards() -> None:
+    """_fee_cents: tenant-basierte bps-Ganzzahl-Arithmetik. Marktplatz mit 800 bps
+    → 8 %; PMS-Konto → 0 (kein Charge); ungültiger Satz → klarer Fehler. Braucht
+    keine Stripe-Verbindung."""
+    # Marktplatz-Tenant, 800 bps: 8 % von 120 € = 960 Cent.
+    mkt = _db_with_booking(charges_enabled=True)
+    svc = PaymentsService(service_client=mkt)
+    assert svc._fee_cents(mkt, "t1", 12000) == 960  # noqa: SLF001
+    # Ganzzahl-Division (kein Float-Rundungsfehler): 12345 * 800 // 10000 = 987.
+    assert svc._fee_cents(mkt, "t1", 12345) == 987  # noqa: SLF001
+    # PMS-Konto (Abo-Modell) → keine Fee, egal welcher bps-Wert.
+    pms = _db_with_booking(charges_enabled=True, account_type="pms")
+    svc_pms = PaymentsService(service_client=pms)
+    assert svc_pms._fee_cents(pms, "t1", 12000) == 0  # noqa: SLF001
+    # Marktplatz ohne gesetzten Satz = Datenfehler → 500 (kein stiller 0-Kassier).
+    nofee = _db_with_booking(charges_enabled=True, platform_fee_bps=None)
+    svc_nf = PaymentsService(service_client=nofee)
     with pytest.raises(PaymentsError) as exc:
-        svc._fee_cents(12000)  # noqa: SLF001
+        svc_nf._fee_cents(nofee, "t1", 12000)  # noqa: SLF001
     assert exc.value.status_code == 500
+    # Absurd hoher Satz (>10000 bps) = Konfigfehler → 500.
+    bad = _db_with_booking(charges_enabled=True, platform_fee_bps=80000)
+    svc_bad = PaymentsService(service_client=bad)
+    with pytest.raises(PaymentsError) as exc2:
+        svc_bad._fee_cents(bad, "t1", 12000)  # noqa: SLF001
+    assert exc2.value.status_code == 500
 
 
 @_needs_stripe
-def test_ota_booking_charges_no_fee_and_blocks(monkeypatch) -> None:  # noqa: ANN001
-    """Gegenprobe: Bei 8 % Fee-Config darf eine OTA-Buchung TROTZDEM keinen Charge
-    erzeugen (die OTA kassiert den Gast) — 409, keine payments-Row, keine Fee."""
-    monkeypatch.setattr(get_settings(), "stripe_platform_fee_pct", 8.0)
+def test_ota_booking_charges_no_fee_and_blocks() -> None:
+    """Gegenprobe: Bei einem Marktplatz-Konto (8 % Fee) darf eine OTA-Buchung
+    TROTZDEM keinen Charge erzeugen (die OTA kassiert den Gast) — 409, keine
+    payments-Row, keine Fee."""
     db = _db_with_booking(charges_enabled=True)
     res = db.store["reservations"][0]
     res["channel"] = "booking"

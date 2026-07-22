@@ -1,4 +1,4 @@
-# Mobile-Integration — Plan: Die All-in-One-App (apps/mobile)
+# Mobile-Integration — Plan: Die All-in-One-App (mobile)
 
 > Verbindlicher Plan. Eine einzige App für ALLE Nutzergruppen der Plattform —
 > kein App-Zoo. Umsetzung in 9 sequenziellen Arbeitspaketen
@@ -86,7 +86,7 @@ Fundament. P9 prüft am Ende das Ganze inkl. neuem Gast-Auth.
 
 ## 5. Qualitätsgate (gilt für JEDES Paket)
 
-- Mobile: `tsc --noEmit` in `apps/mobile` fehlerfrei; Jest grün.
+- Mobile: `tsc --noEmit` in `mobile` fehlerfrei; Jest grün.
 - Backend-Änderungen: `pytest` grün, `ruff check` sauber, `pylint` 10.00/10
   auf geänderten Modulen. Neue Tabellen → Migration + RLS (nie automatisch
   einspielen).

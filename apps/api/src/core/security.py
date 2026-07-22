@@ -124,6 +124,56 @@ def get_current_user(
 CurrentUser = Annotated[AuthContext, Depends(get_current_user)]
 
 
+class GuestContext(BaseModel):
+    """Kontext eines eingeloggten Portal-Gasts (Demand-Seite, /plattform).
+
+    Getrennt von AuthContext (Vermieter/Staff): ein Gast hat KEINEN tenant_id
+    und KEINE Rolle — er ist über seine auth.uid() (== portal_guests.id) und
+    seine E-Mail (E-Mail-Match gegen reservations.guest_email) identifiziert.
+    """
+    guest_id: str
+    email: str
+
+
+def get_current_guest(
+    settings: Annotated[Settings, Depends(get_settings)],
+    authorization: Annotated[str | None, Header()] = None,
+) -> GuestContext:
+    """Verifiziert ein Portal-Gast-Token (reguläres Supabase-JWT).
+
+    Ein Gast-Token ist ein normales GoTrue-Access-Token (aud=authenticated),
+    trägt aber KEINE app_metadata.tenant_id. Die Zugehörigkeit zu portal_guests
+    prüft der jeweilige Service beim ersten DB-Zugriff (E-Mail-Match); der Guard
+    liefert nur die identifizierenden Claims (sub + email), fail-closed bei
+    fehlender E-Mail. Ob ein Tenant-Nutzer-Token hier durchkäme, ist unkritisch:
+    jeder Gast-Endpunkt scoped ausschließlich über guest_id/email, sodass ein
+    Tenant-Token nur seine EIGENEN (per E-Mail gematchten) Buchungen sähe.
+    """
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authorization-Header fehlt.",
+        )
+    token = authorization.split(" ", 1)[1]
+    claims = _decode_token(token, settings)
+    sub = claims.get("sub")
+    email = claims.get("email")
+    if not isinstance(sub, str):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token ohne gültige sub-Claim.",
+        )
+    if not isinstance(email, str) or not email:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token ohne E-Mail-Claim.",
+        )
+    return GuestContext(guest_id=sub, email=email.lower())
+
+
+CurrentGuest = Annotated[GuestContext, Depends(get_current_guest)]
+
+
 def secrets_match(provided: str | None, expected: str | None) -> bool:
     """Zeitkonstanter Vergleich zweier Secret-Strings, robust gegen nicht-ASCII.
 

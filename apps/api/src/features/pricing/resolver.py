@@ -39,6 +39,23 @@ log = get_logger("nextdays.pricing")
 # Wochentag-Index (date.weekday(): Mo=0) → Key in weekday_prices.
 _WEEKDAY_KEYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
 
+# Default-Anzeigename je Rabatt-Typ, falls die Regel keinen i18n-Namen trägt.
+_DISCOUNT_LABEL = {
+    "length_of_stay": "Längen-Rabatt",
+    "early_booker": "Frühbucher-Rabatt",
+    "last_minute": "Last-Minute-Rabatt",
+    "custom": "Rabatt",
+}
+
+
+def _pick_locale_text(name: object) -> str | None:
+    """Aus einem i18n-jsonb {locale: text} einen Anzeigetext wählen: 'de'
+    bevorzugt, sonst der erste vorhandene Wert. None, wenn leer/kein dict."""
+    if not isinstance(name, dict) or not name:
+        return None
+    val = name.get("de") or next(iter(name.values()), None)
+    return str(val) if val else None
+
 
 class PricingError(Exception):
     """Fachlicher Preis-Fehler; vom Router auf HTTP-Status gemappt."""
@@ -616,6 +633,57 @@ class PricingResolver:
                 out[pid] = _to_float(r.get("base_price"))
         return out
 
+    def _best_discount(
+        self, property_id: str, nights: int, check_in: date, as_of: date
+    ) -> dict | None:
+        """Die AKTIVE Rabattregel (property_discounts, 0185) mit der höchsten
+        greifenden Ersparnis liefern — oder None. BESTER EINZELRABATT, kein
+        Stacking (Produktentscheidung): mehrere greifende Regeln addieren sich
+        NICHT, nur die höchste discount_bps gewinnt. Deterministisch (as_of aus
+        dem Request, nicht date.today() hier).
+        """
+        try:
+            rows = (
+                self._db()
+                .table("property_discounts")
+                .select(
+                    "discount_type, discount_bps, min_nights, days_before, "
+                    "starts_on, ends_on, name"
+                )
+                .eq("property_id", property_id)
+                .eq("active", True)
+                .execute()
+            ).data or []
+        except Exception:  # noqa: BLE001 — fehlende Tabelle/Fehler = kein Rabatt
+            return None
+        days_ahead = (check_in - as_of).days
+        best: dict | None = None
+        best_bps = 0
+        for r in rows:
+            t = r.get("discount_type")
+            applies = False
+            if t == "length_of_stay":
+                mn = r.get("min_nights")
+                applies = mn is not None and nights >= int(mn)
+            elif t == "early_booker":
+                db = r.get("days_before")
+                applies = db is not None and days_ahead >= int(db)
+            elif t == "last_minute":
+                db = r.get("days_before")
+                applies = db is not None and 0 <= days_ahead <= int(db)
+            elif t == "custom":
+                s, e = r.get("starts_on"), r.get("ends_on")
+                if s and e:
+                    applies = (
+                        date.fromisoformat(str(s))
+                        <= check_in
+                        <= date.fromisoformat(str(e))
+                    )
+            bps = int(r["discount_bps"])
+            if applies and bps > best_bps:
+                best, best_bps = r, bps
+        return best
+
     # -- Vollständiger Quote --------------------------------------------------
     def quote(self, req: QuoteRequest) -> QuoteResponse:
         """Vollständige Preisaufschlüsselung. Reihenfolge:
@@ -745,7 +813,39 @@ class PricingResolver:
                 )
                 subtotal += amount
 
-        # 4) Aktion (prozentualer Rabatt auf die bisherige Zwischensumme). Der
+        # 4a) Host-Rabatt (property_discounts, 0185): der BESTE greifende Einzel-
+        #    rabatt (Wochen-/Monats-LOS, Frühbucher, Last-Minute, custom) als eigene
+        #    Rabattzeile — pro Steuersatz aufgeteilt wie die Aktion unten. Kein
+        #    Stacking untereinander (bester gewinnt); as_of/Nächte deterministisch
+        #    aus dem Request.
+        best_disc = self._best_discount(
+            req.property_id, n, req.check_in, req.as_of
+        )
+        if best_disc and subtotal > 0:
+            disc_pct = int(best_disc["discount_bps"]) / 100.0
+            disc_name = (
+                _pick_locale_text(best_disc.get("name"))
+                or _DISCOUNT_LABEL.get(best_disc["discount_type"], "Rabatt")
+            )
+            by_rate_d: dict[float | None, float] = {}
+            for ln in lines:
+                if ln.amount > 0:
+                    by_rate_d[ln.tax_rate] = by_rate_d.get(ln.tax_rate, 0.0) + ln.amount
+            for rate, base in by_rate_d.items():
+                part = base * disc_pct / 100.0
+                if part <= 0:
+                    continue
+                lines.append(
+                    QuoteLine(
+                        label=f"{disc_name} (−{disc_pct:g}%)",
+                        amount=round(-part, 2),
+                        kind="discount",
+                        tax_rate=rate,
+                    )
+                )
+            subtotal -= subtotal * disc_pct / 100.0
+
+        # 4b) Aktion (prozentualer Rabatt auf die bisherige Zwischensumme). Der
         #    Rabatt wird PRO STEUERSATZ aufgeteilt (eine discount-Zeile je Satz mit
         #    dem passenden tax_rate-Snapshot): sonst würde der auf eine höher
         #    besteuerte Gebühr (z. B. Frühstück 19 %) entfallende Rabattanteil mit

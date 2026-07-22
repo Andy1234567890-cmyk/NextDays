@@ -8,7 +8,7 @@ import { Icon } from "@iconify/react";
 import { useState } from "react";
 
 import { bucheGast, ladeVerfuegbarkeit } from "@/lib/buchung";
-import { type Listing, formatEuro } from "@/lib/listings";
+import { type Listing, formatCurrency } from "@/lib/listings";
 import { StripeCheckout } from "@/components/stripe-checkout";
 
 function naechte(checkIn: string, checkOut: string): number {
@@ -33,7 +33,9 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
 
   const n = naechte(checkIn, checkOut);
   const preis = listing.preisProNacht; // null = Preis auf Anfrage
-  const zwischensumme = (preis ?? 0) * n;
+  // Wurzel 4: kein 0-Fallback. Fehlt der Preis, gibt es KEINE Zwischensumme —
+  // eine Buchung mit total_amount:0 wäre ein erfundener Wert. Buchung dann gesperrt.
+  const zwischensumme = preis != null ? preis * n : null;
 
   async function reservieren() {
     if (n <= 0) {
@@ -42,6 +44,14 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
     }
     if (!vorname || !nachname || !email) {
       setStatus({ kind: "error", msg: "Bitte Kontaktdaten ausfüllen." });
+      return;
+    }
+    if (zwischensumme == null) {
+      // Preis auf Anfrage: ohne hinterlegten Preis keine Buchung mit 0 anlegen.
+      setStatus({
+        kind: "error",
+        msg: "Für dieses Objekt ist kein Preis hinterlegt — bitte den Gastgeber anfragen.",
+      });
       return;
     }
     setStatus({ kind: "loading" });
@@ -76,7 +86,7 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
         {preis != null ? (
           <>
             <span className="text-xl font-semibold">
-              {formatEuro(preis, listing.currency)}
+              {formatCurrency(preis, listing.currency)}
             </span>{" "}
             <span className="text-muted-foreground">Nacht</span>
           </>
@@ -157,17 +167,17 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
         <p className="mt-3 text-center text-sm text-red-600">{status.msg}</p>
       )}
 
-      {n > 0 && preis != null && status.kind !== "done" && (
+      {n > 0 && preis != null && zwischensumme != null && status.kind !== "done" && (
         <div className="mt-6 flex flex-col gap-3 text-sm">
           <div className="flex justify-between">
             <span className="underline">
-              {formatEuro(preis, listing.currency)} × {n} Nächte
+              {formatCurrency(preis, listing.currency)} × {n} Nächte
             </span>
-            <span>{formatEuro(zwischensumme, listing.currency)}</span>
+            <span>{formatCurrency(zwischensumme, listing.currency)}</span>
           </div>
           <div className="mt-2 flex justify-between border-t border-border pt-3 font-semibold">
             <span>Gesamt</span>
-            <span>{formatEuro(zwischensumme, listing.currency)}</span>
+            <span>{formatCurrency(zwischensumme, listing.currency)}</span>
           </div>
         </div>
       )}

@@ -25,6 +25,12 @@ from .features.content.router import router as content_router
 from .features.crm.router import router as crm_router
 from .features.dashboard.router import router as dashboard_router
 from .features.external_calendar.router import router as external_calendar_router
+from .features.guest_auth.router import router as guest_auth_router
+from .features.guest_bookings.router import router as guest_bookings_router
+from .features.guest_messages.router import router as guest_messages_router
+from .features.guest_reviews.router import router as guest_reviews_router
+from .features.guest_stay.router import router as guest_stay_router
+from .features.guest_wishlist.router import router as guest_wishlist_router
 from .features.guests.router import router as guests_router
 from .features.inbox import scheduler as inbox_scheduler
 from .features.inbox.router import router as inbox_router
@@ -35,6 +41,7 @@ from .features.owners.router import router as owners_router
 from .features.payments.router import router as payments_router
 from .features.pricing.router import router as pricing_router
 from .features.properties.router import router as properties_router
+from .features.property_discounts.router import router as property_discounts_router
 from .features.property_dossier.router import router as property_dossier_router
 from .features.property_portal.router import router as property_portal_router
 from .features.public_portal.router import router as public_portal_router
@@ -58,9 +65,17 @@ _SLICE_ROUTERS = [
     addons_router,
     rates_router,
     pricing_router,
+    property_discounts_router,
     calendar_router,
     reservations_router,
     guests_router,
+    # Gast-/Kunden-Dashboard der Plattform-Demand-Seite (/plattform).
+    guest_auth_router,
+    guest_bookings_router,
+    guest_stay_router,
+    guest_messages_router,
+    guest_wishlist_router,
+    guest_reviews_router,
     inbox_router,
     payments_router,
     subscriptions_router,

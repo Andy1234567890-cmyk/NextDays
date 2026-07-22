@@ -12,7 +12,13 @@ import { type Reihe } from "@/lib/listings";
 import { ListingCard } from "./listing-card";
 import { PhotoPlaceholder } from "./photo-placeholder";
 
-export function ListingReihe({ reihe }: { reihe: Reihe }) {
+export function ListingReihe({
+  reihe,
+  eingeloggt = false,
+}: {
+  reihe: Reihe;
+  eingeloggt?: boolean;
+}) {
   const bandRef = useRef<HTMLDivElement>(null);
   // Foto-Stack der "Alle anzeigen"-Karte zeigt die ersten 3 Inserate der Reihe.
   const stapel = reihe.listings.slice(0, 3);
@@ -58,7 +64,7 @@ export function ListingReihe({ reihe }: { reihe: Reihe }) {
       >
         {reihe.listings.map((listing) => (
           <div key={listing.id} className="w-60 shrink-0 snap-start">
-            <ListingCard listing={listing} />
+            <ListingCard listing={listing} eingeloggt={eingeloggt} />
           </div>
         ))}
 

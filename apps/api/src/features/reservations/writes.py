@@ -35,6 +35,10 @@ from .schemas import (
     ReservationResponse,
 )
 
+# Sentinel: „kein by_user_id übergeben → nimm ctx.user_id". Getrennt von None,
+# denn None ist ein GÜLTIGER Auslöser-Wert (Gast-Storno: kein users-Eintrag).
+_ACTOR_FROM_CTX = object()
+
 
 class WritesMixin(ReservationsBase):
     """Schreib-Endpunkte des reservations-Slice."""
@@ -607,7 +611,12 @@ class WritesMixin(ReservationsBase):
         return self._row((full.data or [upd.data[0]])[0], mask)
 
     def cancel(
-        self, ctx: AuthContext, reservation_id: str, reason: str
+        self,
+        ctx: AuthContext,
+        reservation_id: str,
+        reason: str,
+        *,
+        by_user_id: str | None | object = _ACTOR_FROM_CTX,
     ) -> ReservationResponse:
         """Reservierung stornieren — kanal-agnostisch (Direkt, eigene Plattform,
         alle Channex-OTAs). Begründung ist PFLICHT und wird dokumentiert.
@@ -621,7 +630,17 @@ class WritesMixin(ReservationsBase):
 
         Hinweis: Eine lokale Storno hebt eine OTA-Buchung NICHT beim Portal auf
         (das UI weist darauf hin) — wir geben nur die lokale Belegung frei.
+
+        `by_user_id` überschreibt, WER als Auslöser in cancelled_by/Audit/Event
+        vermerkt wird (Default: der Tenant-Nutzer aus ctx). Der Gast-Storno
+        (guest_bookings) übergibt hier None: ein Portal-Gast ist KEINE users-Zeile
+        (cancelled_by/by_user_id sind FK auf public.users) → der Auslöser bleibt
+        leer statt eine FK-Verletzung (500) auszulösen. So bleibt _release_nights
+        die EINE Freigabestelle (Wurzel 1), ohne den Ablauf zu duplizieren.
         """
+        actor_user_id = (
+            ctx.user_id if by_user_id is _ACTOR_FROM_CTX else by_user_id
+        )
         tenant_id = self._require_tenant(ctx)
         _require_uuid(reservation_id)
         clean_reason = (reason or "").strip()
@@ -673,7 +692,7 @@ class WritesMixin(ReservationsBase):
                 {
                     "status": "cancelled",
                     "cancel_reason": clean_reason,
-                    "cancelled_by": ctx.user_id,
+                    "cancelled_by": actor_user_id,
                     "cancelled_at": now,
                 }
             )
@@ -701,7 +720,7 @@ class WritesMixin(ReservationsBase):
                 {
                     "tenant_id": tenant_id,
                     "reservation_id": reservation_id,
-                    "by_user_id": ctx.user_id,
+                    "by_user_id": actor_user_id,
                     "reason": clean_reason,
                     "channel": current.get("channel"),
                     "ota_name": current.get("ota_name"),
@@ -756,7 +775,7 @@ class WritesMixin(ReservationsBase):
         log.info(
             "reservation_cancelled",
             reservation_id=reservation_id,
-            by_user_id=ctx.user_id,
+            by_user_id=actor_user_id,
             channel=current.get("channel"),
         )
         # Zeitleiste (0122): „storniert" — mit Begründung (in der Zeitleiste
@@ -765,7 +784,7 @@ class WritesMixin(ReservationsBase):
             tenant_id,
             reservation_id,
             "cancelled",
-            by_user_id=ctx.user_id,
+            by_user_id=actor_user_id,
             detail={"reason": clean_reason, "channel": current.get("channel")},
         )
         full = (
@@ -944,3 +963,219 @@ class WritesMixin(ReservationsBase):
             invoice_number=invoice.get("invoice_number"),
             invoice_already_existed=bool(invoice["already_existed"]),
         )
+
+    # --- Anfrage-Modell (Airbnb Request to Book): accept / decline -----------
+
+    def accept_request(
+        self, ctx: AuthContext, reservation_id: str
+    ) -> ReservationResponse:
+        """Eine Gast-Anfrage (status='requested') annehmen → 'confirmed'.
+
+        Ablauf:
+          1) Tenant-scoped laden (Wurzel 3/9 — gleicher Scope wie die Liste).
+          2) Idempotenz-Guard (Wurzel 2): schon 'confirmed' → No-op-Response ohne
+             zweiten Push; 'declined'/'expired'/'cancelled' → 409.
+          3) Bedingtes UPDATE WHERE status='requested' (claim-Guard gegen den
+             Expire-Job-Race): gewinnt genau einer, der Verlierer bekommt leeres
+             upd.data → 409.
+          4) VOR dem OTA-0-Push frisch prüfen, ob zwischen Anfrage und accept eine
+             OTA-Nacht importiert wurde (Überbuchungsschutz) → 409 statt blind.
+          5) availability=0 an Channex/OTAs (die Nacht ist jetzt verbindlich) +
+             Dynamic-Pricing-Recompute + Zahlungs-Capture.
+        """
+        tenant_id = self._require_tenant(ctx)
+        current = self._load_owned(tenant_id, reservation_id)
+        status = current.get("status")
+        if status == "confirmed":
+            # Doppelklick/Retry: schon bestätigt → gleiche Antwort, KEIN Re-Push.
+            mask = load_guest_mask(self._client, ctx.user_id)
+            return self._row(current, mask)
+        if status != "requested":
+            raise ReservationError(
+                "Nur offene Anfragen können angenommen werden.", status_code=409
+            )
+
+        now = datetime.now(UTC).isoformat()
+        upd = (
+            self._db()
+            .table("reservations")
+            .update(
+                {
+                    "status": "confirmed",
+                    "request_decided_by": ctx.user_id,
+                    "request_decided_at": now,
+                }
+            )
+            .eq("id", reservation_id)
+            .eq("tenant_id", tenant_id)
+            .eq("status", "requested")  # claim-Guard gegen Expire-Job-Race
+            .execute()
+        )
+        if not upd.data:
+            # Verloren gegen Expire-Job/zweiten accept → aktuellen Stand melden.
+            raise ReservationError(
+                "Anfrage ist nicht mehr offen (bereits entschieden oder "
+                "abgelaufen).",
+                status_code=409,
+            )
+
+        property_id = current["property_id"]
+        check_in = _as_date(current["check_in"])
+        check_out = _as_date(current["check_out"])
+        # Überbuchungsschutz: kam zwischen Anfrage und accept eine OTA-Nacht rein
+        # (source_channex_booking_id-Buchung ist vom EXCLUDE-Constraint befreit),
+        # nicht blind auf 0 pushen. Prüfe echte Fremdbelegung im Zeitraum.
+        clash = (
+            self._db()
+            .table("reservations")
+            .select("id")
+            .eq("property_id", property_id)
+            .neq("id", reservation_id)
+            .not_.is_("source_channex_booking_id", "null")
+            .in_("status", ["confirmed", "pending"])
+            .lt("check_in", check_out.isoformat())
+            .gt("check_out", check_in.isoformat())
+            .limit(1)
+            .execute()
+        ).data
+        if clash:
+            raise ReservationError(
+                "Zeitraum wurde zwischenzeitlich über ein Portal gebucht — "
+                "die Anfrage kann nicht mehr angenommen werden.",
+                status_code=409,
+            )
+
+        # Jetzt verbindlich: OTAs sperren (availability=0) + Dynamic Pricing.
+        self._push_channex_availability(
+            tenant_id, property_id, check_in, check_out, 0,
+        )
+        self._recompute_dynamic_pricing(tenant_id, property_id)
+
+        # Zahlung: bei einer Anfrage wird VOR accept NICHT kassiert (Airbnb/Booking-
+        # Modell — kein PaymentIntent für eine evtl. abgelehnte Anfrage). Erst mit
+        # accept wird die Buchung zahlungspflichtig; der Gast erhält die Zahlungs-
+        # aufforderung über den bestehenden Gast-Zahlpfad (create_booking_payment
+        # erzeugt den Intent beim Öffnen des Checkouts). So entsteht KEIN Refund-
+        # Gegenzustand bei decline/expire (Wurzel 1) — es floss nie Geld.
+        self._log_event(
+            tenant_id, reservation_id, "request_accepted", by_user_id=ctx.user_id,
+        )
+        mask = load_guest_mask(self._client, ctx.user_id)
+        return self._row(self._load_owned(tenant_id, reservation_id), mask)
+
+    def decline_request(
+        self, ctx: AuthContext, reservation_id: str, reason: str | None = None
+    ) -> ReservationResponse:
+        """Eine Gast-Anfrage (status='requested') ablehnen → 'declined'.
+
+        Gibt die lokal belegten Nächte frei (der EXCLUDE-Constraint befreit
+        'declined' vom Overlap → der Slot ist sofort wieder buchbar). Idempotent:
+        schon 'declined' → No-op; anderer Endstatus → 409.
+        """
+        tenant_id = self._require_tenant(ctx)
+        current = self._load_owned(tenant_id, reservation_id)
+        status = current.get("status")
+        if status == "declined":
+            mask = load_guest_mask(self._client, ctx.user_id)
+            return self._row(current, mask)
+        if status != "requested":
+            raise ReservationError(
+                "Nur offene Anfragen können abgelehnt werden.", status_code=409
+            )
+
+        clean_reason = (reason or "").strip() or None
+        now = datetime.now(UTC).isoformat()
+        upd = (
+            self._db()
+            .table("reservations")
+            .update(
+                {
+                    "status": "declined",
+                    "request_decline_reason": clean_reason,
+                    "request_decided_by": ctx.user_id,
+                    "request_decided_at": now,
+                }
+            )
+            .eq("id", reservation_id)
+            .eq("tenant_id", tenant_id)
+            .eq("status", "requested")  # claim-Guard gegen Expire-Job-Race
+            .execute()
+        )
+        if not upd.data:
+            raise ReservationError(
+                "Anfrage ist nicht mehr offen (bereits entschieden oder "
+                "abgelaufen).",
+                status_code=409,
+            )
+
+        # Lokale Belegung freigeben (Gegenzustand, Wurzel 1) — die EINE Freigabe-
+        # stelle. Kein Channex-Push nötig: bei einer Anfrage wurde NIE ein 0-Push
+        # gesendet (die OTAs sahen die Nacht durchgehend als frei).
+        property_id = current["property_id"]
+        nights = _nights(
+            _as_date(current["check_in"]), _as_date(current["check_out"])
+        )
+        self._release_nights(
+            tenant_id, property_id, [d.isoformat() for d in nights], reservation_id,
+        )
+
+        self._log_event(
+            tenant_id, reservation_id, "request_declined", by_user_id=ctx.user_id,
+            detail={"reason": clean_reason} if clean_reason else None,
+        )
+        mask = load_guest_mask(self._client, ctx.user_id)
+        return self._row(self._load_owned(tenant_id, reservation_id), mask)
+
+    def expire_stale_requests(self) -> int:
+        """Abgelaufene Anfragen (status='requested' AND request_expires_at < now)
+        über ALLE Tenants auf 'expired' setzen und die Nächte freigeben. Cron-Pfad
+        (service_role, kein ctx). Gibt die Anzahl abgelaufener Anfragen zurück.
+
+        Jede Zeile wird per bedingtem UPDATE (WHERE status='requested') geclaimt —
+        gewinnt der Job den Race gegen ein gleichzeitiges accept/decline NICHT,
+        überspringt er sie (leeres upd.data). Freigabe über _release_nights (die
+        EINE Freigabestelle, Wurzel 1). Kein Channex-Push nötig: eine Anfrage hat
+        nie availability=0 gepusht.
+        """
+        if self._client is None:
+            return 0
+        now = datetime.now(UTC).isoformat()
+        due = (
+            self._db()
+            .table("reservations")
+            .select("id, tenant_id, property_id, check_in, check_out")
+            .eq("status", "requested")
+            .lt("request_expires_at", now)
+            .limit(500)  # harte Obergrenze je Lauf (Wurzel 8), Rest im nächsten Tick
+            .execute()
+        ).data or []
+        expired = 0
+        for r in due:
+            claimed = (
+                self._db()
+                .table("reservations")
+                .update({"status": "expired", "request_decided_at": now})
+                .eq("id", r["id"])
+                .eq("status", "requested")  # claim-Guard gegen accept/decline
+                .execute()
+            ).data
+            if not claimed:
+                continue  # jemand hat sie zwischenzeitlich entschieden
+            nights = _nights(_as_date(r["check_in"]), _as_date(r["check_out"]))
+            try:
+                self._release_nights(
+                    r["tenant_id"], r["property_id"],
+                    [d.isoformat() for d in nights], r["id"],
+                )
+                self._log_event(
+                    r["tenant_id"], r["id"], "request_expired", by_user_id=None,
+                )
+            except Exception as exc:  # noqa: BLE001 — ein Fehler stoppt den Lauf nicht
+                log.warning(
+                    "request_expire_release_failed",
+                    reservation_id=r["id"], error=str(exc)[:200],
+                )
+            expired += 1
+        if expired:
+            log.info("requests_expired", count=expired)
+        return expired

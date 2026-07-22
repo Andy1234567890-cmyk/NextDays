@@ -41,6 +41,8 @@ from .schemas import (
     PaymentsDiagnostics,
     PaymentSettings,
     PaymentSettingsResponse,
+    PlatformFeeRow,
+    PlatformFeeSummary,
     SliceHealth,
     StripeAccountDiagnostics,
 )
@@ -636,20 +638,47 @@ class PaymentsService:
         ).data
         return bool(row[0].get(column)) if row else False
 
-    def _fee_cents(self, amount_cents: int) -> int:
-        pct = get_settings().stripe_platform_fee_pct
-        if pct <= 0:
+    def _platform_fee_bps(self, db: Client, tenant_id: str) -> int:
+        """Provision (Basispunkte) für DIESEN Tenant — die einzige Fee-Quelle.
+
+        NUR Marktplatz-Gastgeber (account_type='marketplace', 0180) zahlen eine
+        Provision je Buchung; PMS/CM-Tenants (Abo-Modell) zahlen 0. Der Satz kommt
+        AUSSCHLIESSLICH aus tenants.platform_fee_bps (Wurzel 3: nie aus Client-
+        Input; Wurzel 4: kein globaler Fantasie-Default) — so kann ein Betrieb die
+        eigene Provision nicht drücken und ein PMS-Kunde wird nie belastet.
+        """
+        row = (
+            db.table("tenants")
+            .select("account_type, platform_fee_bps")
+            .eq("id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not row or row[0].get("account_type") != "marketplace":
             return 0
-        # Ein Konfig-Tippfehler (z. B. 800 statt 8) darf keinen Charge erzeugen,
-        # dessen application_fee den Buchungsbetrag übersteigt — Stripe lehnt das
-        # ab und der GAST bekäme einen 500. Absurd hohe Sätze sind ein Konfig-
-        # fehler → klar fehlschlagen (kein stiller Ersatzwert, Wurzel 4/5).
-        if pct > 100:
+        bps = row[0].get("platform_fee_bps")
+        if bps is None:
+            # marketplace-Tenant ohne gesetzten Satz ist ein Datenfehler — nicht
+            # still 0 kassieren (dann verdient die Plattform nichts) und nicht
+            # raten. Klar fehlschlagen (Wurzel 4/5).
             raise PaymentsError(
-                "Provisions-Satz (STRIPE_PLATFORM_FEE_PCT) ist ungültig (>100 %).",
+                "Provisions-Satz (platform_fee_bps) für Marktplatz-Konto fehlt.",
                 status_code=500,
             )
-        return int(round(amount_cents * pct / 100.0))
+        if not 0 <= bps <= 10000:
+            raise PaymentsError(
+                "Provisions-Satz (platform_fee_bps) ist ungültig (0..10000).",
+                status_code=500,
+            )
+        return int(bps)
+
+    def _fee_cents(self, db: Client, tenant_id: str, amount_cents: int) -> int:
+        """Provisionsbetrag in Cent (Stripe application_fee) — exakte bps-Ganzzahl-
+        Arithmetik, kein Float. 0 für Nicht-Marktplatz-Tenants."""
+        bps = self._platform_fee_bps(db, tenant_id)
+        if bps <= 0:
+            return 0
+        return amount_cents * bps // 10000
 
     def create_booking_payment(self, *, reservation_id: str) -> BookingPaymentResult:
         """PaymentIntent (Destination Charge) für eine Gastbuchung erzeugen und
@@ -687,7 +716,7 @@ class PaymentsService:
                 amount_cents=amount_cents,
                 currency=currency,
                 destination_acct=acct,
-                application_fee_cents=self._fee_cents(amount_cents),
+                application_fee_cents=self._fee_cents(db, tenant_id, amount_cents),
                 statement_descriptor=self._merchant_descriptor(db, tenant_id),
                 metadata={"reservation_id": reservation_id, "tenant_id": tenant_id},
                 client=self._stripe,
@@ -700,6 +729,17 @@ class PaymentsService:
             ptype="full",
             gateway_ref=intent["id"],
             status="pending",
+        )
+        # Fee-Ledger (Marktplatz): auf den Gesamtbetrag eingefroren, bevor der
+        # Charge bestätigt ist. No-op bei PMS-Tenants.
+        self._record_platform_fee(
+            db,
+            reservation_id=reservation_id,
+            tenant_id=tenant_id,
+            gross_cents=amount_cents,
+            currency=currency,
+            payment_id=payment["id"],
+            gateway="stripe",
         )
         self._set_reservation_payment_status(db, reservation_id, "pending")
         return BookingPaymentResult(
@@ -808,7 +848,7 @@ class PaymentsService:
                 amount_cents=down_cents,
                 currency=currency,
                 destination_acct=acct,
-                application_fee_cents=self._fee_cents(down_cents),
+                application_fee_cents=self._fee_cents(db, tenant_id, down_cents),
                 customer=customer,
                 save_payment_method=True,  # Karte für die Restzahlung merken
                 statement_descriptor=self._merchant_descriptor(db, tenant_id),
@@ -827,6 +867,18 @@ class PaymentsService:
             ptype="down_payment",
             gateway_ref=intent["id"],
             status="pending",
+        )
+        # Fee-Ledger EINMAL auf den GESAMTbetrag (nicht die Anzahlung) einfrieren:
+        # die je-Charge application_fee (down + balance) summiert sich real, die
+        # eine Ledger-Zeile hält den Soll-Wert auf total (UNIQUE reservation_id).
+        self._record_platform_fee(
+            db,
+            reservation_id=reservation_id,
+            tenant_id=tenant_id,
+            gross_cents=_to_cents(total),
+            currency=currency,
+            payment_id=payment["id"],
+            gateway="stripe",
         )
         # Customer schon jetzt an der Anzahlung vermerken; die payment_method-ID
         # kommt erst nach Bestätigung (Webhook/Confirm) und wird dann nachgetragen.
@@ -947,7 +999,9 @@ class PaymentsService:
                     amount_cents=amount_cents,
                     currency=bal["currency"],
                     destination_acct=acct,
-                    application_fee_cents=self._fee_cents(amount_cents),
+                    application_fee_cents=self._fee_cents(
+                        db, res["tenant_id"], amount_cents
+                    ),
                     customer=customer,
                     payment_method=pm,
                     off_session=True,
@@ -1121,10 +1175,14 @@ class PaymentsService:
             # Geldereignis. Betrag im Key, damit eine legitime spätere Teilerstattung
             # anderer Höhe nicht fälschlich denselben Key trifft.
             idem_key = f"refund:{payment_id}:{amount_cents if amount_cents else 'full'}"
+            # Marktplatz-Buchung: die application_fee anteilig mit-erstatten, sonst
+            # behält die Plattform die Provision auf stornierte Nächte (Wurzel 1).
+            refund_fee = self._platform_fee_bps(db, tenant_id) > 0
             with _stripe_errors():
                 result = sc.refund(
                     payment["gateway_ref"], amount_cents,
                     client=self._stripe, idempotency_key=idem_key,
+                    refund_application_fee=refund_fee,
                 )
             refund_id = result["id"]
         self._insert_payment(
@@ -1145,6 +1203,18 @@ class PaymentsService:
         self._set_reservation_payment_status(
             db, payment["reservation_id"], status_val
         )
+        # Fee-Gegenzustand (Wurzel 1): den Plattform-Fee-Anteil proportional zum
+        # erstatteten Betrag im Ledger zurückbuchen. Best-effort — ein Ledger-
+        # Fehler darf den bereits erfolgten Geld-Refund nicht kippen (Wurzel 5).
+        try:
+            self._reverse_platform_fee(
+                db, payment["reservation_id"], refunded_cents=_to_cents(refund_amount)
+            )
+        except Exception:  # noqa: BLE001 — Audit-Spiegel, kein Hauptpfad
+            log.warning(
+                "platform_fee_reverse_failed",
+                reservation_id=payment["reservation_id"],
+            )
         return {"payment_id": payment_id, "refund_id": refund_id}
 
     def _refund_paypal(
@@ -1163,7 +1233,11 @@ class PaymentsService:
         currency = payment.get("currency")
         res = self._load_reservation(db, payment["reservation_id"])
         seller = self._paypal_seller(db, res["tenant_id"])
-        fee_refund = self._fee_amount(refund_amount) if currency else None
+        fee_refund = (
+            self._fee_amount(db, res["tenant_id"], refund_amount)
+            if currency
+            else None
+        )
         try:
             result = self._paypal().refund_capture(
                 capture_id=capture_id,
@@ -1254,18 +1328,163 @@ class PaymentsService:
     def _paypal() -> PayPalClient:
         return PayPalClient()
 
-    def _fee_amount(self, amount: float) -> float:
-        """Plattform-Provision als Betrag (nicht Cent) — gleicher Satz wie Stripe
-        (stripe_platform_fee_pct). >100 % = Konfigfehler → klar fehlschlagen."""
-        pct = get_settings().stripe_platform_fee_pct
-        if pct <= 0:
+    def _fee_amount(self, db: Client, tenant_id: str, amount: float) -> float:
+        """Plattform-Provision als Betrag (Major-Unit, für PayPal) — DERSELBE
+        tenant-basierte bps-Kern wie Stripe (_platform_fee_bps): nur Marktplatz-
+        Tenants zahlen, Satz aus tenants.platform_fee_bps. Eine einzige Fee-Quelle
+        (kein zweiter globaler Prozentwert, Wurzel 4)."""
+        bps = self._platform_fee_bps(db, tenant_id)
+        if bps <= 0:
             return 0.0
-        if pct > 100:
-            raise PaymentsError(
-                "Provisions-Satz (STRIPE_PLATFORM_FEE_PCT) ist ungültig (>100 %).",
-                status_code=500,
+        return round(amount * bps / 10000.0, 2)
+
+    # =========================================================================
+    # platform_fees-Ledger (0182) — auditierbarer Spiegel der einbehaltenen Fee
+    # =========================================================================
+    def _record_platform_fee(  # noqa: PLR0913 — Fee-Snapshot braucht alle Felder
+        self,
+        db: Client,
+        *,
+        reservation_id: str,
+        tenant_id: str,
+        gross_cents: int,
+        currency: str,
+        payment_id: str | None,
+        gateway: str,
+    ) -> None:
+        """Fee-Zeile für eine Marktplatz-Buchung anlegen (status='pending'), BEVOR
+        der Charge-Seiteneffekt endgültig ist. No-op für Nicht-Marktplatz-Tenants
+        (bps=0). Split-Payment: die Fee wird EINMAL auf den GESAMTbetrag (gross_cents
+        = total_amount) eingefroren — UNIQUE(reservation_id) hält genau eine Zeile,
+        egal wie viele Chargen (Anzahlung + Rest) folgen.
+
+        Idempotenz (Wurzel 2): upsert on_conflict=reservation_id, ignore_duplicates
+        — eine bereits gebuchte Fee ('charged'/'reversed'/'pending') wird NICHT
+        überschrieben. Währung Pflicht (Wurzel 4): fehlt sie, ist das ein Datenfehler.
+        """
+        bps = self._platform_fee_bps(db, tenant_id)
+        if bps <= 0:
+            return
+        if not currency:
+            raise PaymentsError("Währung der Buchung fehlt.", status_code=422)
+        fee_cents = gross_cents * bps // 10000
+        db.table("platform_fees").upsert(
+            {
+                "tenant_id": tenant_id,
+                "reservation_id": reservation_id,
+                "payment_id": payment_id,
+                "fee_bps": bps,
+                "gross_amount_cents": gross_cents,
+                "fee_amount_cents": fee_cents,
+                "currency": currency,
+                "gateway": gateway,
+                "status": "pending",
+            },
+            on_conflict="reservation_id",
+            ignore_duplicates=True,
+        ).execute()
+
+    def _mark_platform_fee_charged(
+        self, db: Client, reservation_id: str, *, gateway_fee_ref: str | None = None
+    ) -> None:
+        """Fee-Zeile einer Buchung von 'pending' auf 'charged' setzen (Webhook
+        payment_intent.succeeded). Status-Guard: nur 'pending' wird bewegt, ein
+        zweiter Webhook-Redelivery ist ein No-op (Wurzel 2). 'reversed' bleibt."""
+        patch: dict[str, Any] = {"status": "charged"}
+        if gateway_fee_ref:
+            patch["gateway_fee_ref"] = gateway_fee_ref
+        db.table("platform_fees").update(patch).eq(
+            "reservation_id", reservation_id
+        ).eq("status", "pending").execute()
+
+    def _mark_platform_fee_failed(self, db: Client, reservation_id: str) -> None:
+        """Fee-Zeile auf 'failed' setzen (Charge endgültig fehlgeschlagen — Fee ist
+        nie geflossen). Nur aus 'pending' (Wurzel 2)."""
+        db.table("platform_fees").update({"status": "failed"}).eq(
+            "reservation_id", reservation_id
+        ).eq("status", "pending").execute()
+
+    def _reverse_platform_fee(
+        self, db: Client, reservation_id: str, *, refunded_cents: int
+    ) -> None:
+        """Fee-Gegenzustand (Wurzel 1): wird bei JEDEM Gast-Refund aufgerufen. Der
+        Plattform-Fee-Anteil wird proportional zum erstatteten Betrag zurückgegeben
+        und im Ledger als reversed_amount_cents festgehalten (nie über
+        fee_amount_cents, DB-CHECK ist der Backstop). Voll erstattet → 'reversed'.
+
+        Best-effort im Refund-Pfad (Wurzel 5): ein Ledger-Fehler darf den bereits
+        erfolgten Geld-Refund nicht kippen — der eigentliche application_fee-Refund
+        passiert bei Stripe automatisch (refund_application_fee) / bei PayPal via
+        platform_fee_refund; dies ist nur die auditierbare Gegenbuchung."""
+        row = (
+            db.table("platform_fees")
+            .select("gross_amount_cents, fee_amount_cents, reversed_amount_cents")
+            .eq("reservation_id", reservation_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not row:
+            return
+        gross = int(row[0]["gross_amount_cents"] or 0)
+        fee = int(row[0]["fee_amount_cents"] or 0)
+        already = int(row[0]["reversed_amount_cents"] or 0)
+        if gross <= 0 or fee <= 0:
+            return
+        # Anteil der erstatteten Summe an der Gesamtbuchung → derselbe Anteil der Fee.
+        to_reverse = min(refunded_cents * fee // gross, fee - already)
+        if to_reverse <= 0:
+            return
+        new_reversed = already + to_reverse
+        db.table("platform_fees").update(
+            {
+                "reversed_amount_cents": new_reversed,
+                "status": "reversed" if new_reversed >= fee else "charged",
+            }
+        ).eq("reservation_id", reservation_id).execute()
+
+    def platform_fee_summary(self, ctx: AuthContext) -> PlatformFeeSummary:
+        """Provisions-Übersicht des Marktplatz-Gastgebers (eigener Tenant). RLS +
+        explizit tenant-gescopet (Wurzel 3). Gemischte Währungen → currency=None."""
+        db, tenant_id = self._require(ctx)
+        rows = (
+            db.table("platform_fees")
+            .select(
+                "id, reservation_id, fee_bps, gross_amount_cents, "
+                "fee_amount_cents, reversed_amount_cents, currency, gateway, "
+                "status, created_at"
             )
-        return round(amount * pct / 100.0, 2)
+            .eq("tenant_id", tenant_id)
+            .order("created_at", desc=True)
+            .execute()
+        ).data or []
+        fee_rows = [
+            PlatformFeeRow(
+                id=r["id"],
+                reservation_id=r["reservation_id"],
+                fee_bps=int(r["fee_bps"]),
+                gross_amount_cents=int(r["gross_amount_cents"]),
+                fee_amount_cents=int(r["fee_amount_cents"]),
+                reversed_amount_cents=int(r["reversed_amount_cents"] or 0),
+                currency=r["currency"],
+                gateway=r.get("gateway") or "stripe",
+                status=r["status"],
+                created_at=str(r["created_at"]),
+            )
+            for r in rows
+        ]
+        currencies = {r.currency for r in fee_rows}
+        # Nur charged/reversed zählen als real geflossene Provision (pending/failed
+        # nicht) — sonst zeigt die Summe Geld, das nie eingezogen wurde.
+        counted = [r for r in fee_rows if r.status in ("charged", "reversed")]
+        total_fee = sum(r.fee_amount_cents for r in counted)
+        total_rev = sum(r.reversed_amount_cents for r in counted)
+        return PlatformFeeSummary(
+            currency=next(iter(currencies)) if len(currencies) == 1 else None,
+            total_fee_cents=total_fee,
+            total_reversed_cents=total_rev,
+            net_fee_cents=total_fee - total_rev,
+            rows=fee_rows,
+        )
 
     def _paypal_seller(self, db: Client, tenant_id: str) -> str:
         """Verkäufer-Merchant-ID des Tenants — NUR wenn abrechnungsfähig verbunden
@@ -1410,7 +1629,7 @@ class PaymentsService:
             if order.get("status") in {"CREATED", "APPROVED", "PAYER_ACTION_REQUIRED"}:
                 return {"order_id": order_id, "payment_id": existing[0]["id"]}
 
-        fee = self._fee_amount(amount)
+        fee = self._fee_amount(db, tenant_id, amount)
         try:
             order = self._paypal().create_order(
                 seller_merchant_id=seller,
@@ -1434,6 +1653,15 @@ class PaymentsService:
             status="pending",
             gateway="paypal",
             extra={"paypal_order_id": order["id"]},
+        )
+        self._record_platform_fee(
+            db,
+            reservation_id=reservation_id,
+            tenant_id=tenant_id,
+            gross_cents=_to_cents(amount),
+            currency=currency,
+            payment_id=payment["id"],
+            gateway="paypal",
         )
         self._set_reservation_payment_status(db, reservation_id, "pending")
         return {"order_id": order["id"], "payment_id": payment["id"]}

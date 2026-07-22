@@ -51,7 +51,7 @@ Die zentrale Sizing-Quelle. Die Datei definiert **nur zwei eigene Container** un
 |---|---|---|---|
 | `apps/api` | FastAPI, Python 3.12, `uv`, uvicorn | **6 reale Slices** (auth, buchhaltung, calendar, properties, reservations, tasks) + **11 Health-Stubs** (9 Zeilen je service.py: booking_engine, channel_manager, crm, dashboard, guests, inbox, ocr, payments, public_portal, rates). 17 Router gemountet (`main.py`). | **Hetzner** |
 | `apps/web` | Next.js 15, React 19, Bun, 61 Dependencies (tiptap, recharts, pdf-lib, radix, google-maps) | Vermieter-Dashboard, in aktiver Entwicklung | **Vercel** (lt. Stack) |
-| `apps/mobile` | React Native 0.86 | 14 Screens, nur `HostListings` verdrahtet | Build-Pipeline, kein Server |
+| `mobile` | React Native 0.86 | 14 Screens, nur `HostListings` verdrahtet | Build-Pipeline, kein Server |
 | `apps/storybook` | Next.js | Komponenten-Schau + Realtime-Chat | Vercel |
 
 - **API-Dependencies (pyproject.toml):** fastapi, uvicorn[standard], pydantic, supabase, **redis**, structlog, python-multipart (Uploads), pyjwt, pyotp + qrcode (TOTP-2FA), pillow (über supabase/transitive). **Keine** OCR-Engine (kein pytesseract/paddle), **kein** Worker-Framework (kein celery/arq/rq) installiert.

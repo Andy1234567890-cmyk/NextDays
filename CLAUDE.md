@@ -65,7 +65,7 @@ Channex/SiteMinder/Cloudbeds/Shopify). Die drei Vertriebskanäle:
 - **Plattform**: unser EIGENER globaler Marktplatz (`/plattform`), ein
   gleichrangiger Buchungskanal wie Booking/Airbnb, NICHT „Direkt". Sichtbarkeit =
   eigene Achse `properties.listed_on_marketplace` (0159), getrennt von OTA.
-- **App**: die mobile Plattform (`apps/mobile`, React Native) — gleichwertiges
+- **App**: die mobile Plattform (`mobile`, React Native) — gleichwertiges
   Frontend derselben FastAPI (Gast · Agentur · Owner · Mitarbeiter), siehe
   „Mobile"-Abschnitt unten.
 Regel: auf einem Kanal sichtbar = Objekt-Status erlaubt Verkauf (`status='active'`)
@@ -135,21 +135,21 @@ Rollen ausliefern, die es nicht brauchen (Recon für Priv-Esc).
 
 ---
 
-## Mobile (apps/mobile) — gleiche Plattform, gleiche Regeln
+## Mobile (mobile) — gleiche Plattform, gleiche Regeln
 Die React-Native-App ist ein gleichwertiges Frontend derselben FastAPI
 (`/api/v1`) — die All-in-One-App: vier Erlebnisse (Gast · Agentur · Owner ·
 Mitarbeiter), Routing aus dem Konto, zwei strikt getrennte Auth-Welten
 (Tenant vs. portal_guests). Plan: `docs/mobile-integration-plan.md` ·
 Arbeitspakete P1–P9: `docs/mobile-integration-prompts.md` (strikt sequenziell,
 Status in NOTES.md). Zusätzlich verbindlich:
-- Daten NUR über `apps/mobile/lib/api.ts` (Bearer aus Keychain). Kein direkter
+- Daten NUR über `mobile/lib/api.ts` (Bearer aus Keychain). Kein direkter
   Supabase-Zugriff — Ausnahme Realtime: dedizierter supabase-js-Client,
   `persistSession:false`, `await setAuth(token)` VOR `subscribe()` (Muster:
   `apps/web/lib/use-realtime.ts`).
 - Tokens (access + refresh) NUR in react-native-keychain, nie AsyncStorage,
   nie loggen. 401 → genau EIN Refresh-Versuch (single-flight), dann Logout —
   Auth-Rate-Limit ist 10/60/IP (Wurzel 2).
-- URLs/Umgebung NUR in `apps/mobile/lib/config.ts` (`__DEV__`-Switch). Keine
+- URLs/Umgebung NUR in `mobile/lib/config.ts` (`__DEV__`-Switch). Keine
   URL-/Währungs-Hardcodes in Screens (Wurzel 4). Maskierte Felder
   (`total_amount: null`, Vorname-only) als „—" rendern, nie 0/Fantasiewert.
 - Rollen-/Capability-Gating aus `GET /auth/me` (wie
@@ -158,7 +158,7 @@ Status in NOTES.md). Zusätzlich verbindlich:
 ## Qualitätsgate (vor „fertig")
 - `pytest` grün; `ruff check` sauber; `pylint` 10.00/10 auf geänderten Modulen.
 - Frontend: `tsc --noEmit` in apps/web UND builder ohne Fehler.
-- Mobile berührt? `tsc --noEmit` in apps/mobile ohne Fehler, Jest grün.
+- Mobile berührt? `tsc --noEmit` in mobile ohne Fehler, Jest grün.
 - DB-Änderung? Migration schreiben und via `supabase/apply-migrations.sh` live
   einspielen (nie automatisch), JEDE neue public-Tabelle bekommt RLS.
 - Realtime: jede neue Liste/Detail-UI abonniert alle speisenden Tabellen.

@@ -5,7 +5,7 @@ KEIN JWT: die tenant_id wird aus der Property abgeleitet (Property-Existenz ist
 die Autorisierung). Der Buchungskalender (availability) ist die oberste Wahrheit —
 jede Buchung prüft Double-Booking (409) und pusht realtime an Channex/OTAs.
 """
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 
 from postgrest.exceptions import APIError
 from supabase import Client
@@ -467,7 +467,7 @@ class BookingEngineService:
         res = (
             self._db()
             .table("properties")
-            .select("tenant_id, status, max_guests")
+            .select("tenant_id, status, max_guests, booking_mode")
             .eq("id", property_id)
             .limit(1)
             .execute()
@@ -627,12 +627,26 @@ class BookingEngineService:
             for line in quote.lines
             if line.kind != "addon"
         ]
+        # Airbnb-Modell: instant = Sofortbuchung (status=confirmed, sperrt OTAs),
+        # request = Anfrage (status=requested, belegt lokal den Slot atomar, aber
+        # KEIN OTA-0-Push — die Nacht bleibt für OTAs verkäuflich, bis der Host
+        # zusagt). DB-NOT-NULL-Default 'instant' garantiert den Wert (kein Fallback).
+        is_request = prop.get("booking_mode") == "request"
+        reservation_status = "requested" if is_request else "confirmed"
+        # 24-h-Frist ab jetzt (Airbnb-Standard). Nur bei Anfrage; instant → NULL.
+        request_expires_at = (
+            (datetime.now(UTC) + timedelta(hours=24)).isoformat()
+            if is_request
+            else None
+        )
+
         # Reservierung + Kalender-Belegung + ari_outbox ATOMAR (RPC 0104):
         # Advisory-Lock je Objekt schließt das TOCTOU-Fenster zwischen dem Check
         # oben und dem Write — zwei gleichzeitige Gäste bekommen nie dieselbe
         # Nacht. Der EXCLUDE-Constraint reservations_no_local_overlap ist der
         # DB-Backstop. Die ari_outbox-Zeile (availability=0) entsteht in
-        # derselben Transaktion → der Channex-Push geht nie verloren.
+        # derselben Transaktion → der Channex-Push geht nie verloren. Bei Anfrage
+        # KEINE outbox-Zeile (p_with_outbox=False): der 0-Push kommt erst bei accept.
         try:
             ins = (
                 self._db()
@@ -654,13 +668,15 @@ class BookingEngineService:
                             "ota_name": "myNextDays",  # Herkunft für Kalender/Posteingang
                             "check_in": req.check_in.isoformat(),
                             "check_out": req.check_out.isoformat(),
-                            "status": "confirmed",
+                            "status": reservation_status,
+                            "request_expires_at": request_expires_at,
                             "total_amount": total_amount,
                             "quote_items": quote_items,
                             "currency": currency or None,
                         },
                         "p_source": "direct",
-                        "p_with_outbox": True,
+                        # Anfrage: keine ari_outbox-Zeile → kein OTA-0-Push vor accept.
+                        "p_with_outbox": not is_request,
                     },
                 )
                 .execute()
@@ -710,10 +726,13 @@ class BookingEngineService:
 
         # Kalender-Belegung ist bereits Teil der atomaren RPC (oben).
         # Realtime an Channex/OTAs sperren (availability=0) — kein OTA-Doppel.
-        self._push_channex(
-            tenant_id, req.property_id, req.check_in, req.check_out, 0,
-            outbox_id=outbox_id,
-        )
+        # NUR bei Sofortbuchung: eine Anfrage sperrt die OTAs noch nicht (der Slot
+        # bleibt dort verkäuflich, bis der Host zusagt → dann pusht accept den 0).
+        if not is_request:
+            self._push_channex(
+                tenant_id, req.property_id, req.check_in, req.check_out, 0,
+                outbox_id=outbox_id,
+            )
         # Dynamic Pricing neu rechnen — eine Plattform-Buchung ändert Auslastung/
         # Orphan-Lücken genauso wie eine interne Buchung (wie reservations.create).
         try:
@@ -742,7 +761,9 @@ class BookingEngineService:
             property_id=req.property_id,
             check_in=req.check_in,
             check_out=req.check_out,
-            status="confirmed",
+            status=reservation_status,
+            is_request=is_request,
+            request_expires_at=request_expires_at,
         )
 
     def _verified_reservation(self, reservation_id: str, email: str) -> dict:

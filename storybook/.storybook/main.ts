@@ -34,7 +34,7 @@ const config: StorybookConfig = {
     cfg.resolve.alias = {
       ...(cfg.resolve.alias ?? {}),
       "@": storybookRoot.replace(/\/$/, ""),
-      // Mobile-Komponenten (apps/mobile → hier portiert nach components/mobile)
+      // Mobile-Komponenten (mobile → hier portiert nach components/mobile)
       // rendern über react-native-web. `react-native` MUSS auf die Web-Variante
       // zeigen, damit die RN-Primitives (View/Text/Pressable) im Browser laufen —
       // ohne `$`, damit auch Subpath-Importe aus RN-Abhängigkeiten (z. B.

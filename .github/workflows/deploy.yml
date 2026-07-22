@@ -39,12 +39,13 @@ jobs:
           APPS=(
             "jt5gdgragv2jzivpx4oiqfir|nextdays-kong|deploy/kong/"
             "y13cm245vlmvq3yv38gdbtat|nextdays-marketing|marketing/"
-            "rh4f581hqashrnmiwnxb6pcu|nextdays-plattform|plattform/"
-            "u67kn5pj9cb2gqryt2ezsc8r|nextdays-storybook|apps/storybook/"
+            "rh4f581hqashrnmiwnxb6pcu|nextdays-plattform|plattform/ packages/"
+            "uo0irbk8eno9c9qonngzqwy2|nextdays-gastgeber|gastgeber/ packages/"
+            "u67kn5pj9cb2gqryt2ezsc8r|nextdays-storybook|storybook/"
             "cdqxi7d0w34sxzr4wr8jy8um|nextdays-supabase|deploy/supabase/"
             "kilcrxob5u434k3vsyf54ble|nextdays-api|apps/api/ deploy/api-standalone/"
             "ly4w6vw4ffxk2987nyg5z5kt|nextdays-worker|apps/api/ deploy/worker/"
-            "bln3q0n1l1se2hna8utkuag9|nextdays-web|apps/web/"
+            "bln3q0n1l1se2hna8utkuag9|nextdays-web|web/ packages/"
             "zcjrx4czu338zghc58d41yp7|nextdays-docs|deploy/docs/"
           )
 

@@ -2,7 +2,7 @@
 
 **Art:** Statische Code-Analyse (defensiv, kein Live-Pentest, kein DB-Zugriff).
 **Datum:** 2026-07-16
-**Scope:** `apps/api` Auth-Kern, RLS/Tenant-Scoping, `apps/web`/`apps/mobile` (nur service_role-Leak-Check), `supabase/migrations`.
+**Scope:** `apps/api` Auth-Kern, RLS/Tenant-Scoping, `apps/web`/`mobile` (nur service_role-Leak-Check), `supabase/migrations`.
 **Markierung je Aussage:** [Sicher] = im Code verifiziert · [Wahrscheinlich] = starke Indizien · [Vermutung] = nicht abschließend verifizierbar.
 
 ---
@@ -41,9 +41,9 @@ Abgeleitet aus OWASP API Security Top 10 (2023), Supabase-Security (CVE-2025-487
 | V6 | 🟢 abgesichert | `features/properties/service.py:154-168` | Per-ID-Reads scopen explizit `.eq("tenant_id", …).eq("id", …)`. Zweite Achse (Owner-Objekt-Scope) in ARCHITECTURE §6.1. [Sicher] |
 | V6b | 🟡 Restrisiko | `properties/owners/crm` (0 Treffer `load_scoped`) | Mehrere Slices scopen inline statt über `core.supabase.load_scoped`/`_require_own_*`. Fachlich korrekt, aber verlässt sich auf Disziplin (CLAUDE.md Wurzel 3 empfiehlt Single-Source-Helper). [Wahrscheinlich] |
 | V7 | 🟢 abgesichert | `auth/service.py:481-489` | `admin.create_user` setzt Rolle+Tenant serverseitig in `app_metadata`; `email_confirm: True` erzwungen. Kein Client-Signup mit freier Rollenwahl. [Sicher] |
-| V8 | 🟢 abgesichert | `rg service_role apps/web apps/mobile` → 0 | Kein `service_role`-Key im Frontend/Mobile/Storybook. [Sicher] |
+| V8 | 🟢 abgesichert | `rg service_role apps/web mobile` → 0 | Kein `service_role`-Key im Frontend/Mobile/Storybook. [Sicher] |
 | V9 | 🟢 abgesichert | `core/ratelimit_middleware.py:68-69`; `config.py:40` | `/auth/login|register|refresh` → Bucket `auth`, `rate_limit_auth="10/60"`, per-IP. [Sicher] |
-| V10 | 🟢 abgesichert | `apps/mobile/lib/api.ts:3-33,78` | Bei 401 genau EIN stiller Refresh; Rekursionsschutz für `/auth/refresh`. [Sicher] |
+| V10 | 🟢 abgesichert | `mobile/lib/api.ts:3-33,78` | Bei 401 genau EIN stiller Refresh; Rekursionsschutz für `/auth/refresh`. [Sicher] |
 | V11 | 🟡 Restrisiko | `core/ratelimit_middleware.py:78-96` | `_tenant_from_bearer` liest `app_metadata.tenant_id` OHNE Signaturprüfung — nur fürs Fairness-Keying. Angreifer könnte `tenant_id` fälschen, um in einen fremden/anderen Bucket zu fallen (Limit-Umgehung/-Poisoning). IP-Limit greift weiterhin → geringe Schwere. [Sicher] |
 | V12 | 🟢 behoben | `supabase/migrations/0154_enforce_rls_explicit.sql` | **Fix:** RLS + tenant-scoped Policies für alle 13 Tabellen EXPLIZIT (tenant_id direkt / über `property_id` abgeleitet / Service-Role-only für `fx_rates`+`stripe_webhook_event`). Zusätzlich `rls_auto_enable()`-Funktion + Event-Trigger versioniert. **Noch nicht eingespielt** (manuelles Deploy-Gate). [Sicher, dass Migration korrekt; Wirksamkeit nach Einspielen] |
 | V13 | 🟢 abgesichert | `security.py:113-140` | Cron-Guard: ohne Secret 503 (fail-closed), zeitkonstanter Vergleich `secrets_match`. [Sicher] |

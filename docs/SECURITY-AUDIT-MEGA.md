@@ -2,7 +2,7 @@
 
 **Datum:** 2026-07-16
 **Methode:** 10 parallele, disjunkte Domänen-Audits (statische Code-Analyse + Web-Recherche zum aktuellen Bedrohungsstand). Read-only, keine Live-Exploits.
-**Scope:** `apps/api` (FastAPI), `apps/web`, `builder` (Page-Builder), `apps/mobile`, `supabase/migrations`.
+**Scope:** `apps/api` (FastAPI), `apps/web`, `builder` (Page-Builder), `mobile`, `supabase/migrations`.
 **Abgrenzung:** Baut auf Audit 1 (`SECURITY-AUDIT-AUTH.md`) und Audit 2 (`SECURITY-AUDIT-2.md`) auf. Bereits behobene Punkte (RLS-Migration 0154, JWT-Alg-Allowlist, `/docs`-Prod-Deaktivierung, Dependency-CVEs, SSRF-Basisguard) sind hier **nicht** erneut gelistet — außer wo ein Restrisiko fortbesteht.
 **Markierung:** [Sicher] = im Code verifiziert · [Wahrscheinlich] = starke Indizien · [Vermutung] = nicht abschließend verifizierbar.
 

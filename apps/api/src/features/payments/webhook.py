@@ -94,9 +94,21 @@ def _dispatch_stripe_event(
         case "account.updated":
             _handle_account_updated(db, obj, now_iso)
         case "payment_intent.succeeded":
-            _set_payment_status(db, obj["id"], "succeeded", reservation="paid")
+            res_id = _set_payment_status(
+                db, obj["id"], "succeeded", reservation="paid"
+            )
+            if res_id:
+                # Fee-Ledger (0182): pending → charged. Status-Guard macht die
+                # Redelivery idempotent (Wurzel 2). Läuft im try des Dispatchers →
+                # ein Fehler rollt den Event-Claim zurück (Stripe liefert erneut).
+                fee_ref = _field(obj, "application_fee_amount")
+                _mark_platform_fee_charged(
+                    db, res_id, gateway_fee_ref=str(fee_ref) if fee_ref else None
+                )
         case "payment_intent.payment_failed":
-            _set_payment_status(db, obj["id"], "failed")
+            res_id = _set_payment_status(db, obj["id"], "failed")
+            if res_id:
+                _mark_platform_fee_failed(db, res_id)
         case "payment_intent.amount_capturable_updated":
             # Kaution vorautorisiert (Geld ist reserviert, noch nicht eingezogen).
             _set_payment_status(db, obj["id"], "pending", reservation="deposit_held")
@@ -301,9 +313,10 @@ def _set_payment_status(
     payment_status: str,
     *,
     reservation: str | None = None,
-) -> None:
+) -> str | None:
     """``payments``-Row (über gateway_ref) auf neuen Status; optional die
-    Reservierung mit-aktualisieren."""
+    Reservierung mit-aktualisieren. Gibt die reservation_id zurück (für die
+    Fee-Ledger-Kopplung), None wenn keine Zahlung gefunden."""
     rows = (
         db.table("payments")
         .select("id, reservation_id")
@@ -313,7 +326,7 @@ def _set_payment_status(
     ).data
     if not rows:
         log.warning("stripe_payment_not_found", payment_intent_id=payment_intent_id)
-        return
+        return None
     payment = rows[0]
     db.table("payments").update({"status": payment_status}).eq(
         "id", payment["id"]
@@ -322,3 +335,25 @@ def _set_payment_status(
         db.table("reservations").update({"payment_status": reservation}).eq(
             "id", payment["reservation_id"]
         ).execute()
+    return payment["reservation_id"]
+
+
+def _mark_platform_fee_charged(
+    db: Client, reservation_id: str, *, gateway_fee_ref: str | None = None
+) -> None:
+    """Fee-Zeile (0182) einer Buchung 'pending' → 'charged'. Nur aus 'pending'
+    (Status-Guard) → Webhook-Redelivery ist ein No-op (Wurzel 2)."""
+    patch: dict[str, Any] = {"status": "charged"}
+    if gateway_fee_ref:
+        patch["gateway_fee_ref"] = gateway_fee_ref
+    db.table("platform_fees").update(patch).eq(
+        "reservation_id", reservation_id
+    ).eq("status", "pending").execute()
+
+
+def _mark_platform_fee_failed(db: Client, reservation_id: str) -> None:
+    """Fee-Zeile 'pending' → 'failed' (Charge endgültig fehlgeschlagen, Fee nie
+    geflossen)."""
+    db.table("platform_fees").update({"status": "failed"}).eq(
+        "reservation_id", reservation_id
+    ).eq("status", "pending").execute()

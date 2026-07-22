@@ -44,6 +44,11 @@ class QuoteRequest(BaseModel):
     # Optionale Zusatzleistungen (Upsells); werden nach Basis + Steuer als eigene
     # Positionen in die Aufschlüsselung gerechnet.
     addons: list[AddonSelection] = Field(default_factory=list)
+    # Buchungs-/Bezugsdatum für zeitabhängige Rabatte (early_booker/last_minute:
+    # Abstand as_of→check_in). Default heute. EXPLIZIT im Request, damit der
+    # Resolver deterministisch bleibt (kein date.today() tief in der Rechnung) —
+    # zwei Quotes mit gleichem as_of liefern immer denselben Preis.
+    as_of: date = Field(default_factory=date.today)
 
     @model_validator(mode="after")
     def _check_order(self) -> "QuoteRequest":

@@ -412,6 +412,7 @@ class AuthService:
         # im Rechte-Dialog entzogen wurde.
         pm = Permission.ACCESS_PM_FEATURES in perms
         caps = effective_capabilities(role, has_pm_access=pm)
+        tenant_meta = self._tenant_meta(ctx.tenant_id)
         return MeResponse(
             user_id=ctx.user_id,
             email=data.get("email"),
@@ -419,21 +420,27 @@ class AuthService:
             role=role,
             capabilities=sorted(c.value for c in caps),
             permissions=sorted(p.value for p in perms),
-            accommodation_type=self._accommodation_type(ctx.tenant_id),
+            accommodation_type=tenant_meta.get("accommodation_type"),
+            account_type=tenant_meta.get("account_type"),
         )
 
-    def _accommodation_type(self, tenant_id: str | None) -> str | None:
-        # Beherbergungsart des Mandanten (0090) — steuert die Navigation.
+    def _tenant_meta(self, tenant_id: str | None) -> dict:
+        # Mandanten-Metadaten in EINEM Abruf (0090 accommodation_type + 0180
+        # account_type) — steuert Navigation und Betriebsmodell/Billing.
         if not tenant_id:
-            return None
+            return {}
         row = (
             self._service.table("tenants")
-            .select("accommodation_type")
+            .select("accommodation_type, account_type")
             .eq("id", tenant_id)
             .limit(1)
             .execute()
         )
-        return row.data[0]["accommodation_type"] if row.data else None
+        return row.data[0] if row.data else {}
+
+    def _accommodation_type(self, tenant_id: str | None) -> str | None:
+        # Beherbergungsart des Mandanten (0090) — steuert die Navigation.
+        return self._tenant_meta(tenant_id).get("accommodation_type")
 
     def set_accommodation_type(self, ctx: AuthContext, value: str) -> MeResponse:
         # Berechtigung (MANAGE_TENANT) prüft der Router-Guard; hier nur der
@@ -461,6 +468,8 @@ class AuthService:
                     "country": req.country,
                     "currency": req.currency,
                     "business_type": req.business_type,
+                    # Betriebsmodell (0180): 'pms' (Abo) oder 'marketplace' (8%-Fee).
+                    "account_type": req.account_type,
                 }
             )
             .execute()

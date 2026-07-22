@@ -104,6 +104,13 @@ class ReservationCancel(BaseModel):
     reason: str = Field(min_length=1)
 
 
+class RequestDecline(BaseModel):
+    """Ablehnung einer Anfrage (Airbnb-Modell). Begründung optional (für den Gast
+    sichtbar) — anders als beim Storno kein Pflichtfeld."""
+
+    reason: str | None = Field(default=None, max_length=1000)
+
+
 class ReservationResponse(BaseModel):
     id: str
     property_id: str

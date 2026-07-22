@@ -28,7 +28,7 @@ Im Slice apps/api/src/features/auth/ einen Refresh-Endpoint ergänzen:
   tests/conftest.py vorhanden).
 
 AUFGABE B — Mobile: Env-Config
-apps/mobile/lib/config.ts umbauen: ein CONFIG-Objekt mit __DEV__-Switch.
+mobile/lib/config.ts umbauen: ein CONFIG-Objekt mit __DEV__-Switch.
 - Dev: API http://localhost:8000 (iOS-Sim) / http://10.0.2.2:8000 (Android-Emu)
   — bestehende Platform-Logik behalten.
 - Prod: API https://nextdays-api.65.21.144.136.sslip.io,
@@ -39,7 +39,7 @@ apps/mobile/lib/config.ts umbauen: ein CONFIG-Objekt mit __DEV__-Switch.
 - KEINE URL darf außerhalb dieser Datei stehen (Wurzel 4 sinngemäß).
 
 AUFGABE C — Mobile: Refresh + zentraler Auth-State
-1. apps/mobile/lib/auth.ts erweitern:
+1. mobile/lib/auth.ts erweitern:
    - Beim Login access_token UND refresh_token in Keychain speichern
      (react-native-keychain, gleicher Service „nextdays.auth", zweiter Account
      „nd_refresh"), zusätzlich expires_at (Unix-Sekunden) merken.
@@ -47,10 +47,10 @@ AUFGABE C — Mobile: Refresh + zentraler Auth-State
      refresh_token; bei Erfolg beide Tokens atomar ersetzen; bei 401 alles
      löschen (Logout-Zustand). SINGLE-FLIGHT: parallele Aufrufe teilen sich
      EIN laufendes Promise (Wurzel 2 — Auth-Limit ist 10/60/IP).
-2. apps/mobile/lib/api.ts: bei Response 401 genau EINEN refreshSession()-
+2. mobile/lib/api.ts: bei Response 401 genau EINEN refreshSession()-
    Versuch, dann Request einmal wiederholen; schlägt auch das fehl → ApiError
    mit Status 401 werfen (kein Loop).
-3. Neu: apps/mobile/contexts/AuthContext.tsx — Provider mit
+3. Neu: mobile/contexts/AuthContext.tsx — Provider mit
    { status: 'loading'|'signedOut'|'signedIn', me: MeResponse|null,
      login(), logout(), reload() }. me kommt aus GET /api/v1/auth/me
    (Felder: user_id, email, tenant_id, role, capabilities, permissions,
@@ -69,7 +69,7 @@ AUFGABE C — Mobile: Refresh + zentraler Auth-State
 
 ABNAHME / QUALITÄTSGATE
 - Backend: pytest grün, ruff check sauber, pylint 10.00/10 auf geänderten Modulen.
-- Mobile: tsc --noEmit in apps/mobile fehlerfrei, Jest grün.
+- Mobile: tsc --noEmit in mobile fehlerfrei, Jest grün.
 - Manuell nachvollziehbar (beschreiben, nicht selbst starten): Login → Token
   läuft ab → nächster API-Call refresht still → Session bleibt; owner-Login
   landet NICHT im Agentur-Dashboard.
@@ -85,14 +85,14 @@ Lies zuerst CLAUDE.md, docs/mobile-integration-plan.md, NOTES.md. Voraussetzung:
 P1 ist abgenommen. Nichts committen.
 
 KONTEXT
-apps/mobile/screens/HostDashboard.tsx und HostCalendar.tsx laufen auf
+mobile/screens/HostDashboard.tsx und HostCalendar.tsx laufen auf
 hartkodierten Demo-Daten (Unsplash-Fotos aus lib/photos.ts). Die Web-App holt
 dieselben Daten über FastAPI — Contracts in apps/api/src/features/dashboard/
 und apps/api/src/features/calendar/ (router.py + schemas.py) sowie den
 Web-Wrappern apps/web/lib/*.ts.
 
 AUFGABE
-1. Neu: apps/mobile/lib/dashboard.ts und apps/mobile/lib/calendar.ts nach dem
+1. Neu: mobile/lib/dashboard.ts und mobile/lib/calendar.ts nach dem
    Muster von lib/properties.ts (typisierte Wrapper über lib/api.ts, deutsche
    Fehlertexte, call<T>-Result-Wrapper). Typen exakt am Pydantic-Contract
    ausrichten — KEINE erfundenen Felder, nullable bleibt nullable.
@@ -109,7 +109,7 @@ AUFGABE
    GET /api/v1/properties/{id} statt fester Demo-Daten.
 
 ABNAHME / QUALITÄTSGATE
-- tsc --noEmit in apps/mobile fehlerfrei, Jest grün.
+- tsc --noEmit in mobile fehlerfrei, Jest grün.
 - Keine neue URL, kein neues „EUR"/„€" im Diff (grep belegen).
 - NOTES.md: P2 abhaken + Ergebnis.
 ```
@@ -131,7 +131,7 @@ ohne VIEW_GUEST_FULL bekommen nur Vornamen und total_amount: null
 darf diese Maskierung weder umgehen noch „auffüllen".
 
 AUFGABE
-1. Neu: apps/mobile/lib/reservations.ts + apps/mobile/lib/tasks.ts
+1. Neu: mobile/lib/reservations.ts + mobile/lib/tasks.ts
    (Muster lib/properties.ts, total_amount als number|null typisieren).
 2. Neuer Screen HostReservations.tsx: Liste (Filter: anstehend/aktuell/
    vergangen), Detail mit Status, Zeitraum, Kanal, Gast (ggf. nur Vorname),
@@ -170,10 +170,10 @@ schema public (RLS filtert auf Tenant). Inbox-Contract:
 apps/api/src/features/inbox/ + apps/web/lib/inbox.ts.
 
 AUFGABE
-1. @supabase/supabase-js in apps/mobile installieren (pnpm). Prüfe, ob bare RN
+1. @supabase/supabase-js in mobile installieren (pnpm). Prüfe, ob bare RN
    zusätzlich react-native-url-polyfill braucht — nur ergänzen, was die Lib
    laut Doku wirklich verlangt.
-2. Neu: apps/mobile/lib/realtime.ts + Hook useRealtime — Signatur wie das Web
+2. Neu: mobile/lib/realtime.ts + Hook useRealtime — Signatur wie das Web
    ({ table, filter, onChange|onEvent, enabled, debounceMs }), Token aus
    lib/auth.ts (Keychain). SUPABASE_URL/ANON_KEY aus lib/config.ts; Key leer
    → Hook ist no-op (kein Crash, EIN console.warn). Bei Token-Refresh (P1)
@@ -204,15 +204,15 @@ P4 abgenommen. Nichts committen.
 AUFGABE
 1. URL-Scheme nextdays:// auf beiden Plattformen:
    - iOS: CFBundleURLTypes/CFBundleURLSchemes in
-     apps/mobile/ios/NextDaysApp/Info.plist.
+     mobile/ios/NextDaysApp/Info.plist.
    - Android: intent-filter mit <data android:scheme="nextdays"/> in
-     apps/mobile/android/app/src/main/AndroidManifest.xml (launchMode prüfen,
+     mobile/android/app/src/main/AndroidManifest.xml (launchMode prüfen,
      singleTask empfohlen).
 2. React Navigation linking-Config im NavigationContainer (App.tsx):
    mindestens nextdays://login, nextdays://host/reservierungen/:id,
    nextdays://host/inbox/:threadId. Kaltstart UND Warmstart abdecken.
 3. iOS-Bundle-ID: org.reactjs.native.example.* in
-   apps/mobile/ios/NextDaysApp.xcodeproj/project.pbxproj auf com.nextdays.app
+   mobile/ios/NextDaysApp.xcodeproj/project.pbxproj auf com.nextdays.app
    ändern (Debug UND Release). Android applicationId (com.nextdaysapp) NICHT
    ändern ohne Hinweis, dass das die Play-Store-Identität wäre.
 4. Tenant-Registrierung: HostSignup-Screen gegen POST /api/v1/auth/register
@@ -246,7 +246,7 @@ Tenant-Auth mit Rolle owner; RLS/RESTRICTIVE-Policies (Migration 0059) und
 Daten-Split greifen serverseitig. Web-Referenz: Owner-Portal-Views in apps/web.
 
 AUFGABE
-1. Neu: apps/mobile/lib/ownerPortal.ts (Wrapper über lib/api.ts, Typen exakt
+1. Neu: mobile/lib/ownerPortal.ts (Wrapper über lib/api.ts, Typen exakt
    am Pydantic-Contract).
 2. Neu: navigation OwnerTabs (ersetzt den P1-Platzhalter):
    Meine Objekte · Kalender · Auszahlungen (Earnings + Statements) · Profil.
@@ -341,7 +341,7 @@ Design-Referenz für Suche/Filter/Listing-Darstellung: plattform/ (Next.js
 Kunden-Portal) — Look & Wording angleichen, Layout bleibt nativ.
 
 AUFGABE
-1. Neu: apps/mobile/lib/bookingEngine.ts + apps/mobile/lib/guestPortal.ts
+1. Neu: mobile/lib/bookingEngine.ts + mobile/lib/guestPortal.ts
    (Wrapper, Typen exakt an den Pydantic-Contracts).
 2. Gast-Auth-Welt clientseitig: eigener GuestAuthContext + Keychain-Accounts
    nd_guest_access/nd_guest_refresh (Service „nextdays.auth" wiederverwenden,
@@ -380,7 +380,7 @@ Lies zuerst CLAUDE.md vollständig. Das ist KEIN Bug-Jagd-Loop „bis 0 Bugs"
 (CLAUDE.md verbietet das) — EIN systematischer Durchlauf, Befunde den 5
 Wurzeln zugeordnet, Klassen schließen statt Einzelsymptome.
 
-SCOPE: apps/api, apps/web, apps/mobile, builder, plattform,
+SCOPE: apps/api, apps/web, mobile, builder, plattform,
 supabase/migrations, deploy. Marketing-Site nur oberflächlich.
 
 PRÜFRASTER (gezielt suchen, nicht alles lesen):

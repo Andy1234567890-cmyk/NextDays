@@ -2,7 +2,7 @@
 from enum import StrEnum
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class PaymentGateway(StrEnum):
@@ -165,6 +165,40 @@ class PayPalOnboardingResponse(BaseModel):
 class PayPalOrderResponse(BaseModel):
     order_id: str
     payment_id: str
+
+
+class PlatformFeeStatus(StrEnum):
+    pending = "pending"    # Charge angelegt, noch nicht bestätigt
+    charged = "charged"    # Fee erfolgreich einbehalten
+    reversed = "reversed"  # (anteilig) zurückgegeben (Storno/Refund)
+    failed = "failed"      # Charge fehlgeschlagen, Fee nie geflossen
+
+
+class PlatformFeeRow(BaseModel):
+    """Eine Plattform-Provisionszeile (0182) für die Abrechnungs-Ansicht des
+    Marktplatz-Gastgebers. Beträge in Cent (Ganzzahl)."""
+
+    id: str
+    reservation_id: str
+    fee_bps: int
+    gross_amount_cents: int
+    fee_amount_cents: int
+    reversed_amount_cents: int = 0
+    currency: str            # aus der Buchung; nie Default-EUR (Wurzel 4)
+    gateway: str = "stripe"
+    status: PlatformFeeStatus
+    created_at: str
+
+
+class PlatformFeeSummary(BaseModel):
+    """Aggregat für den Marktplatz-Gastgeber: Summe fällige/eingezogene Fees.
+    Gemischte Währungen → currency=None (kein Fallback), je-Zeile-Währung in rows."""
+
+    currency: str | None = None
+    total_fee_cents: int = 0
+    total_reversed_cents: int = 0
+    net_fee_cents: int = 0   # total_fee - total_reversed
+    rows: list[PlatformFeeRow] = Field(default_factory=list)
 
 
 class SliceHealth(BaseModel):
