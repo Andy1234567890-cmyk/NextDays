@@ -9,15 +9,15 @@ import { Icon } from "@iconify/react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@nextdays/ui/avatar";
+import { Button } from "@nextdays/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@nextdays/ui/dropdown-menu";
 import { type TenantUser, type UserRole, deleteManagedUser } from "@/lib/account";
 
 import { OwnerPropertiesDialog } from "./owner-properties-dialog";

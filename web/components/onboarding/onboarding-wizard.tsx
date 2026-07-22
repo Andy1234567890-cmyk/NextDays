@@ -16,9 +16,9 @@ import { useEffect, useState, useTransition } from "react";
 import { AddressPlacesSearch } from "@/components/address-places-search";
 import { SwitcherImport } from "@/components/onboarding/switcher-import";
 import { ensureChannexAccount } from "@/lib/channex";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
+import { Button } from "@nextdays/ui/button";
+import { Input } from "@nextdays/ui/input";
+import { NativeSelect } from "@nextdays/ui/native-select";
 import type { AccommodationType } from "@/lib/api";
 import { setAccommodationType } from "@/lib/auth";
 import {

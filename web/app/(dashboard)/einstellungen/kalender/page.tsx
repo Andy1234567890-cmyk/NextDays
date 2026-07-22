@@ -5,7 +5,7 @@
 import { getTranslations } from "next-intl/server";
 
 import { CalendarSync } from "@/components/einstellungen/calendar-sync";
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import { overviewExternalCalendars } from "@/lib/external-calendar";
 
 export default async function KalenderSyncPage() {

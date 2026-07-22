@@ -17,9 +17,9 @@ import { toast } from "sonner";
 import { channelLogo } from "@/lib/channel-logos";
 
 import { ChannelConnectButton } from "@/components/channel-manager/channel-connect-button";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
+import { Button } from "@nextdays/ui/button";
+import { Card } from "@nextdays/ui/card";
+import { Switch } from "@nextdays/ui/switch";
 import {
   type StoredChannelConnection,
   setConnectionActive,

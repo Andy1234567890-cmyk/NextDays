@@ -10,7 +10,7 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
+} from "@nextdays/ui/sheet";
 import { useTranslations } from "next-intl";
 
 import type { Owner } from "@/lib/owners";

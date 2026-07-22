@@ -8,7 +8,7 @@
 import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@nextdays/ui/card";
 import { formatCurrency } from "@/lib/currency";
 import type { StatementListItem } from "@/lib/owner-statements";
 import { useRealtime } from "@/lib/use-realtime";

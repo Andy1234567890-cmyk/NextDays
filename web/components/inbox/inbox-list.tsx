@@ -17,11 +17,11 @@ import { AutomationsTab } from "@/components/inbox/automations-tab";
 import { ManageTab } from "@/components/inbox/manage-tab";
 import { TemplatesTab } from "@/components/inbox/templates-tab";
 import { WhatsAppChat } from "@/components/inbox/whatsapp-panel";
-import { Button } from "@/components/ui/button";
-import { DatePicker } from "@/components/ui/date-picker";
-import { MultiSelect } from "@/components/ui/multi-select";
-import { NativeSelect } from "@/components/ui/native-select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@nextdays/ui/button";
+import { DatePicker } from "@nextdays/ui/date-picker";
+import { MultiSelect } from "@nextdays/ui/multi-select";
+import { NativeSelect } from "@nextdays/ui/native-select";
+import { Popover, PopoverContent, PopoverTrigger } from "@nextdays/ui/popover";
 import { formatCurrency } from "@/lib/currency";
 import {
   type InboxMessage,

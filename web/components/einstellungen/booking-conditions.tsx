@@ -9,21 +9,21 @@ import { Icon } from "@iconify/react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
+import { Button } from "@nextdays/ui/button";
+import { Card } from "@nextdays/ui/card";
+import { Input } from "@nextdays/ui/input";
+import { NativeSelect } from "@nextdays/ui/native-select";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@nextdays/ui/popover";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
+} from "@nextdays/ui/sheet";
 import { currencySymbol } from "@/lib/currency";
 import {
   type BookingCondition,

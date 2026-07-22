@@ -7,23 +7,23 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@nextdays/ui/button";
+import { Input } from "@nextdays/ui/input";
+import { Label } from "@nextdays/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@nextdays/ui/select";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
+} from "@nextdays/ui/sheet";
 import { typeOptionsFor } from "@/lib/property-meta";
 import { createProperty, type PropertyType } from "@/lib/properties";
 

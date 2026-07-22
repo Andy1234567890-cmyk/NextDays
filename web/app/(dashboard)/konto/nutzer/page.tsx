@@ -6,7 +6,7 @@ import { Icon } from "@iconify/react";
 import { UserWizard } from "@/components/konto/user-wizard";
 import { UserList } from "@/components/konto/user-list";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import { listManagedUsers } from "@/lib/account";
 
 export default async function NutzerPage() {

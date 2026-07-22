@@ -4,7 +4,7 @@
 // setzt/hebt Stopps per Drag-Auswahl (Channex-Stops read-only).
 import { StopSellCalendar } from "@/components/stop-sell/stop-sell-calendar";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import { listProperties } from "@/lib/properties";
 import { listAgencies } from "@/lib/travel-agencies";
 

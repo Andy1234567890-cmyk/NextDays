@@ -14,12 +14,12 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 
 import { channelLogo } from "@/lib/channel-logos";
-import { Input } from "@/components/ui/input";
+import { Input } from "@nextdays/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@nextdays/ui/popover";
 import type { ChannelOverview, OtaChannelOverview } from "@/lib/channex";
 import { pinChannel } from "@/lib/channex";
 

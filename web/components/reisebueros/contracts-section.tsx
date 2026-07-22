@@ -11,10 +11,10 @@ import { Icon } from "@iconify/react";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
+import { Button } from "@nextdays/ui/button";
+import { Card } from "@nextdays/ui/card";
+import { Input } from "@nextdays/ui/input";
+import { NativeSelect } from "@nextdays/ui/native-select";
 import {
   type Agency,
   type AgencyContract,

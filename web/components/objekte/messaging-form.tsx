@@ -10,12 +10,12 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@nextdays/ui/popover";
 import { LocalizedTextEditor } from "@/components/objekte/localized-text-editor";
 import {
   type Messaging,

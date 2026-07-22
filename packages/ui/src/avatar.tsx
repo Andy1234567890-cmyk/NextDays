@@ -6,7 +6,7 @@
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
 import type { ComponentProps } from "react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "./utils";
 
 // Wurzel-Element: rundes Wrapper-Element fester Größe.
 export function Avatar({

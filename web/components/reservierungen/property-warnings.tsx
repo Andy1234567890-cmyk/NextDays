@@ -11,7 +11,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import { dateKey } from "@/lib/calendar-views";
 import { formatCurrency } from "@/lib/currency";
 import { type Reservation, listReservations } from "@/lib/reservations";

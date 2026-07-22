@@ -12,9 +12,9 @@ import { useState } from "react";
 import { DossierPdfButton } from "@/components/objekte/kartei/dossier-pdf-button";
 import { CheckboxField, DateField, NumberField, SelectField, TextField, nulled } from "@/components/objekte/kartei/fields";
 import { ListEditor } from "@/components/objekte/kartei/list-editor";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { OverflowTabs } from "@/components/ui/overflow-tabs";
+import { Button } from "@nextdays/ui/button";
+import { Card } from "@nextdays/ui/card";
+import { OverflowTabs } from "@nextdays/ui/overflow-tabs";
 import {
   type AccessData,
   type DossierFull,

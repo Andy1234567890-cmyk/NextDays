@@ -9,9 +9,9 @@ import { format, parse } from "date-fns";
 import { de } from "date-fns/locale";
 import { useState } from "react";
 
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { Calendar } from "./calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "./popover";
+import { cn } from "./utils";
 
 type DatePickerProps = {
   // Wert als ISO-Datum (YYYY-MM-DD) oder leer.

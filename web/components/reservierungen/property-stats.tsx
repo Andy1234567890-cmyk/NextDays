@@ -12,7 +12,7 @@ import { useCallback, useEffect, useState } from "react";
 import { DateRangePopover, type IsoRange } from "@/components/reservierungen/date-range-popover";
 import { ControlCenterLearn } from "@/components/reservierungen/learn-dialog";
 import { ChannelDonuts, StatsKpiGrid } from "@/components/reservierungen/stats-cards";
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import { formatCurrency } from "@/lib/currency";
 import {
   type PropertyStats,

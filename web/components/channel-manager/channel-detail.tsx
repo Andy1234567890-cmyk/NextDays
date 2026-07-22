@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { ChannelConnectButton } from "@/components/channel-manager/channel-connect-button";
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import type {
   ChannelDetail as ChannelDetailData,
   ChannelMappingRow,

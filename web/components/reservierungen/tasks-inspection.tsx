@@ -8,8 +8,8 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@nextdays/ui/button";
+import { Card } from "@nextdays/ui/card";
 import {
   type InspectionItem,
   inspectTask,

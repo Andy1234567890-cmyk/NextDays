@@ -11,10 +11,10 @@ import { Icon } from "@iconify/react";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+import { Button } from "@nextdays/ui/button";
+import { Card } from "@nextdays/ui/card";
+import { Input } from "@nextdays/ui/input";
+import { Switch } from "@nextdays/ui/switch";
 import {
   type PaymentSettings,
   type PaymentSettingsResponse,

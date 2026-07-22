@@ -9,8 +9,8 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card } from "@nextdays/ui/card";
+import { Input } from "@nextdays/ui/input";
 import { useRealtime } from "@/lib/use-realtime";
 
 type PropertyCard = {

@@ -9,7 +9,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { DashboardVoiceAssistant } from "@/components/dashboard/voice-assistant";
 import { RealtimeDebugPanel } from "@/components/realtime-debug-panel";
 import { Topbar } from "@/components/topbar";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@nextdays/ui/sidebar";
 import { getMe } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 

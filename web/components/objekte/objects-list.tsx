@@ -11,16 +11,16 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 import { ChannelChips } from "@/components/objekte/channel-chips";
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
+} from "@nextdays/ui/dropdown-menu";
+import { Input } from "@nextdays/ui/input";
+import { NativeSelect } from "@nextdays/ui/native-select";
 import { Icon } from "@iconify/react";
 import {
   deleteProperty,

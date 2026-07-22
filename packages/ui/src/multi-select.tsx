@@ -8,8 +8,8 @@ import { Icon } from "@iconify/react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "cmdk";
 import { useState } from "react";
 
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { Popover, PopoverContent, PopoverTrigger } from "./popover";
+import { cn } from "./utils";
 
 export type MultiSelectOption = { value: string; label: string };
 

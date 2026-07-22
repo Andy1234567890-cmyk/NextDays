@@ -6,8 +6,8 @@ import { notFound } from "next/navigation";
 
 import { NewCustomerButton } from "@/components/buchhaltung/new-customer-button";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Card } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@nextdays/ui/avatar";
+import { Card } from "@nextdays/ui/card";
 import { listCustomers, type Customer } from "@/lib/buchhaltung";
 
 function initials(c: Customer): string {

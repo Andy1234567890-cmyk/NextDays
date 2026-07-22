@@ -10,13 +10,13 @@ import { useTransition } from "react";
 
 import { setLocale } from "@/i18n/actions";
 import { LOCALES, LOCALE_LABELS, type Locale } from "@/i18n/locales";
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@nextdays/ui/dropdown-menu";
 
 export function LanguageToggle() {
   const locale = useLocale();

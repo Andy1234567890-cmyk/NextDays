@@ -3,7 +3,7 @@
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 
 const PROPERTY_TYPES = [
   "Hotel",

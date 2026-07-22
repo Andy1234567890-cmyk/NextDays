@@ -9,9 +9,9 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@nextdays/ui/button";
+import { Checkbox } from "@nextdays/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@nextdays/ui/popover";
 import { TYPE_LABELS } from "@/lib/property-meta";
 import type { PropertyType } from "@/lib/properties";
 

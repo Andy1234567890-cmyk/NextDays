@@ -18,17 +18,17 @@ import {
   Pill,
   useSaver,
 } from "@/components/objekte/editor-primitives";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Button } from "@nextdays/ui/button";
+import { Card } from "@nextdays/ui/card";
+import { Input } from "@nextdays/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+} from "@nextdays/ui/select";
+import { Switch } from "@nextdays/ui/switch";
 import {
   type Availability,
   type Channel,

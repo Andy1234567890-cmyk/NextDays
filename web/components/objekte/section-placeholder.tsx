@@ -1,7 +1,7 @@
 // Schlichter Platzhalter für Objekt-Unterseiten, die noch nicht ausgebaut sind.
 import { Icon } from "@iconify/react";
 
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 
 export function SectionPlaceholder({
   title,

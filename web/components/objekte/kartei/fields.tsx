@@ -3,11 +3,11 @@
 // Feld-Primitive für die Objektkartei-Panels. Labels kommen als Props (der
 // Stepper reicht i18n-Strings durch — keine hart-kodierten Texte hier). Leere
 // Strings werden beim Speichern zu null normalisiert (kein Ersatzwert, Wurzel 4).
-import { Checkbox } from "@/components/ui/checkbox";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
+import { Checkbox } from "@nextdays/ui/checkbox";
+import { DatePicker } from "@nextdays/ui/date-picker";
+import { Input } from "@nextdays/ui/input";
+import { Label } from "@nextdays/ui/label";
+import { NativeSelect } from "@nextdays/ui/native-select";
 
 export function TextField({
   label,

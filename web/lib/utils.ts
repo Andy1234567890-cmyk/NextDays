@@ -1,10 +1,6 @@
-// shadcn/ui-Standard: Tailwind-Klassen sicher zusammenführen (Konflikte auflösen).
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+// `cn` ist Single Source in @nextdays/ui — hier nur re-exportiert, damit
+// bestehende `@/lib/utils`-Importe (Nicht-ui-Dateien) weiter funktionieren.
+export { cn } from "@nextdays/ui/utils";
 
 // --- Format-Helfer -----------------------------------------------------------
 

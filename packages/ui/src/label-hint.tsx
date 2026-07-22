@@ -5,13 +5,13 @@
 // dauerhaft sichtbarer Untertext. Hält Formulare aufgeräumt.
 import { Icon } from "@iconify/react";
 
-import { Label } from "@/components/ui/label";
+import { Label } from "./label";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "./tooltip";
 
 type Props = {
   htmlFor?: string;

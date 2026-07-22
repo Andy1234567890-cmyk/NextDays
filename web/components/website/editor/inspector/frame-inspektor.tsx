@@ -8,7 +8,7 @@ import { useEditor } from "@craftjs/core";
 import { Icon } from "@iconify/react";
 import { useRef, useState } from "react";
 
-import { Label } from "@/components/ui/label";
+import { Label } from "@nextdays/ui/label";
 import { anyFontStack } from "@/lib/website-fonts";
 
 import { FontPicker } from "../font-picker";

@@ -7,7 +7,7 @@
 import { useState } from "react";
 
 import type { DayAvailability } from "@/lib/calendar";
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import { formatCurrency } from "@/lib/currency";
 import { explainFactors } from "@/lib/dp-factors";
 import { explainDpPrice } from "@/lib/dynamic-pricing";

@@ -25,10 +25,10 @@ import {
   useSaver,
 } from "@/components/objekte/editor-primitives";
 import { LocalizedTextEditor } from "@/components/objekte/localized-text-editor";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+import { Button } from "@nextdays/ui/button";
+import { Card } from "@nextdays/ui/card";
+import { Checkbox } from "@nextdays/ui/checkbox";
+import { Input } from "@nextdays/ui/input";
 import {
   type Distances,
   type LocationExtras,

@@ -2,7 +2,7 @@ import { Icon } from '@iconify/react';
 import { useTranslations } from 'next-intl';
 import type React from 'react';
 import { useRef, useState } from 'react';
-import { NativeSelect } from '@/components/ui/native-select';
+import { NativeSelect } from '@nextdays/ui/native-select';
 import { useSimplePagination } from '@/hooks/pdf/useSimplePagination';
 
 interface SimplePDFViewerProps {

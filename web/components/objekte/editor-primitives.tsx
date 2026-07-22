@@ -7,15 +7,15 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+import { Button } from "@nextdays/ui/button";
+import { Label } from "@nextdays/ui/label";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
+} from "@nextdays/ui/sheet";
 import {
   type Channel,
   CHANNEL_LABELS,

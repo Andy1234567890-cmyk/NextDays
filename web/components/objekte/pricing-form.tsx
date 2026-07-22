@@ -20,23 +20,23 @@ import {
   useSaver,
 } from "@/components/objekte/editor-primitives";
 import { RatePlanWizard } from "@/components/objekte/rate-plan-wizard";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@nextdays/ui/button";
+import { Card } from "@nextdays/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+} from "@nextdays/ui/dropdown-menu";
+import { Input } from "@nextdays/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+} from "@nextdays/ui/select";
+import { Switch } from "@nextdays/ui/switch";
 import { CHANNEL_LABELS } from "@/lib/availability-meta";
 import {
   type AddOn,

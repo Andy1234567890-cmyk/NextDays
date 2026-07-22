@@ -9,8 +9,8 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { Prop } from "@/components/kalender/calendar-board";
-import { Card } from "@/components/ui/card";
-import { Segmented } from "@/components/ui/segmented";
+import { Card } from "@nextdays/ui/card";
+import { Segmented } from "@nextdays/ui/segmented";
 import { getBoard } from "@/lib/calendar";
 import {
   addDays,

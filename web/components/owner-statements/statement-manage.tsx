@@ -6,7 +6,7 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import { formatCurrency } from "@/lib/currency";
 import {
   deleteStatement,

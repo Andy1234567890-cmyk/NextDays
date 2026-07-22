@@ -6,15 +6,15 @@
 // per PUT (Replace-Semantik).
 import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@nextdays/ui/button";
+import { Checkbox } from "@nextdays/ui/checkbox";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
+} from "@nextdays/ui/sheet";
 import { getStaffProperties, setStaffProperties } from "@/lib/account";
 import { listProperties, type Property } from "@/lib/properties";
 

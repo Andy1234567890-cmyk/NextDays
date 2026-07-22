@@ -12,7 +12,7 @@ import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import { getMe } from "@/lib/auth";
 import { formatCurrency } from "@/lib/currency";
 import {

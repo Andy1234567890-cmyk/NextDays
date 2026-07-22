@@ -5,7 +5,7 @@
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 
 export function ModulePlaceholder({
   title,

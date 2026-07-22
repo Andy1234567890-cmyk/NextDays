@@ -12,9 +12,9 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import type { DateRange } from "react-day-picker";
 
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@nextdays/ui/button";
+import { Calendar } from "@nextdays/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@nextdays/ui/popover";
 import { cn } from "@/lib/utils";
 
 export type IsoRange = { from: string; to: string };

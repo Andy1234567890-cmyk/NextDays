@@ -17,7 +17,7 @@ import { useTranslations } from 'next-intl';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 
-import { NativeSelect } from '@/components/ui/native-select';
+import { NativeSelect } from '@nextdays/ui/native-select';
 import { getVATFormat, validateVATNumber } from '@/utils/vatValidation';
 
 export interface ContactPerson {

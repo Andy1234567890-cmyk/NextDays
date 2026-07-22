@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 
 import { Logo } from "@/components/logo";
 import { SignupForm } from "@/components/signup/signup-form";
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import { signInWithProvider } from "@/lib/oauth-login";
 
 // Feature-Liste mit grünem Häkchen (deutsch).

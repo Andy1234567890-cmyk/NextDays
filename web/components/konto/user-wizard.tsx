@@ -14,17 +14,17 @@ import {
 } from "@/lib/account";
 import type { UserRole } from "@/lib/account";
 import { listProperties, type Property } from "@/lib/properties";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@nextdays/ui/button";
+import { Checkbox } from "@nextdays/ui/checkbox";
+import { Input } from "@nextdays/ui/input";
+import { Label } from "@nextdays/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@nextdays/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -32,7 +32,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from "@nextdays/ui/sheet";
 import { cn } from "@/lib/utils";
 
 import { PermissionGroups } from "./permission-groups";

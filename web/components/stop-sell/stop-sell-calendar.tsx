@@ -13,7 +13,7 @@ import { Icon } from "@iconify/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import {
   getAvailability,
   listStopSell,

@@ -9,9 +9,9 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { Logo } from "@/components/logo";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@nextdays/ui/button";
+import { Input } from "@nextdays/ui/input";
+import { Label } from "@nextdays/ui/label";
 import { login, loginTotp } from "@/lib/auth";
 import { signInWithProvider } from "@/lib/oauth-login";
 

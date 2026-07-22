@@ -18,7 +18,7 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@nextdays/ui/dropdown-menu";
 import { type Locale, DEFAULT_LOCALE, isLocale } from "@/i18n/locales";
 import {
   type PropertyPhoto,
@@ -28,7 +28,7 @@ import {
   updatePropertyPhoto,
   uploadPropertyPhoto,
 } from "@/lib/properties";
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 
 // Buchungsportale (via Channex) nehmen nur JPEG/PNG an — die speichern/senden
 // wir. Der Kunde darf aber auch moderne Formate (WebP/AVIF/HEIC) hochladen; die

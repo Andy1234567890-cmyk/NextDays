@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import {
   type Task,
   type TaskStatus,

@@ -11,10 +11,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { Prop } from "@/components/kalender/calendar-board";
 import { ReservationDetailSlider } from "@/components/kalender/reservation-detail-slider";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
+import { Button } from "@nextdays/ui/button";
+import { Card } from "@nextdays/ui/card";
+import { Input } from "@nextdays/ui/input";
+import { NativeSelect } from "@nextdays/ui/native-select";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { CHANNEL_SOURCES, channelMeta } from "@/lib/calendar-channels";
 import { type DisplayStatus, STATUS_META } from "@/lib/calendar-status";

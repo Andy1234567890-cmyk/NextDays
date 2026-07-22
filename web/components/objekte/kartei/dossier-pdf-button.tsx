@@ -7,7 +7,7 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import { type DossierLabels, buildDossierPdf } from "@/lib/dossier-pdf";
 import { getDossier } from "@/lib/property-dossier";
 import { type Property, listPropertyPhotos } from "@/lib/properties";

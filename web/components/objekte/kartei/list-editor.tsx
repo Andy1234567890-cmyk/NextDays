@@ -6,8 +6,8 @@
 import { Icon } from "@iconify/react";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@nextdays/ui/button";
+import { Card } from "@nextdays/ui/card";
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string; status?: number };
 

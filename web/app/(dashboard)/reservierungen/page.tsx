@@ -3,7 +3,7 @@
 // tabelle. Server Component lädt die Objekte (für Titel + Objekt-Filter); der
 // Client-Teil holt die Reservierungen und rendert die gefilterten Reiter.
 import { BookingsBoard } from "@/components/reservierungen/bookings-board";
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import { listProperties } from "@/lib/properties";
 
 export default async function ReservierungenPage() {

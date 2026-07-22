@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 
 import { DynamicPricingTable } from "@/components/dynamic-pricing/dynamic-pricing-table";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import { getDpOverview } from "@/lib/dynamic-pricing";
 
 export const dynamic = "force-dynamic";

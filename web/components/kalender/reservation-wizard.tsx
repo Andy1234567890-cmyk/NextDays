@@ -8,17 +8,17 @@
 import { Icon } from "@iconify/react";
 import { useEffect, useMemo, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@nextdays/ui/button";
+import { Input } from "@nextdays/ui/input";
+import { Label } from "@nextdays/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+} from "@nextdays/ui/select";
+import { Switch } from "@nextdays/ui/switch";
 import { formatCurrency } from "@/lib/currency";
 import { type Quote, getQuote } from "@/lib/pricing";
 import {

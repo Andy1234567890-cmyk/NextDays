@@ -8,7 +8,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import type { GuestAccess } from "@/lib/guests-access";
 import { type GuestListItem, createGuest, listGuests } from "@/lib/guests";
 

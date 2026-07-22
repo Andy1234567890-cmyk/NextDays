@@ -11,7 +11,7 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { LearnButton } from "@/components/reservierungen/learn-dialog";
-import { Switch } from "@/components/ui/switch";
+import { Switch } from "@nextdays/ui/switch";
 import { type MediaItem, deleteMedia, listMedia } from "@/lib/media";
 import { useRealtime } from "@/lib/use-realtime";
 

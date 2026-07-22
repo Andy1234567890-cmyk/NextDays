@@ -10,11 +10,11 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { MultiSelect } from "@/components/ui/multi-select";
-import { NativeSelect } from "@/components/ui/native-select";
-import { Switch } from "@/components/ui/switch";
+import { Button } from "@nextdays/ui/button";
+import { Input } from "@nextdays/ui/input";
+import { MultiSelect } from "@nextdays/ui/multi-select";
+import { NativeSelect } from "@nextdays/ui/native-select";
+import { Switch } from "@nextdays/ui/switch";
 import { listTenantUsers } from "@/lib/account";
 import { listProperties } from "@/lib/properties";
 import {

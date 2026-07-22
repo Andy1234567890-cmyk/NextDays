@@ -4,7 +4,7 @@
 // Eine Quelle für Wizard (Nutzer anlegen) UND Bearbeiten-Dialog — die IDs sind
 // exakt die Backend-Permission-IDs (user-wizard-data.ts). `perms` ist der
 // aktuelle Auswahl-Zustand, `toggle` schaltet eine einzelne ID um.
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox } from "@nextdays/ui/checkbox";
 
 import {
   GENERAL_PERMISSIONS,

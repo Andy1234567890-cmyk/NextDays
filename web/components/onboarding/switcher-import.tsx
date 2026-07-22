@@ -24,7 +24,7 @@ import { useEffect, useState, useTransition } from "react";
 
 import { NewPropertyButton } from "@/components/objekte/new-property-button";
 import { ChannelConnectButton } from "@/components/channel-manager/channel-connect-button";
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import type { AccommodationType } from "@/lib/api";
 import {
   type CsvImportResult,
@@ -36,7 +36,7 @@ import {
   previewLodgifyImport,
   reconcileTenant,
 } from "@/lib/channex";
-import { Input } from "@/components/ui/input";
+import { Input } from "@nextdays/ui/input";
 import { getOnboarding, updateOnboarding } from "@/lib/onboarding";
 import { listProperties } from "@/lib/properties";
 import { useRealtime } from "@/lib/use-realtime";

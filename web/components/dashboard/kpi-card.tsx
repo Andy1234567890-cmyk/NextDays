@@ -2,7 +2,7 @@
 // Reine Darstellung — die Werte kommen später vom FastAPI-Backend.
 import { Icon } from "@iconify/react";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@nextdays/ui/card";
 import { cn } from "@/lib/utils";
 
 export type KpiCardProps = {

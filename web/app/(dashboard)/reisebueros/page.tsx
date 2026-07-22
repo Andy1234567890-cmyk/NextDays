@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 
 import { AgenciesList } from "@/components/reisebueros/agencies-list";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import { listAgencies } from "@/lib/travel-agencies";
 
 export const dynamic = "force-dynamic";

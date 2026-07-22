@@ -9,7 +9,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import {
   type TaskDetail,
   completeTask,

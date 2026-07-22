@@ -9,7 +9,7 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,8 +17,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { RichTextEditor } from "@/components/ui/rich-text-editor";
+} from "@nextdays/ui/dropdown-menu";
+import { RichTextEditor } from "@nextdays/ui/rich-text-editor";
 import {
   type Lang,
   type LocalizedText,

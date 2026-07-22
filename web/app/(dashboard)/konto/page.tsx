@@ -12,31 +12,31 @@ import { toast } from "sonner";
 
 import { KontoBetriebsartSection } from "@/components/konto/konto-betriebsart-section";
 import { KontoZahlungenSection } from "@/components/konto/konto-zahlungen-section";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { LabelHint } from "@/components/ui/label-hint";
-import { NativeSelect } from "@/components/ui/native-select";
+import { Button } from "@nextdays/ui/button";
+import { Input } from "@nextdays/ui/input";
+import { Label } from "@nextdays/ui/label";
+import { LabelHint } from "@nextdays/ui/label-hint";
+import { NativeSelect } from "@nextdays/ui/native-select";
 import {
   accountTypeForLegalForm,
   legalFormsForCountry,
 } from "@/lib/legal-forms";
-import { PhoneInput } from "@/components/ui/phone-input";
-import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { PhoneInput } from "@nextdays/ui/phone-input";
+import { RichTextEditor } from "@nextdays/ui/rich-text-editor";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+} from "@nextdays/ui/select";
+import { Separator } from "@nextdays/ui/separator";
 import {
   COUNTRIES,
   hasSmallBusinessScheme,
   smallBusinessLabel,
   vatIdLabel,
-} from "@/lib/countries";
+} from "@nextdays/ui/countries";
 import {
   checkVatId,
   getFirmenProfil,

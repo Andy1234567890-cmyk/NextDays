@@ -6,14 +6,14 @@
 import { Icon } from "@iconify/react";
 import type { ReactNode } from "react";
 
-import { Button } from "@/components/ui/button";
-import { NativeSelect } from "@/components/ui/native-select";
+import { Button } from "@nextdays/ui/button";
+import { NativeSelect } from "@nextdays/ui/native-select";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@nextdays/ui/dropdown-menu";
 import {
   Sheet,
   SheetClose,
@@ -23,8 +23,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
-import { Switch } from "@/components/ui/switch";
+} from "@nextdays/ui/sheet";
+import { Switch } from "@nextdays/ui/switch";
 
 // Zeitfenster (sichtbare Tage). „Monat" = 28 als feste, gleichmäßige Breite
 // (OPERA-Room-Diary-Stil; kalendarische Monatslänge bricht das Raster nicht).

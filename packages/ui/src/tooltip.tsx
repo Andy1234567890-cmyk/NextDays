@@ -5,7 +5,7 @@
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import type { ComponentProps } from "react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "./utils";
 
 // Provider (steuert Delay), Wurzel und Auslöser ohne eigenes Styling.
 const TooltipProvider = TooltipPrimitive.Provider;

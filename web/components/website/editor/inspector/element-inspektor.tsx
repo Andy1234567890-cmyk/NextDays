@@ -5,8 +5,8 @@
 // (Hero/Bild/Button/Text/Kontakt/Abstand).
 import { useEditor } from "@craftjs/core";
 
-import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
+import { Input } from "@nextdays/ui/input";
+import { NativeSelect } from "@nextdays/ui/native-select";
 import { FONT_CATALOG } from "@/lib/website-fonts";
 
 import { AlignBar } from "./position";

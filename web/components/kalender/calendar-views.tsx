@@ -13,7 +13,7 @@ import { useCallback, useRef } from "react";
 import { useRealtime } from "@/lib/use-realtime";
 
 import { type Prop, CalendarBoard } from "@/components/kalender/calendar-board";
-import { NativeSelect } from "@/components/ui/native-select";
+import { NativeSelect } from "@nextdays/ui/native-select";
 
 // Lazy: nur laden, wenn die jeweilige Ansicht aktiv ist.
 const CalendarBookingsView = dynamic(

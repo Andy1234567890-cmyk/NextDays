@@ -8,13 +8,13 @@ import { Icon } from "@iconify/react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { MultiSelect } from "@/components/ui/multi-select";
-import { NativeSelect } from "@/components/ui/native-select";
-import { Segmented } from "@/components/ui/segmented";
+import { Button } from "@nextdays/ui/button";
+import { Checkbox } from "@nextdays/ui/checkbox";
+import { Input } from "@nextdays/ui/input";
+import { Label } from "@nextdays/ui/label";
+import { MultiSelect } from "@nextdays/ui/multi-select";
+import { NativeSelect } from "@nextdays/ui/native-select";
+import { Segmented } from "@nextdays/ui/segmented";
 import { isoPlus } from "@/lib/dates";
 import {
   type RestrictionRow,

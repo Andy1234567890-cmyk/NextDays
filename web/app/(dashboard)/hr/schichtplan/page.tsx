@@ -1,4 +1,4 @@
-import { ComingSoon } from "@/components/ui/coming-soon";
+import { ComingSoon } from "@nextdays/ui/coming-soon";
 
 export default function SchichtplanPage() {
   return (

@@ -5,7 +5,7 @@
 // Realtime auf die Partner-Tabellen dieser Kartei.
 import { AgencyDetail } from "@/components/reisebueros/agency-detail";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import {
   getAgency,
   listAgencyContacts,

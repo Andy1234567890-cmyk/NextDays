@@ -9,8 +9,8 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@nextdays/ui/button";
+import { Input } from "@nextdays/ui/input";
 import { type Account, type TenantUser } from "@/lib/account";
 import { type Property, updateProperty } from "@/lib/properties";
 import { ContactProfileEditor } from "@/components/objekte/contact-profile-editor";

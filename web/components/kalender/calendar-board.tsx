@@ -9,9 +9,9 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { NativeSelect } from "@/components/ui/native-select";
+import { Button } from "@nextdays/ui/button";
+import { Card } from "@nextdays/ui/card";
+import { NativeSelect } from "@nextdays/ui/native-select";
 import {
   type ViewOptions,
   CalendarHeader,
@@ -41,7 +41,7 @@ import {
 import type { PropertyType } from "@/lib/properties";
 import { typeOptionsFor } from "@/lib/property-meta";
 import { getRateGrid } from "@/lib/rates";
-import { Input } from "@/components/ui/input";
+import { Input } from "@nextdays/ui/input";
 import {
   type Reservation,
   listReservations,

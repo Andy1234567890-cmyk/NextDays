@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 
 import { NewQuoteButton } from "@/components/buchhaltung/new-quote-button";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import { listCustomers, listQuotes } from "@/lib/buchhaltung";
 import type { Customer, QuoteStatus } from "@/lib/buchhaltung";
 import { formatCurrency } from "@/lib/currency";

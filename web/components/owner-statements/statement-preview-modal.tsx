@@ -10,7 +10,7 @@ import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import type { Statement } from "@/lib/owner-statements";
 import { buildStatementHtml, downloadStatementPdf } from "@/lib/statement-pdf";
 

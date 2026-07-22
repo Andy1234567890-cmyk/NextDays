@@ -1,7 +1,7 @@
 // Lade-Platzhalter (shadcn-Stil): animate-pulse über semantische Token-Farben.
 import type { ComponentProps } from "react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "./utils";
 
 // Basis-Skeleton: pulsierender Block in gedämpfter Token-Farbe.
 export function Skeleton({ className, ...props }: ComponentProps<"div">) {

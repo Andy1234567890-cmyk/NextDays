@@ -9,12 +9,12 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import { StatementPreviewModal } from "@/components/owner-statements/statement-preview-modal";
-import { DatePicker } from "@/components/ui/date-picker";
-import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
-import { Textarea } from "@/components/ui/textarea";
+import { DatePicker } from "@nextdays/ui/date-picker";
+import { Input } from "@nextdays/ui/input";
+import { NativeSelect } from "@nextdays/ui/native-select";
+import { Textarea } from "@nextdays/ui/textarea";
 import { formatCurrency } from "@/lib/currency";
 import { downloadStatementPdf } from "@/lib/statement-pdf";
 import {

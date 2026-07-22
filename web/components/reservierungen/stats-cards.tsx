@@ -12,7 +12,7 @@ import { useMemo } from "react";
 import { Pie, PieChart } from "recharts";
 
 import { KpiSparkline } from "@/components/reservierungen/kpi-sparkline";
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import {
   type ChartConfig,
   ChartContainer,
@@ -20,7 +20,7 @@ import {
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/components/ui/chart";
+} from "@nextdays/ui/chart";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { channelMeta } from "@/lib/calendar-channels";
 import type { PropertyStats, StatKpi, StatMetric, StatPoint } from "@/lib/reservations";

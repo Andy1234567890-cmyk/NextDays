@@ -10,7 +10,7 @@ import { ReservationsDashboard } from "@/components/dashboard/reservations-dashb
 import { OnboardingWizard } from "@/components/onboarding/onboarding-wizard";
 import { PaymentsStatusBanner } from "@/components/zahlungen/payments-status-banner";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@nextdays/ui/card";
 import { getMe } from "@/lib/auth";
 import { getOnboarding } from "@/lib/onboarding";
 import { getDashboard } from "@/lib/reservations";

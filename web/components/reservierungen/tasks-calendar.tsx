@@ -14,7 +14,7 @@ import { LearnButton } from "@/components/reservierungen/learn-dialog";
 import { TaskCreatePopup } from "@/components/reservierungen/task-create-popup";
 import { TaskDetailModal } from "@/components/reservierungen/task-detail-modal";
 import { TaskPopover } from "@/components/reservierungen/task-popover";
-import { MultiSelect } from "@/components/ui/multi-select";
+import { MultiSelect } from "@nextdays/ui/multi-select";
 import { CHANNEL_META } from "@/lib/calendar-channels";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { listTenantUsers } from "@/lib/account";

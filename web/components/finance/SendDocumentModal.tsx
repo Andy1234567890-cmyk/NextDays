@@ -155,7 +155,7 @@ import { EmailSendModal } from './EmailSendModal';
 import PDFTemplate from './PDFTemplates';
 import type { PDFTemplateProps } from './pdf-templates';
 import { SimplePDFViewer } from './SimplePDFViewer';
-import { NativeSelect } from '@/components/ui/native-select';
+import { NativeSelect } from '@nextdays/ui/native-select';
 
 interface SendDocumentModalProps {
   isOpen: boolean;

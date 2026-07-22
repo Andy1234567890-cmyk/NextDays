@@ -4,9 +4,9 @@
 import { useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
+import { Button } from "@nextdays/ui/button";
+import { Input } from "@nextdays/ui/input";
+import { NativeSelect } from "@nextdays/ui/native-select";
 import { type AiSettings, getAiSettings, saveAiSettings } from "@/lib/inbox";
 
 const TONES = ["freundlich", "formell", "locker"];

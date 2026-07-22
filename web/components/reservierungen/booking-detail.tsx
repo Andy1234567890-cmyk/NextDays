@@ -18,8 +18,8 @@ import { BookingDetailTabs } from "@/components/reservierungen/booking-detail-ta
 import { BookingTasksSection } from "@/components/reservierungen/booking-tasks-section";
 import { CheckoutPaymentDialog } from "@/components/reservierungen/checkout-payment-dialog";
 import { PropertyLocation } from "@/components/reservierungen/property-location";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@nextdays/ui/button";
+import { Card } from "@nextdays/ui/card";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { channelMeta } from "@/lib/calendar-channels";
 import { STATUS_META, displayStatus } from "@/lib/calendar-status";

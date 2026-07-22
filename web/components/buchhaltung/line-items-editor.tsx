@@ -7,9 +7,9 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@nextdays/ui/button";
+import { Input } from "@nextdays/ui/input";
+import { Label } from "@nextdays/ui/label";
 import type { LineItemInput } from "@/lib/buchhaltung";
 import { currencySymbol, formatCurrency } from "@/lib/currency";
 

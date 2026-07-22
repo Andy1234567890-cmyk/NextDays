@@ -10,14 +10,14 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { RealtimeRefresh } from "@/components/realtime-refresh";
-import { Card } from "@/components/ui/card";
-import { Switch } from "@/components/ui/switch";
+import { Card } from "@nextdays/ui/card";
+import { Switch } from "@nextdays/ui/switch";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@nextdays/ui/tooltip";
 import { formatCurrency } from "@/lib/currency";
 import {
   type BaseMode,

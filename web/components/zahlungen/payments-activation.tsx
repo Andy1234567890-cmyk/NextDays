@@ -17,7 +17,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import {
   acceptConnectTos,
   getConnectStatus,

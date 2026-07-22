@@ -9,19 +9,19 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { PhoneInput } from "@/components/ui/phone-input";
-import { RichTextEditor } from "@/components/ui/rich-text-editor";
+import { Button } from "@nextdays/ui/button";
+import { Checkbox } from "@nextdays/ui/checkbox";
+import { Input } from "@nextdays/ui/input";
+import { Label } from "@nextdays/ui/label";
+import { PhoneInput } from "@nextdays/ui/phone-input";
+import { RichTextEditor } from "@nextdays/ui/rich-text-editor";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
+} from "@nextdays/ui/sheet";
 import {
   type Account,
   updateEmail,

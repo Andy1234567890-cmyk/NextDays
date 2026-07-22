@@ -8,8 +8,8 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@nextdays/ui/button";
+import { Input } from "@nextdays/ui/input";
 import {
   type Page,
   applyTemplate,

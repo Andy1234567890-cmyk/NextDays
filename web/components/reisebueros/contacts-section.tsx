@@ -9,9 +9,9 @@ import { Icon } from "@iconify/react";
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Button } from "@nextdays/ui/button";
+import { Card } from "@nextdays/ui/card";
+import { Input } from "@nextdays/ui/input";
 import {
   type AgencyContact,
   addAgencyContact,

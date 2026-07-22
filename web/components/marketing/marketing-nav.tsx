@@ -7,7 +7,7 @@ import { Icon } from "@iconify/react";
 import Link from "next/link";
 
 import { Logo } from "@/components/logo";
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 
 const NAV_LINKS = [
   { label: "Funktionen", href: "#funktionen" },

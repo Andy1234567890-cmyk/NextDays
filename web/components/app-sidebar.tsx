@@ -15,7 +15,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+} from "@nextdays/ui/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +23,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@nextdays/ui/dropdown-menu";
 import {
   Sidebar,
   SidebarContent,
@@ -39,7 +39,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarTrigger,
-} from "@/components/ui/sidebar";
+} from "@nextdays/ui/sidebar";
 
 // Navigation: oben die täglichen Kernbereiche flach, darunter thematische
 // Gruppen. Die Beherbergungsart des Mandanten (vacation_rental | hotel,

@@ -15,7 +15,7 @@ import { OwnerMasterSheet } from "@/components/eigentuemer/owner-master-sheet";
 import { OwnerRealtime } from "@/components/eigentuemer/owner-realtime";
 import { StatementEditor } from "@/components/owner-statements/statement-editor";
 import { StatementManage } from "@/components/owner-statements/statement-manage";
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import type { Owner } from "@/lib/owners";
 import {
   generateStatement,

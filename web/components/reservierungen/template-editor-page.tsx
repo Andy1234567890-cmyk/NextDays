@@ -11,9 +11,9 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { LearnButton } from "@/components/reservierungen/learn-dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
+import { Button } from "@nextdays/ui/button";
+import { Input } from "@nextdays/ui/input";
+import { Switch } from "@nextdays/ui/switch";
 import {
   type RuleItem,
   createRule,

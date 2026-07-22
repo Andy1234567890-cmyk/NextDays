@@ -8,7 +8,7 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 
 export function LearnButton({
   title,

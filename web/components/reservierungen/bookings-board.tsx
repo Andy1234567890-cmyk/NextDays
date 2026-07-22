@@ -17,8 +17,8 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { BookingsFilter } from "@/components/reservierungen/bookings-filter";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card } from "@nextdays/ui/card";
+import { Input } from "@nextdays/ui/input";
 import { channelMeta } from "@/lib/calendar-channels";
 import { STATUS_META } from "@/lib/calendar-status";
 import {

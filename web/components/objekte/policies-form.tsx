@@ -19,16 +19,16 @@ import {
   useSaver,
 } from "@/components/objekte/editor-primitives";
 import { LocalizedTextEditor } from "@/components/objekte/localized-text-editor";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Button } from "@nextdays/ui/button";
+import { Card } from "@nextdays/ui/card";
+import { Input } from "@nextdays/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@nextdays/ui/select";
 import {
   type CancellationType,
   type DepositMode,

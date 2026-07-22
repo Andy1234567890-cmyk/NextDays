@@ -8,7 +8,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import { deleteTask, type TaskListItem } from "@/lib/tasks";
 
 function statusLabel(t: ReturnType<typeof useTranslations>, status: string) {

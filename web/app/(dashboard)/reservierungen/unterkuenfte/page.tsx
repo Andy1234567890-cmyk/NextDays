@@ -3,7 +3,7 @@
 // (Kalender/Statistiken/Bilder/Warnungen/Gastmodul/Gästemappe).
 import { getTranslations } from "next-intl/server";
 import { PropertyGrid } from "@/components/reservierungen/property-grid";
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import { listProperties } from "@/lib/properties";
 
 export default async function PmUnterkuenftePage() {

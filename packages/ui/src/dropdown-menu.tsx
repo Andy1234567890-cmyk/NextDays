@@ -6,7 +6,7 @@ import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { Icon } from "@iconify/react";
 import type { ComponentProps } from "react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "./utils";
 
 // Wurzel + einfache Sub-Exports ohne eigenes Styling.
 const DropdownMenu = DropdownMenuPrimitive.Root;

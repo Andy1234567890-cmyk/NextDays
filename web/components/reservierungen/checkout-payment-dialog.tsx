@@ -8,7 +8,7 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import type { CheckOutPayment } from "@/lib/reservations";
 
 function buildMethods(t: ReturnType<typeof useTranslations>) {

@@ -6,7 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { NewPropertyButton } from "@/components/objekte/new-property-button";
 import { ObjectsList } from "@/components/objekte/objects-list";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import { Icon } from "@iconify/react";
 import { getMe } from "@/lib/auth";
 import { listProperties } from "@/lib/properties";

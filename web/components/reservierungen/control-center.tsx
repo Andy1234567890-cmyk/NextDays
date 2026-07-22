@@ -14,7 +14,7 @@ import { DateRangePopover, type IsoRange } from "@/components/reservierungen/dat
 import { ControlCenterLearn } from "@/components/reservierungen/learn-dialog";
 import { PropertyFilter } from "@/components/reservierungen/property-filter";
 import { ChannelDonuts, StatsKpiGrid } from "@/components/reservierungen/stats-cards";
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import { formatCurrency } from "@/lib/currency";
 import { type Property, listProperties } from "@/lib/properties";
 import {

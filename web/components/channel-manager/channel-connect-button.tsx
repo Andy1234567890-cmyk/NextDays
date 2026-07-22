@@ -10,9 +10,9 @@ import Image from "next/image";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
 import { channelLogo } from "@/lib/channel-logos";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
+import { Button } from "@nextdays/ui/button";
+import { Input } from "@nextdays/ui/input";
+import { NativeSelect } from "@nextdays/ui/native-select";
 import {
   type ChannelMapping,
   type LocalRoomOption,

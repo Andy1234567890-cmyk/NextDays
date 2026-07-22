@@ -6,7 +6,7 @@
 import { Icon } from "@iconify/react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
-import { Label } from "@/components/ui/label";
+import { Label } from "@nextdays/ui/label";
 
 // --- Layout-Bausteine des Inspektors ----------------------------------------
 // Sektion wie Framer: kleiner Titel links, rechts ein Icon-Button (Plus wenn

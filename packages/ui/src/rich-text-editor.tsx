@@ -10,7 +10,7 @@ import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { useCallback } from "react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "./utils";
 
 type RichTextEditorProps = {
   value?: string;

@@ -11,26 +11,26 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { useSaver } from "@/components/objekte/editor-primitives";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ChannelBadge } from "@/components/ui/channel-badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "@nextdays/ui/button";
+import { Card } from "@nextdays/ui/card";
+import { ChannelBadge } from "@nextdays/ui/channel-badge";
+import { Input } from "@nextdays/ui/input";
+import { Label } from "@nextdays/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@nextdays/ui/select";
 import {
   Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from "@/components/ui/sheet";
-import { Textarea } from "@/components/ui/textarea";
+} from "@nextdays/ui/sheet";
+import { Textarea } from "@nextdays/ui/textarea";
 import {
   AMENITY_SLUGS,
   amenityLabel,

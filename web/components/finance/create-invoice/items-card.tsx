@@ -44,7 +44,7 @@ import {
 import type { InvoiceService } from '@/components/finance/create-invoice/use-invoice-loaders';
 import type { NewProductValues } from '@/components/inventory/NewProductModal';
 import InventorySelector from '@/components/quotes/InventorySelector';
-import { NativeSelect } from '@/components/ui/native-select';
+import { NativeSelect } from '@nextdays/ui/native-select';
 import type { QuoteItem } from '@/services/quoteService';
 
 type ItemsCardProps = {

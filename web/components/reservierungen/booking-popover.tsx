@@ -7,7 +7,7 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import { CHANNEL_META } from "@/lib/calendar-channels";
 import type { AvailabilitySource } from "@/lib/calendar";
 import type { CalendarBooking } from "@/lib/tasks";

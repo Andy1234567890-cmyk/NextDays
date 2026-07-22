@@ -8,7 +8,7 @@ import { Icon } from "@iconify/react";
 import { DayPicker } from "react-day-picker";
 import { de } from "react-day-picker/locale";
 
-import { cn } from "@/lib/utils";
+import { cn } from "./utils";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 

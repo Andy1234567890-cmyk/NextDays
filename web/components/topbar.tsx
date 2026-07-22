@@ -8,9 +8,9 @@ import { usePathname } from "next/navigation";
 
 import { LanguageToggle } from "@/components/language-toggle";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Button } from "@nextdays/ui/button";
+import { Separator } from "@nextdays/ui/separator";
+import { SidebarTrigger } from "@nextdays/ui/sidebar";
 
 // Pfad-Segment → nav-Übersetzungskey (Seitentitel folgt der aktiven Route).
 const PATH_TITLE: Record<string, string> = {

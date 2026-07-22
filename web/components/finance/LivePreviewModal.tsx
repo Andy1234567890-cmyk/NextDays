@@ -19,7 +19,7 @@ import type React from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 
-import { NativeSelect } from '@/components/ui/native-select';
+import { NativeSelect } from '@nextdays/ui/native-select';
 import { useNewAuth } from '@/contexts/NewAuthContext';
 import { api } from '@/lib/api-client';
 import type { DocumentType } from '@/lib/document-utils';

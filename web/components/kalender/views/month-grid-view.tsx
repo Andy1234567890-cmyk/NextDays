@@ -10,9 +10,9 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import type { Prop } from "@/components/kalender/calendar-board";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { NativeSelect } from "@/components/ui/native-select";
+import { Button } from "@nextdays/ui/button";
+import { Card } from "@nextdays/ui/card";
+import { NativeSelect } from "@nextdays/ui/native-select";
 import {
   type DayAvailability,
   getAvailability,

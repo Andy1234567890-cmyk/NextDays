@@ -6,7 +6,7 @@
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import type { Page } from "@/lib/site-pages";
 
 import { InsertMenu } from "../insert-panel";

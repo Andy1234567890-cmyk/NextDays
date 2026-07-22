@@ -10,7 +10,7 @@ import Link from "next/link";
 
 import { BookingDetailTabs } from "@/components/reservierungen/booking-detail-tabs";
 import { BookingTimeline } from "@/components/reservierungen/booking-timeline";
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import { useReservationDetail } from "@/lib/use-reservation-detail";
 
 export function BookingTimelinePage({

@@ -8,9 +8,9 @@
 // Selektor leer und der Wert steht im Nummern-Teil.
 import { useEffect, useState } from "react";
 
-import { NativeSelect } from "@/components/ui/native-select";
-import { Input } from "@/components/ui/input";
-import { COUNTRIES, joinPhone, splitPhone } from "@/lib/countries";
+import { NativeSelect } from "./native-select";
+import { Input } from "./input";
+import { COUNTRIES, joinPhone, splitPhone } from "./countries";
 
 type Props = {
   id?: string;

@@ -13,10 +13,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import type { Prop } from "@/components/kalender/calendar-board";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
-import { Segmented } from "@/components/ui/segmented";
+import { Button } from "@nextdays/ui/button";
+import { Input } from "@nextdays/ui/input";
+import { NativeSelect } from "@nextdays/ui/native-select";
+import { Segmented } from "@nextdays/ui/segmented";
 import { getBoard } from "@/lib/calendar";
 import { formatCurrency } from "@/lib/currency";
 import {

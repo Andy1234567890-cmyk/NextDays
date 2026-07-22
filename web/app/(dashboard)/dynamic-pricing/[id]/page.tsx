@@ -6,7 +6,7 @@ import { notFound } from "next/navigation";
 
 import { DpPreviewGrid } from "@/components/dynamic-pricing/dp-preview-grid";
 import { RealtimeRefresh } from "@/components/realtime-refresh";
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import { getAvailability, getBoard } from "@/lib/calendar";
 import { getProperty } from "@/lib/properties";
 

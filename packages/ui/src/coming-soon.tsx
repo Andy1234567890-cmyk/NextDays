@@ -2,7 +2,7 @@
 // NextDays-Design: Card, font-display, Token-Klassen, rounded-full.
 import { Icon } from "@iconify/react";
 
-import { Card } from "@/components/ui/card";
+import { Card } from "./card";
 
 export function ComingSoon({
   title,

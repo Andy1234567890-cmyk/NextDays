@@ -9,8 +9,8 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@nextdays/ui/button";
+import { Card } from "@nextdays/ui/card";
 import { addDays, dateKey, occupiesNight } from "@/lib/calendar-views";
 import { type Reservation, listReservations } from "@/lib/reservations";
 import { useRealtime } from "@/lib/use-realtime";

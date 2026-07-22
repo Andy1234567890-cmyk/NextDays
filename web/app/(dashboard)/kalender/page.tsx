@@ -5,7 +5,7 @@
 import { Suspense } from "react";
 
 import { CalendarViews } from "@/components/kalender/calendar-views";
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import { getMe } from "@/lib/auth";
 import { getDpOverview } from "@/lib/dynamic-pricing";
 import { listProperties } from "@/lib/properties";

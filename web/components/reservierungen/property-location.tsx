@@ -11,7 +11,7 @@ import { useTranslations } from "next-intl";
 
 import { Icon } from "@iconify/react";
 
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 
 type LocationProps = {
   title: string;

@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 
 import { ReservationAddonsSection } from "@/components/kalender/reservation-addons-section";
 import { CheckoutPaymentDialog } from "@/components/reservierungen/checkout-payment-dialog";
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import type { AvailabilitySource } from "@/lib/calendar";
 import { channelMeta } from "@/lib/calendar-channels";
 import { STATUS_META, displayStatus } from "@/lib/calendar-status";

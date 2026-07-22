@@ -12,11 +12,11 @@ import { toast } from "sonner";
 
 import { useRealtime } from "@/lib/use-realtime";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { NativeSelect } from "@/components/ui/native-select";
-import { OverflowTabs } from "@/components/ui/overflow-tabs";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@nextdays/ui/button";
+import { Input } from "@nextdays/ui/input";
+import { NativeSelect } from "@nextdays/ui/native-select";
+import { OverflowTabs } from "@nextdays/ui/overflow-tabs";
+import { Textarea } from "@nextdays/ui/textarea";
 import { ReservationDetailSlider } from "@/components/kalender/reservation-detail-slider";
 import { ReservationWizard } from "@/components/kalender/reservation-wizard";
 import { STATUS_META } from "@/lib/calendar-status";

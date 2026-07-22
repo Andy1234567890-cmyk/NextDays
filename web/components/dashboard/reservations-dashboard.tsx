@@ -4,7 +4,7 @@
 // fehlt etwas, zeigt die Karte ehrlich „nichts" statt erfundener Zahlen.
 import { Icon } from "@iconify/react";
 
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@nextdays/ui/card";
 import { formatCurrency } from "@/lib/currency";
 import type {
   Dashboard,

@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import { TaskDetailModal } from "@/components/reservierungen/task-detail-modal";
-import { Card } from "@/components/ui/card";
+import { Card } from "@nextdays/ui/card";
 import { type TaskListItem, listTeamTasks } from "@/lib/tasks";
 import { useRealtime } from "@/lib/use-realtime";
 

@@ -9,9 +9,9 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@nextdays/ui/button";
+import { Checkbox } from "@nextdays/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@nextdays/ui/popover";
 import type { Property } from "@/lib/properties";
 
 export function PropertyFilter({

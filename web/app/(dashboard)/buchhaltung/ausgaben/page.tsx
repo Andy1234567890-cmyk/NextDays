@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 
-import { ComingSoon } from "@/components/ui/coming-soon";
+import { ComingSoon } from "@nextdays/ui/coming-soon";
 
 export default function AusgabenPage() {
   const t = useTranslations("finance");

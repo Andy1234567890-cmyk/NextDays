@@ -3,7 +3,7 @@
 // Icons via Iconify — niemals lucide-react (PROJECT.md §2).
 import type { ComponentProps } from "react";
 
-import { cn } from "@/lib/utils";
+import { cn } from "./utils";
 
 type InputProps = ComponentProps<"input"> & {
   // Fehler-Zustand: roter Rahmen + Fokus-Ring in destructive.

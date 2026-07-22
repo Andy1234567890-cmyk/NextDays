@@ -14,13 +14,13 @@ import { useTranslations } from "next-intl";
 import { useMemo, useState, useTransition } from "react";
 
 import { channelLogo } from "@/lib/channel-logos";
-import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Card } from "@nextdays/ui/card";
+import { Input } from "@nextdays/ui/input";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from "@nextdays/ui/popover";
 import type {
   ChannelOverview,
   OtaChannelOverview,

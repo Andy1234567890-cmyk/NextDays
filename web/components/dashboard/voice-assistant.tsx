@@ -15,7 +15,7 @@ import { Icon } from "@iconify/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@nextdays/ui/button";
 import {
   answerLocalQuery,
   buildActionConfirmation,
