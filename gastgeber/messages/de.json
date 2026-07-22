@@ -31,6 +31,49 @@
       "inactive": "Pausiert"
     }
   },
+  "onboarding": {
+    "titel": "Objekt einstellen",
+    "untertitel": "Grunddaten deines Ferienobjekts. Fotos, Preise und Regeln folgen danach.",
+    "feldTitel": "Bezeichnung",
+    "feldTitelPlatzhalter": "z. B. Ferienwohnung am See",
+    "feldTyp": "Objekttyp",
+    "feldGaeste": "Max. Gäste",
+    "feldLand": "Land",
+    "feldStadt": "Stadt",
+    "feldStrasse": "Straße",
+    "feldHausnummer": "Nr.",
+    "feldPlz": "PLZ",
+    "waehrungHinweis": "Währung wird aus dem Land übernommen",
+    "anlegen": "Objekt anlegen",
+    "anlegenLaeuft": "Wird angelegt …",
+    "typen": {
+      "ferienhaus": "Ferienhaus",
+      "appartement": "Appartement",
+      "glamping": "Glamping",
+      "tiny_house": "Tiny House",
+      "stellplatz": "Stellplatz",
+      "hausboot": "Hausboot",
+      "einzelzimmer": "Einzelzimmer",
+      "doppelzimmer": "Doppelzimmer",
+      "zweibettzimmer": "Zweibettzimmer",
+      "familienzimmer": "Familienzimmer",
+      "junior_suite": "Junior-Suite",
+      "suite": "Suite"
+    }
+  },
+  "objektDetail": {
+    "zurueck": "Zurück zu den Objekten",
+    "veroeffentlichen": "Veröffentlichen",
+    "veroeffentlichenLaeuft": "Wird veröffentlicht …",
+    "veroeffentlicht": "Veröffentlicht",
+    "grunddaten": "Grunddaten",
+    "typ": "Objekttyp",
+    "gaeste": "Max. Gäste",
+    "adresse": "Adresse",
+    "waehrung": "Währung",
+    "naechsteSchritte": "Nächste Schritte",
+    "naechsteSchritteText": "Lege Fotos, Preise und Verfügbarkeit an, um dein Objekt zu veröffentlichen. Diese Bereiche folgen hier."
+  },
   "gemeinsam": {
     "laden": "Lädt …",
     "speichern": "Speichern",

@@ -25,6 +25,9 @@ export interface Property {
   listed_on_website: boolean;
   currency: string | null;
   max_guests: number;
+  street: string | null;
+  house_number: string | null;
+  postal_code: string | null;
   city: string | null;
   country: string | null;
   amenities: string[];
