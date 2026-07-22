@@ -17,6 +17,7 @@
     "react-dom": "^19.0.0",
     "@nextdays/laender": "workspace:*",
     "@nextdays/currency": "workspace:*",
+    "@nextdays/auth": "workspace:*",
     "@nextdays/security-headers": "workspace:*"
   },
   "devDependencies": {

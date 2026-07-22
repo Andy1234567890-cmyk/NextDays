@@ -3,15 +3,16 @@
 // Liefert das Access-Token des eingeloggten Nutzers für FastAPI-Aufrufe.
 // Quelle: FastAPI-Cookie nd_access ODER Supabase-OAuth-Session (Google).
 // getUser() zuerst validiert/erneuert die Session serverseitig (@supabase/ssr).
-import { cookies } from "next/headers";
+// Cookie-Read + JWT-email-Decoder aus @nextdays/auth (ADR-0017); die
+// Supabase-OAuth-Welt bleibt web-spezifisch (nur web hat Google-Login).
+import { emailFromToken, readToken } from "@nextdays/auth/server";
 
 import { createClient } from "@/lib/supabase/server";
 
 const ACCESS = "nd_access";
 
 export async function currentToken(): Promise<string | null> {
-  const jar = await cookies();
-  const fromCookie = jar.get(ACCESS)?.value;
+  const fromCookie = await readToken(ACCESS);
   if (fromCookie) return fromCookie;
 
   try {
@@ -43,19 +44,7 @@ export async function currentUserEmail(): Promise<string | null> {
     // ignorieren — Fallback auf JWT
   }
 
-  const jar = await cookies();
-  const token = jar.get(ACCESS)?.value;
+  const token = await readToken(ACCESS);
   if (!token) return null;
-  try {
-    const payload = token.split(".")[1];
-    if (!payload) return null;
-    const json = Buffer.from(
-      payload.replace(/-/g, "+").replace(/_/g, "/"),
-      "base64",
-    ).toString("utf8");
-    const claims = JSON.parse(json) as { email?: string };
-    return claims.email ?? null;
-  } catch {
-    return null;
-  }
+  return emailFromToken(token);
 }

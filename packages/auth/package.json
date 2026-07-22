@@ -1,0 +1,15 @@
+{
+  "name": "@nextdays/auth",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Geteilte Frontend-Auth-Mechanik (BFF) für alle Next-Apps: Cookie-Helper (__Host-, Name als Pflicht-Parameter), Backend-fetch mit Bearer, JWT-Claim-Decoder, Typen. NUR Mechanik — Flows/Cookie-Namen/Audiences bleiben pro App (Sicherheitsgrenze, ADR-0017). Wurzel 4.",
+  "type": "module",
+  "exports": {
+    "./server": "./src/server.ts",
+    "./errors": "./src/errors.ts",
+    "./types": "./src/types.ts"
+  },
+  "peerDependencies": {
+    "next": ">=15.5.0"
+  }
+}

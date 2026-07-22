@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 import { securityHeaders } from "@nextdays/security-headers";
@@ -9,11 +10,15 @@ const nextConfig: NextConfig = {
   // Schlanker, eigenständiger Server-Output für den Docker-Runtime-Stage
   // (kopiert nur die wirklich benötigten Dateien + node_modules-Teilmenge).
   output: "standalone",
+  // Monorepo hat mehrere Lockfiles → Repo-Root deterministisch als
+  // File-Tracing-Root (relativ: lokal + Docker-Root-Kontext).
+  outputFileTracingRoot: path.join(__dirname, ".."),
   // Kein x-powered-by:Next.js — verrät die Technologie (Version-Leak/Recon).
   poweredByHeader: false,
   // Geteiltes Workspace-Package (@nextdays/currency) liefert TS-Quellen → Next
   // muss es mit-transpilieren (ADR-0016, bun-Workspace).
-  transpilePackages: ["@nextdays/currency", "@nextdays/security-headers"],
+  transpilePackages: ["@nextdays/currency", "@nextdays/auth",
+    "@nextdays/security-headers"],
   // Datei-Uploads (Avatar, Objekt-Bilder, Galerie-Fotos) laufen über Server
   // Actions in lib/*.ts. Next.js begrenzt Server-Action-Bodies sonst auf 1 MB —
   // das Backend erlaubt bis 20 MB, also hier denselben Wert setzen.

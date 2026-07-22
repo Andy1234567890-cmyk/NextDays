@@ -4,42 +4,17 @@
 // Session über httpOnly-Cookies. Die Business-Logik bleibt in FastAPI
 // (PROJECT.md §2) — hier wird nur aufgerufen und das Token sicher abgelegt.
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
+
+import { clearSession, persistSession } from "@nextdays/auth/server";
+import type { LoginResponse } from "@nextdays/auth/types";
 
 import { ApiError, api, type MeResponse, type SessionResponse } from "@/lib/api";
 import { currentToken } from "@/lib/session-token";
 import { createClient } from "@/lib/supabase/server";
 
-const ACCESS = "nd_access";
-const REFRESH = "nd_refresh";
-
-// Antwort auf /auth/login und /auth/login/totp: entweder Session (2FA aus/erledigt)
-// oder mfa_required + mfa_token (2FA aktiv, Code steht noch aus).
-type LoginResponse = {
-  mfa_required: boolean;
-  session: SessionResponse | null;
-  mfa_token: string | null;
-};
-
-/** Session-Tokens als httpOnly-Cookies ablegen (nach echtem Login). */
-async function persistSession(session: SessionResponse): Promise<void> {
-  const jar = await cookies();
-  const secure = process.env.NODE_ENV === "production";
-  jar.set(ACCESS, session.access_token, {
-    httpOnly: true,
-    secure,
-    sameSite: "lax",
-    path: "/",
-    maxAge: session.expires_in,
-  });
-  jar.set(REFRESH, session.refresh_token, {
-    httpOnly: true,
-    secure,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30, // 30 Tage
-  });
-}
+// Cookie-Namen dieser App (Sicherheitsgrenze — pro App explizit, ADR-0017). web
+// nutzt zusätzlich eine Supabase-OAuth-Welt (Google), die hier web-lokal bleibt.
+const COOKIES = { access: "nd_access", refresh: "nd_refresh" } as const;
 
 type LoginResult =
   | { ok: true }
@@ -61,7 +36,7 @@ export async function login(
       return { ok: true, mfaRequired: true, mfaToken: res.mfa_token };
     }
     if (!res.session) return { ok: false, error: "Login fehlgeschlagen." };
-    await persistSession(res.session);
+    await persistSession(res.session, COOKIES);
     return { ok: true };
   } catch (exc) {
     const error =
@@ -82,7 +57,7 @@ export async function loginTotp(
       body: { mfa_token: mfaToken, code },
     });
     if (!res.session) return { ok: false, error: "Login fehlgeschlagen." };
-    await persistSession(res.session);
+    await persistSession(res.session, COOKIES);
     return { ok: true };
   } catch (exc) {
     const error =
@@ -117,7 +92,7 @@ export async function register(input: {
         business_type: input.businessType ?? "agency",
       },
     });
-    await persistSession(session);
+    await persistSession(session, COOKIES);
     return { ok: true };
   } catch (exc) {
     const error =
@@ -128,9 +103,7 @@ export async function register(input: {
 
 /** Logout: beide Session-Arten beenden (FastAPI-Cookies + Supabase-Session). */
 export async function logout(): Promise<void> {
-  const jar = await cookies();
-  jar.delete(ACCESS);
-  jar.delete(REFRESH);
+  await clearSession(COOKIES);
 
   // Supabase-OAuth-Session (z. B. Google) ebenfalls beenden — ignoriert, wenn
   // gar keine Supabase-Session existiert.

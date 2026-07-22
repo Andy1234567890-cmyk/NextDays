@@ -1,88 +1,29 @@
 "use server";
 
-// Gastgeber-Auth für die Plattform (eigener Flow, getrennt von apps/web).
-// Registrierung setzt account_type='marketplace' → 8%-Fee-Modell statt Abo.
-// Session als httpOnly-Cookie nd_access/nd_refresh (dasselbe Cookie, das der
-// Proxy als Bearer injiziert). Business-Logik bleibt in FastAPI (auth-Slice).
+// Gastgeber-Auth für die Plattform (eigener Flow, getrennt von web/). Die Cookie-/
+// fetch-MECHANIK kommt aus @nextdays/auth (ADR-0017); HIER bleiben die app-
+// spezifischen FLOWS + die Cookie-Namen dieser App (nd_access/nd_refresh — dasselbe
+// Cookie, das der Proxy als Bearer injiziert). Registrierung setzt
+// account_type='marketplace' → 8%-Fee-Modell statt Abo.
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
 
-const BACKEND = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-const ACCESS = "nd_access";
-const REFRESH = "nd_refresh";
+import {
+  api,
+  clearSession,
+  persistSession,
+  readToken,
+} from "@nextdays/auth/server";
+import { ApiError } from "@nextdays/auth/errors";
+import type {
+  LoginResponse,
+  MeResponse,
+  SessionResponse,
+} from "@nextdays/auth/types";
 
-export type SessionResponse = {
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
-};
-export type MeResponse = {
-  user_id: string;
-  email: string | null;
-  tenant_id: string | null;
-  role: string | null;
-  capabilities: string[];
-  permissions: string[];
-  accommodation_type: string | null;
-  account_type: string | null;
-};
-type LoginResponse = {
-  mfa_required: boolean;
-  session: SessionResponse | null;
-  mfa_token: string | null;
-};
+export type { SessionResponse, MeResponse };
 
-class BackendError extends Error {
-  constructor(
-    public readonly status: number,
-    message: string,
-  ) {
-    super(message);
-  }
-}
-
-async function backend<T>(
-  path: string,
-  opts: { method?: string; body?: unknown; token?: string } = {},
-): Promise<T> {
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  if (opts.token) headers.Authorization = `Bearer ${opts.token}`;
-  const res = await fetch(`${BACKEND}/api/v1${path}`, {
-    method: opts.method ?? "GET",
-    headers,
-    body: opts.body ? JSON.stringify(opts.body) : undefined,
-    cache: "no-store",
-  });
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
-  if (!res.ok) {
-    throw new BackendError(
-      res.status,
-      (data && typeof data.detail === "string" && data.detail) ||
-        `Fehler ${res.status}`,
-    );
-  }
-  return data as T;
-}
-
-async function persistSession(session: SessionResponse): Promise<void> {
-  const jar = await cookies();
-  const secure = process.env.NODE_ENV === "production";
-  jar.set(ACCESS, session.access_token, {
-    httpOnly: true,
-    secure,
-    sameSite: "lax",
-    path: "/",
-    maxAge: session.expires_in,
-  });
-  jar.set(REFRESH, session.refresh_token, {
-    httpOnly: true,
-    secure,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 30,
-  });
-}
+// Cookie-Namen dieser App (Sicherheitsgrenze — pro App explizit, ADR-0017).
+const COOKIES = { access: "nd_access", refresh: "nd_refresh" } as const;
 
 type LoginResult =
   | { ok: true }
@@ -94,20 +35,21 @@ export async function login(
   password: string,
 ): Promise<LoginResult> {
   try {
-    const res = await backend<LoginResponse>("/auth/login", {
+    const res = await api<LoginResponse>("/auth/login", {
       method: "POST",
       body: { email, password },
+      isPublic: true,
     });
     if (res.mfa_required && res.mfa_token) {
       return { ok: true, mfaRequired: true, mfaToken: res.mfa_token };
     }
     if (!res.session) return { ok: false, error: "Login fehlgeschlagen." };
-    await persistSession(res.session);
+    await persistSession(res.session, COOKIES);
     return { ok: true };
   } catch (exc) {
     return {
       ok: false,
-      error: exc instanceof BackendError ? exc.message : "Login fehlgeschlagen.",
+      error: exc instanceof ApiError ? exc.message : "Login fehlgeschlagen.",
     };
   }
 }
@@ -117,17 +59,18 @@ export async function loginTotp(
   code: string,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
-    const res = await backend<LoginResponse>("/auth/login/totp", {
+    const res = await api<LoginResponse>("/auth/login/totp", {
       method: "POST",
       body: { mfa_token: mfaToken, code },
+      isPublic: true,
     });
     if (!res.session) return { ok: false, error: "Login fehlgeschlagen." };
-    await persistSession(res.session);
+    await persistSession(res.session, COOKIES);
     return { ok: true };
   } catch (exc) {
     return {
       ok: false,
-      error: exc instanceof BackendError ? exc.message : "Code ist ungültig.",
+      error: exc instanceof ApiError ? exc.message : "Code ist ungültig.",
     };
   }
 }
@@ -143,8 +86,9 @@ export async function registerHost(input: {
   currency: string;
 }): Promise<{ ok: true } | { ok: false; error: string }> {
   try {
-    const session = await backend<SessionResponse>("/auth/register", {
+    const session = await api<SessionResponse>("/auth/register", {
       method: "POST",
+      isPublic: true,
       body: {
         email: input.email,
         password: input.password,
@@ -158,32 +102,27 @@ export async function registerHost(input: {
         account_type: "marketplace",
       },
     });
-    await persistSession(session);
+    await persistSession(session, COOKIES);
     return { ok: true };
   } catch (exc) {
     return {
       ok: false,
       error:
-        exc instanceof BackendError
-          ? exc.message
-          : "Registrierung fehlgeschlagen.",
+        exc instanceof ApiError ? exc.message : "Registrierung fehlgeschlagen.",
     };
   }
 }
 
 export async function logout(): Promise<void> {
-  const jar = await cookies();
-  jar.delete(ACCESS);
-  jar.delete(REFRESH);
+  await clearSession(COOKIES);
   revalidatePath("/", "layout");
 }
 
 export async function getMe(): Promise<MeResponse | null> {
-  const jar = await cookies();
-  const token = jar.get(ACCESS)?.value;
+  const token = await readToken(COOKIES.access);
   if (!token) return null;
   try {
-    return await backend<MeResponse>("/auth/me", { token });
+    return await api<MeResponse>("/auth/me", { token });
   } catch {
     return null;
   }

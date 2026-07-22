@@ -1,35 +1,20 @@
 "use server";
 
-// Access-Token des eingeloggten GASTGEBERS für FastAPI-Aufrufe (Bearer).
-// Quelle: das FastAPI-Cookie nd_access (HttpOnly, vom /auth/login gesetzt).
-// Die Plattform hat KEINE Supabase-OAuth-Welt wie apps/web — nur der eigene
-// Login-Flow (E-Mail/Passwort) setzt dieses Cookie. Gast-Buchung bleibt public
-// (kein Token). Zwei strikt getrennte Auth-Welten.
-import { cookies } from "next/headers";
+// Access-Token + Login-E-Mail des eingeloggten Gastgebers (Bearer für FastAPI).
+// Quelle: das Cookie nd_access (vom eigenen /auth/login gesetzt). Die Plattform
+// hat KEINE Supabase-OAuth-Welt wie web/ — nur der eigene E-Mail/Passwort-Flow.
+// Gast-Buchung bleibt public (kein Token). Mechanik aus @nextdays/auth (ADR-0017).
+import { emailFromToken, readToken } from "@nextdays/auth/server";
 
 const ACCESS = "nd_access";
 
 export async function currentToken(): Promise<string | null> {
-  const jar = await cookies();
-  return jar.get(ACCESS)?.value ?? null;
+  return readToken(ACCESS);
 }
 
-// E-Mail des eingeloggten Gastgebers aus dem JWT-`email`-Claim (nur zum
-// Vorausfüllen, nie als Vertrauensanker — der Server prüft die Signatur).
+// E-Mail aus dem JWT-`email`-Claim (nur zum Vorausfüllen, nie Vertrauensanker).
 export async function currentUserEmail(): Promise<string | null> {
-  const jar = await cookies();
-  const token = jar.get(ACCESS)?.value;
+  const token = await readToken(ACCESS);
   if (!token) return null;
-  try {
-    const payload = token.split(".")[1];
-    if (!payload) return null;
-    const json = Buffer.from(
-      payload.replace(/-/g, "+").replace(/_/g, "/"),
-      "base64",
-    ).toString("utf8");
-    const claims = JSON.parse(json) as { email?: string };
-    return claims.email ?? null;
-  } catch {
-    return null;
-  }
+  return emailFromToken(token);
 }

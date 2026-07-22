@@ -1,3 +1,4 @@
+import path from "node:path";
 import type { NextConfig } from "next";
 import { securityHeaders } from "@nextdays/security-headers";
 
@@ -6,6 +7,9 @@ import { securityHeaders } from "@nextdays/security-headers";
 // indexieren (kein SEO nötig, Isolierung zählt).
 const nextConfig: NextConfig = {
   output: "standalone",
+  // Monorepo hat mehrere Lockfiles → Repo-Root deterministisch als
+  // File-Tracing-Root (relativ: lokal + Docker-Root-Kontext).
+  outputFileTracingRoot: path.join(__dirname, ".."),
   // Kein x-powered-by:Next.js — verrät die Technologie (Version-Leak/Recon).
   poweredByHeader: false,
   // Geteilte Workspace-Packages (@nextdays/*) liefern TS-Quellen → Next muss sie
@@ -13,6 +17,7 @@ const nextConfig: NextConfig = {
   transpilePackages: [
     "@nextdays/laender",
     "@nextdays/currency",
+    "@nextdays/auth",
     "@nextdays/security-headers",
   ],
   // CSP + X-Frame-Options (pro App). HSTS/nosniff/Referrer setzt Traefik global.
