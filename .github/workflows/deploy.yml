@@ -63,7 +63,10 @@ jobs:
           deploy() {
             local uuid="$1" name="$2"
             echo "→ Deploy $name"
-            code=$(curl -sS -o /tmp/resp.json -w '%{http_code}' \
+            # POST seit Coolify 4.2.0 (GET liefert 405 "endpoint changed to POST").
+            # COOLIFY_URL zeigt auf die HTTPS-Route (Port 8000 ist extern
+            # geschlossen — nur 127.0.0.1 + Traefik/443, Security-Härtung K2).
+            code=$(curl -sS -o /tmp/resp.json -w '%{http_code}' -X POST \
               -H "Authorization: Bearer $COOLIFY_TOKEN" \
               "$COOLIFY_URL/api/v1/deploy?uuid=$uuid")
             cat /tmp/resp.json; echo

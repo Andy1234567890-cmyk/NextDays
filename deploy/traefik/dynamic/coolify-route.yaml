@@ -1,0 +1,24 @@
+# Coolify-Dashboard/API über Traefik auf HTTPS/443 (statt offenem Port 8000).
+# Damit läuft der GitHub-Deploy (COOLIFY_URL → https://...) wieder, während das
+# Dashboard extern nur über diese TLS-Route erreichbar ist (8000 bleibt zu).
+# coolify-proxy und coolify sind im selben Docker-Netz "coolify" → interner
+# Zugriff auf coolify:8080.
+http:
+  routers:
+    nd-coolify:
+      rule: "Host(`coolify.65.21.144.136.sslip.io`)"
+      entryPoints:
+        - https
+      service: nd-coolify-svc
+      tls:
+        certResolver: letsencrypt
+    nd-coolify-http:
+      rule: "Host(`coolify.65.21.144.136.sslip.io`)"
+      entryPoints:
+        - http
+      service: nd-coolify-svc
+  services:
+    nd-coolify-svc:
+      loadBalancer:
+        servers:
+          - url: "http://coolify:8080"
