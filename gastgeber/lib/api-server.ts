@@ -29,6 +29,10 @@ interface CallOpts {
   revalidate?: number;
   /** Öffentliche Endpunkte (kein Login nötig) → ohne Bearer. */
   public?: boolean;
+  /** Echter Browser-User-Agent (nur beim Login, für den Geräteverlauf). */
+  clientUserAgent?: string;
+  /** Echte Browser-IP (nur beim Login, für den Geräteverlauf). */
+  clientIp?: string;
 }
 
 /** Ein Backend-Call server-zu-server mit Bearer aus dem Host-Cookie.
@@ -41,5 +45,7 @@ export async function api<T>(path: string, opts: CallOpts = {}): Promise<T> {
     revalidate: opts.revalidate,
     isPublic: opts.public,
     accessCookie: HOST_COOKIES.access,
+    clientUserAgent: opts.clientUserAgent,
+    clientIp: opts.clientIp,
   });
 }

@@ -16,11 +16,12 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, s
 
 from src.core.config import get_settings
 from src.core.logging import get_logger
-from src.core.security import AuthContext
+from src.core.security import AuthContext, get_current_user
 from src.core.supabase import get_service_client
 from src.features.auth.dependencies import require_permission
 from src.features.auth.permissions import Capability
 
+from .identity import IdentityService
 from .paypal_webhook import handle_paypal_event
 from .schemas import (
     BookingPaymentResult,
@@ -30,6 +31,8 @@ from .schemas import (
     ConnectAccountUpdate,
     DepositCaptureRequest,
     ExternalAccountRequest,
+    IdentityVerificationRequest,
+    IdentityVerificationResponse,
     PaymentsDiagnostics,
     PaymentSettings,
     PaymentSettingsResponse,
@@ -53,6 +56,18 @@ def get_payments_service() -> PaymentsService:
 
 PaymentsServiceDep = Annotated[PaymentsService, Depends(get_payments_service)]
 _billing = Annotated[AuthContext, Depends(require_permission(Capability.MANAGE_BILLING))]
+
+# Identitätsprüfung ist eine PERSÖNLICHE Aktion: jeder eingeloggte Nutzer
+# verifiziert nur sich selbst (user_id aus dem Token) — daher get_current_user
+# (Authentifizierung), keine Finanz-Capability.
+_user = Annotated[AuthContext, Depends(get_current_user)]
+
+
+def get_identity_service() -> IdentityService:
+    return IdentityService(service_client=get_service_client())
+
+
+IdentityServiceDep = Annotated[IdentityService, Depends(get_identity_service)]
 
 
 @router.get("/health", response_model=SliceHealth)
@@ -142,6 +157,31 @@ def get_connect_account_status(
     """KYC-/Aktivierungsstatus + offene Requirements (für die eigene Onboarding-UI)."""
     try:
         return service.get_connect_account_status(ctx.tenant_id, stripe_account_id)
+    except PaymentsError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/identity/verification-session", response_model=IdentityVerificationResponse
+)
+def start_identity_verification(
+    req: IdentityVerificationRequest,
+    service: IdentityServiceDep,
+    ctx: _user,
+) -> IdentityVerificationResponse:
+    """Startet die Ausweis-/Selfie-Verifizierung (Stripe Identity, Hosted
+    Redirect) und gibt die URL zurück. Nutzer/Tenant AUSSCHLIESSLICH aus dem
+    Token (Wurzel 3). Ergebnis kommt asynchron per Webhook."""
+    if not ctx.tenant_id:
+        raise HTTPException(status_code=403, detail="Kein Tenant.")
+    try:
+        url = service.create_verification_session(
+            user_id=ctx.user_id,
+            tenant_id=ctx.tenant_id,
+            email=None,
+            return_url=req.return_url,
+        )
+        return IdentityVerificationResponse(url=url)
     except PaymentsError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

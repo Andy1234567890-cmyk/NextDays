@@ -40,6 +40,25 @@ from .service import AuthError
 
 log = get_logger("nextdays.auth.account")
 
+# Personengebundene Profilfelder, die IMMER auf users gehören (nie zur Agentur/
+# tenant_billing_profile gespiegelt werden) — auch beim Super-Admin. Airbnb
+# „Persönliche Informationen": Vorname, Wohn-/Postadresse, Notfallkontakt.
+_PERSONAL_USER_FIELDS = frozenset(
+    {
+        "preferred_first_name",
+        "residential_street",
+        "residential_postal_code",
+        "residential_city",
+        "residential_country",
+        "mailing_street",
+        "mailing_postal_code",
+        "mailing_city",
+        "mailing_country",
+        "emergency_contact_name",
+        "emergency_contact_phone",
+    }
+)
+
 TOTP_ISSUER = "NextDays"
 RECOVERY_CODE_COUNT = 8
 
@@ -86,6 +105,22 @@ class AccountService:
             description=row.get("description"),
             avatar_url=row.get("avatar_url"),
             permissions=self._effective_perm_ids(row),
+            # Personengebundene Gastgeber-Felder (immer aus users, nie Agentur).
+            preferred_first_name=row.get("preferred_first_name"),
+            residential_street=row.get("residential_street"),
+            residential_postal_code=row.get("residential_postal_code"),
+            residential_city=row.get("residential_city"),
+            residential_country=row.get("residential_country"),
+            mailing_street=row.get("mailing_street"),
+            mailing_postal_code=row.get("mailing_postal_code"),
+            mailing_city=row.get("mailing_city"),
+            mailing_country=row.get("mailing_country"),
+            emergency_contact_name=row.get("emergency_contact_name"),
+            emergency_contact_phone=row.get("emergency_contact_phone"),
+            # Identitätsprüfung: echter Status aus der DB (Default unverified).
+            identity_status=row.get("identity_status") or "unverified",
+            identity_verified_at=row.get("identity_verified_at"),
+            phone_verified_at=row.get("phone_verified_at"),
         )
 
     def _tenant_country(self, tenant_id: str | None) -> str | None:
@@ -575,12 +610,17 @@ class AccountService:
         patch = req.model_dump(exclude_unset=True)
         # Eine Identität, EIN Speicherort: beim Super-Admin gehören Name/
         # Telefon/Website der Agentur (/konto, tenant_billing_profile) — dort
-        # zurückschreiben, users trägt nur den Anzeigenamen (keine Doppel-
-        # Spalten in users).
+        # zurückschreiben, users trägt nur den Anzeigenamen. Personengebundene
+        # Gastgeber-Felder (Vorname, Wohn-/Postadresse, Notfallkontakt) gehören
+        # dagegen IMMER auf users — auch beim Admin, sonst würden sie verworfen.
         if patch and row.get("role") == UserRole.admin.value:
             tenant_id = row.get("tenant_id") or ctx.tenant_id
             self._mirror_admin_profile(tenant_id, patch)
-            patch = {k: v for k, v in patch.items() if k == "full_name"}
+            patch = {
+                k: v
+                for k, v in patch.items()
+                if k == "full_name" or k in _PERSONAL_USER_FIELDS
+            }
         if patch:
             self._service.table("users").update(patch).eq("id", ctx.user_id).execute()
         log.info("profile_updated", user_id=ctx.user_id, fields=sorted(patch.keys()))

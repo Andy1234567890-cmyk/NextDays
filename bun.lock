@@ -38,6 +38,7 @@
         "@nextdays/security-headers": "workspace:*",
         "@nextdays/ui": "workspace:*",
         "@supabase/supabase-js": "2.108.2",
+        "framer-motion": "^12.42.2",
         "next": "^15.5.0",
         "next-intl": "4.13.0",
         "react": "^19.0.0",

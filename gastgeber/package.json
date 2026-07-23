@@ -11,17 +11,18 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@iconify/react": "6.0.2",
+    "@nextdays/auth": "workspace:*",
+    "@nextdays/currency": "workspace:*",
+    "@nextdays/laender": "workspace:*",
+    "@nextdays/security-headers": "workspace:*",
+    "@nextdays/ui": "workspace:*",
     "@supabase/supabase-js": "2.108.2",
+    "framer-motion": "^12.42.2",
     "next": "^15.5.0",
+    "next-intl": "4.13.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "@nextdays/laender": "workspace:*",
-    "@nextdays/currency": "workspace:*",
-    "@nextdays/auth": "workspace:*",
-    "@nextdays/ui": "workspace:*",
-    "@nextdays/security-headers": "workspace:*",
-    "@iconify/react": "6.0.2",
-    "next-intl": "4.13.0",
     "sonner": "2.0.7"
   },
   "devDependencies": {

@@ -5,10 +5,21 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { login, loginTotp, registerHost } from "@/lib/auth";
+import { login, loginSms, loginTotp, registerHost } from "@/lib/auth";
 import { currencyForCountry, LAENDER } from "@nextdays/laender";
 
+import { CodeEingabe } from "./konto/code-eingabe";
+
 type Modus = "login" | "register";
+// Der aktuell gewählte 2. Faktor im Login. null = noch keiner ausgewählt
+// (nur relevant, wenn das Konto BEIDE Faktoren hat und der Nutzer wählen muss).
+type MfaMode = "sms" | "totp";
+
+type MfaState = {
+  token: string;
+  methods: string[];
+  phoneMasked: string | null;
+};
 
 export function AuthForm({ weiter }: { weiter: string }) {
   const router = useRouter();
@@ -18,8 +29,10 @@ export function AuthForm({ weiter }: { weiter: string }) {
   const [fullName, setFullName] = useState("");
   const [tenantName, setTenantName] = useState("");
   const [country, setCountry] = useState("DE");
-  const [totpToken, setTotpToken] = useState<string | null>(null);
-  const [totpCode, setTotpCode] = useState("");
+  const [mfa, setMfa] = useState<MfaState | null>(null);
+  // Bei genau einem Faktor direkt gesetzt; bei zweien erst nach Auswahl.
+  const [mfaMode, setMfaMode] = useState<MfaMode | null>(null);
+  const [code, setCode] = useState("");
   const [fehler, setFehler] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -34,7 +47,16 @@ export function AuthForm({ weiter }: { weiter: string }) {
       if (modus === "login") {
         const res = await login(email, password);
         if (!res.ok) return setFehler(res.error);
-        if (res.mfaRequired) return setTotpToken(res.mfaToken);
+        if (res.mfaRequired) {
+          setMfa({
+            token: res.mfaToken,
+            methods: res.mfaMethods,
+            phoneMasked: res.mfaPhoneMasked,
+          });
+          // Nur ein Faktor → direkt dorthin; sonst Auswahl anzeigen.
+          setMfaMode(res.mfaMethods.length === 1 ? (res.mfaMethods[0] as MfaMode) : null);
+          return;
+        }
         router.push(weiter);
         router.refresh();
       } else {
@@ -56,14 +78,19 @@ export function AuthForm({ weiter }: { weiter: string }) {
     }
   }
 
-  async function handleTotp(e: React.FormEvent) {
-    e.preventDefault();
-    if (!totpToken) return;
+  async function pruefeCode(codeWert: string) {
+    if (!mfa || !mfaMode) return;
     setFehler(null);
     setBusy(true);
     try {
-      const res = await loginTotp(totpToken, totpCode);
-      if (!res.ok) return setFehler(res.error);
+      const res =
+        mfaMode === "sms"
+          ? await loginSms(mfa.token, codeWert)
+          : await loginTotp(mfa.token, codeWert);
+      if (!res.ok) {
+        setCode("");
+        return setFehler(res.error);
+      }
       router.push(weiter);
       router.refresh();
     } finally {
@@ -71,31 +98,84 @@ export function AuthForm({ weiter }: { weiter: string }) {
     }
   }
 
-  if (totpToken) {
+  // --- 2. Login-Schritt bei aktiver 2FA -------------------------------------
+  if (mfa) {
+    // Konto hat beide Faktoren, aber noch keiner gewählt → Auswahl anzeigen.
+    if (!mfaMode) {
+      return (
+        <div className="w-full max-w-sm space-y-4">
+          <h2 className="font-display text-xl font-semibold">
+            Bestätige deine Anmeldung
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Wähle, wie du deinen zweiten Faktor bestätigen möchtest.
+          </p>
+          {mfa.methods.includes("sms") ? (
+            <button
+              type="button"
+              onClick={() => setMfaMode("sms")}
+              className="w-full rounded-2xl border border-border px-4 py-4 text-left transition hover:border-foreground"
+            >
+              <p className="font-medium">SMS-Code</p>
+              <p className="text-sm text-muted-foreground">
+                An {mfa.phoneMasked ?? "deine Nummer"}
+              </p>
+            </button>
+          ) : null}
+          {mfa.methods.includes("totp") ? (
+            <button
+              type="button"
+              onClick={() => setMfaMode("totp")}
+              className="w-full rounded-2xl border border-border px-4 py-4 text-left transition hover:border-foreground"
+            >
+              <p className="font-medium">Authenticator-App</p>
+              <p className="text-sm text-muted-foreground">
+                6-stelliger Code aus deiner App
+              </p>
+            </button>
+          ) : null}
+          {fehler ? <p className="text-sm text-red-600">{fehler}</p> : null}
+        </div>
+      );
+    }
+
+    const kannWechseln = mfa.methods.length > 1;
     return (
-      <form onSubmit={handleTotp} className="w-full max-w-sm space-y-4">
+      <div className="w-full max-w-sm space-y-4">
         <h2 className="font-display text-xl font-semibold">Bestätigungscode</h2>
         <p className="text-sm text-muted-foreground">
-          Gib den 6-stelligen Code aus deiner Authenticator-App ein.
+          {mfaMode === "sms"
+            ? `Wir haben einen 6-stelligen Code an ${mfa.phoneMasked ?? "deine Nummer"} gesendet.`
+            : "Gib den 6-stelligen Code aus deiner Authenticator-App ein."}
         </p>
-        <input
-          value={totpCode}
-          onChange={(e) => setTotpCode(e.target.value)}
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          placeholder="123456"
-          className="w-full rounded-full border border-border bg-background px-4 py-3 text-center tracking-widest"
-          required
+        <CodeEingabe
+          disabled={busy}
+          onChange={setCode}
+          onComplete={(c) => void pruefeCode(c)}
         />
         {fehler ? <p className="text-sm text-red-600">{fehler}</p> : null}
         <button
-          type="submit"
-          disabled={busy}
+          type="button"
+          onClick={() => void pruefeCode(code)}
+          disabled={busy || code.length !== 6}
           className="w-full rounded-full bg-primary px-4 py-3 font-medium text-primary-foreground disabled:opacity-60"
         >
           {busy ? "Prüfe …" : "Anmelden"}
         </button>
-      </form>
+        {kannWechseln ? (
+          <button
+            type="button"
+            onClick={() => {
+              setMfaMode(null);
+              setCode("");
+              setFehler(null);
+            }}
+            className="w-full text-center text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground"
+          >
+            Andere Methode wählen
+          </button>
+        ) : null}
+      </div>
     );
   }
 

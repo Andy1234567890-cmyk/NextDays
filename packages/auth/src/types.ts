@@ -13,6 +13,11 @@ export interface LoginResponse {
   mfa_required: boolean;
   session: SessionResponse | null;
   mfa_token: string | null;
+  // Welche zweiten Faktoren dieses Konto hat: 'totp' (Authenticator-App) und/
+  // oder 'sms' (Code an die verifizierte Nummer). Steuert den 2. Login-Schritt.
+  mfa_methods?: string[];
+  // Bei SMS: maskierte Zielnummer zur Anzeige („+49 ••• 9026").
+  mfa_phone_masked?: string | null;
 }
 
 /** GET /auth/me — Konto + Rollen/Capabilities fürs UI-Gating. */

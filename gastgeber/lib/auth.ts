@@ -5,6 +5,7 @@
 // (ADR-0017); HIER bleiben die app-spezifischen FLOWS (Login/TOTP/Register mit
 // account_type='marketplace') + die Cookie-Namen der Gastgeber-Welt.
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 
 import { clearSession, persistSession } from "@nextdays/auth/server";
 import type {
@@ -19,8 +20,34 @@ export type { MeResponse };
 
 type LoginResult =
   | { ok: true; mfaRequired?: false }
-  | { ok: true; mfaRequired: true; mfaToken: string }
+  | {
+      ok: true;
+      mfaRequired: true;
+      mfaToken: string;
+      // Welche 2. Faktoren zur Auswahl stehen ('totp' und/oder 'sms').
+      mfaMethods: string[];
+      // Maskierte Zielnummer, falls SMS ein Faktor ist (sonst null).
+      mfaPhoneMasked: string | null;
+    }
   | { ok: false; error: string };
+
+/** Echter Browser-Kontext (User-Agent + IP) des eingehenden Requests. Wird beim
+ *  Login mitgegeben, damit der Geräteverlauf echtes Gerät + echte IP zeigt.
+ *  Die IP steht in x-forwarded-for (Traefik/Prod) bzw. x-real-ip; lokal fehlt sie
+ *  → undefined, das Backend fällt dann auf seine Peer-IP zurück (kein Fake). */
+async function browserContext(): Promise<{
+  clientUserAgent?: string;
+  clientIp?: string;
+}> {
+  const h = await headers();
+  const forwarded = h.get("x-forwarded-for");
+  const ip =
+    forwarded?.split(",")[0]?.trim() || h.get("x-real-ip") || undefined;
+  return {
+    clientUserAgent: h.get("user-agent") ?? undefined,
+    clientIp: ip,
+  };
+}
 
 export async function login(
   email: string,
@@ -31,17 +58,30 @@ export async function login(
       method: "POST",
       body: { email, password },
       public: true,
+      ...(await browserContext()),
     });
     if (res.mfa_required && res.mfa_token) {
-      return { ok: true, mfaRequired: true, mfaToken: res.mfa_token };
+      return {
+        ok: true,
+        mfaRequired: true,
+        mfaToken: res.mfa_token,
+        mfaMethods: res.mfa_methods ?? [],
+        mfaPhoneMasked: res.mfa_phone_masked ?? null,
+      };
     }
     if (!res.session) return { ok: false, error: "Login fehlgeschlagen." };
     await persistSession(res.session, HOST_COOKIES);
     return { ok: true };
   } catch (exc) {
+    // Kein stiller Ersatztext (Wurzel 5): ist es KEIN ApiError (also ein echter
+    // Laufzeitfehler statt einer Backend-Ablehnung), die wahre Ursache in den
+    // Server-Log schreiben und im UI benennen — nicht als „Login fehlgeschlagen"
+    // tarnen (das würde einen Konfig-/Code-Fehler wie falsche Zugangsdaten aussehen lassen).
+    if (exc instanceof ApiError) return { ok: false, error: exc.message };
+    console.error("host_login_unexpected_error", exc);
     return {
       ok: false,
-      error: exc instanceof ApiError ? exc.message : "Login fehlgeschlagen.",
+      error: `Unerwarteter Fehler beim Login: ${exc instanceof Error ? exc.message : String(exc)}`,
     };
   }
 }
@@ -55,6 +95,31 @@ export async function loginTotp(
       method: "POST",
       body: { mfa_token: mfaToken, code },
       public: true,
+      ...(await browserContext()),
+    });
+    if (!res.session) return { ok: false, error: "Login fehlgeschlagen." };
+    await persistSession(res.session, HOST_COOKIES);
+    return { ok: true };
+  } catch (exc) {
+    return {
+      ok: false,
+      error: exc instanceof ApiError ? exc.message : "Code ist ungültig.",
+    };
+  }
+}
+
+/** Zweiter Login-Schritt bei SMS-2FA: mfa_token + 6-stelliger SMS-Code gegen
+ *  eine echte Session einlösen. Der Code kam per SMS aus dem ersten login()-Schritt. */
+export async function loginSms(
+  mfaToken: string,
+  code: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    const res = await api<LoginResponse>("/auth/login/sms", {
+      method: "POST",
+      body: { mfa_token: mfaToken, code },
+      public: true,
+      ...(await browserContext()),
     });
     if (!res.session) return { ok: false, error: "Login fehlgeschlagen." };
     await persistSession(res.session, HOST_COOKIES);

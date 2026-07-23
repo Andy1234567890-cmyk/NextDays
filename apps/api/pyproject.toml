@@ -21,6 +21,7 @@ dependencies = [
     "stripe>=15.3.0",            # Stripe Connect (Marketplace-Zahlungen)
     "pillow>=12.3.0",           # transitiv via qrcode[pil]; >=12.3.0 schließt 8 CVEs (PYSEC-2026-*)
     "nh3>=0.2.18",              # HTML-Sanitizer (Rust/ammonia) für gast-sichtbares Rich-Text
+    "twilio>=9.10.9",
 ]
 
 [project.optional-dependencies]

@@ -3,16 +3,22 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-from src.core.security import AuthContext, CurrentUser
+from src.core.config import Settings, get_settings
+from src.core.ratelimit import client_ip_from_xff
+from src.core.security import AuthContext, CurrentUser, decode_token
 from src.core.uploads import read_upload
+from src.features.login_devices.dependencies import LoginDeviceServiceDep
+from src.features.login_devices.service import LoginDeviceService
 
 from .dependencies import (
     AccountServiceDep,
     AuthServiceDep,
+    OtpServiceDep,
     OwnerAssignmentServiceDep,
     StaffAssignmentServiceDep,
     require_permission,
 )
+from .otp_service import OtpError
 from .permissions import Capability
 from .schemas import (
     AccommodationTypeUpdate,
@@ -24,10 +30,15 @@ from .schemas import (
     MeResponse,
     OwnerAssignmentResponse,
     OwnerAssignmentUpdate,
+    PhoneSendCodeRequest,
+    PhoneVerifyRequest,
     RefreshRequest,
     RegisterRequest,
+    RevokeOthersResponse,
+    SessionInfo,
     SessionResponse,
     SliceHealth,
+    SmsLoginRequest,
     StaffAssignmentResponse,
     StaffAssignmentUpdate,
     TenantUser,
@@ -43,6 +54,8 @@ from .schemas import (
     UpdateProfileRequest,
 )
 from .service import AuthError
+
+SettingsDep = Annotated[Settings, Depends(get_settings)]
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -65,24 +78,127 @@ def register(req: RegisterRequest, service: AuthServiceDep) -> SessionResponse:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+def _client_user_agent(request: Request) -> str | None:
+    """Der ECHTE Browser-User-Agent. Der BFF ruft server-zu-server, sein eigener
+    User-Agent-Header ist also node/undici — den echten Browser-UA reicht er in
+    X-Client-User-Agent durch. Fällt auf den normalen User-Agent-Header zurück
+    (Direktzugriff, z. B. Mobile-App). GoTrue speichert ihn in auth.sessions."""
+    return request.headers.get("x-client-user-agent") or request.headers.get(
+        "user-agent"
+    )
+
+
+def _client_ip(request: Request, settings: Settings) -> str | None:
+    """Die ECHTE Browser-IP. Der BFF reicht sie in X-Client-IP durch (sein eigener
+    Peer ist der App-Server). Fällt sonst auf X-Forwarded-For (Traefik) bzw. die
+    Peer-IP zurück — spoofing-sicher über trusted hops (wie das Rate-Limiting)."""
+    explicit = request.headers.get("x-client-ip")
+    if explicit:
+        return explicit.strip()
+    peer = request.client.host if request.client else None
+    return client_ip_from_xff(
+        request.headers.get("x-forwarded-for"),
+        peer,
+        settings.rate_limit_trusted_proxy_hops,
+    )
+
+
+def _record_device(
+    resp: LoginResponse,
+    request: Request,
+    settings: Settings,
+    devices: LoginDeviceService,
+) -> None:
+    """Nach erfolgreichem Login (Session vorhanden) genau EINE Geräte-Zeile mit
+    echter IP + UA + Ort schreiben. Bei mfa_required (noch keine Session) passiert
+    nichts. Best effort — ein Fehler hier darf den Login nicht kippen."""
+    if resp.session is None:
+        return
+    session_id = _session_id_from_token(resp.session.access_token, settings)
+    user_id = _user_id_from_token(resp.session.access_token, settings)
+    if not user_id:
+        return
+    devices.record_login(
+        user_id=user_id,
+        session_id=session_id,
+        ip=_client_ip(request, settings),
+        user_agent=_client_user_agent(request),
+    )
+
+
+def _claims(token: str, settings: Settings) -> dict[str, object] | None:
+    try:
+        return decode_token(token, settings)
+    except HTTPException:
+        return None
+
+
+def _session_id_from_token(token: str, settings: Settings) -> str | None:
+    claims = _claims(token, settings)
+    sid = claims.get("session_id") if claims else None
+    return sid if isinstance(sid, str) else None
+
+
+def _user_id_from_token(token: str, settings: Settings) -> str | None:
+    claims = _claims(token, settings)
+    sub = claims.get("sub") if claims else None
+    return sub if isinstance(sub, str) else None
+
+
 @router.post("/login", response_model=LoginResponse)
-def login(req: LoginRequest, service: AuthServiceDep) -> LoginResponse:
+def login(
+    req: LoginRequest,
+    request: Request,
+    service: AuthServiceDep,
+    settings: SettingsDep,
+    devices: LoginDeviceServiceDep,
+) -> LoginResponse:
     """Erster Login-Schritt. Bei aktivem 2FA kommt mfa_required=True + mfa_token
     (KEINE Session) zurück; die Session gibt es erst nach /auth/login/totp."""
     try:
-        return service.login(req)
+        resp = service.login(req, _client_user_agent(request))
     except AuthError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    _record_device(resp, request, settings, devices)
+    return resp
 
 
 @router.post("/login/totp", response_model=LoginResponse)
-def login_totp(req: TotpLoginRequest, service: AuthServiceDep) -> LoginResponse:
+def login_totp(
+    req: TotpLoginRequest,
+    request: Request,
+    service: AuthServiceDep,
+    settings: SettingsDep,
+    devices: LoginDeviceServiceDep,
+) -> LoginResponse:
     """Zweiter Login-Schritt bei aktivem 2FA: mfa_token + TOTP-/Recovery-Code
     gegen eine echte Session einlösen."""
     try:
-        return service.login_totp(req)
+        resp = service.login_totp(req, _client_user_agent(request))
     except AuthError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    _record_device(resp, request, settings, devices)
+    return resp
+
+
+@router.post("/login/sms", response_model=LoginResponse)
+def login_sms(
+    req: SmsLoginRequest,
+    request: Request,
+    service: AuthServiceDep,
+    settings: SettingsDep,
+    devices: LoginDeviceServiceDep,
+) -> LoginResponse:
+    """Zweiter Login-Schritt bei SMS-2FA: mfa_token + SMS-Code gegen eine echte
+    Session einlösen."""
+    try:
+        resp = service.login_sms(req, _client_user_agent(request))
+    except (AuthError, OtpError) as exc:
+        # OtpError (falscher/abgelaufener Code, zu viele Versuche) präzise als
+        # 401/410/429 durchreichen — nie als 500 (fail-closed, Wurzel 5).
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    _record_device(resp, request, settings, devices)
+    return resp
 
 
 @router.post("/refresh", response_model=SessionResponse)
@@ -99,6 +215,33 @@ def refresh(req: RefreshRequest, service: AuthServiceDep) -> SessionResponse:
 @router.get("/me", response_model=MeResponse)
 def me(ctx: CurrentUser, service: AuthServiceDep) -> MeResponse:
     return service.me(ctx)
+
+
+@router.get("/sessions", response_model=list[SessionInfo])
+def list_sessions(ctx: CurrentUser, service: AuthServiceDep) -> list[SessionInfo]:
+    """Aktive Sitzungen des eingeloggten Nutzers (Geräteverlauf). Scope steckt
+    serverseitig in der RPC (nur ctx.user_id) — kein Client-Parameter."""
+    return service.list_sessions(ctx)
+
+
+@router.delete("/sessions/others", response_model=RevokeOthersResponse)
+def revoke_other_sessions(
+    ctx: CurrentUser, service: AuthServiceDep
+) -> RevokeOthersResponse:
+    """Auf allen anderen Geräten abmelden. Die aktuelle Sitzung bleibt."""
+    return RevokeOthersResponse(revoked=service.revoke_other_sessions(ctx))
+
+
+@router.delete("/sessions/{session_id}", status_code=status.HTTP_204_NO_CONTENT)
+def revoke_session(
+    session_id: str, ctx: CurrentUser, service: AuthServiceDep
+) -> None:
+    """Ein einzelnes Gerät abmelden. 404, wenn die Sitzung nicht dem Nutzer
+    gehört (Scope in der RPC, Wurzel 9)."""
+    try:
+        service.revoke_session(ctx, session_id)
+    except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
 @router.patch("/tenant/accommodation-type", response_model=MeResponse)
@@ -381,4 +524,30 @@ def totp_disable(
     try:
         return service.totp_disable(ctx, req)
     except AuthError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Telefonnummer-Verifizierung (SMS-OTP, Airbnb-„Confirm account") ---------
+
+
+@router.post("/phone/send-code", status_code=status.HTTP_204_NO_CONTENT)
+def phone_send_code(
+    req: PhoneSendCodeRequest, ctx: CurrentUser, service: OtpServiceDep
+) -> None:
+    """SMS-Code an die eigene Telefonnummer senden. Nutzer AUSSCHLIESSLICH aus
+    dem Token (Wurzel 3). Idempotent + rate-limited im Service."""
+    try:
+        service.send_phone_code(ctx, req.phone)
+    except OtpError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/phone/verify", status_code=status.HTTP_204_NO_CONTENT)
+def phone_verify(
+    req: PhoneVerifyRequest, ctx: CurrentUser, service: OtpServiceDep
+) -> None:
+    """Code prüfen → Nummer als verifiziert setzen (users.phone_verified_at)."""
+    try:
+        service.verify_phone_code(ctx, req.phone, req.code)
+    except OtpError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

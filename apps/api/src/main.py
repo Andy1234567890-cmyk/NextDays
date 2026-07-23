@@ -36,6 +36,7 @@ from .features.guest_wishlist.router import router as guest_wishlist_router
 from .features.guests.router import router as guests_router
 from .features.inbox import scheduler as inbox_scheduler
 from .features.inbox.router import router as inbox_router
+from .features.login_devices.router import router as login_devices_router
 from .features.media.router import router as media_router
 from .features.ocr.router import router as ocr_router
 from .features.owner_statements.router import router as owner_statements_router
@@ -79,6 +80,7 @@ _SLICE_ROUTERS = [
     guest_wishlist_router,
     guest_reviews_router,
     inbox_router,
+    login_devices_router,
     payments_router,
     subscriptions_router,
     external_calendar_router,

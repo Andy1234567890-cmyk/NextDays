@@ -82,6 +82,12 @@ class Settings(BaseSettings):
     # --- Externe Dienste (optional, erst bei Bedarf gefüllt) ---
     google_maps_api_key: SecretStr = SecretStr("")
     google_translate_api_key: SecretStr = SecretStr("")
+    # Twilio — SMS-OTP-Versand (2FA / Nummern-Verifizierung). Trial im Test:
+    # sendet nur an in Twilio verifizierte Nummern. Fehlt die Config, schlägt der
+    # SMS-Versand klar fehl (kein Fake-„gesendet", Wurzel 4/5).
+    twilio_account_sid: str = ""              # AC… (kein Geheimnis i.e.S.)
+    twilio_auth_token: SecretStr = SecretStr("")
+    twilio_from_number: str = ""              # Twilio-Absendernummer (E.164)
     stripe_secret_key: SecretStr = SecretStr("")
     stripe_webhook_secret: SecretStr = SecretStr("")
     stripe_publishable_key: str = ""          # NEXT_PUBLIC_ im Frontend

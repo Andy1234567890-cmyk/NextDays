@@ -246,3 +246,17 @@ class PaymentsDiagnostics(BaseModel):
     checks: list[DiagnosticCheck]
     stripe_account: StripeAccountDiagnostics | None = None
     country_requirements: CountryRequirements | None = None
+
+
+class IdentityVerificationRequest(BaseModel):
+    """Start der Ausweis-Verifizierung. Das Frontend liefert die return_url zu
+    sich selbst (kein Domain-Hardcode im Backend, Wurzel 4) — das Backend prüft
+    sie gegen die erlaubten Origins."""
+
+    return_url: str = Field(max_length=500)
+
+
+class IdentityVerificationResponse(BaseModel):
+    """Nur die Stripe-Hosted-URL, auf die das Frontend weiterleitet."""
+
+    url: str

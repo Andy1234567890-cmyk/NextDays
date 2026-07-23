@@ -47,6 +47,14 @@ interface CallOpts {
   accessCookie?: string;
   /** Expliziter Bearer (z. B. frisch aus einem Login), überschreibt das Cookie. */
   token?: string;
+  /** Echter Browser-User-Agent (aus headers() in einer Server Action). Wird als
+   *  X-Client-User-Agent weitergereicht, damit GoTrue das echte Gerät im
+   *  Geräteverlauf speichert statt des Server-Clients (nur beim Login relevant). */
+  clientUserAgent?: string;
+  /** Echte Browser-IP (aus headers() in einer Server Action). Wird als
+   *  X-Client-IP weitergereicht, damit der Geräteverlauf die echte Client-IP
+   *  speichert statt der Server-IP (nur beim Login relevant). */
+  clientIp?: string;
 }
 
 /** Ein Backend-Call server-zu-server. Hängt den Bearer aus dem Session-Cookie
@@ -59,6 +67,12 @@ export async function api<T>(path: string, opts: CallOpts = {}): Promise<T> {
       opts.token ??
       (opts.accessCookie ? await readToken(opts.accessCookie) : null);
     if (token) headers.Authorization = `Bearer ${token}`;
+  }
+  if (opts.clientUserAgent) {
+    headers["X-Client-User-Agent"] = opts.clientUserAgent;
+  }
+  if (opts.clientIp) {
+    headers["X-Client-IP"] = opts.clientIp;
   }
 
   const init: RequestInit & { next?: { revalidate?: number } } = {

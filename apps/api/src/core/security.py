@@ -27,6 +27,10 @@ class AuthContext(BaseModel):
     user_id: str
     tenant_id: str | None = None
     role: str | None = None
+    # Die GoTrue-Session-ID dieses Access-Tokens (Claim session_id). Erlaubt es
+    # Endpunkten, die AKTUELLE Sitzung zu erkennen (z. B. „auf allen anderen
+    # Geräten abmelden" ohne sich selbst auszusperren). Bei API-Client-Tokens None.
+    session_id: str | None = None
     # Nur gesetzt, wenn der Request über einen Entwickler-API-Token kommt
     # (Client-Credentials), nicht über ein Supabase-Login-Token. Erlaubt den
     # Endpunkten, Scope + Objekt-Beschränkung des API-Clients durchzusetzen
@@ -94,6 +98,13 @@ def _decode_token(token: str, settings: Settings) -> dict[str, object]:
         ) from exc
 
 
+def decode_token(token: str, settings: Settings) -> dict[str, object]:
+    """Öffentlicher Zugang zum verifizierten Token-Claim-Set (z. B. um die
+    session_id/sub einer frisch ausgestellten Session zu lesen). Wirft dieselbe
+    401-HTTPException wie der Guard, wenn das Token ungültig ist."""
+    return _decode_token(token, settings)
+
+
 def get_current_user(
     settings: Annotated[Settings, Depends(get_settings)],
     authorization: Annotated[str | None, Header()] = None,
@@ -114,10 +125,12 @@ def get_current_user(
     app_meta = claims.get("app_metadata") or {}
     tenant = app_meta.get("tenant_id") if isinstance(app_meta, dict) else None
     role = app_meta.get("role") if isinstance(app_meta, dict) else None
+    session_id = claims.get("session_id")
     return AuthContext(
         user_id=sub,
         tenant_id=tenant if isinstance(tenant, str) else None,
         role=role if isinstance(role, str) else None,
+        session_id=session_id if isinstance(session_id, str) else None,
     )
 
 

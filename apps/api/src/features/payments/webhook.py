@@ -124,6 +124,11 @@ def _dispatch_stripe_event(
                 fully = refunded >= amount > 0
                 status_val = "refunded" if fully else "partially_refunded"
                 _set_payment_status(db, pi_id, status_val, reservation=status_val)
+        case "identity.verification_session.verified" | \
+                "identity.verification_session.processing" | \
+                "identity.verification_session.requires_input" | \
+                "identity.verification_session.canceled":
+            _handle_identity_event(db, event_type, obj, now_iso)
         case "customer.subscription.created" | "customer.subscription.updated" | \
                 "customer.subscription.deleted":
             _handle_subscription_event(db, obj)
@@ -305,6 +310,69 @@ def _handle_account_updated(
         log.info("stripe_account_updated", stripe_account_id=stripe_account_id)
     else:
         log.warning("stripe_account_not_found_in_db", stripe_account_id=stripe_account_id)
+
+
+def _meta_get(meta: Any, key: str) -> str | None:  # noqa: ANN401
+    """Metadaten-Wert robust lesen — Stripe liefert ``metadata`` mal als Dict
+    (Test), mal als StripeObject OHNE ``.get()`` (Live). Beide Formen erlauben
+    Index-Zugriff; fehlt der Key, ist es None (kein Crash, Wurzel 5)."""
+    try:
+        value = meta[key]
+    except (KeyError, TypeError, AttributeError):
+        return None
+    return str(value) if value is not None else None
+
+
+# Stripe-Identity-Event → users.identity_status. Event-Typ bestimmt den Status
+# 1:1 (kein Fake-Default, Wurzel 5). Reihenfolge der Events ist nicht garantiert
+# → wir setzen schlicht den zum Event gehörenden Status.
+_IDENTITY_STATUS = {
+    "identity.verification_session.verified": "verified",
+    "identity.verification_session.processing": "processing",
+    "identity.verification_session.requires_input": "requires_input",
+    "identity.verification_session.canceled": "unverified",
+}
+
+
+def _handle_identity_event(
+    db: Client, event_type: str, session: Mapping[str, Any], now_iso: str
+) -> None:
+    """Ausweis-Verifizierungs-Status auf den Gastgeber schreiben.
+
+    Zuordnung über metadata{user_id,tenant_id} (serverseitig gesetzt) — dem
+    Client wird NICHT vertraut (Wurzel 3). Scope: der Nutzer muss zum Tenant aus
+    der Session-Metadata gehören, sonst wird nichts geschrieben. Es werden KEINE
+    Ausweisdaten gespeichert, nur der Status + Zeitpunkt (DSGVO/DE).
+    """
+    status_val = _IDENTITY_STATUS.get(event_type)
+    if status_val is None:
+        return
+    meta = _field(session, "metadata", {}) or {}
+    user_id = _meta_get(meta, "user_id")
+    tenant_id = _meta_get(meta, "tenant_id")
+    session_id = _field(session, "id")
+    if not user_id or not tenant_id:
+        log.warning("identity_event_without_metadata", session_id=session_id)
+        return
+
+    update: dict[str, Any] = {"identity_status": status_val}
+    if status_val == "verified":
+        update["identity_verified_at"] = now_iso
+    if session_id:
+        update["identity_session_id"] = session_id
+
+    # Scope-Guard: nur die Zeile dieses Nutzers UND dieses Tenants (Wurzel 3).
+    result = (
+        db.table("users")
+        .update(update)
+        .eq("id", user_id)
+        .eq("tenant_id", tenant_id)
+        .execute()
+    )
+    if result.data:
+        log.info("identity_status_set", user_id=user_id, status=status_val)
+    else:
+        log.warning("identity_user_not_found", user_id=user_id, tenant_id=tenant_id)
 
 
 def _set_payment_status(

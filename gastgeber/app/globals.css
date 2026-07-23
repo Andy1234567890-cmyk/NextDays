@@ -3,6 +3,7 @@
 /* Tailwind v4 scannt per Default nur das eigene Projekt. Die geteilten
    @nextdays/ui-Komponenten liegen außerhalb → explizit als Content-Quelle
    einbinden, sonst fehlen ihre Klassen (Sidebar etc. rendern unstyled). */
+@source "../app";
 @source "../components";
 @source "../../packages/ui/src";
 

@@ -17,6 +17,7 @@ from supabase_auth.errors import AuthError as GoTrueAuthError
 from src.core.config import get_settings
 from src.core.logging import get_logger, mask_email
 from src.core.security import AuthContext
+from src.core.supabase import make_anon_client_with_user_agent
 
 from .granular_permissions import (
     Permission,
@@ -24,6 +25,7 @@ from .granular_permissions import (
     effective_permissions,
     normalize_permissions,
 )
+from .otp_service import OtpService
 from .permissions import effective_capabilities
 from .schemas import (
     InviteRequest,
@@ -33,8 +35,10 @@ from .schemas import (
     MeResponse,
     RefreshRequest,
     RegisterRequest,
+    SessionInfo,
     SessionResponse,
     SliceHealth,
+    SmsLoginRequest,
     TotpLoginRequest,
     UserRole,
 )
@@ -48,6 +52,13 @@ _MFA_PENDING_TYP = "mfa_pending"  # noqa: S105 — Claim-Wert, kein Secret
 _MFA_PENDING_TTL_SECONDS = 300
 
 log = get_logger("nextdays.auth")
+
+
+def _mask_phone(phone: str) -> str:
+    """Nummer für die Anzeige maskieren („+49 ••• 9026") — nur die letzten 4
+    Ziffern sichtbar. Keine Fantasiewerte (Wurzel 4)."""
+    tail = phone[-4:]
+    return f"{phone[:3]} ••• {tail}" if len(phone) > 7 else "•••• " + tail
 
 
 class AuthError(Exception):
@@ -200,22 +211,48 @@ class AuthService:
             permissions=permissions,
         )
 
-    def login(self, req: LoginRequest) -> LoginResponse:
+    def login(
+        self, req: LoginRequest, user_agent: str | None = None
+    ) -> LoginResponse:
         """Erster Login-Schritt: E-Mail + Passwort.
 
-        Hat der Nutzer 2FA aktiv, wird KEINE Session ausgegeben (fail-closed),
-        sondern nur ein kurzlebiges Pending-Token (mfa_required=True). Die echte
-        Session entsteht erst nach erfolgreichem TOTP-Schritt (login_totp).
-        """
-        session = self._sign_in(req.email, req.password)
-        if self._totp_enabled(session.user.id):
-            return LoginResponse(
-                mfa_required=True,
-                mfa_token=self._issue_mfa_token(session.user.id),
-            )
-        return LoginResponse(session=self._to_session(session))
+        Hat der Nutzer 2FA aktiv (Authenticator-App ODER SMS), wird KEINE Session
+        ausgegeben (fail-closed), sondern nur ein kurzlebiges Pending-Token
+        (mfa_required=True). Die echte Session entsteht erst nach erfolgreichem
+        zweiten Schritt (login_totp / login_sms). Bei SMS wird der Code hier
+        direkt gesendet, damit er beim Nutzer ankommt, bevor er den Code eingibt.
 
-    def login_totp(self, req: TotpLoginRequest) -> LoginResponse:
+        user_agent: der ECHTE Browser-User-Agent (vom BFF durchgereicht). GoTrue
+        speichert ihn in auth.sessions → der Geräteverlauf zeigt das echte Gerät,
+        nicht den Server-Client.
+        """
+        session = self._sign_in(req.email, req.password, user_agent)
+        user_id = session.user.id
+        methods: list[str] = []
+        if self._totp_enabled(user_id):
+            methods.append("totp")
+        phone = self._sms_2fa_phone(user_id)
+        if phone:
+            methods.append("sms")
+
+        if not methods:
+            return LoginResponse(session=self._to_session(session))
+
+        # SMS-Code sofort senden, falls SMS ein Faktor ist (best effort — schlägt
+        # der Versand fehl, bleibt TOTP als Weg, falls vorhanden).
+        if "sms" in methods:
+            self._send_login_sms(user_id, phone)  # type: ignore[arg-type]
+
+        return LoginResponse(
+            mfa_required=True,
+            mfa_token=self._issue_mfa_token(user_id),
+            mfa_methods=methods,
+            mfa_phone_masked=_mask_phone(phone) if phone else None,
+        )
+
+    def login_totp(
+        self, req: TotpLoginRequest, user_agent: str | None = None
+    ) -> LoginResponse:
         """Zweiter Login-Schritt: Pending-Token + TOTP-/Recovery-Code einlösen.
 
         Der Pending-Token beweist, dass der Passwort-Schritt gerade bestanden
@@ -237,15 +274,73 @@ class AuthService:
             raise AuthError("Code ist ungültig.", status_code=401)
 
         # Frische Session per Admin-Generate — kein zweiter Passwort-Roundtrip.
-        session = self._session_for_verified_user(user_id)
+        session = self._session_for_verified_user(user_id, user_agent)
         log.info("login_totp_ok", user_id=user_id)
         return LoginResponse(session=session)
 
+    def login_sms(
+        self, req: SmsLoginRequest, user_agent: str | None = None
+    ) -> LoginResponse:
+        """Zweiter Login-Schritt bei SMS-2FA: Pending-Token + SMS-Code einlösen.
+
+        Der Code wurde in login() an die verifizierte Nummer gesendet. Prüfung,
+        Fehlversuch-Zählung und Ablauf laufen über den OTP-Service (gleicher
+        Hash-/Brute-Force-Schutz wie bei der Nummern-Verifizierung).
+        """
+        user_id = self._verify_mfa_token(req.mfa_token)
+        phone = self._sms_2fa_phone(user_id)
+        if not phone:
+            raise AuthError("SMS-2FA ist für dieses Konto nicht aktiv.", status_code=400)
+        # Code über den OTP-Service prüfen (purpose='2fa_login').
+        self._otp().verify_login_code(user_id, phone, req.code.strip())
+        session = self._session_for_verified_user(user_id, user_agent)
+        log.info("login_sms_ok", user_id=user_id)
+        return LoginResponse(session=session)
+
+    # --- SMS-2FA-Bausteine -------------------------------------------------
+
+    def _sms_2fa_phone(self, user_id: str) -> str | None:
+        """Die verifizierte Telefonnummer, wenn SMS-2FA aktiv ist — sonst None.
+        SMS-2FA gilt als aktiv, sobald die Nummer per SMS bestätigt wurde
+        (phone_verified_at gesetzt)."""
+        res = (
+            self._service.table("users")
+            .select("phone, phone_verified_at")
+            .eq("id", user_id)
+            .limit(1)
+            .execute()
+        )
+        row = res.data[0] if res.data else None
+        if row and row.get("phone_verified_at") and row.get("phone"):
+            return row["phone"]
+        return None
+
+    def _send_login_sms(self, user_id: str, phone: str) -> None:
+        """Login-OTP an die verifizierte Nummer senden (best effort — ein
+        Versandfehler darf den Login-Step nicht mit 500 killen)."""
+        try:
+            self._otp().send_login_code(user_id, phone)
+        except Exception as exc:  # noqa: BLE001 — Versand best effort
+            log.warning("login_sms_send_failed", user_id=user_id, error=str(exc))
+
+    def _otp(self) -> OtpService:
+        return OtpService(db=self._service)
+
     # --- Login-Bausteine ---------------------------------------------------
 
-    def _sign_in(self, email: str, password: SecretStr) -> AuthResponse:
+    def _anon_for_ua(self, user_agent: str | None) -> Client:
+        """Der Auth-Client für einen Login/Session-Call. Mit Browser-UA ein
+        frischer Client, der diesen UA an GoTrue sendet (→ echter Geräteverlauf);
+        ohne UA der globale Client."""
+        if user_agent:
+            return make_anon_client_with_user_agent(user_agent)
+        return self._anon
+
+    def _sign_in(
+        self, email: str, password: SecretStr, user_agent: str | None = None
+    ) -> AuthResponse:
         try:
-            res = self._anon.auth.sign_in_with_password(
+            res = self._anon_for_ua(user_agent).auth.sign_in_with_password(
                 {"email": email, "password": password.get_secret_value()}
             )
         except Exception as exc:
@@ -331,12 +426,16 @@ class AuthService:
             raise AuthError("JWT-Secret nicht konfiguriert.", status_code=500)
         return secret
 
-    def _session_for_verified_user(self, user_id: str) -> SessionResponse:
-        """Session für einen bereits (per TOTP) verifizierten User ausstellen.
+    def _session_for_verified_user(
+        self, user_id: str, user_agent: str | None = None
+    ) -> SessionResponse:
+        """Session für einen bereits (per TOTP/SMS) verifizierten User ausstellen.
 
         GoTrue kennt keinen 'session for user_id'-Aufruf; wir nutzen den
         Admin-Endpoint, der ein Refresh-Token generiert, und tauschen es sofort
-        gegen eine Access/Refresh-Session (anon-Client)."""
+        gegen eine Access/Refresh-Session. Der verify_otp-Call ERZEUGT die
+        Session-Zeile in auth.sessions → er muss den Browser-UA tragen, damit der
+        Geräteverlauf das echte Gerät zeigt (nicht den Server-Client)."""
         try:
             auth_user = self._service.auth.admin.get_user_by_id(user_id)
             email = getattr(auth_user.user, "email", None)
@@ -351,7 +450,7 @@ class AuthService:
             )
             props = getattr(link, "properties", None)
             token_hash = getattr(props, "hashed_token", None)
-            verified = self._anon.auth.verify_otp(
+            verified = self._anon_for_ua(user_agent).auth.verify_otp(
                 {"token_hash": token_hash, "type": "magiclink"}
             )
         except Exception as exc:  # noqa: BLE001 — in AuthError übersetzen
@@ -391,6 +490,57 @@ class AuthService:
             refresh_token=session.refresh_token,
             expires_in=session.expires_in,
         )
+
+    # --- Geräteverlauf / aktive Sitzungen ----------------------------------
+
+    def list_sessions(self, ctx: AuthContext) -> list[SessionInfo]:
+        """Aktive Sitzungen des eingeloggten Nutzers (Airbnb „Geräteverlauf").
+
+        Liest auth.sessions ausschließlich für ctx.user_id über die gescopte
+        SECURITY-DEFINER-RPC (Wurzel 3 — der Scope steckt in der Funktion, nie
+        eine Client-ID). Die aktuelle Sitzung (session_id aus dem Token) wird
+        markiert, damit die UI sie als „Dieses Gerät" zeigen kann."""
+        res = self._service.rpc(
+            "host_list_own_sessions", {"p_user_id": ctx.user_id}
+        ).execute()
+        rows = res.data or []
+        out: list[SessionInfo] = []
+        for r in rows:
+            out.append(
+                SessionInfo(
+                    id=r["id"],
+                    user_agent=r.get("user_agent"),
+                    ip=r.get("ip"),
+                    created_at=r.get("created_at"),
+                    last_seen_at=r.get("last_seen_at"),
+                    is_current=bool(ctx.session_id and r["id"] == ctx.session_id),
+                )
+            )
+        return out
+
+    def revoke_session(self, ctx: AuthContext, session_id: str) -> None:
+        """Eine EIGENE Sitzung widerrufen (Gerät abmelden). Der Scope auf
+        ctx.user_id in der RPC verhindert das Löschen fremder Sitzungen (Wurzel
+        3/9). 0 gelöschte Zeilen → die Sitzung gehört nicht dem Nutzer → 404."""
+        res = self._service.rpc(
+            "host_revoke_session",
+            {"p_user_id": ctx.user_id, "p_session_id": session_id},
+        ).execute()
+        deleted = res.data if isinstance(res.data, int) else 0
+        if not deleted:
+            raise AuthError("Sitzung nicht gefunden.", status_code=404)
+        log.info("session_revoked", user_id=ctx.user_id)
+
+    def revoke_other_sessions(self, ctx: AuthContext) -> int:
+        """Alle anderen Sitzungen widerrufen („Auf allen anderen Geräten
+        abmelden"). Die aktuelle Sitzung bleibt bestehen (ctx.session_id)."""
+        res = self._service.rpc(
+            "host_revoke_other_sessions",
+            {"p_user_id": ctx.user_id, "p_keep_session_id": ctx.session_id},
+        ).execute()
+        count = res.data if isinstance(res.data, int) else 0
+        log.info("other_sessions_revoked", user_id=ctx.user_id, count=count)
+        return count
 
     def me(self, ctx: AuthContext) -> MeResponse:
         # Rolle + Berechtigungen aus der DB (Quelle der Wahrheit) lesen — das

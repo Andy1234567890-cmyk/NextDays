@@ -9,6 +9,7 @@ from src.core.supabase import get_anon_client, get_service_client
 
 from .account_service import AccountService
 from .granular_permissions import Permission, has_permission, has_pm_access
+from .otp_service import OtpService
 from .owner_assignment_service import OwnerAssignmentService
 from .permissions import Capability, has_capability, is_pm_capability
 from .schemas import UserRole
@@ -38,8 +39,13 @@ def get_staff_assignment_service() -> StaffAssignmentService:
     return StaffAssignmentService(service_client=get_service_client())
 
 
+def get_otp_service() -> OtpService:
+    return OtpService(db=get_service_client())
+
+
 AuthServiceDep = Annotated[AuthService, Depends(get_auth_service)]
 AccountServiceDep = Annotated[AccountService, Depends(get_account_service)]
+OtpServiceDep = Annotated[OtpService, Depends(get_otp_service)]
 OwnerAssignmentServiceDep = Annotated[
     OwnerAssignmentService, Depends(get_owner_assignment_service)
 ]

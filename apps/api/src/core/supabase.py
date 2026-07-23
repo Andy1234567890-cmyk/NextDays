@@ -6,7 +6,7 @@ nie mit Gast-/User-Input ohne tenant-Scope.
 from functools import lru_cache
 
 import httpx
-from supabase import Client, create_client
+from supabase import Client, ClientOptions, create_client
 
 from .config import get_settings
 from .logging import get_logger
@@ -91,6 +91,28 @@ def get_anon_client() -> Client:
         create_client(
             settings.supabase_url,
             settings.supabase_anon_key.get_secret_value(),
+        )
+    )
+
+
+def make_anon_client_with_user_agent(user_agent: str) -> Client:
+    """Anon-Client, dessen Auth-Requests einen bestimmten User-Agent tragen.
+
+    GoTrue speichert den User-Agent des Login-Requests in auth.sessions.user_agent
+    (live verifiziert). Der globale Client trägt „python-httpx/…", weil der Login
+    server-zu-server läuft — damit der Geräteverlauf den ECHTEN Browser zeigt,
+    reichen wir den Browser-UA (vom BFF) hier bis an den GoTrue-Call durch.
+
+    Nicht gecacht: pro Login potenziell ein anderer UA. Wird nur für den einen
+    sign_in-Call verwendet und danach verworfen (der globale Client bleibt für
+    alles andere)."""
+    settings = get_settings()
+    options = ClientOptions(headers={"User-Agent": user_agent})
+    return _harden(
+        create_client(
+            settings.supabase_url,
+            settings.supabase_anon_key.get_secret_value(),
+            options,
         )
     )
 

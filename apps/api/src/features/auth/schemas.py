@@ -96,6 +96,28 @@ class SessionResponse(BaseModel):
     expires_in: int
 
 
+class SessionInfo(BaseModel):
+    """Eine aktive Sitzung im Geräteverlauf (Airbnb „Login & Sicherheit").
+
+    Rohdaten aus auth.sessions (GoTrue): user_agent + ip werden im Frontend zu
+    „Chrome · Windows · Berlin" o. ä. aufbereitet. is_current markiert die
+    Sitzung, aus der der aktuelle Request kommt (kann nicht sich selbst abmelden)."""
+
+    id: str
+    user_agent: str | None = None
+    ip: str | None = None
+    created_at: str | None = None
+    last_seen_at: str | None = None
+    is_current: bool = False
+
+
+class RevokeOthersResponse(BaseModel):
+    """Ergebnis von „auf allen anderen Geräten abmelden": Anzahl beendeter
+    Sitzungen (ohne die aktuelle)."""
+
+    revoked: int
+
+
 class LoginResponse(BaseModel):
     """Antwort auf /auth/login. Genau EINE der beiden Welten ist gesetzt:
 
@@ -111,6 +133,11 @@ class LoginResponse(BaseModel):
     session: SessionResponse | None = None
     # Nur bei mfa_required=True: kurzlebiges Pending-Token (5 Min).
     mfa_token: str | None = None
+    # Welche 2. Faktoren dieses Konto hat (für die UI: welcher Schritt kommt).
+    # 'totp' = Authenticator-App, 'sms' = SMS-Code an die verifizierte Nummer.
+    mfa_methods: list[str] = []
+    # Bei SMS: maskierte Zielnummer für die Anzeige („+49 ••• 9026").
+    mfa_phone_masked: str | None = None
 
 
 class TotpLoginRequest(BaseModel):
@@ -119,6 +146,13 @@ class TotpLoginRequest(BaseModel):
 
     mfa_token: str
     code: str = Field(min_length=6, max_length=32)
+
+
+class SmsLoginRequest(BaseModel):
+    """Zweiter Login-Schritt bei SMS-2FA: mfa_token + 6-stelliger SMS-Code."""
+
+    mfa_token: str
+    code: str = Field(min_length=6, max_length=6)
 
 
 class MeResponse(BaseModel):
@@ -165,6 +199,23 @@ class AccountResponse(BaseModel):
     # Land des Unternehmens (ISO-2, aus tenants.country) — Vorbelegung z. B.
     # der Telefon-Ländervorwahl im Frontend (kein Hardcode, Wurzel 4).
     tenant_country: str | None = None
+    # Personengebundene Gastgeber-Felder (Airbnb „Persönliche Informationen").
+    preferred_first_name: str | None = None
+    residential_street: str | None = None
+    residential_postal_code: str | None = None
+    residential_city: str | None = None
+    residential_country: str | None = None
+    mailing_street: str | None = None
+    mailing_postal_code: str | None = None
+    mailing_city: str | None = None
+    mailing_country: str | None = None
+    emergency_contact_name: str | None = None
+    emergency_contact_phone: str | None = None
+    # Identitätsprüfung (Stripe Identity) — echter Status, kein Fake-Default.
+    identity_status: str = "unverified"
+    identity_verified_at: str | None = None
+    # Telefonnummer-Verifizierung (SMS-OTP) — Zeitpunkt oder None.
+    phone_verified_at: str | None = None
 
 
 class TenantUser(BaseModel):
@@ -249,6 +300,19 @@ class UpdateProfileRequest(BaseModel):
     website: str | None = Field(default=None, max_length=300)
     description: str | None = Field(default=None, max_length=5000)
     avatar_url: str | None = Field(default=None, max_length=1000)
+    # Personengebundene Gastgeber-Felder (Airbnb „Persönliche Informationen").
+    # IMMER auf users — auch beim Admin NICHT nach tenant_billing_profile.
+    preferred_first_name: str | None = Field(default=None, max_length=200)
+    residential_street: str | None = Field(default=None, max_length=200)
+    residential_postal_code: str | None = Field(default=None, max_length=20)
+    residential_city: str | None = Field(default=None, max_length=120)
+    residential_country: str | None = Field(default=None, max_length=2)
+    mailing_street: str | None = Field(default=None, max_length=200)
+    mailing_postal_code: str | None = Field(default=None, max_length=20)
+    mailing_city: str | None = Field(default=None, max_length=120)
+    mailing_country: str | None = Field(default=None, max_length=2)
+    emergency_contact_name: str | None = Field(default=None, max_length=200)
+    emergency_contact_phone: str | None = Field(default=None, max_length=40)
 
 
 class UpdatePasswordRequest(BaseModel):
@@ -276,6 +340,18 @@ class TotpVerifyResponse(BaseModel):
 
 class TotpDisableRequest(BaseModel):
     code: str = Field(min_length=6, max_length=8)
+
+
+class PhoneSendCodeRequest(BaseModel):
+    """Nummern-Verifizierung starten. E.164 erzwungen (führendes +, 8–15 Ziffern)
+    — keine erfundenen Vorwahlen (Wurzel 4)."""
+
+    phone: str = Field(pattern=r"^\+[1-9]\d{7,14}$", max_length=16)
+
+
+class PhoneVerifyRequest(BaseModel):
+    phone: str = Field(pattern=r"^\+[1-9]\d{7,14}$", max_length=16)
+    code: str = Field(min_length=6, max_length=6)
 
 
 # Bleibt erhalten: einheitlicher Health-Endpoint über alle Slices.
