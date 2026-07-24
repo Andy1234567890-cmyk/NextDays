@@ -625,8 +625,14 @@ class SiteConfigService:
 
     def _draft_secret(self) -> bytes:
         secret = get_settings().site_draft_secret.get_secret_value()
-        # Lokaler Dev-Default (nur ohne gesetztes Secret) — in Prod IMMER gesetzt.
-        return (secret or "dev-only-insecure-draft-secret").encode()
+        # Fail-CLOSED (Wurzel 5): ein leeres SITE_DRAFT_SECRET darf NICHT auf ein
+        # hartkodiertes Secret zurückfallen — sonst könnte jeder gültige Draft-
+        # Vorschau-Tokens fälschen. Fehlt es, ist das ein Betriebs-/Config-Fehler.
+        if not secret:
+            raise SiteConfigError(
+                "SITE_DRAFT_SECRET ist nicht konfiguriert.", status_code=503
+            )
+        return secret.encode()
 
     def create_draft_token(self, ctx: AuthContext, page_id: str) -> str:
         """Signiert einen kurzlebigen Token (tenant+page+exp) für die Live-

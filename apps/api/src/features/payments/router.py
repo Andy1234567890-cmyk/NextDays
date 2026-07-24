@@ -388,12 +388,14 @@ def paypal_onboarding_return(
     tracking_id: str | None = None,
 ) -> dict:
     """Return-Ziel nach dem PayPal-Onboarding. PayPal hängt merchantIdInPayPal +
-    tracking_id an. Die Return-Parameter sind NICHT vertrauenswürdig (Wurzel 3) →
-    wir laden den echten Status frisch von PayPal (sync über tracking_id→tenant)."""
+    tracking_id an. Die Return-Parameter sind NICHT vertrauenswürdig (Wurzel 3):
+    Der Sync geht über sync_paypal_from_return, das den tracking_id gegen ein
+    tatsächlich laufendes Onboarding scoped (sonst könnte ein Fremder eine
+    Angreifer-merchant_id an einen fremden Tenant binden → Payout-Umleitung)."""
     if not tracking_id or not merchant_id:
         raise HTTPException(status_code=400, detail="Unvollständige PayPal-Rückkehr.")
     try:
-        service.sync_paypal_status(tenant_id=tracking_id, merchant_id=merchant_id)
+        service.sync_paypal_from_return(tracking_id=tracking_id, merchant_id=merchant_id)
     except PaymentsError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
     return {"status": "ok"}

@@ -1549,13 +1549,38 @@ class PaymentsService:
             return {"receivable": False, "email_confirmed": False}
         return self.sync_paypal_status(tenant_id=tenant_id, merchant_id=merchant_id)
 
+    def sync_paypal_from_return(self, *, tracking_id: str, merchant_id: str) -> dict:
+        """Return-Handler-Pfad (UNAUTHENTIFIZIERT, PayPal leitet den Browser hierher
+        zurück). tracking_id kommt aus der URL und ist NICHT vertrauenswürdig
+        (Wurzel 3): tenant_id ist keine geheime ID, ein Angreifer könnte eine fremde
+        einsetzen, um beim fremden Tenant eine Angreifer-merchant_id zu binden
+        (Payout-Umleitung). Deshalb hier eine Scope-Guard: nur syncen, wenn für
+        diesen tracking_id auch WIRKLICH ein von UNS gestartetes Onboarding läuft
+        (paypal_tracking_id == tracking_id UND Status 'pending'). Trifft das nicht
+        zu, passiert nichts (fail-closed) — der echte Tenant synct ohnehin über den
+        signierten Webhook oder den eingeloggten refresh_paypal_status."""
+        db = self._db_or_fail()
+        prof = (
+            db.table("tenant_billing_profile")
+            .select("tenant_id,paypal_onboarding_status")
+            .eq("paypal_tracking_id", tracking_id)
+            .eq("tenant_id", tracking_id)  # tracking_id == tenant_id (start_paypal_onboarding)
+            .limit(1)
+            .execute()
+        ).data
+        if not prof or prof[0].get("paypal_onboarding_status") != "pending":
+            # Kein passendes laufendes Onboarding → nichts binden (fail-closed).
+            raise PaymentsError("Kein laufendes PayPal-Onboarding.", status_code=409)
+        return self.sync_paypal_status(tenant_id=tracking_id, merchant_id=merchant_id)
+
     def sync_paypal_status(
         self, *, tenant_id: str, merchant_id: str
     ) -> dict:
         """Onboarding-Status eines Verkäufers bei PayPal nachladen und ins Profil
-        spiegeln. Aufgerufen vom Return-Handler UND vom Webhook — der Return liefert
-        die merchant_id NUR als Hinweis; die Wahrheit kommt aus dem Status-Call
-        (Wurzel 3). Sellbar = receivable && email_confirmed (fail-closed)."""
+        spiegeln. Aufgerufen vom (scope-geprüften) Return-Handler UND vom signierten
+        Webhook — der Return liefert die merchant_id NUR als Hinweis; die Wahrheit
+        kommt aus dem Status-Call (Wurzel 3). Sellbar = receivable && email_confirmed
+        (fail-closed)."""
         db = self._db_or_fail()
         try:
             status = self._paypal().get_merchant_status(seller_merchant_id=merchant_id)

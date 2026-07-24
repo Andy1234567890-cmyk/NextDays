@@ -24,6 +24,19 @@ from src.features.site_config.schemas import (
 from src.features.site_config.service import SiteConfigError, SiteConfigService
 
 
+@pytest.fixture(autouse=True)
+def _draft_secret_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Draft-Token-Signatur braucht ein gesetztes SITE_DRAFT_SECRET (fail-closed
+    ohne, seit dem Hardcode-Fallback-Fix). In Prod als Env gesetzt; hier für die
+    Tests injizieren, damit sie den realen Signaturpfad prüfen."""
+    from src.core.config import get_settings
+
+    monkeypatch.setenv("SITE_DRAFT_SECRET", "test-draft-secret-not-a-real-key")
+    get_settings.cache_clear()
+    yield
+    get_settings.cache_clear()
+
+
 # --- Fake-DB-Mock ------------------------------------------------------------
 class _Result:
     def __init__(self, data: list[dict]) -> None:
