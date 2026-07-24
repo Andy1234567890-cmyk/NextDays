@@ -18,6 +18,7 @@ from .schemas import (
     PropertyPhoto,
     PropertyPhotoListResponse,
     PropertyResponse,
+    PropertyTaxonomyResponse,
     PropertyUpdate,
     SliceHealth,
 )
@@ -61,6 +62,15 @@ def create_property(
         return service.create(ctx, req)
     except PropertyError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/taxonomy", response_model=PropertyTaxonomyResponse)
+def get_taxonomy(
+    ctx: CurrentUser, service: PropertiesServiceDep
+) -> PropertyTaxonomyResponse:
+    # Objekt-Taxonomie (Kategorien + Immobilientypen) für den Objekttyp-Editor.
+    # MUSS vor „/{property_id}" stehen (sonst fängt die Detail-Route „taxonomy" ab).
+    return service.taxonomy()
 
 
 @router.get("/{property_id}", response_model=PropertyResponse)

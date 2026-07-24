@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { ApiError } from "@nextdays/auth/errors";
 
 import { api } from "./api-server";
+import type { BlockedGuest, PrivacyKey, PrivacySettings } from "./datenschutz";
 import type { Account } from "./konto";
 
 type Result = { ok: true; data: Account } | { ok: false; error: string };
@@ -251,6 +252,66 @@ export async function widerrufeAndereSitzungen(): Promise<
     return {
       ok: false,
       error: exc instanceof ApiError ? exc.message : "Abmelden fehlgeschlagen.",
+    };
+  }
+}
+
+/** Eine einzelne Datenschutz-Präferenz umschalten (PATCH /privacy-settings).
+ *  Gibt die frischen Einstellungen zurück, damit das UI ohne Reload konsistent
+ *  bleibt (der Server ist die Quelle der Wahrheit). */
+export async function setzeDatenschutz(
+  key: PrivacyKey,
+  value: boolean,
+): Promise<{ ok: true; settings: PrivacySettings } | { ok: false; error: string }> {
+  try {
+    const settings = await api<PrivacySettings>("/privacy-settings", {
+      method: "PATCH",
+      body: { [key]: value },
+    });
+    revalidatePath("/konto");
+    return { ok: true, settings };
+  } catch (exc) {
+    return {
+      ok: false,
+      error:
+        exc instanceof ApiError
+          ? exc.message
+          : "Einstellung konnte nicht gespeichert werden.",
+    };
+  }
+}
+
+/** Blockierte Gäste laden (GET /guest-blocks). */
+export async function ladeBlockierte(): Promise<
+  { ok: true; blockierte: BlockedGuest[] } | { ok: false; error: string }
+> {
+  try {
+    const blockierte = await api<BlockedGuest[]>("/guest-blocks");
+    return { ok: true, blockierte };
+  } catch (exc) {
+    return {
+      ok: false,
+      error:
+        exc instanceof ApiError
+          ? exc.message
+          : "Blockierte Personen konnten nicht geladen werden.",
+    };
+  }
+}
+
+/** Einen Gast entblocken (DELETE /guest-blocks/{portalGuestId}). */
+export async function entblockeGast(
+  portalGuestId: string,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await api<void>(`/guest-blocks/${portalGuestId}`, { method: "DELETE" });
+    revalidatePath("/konto");
+    return { ok: true };
+  } catch (exc) {
+    return {
+      ok: false,
+      error:
+        exc instanceof ApiError ? exc.message : "Entblocken fehlgeschlagen.",
     };
   }
 }

@@ -145,6 +145,30 @@ def _channex_type_from_pct(pct_code: int | None) -> str | None:
     return _PCT_TO_CHANNEX.get(int(pct_code))
 
 
+# Die 22 gültigen Channex-property_type-Codes (docs.channex.io, 3-fach verifiziert).
+# Der aus dem Immobilientyp (property_subtypes) gelesene Code wird hiergegen
+# geprüft, damit ein Katalog-Fehler NIE einen ungültigen Wert an Channex schickt
+# (422 „property_type is invalid" würde den Content-Sync kippen, Wurzel 5).
+_VALID_CHANNEX_PROPERTY_TYPES: frozenset[str] = frozenset({
+    "apart_hotel", "apartment", "boat", "camping", "capsule_hotel", "chalet",
+    "country_house", "farm_stay", "guest_house", "holiday_home", "holiday_park",
+    "homestay", "hostel", "hotel", "inn", "lodge", "motel", "resort", "riad",
+    "ryokan", "tent", "villa",
+})
+
+
+def _channex_type_from_subtype(subtype: dict[str, Any] | None) -> str | None:
+    """Channex-property_type aus dem eingebetteten Immobilientyp (property_subtypes)
+    lesen (0198). Nur einen der 22 gültigen Codes durchlassen — sonst None (Feld
+    weglassen statt 422). subtype kommt aus dem PostgREST-Embed (dict oder None)."""
+    if not isinstance(subtype, dict):
+        return None
+    code = subtype.get("channex_property_type")
+    if isinstance(code, str) and code in _VALID_CHANNEX_PROPERTY_TYPES:
+        return code
+    return None
+
+
 # Gültige Werte für den Mindestaufenthalt-Typ (Channex-settings.min_stay_type,
 # live verifiziert): "both" (Standard), "arrival" (nur bei Anreise) oder
 # "through" (durchgehend). Alles andere wird ignoriert (kein 422 riskieren).

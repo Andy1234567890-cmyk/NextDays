@@ -2,6 +2,7 @@
 // und seitliches Buchungs-Widget. Daten aus dem Backend (booking_engine,
 // nur active Objekte). Keine erfundenen Bewertungen/Texte.
 import { Icon } from "@iconify/react";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { BuchungsWidget } from "@/components/buchungs-widget";
@@ -9,6 +10,26 @@ import { PhotoPlaceholder } from "@/components/photo-placeholder";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeader } from "@/components/site-header";
 import { ladeInserat } from "@/lib/inserate";
+
+// Suchmaschinen-Indexierung pro Objekt (Airbnb „Objekte in Suchmaschinen
+// aufnehmen"). Ist der Schalter AUS (Default), rendert Next den robots-Meta-Tag
+//   <meta name="robots" content="noindex, nofollow, noimageindex">
+// — exakt Airbnbs Mechanik. Der Konto-Schalter setzt das Flag für alle Objekte.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const listing = await ladeInserat(id);
+  const indexierbar = listing?.suchmaschinenIndex === true;
+  return {
+    title: listing?.titel,
+    robots: indexierbar
+      ? { index: true, follow: true }
+      : { index: false, follow: false, noimageindex: true },
+  };
+}
 
 // Ausstattungs-Icons (Mapping bekannter amenity-Codes → Icon + Label).
 const AMENITY_META: Record<string, { icon: string; label: string }> = {

@@ -28,12 +28,14 @@ from .features.crm.router import router as crm_router
 from .features.dashboard.router import router as dashboard_router
 from .features.external_calendar.router import router as external_calendar_router
 from .features.guest_auth.router import router as guest_auth_router
+from .features.guest_blocks.router import router as guest_blocks_router
 from .features.guest_bookings.router import router as guest_bookings_router
 from .features.guest_messages.router import router as guest_messages_router
 from .features.guest_reviews.router import router as guest_reviews_router
 from .features.guest_stay.router import router as guest_stay_router
 from .features.guest_wishlist.router import router as guest_wishlist_router
 from .features.guests.router import router as guests_router
+from .features.host_messages.router import router as host_messages_router
 from .features.inbox import scheduler as inbox_scheduler
 from .features.inbox.router import router as inbox_router
 from .features.login_devices.router import router as login_devices_router
@@ -43,6 +45,7 @@ from .features.owner_statements.router import router as owner_statements_router
 from .features.owners.router import router as owners_router
 from .features.payments.router import router as payments_router
 from .features.pricing.router import router as pricing_router
+from .features.privacy_settings.router import router as privacy_settings_router
 from .features.properties.router import router as properties_router
 from .features.property_discounts.router import router as property_discounts_router
 from .features.property_dossier.router import router as property_dossier_router
@@ -74,13 +77,16 @@ _SLICE_ROUTERS = [
     guests_router,
     # Gast-/Kunden-Dashboard der Plattform-Demand-Seite (/plattform).
     guest_auth_router,
+    guest_blocks_router,
     guest_bookings_router,
     guest_stay_router,
     guest_messages_router,
     guest_wishlist_router,
     guest_reviews_router,
+    host_messages_router,
     inbox_router,
     login_devices_router,
+    privacy_settings_router,
     payments_router,
     subscriptions_router,
     external_calendar_router,

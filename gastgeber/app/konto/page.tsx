@@ -5,19 +5,20 @@
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
+import { DatenschutzAbschnitt } from "@/components/konto/datenschutz-abschnitt";
 import { KontoNav } from "@/components/konto/konto-nav";
 import { PersoenlichAbschnitt } from "@/components/konto/persoenlich-abschnitt";
 import { SicherheitAbschnitt } from "@/components/konto/sicherheit-abschnitt";
 import { SpracheAbschnitt } from "@/components/konto/sprache-abschnitt";
 import { VorbereitungAbschnitt } from "@/components/konto/vorbereitung-abschnitt";
 import { ZahlungenAbschnitt } from "@/components/konto/zahlungen-abschnitt";
+import { getPrivacySettings } from "@/lib/datenschutz";
 import { getAccount } from "@/lib/konto";
 import { getPaymentSettings } from "@/lib/payments";
 
 // Bereiche ohne eigenes Backend → Platzhalter, aber in der Nav sichtbar (wie
 // Airbnb): Titel-Key je Bereich.
 const VORBEREITUNG: Record<string, string> = {
-  datenschutz: "navDatenschutz",
   benachrichtigungen: "navBenachrichtigungen",
   steuern: "navSteuern",
   buchungsrechte: "navBuchungsrechte",
@@ -40,6 +41,7 @@ export default async function KontoPage({
   const aktiv = bereich ?? "persoenlich";
 
   const settings = aktiv === "zahlungen" ? await getPaymentSettings() : null;
+  const privacy = aktiv === "datenschutz" ? await getPrivacySettings() : null;
 
   return (
     <div className="mx-auto max-w-6xl px-8 py-12">
@@ -56,6 +58,9 @@ export default async function KontoPage({
           {aktiv === "sicherheit" && <SicherheitAbschnitt account={account} />}
           {aktiv === "zahlungen" && <ZahlungenAbschnitt settings={settings} />}
           {aktiv === "sprache" && <SpracheAbschnitt account={account} />}
+          {aktiv === "datenschutz" && (
+            <DatenschutzAbschnitt settings={privacy} />
+          )}
           {VORBEREITUNG[aktiv] && (
             <VorbereitungAbschnitt titelKey={VORBEREITUNG[aktiv]} />
           )}

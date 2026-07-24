@@ -28,6 +28,7 @@ type ApiListingDetail = ApiListing & {
   lng: number | null;
   price: number | null;
   nights: number | null;
+  search_engine_indexing: boolean;
 };
 
 type ApiListResponse = { items: ApiListing[]; total: number };
@@ -87,6 +88,7 @@ function mapDetail(a: ApiListingDetail): Listing {
     ...mapList(a),
     beschreibung: a.description,
     preisProNacht: a.price ?? a.price_from,
+    suchmaschinenIndex: a.search_engine_indexing,
   };
 }
 
@@ -96,6 +98,28 @@ export type SuchParams = {
   start?: string;
   end?: string;
 };
+
+// --- Sitemap: nur aktive, suchmaschinen-indexierbare Objekte -----------------
+type ApiSitemapEntry = { id: string; updated_at: string | null };
+type ApiSitemapResponse = { items: ApiSitemapEntry[] };
+
+export type SitemapInserat = { id: string; updatedAt: string | null };
+
+/** IDs (+ letzte Änderung) der aktiven, indexierbaren Objekte für die Sitemap.
+ *  noindex-Objekte liefert das Backend gar nicht erst. Resilient: ein Fehler
+ *  ergibt eine leere Sitemap statt eines Crashs. */
+export async function ladeSitemapInserate(): Promise<SitemapInserat[]> {
+  try {
+    const data = await get<ApiSitemapResponse>("sitemap");
+    return (data.items ?? []).map((e) => ({
+      id: e.id,
+      updatedAt: e.updated_at,
+    }));
+  } catch (err) {
+    console.error("ladeSitemapInserate fehlgeschlagen:", err);
+    return [];
+  }
+}
 
 /** Alle aktiven Inserate (optional gefiltert). Resilient: ein Backend-Fehler
  *  oder Timeout darf die Startseite NICHT abstürzen lassen — dann leere Liste

@@ -41,7 +41,11 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/:path*",
-        headers: securityHeaders({ dev: process.env.NODE_ENV !== "production" }),
+        // googleMaps: web rendert die Standort-Karte (Google-Maps-JS-API).
+        headers: securityHeaders({
+          dev: process.env.NODE_ENV !== "production",
+          googleMaps: true,
+        }),
       },
     ];
   },

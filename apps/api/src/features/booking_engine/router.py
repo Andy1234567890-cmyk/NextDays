@@ -19,6 +19,8 @@ from .schemas import (
     PublicListingDetail,
     PublicListingListResponse,
     ReservationAddonsView,
+    SitemapEntry,
+    SitemapResponse,
     SliceHealth,
 )
 from .service import BookingEngineError, BookingEngineService
@@ -78,6 +80,15 @@ def listing_detail(
         return service.listing_detail(listing_id, start=start, end=end)
     except BookingEngineError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/sitemap", response_model=SitemapResponse)
+def sitemap(service: BookingEngineServiceDep) -> SitemapResponse:
+    """Aktive, suchmaschinen-indexierbare Objekte (id + updated_at) für die
+    Sitemap der Plattform. noindex-Objekte tauchen hier NICHT auf."""
+    return SitemapResponse(
+        items=[SitemapEntry(**e) for e in service.sitemap_entries()]
+    )
 
 
 @router.get("/availability", response_model=PublicAvailabilityResponse)

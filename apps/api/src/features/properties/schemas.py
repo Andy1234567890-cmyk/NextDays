@@ -100,6 +100,27 @@ class PropertyStatus(StrEnum):
     inactive = "inactive"
 
 
+class ListingType(StrEnum):
+    # public.listing_type (Migration 0198) — Airbnb „Angebotsart".
+    entire_place = "entire_place"  # Der gesamte Ort
+    private_room = "private_room"  # Zimmer
+    shared_room = "shared_room"    # Geteiltes Zimmer
+
+
+# Erlaubte Einheiten der Wohnfläche (Airbnb „Property size" · Unit). Alles andere
+# → 422 (kein erfundener Default, Wurzel 4).
+SIZE_UNITS: frozenset[str] = frozenset({"sqm", "sqft"})
+
+
+def _validate_size_unit(value: str | None) -> str | None:
+    """Wohnflächen-Einheit auf 'sqm'/'sqft' beschränken (leer bleibt leer)."""
+    if value is None or value == "":
+        return None
+    if value not in SIZE_UNITS:
+        raise ValueError("size_unit muss 'sqm' oder 'sqft' sein.")
+    return value
+
+
 class PropertyBase(BaseModel):
     """Gemeinsame, bearbeitbare Felder eines Objekts."""
 
@@ -109,6 +130,18 @@ class PropertyBase(BaseModel):
     # erhalten weiter `description`. None = Fallback auf `description`.
     platform_description: str | None = None
     property_type: PropertyType = PropertyType.ferienhaus
+    # Objekt-Taxonomie (Migration 0198) — Airbnb-3-Ebenen-Modell:
+    #   category_slug (Kategorie) → subtype_slug (Immobilientyp) → listing_type
+    #   (Angebotsart). property_type bleibt Legacy (Channex-Fallback/Bestand).
+    # total_rooms: nur „Hotel & Betriebe" (Zimmeranzahl-Bucket „2-5"…"50+").
+    category_slug: str | None = None
+    subtype_slug: str | None = None
+    listing_type: ListingType | None = None
+    total_rooms: str | None = None
+    # Booking.com-Unterkunftsart des Betriebs (PCT-Code, developers.booking.com).
+    # Eigene Achse neben property_type: Hotel/Hostel/Pension/Aparthotel/Riad/…
+    # (booking-property-types.ts). None = nicht gesetzt (kein erfundener Default).
+    booking_property_type: int | None = None
     status: PropertyStatus = PropertyStatus.draft
     # Sichtbarkeit auf dem eigenen myNextDays-Marktplatz (/plattform) als eigener
     # Buchungskanal — getrennt von status (Lebenszyklus) und OTA-Distribution
@@ -128,6 +161,14 @@ class PropertyBase(BaseModel):
 
     # Rental info: Größe, Einheiten, Gäste.
     max_guests: int = Field(default=1, ge=1, le=99)
+
+    # Gebäude-/Flächenangaben (Airbnb „Property type" · Zusatzfelder, Migration
+    # 0197). Harte Grenzen (Wurzel 8: kein unbegrenzter Bereich).
+    floors_total: int | None = Field(default=None, ge=1, le=200)
+    floor_number: int | None = Field(default=None, ge=0, le=200)
+    year_built: int | None = Field(default=None, ge=1000, le=2100)
+    size_value: float | None = Field(default=None, gt=0, le=100000)
+    size_unit: str | None = None
 
     # Strukturierte Adresse (Lastenheft §6).
     street: str | None = None
@@ -155,6 +196,7 @@ class PropertyBase(BaseModel):
 
     _norm_country = field_validator("country")(_validate_country_iso2)
     _norm_currency = field_validator("currency")(_validate_currency)
+    _norm_size_unit = field_validator("size_unit")(_validate_size_unit)
 
 
 class PropertyCreate(PropertyBase):
@@ -168,6 +210,14 @@ class PropertyUpdate(BaseModel):
     description: str | None = None
     platform_description: str | None = None
     property_type: PropertyType | None = None
+    # Objekt-Taxonomie (0198). subtype_slug wird gegen property_subtypes validiert
+    # (service.update, fail-closed); category leitet sich daraus ab.
+    category_slug: str | None = None
+    subtype_slug: str | None = None
+    listing_type: ListingType | None = None
+    total_rooms: str | None = None
+    # Booking.com-Unterkunftsart (PCT-Code) — eigene Achse neben property_type.
+    booking_property_type: int | None = None
     status: PropertyStatus | None = None
     # Marktplatz-Kanal an/aus (0159) — pro-Kanal-Sichtbarkeit, unabhängig von
     # status und OTA. Toggle für „auf dem eigenen Marktplatz zeigen/verstecken".
@@ -179,6 +229,12 @@ class PropertyUpdate(BaseModel):
     # (service.update, Wurzel 1). Nicht unterstützter Code → 422.
     currency: str | None = None
     max_guests: int | None = Field(default=None, ge=1, le=99)
+    # Gebäude-/Flächenangaben (0197) — harte Grenzen (Wurzel 8).
+    floors_total: int | None = Field(default=None, ge=1, le=200)
+    floor_number: int | None = Field(default=None, ge=0, le=200)
+    year_built: int | None = Field(default=None, ge=1000, le=2100)
+    size_value: float | None = Field(default=None, gt=0, le=100000)
+    size_unit: str | None = None
     street: str | None = None
     house_number: str | None = None
     postal_code: str | None = None
@@ -192,6 +248,7 @@ class PropertyUpdate(BaseModel):
 
     _norm_country = field_validator("country")(_validate_country_iso2)
     _norm_currency = field_validator("currency")(_validate_currency)
+    _norm_size_unit = field_validator("size_unit")(_validate_size_unit)
     photos: list[str] | None = None
     type_attributes: dict | None = None
 
@@ -232,6 +289,36 @@ class PropertyResponse(PropertyBase):
 class PropertyListResponse(BaseModel):
     items: list[PropertyResponse]
     total: int
+
+
+# --- Objekt-Taxonomie (property_categories/property_subtypes, Migration 0198) --
+
+
+class PropertyCategoryOut(BaseModel):
+    """Eine Objekt-Kategorie (Ebene 1)."""
+
+    slug: str
+    label_de: str
+    sort_order: int
+
+
+class PropertySubtypeOut(BaseModel):
+    """Ein Immobilientyp (Ebene 2) mit Kategorie + erlaubten Angebotsarten. Die
+    Portal-Mappings (Channex/Booking) sind serverintern und werden NICHT
+    ausgeliefert — das Panel braucht nur Kategorie + Angebotsarten."""
+
+    slug: str
+    label_de: str
+    category_slug: str
+    listing_types: list[ListingType] = Field(default_factory=list)
+    sort_order: int
+
+
+class PropertyTaxonomyResponse(BaseModel):
+    """Vollständige Taxonomie für den Objekttyp-Editor (Kategorien + Immobilientypen)."""
+
+    categories: list[PropertyCategoryOut]
+    subtypes: list[PropertySubtypeOut]
 
 
 class ImageUploadResponse(BaseModel):

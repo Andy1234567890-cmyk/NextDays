@@ -23,17 +23,28 @@ export interface CspOptions {
   frameAncestors?: string;
   /** Dev-Modus braucht 'unsafe-eval' (React-Debugging). In Prod NIE. */
   dev?: boolean;
+  /** Google-Maps-JS-API freigeben (nur Apps, die eine Karte rendern). Fügt die
+   *  minimal nötigen Maps-Hosts zu script-/connect-/img-src hinzu — NICHT pauschal
+   *  für alle Apps, damit die CSP sonst eng bleibt (Wurzel 6). */
+  googleMaps?: boolean;
 }
+
+// Genau die Hosts, die die Google-Maps-JS-API braucht — nicht mehr.
+const MAPS_SCRIPT = ["https://maps.googleapis.com"];
+const MAPS_CONNECT = ["https://maps.googleapis.com", "https://maps.gstatic.com"];
+const MAPS_IMG = ["https://maps.googleapis.com", "https://maps.gstatic.com", "https://*.googleusercontent.com"];
 
 /** Baut den CSP-Header-Wert für eine App. */
 export function buildCsp(opts: CspOptions = {}): string {
-  const { connectHosts = [], frameAncestors = "'none'", dev = false } = opts;
-  const connect = ["'self'", "https:", ...connectHosts].join(" ");
+  const { connectHosts = [], frameAncestors = "'none'", dev = false, googleMaps = false } = opts;
+  const scriptExtra = googleMaps ? " " + MAPS_SCRIPT.join(" ") : "";
+  const connect = ["'self'", "https:", ...connectHosts, ...(googleMaps ? MAPS_CONNECT : [])].join(" ");
+  const img = ["'self'", "data:", "blob:", "https:", ...(googleMaps ? MAPS_IMG : [])].join(" ");
   return [
     "default-src 'self'",
-    `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ""}`,
+    `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ""}${scriptExtra}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https:",
+    `img-src ${img}`,
     "font-src 'self' data:",
     `connect-src ${connect}`,
     `frame-ancestors ${frameAncestors}`,

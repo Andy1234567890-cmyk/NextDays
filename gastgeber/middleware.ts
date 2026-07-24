@@ -7,8 +7,13 @@ import { type NextRequest, NextResponse } from "next/server";
 
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  // Anmeldung + API-interne Pfade bleiben frei.
-  if (pathname.startsWith("/anmelden")) return NextResponse.next();
+  // Anmeldung + API-Route-Handler bleiben frei. Route-Handler (z. B. der Foto-
+  // Upload /api/objekte/…/fotos) machen ihre eigene Auth über den Host-Cookie
+  // (readToken); ein Redirect würde POST/multipart-Requests kaputt machen
+  // (Next.js: „Failed to find Server Action").
+  if (pathname.startsWith("/anmelden") || pathname.startsWith("/api/")) {
+    return NextResponse.next();
+  }
 
   // host-only Cookie (dev: nd_host, prod: __Host-nd_host).
   const token =

@@ -19,6 +19,9 @@ export type Listing = {
   bewertung?: number;
   anzahlBewertungen?: number;
   istFavorit?: boolean;
+  // Ob die Detailseite für Suchmaschinen indexierbar ist (Airbnb „Objekte in
+  // Suchmaschinen aufnehmen"). Nur beim Detail gesetzt; false → robots-noindex.
+  suchmaschinenIndex?: boolean;
 };
 
 // Themen-Reihe für die Startseite (horizontale Kategorie).

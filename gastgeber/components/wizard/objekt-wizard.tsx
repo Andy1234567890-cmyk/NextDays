@@ -45,21 +45,32 @@ interface WizardData {
   monthly_discount: boolean;
 }
 
+// Icons pro Objekttyp — jeder Typ eindeutig (keine Duplikate, keine Lücken).
+// Solar hat kein Zelt/Boot → dafür Phosphor (ph, gleicher Duotone-Stil).
+// Zimmertypen als unterscheidbare Bett-Serie (mdi: single/double/king).
 const TYPES = [
   { key: "ferienhaus", icon: "solar:home-2-bold-duotone" },
   { key: "appartement", icon: "solar:buildings-2-bold-duotone" },
-  { key: "glamping", icon: "solar:tent-bold-duotone" },
+  { key: "glamping", icon: "ph:tent-duotone" },
   { key: "tiny_house", icon: "solar:home-smile-bold-duotone" },
-  { key: "hausboot", icon: "solar:ship-bold-duotone" },
-  { key: "einzelzimmer", icon: "solar:bed-bold-duotone" },
-  { key: "doppelzimmer", icon: "solar:bed-bold-duotone" },
-  { key: "suite", icon: "solar:crown-bold-duotone" },
+  { key: "hausboot", icon: "ph:sailboat-duotone" },
+  { key: "einzelzimmer", icon: "mdi:bed-single" },
+  { key: "doppelzimmer", icon: "mdi:bed-double" },
+  { key: "suite", icon: "mdi:bed-king" },
 ] as const;
+
+// Unterkunftsart (Schritt 2) — je Typ ein eigenes Icon: ganze Unterkunft = Haus,
+// ein Zimmer = Bett, Gemeinschaftszimmer = Personengruppe. Nicht dreimal dasselbe.
+const PRIVACY_ICON = {
+  entire: "solar:home-bold-duotone",
+  room: "solar:bed-bold-duotone",
+  shared: "solar:users-group-rounded-bold-duotone",
+} as const;
 
 const AMENITIES = [
   { key: "wifi", icon: "solar:wi-fi-router-bold-duotone", label: "WLAN" },
   { key: "kitchen", icon: "solar:chef-hat-bold-duotone", label: "Küche" },
-  { key: "parking", icon: "solar:parking-square-bold-duotone", label: "Parkplatz" },
+  { key: "parking", icon: "ph:car-duotone", label: "Parkplatz" },
   { key: "washer", icon: "solar:washing-machine-bold-duotone", label: "Waschmaschine" },
   { key: "tv", icon: "solar:tv-bold-duotone", label: "TV" },
   { key: "heating", icon: "solar:temperature-bold-duotone", label: "Heizung" },
@@ -69,7 +80,7 @@ const AMENITIES = [
 
 const OCCUPANCY = [
   { key: "me", icon: "solar:user-bold-duotone" },
-  { key: "familie", icon: "solar:users-group-rounded-bold-duotone" },
+  { key: "familie", icon: "solar:user-heart-bold-duotone" },
   { key: "andere", icon: "solar:users-group-two-rounded-bold-duotone" },
   { key: "mitbewohner", icon: "solar:user-hands-bold-duotone" },
 ] as const;
@@ -247,7 +258,7 @@ export function ObjektWizard() {
                 key={p}
                 title={t(`privacy.${p}`)}
                 description={t(`privacy.${p}Hint`)}
-                icon="solar:home-bold-duotone"
+                icon={PRIVACY_ICON[p]}
                 selected={d.privacy_type === p}
                 onClick={() => set("privacy_type", p)}
               />

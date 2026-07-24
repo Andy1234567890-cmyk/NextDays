@@ -22,6 +22,7 @@ from .common import (
     _channex_facility_ids,
     _channex_property_type,
     _channex_type_from_pct,
+    _channex_type_from_subtype,
     _timezone_for_country,
     log,
 )
@@ -189,6 +190,10 @@ class ContentSyncMixin:
             db.table("properties")
             .select(
                 "id, title, description, property_type, booking_property_type, "
+                "subtype_slug, "
+                # Immobilientyp-Mapping (0198): der an Channex gesendete
+                # property_type kommt bevorzugt aus dem Subtyp (property_subtypes).
+                "property_subtypes(channex_property_type), "
                 "street, house_number, "
                 "postal_code, city, country, lat, lng, max_guests, amenities, "
                 "type_attributes, currency"
@@ -625,11 +630,13 @@ class ContentSyncMixin:
             "zip_code": prop_row.get("postal_code"),
             "city": prop_row.get("city"),
             "country": country,
-            # Unterkunftsart: explizit gewählte Booking-PCT hat Vorrang (feiner:
-            # Hotel/Guesthouse/Riad/…); sonst der aus dem internen property_type
-            # abgeleitete grobe Channex-Typ (bisheriges Verhalten).
+            # Unterkunftsart (Channex-property_type), Vorrang-Reihenfolge:
+            #  1. Immobilientyp-Mapping (property_subtypes.channex_property_type, 0198)
+            #  2. explizit gewählte Booking-PCT (Hotel/Guesthouse/Riad/…)
+            #  3. aus dem Legacy-property_type abgeleiteter grober Typ (Bestand)
             "property_type": (
-                _channex_type_from_pct(prop_row.get("booking_property_type"))
+                _channex_type_from_subtype(prop_row.get("property_subtypes"))
+                or _channex_type_from_pct(prop_row.get("booking_property_type"))
                 or _channex_property_type(prop_row.get("property_type"))
             ),
             "latitude": prop_row.get("lat"),

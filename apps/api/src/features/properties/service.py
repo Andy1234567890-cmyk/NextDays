@@ -24,6 +24,7 @@ from src.jobs.queue import (
 from .schemas import (
     ChannelState,
     PhotoUpdateRequest,
+    PropertyCategoryOut,
     PropertyChannels,
     PropertyCreate,
     PropertyListResponse,
@@ -31,6 +32,8 @@ from .schemas import (
     PropertyPhotoListResponse,
     PropertyResponse,
     PropertyStatus,
+    PropertySubtypeOut,
+    PropertyTaxonomyResponse,
     PropertyType,
     PropertyUpdate,
     SliceHealth,
@@ -48,6 +51,9 @@ log = get_logger("nextdays.properties")
 # infants, count_of_rooms) gebaut, die an die OTAs geht.
 _CONTENT_FIELDS = frozenset({
     "title", "description", "platform_description", "property_type",
+    # Immobilientyp (0198) + Booking-PCT bestimmen (feiner) den an die Portale
+    # gesendeten Channex-property_type → content-relevant.
+    "subtype_slug", "booking_property_type",
     "street", "house_number", "postal_code", "city", "country",
     "lat", "lng", "amenities", "max_guests", "type_attributes",
 })
@@ -117,6 +123,58 @@ class PropertiesService:
                 "angebotenen Liste.",
                 status_code=422,
             )
+
+    def taxonomy(self) -> PropertyTaxonomyResponse:
+        """Objekt-Taxonomie (Kategorien + Immobilientypen) für den Objekttyp-Editor
+        (0198). Öffentlicher Referenzkatalog — nur UI-Felder (keine Portal-Mappings),
+        sortiert nach sort_order."""
+        cats = (
+            self._db.table("property_categories")
+            .select("slug, label_de, sort_order")
+            .order("sort_order")
+            .execute()
+        )
+        subs = (
+            self._db.table("property_subtypes")
+            .select("slug, label_de, category_slug, listing_types, sort_order")
+            .order("sort_order")
+            .execute()
+        )
+        return PropertyTaxonomyResponse(
+            categories=[PropertyCategoryOut(**c) for c in (cats.data or [])],
+            subtypes=[
+                PropertySubtypeOut(**{**s, "listing_types": s.get("listing_types") or []})
+                for s in (subs.data or [])
+            ],
+        )
+
+    def _require_valid_subtype(
+        self, subtype_slug: str, listing_type: str | None
+    ) -> str:
+        """Immobilientyp muss in property_subtypes existieren; ein mitgeschickter
+        Listing-Type muss dazu erlaubt sein. Fail-closed (Wurzel 3/5). Gibt den
+        zugehörigen category_slug zurück (damit die Kategorie serverseitig mitgesetzt
+        wird — die UI muss sie nicht separat konsistent halten)."""
+        row = (
+            self._db.table("property_subtypes")
+            .select("slug, category_slug, listing_types")
+            .eq("slug", subtype_slug)
+            .limit(1)
+            .execute()
+        )
+        if not row.data:
+            raise PropertyError(
+                f"Unbekannter Objekttyp „{subtype_slug}“.", status_code=422
+            )
+        if listing_type is not None and listing_type not in (
+            row.data[0].get("listing_types") or []
+        ):
+            raise PropertyError(
+                f"Die Angebotsart „{listing_type}“ ist für diesen Objekttyp "
+                "nicht möglich.",
+                status_code=422,
+            )
+        return row.data[0]["category_slug"]
 
     def list(self, ctx: AuthContext) -> PropertyListResponse:
         tenant_id = self._require_tenant(ctx)
@@ -384,6 +442,12 @@ class PropertiesService:
         if "property_type" in changes:
             self._require_type_matches_accommodation(
                 tenant_id, PropertyType(changes["property_type"])
+            )
+        # Immobilientyp (0198) gegen den Katalog prüfen und die Kategorie
+        # serverseitig ableiten (die UI muss category_slug nicht konsistent halten).
+        if changes.get("subtype_slug"):
+            changes["category_slug"] = self._require_valid_subtype(
+                changes["subtype_slug"], changes.get("listing_type")
             )
         # Wechsel auf "active" nur zulassen, wenn das Objekt bereits bei den
         # Portalen registriert ist (channex_property_map). Sonst würde ein Objekt

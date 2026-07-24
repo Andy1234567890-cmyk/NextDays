@@ -14,6 +14,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.supabase import fetch_all_rows
+from src.features.guest_blocks.service import GuestBlockService
 
 from .schemas import (
     CreateThreadRequest,
@@ -231,6 +232,16 @@ class GuestMessagesService:
         # E-Mail-Match zuerst: nur eigene Reservierungen dürfen einen Thread haben.
         reservation = self._own_reservation(req.reservation_id, email)
 
+        # Airbnb-Block: ein blockierter Gast startet keine neue Konversation —
+        # außer es läuft ein 2-Wochen-Trip-Fenster für diese Reservierung.
+        if GuestBlockService(self._db()).is_blocked_for_messaging(
+            reservation["tenant_id"], guest_id
+        ):
+            raise GuestMessagesError(
+                "Du kannst diesem Gastgeber derzeit keine Nachrichten senden.",
+                status_code=403,
+            )
+
         # Bestehenden Thread idempotent wiederverwenden (unique reservation+guest).
         existing = (
             self._db()
@@ -288,7 +299,16 @@ class GuestMessagesService:
         die Liste). Wurzel 8: body sanitisiert + gecappt. last_message_at des
         Threads wird auf den Nachrichten-Zeitpunkt gesetzt.
         """
-        self._own_thread(thread_id, guest_id)
+        thread = self._own_thread(thread_id, guest_id)
+        # Airbnb-Block: hat der Betrieb diesen Gast blockiert, darf er nicht mehr
+        # schreiben — außer es läuft ein 2-Wochen-Trip-Fenster (im Block-Service).
+        if GuestBlockService(self._db()).is_blocked_for_messaging(
+            thread["tenant_id"], guest_id
+        ):
+            raise GuestMessagesError(
+                "Du kannst diesem Gastgeber derzeit keine Nachrichten senden.",
+                status_code=403,
+            )
         body = _sanitize_body(req.body)
         now = _now_iso()
 

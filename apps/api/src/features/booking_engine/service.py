@@ -17,6 +17,7 @@ from src.core.sales_channels import (
     stop_sell_blocks_channel,
 )
 from src.core.supabase import fetch_all_rows
+from src.features.guest_blocks.service import GuestBlockService
 
 from .schemas import (
     GuestContact,
@@ -41,13 +42,19 @@ log = get_logger("nextdays.booking_engine")
 # description NUR hier; OTAs/Channex sehen ihn nicht).
 _PUBLIC_PROPERTY_COLUMNS = (
     "id, title, description, platform_description, property_type, city, country, "
-    "lat, lng, max_guests, amenities, photos, type_attributes, status"
+    "lat, lng, max_guests, amenities, photos, type_attributes, status, "
+    "search_engine_indexing"
 )
 
 # Max. angezeigte Marktplatz-Treffer je Suche. Deckelt die datierte Preisauflösung
 # (je Objekt ein Resolver-Lauf) und die Antwortgröße. Über diesem Wert wird
 # getruncated + geloggt (keine stille Begrenzung).
 _MAX_LISTING_RESULTS = 200
+
+# Max. Objekte in der öffentlichen Sitemap. Deckelt den JWT-losen Sitemap-Endpunkt
+# (Wurzel 8); Suchmaschinen holen Sitemaps sowieso paginiert, 50k ist das
+# Sitemap-Protokoll-Limit — deutlich darunter bleiben.
+_MAX_SITEMAP_ENTRIES = 10000
 
 # Max. Datums-Span für öffentliche, JWT-lose Endpunkte. Ohne Obergrenze baut der
 # Tag-für-Tag-Loop (_nights) + die datierte Preisauflösung bei z. B. end=9999
@@ -337,7 +344,29 @@ class BookingEngineService:
             price=price,
             nights=nights,
             addons=self._public_addons(listing_id),
+            # Steuert das robots-noindex-Meta auf der öffentlichen Inserat-Seite
+            # (Airbnb-Mechanik). Default false = nicht indexierbar.
+            search_engine_indexing=bool(r.get("search_engine_indexing")),
         )
+
+    def sitemap_entries(self) -> list[dict]:
+        """Aktive UND suchmaschinen-indexierbare Objekte (id + updated_at) für die
+        Sitemap. Nur diese Objekte dürfen in der Sitemap stehen — noindex-Objekte
+        (search_engine_indexing=false) tauchen gar nicht erst auf. Gedeckelt auf
+        _MAX_SITEMAP_ENTRIES (DoS-Schutz für den JWT-losen Endpunkt, Wurzel 8)."""
+        rows = (
+            self._db()
+            .table("properties")
+            .select("id, updated_at")
+            .eq("status", "active")
+            .eq("search_engine_indexing", True)
+            .order("updated_at", desc=True)
+            .limit(_MAX_SITEMAP_ENTRIES)
+            .execute()
+        ).data or []
+        return [
+            {"id": str(r["id"]), "updated_at": r.get("updated_at")} for r in rows
+        ]
 
     def _bookable_addon_selections(
         self, property_id: str, selections: list[tuple[str, int]]
@@ -509,6 +538,17 @@ class BookingEngineService:
         if prop is None:
             raise BookingEngineError("Objekt nicht gefunden.", status_code=404)
         tenant_id = prop["tenant_id"]
+
+        # Airbnb-Block: ein vom Betrieb blockierter Gast kann dessen Objekte nicht
+        # mehr buchen (E-Mail-Match auf portal_guests). Buchen ist IMMER gesperrt —
+        # keine Trip-Ausnahme (Artikel 4046).
+        if GuestBlockService(self._db()).is_email_blocked_for_booking(
+            tenant_id, req.contact.email
+        ):
+            raise BookingEngineError(
+                "Eine Buchung ist für dieses Konto nicht möglich.",
+                status_code=403,
+            )
 
         # Vergangene Anreise ablehnen: für Tage vor heute existieren keine
         # availability-Zeilen → der Double-Booking-Check unten griffe nicht.

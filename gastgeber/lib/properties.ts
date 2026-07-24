@@ -13,18 +13,93 @@ export interface PropertyChannels {
   portals?: string | null;
 }
 
+// Flexible Detailfelder im jsonb type_attributes (aus dem Wizard). Nur die für
+// den Editor relevanten Teile typisiert; der Rest bleibt offen. Werte können
+// fehlen → UI rendert dann „—"/„Noch nicht hinterlegt" (kein Fake, Wurzel 4).
+export interface PropertyAttributes {
+  beds?: number;
+  bedrooms?: number;
+  bathrooms_private?: number;
+  bathrooms_shared?: number;
+  size_m2?: number;
+  rooms?: string[];
+  // Preis-Blob aus dem Wizard (Legacy). Die WAHRE Preisquelle des Editors ist
+  // NICHT dieser Blob, sondern rate_plans/dp_settings/property_discounts (siehe
+  // lib/preise.ts) — der Resolver/Kalender/Quote lesen ausschließlich dort.
+  pricing?: {
+    basePrice?: number;
+    currency?: string;
+  };
+  availability?: {
+    minStay?: number;
+    maxStay?: number;
+  };
+  // Schlafmöglichkeiten je Zimmer (Airbnb „Sleeping arrangements"): Zimmer-ID →
+  // Bett-Typ-Schlüssel → Anzahl. Lebt im bestehenden type_attributes-jsonb, KEINE
+  // eigene Tabelle. Fehlt = keine Betten gepflegt.
+  sleeping?: Record<string, Record<string, number>>;
+  // Privatsphäre je Zimmer (Airbnb „Privacy info"): Türschloss vorhanden + Typ.
+  // hasLock=false: kein Schloss. hasLock=true ohne lockType: gemeldet, Typ offen.
+  privacy?: Record<
+    string,
+    { hasLock: boolean; lockType: "inside_only" | "inside_outside" | null }
+  >;
+  // Barrierefreiheit (Airbnb „Accessibility features"): Merkmal-Slug → { has }.
+  // Objektweit (nicht pro Zimmer). Merkmale mit Channex-Gegenstück werden zusätzlich
+  // in properties.amenities gespiegelt (OTA-Sync); die Demofotos werden NIE
+  // gespeichert (nur Vorlage).
+  accessibility?: Record<string, { has: boolean }>;
+  // Kachelbild je Zimmer (Zimmer-ID → Foto-URL aus der Objekt-Galerie). EINE
+  // Quelle, geteilt zwischen Fototour und Schlafmöglichkeiten (Airbnb: ein Foto
+  // pro Zimmer). Reine Editor-Zuordnung; die Foto-Wahrheit bleibt properties.photos.
+  roomPhotos?: Record<string, string>;
+  // Standort-Zusatzangaben (Airbnb „Location"), objektweit. Die eigentliche
+  // Adresse + lat/lng liegen in den Top-Level-Property-Spalten; hier nur die
+  // Editor-Zusätze. features/views = Slug-Listen (lage-katalog.ts).
+  location?: {
+    // „Genaue Lage zeigen" (Airbnb „Show precise location"). Default false =
+    // ungefähre Lage (Umkreis) — Datenschutz-schonender Standard.
+    preciseLocation?: boolean;
+    features?: string[]; // Location features
+    views?: string[]; // Scenic views
+    neighborhood?: string; // Freitext „Neighborhood description"
+    gettingAround?: string; // Freitext „Getting around"
+  };
+  [key: string]: unknown;
+}
+
+// Angebotsart (Airbnb „Listing type", public.listing_type, Migration 0198).
+export type ListingType = "entire_place" | "private_room" | "shared_room";
+
 export interface Property {
   id: string;
   tenant_id: string;
   title: string;
   description: string | null;
   platform_description: string | null;
+  // Legacy-Objekttyp-Enum (bleibt für Bestand/Channex-Fallback).
   property_type: string;
+  // Objekt-Taxonomie (0198): Kategorie → Immobilientyp → Angebotsart.
+  category_slug: string | null;
+  subtype_slug: string | null;
+  listing_type: ListingType | null;
+  total_rooms: string | null;
+  // Booking.com-Unterkunftsart des Betriebs (PCT-Code) — eigene Achse.
+  booking_property_type: number | null;
+  // Airbnb-Zusatzfelder (Gebäude/Fläche, Migration 0197).
+  floors_total: number | null;
+  floor_number: number | null;
+  year_built: number | null;
+  size_value: number | null;
+  size_unit: string | null;
   status: PropertyStatus;
   listed_on_marketplace: boolean;
   listed_on_website: boolean;
   currency: string | null;
   max_guests: number;
+  // Standort (aus dem Lage-Schritt). Für den Umkreis-Preisvergleich (Karte).
+  lat: number | null;
+  lng: number | null;
   street: string | null;
   house_number: string | null;
   postal_code: string | null;
@@ -33,6 +108,7 @@ export interface Property {
   amenities: string[];
   photos: string[];
   channels: PropertyChannels | null;
+  type_attributes: PropertyAttributes;
   created_at: string | null;
   updated_at: string | null;
 }

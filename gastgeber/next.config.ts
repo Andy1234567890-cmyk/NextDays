@@ -29,7 +29,12 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/:path*",
-        headers: securityHeaders({ dev: process.env.NODE_ENV !== "production" }),
+        // googleMaps: der Objekt-Editor rendert die Preisvergleichs-Karte
+        // (Google-Maps-JS-API) → deren Hosts in die CSP freigeben.
+        headers: securityHeaders({
+          dev: process.env.NODE_ENV !== "production",
+          googleMaps: true,
+        }),
       },
     ];
   },

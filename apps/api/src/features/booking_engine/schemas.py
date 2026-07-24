@@ -67,11 +67,27 @@ class PublicListingDetail(PublicListing):
     price: float | None = None
     nights: int | None = None
     addons: list[PublicAddon] = []
+    # Ob diese Objektseite für Suchmaschinen indexierbar ist (Airbnb „Objekte in
+    # Suchmaschinen aufnehmen"). false → Frontend rendert robots-noindex-Meta.
+    search_engine_indexing: bool = False
 
 
 class PublicListingListResponse(BaseModel):
     items: list[PublicListing] = []
     total: int = 0
+
+
+class SitemapEntry(BaseModel):
+    """Ein Sitemap-Eintrag: nur ID + letzter Änderungszeitpunkt eines aktiven,
+    suchmaschinen-indexierbaren Objekts. Bewusst minimal (kein Preis/keine
+    Auflösung), damit die Sitemap-Abfrage billig bleibt."""
+
+    id: str
+    updated_at: str | None = None
+
+
+class SitemapResponse(BaseModel):
+    items: list[SitemapEntry] = []
 
 
 class PublicDay(BaseModel):
