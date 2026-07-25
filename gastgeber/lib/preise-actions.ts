@@ -14,7 +14,13 @@ import { revalidatePath } from "next/cache";
 import { ApiError } from "@nextdays/auth/errors";
 
 import { api } from "./api-server";
-import { getMarktVergleich, type Discount, type DpSettings, type MarktVergleich } from "./preise";
+import {
+  getMarktVergleich,
+  type Discount,
+  type DpSettings,
+  type MarktVergleich,
+  type SmartVorschlag,
+} from "./preise";
 
 type Result<T> = { ok: true; data: T } | { ok: false; error: string };
 
@@ -54,6 +60,23 @@ export async function setBasePrice(
     return { ok: true, data };
   } catch (exc) {
     return fehler(exc, "Grundpreis konnte nicht gespeichert werden.");
+  }
+}
+
+/** Empfohlene Smart-Pricing-Spanne aus der ECHTEN Dynamic-Pricing-Engine
+ *  (nachfrage-/saison-/wochenend-getriebene Tagespreis-Extrema über 120 Tage) —
+ *  kein geratener Multiplikator. Fehler/fehlende Datengrundlage → available:false
+ *  (Best-effort-Read, kein „unexpected response"). */
+export async function ladeSmartVorschlag(propertyId: string): Promise<SmartVorschlag> {
+  try {
+    const d = await api<{
+      available: boolean;
+      min_price: number | null;
+      max_price: number | null;
+    }>(`/pricing/settings/${propertyId}/suggest`);
+    return { available: d.available, min_price: d.min_price, max_price: d.max_price };
+  } catch {
+    return { available: false, min_price: null, max_price: null };
   }
 }
 

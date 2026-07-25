@@ -210,6 +210,19 @@ class DpOverviewResponse(BaseModel):
     items: list[DpOverviewItem] = []
 
 
+class PriceSuggestResponse(BaseModel):
+    """Empfohlene Smart-Pricing-Spanne aus der Dynamic-Pricing-Engine.
+
+    min/max = Extrema der von Nachfrage/Saison/Wochenende/Auslastung getriebenen
+    Tagespreise über den Horizont. available=False, wenn kein Basispreis existiert
+    (kein Vorschlag ohne Datengrundlage — kein erfundener Wert)."""
+
+    property_id: str
+    available: bool = False
+    min_price: float | None = None
+    max_price: float | None = None
+
+
 class RecomputeResponse(BaseModel):
     properties: int
     days: int

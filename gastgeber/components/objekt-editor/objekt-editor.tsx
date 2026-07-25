@@ -21,6 +21,7 @@ import {
 } from "@/lib/preise-actions";
 import type { Property } from "@/lib/properties";
 import { updateProperty } from "@/lib/properties-actions";
+import { setMinStay } from "@/lib/verfuegbarkeit-actions";
 import { listPhotos, type PropertyPhoto } from "@/lib/property-photos";
 import { getTaxonomy } from "@/lib/taxonomie";
 import { useRealtime } from "@/lib/use-realtime";
@@ -28,8 +29,8 @@ import { useRealtime } from "@/lib/use-realtime";
 import { ObjektPublish } from "@/components/objekt-publish";
 
 import { AmenityPanel } from "./amenity-panel";
-import { AttributPanel } from "./attribut-panel";
 import { BarrierefreiheitPanel } from "./barrierefreiheit-panel";
+import { GaestePanel } from "./gaeste-panel";
 import { KACHEL_SPRING } from "./foto-kacheln";
 import { FotoTour } from "./foto-tour";
 import { LagePanel } from "./lage-panel";
@@ -40,6 +41,7 @@ import { SchlafPanel } from "./schlaf-panel";
 import { SchlafmoeglichkeitenPanel } from "./schlaf-uebersicht";
 import { TextPanel } from "./text-panel";
 import { TypPanel } from "./typ-panel";
+import { VerfuegbarkeitPanel } from "./verfuegbarkeit-panel";
 import { WertPanel } from "./wert-panel";
 
 type SectionKey =
@@ -59,6 +61,12 @@ export function ObjektEditor({
   // Preis-Stand aus den echten Quellen (rate_plans/dp_settings/property_discounts).
   // Realtime unten hält ihn aktuell; Actions spiegeln optimistisch nach.
   const [preise, setPreise] = useState<PreisStand>(preisStand);
+  // Airbnb-Muster: JEDE Detail-Sidebar speichert ihren eigenen Wert SOFORT (eigener
+  // Abbrechen/Speichern-Fuß in der Sidebar) — es gibt KEINEN editor-weiten Draft und
+  // keine globale untere Speicherleiste. prop/preise sind direkt die gespeicherte
+  // Wahrheit; Realtime hält sie aktuell.
+  const viewProp: Property = prop;
+  const viewPreise: PreisStand = preise;
   // Immobilientyp-Label für die „Objekttyp"-Vorschau (Taxonomie).
   const [typLabel, setTypLabel] = useState<string | null>(null);
   const [aktiv, setAktiv] = useState<SectionKey>("fotos");
@@ -72,6 +80,9 @@ export function ObjektEditor({
   // NUR die rechte Bett-Sidebar (nicht die Fototour-Detailansicht mit Cover-Foto,
   // die hat im Schlaf-Kontext nichts verloren). null = zu.
   const [schlafRaum, setSchlafRaum] = useState<string | null>(null);
+  // Ist im Preise-Panel eine Detail-Sidebar offen? Dann blendet der Editor die
+  // linke Abschnittsliste aus (Airbnb: Klick auf eine Preis-Karte → links weg).
+  const [detailOffen, setDetailOffen] = useState(false);
   // Galerie-Fotos (id + url) für „Weitere Fotos"/Picker. properties.photos ist nur
   // der URL-Spiegel; zum Löschen braucht es die Foto-ID → volle Liste laden.
   const [fotos, setFotos] = useState<PropertyPhoto[]>([]);
@@ -141,6 +152,10 @@ export function ObjektEditor({
     },
   });
 
+  // Property-Felder SOFORT speichern (Airbnb: jede Sidebar sichert ihren eigenen
+  // Wert direkt beim „Speichern"). Optimistisch nachziehen; Realtime bestätigt.
+  // Gibt true bei Erfolg zurück, damit die Sidebar ihren „gespeichert"-Zweig
+  // (schließen) fahren kann.
   async function speichere(fields: Partial<Property>) {
     const res = await updateProperty(prop.id, fields);
     if (res.ok) setProp((p) => ({ ...p, ...res.data }));
@@ -153,7 +168,7 @@ export function ObjektEditor({
   // availability/… verloren (Wurzel 1: Gegenzustand mitpflegen). 0-Werte werden
   // im Panel schon rausgefiltert; ein leeres Zimmer wird ganz entfernt.
   async function speichereSchlaf(raumId: string, werte: Record<string, number>) {
-    const bisher = prop.type_attributes ?? {};
+    const bisher = viewProp.type_attributes ?? {};
     const sleeping = { ...(bisher.sleeping ?? {}) };
     if (Object.keys(werte).length === 0) delete sleeping[raumId];
     else sleeping[raumId] = werte;
@@ -166,15 +181,13 @@ export function ObjektEditor({
     raumId: string,
     wert: { hasLock: boolean; lockType: "inside_only" | "inside_outside" | null },
   ) {
-    const bisher = prop.type_attributes ?? {};
+    const bisher = viewProp.type_attributes ?? {};
     const privacy = { ...(bisher.privacy ?? {}), [raumId]: wert };
     return speichere({ type_attributes: { ...bisher, privacy } });
   }
 
-  // --- Preise: an die ECHTE Preis-Wahrheit schreiben, nicht in den Blob --------
-  // Diese Tabellen (rate_plans/dp_settings/property_discounts) sind für den
-  // anon-Key gesperrt (Wurzel 6) → KEIN Realtime möglich; stattdessen nach jeder
-  // erfolgreichen Action den lokalen preise-State optimistisch nachziehen.
+  // --- Preise: SOFORT an die echten Tabellen (rate_plans/dp_settings/
+  // property_discounts). Jede Preis-Sidebar sichert ihren Wert direkt. ---
 
   // Grundpreis → rate_plans.base_price. Braucht die Objektwährung (kein €-Default,
   // Wurzel 4): fehlt sie, klar fehlschlagen statt einen falschen Preis zu setzen.
@@ -182,13 +195,11 @@ export function ObjektEditor({
     const waehrung = preise.currency ?? prop.currency;
     if (!waehrung) return false; // Datenfehler: Objektwährung fehlt → nicht raten.
     const res = await setBasePrice(prop.id, basePrice, waehrung);
-    if (res.ok) {
-      setPreise((p) => ({ ...p, basePrice, currency: waehrung }));
-    }
+    if (res.ok) setPreise((p) => ({ ...p, basePrice, currency: waehrung }));
     return res.ok;
   }
 
-  // Smart Pricing / Wochenend-Uplift → dp_settings (PATCH-Semantik).
+  // Smart Pricing / Wochenend-Uplift → dp_settings (PATCH nur gesendete Felder).
   async function speichereSmart(
     fields: Partial<
       Pick<PreisStand["smart"], "enabled" | "min_price" | "max_price" | "weekend_uplift_pct">
@@ -199,21 +210,38 @@ export function ObjektEditor({
     return res.ok;
   }
 
-  // Längen-Rabatt (Woche=7 / Monat=28 Nächte) → property_discounts. pct=undefined
-  // löscht die Regel (Wurzel 1: Gegenzustand). Nach Erfolg lokal spiegeln.
+  // Längen-Rabatt (Woche=7 / Monat=28 Nächte) → property_discounts. pct=undefined =
+  // Regel löschen (Wurzel 1: Gegenzustand mitpflegen). Idempotenter Upsert/Delete.
   async function speichereLosRabatt(minNights: 7 | 28, pct: number | undefined) {
-    const bestehend =
-      minNights === 7 ? preise.weeklyDiscount : preise.monthlyDiscount;
+    const key = minNights === 7 ? "weeklyDiscount" : "monthlyDiscount";
+    const bestehend = preise[key];
     const res = await setLengthDiscount(prop.id, minNights, pct, bestehend);
-    if (res.ok) {
-      setPreise((p) => ({
-        ...p,
-        ...(minNights === 7
-          ? { weeklyDiscount: res.data }
-          : { monthlyDiscount: res.data }),
-      }));
-    }
+    if (res.ok) setPreise((p) => ({ ...p, [key]: res.data }));
     return res.ok;
+  }
+
+  // --- Verfügbarkeit (Airbnb „Availability"). ---
+
+  // Objektweiter Mindestaufenthalt → rate_plans.min_stay (PATCH /rates/{id}).
+  // Braucht den Grundpreis-Plan; fehlt er (noch kein Rate-Plan), nicht raten.
+  async function speichereMinStay(naechte: number) {
+    if (!preise.ratePlanId) return false; // kein Plan → nichts zu patchen.
+    const res = await setMinStay(preise.ratePlanId, prop.id, naechte);
+    if (res.ok) setPreise((p) => ({ ...p, minStay: res.data.min_stay }));
+    return res.ok;
+  }
+
+  // Verkaufssteuerung (max_stay/Vorlaufzeit/Buchungsfenster/min-stay-Typ) →
+  // type_attributes.availability gemergt (Wurzel 1: andere Blob-Zweige erhalten).
+  async function speichereAvailBlob(teil: {
+    maxStay?: number;
+    cutOffDays?: number;
+    maxDayAdvance?: number;
+    minStayType?: "both" | "arrival" | "through";
+  }) {
+    const bisher = viewProp.type_attributes ?? {};
+    const availability = { ...(bisher.availability ?? {}), ...teil };
+    return speichere({ type_attributes: { ...bisher, availability } });
   }
 
   // Ausstattung speichern — objektweites Feld properties.amenities (string[] der
@@ -223,20 +251,45 @@ export function ObjektEditor({
     return speichere({ amenities: neu });
   }
 
+  // --- Anzahl Gäste (Airbnb „Number of guests"). ---
+
+  // Maximale Gästezahl → properties.max_guests (1–99). Löst OTA-Content-Resync aus.
+  async function speichereMaxGuests(n: number) {
+    return speichere({ max_guests: Math.min(99, Math.max(1, Math.round(n))) });
+  }
+
+  // Kinder-/Kleinkindplätze → type_attributes.occupancy {children,infants} gemergt
+  // (Wurzel 1: andere Blob-Zweige + den rooms-Wert erhalten). Als OBJEKT schreiben —
+  // der Channex-Content-Sync liest occ_children/occ_infants ausschließlich von hier.
+  async function speichereOccupancy(teil: { children?: number; infants?: number }) {
+    const bisher = viewProp.type_attributes ?? {};
+    const occ = { ...(bisher.occupancy ?? {}), ...teil };
+    return speichere({ type_attributes: { ...bisher, occupancy: occ } });
+  }
+
+  // Haustiere erlaubt → Amenity-Slug "pets_allowed" in properties.amenities
+  // (Wurzel 1: Gegenzustand — abschalten entfernt den Slug wieder).
+  async function speicherePets(erlaubt: boolean) {
+    const set = new Set(viewProp.amenities);
+    if (erlaubt) set.add("pets_allowed");
+    else set.delete("pets_allowed");
+    return speichere({ amenities: [...set] });
+  }
+
   // Ein hochgeladenes/ausgewähltes Foto einer Foto-Tour-Kachel (Zimmer) zuordnen.
   // Die Objekt-Galerie (properties.photos) bleibt die Foto-Wahrheit; die Kachel-
   // Zuordnung ist reine Editor-Darstellung → type_attributes.roomPhotos[raumId].
   // Leere url = Zuordnung ENTFERNEN (Eintrag löschen, Wurzel 1: Gegenzustand).
   async function speichereRaumFoto(raumId: string, url: string) {
-    const bisher = prop.type_attributes ?? {};
+    const bisher = viewProp.type_attributes ?? {};
     const roomPhotos = { ...(bisher.roomPhotos ?? {}) };
     if (url) roomPhotos[raumId] = url;
     else delete roomPhotos[raumId];
     const neu = { ...bisher, roomPhotos };
-    // Sofort spiegeln, damit die Zimmer-Kachel das neue Foto ohne Warten auf den
-    // Server-Round-Trip zeigt; speichere() bestätigt denselben Stand serverseitig.
-    setProp((p) => ({ ...p, type_attributes: neu }));
-    return speichere({ type_attributes: neu });
+    setProp((p) => ({ ...p, type_attributes: { ...p.type_attributes, roomPhotos } }));
+    const res = await updateProperty(prop.id, { type_attributes: neu });
+    if (res.ok) setProp((p) => ({ ...p, ...res.data }));
+    return res.ok;
   }
 
 
@@ -249,13 +302,13 @@ export function ObjektEditor({
     has: boolean,
     facility: string | null,
   ) {
-    const bisher = prop.type_attributes ?? {};
+    const bisher = viewProp.type_attributes ?? {};
     const accessibility = { ...(bisher.accessibility ?? {}), [key]: { has } };
     const fields: Partial<Property> = {
       type_attributes: { ...bisher, accessibility },
     };
     if (facility) {
-      const set = new Set(prop.amenities);
+      const set = new Set(viewProp.amenities);
       if (has) set.add(facility);
       else set.delete(facility);
       fields.amenities = [...set];
@@ -263,13 +316,13 @@ export function ObjektEditor({
     return speichere(fields);
   }
 
-  const ort = [prop.city, prop.country].filter(Boolean).join(", ");
+  const ort = [viewProp.city, viewProp.country].filter(Boolean).join(", ");
 
-  // Detailwerte aus type_attributes (Wizard-Daten).
-  const attr = prop.type_attributes ?? {};
-  // Preis-Werte aus den ECHTEN Quellen (preise), nicht aus dem Blob.
-  const basePrice = preise.basePrice ?? undefined;
-  const priceCurrency = preise.currency ?? prop.currency ?? null;
+  // Detailwerte aus dem gemergten View (gespeicherte Wahrheit + Draft).
+  const attr = viewProp.type_attributes ?? {};
+  // Preis-Werte aus dem gemergten Preis-View (inkl. ungespeicherter Draft-Werte).
+  const basePrice = viewPreise.basePrice ?? undefined;
+  const priceCurrency = viewPreise.currency ?? viewProp.currency ?? null;
   const baeder = (attr.bathrooms_private ?? 0) + (attr.bathrooms_shared ?? 0);
   const schlafVorschau = [
     attr.bedrooms != null ? `${attr.bedrooms} ${t("schlafzimmer")}` : null,
@@ -326,7 +379,7 @@ export function ObjektEditor({
   ];
   // Preis-Vorschau als Range (Grundpreis – Wochenendpreis), wie Airbnb
   // („€59 - €60 per night"). Wochenend-Uplift kommt aus dp_settings.
-  const weekendPct = preise.smart.weekend_uplift_pct ?? 0;
+  const weekendPct = viewPreise.smart.weekend_uplift_pct ?? 0;
   const preisVorschau = (() => {
     if (basePrice == null || basePrice <= 0) return t("hinzufuegen");
     const von = formatCurrency(basePrice, priceCurrency, "de-DE", 0);
@@ -341,17 +394,22 @@ export function ObjektEditor({
   })();
   // Rabatt-Vorschau (Wochen-/Monatsrabatt) aus property_discounts (bps → %).
   const rabattVorschau = [
-    preise.weeklyDiscount
-      ? t("preisWochenrabattKurz", { pct: preise.weeklyDiscount.discount_bps / 100 })
+    viewPreise.weeklyDiscount
+      ? t("preisWochenrabattKurz", { pct: viewPreise.weeklyDiscount.discount_bps / 100 })
       : null,
-    preise.monthlyDiscount
-      ? t("preisMonatsrabattKurz", { pct: preise.monthlyDiscount.discount_bps / 100 })
+    viewPreise.monthlyDiscount
+      ? t("preisMonatsrabattKurz", { pct: viewPreise.monthlyDiscount.discount_bps / 100 })
       : null,
   ].filter(Boolean);
-  const verfVorschau =
-    attr.availability?.minStay != null
-      ? t("naechteEinheit", { n: attr.availability.minStay }) + "+"
-      : t("hinzufuegen");
+  // Verfügbarkeit-Vorschau: objektweiter Mindestaufenthalt aus rate_plans.min_stay
+  // (echte Quelle), ergänzt um den Max-Aufenthalt aus dem Blob, falls gesetzt.
+  const verfVorschau = (() => {
+    const min = t("naechteEinheit", { n: viewPreise.minStay }) + "+";
+    const max = attr.availability?.maxStay;
+    return max && max > 0
+      ? `${min} · ${t("maxNaechte")} ${t("naechteEinheit", { n: max })}`
+      : min;
+  })();
 
   // Abschnitts-Karten links — jede mit Vorschauwert (oder „Hinzufügen").
   const sections: {
@@ -362,26 +420,25 @@ export function ObjektEditor({
   }[] = [
     { key: "fotos", titel: t("secFotos"),
       vorschau: fotoKartenInfo || t("fotosAnzahl", { n: fotos.length }) },
-    { key: "titel", titel: t("secTitel"), vorschau: prop.title || t("hinzufuegen"), fehlt: !prop.title },
+    { key: "titel", titel: t("secTitel"), vorschau: viewProp.title || t("hinzufuegen"), fehlt: !viewProp.title },
     { key: "typ", titel: t("secTyp"),
       vorschau: typLabel ?? t("hinzufuegen"),
-      fehlt: !prop.subtype_slug },
+      fehlt: !viewProp.subtype_slug },
     { key: "schlafen", titel: t("secSchlafen"),
       vorschau: schlafVorschau || t("hinzufuegen"), fehlt: !schlafVorschau },
     { key: "beschreibung", titel: t("secBeschreibung"),
-      vorschau: prop.description || t("hinzufuegen"), fehlt: !prop.description },
+      vorschau: viewProp.description || t("hinzufuegen"), fehlt: !viewProp.description },
     { key: "ausstattung", titel: t("secAusstattung"),
-      vorschau: prop.amenities.length ? `${prop.amenities.length}` : t("hinzufuegen"),
-      fehlt: prop.amenities.length === 0 },
-    { key: "gaeste", titel: t("secGaeste"), vorschau: t("gaesteWert", { n: prop.max_guests }) },
+      vorschau: viewProp.amenities.length ? `${viewProp.amenities.length}` : t("hinzufuegen"),
+      fehlt: viewProp.amenities.length === 0 },
+    { key: "gaeste", titel: t("secGaeste"), vorschau: t("gaesteWert", { n: viewProp.max_guests }) },
     { key: "lage", titel: t("secLage"), vorschau: ort || t("hinzufuegen"), fehlt: !ort },
     { key: "preise", titel: t("secPreise"), vorschau: preisVorschau,
       fehlt: !(basePrice != null && basePrice > 0) },
     { key: "rabatte", titel: t("secRabatte"),
       vorschau: rabattVorschau.length ? rabattVorschau.join("\n") : t("hinzufuegen"),
       fehlt: rabattVorschau.length === 0 },
-    { key: "verfuegbarkeit", titel: t("secVerfuegbarkeit"), vorschau: verfVorschau,
-      fehlt: attr.availability?.minStay == null },
+    { key: "verfuegbarkeit", titel: t("secVerfuegbarkeit"), vorschau: verfVorschau },
     { key: "hausregeln", titel: t("secHausregeln"), vorschau: t("hinzufuegen"), fehlt: true },
     { key: "storno", titel: t("secStorno"), vorschau: t("hinzufuegen"), fehlt: true },
   ];
@@ -405,7 +462,11 @@ export function ObjektEditor({
           {!raumOffen ? (
             <motion.div
               key="editor"
-              className="relative grid min-h-[calc(100vh-5rem)] grid-cols-1 lg:grid-cols-[26rem_1fr]"
+              // Flex statt Grid: links Abschnittsliste (feste Breite), rechts Inhalt
+              // (flex-1). Ist im Preise-Panel eine Detail-Sidebar offen, wird die
+              // linke Spalte per hidden ausgeblendet (Airbnb: Klick auf eine Preis-
+              // Karte → links weg), die rechte füllt dann die volle Breite.
+              className="relative flex min-h-[calc(100vh-5rem)]"
               // Der Editor kehrt aus der Detailansicht zurück: er kommt von LINKS
               // (aus Zieh-Richtung) mit derselben Feder herein wie die Kacheln, die
               // vom Thumbnail zurück ins Grid wandern — eine einzige Bewegung.
@@ -414,10 +475,13 @@ export function ObjektEditor({
               exit={reduziert ? { opacity: 0 } : { opacity: 0, x: "-4%" }}
               transition={reduziert ? { duration: 0 } : KACHEL_SPRING}
             >
-      {/* Linke Spalte — feste Viewport-Höhe, damit die Abschnittsliste INTERN
-          scrollt (overflow-y-auto unten greift nur mit begrenzter Höhe) statt die
-          ganze Seite zu verlängern. */}
-      <div className="flex h-[calc(100vh-5rem)] flex-col border-r border-border">
+      {/* Linke Spalte — feste Breite + Viewport-Höhe (Abschnittsliste scrollt
+          intern). Bei offener Preis-Detail-Sidebar ausgeblendet (Airbnb). */}
+      <div
+        className={`h-[calc(100vh-5rem)] w-full shrink-0 flex-col border-r border-border lg:w-[26rem] ${
+          detailOffen ? "hidden" : "flex"
+        }`}
+      >
         <div className="flex items-center gap-3 px-6 pt-7">
           <Link
             href="/objekte"
@@ -535,26 +599,41 @@ export function ObjektEditor({
           })}
         </div>
 
-        {/* Schwebender „Ansehen"-Button (Airbnb-Muster) */}
-        <div className="pointer-events-none sticky bottom-0 flex justify-center pb-6">
+        {/* Schwebende Fußzeile der linken Spalte: „Ansehen" (Airbnb-Vorschau) +
+            Veröffentlichen. Der Veröffentlichen-Button lebt hier — NICHT in einer
+            Detail-Sidebar-Ecke und NICHT in einer globalen Speicherleiste (die
+            Sidebars speichern jeweils selbst). */}
+        <div className="pointer-events-none sticky bottom-0 flex items-center justify-center gap-3 pb-6">
           <span className="pointer-events-auto flex items-center gap-2 rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background shadow-lg">
             <Icon icon="ph:eye" className="size-4" />
             {t("ansehen")}
           </span>
+          <span className="pointer-events-auto">
+            <ObjektPublish id={prop.id} status={prop.status} />
+          </span>
         </div>
       </div>
 
-      {/* Rechte Spalte — aktiver Abschnitt. flex-col + feste Höhe, damit Panels
-          mit h-full (z. B. der zentrierte Titel-Editor) den Raum ausfüllen. */}
-      <div className="flex h-[calc(100vh-5rem)] flex-col overflow-y-auto px-8 py-8 lg:px-14 lg:py-12">
-        <div className="mb-8 flex shrink-0 justify-end">
-          <ObjektPublish id={prop.id} status={prop.status} />
-        </div>
+      {/* Rechte Spalte — füllt den Rest (flex-1). Preise/Lage sind inline 2-spaltig
+          (Karten + Detail-Sidebar) und bringen ihr Padding selbst mit → hier KEIN
+          Wrapper-Padding, sonst kollidiert die Sidebar; die übrigen Panels
+          bekommen das Padding. */}
+      <div
+        className={`flex h-[calc(100vh-5rem)] min-w-0 flex-1 flex-col overflow-y-auto ${
+          aktiv === "preise" ||
+          aktiv === "lage" ||
+          aktiv === "verfuegbarkeit" ||
+          aktiv === "rabatte" ||
+          aktiv === "gaeste"
+            ? ""
+            : "px-8 py-8 lg:px-14 lg:py-12"
+        }`}
+      >
         {(aktiv === "titel" || aktiv === "beschreibung") ? (
           <div className="min-h-0 flex-1">
             <TextPanel
               titel={aktiv === "titel" ? t("secTitel") : t("secBeschreibung")}
-              wert={aktiv === "titel" ? prop.title : prop.description ?? ""}
+              wert={aktiv === "titel" ? viewProp.title : viewProp.description ?? ""}
               platzhalter={
                 aktiv === "titel" ? t("titelPlatzhalter") : t("beschreibungPlatzhalter")
               }
@@ -576,18 +655,25 @@ export function ObjektEditor({
           />
         )}
         {aktiv === "typ" && (
-          <TypPanel property={prop} onSpeichere={speichere} />
+          <TypPanel property={viewProp} onSpeichere={speichere} />
         )}
         {aktiv === "gaeste" && (
-          <WertPanel titel={t("secGaeste")} wert={t("gaesteWert", { n: prop.max_guests })} />
+          <GaestePanel
+            property={viewProp}
+            onMaxGuests={speichereMaxGuests}
+            onBlob={speichereOccupancy}
+            onPets={speicherePets}
+          />
         )}
         {aktiv === "ausstattung" && (
           <WertPanel
             titel={t("secAusstattung")}
-            wert={prop.amenities.length ? prop.amenities.join(", ") : t("noch")}
+            wert={viewProp.amenities.length ? viewProp.amenities.join(", ") : t("noch")}
           />
         )}
-        {aktiv === "lage" && <LagePanel property={prop} onSpeichere={speichere} />}
+        {aktiv === "lage" && (
+          <LagePanel property={viewProp} onSpeichere={speichere} onDetailOffen={setDetailOffen} />
+        )}
         {aktiv === "schlafen" && (
           <SchlafmoeglichkeitenPanel
             raeume={raeume
@@ -603,33 +689,34 @@ export function ObjektEditor({
         )}
         {aktiv === "preise" && (
           <PreisPanel
-            preise={preise}
+            preise={viewPreise}
             currency={priceCurrency}
             propertyId={prop.id}
             koords={
-              prop.lat != null && prop.lng != null
-                ? { lat: prop.lat, lng: prop.lng }
+              viewProp.lat != null && viewProp.lng != null
+                ? { lat: viewProp.lat, lng: viewProp.lng }
                 : null
             }
-            guests={prop.max_guests}
+            guests={viewProp.max_guests}
             onGrundpreis={speichereGrundpreis}
             onSmart={speichereSmart}
+            onDetailOffen={setDetailOffen}
           />
         )}
         {aktiv === "rabatte" && (
-          <DiscountPanel preise={preise} onRabatt={speichereLosRabatt} />
+          <DiscountPanel
+            preise={viewPreise}
+            currency={priceCurrency}
+            onRabatt={speichereLosRabatt}
+          />
         )}
         {aktiv === "verfuegbarkeit" && (
-          <AttributPanel
-            titel={t("secVerfuegbarkeit")}
-            rows={[
-              { label: t("minNaechte"),
-                wert: attr.availability?.minStay != null
-                  ? t("naechteEinheit", { n: attr.availability.minStay }) : null },
-              { label: t("maxNaechte"),
-                wert: attr.availability?.maxStay != null
-                  ? t("naechteEinheit", { n: attr.availability.maxStay }) : null },
-            ]}
+          <VerfuegbarkeitPanel
+            property={viewProp}
+            minStay={viewPreise.minStay}
+            onMinStay={speichereMinStay}
+            onBlob={speichereAvailBlob}
+            onDetailOffen={setDetailOffen}
           />
         )}
         {(aktiv === "hausregeln" || aktiv === "storno") && (
@@ -682,6 +769,7 @@ export function ObjektEditor({
           </motion.aside>
         )}
       </AnimatePresence>
+
             </motion.div>
           ) : (
             // Zimmer-Detail — dieselben Kacheln (per layoutId) wandern hierher.
@@ -709,7 +797,7 @@ export function ObjektEditor({
                   fotos={fotos}
                   sleeping={attr.sleeping ?? {}}
                   privacy={attr.privacy ?? {}}
-                  amenityAnzahl={prop.amenities.length}
+                  amenityAnzahl={viewProp.amenities.length}
                   barriereAnzahl={
                     Object.values(attr.accessibility ?? {}).filter((a) => a.has)
                       .length
@@ -801,7 +889,7 @@ export function ObjektEditor({
                       )}
                       {raumThema === "amenities" && (
                         <AmenityPanel
-                          gewaehlt={prop.amenities}
+                          gewaehlt={viewProp.amenities}
                           onSpeichere={speichereAmenities}
                           onZurueck={() => setRaumThema(null)}
                         />

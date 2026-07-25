@@ -34,6 +34,7 @@ from .schemas import (
     DpSettingsUpdate,
     EffectivePriceDay,
     PriceExplainResponse,
+    PriceSuggestResponse,
     QuoteRequest,
     QuoteResponse,
     RecomputeResponse,
@@ -142,6 +143,37 @@ def get_dp_settings(
         return service.get(ctx, property_id)
     except PricingError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.get("/settings/{property_id}/suggest", response_model=PriceSuggestResponse)
+def suggest_price_range(
+    property_id: str,
+    settings: DpSettingsServiceDep,
+    ctx: Annotated[
+        AuthContext,
+        Depends(require_granular_permission(Permission.PM_BOOKING_TOTAL)),
+    ],
+) -> PriceSuggestResponse:
+    """Empfohlene Smart-Pricing-Spanne (min/max) aus der ECHTEN Dynamic-Pricing-
+    Engine — die Extrema der nachfrage-/saison-/wochenend-getriebenen Tagespreise
+    über 120 Tage. Kein erfundener Multiplikator (Wurzel 4).
+
+    Owner-Scope + PM_BOOKING_TOTAL wie /effective: ein Owner ohne Preis-Recht darf
+    keine Preise ableiten; der Resolver liest ungescopet (Service-Role) → Eigentum
+    hier prüfen."""
+    try:
+        settings.require_own_property(ctx, property_id)
+        rng = DynamicPricingRecompute(get_service_client()).suggest_range(property_id)
+    except PricingError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+    if not rng:
+        return PriceSuggestResponse(property_id=property_id, available=False)
+    return PriceSuggestResponse(
+        property_id=property_id,
+        available=True,
+        min_price=rng["min"],
+        max_price=rng["max"],
+    )
 
 
 @router.put(

@@ -225,17 +225,15 @@ function MerkmalDetail({
                 key={String(wert)}
                 type="button"
                 onClick={() => setLokal(wert)}
-                className={`flex w-full items-center justify-between gap-4 rounded-2xl border px-5 py-4 text-left transition-colors ${
-                  aktiv ? "border-foreground bg-muted/40" : "border-border hover:border-foreground"
-                }`}
+                className={`flex w-full items-center justify-between gap-4 rounded-2xl border px-5 py-4 text-left transition-colors ${aktiv ? "border-foreground bg-muted/40" : "border-border hover:border-foreground"
+                  }`}
               >
                 <span className="font-medium">
                   {wert ? t("barriereHabeIch") : t("barriereHabeIchNicht")}
                 </span>
                 <span
-                  className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 ${
-                    aktiv ? "border-foreground" : "border-border"
-                  }`}
+                  className={`flex size-5 shrink-0 items-center justify-center rounded-full border-2 ${aktiv ? "border-foreground" : "border-border"
+                    }`}
                 >
                   {aktiv && <span className="size-2.5 rounded-full bg-foreground" />}
                 </span>
@@ -296,7 +294,7 @@ function MerkmalDetail({
           disabled={speichert || lokal == null}
           className="rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-40"
         >
-          {speichert ? t("speichert") : t("speichern")}
+          {speichert ? t("speichert") : t("fertig")}
         </button>
       </div>
 

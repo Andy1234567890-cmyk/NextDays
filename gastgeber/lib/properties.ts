@@ -30,9 +30,21 @@ export interface PropertyAttributes {
     basePrice?: number;
     currency?: string;
   };
+  // Verfügbarkeit/Verkaufssteuerung (Airbnb „Availability"). Die WERTE hier werden
+  // real vom Channex-Content-Sync gelesen (channel_manager/common.py
+  // _availability_settings) und als Property-Restrictions an die Portale gepusht —
+  // KEIN toter Blob. Ausnahme: der objektweite Mindestaufenthalt lebt NICHT hier,
+  // sondern als rate_plans.min_stay (siehe lib/verfuegbarkeit.ts). maxStay: 0 =
+  // keine Obergrenze. cutOffDays: Verkaufsstopp N Tage vor Anreise (Vorlaufzeit).
+  // cutOffTime "HH:MM": Same-Day-Stopp ab Uhrzeit. maxDayAdvance: Buchungsfenster
+  // (ferne Zukunft schließen). minStayType: Geltung des Mindestaufenthalts.
   availability?: {
     minStay?: number;
     maxStay?: number;
+    cutOffDays?: number;
+    cutOffTime?: string;
+    maxDayAdvance?: number;
+    minStayType?: "both" | "arrival" | "through";
   };
   // Schlafmöglichkeiten je Zimmer (Airbnb „Sleeping arrangements"): Zimmer-ID →
   // Bett-Typ-Schlüssel → Anzahl. Lebt im bestehenden type_attributes-jsonb, KEINE
@@ -65,6 +77,14 @@ export interface PropertyAttributes {
     neighborhood?: string; // Freitext „Neighborhood description"
     gettingAround?: string; // Freitext „Getting around"
   };
+  // Belegung (Airbnb „Number of guests"), objektweit. Erwachsene = max_guests
+  // (Top-Level-Spalte, NICHT hier). Hier nur Kinder-/Kleinkindplätze + Zimmeranzahl
+  // — 1:1 die Channex-Room-Type-Felder occ_children/occ_infants/count_of_rooms
+  // (content_sync.py _room_type_occupancy). NUR als Objekt gültig.
+  occupancy?: { rooms?: number; children?: number; infants?: number };
+  // Reisetyp-Tags aus dem Anlage-Wizard („Wer wohnt hier?"). Eigener Key, damit sie
+  // nicht mit dem Belegungs-Objekt occupancy kollidieren.
+  occupancyTags?: string[];
   [key: string]: unknown;
 }
 

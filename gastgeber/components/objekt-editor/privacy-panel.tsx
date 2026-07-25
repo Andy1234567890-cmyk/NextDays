@@ -169,7 +169,7 @@ export function PrivacyPanel({
           disabled={speichert}
           className="rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {speichert ? t("speichert") : t("speichern")}
+          {speichert ? t("speichert") : t("fertig")}
         </button>
       </div>
 
@@ -223,7 +223,7 @@ export function PrivacyPanel({
               disabled={!typWahl}
               className="rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-40"
             >
-              {t("speichern")}
+              {t("fertig")}
             </button>
           </div>
         </DialogContent>

@@ -19,7 +19,7 @@ import { Icon } from "@iconify/react";
 import { APIProvider, Map, Marker } from "@vis.gl/react-google-maps";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { currencySymbol, formatCurrency } from "@nextdays/currency";
 import {
@@ -29,8 +29,8 @@ import {
   DialogTitle,
 } from "@nextdays/ui/dialog";
 
-import type { MarktVergleich, PreisStand } from "@/lib/preise";
-import { ladeMarktVergleich } from "@/lib/preise-actions";
+import type { MarktVergleich, PreisStand, SmartVorschlag } from "@/lib/preise";
+import { ladeMarktVergleich, ladeSmartVorschlag } from "@/lib/preise-actions";
 
 import {
   MARKTPLATZ_FEE_PCT,
@@ -53,6 +53,7 @@ export function PreisPanel({
   guests,
   onGrundpreis,
   onSmart,
+  onDetailOffen,
 }: {
   preise: PreisStand;
   currency: string | null;
@@ -62,10 +63,19 @@ export function PreisPanel({
   guests: number;
   onGrundpreis: (basePrice: number) => Promise<boolean>;
   onSmart: (fields: SmartPatch) => Promise<boolean>;
+  // Meldet dem Editor, ob eine Detail-Sidebar offen ist — dann blendet der Editor
+  // die linke Abschnittsliste aus (Airbnb: Klick auf eine Karte → links ausblenden).
+  onDetailOffen?: (offen: boolean) => void;
 }) {
   const t = useTranslations("objektEditor");
   const reduziert = useReducedMotion();
-  const [detail, setDetail] = useState<Detail | null>(null);
+  // Detail-Sidebar (Airbnb): standardmäßig ZU (null). Klick auf eine Karte öffnet
+  // sie inline; X/Zurück schließt sie wieder. Jede Änderung wird nach oben gemeldet.
+  const [detail, setDetailState] = useState<Detail | null>(null);
+  function setDetail(d: Detail | null) {
+    setDetailState(d);
+    onDetailOffen?.(d != null);
+  }
   // Marktvergleich-Modal: null = zu, "laedt" = lädt, sonst das Ergebnis.
   const [vergleich, setVergleich] = useState<MarktVergleich | "laedt" | null>(null);
 
@@ -83,8 +93,13 @@ export function PreisPanel({
   }
 
   return (
-    <div className="relative h-full">
-      <section className="max-w-2xl">
+    // Inline-Layout: links die Karten (flex-1), rechts die Detail-Sidebar als
+    // EIGENE Spalte, die per Breiten-Animation ausfährt und die Karten daneben
+    // schrumpfen lässt (kein Overlay — die Sidebar liegt NEBEN, nicht ÜBER dem
+    // Inhalt).
+    <div className="flex h-full min-h-0">
+      <section className="min-w-0 flex-1 overflow-y-auto px-8 py-8 lg:py-12">
+        <div className="mx-auto max-w-2xl">
         <h2 className="font-sans text-[2rem] font-bold tracking-tight">
           {t("secPreise")}
         </h2>
@@ -136,7 +151,11 @@ export function PreisPanel({
             </button>
             <Toggle
               an={smartAn}
-              onChange={(an) => void onSmart({ enabled: an })}
+              onChange={(an) => {
+                void onSmart({ enabled: an });
+                // Beim EINSCHALTEN die rechte Spalte auf das Smart-Detail wechseln.
+                if (an) setDetail("smart");
+              }}
             />
           </div>
 
@@ -146,31 +165,33 @@ export function PreisPanel({
             <span>{t("preisKalenderVerweis")}</span>
           </div>
         </div>
+        </div>
       </section>
 
-      {/* Detail-Sidebar (Overlay über dem Pricing-Screen, Airbnb-Muster). */}
-      <AnimatePresence>
+      {/* Detail-Sidebar als INLINE-Spalte (kein Overlay): fährt per Breiten-
+          Animation (0 → 32rem) aus und schiebt die Karten daneben zusammen. X
+          schließt sie. */}
+      <AnimatePresence initial={false}>
         {detail != null && (
           <motion.aside
             key="preis-sidebar"
-            className="absolute inset-y-0 right-0 z-20 w-[30rem] overflow-hidden border-l border-border bg-background shadow-xl"
-            initial={reduziert ? false : { x: "100%" }}
-            animate={{ x: 0 }}
-            exit={reduziert ? { opacity: 0 } : { x: "100%" }}
+            className="shrink-0 overflow-hidden border-l border-border"
+            initial={reduziert ? false : { width: 0, opacity: 0 }}
+            animate={{ width: "32rem", opacity: 1 }}
+            exit={reduziert ? { opacity: 0 } : { width: 0, opacity: 0 }}
             transition={
-              reduziert
-                ? { duration: 0 }
-                : { type: "spring", stiffness: 260, damping: 30 }
+              reduziert ? { duration: 0 } : { type: "spring", stiffness: 260, damping: 30 }
             }
           >
+            <div className="h-full w-[32rem]">
             {detail === "base" && (
               <NachtpreisSidebar
                 basePrice={basePrice}
                 sym={sym}
                 fmt={fmt}
                 onSpeichere={onGrundpreis}
-                onZurueck={() => setDetail(null)}
                 onVergleich={oeffneVergleich}
+                onZurueck={() => setDetail(null)}
               />
             )}
             {detail === "weekend" && (
@@ -180,20 +201,21 @@ export function PreisPanel({
                 fmt={fmt}
                 smartAn={smartAn}
                 onSpeichere={(pct) => onSmart({ weekend_uplift_pct: pct })}
-                onZurueck={() => setDetail(null)}
                 onVergleich={oeffneVergleich}
+                onZurueck={() => setDetail(null)}
               />
             )}
             {detail === "smart" && (
               <SmartSidebar
                 smart={preise.smart}
-                basePrice={basePrice}
+                propertyId={propertyId}
                 sym={sym}
                 onSpeichere={onSmart}
-                onZurueck={() => setDetail(null)}
                 onVergleich={oeffneVergleich}
+                onZurueck={() => setDetail(null)}
               />
             )}
+            </div>
           </motion.aside>
         )}
       </AnimatePresence>
@@ -215,15 +237,29 @@ export function PreisPanel({
 
 export function DiscountPanel({
   preise,
+  currency,
   onRabatt,
 }: {
   preise: PreisStand;
+  currency: string | null;
   onRabatt: (minNights: 7 | 28, pct: number | undefined) => Promise<boolean>;
 }) {
   const t = useTranslations("objektEditor");
 
+  const basePrice = preise.basePrice ?? 0;
+  const weeklyPct = preise.weeklyDiscount ? preise.weeklyDiscount.discount_bps / 100 : 0;
+  const monthlyPct = preise.monthlyDiscount ? preise.monthlyDiscount.discount_bps / 100 : 0;
+  // Durchschnittlicher Aufenthaltspreis nach Rabatt (Airbnb „Weekly average is €X"):
+  // Grundpreis × Nächte × (1 − Rabatt). Nur mit gesetztem Grundpreis (kein Fake).
+  const schnitt = (naechte: number, pct: number) =>
+    basePrice > 0
+      ? formatCurrency(Math.round(basePrice * naechte * (1 - pct / 100)), currency, "de-DE", 0)
+      : null;
+  const wochenSchnitt = schnitt(7, weeklyPct);
+  const monatsSchnitt = schnitt(28, monthlyPct);
+
   return (
-    <section className="max-w-2xl">
+    <section className="mx-auto max-w-2xl px-8 py-8 lg:py-12">
       <h2 className="font-sans text-[2rem] font-bold tracking-tight">
         {t("secRabatte")}
       </h2>
@@ -237,6 +273,7 @@ export function DiscountPanel({
           hint={t("preisWochenrabattHint")}
           // bps → % für die Anzeige.
           pct={preise.weeklyDiscount ? preise.weeklyDiscount.discount_bps / 100 : undefined}
+          avg={wochenSchnitt ? t("preisWochenschnitt", { preis: wochenSchnitt }) : null}
           onSpeichere={(pct) => onRabatt(7, pct)}
         />
         <RabattZeile
@@ -245,6 +282,7 @@ export function DiscountPanel({
           pct={
             preise.monthlyDiscount ? preise.monthlyDiscount.discount_bps / 100 : undefined
           }
+          avg={monatsSchnitt ? t("preisMonatsschnitt", { preis: monatsSchnitt }) : null}
           onSpeichere={(pct) => onRabatt(28, pct)}
         />
       </div>
@@ -264,15 +302,15 @@ function NachtpreisSidebar({
   sym,
   fmt,
   onSpeichere,
-  onZurueck,
   onVergleich,
+  onZurueck,
 }: {
   basePrice: number | undefined;
   sym: string;
   fmt: (n: number) => string;
   onSpeichere: (preis: number) => Promise<boolean>;
-  onZurueck: () => void;
   onVergleich: () => void;
+  onZurueck: () => void;
 }) {
   const t = useTranslations("objektEditor");
   const [wert, setWert] = useState(basePrice != null ? String(basePrice) : "");
@@ -291,20 +329,23 @@ function NachtpreisSidebar({
   // IMMER sichtbar (Airbnb zeigt ihn auch bei €0), nur die Zahlen ändern sich.
   const betrag = gueltig ? zahl : 0;
 
-  async function sichern() {
-    setEditiert(false);
+  // Speichern über den Fuß-Button — nur wenn geändert und gültig; danach schließen.
+  async function speichern() {
     if (!geaendert) return;
     setSpeichert(true);
-    await onSpeichere(zahl);
+    const ok = await onSpeichere(zahl);
     setSpeichert(false);
+    if (ok) onZurueck();
   }
 
   return (
     <SidebarRahmen
       titel={t("preisNachtpreis")}
-      onZurueck={onZurueck}
       onVergleich={onVergleich}
+      onZurueck={onZurueck}
+      onSpeichern={speichern}
       speichert={speichert}
+      speichernAus={!geaendert}
     >
       <div className="flex items-center justify-center gap-3 py-8">
         {editiert ? (
@@ -316,8 +357,8 @@ function NachtpreisSidebar({
               autoFocus
               value={wert}
               onChange={(e) => setWert(e.target.value.replace(/[^\d]/g, ""))}
-              onBlur={sichern}
-              onKeyDown={(e) => e.key === "Enter" && sichern()}
+              onBlur={() => setEditiert(false)}
+              onKeyDown={(e) => e.key === "Enter" && setEditiert(false)}
               aria-label={t("preisNachtpreis")}
               className="w-[5ch] bg-transparent text-center outline-none placeholder:text-muted-foreground/40"
               placeholder="0"
@@ -385,43 +426,43 @@ function WochenendSidebar({
   fmt,
   smartAn,
   onSpeichere,
-  onZurueck,
   onVergleich,
+  onZurueck,
 }: {
   basePrice: number | undefined;
   weekendPct: number;
   fmt: (n: number) => string;
   smartAn: boolean;
   onSpeichere: (pct: number) => Promise<boolean>;
-  onZurueck: () => void;
   onVergleich: () => void;
+  onZurueck: () => void;
 }) {
   const t = useTranslations("objektEditor");
   const [pct, setPct] = useState(weekendPct);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [speichert, setSpeichert] = useState(false);
 
   useEffect(() => setPct(weekendPct), [weekendPct]);
 
-  function schiebe(neu: number) {
-    setPct(neu);
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => void onSpeichere(neu), 400);
-  }
+  const geaendert = pct !== weekendPct;
 
-  useEffect(
-    () => () => {
-      if (timer.current != null) clearTimeout(timer.current);
-    },
-    [],
-  );
+  async function speichern() {
+    if (!geaendert) return;
+    setSpeichert(true);
+    const ok = await onSpeichere(pct);
+    setSpeichert(false);
+    if (ok) onZurueck();
+  }
 
   const hatPreis = basePrice != null && basePrice > 0;
 
   return (
     <SidebarRahmen
       titel={t("preisWochenende")}
-      onZurueck={onZurueck}
       onVergleich={onVergleich}
+      onZurueck={onZurueck}
+      onSpeichern={speichern}
+      speichert={speichert}
+      speichernAus={!geaendert}
     >
       <div className="flex flex-col items-center justify-center py-10">
         <p className="text-5xl font-bold tracking-tight">+{pct}%</p>
@@ -438,7 +479,7 @@ function WochenendSidebar({
           max={50}
           step={1}
           value={pct}
-          onChange={(e) => schiebe(Number(e.target.value))}
+          onChange={(e) => setPct(Number(e.target.value))}
           aria-label={t("preisWochenende")}
           className="mt-10 w-full accent-foreground"
         />
@@ -457,31 +498,65 @@ function WochenendSidebar({
 // Smart Pricing: min/max-Preisfelder mit Vorschlag-Links.
 function SmartSidebar({
   smart,
-  basePrice,
+  propertyId,
   sym,
   onSpeichere,
-  onZurueck,
   onVergleich,
+  onZurueck,
 }: {
   smart: Smart;
-  basePrice: number | undefined;
+  propertyId: string;
   sym: string;
   onSpeichere: (neu: SmartPatch) => Promise<boolean>;
-  onZurueck: () => void;
   onVergleich: () => void;
+  onZurueck: () => void;
 }) {
   const t = useTranslations("objektEditor");
   const an = smart.enabled === true;
 
-  // Vorschlagswerte relativ zum Grundpreis — reine Klick-Vorschläge, kein Auto-Wert.
-  const minTipp = basePrice ? Math.round(basePrice * 0.5) : null;
-  const maxTipp = basePrice ? Math.round(basePrice * 2) : null;
+  // Vorschlagswerte aus der ECHTEN Dynamic-Pricing-Engine (min/max der
+  // nachfrage-getriebenen Tagespreise), NICHT aus einem geratenen Multiplikator
+  // (Wurzel 4). Lazy geladen, sobald Smart Pricing an ist. null = kein Vorschlag
+  // (dann kein „Try €X"-Link statt einer erfundenen Zahl).
+  const [vorschlag, setVorschlag] = useState<SmartVorschlag | null>(null);
+  useEffect(() => {
+    if (!an) return;
+    let aktiv = true;
+    ladeSmartVorschlag(propertyId).then((v) => {
+      if (aktiv) setVorschlag(v);
+    });
+    return () => {
+      aktiv = false;
+    };
+  }, [an, propertyId]);
+  const minTipp = vorschlag?.available ? vorschlag.min_price : null;
+  const maxTipp = vorschlag?.available ? vorschlag.max_price : null;
+
+  // min/max lokal sammeln; über den Fuß speichern.
+  const [minWert, setMinWert] = useState<number | null>(smart.min_price);
+  const [maxWert, setMaxWert] = useState<number | null>(smart.max_price);
+  const [speichert, setSpeichert] = useState(false);
+  useEffect(() => setMinWert(smart.min_price), [smart.min_price]);
+  useEffect(() => setMaxWert(smart.max_price), [smart.max_price]);
+
+  const geaendert = minWert !== smart.min_price || maxWert !== smart.max_price;
+
+  async function speichern() {
+    if (!geaendert) return;
+    setSpeichert(true);
+    const ok = await onSpeichere({ min_price: minWert, max_price: maxWert });
+    setSpeichert(false);
+    if (ok) onZurueck();
+  }
 
   return (
     <SidebarRahmen
       titel={t("preisSmart")}
-      onZurueck={onZurueck}
       onVergleich={onVergleich}
+      onZurueck={onZurueck}
+      onSpeichern={speichern}
+      speichert={speichert}
+      speichernAus={!geaendert}
     >
       <p className="text-sm text-muted-foreground">{t("preisSmartLang")}</p>
       {an ? (
@@ -489,16 +564,16 @@ function SmartSidebar({
           <PreisFeld
             label={t("preisMin")}
             sym={sym}
-            wert={smart.min_price ?? undefined}
+            wert={minWert ?? undefined}
             tipp={minTipp}
-            onSpeichere={(v) => onSpeichere({ min_price: v })}
+            onChange={setMinWert}
           />
           <PreisFeld
             label={t("preisMax")}
             sym={sym}
-            wert={smart.max_price ?? undefined}
+            wert={maxWert ?? undefined}
             tipp={maxTipp}
-            onSpeichere={(v) => onSpeichere({ max_price: v })}
+            onChange={setMaxWert}
           />
           <p className="pt-2 text-xs text-muted-foreground">{t("preisSmartStern")}</p>
         </div>
@@ -519,23 +594,31 @@ function SmartSidebar({
 
 function SidebarRahmen({
   titel,
-  onZurueck,
   onVergleich,
+  onZurueck,
+  onSpeichern,
   speichert,
+  speichernAus,
   children,
 }: {
   titel: string;
-  onZurueck: () => void;
   // „Ähnliche Inserate ansehen" — optional; nur die Preis-Detailscreens zeigen ihn.
   onVergleich?: () => void;
+  // Sidebar schließen (X oben rechts + „Abbrechen" im Fuß, Airbnb-Muster).
+  onZurueck: () => void;
+  // Speichern-Button im Fuß.
+  onSpeichern: () => void;
   speichert?: boolean;
+  speichernAus?: boolean;
   children: React.ReactNode;
 }) {
   const t = useTranslations("objektEditor");
   return (
     <div className="flex h-full flex-col">
-      <div className="min-h-0 flex-1 overflow-y-auto px-8 pt-8 lg:px-10 lg:pt-10">
-        <div className="mb-4 flex justify-end">
+      {/* Scrollender Inhalt. */}
+      <div className="min-h-0 flex-1 overflow-y-auto px-6 pt-8">
+        {/* Schließen-X oben rechts (Airbnb). */}
+        <div className="mb-2 flex justify-end">
           <button
             type="button"
             onClick={onZurueck}
@@ -545,7 +628,7 @@ function SidebarRahmen({
             <Icon icon="ph:x" className="size-5" />
           </button>
         </div>
-        <h2 className="font-sans text-[1.75rem] font-bold tracking-tight">{titel}</h2>
+        <h2 className="font-sans text-[1.5rem] font-bold tracking-tight">{titel}</h2>
         <div className="mt-4">{children}</div>
 
         {/* „Ähnliche Inserate ansehen" (Airbnb-Vergleichslink) — auf den
@@ -562,11 +645,25 @@ function SidebarRahmen({
           </div>
         )}
       </div>
-      {speichert && (
-        <p className="shrink-0 px-8 pb-4 text-center text-xs text-muted-foreground lg:px-10">
-          {t("speichert")}
-        </p>
-      )}
+
+      {/* Fester Save/Cancel-Fuß am unteren Rand der Sidebar (Airbnb). */}
+      <div className="flex shrink-0 items-center justify-between gap-3 border-t border-border px-6 py-4">
+        <button
+          type="button"
+          onClick={onZurueck}
+          className="text-sm font-semibold underline-offset-4 hover:underline"
+        >
+          {t("abbrechen")}
+        </button>
+        <button
+          type="button"
+          onClick={onSpeichern}
+          disabled={speichert || speichernAus}
+          className="rounded-full bg-foreground px-5 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+        >
+          {speichert ? t("speichert") : t("speichern")}
+        </button>
+      </div>
     </div>
   );
 }
@@ -618,28 +715,36 @@ function Toggle({ an, onChange }: { an: boolean; onChange: (an: boolean) => void
   );
 }
 
-// Preisfeld mit Symbol + „Vorschlag"-Link (Airbnb „Try €28"). Speichert bei Blur.
+// Preisfeld mit Symbol + „Vorschlag"-Link (Airbnb „Try €28"). Meldet Änderungen
+// nach oben (onChange) — gespeichert wird über den Save/Cancel-Fuß der Sidebar,
+// nicht direkt hier. Leeres Feld = null (kein Wert gesetzt).
 function PreisFeld({
   label,
   sym,
   wert,
   tipp,
-  onSpeichere,
+  onChange,
 }: {
   label: string;
   sym: string;
   wert: number | undefined;
   tipp: number | null;
-  onSpeichere: (v: number) => Promise<boolean>;
+  onChange: (v: number | null) => void;
 }) {
   const t = useTranslations("objektEditor");
   const [lokal, setLokal] = useState(wert != null ? String(wert) : "");
 
   useEffect(() => setLokal(wert != null ? String(wert) : ""), [wert]);
 
-  function sichern() {
-    const z = Number(lokal);
-    if (lokal !== "" && Number.isFinite(z) && z >= 0 && z !== wert) void onSpeichere(z);
+  // Eingabe säubern, lokal halten UND nach oben melden (leer → null).
+  function aendern(roh: string) {
+    const clean = roh.replace(/[^\d]/g, "");
+    setLokal(clean);
+    if (clean === "") onChange(null);
+    else {
+      const z = Number(clean);
+      if (Number.isFinite(z)) onChange(z);
+    }
   }
 
   return (
@@ -651,7 +756,7 @@ function PreisFeld({
             type="button"
             onClick={() => {
               setLokal(String(tipp));
-              void onSpeichere(tipp);
+              onChange(tipp);
             }}
             className="text-sm font-medium underline underline-offset-2 hover:opacity-80"
           >
@@ -665,8 +770,7 @@ function PreisFeld({
           type="text"
           inputMode="numeric"
           value={lokal}
-          onChange={(e) => setLokal(e.target.value.replace(/[^\d]/g, ""))}
-          onBlur={sichern}
+          onChange={(e) => aendern(e.target.value)}
           aria-label={label}
           className="w-[6ch] bg-transparent outline-none placeholder:text-muted-foreground/40"
           placeholder="0"
@@ -676,17 +780,21 @@ function PreisFeld({
   );
 }
 
-// Rabatt-Zeile (Wochen-/Monatsrabatt) mit Prozent-Eingabe + Speichern bei Blur.
-// Leeres Feld → Rabatt löschen (undefined nach oben).
+// Rabatt-Karte im Airbnb-„Discounts"-Look: oben Titel · Kurzbeschreibung (links)
+// und der Durchschnittspreis (rechts, „Wochenschnitt: €385"), darunter der große
+// Prozentwert mit Eingabe. Speichern bei Blur; leeres Feld → Rabatt löschen.
 function RabattZeile({
   titel,
   hint,
   pct,
+  avg,
   onSpeichere,
 }: {
   titel: string;
   hint: string;
   pct: number | undefined;
+  // Durchschnittspreis-Hinweis (Airbnb „Weekly average is €X"); null = kein Preis.
+  avg: string | null;
   onSpeichere: (pct: number | undefined) => Promise<boolean>;
 }) {
   const [lokal, setLokal] = useState(pct != null ? String(pct) : "");
@@ -703,12 +811,18 @@ function RabattZeile({
   }
 
   return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl border border-border p-6">
-      <div className="min-w-0">
-        <p className="font-semibold">{titel}</p>
-        <p className="mt-0.5 text-sm text-muted-foreground">{hint}</p>
+    <div className="rounded-2xl border border-border p-6">
+      {/* Kopf: Titel · Kurzbeschreibung links, Durchschnitt rechts (Airbnb). */}
+      <div className="flex items-start justify-between gap-4">
+        <p className="min-w-0 text-sm font-medium text-muted-foreground">
+          <span className="font-semibold text-foreground">{titel}</span>
+          <span className="mx-1.5" aria-hidden>·</span>
+          {hint}
+        </p>
+        {avg && <p className="shrink-0 text-sm text-muted-foreground">{avg}</p>}
       </div>
-      <label className="flex shrink-0 items-baseline gap-0.5 text-xl font-bold">
+      {/* Großer Prozentwert mit Inline-Eingabe (Airbnb: „7%"). */}
+      <label className="mt-2 flex items-baseline gap-0.5 text-3xl font-bold tracking-tight">
         <input
           type="text"
           inputMode="numeric"
@@ -716,7 +830,7 @@ function RabattZeile({
           onChange={(e) => setLokal(e.target.value.replace(/[^\d]/g, ""))}
           onBlur={sichern}
           aria-label={titel}
-          className="w-[3ch] bg-transparent text-right outline-none placeholder:text-muted-foreground/40"
+          className="w-[2.5ch] bg-transparent outline-none placeholder:text-muted-foreground/40"
           placeholder="0"
         />
         <span aria-hidden>%</span>

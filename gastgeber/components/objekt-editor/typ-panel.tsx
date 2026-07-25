@@ -46,7 +46,6 @@ export function TypPanel({
   onSpeichere: (fields: Partial<Property>) => Promise<boolean>;
 }) {
   const [tax, setTax] = useState<Taxonomy | null>(null);
-  const [busy, setBusy] = useState(false);
   const [kategorie, setKategorie] = useState<string>("");
   const [d, setD] = useState<Entwurf>({
     subtype_slug: property.subtype_slug,
@@ -58,6 +57,26 @@ export function TypPanel({
     size_value: property.size_value,
     size_unit: property.size_unit,
   });
+
+  // Ein Feld ändern: lokalen Entwurf aktualisieren UND den vollständigen Feldsatz
+  // sofort speichern (Vollscreen-Editor sichert direkt, kein eigener Save-Button).
+  // total_rooms nur bei „Hotel & Betriebe" mitschicken (sonst null).
+  function merge(patch: Partial<Entwurf>, hotelKategorie: boolean) {
+    setD((p) => {
+      const next = { ...p, ...patch };
+      void onSpeichere({
+        subtype_slug: next.subtype_slug,
+        listing_type: next.listing_type,
+        total_rooms: hotelKategorie ? next.total_rooms : null,
+        floors_total: next.floors_total,
+        floor_number: next.floor_number,
+        year_built: next.year_built,
+        size_value: next.size_value,
+        size_unit: next.size_unit,
+      });
+      return next;
+    });
+  }
 
   useEffect(() => {
     let aktiv = true;
@@ -92,51 +111,26 @@ export function TypPanel({
   function waehleKategorie(slug: string) {
     setKategorie(slug);
     // Immobilientyp/Angebotsart/Zimmeranzahl zurücksetzen (passen nicht mehr).
-    setD((p) => ({
-      ...p,
-      subtype_slug: null,
-      listing_type: null,
-      total_rooms: null,
-    }));
+    // hotelKategorie aus der NEUEN Kategorie ableiten (State ist noch nicht aktuell).
+    merge(
+      { subtype_slug: null, listing_type: null, total_rooms: null },
+      slug === HOTEL_KATEGORIE,
+    );
   }
 
   function waehleSubtype(slug: string) {
     const neu = tax?.subtypes.find((s) => s.slug === slug) ?? null;
-    setD((p) => ({
-      ...p,
-      subtype_slug: slug,
-      // Angebotsart behalten, falls für den neuen Typ erlaubt, sonst zurücksetzen.
-      listing_type:
-        p.listing_type && neu?.listing_types.includes(p.listing_type)
-          ? p.listing_type
-          : null,
-    }));
-  }
-
-  const geaendert =
-    d.subtype_slug !== property.subtype_slug ||
-    d.listing_type !== property.listing_type ||
-    d.total_rooms !== property.total_rooms ||
-    d.floors_total !== property.floors_total ||
-    d.floor_number !== property.floor_number ||
-    d.year_built !== property.year_built ||
-    d.size_value !== property.size_value ||
-    d.size_unit !== property.size_unit;
-
-  async function speichern() {
-    if (!geaendert || busy) return;
-    setBusy(true);
-    await onSpeichere({
-      subtype_slug: d.subtype_slug,
-      listing_type: d.listing_type,
-      total_rooms: zeigtZimmerFeld ? d.total_rooms : null,
-      floors_total: d.floors_total,
-      floor_number: d.floor_number,
-      year_built: d.year_built,
-      size_value: d.size_value,
-      size_unit: d.size_unit,
-    });
-    setBusy(false);
+    merge(
+      {
+        subtype_slug: slug,
+        // Angebotsart behalten, falls für den neuen Typ erlaubt, sonst zurücksetzen.
+        listing_type:
+          d.listing_type && neu?.listing_types.includes(d.listing_type)
+            ? d.listing_type
+            : null,
+      },
+      zeigtZimmerFeld,
+    );
   }
 
   return (
@@ -179,7 +173,7 @@ export function TypPanel({
               label="Wie viele Zimmer hat Ihre Unterkunft insgesamt?"
               value={d.total_rooms ?? ""}
               platzhalter="Bitte wählen"
-              onChange={(v) => setD((p) => ({ ...p, total_rooms: v || null }))}
+              onChange={(v) => merge({ total_rooms: v || null }, true)}
               optionen={ZIMMER_BUCKETS.map((b) => ({ value: b, label: b }))}
             />
           )}
@@ -191,7 +185,10 @@ export function TypPanel({
             platzhalter="Bitte wählen"
             disabled={erlaubteListingTypes.length === 0}
             onChange={(v) =>
-              setD((p) => ({ ...p, listing_type: (v || null) as ListingType | null }))
+              merge(
+                { listing_type: (v || null) as ListingType | null },
+                zeigtZimmerFeld,
+              )
             }
             optionen={erlaubteListingTypes.map((lt) => ({
               value: lt,
@@ -204,13 +201,13 @@ export function TypPanel({
             label="Wie viele Stockwerke hat das Gebäude?"
             wert={d.floors_total}
             min={1}
-            onSetze={(n) => setD((p) => ({ ...p, floors_total: n }))}
+            onSetze={(n) => merge({ floors_total: n }, zeigtZimmerFeld)}
           />
           <StepperZeile
             label="In welcher Etage befindet sich das Angebot?"
             wert={d.floor_number}
             min={0}
-            onSetze={(n) => setD((p) => ({ ...p, floor_number: n }))}
+            onSetze={(n) => merge({ floor_number: n }, zeigtZimmerFeld)}
           />
 
           {/* Baujahr */}
@@ -223,10 +220,10 @@ export function TypPanel({
               value={d.year_built ?? ""}
               placeholder="z. B. 1998"
               onChange={(e) =>
-                setD((p) => ({
-                  ...p,
-                  year_built: e.target.value ? Number(e.target.value) : null,
-                }))
+                merge(
+                  { year_built: e.target.value ? Number(e.target.value) : null },
+                  zeigtZimmerFeld,
+                )
               }
               className="w-full bg-transparent text-[0.95rem] outline-none placeholder:text-muted-foreground"
             />
@@ -245,10 +242,10 @@ export function TypPanel({
                   value={d.size_value ?? ""}
                   placeholder="z. B. 75"
                   onChange={(e) =>
-                    setD((p) => ({
-                      ...p,
-                      size_value: e.target.value ? Number(e.target.value) : null,
-                    }))
+                    merge(
+                      { size_value: e.target.value ? Number(e.target.value) : null },
+                      zeigtZimmerFeld,
+                    )
                   }
                   className="w-full bg-transparent text-[0.95rem] outline-none placeholder:text-muted-foreground"
                 />
@@ -260,7 +257,7 @@ export function TypPanel({
                 <select
                   value={d.size_unit ?? ""}
                   onChange={(e) =>
-                    setD((p) => ({ ...p, size_unit: e.target.value || null }))
+                    merge({ size_unit: e.target.value || null }, zeigtZimmerFeld)
                   }
                   className="size-full appearance-none bg-transparent px-4 pt-6 pb-1.5 text-[0.95rem] outline-none"
                 >
@@ -279,18 +276,6 @@ export function TypPanel({
             </p>
           </div>
         </div>
-      </div>
-
-      {/* Speichern unten rechts — deaktiviert, solange unverändert. */}
-      <div className="mt-6 flex justify-end border-t border-border pt-5">
-        <button
-          type="button"
-          onClick={() => void speichern()}
-          disabled={busy || !geaendert}
-          className="rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-30"
-        >
-          {busy ? "Speichert …" : "Speichern"}
-        </button>
       </div>
     </div>
   );

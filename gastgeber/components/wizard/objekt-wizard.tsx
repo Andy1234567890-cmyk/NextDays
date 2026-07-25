@@ -148,7 +148,10 @@ export function ObjektWizard() {
       beds: d.beds,
       bathrooms_private: d.bathrooms_private,
       bathrooms_shared: d.bathrooms_shared,
-      occupancy: d.occupancy,
+      // Reisetyp-Tags („Wer wohnt hier?") — eigener Key, damit sie NICHT mit dem
+      // Belegungs-Objekt type_attributes.occupancy {rooms,children,infants}
+      // kollidieren, das der Channex-Content-Sync liest (content_sync.py).
+      occupancyTags: d.occupancy,
     };
     const fields: Record<string, unknown> = {
       title: d.title || t("titel_step.titel"),

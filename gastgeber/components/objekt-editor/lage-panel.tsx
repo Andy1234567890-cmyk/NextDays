@@ -28,14 +28,21 @@ type LocationAttr = NonNullable<Property["type_attributes"]["location"]>;
 export function LagePanel({
   property,
   onSpeichere,
+  onDetailOffen,
 }: {
   property: Property;
   // Generischer Property-Patch (Adresse + type_attributes). true bei Erfolg.
   onSpeichere: (fields: Partial<Property>) => Promise<boolean>;
+  // Meldet dem Editor, ob eine Detail-Sidebar offen ist (linke Liste ausblenden).
+  onDetailOffen?: (offen: boolean) => void;
 }) {
   const t = useTranslations("objektEditor");
   const reduziert = useReducedMotion();
-  const [detail, setDetail] = useState<Detail | null>(null);
+  const [detail, setDetailState] = useState<Detail | null>(null);
+  function setDetail(d: Detail | null) {
+    setDetailState(d);
+    onDetailOffen?.(d != null);
+  }
 
   const loc = property.type_attributes?.location ?? {};
   const adresse =
@@ -54,10 +61,11 @@ export function LagePanel({
   }
 
   return (
-    // min-h-full (nicht h-full): der Inhalt darf über die sichtbare Höhe hinaus
-    // wachsen, damit die scrollende rechte Editor-Spalte greift statt abzuschneiden.
-    <div className="relative min-h-full">
-      <section className="max-w-2xl">
+    // Inline-Layout: links die Karten (flex-1), rechts die Detail-Sidebar als
+    // eigene Spalte, die per Breiten-Animation ausfährt (kein Overlay).
+    <div className="flex h-full min-h-0">
+      <section className="min-w-0 flex-1 overflow-y-auto px-8 py-8 lg:py-12">
+        <div className="mx-auto max-w-2xl">
         <h2 className="font-sans text-[2rem] font-bold tracking-tight">{t("secLage")}</h2>
 
         {/* Karte (echte Lage, sofern Koordinaten da) */}
@@ -116,23 +124,24 @@ export function LagePanel({
             onClick={() => setDetail("views")}
           />
         </div>
+        </div>
       </section>
 
-      <AnimatePresence>
+      {/* Detail-Sidebar als INLINE-Spalte (kein Overlay): fährt per Breiten-
+          Animation aus und schiebt die Karten daneben zusammen. */}
+      <AnimatePresence initial={false}>
         {detail != null && (
           <motion.aside
             key="lage-sidebar"
-            // sticky + Viewport-Höhe: die Sidebar bleibt beim Scrollen des Panels
-            // im Blick und scrollt ihren eigenen Inhalt (21 Views), statt vom
-            // Panel-Overflow abgeschnitten zu werden.
-            className="fixed bottom-0 right-0 top-20 z-30 w-[32rem] max-w-full overflow-hidden border-l border-border bg-background shadow-xl"
-            initial={reduziert ? false : { x: "100%" }}
-            animate={{ x: 0 }}
-            exit={reduziert ? { opacity: 0 } : { x: "100%" }}
+            className="shrink-0 overflow-hidden border-l border-border"
+            initial={reduziert ? false : { width: 0, opacity: 0 }}
+            animate={{ width: "32rem", opacity: 1 }}
+            exit={reduziert ? { opacity: 0 } : { width: 0, opacity: 0 }}
             transition={
               reduziert ? { duration: 0 } : { type: "spring", stiffness: 260, damping: 30 }
             }
           >
+            <div className="h-full w-[32rem]">
             {detail === "adresse" && (
               <AdresseSidebar
                 property={property}
@@ -187,6 +196,7 @@ export function LagePanel({
                 labelPrefix="lageView"
               />
             )}
+            </div>
           </motion.aside>
         )}
       </AnimatePresence>

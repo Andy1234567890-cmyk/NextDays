@@ -12,6 +12,7 @@ dp_settings.enabled werden berechnet.
 """
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import UTC, date, datetime, timedelta
 
 from supabase import Client
@@ -19,7 +20,7 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.supabase import fetch_all_rows
 
-from .engine import DaySignals, DpSettings, compute_day
+from .engine import DayResult, DaySignals, DpSettings, compute_day
 from .market import MarketDay, MarketSignalProvider, get_market_provider
 
 log = get_logger("nextdays.pricing.recompute")
@@ -104,59 +105,20 @@ class DynamicPricingRecompute:
             log.info("dynamic_pricing_skip_no_base", property_id=property_id)
             return 0
 
+        results = self._price_curve(property_id, base, settings, today, rng_start, rng_end)
         tenant_id = self._tenant_for_property(property_id)
-        season_pct = self._season_pct_by_date(property_id, rng_start, rng_end)
-        event_pct = self._event_pct_by_date(tenant_id, rng_start, rng_end)
-        booked = self._booked_dates(property_id, rng_start, rng_end)
-        market = self._market_by_date(settings, tenant_id, rng_start, rng_end)
-
-        # Pickup: heutigen Belegungs-Snapshot je Aufenthaltstag persistieren
-        # (Lern-Fundament + Velocity-Quelle). Best-effort — fehlt die Tabelle/
-        # Historie, bleibt das Velocity-Signal None (neutral).
-        self._write_pickup_snapshots(property_id, today, rng_start, rng_end, booked)
-        # Velocity-Quelle: primär die gelernte KI-Forecast-Kurve (Phase 4), wo sie
-        # trägt; wo die Kurve eine Zelle nicht gelernt hat (Cold-Start), greift das
-        # einfache Lookback-Signal (Phase 2). Keine Fallbacks: liefert keine der
-        # beiden Quellen einen Wert, bleibt der Tag ohne Pickup-Signal (neutral).
-        velocity = self._pickup_velocity_by_date(property_id, today, rng_start, rng_end)
-        velocity.update(
-            self._forecast_velocity_by_date(property_id, today, rng_start, rng_end)
-        )
-
-        # Wetter (RateBoard-Baustein): nur wenn aktiviert. Tages-Score aus DWD/
-        # Bright Sky für Tage im Forecast-Horizont; ferne Tage → kein Score (neutral).
-        weather = self._weather_by_date(property_id, settings, today, rng_start, rng_end)
-
-        rows: list[dict] = []
-        cur = rng_start
-        while cur < rng_end:
-            md = market.get(cur.isoformat())
-            signals = DaySignals(
-                day=cur,
-                season_pct=season_pct.get(cur.isoformat(), 0.0),
-                event_pct=event_pct.get(cur.isoformat(), 0.0),
-                occupancy=self._occupancy_signal(cur, booked, today),
-                days_before=(cur - today).days,
-                is_orphan_gap=self._is_orphan_gap(cur, booked),
-                comp_price=md.comp_price if md else None,
-                demand_index=md.demand_index if md else None,
-                market_event_pct=md.event_uplift_pct if md else None,
-                pickup_velocity=velocity.get(cur.isoformat()),
-                weather_score=weather.get(cur.isoformat()),
-            )
-            res = compute_day(base, settings, signals)
-            rows.append(
-                {
-                    "property_id": property_id,
-                    "date": cur.isoformat(),
-                    "price": res.price,
-                    "min_stay": res.min_stay,
-                    # Faktor-Aufschlüsselung persistieren („Warum dieser Preis?").
-                    "factors": {k: round(v, 4) for k, v in res.factors.items()},
-                    "computed_at": datetime.now(UTC).isoformat(),
-                }
-            )
-            cur += timedelta(days=1)
+        rows = [
+            {
+                "property_id": property_id,
+                "date": cur.isoformat(),
+                "price": res.price,
+                "min_stay": res.min_stay,
+                # Faktor-Aufschlüsselung persistieren („Warum dieser Preis?").
+                "factors": {k: round(v, 4) for k, v in res.factors.items()},
+                "computed_at": datetime.now(UTC).isoformat(),
+            }
+            for cur, res in results
+        ]
 
         if rows:
             # In dynamic_prices schreiben → Kalender, Quote UND die eigene
@@ -185,6 +147,85 @@ class DynamicPricingRecompute:
             days=len(rows),
         )
         return len(rows)
+
+    def _price_curve(
+        self,
+        property_id: str,
+        base: float,
+        settings: DpSettings,
+        today: date,
+        rng_start: date,
+        rng_end: date,
+    ) -> list[tuple[date, DayResult]]:
+        """Die Dynamic-Pricing-Tageskurve [rng_start, rng_end) berechnen (Signals
+        + compute_day), OHNE zu speichern. Geteilt von recompute_property (schreibt)
+        und suggest_range (nur lesen). EINE Rechenwahrheit."""
+        tenant_id = self._tenant_for_property(property_id)
+        season_pct = self._season_pct_by_date(property_id, rng_start, rng_end)
+        event_pct = self._event_pct_by_date(tenant_id, rng_start, rng_end)
+        booked = self._booked_dates(property_id, rng_start, rng_end)
+        market = self._market_by_date(settings, tenant_id, rng_start, rng_end)
+
+        # Pickup: heutigen Belegungs-Snapshot je Aufenthaltstag persistieren
+        # (Lern-Fundament + Velocity-Quelle). Best-effort — fehlt die Tabelle/
+        # Historie, bleibt das Velocity-Signal None (neutral).
+        self._write_pickup_snapshots(property_id, today, rng_start, rng_end, booked)
+        # Velocity-Quelle: primär die gelernte KI-Forecast-Kurve (Phase 4), sonst
+        # das einfache Lookback-Signal (Phase 2). Keine Fallbacks (neutral bei leer).
+        velocity = self._pickup_velocity_by_date(property_id, today, rng_start, rng_end)
+        velocity.update(
+            self._forecast_velocity_by_date(property_id, today, rng_start, rng_end)
+        )
+        # Wetter (RateBoard): nur wenn aktiviert; ferne Tage → kein Score (neutral).
+        weather = self._weather_by_date(property_id, settings, today, rng_start, rng_end)
+
+        out: list[tuple[date, DayResult]] = []
+        cur = rng_start
+        while cur < rng_end:
+            md = market.get(cur.isoformat())
+            signals = DaySignals(
+                day=cur,
+                season_pct=season_pct.get(cur.isoformat(), 0.0),
+                event_pct=event_pct.get(cur.isoformat(), 0.0),
+                occupancy=self._occupancy_signal(cur, booked, today),
+                days_before=(cur - today).days,
+                is_orphan_gap=self._is_orphan_gap(cur, booked),
+                comp_price=md.comp_price if md else None,
+                demand_index=md.demand_index if md else None,
+                market_event_pct=md.event_uplift_pct if md else None,
+                pickup_velocity=velocity.get(cur.isoformat()),
+                weather_score=weather.get(cur.isoformat()),
+            )
+            out.append((cur, compute_day(base, settings, signals)))
+            cur += timedelta(days=1)
+        return out
+
+    def suggest_range(
+        self, property_id: str, *, horizon_days: int = 120
+    ) -> dict[str, float] | None:
+        """Empfohlene Preisspanne (min/max) für Smart Pricing aus der ECHTEN
+        Dynamic-Pricing-Engine über den Horizont — die Extrema der von Nachfrage/
+        Saison/Wochenende/Auslastung getriebenen Tagespreise. KEIN erfundener
+        Multiplikator (Wurzel 4). Rechnet OHNE min/max-Klammer (die will der Host
+        ja gerade erst setzen) und OHNE zu speichern.
+
+        None, wenn kein Basispreis existiert (kein Vorschlag ohne Datengrundlage)."""
+        today = datetime.now(UTC).date()
+        base = self._load_base_price(property_id)
+        if base is None:
+            return None
+        settings = self._load_settings(property_id)
+        # Für den Vorschlag die eigene Klammer ignorieren: wir wollen die
+        # ungeklammerte Nachfrage-Spanne sehen (sonst schlägt die Engine nur den
+        # bereits gesetzten Rahmen zurück).
+        settings = replace(settings, min_price=None, max_price=None)
+        curve = self._price_curve(
+            property_id, base, settings, today, today, today + timedelta(days=horizon_days)
+        )
+        prices = [res.price for _, res in curve if res.price is not None]
+        if not prices:
+            return None
+        return {"min": round(min(prices)), "max": round(max(prices))}
 
     def _market_by_date(
         self, settings: DpSettings, tenant_id: str | None, start: date, end: date

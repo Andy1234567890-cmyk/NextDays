@@ -14,6 +14,7 @@ interface RatePlan {
   name: string;
   base_price: number;
   currency: string;
+  min_stay: number;
   derived_from_rate_plan_id?: string | null;
 }
 interface RatePlanList {
@@ -47,10 +48,19 @@ export interface PreisStand {
   currency: string | null;
   // Der Rate-Plan, an den base_price/currency hängen (für spätere Patches).
   ratePlanId: string | null;
+  // Objektweiter Mindestaufenthalt (rate_plans.min_stay) — für das Verfügbarkeits-Tab.
+  minStay: number;
   smart: DpSettings;
   // Länge-Rabatte (Airbnb Wochen-/Monatsrabatt), nach min_nights indexiert.
   weeklyDiscount: Discount | null; // min_nights === 7
   monthlyDiscount: Discount | null; // min_nights === 28
+}
+
+// Empfohlene Smart-Pricing-Spanne aus der Dynamic-Pricing-Engine.
+export interface SmartVorschlag {
+  available: boolean;
+  min_price: number | null;
+  max_price: number | null;
 }
 
 // --- Marktvergleich (Airbnb „Compare similar listings") -------------------
@@ -219,6 +229,7 @@ export async function getPreisStand(propertyId: string): Promise<PreisStand> {
     basePrice: plan?.base_price ?? null,
     currency: plan?.currency ?? null,
     ratePlanId: plan?.id ?? null,
+    minStay: plan?.min_stay ?? 1,
     smart:
       smart ?? {
         property_id: propertyId,

@@ -687,10 +687,16 @@ class ContentSyncMixin:
         """Room-Type-Belegung aus den ECHTEN Objektdaten, nicht pauschal — sonst
         zeigt Channex/OTA eine falsche Kapazität. Erwachsene = max_guests; Kinder-,
         Kleinkindplätze und Zimmeranzahl kommen aus type_attributes.occupancy (im
-        Objekt-Editor „Belegung" erfasst, 1:1 die Channex-Felder). Channex verlangt
+        Objekt-Editor „Anzahl Gäste" erfasst, 1:1 die Channex-Felder). Channex verlangt
         occ_adults ≥ 1 und default_occupancy ≤ occ_adults; occ_children/occ_infants
-        sind Pflichtfelder (live verifiziert)."""
-        occ = ((prop_row or {}).get("type_attributes") or {}).get("occupancy") or {}
+        sind Pflichtfelder (live verifiziert).
+
+        WICHTIG: occupancy ist NUR als Objekt {rooms,children,infants} gültig. Ältere
+        Wizard-Versionen schrieben hier ein String-Array (Reisetyp-Tags) — das ist ein
+        anderer Belang und lebt jetzt unter occupancyTags. Ist occupancy (noch) ein
+        Array/kein dict, wird es als leer behandelt (kein AttributeError-Crash)."""
+        raw_occ = ((prop_row or {}).get("type_attributes") or {}).get("occupancy")
+        occ = raw_occ if isinstance(raw_occ, dict) else {}
         occ_adults = max(1, int((prop_row or {}).get("max_guests") or 2))
         return {
             "count_of_rooms": max(1, int(occ.get("rooms") or 1)),
