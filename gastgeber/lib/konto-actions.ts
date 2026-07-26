@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { ApiError } from "@nextdays/auth/errors";
 
 import { api } from "./api-server";
+import type { NotificationOverview } from "./benachrichtigungen";
 import type { BlockedGuest, PrivacyKey, PrivacySettings } from "./datenschutz";
 import type { Account } from "./konto";
 
@@ -312,6 +313,39 @@ export async function entblockeGast(
       ok: false,
       error:
         exc instanceof ApiError ? exc.message : "Entblocken fehlgeschlagen.",
+    };
+  }
+}
+
+/** Einen Benachrichtigungs-Kanal umschalten (Airbnb „Konto → Benachrichtigungen").
+ *
+ *  `spalte` ist der Backend-Feldname `<kategorie>_<kanal>` (siehe 0225). Das
+ *  Backend erzwingt dabei seine Regeln: Pflicht-E-Mails bleiben an, und das
+ *  Sammel-Opt-out pflegt die Marketing-Kanäle mit. Die UI übernimmt DESHALB die
+ *  zurückgegebene Übersicht, statt den geklickten Wert zu glauben. */
+export async function setzeBenachrichtigung(
+  spalte: string,
+  value: boolean,
+): Promise<
+  { ok: true; uebersicht: NotificationOverview } | { ok: false; error: string }
+> {
+  try {
+    await api("/notification-settings", {
+      method: "PATCH",
+      body: { [spalte]: value },
+    });
+    // Bewusst neu lesen statt die PATCH-Antwort zu nehmen: der PATCH liefert die
+    // flachen Werte, die UI braucht die Kategorien-Sicht inkl. Sperr-Status.
+    const uebersicht = await api<NotificationOverview>("/notification-settings");
+    revalidatePath("/konto");
+    return { ok: true, uebersicht };
+  } catch (exc) {
+    return {
+      ok: false,
+      error:
+        exc instanceof ApiError
+          ? exc.message
+          : "Einstellung konnte nicht gespeichert werden.",
     };
   }
 }

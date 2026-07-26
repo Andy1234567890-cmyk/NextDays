@@ -55,6 +55,9 @@ from .features.payments.router import router as payments_router
 from .features.payouts.router import router as payouts_router
 from .features.platform_admin.router import router as platform_admin_router
 from .features.pricing.router import router as pricing_router
+from .features.notification_settings.router import (
+    router as notification_settings_router,
+)
 from .features.privacy_settings.router import router as privacy_settings_router
 from .features.properties.router import router as properties_router
 from .features.property_discounts.router import router as property_discounts_router
@@ -98,6 +101,7 @@ _SLICE_ROUTERS = [
     host_profiles_router,
     inbox_router,
     login_devices_router,
+    notification_settings_router,
     privacy_settings_router,
     payments_router,
     payouts_router,

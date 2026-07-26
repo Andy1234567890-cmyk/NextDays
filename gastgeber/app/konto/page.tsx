@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
 import { AuszahlungenTab } from "@/components/konto/auszahlungen-tab";
+import { BenachrichtigungenAbschnitt } from "@/components/konto/benachrichtigungen-abschnitt";
 import { DatenschutzAbschnitt } from "@/components/konto/datenschutz-abschnitt";
 import { KontoNav } from "@/components/konto/konto-nav";
 import { PersoenlichAbschnitt } from "@/components/konto/persoenlich-abschnitt";
@@ -18,6 +19,7 @@ import { VorbereitungAbschnitt } from "@/components/konto/vorbereitung-abschnitt
 import { ZahlungenAbschnitt } from "@/components/konto/zahlungen-abschnitt";
 import { ZahlungenTabs } from "@/components/konto/zahlungen-tabs";
 import { getAuszahlungsUebersicht } from "@/lib/auszahlungen";
+import { getNotificationOverview } from "@/lib/benachrichtigungen";
 import { getPrivacySettings } from "@/lib/datenschutz";
 import { getDebugSessions } from "@/lib/diagnose";
 import { getAccount } from "@/lib/konto";
@@ -32,7 +34,6 @@ import { getUnternehmensprofil } from "@/lib/unternehmen";
 // Bereiche ohne eigenes Backend → Platzhalter, aber in der Nav sichtbar (wie
 // Airbnb): Titel-Key je Bereich.
 const VORBEREITUNG: Record<string, string> = {
-  benachrichtigungen: "navBenachrichtigungen",
   steuern: "navSteuern",
   buchungsrechte: "navBuchungsrechte",
   profitools: "navProfiTools",
@@ -81,6 +82,8 @@ export default async function KontoPage({
   // steuert dort, wer wann Einblick in seine Fehlerdaten hat.
   const debugSessions =
     aktiv === "datenschutz" ? await getDebugSessions().catch(() => []) : [];
+  const benachrichtigungen =
+    aktiv === "benachrichtigungen" ? await getNotificationOverview() : null;
 
   return (
     <div className="mx-auto max-w-6xl px-8 py-12">
@@ -133,6 +136,9 @@ export default async function KontoPage({
               <DatenschutzAbschnitt settings={privacy} />
               <SupportDiagnose sessions={debugSessions} />
             </>
+          )}
+          {aktiv === "benachrichtigungen" && (
+            <BenachrichtigungenAbschnitt uebersicht={benachrichtigungen} />
           )}
           {aktiv === "unternehmen" && <UnternehmenTab profil={unternehmen} />}
           {VORBEREITUNG[aktiv] && (
