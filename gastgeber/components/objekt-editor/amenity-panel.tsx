@@ -49,7 +49,9 @@ export function AmenityPanel({
 }) {
   const t = useTranslations("objektEditor");
   const [lokal, setLokal] = useState<Set<string>>(new Set(gewaehlt));
-  const [filter, setFilter] = useState<"alle" | "beliebt">("alle");
+  // Kategorie-Filter: "alle" oder ein Kategorie-Name aus KATEGORIE_REIHENFOLGE
+  // (Airbnb zeigt alle Kategorien als Chips, nicht nur „Alle/Vorgeschlagen").
+  const [filter, setFilter] = useState<string>("alle");
   const [suche, setSuche] = useState("");
   const [sucheOffen, setSucheOffen] = useState(false);
   const [speichert, setSpeichert] = useState(false);
@@ -67,7 +69,7 @@ export function AmenityPanel({
   const gruppen = useMemo(() => {
     const q = normalisiere(suche.trim());
     const gefiltert = AMENITY_KATALOG.filter((a) => {
-      if (filter === "beliebt" && a.kategorie !== "Beliebt") return false;
+      if (filter !== "alle" && a.kategorie !== filter) return false;
       if (q && !normalisiere(a.label).includes(q)) return false;
       return true;
     });
@@ -93,7 +95,7 @@ export function AmenityPanel({
   return (
     <div className="flex h-full flex-col">
       {/* Fixer Kopf (Titel, Suche, Filter) — scrollt NICHT mit der Liste. */}
-      <div className="shrink-0 px-8 pt-8 lg:px-12 lg:pt-12">
+      <div className="shrink-0 border-b border-border px-8 pb-5 pt-8 lg:px-12 lg:pt-12">
         {/* Schließen-X oben rechts (Airbnb-Muster). */}
         <div className="mb-4 flex justify-end">
           <button
@@ -135,27 +137,32 @@ export function AmenityPanel({
           />
         )}
 
-        {/* Filter „Alle" / „Vorgeschlagen" */}
-        <div className="mt-5 flex gap-2">
-          {(["alle", "beliebt"] as const).map((f) => (
-            <button
-              key={f}
-              type="button"
-              onClick={() => setFilter(f)}
-              className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
-                filter === f
-                  ? "border-foreground bg-foreground text-background"
-                  : "border-border text-foreground hover:border-foreground"
-              }`}
-            >
-              {f === "alle" ? t("amenityAlle") : t("amenityVorgeschlagen")}
-            </button>
-          ))}
+        {/* Kategorie-Chips: „Alle" + alle Katalog-Kategorien (Airbnb-Muster).
+            EINE Zeile, horizontal scrollbar (kein Umbruch) — bei 14 Chips würde
+            flex-wrap den Kopf sonst mehrzeilig aufblähen. Die Scrollbar bleibt
+            unsichtbar; gewischt/gescrollt wird seitlich. */}
+        <div className="mt-5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex w-max gap-2 pr-8 lg:pr-12">
+            {["alle", ...KATEGORIE_REIHENFOLGE].map((f) => (
+              <button
+                key={f}
+                type="button"
+                onClick={() => setFilter(f)}
+                className={`shrink-0 whitespace-nowrap rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                  filter === f
+                    ? "border-foreground bg-foreground text-background"
+                    : "border-border text-foreground hover:border-foreground"
+                }`}
+              >
+                {f === "alle" ? t("amenityAlle") : f}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Scrollende Liste — nur dieser Bereich scrollt intern. */}
-      <div className="min-h-0 flex-1 overflow-y-auto px-8 pt-6 lg:px-12">
+      <div className="min-h-0 flex-1 overflow-y-auto px-8 pt-8 lg:px-12">
         {gruppen.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
             {t("amenityKeine")}

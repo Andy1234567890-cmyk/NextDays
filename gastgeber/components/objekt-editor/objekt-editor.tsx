@@ -31,6 +31,7 @@ import { useRealtime } from "@/lib/use-realtime";
 import { ObjektPublish } from "@/components/objekt-publish";
 
 import { AmenityPanel } from "./amenity-panel";
+import { AusstattungPanel } from "./ausstattung-panel";
 import { BarrierefreiheitPanel } from "./barrierefreiheit-panel";
 import { BeschreibungPanel } from "./beschreibung-panel";
 import { GaestePanel } from "./gaeste-panel";
@@ -475,7 +476,9 @@ export function ObjektEditor({
     { key: "beschreibung", titel: t("secBeschreibung"),
       vorschau: viewProp.description || t("hinzufuegen"), fehlt: !viewProp.description },
     { key: "ausstattung", titel: t("secAusstattung"),
-      vorschau: viewProp.amenities.length ? `${viewProp.amenities.length}` : t("hinzufuegen"),
+      vorschau: viewProp.amenities.length
+        ? t("ausstattungAnzahl", { n: viewProp.amenities.length })
+        : t("hinzufuegen"),
       fehlt: viewProp.amenities.length === 0 },
     { key: "gaeste", titel: t("secGaeste"), vorschau: t("gaesteWert", { n: viewProp.max_guests }) },
     { key: "lage", titel: t("secLage"), vorschau: ort || t("hinzufuegen"), fehlt: !ort },
@@ -720,7 +723,8 @@ export function ObjektEditor({
           aktiv === "rabatte" ||
           aktiv === "gaeste" ||
           aktiv === "beschreibung" ||
-          aktiv === "host"
+          aktiv === "host" ||
+          aktiv === "ausstattung"
             ? ""
             : "px-8 py-8 lg:px-14 lg:py-12"
         }`}
@@ -774,9 +778,10 @@ export function ObjektEditor({
           />
         )}
         {aktiv === "ausstattung" && (
-          <WertPanel
-            titel={t("secAusstattung")}
-            wert={viewProp.amenities.length ? viewProp.amenities.join(", ") : t("noch")}
+          <AusstattungPanel
+            gewaehlt={viewProp.amenities}
+            onSpeichere={speichereAmenities}
+            onDetailOffen={setDetailOffen}
           />
         )}
         {aktiv === "lage" && (
