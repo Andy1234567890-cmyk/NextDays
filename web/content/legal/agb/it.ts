@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // (Stripe Connected Account Agreement) — Eigennamen und URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Condizioni generali di contratto (CGC) per agenzie e locatori",
-  stand: "Ultimo aggiornamento: 3 luglio 2026",
+  stand: "Ultimo aggiornamento: 26 luglio 2026",
   intro: [
     "Le presenti Condizioni generali di contratto (di seguito «CGC») disciplinano l’utilizzo della piattaforma software myNextDays (di seguito «Piattaforma») da parte di agenzie, locatori, amministratori immobiliari e altri utenti professionali (di seguito «Utente»).",
     "La Piattaforma è gestita da [ragione sociale completa, forma giuridica, indirizzo e dati di registro del gestore — da completare prima della pubblicazione] (di seguito «myNextDays» o «noi»).",
@@ -60,8 +60,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Versamenti, storni di addebito e saldi negativi",
       paragraphs: [
+        "Il percorso di pagamento dipende dal canale di prenotazione. Per le prenotazioni effettuate tramite il motore di prenotazione dell'Utente e per le prenotazioni tramite portali di distribuzione collegati, i pagamenti degli ospiti sono incassati direttamente sul conto di pagamento dell'Utente; in tali casi l'Utente è, nei confronti dell'ospite, il destinatario del pagamento e la parte contraente della prestazione di alloggio (§ 4), e myNextDays non diventa in alcun momento titolare di tali fondi. myNextDays non applica alcuna commissione percentuale di prenotazione su tali prenotazioni; la commissione per le prenotazioni tramite portali di distribuzione collegati è indicata separatamente e fatturata successivamente.",
+        "Per le prenotazioni effettuate tramite il portale di prenotazione myNextDays, il pagamento è gestito tramite myNextDays. myNextDays trattiene a tal fine la commissione di intermediazione indicata nel listino prezzi di volta in volta vigente, inclusi i costi di gestione del pagamento, e trasferisce l'importo residuo all'Utente secondo i commi che seguono. Il corrispettivo per l'utilizzo del software (§ 7) resta impregiudicato.",
         "I versamenti vengono effettuati sul conto bancario indicato dall’Utente. myNextDays può modificare la cadenza dei versamenti per motivi di rischio, in particolare in caso di account nuovi, modelli di transazione anomali o verifiche in corso.",
-        "Gli storni di addebito (chargeback), i rimborsi e le relative commissioni connessi alle prenotazioni dell’Utente sono a carico dell’Utente. myNextDays ha il diritto di compensare tali importi con versamenti futuri.",
+        "I rimborsi agli ospiti sono economicamente a carico dell'Utente. Gli storni di addebito e le relative spese sono a carico dell'Utente per le prenotazioni effettuate tramite il proprio motore di prenotazione e tramite portali di distribuzione collegati, essendo in tali casi l'Utente il destinatario del pagamento; per le prenotazioni effettuate tramite il portale di prenotazione myNextDays, myNextDays sopporta il rischio di storno, salvo che questo derivi da un inadempimento dell'Utente (in particolare mancata prestazione o difformità sostanziale della prestazione di alloggio). myNextDays ha diritto di compensare gli importi a carico dell'Utente con i versamenti futuri.",
         "Se sul conto di pagamento dell’Utente si genera un saldo negativo, l’Utente deve ripianarlo senza indugio. L’Utente autorizza myNextDays e Stripe ad addebitare i saldi negativi sul conto bancario registrato, nella misura consentita dalla legge.",
       ],
     },

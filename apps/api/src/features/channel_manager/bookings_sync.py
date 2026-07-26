@@ -402,19 +402,32 @@ class BookingsSyncMixin:
     # Pflichtangabe, wird die Buchung übersprungen und geloggt.
 
     # OTA-Name → reservation_channel-Enum. Der Enum kennt nur diese Werte; andere
-    # OTAs (Expedia, Agoda, …) laufen auf 'portal', ihr echter Name bleibt in
-    # reservations.ota_name erhalten (für Kalender-Anzeige + Posteingang).
+    # Namen, die die Preisliste §2 einzeln nennt. Alles andere (Expedia, Agoda,
+    # Namensvarianten wie "Booking.com B.V.") fällt auf 'ota_other' — ebenfalls
+    # ein EXTERNER Kanal mit 1 % monatlich. Der echte Anbietername bleibt in
+    # reservations.ota_name erhalten (Kalender-Anzeige + Posteingang).
     _OTA_CHANNEL_MAP = {
         "booking.com": "booking",
+        "booking": "booking",
         "airbnb": "airbnb",
         "vrbo": "vrbo",
+        "expedia": "ota_other",
     }
 
     @classmethod
     def _ota_name_to_channel(cls, ota_name: str | None) -> str:
+        """OTA-Name → Kanal. NIEMALS 'portal'.
+
+        'portal' trägt laut Preisliste §2 die 8 % all-in und macht uns zum
+        Merchant of Record. Eine über den Channel-Manager eingegangene Buchung
+        ist per Definition eine FREMDE Buchung — das Geld lief nie über uns.
+        Fiele sie auf 'portal', entstünde doppelter Schaden: die geschuldete
+        1 % würde nie fakturiert (record_commission verwirft Nicht-OTA), und
+        wir trügen die Chargeback-Haftung für eine Buchung ohne Erlös.
+        """
         if not ota_name:
-            return "portal"
-        return cls._OTA_CHANNEL_MAP.get(ota_name.strip().lower(), "portal")
+            return "ota_other"
+        return cls._OTA_CHANNEL_MAP.get(ota_name.strip().lower(), "ota_other")
 
     def _resolve_local_property(
         self, db: Client, tenant_id: str, channex_property_id: str,

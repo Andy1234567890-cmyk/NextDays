@@ -25,9 +25,10 @@ export default async function AnmeldenPage({
             Vermiete auf myNextDays.
           </h1>
           <p className="mt-4 max-w-md text-primary-foreground/70">
-            Stelle dein Objekt ein, verwalte Kalender, Preise und Buchungen —
-            ganz ohne monatliches Abo. Wir berechnen nur 8 % Provision pro
-            erfolgreicher Buchung.
+            Stelle dein Objekt ein, verwalte Kalender, Preise und Buchungen.
+            8 % Provision zahlst du nur auf Buchungen, die über myNextDays
+            zustande kommen — Direktbuchungen über deine eigene Seite bleiben
+            provisionsfrei.
           </p>
         </div>
         <div className="flex items-center gap-6 text-sm text-primary-foreground/60">

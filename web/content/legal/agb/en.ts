@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // (recommended disclosure language) — Wortlaut und URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Terms and Conditions for Agencies and Property Managers",
-  stand: "Last updated: 3 July 2026",
+  stand: "Last updated: 26 July 2026",
   intro: [
     "These Terms and Conditions (the “Terms”) govern the use of the myNextDays software platform (the “Platform”) by agencies, property managers, landlords and other business users (the “User”).",
     "The Platform is operated by [full legal name, legal form, address and register details of the operating company — to be completed before publication] (“myNextDays”, “we”).",
@@ -60,8 +60,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Payouts, chargebacks and negative balances",
       paragraphs: [
+        "The payment flow depends on the booking channel. For bookings made through the User's own booking engine and for bookings via connected distribution portals, guest payments are received directly into the User's payment account; in these cases the User is the recipient of payment and the contracting party for the accommodation service vis-à-vis the guest (§ 4), and myNextDays never becomes the holder of these funds. myNextDays does not charge any percentage booking fee on such bookings; the commission for bookings via connected distribution portals is disclosed separately and invoiced in arrears.",
+        "For bookings made through the myNextDays booking portal, payment is processed via myNextDays. myNextDays retains the intermediation commission set out in the price list applicable from time to time, including the cost of payment processing, and forwards the remaining amount to the User in accordance with the paragraphs below. The fee for use of the software (§ 7) remains unaffected.",
         "Payouts are made to the bank account provided by the User. myNextDays may adjust the payout schedule for risk reasons, in particular for new accounts, unusual transaction patterns or ongoing reviews.",
-        "Chargebacks, refunds and any resulting fees relating to the User’s bookings are borne by the User. myNextDays is entitled to set such amounts off against future payouts.",
+        "Refunds to guests are borne economically by the User. Chargebacks and any resulting fees are borne by the User for bookings made through the User's own booking engine and through connected distribution portals, since the User is the recipient of payment in those cases; for bookings made through the myNextDays booking portal, myNextDays bears the chargeback risk, unless the chargeback results from a breach of duty by the User (in particular non-provision of, or material deviation in, the accommodation service). myNextDays is entitled to set off amounts to be borne by the User against future payouts.",
         "If a negative balance arises on the User’s payment account, the User must settle it without undue delay. The User authorizes myNextDays and Stripe to debit negative balances from the bank account on file, to the extent legally permissible.",
       ],
     },

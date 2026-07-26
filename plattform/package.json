@@ -23,7 +23,8 @@
     "@nextdays/laender": "workspace:*",
     "@nextdays/currency": "workspace:*",
     "@nextdays/auth": "workspace:*",
-    "@nextdays/security-headers": "workspace:*"
+    "@nextdays/security-headers": "workspace:*",
+    "@nextdays/diagnostics": "workspace:*"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",

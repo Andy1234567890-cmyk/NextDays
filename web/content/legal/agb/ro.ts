@@ -6,7 +6,7 @@ import type { LegalDoc } from "../types";
 // Agreement) — Wortlaut an Stripes Empfehlungstext angelehnt, URLs nicht ändern.
 export const agb: LegalDoc = {
   title: "Condiții generale de afaceri (CGA) pentru agenții și locatori",
-  stand: "Ultima actualizare: 3 iulie 2026",
+  stand: "Ultima actualizare: 26 iulie 2026",
   intro: [
     "Prezentele condiții generale de afaceri (denumite în continuare „CGA”) reglementează utilizarea platformei software myNextDays (denumită în continuare „Platforma”) de către agenții, locatori, administratori de imobile și alți utilizatori comerciali (denumiți în continuare „Utilizatorul”).",
     "Furnizorul Platformei este [denumirea completă a societății, forma juridică, adresa și datele de înregistrare ale operatorului — a se completa înainte de publicare] (denumit în continuare „myNextDays” sau „noi”).",
@@ -61,8 +61,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Viramente, refuzuri la plată și solduri negative",
       paragraphs: [
+        "Circuitul plății depinde de canalul de rezervare. În cazul rezervărilor efectuate prin propriul motor de rezervări al Utilizatorului și al rezervărilor prin portaluri de distribuție conectate, plățile oaspeților sunt încasate direct în contul de plată al Utilizatorului; în aceste cazuri, Utilizatorul este, față de oaspete, beneficiarul plății și partea contractantă a serviciului de cazare (§ 4), iar myNextDays nu devine în niciun moment deținător al acestor fonduri. Pentru astfel de rezervări, myNextDays nu percepe niciun comision procentual de rezervare; comisionul pentru rezervările prin portaluri de distribuție conectate este indicat separat și facturat ulterior.",
+        "În cazul rezervărilor efectuate prin portalul de rezervări myNextDays, plata este procesată prin myNextDays. myNextDays reține în acest caz comisionul de intermediere prevăzut în lista de prețuri în vigoare, inclusiv costurile procesării plății, și transferă suma rămasă Utilizatorului potrivit alineatelor de mai jos. Remunerația pentru utilizarea software-ului (§ 7) rămâne neafectată.",
         "Viramentele se efectuează în contul bancar indicat de Utilizator. myNextDays poate ajusta ritmul viramentelor din motive de risc, în special în cazul conturilor noi, al tiparelor de tranzacții neobișnuite sau al verificărilor în curs.",
-        "Refuzurile la plată (chargeback), rambursările, precum și comisioanele rezultate din acestea în legătură cu rezervările Utilizatorului sunt suportate de Utilizator. myNextDays are dreptul să compenseze sumele corespunzătoare cu viramentele viitoare.",
+        "Rambursările către oaspeți sunt suportate economic de Utilizator. Refuzurile la plată și taxele rezultate sunt suportate de Utilizator în cazul rezervărilor efectuate prin propriul motor de rezervări și prin portaluri de distribuție conectate, întrucât în aceste cazuri Utilizatorul este beneficiarul plății; în cazul rezervărilor efectuate prin portalul de rezervări myNextDays, myNextDays suportă riscul de refuz la plată, cu excepția cazului în care acesta rezultă dintr-o încălcare a obligațiilor Utilizatorului (în special neprestarea sau abaterea substanțială a serviciului de cazare). myNextDays are dreptul de a compensa sumele suportate de Utilizator cu viramentele viitoare.",
         "Dacă în contul de plăți al Utilizatorului apare un sold negativ, Utilizatorul trebuie să îl acopere fără întârziere. Utilizatorul autorizează myNextDays și Stripe să debiteze soldurile negative din contul bancar indicat, în măsura în care acest lucru este permis de lege.",
       ],
     },

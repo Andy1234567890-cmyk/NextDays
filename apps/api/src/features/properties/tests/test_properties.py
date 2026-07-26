@@ -22,6 +22,7 @@ from src.features.properties.service import (
     PropertyError,
     _derive_channels,
     _max_stay_of,
+    _sniff_image_ext,
 )
 from src.main import create_app
 
@@ -220,9 +221,22 @@ class _PublishDB:
         return _PublishQuery(self, name)
 
 
+# publish() prüft VOR allem anderen die Zahlungsfreigabe des Tenants
+# (_require_payments_ready → tenant_billing_profile.stripe_charges_enabled).
+# Wer den Pfad DAHINTER testen will, muss das Profil freigeschaltet mitliefern —
+# sonst schlägt schon das Stripe-Gate mit 409 zu und der Test prüft nichts.
+_BILLING_READY = [{"stripe_charges_enabled": True}]
+
+
 def test_publish_without_rate_plan_is_422() -> None:
     # Property existiert, aber KEIN rate_plan → Veröffentlichen abgelehnt (kein Fallback).
-    db = _PublishDB({"properties": [_row()], "rate_plans": []})
+    db = _PublishDB(
+        {
+            "properties": [_row()],
+            "rate_plans": [],
+            "tenant_billing_profile": _BILLING_READY,
+        }
+    )
     svc = PropertiesService(service_client=db)
     with pytest.raises(PropertyError) as exc:
         svc.publish(_ctx(), "p-1")
@@ -230,11 +244,30 @@ def test_publish_without_rate_plan_is_422() -> None:
 
 
 def test_publish_missing_property_404() -> None:
-    db = _PublishDB({"properties": [], "rate_plans": []})
+    db = _PublishDB(
+        {
+            "properties": [],
+            "rate_plans": [],
+            "tenant_billing_profile": _BILLING_READY,
+        }
+    )
     svc = PropertiesService(service_client=db)
     with pytest.raises(PropertyError) as exc:
         svc.publish(_ctx(), "p-x")
     assert exc.value.status_code == 404
+
+
+def test_publish_blocked_without_payments_ready() -> None:
+    """Ohne Stripe-Freigabe wird VOR allen anderen Prüfungen abgelehnt (409).
+
+    Sichert das Gate selbst ab — es ist die eine Quelle der Wahrheit für
+    „darf dieser Mandant verkaufen?".
+    """
+    db = _PublishDB({"properties": [_row()], "rate_plans": []})
+    svc = PropertiesService(service_client=db)
+    with pytest.raises(PropertyError) as exc:
+        svc.publish(_ctx(), "p-1")
+    assert exc.value.status_code == 409
 
 
 def test_resync_missing_property_404() -> None:
@@ -507,21 +540,27 @@ def test_list_photos_unknown_property_404() -> None:
     assert exc.value.status_code == 404
 
 
-# --- Gate: Objekt-Anlage erst mit bestätigtem Stripe-Account ----------------
+# --- Gate: Zahlungsfreigabe erst beim Veröffentlichen -----------------------
 
-def test_create_blocked_without_confirmed_stripe_account() -> None:
-    """Ohne charges_enabled darf KEIN Objekt angelegt werden (Onboarding/KYC
-    muss vorher abgeschlossen sein)."""
+def test_create_allowed_as_draft_without_stripe_account() -> None:
+    """Ein ENTWURF darf ohne Stripe-Freigabe entstehen.
+
+    Das Zahlungs-Gate greift bewusst erst bei publish(): erst wenn ein Gast
+    tatsächlich buchen/zahlen kann, muss eine Auszahlung möglich sein. Ein
+    Gastgeber soll sein Objekt vorbereiten können, während das KYC noch läuft.
+    """
     db = _PhotoDB()
+    db.tables["properties"] = []
     db.tables["tenant_billing_profile"] = [
         {"tenant_id": "t-1", "stripe_charges_enabled": False}
     ]
     svc = PropertiesService(service_client=db)
-    with pytest.raises(PropertyError) as exc:
-        svc.create(_ctx(), PropertyCreate(title="Villa", property_type=PropertyType.ferienhaus))
-    assert exc.value.status_code == 409
-    # Es wurde KEIN Objekt angelegt.
-    assert len(db.tables.get("properties", [])) == 1  # nur die Default-Row
+    res = svc.create(
+        _ctx(), PropertyCreate(title="Villa", property_type=PropertyType.ferienhaus)
+    )
+    # Angelegt — und zwar zwingend als Entwurf (nie direkt aktiv).
+    assert res.status == "draft"
+    assert len(db.tables.get("properties", [])) == 1
 
 
 def test_create_allowed_with_confirmed_stripe_account() -> None:
@@ -686,3 +725,50 @@ def test_derive_channels_draft_object_paused_local_channels() -> None:
     ch = _derive_channels(row, None)
     assert ch.website == ChannelState.paused
     assert ch.marketplace == ChannelState.paused
+
+
+# --- Barrierefreiheits-Beweisfotos (0201) ------------------------------------
+
+
+
+def test_sniff_detects_real_image_types() -> None:
+    """Magic-Bytes erkennen die vier erlaubten Formate."""
+    assert _sniff_image_ext(b"\x89PNG\r\n\x1a\n rest") == "png"
+    assert _sniff_image_ext(b"\xff\xd8\xff\xe0 rest") == "jpg"
+    assert _sniff_image_ext(b"RIFF" + b"1234" + b"WEBP" + b"rest") == "webp"
+    assert _sniff_image_ext(b"GIF89a rest") == "gif"
+
+
+def test_sniff_rejects_non_image() -> None:
+    """Alles andere wird abgelehnt — auch wenn der Client 'image/png' behauptet.
+
+    Genau das ist der Punkt: der content_type ist frei wählbar und damit kein
+    Schutz (Wurzel 8). Eine als Bild getarnte HTML-/Skriptdatei fällt hier raus.
+    """
+    assert _sniff_image_ext(b"<html><script>alert(1)</script>") is None
+    assert _sniff_image_ext(b"%PDF-1.7") is None
+    assert _sniff_image_ext(b"") is None
+    assert _sniff_image_ext(b"\x89PNG") is None  # abgeschnittene Signatur
+
+
+def test_accessibility_upload_rejects_disguised_file() -> None:
+    """Ein 'image/png' mit HTML-Inhalt wird mit 415 abgelehnt."""
+    db = _PhotoDB()
+    svc = PropertiesService(service_client=db)
+    with pytest.raises(PropertyError) as exc:
+        svc.upload_accessibility_photo(
+            _ctx(), "p-1", "step_free_guest_entrance", b"<html>", "image/png"
+        )
+    assert exc.value.status_code == 415
+
+
+def test_accessibility_upload_rejects_oversize() -> None:
+    """Über 10 MB wird abgelehnt, bevor irgendetwas in den Bucket geht."""
+    db = _PhotoDB()
+    svc = PropertiesService(service_client=db)
+    zu_gross = b"\x89PNG\r\n\x1a\n" + b"x" * (10 * 1024 * 1024 + 1)
+    with pytest.raises(PropertyError) as exc:
+        svc.upload_accessibility_photo(
+            _ctx(), "p-1", "step_free_guest_entrance", zu_gross, "image/png"
+        )
+    assert exc.value.status_code == 413

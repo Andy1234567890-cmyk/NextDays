@@ -10,10 +10,35 @@ sekundär, NotImplemented). Enthält: `router.py`, `service.py`, `schemas.py`,
   Branding. Account anlegen (`type=custom`, `tos_acceptance.service_agreement=full`),
   KYC-Daten/IBAN über die eigene Dashboard-UI per `Account.update` /
   `external_account`. KEIN Stripe-hosted Onboarding-Link.
-- **Gast-Zahlung (Destination Charge)** — der Gast zahlt über den Plattform-Account,
-  das Geld geht per `transfer_data.destination` an den Connected Account des Tenants.
-  Plattform-Provision via `stripe_platform_fee_pct` (Default 0). Voraussetzung:
-  `stripe_charges_enabled = true`, sonst 409 (kein Fallback-Charge).
+- **Gast-Zahlung** — der Gast zahlt immer über den Plattform-Account. WANN das
+  Geld beim Betrieb ankommt, steuert `stripe_separate_transfers`:
+  - **aus (Default, Altpfad):** Destination Charge — `transfer_data.destination`
+    reicht sofort nach dem Charge weiter. Solange das gilt, ist der
+    Auszahlungslauf (`features/payouts`) gesperrt, sonst flösse dieselbe Buchung
+    zweimal.
+  - **an (Ziel):** Separate Charge — der Betrag landet auf dem Plattform-Saldo
+    und wird erst nach dem Checkout per Transfer freigegeben (gleiche
+    `transfer_group`). Storno vor Anreise braucht dann kein Zurückholen.
+
+  `on_behalf_of` ist in beiden Fällen der Betrieb: seine Währung, sein Land, sein
+  Name auf der Kartenabrechnung. Live über 8 Länder/5 Währungen geprüft — jeder
+  Betrieb erhält seine eigene Währung, nicht die der Plattform.
+
+  **Provision und Haftung hängen am KANAL, nicht am Kontotyp** (Preisliste §1:
+  „Ein Tarif für alle. Kein Privat- oder Agentur-Modell"). Derselbe Betrieb
+  verkauft über alle drei Wege:
+
+  | `reservations.channel` | Provision | Charge-Typ | Haftung |
+  |---|---|---|---|
+  | `portal` (unser Marktplatz) | **8 % all-in** | über die Plattform | myNextDays |
+  | `direct` (eigene Website) | **0 %** (§5) | **Direct Charge** | Betrieb |
+  | `booking`/`airbnb`/`vrbo` | 0 % am Charge (1 % monatlich) | kein Charge (409) | — |
+
+  Die Regel dahinter: Wer an einer Buchung nichts verdient, haftet auch nicht
+  für ihre Chargebacks (Lastenheft §7.1). Nur Direct Charges verlagern die
+  Haftung wirklich — `on_behalf_of` tut das nachweislich NICHT.
+
+  Voraussetzung: `stripe_charges_enabled = true`, sonst 409 (kein Fallback-Charge).
 - **Kaution** — manual-capture PaymentIntent (`properties.deposit_amount`):
   vorautorisieren, später `capture` (Schaden) oder `cancel` (Freigabe).
 - **Refund** — voll/teilweise; schreibt eine `refund`-Zahlung + Status-Update.

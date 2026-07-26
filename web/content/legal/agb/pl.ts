@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // (Stripe Connected Account Agreement) — Wortlaut sinngemäß, URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Ogólne Warunki Handlowe (Regulamin) dla agencji i wynajmujących",
-  stand: "Stan na: 3 lipca 2026 r.",
+  stand: "Stan na: 26 lipca 2026 r.",
   intro: [
     "Niniejsze Ogólne Warunki Handlowe (zwane dalej „Regulaminem”) określają zasady korzystania z platformy oprogramowania myNextDays (zwanej dalej „Platformą”) przez agencje, wynajmujących, zarządców nieruchomości oraz innych użytkowników prowadzących działalność gospodarczą (zwanych dalej „Użytkownikiem”).",
     "Dostawcą Platformy jest [pełna firma, forma prawna, adres i dane rejestrowe operatora — uzupełnić przed publikacją] (zwana dalej „myNextDays” lub „my”).",
@@ -60,8 +60,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Wypłaty, obciążenia zwrotne i salda ujemne",
       paragraphs: [
+        "Sposób rozliczenia zależy od kanału rezerwacji. W przypadku rezerwacji dokonanych przez własny silnik rezerwacyjny Użytkownika oraz rezerwacji za pośrednictwem podłączonych portali dystrybucyjnych płatności gości wpływają bezpośrednio na rachunek płatniczy Użytkownika; w tych przypadkach Użytkownik jest wobec gościa odbiorcą płatności i stroną umowy o świadczenie usługi zakwaterowania (§ 4), a myNextDays w żadnym momencie nie staje się posiadaczem tych środków. myNextDays nie pobiera od takich rezerwacji żadnej procentowej opłaty rezerwacyjnej; prowizja za rezerwacje za pośrednictwem podłączonych portali dystrybucyjnych jest wykazywana odrębnie i fakturowana następczo.",
+        "W przypadku rezerwacji dokonanych za pośrednictwem portalu rezerwacyjnego myNextDays płatność jest realizowana przez myNextDays. myNextDays potrąca przy tym prowizję pośrednictwa wskazaną w każdorazowo obowiązującym cenniku, wraz z kosztami obsługi płatności, i przekazuje pozostałą kwotę Użytkownikowi zgodnie z poniższymi ustępami. Wynagrodzenie za korzystanie z oprogramowania (§ 7) pozostaje nienaruszone.",
         "Wypłaty są dokonywane na rachunek bankowy wskazany przez Użytkownika. myNextDays może dostosować harmonogram wypłat ze względu na ryzyko, w szczególności w przypadku nowych kont, nietypowych wzorców transakcji lub trwających weryfikacji.",
-        "Obciążenia zwrotne (chargebacki), zwroty płatności oraz wynikające z nich opłaty związane z rezerwacjami Użytkownika ponosi Użytkownik. myNextDays jest uprawniona do potrącania odpowiednich kwot z przyszłych wypłat.",
+        "Zwroty na rzecz gości ponosi ekonomicznie Użytkownik. Obciążenia zwrotne oraz wynikające z nich opłaty ponosi Użytkownik w przypadku rezerwacji dokonanych przez własny silnik rezerwacyjny oraz za pośrednictwem podłączonych portali dystrybucyjnych, ponieważ w tych przypadkach Użytkownik jest odbiorcą płatności; w przypadku rezerwacji dokonanych za pośrednictwem portalu rezerwacyjnego myNextDays ryzyko obciążenia zwrotnego ponosi myNextDays, chyba że wynika ono z naruszenia obowiązków przez Użytkownika (w szczególności niewykonania lub istotnej niezgodności usługi zakwaterowania). myNextDays jest uprawniona do potrącenia kwot obciążających Użytkownika z przyszłymi wypłatami.",
         "Jeżeli na rachunku płatniczym Użytkownika powstanie saldo ujemne, Użytkownik jest zobowiązany do jego niezwłocznego wyrównania. Użytkownik upoważnia myNextDays i Stripe do pobierania sald ujemnych ze wskazanego rachunku bankowego, o ile jest to prawnie dopuszczalne.",
       ],
     },

@@ -7,6 +7,8 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
 from fastapi import APIRouter, FastAPI, Request
+from fastapi.encoders import jsonable_encoder
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -14,6 +16,8 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 from .core.config import get_settings
 from .core.logging import configure_logging, get_logger
 from .core.ratelimit_middleware import RateLimitMiddleware
+from .core.request_context import merke_ursache as _merke_fehlerursache
+from .core.request_context import neue_request_id
 from .features.addons.router import router as addons_router
 from .features.api_clients.router import router as api_clients_router
 from .features.auth.router import router as auth_router
@@ -23,9 +27,12 @@ from .features.buchhaltung.router import router as buchhaltung_router
 from .features.calendar.router import router as calendar_router
 from .features.channel_manager.router import router as channel_manager_router
 from .features.channel_manager.sandbox_ota import router as sandbox_ota_router
+from .features.cohosts.router import router as cohosts_router
 from .features.content.router import router as content_router
 from .features.crm.router import router as crm_router
 from .features.dashboard.router import router as dashboard_router
+from .features.diagnostics.router import router as diagnostics_router
+from .features.donations.router import router as donations_router
 from .features.external_calendar.router import router as external_calendar_router
 from .features.guest_auth.router import router as guest_auth_router
 from .features.guest_blocks.router import router as guest_blocks_router
@@ -45,6 +52,8 @@ from .features.ocr.router import router as ocr_router
 from .features.owner_statements.router import router as owner_statements_router
 from .features.owners.router import router as owners_router
 from .features.payments.router import router as payments_router
+from .features.payouts.router import router as payouts_router
+from .features.platform_admin.router import router as platform_admin_router
 from .features.pricing.router import router as pricing_router
 from .features.privacy_settings.router import router as privacy_settings_router
 from .features.properties.router import router as properties_router
@@ -57,6 +66,7 @@ from .features.reservations.router import router as reservations_router
 from .features.site_config.router import manage_router as site_config_manage_router
 from .features.site_config.router import public_router as site_config_public_router
 from .features.subscriptions.router import router as subscriptions_router
+from .features.support.router import router as support_router
 from .features.tasks.router import router as tasks_router
 from .features.travel_agencies.router import router as travel_agencies_router
 from .features.whatsapp.router import router as whatsapp_router
@@ -90,8 +100,16 @@ _SLICE_ROUTERS = [
     login_devices_router,
     privacy_settings_router,
     payments_router,
+    payouts_router,
+    # Plattform-Backoffice: EINZIGER mandantenübergreifender Router (eigener
+    # Guard CurrentPlatformAdmin, DB-geprüfte Rolle, vollständiges Audit-Log).
+    platform_admin_router,
     subscriptions_router,
+    support_router,
     external_calendar_router,
+    cohosts_router,
+    donations_router,
+    diagnostics_router,
     api_clients_router,
     channel_manager_router,
     sandbox_ota_router,
@@ -153,6 +171,10 @@ def create_app() -> FastAPI:
         allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
         allow_headers=["*"],
+        # Ohne expose_headers bleibt X-Request-Id für Browser-JS unsichtbar
+        # (CORS gibt nur die einfachen Antwort-Header frei). Der Diagnose-
+        # Reporter braucht ihn, um einen Fehler der Backend-Ursache zuzuordnen.
+        expose_headers=["X-Request-Id"],
     )
 
     # Host-Header-Injection (Cache-Poisoning, Password-Reset-Poisoning): nur die
@@ -167,6 +189,13 @@ def create_app() -> FastAPI:
     # setzt der TLS-terminierende Proxy (Traefik), NICHT hier — sonst Duplikat.
     @app.middleware("http")
     async def _security_headers(request: Request, call_next):  # noqa: ANN001,ANN202
+        # Request-ID zuerst: Sie muss stehen, BEVOR ein Handler fehlschlagen
+        # kann — sonst hätte ausgerechnet der Fehlerfall keine ID. Ein vom
+        # Client mitgeschickter Wert wird bewusst ignoriert: Die ID landet im
+        # Log und in der Diagnose, sie darf nicht angreiferkontrolliert sein
+        # (Log-Injection, Wurzel 3).
+        request.state.request_id = neue_request_id()
+
         resp = await call_next(request)
         resp.headers.setdefault("X-Content-Type-Options", "nosniff")
         resp.headers.setdefault("X-Frame-Options", "DENY")
@@ -174,18 +203,62 @@ def create_app() -> FastAPI:
         resp.headers.setdefault(
             "Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'"
         )
+        # Damit der Browser die ID melden kann. CORS blendet nicht-einfache
+        # Header sonst aus — expose_headers in der CORS-Konfiguration gibt sie
+        # frei.
+        resp.headers.setdefault("X-Request-Id", request.state.request_id)
         return resp
 
     # Fail-closed & kein Stacktrace-Leak (Wurzel 5): unerwartete Exceptions werden
     # serverseitig geloggt (der Handler-Stack im Log), der Client bekommt nur einen
     # generischen 500 ohne interne Details. HTTPException/Validation bleiben davon
     # unberührt (FastAPI behandelt sie eigenständig mit klaren Statuscodes).
+    #
+    # Die Request-ID ist die Brücke zur Support-Diagnose: Sie steht im Log UND in
+    # der Antwort, sodass der Support einen Frontend-Fehler der konkreten
+    # Backend-Ursache zuordnen kann. Der Client erfährt weiterhin NUR die ID,
+    # niemals Exception-Typ oder Stacktrace — die Zuordnung passiert im
+    # Backoffice, nicht im Browser.
+    # Validierungsfehler (422) sind der häufigste Fall im Alltag — und ohne
+    # diesen Handler der undurchsichtigste: Der Client sah nur „422", nicht
+    # WELCHES Feld abgelehnt wurde. FastAPIs Standardantwort enthält das zwar,
+    # aber sie trägt keine Request-ID, mit der sich der Fall im Backoffice
+    # wiederfinden ließe. Deshalb hier ergänzt.
+    @app.exception_handler(RequestValidationError)
+    async def _validation(request: Request, exc: RequestValidationError):  # noqa: ANN202
+        rid = getattr(request.state, "request_id", None)
+        log.info(
+            "validation_error",
+            path=request.url.path,
+            request_id=rid,
+            felder=[".".join(str(p) for p in e.get("loc", ())) for e in exc.errors()],
+        )
+        return JSONResponse(
+            status_code=422,
+            content=jsonable_encoder(
+                {"detail": exc.errors(), "request_id": rid}
+            ),
+            headers={"X-Request-Id": rid} if rid else None,
+        )
+
     @app.exception_handler(Exception)
     async def _unhandled(request: Request, exc: Exception):  # noqa: ANN202
+        rid = getattr(request.state, "request_id", None)
         log.exception(
-            "unhandled_error", path=request.url.path, error=type(exc).__name__
+            "unhandled_error",
+            path=request.url.path,
+            error=type(exc).__name__,
+            request_id=rid,
         )
-        return JSONResponse(status_code=500, content={"detail": "internal_error"})
+        # Ursache für die Support-Diagnose hinterlegen — bewusst NUR
+        # Exception-Typ und Herkunftsmodul, nie die Nachricht: die kann
+        # Kundendaten oder Secrets enthalten.
+        _merke_fehlerursache(rid, exc)
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "internal_error", "request_id": rid},
+            headers={"X-Request-Id": rid} if rid else None,
+        )
 
     # Redis-backed Rate-Limiting (Infra-Runbook Punkt 8): schützt vor Brute-Force
     # (Login), Scrapern und Lastspitzen, sodass ein einzelner missbrauchter/teurer

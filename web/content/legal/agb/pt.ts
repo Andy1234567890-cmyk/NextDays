@@ -6,7 +6,7 @@ import type { LegalDoc } from "../types";
 // disclosure language) — Wortlaut sinngemäß, URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Termos e Condições Gerais (TCG) para Agências e Arrendadores",
-  stand: "Última atualização: 3 de julho de 2026",
+  stand: "Última atualização: 26 de julho de 2026",
   intro: [
     "Estes Termos e Condições Gerais (doravante «TCG») regulam a utilização da plataforma de software myNextDays (doravante «Plataforma») por agências, arrendadores, empresas de administração de imóveis e outros utilizadores profissionais (doravante «Utilizador»).",
     "A Plataforma é disponibilizada por [firma completa, forma jurídica, morada e dados de registo da entidade operadora — a completar antes da publicação] (doravante «myNextDays» ou «nós»).",
@@ -61,8 +61,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Transferências, estornos e saldos negativos",
       paragraphs: [
+        "O circuito de pagamento depende do canal de reserva. Nas reservas efetuadas através do motor de reservas do próprio Utilizador e nas reservas através de portais de distribuição ligados, os pagamentos dos hóspedes são recebidos diretamente na conta de pagamento do Utilizador; nesses casos, o Utilizador é, perante o hóspede, o beneficiário do pagamento e a parte contratante do serviço de alojamento (§ 4), e a myNextDays não se torna, em momento algum, titular desses fundos. A myNextDays não cobra qualquer taxa percentual de reserva sobre tais reservas; a comissão relativa a reservas através de portais de distribuição ligados é indicada separadamente e faturada posteriormente.",
+        "Nas reservas efetuadas através do portal de reservas myNextDays, o pagamento é processado através da myNextDays. A myNextDays retém, para o efeito, a comissão de intermediação indicada na lista de preços em vigor, incluindo os custos do processamento do pagamento, e transfere o montante remanescente para o Utilizador nos termos dos números seguintes. A remuneração pela utilização do software (§ 7) não é afetada.",
         "As transferências são efetuadas para a conta bancária indicada pelo Utilizador. A myNextDays pode ajustar a periodicidade das transferências por motivos de risco, em particular no caso de contas novas, padrões de transação invulgares ou verificações em curso.",
-        "Os estornos (chargebacks), os reembolsos e as taxas daí resultantes relacionados com reservas do Utilizador são suportados pelo Utilizador. A myNextDays tem o direito de compensar os montantes correspondentes com transferências futuras.",
+        "Os reembolsos aos hóspedes são economicamente suportados pelo Utilizador. Os estornos e as despesas daí decorrentes são suportados pelo Utilizador nas reservas efetuadas através do seu próprio motor de reservas e através de portais de distribuição ligados, uma vez que nesses casos o Utilizador é o beneficiário do pagamento; nas reservas efetuadas através do portal de reservas myNextDays, a myNextDays suporta o risco de estorno, salvo se este resultar de um incumprimento do Utilizador (em especial, a não prestação ou um desvio substancial do serviço de alojamento). A myNextDays tem o direito de compensar os montantes a cargo do Utilizador com transferências futuras.",
         "Se surgir um saldo negativo na conta de pagamentos do Utilizador, o Utilizador deve regularizá-lo sem demora. O Utilizador autoriza a myNextDays e a Stripe a debitar saldos negativos da conta bancária indicada, na medida em que tal seja legalmente admissível.",
       ],
     },

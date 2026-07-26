@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // (recommended disclosure language) — Sinn und URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Üldtingimused agentuuridele ja üürileandjatele",
-  stand: "Seisuga: 3. juuli 2026",
+  stand: "Seisuga: 26. juuli 2026",
   intro: [
     "Käesolevad üldtingimused (edaspidi „tingimused“) reguleerivad tarkvaraplatvormi myNextDays (edaspidi „platvorm“) kasutamist agentuuride, üürileandjate, kinnisvarahaldurite ja muude ärikasutajate (edaspidi „kasutaja“) poolt.",
     "Platvormi pakkuja on [käitaja täielik ärinimi, õiguslik vorm, aadress ja registriandmed — täiendada enne avaldamist] (edaspidi „myNextDays“ või „meie“).",
@@ -60,8 +60,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Väljamaksed, tagasinõuded ja negatiivsed saldod",
       paragraphs: [
+        "Makseviis sõltub broneerimiskanalist. Kasutaja oma broneerimissüsteemi kaudu tehtud broneeringute ja ühendatud jaotusportaalide kaudu tehtud broneeringute puhul laekuvad külaliste maksed otse kasutaja maksekontole; nendel juhtudel on kasutaja külalise suhtes makse saaja ja majutusteenuse lepingupool (§ 4) ning myNextDays ei muutu ühelgi hetkel nende vahendite valdajaks. Selliste broneeringute pealt myNextDays protsentuaalset broneerimistasu ei võta; ühendatud jaotusportaalide kaudu tehtud broneeringute vahendustasu näidatakse eraldi ja esitatakse arve tagantjärele.",
+        "myNextDaysi broneerimisportaali kaudu tehtud broneeringute puhul töödeldakse makse myNextDaysi kaudu. myNextDays peab seejuures kinni kehtivas hinnakirjas näidatud vahendustasu koos makse töötlemise kuludega ning kannab ülejäänud summa kasutajale üle alljärgnevate lõigete kohaselt. Tarkvara kasutamise eest võetav tasu (§ 7) jääb muutumatuks.",
         "Väljamaksed tehakse kasutaja esitatud pangakontole. myNextDays võib riskikaalutlustel väljamaksete sagedust kohandada, eelkõige uute kontode, ebatavaliste tehingumustrite või käimasolevate kontrollide korral.",
-        "Tagasinõuded (chargeback), tagasimaksed ning nendest tulenevad tasud seoses kasutaja broneeringutega kannab kasutaja. myNextDaysil on õigus vastavad summad tasaarvestada tulevaste väljamaksetega.",
+        "Külalistele tehtavad tagasimaksed kannab majanduslikult kasutaja. Tagasinõuded ja neist tulenevad tasud kannab kasutaja broneeringute puhul, mis on tehtud tema oma broneerimissüsteemi ja ühendatud jaotusportaalide kaudu, kuna kasutaja on neil juhtudel makse saaja; myNextDaysi broneerimisportaali kaudu tehtud broneeringute puhul kannab tagasinõuderiski myNextDays, välja arvatud juhul, kui see tuleneb kasutaja kohustuste rikkumisest (eelkõige majutusteenuse osutamata jätmisest või olulisest kõrvalekaldest). myNextDaysil on õigus tasaarvestada kasutaja kantavad summad tulevaste väljamaksetega.",
         "Kui kasutaja maksekontol tekib negatiivne saldo, peab kasutaja selle viivitamata tasuma. Kasutaja volitab myNextDaysi ja Stripe’i debiteerima negatiivsed saldod esitatud pangakontolt, niivõrd kui see on õiguslikult lubatud.",
       ],
     },

@@ -174,7 +174,7 @@ Jeder Slice in `apps/api/src/features/<name>/` mit `router.py`, `service.py`, `s
 5. **reservations** — Buchungsverwaltung (kanalunabhängig), Status, Check-in/out.
 6. **guests** — Gastprofile, Historie.
 7. **inbox** — zentrale Gästekommunikation.
-8. **payments** — Zahlungs-Gateway mit Adapter-Pattern: **Stripe Connect Custom primär** (white-label, Destination Charge, Anzahlungen, Kautionen, Zusatzleistungen, Belege), **Revolut sekundär** konfigurierbar. Geldfluss nur für eigene Kanäle (direct/portal) — OTA-Buchungen (booking/airbnb/vrbo) werden bei der OTA bezahlt, kein Stripe. Siehe ADR-0011.
+8. **payments** — Zahlungs-Gateway mit Adapter-Pattern: **Stripe Connect Custom primär** (white-label, Anzahlungen, Kautionen, Zusatzleistungen, Belege), **Revolut sekundär** konfigurierbar. Der Zeitpunkt der Weitergabe an den Betrieb hängt an `STRIPE_SEPARATE_TRANSFERS` (Default: sofort per Destination Charge; Ziel: nach Abreise über den `payouts`-Slice). Geldfluss nur für eigene Kanäle (direct/portal) — OTA-Buchungen (booking/airbnb/vrbo) werden bei der OTA bezahlt, kein Stripe. Siehe ADR-0011.
 9. **channel_manager** — Sync-Grundlage + Adapter-Pattern pro Kanal:
    - Adapter-Interface (einheitlich), konkrete Adapter: **Booking.com**, **Airbnb**, **Vrbo/Expedia** (über Connectivity-Programme; alternativ Aggregator-Adapter z.B. Feondi).
    - Zwei-Wege-Sync (Verfügbarkeit, Preise, Buchungen), robuste Fehlerbehandlung (Retry, Logging, Alarm).

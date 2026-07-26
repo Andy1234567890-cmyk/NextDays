@@ -6,7 +6,7 @@ import type { LegalDoc } from "../types";
 export const agb: LegalDoc = {
   title:
     "Condiciones generales de contratación (CGC) para agencias y arrendadores",
-  stand: "Última actualización: 3 de julio de 2026",
+  stand: "Última actualización: 26 de julio de 2026",
   intro: [
     "Las presentes Condiciones generales de contratación (en adelante, las «Condiciones») regulan el uso de la plataforma de software myNextDays (en adelante, la «Plataforma») por parte de agencias, arrendadores, administradores de fincas y otros usuarios profesionales (en adelante, el «Usuario»).",
     "La Plataforma es operada por [razón social completa, forma jurídica, dirección y datos registrales del operador — completar antes de la publicación] (en adelante, «myNextDays» o «nosotros»).",
@@ -61,8 +61,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Desembolsos, devoluciones de cargo y saldos negativos",
       paragraphs: [
+        "El circuito de pago depende del canal de reserva. En las reservas realizadas a través del motor de reservas propio del Usuario y en las reservas a través de portales de distribución conectados, los pagos de los huéspedes se reciben directamente en la cuenta de pago del Usuario; en estos casos, el Usuario es, frente al huésped, el receptor del pago y la parte contratante del servicio de alojamiento (§ 4), y myNextDays no llega en ningún momento a ser titular de dichos fondos. myNextDays no cobra ninguna comisión porcentual de reserva sobre tales reservas; la comisión por reservas a través de portales de distribución conectados se indica por separado y se factura con posterioridad.",
+        "En las reservas realizadas a través del portal de reservas de myNextDays, el pago se tramita a través de myNextDays. myNextDays retiene en tal caso la comisión de intermediación indicada en la lista de precios vigente en cada momento, incluidos los costes de la tramitación del pago, y transfiere el importe restante al Usuario conforme a los apartados siguientes. La remuneración por el uso del software (§ 7) no se ve afectada.",
         "Los desembolsos se efectúan en la cuenta bancaria registrada por el Usuario. myNextDays puede ajustar la frecuencia de los desembolsos por motivos de riesgo, en particular en el caso de cuentas nuevas, patrones de transacciones inusuales o verificaciones en curso.",
-        "Las devoluciones de cargo (chargebacks), los reembolsos y las comisiones derivadas de ellos en relación con las reservas del Usuario correrán a cargo del Usuario. myNextDays está facultada para compensar los importes correspondientes con desembolsos futuros.",
+        "Las devoluciones a los huéspedes las soporta económicamente el Usuario. Las devoluciones de cargo y los gastos derivados las soporta el Usuario en las reservas realizadas a través de su propio motor de reservas y a través de portales de distribución conectados, ya que en esos casos el Usuario es el receptor del pago; en las reservas realizadas a través del portal de reservas de myNextDays, myNextDays soporta el riesgo de devolución de cargo, salvo que esta se deba a un incumplimiento del Usuario (en particular, la no prestación o una desviación sustancial del servicio de alojamiento). myNextDays está facultada para compensar los importes a cargo del Usuario con desembolsos futuros.",
         "Si se genera un saldo negativo en la cuenta de pagos del Usuario, este deberá regularizarlo sin demora. El Usuario autoriza a myNextDays y a Stripe a adeudar los saldos negativos en la cuenta bancaria registrada, en la medida en que ello sea legalmente admisible.",
       ],
     },

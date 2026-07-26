@@ -22,11 +22,7 @@ export async function ZahlungenAbschnitt({
   const paypalOk = !!settings?.paypal_connected;
 
   return (
-    <section>
-      <h1 className="mb-8 font-display text-3xl font-semibold tracking-tight">
-        {t("zahlungenTitel")}
-      </h1>
-
+    <div>
       <div className="border-b border-border py-6">
         <div className="flex items-center justify-between gap-4">
           <p className="font-medium">{t("stripeTitel")}</p>
@@ -50,7 +46,7 @@ export async function ZahlungenAbschnitt({
       <p className="mt-6 max-w-lg text-sm text-muted-foreground/80">
         {t("zahlungenHinweis")}
       </p>
-    </section>
+    </div>
   );
 }
 

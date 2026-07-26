@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // (Stripe Connected Account Agreement) — Wortlaut sinngemäß, URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Všeobecné obchodní podmínky (VOP) pro agentury a pronajímatele",
-  stand: "Stav ke dni: 3. července 2026",
+  stand: "Stav ke dni: 26. července 2026",
   intro: [
     "Tyto všeobecné obchodní podmínky (dále jen „VOP“) upravují užívání softwarové platformy myNextDays (dále jen „platforma“) agenturami, pronajímateli, správci nemovitostí a dalšími podnikatelskými uživateli (dále jen „uživatel“).",
     "Provozovatelem platformy je [úplný název společnosti, právní forma, adresa a údaje o zápisu provozovatele do rejstříku — doplnit před zveřejněním] (dále jen „myNextDays“ nebo „my“).",
@@ -60,8 +60,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Výplaty, zpětná zúčtování a záporné zůstatky",
       paragraphs: [
+        "Způsob úhrady se řídí rezervačním kanálem. U rezervací uskutečněných prostřednictvím vlastního rezervačního systému Uživatele a u rezervací prostřednictvím připojených distribučních portálů jsou platby hostů přijímány přímo na platební účet Uživatele; v těchto případech je Uživatel vůči hostovi příjemcem platby a smluvní stranou ubytovací služby (§ 4) a myNextDays se v žádném okamžiku nestává držitelem těchto prostředků. Z takových rezervací myNextDays neúčtuje žádný procentní rezervační poplatek; provize za rezervace prostřednictvím připojených distribučních portálů se uvádí samostatně a fakturuje se dodatečně.",
+        "U rezervací uskutečněných prostřednictvím rezervačního portálu myNextDays je platba zpracována prostřednictvím myNextDays. myNextDays si přitom ponechává zprostředkovatelskou provizi uvedenou v aktuálně platném ceníku včetně nákladů na zpracování platby a zbývající částku poukazuje Uživateli podle níže uvedených odstavců. Odměna za užívání softwaru (§ 7) tím není dotčena.",
         "Výplaty se provádějí na bankovní účet uvedený uživatelem. myNextDays může frekvenci výplat z důvodů řízení rizik upravit, zejména u nových účtů, nápadných transakčních vzorců nebo probíhajících prověrek.",
-        "Zpětná zúčtování (chargebacky), vrácení plateb a z nich vyplývající poplatky v souvislosti s rezervacemi uživatele nese uživatel. myNextDays je oprávněna započíst odpovídající částky proti budoucím výplatám.",
+        "Vrácení plateb hostům nese ekonomicky Uživatel. Zpětná zúčtování a z nich vyplývající poplatky nese Uživatel u rezervací uskutečněných prostřednictvím vlastního rezervačního systému a prostřednictvím připojených distribučních portálů, neboť Uživatel je v těchto případech příjemcem platby; u rezervací uskutečněných prostřednictvím rezervačního portálu myNextDays nese riziko zpětného zúčtování myNextDays, ledaže je způsobeno porušením povinností Uživatele (zejména neposkytnutím nebo podstatnou odchylkou ubytovací služby). myNextDays je oprávněna započíst částky k tíži Uživatele proti budoucím výplatám.",
         "Vznikne-li na platebním účtu uživatele záporný zůstatek, je uživatel povinen jej neprodleně vyrovnat. Uživatel zmocňuje myNextDays a Stripe k inkasu záporných zůstatků z uvedeného bankovního účtu, pokud je to právně přípustné.",
       ],
     },

@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
   // Geteilte Workspace-Packages (@nextdays/*) liefern TS-Quellen → Next muss sie
   // mit-transpilieren (ADR-0016, bun-Workspace).
   transpilePackages: [
+    "@nextdays/diagnostics",
     "@nextdays/laender",
     "@nextdays/currency",
     "@nextdays/auth",

@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // (recommended disclosure language) — Wortlaut und URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Vispārīgie darījumu noteikumi aģentūrām un izīrētājiem",
-  stand: "Redakcija: 2026. gada 3. jūlijs",
+  stand: "Redakcija: 2026. gada 26. jūlijs",
   intro: [
     "Šie vispārīgie darījumu noteikumi (turpmāk — „Noteikumi”) regulē programmatūras platformas myNextDays (turpmāk — „Platforma”) lietošanu, ko veic aģentūras, izīrētāji, īpašumu pārvaldītāji un citi komerciāli lietotāji (turpmāk — „Lietotājs”).",
     "Platformas nodrošinātāja ir [pirms publicēšanas norādīt operatora pilnu juridisko nosaukumu, juridisko formu, adresi un reģistrācijas datus] (turpmāk — „myNextDays” vai „mēs”).",
@@ -60,8 +60,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Izmaksas, atgrieztie maksājumi un negatīvs atlikums",
       paragraphs: [
+        "Maksājuma ceļš ir atkarīgs no rezervācijas kanāla. Rezervācijām, kas veiktas ar Lietotāja paša rezervāciju sistēmu, un rezervācijām ar pievienoto izplatīšanas portālu starpniecību viesu maksājumi tiek saņemti tieši Lietotāja maksājumu kontā; šajos gadījumos Lietotājs attiecībā pret viesi ir maksājuma saņēmējs un izmitināšanas pakalpojuma līgumslēdzēja puse (§ 4), un myNextDays nevienā brīdī nekļūst par šo līdzekļu turētāju. Par šādām rezervācijām myNextDays neiekasē procentuālu rezervācijas maksu; komisijas maksa par rezervācijām ar pievienoto izplatīšanas portālu starpniecību tiek norādīta atsevišķi un tiek izrakstīts rēķins vēlāk.",
+        "Rezervācijām, kas veiktas ar myNextDays rezervāciju portāla starpniecību, maksājums tiek apstrādāts ar myNextDays starpniecību. myNextDays šajā gadījumā ietur spēkā esošajā cenrādī norādīto starpniecības komisijas maksu, ieskaitot maksājuma apstrādes izmaksas, un pārskaita atlikušo summu Lietotājam saskaņā ar turpmākajām daļām. Atlīdzība par programmatūras lietošanu (§ 7) paliek neskarta.",
         "Izmaksas tiek veiktas uz Lietotāja norādīto bankas kontu. myNextDays riska apsvērumu dēļ var pielāgot izmaksu grafiku, jo īpaši jaunu kontu, neparastu darījumu modeļu vai notiekošu pārbaužu gadījumā.",
-        "Atgrieztos maksājumus (chargeback), atmaksas, kā arī no tiem izrietošās maksas saistībā ar Lietotāja rezervācijām sedz Lietotājs. myNextDays ir tiesīga attiecīgās summas ieskaitīt pret turpmākajām izmaksām.",
+        "Atmaksas viesiem ekonomiski sedz Lietotājs. Atgrieztos maksājumus un no tiem izrietošās maksas sedz Lietotājs rezervācijām, kas veiktas ar viņa paša rezervāciju sistēmu un ar pievienoto izplatīšanas portālu starpniecību, jo šajos gadījumos Lietotājs ir maksājuma saņēmējs; rezervācijām, kas veiktas ar myNextDays rezervāciju portāla starpniecību, atgriezto maksājumu risku sedz myNextDays, izņemot gadījumus, kad tas izriet no Lietotāja pienākumu pārkāpuma (jo īpaši izmitināšanas pakalpojuma nesniegšanas vai būtiskas neatbilstības). myNextDays ir tiesīga ieskaitīt Lietotāja sedzamās summas pret nākotnes izmaksām.",
         "Ja Lietotāja maksājumu kontā rodas negatīvs atlikums, Lietotājam tas ir nekavējoties jāsedz. Lietotājs pilnvaro myNextDays un Stripe iekasēt negatīvo atlikumu no norādītā bankas konta, ciktāl tas ir tiesiski pieļaujams.",
       ],
     },

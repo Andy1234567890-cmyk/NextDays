@@ -5,16 +5,29 @@
 import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
+import { AuszahlungenTab } from "@/components/konto/auszahlungen-tab";
 import { DatenschutzAbschnitt } from "@/components/konto/datenschutz-abschnitt";
 import { KontoNav } from "@/components/konto/konto-nav";
 import { PersoenlichAbschnitt } from "@/components/konto/persoenlich-abschnitt";
 import { SicherheitAbschnitt } from "@/components/konto/sicherheit-abschnitt";
+import { SpendenTab } from "@/components/konto/spenden-tab";
 import { SpracheAbschnitt } from "@/components/konto/sprache-abschnitt";
+import { SupportDiagnose } from "@/components/konto/support-diagnose";
+import { UnternehmenTab } from "@/components/konto/unternehmen-tab";
 import { VorbereitungAbschnitt } from "@/components/konto/vorbereitung-abschnitt";
 import { ZahlungenAbschnitt } from "@/components/konto/zahlungen-abschnitt";
+import { ZahlungenTabs } from "@/components/konto/zahlungen-tabs";
+import { getAuszahlungsUebersicht } from "@/lib/auszahlungen";
 import { getPrivacySettings } from "@/lib/datenschutz";
+import { getDebugSessions } from "@/lib/diagnose";
 import { getAccount } from "@/lib/konto";
-import { getPaymentSettings } from "@/lib/payments";
+import {
+  getAuszahlungsKontoId,
+  getAuszahlungsStatus,
+  getPaymentSettings,
+} from "@/lib/payments";
+import { getSpendenUebersicht } from "@/lib/spenden";
+import { getUnternehmensprofil } from "@/lib/unternehmen";
 
 // Bereiche ohne eigenes Backend → Platzhalter, aber in der Nav sichtbar (wie
 // Airbnb): Titel-Key je Bereich.
@@ -22,16 +35,15 @@ const VORBEREITUNG: Record<string, string> = {
   benachrichtigungen: "navBenachrichtigungen",
   steuern: "navSteuern",
   buchungsrechte: "navBuchungsrechte",
-  unternehmen: "navUnternehmen",
   profitools: "navProfiTools",
 };
 
 export default async function KontoPage({
   searchParams,
 }: {
-  searchParams: Promise<{ bereich?: string }>;
+  searchParams: Promise<{ bereich?: string; tab?: string }>;
 }) {
-  const [account, t, { bereich }] = await Promise.all([
+  const [account, t, { bereich, tab }] = await Promise.all([
     getAccount(),
     getTranslations("konto"),
     searchParams,
@@ -39,9 +51,36 @@ export default async function KontoPage({
 
   if (!account) redirect("/anmelden?weiter=/konto");
   const aktiv = bereich ?? "persoenlich";
+  const zahlungenTab = tab ?? "zahlungen";
 
   const settings = aktiv === "zahlungen" ? await getPaymentSettings() : null;
+  // Spenden nur laden, wenn der Reiter auch offen ist — ein zusätzlicher
+  // Backend-Aufruf je Seitenaufruf wäre sonst reine Last.
+  const spenden =
+    aktiv === "zahlungen" && zahlungenTab === "spenden"
+      ? await getSpendenUebersicht()
+      : null;
+
+  // Auszahlungen: Übersicht und Kontostand. Der Live-Status kostet einen
+  // Aufruf beim Zahlungsanbieter — nur holen, wenn ein Konto existiert.
+  const auszahlungenOffen =
+    aktiv === "zahlungen" && zahlungenTab === "auszahlungen";
+  const [auszahlungen, kontoId] = auszahlungenOffen
+    ? await Promise.all([getAuszahlungsUebersicht(), getAuszahlungsKontoId()])
+    : [null, null];
+  const kontoStatus = kontoId ? await getAuszahlungsStatus(kontoId) : null;
+
+  // Unternehmensdaten: eigener Bereich UND Quelle für Land/Kontoinhaber im
+  // Auszahlungs-Reiter (die Bankverbindung braucht das Land für die Währung).
+  const unternehmen =
+    aktiv === "unternehmen" || auszahlungenOffen
+      ? await getUnternehmensprofil()
+      : null;
   const privacy = aktiv === "datenschutz" ? await getPrivacySettings() : null;
+  // Diagnose-Freigaben gehören thematisch zum Datenschutz — der Kunde
+  // steuert dort, wer wann Einblick in seine Fehlerdaten hat.
+  const debugSessions =
+    aktiv === "datenschutz" ? await getDebugSessions().catch(() => []) : [];
 
   return (
     <div className="mx-auto max-w-6xl px-8 py-12">
@@ -56,11 +95,46 @@ export default async function KontoPage({
         <div className="max-w-2xl">
           {aktiv === "persoenlich" && <PersoenlichAbschnitt account={account} />}
           {aktiv === "sicherheit" && <SicherheitAbschnitt account={account} />}
-          {aktiv === "zahlungen" && <ZahlungenAbschnitt settings={settings} />}
+          {aktiv === "zahlungen" && (
+            <section>
+              <h1 className="mb-8 font-display text-3xl font-semibold tracking-tight">
+                {t("zahlungenTitel")}
+              </h1>
+              <ZahlungenTabs />
+              {zahlungenTab === "spenden" ? (
+                spenden ? (
+                  // Währung des Betriebs steht im Account nicht zur Verfügung.
+                  // Statt eine zu raten (Wurzel 4) wird null durchgereicht —
+                  // formatCurrency rendert dann symbollos, und die echten
+                  // Beträge im Verlauf tragen ohnehin ihre eigene Währung.
+                  <SpendenTab uebersicht={spenden} waehrung={null} />
+                ) : (
+                  <p className="text-[0.9375rem] text-muted-foreground">
+                    Die Spendenübersicht ist gerade nicht abrufbar. Bitte später
+                    erneut versuchen.
+                  </p>
+                )
+              ) : zahlungenTab === "auszahlungen" ? (
+                <AuszahlungenTab
+                  uebersicht={auszahlungen}
+                  kontoStatus={kontoStatus}
+                  kontoId={kontoId}
+                  land={unternehmen?.companyCountry || null}
+                  kontoinhaber={unternehmen?.companyName ?? ""}
+                />
+              ) : (
+                <ZahlungenAbschnitt settings={settings} />
+              )}
+            </section>
+          )}
           {aktiv === "sprache" && <SpracheAbschnitt account={account} />}
           {aktiv === "datenschutz" && (
-            <DatenschutzAbschnitt settings={privacy} />
+            <>
+              <DatenschutzAbschnitt settings={privacy} />
+              <SupportDiagnose sessions={debugSessions} />
+            </>
           )}
+          {aktiv === "unternehmen" && <UnternehmenTab profil={unternehmen} />}
           {VORBEREITUNG[aktiv] && (
             <VorbereitungAbschnitt titelKey={VORBEREITUNG[aktiv]} />
           )}

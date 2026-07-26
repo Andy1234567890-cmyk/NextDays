@@ -113,6 +113,7 @@ const MENU = [
   { key: "finanzen", href: "/finanzen", icon: "solar:wallet-line-duotone" },
   { key: "statistiken", href: "/statistiken", icon: "solar:chart-2-line-duotone" },
   { key: "neuesObjekt", href: "/objekt-einstellen", icon: "solar:add-square-line-duotone" },
+  { key: "support", href: "/support", icon: "solar:chat-round-line-duotone" },
 ] as const;
 
 // Eine schräge, abgerundete Promo-Kachel (Airbnb-Foto-Anmutung, ohne

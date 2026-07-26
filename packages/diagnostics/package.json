@@ -1,0 +1,10 @@
+{
+  "name": "@nextdays/diagnostics",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Technischer Fehler-Reporter für die Frontends (nur Fehler und fehlgeschlagene Aufrufe — kein Verhaltens-Tracking).",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}

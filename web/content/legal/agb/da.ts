@@ -6,7 +6,7 @@ import type { LegalDoc } from "../types";
 // Stripes offiziellen Empfehlungstext angelehnt, URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Almindelige forretningsbetingelser for bureauer og udlejere",
-  stand: "Senest opdateret: 3. juli 2026",
+  stand: "Senest opdateret: 26. juli 2026",
   intro: [
     "Disse almindelige forretningsbetingelser (herefter »betingelserne«) regulerer bureauers, udlejeres, ejendomsadministratorers og andre erhvervsmæssige brugeres (herefter »brugeren«) brug af softwareplatformen myNextDays (herefter »platformen«).",
     "Udbyderen af platformen er [fuldt firmanavn, selskabsform, adresse og registreringsoplysninger for operatøren — udfyldes inden offentliggørelse] (herefter »myNextDays« eller »vi«).",
@@ -61,8 +61,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Udbetalinger, tilbageførsler og negative saldi",
       paragraphs: [
+        "Betalingsvejen afhænger af bookingkanalen. Ved bookinger via brugerens egen bookingløsning og ved bookinger via tilsluttede distributionsportaler modtages gæsternes betalinger direkte på brugerens betalingskonto; i disse tilfælde er brugeren over for gæsten betalingsmodtager og aftalepart for indkvarteringsydelsen (§ 4), og myNextDays bliver på intet tidspunkt indehaver af disse midler. myNextDays opkræver intet procentuelt bookinggebyr på sådanne bookinger; provisionen for bookinger via tilsluttede distributionsportaler angives særskilt og faktureres efterfølgende.",
+        "Ved bookinger, der indgås via myNextDays-bookingportalen, afvikles betalingen gennem myNextDays. myNextDays tilbageholder her den formidlingsprovision, der fremgår af den til enhver tid gældende prisliste, inklusive omkostningerne til betalingsafvikling, og videresender det resterende beløb til brugeren i overensstemmelse med nedenstående afsnit. Vederlaget for brug af softwaren (§ 7) berøres ikke heraf.",
         "Udbetalinger sker til den bankkonto, som brugeren har angivet. myNextDays kan af risikohensyn tilpasse udbetalingsfrekvensen, navnlig ved nye konti, usædvanlige transaktionsmønstre eller igangværende kontroller.",
-        "Tilbageførsler (chargebacks), refusioner samt gebyrer, der opstår som følge heraf, i forbindelse med brugerens bookinger bæres af brugeren. myNextDays er berettiget til at modregne sådanne beløb i fremtidige udbetalinger.",
+        "Refusioner til gæster bæres økonomisk af brugeren. Tilbageførsler (chargebacks) og heraf følgende gebyrer bæres af brugeren ved bookinger via brugerens egen bookingløsning og via tilsluttede distributionsportaler, da brugeren i disse tilfælde er betalingsmodtager; ved bookinger via myNextDays-bookingportalen bærer myNextDays tilbageførselsrisikoen, medmindre tilbageførslen skyldes brugerens pligtforsømmelse (navnlig manglende levering af eller væsentlig afvigelse i indkvarteringsydelsen). myNextDays er berettiget til at modregne beløb, som brugeren skal bære, i fremtidige udbetalinger.",
         "Opstår der en negativ saldo på brugerens betalingskonto, skal brugeren straks udligne den. Brugeren bemyndiger myNextDays og Stripe til at trække negative saldi fra den angivne bankkonto, i det omfang det er lovligt.",
       ],
     },

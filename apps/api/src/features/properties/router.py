@@ -299,3 +299,66 @@ def delete_property_photo(
         service.delete_photo(ctx, property_id, photo_id)
     except PropertyError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+# --- Barrierefreiheits-Beweisfotos (0201) ------------------------------------
+#
+# Ein Merkmal (type_attributes.accessibility) wird erst mit geprüften Fotos
+# glaubwürdig — Airbnb verlangt mindestens ein Foto je Merkmal und prüft es.
+# Die Fotos liegen in property_accessibility_photos mit eigenem Prüfstatus.
+
+
+@router.get("/{property_id}/accessibility-photos")
+def list_accessibility_photos(
+    property_id: str,
+    service: PropertiesServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE_IMAGES)],
+    feature_key: str | None = None,
+) -> list[dict]:
+    """Beweisfotos eines Objekts, optional auf ein Merkmal gefiltert."""
+    try:
+        return service.list_accessibility_photos(ctx, property_id, feature_key)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/{property_id}/accessibility-photos/{feature_key}",
+    status_code=status.HTTP_201_CREATED,
+)
+async def add_accessibility_photo(
+    property_id: str,
+    feature_key: str,
+    request: Request,
+    service: PropertiesServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE_IMAGES)],
+) -> dict:
+    """Ein Beweisfoto zu einem Barrierefreiheits-Merkmal hochladen (multipart)."""
+    content, content_type = await read_upload(request)
+    try:
+        return service.upload_accessibility_photo(
+            ctx,
+            property_id,
+            feature_key,
+            content,
+            content_type or "application/octet-stream",
+        )
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.delete(
+    "/{property_id}/accessibility-photos/{photo_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_accessibility_photo(
+    property_id: str,
+    photo_id: str,
+    service: PropertiesServiceDep,
+    ctx: Annotated[AuthContext, Depends(_MANAGE_IMAGES)],
+) -> None:
+    """Ein Beweisfoto löschen. Gleicher Scope wie die Liste (Wurzel 9)."""
+    try:
+        service.delete_accessibility_photo(ctx, property_id, photo_id)
+    except PropertyError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

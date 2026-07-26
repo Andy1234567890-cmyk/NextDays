@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // (Stripe Connected Account Agreement) — URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Általános Szerződési Feltételek (ÁSZF) ügynökségek és szállásadók részére",
-  stand: "Utolsó frissítés: 2026. július 3.",
+  stand: "Utolsó frissítés: 2026. július 26.",
   intro: [
     "Jelen Általános Szerződési Feltételek (a továbbiakban: „ÁSZF”) a myNextDays szoftverplatform (a továbbiakban: „Platform”) ügynökségek, szállásadók, ingatlankezelők és egyéb üzleti felhasználók (a továbbiakban: „Felhasználó”) általi használatát szabályozzák.",
     "A Platform szolgáltatója: [az üzemeltető teljes cégneve, cégformája, címe és cégjegyzékadatai — közzététel előtt kiegészítendő] (a továbbiakban: „myNextDays” vagy „mi”).",
@@ -60,8 +60,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Kifizetések, visszaterhelések és negatív egyenlegek",
       paragraphs: [
+        "A fizetési út a foglalási csatornától függ. A Felhasználó saját foglalási felületén keresztül létrejött foglalások, valamint a csatlakoztatott értékesítési portálokon keresztüli foglalások esetén a vendégek fizetései közvetlenül a Felhasználó fizetési számlájára érkeznek; ezekben az esetekben a Felhasználó a vendéggel szemben a kifizetés jogosultja és a szálláshely-szolgáltatás szerződő fele (§ 4), és a myNextDays semmikor nem válik e pénzeszközök birtokosává. Az ilyen foglalásokra a myNextDays nem számít fel százalékos foglalási díjat; a csatlakoztatott értékesítési portálokon keresztüli foglalások jutaléka külön kerül feltüntetésre és utólag kerül kiszámlázásra.",
+        "A myNextDays foglalási portálon keresztül létrejött foglalások esetén a fizetés a myNextDays útján történik. A myNextDays ennek során visszatartja a mindenkor hatályos árlistában feltüntetett közvetítői jutalékot, ideértve a fizetés lebonyolításának költségeit is, és a fennmaradó összeget az alábbi bekezdések szerint továbbítja a Felhasználónak. A szoftver használatáért járó díj (§ 7) ezáltal nem érintett.",
         "A kifizetések a Felhasználó által megadott bankszámlára történnek. A myNextDays kockázati okokból módosíthatja a kifizetési ütemezést, különösen új fiókok, szokatlan tranzakciós minták vagy folyamatban lévő ellenőrzések esetén.",
-        "A Felhasználó foglalásaival összefüggő visszaterheléseket (chargeback), visszatérítéseket és az ezekből eredő díjakat a Felhasználó viseli. A myNextDays jogosult az ilyen összegeket a jövőbeli kifizetésekbe beszámítani.",
+        "A vendégeknek nyújtott visszatérítéseket gazdaságilag a Felhasználó viseli. A visszaterheléseket és az ezekből eredő díjakat a Felhasználó viseli a saját foglalási felületén és a csatlakoztatott értékesítési portálokon keresztül létrejött foglalások esetén, mivel ezekben az esetekben a Felhasználó a kifizetés jogosultja; a myNextDays foglalási portálon keresztül létrejött foglalások esetén a visszaterhelési kockázatot a myNextDays viseli, kivéve, ha az a Felhasználó kötelezettségszegésére vezethető vissza (különösen a szálláshely-szolgáltatás elmaradása vagy lényeges eltérése). A myNextDays jogosult a Felhasználót terhelő összegeket a jövőbeli kifizetésekbe beszámítani.",
         "Ha a Felhasználó fizetési számláján negatív egyenleg keletkezik, azt a Felhasználó köteles haladéktalanul kiegyenlíteni. A Felhasználó felhatalmazza a myNextDays-t és a Stripe-ot arra, hogy a negatív egyenlegeket a megadott bankszámláról beszedjék, amennyiben ez jogilag megengedett.",
       ],
     },

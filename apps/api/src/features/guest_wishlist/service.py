@@ -34,7 +34,8 @@ log = get_logger("nextdays.guest_wishlist")
 # Gast-sichere Objektfelder für die Item-Anreicherung (NIE tenant_id/Eigentümer/
 # interne Preisdetails). currency ist die Objektwährung (0161).
 _PUBLIC_PROPERTY_COLUMNS = (
-    "id, title, photos, city, country, currency, status, listed_on_marketplace"
+    "id, title, photos, city, country, currency, status, listed_on_marketplace, "
+    "moderation_status"
 )
 
 # Harte Obergrenze der zurückgegebenen Einträge/Listen (Wurzel 8): der Merkzettel
@@ -262,9 +263,12 @@ class GuestWishlistService:
             )
         photos = prop.get("photos") or []
         first_photo = photos[0] if photos else None
+        # Buchbar auf dem Marktplatz nur mit allen drei Achsen: aktiv, gelistet
+        # UND vom Betreiber freigegeben (0203).
         bookable = (
             prop.get("status") == "active"
             and bool(prop.get("listed_on_marketplace"))
+            and prop.get("moderation_status") == "approved"
         )
         return WishlistItem(
             property_id=str(item_row["property_id"]),

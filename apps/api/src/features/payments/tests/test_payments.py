@@ -5,6 +5,8 @@ Voraussetzung ist ein `sk_test_...`-Key in der Umgebung (.env). Ohne Key werden
 die netzabhängigen Tests übersprungen (Skip, kein Fake). Die DB ist ein
 In-Memory-Fake (gleiches Muster wie der whatsapp-Slice).
 """
+from unittest.mock import MagicMock
+
 import pytest
 from fastapi.testclient import TestClient
 from stripe import StripeClient
@@ -382,32 +384,94 @@ def test_portal_booking_charges_8pct_fee() -> None:
     assert result.client_secret.startswith("pi_")
 
 
-def test_fee_cents_math_and_guards() -> None:
-    """_fee_cents: tenant-basierte bps-Ganzzahl-Arithmetik. Marktplatz mit 800 bps
-    → 8 %; PMS-Konto → 0 (kein Charge); ungültiger Satz → klarer Fehler. Braucht
-    keine Stripe-Verbindung."""
-    # Marktplatz-Tenant, 800 bps: 8 % von 120 € = 960 Cent.
-    mkt = _db_with_booking(charges_enabled=True)
-    svc = PaymentsService(service_client=mkt)
-    assert svc._fee_cents(mkt, "t1", 12000) == 960  # noqa: SLF001
+def test_fee_cents_haengt_am_kanal_nicht_am_kontotyp() -> None:
+    """Preisliste §2: Die Provision entscheidet der KANAL.
+
+    „Ein Tarif für alle. Kein Privat- oder Agentur-Modell." — derselbe Betrieb
+    verkauft über unser Portal mit 8 %, über seine eigene Website
+    provisionsfrei (§5: „provisionsfreie Direktbuchungen zusätzlich") und über
+    OTAs mit 1 %, die monatlich fakturiert wird.
+    """
+    portal = {"tenant_id": "t1", "channel": "portal"}
+    direkt = {"tenant_id": "t1", "channel": "direct"}
+    ota = {"tenant_id": "t1", "channel": "booking"}
+
+    db = _db_with_booking(charges_enabled=True)
+    svc = PaymentsService(service_client=db)
+    # Portal-Buchung, 800 bps: 8 % von 120 € = 960 Cent.
+    assert svc._fee_cents(db, "t1", 12000, portal) == 960  # noqa: SLF001
     # Ganzzahl-Division (kein Float-Rundungsfehler): 12345 * 800 // 10000 = 987.
-    assert svc._fee_cents(mkt, "t1", 12345) == 987  # noqa: SLF001
-    # PMS-Konto (Abo-Modell) → keine Fee, egal welcher bps-Wert.
+    assert svc._fee_cents(db, "t1", 12345, portal) == 987  # noqa: SLF001
+    # Eigene Website des Betriebs → provisionsfrei.
+    assert svc._fee_cents(db, "t1", 12000, direkt) == 0  # noqa: SLF001
+    # OTA → am Charge nichts; die 1 % laufen über die Monatsrechnung.
+    assert svc._fee_cents(db, "t1", 12000, ota) == 0  # noqa: SLF001
+    # Ohne Kontext lieber nichts berechnen als zu Unrecht (Wurzel 5).
+    assert svc._fee_cents(db, "t1", 12000, None) == 0  # noqa: SLF001
+
+    # Derselbe Tenant, egal welcher Kontotyp — der Kanal zählt.
     pms = _db_with_booking(charges_enabled=True, account_type="pms")
     svc_pms = PaymentsService(service_client=pms)
-    assert svc_pms._fee_cents(pms, "t1", 12000) == 0  # noqa: SLF001
-    # Marktplatz ohne gesetzten Satz = Datenfehler → 500 (kein stiller 0-Kassier).
+    assert svc_pms._fee_cents(pms, "t1", 12000, portal) == 960  # noqa: SLF001
+    assert svc_pms._fee_cents(pms, "t1", 12000, direkt) == 0  # noqa: SLF001
+
+    # Portal-Buchung ohne gesetzten Satz = Datenfehler → 500 (kein stiller
+    # 0-Kassier).
     nofee = _db_with_booking(charges_enabled=True, platform_fee_bps=None)
     svc_nf = PaymentsService(service_client=nofee)
     with pytest.raises(PaymentsError) as exc:
-        svc_nf._fee_cents(nofee, "t1", 12000)  # noqa: SLF001
+        svc_nf._fee_cents(nofee, "t1", 12000, portal)  # noqa: SLF001
     assert exc.value.status_code == 500
     # Absurd hoher Satz (>10000 bps) = Konfigfehler → 500.
     bad = _db_with_booking(charges_enabled=True, platform_fee_bps=80000)
     svc_bad = PaymentsService(service_client=bad)
     with pytest.raises(PaymentsError) as exc2:
-        svc_bad._fee_cents(bad, "t1", 12000)  # noqa: SLF001
+        svc_bad._fee_cents(bad, "t1", 12000, portal)  # noqa: SLF001
     assert exc2.value.status_code == 500
+
+
+def test_ledger_folgt_dem_kanal() -> None:
+    """Der platform_fees-Ledger MUSS denselben Kanal sehen wie der Charge.
+
+    Ohne `res` gäbe `_platform_fee_bps` 0 zurück → bei Portal-Buchungen entstünde
+    NIE eine Ledger-Zeile, und `_plane_auszahlung` würde das Netto ohne Abzug
+    der 8 % berechnen: Der Gastgeber bekäme 100 % angewiesen, obwohl Stripe nur
+    92 % transferiert hat.
+    """
+    db = _db_with_booking(charges_enabled=True)
+    svc = PaymentsService(service_client=db)
+    portal = {"tenant_id": "t1", "channel": "portal"}
+    direkt = {"tenant_id": "t1", "channel": "direct"}
+
+    svc._record_platform_fee(  # noqa: SLF001
+        db, reservation_id="res-1", tenant_id="t1", gross_cents=100000,
+        currency="eur", payment_id="pay-1", gateway="stripe", res=portal,
+    )
+    zeilen = db.store.get("platform_fees", [])
+    assert len(zeilen) == 1, "Portal-Buchung braucht eine Ledger-Zeile"
+    assert zeilen[0]["fee_amount_cents"] == 8000
+    assert zeilen[0]["fee_bps"] == 800
+
+    # Direktbuchung: keine Zeile, sonst stünde Provision im Ledger, die nie floss.
+    svc._record_platform_fee(  # noqa: SLF001
+        db, reservation_id="res-2", tenant_id="t1", gross_cents=100000,
+        currency="eur", payment_id="pay-2", gateway="stripe", res=direkt,
+    )
+    assert len(db.store.get("platform_fees", [])) == 1
+
+
+def test_haftung_folgt_der_provision() -> None:
+    """Wer nichts verdient, haftet nicht (Lastenheft §7.1).
+
+    Portal-Buchung (8 %) → wir tragen das Risiko, Charge über unser Konto.
+    Sonst → Direct Charge, der Betrieb ist Merchant of Record.
+    """
+    db = _db_with_booking(charges_enabled=True)
+    svc = PaymentsService(service_client=db)
+    assert svc._traegt_haftung({"channel": "portal"}) is True  # noqa: SLF001
+    assert svc._traegt_haftung({"channel": "direct"}) is False  # noqa: SLF001
+    assert svc._traegt_haftung({"channel": "booking"}) is False  # noqa: SLF001
+    assert svc._traegt_haftung({}) is False  # noqa: SLF001
 
 
 @_needs_stripe
@@ -442,6 +506,363 @@ def test_webhook_succeeded_marks_paid() -> None:
     handle_stripe_event(db, event, now_iso="2026-06-30T00:00:00Z")
     assert db.store["payments"][0]["status"] == "succeeded"
     assert db.store["reservations"][0]["payment_status"] == "paid"
+
+
+def test_pms_faehrt_direct_charge(monkeypatch) -> None:
+    """PMS = Direct Charge: der Betrieb ist Händler und haftet selbst.
+
+    Lastenheft §7.1 sagt 0 % Buchungsgebühr zu. Wer nichts verdient, darf auch
+    nicht für Chargebacks haften — und nur Direct Charges verlagern die Haftung
+    wirklich (on_behalf_of tut es nachweislich NICHT).
+
+    Live belegt: Charge im Betriebskonto, net=967,25 fee=32,75 — die
+    Stripe-Gebühr trägt der Betrieb, Kartenabrechnung zeigt seinen Namen.
+    """
+    from src.features.payments import stripe_client as sc_mod
+
+    gesehen: dict = {}
+    optionen: dict = {}
+
+    class _FakePI:
+        id = "pi_x"
+        client_secret = "cs_x"
+        status = "succeeded"
+
+    class _FakeStripe:
+        class v1:  # noqa: N801
+            class payment_intents:  # noqa: N801
+                @staticmethod
+                def create(params, options=None):  # noqa: ANN001
+                    gesehen.update(params)
+                    optionen.update(options or {})
+                    return _FakePI()
+
+    einstellungen = MagicMock()
+    einstellungen.stripe_separate_transfers = False
+    monkeypatch.setattr(sc_mod, "get_settings", lambda: einstellungen)
+    sc_mod.create_payment_intent(
+        amount_cents=100000,
+        currency="eur",
+        destination_acct="acct_pms",
+        application_fee_cents=0,
+        direct=True,
+        client=_FakeStripe(),
+    )
+    # DER Unterschied: Aufruf im Konto des Betriebs.
+    assert optionen["stripe_account"] == "acct_pms"
+    # Kein Weiterreichen nötig — das Geld ist schon dort.
+    assert "transfer_data" not in gesehen
+    # on_behalf_of wäre sinnlos und würde abgelehnt.
+    assert "on_behalf_of" not in gesehen
+    assert "application_fee_amount" not in gesehen
+
+
+def test_marktplatz_faehrt_keinen_direct_charge(monkeypatch) -> None:
+    """Gegenprobe: Marktplatz läuft über unser Konto, mit Provision."""
+    from src.features.payments import stripe_client as sc_mod
+
+    gesehen: dict = {}
+    optionen: dict = {}
+
+    class _FakePI:
+        id = "pi_x"
+        client_secret = "cs_x"
+        status = "succeeded"
+
+    class _FakeStripe:
+        class v1:  # noqa: N801
+            class payment_intents:  # noqa: N801
+                @staticmethod
+                def create(params, options=None):  # noqa: ANN001
+                    gesehen.update(params)
+                    optionen.update(options or {})
+                    return _FakePI()
+
+    einstellungen = MagicMock()
+    einstellungen.stripe_separate_transfers = False
+    monkeypatch.setattr(sc_mod, "get_settings", lambda: einstellungen)
+    sc_mod.create_payment_intent(
+        amount_cents=100000,
+        currency="eur",
+        destination_acct="acct_mp",
+        application_fee_cents=8000,
+        direct=False,
+        client=_FakeStripe(),
+    )
+    assert "stripe_account" not in optionen
+    assert gesehen["on_behalf_of"] == "acct_mp"
+    assert gesehen["application_fee_amount"] == 8000
+
+
+def test_on_behalf_of_ist_in_beiden_modi_gesetzt(monkeypatch) -> None:
+    """on_behalf_of erhält die Fremdwährung — es darf NIE wegfallen.
+
+    Live belegt: Ein USD-Charge OHNE on_behalf_of wird in die Plattform-Währung
+    umgerechnet (1000 USD → 6574,75 DKK, Kurs 6,57475). Der spätere Transfer in
+    USD scheitert dann mit "currency of source_transaction's balance
+    transaction (dkk) must be the same as the transfer currency (usd)" — der
+    Betrieb bekäme sein Geld gar nicht oder in der falschen Währung.
+
+    MIT on_behalf_of führt der Plattform-Saldo eine eigene Zeile je Währung
+    (live gesehen: EUR, PLN, SEK, GBP, CAD neben DKK).
+
+    Gilt für beide NICHT-direkten Modi. Bei Direct Charges entfällt es, weil
+    der Charge ohnehin im Konto des Betriebs entsteht (eigener Test).
+    """
+    from src.features.payments import stripe_client as sc_mod
+
+    gesehen: dict = {}
+
+    class _FakePI:
+        id = "pi_x"
+        client_secret = "cs_x"
+        status = "succeeded"
+
+    class _FakeStripe:
+        class v1:  # noqa: N801
+            class payment_intents:  # noqa: N801
+                @staticmethod
+                def create(params, options=None):  # noqa: ANN001, ARG004
+                    gesehen.update(params)
+                    return _FakePI()
+
+    einstellungen = MagicMock()
+    for getrennt in (True, False):
+        einstellungen.stripe_separate_transfers = getrennt
+        monkeypatch.setattr(sc_mod, "get_settings", lambda: einstellungen)
+        gesehen.clear()
+        sc_mod.create_payment_intent(
+            amount_cents=100000,
+            currency="usd",
+            destination_acct="acct_us",
+            application_fee_cents=0,
+            client=_FakeStripe(),
+        )
+        assert gesehen["on_behalf_of"] == "acct_us", (
+            f"on_behalf_of fehlt (separate={getrennt}) — Fremdwährung ginge "
+            "verloren"
+        )
+
+
+def test_separate_charge_setzt_keine_application_fee(monkeypatch) -> None:
+    """Stripe lehnt application_fee_amount ohne transfer_data ab.
+
+    Live verifiziert: "Can only apply an application_fee_amount when the
+    PaymentIntent is attached to a connected account". Ohne diese Weiche wäre
+    JEDER Charge gescheitert, sobald das Flag umgelegt wird.
+
+    Die Provision geht dadurch nicht verloren — bei Separate Charges landet der
+    volle Betrag bei uns und der Auszahlungslauf transferiert nur den Netto-
+    anteil weiter.
+    """
+    from src.features.payments import stripe_client as sc_mod
+
+    gesehen: dict = {}
+
+    class _FakePI:
+        id = "pi_x"
+        client_secret = "cs_x"
+        status = "succeeded"
+
+    class _FakeStripe:
+        class v1:  # noqa: N801
+            class payment_intents:  # noqa: N801
+                @staticmethod
+                def create(params, options=None):  # noqa: ANN001, ARG004
+                    gesehen.update(params)
+                    return _FakePI()
+
+    einstellungen = MagicMock()
+    einstellungen.stripe_separate_transfers = True
+    monkeypatch.setattr(sc_mod, "get_settings", lambda: einstellungen)
+    sc_mod.create_payment_intent(
+        amount_cents=100000,
+        currency="eur",
+        destination_acct="acct_1",
+        application_fee_cents=8000,
+        transfer_group="reservation:r1",
+        client=_FakeStripe(),
+    )
+    assert "transfer_data" not in gesehen
+    assert "application_fee_amount" not in gesehen
+    assert gesehen["on_behalf_of"] == "acct_1"
+    assert gesehen["transfer_group"] == "reservation:r1"
+
+    # Gegenprobe: Im Altpfad MUSS beides gesetzt sein.
+    gesehen.clear()
+    einstellungen.stripe_separate_transfers = False
+    sc_mod.create_payment_intent(
+        amount_cents=100000,
+        currency="eur",
+        destination_acct="acct_1",
+        application_fee_cents=8000,
+        client=_FakeStripe(),
+    )
+    assert gesehen["transfer_data"] == {"destination": "acct_1"}
+    assert gesehen["application_fee_amount"] == 8000
+
+
+def test_direktbuchung_plant_keine_auszahlung() -> None:
+    """Preisliste §5: „provisionsfreie Direktbuchungen zusätzlich".
+
+    Buchungen über die eigene Website des Betriebs laufen als Direct Charge —
+    das Geld war nie bei uns, es gibt nichts auszuzahlen. Eine Zeile hier wäre
+    eine Auszahlung ins Leere.
+    """
+    db = _DB()
+    db.store["payments"] = [
+        {
+            "id": "pay-d",
+            "reservation_id": "res-1",
+            "gateway_ref": "pi_direkt",
+            "status": "pending",
+            "type": "full",
+        }
+    ]
+    db.store["reservations"] = [
+        {
+            "id": "res-1",
+            "tenant_id": "t1",
+            "total_amount": 500.0,
+            "currency": "eur",
+            "check_out": "2026-08-01",
+            "payment_status": "pending",
+            "channel": "direct",
+        }
+    ]
+    handle_stripe_event(
+        db,
+        {
+            "id": "evt_direkt",
+            "type": "payment_intent.succeeded",
+            "data": {"object": {"id": "pi_direkt", "latest_charge": "ch_d"}},
+        },
+        now_iso="2026-06-30T00:00:00Z",
+    )
+    assert not db.store.get("payouts"), "Direktbuchung darf keine Auszahlung planen"
+
+
+def test_kaution_plant_keine_auszahlung() -> None:
+    """Der Kautions-Einzug feuert ebenfalls payment_intent.succeeded.
+
+    Ohne Filter würde der Upsert die Auszahlungszeile der Buchung überschreiben:
+    Status zurück auf 'scheduled' (auch bei bereits stornierter Zeile) und
+    source_charge_id auf die Kautions-Charge.
+    """
+    db = _DB()
+    db.store["payments"] = [
+        {
+            "id": "pay-k",
+            "reservation_id": "res-1",
+            "gateway_ref": "pi_kaution",
+            "status": "pending",
+            "type": "deposit",
+        }
+    ]
+    db.store["reservations"] = [
+        {
+            "id": "res-1",
+            "tenant_id": "t1",
+            "total_amount": 500.0,
+            "currency": "eur",
+            "check_out": "2026-08-01",
+            "payment_status": "pending",
+        }
+    ]
+    handle_stripe_event(
+        db,
+        {
+            "id": "evt_k",
+            "type": "payment_intent.succeeded",
+            "data": {"object": {"id": "pi_kaution", "latest_charge": "ch_k"}},
+        },
+        now_iso="2026-06-30T00:00:00Z",
+    )
+    assert not db.store.get("payouts"), "Kaution darf keine Auszahlung planen"
+
+
+def test_normale_zahlung_plant_auszahlung() -> None:
+    """Gegenprobe: Eine echte Buchungszahlung erzeugt sehr wohl eine Zeile."""
+    db = _DB()
+    db.store["payments"] = [
+        {
+            "id": "pay-1",
+            "reservation_id": "res-1",
+            "gateway_ref": "pi_voll",
+            "status": "pending",
+            "type": "full",
+        }
+    ]
+    db.store["reservations"] = [
+        {
+            "id": "res-1",
+            "tenant_id": "t1",
+            "total_amount": 500.0,
+            "currency": "eur",
+            "check_out": "2026-08-01",
+            "payment_status": "pending",
+            # Portal-Buchung: nur dafür hält die Plattform Geld und zahlt aus.
+            "channel": "portal",
+        }
+    ]
+    handle_stripe_event(
+        db,
+        {
+            "id": "evt_v",
+            "type": "payment_intent.succeeded",
+            "data": {"object": {"id": "pi_voll", "latest_charge": "ch_v"}},
+        },
+        now_iso="2026-06-30T00:00:00Z",
+    )
+    assert db.store.get("payouts"), "Buchungszahlung muss eine Auszahlung planen"
+
+
+def test_chargeback_haelt_die_auszahlung_zurueck() -> None:
+    """Stripe belastet bei einem Dispute sofort den Plattform-Saldo.
+
+    Ginge die Auszahlung trotzdem raus, zahlte die Plattform den Betrieb aus
+    Geld, das ihr gerade entzogen wird.
+    """
+    db = _DB()
+    db.store["payments"] = [
+        {"id": "pay-1", "reservation_id": "res-1", "gateway_ref": "pi_d"}
+    ]
+    db.store["payouts"] = [
+        {"id": "po-1", "reservation_id": "res-1", "status": "scheduled"}
+    ]
+    handle_stripe_event(
+        db,
+        {
+            "id": "evt_d",
+            "type": "charge.dispute.created",
+            "data": {"object": {"id": "dp_1", "payment_intent": "pi_d"}},
+        },
+        now_iso="2026-06-30T00:00:00Z",
+    )
+    assert db.store["payouts"][0]["status"] == "held"
+    assert db.store.get("payout_holds"), "Hold-Zeile muss entstehen"
+
+
+def test_chargeback_nach_auszahlung_setzt_keinen_hold() -> None:
+    """Ist das Geld schon raus, hilft kein Hold — dafür gibt es die
+    Verrechnung. Der Webhook darf daran nicht scheitern."""
+    db = _DB()
+    db.store["payments"] = [
+        {"id": "pay-1", "reservation_id": "res-1", "gateway_ref": "pi_d"}
+    ]
+    db.store["payouts"] = [
+        {"id": "po-1", "reservation_id": "res-1", "status": "paid"}
+    ]
+    handle_stripe_event(
+        db,
+        {
+            "id": "evt_d2",
+            "type": "charge.dispute.created",
+            "data": {"object": {"id": "dp_2", "payment_intent": "pi_d"}},
+        },
+        now_iso="2026-06-30T00:00:00Z",
+    )
+    assert db.store["payouts"][0]["status"] == "paid"
 
 
 class _StripeObjectLike:

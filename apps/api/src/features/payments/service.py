@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from contextlib import contextmanager
 from datetime import UTC, date, datetime, timedelta
+from functools import lru_cache
 from typing import Any
 
 from stripe import StripeClient
@@ -28,6 +29,11 @@ from supabase import Client
 from src.core.config import get_settings
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.features.cohosts.payout_service import PayoutService as CohostPayoutService
+from src.features.cohosts.payouts import BeteiligungFehler
+from src.features.donations.berechnung import Spende as DonationShare
+from src.features.donations.service import DonationsService
+from src.features.payouts.faelligkeit import transfer_group as _transfer_group
 
 from . import stripe_client as sc
 from .paypal_client import PayPalClient, PayPalError, PayPalNotConfiguredError
@@ -81,6 +87,8 @@ def _stripe_errors():  # noqa: ANN202
 def _to_cents(amount: float) -> int:
     """Betrag in Cent (Stripe rechnet in der kleinsten Einheit)."""
     return int(round(amount * 100))
+
+
 
 
 class PaymentsService:
@@ -572,7 +580,9 @@ class PaymentsService:
     # OTA zahlt den Vermieter selbst aus. Für solche Buchungen darf KEINE Stripe-
     # Zahlung erzeugt werden (sonst doppelte Belastung). Eigene Kanäle (direct =
     # manuell erfasst, portal = eigene Buchungsstrecke) laufen über Stripe.
-    _OTA_CHANNELS = frozenset({"booking", "airbnb", "vrbo"})
+    _OTA_CHANNELS = frozenset(
+        {"booking", "airbnb", "vrbo", "ota_other"}
+    )
 
     def _require_own_channel(self, res: dict) -> None:
         """Stellt sicher, dass die Reservierung über einen EIGENEN Kanal kam —
@@ -638,31 +648,85 @@ class PaymentsService:
         ).data
         return bool(row[0].get(column)) if row else False
 
-    def _platform_fee_bps(self, db: Client, tenant_id: str) -> int:
-        """Provision (Basispunkte) für DIESEN Tenant — die einzige Fee-Quelle.
+    # Buchungen über unseren Marktplatz. Preisliste §2: „Eigenes
+    # myNextDays-Portal (Direktbuchung) 8,0 % all-in". Alles andere ist
+    # provisionsfrei am Charge — Direktbuchungen über die Website des Betriebs
+    # ausdrücklich („provisionsfreie Direktbuchungen zusätzlich", §5), OTA-
+    # Buchungen laufen gar nicht über uns (1 % wird monatlich fakturiert).
+    _PORTAL_CHANNELS = frozenset({"portal"})
 
-        NUR Marktplatz-Gastgeber (account_type='marketplace', 0180) zahlen eine
-        Provision je Buchung; PMS/CM-Tenants (Abo-Modell) zahlen 0. Der Satz kommt
+    def _ist_portal_buchung(self, res: dict) -> bool:
+        """Kam diese Buchung über unser myNextDays-Portal (8 % all-in)?
+
+        Die Provision hängt am KANAL, nicht am Kontotyp: Die Preisliste kennt
+        „Ein Tarif für alle. Kein Privat- oder Agentur-Modell." Derselbe Betrieb
+        kann über den Marktplatz (8 %), seine eigene Website (0 %) und OTAs
+        (1 % monatlich) verkaufen.
+
+        Fail-closed (Wurzel 5): Fehlt der Kanal, gilt die Buchung NICHT als
+        Portal-Buchung — lieber keine Provision berechnen als eine zu Unrecht.
+        """
+        return (res.get("channel") or "").lower() in self._PORTAL_CHANNELS
+
+    def _traegt_haftung(self, res: dict) -> bool:
+        """Trägt die Plattform das Chargeback-Risiko dieser Buchung?
+
+        Nur wo wir verdienen. Lastenheft §7.1 sagt 0 % Buchungsgebühr auf
+        Vermieter-Buchungen zu — wer an einer Buchung nichts verdient, darf für
+        sie auch nicht haften, sonst wäre das Versprechen ein unbegrenztes
+        Risiko. Deckt sich mit den AGB (§4): „myNextDays wird nicht
+        Vertragspartei des Beherbergungsvertrags."
+
+        Portal-Buchung (8 %) → wir haften, Charge läuft über unser Konto.
+        Sonst → Direct Charge, der Betrieb ist Merchant of Record.
+        """
+        return self._ist_portal_buchung(res)
+
+    def _direct_acct(self, db: Client, res: dict) -> str | None:
+        """Konto für Folgeoperationen an einem Direct Charge, sonst None.
+
+        Refund, Capture und Cancel müssen bei Direct Charges im Konto des
+        Betriebs laufen — dort liegt der Intent. Ohne den Header antwortet
+        Stripe mit „No such payment_intent".
+        """
+        if self._traegt_haftung(res):
+            return None
+        return self._connected_account(db, res["tenant_id"])
+
+    def _platform_fee_bps(
+        self, db: Client, tenant_id: str, res: dict | None = None
+    ) -> int:
+        """Provision (Basispunkte) für DIESE Buchung — die einzige Fee-Quelle.
+
+        Maßgeblich ist der KANAL, nicht der Kontotyp (Preisliste §2: „Eigenes
+        myNextDays-Portal (Direktbuchung) 8,0 % all-in"). Derselbe Betrieb
+        verkauft über den Marktplatz mit 8 %, über seine eigene Website
+        provisionsfrei und über OTAs mit 1 %, die monatlich fakturiert wird.
+
+        Ohne Reservierungskontext (``res=None``) wird nichts berechnet — lieber
+        keine Provision als eine zu Unrecht (Wurzel 5). Der Satz kommt
         AUSSCHLIESSLICH aus tenants.platform_fee_bps (Wurzel 3: nie aus Client-
         Input; Wurzel 4: kein globaler Fantasie-Default) — so kann ein Betrieb die
         eigene Provision nicht drücken und ein PMS-Kunde wird nie belastet.
         """
+        if res is None or not self._ist_portal_buchung(res):
+            return 0
         row = (
             db.table("tenants")
-            .select("account_type, platform_fee_bps")
+            .select("platform_fee_bps")
             .eq("id", tenant_id)
             .limit(1)
             .execute()
         ).data
-        if not row or row[0].get("account_type") != "marketplace":
+        if not row:
             return 0
         bps = row[0].get("platform_fee_bps")
         if bps is None:
-            # marketplace-Tenant ohne gesetzten Satz ist ein Datenfehler — nicht
+            # Portal-Buchung ohne gesetzten Satz ist ein Datenfehler — nicht
             # still 0 kassieren (dann verdient die Plattform nichts) und nicht
             # raten. Klar fehlschlagen (Wurzel 4/5).
             raise PaymentsError(
-                "Provisions-Satz (platform_fee_bps) für Marktplatz-Konto fehlt.",
+                "Provisions-Satz (platform_fee_bps) für Portal-Buchung fehlt.",
                 status_code=500,
             )
         if not 0 <= bps <= 10000:
@@ -672,13 +736,76 @@ class PaymentsService:
             )
         return int(bps)
 
-    def _fee_cents(self, db: Client, tenant_id: str, amount_cents: int) -> int:
+    def _fee_cents(
+        self, db: Client, tenant_id: str, amount_cents: int,
+        res: dict | None = None,
+    ) -> int:
         """Provisionsbetrag in Cent (Stripe application_fee) — exakte bps-Ganzzahl-
         Arithmetik, kein Float. 0 für Nicht-Marktplatz-Tenants."""
-        bps = self._platform_fee_bps(db, tenant_id)
+        bps = self._platform_fee_bps(db, tenant_id, res)
         if bps <= 0:
             return 0
         return amount_cents * bps // 10000
+
+    def _donation_for(
+        self, db: Client, tenant_id: str, amount_cents: int
+    ) -> DonationShare | None:
+        """Spendenanteil dieser Buchung (0216) — oder None, wenn der Betrieb
+        keine Spende eingerichtet hat (Normalfall).
+
+        Ein Fehler in der Spendeneinstellung darf die Buchung nicht verhindern:
+        Der Gast will bezahlen, und die Spende ist eine freiwillige Zugabe des
+        Gastgebers. Deshalb wird hier NICHT re-raised — der Fehler wird geloggt
+        und die Buchung läuft ohne Spende weiter (best effort, wie beim
+        Fee-Ledger-Reverse). Der Gastgeber sieht die fehlende Zeile in seiner
+        Spendenübersicht.
+        """
+        try:
+            return DonationsService(db=db).spende_fuer_buchung(
+                tenant_id, amount_cents
+            )
+        except Exception as exc:  # noqa: BLE001 — Buchung darf nicht kippen
+            log.warning(
+                "donation_calculation_failed",
+                tenant_id=tenant_id,
+                error=str(exc)[:200],
+            )
+            return None
+
+    def _record_donation(
+        self,
+        db: Client,
+        *,
+        reservation_id: str,
+        tenant_id: str,
+        spende: DonationShare | None,
+        gross_cents: int,
+        currency: str,
+    ) -> None:
+        """Spendenzeile anlegen. No-op ohne eingerichtete Spende.
+
+        Best effort wie ``_donation_for``: Der Betrag ist bereits Teil der
+        application_fee und liegt beim Plattform-Saldo — eine fehlende
+        Ledger-Zeile ist ein Buchhaltungsproblem, kein Grund, die bestätigte
+        Zahlung des Gastes scheitern zu lassen.
+        """
+        if not spende:
+            return
+        try:
+            DonationsService(db=db).merke_spende(
+                tenant_id=tenant_id,
+                reservation_id=reservation_id,
+                spende=spende,
+                brutto_cents=gross_cents,
+                currency=currency,
+            )
+        except Exception as exc:  # noqa: BLE001 — Zahlung darf nicht kippen
+            log.error(
+                "donation_ledger_write_failed",
+                reservation_id=reservation_id,
+                amount_cents=spende.betrag_cents,
+                error=str(exc)[:200],
+            )
 
     def create_booking_payment(self, *, reservation_id: str) -> BookingPaymentResult:
         """PaymentIntent (Destination Charge) für eine Gastbuchung erzeugen und
@@ -701,7 +828,7 @@ class PaymentsService:
         # anzulegen (der öffentliche Endpoint ist unauthentifiziert und wird bei
         # Doppelklick/Reload/Retry mehrfach getroffen → sonst mehrere Intents +
         # payments-Rows für dieselbe Buchung).
-        reuse = self._reuse_pending_intent(db, reservation_id, "full")
+        reuse = self._reuse_pending_intent(db, reservation_id, "full", res)
         if reuse:
             return BookingPaymentResult(
                 client_secret=reuse["client_secret"],
@@ -711,13 +838,24 @@ class PaymentsService:
 
         acct = self._connected_account(db, tenant_id)
         amount_cents = _to_cents(amount)
+        # Spendenanteil (0216): geht vom Anteil des GASTGEBERS ab, nicht von der
+        # Plattform-Gebühr. Da wir per Destination Charge kassieren und die
+        # Plattform das Geld nie hält, muss der Betrag als Teil der
+        # application_fee einbehalten werden — sonst läge er beim Gastgeber und
+        # müsste zurückgeholt werden.
+        spende = self._donation_for(db, tenant_id, amount_cents)
         with _stripe_errors():
             intent = sc.create_payment_intent(
                 amount_cents=amount_cents,
                 currency=currency,
                 destination_acct=acct,
-                application_fee_cents=self._fee_cents(db, tenant_id, amount_cents),
+                application_fee_cents=self._fee_cents(
+                    db, tenant_id, amount_cents, res
+                )
+                + (spende.betrag_cents if spende else 0),
                 statement_descriptor=self._merchant_descriptor(db, tenant_id),
+                transfer_group=_transfer_group(reservation_id),
+                direct=not self._traegt_haftung(res),
                 metadata={"reservation_id": reservation_id, "tenant_id": tenant_id},
                 client=self._stripe,
             )
@@ -740,6 +878,18 @@ class PaymentsService:
             currency=currency,
             payment_id=payment["id"],
             gateway="stripe",
+            res=res,
+        )
+        # Spenden-Ledger: Satz und Betrag einfrieren. Ohne diese Zeile wäre
+        # später nicht mehr feststellbar, wie viel der einbehaltenen
+        # application_fee der Organisation zusteht.
+        self._record_donation(
+            db,
+            reservation_id=reservation_id,
+            tenant_id=tenant_id,
+            spende=spende,
+            gross_cents=amount_cents,
+            currency=currency,
         )
         self._set_reservation_payment_status(db, reservation_id, "pending")
         return BookingPaymentResult(
@@ -824,7 +974,7 @@ class PaymentsService:
             raise PaymentsError("Währung der Buchung fehlt.", status_code=422)
 
         # Idempotenz: offene Anzahlung wiederverwenden (Doppelklick/Reload/Retry).
-        reuse = self._reuse_pending_intent(db, reservation_id, "down_payment")
+        reuse = self._reuse_pending_intent(db, reservation_id, "down_payment", res)
         if reuse:
             return BookingPaymentResult(
                 client_secret=reuse["client_secret"],
@@ -848,10 +998,14 @@ class PaymentsService:
                 amount_cents=down_cents,
                 currency=currency,
                 destination_acct=acct,
-                application_fee_cents=self._fee_cents(db, tenant_id, down_cents),
+                application_fee_cents=self._fee_cents(
+                    db, tenant_id, down_cents, res
+                ),
                 customer=customer,
                 save_payment_method=True,  # Karte für die Restzahlung merken
                 statement_descriptor=self._merchant_descriptor(db, tenant_id),
+                transfer_group=_transfer_group(reservation_id),
+                direct=not self._traegt_haftung(res),
                 metadata={
                     "reservation_id": reservation_id,
                     "tenant_id": tenant_id,
@@ -879,6 +1033,7 @@ class PaymentsService:
             currency=currency,
             payment_id=payment["id"],
             gateway="stripe",
+            res=res,
         )
         # Customer schon jetzt an der Anzahlung vermerken; die payment_method-ID
         # kommt erst nach Bestätigung (Webhook/Confirm) und wird dann nachgetragen.
@@ -1000,7 +1155,7 @@ class PaymentsService:
                     currency=bal["currency"],
                     destination_acct=acct,
                     application_fee_cents=self._fee_cents(
-                        db, res["tenant_id"], amount_cents
+                        db, res["tenant_id"], amount_cents, res
                     ),
                     customer=customer,
                     payment_method=pm,
@@ -1008,6 +1163,8 @@ class PaymentsService:
                     statement_descriptor=self._merchant_descriptor(
                         db, res["tenant_id"]
                     ),
+                    transfer_group=_transfer_group(bal["reservation_id"]),
+                    direct=not self._traegt_haftung(res),
                     idempotency_key=idem_key,
                     metadata={
                         "reservation_id": bal["reservation_id"],
@@ -1069,7 +1226,7 @@ class PaymentsService:
         # Idempotenz: offenen Kautions-Hold wiederverwenden statt eines zweiten
         # manual-capture-Intents (sonst blockiert ein Doppelklick/Retry zwei
         # Beträge auf der Gastkarte). Zentrale Prüfung (wie create_booking_payment).
-        reuse = self._reuse_pending_intent(db, reservation_id, "deposit")
+        reuse = self._reuse_pending_intent(db, reservation_id, "deposit", res)
         if reuse:
             return {
                 "client_secret": reuse["client_secret"],
@@ -1086,6 +1243,10 @@ class PaymentsService:
                 application_fee_cents=0,  # auf Kautionen keine Plattform-Fee
                 capture_method="manual",
                 statement_descriptor=self._merchant_descriptor(db, tenant_id),
+                # Auch die Kaution braucht die Klammer: im Separate-Charges-
+                # Modus läge sie sonst unzuordenbar auf dem Plattform-Saldo.
+                transfer_group=_transfer_group(reservation_id),
+                direct=not self._traegt_haftung(res),
                 metadata={"reservation_id": reservation_id, "type": "deposit"},
                 client=self._stripe,
             )
@@ -1113,7 +1274,12 @@ class PaymentsService:
         amount_cents = _to_cents(amount) if amount is not None else None
         with _stripe_errors():
             result = sc.capture_payment_intent(
-                payment["gateway_ref"], amount_cents, client=self._stripe
+                payment["gateway_ref"],
+                amount_cents,
+                direct_acct=self._direct_acct(
+                    db, self._load_reservation(db, payment["reservation_id"])
+                ),
+                client=self._stripe,
             )
         self._update_payment(db, payment_id, {"status": "succeeded"})
         return {"payment_id": payment_id, "status": result["status"]}
@@ -1124,7 +1290,11 @@ class PaymentsService:
         payment = self._load_payment(db, payment_id, tenant_id, expect_type="deposit")
         with _stripe_errors():
             result = sc.cancel_payment_intent(
-                payment["gateway_ref"], client=self._stripe
+                payment["gateway_ref"],
+                direct_acct=self._direct_acct(
+                    db, self._load_reservation(db, payment["reservation_id"])
+                ),
+                client=self._stripe,
             )
         self._update_payment(db, payment_id, {"status": "refunded"})
         return {"payment_id": payment_id, "status": result["status"]}
@@ -1175,16 +1345,41 @@ class PaymentsService:
             # Geldereignis. Betrag im Key, damit eine legitime spätere Teilerstattung
             # anderer Höhe nicht fälschlich denselben Key trifft.
             idem_key = f"refund:{payment_id}:{amount_cents if amount_cents else 'full'}"
-            # Marktplatz-Buchung: die application_fee anteilig mit-erstatten, sonst
-            # behält die Plattform die Provision auf stornierte Nächte (Wurzel 1).
-            refund_fee = self._platform_fee_bps(db, tenant_id) > 0
+            # DER GAST GEHT VOR. Die Rückholung beim Betrieb ist ein zweiter,
+            # getrennter Schritt — nie eine Bedingung für die Erstattung.
+            #
+            # Grund: Mit reverse_transfer=True am Refund scheitert der GANZE
+            # Refund, wenn der Betrieb kein Guthaben mehr hat (Stripe-Doku:
+            # "the refund request returns an error instead of creating a refund
+            # with a pending status"). Der Gast bekäme dann gar nichts.
+            #
+            # Bei Separate Charges ist die Rückholung ohnehin gegenstandslos,
+            # solange noch kein Transfer lief — das Geld liegt bei uns.
+            #
+            # refund_application_fee bewusst NICHT gesetzt: Das Flag würde die
+            # Provision an den GASTGEBER schieben, nicht sie uns erhalten. Wie
+            # bei Booking.com bleibt die Provision bei der Plattform — der
+            # Vermittlungsaufwand ist entstanden, unabhängig vom Storno.
             with _stripe_errors():
                 result = sc.refund(
                     payment["gateway_ref"], amount_cents,
                     client=self._stripe, idempotency_key=idem_key,
-                    refund_application_fee=refund_fee,
+                    reverse_transfer=False,
+                    # PMS: Der Intent gehört dem Betrieb, die Erstattung geht
+                    # aus SEINEM Saldo. Bei 0 % Provision genau richtig.
+                    direct_acct=self._direct_acct(
+                    db, self._load_reservation(db, payment["reservation_id"])
+                ),
                 )
             refund_id = result["id"]
+            # Erst jetzt zurückholen, was schon draußen ist. Schlägt es fehl
+            # (kein Guthaben), wird daraus eine Verrechnungsforderung — der
+            # nächste Transfer dieses Betriebs wird gekürzt. Nie ein Bankeinzug.
+            self._hole_zurueck_oder_verrechne(
+                db,
+                payment=payment,
+                refund_cents=_to_cents(refund_amount),
+            )
         self._insert_payment(
             db,
             reservation_id=payment["reservation_id"],
@@ -1203,19 +1398,134 @@ class PaymentsService:
         self._set_reservation_payment_status(
             db, payment["reservation_id"], status_val
         )
-        # Fee-Gegenzustand (Wurzel 1): den Plattform-Fee-Anteil proportional zum
-        # erstatteten Betrag im Ledger zurückbuchen. Best-effort — ein Ledger-
-        # Fehler darf den bereits erfolgten Geld-Refund nicht kippen (Wurzel 5).
-        try:
-            self._reverse_platform_fee(
-                db, payment["reservation_id"], refunded_cents=_to_cents(refund_amount)
-            )
-        except Exception:  # noqa: BLE001 — Audit-Spiegel, kein Hauptpfad
-            log.warning(
-                "platform_fee_reverse_failed",
-                reservation_id=payment["reservation_id"],
-            )
+        # Fee-Gegenbuchung NUR bei PayPal: Dort fließt die Provision durch
+        # platform_fee_refund wirklich zurück. Bei Stripe bleibt sie bei der
+        # Plattform (siehe _reverse_platform_fee) — eine Gegenbuchung würde den
+        # Ledger vom echten Geldfluss entkoppeln. Best-effort (Wurzel 5).
+        if payment.get("gateway") == "paypal":
+            try:
+                self._reverse_platform_fee(
+                    db,
+                    payment["reservation_id"],
+                    refunded_cents=_to_cents(refund_amount),
+                )
+            except Exception:  # noqa: BLE001 — Audit-Spiegel, kein Hauptpfad
+                log.warning(
+                    "platform_fee_reverse_failed",
+                    reservation_id=payment["reservation_id"],
+                )
         return {"payment_id": payment_id, "refund_id": refund_id}
+
+    def _hole_zurueck_oder_verrechne(
+        self, db: Client, *, payment: dict, refund_cents: int
+    ) -> None:
+        """Erstatteten Betrag beim Betrieb zurückholen — oder verrechnen.
+
+        DREISTUFIG, in dieser Reihenfolge (Airbnb-Modell):
+
+        1. Ist der Transfer noch gar nicht gelaufen (Separate Charges, Storno
+           vor Checkout), gibt es nichts zurückzuholen — das Geld liegt bei uns.
+        2. Sonst Transfer-Reversal versuchen. Klappt es, ist der Fall erledigt.
+        3. Klappt es nicht (Betrieb hat das Geld schon abgezogen → Stripe
+           antwortet ``balance_insufficient``), wird daraus ein
+           Verrechnungsposten: Die nächste Auszahlung wird gekürzt. NIE ein
+           Einzug vom Bankkonto des Betriebs.
+
+        Der Gast hat sein Geld an dieser Stelle bereits erhalten — diese Methode
+        darf den Storno deshalb nie kippen (Wurzel 5). Fehler landen im Ledger,
+        nicht in einer Exception.
+        """
+        if refund_cents <= 0:
+            return
+        reservation_id = payment["reservation_id"]
+        currency = payment.get("currency")
+        if not currency:
+            # Ohne Währung kein Posten — sonst stünde eine Forderung ohne
+            # Einheit im Ledger (Wurzel 4). Fällt im Monitoring auf.
+            log.warning("refund_recovery_no_currency", reservation_id=reservation_id)
+            return
+
+        # Lazy: payouts.service importiert seinerseits payments.stripe_client —
+        # ein Modul-Import hier schlösse den Zyklus (ADR-0016, Slice-Grenzen).
+        from src.features.payouts.service import (  # noqa: PLC0415
+            PayoutsService,
+        )
+
+        res = self._load_reservation(db, reservation_id)
+        tenant_id = res["tenant_id"]
+
+        if not self._traegt_haftung(res):
+            # Direct Charge: Das Geld war nie bei uns, der Refund lief
+            # bereits aus dem Saldo des Betriebs. Es gibt nichts zurückzuholen
+            # und nichts zu verrechnen — es existiert gar keine Auszahlung.
+            log.info("refund_direct_charge_ohne_payout", reservation_id=reservation_id)
+            return
+        payouts = PayoutsService(db=db)
+
+        zeile = payouts.transfer_zu_buchung(reservation_id)
+        # Die Frage ist NICHT "lief unser Transfer?", sondern "hat der Betrieb
+        # das Geld?". Bei einer Destination Charge hat er es aus dem Charge —
+        # ganz ohne Transfer-Zeile. Beides muss verneint sein, damit Stufe 1
+        # greift, sonst bliebe der Betrag beim Betrieb und die Plattform trüge
+        # die Erstattung still allein.
+        getrennt = get_settings().stripe_separate_transfers
+        nichts_geflossen = getrennt and not (
+            zeile and zeile.get("stripe_transfer_id")
+        )
+        if nichts_geflossen:
+            # Stufe 1: Geld liegt noch bei uns. Geplante Auszahlung stoppen,
+            # damit sie nicht später doch noch für eine stornierte Buchung
+            # freigibt (Wurzel 1 — Gegenzustand pflegen).
+            payouts.storniere(reservation_id)
+            log.info("refund_no_transfer_yet", reservation_id=reservation_id)
+            return
+
+        if zeile:
+            # Auch wenn zurückgeholt wird: die geplante Auszahlung darf nicht
+            # stehen bleiben, sonst zahlt der Lauf die stornierte Buchung aus.
+            payouts.storniere(reservation_id)
+
+        if not zeile or not zeile.get("stripe_transfer_id"):
+            # Destination Charge: kein eigener Transfer, den man umkehren
+            # könnte — der Betrieb hat das Geld trotzdem. Direkt verrechnen.
+            payouts.verrechne_storno(
+                reservation_id=reservation_id,
+                tenant_id=tenant_id,
+                betrag_cents=refund_cents,
+                currency=currency,
+            )
+            return
+
+        # Stufe 2: zurückholen versuchen.
+        try:
+            with _stripe_errors():
+                sc.reverse_transfer(
+                    zeile["stripe_transfer_id"],
+                    amount_cents=refund_cents,
+                    client=self._stripe,
+                    idempotency_key=f"reversal:{payment['id']}:{refund_cents}",
+                )
+            log.info(
+                "refund_transfer_reversed",
+                reservation_id=reservation_id,
+                amount_cents=refund_cents,
+            )
+            return
+        except PaymentsError as exc:
+            # Stufe 3: nicht zurückholbar → Forderung. Nur der erwartete Fall
+            # (kein Guthaben) wird verrechnet; alles andere bleibt sichtbar.
+            log.warning(
+                "refund_reversal_failed",
+                reservation_id=reservation_id,
+                error=exc.message[:150],
+            )
+
+        payouts.verrechne_storno(
+            reservation_id=reservation_id,
+            tenant_id=tenant_id,
+            betrag_cents=refund_cents,
+            currency=currency,
+        )
 
     def _refund_paypal(
         self, db: Client, payment: dict, refund_amount: float, *, is_partial: bool
@@ -1234,7 +1544,7 @@ class PaymentsService:
         res = self._load_reservation(db, payment["reservation_id"])
         seller = self._paypal_seller(db, res["tenant_id"])
         fee_refund = (
-            self._fee_amount(db, res["tenant_id"], refund_amount)
+            self._fee_amount(db, res["tenant_id"], refund_amount, res)
             if currency
             else None
         )
@@ -1328,12 +1638,15 @@ class PaymentsService:
     def _paypal() -> PayPalClient:
         return PayPalClient()
 
-    def _fee_amount(self, db: Client, tenant_id: str, amount: float) -> float:
+    def _fee_amount(
+        self, db: Client, tenant_id: str, amount: float,
+        res: dict | None = None,
+    ) -> float:
         """Plattform-Provision als Betrag (Major-Unit, für PayPal) — DERSELBE
-        tenant-basierte bps-Kern wie Stripe (_platform_fee_bps): nur Marktplatz-
-        Tenants zahlen, Satz aus tenants.platform_fee_bps. Eine einzige Fee-Quelle
-        (kein zweiter globaler Prozentwert, Wurzel 4)."""
-        bps = self._platform_fee_bps(db, tenant_id)
+        kanalbasierte bps-Kern wie Stripe (_platform_fee_bps): nur
+        Portal-Buchungen zahlen, Satz aus tenants.platform_fee_bps. Eine einzige
+        Fee-Quelle (kein zweiter globaler Prozentwert, Wurzel 4)."""
+        bps = self._platform_fee_bps(db, tenant_id, res)
         if bps <= 0:
             return 0.0
         return round(amount * bps / 10000.0, 2)
@@ -1351,10 +1664,14 @@ class PaymentsService:
         currency: str,
         payment_id: str | None,
         gateway: str,
+        res: dict | None = None,
     ) -> None:
-        """Fee-Zeile für eine Marktplatz-Buchung anlegen (status='pending'), BEVOR
-        der Charge-Seiteneffekt endgültig ist. No-op für Nicht-Marktplatz-Tenants
-        (bps=0). Split-Payment: die Fee wird EINMAL auf den GESAMTbetrag (gross_cents
+        """Fee-Zeile für eine Portal-Buchung anlegen (status='pending'), BEVOR
+        der Charge-Seiteneffekt endgültig ist. No-op für alle anderen Kanäle
+        (bps=0) — ``res`` MUSS mitgegeben werden, sonst wäre der Ledger blind
+        für den Kanal und stünde im Widerspruch zum tatsächlichen Charge.
+
+        Split-Payment: die Fee wird EINMAL auf den GESAMTbetrag (gross_cents
         = total_amount) eingefroren — UNIQUE(reservation_id) hält genau eine Zeile,
         egal wie viele Chargen (Anzahlung + Rest) folgen.
 
@@ -1362,7 +1679,7 @@ class PaymentsService:
         — eine bereits gebuchte Fee ('charged'/'reversed'/'pending') wird NICHT
         überschrieben. Währung Pflicht (Wurzel 4): fehlt sie, ist das ein Datenfehler.
         """
-        bps = self._platform_fee_bps(db, tenant_id)
+        bps = self._platform_fee_bps(db, tenant_id, res)
         if bps <= 0:
             return
         if not currency:
@@ -1384,6 +1701,69 @@ class PaymentsService:
             ignore_duplicates=True,
         ).execute()
 
+        # Beteiligung der Co-Gastgeber — ZUSÄTZLICH zur Plattform-Gebühr und
+        # zulasten des Gastgebers. Bewusst hier, direkt an der Fee-Zeile: Das
+        # ist der eine Punkt, den alle Zahlungswege durchlaufen (Vollzahlung,
+        # Anzahlung, Restzahlung), und der Plattformanteil ist genau hier
+        # bekannt.
+        self._record_cohost_payouts(
+            db,
+            reservation_id=reservation_id,
+            tenant_id=tenant_id,
+            gross_cents=gross_cents,
+            currency=currency,
+            plattform_bps=bps,
+        )
+
+    def _record_cohost_payouts(
+        self,
+        db: Client,
+        *,
+        reservation_id: str,
+        tenant_id: str,
+        gross_cents: int,
+        currency: str,
+        plattform_bps: int,
+    ) -> None:
+        """Beteiligungen der Co-Gastgeber dieser Buchung festhalten.
+
+        Best-effort gegenüber dem Zahlungspfad: Ein Problem hier darf die
+        Zahlung des Gastes NICHT verhindern — der Gast hat mit der internen
+        Aufteilung nichts zu tun. Der Fehler wird geloggt und ist über die
+        fehlende cohost_payouts-Zeile sichtbar.
+
+        AUSNAHME: BeteiligungFehler (z. B. „Anteile übersteigen den Betrag")
+        wird durchgereicht. Das ist ein echter Konfigurationsfehler des
+        Gastgebers, und ihn zu verschlucken hieße, still eine falsche
+        Aufteilung zu buchen (Wurzel 5).
+        """
+        res = (
+            db.table("reservations")
+            .select("property_id")
+            .eq("id", reservation_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not res or not res[0].get("property_id"):
+            return
+        try:
+            CohostPayoutService(db).record_for_reservation(
+                reservation_id=reservation_id,
+                tenant_id=tenant_id,
+                property_id=res[0]["property_id"],
+                brutto_cents=gross_cents,
+                currency=currency,
+                plattform_bps=plattform_bps,
+            )
+        except BeteiligungFehler:
+            raise
+        except Exception as exc:  # noqa: BLE001 — Zahlung nicht blockieren
+            log.warning(
+                "cohost_payouts_record_failed",
+                reservation_id=reservation_id,
+                error=str(exc)[:200],
+            )
+
     def _mark_platform_fee_charged(
         self, db: Client, reservation_id: str, *, gateway_fee_ref: str | None = None
     ) -> None:
@@ -1397,6 +1777,22 @@ class PaymentsService:
             "reservation_id", reservation_id
         ).eq("status", "pending").execute()
 
+        # Jetzt ist das Geld da — die Co-Gastgeber können ausgezahlt werden.
+        # Best-effort: Schlägt ein Transfer fehl (Konto noch nicht bereit,
+        # Saldo noch nicht verfügbar), bleibt die Zeile 'pending' mit
+        # Fehlergrund und ein späterer Lauf holt sie nach. Der Zahlungs-Webhook
+        # darf davon nie kippen — sonst würde Stripe ihn endlos wiederholen.
+        try:
+            CohostPayoutService(db).pay_pending(
+                reservation_id=reservation_id, charge_id=gateway_fee_ref
+            )
+        except Exception as exc:  # noqa: BLE001 — Webhook nicht kippen
+            log.warning(
+                "cohost_payouts_pay_failed",
+                reservation_id=reservation_id,
+                error=str(exc)[:200],
+            )
+
     def _mark_platform_fee_failed(self, db: Client, reservation_id: str) -> None:
         """Fee-Zeile auf 'failed' setzen (Charge endgültig fehlgeschlagen — Fee ist
         nie geflossen). Nur aus 'pending' (Wurzel 2)."""
@@ -1407,15 +1803,22 @@ class PaymentsService:
     def _reverse_platform_fee(
         self, db: Client, reservation_id: str, *, refunded_cents: int
     ) -> None:
-        """Fee-Gegenzustand (Wurzel 1): wird bei JEDEM Gast-Refund aufgerufen. Der
-        Plattform-Fee-Anteil wird proportional zum erstatteten Betrag zurückgegeben
-        und im Ledger als reversed_amount_cents festgehalten (nie über
-        fee_amount_cents, DB-CHECK ist der Backstop). Voll erstattet → 'reversed'.
+        """Fee-Gegenbuchung im Ledger (Wurzel 1) — NUR für Gateways, die die
+        Provision tatsächlich zurückgeben.
 
-        Best-effort im Refund-Pfad (Wurzel 5): ein Ledger-Fehler darf den bereits
-        erfolgten Geld-Refund nicht kippen — der eigentliche application_fee-Refund
-        passiert bei Stripe automatisch (refund_application_fee) / bei PayPal via
-        platform_fee_refund; dies ist nur die auditierbare Gegenbuchung."""
+        WICHTIG, unterschiedliches Verhalten je Gateway:
+
+        * **Stripe**: Die Provision BLEIBT bei der Plattform (wie Booking.com,
+          das Provision auch auf Stornogebühren erhebt). ``refund`` setzt
+          ``refund_application_fee`` bewusst NICHT — das Flag würde die
+          Provision an den Gastgeber schieben, nicht sie uns erhalten. Für
+          Stripe darf hier also NICHTS gegengebucht werden, sonst weicht der
+          Ledger vom echten Geldfluss ab.
+        * **PayPal**: Dort wird ``platform_fee_refund`` explizit gesetzt, das
+          Geld fließt wirklich zurück → Gegenbuchung ist korrekt.
+
+        Best-effort im Refund-Pfad (Wurzel 5): ein Ledger-Fehler darf den
+        bereits erfolgten Geld-Refund nicht kippen."""
         row = (
             db.table("platform_fees")
             .select("gross_amount_cents, fee_amount_cents, reversed_amount_cents")
@@ -1441,6 +1844,26 @@ class PaymentsService:
                 "status": "reversed" if new_reversed >= fee else "charged",
             }
         ).eq("reservation_id", reservation_id).execute()
+
+        # Gegenzustand für die Co-Gastgeber (Wurzel 1): Bei VOLLER Erstattung
+        # müssen auch deren Anteile zurück — sonst trüge der Gastgeber die
+        # Erstattung allein, während der Co-Gastgeber seinen Anteil behält.
+        #
+        # Nur bei voller Erstattung: Eine anteilige Rückbuchung von Transfers
+        # ist ohne klare Regel, wer wie viel trägt, nicht seriös zu entscheiden
+        # — das wäre Raten (Wurzel 4). Teilerstattungen bleiben deshalb bewusst
+        # dem Gastgeber überlassen und sind an der Zeile sichtbar.
+        if new_reversed >= fee:
+            try:
+                svc = CohostPayoutService(db)
+                svc.cancel_for_reservation(reservation_id)
+                svc.reverse_for_reservation(reservation_id)
+            except Exception as exc:  # noqa: BLE001 — Refund nicht kippen
+                log.warning(
+                    "cohost_payout_reversal_failed",
+                    reservation_id=reservation_id,
+                    error=str(exc)[:200],
+                )
 
     def platform_fee_summary(self, ctx: AuthContext) -> PlatformFeeSummary:
         """Provisions-Übersicht des Marktplatz-Gastgebers (eigener Tenant). RLS +
@@ -1654,7 +2077,7 @@ class PaymentsService:
             if order.get("status") in {"CREATED", "APPROVED", "PAYER_ACTION_REQUIRED"}:
                 return {"order_id": order_id, "payment_id": existing[0]["id"]}
 
-        fee = self._fee_amount(db, tenant_id, amount)
+        fee = self._fee_amount(db, tenant_id, amount, res)
         try:
             order = self._paypal().create_order(
                 seller_merchant_id=seller,
@@ -1687,6 +2110,7 @@ class PaymentsService:
             currency=currency,
             payment_id=payment["id"],
             gateway="paypal",
+            res=res,
         )
         self._set_reservation_payment_status(db, reservation_id, "pending")
         return {"order_id": order["id"], "payment_id": payment["id"]}
@@ -1731,6 +2155,21 @@ class PaymentsService:
         )
         if succeeded:
             self._set_reservation_payment_status(db, pay["reservation_id"], "paid")
+            # BEWUSST KEINE Auszahlungszeile (0217) und keine Cohost-Beteiligung.
+            #
+            # PayPal Multiparty zahlt direkt an das Konto des Verkäufers; die
+            # Plattform hält das Geld zu keinem Zeitpunkt. Eine Auszahlungszeile
+            # würde eine zweite Zahlung planen — derselbe Fehler wie bei der
+            # Destination Charge, nur ohne Rückholmöglichkeit.
+            #
+            # Folge, offen und benannt: Bei PayPal-Buchungen greifen weder
+            # Co-Gastgeber-Beteiligung noch Spendenabzug noch die Verrechnung
+            # bei Storno. Wer beides braucht, muss Stripe nutzen.
+            log.info(
+                "paypal_kein_payout_geplant",
+                reservation_id=pay["reservation_id"],
+                grund="multiparty_zahlt_direkt_an_verkaeufer",
+            )
         return {"payment_id": pay["id"], "status": cap.get("status")}
 
     def _insert_payment(
@@ -1765,13 +2204,19 @@ class PaymentsService:
         db.table("payments").update(patch).eq("id", payment_id).execute()
 
     def _reuse_pending_intent(
-        self, db: Client, reservation_id: str, ptype: str
+        self, db: Client, reservation_id: str, ptype: str,
+        res: dict | None = None,
     ) -> dict | None:
         """Idempotenz-Kern: existiert für (reservation, ptype) bereits ein offener
         (pending) Stripe-PaymentIntent, gib {payment_id, client_secret} zurück, um
         ihn wiederzuverwenden — sonst None. Die EINE Stelle, die Doppel-Intents bei
         Doppelklick/Reload/Retry/Webhook-Redelivery verhindert (Wurzel: „einmal
         aufgerufen" als Annahme). Jeder neue Intent-erzeugende Pfad ruft das ZUERST.
+
+        ``res`` ist PFLICHT für Direct Charges: Der Intent liegt dann im Konto
+        des Betriebs. Ohne den Header antwortet Stripe „No such payment_intent",
+        und die Buchung wäre dauerhaft unbezahlbar — jeder Retry träfe denselben
+        Fehler.
         """
         existing = (
             db.table("payments")
@@ -1787,7 +2232,9 @@ class PaymentsService:
             return None
         with _stripe_errors():
             intent = sc.retrieve_payment_intent(
-                existing[0]["gateway_ref"], client=self._stripe
+                existing[0]["gateway_ref"],
+                direct_acct=self._direct_acct(db, res) if res else None,
+                client=self._stripe,
             )
         return {
             "payment_id": existing[0]["id"],
@@ -1888,15 +2335,25 @@ class PaymentsService:
         ).execute()
 
 
+@lru_cache(maxsize=64)
 def _currency_for_country(country: str) -> str:
-    """Auszahlungswährung des Bankkontos. EU/SEPA → EUR; sonst klar fehlschlagen
-    statt zu raten (keine Fallback-Erfindung)."""
-    sepa_eur = {
-        "DE", "AT", "FR", "ES", "IT", "NL", "BE", "PT", "IE", "FI", "GR",
-        "LU", "SK", "SI", "EE", "LV", "LT", "CY", "MT",
-    }
-    if country.upper() in sepa_eur:
-        return "eur"
-    raise PaymentsError(
-        f"Auszahlungswährung für Land {country} nicht bestimmbar.", status_code=422
-    )
+    """Auszahlungswährung eines Bankkontos — bei Stripe erfragt, nicht geraten.
+
+    Eine hartkodierte Länderliste war hier falsch: Sie enthielt nur die
+    EUR-SEPA-Länder, sodass ein dänisches, schwedisches oder polnisches Konto
+    mit 422 abgewiesen wurde, obwohl Stripe es unterstützt. Die
+    country_specs-API ist die einzige verlässliche Quelle (Wurzel 4).
+
+    Ergebnis wird zwischengespeichert — die Angabe je Land ändert sich
+    praktisch nie, und der Aufruf soll nicht bei jedem Kontowechsel erfolgen.
+    """
+    code = country.upper()
+    with _stripe_errors():
+        spec = get_stripe().v1.country_specs.retrieve(code)
+    waehrung = getattr(spec, "default_currency", None)
+    if not waehrung:
+        raise PaymentsError(
+            f"Auszahlungswährung für Land {code} nicht bestimmbar.",
+            status_code=422,
+        )
+    return str(waehrung)

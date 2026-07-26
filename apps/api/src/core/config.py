@@ -91,9 +91,22 @@ class Settings(BaseSettings):
     stripe_secret_key: SecretStr = SecretStr("")
     stripe_webhook_secret: SecretStr = SecretStr("")
     stripe_publishable_key: str = ""          # NEXT_PUBLIC_ im Frontend
-    # Plattform-Provision auf Gast-Zahlungen (Destination Charge), in Prozent des
-    # Buchungsbetrags. 0 = keine Fee (Default). Wird zu application_fee_amount.
+    # VERALTET — ohne Wirkung. Die Provision kommt ausschließlich aus
+    # tenants.platform_fee_bps und gilt nur für Portal-Buchungen (Preisliste §2).
+    # Bleibt vorerst stehen, damit gesetzte Env-Werte keinen Startfehler
+    # erzeugen; nicht mehr verwenden.
     stripe_platform_fee_pct: float = 0.0
+    # Trennt der Zahlungspfad Charge und Transfer (Separate Charges +
+    # transfer_group) statt sofort per transfer_data.destination weiterzureichen?
+    #
+    # false (Default) = Destination Charge: Das Geld ist unmittelbar nach dem
+    # Charge beim Betrieb. Der Auszahlungslauf (0217) MUSS dann stillstehen,
+    # sonst zahlt er dieselbe Buchung ein zweites Mal aus dem Plattform-Saldo.
+    #
+    # true = Charge landet auf dem Plattform-Saldo, der Auszahlungslauf gibt ihn
+    # nach dem Checkout frei. Erst umstellen, wenn KEIN Zahlungspfad mehr
+    # transfer_data setzt — sonst laufen beide Mechaniken gleichzeitig.
+    stripe_separate_transfers: bool = False
 
     # --- PayPal (Complete Payments Platform / Multiparty) ---
     # Partner-Credentials (client_credentials-OAuth). Alles Secrets → nie ins

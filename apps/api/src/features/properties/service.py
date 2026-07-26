@@ -7,6 +7,7 @@ auth.account_service (PROJECT.md §2 — Business-Logik im Backend).
 from __future__ import annotations
 
 import secrets
+from typing import Any
 
 from supabase import Client
 
@@ -74,6 +75,23 @@ def _max_stay_of(row: dict) -> int:
         return max(0, int(avail.get("maxStay") or 0))
     except (TypeError, ValueError):
         return 0
+
+
+def _sniff_image_ext(content: bytes) -> str | None:
+    """Bildtyp aus den Magic-Bytes bestimmen (PNG/JPEG/WebP/GIF).
+
+    None = kein erlaubtes Bild. Der Client-content_type wird bewusst ignoriert:
+    er ist frei wählbar und damit kein Schutz (Wurzel 8).
+    """
+    if content.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "png"
+    if content.startswith(b"\xff\xd8\xff"):
+        return "jpg"
+    if content[:4] == b"RIFF" and content[8:12] == b"WEBP":
+        return "webp"
+    if content[:6] in (b"GIF87a", b"GIF89a"):
+        return "gif"
+    return None
 
 
 class PropertyError(Exception):
@@ -955,9 +973,23 @@ class PropertiesService:
         #    Veröffentlichen = im Normalfall überall live (1 Klick → OTAs +
         #    eigener Marktplatz). Die Marktplatz-Sichtbarkeit bleibt danach ein
         #    eigener, separat schaltbarer Kanal (getrennt von der OTA-Distribution).
+        #
+        #    Der EIGENE Marktplatz zeigt das Objekt allerdings erst nach Freigabe
+        #    durch den Plattformbetreiber (0203): Veröffentlichen reicht es zur
+        #    Prüfung ein (moderation_status='pending'). OTA-Vertrieb und eigene
+        #    Website laufen sofort — sie sind von der Prüfung nicht betroffen.
+        #    Bereits freigegebene Objekte behalten ihre Freigabe (ein erneutes
+        #    publish, z. B. nach einer Pause, wirft sie nicht zurück).
+        felder: dict[str, str | bool] = {
+            "status": "active",
+            "listed_on_marketplace": True,
+        }
+        if row.get("moderation_status") != "approved":
+            felder["moderation_status"] = "pending"
+            felder["moderation_submitted_at"] = datetime.now(UTC).isoformat()
         upd = (
             self._db.table("properties")
-            .update({"status": "active", "listed_on_marketplace": True})
+            .update(felder)
             .eq("id", property_id)
             .eq("tenant_id", tenant_id)
             .execute()
@@ -1181,6 +1213,140 @@ class PropertiesService:
             property_id=property_id,
         )
         return PropertyResponse(**_row(row), channels=_derive_channels(row, portals))
+
+    # --- Barrierefreiheits-Beweisfotos (0201) --------------------------------
+    #
+    # Airbnb-Ablauf: der Gastgeber wählt je Merkmal „Ich habe diese Funktion"
+    # und lädt Beweisfotos hoch; erst nach Prüfung erscheint das Merkmal im
+    # Inserat. Das has-Flag liegt weiterhin in type_attributes.accessibility;
+    # hier nur die Fotos samt Prüfstatus.
+
+    ACCESSIBILITY_MAX_PHOTOS = 10
+
+    def list_accessibility_photos(
+        self, ctx: AuthContext, property_id: str, feature_key: str | None = None
+    ) -> list[dict[str, Any]]:
+        """Beweisfotos eines Objekts, optional auf ein Merkmal gefiltert."""
+        tenant_id = self._require_tenant(ctx)
+        self.get(ctx, property_id)  # 404, wenn nicht im eigenen Tenant
+        query = (
+            self._db.table("property_accessibility_photos")
+            .select("*")
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+        )
+        if feature_key:
+            query = query.eq("feature_key", feature_key)
+        return query.order("created_at", desc=False).execute().data or []
+
+    def upload_accessibility_photo(
+        self,
+        ctx: AuthContext,
+        property_id: str,
+        feature_key: str,
+        content: bytes,
+        content_type: str,
+    ) -> dict[str, Any]:
+        """Ein Beweisfoto zu einem Merkmal hochladen.
+
+        Magic-Byte-Prüfung statt Vertrauen auf content_type (Wurzel 8) und eine
+        harte Obergrenze je Merkmal, damit ein Upload-Loop den Bucket nicht
+        flutet.
+        """
+        _ = content_type  # bewusst ignoriert — die echten Bytes entscheiden.
+        tenant_id = self._require_tenant(ctx)
+        self.get(ctx, property_id)
+
+        if len(content) > self.IMAGE_MAX_BYTES:
+            raise PropertyError("Bild ist zu groß (max. 10 MB).", status_code=413)
+        ext = _sniff_image_ext(content)
+        if not ext:
+            raise PropertyError("Nur PNG/JPEG/WebP/GIF erlaubt.", status_code=415)
+
+        vorhanden = (
+            self._db.table("property_accessibility_photos")
+            .select("id")
+            .eq("property_id", property_id)
+            .eq("feature_key", feature_key)
+            .execute()
+        ).data or []
+        if len(vorhanden) >= self.ACCESSIBILITY_MAX_PHOTOS:
+            raise PropertyError(
+                f"Höchstens {self.ACCESSIBILITY_MAX_PHOTOS} Fotos je Merkmal.",
+                status_code=422,
+            )
+
+        safe_key = "".join(c for c in feature_key if c.isalnum() or c in "-_")
+        if not safe_key:
+            raise PropertyError("Ungültiges Merkmal.", status_code=422)
+        name = secrets.token_hex(8)
+        path = f"{tenant_id}/{property_id}/accessibility/{safe_key}/{name}.{ext}"
+        storage = self._db.storage.from_(self.IMAGE_BUCKET)
+        try:
+            storage.upload(path, content, {"content-type": f"image/{ext}"})
+        except Exception as exc:  # noqa: BLE001 — Storage-Fehler einheitlich
+            log.warning(
+                "accessibility_photo_upload_failed",
+                property_id=property_id,
+                error=str(exc),
+            )
+            raise PropertyError("Upload fehlgeschlagen.", status_code=502) from exc
+
+        res = (
+            self._db.table("property_accessibility_photos")
+            .insert(
+                {
+                    "tenant_id": tenant_id,
+                    "property_id": property_id,
+                    "feature_key": feature_key,
+                    "storage_path": path,
+                    "url": storage.get_public_url(path),
+                    "status": "pending",
+                }
+            )
+            .execute()
+        ).data
+        log.info(
+            "accessibility_photo_uploaded",
+            tenant_id=tenant_id,
+            property_id=property_id,
+            feature_key=feature_key,
+        )
+        return res[0]
+
+    def delete_accessibility_photo(
+        self, ctx: AuthContext, property_id: str, photo_id: str
+    ) -> None:
+        """Ein Beweisfoto löschen (Datei + Zeile). Scope wie die Liste
+        (Wurzel 9: derselbe Filter auf tenant_id UND property_id)."""
+        tenant_id = self._require_tenant(ctx)
+        self.get(ctx, property_id)
+        existing = (
+            self._db.table("property_accessibility_photos")
+            .select("storage_path")
+            .eq("id", photo_id)
+            .eq("tenant_id", tenant_id)
+            .eq("property_id", property_id)
+            .execute()
+        ).data
+        if not existing:
+            raise PropertyError("Foto nicht gefunden.", status_code=404)
+
+        pfad = existing[0].get("storage_path")
+        if pfad:
+            try:
+                self._db.storage.from_(self.IMAGE_BUCKET).remove([pfad])
+            except Exception as exc:  # noqa: BLE001 — verwaiste Datei ist ok
+                log.warning(
+                    "accessibility_photo_storage_delete_failed",
+                    photo_id=photo_id,
+                    error=str(exc),
+                )
+        self._db.table("property_accessibility_photos").delete().eq(
+            "id", photo_id
+        ).eq("tenant_id", tenant_id).execute()
+        log.info("accessibility_photo_deleted", photo_id=photo_id)
+
 
 
 def _local_channel_state(status: str | None, flag: bool | None) -> ChannelState:

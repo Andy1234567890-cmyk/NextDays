@@ -10,6 +10,7 @@
 // Session setzen → vertauschte Sessions). Fehlt der Name, wird hart gefehlschlagen.
 import { cookies } from "next/headers";
 
+import { meldeFehlerhaftenAufruf } from "./diagnose";
 import { ApiError } from "./errors";
 import type { CookieNames, SessionResponse } from "./types";
 
@@ -55,6 +56,12 @@ interface CallOpts {
    *  X-Client-IP weitergereicht, damit der Geräteverlauf die echte Client-IP
    *  speichert statt der Server-IP (nur beim Login relevant). */
   clientIp?: string;
+  /** Oberfläche ('gastgeber' | 'plattform' | 'web') für die Support-Diagnose.
+   *  Ohne diesen Wert wird ein fehlgeschlagener Aufruf NICHT gemeldet — diese
+   *  Aufrufe laufen server-zu-server und sind für den Browser unsichtbar, der
+   *  Support sähe sie sonst nie. Optional, damit bestehende Aufrufer
+   *  unverändert weiterlaufen. */
+  app?: string;
 }
 
 /** Ein Backend-Call server-zu-server. Hängt den Bearer aus dem Session-Cookie
@@ -62,8 +69,11 @@ interface CallOpts {
  *  Components / Server Actions aufrufen (BFF — Token nie im Browser-JS). */
 export async function api<T>(path: string, opts: CallOpts = {}): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
+  // Für die Diagnose festhalten: Nur mit Token lässt sich ein fehlgeschlagener
+  // Aufruf einem Konto zuordnen.
+  let token: string | null = null;
   if (!opts.isPublic) {
-    const token =
+    token =
       opts.token ??
       (opts.accessCookie ? await readToken(opts.accessCookie) : null);
     if (token) headers.Authorization = `Bearer ${token}`;
@@ -86,6 +96,7 @@ export async function api<T>(path: string, opts: CallOpts = {}): Promise<T> {
     delete init.cache; // revalidate und no-store schließen sich aus
   }
 
+  const start = Date.now();
   let res: Response;
   try {
     res = await fetch(`${BACKEND}/api/v1${path}`, init);
@@ -95,6 +106,26 @@ export async function api<T>(path: string, opts: CallOpts = {}): Promise<T> {
   const text = await res.text();
   const data = text ? (JSON.parse(text) as unknown) : null;
   if (!res.ok) {
+    // Den vollständigen Aufruf für den Support festhalten. Diese Aufrufe
+    // laufen server-zu-server und sind für den Browser unsichtbar — ohne das
+    // hier bliebe ein 422 aus einer Server Action undiagnostizierbar.
+    // Best-effort und ohne await: Der Nutzer wartet auf seinen Fehler, nicht
+    // auf die Diagnose. Der Server verwirft das Ereignis, wenn keine Freigabe
+    // des Kunden läuft.
+    if (opts.app) {
+      meldeFehlerhaftenAufruf({
+        app: opts.app,
+        token,
+        method: init.method ?? "GET",
+        path,
+        status: res.status,
+        dauerMs: Date.now() - start,
+        gesendet: typeof init.body === "string" ? init.body : undefined,
+        antwort: text,
+        requestId: res.headers.get("X-Request-Id"),
+      });
+    }
+
     const detail =
       data && typeof (data as { detail?: unknown }).detail === "string"
         ? (data as { detail: string }).detail

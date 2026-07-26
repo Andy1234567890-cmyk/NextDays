@@ -13,11 +13,12 @@ from supabase import Client
 from src.core.security import AuthContext
 from src.features.inbox.ai import GroqClient, GroqError
 
-from .schemas import DashboardVoiceSnapshot
-
 from .schemas import (
+    DashboardEntrySnapshot,
+    DashboardPropertySnapshot,
     DashboardVoiceRequest,
     DashboardVoiceResponse,
+    DashboardVoiceSnapshot,
     OnboardingStatus,
     OnboardingUpdate,
     SliceHealth,
@@ -124,7 +125,7 @@ class DashboardService:
     def _build_voice_prompt(utterance: str, snapshot: DashboardVoiceSnapshot) -> str:
         snap = snapshot
 
-        def fmt_entry(entry: Any) -> str:
+        def fmt_entry(entry: DashboardEntrySnapshot) -> str:
             guest = entry.guest_name or "unbekannt"
             prop = f", Objekt: {entry.property_title}" if entry.property_title else ""
             ota = f", Kanal: {entry.ota_name}" if entry.ota_name else ""
@@ -133,7 +134,7 @@ class DashboardService:
                 f"Status: {entry.status}"
             )
 
-        def fmt_property(entry: Any) -> str:
+        def fmt_property(entry: DashboardPropertySnapshot) -> str:
             place_bits = [entry.city, entry.country]
             place = ", ".join(part for part in place_bits if part)
             place_text = f", Ort: {place}" if place else ""

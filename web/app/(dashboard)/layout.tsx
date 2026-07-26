@@ -13,6 +13,8 @@ import { SidebarInset, SidebarProvider } from "@nextdays/ui/sidebar";
 import { getMe } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
+import { DiagnoseStarter } from "@/components/diagnose-starter";
+
 export default async function DashboardLayout({
   children,
 }: {
@@ -43,6 +45,8 @@ export default async function DashboardLayout({
 
   return (
     <SidebarProvider>
+      {/* Technischer Fehler-Reporter (kein Verhaltens-Tracking). */}
+      <DiagnoseStarter />
       <AppSidebar
         email={email}
         role={role}

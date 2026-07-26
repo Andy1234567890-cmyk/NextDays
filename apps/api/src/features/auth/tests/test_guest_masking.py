@@ -1,9 +1,9 @@
 """Tests für den zentralen Gast-Masking-Helper (DSGVO-Daten-Split §4)."""
-from src.features.auth.guest_masking import mask_for
 from src.features.auth.granular_permissions import (
     Permission,
     effective_permissions,
 )
+from src.features.auth.guest_masking import mask_for
 from src.features.auth.schemas import UserRole
 
 

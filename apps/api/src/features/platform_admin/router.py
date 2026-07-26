@@ -1,0 +1,470 @@
+"""Router für das Plattform-Backoffice. Gemountet unter /api/v1/platform.
+
+ACHTUNG — Sonderstellung: Dies ist der einzige Router, dessen Endpunkte bewusst
+MANDANTENÜBERGREIFEND arbeiten. Jeder Endpunkt hier MUSS
+`CurrentPlatformAdmin` verwenden (nie `CurrentUser`) und schreibende Aktionen
+zusätzlich `require_platform_write`. Ein Endpunkt ohne diesen Guard wäre ein
+Totalausfall der Mandantentrennung.
+
+Jede Aktion wird protokolliert (audit.record) — auch lesende.
+"""
+from __future__ import annotations
+
+from fastapi import APIRouter, HTTPException, Query, Request, status
+
+from src.core.security import CurrentPlatformAdmin, require_platform_write
+
+from .dependencies import PlatformAdminServiceDep
+from .schemas import (
+    AuditList,
+    FinanzUebersicht,
+    ModerationDecision,
+    ModerationList,
+    ModerationProperty,
+    PlatformGuestList,
+    PlatformMe,
+    PlatformUserList,
+    SupportMessage,
+    SupportReply,
+    SupportTicket,
+    SupportTicketDetail,
+    SupportTicketList,
+    SupportTicketUpdate,
+    TenantDetail,
+    TenantList,
+    VorgangList,
+)
+
+router = APIRouter(prefix="/platform", tags=["platform-admin"])
+
+
+@router.get("/me", response_model=PlatformMe)
+def get_me(
+    ctx: CurrentPlatformAdmin, service: PlatformAdminServiceDep
+) -> PlatformMe:
+    """Identität + Rolle des eingeloggten Backoffice-Nutzers.
+
+    Bewusst NICHT protokolliert: der Aufruf erfolgt bei jedem Seitenaufbau und
+    greift auf keine Mandantendaten zu — er würde das Protokoll nur fluten.
+    """
+    return service.me(ctx)
+
+
+@router.get("/audit", response_model=AuditList)
+def list_audit(
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    action: str | None = None,
+    tenant_id: str | None = None,
+    actor_user_id: str | None = None,
+) -> AuditList:
+    """Backoffice-Protokoll lesen (neueste zuerst), optional gefiltert."""
+    result = service.audit(
+        limit=limit,
+        offset=offset,
+        action=action,
+        tenant_id=tenant_id,
+        actor_user_id=actor_user_id,
+    )
+    # Auch der Blick ins Protokoll wird protokolliert (Vier-Augen-Prinzip).
+    service.log_action(
+        ctx,
+        "audit.view",
+        detail={"limit": limit, "offset": offset},
+        request=request,
+    )
+    return result
+
+
+@router.get("/tenants", response_model=TenantList)
+def list_tenants(
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    suche: str | None = None,
+) -> TenantList:
+    """Alle Betriebe der Plattform (neueste zuerst)."""
+    result = service.tenants(limit=limit, offset=offset, suche=suche)
+    service.log_action(
+        ctx,
+        "tenant.list",
+        detail={"limit": limit, "offset": offset, "suche": suche},
+        request=request,
+    )
+    return result
+
+
+@router.get("/tenants/{tenant_id}", response_model=TenantDetail)
+def get_tenant(
+    tenant_id: str,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+) -> TenantDetail:
+    """Ein Betrieb im Detail inkl. Zahlungs-/Abo-Status."""
+    result = service.tenant(tenant_id)
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Betrieb nicht gefunden."
+        )
+    # Der Blick in EINEN Betrieb ist der eigentlich schützenswerte Vorgang —
+    # deshalb mit tenant_id protokolliert ("wer hat in MEINE Daten geschaut").
+    service.log_action(
+        ctx,
+        "tenant.view",
+        target_type="tenant",
+        target_id=tenant_id,
+        tenant_id=tenant_id,
+        request=request,
+    )
+    return result
+
+
+@router.get("/users", response_model=PlatformUserList)
+def list_users(
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    tenant_id: str | None = None,
+) -> PlatformUserList:
+    """Betriebs-Nutzer (Supply-Seite), neueste zuerst."""
+    result = service.users(limit=limit, offset=offset, tenant_id=tenant_id)
+    service.log_action(
+        ctx,
+        "user.list",
+        tenant_id=tenant_id,
+        detail={"limit": limit, "offset": offset},
+        request=request,
+    )
+    return result
+
+
+@router.get("/guests", response_model=PlatformGuestList)
+def list_guests(
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    suche: str | None = None,
+) -> PlatformGuestList:
+    """Plattform-Gäste (Demand-Seite, portal_guests), neueste zuerst."""
+    result = service.guests(limit=limit, offset=offset, suche=suche)
+    service.log_action(
+        ctx,
+        "guest.list",
+        detail={"limit": limit, "offset": offset, "suche": suche},
+        request=request,
+    )
+    return result
+
+
+@router.get("/moderation", response_model=ModerationList)
+def moderation_queue(
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+    status_filter: str = Query("pending", pattern="^(draft|pending|approved|rejected)$"),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+) -> ModerationList:
+    """Freigabe-Warteschlange für den eigenen Marktplatz.
+
+    Standard: die wartenden Objekte, älteste Einreichung zuerst.
+    """
+    result = service.moderation_queue(
+        status_filter=status_filter, limit=limit, offset=offset
+    )
+    service.log_action(
+        ctx,
+        "moderation.list",
+        detail={"status": status_filter, "limit": limit, "offset": offset},
+        request=request,
+    )
+    return result
+
+
+@router.post("/moderation/{property_id}/approve", response_model=ModerationProperty)
+def approve_property(
+    property_id: str,
+    entscheidung: ModerationDecision,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+) -> ModerationProperty:
+    """Ein Objekt für den Marktplatz freigeben. Nur platform_admin."""
+    require_platform_write(ctx)
+    result = service.decide(
+        property_id,
+        approve=True,
+        reviewer_user_id=ctx.user_id,
+        note=entscheidung.note,
+    )
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Objekt nicht gefunden."
+        )
+    service.log_action(
+        ctx,
+        "property.approve",
+        target_type="property",
+        target_id=property_id,
+        tenant_id=result.tenant_id,
+        detail={"note": entscheidung.note},
+        request=request,
+    )
+    return result
+
+
+@router.post("/moderation/{property_id}/reject", response_model=ModerationProperty)
+def reject_property(
+    property_id: str,
+    entscheidung: ModerationDecision,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+) -> ModerationProperty:
+    """Ein Objekt ablehnen. Nur platform_admin.
+
+    Die Begründung ist PFLICHT: sie wird dem Gastgeber angezeigt, damit er
+    nachbessern kann. Eine wortlose Ablehnung wäre für ihn nicht handhabbar.
+    """
+    require_platform_write(ctx)
+    if not (entscheidung.note or "").strip():
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Bitte einen Ablehnungsgrund angeben.",
+        )
+    result = service.decide(
+        property_id,
+        approve=False,
+        reviewer_user_id=ctx.user_id,
+        note=entscheidung.note,
+    )
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Objekt nicht gefunden."
+        )
+    service.log_action(
+        ctx,
+        "property.reject",
+        target_type="property",
+        target_id=property_id,
+        tenant_id=result.tenant_id,
+        detail={"note": entscheidung.note},
+        request=request,
+    )
+    return result
+
+
+@router.get("/finanzen", response_model=FinanzUebersicht)
+def finanzen(
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+    limit: int = Query(50, ge=1, le=200),
+) -> FinanzUebersicht:
+    """Finanzsicht des Betreibers: Provisionen je Währung, jüngste Buchungen,
+    Onboarding-Rückstand (Betriebe ohne Zahlungsfreigabe) und Abo-Verteilung."""
+    result = service.finanzen(limit=limit)
+    service.log_action(ctx, "finanzen.view", request=request)
+    return result
+
+
+# --- Support -----------------------------------------------------------------
+
+
+@router.get("/support", response_model=SupportTicketList)
+def list_tickets(
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+    status_filter: str | None = Query(
+        None, pattern="^(open|waiting|resolved|closed)$"
+    ),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+) -> SupportTicketList:
+    """Support-Tickets, zuletzt aktive zuerst."""
+    result = service.tickets(
+        status_filter=status_filter, limit=limit, offset=offset
+    )
+    service.log_action(
+        ctx, "support.list", detail={"status": status_filter}, request=request
+    )
+    return result
+
+
+@router.get("/support/{ticket_id}", response_model=SupportTicketDetail)
+def get_ticket(
+    ticket_id: str,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+) -> SupportTicketDetail:
+    """Ein Ticket mit vollem Verlauf (im Backoffice inkl. interner Notizen)."""
+    result = service.ticket(ticket_id)
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Ticket nicht gefunden."
+        )
+    service.log_action(
+        ctx,
+        "support.view",
+        target_type="ticket",
+        target_id=ticket_id,
+        tenant_id=result.tenant_id,
+        request=request,
+    )
+    return result
+
+
+@router.post("/support/{ticket_id}/reply", response_model=SupportMessage)
+def reply_ticket(
+    ticket_id: str,
+    antwort: SupportReply,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+) -> SupportMessage:
+    """Antworten oder eine interne Notiz anhängen.
+
+    Bewusst OHNE require_platform_write: Support-Bearbeitung ist genau die
+    Aufgabe der Rolle platform_support. Freigaben und Sperren bleiben ihr
+    verwehrt.
+    """
+    result = service.reply(
+        ticket_id,
+        author_user_id=ctx.user_id,
+        body=antwort.body,
+        internal=antwort.internal,
+    )
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Ticket nicht gefunden."
+        )
+    service.log_action(
+        ctx,
+        "support.reply",
+        target_type="ticket",
+        target_id=ticket_id,
+        detail={"internal": antwort.internal},
+        request=request,
+    )
+    return result
+
+
+@router.patch("/support/{ticket_id}", response_model=SupportTicket)
+def update_ticket(
+    ticket_id: str,
+    patch: SupportTicketUpdate,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+) -> SupportTicket:
+    """Status, Priorität oder Zuweisung ändern."""
+    result = service.update_ticket(
+        ticket_id,
+        {
+            "status": patch.status,
+            "priority": patch.priority,
+            "assignee_user_id": patch.assignee_user_id,
+        },
+    )
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Ticket nicht gefunden."
+        )
+    service.log_action(
+        ctx,
+        "support.update",
+        target_type="ticket",
+        target_id=ticket_id,
+        detail=patch.model_dump(exclude_none=True),
+        request=request,
+    )
+    return result
+
+
+# --- Technische Diagnose (nur bei Freigabe des Kunden) -----------------------
+
+
+@router.get("/diagnostics/sessions")
+def active_debug_sessions(
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+) -> list[dict]:
+    """Laufende Diagnose-Freigaben — die Arbeitsliste des Supports.
+
+    Zeigt NUR Konten, die dem Support aktiv Einsicht gewährt haben. Es gibt
+    keinen Weg, sich diese Einsicht selbst zu verschaffen.
+    """
+    from src.features.diagnostics.service import DiagnosticsService
+
+    result = DiagnosticsService(db=service.db).active_sessions()
+    service.log_action(ctx, "diagnostics.sessions", request=request)
+    return [s.model_dump(mode="json") for s in result]
+
+
+@router.get("/diagnostics/sessions/{session_id}")
+def session_events(
+    session_id: str,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+    limit: int = Query(100, ge=1, le=200),
+) -> dict:
+    """Technische Ereignisse einer Freigabe.
+
+    Der Service begrenzt auf das Freigabefenster und liefert nichts, sobald
+    die Freigabe abgelaufen oder widerrufen ist. Der Zugriff wird protokolliert
+    — der Kunde muss nachvollziehen können, wer in seine Diagnose geschaut hat.
+    """
+    from src.features.diagnostics.service import DiagnosticsService
+
+    result = DiagnosticsService(db=service.db).events_for_session(
+        session_id, limit=limit
+    )
+    service.log_action(
+        ctx,
+        "diagnostics.view",
+        target_type="debug_session",
+        target_id=session_id,
+        request=request,
+    )
+    return result.model_dump(mode="json")
+
+
+@router.get("/tenants/{tenant_id}/vorgaenge", response_model=VorgangList)
+def tenant_vorgaenge(
+    tenant_id: str,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+    limit: int = Query(100, ge=1, le=200),
+) -> VorgangList:
+    """Fachliche Vorgangshistorie eines Betriebs.
+
+    Führt bestehende Protokolle zusammen (Buchungen, Stornierungen,
+    Anmeldungen, Zuweisungen) — es wird nichts zusätzlich aufgezeichnet.
+    Der Zugriff wird protokolliert: der Betrieb muss nachvollziehen können,
+    wer in seine Historie geschaut hat.
+    """
+    result = service.vorgaenge(tenant_id, limit=limit)
+    service.log_action(
+        ctx,
+        "tenant.vorgaenge",
+        target_type="tenant",
+        target_id=tenant_id,
+        tenant_id=tenant_id,
+        request=request,
+    )
+    return result

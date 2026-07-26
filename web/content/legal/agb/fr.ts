@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // Empfehlungstext (Stripe Connected Account Agreement) — URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Conditions générales d'utilisation (CGU) pour les agences et les loueurs",
-  stand: "Dernière mise à jour : 3 juillet 2026",
+  stand: "Dernière mise à jour : 26 juillet 2026",
   intro: [
     "Les présentes conditions générales d'utilisation (ci-après les « CGU ») régissent l'utilisation de la plateforme logicielle myNextDays (ci-après la « Plateforme ») par les agences, les loueurs, les gestionnaires de biens et les autres utilisateurs professionnels (ci-après l'« Utilisateur »).",
     "L'exploitant de la Plateforme est [dénomination sociale complète, forme juridique, adresse et données d'immatriculation de l'exploitant — à compléter avant publication] (ci-après « myNextDays » ou « nous »).",
@@ -60,8 +60,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Versements, rétrofacturations et soldes négatifs",
       paragraphs: [
+        "Le circuit de paiement dépend du canal de réservation. Pour les réservations effectuées via le moteur de réservation propre de l'Utilisateur et pour les réservations via des portails de distribution connectés, les paiements des clients sont encaissés directement sur le compte de paiement de l'Utilisateur ; dans ces cas, l'Utilisateur est, à l'égard du client, le bénéficiaire du paiement et la partie contractante de la prestation d'hébergement (§ 4), et myNextDays ne devient à aucun moment détenteur de ces fonds. myNextDays ne prélève aucune commission de réservation en pourcentage sur ces réservations ; la commission relative aux réservations via des portails de distribution connectés est indiquée séparément et facturée a posteriori.",
+        "Pour les réservations réalisées via le portail de réservation myNextDays, le paiement est traité par myNextDays. myNextDays retient à ce titre la commission d'intermédiation indiquée dans la liste de prix en vigueur, y compris les frais de traitement des paiements, et reverse le montant restant à l'Utilisateur conformément aux paragraphes ci-dessous. La rémunération de l'utilisation du logiciel (§ 7) n'en est pas affectée.",
         "Les versements sont effectués sur le compte bancaire indiqué par l'Utilisateur. myNextDays peut adapter le rythme des versements pour des raisons de risque, en particulier en cas de nouveaux comptes, de schémas de transactions inhabituels ou de vérifications en cours.",
-        "Les rétrofacturations (chargebacks), les remboursements ainsi que les frais qui en résultent, liés aux réservations de l'Utilisateur, sont à la charge de l'Utilisateur. myNextDays est en droit de compenser les montants correspondants avec des versements futurs.",
+        "Les remboursements aux clients sont économiquement supportés par l'Utilisateur. Les rétrofacturations et les frais en résultant sont supportés par l'Utilisateur pour les réservations effectuées via son propre moteur de réservation et via les portails de distribution connectés, l'Utilisateur étant dans ces cas le bénéficiaire du paiement ; pour les réservations effectuées via le portail de réservation myNextDays, myNextDays supporte le risque de rétrofacturation, sauf si celle-ci résulte d'un manquement de l'Utilisateur (notamment non-fourniture ou écart substantiel de la prestation d'hébergement). myNextDays est en droit de compenser les montants à la charge de l'Utilisateur avec les versements futurs.",
         "Si un solde négatif apparaît sur le compte de paiement de l'Utilisateur, celui-ci doit le régulariser sans délai. L'Utilisateur autorise myNextDays et Stripe à prélever les soldes négatifs sur le compte bancaire enregistré, dans la mesure où la loi le permet.",
       ],
     },

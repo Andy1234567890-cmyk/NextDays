@@ -731,9 +731,27 @@ sent|delivered|read|failed|received, Meta-ID-Unique für Idempotenz). RLS via
 ## payments (Stripe Payment-Kern — implementiert)
 
 Online-Zahlungen über **Stripe** (primär; Revolut sekundär/NotImplemented). Connect
-ist **Custom** (voll white-label, kein Stripe-Branding/-Onboarding). Geldfluss =
-**Destination Charge**: der Gast zahlt über den Plattform-Account, das Geld geht an
-den Connected Account des Tenants (`transfer_data.destination`).
+ist **Custom** (voll white-label, kein Stripe-Branding/-Onboarding).
+
+Geldfluss: Der Gast zahlt immer über den Plattform-Account. Wann der Betrieb das
+Geld bekommt, steuert `STRIPE_SEPARATE_TRANSFERS`:
+
+- **aus (Default):** Destination Charge — `transfer_data.destination` reicht
+  sofort weiter. Der Auszahlungslauf (`features/payouts`) ist dann gesperrt.
+- **an (Ziel):** Separate Charge — der Betrag bleibt auf dem Plattform-Saldo und
+  wird nach dem Checkout per Transfer freigegeben (`transfer_group`).
+
+Der KANAL (`reservations.channel`) entscheidet über Provision und Haftung —
+nicht der Kontotyp (Preisliste §1: „Ein Tarif für alle"):
+
+| Kanal | Provision | Charge | Haftung |
+|---|---|---|---|
+| `portal` | 8 % all-in | über die Plattform | myNextDays |
+| `direct` | 0 % | Direct Charge (`Stripe-Account`) | Betrieb |
+| OTA | 0 % am Charge (1 % monatlich) | kein Charge (409) | — |
+
+Bei den Plattform-Charges ist `on_behalf_of` der Betrieb (Settlement-Währung und
+Kartenabrechnung bleiben seine); bei Direct Charges ergibt sich das von selbst.
 
 **0% Buchungsgebühr (ADR-0006):** Auf PMS-/Direktbuchungen der Vermieter erhebt
 myNextDays **keine** Provision — `STRIPE_PLATFORM_FEE_PCT` ist 0. Eine Provision

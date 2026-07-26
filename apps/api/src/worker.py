@@ -86,6 +86,10 @@ BOOKINGS_TICK_SECONDS = 5 * 60
 # off-session belasten. Stündlich reicht (Fälligkeit ist tagesgenau), hält aber
 # die Stripe-Last niedrig.
 BALANCE_TICK_SECONDS = 60 * 60
+# Auszahlungslauf: stündlich reicht. Die Fälligkeit ist tages-, nicht
+# minutengenau (Booking zahlt donnerstags bzw. zum 15.) — häufiger zu prüfen
+# brächte nichts außer Last.
+PAYOUT_TICK_SECONDS = 60 * 60
 # Nächtlicher Full-Sync-Push (Channex-Doku: "daily full update each night per
 # property"): im UTC-Stundenfenster [FULL_SYNC_HOUR_UTC, +1) je aktiver Property
 # EIN full_sync_property-Job pro Tag (dedup je Property+Tag), gestaffelt.
@@ -382,6 +386,7 @@ class Worker:
         self._last_ical_tick = 0.0
         self._last_bookings_tick = 0.0
         self._last_balance_tick = 0.0
+        self._last_payout_tick = 0.0
         # Kontoweites Channex-Token-Budget (Phase 1b): vor jedem Channex-Push wird
         # ein Token verbraucht, sonst wird der Job verzögert statt Channex überfahren.
         self._budget = budget or ChannexBudget(get_settings())
@@ -665,6 +670,36 @@ class Worker:
         if ids:
             log.info("balance_tick", due=len(ids), charged=charged)
 
+    async def _payout_tick(self, loop_time: float) -> None:
+        """Fällige Auszahlungen an Betriebe ausführen (0217).
+
+        Modell wie Booking.com: Die Plattform hält das Geld bis zur Abreise.
+        Der Lauf zieht offene Verrechnungsposten ab und transferiert den Rest;
+        abgelaufene Zurückhaltungen werden vorher freigegeben, sonst bliebe
+        Geld unbegrenzt liegen.
+
+        Netzwerk-/DB-Arbeit im Thread. Ein Fehler kippt weder den Tick noch die
+        übrigen Zeilen — der Service isoliert je Zeile und schreibt 'failed',
+        nie still 'ausgezahlt'.
+        """
+        if loop_time - self._last_payout_tick < PAYOUT_TICK_SECONDS:
+            return
+        self._last_payout_tick = loop_time
+        try:
+            await asyncio.to_thread(self._run_payouts)
+        except Exception as exc:  # noqa: BLE001
+            log.warning("payout_tick_failed", error=str(exc)[:200])
+
+    def _run_payouts(self) -> None:
+        """Zurückhaltungen freigeben, dann fällige Auszahlungen abarbeiten."""
+        from src.features.payouts.service import PayoutsService
+
+        svc = PayoutsService(db=self._db)
+        freigegeben = svc.gib_holds_frei()
+        bilanz = svc.fuehre_lauf_aus()
+        if bilanz["geprueft"] or freigegeben:
+            log.info("payout_tick", freigegeben=freigegeben, **bilanz)
+
     async def _bookings_tick(self, loop_time: float) -> None:
         """Alle 5 min einen kontoweiten Booking-Feed-Pull einreihen (Backstop —
         der primäre Trigger ist der booking_*-Webhook). Coalescing über den
@@ -800,6 +835,7 @@ class Worker:
             await self._ical_tick(loop_time)
             await self._bookings_tick(loop_time)
             await self._balance_tick(loop_time)
+            await self._payout_tick(loop_time)
             free = CONCURRENCY - len(self._inflight)
             jobs = await asyncio.to_thread(self._claim, free) if free > 0 else []
             for job in jobs:

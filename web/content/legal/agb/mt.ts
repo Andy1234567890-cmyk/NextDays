@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // Account Agreement) — Wortlaut und URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Termini u Kundizzjonijiet għall-Aġenziji u s-Sidien il-Kera",
-  stand: "L-aħħar aġġornament: 3 ta' Lulju 2026",
+  stand: "L-aħħar aġġornament: 26 ta' Lulju 2026",
   intro: [
     "Dawn it-Termini u Kundizzjonijiet Ġenerali (minn hawn 'il quddiem it-“Termini”) jirregolaw l-użu tal-pjattaforma tas-software myNextDays (minn hawn 'il quddiem il-“Pjattaforma”) minn aġenziji, sidien il-kera, amministraturi tal-proprjetà u utenti kummerċjali oħra (minn hawn 'il quddiem l-“Utent”).",
     "Il-Pjattaforma hija operata minn [isem legali sħiħ, forma legali, indirizz u dettalji tar-reġistru tal-operatur — għandhom jiżdiedu qabel il-pubblikazzjoni] (minn hawn 'il quddiem “myNextDays” jew “aħna”).",
@@ -60,8 +60,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Pagamenti lill-Utent, chargebacks u bilanċi negattivi",
       paragraphs: [
+        "Ir-rotta tal-pagament tiddependi mill-kanal tal-prenotazzjoni. Fil-każ ta' prenotazzjonijiet magħmula permezz tas-sistema ta' prenotazzjoni tal-Utent stess u ta' prenotazzjonijiet permezz ta' portali ta' distribuzzjoni konnessi, il-pagamenti tal-mistednin jiġu rċevuti direttament fil-kont ta' pagament tal-Utent; f'dawn il-każijiet l-Utent huwa, fil-konfront tal-mistieden, ir-riċevitur tal-pagament u l-parti kontraenti tas-servizz ta' akkomodazzjoni (§ 4), u myNextDays fl-ebda mument ma jsir detentur ta' dawn il-fondi. Fuq tali prenotazzjonijiet myNextDays ma jimponi ebda tariffa perċentwali ta' prenotazzjoni; il-kummissjoni għal prenotazzjonijiet permezz ta' portali ta' distribuzzjoni konnessi tiġi indikata separatament u ffatturata sussegwentement.",
+        "Fil-każ ta' prenotazzjonijiet magħmula permezz tal-portal ta' prenotazzjoni myNextDays, il-pagament jiġi pproċessat permezz ta' myNextDays. myNextDays iżomm f'dan il-każ il-kummissjoni ta' intermedjazzjoni indikata fil-lista tal-prezzijiet fis-seħħ minn żmien għal żmien, inklużi l-ispejjeż tal-ipproċessar tal-pagament, u jgħaddi l-ammont li jifdal lill-Utent skont il-paragrafi t'hawn taħt. It-tariffa għall-użu tas-software (§ 7) tibqa' mhux affettwata.",
         "Il-pagamenti lill-Utent isiru fil-kont bankarju rreġistrat mill-Utent. myNextDays tista' taġġusta r-ritmu tal-pagamenti għal raġunijiet ta' riskju, b'mod partikolari fil-każ ta' kontijiet ġodda, mudelli ta' tranżazzjonijiet mhux tas-soltu jew verifiki li jkunu għaddejjin.",
-        "Il-chargebacks, ir-rifużjonijiet u kwalunkwe tariffa li tirriżulta minnhom b'rabta mal-prenotazzjonijiet tal-Utent jitħallsu mill-Utent. myNextDays hija intitolata tpaċi ammonti bħal dawn ma' pagamenti futuri lill-Utent.",
+        "Ir-rifużjonijiet lill-mistednin jinġarru ekonomikament mill-Utent. Il-chargebacks u t-tariffi li jirriżultaw minnhom jinġarru mill-Utent fil-każ ta' prenotazzjonijiet magħmula permezz tas-sistema ta' prenotazzjoni tiegħu stess u permezz ta' portali ta' distribuzzjoni konnessi, peress li f'dawk il-każijiet l-Utent huwa r-riċevitur tal-pagament; fil-każ ta' prenotazzjonijiet magħmula permezz tal-portal ta' prenotazzjoni myNextDays, myNextDays iġorr ir-riskju ta' chargeback, sakemm dan ma jirriżultax minn ksur ta' obbligu mill-Utent (b'mod partikolari n-nuqqas ta' provvista jew devjazzjoni sostanzjali tas-servizz ta' akkomodazzjoni). myNextDays huwa intitolat li jpaċi ammonti li għandhom jinġarru mill-Utent kontra pagamenti futuri.",
         "Jekk jinħoloq bilanċ negattiv fil-kont tal-ħlasijiet tal-Utent, l-Utent għandu jsaldah mingħajr dewmien żejjed. L-Utent jawtorizza lil myNextDays u lil Stripe jiġbru l-bilanċi negattivi mill-kont bankarju rreġistrat, sa fejn dan ikun legalment permess.",
       ],
     },

@@ -47,5 +47,8 @@ export async function api<T>(path: string, opts: CallOpts = {}): Promise<T> {
     accessCookie: HOST_COOKIES.access,
     clientUserAgent: opts.clientUserAgent,
     clientIp: opts.clientIp,
+    // Für die Support-Diagnose: Diese Aufrufe laufen server-zu-server und sind
+    // im Browser unsichtbar — ohne die Kennung sähe der Support sie nie.
+    app: "gastgeber",
   });
 }

@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 
 import { formatCurrency } from "@nextdays/currency";
 
+import type { Cohost, CohostInvitation } from "@/lib/cohosts";
 import { formatHostingSince, type HostProfile } from "@/lib/host-profil";
 import { updateHostProfile, type HostProfilePatch } from "@/lib/host-profil-actions";
 import type { PreisStand } from "@/lib/preise";
@@ -34,6 +35,7 @@ import { AmenityPanel } from "./amenity-panel";
 import { AusstattungPanel } from "./ausstattung-panel";
 import { BarrierefreiheitPanel } from "./barrierefreiheit-panel";
 import { BeschreibungPanel } from "./beschreibung-panel";
+import { CohostPanel } from "./cohost-panel";
 import { GaestePanel } from "./gaeste-panel";
 import { HostProfilPanel } from "./host-profil-panel";
 import { KACHEL_SPRING } from "./foto-kacheln";
@@ -51,17 +53,27 @@ import { WertPanel } from "./wert-panel";
 
 type SectionKey =
   | "fotos" | "titel" | "typ" | "schlafen" | "beschreibung" | "ausstattung"
+  | "barrierefreiheit"
   | "gaeste" | "lage" | "preise" | "rabatte" | "verfuegbarkeit"
-  | "hausregeln" | "storno" | "host";
+  | "hausregeln" | "storno" | "host" | "cohosts";
 
 export function ObjektEditor({
   property,
   preisStand,
   hostProfile,
+  cohosts,
+  cohostEinladungen,
+  plattformBps,
 }: {
   property: Property;
   preisStand: PreisStand;
   hostProfile: HostProfile;
+  /** Co-Gastgeber dieses Objekts (Personen mit eigenem Konto). */
+  cohosts: Cohost[];
+  /** Ausgesprochene, noch nicht angenommene Einladungen. */
+  cohostEinladungen: CohostInvitation[];
+  /** Feste Plattform-Gebühr in Basispunkten — für die Beispielrechnung. */
+  plattformBps: number;
 }) {
   const t = useTranslations("objektEditor");
   const [prop, setProp] = useState<Property>(property);
@@ -71,6 +83,11 @@ export function ObjektEditor({
   // Host-Profil (Airbnb „Über den Gastgeber"). User-gebunden; Realtime unten hält
   // es aktuell, die Patch-Action spiegelt optimistisch nach.
   const [profil, setProfil] = useState<HostProfile>(hostProfile);
+  // Co-Gastgeber und offene Einladungen. Die Aktionen im Panel spiegeln
+  // optimistisch hierher, Realtime unten hält den Stand aktuell.
+  const [coHosts, setCoHosts] = useState<Cohost[]>(cohosts);
+  const [coEinladungen, setCoEinladungen] =
+    useState<CohostInvitation[]>(cohostEinladungen);
   // Airbnb-Muster: JEDE Detail-Sidebar speichert ihren eigenen Wert SOFORT (eigener
   // Abbrechen/Speichern-Fuß in der Sidebar) — es gibt KEINEN editor-weiten Draft und
   // keine globale untere Speicherleiste. prop/preise sind direkt die gespeicherte
@@ -158,6 +175,41 @@ export function ObjektEditor({
         setFotos((f) => f.filter((x) => x.id !== alt.id));
       } else if (evt.eventType === "UPDATE" && neu?.id) {
         setFotos((f) => f.map((x) => (x.id === neu.id ? neu : x)));
+      }
+    },
+  });
+
+  // Realtime: Co-Gastgeber. Nimmt jemand eine Einladung an, erscheint er hier
+  // sofort — der Eigentümer wartet genau darauf. Inkrementell, kein Reload.
+  useRealtime<Cohost>({
+    table: "property_cohosts",
+    filter: `property_id=eq.${prop.id}`,
+    onEvent: (evt) => {
+      const neu = evt.new as Cohost | undefined;
+      const alt = evt.old as Partial<Cohost> | undefined;
+      if (evt.eventType === "DELETE" && alt?.id) {
+        setCoHosts((c) => c.filter((x) => x.id !== alt.id));
+        return;
+      }
+      if (!neu?.id) return;
+      // Entzogene/abgelehnte Zuordnungen verschwinden aus der Liste — sie
+      // kommen als UPDATE (status='revoked'), nicht als DELETE.
+      if (neu.status !== "active" && neu.status !== "pending") {
+        setCoHosts((c) => c.filter((x) => x.id !== neu.id));
+        return;
+      }
+      setCoHosts((c) =>
+        c.some((x) => x.id === neu.id)
+          ? c.map((x) => (x.id === neu.id ? { ...x, ...neu } : x))
+          : [...c, neu],
+      );
+      // Angenommene Einladung: Die zugehörige offene Einladung ist damit
+      // erledigt. cohost_invitations ist für Clients gesperrt (Token-Hashes),
+      // liefert also keine Events — deshalb hier über die E-Mail abräumen.
+      if (neu.status === "active" && neu.email) {
+        setCoEinladungen((e) =>
+          e.filter((x) => x.email.toLowerCase() !== neu.email!.toLowerCase()),
+        );
       }
     },
   });
@@ -458,6 +510,12 @@ export function ObjektEditor({
       : min;
   })();
 
+  // Gesetzte Barrierefreiheits-Merkmale (has=true). Objektweit, nicht pro Raum:
+  // die Werte liegen in type_attributes.accessibility.
+  const barriereAnzahl = Object.values(attr.accessibility ?? {}).filter(
+    (a) => a.has,
+  ).length;
+
   // Abschnitts-Karten links — jede mit Vorschauwert (oder „Hinzufügen").
   const sections: {
     key: SectionKey;
@@ -480,6 +538,11 @@ export function ObjektEditor({
         ? t("ausstattungAnzahl", { n: viewProp.amenities.length })
         : t("hinzufuegen"),
       fehlt: viewProp.amenities.length === 0 },
+    { key: "barrierefreiheit", titel: t("secBarrierefreiheit"),
+      vorschau: barriereAnzahl > 0
+        ? t("barriereAnzahl", { n: barriereAnzahl })
+        : t("hinzufuegen"),
+      fehlt: barriereAnzahl === 0 },
     { key: "gaeste", titel: t("secGaeste"), vorschau: t("gaesteWert", { n: viewProp.max_guests }) },
     { key: "lage", titel: t("secLage"), vorschau: ort || t("hinzufuegen"), fehlt: !ort },
     { key: "preise", titel: t("secPreise"), vorschau: preisVorschau,
@@ -495,6 +558,16 @@ export function ObjektEditor({
         ? t("hostSeit", { zeit: formatHostingSince(profil.hosting_since)! })
         : (profil.full_name ?? t("hinzufuegen")),
       fehlt: !profil.full_name },
+    // Co-Gastgeber direkt nach „Über den Gastgeber" — beide betreffen
+    // Personen, nicht das Objekt selbst (Airbnb-Reihenfolge).
+    { key: "cohosts", titel: "Co-Gastgeber",
+      vorschau: coHosts.length + coEinladungen.length > 0
+        ? [
+            coHosts.length > 0 ? `${coHosts.length} aktiv` : null,
+            coEinladungen.length > 0 ? `${coEinladungen.length} eingeladen` : null,
+          ].filter(Boolean).join(" · ")
+        : t("hinzufuegen"),
+      fehlt: coHosts.length === 0 },
   ];
 
   const raumOffen = offenerRaum != null;
@@ -724,6 +797,8 @@ export function ObjektEditor({
           aktiv === "gaeste" ||
           aktiv === "beschreibung" ||
           aktiv === "host" ||
+          aktiv === "barrierefreiheit" ||
+          aktiv === "cohosts" ||
           aktiv === "ausstattung"
             ? ""
             : "px-8 py-8 lg:px-14 lg:py-12"
@@ -781,6 +856,28 @@ export function ObjektEditor({
           <AusstattungPanel
             gewaehlt={viewProp.amenities}
             onSpeichere={speichereAmenities}
+            onDetailOffen={setDetailOffen}
+          />
+        )}
+        {aktiv === "barrierefreiheit" && (
+          <BarrierefreiheitPanel
+            werte={attr.accessibility ?? {}}
+            propertyId={prop.id}
+            onSpeichere={speichereBarriere}
+            onDetailOffen={setDetailOffen}
+          />
+        )}
+        {aktiv === "cohosts" && (
+          <CohostPanel
+            propertyId={prop.id}
+            cohosts={coHosts}
+            einladungen={coEinladungen}
+            waehrung={viewProp.currency}
+            plattformBps={plattformBps}
+            onAendern={(c, e) => {
+              setCoHosts(c);
+              setCoEinladungen(e);
+            }}
             onDetailOffen={setDetailOffen}
           />
         )}
@@ -911,10 +1008,7 @@ export function ObjektEditor({
                   sleeping={attr.sleeping ?? {}}
                   privacy={attr.privacy ?? {}}
                   amenityAnzahl={viewProp.amenities.length}
-                  barriereAnzahl={
-                    Object.values(attr.accessibility ?? {}).filter((a) => a.has)
-                      .length
-                  }
+                  barriereAnzahl={barriereAnzahl}
                   aktivesThema={raumThema}
                   onWaehle={setOffenerRaum}
                   onZurueck={() => {
@@ -1010,6 +1104,7 @@ export function ObjektEditor({
                       {raumThema === "barriere" && (
                         <BarrierefreiheitPanel
                           werte={attr.accessibility ?? {}}
+                          propertyId={prop.id}
                           onSpeichere={speichereBarriere}
                           onZurueck={() => setRaumThema(null)}
                         />

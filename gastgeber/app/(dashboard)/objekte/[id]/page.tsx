@@ -5,6 +5,11 @@ import { notFound } from "next/navigation";
 
 import { ObjektEditor } from "@/components/objekt-editor/objekt-editor";
 import { ApiError } from "@/lib/api-server";
+import {
+  getCohostInvitations,
+  getCohosts,
+  getPlattformGebuehr,
+} from "@/lib/cohosts";
 import { getHostProfile, LEERES_PROFIL } from "@/lib/host-profil";
 import { getPreisStand } from "@/lib/preise";
 import { getProperty } from "@/lib/properties";
@@ -32,9 +37,24 @@ export default async function ObjektEditorPage({
   // parallel laden — user-gebunden, unabhängig vom Objekt. Ein Profil-Ladefehler
   // darf NICHT den ganzen Editor blockieren → auf leeres Profil zurückfallen
   // (der Tab zeigt dann „Details hinzufügen"; kein erfundener Wert, Wurzel 4/5).
-  const [preisStand, hostProfile] = await Promise.all([
+  //
+  // Co-Gastgeber ebenso fehlertolerant: Ein Ladefehler zeigt den Tab als leer
+  // („Einladen"), statt den ganzen Editor zu blockieren.
+  const [
+    preisStand,
+    hostProfile,
+    cohosts,
+    cohostEinladungen,
+    plattformBps,
+  ] = await Promise.all([
     getPreisStand(id),
     getHostProfile().catch(() => LEERES_PROFIL),
+    getCohosts(id).catch(() => []),
+    getCohostInvitations(id).catch(() => []),
+    // 0 bei einem Ladefehler: Die Beispielrechnung zeigt dann keine Gebühr,
+    // statt einen erfundenen Satz anzuzeigen (Wurzel 4). Die echte Aufteilung
+    // rechnet ohnehin das Backend.
+    getPlattformGebuehr().catch(() => 0),
   ]);
 
   return (
@@ -42,6 +62,9 @@ export default async function ObjektEditorPage({
       property={property}
       preisStand={preisStand}
       hostProfile={hostProfile}
+      cohosts={cohosts}
+      cohostEinladungen={cohostEinladungen}
+      plattformBps={plattformBps}
     />
   );
 }

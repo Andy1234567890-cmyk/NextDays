@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // Empfehlungstext (Stripe Connected Account Agreement) — URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Yleiset sopimusehdot välitystoimistoille ja vuokranantajille",
-  stand: "Päivitetty: 3. heinäkuuta 2026",
+  stand: "Päivitetty: 26. heinäkuuta 2026",
   intro: [
     "Nämä yleiset sopimusehdot (jäljempänä ”ehdot”) sääntelevät myNextDays-ohjelmistoalustan (jäljempänä ”alusta”) käyttöä, kun käyttäjinä ovat välitystoimistot, vuokranantajat, isännöintiyritykset ja muut elinkeinonharjoittajat (jäljempänä ”käyttäjä”).",
     "Alustan tarjoaa [ylläpitäjän täydellinen toiminimi, yhtiömuoto, osoite ja rekisteritiedot — täydennettävä ennen julkaisua] (jäljempänä ”myNextDays” tai ”me”).",
@@ -60,8 +60,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Tilitykset, takaisinveloitukset ja negatiiviset saldot",
       paragraphs: [
+        "Maksureitti määräytyy varauskanavan mukaan. Käyttäjän oman varausjärjestelmän kautta tehdyissä varauksissa ja liitettyjen jakeluportaalien kautta tehdyissä varauksissa vieraiden maksut vastaanotetaan suoraan käyttäjän maksutilille; näissä tapauksissa käyttäjä on suhteessa vieraaseen maksun saaja ja majoituspalvelun sopimusosapuoli (§ 4), eikä myNextDays missään vaiheessa tule näiden varojen haltijaksi. Tällaisista varauksista myNextDays ei peri prosentuaalista varausmaksua; liitettyjen jakeluportaalien kautta tehtyjen varausten välityspalkkio ilmoitetaan erikseen ja laskutetaan jälkikäteen.",
+        "myNextDays-varausportaalin kautta tehdyissä varauksissa maksu käsitellään myNextDaysin kautta. myNextDays pidättää tällöin kulloinkin voimassa olevassa hinnastossa ilmoitetun välityspalkkion maksun käsittelykustannuksineen ja tilittää jäljelle jäävän summan käyttäjälle jäljempänä olevien kohtien mukaisesti. Ohjelmiston käytöstä perittävä korvaus (§ 7) ei muutu.",
         "Tilitykset maksetaan käyttäjän ilmoittamalle pankkitilille. myNextDays voi muuttaa tilitysaikataulua riskisyistä, erityisesti uusien tilien, poikkeavien tapahtumamallien tai käynnissä olevien tarkastusten yhteydessä.",
-        "Käyttäjä vastaa varauksiinsa liittyvistä takaisinveloituksista (chargebacks) ja palautuksista sekä niistä aiheutuvista maksuista. myNextDaysillä on oikeus kuitata vastaavat määrät tulevista tilityksistä.",
+        "Vieraille maksettavat hyvitykset kantaa taloudellisesti käyttäjä. Takaisinveloitukset ja niistä aiheutuvat maksut kantaa käyttäjä varauksissa, jotka on tehty hänen oman varausjärjestelmänsä ja liitettyjen jakeluportaalien kautta, koska käyttäjä on näissä tapauksissa maksun saaja; myNextDays-varausportaalin kautta tehdyissä varauksissa takaisinveloitusriskin kantaa myNextDays, ellei se johdu käyttäjän velvoitteiden laiminlyönnistä (erityisesti majoituspalvelun suorittamatta jättämisestä tai olennaisesta poikkeamasta). myNextDaysilla on oikeus kuitata käyttäjän kannettavat määrät tulevista tilityksistä.",
         "Jos käyttäjän maksutilille syntyy negatiivinen saldo, käyttäjän on tasattava se viipymättä. Käyttäjä valtuuttaa myNextDaysin ja Stripen veloittamaan negatiiviset saldot ilmoitetulta pankkitililtä siltä osin kuin se on oikeudellisesti sallittua.",
       ],
     },

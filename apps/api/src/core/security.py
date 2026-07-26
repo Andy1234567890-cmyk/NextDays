@@ -187,6 +187,115 @@ def get_current_guest(
 CurrentGuest = Annotated[GuestContext, Depends(get_current_guest)]
 
 
+class PlatformContext(BaseModel):
+    """Kontext eines eingeloggten PLATTFORM-Betreibers (Backoffice/Admin).
+
+    Streng getrennt von AuthContext (Betriebs-Nutzer) und GuestContext (Gast).
+    Ein Plattform-Admin darf als EINZIGER mandantenübergreifend lesen/handeln —
+    deshalb stammt diese Berechtigung NICHT aus dem JWT, sondern wird bei jedem
+    Request frisch gegen public.platform_admins geprüft (Wurzel 7: eine entzogene
+    Rolle darf nicht bis zum Token-Ablauf weitergelten).
+
+    platform_role: 'platform_admin' (voll, inkl. schreibender Aktionen) oder
+    'platform_support' (lesend + Support-Tickets, keine Freigaben/Sperren).
+    """
+
+    user_id: str
+    email: str | None = None
+    platform_role: str
+    session_id: str | None = None
+
+    @property
+    def is_admin(self) -> bool:
+        """True nur für die volle Betreiber-Rolle (nicht für Support)."""
+        return self.platform_role == "platform_admin"
+
+
+def get_current_platform_admin(
+    settings: Annotated[Settings, Depends(get_settings)],
+    authorization: Annotated[str | None, Header()] = None,
+) -> PlatformContext:
+    """Verifiziert ein Backoffice-Token und prüft die Betreiber-Rolle in der DB.
+
+    Zweistufig und fail-closed:
+      1. Reguläre JWT-Verifikation (dieselbe wie für Betriebs-Nutzer).
+      2. Nachschlagen in public.platform_admins mit active = true. Steht der
+         Nutzer dort NICHT, gibt es 403 — unabhängig davon, was im Token steht.
+
+    Bewusst KEIN app_metadata-Flag: ein Token bleibt nach Rechte-Entzug bis zu
+    einer Stunde gültig; über die DB-Prüfung wirkt ein Entzug sofort. Der
+    Lookup läuft über den service_role-Client, weil platform_admins für
+    anon/authenticated hart gesperrt ist (Wurzel 6).
+    """
+    if not authorization or not authorization.lower().startswith("bearer "):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authorization-Header fehlt.",
+        )
+    token = authorization.split(" ", 1)[1]
+    claims = _decode_token(token, settings)
+    sub = claims.get("sub")
+    if not isinstance(sub, str):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token ohne gültige sub-Claim.",
+        )
+
+    # Import lokal, um einen Zyklus core.security <-> core.supabase zu vermeiden.
+    from .supabase import get_service_client  # noqa: PLC0415
+
+    rows = (
+        get_service_client()
+        .table("platform_admins")
+        .select("role, active")
+        .eq("user_id", sub)
+        .eq("active", True)
+        .limit(1)
+        .execute()
+    ).data or []
+    if not rows:
+        # Bewusst dieselbe Meldung wie bei falscher Rolle: kein Hinweis darauf,
+        # ob der Account existiert (keine Aufklärung für Angreifer).
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Kein Zugriff auf das Plattform-Backoffice.",
+        )
+    role = rows[0].get("role")
+    if role not in ("platform_admin", "platform_support"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Kein Zugriff auf das Plattform-Backoffice.",
+        )
+
+    email = claims.get("email")
+    session_id = claims.get("session_id")
+    return PlatformContext(
+        user_id=sub,
+        email=email.lower() if isinstance(email, str) and email else None,
+        platform_role=role,
+        session_id=session_id if isinstance(session_id, str) else None,
+    )
+
+
+CurrentPlatformAdmin = Annotated[
+    PlatformContext, Depends(get_current_platform_admin)
+]
+
+
+def require_platform_write(ctx: PlatformContext) -> None:
+    """Guard für SCHREIBENDE Backoffice-Aktionen (Freigaben, Sperren, Rollen).
+
+    'platform_support' darf lesen und Tickets bearbeiten, aber nichts freigeben
+    oder sperren — diese Trennung wird hier durchgesetzt (fail-closed: alles
+    außer der vollen Rolle wird abgelehnt).
+    """
+    if not ctx.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Diese Aktion erfordert volle Backoffice-Rechte.",
+        )
+
+
 def secrets_match(provided: str | None, expected: str | None) -> bool:
     """Zeitkonstanter Vergleich zweier Secret-Strings, robust gegen nicht-ASCII.
 

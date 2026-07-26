@@ -28,21 +28,21 @@ _PROPERTIES = [
         "lat": 54.123456, "lng": 8.654321, "max_guests": 6,
         "amenities": ["wifi"], "photos": ["a.jpg"],
         "type_attributes": {"bedrooms": 3, "baths": 2}, "status": "active",
-        "listed_on_marketplace": True,
+        "listed_on_marketplace": True, "moderation_status": "approved",
     },
     {
         "id": "p-active2", "tenant_id": "t2", "title": "City Loft",
         "description": None, "property_type": "appartement", "city": "Berlin",
         "country": "DE", "lat": None, "lng": None, "max_guests": 2,
         "amenities": [], "photos": [], "type_attributes": {}, "status": "active",
-        "listed_on_marketplace": True,
+        "listed_on_marketplace": True, "moderation_status": "approved",
     },
     {
         "id": "p-draft", "tenant_id": "t1", "title": "Entwurf", "description": None,
         "property_type": "ferienhaus", "city": "X", "country": "DE", "lat": None,
         "lng": None, "max_guests": 4, "amenities": [], "photos": [],
         "type_attributes": {}, "status": "draft",
-        "listed_on_marketplace": True,
+        "listed_on_marketplace": True, "moderation_status": "draft",
     },
 ]
 
@@ -549,3 +549,33 @@ def test_availability_rejects_huge_span() -> None:
         raise AssertionError("halber Span nicht abgelehnt")
     except BookingEngineError as exc:
         assert exc.status_code == 422
+
+
+def test_listings_moderation_gate_central_only() -> None:
+    """Ohne Freigabe des Betreibers kein zentraler Marktplatz (0203).
+
+    Die Prüfung gilt bewusst NUR für den eigenen Marktplatz — White-Label-Seiten
+    und der Featured-Block kuratiert der Betrieb selbst, und OTA/Website laufen
+    ohnehin an dieser Achse vorbei.
+    """
+    props = [
+        # aktiv + gelistet, aber wartet noch auf Freigabe
+        {**_PROPERTIES[0], "moderation_status": "pending"},
+        _PROPERTIES[1],  # p-active2, freigegeben
+    ]
+    svc = _service(properties=props)
+    # Zentraler Marktplatz: nur das freigegebene Objekt.
+    assert {i.id for i in svc.list_listings().items} == {"p-active2"}
+    # White-Label-Seite des Tenants: unabhängig von der Freigabe sichtbar.
+    assert {i.id for i in svc.list_listings(tenant="t1").items} == {"p-active"}
+    # Featured-Block per ID: ebenfalls sichtbar (explizite Kuratierung).
+    assert {
+        i.id for i in svc.list_listings(property_ids=["p-active"]).items
+    } == {"p-active"}
+
+
+def test_listings_rejected_property_hidden() -> None:
+    """Ein abgelehntes Objekt erscheint nicht auf dem zentralen Marktplatz."""
+    props = [{**_PROPERTIES[0], "moderation_status": "rejected"}]
+    svc = _service(properties=props)
+    assert svc.list_listings().items == []

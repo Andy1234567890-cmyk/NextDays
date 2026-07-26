@@ -61,20 +61,24 @@ export function TypPanel({
   // Ein Feld ändern: lokalen Entwurf aktualisieren UND den vollständigen Feldsatz
   // sofort speichern (Vollscreen-Editor sichert direkt, kein eigener Save-Button).
   // total_rooms nur bei „Hotel & Betriebe" mitschicken (sonst null).
+  //
+  // WICHTIG: Der Speichern-Aufruf steht AUSSERHALB des setD-Updaters. React ruft
+  // Updater während des Renderns auf (und im StrictMode zweimal) — ein
+  // Server-Aufruf darin löst „Cannot update a component while rendering a
+  // different component" aus und würde doppelt speichern. Der nächste Zustand
+  // wird deshalb hier aus `d` berechnet und beides getrennt ausgelöst.
   function merge(patch: Partial<Entwurf>, hotelKategorie: boolean) {
-    setD((p) => {
-      const next = { ...p, ...patch };
-      void onSpeichere({
-        subtype_slug: next.subtype_slug,
-        listing_type: next.listing_type,
-        total_rooms: hotelKategorie ? next.total_rooms : null,
-        floors_total: next.floors_total,
-        floor_number: next.floor_number,
-        year_built: next.year_built,
-        size_value: next.size_value,
-        size_unit: next.size_unit,
-      });
-      return next;
+    const next = { ...d, ...patch };
+    setD(next);
+    void onSpeichere({
+      subtype_slug: next.subtype_slug,
+      listing_type: next.listing_type,
+      total_rooms: hotelKategorie ? next.total_rooms : null,
+      floors_total: next.floors_total,
+      floor_number: next.floor_number,
+      year_built: next.year_built,
+      size_value: next.size_value,
+      size_unit: next.size_unit,
     });
   }
 

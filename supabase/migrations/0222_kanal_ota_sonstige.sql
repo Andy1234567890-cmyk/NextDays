@@ -1,0 +1,31 @@
+-- Eigener Kanal für OTAs außerhalb von Booking/Airbnb/Vrbo.
+--
+-- PROBLEM: `_ota_name_to_channel` fiel für jeden unbekannten OTA-Namen auf
+-- 'portal' zurück — ausgerechnet den Kanal, der laut Preisliste §2 die 8 %
+-- all-in trägt. Expedia steht dort ausdrücklich als externer Kanal, fehlte aber
+-- in der Map; ebenso jede Namensvariante ("Booking.com B.V.", "Airbnb Inc.").
+--
+-- Doppelter Schaden je betroffener Buchung:
+--   * Die geschuldete 1 % wurde NIE fakturiert (`record_commission` verwirft
+--     alles, was nicht in EXTERNAL_CHANNELS steht).
+--   * Gleichzeitig galt sie überall als Portal-Buchung: Chargeback-Haftung bei
+--     uns, obwohl wir nichts verdienen, und eine Auszahlungszeile für Geld, das
+--     nie über unser Konto lief.
+--
+-- Das war ein erfundener Ersatzwert (Wurzel 4) und fail-OPEN in die teuerste
+-- Richtung (Wurzel 5).
+--
+-- LÖSUNG: 'ota_other' als neutraler externer Kanal. Er trägt dieselbe
+-- Behandlung wie booking/airbnb/vrbo — 1 % monatlich, kein Charge über uns,
+-- keine Plattform-Haftung. Der echte Anbietername bleibt in
+-- reservations.ota_name erhalten.
+
+alter type public.reservation_channel add value if not exists 'ota_other';
+
+-- Bestand korrigieren: Buchungen, die über den Channel-Manager kamen
+-- (source_channex_booking_id gesetzt) und fälschlich als 'portal' abgelegt
+-- wurden, sind externe OTA-Buchungen — echte Portal-Buchungen entstehen
+-- ausschließlich in der eigenen Buchungs-Engine und haben keine Channex-ID.
+--
+-- Läuft in einer eigenen Migration nach dem Enum-Commit (siehe 0223): Postgres
+-- erlaubt einen neuen Enum-Wert nicht in derselben Transaktion zu verwenden.

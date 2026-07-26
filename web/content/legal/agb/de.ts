@@ -7,7 +7,7 @@ import type { LegalDoc } from "../types";
 // Stripes offiziellen Empfehlungstext angelehnt, URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Allgemeine Geschäftsbedingungen (AGB) für Agenturen und Vermieter",
-  stand: "Stand: 3. Juli 2026",
+  stand: "Stand: 26. Juli 2026",
   intro: [
     "Diese Allgemeinen Geschäftsbedingungen (nachfolgend „AGB“) regeln die Nutzung der Software-Plattform myNextDays (nachfolgend „Plattform“) durch Agenturen, Vermieter, Hausverwaltungen und sonstige gewerbliche Nutzer (nachfolgend „Nutzer“).",
     "Anbieterin der Plattform ist [vollständige Firmierung, Rechtsform, Anschrift und Registerangaben des Betreibers — vor Veröffentlichung ergänzen] (nachfolgend „myNextDays“ oder „wir“).",
@@ -62,8 +62,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Auszahlungen, Rückbelastungen und negative Salden",
       paragraphs: [
+        "Der Zahlungsweg richtet sich nach dem Buchungskanal. Bei Buchungen über die eigene Buchungsstrecke des Nutzers sowie bei Buchungen über angebundene Vertriebsportale werden die Zahlungen der Gäste unmittelbar auf dem Zahlungskonto des Nutzers vereinnahmt; der Nutzer ist insoweit gegenüber dem Gast Zahlungsempfänger und Vertragspartner der Beherbergungsleistung (§ 4), und myNextDays wird zu keinem Zeitpunkt Inhaber dieser Gelder. Auf solche Buchungen erhebt myNextDays keine prozentuale Buchungsgebühr; die Provision für Buchungen über angebundene Vertriebsportale wird gesondert ausgewiesen und nachträglich in Rechnung gestellt.",
+        "Bei Buchungen, die über das myNextDays-Buchungsportal zustande kommen, wird die Zahlung über myNextDays abgewickelt. myNextDays behält hierbei die in der jeweils gültigen Preisliste ausgewiesene Vermittlungsprovision einschließlich der Kosten der Zahlungsabwicklung ein und leitet den verbleibenden Betrag nach Maßgabe der nachstehenden Absätze an den Nutzer weiter. Das Entgelt für die Softwarenutzung (§ 7) bleibt hiervon unberührt.",
         "Auszahlungen erfolgen auf das vom Nutzer hinterlegte Bankkonto. myNextDays kann den Auszahlungsrhythmus aus Risikogründen anpassen, insbesondere bei neuen Konten, auffälligen Transaktionsmustern oder laufenden Prüfungen.",
-        "Rückbelastungen (Chargebacks), Rückerstattungen sowie daraus entstehende Gebühren im Zusammenhang mit Buchungen des Nutzers trägt der Nutzer. myNextDays ist berechtigt, entsprechende Beträge mit künftigen Auszahlungen zu verrechnen.",
+        "Rückerstattungen an Gäste trägt wirtschaftlich der Nutzer. Rückbelastungen (Chargebacks) und daraus entstehende Gebühren trägt bei Buchungen über die eigene Buchungsstrecke des Nutzers sowie über angebundene Vertriebsportale der Nutzer, da er insoweit Zahlungsempfänger ist; bei Buchungen über das myNextDays-Buchungsportal trägt myNextDays das Rückbelastungsrisiko, soweit die Rückbelastung nicht auf einer Pflichtverletzung des Nutzers beruht (insbesondere Nichterbringung oder erhebliche Abweichung der Beherbergungsleistung). myNextDays ist berechtigt, vom Nutzer zu tragende Beträge mit künftigen Auszahlungen zu verrechnen.",
         "Entsteht auf dem Zahlungskonto des Nutzers ein negativer Saldo, hat der Nutzer diesen unverzüglich auszugleichen. Der Nutzer ermächtigt myNextDays und Stripe, negative Salden vom hinterlegten Bankkonto einzuziehen, soweit dies rechtlich zulässig ist.",
       ],
     },

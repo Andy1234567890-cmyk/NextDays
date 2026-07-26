@@ -182,6 +182,11 @@ class BookingEngineService:
         # Marktplatz-Flag NICHT gefiltert.
         if tenant is None and property_ids is None:
             query = query.eq("listed_on_marketplace", True)
+            # Freigabe des Betreibers (0203): auf dem EIGENEN Marktplatz tritt
+            # myNextDays als Anbieter auf, darum erscheint ein Objekt dort erst
+            # nach Prüfung. OTA/Website sind davon bewusst NICHT betroffen —
+            # deshalb steht diese Bedingung nur in diesem Zweig.
+            query = query.eq("moderation_status", "approved")
         if tenant:
             query = query.eq("tenant_id", tenant)
         if property_ids:
@@ -704,7 +709,14 @@ class BookingEngineService:
                             # fehl und der Upsell der eigenen Plattform ist tot.
                             "guest_email": req.contact.email or None,
                             "guest_phone": req.contact.phone or None,
-                            "channel": "direct",      # eigene Plattform = Direktbuchung
+                            # Unser Marktplatz ist ein EIGENER Kanal, nicht
+                            # "direct". Die Preisliste unterscheidet genau hier:
+                            # eigenes myNextDays-Portal = 8 % all-in, während
+                            # Direktbuchungen über die Website des Betriebs
+                            # provisionsfrei sind ("provisionsfreie
+                            # Direktbuchungen zusätzlich", Preisliste §5).
+                            # Mit "direct" entginge uns die Provision.
+                            "channel": "portal",
                             "ota_name": "myNextDays",  # Herkunft für Kalender/Posteingang
                             "check_in": req.check_in.isoformat(),
                             "check_out": req.check_out.isoformat(),

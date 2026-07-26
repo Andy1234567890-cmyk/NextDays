@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // (recommended disclosure language) — Wortlaut und URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Algemene voorwaarden (AV) voor agentschappen en verhuurders",
-  stand: "Laatst bijgewerkt: 3 juli 2026",
+  stand: "Laatst bijgewerkt: 26 juli 2026",
   intro: [
     "Deze algemene voorwaarden (hierna “Voorwaarden”) regelen het gebruik van het softwareplatform myNextDays (hierna “Platform”) door agentschappen, verhuurders, vastgoedbeheerders en andere zakelijke gebruikers (hierna “Gebruiker”).",
     "Het Platform wordt geëxploiteerd door [volledige bedrijfsnaam, rechtsvorm, adres en registergegevens van de exploitant — vóór publicatie aanvullen] (hierna “myNextDays” of “wij”).",
@@ -60,8 +60,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Uitbetalingen, terugboekingen en negatieve saldi",
       paragraphs: [
+        "De betalingsroute hangt af van het boekingskanaal. Bij boekingen via de eigen boekingsmodule van de gebruiker en bij boekingen via aangesloten distributieportalen worden betalingen van gasten rechtstreeks op de betaalrekening van de gebruiker ontvangen; in die gevallen is de gebruiker tegenover de gast de begunstigde van de betaling en de contractpartij voor de accommodatiedienst (§ 4), en wordt myNextDays op geen enkel moment houder van deze gelden. myNextDays brengt op dergelijke boekingen geen procentuele boekingsvergoeding in rekening; de commissie voor boekingen via aangesloten distributieportalen wordt afzonderlijk vermeld en achteraf gefactureerd.",
+        "Bij boekingen die via het myNextDays-boekingsportaal tot stand komen, wordt de betaling via myNextDays afgewikkeld. myNextDays houdt daarbij de in de op dat moment geldende prijslijst vermelde bemiddelingscommissie in, inclusief de kosten van de betalingsverwerking, en maakt het resterende bedrag conform de onderstaande leden over aan de gebruiker. De vergoeding voor het gebruik van de software (§ 7) blijft hierdoor onverlet.",
         "Uitbetalingen vinden plaats op de door de Gebruiker opgegeven bankrekening. myNextDays kan het uitbetalingsritme om risicoredenen aanpassen, in het bijzonder bij nieuwe accounts, opvallende transactiepatronen of lopende controles.",
-        "Terugboekingen (chargebacks), terugbetalingen en daaruit voortvloeiende kosten in verband met boekingen van de Gebruiker komen voor rekening van de Gebruiker. myNextDays is gerechtigd deze bedragen te verrekenen met toekomstige uitbetalingen.",
+        "Terugbetalingen aan gasten komen economisch voor rekening van de gebruiker. Terugboekingen (chargebacks) en de daaruit voortvloeiende kosten komen voor rekening van de gebruiker bij boekingen via de eigen boekingsmodule van de gebruiker en via aangesloten distributieportalen, aangezien de gebruiker in die gevallen de begunstigde van de betaling is; bij boekingen via het myNextDays-boekingsportaal draagt myNextDays het terugboekingsrisico, tenzij de terugboeking het gevolg is van een tekortkoming van de gebruiker (met name het niet leveren van of een wezenlijke afwijking in de accommodatiedienst). myNextDays is gerechtigd door de gebruiker te dragen bedragen te verrekenen met toekomstige uitbetalingen.",
         "Ontstaat op de betaalrekening van de Gebruiker een negatief saldo, dan dient de Gebruiker dit onverwijld aan te zuiveren. De Gebruiker machtigt myNextDays en Stripe om negatieve saldi van de opgegeven bankrekening te incasseren, voor zover dit wettelijk is toegestaan.",
       ],
     },

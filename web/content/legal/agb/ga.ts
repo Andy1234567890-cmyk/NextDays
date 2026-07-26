@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // (Stripe Connected Account Agreement) — URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Téarmaí agus Coinníollacha Ginearálta do Ghníomhaireachtaí agus do Bhainisteoirí Réadmhaoine",
-  stand: "Arna nuashonrú: 3 Iúil 2026",
+  stand: "Arna nuashonrú: 26 Iúil 2026",
   intro: [
     "Rialaíonn na Téarmaí agus Coinníollacha seo (na “Téarmaí” anseo feasta) úsáid ardán bogearraí myNextDays (an “tArdán” anseo feasta) ag gníomhaireachtaí, bainisteoirí réadmhaoine, tiarnaí talún agus úsáideoirí gnó eile (an “tÚsáideoir” anseo feasta).",
     "Is é [ainm dlíthiúil iomlán, foirm dhlíthiúil, seoladh agus sonraí cláir na cuideachta oibriúcháin — le comhlánú roimh fhoilsiú] a oibríonn an tArdán (“myNextDays” nó “muidne” anseo feasta).",
@@ -60,8 +60,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Eisíocaíochtaí, aisghlaonna muirir agus iarmhéideanna diúltacha",
       paragraphs: [
+        "Braitheann conair na híocaíochta ar an gcainéal áirithinte. I gcás áirithintí a dhéantar trí inneall áirithinte an Úsáideora féin agus i gcás áirithintí trí thairseacha dáileacháin nasctha, faightear íocaíochtaí na n-aíonna go díreach isteach i gcuntas íocaíochta an Úsáideora; sna cásanna sin is é an tÚsáideoir, i leith an aoi, faighteoir na híocaíochta agus páirtí conartha na seirbhíse cóiríochta (§ 4), agus ní thagann myNextDays chun bheith ina shealbhóir ar na cistí sin ag am ar bith. Ní ghearrann myNextDays aon táille áirithinte céatadánach ar áirithintí den sórt sin; léirítear an coimisiún d'áirithintí trí thairseacha dáileacháin nasctha ar leithligh agus déantar é a bhilleáil ina dhiaidh sin.",
+        "I gcás áirithintí a dhéantar trí thairseach áirithinte myNextDays, próiseáiltear an íocaíocht trí myNextDays. Coinníonn myNextDays an coimisiún idirghabhála atá leagtha amach sa liosta praghsanna atá i bhfeidhm ó am go ham, lena n-áirítear costas próiseála na híocaíochta, agus seolann sé an tsuim atá fágtha ar aghaidh chuig an Úsáideoir de réir na míreanna thíos. Níl aon éifeacht aige sin ar an táille as an mbogearra a úsáid (§ 7).",
         "Déantar eisíocaíochtaí chuig an gcuntas bainc a sholáthraíonn an tÚsáideoir. Féadfaidh myNextDays sceideal na n-eisíocaíochtaí a choigeartú ar chúiseanna riosca, go háirithe i gcás cuntas nua, patrún idirbheart neamhghnách nó athbhreithnithe leanúnacha.",
-        "Is é an tÚsáideoir a iompraíonn aisghlaonna muirir (chargebacks), aisíocaíochtaí agus aon táillí a eascraíonn astu a bhaineann le háirithintí an Úsáideora. Tá myNextDays i dteideal méideanna den sórt sin a fhritháireamh in aghaidh eisíocaíochtaí amach anseo.",
+        "Is é an tÚsáideoir a iompraíonn go heacnamaíoch aisíocaíochtaí le haíonna. Iompraíonn an tÚsáideoir aisghlaonna muirir agus aon táillí a eascraíonn astu i gcás áirithintí a dhéantar trí a inneall áirithinte féin agus trí thairseacha dáileacháin nasctha, ós rud é gurb é an tÚsáideoir faighteoir na híocaíochta sna cásanna sin; i gcás áirithintí a dhéantar trí thairseach áirithinte myNextDays, iompraíonn myNextDays an riosca aisghlaonna muirir, mura n-eascraíonn sé as sárú dualgais ag an Úsáideoir (go háirithe gan an tseirbhís chóiríochta a sholáthar nó imeacht ábhartha uaithi). Tá myNextDays i dteideal suimeanna atá le hiompar ag an Úsáideoir a fhritháireamh in aghaidh eisíocaíochtaí sa todhchaí.",
         "Má thagann iarmhéid diúltach chun cinn ar chuntas íocaíochta an Úsáideora, ní mór don Úsáideoir é a shocrú gan mhoill mhíchuí. Údaraíonn an tÚsáideoir do myNextDays agus do Stripe iarmhéideanna diúltacha a dhochrú ón gcuntas bainc atá ar comhad, a mhéid a cheadaítear le dlí.",
       ],
     },

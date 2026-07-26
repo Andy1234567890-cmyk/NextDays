@@ -859,13 +859,27 @@ def _seed_push_history(db, tenant_id="t1", property_id="p1"):  # noqa: ANN001, A
 
 
 def test_ota_name_to_channel() -> None:
+    """OTA-Namen → Kanal. NIEMALS 'portal'.
+
+    'portal' trägt laut Preisliste §2 die 8 % all-in und macht uns zum Merchant
+    of Record. Eine über den Channel-Manager eingegangene Buchung ist per
+    Definition fremd — sie dort einzuordnen würde die geschuldete 1 % nie
+    fakturieren UND uns die Chargeback-Haftung ohne Erlös aufladen.
+    """
     f = ChannelManagerService._ota_name_to_channel
     assert f("Booking.com") == "booking"
     assert f("Airbnb") == "airbnb"
     assert f("VRBO") == "vrbo"
-    assert f("Expedia") == "portal"
-    assert f("Agoda") == "portal"
-    assert f(None) == "portal"
+    # Namensvarianten dürfen nicht durchrutschen.
+    assert f("booking") == "booking"
+    # Unbekannte/weitere OTAs → externer Sammelkanal, nicht 'portal'.
+    assert f("Expedia") == "ota_other"
+    assert f("Agoda") == "ota_other"
+    assert f("Booking.com B.V.") == "ota_other"
+    assert f(None) == "ota_other"
+    # Der Kernschutz, explizit:
+    for name in (None, "", "Expedia", "Agoda", "irgendwas"):
+        assert f(name) != "portal"
 
 
 def test_channex_property_type_mapping() -> None:

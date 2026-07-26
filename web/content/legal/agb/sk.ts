@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // (Stripe Connected Account Agreement) — Wortlaut sinngemäß, URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Všeobecné obchodné podmienky (VOP) pre agentúry a prenajímateľov",
-  stand: "Stav ku dňu: 3. júla 2026",
+  stand: "Stav ku dňu: 26. júla 2026",
   intro: [
     "Tieto všeobecné obchodné podmienky (ďalej len „VOP“) upravujú používanie softvérovej platformy myNextDays (ďalej len „platforma“) agentúrami, prenajímateľmi, správcami nehnuteľností a inými podnikateľskými používateľmi (ďalej len „používateľ“).",
     "Poskytovateľom platformy je [úplné obchodné meno, právna forma, adresa a registrové údaje prevádzkovateľa — doplniť pred zverejnením] (ďalej len „myNextDays“ alebo „my“).",
@@ -60,8 +60,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Výplaty, spätné zúčtovania a záporné zostatky",
       paragraphs: [
+        "Spôsob úhrady sa riadi rezervačným kanálom. Pri rezerváciách uskutočnených prostredníctvom vlastného rezervačného systému Používateľa a pri rezerváciách prostredníctvom pripojených distribučných portálov sa platby hostí prijímajú priamo na platobný účet Používateľa; v týchto prípadoch je Používateľ voči hosťovi príjemcom platby a zmluvnou stranou ubytovacej služby (§ 4) a myNextDays sa v žiadnom okamihu nestáva držiteľom týchto prostriedkov. Z takýchto rezervácií myNextDays neúčtuje žiadny percentuálny rezervačný poplatok; provízia za rezervácie prostredníctvom pripojených distribučných portálov sa uvádza samostatne a fakturuje sa dodatočne.",
+        "Pri rezerváciách uskutočnených prostredníctvom rezervačného portálu myNextDays je platba spracovaná prostredníctvom myNextDays. myNextDays si pritom ponecháva sprostredkovateľskú províziu uvedenú v aktuálne platnom cenníku vrátane nákladov na spracovanie platby a zvyšnú sumu poukazuje Používateľovi podľa nasledujúcich odsekov. Odmena za používanie softvéru (§ 7) tým nie je dotknutá.",
         "Výplaty sa uskutočňujú na bankový účet uvedený používateľom. myNextDays môže z dôvodov riadenia rizika upraviť frekvenciu výplat, najmä pri nových účtoch, neobvyklých transakčných vzorcoch alebo prebiehajúcich kontrolách.",
-        "Spätné zúčtovania (chargebacky), vrátenia platieb, ako aj poplatky z nich vyplývajúce v súvislosti s rezerváciami používateľa znáša používateľ. myNextDays je oprávnená započítať zodpovedajúce sumy proti budúcim výplatám.",
+        "Vrátenie platieb hosťom nesie ekonomicky Používateľ. Spätné zúčtovania a z nich vyplývajúce poplatky nesie Používateľ pri rezerváciách uskutočnených prostredníctvom vlastného rezervačného systému a prostredníctvom pripojených distribučných portálov, keďže Používateľ je v týchto prípadoch príjemcom platby; pri rezerváciách uskutočnených prostredníctvom rezervačného portálu myNextDays nesie riziko spätného zúčtovania myNextDays, ibaže je spôsobené porušením povinností Používateľa (najmä neposkytnutím alebo podstatnou odchýlkou ubytovacej služby). myNextDays je oprávnená započítať sumy na ťarchu Používateľa proti budúcim výplatám.",
         "Ak na platobnom účte používateľa vznikne záporný zostatok, používateľ je povinný ho bezodkladne vyrovnať. Používateľ oprávňuje myNextDays a Stripe inkasovať záporné zostatky z uvedeného bankového účtu, pokiaľ je to právne prípustné.",
       ],
     },

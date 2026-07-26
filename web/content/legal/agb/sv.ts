@@ -6,7 +6,7 @@ import type { LegalDoc } from "../types";
 // Stripes offiziellen Empfehlungstext angelehnt, URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Allmänna villkor för byråer och uthyrare",
-  stand: "Senast uppdaterad: 3 juli 2026",
+  stand: "Senast uppdaterad: 26 juli 2026",
   intro: [
     "Dessa allmänna villkor (nedan ”villkoren”) reglerar byråers, uthyrares, fastighetsförvaltares och andra kommersiella användares (nedan ”användaren”) användning av programvaruplattformen myNextDays (nedan ”plattformen”).",
     "Plattformen tillhandahålls av [fullständigt företagsnamn, bolagsform, adress och registeruppgifter för operatören — kompletteras före publicering] (nedan ”myNextDays” eller ”vi”).",
@@ -61,8 +61,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Utbetalningar, återdebiteringar och negativa saldon",
       paragraphs: [
+        "Betalningsvägen beror på bokningskanalen. Vid bokningar via användarens egen bokningslösning och vid bokningar via anslutna distributionsportaler tas gästernas betalningar emot direkt på användarens betalkonto; i dessa fall är användaren gentemot gästen betalningsmottagare och avtalspart för inkvarteringstjänsten (§ 4), och myNextDays blir aldrig innehavare av dessa medel. myNextDays tar inte ut någon procentuell bokningsavgift på sådana bokningar; provisionen för bokningar via anslutna distributionsportaler anges separat och faktureras i efterhand.",
+        "Vid bokningar som sker via myNextDays bokningsportal hanteras betalningen genom myNextDays. myNextDays behåller härvid den förmedlingsprovision som anges i den vid var tid gällande prislistan, inklusive kostnaden för betalningshantering, och vidarebefordrar återstående belopp till användaren enligt nedanstående stycken. Ersättningen för användning av programvaran (§ 7) påverkas inte.",
         "Utbetalningar görs till det bankkonto som användaren har angett. myNextDays kan av riskskäl anpassa utbetalningsfrekvensen, i synnerhet vid nya konton, avvikande transaktionsmönster eller pågående granskningar.",
-        "Återdebiteringar (chargebacks), återbetalningar samt avgifter som uppstår till följd av dessa i samband med användarens bokningar bärs av användaren. myNextDays har rätt att kvitta motsvarande belopp mot framtida utbetalningar.",
+        "Återbetalningar till gäster bärs ekonomiskt av användaren. Återdebiteringar och därav följande avgifter bärs av användaren vid bokningar via användarens egen bokningslösning och via anslutna distributionsportaler, eftersom användaren i dessa fall är betalningsmottagare; vid bokningar via myNextDays bokningsportal bär myNextDays återdebiteringsrisken, om inte återdebiteringen beror på ett avtalsbrott från användarens sida (särskilt utebliven eller väsentligt avvikande inkvarteringstjänst). myNextDays har rätt att kvitta belopp som ska bäras av användaren mot framtida utbetalningar.",
         "Om ett negativt saldo uppstår på användarens betalkonto ska användaren utan dröjsmål utjämna det. Användaren bemyndigar myNextDays och Stripe att debitera negativa saldon från det angivna bankkontot, i den mån detta är rättsligt tillåtet.",
       ],
     },

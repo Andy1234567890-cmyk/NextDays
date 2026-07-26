@@ -1,4 +1,4 @@
-// Barrierefreiheits-Merkmale (Airbnb „Accessibility features"), 12 aktuelle
+// Barrierefreiheits-Merkmale (Airbnb „Accessibility features"), 14 aktuelle
 // Merkmale über 4 Kategorien (belegt: airbnb.com/help/article/2000 & 3138).
 // key = stabiler Slug (in type_attributes.accessibility gespeichert, NIE ändern).
 // `facility` = passender Channex-property_facilities-Slug (aus _CHANNEX_FACILITY),
@@ -11,6 +11,8 @@ export type BarriereMerkmal = {
   label: string;
   beschreibung: string;
   kategorie: string;
+  /** Iconify-Name für die Merkmal-Liste (Airbnb zeigt je Merkmal ein Symbol). */
+  icon: string;
   facility: string | null;
   bilder: { src: string; alt: string }[];
   // Foto-Anleitung (Airbnb: Bullet-Liste unter „vorhanden") — wie ein gutes
@@ -51,6 +53,7 @@ export const BARRIERE_MERKMALE: BarriereMerkmal[] = [
     beschreibung:
       "Zum Gästeeingang führen keine Stufen, Treppen oder Schwellen höher als 5 cm. Er ist ebenerdig oder per Rampe erreichbar.",
     kategorie: "Zugang zum Objekt",
+    icon: "ph:door-open",
     facility: null,
     bilder: [
       BILD("step_free_guest_entrance", 1, "Ebenerdiger Eingang mit Rampe"),
@@ -64,6 +67,7 @@ export const BARRIERE_MERKMALE: BarriereMerkmal[] = [
     beschreibung:
       "Die Eingangstür ist mindestens 81 cm breit, sodass ein Rollstuhl hindurchpasst.",
     kategorie: "Zugang zum Objekt",
+    icon: "ph:arrows-out-line-horizontal",
     facility: null,
     bilder: [
       BILD("guest_entrance_wider_than_32_inches", 1, "Breite Eingangstür"),
@@ -77,11 +81,28 @@ export const BARRIERE_MERKMALE: BarriereMerkmal[] = [
     beschreibung:
       "Ein ausgewiesener barrierefreier Parkplatz für Gäste mit Behinderung ist in der Nähe des Eingangs vorhanden.",
     kategorie: "Zugang zum Objekt",
+    icon: "ph:car",
     facility: "accessible_parking",
     bilder: [
       BILD("disabled_parking_spot", 1, "Behindertenparkplatz mit Symbol"),
       BILD("disabled_parking_spot", 2, "Barrierefreie Parkfläche"),
     ],
+    fotoHinweise: HINWEISE_OBJEKT,
+  },
+  {
+    key: "well_lit_path_to_entrance",
+    label: "Beleuchteter Weg zum Gästeeingang",
+    beschreibung:
+      "Der Weg zum Gästeeingang ist nachts durchgehend beleuchtet, sodass Stufen und Hindernisse gut erkennbar sind.",
+    kategorie: "Zugang zum Objekt",
+    icon: "ph:lightbulb",
+    facility: null,
+    // Noch keine Demofotos vorhanden. Leer statt Verweise auf fehlende
+    // Dateien: Ein gebrochenes Bild sieht nach Defekt aus, das Merkmal
+    // funktioniert ohne Beispiele vollständig. Bilder unter
+    // public/barrierefreiheit/well_lit_path_to_entrance-{1,2}.jpg ablegen,
+    // dann hier BILD(...) eintragen.
+    bilder: [],
     fotoHinweise: HINWEISE_OBJEKT,
   },
   // — Schlafzimmer —
@@ -91,6 +112,7 @@ export const BARRIERE_MERKMALE: BarriereMerkmal[] = [
     beschreibung:
       "Zum Schlafzimmer führen keine Stufen oder Schwellen höher als 5 cm; es ist ebenerdig oder per Aufzug/Rampe erreichbar.",
     kategorie: "Schlafzimmer",
+    icon: "ph:bed",
     facility: null,
     bilder: [
       BILD("step_free_bedroom_access", 1, "Ebenerdiges Schlafzimmer"),
@@ -104,6 +126,7 @@ export const BARRIERE_MERKMALE: BarriereMerkmal[] = [
     beschreibung:
       "Die Schlafzimmertür ist mindestens 81 cm breit, sodass ein Rollstuhl hindurchpasst.",
     kategorie: "Schlafzimmer",
+    icon: "ph:arrows-out-line-horizontal",
     facility: null,
     bilder: [
       BILD("bedroom_entrance_wider_than_32_inches", 1, "Breite Schlafzimmertür"),
@@ -118,6 +141,7 @@ export const BARRIERE_MERKMALE: BarriereMerkmal[] = [
     beschreibung:
       "Zum Badezimmer führen keine Stufen oder Schwellen höher als 5 cm; es ist ebenerdig erreichbar.",
     kategorie: "Bad",
+    icon: "ph:bathtub",
     facility: null,
     bilder: [
       BILD("step_free_bathroom_access", 1, "Ebenerdiges Badezimmer"),
@@ -131,6 +155,7 @@ export const BARRIERE_MERKMALE: BarriereMerkmal[] = [
     beschreibung:
       "Die Badezimmertür ist mindestens 81 cm breit, sodass ein Rollstuhl hindurchpasst.",
     kategorie: "Bad",
+    icon: "ph:arrows-out-line-horizontal",
     facility: null,
     bilder: [
       BILD("bathroom_entrance_wider_than_32_inches", 1, "Breite Badezimmertür"),
@@ -144,6 +169,7 @@ export const BARRIERE_MERKMALE: BarriereMerkmal[] = [
     beschreibung:
       "Neben dem WC ist ein fest montierter Haltegriff angebracht, der beim Hinsetzen und Aufstehen Halt gibt.",
     kategorie: "Bad",
+    icon: "ph:toilet",
     facility: "toilet_with_grab_rails",
     bilder: [
       BILD("toilet_grab_bar", 1, "Haltegriff im Bad"),
@@ -157,6 +183,7 @@ export const BARRIERE_MERKMALE: BarriereMerkmal[] = [
     beschreibung:
       "In der Dusche ist ein fest montierter Haltegriff angebracht, der beim Duschen Halt gibt.",
     kategorie: "Bad",
+    icon: "ph:shower",
     facility: null,
     bilder: [
       BILD("shower_grab_bar", 1, "Haltegriff in der Dusche"),
@@ -170,6 +197,7 @@ export const BARRIERE_MERKMALE: BarriereMerkmal[] = [
     beschreibung:
       "Die Dusche ist ebenerdig begehbar, ohne Stufe oder Schwelle, sodass sie mit Rollstuhl oder Duschstuhl befahrbar ist.",
     kategorie: "Bad",
+    icon: "ph:shower",
     facility: null,
     bilder: [
       BILD("step_free_shower", 1, "Bodengleiche Dusche"),
@@ -183,6 +211,7 @@ export const BARRIERE_MERKMALE: BarriereMerkmal[] = [
     beschreibung:
       "Ein Dusch- oder Badestuhl steht zur Verfügung, sodass Gäste im Sitzen duschen oder baden können.",
     kategorie: "Bad",
+    icon: "ph:chair",
     facility: null,
     bilder: [
       BILD("shower_or_bath_chair", 1, "Duschstuhl"),
@@ -197,11 +226,27 @@ export const BARRIERE_MERKMALE: BarriereMerkmal[] = [
     beschreibung:
       "Ein Deckenlift oder mobiler Personenlifter ist vorhanden, um Gäste z. B. vom Rollstuhl ins Bett oder in die Dusche zu heben.",
     kategorie: "Anpassungen",
+    icon: "ph:elevator",
     facility: null,
     bilder: [
       BILD("ceiling_or_mobile_hoist", 1, "Personenlifter"),
       BILD("ceiling_or_mobile_hoist", 2, "Lifthilfe"),
     ],
+    fotoHinweise: HINWEISE_OBJEKT,
+  },
+  {
+    key: "pool_or_hot_tub_hoist",
+    label: "Schwimmbad- oder Whirlpoollift",
+    beschreibung:
+      "Ein fest installierter oder mobiler Lift ermöglicht den Ein- und Ausstieg in Pool oder Whirlpool.",
+    kategorie: "Anpassungen",
+    icon: "ph:swimming-pool",
+    facility: null,
+    // Noch keine Demofotos vorhanden — siehe Hinweis bei
+    // well_lit_path_to_entrance. Dateien unter
+    // public/barrierefreiheit/pool_or_hot_tub_hoist-{1,2}.jpg ablegen, dann
+    // hier BILD(...) eintragen.
+    bilder: [],
     fotoHinweise: HINWEISE_OBJEKT,
   },
 ];

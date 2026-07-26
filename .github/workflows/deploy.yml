@@ -41,6 +41,7 @@ jobs:
             "y13cm245vlmvq3yv38gdbtat|nextdays-marketing|marketing/"
             "rh4f581hqashrnmiwnxb6pcu|nextdays-plattform|plattform/ packages/"
             "uo0irbk8eno9c9qonngzqwy2|nextdays-gastgeber|gastgeber/ packages/"
+            "oznosa2xmefzmfeqidezodm6|nextdays-admin|admin/ packages/"
             "u67kn5pj9cb2gqryt2ezsc8r|nextdays-storybook|storybook/"
             "cdqxi7d0w34sxzr4wr8jy8um|nextdays-supabase|deploy/supabase/"
             "kilcrxob5u434k3vsyf54ble|nextdays-api|apps/api/ deploy/api-standalone/"

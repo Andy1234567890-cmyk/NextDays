@@ -276,8 +276,8 @@ export function AuthForm({ weiter }: { weiter: string }) {
 
       {modus === "register" ? (
         <p className="text-center text-xs text-muted-foreground">
-          Kostenlos starten — wir berechnen nur 8 % Provision pro Buchung, kein
-          monatliches Abo.
+          Kostenlos starten — 8 % Provision nur auf Buchungen über myNextDays.
+          Direktbuchungen über deine eigene Seite bleiben provisionsfrei.
         </p>
       ) : null}
     </form>

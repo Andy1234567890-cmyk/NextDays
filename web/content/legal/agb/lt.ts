@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // (recommended disclosure language) — Sinn und URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Bendrosios sąlygos agentūroms ir nuomotojams",
-  stand: "Redakcija: 2026 m. liepos 3 d.",
+  stand: "Redakcija: 2026 m. liepos 26 d.",
   intro: [
     "Šios bendrosios sąlygos (toliau — „Sąlygos“) reglamentuoja, kaip agentūros, nuomotojai, būstų administratoriai ir kiti verslo naudotojai (toliau — „Naudotojas“) naudojasi programinės įrangos platforma myNextDays (toliau — „Platforma“).",
     "Platformos teikėja yra [visas operatoriaus įmonės pavadinimas, teisinė forma, adresas ir registro duomenys — papildyti prieš paskelbiant] (toliau — „myNextDays“ arba „mes“).",
@@ -60,8 +60,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Išmokos, mokėjimų užginčijimai ir neigiami likučiai",
       paragraphs: [
+        "Mokėjimo kelias priklauso nuo rezervavimo kanalo. Rezervacijų, atliktų per paties Naudotojo rezervavimo sistemą, ir rezervacijų per prijungtus platinimo portalus atveju svečių mokėjimai gaunami tiesiai į Naudotojo mokėjimo sąskaitą; tokiais atvejais Naudotojas svečio atžvilgiu yra mokėjimo gavėjas ir apgyvendinimo paslaugos sutarties šalis (§ 4), o myNextDays niekada netampa šių lėšų turėtoju. Už tokias rezervacijas myNextDays netaiko procentinio rezervacijos mokesčio; komisinis mokestis už rezervacijas per prijungtus platinimo portalus nurodomas atskirai ir sąskaita pateikiama vėliau.",
+        "Rezervacijų, atliktų per myNextDays rezervavimo portalą, atveju mokėjimas apdorojamas per myNextDays. myNextDays tokiu atveju pasilieka galiojančiame kainoraštyje nurodytą tarpininkavimo komisinį mokestį kartu su mokėjimo apdorojimo išlaidomis ir likusią sumą perveda Naudotojui pagal toliau nurodytas dalis. Atlyginimas už programinės įrangos naudojimą (§ 7) lieka nepakitęs.",
         "Išmokos pervedamos į Naudotojo nurodytą banko sąskaitą. myNextDays gali dėl rizikos priežasčių koreguoti išmokų periodiškumą, ypač naujų paskyrų, neįprastų operacijų modelių ar vykstančių patikrinimų atveju.",
-        "Mokėjimų užginčijimus (angl. chargebacks), pinigų grąžinimus ir dėl to atsirandančius mokesčius, susijusius su Naudotojo užsakymais, padengia Naudotojas. myNextDays turi teisę atitinkamas sumas įskaityti į būsimas išmokas.",
+        "Grąžinimus svečiams ekonomiškai padengia Naudotojas. Mokėjimų užginčijimus ir dėl jų atsirandančius mokesčius padengia Naudotojas rezervacijų, atliktų per jo paties rezervavimo sistemą ir per prijungtus platinimo portalus, atveju, nes tokiais atvejais Naudotojas yra mokėjimo gavėjas; rezervacijų, atliktų per myNextDays rezervavimo portalą, atveju užginčijimo riziką prisiima myNextDays, nebent ji kyla dėl Naudotojo pareigų pažeidimo (visų pirma apgyvendinimo paslaugos nesuteikimo ar esminio nukrypimo). myNextDays turi teisę įskaityti Naudotojo dengiamas sumas į būsimas išmokas.",
         "Jei Naudotojo mokėjimų sąskaitoje susidaro neigiamas likutis, Naudotojas privalo jį nedelsdamas padengti. Naudotojas įgalioja myNextDays ir Stripe nurašyti neigiamus likučius iš nurodytos banko sąskaitos, kiek tai teisiškai leidžiama.",
       ],
     },

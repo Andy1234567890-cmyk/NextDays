@@ -47,7 +47,9 @@ COMMISSION_HIGH_VOLUME_FROM = 101  # ab dieser Objektzahl gilt der reduzierte Sa
 # OTA-Kanäle, für die die externe Provision anfällt (dieselbe Menge wie im
 # payments-Slice; eigene/portal-Buchungen sind hier NICHT provisionspflichtig —
 # die tragen die 8 % Portal-Fee direkt am Charge).
-EXTERNAL_CHANNELS = frozenset({"booking", "airbnb", "vrbo"})
+EXTERNAL_CHANNELS = frozenset(
+    {"booking", "airbnb", "vrbo", "ota_other"}
+)
 
 # module_key -> (lookup_key, per-unit-Label). Deckt alle im UI wählbaren Preise.
 _MODULE_PRICE_VARIANTS: dict[str, tuple[str, str | None]] = {

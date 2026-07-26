@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 
+import { DiagnoseStarter } from "@/components/diagnose-starter";
+
 export const metadata: Metadata = {
   title: "myNextDays — Unterkünfte finden & buchen",
   description:
@@ -14,7 +16,11 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="de">
-      <body className="font-sans antialiased">{children}</body>
+      <body className="font-sans antialiased">
+        {/* Technischer Fehler-Reporter (kein Verhaltens-Tracking). */}
+        <DiagnoseStarter />
+        {children}
+      </body>
     </html>
   );
 }

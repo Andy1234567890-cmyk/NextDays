@@ -111,6 +111,67 @@ ROLE_CAPABILITIES: dict[UserRole, frozenset[Capability]] = {
 }
 
 
+# --- Co-Gastgeber (Plattform-Marktplatz) ------------------------------------
+# NICHT zu verwechseln mit den Rollen oben: Die gelten INNERHALB eines Tenants
+# (Team-Modell, apps/web). Ein Co-Gastgeber ist tenant-FREMD und bekommt Rechte
+# ausschließlich für EIN bestimmtes Objekt — deshalb keine Rolle, sondern eine
+# eigene Matrix, die pro Zuordnung ausgewertet wird.
+#
+# Die drei Stufen bilden airbnb.com/help/article/1534 ab (abgerufen 2026-07-26).
+
+# Vollzugriff: Objekt und Preise verwalten, Buchungen annehmen/ablehnen,
+# Kalender bearbeiten, mit Gästen schreiben, Einnahmen einsehen.
+_COHOST_FULL: frozenset[Capability] = frozenset({
+    Capability.MANAGE_PROPERTIES,
+    Capability.MANAGE_CALENDAR,
+    Capability.VIEW_CALENDAR,
+    Capability.MANAGE_TASKS,
+    Capability.VIEW_OWN_TASKS,
+    Capability.APPROVE_BLOCK,
+    Capability.VIEW_GUEST_FULL,
+    # Laut Doku sieht ein Vollzugriff-Co-Gastgeber das Earnings-Dashboard und
+    # vergangene wie kommende Auszahlungen. Gesperrt ist nur das EINRICHTEN der
+    # Auszahlungsdaten — das bleibt beim Eigentümer und hängt an
+    # MANAGE_BILLING, das hier bewusst FEHLT.
+    Capability.VIEW_FINANCES,
+})
+
+# Kalender + Nachrichten: Kalender SEHEN (nicht ändern), mit Gästen schreiben.
+_COHOST_CALENDAR_MESSAGING: frozenset[Capability] = frozenset({
+    Capability.VIEW_CALENDAR,
+    Capability.VIEW_GUEST_FULL,  # Nachrichten setzen den Gastnamen voraus
+})
+
+# Nur Kalender: sehen, wann Gäste an- und abreisen. Keine Nachrichten, deshalb
+# nur der eingeschränkte Gast-Blick (Vorname/Belegungszeit, §4).
+_COHOST_CALENDAR: frozenset[Capability] = frozenset({
+    Capability.VIEW_CALENDAR,
+    Capability.VIEW_GUEST_LIMITED,
+})
+
+COHOST_CAPABILITIES: dict[str, frozenset[Capability]] = {
+    "full": _COHOST_FULL,
+    "calendar_messaging": _COHOST_CALENDAR_MESSAGING,
+    "calendar": _COHOST_CALENDAR,
+}
+
+
+def cohost_capabilities_for(access: str | None) -> frozenset[Capability]:
+    """Fähigkeiten einer Co-Gastgeber-Zugriffsstufe.
+
+    Fail-closed (Wurzel 5): Eine unbekannte oder fehlende Stufe ergibt die
+    LEERE Menge, nie ein Default-Set — sonst würde ein Tippfehler in der DB
+    stillschweigend Rechte vergeben.
+    """
+    if not access:
+        return frozenset()
+    return COHOST_CAPABILITIES.get(access, frozenset())
+
+
+def cohost_has_capability(access: str | None, cap: Capability) -> bool:
+    return cap in cohost_capabilities_for(access)
+
+
 def capabilities_for(role: UserRole | str | None) -> frozenset[Capability]:
     """Fähigkeiten einer Rolle; leere Menge für unbekannte/fehlende Rolle."""
     if role is None:

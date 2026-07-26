@@ -21,6 +21,9 @@ class AvailabilitySource(StrEnum):
     booking = "booking"
     airbnb = "airbnb"
     vrbo = "vrbo"
+    # Sonstige OTA (Expedia, Agoda, Namensvarianten). Externer Kanal:
+    # 1 % monatlich, kein Charge über uns (Preisliste §2).
+    ota_other = "ota_other"
     manual = "manual"
 
 

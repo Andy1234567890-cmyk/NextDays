@@ -5,7 +5,7 @@ import type { LegalDoc } from "../types";
 // Account Agreement) — Wortlaut und URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Splošni pogoji poslovanja za agencije in najemodajalce",
-  stand: "Zadnja posodobitev: 3. julij 2026",
+  stand: "Zadnja posodobitev: 26. julij 2026",
   intro: [
     "Ti splošni pogoji poslovanja (v nadaljevanju „Splošni pogoji“) urejajo uporabo programske platforme myNextDays (v nadaljevanju „Platforma“) s strani agencij, najemodajalcev, upravnikov nepremičnin in drugih poslovnih uporabnikov (v nadaljevanju „Uporabnik“).",
     "Ponudnik Platforme je [polna firma, pravna oblika, naslov in registrski podatki upravljavca — dopolniti pred objavo] (v nadaljevanju „myNextDays“ ali „mi“).",
@@ -60,8 +60,10 @@ export const agb: LegalDoc = {
     {
       heading: "§ 6 Izplačila, povratne bremenitve in negativna stanja",
       paragraphs: [
+        "Pot plačila je odvisna od rezervacijskega kanala. Pri rezervacijah, opravljenih prek Uporabnikovega lastnega rezervacijskega sistema, in pri rezervacijah prek povezanih distribucijskih portalov se plačila gostov prejmejo neposredno na plačilni račun Uporabnika; v teh primerih je Uporabnik v razmerju do gosta prejemnik plačila in pogodbena stranka nastanitvene storitve (§ 4), myNextDays pa v nobenem trenutku ne postane imetnik teh sredstev. Za takšne rezervacije myNextDays ne zaračunava odstotne rezervacijske provizije; provizija za rezervacije prek povezanih distribucijskih portalov je izkazana ločeno in zaračunana naknadno.",
+        "Pri rezervacijah, sklenjenih prek rezervacijskega portala myNextDays, se plačilo obdela prek myNextDays. myNextDays pri tem zadrži posredniško provizijo, navedeno v vsakokrat veljavnem ceniku, vključno s stroški obdelave plačila, preostali znesek pa nakaže Uporabniku v skladu s spodnjimi odstavki. Plačilo za uporabo programske opreme (§ 7) s tem ni prizadeto.",
         "Izplačila se izvajajo na bančni račun, ki ga je navedel Uporabnik. myNextDays lahko iz razlogov obvladovanja tveganj prilagodi časovni razpored izplačil, zlasti pri novih računih, neobičajnih vzorcih transakcij ali potekajočih preverjanjih.",
-        "Povratne bremenitve (chargebacks), vračila ter iz tega izhajajoče stroške v zvezi z rezervacijami Uporabnika nosi Uporabnik. myNextDays je upravičena take zneske pobotati s prihodnjimi izplačili.",
+        "Vračila gostom nosi ekonomsko Uporabnik. Povratne bremenitve in iz njih izhajajoče stroške nosi Uporabnik pri rezervacijah, opravljenih prek njegovega lastnega rezervacijskega sistema in prek povezanih distribucijskih portalov, saj je Uporabnik v teh primerih prejemnik plačila; pri rezervacijah, sklenjenih prek rezervacijskega portala myNextDays, tveganje povratne bremenitve nosi myNextDays, razen če ta izhaja iz kršitve obveznosti Uporabnika (zlasti neizvedbe ali bistvenega odstopanja nastanitvene storitve). myNextDays je upravičena pobotati zneske v breme Uporabnika s prihodnjimi izplačili.",
         "Če na plačilnem računu Uporabnika nastane negativno stanje, ga mora Uporabnik nemudoma poravnati. Uporabnik pooblašča myNextDays in Stripe, da negativna stanja poravnata z bremenitvijo navedenega bančnega računa, kolikor je to pravno dopustno.",
       ],
     },

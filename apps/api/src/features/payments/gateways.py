@@ -7,6 +7,8 @@ gedreht — Stripe ist der produktive Gateway.)
 """
 from abc import ABC, abstractmethod
 
+from src.features.payouts.faelligkeit import transfer_group
+
 from . import stripe_client as sc
 from .schemas import ChargeRequest, ChargeResult, PaymentGateway
 
@@ -54,6 +56,9 @@ class StripeAdapter(PaymentGatewayAdapter):
             destination_acct=destination_acct,
             application_fee_cents=0,
             capture_method=capture,
+            # Ohne Klammer läge der Charge im Separate-Charges-Modus
+            # unzuordenbar auf dem Plattform-Saldo.
+            transfer_group=transfer_group(req.reservation_id),
             metadata={"reservation_id": req.reservation_id},
         )
         return ChargeResult(
