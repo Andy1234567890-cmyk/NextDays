@@ -85,6 +85,16 @@ export interface PropertyAttributes {
   // Reisetyp-Tags aus dem Anlage-Wizard („Wer wohnt hier?"). Eigener Key, damit sie
   // nicht mit dem Belegungs-Objekt occupancy kollidieren.
   occupancyTags?: string[];
+  // Airbnb-Beschreibungs-Zusätze (Listing-Editor „Beschreibung"), objektweit. Die
+  // Haupt-„Angebotsbeschreibung" liegt in der Top-Level-Spalte properties.description
+  // (an Channex/OTAs gesynct) — NICHT hier. Hier nur die Airbnb-spezifischen
+  // Zusatztexte, für die es kein OTA-Zielfeld gibt (reine Objektdaten).
+  descriptions?: {
+    space?: string; // „Ihr Eigentum" — Zimmer/Räumlichkeiten
+    access?: string; // „Gastzugang" — welche Teile nutzbar
+    interaction?: string; // „Interaktion mit Gästen"
+    notes?: string; // „Weitere zu beachtende Details"
+  };
   [key: string]: unknown;
 }
 

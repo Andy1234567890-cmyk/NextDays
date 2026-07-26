@@ -13,6 +13,7 @@
 //     (onPets); an die OTAs gesynct.
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 
 import type { Property } from "@/lib/properties";
 
@@ -39,18 +40,51 @@ export function GaestePanel({
 
   return (
     <section className="mx-auto max-w-2xl px-8 py-8 lg:py-12">
-      <h2 className="font-sans text-[2rem] font-bold tracking-tight">{t("secGaeste")}</h2>
-      <p className="mt-2 text-[0.9375rem] text-muted-foreground">{t("gaesteHint")}</p>
-
-      <div className="mt-8 space-y-4">
-        <StepperKarte
-          titel={t("gaesteMax")}
-          hint={t("gaesteMaxHint")}
-          wert={maxGuests}
-          min={1}
-          max={99}
-          onSetze={onMaxGuests}
+      {/* Illustration mittig + zentrale Frage + großer Stepper (Airbnb-Muster).
+          fluent-emoji = 3D, wie die übrigen Editor-Illustrationen. */}
+      <div className="flex flex-col items-center text-center">
+        {/* 3D-Illustration (Airbnb-Stil, KI-generiert) — freigestellt auf weiß. */}
+        <Image
+          src="/illustrations/gaeste.png"
+          alt=""
+          width={200}
+          height={286}
+          priority
+          className="h-40 w-auto object-contain"
         />
+        <h2 className="mt-6 font-sans text-[2rem] font-bold tracking-tight">
+          {t("gaesteFrage")}
+        </h2>
+        <p className="mt-2 max-w-md text-[0.9375rem] text-muted-foreground">
+          {t("gaesteHint")}
+        </p>
+        <div className="mt-10 flex items-center gap-8">
+          <button
+            type="button"
+            aria-label={`${t("gaesteMax")} −`}
+            disabled={maxGuests <= 1}
+            onClick={() => void onMaxGuests(Math.max(1, maxGuests - 1))}
+            className="flex size-12 items-center justify-center rounded-full border border-border transition-colors hover:border-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Icon icon="ph:minus" className="size-5" />
+          </button>
+          <span className="min-w-16 text-center text-6xl font-bold tabular-nums">
+            {maxGuests}
+          </span>
+          <button
+            type="button"
+            aria-label={`${t("gaesteMax")} +`}
+            disabled={maxGuests >= 99}
+            onClick={() => void onMaxGuests(Math.min(99, maxGuests + 1))}
+            className="flex size-12 items-center justify-center rounded-full border border-border transition-colors hover:border-foreground disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Icon icon="ph:plus" className="size-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Zusatz-Belegung (Kinder/Kleinkinder/Haustiere) darunter als Karten. */}
+      <div className="mt-12 space-y-4 border-t border-border pt-10">
         <StepperKarte
           titel={t("gaesteKinder")}
           hint={t("gaesteKinderHint")}

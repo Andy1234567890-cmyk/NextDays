@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 
 import { ObjektEditor } from "@/components/objekt-editor/objekt-editor";
 import { ApiError } from "@/lib/api-server";
+import { getHostProfile, LEERES_PROFIL } from "@/lib/host-profil";
 import { getPreisStand } from "@/lib/preise";
 import { getProperty } from "@/lib/properties";
 
@@ -27,8 +28,20 @@ export default async function ObjektEditorPage({
 
   // Preis-Stand aus den echten Quellen (rate_plans/dp_settings/property_discounts),
   // NICHT aus dem type_attributes-Blob — sonst zeigt der Editor andere Preise als
-  // Resolver/Kalender/Quote buchen.
-  const preisStand = await getPreisStand(id);
+  // Resolver/Kalender/Quote buchen. Host-Profil (Airbnb „Über den Gastgeber")
+  // parallel laden — user-gebunden, unabhängig vom Objekt. Ein Profil-Ladefehler
+  // darf NICHT den ganzen Editor blockieren → auf leeres Profil zurückfallen
+  // (der Tab zeigt dann „Details hinzufügen"; kein erfundener Wert, Wurzel 4/5).
+  const [preisStand, hostProfile] = await Promise.all([
+    getPreisStand(id),
+    getHostProfile().catch(() => LEERES_PROFIL),
+  ]);
 
-  return <ObjektEditor property={property} preisStand={preisStand} />;
+  return (
+    <ObjektEditor
+      property={property}
+      preisStand={preisStand}
+      hostProfile={hostProfile}
+    />
+  );
 }

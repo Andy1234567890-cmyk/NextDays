@@ -27,11 +27,15 @@ function Inner({
   onChange,
   onPick,
   placeholder,
+  cityOnly,
 }: {
   value: string;
   onChange: (v: string) => void;
   onPick: (addr: PlacesAddress) => void;
   placeholder?: string;
+  // Nur Städte statt voller Adressen (Airbnb „Wo ich wohne / Suche nach deiner
+  // Stadt"). Ergebnis trägt city/state/country, keine Straße/Hausnummer.
+  cityOnly?: boolean;
 }) {
   const places = useMapsLibrary("places");
   const inputRef = useRef<HTMLInputElement>(null);
@@ -42,9 +46,14 @@ function Inner({
 
   useEffect(() => {
     if (!places || !inputRef.current) return;
+    // Kein `types`-Filter im cityOnly-Modus: `["(cities)"]` ist eine restriktive
+    // Google-Collection, die weltweit lückenhaft ist (viele Orte werden NICHT
+    // vorgeschlagen). Ohne Filter liefert Places alle Ergebnistypen weltweit
+    // (Städte, Regionen, Orte) — die city/country-Komponenten ziehen wir unten
+    // heraus. Für die volle Adresssuche bleibt `["address"]`.
     const ac = new places.Autocomplete(inputRef.current, {
       fields: ["address_components", "geometry"],
-      types: ["address"],
+      ...(cityOnly ? {} : { types: ["address"] }),
     });
     const listener = ac.addListener("place_changed", () => {
       const place = ac.getPlace();
@@ -69,7 +78,7 @@ function Inner({
       });
     });
     return () => listener.remove();
-  }, [places]);
+  }, [places, cityOnly]);
 
   return (
     <Input
@@ -86,11 +95,13 @@ export function AdressSuche({
   onChange,
   onPick,
   placeholder,
+  cityOnly,
 }: {
   value: string;
   onChange: (v: string) => void;
   onPick: (addr: PlacesAddress) => void;
   placeholder?: string;
+  cityOnly?: boolean;
 }) {
   if (!API_KEY) {
     return (
@@ -103,7 +114,13 @@ export function AdressSuche({
   }
   return (
     <APIProvider apiKey={API_KEY}>
-      <Inner value={value} onChange={onChange} onPick={onPick} placeholder={placeholder} />
+      <Inner
+        value={value}
+        onChange={onChange}
+        onPick={onPick}
+        placeholder={placeholder}
+        cityOnly={cityOnly}
+      />
     </APIProvider>
   );
 }

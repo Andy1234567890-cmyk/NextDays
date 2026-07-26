@@ -13,6 +13,8 @@ import { useEffect, useState } from "react";
 
 import { formatCurrency } from "@nextdays/currency";
 
+import { formatHostingSince, type HostProfile } from "@/lib/host-profil";
+import { updateHostProfile, type HostProfilePatch } from "@/lib/host-profil-actions";
 import type { PreisStand } from "@/lib/preise";
 import {
   setBasePrice,
@@ -30,10 +32,12 @@ import { ObjektPublish } from "@/components/objekt-publish";
 
 import { AmenityPanel } from "./amenity-panel";
 import { BarrierefreiheitPanel } from "./barrierefreiheit-panel";
+import { BeschreibungPanel } from "./beschreibung-panel";
 import { GaestePanel } from "./gaeste-panel";
+import { HostProfilPanel } from "./host-profil-panel";
 import { KACHEL_SPRING } from "./foto-kacheln";
 import { FotoTour } from "./foto-tour";
-import { LagePanel } from "./lage-panel";
+import { LageKarte, LagePanel } from "./lage-panel";
 import { DiscountPanel, PreisPanel } from "./preis-panel";
 import { PrivacyPanel } from "./privacy-panel";
 import { type RaumKachel, RaumDetail } from "./raum-detail";
@@ -47,20 +51,25 @@ import { WertPanel } from "./wert-panel";
 type SectionKey =
   | "fotos" | "titel" | "typ" | "schlafen" | "beschreibung" | "ausstattung"
   | "gaeste" | "lage" | "preise" | "rabatte" | "verfuegbarkeit"
-  | "hausregeln" | "storno";
+  | "hausregeln" | "storno" | "host";
 
 export function ObjektEditor({
   property,
   preisStand,
+  hostProfile,
 }: {
   property: Property;
   preisStand: PreisStand;
+  hostProfile: HostProfile;
 }) {
   const t = useTranslations("objektEditor");
   const [prop, setProp] = useState<Property>(property);
   // Preis-Stand aus den echten Quellen (rate_plans/dp_settings/property_discounts).
   // Realtime unten hält ihn aktuell; Actions spiegeln optimistisch nach.
   const [preise, setPreise] = useState<PreisStand>(preisStand);
+  // Host-Profil (Airbnb „Über den Gastgeber"). User-gebunden; Realtime unten hält
+  // es aktuell, die Patch-Action spiegelt optimistisch nach.
+  const [profil, setProfil] = useState<HostProfile>(hostProfile);
   // Airbnb-Muster: JEDE Detail-Sidebar speichert ihren eigenen Wert SOFORT (eigener
   // Abbrechen/Speichern-Fuß in der Sidebar) — es gibt KEINEN editor-weiten Draft und
   // keine globale untere Speicherleiste. prop/preise sind direkt die gespeicherte
@@ -244,6 +253,35 @@ export function ObjektEditor({
     return speichere({ type_attributes: { ...bisher, availability } });
   }
 
+  // --- Beschreibung (Airbnb „Description"). ---
+
+  // Haupt-„Angebotsbeschreibung" → properties.description (an Channex/OTAs gesynct).
+  async function speichereBeschreibung(text: string) {
+    return speichere({ description: text });
+  }
+
+  // Airbnb-Zusatztexte (Ihr Eigentum/Gastzugang/Interaktion/Weitere Details) →
+  // type_attributes.descriptions[key] gemergt (Wurzel 1: andere Blob-Zweige +
+  // die übrigen descriptions-Felder erhalten).
+  async function speichereBeschreibungZusatz(
+    key: "space" | "access" | "interaction" | "notes",
+    text: string,
+  ) {
+    const bisher = viewProp.type_attributes ?? {};
+    const descriptions = { ...(bisher.descriptions ?? {}), [key]: text };
+    return speichere({ type_attributes: { ...bisher, descriptions } });
+  }
+
+  // --- Über den Gastgeber (Airbnb „About the host"). ---
+
+  // Host-Profil-Feld(er) SOFORT speichern (PATCH /host-profile). Optimistisch
+  // nachziehen; Realtime bestätigt. true bei Erfolg → die Sidebar schließt.
+  async function speichereProfil(patch: HostProfilePatch) {
+    const res = await updateHostProfile(patch);
+    if (res.ok) setProfil(res.data);
+    return res.ok;
+  }
+
   // Ausstattung speichern — objektweites Feld properties.amenities (string[] der
   // Channex-Slugs), NICHT type_attributes. Das Backend setzt facilities immer neu
   // (auch []), also ist die volle Liste die Wahrheit.
@@ -317,6 +355,14 @@ export function ObjektEditor({
   }
 
   const ort = [viewProp.city, viewProp.country].filter(Boolean).join(", ");
+  // Volle Adresse für die Lage-Karte (Airbnb zeigt sie unter der Mini-Karte).
+  // „Straße Hausnr, PLZ Stadt" — nur vorhandene Teile (kein erfundener Teil).
+  const volleAdresse = [
+    [viewProp.street, viewProp.house_number].filter(Boolean).join(" "),
+    [viewProp.postal_code, viewProp.city].filter(Boolean).join(" "),
+  ]
+    .filter(Boolean)
+    .join(", ");
 
   // Detailwerte aus dem gemergten View (gespeicherte Wahrheit + Draft).
   const attr = viewProp.type_attributes ?? {};
@@ -441,6 +487,11 @@ export function ObjektEditor({
     { key: "verfuegbarkeit", titel: t("secVerfuegbarkeit"), vorschau: verfVorschau },
     { key: "hausregeln", titel: t("secHausregeln"), vorschau: t("hinzufuegen"), fehlt: true },
     { key: "storno", titel: t("secStorno"), vorschau: t("hinzufuegen"), fehlt: true },
+    { key: "host", titel: t("secGastgeber"),
+      vorschau: formatHostingSince(profil.hosting_since)
+        ? t("hostSeit", { zeit: formatHostingSince(profil.hosting_since)! })
+        : (profil.full_name ?? t("hinzufuegen")),
+      fehlt: !profil.full_name },
   ];
 
   const raumOffen = offenerRaum != null;
@@ -550,10 +601,10 @@ export function ObjektEditor({
                     {s.vorschau}
                   </p>
                 )}
-                {/* Aktive Fotos-Karte: gefächertes Foto-Ensemble (Airbnb-Muster) —
-                    das vordere Foto mittig, weitere leicht versetzt dahinter, plus
-                    „N Fotos"-Badge. */}
-                {zeigtFoto && isAktiv && (
+                {/* Fotos-Karte: gefächertes Foto-Ensemble (Airbnb-Muster) — das
+                    vordere Foto mittig, weitere leicht versetzt dahinter, plus
+                    „N Fotos"-Badge. IMMER sichtbar (nicht nur wenn aktiv). */}
+                {zeigtFoto && (
                   <span className="relative mt-4 flex aspect-[16/10] items-center justify-center">
                     {/* Gefächertes 3-Foto-Ensemble (Airbnb): eins links, eins rechts
                         gefächert hinter dem vorderen Foto. Aus der echten Galerie. */}
@@ -585,6 +636,49 @@ export function ObjektEditor({
                     <span className="absolute left-1/2 top-3 z-20 -translate-x-1/2 rounded-full bg-background px-3 py-1 text-xs font-semibold shadow-md">
                       {t("fotosAnzahl", { n: fotos.length })}
                     </span>
+                  </span>
+                )}
+                {/* Lage-Karte: Mini-Karte mit Ort-Marker (Airbnb-Muster) — IMMER
+                    sichtbar (nicht nur wenn der Tab aktiv ist), wie die Fotos-
+                    Vorschau. Dieselbe LageKarte wie im Detailpanel (keine zweite
+                    Kopie). Nur wenn Koordinaten da sind (kein erfundener Ort).
+                    Feste Pixelhöhe (h-40): der Google-Map-Container braucht eine
+                    konkrete Höhe zum Initialisieren — aspect-ratio allein reicht
+                    nicht (Map bliebe leer). block, damit die Höhe greift. */}
+                {s.key === "lage" &&
+                  viewProp.lat != null && viewProp.lng != null && (
+                  <>
+                    <span className="mt-4 block h-40 overflow-hidden rounded-xl border border-border">
+                      <LageKarte lat={viewProp.lat} lng={viewProp.lng} statisch />
+                    </span>
+                    {/* Volle Adresse UNTER der Karte (Airbnb-Muster). Aus den
+                        echten Top-Level-Spalten zusammengesetzt; nur zeigen, was
+                        vorhanden ist (kein erfundener Teil, Wurzel 4). */}
+                    {volleAdresse && (
+                      <span className="mt-3 block text-sm text-foreground">
+                        {volleAdresse}
+                      </span>
+                    )}
+                  </>
+                )}
+                {/* Host-Karte: Avatar + Name mittig (Airbnb-Muster) — IMMER
+                    sichtbar, wie Fotos/Lage. Avatar aus host_profiles, sonst
+                    Initiale des Namens (kein Fremdbild, Wurzel 4). */}
+                {s.key === "host" && (
+                  <span className="mt-4 flex flex-col items-center">
+                    <span className="flex size-28 items-center justify-center overflow-hidden rounded-full bg-accent/15">
+                      {profil.avatar_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={profil.avatar_url} alt="" className="size-full object-cover" />
+                      ) : (
+                        <span className="font-sans text-4xl font-bold text-accent">
+                          {(profil.full_name ?? "").trim().charAt(0).toUpperCase() || "?"}
+                        </span>
+                      )}
+                    </span>
+                    {profil.full_name && (
+                      <span className="mt-3 font-semibold">{profil.full_name}</span>
+                    )}
                   </span>
                 )}
                 {/* Task-Hinweis in der aktiven Foto-Karte (wenn nicht aktiv/live) */}
@@ -624,24 +718,22 @@ export function ObjektEditor({
           aktiv === "lage" ||
           aktiv === "verfuegbarkeit" ||
           aktiv === "rabatte" ||
-          aktiv === "gaeste"
+          aktiv === "gaeste" ||
+          aktiv === "beschreibung" ||
+          aktiv === "host"
             ? ""
             : "px-8 py-8 lg:px-14 lg:py-12"
         }`}
       >
-        {(aktiv === "titel" || aktiv === "beschreibung") ? (
+        {aktiv === "titel" ? (
           <div className="min-h-0 flex-1">
             <TextPanel
-              titel={aktiv === "titel" ? t("secTitel") : t("secBeschreibung")}
-              wert={aktiv === "titel" ? viewProp.title : viewProp.description ?? ""}
-              platzhalter={
-                aktiv === "titel" ? t("titelPlatzhalter") : t("beschreibungPlatzhalter")
-              }
-              mehrzeilig={aktiv === "beschreibung"}
-              maxLen={aktiv === "titel" ? 50 : 500}
-              onSave={(v) =>
-                speichere(aktiv === "titel" ? { title: v } : { description: v })
-              }
+              titel={t("secTitel")}
+              wert={viewProp.title}
+              platzhalter={t("titelPlatzhalter")}
+              mehrzeilig={false}
+              maxLen={50}
+              onSave={(v) => speichere({ title: v })}
             />
           </div>
         ) : (
@@ -656,6 +748,22 @@ export function ObjektEditor({
         )}
         {aktiv === "typ" && (
           <TypPanel property={viewProp} onSpeichere={speichere} />
+        )}
+        {aktiv === "beschreibung" && (
+          <BeschreibungPanel
+            property={viewProp}
+            onDescription={speichereBeschreibung}
+            onBlob={speichereBeschreibungZusatz}
+            onDetailOffen={setDetailOffen}
+          />
+        )}
+        {aktiv === "host" && (
+          <HostProfilPanel
+            profile={profil}
+            onPatch={speichereProfil}
+            onProfil={setProfil}
+            onDetailOffen={setDetailOffen}
+          />
         )}
         {aktiv === "gaeste" && (
           <GaestePanel

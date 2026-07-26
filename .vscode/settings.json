@@ -1,4 +1,8 @@
 {
+  "// TypeScript": "IDE nutzt die Workspace-TS (5.9.3, bun-Symlink), NICHT VS Codes eingebautes TS 6.0 — sonst wirft der Language-Server ts(2882) bei side-effect-CSS-Imports (noUncheckedSideEffectImports ist ab TS 6.0 default an), während 'tsc' grün ist.",
+  "typescript.tsdk": "gastgeber/node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+
   "// Hinweis": "Tailwind v4: CSS-basierte Konfiguration. Quelle der Design-Tokens liegt im Storybook-Package.",
   "tailwindCSS.experimental.configFile": {
     "apps/storybook/styles/globals.css": "apps/storybook/**"

@@ -15,6 +15,14 @@ export function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
+  // Statische Dateien aus public/ (Illustrationen, Bilder, Fonts …) NIE auf die
+  // Anmeldung umleiten — sonst liefert Next einen 307 statt der Datei, und
+  // next/image kann das Bild nicht laden. Der Matcher unten deckt nur _next/*
+  // ab, nicht eigene public/-Assets → hier per Dateiendung freigeben.
+  if (/\.(?:png|jpe?g|svg|gif|webp|avif|ico|woff2?|ttf|otf)$/i.test(pathname)) {
+    return NextResponse.next();
+  }
+
   // host-only Cookie (dev: nd_host, prod: __Host-nd_host).
   const token =
     req.cookies.get("__Host-nd_host")?.value ??

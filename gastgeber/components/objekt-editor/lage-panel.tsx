@@ -208,7 +208,18 @@ export function LagePanel({
 /* Karte                                                              */
 /* ------------------------------------------------------------------ */
 
-function LageKarte({ lat, lng }: { lat: number; lng: number }) {
+export function LageKarte({
+  lat,
+  lng,
+  statisch,
+}: {
+  lat: number;
+  lng: number;
+  // statisch = nicht interagierbar (z. B. als Vorschau in einem Button/Karte):
+  // Gesten aus, damit ein Klick sauber den umgebenden Button auslöst statt in
+  // die Karte zu greifen.
+  statisch?: boolean;
+}) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   if (!apiKey) {
     return (
@@ -218,21 +229,23 @@ function LageKarte({ lat, lng }: { lat: number; lng: number }) {
     );
   }
   return (
-    <APIProvider apiKey={apiKey}>
-      {/* Klassischer Marker (nicht AdvancedMarker): funktioniert OHNE im Google-
-          Cloud-Projekt registrierte Vektor-mapId — genau das Muster aus web/
-          location-form.tsx. AdvancedMarker bräuchte eine echte mapId, sonst
-          bleibt die Karte leer. */}
-      <Map
-        center={{ lat, lng }}
-        defaultZoom={14}
-        gestureHandling="cooperative"
-        disableDefaultUI
-        className="size-full"
-      >
-        <Marker position={{ lat, lng }} />
-      </Map>
-    </APIProvider>
+    <div className={statisch ? "pointer-events-none size-full" : "size-full"}>
+      <APIProvider apiKey={apiKey}>
+        {/* Klassischer Marker (nicht AdvancedMarker): funktioniert OHNE im Google-
+            Cloud-Projekt registrierte Vektor-mapId — genau das Muster aus web/
+            location-form.tsx. AdvancedMarker bräuchte eine echte mapId, sonst
+            bleibt die Karte leer. */}
+        <Map
+          center={{ lat, lng }}
+          defaultZoom={14}
+          gestureHandling={statisch ? "none" : "cooperative"}
+          disableDefaultUI
+          className="size-full"
+        >
+          <Marker position={{ lat, lng }} />
+        </Map>
+      </APIProvider>
+    </div>
   );
 }
 
