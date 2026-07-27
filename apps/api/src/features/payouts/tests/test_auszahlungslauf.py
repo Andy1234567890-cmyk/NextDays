@@ -65,11 +65,18 @@ class _FakeDb:
         return _FakeQuery(name, self.store)
 
 
+# Feste UUIDs statt "p1"/"t1": Die echte DB weist Nicht-UUIDs mit
+# `invalid input syntax for type uuid` ab — das frühere Fake hat das verdeckt.
+_PAYOUT_ID = "11111111-1111-4111-8111-111111111111"
+_TENANT_ID = "22222222-2222-4222-8222-222222222222"
+_RESERVATION_ID = "33333333-3333-4333-8333-333333333333"
+
+
 def _zeile(**over: Any) -> dict[str, Any]:
     basis = {
-        "id": "p1",
-        "tenant_id": "t1",
-        "reservation_id": "r1",
+        "id": _PAYOUT_ID,
+        "tenant_id": _TENANT_ID,
+        "reservation_id": _RESERVATION_ID,
         "net_amount_cents": 92000,
         "currency": "eur",
         "status": "due",
@@ -188,9 +195,46 @@ def _entsperrt(monkeypatch) -> None:
     )
 
 
-def test_transfer_geht_in_buchungswaehrung_raus(monkeypatch, _entsperrt) -> None:
+@pytest.fixture
+def _sauberer_betrieb() -> Any:
+    """Ein Betrieb OHNE laufenden Steuer-Mahnvorgang, am echten Client.
+
+    Bewusst kein Fake mehr: Das frühere `_FakeDb` kannte nur die zufällig
+    genutzten Query-Methoden. Als der Lauf um die Steuer-Sperre (§ 23 PStTG)
+    erweitert wurde, brach es an `is_()` — einer Methode, die der echte Client
+    hat. Das Double hat den Fehler also ERZEUGT, nicht gefunden.
+
+    Die Steuer-Sperre wird hier NICHT weggepatcht: Der Service fragt die echte
+    Tabelle, und der Test stellt nur sicher, dass für diesen Betrieb kein
+    Einbehalt läuft. So bleibt die Sperre auch in diesen Tests scharf.
+    """
+    from src.core.supabase import get_service_client  # noqa: PLC0415
+
+    db = get_service_client()
+    rows = (db.table("tenants").select("id").limit(1).execute()).data
+    if not rows:
+        pytest.skip("Kein Betrieb in der DB.")
+    tenant_id = rows[0]["id"]
+    laufend = (
+        db.table("taxpayer_enforcement")
+        .select("id")
+        .eq("tenant_id", tenant_id)
+        .is_("resolved_at", "null")
+        .not_.is_("enforced_at", "null")
+        .execute()
+    ).data
+    if laufend:
+        pytest.skip("Betrieb hat einen laufenden Steuer-Einbehalt.")
+    return db, tenant_id
+
+
+@pytest.mark.integration
+def test_transfer_geht_in_buchungswaehrung_raus(
+    monkeypatch, _entsperrt, _sauberer_betrieb
+) -> None:
     """Der Betrieb bekommt seine Währung — nicht die der Plattform."""
-    svc = PayoutsService(db=_FakeDb({}))
+    db, tenant_id = _sauberer_betrieb
+    svc = PayoutsService(db=db)
     monkeypatch.setattr(PayoutsService, "_ziel_konto", lambda self, t: "acct_x")
     monkeypatch.setattr(PayoutsService, "_pausiert", lambda self, t: False)
     monkeypatch.setattr(PayoutsService, "_offene_posten", lambda self, t, c: [])
@@ -208,18 +252,22 @@ def test_transfer_geht_in_buchungswaehrung_raus(monkeypatch, _entsperrt) -> None
     monkeypatch.setattr(
         "src.features.payouts.service.sc.create_transfer", _transfer
     )
-    assert svc._verarbeite_zeile(_zeile(currency="sek")) is True
+    assert svc._verarbeite_zeile(_zeile(currency="sek", tenant_id=tenant_id)) is True
     assert gerufen["amount_cents"] == 92000
     assert gerufen["currency"] == "sek"
     assert gerufen["destination_acct"] == "acct_x"
-    assert gerufen["transfer_group"] == "reservation:r1"
+    assert gerufen["transfer_group"] == f"reservation:{_RESERVATION_ID}"
     # Wurzel 2: Retry darf nicht ein zweites Mal auszahlen.
-    assert gerufen["idempotency_key"] == "payout-p1"
+    assert gerufen["idempotency_key"] == f"payout-{_PAYOUT_ID}"
 
 
-def test_offene_posten_kuerzen_den_transfer(monkeypatch, _entsperrt) -> None:
+@pytest.mark.integration
+def test_offene_posten_kuerzen_den_transfer(
+    monkeypatch, _entsperrt, _sauberer_betrieb
+) -> None:
     """Airbnb-Modell: Storno wird verrechnet, nicht zurückgeholt."""
-    svc = PayoutsService(db=_FakeDb({}))
+    db, tenant_id = _sauberer_betrieb
+    svc = PayoutsService(db=db)
     monkeypatch.setattr(PayoutsService, "_ziel_konto", lambda self, t: "acct_x")
     monkeypatch.setattr(PayoutsService, "_pausiert", lambda self, t: False)
     monkeypatch.setattr(
@@ -240,13 +288,16 @@ def test_offene_posten_kuerzen_den_transfer(monkeypatch, _entsperrt) -> None:
         "src.features.payouts.service.sc.create_transfer",
         lambda **kw: (gerufen.update(kw), {"id": "tr_1"})[1],
     )
-    assert svc._verarbeite_zeile(_zeile()) is True
+    assert svc._verarbeite_zeile(_zeile(tenant_id=tenant_id)) is True
     assert gerufen["amount_cents"] == 62000  # 92000 − 30000
 
 
-def test_voll_verrechnet_zahlt_gar_nicht_aus(monkeypatch, _entsperrt) -> None:
+@pytest.mark.integration
+def test_voll_verrechnet_zahlt_gar_nicht_aus(
+    monkeypatch, _entsperrt, _sauberer_betrieb
+) -> None:
     """Deckt der offene Posten alles, fließt kein Geld — die Zeile ist erledigt."""
-    db = _FakeDb({})
+    db, tenant_id = _sauberer_betrieb
     svc = PayoutsService(db=db)
     monkeypatch.setattr(PayoutsService, "_ziel_konto", lambda self, t: "acct_x")
     monkeypatch.setattr(PayoutsService, "_pausiert", lambda self, t: False)
@@ -263,9 +314,44 @@ def test_voll_verrechnet_zahlt_gar_nicht_aus(monkeypatch, _entsperrt) -> None:
         "src.features.payouts.service.sc.create_transfer",
         lambda **kw: gerufen.append(kw),
     )
-    assert svc._verarbeite_zeile(_zeile()) is False
-    assert not gerufen, "kein Transfer, wenn alles verrechnet ist"
-    assert any(p.get("status") == "paid" for _, p in db.store["updates"])
+    # Echte Zeile anlegen, damit das Status-Update auch wirklich eine Zeile
+    # trifft — gegen die echte DB ist „update lief" nur beweisbar, wenn die
+    # Zeile danach gelesen werden kann. Die Reservierung muss dabei existieren:
+    # payouts.reservation_id hat einen Fremdschlüssel (das Fake kannte den nicht).
+    res = (
+        db.table("reservations")
+        .select("id")
+        .eq("tenant_id", tenant_id)
+        .limit(1)
+        .execute()
+    ).data
+    if not res:
+        pytest.skip("Betrieb hat keine Reservierung.")
+    reservation_id = res[0]["id"]
+    db.table("payouts").delete().eq("id", _PAYOUT_ID).execute()
+    db.table("payouts").insert(
+        {
+            "id": _PAYOUT_ID,
+            "tenant_id": tenant_id,
+            "reservation_id": reservation_id,
+            "gross_amount_cents": 100000,
+            "net_amount_cents": 92000,
+            "platform_fee_cents": 8000,
+            "currency": "eur",
+            "status": "due",
+            "due_at": JETZT.isoformat(),
+            "charge_modell": "separate",
+        }
+    ).execute()
+    try:
+        assert svc._verarbeite_zeile(_zeile(tenant_id=tenant_id)) is False
+        assert not gerufen, "kein Transfer, wenn alles verrechnet ist"
+        danach = (
+            db.table("payouts").select("status").eq("id", _PAYOUT_ID).execute()
+        ).data
+        assert danach and danach[0]["status"] == "paid"
+    finally:
+        db.table("payouts").delete().eq("id", _PAYOUT_ID).execute()
 
 
 def test_pausierter_betrieb_wird_uebersprungen(monkeypatch, _entsperrt) -> None:
@@ -275,13 +361,17 @@ def test_pausierter_betrieb_wird_uebersprungen(monkeypatch, _entsperrt) -> None:
         svc._verarbeite_zeile(_zeile())
 
 
-def test_ohne_auszahlungskonto_kein_transfer(monkeypatch, _entsperrt) -> None:
+@pytest.mark.integration
+def test_ohne_auszahlungskonto_kein_transfer(
+    monkeypatch, _entsperrt, _sauberer_betrieb
+) -> None:
     """Kein Konto = liegen lassen, nicht als Fehler werten."""
-    svc = PayoutsService(db=_FakeDb({}))
+    db, tenant_id = _sauberer_betrieb
+    svc = PayoutsService(db=db)
     monkeypatch.setattr(PayoutsService, "_pausiert", lambda self, t: False)
     monkeypatch.setattr(PayoutsService, "_ziel_konto", lambda self, t: None)
     with pytest.raises(_Uebersprungen):
-        svc._verarbeite_zeile(_zeile())
+        svc._verarbeite_zeile(_zeile(tenant_id=tenant_id))
 
 
 # --- transfer_group: die Klammer zwischen Charge und Transfer ---------------

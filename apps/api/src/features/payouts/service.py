@@ -87,6 +87,18 @@ class PayoutsService:
         ).data
         return bool(rows[0]["paused"]) if rows else False
 
+    def _steuerangaben_fehlen(self, tenant_id: str) -> bool:
+        """Steht für diesen Betrieb ein Einbehalt nach § 23 PStTG?
+
+        Import lokal, um einen Zyklus payouts ↔ taxpayer zu vermeiden: der
+        taxpayer-Slice liest seinerseits Objekte und Rechnungsprofil.
+        """
+        from src.features.taxpayer.enforcement import (  # noqa: PLC0415
+            TaxpayerEnforcement,
+        )
+
+        return TaxpayerEnforcement(self._db).zahlungen_einbehalten(tenant_id)
+
     # --- Ledger: Zeile anlegen ---------------------------------------------
 
     def plane_auszahlung(
@@ -397,6 +409,16 @@ class PayoutsService:
             raise _Uebersprungen
 
         if self._pausiert(tenant_id):
+            raise _Uebersprungen
+
+        # § 23 PStTG (DAC7): Fehlen die Steuerangaben nach zwei Erinnerungen und
+        # Ablauf der Frist, MUSS die Plattform die Vergütung einbehalten — das
+        # Unterlassen ist bußgeldbewehrt (§ 25 Abs. 1 Nr. 6, bis 30.000 EUR).
+        # Gewählt ist der Einbehalt (Satz 2 Nr. 2), nicht die Kontosperre
+        # (Nr. 1) — das ist das Airbnb-Modell und trifft nur den säumigen
+        # Betrieb. Die Zeile bleibt liegen und wird ausgezahlt, sobald die
+        # Angaben vorliegen; § 23 Satz 3 macht diese Aufhebung zur Pflicht.
+        if self._steuerangaben_fehlen(tenant_id):
             raise _Uebersprungen
 
         konto = self._ziel_konto(tenant_id)
