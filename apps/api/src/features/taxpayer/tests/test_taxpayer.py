@@ -78,15 +78,36 @@ def test_upsert_speichert_und_bestaetigt(
     assert eintrag.tin == "DE123456789"
 
 
-def test_upsert_ersetzt_statt_zu_doppeln(
+def test_upsert_doppelt_nicht(
     service: TaxpayerService, ctx: AuthContext
 ) -> None:
-    """Der UNIQUE-Constraint macht die Korrektur zum Ersetzen — echt geprüft."""
+    """Ein Land, ein Eintrag — der UNIQUE-Constraint macht die Korrektur
+    zum Ersetzen statt zum Anlegen einer zweiten, widersprüchlichen Zeile."""
     service.upsert(ctx, _firma())
-    service.upsert(ctx, _firma(tin="DE999999999"))
+    service.upsert(ctx, _firma(city="Hamburg"))
     de = [e for e in service.list(ctx) if e.country == "DE"]
     assert len(de) == 1
-    assert de[0].tin == "DE999999999"
+    assert de[0].city == "Hamburg"
+
+
+def test_steuernummer_laesst_sich_nicht_ueberschreiben(
+    service: TaxpayerService, ctx: AuthContext
+) -> None:
+    """Zwei-Klassen-Modell nach Airbnb (Hilfeartikel 417): Stammdaten sind
+    änderbar, die Steuernummer nicht.
+
+    Eine geänderte Steuernummer ist ein ANDERER Steuerpflichtiger. Würde sie
+    still überschrieben, stünde in der nächsten Meldung eine andere Person
+    unter demselben Eintrag — und die bereits abgegebene Selbstauskunft wäre
+    nicht mehr nachvollziehbar.
+    """
+    service.upsert(ctx, _firma())
+    with pytest.raises(TaxpayerError) as exc:
+        service.upsert(ctx, _firma(tin="DE999999999"))
+    assert exc.value.status_code == 409
+    # Der alte Wert bleibt unangetastet.
+    de = [e for e in service.list(ctx) if e.country == "DE"]
+    assert de[0].tin == "DE123456789"
 
 
 def test_mehrere_laender_nebeneinander(

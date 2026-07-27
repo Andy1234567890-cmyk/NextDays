@@ -21,7 +21,7 @@ import { ZahlungenAbschnitt } from "@/components/konto/zahlungen-abschnitt";
 import { ZahlungenTabs } from "@/components/konto/zahlungen-tabs";
 import { getAuszahlungsUebersicht } from "@/lib/auszahlungen";
 import { getNotificationOverview } from "@/lib/benachrichtigungen";
-import { getTaxpayerOverview } from "@/lib/steuern";
+import { getObjektangaben, getTaxpayerOverview } from "@/lib/steuern";
 import { getPrivacySettings } from "@/lib/datenschutz";
 import { getDebugSessions } from "@/lib/diagnose";
 import { getAccount } from "@/lib/konto";
@@ -85,7 +85,12 @@ export default async function KontoPage({
     aktiv === "datenschutz" ? await getDebugSessions().catch(() => []) : [];
   const benachrichtigungen =
     aktiv === "benachrichtigungen" ? await getNotificationOverview() : null;
-  const steuern = aktiv === "steuern" ? await getTaxpayerOverview() : null;
+  // Beide Steuer-Abfragen parallel: die Objektangaben sind ein eigener
+  // Endpunkt, aber derselbe Tab — nacheinander wäre der Tab doppelt langsam.
+  const [steuern, objektangaben] =
+    aktiv === "steuern"
+      ? await Promise.all([getTaxpayerOverview(), getObjektangaben()])
+      : [null, null];
 
   return (
     <div className="mx-auto max-w-6xl px-8 py-12">
@@ -142,7 +147,12 @@ export default async function KontoPage({
           {aktiv === "benachrichtigungen" && (
             <BenachrichtigungenAbschnitt uebersicht={benachrichtigungen} />
           )}
-          {aktiv === "steuern" && <SteuernAbschnitt uebersicht={steuern} />}
+          {aktiv === "steuern" && (
+            <SteuernAbschnitt
+              uebersicht={steuern}
+              objektangaben={objektangaben}
+            />
+          )}
           {aktiv === "unternehmen" && <UnternehmenTab profil={unternehmen} />}
           {VORBEREITUNG[aktiv] && (
             <VorbereitungAbschnitt titelKey={VORBEREITUNG[aktiv]} />

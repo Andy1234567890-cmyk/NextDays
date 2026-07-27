@@ -228,8 +228,3 @@ def business_type_for(
     return (_INDIVIDUAL, None)
 
 
-def needs_person_api(business_type: str) -> bool:
-    """True, wenn Personen (representative/directors/owners) über die Persons-API
-    angelegt werden müssen — NUR bei company/non_profit, NIE bei individual
-    (dort entsteht die Person automatisch aus ``individual.*``)."""
-    return business_type in (_COMPANY, _NON_PROFIT)

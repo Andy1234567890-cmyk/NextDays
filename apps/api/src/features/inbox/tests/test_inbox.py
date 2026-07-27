@@ -323,7 +323,8 @@ def test_scope_assigned_only_filters_foreign_thread_to_404() -> None:
     # assigned-only-Nutzer: fremder (nicht zugewiesener) Thread → 404.
     db = _FakeDB(
         [_thread(assigned_to="someone-else")], [],
-        user_role="staff", user_perms=["access_pm_features", "pm_chat"],  # kein inbox_view_all → assigned
+        # ohne inbox_view_all → der Nutzer sieht nur Zugewiesenes
+        user_role="staff", user_perms=["access_pm_features", "pm_chat"],
     )
     svc = InboxService(service_client=db, channex=_FakeChannex())
     with pytest.raises(InboxError) as exc:

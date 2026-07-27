@@ -4,6 +4,7 @@ from datetime import date
 import pytest
 from fastapi.testclient import TestClient
 
+from src.core.dates import merge_day_ranges
 from src.core.security import AuthContext
 from src.features.calendar.schemas import (
     AvailabilityStatus,
@@ -675,8 +676,10 @@ def test_reset_all_stop_sell_rejects_missing_tenant() -> None:
 
 
 def test_date_spans_compresses_consecutive_days() -> None:
-    spans = CalendarService._date_spans(
-        [date(2027, 6, 5), date(2027, 6, 6), date(2027, 6, 8)]
+    # Früher CalendarService._date_spans — jetzt die zentrale Funktion mit der
+    # inklusiven Channex-Konvention (core.dates). Erwartung unverändert.
+    spans = merge_day_ranges(
+        [date(2027, 6, 5), date(2027, 6, 6), date(2027, 6, 8)], end_exclusive=False
     )
     assert spans == [
         (date(2027, 6, 5), date(2027, 6, 6)),

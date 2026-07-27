@@ -25,7 +25,6 @@ from src.core.security import AuthContext
 
 from .schemas import (
     GRUNDTARIF_LOOKUP_KEY,
-    MODULE_KEYS,
     MODULE_PRICE_LOOKUP,
     CommissionRow,
     CommissionSummary,
@@ -447,24 +446,6 @@ class SubscriptionsService:
         )
 
     # -- Modul-Entitlement (serverseitig, Wurzel 3) -------------------------
-    def has_module(self, ctx: AuthContext, module_key: str) -> bool:
-        """Feature-Gate: ist das Modul für diesen Tenant aktiv? Serverseitig
-        erzwungen — nie nur im Frontend ausblenden."""
-        db, tenant_id = self._require(ctx)
-        if module_key not in MODULE_KEYS:
-            raise SubscriptionsError(f"Unbekanntes Modul: {module_key}", status_code=400)
-        rows = (
-            db.table("tenant_module_entitlement")
-            .select("active")
-            .eq("tenant_id", tenant_id)
-            .eq("module_key", module_key)
-            .eq("active", True)
-            .limit(1)
-            .execute()
-        ).data
-        return bool(rows)
-
-    # -- Externe Provision (OTA-Buchungen, nachgelagert) --------------------
     def get_commission_summary(self, ctx: AuthContext) -> CommissionSummary:
         """Provisions-Übersicht für die Billing-UI: aktueller Satz + offene
         (pending) Provisionen. Tenant-gescopet (Wurzel 3)."""

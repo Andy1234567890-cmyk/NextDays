@@ -76,7 +76,7 @@ function mapList(a: ApiListing): Listing {
     typ: a.property_type,
     ort: ort(a.city, a.country),
     preisProNacht: a.price_from,
-    currency: a.currency || "EUR",
+    currency: a.currency ?? null,
     hue: hueAusId(a.id),
     fotos: a.photos ?? [],
     schlafzimmer: a.bedrooms,

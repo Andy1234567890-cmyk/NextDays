@@ -7,7 +7,9 @@ export type Listing = {
   typ: string; // property_type (für Themen-Reihen)
   ort: string; // "Stadt, Land" (gast-sicher, keine exakte Adresse)
   preisProNacht: number | null; // „ab"-Preis; null = kein Preis hinterlegt
-  currency: string;
+  // null = Backend liefert keine Währung. Nie ersetzen (Wurzel 4) —
+  // formatCurrency rendert dann symbollos statt ein falsches € zu erfinden.
+  currency: string | null;
   hue: number; // Farbton für den Platzhalter, falls kein Foto vorhanden
   fotos: string[]; // echte Foto-URLs (kann leer sein → Platzhalter)
   schlafzimmer: number | null;
@@ -32,9 +34,7 @@ export function hueAusId(id: string): number {
   return h;
 }
 
-export function formatEuro(value: number, currency = "EUR"): string {
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: currency || "EUR",
-  }).format(value);
-}
+// Preis in der WÄHRUNG DES OBJEKTS formatieren — Single Source im geteilten
+// Paket (@nextdays/currency), kein €-Hardcode, symbollos bei fehlender Währung
+// (Wurzel 4). Identisch zu plattform/lib/listings.ts (ADR-0016).
+export { formatCurrency } from "@nextdays/currency";

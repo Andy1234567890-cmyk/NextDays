@@ -48,6 +48,9 @@ from .features.inbox import scheduler as inbox_scheduler
 from .features.inbox.router import router as inbox_router
 from .features.login_devices.router import router as login_devices_router
 from .features.media.router import router as media_router
+from .features.notification_settings.router import (
+    router as notification_settings_router,
+)
 from .features.ocr.router import router as ocr_router
 from .features.owner_statements.router import router as owner_statements_router
 from .features.owners.router import router as owners_router
@@ -55,15 +58,12 @@ from .features.payments.router import router as payments_router
 from .features.payouts.router import router as payouts_router
 from .features.platform_admin.router import router as platform_admin_router
 from .features.pricing.router import router as pricing_router
-from .features.notification_settings.router import (
-    router as notification_settings_router,
-)
 from .features.privacy_settings.router import router as privacy_settings_router
-from .features.taxpayer.router import router as taxpayer_router
 from .features.properties.router import router as properties_router
 from .features.property_discounts.router import router as property_discounts_router
 from .features.property_dossier.router import router as property_dossier_router
 from .features.property_portal.router import router as property_portal_router
+from .features.property_taxes.router import router as property_taxes_router
 from .features.public_portal.router import router as public_portal_router
 from .features.rates.router import router as rates_router
 from .features.reservations.router import router as reservations_router
@@ -72,6 +72,7 @@ from .features.site_config.router import public_router as site_config_public_rou
 from .features.subscriptions.router import router as subscriptions_router
 from .features.support.router import router as support_router
 from .features.tasks.router import router as tasks_router
+from .features.taxpayer.router import router as taxpayer_router
 from .features.travel_agencies.router import router as travel_agencies_router
 from .features.whatsapp.router import router as whatsapp_router
 
@@ -111,6 +112,7 @@ _SLICE_ROUTERS = [
     platform_admin_router,
     subscriptions_router,
     support_router,
+    property_taxes_router,
     taxpayer_router,
     external_calendar_router,
     cohosts_router,

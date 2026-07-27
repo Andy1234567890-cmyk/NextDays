@@ -13,7 +13,11 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Query
 
-from src.core.security import CurrentUser
+from src.core.security import (
+    CurrentPlatformAdmin,
+    CurrentUser,
+    require_platform_write,
+)
 
 from .dependencies import DiagnosticsServiceDep
 from .schemas import DebugSession, DebugSessionStart, DiagnosticBatch
@@ -76,15 +80,16 @@ def end_debug_session(
 
 @router.post("/purge")
 def purge(
-    ctx: CurrentUser,
+    ctx: CurrentPlatformAdmin,
     service: DiagnosticsServiceDep,
     tage: int = Query(30, ge=7, le=90),
 ) -> dict[str, int]:
     """Alte Diagnoseereignisse löschen (Aufbewahrungsgrenze).
 
-    Auf den eigenen Aufruf beschränkt zu prüfen wäre sinnlos — das Löschen
-    betrifft alle Konten. Der Aufruf ist daher als Wartungsaufgabe gedacht und
-    verlangt lediglich ein gültiges Login; er gibt keine Daten preis.
+    Das Löschen wirkt MANDANTENÜBERGREIFEND — es ist eine Plattform-
+    Wartungsaufgabe, keine Betriebsfunktion. Mit `CurrentUser` konnte zuvor
+    jeder eingeloggte Nutzer irgendeines Betriebs fremde Diagnosedaten
+    löschen (Wurzel 3/9); deshalb Platform-Admin mit Schreibrecht.
     """
-    _ = ctx
+    require_platform_write(ctx)
     return {"geloescht": service.purge_old(tage=tage)}

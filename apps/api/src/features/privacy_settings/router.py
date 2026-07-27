@@ -6,12 +6,13 @@ sieht/ändert nur die EIGENE Zeile.
 """
 from __future__ import annotations
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from src.core.security import CurrentUser
 
 from .dependencies import PrivacySettingsServiceDep
 from .schemas import PrivacySettings, PrivacySettingsUpdate
+from .service import PrivacySettingsError
 
 router = APIRouter(prefix="/privacy-settings", tags=["privacy-settings"])
 
@@ -30,5 +31,14 @@ def update_privacy_settings(
     ctx: CurrentUser,
     service: PrivacySettingsServiceDep,
 ) -> PrivacySettings:
-    """Einzelne Präferenzen ändern (nur gesetzte Felder). Legt die Zeile lazy an."""
-    return service.update(ctx, patch)
+    """Einzelne Präferenzen ändern (nur gesetzte Felder). Legt die Zeile lazy an.
+
+    Das Objekt-Feld `listings_search_engine_indexing` verlangt zusätzlich
+    MANAGE_PROPERTIES — es schreibt auf ALLE Objekte des Tenants (Wurzel 9).
+    """
+    try:
+        return service.update(ctx, patch)
+    except PrivacySettingsError as exc:
+        raise HTTPException(
+            status_code=exc.status_code, detail=exc.message
+        ) from exc

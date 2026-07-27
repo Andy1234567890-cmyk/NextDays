@@ -191,6 +191,8 @@ class AccountResponse(BaseModel):
     additional_phone: str | None = None
     hide_phones: bool = False
     preferred_language: str | None = None
+    preferred_currency: str | None = None
+    preferred_timezone: str | None = None
     spoken_languages: list[str] = []
     website: str | None = None
     description: str | None = None
@@ -296,6 +298,12 @@ class UpdateProfileRequest(BaseModel):
     additional_phone: str | None = Field(default=None, max_length=40)
     hide_phones: bool | None = None
     preferred_language: str | None = Field(default=None, max_length=10)
+    # ISO-4217 (3 Grossbuchstaben) bzw. IANA-Zone — die DB prueft beides
+    # zusaetzlich, damit auch ein direkter Schreibpfad nicht durchrutscht.
+    preferred_currency: str | None = Field(
+        default=None, min_length=3, max_length=3, pattern=r"^[A-Z]{3}$"
+    )
+    preferred_timezone: str | None = Field(default=None, max_length=64)
     spoken_languages: list[str] | None = None
     website: str | None = Field(default=None, max_length=300)
     description: str | None = Field(default=None, max_length=5000)
@@ -340,6 +348,17 @@ class TotpVerifyResponse(BaseModel):
 
 class TotpDisableRequest(BaseModel):
     code: str = Field(min_length=6, max_length=8)
+
+
+class PhoneDisableRequest(BaseModel):
+    """SMS-Zweitfaktor entfernen.
+
+    Passwort statt SMS-Code: Wer das Telefon verloren hat, kann keinen Code
+    empfangen — eine Code-Abfrage waere genau im Bedarfsfall unbenutzbar.
+    Optional, weil reine OAuth-Konten kein Passwort haben.
+    """
+
+    current_password: SecretStr | None = None
 
 
 class PhoneSendCodeRequest(BaseModel):

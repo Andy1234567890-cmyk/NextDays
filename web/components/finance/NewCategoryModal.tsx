@@ -33,7 +33,9 @@ export interface NewCategoryModalProps {
   saving?: boolean;
   onSave?: (values: CategoryValues) => Promise<void>;
   companyId?: string;
-  onSaved?: (categoryId: string, categoryData: CategoryValues) => void;
+  // Ohne Backend-Endpunkt gibt es keine Kategorie-ID — der Aufrufer bekommt nur
+  // die eingegebenen Werte.
+  onSaved?: (categoryData: CategoryValues) => void;
 }
 
 const DEFAULT_VALUES: CategoryValues = {
@@ -66,24 +68,22 @@ export default function NewCategoryModal({
     return values.name.trim() && values.categoryType.trim();
   };
 
+  // Es gibt im Backend keinen Kategorie-Endpunkt (der frühere Aufruf auf
+  // /api/v1/categories lief immer in einen 404, `onSaved` wurde daher nie
+  // erreicht). Die Kategorie lebt jetzt rein im Formular-Zustand: `onSaved`
+  // übernimmt sie in die Kundenmaske, `onSave` bleibt der Persistenz-Haken für
+  // den Elternteil.
   const handleSave = async () => {
     if (!isValid()) return;
 
     try {
-      // Import API function dynamically
-      const { createCategory } = await import('@/utils/api/companyApi');
-
-      const response = await createCategory(values);
-      if (response.success && response.categoryId) {
-        if (onSaved) onSaved(response.categoryId, values);
-        onOpenChange(false);
-        return;
-      }
-
-      // Fallback: Eltern-Handler verwenden
       if (onSave) {
         await onSave(values);
       }
+      if (onSaved) {
+        onSaved(values);
+      }
+      onOpenChange(false);
     } catch (error) {
       console.error('Fehler beim Speichern der Kategorie:', error);
     }

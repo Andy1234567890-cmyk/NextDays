@@ -133,7 +133,7 @@ def checklist_item(
     ],
 ) -> dict[str, str]:
     try:
-        return {"id": service.add_checklist_item(_tenant(ctx), req).id}
+        return {"id": service.add_checklist_item(_tenant(ctx), req, ctx).id}
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -147,7 +147,7 @@ def checklist_photo(
     ],
 ) -> dict[str, str]:
     try:
-        return {"id": service.add_checklist_photo(_tenant(ctx), req)}
+        return {"id": service.add_checklist_photo(_tenant(ctx), req, ctx)}
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -166,7 +166,7 @@ async def upload_checklist_photo(
     content = await file.read()
     try:
         photo_id = service.upload_checklist_photo(
-            _tenant(ctx), item_id, content, file.content_type or ""
+            _tenant(ctx), item_id, content, file.content_type or "", ctx
         )
         return {"id": photo_id}
     except TaskError as exc:
@@ -187,7 +187,7 @@ async def upload_task_photo(
     content = await file.read()
     try:
         photo_id = service.upload_task_photo(
-            _tenant(ctx), task_id, content, file.content_type or ""
+            _tenant(ctx), task_id, content, file.content_type or "", ctx
         )
         return {"id": photo_id}
     except TaskError as exc:
@@ -204,6 +204,27 @@ def request_substitution(
 ) -> dict[str, str]:
     try:
         sub = service.request_substitution(_tenant(ctx), ctx.user_id, req)
+        return {"id": sub.id, "status": sub.status.value}
+    except TaskError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/substitution/{substitution_id}/accept")
+def accept_substitution(
+    substitution_id: str,
+    service: TasksServiceDep,
+    ctx: Annotated[
+        AuthContext, Depends(require_permission(Capability.REQUEST_SUBSTITUTE))
+    ],
+) -> dict[str, str]:
+    """Eine Vertretungsanfrage annehmen.
+
+    Ohne diesen Endpunkt war das Feature eine Sackgasse: eine Vertretung ließ
+    sich anfragen, aber von niemandem annehmen. Dieselbe Fähigkeit wie das
+    Anfragen — wer vertreten werden darf, darf auch vertreten.
+    """
+    try:
+        sub = service.accept_substitution(_tenant(ctx), substitution_id, ctx.user_id)
         return {"id": sub.id, "status": sub.status.value}
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
@@ -276,7 +297,7 @@ def task_detail(
     ctx: Annotated[AuthContext, Depends(_own())],
 ) -> TaskDetail:
     try:
-        return service.get_detail(_tenant(ctx), task_id)
+        return service.get_detail(_tenant(ctx), task_id, ctx)
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
@@ -288,7 +309,7 @@ def complete_task(
     ctx: Annotated[AuthContext, Depends(_own())],
 ) -> TaskDetail:
     try:
-        return service.complete_task(_tenant(ctx), task_id, ctx.user_id)
+        return service.complete_task(_tenant(ctx), task_id, ctx.user_id, ctx)
     except TaskError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

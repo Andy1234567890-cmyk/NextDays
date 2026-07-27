@@ -1,61 +1,72 @@
-// Länder für die Steuerzahler-Angaben (DAC7/PStTG).
+// Ländernamen für die Oberfläche — ISO-3166-1 alpha-2 bleibt der Datenwert.
 //
-// Umfang: die 27 EU-Mitgliedstaaten plus Norwegen, Island und Liechtenstein
-// (EWR) sowie das Vereinigte Königreich und die Schweiz — dort haben Betriebe
-// typischerweise Objekte, und die Meldepflicht bzw. vergleichbare Regeln
-// greifen. Bewusst KEINE Weltliste: jedes zusätzliche Land bräuchte geprüfte
-// Regeln zur Steuernummer, und die zu erfinden wäre falsch (Wurzel 4).
+// Gespeichert und übertragen wird AUSSCHLIESSLICH der ISO-Code („DE", „NZ").
+// Der ausgeschriebene Name entsteht erst beim Rendern und wird nie persistiert.
 //
-// Die Namen stehen hier auf Deutsch, weil das Frontend derzeit nur Deutsch
-// spricht (gastgeber/messages/de.json). Kommt eine zweite Sprache, wandern sie
-// in die Message-Dateien.
+// Warum keine gepflegte Liste mehr: Die Auswahl der Steuerländer kommt aus
+// `tax_country_rules` in der DB. Eine zweite, handgepflegte Namensliste im
+// Frontend lief zwangsläufig auseinander — sie hatte 32 Einträge, die DB 42,
+// und für die Differenz erschien im Wizard das rohe Kürzel („CA", „NZ").
+// `Intl.DisplayNames` kennt jeden gültigen ISO-Code und kann deshalb nicht
+// unvollständig sein: Neue Länder in der Regeltabelle wirken sofort, ohne dass
+// hier etwas nachgezogen werden muss.
+//
+// Die Sprache ist fest „de", solange das Frontend nur Deutsch spricht. Kommt
+// eine zweite Sprache, wird sie zum Parameter — die Aufrufer bleiben gleich.
+
+const SPRACHE = "de";
+
+/** Wird einmal gebaut: `Intl.DisplayNames` ist pro Aufruf teuer, und die
+ *  Länderauswahl rendert Dutzende Optionen. */
+const ANZEIGE = new Intl.DisplayNames([SPRACHE], {
+  type: "region",
+  // Unbekannte Codes liefern den Code zurück statt zu werfen. Ein erfundener
+  // Name wäre hier schlimmer als das Kürzel (Wurzel 4).
+  fallback: "code",
+});
 
 export interface Land {
+  /** ISO-3166-1 alpha-2 — der einzige Wert, der gespeichert wird. */
   code: string;
   name: string;
-  /** EU-Mitglied → DAC7 gilt unmittelbar. */
-  eu: boolean;
 }
 
-export const LAENDER: readonly Land[] = [
-  { code: "AT", name: "Österreich", eu: true },
-  { code: "BE", name: "Belgien", eu: true },
-  { code: "BG", name: "Bulgarien", eu: true },
-  { code: "CH", name: "Schweiz", eu: false },
-  { code: "CY", name: "Zypern", eu: true },
-  { code: "CZ", name: "Tschechien", eu: true },
-  { code: "DE", name: "Deutschland", eu: true },
-  { code: "DK", name: "Dänemark", eu: true },
-  { code: "EE", name: "Estland", eu: true },
-  { code: "ES", name: "Spanien", eu: true },
-  { code: "FI", name: "Finnland", eu: true },
-  { code: "FR", name: "Frankreich", eu: true },
-  { code: "GB", name: "Vereinigtes Königreich", eu: false },
-  { code: "GR", name: "Griechenland", eu: true },
-  { code: "HR", name: "Kroatien", eu: true },
-  { code: "HU", name: "Ungarn", eu: true },
-  { code: "IE", name: "Irland", eu: true },
-  { code: "IS", name: "Island", eu: false },
-  { code: "IT", name: "Italien", eu: true },
-  { code: "LI", name: "Liechtenstein", eu: false },
-  { code: "LT", name: "Litauen", eu: true },
-  { code: "LU", name: "Luxemburg", eu: true },
-  { code: "LV", name: "Lettland", eu: true },
-  { code: "MT", name: "Malta", eu: true },
-  { code: "NL", name: "Niederlande", eu: true },
-  { code: "NO", name: "Norwegen", eu: false },
-  { code: "PL", name: "Polen", eu: true },
-  { code: "PT", name: "Portugal", eu: true },
-  { code: "RO", name: "Rumänien", eu: true },
-  { code: "SE", name: "Schweden", eu: true },
-  { code: "SI", name: "Slowenien", eu: true },
-  { code: "SK", name: "Slowakei", eu: true },
-] as const;
-
-const NACH_CODE = new Map(LAENDER.map((l) => [l.code, l]));
-
-/** Ländername zum Code, oder der Code selbst, wenn er unbekannt ist —
- *  nie ein erfundener Name. */
+/** Ländername zum ISO-Code. Unbekannte Codes kommen unverändert zurück. */
 export function landName(code: string): string {
-  return NACH_CODE.get(code.toUpperCase())?.name ?? code.toUpperCase();
+  const iso = code.trim().toUpperCase();
+  if (iso.length !== 2) return iso;
+  try {
+    return ANZEIGE.of(iso) ?? iso;
+  } catch {
+    // Ungültige Codes (z. B. Ziffern) lässt `of` werfen — dann ist der Code
+    // selbst die ehrlichste Anzeige.
+    return iso;
+  }
 }
+
+/** Alle ISO-3166-1-alpha-2-Codes, nach deutschem Namen sortiert.
+ *
+ *  Für Felder, die JEDES Land zulassen müssen — etwa das Geburtsland: wer in
+ *  Brasilien geboren ist und in Spanien vermietet, muss beides angeben können.
+ *  Für die Steuerländer NICHT verwenden; deren Auswahl kommt aus der DB. */
+export function alleLaender(): readonly Land[] {
+  return ALLE;
+}
+
+/** ISO-3166-1 alpha-2: A..Z × A..Z durchgehen und behalten, was `Intl` als
+ *  echtes Land kennt. Reservierte und unbelegte Kombinationen liefern mit
+ *  `fallback: "code"` den Code selbst zurück und fallen so heraus. */
+function baueAlleLaender(): readonly Land[] {
+  const A = 65;
+  const laender: Land[] = [];
+  for (let i = 0; i < 26; i += 1) {
+    for (let j = 0; j < 26; j += 1) {
+      const code = String.fromCharCode(A + i, A + j);
+      const name = ANZEIGE.of(code);
+      if (name && name !== code) laender.push({ code, name });
+    }
+  }
+  return laender.sort((a, b) => a.name.localeCompare(b.name, SPRACHE));
+}
+
+const ALLE = baueAlleLaender();

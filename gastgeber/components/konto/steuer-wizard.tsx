@@ -12,18 +12,29 @@
 // fehlt. So kann die UI nicht behaupten, etwas sei in Ordnung, was der Server
 // ablehnt.
 import { Icon } from "@iconify/react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
-import { Dialog, DialogContent } from "@nextdays/ui/dialog";
+import { Dialog, DialogClose, DialogContent } from "@nextdays/ui/dialog";
 import { Input } from "@nextdays/ui/input";
 
-import { LAENDER } from "@/lib/laender";
-import type { TaxpayerEntry, TaxpayerInput, TaxpayerKind } from "@/lib/steuern";
+import { SuchAuswahl } from "@/components/ui/such-auswahl";
+import { alleLaender, landName } from "@/lib/laender";
+import type {
+  LandRegel,
+  TaxpayerEntry,
+  TaxpayerInput,
+  TaxpayerKind,
+} from "@/lib/steuern";
+import { getLaenderRegeln } from "@/lib/steuern";
 import { speichereSteuerangaben } from "@/lib/steuern-actions";
 import type { TaxpayerOverview } from "@/lib/steuern";
 
 type Schritt = "land" | "art" | "felder";
+
+/** Reihenfolge der Schritte — daraus wird der Fortschritt abgeleitet, statt
+ *  ihn an zweiter Stelle zu pflegen (sonst laufen beide auseinander). */
+const SCHRITTE: readonly Schritt[] = ["land", "art", "felder"] as const;
 
 export function SteuerWizard({
   offen,
@@ -66,6 +77,33 @@ export function SteuerWizard({
   const [fehler, setFehler] = useState<string | null>(null);
   const [laeuft, setLaeuft] = useState(false);
 
+  // Die wählbaren Steuerländer kommen aus `tax_country_rules` — eine zweite
+  // Liste im Frontend liefe zwangsläufig auseinander (Wurzel 4). Der Name wird
+  // aus dem ISO-Code gerendert, gespeichert bleibt nur der Code.
+  const [regeln, setRegeln] = useState<LandRegel[] | null>(null);
+  useEffect(() => {
+    if (!offen) return;
+    let aktiv = true;
+    void getLaenderRegeln().then((r) => {
+      if (aktiv) setRegeln(r);
+    });
+    return () => {
+      aktiv = false;
+    };
+  }, [offen]);
+
+  const steuerLaender = useMemo(
+    () =>
+      (regeln ?? [])
+        .map((r) => ({ code: r.country, name: landName(r.country) }))
+        .sort((a, b) => a.name.localeCompare(b.name, "de")),
+    [regeln],
+  );
+
+  // Geburtsland ist NICHT auf die Steuerländer begrenzt: wer in Brasilien
+  // geboren ist und in Spanien vermietet, muss beides angeben können.
+  const geburtsLaender = useMemo(() => alleLaender(), []);
+
   function setzeWert(feld: keyof TaxpayerInput, wert: string) {
     setWerte((v) => ({ ...v, [feld]: wert || null }));
   }
@@ -89,27 +127,86 @@ export function SteuerWizard({
 
   const istPerson = art === "individual";
 
+  // Nur die Schritte zählen, die dieser Durchlauf wirklich hat: kommt der
+  // Nutzer über „Land ergänzen", ist die Landauswahl schon erledigt. Sonst
+  // stünde dauerhaft „Schritt 2 von 3", ohne dass Schritt 1 je erscheint.
+  const aktiveSchritte = vorbelegtesLand
+    ? SCHRITTE.filter((s) => s !== "land")
+    : SCHRITTE;
+  const schrittNr = aktiveSchritte.indexOf(schritt) + 1;
+
+  // Beim Bearbeiten steht das Land fest, und ein vorbelegtes Land überspringt
+  // Schritt 1 — in beiden Fällen gibt es dahinter nichts, wohin man zurück
+  // könnte. Ein Pfeil, der nur schließt, wäre irreführend.
+  const zurueckMoeglich =
+    !bearbeiten &&
+    (schritt === "felder" || (schritt === "art" && !vorbelegtesLand));
+
+  function zurueck() {
+    setFehler(null);
+    if (schritt === "felder") setSchritt("art");
+    else if (schritt === "art") setSchritt("land");
+  }
+
   return (
     <Dialog open={offen} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-[34rem] rounded-3xl p-0">
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Schließen"
-            className="rounded-full p-1 text-muted-foreground hover:bg-muted"
-          >
-            <Icon icon="solar:close-circle-line-duotone" className="size-5" />
-          </button>
+      <DialogContent
+        className="max-w-[34rem] rounded-3xl p-0"
+        showCloseButton={false}
+      >
+        {/* Kopf wie bei Airbnb: links zurück im Fluss, rechts schließen —
+            zwei getrennte Bedeutungen, darum zwei getrennte Stellen. Ein
+            zweites X neben dem des Dialogs wäre doppelt. */}
+        <div className="flex items-center justify-between gap-2 px-6 pb-3 pt-4">
+          {zurueckMoeglich ? (
+            <button
+              type="button"
+              onClick={zurueck}
+              aria-label="Zurück"
+              className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            >
+              <Icon icon="ph:arrow-left" className="size-5" />
+            </button>
+          ) : (
+            <span className="size-7" />
+          )}
           <h3 className="font-display text-base font-bold">
             {bearbeiten
               ? "Steuerinformationen bearbeiten"
               : "Steuerinformationen hinzufügen"}
           </h3>
-          <span className="w-7" />
+          <DialogClose
+            aria-label="Schließen"
+            className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <Icon icon="ph:x" className="size-5" />
+          </DialogClose>
         </div>
 
-        <div className="max-h-[60vh] overflow-y-auto px-6 py-6">
+        {/* Fortschritt. Beim Bearbeiten entfällt er: dort gibt es nur einen
+            Schritt, ein Balken bei 100 % wäre eine Attrappe. */}
+        {!bearbeiten && (
+          <div className="px-6 pb-4">
+            <div
+              className="h-1 overflow-hidden rounded-full bg-muted"
+              role="progressbar"
+              aria-valuenow={schrittNr}
+              aria-valuemin={1}
+              aria-valuemax={aktiveSchritte.length}
+              aria-label={`Schritt ${schrittNr} von ${aktiveSchritte.length}`}
+            >
+              <div
+                className="h-full rounded-full bg-foreground transition-[width] duration-300"
+                style={{ width: `${(schrittNr / aktiveSchritte.length) * 100}%` }}
+              />
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Schritt {schrittNr} von {aktiveSchritte.length}
+            </p>
+          </div>
+        )}
+
+        <div className="max-h-[60vh] overflow-y-auto border-t border-border px-6 py-6">
           {schritt === "land" && (
             <div className="flex flex-col gap-4">
               <p className="text-[0.9375rem] text-foreground">
@@ -122,18 +219,17 @@ export function SteuerWizard({
               </p>
               <label className="flex flex-col gap-2">
                 <span className="text-sm font-medium">Land/Region</span>
-                <select
-                  value={land}
-                  onChange={(e) => setLand(e.target.value)}
-                  className="h-12 rounded-xl border border-border bg-background px-3 text-[0.9375rem]"
-                >
-                  <option value="">Bitte wählen</option>
-                  {LAENDER.map((l) => (
-                    <option key={l.code} value={l.code}>
-                      {l.name}
-                    </option>
-                  ))}
-                </select>
+                <SuchAuswahl
+                  optionen={steuerLaender.map((l) => ({
+                    wert: l.code,
+                    label: l.name,
+                    stichworte: l.code,
+                  }))}
+                  wert={land}
+                  onChange={setLand}
+                  platzhalter={regeln === null ? "Wird geladen …" : "Bitte wählen"}
+                  suchPlatzhalter="Land suchen …"
+                />
               </label>
             </div>
           )}
@@ -250,20 +346,16 @@ export function SteuerWizard({
                   />
                   <label className="flex flex-col gap-2">
                     <span className="text-sm font-medium">Geburtsland</span>
-                    <select
-                      value={werte.birth_place_country ?? ""}
-                      onChange={(e) =>
-                        setzeWert("birth_place_country", e.target.value)
-                      }
-                      className="h-12 rounded-xl border border-border bg-background px-3 text-[0.9375rem]"
-                    >
-                      <option value="">Bitte wählen</option>
-                      {LAENDER.map((l) => (
-                        <option key={l.code} value={l.code}>
-                          {l.name}
-                        </option>
-                      ))}
-                    </select>
+                    <SuchAuswahl
+                      optionen={geburtsLaender.map((l) => ({
+                        wert: l.code,
+                        label: l.name,
+                        stichworte: l.code,
+                      }))}
+                      wert={werte.birth_place_country ?? ""}
+                      onChange={(v) => setzeWert("birth_place_country", v)}
+                      suchPlatzhalter="Land suchen …"
+                    />
                   </label>
                 </div>
               )}
@@ -322,15 +414,10 @@ export function SteuerWizard({
         <div className="flex items-center justify-between border-t border-border px-6 py-4">
           <button
             type="button"
-            onClick={() => {
-              setFehler(null);
-              if (schritt === "felder" && !bearbeiten) setSchritt("art");
-              else if (schritt === "art") setSchritt("land");
-              else onClose();
-            }}
+            onClick={() => (zurueckMoeglich ? zurueck() : onClose())}
             className="text-sm font-medium underline underline-offset-4"
           >
-            {schritt === "land" || bearbeiten ? "Abbrechen" : "Zurück"}
+            {zurueckMoeglich ? "Zurück" : "Abbrechen"}
           </button>
           {schritt === "felder" ? (
             <Button onClick={() => void speichern()} disabled={laeuft}>

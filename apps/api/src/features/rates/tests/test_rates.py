@@ -4,12 +4,12 @@ from datetime import date
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
 
+from src.core.dates import merge_day_ranges
 from src.core.security import AuthContext
 from src.features.rates.schemas import RatePlanCreate, RatePlanPriceSet
 from src.features.rates.service import (
     RateError,
     RatesService,
-    _contiguous_ranges,
     _weekday_filtered,
 )
 from src.main import create_app
@@ -636,8 +636,12 @@ def test_weekday_filtered_and_ranges() -> None:
     days = _weekday_filtered(date(2026, 7, 13), date(2026, 7, 20), [0, 2])
     assert [d.day for d in days] == [13, 15]
     # Zusammenhängende Bereiche bündeln.
-    ranges = _contiguous_ranges([date(2026, 7, 1), date(2026, 7, 2),
-                                 date(2026, 7, 5)])
+    # `end_exclusive=False`: hier ist das Ende INKLUSIV — ein ARI-Segment
+    # deckt den letzten Tag mit ab.
+    ranges = merge_day_ranges(
+        [date(2026, 7, 1), date(2026, 7, 2), date(2026, 7, 5)],
+        end_exclusive=False,
+    )
     assert ranges == [(date(2026, 7, 1), date(2026, 7, 2)),
                       (date(2026, 7, 5), date(2026, 7, 5))]
 

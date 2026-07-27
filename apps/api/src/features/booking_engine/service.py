@@ -10,6 +10,7 @@ from datetime import UTC, date, datetime, timedelta
 from postgrest.exceptions import APIError
 from supabase import Client
 
+from src.core.dates import nights as _nights
 from src.core.logging import get_logger
 from src.core.sales_channels import (
     PLATFORM,
@@ -89,13 +90,6 @@ def _assert_span(start: date | None, end: date | None) -> None:
         )
 
 
-def _nights(check_in: date, check_out: date) -> list[date]:
-    days: list[date] = []
-    cur = check_in
-    while cur < check_out:
-        days.append(cur)
-        cur += timedelta(days=1)
-    return days
 
 
 def _round_coord(value: object) -> float | None:

@@ -54,6 +54,7 @@ class _Buckets:
         self.listings = parse_limit(settings.rate_limit_listings)
         self.listings_tenant = parse_limit(settings.rate_limit_listings_tenant)
         self.tenant = parse_limit(settings.rate_limit_tenant)
+        self.ai = parse_limit(settings.rate_limit_ai)
 
 
 def _is_exempt(path: str) -> bool:
@@ -63,26 +64,45 @@ def _is_exempt(path: str) -> bool:
     return path.endswith("/health")
 
 
+# Credential-Endpunkte → strenger auth-Bucket (Brute-Force-/Stuffing-Schutz,
+# Wurzel 2/7). Die Gast-Auth der Demand-Seite (/plattform) zählt genauso wie der
+# Vermieter-Login; password-reset zusätzlich gegen E-Mail-Enumeration.
+# /oauth/token ist der Client-Credentials-Tausch der Entwickler-API.
+_AUTH_PATHS = (
+    "/auth/login",
+    "/auth/register",
+    "/auth/refresh",
+    "/oauth/token",
+    "/guest-auth/login",
+    "/guest-auth/register",
+    "/guest-auth/refresh",
+    "/guest-auth/password-reset",
+)
+
+# Endpunkte, die eine KOSTENPFLICHTIGE Fremd-API anstoßen (Groq bzw. Google
+# Translate). Im Default-Bucket könnte ein einzelner eingeloggter Nutzer
+# erhebliche Kosten verursachen — eigener strenger Bucket (Wurzel 8).
+_AI_PATHS = ("/dashboard/voice", "/content/translate")
+
+# Öffentliche Such-/Kalender-Endpunkte → Scraper-Schutz pro IP. Der iCal-Export
+# ist nicht eingeloggt (ein Kalender-Client schickt kein JWT).
+_LISTINGS_PATHS = (
+    "/booking-engine/listings",
+    "/booking-engine/availability",
+    "/calendar",
+    "/external-calendar/export/",
+)
+
+
 def _select_bucket(path: str, buckets: _Buckets) -> tuple[str, Limit, bool]:
     """Pfad → (Bucket-Name, Limit, sensibel?). Sensibel = Kandidat für fail-closed."""
-    if "/auth/login" in path or "/auth/register" in path or "/auth/refresh" in path \
-            or "/oauth/token" in path \
-            or "/guest-auth/login" in path or "/guest-auth/register" in path \
-            or "/guest-auth/refresh" in path or "/guest-auth/password-reset" in path:
-        # Gast-Auth (Demand-Seite /plattform) ist genauso ein Credential-Endpunkt
-        # wie der Vermieter-Login → gleicher strenger auth-Bucket (Brute-Force-/
-        # Stuffing-Schutz, Wurzel 2/7). password-reset zusätzlich gegen E-Mail-Enum.
-        # /oauth/token ist der Client-Credentials-Tausch (Entwickler-API): ein
-        # Credential-Endpunkt wie Login → strenger Auth-Bucket, Brute-Force-Schutz.
+    if any(p in path for p in _AUTH_PATHS):
         return "auth", buckets.auth, True
     if "/payments/" in path:
         return "payments", buckets.payments, True
-    if "/booking-engine/listings" in path or "/booking-engine/availability" in path \
-            or "/calendar" in path \
-            or "/external-calendar/export/" in path:
-        # Der öffentliche iCal-Export-Feed ist nicht eingeloggt (ein Kalender-
-        # Client schickt kein JWT) → Scraper-Schutz PRO IP, wie andere öffentliche
-        # Listings/Kalender-Endpunkte (Wurzel 8: eigener, strenger Bucket).
+    if any(p in path for p in _AI_PATHS):
+        return "ai", buckets.ai, False
+    if any(p in path for p in _LISTINGS_PATHS):
         return "listings", buckets.listings, False
     return "default", buckets.default, False
 

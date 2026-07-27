@@ -8,7 +8,7 @@ import { Icon } from "@iconify/react";
 import { useState } from "react";
 
 import { bucheGast, ladeVerfuegbarkeit } from "@/lib/buchung";
-import { type Listing, formatEuro } from "@/lib/listings";
+import { type Listing, formatCurrency } from "@/lib/listings";
 import { StripeCheckout } from "@/components/stripe-checkout";
 
 function naechte(checkIn: string, checkOut: string): number {
@@ -76,7 +76,7 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
         {preis != null ? (
           <>
             <span className="text-xl font-semibold">
-              {formatEuro(preis, listing.currency)}
+              {formatCurrency(preis, listing.currency)}
             </span>{" "}
             <span className="text-muted-foreground">Nacht</span>
           </>
@@ -161,13 +161,13 @@ export function BuchungsWidget({ listing }: { listing: Listing }) {
         <div className="mt-6 flex flex-col gap-3 text-sm">
           <div className="flex justify-between">
             <span className="underline">
-              {formatEuro(preis, listing.currency)} × {n} Nächte
+              {formatCurrency(preis, listing.currency)} × {n} Nächte
             </span>
-            <span>{formatEuro(zwischensumme, listing.currency)}</span>
+            <span>{formatCurrency(zwischensumme, listing.currency)}</span>
           </div>
           <div className="mt-2 flex justify-between border-t border-border pt-3 font-semibold">
             <span>Gesamt</span>
-            <span>{formatEuro(zwischensumme, listing.currency)}</span>
+            <span>{formatCurrency(zwischensumme, listing.currency)}</span>
           </div>
         </div>
       )}

@@ -29,6 +29,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.core.supabase import escape_like
 from src.features.reservations.service import (
     ReservationError,
     ReservationsService,
@@ -51,11 +52,6 @@ log = get_logger("nextdays.guest_bookings")
 # außergewöhnlich vielen Buchungen bekommt 422 statt einer unbegrenzten Antwort.
 _MAX_ROWS = 200
 
-
-def _escape_like(value: str) -> str:
-    """LIKE-/ILIKE-Metazeichen escapen, damit eine E-Mail exakt (case-insensitiv)
-    matcht und kein Wildcard bildet. `\\` zuerst, dann `%`/`_` (Reihenfolge zählt)."""
-    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 # Status, in denen ein Gast selbst noch stornieren darf (frei stornierbar). „nicht
 # eingecheckt" wird zusätzlich zur Laufzeit geprüft.
@@ -233,7 +229,7 @@ class GuestBookingsService:
             # Adresse werden escaped, damit ein `a_b@x.de` kein Wildcard-Match wird
             # (sonst fremde Buchungen — under-/over-permissive). Sonst fehlten
             # gemischt geschriebene (v. a. OTA-)Buchungen in der Liste.
-            .ilike("guest_email", _escape_like(email))
+            .ilike("guest_email", escape_like(email))
             .order("check_in", desc=True)
             # +1 über dem Limit: erkennt „zu viele" ohne Vollzählung.
             .limit(_MAX_ROWS + 1)

@@ -19,6 +19,7 @@ import { updatePassword } from "@/lib/konto-actions";
 
 import { Geraeteverlauf } from "./geraeteverlauf";
 import { KontoZeile } from "./konto-zeile";
+import { Sms2FaAusschalten } from "./sms-2fa-ausschalten";
 import { ZweiFaZeile } from "./zweifa-zeile";
 
 type Tab = "login" | "shared";
@@ -83,12 +84,21 @@ function LoginTab({ account }: { account: Account }) {
               {t("zweiFaAktivText", { phone: account.phone ?? "" })}
             </p>
           </div>
-          <Link
-            href="/zwei-faktor"
-            className="shrink-0 text-sm font-medium underline underline-offset-2 hover:opacity-70"
-          >
-            {t("zweiFaVerwalten")}
-          </Link>
+          {/* Zwei getrennte Wege: „Verwalten" ändert die Nummer, „Entfernen"
+              schaltet den Faktor ab. Ein gemeinsamer Link würde das Abschalten
+              hinter einer Seite verstecken, auf der es bisher fehlte. */}
+          <div className="flex shrink-0 items-center gap-4">
+            <Link
+              href="/zwei-faktor"
+              className="text-sm font-medium underline underline-offset-2 hover:opacity-70"
+            >
+              {t("zweiFaVerwalten")}
+            </Link>
+            <Sms2FaAusschalten
+              hatPasswort={account.has_password}
+              totpAktiv={account.totp_enabled}
+            />
+          </div>
         </div>
       ) : (
         <div className="mb-10 flex items-start gap-4 rounded-2xl border border-border p-5">

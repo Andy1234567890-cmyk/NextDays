@@ -251,9 +251,20 @@ def set_external_account(
 def create_booking_intent(
     reservation_id: str, service: PaymentsServiceDep
 ) -> BookingPaymentResult:
-    """PaymentIntent für eine Gastbuchung — Tenant kommt aus der Reservierung."""
+    """PaymentIntent für eine Gastbuchung — Tenant kommt aus der Reservierung.
+
+    Nutzt den konditionsgesteuerten Pfad: gilt für die Buchung ein Zahlungsplan
+    mit Anzahlung, wird nur diese kassiert, die Karte für die Restzahlung
+    gespeichert und die 'balance'-Zeile mit Fälligkeit geplant (der Worker
+    bucht sie später ab). Ohne Zahlungsplan delegiert die Methode an den
+    bisherigen Vollzahlungs-Pfad — für diese Buchungen ändert sich nichts.
+    Zuvor war dieser Einstieg nirgends verdrahtet, sodass Zahlungspläne trotz
+    vorhandener Konditionen nie griffen.
+    """
     try:
-        return service.create_booking_payment(reservation_id=reservation_id)
+        return service.create_booking_payment_scheduled(
+            reservation_id=reservation_id
+        )
     except PaymentsError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

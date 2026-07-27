@@ -11,6 +11,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.features.auth.owner_scope import is_owner, owner_property_ids
 
 from .engine import DpSettings
 from .resolver import PricingError
@@ -61,26 +62,6 @@ class DpSettingsService:
             raise PricingError("Preis-DB nicht verfügbar.", status_code=500)
         return self._client
 
-    def _is_owner(self, ctx: AuthContext) -> bool:
-        """Eingeloggter Immobilien-Eigentümer (Lastenheft §4.2, read-only-Sicht)."""
-        return ctx.role == "owner"
-
-    def _owner_property_ids(self, ctx: AuthContext) -> set[str]:
-        """Objekte, die diesem Eigentümer zugeordnet sind (owner_property_assignments).
-
-        Die API nutzt den Service-Role-Key und umgeht RLS — der owner-Scope muss
-        hier also explizit durchgesetzt werden (die RLS aus 0059 schützt nur den
-        direkten Frontend→Supabase-Pfad). Leere Menge = sieht nichts (fail-closed)."""
-        rows = (
-            self._db()
-            .table("owner_property_assignments")
-            .select("property_id")
-            .eq("tenant_id", ctx.tenant_id)
-            .eq("user_id", ctx.user_id)
-            .execute()
-        ).data or []
-        return {r["property_id"] for r in rows}
-
     def require_own_property(self, ctx: AuthContext, property_id: str) -> None:
         """Öffentlicher Scope-Guard für Router (Tenant-Eigentum + Owner-§4.2).
         Wirft PricingError(404), wenn das Objekt fremd/nicht sichtbar ist."""
@@ -101,7 +82,7 @@ class DpSettingsService:
         if not res:
             raise PricingError("Objekt nicht gefunden.", status_code=404)
         # Eigentümer dürfen nur ihre zugeordneten Objekte sehen (§4.2).
-        if self._is_owner(ctx) and property_id not in self._owner_property_ids(ctx):
+        if is_owner(ctx) and property_id not in owner_property_ids(self._db(), ctx):
             raise PricingError("Objekt nicht gefunden.", status_code=404)
 
     def get(self, ctx: AuthContext, property_id: str) -> DpSettingsResponse:
@@ -123,7 +104,7 @@ class DpSettingsService:
     ) -> DpSettingsResponse:
         """dp_settings setzen (Upsert). Nur gesetzte Felder werden übernommen."""
         # Eigentümer-Sicht ist read-only (Lastenheft §4.2): kein Schreibzugriff.
-        if self._is_owner(ctx):
+        if is_owner(ctx):
             raise PricingError(
                 "Eigentümer können Dynamic Pricing nicht ändern.", status_code=403
             )
@@ -155,8 +136,8 @@ class DpSettingsService:
             .eq("tenant_id", ctx.tenant_id)
         )
         # Eigentümer sehen nur ihre zugeordneten Objekte (Lastenheft §4.2).
-        if self._is_owner(ctx):
-            owned = self._owner_property_ids(ctx)
+        if is_owner(ctx):
+            owned = owner_property_ids(self._db(), ctx)
             if not owned:
                 return DpOverviewResponse(items=[])
             query = query.in_("id", list(owned))
@@ -205,6 +186,59 @@ class DpSettingsService:
                 )
             )
         return DpOverviewResponse(items=items)
+
+    def explain_input(
+        self, ctx: AuthContext, property_id: str, tag: str
+    ) -> tuple[float, float, dict[str, float], str]:
+        """Eingangsdaten für die Preis-Begründung: (basispreis, preis, faktoren,
+        währung).
+
+        Liegt im Service, nicht im Router: hier hängen Scope-Prüfung, zwei
+        DB-Abfragen und die Basispreis-/Währungsableitung zusammen — ein Router
+        soll transportieren, nicht rechnen. Wirft PricingError (404), wenn für
+        den Tag kein dynamischer Preis existiert.
+        """
+        self._require_own_property(ctx, property_id)
+
+        rows = (
+            self._db()
+            .table("dynamic_prices")
+            .select("price, factors")
+            .eq("property_id", property_id)
+            .eq("date", tag)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            raise PricingError(
+                "Für diesen Tag gibt es keinen dynamischen Preis "
+                "(DP aus oder noch nicht berechnet).",
+                status_code=404,
+            )
+        preis = float(rows[0].get("price") or 0)
+        faktoren = {k: float(v) for k, v in (rows[0].get("factors") or {}).items()}
+
+        rate_rows = (
+            self._db()
+            .table("rate_plans")
+            .select("base_price, currency, created_at")
+            .eq("property_id", property_id)
+            .order("created_at")
+            .limit(1)
+            .execute()
+        ).data or []
+        # Ohne Rate-Plan gibt es keinen Anker — dann ist der berechnete Preis
+        # selbst der Vergleichswert (kein erfundener Basispreis).
+        basispreis = (
+            float(rate_rows[0]["base_price"])
+            if rate_rows and rate_rows[0].get("base_price") is not None
+            else preis
+        )
+        # rate_plans.currency ist NOT NULL — existiert ein Rate-Plan, ist die
+        # Währung gesetzt. Fehlt der Plan, keine Währung erfinden (Wurzel 4):
+        # leer lassen, die Formatierung rendert dann symbollos.
+        waehrung = (rate_rows[0].get("currency") if rate_rows else None) or ""
+        return basispreis, preis, faktoren, waehrung
 
     def _settings_by_property(self, ids: list[str]) -> dict[str, dict]:
         rows = (

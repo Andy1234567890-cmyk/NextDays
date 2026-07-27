@@ -11,11 +11,12 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { formatCurrency } from "@nextdays/currency";
+import { currencySymbol, formatCurrency } from "@nextdays/currency";
 
 import type { Cohost, CohostInvitation } from "@/lib/cohosts";
 import { formatHostingSince, type HostProfile } from "@/lib/host-profil";
 import { updateHostProfile, type HostProfilePatch } from "@/lib/host-profil-actions";
+import type { ObjektSteuer } from "@/lib/objekt-steuern";
 import type { PreisStand } from "@/lib/preise";
 import {
   setBasePrice,
@@ -42,6 +43,7 @@ import { KACHEL_SPRING } from "./foto-kacheln";
 import { FotoTour } from "./foto-tour";
 import { LageKarte, LagePanel } from "./lage-panel";
 import { DiscountPanel, PreisPanel } from "./preis-panel";
+import { SteuernPanel } from "./steuern-panel";
 import { PrivacyPanel } from "./privacy-panel";
 import { type RaumKachel, RaumDetail } from "./raum-detail";
 import { SchlafPanel } from "./schlaf-panel";
@@ -54,7 +56,7 @@ import { WertPanel } from "./wert-panel";
 type SectionKey =
   | "fotos" | "titel" | "typ" | "schlafen" | "beschreibung" | "ausstattung"
   | "barrierefreiheit"
-  | "gaeste" | "lage" | "preise" | "rabatte" | "verfuegbarkeit"
+  | "gaeste" | "lage" | "preise" | "rabatte" | "steuern" | "verfuegbarkeit"
   | "hausregeln" | "storno" | "host" | "cohosts";
 
 export function ObjektEditor({
@@ -64,6 +66,7 @@ export function ObjektEditor({
   cohosts,
   cohostEinladungen,
   plattformBps,
+  objektSteuern,
 }: {
   property: Property;
   preisStand: PreisStand;
@@ -74,6 +77,8 @@ export function ObjektEditor({
   cohostEinladungen: CohostInvitation[];
   /** Feste Plattform-Gebühr in Basispunkten — für die Beispielrechnung. */
   plattformBps: number;
+  /** Steuern, die der Gastgeber dem Gast berechnet. null = Ladefehler. */
+  objektSteuern: ObjektSteuer[] | null;
 }) {
   const t = useTranslations("objektEditor");
   const [prop, setProp] = useState<Property>(property);
@@ -500,6 +505,16 @@ export function ObjektEditor({
       ? t("preisMonatsrabattKurz", { pct: viewPreise.monthlyDiscount.discount_bps / 100 })
       : null,
   ].filter(Boolean);
+  // Steuer-Vorschau: was der Gast zusätzlich zahlt. Nur AKTIVE Steuern —
+  // eine pausierte Steuer wird nicht berechnet und darf hier nicht so
+  // aussehen, als würde sie es.
+  const steuerVorschau = (objektSteuern ?? [])
+    .filter((s) => s.active)
+    .map((s) =>
+      s.rate_bps != null
+        ? `${s.tax_type} ${s.rate_bps / 100} %`
+        : `${s.tax_type} ${(s.amount_minor ?? 0) / 100} ${currencySymbol(priceCurrency)}`.trim(),
+    );
   // Verfügbarkeit-Vorschau: objektweiter Mindestaufenthalt aus rate_plans.min_stay
   // (echte Quelle), ergänzt um den Max-Aufenthalt aus dem Blob, falls gesetzt.
   const verfVorschau = (() => {
@@ -550,6 +565,9 @@ export function ObjektEditor({
     { key: "rabatte", titel: t("secRabatte"),
       vorschau: rabattVorschau.length ? rabattVorschau.join("\n") : t("hinzufuegen"),
       fehlt: rabattVorschau.length === 0 },
+    { key: "steuern", titel: "Steuern",
+      vorschau: steuerVorschau.length ? steuerVorschau.join("\n") : t("hinzufuegen"),
+      fehlt: steuerVorschau.length === 0 },
     { key: "verfuegbarkeit", titel: t("secVerfuegbarkeit"), vorschau: verfVorschau },
     { key: "hausregeln", titel: t("secHausregeln"), vorschau: t("hinzufuegen"), fehlt: true },
     { key: "storno", titel: t("secStorno"), vorschau: t("hinzufuegen"), fehlt: true },
@@ -918,6 +936,13 @@ export function ObjektEditor({
             preise={viewPreise}
             currency={priceCurrency}
             onRabatt={speichereLosRabatt}
+          />
+        )}
+        {aktiv === "steuern" && (
+          <SteuernPanel
+            propertyId={prop.id}
+            steuern={objektSteuern}
+            currency={priceCurrency}
           />
         )}
         {aktiv === "verfuegbarkeit" && (

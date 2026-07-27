@@ -379,3 +379,161 @@ export async function getVorgaenge(
     { cache: "no-store" },
   );
 }
+
+// --- Buchungen --------------------------------------------------------------
+
+export interface BuchungSummary {
+  id: string;
+  tenant_id: string;
+  tenant_name: string | null;
+  property_id: string;
+  property_title: string | null;
+  guest_name: string | null;
+  channel: string;
+  status: string;
+  payment_status: string;
+  check_in: string;
+  check_out: string;
+  naechte: number;
+  total_amount: string;
+  paid_amount: string;
+  currency: string | null;
+  created_at: string;
+}
+
+export interface BuchungList {
+  items: BuchungSummary[];
+  total: number;
+}
+
+export interface BuchungGast {
+  email: string | null;
+  phone: string | null;
+  country: string | null;
+  language: string | null;
+  guest_id: string | null;
+  name: string | null;
+  company: string | null;
+  stays_count: number | null;
+  portal_guest_id: string | null;
+  portal_registered_at: string | null;
+}
+
+export interface BuchungObjekt {
+  id: string;
+  title: string | null;
+  street: string | null;
+  postal_code: string | null;
+  city: string | null;
+  country: string | null;
+  status: string | null;
+  max_guests: number | null;
+}
+
+export interface BuchungZahlung {
+  id: string;
+  type: string | null;
+  status: string | null;
+  gateway: string | null;
+  amount: string | null;
+  currency: string | null;
+  due_at: string | null;
+  created_at: string;
+}
+
+export interface BuchungProvision {
+  id: string;
+  fee_bps: number | null;
+  gross_amount_cents: number | null;
+  fee_amount_cents: number | null;
+  reversed_amount_cents: number | null;
+  currency: string | null;
+  gateway: string | null;
+  status: string | null;
+  created_at: string;
+}
+
+export interface BuchungDetail extends BuchungSummary {
+  gast: BuchungGast;
+  objekt: BuchungObjekt;
+  zahlungen: BuchungZahlung[];
+  provisionen: BuchungProvision[];
+  quote_items: Record<string, unknown>[];
+  num_guests: number;
+  adults: number;
+  children: number;
+  infants: number;
+  pets: number;
+  note: string | null;
+  ota_name: string | null;
+  external_ref: string | null;
+  source_channex_booking_id: string | null;
+  cancel_reason: string | null;
+  cancelled_at: string | null;
+  checked_in_at: string | null;
+  checked_out_at: string | null;
+  channel_fee: string;
+}
+
+/** Alle Buchungen der Plattform (neueste zuerst). */
+export async function getBuchungen(params?: {
+  limit?: number;
+  offset?: number;
+  status?: string;
+  channel?: string;
+  tenantId?: string;
+  suche?: string;
+}): Promise<BuchungList> {
+  const q = new URLSearchParams();
+  if (params?.limit) q.set("limit", String(params.limit));
+  if (params?.offset) q.set("offset", String(params.offset));
+  if (params?.status) q.set("status_filter", params.status);
+  if (params?.channel) q.set("channel", params.channel);
+  if (params?.tenantId) q.set("tenant_id", params.tenantId);
+  if (params?.suche) q.set("suche", params.suche);
+  const suffix = q.toString() ? `?${q}` : "";
+  return api<BuchungList>(`/platform/buchungen${suffix}`, { cache: "no-store" });
+}
+
+/** Eine Buchung mit beiden Seiten: Betrieb/Objekt und Gast/Zahlung. */
+export async function getBuchung(id: string): Promise<BuchungDetail> {
+  return api<BuchungDetail>(`/platform/buchungen/${id}`, { cache: "no-store" });
+}
+
+// --- Steuer-Compliance ------------------------------------------------------
+//
+// Der Betreiber MUSS überprüfen können, ob die Steuerangaben seiner Betriebe
+// vollständig sind: das Unterlassen der Durchsetzung ist nach § 25 Abs. 1
+// Nr. 6 PStTG mit bis zu 30.000 € bußgeldbewehrt.
+
+export interface SteuerBetrieb {
+  tenant_id: string;
+  tenant_name: string | null;
+  country: string | null;
+  /** Länder, in denen der Betrieb ansässig ist ODER Objekte hat. */
+  pflicht_laender: string[];
+  erfasste_laender: string[];
+  fehlende_laender: string[];
+  objekte_gesamt: number;
+  /** Ohne erhobene Grundbuchnummer (§ 14 Abs. 4 Nr. 6). */
+  objekte_ohne_angabe: number;
+  mahnungen_offen: number;
+  zahlungen_einbehalten: boolean;
+  /** 180-Tage-Frist verstrichen, ohne dass eine Maßnahme lief. */
+  ueberfaellig: string[];
+}
+
+export interface SteuerUebersicht {
+  betriebe: SteuerBetrieb[];
+  betriebe_gesamt: number;
+  betriebe_vollstaendig: number;
+  betriebe_mit_luecke: number;
+  betriebe_ueberfaellig: number;
+  zahlungen_einbehalten: number;
+}
+
+/** Steuerlicher Stand aller Betriebe (neueste zuerst). */
+export async function getSteuern(nurLuecken = false): Promise<SteuerUebersicht> {
+  const q = nurLuecken ? "?nur_luecken=true" : "";
+  return api<SteuerUebersicht>(`/platform/steuern${q}`, { cache: "no-store" });
+}

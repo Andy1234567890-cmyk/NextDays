@@ -25,6 +25,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext, secrets_match
+from src.core.supabase import escape_like
 
 from .payouts import pruefe_vereinbarung_gegen_gebuehr
 from .schemas import (
@@ -170,7 +171,9 @@ class CohostService:
         vorhanden = (
             self._db.table("users")
             .select("id")
-            .ilike("email", email)
+            # escape_like: '_' ist ein ILIKE-Wildcard und in E-Mails häufig —
+            # ohne Escaping träfe 'max_muster@x.de' auch 'maxamuster@x.de'.
+            .ilike("email", escape_like(email))
             .limit(1)
             .execute()
         ).data or []

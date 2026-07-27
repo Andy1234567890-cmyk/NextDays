@@ -84,7 +84,7 @@ export function RealtimeDebugPanel() {
                       {s.status}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                  <div className="flex items-center gap-3 text-[0.6875rem] text-muted-foreground">
                     <span>{s.events} Events</span>
                     <span>{s.hasToken ? "Token ✓" : "kein Token"}</span>
                     {s.lastEventAt ? (
@@ -94,7 +94,7 @@ export function RealtimeDebugPanel() {
                     ) : null}
                   </div>
                   {s.error ? (
-                    <span className="text-[11px] text-red-600">{s.error}</span>
+                    <span className="text-[0.6875rem] text-red-600">{s.error}</span>
                   ) : null}
                 </li>
               ))}

@@ -149,55 +149,37 @@ export class AutoEInvoiceService {
   }
 
   /**
-   * Generiert TSE-Daten für deutsche Compliance
+   * TSE-Daten (§ 146a AO) — NICHT implementiert.
+   *
+   * Eine TSE-Signatur darf ausschließlich von zertifizierter TSE-Hardware bzw.
+   * einem zertifizierten Cloud-TSE-Dienst erzeugt werden. Hier standen zuvor
+   * erfundene Signaturen und ein Platzhalter-Public-Key: das erzeugt Belege,
+   * die eine Kassensicherungs-Konformität VORTÄUSCHEN, die es nicht gibt.
+   * Lieber sichtbar fehlschlagen als falsche Steuerbelege ausstellen.
    */
-  private static async generateTSEData(companyId: string): Promise<TSEData> {
-    // Hier würde normalerweise eine echte TSE-Hardware angesprochen werden
-    // Für Demo-Zwecke generieren wir Mock-Daten
-    const now = new Date();
-    const transactionNumber = Math.floor(Math.random() * 1000000).toString();
-
-    return {
-      serialNumber: `TSE-${companyId.substring(0, 8).toUpperCase()}`,
-      signatureAlgorithm: 'ecdsa-plain-SHA256',
-      transactionNumber,
-      startTime: now.toISOString(),
-      finishTime: new Date(now.getTime() + 1000).toISOString(),
-      signature: AutoEInvoiceService.generateMockSignature(transactionNumber),
-      publicKey: AutoEInvoiceService.generateMockPublicKey(),
-      certificateSerial: `CERT-${Date.now()}`,
-    };
+  private static async generateTSEData(_companyId: string): Promise<TSEData> {
+    throw new Error(
+      'TSE-Signatur ist nicht angebunden. Die Funktion erfordert eine ' +
+        'zertifizierte TSE; bitte im Support melden, statt die Rechnung ' +
+        'ohne gültige Signatur auszustellen.',
+    );
   }
 
   /**
-   * Mock-Signatur für Demo-Zwecke
+   * Automatische Übertragung (PEPPOL / E-Mail / Portal) — NICHT implementiert.
+   *
+   * Zuvor simulierte ein setTimeout den Versand und meldete anschließend
+   * „gesendet". Eine nie übertragene Rechnung als übertragen zu markieren, ist
+   * fachlich schlimmer als ein sichtbarer Fehler.
    */
-  private static generateMockSignature(transactionNumber: string): string {
-    // In einer echten Implementierung würde hier die TSE-Hardware die Signatur erstellen
-    const mockData = `${transactionNumber}-${Date.now()}`;
-    return Buffer.from(mockData).toString('base64').substring(0, 64);
-  }
-
-  /**
-   * Mock-Public-Key für Demo-Zwecke
-   */
-  private static generateMockPublicKey(): string {
-    // In einer echten Implementierung würde hier der öffentliche Schlüssel der TSE verwendet
-    return 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE...MockPublicKey...';
-  }
-
-  /**
-   * Überträgt E-Invoice (automatisch)
-   */
-  private static async transmitEInvoice(_eInvoiceId: string, _xmlContent: string): Promise<void> {
-    // Hier würde die tatsächliche Übertragung stattfinden:
-    // - PEPPOL Network
-    // - E-Mail mit PDF/A-3
-    // - Portal-Upload
-    // - WebService-Call
-
-    // Simulation einer Übertragung
-    await new Promise(resolve => setTimeout(resolve, 1000));
+  private static async transmitEInvoice(
+    _eInvoiceId: string,
+    _xmlContent: string,
+  ): Promise<void> {
+    throw new Error(
+      'Automatischer E-Rechnungs-Versand ist nicht angebunden. Die ' +
+        'Rechnung wurde erzeugt, aber NICHT übertragen.',
+    );
   }
 
   /**

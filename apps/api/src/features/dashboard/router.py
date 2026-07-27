@@ -49,6 +49,13 @@ def update_onboarding(
 def voice_assistant(
     req: DashboardVoiceRequest, ctx: CurrentUser, service: DashboardServiceDep
 ) -> DashboardVoiceResponse:
+    """Sprachassistent des eigenen Dashboards (Groq).
+
+    Bewusst nur `CurrentUser`: der Assistent ist ein allgemeines Werkzeug jedes
+    eingeloggten Nutzers und liefert nur Daten, die dessen Rolle ohnehin sieht.
+    Gegen Kostenmissbrauch greift der eigene strenge `ai`-Rate-Limit-Bucket
+    (Wurzel 8), nicht eine zusätzliche Rollenhürde.
+    """
     try:
         return service.voice_assistant(ctx, req)
     except DashboardError as exc:

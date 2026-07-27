@@ -11,6 +11,7 @@ from datetime import date, timedelta
 
 from supabase import Client
 
+from src.core.dates import merge_day_ranges
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.jobs.queue import (
@@ -62,24 +63,6 @@ def _weekday_filtered(
         if mask is None or d.weekday() in mask:
             out.append(d)
     return out
-
-
-def _contiguous_ranges(days: list[date]) -> list[tuple[date, date]]:
-    """Sortierte Tagesliste in zusammenhängende [von, bis]-Bereiche (bis inklusiv)
-    bündeln — für tag-genaue Wochentagsmasken werden daraus mehrere Push-Segmente."""
-    if not days:
-        return []
-    ordered = sorted(days)
-    ranges: list[tuple[date, date]] = []
-    run_start = prev = ordered[0]
-    for d in ordered[1:]:
-        if d == prev + timedelta(days=1):
-            prev = d
-            continue
-        ranges.append((run_start, prev))
-        run_start = prev = d
-    ranges.append((run_start, prev))
-    return ranges
 
 
 class RatesService:
@@ -829,7 +812,7 @@ class RatesService:
         # Plan). Aus den betroffenen Tagen zusammenhängende Bereiche bilden
         # (Wochentagsmaske → mehrere Segmente).
         rate_cents = None if req.price is None else int(round(req.price * 100))
-        for seg_from, seg_to in _contiguous_ranges(days):
+        for seg_from, seg_to in merge_day_ranges(days, end_exclusive=False):
             self._enqueue_rate_plan_push(
                 tenant_id, property_id, rate_plan_id,
                 seg_from, seg_to + timedelta(days=1), rate_cents,
@@ -959,7 +942,7 @@ class RatesService:
                 ],
                 on_conflict="rate_plan_id,date",
             ).execute()
-        for seg_from, seg_to in _contiguous_ranges(days):
+        for seg_from, seg_to in merge_day_ranges(days, end_exclusive=False):
             self._enqueue_rate_plan_min_stay_push(
                 tenant_id, property_id, rate_plan_id,
                 seg_from, seg_to + timedelta(days=1), req.min_stay,
@@ -1075,7 +1058,7 @@ class RatesService:
         # Portal-Push: explizite Endwerte — beim Zurücknehmen offen/kein Limit
         # (false/false/0), sonst bliebe die OTA-Seite auf dem alten Stand. Bei
         # Wochentagsmaske je zusammenhängendem Bereich eine Zeile.
-        for seg_from, seg_to in _contiguous_ranges(days):
+        for seg_from, seg_to in merge_day_ranges(days, end_exclusive=False):
             try_enqueue_ari(
                 self._db(), tenant_id, property_id, "restriction_rows",
                 {"rows": [{

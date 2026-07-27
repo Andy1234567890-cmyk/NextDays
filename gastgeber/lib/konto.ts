@@ -14,6 +14,10 @@ export interface Account {
   additional_phone: string | null;
   hide_phones: boolean;
   preferred_language: string | null;
+  /** ISO-4217 Anzeigewährung des Nutzers — NICHT die Objektwährung. */
+  preferred_currency: string | null;
+  /** IANA-Zeitzone, z. B. "Europe/Berlin". */
+  preferred_timezone: string | null;
   spoken_languages: string[];
   website: string | null;
   description: string | null;

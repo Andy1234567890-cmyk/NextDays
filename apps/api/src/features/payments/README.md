@@ -1,8 +1,8 @@
 # Slice: payments
 
-Vertical Slice für Online-Zahlungen über **Stripe** (primäres Gateway; Revolut
-sekundär, NotImplemented). Enthält: `router.py`, `service.py`, `schemas.py`,
-`gateways.py`, `stripe_client.py`, `webhook.py`, `tests/`.
+Vertical Slice für Online-Zahlungen über **Stripe** (primäres Gateway) und
+**PayPal**. Enthält: `router.py`, `service.py`, `schemas.py`,
+`stripe_client.py`, `paypal_client.py`, `webhook.py`, `tests/`.
 
 ## Funktionen
 
@@ -148,4 +148,6 @@ server-only (revoke, 0174).
   die Gast-Buchungsstrecke gebaut wird.
 - Owner→Owner-Auszahlung über Stripe (Owner sind im Datenmodell keine Stripe-
   Accounts).
-- Revolut-Adapter (`gateways.py`) bleibt NotImplemented.
+- Ein Revolut-Adapter existiert NICHT (mehr): `gateways.py` war eine nie
+  eingebundene Adapter-Hülle (0 Aufrufer) und wurde entfernt. Kommt Revolut
+  zurück, entsteht der Adapter neu — mit Anbindung statt auf Vorrat.

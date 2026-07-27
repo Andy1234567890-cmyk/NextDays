@@ -57,6 +57,8 @@ export async function updateProfile(fields: {
   additional_phone?: string;
   hide_phones?: boolean;
   preferred_language?: string;
+  preferred_currency?: string;
+  preferred_timezone?: string;
   spoken_languages?: string[];
   website?: string;
   description?: string;
@@ -169,6 +171,31 @@ export async function totpDisable(code: string): Promise<Result> {
     return {
       ok: false,
       error: exc instanceof ApiError ? exc.message : "Deaktivieren fehlgeschlagen.",
+    };
+  }
+}
+
+/** Bestätigte Nummer als Zweitfaktor entfernen — der Gegenzustand zu
+ *  `phone/verify`. Ohne diesen Weg bliebe eine verlorene Nummer für immer
+ *  hinterlegt (Wurzel 1).
+ *
+ *  Re-Auth über das Passwort, nicht über einen SMS-Code: Wer das Telefon
+ *  nicht mehr hat, kann keinen Code empfangen. `null` bei OAuth-Konten ohne
+ *  Passwort — der Server entscheidet, ob er eins verlangt. */
+export async function phoneDisable(
+  currentPassword: string | null,
+): Promise<Result> {
+  try {
+    const data = await api<Account>("/auth/phone/disable", {
+      method: "POST",
+      body: { current_password: currentPassword },
+    });
+    revalidatePath("/konto");
+    return { ok: true, data };
+  } catch (exc) {
+    return {
+      ok: false,
+      error: exc instanceof ApiError ? exc.message : "Entfernen fehlgeschlagen.",
     };
   }
 }

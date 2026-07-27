@@ -628,19 +628,6 @@ class AriPushMixin:
             # Die ari_outbox bleibt der zusätzliche Backstop.
             return True
 
-    def _resolve_channex_rate_plan(
-        self, db: Client, tenant_id: str, property_id: str
-    ) -> dict[str, str] | None:
-        """property_id → (channex_property_id, channex_rate_plan_id) über die
-        synthetische Room-Type/Rate-Plan-Kette. None, wenn nicht verbunden.
-
-        Liefert den ERSTEN Rate-Plan (deterministisch: ältestes Mapping). Für
-        Restriktionen/Stop-Sell/Preise, die pro Rate-Plan wirken, IMMER
-        _resolve_channex_rate_plans (Plural) nutzen — sonst bleibt ein zweiter
-        Rate-Plan (z. B. Non-Refundable → Expedia) ungesperrt."""
-        plans = self._resolve_channex_rate_plans(db, tenant_id, property_id)
-        return plans[0] if plans else None
-
     def _resolve_channex_rate_plans(
         self, db: Client, tenant_id: str, property_id: str
     ) -> list[dict[str, str]]:

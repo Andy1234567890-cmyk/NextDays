@@ -85,7 +85,16 @@ def _stripe_errors():  # noqa: ANN202
 
 
 def _to_cents(amount: float) -> int:
-    """Betrag in Cent (Stripe rechnet in der kleinsten Einheit)."""
+    """Betrag in Cent (Stripe rechnet in der kleinsten Einheit).
+
+    Bewusst OHNE Zero-Decimal-Sonderfall (JPY/HUF/KRW rechnen bei Stripe ohne
+    Faktor 100): `SUPPORTED_CURRENCIES` lässt ausschließlich EU27-Währungen
+    plus CHF/GBP/USD zu — allesamt zweistellig. Ein Zero-Decimal-Code kann hier
+    also nicht ankommen; käme er je dazu, MUSS diese Funktion mitgezogen
+    werden. (Der PayPal-Pfad hat seine eigene, abweichende Liste in
+    `paypal_client._ZERO_DECIMAL` — die Anbieter-Listen sind nicht identisch
+    und dürfen nicht zusammengelegt werden.)
+    """
     return int(round(amount * 100))
 
 

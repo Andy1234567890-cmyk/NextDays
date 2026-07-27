@@ -24,6 +24,7 @@ from decimal import ROUND_HALF_UP, Decimal
 
 from supabase import Client
 
+from src.core.dates import nights as _nights
 from src.core.logging import get_logger
 from src.features.addons.pricing import addon_total
 
@@ -116,13 +117,6 @@ def _to_float(value: object) -> float | None:
         return None
 
 
-def _nights(check_in: date, check_out: date) -> list[date]:
-    days: list[date] = []
-    cur = check_in
-    while cur < check_out:
-        days.append(cur)
-        cur += timedelta(days=1)
-    return days
 
 
 class _PricingConfig:
@@ -309,13 +303,6 @@ class PricingResolver:
             offset_amount=_to_float(row.get("offset_amount")),
             offset_percent=_to_float(row.get("offset_percent")),
         )
-
-    def _load_rate_plan_by_id(
-        self, property_id: str, rate_plan_id: str
-    ) -> tuple[float | None, str | None]:
-        """Basispreis + Währung (Kompat-Wrapper um _load_rate_plan_meta)."""
-        meta = self._load_rate_plan_meta(property_id, rate_plan_id)
-        return meta.base, meta.currency
 
     def _load_overrides(
         self, property_id: str, check_in: date, check_out: date

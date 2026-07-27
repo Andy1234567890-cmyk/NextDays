@@ -18,6 +18,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.core.supabase import fetch_all_rows
 from src.features.auth.granular_permissions import effective_permissions
 from src.features.auth.guest_masking import GuestMask, mask_for
 from src.features.auth.schemas import UserRole
@@ -452,13 +453,16 @@ class HostMessagesService:
         """Vorschau der letzten Nachricht je Thread."""
         if not thread_ids:
             return {}
-        rows = (
+        # fetch_all_rows: bei bis zu 500 Threads überschreitet die Nachrichten-
+        # menge den 1000-Zeilen-Cap von PostgREST leicht — abgeschnitten fehlte
+        # die Vorschau ausgerechnet bei den ruhigeren Threads.
+        rows = fetch_all_rows(
             self._db.table("guest_messages")
             .select("thread_id, body, created_at")
             .in_("thread_id", thread_ids)
             .order("created_at", desc=True)
-            .execute()
-        ).data or []
+            .order("id")
+        )
         out: dict[str, str] = {}
         for r in rows:  # neueste zuerst → erste je Thread behalten
             out.setdefault(r["thread_id"], r["body"])
@@ -470,13 +474,15 @@ class HostMessagesService:
         thread_ids = [t["id"] for t in threads]
         if not thread_ids:
             return {}
-        rows = (
+        # fetch_all_rows: ein abgeschnittenes Ergebnis zählte zu wenige
+        # ungelesene Nachrichten — Threads erschienen fälschlich als gelesen.
+        rows = fetch_all_rows(
             self._db.table("guest_messages")
             .select("thread_id, created_at, sender")
             .in_("thread_id", thread_ids)
             .eq("sender", "guest")
-            .execute()
-        ).data or []
+            .order("id")
+        )
         read_at = {t["id"]: t.get("host_read_at") for t in threads}
         counts: dict[str, int] = {}
         for r in rows:

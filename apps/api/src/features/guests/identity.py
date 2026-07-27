@@ -30,6 +30,7 @@ from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.core.supabase import escape_like
 
 log = get_logger("nextdays.guests.identity")
 
@@ -139,12 +140,6 @@ def contact_from_ota_customer(
     )
 
 
-def _like_escape(value: str) -> str:
-    """LIKE/ILIKE-Sonderzeichen escapen, damit der Wert als LITERAL matcht.
-    E-Mails enthalten regelmäßig '_' (ein ILIKE-Wildcard für ein beliebiges
-    Zeichen); ohne Escaping würde 'max_muster@x.de' fälschlich auch 'maxamuster@…'
-    treffen. Backslash zuerst, dann die Wildcards."""
-    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
 def _find_by_email(
@@ -160,7 +155,7 @@ def _find_by_email(
         db.table("guests")
         .select("id")
         .eq("tenant_id", tenant_id)
-        .ilike("email", _like_escape(email))
+        .ilike("email", escape_like(email))
         .limit(1)
         .execute()
     ).data

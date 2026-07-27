@@ -25,13 +25,11 @@ from src.core.security import AuthContext
 
 from .schemas import (
     CustomerCreate,
-    CustomerListResponse,
     CustomerResponse,
     CustomerUpdate,
     InvoiceCreate,
     InvoiceListResponse,
     InvoiceResponse,
-    InvoiceUpdate,
     LineItemInput,
     QuoteCreate,
     QuoteListResponse,
@@ -200,12 +198,6 @@ class BuchhaltungService:
             .execute()
         )
         return res.data or []
-
-    def list_customers(self, ctx: AuthContext) -> CustomerListResponse:
-        """{items,total}-Form (Nachbau-Server-Action lib/buchhaltung.ts)."""
-        rows = self._customers_rows(ctx)
-        items = [CustomerResponse(**row) for row in rows]
-        return CustomerListResponse(items=items, total=len(items))
 
     def list_customers_array(self, ctx: AuthContext) -> list[dict]:
         """Reines Array (vom übernommenen Buchhaltungs-Bestand erwartet)."""
@@ -1305,60 +1297,6 @@ class BuchhaltungService:
             for line_var in lines:
                 line_var["invoice_id"] = invoice_id
             self._db.table("invoice_line_items").insert(lines).execute()
-        return self.get_invoice(ctx, invoice_id)
-
-    def update_invoice(
-        self, ctx: AuthContext, invoice_id: str, req: InvoiceUpdate
-    ) -> InvoiceResponse:
-        tenant_id = self._require_tenant(ctx)
-        current = (
-            self._db.table("invoices")
-            .select("is_locked, is_kleinunternehmer, status, invoice_number")
-            .eq("id", invoice_id)
-            .eq("tenant_id", tenant_id)
-            .limit(1)
-            .execute()
-        )
-        if not current.data:
-            raise BuchhaltungError("Rechnung nicht gefunden.", status_code=404)
-        row = current.data[0]
-        # Nur echte Entwürfe ohne Nummer sind änderbar (GoBD, wie delete_invoice).
-        if (
-            bool(row.get("is_locked"))
-            or row.get("status") not in self._MUTABLE_INVOICE_STATUSES
-            or bool(row.get("invoice_number"))
-        ):
-            raise BuchhaltungError(
-                "Festgeschriebene Rechnungen sind GoBD-geschützt und nicht "
-                "änderbar (nur Entwürfe ohne Nummer).",
-                status_code=409,
-            )
-        is_klein = bool(row.get("is_kleinunternehmer"))
-
-        patch = req.model_dump(mode="json", exclude_unset=True, exclude={"items"})
-        # Positionen ersetzen + Summen neu berechnen, falls items übergeben.
-        if req.items is not None:
-            self._db.table("invoice_line_items").delete().eq(
-                "invoice_id", invoice_id
-            ).execute()
-            lines = [
-                self._compute_line(it, i + 1, is_klein=is_klein)
-                for i, it in enumerate(req.items)
-            ]
-            net_total = _q(sum((Decimal(line_var["net_amount"]) for line_var in lines), Decimal(0)))
-            tax_total = _q(sum((Decimal(line_var["tax_amount"]) for line_var in lines), Decimal(0)))
-            patch["net_amount"] = str(net_total)
-            patch["tax_amount"] = str(tax_total)
-            patch["gross_amount"] = str(_q(net_total + tax_total))
-            if lines:
-                for line_var in lines:
-                    line_var["invoice_id"] = invoice_id
-                self._db.table("invoice_line_items").insert(lines).execute()
-
-        if patch:
-            self._db.table("invoices").update(patch).eq("id", invoice_id).eq(
-                "tenant_id", tenant_id
-            ).execute()
         return self.get_invoice(ctx, invoice_id)
 
     # Festgeschriebene Belege (GoBD): sobald eine Rechnung eine Nummer trägt oder

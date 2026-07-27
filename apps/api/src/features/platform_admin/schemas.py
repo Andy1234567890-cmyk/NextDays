@@ -1,7 +1,8 @@
 """Schemas des platform_admin-Slice (Plattform-Backoffice)."""
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
+from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
@@ -281,3 +282,179 @@ class VorgangList(BaseModel):
     """Vorgangshistorie eines Betriebs (neueste zuerst)."""
 
     items: list[VorgangEintrag]
+
+
+class SteuerBetrieb(BaseModel):
+    """Steuerlicher Compliance-Stand eines Betriebs — die Prüfsicht.
+
+    Der Betreiber MUSS das überprüfen können: das Unterlassen der
+    Durchsetzung ist selbst bußgeldbewehrt (§ 25 Abs. 1 Nr. 6 PStTG, bis
+    30.000 EUR). Eine Oberfläche, die nur den Gastgeber fragt, aber dem
+    Betreiber keine Kontrolle gibt, erfüllt die Pflicht nicht.
+    """
+
+    tenant_id: str
+    tenant_name: str | None = None
+    country: str | None = None
+    # Länder, in denen der Betrieb Objekte hat ODER selbst ansässig ist.
+    pflicht_laender: list[str] = []
+    # Davon abgedeckt durch eine Selbstauskunft.
+    erfasste_laender: list[str] = []
+    fehlende_laender: list[str] = []
+    # Objekte ohne erhobene Grundbuchnummer (§ 14 Abs. 4 Nr. 6).
+    objekte_gesamt: int = 0
+    objekte_ohne_angabe: int = 0
+    # Laufende Durchsetzung (§ 23 PStTG).
+    mahnungen_offen: int = 0
+    # True = Auszahlungen werden aktuell einbehalten.
+    zahlungen_einbehalten: bool = False
+    # Länder, in denen die 180-Tage-Frist verstrichen ist, ohne dass eine
+    # Maßnahme lief — das ist der bußgeldbewehrte Fall.
+    ueberfaellig: list[str] = []
+
+    @property
+    def vollstaendig(self) -> bool:
+        return not self.fehlende_laender and not self.ueberfaellig
+
+
+class SteuerUebersicht(BaseModel):
+    """Die Prüfsicht über alle Betriebe."""
+
+    betriebe: list[SteuerBetrieb]
+    # Kennzahlen für den Kopf der Seite.
+    betriebe_gesamt: int = 0
+    betriebe_vollstaendig: int = 0
+    betriebe_mit_luecke: int = 0
+    betriebe_ueberfaellig: int = 0
+    zahlungen_einbehalten: int = 0
+
+
+class BuchungSummary(BaseModel):
+    """Eine Buchung in der Backoffice-Liste — beide Seiten auf einen Blick.
+
+    Bewusst schmal: die Liste soll überflogen werden. Wer die Anschrift oder
+    den Zahlungsverlauf braucht, öffnet das Detail — und DAS wird dann mit
+    tenant_id protokolliert.
+    """
+
+    id: str
+    # Seite Betrieb
+    tenant_id: str
+    tenant_name: str | None = None
+    property_id: str
+    property_title: str | None = None
+    # Seite Gast — in der Liste nur der Name, keine Kontaktdaten.
+    guest_name: str | None = None
+    # Vorgang
+    channel: str
+    status: str
+    payment_status: str
+    check_in: date
+    check_out: date
+    naechte: int
+    total_amount: Decimal
+    paid_amount: Decimal
+    # Keine Ersatzwährung: fehlt sie, ist das ein Datenfehler, den die Anzeige
+    # als „—" zeigt statt zu erfinden (Wurzel 4).
+    currency: str | None = None
+    created_at: datetime
+
+
+class BuchungList(BaseModel):
+    items: list[BuchungSummary]
+    total: int
+
+
+class BuchungGast(BaseModel):
+    """Die Gastseite einer Buchung.
+
+    Zwei Quellen, bewusst getrennt gehalten: `guests` ist die Gastakte DES
+    BETRIEBS, `portal_guests` ist das Plattform-Konto. Beide können existieren,
+    eines, oder keines (OTA-Buchung ohne Konto) — deshalb ist alles optional
+    und nichts wird zusammengerechnet.
+    """
+
+    # Aus der Reservierung selbst (auch ohne Gastakte vorhanden).
+    email: str | None = None
+    phone: str | None = None
+    country: str | None = None
+    language: str | None = None
+    # Aus der Gastakte des Betriebs (guests), falls verknüpft.
+    guest_id: str | None = None
+    name: str | None = None
+    company: str | None = None
+    stays_count: int | None = None
+    # Aus dem Plattform-Konto (portal_guests), falls die E-Mail passt.
+    portal_guest_id: str | None = None
+    portal_registered_at: datetime | None = None
+
+
+class BuchungObjekt(BaseModel):
+    """Die Objektseite einer Buchung — eine buchbare Einheit, kein Container."""
+
+    id: str
+    title: str | None = None
+    street: str | None = None
+    postal_code: str | None = None
+    city: str | None = None
+    country: str | None = None
+    status: str | None = None
+    max_guests: int | None = None
+
+
+class BuchungZahlung(BaseModel):
+    """Eine Zahlungsbewegung zur Buchung."""
+
+    id: str
+    type: str | None = None
+    status: str | None = None
+    gateway: str | None = None
+    amount: Decimal | None = None
+    currency: str | None = None
+    due_at: datetime | None = None
+    created_at: datetime
+
+
+class BuchungProvision(BaseModel):
+    """Unsere Provision auf diese Buchung (platform_fees)."""
+
+    id: str
+    fee_bps: int | None = None
+    gross_amount_cents: int | None = None
+    fee_amount_cents: int | None = None
+    reversed_amount_cents: int | None = None
+    currency: str | None = None
+    gateway: str | None = None
+    status: str | None = None
+    created_at: datetime
+
+
+class BuchungDetail(BuchungSummary):
+    """Eine Buchung mit allem, was beide Seiten hergeben.
+
+    Das ist die Sicht für den Streitfall: Was wurde gebucht, was wurde gezahlt,
+    was haben wir daran verdient, wer war der Gast, welches Objekt.
+    """
+
+    gast: BuchungGast
+    objekt: BuchungObjekt
+    zahlungen: list[BuchungZahlung] = []
+    provisionen: list[BuchungProvision] = []
+    # Was der Gast zum Zeitpunkt der Buchung gesehen/gewählt hat.
+    quote_items: list[dict] = []
+    num_guests: int = 1
+    adults: int = 1
+    children: int = 0
+    infants: int = 0
+    pets: int = 0
+    note: str | None = None
+    # Herkunft bei OTA-Buchungen.
+    ota_name: str | None = None
+    external_ref: str | None = None
+    source_channex_booking_id: str | None = None
+    # Storno — nur gesetzt, wenn wirklich storniert.
+    cancel_reason: str | None = None
+    cancelled_at: datetime | None = None
+    checked_in_at: datetime | None = None
+    checked_out_at: datetime | None = None
+    channel_fee: Decimal = Decimal(0)

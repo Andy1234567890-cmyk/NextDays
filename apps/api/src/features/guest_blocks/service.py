@@ -20,6 +20,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.core.supabase import escape_like
 
 from .schemas import BlockedGuest
 
@@ -152,7 +153,7 @@ class GuestBlockService:
         rows = (
             self._db.table("portal_guests")
             .select("id")
-            .ilike("email", clean)
+            .ilike("email", escape_like(clean))
             .execute()
         ).data or []
         return any(
@@ -199,7 +200,10 @@ class GuestBlockService:
             self._db.table("reservations")
             .select("id, status, check_out")
             .eq("tenant_id", tenant_id)
-            .ilike("guest_email", email)
+            # escape_like: eine E-Mail mit `%` würde sonst als Wildcard matchen
+            # und die Trip-Ausnahme zu Unrecht öffnen — der Block fürs Schreiben
+            # wäre umgangen (Wurzel 8).
+            .ilike("guest_email", escape_like(email))
             .neq("status", "cancelled")
             .gte("check_out", cutoff)
             .limit(1)

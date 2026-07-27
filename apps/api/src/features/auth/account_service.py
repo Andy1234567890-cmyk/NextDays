@@ -26,6 +26,7 @@ from .granular_permissions import (
 )
 from .schemas import (
     AccountResponse,
+    PhoneDisableRequest,
     TenantUser,
     TotpDisableRequest,
     TotpEnrollResponse,
@@ -56,6 +57,14 @@ _PERSONAL_USER_FIELDS = frozenset(
         "mailing_country",
         "emergency_contact_name",
         "emergency_contact_phone",
+        # Sprache/Währung/Zeitzone sind ANZEIGE-Einstellungen der Person, nicht
+        # Stammdaten des Betriebs: zwei Admins desselben Tenants dürfen die
+        # Oberfläche in verschiedenen Sprachen sehen. Ohne diese drei Einträge
+        # filtert `update_profile` sie beim Admin heraus — dann speichert die
+        # Auswahl still ins Leere.
+        "preferred_language",
+        "preferred_currency",
+        "preferred_timezone",
     }
 )
 
@@ -100,6 +109,8 @@ class AccountService:
             additional_phone=row.get("additional_phone"),
             hide_phones=bool(row.get("hide_phones")),
             preferred_language=row.get("preferred_language"),
+            preferred_currency=row.get("preferred_currency"),
+            preferred_timezone=row.get("preferred_timezone"),
             spoken_languages=row.get("spoken_languages") or [],
             website=agency.get("website") or row.get("website"),
             description=row.get("description"),
@@ -746,6 +757,58 @@ class AccountService:
 
         self._service.table("user_mfa").delete().eq("user_id", ctx.user_id).execute()
         log.info("totp_disabled", user_id=ctx.user_id)
+        return self.get_account(ctx)
+
+    def phone_disable(
+        self, ctx: AuthContext, req: PhoneDisableRequest
+    ) -> AccountResponse:
+        """SMS-Zweitfaktor entfernen — der Gegenzustand zu `phone/verify`.
+
+        Ohne diesen Weg liesse sich die Nummer bestaetigen, aber nie loesen
+        (Wurzel 1): Wer sein Telefon verliert oder die Nummer wechselt, waere
+        dauerhaft ausgesperrt.
+
+        Re-Auth ueber das PASSWORT, nicht ueber einen SMS-Code: Wer das Telefon
+        nicht mehr hat, kann keinen Code empfangen — eine Code-Abfrage waere
+        genau in dem Fall unbenutzbar, fuer den man den Ausschalter braucht
+        (Wurzel 7). Ein gekapertes Session-Cookie allein reicht damit nicht.
+
+        Beides zusammen abzuschalten waere falsch: Ist TOTP aktiv, bleibt es
+        aktiv — die Nummer ist dann nur ein zweiter Weg, nicht der einzige.
+        """
+        self._ensure_user_row(ctx)
+        auth_user = self._get_auth_user(ctx.user_id)
+        email = self._auth_email(auth_user)
+
+        row = (
+            self._service.table("users")
+            .select("phone, phone_verified_at")
+            .eq("id", ctx.user_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not row or not row[0].get("phone_verified_at"):
+            raise AuthError(
+                "Es ist keine bestätigte Nummer hinterlegt.", status_code=400
+            )
+
+        # OAuth-Konten ohne Passwort koennen sich nicht per Passwort
+        # ausweisen — dort ist der SMS-Code die einzige verbliebene Huerde.
+        if self._has_password(auth_user):
+            if req.current_password is None:
+                raise AuthError("Aktuelles Passwort erforderlich.", status_code=400)
+            if not email or not self._password_ok(
+                email, req.current_password.get_secret_value()
+            ):
+                raise AuthError("Aktuelles Passwort ist falsch.", status_code=401)
+
+        # Nummer UND Bestaetigungszeitpunkt zusammen loeschen: bliebe
+        # `phone_verified_at` stehen, gaelte eine geloeschte Nummer weiter als
+        # bestaetigt (Wurzel 1).
+        self._service.table("users").update(
+            {"phone": None, "phone_verified_at": None}
+        ).eq("id", ctx.user_id).execute()
+        log.info("phone_2fa_disabled", user_id=ctx.user_id)
         return self.get_account(ctx)
 
     # --- interne Helfer ----------------------------------------------------

@@ -235,16 +235,25 @@ class TasksService:
 
     # --- Checklisten + Foto-Nachweise (§2.5) ---
 
-    def _require_own_task(self, tenant_id: str, task_id: str) -> None:
+    def _require_own_task(
+        self, tenant_id: str, task_id: str, ctx: AuthContext | None = None
+    ) -> None:
         """Die Aufgabe MUSS dem Tenant gehören. checklist_items/-photos tragen
         keine tenant_id (Migration 0012) — der Service läuft mit service_role
         (RLS umgangen), also ist dieser explizite Check der EINZIGE Cross-Tenant-
         Schutz: sonst könnte ein Mitarbeiter mit einer erratenen fremden task_id
-        Einträge an fremde Aufgaben schreiben (IDOR)."""
+        Einträge an fremde Aufgaben schreiben (IDOR).
+
+        Mit `ctx` gilt zusätzlich derselbe Objekt-Scope wie in `list_tasks`
+        (Wurzel 9): der Item-Pfad darf nicht mehr hergeben als der List-Pfad,
+        sonst liest/schließt ein Mitarbeiter über eine geratene task_id eine
+        Aufgabe an einem nicht freigegebenen Objekt ab (IDOR-in-role).
+        Pool-Aufgaben ohne Objektbezug bleiben erreichbar, wie in der Liste.
+        """
         owned = (
             self._db()
             .table("tasks")
-            .select("id")
+            .select("id, property_id")
             .eq("id", task_id)
             .eq("tenant_id", tenant_id)
             .limit(1)
@@ -252,9 +261,18 @@ class TasksService:
         ).data
         if not owned:
             raise TaskError("Aufgabe nicht gefunden.", status_code=404)
+        if ctx is not None and is_staff(ctx):
+            prop = owned[0].get("property_id")
+            if prop is not None and prop not in staff_property_ids(self._db(), ctx):
+                # Gleiche Fehlermeldung wie „nicht vorhanden": kein Orakel
+                # darüber, ob eine fremde Aufgabe existiert.
+                raise TaskError("Aufgabe nicht gefunden.", status_code=404)
 
-    def _require_own_checklist_item(self, tenant_id: str, item_id: str) -> None:
-        """Das Checklist-Item MUSS über seine Aufgabe zum Tenant gehören."""
+    def _require_own_checklist_item(
+        self, tenant_id: str, item_id: str, ctx: AuthContext | None = None
+    ) -> None:
+        """Das Checklist-Item MUSS über seine Aufgabe zum Tenant gehören —
+        und mit `ctx` zusätzlich zum Objekt-Scope des Mitarbeiters (Wurzel 9)."""
         item = (
             self._db()
             .table("checklist_items")
@@ -265,12 +283,15 @@ class TasksService:
         ).data
         if not item:
             raise TaskError("Checklisten-Eintrag nicht gefunden.", status_code=404)
-        self._require_own_task(tenant_id, str(item[0]["task_id"]))
+        self._require_own_task(tenant_id, str(item[0]["task_id"]), ctx)
 
     def add_checklist_item(
-        self, tenant_id: str, req: ChecklistItemCreate
+        self,
+        tenant_id: str,
+        req: ChecklistItemCreate,
+        ctx: AuthContext | None = None,
     ) -> ChecklistItem:
-        self._require_own_task(tenant_id, req.task_id)
+        self._require_own_task(tenant_id, req.task_id, ctx)
         row = self._insert(
             "checklist_items",
             {
@@ -282,9 +303,14 @@ class TasksService:
         )
         return ChecklistItem(**{k: row.get(k) for k in ChecklistItem.model_fields})
 
-    def add_checklist_photo(self, tenant_id: str, req: ChecklistPhotoCreate) -> str:
+    def add_checklist_photo(
+        self,
+        tenant_id: str,
+        req: ChecklistPhotoCreate,
+        ctx: AuthContext | None = None,
+    ) -> str:
         """Bildnachweis (unbegrenzt pro Raum) referenzieren. Gibt Foto-ID zurück."""
-        self._require_own_checklist_item(tenant_id, req.item_id)
+        self._require_own_checklist_item(tenant_id, req.item_id, ctx)
         row = self._insert(
             "checklist_photos",
             {"item_id": req.item_id, "storage_path": req.storage_path},
@@ -292,15 +318,22 @@ class TasksService:
         return row["id"]
 
     def upload_task_photo(
-        self, tenant_id: str, task_id: str, content: bytes, content_type: str
+        self,
+        tenant_id: str,
+        task_id: str,
+        content: bytes,
+        content_type: str,
+        ctx: AuthContext | None = None,
     ) -> str:
         """Foto direkt an einer Aufgabe (ohne konkretes Checklisten-Item).
         Housekeeping-Nachweis („Foto vom sauberen Zimmer"). Legt bei Bedarf EIN
         Sammel-Item ('Fotos') an und hängt das Foto dort ein — so erscheint es
-        im Bilder-Modul als Buchungsbild. IDOR-Guard über tenant."""
-        self._require_own_task(tenant_id, task_id)
+        im Bilder-Modul als Buchungsbild. IDOR-Guard über tenant + Objekt-Scope."""
+        self._require_own_task(tenant_id, task_id, ctx)
         item_id = self._ensure_photo_item(task_id)
-        return self.upload_checklist_photo(tenant_id, item_id, content, content_type)
+        return self.upload_checklist_photo(
+            tenant_id, item_id, content, content_type, ctx
+        )
 
     def _ensure_photo_item(self, task_id: str) -> str:
         """Sammel-Item 'Fotos' der Aufgabe — vorhandenes wiederverwenden
@@ -323,12 +356,18 @@ class TasksService:
         return row["id"]
 
     def upload_checklist_photo(
-        self, tenant_id: str, item_id: str, content: bytes, content_type: str
+        self,
+        tenant_id: str,
+        item_id: str,
+        content: bytes,
+        content_type: str,
+        ctx: AuthContext | None = None,
     ) -> str:
         """Foto-Datei zu einem Checklisten-Punkt hochladen (privater Bucket
         task-photos) und in checklist_photos referenzieren. IDOR-Guard über die
-        Item→Task→Tenant-Kette (Wurzel 3). Typ/Größe serverseitig prüfen."""
-        self._require_own_checklist_item(tenant_id, item_id)
+        Item→Task→Tenant-Kette (Wurzel 3) plus Objekt-Scope des Mitarbeiters
+        (Wurzel 9). Typ/Größe serverseitig prüfen."""
+        self._require_own_checklist_item(tenant_id, item_id, ctx)
         ext = _PHOTO_MIME.get(content_type)
         if not ext:
             raise TaskError("Nur JPEG/PNG/WebP erlaubt.", status_code=415)
@@ -635,7 +674,12 @@ class TasksService:
             )
         return out
 
-    def get_detail(self, tenant_id: str, task_id: str) -> TaskDetail:
+    def get_detail(
+        self, tenant_id: str, task_id: str, ctx: AuthContext | None = None
+    ) -> TaskDetail:
+        """Aufgaben-Detail. Mit `ctx` gilt derselbe Objekt-Scope wie in
+        `list_tasks` — ein Mitarbeiter sieht im Detail nichts, was ihm in der
+        Liste verborgen bliebe (Wurzel 9)."""
         row = (
             self._db()
             .table("tasks")
@@ -647,6 +691,10 @@ class TasksService:
         ).data
         if not row:
             raise TaskError("Aufgabe nicht gefunden.", status_code=404)
+        if ctx is not None and is_staff(ctx):
+            prop = row[0].get("property_id")
+            if prop is not None and prop not in staff_property_ids(self._db(), ctx):
+                raise TaskError("Aufgabe nicht gefunden.", status_code=404)
         task = self._to_task(row[0])
         enriched = self._enrich(tenant_id, [task])[0]
         checklist = self._load_checklist(task_id)
@@ -697,10 +745,18 @@ class TasksService:
 
     # --- Abschluss mit Foto-Pflicht + Inspektion ---
 
-    def complete_task(self, tenant_id: str, task_id: str, user_id: str) -> TaskDetail:
+    def complete_task(
+        self,
+        tenant_id: str,
+        task_id: str,
+        user_id: str,
+        ctx: AuthContext | None = None,
+    ) -> TaskDetail:
         """Aufgabe abschließen. Alle requires_photo-Items MÜSSEN ein Foto haben
-        (sonst 422). Bei needs_inspection → inspection_state='to_review'."""
-        detail = self.get_detail(tenant_id, task_id)
+        (sonst 422). Bei needs_inspection → inspection_state='to_review'.
+        Mit `ctx` gilt der Objekt-Scope aus `list_tasks` (Wurzel 9) — sonst
+        könnte ein Mitarbeiter fremde Aufgaben abschließen."""
+        detail = self.get_detail(tenant_id, task_id, ctx)
         missing = [
             i for i in detail.checklist if i.requires_photo and not i.photos
         ]
@@ -726,7 +782,7 @@ class TasksService:
         )
         if not res.data:
             raise TaskError("Aufgabe nicht gefunden.", status_code=404)
-        return self.get_detail(tenant_id, task_id)
+        return self.get_detail(tenant_id, task_id, ctx)
 
     def list_inspection(
         self, tenant_id: str, tab: str

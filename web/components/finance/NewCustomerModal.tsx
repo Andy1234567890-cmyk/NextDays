@@ -327,7 +327,10 @@ export default function NewCustomerModal({
   const [_nextCustomerNumber, setNextCustomerNumber] = useState('KD-001');
   const [_currentNumberSequence, _setCurrentNumberSequence] = useState<NumberSequence | null>(null);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
-  const [customCategories, setCustomCategories] = useState<
+  // Eigene Kundenkategorien: es gibt im Backend noch keinen Endpunkt dafür (der
+  // frühere Aufruf auf /api/v1/categories lief immer in einen 404). Bis dahin
+  // bleibt die Liste leer; die fest definierten Kategorien darunter greifen.
+  const [customCategories] = useState<
     Array<{ id: string; name: string; categoryType: string }>
   >([]);
   const [referenceFieldType, setReferenceFieldType] = useState<'customerReference' | 'leitwegId'>(
@@ -410,10 +413,8 @@ export default function NewCustomerModal({
     }
   };
 
-  // 🔥 CRITICAL FIX: Separate category loading from tab changes
   useEffect(() => {
     if (open) {
-      loadCategories();
       generateNextCustomerNumber();
     }
   }, [open]); // Funktionen nicht memoized → aus Deps genommen (Loop-Schutz)
@@ -546,17 +547,6 @@ export default function NewCustomerModal({
     }
   }
 
-  async function loadCategories() {
-    try {
-      const { getCategories } = await import('@/utils/api/companyApi');
-      const response = await getCategories();
-      if (response.success && response.categories) {
-        setCustomCategories(response.categories);
-      }
-    } catch (error) {
-      console.error('Fehler beim Laden der Kategorien:', error);
-    }
-  }
 
   // VAT Validation
   const validateVAT = async () => {
@@ -2026,16 +2016,18 @@ export default function NewCustomerModal({
 
                   if (persistDirectly && companyId) {
                     try {
-                      // Use the correct API import for customer creation
                       const { createCustomer } = await import('@/utils/api/companyApi');
-                      const response = await createCustomer(companyId, customerData);
+                      // Das Backend liefert die angelegte Kundenzeile ({id, …}),
+                      // kein {success, customerId} — das alte Format stammte von
+                      // einer Route, die es nicht mehr gibt.
+                      const created = await createCustomer(customerData);
 
-                      if (response.success && response.customerId) {
+                      if (created?.id) {
                         toast.success(
                           t('NewCustomerModal.customerCreatedSuccess', { name: displayName }),
                         );
 
-                        if (onSaved) onSaved(response.customerId);
+                        if (onSaved) onSaved(created.id);
                         onOpenChange(false);
                         return;
                       } else {
@@ -2075,12 +2067,8 @@ export default function NewCustomerModal({
           open={showCategoryModal}
           onOpenChange={setShowCategoryModal}
           companyId={companyId}
-          onSaved={(_categoryId, categoryData) => {
-            // Setze die neue Kategorie als aktuellen Typ
+          onSaved={(categoryData) => {
             handleInputChange('organizationType', categoryData.categoryType);
-
-            // Lade Kategorien-Liste neu um die neue Kategorie zu erhalten
-            loadCategories();
           }}
         />
       )}

@@ -15,12 +15,13 @@ from __future__ import annotations
 import ipaddress
 import secrets
 import socket
-from datetime import date, timedelta
+from datetime import date
 from urllib.parse import urlparse
 
 import httpx
 from supabase import Client
 
+from src.core.dates import merge_day_ranges
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
@@ -259,7 +260,7 @@ class ExternalCalendarService:
                 end=end,  # exklusiv
                 summary="Nicht verfügbar",
             )
-            for start, end in _merge_ranges(booked)
+            for start, end in merge_day_ranges(booked, end_exclusive=True)
         ]
         return build_ical(
             prod_id="myNextDays",
@@ -471,22 +472,3 @@ class ExternalCalendarService:
 def _now_iso() -> str:
     from datetime import UTC, datetime
     return datetime.now(UTC).isoformat()
-
-
-def _merge_ranges(days: list[date]) -> list[tuple[date, date]]:
-    """Aufeinanderfolgende belegte Tage zu Zeiträumen zusammenfassen. Rückgabe je
-    Zeitraum (start_inklusiv, end_EXKLUSIV) — passend zur iCal-DATE-Semantik
-    (Abreisetag = DTEND, nicht belegt). `days` muss sortiert und dedupliziert
-    sein (kommt so aus der Query)."""
-    if not days:
-        return []
-    ranges: list[tuple[date, date]] = []
-    start = prev = days[0]
-    for d in days[1:]:
-        if d == prev + timedelta(days=1):
-            prev = d
-            continue
-        ranges.append((start, prev + timedelta(days=1)))
-        start = prev = d
-    ranges.append((start, prev + timedelta(days=1)))
-    return ranges

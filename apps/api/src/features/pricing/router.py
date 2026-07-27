@@ -223,59 +223,21 @@ def explain_dynamic_price(
     db = get_service_client()
     if db is None:
         raise HTTPException(status_code=500, detail="Preis-DB nicht verfügbar.")
-    # Eigentum/Tenant-Scope über den Settings-Service (wirft 403/404 sauber).
     service = DpSettingsService(service_client=db)
     try:
-        service.require_own_property(ctx, property_id)
-    except PricingError as exc:
-        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
-
-    rows = (
-        db.table("dynamic_prices")
-        .select("price, factors")
-        .eq("property_id", property_id)
-        .eq("date", day.isoformat())
-        .limit(1)
-        .execute()
-    ).data or []
-    if not rows:
-        raise HTTPException(
-            status_code=404,
-            detail=(
-                "Für diesen Tag gibt es keinen dynamischen Preis "
-                "(DP aus oder noch nicht berechnet)."
-            ),
+        # Scope-Prüfung, DB-Zugriffe und Basispreis-Ableitung liegen im Service.
+        base_price, price, factors, currency = service.explain_input(
+            ctx, property_id, day.isoformat()
         )
-    price = float(rows[0].get("price") or 0)
-    factors = rows[0].get("factors") or {}
-
-    # Basispreis (Anker) für den Vergleich aus dem Rate-Plan.
-    rate_rows = (
-        db.table("rate_plans")
-        .select("base_price, currency, created_at")
-        .eq("property_id", property_id)
-        .order("created_at")
-        .limit(1)
-        .execute()
-    ).data or []
-    base_price = (
-        float(rate_rows[0]["base_price"])
-        if rate_rows and rate_rows[0].get("base_price") is not None
-        else price
-    )
-    # rate_plans.currency ist NOT NULL — existiert ein Rate-Plan, ist die Währung
-    # gesetzt. Fehlt der Rate-Plan ganz, keine Währung erfinden (Wurzel 4): leer
-    # lassen, die Formatierung rendert dann symbollos statt ein falsches EUR.
-    currency = (rate_rows[0].get("currency") if rate_rows else None) or ""
-
-    try:
         explanation = explain_price(
             base_price=base_price,
             final_price=price,
-            factors={k: float(v) for k, v in factors.items()},
+            factors=factors,
             currency=currency,
             day=day.isoformat(),
         )
+    except PricingError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
     except PriceExplainError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 

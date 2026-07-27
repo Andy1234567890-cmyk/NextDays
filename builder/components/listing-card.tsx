@@ -4,7 +4,7 @@
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 
-import { type Listing, formatEuro } from "@/lib/listings";
+import { type Listing, formatCurrency } from "@/lib/listings";
 
 import { PhotoPlaceholder } from "./photo-placeholder";
 
@@ -50,7 +50,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
         {listing.preisProNacht != null ? (
           <>
             <span className="font-semibold">
-              {formatEuro(listing.preisProNacht, listing.currency)}
+              {formatCurrency(listing.preisProNacht, listing.currency)}
             </span>{" "}
             <span className="text-muted-foreground">Nacht</span>
           </>

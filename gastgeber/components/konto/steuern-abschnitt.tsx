@@ -14,21 +14,45 @@ import { useState } from "react";
 import { Button } from "@nextdays/ui/button";
 
 import { landName } from "@/lib/laender";
-import type { TaxpayerEntry, TaxpayerOverview } from "@/lib/steuern";
+import type {
+  ObjektAngabeStatus,
+  TaxpayerEntry,
+  TaxpayerOverview,
+} from "@/lib/steuern";
 import { loescheSteuerangaben } from "@/lib/steuern-actions";
 
+import { ObjektangabenAbschnitt } from "./objektangaben-abschnitt";
+import { SteuerStartDialog } from "./steuer-start-dialog";
 import { SteuerWizard } from "./steuer-wizard";
 
 type Reiter = "steuerzahler" | "dokumente";
 
+/** Steuernummer maskieren — nur die letzten vier Stellen bleiben lesbar.
+ *
+ *  Eine Steuer-ID ist ein sensibles Personenmerkmal. Zum Wiedererkennen in
+ *  einer Übersicht genügt das Ende; wer den vollen Wert braucht, öffnet den
+ *  Eintrag. Kurze Nummern werden ganz verdeckt, sonst bliebe fast alles
+ *  sichtbar. */
+function maskiere(tin: string): string {
+  const rein = tin.trim();
+  if (rein.length <= 4) return "•".repeat(rein.length);
+  return `${"•".repeat(rein.length - 4)}${rein.slice(-4)}`;
+}
+
 export function SteuernAbschnitt({
   uebersicht,
+  objektangaben,
 }: {
   uebersicht: TaxpayerOverview | null;
+  objektangaben: ObjektAngabeStatus[] | null;
 }) {
   const [daten, setDaten] = useState(uebersicht);
   const [reiter, setReiter] = useState<Reiter>("steuerzahler");
   const [wizardOffen, setWizardOffen] = useState(false);
+  // Neue Angaben starten über das Regime-Popup und laufen dann im Vollbild
+  // weiter. Bearbeiten und „Land ergänzen" bleiben im Dialog: dort steht das
+  // Land schon fest, ein Vollbild-Flow wäre ein Umweg.
+  const [startOffen, setStartOffen] = useState(false);
   const [vorbelegt, setVorbelegt] = useState<string | undefined>();
   const [bearbeiten, setBearbeiten] = useState<TaxpayerEntry | undefined>();
   const [fehler, setFehler] = useState<string | null>(null);
@@ -139,14 +163,29 @@ export function SteuernAbschnitt({
                     className="flex items-center justify-between gap-4 py-4"
                   >
                     <div className="flex flex-col gap-1">
-                      <span className="text-[0.9375rem] font-medium">
+                      <span className="flex items-center gap-2 text-[0.9375rem] font-medium">
                         {landName(e.country)}
+                        {e.confirmed_at ? (
+                          <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                            Abgeschlossen
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+                            Handlung erforderlich
+                          </span>
+                        )}
                       </span>
                       <span className="text-sm text-muted-foreground">
                         {e.kind === "entity"
                           ? e.legal_name
                           : `${e.first_name ?? ""} ${e.last_name ?? ""}`.trim()}
-                        {e.tin ? ` · ${e.tin}` : " · ohne Steuernummer"}
+                        {/* Die Steuernummer wird MASKIERT: sie ist ein
+                            sensibles Personenmerkmal und muss in einer
+                            Übersicht nicht lesbar sein. Zum Prüfen genügen
+                            die letzten Stellen. */}
+                        {e.tin
+                          ? ` · ${maskiere(e.tin)}`
+                          : " · ohne Steuernummer"}
                       </span>
                     </div>
                     <div className="flex shrink-0 gap-3">
@@ -170,7 +209,7 @@ export function SteuernAbschnitt({
               </ul>
             )}
 
-            <Button className="self-start" onClick={() => oeffneWizard()}>
+            <Button className="self-start" onClick={() => setStartOffen(true)}>
               Steuerinformationen hinzufügen
             </Button>
           </section>
@@ -200,6 +239,8 @@ export function SteuernAbschnitt({
               In den Unternehmensdaten bearbeiten
             </a>
           </section>
+
+          <ObjektangabenAbschnitt angaben={objektangaben} />
         </>
       ) : (
         <section className="flex flex-col gap-4">
@@ -219,6 +260,11 @@ export function SteuernAbschnitt({
           </div>
         </section>
       )}
+
+      <SteuerStartDialog
+        offen={startOffen}
+        onClose={() => setStartOffen(false)}
+      />
 
       {wizardOffen && (
         <SteuerWizard

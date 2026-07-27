@@ -10,18 +10,26 @@ Zugang so eng bewacht ist.
 """
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 
 from fastapi import Request
 from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import PlatformContext
+from src.core.supabase import escape_like, fetch_all_rows
 
 from . import audit
 from .schemas import (
     AuditEntry,
     AuditList,
+    BuchungDetail,
+    BuchungGast,
+    BuchungList,
+    BuchungObjekt,
+    BuchungProvision,
+    BuchungSummary,
+    BuchungZahlung,
     FinanzKennzahlen,
     FinanzUebersicht,
     ModerationList,
@@ -32,6 +40,8 @@ from .schemas import (
     PlatformMe,
     PlatformUser,
     PlatformUserList,
+    SteuerBetrieb,
+    SteuerUebersicht,
     SupportMessage,
     SupportTicket,
     SupportTicketDetail,
@@ -52,6 +62,13 @@ _MAX_LIMIT = 200
 # dieser Größe vertretbar; darüber gehört die Aggregation in die DB (View/RPC).
 _AGGREGAT_LIMIT = 5000
 
+# Obergrenze aus § 23 Satz 2 PStTG: die Massnahme muss SPAETESTENS nach 180
+# Tagen greifen. Wird sie das nicht, ist das fuer den BETREIBER bussgeldbewehrt
+# (§ 25 Abs. 1 Nr. 6) — darum in der Pruefsicht sichtbar. Bewusst hier
+# gespiegelt statt importiert: der platform_admin-Slice soll nicht vom
+# taxpayer-Slice abhaengen.
+_FRIST_SPAETESTENS_TAGE = 180
+
 # Spalten aus public.tenants, die in die Backoffice-Sicht übernommen werden.
 # Explizit statt per model_fields-Introspektion: so ist beim Lesen sichtbar,
 # welche Felder das Backoffice sieht, und ein neues Schema-Feld leakt nicht
@@ -64,6 +81,15 @@ _TENANT_COLUMNS = (
     "account_type",
     "business_type",
     "created_at",
+)
+
+
+# Spalten der Buchungs-LISTE. Bewusst ohne Kontaktdaten (Telefon, Anschrift):
+# die Liste wird überflogen, das Detail wird geöffnet — und nur dieses Öffnen
+# ist der Vorgang, der mit tenant_id protokolliert gehört.
+_BUCHUNG_LIST_FIELDS = (
+    "id, tenant_id, property_id, guest_id, channel, status, payment_status, "
+    "check_in, check_out, total_amount, paid_amount, currency, created_at"
 )
 
 
@@ -193,7 +219,10 @@ class PlatformAdminService:
             .order("created_at", desc=True)
         )
         if suche:
-            query = query.ilike("name", f"%{suche}%")
+            # Wildcards bleiben außen (Teilstring-Suche ist gewollt), der
+            # EINGEGEBENE Teil wird escaped — sonst wirkt ein `%` im Suchtext
+            # als zusätzliches Wildcard und liefert falsche Treffer.
+            query = query.ilike("name", f"%{escape_like(suche)}%")
         res = query.range(offset, offset + limit - 1).execute()
         rows = res.data or []
         ids = [r["id"] for r in rows]
@@ -340,7 +369,7 @@ class PlatformAdminService:
             .order("created_at", desc=True)
         )
         if suche:
-            query = query.ilike("email", f"%{suche}%")
+            query = query.ilike("email", f"%{escape_like(suche)}%")
         res = query.range(offset, offset + limit - 1).execute()
         return PlatformGuestList(
             items=[PlatformGuest(**r) for r in (res.data or [])],
@@ -506,23 +535,27 @@ class PlatformAdminService:
         Zählt auch Betriebe MIT Profil, bei denen charges_enabled false ist —
         beide Fälle bedeuten: dieser Betrieb kann nicht verkaufen.
         """
-        alle = (
-            self._db.table("tenants").select("id").execute()
-        ).data or []
-        bereit = (
+        # fetch_all_rows statt .execute(): ab 1000 Betrieben schnitt PostgREST
+        # die Listen still ab und die Backoffice-Kennzahl war zu niedrig
+        # (Wurzel 8). Eine reine Differenz zweier counts wäre falsch, sobald
+        # ein Billing-Profil ohne passenden Tenant existiert — deshalb weiter
+        # ein echter Mengenvergleich, nur vollständig geladen.
+        alle = fetch_all_rows(self._db.table("tenants").select("id").order("id"))
+        bereit = fetch_all_rows(
             self._db.table("tenant_billing_profile")
             .select("tenant_id")
             .eq("stripe_charges_enabled", True)
-            .execute()
-        ).data or []
+            .order("tenant_id")
+        )
         bereit_ids = {r["tenant_id"] for r in bereit if r.get("tenant_id")}
         return sum(1 for t in alle if t["id"] not in bereit_ids)
 
     def _abo_verteilung(self) -> dict[str, int]:
         """Abo-Status über alle Betriebe (status → Anzahl)."""
-        rows = (
-            self._db.table("tenant_subscription").select("status").execute()
-        ).data or []
+        rows = fetch_all_rows(
+            self._db.table("tenant_subscription").select("status, tenant_id")
+            .order("tenant_id")
+        )
         out: dict[str, int] = {}
         for r in rows:
             s = r.get("status") or "unbekannt"
@@ -836,3 +869,383 @@ class PlatformAdminService:
             .execute()
         ).data or []
         return {r["id"]: r["email"] for r in rows if r.get("email")}
+
+    # -- Steuer-Compliance (Prüfsicht des Betreibers) ----------------------
+
+    def steuer_uebersicht(self, *, nur_luecken: bool = False) -> SteuerUebersicht:
+        """Steuerlicher Stand ALLER Betriebe.
+
+        Warum diese Sicht existiert: Nach § 23 PStTG muss der Plattform-
+        betreiber die Mitwirkung durchsetzen, und das Unterlassen ist selbst
+        bußgeldbewehrt (§ 25 Abs. 1 Nr. 6, bis 30.000 EUR). Eine Oberfläche,
+        die nur den Gastgeber fragt, erfüllt die Pflicht nicht — der Betreiber
+        muss sehen können, wo etwas fehlt.
+
+        Die Pflichtländer werden ODER-verknüpft abgeleitet: Sitzland des
+        Betriebs ODER Land eines Objekts. Nur die Objektländer zu prüfen wäre
+        zu eng — ein deutscher Betrieb mit ausschließlich spanischen Objekten
+        ist auch in Deutschland meldepflichtig.
+        """
+        tenants = (
+            self._db.table("tenants")
+            .select("id, name, country")
+            .order("name")
+            .limit(_AGGREGAT_LIMIT)
+            .execute()
+        ).data or []
+        if not tenants:
+            return SteuerUebersicht(betriebe=[])
+
+        ids = [t["id"] for t in tenants]
+        objekte = self._objekt_stand(ids)
+        erfasst = self._erfasste_laender(ids)
+        mahnungen = self._mahnstand(ids)
+
+        betriebe: list[SteuerBetrieb] = []
+        for t in tenants:
+            tid = t["id"]
+            objekt_laender, gesamt, ohne_angabe = objekte.get(tid, (set(), 0, 0))
+            pflicht = set(objekt_laender)
+            if t.get("country"):
+                pflicht.add(t["country"].upper())
+            abgedeckt = erfasst.get(tid, set())
+            offen, einbehalt, ueberfaellig = mahnungen.get(tid, (0, False, []))
+
+            betriebe.append(
+                SteuerBetrieb(
+                    tenant_id=tid,
+                    tenant_name=t.get("name"),
+                    country=t.get("country"),
+                    pflicht_laender=sorted(pflicht),
+                    erfasste_laender=sorted(abgedeckt),
+                    fehlende_laender=sorted(pflicht - abgedeckt),
+                    objekte_gesamt=gesamt,
+                    objekte_ohne_angabe=ohne_angabe,
+                    mahnungen_offen=offen,
+                    zahlungen_einbehalten=einbehalt,
+                    ueberfaellig=sorted(ueberfaellig),
+                )
+            )
+
+        sichtbar = (
+            [b for b in betriebe if not b.vollstaendig] if nur_luecken else betriebe
+        )
+        return SteuerUebersicht(
+            betriebe=sichtbar,
+            betriebe_gesamt=len(betriebe),
+            betriebe_vollstaendig=sum(1 for b in betriebe if b.vollstaendig),
+            betriebe_mit_luecke=sum(1 for b in betriebe if b.fehlende_laender),
+            betriebe_ueberfaellig=sum(1 for b in betriebe if b.ueberfaellig),
+            zahlungen_einbehalten=sum(
+                1 for b in betriebe if b.zahlungen_einbehalten
+            ),
+        )
+
+    def _objekt_stand(
+        self, tenant_ids: list[str]
+    ) -> dict[str, tuple[set[str], int, int]]:
+        """tenant_id → (Objektländer, Anzahl, davon ohne Grundbuchangabe)."""
+        rows = (
+            self._db.table("properties")
+            .select(
+                "tenant_id, country, land_registration_number, "
+                "land_registration_unavailable"
+            )
+            .in_("tenant_id", tenant_ids)
+            .limit(_AGGREGAT_LIMIT)
+            .execute()
+        ).data or []
+        stand: dict[str, tuple[set[str], int, int]] = {}
+        for r in rows:
+            tid = r["tenant_id"]
+            laender, gesamt, ohne = stand.get(tid, (set(), 0, 0))
+            if r.get("country"):
+                laender.add(r["country"].upper())
+            erhoben = bool(r.get("land_registration_number")) or bool(
+                r.get("land_registration_unavailable")
+            )
+            stand[tid] = (laender, gesamt + 1, ohne + (0 if erhoben else 1))
+        return stand
+
+    def _erfasste_laender(self, tenant_ids: list[str]) -> dict[str, set[str]]:
+        """tenant_id → Länder mit vorliegender Selbstauskunft."""
+        rows = (
+            self._db.table("taxpayer_info")
+            .select("tenant_id, country")
+            .in_("tenant_id", tenant_ids)
+            .limit(_AGGREGAT_LIMIT)
+            .execute()
+        ).data or []
+        erfasst: dict[str, set[str]] = {}
+        for r in rows:
+            erfasst.setdefault(r["tenant_id"], set()).add(
+                (r["country"] or "").upper()
+            )
+        return erfasst
+
+    def _mahnstand(
+        self, tenant_ids: list[str]
+    ) -> dict[str, tuple[int, bool, list[str]]]:
+        """tenant_id → (offene Vorgänge, Einbehalt aktiv, überfällige Länder).
+
+        Überfällig heißt: die 180-Tage-Obergrenze aus § 23 Satz 2 ist
+        verstrichen, ohne dass eine Maßnahme griff. Genau dieser Fall ist für
+        den BETREIBER bußgeldbewehrt — er muss sichtbar sein.
+        """
+        rows = (
+            self._db.table("taxpayer_enforcement")
+            .select("tenant_id, country, requested_at, enforced_at, resolved_at")
+            .in_("tenant_id", tenant_ids)
+            .is_("resolved_at", "null")
+            .limit(_AGGREGAT_LIMIT)
+            .execute()
+        ).data or []
+        jetzt = datetime.now(UTC)
+        stand: dict[str, tuple[int, bool, list[str]]] = {}
+        for r in rows:
+            tid = r["tenant_id"]
+            offen, einbehalt, ueberfaellig = stand.get(tid, (0, False, []))
+            offen += 1
+            if r.get("enforced_at"):
+                einbehalt = True
+            elif (
+                jetzt - datetime.fromisoformat(r["requested_at"])
+            ).days > _FRIST_SPAETESTENS_TAGE:
+                ueberfaellig.append(r["country"])
+            stand[tid] = (offen, einbehalt, ueberfaellig)
+        return stand
+
+    # -- Buchungen (mandantenübergreifend) ---------------------------------
+
+    def buchungen(
+        self,
+        *,
+        limit: int = 50,
+        offset: int = 0,
+        status_filter: str | None = None,
+        channel: str | None = None,
+        tenant_id: str | None = None,
+        suche: str | None = None,
+    ) -> BuchungList:
+        """Alle Buchungen der Plattform, neueste zuerst.
+
+        `suche` trifft die Gast-E-Mail — das ist der Weg, auf dem eine Anfrage
+        real hereinkommt („Gast XY beschwert sich"). Die Liste zeigt bewusst
+        KEINE Telefonnummer und keine Anschrift; dafür gibt es das Detail.
+        """
+        limit = max(1, min(_MAX_LIMIT, limit))
+        offset = max(0, offset)
+
+        query = (
+            self._db.table("reservations")
+            .select(_BUCHUNG_LIST_FIELDS, count="exact")
+            .order("created_at", desc=True)
+        )
+        if status_filter:
+            query = query.eq("status", status_filter)
+        if channel:
+            query = query.eq("channel", channel)
+        if tenant_id:
+            query = query.eq("tenant_id", tenant_id)
+        if suche:
+            query = query.ilike("guest_email", f"%{escape_like(suche)}%")
+        res = query.range(offset, offset + limit - 1).execute()
+        rows = res.data or []
+
+        namen = self._tenant_names([r.get("tenant_id") for r in rows])
+        objekte = self._property_titles([r.get("property_id") for r in rows])
+        gaeste = self._guest_names([r.get("guest_id") for r in rows])
+        return BuchungList(
+            items=[
+                self._buchung_summary(r, namen, objekte, gaeste) for r in rows
+            ],
+            total=res.count or 0,
+        )
+
+    def buchung(self, reservation_id: str) -> BuchungDetail | None:
+        """Eine Buchung mit beiden Seiten: Betrieb/Objekt und Gast/Zahlung."""
+        rows = (
+            self._db.table("reservations")
+            .select("*")
+            .eq("id", reservation_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not rows:
+            return None
+        r = rows[0]
+
+        namen = self._tenant_names([r.get("tenant_id")])
+        objekt = self._objekt(r["property_id"])
+        gaeste = self._guest_names([r.get("guest_id")])
+        basis = self._buchung_summary(
+            r, namen, {objekt.id: objekt.title} if objekt.title else {}, gaeste
+        )
+        return BuchungDetail(
+            **basis.model_dump(),
+            gast=self._gast(r),
+            objekt=objekt,
+            zahlungen=self._zahlungen(reservation_id),
+            provisionen=self._provisionen(reservation_id),
+            quote_items=r.get("quote_items") or [],
+            num_guests=r.get("num_guests", 1),
+            adults=r.get("adults", 1),
+            children=r.get("children", 0),
+            infants=r.get("infants", 0),
+            pets=r.get("pets", 0),
+            note=r.get("note"),
+            ota_name=r.get("ota_name"),
+            external_ref=r.get("external_ref"),
+            source_channex_booking_id=r.get("source_channex_booking_id"),
+            cancel_reason=r.get("cancel_reason"),
+            cancelled_at=r.get("cancelled_at"),
+            checked_in_at=r.get("checked_in_at"),
+            checked_out_at=r.get("checked_out_at"),
+            channel_fee=r.get("channel_fee") or 0,
+        )
+
+    @staticmethod
+    def _buchung_summary(
+        row: dict,
+        tenant_namen: dict[str, str],
+        objekt_titel: dict[str, str],
+        gast_namen: dict[str, str],
+    ) -> BuchungSummary:
+        """Eine Zeile in die Listensicht übersetzen.
+
+        Die Nächte werden aus den Daten GERECHNET, nicht gespeichert — eine
+        zweite Quelle für dieselbe Zahl liefe auseinander (Wurzel 1).
+        """
+        anreise = date.fromisoformat(row["check_in"])
+        abreise = date.fromisoformat(row["check_out"])
+        return BuchungSummary(
+            id=row["id"],
+            tenant_id=row["tenant_id"],
+            tenant_name=tenant_namen.get(row["tenant_id"]),
+            property_id=row["property_id"],
+            property_title=objekt_titel.get(row["property_id"]),
+            guest_name=gast_namen.get(row.get("guest_id") or ""),
+            channel=row["channel"],
+            status=row["status"],
+            payment_status=row["payment_status"],
+            check_in=anreise,
+            check_out=abreise,
+            naechte=(abreise - anreise).days,
+            total_amount=row["total_amount"],
+            paid_amount=row["paid_amount"],
+            currency=row.get("currency"),
+            created_at=row["created_at"],
+        )
+
+    def _gast(self, row: dict) -> BuchungGast:
+        """Die Gastseite aus drei möglichen Quellen zusammensetzen.
+
+        Reihenfolge ist Absicht: die Reservierung selbst ist die einzige immer
+        vorhandene Quelle. Gastakte und Plattform-Konto ERGÄNZEN sie, ersetzen
+        sie aber nie — sonst zeigte das Backoffice eine andere E-Mail an, als
+        in der Buchung steht.
+        """
+        gast = BuchungGast(
+            email=row.get("guest_email"),
+            phone=row.get("guest_phone"),
+            country=row.get("guest_country"),
+            language=row.get("guest_language"),
+        )
+        if guest_id := row.get("guest_id"):
+            akte = (
+                self._db.table("guests")
+                .select("id, name, company, stays_count")
+                .eq("id", guest_id)
+                .limit(1)
+                .execute()
+            ).data
+            if akte:
+                gast.guest_id = akte[0]["id"]
+                gast.name = akte[0].get("name")
+                gast.company = akte[0].get("company")
+                gast.stays_count = akte[0].get("stays_count")
+        if email := row.get("guest_email"):
+            konto = (
+                self._db.table("portal_guests")
+                .select("id, name, created_at")
+                # escape_like + stabile Sortierung: eine E-Mail mit `%` würde
+                # sonst als Wildcard matchen und im Detail ein FREMDES
+                # Plattform-Konto anzeigen (Wurzel 8).
+                .ilike("email", escape_like(email))
+                .order("created_at")
+                .limit(1)
+                .execute()
+            ).data
+            if konto:
+                gast.portal_guest_id = konto[0]["id"]
+                gast.portal_registered_at = konto[0].get("created_at")
+                gast.name = gast.name or konto[0].get("name")
+        return gast
+
+    def _objekt(self, property_id: str) -> BuchungObjekt:
+        """Die Objektseite — EINE buchbare Einheit, kein Container."""
+        rows = (
+            self._db.table("properties")
+            .select("id, title, street, postal_code, city, country, status, max_guests")
+            .eq("id", property_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not rows:
+            # Der Fremdschlüssel ist RESTRICT — das kann nur passieren, wenn
+            # jemand an der DB vorbei gelöscht hat. Nicht erfinden, nur die ID.
+            return BuchungObjekt(id=property_id)
+        return BuchungObjekt(**rows[0])
+
+    def _zahlungen(self, reservation_id: str) -> list[BuchungZahlung]:
+        rows = (
+            self._db.table("payments")
+            .select(
+                "id, type, status, gateway, amount, currency, due_at, created_at"
+            )
+            .eq("reservation_id", reservation_id)
+            .order("created_at")
+            .limit(_MAX_LIMIT)
+            .execute()
+        ).data or []
+        return [BuchungZahlung(**r) for r in rows]
+
+    def _provisionen(self, reservation_id: str) -> list[BuchungProvision]:
+        rows = (
+            self._db.table("platform_fees")
+            .select(
+                "id, fee_bps, gross_amount_cents, fee_amount_cents, "
+                "reversed_amount_cents, currency, gateway, status, created_at"
+            )
+            .eq("reservation_id", reservation_id)
+            .order("created_at")
+            .limit(_MAX_LIMIT)
+            .execute()
+        ).data or []
+        return [BuchungProvision(**r) for r in rows]
+
+    def _property_titles(self, property_ids: list[str | None]) -> dict[str, str]:
+        """id → Titel für eine Menge von Objekten (eine Abfrage)."""
+        eindeutig = list({p for p in property_ids if p})
+        if not eindeutig:
+            return {}
+        rows = (
+            self._db.table("properties")
+            .select("id, title")
+            .in_("id", eindeutig)
+            .execute()
+        ).data or []
+        return {r["id"]: r["title"] for r in rows if r.get("title")}
+
+    def _guest_names(self, guest_ids: list[str | None]) -> dict[str, str]:
+        """id → Name für eine Menge von Gastakten (eine Abfrage)."""
+        eindeutig = list({g for g in guest_ids if g})
+        if not eindeutig:
+            return {}
+        rows = (
+            self._db.table("guests")
+            .select("id, name")
+            .in_("id", eindeutig)
+            .execute()
+        ).data or []
+        return {r["id"]: r["name"] for r in rows if r.get("name")}

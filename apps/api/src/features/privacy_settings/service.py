@@ -24,10 +24,20 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.features.auth.permissions import Capability, has_capability
 
 from .schemas import PrivacySettings, PrivacySettingsUpdate
 
 log = get_logger("nextdays.privacy_settings")
+
+
+class PrivacySettingsError(Exception):
+    """Fachlicher Fehler mit HTTP-Status (Router mappt ihn)."""
+
+    def __init__(self, message: str, status_code: int = 400) -> None:
+        super().__init__(message)
+        self.message = message
+        self.status_code = status_code
 
 # Reine Konto-Präferenzen (in privacy_settings gespeichert). Ohne die abgeleitete
 # listings_search_engine_indexing — die lebt auf den Objekten.
@@ -68,6 +78,17 @@ class PrivacySettingsService:
         # Objekt-Bulk getrennt behandeln — nie in privacy_settings schreiben.
         listings = changed.pop("listings_search_engine_indexing", None)
         if listings is not None:
+            # Wurzel 9: der Endpunkt hängt an CurrentUser (Authentifizierung),
+            # dieses eine Feld schreibt aber auf ALLE Objekte des Tenants. Ohne
+            # diese Prüfung könnte jeder staff/cleaner/owner den kompletten
+            # Objektbestand aus den Suchmaschinen nehmen. Konto-Präferenzen
+            # bleiben bewusst für jeden eingeloggten Nutzer änderbar.
+            if not has_capability(ctx.role, Capability.MANAGE_PROPERTIES):
+                raise PrivacySettingsError(
+                    "Für die Suchmaschinen-Einstellung der Objekte fehlt die "
+                    "Berechtigung.",
+                    status_code=403,
+                )
             self._set_all_listings_indexed(ctx, listings)
 
         if changed:
@@ -93,15 +114,27 @@ class PrivacySettingsService:
         Objekte false (nichts ist indexierbar → Schalter aus, ehrlich)."""
         if not ctx.tenant_id:
             return False
-        rows = (
+        # Zwei counts statt Vollabzug: ab 1000 Objekten schnitt PostgREST die
+        # Liste still ab und der Schalter zeigte „an", obwohl nicht alle
+        # Objekte indexierbar waren (Wurzel 8).
+        gesamt = (
             self._db.table("properties")
-            .select("search_engine_indexing")
+            .select("id", count="exact")
             .eq("tenant_id", ctx.tenant_id)
+            .limit(1)
             .execute()
-        ).data or []
-        if not rows:
+        ).count or 0
+        if not gesamt:
             return False
-        return all(bool(r.get("search_engine_indexing")) for r in rows)
+        indexiert = (
+            self._db.table("properties")
+            .select("id", count="exact")
+            .eq("tenant_id", ctx.tenant_id)
+            .eq("search_engine_indexing", True)
+            .limit(1)
+            .execute()
+        ).count or 0
+        return indexiert == gesamt
 
     def _set_all_listings_indexed(self, ctx: AuthContext, value: bool) -> None:
         """search_engine_indexing auf ALLEN Objekten des Tenants setzen (Bulk).

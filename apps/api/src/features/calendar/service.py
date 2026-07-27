@@ -14,6 +14,7 @@ from typing import TYPE_CHECKING
 
 from supabase import Client
 
+from src.core.dates import merge_day_ranges
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 from src.features.auth.owner_scope import is_owner, owner_property_ids
@@ -629,7 +630,7 @@ class CalendarService:
         # würde Stop-Sell für gebuchte Tage an die OTAs gemeldet.
         self._push_channex_stop_sell(
             property_id,
-            self._date_spans(days),
+            merge_day_ranges(days, end_exclusive=False),
             stop_sell=True,
         )
         log.info(
@@ -700,7 +701,7 @@ class CalendarService:
             )
         else:
             self._push_channex_stop_sell(
-                property_id, self._date_spans(open_days), stop_sell=False
+                property_id, merge_day_ranges(open_days, end_exclusive=False), stop_sell=False
             )
         log.info("calendar_stop_sell_cleared", property_id=property_id)
 
@@ -748,7 +749,7 @@ class CalendarService:
                 "property_id", pid
             ).gte("date", today.isoformat()).execute()
             self._push_channex_stop_sell(
-                pid, self._date_spans(days), stop_sell=False
+                pid, merge_day_ranges(days, end_exclusive=False), stop_sell=False
             )
             total_days += len(days)
         log.info(
@@ -758,19 +759,6 @@ class CalendarService:
             days=total_days,
         )
         return {"properties": len(property_ids), "days": total_days}
-
-    @staticmethod
-    def _date_spans(days: list[date]) -> list[tuple[date, date]]:
-        """Sortierte Tagesliste zu zusammenhängenden (start, end)-Spannen
-        komprimieren (end inklusiv) — Ranges statt Einzeltage pushen
-        (Channex-Skill: „batch via ranges")."""
-        spans: list[tuple[date, date]] = []
-        for d in sorted(days):
-            if spans and d == spans[-1][1] + timedelta(days=1):
-                spans[-1] = (spans[-1][0], d)
-            else:
-                spans.append((d, d))
-        return spans
 
     def _tenant_of(self, property_id: str) -> str | None:
         """tenant_id eines Objekts (für die ARI-Push-Jobs). None, wenn das Objekt

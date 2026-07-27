@@ -17,6 +17,8 @@ from src.core.security import CurrentPlatformAdmin, require_platform_write
 from .dependencies import PlatformAdminServiceDep
 from .schemas import (
     AuditList,
+    BuchungDetail,
+    BuchungList,
     FinanzUebersicht,
     ModerationDecision,
     ModerationList,
@@ -24,6 +26,7 @@ from .schemas import (
     PlatformGuestList,
     PlatformMe,
     PlatformUserList,
+    SteuerUebersicht,
     SupportMessage,
     SupportReply,
     SupportTicket,
@@ -465,6 +468,97 @@ def tenant_vorgaenge(
         target_type="tenant",
         target_id=tenant_id,
         tenant_id=tenant_id,
+        request=request,
+    )
+    return result
+
+
+@router.get("/steuern", response_model=SteuerUebersicht)
+def get_steuern(
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+    nur_luecken: bool = False,
+) -> SteuerUebersicht:
+    """Steuerlicher Compliance-Stand aller Betriebe.
+
+    Die Pflicht des Betreibers, das zu überwachen, folgt aus § 23 PStTG; das
+    Unterlassen ist bußgeldbewehrt (§ 25 Abs. 1 Nr. 6). Diese Sicht ist die
+    Kontrolle dazu.
+    """
+    result = service.steuer_uebersicht(nur_luecken=nur_luecken)
+    service.log_action(
+        ctx,
+        "steuern.view",
+        detail={
+            "nur_luecken": nur_luecken,
+            "betriebe": result.betriebe_gesamt,
+            "mit_luecke": result.betriebe_mit_luecke,
+        },
+        request=request,
+    )
+    return result
+
+
+@router.get("/buchungen", response_model=BuchungList)
+def list_buchungen(
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    status_filter: str | None = None,
+    channel: str | None = None,
+    tenant_id: str | None = None,
+    suche: str | None = None,
+) -> BuchungList:
+    """Alle Buchungen der Plattform, neueste zuerst."""
+    result = service.buchungen(
+        limit=limit,
+        offset=offset,
+        status_filter=status_filter,
+        channel=channel,
+        tenant_id=tenant_id,
+        suche=suche,
+    )
+    service.log_action(
+        ctx,
+        "buchung.list",
+        detail={
+            "limit": limit,
+            "offset": offset,
+            "status": status_filter,
+            "channel": channel,
+            "suche": suche,
+        },
+        tenant_id=tenant_id,
+        request=request,
+    )
+    return result
+
+
+@router.get("/buchungen/{reservation_id}", response_model=BuchungDetail)
+def get_buchung(
+    reservation_id: str,
+    ctx: CurrentPlatformAdmin,
+    service: PlatformAdminServiceDep,
+    request: Request,
+) -> BuchungDetail:
+    """Eine Buchung mit beiden Seiten: Betrieb/Objekt und Gast/Zahlung."""
+    result = service.buchung(reservation_id)
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Buchung nicht gefunden."
+        )
+    # Mit tenant_id protokolliert: hier werden Kontaktdaten eines fremden
+    # Mandanten sichtbar — genau der Vorgang, den ein Betrieb nachvollziehen
+    # können muss.
+    service.log_action(
+        ctx,
+        "buchung.view",
+        target_type="reservation",
+        target_id=reservation_id,
+        tenant_id=result.tenant_id,
         request=request,
     )
     return result

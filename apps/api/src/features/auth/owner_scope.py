@@ -40,12 +40,3 @@ def owner_property_ids(db: Client, ctx: AuthContext) -> set[str]:
         .execute()
     ).data or []
     return {r["property_id"] for r in rows}
-
-
-def filter_to_owned(db: Client, ctx: AuthContext, property_ids: list[str]) -> list[str]:
-    """`property_ids` für Eigentümer auf die zugeordneten Objekte einschränken
-    (Reihenfolge bleibt erhalten). Nicht-Owner erhalten die Liste unverändert."""
-    if not is_owner(ctx):
-        return property_ids
-    allowed = owner_property_ids(db, ctx)
-    return [p for p in property_ids if p in allowed]

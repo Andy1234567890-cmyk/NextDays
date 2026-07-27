@@ -12,15 +12,23 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
+from src.core.dates import merge_day_ranges
 from src.core.security import AuthContext
 from src.features.external_calendar.ical import ExportEvent, build_ical, parse_ical
 from src.features.external_calendar.service import (
     ExternalCalendarError,
     ExternalCalendarService,
     _assert_public_url,
-    _merge_ranges,
 )
 from src.main import create_app
+
+
+def merge_ranges_exklusiv(days):
+    """Frueher `_merge_ranges` — jetzt die zentrale Funktion mit der
+    exklusiven iCal-Konvention (core.dates)."""
+    return merge_day_ranges(days, end_exclusive=True)
+
+
 
 client = TestClient(create_app())
 _CTX = AuthContext(user_id="u", tenant_id="t1")
@@ -300,16 +308,19 @@ def test_ical_does_not_overwrite_real_booking_on_same_day() -> None:
 
 
 def test_merge_ranges_groups_consecutive_days() -> None:
+    # Der Helfer liegt jetzt in core.dates: dieselbe Logik wurde in rates
+    # und hier doppelt gepflegt. `end_exclusive=True` ist die iCal-Semantik
+    # (DTEND zeigt auf den Tag NACH der letzten Nacht).
     days = [
         date(2026, 1, 1), date(2026, 1, 2), date(2026, 1, 3),
         date(2026, 1, 5),
     ]
     # 1.–3. zusammenhängend (DTEND exklusiv = 4.), 5. einzeln (DTEND = 6.).
-    assert _merge_ranges(days) == [
+    assert merge_day_ranges(days, end_exclusive=True) == [
         (date(2026, 1, 1), date(2026, 1, 4)),
         (date(2026, 1, 5), date(2026, 1, 6)),
     ]
-    assert _merge_ranges([]) == []
+    assert merge_day_ranges([], end_exclusive=True) == []
 
 
 def test_build_ical_roundtrips_through_parser() -> None:

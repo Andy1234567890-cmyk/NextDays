@@ -1725,13 +1725,13 @@ export function DashboardVoiceAssistant({
             {debugLines.length > 0 ? (
               <div className="space-y-1">
                 {debugLines.map((line, idx) => (
-                  <p key={`${idx}-${line}`} className="break-words font-mono text-[11px] leading-4 text-muted-foreground">
+                  <p key={`${idx}-${line}`} className="break-words font-mono text-[0.6875rem] leading-4 text-muted-foreground">
                     {line}
                   </p>
                 ))}
               </div>
             ) : (
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-[0.6875rem] text-muted-foreground">
                 Noch keine Debug-Ereignisse.
               </p>
             )}

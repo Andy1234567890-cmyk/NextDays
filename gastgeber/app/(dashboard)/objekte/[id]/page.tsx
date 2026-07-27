@@ -11,6 +11,7 @@ import {
   getPlattformGebuehr,
 } from "@/lib/cohosts";
 import { getHostProfile, LEERES_PROFIL } from "@/lib/host-profil";
+import { getObjektSteuern } from "@/lib/objekt-steuern";
 import { getPreisStand } from "@/lib/preise";
 import { getProperty } from "@/lib/properties";
 
@@ -46,6 +47,7 @@ export default async function ObjektEditorPage({
     cohosts,
     cohostEinladungen,
     plattformBps,
+    objektSteuern,
   ] = await Promise.all([
     getPreisStand(id),
     getHostProfile().catch(() => LEERES_PROFIL),
@@ -55,6 +57,9 @@ export default async function ObjektEditorPage({
     // statt einen erfundenen Satz anzuzeigen (Wurzel 4). Die echte Aufteilung
     // rechnet ohnehin das Backend.
     getPlattformGebuehr().catch(() => 0),
+    // null bei Ladefehler — das Panel zeigt dann einen Hinweis statt einer
+    // leeren Liste, die „keine Steuern" behaupten würde (Wurzel 5).
+    getObjektSteuern(id),
   ]);
 
   return (
@@ -65,6 +70,7 @@ export default async function ObjektEditorPage({
       cohosts={cohosts}
       cohostEinladungen={cohostEinladungen}
       plattformBps={plattformBps}
+      objektSteuern={objektSteuern}
     />
   );
 }

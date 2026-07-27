@@ -11,6 +11,7 @@ from datetime import date
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.core.supabase import escape_like
 
 from .schemas import (
     AgencyCreate,
@@ -113,7 +114,8 @@ class TravelAgenciesService:
         if not include_inactive:
             query = query.eq("is_active", True)
         if q:
-            query = query.ilike("name", f"%{q}%")
+            # Wildcards außen (Teilstring-Suche gewollt), Eingabe escaped.
+            query = query.ilike("name", f"%{escape_like(q)}%")
         return query.execute().data or []
 
     def create_agency(self, tenant_id: str, data: AgencyCreate) -> dict:

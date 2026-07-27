@@ -64,6 +64,11 @@ class Settings(BaseSettings):
     rate_limit_listings_tenant: str = "1200/60"
     # Multi-Tenant-Fairness: ein eingeloggter Tenant darf den Pool nicht leeren.
     rate_limit_tenant: str = "600/60"
+    # Streng: Endpunkte, die eine KOSTENPFLICHTIGE Fremd-API anstoßen
+    # (Sprachassistent → Groq, Übersetzung → Google). Im Default-Bucket (300/60)
+    # könnte ein einzelner eingeloggter Nutzer erhebliche Kosten verursachen —
+    # Wurzel 8 verlangt hier einen eigenen, strengen Bucket.
+    rate_limit_ai: str = "20/60"
     # Vertrauenswürdige Proxy-Hops für die X-Forwarded-For-Auswertung. Anzahl der
     # von RECHTS zu überspringenden Proxy-IPs; die echte Client-IP ist das
     # (1+trusted_hops)-letzte XFF-Element.

@@ -6,6 +6,7 @@ import { View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Btn, Card, Chip, Col, Photo, Row, Spinner, Star, Txt } from "@/components/ui/kit";
+import { formatCurrency } from "@/lib/currency";
 import { listProperties, type Property } from "@/lib/properties";
 import { ND_PHOTOS as P, PH } from "@/lib/photos";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -16,18 +17,23 @@ type Item = {
   grad: "grad1" | "grad2" | "grad3";
   status: "Live" | "Entwurf";
   rating: string;
-  price: number;
+  // null = kein Preis hinterlegt → „—" statt 0 (Wurzel 4).
+  price: number | null;
+  // Währung des Objekts; null → Betrag symbollos, nie ein erfundenes €.
+  currency: string | null;
   occ: number;
 };
 
 const DEMO: Item[] = [
-  { name: "Villa Solnedgang", photo: PH(P.villa, 600), grad: "grad1", status: "Live", rating: "4,97", price: 189, occ: 84 },
-  { name: "Lys Loft Apartment", photo: PH(P.loft, 600), grad: "grad3", status: "Live", rating: "4,81", price: 158, occ: 71 },
-  { name: "Hytte ved Skoven", photo: PH(P.cabin, 600), grad: "grad2", status: "Entwurf", rating: "–", price: 132, occ: 0 },
+  { name: "Villa Solnedgang", photo: PH(P.villa, 600), grad: "grad1", status: "Live", rating: "4,97", price: 189, currency: "DKK", occ: 84 },
+  { name: "Lys Loft Apartment", photo: PH(P.loft, 600), grad: "grad3", status: "Live", rating: "4,81", price: 158, currency: "DKK", occ: 71 },
+  { name: "Hytte ved Skoven", photo: PH(P.cabin, 600), grad: "grad2", status: "Entwurf", rating: "–", price: 132, currency: "DKK", occ: 0 },
 ];
 
 function fromProperty(p: Property): Item {
-  const price = Number((p.type_attributes?.pricing as { basePrice?: number } | undefined)?.basePrice) || 0;
+  const roh = (p.type_attributes?.pricing as { basePrice?: number } | undefined)?.basePrice;
+  const price = Number.isFinite(Number(roh)) ? Number(roh) : null;
+  const currency = p.type_attributes?.currency;
   return {
     name: p.title,
     photo: p.photos?.[0],
@@ -35,6 +41,7 @@ function fromProperty(p: Property): Item {
     status: p.status === "active" ? "Live" : "Entwurf",
     rating: "–",
     price,
+    currency: typeof currency === "string" && currency ? currency : null,
     occ: 0,
   };
 }
@@ -105,7 +112,7 @@ export default function Listings() {
                       PREIS
                     </Txt>
                     <Txt v="sm" style={{ fontFamily: t.type.bold.fontFamily }}>
-                      €{it.price}
+                      {it.price === null ? "—" : formatCurrency(it.price, it.currency)}
                     </Txt>
                   </Col>
                   <Col>

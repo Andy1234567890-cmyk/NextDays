@@ -30,6 +30,7 @@ from .schemas import (
     MeResponse,
     OwnerAssignmentResponse,
     OwnerAssignmentUpdate,
+    PhoneDisableRequest,
     PhoneSendCodeRequest,
     PhoneVerifyRequest,
     RefreshRequest,
@@ -539,6 +540,22 @@ def phone_send_code(
     try:
         service.send_phone_code(ctx, req.phone)
     except OtpError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post("/phone/disable", response_model=AccountResponse)
+def phone_disable(
+    req: PhoneDisableRequest, ctx: CurrentUser, service: AccountServiceDep
+) -> AccountResponse:
+    """Bestätigte Nummer als Zweitfaktor entfernen (Gegenzustand zu verify).
+
+    Re-Auth über das Passwort statt über einen SMS-Code: Wer das Telefon
+    verloren hat, kann keinen Code empfangen — genau dann braucht man den
+    Ausschalter (Wurzel 7).
+    """
+    try:
+        return service.phone_disable(ctx, req)
+    except AuthError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 

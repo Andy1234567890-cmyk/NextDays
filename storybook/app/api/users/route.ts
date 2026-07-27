@@ -12,9 +12,14 @@ const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 const SERVICE = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
+// Admin-Allowlist AUSSCHLIESSLICH aus der Umgebung. Kein hartkodierter
+// Fallback: eine im Repo stehende Adresse ist ein Zugangsschlüssel im
+// Klartext, und ein vergessenes STORYBOOK_ADMIN_EMAILS würde unbemerkt genau
+// dieses eine Konto berechtigen. Fehlt die Variable, ist die Menge leer und
+// jeder Aufruf endet in 403 (fail-closed, Wurzel 5).
 function adminEmails(): Set<string> {
   return new Set(
-    (process.env.STORYBOOK_ADMIN_EMAILS ?? "a.staudinger32@gmail.com")
+    (process.env.STORYBOOK_ADMIN_EMAILS ?? "")
       .split(",")
       .map((e) => e.trim().toLowerCase())
       .filter(Boolean),

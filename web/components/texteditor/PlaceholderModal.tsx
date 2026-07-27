@@ -207,7 +207,7 @@ export default function PlaceholderModal({
             <div className="flex-1 px-6 pb-4">
               {placeholderGroups.map(group => (
                 <TabsContent key={group.id} value={group.id} className="mt-4 h-full">
-                  <ScrollArea className="h-[450px] pr-4">
+                  <ScrollArea className="h-[28.125rem] pr-4">
                     <div className="space-y-2">
                       {group.placeholders.map(placeholder => (
                         <div

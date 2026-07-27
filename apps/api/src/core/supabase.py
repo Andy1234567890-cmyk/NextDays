@@ -158,6 +158,18 @@ def fetch_all_rows(query: object, *, page_size: int = _PAGE_SIZE) -> list[dict]:
         offset += page_size
 
 
+def escape_like(value: str) -> str:
+    """LIKE-/ILIKE-Metazeichen escapen, damit ein Wert EXAKT (case-insensitiv)
+    matcht und kein Wildcard bildet.
+
+    Ohne das wird aus einer E-Mail wie `a%@example.com` ein Wildcard-Muster, das
+    fremde Zeilen trifft — bei Sperr-/Zuordnungsprüfungen ein Umgehungspfad
+    (Wurzel 8). `\\` zuerst ersetzen, dann `%`/`_` (Reihenfolge zählt, sonst
+    werden die eigenen Escape-Backslashes nochmals escaped).
+    """
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
+
 def load_scoped(
     db: Client,
     table: str,

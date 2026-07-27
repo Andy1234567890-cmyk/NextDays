@@ -153,5 +153,3 @@ class MailService:
             server.login(s.smtp_user, password)
 
 
-def get_mail_service() -> MailService:
-    return MailService()

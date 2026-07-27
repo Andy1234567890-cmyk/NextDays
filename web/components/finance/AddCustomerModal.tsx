@@ -398,7 +398,7 @@ function AddCustomerModal({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="bg-accent hover:bg-[#0f9d84]">
+        <Button className="bg-accent hover:bg-accent/90">
           <Icon icon="lucide:plus" className="mr-2 h-4 w-4" />
           {t('AddCustomerModal.newCustomer')}
         </Button>
@@ -1022,7 +1022,7 @@ function AddCustomerModal({
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="bg-accent hover:bg-[#0f9d84]"
+                  className="bg-accent hover:bg-accent/90"
                 >
                   {loading && <Icon icon="lucide:loader2" className="mr-2 h-4 w-4 animate-spin" />}
                   {t('AddCustomerModal.submitAddCustomer')}

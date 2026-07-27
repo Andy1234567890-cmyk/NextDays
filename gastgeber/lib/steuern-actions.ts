@@ -9,7 +9,12 @@ import { revalidatePath } from "next/cache";
 import { ApiError } from "@nextdays/auth/errors";
 
 import { api } from "./api-server";
-import type { TaxpayerEntry, TaxpayerInput, TaxpayerOverview } from "./steuern";
+import type {
+  ObjektAngabeStatus,
+  TaxpayerEntry,
+  TaxpayerInput,
+  TaxpayerOverview,
+} from "./steuern";
 
 type Ergebnis =
   | { ok: true; uebersicht: TaxpayerOverview }
@@ -88,6 +93,39 @@ export async function pruefeUstId(
         exc instanceof ApiError
           ? exc.message
           : "Die Prüfung ist derzeit nicht möglich.",
+    };
+  }
+}
+
+/** Grundbuchnummer eines Objekts setzen oder erklären, dass keine existiert
+ *  (§ 14 Abs. 4 Nr. 6 PStTG).
+ *
+ *  Die Angabe ist nur „sofern vorhanden" Pflicht — ein leeres Feld blockiert
+ *  weder Buchungen noch Auszahlungen. Erfasst wird trotzdem, WANN gefragt
+ *  wurde: der Betreiber muss die Erhebung belegen können. */
+export async function speichereObjektangabe(
+  propertyId: string,
+  daten: {
+    land_registration_number?: string | null;
+    land_registration_unavailable?: boolean;
+  },
+): Promise<
+  { ok: true; angabe: ObjektAngabeStatus } | { ok: false; error: string }
+> {
+  try {
+    const angabe = await api<ObjektAngabeStatus>(
+      `/taxpayer/objekte/${encodeURIComponent(propertyId)}`,
+      { method: "PUT", body: daten },
+    );
+    revalidatePath("/konto");
+    return { ok: true, angabe };
+  } catch (exc) {
+    return {
+      ok: false,
+      error:
+        exc instanceof ApiError
+          ? exc.message
+          : "Die Angabe konnte nicht gespeichert werden.",
     };
   }
 }
