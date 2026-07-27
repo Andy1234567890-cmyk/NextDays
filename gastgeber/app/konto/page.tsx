@@ -7,6 +7,7 @@ import { redirect } from "next/navigation";
 
 import { AuszahlungenTab } from "@/components/konto/auszahlungen-tab";
 import { BenachrichtigungenAbschnitt } from "@/components/konto/benachrichtigungen-abschnitt";
+import { SteuernAbschnitt } from "@/components/konto/steuern-abschnitt";
 import { DatenschutzAbschnitt } from "@/components/konto/datenschutz-abschnitt";
 import { KontoNav } from "@/components/konto/konto-nav";
 import { PersoenlichAbschnitt } from "@/components/konto/persoenlich-abschnitt";
@@ -20,6 +21,7 @@ import { ZahlungenAbschnitt } from "@/components/konto/zahlungen-abschnitt";
 import { ZahlungenTabs } from "@/components/konto/zahlungen-tabs";
 import { getAuszahlungsUebersicht } from "@/lib/auszahlungen";
 import { getNotificationOverview } from "@/lib/benachrichtigungen";
+import { getTaxpayerOverview } from "@/lib/steuern";
 import { getPrivacySettings } from "@/lib/datenschutz";
 import { getDebugSessions } from "@/lib/diagnose";
 import { getAccount } from "@/lib/konto";
@@ -34,7 +36,6 @@ import { getUnternehmensprofil } from "@/lib/unternehmen";
 // Bereiche ohne eigenes Backend → Platzhalter, aber in der Nav sichtbar (wie
 // Airbnb): Titel-Key je Bereich.
 const VORBEREITUNG: Record<string, string> = {
-  steuern: "navSteuern",
   buchungsrechte: "navBuchungsrechte",
   profitools: "navProfiTools",
 };
@@ -84,6 +85,7 @@ export default async function KontoPage({
     aktiv === "datenschutz" ? await getDebugSessions().catch(() => []) : [];
   const benachrichtigungen =
     aktiv === "benachrichtigungen" ? await getNotificationOverview() : null;
+  const steuern = aktiv === "steuern" ? await getTaxpayerOverview() : null;
 
   return (
     <div className="mx-auto max-w-6xl px-8 py-12">
@@ -140,6 +142,7 @@ export default async function KontoPage({
           {aktiv === "benachrichtigungen" && (
             <BenachrichtigungenAbschnitt uebersicht={benachrichtigungen} />
           )}
+          {aktiv === "steuern" && <SteuernAbschnitt uebersicht={steuern} />}
           {aktiv === "unternehmen" && <UnternehmenTab profil={unternehmen} />}
           {VORBEREITUNG[aktiv] && (
             <VorbereitungAbschnitt titelKey={VORBEREITUNG[aktiv]} />

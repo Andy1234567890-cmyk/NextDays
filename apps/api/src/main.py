@@ -59,6 +59,7 @@ from .features.notification_settings.router import (
     router as notification_settings_router,
 )
 from .features.privacy_settings.router import router as privacy_settings_router
+from .features.taxpayer.router import router as taxpayer_router
 from .features.properties.router import router as properties_router
 from .features.property_discounts.router import router as property_discounts_router
 from .features.property_dossier.router import router as property_dossier_router
@@ -110,6 +111,7 @@ _SLICE_ROUTERS = [
     platform_admin_router,
     subscriptions_router,
     support_router,
+    taxpayer_router,
     external_calendar_router,
     cohosts_router,
     donations_router,
