@@ -255,17 +255,32 @@ class Settings(BaseSettings):
     def trusted_host_list(self) -> list[str]:
         """Erlaubte Host-Header. Explizit gesetzt > aus CORS-Origins abgeleitet.
 
+        Der Host aus public_api_url wird IMMER ergänzt: unter dieser URL melden
+        wir Webhook-Callbacks bei Dritten an (Channex & Co.). Fehlt sie in der
+        Liste, weist die TrustedHostMiddleware jeden eingehenden Callback mit
+        400 "Invalid host header" ab, BEVOR ein Handler läuft — also ohne Log,
+        ohne DB-Spur, ohne dass die Gegenseite den Grund erfährt. Genau so
+        liefen am 25./26.07.2026 86 ARI-Webhooks von Channex stumm auf (die
+        Liste war handgepflegt und kannte den Callback-Host nicht). Die beiden
+        Werte dürfen deshalb nicht getrennt pflegbar sein.
+
         Lokal (is_local) wird die TrustedHostMiddleware nicht gebunden — hier gibt
         die Ableitung nur die Prod-Hosts zurück, die main.py im Prod-Zweig nutzt.
         """
         if self.trusted_hosts.strip():
-            return [h.strip() for h in self.trusted_hosts.split(",") if h.strip()]
-        # Aus den CORS-Origins die reinen Hostnamen ziehen (ohne Schema/Port).
-        hosts: list[str] = []
-        for origin in self.cors_origin_list:
-            host = origin.split("://", 1)[-1].split("/", 1)[0].split(":", 1)[0]
-            if host and host not in hosts:
-                hosts.append(host)
+            hosts = [h.strip() for h in self.trusted_hosts.split(",") if h.strip()]
+        else:
+            # Aus den CORS-Origins die reinen Hostnamen ziehen (ohne Schema/Port).
+            hosts = []
+            for origin in self.cors_origin_list:
+                host = origin.split("://", 1)[-1].split("/", 1)[0].split(":", 1)[0]
+                if host and host not in hosts:
+                    hosts.append(host)
+        callback_host = (
+            self.public_api_url.split("://", 1)[-1].split("/", 1)[0].split(":", 1)[0]
+        )
+        if callback_host and callback_host not in hosts:
+            hosts.append(callback_host)
         return hosts
 
 

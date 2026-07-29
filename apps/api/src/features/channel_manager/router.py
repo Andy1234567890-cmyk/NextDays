@@ -30,6 +30,7 @@ from src.core.security import (
 from src.features.auth.dependencies import require_granular_permission
 from src.features.auth.granular_permissions import Permission
 
+from .common import log
 from .dependencies import ChannelManagerServiceDep
 from .schemas import (
     AriPushRequest,
@@ -574,6 +575,18 @@ async def channex_webhook(
     # Events (Buchungen/ARI) in fremde Tenants eingespeist werden könnten.
     expected = get_settings().channex_webhook_secret.get_secret_value()
     if not secrets_match(x_channex_webhook_secret, expected):
+        # LAUT ablehnen: ein Secret-Mismatch (falsch deployte Variable, mit altem
+        # Wert überschriebene Registrierung) lässt SÄMTLICHE Events auflaufen —
+        # 86 stumme Ablehnungen fielen so tagelang nicht auf. Nie das Secret
+        # loggen, nur Länge/Anwesenheit zur Diagnose.
+        log.error(
+            "channex_webhook_rejected",
+            webhook_event=str(payload.get("event"))[:64],
+            header_vorhanden=x_channex_webhook_secret is not None,
+            header_laenge=len(x_channex_webhook_secret or ""),
+            erwartet_laenge=len(expected),
+            erwartet_gesetzt=bool(expected),
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Ungültiges Webhook-Secret."
         )

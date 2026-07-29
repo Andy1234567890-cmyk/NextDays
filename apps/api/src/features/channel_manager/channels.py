@@ -11,7 +11,7 @@ from typing import Any
 
 from supabase import Client
 
-from src.core.security import AuthContext
+from src.core.security import AuthContext, secrets_match
 
 from .channex_client import ChannexError
 from .common import ChannelManagerError, _booking_room_type, log
@@ -1734,6 +1734,13 @@ class ChannelsMixin:
                 "CHANNEX_WEBHOOK_SECRET fehlt — ohne Secret kein Webhook.",
                 status_code=400,
             )
+        # Registrierung ist DESTRUKTIV (löscht die bestehende Callback-URL und
+        # legt sie mit UNSEREM Secret neu an). Läuft sie versehentlich aus einer
+        # Umgebung mit abweichendem Secret (lokale .env), lehnt der Server danach
+        # jedes echte Event mit 401 ab — genau der Ausfall, der unbemerkt blieb.
+        # Deshalb: unterscheidet sich das Secret von dem der bestehenden aktiven
+        # Registrierung, fail-CLOSED statt sie zu zerschießen.
+        self._guard_secret_ueberschreibt_aktive_registrierung(callback_url, secret)
         try:
             # Vorhandene gleiche Callback-URL aufräumen (idempotent).
             existing = self._channex.list_webhooks().get("data") or []
@@ -1756,6 +1763,42 @@ class ChannelsMixin:
         except ChannexError as exc:
             raise self._wrap_channex(exc) from exc
         return created.get("data") or {}
+
+    def _guard_secret_ueberschreibt_aktive_registrierung(
+        self, callback_url: str, secret: str
+    ) -> None:
+        """Bricht ab, wenn bei Channex bereits eine aktive Registrierung auf
+        dieselbe callback_url mit einem ANDEREN Secret liegt. Ohne diesen Guard
+        macht ein Aufruf aus einer Umgebung mit veraltetem Secret den Webhook
+        kaputt: die neue Registrierung sendet dann ein Secret, das der laufende
+        Server nicht kennt → alle Events laufen in 401.
+
+        Das Auslesen der bestehenden Liste ist best effort: erreichen wir Channex
+        nicht, ist das KEIN Grund, die Registrierung zu blockieren (dann schlägt
+        ohnehin der eigentliche Call fehl)."""
+        try:
+            existing = self._channex.list_webhooks().get("data") or []
+        except ChannexError:
+            return
+        for wh in existing:
+            attrs = wh.get("attributes") or wh
+            if attrs.get("callback_url") != callback_url:
+                continue
+            if not attrs.get("is_active", True):
+                continue
+            kopf = attrs.get("headers") or {}
+            vorhanden = next(
+                (str(v) for k, v in kopf.items() if "secret" in str(k).lower()), None
+            )
+            if vorhanden and not secrets_match(vorhanden, secret):
+                raise ChannelManagerError(
+                    "Registrierung abgebrochen: bei Channex liegt bereits ein "
+                    "aktiver Webhook auf diese URL mit einem ANDEREN Secret. "
+                    "Ein Überschreiben würde alle Events auf 401 laufen lassen. "
+                    "CHANNEX_WEBHOOK_SECRET dieser Umgebung mit dem Server "
+                    "abgleichen (oder den alten Webhook bewusst löschen).",
+                    status_code=409,
+                )
 
     def list_registered_webhooks(self) -> list[dict[str, Any]]:
         try:
