@@ -13,7 +13,7 @@ export type Result<T> =
 
 async function call<T>(
   path: string,
-  opts: { method?: "GET" | "POST"; body?: unknown } = {},
+  opts: { method?: "GET" | "POST" | "PUT"; body?: unknown } = {},
 ): Promise<Result<T>> {
   const token = await currentToken();
   if (!token) return { ok: false, error: "Nicht angemeldet." };
@@ -125,4 +125,46 @@ export type CommissionSummary = {
 
 export async function getCommissions(): Promise<Result<CommissionSummary>> {
   return call<CommissionSummary>("/commissions");
+}
+
+// --- Rechnungsadresse + Rechnungsverlauf (Quelle: Stripe-Customer) ----------
+
+export type BillingAddress = {
+  first_name: string | null;
+  last_name: string | null;
+  line1: string | null;
+  line2: string | null;
+  city: string | null;
+  state: string | null;
+  postal_code: string | null;
+  country: string | null; // ISO-3166-1 alpha-2
+  email: string | null;
+  account_type: "individual" | "company";
+  company_name: string | null;
+  vat_id: string | null;
+};
+
+export type InvoiceRow = {
+  id: string;
+  number: string | null;
+  description: string | null;
+  created: string;
+  total: number;
+  currency: string;
+  status: string | null;
+  pdf_url: string | null;
+};
+
+export async function getBillingAddress(): Promise<Result<BillingAddress>> {
+  return call<BillingAddress>("/billing-address");
+}
+
+export async function updateBillingAddress(
+  addr: BillingAddress,
+): Promise<Result<BillingAddress>> {
+  return call<BillingAddress>("/billing-address", { method: "PUT", body: addr });
+}
+
+export async function getInvoices(limit = 24): Promise<Result<InvoiceRow[]>> {
+  return call<InvoiceRow[]>(`/invoices?limit=${limit}`);
 }

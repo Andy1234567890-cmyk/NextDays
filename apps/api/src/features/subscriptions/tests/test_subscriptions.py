@@ -12,6 +12,7 @@ from typing import Any
 
 import pytest
 from fastapi.testclient import TestClient
+from stripe import StripeError as _StripeError
 
 from src.core.config import get_settings
 from src.core.security import AuthContext
@@ -453,3 +454,109 @@ def test_bill_commissions_creates_stripe_invoice_item() -> None:
     assert item["amount"] == 550
     # Idempotenz: zweiter Lauf findet keine pending mehr → 0.
     assert svc.bill_pending_commissions("t1", period=period) == 0
+
+
+# --- Verwaiste Stripe-Customer-ID (realer Vorfall) -------------------------
+# Die DB hielt cus_UqH4XY0CiBtUjk, bei Stripe war der Kunde gelöscht. Folge:
+# /billing-address UND /checkout antworteten dauerhaft mit 400 ("No such
+# customer") — der Betrieb kam nicht mehr an sein Abo. Eine gespeicherte ID
+# kann immer ins Leere zeigen (Testdaten-Reset, Account-/Key-Wechsel).
+
+
+class _StripeFehlt(_StripeError):
+    """Stellt stripe.InvalidRequestError mit code='resource_missing' nach.
+    MUSS von StripeError erben — der Service fängt gezielt diesen Typ."""
+
+    def __init__(self, msg: str = "No such customer") -> None:
+        super().__init__(msg)
+        self.code = "resource_missing"
+
+
+class _FakeCustomers:
+    def __init__(self, existiert: bool, *, neue_id: str = "cus_neu") -> None:
+        self._existiert = existiert
+        self._neue_id = neue_id
+        self.angelegt: list[dict[str, Any]] = []
+
+    def retrieve(self, cid: str, params: dict | None = None) -> dict:  # noqa: ARG002
+        if not self._existiert:
+            raise _StripeFehlt
+        return {"id": cid, "address": {}, "metadata": {}, "name": None}
+
+    def create(self, params: dict) -> dict:
+        self.angelegt.append(params)
+        return {"id": self._neue_id}
+
+    def delete(self, cid: str) -> dict:
+        return {"id": cid, "deleted": True}
+
+
+class _FakeStripeV1:
+    def __init__(self, customers: _FakeCustomers) -> None:
+        self.customers = customers
+
+
+class _FakeStripe:
+    """Nur so viel Stripe, wie die Customer-Heilung berührt."""
+
+    def __init__(self, existiert: bool) -> None:
+        self.v1 = _FakeStripeV1(_FakeCustomers(existiert))
+
+
+def _db_mit_customer(cid: str) -> _DB:
+    db = _db_with_properties(1)
+    db.store["tenant_subscription"] = [
+        {"tenant_id": "t1", "stripe_customer_id": cid}
+    ]
+    db.store["tenants"] = [{"id": "t1", "name": "Testbetrieb"}]
+    return db
+
+
+def test_billing_address_bei_verwaister_id_ist_leer_statt_fehler() -> None:
+    """KRITISCH: der Vorfall. Zeigt die gespeicherte ID ins Leere, muss die
+    Seite laden (leere Adresse) statt mit 400 zu blockieren."""
+    db = _db_mit_customer("cus_weg")
+    svc = SubscriptionsService(service_client=db, stripe=_FakeStripe(False))
+    addr = svc.get_billing_address(_CTX)
+    assert addr.line1 is None
+    assert addr.account_type == "individual"
+
+
+def test_ensure_customer_legt_bei_verwaister_id_neu_an() -> None:
+    """Checkout muss wieder funktionieren: verwaiste ID verwerfen, neuen Kunden
+    anlegen und die neue ID persistieren."""
+    db = _db_mit_customer("cus_weg")
+    stripe = _FakeStripe(False)
+    svc = SubscriptionsService(service_client=db, stripe=stripe)
+    neue = svc._ensure_customer(db, "t1")  # noqa: SLF001
+    assert neue == "cus_neu"
+    assert len(stripe.v1.customers.angelegt) == 1
+    # Die neue ID steht in der DB — die verwaiste ist weg.
+    assert db.store["tenant_subscription"][0]["stripe_customer_id"] == "cus_neu"
+
+
+def test_ensure_customer_verwendet_existierende_id_wieder() -> None:
+    """Gegenprobe: existiert der Kunde, wird KEIN zweiter angelegt (Wurzel 2)."""
+    db = _db_mit_customer("cus_ok")
+    stripe = _FakeStripe(True)
+    svc = SubscriptionsService(service_client=db, stripe=stripe)
+    assert svc._ensure_customer(db, "t1") == "cus_ok"  # noqa: SLF001
+    assert stripe.v1.customers.angelegt == []
+
+
+def test_customer_exists_reicht_andere_stripe_fehler_durch() -> None:
+    """Ein Netz-/Auth-Fehler darf NICHT als 'Kunde weg' gelten — sonst entstünde
+    bei einer Stripe-Störung ein zweiter Kunde für denselben Tenant."""
+
+    class _Kaputt(_StripeError):
+        code = "api_error"
+
+    class _CustomersKaputt(_FakeCustomers):
+        def retrieve(self, cid: str, params: dict | None = None) -> dict:  # noqa: ARG002
+            raise _Kaputt
+
+    stripe = _FakeStripe(True)
+    stripe.v1.customers = _CustomersKaputt(True)
+    svc = SubscriptionsService(service_client=_db_mit_customer("c"), stripe=stripe)
+    with pytest.raises(SubscriptionsError):
+        svc._customer_exists("cus_x")  # noqa: SLF001

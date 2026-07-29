@@ -14,6 +14,7 @@ tenant-gescopet (Wurzel 3). Stripe-Fehler werden spezifisch übersetzt (Wurzel 5
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import UTC, datetime
 from typing import Any
 
 from stripe import StripeClient
@@ -23,11 +24,17 @@ from supabase import Client
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
+# EU-Länderliste NICHT zweitkopieren — dieselbe Menge entscheidet über
+# Reverse-Charge in den Eigentümer-Abrechnungen (Wurzel 4: eine Quelle).
+from src.features.owner_statements.tax import EU_COUNTRIES as _EU_LAENDER
+
 from .schemas import (
     GRUNDTARIF_LOOKUP_KEY,
     MODULE_PRICE_LOOKUP,
+    BillingAddress,
     CommissionRow,
     CommissionSummary,
+    InvoiceRow,
     ModuleEntitlement,
     ModulePrice,
     PriceTier,
@@ -43,6 +50,7 @@ log = get_logger("nextdays.subscriptions")
 COMMISSION_RATE_STANDARD = 0.01
 COMMISSION_RATE_HIGH_VOLUME = 0.005
 COMMISSION_HIGH_VOLUME_FROM = 101  # ab dieser Objektzahl gilt der reduzierte Satz
+_ISO_LAND_LAENGE = 2  # ISO-3166-1 alpha-2
 # OTA-Kanäle, für die die externe Provision anfällt (dieselbe Menge wie im
 # payments-Slice; eigene/portal-Buchungen sind hier NICHT provisionspflichtig —
 # die tragen die 8 % Portal-Fee direkt am Charge).
@@ -168,13 +176,48 @@ class SubscriptionsService:
         ).data
         return rows[0] if rows else None
 
+    def _customer_exists(self, customer_id: str) -> bool:
+        """Existiert der Customer bei Stripe noch? Eine gespeicherte ID kann ins
+        Leere zeigen — gelöschter Testkunde, Wechsel des Stripe-Accounts oder
+        Test-/Live-Key-Tausch. Dann ist JEDER Aufruf mit dieser ID ein 404 und
+        der Betrieb kommt weder an seine Rechnungsadresse noch durch den
+        Checkout. Nur 'resource_missing' gilt als 'weg'; alle anderen Fehler
+        (Netz, Auth, Rate-Limit) dürfen NICHT zum Neuanlegen führen, sonst
+        entstünde bei einer Stripe-Störung ein Doppelkunde (Wurzel 5)."""
+        try:
+            cus = self._stripe.v1.customers.retrieve(customer_id)
+        except _StripeError as exc:
+            if getattr(exc, "code", None) == "resource_missing":
+                return False
+            raise self._stripe_err(exc) from exc
+        # Ein bei Stripe gelöschter Kunde wird weiterhin ausgeliefert, ist aber
+        # als deleted markiert und für Checkout/Update unbrauchbar.
+        return not _f(cus, "deleted", False)
+
     def _ensure_customer(self, db: Client, tenant_id: str) -> str:
         """Stripe-Customer für den Tenant — vorhandenen wiederverwenden (Wurzel 2:
         Doppelklick/Retry legt keinen zweiten Customer an). Der lokale Row-UNIQUE
-        auf stripe_customer_id ist der DB-Backstop."""
+        auf stripe_customer_id ist der DB-Backstop.
+
+        Zeigt die gespeicherte ID ins Leere, wird sie verworfen und ein neuer
+        Customer angelegt — sonst bliebe der Tenant dauerhaft blockiert."""
         row = self._load_row(db, tenant_id)
-        if row and row.get("stripe_customer_id"):
-            return row["stripe_customer_id"]
+        vorhanden = (row or {}).get("stripe_customer_id")
+        if vorhanden:
+            if self._customer_exists(vorhanden):
+                return vorhanden
+            # Verwaiste ID entfernen, damit der WHERE-Guard unten (is null)
+            # greifen kann und die neue ID geschrieben wird.
+            log.warning(
+                "stripe_customer_verwaist_neu_angelegt",
+                tenant_id=tenant_id,
+                alte_customer_id=vorhanden,
+            )
+            db.table("tenant_subscription").update(
+                {"stripe_customer_id": None}
+            ).eq("tenant_id", tenant_id).eq(
+                "stripe_customer_id", vorhanden
+            ).execute()
         # Tenant-Metadaten für den Customer (nur zur Zuordnung, kein Rateschluss).
         tenant = (
             db.table("tenants").select("name").eq("id", tenant_id).limit(1).execute()
@@ -324,6 +367,15 @@ class SubscriptionsService:
                 params={"customer": row["stripe_customer_id"], "return_url": return_url}
             )
         except _StripeError as exc:
+            # Verwaiste ID: das Portal kann nichts anzeigen. Statt des rohen
+            # Stripe-Texts ("No such customer") sagen, was zu tun ist — den
+            # Kunden legt der nächste Checkout/Adress-Speichern neu an.
+            if getattr(exc, "code", None) == "resource_missing":
+                raise SubscriptionsError(
+                    "Der hinterlegte Zahlungskunde existiert bei Stripe nicht "
+                    "mehr. Bitte das Abo neu abschließen.",
+                    status_code=409,
+                ) from exc
             raise self._stripe_err(exc) from exc
         url = _f(session, "url")
         if not url:
@@ -444,6 +496,194 @@ class SubscriptionsService:
         return PricingResponse(
             currency=currency, grundtarif_tiers=tiers, modules=modules
         )
+
+    # -- Rechnungsadresse + Rechnungen (Quelle: Stripe) ---------------------
+    def get_billing_address(self, ctx: AuthContext) -> BillingAddress:
+        """Rechnungsadresse aus dem Stripe-Customer. Existiert noch kein
+        Customer, liefern wir eine LEERE Adresse statt einen anzulegen: ein
+        reiner Lesezugriff darf keinen Kunden bei Stripe erzeugen (Wurzel 2)."""
+        db, tenant_id = self._require(ctx)
+        row = self._load_row(db, tenant_id)
+        customer_id = (row or {}).get("stripe_customer_id")
+        if not customer_id:
+            return BillingAddress()
+        try:
+            cus = self._stripe.v1.customers.retrieve(
+                customer_id, params={"expand": ["tax_ids"]}
+            )
+        except _StripeError as exc:
+            # Verwaiste ID (gelöschter Kunde, Account-/Key-Wechsel): wie „noch
+            # keine Adresse" behandeln statt die Seite mit 400 zu blockieren.
+            # Der Schreibpfad legt beim Speichern einen frischen Customer an.
+            if getattr(exc, "code", None) == "resource_missing":
+                return BillingAddress()
+            raise self._stripe_err(exc) from exc
+        return self._billing_address_from_customer(cus)
+
+    @staticmethod
+    def _billing_address_from_customer(cus: Any) -> BillingAddress:  # noqa: ANN401
+        """Stripe-Customer → BillingAddress. Vor-/Nachname liegen bei Stripe nur
+        als EIN `name`-Feld; wir teilen am ERSTEN Leerzeichen (der Rest ist
+        Nachname), damit mehrteilige Nachnamen wie 'van der Berg' heil bleiben."""
+        addr = _f(cus, "address") or {}
+        meta = _f(cus, "metadata") or {}
+        konto_typ = _f(meta, "account_type") or "individual"
+        voller_name = (_f(cus, "name") or "").strip()
+        firma = _f(meta, "company_name")
+        if konto_typ == "company":
+            # Bei Unternehmen trägt `name` den Firmennamen — die Personennamen
+            # stehen in den Metadaten, sonst gingen sie beim Speichern verloren.
+            vorname = _f(meta, "first_name")
+            nachname = _f(meta, "last_name")
+            firma = firma or voller_name or None
+        else:
+            vorname, _, nachname = voller_name.partition(" ")
+            vorname = vorname or None
+            nachname = nachname.strip() or None
+        steuer = _f(cus, "tax_ids") or {}
+        steuer_daten = _f(steuer, "data") or []
+        return BillingAddress(
+            first_name=vorname,
+            last_name=nachname,
+            line1=_f(addr, "line1"),
+            line2=_f(addr, "line2"),
+            city=_f(addr, "city"),
+            state=_f(addr, "state"),
+            postal_code=_f(addr, "postal_code"),
+            country=_f(addr, "country"),
+            email=_f(cus, "email"),
+            account_type=konto_typ,
+            company_name=firma,
+            vat_id=_f(steuer_daten[0], "value") if steuer_daten else None,
+        )
+
+    def update_billing_address(
+        self, ctx: AuthContext, addr: BillingAddress
+    ) -> BillingAddress:
+        """Rechnungsadresse am Stripe-Customer setzen. Anders als beim Lesen legen
+        wir hier bei Bedarf einen Customer an — der Nutzer will ja gerade seine
+        Rechnungsdaten hinterlegen."""
+        db, tenant_id = self._require(ctx)
+        customer_id = self._ensure_customer(db, tenant_id)
+        if addr.account_type not in ("individual", "company"):
+            raise SubscriptionsError(
+                "Konto-Typ muss 'individual' oder 'company' sein.", status_code=422
+            )
+        if addr.account_type == "company" and not (addr.company_name or "").strip():
+            raise SubscriptionsError(
+                "Für ein Unternehmen ist der Firmenname nötig.", status_code=422
+            )
+        land = (addr.country or "").strip().upper()
+        if land and len(land) != _ISO_LAND_LAENGE:
+            raise SubscriptionsError(
+                "Land muss als 2-stelliger ISO-Code angegeben werden.", status_code=422
+            )
+        person = " ".join(
+            t for t in ((addr.first_name or "").strip(), (addr.last_name or "").strip()) if t
+        )
+        ist_firma = addr.account_type == "company"
+        params: dict[str, Any] = {
+            "name": (addr.company_name or "").strip() if ist_firma else (person or None),
+            "email": (addr.email or "").strip() or None,
+            "address": {
+                "line1": (addr.line1 or "").strip() or None,
+                "line2": (addr.line2 or "").strip() or None,
+                "city": (addr.city or "").strip() or None,
+                "state": (addr.state or "").strip() or None,
+                "postal_code": (addr.postal_code or "").strip() or None,
+                "country": land or None,
+            },
+            # Personennamen und Konto-Typ überleben nur in den Metadaten: Stripe
+            # kennt am Customer kein getrenntes Vor-/Nachname-Feld.
+            "metadata": {
+                "account_type": addr.account_type,
+                "first_name": (addr.first_name or "").strip(),
+                "last_name": (addr.last_name or "").strip(),
+                "company_name": (addr.company_name or "").strip(),
+            },
+        }
+        try:
+            self._stripe.v1.customers.update(customer_id, params=params)
+            self._sync_vat_id(customer_id, addr.vat_id, land)
+            cus = self._stripe.v1.customers.retrieve(
+                customer_id, params={"expand": ["tax_ids"]}
+            )
+        except _StripeError as exc:
+            raise self._stripe_err(exc) from exc
+        return self._billing_address_from_customer(cus)
+
+    def _sync_vat_id(self, customer_id: str, vat_id: str | None, land: str) -> None:
+        """USt-IdNr. am Customer pflegen. Stripe erlaubt kein Ändern einer
+        tax_id — nur Anlegen/Löschen. Unverändert lassen wir sie stehen, damit
+        eine bereits von Stripe VALIDIERTE Nummer ihren Status behält."""
+        gewuenscht = (vat_id or "").strip().upper()
+        vorhandene = self._stripe.v1.customers.tax_ids.list(
+            customer_id, params={"limit": 100}
+        )
+        for eintrag in _f(vorhandene, "data") or []:
+            if (_f(eintrag, "value") or "").upper() == gewuenscht:
+                return  # schon gesetzt → nicht anfassen
+            self._stripe.v1.customers.tax_ids.delete(
+                customer_id, _f(eintrag, "id")
+            )
+        if not gewuenscht:
+            return
+        # EU-Länder → eu_vat; alles andere überlassen wir Stripes Autoerkennung
+        # nicht, sondern lehnen es ab (falscher Typ erzeugt stumme Fehlrechnungen).
+        if land not in _EU_LAENDER:
+            raise SubscriptionsError(
+                "USt-IdNr. wird derzeit nur für EU-Länder unterstützt.",
+                status_code=422,
+            )
+        self._stripe.v1.customers.tax_ids.create(
+            customer_id, params={"type": "eu_vat", "value": gewuenscht}
+        )
+
+    def list_invoices(self, ctx: AuthContext, *, limit: int = 24) -> list[InvoiceRow]:
+        """Rechnungsverlauf aus Stripe. Ohne Customer gibt es nichts zu zeigen —
+        leere Liste statt Fehler (der Betrieb hat schlicht noch nie gezahlt)."""
+        db, tenant_id = self._require(ctx)
+        row = self._load_row(db, tenant_id)
+        customer_id = (row or {}).get("stripe_customer_id")
+        if not customer_id:
+            return []
+        try:
+            res = self._stripe.v1.invoices.list(
+                params={"customer": customer_id, "limit": max(1, min(limit, 100))}
+            )
+        except _StripeError as exc:
+            # Verwaiste ID → keine Rechnungen, kein Fehler (s. get_billing_address).
+            if getattr(exc, "code", None) == "resource_missing":
+                return []
+            raise self._stripe_err(exc) from exc
+        zeilen: list[InvoiceRow] = []
+        for inv in _f(res, "data") or []:
+            erstellt = _f(inv, "created")
+            zeilen.append(
+                InvoiceRow(
+                    id=_f(inv, "id"),
+                    number=_f(inv, "number"),
+                    description=self._invoice_description(inv),
+                    created=datetime.fromtimestamp(
+                        int(erstellt or 0), tz=UTC
+                    ).date().isoformat(),
+                    # Stripe liefert Cent (kleinste Einheit) → in die Anzeige-
+                    # Einheit umrechnen, die Währung kommt mit (kein €-Hardcode).
+                    total=int(_f(inv, "total", 0) or 0) / 100,
+                    currency=(_f(inv, "currency") or "").upper(),
+                    status=_f(inv, "status"),
+                    pdf_url=_f(inv, "invoice_pdf"),
+                )
+            )
+        return zeilen
+
+    @staticmethod
+    def _invoice_description(inv: Any) -> str | None:  # noqa: ANN401
+        """Sprechende Zeile für die Tabelle: die erste Position der Rechnung."""
+        zeilen = _f(_f(inv, "lines") or {}, "data") or []
+        if not zeilen:
+            return _f(inv, "description")
+        return _f(zeilen[0], "description") or _f(inv, "description")
 
     # -- Modul-Entitlement (serverseitig, Wurzel 3) -------------------------
     def get_commission_summary(self, ctx: AuthContext) -> CommissionSummary:

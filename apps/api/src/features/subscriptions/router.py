@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
@@ -19,9 +19,11 @@ from src.features.auth.permissions import Capability
 
 from .schemas import (
     BillCommissionsResult,
+    BillingAddress,
     CheckoutSessionRequest,
     CheckoutSessionResponse,
     CommissionSummary,
+    InvoiceRow,
     PortalSessionResponse,
     PricingResponse,
     SliceHealth,
@@ -103,6 +105,40 @@ def sync_quantity(ctx: _billing, service: ServiceDep) -> dict[str, int]:
     except SubscriptionsError as exc:
         raise _handle(exc) from exc
     return {"property_count": count}
+
+
+@router.get("/billing-address", response_model=BillingAddress)
+def get_billing_address(ctx: _billing, service: ServiceDep) -> BillingAddress:
+    """Rechnungsadresse des Betriebs (liegt am Stripe-Customer)."""
+    try:
+        return service.get_billing_address(ctx)
+    except SubscriptionsError as exc:
+        raise _handle(exc) from exc
+
+
+@router.put("/billing-address", response_model=BillingAddress)
+def update_billing_address(
+    ctx: _billing, service: ServiceDep, addr: BillingAddress
+) -> BillingAddress:
+    """Rechnungsadresse setzen. Gilt nur für ZUKÜNFTIGE Rechnungen — bereits
+    ausgestellte bleiben unverändert (steuerlich bindend)."""
+    try:
+        return service.update_billing_address(ctx, addr)
+    except SubscriptionsError as exc:
+        raise _handle(exc) from exc
+
+
+@router.get("/invoices", response_model=list[InvoiceRow])
+def list_invoices(
+    ctx: _billing,
+    service: ServiceDep,
+    limit: Annotated[int, Query(ge=1, le=100)] = 24,
+) -> list[InvoiceRow]:
+    """Rechnungsverlauf aus Stripe (neueste zuerst)."""
+    try:
+        return service.list_invoices(ctx, limit=limit)
+    except SubscriptionsError as exc:
+        raise _handle(exc) from exc
 
 
 @router.get("/commissions", response_model=CommissionSummary)

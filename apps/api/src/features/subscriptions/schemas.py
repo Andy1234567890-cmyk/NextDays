@@ -118,3 +118,40 @@ class CommissionSummary(BaseModel):
 class BillCommissionsResult(BaseModel):
     billed_count: int
     period: str
+
+
+class BillingAddress(BaseModel):
+    """Rechnungsadresse des Betriebs — liegt bei Stripe am Customer (Quelle der
+    Wahrheit für die Rechnungsstellung), NICHT doppelt in unserer DB.
+
+    `account_type` unterscheidet Privatperson/Unternehmen: nur bei 'company'
+    sind Firmenname und USt-IdNr. relevant (Reverse-Charge innerhalb der EU).
+    Land als ISO-3166-1 alpha-2 — kein Klartext, damit Stripe es akzeptiert.
+    """
+
+    first_name: str | None = None
+    last_name: str | None = None
+    line1: str | None = None
+    line2: str | None = None
+    city: str | None = None
+    state: str | None = None
+    postal_code: str | None = None
+    country: str | None = None  # ISO-3166-1 alpha-2
+    email: str | None = None
+    account_type: str = "individual"  # individual | company
+    company_name: str | None = None
+    vat_id: str | None = None  # z.B. DK44179377
+
+
+class InvoiceRow(BaseModel):
+    """Eine Rechnung aus Stripe. `total` in der Währung der Rechnung (nicht
+    umgerechnet) — die UI rendert mit formatCurrency (Wurzel 4)."""
+
+    id: str
+    number: str | None = None
+    description: str | None = None
+    created: str  # ISO-Datum
+    total: float
+    currency: str
+    status: str | None = None
+    pdf_url: str | None = None

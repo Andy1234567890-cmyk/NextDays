@@ -1,39 +1,43 @@
 "use client";
 
-// Abo-Abschnitt direkt auf der Konto-Seite (/konto) — kein eigener Tab
-// (konto-alles-gebuendelt). Zeigt den aktuellen Tarif (Grundgebühr + Objekt-
-// Staffel), die abrechenbare Objektzahl, gebuchte Zusatzmodule und erlaubt
-// Abschluss/Verwaltung über Stripe Checkout bzw. Billing-Portal.
+// Abrechnung (/konto/tarif) — Abo-Karte mit Kennzahlenleiste, Rechnungsadresse
+// und Rechnungsverlauf. UI-Vorbild ist die Lodgify-Abrechnungsseite: eine
+// Karte je Thema, Kennzahlen nebeneinander mit Trennstrichen, Aktionen im
+// „…"-Menü rechts oben.
 //
 // Beträge kommen ausschließlich aus Stripe (getPricing) und werden mit
-// formatCurrency gerendert — kein €-Hardcode. Realtime auf tenant_subscription
-// + tenant_module_entitlement, damit Webhook-Änderungen sofort erscheinen.
+// formatCurrency gerendert — kein €-Hardcode (Wurzel 4). Realtime auf
+// tenant_subscription + commission_ledger, damit Webhook-Änderungen sofort
+// erscheinen.
 import { Icon } from "@iconify/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@nextdays/ui/dropdown-menu";
 import { getMe } from "@/lib/auth";
 import { formatCurrency } from "@/lib/currency";
 import {
+  getBillingAddress,
   getCommissions,
   getPricing,
   getSubscriptionStatus,
   openBillingPortal,
-  startCheckout,
+  type BillingAddress,
   type CommissionSummary,
   type Pricing,
   type SubscriptionStatus,
 } from "@/lib/subscriptions";
 import { useRealtime } from "@/lib/use-realtime";
 
-// Anzeige-Reihenfolge + Klartext der Zusatzmodule.
-const MODULE_LABELS: Record<string, string> = {
-  modul3_buchhaltung: "Buchhaltung",
-  modul4_mitarbeiter: "Mitarbeiter",
-  modul5_jobmarkt: "Jobmarkt",
-  modul6_hotel: "Hotel",
-};
+import { RechnungsadresseDialog } from "./rechnungsadresse-dialog";
+import { Rechnungsverlauf } from "./rechnungsverlauf";
+import { TarifRechner } from "./tarif-rechner";
 
 type Loaded = {
   canManage: boolean;
@@ -41,7 +45,19 @@ type Loaded = {
   status: SubscriptionStatus | null;
   pricing: Pricing | null;
   commissions: CommissionSummary | null;
+  address: BillingAddress | null;
   error: string | null;
+};
+
+// Abo-Status → deutsches Label + Farbe. Unbekanntes zeigen wir roh, statt es
+// auf „aktiv" zu raten (Wurzel 4).
+const STATUS_LABEL: Record<string, { label: string; klasse: string }> = {
+  active: { label: "Aktiv", klasse: "bg-emerald-500/15 text-emerald-600" },
+  trialing: { label: "Testphase", klasse: "bg-sky-500/15 text-sky-600" },
+  past_due: { label: "Zahlung offen", klasse: "bg-amber-500/15 text-amber-600" },
+  canceled: { label: "Gekündigt", klasse: "bg-muted text-muted-foreground" },
+  unpaid: { label: "Unbezahlt", klasse: "bg-destructive/10 text-destructive" },
+  incomplete: { label: "Unvollständig", klasse: "bg-amber-500/15 text-amber-600" },
 };
 
 // Baut aus den graduated-Tiers eine lesbare Staffel-Zeile, Beträge aus Stripe.
@@ -70,13 +86,16 @@ function tierLines(pricing: Pricing): string[] {
 export function KontoAboSection() {
   const [state, setState] = useState<Loaded | null>(null);
   const [busy, setBusy] = useState(false);
+  const [adresseOffen, setAdresseOffen] = useState(false);
+  const [zeigeVerlauf, setZeigeVerlauf] = useState(false);
+  const [zeigeTarife, setZeigeTarife] = useState(false);
 
   async function load() {
     const me = await getMe();
     if (!me) {
       setState({
         canManage: false, tenantId: null, status: null, pricing: null,
-        commissions: null, error: null,
+        commissions: null, address: null, error: null,
       });
       return;
     }
@@ -88,14 +107,16 @@ export function KontoAboSection() {
         status: null,
         pricing: null,
         commissions: null,
+        address: null,
         error: null,
       });
       return;
     }
-    const [statusRes, pricingRes, commRes] = await Promise.all([
+    const [statusRes, pricingRes, commRes, addrRes] = await Promise.all([
       getSubscriptionStatus(),
       getPricing(),
       getCommissions(),
+      getBillingAddress(),
     ]);
     setState({
       canManage,
@@ -103,6 +124,7 @@ export function KontoAboSection() {
       status: statusRes.ok ? statusRes.data : null,
       pricing: pricingRes.ok ? pricingRes.data : null,
       commissions: commRes.ok ? commRes.data : null,
+      address: addrRes.ok ? addrRes.data : null,
       // Fehler sichtbar machen, nicht verschlucken (Wurzel 5).
       error: !statusRes.ok ? statusRes.error : !pricingRes.ok ? pricingRes.error : null,
     });
@@ -137,7 +159,7 @@ export function KontoAboSection() {
     return (
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <Icon icon="svg-spinners:180-ring" className="size-4" />
-        Abo wird geladen …
+        Abrechnung wird geladen …
       </div>
     );
   }
@@ -150,29 +172,20 @@ export function KontoAboSection() {
     );
   }
 
+  // Der Rechnungsverlauf ist eine Vollbild-Unteransicht des Abrechnungs-
+  // Reiters (mit eigenem Zurück), keine dritte Reiter-Ebene.
+  if (zeigeVerlauf) {
+    return <Rechnungsverlauf onBack={() => setZeigeVerlauf(false)} />;
+  }
+
   const s = state.status;
   const p = state.pricing;
-
-  async function onCheckout() {
-    setBusy(true);
-    try {
-      const origin = window.location.origin;
-      const res = await startCheckout({
-        moduleKeys: [],
-        successUrl: `${origin}/konto?abo=ok`,
-        cancelUrl: `${origin}/konto?abo=abbruch`,
-      });
-      if (res.ok) window.location.href = res.data.checkout_url;
-      else toast.error(res.error);
-    } finally {
-      setBusy(false);
-    }
-  }
+  const st = s?.status ? STATUS_LABEL[s.status] : undefined;
 
   async function onPortal() {
     setBusy(true);
     try {
-      const res = await openBillingPortal(`${window.location.origin}/konto`);
+      const res = await openBillingPortal(`${window.location.origin}/konto/tarif`);
       if (res.ok) window.location.href = res.data.portal_url;
       else toast.error(res.error);
     } finally {
@@ -180,17 +193,144 @@ export function KontoAboSection() {
     }
   }
 
+  // Tarifseite als Vollbild — kommt NUR über „Abo abschließen", kein Reiter.
+  if (zeigeTarife) {
+    return <TarifRechner onBack={() => setZeigeTarife(false)} />;
+  }
+
   return (
     <div className="flex flex-col gap-4">
+      <div>
+        <h2 className="font-display text-2xl font-extrabold">Abrechnung</h2>
+        <p className="text-sm text-muted-foreground">
+          Abo-Status, Rechnungsadresse und Rechnungen — monatlich über
+          myNextDays abgerechnet.
+        </p>
+      </div>
+
       {state.error && (
         <p className="rounded-2xl bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {state.error}
         </p>
       )}
 
-      {/* Tarif-Übersicht (Beträge aus Stripe) */}
+      {/* Kopfzeile mit den beiden Sprungzielen (Lodgify-Vorbild) */}
+      <div className="flex flex-wrap justify-end gap-2">
+        <Button variant="outline" onClick={() => setAdresseOffen(true)}>
+          Rechnungsadresse
+        </Button>
+        <Button variant="outline" onClick={() => setZeigeVerlauf(true)}>
+          Rechnungsverlauf
+        </Button>
+      </div>
+
+      {/* Abo-Karte: Status + Kennzahlenleiste + Aktionen */}
+      <div className="rounded-2xl border border-border bg-card p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-display text-base font-extrabold">
+                {s?.has_subscription ? "myNextDays" : "Kein Abo"}
+              </span>
+              {s?.has_subscription && (
+                <>
+                  <span className="text-muted-foreground">—</span>
+                  <span className="text-sm text-muted-foreground">Monatlich</span>
+                  <span
+                    className={`rounded-full px-3 py-0.5 text-xs font-semibold ${
+                      st?.klasse ?? "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {st?.label ?? s.status}
+                  </span>
+                </>
+              )}
+            </div>
+            {s?.cancel_at_period_end && (
+              <p className="mt-1 text-sm text-amber-600">
+                Endet zum Ende der laufenden Periode.
+              </p>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            {s?.has_subscription ? (
+              <>
+                <Button onClick={onPortal} disabled={busy}>
+                  {busy ? "…" : "Abo verwalten"}
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Weitere Aktionen"
+                      className="inline-flex size-9 items-center justify-center rounded-full hover:bg-muted"
+                    >
+                      <Icon icon="lucide:more-horizontal" className="size-5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {/* Kündigung und Zahlungsmethode laufen bewusst über das
+                        Stripe-Portal: dort hängen SCA/Mandate und die
+                        rechtsverbindliche Bestätigung dran. */}
+                    <DropdownMenuItem onSelect={() => setZeigeTarife(true)}>
+                      Abonnement ändern
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => void onPortal()}>
+                      Zahlungsmethode verwalten
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => void onPortal()}>
+                      Kündigung beantragen
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              // Führt auf die Tarifseite, NICHT direkt zu Stripe: der Betrieb
+              // soll erst sehen, was er für seine Objektzahl zahlt.
+              <Button onClick={() => setZeigeTarife(true)}>
+                Abo abschließen
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Kennzahlen nebeneinander, durch Trennstriche geteilt */}
+        <dl className="mt-5 flex flex-wrap gap-x-8 gap-y-4">
+          <Kennzahl
+            label="Nächstes Abrechnungsdatum"
+            wert={
+              s?.current_period_end
+                ? new Date(s.current_period_end).toLocaleDateString("de-DE", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })
+                : "—"
+            }
+          />
+          <Kennzahl
+            label="Buchungsgebühr"
+            wert={
+              state.commissions
+                ? `${(state.commissions.current_rate * 100).toLocaleString("de-DE", {
+                    maximumFractionDigits: 2,
+                  })} %`
+                : "—"
+            }
+            trennstrich
+          />
+          <Kennzahl
+            label="Abrechenbare Objekte"
+            wert={String(s?.property_count ?? 0)}
+            trennstrich
+          />
+        </dl>
+      </div>
+
+      {/* Tarif-Staffel (Beträge aus Stripe) */}
       {p && (
-        <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="rounded-2xl border border-border bg-card p-5">
           <div className="mb-2 font-display text-base font-extrabold">Tarif</div>
           <ul className="flex flex-col gap-1 text-sm text-muted-foreground">
             {tierLines(p).map((l) => (
@@ -200,74 +340,40 @@ export function KontoAboSection() {
         </div>
       )}
 
-      {/* Ist-Zustand */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl border border-border bg-card p-4">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground">
-            Abrechenbare Objekte
-          </div>
-          <div className="mt-1 font-display text-2xl font-extrabold">
-            {s?.property_count ?? 0}
-          </div>
-        </div>
-        <div className="rounded-2xl border border-border bg-card p-4">
-          <div className="text-xs uppercase tracking-wide text-muted-foreground">
-            Abo-Status
-          </div>
-          <div className="mt-1 font-display text-2xl font-extrabold capitalize">
-            {s?.has_subscription ? (s.status ?? "—") : "kein Abo"}
-          </div>
-          {s?.current_period_end && (
-            <div className="mt-1 text-xs text-muted-foreground">
-              Läuft bis {new Date(s.current_period_end).toLocaleDateString("de-DE")}
-              {s.cancel_at_period_end && " (endet danach)"}
+      {/* Rechnungsadresse */}
+      <div className="rounded-2xl border border-border bg-card p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="font-display text-base font-extrabold">
+              Rechnungsadresse
             </div>
-          )}
+            <p className="mt-1 text-sm text-muted-foreground">
+              Diese Angaben erscheinen auf allen künftigen Rechnungen.
+            </p>
+            <div className="mt-3 text-sm">
+              {adresseZeilen(state.address).length > 0 ? (
+                adresseZeilen(state.address).map((z) => <div key={z}>{z}</div>)
+              ) : (
+                <span className="text-muted-foreground">
+                  Noch keine Rechnungsadresse hinterlegt.
+                </span>
+              )}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setAdresseOffen(true)}
+            aria-label="Rechnungsadresse bearbeiten"
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-full hover:bg-muted"
+          >
+            <Icon icon="lucide:pencil" className="size-4" />
+          </button>
         </div>
       </div>
 
-      {/* Module */}
-      {p && p.modules.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card p-4">
-          <div className="mb-2 font-display text-base font-extrabold">Zusatzmodule</div>
-          <ul className="flex flex-col gap-2 text-sm">
-            {p.modules
-              .filter((m) => !m.per_unit_label) // flat-Variante als Zeile; per-unit als Zusatz
-              .map((m) => {
-                const active = s?.modules.some(
-                  (e) => e.module_key === m.module_key && e.active,
-                );
-                const perUnit = p.modules.find(
-                  (x) => x.module_key === m.module_key && x.per_unit_label,
-                );
-                return (
-                  <li
-                    key={m.module_key}
-                    className="flex items-center justify-between gap-2"
-                  >
-                    <span>
-                      {MODULE_LABELS[m.module_key] ?? m.module_key} —{" "}
-                      {formatCurrency(m.unit_amount / 100, p.currency)} / Monat
-                      {perUnit &&
-                        ` oder ${formatCurrency(perUnit.unit_amount / 100, p.currency)} / ${perUnit.per_unit_label}`}
-                    </span>
-                    {active ? (
-                      <span className="rounded-full bg-emerald-500/15 px-3 py-0.5 text-xs font-semibold text-emerald-600">
-                        gebucht
-                      </span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">nicht gebucht</span>
-                    )}
-                  </li>
-                );
-              })}
-          </ul>
-        </div>
-      )}
-
-      {/* Provisionen (externe OTA-Buchungen: 1 % / 0,5 %) */}
+      {/* Provisionen (externe OTA-Buchungen) */}
       {state.commissions && (
-        <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="rounded-2xl border border-border bg-card p-5">
           <div className="mb-1 font-display text-base font-extrabold">
             Provision externe Portale
           </div>
@@ -295,18 +401,50 @@ export function KontoAboSection() {
         </div>
       )}
 
-      {/* Aktionen */}
-      <div className="flex flex-wrap gap-2">
-        {s?.has_subscription ? (
-          <Button onClick={onPortal} disabled={busy} variant="outline">
-            {busy ? "…" : "Abo verwalten"}
-          </Button>
-        ) : (
-          <Button onClick={onCheckout} disabled={busy}>
-            {busy ? "…" : "Abo abschließen"}
-          </Button>
-        )}
-      </div>
+      <RechnungsadresseDialog
+        open={adresseOffen}
+        onOpenChange={setAdresseOffen}
+        address={state.address}
+        onSaved={(addr) =>
+          setState((prev) => (prev ? { ...prev, address: addr } : prev))
+        }
+      />
+    </div>
+  );
+}
+
+// Adresse als Anschriftsblock. Leere Felder fallen raus, damit keine Lücken
+// oder einsame Kommata entstehen.
+function adresseZeilen(a: BillingAddress | null): string[] {
+  if (!a) return [];
+  const person = [a.first_name, a.last_name].filter(Boolean).join(" ").trim();
+  const ort = [a.postal_code, a.city].filter(Boolean).join(" ").trim();
+  return [
+    a.account_type === "company" ? a.company_name : person,
+    a.account_type === "company" ? person : null,
+    a.line1,
+    a.line2,
+    ort,
+    a.country,
+    a.vat_id ? `USt-IdNr. ${a.vat_id}` : null,
+  ]
+    .map((z) => (z ?? "").trim())
+    .filter((z) => z.length > 0);
+}
+
+function Kennzahl({
+  label,
+  wert,
+  trennstrich = false,
+}: {
+  label: string;
+  wert: string;
+  trennstrich?: boolean;
+}) {
+  return (
+    <div className={trennstrich ? "border-l border-border pl-8" : undefined}>
+      <dt className="text-xs text-muted-foreground">{label}</dt>
+      <dd className="mt-0.5 font-semibold">{wert}</dd>
     </div>
   );
 }
