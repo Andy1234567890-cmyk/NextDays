@@ -1,9 +1,14 @@
 // Login/Registrierung des Gastgebers. Server Component: prüft serverseitig, ob
 // schon eingeloggt (getMe) → dann direkt ins Dashboard.
+import { getTranslations } from "next-intl/server";
 import { redirect } from "next/navigation";
 
 import { AuthForm } from "@/components/auth-form";
 import { getMe } from "@/lib/me";
+
+// Provisionssatz steht an einer Stelle, nicht doppelt in Text und Logik —
+// sonst laufen angezeigter und berechneter Satz auseinander.
+const PROVISION_PROZENT = 8;
 
 export default async function AnmeldenPage({
   searchParams,
@@ -16,24 +21,23 @@ export default async function AnmeldenPage({
   const me = await getMe();
   if (me?.tenant_id) redirect(ziel);
 
+  const t = await getTranslations("anmeldeseite");
+
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
       <div className="relative hidden flex-1 flex-col justify-between bg-primary p-12 text-primary-foreground md:flex">
         <span className="font-display text-2xl font-semibold">myNextDays</span>
         <div>
           <h1 className="font-display text-4xl font-semibold leading-tight">
-            Vermiete auf myNextDays.
+            {t("heldTitel")}
           </h1>
           <p className="mt-4 max-w-md text-primary-foreground/70">
-            Stelle dein Objekt ein, verwalte Kalender, Preise und Buchungen.
-            8 % Provision zahlst du nur auf Buchungen, die über myNextDays
-            zustande kommen — Direktbuchungen über deine eigene Seite bleiben
-            provisionsfrei.
+            {t("heldText", { pct: PROVISION_PROZENT })}
           </p>
         </div>
         <div className="flex items-center gap-6 text-sm text-primary-foreground/60">
-          <span>Keine Grundgebühr</span>
-          <span>Sofort startklar</span>
+          <span>{t("merkmalKeineGrundgebuehr")}</span>
+          <span>{t("merkmalSofortStartklar")}</span>
         </div>
       </div>
 
@@ -43,8 +47,7 @@ export default async function AnmeldenPage({
         </div>
         <AuthForm weiter={ziel} />
         <p className="mt-8 max-w-md text-center text-xs text-muted-foreground">
-          Mit der Anmeldung stimmst du den Nutzungsbedingungen und der
-          Datenschutzerklärung von myNextDays zu.
+          {t("rechtshinweis")}
         </p>
       </div>
     </div>

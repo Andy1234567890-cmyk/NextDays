@@ -124,7 +124,7 @@ export function BarrierefreiheitPanel({
                   <button
                     type="button"
                     onClick={() => setOffen(istOffen ? null : m)}
-                    className={`group flex w-full items-center gap-5 rounded-2xl px-4 py-5 text-left outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-foreground/20 ${
+                    className={`group flex w-full items-center gap-5 rounded-2xl px-4 py-5 text-start outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-foreground/20 ${
                       // Das offene Merkmal hebt sich als Karte ab (Airbnb):
                       // Schatten statt Farbfläche, damit die Liste ruhig bleibt.
                       // outline-none unterdrückt den blauen Browser-Rahmen nach
@@ -139,7 +139,9 @@ export function BarrierefreiheitPanel({
                       className="size-7 shrink-0 text-foreground"
                     />
                     <span className="min-w-0 flex-1">
-                      <span className="block text-[1.0625rem]">{m.label}</span>
+                      <span className="block text-[1.0625rem]">
+                        {t(m.labelKey)}
+                      </span>
                       {v === false && (
                         <span className="mt-0.5 block text-sm text-muted-foreground">
                           {t("barriereNein")}
@@ -174,7 +176,7 @@ export function BarrierefreiheitPanel({
         {offen && !kompakt && (
           <motion.aside
             key="barriere-sidebar"
-            className="shrink-0 overflow-hidden border-l border-border"
+            className="shrink-0 overflow-hidden border-s border-border"
             initial={reduziert ? false : { width: 0, opacity: 0 }}
             animate={{ width: "32rem", opacity: 1 }}
             exit={reduziert ? { opacity: 0 } : { width: 0, opacity: 0 }}
@@ -213,9 +215,12 @@ export function BarrierefreiheitPanel({
 // ihr Fehlen darf die Ansicht nicht beschädigen.
 function DemoFoto({
   bild,
+  alt,
   onOeffne,
 }: {
-  bild: { src: string; alt: string };
+  bild: { src: string; altKey: string };
+  /** Bereits übersetzter alt-Text — das Katalog-Objekt trägt nur den Schlüssel. */
+  alt: string;
   onOeffne: () => void;
 }) {
   const [fehlt, setFehlt] = useState(false);
@@ -224,7 +229,7 @@ function DemoFoto({
     return (
       <div className="flex aspect-[4/3] w-56 shrink-0 flex-col items-center justify-center gap-2 rounded-2xl bg-muted px-4 text-center">
         <Icon icon="ph:image" className="size-7 text-muted-foreground/60" />
-        <span className="text-xs text-muted-foreground">{bild.alt}</span>
+        <span className="text-xs text-muted-foreground">{alt}</span>
       </div>
     );
   }
@@ -238,7 +243,7 @@ function DemoFoto({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={bild.src}
-        alt={bild.alt}
+        alt={alt}
         onError={() => setFehlt(true)}
         className="size-full object-cover"
       />
@@ -355,10 +360,10 @@ function MerkmalDetail({
           </button>
         )}
         <h2 className="font-sans text-[2rem] font-bold tracking-tight">
-          {merkmal.label}
+          {t(merkmal.labelKey)}
         </h2>
         <p className="mt-3 text-[0.9375rem] leading-relaxed text-muted-foreground">
-          {merkmal.beschreibung}
+          {t(merkmal.beschreibungKey)}
         </p>
       </div>
 
@@ -376,6 +381,7 @@ function MerkmalDetail({
                 <DemoFoto
                   key={b.src}
                   bild={b}
+                  alt={t(b.altKey)}
                   onOeffne={() => setGalerieIndex(i)}
                 />
               ))}
@@ -399,7 +405,7 @@ function MerkmalDetail({
                 key={String(wert)}
                 type="button"
                 onClick={() => setLokal(wert)}
-                className={`flex w-full items-center justify-between gap-4 rounded-2xl border px-5 py-4 text-left transition-colors ${aktiv ? "border-foreground bg-muted/40" : "border-border hover:border-foreground"
+                className={`flex w-full items-center justify-between gap-4 rounded-2xl border px-5 py-4 text-start transition-colors ${aktiv ? "border-foreground bg-muted/40" : "border-border hover:border-foreground"
                   }`}
               >
                 <span className="font-medium">
@@ -424,13 +430,13 @@ function MerkmalDetail({
           <div className="mt-8">
             <p className="font-medium">{t("barriereFotosTitel")}</p>
             <ul className="mt-3 space-y-2">
-              {merkmal.fotoHinweise.map((h) => (
+              {merkmal.fotoHinweisKeys.map((h) => (
                 <li
                   key={h}
                   className="flex gap-2.5 text-sm text-muted-foreground"
                 >
                   <span className="mt-2 size-1 shrink-0 rounded-full bg-muted-foreground" />
-                  {h}
+                  {t(h)}
                 </li>
               ))}
             </ul>
@@ -465,7 +471,7 @@ function MerkmalDetail({
                       type="button"
                       aria-label={t("barriereFotoLoeschen")}
                       onClick={() => void fotoLoeschen(f.id)}
-                      className="absolute -right-1.5 -top-1.5 flex size-6 items-center justify-center rounded-full bg-background shadow-md transition-opacity hover:opacity-80"
+                      className="absolute -end-1.5 -top-1.5 flex size-6 items-center justify-center rounded-full bg-background shadow-md transition-opacity hover:opacity-80"
                     >
                       <Icon icon="ph:x" className="size-3.5" />
                     </button>
@@ -567,12 +573,14 @@ function VollbildGalerie({
   onSetze,
   onSchliesse,
 }: {
-  bilder: { src: string; alt: string }[];
+  bilder: { src: string; altKey: string }[];
   index: number;
   onSetze: (i: number) => void;
   onSchliesse: () => void;
 }) {
+  const t = useTranslations("objektEditor");
   const aktiv = bilder[index];
+  const aktivAlt = t(aktiv.altKey);
   const vor = () => onSetze((index - 1 + bilder.length) % bilder.length);
   const zurueck = () => onSetze((index + 1) % bilder.length);
 
@@ -581,7 +589,7 @@ function VollbildGalerie({
       <div className="flex items-center justify-between px-6 py-4">
         <button
           type="button"
-          aria-label="Schließen"
+          aria-label={t("schliessen")}
           onClick={onSchliesse}
           className="flex size-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
         >
@@ -613,7 +621,7 @@ function VollbildGalerie({
             <img
               key={aktiv.src}
               src={aktiv.src}
-              alt={aktiv.alt}
+              alt={aktivAlt}
               onError={(e) => {
                 e.currentTarget.style.visibility = "hidden";
               }}
@@ -621,7 +629,7 @@ function VollbildGalerie({
             />
           </div>
           <p className="hidden w-64 shrink-0 text-[0.9375rem] leading-relaxed lg:block">
-            {aktiv.alt}
+            {aktivAlt}
           </p>
         </div>
         {bilder.length > 1 && (

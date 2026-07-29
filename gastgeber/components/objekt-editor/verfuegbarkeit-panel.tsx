@@ -119,7 +119,7 @@ export function VerfuegbarkeitPanel({
         {detail != null && (
           <motion.aside
             key="verf-sidebar"
-            className="shrink-0 overflow-hidden border-l border-border"
+            className="shrink-0 overflow-hidden border-s border-border"
             initial={reduziert ? false : { width: 0, opacity: 0 }}
             animate={{ width: "32rem", opacity: 1 }}
             exit={reduziert ? { opacity: 0 } : { width: 0, opacity: 0 }}
@@ -317,7 +317,7 @@ function TypSidebar({
               key={o.key}
               type="button"
               onClick={() => setTyp(o.key)}
-              className={`flex w-full items-center justify-between gap-4 rounded-2xl border px-5 py-4 text-left transition-colors ${
+              className={`flex w-full items-center justify-between gap-4 rounded-2xl border px-5 py-4 text-start transition-colors ${
                 aktiv ? "border-foreground bg-muted/50" : "border-border hover:border-foreground"
               }`}
             >
@@ -408,7 +408,7 @@ function KachelButton({
     <button
       type="button"
       onClick={onClick}
-      className="block w-full rounded-2xl border border-border p-6 text-left outline-none transition-all hover:shadow-md focus-visible:ring-2 focus-visible:ring-foreground/20"
+      className="block w-full rounded-2xl border border-border p-6 text-start outline-none transition-all hover:shadow-md focus-visible:ring-2 focus-visible:ring-foreground/20"
     >
       <p className="text-sm font-medium text-muted-foreground">{titel}</p>
       <p className="mt-1 text-2xl font-bold tracking-tight">{wert}</p>

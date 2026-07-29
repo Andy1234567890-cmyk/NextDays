@@ -12,6 +12,7 @@
 // ändert sich per Gesetz. Eine zweite Kopie im Client liefe auseinander
 // (Wurzel 4).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -40,20 +41,22 @@ const SCHRITTE: readonly Schritt[] = [
   "bestaetigen",
 ] as const;
 
-/** Anzeigename der erwarteten Nummer. Ein Mexikaner kennt keine „TIN". */
-const ID_NAME: Record<string, string> = {
-  tin: "Steueridentifikationsnummer",
-  ssn: "Social Security Number (SSN)",
-  itin: "ITIN",
-  ein: "Employer Identification Number (EIN)",
-  rfc: "RFC",
-  curp: "CURP",
-  pan: "PAN",
-  gstin: "GSTIN",
-  rut: "RUT",
-  abn: "ABN",
-  vat: "Umsatzsteuer-Identifikationsnummer",
-};
+/** Welche Nummern einen eigenen Anzeigenamen haben. Ein Mexikaner kennt keine
+ *  „TIN" — der Name kommt je Code aus `steuern.idName.<code>`. Codes ausserhalb
+ *  dieser Liste fallen auf die allgemeine Bezeichnung zurück. */
+const ID_CODES = [
+  "tin",
+  "ssn",
+  "itin",
+  "ein",
+  "rfc",
+  "curp",
+  "pan",
+  "gstin",
+  "rut",
+  "abn",
+  "vat",
+] as const;
 
 /** Basispunkte lesbar machen: 10 → „0,1 %", 2000 → „20 %". */
 function satz(bps: number): string {
@@ -68,7 +71,14 @@ export function SteuerVollbildWizard({
   /** Vorauswahl aus dem Start-Popup: us | national | global. */
   gruppe: string;
 }) {
+  const t = useTranslations("steuern");
   const router = useRouter();
+
+  function idName(code: string): string {
+    return (ID_CODES as readonly string[]).includes(code)
+      ? t(`idName.${code}`)
+      : t("steuernummer");
+  }
 
   // Die Auswahl im Popup schränkt die Länderliste ein — sie ersetzt sie
   // nicht: welches Land welchem Regime zugeordnet ist, weiß der Server.
@@ -181,7 +191,7 @@ export function SteuerVollbildWizard({
           onClick={() => setAbbruchOffen(true)}
           className="rounded-full bg-muted px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-muted/70"
         >
-          Beenden
+          {t("beenden")}
         </button>
       </header>
 
@@ -191,15 +201,14 @@ export function SteuerVollbildWizard({
           {schritt === "land" && (
             <>
               <h1 className="font-display text-[2.5rem] font-bold leading-tight tracking-tight">
-                Wähle dein Land oder deine Region
+                {t("landSchrittTitel")}
               </h1>
               <p className="mt-3 text-[1.0625rem] text-muted-foreground">
-                Sag uns, wo du steuerlich ansässig bist oder wo deine Objekte
-                liegen.
+                {t("landSchrittText")}
               </p>
 
               <label className="mt-10 flex flex-col gap-2">
-                <span className="text-sm font-medium">Land/Region</span>
+                <span className="text-sm font-medium">{t("landLabel")}</span>
                 {/* Suche statt nativer Liste: Der ISO-Code kommt als
                     Stichwort mit, damit „DE" genauso findet wie
                     „Deutschland". */}
@@ -211,7 +220,7 @@ export function SteuerVollbildWizard({
                   }))}
                   wert={land}
                   onChange={setLand}
-                  suchPlatzhalter="Land suchen …"
+                  suchPlatzhalter={t("landSuchen")}
                 />
               </label>
             </>
@@ -220,48 +229,37 @@ export function SteuerVollbildWizard({
           {schritt === "art" && (
             <>
               <h1 className="font-display text-[2.5rem] font-bold leading-tight tracking-tight">
-                Vermietest du privat oder als Unternehmen?
+                {t("artSchrittTitel")}
               </h1>
               <p className="mt-3 text-[1.0625rem] text-muted-foreground">
-                Danach richtet sich, welche Angaben wir brauchen.
+                {t("artSchrittText")}
               </p>
 
               <div className="mt-10 flex flex-col">
-                {(
-                  [
-                    {
-                      wert: "individual" as const,
-                      titel: "Privatperson",
-                      text: "Du vermietest als natürliche Person.",
-                    },
-                    {
-                      wert: "entity" as const,
-                      titel: "Unternehmen",
-                      text: "Du vermietest über eine Firma oder einen anderen Rechtsträger.",
-                    },
-                  ]
-                ).map((o) => (
-                  <label
-                    key={o.wert}
-                    className="flex cursor-pointer items-start gap-4 border-b border-border py-5 last:border-b-0"
-                  >
-                    <input
-                      type="radio"
-                      name="art"
-                      checked={art === o.wert}
-                      onChange={() => setArt(o.wert)}
-                      className="mt-0.5 size-5 shrink-0 accent-foreground"
-                    />
-                    <span className="flex flex-col gap-1">
-                      <span className="text-[1.0625rem] font-medium">
-                        {o.titel}
+                {(["individual", "entity"] satisfies TaxpayerKind[]).map(
+                  (wert) => (
+                    <label
+                      key={wert}
+                      className="flex cursor-pointer items-start gap-4 border-b border-border py-5 last:border-b-0"
+                    >
+                      <input
+                        type="radio"
+                        name="art"
+                        checked={art === wert}
+                        onChange={() => setArt(wert)}
+                        className="mt-0.5 size-5 shrink-0 accent-foreground"
+                      />
+                      <span className="flex flex-col gap-1">
+                        <span className="text-[1.0625rem] font-medium">
+                          {t(`art.${wert}.titel`)}
+                        </span>
+                        <span className="text-[0.9375rem] text-muted-foreground">
+                          {t(`art.${wert}.textLang`)}
+                        </span>
                       </span>
-                      <span className="text-[0.9375rem] text-muted-foreground">
-                        {o.text}
-                      </span>
-                    </span>
-                  </label>
-                ))}
+                    </label>
+                  ),
+                )}
               </div>
             </>
           )}
@@ -269,7 +267,7 @@ export function SteuerVollbildWizard({
           {schritt === "felder" && regel && (
             <>
               <h1 className="font-display text-[2.5rem] font-bold leading-tight tracking-tight">
-                Deine Steuerangaben für {landName(land)}
+                {t("felderSchrittTitel", { land: landName(land) })}
               </h1>
 
               {/* Was eine fehlende Nummer KOSTET — der Gastgeber soll das
@@ -284,14 +282,21 @@ export function SteuerVollbildWizard({
                       className="mt-0.5 size-5 shrink-0"
                     />
                     <span>
-                      Ohne gültige Nummer schuldest du in{" "}
-                      {landName(land)}{" "}
-                      <strong>{satz(regel.host_tax_bps_without_id)}</strong>{" "}
-                      auf deine Einnahmen
-                      {regel.host_tax_bps_with_id != null &&
-                        ` statt ${satz(regel.host_tax_bps_with_id)}`}
-                      . Wir ziehen davon nichts ab — du führst die Steuer
-                      selbst ab.
+                      {/* Zwei Varianten statt eines zusammengesetzten Satzes:
+                          der Vergleichssatz ist optional, und ein Übersetzer
+                          muss den ganzen Satz am Stück umstellen können. */}
+                      {regel.host_tax_bps_with_id != null
+                        ? t.rich("ohneNummerSatzVergleich", {
+                            land: landName(land),
+                            satzOhne: satz(regel.host_tax_bps_without_id),
+                            satzMit: satz(regel.host_tax_bps_with_id),
+                            stark: (c) => <strong>{c}</strong>,
+                          })
+                        : t.rich("ohneNummerSatz", {
+                            land: landName(land),
+                            satzOhne: satz(regel.host_tax_bps_without_id),
+                            stark: (c) => <strong>{c}</strong>,
+                          })}
                     </span>
                   </p>
                 )}
@@ -299,19 +304,19 @@ export function SteuerVollbildWizard({
               <div className="mt-10 flex flex-col gap-6">
                 {istPerson ? (
                   <>
-                    <Feld label="Vorname">
+                    <Feld label={t("vorname")}>
                       <Input
                         value={werte.first_name ?? ""}
                         onChange={(e) => setzeWert("first_name", e.target.value)}
                       />
                     </Feld>
-                    <Feld label="Nachname">
+                    <Feld label={t("nachname")}>
                       <Input
                         value={werte.last_name ?? ""}
                         onChange={(e) => setzeWert("last_name", e.target.value)}
                       />
                     </Feld>
-                    <Feld label="Geburtsdatum">
+                    <Feld label={t("geburtsdatum")}>
                       <Input
                         type="date"
                         value={werte.date_of_birth ?? ""}
@@ -323,15 +328,15 @@ export function SteuerVollbildWizard({
                   </>
                 ) : (
                   <>
-                    <Feld label="Firmenname">
+                    <Feld label={t("firmenname")}>
                       <Input
                         value={werte.legal_name ?? ""}
                         onChange={(e) => setzeWert("legal_name", e.target.value)}
                       />
                     </Feld>
                     <Feld
-                      label="Handelsregisternummer"
-                      hinweis="Optional, z. B. HRB 12345"
+                      label={t("handelsregisternummer")}
+                      hinweis={t("handelsregisternummerHinweis")}
                     >
                       <Input
                         value={werte.business_registration_number ?? ""}
@@ -350,10 +355,10 @@ export function SteuerVollbildWizard({
                     ohne geforderte ID erscheint das Feld gar nicht. */}
                 {regel.required_ids.length > 0 && (
                   <Feld
-                    label={ID_NAME[regel.required_ids[0]] ?? "Steuernummer"}
+                    label={idName(regel.required_ids[0])}
                     hinweis={
                       regel.birthplace_substitutes_id && istPerson
-                        ? "Wenn du keine hast, gib stattdessen deinen Geburtsort an."
+                        ? t("steuerIdHinweisGeburtsort")
                         : undefined
                     }
                   >
@@ -369,7 +374,7 @@ export function SteuerVollbildWizard({
                     ersetzen — das Feld erschiene fälschlich als Ausweg. */}
                 {regel.birthplace_substitutes_id && istPerson && !werte.tin && (
                   <div className="grid gap-6 sm:grid-cols-2">
-                    <Feld label="Geburtsort">
+                    <Feld label={t("geburtsort")}>
                       <Input
                         value={werte.birth_place_city ?? ""}
                         onChange={(e) =>
@@ -377,7 +382,7 @@ export function SteuerVollbildWizard({
                         }
                       />
                     </Feld>
-                    <Feld label="Geburtsland">
+                    <Feld label={t("geburtsland")}>
                       <SuchAuswahl
                         optionen={geburtsLaender.map((l) => ({
                           wert: l.code,
@@ -386,16 +391,18 @@ export function SteuerVollbildWizard({
                         }))}
                         wert={werte.birth_place_country ?? ""}
                         onChange={(v) => setzeWert("birth_place_country", v)}
-                        suchPlatzhalter="Land suchen …"
+                        suchPlatzhalter={t("landSuchen")}
                       />
                     </Feld>
                   </div>
                 )}
 
                 <div className="border-t border-border pt-6">
-                  <h2 className="font-display text-xl font-bold">Anschrift</h2>
+                  <h2 className="font-display text-xl font-bold">
+                    {t("anschrift")}
+                  </h2>
                   <div className="mt-4 flex flex-col gap-6">
-                    <Feld label="Straße und Hausnummer">
+                    <Feld label={t("strasseHausnummer")}>
                       <Input
                         value={werte.address_line1 ?? ""}
                         onChange={(e) =>
@@ -404,7 +411,7 @@ export function SteuerVollbildWizard({
                       />
                     </Feld>
                     <div className="grid gap-6 sm:grid-cols-[10rem_1fr]">
-                      <Feld label="Postleitzahl">
+                      <Feld label={t("postleitzahl")}>
                         <Input
                           value={werte.postal_code ?? ""}
                           onChange={(e) =>
@@ -412,7 +419,7 @@ export function SteuerVollbildWizard({
                           }
                         />
                       </Feld>
-                      <Feld label="Ort">
+                      <Feld label={t("ort")}>
                         <Input
                           value={werte.city ?? ""}
                           onChange={(e) => setzeWert("city", e.target.value)}
@@ -425,9 +432,9 @@ export function SteuerVollbildWizard({
 
               {regel.legal_basis && (
                 <p className="mt-8 text-xs text-muted-foreground">
-                  Rechtsgrundlage: {regel.legal_basis}
+                  {t("rechtsgrundlage", { grundlage: regel.legal_basis })}
                   {regel.reporting_authority &&
-                    ` · Meldung an ${regel.reporting_authority}`}
+                    t("meldungAn", { behoerde: regel.reporting_authority })}
                 </p>
               )}
             </>
@@ -436,45 +443,51 @@ export function SteuerVollbildWizard({
           {schritt === "bestaetigen" && regel && (
             <>
               <h1 className="font-display text-[2.5rem] font-bold leading-tight tracking-tight">
-                Prüfe deine Angaben
+                {t("pruefenTitel")}
               </h1>
               <p className="mt-3 text-[1.0625rem] text-muted-foreground">
-                Wir melden diese Daten an die Steuerbehörde. Prüfe sie bitte,
-                bevor du sie bestätigst.
+                {t("pruefenText")}
               </p>
 
               <dl className="mt-10 divide-y divide-border rounded-2xl border border-border px-6">
-                <Zeile label="Land" wert={landName(land)} />
+                <Zeile label={t("landKurz")} wert={landName(land)} />
                 <Zeile
-                  label="Art"
-                  wert={istPerson ? "Privatperson" : "Unternehmen"}
+                  label={t("artKurz")}
+                  wert={
+                    istPerson
+                      ? t("art.individual.titel")
+                      : t("art.entity.titel")
+                  }
                 />
                 {istPerson ? (
                   <>
                     <Zeile
-                      label="Name"
+                      label={t("name")}
                       wert={`${werte.first_name ?? ""} ${werte.last_name ?? ""}`.trim()}
                     />
-                    <Zeile label="Geburtsdatum" wert={werte.date_of_birth} />
+                    <Zeile
+                      label={t("geburtsdatum")}
+                      wert={werte.date_of_birth}
+                    />
                   </>
                 ) : (
                   <>
-                    <Zeile label="Firmenname" wert={werte.legal_name} />
+                    <Zeile label={t("firmenname")} wert={werte.legal_name} />
                     <Zeile
-                      label="Handelsregisternummer"
+                      label={t("handelsregisternummer")}
                       wert={werte.business_registration_number}
                     />
                   </>
                 )}
                 {regel.required_ids.length > 0 && (
                   <Zeile
-                    label={ID_NAME[regel.required_ids[0]] ?? "Steuernummer"}
+                    label={idName(regel.required_ids[0])}
                     wert={werte.tin}
                   />
                 )}
                 {werte.birth_place_city && (
                   <Zeile
-                    label="Geburtsort"
+                    label={t("geburtsort")}
                     wert={[
                       werte.birth_place_city,
                       werte.birth_place_country
@@ -486,7 +499,7 @@ export function SteuerVollbildWizard({
                   />
                 )}
                 <Zeile
-                  label="Anschrift"
+                  label={t("anschrift")}
                   wert={[
                     werte.address_line1,
                     [werte.postal_code, werte.city].filter(Boolean).join(" "),
@@ -501,15 +514,15 @@ export function SteuerVollbildWizard({
                   Der getippte Name ist bewusst höherschwelliger als ein
                   Haken (Airbnb-Vorbild, Hilfeartikel 3166). */}
               <div className="mt-10 rounded-2xl border border-border p-6">
-                <h2 className="font-display text-xl font-bold">Bestätigung</h2>
+                <h2 className="font-display text-xl font-bold">
+                  {t("bestaetigungTitel")}
+                </h2>
                 <p className="mt-3 text-[0.9375rem] text-muted-foreground">
-                  Ich erkläre, dass die oben gemachten Angaben vollständig und
-                  richtig sind. Ändert sich etwas daran, teile ich es
-                  unverzüglich mit.
+                  {t("selbstauskunftErklaerung")}
                 </p>
                 <label className="mt-6 flex flex-col gap-2">
                   <span className="text-sm font-medium">
-                    Vollständiger Name als Unterschrift
+                    {t("unterschriftLabel")}
                   </span>
                   <Input
                     value={signatur}
@@ -521,7 +534,7 @@ export function SteuerVollbildWizard({
                     }
                   />
                   <span className="text-xs text-muted-foreground">
-                    Dein getippter Name gilt als Unterschrift.
+                    {t("unterschriftHinweis")}
                   </span>
                 </label>
               </div>
@@ -554,7 +567,7 @@ export function SteuerVollbildWizard({
             onClick={zurueck}
             className="text-[0.9375rem] font-medium underline underline-offset-4"
           >
-            Zurück
+            {t("zurueck")}
           </button>
           {schritt === "bestaetigen" ? (
             <Button
@@ -562,11 +575,11 @@ export function SteuerVollbildWizard({
               disabled={laeuft || !signaturPasst}
               onClick={() => void speichern()}
             >
-              {laeuft ? "Wird gespeichert …" : "Bestätigen und senden"}
+              {laeuft ? t("wirdGespeichert") : t("bestaetigenUndSenden")}
             </Button>
           ) : (
             <Button size="lg" disabled={!weiterMoeglich} onClick={weiter}>
-              Weiter
+              {t("weiter")}
             </Button>
           )}
         </div>
@@ -592,15 +605,17 @@ export function SteuerVollbildWizard({
               id="abbruch-titel"
               className="text-center font-display text-2xl font-bold"
             >
-              Wirklich beenden?
+              {t("abbruchTitel")}
             </h2>
             <p className="mt-3 text-center text-[0.9375rem] text-muted-foreground">
-              Deine Angaben wurden noch nicht gespeichert.
+              {t("abbruchText")}
               {regel?.host_tax_bps_without_id != null &&
                 regel.host_tax_bps_without_id > 0 &&
-                ` Ohne Steuernummer schuldest du in ${landName(land)} ${satz(
-                  regel.host_tax_bps_without_id,
-                )} statt ${satz(regel.host_tax_bps_with_id ?? 0)} auf deine Einnahmen.`}
+                ` ${t("abbruchSatzHinweis", {
+                  land: landName(land),
+                  satzOhne: satz(regel.host_tax_bps_without_id),
+                  satzMit: satz(regel.host_tax_bps_with_id ?? 0),
+                })}`}
             </p>
             <div className="mt-7 flex gap-3">
               <Button
@@ -608,13 +623,13 @@ export function SteuerVollbildWizard({
                 className="flex-1"
                 onClick={() => setAbbruchOffen(false)}
               >
-                Abbrechen
+                {t("abbrechen")}
               </Button>
               <Button
                 className="flex-1"
                 onClick={() => router.push("/konto?bereich=steuern")}
               >
-                Ja, beenden
+                {t("jaBeenden")}
               </Button>
             </div>
           </div>

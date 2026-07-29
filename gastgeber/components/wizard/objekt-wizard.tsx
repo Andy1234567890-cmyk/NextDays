@@ -577,7 +577,7 @@ function DiscountRow({
     <button
       type="button"
       onClick={onToggle}
-      className={`flex w-full items-center gap-4 rounded-2xl border p-5 text-left transition-colors ${
+      className={`flex w-full items-center gap-4 rounded-2xl border p-5 text-start transition-colors ${
         checked ? "border-foreground bg-muted/40" : "border-border"
       }`}
     >

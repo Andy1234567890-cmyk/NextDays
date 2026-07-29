@@ -4,6 +4,7 @@
 // Ort, Reservierungs-/Zahldetails (Nächte, Gäste, Status, Betrag, Zahlstatus,
 // Stornogrund). Lädt beim Öffnen; fehlende Felder rendern „—" (kein Fake).
 import { Icon } from "@iconify/react";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { formatCurrency } from "@nextdays/currency";
@@ -11,12 +12,11 @@ import { formatCurrency } from "@nextdays/currency";
 import type { HostReservationDetail } from "@/lib/posteingang";
 import { getReservationDetail } from "@/lib/posteingang";
 
-const STATUS_LABEL: Record<string, string> = {
-  confirmed: "Bestätigt",
-  pending: "Ausstehend",
-  cancelled: "Storniert",
-  completed: "Abgeschlossen",
-};
+// Die vier Reservierungsstatus des Backends; unbekannte Werte werden roh gezeigt.
+const STATUS_KEYS = ["confirmed", "pending", "cancelled", "completed"] as const;
+
+// Platzhalter für fehlende Werte — reines Satzzeichen, sprachunabhängig.
+const LEER = "—";
 
 export function ReservierungsPanel({
   threadId,
@@ -25,6 +25,8 @@ export function ReservierungsPanel({
   threadId: string;
   onClose: () => void;
 }) {
+  const t = useTranslations("posteingang");
+  const locale = useLocale();
   const [detail, setDetail] = useState<HostReservationDetail | null>(null);
   const [laedt, setLaedt] = useState(true);
 
@@ -45,11 +47,11 @@ export function ReservierungsPanel({
     <aside className="hidden h-full w-[26rem] flex-col overflow-y-auto border-l border-border bg-background lg:flex">
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background px-6 py-4">
         <h2 className="font-display text-[1.35rem] font-semibold tracking-tight">
-          Details
+          {t("detailsTitel")}
         </h2>
         <button
           type="button"
-          aria-label="Schließen"
+          aria-label={t("schliessen")}
           onClick={onClose}
           className="flex size-9 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
         >
@@ -58,10 +60,10 @@ export function ReservierungsPanel({
       </div>
 
       {laedt ? (
-        <p className="px-6 py-8 text-sm text-muted-foreground">Wird geladen …</p>
+        <p className="px-6 py-8 text-sm text-muted-foreground">{t("laedt")}</p>
       ) : !detail ? (
         <p className="px-6 py-8 text-sm text-muted-foreground">
-          Keine Reservierungsdaten.
+          {t("keineReservierungsdaten")}
         </p>
       ) : (
         <div className="px-6 py-6">
@@ -70,7 +72,7 @@ export function ReservierungsPanel({
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={detail.property_photos[0]}
-              alt={detail.property_title ?? "Objekt"}
+              alt={detail.property_title ?? t("objektFoto")}
               className="mb-4 h-52 w-full rounded-2xl object-cover"
             />
           ) : (
@@ -80,7 +82,7 @@ export function ReservierungsPanel({
           )}
 
           <h3 className="font-display text-xl font-semibold">
-            {detail.property_title ?? "—"}
+            {detail.property_title ?? LEER}
           </h3>
           {(detail.city || detail.country) && (
             <p className="mt-0.5 text-sm text-muted-foreground">
@@ -89,50 +91,64 @@ export function ReservierungsPanel({
           )}
 
           <div className="mt-6 border-t border-border pt-6">
-            <h4 className="mb-3 text-lg font-semibold">Reservierungsdetails</h4>
+            <h4 className="mb-3 text-lg font-semibold">
+              {t("reservierungsdetails")}
+            </h4>
             <dl className="space-y-3 text-sm">
-              <Zeile label="Anreise" wert={datum(detail.check_in)} />
-              <Zeile label="Abreise" wert={datum(detail.check_out)} />
               <Zeile
-                label="Nächte"
-                wert={detail.nights != null ? String(detail.nights) : "—"}
+                label={t("anreise")}
+                wert={datum(detail.check_in, locale)}
               />
               <Zeile
-                label="Gäste"
-                wert={detail.num_guests != null ? String(detail.num_guests) : "—"}
+                label={t("abreise")}
+                wert={datum(detail.check_out, locale)}
               />
               <Zeile
-                label="Status"
+                label={t("naechte")}
+                wert={detail.nights != null ? String(detail.nights) : LEER}
+              />
+              <Zeile
+                label={t("gaeste")}
+                wert={
+                  detail.num_guests != null ? String(detail.num_guests) : LEER
+                }
+              />
+              <Zeile
+                label={t("status")}
                 wert={
                   detail.status
-                    ? (STATUS_LABEL[detail.status] ?? detail.status)
-                    : "—"
+                    ? istBekannterStatus(detail.status)
+                      ? t(`status_${detail.status}`)
+                      : detail.status
+                    : LEER
                 }
               />
             </dl>
           </div>
 
           <div className="mt-6 border-t border-border pt-6">
-            <h4 className="mb-3 text-lg font-semibold">Zahlung</h4>
+            <h4 className="mb-3 text-lg font-semibold">{t("zahlung")}</h4>
             <dl className="space-y-3 text-sm">
               <Zeile
-                label="Gesamtbetrag"
+                label={t("gesamtbetrag")}
                 wert={betrag(detail.total_amount, detail.currency)}
               />
               <Zeile
-                label="Bezahlt"
+                label={t("bezahlt")}
                 wert={betrag(detail.paid_amount, detail.currency)}
               />
               <Zeile
-                label="Zahlstatus"
-                wert={detail.payment_status ?? "—"}
+                label={t("zahlstatus")}
+                wert={detail.payment_status ?? LEER}
               />
             </dl>
           </div>
 
           {detail.cancel_reason && (
             <div className="mt-6 border-t border-border pt-6">
-              <h4 className="mb-1 text-lg font-semibold">Stornierung</h4>
+              <h4 className="mb-1 text-lg font-semibold">
+                {t("stornierung")}
+              </h4>
               <p className="text-sm text-muted-foreground">
                 {detail.cancel_reason}
               </p>
@@ -153,9 +169,11 @@ function Zeile({ label, wert }: { label: string; wert: string }) {
   );
 }
 
-function datum(iso: string | null): string {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("de-DE", {
+// Datum in der aktiven UI-Sprache formatieren — kein festes de-DE, sonst
+// bliebe das Datum deutsch, während die Oberfläche übersetzt ist.
+function datum(iso: string | null, locale: string): string {
+  if (!iso) return LEER;
+  return new Date(iso).toLocaleDateString(locale, {
     day: "numeric",
     month: "long",
     year: "numeric",
@@ -165,6 +183,12 @@ function datum(iso: string | null): string {
 // Betrag mit echter Objektwährung (kein €-Hardcode, Wurzel 4). Fehlt der Betrag,
 // „—"; fehlt die Währung, rendert formatCurrency symbollos.
 function betrag(amount: number | null, currency: string | null): string {
-  if (amount == null) return "—";
+  if (amount == null) return LEER;
   return formatCurrency(amount, currency);
+}
+
+function istBekannterStatus(
+  status: string,
+): status is (typeof STATUS_KEYS)[number] {
+  return (STATUS_KEYS as readonly string[]).includes(status);
 }

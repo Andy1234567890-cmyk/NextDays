@@ -142,7 +142,7 @@ export function AmenityPanel({
             flex-wrap den Kopf sonst mehrzeilig aufblähen. Die Scrollbar bleibt
             unsichtbar; gewischt/gescrollt wird seitlich. */}
         <div className="mt-5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <div className="flex w-max gap-2 pr-8 lg:pr-12">
+          <div className="flex w-max gap-2 pe-8 lg:pe-12">
             {["alle", ...KATEGORIE_REIHENFOLGE].map((f) => (
               <button
                 key={f}
@@ -183,7 +183,7 @@ export function AmenityPanel({
                       <button
                         type="button"
                         onClick={() => toggle(a.key)}
-                        className="flex w-full items-center gap-4 py-3.5 text-left"
+                        className="flex w-full items-center gap-4 py-3.5 text-start"
                       >
                         <Icon
                           icon={a.icon}

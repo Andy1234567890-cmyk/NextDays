@@ -61,7 +61,7 @@ export function BlockiertePersonen() {
       <DialogTrigger asChild>
         <button
           type="button"
-          className="flex w-full items-center gap-3 rounded-2xl border border-border p-5 text-left transition-colors hover:bg-muted/50"
+          className="flex w-full items-center gap-3 rounded-2xl border border-border p-5 text-start transition-colors hover:bg-muted/50"
         >
           <span className="min-w-0 flex-1 font-medium">
             {t("dsBlockierteTitel")}

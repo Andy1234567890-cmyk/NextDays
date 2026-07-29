@@ -5,6 +5,7 @@
 // Dropdown-Pill (öffnet Alle/Archiviert), „Ungelesen" als eigene umrandete Pill.
 // Darunter die Thread-Einträge; großzügiger Leerzustand mit „Filter zurücksetzen".
 import { Icon } from "@iconify/react";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
@@ -29,6 +30,8 @@ export function ThreadListe({
   onSuche: (q: string) => void;
   onOeffne: (id: string) => void;
 }) {
+  const t = useTranslations("posteingang");
+  const locale = useLocale();
   const [sucheOffen, setSucheOffen] = useState(false);
   const [menuOffen, setMenuOffen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -44,7 +47,8 @@ export function ThreadListe({
     return () => document.removeEventListener("mousedown", bei);
   }, [menuOffen]);
 
-  const dropdownLabel = filter === "archiviert" ? "Archiviert" : "Alle";
+  const dropdownLabel =
+    filter === "archiviert" ? t("filterArchiviert") : t("filterAlle");
   const gefiltert = filter !== "alle" || suche.length > 0;
 
   return (
@@ -52,18 +56,18 @@ export function ThreadListe({
       {/* Kopf */}
       <div className="flex items-center justify-between px-6 pb-1 pt-7">
         <h1 className="font-display text-[1.75rem] font-semibold tracking-tight">
-          Nachrichten
+          {t("titel")}
         </h1>
         <div className="flex items-center gap-1.5">
           <IconButton
-            label="Suchen"
+            label={t("suchen")}
             icon="ph:magnifying-glass"
             aktiv={sucheOffen}
             onClick={() => setSucheOffen((v) => !v)}
           />
           <Link
             href="/nachrichten/vorlagen"
-            aria-label="Vorlagen verwalten"
+            aria-label={t("vorlagenVerwalten")}
             className="flex size-10 items-center justify-center rounded-full text-foreground transition-colors hover:bg-muted"
           >
             <Icon icon="ph:gear-six" className="size-[1.15rem]" />
@@ -82,7 +86,7 @@ export function ThreadListe({
               type="search"
               value={suche}
               onChange={(e) => onSuche(e.target.value)}
-              placeholder="Nach Name, E-Mail oder Objekt suchen"
+              placeholder={t("suchePlatzhalter")}
               className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               autoFocus
             />
@@ -112,7 +116,7 @@ export function ThreadListe({
             <div className="absolute left-0 top-12 z-20 w-64 overflow-hidden rounded-2xl border border-border bg-background p-1.5 shadow-xl">
               <MenuItem
                 icon="ph:chat-circle"
-                label="Alle"
+                label={t("filterAlle")}
                 aktiv={filter === "alle"}
                 onClick={() => {
                   onFilter("alle");
@@ -121,7 +125,7 @@ export function ThreadListe({
               />
               <MenuItem
                 icon="ph:archive"
-                label="Archiviert"
+                label={t("filterArchiviert")}
                 aktiv={filter === "archiviert"}
                 onClick={() => {
                   onFilter("archiviert");
@@ -143,7 +147,7 @@ export function ThreadListe({
               : "border border-border text-foreground hover:border-foreground/40"
           }`}
         >
-          Ungelesen
+          {t("filterUngelesen")}
         </button>
       </div>
 
@@ -158,14 +162,10 @@ export function ThreadListe({
               />
             </span>
             <p className="text-lg font-semibold">
-              {gefiltert
-                ? "Keine Nachrichten gefunden"
-                : "Noch keine Nachrichten"}
+              {gefiltert ? t("leerGefiltertTitel") : t("leerTitel")}
             </p>
             <p className="mt-1.5 max-w-[16rem] text-sm leading-relaxed text-muted-foreground">
-              {gefiltert
-                ? "Passe deine Filter an oder setze sie zurück."
-                : "Hier erscheinen Konversationen mit deinen Gästen."}
+              {gefiltert ? t("leerGefiltertText") : t("leerText")}
             </p>
             {gefiltert && (
               <button
@@ -176,30 +176,30 @@ export function ThreadListe({
                 }}
                 className="mt-5 rounded-full border border-border px-5 py-2.5 text-sm font-semibold transition-colors hover:bg-muted"
               >
-                Filter zurücksetzen
+                {t("filterZuruecksetzen")}
               </button>
             )}
           </div>
         ) : (
           <ul className="px-3 py-1">
-            {threads.map((t) => {
-              const ungelesen = t.unread_count > 0;
+            {threads.map((thread) => {
+              const ungelesen = thread.unread_count > 0;
               return (
-                <li key={t.id}>
+                <li key={thread.id}>
                   <button
                     type="button"
-                    onClick={() => onOeffne(t.id)}
+                    onClick={() => onOeffne(thread.id)}
                     className={`flex w-full items-start gap-3.5 rounded-2xl px-3 py-3.5 text-left transition-colors ${
-                      aktivId === t.id ? "bg-muted" : "hover:bg-muted/60"
+                      aktivId === thread.id ? "bg-muted" : "hover:bg-muted/60"
                     }`}
                   >
                     <span className="relative flex size-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-muted to-muted/60 text-[0.9375rem] font-semibold text-foreground">
-                      {(t.guest_name ?? t.guest_email ?? "?")
+                      {(thread.guest_name ?? thread.guest_email ?? "?")
                         .slice(0, 1)
                         .toUpperCase()}
                       {ungelesen && (
                         <span className="absolute -right-0.5 -top-0.5 flex min-w-[1.25rem] items-center justify-center rounded-full bg-rose-500 px-1 text-[0.625rem] font-bold text-white ring-2 ring-background">
-                          {t.unread_count}
+                          {thread.unread_count}
                         </span>
                       )}
                     </span>
@@ -208,22 +208,25 @@ export function ThreadListe({
                         <span
                           className={`truncate text-[0.9375rem] ${ungelesen ? "font-semibold text-foreground" : "font-medium text-foreground"}`}
                         >
-                          {t.guest_name ?? t.guest_email ?? "Gast"}
+                          {thread.guest_name ?? thread.guest_email ?? t("gast")}
                         </span>
                         <span
                           className={`shrink-0 text-xs ${ungelesen ? "font-semibold text-foreground" : "text-muted-foreground"}`}
                         >
-                          {kurzDatum(t.last_message_at)}
+                          {kurzDatum(thread.last_message_at, locale, t("gestern"))}
                         </span>
                       </div>
                       <p
                         className={`mt-0.5 truncate text-sm ${ungelesen ? "font-medium text-foreground" : "text-muted-foreground"}`}
                       >
-                        {t.last_message ?? "Noch keine Nachricht"}
+                        {thread.last_message ?? t("nochKeineNachricht")}
                       </p>
-                      {(t.property_title || t.check_in) && (
+                      {(thread.property_title || thread.check_in) && (
                         <p className="mt-1 truncate text-xs text-muted-foreground">
-                          {[aufenthalt(t.check_in, t.check_out), t.property_title]
+                          {[
+                            aufenthalt(thread.check_in, thread.check_out, locale),
+                            thread.property_title,
+                          ]
                             .filter(Boolean)
                             .join(" · ")}
                         </p>
@@ -291,23 +294,33 @@ function MenuItem({
   );
 }
 
-function kurzDatum(iso: string | null): string {
+// Datum/Uhrzeit in der aktiven UI-Sprache. „Gestern" kommt übersetzt herein,
+// weil die Helfer außerhalb der Komponente keinen Übersetzer haben.
+function kurzDatum(
+  iso: string | null,
+  locale: string,
+  gesternLabel: string,
+): string {
   if (!iso) return "";
   const d = new Date(iso);
   const heute = new Date();
   const gestern = new Date(heute);
   gestern.setDate(heute.getDate() - 1);
   if (d.toDateString() === heute.toDateString())
-    return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-  if (d.toDateString() === gestern.toDateString()) return "Gestern";
-  return d.toLocaleDateString("de-DE", { day: "numeric", month: "short" });
+    return d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+  if (d.toDateString() === gestern.toDateString()) return gesternLabel;
+  return d.toLocaleDateString(locale, { day: "numeric", month: "short" });
 }
 
-function aufenthalt(ein: string | null, aus: string | null): string {
+function aufenthalt(
+  ein: string | null,
+  aus: string | null,
+  locale: string,
+): string {
   if (!ein) return "";
   const opt: Intl.DateTimeFormatOptions = { day: "numeric", month: "short" };
-  const e = new Date(ein).toLocaleDateString("de-DE", opt);
+  const e = new Date(ein).toLocaleDateString(locale, opt);
   if (!aus) return e;
-  const a = new Date(aus).toLocaleDateString("de-DE", opt);
+  const a = new Date(aus).toLocaleDateString(locale, opt);
   return `${e} – ${a}`;
 }

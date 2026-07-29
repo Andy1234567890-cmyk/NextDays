@@ -112,7 +112,7 @@ export function SchlafPanel({
             </button>
             <span
               aria-hidden
-              className="pointer-events-none absolute -bottom-2.5 -right-2.5 flex size-9 items-center justify-center rounded-full bg-foreground text-background shadow-sm"
+              className="pointer-events-none absolute -bottom-2.5 -end-2.5 flex size-9 items-center justify-center rounded-full bg-foreground text-background shadow-sm"
             >
               <Icon icon="ph:plus" className="size-4" />
             </span>

@@ -3,7 +3,7 @@
 // Abschnitt „Sprache & Währung" (Airbnb-Vorbild: drei Zeilen — Sprache,
 // Währung, Zeitzone).
 //
-// Sprache: 24 EU-Amtssprachen (LOCALE_LABELS, kein Hardcode). Schreibt
+// Sprache: alle Locales aus LOCALE_LABELS (kein Hardcode). Schreibt
 // preferred_language ins Profil und setzt zusätzlich das UI-Locale-Cookie,
 // damit die Oberfläche sofort umschaltet.
 //
@@ -131,7 +131,7 @@ export function SpracheAbschnitt({ account }: { account: Account }) {
             value={sprache}
             onChange={(e) => setSprache(e.target.value)}
             disabled={busy}
-            className="w-full appearance-none rounded-lg border border-border bg-background py-2.5 pl-3 pr-10 text-[0.9375rem] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="w-full appearance-none rounded-lg border border-border bg-background py-2.5 ps-3 pe-10 text-[0.9375rem] outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             {LOCALES.map(([code, label]) => (
               <option key={code} value={code}>
@@ -144,7 +144,7 @@ export function SpracheAbschnitt({ account }: { account: Account }) {
       </KontoZeile>
 
       <KontoZeile
-        label="Bevorzugte Währung"
+        label={t("waehrungLabel")}
         value={
           waehrungLabel(account.preferred_currency, sprache) ??
           t("nichtAngegeben")
@@ -157,8 +157,7 @@ export function SpracheAbschnitt({ account }: { account: Account }) {
       >
         <div className="max-w-lg space-y-4">
           <p className="text-sm text-muted-foreground">
-            In dieser Währung siehst du Beträge in deinem Konto. Die Preise
-            deiner Objekte bleiben in ihrer eigenen Währung.
+            {t("waehrungHinweis")}
           </p>
           {/* Suche statt <select>: 45 Währungen sind nativ noch machbar, aber
               die Tastatursuche fände nur Treffer am Zeilenanfang — „Franken"
@@ -172,14 +171,14 @@ export function SpracheAbschnitt({ account }: { account: Account }) {
             wert={waehrung}
             onChange={setWaehrung}
             disabled={busy}
-            suchPlatzhalter="Währung suchen …"
+            suchPlatzhalter={t("waehrungSuche")}
           />
           <Fuss feld="waehrung" />
         </div>
       </KontoZeile>
 
       <KontoZeile
-        label="Zeitzone"
+        label={t("zeitzoneLabel")}
         value={zeitzoneLabel(account.preferred_timezone) ?? t("nichtAngegeben")}
         hasValue={!!account.preferred_timezone}
         open={offen === "zeitzone"}
@@ -200,7 +199,7 @@ export function SpracheAbschnitt({ account }: { account: Account }) {
             wert={zone}
             onChange={setZone}
             disabled={busy}
-            suchPlatzhalter="Stadt oder Zeitzone suchen …"
+            suchPlatzhalter={t("zeitzoneSuche")}
           />
           <Fuss feld="zeitzone" />
         </div>

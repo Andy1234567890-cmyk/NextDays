@@ -5,22 +5,27 @@
 // Der Verlauf enthält ausschließlich sichtbare Nachrichten — interne
 // Team-Notizen filtert der Server heraus (support_messages.internal) und sie
 // erreichen den Client gar nicht erst.
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { useFormatierung } from "@/lib/formatierung";
 import type { TicketDetail } from "@/lib/support";
 import { ticketAntworten } from "@/lib/support-actions";
 import { useRealtime } from "@/lib/use-realtime";
 
-import { STATUS_ANZEIGE, themaLabel } from "./themen-katalog";
+import { STATUS_ANZEIGE, themaLabelKey } from "./themen-katalog";
 
 export function AnfrageVerlauf({ ticket }: { ticket: TicketDetail }) {
+  const t = useTranslations("support");
+  const f = useFormatierung();
   const router = useRouter();
   const [text, setText] = useState("");
   const [laeuft, setLaeuft] = useState(false);
 
   const anzeige = STATUS_ANZEIGE[ticket.status] ?? STATUS_ANZEIGE.in_bearbeitung;
+  const themaKey = themaLabelKey(ticket.category);
 
   // Realtime: Antworten des Teams erscheinen sofort, ohne Neuladen. Die
   // RLS-Policy (0205) liefert nur sichtbare Nachrichten aus — interne Notizen
@@ -45,7 +50,7 @@ export function AnfrageVerlauf({ ticket }: { ticket: TicketDetail }) {
     setLaeuft(false);
     if (res.ok) {
       setText("");
-      toast.success("Antwort gesendet.");
+      toast.success(t("antwortGesendet"));
     } else {
       toast.error(res.fehler);
     }
@@ -66,12 +71,14 @@ export function AnfrageVerlauf({ ticket }: { ticket: TicketDetail }) {
                 : "bg-muted text-foreground"
           }`}
         >
-          {anzeige.label}
+          {t(anzeige.labelKey)}
         </span>
       </div>
+      {/* Ohne hinterlegtes Thema entfällt der Teil samt Trennzeichen — kein
+          erfundenes Ersatz-Thema (Wurzel 4). */}
       <p className="mt-1 text-sm text-muted-foreground">
-        {themaLabel(ticket.category) ?? "Allgemein"} · Erstellt am{" "}
-        {new Date(ticket.created_at).toLocaleDateString("de-DE")}
+        {themaKey ? `${t(themaKey)} · ` : ""}
+        {t("erstelltAm", { datum: f.datum(ticket.created_at) })}
       </p>
 
       {/* Verlauf: eigene Nachrichten rechts, Team links (Chat-Anmutung). */}
@@ -89,8 +96,8 @@ export function AnfrageVerlauf({ ticket }: { ticket: TicketDetail }) {
                 }`}
               >
                 <p className="text-xs font-semibold text-muted-foreground">
-                  {vomTeam ? "myNextDays Support" : "Du"} ·{" "}
-                  {new Date(m.created_at).toLocaleString("de-DE")}
+                  {vomTeam ? t("absenderTeam") : t("absenderDu")} ·{" "}
+                  {f.datumZeit(m.created_at)}
                 </p>
                 <p className="mt-1.5 whitespace-pre-wrap text-[0.9375rem] leading-relaxed">
                   {m.body}
@@ -109,7 +116,7 @@ export function AnfrageVerlauf({ ticket }: { ticket: TicketDetail }) {
           onChange={(e) => setText(e.target.value)}
           rows={4}
           maxLength={5000}
-          placeholder="Antwort schreiben …"
+          placeholder={t("antwortPlatzhalter")}
           className="w-full resize-none bg-transparent text-[0.9375rem] outline-none"
         />
         <div className="mt-4 flex justify-end border-t border-border pt-4">
@@ -119,7 +126,7 @@ export function AnfrageVerlauf({ ticket }: { ticket: TicketDetail }) {
             onClick={() => void senden()}
             className="rounded-full bg-foreground px-5 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-50"
           >
-            {laeuft ? "Wird gesendet …" : "Antworten"}
+            {laeuft ? t("antwortLaeuft") : t("antworten")}
           </button>
         </div>
       </div>

@@ -9,6 +9,7 @@
 // Bearbeitet wird im Zeilen-Inline-Modus (wie Airbnb), nicht in einem Dialog:
 // Der Nutzer sieht die übrigen Angaben weiter und verliert den Kontext nicht.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -20,7 +21,7 @@ import {
 import type { Unternehmensprofil } from "@/lib/unternehmen";
 import { useRealtime } from "@/lib/use-realtime";
 
-/** Eine bearbeitbare Zeile. `mehrfach` = mehrere Felder in einer Zeile. */
+/** Eine bearbeitbare Zeile. `titel`/`label`/`hinweis` sind Textschlüssel. */
 type Zeile = {
   titel: string;
   felder: { key: UnternehmensFeld; label: string; typ?: string }[];
@@ -31,29 +32,29 @@ type Zeile = {
 
 const ZEILEN: Zeile[] = [
   {
-    titel: "Geschäftliche Telefonnummer",
-    felder: [{ key: "phoneNumber", label: "Telefonnummer", typ: "tel" }],
+    titel: "utZeileTelefon",
+    felder: [{ key: "phoneNumber", label: "utFeldTelefon", typ: "tel" }],
     anzeige: (p) => p.phoneNumber,
   },
   {
-    titel: "Geschäftliche E-Mail-Adresse",
-    felder: [{ key: "email", label: "E-Mail-Adresse", typ: "email" }],
+    titel: "utZeileEmail",
+    felder: [{ key: "email", label: "utFeldEmail", typ: "email" }],
     anzeige: (p) => p.email,
   },
   {
-    titel: "Website",
-    felder: [{ key: "website", label: "Website", typ: "url" }],
+    titel: "utZeileWebsite",
+    felder: [{ key: "website", label: "utFeldWebsite", typ: "url" }],
     anzeige: (p) => p.website,
   },
   {
-    titel: "Eingetragene Geschäftsadresse",
+    titel: "utZeileAdresse",
     felder: [
-      { key: "companyStreet", label: "Straße" },
-      { key: "companyHouseNumber", label: "Hausnummer" },
-      { key: "companyPostalCode", label: "Postleitzahl" },
-      { key: "companyCity", label: "Ort" },
-      { key: "companyState", label: "Bundesland / Region" },
-      { key: "companyCountry", label: "Land (zweistellig, z. B. DE)" },
+      { key: "companyStreet", label: "utFeldStrasse" },
+      { key: "companyHouseNumber", label: "utFeldHausnummer" },
+      { key: "companyPostalCode", label: "utFeldPlz" },
+      { key: "companyCity", label: "utFeldOrt" },
+      { key: "companyState", label: "utFeldRegion" },
+      { key: "companyCountry", label: "utFeldLand" },
     ],
     anzeige: (p) =>
       [
@@ -65,43 +66,43 @@ const ZEILEN: Zeile[] = [
         .join(", "),
   },
   {
-    titel: "Offizieller Firmenname",
+    titel: "utZeileFirma",
     felder: [
-      { key: "companyName", label: "Firmenname" },
-      { key: "legalForm", label: "Rechtsform (z. B. GmbH, Einzelunternehmen)" },
+      { key: "companyName", label: "utFeldFirmenname" },
+      { key: "legalForm", label: "utFeldRechtsform" },
     ],
     anzeige: (p) => [p.companyName, p.legalForm].filter(Boolean).join(" · "),
   },
   {
-    titel: "Registereintrag",
+    titel: "utZeileRegister",
     felder: [
-      { key: "companyRegister", label: "Handelsregisternummer" },
-      { key: "districtCourt", label: "Registergericht" },
+      { key: "companyRegister", label: "utFeldRegisternummer" },
+      { key: "districtCourt", label: "utFeldRegistergericht" },
     ],
     anzeige: (p) =>
       [p.companyRegister, p.districtCourt].filter(Boolean).join(" · "),
   },
   {
-    titel: "Steuernummern",
+    titel: "utZeileSteuern",
     felder: [
-      { key: "vatId", label: "Umsatzsteuer-Identifikationsnummer" },
-      { key: "taxNumber", label: "Steuernummer" },
+      { key: "vatId", label: "utFeldUstId" },
+      { key: "taxNumber", label: "utFeldSteuernummer" },
     ],
     anzeige: (p) => [p.vatId, p.taxNumber].filter(Boolean).join(" · "),
   },
   {
-    titel: "Vertretungsberechtigte Person",
+    titel: "utZeileVertretung",
     felder: [
-      { key: "firstName", label: "Vorname" },
-      { key: "lastName", label: "Nachname" },
+      { key: "firstName", label: "utFeldVorname" },
+      { key: "lastName", label: "utFeldNachname" },
     ],
     anzeige: (p) => [p.firstName, p.lastName].filter(Boolean).join(" "),
-    hinweis:
-      "Wird für die Freischaltung von Zahlungen benötigt und nicht öffentlich gezeigt.",
+    hinweis: "utVertretungHinweis",
   },
 ];
 
 export function UnternehmenTab({ profil }: { profil: Unternehmensprofil | null }) {
+  const t = useTranslations("konto");
   const router = useRouter();
   const [offen, setOffen] = useState<string | null>(null);
 
@@ -116,11 +117,10 @@ export function UnternehmenTab({ profil }: { profil: Unternehmensprofil | null }
     return (
       <div>
         <h2 className="font-display text-3xl font-semibold tracking-tight">
-          Unternehmensdaten
+          {t("utTitel")}
         </h2>
         <p className="mt-4 text-[0.9375rem] text-muted-foreground">
-          Die Unternehmensdaten sind gerade nicht abrufbar. Bitte später erneut
-          versuchen.
+          {t("utNichtAbrufbar")}
         </p>
       </div>
     );
@@ -129,15 +129,15 @@ export function UnternehmenTab({ profil }: { profil: Unternehmensprofil | null }
   // Pflichtangaben für die Zahlungsfreischaltung. Fehlt eine, zeigt Airbnb
   // oben ein Banner — wir nennen konkret, was fehlt, statt allgemein zu warnen.
   const fehlend = [
-    !profil.email && "E-Mail-Adresse",
-    !profil.companyCountry && "Land",
-    !profil.companyStreet && "Adresse",
+    !profil.email && t("utFehlendEmail"),
+    !profil.companyCountry && t("utFehlendLand"),
+    !profil.companyStreet && t("utFehlendAdresse"),
   ].filter(Boolean) as string[];
 
   return (
     <div>
       <h2 className="font-display text-3xl font-semibold tracking-tight">
-        Unternehmensdaten
+        {t("utTitel")}
       </h2>
 
       {fehlend.length > 0 && (
@@ -146,10 +146,9 @@ export function UnternehmenTab({ profil }: { profil: Unternehmensprofil | null }
             <Icon icon="solar:danger-bold" className="size-5" />
           </span>
           <div className="min-w-0">
-            <p className="font-medium">Angaben vervollständigen</p>
+            <p className="font-medium">{t("utBannerTitel")}</p>
             <p className="mt-0.5 text-[0.9375rem] text-muted-foreground">
-              Ohne {fehlend.join(", ")} können wir keine Zahlungen für dich
-              freischalten.
+              {t("utBannerText", { fehlend: fehlend.join(", ") })}
             </p>
           </div>
         </div>
@@ -161,15 +160,12 @@ export function UnternehmenTab({ profil }: { profil: Unternehmensprofil | null }
             icon="solar:info-circle-bold"
             className="mr-1.5 inline size-4 align-text-bottom"
           />
-          Die letzte Übertragung an unseren Zahlungsdienst schlug fehl:{" "}
-          {profil.stripeSyncError}
+          {t("utSyncFehler", { fehler: profil.stripeSyncError })}
         </div>
       )}
 
       <p className="mt-6 max-w-xl text-[0.9375rem] leading-relaxed text-muted-foreground">
-        Je nach Standort erscheinen einige dieser Angaben in deinen Inseraten.
-        Sie werden außerdem für die Freischaltung von Zahlungen und für deine
-        Rechnungen verwendet.
+        {t("utEinleitung")}
       </p>
 
       {/* Gewerbestatus: Muss im EWR, in Großbritannien und der Schweiz erklärt
@@ -182,25 +178,19 @@ export function UnternehmenTab({ profil }: { profil: Unternehmensprofil | null }
       <div className="mt-8 rounded-2xl border border-border p-5">
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="font-medium">Art der Vermietung</p>
+            <p className="font-medium">{t("utArtTitel")}</p>
             <p className="mt-1 text-[0.9375rem] text-muted-foreground">
               {profil.accountType === "company"
-                ? "Gewerblich — du vermietest als Unternehmen."
-                : "Privat — du vermietest als Privatperson."}
+                ? t("utArtGewerblich")
+                : t("utArtPrivat")}
             </p>
           </div>
         </div>
         <p className="mt-3 text-sm text-muted-foreground/80">
-          Gewerblich vermietest du in der Regel, wenn die Vermietung deine
-          Haupteinnahmequelle ist, du im Handelsregister eingetragen oder
-          umsatzsteuerpflichtig bist oder regelmäßig mit Gewinnabsicht
-          vermietest. Dieser Status wird Gästen im Europäischen
-          Wirtschaftsraum, in Großbritannien und der Schweiz angezeigt.
+          {t("utArtKriterien")}
         </p>
         <p className="mt-2 text-sm text-muted-foreground/80">
-          Wir dürfen deinen Status nicht selbst festlegen. Wenn er sich ändert,
-          wende dich bitte an den Support. Im Zweifel hilft dir eine
-          Rechtsberatung weiter.
+          {t("utArtHinweis")}
         </p>
       </div>
 
@@ -218,8 +208,7 @@ export function UnternehmenTab({ profil }: { profil: Unternehmensprofil | null }
       </div>
 
       <p className="mt-6 max-w-xl text-sm text-muted-foreground/80">
-        Änderungen an bereits geprüften Angaben können eine erneute Prüfung
-        auslösen. Bis sie abgeschlossen ist, bleiben deine Zahlungen aktiv.
+        {t("utPruefungHinweis")}
       </p>
     </div>
   );
@@ -238,6 +227,7 @@ function ZeilenEintrag({
   aufKlappen: () => void;
   aufSchliessen: () => void;
 }) {
+  const t = useTranslations("konto");
   const wert = zeile.anzeige(profil);
   const [entwurf, setEntwurf] = useState<Record<string, string>>({});
   const [laeuft, setLaeuft] = useState(false);
@@ -261,7 +251,7 @@ function ZeilenEintrag({
     );
     setLaeuft(false);
     if (res.ok) {
-      toast.success("Gespeichert.");
+      toast.success(t("utGespeichert"));
       aufSchliessen();
     } else {
       toast.error(res.fehler);
@@ -272,7 +262,7 @@ function ZeilenEintrag({
     <div className="border-b border-border py-6">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <p className="font-medium">{zeile.titel}</p>
+          <p className="font-medium">{t(zeile.titel)}</p>
           {!offen && (
             <p
               className={`mt-0.5 text-[0.9375rem] ${
@@ -280,7 +270,7 @@ function ZeilenEintrag({
               }`}
             >
               {/* Kein erfundener Platzhalter — leer heißt leer (Wurzel 4). */}
-              {wert || "Nicht angegeben"}
+              {wert || t("nichtAngegeben")}
             </p>
           )}
         </div>
@@ -289,7 +279,11 @@ function ZeilenEintrag({
           onClick={offen ? aufSchliessen : starten}
           className="shrink-0 text-[0.9375rem] font-medium underline underline-offset-4 outline-none hover:opacity-70 focus-visible:ring-2 focus-visible:ring-foreground/20"
         >
-          {offen ? "Abbrechen" : wert ? "Bearbeiten" : "Hinzufügen"}
+          {offen
+            ? t("abbrechen")
+            : wert
+              ? t("bearbeiten")
+              : t("hinzufuegen")}
         </button>
       </div>
 
@@ -301,7 +295,7 @@ function ZeilenEintrag({
                 htmlFor={`feld-${f.key}`}
                 className="block text-sm text-muted-foreground"
               >
-                {f.label}
+                {t(f.label)}
               </label>
               <input
                 id={`feld-${f.key}`}
@@ -316,7 +310,7 @@ function ZeilenEintrag({
           ))}
 
           {zeile.hinweis && (
-            <p className="text-sm text-muted-foreground">{zeile.hinweis}</p>
+            <p className="text-sm text-muted-foreground">{t(zeile.hinweis)}</p>
           )}
 
           <button
@@ -325,7 +319,7 @@ function ZeilenEintrag({
             disabled={laeuft}
             className="rounded-full bg-foreground px-7 py-3 text-sm font-medium text-background outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/20 disabled:opacity-40"
           >
-            {laeuft ? "Wird gespeichert …" : "Speichern"}
+            {laeuft ? t("utSpeichernLaeuft") : t("speichern")}
           </button>
         </div>
       )}

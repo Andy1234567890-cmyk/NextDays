@@ -70,7 +70,7 @@ export function ChoiceCard({
     <button
       type="button"
       onClick={onClick}
-      className={`flex w-full items-center justify-between gap-3 rounded-2xl border p-5 text-left transition-colors ${
+      className={`flex w-full items-center justify-between gap-3 rounded-2xl border p-5 text-start transition-colors ${
         selected
           ? "border-foreground ring-1 ring-foreground"
           : "border-border hover:border-foreground/40"
@@ -105,7 +105,7 @@ export function GridTile({
     <button
       type="button"
       onClick={onClick}
-      className={`flex flex-col gap-3 rounded-2xl border p-5 text-left transition-colors ${
+      className={`flex flex-col gap-3 rounded-2xl border p-5 text-start transition-colors ${
         selected
           ? "border-foreground ring-1 ring-foreground"
           : "border-border hover:border-foreground/40"

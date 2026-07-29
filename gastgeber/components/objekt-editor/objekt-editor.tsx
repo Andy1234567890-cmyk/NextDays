@@ -7,7 +7,7 @@
 // ehrlich als „Hinzufügen" gezeigt (kein Fake, Wurzel 4).
 import { Icon } from "@iconify/react";
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "framer-motion";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -81,6 +81,7 @@ export function ObjektEditor({
   objektSteuern: ObjektSteuer[] | null;
 }) {
   const t = useTranslations("objektEditor");
+  const locale = useLocale();
   const [prop, setProp] = useState<Property>(property);
   // Preis-Stand aus den echten Quellen (rate_plans/dp_settings/property_discounts).
   // Realtime unten hält ihn aktuell; Actions spiegeln optimistisch nach.
@@ -572,8 +573,10 @@ export function ObjektEditor({
     { key: "hausregeln", titel: t("secHausregeln"), vorschau: t("hinzufuegen"), fehlt: true },
     { key: "storno", titel: t("secStorno"), vorschau: t("hinzufuegen"), fehlt: true },
     { key: "host", titel: t("secGastgeber"),
-      vorschau: formatHostingSince(profil.hosting_since)
-        ? t("hostSeit", { zeit: formatHostingSince(profil.hosting_since)! })
+      vorschau: formatHostingSince(profil.hosting_since, locale)
+        ? t("hostSeit", {
+            zeit: formatHostingSince(profil.hosting_since, locale)!,
+          })
         : (profil.full_name ?? t("hinzufuegen")),
       fehlt: !profil.full_name },
     // Co-Gastgeber direkt nach „Über den Gastgeber" — beide betreffen
@@ -623,7 +626,7 @@ export function ObjektEditor({
       {/* Linke Spalte — feste Breite + Viewport-Höhe (Abschnittsliste scrollt
           intern). Bei offener Preis-Detail-Sidebar ausgeblendet (Airbnb). */}
       <div
-        className={`h-[calc(100vh-5rem)] w-full shrink-0 flex-col border-r border-border lg:w-[26rem] ${
+        className={`h-[calc(100vh-5rem)] w-full shrink-0 flex-col border-e border-border lg:w-[26rem] ${
           detailOffen ? "hidden" : "flex"
         }`}
       >
@@ -673,7 +676,7 @@ export function ObjektEditor({
                 key={s.key}
                 type="button"
                 onClick={() => setAktiv(s.key)}
-                className={`block w-full rounded-2xl p-5 text-left outline-none transition-all focus-visible:ring-2 focus-visible:ring-foreground/20 ${
+                className={`block w-full rounded-2xl p-5 text-start outline-none transition-all focus-visible:ring-2 focus-visible:ring-foreground/20 ${
                   isAktiv
                     ? "border-2 border-foreground"
                     : "border border-border hover:shadow-md"
@@ -971,7 +974,7 @@ export function ObjektEditor({
         {schlafRaum != null && (
           <motion.aside
             key="schlaf-sidebar"
-            className="absolute inset-y-0 right-0 z-20 w-[30rem] overflow-hidden border-l border-border bg-background shadow-xl"
+            className="absolute inset-y-0 end-0 z-20 w-[30rem] overflow-hidden border-s border-border bg-background shadow-xl"
             initial={reduziert ? false : { x: "100%" }}
             animate={{ x: 0 }}
             exit={reduziert ? { opacity: 0 } : { x: "100%" }}
@@ -1072,7 +1075,7 @@ export function ObjektEditor({
                 {raumThema != null && (
                   <motion.aside
                     key="raum-sidebar"
-                    className="shrink-0 overflow-hidden border-l border-border"
+                    className="shrink-0 overflow-hidden border-s border-border"
                     initial={reduziert ? false : { width: 0, opacity: 0 }}
                     animate={{ width: "30rem", opacity: 1 }}
                     exit={reduziert ? { opacity: 0 } : { width: 0, opacity: 0 }}

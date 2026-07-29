@@ -2,6 +2,7 @@
 // lib/auth.ts — kein direkter Backend-Zugriff, kein Token im Client.
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -22,6 +23,7 @@ type MfaState = {
 };
 
 export function AuthForm({ weiter }: { weiter: string }) {
+  const t = useTranslations("auth");
   const router = useRouter();
   const [modus, setModus] = useState<Modus>("login");
   const [email, setEmail] = useState("");
@@ -60,7 +62,7 @@ export function AuthForm({ weiter }: { weiter: string }) {
         router.push(weiter);
         router.refresh();
       } else {
-        if (!currency) return setFehler("Bitte ein Land auswählen.");
+        if (!currency) return setFehler(t("landWaehlen"));
         const res = await registerHost({
           email,
           password,
@@ -105,10 +107,10 @@ export function AuthForm({ weiter }: { weiter: string }) {
       return (
         <div className="w-full max-w-sm space-y-4">
           <h2 className="font-display text-xl font-semibold">
-            Bestätige deine Anmeldung
+            {t("anmeldungBestaetigen")}
           </h2>
           <p className="text-sm text-muted-foreground">
-            Wähle, wie du deinen zweiten Faktor bestätigen möchtest.
+            {t("faktorWaehlen")}
           </p>
           {mfa.methods.includes("sms") ? (
             <button
@@ -116,9 +118,9 @@ export function AuthForm({ weiter }: { weiter: string }) {
               onClick={() => setMfaMode("sms")}
               className="w-full rounded-2xl border border-border px-4 py-4 text-left transition hover:border-foreground"
             >
-              <p className="font-medium">SMS-Code</p>
+              <p className="font-medium">{t("smsCode")}</p>
               <p className="text-sm text-muted-foreground">
-                An {mfa.phoneMasked ?? "deine Nummer"}
+                {t("anNummer", { nummer: mfa.phoneMasked ?? t("deineNummer") })}
               </p>
             </button>
           ) : null}
@@ -128,9 +130,9 @@ export function AuthForm({ weiter }: { weiter: string }) {
               onClick={() => setMfaMode("totp")}
               className="w-full rounded-2xl border border-border px-4 py-4 text-left transition hover:border-foreground"
             >
-              <p className="font-medium">Authenticator-App</p>
+              <p className="font-medium">{t("authenticatorApp")}</p>
               <p className="text-sm text-muted-foreground">
-                6-stelliger Code aus deiner App
+                {t("authenticatorHinweis")}
               </p>
             </button>
           ) : null}
@@ -142,11 +144,15 @@ export function AuthForm({ weiter }: { weiter: string }) {
     const kannWechseln = mfa.methods.length > 1;
     return (
       <div className="w-full max-w-sm space-y-4">
-        <h2 className="font-display text-xl font-semibold">Bestätigungscode</h2>
+        <h2 className="font-display text-xl font-semibold">
+          {t("bestaetigungscode")}
+        </h2>
         <p className="text-sm text-muted-foreground">
           {mfaMode === "sms"
-            ? `Wir haben einen 6-stelligen Code an ${mfa.phoneMasked ?? "deine Nummer"} gesendet.`
-            : "Gib den 6-stelligen Code aus deiner Authenticator-App ein."}
+            ? t("codeGesendet", {
+                nummer: mfa.phoneMasked ?? t("deineNummer"),
+              })
+            : t("codeAusApp")}
         </p>
         <CodeEingabe
           disabled={busy}
@@ -160,7 +166,7 @@ export function AuthForm({ weiter }: { weiter: string }) {
           disabled={busy || code.length !== 6}
           className="w-full rounded-full bg-primary px-4 py-3 font-medium text-primary-foreground disabled:opacity-60"
         >
-          {busy ? "Prüfe …" : "Anmelden"}
+          {busy ? t("prueft") : t("anmelden")}
         </button>
         {kannWechseln ? (
           <button
@@ -172,7 +178,7 @@ export function AuthForm({ weiter }: { weiter: string }) {
             }}
             className="w-full text-center text-sm text-muted-foreground underline underline-offset-2 hover:text-foreground"
           >
-            Andere Methode wählen
+            {t("andereMethode")}
           </button>
         ) : null}
       </div>
@@ -191,7 +197,7 @@ export function AuthForm({ weiter }: { weiter: string }) {
               : "text-muted-foreground"
           }`}
         >
-          Anmelden
+          {t("anmelden")}
         </button>
         <button
           type="button"
@@ -202,27 +208,27 @@ export function AuthForm({ weiter }: { weiter: string }) {
               : "text-muted-foreground"
           }`}
         >
-          Registrieren
+          {t("registrieren")}
         </button>
       </div>
 
       {modus === "register" ? (
         <>
           <Feld
-            label="Dein Name"
+            label={t("deinName")}
             value={fullName}
             onChange={setFullName}
             autoComplete="name"
             required
           />
           <Feld
-            label="Name deines Betriebs"
+            label={t("betriebName")}
             value={tenantName}
             onChange={setTenantName}
             required
           />
           <div className="space-y-1">
-            <label className="text-sm font-medium">Land</label>
+            <label className="text-sm font-medium">{t("land")}</label>
             <select
               value={country}
               onChange={(e) => setCountry(e.target.value)}
@@ -236,7 +242,7 @@ export function AuthForm({ weiter }: { weiter: string }) {
             </select>
             {currency ? (
               <p className="px-4 text-xs text-muted-foreground">
-                Abrechnungswährung: {currency}
+                {t("abrechnungswaehrung", { waehrung: currency })}
               </p>
             ) : null}
           </div>
@@ -244,7 +250,7 @@ export function AuthForm({ weiter }: { weiter: string }) {
       ) : null}
 
       <Feld
-        label="E-Mail"
+        label={t("email")}
         type="email"
         value={email}
         onChange={setEmail}
@@ -252,7 +258,7 @@ export function AuthForm({ weiter }: { weiter: string }) {
         required
       />
       <Feld
-        label="Passwort"
+        label={t("passwort")}
         type="password"
         value={password}
         onChange={setPassword}
@@ -268,16 +274,15 @@ export function AuthForm({ weiter }: { weiter: string }) {
         className="w-full rounded-full bg-primary px-4 py-3 font-medium text-primary-foreground disabled:opacity-60"
       >
         {busy
-          ? "Bitte warten …"
+          ? t("bitteWarten")
           : modus === "login"
-            ? "Anmelden"
-            : "Konto erstellen"}
+            ? t("anmelden")
+            : t("kontoErstellen")}
       </button>
 
       {modus === "register" ? (
         <p className="text-center text-xs text-muted-foreground">
-          Kostenlos starten — 8 % Provision nur auf Buchungen über myNextDays.
-          Direktbuchungen über deine eigene Seite bleiben provisionsfrei.
+          {t("provisionHinweis")}
         </p>
       ) : null}
     </form>

@@ -12,6 +12,7 @@
 // Doppelte Bestätigung, weil hier eine Sicherheitsstufe fällt: erst die
 // Rückfrage mit dem konkreten Nachteil, dann das Passwort.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -32,6 +33,7 @@ export function Sms2FaAusschalten({
    *  Faktor bestehen — das ändert die Warnung. */
   totpAktiv: boolean;
 }) {
+  const t = useTranslations("konto");
   const router = useRouter();
   const [phase, setPhase] = useState<Phase>("zu");
   const [passwort, setPasswort] = useState("");
@@ -64,7 +66,7 @@ export function Sms2FaAusschalten({
         onClick={() => setPhase("frage")}
         className="shrink-0 text-sm font-medium text-destructive underline underline-offset-2 hover:opacity-70"
       >
-        Entfernen
+        {t("smsAusEntfernen")}
       </button>
 
       {phase !== "zu" && (
@@ -85,15 +87,15 @@ export function Sms2FaAusschalten({
                   id="sms-aus-titel"
                   className="text-center font-display text-2xl font-bold"
                 >
-                  Zwei-Faktor per SMS entfernen?
+                  {t("smsAusFrageTitel")}
                 </h2>
                 {/* Die Warnung sagt, was WIRKLICH passiert — sie hängt davon
                     ab, ob noch ein zweiter Faktor übrig bleibt. Ein pauschaler
                     Text wäre in einem der beiden Fälle falsch. */}
                 <p className="mt-3 text-center text-[0.9375rem] text-muted-foreground">
                   {totpAktiv
-                    ? "Anmeldungen von neuen Geräten werden dann nur noch über deine Authenticator-App bestätigt."
-                    : "Dein Konto ist danach nur noch durch dein Passwort geschützt. Bei Anmeldungen von neuen Geräten fragen wir keinen Code mehr ab."}
+                    ? t("smsAusWarnungTotp")
+                    : t("smsAusWarnungOhne")}
                 </p>
                 {/* Ohne Passwort-Schritt endet der Vorgang hier — dann muss
                     ein Serverfehler auch hier sichtbar sein. */}
@@ -112,7 +114,7 @@ export function Sms2FaAusschalten({
                     className="flex-1"
                     onClick={schliessen}
                   >
-                    Abbrechen
+                    {t("smsAusAbbrechen")}
                   </Button>
                   <Button
                     variant="destructive"
@@ -122,7 +124,7 @@ export function Sms2FaAusschalten({
                     }
                     disabled={laeuft}
                   >
-                    {laeuft ? "…" : "Weiter"}
+                    {laeuft ? t("smsAusLaeuftKurz") : t("smsAusWeiter")}
                   </Button>
                 </div>
               </>
@@ -132,13 +134,15 @@ export function Sms2FaAusschalten({
                   id="sms-aus-titel"
                   className="text-center font-display text-2xl font-bold"
                 >
-                  Bestätige mit deinem Passwort
+                  {t("smsAusPasswortTitel")}
                 </h2>
                 <p className="mt-3 text-center text-[0.9375rem] text-muted-foreground">
-                  Damit niemand sonst deinen zweiten Faktor entfernen kann.
+                  {t("smsAusPasswortText")}
                 </p>
                 <label className="mt-6 flex flex-col gap-2">
-                  <span className="text-sm font-medium">Passwort</span>
+                  <span className="text-sm font-medium">
+                    {t("smsAusPasswortLabel")}
+                  </span>
                   <Input
                     type="password"
                     value={passwort}
@@ -163,7 +167,7 @@ export function Sms2FaAusschalten({
                     onClick={schliessen}
                     disabled={laeuft}
                   >
-                    Abbrechen
+                    {t("smsAusAbbrechen")}
                   </Button>
                   <Button
                     variant="destructive"
@@ -171,7 +175,7 @@ export function Sms2FaAusschalten({
                     onClick={() => void entfernen()}
                     disabled={laeuft || passwort.length === 0}
                   >
-                    {laeuft ? "Wird entfernt …" : "Entfernen"}
+                    {laeuft ? t("smsAusEntfernenLaeuft") : t("smsAusEntfernen")}
                   </Button>
                 </div>
               </>

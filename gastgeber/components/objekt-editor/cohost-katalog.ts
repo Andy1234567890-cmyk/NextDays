@@ -10,63 +10,65 @@
 // (features/auth/permissions.py) — dieser Katalog ist reine Darstellung.
 import type { CohostAccess } from "@/lib/cohosts";
 
+// Datenmodul ohne React-Kontext: `useTranslations` läuft hier nicht. Die
+// Einträge tragen deshalb Übersetzungs-SCHLÜSSEL (…Key), die erst in der
+// rendernden Komponente über t(...) aufgelöst werden. `key` ist ein API-Wert
+// und bleibt unübersetzt.
 export interface ZugriffsStufe {
   key: CohostAccess;
-  label: string;
-  kurz: string;
+  labelKey: string;
+  kurzKey: string;
   icon: string;
   /** Was diese Stufe darf — vollständig, nicht beispielhaft. */
-  darf: string[];
+  darfKeys: string[];
   /** Was sie NICHT darf. Leer bei Vollzugriff. */
-  darfNicht: string[];
+  darfNichtKeys: string[];
 }
 
 export const ZUGRIFFS_STUFEN: ZugriffsStufe[] = [
   {
     key: "full",
-    label: "Vollzugriff",
-    kurz: "Verwaltet das Objekt vollständig",
+    labelKey: "stufeVollLabel",
+    kurzKey: "stufeVollKurz",
     icon: "ph:shield-star",
-    darf: [
-      "Objektdaten, Fotos und Beschreibung bearbeiten",
-      "Preise und Rabatte festlegen",
-      "Kalender bearbeiten und Verfügbarkeit pflegen",
-      "Buchungsanfragen annehmen und ablehnen",
-      "Mit Gästen schreiben",
-      "Einnahmen und Auszahlungen einsehen",
-      "Weitere Co-Gastgeber einladen (nur mit eingeschränktem Zugriff)",
+    darfKeys: [
+      "stufeVollDarf1",
+      "stufeVollDarf2",
+      "stufeVollDarf3",
+      "stufeVollDarf4",
+      "stufeVollDarf5",
+      "stufeVollDarf6",
+      "stufeVollDarf7",
     ],
-    darfNicht: [
-      "Auszahlungsdaten einrichten oder ändern — das bleibt bei dir",
-    ],
+    darfNichtKeys: ["stufeVollDarfNicht1"],
   },
   {
     key: "calendar_messaging",
-    label: "Kalender und Nachrichten",
-    kurz: "Sieht den Kalender, schreibt mit Gästen",
+    labelKey: "stufeKalenderNachrichtenLabel",
+    kurzKey: "stufeKalenderNachrichtenKurz",
     icon: "ph:chat-circle-dots",
-    darf: [
-      "Kalender ansehen — sehen, wann Gäste an- und abreisen",
-      "Mit Gästen schreiben, Fragen beantworten, Anreise abstimmen",
+    darfKeys: [
+      "stufeKalenderNachrichtenDarf1",
+      "stufeKalenderNachrichtenDarf2",
     ],
-    darfNicht: [
-      "Den Kalender ändern",
-      "Preise oder Objektdaten bearbeiten",
-      "Buchungen annehmen oder ablehnen",
-      "Einnahmen einsehen",
+    darfNichtKeys: [
+      "stufeKalenderNachrichtenDarfNicht1",
+      "stufeKalenderNachrichtenDarfNicht2",
+      "stufeKalenderNachrichtenDarfNicht3",
+      "stufeKalenderNachrichtenDarfNicht4",
     ],
   },
   {
     key: "calendar",
-    label: "Nur Kalender",
-    kurz: "Sieht nur, wer wann da ist",
+    labelKey: "stufeKalenderLabel",
+    kurzKey: "stufeKalenderKurz",
     icon: "ph:calendar-blank",
-    darf: ["Kalender ansehen — sehen, wann Gäste an- und abreisen"],
-    darfNicht: [
-      "Den Kalender ändern",
-      "Mit Gästen schreiben",
-      "Preise oder Objektdaten bearbeiten",
-      "Einnahmen einsehen",
+    darfKeys: ["stufeKalenderDarf1"],
+    darfNichtKeys: [
+      "stufeKalenderDarfNicht1",
+      "stufeKalenderDarfNicht2",
+      "stufeKalenderDarfNicht3",
+      "stufeKalenderDarfNicht4",
     ],
   },
 ];

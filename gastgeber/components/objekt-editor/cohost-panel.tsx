@@ -10,6 +10,7 @@
 // Backend; diese Oberfläche zeigt sie nur an.
 import { Icon } from "@iconify/react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -26,6 +27,10 @@ import { BriefIllustration } from "./brief-illustration";
 import { CohostBeteiligung } from "./cohost-beteiligung";
 import { stufeVon, ZUGRIFFS_STUFEN } from "./cohost-katalog";
 import { CohostWizard } from "./cohost-wizard";
+
+/** Airbnb-Grenze: höchstens so viele Co-Gastgeber je Objekt (offene
+ *  Einladungen zählen mit). Das Backend erzwingt dieselbe Zahl. */
+const MAX_COHOSTS = 10;
 
 /** Anfangsbuchstaben als Avatar — kein Foto, aber persönlicher als ein Icon. */
 function Initialen({ name, email }: { name: string | null; email: string | null }) {
@@ -64,6 +69,7 @@ export function CohostPanel({
   /** Blendet die linke Abschnittsliste aus, solange eine Sidebar offen ist. */
   onDetailOffen?: (offen: boolean) => void;
 }) {
+  const t = useTranslations("objektEditor");
   const reduziert = useReducedMotion();
   const [wizardOffen, setWizardOffenState] = useState(false);
   // Co-Gastgeber, dessen Beteiligung gerade bearbeitet wird (null = keine).
@@ -85,18 +91,23 @@ export function CohostPanel({
   /** Beteiligung als kurzer Text für die Liste. */
   function beteiligungText(c: Cohost): string {
     if (c.share_kind === "percent" && c.share_bps) {
-      return `${c.share_bps / 100} % je Buchung`;
+      return t("cohostAnteilProzentJeBuchung", { pct: c.share_bps / 100 });
     }
     if (c.share_kind === "fixed" && c.share_fixed_cents) {
-      return `${formatCurrency(c.share_fixed_cents / 100, c.share_currency ?? waehrung)} je Buchung`;
+      return t("cohostAnteilBetragJeBuchung", {
+        betrag: formatCurrency(
+          c.share_fixed_cents / 100,
+          c.share_currency ?? waehrung,
+        ),
+      });
     }
-    return "Unentgeltlich";
+    return t("cohostUnentgeltlich");
   }
 
   const leer = cohosts.length === 0 && einladungen.length === 0;
   // Airbnb-Grenze: 10 je Objekt. Offene Einladungen zählen mit — das erzwingt
   // auch das Backend, hier wird der Knopf nur ehrlich deaktiviert.
-  const voll = cohosts.length + einladungen.length >= 10;
+  const voll = cohosts.length + einladungen.length >= MAX_COHOSTS;
 
   async function zugriffAendern(c: Cohost, access: Cohost["access"]) {
     setLaeuft(c.id);
@@ -107,7 +118,7 @@ export function CohostPanel({
         cohosts.map((x) => (x.id === c.id ? res.data : x)),
         einladungen,
       );
-      toast.success("Zugriff geändert.");
+      toast.success(t("cohostZugriffGeaendert"));
     } else {
       toast.error(res.fehler);
     }
@@ -122,7 +133,7 @@ export function CohostPanel({
         cohosts.filter((x) => x.id !== c.id),
         einladungen,
       );
-      toast.success("Zugriff entzogen.");
+      toast.success(t("cohostZugriffEntzogen"));
     } else {
       toast.error(res.fehler);
     }
@@ -137,7 +148,7 @@ export function CohostPanel({
         cohosts,
         einladungen.filter((x) => x.id !== inv.id),
       );
-      toast.success("Einladung zurückgezogen.");
+      toast.success(t("cohostEinladungZurueckgezogen"));
     } else {
       toast.error(res.fehler);
     }
@@ -150,11 +161,10 @@ export function CohostPanel({
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
               <h2 className="font-sans text-[2rem] font-bold tracking-tight">
-                Co-Gastgeber
+                {t("cohostTitel")}
               </h2>
               <p className="mt-2 text-[0.9375rem] text-muted-foreground">
-                Hol dir Unterstützung bei diesem Objekt. Du legst fest, worauf
-                jede Person Zugriff hat.
+                {t("cohostText")}
               </p>
             </div>
             {!leer && (
@@ -164,7 +174,7 @@ export function CohostPanel({
                 onClick={() => setWizardOffen(true)}
                 className="shrink-0 rounded-full bg-muted px-5 py-2.5 text-sm font-semibold outline-none transition-colors hover:bg-muted/70 focus-visible:ring-2 focus-visible:ring-foreground/20 disabled:opacity-40"
               >
-                Einladen
+                {t("cohostEinladen")}
               </button>
             )}
           </div>
@@ -174,19 +184,16 @@ export function CohostPanel({
                worum es geht: eine Einladung geht raus. */
             <div className="mt-12 flex flex-col items-center text-center">
               <BriefIllustration className="max-w-[15rem]" />
-              <p className="mt-8 text-lg font-semibold">
-                Lade einen Co-Gastgeber ein
-              </p>
+              <p className="mt-8 text-lg font-semibold">{t("cohostLeerTitel")}</p>
               <p className="mt-2 max-w-md text-[0.9375rem] text-muted-foreground">
-                Ein Co-Gastgeber kann dich bei allem unterstützen — von der
-                Kalenderpflege bis zur Betreuung deiner Gäste.
+                {t("cohostLeerText")}
               </p>
               <button
                 type="button"
                 onClick={() => setWizardOffen(true)}
                 className="mt-8 rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/20"
               >
-                Co-Gastgeber einladen
+                {t("cohostLeerCta")}
               </button>
             </div>
           ) : (
@@ -202,11 +209,11 @@ export function CohostPanel({
                     <Initialen name={c.full_name} email={c.email} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">
-                        {c.full_name || c.email || "Unbekannt"}
+                        {c.full_name || c.email || t("cohostUnbekannt")}
                       </p>
                       <p className="mt-0.5 flex items-center gap-1.5 text-sm text-muted-foreground">
                         <Icon icon={stufe.icon} className="size-4 shrink-0" />
-                        {stufe.label}
+                        {t(stufe.labelKey)}
                       </p>
                       {/* Beteiligung als eigene Zeile — Geld gehört nicht in
                           eine Nebenbemerkung. */}
@@ -232,12 +239,14 @@ export function CohostPanel({
                       onChange={(e) =>
                         void zugriffAendern(c, e.target.value as Cohost["access"])
                       }
-                      aria-label={`Zugriff von ${c.full_name || c.email}`}
+                      aria-label={t("cohostZugriffVon", {
+                        name: c.full_name || c.email || t("cohostUnbekannt"),
+                      })}
                       className="shrink-0 rounded-full border border-border bg-background px-4 py-2 text-sm outline-none focus-visible:border-foreground disabled:opacity-50"
                     >
                       {ZUGRIFFS_STUFEN.map((s) => (
                         <option key={s.key} value={s.key}>
-                          {s.label}
+                          {t(s.labelKey)}
                         </option>
                       ))}
                     </select>
@@ -245,7 +254,9 @@ export function CohostPanel({
                       type="button"
                       disabled={laeuft === c.id}
                       onClick={() => void entfernen(c)}
-                      aria-label={`${c.full_name || c.email} entfernen`}
+                      aria-label={t("cohostEntfernenAria", {
+                        name: c.full_name || c.email || t("cohostUnbekannt"),
+                      })}
                       className="flex size-9 shrink-0 items-center justify-center rounded-full outline-none transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-foreground/20 disabled:opacity-50"
                     >
                       <Icon icon="ph:x" className="size-4" />
@@ -272,7 +283,9 @@ export function CohostPanel({
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">{inv.email}</p>
                       <p className="mt-0.5 text-sm text-muted-foreground">
-                        Eingeladen · {stufe.label} · noch nicht angenommen
+                        {t("cohostEingeladenZeile", {
+                          stufe: t(stufe.labelKey),
+                        })}
                       </p>
                     </div>
                     <button
@@ -281,7 +294,7 @@ export function CohostPanel({
                       onClick={() => void einladungZurueck(inv)}
                       className="shrink-0 text-sm font-semibold underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-foreground/20 disabled:opacity-50"
                     >
-                      Zurückziehen
+                      {t("cohostZurueckziehen")}
                     </button>
                   </div>
                 );
@@ -289,7 +302,7 @@ export function CohostPanel({
 
               {voll && (
                 <p className="mt-5 text-sm text-muted-foreground">
-                  Ein Objekt kann höchstens 10 Co-Gastgeber haben.
+                  {t("cohostMaxErreicht", { max: MAX_COHOSTS })}
                 </p>
               )}
             </div>

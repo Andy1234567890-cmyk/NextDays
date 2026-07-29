@@ -4,6 +4,7 @@ from src.features.channel_manager.ari_push import (
     AriPushMixin,
     _group_iso_days_to_ranges,
     _iso_days,
+    _merge_equal_value_days,
 )
 
 
@@ -53,3 +54,46 @@ def test_group_ranges_bundles_consecutive_days() -> None:
     assert _group_iso_days_to_ranges(
         {"2026-08-01", "2026-08-02", "2026-08-04"}
     ) == [("2026-08-01", "2026-08-02"), ("2026-08-04", "2026-08-04")]
+
+
+# --- Reconcile-Drift: date_range statt Einzeltag-Objekte --------------------
+# Channex-Zertifizierung 17.07.2026, dreimal: „Use date_range syntax with merged
+# sequences instead of single-date objects."
+
+
+def test_merge_equal_value_days_bundles_consecutive_same_value() -> None:
+    drift = {"2026-11-10": 12000, "2026-11-11": 12000, "2026-11-12": 12000}
+    assert _merge_equal_value_days(drift, "rate_cents", "rp-1") == [
+        {
+            "date_from": "2026-11-10",
+            "date_to": "2026-11-12",
+            "rate_cents": 12000,
+            "rate_plan_id": "rp-1",
+        }
+    ]
+
+
+def test_merge_equal_value_days_never_merges_different_values() -> None:
+    """KRITISCH: unterschiedliche Preise dürfen NIE in eine Range fallen —
+    sonst überschriebe der Push einen Tag mit dem falschen Betrag."""
+    drift = {"2026-11-10": 12000, "2026-11-11": 9900, "2026-11-12": 12000}
+    segmente = _merge_equal_value_days(drift, "rate_cents", "rp-1")
+    assert len(segmente) == 3
+    assert all(s["date_from"] == s["date_to"] for s in segmente)
+    nach_tag = {s["date_from"]: s["rate_cents"] for s in segmente}
+    assert nach_tag == drift
+
+
+def test_merge_equal_value_days_splits_at_gaps() -> None:
+    # Gleicher Wert, aber Lücke am 12.: zwei Ranges, der 12. bleibt unberührt.
+    drift = {"2026-11-10": 5, "2026-11-11": 5, "2026-11-13": 5}
+    segmente = _merge_equal_value_days(drift, "min_stay", "rp-1")
+    assert [(s["date_from"], s["date_to"]) for s in segmente] == [
+        ("2026-11-10", "2026-11-11"),
+        ("2026-11-13", "2026-11-13"),
+    ]
+    assert all(s["min_stay"] == 5 for s in segmente)
+
+
+def test_merge_equal_value_days_empty() -> None:
+    assert _merge_equal_value_days({}, "rate_cents", "rp-1") == []

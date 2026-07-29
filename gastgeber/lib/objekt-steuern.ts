@@ -39,39 +39,45 @@ export interface ObjektSteuer {
 
 export type ObjektSteuerInput = Omit<ObjektSteuer, "id" | "property_id">;
 
+// Die folgenden Listen sind Anzeigetexte in einem Modul ohne React-Kontext
+// (`useTranslations` läuft hier nicht). Sie tragen deshalb nur Übersetzungs-
+// SCHLÜSSEL des Bereichs „objektEditor"; aufgelöst werden sie im Panel. Die
+// Schlüssel der Records (charge_mode, taxable_base) sind API-Werte und bleiben
+// unverändert.
+
 /** Vorschläge für die Steuerart.
  *
  *  Bewusst eine VORSCHLAGSLISTE und kein Enum: Airbnb nennt öffentlich nur
  *  vier Arten und schreibt ausdrücklich „and others", die verfügbaren Arten
  *  hängen zudem vom Land ab. Ein festes Enum hätte geraten werden müssen
  *  (Wurzel 4). Der Gastgeber kann eintragen, was seine Behörde verlangt. */
-export const STEUERART_VORSCHLAEGE = [
-  "Kurtaxe",
-  "Tourismusabgabe",
-  "Übernachtungssteuer",
-  "Beherbergungssteuer",
-  "Umsatzsteuer",
-  "Gemeindeabgabe",
-  "Kulturförderabgabe",
+export const STEUERART_VORSCHLAEGE_KEYS = [
+  "steuerartKurtaxe",
+  "steuerartTourismusabgabe",
+  "steuerartUebernachtungssteuer",
+  "steuerartBeherbergungssteuer",
+  "steuerartUmsatzsteuer",
+  "steuerartGemeindeabgabe",
+  "steuerartKulturfoerderabgabe",
 ] as const;
 
-export const ABRECHNUNGSART: Record<ChargeMode, string> = {
-  percentage_per_booking: "Prozentsatz pro Buchung",
-  per_guest: "Betrag pro Gast",
-  per_night: "Betrag pro Nacht",
-  per_guest_per_night: "Betrag pro Gast und Nacht",
+export const ABRECHNUNGSART_KEYS: Record<ChargeMode, string> = {
+  percentage_per_booking: "abrechnungProzentJeBuchung",
+  per_guest: "abrechnungBetragJeGast",
+  per_night: "abrechnungBetragJeNacht",
+  per_guest_per_night: "abrechnungBetragJeGastUndNacht",
 };
 
 /** Worauf ein Prozentsatz rechnet. Die Servicegebühr der Plattform fehlt
  *  bewusst und darf nie dazukommen — sie ist unser Entgelt, nicht die
  *  Leistung des Gastgebers. Airbnb schließt sie ebenso aus. */
-export const BEMESSUNGSGRUNDLAGE: Record<TaxableBase, string> = {
-  base_price: "Grundpreis",
-  cleaning_fee: "Reinigungsgebühr",
-  linen_fee: "Bettwäschegebühr",
-  resort_fee: "Resortgebühr",
-  management_fee: "Verwaltungsgebühr",
-  community_fee: "Gemeinschaftsgebühr",
+export const BEMESSUNGSGRUNDLAGE_KEYS: Record<TaxableBase, string> = {
+  base_price: "grundlageGrundpreis",
+  cleaning_fee: "grundlageReinigungsgebuehr",
+  linen_fee: "grundlageBettwaeschegebuehr",
+  resort_fee: "grundlageResortgebuehr",
+  management_fee: "grundlageVerwaltungsgebuehr",
+  community_fee: "grundlageGemeinschaftsgebuehr",
 };
 
 export async function getObjektSteuern(

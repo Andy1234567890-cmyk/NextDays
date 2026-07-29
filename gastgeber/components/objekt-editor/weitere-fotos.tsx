@@ -103,7 +103,7 @@ export function WeitereFotos({
                     await deletePhoto(propertyId, f.id).catch(() => {});
                     onFotoEntfernt(f.id, f.url);
                   }}
-                  className="absolute right-2 top-2 flex size-8 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm transition-colors hover:bg-background"
+                  className="absolute end-2 top-2 flex size-8 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm transition-colors hover:bg-background"
                 >
                   <Icon icon="ph:trash" className="size-4" />
                 </button>
@@ -269,7 +269,7 @@ function UploadModal({
                   type="button"
                   aria-label={t("fotoLoeschen")}
                   onClick={() => setDateien((v) => v.filter((_, j) => j !== i))}
-                  className="absolute right-1.5 top-1.5 flex size-7 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm transition-colors hover:bg-background"
+                  className="absolute end-1.5 top-1.5 flex size-7 items-center justify-center rounded-full bg-background/90 text-foreground shadow-sm transition-colors hover:bg-background"
                 >
                   <Icon icon="ph:x" className="size-4" />
                 </button>
@@ -321,7 +321,7 @@ function Lightbox({
           type="button"
           aria-label={t("schliessen")}
           onClick={onSchliesse}
-          className="absolute left-6 top-8 flex size-10 items-center justify-center rounded-full bg-muted text-foreground transition-colors hover:bg-muted/70 lg:left-10"
+          className="absolute start-6 top-8 flex size-10 items-center justify-center rounded-full bg-muted text-foreground transition-colors hover:bg-muted/70 lg:start-10"
         >
           <Icon icon="ph:x" className="size-5" />
         </button>

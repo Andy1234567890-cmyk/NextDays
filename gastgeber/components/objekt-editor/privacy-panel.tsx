@@ -191,7 +191,7 @@ export function PrivacyPanel({
                   key={typ}
                   type="button"
                   onClick={() => setTypWahl(typ)}
-                  className={`flex w-full items-center justify-between gap-4 rounded-2xl border px-5 py-4 text-left transition-colors ${
+                  className={`flex w-full items-center justify-between gap-4 rounded-2xl border px-5 py-4 text-start transition-colors ${
                     aktiv ? "border-foreground bg-muted/50" : "border-border hover:border-foreground"
                   }`}
                 >

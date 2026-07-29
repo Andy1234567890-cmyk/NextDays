@@ -64,7 +64,7 @@ export function KachelGross({
   onOeffne: () => void;
 }) {
   return (
-    <button type="button" onClick={onOeffne} className="w-[13.5rem] text-left">
+    <button type="button" onClick={onOeffne} className="w-[13.5rem] text-start">
       <motion.div
         layoutId={`kachel-${raum.id}`}
         transition={KACHEL_SPRING}

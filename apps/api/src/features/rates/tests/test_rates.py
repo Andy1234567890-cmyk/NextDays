@@ -386,6 +386,66 @@ def test_set_rate_plan_min_stays_upserts_and_enqueues(monkeypatch) -> None:  # n
     assert "rate_cents" not in seg  # reiner Min-Stay-Push, kein Preis
 
 
+def test_set_min_stays_weekday_mask_sends_one_request(monkeypatch) -> None:  # noqa: ANN001
+    """Wochentagsmaske → MEHRERE Bereiche, aber GENAU EIN Channex-Request.
+
+    Channex-Zertifizierung 17.07.2026, „Min Stay Update — Failed": erwartet
+    wurde genau ein Property.UpdateRestrictions, gesendet wurden drei. Ursache
+    war ein Enqueue je zusammenhängendem Bereich; die Bereiche gehören in EIN
+    segments-Array.
+    """
+    from src.features.rates import service as svc_mod
+    from src.features.rates.schemas import RatePlanMinStaySet
+
+    enqueued: list = []
+    monkeypatch.setattr(
+        svc_mod, "try_enqueue_ari",
+        lambda *a, **k: enqueued.append((a, k)),
+    )
+    svc = _svc(_OWN_PLAN)
+    # Nur montags im November 2026 → 2., 9., 16., 23., 30. = fünf Einzelbereiche.
+    svc.set_min_stays(
+        _ctx(), "rp-1",
+        RatePlanMinStaySet(
+            start="2026-11-01", end="2026-12-01", min_stay=2, weekdays=[0]
+        ),
+    )
+    assert len(enqueued) == 1, "je Bereich ein Request wäre der Zert-Fehler"
+    segments = enqueued[0][0][4]["segments"]
+    assert len(segments) == 5
+    assert all(s["min_stay"] == 2 for s in segments)
+    assert all(s["rate_plan_id"] == "rp-1" for s in segments)
+    # Einzeltage bleiben Einzeltage (date_from == date_to), keine Lücken-Brücke.
+    assert [s["date_from"] for s in segments] == [
+        "2026-11-02", "2026-11-09", "2026-11-16", "2026-11-23", "2026-11-30",
+    ]
+    assert all(s["date_from"] == s["date_to"] for s in segments)
+
+
+def test_set_restrictions_weekday_mask_sends_one_request(monkeypatch) -> None:  # noqa: ANN001
+    """Wie oben für CTA/CTD/Max-Stay: ein Request mit mehreren `rows`."""
+    from src.features.rates import service as svc_mod
+    from src.features.rates.schemas import RatePlanRestrictionSet
+
+    enqueued: list = []
+    monkeypatch.setattr(
+        svc_mod, "try_enqueue_ari",
+        lambda *a, **k: enqueued.append((a, k)),
+    )
+    svc = _svc(_OWN_PLAN)
+    svc.set_restrictions(
+        _ctx(), "rp-1",
+        RatePlanRestrictionSet(
+            start="2026-11-01", end="2026-12-01",
+            weekdays=[0], closed_to_arrival=True,
+        ),
+    )
+    assert len(enqueued) == 1
+    rows = enqueued[0][0][4]["rows"]
+    assert len(rows) == 5
+    assert all(r["closed_to_arrival"] is True for r in rows)
+
+
 def test_clear_rate_plan_min_stays_deletes(monkeypatch) -> None:  # noqa: ANN001
     from src.features.rates import service as svc_mod
     from src.features.rates.schemas import RatePlanMinStaySet

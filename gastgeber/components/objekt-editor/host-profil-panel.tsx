@@ -12,7 +12,7 @@
 // abgeleitet (aus users) und read-only. Nichts erfunden.
 import { Icon } from "@iconify/react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import {
@@ -59,6 +59,7 @@ export function HostProfilPanel({
   onDetailOffen?: (offen: boolean) => void;
 }) {
   const t = useTranslations("objektEditor");
+  const locale = useLocale();
   const reduziert = useReducedMotion();
   const [detail, setDetailState] = useState<Detail | null>(null);
   // Avatar-Upload-Zustand (kein Draft: das Foto ist sofort gespeichert).
@@ -161,9 +162,11 @@ export function HostProfilPanel({
                 {profile.full_name}
               </p>
             )}
-            {formatHostingSince(profile.hosting_since) && (
+            {formatHostingSince(profile.hosting_since, locale) && (
               <p className="mt-1 text-sm text-muted-foreground">
-                {t("hostSeit", { zeit: formatHostingSince(profile.hosting_since)! })}
+                {t("hostSeit", {
+                  zeit: formatHostingSince(profile.hosting_since, locale)!,
+                })}
               </p>
             )}
           </div>
@@ -172,7 +175,7 @@ export function HostProfilPanel({
           <button
             type="button"
             onClick={() => setDetail("intro")}
-            className="mt-8 block w-full rounded-2xl border border-dashed border-border p-6 text-left outline-none transition-colors hover:border-foreground focus-visible:ring-2 focus-visible:ring-foreground/20"
+            className="mt-8 block w-full rounded-2xl border border-dashed border-border p-6 text-start outline-none transition-colors hover:border-foreground focus-visible:ring-2 focus-visible:ring-foreground/20"
           >
             {profile.intro?.trim() ? (
               <p className="text-[0.9375rem] leading-relaxed">{profile.intro}</p>
@@ -269,7 +272,7 @@ export function HostProfilPanel({
         {detail != null && (
           <motion.aside
             key="host-sidebar"
-            className="shrink-0 overflow-hidden border-l border-border"
+            className="shrink-0 overflow-hidden border-s border-border"
             initial={reduziert ? false : { width: 0, opacity: 0 }}
             animate={{ width: "32rem", opacity: 1 }}
             exit={reduziert ? { opacity: 0 } : { width: 0, opacity: 0 }}
@@ -674,13 +677,13 @@ function SprachenSidebar({
       <div className="relative">
         <Icon
           icon="ph:magnifying-glass"
-          className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+          className="absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
         />
         <input
           value={suche}
           onChange={(e) => setSuche(e.target.value)}
           placeholder={t("hostLanguagesSuche")}
-          className="w-full rounded-full border border-border bg-transparent py-3 pl-11 pr-4 outline-none focus:border-foreground"
+          className="w-full rounded-full border border-border bg-transparent py-3 ps-11 pe-4 outline-none focus:border-foreground"
         />
       </div>
       <div className="mt-4 divide-y divide-border">
@@ -691,7 +694,7 @@ function SprachenSidebar({
               key={code}
               type="button"
               onClick={() => toggle(code)}
-              className="flex w-full items-center justify-between gap-4 py-4 text-left"
+              className="flex w-full items-center justify-between gap-4 py-4 text-start"
             >
               <span className="font-medium">{t(`lang_${code}`)}</span>
               <span
@@ -778,13 +781,13 @@ function InteressenSidebar({
         <div className="relative mt-6">
           <Icon
             icon="ph:magnifying-glass"
-            className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+            className="absolute start-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
           />
           <input
             value={suche}
             onChange={(e) => setSuche(e.target.value)}
             placeholder={t("hostInterestsSuche")}
-            className="w-full rounded-full border border-border bg-transparent py-3 pl-11 pr-4 outline-none focus:border-foreground"
+            className="w-full rounded-full border border-border bg-transparent py-3 ps-11 pe-4 outline-none focus:border-foreground"
           />
         </div>
       )}
@@ -903,7 +906,7 @@ function ZeileButton({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center gap-4 py-4 text-left outline-none transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-foreground/20"
+      className="flex w-full items-center gap-4 py-4 text-start outline-none transition-colors hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-foreground/20"
     >
       <Icon icon={icon} className="size-6 shrink-0 text-muted-foreground" />
       <div className="min-w-0 flex-1">

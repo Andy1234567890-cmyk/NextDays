@@ -5,6 +5,7 @@
 // Platzhalter {{guest_name}} / {{property}} / {{check_in}} / {{check_out}} füllt
 // der Server beim Einfügen im Chat.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -16,7 +17,15 @@ import { erstelleVorlage, loescheVorlage } from "@/lib/posteingang-actions";
 
 const PLATZHALTER = ["{{guest_name}}", "{{property}}", "{{check_in}}", "{{check_out}}"];
 
+// Die Beispiel-Zeile im Textfeld nennt zwei dieser Platzhalter. Sie werden als
+// Variablen in die Übersetzung gereicht: so bleiben sie mit PLATZHALTER in
+// Deckung und die geschweiften Klammern kollidieren nicht mit der ICU-Syntax.
+const [PLATZHALTER_GAST, PLATZHALTER_OBJEKT] = PLATZHALTER;
+
 export function VorlagenVerwaltung({ initial }: { initial: QuickReply[] }) {
+  const t = useTranslations("posteingang");
+  // „Speichern"/„Abbrechen" liegen schon im gemeinsamen Bereich — nicht doppeln.
+  const tg = useTranslations("gemeinsam");
   const [liste, setListe] = useState<QuickReply[]>(initial);
   const [formOffen, setFormOffen] = useState(false);
   const [titel, setTitel] = useState("");
@@ -53,22 +62,22 @@ export function VorlagenVerwaltung({ initial }: { initial: QuickReply[] }) {
         className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
       >
         <Icon icon="ph:arrow-left" className="size-4" />
-        Zurück zum Posteingang
+        {t("zurueckZumPosteingang")}
       </Link>
 
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-semibold tracking-tight">
-            Vorlagen verwalten
+            {t("vorlagenTitel")}
           </h1>
           <p className="mt-1 text-muted-foreground">
-            Schnellantworten auf häufige Fragen – mit Platzhaltern.
+            {t("vorlagenUntertitel")}
           </p>
         </div>
         {!formOffen && (
           <Button type="button" onClick={() => setFormOffen(true)}>
             <Icon icon="ph:plus" className="mr-1.5 size-4" />
-            Erstellen
+            {t("erstellen")}
           </Button>
         )}
       </div>
@@ -79,23 +88,30 @@ export function VorlagenVerwaltung({ initial }: { initial: QuickReply[] }) {
         <div className="mb-8 rounded-2xl border border-border p-5">
           <div className="space-y-4">
             <div>
-              <label className="mb-1 block text-sm font-medium">Titel</label>
+              <label className="mb-1 block text-sm font-medium">
+                {t("vorlageTitel")}
+              </label>
               <Input
                 value={titel}
                 onChange={(e) => setTitel(e.target.value)}
-                placeholder="z. B. Check-in-Infos"
+                placeholder={t("vorlageTitelPlatzhalter")}
                 disabled={busy}
                 autoFocus
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium">Nachricht</label>
+              <label className="mb-1 block text-sm font-medium">
+                {t("vorlageNachricht")}
+              </label>
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
                 rows={4}
                 disabled={busy}
-                placeholder="Hallo {{guest_name}}, dein Check-in in {{property}} ist ab 15 Uhr…"
+                placeholder={t("vorlageNachrichtPlatzhalter", {
+                  gast: PLATZHALTER_GAST,
+                  objekt: PLATZHALTER_OBJEKT,
+                })}
                 className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
               />
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -103,7 +119,7 @@ export function VorlagenVerwaltung({ initial }: { initial: QuickReply[] }) {
                   <button
                     key={p}
                     type="button"
-                    onClick={() => setText((t) => `${t}${p}`)}
+                    onClick={() => setText((vorher) => `${vorher}${p}`)}
                     className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/70"
                   >
                     {p}
@@ -117,7 +133,7 @@ export function VorlagenVerwaltung({ initial }: { initial: QuickReply[] }) {
                 onClick={() => void anlegen()}
                 disabled={busy || !titel.trim() || !text.trim()}
               >
-                Speichern
+                {tg("speichern")}
               </Button>
               <button
                 type="button"
@@ -125,7 +141,7 @@ export function VorlagenVerwaltung({ initial }: { initial: QuickReply[] }) {
                 disabled={busy}
                 className="text-sm font-medium underline underline-offset-2 hover:opacity-70"
               >
-                Abbrechen
+                {tg("abbrechen")}
               </button>
             </div>
           </div>
@@ -135,8 +151,8 @@ export function VorlagenVerwaltung({ initial }: { initial: QuickReply[] }) {
       {liste.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border py-16 text-center text-muted-foreground">
           <Icon icon="ph:chat-dots" className="mx-auto size-8" />
-          <p className="mt-2 font-medium">Noch keine Vorlagen</p>
-          <p className="text-sm">Erstelle deine erste Schnellantwort.</p>
+          <p className="mt-2 font-medium">{t("keineVorlagenTitel")}</p>
+          <p className="text-sm">{t("keineVorlagenText")}</p>
         </div>
       ) : (
         <ul className="space-y-3">
@@ -153,7 +169,7 @@ export function VorlagenVerwaltung({ initial }: { initial: QuickReply[] }) {
               </div>
               <button
                 type="button"
-                aria-label="Löschen"
+                aria-label={t("loeschen")}
                 onClick={() => void loeschen(q.id)}
                 className="shrink-0 rounded-full p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-destructive"
               >

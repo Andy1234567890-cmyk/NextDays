@@ -16,6 +16,7 @@
 // Währung strikt aus den Daten (Wurzel 4): fehlt sie, rendert formatCurrency
 // symbollos statt einen €-Ersatzwert zu zeigen.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { currencySymbol } from "@nextdays/currency";
@@ -23,9 +24,9 @@ import { Button } from "@nextdays/ui/button";
 import { Input } from "@nextdays/ui/input";
 
 import {
-  ABRECHNUNGSART,
-  BEMESSUNGSGRUNDLAGE,
-  STEUERART_VORSCHLAEGE,
+  ABRECHNUNGSART_KEYS,
+  BEMESSUNGSGRUNDLAGE_KEYS,
+  STEUERART_VORSCHLAEGE_KEYS,
   type ChargeMode,
   type ObjektSteuer,
   type ObjektSteuerInput,
@@ -81,6 +82,7 @@ function Zeile({
   onBearbeiten: () => void;
   onEntfernen: () => void;
 }) {
+  const t = useTranslations("objektEditor");
   const wert =
     steuer.rate_bps != null
       ? `${bpsZuProzent(steuer.rate_bps)} %`
@@ -93,24 +95,29 @@ function Zeile({
           {steuer.tax_type}
           {!steuer.active && (
             <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-              Pausiert
+              {t("steuerPausiert")}
             </span>
           )}
         </span>
         <span className="text-sm text-muted-foreground">
-          {wert} · {ABRECHNUNGSART[steuer.charge_mode]}
+          {wert} · {t(ABRECHNUNGSART_KEYS[steuer.charge_mode])}
           {steuer.taxable_base.length > 0 &&
-            ` · auf ${steuer.taxable_base
-              .map((b) => BEMESSUNGSGRUNDLAGE[b])
-              .join(", ")}`}
+            t("steuerAufGrundlage", {
+              grundlagen: steuer.taxable_base
+                .map((b) => t(BEMESSUNGSGRUNDLAGE_KEYS[b]))
+                .join(", "),
+            })}
         </span>
         {(steuer.long_stay_exempt_nights != null ||
           steuer.taxable_first_nights != null) && (
           <span className="text-sm text-muted-foreground">
             {steuer.taxable_first_nights != null &&
-              `Nur die ersten ${steuer.taxable_first_nights} Nächte`}
+              t("steuerNurErsteNaechte", { n: steuer.taxable_first_nights })}
             {steuer.long_stay_exempt_nights != null &&
-              `${steuer.taxable_first_nights != null ? " · " : ""}Entfällt ab ${steuer.long_stay_exempt_nights} Nächten`}
+              `${steuer.taxable_first_nights != null ? " · " : ""}${t(
+                "steuerEntfaelltAb",
+                { n: steuer.long_stay_exempt_nights },
+              )}`}
           </span>
         )}
       </div>
@@ -120,14 +127,14 @@ function Zeile({
           onClick={onBearbeiten}
           className="text-sm font-medium underline underline-offset-4"
         >
-          Bearbeiten
+          {t("bearbeiten")}
         </button>
         <button
           type="button"
           onClick={onEntfernen}
           className="text-sm text-muted-foreground underline underline-offset-4"
         >
-          Entfernen
+          {t("steuerEntfernen")}
         </button>
       </div>
     </li>
@@ -145,6 +152,7 @@ export function SteuernPanel({
   steuern: ObjektSteuer[] | null;
   currency: string | null;
 }) {
+  const t = useTranslations("objektEditor");
   const [liste, setListe] = useState(steuern ?? []);
   const [formular, setFormular] = useState<ObjektSteuerInput | null>(null);
   const [bearbeiteId, setBearbeiteId] = useState<string | null>(null);
@@ -153,9 +161,7 @@ export function SteuernPanel({
 
   if (steuern === null) {
     return (
-      <p className="text-sm text-muted-foreground">
-        Die Steuern konnten nicht geladen werden. Lade die Seite neu.
-      </p>
+      <p className="text-sm text-muted-foreground">{t("steuernLadefehler")}</p>
     );
   }
 
@@ -248,12 +254,13 @@ export function SteuernPanel({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <h2 className="font-display text-2xl font-extrabold">Steuern</h2>
+        <h2 className="font-display text-2xl font-extrabold">
+          {t("steuernTitel")}
+        </h2>
         <p className="text-sm text-muted-foreground">
-          Lege fest, welche Steuern deinen Gästen zusätzlich berechnet werden.
-          Wir weisen sie beim Buchen aus und zahlen sie dir aus —{" "}
-          <strong>abgeführt werden sie von dir</strong>. Wir behalten davon
-          nichts ein und berechnen keine Provision darauf.
+          {t.rich("steuernText", {
+            hervor: (teile) => <strong>{teile}</strong>,
+          })}
         </p>
       </div>
 
@@ -281,37 +288,39 @@ export function SteuernPanel({
       {formular ? (
         <div className="flex flex-col gap-5 rounded-2xl border border-border p-5">
           <label className="flex flex-col gap-2">
-            <span className="text-sm font-medium">Steuerart</span>
+            <span className="text-sm font-medium">{t("steuerArt")}</span>
             <Input
               list="steuerart-vorschlaege"
               value={formular.tax_type}
               onChange={(e) =>
                 setFormular({ ...formular, tax_type: e.target.value })
               }
-              placeholder="z. B. Kurtaxe"
+              placeholder={t("steuerArtPlatzhalter")}
             />
             {/* Vorschlagsliste statt fester Auswahl: welche Steuern es gibt,
                 hängt von der Gemeinde ab — eine geschlossene Liste wäre
                 geraten (Wurzel 4). */}
             <datalist id="steuerart-vorschlaege">
-              {STEUERART_VORSCHLAEGE.map((v) => (
-                <option key={v} value={v} />
+              {STEUERART_VORSCHLAEGE_KEYS.map((v) => (
+                <option key={v} value={t(v)} />
               ))}
             </datalist>
           </label>
 
           <label className="flex flex-col gap-2">
-            <span className="text-sm font-medium">Abrechnungsart</span>
+            <span className="text-sm font-medium">
+              {t("steuerAbrechnungsart")}
+            </span>
             <select
               value={formular.charge_mode}
               onChange={(e) => setzeArt(e.target.value as ChargeMode)}
               className="h-12 rounded-xl border border-border bg-background pl-3 pr-10 text-[0.9375rem]"
             >
               {(
-                Object.entries(ABRECHNUNGSART) as [ChargeMode, string][]
-              ).map(([k, label]) => (
+                Object.entries(ABRECHNUNGSART_KEYS) as [ChargeMode, string][]
+              ).map(([k, labelKey]) => (
                 <option key={k} value={k}>
-                  {label}
+                  {t(labelKey)}
                 </option>
               ))}
             </select>
@@ -320,7 +329,9 @@ export function SteuernPanel({
           {istProzent ? (
             <>
               <label className="flex flex-col gap-2">
-                <span className="text-sm font-medium">Prozentsatz</span>
+                <span className="text-sm font-medium">
+                  {t("steuerProzentsatz")}
+                </span>
                 <Input
                   inputMode="decimal"
                   value={bpsZuProzent(formular.rate_bps)}
@@ -330,20 +341,20 @@ export function SteuernPanel({
                       rate_bps: prozentZuBps(e.target.value),
                     })
                   }
-                  placeholder="5"
+                  placeholder={t("steuerProzentsatzPlatzhalter")}
                 />
               </label>
               <fieldset className="flex flex-col gap-2">
                 <legend className="text-sm font-medium">
-                  Worauf wird gerechnet?
+                  {t("steuerWorauf")}
                 </legend>
                 <div className="flex flex-wrap gap-2">
                   {(
-                    Object.entries(BEMESSUNGSGRUNDLAGE) as [
+                    Object.entries(BEMESSUNGSGRUNDLAGE_KEYS) as [
                       TaxableBase,
                       string,
                     ][]
-                  ).map(([k, label]) => (
+                  ).map(([k, labelKey]) => (
                     <button
                       key={k}
                       type="button"
@@ -354,7 +365,7 @@ export function SteuernPanel({
                           : "border border-border text-muted-foreground hover:bg-muted"
                       }`}
                     >
-                      {label}
+                      {t(labelKey)}
                     </button>
                   ))}
                 </div>
@@ -362,8 +373,14 @@ export function SteuernPanel({
             </>
           ) : (
             <label className="flex flex-col gap-2">
+              {/* Ohne Währung im Datensatz nur „Betrag" — kein erfundenes
+                  Symbol (Wurzel 4). */}
               <span className="text-sm font-medium">
-                Betrag {currencySymbol(currency) && `(${currencySymbol(currency)})`}
+                {currencySymbol(currency)
+                  ? t("steuerBetragMitWaehrung", {
+                      symbol: currencySymbol(currency),
+                    })
+                  : t("steuerBetrag")}
               </span>
               <Input
                 inputMode="decimal"
@@ -374,13 +391,15 @@ export function SteuernPanel({
                     amount_minor: betragZuMinor(e.target.value),
                   })
                 }
-                placeholder="3"
+                placeholder={t("steuerBetragPlatzhalter")}
               />
             </label>
           )}
 
           <label className="flex flex-col gap-2">
-            <span className="text-sm font-medium">Registrierungsnummer</span>
+            <span className="text-sm font-medium">
+              {t("steuerRegistrierungsnummer")}
+            </span>
             <Input
               value={formular.registration_number}
               onChange={(e) =>
@@ -389,18 +408,17 @@ export function SteuernPanel({
                   registration_number: e.target.value,
                 })
               }
-              placeholder="Nummer deiner Steuerbehörde"
+              placeholder={t("steuerRegistrierungsnummerPlatzhalter")}
             />
             <span className="text-xs text-muted-foreground">
-              Die Nummer, unter der du diese Steuer bei deiner Behörde
-              angemeldet hast.
+              {t("steuerRegistrierungsnummerHint")}
             </span>
           </label>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="flex flex-col gap-2">
               <span className="text-sm font-medium">
-                Nur die ersten … Nächte
+                {t("steuerNurErsteNaechteLabel")}
               </span>
               <Input
                 inputMode="numeric"
@@ -412,11 +430,13 @@ export function SteuernPanel({
                       Number.parseInt(e.target.value, 10) || null,
                   })
                 }
-                placeholder="optional"
+                placeholder={t("steuerOptional")}
               />
             </label>
             <label className="flex flex-col gap-2">
-              <span className="text-sm font-medium">Entfällt ab … Nächten</span>
+              <span className="text-sm font-medium">
+                {t("steuerEntfaelltAbLabel")}
+              </span>
               <Input
                 inputMode="numeric"
                 value={formular.long_stay_exempt_nights ?? ""}
@@ -427,7 +447,7 @@ export function SteuernPanel({
                       Number.parseInt(e.target.value, 10) || null,
                   })
                 }
-                placeholder="optional"
+                placeholder={t("steuerOptional")}
               />
             </label>
           </div>
@@ -441,21 +461,21 @@ export function SteuernPanel({
               }
               className="size-4"
             />
-            <span className="text-sm">Diese Steuer ist aktiv</span>
+            <span className="text-sm">{t("steuerAktiv")}</span>
           </label>
 
           <div className="flex gap-3">
             <Button onClick={() => void speichern()} disabled={laeuft}>
-              {laeuft ? "Wird gespeichert …" : "Speichern"}
+              {laeuft ? t("wirdGespeichert") : t("speichern")}
             </Button>
             <Button variant="outline" onClick={() => setFormular(null)}>
-              Abbrechen
+              {t("abbrechen")}
             </Button>
           </div>
         </div>
       ) : (
         <Button className="self-start" onClick={() => oeffne()}>
-          Eine Steuer hinzufügen
+          {t("steuerHinzufuegen")}
         </Button>
       )}
     </div>

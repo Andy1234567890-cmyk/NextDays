@@ -812,11 +812,15 @@ class RatesService:
         # Plan). Aus den betroffenen Tagen zusammenhängende Bereiche bilden
         # (Wochentagsmaske → mehrere Segmente).
         rate_cents = None if req.price is None else int(round(req.price * 100))
-        for seg_from, seg_to in merge_day_ranges(days, end_exclusive=False):
-            self._enqueue_rate_plan_push(
-                tenant_id, property_id, rate_plan_id,
-                seg_from, seg_to + timedelta(days=1), rate_cents,
-            )
+        # EIN Push mit allen Segmenten — nicht einer je Segment (Zertifizierung:
+        # merged date_range statt vieler Einzel-Requests).
+        self._enqueue_rate_plan_segments(
+            tenant_id,
+            property_id,
+            rate_plan_id,
+            merge_day_ranges(days, end_exclusive=False),
+            rate_cents,
+        )
         self._propagate_to_children(tenant_id, property_id, rate_plan_id)
         log.info(
             "rate_plan_prices_set",
@@ -942,11 +946,15 @@ class RatesService:
                 ],
                 on_conflict="rate_plan_id,date",
             ).execute()
-        for seg_from, seg_to in merge_day_ranges(days, end_exclusive=False):
-            self._enqueue_rate_plan_min_stay_push(
-                tenant_id, property_id, rate_plan_id,
-                seg_from, seg_to + timedelta(days=1), req.min_stay,
-            )
+        # EIN Push mit allen Segmenten (nicht je Segment einer): die
+        # Zertifizierung verlangt genau EIN Property.UpdateRestrictions.
+        self._enqueue_rate_plan_min_stay_segments(
+            tenant_id,
+            property_id,
+            rate_plan_id,
+            merge_day_ranges(days, end_exclusive=False),
+            req.min_stay,
+        )
         log.info(
             "rate_plan_min_stays_set",
             tenant_id=tenant_id,
@@ -1058,17 +1066,23 @@ class RatesService:
         # Portal-Push: explizite Endwerte — beim Zurücknehmen offen/kein Limit
         # (false/false/0), sonst bliebe die OTA-Seite auf dem alten Stand. Bei
         # Wochentagsmaske je zusammenhängendem Bereich eine Zeile.
-        for seg_from, seg_to in merge_day_ranges(days, end_exclusive=False):
+        # ALLE Bereiche in EINEM Push (`rows` nimmt mehrere Zeilen) — ein
+        # Enqueue je Bereich erzeugte sonst einen Channex-Request je Bereich.
+        rows = [
+            {
+                "date_from": seg_from.isoformat(),
+                "date_to": seg_to.isoformat(),
+                "rate_plan_id": rate_plan_id,
+                "closed_to_arrival": bool(req.closed_to_arrival),
+                "closed_to_departure": bool(req.closed_to_departure),
+                "max_stay": req.max_stay if req.max_stay is not None else 0,
+            }
+            for seg_from, seg_to in merge_day_ranges(days, end_exclusive=False)
+        ]
+        if rows:
             try_enqueue_ari(
                 self._db(), tenant_id, property_id, "restriction_rows",
-                {"rows": [{
-                    "date_from": seg_from.isoformat(),
-                    "date_to": seg_to.isoformat(),
-                    "rate_plan_id": rate_plan_id,
-                    "closed_to_arrival": bool(req.closed_to_arrival),
-                    "closed_to_departure": bool(req.closed_to_departure),
-                    "max_stay": req.max_stay if req.max_stay is not None else 0,
-                }]},
+                {"rows": rows},
             )
         log.info(
             "rate_plan_restrictions_set",
@@ -1091,8 +1105,34 @@ class RatesService:
         """Einen rate-plan-genauen Min-Stay-Push einreihen (min_stay_arrival/through).
         Beim Zurücknehmen (min_stay None) kein Push — der Content-/Reconcile-Sync
         setzt den Rate-Plan-Default wieder; der Reconcile-Tick gleicht ab."""
+        self._enqueue_rate_plan_min_stay_segments(
+            tenant_id,
+            property_id,
+            rate_plan_id,
+            [(start, end - timedelta(days=1))],
+            min_stay,
+        )
+
+    def _enqueue_rate_plan_min_stay_segments(
+        self,
+        tenant_id: str,
+        property_id: str,
+        rate_plan_id: str,
+        segments: list[tuple[date, date]],
+        min_stay: int | None,
+    ) -> None:
+        """ALLE Min-Stay-Segmente in EINEM Push einreihen (date_to inklusiv).
+
+        Channex-Zertifizierung: „Min Stay Update — Expected exactly one update
+        (Property.UpdateRestrictions), found: [..., ..., ...]". Ein Enqueue je
+        Segment erzeugt einen Request je Segment — bei einer Wochentagsmaske
+        also beliebig viele. Die Segmente gehören in EIN `segments`-Array, das
+        der Push-Pfad ohnehin schon verarbeitet.
+        """
         if min_stay is None:
             self._sync_property(tenant_id, property_id, None, None)
+            return
+        if not segments:
             return
         try_enqueue_ari(
             self._db(),
@@ -1102,11 +1142,12 @@ class RatesService:
             {
                 "segments": [
                     {
-                        "date_from": start.isoformat(),
-                        "date_to": (end - timedelta(days=1)).isoformat(),
+                        "date_from": seg_from.isoformat(),
+                        "date_to": seg_to.isoformat(),
                         "min_stay": min_stay,
                         "rate_plan_id": rate_plan_id,
                     }
+                    for seg_from, seg_to in segments
                 ]
             },
         )
@@ -1125,8 +1166,32 @@ class RatesService:
         weg". Der nachfolgende Content-/Reconcile-Sync setzt dann den Basispreis
         wieder; hier nur das Enqueue bei gesetztem Preis (fail-nicht-leise: der
         Reconcile-Tick gleicht Zurücknahmen ab)."""
+        self._enqueue_rate_plan_segments(
+            tenant_id,
+            property_id,
+            rate_plan_id,
+            [(start, end - timedelta(days=1))],
+            rate_cents,
+        )
+
+    def _enqueue_rate_plan_segments(
+        self,
+        tenant_id: str,
+        property_id: str,
+        rate_plan_id: str,
+        segments: list[tuple[date, date]],
+        rate_cents: int | None,
+    ) -> None:
+        """ALLE Preis-Segmente in EINEM Push einreihen (date_to inklusiv).
+
+        Wie beim Min-Stay: ein Enqueue je Segment erzeugt einen Channex-Request
+        je Segment. Die Zertifizierung mahnt genau das an („Use date_range
+        syntax with merged sequences"); die Segmente gehören in EIN Array.
+        """
         if rate_cents is None:
             self._sync_property(tenant_id, property_id, None, None)
+            return
+        if not segments:
             return
         try_enqueue_ari(
             self._db(),
@@ -1136,12 +1201,12 @@ class RatesService:
             {
                 "segments": [
                     {
-                        "date_from": start.isoformat(),
-                        # date_to inklusiv (end ist exklusiv).
-                        "date_to": (end - timedelta(days=1)).isoformat(),
+                        "date_from": seg_from.isoformat(),
+                        "date_to": seg_to.isoformat(),
                         "rate_cents": rate_cents,
                         "rate_plan_id": rate_plan_id,
                     }
+                    for seg_from, seg_to in segments
                 ]
             },
         )

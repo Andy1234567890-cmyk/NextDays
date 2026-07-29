@@ -12,76 +12,84 @@
 // Zendesk blendet das Feld vor Endkunden aus, ServiceNow setzt es
 // schreibgeschützt — wir folgen dem.
 
+// Dieses Modul ist ein Datenmodul ohne React-Kontext: `useTranslations` läuft
+// hier nicht. Die Einträge tragen deshalb Übersetzungs-SCHLÜSSEL (…Key), die
+// erst in der rendernden Komponente über t(...) aufgelöst werden. Slugs, Icons
+// und Links bleiben unübersetzt — das sind stabile technische Werte.
 export interface SupportThema {
   /** Stabiler Slug — muss zu _PRIO_JE_THEMA im Backend passen. */
   slug: string;
-  label: string;
+  labelKey: string;
   icon: string;
   /** Kurzbeschreibung unter dem Titel (hilft bei der Auswahl). */
-  hinweis: string;
+  hinweisKey: string;
   /** Selbsthilfe VOR dem Kontakt (Amazons „Quick Solutions"-Muster). */
-  selbsthilfe?: { text: string; href: string }[];
+  selbsthilfe?: { textKey: string; href: string }[];
 }
 
 export const SUPPORT_THEMEN: SupportThema[] = [
   {
     slug: "buchung",
-    label: "Buchung & Gäste",
+    labelKey: "themaBuchung",
     icon: "solar:calendar-line-duotone",
-    hinweis: "Reservierungen, Stornierungen, Gästekommunikation",
+    hinweisKey: "themaBuchungHinweis",
     selbsthilfe: [
-      { text: "Buchungen ansehen", href: "/buchungen" },
-      { text: "Nachrichten an Gäste", href: "/nachrichten" },
+      { textKey: "themaBuchungHilfeBuchungen", href: "/buchungen" },
+      { textKey: "themaBuchungHilfeNachrichten", href: "/nachrichten" },
     ],
   },
   {
     slug: "zahlung",
-    label: "Zahlungen & Auszahlungen",
+    labelKey: "themaZahlung",
     icon: "solar:wallet-line-duotone",
-    hinweis: "Auszahlungen, Gebühren, Rechnungen",
-    selbsthilfe: [{ text: "Finanzen öffnen", href: "/finanzen" }],
+    hinweisKey: "themaZahlungHinweis",
+    selbsthilfe: [{ textKey: "themaZahlungHilfeFinanzen", href: "/finanzen" }],
   },
   {
     slug: "objekt",
-    label: "Objekt & Inserat",
+    labelKey: "themaObjekt",
     icon: "solar:home-line-duotone",
-    hinweis: "Objektdaten, Fotos, Sichtbarkeit auf den Portalen",
-    selbsthilfe: [{ text: "Meine Objekte", href: "/objekte" }],
+    hinweisKey: "themaObjektHinweis",
+    selbsthilfe: [{ textKey: "themaObjektHilfeObjekte", href: "/objekte" }],
   },
   {
     slug: "konto",
-    label: "Konto & Zugang",
+    labelKey: "themaKonto",
     icon: "solar:user-line-duotone",
-    hinweis: "Anmeldung, Mitarbeiter, Sicherheit",
-    selbsthilfe: [{ text: "Kontoeinstellungen", href: "/konto" }],
+    hinweisKey: "themaKontoHinweis",
+    selbsthilfe: [{ textKey: "themaKontoHilfeKonto", href: "/konto" }],
   },
   {
     slug: "technik",
-    label: "Technisches Problem",
+    labelKey: "themaTechnik",
     icon: "solar:bug-line-duotone",
-    hinweis: "Fehler, etwas funktioniert nicht wie erwartet",
+    hinweisKey: "themaTechnikHinweis",
   },
   {
     slug: "sonstiges",
-    label: "Etwas anderes",
+    labelKey: "themaSonstiges",
     icon: "solar:question-circle-line-duotone",
-    hinweis: "Passt nichts davon? Beschreibe dein Anliegen frei.",
+    hinweisKey: "themaSonstigesHinweis",
   },
 ];
 
-/** Anzeigename eines Themas (für die Ticket-Liste). */
-export function themaLabel(slug: string | null): string | null {
+/** Übersetzungs-Schlüssel eines Themas (für die Ticket-Liste).
+ *
+ *  Unbekannter Slug → null statt des rohen Slugs: Ein technischer Wert in der
+ *  Oberfläche ist kein Anzeigetext. Die Renderstelle lässt das Thema dann weg
+ *  (sie tut das bei fehlendem Thema ohnehin schon). */
+export function themaLabelKey(slug: string | null): string | null {
   if (!slug) return null;
-  return SUPPORT_THEMEN.find((t) => t.slug === slug)?.label ?? slug;
+  return SUPPORT_THEMEN.find((t) => t.slug === slug)?.labelKey ?? null;
 }
 
-// Melder-Status → Anzeige. Die Werte kommen bereits übersetzt vom Server
-// (_MELDER_STATUS); interne Zustände wie „waiting" erreichen den Client nie.
+// Melder-Status → Anzeige. Die Statuswerte selbst sind API-Werte und bleiben
+// unübersetzt; nur der Anzeigetext kommt über den Schlüssel.
 export const STATUS_ANZEIGE: Record<
   string,
-  { label: string; ton: "offen" | "du" | "fertig" }
+  { labelKey: string; ton: "offen" | "du" | "fertig" }
 > = {
-  in_bearbeitung: { label: "In Bearbeitung", ton: "offen" },
-  wartet_auf_dich: { label: "Warten auf dich", ton: "du" },
-  geloest: { label: "Gelöst", ton: "fertig" },
+  in_bearbeitung: { labelKey: "statusInBearbeitung", ton: "offen" },
+  wartet_auf_dich: { labelKey: "statusWartetAufDich", ton: "du" },
+  geloest: { labelKey: "statusGeloest", ton: "fertig" },
 };

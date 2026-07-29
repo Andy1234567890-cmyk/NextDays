@@ -163,7 +163,7 @@ export function AusstattungPanel({
         {offen && (
           <motion.aside
             key="ausstattung-sidebar"
-            className="shrink-0 overflow-hidden border-l border-border"
+            className="shrink-0 overflow-hidden border-s border-border"
             initial={reduziert ? false : { width: 0, opacity: 0 }}
             animate={{ width: "32rem", opacity: 1 }}
             exit={reduziert ? { opacity: 0 } : { width: 0, opacity: 0 }}

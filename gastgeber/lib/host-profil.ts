@@ -95,11 +95,18 @@ export async function uploadAvatar(datei: File): Promise<HostProfile> {
   return (await res.json()) as HostProfile;
 }
 
-// „Hosting begann"-Zeitpunkt als „Monat Jahr" (lokalisiert, de-DE), aus dem
-// vollen ISO-Zeitstempel. Ungültig/leer → null (kein erfundener Wert, Wurzel 4).
-export function formatHostingSince(iso: string | null): string | null {
+// „Hosting begann"-Zeitpunkt als „Monat Jahr", aus dem vollen ISO-Zeitstempel.
+// Ungültig/leer → null (kein erfundener Wert, Wurzel 4).
+//
+// Die Locale kommt als Parameter herein, weil das hier keine Komponente ist und
+// `useLocale()` deshalb nicht zur Verfügung steht. Aufrufer reichen sie durch —
+// fest verdrahtetes „de-DE" zeigte in allen 45 Sprachen deutsche Monatsnamen.
+export function formatHostingSince(
+  iso: string | null,
+  locale: string,
+): string | null {
   if (!iso) return null;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
-  return d.toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+  return d.toLocaleDateString(locale, { month: "long", year: "numeric" });
 }

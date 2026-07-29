@@ -7,6 +7,7 @@
 // vollständige Rechteliste auf der Seite — nicht hinter einem „mehr erfahren".
 import { Icon } from "@iconify/react";
 import { motion, useReducedMotion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -26,6 +27,9 @@ export function EinladungAnsicht({
   token: string;
   einladung: PendingInvitation;
 }) {
+  // Die Rechteliste stammt aus dem Zugriffsstufen-Katalog und trägt dort nur
+  // Schlüssel — aufgelöst wird sie hier, im Bereich „objektEditor".
+  const t = useTranslations("objektEditor");
   const router = useRouter();
   const reduziert = useReducedMotion();
   const [laeuft, setLaeuft] = useState(false);
@@ -39,7 +43,7 @@ export function EinladungAnsicht({
     setLaeuft(false);
     if (res.ok) {
       setErledigt("an");
-      toast.success("Einladung angenommen.");
+      toast.success(t("einladungAngenommenToast"));
       router.refresh();
     } else {
       // Die Backend-Meldung ist fachlich („Bitte bestätige zuerst deine
@@ -75,19 +79,27 @@ export function EinladungAnsicht({
           />
         </div>
         <h1 className="mt-6 font-sans text-[2rem] font-bold tracking-tight">
-          {erledigt === "an" ? "Du bist dabei" : "Einladung abgelehnt"}
+          {erledigt === "an"
+            ? t("einladungDabeiTitel")
+            : t("einladungAbgelehntTitel")}
         </h1>
         <p className="mt-3 text-[0.9375rem] text-muted-foreground">
+          {/* Ohne Objektnamen wird der Satz umformuliert statt mit einem
+              Platzhalter-Namen gefüllt (Wurzel 4). */}
           {erledigt === "an"
-            ? `Du bist jetzt Co-Gastgeber für „${einladung.property_title ?? "das Objekt"}". Der Gastgeber wurde informiert.`
-            : "Wir haben dem Gastgeber Bescheid gegeben."}
+            ? einladung.property_title
+              ? t("einladungDabeiTextMitObjekt", {
+                  objekt: einladung.property_title,
+                })
+              : t("einladungDabeiText")
+            : t("einladungAbgelehntText")}
         </p>
         {erledigt === "an" && (
           <a
             href="/objekte"
             className="mt-8 rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background transition-opacity hover:opacity-90"
           >
-            Zu den Objekten
+            {t("einladungZuDenObjekten")}
           </a>
         )}
       </main>
@@ -107,12 +119,14 @@ export function EinladungAnsicht({
 
         <h1 className="mt-8 text-center font-sans text-[2rem] font-bold leading-tight tracking-tight">
           {einladung.inviter_name
-            ? `${einladung.inviter_name} lädt dich als Co-Gastgeber ein`
-            : "Du wurdest als Co-Gastgeber eingeladen"}
+            ? t("einladungTitelMitEinladendem", {
+                name: einladung.inviter_name,
+              })
+            : t("einladungTitel")}
         </h1>
         {einladung.property_title && (
           <p className="mt-3 text-center text-[0.9375rem] text-muted-foreground">
-            für „{einladung.property_title}"
+            {t("einladungFuerObjekt", { objekt: einladung.property_title })}
           </p>
         )}
 
@@ -127,29 +141,29 @@ export function EinladungAnsicht({
         <div className="mt-8 rounded-2xl border border-border p-6">
           <p className="flex items-center gap-2 font-semibold">
             <Icon icon={stufe.icon} className="size-5 shrink-0" />
-            {stufe.label}
+            {t(stufe.labelKey)}
           </p>
           <p className="mt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Du kannst dann
+            {t("einladungDuKannstDann")}
           </p>
           <ul className="mt-2 space-y-1.5">
-            {stufe.darf.map((d) => (
+            {stufe.darfKeys.map((d) => (
               <li key={d} className="flex gap-2 text-sm text-muted-foreground">
                 <Icon icon="ph:check" className="mt-0.5 size-4 shrink-0" />
-                {d}
+                {t(d)}
               </li>
             ))}
           </ul>
-          {stufe.darfNicht.length > 0 && (
+          {stufe.darfNichtKeys.length > 0 && (
             <>
               <p className="mt-5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Nicht möglich
+                {t("einladungNichtMoeglich")}
               </p>
               <ul className="mt-2 space-y-1.5">
-                {stufe.darfNicht.map((d) => (
+                {stufe.darfNichtKeys.map((d) => (
                   <li key={d} className="flex gap-2 text-sm text-muted-foreground">
                     <Icon icon="ph:x" className="mt-0.5 size-4 shrink-0" />
-                    {d}
+                    {t(d)}
                   </li>
                 ))}
               </ul>
@@ -158,8 +172,7 @@ export function EinladungAnsicht({
         </div>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
-          Zum Annehmen brauchst du ein myNextDays-Konto mit derselben
-          E-Mail-Adresse und eine bestätigte Identität.
+          {t("einladungVoraussetzung")}
         </p>
 
         <div className="mt-8 flex items-center justify-center gap-4">
@@ -169,7 +182,7 @@ export function EinladungAnsicht({
             onClick={() => void ablehnen()}
             className="rounded-full px-6 py-3 text-sm font-semibold underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-foreground/20 disabled:opacity-50"
           >
-            Ablehnen
+            {t("einladungAblehnen")}
           </button>
           <button
             type="button"
@@ -177,7 +190,7 @@ export function EinladungAnsicht({
             onClick={() => void annehmen()}
             className="rounded-full bg-foreground px-8 py-3 text-sm font-semibold text-background outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/20 disabled:opacity-50"
           >
-            {laeuft ? "Einen Moment …" : "Einladung annehmen"}
+            {laeuft ? t("einladungLaeuft") : t("einladungAnnehmen")}
           </button>
         </div>
       </motion.div>

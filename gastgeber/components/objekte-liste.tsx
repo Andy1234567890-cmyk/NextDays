@@ -75,7 +75,7 @@ export function ObjekteListe({ items }: { items: Property[] }) {
       <div className="overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-border text-left">
+            <tr className="border-b border-border text-start">
               <Th className="w-[45%]">{t("spalteObjekt")}</Th>
               <Th>{t("spalteTyp")}</Th>
               <Th>{t("spalteOrt")}</Th>
@@ -89,7 +89,7 @@ export function ObjekteListe({ items }: { items: Property[] }) {
                 className="group cursor-pointer border-b border-border transition-colors hover:bg-muted/40"
                 onClick={() => router.push(`/objekte/${p.id}`)}
               >
-                <td className="py-4 pr-4">
+                <td className="py-4 pe-4">
                   <Link
                     href={`/objekte/${p.id}`}
                     className="flex items-center gap-4"
@@ -117,10 +117,10 @@ export function ObjekteListe({ items }: { items: Property[] }) {
                     </span>
                   </Link>
                 </td>
-                <td className="py-4 pr-4 text-[0.9375rem] text-muted-foreground">
+                <td className="py-4 pe-4 text-[0.9375rem] text-muted-foreground">
                   {TYP_LABEL[p.property_type] ?? p.property_type}
                 </td>
-                <td className="py-4 pr-4 text-[0.9375rem] text-muted-foreground">
+                <td className="py-4 pe-4 text-[0.9375rem] text-muted-foreground">
                   {[p.city, p.country].filter(Boolean).join(", ") || "—"}
                 </td>
                 <td className="py-4">

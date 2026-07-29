@@ -9,6 +9,7 @@
 // Die Beispielrechnung nutzt Airbnbs eigene Zahl (3 % von 250 = 7,50) — eine
 // konkrete Summe erklärt den Mechanismus besser als jeder Fließtext.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -33,6 +34,7 @@ export function SpendenTab({
   /** Währung des Betriebs. Fehlt sie, rendert formatCurrency symbollos. */
   waehrung: string | null;
 }) {
+  const t = useTranslations("konto");
   const { settings, recipients } = uebersicht;
   const gesperrt = !settings.payouts_ready;
 
@@ -84,9 +86,7 @@ export function SpendenTab({
     const res = await setzeSpendenAnteil(bps, empfaenger, bps > 0);
     setLaeuft(false);
     if (res.ok) {
-      toast.success(
-        bps > 0 ? "Spendenanteil gespeichert." : "Spende beendet.",
-      );
+      toast.success(bps > 0 ? t("spGespeichert") : t("spBeendet"));
     } else {
       toast.error(res.fehler);
     }
@@ -103,34 +103,36 @@ export function SpendenTab({
             <Icon icon="solar:bell-bold" className="size-5" />
           </span>
           <div className="min-w-0">
-            <p className="font-medium">Auszahlungskonto hinzufügen</p>
+            <p className="font-medium">{t("spSperrTitel")}</p>
             <p className="mt-0.5 text-[0.9375rem] text-muted-foreground">
-              Bevor du spendest, richte ein, wie du bezahlt werden möchtest.
+              {t("spSperrText")}
             </p>
             <a
               href="/konto?bereich=zahlungen&tab=auszahlungen"
               className="mt-2 inline-block text-[0.9375rem] font-medium underline underline-offset-4"
             >
-              Auszahlungen ansehen
+              {t("spSperrLink")}
             </a>
           </div>
         </div>
       )}
 
       <h2 className="font-display text-3xl font-semibold tracking-tight">
-        An {recipients[0]?.name ?? "gemeinnützige Organisationen"} spenden
+        {t("spTitel", {
+          organisation: recipients[0]?.name ?? t("spTitelFallback"),
+        })}
       </h2>
       <p className="mt-3 max-w-xl text-[0.9375rem] leading-relaxed text-muted-foreground">
-        {recipients[0]?.description ??
-          "Gib einen Teil jeder Auszahlung weiter."}{" "}
-        Der Anteil geht von deiner Auszahlung ab — die Plattform-Gebühr bleibt
-        davon unberührt.
+        {recipients[0]?.description ?? t("spEinleitungFallback")}{" "}
+        {t("spEinleitungZusatz")}
       </p>
 
-      <h3 className="mt-8 font-medium">Anteil wählen</h3>
+      <h3 className="mt-8 font-medium">{t("spAnteilTitel")}</h3>
       <p className="mt-1 text-[0.9375rem] text-muted-foreground">
-        Beispiel: {formatCurrency((BEISPIEL * 300) / 10000, waehrung)} bei einer
-        Auszahlung von {formatCurrency(BEISPIEL, waehrung)} entsprechen 3 %.
+        {t("spBeispiel", {
+          spende: formatCurrency((BEISPIEL * 300) / 10000, waehrung),
+          basis: formatCurrency(BEISPIEL, waehrung),
+        })}
       </p>
 
       <div className="mt-4 flex flex-wrap gap-3">
@@ -149,7 +151,7 @@ export function SpendenTab({
                   : "border-border hover:border-foreground"
               }`}
             >
-              {wert / 100} %
+              {t("spProzent", { wert: wert / 100 })}
             </button>
           );
         })}
@@ -167,7 +169,7 @@ export function SpendenTab({
               : "border-border hover:border-foreground"
           }`}
         >
-          Anderer
+          {t("spAnderer")}
         </button>
       </div>
 
@@ -181,11 +183,11 @@ export function SpendenTab({
             step="0.5"
             value={eigenerWert}
             onChange={(e) => eigenerEingabe(e.target.value)}
-            aria-label="Eigener Spendenanteil in Prozent"
+            aria-label={t("spEigenerAria")}
             className="w-28 rounded-xl border border-border bg-background px-4 py-2.5 text-right outline-none focus-visible:border-foreground"
           />
           <span className="text-[0.9375rem] text-muted-foreground">
-            % je Auszahlung
+            {t("spJeAuszahlung")}
           </span>
         </div>
       )}
@@ -193,16 +195,22 @@ export function SpendenTab({
       {/* Live-Beispiel, sobald ein Satz gewählt ist. */}
       {bps > 0 && !ueberGrenze && (
         <p className="mt-5 rounded-2xl bg-muted/50 px-5 py-4 text-[0.9375rem]">
-          Bei einer Auszahlung von {formatCurrency(BEISPIEL, waehrung)} gehen{" "}
-          <strong>{formatCurrency(beispielSpende, waehrung)}</strong> an{" "}
-          {recipients.find((r) => r.id === empfaenger)?.name ?? "die Organisation"}.
+          {t.rich("spLiveBeispiel", {
+            basis: formatCurrency(BEISPIEL, waehrung),
+            spende: formatCurrency(beispielSpende, waehrung),
+            organisation:
+              recipients.find((r) => r.id === empfaenger)?.name ??
+              t("spOrganisationFallback"),
+            stark: (teile) => <strong>{teile}</strong>,
+          })}
         </p>
       )}
 
       {ueberGrenze && (
         <p className="mt-5 text-[0.9375rem] text-destructive">
-          Nach Abzug von Plattform-Gebühr und Beteiligungen stehen höchstens{" "}
-          {(settings.max_share_bps / 100).toFixed(2)} % zur Verfügung.
+          {t("spUeberGrenze", {
+            max: (settings.max_share_bps / 100).toFixed(2),
+          })}
         </p>
       )}
 
@@ -213,7 +221,7 @@ export function SpendenTab({
             htmlFor="spenden-empfaenger"
             className="block font-medium"
           >
-            Organisation
+            {t("spOrganisation")}
           </label>
           <select
             id="spenden-empfaenger"
@@ -237,14 +245,12 @@ export function SpendenTab({
         disabled={!kannSpeichern || laeuft}
         className="mt-8 rounded-full bg-foreground px-8 py-3 font-medium text-background outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/20 disabled:cursor-not-allowed disabled:opacity-40"
       >
-        {laeuft ? "Wird gespeichert …" : "Speichern"}
+        {laeuft ? t("spSpeichernLaeuft") : t("spSpeichern")}
       </button>
 
       {bps > 0 && (
         <p className="mt-4 max-w-xl text-sm text-muted-foreground">
-          Mit dem Speichern stimmst du zu, dass der gewählte Anteil jeder
-          künftigen Auszahlung an die Organisation weitergegeben wird. Du kannst
-          das jederzeit ändern oder beenden.
+          {t("spZustimmung")}
         </p>
       )}
 
@@ -261,13 +267,14 @@ function SpendenVerlauf({
   uebersicht: SpendenUebersicht;
   waehrung: string | null;
 }) {
+  const t = useTranslations("konto");
   const { summary, recent } = uebersicht;
   if (!summary.length) return null;
 
   return (
     <section className="mt-12 border-t border-border pt-8">
       <h3 className="font-display text-xl font-semibold tracking-tight">
-        Deine Spenden
+        {t("spVerlaufTitel")}
       </h3>
 
       <div className="mt-4 flex flex-wrap gap-8">
@@ -282,7 +289,7 @@ function SpendenVerlauf({
                 {formatCurrency(netto, s.currency || waehrung)}
               </p>
               <p className="text-sm text-muted-foreground">
-                {s.count} {s.count === 1 ? "Buchung" : "Buchungen"}
+                {t("spVerlaufBuchungen", { anzahl: s.count })}
               </p>
             </div>
           );
@@ -302,8 +309,13 @@ function SpendenVerlauf({
                   })}
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  {z.share_bps / 100} % von{" "}
-                  {formatCurrency(z.gross_amount_cents / 100, z.currency)}
+                  {t("spVerlaufZeile", {
+                    prozent: z.share_bps / 100,
+                    betrag: formatCurrency(
+                      z.gross_amount_cents / 100,
+                      z.currency,
+                    ),
+                  })}
                 </p>
               </div>
               <span className="shrink-0 text-[0.9375rem] font-medium tabular-nums">

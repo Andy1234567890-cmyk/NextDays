@@ -69,11 +69,11 @@ export function HostTopNav({ email }: { email: string | null }) {
                 <span className="relative">
                   {t(item.key)}
                   {item.dot && (
-                    <span className="absolute -right-3 top-0 size-2 rounded-full bg-rose-500" />
+                    <span className="absolute -end-3 top-0 size-2 rounded-full bg-rose-500" />
                   )}
                 </span>
                 {active && (
-                  <span className="absolute -bottom-2 left-0 h-1 w-full rounded-full bg-foreground" />
+                  <span className="absolute -bottom-2 start-0 h-1 w-full rounded-full bg-foreground" />
                 )}
               </Link>
             );
@@ -161,7 +161,7 @@ function MenueSheet({ email }: { email: string | null }) {
       <SheetContent
         side="right"
         showCloseButton={false}
-        className="w-full gap-0 overflow-y-auto rounded-l-3xl border-l-0 p-0 sm:max-w-md"
+        className="w-full gap-0 overflow-y-auto rounded-s-3xl border-s-0 p-0 sm:max-w-md"
       >
         {/* Kopf: Glocke + Schließen (rund) */}
         <div className="flex items-center justify-end gap-2 px-6 pt-6">

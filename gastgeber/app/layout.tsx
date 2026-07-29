@@ -2,23 +2,34 @@
 // eigene Subdomain host. — eingeloggter Bereich, daher noindex (ADR-0015).
 import type { Metadata } from "next";
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Toaster } from "sonner";
+
+import { textrichtung } from "@/i18n/locales";
 
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: "myNextDays — Gastgeber",
-  description: "Verwalte deine Objekte, Kalender, Preise und Buchungen.",
-  robots: { index: false, follow: false },
-};
+// Titel und Beschreibung sprachabhängig: Sie stehen im Browser-Tab und in der
+// Lesezeichenliste — ein fest deutscher Titel wäre dort auch für einen
+// japanischen Gastgeber deutsch.
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("anmeldeseite");
+  return {
+    title: t("seitenTitel"),
+    description: t("seitenBeschreibung"),
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   const locale = await getLocale();
+  // `dir` steuert die gesamte Leserichtung: Damit spiegeln die logischen
+  // CSS-Eigenschaften (ms-/me-/text-start) das Layout für Arabisch und
+  // Hebräisch von selbst. Ohne dieses Attribut bliebe alles links-nach-rechts.
   return (
-    <html lang={locale}>
+    <html lang={locale} dir={textrichtung(locale)}>
       <body className="font-sans antialiased">
         <NextIntlClientProvider>
           {children}

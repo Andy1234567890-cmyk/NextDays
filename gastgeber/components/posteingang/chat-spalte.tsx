@@ -55,7 +55,7 @@ export function ChatSpalte({
 
   if (!detail) {
     return (
-      <section className="flex h-full items-center justify-center border-r border-border bg-muted/20">
+      <section className="flex h-full items-center justify-center border-e border-border bg-muted/20">
         <div className="flex flex-col items-center text-center">
           <span className="mb-4 flex size-16 items-center justify-center rounded-full bg-muted">
             <Icon
@@ -114,7 +114,7 @@ export function ChatSpalte({
   }
 
   return (
-    <section className="flex h-full flex-col border-r border-border">
+    <section className="flex h-full flex-col border-e border-border">
       {/* Kopf */}
       <header className="flex items-center gap-3 border-b border-border px-6 py-4">
         <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-muted to-muted/60 text-[0.9375rem] font-semibold">
@@ -123,7 +123,7 @@ export function ChatSpalte({
         <button
           type="button"
           onClick={onPanelToggle}
-          className="group flex min-w-0 items-center gap-2 text-left"
+          className="group flex min-w-0 items-center gap-2 text-start"
         >
           <span className="truncate text-[1.35rem] font-semibold tracking-tight">
             {name}
@@ -151,11 +151,11 @@ export function ChatSpalte({
             <Icon icon="ph:dots-three" className="size-5" />
           </button>
           {menueOffen && (
-            <div className="absolute right-0 top-12 z-10 w-56 overflow-hidden rounded-2xl border border-border bg-background p-1.5 shadow-xl">
+            <div className="absolute end-0 top-12 z-10 w-56 overflow-hidden rounded-2xl border border-border bg-background p-1.5 shadow-xl">
               <button
                 type="button"
                 onClick={() => void archivieren()}
-                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium hover:bg-muted"
+                className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm font-medium hover:bg-muted"
               >
                 <Icon icon="ph:archive" className="size-[1.15rem] text-muted-foreground" />
                 {detail.is_archived ? "Aus Archiv holen" : "Archivieren"}
@@ -164,7 +164,7 @@ export function ChatSpalte({
                 <button
                   type="button"
                   onClick={() => void blockieren()}
-                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-rose-600 hover:bg-rose-50"
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-start text-sm font-medium text-rose-600 hover:bg-rose-50"
                 >
                   <Icon icon="ph:prohibit" className="size-[1.15rem]" />
                   Gast blockieren
@@ -225,13 +225,13 @@ export function ChatSpalte({
                 Vorlagen
               </button>
               {vorlagenOffen && quickReplies.length > 0 && (
-                <div className="absolute bottom-11 left-0 z-10 max-h-72 w-72 overflow-y-auto rounded-2xl border border-border bg-background py-1 shadow-lg">
+                <div className="absolute bottom-11 start-0 z-10 max-h-72 w-72 overflow-y-auto rounded-2xl border border-border bg-background py-1 shadow-lg">
                   {quickReplies.map((qr) => (
                     <button
                       key={qr.id}
                       type="button"
                       onClick={() => void vorlageEinfuegen(qr)}
-                      className="block w-full px-4 py-2.5 text-left hover:bg-muted"
+                      className="block w-full px-4 py-2.5 text-start hover:bg-muted"
                     >
                       <span className="block text-sm font-medium">{qr.title}</span>
                       <span className="block truncate text-xs text-muted-foreground">
@@ -271,7 +271,7 @@ function Blase({ nachricht }: { nachricht: HostMessage }) {
       >
         <p className="whitespace-pre-line">{nachricht.body}</p>
         <p
-          className={`mt-1.5 text-right text-[0.6875rem] ${vomHost ? "text-background/55" : "text-muted-foreground"}`}
+          className={`mt-1.5 text-end text-[0.6875rem] ${vomHost ? "text-background/55" : "text-muted-foreground"}`}
         >
           {uhrzeit(nachricht.created_at)}
         </p>

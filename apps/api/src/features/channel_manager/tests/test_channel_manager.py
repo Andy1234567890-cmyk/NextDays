@@ -1620,6 +1620,20 @@ def test_resolve_rate_plans_finds_hotel_room_type_plans() -> None:
     assert all(p["channex_property_id"] == "cx-prop" for p in plans)
 
 
+def test_resolve_room_type_falls_back_on_shared_property() -> None:
+    # Regression: Bei geteilter Channex-Property (Hotel) trägt die Room-Type-Map
+    # local_unit_ref = room_type.id, nicht property_id. Der frühere harte Filter
+    # fand nichts → das Zimmer fiel still aus dem Verfügbarkeits-Push
+    # (Zertifizierung: „Availability update has no data for room type(s)").
+    db = _ImportDB()
+    _seed_hotel_mapping(db)
+    svc = _import_svc(_ImportChannex(), db)
+    rt = svc._resolve_channex_room_type(db, "t1", "p1")
+    assert rt is not None, "ohne Fallback bleibt das Zimmer unversorgt"
+    assert rt["channex_property_id"] == "cx-prop"
+    assert rt["channex_room_type_id"] in {"cx-rt-a", "cx-rt-b"}
+
+
 def test_push_rates_batch_hotel_targets_matching_plan() -> None:
     # Ein rate-plan-genaues Segment (Hotel) geht NUR an den passenden Channex-Plan.
     db = _ImportDB()
@@ -2257,9 +2271,15 @@ def test_reconcile_pushes_continuous_base_price() -> None:
     )
     # 6 Tage (heute..+5) nur für rp-a — rp-b hat keinen Basispreis, kein Soll.
     assert res["drift"] == 6
-    assert len(channex.restrictions_pushed) == 6
-    assert all(v["rate"] == 12000 for v in channex.restrictions_pushed)
-    assert {v["rate_plan_id"] for v in channex.restrictions_pushed} == {"cx-rp-a"}
+    # Alle 6 Tage tragen denselben Basispreis → EIN date_range statt sechs
+    # Einzeltag-Objekten (Channex-Zertifizierung 17.07.2026: „Use date_range
+    # syntax with merged sequences instead of single-date objects").
+    assert len(channex.restrictions_pushed) == 1
+    val = channex.restrictions_pushed[0]
+    assert val["rate"] == 12000
+    assert val["rate_plan_id"] == "cx-rp-a"
+    assert "date" not in val
+    assert val["date_from"] < val["date_to"]
 
 
 def test_reconcile_noop_when_all_in_sync() -> None:

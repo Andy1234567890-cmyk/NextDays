@@ -293,7 +293,7 @@ export function RaumDetail({
                     <Icon icon="ph:spinner-gap" className="size-10 animate-spin" />
                   </div>
                 )}
-                <div className="absolute right-3 top-3 flex gap-2">
+                <div className="absolute end-3 top-3 flex gap-2">
                   <button
                     type="button"
                     onClick={() => dateiInput.current?.click()}
@@ -343,7 +343,7 @@ export function RaumDetail({
                     key={z.key}
                     type="button"
                     onClick={() => z.thema && onOeffneThema(offen ? null : z.thema)}
-                    className={`flex w-full items-center gap-4 rounded-xl px-3 py-5 text-left transition-colors ${
+                    className={`flex w-full items-center gap-4 rounded-xl px-3 py-5 text-start transition-colors ${
                       offen ? "bg-muted" : "hover:bg-muted/50"
                     }`}
                   >

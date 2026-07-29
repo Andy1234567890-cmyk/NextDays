@@ -13,6 +13,7 @@
 // wird deshalb NICHT als Mangel dargestellt und blockiert nichts — anders als
 // die Steuerangaben je Land, die die Auszahlung sperren können.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
@@ -28,6 +29,7 @@ function Zeile({
   angabe: ObjektAngabeStatus;
   onGespeichert: (a: ObjektAngabeStatus) => void;
 }) {
+  const t = useTranslations("konto");
   const [offen, setOffen] = useState(false);
   const [nummer, setNummer] = useState(angabe.land_registration_number ?? "");
   const [keine, setKeine] = useState(angabe.land_registration_unavailable);
@@ -60,10 +62,10 @@ function Zeile({
       <div className="flex items-start justify-between gap-4">
         <div className="flex flex-col gap-1">
           <span className="text-[0.9375rem] font-medium">
-            {angabe.title ?? "Objekt ohne Titel"}
+            {angabe.title ?? t("oaOhneTitel")}
           </span>
           <span className="text-sm text-muted-foreground">
-            {ort || "Ohne Ortsangabe"}
+            {ort || t("oaOhneOrt")}
           </span>
           {angabe.land_registration_number ? (
             <span className="mt-1 flex items-center gap-1.5 text-sm">
@@ -75,11 +77,11 @@ function Zeile({
             </span>
           ) : angabe.land_registration_unavailable ? (
             <span className="mt-1 text-sm text-muted-foreground">
-              Keine Nummer vorhanden
+              {t("oaKeineNummer")}
             </span>
           ) : (
             <span className="mt-1 text-sm text-muted-foreground">
-              Noch nicht angegeben
+              {t("oaNochNicht")}
             </span>
           )}
         </div>
@@ -89,7 +91,7 @@ function Zeile({
             onClick={() => setOffen(true)}
             className="shrink-0 text-sm font-medium underline underline-offset-4"
           >
-            {angabeErledigt(angabe) ? "Ändern" : "Hinzufügen"}
+            {angabeErledigt(angabe) ? t("oaAendern") : t("oaHinzufuegen")}
           </button>
         )}
       </div>
@@ -97,15 +99,13 @@ function Zeile({
       {offen && (
         <div className="flex flex-col gap-3 rounded-2xl border border-border p-4">
           <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium">
-              Grundbuch- oder Katasternummer
-            </span>
+            <span className="text-sm font-medium">{t("oaNummerLabel")}</span>
             <input
               type="text"
               value={nummer}
               disabled={keine || laeuft}
               onChange={(e) => setNummer(e.target.value)}
-              placeholder="z. B. 1234/5678"
+              placeholder={t("oaNummerPlatzhalter")}
               className="rounded-xl border border-border bg-transparent px-4 py-2.5 text-sm outline-none focus-visible:border-foreground disabled:opacity-50"
             />
           </label>
@@ -119,7 +119,7 @@ function Zeile({
               className="mt-0.5 size-4"
             />
             <span className="text-sm text-muted-foreground">
-              Für dieses Objekt gibt es keine Grundbuch- oder Katasternummer.
+              {t("oaKeineNummerCheckbox")}
             </span>
           </label>
 
@@ -135,7 +135,7 @@ function Zeile({
 
           <div className="flex gap-2">
             <Button size="sm" disabled={laeuft} onClick={() => void speichern()}>
-              {laeuft ? "Speichert…" : "Speichern"}
+              {laeuft ? t("oaSpeichernLaeuft") : t("oaSpeichern")}
             </Button>
             <Button
               size="sm"
@@ -148,7 +148,7 @@ function Zeile({
                 setOffen(false);
               }}
             >
-              Abbrechen
+              {t("oaAbbrechen")}
             </Button>
           </div>
         </div>
@@ -162,26 +162,20 @@ export function ObjektangabenAbschnitt({
 }: {
   angaben: ObjektAngabeStatus[] | null;
 }) {
+  const t = useTranslations("konto");
   const [liste, setListe] = useState(angaben ?? []);
 
   if (angaben === null) {
     return (
-      <p className="text-sm text-muted-foreground">
-        Die Objektangaben konnten nicht geladen werden.
-      </p>
+      <p className="text-sm text-muted-foreground">{t("oaNichtGeladen")}</p>
     );
   }
 
   if (liste.length === 0) {
     return (
       <section className="flex flex-col gap-3 border-t border-border pt-8">
-        <h3 className="font-display text-xl font-bold">
-          Grundbuchnummern deiner Objekte
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Sobald du ein Objekt angelegt hast, kannst du hier seine
-          Grundbuchnummer hinterlegen.
-        </p>
+        <h3 className="font-display text-xl font-bold">{t("oaTitel")}</h3>
+        <p className="text-sm text-muted-foreground">{t("oaLeerText")}</p>
       </section>
     );
   }
@@ -191,15 +185,8 @@ export function ObjektangabenAbschnitt({
   return (
     <section className="flex flex-col gap-4 border-t border-border pt-8">
       <div className="flex flex-col gap-1">
-        <h3 className="font-display text-xl font-bold">
-          Grundbuchnummern deiner Objekte
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Für Objekte in der EU melden wir die Grundbuch- oder Katasternummer
-          mit, sobald sie vorliegt. Wenn du keine hast, kannst du deine
-          Steuerangaben trotzdem einreichen — auf Buchungen und Auszahlungen
-          hat das keine Auswirkung.
-        </p>
+        <h3 className="font-display text-xl font-bold">{t("oaTitel")}</h3>
+        <p className="text-sm text-muted-foreground">{t("oaEinleitung")}</p>
       </div>
 
       {offen > 0 && (
@@ -208,11 +195,7 @@ export function ObjektangabenAbschnitt({
             icon="solar:info-circle-line-duotone"
             className="mt-0.5 size-4 shrink-0"
           />
-          <span>
-            {offen === 1
-              ? "Für ein Objekt fehlt die Angabe noch."
-              : `Für ${offen} Objekte fehlt die Angabe noch.`}
-          </span>
+          <span>{t("oaOffen", { anzahl: offen })}</span>
         </p>
       )}
 

@@ -14,11 +14,18 @@ import {
   setAktivitaetsAufzeichnung,
 } from "@nextdays/diagnostics";
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import type { DebugSession } from "@/lib/diagnose";
 import { diagnoseFreigeben, diagnoseWiderrufen } from "@/lib/diagnose-actions";
+import { useFormatierung } from "@/lib/formatierung";
+
+// 8 Stunden: deckt einen Arbeitstag ab, ohne zur Dauerfreigabe zu werden.
+// Als Konstante, damit die angezeigte Dauer nicht vom übergebenen Wert abweichen
+// kann.
+const FREIGABE_STUNDEN = 8;
 
 export function DiagnoseFreigabe({
   aktiv,
@@ -28,13 +35,17 @@ export function DiagnoseFreigabe({
   aktiv: DebugSession | null;
   ticketId: string;
 }) {
+  const t = useTranslations("support");
+  const f = useFormatierung();
   const [laeuft, setLaeuft] = useState(false);
   const [offen, setOffen] = useState(false);
 
   async function freigeben() {
     setLaeuft(true);
-    // 8 Stunden: deckt einen Arbeitstag ab, ohne zur Dauerfreigabe zu werden.
-    const res = await diagnoseFreigeben(8, `Support-Anfrage ${ticketId.slice(0, 8)}`);
+    const res = await diagnoseFreigeben(
+      FREIGABE_STUNDEN,
+      t("dfNotiz", { ticket: ticketId.slice(0, 8) }),
+    );
     setLaeuft(false);
     if (res.ok) {
       // Umgebung sofort mitschicken, damit der Support nicht auf den nächsten
@@ -42,7 +53,7 @@ export function DiagnoseFreigabe({
       await reportClientInfo();
       setAktivitaetsAufzeichnung(true);
       setOffen(false);
-      toast.success("Diagnose freigegeben — danke, das hilft uns.");
+      toast.success(t("dfToastFreigegeben"));
     } else {
       toast.error(res.fehler);
     }
@@ -54,7 +65,7 @@ export function DiagnoseFreigabe({
     setLaeuft(false);
     if (res.ok) {
       setAktivitaetsAufzeichnung(false);
-      toast.success("Freigabe beendet.");
+      toast.success(t("dfToastBeendet"));
     }
     else toast.error(res.fehler);
   }
@@ -65,15 +76,15 @@ export function DiagnoseFreigabe({
         <div className="min-w-0">
           <p className="flex items-center gap-2 font-semibold">
             <Icon icon="ph:check-circle" className="size-5 shrink-0" />
-            Diagnose freigegeben
+            {t("dfAktivTitel")}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Unser Support sieht deine Schritte und Fehlermeldungen bis{" "}
-            {new Date(aktiv.expires_at).toLocaleTimeString("de-DE", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}{" "}
-            Uhr deine Fehlermeldungen einsehen.
+            {t("dfAktivText", {
+              zeit: f.zeit(aktiv.expires_at, {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+            })}
           </p>
         </div>
         <button
@@ -82,7 +93,7 @@ export function DiagnoseFreigabe({
           onClick={() => void widerrufen()}
           className="shrink-0 text-sm font-semibold underline-offset-4 hover:underline disabled:opacity-50"
         >
-          Beenden
+          {t("dfBeenden")}
         </button>
       </div>
     );
@@ -92,28 +103,18 @@ export function DiagnoseFreigabe({
     <div className="mt-6 rounded-2xl border border-dashed border-border p-5">
       <p className="flex items-center gap-2 font-semibold">
         <Icon icon="ph:activity" className="size-5 shrink-0" />
-        Hilf uns, den Fehler zu finden
+        {t("dfTitel")}
       </p>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Gib unserem Support befristet Einblick — er sieht dann deine
-        Schritte und die Fehlermeldungen deines Kontos.
-      </p>
+      <p className="mt-1 text-sm text-muted-foreground">{t("dfEinleitung")}</p>
 
       {offen && (
         <div className="mt-4 rounded-xl bg-muted/40 p-4 text-sm">
-          <p className="font-semibold">Der Support sieht dann</p>
-          <p className="mt-1 text-muted-foreground">
-            Fehlermeldungen, fehlgeschlagene Aufrufe, Browser und Gerät —
-            und während der Freigabe, welche Seiten du öffnest und welche
-            Schaltflächen du anklickst.
-          </p>
-          <p className="mt-3 font-semibold">Nicht sichtbar</p>
-          <p className="mt-1 text-muted-foreground">
-            Deine Eingaben, Nachrichten und Gastdaten. Nach Ablauf oder
-            Widerruf endet die Aufzeichnung sofort.
-          </p>
+          <p className="font-semibold">{t("dfSiehtTitel")}</p>
+          <p className="mt-1 text-muted-foreground">{t("dfSiehtText")}</p>
+          <p className="mt-3 font-semibold">{t("dfSiehtNichtTitel")}</p>
+          <p className="mt-1 text-muted-foreground">{t("dfSiehtNichtText")}</p>
           <p className="mt-3 text-xs text-muted-foreground">
-            Die Freigabe gilt 8 Stunden und lässt sich jederzeit beenden.
+            {t("dfDauerHinweis", { stunden: FREIGABE_STUNDEN })}
           </p>
         </div>
       )}
@@ -125,14 +126,14 @@ export function DiagnoseFreigabe({
           onClick={() => void freigeben()}
           className="rounded-full bg-foreground px-5 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-50"
         >
-          {laeuft ? "Wird freigegeben …" : "Diagnose freigeben"}
+          {laeuft ? t("dfFreigebenLaeuft") : t("dfFreigeben")}
         </button>
         <button
           type="button"
           onClick={() => setOffen((o) => !o)}
           className="text-sm font-semibold underline-offset-4 hover:underline"
         >
-          {offen ? "Weniger" : "Was wird geteilt?"}
+          {offen ? t("dfWeniger") : t("dfWasGeteilt")}
         </button>
       </div>
     </div>

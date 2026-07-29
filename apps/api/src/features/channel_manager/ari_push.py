@@ -166,6 +166,34 @@ def _group_iso_days_to_ranges(days: set[str]) -> list[tuple[str, str]]:
     return ranges
 
 
+def _merge_equal_value_days(
+    drift: dict[str, int], feld: str, rate_plan_id: str
+) -> list[dict[str, Any]]:
+    """Drift-Tage mit GLEICHEM Wert zu date_range-Segmenten bündeln.
+
+    `drift` ist {ISO-Tag: Wert}. Zusammengefasst wird nur, was denselben Wert
+    trägt UND lückenlos aufeinanderfolgt — sonst würde eine Range einen Tag mit
+    abweichendem Preis/Min-Stay überschreiben. Ergebnis ist nach Startdatum
+    sortiert (stabile, lesbare Payload).
+    """
+    if not drift:
+        return []
+    tage_je_wert: dict[int, set[str]] = {}
+    for iso, wert in drift.items():
+        tage_je_wert.setdefault(wert, set()).add(iso)
+    segmente: list[dict[str, Any]] = []
+    for wert, tage in tage_je_wert.items():
+        for von, bis in _group_iso_days_to_ranges(tage):
+            segmente.append({
+                "date_from": von,
+                "date_to": bis,
+                feld: wert,
+                "rate_plan_id": rate_plan_id,
+            })
+    segmente.sort(key=lambda s: (s["date_from"], s["date_to"]))
+    return segmente
+
+
 def _expand_restriction_values(
     base: dict[str, Any], date_from: date, date_to: date
 ) -> list[dict[str, Any]]:
@@ -377,8 +405,21 @@ class AriPushMixin:
         self, db: Client, tenant_id: str, property_id: str,
     ) -> dict[str, str] | None:
         """property_id → (channex_property_id, channex_room_type_id). None, wenn
-        nicht mit Channex verbunden. 1 Objekt = 1 Einheit: je Objekt EIN
-        synthetischer Channex-Room-Type (local_unit_ref = property_id)."""
+        nicht mit Channex verbunden.
+
+        1 Objekt = 1 buchbare Einheit, also EIN Room-Type je Objekt. Gesucht wird
+        zuerst über `local_unit_ref = property_id` (der synthetische
+        FeWo-Room-Type). Findet sich dort nichts, greift der Fallback auf die
+        Room-Type-Map der Property.
+
+        Warum der Fallback nötig ist: Bei einer GETEILTEN Channex-Property
+        (Hotel, n Zimmer → 1 Property) trägt die Map `local_unit_ref =
+        room_type.id`, nicht die property_id. Der frühere harte Filter fand
+        solche Zimmer nie → sie fielen still aus dem Verfügbarkeits-Push
+        (Channex-Zertifizierung 17.07.2026: „Availability update has no data for
+        room type(s)"). `_resolve_channex_rate_plans` wurde für exakt dieses
+        Problem bereits repariert; hier fehlte die Entsprechung.
+        """
         pm = (
             db.table("channex_property_map")
             .select("id, channex_property_id")
@@ -400,6 +441,19 @@ class AriPushMixin:
             .limit(1)
             .execute()
         ).data
+        if not rt:
+            # Geteilte Property: Map hängt an room_type.id statt property_id.
+            # Älteste Map gewinnt (stabil über Aufrufe hinweg).
+            rt = (
+                db.table("channex_room_type_map")
+                .select("channex_room_type_id")
+                .eq("tenant_id", tenant_id)
+                .eq("property_map_id", pm[0]["id"])
+                .is_("deleted_at", "null")
+                .order("created_at")
+                .limit(1)
+                .execute()
+            ).data
         if not rt:
             return None
         return {
@@ -580,7 +634,10 @@ class AriPushMixin:
             tenant_id=tenant_id, property_id=property_id, step="availability"
         )
         try:
-            for r_from, r_to in push_ranges:
+            # ALLE Ranges in EINEM Request (values-Array), nicht ein Request je
+            # Range: Channex-Zertifizierung verlangt gebündelte date_range-
+            # Updates statt vieler Einzel-Calls.
+            if push_ranges:
                 self._channex.update_availability(
                     [
                         {
@@ -590,6 +647,7 @@ class AriPushMixin:
                             "date_to": r_to,
                             "availability": availability,
                         }
+                        for r_from, r_to in push_ranges
                     ]
                 )
             if outbox_id:
@@ -1268,16 +1326,17 @@ class AriPushMixin:
             result["drift"] += drift
             # Sichtbaren Sync-Status je Plan festhalten (Frontend liest ihn live).
             self._write_rate_plan_sync_state(db, local_rp, drift)
-            for iso, cents in sorted(price_drift.items()):
-                segments.append({
-                    "date_from": iso, "date_to": iso,
-                    "rate_cents": cents, "rate_plan_id": local_rp,
-                })
-            for iso, ms in sorted(min_drift.items()):
-                segments.append({
-                    "date_from": iso, "date_to": iso,
-                    "min_stay": ms, "rate_plan_id": local_rp,
-                })
+            # Gleichwertige AUFEINANDERFOLGENDE Tage zu einem date_range
+            # bündeln, statt je Tag ein Objekt zu senden. Die Channex-
+            # Zertifizierung mahnt Einzeltag-Objekte ausdrücklich an („Use
+            # date_range syntax with merged sequences"); bei Drift über einen
+            # längeren Zeitraum entstanden hier hunderte davon.
+            segments.extend(
+                _merge_equal_value_days(price_drift, "rate_cents", local_rp)
+            )
+            segments.extend(
+                _merge_equal_value_days(min_drift, "min_stay", local_rp)
+            )
         if segments:
             self.push_rates_batch(tenant_id, property_id, segments)
             result["pushed_segments"] = len(segments)
@@ -1600,18 +1659,19 @@ class AriPushMixin:
                 step="availability",
             )
             try:
-                for r_from, r_to in push_ranges:
-                    self._channex.update_availability(
-                        [
-                            {
-                                "property_id": mapping["channex_property_id"],
-                                "room_type_id": mapping["channex_room_type_id"],
-                                "date_from": r_from,
-                                "date_to": r_to,
-                                "availability": r["availability"],
-                            }
-                        ]
-                    )
+                # ALLE Ranges dieser Zeile in EINEM Request (s. schneller Pfad).
+                self._channex.update_availability(
+                    [
+                        {
+                            "property_id": mapping["channex_property_id"],
+                            "room_type_id": mapping["channex_room_type_id"],
+                            "date_from": r_from,
+                            "date_to": r_to,
+                            "availability": r["availability"],
+                        }
+                        for r_from, r_to in push_ranges
+                    ]
+                )
                 # Guard status='pending' wie in den übrigen Zweigen: arbeitet der
                 # schnelle push_availability_for_property-Pfad dieselbe Zeile
                 # nebenläufig ab, darf der Cron ihren Zustand/attempts-Zähler nicht

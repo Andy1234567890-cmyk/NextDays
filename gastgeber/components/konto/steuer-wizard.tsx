@@ -12,6 +12,7 @@
 // fehlt. So kann die UI nicht behaupten, etwas sei in Ordnung, was der Server
 // ablehnt.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
@@ -51,6 +52,7 @@ export function SteuerWizard({
   /** Gesetzt = Korrektur eines bestehenden Eintrags (Land steht dann fest). */
   bearbeiten?: TaxpayerEntry;
 }) {
+  const t = useTranslations("steuern");
   const [schritt, setSchritt] = useState<Schritt>(
     bearbeiten ? "felder" : vorbelegtesLand ? "art" : "land",
   );
@@ -162,7 +164,7 @@ export function SteuerWizard({
             <button
               type="button"
               onClick={zurueck}
-              aria-label="Zurück"
+              aria-label={t("zurueck")}
               className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
               <Icon icon="ph:arrow-left" className="size-5" />
@@ -171,12 +173,10 @@ export function SteuerWizard({
             <span className="size-7" />
           )}
           <h3 className="font-display text-base font-bold">
-            {bearbeiten
-              ? "Steuerinformationen bearbeiten"
-              : "Steuerinformationen hinzufügen"}
+            {bearbeiten ? t("dialogTitelBearbeiten") : t("dialogTitel")}
           </h3>
           <DialogClose
-            aria-label="Schließen"
+            aria-label={t("schliessen")}
             className="rounded-full p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             <Icon icon="ph:x" className="size-5" />
@@ -193,7 +193,10 @@ export function SteuerWizard({
               aria-valuenow={schrittNr}
               aria-valuemin={1}
               aria-valuemax={aktiveSchritte.length}
-              aria-label={`Schritt ${schrittNr} von ${aktiveSchritte.length}`}
+              aria-label={t("schrittVon", {
+                nr: schrittNr,
+                gesamt: aktiveSchritte.length,
+              })}
             >
               <div
                 className="h-full rounded-full bg-foreground transition-[width] duration-300"
@@ -201,7 +204,10 @@ export function SteuerWizard({
               />
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
-              Schritt {schrittNr} von {aktiveSchritte.length}
+              {t("schrittVon", {
+                nr: schrittNr,
+                gesamt: aktiveSchritte.length,
+              })}
             </p>
           </div>
         )}
@@ -210,15 +216,13 @@ export function SteuerWizard({
           {schritt === "land" && (
             <div className="flex flex-col gap-4">
               <p className="text-[0.9375rem] text-foreground">
-                Wähle zuerst das Land oder die Region, für die du deine
-                Steuerinformationen hinterlegst.
+                {t("landAuswahlEinleitung")}
               </p>
               <p className="text-sm text-muted-foreground">
-                Als Buchungsplattform sind wir verpflichtet, diese Angaben zu
-                erheben und jährlich an die Steuerbehörde zu melden.
+                {t("meldepflichtHinweis")}
               </p>
               <label className="flex flex-col gap-2">
-                <span className="text-sm font-medium">Land/Region</span>
+                <span className="text-sm font-medium">{t("landLabel")}</span>
                 <SuchAuswahl
                   optionen={steuerLaender.map((l) => ({
                     wert: l.code,
@@ -227,8 +231,10 @@ export function SteuerWizard({
                   }))}
                   wert={land}
                   onChange={setLand}
-                  platzhalter={regeln === null ? "Wird geladen …" : "Bitte wählen"}
-                  suchPlatzhalter="Land suchen …"
+                  platzhalter={
+                    regeln === null ? t("wirdGeladen") : t("bitteWaehlen")
+                  }
+                  suchPlatzhalter={t("landSuchen")}
                 />
               </label>
             </div>
@@ -237,45 +243,34 @@ export function SteuerWizard({
           {schritt === "art" && (
             <div className="flex flex-col gap-4">
               <p className="text-[0.9375rem] text-foreground">
-                Vermietest du als Privatperson oder als Unternehmen?
+                {t("artFrage")}
               </p>
               {(
-                [
-                  {
-                    wert: "individual" as const,
-                    titel: "Privatperson",
-                    text: "Du vermietest als natürliche Person.",
-                  },
-                  {
-                    wert: "entity" as const,
-                    titel: "Unternehmen",
-                    text: "Du vermietest über eine Firma oder Gesellschaft.",
-                  },
-                ] satisfies { wert: TaxpayerKind; titel: string; text: string }[]
-              ).map((o) => (
+                ["individual", "entity"] satisfies TaxpayerKind[]
+              ).map((wert) => (
                 <button
-                  key={o.wert}
+                  key={wert}
                   type="button"
-                  onClick={() => setArt(o.wert)}
+                  onClick={() => setArt(wert)}
                   className={`flex items-start gap-3 rounded-2xl border p-4 text-left transition-colors ${
-                    art === o.wert
+                    art === wert
                       ? "border-foreground bg-muted"
                       : "border-border hover:bg-muted/60"
                   }`}
                 >
                   <span
                     className={`mt-1 size-4 shrink-0 rounded-full border-2 ${
-                      art === o.wert
+                      art === wert
                         ? "border-foreground bg-foreground"
                         : "border-muted-foreground"
                     }`}
                   />
                   <span className="flex flex-col gap-1">
                     <span className="text-[0.9375rem] font-medium">
-                      {o.titel}
+                      {t(`art.${wert}.titel`)}
                     </span>
                     <span className="text-sm text-muted-foreground">
-                      {o.text}
+                      {t(`art.${wert}.textKurz`)}
                     </span>
                   </span>
                 </button>
@@ -288,17 +283,17 @@ export function SteuerWizard({
               {istPerson ? (
                 <>
                   <Feld
-                    label="Vorname"
+                    label={t("vorname")}
                     wert={werte.first_name}
                     onChange={(v) => setzeWert("first_name", v)}
                   />
                   <Feld
-                    label="Nachname"
+                    label={t("nachname")}
                     wert={werte.last_name}
                     onChange={(v) => setzeWert("last_name", v)}
                   />
                   <Feld
-                    label="Geburtsdatum"
+                    label={t("geburtsdatum")}
                     typ="date"
                     wert={werte.date_of_birth}
                     onChange={(v) => setzeWert("date_of_birth", v)}
@@ -307,13 +302,13 @@ export function SteuerWizard({
               ) : (
                 <>
                   <Feld
-                    label="Firmenname"
+                    label={t("firmenname")}
                     wert={werte.legal_name}
                     onChange={(v) => setzeWert("legal_name", v)}
                   />
                   <Feld
-                    label="Handelsregisternummer"
-                    hinweis="Optional, z. B. HRB 12345"
+                    label={t("handelsregisternummer")}
+                    hinweis={t("handelsregisternummerHinweis")}
                     wert={werte.business_registration_number}
                     onChange={(v) =>
                       setzeWert("business_registration_number", v)
@@ -323,12 +318,8 @@ export function SteuerWizard({
               )}
 
               <Feld
-                label="Steueridentifikationsnummer"
-                hinweis={
-                  istPerson
-                    ? "Falls dein Land keine vergibt, gib stattdessen den Geburtsort an."
-                    : undefined
-                }
+                label={t("steuerId")}
+                hinweis={istPerson ? t("steuerIdHinweisPerson") : undefined}
                 wert={werte.tin}
                 onChange={(v) => setzeWert("tin", v)}
               />
@@ -336,16 +327,17 @@ export function SteuerWizard({
               {istPerson && !werte.tin && (
                 <div className="flex flex-col gap-4 rounded-2xl bg-muted/60 p-4">
                   <p className="text-sm text-muted-foreground">
-                    Ohne Steueridentifikationsnummer brauchen wir deinen
-                    Geburtsort.
+                    {t("geburtsortErsatzHinweis")}
                   </p>
                   <Feld
-                    label="Geburtsort"
+                    label={t("geburtsort")}
                     wert={werte.birth_place_city}
                     onChange={(v) => setzeWert("birth_place_city", v)}
                   />
                   <label className="flex flex-col gap-2">
-                    <span className="text-sm font-medium">Geburtsland</span>
+                    <span className="text-sm font-medium">
+                      {t("geburtsland")}
+                    </span>
                     <SuchAuswahl
                       optionen={geburtsLaender.map((l) => ({
                         wert: l.code,
@@ -354,37 +346,37 @@ export function SteuerWizard({
                       }))}
                       wert={werte.birth_place_country ?? ""}
                       onChange={(v) => setzeWert("birth_place_country", v)}
-                      suchPlatzhalter="Land suchen …"
+                      suchPlatzhalter={t("landSuchen")}
                     />
                   </label>
                 </div>
               )}
 
               <div className="mt-2 border-t border-border pt-4">
-                <p className="mb-4 text-sm font-medium">Anschrift</p>
+                <p className="mb-4 text-sm font-medium">{t("anschrift")}</p>
                 <div className="flex flex-col gap-4">
                   <Feld
-                    label="Straße und Hausnummer"
+                    label={t("strasseHausnummer")}
                     wert={werte.address_line1}
                     onChange={(v) => setzeWert("address_line1", v)}
                   />
                   <Feld
-                    label="Adresszusatz"
-                    hinweis="Optional"
+                    label={t("adresszusatz")}
+                    hinweis={t("optional")}
                     wert={werte.address_line2}
                     onChange={(v) => setzeWert("address_line2", v)}
                   />
                   <div className="flex gap-4">
                     <div className="w-1/3">
                       <Feld
-                        label="PLZ"
+                        label={t("plzKurz")}
                         wert={werte.postal_code}
                         onChange={(v) => setzeWert("postal_code", v)}
                       />
                     </div>
                     <div className="flex-1">
                       <Feld
-                        label="Ort"
+                        label={t("ort")}
                         wert={werte.city}
                         onChange={(v) => setzeWert("city", v)}
                       />
@@ -394,8 +386,7 @@ export function SteuerWizard({
               </div>
 
               <p className="text-xs text-muted-foreground">
-                Mit dem Speichern bestätigst du, dass diese Angaben richtig und
-                vollständig sind.
+                {t("speichernBestaetigungHinweis")}
               </p>
             </div>
           )}
@@ -417,18 +408,18 @@ export function SteuerWizard({
             onClick={() => (zurueckMoeglich ? zurueck() : onClose())}
             className="text-sm font-medium underline underline-offset-4"
           >
-            {zurueckMoeglich ? "Zurück" : "Abbrechen"}
+            {zurueckMoeglich ? t("zurueck") : t("abbrechen")}
           </button>
           {schritt === "felder" ? (
             <Button onClick={() => void speichern()} disabled={laeuft}>
-              {laeuft ? "Wird gespeichert …" : "Speichern"}
+              {laeuft ? t("wirdGespeichert") : t("speichern")}
             </Button>
           ) : (
             <Button
               onClick={() => setSchritt(schritt === "land" ? "art" : "felder")}
               disabled={schritt === "land" && !land}
             >
-              Weiter
+              {t("weiter")}
             </Button>
           )}
         </div>

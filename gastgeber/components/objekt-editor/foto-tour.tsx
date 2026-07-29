@@ -61,7 +61,7 @@ export function FotoTour({
       {!aktiv && (
         <button
           type="button"
-          className="mb-8 flex w-full items-center gap-3 rounded-2xl bg-muted/50 px-5 py-4 text-left transition-colors hover:bg-muted/70"
+          className="mb-8 flex w-full items-center gap-3 rounded-2xl bg-muted/50 px-5 py-4 text-start transition-colors hover:bg-muted/70"
         >
           <span className="size-1.5 rounded-full bg-accent" />
           <span className="flex-1 text-sm font-medium">{t("aufgabenOffen")}</span>

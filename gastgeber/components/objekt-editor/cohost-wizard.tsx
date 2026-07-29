@@ -9,6 +9,7 @@
 // würde sie überlesen — und im Zweifel vergibt man Vollzugriff.
 import { Icon } from "@iconify/react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -20,6 +21,9 @@ import { ZUGRIFFS_STUFEN } from "./cohost-katalog";
 type Schritt = "kontakt" | "rechte" | "notiz" | "pruefen" | "gesendet";
 
 const REIHENFOLGE: Schritt[] = ["kontakt", "rechte", "notiz", "pruefen"];
+
+/** Länge der optionalen Nachricht — dieselbe Grenze prüft das Backend. */
+const NOTIZ_MAX_ZEICHEN = 500;
 
 /** Grobe Plausibilitätsprüfung. Die echte Prüfung macht das Backend. */
 function emailPlausibel(wert: string): boolean {
@@ -35,6 +39,7 @@ export function CohostWizard({
   onFertig: (einladung: CohostInvitation) => void;
   onAbbrechen: () => void;
 }) {
+  const t = useTranslations("objektEditor");
   const reduziert = useReducedMotion();
   const [schritt, setSchritt] = useState<Schritt>("kontakt");
   const [email, setEmail] = useState("");
@@ -100,12 +105,15 @@ export function CohostWizard({
             <Icon icon="ph:check" className="size-7 text-background" />
           </div>
           <h2 className="mt-6 font-sans text-[2rem] font-bold tracking-tight">
-            Einladung erstellt
+            {t("cohostGesendetTitel")}
           </h2>
           <p className="mt-3 text-[0.9375rem] leading-relaxed text-muted-foreground">
-            Schick <span className="font-medium text-foreground">{email}</span>{" "}
-            diesen Link. Sobald die Einladung angenommen wird, erscheint die
-            Person in deiner Liste. Der Link gilt 7 Tage.
+            {t.rich("cohostGesendetText", {
+              email,
+              hervor: (teile) => (
+                <span className="font-medium text-foreground">{teile}</span>
+              ),
+            })}
           </p>
           {link && (
             <div className="mt-6">
@@ -119,11 +127,11 @@ export function CohostWizard({
                     void navigator.clipboard.writeText(
                       `${window.location.origin}${link}`,
                     );
-                    toast.success("Link kopiert.");
+                    toast.success(t("cohostLinkKopiert"));
                   }}
                   className="shrink-0 rounded-full bg-foreground px-4 py-2 text-sm font-semibold text-background outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/20"
                 >
-                  Kopieren
+                  {t("cohostKopieren")}
                 </button>
               </div>
             </div>
@@ -135,7 +143,7 @@ export function CohostWizard({
             onClick={onAbbrechen}
             className="rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/20"
           >
-            Fertig
+            {t("fertig")}
           </button>
         </div>
       </div>
@@ -171,30 +179,29 @@ export function CohostWizard({
             {schritt === "kontakt" && (
               <>
                 <h2 className="font-sans text-[2rem] font-bold tracking-tight">
-                  Wen möchtest du einladen?
+                  {t("cohostKontaktTitel")}
                 </h2>
                 <p className="mt-3 text-[0.9375rem] text-muted-foreground">
-                  Wir erstellen eine Einladung, die du weitergeben kannst. Der
-                  Zugriff entsteht erst, wenn sie angenommen wird.
+                  {t("cohostKontaktText")}
                 </p>
                 <label
                   htmlFor="cohost-email"
                   className="mt-8 block text-sm font-medium"
                 >
-                  E-Mail-Adresse
+                  {t("cohostEmailLabel")}
                 </label>
                 <input
                   id="cohost-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@beispiel.de"
+                  placeholder={t("cohostEmailPlatzhalter")}
                   autoComplete="off"
                   className="mt-2 w-full rounded-2xl border border-border bg-background px-5 py-3.5 outline-none transition-colors focus-visible:border-foreground"
                 />
                 {email.length > 0 && !emailPlausibel(email) && (
                   <p className="mt-2 text-sm text-muted-foreground">
-                    Bitte gib eine vollständige E-Mail-Adresse ein.
+                    {t("cohostEmailUnvollstaendig")}
                   </p>
                 )}
               </>
@@ -203,10 +210,10 @@ export function CohostWizard({
             {schritt === "rechte" && (
               <>
                 <h2 className="font-sans text-[2rem] font-bold tracking-tight">
-                  Worauf soll die Person Zugriff haben?
+                  {t("cohostRechteTitel")}
                 </h2>
                 <p className="mt-3 text-[0.9375rem] text-muted-foreground">
-                  Du kannst das jederzeit ändern.
+                  {t("cohostRechteText")}
                 </p>
                 <div className="mt-8 space-y-3">
                   {ZUGRIFFS_STUFEN.map((s) => {
@@ -226,9 +233,11 @@ export function CohostWizard({
                         <span className="flex items-center gap-3">
                           <Icon icon={s.icon} className="size-6 shrink-0" />
                           <span className="min-w-0 flex-1">
-                            <span className="block font-semibold">{s.label}</span>
+                            <span className="block font-semibold">
+                              {t(s.labelKey)}
+                            </span>
                             <span className="mt-0.5 block text-sm text-muted-foreground">
-                              {s.kurz}
+                              {t(s.kurzKey)}
                             </span>
                           </span>
                         </span>
@@ -237,10 +246,10 @@ export function CohostWizard({
                         {gewaehlt && (
                           <span className="mt-4 block border-t border-border pt-4">
                             <span className="block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                              Darf
+                              {t("cohostDarf")}
                             </span>
                             <ul className="mt-2 space-y-1.5">
-                              {s.darf.map((d) => (
+                              {s.darfKeys.map((d) => (
                                 <li
                                   key={d}
                                   className="flex gap-2 text-sm text-muted-foreground"
@@ -249,17 +258,17 @@ export function CohostWizard({
                                     icon="ph:check"
                                     className="mt-0.5 size-4 shrink-0"
                                   />
-                                  {d}
+                                  {t(d)}
                                 </li>
                               ))}
                             </ul>
-                            {s.darfNicht.length > 0 && (
+                            {s.darfNichtKeys.length > 0 && (
                               <>
                                 <span className="mt-4 block text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                                  Darf nicht
+                                  {t("cohostDarfNicht")}
                                 </span>
                                 <ul className="mt-2 space-y-1.5">
-                                  {s.darfNicht.map((d) => (
+                                  {s.darfNichtKeys.map((d) => (
                                     <li
                                       key={d}
                                       className="flex gap-2 text-sm text-muted-foreground"
@@ -268,7 +277,7 @@ export function CohostWizard({
                                         icon="ph:x"
                                         className="mt-0.5 size-4 shrink-0"
                                       />
-                                      {d}
+                                      {t(d)}
                                     </li>
                                   ))}
                                 </ul>
@@ -286,20 +295,25 @@ export function CohostWizard({
             {schritt === "notiz" && (
               <>
                 <h2 className="font-sans text-[2rem] font-bold tracking-tight">
-                  Möchtest du etwas dazuschreiben?
+                  {t("cohostNotizTitel")}
                 </h2>
                 <p className="mt-3 text-[0.9375rem] text-muted-foreground">
-                  Die Nachricht steht in der Einladung. Optional.
+                  {t("cohostNotizText")}
                 </p>
                 <textarea
                   value={notiz}
-                  onChange={(e) => setNotiz(e.target.value.slice(0, 500))}
+                  onChange={(e) =>
+                    setNotiz(e.target.value.slice(0, NOTIZ_MAX_ZEICHEN))
+                  }
                   rows={5}
-                  placeholder="Hallo, magst du mir bei diesem Objekt helfen?"
+                  placeholder={t("cohostNotizPlatzhalter")}
                   className="mt-8 w-full resize-none rounded-2xl border border-border bg-background px-5 py-4 outline-none transition-colors focus-visible:border-foreground"
                 />
                 <p className="mt-2 text-right text-sm text-muted-foreground">
-                  {notiz.length}/500
+                  {t("cohostNotizZaehler", {
+                    n: notiz.length,
+                    max: NOTIZ_MAX_ZEICHEN,
+                  })}
                 </p>
               </>
             )}
@@ -307,25 +321,29 @@ export function CohostWizard({
             {schritt === "pruefen" && gewaehlteStufe && (
               <>
                 <h2 className="font-sans text-[2rem] font-bold tracking-tight">
-                  Passt das so?
+                  {t("cohostPruefenTitel")}
                 </h2>
                 <dl className="mt-8 divide-y divide-border">
                   <div className="flex items-start justify-between gap-4 py-4">
-                    <dt className="text-sm text-muted-foreground">Einladen</dt>
+                    <dt className="text-sm text-muted-foreground">
+                      {t("cohostPruefenEinladen")}
+                    </dt>
                     <dd className="min-w-0 break-words text-right font-medium">
                       {email}
                     </dd>
                   </div>
                   <div className="flex items-start justify-between gap-4 py-4">
-                    <dt className="text-sm text-muted-foreground">Zugriff</dt>
+                    <dt className="text-sm text-muted-foreground">
+                      {t("cohostPruefenZugriff")}
+                    </dt>
                     <dd className="text-right font-medium">
-                      {gewaehlteStufe.label}
+                      {t(gewaehlteStufe.labelKey)}
                     </dd>
                   </div>
                   {notiz.trim() && (
                     <div className="flex items-start justify-between gap-4 py-4">
                       <dt className="shrink-0 text-sm text-muted-foreground">
-                        Nachricht
+                        {t("cohostPruefenNachricht")}
                       </dt>
                       <dd className="min-w-0 whitespace-pre-wrap break-words text-right">
                         {notiz.trim()}
@@ -334,8 +352,7 @@ export function CohostWizard({
                   )}
                 </dl>
                 <p className="mt-6 text-sm text-muted-foreground">
-                  Du bleibst für dein Objekt verantwortlich — auch für das, was
-                  Co-Gastgeber tun. Den Zugriff kannst du jederzeit entziehen.
+                  {t("cohostPruefenHaftung")}
                 </p>
               </>
             )}
@@ -349,7 +366,7 @@ export function CohostWizard({
           onClick={zurueck}
           className="text-sm font-semibold underline-offset-4 outline-none hover:underline focus-visible:ring-2 focus-visible:ring-foreground/20"
         >
-          {index === 0 ? "Abbrechen" : "Zurück"}
+          {index === 0 ? t("abbrechen") : t("zurueck")}
         </button>
         <button
           type="button"
@@ -358,10 +375,10 @@ export function CohostWizard({
           className="rounded-full bg-foreground px-6 py-3 text-sm font-semibold text-background outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-foreground/20 disabled:opacity-40"
         >
           {sendet
-            ? "Wird erstellt …"
+            ? t("cohostWirdErstellt")
             : schritt === "pruefen"
-              ? "Einladung erstellen"
-              : "Weiter"}
+              ? t("cohostEinladungErstellen")
+              : t("cohostWeiter")}
         </button>
       </div>
     </div>

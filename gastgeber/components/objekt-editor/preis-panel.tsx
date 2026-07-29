@@ -142,7 +142,7 @@ export function PreisPanel({
             <button
               type="button"
               onClick={() => setDetail("smart")}
-              className="min-w-0 flex-1 text-left outline-none"
+              className="min-w-0 flex-1 text-start outline-none"
             >
               <p className="font-semibold">{t("preisSmart")}</p>
               <p className="mt-1 text-sm text-muted-foreground">
@@ -175,7 +175,7 @@ export function PreisPanel({
         {detail != null && (
           <motion.aside
             key="preis-sidebar"
-            className="shrink-0 overflow-hidden border-l border-border"
+            className="shrink-0 overflow-hidden border-s border-border"
             initial={reduziert ? false : { width: 0, opacity: 0 }}
             animate={{ width: "32rem", opacity: 1 }}
             exit={reduziert ? { opacity: 0 } : { width: 0, opacity: 0 }}
@@ -679,7 +679,7 @@ function KachelButton({
     <button
       type="button"
       onClick={onClick}
-      className="block w-full rounded-2xl border border-border p-6 text-left outline-none transition-all hover:shadow-md focus-visible:ring-2 focus-visible:ring-foreground/20"
+      className="block w-full rounded-2xl border border-border p-6 text-start outline-none transition-all hover:shadow-md focus-visible:ring-2 focus-visible:ring-foreground/20"
     >
       {children}
     </button>
@@ -876,7 +876,7 @@ function VergleichModal({
             type="button"
             onClick={onSchliessen}
             aria-label={t("schliessen")}
-            className="absolute left-5 top-5 z-20 flex size-10 items-center justify-center rounded-full bg-background shadow-md transition-colors hover:bg-muted"
+            className="absolute start-5 top-5 z-20 flex size-10 items-center justify-center rounded-full bg-background shadow-md transition-colors hover:bg-muted"
           >
             <Icon icon="ph:x" className="size-5" />
           </button>
@@ -897,7 +897,7 @@ function VergleichModal({
 
           {/* Info-Karte rechts oben (Airbnb) — nur mit echten Daten. */}
           {daten && daten.anzahl > 0 && daten.min != null && daten.max != null && (
-            <div className="absolute right-5 top-5 z-20 w-80 max-w-[calc(100%-2.5rem)] rounded-2xl bg-background p-6 shadow-xl">
+            <div className="absolute end-5 top-5 z-20 w-80 max-w-[calc(100%-2.5rem)] rounded-2xl bg-background p-6 shadow-xl">
               <h2 className="text-xl font-bold tracking-tight">
                 {t("preisVergleichTitel")}
               </h2>

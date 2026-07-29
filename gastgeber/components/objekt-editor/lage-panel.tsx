@@ -133,7 +133,7 @@ export function LagePanel({
         {detail != null && (
           <motion.aside
             key="lage-sidebar"
-            className="shrink-0 overflow-hidden border-l border-border"
+            className="shrink-0 overflow-hidden border-s border-border"
             initial={reduziert ? false : { width: 0, opacity: 0 }}
             animate={{ width: "32rem", opacity: 1 }}
             exit={reduziert ? { opacity: 0 } : { width: 0, opacity: 0 }}
@@ -491,7 +491,7 @@ function TextSidebar({
         maxLength={500}
         className="w-full resize-none rounded-2xl border border-border bg-transparent p-4 outline-none focus-visible:border-foreground"
       />
-      <p className="mt-2 text-right text-xs text-muted-foreground">
+      <p className="mt-2 text-end text-xs text-muted-foreground">
         {t("zeichenVerbleibend", { n: 500 - lokal.length, max: 500 })}
       </p>
       <div className="mt-6 flex items-center justify-between gap-4">
@@ -562,7 +562,7 @@ function ZeileButton({
     <button
       type="button"
       onClick={onClick}
-      className="flex w-full items-center justify-between gap-4 p-5 text-left outline-none transition-colors first:rounded-t-2xl last:rounded-b-2xl hover:bg-muted/40"
+      className="flex w-full items-center justify-between gap-4 p-5 text-start outline-none transition-colors first:rounded-t-2xl last:rounded-b-2xl hover:bg-muted/40"
     >
       <div className="min-w-0">
         <p className="font-semibold">{titel}</p>

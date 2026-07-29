@@ -9,6 +9,7 @@
 // meldung läuft erstmals im Januar. Ein erfundener Download-Button wäre ein
 // toter Button (Wurzel 5).
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@nextdays/ui/button";
@@ -46,6 +47,7 @@ export function SteuernAbschnitt({
   uebersicht: TaxpayerOverview | null;
   objektangaben: ObjektAngabeStatus[] | null;
 }) {
+  const t = useTranslations("konto");
   const [daten, setDaten] = useState(uebersicht);
   const [reiter, setReiter] = useState<Reiter>("steuerzahler");
   const [wizardOffen, setWizardOffen] = useState(false);
@@ -59,10 +61,7 @@ export function SteuernAbschnitt({
 
   if (!daten) {
     return (
-      <p className="text-sm text-muted-foreground">
-        Die Steuerangaben konnten nicht geladen werden. Diesen Bereich sieht nur,
-        wer die Abrechnung verwalten darf.
-      </p>
+      <p className="text-sm text-muted-foreground">{t("sxNichtGeladen")}</p>
     );
   }
 
@@ -82,13 +81,13 @@ export function SteuernAbschnitt({
 
   return (
     <div className="flex flex-col gap-8">
-      <h2 className="font-display text-2xl font-extrabold">Steuern</h2>
+      <h2 className="font-display text-2xl font-extrabold">{t("navSteuern")}</h2>
 
       <div className="flex gap-2">
         {(
           [
-            ["steuerzahler", "Steuerzahler"],
-            ["dokumente", "Steuerdokumente"],
+            ["steuerzahler", t("sxReiterSteuerzahler")],
+            ["dokumente", t("sxReiterDokumente")],
           ] as const
         ).map(([k, label]) => (
           <button
@@ -118,12 +117,10 @@ export function SteuernAbschnitt({
           <section className="flex flex-col gap-4">
             <div className="flex flex-col gap-1">
               <h3 className="font-display text-xl font-bold">
-                Steuerinformationen
+                {t("sxInfoTitel")}
               </h3>
               <p className="text-sm text-muted-foreground">
-                Für die meisten Länder sind Steuerangaben erforderlich. Wir sind
-                als Buchungsplattform verpflichtet, sie zu erheben und jährlich
-                an die Steuerbehörde zu melden.
+                {t("sxInfoText")}
               </p>
             </div>
 
@@ -135,9 +132,9 @@ export function SteuernAbschnitt({
                     className="mt-0.5 size-4 shrink-0"
                   />
                   <span>
-                    Für{" "}
-                    {daten.fehlende_laender.map(landName).join(", ")} fehlen noch
-                    Steuerangaben — dort hast du Objekte.
+                    {t("sxFehlendeLaender", {
+                      laender: daten.fehlende_laender.map(landName).join(", "),
+                    })}
                   </span>
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -148,7 +145,7 @@ export function SteuernAbschnitt({
                       size="sm"
                       onClick={() => oeffneWizard(land)}
                     >
-                      {landName(land)} ergänzen
+                      {t("sxLandErgaenzen", { land: landName(land) })}
                     </Button>
                   ))}
                 </div>
@@ -167,11 +164,11 @@ export function SteuernAbschnitt({
                         {landName(e.country)}
                         {e.confirmed_at ? (
                           <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                            Abgeschlossen
+                            {t("sxStatusAbgeschlossen")}
                           </span>
                         ) : (
                           <span className="rounded-full bg-amber-500/10 px-2 py-0.5 text-xs font-medium text-amber-600 dark:text-amber-400">
-                            Handlung erforderlich
+                            {t("sxStatusHandlung")}
                           </span>
                         )}
                       </span>
@@ -184,8 +181,8 @@ export function SteuernAbschnitt({
                             Übersicht nicht lesbar sein. Zum Prüfen genügen
                             die letzten Stellen. */}
                         {e.tin
-                          ? ` · ${maskiere(e.tin)}`
-                          : " · ohne Steuernummer"}
+                          ? t("sxTinZusatz", { nummer: maskiere(e.tin) })
+                          : t("sxOhneSteuernummer")}
                       </span>
                     </div>
                     <div className="flex shrink-0 gap-3">
@@ -194,14 +191,14 @@ export function SteuernAbschnitt({
                         onClick={() => oeffneWizard(undefined, e)}
                         className="text-sm font-medium underline underline-offset-4"
                       >
-                        Bearbeiten
+                        {t("bearbeiten")}
                       </button>
                       <button
                         type="button"
                         onClick={() => void entferne(e.country)}
                         className="text-sm text-muted-foreground underline underline-offset-4"
                       >
-                        Entfernen
+                        {t("sxEntfernen")}
                       </button>
                     </div>
                   </li>
@@ -210,33 +207,34 @@ export function SteuernAbschnitt({
             )}
 
             <Button className="self-start" onClick={() => setStartOffen(true)}>
-              Steuerinformationen hinzufügen
+              {t("sxHinzufuegen")}
             </Button>
           </section>
 
           <section className="flex flex-col gap-3 border-t border-border pt-8">
             <h3 className="font-display text-xl font-bold">
-              Umsatzsteuer-Identifikationsnummer
+              {t("utFeldUstId")}
             </h3>
-            <p className="text-sm text-muted-foreground">
-              Wenn du umsatzsteuerlich registriert bist, hinterlege deine
-              USt-IdNr. Sie gehört zu den Unternehmensdaten und wird für deine
-              Rechnungen verwendet.
-            </p>
+            <p className="text-sm text-muted-foreground">{t("sxUstText")}</p>
             {daten.vat_id ? (
               <p className="text-[0.9375rem]">
-                Hinterlegt: <span className="font-medium">{daten.vat_id}</span>
+                {t.rich("sxUstHinterlegt", {
+                  wert: daten.vat_id,
+                  stark: (teile) => (
+                    <span className="font-medium">{teile}</span>
+                  ),
+                })}
               </p>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Noch keine USt-IdNr. hinterlegt.
+                {t("sxUstLeer")}
               </p>
             )}
             <a
               href="/konto?bereich=unternehmen"
               className="self-start text-sm font-medium underline underline-offset-4"
             >
-              In den Unternehmensdaten bearbeiten
+              {t("sxUstBearbeiten")}
             </a>
           </section>
 
@@ -245,17 +243,16 @@ export function SteuernAbschnitt({
       ) : (
         <section className="flex flex-col gap-4">
           <div className="flex flex-col gap-1">
-            <h3 className="font-display text-xl font-bold">Dokumente</h3>
+            <h3 className="font-display text-xl font-bold">
+              {t("sxDokumenteTitel")}
+            </h3>
             <p className="text-sm text-muted-foreground">
-              Hier findest du künftig die Unterlagen zu deiner jährlichen
-              Steuermeldung. Deine Rechnungen und Auszahlungen findest du unter
-              Zahlungen.
+              {t("sxDokumenteText")}
             </p>
           </div>
           <div className="rounded-2xl border border-border p-6">
             <p className="text-sm text-muted-foreground">
-              Es liegen noch keine Steuerdokumente vor. Die Meldung erfolgt
-              jeweils im Januar für das abgelaufene Jahr.
+              {t("sxDokumenteLeer")}
             </p>
           </div>
         </section>

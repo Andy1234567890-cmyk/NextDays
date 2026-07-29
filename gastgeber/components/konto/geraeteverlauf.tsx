@@ -11,6 +11,7 @@ import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
+import { useFormatierung } from "@/lib/formatierung";
 import {
   type GeraetSitzung,
   ladeSitzungen,
@@ -20,6 +21,7 @@ import {
 
 export function Geraeteverlauf() {
   const t = useTranslations("konto");
+  const f = useFormatierung();
   const [sitzungen, setSitzungen] = useState<GeraetSitzung[] | null>(null);
   const [fehler, setFehler] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -83,15 +85,15 @@ export function Geraeteverlauf() {
             </span>
             <div className="min-w-0 flex-1">
               <p className="truncate font-medium">
-                {geraetName(s.user_agent)}
+                {geraetName(s.user_agent, t)}
                 {s.is_current ? (
-                  <span className="ml-2 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
+                  <span className="ms-2 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-700">
                     {t("geraeteDieses")}
                   </span>
                 ) : null}
               </p>
               <p className="truncate text-sm text-muted-foreground">
-                {[ort(s.city, s.country), s.ip, zeit(s.last_seen_at, t)]
+                {[ort(s.city, s.country), s.ip, zeit(s.last_seen_at, t, f)]
                   .filter(Boolean)
                   .join(" · ")}
               </p>
@@ -126,8 +128,11 @@ export function Geraeteverlauf() {
 
 // --- User-Agent → menschenlesbar (bewusst simpel, keine externe Lib) ---------
 
-function geraetName(ua: string | null): string {
-  if (!ua) return "Unbekanntes Gerät";
+function geraetName(
+  ua: string | null,
+  t: ReturnType<typeof useTranslations>,
+): string {
+  if (!ua) return t("geraeteUnbekannt");
   const browser = erkenne(ua, [
     ["Edg/", "Edge"],
     ["OPR/", "Opera"],
@@ -162,11 +167,14 @@ function erkenne(ua: string, paare: [string, string][]): string | null {
   return null;
 }
 
-function zeit(iso: string | null, t: ReturnType<typeof useTranslations>): string {
+function zeit(
+  iso: string | null,
+  t: ReturnType<typeof useTranslations>,
+  f: ReturnType<typeof useFormatierung>,
+): string {
   if (!iso) return "";
-  const d = new Date(iso);
   return t("geraeteZuletzt", {
-    datum: d.toLocaleDateString("de-DE", {
+    datum: f.datum(iso, {
       day: "numeric",
       month: "short",
       hour: "2-digit",

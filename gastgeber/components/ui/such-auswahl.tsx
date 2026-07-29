@@ -10,6 +10,7 @@
 // Nutzer gar nicht erreichbar wäre: ↑/↓ wandern, Enter wählt, Escape schließt.
 // Die Rollen (combobox/listbox/option) sagen Screenreadern, was das Ding ist.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 export interface SuchOption {
@@ -24,8 +25,8 @@ export function SuchAuswahl({
   optionen,
   wert,
   onChange,
-  platzhalter = "Bitte wählen",
-  suchPlatzhalter = "Suchen …",
+  platzhalter,
+  suchPlatzhalter,
   disabled = false,
 }: {
   optionen: SuchOption[];
@@ -35,6 +36,11 @@ export function SuchAuswahl({
   suchPlatzhalter?: string;
   disabled?: boolean;
 }) {
+  const t = useTranslations("gemeinsam");
+  // Die Vorgaben kommen aus den Übersetzungen, nicht aus Default-Parametern —
+  // ein Default-String im Signatur-Kopf wäre in jeder Sprache deutsch.
+  const platzhalterText = platzhalter ?? t("bitteWaehlen");
+  const suchText = suchPlatzhalter ?? t("suchen");
   const [offen, setOffen] = useState(false);
   const [suche, setSuche] = useState("");
   const [markiert, setMarkiert] = useState(0);
@@ -115,10 +121,10 @@ export function SuchAuswahl({
         onClick={() => setOffen((o) => !o)}
         aria-haspopup="listbox"
         aria-expanded={offen}
-        className="flex h-12 w-full items-center justify-between gap-3 rounded-xl border border-border bg-background pl-3 pr-4 text-left text-[0.9375rem] outline-none focus-visible:border-foreground disabled:opacity-60"
+        className="flex h-12 w-full items-center justify-between gap-3 rounded-xl border border-border bg-background ps-3 pe-4 text-start text-[0.9375rem] outline-none focus-visible:border-foreground disabled:opacity-60"
       >
         <span className={gewaehlt ? "" : "text-muted-foreground"}>
-          {gewaehlt?.label ?? platzhalter}
+          {gewaehlt?.label ?? platzhalterText}
         </span>
         <Icon
           icon="ph:caret-down"
@@ -143,8 +149,8 @@ export function SuchAuswahl({
                 setMarkiert(0);
               }}
               onKeyDown={taste}
-              placeholder={suchPlatzhalter}
-              aria-label={suchPlatzhalter}
+              placeholder={suchText}
+              aria-label={suchText}
               role="combobox"
               aria-expanded={offen}
               aria-controls="such-auswahl-liste"
@@ -154,7 +160,7 @@ export function SuchAuswahl({
 
           {treffer.length === 0 ? (
             <p className="px-4 py-6 text-center text-sm text-muted-foreground">
-              Nichts gefunden.
+              {t("nichtsGefunden")}
             </p>
           ) : (
             <ul
@@ -169,7 +175,7 @@ export function SuchAuswahl({
                     type="button"
                     onClick={() => waehle(o)}
                     onMouseEnter={() => setMarkiert(i)}
-                    className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-left text-[0.9375rem] ${
+                    className={`flex w-full items-center justify-between gap-3 px-4 py-2.5 text-start text-[0.9375rem] ${
                       i === markiert ? "bg-muted" : ""
                     }`}
                   >

@@ -9,16 +9,17 @@
 // Etagen-Stepper, Baujahr, Wohnfläche+Einheit. Taxonomie aus der DB (0198),
 // NICHTS hartkodiert außer den Angebotsart-/Zimmeranzahl-Labels.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useState } from "react";
 
 import type { ListingType, Property } from "@/lib/properties";
 import { getTaxonomy, type Taxonomy } from "@/lib/taxonomie";
 
-// Angebotsart-Label (Airbnb „Listing type").
-const LISTING_LABEL: Record<ListingType, string> = {
-  entire_place: "Der gesamte Ort",
-  private_room: "Zimmer",
-  shared_room: "Geteiltes Zimmer",
+// Angebotsart-Label (Airbnb „Listing type") — Übersetzungsschlüssel je Wert.
+const LISTING_KEY: Record<ListingType, string> = {
+  entire_place: "typAngebotsartEntire",
+  private_room: "typAngebotsartPrivate",
+  shared_room: "typAngebotsartShared",
 };
 
 // Zimmeranzahl-Buckets (nur „Hotel & Betriebe", Airbnb).
@@ -45,6 +46,7 @@ export function TypPanel({
   property: Property;
   onSpeichere: (fields: Partial<Property>) => Promise<boolean>;
 }) {
+  const t = useTranslations("objektEditor");
   const [tax, setTax] = useState<Taxonomy | null>(null);
   const [kategorie, setKategorie] = useState<string>("");
   const [d, setD] = useState<Entwurf>({
@@ -141,15 +143,15 @@ export function TypPanel({
     <div className="flex h-full flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto">
         <h2 className="mb-8 font-sans text-[2rem] font-bold tracking-tight">
-          Objekttyp
+          {t("secTyp")}
         </h2>
 
         <div className="max-w-2xl space-y-4">
           {/* Ebene 1 — Kategorie */}
           <SelectCard
-            label="Welcher Ort ähnelt Ihrem am meisten?"
+            label={t("typKategorie")}
             value={kategorie}
-            platzhalter="Bitte wählen"
+            platzhalter={t("typBitteWaehlen")}
             disabled={!tax}
             onChange={waehleKategorie}
             optionen={(tax?.categories ?? []).map((c) => ({
@@ -160,9 +162,9 @@ export function TypPanel({
 
           {/* Ebene 2 — Immobilientyp (abhängig von Kategorie) */}
           <SelectCard
-            label="Immobilientyp"
+            label={t("typImmobilientyp")}
             value={d.subtype_slug ?? ""}
-            platzhalter="Bitte wählen"
+            platzhalter={t("typBitteWaehlen")}
             disabled={!kategorie}
             onChange={waehleSubtype}
             optionen={subtypenDerKategorie.map((s) => ({
@@ -174,9 +176,9 @@ export function TypPanel({
           {/* Zusatzfeld nur bei „Hotel & Betriebe" */}
           {zeigtZimmerFeld && (
             <SelectCard
-              label="Wie viele Zimmer hat Ihre Unterkunft insgesamt?"
+              label={t("typZimmerGesamt")}
               value={d.total_rooms ?? ""}
-              platzhalter="Bitte wählen"
+              platzhalter={t("typBitteWaehlen")}
               onChange={(v) => merge({ total_rooms: v || null }, true)}
               optionen={ZIMMER_BUCKETS.map((b) => ({ value: b, label: b }))}
             />
@@ -184,9 +186,9 @@ export function TypPanel({
 
           {/* Ebene 3 — Angebotsart (abhängig von Immobilientyp) */}
           <SelectCard
-            label="Angebotsart"
+            label={t("typAngebotsart")}
             value={d.listing_type ?? ""}
-            platzhalter="Bitte wählen"
+            platzhalter={t("typBitteWaehlen")}
             disabled={erlaubteListingTypes.length === 0}
             onChange={(v) =>
               merge(
@@ -196,33 +198,33 @@ export function TypPanel({
             }
             optionen={erlaubteListingTypes.map((lt) => ({
               value: lt,
-              label: LISTING_LABEL[lt],
+              label: t(LISTING_KEY[lt]),
             }))}
           />
 
           {/* Etagen-Stepper */}
           <StepperZeile
-            label="Wie viele Stockwerke hat das Gebäude?"
+            label={t("typStockwerke")}
             wert={d.floors_total}
             min={1}
             onSetze={(n) => merge({ floors_total: n }, zeigtZimmerFeld)}
           />
           <StepperZeile
-            label="In welcher Etage befindet sich das Angebot?"
+            label={t("typEtage")}
             wert={d.floor_number}
             min={0}
             onSetze={(n) => merge({ floor_number: n }, zeigtZimmerFeld)}
           />
 
           {/* Baujahr */}
-          <FeldCard label="Baujahr">
+          <FeldCard label={t("typBaujahr")}>
             <input
               type="number"
               inputMode="numeric"
               min={1000}
               max={2100}
               value={d.year_built ?? ""}
-              placeholder="z. B. 1998"
+              placeholder={t("typBaujahrPlatzhalter")}
               onChange={(e) =>
                 merge(
                   { year_built: e.target.value ? Number(e.target.value) : null },
@@ -237,14 +239,16 @@ export function TypPanel({
           <div>
             <div className="flex overflow-hidden rounded-2xl border border-border focus-within:border-foreground">
               <div className="flex-1 px-4 py-2.5">
-                <span className="block text-xs text-muted-foreground">Wohnfläche</span>
+                <span className="block text-xs text-muted-foreground">
+                  {t("typFlaeche")}
+                </span>
                 <input
                   type="number"
                   inputMode="decimal"
                   min={0}
                   step="0.1"
                   value={d.size_value ?? ""}
-                  placeholder="z. B. 75"
+                  placeholder={t("typFlaechePlatzhalter")}
                   onChange={(e) =>
                     merge(
                       { size_value: e.target.value ? Number(e.target.value) : null },
@@ -256,7 +260,7 @@ export function TypPanel({
               </div>
               <div className="relative w-36 border-l border-border">
                 <span className="pointer-events-none absolute left-4 top-2.5 text-xs text-muted-foreground">
-                  Einheit
+                  {t("typEinheit")}
                 </span>
                 <select
                   value={d.size_unit ?? ""}
@@ -265,9 +269,9 @@ export function TypPanel({
                   }
                   className="size-full appearance-none bg-transparent px-4 pt-6 pb-1.5 text-[0.95rem] outline-none"
                 >
-                  <option value="">—</option>
-                  <option value="sqm">m²</option>
-                  <option value="sqft">sq ft</option>
+                  <option value="">{t("keinWert")}</option>
+                  <option value="sqm">{t("typEinheitSqm")}</option>
+                  <option value="sqft">{t("typEinheitSqft")}</option>
                 </select>
                 <Icon
                   icon="ph:caret-down"
@@ -276,7 +280,7 @@ export function TypPanel({
               </div>
             </div>
             <p className="mt-2 px-1 text-sm text-muted-foreground">
-              Die für Gäste nutzbare Innenfläche.
+              {t("typFlaecheHint")}
             </p>
           </div>
         </div>

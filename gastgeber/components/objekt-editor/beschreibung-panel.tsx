@@ -114,7 +114,7 @@ export function BeschreibungPanel({
                   key={a.key}
                   type="button"
                   onClick={() => setDetail(a.key)}
-                  className={`flex w-full items-start justify-between gap-4 rounded-2xl border p-6 text-left outline-none transition-all focus-visible:ring-2 focus-visible:ring-foreground/20 ${
+                  className={`flex w-full items-start justify-between gap-4 rounded-2xl border p-6 text-start outline-none transition-all focus-visible:ring-2 focus-visible:ring-foreground/20 ${
                     detail === a.key
                       ? "border-2 border-foreground"
                       : "border border-border hover:shadow-md"
@@ -142,7 +142,7 @@ export function BeschreibungPanel({
         {offen != null && (
           <motion.aside
             key="besch-sidebar"
-            className="shrink-0 overflow-hidden border-l border-border"
+            className="shrink-0 overflow-hidden border-s border-border"
             initial={reduziert ? false : { width: 0, opacity: 0 }}
             animate={{ width: "32rem", opacity: 1 }}
             exit={reduziert ? { opacity: 0 } : { width: 0, opacity: 0 }}

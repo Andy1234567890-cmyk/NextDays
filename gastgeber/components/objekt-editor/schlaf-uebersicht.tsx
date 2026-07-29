@@ -47,7 +47,7 @@ export function SchlafmoeglichkeitenPanel({
               key={r.id}
               type="button"
               onClick={() => onOeffne(r.id)}
-              className="flex w-full items-center gap-4 rounded-2xl border border-border p-4 text-left transition-shadow hover:shadow-md"
+              className="flex w-full items-center gap-4 rounded-2xl border border-border p-4 text-start transition-shadow hover:shadow-md"
             >
               {/* 3D-Bett-Illustration (Airbnb: direkt in der Card, keine Kachel). */}
               <Icon icon="fluent-emoji:bed" className="size-12 shrink-0" />
