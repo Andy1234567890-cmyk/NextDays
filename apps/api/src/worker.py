@@ -22,7 +22,7 @@ import signal
 import socket
 import time
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from typing import Any
 
 from postgrest.exceptions import APIError
@@ -90,6 +90,14 @@ BALANCE_TICK_SECONDS = 60 * 60
 # minutengenau (Booking zahlt donnerstags bzw. zum 15.) — häufiger zu prüfen
 # brächte nichts außer Last.
 PAYOUT_TICK_SECONDS = 60 * 60
+# Provisions-Abrechnung: am 1. jedes Monats werden die offenen OTA-Provisionen
+# des VORMONATS als Invoice-Item auf das Abo gebucht (Preisliste §2 — der Kunde
+# sieht das Datum im Provisions-Monatsverlauf). Stündlich prüfen genügt: die
+# Fälligkeit ist tagesgenau. Der Lauf ist idempotent (deterministischer Stripe-
+# idempotency_key je tenant+period) — mehrfaches Prüfen am selben Tag erzeugt
+# KEINE zweite Belastung.
+COMMISSION_TICK_SECONDS = 60 * 60
+COMMISSION_BILLING_DAY = 1  # Monatserster
 # Nächtlicher Full-Sync-Push (Channex-Doku: "daily full update each night per
 # property"): im UTC-Stundenfenster [FULL_SYNC_HOUR_UTC, +1) je aktiver Property
 # EIN full_sync_property-Job pro Tag (dedup je Property+Tag), gestaffelt.
@@ -212,8 +220,6 @@ def _handle_push_ari(
     sind die Argumente. Ersetzt die früher synchron im Request-Pfad laufenden
     _push_channex_*-Aufrufe (calendar/rates) — dieselben Service-Methoden, nur
     jetzt asynchron im Worker mit Channex-Token-Budget."""
-    from datetime import date
-
     # push_*-Methoden liegen direkt am Service (AriPushMixin).
     push = _svc(db, budget)
     kind = payload["kind"]
@@ -387,6 +393,7 @@ class Worker:
         self._last_bookings_tick = 0.0
         self._last_balance_tick = 0.0
         self._last_payout_tick = 0.0
+        self._last_commission_tick = 0.0
         # Kontoweites Channex-Token-Budget (Phase 1b): vor jedem Channex-Push wird
         # ein Token verbraucht, sonst wird der Job verzögert statt Channex überfahren.
         self._budget = budget or ChannexBudget(get_settings())
@@ -700,6 +707,37 @@ class Worker:
         if bilanz["geprueft"] or freigegeben:
             log.info("payout_tick", freigegeben=freigegeben, **bilanz)
 
+    async def _commission_tick(self, loop_time: float) -> None:
+        """Am Monatsersten die OTA-Provisionen des Vormonats abrechnen.
+
+        Der Kunde sieht im Provisions-Monatsverlauf „Einzug am 1. …" — dieser
+        Tick löst genau das aus. Läuft nur am 1., der Rest des Monats ist ein
+        No-op; mehrfaches Auslösen am selben Tag ist unschädlich, weil
+        bill_all_tenants_for_period über einen deterministischen Stripe-
+        idempotency_key idempotent ist (Wurzel 2).
+
+        Netzwerk-/DB-Arbeit im Thread. Ein Fehler kippt weder den Tick noch die
+        übrigen Betriebe — der Service isoliert je Tenant.
+        """
+        if loop_time - self._last_commission_tick < COMMISSION_TICK_SECONDS:
+            return
+        self._last_commission_tick = loop_time
+        heute = datetime.now(UTC).date()
+        if heute.day != COMMISSION_BILLING_DAY:
+            return
+        try:
+            await asyncio.to_thread(self._bill_commissions, heute)
+        except Exception as exc:  # noqa: BLE001 — Tick darf den Worker nie killen
+            log.warning("commission_tick_failed", error=str(exc)[:200])
+
+    def _bill_commissions(self, heute: date) -> None:
+        """Offene Provisionen aller Betriebe für den Vormonat fakturieren."""
+        from src.features.subscriptions.service import SubscriptionsService
+
+        svc = SubscriptionsService(service_client=self._db)
+        periode = svc.abgelaufene_periode(heute)
+        svc.bill_all_tenants_for_period(period=periode)
+
     async def _bookings_tick(self, loop_time: float) -> None:
         """Alle 5 min einen kontoweiten Booking-Feed-Pull einreihen (Backstop —
         der primäre Trigger ist der booking_*-Webhook). Coalescing über den
@@ -836,6 +874,7 @@ class Worker:
             await self._bookings_tick(loop_time)
             await self._balance_tick(loop_time)
             await self._payout_tick(loop_time)
+            await self._commission_tick(loop_time)
             free = CONCURRENCY - len(self._inflight)
             jobs = await asyncio.to_thread(self._claim, free) if free > 0 else []
             for job in jobs:

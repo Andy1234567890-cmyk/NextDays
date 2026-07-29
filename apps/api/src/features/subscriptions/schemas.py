@@ -6,7 +6,7 @@ Beträge, die kommen aus Stripe. Kein €-Hardcode (Wurzel 4).
 """
 from __future__ import annotations
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # Stabile Stripe-lookup_keys (decken sich mit deploy/billing/seed_stripe_prices.py).
 GRUNDTARIF_LOOKUP_KEY = "mnd_grundtarif_month"
@@ -50,11 +50,20 @@ class SubscriptionStatusResponse(BaseModel):
 
 
 class CheckoutSessionRequest(BaseModel):
-    """Startet Stripe Checkout für das Grund-Abo (+ optional Module)."""
+    """Startet Stripe Checkout für das Grund-Abo (+ optional Module).
+
+    ``property_count`` ist die Objektzahl, für die der Kunde buchen WILL (der
+    Regler auf der Tarifseite). Sie kann über der aktuell angelegten Zahl
+    liegen: wer 5 Objekte plant, aber erst eines eingetragen hat, soll auch für
+    5 abschließen können. Fehlt sie, gilt die tatsächlich aktive Objektzahl.
+    Nach unten begrenzt der Server auf die aktiven Objekte — weniger buchen als
+    man betreibt, geht nicht (Wurzel 3: Scope serverseitig erzwingen).
+    """
 
     module_keys: list[str] = []
     success_url: str
     cancel_url: str
+    property_count: int | None = Field(default=None, ge=1, le=10000)
 
 
 class CheckoutSessionResponse(BaseModel):
@@ -141,6 +150,28 @@ class BillingAddress(BaseModel):
     account_type: str = "individual"  # individual | company
     company_name: str | None = None
     vat_id: str | None = None  # z.B. DK44179377
+
+
+class CommissionMonth(BaseModel):
+    """Ein Abrechnungsmonat der Portal-Provisionen (Kundensicht).
+
+    `period` ist YYYY-MM. Die Einzugs-Regel steht in der Preisliste: offene
+    Provisionen eines Monats werden am 1. des Folgemonats über die hinterlegte
+    Zahlungsmethode eingezogen — deshalb `charge_date`, damit der Kunde das
+    Datum nicht selbst ausrechnen muss.
+
+    `status` spiegelt die Ledger-Zeilen: 'pending' = noch nicht fakturiert,
+    'invoiced' = als Stripe-Invoice-Item gebucht, 'mixed' = beides (kommt vor,
+    wenn im laufenden Monat nachträglich Buchungen eintreffen).
+    """
+
+    period: str  # YYYY-MM
+    charge_date: str  # ISO-Datum, 1. des Folgemonats
+    booking_count: int
+    gross_total: float  # Buchungsumsatz der Periode
+    commission_total: float
+    currency: str | None = None
+    status: str  # pending | invoiced | mixed
 
 
 class InvoiceRow(BaseModel):

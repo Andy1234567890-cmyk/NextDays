@@ -35,6 +35,7 @@ import {
 } from "@/lib/subscriptions";
 import { useRealtime } from "@/lib/use-realtime";
 
+import { ProvisionsVerlauf } from "./provisions-verlauf";
 import { RechnungsadresseDialog } from "./rechnungsadresse-dialog";
 import { Rechnungsverlauf } from "./rechnungsverlauf";
 import { TarifRechner } from "./tarif-rechner";
@@ -89,6 +90,7 @@ export function KontoAboSection() {
   const [adresseOffen, setAdresseOffen] = useState(false);
   const [zeigeVerlauf, setZeigeVerlauf] = useState(false);
   const [zeigeTarife, setZeigeTarife] = useState(false);
+  const [zeigeProvisionen, setZeigeProvisionen] = useState(false);
 
   async function load() {
     const me = await getMe();
@@ -176,6 +178,10 @@ export function KontoAboSection() {
   // Reiters (mit eigenem Zurück), keine dritte Reiter-Ebene.
   if (zeigeVerlauf) {
     return <Rechnungsverlauf onBack={() => setZeigeVerlauf(false)} />;
+  }
+
+  if (zeigeProvisionen) {
+    return <ProvisionsVerlauf onBack={() => setZeigeProvisionen(false)} />;
   }
 
   const s = state.status;
@@ -398,6 +404,13 @@ export function KontoAboSection() {
               Aktuell keine offenen Provisionen.
             </div>
           )}
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={() => setZeigeProvisionen(true)}
+          >
+            Monatsverlauf ansehen
+          </Button>
         </div>
       )}
 

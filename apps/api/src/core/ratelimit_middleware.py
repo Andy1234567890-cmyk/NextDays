@@ -93,9 +93,33 @@ _LISTINGS_PATHS = (
     "/external-calendar/export/",
 )
 
+# EINGEHENDE Provider-Webhooks. Sie werden weiterhin gezählt (Missbrauchsschutz),
+# laufen bei Redis-Ausfall aber fail-OPEN statt fail-closed.
+#
+# Begründung: Jeder dieser Endpunkte prüft selbst eine Signatur bzw. ein
+# geteiltes Secret (Stripe `construct_event`, PayPal `verify_webhook`, Channex
+# X-Channex-Webhook-Secret, WhatsApp verify_token) — das Rate-Limit ist dort
+# NICHT die Zugangskontrolle. Ein 503 wegen nicht erreichbarem Redis wirft
+# dagegen echte Ereignisse weg: Stripe wiederholt nur ~3 Tage, danach ist das
+# Event verloren. Genau so blieb am 29.07.2026 ein bezahltes Abo dauerhaft auf
+# „Kein Abo" stehen — 10 von 10 `customer.subscription.created`-Zustellungen
+# wurden mit 503 abgewiesen, weil der Limiter-Client auf einem fremden Redis
+# hing. Ein Zahlungsereignis darf nicht an der Verfügbarkeit einer
+# Hilfskomponente scheitern (Wurzel 5: Kontroll-Signal nicht verschlucken).
+_WEBHOOK_PATHS = (
+    "/payments/webhook",
+    "/payments/paypal/webhook",
+    "/channel-manager/webhook",
+    "/whatsapp/webhook",
+)
+
 
 def _select_bucket(path: str, buckets: _Buckets) -> tuple[str, Limit, bool]:
     """Pfad → (Bucket-Name, Limit, sensibel?). Sensibel = Kandidat für fail-closed."""
+    # VOR den /payments/-Zweig: der Stripe-Webhook liegt unter /payments/ und
+    # würde sonst als sensibel eingestuft und fail-closed abgewiesen.
+    if any(p in path for p in _WEBHOOK_PATHS):
+        return "payments", buckets.payments, False
     if any(p in path for p in _AUTH_PATHS):
         return "auth", buckets.auth, True
     if "/payments/" in path:

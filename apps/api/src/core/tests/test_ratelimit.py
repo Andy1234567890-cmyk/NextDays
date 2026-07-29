@@ -95,6 +95,45 @@ def test_bucket_selection_staffelung() -> None:
     assert _select_bucket("/api/v1/booking-engine/listings", b)[2] is False
 
 
+def test_provider_webhooks_sind_nicht_fail_closed() -> None:
+    """KRITISCH (Vorfall 29.07.2026): Eingehende Webhooks duerfen bei einem
+    Redis-Ausfall NICHT mit 503 abgewiesen werden.
+
+    Der Stripe-Webhook liegt unter /payments/ und waere sonst als sensibel
+    eingestuft. Real wurden dadurch 10 von 10 customer.subscription.created-
+    Zustellungen verworfen — ein bezahltes Abo blieb dauerhaft auf 'Kein Abo'.
+    Die Endpunkte pruefen selbst Signatur/Secret; das Rate-Limit ist dort
+    Missbrauchsschutz, nicht die Zugangskontrolle.
+    """
+    from src.core.ratelimit_middleware import _Buckets  # noqa: PLC0415
+
+    b = _Buckets(Settings())
+    for pfad in (
+        "/api/v1/payments/webhook",
+        "/api/v1/payments/paypal/webhook",
+        "/api/v1/channel-manager/webhook",
+        "/api/v1/whatsapp/webhook",
+    ):
+        bucket, _, sensibel = _select_bucket(pfad, b)
+        assert sensibel is False, f"{pfad} darf nicht fail-closed sein"
+        # Gezaehlt wird weiterhin — nur die Ausfall-Reaktion aendert sich.
+        assert bucket in ("payments", "default"), pfad
+
+
+def test_zahlungs_endpunkte_bleiben_fail_closed() -> None:
+    """Gegenprobe: NUR die Webhooks sind ausgenommen. Die uebrigen
+    /payments/-Routen (Intent anlegen, Refund) bleiben sensibel — dort ist das
+    Limit echter Missbrauchsschutz gegen eingeloggte Angreifer."""
+    from src.core.ratelimit_middleware import _Buckets  # noqa: PLC0415
+
+    b = _Buckets(Settings())
+    for pfad in (
+        "/api/v1/payments/booking/x/intent",
+        "/api/v1/payments/x/refund",
+    ):
+        assert _select_bucket(pfad, b)[2] is True, pfad
+
+
 # --- Tenant-Extraktion aus dem Bearer (best-effort) -------------------------
 def test_tenant_from_bearer_reads_app_metadata() -> None:
     import base64

@@ -184,6 +184,9 @@ export function TarifRechner({ onBack }: { onBack: () => void }) {
         moduleKeys: [],
         successUrl: `${origin}/konto/tarif?abo=ok`,
         cancelUrl: `${origin}/konto/tarif?abo=abbruch`,
+        // Die eingestellte Objektzahl mitgeben, sonst rechnet Stripe mit den
+        // aktuell angelegten Objekten und zeigt einen anderen Betrag.
+        propertyCount: anzahl,
       });
       if (res.ok) window.location.href = res.data.checkout_url;
       else toast.error(res.error);

@@ -84,6 +84,9 @@ export async function startCheckout(input: {
   moduleKeys: string[];
   successUrl: string;
   cancelUrl: string;
+  // Objektzahl aus dem Tarifrechner. Ohne sie zeigte Stripe einen anderen
+  // Betrag als die Tarifseite (Server nähme sonst nur die aktiven Objekte).
+  propertyCount?: number;
 }): Promise<Result<{ checkout_url: string }>> {
   return call<{ checkout_url: string }>("/checkout", {
     method: "POST",
@@ -91,6 +94,7 @@ export async function startCheckout(input: {
       module_keys: input.moduleKeys,
       success_url: input.successUrl,
       cancel_url: input.cancelUrl,
+      property_count: input.propertyCount,
     },
   });
 }
@@ -125,6 +129,22 @@ export type CommissionSummary = {
 
 export async function getCommissions(): Promise<Result<CommissionSummary>> {
   return call<CommissionSummary>("/commissions");
+}
+
+export type CommissionMonth = {
+  period: string; // YYYY-MM
+  charge_date: string; // 1. des Folgemonats
+  booking_count: number;
+  gross_total: number;
+  commission_total: number;
+  currency: string | null; // null = gemischte Währungen im Monat
+  status: "pending" | "invoiced" | "mixed";
+};
+
+export async function getCommissionMonths(
+  limit = 24,
+): Promise<Result<CommissionMonth[]>> {
+  return call<CommissionMonth[]>(`/commission-months?limit=${limit}`);
 }
 
 // --- Rechnungsadresse + Rechnungsverlauf (Quelle: Stripe-Customer) ----------

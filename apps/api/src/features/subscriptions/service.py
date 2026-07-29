@@ -14,7 +14,7 @@ tenant-gescopet (Wurzel 3). Stripe-Fehler werden spezifisch übersetzt (Wurzel 5
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Any
 
 from stripe import StripeClient
@@ -23,6 +23,7 @@ from supabase import Client
 
 from src.core.logging import get_logger
 from src.core.security import AuthContext
+from src.core.supabase import fetch_all_rows
 
 # EU-Länderliste NICHT zweitkopieren — dieselbe Menge entscheidet über
 # Reverse-Charge in den Eigentümer-Abrechnungen (Wurzel 4: eine Quelle).
@@ -32,6 +33,7 @@ from .schemas import (
     GRUNDTARIF_LOOKUP_KEY,
     MODULE_PRICE_LOOKUP,
     BillingAddress,
+    CommissionMonth,
     CommissionRow,
     CommissionSummary,
     InvoiceRow,
@@ -51,6 +53,7 @@ COMMISSION_RATE_STANDARD = 0.01
 COMMISSION_RATE_HIGH_VOLUME = 0.005
 COMMISSION_HIGH_VOLUME_FROM = 101  # ab dieser Objektzahl gilt der reduzierte Satz
 _ISO_LAND_LAENGE = 2  # ISO-3166-1 alpha-2
+_DEZEMBER = 12  # Jahreswechsel beim Einzugstag
 # OTA-Kanäle, für die die externe Provision anfällt (dieselbe Menge wie im
 # payments-Slice; eigene/portal-Buchungen sind hier NICHT provisionspflichtig —
 # die tragen die 8 % Portal-Fee direkt am Charge).
@@ -297,10 +300,17 @@ class SubscriptionsService:
         module_keys: list[str],
         success_url: str,
         cancel_url: str,
+        property_count: int | None = None,
     ) -> str:
         """Stripe-Checkout-Session für Grund-Abo (+ gewählte Module). Adaptive
-        Pricing rechnet in die Käuferwährung um (27 EU). quantity des graduated
-        Preises = aktuelle abrechenbare Objektzahl."""
+        Pricing rechnet in die Käuferwährung um (27 EU).
+
+        quantity des graduated Preises = die Objektzahl, für die gebucht wird.
+        ``property_count`` ist der Wunsch des Kunden (Regler auf der Tarifseite)
+        und darf ÜBER der aktuell angelegten Zahl liegen — sonst zeigte der
+        Checkout einen anderen Betrag als die Tarifseite. Nach unten gewinnt
+        immer die tatsächliche Objektzahl: wer 20 Objekte betreibt, kann nicht
+        für 1 abschließen (Wurzel 3 — der Client bestimmt den Scope nicht)."""
         db, tenant_id = self._require(ctx)
         for mk in module_keys:
             if mk not in MODULE_PRICE_LOOKUP:
@@ -320,14 +330,17 @@ class SubscriptionsService:
                 status_code=409,
             )
         customer_id = self._ensure_customer(db, tenant_id)
-        count = self._active_property_count(db, tenant_id)
+        aktiv = self._active_property_count(db, tenant_id)
         # Grundtarif: quantity = Objektzahl (Stripe rechnet die Staffel selbst).
-        # Bei 0 aktiven Objekten trotzdem quantity 1 (Tier-1-Flat = Grundgebühr,
-        # das 1. Objekt ist laut Preisliste inklusive).
+        # Der Wunsch des Kunden zählt, mindestens aber die tatsächlich aktiven
+        # Objekte und mindestens 1 (Tier-1-Flat = Grundgebühr, das 1. Objekt ist
+        # laut Preisliste inklusive). Der Webhook zieht die quantity später
+        # ohnehin auf die reale Objektzahl nach (_sync_quantity).
+        menge = max(property_count or 0, aktiv, 1)
         line_items: list[dict[str, Any]] = [
             {
                 "price": self._price_id_by_lookup(GRUNDTARIF_LOOKUP_KEY),
-                "quantity": max(count, 1),
+                "quantity": menge,
             }
         ]
         for mk in module_keys:
@@ -709,6 +722,69 @@ class SubscriptionsService:
             rows=[CommissionRow(**r) for r in rows],
         )
 
+    def get_commission_months(
+        self, ctx: AuthContext, *, limit: int = 24
+    ) -> list[CommissionMonth]:
+        """Provisionen nach Abrechnungsmonat, neueste zuerst.
+
+        Die Periode kommt aus `period`, sobald fakturiert wurde; bei noch
+        offenen Zeilen gibt es die Spalte nicht — dort zählt der Monat der
+        Buchungserfassung (`created_at`). Sonst fielen alle offenen Provisionen
+        in einen namenlosen Topf, und genau die will der Kunde ja vorab sehen.
+
+        Gemischte Währungen innerhalb eines Monats werden NICHT addiert (das
+        wäre ein erfundener Kurs, Wurzel 4) — die Währung ist dann None und die
+        UI weist den Monat als uneindeutig aus.
+        """
+        db, tenant_id = self._require(ctx)
+        rows = fetch_all_rows(
+            db.table("commission_ledger")
+            .select("channel, currency, gross_amount, commission_amount, "
+                    "status, period, created_at")
+            .eq("tenant_id", tenant_id)
+            .order("created_at", desc=True)
+        )
+        gruppen: dict[str, list[dict[str, Any]]] = {}
+        for r in rows:
+            periode = (r.get("period") or "")[:7] or str(r.get("created_at") or "")[:7]
+            if not periode:
+                continue  # ohne Datum keine Zuordnung — nicht raten
+            gruppen.setdefault(periode, []).append(r)
+
+        monate: list[CommissionMonth] = []
+        for periode in sorted(gruppen, reverse=True)[:limit]:
+            zeilen = gruppen[periode]
+            waehrungen = {z["currency"] for z in zeilen if z.get("currency")}
+            zustaende = {z.get("status") for z in zeilen}
+            monate.append(
+                CommissionMonth(
+                    period=periode,
+                    charge_date=self._einzugstag(periode),
+                    booking_count=len(zeilen),
+                    gross_total=round(
+                        sum(float(z["gross_amount"]) for z in zeilen), 2
+                    ),
+                    commission_total=round(
+                        sum(float(z["commission_amount"]) for z in zeilen), 2
+                    ),
+                    currency=waehrungen.pop() if len(waehrungen) == 1 else None,
+                    status=(
+                        zustaende.pop()
+                        if len(zustaende) == 1
+                        else "mixed"
+                    ),
+                )
+            )
+        return monate
+
+    @staticmethod
+    def _einzugstag(periode: str) -> str:
+        """1. des Folgemonats — dann wird die Provision eingezogen."""
+        jahr, monat = (int(t) for t in periode.split("-")[:2])
+        return (
+            f"{jahr + 1}-01-01" if monat == _DEZEMBER else f"{jahr}-{monat + 1:02d}-01"
+        )
+
     def commission_rate_for_tenant(self, db: Client, tenant_id: str) -> float:
         """Provisions-Satz nach Objektzahl-Staffel (Preisliste): 1 % bis 100
         Objekte, 0,5 % ab 101. Dieselbe abrechenbare Objektzahl wie das Abo
@@ -785,6 +861,58 @@ class SubscriptionsService:
         self._db.table("commission_ledger").delete().eq(
             "tenant_id", tenant_id
         ).eq("reservation_id", reservation_id).eq("status", "pending").execute()
+
+    @staticmethod
+    def abgelaufene_periode(heute: date) -> str:
+        """Die Periode, die am Monatsersten fällig wird = der VORMONAT.
+
+        Am 1. August wird der Juli abgerechnet. Ein eigener Helfer, damit der
+        Jahreswechsel (1. Januar → Dezember des Vorjahres) genau eine Stelle hat.
+        """
+        if heute.month == 1:
+            return f"{heute.year - 1}-12"
+        return f"{heute.year}-{heute.month - 1:02d}"
+
+    def bill_all_tenants_for_period(self, *, period: str) -> dict[str, int]:
+        """Monatslauf über ALLE Betriebe mit offenen Provisionen.
+
+        Fehler eines Betriebs (kein Abo, gemischte Währungen, Stripe-Ausfall)
+        dürfen die übrigen NICHT stoppen — sonst blieben bei einem einzigen
+        kaputten Datensatz alle anderen unabgerechnet. Deshalb je Tenant
+        isoliert; der Zähler `fehler` macht das im Log sichtbar, statt es still
+        zu verschlucken (Wurzel 5).
+
+        Idempotent über den deterministischen Stripe-idempotency_key in
+        `bill_pending_commissions`: ein zweiter Lauf derselben Periode erzeugt
+        KEIN zweites Invoice-Item (Wurzel 2).
+        """
+        if self._db is None:
+            raise SubscriptionsError(
+                "Subscriptions-DB nicht verfügbar.", status_code=500
+            )
+        offene = fetch_all_rows(
+            self._db.table("commission_ledger")
+            .select("tenant_id")
+            .eq("status", "pending")
+        )
+        tenant_ids = sorted({r["tenant_id"] for r in offene if r.get("tenant_id")})
+        bilanz = {"tenants": len(tenant_ids), "abgerechnet": 0, "zeilen": 0, "fehler": 0}
+        for tid in tenant_ids:
+            try:
+                anzahl = self.bill_pending_commissions(tid, period=period)
+            except SubscriptionsError as exc:
+                bilanz["fehler"] += 1
+                log.warning(
+                    "commission_billing_failed",
+                    tenant_id=tid, period=period, error=exc.message,
+                )
+                continue
+            if anzahl:
+                bilanz["abgerechnet"] += 1
+                bilanz["zeilen"] += anzahl
+        if tenant_ids:
+            log.info("commission_billing_run", period=period, **bilanz)
+        return bilanz
 
     def bill_commissions_for_ctx(self, ctx: AuthContext, *, period: str) -> int:
         """ctx-basierter Einstieg für den API-Endpunkt (Tenant aus dem Token,

@@ -22,6 +22,7 @@ from .schemas import (
     BillingAddress,
     CheckoutSessionRequest,
     CheckoutSessionResponse,
+    CommissionMonth,
     CommissionSummary,
     InvoiceRow,
     PortalSessionResponse,
@@ -79,6 +80,7 @@ def create_checkout(
             module_keys=body.module_keys,
             success_url=body.success_url,
             cancel_url=body.cancel_url,
+            property_count=body.property_count,
         )
     except SubscriptionsError as exc:
         raise _handle(exc) from exc
@@ -137,6 +139,19 @@ def list_invoices(
     """Rechnungsverlauf aus Stripe (neueste zuerst)."""
     try:
         return service.list_invoices(ctx, limit=limit)
+    except SubscriptionsError as exc:
+        raise _handle(exc) from exc
+
+
+@router.get("/commission-months", response_model=list[CommissionMonth])
+def list_commission_months(
+    ctx: _billing,
+    service: ServiceDep,
+    limit: Annotated[int, Query(ge=1, le=60)] = 24,
+) -> list[CommissionMonth]:
+    """Provisionen je Abrechnungsmonat (neueste zuerst) mit Einzugsdatum."""
+    try:
+        return service.get_commission_months(ctx, limit=limit)
     except SubscriptionsError as exc:
         raise _handle(exc) from exc
 

@@ -560,3 +560,106 @@ def test_customer_exists_reicht_andere_stripe_fehler_durch() -> None:
     svc = SubscriptionsService(service_client=_db_mit_customer("c"), stripe=stripe)
     with pytest.raises(SubscriptionsError):
         svc._customer_exists("cus_x")  # noqa: SLF001
+
+
+# --- Objektzahl aus dem Tarifrechner an Stripe durchreichen ----------------
+# Realer Befund: Der Regler stand auf 5 (43,90 €), Stripe-Checkout zeigte
+# 19,90 €. Grund: quantity kam aus _active_property_count statt aus dem
+# Wunsch des Kunden. Wer 5 Objekte plant, muss auch für 5 abschliessen können.
+
+
+class _CheckoutStripeStub:
+    """Faengt die Checkout-Parameter ab, statt Stripe zu rufen."""
+
+    def __init__(self) -> None:
+        self.params: dict[str, Any] | None = None
+        self.v1 = self
+
+    # -- v1.prices.list -- der Service liest .data per getattr, nicht als Key.
+    @property
+    def prices(self):  # noqa: ANN202
+        class _Res:
+            data = [{"id": "price_x"}]
+
+        class _P:
+            @staticmethod
+            def list(params: dict) -> _Res:  # noqa: ARG004
+                return _Res()
+
+        return _P
+
+    @property
+    def customers(self):  # noqa: ANN202
+        class _C:
+            @staticmethod
+            def retrieve(cid: str, params: dict | None = None) -> dict:  # noqa: ARG004
+                return {"id": cid, "address": {}, "metadata": {}}
+
+        return _C
+
+    @property
+    def checkout(self):  # noqa: ANN202
+        stub = self
+
+        class _S:
+            @staticmethod
+            def create(params: dict) -> dict:
+                stub.params = params
+                return {"url": "https://checkout.test/x"}
+
+        class _Checkout:
+            sessions = _S
+
+        return _Checkout
+
+    def _menge(self) -> int:
+        return (self.params or {})["line_items"][0]["quantity"]
+
+
+def _checkout_svc(aktive_objekte: int):  # noqa: ANN202
+    db = _db_with_properties(aktive_objekte)
+    db.store["tenant_subscription"] = [
+        {"tenant_id": "t1", "stripe_customer_id": "cus_ok"}
+    ]
+    stripe = _CheckoutStripeStub()
+    return SubscriptionsService(service_client=db, stripe=stripe), stripe
+
+
+def _start(svc, anzahl: int | None) -> None:  # noqa: ANN001
+    svc.create_checkout(
+        _CTX,
+        module_keys=[],
+        success_url="https://x/ok",
+        cancel_url="https://x/no",
+        property_count=anzahl,
+    )
+
+
+def test_checkout_nutzt_gewuenschte_objektzahl() -> None:
+    """KRITISCH: der Vorfall. 1 aktives Objekt, Regler auf 5 -> quantity 5,
+    damit Stripe denselben Betrag zeigt wie die Tarifseite (43,90 €)."""
+    svc, stripe = _checkout_svc(aktive_objekte=1)
+    _start(svc, 5)
+    assert stripe._menge() == 5  # noqa: SLF001
+
+
+def test_checkout_nimmt_nie_weniger_als_die_aktiven_objekte() -> None:
+    """Wurzel 3: Der Client darf den Scope nicht nach unten druecken — wer 20
+    Objekte betreibt, kann nicht fuer 1 abschliessen."""
+    svc, stripe = _checkout_svc(aktive_objekte=20)
+    _start(svc, 1)
+    assert stripe._menge() == 20  # noqa: SLF001
+
+
+def test_checkout_ohne_wunsch_nimmt_aktive_objektzahl() -> None:
+    """Rueckwaertskompatibel: ohne property_count gilt die reale Objektzahl."""
+    svc, stripe = _checkout_svc(aktive_objekte=7)
+    _start(svc, None)
+    assert stripe._menge() == 7  # noqa: SLF001
+
+
+def test_checkout_mindestens_eins_bei_null_objekten() -> None:
+    """Tier-1-Flat ist die Grundgebuehr — quantity 0 gaebe es bei Stripe nicht."""
+    svc, stripe = _checkout_svc(aktive_objekte=0)
+    _start(svc, None)
+    assert stripe._menge() == 1  # noqa: SLF001
