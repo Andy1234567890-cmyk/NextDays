@@ -475,6 +475,10 @@ class PropertiesService:
         # Scope/Vorbedingung serverseitig erzwingen (Wurzel 3), fail-closed.
         if changes.get("status") == PropertyStatus.active.value:
             self._require_property_registered(tenant_id, property_id)
+            # Derselbe Kontingent-Riegel wie in publish() — sonst wäre update()
+            # der offene Seitenweg, über den beliebig viele Objekte aktiv würden
+            # (Wurzel 9: gleicher Scope auf allen Pfaden zum selben Zustand).
+            self._require_kontingent(tenant_id, property_id)
         res = (
             self._db.table("properties")
             .update(changes)
@@ -924,6 +928,56 @@ class PropertiesService:
                 currency=None,
             )
 
+    def _require_kontingent(self, tenant_id: str, property_id: str) -> None:
+        """Veröffentlichen nur im Rahmen des gebuchten Tarifs.
+
+        Der Kunde bezahlt eine Objektzahl (``reported_property_count``, der
+        Regler beim Abschluss). Ohne diese Schranke ließen sich beliebig viele
+        Objekte live schalten, während nur für fünf gezahlt wird.
+
+        Gezählt werden die bereits aktiven Objekte OHNE das gerade zu
+        veröffentlichende — sonst könnte ein erneutes publish() desselben,
+        schon aktiven Objekts an der eigenen Belegung scheitern (Wurzel 2:
+        real kommt alles doppelt). Fehlt das Abo oder die Menge, wird
+        fail-closed abgewiesen statt eine Zahl zu erfinden (Wurzel 4/5).
+        """
+        rows = (
+            self._db.table("tenant_subscription")
+            .select("status, reported_property_count")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        row = rows[0] if rows else None
+        if not row or row.get("status") not in ("active", "trialing"):
+            raise PropertyError(
+                "Zum Veröffentlichen wird ein aktives Abo benötigt. "
+                "Bitte im Konto unter „Tarif & Abo“ abschließen.",
+                status_code=422,
+            )
+        gebucht = row.get("reported_property_count")
+        if not gebucht:
+            raise PropertyError(
+                "Die gebuchte Objektzahl konnte nicht ermittelt werden. "
+                "Bitte den Support kontaktieren.",
+                status_code=422,
+            )
+        andere_aktive = (
+            self._db.table("properties")
+            .select("id", count="exact")
+            .eq("tenant_id", tenant_id)
+            .eq("status", "active")
+            .neq("id", property_id)
+            .execute()
+        ).count or 0
+        if andere_aktive >= int(gebucht):
+            raise PropertyError(
+                f"Ihr Tarif umfasst {gebucht} Objekte, davon sind bereits "
+                f"{andere_aktive} veröffentlicht. Bitte den Tarif erweitern "
+                "oder ein anderes Objekt deaktivieren.",
+                status_code=422,
+            )
+
     def publish(self, ctx: AuthContext, property_id: str) -> PropertyResponse:
         """Objekt veröffentlichen: draft→active + Channex-Sync + Verfügbarkeit.
 
@@ -949,6 +1003,9 @@ class PropertiesService:
         if not prop:
             raise PropertyError("Objekt nicht gefunden.", status_code=404)
         row = prop[0]
+        # Erst wenn feststeht, dass es das Objekt gibt: passt es noch in den
+        # gebuchten Tarif? Ein unbekanntes Objekt bleibt 404, nicht 422.
+        self._require_kontingent(tenant_id, property_id)
 
         rates = (
             self._db.table("rate_plans")

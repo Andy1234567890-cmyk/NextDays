@@ -1071,3 +1071,50 @@ def test_webhook_full_refund_marks_refunded() -> None:
     }
     handle_stripe_event(db, event, now_iso="2026-06-30T00:00:00Z")
     assert db.store["reservations"][0]["payment_status"] == "refunded"
+
+
+# -- current_period_end: Stripe verschob das Feld auf die Item-Ebene ---------
+def test_period_end_von_item_wenn_oben_nicht_gesetzt() -> None:
+    """Seit API 2025-03-31 trägt die Subscription das Feld nicht mehr — dann
+    muss es aus den Items kommen, sonst bleibt das Abrechnungsdatum leer."""
+    from src.features.payments.webhook import _period_end
+
+    sub = {
+        "id": "sub_1",
+        "items": {"data": [{"current_period_end": 1788008618}]},
+    }
+    assert _period_end(sub) == 1788008618
+
+
+def test_period_end_bevorzugt_oberste_ebene() -> None:
+    """Ältere API-Versionen liefern es oben — das gilt dann vorrangig."""
+    from src.features.payments.webhook import _period_end
+
+    sub = {
+        "id": "sub_1",
+        "current_period_end": 1700000000,
+        "items": {"data": [{"current_period_end": 1788008618}]},
+    }
+    assert _period_end(sub) == 1700000000
+
+
+def test_period_end_nimmt_frueheste_item_periode() -> None:
+    """Mehrere Positionen mit eigenen Perioden: als Nächstes wird die früheste
+    abgerechnet."""
+    from src.features.payments.webhook import _period_end
+
+    sub = {
+        "id": "sub_1",
+        "items": {"data": [
+            {"current_period_end": 1788008618},
+            {"current_period_end": 1780000000},
+        ]},
+    }
+    assert _period_end(sub) == 1780000000
+
+
+def test_period_end_ohne_daten_ist_none() -> None:
+    """Fehlt die Angabe ganz, wird nichts erfunden (Wurzel 4)."""
+    from src.features.payments.webhook import _period_end
+
+    assert _period_end({"id": "sub_1", "items": {"data": []}}) is None

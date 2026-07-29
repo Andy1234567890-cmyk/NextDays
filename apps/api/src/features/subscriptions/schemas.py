@@ -44,6 +44,10 @@ class SubscriptionStatusResponse(BaseModel):
     status: str | None = None
     stripe_customer_id: str | None = None
     property_count: int
+    # Die Menge, für die der Kunde bezahlt (Regler beim Abschluss). Sie kann
+    # über property_count liegen — wer für 5 bucht, aber erst eines angelegt
+    # hat, zahlt für 5. None solange kein Abo besteht.
+    billed_property_count: int | None = None
     current_period_end: str | None = None
     cancel_at_period_end: bool = False
     modules: list[ModuleEntitlement] = []

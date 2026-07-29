@@ -326,9 +326,13 @@ export function KontoAboSection() {
             }
             trennstrich
           />
+          {/* Mit Abo zählt die BEZAHLTE Menge (Regler beim Abschluss), nicht
+              die Zahl der angelegten Objekte — wer für 5 bucht, sieht 5. */}
           <Kennzahl
-            label="Abrechenbare Objekte"
-            wert={String(s?.property_count ?? 0)}
+            label={s?.has_subscription ? "Gebuchte Objekte" : "Aktive Objekte"}
+            wert={String(
+              (s?.has_subscription ? s?.billed_property_count : s?.property_count) ?? 0,
+            )}
             trennstrich
           />
         </dl>

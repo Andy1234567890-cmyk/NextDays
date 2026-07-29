@@ -288,6 +288,7 @@ class SubscriptionsService:
             status=row.get("status"),
             stripe_customer_id=row.get("stripe_customer_id"),
             property_count=count,
+            billed_property_count=row.get("reported_property_count"),
             current_period_end=row.get("current_period_end"),
             cancel_at_period_end=bool(row.get("cancel_at_period_end")),
             modules=modules,

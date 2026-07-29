@@ -46,6 +46,7 @@ export type SubscriptionStatus = {
   status: string | null;
   stripe_customer_id: string | null;
   property_count: number;
+  billed_property_count: number | null;
   current_period_end: string | null;
   cancel_at_period_end: boolean;
   modules: ModuleEntitlement[];

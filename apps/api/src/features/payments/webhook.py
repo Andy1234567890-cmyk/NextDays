@@ -237,6 +237,23 @@ def _iso_from_epoch(value: Any) -> str | None:  # noqa: ANN401
     return datetime.fromtimestamp(int(value), tz=UTC).isoformat()
 
 
+def _period_end(obj: Mapping[str, Any]) -> Any | None:  # noqa: ANN401
+    """Ende der laufenden Periode als Epoch.
+
+    Seit API-Version 2025-03-31 trägt NICHT mehr die Subscription das Feld,
+    sondern jede Item-Zeile (Stripe erlaubt seither Positionen mit eigenen
+    Perioden). Ältere Versionen liefern es weiterhin oben. Erst oben lesen,
+    sonst die früheste Item-Periode nehmen — das ist der Zeitpunkt, zu dem
+    als Nächstes abgerechnet wird.
+    """
+    top = _field(obj, "current_period_end")
+    if top:
+        return top
+    items = _field(_field(obj, "items", {}) or {}, "data", []) or []
+    enden = [e for it in items if (e := _field(it, "current_period_end"))]
+    return min(enden) if enden else None
+
+
 def _handle_subscription_event(db: Client, obj: Mapping[str, Any]) -> None:
     """tenant_subscription mit dem Stripe-Subscription-Zustand spiegeln.
     Upsert auf tenant_id (idempotent, Wurzel 2). deleted → status canceled."""
@@ -249,7 +266,7 @@ def _handle_subscription_event(db: Client, obj: Mapping[str, Any]) -> None:
         "stripe_subscription_id": _field(obj, "id"),
         "status": _field(obj, "status"),
         "cancel_at_period_end": bool(_field(obj, "cancel_at_period_end", False)),
-        "current_period_end": _iso_from_epoch(_field(obj, "current_period_end")),
+        "current_period_end": _iso_from_epoch(_period_end(obj)),
     }
     if _field(obj, "customer"):
         update["stripe_customer_id"] = _field(obj, "customer")

@@ -201,6 +201,9 @@ class _PublishQuery:
     def eq(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
         return self
 
+    def neq(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
+        return self
+
     def limit(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN201
         return self
 
@@ -210,6 +213,9 @@ class _PublishQuery:
 
         r = _R()
         r.data = self._db.canned.get(self._name, [])
+        # count="exact" liest der Kontingent-Check; die Länge der Canned-Zeilen
+        # ist hier die Zahl der aktiven Objekte.
+        r.count = len(r.data)
         return r
 
 
@@ -772,3 +778,59 @@ def test_accessibility_upload_rejects_oversize() -> None:
             _ctx(), "p-1", "step_free_guest_entrance", zu_gross, "image/png"
         )
     assert exc.value.status_code == 413
+
+
+# --- Kontingent: nur so viele aktive Objekte wie gebucht --------------------
+_ABO_5 = [{"status": "active", "reported_property_count": 5}]
+
+
+def test_publish_ohne_abo_ist_422() -> None:
+    """Ohne aktives Abo darf nichts live gehen."""
+    db = _PublishDB(
+        {
+            "properties": [_row()],
+            "rate_plans": [{"id": "rp-1", "currency": "EUR", "min_stay": 1}],
+            "tenant_billing_profile": _BILLING_READY,
+            "tenant_subscription": [],
+        }
+    )
+    svc = PropertiesService(service_client=db)
+    with pytest.raises(PropertyError) as exc:
+        svc.publish(_ctx(), "p-1")
+    assert exc.value.status_code == 422
+    assert "Abo" in str(exc.value)
+
+
+def test_publish_ueber_kontingent_ist_422() -> None:
+    """5 gebucht, 5 andere bereits aktiv → das sechste wird abgewiesen."""
+    db = _PublishDB(
+        {
+            "properties": [_row() for _ in range(5)],
+            "rate_plans": [{"id": "rp-1", "currency": "EUR", "min_stay": 1}],
+            "tenant_billing_profile": _BILLING_READY,
+            "tenant_subscription": _ABO_5,
+        }
+    )
+    svc = PropertiesService(service_client=db)
+    with pytest.raises(PropertyError) as exc:
+        svc.publish(_ctx(), "p-neu")
+    assert exc.value.status_code == 422
+    assert "5" in str(exc.value)
+
+
+def test_publish_ohne_gebuchte_menge_ist_422() -> None:
+    """Abo aktiv, aber Menge fehlt → fail-closed statt Fantasiewert (Wurzel 4)."""
+    db = _PublishDB(
+        {
+            "properties": [_row()],
+            "rate_plans": [{"id": "rp-1", "currency": "EUR", "min_stay": 1}],
+            "tenant_billing_profile": _BILLING_READY,
+            "tenant_subscription": [
+                {"status": "active", "reported_property_count": None}
+            ],
+        }
+    )
+    svc = PropertiesService(service_client=db)
+    with pytest.raises(PropertyError) as exc:
+        svc.publish(_ctx(), "p-1")
+    assert exc.value.status_code == 422
