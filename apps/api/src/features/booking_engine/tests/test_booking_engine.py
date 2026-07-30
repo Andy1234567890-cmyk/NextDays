@@ -581,3 +581,61 @@ def test_listings_rejected_property_hidden() -> None:
     props = [{**_PROPERTIES[0], "moderation_status": "rejected"}]
     svc = _service(properties=props)
     assert svc.list_listings().items == []
+
+
+def test_public_booking_writes_num_guests(monkeypatch) -> None:  # noqa: ANN001
+    """Regression: die Gästezahl der öffentlichen Buchung MUSS in reservations
+    landen. Sie floss vorher nur in den Quote, sodass jede Portal-Buchung mit dem
+    Spalten-Default 1 gespeichert wurde — Gast-App, Kalender und Kurtaxe sahen
+    eine falsche Belegung."""
+    from datetime import date as _date
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+
+    import src.features.pricing.resolver as resolver_mod
+    from src.features.booking_engine.schemas import GuestContact, PublicBookingRequest
+    from src.features.booking_engine.service import BookingEngineService
+
+    db = MagicMock(name="supabase")
+
+    def table(name: str) -> MagicMock:
+        t = MagicMock(name=f"table:{name}")
+        if name in ("availability", "stop_sell"):
+            chain = (
+                t.select.return_value.eq.return_value.gte.return_value.lt.return_value
+            )
+            chain.execute.return_value.data = []
+        return t
+
+    db.table.side_effect = table
+    db.rpc.return_value.execute.return_value.data = {
+        "reservation": {"id": "res-1"}, "outbox_id": None,
+    }
+
+    svc = BookingEngineService(service_client=db)
+    monkeypatch.setattr(
+        svc, "_public_property",
+        lambda *_a: {"tenant_id": "t-1", "status": "active", "max_guests": 6},
+    )
+    monkeypatch.setattr(svc, "_upsert_guest", lambda *_a: "g-1")
+    monkeypatch.setattr(svc, "_push_channex", lambda *_a, **_k: None)
+    monkeypatch.setattr(
+        resolver_mod.PricingResolver,
+        "quote",
+        lambda _self, _req: SimpleNamespace(total=260.0, currency="EUR", lines=[]),
+    )
+
+    svc.create_public_booking(
+        PublicBookingRequest(
+            property_id="p-1",
+            check_in=_date(2026, 8, 1),
+            check_out=_date(2026, 8, 3),
+            guests=4,
+            contact=GuestContact(
+                first_name="Max", last_name="Gast", email="max@example.com",
+            ),
+        )
+    )
+
+    payload = db.rpc.call_args[0][1]["p_reservation"]
+    assert payload["num_guests"] == 4

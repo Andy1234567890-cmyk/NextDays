@@ -49,6 +49,29 @@ _COUNTRIES: dict[str, tuple[str, str]] = {
 
 _VALID_CODES: frozenset[str] = frozenset(_COUNTRIES)
 
+# ISO-2 → internationale Telefonvorwahl (E.164, inkl. „+"). Identisch zur
+# `dialCode`-Spalte in packages/ui/src/countries.ts — Erweiterung nur gemeinsam.
+# Gebraucht wird sie dort, wo eine national gespeicherte Nummer („1234567890")
+# für einen Empfänger auf E.164 gebracht werden muss (Stripe lehnt Nummern ohne
+# Landesvorwahl mit "not a valid phone number" ab).
+_DIAL_CODES: dict[str, str] = {
+    "BE": "+32", "BG": "+359", "DK": "+45", "DE": "+49", "EE": "+372",
+    "FI": "+358", "FR": "+33", "GR": "+30", "IE": "+353", "IT": "+39",
+    "HR": "+385", "LV": "+371", "LT": "+370", "LU": "+352", "MT": "+356",
+    "NL": "+31", "AT": "+43", "PL": "+48", "PT": "+351", "RO": "+40",
+    "SE": "+46", "SK": "+421", "SI": "+386", "ES": "+34", "CZ": "+420",
+    "HU": "+36", "CY": "+357", "CH": "+41", "GB": "+44",
+}
+
+
+def dial_code(country: str | None) -> str | None:
+    """Telefonvorwahl zu einem ISO-2-Ländercode („DE" → „+49").
+
+    Unbekanntes/leeres Land → None. Der Aufrufer entscheidet dann, ob er ohne
+    Vorwahl weitermacht oder fehlschlägt — geraten wird hier nichts (Wurzel 4).
+    """
+    return _DIAL_CODES.get((country or "").strip().upper())
+
 # Name (lower-case, deutsch + englisch + Varianten) → ISO-2.
 _NAME_TO_CODE: dict[str, str] = {}
 for _code, (_de, _en) in _COUNTRIES.items():

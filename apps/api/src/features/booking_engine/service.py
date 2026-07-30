@@ -714,6 +714,13 @@ class BookingEngineService:
                             "ota_name": "myNextDays",  # Herkunft für Kalender/Posteingang
                             "check_in": req.check_in.isoformat(),
                             "check_out": req.check_out.isoformat(),
+                            # Gästezahl MITSCHREIBEN: sie floss bisher nur in den
+                            # Quote ein, sodass jede Portal-Buchung mit dem
+                            # Spalten-Default 1 in reservations landete — Gast-App,
+                            # Kalender und Kurtaxe sahen dadurch eine falsche
+                            # Belegung. Kapazität ist oben bereits gegen max_guests
+                            # geprüft.
+                            "num_guests": max(req.guests, 1),
                             "status": reservation_status,
                             "request_expires_at": request_expires_at,
                             "total_amount": total_amount,

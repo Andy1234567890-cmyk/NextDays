@@ -416,6 +416,13 @@ class SubscriptionsService:
         return self._sync_quantity(self._db, tenant_id)
 
     def _sync_quantity(self, db: Client, tenant_id: str) -> int:
+        """Menge nach OBEN nachziehen, wenn mehr Objekte aktiv sind als bezahlt.
+
+        Die gebuchte Menge ist das, was der Kunde bestellt hat — sie wird hier
+        NIE nach unten korrigiert: wer für fünf zahlt und nur eines aktiv hat,
+        behält sein Kontingent von fünf. Kleiner buchen geht ausschließlich über
+        ``change_quantity`` (bewusste Entscheidung des Kunden).
+        """
         row = self._load_row(db, tenant_id)
         count = self._active_property_count(db, tenant_id)
         if not row or not row.get("stripe_subscription_id"):
@@ -425,6 +432,10 @@ class SubscriptionsService:
                     {"reported_property_count": count}
                 ).eq("tenant_id", tenant_id).execute()
             return count
+        gebucht = int(row.get("reported_property_count") or 0)
+        qty = max(count, gebucht, 1)
+        if qty == gebucht:
+            return gebucht
         try:
             sub = self._stripe.v1.subscriptions.retrieve(row["stripe_subscription_id"])
             item = self._grundtarif_item(sub)
@@ -433,7 +444,6 @@ class SubscriptionsService:
                     "Grundtarif-Position in der Subscription nicht gefunden.",
                     status_code=500,
                 )
-            qty = max(count, 1)
             if int(_f(item, "quantity", 0) or 0) != qty:
                 self._stripe.v1.subscription_items.update(
                     _f(item, "id"),
@@ -442,9 +452,123 @@ class SubscriptionsService:
         except _StripeError as exc:
             raise self._stripe_err(exc) from exc
         db.table("tenant_subscription").update(
-            {"reported_property_count": count}
+            {"reported_property_count": qty}
         ).eq("tenant_id", tenant_id).execute()
-        return count
+        return qty
+
+    def change_quantity(self, ctx: AuthContext, *, property_count: int) -> int:
+        """Gebuchte Objektzahl ändern — Erweitern sofort, Verkleinern mit Riegel.
+
+        Beim ERWEITERN wird der anteilige Differenzbetrag unmittelbar in
+        Rechnung gestellt und eingezogen: der Kunde bekommt sofort ein
+        Dokument im Rechnungsverlauf, statt bis zum Monatsende auf einen
+        stillen Rechnungsposten zu warten. Beim REDUZIEREN entsteht eine
+        Gutschrift — die bleibt auf der nächsten regulären Rechnung, es wäre
+        sinnlos, eine Rechnung über einen negativen Betrag zu erzeugen.
+
+        Verkleinern ist nur erlaubt, solange nicht mehr Objekte aktiv sind als
+        künftig bezahlt werden — sonst stünden live geschaltete Objekte über
+        dem Kontingent (422, Wurzel 1: der Gegenzustand muss mitgepflegt
+        werden).
+        """
+        db, tenant_id = self._require(ctx)
+        row = self._load_row(db, tenant_id)
+        sub_id = row.get("stripe_subscription_id") if row else None
+        if not row or not sub_id:
+            raise SubscriptionsError(
+                "Es besteht kein aktives Abo, das geändert werden könnte.",
+                status_code=422,
+            )
+        aktiv = self._active_property_count(db, tenant_id)
+        if property_count < aktiv:
+            raise SubscriptionsError(
+                f"Sie haben {aktiv} veröffentlichte Objekte. Bitte zuerst "
+                f"Objekte deaktivieren, dann auf {property_count} reduzieren.",
+                status_code=422,
+            )
+        vorher = int(row.get("reported_property_count") or 0)
+        try:
+            sub = self._stripe.v1.subscriptions.retrieve(sub_id)
+            item = self._grundtarif_item(sub)
+            if item is None:
+                raise SubscriptionsError(
+                    "Grundtarif-Position in der Subscription nicht gefunden.",
+                    status_code=500,
+                )
+            if int(_f(item, "quantity", 0) or 0) != property_count:
+                self._stripe.v1.subscription_items.update(
+                    _f(item, "id"),
+                    params={
+                        "quantity": property_count,
+                        "proration_behavior": "create_prorations",
+                    },
+                )
+            if property_count > vorher and row.get("stripe_customer_id"):
+                self._invoice_prorations_now(
+                    sub_id,
+                    row["stripe_customer_id"],
+                    tenant_id,
+                    quantity=property_count,
+                )
+        except _StripeError as exc:
+            raise self._stripe_err(exc) from exc
+        # Lokal spiegeln, damit das Kontingent sofort greift — der Webhook
+        # bestätigt denselben Wert gleich noch einmal (idempotent, Wurzel 2).
+        db.table("tenant_subscription").update(
+            {"reported_property_count": property_count}
+        ).eq("tenant_id", tenant_id).execute()
+        log.info(
+            "subscription_quantity_changed",
+            tenant_id=tenant_id,
+            quantity=property_count,
+        )
+        return property_count
+
+    def _invoice_prorations_now(
+        self, sub_id: str, customer_id: str, tenant_id: str, *, quantity: int
+    ) -> None:
+        """Die offenen Proration-Posten sofort als Rechnung stellen und einziehen.
+
+        Ohne diesen Schritt bliebe die Erweiterung ein unsichtbarer Posten bis
+        zum Monatsende — der Kunde hätte im Rechnungsverlauf keinen Beleg für
+        den Vorgang, obwohl er ihn gerade bezahlt hat.
+
+        Idempotent über einen Schlüssel aus Abo + Zielmenge: Doppelklick oder
+        Retry liefern dieselbe Rechnung zurück statt eine zweite zu erzeugen
+        (Wurzel 2 — geldbewegende Operation). Gibt es nichts abzurechnen,
+        antwortet Stripe mit ``invoice_no_customer_line_items``; das ist kein
+        Fehler, sondern der Normalfall bei unveränderter Menge.
+
+        ``finalize`` macht aus dem Entwurf sofort eine echte Rechnung, damit
+        sie unmittelbar im Verlauf erscheint; den Einzug übernimmt Stripe
+        danach selbst (``auto_advance``).
+        """
+        schluessel = f"proration:{sub_id}:{quantity}"
+        try:
+            inv = self._stripe.v1.invoices.create(
+                params={
+                    "customer": customer_id,
+                    "subscription": sub_id,
+                    "auto_advance": True,
+                },
+                options={"idempotency_key": schluessel},
+            )
+        except _StripeError as exc:
+            if getattr(exc, "code", "") == "invoice_no_customer_line_items":
+                log.info("proration_invoice_leer", tenant_id=tenant_id)
+                return
+            raise
+        inv_id = _f(inv, "id")
+        if _f(inv, "status") == "draft":
+            self._stripe.v1.invoices.finalize_invoice(
+                inv_id, options={"idempotency_key": f"{schluessel}:final"}
+            )
+        log.info(
+            "proration_invoice_erstellt",
+            tenant_id=tenant_id,
+            invoice_id=inv_id,
+            total=_f(inv, "total"),
+        )
 
     def _grundtarif_item(self, sub: Any) -> dict[str, Any] | None:  # noqa: ANN401
         """Die Subscription-Position, die den graduated Grundtarif trägt —
@@ -513,14 +637,21 @@ class SubscriptionsService:
 
     # -- Rechnungsadresse + Rechnungen (Quelle: Stripe) ---------------------
     def get_billing_address(self, ctx: AuthContext) -> BillingAddress:
-        """Rechnungsadresse aus dem Stripe-Customer. Existiert noch kein
-        Customer, liefern wir eine LEERE Adresse statt einen anzulegen: ein
-        reiner Lesezugriff darf keinen Kunden bei Stripe erzeugen (Wurzel 2)."""
+        """Rechnungsadresse aus dem Stripe-Customer, ergänzt aus dem Betriebsprofil.
+
+        Stripe ist die Quelle der Wahrheit für die Rechnungsstellung und hat
+        daher Vorrang. Felder, die dort noch fehlen, werden aus dem im Konto
+        gepflegten Betriebsprofil VORGESCHLAGEN — sonst müsste der Betrieb seine
+        Anschrift ein zweites Mal eintippen. Existiert noch kein Customer,
+        legen wir keinen an: ein Lesezugriff darf keinen Kunden erzeugen
+        (Wurzel 2).
+        """
         db, tenant_id = self._require(ctx)
         row = self._load_row(db, tenant_id)
         customer_id = (row or {}).get("stripe_customer_id")
+        vorschlag = self._address_from_billing_profile(db, tenant_id)
         if not customer_id:
-            return BillingAddress()
+            return vorschlag
         try:
             cus = self._stripe.v1.customers.retrieve(
                 customer_id, params={"expand": ["tax_ids"]}
@@ -530,9 +661,92 @@ class SubscriptionsService:
             # keine Adresse" behandeln statt die Seite mit 400 zu blockieren.
             # Der Schreibpfad legt beim Speichern einen frischen Customer an.
             if getattr(exc, "code", None) == "resource_missing":
-                return BillingAddress()
+                return vorschlag
             raise self._stripe_err(exc) from exc
-        return self._billing_address_from_customer(cus)
+        return self._merge_address(self._billing_address_from_customer(cus), vorschlag)
+
+    # Felder, bei denen das Betriebsprofil VORRANG hat. Stripes `name` und
+    # `email` stammen beim Erstkauf aus dem Tenant (Betriebsname, Entwickler-
+    # Adresse) und sind deshalb keine belastbare Personenangabe — stünde Stripe
+    # hier vorn, erschiene der Firmenname als „Vorname". Die eigentliche
+    # Anschrift (line1, city, …) gewinnt umgekehrt aus Stripe: dort hat der
+    # Nutzer sie zuletzt bewusst für die Rechnungsstellung bestätigt.
+    _PROFIL_HAT_VORRANG = ("first_name", "last_name", "email")
+
+    @classmethod
+    def _merge_address(
+        cls, stripe_addr: BillingAddress, vorschlag: BillingAddress
+    ) -> BillingAddress:
+        """Stripe und Betriebsprofil zusammenführen.
+
+        Grundregel: Stripe gewinnt, leere Felder kommen aus dem Profil. Für
+        Personenname und E-Mail gilt das Gegenteil (siehe
+        ``_PROFIL_HAT_VORRANG``). ``account_type`` bleibt der Stripe-Wert — er
+        entscheidet über die Pflichtfelder im Formular.
+        """
+        ergaenzt: dict[str, Any] = {}
+        for k, v in stripe_addr.model_dump().items():
+            if k == "account_type":
+                continue
+            aus_profil = getattr(vorschlag, k, None)
+            if k in cls._PROFIL_HAT_VORRANG:
+                ergaenzt[k] = aus_profil or v
+            else:
+                ergaenzt[k] = v if v not in (None, "") else aus_profil
+        ergaenzt["account_type"] = stripe_addr.account_type
+        return BillingAddress(**ergaenzt)
+
+    def _address_from_billing_profile(
+        self, db: Client, tenant_id: str
+    ) -> BillingAddress:
+        """Vorbelegung aus dem Betriebsprofil (`tenant_billing_profile`).
+
+        Solange am Stripe-Customer noch keine Rechnungsadresse hängt, stünde im
+        Formular alles leer — obwohl der Betrieb seine Anschrift im Konto längst
+        gepflegt hat. Diese Daten werden deshalb als VORSCHLAG geladen; sie
+        werden erst zu Stripe geschrieben, wenn der Nutzer speichert. Fehlt das
+        Profil, bleibt die Adresse leer (nichts erfinden, Wurzel 4).
+        """
+        rows = (
+            db.table("tenant_billing_profile")
+            .select(
+                "legal_name, company_street, company_house_number, "
+                "company_postal_code, company_city, company_country, "
+                "company_state, email, vat_id, account_type, "
+                "managing_director_first_name, managing_director_last_name"
+            )
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not rows:
+            return BillingAddress()
+        p = rows[0]
+
+        def feld(name: str) -> str | None:
+            """Getrimmter Wert oder None — im Profil stehen teils Leerzeichen am
+            Ende ("Max "), die sonst auf der Rechnung landen."""
+            wert = (p.get(name) or "").strip()
+            return wert or None
+
+        # Straße und Hausnummer stehen getrennt, Stripe kennt nur eine Zeile.
+        strasse = " ".join(
+            t for t in (feld("company_street"), feld("company_house_number")) if t
+        )
+        typ = "company" if p.get("account_type") == "company" else "individual"
+        return BillingAddress(
+            first_name=feld("managing_director_first_name"),
+            last_name=feld("managing_director_last_name"),
+            line1=strasse or None,
+            city=feld("company_city"),
+            state=feld("company_state"),
+            postal_code=feld("company_postal_code"),
+            country=feld("company_country"),
+            email=feld("email"),
+            account_type=typ,
+            company_name=feld("legal_name"),
+            vat_id=feld("vat_id"),
+        )
 
     @staticmethod
     def _billing_address_from_customer(cus: Any) -> BillingAddress:  # noqa: ANN401

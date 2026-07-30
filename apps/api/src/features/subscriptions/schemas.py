@@ -74,6 +74,21 @@ class CheckoutSessionResponse(BaseModel):
     checkout_url: str
 
 
+class QuantityChangeRequest(BaseModel):
+    """Gebuchte Objektzahl eines bestehenden Abos ändern.
+
+    Erhöhen wird sofort wirksam und anteilig berechnet; Verkleinern lehnt der
+    Server ab, solange mehr Objekte veröffentlicht sind als künftig bezahlt
+    werden (422).
+    """
+
+    property_count: int = Field(ge=1, le=10000)
+
+
+class QuantityChangeResponse(BaseModel):
+    property_count: int
+
+
 class ModuleToggleRequest(BaseModel):
     module_key: str
 

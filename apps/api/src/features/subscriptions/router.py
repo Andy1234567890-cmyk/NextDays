@@ -27,6 +27,8 @@ from .schemas import (
     InvoiceRow,
     PortalSessionResponse,
     PricingResponse,
+    QuantityChangeRequest,
+    QuantityChangeResponse,
     SliceHealth,
     SubscriptionStatusResponse,
 )
@@ -107,6 +109,19 @@ def sync_quantity(ctx: _billing, service: ServiceDep) -> dict[str, int]:
     except SubscriptionsError as exc:
         raise _handle(exc) from exc
     return {"property_count": count}
+
+
+@router.post("/quantity", response_model=QuantityChangeResponse)
+def change_quantity(
+    body: QuantityChangeRequest, ctx: _billing, service: ServiceDep
+) -> QuantityChangeResponse:
+    """Gebuchte Objektzahl ändern. Erhöhen wirkt sofort (anteilige Berechnung),
+    Verkleinern nur, wenn nicht mehr Objekte veröffentlicht sind (422)."""
+    try:
+        count = service.change_quantity(ctx, property_count=body.property_count)
+    except SubscriptionsError as exc:
+        raise _handle(exc) from exc
+    return QuantityChangeResponse(property_count=count)
 
 
 @router.get("/billing-address", response_model=BillingAddress)

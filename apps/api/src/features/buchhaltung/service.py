@@ -20,6 +20,7 @@ import nh3
 from postgrest.exceptions import APIError
 from supabase import Client
 
+from src.core.countries import dial_code
 from src.core.logging import get_logger
 from src.core.security import AuthContext
 
@@ -1590,7 +1591,7 @@ def _company_representative_from_profile(profile: dict) -> dict | None:
         "first_name": profile.get("managing_director_first_name"),
         "last_name": profile.get("managing_director_last_name"),
         "email": profile.get("email"),
-        "phone": _e164_phone(profile.get("phone_number")),
+        "phone": _e164_phone(profile.get("phone_number"), profile.get("company_country")),
     }
     if address:
         person["address"] = address
@@ -1636,7 +1637,7 @@ def _connect_fields_from_profile(profile: dict) -> dict:
         "first_name": profile.get("managing_director_first_name"),
         "last_name": profile.get("managing_director_last_name"),
         "email": profile.get("email"),
-        "phone": _e164_phone(profile.get("phone_number")),
+        "phone": _e164_phone(profile.get("phone_number"), profile.get("company_country")),
     }
     if address:
         person["address"] = address
@@ -1667,7 +1668,7 @@ def _connect_fields_from_profile(profile: dict) -> dict:
             company["structure"] = structure
         if address:
             company["address"] = address
-        company_phone = _e164_phone(profile.get("phone_number"))
+        company_phone = _e164_phone(profile.get("phone_number"), profile.get("company_country"))
         if company_phone:
             company["phone"] = company_phone
         # Handelsregisternummer → company.tax_id. KRITISCH für DE (live verifiziert):
@@ -1711,7 +1712,7 @@ def _dob_parts(value: object) -> dict | None:
         return None
 
 
-def _e164_phone(value: object) -> str | None:
+def _e164_phone(value: object, country: object = None) -> str | None:
     """Telefonnummer auf E.164 normalisieren (+ und Ziffern, KEINE Leerzeichen).
 
     Das Telefon-Eingabefeld speichert die Nummer anzeige-freundlich mit Leerzeichen
@@ -1719,13 +1720,26 @@ def _e164_phone(value: object) -> str | None:
     E.164 ohne Trennzeichen und lehnt „+49 1234567890" als „not a valid phone number"
     ab — ein einziger solcher Wert ließ FRÜHER das gesamte Account-Update scheitern
     (und mit ihm representative/Handelsregister). Darum hier, an der Stripe-Grenze,
-    robust normalisieren: führendes '+' erhalten, alle Nicht-Ziffern entfernen. Leere/
-    ziffernlose Eingabe → None (kein erfundener Wert, Wurzel 4)."""
+    robust normalisieren: führendes '+' erhalten, alle Nicht-Ziffern entfernen.
+
+    Fehlt die Landesvorwahl ganz (gespeichert wurde nur „1234567890", weil
+    `splitPhone` im Frontend keine bekannte Vorwahl erkannte), ergänzen wir sie
+    aus dem Ländercode des Profils — sonst weist Stripe die Nummer ab und das
+    gesamte Konto-Update scheitert an einer Nebenangabe. Ist das Land unbekannt,
+    wird KEINE Vorwahl geraten: dann lieber None als eine falsche Nummer
+    (Wurzel 4). Leere/ziffernlose Eingabe → None.
+    """
     if not value:
         return None
     raw = str(value).strip()
-    plus = raw.startswith("+")
     digits = "".join(ch for ch in raw if ch.isdigit())
     if not digits:
         return None
-    return f"+{digits}" if plus else digits
+    if raw.startswith("+"):
+        return f"+{digits}"
+    vorwahl = dial_code(str(country) if country else None)
+    if not vorwahl:
+        return None
+    # Führende 0 ist die nationale Verkehrsausscheidungsziffer und entfällt
+    # international („0151…" → „+49151…").
+    return f"{vorwahl}{digits.lstrip('0')}"

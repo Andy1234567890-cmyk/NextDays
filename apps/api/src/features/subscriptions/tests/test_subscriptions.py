@@ -663,3 +663,167 @@ def test_checkout_mindestens_eins_bei_null_objekten() -> None:
     svc, stripe = _checkout_svc(aktive_objekte=0)
     _start(svc, None)
     assert stripe._menge() == 1  # noqa: SLF001
+
+
+# -- change_quantity: Verkleinern nur mit genug deaktivierten Objekten -------
+def test_change_quantity_ohne_abo_ist_422() -> None:
+    """Ohne Abo gibt es keine Menge zu ändern."""
+    svc = SubscriptionsService(service_client=_DB())
+    with pytest.raises(SubscriptionsError) as exc:
+        svc.change_quantity(_CTX, property_count=3)
+    assert exc.value.status_code == 422
+
+
+def test_change_quantity_unter_aktive_objekte_ist_422() -> None:
+    """5 Objekte live, aber nur 3 buchen wollen → abgelehnt, sonst stünden
+    zwei veröffentlichte Objekte über dem Kontingent (Wurzel 1)."""
+    db = _db_with_properties(5)
+    db.store["tenant_subscription"] = [
+        {
+            "tenant_id": "t1",
+            "stripe_subscription_id": "sub_1",
+            "status": "active",
+            "reported_property_count": 5,
+        }
+    ]
+    svc = SubscriptionsService(service_client=db)
+    with pytest.raises(SubscriptionsError) as exc:
+        svc.change_quantity(_CTX, property_count=3)
+    assert exc.value.status_code == 422
+    assert "5" in str(exc.value)
+
+
+def test_sync_quantity_reduziert_bezahlte_menge_nicht() -> None:
+    """Wer für 5 zahlt und nur 1 Objekt aktiv hat, behält 5 — der Sync zieht
+    ausschliesslich nach OBEN nach."""
+    db = _db_with_properties(1)
+    db.store["tenant_subscription"] = [
+        {
+            "tenant_id": "t1",
+            "stripe_subscription_id": "sub_1",
+            "status": "active",
+            "reported_property_count": 5,
+        }
+    ]
+    svc = SubscriptionsService(service_client=db)
+    assert svc.sync_quantity_for_tenant("t1") == 5
+    assert db.store["tenant_subscription"][0]["reported_property_count"] == 5
+
+
+def test_change_quantity_rechnet_nur_beim_erweitern_sofort_ab() -> None:
+    """Erweitern erzeugt sofort eine Rechnung, Reduzieren nicht (dort entsteht
+    eine Gutschrift, die auf der nächsten regulären Rechnung bleibt)."""
+    gerufen: list[int] = []
+
+    class _Svc(SubscriptionsService):
+        def _invoice_prorations_now(  # noqa: PLR0913
+            self, sub_id: str, customer_id: str, tenant_id: str, *, quantity: int
+        ) -> None:
+            gerufen.append(quantity)
+
+        def _grundtarif_item(self, sub: Any) -> dict[str, Any] | None:
+            return {"id": "si_1", "quantity": 5}
+
+        @property
+        def _stripe(self) -> Any:
+            return _Stripe()
+
+    class _Stripe:
+        class v1:  # noqa: N801
+            class subscriptions:  # noqa: N801
+                @staticmethod
+                def retrieve(_id: str) -> dict[str, Any]:
+                    return {"id": "sub_1", "items": {"data": []}}
+
+            class subscription_items:  # noqa: N801
+                @staticmethod
+                def update(_id: str, **_k: Any) -> None:
+                    return None
+
+    db = _db_with_properties(1)
+    db.store["tenant_subscription"] = [
+        {
+            "tenant_id": "t1",
+            "stripe_customer_id": "cus_1",
+            "stripe_subscription_id": "sub_1",
+            "status": "active",
+            "reported_property_count": 5,
+        }
+    ]
+    svc = _Svc(service_client=db)
+
+    svc.change_quantity(_CTX, property_count=8)
+    assert gerufen == [8], "Erweitern muss sofort abrechnen"
+
+    gerufen.clear()
+    svc.change_quantity(_CTX, property_count=3)
+    assert gerufen == [], "Reduzieren darf keine Rechnung erzeugen"
+
+
+# -- Rechnungsadresse: Vorbelegung aus dem Betriebsprofil --------------------
+_PROFIL = [
+    {
+        "tenant_id": "t1",
+        "legal_name": "Villa zur Sonne",
+        "company_street": "Hauptstr. ",  # Leerzeichen wie im echten Profil
+        "company_house_number": "12",
+        "company_postal_code": "15749",
+        "company_city": "Mittenwalde",
+        "company_country": "DE",
+        "company_state": None,
+        "email": "info@villa.de",
+        "vat_id": "DE123456789",
+        "account_type": "company",
+        "managing_director_first_name": "Max ",
+        "managing_director_last_name": "Mustermann",
+    }
+]
+
+
+def test_billing_address_ohne_customer_kommt_aus_profil() -> None:
+    """Ohne Stripe-Customer wird das Formular aus dem Betriebsprofil vorbelegt,
+    statt den Betrieb alles erneut eintippen zu lassen."""
+    db = _DB()
+    db.store["tenant_billing_profile"] = _PROFIL
+    svc = SubscriptionsService(service_client=db)
+    addr = svc.get_billing_address(_CTX)
+    assert addr.line1 == "Hauptstr. 12"
+    assert addr.postal_code == "15749"
+    assert addr.city == "Mittenwalde"
+    assert addr.country == "DE"
+    assert addr.company_name == "Villa zur Sonne"
+    assert addr.first_name == "Max"
+
+
+def test_billing_address_ohne_profil_bleibt_leer() -> None:
+    """Kein Profil → nichts erfinden (Wurzel 4)."""
+    svc = SubscriptionsService(service_client=_DB())
+    addr = svc.get_billing_address(_CTX)
+    assert addr.line1 is None
+    assert addr.city is None
+
+
+def test_merge_address_stripe_gewinnt_profil_fuellt_luecken() -> None:
+    """Vorhandene Stripe-Werte bleiben; nur leere Felder kommen aus dem Profil."""
+    from src.features.subscriptions.schemas import BillingAddress as _BA
+
+    stripe_addr = _BA(
+        city="Berlin",
+        first_name="myNextDays",   # aus dem Checkout: der TENANT-Name
+        email="developer@example.com",
+        account_type="individual",
+    )
+    vorschlag = _BA(
+        city="Mittenwalde",
+        postal_code="15749",
+        first_name="Max",
+        email="admin@villa.de",
+        account_type="company",
+    )
+    zus = SubscriptionsService._merge_address(stripe_addr, vorschlag)  # noqa: SLF001
+    assert zus.city == "Berlin", "Anschrift: Stripe-Wert gewinnt"
+    assert zus.postal_code == "15749", "Leeres Feld wird ergänzt"
+    assert zus.account_type == "individual", "Konto-Typ bleibt der Stripe-Wert"
+    # Name/E-Mail: das Profil gewinnt, sonst stünde der Firmenname als Vorname.
+    assert zus.first_name == "Max"
+    assert zus.email == "admin@villa.de"
