@@ -1,33 +1,24 @@
-// Trial — "NextDays 30 Tage kostenlos testen" mit 3 Vorteils-Icons (links)
+// Trial — "myNextDays 30 Tage kostenlos testen" mit 3 Vorteils-Icons (links)
 // und Anmeldeformular (rechts). Figma: peach-Hintergrund-Block, zweispaltig.
 "use client";
 
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { type FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+// Schlüssel + Icon; Titel und Text kommen aus messages (trial.perks.*).
 const PERKS = [
-  {
-    icon: "ph:chart-line-up",
-    title: "Steigere deine Buchungen",
-    text: "um bis zu 46 % mit unserer einfachen Software.",
-  },
-  {
-    icon: "ph:calendar-check",
-    title: "Behalte die Kontrolle",
-    text: "über alle Check-ins, Buchungen und Rechnungen an einem Ort.",
-  },
-  {
-    icon: "ph:device-mobile",
-    title: "Genieße mehr Freiheit",
-    text: "und verwalte deine Unterkunft unterwegs mit unserer mobilen App.",
-  },
-];
+  { key: "buchungen", icon: "ph:chart-line-up" },
+  { key: "kontrolle", icon: "ph:calendar-check" },
+  { key: "freiheit", icon: "ph:device-mobile" },
+] as const;
 
 export function MarketingTrial() {
+  const t = useTranslations("trial");
   const [submitted, setSubmitted] = useState(false);
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
@@ -40,29 +31,25 @@ export function MarketingTrial() {
       <div className="mx-auto max-w-7xl px-6 py-20">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-            myNextDays 30 Tage kostenlos testen.
+            {t("heading")}
           </h2>
-          <p className="mt-3 text-muted-foreground">
-            Keine Mindestlaufzeit. Jederzeit kündbar. Fülle einfach dieses kurze
-            Formular aus:
-          </p>
+          <p className="mt-3 text-muted-foreground">{t("sub")}</p>
         </div>
 
         <div className="mt-12 grid gap-12 lg:grid-cols-2">
           <div className="flex flex-col justify-center">
-            <h3 className="font-display text-xl font-semibold">
-              Schließe dich tausenden Gastgebern an, die mehr
-              Distributionskraft, Kontrolle und Effizienz gewonnen haben.
-            </h3>
+            <h3 className="font-display text-xl font-semibold">{t("seitenHeading")}</h3>
             <ul className="mt-8 flex flex-col gap-6">
               {PERKS.map((perk) => (
-                <li key={perk.title} className="flex gap-4">
+                <li key={perk.key} className="flex gap-4">
                   <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
                     <Icon icon={perk.icon} className="size-6" />
                   </span>
                   <div>
-                    <p className="font-semibold">{perk.title}</p>
-                    <p className="text-sm text-muted-foreground">{perk.text}</p>
+                    <p className="font-semibold">{t(`perks.${perk.key}.title`)}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {t(`perks.${perk.key}.text`)}
+                    </p>
                   </div>
                 </li>
               ))}
@@ -73,26 +60,30 @@ export function MarketingTrial() {
             {submitted ? (
               <div className="flex h-full flex-col items-center justify-center gap-3 text-center">
                 <Icon icon="ph:check-circle-fill" className="size-12 text-success" />
-                <p className="font-display text-xl font-semibold">Vielen Dank!</p>
-                <p className="text-sm text-muted-foreground">
-                  Wir melden uns in Kürze bei dir.
-                </p>
+                <p className="font-display text-xl font-semibold">{t("dankeTitel")}</p>
+                <p className="text-sm text-muted-foreground">{t("dankeText")}</p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                 <div className="grid gap-5 sm:grid-cols-2">
                   <div className="flex flex-col gap-2">
-                    <Label htmlFor="fname">Vorname</Label>
+                    <Label htmlFor="fname">{t("vorname")}</Label>
                     <Input id="fname" name="fname" required />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <Label htmlFor="lname">Nachname</Label>
+                    <Label htmlFor="lname">{t("nachname")}</Label>
                     <Input id="lname" name="lname" required />
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="email">E-Mail</Label>
-                  <Input id="email" name="email" type="email" placeholder="name@beispiel.de" required />
+                  <Label htmlFor="email">{t("email")}</Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder={t("emailPlatzhalter")}
+                    required
+                  />
                 </div>
                 <label className="flex items-start gap-3 text-sm text-muted-foreground">
                   <input
@@ -100,14 +91,10 @@ export function MarketingTrial() {
                     name="gdpr"
                     className="mt-0.5 size-4 rounded border-border accent-[var(--accent)]"
                   />
-                  <span>
-                    Ja, ich möchte gelegentlich Neuigkeiten, Webinar-Einladungen
-                    und Angebote von myNextDays erhalten. Du kannst deine
-                    Einwilligung jederzeit widerrufen.
-                  </span>
+                  <span>{t("einwilligung")}</span>
                 </label>
                 <Button type="submit" variant="accent" size="lg" className="mt-2">
-                  Jetzt loslegen
+                  {t("absenden")}
                 </Button>
               </form>
             )}

@@ -5,10 +5,10 @@ import type { LegalDoc } from "../types";
 // Account Agreement) — Wortlaut und URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Termini u Kundizzjonijiet għall-Aġenziji u s-Sidien il-Kera",
-  stand: "L-aħħar aġġornament: 26 ta' Lulju 2026",
+  stand: "L-aħħar aġġornament: 30 ta' Lulju 2026",
   intro: [
     "Dawn it-Termini u Kundizzjonijiet Ġenerali (minn hawn 'il quddiem it-“Termini”) jirregolaw l-użu tal-pjattaforma tas-software myNextDays (minn hawn 'il quddiem il-“Pjattaforma”) minn aġenziji, sidien il-kera, amministraturi tal-proprjetà u utenti kummerċjali oħra (minn hawn 'il quddiem l-“Utent”).",
-    "Il-Pjattaforma hija operata minn [isem legali sħiħ, forma legali, indirizz u dettalji tar-reġistru tal-operatur — għandhom jiżdiedu qabel il-pubblikazzjoni] (minn hawn 'il quddiem “myNextDays” jew “aħna”).",
+    "Il-Pjattaforma hija operata minn myNextDays ApS, kumpanija b'responsabbiltà limitata (anpartsselskab) taħt il-liġi Daniża, Hirtshalsvej 21, 9881 Bindslev, id-Danimarka, irreġistrata fir-Reġistru Ċentrali tan-Negozju Daniż (CVR) bin-numru CVR 46615182 (minn hawn 'il quddiem “myNextDays” jew “aħna”).",
     "Il-Pjattaforma hija maħsuba esklussivament għal negozji fis-sens tal-Artikolu 14 tal-Kodiċi Ċivili Ġermaniż (BGB) jew tad-dispożizzjonijiet korrispondenti tal-Istat Membru rilevanti tal-UE. Mhijiex maħsuba għall-konsumaturi.",
   ],
   sections: [

@@ -6,10 +6,10 @@ import type { LegalDoc } from "../types";
 export const agb: LegalDoc = {
   title:
     "Condiciones generales de contratación (CGC) para agencias y arrendadores",
-  stand: "Última actualización: 26 de julio de 2026",
+  stand: "Última actualización: 30 de julio de 2026",
   intro: [
     "Las presentes Condiciones generales de contratación (en adelante, las «Condiciones») regulan el uso de la plataforma de software myNextDays (en adelante, la «Plataforma») por parte de agencias, arrendadores, administradores de fincas y otros usuarios profesionales (en adelante, el «Usuario»).",
-    "La Plataforma es operada por [razón social completa, forma jurídica, dirección y datos registrales del operador — completar antes de la publicación] (en adelante, «myNextDays» o «nosotros»).",
+    "La Plataforma es operada por myNextDays ApS, sociedad de responsabilidad limitada (anpartsselskab) de derecho danés, Hirtshalsvej 21, 9881 Bindslev, Dinamarca, inscrita en el Registro Central de Empresas de Dinamarca (CVR) con el n.º CVR 46615182 (en adelante, «myNextDays» o «nosotros»).",
     "La Plataforma se dirige exclusivamente a empresarios en el sentido del artículo 14 del Código Civil alemán (BGB) o de las disposiciones correspondientes del respectivo Estado miembro de la UE. No se dirige a consumidores.",
   ],
   sections: [

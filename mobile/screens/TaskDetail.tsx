@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/ui/Icon";
 import { Btn, Card, Chip, Col, Divider, IconBtn, Row, Spinner, Txt } from "@/components/ui/kit";
+import { useRealtime } from "@/lib/realtime";
 import { completeTask, getTaskDetail, type TaskDetail as Detail } from "@/lib/tasks";
 import type { RootStackParamList } from "@/navigation/types";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -34,6 +35,10 @@ export default function TaskDetail() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Genau diese Aufgabe: ändert ein Kollege Status oder Zuweisung, zieht die
+  // Ansicht nach, ohne dass der Nutzer zurück und wieder hinein muss.
+  useRealtime({ table: "tasks", filter: `id=eq.${id}`, onChange: load });
 
   const complete = async () => {
     if (saving) return; // Doppel-Tap-Sperre

@@ -5,10 +5,10 @@ import type { LegalDoc } from "../types";
 // Empfehlungstext (Stripe Connected Account Agreement) — URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Yleiset sopimusehdot välitystoimistoille ja vuokranantajille",
-  stand: "Päivitetty: 26. heinäkuuta 2026",
+  stand: "Päivitetty: 30. heinäkuuta 2026",
   intro: [
     "Nämä yleiset sopimusehdot (jäljempänä ”ehdot”) sääntelevät myNextDays-ohjelmistoalustan (jäljempänä ”alusta”) käyttöä, kun käyttäjinä ovat välitystoimistot, vuokranantajat, isännöintiyritykset ja muut elinkeinonharjoittajat (jäljempänä ”käyttäjä”).",
-    "Alustan tarjoaa [ylläpitäjän täydellinen toiminimi, yhtiömuoto, osoite ja rekisteritiedot — täydennettävä ennen julkaisua] (jäljempänä ”myNextDays” tai ”me”).",
+    "Alustan tarjoaa myNextDays ApS, Tanskan oikeuden mukainen osakeyhtiö (anpartsselskab), Hirtshalsvej 21, 9881 Bindslev, Tanska, rekisteröity Tanskan kaupparekisteriin (CVR) numerolla CVR 46615182 (jäljempänä ”myNextDays” tai ”me”).",
     "Alusta on tarkoitettu yksinomaan Saksan siviililain (BGB) 14 §:ssä tai kulloisenkin EU-jäsenvaltion vastaavissa säännöksissä tarkoitetuille elinkeinonharjoittajille. Sitä ei ole tarkoitettu kuluttajille.",
   ],
   sections: [

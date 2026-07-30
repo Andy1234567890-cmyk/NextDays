@@ -6,10 +6,10 @@ import type { LegalDoc } from "../types";
 // Stripes offiziellen Empfehlungstext angelehnt, URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Almindelige forretningsbetingelser for bureauer og udlejere",
-  stand: "Senest opdateret: 26. juli 2026",
+  stand: "Senest opdateret: 30. juli 2026",
   intro: [
     "Disse almindelige forretningsbetingelser (herefter »betingelserne«) regulerer bureauers, udlejeres, ejendomsadministratorers og andre erhvervsmæssige brugeres (herefter »brugeren«) brug af softwareplatformen myNextDays (herefter »platformen«).",
-    "Udbyderen af platformen er [fuldt firmanavn, selskabsform, adresse og registreringsoplysninger for operatøren — udfyldes inden offentliggørelse] (herefter »myNextDays« eller »vi«).",
+    "Udbyderen af platformen er myNextDays ApS, et anpartsselskab efter dansk ret, Hirtshalsvej 21, 9881 Bindslev, Danmark, registreret i Det Centrale Virksomhedsregister (CVR) under CVR-nr. 46615182 (herefter »myNextDays« eller »vi«).",
     "Platformen henvender sig udelukkende til erhvervsdrivende som omhandlet i § 14 i den tyske borgerlige lovbog (BGB) eller de tilsvarende bestemmelser i det pågældende EU-medlemsland. Den henvender sig ikke til forbrugere.",
   ],
   sections: [

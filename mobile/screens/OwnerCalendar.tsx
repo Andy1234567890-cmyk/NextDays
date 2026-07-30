@@ -56,7 +56,9 @@ export default function OwnerCalendar() {
         setProps(res.data.items);
         if (res.data.items.length > 0) setSelected(res.data.items[0].id);
       } else {
-        setProps([]);
+        // null, nicht []: „keine Objekte zugeordnet" ist eine Aussage über den
+        // Bestand und darf nicht aus einem Ladefehler entstehen (Wurzel 4).
+        setProps(null);
         setError(res.error);
       }
     });
@@ -147,10 +149,15 @@ export default function OwnerCalendar() {
         </Row>
       </Col>
 
-      {!props && <Spinner />}
+      {!props && !error && <Spinner />}
+      {error && (
+        <Txt v="sm" soft style={{ textAlign: "center", marginTop: 40 }}>
+          {error}
+        </Txt>
+      )}
       {props && props.length === 0 && (
         <Txt v="sm" soft style={{ textAlign: "center", marginTop: 40 }}>
-          {error ?? "Dir sind noch keine Objekte zugeordnet."}
+          Dir sind noch keine Objekte zugeordnet.
         </Txt>
       )}
 

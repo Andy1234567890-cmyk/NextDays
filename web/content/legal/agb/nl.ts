@@ -5,10 +5,10 @@ import type { LegalDoc } from "../types";
 // (recommended disclosure language) — Wortlaut und URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Algemene voorwaarden (AV) voor agentschappen en verhuurders",
-  stand: "Laatst bijgewerkt: 26 juli 2026",
+  stand: "Laatst bijgewerkt: 30 juli 2026",
   intro: [
     "Deze algemene voorwaarden (hierna “Voorwaarden”) regelen het gebruik van het softwareplatform myNextDays (hierna “Platform”) door agentschappen, verhuurders, vastgoedbeheerders en andere zakelijke gebruikers (hierna “Gebruiker”).",
-    "Het Platform wordt geëxploiteerd door [volledige bedrijfsnaam, rechtsvorm, adres en registergegevens van de exploitant — vóór publicatie aanvullen] (hierna “myNextDays” of “wij”).",
+    "Het Platform wordt geëxploiteerd door myNextDays ApS, een besloten vennootschap (anpartsselskab) naar Deens recht, Hirtshalsvej 21, 9881 Bindslev, Denemarken, ingeschreven in het Deense Centrale Ondernemingsregister (CVR) onder CVR-nr. 46615182 (hierna “myNextDays” of “wij”).",
     "Het Platform is uitsluitend bedoeld voor ondernemers in de zin van § 14 van het Duitse Burgerlijk Wetboek (BGB) dan wel de overeenkomstige bepalingen van de betreffende EU-lidstaat. Het is niet bedoeld voor consumenten.",
   ],
   sections: [

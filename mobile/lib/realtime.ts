@@ -11,6 +11,7 @@ import {
 import { useEffect, useRef } from "react";
 
 import { getToken, onTokenChange } from "@/lib/auth";
+import { getGuestToken, onGuestTokenChange } from "@/lib/guestAuth";
 import { CONFIG } from "@/lib/config";
 
 // Client-Singleton. null, wenn kein anon-Key konfiguriert ist (dann ist der Hook
@@ -36,15 +37,19 @@ function realtimeClient(): SupabaseClient | null {
     // nie über das auth-Modul dieses Clients.
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
   });
-  // Bei Token-Refresh/Logout (lib/auth) das JWT erneuern — kein Polling.
-  onTokenChange((token) => {
+  // Bei Token-Refresh/Logout das JWT erneuern — kein Polling. BEIDE Auth-Welten:
+  // ohne den Gast-Listener behielten Gast-Channels nach einem Refresh das alte
+  // JWT und liefen still aus (Events hören auf, ohne Fehler).
+  const erneuern = (token: string | null) => {
     if (rtClient && token) {
       rtClient.realtime.setAuth(token).catch(() => {
         // Best-effort: schlägt setAuth fehl, greift beim nächsten Channel-JOIN
-        // erneut der getToken()-Pfad. Kein Kippen des Hauptpfads.
+        // erneut der Token-Pfad. Kein Kippen des Hauptpfads.
       });
     }
-  });
+  };
+  onTokenChange(erneuern);
+  onGuestTokenChange(erneuern);
   return rtClient;
 }
 
@@ -71,6 +76,13 @@ type RealtimeOpts<T = Record<string, unknown>> = {
   enabled?: boolean;
   /** Debounce-Fenster für onChange (ms, default 400 — wie Web). */
   debounceMs?: number;
+  /**
+   * Aus WELCHER Auth-Welt das JWT kommt. Die App hat zwei strikt getrennte:
+   * "tenant" = Betrieb/Owner/Mitarbeiter (lib/auth), "guest" = portal_guest
+   * (lib/guestAuth). Das JWT entscheidet, welche RLS-Policies greifen — mit dem
+   * falschen Token kommt kein Event, weil keine Policy passt. Default "tenant".
+   */
+  tokenSource?: "tenant" | "guest";
 };
 
 /**
@@ -84,6 +96,7 @@ export function useRealtime<T = Record<string, unknown>>({
   onEvent,
   enabled = true,
   debounceMs = 400,
+  tokenSource = "tenant",
 }: RealtimeOpts<T>): void {
   const cb = useRef(onChange);
   cb.current = onChange;
@@ -114,7 +127,7 @@ export function useRealtime<T = Record<string, unknown>>({
     };
 
     (async () => {
-      const token = await getToken();
+      const token = tokenSource === "guest" ? await getGuestToken() : await getToken();
       if (cancelled) return;
       if (token) await supabase.realtime.setAuth(token); // VOR subscribe()
       if (cancelled) return;
@@ -144,5 +157,5 @@ export function useRealtime<T = Record<string, unknown>>({
       if (timer) clearTimeout(timer);
       if (channel) supabase.removeChannel(channel);
     };
-  }, [table, filter, enabled, debounceMs, uid]);
+  }, [table, filter, enabled, debounceMs, uid, tokenSource]);
 }

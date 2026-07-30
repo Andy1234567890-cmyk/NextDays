@@ -25,9 +25,47 @@ Prod = sslip.io-URLs bis Domain-Cutover; kein Push in dieser Phase. Regeln
 in `CLAUDE.md` (Abschnitt Mobile) verankert.
 
 Paket-Status: P1 ☑ (inkl. P1.1) · P2 ☑ (inkl. P2.1) · P3 ☑ (inkl. P3.1) · P4 ☑
-(inkl. P4.1) · P5 ☑ (inkl. P5.1) · P6 (Owner) ☑ · P7 (Gast-Backend) ☐ ·
-P8 (Gast-App) ☐ · P9 (Security-Review) ☐
+(inkl. P4.1) · P5 ☑ (inkl. P5.1) · P6 (Owner) ☑ · P7 (Gast-Backend) ☑ ·
+P8 (Gast-App) ☑ · P9 (Security-Review) ☐
 Nach jedem Paket diese Zeile aktualisieren.
+
+**Datenanbindung abgeschlossen (30.07.2026) — kein Screen mehr auf Attrappen:**
+- Demo-/Ersatzdaten ENTFERNT: `lib/photos.ts` (Unsplash-Bilder) und
+  `components/Placeholder.tsx` gelöscht, die Demo-Objektliste in HostListings und
+  der Null-Datensatz in HostDashboard durch echte Fehlerzustände mit
+  „Erneut versuchen" ersetzt. Acht weitere Screens setzten bei einem Ladefehler
+  eine LEERE Liste (von echtem Leerstand nicht zu unterscheiden, Wurzel 4) — jetzt
+  `null` + sichtbarer Fehler; OwnerRequests verschluckte Fehler ganz und hat nun
+  einen Fehlerrahmen.
+- HostListings zeigt statt erfundener Bewertung/Belegung („–", „0 %") die drei
+  echten Vertriebskanal-Chips aus `PropertyResponse.channels` — wie die
+  Objektliste im Web. `properties.currency` (zentral, 0161) statt
+  `type_attributes.currency` in `lib/properties.ts`.
+- REALTIME-BEFUND (live gegen die Server-DB): von 52 abonnierten Tabellen lieferten
+  8 nie ein Event. Postgres-Changes braucht BEIDES — `select` für `authenticated`
+  UND Publikations-Mitgliedschaft. Migration 0234 behebt `properties` (Grant fehlte,
+  obwohl 0207 ihn ausdrücklich behalten wollte → Objekt-Realtime war in web UND
+  mobile tot) und publiziert `property_seasons`/`property_season_assignments`.
+  Die fünf Finanztabellen (payments, invoices, invoice_line_items,
+  commission_ledger, owner_statements) bleiben BEWUSST ohne Grant (Wurzel 6/0187) —
+  dort ist das Abo der Fehler. In mobile behoben (OwnerEarnings hört nur noch auf
+  `reservations`); OFFEN in web: konto-abo-section, finance/invoices-client,
+  gaeste/guest-detail, use-reservation-detail, eigentuemer/my-statements +
+  owner-realtime, reservierungen/booking-timeline.
+- Gast-Realtime: `useRealtime` kennt jetzt `tokenSource: "tenant" | "guest"` — mit
+  dem Tenant-Token passt für portal_guests keine Policy. Migration 0235 gibt
+  `wishlists`/`wishlist_items` das SELECT-Grant (Policy `*_self` = auth.uid()) und
+  publiziert sie; Schreiben bleibt serverseitig. GuestWishlist + WishlistDetail
+  abonnieren live, das manuelle `load()` nach eigenen Aktionen ist entfallen.
+  LIVE BEWIESEN (Transaktion mit rollback): zwei Merklisten angelegt, als Gast 1
+  ist genau die eigene sichtbar; `properties` liefert dem Gast 0 Zeilen, `payments`
+  verweigert den Zugriff.
+- Bewusst OHNE Realtime (im Code begründet): GuestTrips/TripDetail/Checkin —
+  `reservations` hat nur tenant-/owner-/staff-Policies. Eine portal_guest-Policy
+  würde dem Gast die Rohzeile über den DB-Direktpfad öffnen, während die API
+  maskiert (Wurzel 6). Dort aktualisiert Pull-to-Refresh/Focus.
+- HostTasks + TaskDetail neu mit `tasks`-Abo. Qualitätsgate: tsc grün, eslint ohne
+  Fehler, Jest 3 Suites/12 grün.
 
 **P6 erledigt (13.07.2026) — Owner-Erlebnis über /public-portal:**
 - Neu `lib/ownerPortal.ts` (Wrapper über lib/api.ts): getOwnerProperties,

@@ -56,8 +56,13 @@ export default function OwnerEarnings() {
     load();
   }, [load]);
 
+  // NUR reservations: owner_statements ist für `authenticated` bewusst ohne
+  // SELECT-Grant (Wurzel 6 — Finanzdaten liest nur der Server, 0187). Ein Abo
+  // darauf liefert deshalb NIE ein Event und wäre eine stumme Attrappe, die
+  // „live" aussieht. Abrechnungen entstehen serverseitig aus Buchungen, also
+  // deckt reservations den realen Auslöser ab; ein reiner Monatslauf ohne
+  // Buchungsänderung kommt erst per Pull-to-Refresh an.
   useRealtime({ table: "reservations", onChange: load });
-  useRealtime({ table: "owner_statements", onChange: load });
 
   if (!earnings && !error) {
     return (

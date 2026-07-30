@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Card, Chip, Col, Progress, Row, Segmented, Spinner, Txt } from "@/components/ui/kit";
 import { useAuth } from "@/contexts/AuthContext";
 import { can } from "@/lib/permissions";
+import { useRealtime } from "@/lib/realtime";
 import {
   listMyTasks,
   listTeamTasks,
@@ -62,6 +63,10 @@ export default function HostTasks({ navigation }: { navigation: any }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  // tasks speist beide Listen (eigene + Team). RLS begrenzt auf den Tenant und
+  // — für Mitarbeiter — auf die eigenen Zuweisungen.
+  useRealtime({ table: "tasks", onChange: load });
 
   const advance = async (task: TaskListItem) => {
     const next = nextStatus(task.status);

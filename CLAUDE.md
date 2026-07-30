@@ -161,7 +161,17 @@ Status in NOTES.md). Zusätzlich verbindlich:
 - Mobile berührt? `tsc --noEmit` in mobile ohne Fehler, Jest grün.
 - DB-Änderung? Migration schreiben und via `supabase/apply-migrations.sh` live
   einspielen (nie automatisch), JEDE neue public-Tabelle bekommt RLS.
-- Realtime: jede neue Liste/Detail-UI abonniert alle speisenden Tabellen.
+- Realtime: jede neue Liste/Detail-UI abonniert alle speisenden Tabellen. Ein Abo
+  wirkt nur, wenn BEIDES stimmt: `select` für `authenticated` auf der Tabelle
+  (RLS entscheidet dann, welche Zeilen) UND Mitgliedschaft in der Publikation
+  `supabase_realtime`. Fehlt eines, ist das Abo eine stumme Attrappe — die UI
+  sieht live aus und aktualisiert nie. Beides gegen die Live-DB prüfen, nicht
+  annehmen (so waren 8 Abos in web+mobile tot, u. a. `properties`). Tabellen, die
+  Wurzel 6 bewusst sperrt (Finanzen: payments, invoices, commission_ledger,
+  owner_statements), dürfen NICHT per Grant geöffnet werden — dort ist das Abo
+  der Fehler: auf eine erlaubte Quelle hören (z. B. `reservations`).
+  Zwei Auth-Welten: Gast-Abos (portal_guest) brauchen das GAST-JWT, sonst passt
+  keine Policy (`mobile/lib/realtime.ts`, `tokenSource: "guest"`).
 - **Security-Gate (Wurzel 6–9):** neue/geänderte sensible Tabelle → `revoke` +
   restriktive Rollen-Policy gesetzt und gedanklich per anon-Key-`curl` gegengeprüft
   (lesen UND schreiben). Neuer serverseitiger Fetch/Render/HTML-Sink → sanitisiert/

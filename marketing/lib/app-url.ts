@@ -11,3 +11,6 @@ export const APP_URL = LOGIN_URL.replace(/\/login\/?$/, "");
 
 export const AGB_URL = `${APP_URL}/agb`;
 export const HILFE_URL = `${APP_URL}/hilfe`;
+// Registrierung liegt in der web-App unter /signup (NICHT /register — diese
+// Route existiert nirgends und lief vorher in einen 404).
+export const SIGNUP_URL = `${APP_URL}/signup`;

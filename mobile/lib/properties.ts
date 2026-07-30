@@ -5,6 +5,16 @@ import { call, type Result } from "@/lib/api";
 
 export type PropertyStatus = "draft" | "active" | "inactive";
 
+// Zustand eines Objekts PRO Vertriebskanal (Spiegel von web/lib/properties.ts):
+// aktiv, pausiert (Nutzer-Wille, kein Alarm), nicht eingerichtet, Fehler.
+export type ChannelState = "active" | "paused" | "not_connected" | "error";
+
+export type PropertyChannels = {
+  website: ChannelState;
+  marketplace: ChannelState;
+  portals: ChannelState;
+};
+
 export type Property = {
   id: string;
   tenant_id: string;
@@ -18,7 +28,14 @@ export type Property = {
   // DK-Katasternummer (Objektkartei §6) — dient als Objektnummer im Umschalter.
   // Leer = keine Nummer anzeigen (kein erfundener Ersatzwert).
   bfe_number: string | null;
+  // Zentrale Objektwährung (properties.currency, Migration 0161) — gilt für alle
+  // Rate-Plans des Objekts. null → Beträge symbollos rendern, NIE ein
+  // erfundenes € (Wurzel 4). Liegt NICHT in type_attributes.
+  currency: string | null;
   photos: string[];
+  // Abgeleiteter Kanal-Zustand (Ebene B). Der Server befüllt ihn nur auf den
+  // Listen-/Detail-Wegen; fehlt er, werden keine Chips gerendert.
+  channels?: PropertyChannels;
   type_attributes: Record<string, unknown>;
 };
 

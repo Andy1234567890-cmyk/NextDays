@@ -5,10 +5,10 @@ import type { LegalDoc } from "../types";
 // (Stripe Connected Account Agreement) — Wortlaut sinngemäß, URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Ogólne Warunki Handlowe (Regulamin) dla agencji i wynajmujących",
-  stand: "Stan na: 26 lipca 2026 r.",
+  stand: "Stan na: 30 lipca 2026 r.",
   intro: [
     "Niniejsze Ogólne Warunki Handlowe (zwane dalej „Regulaminem”) określają zasady korzystania z platformy oprogramowania myNextDays (zwanej dalej „Platformą”) przez agencje, wynajmujących, zarządców nieruchomości oraz innych użytkowników prowadzących działalność gospodarczą (zwanych dalej „Użytkownikiem”).",
-    "Dostawcą Platformy jest [pełna firma, forma prawna, adres i dane rejestrowe operatora — uzupełnić przed publikacją] (zwana dalej „myNextDays” lub „my”).",
+    "Dostawcą Platformy jest myNextDays ApS, spółka z ograniczoną odpowiedzialnością (anpartsselskab) prawa duńskiego, Hirtshalsvej 21, 9881 Bindslev, Dania, zarejestrowana w duńskim Centralnym Rejestrze Przedsiębiorców (CVR) pod numerem CVR 46615182 (zwana dalej „myNextDays” lub „my”).",
     "Platforma jest przeznaczona wyłącznie dla przedsiębiorców w rozumieniu § 14 niemieckiego kodeksu cywilnego (BGB) lub odpowiednich przepisów danego państwa członkowskiego UE. Nie jest przeznaczona dla konsumentów.",
   ],
   sections: [

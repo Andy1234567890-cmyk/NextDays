@@ -5,10 +5,10 @@ import type { LegalDoc } from "../types";
 // (Stripe Connected Account Agreement) — Wortlaut sinngemäß, URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Všeobecné obchodné podmienky (VOP) pre agentúry a prenajímateľov",
-  stand: "Stav ku dňu: 26. júla 2026",
+  stand: "Stav ku dňu: 30. júla 2026",
   intro: [
     "Tieto všeobecné obchodné podmienky (ďalej len „VOP“) upravujú používanie softvérovej platformy myNextDays (ďalej len „platforma“) agentúrami, prenajímateľmi, správcami nehnuteľností a inými podnikateľskými používateľmi (ďalej len „používateľ“).",
-    "Poskytovateľom platformy je [úplné obchodné meno, právna forma, adresa a registrové údaje prevádzkovateľa — doplniť pred zverejnením] (ďalej len „myNextDays“ alebo „my“).",
+    "Poskytovateľom platformy je myNextDays ApS, spoločnosť s ručením obmedzeným (anpartsselskab) podľa dánskeho práva, Hirtshalsvej 21, 9881 Bindslev, Dánsko, zapísaná v dánskom Centrálnom registri podnikov (CVR) pod CVR č. 46615182 (ďalej len „myNextDays“ alebo „my“).",
     "Platforma je určená výlučne podnikateľom v zmysle § 14 nemeckého občianskeho zákonníka (BGB), resp. zodpovedajúcich predpisov príslušného členského štátu EÚ. Nie je určená spotrebiteľom.",
   ],
   sections: [

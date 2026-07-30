@@ -6,10 +6,10 @@ import type { LegalDoc } from "../types";
 // disclosure language) — Wortlaut sinngemäß, URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Termos e Condições Gerais (TCG) para Agências e Arrendadores",
-  stand: "Última atualização: 26 de julho de 2026",
+  stand: "Última atualização: 30 de julho de 2026",
   intro: [
     "Estes Termos e Condições Gerais (doravante «TCG») regulam a utilização da plataforma de software myNextDays (doravante «Plataforma») por agências, arrendadores, empresas de administração de imóveis e outros utilizadores profissionais (doravante «Utilizador»).",
-    "A Plataforma é disponibilizada por [firma completa, forma jurídica, morada e dados de registo da entidade operadora — a completar antes da publicação] (doravante «myNextDays» ou «nós»).",
+    "A Plataforma é disponibilizada por myNextDays ApS, sociedade por quotas (anpartsselskab) de direito dinamarquês, Hirtshalsvej 21, 9881 Bindslev, Dinamarca, registada no Registo Central de Empresas dinamarquês (CVR) com o n.º CVR 46615182 (doravante «myNextDays» ou «nós»).",
     "A Plataforma destina-se exclusivamente a empresários na aceção do § 14 do Código Civil alemão (BGB) ou das disposições correspondentes do respetivo Estado-Membro da UE. Não se destina a consumidores.",
   ],
   sections: [

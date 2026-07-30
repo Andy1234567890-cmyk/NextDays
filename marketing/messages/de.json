@@ -1,0 +1,261 @@
+{
+  "meta": {
+    "title": "myNextDays — Eine Plattform für kleine Unterkünfte",
+    "description": "Steigere deine Buchungen, vereinfache deinen Betrieb und biete unvergessliche Gästeerlebnisse – alles an einem Ort. 30 Tage kostenlos testen."
+  },
+  "nav": {
+    "funktionen": "Funktionen",
+    "preise": "Preise",
+    "kanaele": "Kanäle",
+    "kunden": "Kunden",
+    "ressourcen": "Ressourcen",
+    "sprache": "Sprache",
+    "spracheWaehlen": "Sprache wählen",
+    "anmelden": "Anmelden",
+    "kostenlosStarten": "Kostenlos starten",
+    "sprachModalTitel": "Sprache und Region",
+    "sprachModalHeading": "Sprache wählen",
+    "sprachModalHinweis": "Die Auswahl gilt für diese Website und wird in deinem Konto übernommen.",
+    "schliessen": "Schließen"
+  },
+  "sprachen": {
+    "de": "Deutsch",
+    "en": "Englisch"
+  },
+  "hero": {
+    "bewertung": "4,5 / 5",
+    "bewertungenAnzahl": "· 921 Bewertungen",
+    "empfohlen": "Empfohlen von 53.000+ Gastgebern",
+    "headlinePre": "Mehr",
+    "headlineHighlight": "Buchungen",
+    "headlinePost": "weniger Aufwand.",
+    "subline": "Verwalte deine Ferienwohnungen mit einer Plattform — Channel Manager, Kalender, Gäste-Kommunikation und Zahlungen in einem Ort.",
+    "ctaTrial": "Jetzt 30 Tage kostenlos",
+    "ctaDemo": "Demo ansehen",
+    "kanaeleLabel": "Verbunden mit allen großen Plattformen",
+    "kanaeleText": "Verbinde dich mit über 450 Buchungskanälen und maximiere deine Auslastung."
+  },
+  "intro": {
+    "heading": "Willkommen bei myNextDays.",
+    "p1": "Leistungsstarke, globale Distributionstechnologie kombiniert mit einem perfekt zugeschnittenen Property-Management-System.",
+    "p2": "Erhöhe deine Auslastung, vereinfache den Alltag und biete großartige Gästeerlebnisse – ohne die Komplexität von Systemen, die für große Hotels gemacht sind.",
+    "p3": "Mit zentralen Tools, smarter Automatisierung und nahtloser Anbindung an die wichtigsten Buchungskanäle wächst dein Geschäft mit mehr Kontrolle und weniger Aufwand.",
+    "cta": "Funktionen entdecken",
+    "reichweite": "Wir betreuen über 53.000 Unterkünfte weltweit.",
+    "typen": {
+      "hotel": "Hotel",
+      "bnb": "B&B",
+      "gaestehaus": "Gästehaus",
+      "motel": "Motel",
+      "lodge": "Lodge",
+      "ferienwohnung": "Ferienwohnung",
+      "resort": "Resort",
+      "huette": "Hütte",
+      "pension": "Pension",
+      "campingplatz": "Campingplatz"
+    },
+    "zitat": "Die Zusammenarbeit mit euch war die Lösung für unsere Probleme. Wir haben unsere Verwaltung und den Service für unsere Gäste modernisiert.",
+    "zitatQuelle": "Inhaber, Hotel Santa Maria, Mexiko"
+  },
+  "benefits": {
+    "heading": "Mehr Buchungen. Weniger Arbeit.",
+    "roi": {
+      "stat": "63×",
+      "statLabel": "Return on Investment",
+      "title": "Mehr Buchungen gewinnen",
+      "text": "Erreiche die richtigen Gäste über die wichtigsten Buchungskanäle, Metasuche und deine eigene Website – für maximale Auslastung."
+    },
+    "zeit": {
+      "stat": "35 Min.",
+      "statLabel": "gespart pro Buchung",
+      "title": "Betrieb vereinfachen",
+      "text": "Steuere jeden Aspekt deiner Unterkunft von einem Ort aus – ob unterwegs oder am Schreibtisch."
+    },
+    "support": {
+      "stat": "24/7",
+      "statLabel": "Support",
+      "title": "Expertise, der du vertrauen kannst",
+      "text": "myNextDays gibt dir Zugang zu einem globalen Netzwerk von Experten, 24/7-Support und Sicherheit, um deine Unterkunft mit Zuversicht auszubauen."
+    },
+    "preisBanner": {
+      "heading": "Alles für deine kleine Unterkunft an einem Ort",
+      "text": "30 Tage kostenlos. Keine Mindestlaufzeit. Jederzeit kündbar.",
+      "ab": "ab",
+      "preis": "39 €",
+      "proMonat": "pro Monat",
+      "zusatz": "+1 % Buchungswert",
+      "cta": "Preise ansehen"
+    }
+  },
+  "trial": {
+    "heading": "myNextDays 30 Tage kostenlos testen.",
+    "sub": "Keine Mindestlaufzeit. Jederzeit kündbar. Fülle einfach dieses kurze Formular aus:",
+    "seitenHeading": "Schließe dich tausenden Gastgebern an, die mehr Distributionskraft, Kontrolle und Effizienz gewonnen haben.",
+    "perks": {
+      "buchungen": {
+        "title": "Steigere deine Buchungen",
+        "text": "um bis zu 46 % mit unserer einfachen Software."
+      },
+      "kontrolle": {
+        "title": "Behalte die Kontrolle",
+        "text": "über alle Check-ins, Buchungen und Rechnungen an einem Ort."
+      },
+      "freiheit": {
+        "title": "Genieße mehr Freiheit",
+        "text": "und verwalte deine Unterkunft unterwegs mit unserer mobilen App."
+      }
+    },
+    "vorname": "Vorname",
+    "nachname": "Nachname",
+    "email": "E-Mail",
+    "emailPlatzhalter": "name@beispiel.de",
+    "einwilligung": "Ja, ich möchte gelegentlich Neuigkeiten, Webinar-Einladungen und Angebote von myNextDays erhalten. Du kannst deine Einwilligung jederzeit widerrufen.",
+    "absenden": "Jetzt loslegen",
+    "dankeTitel": "Vielen Dank!",
+    "dankeText": "Wir melden uns in Kürze bei dir."
+  },
+  "features": {
+    "heading": "Ein System. Ein Login. Viele Funktionen.",
+    "mehrErfahren": "Mehr erfahren",
+    "calendar": {
+      "label": "Kalender",
+      "title": "Kalender",
+      "text": "Starte deinen Tag mit dem Blick auf deinen zentralen Kalender und die täglichen Abläufe."
+    },
+    "channel": {
+      "label": "Channel-Manager",
+      "title": "Channel-Manager",
+      "text": "Verwalte alle Buchungskanäle zentral und vermeide Doppelbuchungen durch Echtzeit-Synchronisation."
+    },
+    "booking": {
+      "label": "Direktbuchung",
+      "title": "Direktbuchungs-Engine",
+      "text": "Nimm provisionsfreie Direktbuchungen über deine eigene Website entgegen."
+    },
+    "insights": {
+      "label": "Auswertungen",
+      "title": "Auswertungen",
+      "text": "Behalte Umsatz, Auslastung und Kennzahlen deiner Unterkunft jederzeit im Blick."
+    },
+    "channelsPlus": {
+      "label": "Kanäle Plus",
+      "title": "Kanäle Plus",
+      "text": "Erweitere deine Reichweite mit zusätzlichen Premium-Buchungskanälen und Metasuche."
+    },
+    "revenue": {
+      "label": "Dynamische Preise",
+      "title": "Dynamische Preisgestaltung",
+      "text": "Optimiere deine Raten automatisch nach Nachfrage und Auslastung – für mehr Umsatz."
+    },
+    "guest": {
+      "label": "Gästeerlebnis",
+      "title": "Gästeerlebnis",
+      "text": "Automatisiere Nachrichten und biete deinen Gästen einen reibungslosen Aufenthalt."
+    },
+    "website": {
+      "label": "Website-Baukasten",
+      "title": "Website-Baukasten",
+      "text": "Erstelle deine eigene Unterkunfts-Website mit integrierter Buchungsmöglichkeit."
+    },
+    "payments": {
+      "label": "Zahlungen",
+      "title": "Zahlungen",
+      "text": "Verarbeite Zahlungen sicher und behalte deine Finanzen an einem Ort im Blick."
+    },
+    "app": {
+      "label": "Mobile App",
+      "title": "Mobile App",
+      "text": "Verwalte deine Unterkunft von überall – direkt vom Smartphone aus."
+    },
+    "metasearch": {
+      "label": "Metasuche",
+      "title": "Metasuche",
+      "text": "Werde auf Metasuch-Plattformen sichtbar und gewinne mehr Direktbuchungen."
+    }
+  },
+  "testimonials": {
+    "heading": "Was unsere zufriedenen Kunden sagen.",
+    "eins": {
+      "quote": "Es ist so einfach zu bedienen! Alle Informationen laufen an einem Ort zusammen und ich kann von überall darauf zugreifen. Wirklich brillant. Auch das Support-Team ist sehr hilfsbereit.",
+      "name": "French Bay House",
+      "location": "Neuseeland"
+    },
+    "zwei": {
+      "quote": "myNextDays hatte ein fantastisches Onboarding und war leicht einzurichten. Ich hatte alle Zeit, die ich brauchte, um mit dem Team zu sprechen. Es ist sehr benutzerfreundlich.",
+      "name": "Country Dome Suites",
+      "location": "Houston, USA"
+    }
+  },
+  "stats": {
+    "heading": "Jede Stunde wählt eine kleine Unterkunft myNextDays.",
+    "laender": {
+      "value": "140+",
+      "label": "Länder",
+      "text": "Weltweit vertreten, lokal unterstützt"
+    },
+    "kanaele": {
+      "value": "450+",
+      "label": "Kanäle",
+      "text": "Zugang zu den besten Buchungskanälen"
+    },
+    "zufriedenheit": {
+      "value": "96 %",
+      "label": "Zufriedenheit",
+      "text": "Positives Feedback im Chat-Support"
+    },
+    "stunden": {
+      "value": "3",
+      "label": "Stunden",
+      "text": "Spare 3 Stunden pro Tag bei der Verwaltung"
+    },
+    "jahre": {
+      "value": "19+",
+      "label": "Jahre",
+      "text": "Erfahrung als Branchenführer"
+    }
+  },
+  "footer": {
+    "claim": "Eine starke Plattform für kleine Unterkünfte – mehr Buchungen, weniger Arbeit.",
+    "appLaden": "App herunterladen",
+    "spalten": {
+      "produkt": "Produkt",
+      "loesungen": "Lösungen",
+      "ressourcen": "Ressourcen",
+      "unternehmen": "Unternehmen"
+    },
+    "produkt": {
+      "pms": "Property-Management",
+      "channelManager": "Channel-Manager",
+      "direktbuchung": "Direktbuchung",
+      "zahlungen": "Zahlungen",
+      "mobileApp": "Mobile App"
+    },
+    "loesungen": {
+      "hotels": "Hotels",
+      "bnb": "B&B",
+      "gaestehaeuser": "Gästehäuser",
+      "ferienwohnungen": "Ferienwohnungen",
+      "campingplaetze": "Campingplätze"
+    },
+    "ressourcen": {
+      "blog": "Blog",
+      "hilfeCenter": "Hilfe-Center",
+      "webinare": "Webinare",
+      "leitfaeden": "Leitfäden",
+      "api": "API-Dokumentation"
+    },
+    "unternehmen": {
+      "ueberUns": "Über uns",
+      "karriere": "Karriere",
+      "partner": "Partner",
+      "kontakt": "Kontakt",
+      "presse": "Presse"
+    },
+    "copyright": "© 2026 myNextDays. Alle Rechte vorbehalten.",
+    "agb": "AGB",
+    "datenschutz": "Datenschutz",
+    "impressum": "Impressum",
+    "cookies": "Cookie-Richtlinie",
+    "avv": "Auftragsverarbeitung"
+  }
+}

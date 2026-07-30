@@ -7,10 +7,10 @@ import type { LegalDoc } from "../types";
 // Stripes offiziellen Empfehlungstext angelehnt, URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Allgemeine Geschäftsbedingungen (AGB) für Agenturen und Vermieter",
-  stand: "Stand: 26. Juli 2026",
+  stand: "Stand: 30. Juli 2026",
   intro: [
     "Diese Allgemeinen Geschäftsbedingungen (nachfolgend „AGB“) regeln die Nutzung der Software-Plattform myNextDays (nachfolgend „Plattform“) durch Agenturen, Vermieter, Hausverwaltungen und sonstige gewerbliche Nutzer (nachfolgend „Nutzer“).",
-    "Anbieterin der Plattform ist [vollständige Firmierung, Rechtsform, Anschrift und Registerangaben des Betreibers — vor Veröffentlichung ergänzen] (nachfolgend „myNextDays“ oder „wir“).",
+    "Anbieterin der Plattform ist myNextDays ApS, ein Anpartsselskab (ApS) dänischen Rechts, Hirtshalsvej 21, 9881 Bindslev, Dänemark, eingetragen im dänischen Centrale Virksomhedsregister (CVR) unter CVR-nr. 46615182 (nachfolgend „myNextDays“ oder „wir“).",
     "Die Plattform richtet sich ausschließlich an Unternehmer im Sinne des § 14 BGB bzw. der entsprechenden Vorschriften des jeweiligen EU-Mitgliedstaats. Sie richtet sich nicht an Verbraucher.",
   ],
   sections: [

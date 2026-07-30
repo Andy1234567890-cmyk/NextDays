@@ -5,10 +5,10 @@ import type { LegalDoc } from "../types";
 // (recommended disclosure language) — Sinn und URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Üldtingimused agentuuridele ja üürileandjatele",
-  stand: "Seisuga: 26. juuli 2026",
+  stand: "Seisuga: 30. juuli 2026",
   intro: [
     "Käesolevad üldtingimused (edaspidi „tingimused“) reguleerivad tarkvaraplatvormi myNextDays (edaspidi „platvorm“) kasutamist agentuuride, üürileandjate, kinnisvarahaldurite ja muude ärikasutajate (edaspidi „kasutaja“) poolt.",
-    "Platvormi pakkuja on [käitaja täielik ärinimi, õiguslik vorm, aadress ja registriandmed — täiendada enne avaldamist] (edaspidi „myNextDays“ või „meie“).",
+    "Platvormi pakkuja on myNextDays ApS, Taani õiguse alusel asutatud osaühing (anpartsselskab), Hirtshalsvej 21, 9881 Bindslev, Taani, registreeritud Taani äriregistris (CVR) numbri CVR 46615182 all (edaspidi „myNextDays“ või „meie“).",
     "Platvorm on mõeldud üksnes ettevõtjatele Saksa tsiviilseadustiku (BGB) § 14 või vastava ELi liikmesriigi vastavate sätete tähenduses. Platvorm ei ole mõeldud tarbijatele.",
   ],
   sections: [

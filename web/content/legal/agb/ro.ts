@@ -6,10 +6,10 @@ import type { LegalDoc } from "../types";
 // Agreement) — Wortlaut an Stripes Empfehlungstext angelehnt, URLs nicht ändern.
 export const agb: LegalDoc = {
   title: "Condiții generale de afaceri (CGA) pentru agenții și locatori",
-  stand: "Ultima actualizare: 26 iulie 2026",
+  stand: "Ultima actualizare: 30 iulie 2026",
   intro: [
     "Prezentele condiții generale de afaceri (denumite în continuare „CGA”) reglementează utilizarea platformei software myNextDays (denumită în continuare „Platforma”) de către agenții, locatori, administratori de imobile și alți utilizatori comerciali (denumiți în continuare „Utilizatorul”).",
-    "Furnizorul Platformei este [denumirea completă a societății, forma juridică, adresa și datele de înregistrare ale operatorului — a se completa înainte de publicare] (denumit în continuare „myNextDays” sau „noi”).",
+    "Furnizorul Platformei este myNextDays ApS, societate cu răspundere limitată (anpartsselskab) de drept danez, Hirtshalsvej 21, 9881 Bindslev, Danemarca, înregistrată în Registrul Central al Întreprinderilor din Danemarca (CVR) cu nr. CVR 46615182 (denumit în continuare „myNextDays” sau „noi”).",
     "Platforma se adresează exclusiv întreprinzătorilor în sensul § 14 din Codul civil german (BGB), respectiv al dispozițiilor corespunzătoare din statul membru UE relevant. Ea nu se adresează consumatorilor.",
   ],
   sections: [

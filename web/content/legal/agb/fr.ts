@@ -5,10 +5,10 @@ import type { LegalDoc } from "../types";
 // Empfehlungstext (Stripe Connected Account Agreement) — URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Conditions générales d'utilisation (CGU) pour les agences et les loueurs",
-  stand: "Dernière mise à jour : 26 juillet 2026",
+  stand: "Dernière mise à jour : 30 juillet 2026",
   intro: [
     "Les présentes conditions générales d'utilisation (ci-après les « CGU ») régissent l'utilisation de la plateforme logicielle myNextDays (ci-après la « Plateforme ») par les agences, les loueurs, les gestionnaires de biens et les autres utilisateurs professionnels (ci-après l'« Utilisateur »).",
-    "L'exploitant de la Plateforme est [dénomination sociale complète, forme juridique, adresse et données d'immatriculation de l'exploitant — à compléter avant publication] (ci-après « myNextDays » ou « nous »).",
+    "L'exploitant de la Plateforme est myNextDays ApS, société à responsabilité limitée (anpartsselskab) de droit danois, Hirtshalsvej 21, 9881 Bindslev, Danemark, immatriculée au registre central des entreprises danois (CVR) sous le numéro CVR 46615182 (ci-après « myNextDays » ou « nous »).",
     "La Plateforme s'adresse exclusivement aux entrepreneurs au sens de l'article 14 du Code civil allemand (BGB) ou des dispositions correspondantes de l'État membre de l'UE concerné. Elle ne s'adresse pas aux consommateurs.",
   ],
   sections: [

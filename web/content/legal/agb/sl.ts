@@ -5,10 +5,10 @@ import type { LegalDoc } from "../types";
 // Account Agreement) — Wortlaut und URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Splošni pogoji poslovanja za agencije in najemodajalce",
-  stand: "Zadnja posodobitev: 26. julij 2026",
+  stand: "Zadnja posodobitev: 30. julij 2026",
   intro: [
     "Ti splošni pogoji poslovanja (v nadaljevanju „Splošni pogoji“) urejajo uporabo programske platforme myNextDays (v nadaljevanju „Platforma“) s strani agencij, najemodajalcev, upravnikov nepremičnin in drugih poslovnih uporabnikov (v nadaljevanju „Uporabnik“).",
-    "Ponudnik Platforme je [polna firma, pravna oblika, naslov in registrski podatki upravljavca — dopolniti pred objavo] (v nadaljevanju „myNextDays“ ali „mi“).",
+    "Ponudnik Platforme je myNextDays ApS, družba z omejeno odgovornostjo (anpartsselskab) po danskem pravu, Hirtshalsvej 21, 9881 Bindslev, Danska, vpisana v danski Centralni poslovni register (CVR) pod št. CVR 46615182 (v nadaljevanju „myNextDays“ ali „mi“).",
     "Platforma je namenjena izključno podjetnikom v smislu člena 14 nemškega civilnega zakonika (BGB) oziroma ustreznih predpisov posamezne države članice EU. Ni namenjena potrošnikom.",
   ],
   sections: [

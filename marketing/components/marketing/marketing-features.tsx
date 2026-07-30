@@ -3,97 +3,34 @@
 "use client";
 
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
+// Nur Schlüssel + Icon; Label, Titel und Text kommen aus messages (features.*).
 const FEATURES = [
-  {
-    key: "calendar",
-    label: "Kalender",
-    icon: "ph:calendar-blank",
-    title: "Kalender",
-    text: "Starte deinen Tag mit dem Blick auf deinen zentralen Kalender und die täglichen Abläufe.",
-  },
-  {
-    key: "channel",
-    label: "Channel-Manager",
-    icon: "ph:share-network",
-    title: "Channel-Manager",
-    text: "Verwalte alle Buchungskanäle zentral und vermeide Doppelbuchungen durch Echtzeit-Synchronisation.",
-  },
-  {
-    key: "booking",
-    label: "Direktbuchung",
-    icon: "ph:globe-hemisphere-west",
-    title: "Direktbuchungs-Engine",
-    text: "Nimm provisionsfreie Direktbuchungen über deine eigene Website entgegen.",
-  },
-  {
-    key: "insights",
-    label: "Auswertungen",
-    icon: "ph:chart-bar",
-    title: "Auswertungen",
-    text: "Behalte Umsatz, Auslastung und Kennzahlen deiner Unterkunft jederzeit im Blick.",
-  },
-  {
-    key: "channels-plus",
-    label: "Kanäle Plus",
-    icon: "ph:plugs-connected",
-    title: "Kanäle Plus",
-    text: "Erweitere deine Reichweite mit zusätzlichen Premium-Buchungskanälen und Metasuche.",
-  },
-  {
-    key: "revenue",
-    label: "Dynamische Preise",
-    icon: "ph:trend-up",
-    title: "Dynamische Preisgestaltung",
-    text: "Optimiere deine Raten automatisch nach Nachfrage und Auslastung – für mehr Umsatz.",
-  },
-  {
-    key: "guest",
-    label: "Gästeerlebnis",
-    icon: "ph:users-three",
-    title: "Gästeerlebnis",
-    text: "Automatisiere Nachrichten und biete deinen Gästen einen reibungslosen Aufenthalt.",
-  },
-  {
-    key: "website",
-    label: "Website-Baukasten",
-    icon: "ph:browser",
-    title: "Website-Baukasten",
-    text: "Erstelle deine eigene Unterkunfts-Website mit integrierter Buchungsmöglichkeit.",
-  },
-  {
-    key: "payments",
-    label: "Zahlungen",
-    icon: "ph:credit-card",
-    title: "Zahlungen",
-    text: "Verarbeite Zahlungen sicher und behalte deine Finanzen an einem Ort im Blick.",
-  },
-  {
-    key: "app",
-    label: "Mobile App",
-    icon: "ph:device-mobile-camera",
-    title: "Mobile App",
-    text: "Verwalte deine Unterkunft von überall – direkt vom Smartphone aus.",
-  },
-  {
-    key: "metasearch",
-    label: "Metasuche",
-    icon: "ph:magnifying-glass",
-    title: "Metasuche",
-    text: "Werde auf Metasuch-Plattformen sichtbar und gewinne mehr Direktbuchungen.",
-  },
-];
+  { key: "calendar", icon: "ph:calendar-blank" },
+  { key: "channel", icon: "ph:share-network" },
+  { key: "booking", icon: "ph:globe-hemisphere-west" },
+  { key: "insights", icon: "ph:chart-bar" },
+  { key: "channelsPlus", icon: "ph:plugs-connected" },
+  { key: "revenue", icon: "ph:trend-up" },
+  { key: "guest", icon: "ph:users-three" },
+  { key: "website", icon: "ph:browser" },
+  { key: "payments", icon: "ph:credit-card" },
+  { key: "app", icon: "ph:device-mobile-camera" },
+  { key: "metasearch", icon: "ph:magnifying-glass" },
+] as const;
 
 export function MarketingFeatures() {
-  const [active, setActive] = useState(FEATURES[0].key);
+  const t = useTranslations("features");
+  const [active, setActive] = useState<string>(FEATURES[0].key);
   const current = FEATURES.find((f) => f.key === active) ?? FEATURES[0];
 
   return (
     <section className="bg-background">
       <div className="mx-auto max-w-7xl px-6 py-20">
         <h2 className="text-center font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-          Ein System. Ein Login. Viele Funktionen.
+          {t("heading")}
         </h2>
 
         <div className="mx-auto mt-10 flex max-w-4xl flex-wrap justify-center gap-2">
@@ -110,20 +47,22 @@ export function MarketingFeatures() {
               }
             >
               <Icon icon={f.icon} className="size-4" />
-              {f.label}
+              {t(`${f.key}.label`)}
             </button>
           ))}
         </div>
 
         <div className="mt-12 grid items-center gap-10 lg:grid-cols-2">
           <div>
-            <h3 className="font-display text-2xl font-semibold">{current.title}</h3>
-            <p className="mt-4 text-muted-foreground">{current.text}</p>
+            <h3 className="font-display text-2xl font-semibold">
+              {t(`${current.key}.title`)}
+            </h3>
+            <p className="mt-4 text-muted-foreground">{t(`${current.key}.text`)}</p>
             <a
               href="#preise"
               className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-accent hover:underline"
             >
-              Mehr erfahren
+              {t("mehrErfahren")}
               <Icon icon="ph:arrow-right" className="size-4" />
             </a>
           </div>

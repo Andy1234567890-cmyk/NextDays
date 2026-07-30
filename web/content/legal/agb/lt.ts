@@ -5,10 +5,10 @@ import type { LegalDoc } from "../types";
 // (recommended disclosure language) — Sinn und URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Bendrosios sąlygos agentūroms ir nuomotojams",
-  stand: "Redakcija: 2026 m. liepos 26 d.",
+  stand: "Redakcija: 2026 m. liepos 30 d.",
   intro: [
     "Šios bendrosios sąlygos (toliau — „Sąlygos“) reglamentuoja, kaip agentūros, nuomotojai, būstų administratoriai ir kiti verslo naudotojai (toliau — „Naudotojas“) naudojasi programinės įrangos platforma myNextDays (toliau — „Platforma“).",
-    "Platformos teikėja yra [visas operatoriaus įmonės pavadinimas, teisinė forma, adresas ir registro duomenys — papildyti prieš paskelbiant] (toliau — „myNextDays“ arba „mes“).",
+    "Platformos teikėja yra myNextDays ApS, pagal Danijos teisę įsteigta uždaroji akcinė bendrovė (anpartsselskab), Hirtshalsvej 21, 9881 Bindslev, Danija, įregistruota Danijos centriniame įmonių registre (CVR) CVR Nr. 46615182 (toliau — „myNextDays“ arba „mes“).",
     "Platforma skirta išimtinai verslininkams, kaip apibrėžta Vokietijos civilinio kodekso (BGB) 14 straipsnyje arba atitinkamose konkrečios ES valstybės narės nuostatose. Ji nėra skirta vartotojams.",
   ],
   sections: [

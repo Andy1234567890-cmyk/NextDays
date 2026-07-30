@@ -57,7 +57,7 @@ export default function GuestTrips() {
       setItems(res.data.items);
       setFehler(null);
     } else {
-      setItems([]);
+      setItems(null);
       setFehler(res.error);
     }
   }, [gastStatus, seg]);
@@ -104,7 +104,7 @@ export default function GuestTrips() {
         />
       </Col>
 
-      {!items && <Spinner />}
+      {!items && !fehler && <Spinner />}
 
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40, gap: 16 }}

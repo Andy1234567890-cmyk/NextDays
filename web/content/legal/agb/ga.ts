@@ -5,10 +5,10 @@ import type { LegalDoc } from "../types";
 // (Stripe Connected Account Agreement) — URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Téarmaí agus Coinníollacha Ginearálta do Ghníomhaireachtaí agus do Bhainisteoirí Réadmhaoine",
-  stand: "Arna nuashonrú: 26 Iúil 2026",
+  stand: "Arna nuashonrú: 30 Iúil 2026",
   intro: [
     "Rialaíonn na Téarmaí agus Coinníollacha seo (na “Téarmaí” anseo feasta) úsáid ardán bogearraí myNextDays (an “tArdán” anseo feasta) ag gníomhaireachtaí, bainisteoirí réadmhaoine, tiarnaí talún agus úsáideoirí gnó eile (an “tÚsáideoir” anseo feasta).",
-    "Is é [ainm dlíthiúil iomlán, foirm dhlíthiúil, seoladh agus sonraí cláir na cuideachta oibriúcháin — le comhlánú roimh fhoilsiú] a oibríonn an tArdán (“myNextDays” nó “muidne” anseo feasta).",
+    "Is é myNextDays ApS, cuideachta faoi theorainn scaireanna (anpartsselskab) faoi dhlí na Danmhairge, Hirtshalsvej 21, 9881 Bindslev, an Danmhairg, cláraithe i gClár Lárnach Gnólachtaí na Danmhairge (CVR) faoi uimhir CVR 46615182 a oibríonn an tArdán (“myNextDays” nó “muidne” anseo feasta).",
     "Tá an tArdán dírithe go heisiach ar ghnóthais de réir bhrí Alt 14 de Chód Sibhialta na Gearmáine (BGB) nó fhorálacha comhfhreagracha an bhallstáit ábhartha den AE. Níl sé dírithe ar thomhaltóirí.",
   ],
   sections: [

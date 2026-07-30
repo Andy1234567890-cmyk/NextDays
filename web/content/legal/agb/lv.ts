@@ -5,10 +5,10 @@ import type { LegalDoc } from "../types";
 // (recommended disclosure language) — Wortlaut und URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Vispārīgie darījumu noteikumi aģentūrām un izīrētājiem",
-  stand: "Redakcija: 2026. gada 26. jūlijs",
+  stand: "Redakcija: 2026. gada 30. jūlijs",
   intro: [
     "Šie vispārīgie darījumu noteikumi (turpmāk — „Noteikumi”) regulē programmatūras platformas myNextDays (turpmāk — „Platforma”) lietošanu, ko veic aģentūras, izīrētāji, īpašumu pārvaldītāji un citi komerciāli lietotāji (turpmāk — „Lietotājs”).",
-    "Platformas nodrošinātāja ir [pirms publicēšanas norādīt operatora pilnu juridisko nosaukumu, juridisko formu, adresi un reģistrācijas datus] (turpmāk — „myNextDays” vai „mēs”).",
+    "Platformas nodrošinātāja ir myNextDays ApS, sabiedrība ar ierobežotu atbildību (anpartsselskab) saskaņā ar Dānijas tiesībām, Hirtshalsvej 21, 9881 Bindslev, Dānija, reģistrēta Dānijas Centrālajā uzņēmumu reģistrā (CVR) ar CVR Nr. 46615182 (turpmāk — „myNextDays” vai „mēs”).",
     "Platforma ir paredzēta vienīgi uzņēmējiem Vācijas Civillikuma (BGB) 14. panta vai attiecīgās ES dalībvalsts atbilstošo tiesību normu izpratnē. Tā nav paredzēta patērētājiem.",
   ],
   sections: [

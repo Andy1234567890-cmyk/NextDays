@@ -88,7 +88,7 @@ export default function HostReservations({ navigation }: { navigation: any }) {
       setItems(r.data.items);
       setError(null);
     } else {
-      setItems([]);
+      setItems(null);
       setError(r.error);
     }
     if (p.ok) setProps(p.data.items);
@@ -199,7 +199,7 @@ export default function HostReservations({ navigation }: { navigation: any }) {
         </ScrollView>
       </Col>
 
-      {!items && <Spinner />}
+      {!items && !error && <Spinner />}
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: insets.bottom + 32, gap: 14 }}
         refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}

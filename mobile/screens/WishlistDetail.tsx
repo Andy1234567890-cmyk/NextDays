@@ -13,6 +13,7 @@ import { Card, Chip, Col, Divider, IconBtn, Photo, Row, Spinner, Txt } from "@/c
 import { formatCurrency } from "@/lib/currency";
 import { getWishlist, removeWishlistItem, type WishlistDetail as Detail } from "@/lib/guestWishlist";
 import type { RootStackParamList } from "@/navigation/types";
+import { useRealtime } from "@/lib/realtime";
 import { useTheme } from "@/theme/ThemeProvider";
 
 export default function WishlistDetail() {
@@ -40,12 +41,24 @@ export default function WishlistDetail() {
     load();
   }, [load]);
 
+  // Realtime mit dem GAST-JWT (Migration 0235: Grant + Publikation). Beide
+  // speisenden Tabellen: die Liste selbst (Name, Löschung) und ihre Einträge,
+  // serverseitig auf DIESE Liste gefiltert.
+  useRealtime({ table: "wishlists", filter: `id=eq.${id}`, tokenSource: "guest", onChange: load });
+  useRealtime({
+    table: "wishlist_items",
+    filter: `wishlist_id=eq.${id}`,
+    tokenSource: "guest",
+    onChange: load,
+  });
+
   const entfernen = async (propertyId: string) => {
     if (busy) return;
     setBusy(true);
     const res = await removeWishlistItem(id, propertyId);
     if (!res.ok) setFehler(res.error);
-    await load();
+    // KEIN load(): das DELETE-Event auf wishlist_items zieht die Liste nach —
+    // zwei Reload-Pfade nebeneinander erzeugen Doppel-Zustände.
     setBusy(false);
   };
 

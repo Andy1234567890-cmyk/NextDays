@@ -5,10 +5,10 @@ import type { LegalDoc } from "../types";
 // (Stripe Connected Account Agreement) — URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Általános Szerződési Feltételek (ÁSZF) ügynökségek és szállásadók részére",
-  stand: "Utolsó frissítés: 2026. július 26.",
+  stand: "Utolsó frissítés: 2026. július 30.",
   intro: [
     "Jelen Általános Szerződési Feltételek (a továbbiakban: „ÁSZF”) a myNextDays szoftverplatform (a továbbiakban: „Platform”) ügynökségek, szállásadók, ingatlankezelők és egyéb üzleti felhasználók (a továbbiakban: „Felhasználó”) általi használatát szabályozzák.",
-    "A Platform szolgáltatója: [az üzemeltető teljes cégneve, cégformája, címe és cégjegyzékadatai — közzététel előtt kiegészítendő] (a továbbiakban: „myNextDays” vagy „mi”).",
+    "A Platform szolgáltatója: myNextDays ApS, dán jog szerinti korlátolt felelősségű társaság (anpartsselskab), Hirtshalsvej 21, 9881 Bindslev, Dánia, a dán Központi Cégnyilvántartásban (CVR) CVR-szám 46615182 alatt bejegyezve (a továbbiakban: „myNextDays” vagy „mi”).",
     "A Platform kizárólag a német Polgári Törvénykönyv (BGB) 14. §-a, illetve az érintett EU-tagállam megfelelő rendelkezései értelmében vett vállalkozásoknak szól. Nem fogyasztók részére készült.",
   ],
   sections: [

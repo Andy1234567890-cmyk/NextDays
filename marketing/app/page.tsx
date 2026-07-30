@@ -11,14 +11,8 @@ import { MarketingStats } from "@/components/marketing/marketing-stats";
 import { MarketingTestimonials } from "@/components/marketing/marketing-testimonials";
 import { MarketingTrial } from "@/components/marketing/marketing-trial";
 
-import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "NextDays — Eine Plattform für kleine Unterkünfte",
-  description:
-    "Steigere deine Buchungen, vereinfache deinen Betrieb und biete unvergessliche Gästeerlebnisse – alles an einem Ort. 30 Tage kostenlos testen.",
-};
-
+// Titel/Beschreibung kommen aus dem Root-Layout (generateMetadata, meta.*) —
+// keine zweite, sprachfeste Kopie hier.
 export default function MarketingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background font-sans text-foreground">

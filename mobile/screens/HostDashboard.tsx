@@ -1,31 +1,21 @@
 // Gastgeber · Übersicht. Echte KPIs + heutige An-/Abreisen + Anstehendes aus
 // GET /api/v1/reservations/dashboard (dieselbe Quelle wie das Web-Dashboard).
-// Lade-/Fehler-/Leerzustand getrennt; Demo-Daten NUR als gekennzeichneter
-// Fallback (usingDemo, wie HostListings). Beträge/Währung aus den Daten
-// (§4.2: revenue_30d = null → keine Umsatz-Kachel, kein erfundener Wert).
+// Lade-/Fehler-/Leerzustand getrennt. KEIN Demo-Fallback: eine Übersicht mit
+// lauter Nullen ist von einem echten ruhigen Tag nicht zu unterscheiden und
+// gibt dem Gastgeber falsche Sicherheit über seinen Betrieb (Wurzel 4). Ist das
+// Backend nicht erreichbar, steht das da — mit Wiederholen.
+// Beträge/Währung aus den Daten (§4.2: revenue_30d = null → keine Umsatz-Kachel).
 import { useCallback, useEffect, useState } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/ui/Icon";
-import { Card, Chip, Col, Divider, IconBtn, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Btn, Card, Chip, Col, Divider, IconBtn, Row, Spinner, Txt } from "@/components/ui/kit";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/lib/currency";
 import { getDashboard, type Dashboard, type DashboardEntry } from "@/lib/dashboard";
 import { useRealtime } from "@/lib/realtime";
 import { useTheme } from "@/theme/ThemeProvider";
-
-// Demo-Fallback (nur wenn Backend nicht erreichbar) — klar als Demo markiert.
-const DEMO: Dashboard = {
-  today: "",
-  checkins_today: [],
-  checkouts_today: [],
-  upcoming: [],
-  checkins_30d: { value: 0, change_pct: null },
-  revenue_30d: null,
-  confirmed_30d: { value: 0, change_pct: null },
-  currency: "",
-};
 
 function todayLabel(iso: string): string {
   if (!iso) return "";
@@ -46,19 +36,17 @@ export default function HostDashboard() {
   const { me } = useAuth();
   const [data, setData] = useState<Dashboard | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [usingDemo, setUsingDemo] = useState(false);
 
   const load = useCallback(async () => {
     const res = await getDashboard();
     if (res.ok) {
       setData(res.data);
       setError(null);
-      setUsingDemo(false);
     } else {
-      // Kein Backend/Fehler → gekennzeichneter Demo-Fallback (kein stiller Fake).
-      setData(DEMO);
+      // Kein Ersatzdatensatz: sonst zeigt die App „0 Buchungen" für einen
+      // Betrieb, dessen Zahlen sie schlicht nicht kennt.
+      setData(null);
       setError(res.error);
-      setUsingDemo(true);
     }
   }, []);
 
@@ -69,6 +57,29 @@ export default function HostDashboard() {
   // Realtime: Buchungsänderungen → KPIs/Listen debounced neu laden (400ms wie
   // Web). reservations speist alle Zahlen dieser Übersicht.
   useRealtime({ table: "reservations", onChange: load });
+
+  if (error) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: t.palette.bg,
+          paddingTop: insets.top + 12,
+          paddingHorizontal: 20,
+        }}
+      >
+        <Card style={{ padding: 16, gap: 12 }}>
+          <Txt v="title">Übersicht nicht geladen</Txt>
+          <Txt v="sm" soft>
+            {error}
+          </Txt>
+          <Btn variant="outline" onPress={load}>
+            Erneut versuchen
+          </Btn>
+        </Card>
+      </View>
+    );
+  }
 
   if (!data) {
     return (
@@ -103,14 +114,6 @@ export default function HostDashboard() {
           </Col>
           <IconBtn icon="bell" />
         </Row>
-
-        {usingDemo && (
-          <Card style={{ padding: 12, backgroundColor: "rgba(245,158,11,0.10)" }}>
-            <Txt v="xs" color="#B45309">
-              Demo-Daten — Backend nicht erreichbar{error ? ` (${error})` : ""}.
-            </Txt>
-          </Card>
-        )}
 
         <Row gap={12}>
           <Kpi

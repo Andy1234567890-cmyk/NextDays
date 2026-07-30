@@ -51,7 +51,7 @@ export default function GuestDiscover() {
       setItems(res.data.items);
       setFehler(null);
     } else {
-      setItems([]);
+      setItems(null);
       setFehler(res.error);
     }
   }, [aktiveSuche, gaeste, start, ende]);
@@ -108,7 +108,7 @@ export default function GuestDiscover() {
         )}
       </Col>
 
-      {!items && <Spinner />}
+      {!items && !fehler && <Spinner />}
 
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40, gap: 20 }}

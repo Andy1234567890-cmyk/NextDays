@@ -45,29 +45,48 @@ export default function OwnerRequests() {
   const [selected, setSelected] = useState<string | null>(null);
   const [requests, setRequests] = useState<BlockRequest[] | null>(null);
   const [readings, setReadings] = useState<MeterReading[] | null>(null);
+  const [fehler, setFehler] = useState<string | null>(null);
 
+  // Alle drei Ladepfade zeigen Fehler sichtbar an. Vorher wurde jeder Fehler zu
+  // einer leeren Liste — der Eigentümer sah „keine Anfragen" / „keine
+  // Zählerstände", obwohl die App sie nur nicht laden konnte (Wurzel 4/5).
   const loadProps = useCallback(async () => {
     const res = await getOwnerProperties();
     if (res.ok) {
       setProps(res.data.items);
       setSelected((cur) => cur ?? res.data.items[0]?.id ?? null);
+      setFehler(null);
     } else {
-      setProps([]);
+      setProps(null);
+      setFehler(res.error);
     }
   }, []);
 
   const loadRequests = useCallback(async () => {
     const res = await getBlockRequests();
-    setRequests(res.ok ? res.data.items : []);
+    if (res.ok) {
+      setRequests(res.data.items);
+      setFehler(null);
+    } else {
+      setRequests(null);
+      setFehler(res.error);
+    }
   }, []);
 
   const loadReadings = useCallback(async () => {
     if (!selected) {
+      // Kein Objekt gewählt ist echter Leerstand, kein Fehler.
       setReadings([]);
       return;
     }
     const res = await getMeterReadings(selected);
-    setReadings(res.ok ? res.data.items : []);
+    if (res.ok) {
+      setReadings(res.data.items);
+      setFehler(null);
+    } else {
+      setReadings(null);
+      setFehler(res.error);
+    }
   }, [selected]);
 
   useEffect(() => {
@@ -95,7 +114,18 @@ export default function OwnerRequests() {
         <Txt v="h1">Anfragen</Txt>
       </Col>
 
-      {!props && <Spinner />}
+      {fehler && (
+        <Card style={{ padding: 16, gap: 12 }}>
+          <Txt v="title">Nicht geladen</Txt>
+          <Txt v="sm" soft>
+            {fehler}
+          </Txt>
+          <Btn variant="outline" onPress={onRefresh}>
+            Erneut versuchen
+          </Btn>
+        </Card>
+      )}
+      {!props && !fehler && <Spinner />}
       {props && props.length === 0 && (
         <Txt v="sm" soft style={{ textAlign: "center", marginTop: 40 }}>
           Dir sind noch keine Objekte zugeordnet.
@@ -271,7 +301,7 @@ function RequestList({
 }) {
   const t = useTheme();
   const title = (id: string) => propsById.find((p) => p.id === id)?.title ?? "Objekt";
-  if (!requests) return <Spinner />;
+  if (!requests) return null; // Fehler/Ladezustand zeigt der Rahmen oben
   if (requests.length === 0) {
     return (
       <Txt v="sm" soft>
@@ -390,7 +420,7 @@ function MeterForm({ propertyId, onDone }: { propertyId: string | null; onDone: 
 }
 
 function ReadingList({ readings }: { readings: MeterReading[] | null }) {
-  if (!readings) return <Spinner />;
+  if (!readings) return null; // Fehler/Ladezustand zeigt der Rahmen oben
   if (readings.length === 0) {
     return (
       <Txt v="sm" soft>

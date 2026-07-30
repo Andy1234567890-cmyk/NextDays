@@ -5,10 +5,10 @@ import type { LegalDoc } from "../types";
 // (recommended disclosure language) — Wortlaut und URLs nicht verändern.
 export const agb: LegalDoc = {
   title: "Terms and Conditions for Agencies and Property Managers",
-  stand: "Last updated: 26 July 2026",
+  stand: "Last updated: 30 July 2026",
   intro: [
     "These Terms and Conditions (the “Terms”) govern the use of the myNextDays software platform (the “Platform”) by agencies, property managers, landlords and other business users (the “User”).",
-    "The Platform is operated by [full legal name, legal form, address and register details of the operating company — to be completed before publication] (“myNextDays”, “we”).",
+    "The Platform is operated by myNextDays ApS, a private limited company (anpartsselskab) under Danish law, Hirtshalsvej 21, 9881 Bindslev, Denmark, registered in the Danish Central Business Register (CVR) under CVR no. 46615182 (“myNextDays”, “we”).",
     "The Platform is intended exclusively for businesses within the meaning of Section 14 of the German Civil Code (BGB) or the corresponding provisions of the relevant EU member state. It is not intended for consumers.",
   ],
   sections: [

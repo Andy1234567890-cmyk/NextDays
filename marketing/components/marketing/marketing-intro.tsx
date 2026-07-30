@@ -1,24 +1,29 @@
-// Intro — "Willkommen bei NextDays" (zweispaltig: Visual links, Text rechts)
+// Intro — "Willkommen bei myNextDays" (zweispaltig: Visual links, Text rechts)
 // + globale Reichweite mit Property-Typ-Tabs und Kunden-Zitat.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
 
+// Schlüssel, nicht Texte — die Namen der Objekttypen kommen aus messages
+// (intro.typen.*).
 const PROPERTY_TYPES = [
-  "Hotel",
-  "B&B",
-  "Gästehaus",
-  "Motel",
-  "Lodge",
-  "Ferienwohnung",
-  "Resort",
-  "Hütte",
-  "Pension",
-  "Campingplatz",
-];
+  "hotel",
+  "bnb",
+  "gaestehaus",
+  "motel",
+  "lodge",
+  "ferienwohnung",
+  "resort",
+  "huette",
+  "pension",
+  "campingplatz",
+] as const;
 
 export function MarketingIntro() {
+  const t = useTranslations("intro");
+
   return (
     <section className="bg-background">
       {/* Willkommens-Block */}
@@ -39,25 +44,14 @@ export function MarketingIntro() {
 
         <div className="order-1 lg:order-2">
           <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-            Willkommen bei myNextDays.
+            {t("heading")}
           </h2>
-          <p className="mt-5 text-muted-foreground">
-            Leistungsstarke, globale Distributionstechnologie kombiniert mit
-            einem perfekt zugeschnittenen Property-Management-System.
-          </p>
-          <p className="mt-4 text-muted-foreground">
-            Erhöhe deine Auslastung, vereinfache den Alltag und biete großartige
-            Gästeerlebnisse – ohne die Komplexität von Systemen, die für große
-            Hotels gemacht sind.
-          </p>
-          <p className="mt-4 text-muted-foreground">
-            Mit zentralen Tools, smarter Automatisierung und nahtloser Anbindung
-            an die wichtigsten Buchungskanäle wächst dein Geschäft mit mehr
-            Kontrolle und weniger Aufwand.
-          </p>
+          <p className="mt-5 text-muted-foreground">{t("p1")}</p>
+          <p className="mt-4 text-muted-foreground">{t("p2")}</p>
+          <p className="mt-4 text-muted-foreground">{t("p3")}</p>
           <Button asChild variant="default" className="mt-7">
             <Link href="#funktionen" className="gap-2">
-              Funktionen entdecken
+              {t("cta")}
               <Icon icon="ph:arrow-right" className="size-4" />
             </Link>
           </Button>
@@ -68,7 +62,7 @@ export function MarketingIntro() {
       <div className="border-t border-border">
         <div className="mx-auto max-w-7xl px-6 py-16">
           <p className="text-center font-display text-2xl font-semibold tracking-tight">
-            Wir betreuen über 53.000 Unterkünfte weltweit.
+            {t("reichweite")}
           </p>
 
           <ul className="mx-auto mt-8 flex max-w-4xl flex-wrap justify-center gap-2">
@@ -83,7 +77,7 @@ export function MarketingIntro() {
                       : "bg-secondary text-secondary-foreground hover:bg-muted")
                   }
                 >
-                  {type}
+                  {t(`typen.${type}`)}
                 </button>
               </li>
             ))}
@@ -94,12 +88,10 @@ export function MarketingIntro() {
             <figure>
               <Icon icon="ph:quotes-fill" className="size-10 text-accent/30" />
               <blockquote className="mt-4 font-display text-2xl font-medium leading-snug">
-                „Die Zusammenarbeit mit euch war die Lösung für unsere Probleme.
-                Wir haben unsere Verwaltung und den Service für unsere Gäste
-                modernisiert.“
+                „{t("zitat")}“
               </blockquote>
               <figcaption className="mt-5 text-sm text-muted-foreground">
-                Inhaber, Hotel Santa Maria, Mexiko
+                {t("zitatQuelle")}
               </figcaption>
             </figure>
           </div>

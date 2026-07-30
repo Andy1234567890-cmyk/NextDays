@@ -1,11 +1,13 @@
 // Hero — Vollbild-Hintergrund mit dunklem Overlay, zentrierter Headline,
 // CTAs und Channel-Logo-Leiste. Ähnlich ..-Stil.
 // Hintergrundbild: ersetze /marketing/hero-bg.jpg durch ein echtes Foto.
+import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
-import { Icon } from "@iconify/react";
 
 import { Button } from "@/components/ui/button";
+import { SIGNUP_URL } from "@/lib/app-url";
 
 const CHANNELS = [
   { src: "/marketing/channels/booking-com.svg", alt: "Booking.com" },
@@ -17,6 +19,8 @@ const CHANNELS = [
 ];
 
 export function MarketingHero() {
+  const t = useTranslations("hero");
+
   // 100svh minus Nav (h-16 = 4rem): der Hero füllt den restlichen Viewport
   // exakt — kein weißer Streifen der Folgesektion unter der Kanal-Leiste.
   return (
@@ -46,19 +50,19 @@ export function MarketingHero() {
               ))}
               <Icon icon="ph:star-half-fill" className="size-4" />
             </div>
-            <span className="text-sm font-semibold text-white">4,5 / 5</span>
-            <span className="text-sm text-white/60">· 921 Bewertungen</span>
+            <span className="text-sm font-semibold text-white">{t("bewertung")}</span>
+            <span className="text-sm text-white/60">{t("bewertungenAnzahl")}</span>
           </div>
           <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm">
-            Empfohlen von 53.000+ Gastgebern
+            {t("empfohlen")}
           </span>
         </div>
 
         {/* Headline */}
         <h1 className="font-display text-5xl font-extrabold leading-tight tracking-tight text-white sm:text-6xl lg:text-7xl">
-          Mehr{" "}
+          {t("headlinePre")}{" "}
           <span className="relative text-accent">
-            Buchungen
+            {t("headlineHighlight")}
             <svg
               aria-hidden
               viewBox="0 0 300 20"
@@ -75,19 +79,18 @@ export function MarketingHero() {
             </svg>
           </span>
           ,<br />
-          weniger Aufwand.
+          {t("headlinePost")}
         </h1>
 
         {/* Subline */}
         <p className="mt-7 max-w-xl text-lg text-white/70">
-          Verwalte deine Ferienwohnungen mit einer Plattform — Channel Manager,
-          Kalender, Gäste-Kommunikation und Zahlungen in einem Ort.
+          {t("subline")}
         </p>
 
         {/* CTAs */}
         <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
           <Button asChild size="lg" variant="accent" className="min-w-48 text-base">
-            <Link href="/register">Jetzt 30 Tage kostenlos</Link>
+            <Link href={SIGNUP_URL}>{t("ctaTrial")}</Link>
           </Button>
           <Button
             asChild
@@ -97,7 +100,7 @@ export function MarketingHero() {
           >
             <Link href="#demo" className="gap-2">
               <Icon icon="ph:play-circle" className="size-5" />
-              Demo ansehen
+              {t("ctaDemo")}
             </Link>
           </Button>
         </div>
@@ -111,11 +114,10 @@ export function MarketingHero() {
         className="relative z-10 w-full border-t border-white/10 bg-black/40 py-8 backdrop-blur-sm"
       >
         <p className="mb-2 text-center text-xs font-medium uppercase tracking-widest text-white/40">
-          Verbunden mit allen großen Plattformen
+          {t("kanaeleLabel")}
         </p>
         <p className="mb-6 text-center text-sm text-white/70">
-          Verbinde dich mit über 450 Buchungskanälen und maximiere deine
-          Auslastung.
+          {t("kanaeleText")}
         </p>
         {/* Weiße Karten mit Original-Logofarben: die Figma-Exporte bringen
             eigene weiße Hintergrund-Flächen mit — auf weißer Karte unsichtbar,

@@ -56,7 +56,7 @@ export default function GuestHome() {
       setReihen(listingRows(res.data.items));
       setFehler(null);
     } else {
-      setReihen([]);
+      setReihen(null);
       setFehler(res.error);
     }
   }, []);
@@ -159,7 +159,7 @@ export default function GuestHome() {
           )}
         </Card>
 
-        {!reihen && <Spinner />}
+        {!reihen && !fehler && <Spinner />}
 
         {reihen && reihen.length === 0 && (
           <Txt v="sm" soft style={{ textAlign: "center", marginTop: 30 }}>

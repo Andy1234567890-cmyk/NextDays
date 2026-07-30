@@ -1,35 +1,34 @@
 // Footer — dunkler Block mit Link-Spalten, App-Store-Badges, Sprache,
 // Rechtshinweisen und Social-Links. Figma: schwarzer Footer am Seitenende.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { Logo } from "@/components/logo";
+import { RECHTSDOKUMENTE } from "@/content/legal";
 import { AGB_URL, HILFE_URL } from "@/lib/app-url";
 
+// Spalten: Übersetzungsschlüssel, keine fertigen Texte. `href` nur, wo es ein
+// echtes Ziel gibt — der Rest bleibt bewusst Platzhalter (#).
 const FOOTER_COLUMNS = [
   {
-    title: "Produkt",
-    links: [
-      "Property-Management",
-      "Channel-Manager",
-      "Direktbuchung",
-      "Zahlungen",
-      "Mobile App",
-    ],
+    key: "produkt",
+    links: ["pms", "channelManager", "direktbuchung", "zahlungen", "mobileApp"],
   },
   {
-    title: "Lösungen",
-    links: ["Hotels", "B&B", "Gästehäuser", "Ferienwohnungen", "Campingplätze"],
+    key: "loesungen",
+    links: ["hotels", "bnb", "gaestehaeuser", "ferienwohnungen", "campingplaetze"],
   },
   {
-    title: "Ressourcen",
-    links: ["Blog", "Hilfe-Center", "Webinare", "Leitfäden", "API-Dokumentation"],
+    key: "ressourcen",
+    links: ["blog", "hilfeCenter", "webinare", "leitfaeden", "api"],
   },
   {
-    title: "Unternehmen",
-    links: ["Über uns", "Karriere", "Partner", "Kontakt", "Presse"],
+    key: "unternehmen",
+    links: ["ueberUns", "karriere", "partner", "kontakt", "presse"],
   },
-];
+] as const;
 
 const SOCIALS = [
   { icon: "ph:facebook-logo", label: "Facebook" },
@@ -38,17 +37,30 @@ const SOCIALS = [
   { icon: "ph:linkedin-logo", label: "LinkedIn" },
 ];
 
-// AGB/Hilfe liegen in der Haupt-App (web) → absolute Links (lib/app-url).
-// Das Impressum liegt als eigene Route IN dieser App, weil es die
-// Anbieterangaben der Marketing-Site selbst sind → relativer Link.
-const RECHTLICH: { label: string; href?: string }[] = [
-  { label: "AGB", href: AGB_URL },
-  { label: "Datenschutz" },
-  { label: "Impressum", href: "/impressum" },
-  { label: "Cookie-Richtlinie" },
-];
+// Übersetzungsschlüssel je Rechtsdokument — die Registry liefert die Route,
+// der Anzeigetext kommt aus messages/<locale>.json (footer.*).
+const RECHTS_KEYS: Record<string, string> = {
+  datenschutz: "datenschutz",
+  impressum: "impressum",
+  "cookie-richtlinie": "cookies",
+  auftragsverarbeitung: "avv",
+};
 
 export function MarketingFooter() {
+  const t = useTranslations("footer");
+
+  // AGB/Hilfe liegen in der Haupt-App (web) → absolute Links (lib/app-url).
+  // Alle übrigen Rechtsdokumente sind eigene Routen IN dieser App und kommen
+  // aus der Registry (content/legal), damit Footer und Seiten nicht
+  // auseinanderlaufen.
+  const rechtlich = [
+    { label: t("agb"), href: AGB_URL },
+    ...RECHTSDOKUMENTE.map((eintrag) => ({
+      label: t(RECHTS_KEYS[eintrag.doc.slug]),
+      href: `/${eintrag.doc.slug}`,
+    })),
+  ];
+
   return (
     <footer id="ressourcen" className="bg-primary text-primary-foreground">
       <div className="mx-auto max-w-7xl px-6 py-16">
@@ -56,11 +68,10 @@ export function MarketingFooter() {
           <div>
             <Logo heightRem={2.25} dark />
             <p className="mt-4 max-w-xs text-sm text-primary-foreground/70">
-              Eine starke Plattform für kleine Unterkünfte – mehr Buchungen,
-              weniger Arbeit.
+              {t("claim")}
             </p>
             <div className="mt-6 flex flex-col gap-3">
-              <p className="text-sm font-medium">App herunterladen</p>
+              <p className="text-sm font-medium">{t("appLaden")}</p>
               <div className="flex flex-wrap gap-3">
                 <span className="flex items-center gap-2 rounded-lg border border-primary-foreground/20 px-3 py-2 text-xs">
                   <Icon icon="ph:apple-logo-fill" className="size-5" />
@@ -75,19 +86,19 @@ export function MarketingFooter() {
           </div>
 
           {FOOTER_COLUMNS.map((col) => (
-            <div key={col.title}>
-              <p className="text-sm font-semibold">{col.title}</p>
+            <div key={col.key}>
+              <p className="text-sm font-semibold">{t(`spalten.${col.key}`)}</p>
               <ul className="mt-4 flex flex-col gap-3">
                 {col.links.map((link) => {
                   // Nur echte Ziele verlinken; alles andere bleibt Platzhalter (#).
-                  const href = link === "Hilfe-Center" ? HILFE_URL : "#";
+                  const href = link === "hilfeCenter" ? HILFE_URL : "#";
                   return (
                     <li key={link}>
                       <Link
                         href={href}
                         className="text-sm text-primary-foreground/70 transition-colors hover:text-primary-foreground"
                       >
-                        {link}
+                        {t(`${col.key}.${link}`)}
                       </Link>
                     </li>
                   );
@@ -99,31 +110,21 @@ export function MarketingFooter() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-6 border-t border-primary-foreground/15 pt-8 sm:flex-row">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-primary-foreground/60">
-            <span>© 2026 myNextDays. Alle Rechte vorbehalten.</span>
-            {RECHTLICH.map((r) => (
-              <span key={r.label} className="flex items-center gap-2">
+            <span>{t("copyright")}</span>
+            {rechtlich.map((r) => (
+              <span key={r.href} className="flex items-center gap-2">
                 <span aria-hidden>·</span>
-                {r.href ? (
-                  <Link
-                    href={r.href}
-                    className="transition-colors hover:text-primary-foreground hover:underline"
-                  >
-                    {r.label}
-                  </Link>
-                ) : (
-                  <span>{r.label}</span>
-                )}
+                <Link
+                  href={r.href}
+                  className="transition-colors hover:text-primary-foreground hover:underline"
+                >
+                  {r.label}
+                </Link>
               </span>
             ))}
           </div>
           <div className="flex items-center gap-5">
-            <button
-              type="button"
-              className="flex items-center gap-1.5 text-sm text-primary-foreground/70 transition-colors hover:text-primary-foreground"
-            >
-              <Icon icon="ph:globe" className="size-4" />
-              Deutsch
-            </button>
+            <LanguageSwitcher dark />
             <div className="flex items-center gap-3">
               {SOCIALS.map((s) => (
                 <Link

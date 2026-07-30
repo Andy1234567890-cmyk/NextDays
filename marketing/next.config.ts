@@ -1,4 +1,10 @@
+import createNextIntlPlugin from "next-intl/plugin";
+
 import type { NextConfig } from "next";
+
+// next-intl ohne URL-Präfix: die Sprache kommt aus dem nd_locale-Cookie
+// (i18n/request.ts), damit bestehende Routen wie /impressum unverändert bleiben.
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -51,4 +57,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

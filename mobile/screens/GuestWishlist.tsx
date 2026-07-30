@@ -18,6 +18,7 @@ import {
   type WishlistSummary,
 } from "@/lib/guestWishlist";
 import type { RootStackParamList } from "@/navigation/types";
+import { useRealtime } from "@/lib/realtime";
 import { useTheme } from "@/theme/ThemeProvider";
 
 export default function GuestWishlist() {
@@ -39,19 +40,28 @@ export default function GuestWishlist() {
       setItems(res.data.items);
       setFehler(null);
     } else {
-      setItems([]);
+      // null, NICHT [] — eine leere Liste liest sich wie „keine Merklisten"
+      // und wäre von echtem Leerstand nicht zu unterscheiden (Wurzel 4).
+      setItems(null);
       setFehler(res.error);
     }
   }, [gastStatus]);
 
-  // Beim Zurückkehren neu laden (z. B. nachdem im Detail ein Objekt gemerkt
-  // wurde). Realtime scheidet hier aus: wishlists/wishlist_items sind NICHT in
-  // der Realtime-Publication — es kämen schlicht keine Events.
   useFocusEffect(
     useCallback(() => {
       load();
     }, [load]),
   );
+
+  // Echtes Realtime mit dem GAST-JWT (tokenSource): die Policy wishlists_self
+  // (portal_guest_id = auth.uid()) greift nur mit dem portal_guest-Token, nie
+  // mit dem Tenant-Token. Grant + Publikation kamen mit Migration 0235.
+  useRealtime({
+    table: "wishlists",
+    tokenSource: "guest",
+    enabled: gastStatus === "signedIn",
+    onChange: load,
+  });
 
   const anlegen = async () => {
     const wert = name.trim();
@@ -61,7 +71,8 @@ export default function GuestWishlist() {
     if (res.ok) {
       setName("");
       setNeuOffen(false);
-      await load();
+      // KEIN load(): das Realtime-Event auf wishlists zieht die Liste nach.
+      // Zwei Reload-Pfade nebeneinander erzeugen Doppel-Zustände.
     } else {
       setFehler(res.error);
     }
@@ -73,7 +84,7 @@ export default function GuestWishlist() {
     setBusy(true);
     const res = await deleteWishlist(id);
     if (!res.ok) setFehler(res.error);
-    await load();
+    // Erfolgsfall ohne load(): das DELETE-Event auf wishlists aktualisiert.
     setBusy(false);
   };
 

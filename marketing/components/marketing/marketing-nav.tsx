@@ -3,25 +3,28 @@
 // im NextDays-Look (Schwarz/Rot, Pill-Buttons, Fraunces/Inter, rem).
 "use client";
 
-import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
-// Login der Gastgeber liegt in der web-App (Dashboard) — Basis-URL zentral.
-import { LOGIN_URL } from "@/lib/app-url";
+// Login und Registrierung der Gastgeber liegen in der web-App (Dashboard).
+import { LOGIN_URL, SIGNUP_URL } from "@/lib/app-url";
 
 // Anker mit führendem "/" — sonst zeigen sie auf Unterseiten (z. B. /impressum)
 // ins Nichts, weil die Abschnitte nur auf der Startseite existieren.
 const NAV_LINKS = [
-  { label: "Funktionen", href: "/#funktionen" },
-  { label: "Preise", href: "/#preise" },
-  { label: "Kanäle", href: "/#kanaele" },
-  { label: "Kunden", href: "/#kunden" },
-  { label: "Ressourcen", href: "/#ressourcen" },
-];
+  { key: "funktionen", href: "/#funktionen" },
+  { key: "preise", href: "/#preise" },
+  { key: "kanaele", href: "/#kanaele" },
+  { key: "kunden", href: "/#kunden" },
+  { key: "ressourcen", href: "/#ressourcen" },
+] as const;
 
 export function MarketingNav() {
+  const t = useTranslations("nav");
+
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-6">
@@ -36,28 +39,24 @@ export function MarketingNav() {
                 href={link.href}
                 className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
               >
-                {link.label}
+                {t(link.key)}
               </a>
             </li>
           ))}
         </ul>
 
         <div className="flex items-center gap-3">
-          <button
-            type="button"
-            className="hidden items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground sm:flex"
-          >
-            <Icon icon="ph:globe" className="size-4" />
-            Deutsch
-          </button>
+          <div className="hidden sm:block">
+            <LanguageSwitcher />
+          </div>
           <Link
             href={LOGIN_URL}
             className="hidden text-sm font-medium text-foreground transition-colors hover:text-accent sm:block"
           >
-            Anmelden
+            {t("anmelden")}
           </Link>
           <Button asChild variant="accent" size="sm">
-            <Link href="/register">Kostenlos starten</Link>
+            <Link href={SIGNUP_URL}>{t("kostenlosStarten")}</Link>
           </Button>
         </div>
       </nav>

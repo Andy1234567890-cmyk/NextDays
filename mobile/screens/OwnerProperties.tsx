@@ -24,7 +24,7 @@ export default function OwnerProperties() {
       setItems(res.data.items);
       setError(null);
     } else {
-      setItems([]);
+      setItems(null);
       setError(res.error);
     }
   }, []);
@@ -42,7 +42,7 @@ export default function OwnerProperties() {
         <Txt v="h1">Meine Objekte</Txt>
       </Col>
 
-      {!items && <Spinner />}
+      {!items && !error && <Spinner />}
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
