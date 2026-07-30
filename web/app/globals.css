@@ -142,6 +142,37 @@
   --sidebar-ring: #b82028;
 }
 
+/* Hilfe-Center erzwingt IMMER helles Theme (öffentlicher Marketing-Bereich wie
+   Lodgify/Zendesk), unabhängig vom globalen OS-/App-Dark-Mode. Die Variablen
+   werden auf dem Wrapper gesetzt und überschreiben die .dark-Werte für den
+   gesamten Teilbaum (nähere Ancestor-Definition gewinnt). */
+.help-light {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #0a0a0a;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: #b82028;
+  --accent-foreground: #ffffff;
+  --destructive: #b82028;
+  --destructive-foreground: #ffffff;
+  --success: #16a34a;
+  --success-foreground: #ffffff;
+  --warning: #d97706;
+  --warning-foreground: #ffffff;
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #b82028;
+}
+
 /* Dark Mode (.dark auf <html> via next-themes). */
 .dark {
   --background: #0a0a0a;

@@ -100,6 +100,18 @@ export async function startCheckout(input: {
   });
 }
 
+/** Gebuchte Objektzahl eines bestehenden Abos ändern. Erweitern gilt sofort
+ *  (anteilige Berechnung); Reduzieren lehnt der Server ab, solange mehr
+ *  Objekte veröffentlicht sind. */
+export async function changeSubscriptionQuantity(
+  propertyCount: number,
+): Promise<Result<{ property_count: number }>> {
+  return call<{ property_count: number }>("/quantity", {
+    method: "POST",
+    body: { property_count: propertyCount },
+  });
+}
+
 export async function openBillingPortal(
   returnUrl: string,
 ): Promise<Result<{ portal_url: string }>> {

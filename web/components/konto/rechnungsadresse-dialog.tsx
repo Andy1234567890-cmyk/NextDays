@@ -210,9 +210,23 @@ export function RechnungsadresseDialog({
                 )
               }
             >
-              <option value="individual">Persönlich</option>
-              <option value="company">Unternehmen</option>
+              {/* Stripe kennt nur individual/company. Ein Einzelunternehmen
+                  IST steuerlich eine natürliche Person (keine juristische
+                  Person, Inhaberhaftung) — also individual. „Persönlich"
+                  allein las sich wie „Privatperson" und passte für
+                  Einzelunternehmer nicht. */}
+              <option value="individual">
+                Privatperson oder Einzelunternehmen
+              </option>
+              <option value="company">
+                Unternehmen (GmbH, UG, AG, OHG …)
+              </option>
             </NativeSelect>
+            <p className="text-sm text-muted-foreground">
+              Einzelunternehmen zählen hier als Privatperson — sie sind keine
+              eigene juristische Person. Die Rechtsform pflegen Sie unter
+              Kontaktdaten im Konto.
+            </p>
           </Feld>
 
           {istFirma && (
@@ -278,13 +292,15 @@ function Feld({
   pflicht?: boolean;
   children: React.ReactNode;
 }) {
+  // LabelRequired ist NUR das rote Sternchen (es rendert seine Kinder nicht) —
+  // der Feldname muss deshalb im Label daneben stehen, sonst zeigt das Formular
+  // bloß Sterne über leeren Feldern.
   return (
     <div className="flex flex-col gap-1.5">
-      {pflicht ? (
-        <LabelRequired>{label}</LabelRequired>
-      ) : (
-        <Label>{label}</Label>
-      )}
+      <Label>
+        {label}
+        {pflicht && <LabelRequired />}
+      </Label>
       {children}
     </div>
   );

@@ -10,6 +10,7 @@
 // tenant_subscription + commission_ledger, damit Webhook-Änderungen sofort
 // erscheinen.
 import { Icon } from "@iconify/react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -91,6 +92,9 @@ export function KontoAboSection() {
   const [zeigeVerlauf, setZeigeVerlauf] = useState(false);
   const [zeigeTarife, setZeigeTarife] = useState(false);
   const [zeigeProvisionen, setZeigeProvisionen] = useState(false);
+  // Ländercode → Klarname. Muss VOR den frühen returns stehen (Hook-Regel).
+  const tCountry = useTranslations("countries");
+  const adressZeilen = adresseZeilen(state?.address ?? null, (c) => tCountry(c));
 
   async function load() {
     const me = await getMe();
@@ -262,8 +266,10 @@ export function KontoAboSection() {
           <div className="flex items-center gap-2">
             {s?.has_subscription ? (
               <>
-                <Button onClick={onPortal} disabled={busy}>
-                  {busy ? "…" : "Abo verwalten"}
+                {/* Hauptaktion ist unsere Tarifseite (Objekte dazubuchen) —
+                    das Stripe-Portal kennt nur Zahlungsmittel und Kündigung. */}
+                <Button onClick={() => setZeigeTarife(true)}>
+                  Tarif ändern
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -361,8 +367,8 @@ export function KontoAboSection() {
               Diese Angaben erscheinen auf allen künftigen Rechnungen.
             </p>
             <div className="mt-3 text-sm">
-              {adresseZeilen(state.address).length > 0 ? (
-                adresseZeilen(state.address).map((z) => <div key={z}>{z}</div>)
+              {adressZeilen.length > 0 ? (
+                adressZeilen.map((z) => <div key={z}>{z}</div>)
               ) : (
                 <span className="text-muted-foreground">
                   Noch keine Rechnungsadresse hinterlegt.
@@ -432,7 +438,15 @@ export function KontoAboSection() {
 
 // Adresse als Anschriftsblock. Leere Felder fallen raus, damit keine Lücken
 // oder einsame Kommata entstehen.
-function adresseZeilen(a: BillingAddress | null): string[] {
+//
+// `landName` übersetzt den gespeicherten ISO-3166-1-alpha-2-Code in den
+// Klarnamen: gespeichert und an Stripe übertragen wird IMMER der Code (DE),
+// angezeigt wird der Landesname (Deutschland). Fehlt eine Übersetzung, bleibt
+// der Code stehen — besser ein Code als eine leere Zeile.
+function adresseZeilen(
+  a: BillingAddress | null,
+  landName: (code: string) => string,
+): string[] {
   if (!a) return [];
   const person = [a.first_name, a.last_name].filter(Boolean).join(" ").trim();
   const ort = [a.postal_code, a.city].filter(Boolean).join(" ").trim();
@@ -442,7 +456,7 @@ function adresseZeilen(a: BillingAddress | null): string[] {
     a.line1,
     a.line2,
     ort,
-    a.country,
+    a.country ? landName(a.country) : null,
     a.vat_id ? `USt-IdNr. ${a.vat_id}` : null,
   ]
     .map((z) => (z ?? "").trim())

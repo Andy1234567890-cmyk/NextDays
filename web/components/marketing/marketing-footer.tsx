@@ -78,16 +78,20 @@ export async function MarketingFooter() {
             <div key={col.title}>
               <p className="text-sm font-semibold">{col.title}</p>
               <ul className="mt-4 flex flex-col gap-3">
-                {col.links.map((link) => (
-                  <li key={link}>
-                    <Link
-                      href="#"
-                      className="text-sm text-primary-foreground/70 transition-colors hover:text-primary-foreground"
-                    >
-                      {link}
-                    </Link>
-                  </li>
-                ))}
+                {col.links.map((link) => {
+                  // Nur echte Ziele verlinken; alles andere bleibt Platzhalter (#).
+                  const href = link === "Hilfe-Center" ? "/hilfe" : "#";
+                  return (
+                    <li key={link}>
+                      <Link
+                        href={href}
+                        className="text-sm text-primary-foreground/70 transition-colors hover:text-primary-foreground"
+                      >
+                        {link}
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}

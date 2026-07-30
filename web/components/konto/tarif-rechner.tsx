@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { Button } from "@nextdays/ui/button";
 import { formatCurrency } from "@/lib/currency";
 import {
+  changeSubscriptionQuantity,
   getPricing,
   getSubscriptionStatus,
   startCheckout,
@@ -164,9 +165,12 @@ export function TarifRechner({ onBack }: { onBack: () => void }) {
       else setError(p.error);
       if (s.ok) {
         setStatus(s.data);
-        // Mit der echten Objektzahl starten — der Regler zeigt dann sofort den
-        // Preis, der den Betrieb tatsächlich betrifft.
-        setAnzahl(Math.max(1, s.data.property_count));
+        // Mit der BEZAHLTEN Menge starten, wenn ein Abo besteht — sonst würde
+        // der Regler auf die angelegten Objekte springen und ein Reduzieren
+        // vorschlagen, das niemand angefordert hat.
+        setAnzahl(
+          Math.max(1, s.data.billed_property_count ?? s.data.property_count),
+        );
       }
     })();
   }, []);
@@ -175,6 +179,29 @@ export function TarifRechner({ onBack }: { onBack: () => void }) {
     () => (pricing ? preisFuer(pricing, anzahl) : null),
     [pricing, anzahl],
   );
+
+  // Die aktuell bezahlte Menge — Bezugspunkt für „erweitern" vs. „reduzieren".
+  const gebucht = status?.billed_property_count ?? 0;
+
+  async function onMengeAendern() {
+    setBusy(true);
+    try {
+      const res = await changeSubscriptionQuantity(anzahl);
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
+      toast.success(
+        anzahl > gebucht
+          ? `Tarif auf ${anzahl} Objekte erweitert.`
+          : `Tarif auf ${anzahl} Objekte reduziert.`,
+      );
+      const s = await getSubscriptionStatus();
+      if (s.ok) setStatus(s.data);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function onCheckout() {
     setBusy(true);
@@ -285,7 +312,9 @@ export function TarifRechner({ onBack }: { onBack: () => void }) {
                   {anzahl === 1 ? "Objekt" : "Objekte"}.
                 </p>
               </div>
-              {status?.has_subscription && (
+              {/* Nur solange der Regler auf der bezahlten Menge steht — sonst
+                  zeigt die Karte ein Paket, das noch nicht gebucht ist. */}
+              {status?.has_subscription && anzahl === gebucht && (
                 <span className="rounded-full bg-emerald-500/15 px-3 py-0.5 text-xs font-semibold text-emerald-600">
                   Aktuelles Paket
                 </span>
@@ -337,9 +366,34 @@ export function TarifRechner({ onBack }: { onBack: () => void }) {
 
             <div className="mt-5">
               {status?.has_subscription ? (
-                <Button disabled className="w-full">
-                  Aktuelles Paket
-                </Button>
+                <>
+                  <Button
+                    onClick={onMengeAendern}
+                    disabled={busy || monatlich == null || anzahl === gebucht}
+                    className="w-full gap-2"
+                  >
+                    {busy && (
+                      <Icon icon="svg-spinners:180-ring" className="size-4" />
+                    )}
+                    {anzahl === gebucht
+                      ? "Aktuelles Paket"
+                      : anzahl > gebucht
+                        ? `Auf ${anzahl} Objekte erweitern`
+                        : `Auf ${anzahl} Objekte reduzieren`}
+                  </Button>
+                  {anzahl > gebucht && (
+                    <p className="mt-2 text-center text-sm text-muted-foreground">
+                      Die Erweiterung gilt sofort. Für den laufenden Monat wird
+                      nur der anteilige Differenzbetrag berechnet.
+                    </p>
+                  )}
+                  {anzahl < gebucht && (
+                    <p className="mt-2 text-center text-sm text-muted-foreground">
+                      Reduzieren ist erst möglich, wenn höchstens {anzahl}{" "}
+                      {anzahl === 1 ? "Objekt" : "Objekte"} veröffentlicht sind.
+                    </p>
+                  )}
+                </>
               ) : (
                 <Button
                   onClick={onCheckout}
@@ -414,6 +468,21 @@ export function TarifRechner({ onBack }: { onBack: () => void }) {
             Die angegebenen Preise verstehen sich zzgl. der gesetzlichen
             Umsatzsteuer.
           </p>
+
+          {/* Weg in den Hilfebereich (Kategorie konto-abo) — dort stehen die
+              Artikel zu Abo, Tarifberechnung und Rechnungen. Neuer Tab, damit
+              eine begonnene Tarifänderung nicht verloren geht. */}
+          <div className="flex justify-center">
+            <a
+              href="/hilfe/konto-abo"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full bg-muted px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/70"
+            >
+              <Icon icon="lucide:circle-help" className="size-4" />
+              Häufig gestellte Fragen
+            </a>
+          </div>
         </>
       )}
     </div>

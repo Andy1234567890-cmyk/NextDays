@@ -10,6 +10,7 @@ import { Icon } from "@iconify/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
+import { AddressPlacesSearch } from "@/components/address-places-search";
 import { KontoBetriebsartSection } from "@/components/konto/konto-betriebsart-section";
 import { KontoZahlungenSection } from "@/components/konto/konto-zahlungen-section";
 import { Button } from "@nextdays/ui/button";
@@ -443,10 +444,22 @@ export default function ProfilPage() {
           <div className="grid gap-5 sm:grid-cols-3">
             <div className="flex flex-col gap-1.5 sm:col-span-2">
               <Label htmlFor="street">Straße</Label>
-              <Input
-                id="street"
+              {/* Places-Autocomplete direkt AM Straßenfeld: manuell tippbar,
+                  und bei Auswahl eines Vorschlags werden Hausnummer, PLZ,
+                  Stadt, Bundesland und Land strukturiert mitgefüllt (keine
+                  Regex-Zerlegung von Freitext). Leere Teile überschreiben
+                  nichts — Google liefert je Land unterschiedlich viel. */}
+              <AddressPlacesSearch
                 value={street}
-                onChange={(e) => setStreet(e.target.value)}
+                onChange={setStreet}
+                onPick={(a) => {
+                  if (a.street) setStreet(a.street);
+                  if (a.houseNumber) setHouseNumber(a.houseNumber);
+                  if (a.postalCode) setPostalCode(a.postalCode);
+                  if (a.city) setCity(a.city);
+                  if (a.state) setCompanyState(a.state);
+                  if (a.country) setCountry(a.country);
+                }}
               />
             </div>
             <div className="flex flex-col gap-1.5">

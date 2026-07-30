@@ -1,4 +1,29 @@
 {
+  "help": {
+    "heroTitle": "How can we help?",
+    "heroSubtitle": "Search the knowledge base or find step-by-step solutions for your day-to-day work with myNextDays.",
+    "searchPlaceholder": "What are you looking for?",
+    "searchAria": "Search help",
+    "contact": "Contact",
+    "home": "Help home",
+    "articles": "{count, plural, one {# article} other {# articles}}",
+    "collectionKbTitle": "Knowledge base",
+    "collectionKbDesc": "Everything about properties, pricing, calendar, portals and your account.",
+    "collectionUsecasesTitle": "Use cases",
+    "collectionUsecasesDesc": "Step-by-step solutions for common everyday scenarios.",
+    "helpfulQuestion": "Was this article helpful?",
+    "helpfulYes": "Yes",
+    "helpfulNo": "No",
+    "helpfulThanks": "Thanks for your feedback!",
+    "related": "More articles in {category}",
+    "searchTitle": "Search",
+    "results": "{count, plural, one {# result for \u201c{query}\u201d} other {# results for \u201c{query}\u201d}}",
+    "noResultsTitle": "No articles found",
+    "noResultsHintPre": "Try different search terms or ",
+    "noResultsHintLink": "browse the categories",
+    "browseCategories": "Browse categories"
+  },
+
   "common": {
     "save": "Save",
     "cancel": "Cancel",

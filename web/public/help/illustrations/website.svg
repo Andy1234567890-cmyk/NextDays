@@ -1,0 +1,18 @@
+<svg viewBox="0 0 320 240" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true">
+  <rect x="8" y="8" width="304" height="224" rx="28" fill="#E9F5EE"/>
+  <circle cx="64" cy="58" r="5" fill="#B7DCC6"/>
+  <circle cx="252" cy="50" r="7" fill="#B7DCC6"/>
+  <circle cx="242" cy="180" r="5" fill="#B7DCC6"/>
+  <path d="M92 200 q68 -30 136 0" stroke="#B7DCC6" stroke-width="4" stroke-linecap="round"/>
+  <g>
+    <rect x="88" y="62" width="144" height="116" rx="14" fill="#FFFFFF" stroke="#0A0A0A" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M88 90 h144" stroke="#0A0A0A" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="104" cy="76" r="4" fill="#B82028"/>
+    <circle cx="118" cy="76" r="4" fill="#E4E4E7"/>
+    <circle cx="132" cy="76" r="4" fill="#E4E4E7"/>
+    <path d="M104 110 h72" stroke="#0A0A0A" stroke-width="4" stroke-linecap="round"/>
+    <path d="M104 126 h96" stroke="#E4E4E7" stroke-width="4" stroke-linecap="round"/>
+    <path d="M104 138 h80" stroke="#E4E4E7" stroke-width="4" stroke-linecap="round"/>
+    <rect x="104" y="152" width="60" height="16" rx="8" fill="#B82028"/>
+  </g>
+</svg>

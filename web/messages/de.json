@@ -1,4 +1,29 @@
 {
+  "help": {
+    "heroTitle": "Wie können wir helfen?",
+    "heroSubtitle": "Durchsuchen Sie die Wissensdatenbank oder finden Sie Schritt-für-Schritt-Lösungen für Ihren Alltag mit myNextDays.",
+    "searchPlaceholder": "Wonach suchen Sie?",
+    "searchAria": "Hilfe durchsuchen",
+    "contact": "Kontakt",
+    "home": "Hilfe-Start",
+    "articles": "{count, plural, one {# Artikel} other {# Artikel}}",
+    "collectionKbTitle": "Wissensdatenbank",
+    "collectionKbDesc": "Alles über Objekte, Preise, Kalender, Portale und Ihr Konto.",
+    "collectionUsecasesTitle": "Anwendungsfälle",
+    "collectionUsecasesDesc": "Schritt-für-Schritt-Lösungen für typische Szenarien im Alltag.",
+    "helpfulQuestion": "War dieser Artikel hilfreich?",
+    "helpfulYes": "Ja",
+    "helpfulNo": "Nein",
+    "helpfulThanks": "Danke für Ihre Rückmeldung!",
+    "related": "Weitere Artikel in {category}",
+    "searchTitle": "Suche",
+    "results": "{count, plural, one {# Ergebnis für „{query}“} other {# Ergebnisse für „{query}“}}",
+    "noResultsTitle": "Keine Artikel gefunden",
+    "noResultsHintPre": "Versuchen Sie es mit anderen Suchbegriffen oder ",
+    "noResultsHintLink": "durchstöbern Sie die Kategorien",
+    "browseCategories": "Kategorien durchstöbern"
+  },
+
   "common": {
     "save": "Speichern",
     "cancel": "Abbrechen",
