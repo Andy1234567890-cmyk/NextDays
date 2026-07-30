@@ -1,9 +1,15 @@
-// Intro — "Willkommen bei myNextDays" (zweispaltig: Visual links, Text rechts)
-// + globale Reichweite mit Property-Typ-Tabs und Kunden-Zitat.
-import { Icon } from "@iconify/react";
+// Intro — „Willkommen bei myNextDays" (Text links, Belege rechts) plus die
+// Zielgruppen-Reihe.
+//
+// Referenz-UX (hostaway.com): zweispaltige Erklärsektion mit linksbündigem
+// Eyebrow-Heading-Block und einer Check-Liste als rechte Spalte; die
+// Zielgruppen stehen als flache Pill-Reihe unter einer eigenen Überschrift.
+import { Icon } from "@/components/ui/icon";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
+import { TYPE_ICONS } from "@/components/marketing/property-type-icons";
+import { SectionHeading } from "@/components/marketing/section-kit";
 import { Button } from "@/components/ui/button";
 
 // Schlüssel, nicht Texte — die Namen der Objekttypen kommen aus messages
@@ -21,80 +27,68 @@ const PROPERTY_TYPES = [
   "campingplatz",
 ] as const;
 
+// Belegbare Aussagen statt Kundenzitat — Texte aus messages (intro.belege.*).
+const BELEGE = ["neu", "eu", "kanaele", "start"] as const;
+
 export function MarketingIntro() {
   const t = useTranslations("intro");
 
   return (
     <section className="bg-background">
-      {/* Willkommens-Block */}
-      <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-20 lg:grid-cols-2">
-        <div className="order-2 overflow-hidden rounded-2xl border border-border bg-card shadow-lg lg:order-1">
-          <div className="aspect-[4/3] bg-gradient-to-br from-secondary to-background p-6">
-            <div className="flex h-full flex-col gap-3">
-              <div className="h-6 w-1/2 rounded bg-muted" />
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="h-10 flex-1 rounded-lg bg-muted" />
-                  <div className="h-10 w-16 rounded-lg bg-accent/40" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="order-1 lg:order-2">
-          <h2 className="font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-            {t("heading")}
-          </h2>
-          <p className="mt-5 text-muted-foreground">{t("p1")}</p>
+      <div className="mx-auto grid max-w-7xl items-start gap-16 px-6 py-24 lg:grid-cols-2">
+        <div>
+          <SectionHeading
+            eyebrow={t("eyebrow")}
+            heading={t("heading")}
+            align="left"
+          />
+          <p className="mt-6 text-muted-foreground">{t("p1")}</p>
           <p className="mt-4 text-muted-foreground">{t("p2")}</p>
           <p className="mt-4 text-muted-foreground">{t("p3")}</p>
-          <Button asChild variant="default" className="mt-7">
+          <Button asChild variant="default" className="mt-8">
             <Link href="#funktionen" className="gap-2">
               {t("cta")}
               <Icon icon="ph:arrow-right" className="size-4" />
             </Link>
           </Button>
         </div>
-      </div>
 
-      {/* Globale Reichweite */}
-      <div className="border-t border-border">
-        <div className="mx-auto max-w-7xl px-6 py-16">
-          <p className="text-center font-display text-2xl font-semibold tracking-tight">
-            {t("reichweite")}
-          </p>
-
-          <ul className="mx-auto mt-8 flex max-w-4xl flex-wrap justify-center gap-2">
-            {PROPERTY_TYPES.map((type, i) => (
-              <li key={type}>
-                <button
-                  type="button"
-                  className={
-                    "rounded-full px-4 py-1.5 text-sm font-medium transition-colors " +
-                    (i === 0
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-secondary text-secondary-foreground hover:bg-muted")
-                  }
-                >
-                  {t(`typen.${type}`)}
-                </button>
+        <div className="rounded-3xl border border-border bg-surface-warm p-8 shadow-card sm:p-10">
+          <h3 className="font-display text-xl font-semibold">{t("belegeHeading")}</h3>
+          <ul className="mt-6 flex flex-col gap-5">
+            {BELEGE.map((key) => (
+              <li key={key} className="flex gap-4">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-accent text-accent">
+                  <Icon icon="ph:check-bold" className="size-4" />
+                </span>
+                <span className="text-muted-foreground">{t(`belege.${key}`)}</span>
               </li>
             ))}
           </ul>
+        </div>
+      </div>
 
-          <div className="mt-12 grid items-center gap-10 lg:grid-cols-2">
-            <div className="aspect-[16/10] overflow-hidden rounded-2xl border border-border bg-gradient-to-br from-secondary to-muted" />
-            <figure>
-              <Icon icon="ph:quotes-fill" className="size-10 text-accent/30" />
-              <blockquote className="mt-4 font-display text-2xl font-medium leading-snug">
-                „{t("zitat")}“
-              </blockquote>
-              <figcaption className="mt-5 text-sm text-muted-foreground">
-                {t("zitatQuelle")}
-              </figcaption>
-            </figure>
-          </div>
+      {/* Zielgruppen */}
+      <div className="border-t border-border">
+        <div className="mx-auto max-w-7xl px-6 py-16">
+          <SectionHeading eyebrow={t("typenEyebrow")} heading={t("reichweite")} />
+          {/* Kacheln statt Text-Pills: jedes Objekt bekommt ein eigenes
+              Piktogramm, damit die Bandbreite (Zelt bis Hotel) sichtbar wird
+              und nicht nur gelesen werden muss. */}
+          <ul className="mx-auto mt-10 grid max-w-5xl grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+            {PROPERTY_TYPES.map((type) => {
+              const TypeIcon = TYPE_ICONS[type];
+              return (
+                <li
+                  key={type}
+                  className="flex flex-col items-center gap-3 rounded-2xl bg-surface-warm px-4 py-6 text-center transition-colors hover:bg-surface-accent"
+                >
+                  <TypeIcon className="size-10 text-accent" />
+                  <span className="text-sm font-medium">{t(`typen.${type}`)}</span>
+                </li>
+              );
+            })}
+          </ul>
         </div>
       </div>
     </section>

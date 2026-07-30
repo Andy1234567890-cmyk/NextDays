@@ -4,7 +4,6 @@
 // Toolbar mit Fett/Kursiv/Durchstreichen/Listen/Link. Icons via Iconify (ph:*).
 // Styling über semantische Tokens — fügt sich ins Formular ein.
 import { Icon } from "@iconify/react";
-import Link from "@tiptap/extension-link";
 import { Placeholder } from "@tiptap/extensions";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -26,9 +25,12 @@ export function RichTextEditor({
   const editor = useEditor({
     immediatelyRender: false, // kein SSR-Render → kein Hydration-Mismatch
     extensions: [
-      StarterKit,
+      // Link kommt seit TipTap 3 AUS dem StarterKit. Ihn zusätzlich als eigene
+      // Extension zu registrieren erzeugte „Duplicate extension names: ['link']"
+      // — zwei Instanzen desselben Marks mit eigenen Optionen, deren Reihenfolge
+      // entscheidet, welche gewinnt. Darum hier konfigurieren, nicht doppeln.
+      StarterKit.configure({ link: { openOnClick: false } }),
       Placeholder.configure({ placeholder: placeholder ?? "" }),
-      Link.configure({ openOnClick: false }),
     ],
     content: value,
     editorProps: {

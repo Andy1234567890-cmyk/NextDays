@@ -16,6 +16,9 @@ from src.core.security import CurrentGuest, CurrentUser
 from .dependencies import SupportServiceDep
 from .schemas import (
     ChatStart,
+    PublicChatStart,
+    PublicReply,
+    PublicTicket,
     SupportOk,
     TicketCreate,
     TicketDetail,
@@ -216,5 +219,58 @@ def reply_guest_ticket(
     if res is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Ticket nicht gefunden."
+        )
+    return res
+
+
+# --- Anonyme Website-Besucher ------------------------------------------------
+#
+# OHNE Authentifizierung: ein Interessent auf der Marketing-Seite hat kein
+# Konto und soll für eine Frage keines anlegen müssen (Intercom-/Crisp-Muster).
+# Der Schutz besteht deshalb aus drei Teilen:
+#   1. eigener, strenger Rate-Limit-Bucket (core/ratelimit_middleware),
+#   2. Zufallstoken als einziger Schlüssel zum eigenen Verlauf — in der DB liegt
+#      nur dessen SHA-256,
+#   3. schmales Antwortschema (PublicTicket), das weder Priorität noch interne
+#      Felder kennt.
+
+
+@router.post(
+    "/public/chat",
+    response_model=PublicTicket,
+    status_code=status.HTTP_201_CREATED,
+)
+def start_public_chat(
+    req: PublicChatStart, service: SupportServiceDep
+) -> PublicTicket:
+    """Eine Anfrage von der Website eröffnen (Name, E-Mail, optional Telefon)."""
+    try:
+        return service.start_public_chat(req)
+    except SupportError as exc:
+        raise _map(exc) from exc
+
+
+@router.get("/public/{token}", response_model=PublicTicket)
+def get_public_chat(token: str, service: SupportServiceDep) -> PublicTicket:
+    """Den eigenen Verlauf abrufen. Unbekanntes Token → 404."""
+    res = service.public_detail(token)
+    if res is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Konversation nicht gefunden."
+        )
+    return res
+
+
+@router.post("/public/{token}/reply", response_model=TicketMessage)
+def reply_public_chat(
+    token: str, antwort: PublicReply, service: SupportServiceDep
+) -> TicketMessage:
+    """Im eigenen Verlauf antworten. Unbekanntes Token → 404."""
+    res = service.reply_public(
+        token, antwort.body, client_msg_id=antwort.client_msg_id
+    )
+    if res is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Konversation nicht gefunden."
         )
     return res

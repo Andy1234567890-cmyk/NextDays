@@ -58,10 +58,16 @@ log = get_logger("nextdays.payments")
 
 
 class PaymentsError(Exception):
-    def __init__(self, message: str, *, status_code: int = 400) -> None:
+    def __init__(
+        self, message: str, *, status_code: int = 400, param: str | None = None
+    ) -> None:
         super().__init__(message)
         self.message = message
         self.status_code = status_code
+        # Von Stripe benanntes Eingabefeld (z. B. „business_profile[url]"). Nur
+        # bei invalid_request_error gesetzt — der Aufrufer kann damit gezielt
+        # DIESES Feld aus einem Sammel-Update nehmen, statt alles zu verlieren.
+        self.param = param
 
 
 @contextmanager
@@ -81,7 +87,8 @@ def _stripe_errors():  # noqa: ANN202
         # ein Upstream-/Serverproblem → 502.
         http_status = getattr(exc, "http_status", None)
         code = 400 if isinstance(http_status, int) and 400 <= http_status < 500 else 502
-        raise PaymentsError(msg, status_code=code) from exc
+        param = getattr(exc, "param", None)
+        raise PaymentsError(msg, status_code=code, param=param or None) from exc
 
 
 def _to_cents(amount: float) -> int:
@@ -448,6 +455,12 @@ class PaymentsService:
         with _stripe_errors():
             account = self._stripe.v1.accounts.retrieve(stripe_account_id)
         requirements: list[str] = list(account.requirements.currently_due or [])
+        self._mirror_account_flags(
+            tenant_id,
+            charges=bool(account.charges_enabled),
+            payouts=bool(account.payouts_enabled),
+            details=bool(account.details_submitted),
+        )
         return ConnectAccountStatus(
             stripe_account_id=account.id,
             charges_enabled=bool(account.charges_enabled),
@@ -456,6 +469,44 @@ class PaymentsService:
             requirements=requirements,
             disabled_reason=account.requirements.disabled_reason,
         )
+
+    def _mirror_account_flags(
+        self, tenant_id: str, *, charges: bool, payouts: bool, details: bool
+    ) -> None:
+        """Die gespiegelten Freischalt-Flags im Profil auf den LIVE-Stand ziehen.
+
+        ``stripe_charges_enabled`` ist das Gate für Gästezahlungen
+        (``_connected_account``). Bisher schrieb es nur der account.updated-Webhook
+        — verpasst/nie zugestellt (lokale Entwicklung, Webhook-Ausfall), blieb ein
+        altes ``true`` stehen, obwohl Stripe den Account längst wieder gesperrt
+        hatte: die Buchungsstrecke hätte Zahlungen angeboten, die Stripe ablehnt.
+        Beim Live-Status-Abruf daher gegenschreiben, aber NUR bei echter Abweichung
+        (der Status wird gepollt — kein Schreiben pro Poll).
+        """
+        flags = {
+            "stripe_charges_enabled": charges,
+            "stripe_payouts_enabled": payouts,
+            "stripe_details_submitted": details,
+        }
+        db = self._db_or_fail()
+        row = (
+            db.table("tenant_billing_profile")
+            .select(",".join(flags))
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if row and all(row[0].get(k) == v for k, v in flags.items()):
+            return
+        log.info(
+            "connect_flags_drift_corrected",
+            tenant_id=tenant_id,
+            gespeichert=row[0] if row else None,
+            live=flags,
+        )
+        db.table("tenant_billing_profile").update(flags).eq(
+            "tenant_id", tenant_id
+        ).execute()
 
     def update_connect_account(
         self, tenant_id: str, stripe_account_id: str, fields: dict[str, Any]
@@ -468,6 +519,83 @@ class PaymentsService:
         with _stripe_errors():
             self._stripe.v1.accounts.update(stripe_account_id, params=fields)
         return self.get_connect_account_status(tenant_id, stripe_account_id)
+
+    # Obergrenze für den Feld-für-Feld-Rückzug unten: mehr abgelehnte Felder als
+    # das deutet auf ein grundsätzlich kaputtes Update hin — dann lieber
+    # fehlschlagen als endlos gegen Stripe laufen (Wurzel 8: harte Grenze).
+    _MAX_REJECTED_FIELDS = 8
+
+    def sync_connect_fields(
+        self, tenant_id: str, stripe_account_id: str, fields: dict[str, Any]
+    ) -> tuple[ConnectAccountStatus, list[str]]:
+        """Firmendaten an den Account senden — EIN abgelehntes Feld darf NICHT das
+        ganze Update kippen.
+
+        Stripe prüft Nebenangaben live (Telefonnummer gegen libphonenumber, Website
+        gegen die echte Domain). Ist eine davon ungültig, lehnt Stripe den GESAMTEN
+        Account-Update-Request ab — dann kommt keine einzige KYC-Pflichtangabe an
+        und der Account bleibt für immer restricted, während die UI nur „es fehlen
+        Angaben" zeigt. Darum: das von Stripe benannte Feld (``error.param``)
+        entfernen und erneut senden, bis der Rest durchgeht. Die abgelehnten Felder
+        werden NICHT ersetzt oder geraten (Wurzel 4) — sie werden als Klartext
+        zurückgegeben, damit der Nutzer genau sie korrigieren kann.
+
+        Rückgabe: (Status, Liste der abgelehnten Felder als „feld: Stripe-Grund").
+        """
+        self._require_own_connect_account(tenant_id, stripe_account_id)
+        remaining = dict(fields)
+        rejected: list[str] = []
+        # Nur die FELDPFADE loggen, nie die Werte — im Update stehen Name, Adresse
+        # und Geburtsdatum (PII, CWE-532). Der Pfad reicht, um zu sehen, was der
+        # Sync überhaupt zu senden versucht.
+        log.info(
+            "connect_sync_start",
+            tenant_id=tenant_id,
+            account=stripe_account_id,
+            fields=_param_paths(fields),
+        )
+        while remaining:
+            try:
+                with _stripe_errors():
+                    self._stripe.v1.accounts.update(stripe_account_id, params=remaining)
+                break
+            except PaymentsError as exc:
+                dropped = (
+                    _drop_param(remaining, exc.param)
+                    if exc.status_code == 400 and exc.param
+                    else False
+                )
+                if not dropped or len(rejected) >= self._MAX_REJECTED_FIELDS:
+                    log.error(
+                        "connect_sync_failed",
+                        tenant_id=tenant_id,
+                        account=stripe_account_id,
+                        param=exc.param,
+                        status=exc.status_code,
+                        error=exc.message,
+                        already_rejected=rejected,
+                    )
+                    raise
+                rejected.append(f"{exc.param}: {exc.message}")
+                log.warning(
+                    "connect_field_rejected",
+                    tenant_id=tenant_id,
+                    param=exc.param,
+                    error=exc.message,
+                    retry_with=_param_paths(remaining),
+                )
+        status = self.get_connect_account_status(tenant_id, stripe_account_id)
+        log.info(
+            "connect_sync_done",
+            tenant_id=tenant_id,
+            account=stripe_account_id,
+            charges_enabled=status.charges_enabled,
+            payouts_enabled=status.payouts_enabled,
+            disabled_reason=status.disabled_reason,
+            still_required=status.requirements,
+            rejected=rejected,
+        )
+        return status, rejected
 
     def upsert_company_representative(
         self, tenant_id: str, stripe_account_id: str, person: dict[str, Any]
@@ -532,7 +660,19 @@ class PaymentsService:
                 stripe_account_id,
                 params={"tos_acceptance": {"date": when, "ip": ip}},
             )
-        return self.get_connect_account_status(tenant_id, stripe_account_id)
+        status = self.get_connect_account_status(tenant_id, stripe_account_id)
+        # Sichtbar machen, dass die ToS zwar durchging, der Account aber trotzdem
+        # gesperrt bleiben kann (offene requirements) — sonst sieht man in der
+        # Konsole nur „POST accept-tos 200 OK" und hält es für erledigt.
+        log.info(
+            "connect_tos_accepted",
+            tenant_id=tenant_id,
+            account=stripe_account_id,
+            charges_enabled=status.charges_enabled,
+            disabled_reason=status.disabled_reason,
+            still_required=status.requirements,
+        )
+        return status
 
     def has_external_account(self, tenant_id: str, stripe_account_id: str) -> bool:
         """True, wenn am Connected Account bereits ein Auszahlungskonto (bank_account)
@@ -2342,6 +2482,51 @@ class PaymentsService:
         db.table("reservations").update({"payment_status": status}).eq(
             "id", reservation_id
         ).execute()
+
+
+def _param_paths(fields: dict[str, Any], prefix: str = "") -> list[str]:
+    """Feldpfade eines Account-Updates im Stripe-Klammerformat — OHNE Werte.
+
+    Fürs Konsolen-Log: sichtbar machen, WAS gesendet wird, ohne Name, Adresse
+    oder Geburtsdatum ins Log zu schreiben (CWE-532).
+    """
+    paths: list[str] = []
+    for key, value in fields.items():
+        pfad = f"{prefix}[{key}]" if prefix else str(key)
+        if isinstance(value, dict):
+            paths.extend(_param_paths(value, pfad))
+        else:
+            paths.append(pfad)
+    return paths
+
+
+def _drop_param(fields: dict[str, Any], param: str | None) -> bool:
+    """Entfernt das von Stripe benannte Feld aus einem Account-Update.
+
+    ``param`` kommt im Stripe-Klammerpfad („business_profile[url]",
+    „individual[address][city]"). True, wenn wirklich etwas entfernt wurde —
+    sonst darf der Aufrufer NICHT erneut senden (sonst Endlosschleife mit
+    identischem Request). Elternknoten, die dadurch leer werden, fallen mit weg;
+    ein leeres ``{"individual": {}}`` würde Stripe sonst erneut abweisen.
+    """
+    if not param:
+        return False
+    head, _, rest = param.partition("[")
+    path = [head, *[p.rstrip("]") for p in rest.split("[") if p]] if rest else [head]
+    node: Any = fields
+    parents: list[tuple[dict, str]] = []
+    for key in path[:-1]:
+        if not isinstance(node, dict) or key not in node:
+            return False
+        parents.append((node, key))
+        node = node[key]
+    if not isinstance(node, dict) or path[-1] not in node:
+        return False
+    del node[path[-1]]
+    for parent, key in reversed(parents):
+        if not parent[key]:
+            del parent[key]
+    return True
 
 
 @lru_cache(maxsize=64)

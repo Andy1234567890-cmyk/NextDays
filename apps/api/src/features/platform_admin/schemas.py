@@ -279,6 +279,11 @@ class SupportTicket(BaseModel):
     id: str
     reporter_user_id: str | None = None
     reporter_guest_id: str | None = None
+    # Anonymer Melder von der Marketing-Seite (source='web'): es gibt kein
+    # Konto, an dem Name und Rückkanal hängen — beides steht am Ticket.
+    reporter_name: str | None = None
+    reporter_email: str | None = None
+    reporter_phone: str | None = None
     tenant_id: str | None = None
     tenant_name: str | None = None
     subject: str
@@ -290,7 +295,8 @@ class SupportTicket(BaseModel):
     property_id: str | None = None
     created_at: datetime
     last_message_at: datetime | None = None
-    # 'form' = Formular-Anfrage, 'chat' = Live-Chat aus dem Dashboard-Widget.
+    # 'form' = Formular-Anfrage, 'chat' = Live-Chat aus dem Dashboard-Widget,
+    # 'web' = anonyme Anfrage aus dem Widget der Marketing-Seite.
     source: str = "form"
     last_message_preview: str | None = None
     last_message_kind: str | None = None

@@ -17,15 +17,20 @@ Zwei Regeln, die hier immer gelten und den Unterschied ausmachen:
 """
 from __future__ import annotations
 
+import hashlib
+import secrets as pysecrets
 from datetime import UTC, datetime
 
 from postgrest.exceptions import APIError
 from supabase import Client
 
 from src.core.logging import get_logger
+from src.core.security import secrets_match
 
 from .schemas import (
     ChatStart,
+    PublicChatStart,
+    PublicTicket,
     Ticket,
     TicketCreate,
     TicketDetail,
@@ -49,6 +54,11 @@ _PREVIEW_LEN = 160
 
 # Länge des aus der ersten Chat-Nachricht abgeleiteten Betreffs.
 _SUBJECT_LEN = 80
+
+# Wie viele Nachrichten das Website-Widget je Abruf höchstens bekommt. Eine
+# Verkaufs-Konversation ist kurz; die Grenze verhindert, dass ein sehr langer
+# Verlauf den unauthentifizierten Endpunkt teuer macht (Wurzel 8).
+_PUBLIC_MSG_LIMIT = 200
 
 # Spalten, die der Melder sehen darf. Bewusst OHNE assignee_user_id und
 # reporter_*: wer intern zuständig ist, geht den Melder nichts an.
@@ -112,6 +122,11 @@ def _vorschau(text: str) -> str:
     if len(flach) <= _PREVIEW_LEN:
         return flach
     return flach[: _PREVIEW_LEN - 1].rstrip() + "…"
+
+
+def _token_hash(token: str) -> str:
+    """SHA-256 (hex) eines Besucher-Tokens. In der DB liegt nur dieser Wert."""
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
 
 def _betreff_aus_nachricht(text: str) -> str:
@@ -465,6 +480,202 @@ class SupportService:
             conversations=sum(1 for n in ungelesen.values() if n > 0),
             messages=sum(ungelesen.values()),
         )
+
+    # -- anonyme Website-Besucher ---------------------------------------------
+
+    def start_public_chat(self, req: PublicChatStart) -> PublicTicket:
+        """Konversation eines anonymen Besuchers eröffnen.
+
+        Der Besucher hat kein Konto. Statt einer Melder-ID bekommt das Ticket
+        Kontaktdaten und ein Zufallstoken; gespeichert wird nur dessen Hash
+        (Muster wie bei Sitzungs-/Einladungstoken). Das Klartext-Token wird
+        EINMAL zurückgegeben und lebt danach nur im Browser.
+
+        Idempotent über client_msg_id (Wurzel 2): derselbe Doppelklick eröffnet
+        keine zweite Konversation, sondern liefert die vorhandene — samt neuem
+        Token, denn der Client hat seines in dem Fall ja noch nicht.
+        """
+        if req.client_msg_id:
+            vorhanden = self._public_zu_client_id(req.client_msg_id)
+            if vorhanden is not None:
+                return vorhanden
+
+        token = pysecrets.token_urlsafe(32)
+        jetzt = datetime.now(UTC).isoformat()
+        res = (
+            self._db.table("support_tickets")
+            .insert(
+                {
+                    "subject": _betreff_aus_nachricht(req.body),
+                    # Anfragen von der Website sind Vertriebskontakt, kein
+                    # Störfall — die Priorität leitet der Server ab, nie der
+                    # Client (Wurzel 3).
+                    "category": "vertrieb",
+                    "priority": _PRIO_STANDARD,
+                    "source": "web",
+                    "reporter_name": req.name.strip(),
+                    "reporter_email": str(req.email).strip().lower(),
+                    "reporter_phone": (req.phone or "").strip() or None,
+                    "visitor_token_hash": _token_hash(token),
+                    "last_message_at": jetzt,
+                    "last_message_preview": _vorschau(req.body),
+                    "last_message_kind": "reporter",
+                    "reporter_last_read_at": jetzt,
+                }
+            )
+            .execute()
+        ).data
+        if not res:
+            raise SupportError("Anfrage konnte nicht angelegt werden.", status_code=502)
+        ticket = res[0]
+
+        self._db.table("support_messages").insert(
+            {
+                "ticket_id": ticket["id"],
+                "author_kind": "reporter",
+                "body": req.body,
+                "internal": False,
+                "client_msg_id": req.client_msg_id,
+            }
+        ).execute()
+
+        log.info("support_web_chat_started", ticket_id=ticket["id"])
+        detail = self.public_detail(token)
+        if detail is None:  # pragma: no cover — direkt nach dem Insert unmöglich
+            raise SupportError("Anfrage nicht lesbar.", status_code=502)
+        return PublicTicket(**{**detail.model_dump(), "token": token})
+
+    def public_detail(self, token: str) -> PublicTicket | None:
+        """Konversation zu einem Besucher-Token. None = unbekannt.
+
+        Der Scope ist das Token — genau wie sonst die Melder-ID (Wurzel 9).
+        Gesucht wird über den Hash; ein unbekanntes Token ist von einem
+        fremden nicht unterscheidbar.
+        """
+        zeile = self._besucher_zeile(token)
+        if zeile is None:
+            return None
+        msgs = (
+            self._db.table("support_messages")
+            .select("id, author_kind, body, created_at, client_msg_id")
+            .eq("ticket_id", zeile["id"])
+            .eq("internal", False)
+            .order("created_at", desc=False)
+            .limit(_PUBLIC_MSG_LIMIT)
+            .execute()
+        ).data or []
+        return PublicTicket(
+            ticket_id=zeile["id"],
+            status=_melder_status(zeile.get("status")),
+            messages=[TicketMessage(**m) for m in msgs],
+        )
+
+    def reply_public(
+        self, token: str, body: str, *, client_msg_id: str | None = None
+    ) -> TicketMessage | None:
+        """Antwort des Besuchers. None = unbekanntes Token."""
+        zeile = self._besucher_zeile(token)
+        if zeile is None:
+            return None
+
+        try:
+            res = (
+                self._db.table("support_messages")
+                .insert(
+                    {
+                        "ticket_id": zeile["id"],
+                        "author_kind": "reporter",
+                        "body": body,
+                        "internal": False,
+                        "client_msg_id": client_msg_id,
+                    }
+                )
+                .execute()
+            ).data
+        except APIError as exc:
+            if getattr(exc, "code", None) != "23505" or not client_msg_id:
+                raise
+            bestehend = self._nachricht_zu_client_id(zeile["id"], client_msg_id)
+            if bestehend is None:
+                raise
+            return bestehend
+
+        jetzt = datetime.now(UTC).isoformat()
+        felder: dict[str, str] = {
+            "last_message_at": jetzt,
+            "updated_at": jetzt,
+            "last_message_preview": _vorschau(body),
+            "last_message_kind": "reporter",
+            "reporter_last_read_at": jetzt,
+        }
+        if (zeile.get("status") or "") in ("resolved", "closed"):
+            felder["status"] = "open"
+        self._db.table("support_tickets").update(felder).eq(
+            "id", zeile["id"]
+        ).execute()
+        return TicketMessage(**res[0])
+
+    def _besucher_zeile(self, token: str) -> dict | None:
+        """Ticket-Zeile zu einem Besucher-Token (über den Hash).
+
+        Der Hash-Vergleich läuft zusätzlich byteweise über secrets_match: die
+        Gleichheit entscheidet zwar schon der eindeutige Index, aber der
+        Rückvergleich schließt aus, dass eine künftige Änderung (z. B. ein
+        LIKE-Filter) den Abgleich unbemerkt aufweicht.
+        """
+        if not token:
+            return None
+        gehasht = _token_hash(token)
+        rows = (
+            self._db.table("support_tickets")
+            .select("id, status, visitor_token_hash")
+            .eq("visitor_token_hash", gehasht)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            return None
+        if not secrets_match(rows[0].get("visitor_token_hash"), gehasht):
+            return None
+        return rows[0]
+
+    def _public_zu_client_id(self, client_msg_id: str) -> PublicTicket | None:
+        """Bereits mit dieser client_msg_id eröffnete Besucher-Konversation.
+
+        Anders als bei eingeloggten Meldern gibt es hier keine Identität, an der
+        man den Treffer gegenprüfen könnte — deshalb wird NUR zurückgegeben,
+        was auch wirklich eine Website-Konversation ist (source='web'), und das
+        Token wird neu vergeben (der Aufrufer ist derselbe Client, der die
+        Eröffnung wiederholt).
+        """
+        rows = (
+            self._db.table("support_messages")
+            .select("ticket_id")
+            .eq("client_msg_id", client_msg_id)
+            .limit(1)
+            .execute()
+        ).data or []
+        if not rows:
+            return None
+        ticket = (
+            self._db.table("support_tickets")
+            .select("id, status, source")
+            .eq("id", rows[0]["ticket_id"])
+            .eq("source", "web")
+            .limit(1)
+            .execute()
+        ).data or []
+        if not ticket:
+            return None
+
+        token = pysecrets.token_urlsafe(32)
+        self._db.table("support_tickets").update(
+            {"visitor_token_hash": _token_hash(token)}
+        ).eq("id", ticket[0]["id"]).execute()
+        detail = self.public_detail(token)
+        if detail is None:  # pragma: no cover
+            return None
+        return PublicTicket(**{**detail.model_dump(), "token": token})
 
     # -- intern ---------------------------------------------------------------
 

@@ -126,6 +126,31 @@ export async function uploadFirmenLogo(
   }
 }
 
+// Gespeicherte Stammdaten erneut an Stripe übertragen. Nötig, weil der Sync
+// sonst NUR beim Speichern des Formulars läuft: scheiterte er dort, standen die
+// Angaben im Profil, fehlten aber bei Stripe — und die Zahlungen-Karte verlangte
+// Felder, die längst ausgefüllt waren. Ändert keine Daten. Das zurückgegebene
+// Profil trägt `stripeSyncError` (null = alles angekommen).
+export async function resyncStripeProfil(): Promise<
+  Result<Record<string, unknown>>
+> {
+  const token = await currentToken();
+  if (!token) return { ok: false, error: "Nicht angemeldet." };
+  try {
+    const data = await api<Record<string, unknown>>(
+      `${COMPANY_PATH}/stripe-sync`,
+      { method: "POST", token },
+    );
+    return { ok: true, data };
+  } catch (exc) {
+    return {
+      ok: false,
+      error:
+        exc instanceof ApiError ? exc.message : "Übertragung fehlgeschlagen.",
+    };
+  }
+}
+
 export async function saveFirmenProfil(
   profil: FirmenProfil,
 ): Promise<Result<Record<string, unknown>>> {

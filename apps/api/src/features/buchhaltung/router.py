@@ -298,6 +298,24 @@ async def update_company_profile(
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
 
 
+@router.post("/companies/{company_id}/stripe-sync")
+def resync_stripe_profile(
+    company_id: str, ctx: _write, service: BuchhaltungServiceDep
+) -> dict:
+    """Die GESPEICHERTEN Stammdaten erneut an den Connected Account übertragen.
+
+    Bisher lief der Stripe-Sync AUSSCHLIESSLICH beim Speichern des Stammdaten-
+    Formulars. Scheiterte er dort (abgelehntes Feld, Stripe kurz weg), gab es aus
+    der Zahlungen-Karte keinen Weg zurück: die Angaben standen im Profil, bei
+    Stripe fehlten sie, und die UI verlangte Felder, die längst ausgefüllt waren.
+    Dieser Endpunkt ist der Wiederanlauf — er ändert KEINE Daten, er sendet den
+    vorhandenen Stand erneut."""
+    try:
+        return service.resync_stripe_profile(ctx)
+    except BuchhaltungError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
 @router.post("/companies/{company_id}/logo")
 async def upload_company_logo(
     company_id: str,

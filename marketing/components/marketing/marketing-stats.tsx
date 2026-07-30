@@ -1,81 +1,52 @@
-// Stats-Sektion (Figma 3-1109) — zweispaltig: links Überschrift + Sterne +
-// 4 Review-Plattform-Logos, rechts 5 weiße Karten mit Kennzahlen.
-// Look ans NextDays-System angepasst (Akzent-Rot statt Glade-Green).
-import { Icon } from "@iconify/react";
+// Stats — die belegbaren Zahlen als große Kacheln.
+//
+// Referenz-UX (hostaway.com): ein zentrierter Eyebrow-Heading-Block, darunter
+// Kacheln in hell getönter Akzentfarbe mit EINER sehr großen Zahl in
+// Akzentfarbe und einer kurzen Erklärzeile darunter. Bewusst ohne
+// Review-Plattform-Badges und Bewertungssterne: zum Launch (01.09.2026)
+// existieren keine Profile/Reviews, die man zeigen dürfte.
 import { useTranslations } from "next-intl";
-import Image from "next/image";
 
-const REVIEW_LOGOS = [
-  { name: "HotelTechReport", src: "/marketing/reviews/hoteltechreport.png" },
-  { name: "Software Advice", src: "/marketing/reviews/software-advice.png" },
-  { name: "Capterra", src: "/marketing/reviews/capterra.png" },
-  { name: "Trustpilot", src: "/marketing/reviews/trustpilot.png" },
-];
+import { SectionHeading } from "@/components/marketing/section-kit";
 
 // Schlüssel + Darstellung; Zahl, Label und Text kommen aus messages (stats.*).
-// `inline` = Zahl und Label in einer Zeile (Figma).
+// `value: false` = Kachel ohne Kennzahl (reine Aussage).
 const STATS = [
-  { key: "laender", inline: false },
-  { key: "kanaele", inline: false },
-  { key: "zufriedenheit", inline: false },
-  { key: "stunden", inline: true },
-  { key: "jahre", inline: true },
+  { key: "laender", value: true },
+  { key: "sprachen", value: true },
+  { key: "kanaele", value: true },
+  { key: "hosting", value: true },
+  { key: "vermieter", value: false },
 ] as const;
 
 export function MarketingStats() {
   const t = useTranslations("stats");
 
   return (
-    <section className="bg-secondary/40">
-      <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 py-20 lg:grid-cols-2">
-        {/* Links: Überschrift, Sterne, Review-Logos */}
-        <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
-          <h2 className="font-display text-3xl font-semibold tracking-tight">
-            {t("heading")}
-          </h2>
+    <section className="bg-background">
+      <div className="mx-auto max-w-7xl px-6 py-24">
+        <SectionHeading eyebrow={t("eyebrow")} heading={t("heading")} sub={t("sub")} />
 
-          <div className="mt-6 flex text-accent">
-            {[0, 1, 2, 3].map((i) => (
-              <Icon key={i} icon="ph:star-fill" className="size-7" />
-            ))}
-            <Icon icon="ph:star-half-fill" className="size-7" />
-          </div>
-
-          <div className="mt-8 grid grid-cols-2 gap-x-10 gap-y-6">
-            {REVIEW_LOGOS.map((logo) => (
-              <Image
-                key={logo.name}
-                src={logo.src}
-                alt={logo.name}
-                width={148}
-                height={41}
-                className="h-7 w-auto opacity-80"
-              />
-            ))}
-          </div>
-        </div>
-
-        {/* Rechts: Karten-Raster */}
-        <div className="grid grid-cols-2 gap-5 sm:grid-cols-3">
+        {/* Eine Reihe für alle fünf Werte — kein 3+2-Rest, der optisch kippt. */}
+        <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           {STATS.map((s) => (
             <div
               key={s.key}
-              className="flex flex-col justify-center rounded-2xl bg-card p-5 shadow-[0_8px_8px_rgba(0,0,0,0.08)]"
+              className="flex flex-col items-center justify-center rounded-3xl bg-surface-accent px-6 py-9 text-center"
             >
-              {s.inline ? (
-                <p className="flex items-baseline gap-2">
-                  <span className="font-display text-4xl font-semibold text-accent">
-                    {t(`${s.key}.value`)}
-                  </span>
-                  <span className="text-base font-medium">{t(`${s.key}.label`)}</span>
-                </p>
-              ) : (
+              {s.value ? (
                 <>
-                  <p className="font-display text-4xl font-semibold text-accent">
+                  <p className="font-display text-4xl font-extrabold text-accent">
                     {t(`${s.key}.value`)}
                   </p>
-                  <p className="mt-1 text-base font-medium">{t(`${s.key}.label`)}</p>
+                  <p className="mt-2 font-display text-base font-semibold">
+                    {t(`${s.key}.label`)}
+                  </p>
                 </>
+              ) : (
+                <p className="font-display text-base font-semibold">
+                  {t(`${s.key}.label`)}
+                </p>
               )}
               <p className="mt-2 text-sm text-muted-foreground">{t(`${s.key}.text`)}</p>
             </div>

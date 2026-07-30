@@ -1,43 +1,51 @@
-// Testimonials — "Was unsere zufriedenen Kunden sagen" (2 Zitat-Karten).
-// Der Stats-Block ist eine eigene Sektion: marketing-stats.tsx (Figma 3-1109).
-import { Icon } from "@iconify/react";
+// Gründerin-Zitat — bewusst KEINE Kundenstimmen und keine Bewertungssterne:
+// das Produkt startet erst am 01.09.2026, es gibt noch keine Kunden, deren
+// Zitate man zeigen könnte. Sobald echte Stimmen vorliegen, wird hier auf eine
+// Mehr-Karten-Ansicht (Karussell wie bei Hostaway) zurückgebaut.
+//
+// Referenz-UX (hostaway.com): Zitat-Sektion auf warmem Grund, Eyebrow über der
+// Überschrift, das Zitat in einer weißen Karte mit dünnem Rand.
+import { Icon } from "@/components/ui/icon";
 import { useTranslations } from "next-intl";
+import Image from "next/image";
 
-// Schlüssel, nicht Texte — Zitat, Name und Ort kommen aus messages
-// (testimonials.*).
-const TESTIMONIALS = ["eins", "zwei"] as const;
+import { SectionHeading } from "@/components/marketing/section-kit";
 
 export function MarketingTestimonials() {
   const t = useTranslations("testimonials");
 
   return (
-    <section id="kunden" className="bg-secondary/40">
-      <div className="mx-auto max-w-7xl px-6 py-20">
-        <h2 className="text-center font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-          {t("heading")}
-        </h2>
+    <section id="kunden" className="bg-surface-warm">
+      <div className="mx-auto max-w-7xl px-6 py-24">
+        <SectionHeading eyebrow={t("eyebrow")} heading={t("heading")} />
 
-        <div className="mt-12 grid gap-6 md:grid-cols-2">
-          {TESTIMONIALS.map((key) => (
-            <figure
-              key={key}
-              className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-8 shadow-sm"
-            >
-              <div className="flex text-accent">
-                {[0, 1, 2, 3, 4].map((i) => (
-                  <Icon key={i} icon="ph:star-fill" className="size-4" />
-                ))}
-              </div>
-              <blockquote className="text-muted-foreground">
-                „{t(`${key}.quote`)}“
-              </blockquote>
-              <figcaption className="mt-auto">
-                <p className="font-semibold">{t(`${key}.name`)}</p>
-                <p className="text-sm text-muted-foreground">{t(`${key}.location`)}</p>
-              </figcaption>
-            </figure>
-          ))}
-        </div>
+        {/* Foto links, Zitat rechts: das echte Bild der Gründerin trägt die
+            Aussage — es ist die einzige Person, die auf dieser Seite spricht. */}
+        <figure className="mx-auto mt-12 grid max-w-5xl items-stretch gap-0 overflow-hidden rounded-3xl bg-card shadow-float-lg md:grid-cols-[minmax(0,18rem)_1fr]">
+          <div className="relative aspect-[4/3] w-full md:aspect-auto md:min-h-[22rem]">
+            <Image
+              src="/marketing/team/jeanine-aagaard.png"
+              alt={t("gruenderin.name")}
+              fill
+              loading="eager"
+              sizes="(min-width: 768px) 18rem, 100vw"
+              className="object-cover object-top"
+            />
+          </div>
+
+          <div className="flex flex-col justify-center gap-5 p-10 sm:p-12">
+            <Icon icon="ph:quotes-fill" className="size-10 text-accent/30" />
+            <blockquote className="font-display text-2xl font-medium leading-snug">
+              „{t("gruenderin.quote")}“
+            </blockquote>
+            <figcaption>
+              <span className="block font-semibold">{t("gruenderin.name")}</span>
+              <span className="block text-sm text-muted-foreground">
+                {t("gruenderin.location")}
+              </span>
+            </figcaption>
+          </div>
+        </figure>
       </div>
     </section>
   );

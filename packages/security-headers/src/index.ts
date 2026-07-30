@@ -38,7 +38,19 @@ const MAPS_IMG = ["https://maps.googleapis.com", "https://maps.gstatic.com", "ht
 export function buildCsp(opts: CspOptions = {}): string {
   const { connectHosts = [], frameAncestors = "'none'", dev = false, googleMaps = false } = opts;
   const scriptExtra = googleMaps ? " " + MAPS_SCRIPT.join(" ") : "";
-  const connect = ["'self'", "https:", ...connectHosts, ...(googleMaps ? MAPS_CONNECT : [])].join(" ");
+  // `wss:` MUSS mit: ein WebSocket-Ziel wird gegen sein EIGENES Schema geprüft,
+  // `https:` deckt es NICHT ab. Ohne diesen Eintrag blockt die CSP jede
+  // Realtime-Verbindung (supabase `wss://…/realtime/v1/websocket`) — die UI sieht
+  // live aus und aktualisiert nie. Im Dev zusätzlich `ws:` (localhost-HMR/
+  // Realtime ohne TLS); in Prod bleibt es bei verschlüsselt.
+  const connect = [
+    "'self'",
+    "https:",
+    "wss:",
+    ...(dev ? ["ws:"] : []),
+    ...connectHosts,
+    ...(googleMaps ? MAPS_CONNECT : []),
+  ].join(" ");
   const img = ["'self'", "data:", "blob:", "https:", ...(googleMaps ? MAPS_IMG : [])].join(" ");
   return [
     "default-src 'self'",

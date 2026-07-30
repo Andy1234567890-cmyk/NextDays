@@ -965,6 +965,27 @@ class BuchhaltungService:
         )
         return self.get_company_profile(ctx)
 
+    def resync_stripe_profile(self, ctx: AuthContext) -> dict:
+        """Gespeicherte Stammdaten erneut an Stripe übertragen (Wiederanlauf).
+
+        Kein Datenschreiben — nur der Sync-Pfad, den sonst nur das Speichern des
+        Formulars auslöst. Gibt das Profil zurück (inkl. ``stripeSyncError``:
+        None = alles angekommen, sonst die von Stripe abgelehnten Felder)."""
+        tenant_id = self._require_tenant(ctx)
+        profile = (
+            self._db.table("tenant_billing_profile")
+            .select("*")
+            .eq("tenant_id", tenant_id)
+            .limit(1)
+            .execute()
+        ).data
+        if not profile:
+            raise BuchhaltungError(
+                "Es sind noch keine Stammdaten gespeichert.", status_code=404
+            )
+        self._ensure_connect_account(tenant_id, profile[0])
+        return self.get_company_profile(ctx)
+
     def _ensure_connect_account(self, tenant_id: str, profile: dict) -> None:
         """Legt — falls noch nicht vorhanden — automatisch einen Stripe Custom
         Connected Account für den Tenant an und überträgt die erfassten Firmen-/
@@ -1027,7 +1048,7 @@ class BuchhaltungService:
             # Firmen-/Inhaberdaten an den Account übertragen (best effort). Die
             # acct_-ID wurde direkt oben in tenant_billing_profile geschrieben →
             # der _require_own_connect_account-Guard findet sie für diesen Tenant.
-            payments.update_connect_account(
+            _status, rejected = payments.sync_connect_fields(
                 tenant_id,
                 account.stripe_account_id,
                 _connect_fields_from_profile(profile),
@@ -1051,7 +1072,10 @@ class BuchhaltungService:
                 tenant_id=tenant_id,
                 stripe_account_id=account.stripe_account_id,
             )
-            self._set_stripe_sync_error(tenant_id, None)
+            self._set_stripe_sync_error(
+                tenant_id,
+                _rejected_fields_message(rejected) if rejected else None,
+            )
         except PaymentsError as exc:
             # Stripe nicht konfiguriert/erreichbar → Profil bleibt gespeichert,
             # Connect kann später (eigene UI) nachgeholt werden. Fehler SICHTBAR
@@ -1094,6 +1118,23 @@ class BuchhaltungService:
         )
 
         first_error: str | None = None
+        # Welche KYC-relevanten Profilfelder sind LEER? Das ist der häufigste
+        # Grund, warum Stripe hinterher „currently_due" meldet — in der Konsole
+        # sichtbar, ohne die Werte selbst zu loggen (PII).
+        log.info(
+            "connect_sync_profile",
+            tenant_id=tenant_id,
+            account=acct_id,
+            leere_felder=[
+                feld for feld in (
+                    "legal_name", "legal_form", "company_street",
+                    "company_house_number", "company_postal_code", "company_city",
+                    "company_country", "email", "phone_number", "website",
+                    "managing_director_first_name", "managing_director_last_name",
+                    "owner_dob", "iban",
+                ) if not profile.get(feld)
+            ],
+        )
 
         def _step(what: str, fn: Callable[[], None]) -> None:
             nonlocal first_error
@@ -1109,8 +1150,18 @@ class BuchhaltungService:
 
         fields = _connect_fields_from_profile(profile)
         if fields:
-            _step("account_update",
-                  lambda: payments.update_connect_account(tenant_id, acct_id, fields))
+            def _sync_fields() -> None:
+                nonlocal first_error
+                _status, rejected = payments.sync_connect_fields(
+                    tenant_id, acct_id, fields
+                )
+                # Stripe hat einzelne Nebenangaben abgelehnt (Telefon gegen
+                # libphonenumber, Website gegen die echte Domain), der Rest ging
+                # durch. Das ist KEIN stiller Erfolg: der Nutzer muss genau diese
+                # Felder korrigieren, sonst bleibt der Account restricted.
+                if rejected and first_error is None:
+                    first_error = _rejected_fields_message(rejected)
+            _step("account_update", _sync_fields)
         # company/non_profit: Vertreter über die Persons-API (individual → None).
         rep = _company_representative_from_profile(profile)
         if rep:
@@ -1696,6 +1747,42 @@ def _connect_fields_from_profile(profile: dict) -> dict:
         fields["business_profile"] = business_profile
 
     return fields
+
+
+# Stripe-Feldpfad → das Feld, das der Nutzer auf /konto ausfüllt. Nur dafür da,
+# aus „business_profile[url]" ein „Website" zu machen — kein Ersatzwert.
+_STRIPE_FIELD_LABELS: dict[str, str] = {
+    "business_profile[url]": "Website",
+    "individual[phone]": "Telefon",
+    "individual[email]": "E-Mail",
+    "individual[first_name]": "Vorname",
+    "individual[last_name]": "Nachname",
+    "individual[dob]": "Geburtsdatum",
+    "individual[address][line1]": "Straße/Hausnummer",
+    "individual[address][city]": "Ort",
+    "individual[address][postal_code]": "Postleitzahl",
+    "individual[address][state]": "Bundesland",
+    "company[name]": "Firmenname",
+    "company[phone]": "Telefon",
+    "company[tax_id]": "Handelsregisternummer",
+    "company[address][line1]": "Straße/Hausnummer",
+    "company[address][city]": "Ort",
+    "company[address][postal_code]": "Postleitzahl",
+}
+
+
+def _rejected_fields_message(rejected: list[str]) -> str:
+    """Von Stripe abgelehnte Einzelfelder in einen Satz fassen, den der Nutzer
+    umsetzen kann. Die übrigen Angaben sind angekommen — deshalb steht hier
+    ausdrücklich, dass NUR diese Felder die Freischaltung blockieren."""
+    teile: list[str] = []
+    for eintrag in rejected:
+        param, _, grund = eintrag.partition(": ")
+        teile.append(f"{_STRIPE_FIELD_LABELS.get(param, param)} ({grund})")
+    return (
+        "Diese Angaben hat der Zahlungsanbieter abgelehnt und sie fehlen deshalb "
+        "noch: " + ", ".join(teile) + ". Bitte korrigieren und erneut speichern."
+    )
 
 
 def _dob_parts(value: object) -> dict | None:

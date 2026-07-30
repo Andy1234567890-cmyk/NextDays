@@ -7,6 +7,8 @@ import localFont from "next/font/local";
 
 import "./globals.css";
 
+import { SupportChat } from "@/components/support-chat";
+
 import type { Metadata } from "next";
 
 // Schriften liegen LOKAL im Repo (marketing/fonts/) — kein Google-Download,
@@ -40,6 +42,8 @@ export default async function RootLayout({
       <body className={`${inter.variable} ${fraunces.variable} antialiased`}>
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}
+          {/* Auf JEDER Seite erreichbar, auch in den Rechtsdokumenten. */}
+          <SupportChat />
         </NextIntlClientProvider>
       </body>
     </html>

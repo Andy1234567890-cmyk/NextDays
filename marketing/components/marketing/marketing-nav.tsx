@@ -1,6 +1,9 @@
-// Marketing-Navbar — sticky Kopfzeile der öffentlichen Landingpage.
-// Layout aus Figma (Logo links, Menü mittig, Sprache + Login + CTA rechts),
-// im NextDays-Look (Schwarz/Rot, Pill-Buttons, Fraunces/Inter, rem).
+// Marketing-Navbar — EINE Zeile: Logo links, Menü mittig, rechts Sprache,
+// Anmelden und der CTA.
+//
+// Hostaway trennt Sprache/Login in eine eigene Utility-Zeile darüber; das war
+// hier kurzzeitig übernommen und ist auf Wunsch zurückgebaut — alles gehört in
+// den Header, keine zweite Leiste.
 "use client";
 
 import { useTranslations } from "next-intl";
@@ -26,18 +29,18 @@ export function MarketingNav() {
   const t = useTranslations("nav");
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur">
-      <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-6 px-6">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
+      <nav className="mx-auto flex h-18 max-w-7xl items-center justify-between gap-6 px-6">
         <Link href="/" className="flex items-center">
           <Logo heightRem={2.25} />
         </Link>
 
-        <ul className="hidden items-center gap-7 md:flex">
+        <ul className="hidden items-center gap-8 md:flex">
           {NAV_LINKS.map((link) => (
             <li key={link.href}>
               <a
                 href={link.href}
-                className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+                className="text-sm font-medium transition-colors hover:text-accent"
               >
                 {t(link.key)}
               </a>
@@ -45,17 +48,17 @@ export function MarketingNav() {
           ))}
         </ul>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <div className="hidden sm:block">
             <LanguageSwitcher />
           </div>
           <Link
             href={LOGIN_URL}
-            className="hidden text-sm font-medium text-foreground transition-colors hover:text-accent sm:block"
+            className="hidden text-sm font-medium transition-colors hover:text-accent sm:block"
           >
             {t("anmelden")}
           </Link>
-          <Button asChild variant="accent" size="sm">
+          <Button asChild variant="accent">
             <Link href={SIGNUP_URL}>{t("kostenlosStarten")}</Link>
           </Button>
         </div>

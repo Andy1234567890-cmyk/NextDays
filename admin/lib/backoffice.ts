@@ -288,6 +288,11 @@ export interface SupportTicket {
   id: string;
   reporter_user_id: string | null;
   reporter_guest_id: string | null;
+  /** Anonymer Melder von der Marketing-Seite (source='web'): kein Konto, die
+   *  Kontaktdaten hängen am Ticket. */
+  reporter_name: string | null;
+  reporter_email: string | null;
+  reporter_phone: string | null;
   tenant_id: string | null;
   tenant_name: string | null;
   subject: string;
@@ -299,8 +304,9 @@ export interface SupportTicket {
   property_id: string | null;
   created_at: string;
   last_message_at: string | null;
-  /** 'chat' = Live-Chat aus dem Dashboard des Betriebs, 'form' = Formular. */
-  source: "form" | "chat";
+  /** 'chat' = Live-Chat aus dem Dashboard des Betriebs, 'form' = Formular,
+   *  'web' = anonyme Anfrage aus dem Widget der Marketing-Seite. */
+  source: "form" | "chat" | "web";
   last_message_preview: string | null;
   last_message_kind: "reporter" | "agent" | null;
   agent_last_read_at: string | null;
@@ -322,7 +328,7 @@ export interface SupportTicketList {
 /** Support-Tickets, zuletzt aktive zuerst. */
 export async function getTickets(params?: {
   status?: TicketStatus;
-  source?: "form" | "chat";
+  source?: "form" | "chat" | "web";
   /** Nur mir zugewiesene Konversationen. */
   mine?: boolean;
   limit?: number;

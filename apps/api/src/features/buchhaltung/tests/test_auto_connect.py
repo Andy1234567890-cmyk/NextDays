@@ -8,6 +8,8 @@ NICHT, wenn Stripe nicht verfügbar ist.
 """
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from src.core.security import AuthContext
 from src.features.buchhaltung.service import (
     BuchhaltungService,
@@ -250,6 +252,7 @@ def test_ensure_connect_account_creates_and_stores() -> None:
     fake_payments.create_connect_account.return_value = MagicMock(
         stripe_account_id="acct_new"
     )
+    fake_payments.sync_connect_fields.return_value = (MagicMock(), [])
     with patch(
         "src.features.payments.service.PaymentsService", return_value=fake_payments
     ):
@@ -257,7 +260,7 @@ def test_ensure_connect_account_creates_and_stores() -> None:
     # Account-ID wurde im Profil gespeichert.
     assert db.store["tenant_billing_profile"][0]["stripe_account_id"] == "acct_new"
     # Firmendaten + IBAN wurden übertragen.
-    fake_payments.update_connect_account.assert_called_once()
+    fake_payments.sync_connect_fields.assert_called_once()
     fake_payments.set_external_account.assert_called_once()
 
 
@@ -273,13 +276,14 @@ def test_ensure_connect_account_is_idempotent_but_syncs_fields() -> None:
     svc = BuchhaltungService(db)
     with patch("src.features.payments.service.PaymentsService") as cls:
         fake_payments = cls.return_value
+        fake_payments.sync_connect_fields.return_value = (MagicMock(), [])
         svc._ensure_connect_account(  # noqa: SLF001
             "t1", {**_profile_row(), "website": "https://muster.example"}
         )
     fake_payments.create_connect_account.assert_not_called()
     fake_payments.set_external_account.assert_not_called()
-    fake_payments.update_connect_account.assert_called_once()
-    tenant_id, account_id, fields = fake_payments.update_connect_account.call_args.args
+    fake_payments.sync_connect_fields.assert_called_once()
+    tenant_id, account_id, fields = fake_payments.sync_connect_fields.call_args.args
     assert tenant_id == "t1"
     assert account_id == "acct_exists"
     assert fields["business_profile"]["url"] == "https://muster.example"
@@ -302,7 +306,8 @@ def test_company_profile_roundtrip_includes_kyc_fields() -> None:
     svc = BuchhaltungService(db)
     # Auto-Connect ist hier nicht der Fokus → Stripe weg-mocken (ohne E-Mail/Land
     # würde er ohnehin übersprungen, aber wir setzen beides für Realismus).
-    with patch("src.features.payments.service.PaymentsService"):
+    with patch("src.features.payments.service.PaymentsService") as cls:
+        cls.return_value.sync_connect_fields.return_value = (MagicMock(), [])
         svc.update_company_profile(
             _CTX,
             {
@@ -341,3 +346,57 @@ def test_ensure_connect_account_survives_stripe_error() -> None:
         # Darf NICHT werfen — Firmenprofil bleibt gespeichert.
         svc._ensure_connect_account("t1", _profile_row())  # noqa: SLF001
     assert "stripe_account_id" not in db.store["tenant_billing_profile"][0]
+
+
+def test_rejected_field_is_reported_but_sync_continues() -> None:
+    """Stripe weist EIN Nebenfeld ab (z. B. eine Website-Domain, die es nicht
+    gibt) — die übrigen KYC-Daten sind trotzdem angekommen, und der Grund landet
+    sichtbar im Profil. Vorher kippte ein solches Feld das gesamte Update: keine
+    einzige Pflichtangabe kam bei Stripe an und die UI behauptete weiterhin, es
+    fehlten Angaben."""
+    db = _DB()
+    db.store["tenant_billing_profile"].append(
+        {"tenant_id": "t1", "stripe_account_id": "acct_exists"}
+    )
+    svc = BuchhaltungService(db)
+    with patch("src.features.payments.service.PaymentsService") as cls:
+        cls.return_value.sync_connect_fields.return_value = (
+            MagicMock(),
+            ["business_profile[url]: Not a valid URL"],
+        )
+        svc._ensure_connect_account(  # noqa: SLF001
+            "t1", {**_profile_row(), "website": "https://gibtesnicht.invalid"}
+        )
+    fehler = db.store["tenant_billing_profile"][0]["stripe_sync_error"]
+    assert "Website" in fehler
+    assert "Not a valid URL" in fehler
+
+
+def test_resync_stripe_profile_resends_saved_data() -> None:
+    """Wiederanlauf aus der Zahlungen-Karte: die GESPEICHERTEN Stammdaten gehen
+    erneut an Stripe, ohne dass der Nutzer das Formular anfassen muss. Vorher lief
+    der Sync nur beim Speichern — scheiterte er dort, war die Karte eine Sackgasse
+    (Angaben im Profil vorhanden, bei Stripe nicht)."""
+    db = _DB()
+    db.store["tenant_billing_profile"].append(
+        {**_profile_row(), "stripe_account_id": "acct_exists"}
+    )
+    svc = BuchhaltungService(db)
+    with patch("src.features.payments.service.PaymentsService") as cls:
+        cls.return_value.sync_connect_fields.return_value = (MagicMock(), [])
+        svc.resync_stripe_profile(_CTX)
+    cls.return_value.sync_connect_fields.assert_called_once()
+    _tid, acct, fields = cls.return_value.sync_connect_fields.call_args.args
+    assert acct == "acct_exists"
+    assert fields["individual"]["email"] == "host@example.com"
+
+
+def test_resync_stripe_profile_without_profile_is_404() -> None:
+    """Ohne gespeicherte Stammdaten gibt es nichts zu senden — klarer 404 statt
+    eines leeren Stripe-Updates."""
+    from src.features.buchhaltung.service import BuchhaltungError
+
+    svc = BuchhaltungService(_DB())
+    with pytest.raises(BuchhaltungError) as exc:
+        svc.resync_stripe_profile(_CTX)
+    assert exc.value.status_code == 404

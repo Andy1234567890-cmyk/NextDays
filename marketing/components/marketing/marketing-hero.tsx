@@ -1,143 +1,91 @@
-// Hero — Vollbild-Hintergrund mit dunklem Overlay, zentrierter Headline,
-// CTAs und Channel-Logo-Leiste. Ähnlich ..-Stil.
-// Hintergrundbild: ersetze /marketing/hero-bg.jpg durch ein echtes Foto.
-import { Icon } from "@iconify/react";
+// Hero — heller, zweispaltiger Einstieg: links die Botschaft, rechts das
+// Produkt.
+//
+// Referenz-UX (hostaway.com, ausgewertet 30.07.2026): kein dunkler
+// Vollbild-Hero, sondern eine helle Fläche mit linksbündigem Textblock
+// (Eyebrow → Headline → Unterzeile → Trust-Zeile → zwei Vollton-CTAs) und
+// dem Produkt als geschichtete Teilansichten rechts. Der Besucher sieht in
+// der ersten Sekunde, WAS die Software ist — nicht nur einen Claim.
+// Übernommen ist die Anordnung; Farben, Pill-Buttons und Fraunces bleiben
+// myNextDays.
+import { Icon } from "@/components/ui/icon";
 import { useTranslations } from "next-intl";
-import Image from "next/image";
 import Link from "next/link";
 
+import { ProductMockup } from "@/components/marketing/product-mockup";
 import { Button } from "@/components/ui/button";
 import { SIGNUP_URL } from "@/lib/app-url";
 
-const CHANNELS = [
-  { src: "/marketing/channels/booking-com.svg", alt: "Booking.com" },
-  { src: "/marketing/channels/airbnb.png", alt: "Airbnb" },
-  { src: "/marketing/channels/expedia.svg", alt: "Expedia" },
-  { src: "/marketing/channels/google.svg", alt: "Google" },
-  { src: "/marketing/channels/agoda.svg", alt: "Agoda" },
-  { src: "/marketing/channels/tripadvisor.svg", alt: "Tripadvisor" },
-];
+// Trust-Streifen unter der Unterzeile — Schlüssel, nicht Texte (hero.trust*).
+const TRUST = ["trustNeu", "trustVermieter", "trustAirsmil", "trustEu"] as const;
 
 export function MarketingHero() {
   const t = useTranslations("hero");
 
-  // 100svh minus Nav (h-16 = 4rem): der Hero füllt den restlichen Viewport
-  // exakt — kein weißer Streifen der Folgesektion unter der Kanal-Leiste.
   return (
-    <section className="relative flex min-h-[calc(100svh-4rem)] flex-col items-center overflow-hidden bg-primary">
-      {/* Hintergrundbild — lege eine Datei unter /public/marketing/hero-bg.jpg ab,
-          um sie zu aktivieren. Bis dahin zeigt bg-primary (Schwarz). */}
-      {/* <Image
-        src="/marketing/hero-bg.jpg"
-        alt=""
-        fill
-        priority
-        className="object-cover object-center opacity-50"
-      /> */}
+    <section className="relative overflow-hidden bg-gradient-to-b from-surface-warm to-background">
+      <div className="mx-auto grid max-w-7xl items-center gap-16 px-6 py-20 lg:grid-cols-[1fr_1.1fr] lg:gap-12 lg:py-28">
+        {/* Links: Botschaft */}
+        <div>
+          <p className="eyebrow">{t("eyebrow")}</p>
 
-      {/* Dunkles Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/80" />
+          <h1 className="mt-5 font-display text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
+            {t("headlinePre")}{" "}
+            <span className="relative text-accent">
+              {t("headlineHighlight")}
+              <svg
+                aria-hidden
+                viewBox="0 0 300 20"
+                className="absolute -bottom-2 left-0 w-full text-accent"
+                preserveAspectRatio="none"
+              >
+                <path
+                  d="M2 14 C 80 4, 220 4, 298 12"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </span>
+            ,<br />
+            {t("headlinePost")}
+          </h1>
 
-      {/* Inhalt — flex-1 zentriert ihn im Raum ÜBER der Kanal-Leiste,
-          die Leiste selbst sitzt dadurch immer am unteren Sektionsrand. */}
-      <div className="relative z-10 mx-auto flex max-w-4xl flex-1 flex-col items-center justify-center px-6 pt-16 pb-12 text-center">
-        {/* Credibility */}
-        <div className="mb-8 flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-          <div className="flex items-center gap-1.5">
-            <div className="flex text-yellow-400">
-              {[0, 1, 2, 3].map((i) => (
-                <Icon key={i} icon="ph:star-fill" className="size-4" />
-              ))}
-              <Icon icon="ph:star-half-fill" className="size-4" />
-            </div>
-            <span className="text-sm font-semibold text-white">{t("bewertung")}</span>
-            <span className="text-sm text-white/60">{t("bewertungenAnzahl")}</span>
+          <p className="mt-8 max-w-xl text-lg leading-relaxed text-muted-foreground">
+            {t("subline")}
+          </p>
+
+          {/* Trust-Streifen — belegbare Aussagen statt Bewertungssterne: das
+              Produkt startet erst am 01.09.2026, es gibt noch keine Reviews. */}
+          <ul className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2">
+            {TRUST.map((key) => (
+              <li
+                key={key}
+                className="flex items-center gap-2 text-sm font-medium text-foreground"
+              >
+                <Icon icon="ph:check-circle-fill" className="size-4 text-accent" />
+                {t(key)}
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-10 flex flex-wrap items-center gap-4">
+            <Button asChild size="lg" variant="accent" className="min-w-48 text-base">
+              <Link href={SIGNUP_URL}>{t("ctaTrial")}</Link>
+            </Button>
+            <Button asChild size="lg" variant="default" className="min-w-40 text-base">
+              <Link href="#demo" className="gap-2">
+                <Icon icon="ph:play-circle" className="size-5" />
+                {t("ctaDemo")}
+              </Link>
+            </Button>
           </div>
-          <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-medium text-white/90 backdrop-blur-sm">
-            {t("empfohlen")}
-          </span>
         </div>
 
-        {/* Headline */}
-        <h1 className="font-display text-5xl font-extrabold leading-tight tracking-tight text-white sm:text-6xl lg:text-7xl">
-          {t("headlinePre")}{" "}
-          <span className="relative text-accent">
-            {t("headlineHighlight")}
-            <svg
-              aria-hidden
-              viewBox="0 0 300 20"
-              className="absolute -bottom-2 left-0 w-full text-accent"
-              preserveAspectRatio="none"
-            >
-              <path
-                d="M2 14 C 80 4, 220 4, 298 12"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-              />
-            </svg>
-          </span>
-          ,<br />
-          {t("headlinePost")}
-        </h1>
-
-        {/* Subline */}
-        <p className="mt-7 max-w-xl text-lg text-white/70">
-          {t("subline")}
-        </p>
-
-        {/* CTAs */}
-        <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-          <Button asChild size="lg" variant="accent" className="min-w-48 text-base">
-            <Link href={SIGNUP_URL}>{t("ctaTrial")}</Link>
-          </Button>
-          <Button
-            asChild
-            size="lg"
-            variant="outline"
-            className="min-w-40 border-white/30 bg-white/10 text-base text-white backdrop-blur-sm hover:bg-white/20 hover:text-white"
-          >
-            <Link href="#demo" className="gap-2">
-              <Icon icon="ph:play-circle" className="size-5" />
-              {t("ctaDemo")}
-            </Link>
-          </Button>
-        </div>
-      </div>
-
-      {/* Channel-Karten — dunkel gestylt im Hero (die frühere helle
-          Kanal-Sektion ist hierher gewandert; id="kanaele" hält den
-          Nav-Anker). Logos per brightness-0+invert einheitlich weiß. */}
-      <div
-        id="kanaele"
-        className="relative z-10 w-full border-t border-white/10 bg-black/40 py-8 backdrop-blur-sm"
-      >
-        <p className="mb-2 text-center text-xs font-medium uppercase tracking-widest text-white/40">
-          {t("kanaeleLabel")}
-        </p>
-        <p className="mb-6 text-center text-sm text-white/70">
-          {t("kanaeleText")}
-        </p>
-        {/* Weiße Karten mit Original-Logofarben: die Figma-Exporte bringen
-            eigene weiße Hintergrund-Flächen mit — auf weißer Karte unsichtbar,
-            jeder CSS-Filter würde sie dagegen als Blöcke sichtbar machen. */}
-        <div className="mx-auto flex w-full max-w-7xl flex-wrap items-stretch justify-center gap-4 px-6">
-          {CHANNELS.map((ch) => (
-            <div
-              key={ch.alt}
-              className="flex h-[4.25rem] flex-1 items-center justify-center rounded-2xl bg-white px-6 shadow-sm transition hover:shadow-md"
-              style={{ minWidth: "10rem", maxWidth: "13.33rem" }}
-            >
-              <Image
-                src={ch.src}
-                alt={ch.alt}
-                width={181}
-                height={68}
-                className="h-full w-auto object-contain py-3"
-              />
-            </div>
-          ))}
+        {/* Rechts: Produkt */}
+        <div className="pb-12 lg:pb-0">
+          <ProductMockup />
         </div>
       </div>
     </section>

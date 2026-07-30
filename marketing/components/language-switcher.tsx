@@ -12,7 +12,7 @@
 //
 // Eigenes Modal ohne Radix: diese App baut BEWUSST isoliert (ADR-0016) und
 // nutzt keine @nextdays/*-Packages.
-import { Icon } from "@iconify/react";
+import { Icon } from "@/components/ui/icon";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";

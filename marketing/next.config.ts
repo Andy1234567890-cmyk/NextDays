@@ -23,13 +23,32 @@ const nextConfig: NextConfig = {
   // Packages — die kleine CSP-Kopie ist hier die dokumentierte Ausnahme, kein
   // Wurzel-4-Verstoß. Statische Marketing-Seite ohne Backend/Server Actions.
   async headers() {
+    // Der Support-Chat spricht direkt mit der API (siehe lib/config.ts) — ihre
+    // Origin muss in connect-src stehen, sonst blockt der Browser den Aufruf.
+    const apiOrigin = (() => {
+      try {
+        return new URL(
+          process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000",
+        ).origin;
+      } catch {
+        return "";
+      }
+    })();
+    // Dev-only: Next' react-refresh wertet Code per eval aus. Ohne diese
+    // Ausnahme scheitert die Hydration im Dev-Server komplett — die Seite sieht
+    // fertig aus, aber NICHTS ist klickbar (Feature-Tabs, Formular). In
+    // Produktion bleibt die CSP unverändert streng.
+    const scriptSrc =
+      process.env.NODE_ENV === "production"
+        ? "script-src 'self' 'unsafe-inline'"
+        : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
     const csp = [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline'",
+      scriptSrc,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' https:",
+      `connect-src 'self' https:${apiOrigin && !apiOrigin.startsWith("https:") ? ` ${apiOrigin}` : ""}`,
       "frame-ancestors 'none'",
       "base-uri 'self'",
       "form-action 'self'",

@@ -45,6 +45,25 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
+  /* Marketing-Flächen: warmer Sektions-Rhythmus (hell → warm → hell).
+     Aus dem Logo-Rot abgeleitete, sehr helle Volltonflächen — damit die
+     Landingpage Abschnitte optisch trennt, ohne eine zweite Palette
+     einzuführen. Nur hier verwenden, nicht im Dashboard. */
+  --color-surface-warm: var(--surface-warm);
+  --color-surface-accent: var(--surface-accent);
+
+  /* Weiche, warm getönte Schatten (kein neutrales Schwarz-Grau). */
+  --shadow-soft: 0 0.625rem 4rem rgb(184 32 40 / 0.06);
+  --shadow-card: 0 0.125rem 0.75rem rgb(184 32 40 / 0.05);
+  /* „Schwebend": zwei Ebenen — eine enge Kontaktkante und ein weit
+     gestreuter Kern, dadurch löst sich die Karte sichtbar von der Fläche. */
+  --shadow-float:
+    0 0.125rem 0.5rem rgb(24 12 14 / 0.05),
+    0 1.5rem 3rem -0.75rem rgb(24 12 14 / 0.16);
+  --shadow-float-lg:
+    0 0.25rem 0.75rem rgb(24 12 14 / 0.06),
+    0 2.5rem 4.5rem -1rem rgb(24 12 14 / 0.22);
+
   /* Charts (Umsatzentwicklung, Kanalverteilung — Lastenheft §2.1). */
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -101,6 +120,9 @@
   --input: #e4e4e7;
   --ring: #b82028;
 
+  --surface-warm: #fdf7f6;     /* Logo-Rot, sehr stark aufgehellt */
+  --surface-accent: #f9e9ea;   /* Logo-Rot als helle Volltonfläche */
+
   --chart-1: #b82028;
   --chart-2: #0a0a0a;
   --chart-3: #2563eb;
@@ -143,6 +165,9 @@
   --input: #27272a;
   --ring: #e0454d;
 
+  --surface-warm: #171314;
+  --surface-accent: #2a1c1e;
+
   --chart-1: #e0454d;
   --chart-2: #fafafa;
   --chart-3: #60a5fa;
@@ -183,4 +208,46 @@ body {
 h1, h2, h3 {
   font-family: var(--font-fraunces), sans-serif;
   font-weight: 800; /* Extra Bold — Fraunces ist Variable Font bis 900 */
+}
+
+/* Wandernde Wellenkanten: das SVG ist doppelt so breit wie die Sektion und
+   enthält dieselbe Kurve zweimal — die Verschiebung um exakt die halbe Breite
+   läuft dadurch nahtlos endlos. `prefers-reduced-motion` schaltet sie ab. */
+@keyframes wave-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.wave-drift {
+  animation: wave-drift 24s linear infinite;
+}
+
+/* Zweite Kante etwas langsamer und gegenläufig — sonst wirken obere und
+   untere Welle wie ein starr verschobener Block. */
+.wave-drift-slow {
+  animation: wave-drift 34s linear infinite reverse;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wave-drift,
+  .wave-drift-slow {
+    animation: none;
+  }
+}
+
+/* Eyebrow — die kleine Zeile ÜBER jeder Sektions-Überschrift. Gibt der
+   Landingpage einen gleichmäßigen Lese-Rhythmus (Kategorie → Aussage →
+   Erklärung). Gesperrte Versalien, Inter, nicht die Display-Schrift. */
+.eyebrow {
+  font-family: var(--font-inter), sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
 }

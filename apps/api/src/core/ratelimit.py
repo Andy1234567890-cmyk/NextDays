@@ -135,10 +135,24 @@ class RateLimiter:
 
 def build_redis(redis_url: str) -> aioredis.Redis:
     """Async-Redis-Client für den Limiter. Kurze Timeouts, damit ein hängendes
-    Redis den Request-Pfad nicht blockiert (Backpressure-Geist)."""
+    Redis den Request-Pfad nicht blockiert (Backpressure-Geist).
+
+    ``health_check_interval`` + ``retry_on_timeout`` sind hier NICHT optional:
+    Verbindungen aus dem Pool, die länger ungenutzt lagen, sind serverseitig
+    (Redis ``timeout``, NAT, Container-Neustart) oft schon tot. Ohne Health-Check
+    wird so eine Leiche wiederverwendet, läuft in den 0,25-s-``socket_timeout``
+    und meldet ``TimeoutError`` — auf sensiblen Pfaden wird daraus fail-closed
+    ein 503, obwohl Redis längst wieder erreichbar ist. Genau dieses Muster gab
+    sporadische 503 auf ``/payments/connect/accounts/…``. Der Health-Check prüft
+    die Verbindung vor der Nutzung, der Retry fängt den Rest ab; Worst Case bleibt
+    mit einem Wiederholversuch bei 0,5 s statt eines harten Fehlers.
+    """
     return aioredis.from_url(
         redis_url,
         socket_connect_timeout=0.25,
         socket_timeout=0.25,
+        socket_keepalive=True,
+        health_check_interval=30,
+        retry_on_timeout=True,
         decode_responses=True,
     )

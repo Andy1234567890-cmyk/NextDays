@@ -1,6 +1,6 @@
 // Footer — dunkler Block mit Link-Spalten, App-Store-Badges, Sprache,
 // Rechtshinweisen und Social-Links. Figma: schwarzer Footer am Seitenende.
-import { Icon } from "@iconify/react";
+import { Icon } from "@/components/ui/icon";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 
@@ -35,7 +35,7 @@ const SOCIALS = [
   { icon: "ph:instagram-logo", label: "Instagram" },
   { icon: "ph:youtube-logo", label: "YouTube" },
   { icon: "ph:linkedin-logo", label: "LinkedIn" },
-];
+] as const;
 
 // Übersetzungsschlüssel je Rechtsdokument — die Registry liefert die Route,
 // der Anzeigetext kommt aus messages/<locale>.json (footer.*).

@@ -74,7 +74,7 @@ const BAUSTEINE: { kurz: string; text: string }[] = [
 
 type Filter = {
   status: TicketStatus | "alle";
-  source: "form" | "chat" | "alle";
+  source: "form" | "chat" | "web" | "alle";
   mine: boolean;
 };
 
@@ -159,9 +159,9 @@ export function SupportKonsole({
                       )}
                     </span>
                     <span className="truncate text-xs text-muted-foreground">
-                      {t.tenant_name ??
-                        (t.reporter_guest_id ? "Plattform-Gast" : "—")}
+                      {melderName(t)}
                       {t.source === "chat" ? " · Chat" : ""}
+                      {t.source === "web" ? " · Website" : ""}
                       {" · "}
                       {PRIO_LABEL[t.priority] ?? t.priority}
                     </span>
@@ -197,10 +197,30 @@ export function SupportKonsole({
   );
 }
 
+/** Wer meldet? Betrieb, Plattform-Gast oder anonymer Website-Besucher. */
+function melderName(ticket: {
+  tenant_name: string | null;
+  reporter_guest_id: string | null;
+  reporter_name: string | null;
+}): string {
+  if (ticket.tenant_name) return ticket.tenant_name;
+  if (ticket.reporter_name) return ticket.reporter_name;
+  if (ticket.reporter_guest_id) return "Plattform-Gast";
+  return "—";
+}
+
+const KANAL_TEXT: Record<"form" | "chat" | "web", string> = {
+  form: " · Formular",
+  chat: " · Live-Chat",
+  web: " · Website-Anfrage",
+};
+
 const KANAL_LABEL: Record<Filter["source"], string> = {
   alle: "Alle Kanäle",
   chat: "Chat",
   form: "Formular",
+  // Anfrage aus dem Widget der Marketing-Seite: ein Interessent OHNE Konto.
+  web: "Website",
 };
 
 /** Aktuelle Filter in einer Zeile — die Liste soll ohne Klick erklärbar sein. */
@@ -276,7 +296,7 @@ function FilterMenue({
           <p className="mt-1 border-t border-border px-2 pb-1 pt-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-muted-foreground">
             Kanal
           </p>
-          {(["alle", "chat", "form"] as const).map((q) => (
+          {(["alle", "chat", "web", "form"] as const).map((q) => (
             <MenuEintrag
               key={q}
               aktiv={filter.source === q}
@@ -463,9 +483,8 @@ function Verlauf({
           <div className="min-w-0 flex-1">
             <h2 className="truncate text-sm font-semibold">{ticket.subject}</h2>
             <p className="mt-0.5 truncate text-xs text-muted-foreground">
-              {ticket.tenant_name ??
-                (ticket.reporter_guest_id ? "Plattform-Gast" : "—")}
-              {ticket.source === "chat" ? " · Live-Chat" : " · Formular"}
+              {melderName(ticket)}
+              {KANAL_TEXT[ticket.source]}
               {ticket.category ? ` · ${ticket.category}` : ""}
             </p>
           </div>
@@ -614,13 +633,43 @@ function Kontext({
         >
           {ticket.tenant_name ?? ticket.tenant_id}
         </a>
-      ) : ticket.reporter_guest_id ? (
-        "Plattform-Gast"
       ) : (
-        "—"
+        melderName(ticket)
       ),
     },
-    { label: "Kanal", wert: ticket.source === "chat" ? "Live-Chat" : "Formular" },
+    // Website-Anfragen haben kein Konto: E-Mail und Telefon sind der EINZIGE
+    // Rückkanal, sobald der Besucher die Seite verlassen hat.
+    ...(ticket.reporter_email
+      ? [
+          {
+            label: "E-Mail",
+            wert: (
+              <a
+                href={`mailto:${ticket.reporter_email}`}
+                className="underline-offset-4 hover:underline"
+              >
+                {ticket.reporter_email}
+              </a>
+            ),
+          },
+        ]
+      : []),
+    ...(ticket.reporter_phone
+      ? [
+          {
+            label: "Telefon",
+            wert: (
+              <a
+                href={`tel:${ticket.reporter_phone.replace(/\s+/g, "")}`}
+                className="underline-offset-4 hover:underline"
+              >
+                {ticket.reporter_phone}
+              </a>
+            ),
+          },
+        ]
+      : []),
+    { label: "Kanal", wert: KANAL_LABEL[ticket.source] },
     { label: "Thema", wert: ticket.category ?? "—" },
     {
       label: "Priorität",

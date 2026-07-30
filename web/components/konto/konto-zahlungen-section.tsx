@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 
 import { PaymentsActivation } from "@/components/zahlungen/payments-activation";
 import { getMe } from "@/lib/auth";
+import { getFirmenProfil } from "@/lib/firmenprofil";
 import {
   getConnectStatus,
   getStoredConnectAccountId,
@@ -26,6 +27,10 @@ type Loaded = {
   accountId: string | null;
   status: ConnectStatus | null;
   statusError: string | null;
+  // Letzter Ablehnungsgrund des Zahlungsanbieters (stripe_sync_error). Ohne ihn
+  // sah der Nutzer nur „es fehlen Pflichtangaben", obwohl die Angaben da sind
+  // und Stripe genau EINE davon (z. B. die Website) zurückgewiesen hat.
+  syncError: string | null;
 };
 
 export function KontoZahlungenSection() {
@@ -43,6 +48,7 @@ export function KontoZahlungenSection() {
           accountId: null,
           status: null,
           statusError: null,
+          syncError: null,
         });
         return;
       }
@@ -50,12 +56,17 @@ export function KontoZahlungenSection() {
       let accountId: string | null = null;
       let status: ConnectStatus | null = null;
       let statusError: string | null = null;
+      let syncError: string | null = null;
       if (canManage && me.tenant_id) {
         accountId = await getStoredConnectAccountId();
         if (accountId) {
           const res = await getConnectStatus(accountId);
           if (res.ok) status = res.data;
           else statusError = res.error;
+          const profil = await getFirmenProfil();
+          if (profil.ok && typeof profil.data.stripeSyncError === "string") {
+            syncError = profil.data.stripeSyncError;
+          }
         }
       }
       if (!active) return;
@@ -65,6 +76,7 @@ export function KontoZahlungenSection() {
         accountId,
         status,
         statusError,
+        syncError,
       });
     })();
     return () => {
@@ -116,6 +128,7 @@ export function KontoZahlungenSection() {
             accountId={state.accountId}
             initialStatus={state.status}
             initialStatusError={state.statusError}
+            syncError={state.syncError}
           />
         </>
       )}

@@ -339,3 +339,86 @@ def test_bewertung_nur_nach_abschluss() -> None:
     with pytest.raises(SupportError) as exc:
         SupportService(db=db).rate("tk1", rating=5, comment=None, user_id="u1")
     assert exc.value.status_code == 409
+
+
+# --- Anonyme Website-Besucher ------------------------------------------------
+
+
+def _besucher_zeile(mock: MagicMock, rows: list[dict]) -> None:
+    """Die Token-Abfrage (select→eq(hash)→limit) belegen."""
+    kette = mock.select.return_value.eq.return_value.limit.return_value
+    kette.execute.return_value.data = rows
+
+
+def test_public_detail_ohne_token_ist_none() -> None:
+    """Leeres Token darf nie eine Konversation aufschließen."""
+    assert SupportService(db=_db()).public_detail("") is None
+
+
+def test_public_detail_unbekanntes_token_ist_none() -> None:
+    """Ein unbekanntes Token ist von einem fremden nicht unterscheidbar."""
+    db = _db()
+    tickets = MagicMock()
+    _besucher_zeile(tickets, [])
+    db.table.side_effect = lambda n: tickets
+
+    assert SupportService(db=db).public_detail("irgendwas") is None
+
+
+def test_public_detail_sucht_ueber_hash_nie_ueber_klartext() -> None:
+    """In der DB liegt nur der SHA-256 — das Klartext-Token nie."""
+    import hashlib
+
+    token = "geheimes-token"
+    gehasht = hashlib.sha256(token.encode()).hexdigest()
+
+    db = _db()
+    tickets = MagicMock()
+    _besucher_zeile(tickets, [
+        {"id": "tk9", "status": "open", "visitor_token_hash": gehasht}
+    ])
+    messages = MagicMock()
+    _verlauf_rows(messages, [])
+    db.table.side_effect = lambda n: tickets if n == "support_tickets" else messages
+
+    res = SupportService(db=db).public_detail(token)
+
+    assert res is not None
+    assert res.ticket_id == "tk9"
+    # Gefiltert wurde mit dem Hash, nicht mit dem Klartext.
+    gefiltert = tickets.select.return_value.eq.call_args[0]
+    assert gefiltert == ("visitor_token_hash", gehasht)
+
+
+def test_public_detail_filtert_interne_notizen() -> None:
+    """Auch der Besucher darf interne Team-Notizen nie sehen."""
+    import hashlib
+
+    token = "tok"
+    db = _db()
+    tickets = MagicMock()
+    _besucher_zeile(tickets, [
+        {
+            "id": "tk9",
+            "status": "open",
+            "visitor_token_hash": hashlib.sha256(token.encode()).hexdigest(),
+        }
+    ])
+    messages = MagicMock()
+    _verlauf_rows(messages, [])
+    db.table.side_effect = lambda n: tickets if n == "support_tickets" else messages
+
+    SupportService(db=db).public_detail(token)
+
+    innere = messages.select.return_value.eq.return_value.eq
+    assert innere.call_args[0] == ("internal", False)
+
+
+def test_reply_public_unbekanntes_token_ist_none() -> None:
+    """Ohne gültiges Token wird nichts in einen fremden Verlauf geschrieben."""
+    db = _db()
+    tickets = MagicMock()
+    _besucher_zeile(tickets, [])
+    db.table.side_effect = lambda n: tickets
+
+    assert SupportService(db=db).reply_public("fremd", "hallo") is None

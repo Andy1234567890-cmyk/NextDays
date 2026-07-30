@@ -69,6 +69,11 @@ class Settings(BaseSettings):
     # könnte ein einzelner eingeloggter Nutzer erhebliche Kosten verursachen —
     # Wurzel 8 verlangt hier einen eigenen, strengen Bucket.
     rate_limit_ai: str = "20/60"
+
+    # Öffentlicher Support-Chat der Marketing-Seite (ohne Login). 20 Aufrufe je
+    # Minute und IP reichen für eine tippende Person samt Verlaufs-Abrufen und
+    # sind für Massen-Spam zu wenig.
+    rate_limit_public_support: str = "20/60"
     # Vertrauenswürdige Proxy-Hops für die X-Forwarded-For-Auswertung. Anzahl der
     # von RECHTS zu überspringenden Proxy-IPs; die echte Client-IP ist das
     # (1+trusted_hops)-letzte XFF-Element.

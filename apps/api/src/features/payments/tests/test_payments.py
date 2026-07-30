@@ -1118,3 +1118,102 @@ def test_period_end_ohne_daten_ist_none() -> None:
     from src.features.payments.webhook import _period_end
 
     assert _period_end({"id": "sub_1", "items": {"data": []}}) is None
+
+
+# --- toleranter Feld-Sync (ein abgelehntes Feld kippt nicht alles) -----------
+
+def _rejecting_stripe(bad_param: str, message: str):  # noqa: ANN202
+    """Fake-Stripe, der GENAU ein Feld ablehnt und danach durchlässt — wie die
+    echte Stripe-Validierung von Telefonnummer/Website."""
+    from stripe import InvalidRequestError
+
+    calls: list[dict] = []
+
+    class _Accounts:
+        def update(self, _acct, params=None, **_k):  # noqa: ANN001, ANN003, ANN202
+            calls.append(params or {})
+            head, _, rest = bad_param.partition("[")
+            node = (params or {}).get(head)
+            if rest:
+                for teil in [p.rstrip("]") for p in rest.split("[") if p]:
+                    if not isinstance(node, dict) or teil not in node:
+                        node = None
+                        break
+                    node = node[teil]
+            if node is not None:
+                raise InvalidRequestError(message, param=bad_param, http_status=400)
+            return MagicMock(
+                id=_acct, charges_enabled=False, payouts_enabled=False,
+                details_submitted=True,
+                requirements=MagicMock(currently_due=[], disabled_reason=None),
+            )
+
+        def retrieve(self, acct, **_k):  # noqa: ANN001, ANN003, ANN202
+            return MagicMock(
+                id=acct, charges_enabled=False, payouts_enabled=False,
+                details_submitted=True,
+                requirements=MagicMock(currently_due=[], disabled_reason=None),
+            )
+
+    class _V1:
+        accounts = _Accounts()
+
+    class _FakeStripe:
+        v1 = _V1()
+
+    return _FakeStripe(), calls
+
+
+def test_sync_connect_fields_drops_only_the_rejected_field() -> None:
+    """Stripe lehnt die Website ab → sie fliegt aus dem Update, die KYC-Daten
+    gehen trotzdem raus. Vorher ging der GESAMTE Request verloren und der Account
+    blieb ohne eine einzige Pflichtangabe restricted."""
+    stripe_fake, calls = _rejecting_stripe("business_profile[url]", "Not a valid URL")
+    svc = PaymentsService(service_client=_connect_db("acct_x"), stripe=stripe_fake)
+    _status, rejected = svc.sync_connect_fields(
+        "t-1", "acct_x",
+        {
+            "business_type": "individual",
+            "individual": {"first_name": "Max", "last_name": "Muster"},
+            "business_profile": {"name": "Muster", "url": "https://gibtsnicht.invalid"},
+        },
+    )
+    assert rejected == ["business_profile[url]: Not a valid URL"]
+    # Zweiter Versuch: url raus, alles andere noch da.
+    assert "url" not in calls[-1]["business_profile"]
+    assert calls[-1]["individual"]["first_name"] == "Max"
+    assert calls[-1]["business_profile"]["name"] == "Muster"
+
+
+def test_sync_connect_fields_removes_empty_parent() -> None:
+    """War das abgelehnte Feld das EINZIGE im Block, fliegt der leere Block mit —
+    ein leeres `business_profile: {}` würde Stripe erneut abweisen (Endlosschleife)."""
+    stripe_fake, calls = _rejecting_stripe("business_profile[url]", "Not a valid URL")
+    svc = PaymentsService(service_client=_connect_db("acct_x"), stripe=stripe_fake)
+    _status, rejected = svc.sync_connect_fields(
+        "t-1", "acct_x",
+        {"business_type": "individual", "business_profile": {"url": "https://x.invalid"}},
+    )
+    assert len(rejected) == 1
+    assert "business_profile" not in calls[-1]
+
+
+def test_sync_connect_fields_reraises_when_nothing_can_be_dropped() -> None:
+    """Ein Fehler ohne benennbares Feld (oder ein Feld, das gar nicht im Update
+    steht) darf NICHT still geschluckt werden — sonst meldet der Sync Erfolg,
+    obwohl nichts ankam (Wurzel 5)."""
+    from stripe import InvalidRequestError
+
+    class _Accounts:
+        def update(self, *_a, **_k):  # noqa: ANN002, ANN003, ANN202
+            raise InvalidRequestError("kaputt", param=None, http_status=400)
+
+    class _V1:
+        accounts = _Accounts()
+
+    class _FakeStripe:
+        v1 = _V1()
+
+    svc = PaymentsService(service_client=_connect_db("acct_x"), stripe=_FakeStripe())
+    with pytest.raises(PaymentsError):
+        svc.sync_connect_fields("t-1", "acct_x", {"individual": {"phone": "+49123"}})

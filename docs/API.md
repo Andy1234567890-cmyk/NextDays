@@ -1295,9 +1295,9 @@ KEIN eigenes Datenmodell, sondern eine Konversation im vorhandenen
 `0236`) — genau wie Intercom, Chatwoot und Zendesk Widget-Chat, E-Mail und
 Formular in einem Konversations-Stream führen.
 
-Zwei getrennte Melder-Welten (ADR-0015/0017), ein Service:
-`/support/*` für Betriebs-Nutzer (JWT mit `tenant_id`), `/support/guest/*` für
-Plattform-Gäste. Interne Team-Notizen (`support_messages.internal`) werden
+Drei Melder-Welten, ein Service: `/support/*` für Betriebs-Nutzer (JWT mit
+`tenant_id`), `/support/guest/*` für Plattform-Gäste (ADR-0015/0017) und
+`/support/public/*` für **anonyme Website-Besucher** (Migration `0238`). Interne Team-Notizen (`support_messages.internal`) werden
 serverseitig herausgefiltert **und** per RLS (0205) vom DB-Direktpfad
 ausgeschlossen; auch die Vorschau `last_message_preview` wird nie aus einer
 internen Notiz gesetzt.
@@ -1318,11 +1318,42 @@ internen Notiz gesetzt.
 Gast-Zweig identisch unter `/api/v1/support/guest`, `…/guest/list`,
 `…/guest/{id}`, `…/guest/{id}/reply`.
 
+### Anonyme Website-Besucher (`/api/v1/support/public`) — OHNE Auth
+
+Das Chat-Widget der Marketing-Seite (`marketing/components/support-chat.tsx`).
+Ein Interessent hat kein Konto und soll für eine Frage keines anlegen müssen —
+er hinterlässt Name, E-Mail und optional Telefon; die Anfrage IST das Ticket
+(`source='web'`, Kontaktdaten an `support_tickets.reporter_*`).
+
+| Methode | Pfad                                     | Zweck                                                                    |
+| ------- | ---------------------------------------- | ------------------------------------------------------------------------ |
+| `POST`  | `/api/v1/support/public/chat`            | Anfrage eröffnen (Name, E-Mail, Telefon?, Text). Antwort enthält EINMALIG das Token |
+| `GET`   | `/api/v1/support/public/{token}`         | Eigener Verlauf (ohne interne Notizen)                                    |
+| `POST`  | `/api/v1/support/public/{token}/reply`   | Antworten, idempotent über `client_msg_id`                                |
+
+Schutz statt Login:
+
+- **Token als Scope**: 32 Byte Zufall, in der DB liegt nur `sha256` hex
+  (`visitor_token_hash`, eindeutig). Vergleich byteweise über
+  `core.security.secrets_match`; ein unbekanntes Token ist von einem fremden
+  nicht unterscheidbar (`404`, Wurzel 9).
+- **Eigener Rate-Limit-Bucket** `public_support` (Standard `20/60` je IP,
+  `RATE_LIMIT_PUBLIC_SUPPORT`), als sensibel eingestuft → fail-closed. Der
+  Aufruf geht deshalb **direkt** vom Browser an die API, nicht über eine
+  Next-Proxy-Route: sonst zählte der Limiter die Server-IP der Marketing-App
+  statt der Besucher-IP. Betrieb: Marketing-Domain in `CORS_ORIGINS` eintragen.
+- **Schmales Antwortschema** `PublicTicket` (nur `ticket_id`, `status`,
+  Nachrichten) — keine Priorität, keine internen Felder.
+- **Kein Realtime**: `support_tickets` ist für `anon` vollständig gesperrt
+  (Wurzel 6) — ein Abo dafür zu öffnen hieße, alle Support-Verläufe am anon-Key
+  erreichbar zu machen. Das Widget fragt daher alle 8 s ab, solange es offen
+  ist; das Backoffice bleibt auf Realtime.
+
 ### Backoffice (`/api/v1/platform/support`)
 
 | Methode | Pfad                                             | Zweck                                                                     |
 | ------- | ------------------------------------------------ | ------------------------------------------------------------------------- |
-| `GET`   | `…/support?status_filter&source&mine&limit`      | Konversationsliste inkl. `unread` (Team-Sicht), Kanal- und Zuweisungsfilter |
+| `GET`   | `…/support?status_filter&source&mine&limit`      | Konversationsliste inkl. `unread` (Team-Sicht), Kanal- (`form`/`chat`/`web`) und Zuweisungsfilter |
 | `GET`   | `…/support/{id}`                                 | Verlauf **inkl.** interner Notizen                                         |
 | `POST`  | `…/support/{id}/reply`                           | Antwort oder interne Notiz (`internal: true`), idempotent                  |
 | `POST`  | `…/support/{id}/read`                            | Lese-Cursor des Teams                                                     |

@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 
 
 class TicketCreate(BaseModel):
@@ -118,3 +118,43 @@ class UnreadSummary(BaseModel):
 
     conversations: int = 0
     messages: int = 0
+
+
+class PublicChatStart(BaseModel):
+    """Erste Nachricht eines ANONYMEN Website-Besuchers.
+
+    Kontaktdaten sind Pflicht (außer Telefon): ohne Rückkanal ist eine Anfrage
+    ohne Konto wertlos — das Team kann sonst nur antworten, solange der
+    Besucher die Seite offen hält.
+    """
+
+    name: str = Field(min_length=2, max_length=120)
+    email: EmailStr
+    phone: str | None = Field(default=None, max_length=40)
+    body: str = Field(min_length=1, max_length=5000)
+    # Vom Client erzeugte UUID: Doppelklick/Retry darf keine zweite
+    # Konversation eröffnen (Wurzel 2).
+    client_msg_id: str | None = Field(default=None, max_length=64)
+
+
+class PublicTicket(BaseModel):
+    """Konversation aus Sicht des anonymen Besuchers.
+
+    Bewusst schmaler als TicketDetail: Priorität, Kategorie, Bewertung und
+    Zähler braucht das Website-Widget nicht — und was nicht ausgeliefert wird,
+    kann auch nicht versehentlich etwas verraten.
+    """
+
+    ticket_id: str
+    status: str
+    messages: list[TicketMessage] = []
+    # Nur bei der Eröffnung gesetzt: der Schlüssel zum eigenen Verlauf. Danach
+    # nie wieder ausgeliefert — er lebt im Browser des Besuchers.
+    token: str | None = None
+
+
+class PublicReply(BaseModel):
+    """Antwort des Besuchers in seiner eigenen Konversation."""
+
+    body: str = Field(min_length=1, max_length=5000)
+    client_msg_id: str | None = Field(default=None, max_length=64)

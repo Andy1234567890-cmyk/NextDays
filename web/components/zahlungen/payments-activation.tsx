@@ -18,6 +18,7 @@ import { useCallback, useEffect, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@nextdays/ui/button";
+import { resyncStripeProfil } from "@/lib/firmenprofil";
 import {
   acceptConnectTos,
   getConnectStatus,
@@ -146,12 +147,19 @@ type Props = {
   accountId: string;
   initialStatus: ConnectStatus | null;
   initialStatusError: string | null;
+  // stripe_sync_error aus dem Firmenprofil: eine Angabe, die der Zahlungsanbieter
+  // beim letzten Speichern ZURÜCKGEWIESEN hat (z. B. eine Website-Domain, die es
+  // nicht gibt). Ohne diese Anzeige ist der Grund unsichtbar und die Karte
+  // behauptet nur, es fehlten Angaben — der Nutzer trägt sie ein, und nichts
+  // ändert sich.
+  syncError: string | null;
 };
 
 export function PaymentsActivation({
   accountId,
   initialStatus,
   initialStatusError,
+  syncError,
 }: Props) {
   const t = useTranslations("legal");
   const [status, setStatus] = useState<ConnectStatus | null>(initialStatus);
@@ -159,6 +167,10 @@ export function PaymentsActivation({
     initialStatusError,
   );
   const [accepting, startAccept] = useTransition();
+  // Ablehnungsgrund des Zahlungsanbieters — anfangs aus dem Profil, nach einem
+  // Aktivieren-Versuch aus dessen Ergebnis (sonst zeigt die Karte weiter den
+  // alten Grund an, obwohl er längst behoben ist).
+  const [syncHinweis, setSyncHinweis] = useState<string | null>(syncError);
   // Einwilligung als Popup: der AGB-/Stripe-Vertragstext wird NICHT mehr
   // dauerhaft in der Fläche gezeigt, sondern beim Klick auf „Zahlungen
   // aktivieren" abgefragt — Zustimmung erst im Dialog (Stripe-Pflicht: AGB +
@@ -181,19 +193,42 @@ export function PaymentsActivation({
   }, [status, statusError, reloadStatus]);
 
   // account.updated-Webhook schreibt tenant_billing_profile → Status nachladen.
-  // KEIN Realtime-Abo mehr: tenant_billing_profile ist am anon-/authenticated-
+  // KEIN Realtime-Abo: tenant_billing_profile ist am anon-/authenticated-
   // Direktpfad gesperrt (Wurzel 6, Migration 0169) → der Client bekäme ohnehin
-  // keine Events. Stattdessen kurzes Polling, SOLANGE noch nicht freigeschaltet
-  // (der Status kommt aus dem live-Stripe-Call über die API). Sobald aktiv:
-  // Poll stoppt (kein Dauer-Poll).
+  // keine Events. Stattdessen Polling, SOLANGE noch nicht freigeschaltet.
+  //
+  // JEDER Tick kostet einen echten Stripe-API-Call plus zwei DB-Queries. Mit 8 s
+  // lief eine offene Konto-Seite auf ~450 Stripe-Calls pro Stunde und trieb den
+  // Rate-Limiter mit hoch — für einen Status, der sich beim KYC im Minuten- bis
+  // Werktagsbereich ändert. Darum 60 s und nur bei sichtbarem Tab; beim Zurück-
+  // wechseln wird sofort einmal geprüft, die Seite ist also nicht träger.
   useEffect(() => {
     if (status?.charges_enabled) return;
-    const id = setInterval(() => void reloadStatus(), 8000);
-    return () => clearInterval(id);
+    const tick = () => {
+      if (document.visibilityState === "visible") void reloadStatus();
+    };
+    const id = setInterval(tick, 60000);
+    document.addEventListener("visibilitychange", tick);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener("visibilitychange", tick);
+    };
   }, [status?.charges_enabled, reloadStatus]);
 
   function handleAcceptTos() {
     startAccept(async () => {
+      // ERST die gespeicherten Stammdaten an Stripe übertragen, DANN die ToS.
+      // Ohne diesen Schritt war die Karte eine Sackgasse: der Sync lief nur beim
+      // Speichern des Stammdaten-Formulars, und wenn er dort scheiterte, gab es
+      // von hier keinen Weg, die längst erfassten Angaben doch noch loszuschicken.
+      const sync = await resyncStripeProfil();
+      if (!sync.ok) {
+        toast.error(sync.error);
+        return;
+      }
+      const abgelehnt = sync.data.stripeSyncError;
+      setSyncHinweis(typeof abgelehnt === "string" ? abgelehnt : null);
+
       const res = await acceptConnectTos(accountId);
       if (!res.ok) {
         toast.error(res.error);
@@ -201,7 +236,15 @@ export function PaymentsActivation({
       }
       setStatus(res.data);
       setConsentOpen(false);
-      toast.success("Zahlungen aktiviert.");
+      // Nur „aktiviert" melden, wenn Stripe wirklich freigeschaltet hat — sonst
+      // sagt der Toast „fertig", während der Account weiter gesperrt ist.
+      if (res.data.charges_enabled) {
+        toast.success("Zahlungen aktiviert.");
+      } else if (typeof abgelehnt === "string") {
+        toast.error(abgelehnt);
+      } else {
+        toast.info("Angaben übertragen — der Zahlungsanbieter prüft sie noch.");
+      }
     });
   }
 
@@ -245,6 +288,16 @@ export function PaymentsActivation({
         <StatusBadge label="Auszahlungen aktiv" on={status.payouts_enabled} />
         <StatusBadge label="Angaben vollständig" on={status.details_submitted} />
       </div>
+
+      {syncHinweis && !status.charges_enabled && (
+        <p className="rounded-(--radius) border border-amber-500/50 bg-amber-50 p-3 text-sm text-amber-900">
+          <Icon
+            icon="ph:seal-warning"
+            className="mr-1.5 inline size-4 align-text-bottom"
+          />
+          {syncHinweis}
+        </p>
+      )}
 
       {status.disabled_reason && (
         <p className="rounded-(--radius) border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">

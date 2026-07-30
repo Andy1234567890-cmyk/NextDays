@@ -55,6 +55,7 @@ class _Buckets:
         self.listings_tenant = parse_limit(settings.rate_limit_listings_tenant)
         self.tenant = parse_limit(settings.rate_limit_tenant)
         self.ai = parse_limit(settings.rate_limit_ai)
+        self.public_support = parse_limit(settings.rate_limit_public_support)
 
 
 def _is_exempt(path: str) -> bool:
@@ -87,6 +88,14 @@ _AUTH_PATHS = (
 # Translate). Im Default-Bucket könnte ein einzelner eingeloggter Nutzer
 # erhebliche Kosten verursachen — eigener strenger Bucket (Wurzel 8).
 _AI_PATHS = ("/dashboard/voice", "/content/translate")
+
+# UNAUTHENTIFIZIERTE Kontaktaufnahme von der Marketing-Seite. Jeder Aufruf legt
+# einen Datensatz an bzw. schreibt in einen fremden Verlauf — im
+# Default-Bucket (300/60) wäre das ein bequemer Spam- und Token-Rateweg.
+# Deshalb ein eigener, strenger Bucket (Wurzel 8: teure/öffentliche Endpunkte
+# bekommen ein eigenes Dach) — und sensibel, also fail-closed: lieber eine
+# Anfrage abweisen als bei Redis-Ausfall die Schleusen öffnen.
+_PUBLIC_SUPPORT_PATHS = ("/support/public",)
 
 # Öffentliche Such-/Kalender-Endpunkte → Scraper-Schutz pro IP. Der iCal-Export
 # ist nicht eingeloggt (ein Kalender-Client schickt kein JWT).
@@ -128,6 +137,8 @@ def _select_bucket(path: str, buckets: _Buckets) -> tuple[str, Limit, bool]:
         return "auth", buckets.auth, True
     if "/payments/" in path:
         return "payments", buckets.payments, True
+    if any(p in path for p in _PUBLIC_SUPPORT_PATHS):
+        return "public_support", buckets.public_support, True
     if any(p in path for p in _AI_PATHS):
         return "ai", buckets.ai, False
     if any(p in path for p in _LISTINGS_PATHS):
