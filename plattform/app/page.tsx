@@ -22,7 +22,7 @@ export default async function SuchePage({
       <PlattformNav kontoSlot={<KontoMenu />} />
 
       <main className="flex-1">
-        <div className="mx-auto max-w-7xl px-6 py-4">
+        <div className="w-full px-6 md:px-10 2xl:px-20 py-4">
           {reihen.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-24 text-center">
               <p className="font-display text-xl font-semibold">

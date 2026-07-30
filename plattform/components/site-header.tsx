@@ -22,7 +22,7 @@ export function SiteHeader({
 }) {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur">
-      <div className="mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-6">
+      <div className="flex h-20 w-full items-center justify-between gap-4 px-6 md:px-10 2xl:px-20">
         <Link href="/" className="flex items-center">
           <Logo />
         </Link>

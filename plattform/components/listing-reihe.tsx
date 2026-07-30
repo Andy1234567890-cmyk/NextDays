@@ -12,6 +12,23 @@ import { type Reihe } from "@/lib/listings";
 import { ListingCard } from "./listing-card";
 import { PhotoPlaceholder } from "./photo-placeholder";
 
+// Seitenabstand der Seite (identisch in Kopfzeile, Reihen und Fuß) und dessen
+// Ausgleich für das randlos scrollende Band.
+const RAND_AUSGLEICH =
+  "-mx-6 px-6 scroll-px-6 md:-mx-10 md:px-10 md:scroll-px-10 2xl:-mx-20 2xl:px-20 2xl:scroll-px-20";
+
+// Wie viele Karten nebeneinander passen — dieselbe Staffelung wie bei den
+// großen Portalen: mobil zwei, auf sehr breiten Bildschirmen sieben. Die Breite
+// ist ein Anteil der Zeile abzüglich der Abstände (gap-5 = 1,25rem).
+const KARTE = [
+  "w-[calc((100%-1.25rem)/2)]",
+  "sm:w-[calc((100%-2.5rem)/3)]",
+  "md:w-[calc((100%-3.75rem)/4)]",
+  "lg:w-[calc((100%-5rem)/5)]",
+  "xl:w-[calc((100%-6.25rem)/6)]",
+  "2xl:w-[calc((100%-7.5rem)/7)]",
+].join(" ");
+
 export function ListingReihe({
   reihe,
   eingeloggt = false,
@@ -58,12 +75,17 @@ export function ListingReihe({
         </div>
       </div>
 
+      {/* Das Band nutzt die volle Breite (Airbnb-Muster): die Kartenbreite ergibt
+          sich aus der Zeilenbreite, nicht aus einem festen Wert — sonst bleibt
+          auf großen Bildschirmen die halbe Fläche leer. Der negative Rand hebt
+          den Seitenabstand auf, damit die Karten bis an die Kante scrollen und
+          trotzdem bündig unter der Überschrift beginnen. */}
       <div
         ref={bandRef}
-        className="-mx-6 flex snap-x gap-5 overflow-x-auto scroll-px-6 px-6 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className={`flex snap-x gap-5 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${RAND_AUSGLEICH}`}
       >
         {reihe.listings.map((listing) => (
-          <div key={listing.id} className="w-60 shrink-0 snap-start">
+          <div key={listing.id} className={`shrink-0 snap-start ${KARTE}`}>
             <ListingCard listing={listing} eingeloggt={eingeloggt} />
           </div>
         ))}
@@ -72,7 +94,7 @@ export function ListingReihe({
             Bildfeld oben), nur mit Foto-Stack statt Bild und freiem Textbereich. */}
         <Link
           href="#"
-          className="group/alle flex w-60 shrink-0 snap-start flex-col gap-3"
+          className={`group/alle flex shrink-0 snap-start flex-col gap-3 ${KARTE}`}
         >
           <div className="flex aspect-square flex-col items-center justify-center gap-6 overflow-hidden rounded-2xl border border-border bg-secondary">
             <div className="flex items-end justify-center">

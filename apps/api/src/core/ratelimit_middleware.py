@@ -127,22 +127,26 @@ _WEBHOOK_PATHS = (
 )
 
 
+# Reihenfolge ist bedeutungstragend: der ERSTE Treffer gewinnt.
+# Die Webhooks stehen VOR dem /payments/-Eintrag, weil der Stripe-Webhook unter
+# /payments/ liegt und sonst als sensibel eingestuft und fail-closed abgewiesen
+# würde. Tabelle statt Kette von if/return, damit ein weiterer Bucket keine
+# weitere Verzweigung bedeutet.
+_BUCKET_REGELN: tuple[tuple[str, tuple[str, ...], str, bool], ...] = (
+    ("payments", _WEBHOOK_PATHS, "payments", False),
+    ("auth", _AUTH_PATHS, "auth", True),
+    ("payments", ("/payments/",), "payments", True),
+    ("public_support", _PUBLIC_SUPPORT_PATHS, "public_support", True),
+    ("ai", _AI_PATHS, "ai", False),
+    ("listings", _LISTINGS_PATHS, "listings", False),
+)
+
+
 def _select_bucket(path: str, buckets: _Buckets) -> tuple[str, Limit, bool]:
     """Pfad → (Bucket-Name, Limit, sensibel?). Sensibel = Kandidat für fail-closed."""
-    # VOR den /payments/-Zweig: der Stripe-Webhook liegt unter /payments/ und
-    # würde sonst als sensibel eingestuft und fail-closed abgewiesen.
-    if any(p in path for p in _WEBHOOK_PATHS):
-        return "payments", buckets.payments, False
-    if any(p in path for p in _AUTH_PATHS):
-        return "auth", buckets.auth, True
-    if "/payments/" in path:
-        return "payments", buckets.payments, True
-    if any(p in path for p in _PUBLIC_SUPPORT_PATHS):
-        return "public_support", buckets.public_support, True
-    if any(p in path for p in _AI_PATHS):
-        return "ai", buckets.ai, False
-    if any(p in path for p in _LISTINGS_PATHS):
-        return "listings", buckets.listings, False
+    for name, pfade, attribut, sensibel in _BUCKET_REGELN:
+        if any(p in path for p in pfade):
+            return name, getattr(buckets, attribut), sensibel
     return "default", buckets.default, False
 
 

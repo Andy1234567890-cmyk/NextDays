@@ -70,7 +70,7 @@ export function ReiseInspirationen() {
 
   return (
     <section>
-      <div className="mx-auto max-w-7xl px-6 py-12">
+      <div className="w-full px-6 md:px-10 2xl:px-20 py-12">
         <h2 className="font-display text-2xl font-semibold tracking-tight">
           Inspirationen für zukünftige Reisen
         </h2>

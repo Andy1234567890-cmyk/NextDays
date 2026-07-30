@@ -62,7 +62,7 @@ export function PlattformNav({ kontoSlot }: { kontoSlot?: React.ReactNode }) {
       ) : null}
 
       {/* Kopfzeile: Logo links · Tabs+Suche mittig · Gastgeber+Konto rechts */}
-      <div className="relative mx-auto flex h-20 max-w-7xl items-center justify-between gap-4 px-6">
+      <div className="relative flex h-20 w-full items-center justify-between gap-4 px-6 md:px-10 2xl:px-20">
         <Link href="/" className="flex shrink-0 items-center">
           <Logo />
         </Link>

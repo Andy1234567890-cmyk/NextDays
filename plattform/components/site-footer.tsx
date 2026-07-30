@@ -60,7 +60,7 @@ export function SiteFooter() {
       {/* Reise-Inspirationen (Teil des Footers) */}
       <ReiseInspirationen />
 
-      <div className="mx-auto max-w-7xl border-t border-border px-6 py-10">
+      <div className="w-full border-t border-border px-6 md:px-10 2xl:px-20 py-10">
         {/* Link-Spalten */}
         <div className="grid grid-cols-1 gap-8 border-b border-border pb-8 sm:grid-cols-3">
           {SPALTEN.map((spalte) => (
