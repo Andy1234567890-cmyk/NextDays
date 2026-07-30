@@ -24,10 +24,10 @@ jobs:
       run:
         working-directory: apps/api
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: uv installieren
-        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
 
       - name: Abhängigkeiten installieren
         # In ein venv statt `--system`: der Runner-Interpreter unter /usr ist
@@ -64,10 +64,10 @@ jobs:
     name: Packages (Typprüfung)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: bun installieren
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: "1.3.9"
 
@@ -89,10 +89,10 @@ jobs:
       matrix:
         app: [web, marketing, plattform, gastgeber, admin, builder, storybook]
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: bun installieren
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: "1.3.9"
 
@@ -121,10 +121,10 @@ jobs:
       run:
         working-directory: mobile
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: bun installieren
-        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: "1.3.9"
 
@@ -217,14 +217,30 @@ jobs:
             projectdir: .
             compose: deploy/supabase/docker-compose.yml
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Image bauen (Dockerfile)
         if: matrix.kind == 'dockerfile'
         # Ohne NEXT_PUBLIC_*-Build-Args: die Apps lesen API-/Supabase-URLs erst
         # zur Laufzeit. Bricht der Build ohne sie, ist das ein echter Befund
         # (Wurzel 4) — keine Platzhalter-URL nachschieben, die ihn kaschiert.
-        run: docker build -f "${{ matrix.dockerfile }}" -t "ci/${{ matrix.app }}" "${{ matrix.context }}"
+        #
+        # Zwei Versuche: Docker Hub reißt beim Token-Fetch der Basis-Images
+        # sporadisch die Verbindung ab ("connection reset by peer" auf
+        # auth.docker.io) — ein Infrastrukturfehler, kein Befund am Code. Der
+        # zweite Versuch nutzt die Layer des ersten, ein ECHTER Build-Fehler
+        # kostet also kaum Zeit und schlägt weiterhin fehl.
+        run: |
+          set -uo pipefail
+          for versuch in 1 2; do
+            if docker build -f "${{ matrix.dockerfile }}" -t "ci/${{ matrix.app }}" "${{ matrix.context }}"; then
+              exit 0
+            fi
+            echo "::warning::Build-Versuch $versuch fehlgeschlagen"
+            sleep 20
+          done
+          echo "::error::Build von ${{ matrix.app }} nach 2 Versuchen fehlgeschlagen"
+          exit 1
 
       - name: Compose validieren
         if: matrix.kind == 'compose'
@@ -264,7 +280,7 @@ jobs:
       group: coolify-deploy
       cancel-in-progress: false
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 

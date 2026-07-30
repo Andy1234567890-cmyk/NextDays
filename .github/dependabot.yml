@@ -1,0 +1,16 @@
+# Wir pinnen third-party Actions per Commit-SHA (Supply-Chain-Regel im
+# Qualitätsgate). Ein SHA-Pin friert die Version aber ein: actions/checkout
+# stand dadurch monatelang auf v4 und lief in die Node-20-Deprecation, ohne
+# dass es jemandem auffiel. Dependabot hebt die SHAs samt Versionskommentar und
+# hält den Pin damit aktuell — der Pin bleibt, die Version veraltet nicht.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    commit-message:
+      prefix: ci
+    labels: [ci]
+    # Ein PR je Action, damit ein Breaking Change einzeln nachvollziehbar ist.
+    open-pull-requests-limit: 5
