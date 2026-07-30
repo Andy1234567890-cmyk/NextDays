@@ -4,7 +4,8 @@ import type { NavigatorScreenParams } from "@react-navigation/native";
 
 export type GuestTabParamList = {
   Home: undefined;
-  Discover: undefined;
+  // Suche kann mit vorbelegtem Suchtext/Zeitraum geöffnet werden (Startseite).
+  Discover: { q?: string; start?: string; end?: string; guests?: number } | undefined;
   Wishlist: undefined;
   Trips: undefined;
   GuestProfile: undefined;
@@ -44,12 +45,27 @@ export type RootStackParamList = {
   RoleSelect: undefined;
   HostLogin: undefined;
   HostSignup: undefined;
+  // Gast-Konto (portal_guests) — eigene Auth-Welt, NICHT die Tenant-Anmeldung.
+  GuestLogin: { modus?: "login" | "registrieren" } | undefined;
   GuestTabs: NavigatorScreenParams<GuestTabParamList>;
   HostTabs: NavigatorScreenParams<HostTabParamList>;
   OwnerTabs: NavigatorScreenParams<OwnerTabParamList>;
-  ListingDetail: { id: string };
+  // Zeitraum/Gäste werden durchgereicht, damit das Detail den EFFEKTIVPREIS
+  // des angefragten Zeitraums vom Server holen kann (nicht nur den ab-Preis).
+  ListingDetail: { id: string; start?: string; end?: string; guests?: number };
   ReservationDetail: { id: string };
   TaskDetail: { id: string };
-  Checkout: undefined;
-  Checkin: undefined;
+  // Buchungsstrecke: ohne Objekt/Zeitraum gibt es nichts zu buchen (Pflichtparam).
+  Checkout: {
+    listingId: string;
+    checkIn: string;
+    checkOut: string;
+    guests: number;
+  };
+  // Gastmappe/Check-in einer EIGENEN Buchung (guest-stay, Gast-Session nötig).
+  Checkin: { reservationId: string };
+  // Buchungsdetail des Gastes (guest-bookings) inkl. Verlauf + Storno.
+  TripDetail: { id: string };
+  // Eine Merkliste des Gastes (guest-wishlist).
+  WishlistDetail: { id: string; name?: string };
 };

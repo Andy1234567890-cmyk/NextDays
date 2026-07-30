@@ -1,5 +1,8 @@
-// Unterkunft-Karte (aus guest-app.jsx ListingCard): Foto mit Tag/Favorit-Button,
-// Titel + Bewertung, Ort, Preis/Nacht.
+// Unterkunft-Karte für die Gast-Suche. Zeigt NUR echte Daten aus dem
+// booking_engine-Slice: Bewertung erscheint ausschließlich, wenn das Backend
+// eine liefert (nie erfunden), und ein fehlender Preis wird als
+// „Preis auf Anfrage" gerendert — nie als 0 (Wurzel 4). Die Währung kommt aus
+// dem Objekt (kein €-Hardcode).
 import { View } from "react-native";
 
 import { Icon } from "@/components/ui/Icon";
@@ -16,6 +19,7 @@ export function ListingCard({
   reviews,
   price,
   currency,
+  guests,
   tag,
   fav,
 }: {
@@ -23,16 +27,22 @@ export function ListingCard({
   grad?: "grad1" | "grad2" | "grad3";
   place: string;
   title: string;
-  rating: string;
-  reviews: number;
-  price: number;
-  // Währung MUSS aus den Daten kommen (property.currency) — kein €-Hardcode
+  // Bewertung/Anzahl nur setzen, wenn echte Werte vorliegen.
+  rating?: number | null;
+  reviews?: number | null;
+  // „ab"-Preis pro Nacht; null = kein Preis hinterlegt.
+  price: number | null;
+  // Währung MUSS aus den Daten kommen (listing.currency) — kein €-Hardcode
   // (Wurzel 4). Fehlt sie, rendert formatCurrency die reine Zahl ohne Symbol.
   currency: string | null | undefined;
+  guests?: number;
   tag?: string;
   fav?: boolean;
 }) {
   const t = useTheme();
+  // Bewertung kommt als Zahl aus dem Backend; deutsche Schreibweise mit Komma.
+  const bewertung = typeof rating === "number" ? rating.toFixed(2).replace(".", ",") : null;
+
   return (
     <Col gap={10}>
       <Photo src={photo} grad={grad} h={200} r={t.radius.img}>
@@ -44,18 +54,20 @@ export function ListingCard({
           ) : (
             <View />
           )}
-          <View
-            style={{
-              width: 34,
-              height: 34,
-              borderRadius: 17,
-              backgroundColor: "rgba(255,255,255,0.92)",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <Icon n="heart" s={18} sw={2} c={fav ? t.palette.accent : t.palette.ink} />
-          </View>
+          {fav !== undefined && (
+            <View
+              style={{
+                width: 34,
+                height: 34,
+                borderRadius: 17,
+                backgroundColor: "rgba(255,255,255,0.92)",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Icon n="heart" s={18} sw={2} c={fav ? t.palette.accent : t.palette.ink} />
+            </View>
+          )}
         </Row>
       </Photo>
       <Col gap={3}>
@@ -63,19 +75,39 @@ export function ListingCard({
           <Txt v="title" numberOfLines={1} style={{ flex: 1 }}>
             {title}
           </Txt>
-          <Row gap={4}>
-            <Star />
-            <Txt v="sm">{rating}</Txt>
-          </Row>
+          {bewertung && (
+            <Row gap={4}>
+              <Star />
+              <Txt v="sm">{bewertung}</Txt>
+            </Row>
+          )}
         </Row>
-        <Txt v="sm" soft>
+        <Txt v="sm" soft numberOfLines={1}>
           {place}
         </Txt>
-        <Row gap={5} style={{ marginTop: 3 }}>
-          <Txt v="title">{formatCurrency(price, currency)}</Txt>
-          <Txt v="sm" soft>
-            / Nacht · {reviews} Bew.
-          </Txt>
+        <Row gap={5} style={{ marginTop: 3, alignItems: "baseline" }}>
+          {price != null ? (
+            <>
+              <Txt v="title">{formatCurrency(price, currency)}</Txt>
+              <Txt v="sm" soft>
+                / Nacht
+              </Txt>
+            </>
+          ) : (
+            <Txt v="sm" soft>
+              Preis auf Anfrage
+            </Txt>
+          )}
+          {typeof guests === "number" && (
+            <Txt v="sm" soft>
+              · bis {guests} Gäste
+            </Txt>
+          )}
+          {typeof reviews === "number" && reviews > 0 && (
+            <Txt v="sm" soft>
+              · {reviews} Bew.
+            </Txt>
+          )}
         </Row>
       </Col>
     </Col>

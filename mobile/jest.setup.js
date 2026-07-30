@@ -26,3 +26,14 @@ jest.mock('react-native-safe-area-context', () => {
   const mock = jest.requireActual('react-native-safe-area-context/jest/mock');
   return mock.default ?? mock;
 });
+
+// Kein echter Netzwerkverkehr im Testlauf: Screens laden beim Mounten Daten
+// (Inserate, Profil). Ohne Mock liefe der Fetch gegen die echte API weiter und
+// würde nach dem Testende State setzen. Antwort ist bewusst LEER — die Screens
+// müssen den Leerzustand aushalten, ohne Daten zu erfinden.
+global.fetch = jest.fn(async () => ({
+  ok: true,
+  status: 200,
+  json: async () => ({ items: [], total: 0 }),
+  text: async () => JSON.stringify({ items: [], total: 0 }),
+}));

@@ -8,4 +8,12 @@ module.exports = {
     // Tab-Navigatoren definieren tabBarIcon als Render-Funktion (hier ok).
     'react/no-unstable-nested-components': 'off',
   },
+  overrides: [
+    {
+      // Jest-Setup läuft im Test-Runner, nicht in der App: dort sind `jest`,
+      // `beforeEach` & Co. globale Symbole — ohne diese Env meldet no-undef sie.
+      files: ['jest.setup.js', '**/__tests__/**/*.{ts,tsx,js}', '**/*.test.{ts,tsx}'],
+      env: { jest: true },
+    },
+  ],
 };

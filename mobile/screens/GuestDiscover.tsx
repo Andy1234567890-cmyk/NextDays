@@ -1,113 +1,151 @@
-// Gäste · Entdecken (aus guest-app.jsx GuestDiscover): Suchleiste, Kategorien,
-// beliebte Unterkünfte.
-import { useNavigation } from "@react-navigation/native";
+// Gäste · Suche. Zeigt AUSSCHLIESSLICH echte Inserate aus dem booking_engine-
+// Slice (/api/v1/booking-engine/listings) — keine Demo-Objekte mehr. Suchtext,
+// Gästezahl und Zeitraum gehen als Serverparameter mit; gefiltert wird
+// serverseitig (die App filtert nichts nach).
+// Preise/Währung kommen aus den Objektdaten; fehlt ein Preis, steht dort
+// „Preis auf Anfrage" statt 0 (Wurzel 4).
+import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { Image, Pressable, ScrollView, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { Pressable, RefreshControl, ScrollView, TextInput, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ListingCard } from "@/components/ListingCard";
 import { Icon } from "@/components/ui/Icon";
-import { Avatar, Card, Chip, Col, Row, Txt } from "@/components/ui/kit";
-import { Screen } from "@/components/ui/Screen";
-import type { RootStackParamList } from "@/navigation/types";
-import { ND_PHOTOS as P, PH } from "@/lib/photos";
+import { Card, Chip, Col, Spinner, Txt } from "@/components/ui/kit";
+import { ListingCard } from "@/components/ListingCard";
+import {
+  listingOrt,
+  listingTypeLabel,
+  searchListings,
+  type Listing,
+} from "@/lib/listings";
+import type { GuestTabParamList, RootStackParamList } from "@/navigation/types";
 import { useTheme } from "@/theme/ThemeProvider";
 
-// Einbindung des transparenten Logos
-const logoImg = require("../assets/img/Logo_transparent.png");
-
-const CATS: [string, string][] = [
-  ["globe", "Alle"],
-  ["beach", "Strand"],
-  ["cabin", "Natur"],
-  ["city", "Stadt"],
-  ["pool", "Pool"],
-];
+// Gäste-Schnellfilter (Serverparameter `guests`), keine erfundenen Kategorien.
+const GAESTE: (number | null)[] = [null, 1, 2, 4, 6];
 
 export default function GuestDiscover() {
   const t = useTheme();
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<GuestTabParamList, "Discover">>();
+
+  const [suche, setSuche] = useState(route.params?.q ?? "");
+  const [aktiveSuche, setAktiveSuche] = useState(route.params?.q ?? "");
+  const [gaeste, setGaeste] = useState<number | null>(route.params?.guests ?? null);
+  const start = route.params?.start;
+  const ende = route.params?.end;
+
+  const [items, setItems] = useState<Listing[] | null>(null);
+  const [fehler, setFehler] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    const res = await searchListings({
+      q: aktiveSuche || undefined,
+      guests: gaeste ?? undefined,
+      start,
+      end: ende,
+    });
+    if (res.ok) {
+      setItems(res.data.items);
+      setFehler(null);
+    } else {
+      setItems([]);
+      setFehler(res.error);
+    }
+  }, [aktiveSuche, gaeste, start, ende]);
+
+  useEffect(() => {
+    load();
+  }, [load]);
 
   return (
-    <Screen contentStyle={{ gap: 20 }}>
-      {/* Header Bereich: Hier wurde der Text durch das Image ersetzt */}
-      <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
-        <Image
-          source={logoImg}
-          style={{ width: 120, height: 40 }} // Breite erhöht, da es ein Logo-Schriftzug/Breitbild ist
-          resizeMode="contain"
-        />
-        <Avatar s={38} src={PH(P.bright, 100)} />
-      </Row>
+    <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
+      <Col style={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 12, gap: 12 }}>
+        <Txt v="h1">Suche</Txt>
 
-      <Txt v="display">Finde dein{"\n"}nächstes Zuhause.</Txt>
+        <Card style={{ flexDirection: "row", alignItems: "center", padding: 6, paddingLeft: 16, gap: 10 }}>
+          <Icon n="search" s={20} sw={2} c={t.palette.soft} />
+          <TextInput
+            value={suche}
+            onChangeText={setSuche}
+            onSubmitEditing={() => setAktiveSuche(suche.trim())}
+            returnKeyType="search"
+            placeholder="Ort oder Objekt"
+            placeholderTextColor={t.palette.faint}
+            style={{ flex: 1, color: t.palette.ink, fontFamily: t.type.medium.fontFamily, paddingVertical: 12 }}
+          />
+          <Pressable
+            onPress={() => setAktiveSuche(suche.trim())}
+            style={{
+              width: 46,
+              height: 46,
+              borderRadius: 13,
+              backgroundColor: t.palette.accent,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Icon n="search" s={20} sw={2} c="#fff" />
+          </Pressable>
+        </Card>
 
-      <Card style={{ flexDirection: "row", alignItems: "center", padding: 6, paddingLeft: 16, gap: 10 }}>
-        <Icon n="search" s={20} sw={2} c={t.palette.soft} />
-        <Col gap={1} style={{ flex: 1 }}>
-          <Txt v="sm" style={{ fontFamily: t.type.title.fontFamily }}>
-            Wohin geht's?
-          </Txt>
-          <Txt v="xs" soft>
-            Beliebige Daten · 2 Gäste
-          </Txt>
-        </Col>
-        <View
-          style={{
-            width: 46,
-            height: 46,
-            borderRadius: 13,
-            backgroundColor: t.palette.accent,
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Icon n="filter" s={20} sw={2} c="#fff" />
-        </View>
-      </Card>
-
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <Row gap={10}>
-          {CATS.map((c, i) => (
-            <Chip key={c[1]} variant={i === 1 ? "on" : ""} icon={c[0]}>
-              {c[1]}
-            </Chip>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+          {GAESTE.map((g) => (
+            <Pressable key={String(g)} onPress={() => setGaeste(g)}>
+              <Chip variant={g === gaeste ? "on" : ""} icon="users">
+                {g === null ? "Alle" : `ab ${g}`}
+              </Chip>
+            </Pressable>
           ))}
-        </Row>
+        </ScrollView>
+
+        {(start || ende) && (
+          <Txt v="xs" soft>
+            Zeitraum: {start ?? "—"} bis {ende ?? "—"}
+          </Txt>
+        )}
+      </Col>
+
+      {!items && <Spinner />}
+
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40, gap: 20 }}
+        refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
+      >
+        {items && items.length === 0 && (
+          <Txt v="sm" soft style={{ textAlign: "center", marginTop: 40 }}>
+            {fehler ?? "Keine Unterkünfte gefunden."}
+          </Txt>
+        )}
+        {items?.map((l) => (
+          <Pressable
+            key={l.id}
+            onPress={() =>
+              navigation.navigate("ListingDetail", {
+                id: l.id,
+                start,
+                end: ende,
+                guests: gaeste ?? undefined,
+              })
+            }
+          >
+            <ListingCard
+              photo={l.photos[0]}
+              grad="grad1"
+              tag={listingTypeLabel(l.property_type)}
+              title={l.title}
+              place={listingOrt(l) || "—"}
+              rating={l.rating}
+              reviews={l.rating_count}
+              price={l.price_from}
+              currency={l.currency}
+              guests={l.max_guests}
+            />
+          </Pressable>
+        ))}
       </ScrollView>
-
-      <Row style={{ justifyContent: "space-between" }}>
-        <Txt v="h2">Beliebt gerade</Txt>
-        <Txt v="sm" accent>
-          Alle ansehen
-        </Txt>
-      </Row>
-
-      <Pressable onPress={() => navigation.navigate("ListingDetail", { id: "villa" })}>
-        <ListingCard
-          photo={PH(P.villa)}
-          grad="grad1"
-          tag="★ Gastgeber-Favorit"
-          fav
-          title="Villa Solnedgang"
-          place="Skagen, Dänemark"
-          rating="4,97"
-          reviews={128}
-          price={189}
-          currency="DKK"
-        />
-      </Pressable>
-      <Pressable onPress={() => navigation.navigate("ListingDetail", { id: "cabin" })}>
-        <ListingCard
-          photo={PH(P.cabin)}
-          grad="grad2"
-          title="Hytte ved Skoven"
-          place="Silkeborg · Seeblick"
-          rating="4,89"
-          reviews={74}
-          price={132}
-          currency="DKK"
-        />
-      </Pressable>
-    </Screen>
+    </View>
   );
 }

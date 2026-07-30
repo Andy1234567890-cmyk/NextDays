@@ -16,6 +16,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { Splash } from "@/components/Splash";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { GuestAuthProvider, useGuestAuth } from "@/contexts/GuestAuthContext";
 import { experienceFor } from "@/lib/experience";
 import { GuestTabs } from "@/navigation/GuestTabs";
 import { HostTabs } from "@/navigation/HostTabs";
@@ -23,12 +24,15 @@ import { OwnerTabs } from "@/navigation/OwnerTabs";
 import type { RootStackParamList } from "@/navigation/types";
 import Checkin from "@/screens/Checkin";
 import Checkout from "@/screens/Checkout";
+import GuestLogin from "@/screens/GuestLogin";
 import HostLogin from "@/screens/HostLogin";
 import HostSignup from "@/screens/HostSignup";
 import ListingDetail from "@/screens/ListingDetail";
 import ReservationDetail from "@/screens/ReservationDetail";
 import RoleSelect from "@/screens/RoleSelect";
 import TaskDetail from "@/screens/TaskDetail";
+import TripDetail from "@/screens/TripDetail";
+import WishlistDetail from "@/screens/WishlistDetail";
 import { ThemeProvider } from "@/theme/ThemeProvider";
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -48,7 +52,10 @@ const linking: LinkingOptions<RootStackParamList> = {
     screens: {
       HostLogin: "login",
       HostSignup: "registrieren",
+      GuestLogin: "gast/anmelden",
+      ListingDetail: "unterkunft/:id",
       ReservationDetail: "host/reservierungen/:id",
+      TripDetail: "reisen/:id",
       HostTabs: {
         screens: {
           HostInbox: "host/inbox/:threadId",
@@ -60,6 +67,11 @@ const linking: LinkingOptions<RootStackParamList> = {
 
 function Root() {
   const { status, me, logout } = useAuth();
+  // Zweite, unabhängige Auth-Welt: der Portal-Gast. Sie entscheidet NICHT über
+  // das Erlebnis (das kommt aus der Tenant-Rolle), sondern nur darüber, welche
+  // Gast-Routen überhaupt existieren (Deep-Link-Guard wie beim Betriebskonto).
+  const { status: gastStatus } = useGuestAuth();
+  const gastAngemeldet = gastStatus === "signedIn";
 
   // Fail-closed (Wurzel 5): angemeldet, aber keine/unbekannte Rolle → das
   // Konto bekommt KEIN Erlebnis (nie Default ins Agentur-Dashboard). Die
@@ -106,8 +118,20 @@ function Root() {
         <Stack.Screen name="GuestTabs" component={GuestTabs} />
         <Stack.Screen name="RoleSelect" component={RoleSelect} />
         <Stack.Screen name="ListingDetail" component={ListingDetail} />
+        {/* Buchen geht auch ohne Gast-Konto (Kontaktdaten im Formular) — so
+            arbeitet die öffentliche Buchungsstrecke des Backends. */}
         <Stack.Screen name="Checkout" component={Checkout} options={{ presentation: "card" }} />
-        <Stack.Screen name="Checkin" component={Checkin} options={{ presentation: "card" }} />
+        {gastAngemeldet ? (
+          <>
+            {/* Nur mit Gast-Session: eigene Buchungen, Gastmappe, Merklisten.
+                Ohne Session existieren diese Routen nicht (Deep-Link-Guard). */}
+            <Stack.Screen name="Checkin" component={Checkin} options={{ presentation: "card" }} />
+            <Stack.Screen name="TripDetail" component={TripDetail} />
+            <Stack.Screen name="WishlistDetail" component={WishlistDetail} />
+          </>
+        ) : (
+          <Stack.Screen name="GuestLogin" component={GuestLogin} />
+        )}
         {signedIn ? (
           <>
             {/* Geschützt: nur mit Tenant-Session registriert (Auth-Guard für
@@ -136,7 +160,12 @@ export default function App() {
       <SafeAreaProvider>
         <ThemeProvider>
           <AuthProvider>
-            <Root />
+            {/* Zwei getrennte Auth-Welten laufen parallel: Betrieb (AuthProvider)
+                und Portal-Gast (GuestAuthProvider). Sie teilen sich nichts —
+                weder Token noch HTTP-Client. */}
+            <GuestAuthProvider>
+              <Root />
+            </GuestAuthProvider>
           </AuthProvider>
         </ThemeProvider>
       </SafeAreaProvider>

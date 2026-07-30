@@ -48,14 +48,17 @@ Aktuell live angebunden: **Inserate** (`/properties`, Fallback auf Demo-Daten).
 ## Entwicklung
 
 ```bash
-cd apps/mobile
-npm install
+cd mobile
+bun install                      # Paketmanager im ganzen Repo: bun
+cp lib/config.secrets.example.ts lib/config.secrets.ts   # einmalig, dann Wert eintragen
 cd ios && pod install && cd ..   # einmalig / nach nativen Dep-Änderungen
 
-npm start                        # Metro-Bundler (eigenes Terminal)
-npm run ios                      # iOS-Simulator
-npm run android                  # Android-Emulator
-npm run typecheck                # tsc --noEmit
+bun start                        # Metro-Bundler (eigenes Terminal)
+bun run ios                      # iOS-Simulator
+bun run android                  # Android-Emulator
+bun run typecheck                # tsc --noEmit
+bun run lint                     # eslint
+bun run test                     # jest
 ```
 
 Nach Font-/Asset-Änderungen: `npx react-native-asset` erneut ausführen.
