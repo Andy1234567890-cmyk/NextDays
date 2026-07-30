@@ -8,19 +8,17 @@ import Link from "next/link";
 
 import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
+// Login der Gastgeber liegt in der web-App (Dashboard) — Basis-URL zentral.
+import { LOGIN_URL } from "@/lib/app-url";
 
-// Login der Gastgeber liegt in der web-App (Dashboard). Per Env überschreibbar
-// (Domain-Wechsel), Default = aktuelle sslip.io-URL der web-App.
-const LOGIN_URL =
-  process.env.NEXT_PUBLIC_LOGIN_URL ??
-  "https://bln3q0n1l1se2hna8utkuag9.65.21.144.136.sslip.io/login";
-
+// Anker mit führendem "/" — sonst zeigen sie auf Unterseiten (z. B. /impressum)
+// ins Nichts, weil die Abschnitte nur auf der Startseite existieren.
 const NAV_LINKS = [
-  { label: "Funktionen", href: "#funktionen" },
-  { label: "Preise", href: "#preise" },
-  { label: "Kanäle", href: "#kanaele" },
-  { label: "Kunden", href: "#kunden" },
-  { label: "Ressourcen", href: "#ressourcen" },
+  { label: "Funktionen", href: "/#funktionen" },
+  { label: "Preise", href: "/#preise" },
+  { label: "Kanäle", href: "/#kanaele" },
+  { label: "Kunden", href: "/#kunden" },
+  { label: "Ressourcen", href: "/#ressourcen" },
 ];
 
 export function MarketingNav() {

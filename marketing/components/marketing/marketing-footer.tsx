@@ -4,6 +4,7 @@ import { Icon } from "@iconify/react";
 import Link from "next/link";
 
 import { Logo } from "@/components/logo";
+import { AGB_URL, HILFE_URL } from "@/lib/app-url";
 
 const FOOTER_COLUMNS = [
   {
@@ -37,18 +38,13 @@ const SOCIALS = [
   { icon: "ph:linkedin-logo", label: "LinkedIn" },
 ];
 
-// Die Rechtsseiten (AGB usw.) liegen in der Haupt-App (apps/web), nicht in
-// dieser reinen Marketing-App — daher absolute Links auf die App-Domain.
-// Basis aus derselben Env wie der Login-Link in der Nav abgeleitet.
-const APP_URL = (
-  process.env.NEXT_PUBLIC_LOGIN_URL ??
-  "https://bln3q0n1l1se2hna8utkuag9.65.21.144.136.sslip.io/login"
-).replace(/\/login\/?$/, "");
-
+// AGB/Hilfe liegen in der Haupt-App (web) → absolute Links (lib/app-url).
+// Das Impressum liegt als eigene Route IN dieser App, weil es die
+// Anbieterangaben der Marketing-Site selbst sind → relativer Link.
 const RECHTLICH: { label: string; href?: string }[] = [
-  { label: "AGB", href: `${APP_URL}/agb` },
+  { label: "AGB", href: AGB_URL },
   { label: "Datenschutz" },
-  { label: "Impressum" },
+  { label: "Impressum", href: "/impressum" },
   { label: "Cookie-Richtlinie" },
 ];
 
@@ -82,16 +78,20 @@ export function MarketingFooter() {
             <div key={col.title}>
               <p className="text-sm font-semibold">{col.title}</p>
               <ul className="mt-4 flex flex-col gap-3">
-                {col.links.map((link) => (
-                  <li key={link}>
-                    <Link
-                      href="#"
-                      className="text-sm text-primary-foreground/70 transition-colors hover:text-primary-foreground"
-                    >
-                      {link}
-                    </Link>
-                  </li>
-                ))}
+                {col.links.map((link) => {
+                  // Nur echte Ziele verlinken; alles andere bleibt Platzhalter (#).
+                  const href = link === "Hilfe-Center" ? HILFE_URL : "#";
+                  return (
+                    <li key={link}>
+                      <Link
+                        href={href}
+                        className="text-sm text-primary-foreground/70 transition-colors hover:text-primary-foreground"
+                      >
+                        {link}
+                      </Link>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}

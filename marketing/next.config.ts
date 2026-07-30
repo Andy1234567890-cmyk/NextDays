@@ -4,6 +4,12 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Schlankes Runtime-Image für den Dockerfile-Build (node server.js).
   output: "standalone",
+  // Diese App baut BEWUSST isoliert (eigene bun.lock, die der Dockerfile
+  // kopiert). Ohne diese Zeile sucht Next die Workspace-Wurzel selbst, findet
+  // die Root-bun.lock des Monorepos und warnt bei jedem `bun run dev`. Die
+  // Trace-Wurzel IST hier das App-Verzeichnis — im Container ist /app die
+  // Wurzel, lokal marketing/; process.cwd() trifft beides.
+  outputFileTracingRoot: process.cwd(),
   // Kein x-powered-by:Next.js — verrät die Technologie (Version-Leak/Recon).
   poweredByHeader: false,
   // CSP + X-Frame-Options inline: marketing baut BEWUSST isoliert (eigener
