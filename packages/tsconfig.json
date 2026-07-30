@@ -1,0 +1,20 @@
+{
+  // Gemeinsame Typprüfung ALLER geteilten Pakete (packages/@nextdays/*, ADR-0016).
+  // Die Frontends prüfen nur, was sie importieren — Code, den (noch) keine App
+  // nutzt, bliebe sonst ungeprüft. `bunx tsc -p packages` schließt die Lücke;
+  // Compiler-Optionen entsprechen den Frontend-tsconfigs (strict, bundler).
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "jsx": "react-jsx",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "skipLibCheck": true
+  },
+  "include": ["*/src/**/*.ts", "*/src/**/*.tsx"]
+}
