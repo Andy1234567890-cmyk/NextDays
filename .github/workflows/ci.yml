@@ -255,6 +255,11 @@ jobs:
     needs: [api, packages, frontends, mobile, images]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Für die Basis-Ermittlung unten: den letzten Lauf lesen, der wirklich
+      # deployt hat.
+      actions: read
     concurrency:
       group: coolify-deploy
       cancel-in-progress: false
@@ -262,6 +267,31 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
+
+      - name: Basis des Diffs ermitteln
+        # github.event.before wäre falsch: war das CI eines Pushes rot, wird
+        # hier nichts deployt — beim NÄCHSTEN Push liegen dessen Änderungen
+        # aber schon vor `before` und fallen für immer aus dem Diff. Genau so
+        # gingen 29b7468 (web) und bc2af55 (marketing) nicht live.
+        # Basis ist deshalb der head_sha des letzten erfolgreichen Laufs dieses
+        # Workflows auf main — der einzige Stand, von dem sicher ist, dass er
+        # deployt wurde. Fällt keiner an (Erst-Lauf, Historie beschnitten),
+        # bleibt github.event.before als Rückfall.
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          base=$(gh api \
+            "repos/${{ github.repository }}/actions/workflows/ci.yml/runs?branch=main&status=success&event=push&per_page=10" \
+            --jq ".workflow_runs[] | select(.id != ${{ github.run_id }}) | .head_sha" \
+            | head -1 || true)
+          if [ -n "$base" ] && git cat-file -e "${base}^{commit}" 2>/dev/null; then
+            echo "Basis: letzter erfolgreicher Lauf ($base)"
+          else
+            base="${{ github.event.before }}"
+            echo "Kein verwertbarer Vorlauf → Rückfall auf before ($base)"
+          fi
+          echo "DEPLOY_BASE=$base" >> "$GITHUB_ENV"
 
       - name: Deploy geänderte Apps
         env:
@@ -292,11 +322,11 @@ jobs:
             "yih7d7kz4tkkgezqzg1zzjcs|nextdays-redis|deploy/redis-standalone/"
           )
 
-          # Geänderte Dateien dieses Pushes ermitteln (Fallback: alles).
-          BEFORE="${{ github.event.before }}"
+          # Geänderte Dateien seit dem letzten deployten Stand (Fallback: alles).
+          BEFORE="$DEPLOY_BASE"
           if [ -z "$BEFORE" ] || [ "$BEFORE" = "0000000000000000000000000000000000000000" ] \
              || ! git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
-            echo "Kein gültiger before-Commit → alle Apps prüfen (Erst-Push/Force)."
+            echo "Kein gültiger Basis-Commit → alle Apps prüfen (Erst-Push/Force)."
             CHANGED=$(git ls-files)
           else
             CHANGED=$(git diff --name-only "$BEFORE" "${{ github.sha }}")
