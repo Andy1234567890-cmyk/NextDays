@@ -189,6 +189,18 @@ _UNINC_PARTNER_KEYS = {
 }
 _COMPANY_GENERIC = {"company", "firma", "og"}   # grobes „Firma" ohne genaue Form
 
+# Reihenfolge = Prüfreihenfolge: konkrete Rechtsform vor grobem „Firma".
+# Vereine hängen nicht in der Tabelle, weil ihre structure vom Namen abhängt
+# (eingetragen vs. nicht eingetragen).
+_FORM_TABLE: tuple[tuple[frozenset[str] | set[str], str, str | None], ...] = (
+    (_INDIVIDUAL_KEYS, _INDIVIDUAL, None),
+    (_PRIVATE_CORP_KEYS, _COMPANY, _S_PRIV_CORP),
+    (_PUBLIC_CORP_KEYS, _COMPANY, _S_PUB_CORP),
+    (_INC_PARTNER_KEYS, _COMPANY, _S_INC_PARTNER),
+    (_UNINC_PARTNER_KEYS, _COMPANY, _S_UNINC_PARTNER),
+    (_COMPANY_GENERIC, _COMPANY, None),
+)
+
 
 def business_type_for(
     legal_form: str | None, account_type: str | None
@@ -202,29 +214,16 @@ def business_type_for(
     natürliche Person (kein erfundener Firmenzwang).
     """
     key = _norm(legal_form)
-    if key in _INDIVIDUAL_KEYS:
-        return (_INDIVIDUAL, None)
     if key in _NON_PROFIT_KEYS:
         # nicht eingetragener Verein → unincorporated, sonst incorporated.
         unincorporated = "nicht" in key or "n.e.v" in key
         return (_NON_PROFIT,
                 _S_UNINC_NONPROFIT if unincorporated else _S_INC_NONPROFIT)
-    if key in _PRIVATE_CORP_KEYS:
-        return (_COMPANY, _S_PRIV_CORP)
-    if key in _PUBLIC_CORP_KEYS:
-        return (_COMPANY, _S_PUB_CORP)
-    if key in _INC_PARTNER_KEYS:
-        return (_COMPANY, _S_INC_PARTNER)
-    if key in _UNINC_PARTNER_KEYS:
-        return (_COMPANY, _S_UNINC_PARTNER)
-    if key in _COMPANY_GENERIC:
-        return (_COMPANY, None)
+    for keys, business_type, structure in _FORM_TABLE:
+        if key in keys:
+            return (business_type, structure)
     # Rechtsform unbekannt → grobes account_type als Rückfall (ohne structure).
     at = _norm(account_type)
-    if at == _COMPANY:
-        return (_COMPANY, None)
-    if at == _NON_PROFIT:
-        return (_NON_PROFIT, None)
+    if at in (_COMPANY, _NON_PROFIT):
+        return (at, None)
     return (_INDIVIDUAL, None)
-
-

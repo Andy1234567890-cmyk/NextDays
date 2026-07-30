@@ -329,9 +329,11 @@ def _cap_adjust(adjust: float, discount_cap_pct: float, premium_cap_pct: float) 
 
     adjust < 0 (Rabatt) auf −discount_cap begrenzt, adjust > 0 (Aufschlag) auf
     +premium_cap. Cap <= 0 → keine Begrenzung in dieser Richtung."""
-    if adjust < 0 and discount_cap_pct > 0:
-        adjust = max(adjust, -discount_cap_pct / 100.0)
-    elif adjust > 0 and premium_cap_pct > 0:
+    if adjust < 0:
+        if discount_cap_pct > 0:
+            adjust = max(adjust, -discount_cap_pct / 100.0)
+    elif premium_cap_pct > 0:
+        # adjust == 0 bleibt durch min(0, cap) unverändert.
         adjust = min(adjust, premium_cap_pct / 100.0)
     return 1.0 + adjust
 

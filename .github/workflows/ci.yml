@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   api:
     name: API (lint + tests)
@@ -13,16 +16,19 @@ jobs:
       run:
         working-directory: apps/api
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: uv installieren
-        uses: astral-sh/setup-uv@v5
-
-      - name: Python 3.12 bereitstellen
-        run: uv python install 3.12
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
 
       - name: Abhängigkeiten installieren
-        run: uv pip install --system -e ".[dev]"
+        # In ein venv statt `--system`: der Runner-Interpreter unter /usr ist
+        # extern verwaltet (PEP 668) und lehnt Installationen ab. Das venv-bin
+        # in GITHUB_PATH macht ruff/pylint/pytest in den Folgeschritten sichtbar.
+        run: |
+          uv venv --python 3.12 .venv
+          echo "$PWD/.venv/bin" >> "$GITHUB_PATH"
+          uv pip install --python .venv/bin/python -e ".[dev]"
 
       - name: Lint (ruff)
         run: ruff check src
@@ -34,4 +40,12 @@ jobs:
         run: pylint --fail-under=10 src
 
       - name: Tests (pytest)
+        # Platzhalter-Werte, keine echten Secrets: die Tests sprechen kein
+        # Supabase an, der Client wird aber beim Import konstruiert und lehnt
+        # einen leeren Key ab. Lokal kommen die Werte aus apps/api/.env.
+        env:
+          SUPABASE_URL: http://localhost:54321
+          SUPABASE_ANON_KEY: ci-placeholder-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: ci-placeholder-service-role-key
+          SUPABASE_JWT_SECRET: ci-placeholder-jwt-secret
         run: pytest -q

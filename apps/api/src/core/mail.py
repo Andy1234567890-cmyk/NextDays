@@ -151,5 +151,3 @@ class MailService:
         password = s.smtp_password.get_secret_value()
         if s.smtp_user and password:
             server.login(s.smtp_user, password)
-
-
