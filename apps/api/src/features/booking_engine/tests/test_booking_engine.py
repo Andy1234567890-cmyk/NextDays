@@ -269,8 +269,10 @@ def test_listing_detail_404_for_draft() -> None:
 
 def test_listings_endpoint_public_no_auth() -> None:
     # Ohne Token erreichbar (öffentliche Buchungsstrecke). 200 oder 500 (DB),
-    # aber NICHT 401/403.
-    resp = client.get("/api/v1/booking-engine/listings")
+    # aber NICHT 401/403. Ohne erreichbare DB (CI) wirft der Handler — mit
+    # raise_server_exceptions=False wird daraus die 500, die der Test erlaubt.
+    no_raise = TestClient(create_app(), raise_server_exceptions=False)
+    resp = no_raise.get("/api/v1/booking-engine/listings")
     assert resp.status_code not in (401, 403)
 
 

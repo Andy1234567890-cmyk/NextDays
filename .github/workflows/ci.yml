@@ -40,4 +40,12 @@ jobs:
         run: pylint --fail-under=10 src
 
       - name: Tests (pytest)
+        # Platzhalter-Werte, keine echten Secrets: die Tests sprechen kein
+        # Supabase an, der Client wird aber beim Import konstruiert und lehnt
+        # einen leeren Key ab. Lokal kommen die Werte aus apps/api/.env.
+        env:
+          SUPABASE_URL: http://localhost:54321
+          SUPABASE_ANON_KEY: ci-placeholder-anon-key
+          SUPABASE_SERVICE_ROLE_KEY: ci-placeholder-service-role-key
+          SUPABASE_JWT_SECRET: ci-placeholder-jwt-secret
         run: pytest -q
