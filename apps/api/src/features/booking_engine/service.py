@@ -6,6 +6,7 @@ die Autorisierung). Der Buchungskalender (availability) ist die oberste Wahrheit
 jede Buchung prüft Double-Booking (409) und pusht realtime an Channex/OTAs.
 """
 from datetime import UTC, date, datetime, timedelta
+from math import asin, cos, radians, sin, sqrt
 
 from postgrest.exceptions import APIError
 from supabase import Client
@@ -64,6 +65,11 @@ _MAX_SITEMAP_ENTRIES = 10000
 # (Wurzel 5): darüber 422 statt stiller Deckelung.
 _MAX_SPAN_DAYS = 730
 
+# Max. Umkreis der Standortsuche („In der Nähe" in der App). Ohne Obergrenze
+# wäre `radius_km` ein Weg, die Marktplatz-Filterung auszuhebeln; fail-closed
+# (Wurzel 5/8): darüber 422 statt stiller Deckelung.
+_MAX_RADIUS_KM = 500.0
+
 
 class BookingEngineError(Exception):
     def __init__(self, message: str, *, status_code: int = 400) -> None:
@@ -90,6 +96,40 @@ def _assert_span(start: date | None, end: date | None) -> None:
         )
 
 
+
+
+def _assert_near(
+    lat: float | None, lng: float | None, radius_km: float | None
+) -> None:
+    """Standortsuche: lat/lng nur gemeinsam, in gültigen Bereichen, Radius
+    innerhalb der Obergrenze. Unvollständig/außerhalb → 422 (fail-closed)."""
+    if lat is None and lng is None:
+        if radius_km is not None:
+            raise BookingEngineError(
+                "radius_km braucht lat und lng.", status_code=422
+            )
+        return
+    if lat is None or lng is None:
+        raise BookingEngineError(
+            "lat und lng müssen gemeinsam angegeben werden.", status_code=422
+        )
+    if not -90.0 <= lat <= 90.0 or not -180.0 <= lng <= 180.0:
+        raise BookingEngineError("lat/lng außerhalb des gültigen Bereichs.", status_code=422)
+    if radius_km is not None and (radius_km <= 0 or radius_km > _MAX_RADIUS_KM):
+        raise BookingEngineError(
+            f"radius_km muss zwischen 0 und {_MAX_RADIUS_KM:.0f} liegen.", status_code=422
+        )
+
+
+def _distance_km(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """Großkreis-Entfernung in km (Haversine). Genauigkeit reicht für die
+    Umkreissuche; die Objekt-Koordinaten sind ohnehin gerundet."""
+    radius_erde_km = 6371.0
+    p1, p2 = radians(lat1), radians(lat2)
+    d_lat = radians(lat2 - lat1)
+    d_lng = radians(lng2 - lng1)
+    a = sin(d_lat / 2) ** 2 + cos(p1) * cos(p2) * sin(d_lng / 2) ** 2
+    return 2 * radius_erde_km * asin(sqrt(a))
 
 
 def _round_coord(value: object) -> float | None:
@@ -146,6 +186,9 @@ class BookingEngineService:
         end: date | None = None,
         tenant: str | None = None,
         property_ids: list[str] | None = None,
+        lat: float | None = None,
+        lng: float | None = None,
+        radius_km: float | None = None,
     ) -> PublicListingListResponse:
         """Öffentliche Liste buchbarer Objekte. STRIKT status='active' — draft/
         inactive erscheinen NIE. Default tenant-übergreifend (zentraler Marktplatz);
@@ -154,9 +197,13 @@ class BookingEngineService:
 
         Bei gesetztem start/end fließt die Verfügbarkeit ein (belegte Objekte
         fallen raus) und `price_from` ist der Effektivpreis des Zeitraums. `q`
-        filtert über Titel/Ort, `guests` über die Kapazität.
+        filtert über Titel/Ort, `guests` über die Kapazität. Mit `lat`/`lng`
+        (+ optionalem `radius_km`) wird nach Entfernung gefiltert und sortiert
+        („In der Nähe" der App) — Objekte ohne Koordinaten fallen dabei raus,
+        statt mit einer geratenen Position zu erscheinen (Wurzel 4).
         """
         _assert_span(start, end)
+        _assert_near(lat, lng, radius_km)
         # Leere property_ids-Liste = bewusst „keine Objekte" (nicht „alle"): der
         # Featured-Block ohne Auswahl darf nicht versehentlich alles rendern.
         if property_ids is not None and not property_ids:
@@ -203,6 +250,22 @@ class BookingEngineService:
                 or needle in (r.get("city") or "").lower()
                 or needle in (r.get("country") or "").lower()
             ]
+
+        # Standortsuche: nach Entfernung filtern UND sortieren. Objekte ohne
+        # Koordinaten fallen raus — eine geratene Position wäre eine Falschaussage
+        # (Wurzel 4). Sortierung ersetzt hier bewusst die Titel-Sortierung.
+        if lat is not None and lng is not None:
+            with_distance: list[tuple[float, dict]] = []
+            for r in rows:
+                r_lat, r_lng = _round_coord(r.get("lat")), _round_coord(r.get("lng"))
+                if r_lat is None or r_lng is None:
+                    continue
+                km = _distance_km(lat, lng, r_lat, r_lng)
+                if radius_km is not None and km > radius_km:
+                    continue
+                with_distance.append((km, r))
+            with_distance.sort(key=lambda paar: paar[0])
+            rows = [r for _, r in with_distance]
 
         if not rows:
             return PublicListingListResponse(items=[], total=0)

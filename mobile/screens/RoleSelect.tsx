@@ -52,8 +52,11 @@ export default function RoleSelect() {
         gap: 28,
       }}
     >
-      <Col gap={10}>
-        <Image source={require("@/assets/img/Logo_transparent.png")} style={{ height: 32, resizeMode: 'contain', alignSelf: 'flex-start', tintColor: t.palette.accent }} />
+      <Col gap={12}>
+        <Image
+          source={require("@/assets/img/Logo_transparent.png")}
+          style={{ height: 44, width: 160, resizeMode: "contain", alignSelf: "flex-start" }}
+        />
         <Txt v="display">
           Buchen, verwalten,{"\n"}ankommen.
         </Txt>
@@ -63,10 +66,10 @@ export default function RoleSelect() {
       </Col>
 
       <Col gap={12}>
-        <Btn variant="primary" block icon="home" iconR="fwd" onPress={() => navigation.navigate("GuestTabs", { screen: "Discover" })}>
+        <Btn variant="dark" block onPress={() => navigation.navigate("GuestTabs", { screen: "Home" })}>
           Als Gast entdecken
         </Btn>
-        <Btn variant="dark" block icon="chart" iconR="fwd" onPress={goHost}>
+        <Btn variant="outline" block onPress={goHost}>
           Als Gastgeber verwalten
         </Btn>
       </Col>

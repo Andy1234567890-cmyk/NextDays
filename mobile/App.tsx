@@ -24,6 +24,7 @@ import { OwnerTabs } from "@/navigation/OwnerTabs";
 import type { RootStackParamList } from "@/navigation/types";
 import Checkin from "@/screens/Checkin";
 import Checkout from "@/screens/Checkout";
+import GuestAccount from "@/screens/GuestAccount";
 import GuestLogin from "@/screens/GuestLogin";
 import HostLogin from "@/screens/HostLogin";
 import HostSignup from "@/screens/HostSignup";
@@ -128,6 +129,7 @@ function Root() {
             <Stack.Screen name="Checkin" component={Checkin} options={{ presentation: "card" }} />
             <Stack.Screen name="TripDetail" component={TripDetail} />
             <Stack.Screen name="WishlistDetail" component={WishlistDetail} />
+            <Stack.Screen name="GuestAccount" component={GuestAccount} />
           </>
         ) : (
           <Stack.Screen name="GuestLogin" component={GuestLogin} />

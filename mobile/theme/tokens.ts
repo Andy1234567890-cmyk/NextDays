@@ -1,5 +1,6 @@
-// Design-Tokens der NextDays-App — portiert aus dem Design-Kit (app-kit.jsx
-// ND_CSS). Farben, Radien, Schatten, Typo-Skala und Dichte. Light + Dark.
+// Design-Tokens der NextDays-App. Struktur/Dichte folgen dem Airbnb-App-Muster
+// (weiße Fläche, feine Trennlinien, flache Bildradien, randlose Karten), die
+// Farbwelt bleibt myNextDays. Light + Dark.
 // Akzentfarbe ist konfigurierbar (Tweak „Akzent" im Mockup → hier Default).
 
 import type { TextStyle, ViewStyle } from "react-native";
@@ -20,46 +21,49 @@ export type Palette = {
   star: string;
 };
 
-// Light-Palette (Default-Werte aus ND_CSS).
+// Light-Palette. Die Fläche ist weiß (Airbnb-Muster), Abgrenzung entsteht über
+// feine Linien statt über eingefärbte Flächen.
 export function lightPalette(accent: string): Palette {
   return {
-    bg: "#F6F2EC",
+    bg: "#FFFFFF",
     surface: "#FFFFFF",
-    surface2: "#F2ECE3",
-    ink: "#1C1A17",
-    soft: "#837A6E",
-    faint: "#B6ADA0",
-    line: "rgba(28,26,23,0.09)",
+    surface2: "#F7F7F7",
+    ink: "#181614",
+    soft: "#6F6864",
+    faint: "#A8A29C",
+    line: "rgba(24,22,20,0.12)",
     accent,
     accentInk: "#FFFFFF",
     // CSS: color-mix(accent 12%, #fff) — als statische Annäherung gerendert.
     accentSoft: mix(accent, "#FFFFFF", 0.12),
-    star: "#E8A33D",
+    star: "#181614",
   };
 }
 
 // Dark-Palette (aus den Dark-Mode-Overrides im NextDays App.html).
 export function darkPalette(accent: string): Palette {
   return {
-    bg: "#15130F",
-    surface: "#211E18",
-    surface2: "#2C281F",
-    ink: "#F4EFE7",
-    soft: "#A89E8E",
-    faint: "#6F665A",
-    line: "rgba(255,255,255,0.10)",
+    bg: "#141210",
+    surface: "#1C1A18",
+    surface2: "#252220",
+    ink: "#F4F1ED",
+    soft: "#A9A29B",
+    faint: "#726B64",
+    line: "rgba(255,255,255,0.14)",
     accent,
     accentInk: "#FFFFFF",
-    accentSoft: mix(accent, "#211E18", 0.24),
-    star: "#E8A33D",
+    accentSoft: mix(accent, "#1C1A18", 0.24),
+    star: "#F4F1ED",
   };
 }
 
 // Eckradien (px aus dem Kit — Borderradien sind erlaubte px-Ausnahme).
+// `img` folgt dem Airbnb-Kachelbild (flach, ~12), `sheet` der Bottom-Sheet-Kappe.
 export const radius = {
-  card: 22,
-  img: 18,
-  btn: 14,
+  card: 12,
+  img: 12,
+  btn: 12,
+  sheet: 28,
   pill: 999,
 };
 
@@ -71,21 +75,22 @@ export const density: Record<Density, { pad: number; gap: number }> = {
   luftig: { pad: 24, gap: 20 },
 };
 
-// Schatten (iOS + Android elevation) — aus den --shadow-Variablen abgeleitet.
+// Schatten. `sm` ist der schwebende Ring der Such-Pill / runder Buttons,
+// `card` der Sheet-Schatten. Flächenkarten tragen bewusst KEINEN Schatten.
 export const shadow = {
   sm: {
-    shadowColor: "#1C1A17",
-    shadowOpacity: 0.16,
-    shadowRadius: 14,
-    shadowOffset: { width: 0, height: 4 },
+    shadowColor: "#000000",
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 },
     elevation: 3,
   } as ViewStyle,
   card: {
-    shadowColor: "#1C1A17",
+    shadowColor: "#000000",
     shadowOpacity: 0.18,
-    shadowRadius: 30,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 6,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 12,
   } as ViewStyle,
 };
 
@@ -99,15 +104,16 @@ export const fonts = {
   extrabold: "SchibstedGrotesk-ExtraBold",
 };
 
-// Typo-Skala (font-size/weight/spacing) aus ND_CSS. Letter-Spacing in px.
+// Typo-Skala (font-size/weight/spacing). Größen folgen der Airbnb-App:
+// Sheet-Überschrift 26, Sektionstitel 22, Kartentitel 15, Kartenmeta 15.
 export const type: Record<string, TextStyle> = {
-  display: { fontSize: 30, fontFamily: fonts.extrabold, lineHeight: 31, letterSpacing: -0.9 },
-  h1: { fontSize: 24, fontFamily: fonts.bold, lineHeight: 26, letterSpacing: -0.6 },
-  h2: { fontSize: 19, fontFamily: fonts.bold, letterSpacing: -0.38 },
-  title: { fontSize: 16, fontFamily: fonts.semibold, letterSpacing: -0.16 },
-  body: { fontSize: 14.5, fontFamily: fonts.regular, lineHeight: 21 },
-  sm: { fontSize: 13, fontFamily: fonts.medium },
-  xs: { fontSize: 11.5, fontFamily: fonts.semibold },
+  display: { fontSize: 30, fontFamily: fonts.extrabold, lineHeight: 34, letterSpacing: -0.7 },
+  h1: { fontSize: 26, fontFamily: fonts.bold, lineHeight: 31, letterSpacing: -0.5 },
+  h2: { fontSize: 22, fontFamily: fonts.bold, lineHeight: 27, letterSpacing: -0.4 },
+  title: { fontSize: 15, fontFamily: fonts.semibold, lineHeight: 20, letterSpacing: -0.1 },
+  body: { fontSize: 15, fontFamily: fonts.regular, lineHeight: 21 },
+  sm: { fontSize: 15, fontFamily: fonts.regular, lineHeight: 20 },
+  xs: { fontSize: 13, fontFamily: fonts.regular, lineHeight: 18 },
   eyebrow: {
     fontSize: 11,
     fontFamily: fonts.bold,

@@ -9,10 +9,12 @@
 // Bewertung und Belegung gibt es auf dem Host-Pfad NICHT, also stehen sie hier
 // auch nicht als Strich oder Null — sie fehlen einfach.
 import { useCallback, useEffect, useState } from "react";
-import { RefreshControl, ScrollView, View } from "react-native";
+import { Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Btn, Card, Chip, Col, Photo, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Icon } from "@/components/ui/Icon";
+import { Btn, Col, Photo, Row, Spinner, Txt } from "@/components/ui/kit";
+import { EmptyState } from "@/components/ui/patterns";
 import {
   listProperties,
   propertyTypeLabel,
@@ -66,92 +68,88 @@ export default function Listings() {
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
       <Row
         style={{
-          paddingHorizontal: 20,
-          paddingTop: 4,
-          paddingBottom: 14,
+          paddingHorizontal: 24,
+          paddingTop: 12,
+          paddingBottom: 16,
           justifyContent: "space-between",
+          alignItems: "flex-start",
         }}
       >
-        <Col gap={2}>
-          <Txt v="h1">Inserate</Txt>
-          <Txt v="sm" soft>
+        <Col gap={4} style={{ flex: 1 }}>
+          <Txt v="display">Inserate</Txt>
+          <Txt v="body" soft>
             {untertitel}
           </Txt>
         </Col>
-        <Btn variant="primary" icon="plus" style={{ paddingVertical: 11, paddingHorizontal: 15 }}>
-          Neu
-        </Btn>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Neues Objekt"
+          hitSlop={10}
+          style={({ pressed }) => ({ padding: 6, opacity: pressed ? 0.6 : 1 })}
+        >
+          <Icon n="plus" s={24} sw={2} c={t.palette.ink} />
+        </Pressable>
       </Row>
 
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 40, gap: 16 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, gap: 28 }}
         refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
       >
         {!items && !error && <Spinner />}
 
         {error && (
-          <Card style={{ padding: 16, gap: 12 }}>
-            <Txt v="title">Objekte nicht geladen</Txt>
-            <Txt v="sm" soft>
-              {error}
-            </Txt>
-            <Btn variant="outline" onPress={load}>
+          <EmptyState icon="info" titel="Objekte nicht geladen" text={error}>
+            <Btn variant="outline" onPress={load} style={{ marginTop: 6 }}>
               Erneut versuchen
             </Btn>
-          </Card>
+          </EmptyState>
         )}
 
         {items?.length === 0 && (
-          <Card style={{ padding: 16, gap: 6 }}>
-            <Txt v="title">Noch kein Objekt</Txt>
-            <Txt v="sm" soft>
-              Lege dein erstes Objekt an — eine buchbare Einheit, also ein Zimmer oder ein
-              Ferienobjekt.
-            </Txt>
-          </Card>
+          <EmptyState
+            icon="home"
+            titel="Noch kein Objekt"
+            text="Lege dein erstes Objekt an — eine buchbare Einheit, also ein Zimmer oder ein Ferienobjekt."
+          />
         )}
 
         {items?.map((p) => (
-          <Card key={p.id} style={{ overflow: "hidden" }}>
-            <Photo src={p.photos?.[0]} grad="grad1" h={130}>
-              <Chip
+          <Col key={p.id} gap={12}>
+            <Photo src={p.photos?.[0]} grad="grad1" r={t.radius.img} style={{ aspectRatio: 16 / 10 }}>
+              <View
                 style={{
                   position: "absolute",
-                  top: 12,
-                  left: 12,
-                  backgroundColor: p.status === "active" ? t.palette.accent : "rgba(0,0,0,0.55)",
+                  top: 10,
+                  left: 10,
+                  paddingVertical: 6,
+                  paddingHorizontal: 12,
+                  borderRadius: t.radius.pill,
+                  backgroundColor: "rgba(255,255,255,0.95)",
                 }}
-                textColor="#fff"
               >
-                {p.status === "active" ? "● Live" : p.status === "draft" ? "Entwurf" : "Inaktiv"}
-              </Chip>
+                <Txt v="xs" color="#181614" style={{ fontFamily: t.fonts.semibold }}>
+                  {p.status === "active" ? "Live" : p.status === "draft" ? "Entwurf" : "Inaktiv"}
+                </Txt>
+              </View>
             </Photo>
-            <Col style={{ padding: 16, gap: 12 }}>
-              <Col gap={2}>
-                <Txt v="title" numberOfLines={1}>
-                  {p.title}
-                </Txt>
-                <Txt v="xs" soft numberOfLines={1}>
-                  {[propertyTypeLabel(p.property_type), p.city].filter(Boolean).join(" · ")}
-                </Txt>
-              </Col>
 
-              <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
-                {p.channels ? (
-                  <Row gap={8}>
-                    {(["website", "marketplace", "portals"] as ChannelKey[]).map((k) => (
-                      <ChannelDot key={k} label={CHANNEL_LABEL[k]} state={p.channels![k]} />
-                    ))}
-                  </Row>
-                ) : (
-                  <View />
-                )}
-                <Btn variant="ghost" iconR="fwd" style={{ paddingVertical: 9, paddingHorizontal: 14 }}>
-                  Verwalten
-                </Btn>
-              </Row>
+            <Col gap={3}>
+              <Txt v="title" numberOfLines={1}>
+                {p.title}
+              </Txt>
+              <Txt v="sm" soft numberOfLines={1}>
+                {[propertyTypeLabel(p.property_type), p.city].filter(Boolean).join(" · ")}
+              </Txt>
             </Col>
-          </Card>
+
+            {p.channels && (
+              <Row gap={14}>
+                {(["website", "marketplace", "portals"] as ChannelKey[]).map((k) => (
+                  <ChannelDot key={k} label={CHANNEL_LABEL[k]} state={p.channels![k]} />
+                ))}
+              </Row>
+            )}
+          </Col>
         ))}
       </ScrollView>
     </View>

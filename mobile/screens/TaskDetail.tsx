@@ -5,11 +5,12 @@
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCallback, useEffect, useState } from "react";
-import { Alert, ScrollView, View } from "react-native";
+import { Alert, Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/ui/Icon";
-import { Btn, Card, Chip, Col, Divider, IconBtn, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Btn, Chip, Col, Row, Spinner, Txt } from "@/components/ui/kit";
+import { EmptyState } from "@/components/ui/patterns";
 import { useRealtime } from "@/lib/realtime";
 import { completeTask, getTaskDetail, type TaskDetail as Detail } from "@/lib/tasks";
 import type { RootStackParamList } from "@/navigation/types";
@@ -54,18 +55,18 @@ export default function TaskDetail() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: t.palette.bg }}>
+      <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top + 40 }}>
         <Spinner />
       </View>
     );
   }
   if (!detail) {
     return (
-      <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top + 20, paddingHorizontal: 20, gap: 16 }}>
-        <IconBtn icon="back" onPress={() => navigation.goBack()} />
-        <Txt v="sm" soft>
-          Aufgabe nicht gefunden.
-        </Txt>
+      <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
+        <Row style={{ paddingHorizontal: 12, paddingVertical: 8 }}>
+          <ZurueckKnopf onPress={() => navigation.goBack()} />
+        </Row>
+        <EmptyState icon="info" titel="Nicht gefunden" text="Diese Aufgabe gibt es nicht (mehr)." />
       </View>
     );
   }
@@ -73,54 +74,60 @@ export default function TaskDetail() {
   const done = detail.status === "done";
 
   return (
-    <View style={{ flex: 1, backgroundColor: t.palette.bg }}>
-      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 8, paddingHorizontal: 20, paddingBottom: 120, gap: 16 }}>
-        <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
-          <IconBtn icon="back" onPress={() => navigation.goBack()} />
-          <Chip variant={done ? "accent" : ""}>{done ? "Erledigt" : "Offen"}</Chip>
-        </Row>
+    <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
+      <Row style={{ paddingHorizontal: 12, paddingVertical: 8, justifyContent: "space-between" }}>
+        <ZurueckKnopf onPress={() => navigation.goBack()} />
+        <Chip variant={done ? "on" : ""}>{done ? "Erledigt" : "Offen"}</Chip>
+      </Row>
 
-        <Col gap={4}>
-          <Txt v="h1">{detail.title}</Txt>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120, gap: 22 }}>
+        <Col gap={6}>
+          <Txt v="display">{detail.title}</Txt>
           {detail.property_title && (
-            <Txt v="sm" soft>
+            <Txt v="body" soft>
               {detail.property_title}
+            </Txt>
+          )}
+          {detail.needs_inspection && (
+            <Txt v="sm" soft>
+              Nach Abschluss ist eine QA-Freigabe nötig.
             </Txt>
           )}
         </Col>
 
-        {detail.needs_inspection && <Chip variant="ghost">Nach Abschluss QA-Freigabe nötig</Chip>}
-
         {detail.checklist.length > 0 && (
-          <Card style={{ padding: 4 }}>
-            {detail.checklist.map((item, i) => (
-              <View key={item.id}>
-                {i > 0 && <Divider style={{ marginHorizontal: 12 }} />}
-                <Row style={{ padding: 12, gap: 10, alignItems: "center" }}>
-                  <Icon
-                    n={item.done ? "check" : "dot"}
-                    s={18}
-                    c={item.done ? t.palette.accent : t.palette.faint}
-                  />
-                  <Col gap={1} style={{ flex: 1 }}>
-                    <Txt v="sm" style={{ fontWeight: "600" }}>
-                      {item.label}
-                    </Txt>
-                    {item.room && (
-                      <Txt v="xs" soft>
-                        {item.room}
-                      </Txt>
-                    )}
-                  </Col>
-                  {item.requires_photo && (
-                    <Chip variant="ghost" icon="sparkle">
-                      {item.photos.length > 0 ? `${item.photos.length}` : "Foto"}
-                    </Chip>
-                  )}
-                </Row>
-              </View>
-            ))}
-          </Card>
+          <>
+            <View style={{ height: 1, backgroundColor: t.palette.line }} />
+            <Col gap={12}>
+              <Txt v="h2">Checkliste</Txt>
+              <Col gap={0}>
+                {detail.checklist.map((item, i) => (
+                  <View key={item.id}>
+                    {i > 0 && <View style={{ height: 1, backgroundColor: t.palette.line }} />}
+                    <Row gap={12} style={{ paddingVertical: 14, alignItems: "center" }}>
+                      <Icon
+                        n={item.done ? "check" : "dot"}
+                        s={19}
+                        sw={2}
+                        c={item.done ? t.palette.ink : t.palette.faint}
+                      />
+                      <Col gap={2} style={{ flex: 1 }}>
+                        <Txt v="title">{item.label}</Txt>
+                        {item.room && (
+                          <Txt v="sm" soft>
+                            {item.room}
+                          </Txt>
+                        )}
+                      </Col>
+                      {item.requires_photo && (
+                        <Chip>{item.photos.length > 0 ? `${item.photos.length} Fotos` : "Foto nötig"}</Chip>
+                      )}
+                    </Row>
+                  </View>
+                ))}
+              </Col>
+            </Col>
+          </>
         )}
       </ScrollView>
 
@@ -131,18 +138,34 @@ export default function TaskDetail() {
             left: 0,
             right: 0,
             bottom: 0,
-            padding: 20,
+            paddingHorizontal: 24,
+            paddingTop: 16,
             paddingBottom: insets.bottom + 16,
             backgroundColor: t.palette.surface,
             borderTopWidth: 1,
             borderTopColor: t.palette.line,
           }}
         >
-          <Btn variant="primary" block icon="check" onPress={saving ? undefined : complete}>
+          <Btn variant="dark" block onPress={saving ? undefined : complete}>
             {saving ? "Wird abgeschlossen …" : "Aufgabe abschließen"}
           </Btn>
         </View>
       )}
     </View>
+  );
+}
+
+function ZurueckKnopf({ onPress }: { onPress: () => void }) {
+  const t = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Zurück"
+      onPress={onPress}
+      hitSlop={10}
+      style={({ pressed }) => ({ padding: 8, opacity: pressed ? 0.6 : 1 })}
+    >
+      <Icon n="back" s={22} sw={2} c={t.palette.ink} />
+    </Pressable>
   );
 }

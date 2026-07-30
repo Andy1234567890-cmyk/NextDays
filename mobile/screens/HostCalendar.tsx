@@ -14,7 +14,7 @@ import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/ui/Icon";
-import { Card, Col, IconBtn, Photo, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Card, Col, Photo, Row, Spinner, Txt } from "@/components/ui/kit";
 import { getBoard, type BoardProperty, type DayAvailability } from "@/lib/calendar";
 import {
   addDays,
@@ -227,17 +227,21 @@ export default function HostCalendar() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
-      <Col style={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 12, gap: 14 }}>
-        <Row style={{ justifyContent: "space-between" }}>
-          <Txt v="h1">Kalender</Txt>
-          <Row gap={8}>
+      <Col style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 14, gap: 16 }}>
+        <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
+          <Txt v="display">Kalender</Txt>
+          <Row gap={10}>
             {loading && <Spinner />}
             {/* Ansicht umschalten: Grid-Icon = Matrix (Objekte×Tage), List = Monat. */}
-            <IconBtn
-              icon={view === "matrix" ? "list" : "grid"}
-              flat
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={view === "matrix" ? "Monatsansicht" : "Objektübersicht"}
               onPress={() => setView((v) => (v === "matrix" ? "month" : "matrix"))}
-            />
+              hitSlop={10}
+              style={({ pressed }) => ({ padding: 6, opacity: pressed ? 0.6 : 1 })}
+            >
+              <Icon n={view === "matrix" ? "list" : "grid"} s={22} sw={1.8} c={t.palette.ink} />
+            </Pressable>
           </Row>
         </Row>
 

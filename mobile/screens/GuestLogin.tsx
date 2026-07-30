@@ -3,19 +3,35 @@
 // ohne Rolle. Beide Sessions liegen getrennt im Schlüsselbund und können
 // nebeneinander bestehen.
 //
+// Aufbau wie die Anmeldemaske der Referenz-Apps: Logo mittig, ruhige
+// Feldliste, breite Pill als Hauptaktion, sekundäre Wege darunter. Es gibt
+// bewusst KEINE Google-/Apple-Kacheln — dafür existiert serverseitig kein
+// Anmeldeweg, ein Knopf dafür wäre eine Attrappe.
+//
 // Der Passwort-Reset antwortet serverseitig IMMER 200 (kein Existenz-Leak) —
 // die App zeigt deshalb dieselbe neutrale Meldung, egal ob die Adresse existiert.
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, TextInput } from "react-native";
+import {
+  Image,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  TextInput,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Btn, Col, IconBtn, Row, Segmented, Txt } from "@/components/ui/kit";
+import { Icon } from "@/components/ui/Icon";
+import { Btn, Col, Row, Txt } from "@/components/ui/kit";
 import { useGuestAuth } from "@/contexts/GuestAuthContext";
 import { guestPasswordReset } from "@/lib/guestAuth";
 import type { RootStackParamList } from "@/navigation/types";
 import { useTheme } from "@/theme/ThemeProvider";
+
+const logoImg = require("../assets/img/Logo_transparent.png");
 
 function istEmail(wert: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(wert.trim());
@@ -28,7 +44,7 @@ export default function GuestLogin() {
   const route = useRoute<RouteProp<RootStackParamList, "GuestLogin">>();
   const { login, register } = useGuestAuth();
 
-  const [modus, setModus] = useState(route.params?.modus === "registrieren" ? 1 : 0);
+  const [registrieren, setRegistrieren] = useState(route.params?.modus === "registrieren");
   const [email, setEmail] = useState("");
   const [passwort, setPasswort] = useState("");
   const [name, setName] = useState("");
@@ -37,7 +53,6 @@ export default function GuestLogin() {
   const [fehler, setFehler] = useState<string | null>(null);
   const [hinweis, setHinweis] = useState<string | null>(null);
 
-  const registrieren = modus === 1;
   // Serverseitige Mindestlänge (8) hier spiegeln, damit der Nutzer nicht erst
   // ein 422 kassiert. Die verbindliche Prüfung bleibt im Backend.
   const formularOk =
@@ -76,52 +91,81 @@ export default function GuestLogin() {
     setBusy(false);
   };
 
+  const modusWechseln = () => {
+    setRegistrieren((v) => !v);
+    setFehler(null);
+    setHinweis(null);
+  };
+
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Row style={{ paddingHorizontal: 20, paddingVertical: 8, gap: 14 }}>
-        <IconBtn icon="back" flat bg={t.palette.surface2} onPress={() => navigation.goBack()} />
-        <Txt v="h2">Gast-Konto</Txt>
+      {/* Kopf: nur das Schließen-Kreuz, wie beim Anmelde-Sheet der Referenz. */}
+      <Row style={{ paddingHorizontal: 16, paddingVertical: 10, justifyContent: "flex-end" }}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Schließen"
+          onPress={() => navigation.goBack()}
+          hitSlop={10}
+          style={({ pressed }) => ({ padding: 6, opacity: pressed ? 0.6 : 1 })}
+        >
+          <Icon n="x" s={22} sw={2} c={t.palette.ink} />
+        </Pressable>
       </Row>
 
-      <ScrollView contentContainerStyle={{ padding: 20, gap: 16 }} keyboardShouldPersistTaps="handled">
-        <Segmented
-          options={["Anmelden", "Registrieren"]}
-          value={modus}
-          onChange={(i) => {
-            setModus(i);
-            setFehler(null);
-            setHinweis(null);
-          }}
-        />
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, gap: 22 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Col gap={10} style={{ alignItems: "center", paddingTop: 24, paddingBottom: 6 }}>
+          <Image source={logoImg} style={{ width: 168, height: 62 }} resizeMode="contain" />
+          <Txt v="h1" style={{ textAlign: "center" }}>
+            {registrieren ? "Konto erstellen" : "Einloggen oder registrieren"}
+          </Txt>
+          <Txt v="sm" soft style={{ textAlign: "center" }}>
+            {registrieren
+              ? "Mit einem Gast-Konto verwaltest du Buchungen, Wunschlisten und den Check-in."
+              : "Melde dich an und plane deine nächste Reise."}
+          </Txt>
+        </Col>
 
-        <Txt v="sm" soft>
-          {registrieren
-            ? "Mit einem Gast-Konto verwaltest du Buchungen, Merklisten und den Check-in."
-            : "Melde dich mit deinem Gast-Konto an."}
-        </Txt>
-
-        {registrieren && (
-          <Feld label="Name" value={name} onChange={setName} autoCapitalize="words" />
-        )}
-        <Feld
-          label="E-Mail"
-          value={email}
-          onChange={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        <Feld label="Passwort" value={passwort} onChange={setPasswort} secure />
-        {registrieren && (
+        {/* Feldgruppe mit gemeinsamer Umrandung (Referenz-Muster). */}
+        <Col gap={0}>
+          {registrieren && (
+            <Feld
+              label="Name"
+              value={name}
+              onChange={setName}
+              autoCapitalize="words"
+              position="oben"
+            />
+          )}
           <Feld
-            label="Telefon (optional)"
-            value={telefon}
-            onChange={setTelefon}
-            keyboardType="phone-pad"
+            label="E-Mail-Adresse"
+            value={email}
+            onChange={setEmail}
+            keyboardType="email-address"
+            position={registrieren ? "mitte" : "oben"}
           />
-        )}
+          <Feld
+            label="Passwort"
+            value={passwort}
+            onChange={setPasswort}
+            secure
+            position={registrieren ? "mitte" : "unten"}
+          />
+          {registrieren && (
+            <Feld
+              label="Telefon (optional)"
+              value={telefon}
+              onChange={setTelefon}
+              keyboardType="phone-pad"
+              position="unten"
+            />
+          )}
+        </Col>
 
         {registrieren && passwort.length > 0 && passwort.length < 8 && (
           <Txt v="xs" soft>
@@ -130,9 +174,12 @@ export default function GuestLogin() {
         )}
 
         {fehler && (
-          <Txt v="sm" style={{ color: "#B02A2A" }}>
-            {fehler}
-          </Txt>
+          <Row gap={8} style={{ alignItems: "flex-start" }}>
+            <Icon n="info" s={17} sw={1.9} c={t.palette.accent} />
+            <Txt v="sm" accent style={{ flex: 1 }}>
+              {fehler}
+            </Txt>
+          </Row>
         )}
         {hinweis && (
           <Txt v="sm" soft>
@@ -141,28 +188,58 @@ export default function GuestLogin() {
         )}
 
         <Btn variant={formularOk && !busy ? "primary" : "ghost"} block onPress={absenden}>
-          {busy ? "Bitte warten …" : registrieren ? "Konto erstellen" : "Anmelden"}
+          {busy ? "Bitte warten …" : "Weiter"}
         </Btn>
 
         {!registrieren && (
-          <Btn variant="ghost" block onPress={passwortVergessen}>
-            Passwort vergessen
-          </Btn>
+          <Pressable onPress={passwortVergessen} style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}>
+            <Txt v="sm" style={{ textAlign: "center", textDecorationLine: "underline" }}>
+              Passwort vergessen
+            </Txt>
+          </Pressable>
         )}
 
-        <Col gap={6} style={{ marginTop: 10 }}>
+        <Trenner label="oder" />
+
+        <Btn variant="outline" block onPress={modusWechseln}>
+          {registrieren ? "Ich habe schon ein Konto" : "Neues Gast-Konto erstellen"}
+        </Btn>
+
+        <Col gap={8} style={{ marginTop: 6 }}>
           <Txt v="xs" soft style={{ textAlign: "center" }}>
             Du verwaltest Objekte? Der Betriebs-Zugang läuft über ein eigenes Konto.
           </Txt>
-          <Btn variant="ghost" block onPress={() => navigation.navigate("HostLogin")}>
-            Zum Gastgeber-Login
-          </Btn>
+          <Pressable
+            onPress={() => navigation.navigate("HostLogin")}
+            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+          >
+            <Txt v="sm" style={{ textAlign: "center", textDecorationLine: "underline" }}>
+              Zum Gastgeber-Login
+            </Txt>
+          </Pressable>
         </Col>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
+// --- Bausteine --------------------------------------------------------------
+
+function Trenner({ label }: { label: string }) {
+  const t = useTheme();
+  return (
+    <Row gap={14}>
+      <View style={{ flex: 1, height: 1, backgroundColor: t.palette.line }} />
+      <Txt v="xs" soft>
+        {label}
+      </Txt>
+      <View style={{ flex: 1, height: 1, backgroundColor: t.palette.line }} />
+    </Row>
+  );
+}
+
+// Feld einer zusammenhängenden Gruppe: die Ecken werden nur außen gerundet,
+// innen teilen sich benachbarte Felder eine Linie.
 function Feld({
   label,
   value,
@@ -170,6 +247,7 @@ function Feld({
   keyboardType,
   autoCapitalize,
   secure,
+  position,
 }: {
   label: string;
   value: string;
@@ -177,12 +255,28 @@ function Feld({
   keyboardType?: "default" | "email-address" | "phone-pad";
   autoCapitalize?: "none" | "sentences" | "words";
   secure?: boolean;
+  position: "oben" | "mitte" | "unten";
 }) {
   const t = useTheme();
+  const r = 14;
   return (
-    <Col gap={4}>
+    <View
+      style={{
+        borderWidth: 1,
+        borderColor: t.palette.line,
+        borderTopWidth: position === "oben" ? 1 : 0,
+        borderTopLeftRadius: position === "oben" ? r : 0,
+        borderTopRightRadius: position === "oben" ? r : 0,
+        borderBottomLeftRadius: position === "unten" ? r : 0,
+        borderBottomRightRadius: position === "unten" ? r : 0,
+        paddingHorizontal: 16,
+        paddingTop: 10,
+        paddingBottom: 8,
+        backgroundColor: t.palette.surface,
+      }}
+    >
       <Txt v="xs" soft>
-        {label.toUpperCase()}
+        {label}
       </Txt>
       <TextInput
         value={value}
@@ -192,16 +286,12 @@ function Feld({
         autoCorrect={false}
         secureTextEntry={secure}
         style={{
-          borderWidth: 1,
-          borderColor: t.palette.line,
-          borderRadius: t.radius.btn,
-          paddingHorizontal: 14,
-          paddingVertical: 12,
           color: t.palette.ink,
-          fontFamily: t.type.medium.fontFamily,
-          backgroundColor: t.palette.surface,
+          fontFamily: t.fonts.regular,
+          fontSize: 16,
+          paddingVertical: 6,
         }}
       />
-    </Col>
+    </View>
   );
 }

@@ -51,10 +51,15 @@ def listings(
     end: Annotated[date | None, Query()] = None,
     tenant: Annotated[str | None, Query()] = None,
     property_ids: Annotated[list[str] | None, Query()] = None,
+    lat: Annotated[float | None, Query(ge=-90, le=90)] = None,
+    lng: Annotated[float | None, Query(ge=-180, le=180)] = None,
+    radius_km: Annotated[float | None, Query(gt=0, le=500)] = None,
 ) -> PublicListingListResponse:
     """Öffentliche Liste buchbarer (active) Objekte. Optional q/guests/start/end/
     tenant. ``property_ids`` schränkt auf konkrete Objekte ein (Featured-Block der
-    white-label Sites). Default: alle active tenant-übergreifend (Marktplatz)."""
+    white-label Sites). ``lat``/``lng`` (+ optional ``radius_km``) filtern und
+    sortieren nach Entfernung (Standortsuche der App). Default: alle active
+    tenant-übergreifend (Marktplatz)."""
     try:
         return service.list_listings(
             q=q,
@@ -63,6 +68,9 @@ def listings(
             end=end,
             tenant=tenant,
             property_ids=property_ids,
+            lat=lat,
+            lng=lng,
+            radius_km=radius_km,
         )
     except BookingEngineError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

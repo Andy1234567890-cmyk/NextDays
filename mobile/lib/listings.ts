@@ -63,6 +63,11 @@ export type SearchParams = {
   guests?: number;
   start?: string; // JJJJ-MM-TT
   end?: string;
+  // Umkreissuche („In der Nähe"): nur gemeinsam sinnvoll, der Server lehnt
+  // Halbangaben mit 422 ab. Ohne radius_km wird nur nach Entfernung sortiert.
+  lat?: number;
+  lng?: number;
+  radius_km?: number;
 };
 
 function query(params: Record<string, string | number | undefined>): string {
@@ -135,21 +140,57 @@ export function listingTypeLabel(type: string): string {
   return TYP_LABEL[type] ?? type;
 }
 
+// Objektkategorien der Startseite. Das Datenmodell kennt genau zwei Arten
+// buchbarer Einheiten: ein Ferienobjekt ODER ein einzelnes Zimmer (Hotel).
+// Eine Kategorie erscheint als Reiter nur, wenn es dafür echte Objekte gibt.
+const ZIMMER_TYPEN = new Set([
+  "einzelzimmer",
+  "doppelzimmer",
+  "zweibettzimmer",
+  "familienzimmer",
+  "junior_suite",
+  "suite",
+]);
+
+export type Kategorie = "alle" | "ferienobjekte" | "zimmer";
+
+export function listingKategorie(listing: Listing): Exclude<Kategorie, "alle"> {
+  return ZIMMER_TYPEN.has(listing.property_type) ? "zimmer" : "ferienobjekte";
+}
+
+export function filterKategorie(alle: Listing[], kategorie: Kategorie): Listing[] {
+  if (kategorie === "alle") return alle;
+  return alle.filter((l) => listingKategorie(l) === kategorie);
+}
+
+/** Städte mit tatsächlichem Angebot — Grundlage der Suchvorschläge. */
+export function listingStaedte(alle: Listing[]): string[] {
+  const zaehler = new Map<string, number>();
+  for (const l of alle) {
+    const stadt = l.city?.trim();
+    if (!stadt) continue;
+    zaehler.set(stadt, (zaehler.get(stadt) ?? 0) + 1);
+  }
+  return [...zaehler.entries()].sort((a, b) => b[1] - a[1]).map(([stadt]) => stadt);
+}
+
 /** „Stadt, Land" — leer, wenn beides fehlt (kein erfundener Ort). */
 export function listingOrt(listing: { city: string | null; country: string | null }): string {
   return [listing.city, listing.country].filter(Boolean).join(", ");
 }
 
-export type ListingRow = { titel: string; listings: Listing[] };
+// `suche` ist der Begriff, mit dem der Pfeil-Button der Sektion die
+// Ergebnisliste öffnet — null bei der Reihe „alle", die keinen Filter hat.
+export type ListingRow = { titel: string; listings: Listing[]; suche: string | null };
 
 /**
  * Themen-Reihen aus ECHTEN Inseraten ableiten (wie plattform/lib/inserate.ts):
- * erst „alle", dann je Objekttyp, dann je Stadt. Leere Reihen entfallen —
- * es wird keine Kategorie erfunden, die keine Objekte hat.
+ * erst je Stadt, dann je Objekttyp. Leere Reihen entfallen — es wird keine
+ * Kategorie erfunden, die keine Objekte hat. Die Titel folgen dem Muster der
+ * Marktplatz-Apps („Beliebte Unterkünfte in X", „Übernachte in Y").
  */
 export function listingRows(alle: Listing[]): ListingRow[] {
   if (alle.length === 0) return [];
-  const reihen: ListingRow[] = [{ titel: "Beliebte Unterkünfte", listings: alle }];
 
   const nachTyp = new Map<string, Listing[]>();
   const nachStadt = new Map<string, Listing[]>();
@@ -166,11 +207,24 @@ export function listingRows(alle: Listing[]): ListingRow[] {
       nachStadt.set(stadt, arr);
     }
   }
+
+  const reihen: ListingRow[] = [];
+  // Städte zuerst und nach Angebotsdichte sortiert — die größte Auswahl oben.
+  const staedte = [...nachStadt.entries()].sort((a, b) => b[1].length - a[1].length);
+  staedte.forEach(([stadt, listings], i) => {
+    reihen.push({
+      titel: i === 0 ? `Beliebte Unterkünfte in ${stadt}` : `Übernachte in ${stadt}`,
+      listings,
+      suche: stadt,
+    });
+  });
   for (const [typ, listings] of nachTyp) {
-    reihen.push({ titel: listingTypeLabel(typ), listings });
+    const label = listingTypeLabel(typ);
+    reihen.push({ titel: `${label} für deine nächste Reise`, listings, suche: label });
   }
-  for (const [stadt, listings] of nachStadt) {
-    reihen.push({ titel: `Unterkünfte in ${stadt}`, listings });
+  // Auffangreihe, falls weder Stadt noch Typ gepflegt sind.
+  if (reihen.length === 0) {
+    reihen.push({ titel: "Beliebte Unterkünfte", listings: alle, suche: null });
   }
   return reihen;
 }

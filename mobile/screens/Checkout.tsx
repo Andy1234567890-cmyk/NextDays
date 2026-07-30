@@ -15,11 +15,12 @@
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCallback, useEffect, useState } from "react";
-import { ScrollView, TextInput, View } from "react-native";
+import { Pressable, ScrollView, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/ui/Icon";
-import { Btn, Card, Col, Divider, Flat, IconBtn, Photo, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Btn, Col, Photo, Row, Spinner, Txt } from "@/components/ui/kit";
+import { EmptyState } from "@/components/ui/patterns";
 import { useGuestAuth } from "@/contexts/GuestAuthContext";
 import { formatCurrency } from "@/lib/currency";
 import { formatZeitraum } from "@/lib/datum";
@@ -122,14 +123,11 @@ export default function Checkout() {
   if (!listing) {
     return (
       <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
-        <Row style={{ paddingHorizontal: 20, paddingVertical: 8, gap: 14 }}>
-          <IconBtn icon="back" flat bg={t.palette.surface2} onPress={() => navigation.goBack()} />
-          <Txt v="h2">Buchen</Txt>
+        <Row style={{ paddingHorizontal: 12, paddingVertical: 8 }}>
+          <ZurueckKnopf onPress={() => navigation.goBack()} />
         </Row>
         {ladeFehler ? (
-          <Txt v="sm" soft style={{ padding: 20 }}>
-            {ladeFehler}
-          </Txt>
+          <EmptyState icon="info" titel="Nicht verfügbar" text={ladeFehler} />
         ) : (
           <Spinner />
         )}
@@ -140,20 +138,28 @@ export default function Checkout() {
   // Erfolgszustand: klare Unterscheidung Anfrage (Host muss zusagen) vs. Buchung.
   if (erfolg) {
     return (
-      <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
-        <Col style={{ padding: 24, gap: 18, flex: 1, justifyContent: "center", alignItems: "center" }}>
-          <Icon n="check" s={44} sw={2} c={t.palette.accent} />
-          <Txt v="h1" style={{ textAlign: "center" }}>
-            {erfolg.anfrage ? "Anfrage gesendet" : "Buchung bestätigt"}
-          </Txt>
-          <Txt v="sm" soft style={{ textAlign: "center" }}>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: t.palette.bg,
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom + 24,
+          paddingHorizontal: 28,
+          justifyContent: "center",
+        }}
+      >
+        <Col gap={14} style={{ alignItems: "flex-start" }}>
+          <Icon n="check" s={40} sw={2.2} c={t.palette.ink} />
+          <Txt v="display">{erfolg.anfrage ? "Anfrage gesendet" : "Buchung bestätigt"}</Txt>
+          <Txt v="body" soft>
             {erfolg.anfrage
               ? "Der Gastgeber bestätigt deine Anfrage. Du siehst den Status unter „Reisen“."
               : "Deine Buchung steht unter „Reisen“ bereit."}
           </Txt>
           <Btn
-            variant="primary"
+            variant="dark"
             block
+            style={{ marginTop: 10 }}
             onPress={() => navigation.navigate("GuestTabs", { screen: "Trips" })}
           >
             Zu meinen Reisen
@@ -165,66 +171,72 @@ export default function Checkout() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
-      <Row style={{ paddingHorizontal: 20, paddingVertical: 8, gap: 14 }}>
-        <IconBtn icon="back" flat bg={t.palette.surface2} onPress={() => navigation.goBack()} />
-        <Txt v="h2">Buchung prüfen</Txt>
+      <Row style={{ paddingHorizontal: 12, paddingVertical: 8 }}>
+        <ZurueckKnopf onPress={() => navigation.goBack()} />
       </Row>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 20, paddingTop: 8, gap: 16 }}>
-        <Card style={{ flexDirection: "row", padding: 12, gap: 12 }}>
-          <Photo src={listing.photos[0]} grad="grad1" h={70} w={84} r={14} />
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 32, gap: 24 }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Txt v="display">Buchung prüfen</Txt>
+
+        {/* Objekt-Kopf */}
+        <Row gap={14}>
+          <Photo src={listing.photos[0]} grad="grad1" h={78} w={92} r={t.radius.img} />
           <Col gap={3} style={{ flex: 1 }}>
-            <Txt v="title" numberOfLines={1}>
+            <Txt v="title" numberOfLines={2}>
               {listing.title}
             </Txt>
             <Txt v="sm" soft numberOfLines={1}>
               {listingOrt(listing) || "—"}
             </Txt>
           </Col>
-        </Card>
+        </Row>
 
-        <Flat style={{ padding: 16, gap: 12 }}>
-          <Row style={{ justifyContent: "space-between" }}>
-            <Col>
-              <Txt v="xs" soft>
-                ZEITRAUM
-              </Txt>
-              <Txt v="sm" style={{ fontFamily: t.type.semibold.fontFamily }}>
-                {formatZeitraum(checkIn, checkOut) || `${checkIn} – ${checkOut}`}
-              </Txt>
-            </Col>
-            <Icon n="cal" s={18} c={t.palette.accent} />
+        <Trennlinie />
+
+        <Col gap={14}>
+          <Txt v="h2">Deine Reise</Txt>
+          <Row style={{ justifyContent: "space-between", gap: 16 }}>
+            <Txt v="body" soft>
+              Zeitraum
+            </Txt>
+            <Txt v="body" style={{ flexShrink: 1, textAlign: "right" }}>
+              {formatZeitraum(checkIn, checkOut) || `${checkIn} – ${checkOut}`}
+            </Txt>
           </Row>
-          <Divider />
-          <Row style={{ justifyContent: "space-between" }}>
-            <Col>
-              <Txt v="xs" soft>
-                GÄSTE
-              </Txt>
-              <Txt v="sm" style={{ fontFamily: t.type.semibold.fontFamily }}>
-                {guests} {guests === 1 ? "Gast" : "Gäste"}
-              </Txt>
-            </Col>
-            <Icon n="users" s={18} c={t.palette.accent} />
+          <Row style={{ justifyContent: "space-between", gap: 16 }}>
+            <Txt v="body" soft>
+              Gäste
+            </Txt>
+            <Txt v="body">
+              {guests} {guests === 1 ? "Gast" : "Gäste"}
+            </Txt>
           </Row>
-        </Flat>
+        </Col>
+
+        <Trennlinie />
 
         {/* Preis: nur echte Werte des Servers, keine erfundenen Gebühren. */}
-        <Col gap={10}>
-          <Txt v="title">Preis</Txt>
+        <Col gap={14}>
+          <Txt v="h2">Preisdetails</Txt>
           {proNacht != null && nights > 0 ? (
             <>
-              <Row style={{ justifyContent: "space-between" }}>
+              <Row style={{ justifyContent: "space-between", gap: 16 }}>
                 <Txt v="body" soft>
                   {formatCurrency(proNacht, listing.currency)} × {nights}{" "}
                   {nights === 1 ? "Nacht" : "Nächte"}
                 </Txt>
-                <Txt v="sm">{formatCurrency(gesamt ?? 0, listing.currency)}</Txt>
+                <Txt v="body">{formatCurrency(gesamt ?? 0, listing.currency)}</Txt>
               </Row>
-              <Divider />
-              <Row style={{ justifyContent: "space-between" }}>
-                <Txt v="title">Gesamt</Txt>
-                <Txt v="h2" accent>
+              <Trennlinie />
+              <Row style={{ justifyContent: "space-between", gap: 16 }}>
+                <Txt v="body" style={{ fontFamily: t.fonts.semibold }}>
+                  Gesamt
+                </Txt>
+                <Txt v="body" style={{ fontFamily: t.fonts.semibold }}>
                   {formatCurrency(gesamt ?? 0, listing.currency)}
                 </Txt>
               </Row>
@@ -234,27 +246,36 @@ export default function Checkout() {
               </Txt>
             </>
           ) : (
-            <Txt v="sm" soft>
+            <Txt v="body" soft>
               Für diesen Zeitraum ist kein Preis hinterlegt — der Gastgeber meldet
               sich mit einem Angebot.
             </Txt>
           )}
         </Col>
 
-        <Divider />
+        <Trennlinie />
 
-        <Col gap={10}>
-          <Txt v="title">Kontaktdaten</Txt>
-          <Feld label="Vorname" value={vorname} onChange={setVorname} />
-          <Feld label="Nachname" value={nachname} onChange={setNachname} />
-          <Feld
-            label="E-Mail"
-            value={email}
-            onChange={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <Feld label="Telefon (optional)" value={telefon} onChange={setTelefon} keyboardType="phone-pad" />
+        <Col gap={14}>
+          <Txt v="h2">Kontaktdaten</Txt>
+          <Col gap={0}>
+            <Feld label="Vorname" value={vorname} onChange={setVorname} position="oben" />
+            <Feld label="Nachname" value={nachname} onChange={setNachname} position="mitte" />
+            <Feld
+              label="E-Mail"
+              value={email}
+              onChange={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              position="mitte"
+            />
+            <Feld
+              label="Telefon (optional)"
+              value={telefon}
+              onChange={setTelefon}
+              keyboardType="phone-pad"
+              position="unten"
+            />
+          </Col>
           {!formularOk && (
             <Txt v="xs" soft>
               Vorname, Nachname und eine gültige E-Mail sind nötig — daran hängt
@@ -264,57 +285,110 @@ export default function Checkout() {
         </Col>
 
         {fehler && (
-          <Txt v="sm" style={{ color: "#B02A2A" }}>
-            {fehler}
-          </Txt>
+          <Row gap={8} style={{ alignItems: "flex-start" }}>
+            <Icon n="info" s={17} sw={1.9} c={t.palette.accent} />
+            <Txt v="sm" accent style={{ flex: 1 }}>
+              {fehler}
+            </Txt>
+          </Row>
         )}
       </ScrollView>
 
-      <Col
+      <Row
         style={{
-          padding: 20,
+          paddingHorizontal: 24,
+          paddingTop: 16,
           paddingBottom: insets.bottom + 16,
-          gap: 8,
+          gap: 16,
+          justifyContent: "space-between",
+          alignItems: "center",
           backgroundColor: t.palette.surface,
           borderTopWidth: 1,
           borderTopColor: t.palette.line,
         }}
       >
-        <Btn
-          variant={formularOk && !sendet ? "primary" : "ghost"}
-          block
-          icon="shield"
-          onPress={buchen}
-        >
-          {sendet
-            ? "Wird gesendet …"
-            : gesamt != null
-              ? `Verbindlich buchen · ${formatCurrency(gesamt, listing.currency)}`
-              : "Verbindlich anfragen"}
+        <Col gap={2} style={{ flexShrink: 1 }}>
+          {gesamt != null ? (
+            <>
+              <Txt v="body" style={{ fontFamily: t.fonts.semibold }}>
+                {formatCurrency(gesamt, listing.currency)}
+              </Txt>
+              <Txt v="xs" soft numberOfLines={1}>
+                {nights} {nights === 1 ? "Nacht" : "Nächte"}
+              </Txt>
+            </>
+          ) : (
+            <Txt v="body" soft>
+              Preis auf Anfrage
+            </Txt>
+          )}
+        </Col>
+        <Btn variant={formularOk && !sendet ? "primary" : "ghost"} onPress={buchen}>
+          {sendet ? "Wird gesendet …" : gesamt != null ? "Verbindlich buchen" : "Anfragen"}
         </Btn>
-      </Col>
+      </Row>
     </View>
   );
 }
 
+// --- Bausteine --------------------------------------------------------------
+
+function Trennlinie() {
+  const t = useTheme();
+  return <View style={{ height: 1, backgroundColor: t.palette.line }} />;
+}
+
+function ZurueckKnopf({ onPress }: { onPress: () => void }) {
+  const t = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Zurück"
+      onPress={onPress}
+      hitSlop={10}
+      style={({ pressed }) => ({ padding: 8, opacity: pressed ? 0.6 : 1 })}
+    >
+      <Icon n="back" s={22} sw={2} c={t.palette.ink} />
+    </Pressable>
+  );
+}
+
+// Feld einer zusammenhängenden Gruppe: außen gerundet, innen geteilte Linie.
 function Feld({
   label,
   value,
   onChange,
   keyboardType,
   autoCapitalize,
+  position,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   keyboardType?: "default" | "email-address" | "phone-pad";
   autoCapitalize?: "none" | "sentences" | "words";
+  position: "oben" | "mitte" | "unten";
 }) {
   const t = useTheme();
+  const r = 14;
   return (
-    <Col gap={4}>
+    <View
+      style={{
+        borderWidth: 1,
+        borderColor: t.palette.line,
+        borderTopWidth: position === "oben" ? 1 : 0,
+        borderTopLeftRadius: position === "oben" ? r : 0,
+        borderTopRightRadius: position === "oben" ? r : 0,
+        borderBottomLeftRadius: position === "unten" ? r : 0,
+        borderBottomRightRadius: position === "unten" ? r : 0,
+        paddingHorizontal: 16,
+        paddingTop: 10,
+        paddingBottom: 8,
+        backgroundColor: t.palette.surface,
+      }}
+    >
       <Txt v="xs" soft>
-        {label.toUpperCase()}
+        {label}
       </Txt>
       <TextInput
         value={value}
@@ -322,17 +396,8 @@ function Feld({
         keyboardType={keyboardType ?? "default"}
         autoCapitalize={autoCapitalize ?? "words"}
         autoCorrect={false}
-        style={{
-          borderWidth: 1,
-          borderColor: t.palette.line,
-          borderRadius: t.radius.btn,
-          paddingHorizontal: 14,
-          paddingVertical: 12,
-          color: t.palette.ink,
-          fontFamily: t.type.medium.fontFamily,
-          backgroundColor: t.palette.surface,
-        }}
+        style={{ color: t.palette.ink, fontFamily: t.fonts.regular, fontSize: 16, paddingVertical: 6 }}
       />
-    </Col>
+    </View>
   );
 }

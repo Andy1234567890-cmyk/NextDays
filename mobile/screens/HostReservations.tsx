@@ -14,7 +14,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/ui/Icon";
-import { Card, Col, IconBtn, Photo, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Col, Photo, Row, Spinner, Txt } from "@/components/ui/kit";
+import { EmptyState } from "@/components/ui/patterns";
 import { channelMeta } from "@/lib/calendar-channels";
 import { formatCurrency } from "@/lib/currency";
 import { listProperties, type Property } from "@/lib/properties";
@@ -125,24 +126,28 @@ export default function HostReservations({ navigation }: { navigation: any }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
-      <Col style={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 10, gap: 12 }}>
+      <Col style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 14, gap: 16 }}>
         <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
-          <Txt v="h1">Buchungen</Txt>
-          <IconBtn
-            icon="filter"
-            flat
+          <Txt v="display">Buchungen</Txt>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={newestFirst ? "Älteste zuerst" : "Neueste zuerst"}
             onPress={() => setNewestFirst((v) => !v)}
-          />
+            hitSlop={10}
+            style={({ pressed }) => ({ padding: 6, opacity: pressed ? 0.6 : 1 })}
+          >
+            <Icon n="sliders" s={22} sw={1.8} c={t.palette.ink} />
+          </Pressable>
         </Row>
 
         {/* Suchleiste */}
         <Row
           style={{
             alignItems: "center",
-            gap: 8,
-            paddingHorizontal: 12,
-            height: 44,
-            borderRadius: t.radius.card,
+            gap: 10,
+            paddingHorizontal: 16,
+            height: 48,
+            borderRadius: t.radius.pill,
             backgroundColor: t.palette.surface,
             borderWidth: 1,
             borderColor: t.palette.line,
@@ -154,7 +159,7 @@ export default function HostReservations({ navigation }: { navigation: any }) {
             onChangeText={setQuery}
             placeholder="Nach Buchungsref. oder Gast suchen"
             placeholderTextColor={t.palette.faint}
-            style={{ flex: 1, fontFamily: t.type.body.fontFamily, fontSize: 14, color: t.palette.ink }}
+            style={{ flex: 1, fontFamily: t.fonts.regular, fontSize: 15, color: t.palette.ink }}
           />
         </Row>
 
@@ -201,14 +206,21 @@ export default function HostReservations({ navigation }: { navigation: any }) {
 
       {!items && !error && <Spinner />}
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: insets.bottom + 32, gap: 14 }}
+        contentContainerStyle={{
+          paddingHorizontal: 24,
+          paddingTop: 4,
+          paddingBottom: insets.bottom + 32,
+          gap: 24,
+        }}
         refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
         showsVerticalScrollIndicator={false}
       >
         {items && visible.length === 0 && (
-          <Txt v="sm" soft style={{ textAlign: "center", marginTop: 40 }}>
-            {error ?? "Keine Buchungen für diese Filter."}
-          </Txt>
+          <EmptyState
+            icon={error ? "info" : "suitcase"}
+            titel={error ? "Nicht geladen" : "Keine Buchungen"}
+            text={error ?? "Für diese Filter liegt nichts vor."}
+          />
         )}
         {visible.map((r) => (
           <BookingCard
@@ -237,66 +249,71 @@ function BookingCard({
   const ch = channelMeta(r.channel);
 
   return (
-    <Pressable onPress={onPress}>
-      <Card style={{ padding: 0, overflow: "hidden" }}>
-        <Row style={{ alignItems: "stretch" }}>
-          {/* Foto mit Status-Badge (oben) und Kanal-Marke (unten). */}
-          <View style={{ width: 116 }}>
-            <Photo src={property?.photos?.[0]} h={148} w={116} r={0} />
+    <Pressable
+      accessibilityRole="button"
+      onPress={onPress}
+      style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}
+    >
+      <Row gap={14} style={{ alignItems: "flex-start" }}>
+        {/* Foto mit Kanal-Marke. */}
+        <View>
+          <Photo src={property?.photos?.[0]} h={96} w={96} r={t.radius.img} />
+          <View
+            style={{
+              position: "absolute",
+              bottom: 6,
+              left: 6,
+              width: 26,
+              height: 26,
+              borderRadius: 13,
+              backgroundColor: ch.bar,
+              alignItems: "center",
+              justifyContent: "center",
+              borderWidth: 2,
+              borderColor: "#FFFFFF",
+            }}
+          >
+            <Txt v="xs" color={ch.text} style={{ fontFamily: t.fonts.bold, fontSize: 11 }}>
+              {ch.label.slice(0, 1)}
+            </Txt>
+          </View>
+        </View>
+
+        {/* Info-Spalte */}
+        <Col style={{ flex: 1 }} gap={3}>
+          <Row gap={8} style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+            <Txt v="title" numberOfLines={1} style={{ flex: 1 }}>
+              {bookingRef(r)}
+            </Txt>
             <View
               style={{
-                position: "absolute",
-                top: 8,
-                left: 8,
-                paddingHorizontal: 8,
-                paddingVertical: 3,
-                borderRadius: 999,
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                borderRadius: t.radius.pill,
                 backgroundColor: tone.bg,
               }}
             >
-              <Txt v="xs" color={tone.fg} style={{ fontFamily: t.type.semibold.fontFamily }}>
+              <Txt v="xs" color={tone.fg} style={{ fontFamily: t.fonts.semibold }}>
                 {STATUS_LABEL[r.status]}
               </Txt>
             </View>
-            <View
-              style={{
-                position: "absolute",
-                bottom: 8,
-                left: 8,
-                width: 30,
-                height: 30,
-                borderRadius: 15,
-                backgroundColor: ch.bar,
-                alignItems: "center",
-                justifyContent: "center",
-                borderWidth: 2,
-                borderColor: "#FFFFFF",
-              }}
-            >
-              <Txt v="xs" color={ch.text} style={{ fontFamily: t.type.bold.fontFamily }}>
-                {ch.label.slice(0, 1)}
-              </Txt>
-            </View>
-          </View>
-
-          {/* Info-Spalte */}
-          <Col style={{ flex: 1, padding: 12, gap: 3, justifyContent: "center" }}>
-            <Txt v="xs" soft>{fmtRange(r.check_in, r.check_out)}</Txt>
-            <Txt v="title" numberOfLines={1}>{bookingRef(r)}</Txt>
-            <Txt v="sm" soft numberOfLines={1}>
-              {property?.title ?? "—"}
-            </Txt>
-            <Txt v="sm" numberOfLines={1}>
-              {r.guest_name || "Gast"}
-              <Txt v="sm" soft>{`   ·   ${r.num_guests} ${r.num_guests === 1 ? "Gast" : "Gäste"}`}</Txt>
-            </Txt>
-            <Txt v="title" style={{ fontFamily: t.type.bold.fontFamily, marginTop: 2 }}>
-              {/* Maskierung: null → „—" (nie 0/Fantasiewert). */}
-              {r.total_amount != null ? formatCurrency(r.total_amount, r.currency) : "—"}
-            </Txt>
-          </Col>
-        </Row>
-      </Card>
+          </Row>
+          <Txt v="sm" soft numberOfLines={1}>
+            {property?.title ?? "—"}
+          </Txt>
+          <Txt v="sm" soft numberOfLines={1}>
+            {fmtRange(r.check_in, r.check_out)} · {r.num_guests}{" "}
+            {r.num_guests === 1 ? "Gast" : "Gäste"}
+          </Txt>
+          <Txt v="sm" numberOfLines={1}>
+            {r.guest_name || "Gast"}
+          </Txt>
+          <Txt v="body" style={{ fontFamily: t.fonts.semibold, marginTop: 2 }}>
+            {/* Maskierung: null → „—" (nie 0/Fantasiewert). */}
+            {r.total_amount != null ? formatCurrency(r.total_amount, r.currency) : "—"}
+          </Txt>
+        </Col>
+      </Row>
     </Pressable>
   );
 }

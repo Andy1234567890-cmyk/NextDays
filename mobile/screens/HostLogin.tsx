@@ -65,12 +65,7 @@ export default function HostLogin() {
       <Col gap={10}>
         <Image
           source={require("@/assets/img/Logo_transparent.png")}
-          style={{
-            height: 32,
-            resizeMode: "contain",
-            alignSelf: "flex-start",
-            tintColor: t.palette.accent,
-          }}
+          style={{ height: 44, width: 160, resizeMode: "contain", alignSelf: "flex-start" }}
         />
         <Txt v="display">Gastgeber-Login</Txt>
         <Txt v="body" soft>
@@ -106,16 +101,20 @@ export default function HostLogin() {
             {error}
           </Txt>
         )}
-        <Btn variant="primary" block icon="key" onPress={busy ? undefined : submit}>
-          {busy ? "Anmeldung läuft …" : "Anmelden"}
+        <Btn variant="dark" block onPress={busy ? undefined : submit}>
+          {busy ? "Anmeldung läuft …" : "Weiter"}
         </Btn>
 
         <Row style={{ justifyContent: "center", gap: 6, marginTop: 4 }}>
           <Txt v="sm" soft>
             Noch kein Konto?
           </Txt>
-          <Pressable onPress={busy ? undefined : () => navigation.navigate("HostSignup")}>
-            <Txt v="sm" color={t.palette.accent} style={{ fontWeight: "600" }}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={busy ? undefined : () => navigation.navigate("HostSignup")}
+            style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+          >
+            <Txt v="sm" style={{ fontFamily: t.fonts.semibold, textDecorationLine: "underline" }}>
               Unternehmen anlegen
             </Txt>
           </Pressable>

@@ -5,7 +5,10 @@ import type { NavigatorScreenParams } from "@react-navigation/native";
 export type GuestTabParamList = {
   Home: undefined;
   // Suche kann mit vorbelegtem Suchtext/Zeitraum geöffnet werden (Startseite).
-  Discover: { q?: string; start?: string; end?: string; guests?: number } | undefined;
+  // lat/lng kommen aus der Standortsuche („In der Nähe") und ersetzen dann q.
+  Discover:
+    | { q?: string; start?: string; end?: string; guests?: number; lat?: number; lng?: number }
+    | undefined;
   Wishlist: undefined;
   Trips: undefined;
   GuestProfile: undefined;
@@ -47,6 +50,8 @@ export type RootStackParamList = {
   HostSignup: undefined;
   // Gast-Konto (portal_guests) — eigene Auth-Welt, NICHT die Tenant-Anmeldung.
   GuestLogin: { modus?: "login" | "registrieren" } | undefined;
+  // Stammdaten des Gast-Kontos (Name/Telefon), aus dem Profil erreichbar.
+  GuestAccount: undefined;
   GuestTabs: NavigatorScreenParams<GuestTabParamList>;
   HostTabs: NavigatorScreenParams<HostTabParamList>;
   OwnerTabs: NavigatorScreenParams<OwnerTabParamList>;

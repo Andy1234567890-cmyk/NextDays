@@ -10,7 +10,8 @@ import { RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/ui/Icon";
-import { Btn, Card, Chip, Col, Divider, IconBtn, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Btn, Chip, Col, Row, Spinner, Txt } from "@/components/ui/kit";
+import { EmptyState } from "@/components/ui/patterns";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatCurrency } from "@/lib/currency";
 import { getDashboard, type Dashboard, type DashboardEntry } from "@/lib/dashboard";
@@ -60,30 +61,19 @@ export default function HostDashboard() {
 
   if (error) {
     return (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: t.palette.bg,
-          paddingTop: insets.top + 12,
-          paddingHorizontal: 20,
-        }}
-      >
-        <Card style={{ padding: 16, gap: 12 }}>
-          <Txt v="title">Übersicht nicht geladen</Txt>
-          <Txt v="sm" soft>
-            {error}
-          </Txt>
-          <Btn variant="outline" onPress={load}>
+      <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top + 12 }}>
+        <EmptyState icon="info" titel="Übersicht nicht geladen" text={error}>
+          <Btn variant="outline" onPress={load} style={{ marginTop: 6 }}>
             Erneut versuchen
           </Btn>
-        </Card>
+        </EmptyState>
       </View>
     );
   }
 
   if (!data) {
     return (
-      <View style={{ flex: 1, backgroundColor: t.palette.bg }}>
+      <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top + 40 }}>
         <Spinner />
       </View>
     );
@@ -96,26 +86,23 @@ export default function HostDashboard() {
     <View style={{ flex: 1, backgroundColor: t.palette.bg }}>
       <ScrollView
         contentContainerStyle={{
-          padding: 20,
+          paddingHorizontal: 24,
           // Echte Safe-Area statt hartkodierter 60 — sonst rutscht die
           // Titelzeile unter Notch/Dynamic Island (gerätabhängig).
           paddingTop: insets.top + 12,
-          gap: 18,
+          gap: 26,
           paddingBottom: 40,
         }}
         refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
       >
-        <Row style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
-          <Col gap={2}>
-            <Txt v="sm" soft>
-              {todayLabel(data.today) || "Übersicht"}
-            </Txt>
-            <Txt v="h1">{me?.email ? me.email : "Übersicht"}</Txt>
-          </Col>
-          <IconBtn icon="bell" />
-        </Row>
+        <Col gap={4}>
+          <Txt v="display">Übersicht</Txt>
+          <Txt v="body" soft numberOfLines={1}>
+            {[todayLabel(data.today), me?.email].filter(Boolean).join(" · ")}
+          </Txt>
+        </Col>
 
-        <Row gap={12}>
+        <Row gap={28}>
           <Kpi
             icon="chart"
             value={`${confirmed}`}
@@ -159,6 +146,7 @@ export default function HostDashboard() {
   );
 }
 
+// Kennzahl ohne Kasten: die Zahl trägt, das Label steht klein darunter.
 function Kpi({
   icon,
   value,
@@ -172,21 +160,21 @@ function Kpi({
 }) {
   const t = useTheme();
   return (
-    <Card style={{ flex: 1, padding: 16, gap: 4 }}>
-      <Icon n={icon} s={18} sw={1.8} c={t.palette.accent} />
-      <Txt v="display" style={{ fontSize: 26 }}>
+    <Col gap={4} style={{ flex: 1 }}>
+      <Icon n={icon} s={18} sw={1.8} c={t.palette.soft} />
+      <Txt v="h1" numberOfLines={1}>
         {value}
       </Txt>
-      <Txt v="xs" soft>
+      <Txt v="sm" soft>
         {label}
       </Txt>
       {change !== null && (
         <Txt v="xs" color={change >= 0 ? "#1F8A5B" : t.palette.accent}>
           {change >= 0 ? "+" : ""}
-          {Math.round(change)}%
+          {Math.round(change)}% gegenüber der Vorperiode
         </Txt>
       )}
-    </Card>
+    </Col>
   );
 }
 
@@ -205,32 +193,33 @@ function Section({
   field: "check_in" | "check_out";
   accent?: boolean;
 }) {
+  const t = useTheme();
   return (
-    <Col gap={10}>
+    <Col gap={12}>
       <Txt v="h2">{title}</Txt>
       {entries.length === 0 ? (
-        <Txt v="sm" soft>
+        <Txt v="body" soft>
           {empty}
         </Txt>
       ) : (
-        <Card style={{ padding: 6 }}>
+        <Col gap={0}>
           {entries.map((e, i) => (
             <View key={e.reservation_id}>
-              {i > 0 && <Divider style={{ marginHorizontal: 12 }} />}
-              <Row style={{ padding: 12, gap: 12, alignItems: "center" }}>
-                <Col gap={1} style={{ flex: 1 }}>
-                  <Txt v="sm" numberOfLines={1} style={{ fontWeight: "600" }}>
+              {i > 0 && <View style={{ height: 1, backgroundColor: t.palette.line }} />}
+              <Row style={{ paddingVertical: 14, gap: 12, alignItems: "center" }}>
+                <Col gap={2} style={{ flex: 1 }}>
+                  <Txt v="title" numberOfLines={1}>
                     {e.guest_name || "Gast"}
                   </Txt>
-                  <Txt v="xs" soft numberOfLines={1}>
+                  <Txt v="sm" soft numberOfLines={1}>
                     {e.property_title} · {dayShort(e[field])}
                   </Txt>
                 </Col>
-                {chip ? <Chip variant={accent ? "accent" : ""}>{chip}</Chip> : null}
+                {chip ? <Chip variant={accent ? "on" : ""}>{chip}</Chip> : null}
               </Row>
             </View>
           ))}
-        </Card>
+        </Col>
       )}
     </Col>
   );

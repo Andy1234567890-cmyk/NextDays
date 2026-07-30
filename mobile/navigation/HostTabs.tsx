@@ -17,9 +17,9 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Icon, type IconName } from "@/components/ui/Icon";
 import { useAuth } from "@/contexts/AuthContext";
 import { can } from "@/lib/permissions";
+import { tabIcon as icon, tabScreenOptions } from "@/navigation/tab-style";
 import type { HostTabParamList } from "@/navigation/types";
 import HostCalendar from "@/screens/HostCalendar";
 import HostDashboard from "@/screens/HostDashboard";
@@ -41,26 +41,7 @@ export function HostTabs() {
   const isManager = can(me, "manage_tasks");
   const insets = useSafeAreaInsets();
 
-  const icon = (name: IconName) =>
-    ({ color, focused }: { color: string; focused: boolean }) => (
-      <Icon n={name} s={23} sw={focused ? 2.1 : 1.7} c={color} />
-    );
-
-  const screenOptions = {
-    headerShown: false,
-    tabBarActiveTintColor: t.palette.accent,
-    tabBarInactiveTintColor: t.palette.faint,
-    tabBarStyle: {
-      backgroundColor: t.palette.surface,
-      borderTopColor: t.palette.line,
-      // Feste Inhaltshöhe + untere Safe-Area (Home-Indicator), sonst kleben die
-      // Labels am unteren Rand und der Indicator überlappt sie.
-      height: 60 + insets.bottom,
-      paddingTop: 8,
-      paddingBottom: insets.bottom,
-    },
-    tabBarLabelStyle: { fontSize: 10.5, fontFamily: t.fonts.semibold },
-  } as const;
+  const screenOptions = tabScreenOptions(t, insets.bottom);
 
   // Mitarbeiter-Erlebnis: reduzierte Tabs, kein Finanz-/Vertriebseinblick.
   if (!isManager) {
@@ -81,7 +62,7 @@ export function HostTabs() {
     <Tab.Navigator initialRouteName="Dashboard" screenOptions={screenOptions}>
       <Tab.Screen name="Dashboard" component={HostDashboard} options={{ title: "Übersicht", tabBarIcon: icon("chart") }} />
       <Tab.Screen name="Calendar" component={HostCalendar} options={{ title: "Kalender", tabBarIcon: icon("cal") }} />
-      <Tab.Screen name="Reservations" component={HostReservations} options={{ title: "Buchungen", tabBarIcon: icon("card") }} />
+      <Tab.Screen name="Reservations" component={HostReservations} options={{ title: "Buchungen", tabBarIcon: icon("suitcase") }} />
       <Tab.Screen name="Tasks" component={HostTasks} options={{ title: "Aufgaben", tabBarIcon: icon("list") }} />
       <Tab.Screen name="More" component={HostMore} options={{ title: "Mehr", tabBarIcon: icon("more") }} />
       {/* Über „Mehr“ erreichbar, aber nicht in der Leiste: */}

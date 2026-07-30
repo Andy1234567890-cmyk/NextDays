@@ -9,10 +9,12 @@
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCallback, useEffect, useState } from "react";
-import { RefreshControl, ScrollView, TextInput, View } from "react-native";
+import { Pressable, RefreshControl, ScrollView, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Btn, Card, Col, Divider, Flat, IconBtn, Photo, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Icon } from "@/components/ui/Icon";
+import { Btn, Col, Photo, Row, Spinner, Txt } from "@/components/ui/kit";
+import { EmptyState, Sheet } from "@/components/ui/patterns";
 import { formatCurrency } from "@/lib/currency";
 import { formatTag, formatZeitraum } from "@/lib/datum";
 import {
@@ -86,17 +88,10 @@ export default function TripDetail() {
   if (!buchung) {
     return (
       <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
-        <Row style={{ paddingHorizontal: 20, paddingVertical: 8, gap: 14 }}>
-          <IconBtn icon="back" flat bg={t.palette.surface2} onPress={() => navigation.goBack()} />
-          <Txt v="h2">Buchung</Txt>
+        <Row style={{ paddingHorizontal: 12, paddingVertical: 8 }}>
+          <ZurueckKnopf onPress={() => navigation.goBack()} />
         </Row>
-        {fehler ? (
-          <Txt v="sm" soft style={{ padding: 20 }}>
-            {fehler}
-          </Txt>
-        ) : (
-          <Spinner />
-        )}
+        {fehler ? <EmptyState icon="info" titel="Nicht geladen" text={fehler} /> : <Spinner />}
       </View>
     );
   }
@@ -106,34 +101,46 @@ export default function TripDetail() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
-      <Row style={{ paddingHorizontal: 20, paddingVertical: 8, gap: 14 }}>
-        <IconBtn icon="back" flat bg={t.palette.surface2} onPress={() => navigation.goBack()} />
-        <Txt v="h2">Buchung</Txt>
+      <Row style={{ paddingHorizontal: 12, paddingVertical: 8 }}>
+        <ZurueckKnopf onPress={() => navigation.goBack()} />
       </Row>
 
       <ScrollView
-        contentContainerStyle={{ padding: 20, paddingTop: 8, gap: 16, paddingBottom: 60 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 48, gap: 24 }}
         refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
       >
-        <Card style={{ flexDirection: "row", padding: 12, gap: 12 }}>
-          <Photo src={buchung.property.photo ?? undefined} grad="grad1" h={70} w={84} r={14} />
+        <Col gap={6}>
+          <Txt v="display">Buchung</Txt>
+          <Txt v="body" soft>
+            {bookingStatusLabel(buchung.status)}
+          </Txt>
+        </Col>
+
+        <Row gap={14}>
+          <Photo src={buchung.property.photo ?? undefined} grad="grad1" h={78} w={92} r={t.radius.img} />
           <Col gap={3} style={{ flex: 1 }}>
-            <Txt v="title" numberOfLines={1}>
+            <Txt v="title" numberOfLines={2}>
               {buchung.property.title}
             </Txt>
             {buchung.property.address && (
-              <Txt v="sm" soft numberOfLines={1}>
+              <Txt v="sm" soft numberOfLines={2}>
                 {buchung.property.address}
               </Txt>
             )}
-            <Txt v="xs" accent>
-              {bookingStatusLabel(buchung.status)}
-            </Txt>
           </Col>
-        </Card>
+        </Row>
 
-        <Flat style={{ padding: 16, gap: 10 }}>
-          <Zeile label="Zeitraum" wert={formatZeitraum(buchung.check_in, buchung.check_out) || `${buchung.check_in} – ${buchung.check_out}`} />
+        <Trennlinie />
+
+        <Col gap={14}>
+          <Txt v="h2">Deine Reise</Txt>
+          <Zeile
+            label="Zeitraum"
+            wert={
+              formatZeitraum(buchung.check_in, buchung.check_out) ||
+              `${buchung.check_in} – ${buchung.check_out}`
+            }
+          />
           {buchung.checkin_time && <Zeile label="Anreisezeit" wert={buchung.checkin_time} />}
           {buchung.checkout_time && <Zeile label="Abreisezeit" wert={buchung.checkout_time} />}
           <Zeile
@@ -142,46 +149,39 @@ export default function TripDetail() {
           />
           <Zeile label="Kanal" wert={buchung.channel} />
           {buchung.payment_status && <Zeile label="Zahlung" wert={buchung.payment_status} />}
-        </Flat>
+        </Col>
 
-        <Col gap={10}>
-          <Txt v="title">Beträge</Txt>
-          {buchung.quote_items.length > 0 &&
-            buchung.quote_items.map((q, i) => (
-              <Row key={`${q.label ?? "pos"}-${i}`} style={{ justifyContent: "space-between" }}>
-                <Txt v="body" soft style={{ flex: 1 }} numberOfLines={1}>
-                  {q.label ?? "Position"}
-                  {q.quantity != null ? ` × ${q.quantity}` : ""}
-                </Txt>
-                <Txt v="sm">{betrag(q.amount ?? null)}</Txt>
-              </Row>
-            ))}
-          <Divider />
-          <Row style={{ justifyContent: "space-between" }}>
-            <Txt v="sm" soft>
+        <Trennlinie />
+
+        <Col gap={14}>
+          <Txt v="h2">Beträge</Txt>
+          {buchung.quote_items.map((q, i) => (
+            <Row key={`${q.label ?? "pos"}-${i}`} style={{ justifyContent: "space-between", gap: 12 }}>
+              <Txt v="body" soft style={{ flex: 1 }} numberOfLines={1}>
+                {q.label ?? "Position"}
+                {q.quantity != null ? ` × ${q.quantity}` : ""}
+              </Txt>
+              <Txt v="body">{betrag(q.amount ?? null)}</Txt>
+            </Row>
+          ))}
+          {buchung.quote_items.length > 0 && <Trennlinie />}
+          <Row style={{ justifyContent: "space-between", gap: 12 }}>
+            <Txt v="body" style={{ fontFamily: t.fonts.semibold }}>
               Gesamt
             </Txt>
-            <Txt v="title">{betrag(buchung.total_amount)}</Txt>
-          </Row>
-          <Row style={{ justifyContent: "space-between" }}>
-            <Txt v="sm" soft>
-              Bezahlt
+            <Txt v="body" style={{ fontFamily: t.fonts.semibold }}>
+              {betrag(buchung.total_amount)}
             </Txt>
-            <Txt v="sm">{betrag(buchung.paid_amount)}</Txt>
           </Row>
-          <Row style={{ justifyContent: "space-between" }}>
-            <Txt v="sm" soft>
-              Offen
-            </Txt>
-            <Txt v="sm">{betrag(buchung.balance_due)}</Txt>
-          </Row>
+          <Zeile label="Bezahlt" wert={betrag(buchung.paid_amount)} />
+          <Zeile label="Offen" wert={betrag(buchung.balance_due)} />
         </Col>
 
         {buchung.note && (
           <>
-            <Divider />
-            <Col gap={6}>
-              <Txt v="title">Hinweis</Txt>
+            <Trennlinie />
+            <Col gap={10}>
+              <Txt v="h2">Hinweis</Txt>
               <Txt v="body" soft>
                 {buchung.note}
               </Txt>
@@ -191,15 +191,18 @@ export default function TripDetail() {
 
         {verlauf.length > 0 && (
           <>
-            <Divider />
-            <Col gap={10}>
-              <Txt v="title">Verlauf</Txt>
+            <Trennlinie />
+            <Col gap={14}>
+              <Txt v="h2">Verlauf</Txt>
               {verlauf.map((e, i) => (
-                <Row key={`${e.kind}-${e.created_at}-${i}`} style={{ justifyContent: "space-between" }}>
-                  <Txt v="sm" style={{ flex: 1 }}>
+                <Row
+                  key={`${e.kind}-${e.created_at}-${i}`}
+                  style={{ justifyContent: "space-between", gap: 12 }}
+                >
+                  <Txt v="body" style={{ flex: 1 }}>
                     {EVENT_LABEL[e.kind] ?? e.kind}
                   </Txt>
-                  <Txt v="xs" soft>
+                  <Txt v="sm" soft>
                     {formatTag(e.created_at) || e.created_at.slice(0, 10)}
                   </Txt>
                 </Row>
@@ -209,74 +212,102 @@ export default function TripDetail() {
         )}
 
         {buchung.checked_in_at && (
-          <Txt v="xs" soft>
+          <Txt v="sm" soft>
             Eingecheckt am {formatTag(buchung.checked_in_at)}
           </Txt>
         )}
         {buchung.cancelled_at && (
-          <Txt v="xs" soft>
+          <Txt v="sm" soft>
             Storniert am {formatTag(buchung.cancelled_at)}
           </Txt>
         )}
 
-        {/* Storno nur, wenn der Server es erlaubt. */}
-        {buchung.can_cancel && !storniert && (
-          <Col gap={10}>
-            <Divider />
-            {stornoOffen ? (
-              <>
-                <Txt v="title">Buchung stornieren</Txt>
-                <TextInput
-                  value={grund}
-                  onChangeText={(v) => setGrund(v.slice(0, 1000))}
-                  placeholder="Grund (optional)"
-                  placeholderTextColor={t.palette.faint}
-                  multiline
-                  style={{
-                    borderWidth: 1,
-                    borderColor: t.palette.line,
-                    borderRadius: t.radius.btn,
-                    padding: 12,
-                    minHeight: 80,
-                    color: t.palette.ink,
-                    fontFamily: t.type.medium.fontFamily,
-                    textAlignVertical: "top",
-                  }}
-                />
-                <Row gap={10}>
-                  <Btn variant="ghost" style={{ flex: 1 }} onPress={() => setStornoOffen(false)}>
-                    Zurück
-                  </Btn>
-                  <Btn variant="primary" style={{ flex: 1 }} onPress={stornieren}>
-                    {busy ? "Wird storniert …" : "Stornieren"}
-                  </Btn>
-                </Row>
-              </>
-            ) : (
-              <Btn variant="ghost" block onPress={() => setStornoOffen(true)}>
-                Buchung stornieren
-              </Btn>
-            )}
-          </Col>
+        {fehler && (
+          <Row gap={8} style={{ alignItems: "flex-start" }}>
+            <Icon n="info" s={17} sw={1.9} c={t.palette.accent} />
+            <Txt v="sm" accent style={{ flex: 1 }}>
+              {fehler}
+            </Txt>
+          </Row>
         )}
 
-        {fehler && (
-          <Txt v="sm" style={{ color: "#B02A2A" }}>
-            {fehler}
-          </Txt>
+        {/* Storno nur, wenn der Server es erlaubt. */}
+        {buchung.can_cancel && !storniert && (
+          <>
+            <Trennlinie />
+            <Btn variant="outline" block onPress={() => setStornoOffen(true)}>
+              Buchung stornieren
+            </Btn>
+          </>
         )}
       </ScrollView>
+
+      <Sheet
+        open={stornoOffen}
+        onClose={() => setStornoOffen(false)}
+        header={<Txt v="h2">Buchung stornieren</Txt>}
+      >
+        <Col gap={16} style={{ paddingHorizontal: 20, paddingTop: 18 }}>
+          <Txt v="sm" soft>
+            Der Gastgeber wird über die Stornierung informiert. Ein Grund hilft ihm
+            dabei — Pflicht ist er nicht.
+          </Txt>
+          <TextInput
+            value={grund}
+            onChangeText={(v) => setGrund(v.slice(0, 1000))}
+            placeholder="Grund (optional)"
+            placeholderTextColor={t.palette.faint}
+            multiline
+            style={{
+              borderWidth: 1,
+              borderColor: t.palette.line,
+              borderRadius: 14,
+              padding: 16,
+              minHeight: 96,
+              color: t.palette.ink,
+              fontFamily: t.fonts.regular,
+              fontSize: 16,
+              textAlignVertical: "top",
+            }}
+          />
+          <Btn variant="primary" block onPress={stornieren}>
+            {busy ? "Wird storniert …" : "Stornierung bestätigen"}
+          </Btn>
+        </Col>
+      </Sheet>
     </View>
+  );
+}
+
+// --- Bausteine --------------------------------------------------------------
+
+function Trennlinie() {
+  const t = useTheme();
+  return <View style={{ height: 1, backgroundColor: t.palette.line }} />;
+}
+
+function ZurueckKnopf({ onPress }: { onPress: () => void }) {
+  const t = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Zurück"
+      onPress={onPress}
+      hitSlop={10}
+      style={({ pressed }) => ({ padding: 8, opacity: pressed ? 0.6 : 1 })}
+    >
+      <Icon n="back" s={22} sw={2} c={t.palette.ink} />
+    </Pressable>
   );
 }
 
 function Zeile({ label, wert }: { label: string; wert: string }) {
   return (
     <Row style={{ justifyContent: "space-between", gap: 12 }}>
-      <Txt v="sm" soft>
+      <Txt v="body" soft>
         {label}
       </Txt>
-      <Txt v="sm" style={{ flex: 1, textAlign: "right" }} numberOfLines={2}>
+      <Txt v="body" style={{ flex: 1, textAlign: "right" }} numberOfLines={2}>
         {wert}
       </Txt>
     </Row>

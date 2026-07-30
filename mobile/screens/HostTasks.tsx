@@ -10,7 +10,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Card, Chip, Col, Progress, Row, Segmented, Spinner, Txt } from "@/components/ui/kit";
+import { Chip, Col, Progress, Row, Spinner, Txt } from "@/components/ui/kit";
+import { EmptyState } from "@/components/ui/patterns";
 import { useAuth } from "@/contexts/AuthContext";
 import { can } from "@/lib/permissions";
 import { useRealtime } from "@/lib/realtime";
@@ -82,14 +83,27 @@ export default function HostTasks({ navigation }: { navigation: any }) {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
-      <Col style={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 12, gap: 12 }}>
-        <Txt v="h1">Aufgaben</Txt>
-        {tabs.length > 1 && <Segmented options={tabs} value={tab} onChange={setTab} />}
+      <Col style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 16, gap: 16 }}>
+        <Txt v="display">Aufgaben</Txt>
+        {tabs.length > 1 && (
+          <Row gap={8}>
+            {tabs.map((label, i) => (
+              <Pressable
+                key={label}
+                accessibilityRole="button"
+                accessibilityState={{ selected: i === tab }}
+                onPress={() => setTab(i)}
+              >
+                <Chip variant={i === tab ? "on" : ""}>{label}</Chip>
+              </Pressable>
+            ))}
+          </Row>
+        )}
       </Col>
 
       {loading && <Spinner />}
       <ScrollView
-        contentContainerStyle={{ padding: 20, paddingTop: 4, gap: 12 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, gap: 0 }}
         refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
       >
         {showTeam
@@ -101,85 +115,97 @@ export default function HostTasks({ navigation }: { navigation: any }) {
 
   function renderMine(list: Task[]) {
     if (list.length === 0) {
-      return (
-        <Txt v="sm" soft style={{ textAlign: "center", marginTop: 40 }}>
-          Keine Aufgaben zugewiesen.
-        </Txt>
-      );
+      return <EmptyState icon="check" titel="Nichts offen" text="Dir ist gerade keine Aufgabe zugewiesen." />;
     }
-    return list.map((task) => (
-      <Pressable key={task.id} onPress={() => navigation.navigate("TaskDetail", { id: task.id })}>
-        <Card style={{ padding: 16, gap: 8 }}>
-          <Row style={{ justifyContent: "space-between", gap: 8 }}>
-            <Txt v="title" numberOfLines={2} style={{ flex: 1 }}>
+    return list.map((task, i) => (
+      <Pressable
+        key={task.id}
+        accessibilityRole="button"
+        onPress={() => navigation.navigate("TaskDetail", { id: task.id })}
+        style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
+      >
+        {i > 0 && <View style={{ height: 1, backgroundColor: t.palette.line }} />}
+        <Row style={{ paddingVertical: 16, gap: 12, alignItems: "flex-start" }}>
+          <Col gap={3} style={{ flex: 1 }}>
+            <Txt v="title" numberOfLines={2}>
               {task.title}
             </Txt>
-            <Chip variant={task.status === "done" ? "accent" : ""}>
-              {STATUS_LABEL[task.status]}
-            </Chip>
-          </Row>
-          {task.needs_inspection && <Chip variant="ghost">QA-Freigabe nötig</Chip>}
-        </Card>
+            {task.needs_inspection && (
+              <Txt v="sm" soft>
+                QA-Freigabe nötig
+              </Txt>
+            )}
+          </Col>
+          <Chip variant={task.status === "done" ? "on" : ""}>{STATUS_LABEL[task.status]}</Chip>
+        </Row>
       </Pressable>
     ));
   }
 
   function renderTeam(list: TaskListItem[]) {
     if (list.length === 0) {
-      return (
-        <Txt v="sm" soft style={{ textAlign: "center", marginTop: 40 }}>
-          Keine Team-Aufgaben.
-        </Txt>
-      );
+      return <EmptyState icon="list" titel="Keine Team-Aufgaben" text="Es liegt gerade nichts an." />;
     }
-    return list.map((task) => {
+    return list.map((task, i) => {
       const pct = task.checklist_total
         ? Math.round((task.checklist_done / task.checklist_total) * 100)
         : 0;
       const next = nextStatus(task.status);
       return (
-        <Card key={task.id} style={{ padding: 16, gap: 10 }}>
-          <Pressable onPress={() => navigation.navigate("TaskDetail", { id: task.id })}>
-            <Row style={{ justifyContent: "space-between", gap: 8 }}>
-              <Txt v="title" numberOfLines={2} style={{ flex: 1 }}>
-                {task.title}
-              </Txt>
-              <Chip variant={task.status === "done" ? "accent" : ""}>
-                {STATUS_LABEL[task.status]}
-              </Chip>
-            </Row>
-          </Pressable>
-          <Txt v="xs" soft numberOfLines={1}>
-            {task.property_title ?? "—"}
-            {task.assignee_name ? ` · ${task.assignee_name}` : ""}
-          </Txt>
-          {task.checklist_total > 0 && (
-            <Col gap={4}>
-              <Progress pct={pct} />
-              <Txt v="xs" faint>
-                {task.checklist_done}/{task.checklist_total} erledigt
-              </Txt>
-            </Col>
-          )}
-          {next && (
+        <View key={task.id}>
+          {i > 0 && <View style={{ height: 1, backgroundColor: t.palette.line }} />}
+          <Col gap={10} style={{ paddingVertical: 16 }}>
             <Pressable
-              onPress={() => advance(task)}
-              disabled={busyId !== null}
-              style={{
-                paddingVertical: 9,
-                borderRadius: 999,
-                borderWidth: 1,
-                borderColor: t.palette.line,
-                alignItems: "center",
-                opacity: busyId === task.id ? 0.5 : 1,
-              }}
+              accessibilityRole="button"
+              onPress={() => navigation.navigate("TaskDetail", { id: task.id })}
+              style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
             >
-              <Txt v="sm" accent>
-                {busyId === task.id ? "…" : `→ ${STATUS_LABEL[next]}`}
-              </Txt>
+              <Row style={{ justifyContent: "space-between", gap: 12, alignItems: "flex-start" }}>
+                <Col gap={3} style={{ flex: 1 }}>
+                  <Txt v="title" numberOfLines={2}>
+                    {task.title}
+                  </Txt>
+                  <Txt v="sm" soft numberOfLines={1}>
+                    {task.property_title ?? "—"}
+                    {task.assignee_name ? ` · ${task.assignee_name}` : ""}
+                  </Txt>
+                </Col>
+                <Chip variant={task.status === "done" ? "on" : ""}>
+                  {STATUS_LABEL[task.status]}
+                </Chip>
+              </Row>
             </Pressable>
-          )}
-        </Card>
+
+            {task.checklist_total > 0 && (
+              <Col gap={5}>
+                <Progress pct={pct} />
+                <Txt v="xs" soft>
+                  {task.checklist_done}/{task.checklist_total} erledigt
+                </Txt>
+              </Col>
+            )}
+
+            {next && (
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => advance(task)}
+                disabled={busyId !== null}
+                style={{
+                  paddingVertical: 11,
+                  borderRadius: t.radius.pill,
+                  borderWidth: 1,
+                  borderColor: t.palette.line,
+                  alignItems: "center",
+                  opacity: busyId === task.id ? 0.5 : 1,
+                }}
+              >
+                <Txt v="sm" style={{ fontFamily: t.fonts.semibold }}>
+                  {busyId === task.id ? "…" : `Weiter zu „${STATUS_LABEL[next]}“`}
+                </Txt>
+              </Pressable>
+            )}
+          </Col>
+        </View>
       );
     });
   }

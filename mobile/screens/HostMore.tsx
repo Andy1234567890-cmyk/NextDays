@@ -1,12 +1,12 @@
 // Gastgeber · Mehr. Bündelt die selteneren Verwalter-Bereiche (Inbox, Inserate,
 // Profil), damit die untere Tab-Leiste bei max. 5 Einträgen bleibt. Nur für
 // admin/co_admin sichtbar (staff/cleaner haben eine eigene, reduzierte Struktur).
-import { View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Icon, type IconName } from "@/components/ui/Icon";
-import { Card, Divider, Row, Txt } from "@/components/ui/kit";
-import { Pressable } from "react-native";
+import { type IconName } from "@/components/ui/Icon";
+import { Col, Txt } from "@/components/ui/kit";
+import { ListRow } from "@/components/ui/patterns";
 import { useTheme } from "@/theme/ThemeProvider";
 
 type Entry = { icon: IconName; label: string; tab: string };
@@ -22,24 +22,21 @@ export default function HostMore({ navigation }: { navigation: any }) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top + 8, paddingHorizontal: 20, gap: 16 }}>
-      <Txt v="h1">Mehr</Txt>
-      <Card style={{ padding: 4 }}>
-        {ENTRIES.map((e, i) => (
-          <View key={e.tab}>
-            {i > 0 && <Divider style={{ marginHorizontal: 12 }} />}
-            <Pressable onPress={() => navigation.navigate(e.tab)}>
-              <Row style={{ padding: 14, gap: 12, alignItems: "center" }}>
-                <Icon n={e.icon} s={20} c={t.palette.soft} />
-                <Txt v="sm" style={{ flex: 1, fontWeight: "600" }}>
-                  {e.label}
-                </Txt>
-                <Icon n="fwd" s={16} c={t.palette.faint} />
-              </Row>
-            </Pressable>
-          </View>
-        ))}
-      </Card>
+    <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 40, gap: 20 }}>
+        <Txt v="display">Mehr</Txt>
+        <Col>
+          {ENTRIES.map((e, i) => (
+            <ListRow
+              key={e.tab}
+              icon={e.icon}
+              label={e.label}
+              onPress={() => navigation.navigate(e.tab)}
+              last={i === ENTRIES.length - 1}
+            />
+          ))}
+        </Col>
+      </ScrollView>
     </View>
   );
 }

@@ -4,10 +4,12 @@
 import { useNavigation, useRoute, type RouteProp } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useEffect, useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Card, Chip, Col, Divider, IconBtn, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Icon } from "@/components/ui/Icon";
+import { Chip, Col, Row, Spinner, Txt } from "@/components/ui/kit";
+import { EmptyState } from "@/components/ui/patterns";
 import { formatCurrency } from "@/lib/currency";
 import { getReservationDetail, type ReservationDetail as Detail } from "@/lib/reservations";
 import type { RootStackParamList } from "@/navigation/types";
@@ -49,7 +51,7 @@ export default function ReservationDetail() {
 
   if (loading) {
     return (
-      <View style={{ flex: 1, backgroundColor: t.palette.bg }}>
+      <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top + 40 }}>
         <Spinner />
       </View>
     );
@@ -57,11 +59,11 @@ export default function ReservationDetail() {
 
   if (!detail) {
     return (
-      <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top + 20, paddingHorizontal: 20, gap: 16 }}>
-        <IconBtn icon="back" onPress={() => navigation.goBack()} />
-        <Txt v="sm" soft>
-          {error ?? "Reservierung nicht gefunden."}
-        </Txt>
+      <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
+        <Row style={{ paddingHorizontal: 12, paddingVertical: 8 }}>
+          <ZurueckKnopf onPress={() => navigation.goBack()} />
+        </Row>
+        <EmptyState icon="info" titel="Nicht gefunden" text={error ?? "Reservierung nicht gefunden."} />
       </View>
     );
   }
@@ -69,65 +71,97 @@ export default function ReservationDetail() {
   const location = [detail.property_city, detail.property_country].filter(Boolean).join(", ");
 
   return (
-    <View style={{ flex: 1, backgroundColor: t.palette.bg }}>
-      <ScrollView contentContainerStyle={{ paddingTop: insets.top + 8, paddingHorizontal: 20, paddingBottom: 40, gap: 16 }}>
-        <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
-          <IconBtn icon="back" onPress={() => navigation.goBack()} />
-          <Chip variant={detail.status === "confirmed" ? "accent" : ""}>{detail.status}</Chip>
-        </Row>
+    <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
+      <Row style={{ paddingHorizontal: 12, paddingVertical: 8, justifyContent: "space-between" }}>
+        <ZurueckKnopf onPress={() => navigation.goBack()} />
+        <Chip variant={detail.status === "confirmed" ? "on" : ""}>{detail.status}</Chip>
+      </Row>
 
-        <Col gap={4}>
-          <Txt v="h1">{detail.guest_name || "Gast"}</Txt>
-          <Txt v="sm" soft>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, gap: 24 }}>
+        <Col gap={6}>
+          <Txt v="display">{detail.guest_name || "Gast"}</Txt>
+          <Txt v="body" soft>
             {detail.property_title}
             {location ? ` · ${location}` : ""}
           </Txt>
         </Col>
 
-        <Card style={{ padding: 16, gap: 12 }}>
-          <DetailRow label="Zeitraum" value={`${fmtDate(detail.check_in)} – ${fmtDate(detail.check_out)} · ${detail.nights} N`} />
-          <Divider />
+        <Trennlinie />
+
+        <Col gap={14}>
+          <Txt v="h2">Buchung</Txt>
+          <DetailRow
+            label="Zeitraum"
+            value={`${fmtDate(detail.check_in)} – ${fmtDate(detail.check_out)} · ${detail.nights} N`}
+          />
           <DetailRow label="Kanal" value={detail.ota_name ?? detail.channel} />
-          <Divider />
-          <DetailRow label="Gäste" value={`${detail.num_guests} (${detail.adults} Erw.${detail.children ? `, ${detail.children} Kinder` : ""})`} />
-          {detail.external_ref && (
-            <>
-              <Divider />
-              <DetailRow label="Referenz" value={detail.external_ref} />
-            </>
-          )}
-        </Card>
+          <DetailRow
+            label="Gäste"
+            value={`${detail.num_guests} (${detail.adults} Erw.${detail.children ? `, ${detail.children} Kinder` : ""})`}
+          />
+          {detail.external_ref && <DetailRow label="Referenz" value={detail.external_ref} />}
+        </Col>
+
+        <Trennlinie />
 
         {/* Beträge — maskiert (null → „—"). */}
-        <Card style={{ padding: 16, gap: 12 }}>
+        <Col gap={14}>
+          <Txt v="h2">Beträge</Txt>
           <DetailRow label="Gesamt" value={amount(detail.total_amount, detail.currency)} strong />
-          <Divider />
           <DetailRow label="Bezahlt" value={amount(detail.paid_amount, detail.currency)} />
-          <Divider />
           <DetailRow label="Offen" value={amount(detail.due_amount, detail.currency)} />
-        </Card>
+        </Col>
 
         {detail.note && (
-          <Card style={{ padding: 16, gap: 6 }}>
-            <Txt v="xs" soft>
-              NOTIZ
-            </Txt>
-            <Txt v="sm">{detail.note}</Txt>
-          </Card>
+          <>
+            <Trennlinie />
+            <Col gap={10}>
+              <Txt v="h2">Notiz</Txt>
+              <Txt v="body" soft>
+                {detail.note}
+              </Txt>
+            </Col>
+          </>
         )}
       </ScrollView>
     </View>
   );
 }
 
+// --- Bausteine --------------------------------------------------------------
+
+function Trennlinie() {
+  const t = useTheme();
+  return <View style={{ height: 1, backgroundColor: t.palette.line }} />;
+}
+
+function ZurueckKnopf({ onPress }: { onPress: () => void }) {
+  const t = useTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel="Zurück"
+      onPress={onPress}
+      hitSlop={10}
+      style={({ pressed }) => ({ padding: 8, opacity: pressed ? 0.6 : 1 })}
+    >
+      <Icon n="back" s={22} sw={2} c={t.palette.ink} />
+    </Pressable>
+  );
+}
+
 function DetailRow({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
   const t = useTheme();
   return (
-    <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
-      <Txt v="sm" soft>
+    <Row style={{ justifyContent: "space-between", alignItems: "center", gap: 16 }}>
+      <Txt v="body" soft>
         {label}
       </Txt>
-      <Txt v="sm" style={strong ? { fontFamily: t.type.bold.fontFamily } : undefined}>
+      <Txt
+        v="body"
+        numberOfLines={2}
+        style={[{ flex: 1, textAlign: "right" }, strong ? { fontFamily: t.fonts.semibold } : null]}
+      >
         {value}
       </Txt>
     </Row>

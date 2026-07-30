@@ -8,7 +8,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Pressable, RefreshControl, ScrollView, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Btn, Card, Col, Divider, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Btn, Col, Row, Spinner, Txt } from "@/components/ui/kit";
+import { EmptyState } from "@/components/ui/patterns";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   createBlockRequest,
@@ -110,20 +111,16 @@ export default function OwnerRequests() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
-      <Col style={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 12 }}>
-        <Txt v="h1">Anfragen</Txt>
+      <Col style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 16 }}>
+        <Txt v="display">Anfragen</Txt>
       </Col>
 
       {fehler && (
-        <Card style={{ padding: 16, gap: 12 }}>
-          <Txt v="title">Nicht geladen</Txt>
-          <Txt v="sm" soft>
-            {fehler}
-          </Txt>
-          <Btn variant="outline" onPress={onRefresh}>
+        <EmptyState icon="info" titel="Nicht geladen" text={fehler}>
+          <Btn variant="outline" onPress={onRefresh} style={{ marginTop: 6 }}>
             Erneut versuchen
           </Btn>
-        </Card>
+        </EmptyState>
       )}
       {!props && !fehler && <Spinner />}
       {props && props.length === 0 && (
@@ -310,26 +307,26 @@ function RequestList({
     );
   }
   return (
-    <Card style={{ padding: 6 }}>
+    <Col gap={0}>
       {requests.map((r, i) => (
         <View key={r.id}>
-          {i > 0 && <Divider style={{ marginHorizontal: 12 }} />}
-          <Row style={{ padding: 12, gap: 12, alignItems: "center" }}>
-            <Col gap={2} style={{ flex: 1 }}>
-              <Txt v="sm" numberOfLines={1} style={{ fontWeight: "600" }}>
+          {i > 0 && <View style={{ height: 1, backgroundColor: t.palette.line }} />}
+          <Row gap={12} style={{ paddingVertical: 14, alignItems: "center" }}>
+            <Col gap={3} style={{ flex: 1 }}>
+              <Txt v="title" numberOfLines={1}>
                 {title(r.property_id)}
               </Txt>
-              <Txt v="xs" soft>
+              <Txt v="sm" soft>
                 {r.start_date} – {r.end_date}
               </Txt>
             </Col>
-            <Txt v="xs" color={r.status === "approved" ? "#1F8A5B" : t.palette.soft}>
+            <Txt v="sm" color={r.status === "approved" ? "#1F8A5B" : t.palette.soft}>
               {r.status}
             </Txt>
           </Row>
         </View>
       ))}
-    </Card>
+    </Col>
   );
 }
 
@@ -420,6 +417,7 @@ function MeterForm({ propertyId, onDone }: { propertyId: string | null; onDone: 
 }
 
 function ReadingList({ readings }: { readings: MeterReading[] | null }) {
+  const t = useTheme();
   if (!readings) return null; // Fehler/Ladezustand zeigt der Rahmen oben
   if (readings.length === 0) {
     return (
@@ -429,25 +427,23 @@ function ReadingList({ readings }: { readings: MeterReading[] | null }) {
     );
   }
   return (
-    <Card style={{ padding: 6 }}>
+    <Col gap={0}>
       {readings.map((r, i) => (
         <View key={r.id}>
-          {i > 0 && <Divider style={{ marginHorizontal: 12 }} />}
-          <Row style={{ padding: 12, gap: 12, alignItems: "center" }}>
-            <Col gap={2} style={{ flex: 1 }}>
-              <Txt v="sm" style={{ fontWeight: "600" }}>
-                {r.meter_kind}
-              </Txt>
-              <Txt v="xs" soft>
+          {i > 0 && <View style={{ height: 1, backgroundColor: t.palette.line }} />}
+          <Row gap={12} style={{ paddingVertical: 14, alignItems: "center" }}>
+            <Col gap={3} style={{ flex: 1 }}>
+              <Txt v="title">{r.meter_kind}</Txt>
+              <Txt v="sm" soft>
                 {r.read_at}
               </Txt>
             </Col>
-            <Txt v="sm" style={{ fontWeight: "600" }}>
+            <Txt v="body" style={{ fontFamily: t.fonts.semibold }}>
               {r.value}
             </Txt>
           </Row>
         </View>
       ))}
-    </Card>
+    </Col>
   );
 }

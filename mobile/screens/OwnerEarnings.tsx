@@ -6,7 +6,8 @@ import { useCallback, useEffect, useState } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Card, Col, Divider, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Col, Row, Spinner, Txt } from "@/components/ui/kit";
+import { EmptyState } from "@/components/ui/patterns";
 import { formatCurrency } from "@/lib/currency";
 import {
   getOwnerEarnings,
@@ -66,7 +67,7 @@ export default function OwnerEarnings() {
 
   if (!earnings && !error) {
     return (
-      <View style={{ flex: 1, backgroundColor: t.palette.bg }}>
+      <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top + 40 }}>
         <Spinner />
       </View>
     );
@@ -74,89 +75,76 @@ export default function OwnerEarnings() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
-      <Col style={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 12 }}>
-        <Txt v="h1">Auszahlungen</Txt>
+      <Col style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 16 }}>
+        <Txt v="display">Auszahlungen</Txt>
       </Col>
 
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40, gap: 18 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, gap: 26 }}
         refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
       >
-        {error && (
-          <Txt v="sm" color={t.palette.accent}>
-            {error}
-          </Txt>
-        )}
+        {error && <EmptyState icon="info" titel="Nicht geladen" text={error} />}
 
         {earnings && (
-          <Col gap={10}>
-            <Txt v="h2">
-              Einnahmen · {new Date(earnings.period_from).getFullYear()}
-            </Txt>
-            <Card style={{ padding: 16, gap: 4 }}>
-              <Txt v="xs" soft>
-                Auszahlung gesamt (bisher)
+          <Col gap={16}>
+            <Col gap={4}>
+              <Txt v="sm" soft>
+                Auszahlung gesamt · {new Date(earnings.period_from).getFullYear()}
               </Txt>
-              <Txt v="display" style={{ fontSize: 26 }}>
-                {money(earnings.total_payout, earnings.currency)}
-              </Txt>
-            </Card>
+              <Txt v="display">{money(earnings.total_payout, earnings.currency)}</Txt>
+            </Col>
 
             {earnings.items.length > 0 && (
-              <Card style={{ padding: 6 }}>
+              <Col gap={0}>
                 {earnings.items.map((it, i) => (
                   <View key={it.property_id}>
-                    {i > 0 && <Divider style={{ marginHorizontal: 12 }} />}
-                    <Row style={{ padding: 12, gap: 12, alignItems: "center" }}>
-                      <Col gap={2} style={{ flex: 1 }}>
-                        <Txt v="sm" numberOfLines={1} style={{ fontWeight: "600" }}>
+                    {i > 0 && <View style={{ height: 1, backgroundColor: t.palette.line }} />}
+                    <Row gap={12} style={{ paddingVertical: 14, alignItems: "center" }}>
+                      <Col gap={3} style={{ flex: 1 }}>
+                        <Txt v="title" numberOfLines={1}>
                           {it.title}
                         </Txt>
-                        <Txt v="xs" soft>
+                        <Txt v="sm" soft>
                           {it.reservations} Buchungen · {it.nights} Nächte
                         </Txt>
                       </Col>
-                      <Txt v="sm" style={{ fontWeight: "600" }}>
+                      <Txt v="body" style={{ fontFamily: t.fonts.semibold }}>
                         {money(it.payout, it.currency)}
                       </Txt>
                     </Row>
                   </View>
                 ))}
-              </Card>
+              </Col>
             )}
           </Col>
         )}
 
-        <Col gap={10}>
+        <View style={{ height: 1, backgroundColor: t.palette.line }} />
+
+        <Col gap={14}>
           <Txt v="h2">Abrechnungen</Txt>
           {!statements && <Spinner />}
           {statements && statements.length === 0 && (
-            <Txt v="sm" soft>
+            <Txt v="body" soft>
               Noch keine finalisierten Abrechnungen.
             </Txt>
           )}
-          {statements && statements.length > 0 && (
-            <Card style={{ padding: 6 }}>
-              {statements.map((st, i) => (
-                <View key={st.id}>
-                  {i > 0 && <Divider style={{ marginHorizontal: 12 }} />}
-                  <Row style={{ padding: 12, gap: 12, alignItems: "center" }}>
-                    <Col gap={2} style={{ flex: 1 }}>
-                      <Txt v="sm" style={{ fontWeight: "600" }}>
-                        {periodLabel(st.period_from, st.period_to)}
-                      </Txt>
-                      <Txt v="xs" soft>
-                        {st.invoice_number ? `Nr. ${st.invoice_number}` : st.status}
-                      </Txt>
-                    </Col>
-                    <Txt v="sm" style={{ fontWeight: "600" }}>
-                      {formatCurrency(st.owner_payout, st.currency, 2)}
-                    </Txt>
-                  </Row>
-                </View>
-              ))}
-            </Card>
-          )}
+          {statements?.map((st, i) => (
+            <View key={st.id}>
+              {i > 0 && <View style={{ height: 1, backgroundColor: t.palette.line }} />}
+              <Row gap={12} style={{ paddingVertical: 14, alignItems: "center" }}>
+                <Col gap={3} style={{ flex: 1 }}>
+                  <Txt v="title">{periodLabel(st.period_from, st.period_to)}</Txt>
+                  <Txt v="sm" soft>
+                    {st.invoice_number ? `Nr. ${st.invoice_number}` : st.status}
+                  </Txt>
+                </Col>
+                <Txt v="body" style={{ fontFamily: t.fonts.semibold }}>
+                  {formatCurrency(st.owner_payout, st.currency, 2)}
+                </Txt>
+              </Row>
+            </View>
+          ))}
         </Col>
       </ScrollView>
     </View>

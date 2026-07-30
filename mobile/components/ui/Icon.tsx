@@ -56,6 +56,19 @@ export const NIC: Record<string, string> = {
   cabin: "M3 11l9-7.5L21 11M5.5 9.5V20h13V9.5M10 20v-5.5h4V20",
   city: "M4 20.5V8l6-3v15.5M10 20.5h8V11l-8-3M7 11h.01M7 14h.01M7 17h.01M13.5 13h.01M13.5 16h.01",
   pool: "M4 14c2 0 2-1.5 4-1.5S10 14 12 14s2-1.5 4-1.5S18 14 20 14M4 18c2 0 2-1.5 4-1.5S10 18 12 18s2-1.5 4-1.5S18 18 20 18M8 12V5a2 2 0 014 0M8 8.5h4",
+  // Tab-Bar & Sheets (Airbnb-Muster): Koffer für Reisen, Sliders für Filter,
+  // Kompass fürs Entdecken, Chevrons für Listenzeilen.
+  suitcase: "M4 8.5h16a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1v-9a1 1 0 011-1M9 8.5V6a1.5 1.5 0 011.5-1.5h3A1.5 1.5 0 0115 6v2.5M3 13h18",
+  compass: "M12 3a9 9 0 100 18 9 9 0 000-18M15.5 8.5l-2 5-5 2 2-5z",
+  sliders: "M4 8h10M18 8h2M4 16h4M12 16h8M16 8m-2 0a2 2 0 104 0 2 2 0 10-4 0M10 16m-2 0a2 2 0 104 0 2 2 0 10-4 0",
+  chevron: "M9 5l7 7-7 7",
+  bellhop: "M4 19h16M5.5 19v-2a6.5 6.5 0 0113 0v2M12 10.5V8M10 8h4",
+  balloon: "M12 15.5c3 0 5.5-2.8 5.5-6.2S15 3 12 3 6.5 5.9 6.5 9.3s2.5 6.2 5.5 6.2zM10.5 15.5h3l-.7 2.5h-1.6zM11 21h2M10.8 18h2.4l.4 3h-3.2z",
+  lock: "M6 11h12v9H6zM8.5 11V8a3.5 3.5 0 017 0v3",
+  logout: "M15 5H6a1 1 0 00-1 1v12a1 1 0 001 1h9M18.5 12H10M15.5 8.5l3.5 3.5-3.5 3.5",
+  info: "M12 21a9 9 0 100-18 9 9 0 000 18M12 11v5.5M12 7.6h.01",
+  doc: "M6 3.5h8l4 4V20.5H6zM14 3.5V8h4M9 12.5h6M9 16h4",
+  hand: "M8.5 12V5.5a1.5 1.5 0 013 0V11m0-.5V4.5a1.5 1.5 0 113 0V11m0-.5v-2a1.5 1.5 0 113 0V15a6 6 0 01-6 6h-1a5 5 0 01-5-5v-3.5a1.5 1.5 0 013 0",
 };
 
 export type IconName = keyof typeof NIC | string;
@@ -65,11 +78,15 @@ export function Icon({
   s = 22,
   sw = 1.7,
   c = "currentColor",
+  fill,
 }: {
   n: IconName;
   s?: number;
   sw?: number;
   c?: ColorValue;
+  // Gefüllte Variante (gesetztes Herz, Stern). Ohne `fill` bleibt das Icon
+  // eine reine Outline — das ist der Normalfall.
+  fill?: ColorValue;
 }) {
   const d = NIC[n] || NIC.dot;
   // An "M" splitten → mehrere Subpaths (wie im Original-Kit).
@@ -84,6 +101,7 @@ export function Icon({
           strokeWidth={sw}
           strokeLinecap="round"
           strokeLinejoin="round"
+          fill={fill ?? "none"}
         />
       ))}
     </Svg>

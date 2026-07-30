@@ -188,12 +188,7 @@ export default function HostSignup() {
         </Txt>
       )}
 
-      <Btn
-        variant="primary"
-        block
-        icon="key"
-        onPress={busy || !complete ? undefined : submit}
-      >
+      <Btn variant="dark" block onPress={busy || !complete ? undefined : submit}>
         {busy ? "Wird erstellt …" : "Konto erstellen"}
       </Btn>
     </ScrollView>
@@ -218,25 +213,28 @@ function Picker({
   const t = useTheme();
   return (
     <Col gap={8}>
-      <Txt v="sm" style={{ fontWeight: "600" }}>
-        {label}
-      </Txt>
+      <Txt v="title">{label}</Txt>
       <Row style={{ flexWrap: "wrap", gap: 8 }}>
         {options.map((o) => {
           const active = o.code === selected;
           return (
-            <Pressable key={o.code} onPress={disabled ? undefined : () => onSelect(o.code)}>
+            <Pressable
+              key={o.code}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active, disabled }}
+              onPress={disabled ? undefined : () => onSelect(o.code)}
+            >
               <View
                 style={{
-                  paddingVertical: 8,
-                  paddingHorizontal: 14,
-                  borderRadius: 999,
-                  borderWidth: 1,
-                  borderColor: active ? t.palette.accent : t.palette.line,
-                  backgroundColor: active ? t.palette.accent : t.palette.surface,
+                  paddingVertical: 9,
+                  paddingHorizontal: 16,
+                  borderRadius: t.radius.pill,
+                  borderWidth: active ? 0 : 1,
+                  borderColor: t.palette.line,
+                  backgroundColor: active ? t.palette.ink : t.palette.surface,
                 }}
               >
-                <Txt v="sm" color={active ? "#fff" : t.palette.ink}>
+                <Txt v="sm" color={active ? t.palette.bg : t.palette.ink} style={{ fontFamily: t.fonts.semibold }}>
                   {o.label}
                 </Txt>
               </View>

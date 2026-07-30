@@ -6,7 +6,7 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Icon, type IconName } from "@/components/ui/Icon";
+import { tabIcon as icon, tabScreenOptions } from "@/navigation/tab-style";
 import type { OwnerTabParamList } from "@/navigation/types";
 import OwnerCalendar from "@/screens/OwnerCalendar";
 import OwnerEarnings from "@/screens/OwnerEarnings";
@@ -19,28 +19,8 @@ const Tab = createBottomTabNavigator<OwnerTabParamList>();
 export function OwnerTabs() {
   const t = useTheme();
   const insets = useSafeAreaInsets();
-  const icon = (name: IconName) =>
-    ({ color, focused }: { color: string; focused: boolean }) => (
-      <Icon n={name} s={23} sw={focused ? 2.1 : 1.7} c={color} />
-    );
   return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: t.palette.accent,
-        tabBarInactiveTintColor: t.palette.faint,
-        tabBarStyle: {
-          backgroundColor: t.palette.surface,
-          borderTopColor: t.palette.line,
-          // Inhaltshöhe + untere Safe-Area (Home-Indicator), sonst kleben die
-          // Labels am Rand und der Indicator überlappt sie.
-          height: 60 + insets.bottom,
-          paddingTop: 8,
-          paddingBottom: insets.bottom,
-        },
-        tabBarLabelStyle: { fontSize: 10.5, fontFamily: t.fonts.semibold },
-      }}
-    >
+    <Tab.Navigator screenOptions={tabScreenOptions(t, insets.bottom)}>
       <Tab.Screen
         name="OwnerProperties"
         component={OwnerProperties}
@@ -54,7 +34,7 @@ export function OwnerTabs() {
       <Tab.Screen
         name="OwnerEarnings"
         component={OwnerEarnings}
-        options={{ title: "Auszahlungen", tabBarIcon: icon("card") }}
+        options={{ title: "Auszahlungen", tabBarIcon: icon("euro") }}
       />
       <Tab.Screen
         name="OwnerRequests"

@@ -7,7 +7,8 @@ import { useCallback, useEffect, useState } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { Avatar, Card, Col, Divider, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Avatar, Col, Row, Spinner, Txt } from "@/components/ui/kit";
+import { EmptyState } from "@/components/ui/patterns";
 import { getOwnerProperties, type PortalProperty } from "@/lib/ownerPortal";
 import { useRealtime } from "@/lib/realtime";
 import { useTheme } from "@/theme/ThemeProvider";
@@ -38,42 +39,40 @@ export default function OwnerProperties() {
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
-      <Col style={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 12 }}>
-        <Txt v="h1">Meine Objekte</Txt>
+      <Col style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 16 }}>
+        <Txt v="display">Meine Objekte</Txt>
       </Col>
 
       {!items && !error && <Spinner />}
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}
         refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
       >
         {items && items.length === 0 && (
-          <Txt v="sm" soft style={{ textAlign: "center", marginTop: 40 }}>
-            {error ?? "Dir sind noch keine Objekte zugeordnet."}
-          </Txt>
+          <EmptyState
+            icon={error ? "info" : "home"}
+            titel={error ? "Nicht geladen" : "Keine Objekte"}
+            text={error ?? "Dir sind noch keine Objekte zugeordnet."}
+          />
         )}
-        {items && items.length > 0 && (
-          <Card style={{ padding: 6 }}>
-            {items.map((p, i) => (
-              <View key={p.id}>
-                {i > 0 && <Divider style={{ marginHorizontal: 12 }} />}
-                <Row style={{ padding: 12, gap: 12, alignItems: "center" }}>
-                  <Avatar s={48} src={p.photo ?? undefined} icon="home" />
-                  <Col gap={2} style={{ flex: 1 }}>
-                    <Txt v="sm" numberOfLines={1} style={{ fontWeight: "600" }}>
-                      {p.title}
-                    </Txt>
-                    {p.city && (
-                      <Txt v="xs" soft numberOfLines={1}>
-                        {p.city}
-                      </Txt>
-                    )}
-                  </Col>
-                </Row>
-              </View>
-            ))}
-          </Card>
-        )}
+        {items?.map((p, i) => (
+          <View key={p.id}>
+            {i > 0 && <View style={{ height: 1, backgroundColor: t.palette.line }} />}
+            <Row gap={14} style={{ paddingVertical: 14 }}>
+              <Avatar s={56} src={p.photo ?? undefined} icon="home" />
+              <Col gap={3} style={{ flex: 1, justifyContent: "center" }}>
+                <Txt v="title" numberOfLines={1}>
+                  {p.title}
+                </Txt>
+                {p.city && (
+                  <Txt v="sm" soft numberOfLines={1}>
+                    {p.city}
+                  </Txt>
+                )}
+              </Col>
+            </Row>
+          </View>
+        ))}
       </ScrollView>
     </View>
   );

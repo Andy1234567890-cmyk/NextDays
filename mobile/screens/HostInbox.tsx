@@ -19,7 +19,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { Icon } from "@/components/ui/Icon";
-import { Card, Chip, Col, Divider, IconBtn, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Chip, Col, Row, Spinner, Txt } from "@/components/ui/kit";
+import { EmptyState } from "@/components/ui/patterns";
 import { channelMeta } from "@/lib/calendar-channels";
 import {
   getInboxMessages,
@@ -107,20 +108,17 @@ function ThreadList({
 
   return (
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
-      <Col style={{ paddingHorizontal: 20, paddingTop: 4, paddingBottom: 10, gap: 12 }}>
-        <Row style={{ justifyContent: "space-between", alignItems: "center" }}>
-          <Txt v="h1">Nachrichten</Txt>
-          <IconBtn icon="chat" flat />
-        </Row>
+      <Col style={{ paddingHorizontal: 24, paddingTop: 12, paddingBottom: 14, gap: 16 }}>
+        <Txt v="display">Nachrichten</Txt>
 
         {/* Suchleiste */}
         <Row
           style={{
             alignItems: "center",
-            gap: 8,
-            paddingHorizontal: 12,
-            height: 44,
-            borderRadius: t.radius.card,
+            gap: 10,
+            paddingHorizontal: 16,
+            height: 48,
+            borderRadius: t.radius.pill,
             backgroundColor: t.palette.surface,
             borderWidth: 1,
             borderColor: t.palette.line,
@@ -132,7 +130,7 @@ function ThreadList({
             onChangeText={setQuery}
             placeholder="Nach Buchungsref. oder Gast suchen"
             placeholderTextColor={t.palette.faint}
-            style={{ flex: 1, fontFamily: t.type.body.fontFamily, fontSize: 14, color: t.palette.ink }}
+            style={{ flex: 1, fontFamily: t.fonts.regular, fontSize: 15, color: t.palette.ink }}
           />
         </Row>
 
@@ -156,18 +154,20 @@ function ThreadList({
 
       {!threads && <Spinner />}
       <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: insets.bottom + 32 }}
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: insets.bottom + 32 }}
         refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
         showsVerticalScrollIndicator={false}
       >
         {threads && visible.length === 0 && (
-          <Txt v="sm" soft style={{ textAlign: "center", marginTop: 40 }}>
-            Keine Konversationen.
-          </Txt>
+          <EmptyState
+            icon="chat"
+            titel="Keine Konversationen"
+            text="Für diese Filter liegt gerade nichts vor."
+          />
         )}
         {visible.map((thread, i) => (
           <View key={thread.id}>
-            {i > 0 && <Divider style={{ marginHorizontal: 4 }} />}
+            {i > 0 && <View style={{ height: 1, backgroundColor: t.palette.line }} />}
             <ThreadRow thread={thread} onPress={() => onOpen(thread)} />
           </View>
         ))}
@@ -393,8 +393,16 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
       style={{ flex: 1, backgroundColor: t.palette.bg }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <Row style={{ paddingTop: insets.top + 8, paddingHorizontal: 16, paddingBottom: 8, gap: 10, alignItems: "center" }}>
-        <IconBtn icon="back" onPress={onBack} />
+      <Row style={{ paddingTop: insets.top + 8, paddingHorizontal: 12, paddingBottom: 10, gap: 6, alignItems: "center" }}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Zurück"
+          onPress={onBack}
+          hitSlop={10}
+          style={({ pressed }) => ({ padding: 8, opacity: pressed ? 0.6 : 1 })}
+        >
+          <Icon n="back" s={22} sw={2} c={t.palette.ink} />
+        </Pressable>
         <Col style={{ flex: 1 }}>
           <Txt v="title" numberOfLines={1}>
             {thread.guest_name || "Gast"}
@@ -420,20 +428,25 @@ function ThreadView({ thread, onBack }: { thread: InboxThread; onBack: () => voi
                 maxWidth: "82%",
               }}
             >
-              <Card
+              <View
                 style={{
-                  padding: 12,
+                  paddingHorizontal: 16,
+                  paddingVertical: 12,
+                  // Blase: eigene Nachricht dunkel, fremde hell, Notiz getönt.
+                  borderRadius: 20,
+                  borderBottomRightRadius: mine && !note ? 6 : 20,
+                  borderBottomLeftRadius: !mine && !note ? 6 : 20,
                   backgroundColor: note
                     ? t.palette.accentSoft
                     : mine
-                      ? t.palette.accent
+                      ? t.palette.ink
                       : t.palette.surface2,
                 }}
               >
-                <Txt v="sm" color={mine && !note ? "#fff" : t.palette.ink}>
+                <Txt v="body" color={mine && !note ? t.palette.bg : t.palette.ink}>
                   {m.message}
                 </Txt>
-              </Card>
+              </View>
             </View>
           );
         })}

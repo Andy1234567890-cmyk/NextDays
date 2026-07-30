@@ -2,6 +2,10 @@
 // (app-kit.jsx). CSS-Klassen → RN-Komponenten mit Theme-Tokens.
 //  Txt, Btn, Chip, Card, Flat, Divider, Star, Avatar, Toggle, Photo, Badge,
 //  Progress, Segmented, IconBtn.
+//
+// Für Seitenaufbau (Such-Pille, Kategorie-Reiter, Sektionen, Bottom-Sheet,
+// Listenzeilen, Leerzustände) liegen die Muster in `patterns.tsx` — dort sitzt
+// die Marktplatz-Struktur, hier nur die einzelnen Bausteine.
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -59,13 +63,20 @@ export function Txt({
 
 // --- Surfaces ---------------------------------------------------------------
 
+// Fläche mit feinem Rand statt Schatten — im Airbnb-Muster grenzt eine Karte
+// über eine Linie ab, nicht über Tiefe. Schwebende Elemente (Such-Pill, Sheet)
+// bringen ihren Schatten selbst mit.
 export function Card({ style, children }: { style?: StyleProp<ViewStyle>; children?: React.ReactNode }) {
   const t = useTheme();
   return (
     <View
       style={[
-        { backgroundColor: t.palette.surface, borderRadius: t.radius.card },
-        t.shadow.sm,
+        {
+          backgroundColor: t.palette.surface,
+          borderRadius: t.radius.card,
+          borderWidth: 1,
+          borderColor: t.palette.line,
+        },
         style,
       ]}
     >
@@ -141,29 +152,21 @@ export function Btn({
           alignItems: "center",
           justifyContent: "center",
           gap: 8,
-          borderRadius: t.radius.btn,
-          paddingVertical: 13,
-          paddingHorizontal: 18,
+          // Vollrunde Pille mit kräftiger Höhe (Airbnb-CTA).
+          borderRadius: t.radius.pill,
+          paddingVertical: 15,
+          paddingHorizontal: 22,
           backgroundColor: bg,
           borderWidth: variant === "outline" ? 1 : 0,
           borderColor: t.palette.line,
-          transform: [{ scale: pressed ? 0.98 : 1 }],
-          ...(variant === "primary"
-            ? {
-                shadowColor: t.palette.accent,
-                shadowOpacity: 0.4,
-                shadowRadius: 12,
-                shadowOffset: { width: 0, height: 6 },
-                elevation: 4,
-              }
-            : {}),
+          opacity: pressed ? 0.88 : 1,
         },
         block ? { alignSelf: "stretch" } : undefined,
         style,
       ]}
     >
       {icon && <Icon n={icon} s={18} sw={2} c={fg} />}
-      <Text style={{ fontFamily: t.type.title.fontFamily, fontSize: 15, color: fg, letterSpacing: -0.15 }}>
+      <Text style={{ fontFamily: t.fonts.semibold, fontSize: 16, color: fg, letterSpacing: -0.15 }}>
         {children}
       </Text>
       {iconR && <Icon n={iconR} s={18} sw={2} c={fg} />}
@@ -232,7 +235,7 @@ export function Chip({
 }) {
   const t = useTheme();
   const bg = {
-    "": t.palette.surface2,
+    "": t.palette.surface,
     on: t.palette.ink,
     accent: t.palette.accent,
     ghost: "transparent",
@@ -252,11 +255,12 @@ export function Chip({
           flexDirection: "row",
           alignItems: "center",
           gap: 6,
-          paddingVertical: 8,
-          paddingHorizontal: 14,
-          borderRadius: 999,
+          paddingVertical: 9,
+          paddingHorizontal: 16,
+          borderRadius: t.radius.pill,
           backgroundColor: bg,
-          borderWidth: variant === "ghost" ? 1 : 0,
+          // Ruhender Chip grenzt über eine Linie ab, der aktive über die Füllung.
+          borderWidth: variant === "on" || variant === "accent" ? 0 : 1,
           borderColor: t.palette.line,
         },
         style,
@@ -264,9 +268,7 @@ export function Chip({
     >
       {icon && <Icon n={icon} s={14} sw={2} c={fg} />}
       {children != null && (
-        <Text style={{ fontFamily: t.type.sm.fontFamily, fontSize: 13, fontWeight: "600", color: fg }}>
-          {children}
-        </Text>
+        <Text style={{ fontFamily: t.fonts.semibold, fontSize: 14, color: fg }}>{children}</Text>
       )}
     </View>
   );
@@ -386,7 +388,8 @@ export function Photo({
     <View
       style={[
         {
-          height: h,
+          // Höhe optional: Kacheln setzen stattdessen `aspectRatio` per style.
+          ...(h != null ? { height: h } : {}),
           width: (w as number) ?? "100%",
           borderRadius: r,
           backgroundColor: fallback,

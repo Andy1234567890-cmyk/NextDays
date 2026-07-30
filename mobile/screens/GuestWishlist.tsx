@@ -1,6 +1,10 @@
-// Gäste · Merklisten (/api/v1/guest-wishlist). Echte Listen des angemeldeten
+// Gäste · Wunschlisten (/api/v1/guest-wishlist). Echte Listen des angemeldeten
 // Portal-Gastes; ohne Gast-Konto führt der Screen zur Anmeldung (die Listen
 // hängen serverseitig an der guest_id, ohne Session gäbe es nur 401).
+//
+// Aufbau wie in den Marktplatz-Apps: große Überschrift, darunter die Listen
+// als Zeilen mit Vorschau-Kachel; das Anlegen läuft über ein kleines Sheet
+// statt über ein aufklappendes Feld mitten in der Seite.
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useCallback, useState } from "react";
@@ -9,7 +13,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { GuestGate } from "@/components/GuestGate";
 import { Icon } from "@/components/ui/Icon";
-import { Btn, Card, Col, Divider, Row, Spinner, Txt } from "@/components/ui/kit";
+import { Btn, Col, Row, Spinner, Txt } from "@/components/ui/kit";
+import { EmptyState, Sheet } from "@/components/ui/patterns";
 import { useGuestAuth } from "@/contexts/GuestAuthContext";
 import {
   createWishlist,
@@ -17,8 +22,8 @@ import {
   listWishlists,
   type WishlistSummary,
 } from "@/lib/guestWishlist";
-import type { RootStackParamList } from "@/navigation/types";
 import { useRealtime } from "@/lib/realtime";
+import type { RootStackParamList } from "@/navigation/types";
 import { useTheme } from "@/theme/ThemeProvider";
 
 export default function GuestWishlist() {
@@ -40,7 +45,7 @@ export default function GuestWishlist() {
       setItems(res.data.items);
       setFehler(null);
     } else {
-      // null, NICHT [] — eine leere Liste liest sich wie „keine Merklisten"
+      // null, NICHT [] — eine leere Liste liest sich wie „keine Wunschlisten"
       // und wäre von echtem Leerstand nicht zu unterscheiden (Wurzel 4).
       setItems(null);
       setFehler(res.error);
@@ -90,7 +95,7 @@ export default function GuestWishlist() {
 
   if (gastStatus === "loading") {
     return (
-      <View style={{ flex: 1, backgroundColor: t.palette.bg }}>
+      <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top + 40 }}>
         <Spinner />
       </View>
     );
@@ -99,8 +104,7 @@ export default function GuestWishlist() {
   if (gastStatus !== "signedIn") {
     return (
       <GuestGate
-        icon="heart"
-        titel="Merkliste"
+        titel="Wunschlisten"
         hinweis="Mit einem Gast-Konto merkst du dir Unterkünfte und findest sie auf allen Geräten wieder."
       />
     );
@@ -110,82 +114,120 @@ export default function GuestWishlist() {
     <View style={{ flex: 1, backgroundColor: t.palette.bg, paddingTop: insets.top }}>
       <Row
         style={{
-          paddingHorizontal: 20,
-          paddingTop: 4,
-          paddingBottom: 12,
+          paddingHorizontal: 24,
+          paddingTop: 12,
+          paddingBottom: 16,
           justifyContent: "space-between",
-          alignItems: "center",
         }}
       >
-        <Txt v="h1">Merklisten</Txt>
-        <Pressable onPress={() => setNeuOffen((o) => !o)} hitSlop={10}>
-          <Icon n={neuOffen ? "x" : "plus"} s={22} sw={2} c={t.palette.accent} />
+        <Txt v="display">Wunschlisten</Txt>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Neue Wunschliste"
+          onPress={() => setNeuOffen(true)}
+          hitSlop={10}
+          style={({ pressed }) => ({ padding: 6, opacity: pressed ? 0.6 : 1 })}
+        >
+          <Icon n="plus" s={24} sw={2} c={t.palette.ink} />
         </Pressable>
       </Row>
 
-      {neuOffen && (
-        <Col style={{ paddingHorizontal: 20, paddingBottom: 12, gap: 10 }}>
+      {!items && !fehler && <Spinner />}
+
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}
+        refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
+      >
+        {fehler && <EmptyState icon="info" titel="Nicht geladen" text={fehler} />}
+
+        {items && items.length === 0 && !fehler && (
+          <EmptyState
+            icon="heart"
+            titel="Noch keine Wunschliste"
+            text="Tippe auf das Herz einer Unterkunft, um sie zu merken."
+          >
+            <Btn variant="dark" onPress={() => setNeuOffen(true)} style={{ marginTop: 6 }}>
+              Liste anlegen
+            </Btn>
+          </EmptyState>
+        )}
+
+        {items?.map((w, i) => (
+          <View key={w.id}>
+            {i > 0 && <View style={{ height: 1, backgroundColor: t.palette.line }} />}
+            <Row gap={16} style={{ paddingVertical: 16 }}>
+              <Pressable
+                style={{ flex: 1 }}
+                accessibilityRole="button"
+                onPress={() => navigation.navigate("WishlistDetail", { id: w.id, name: w.name })}
+              >
+                <Row gap={16}>
+                  <View
+                    style={{
+                      width: 64,
+                      height: 64,
+                      borderRadius: t.radius.img,
+                      backgroundColor: t.palette.surface2,
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <Icon n="heart" s={24} sw={1.8} c={t.palette.soft} />
+                  </View>
+                  <Col gap={3} style={{ flex: 1 }}>
+                    <Txt v="title" numberOfLines={1}>
+                      {w.name}
+                    </Txt>
+                    <Txt v="sm" soft>
+                      {w.item_count} {w.item_count === 1 ? "gespeicherte Unterkunft" : "gespeicherte Unterkünfte"}
+                    </Txt>
+                  </Col>
+                </Row>
+              </Pressable>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`${w.name} löschen`}
+                onPress={() => loeschen(w.id)}
+                hitSlop={10}
+                style={({ pressed }) => ({ padding: 6, opacity: pressed ? 0.6 : 1 })}
+              >
+                <Icon n="x" s={18} sw={1.9} c={t.palette.soft} />
+              </Pressable>
+            </Row>
+          </View>
+        ))}
+      </ScrollView>
+
+      <Sheet
+        open={neuOffen}
+        onClose={() => setNeuOffen(false)}
+        header={<Txt v="h2">Neue Wunschliste</Txt>}
+      >
+        <Col gap={16} style={{ paddingHorizontal: 20, paddingTop: 18 }}>
           <TextInput
             value={name}
             onChangeText={(v) => setName(v.slice(0, 120))}
             placeholder="Name der Liste (z. B. Sommer 2027)"
             placeholderTextColor={t.palette.faint}
+            autoFocus
+            returnKeyType="done"
+            onSubmitEditing={anlegen}
             style={{
               borderWidth: 1,
               borderColor: t.palette.line,
-              borderRadius: t.radius.btn,
-              paddingHorizontal: 14,
-              paddingVertical: 12,
+              borderRadius: 14,
+              paddingHorizontal: 16,
+              paddingVertical: 16,
               color: t.palette.ink,
-              fontFamily: t.type.medium.fontFamily,
+              fontFamily: t.fonts.regular,
+              fontSize: 16,
             }}
           />
-          <Btn variant="primary" block onPress={anlegen}>
+          <Btn variant={name.trim() && !busy ? "primary" : "ghost"} block onPress={anlegen}>
             {busy ? "Wird angelegt …" : "Liste anlegen"}
           </Btn>
         </Col>
-      )}
-
-      {!items && <Spinner />}
-
-      <ScrollView
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}
-        refreshControl={<RefreshControl refreshing={false} onRefresh={load} />}
-      >
-        {items && items.length === 0 && (
-          <Txt v="sm" soft style={{ textAlign: "center", marginTop: 40 }}>
-            {fehler ?? "Noch keine Merkliste. Tippe oben auf +, um eine anzulegen."}
-          </Txt>
-        )}
-        {items && items.length > 0 && (
-          <Card style={{ padding: 6 }}>
-            {items.map((w, i) => (
-              <View key={w.id}>
-                {i > 0 && <Divider style={{ marginHorizontal: 12 }} />}
-                <Row style={{ padding: 14, gap: 12, alignItems: "center" }}>
-                  <Icon n="heart" s={20} c={t.palette.accent} />
-                  <Pressable
-                    style={{ flex: 1 }}
-                    onPress={() => navigation.navigate("WishlistDetail", { id: w.id, name: w.name })}
-                  >
-                    <Col gap={2}>
-                      <Txt v="sm" style={{ fontFamily: t.type.semibold.fontFamily }}>
-                        {w.name}
-                      </Txt>
-                      <Txt v="xs" soft>
-                        {w.item_count} {w.item_count === 1 ? "Objekt" : "Objekte"}
-                      </Txt>
-                    </Col>
-                  </Pressable>
-                  <Pressable onPress={() => loeschen(w.id)} hitSlop={10}>
-                    <Icon n="x" s={18} c={t.palette.soft} />
-                  </Pressable>
-                </Row>
-              </View>
-            ))}
-          </Card>
-        )}
-      </ScrollView>
+      </Sheet>
     </View>
   );
 }

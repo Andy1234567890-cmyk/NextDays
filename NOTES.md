@@ -29,6 +29,33 @@ Paket-Status: P1 ☑ (inkl. P1.1) · P2 ☑ (inkl. P2.1) · P3 ☑ (inkl. P3.1) 
 P8 (Gast-App) ☑ · P9 (Security-Review) ☐
 Nach jedem Paket diese Zeile aktualisieren.
 
+**UI/UX-Umbau auf Marktplatz-Struktur (30.07.2026) — ganze App, alle vier
+Erlebnisse.** Referenz war die Airbnb-App (Screenshots des Nutzers): Struktur 1:1,
+Farben/Typo/Logo bleiben myNextDays.
+- Tokens (`theme/tokens.ts`): Fläche WEISS statt beige, Abgrenzung über feine
+  Linien statt Schatten, flache Radien (card/img/btn 12, Sheet 28), neue Typo-Skala
+  (display 30 / h1 26 / h2 22 / title 15 / body 15). Sternfarbe = ink.
+- Neu `components/ui/patterns.tsx`: SearchPill, CategoryTabs, SectionHeader,
+  Carousel, ListRow, Sheet, EmptyState — dort sitzt die Seitenstruktur, `kit.tsx`
+  bleibt Bausteine. `Card` ist flach mit Rand, `Btn` vollrunde Pille.
+- Neu `components/SearchSheet.tsx` (Akkordeon Wo/Wann/Wer, fährt von OBEN ein),
+  `components/DateRangePicker.tsx` (Kalender statt getippter Daten — die häufigste
+  422-Quelle), `components/ui/PlaceIllustration.tsx` (eigene farbige
+  Reiseziel-Illustrationen, Motiv aus dem Ortsnamen abgeleitet).
+- „In der Nähe" nutzt den ECHTEN Standort: `lib/standort.ts` (grober Standort,
+  `@react-native-community/geolocation`, Berechtigungstexte iOS+Android gesetzt,
+  natives Modul faul geladen) + neuer Umkreis-Filter im booking_engine
+  (`lat`/`lng`/`radius_km`, Haversine, Sortierung nach Entfernung, 500-km-Deckel,
+  422 bei Halbangaben, Objekte ohne Koordinaten fallen raus statt geraten zu werden).
+  **Erfordert einen App-Neubau** (`npx react-native run-ios`), Pods sind installiert.
+- Neuer Screen `GuestAccount` (Stammdaten), Profil ist jetzt reine Menüliste.
+  `listingRows` liefert ortsbezogene Reihentitel + Suchbegriff für den Pfeil-Button.
+- Kategorie-Reiter sind datengetrieben (Ferienobjekte/Zimmer aus echten Objekten) —
+  „Erlebnisse"/„Services" gibt es im Backend nicht und werden NICHT vorgetäuscht.
+  Ebenso kein Google-/Apple-Login-Knopf ohne Backend-Weg.
+- Gate: `tsc --noEmit`, ESLint und Jest (12/12) grün; API `ruff`, `pylint` 10.00/10
+  auf den geänderten Modulen, `pytest` booking_engine 25/25.
+
 **Datenanbindung abgeschlossen (30.07.2026) — kein Screen mehr auf Attrappen:**
 - Demo-/Ersatzdaten ENTFERNT: `lib/photos.ts` (Unsplash-Bilder) und
   `components/Placeholder.tsx` gelöscht, die Demo-Objektliste in HostListings und
