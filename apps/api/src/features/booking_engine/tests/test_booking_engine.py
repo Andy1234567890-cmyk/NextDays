@@ -637,5 +637,12 @@ def test_public_booking_writes_num_guests(monkeypatch) -> None:  # noqa: ANN001
         )
     )
 
-    payload = db.rpc.call_args[0][1]["p_reservation"]
+    # Gezielt den Reservierungs-RPC greifen, NICHT call_args: nach der Buchung
+    # läuft noch enqueue_job (jobs/queue.py) über dasselbe rpc-Mock, dessen
+    # Aufruf sonst der letzte ist.
+    payload = next(
+        call[0][1]["p_reservation"]
+        for call in db.rpc.call_args_list
+        if call[0][0] == "create_reservation_atomic"
+    )
     assert payload["num_guests"] == 4
